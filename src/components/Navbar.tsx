@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { SearchBar } from "./SearchBar";
 import { Logo } from "./Logo";
 
@@ -17,7 +18,9 @@ export function Navbar() {
 
         {/* Search */}
         <div className="flex-1">
-          <SearchBar />
+          <Suspense fallback={<div className="input max-w-xl" />}>
+            <SearchBar />
+          </Suspense>
         </div>
 
         {/* Nav */}
