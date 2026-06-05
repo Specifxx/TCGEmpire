@@ -25,9 +25,14 @@ async function main() {
   let count = 0;
   let done = 0;
   for (const c of cards) {
-    const num = c.collectorNumber.split("/")[0].replace(/\*/g, "");
+    const [rawNum, total] = c.collectorNumber.split("/");
     try {
-      const r = await searchEbayLowest({ name: c.name, setCode: c.setCode, number: num });
+      const r = await searchEbayLowest({
+        name: c.name,
+        setCode: c.setCode,
+        number: rawNum.replace(/\*/g, ""),
+        total: total ?? "",
+      });
       if (r) {
         await prisma.retailerPrice.create({
           data: {

@@ -235,8 +235,13 @@ export async function importPrices(): Promise<ImportSummary> {
     });
     let ebayPriced = 0;
     for (const c of allCards) {
-      const num = c.collectorNumber.split("/")[0].replace(/\*/g, "");
-      const r = await searchEbayLowest({ name: c.name, setCode: c.setCode, number: num });
+      const [rawNum, total] = c.collectorNumber.split("/");
+      const r = await searchEbayLowest({
+        name: c.name,
+        setCode: c.setCode,
+        number: rawNum.replace(/\*/g, ""),
+        total: total ?? "",
+      });
       if (!r) continue;
       await prisma.retailerPrice.create({
         data: {

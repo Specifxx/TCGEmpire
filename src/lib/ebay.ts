@@ -54,25 +54,43 @@ function shippingFromItem(item: any): number | null {
   return Math.round(parseFloat(v) * 100); // 0 = free shipping (eBay states it)
 }
 
-// Titles that mean a bundle/lot/non-English/sealed listing — never a single.
+// Titles that mean a bundle/lot/non-English/sealed/non-card listing — never a single.
 const EXCLUDE =
-  /\b(lot|lots|bundle|joblot|job lot|playset|complete set|full set|master set|set of|bulk|pick your|choose your|your choice|all epic|all rare|all common|all uncommon|all cards|sealed|booster|pack|box|proxy|custom|chinese|japanese|korean|\d+\s*cards|x\s*\d+)\b/i;
+  /\b(lot|lots|bundle|joblot|job lot|playset|complete set|full set|master set|set of|bulk|pick your|choose your|your choice|all epic|all rare|all common|all uncommon|all cards|sealed|booster|pack|box|proxy|custom|chinese|japanese|korean|\d+\s*cards|x\s*\d+|keychain|key ?ring|keyring|novelty|sticker|plush|playmat|sleeves?|toploader|top ?loader|binder|lanyard|badge|poster|magnet|funko|pin badge)\b/i;
 
-function norm(s: string): string {
-  return s.toLowerCase().replace(/[^a-z0-9]/g, "");
-}
+// Set-name keywords used to confirm the set when a title gives the number without
+// the full "/total" (e.g. "SFD (141)").
+const SET_NAMES: Record<string, string> = {
+  OGN: "origins", OGS: "proving\\s*grounds", SFD: "spirit\\s*forged", UNL: "unleashed", VEN: "vendetta",
+};
+
 function delivered(it: any): number {
   return parseFloat(it.price.value) + (parseFloat(it.shippingOptions?.[0]?.shippingCost?.value ?? "0") || 0);
 }
-// Does the title's collector number match exactly (so base "039" doesn't match an
-// alt-art "039a", and vice-versa)? Tolerant of leading zeros (039 == 39).
-function numberMatches(title: string, number: string): boolean {
+
+function setMentioned(title: string, setCode: string): boolean {
+  if (new RegExp(`\\b${setCode}\\b`, "i").test(title)) return true;
+  const name = SET_NAMES[setCode];
+  return name ? new RegExp(name, "i").test(title) : false;
+}
+
+// Confirm the title is THIS exact card by its collector number — letter-aware so
+// base "238" never matches alt "238a"/overnumbered, tolerant of leading zeros.
+// Strong: matches "238/219". Fallback: number token + the set is named in the title.
+function numberMatches(title: string, number: string, total: string, setCode: string): boolean {
   const digits = number.replace(/[^0-9]/g, "");
   if (!digits) return false;
+  const n = parseInt(digits, 10);
   const letter = (number.match(/[a-z]/i)?.[0] ?? "").toLowerCase();
-  const m = title.match(new RegExp(`\\b0*${parseInt(digits, 10)}([a-z]?)\\b`, "i"));
-  if (!m) return false;
-  return (m[1] || "").toLowerCase() === letter;
+
+  const full = title.match(new RegExp(`\\b0*${n}([a-z]?)\\s*\\*?\\s*/\\s*${total}\\b`, "i"));
+  if (full) return (full[1] || "").toLowerCase() === letter;
+
+  if (setMentioned(title, setCode)) {
+    const tok = title.match(new RegExp(`\\b0*${n}([a-z]?)\\b`, "i"));
+    if (tok) return (tok[1] || "").toLowerCase() === letter;
+  }
+  return false;
 }
 
 // Lowest legitimate single-card AU listing for a specific card. Requires the
@@ -82,6 +100,7 @@ export async function searchEbayLowest(card: {
   name: string;
   setCode: string;
   number: string;
+  total: string;
 }): Promise<EbayResult | null> {
   const token = await getToken();
   if (!token) return null;
@@ -112,18 +131,16 @@ export async function searchEbayLowest(card: {
   const data = await res.json();
   const items: any[] = data.itemSummaries ?? [];
 
-  const wantName = norm(card.name); // e.g. "kaisasurvivor"
+  // Accept only listings whose collector number matches THIS exact card+printing.
+  // No name-only fallback — that mislabelled overnumbered/alt cards with the base
+  // card's listing. The number is the reliable identity.
   const valid = items
     .filter((it) => it?.price?.value)
     .filter((it) => !EXCLUDE.test(it.title ?? ""))
-    // The title must contain the full card name — this rejects bundles and wrong cards.
-    .filter((it) => norm(it.title ?? "").includes(wantName))
+    .filter((it) => numberMatches(it.title ?? "", card.number, card.total, card.setCode))
     .sort((a, b) => delivered(a) - delivered(b));
 
-  // Prefer a listing whose collector number matches exactly (correct base vs
-  // alt-art printing); otherwise fall back to the cheapest name match.
-  const exact = valid.filter((it) => numberMatches(it.title ?? "", card.number));
-  const best = exact[0] ?? valid[0];
+  const best = valid[0];
   if (!best) return null;
 
   return {
