@@ -178,6 +178,27 @@ async function main() {
   const variants = cardData.filter((c) => c.variant).length;
   console.log(`Created ${cardData.length} cards with real images (${variants} alt-art variants).`);
 
+  // ---- promo printings (clone the base card; promos share the base art) -------
+  try {
+    const promoList = JSON.parse(
+      readFileSync(join(process.cwd(), "prisma", "promos.json"), "utf8")
+    ) as { set: string; num: string }[];
+    const baseByKey = new Map<string, (typeof cardData)[number]>();
+    for (const c of cardData) {
+      if (!c.variant) baseByKey.set(`${c.setCode}-${parseInt(c.collectorNumber, 10)}`, c);
+    }
+    const promoData = [];
+    for (const pr of promoList) {
+      const base = baseByKey.get(`${pr.set}-${parseInt(pr.num, 10)}`);
+      if (!base) continue;
+      promoData.push({ ...base, externalId: `${pr.set.toLowerCase()}-${pr.num}-p`, isPromo: true });
+    }
+    if (promoData.length) await prisma.card.createMany({ data: promoData });
+    console.log(`Created ${promoData.length} promo cards.`);
+  } catch {
+    console.warn("promos.json not found — run scripts/fetch-promos.ts to include promos.");
+  }
+
   // NOTE: the peer-to-peer marketplace (listings + buy orders) is stashed while
   // the site operates as a card database + price-comparison tool. The Listing /
   // BuyOrder models and routes remain in place for a future revisit. Run the

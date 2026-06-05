@@ -18,6 +18,7 @@ async function main() {
   await prisma.retailerPrice.deleteMany({ where: { retailer: "ebay" } });
 
   const cards = await prisma.card.findMany({
+    where: { isPromo: false },
     select: { id: true, name: true, setCode: true, collectorNumber: true },
   });
   console.log(`Querying eBay for ${cards.length} cards…`);

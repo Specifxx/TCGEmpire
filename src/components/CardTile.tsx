@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { CardImage } from "./CardImage";
-import { VariantBadge } from "./Badge";
+import { VariantBadge, OvernumberedBadge, PromoBadge } from "./Badge";
 import { WishlistButton } from "./WishlistButton";
 import { formatAUD } from "@/lib/format";
-import { rarityInfo } from "@/lib/constants";
+import { rarityInfo, isOvernumbered } from "@/lib/constants";
 
 export interface CardTileData {
   id: string;
@@ -12,6 +12,7 @@ export interface CardTileData {
   type: string;
   rarity: string;
   variant: string | null;
+  isPromo: boolean;
   setCode: string;
   collectorNumber: string;
   energyCost: number | null;
@@ -42,11 +43,11 @@ export function CardTile({ card }: { card: CardTileData }) {
           card={card}
           className="h-full w-full drop-shadow-lg transition-transform duration-300 group-hover:scale-[1.03]"
         />
-        {card.variant && (
-          <div className="absolute left-2 top-2">
-            <VariantBadge variant={card.variant} />
-          </div>
-        )}
+        <div className="absolute left-2 top-2 flex flex-col items-start gap-1">
+          <VariantBadge variant={card.variant} />
+          <OvernumberedBadge show={isOvernumbered(card.collectorNumber)} />
+          <PromoBadge show={card.isPromo} />
+        </div>
         <div className="absolute right-2 top-2">
           <WishlistButton cardId={card.id} />
         </div>

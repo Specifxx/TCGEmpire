@@ -107,6 +107,14 @@ export function rarityInfo(key: string): RarityInfo {
   return RARITIES[key] ?? RARITIES.Common;
 }
 
+// Overnumbered = collector number beyond the set's base count (e.g. 238/219) or
+// a "*" signature marker (e.g. 299*/298).
+export function isOvernumbered(collectorNumber: string): boolean {
+  if (collectorNumber.includes("*")) return true;
+  const m = collectorNumber.match(/^(\d+)[a-z]?\/(\d+)/i);
+  return m ? parseInt(m[1], 10) > parseInt(m[2], 10) : false;
+}
+
 export function conditionInfo(key: string): ConditionInfo {
   return CONDITIONS[key] ?? CONDITIONS.NM;
 }

@@ -114,7 +114,10 @@ async function fetchCollection(store: RetailerInfo, handle: string): Promise<Sho
 }
 
 export async function importPrices(): Promise<ImportSummary> {
+  // Skip promos: they share the base card's number, so matching would steal the
+  // base card's prices. Promos stay unpriced until promo-aware matching exists.
   const cards = await prisma.card.findMany({
+    where: { isPromo: false },
     select: { id: true, name: true, setCode: true, collectorNumber: true, rarity: true, variant: true },
   });
 
@@ -231,6 +234,7 @@ export async function importPrices(): Promise<ImportSummary> {
   if (isEbayEnabled()) {
     await prisma.retailerPrice.deleteMany({ where: { retailer: "ebay" } });
     const allCards = await prisma.card.findMany({
+      where: { isPromo: false },
       select: { id: true, name: true, setCode: true, collectorNumber: true },
     });
     let ebayPriced = 0;

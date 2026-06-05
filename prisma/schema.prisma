@@ -46,6 +46,8 @@ model Card {
   rarity          String
   // Alt-art / variant suffix from the card number, e.g. "a" for 112a. null = base art.
   variant         String?
+  // Promo printing (prerelease / organized-play). Shares the base card's art.
+  isPromo         Boolean @default(false)
   orientation     String? // portrait | landscape
   energyCost      Int?
   might           Int?

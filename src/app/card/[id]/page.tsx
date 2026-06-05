@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { CardImage } from "@/components/CardImage";
-import { DomainBadge, RarityBadge, VariantBadge } from "@/components/Badge";
+import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge } from "@/components/Badge";
+import { isOvernumbered } from "@/lib/constants";
 import { WishlistButton } from "@/components/WishlistButton";
 import { formatAUD, timeAgo } from "@/lib/format";
 
@@ -18,12 +19,11 @@ export default async function CardPage({ params }: { params: { id: string } }) {
 
   if (!card) notFound();
 
-  // Rank by delivered cost where we KNOW the shipping (eBay), else by item price.
-  // We never show estimated shipping — only an actual, confirmed shipping cost.
+  // Sort by ITEM price so the cheapest shown here matches the catalogue tile's
+  // "from" price (Card.lowestPriceCents) — keeping the two perfectly consistent.
   const prices = card.retailerPrices
     .map((p) => ({ ...p, delivered: p.priceCents + (p.shippingCents ?? 0) }))
-    .sort((a, b) => a.delivered - b.delivered);
-  const lowest = prices[0];
+    .sort((a, b) => a.priceCents - b.priceCents);
 
   return (
     <div>
@@ -47,6 +47,8 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               <RarityBadge rarity={card.rarity} />
               <span className="chip bg-ink-800 text-slate-300">{card.type}</span>
               <VariantBadge variant={card.variant} />
+              <OvernumberedBadge show={isOvernumbered(card.collectorNumber)} />
+              <PromoBadge show={card.isPromo} />
             </div>
             <div className="mt-3 flex items-start justify-between gap-3">
               <div>
@@ -59,7 +61,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <Metric label="Cheapest price" value={lowest ? formatAUD(lowest.priceCents) : "—"} highlight />
+              <Metric label="Cheapest price" value={card.lowestPriceCents != null ? formatAUD(card.lowestPriceCents) : "—"} highlight />
               <Metric label="In stock at" value={`${prices.length} ${prices.length === 1 ? "store" : "stores"}`} />
               {card.energyCost != null && <Metric label="Energy" value={String(card.energyCost)} />}
               {card.might != null && <Metric label="Might" value={String(card.might)} />}

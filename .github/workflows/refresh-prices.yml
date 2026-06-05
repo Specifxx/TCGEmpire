@@ -21,6 +21,11 @@ on:
       - "src/lib/retailers.ts"
       - "scripts/import-prices.ts"
 
+# Never run two price imports at once (they both write to the same DB).
+concurrency:
+  group: refresh-prices
+  cancel-in-progress: false
+
 jobs:
   refresh:
     runs-on: ubuntu-latest

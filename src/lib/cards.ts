@@ -81,6 +81,7 @@ export const CARD_TILE_SELECT = {
   type: true,
   rarity: true,
   variant: true,
+  isPromo: true,
   setCode: true,
   setName: true,
   collectorNumber: true,

@@ -64,6 +64,32 @@ export function VariantBadge({ variant }: { variant?: string | null }) {
   );
 }
 
+export function OvernumberedBadge({ show }: { show?: boolean }) {
+  if (!show) return null;
+  return (
+    <span
+      className="chip font-semibold uppercase"
+      style={{ background: "linear-gradient(90deg,#a855f7,#7c3aed)", color: "#fff" }}
+      title="Overnumbered (secret/signature print beyond the set count)"
+    >
+      ★ Overnumbered
+    </span>
+  );
+}
+
+export function PromoBadge({ show }: { show?: boolean }) {
+  if (!show) return null;
+  return (
+    <span
+      className="chip font-semibold uppercase"
+      style={{ background: "linear-gradient(90deg,#06b6d4,#0891b2)", color: "#04222a" }}
+      title="Promo printing"
+    >
+      ✦ Promo
+    </span>
+  );
+}
+
 export function FoilBadge() {
   return (
     <span
