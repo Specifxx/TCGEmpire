@@ -106,9 +106,10 @@ export async function searchEbayLowest(card: {
   if (!token) return null;
 
   const params = new URLSearchParams({
-    // Broad query for coverage; correctness comes from the name + number filters
-    // below (a narrow query misses cheap listings that word their title differently).
-    q: `${card.name} Riftbound`,
+    // Include the collector number so the exact card ranks into the result window —
+    // otherwise expensive chase cards (e.g. overnumbered) get pushed past the limit
+    // by cheap noise (keychains, bundles). Correctness still comes from the filters.
+    q: `${card.name} ${card.number.replace(/[^0-9]/g, "")} Riftbound`,
     filter: "buyingOptions:{FIXED_PRICE}",
     sort: "price",
     limit: "100",

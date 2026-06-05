@@ -12,6 +12,14 @@ on:
     - cron: "0 19 * * *"
     - cron: "0 7 * * *"
   workflow_dispatch: {} # allows a manual "Run workflow" button
+  # Re-import (and recompute stored prices) whenever price/matching logic changes.
+  push:
+    branches: [main]
+    paths:
+      - "src/lib/ebay.ts"
+      - "src/lib/price-import.ts"
+      - "src/lib/retailers.ts"
+      - "scripts/import-prices.ts"
 
 jobs:
   refresh:
