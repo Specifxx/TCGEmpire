@@ -8,6 +8,8 @@ export interface CardQuery {
   type?: string;
   set?: string;
   variant?: string; // "alt" = alt-art only, "base" = base art only
+  sig?: string; // "1" = signature ("*") cards only
+  promo?: string; // "1" = promo printings only
   priced?: string; // "1" = only cards with a live price
   min?: string;
   max?: string;
@@ -37,6 +39,9 @@ export function buildCardWhere(query: CardQuery): Prisma.CardWhereInput {
 
   if (query.variant === "alt") where.variant = { not: null };
   else if (query.variant === "base") where.variant = null;
+
+  if (query.sig === "1") where.collectorNumber = { contains: "*" };
+  if (query.promo === "1") where.isPromo = true;
 
   if (query.q) {
     // Search the normalised name so "kaisa" matches "Kai'Sa". Also match number.
@@ -93,5 +98,7 @@ export const CARD_TILE_SELECT = {
   imageThumbUrl: true,
   blurDataUrl: true,
   lowestPriceCents: true,
-  _count: { select: { retailerPrices: true } },
+  // Count only in-stock listings for the "N stores" tile label (out-of-stock
+  // listings are shown on the card page but shouldn't inflate availability).
+  _count: { select: { retailerPrices: { where: { inStock: true } } } },
 } satisfies Prisma.CardSelect;

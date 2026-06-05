@@ -46,10 +46,13 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   if (!card) notFound();
 
   // Sort by ITEM price so the cheapest shown here matches the catalogue tile's
-  // "from" price (Card.lowestPriceCents) — keeping the two perfectly consistent.
-  const prices = card.retailerPrices
+  // "from" price (Card.lowestPriceCents). In-stock listings come first; sold-out
+  // listings (the store had it but it's currently unavailable) are shown after.
+  const all = card.retailerPrices
     .map((p) => ({ ...p, delivered: p.priceCents + (p.shippingCents ?? 0) }))
     .sort((a, b) => a.priceCents - b.priceCents);
+  const prices = all.filter((p) => p.inStock);
+  const outOfStock = all.filter((p) => !p.inStock);
 
   // Structured data so Google can show a rich price snippet ("$X, N stores").
   const jsonLd = {
@@ -130,12 +133,20 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               )}
             </div>
 
-            {prices.length === 0 ? (
+            {prices.length === 0 && outOfStock.length === 0 ? (
               <div className="p-8 text-center text-sm text-slate-400">
                 <p className="font-semibold text-white">No prices found yet</p>
                 <p className="mt-1">
                   We haven&apos;t matched this card to a store listing. Check back soon —
                   our price feeds refresh regularly.
+                </p>
+              </div>
+            ) : prices.length === 0 ? (
+              <div className="p-6 text-center text-sm text-slate-400">
+                <p className="font-semibold text-white">Currently sold out everywhere</p>
+                <p className="mt-1">
+                  {outOfStock.length} Australian {outOfStock.length === 1 ? "store has" : "stores have"} listed
+                  this card but it&apos;s out of stock right now. See them below.
                 </p>
               </div>
             ) : (
@@ -177,6 +188,40 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                 ))}
               </ul>
             )}
+
+            {outOfStock.length > 0 && (
+              <div className="border-t border-ink-800">
+                <div className="bg-ink-900/40 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Out of stock ({outOfStock.length}) · last listed price
+                </div>
+                <ul className="divide-y divide-ink-800">
+                  {outOfStock.map((p) => (
+                    <li key={p.id} className="flex items-center gap-3 p-4 opacity-60">
+                      <div className="w-6 text-center text-slate-600">—</div>
+                      <div className="flex-1">
+                        <div className="font-semibold text-slate-300">{p.retailerName}</div>
+                        <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                          {p.condition && <span className="chip bg-ink-800 text-slate-400">{p.condition}</span>}
+                          <span className="text-slate-500">● Out of stock</span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-bold text-slate-400 line-through">{formatAUD(p.priceCents)}</div>
+                      </div>
+                      <a
+                        href={p.url}
+                        target="_blank"
+                        rel="nofollow sponsored noopener noreferrer"
+                        className="btn-ghost"
+                      >
+                        Check →
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             <p className="border-t border-ink-800 p-3 text-center text-[11px] text-slate-600">
               Prices are collected from public store listings and may change. RiftCompareAU
               may earn a commission on some outbound links.

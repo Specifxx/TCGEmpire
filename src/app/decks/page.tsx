@@ -16,19 +16,47 @@ export const metadata: Metadata = {
 
 export default async function DecksPage() {
   const decks = await resolveAllDecks();
+  const beginner = decks.filter((d) => d.category === "beginner");
+  const meta = decks.filter((d) => d.category !== "beginner");
 
   return (
-    <div>
-      <div className="mb-5">
-        <h1 className="text-2xl font-extrabold text-white">Meta Decks</h1>
-        <p className="mt-1 text-sm text-slate-400">
-          The current top-tier Riftbound archetypes — each priced live across Australian
-          stores so you can see what it costs to build and where to buy every card.
-        </p>
+    <div className="flex flex-col gap-10">
+      <div>
+        <div className="mb-4">
+          <h1 className="text-2xl font-extrabold text-white">Meta Decks</h1>
+          <p className="mt-1 text-sm text-slate-400">
+            The current top-tier Riftbound archetypes — each priced live across Australian
+            stores so you can see what it costs to build and where to buy every card.
+          </p>
+        </div>
+        <DeckGrid decks={meta} />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {decks.map((d) => (
+      {beginner.length > 0 && (
+        <div>
+          <div className="mb-4">
+            <h2 className="text-2xl font-extrabold text-white">Starter Decks for New Players</h2>
+            <p className="mt-1 text-sm text-slate-400">
+              New to Riftbound? These budget-friendly decks are built mostly from cheap commons
+              so you can start playing for as little as possible.
+            </p>
+          </div>
+          <DeckGrid decks={beginner} />
+        </div>
+      )}
+
+      <p className="text-center text-[11px] text-slate-600">
+        Decks are a community reference based on recent results and may change. Build cost uses
+        each card&apos;s cheapest in-stock AU price and may span multiple stores.
+      </p>
+    </div>
+  );
+}
+
+function DeckGrid({ decks }: { decks: Awaited<ReturnType<typeof resolveAllDecks>> }) {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {decks.map((d) => (
           <Link
             key={d.slug}
             href={`/decks/${d.slug}`}
@@ -71,12 +99,6 @@ export default async function DecksPage() {
             </div>
           </Link>
         ))}
-      </div>
-
-      <p className="mt-6 text-center text-[11px] text-slate-600">
-        Meta archetypes are a community reference based on recent tournament results and may
-        change. Build cost uses each card&apos;s cheapest in-stock AU price and may span multiple stores.
-      </p>
     </div>
   );
 }

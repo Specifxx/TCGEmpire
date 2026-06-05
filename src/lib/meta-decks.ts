@@ -10,6 +10,7 @@ export interface MetaDeckSeed {
   archetype: string;
   domains: string[];
   description: string;
+  category?: "meta" | "beginner";
   cards: { name: string; qty: number }[];
 }
 
@@ -18,6 +19,7 @@ export const META_DECKS: MetaDeckSeed[] = (metaDecksData.decks ?? []) as MetaDec
 export interface ResolvedCardData {
   id: string;
   name: string;
+  nameNormalized: string;
   setCode: string;
   collectorNumber: string;
   domain: string;
@@ -49,6 +51,7 @@ export interface ResolvedDeck extends MetaDeckSeed {
 const CARD_SELECT = {
   id: true,
   name: true,
+  nameNormalized: true,
   setCode: true,
   collectorNumber: true,
   domain: true,
@@ -59,35 +62,43 @@ const CARD_SELECT = {
   lowestPriceCents: true,
 } as const;
 
-// Resolve a card name to the cheapest real (non-promo, base-art) printing so the
-// deck price reflects what it actually costs to build in AU.
-async function resolveByName(name: string) {
-  const nq = normalizeSearch(name);
+// Build a name -> cheapest base printing map for a set of card names in ONE query.
+// (Resolving each card individually would fire ~100 queries per page and can
+// exhaust the serverless DB connection pool.)
+async function buildCardMap(names: string[]): Promise<Map<string, ResolvedCardData>> {
+  const keys = Array.from(new Set(names.map(normalizeSearch)));
   const matches = await prisma.card.findMany({
-    where: { nameNormalized: nq, isPromo: false },
+    where: { nameNormalized: { in: keys }, isPromo: false },
     select: { ...CARD_SELECT },
     orderBy: [{ lowestPriceCents: { sort: "asc", nulls: "last" } }],
   });
-  // Prefer base art (no "*", no letter variant) when present, else cheapest.
-  const base = matches.find((m) => !m.collectorNumber.includes("*") && !/\d+[a-z]/i.test(m.collectorNumber));
-  return base ?? matches[0] ?? null;
+  const map = new Map<string, ResolvedCardData>();
+  for (const m of matches) {
+    const nq = m.nameNormalized;
+    const isBase = !m.collectorNumber.includes("*") && !/\d+[a-z]/i.test(m.collectorNumber);
+    const existing = map.get(nq);
+    // Prefer base art; otherwise keep the first (cheapest, due to orderBy).
+    if (!existing || (isBase && !(!existing.collectorNumber.includes("*") && !/\d+[a-z]/i.test(existing.collectorNumber)))) {
+      map.set(nq, m);
+    }
+  }
+  return map;
 }
 
-export async function resolveDeck(seed: MetaDeckSeed): Promise<ResolvedDeck> {
-  const legend = await resolveByName(seed.legend);
+function resolveDeckFromMap(seed: MetaDeckSeed, map: Map<string, ResolvedCardData>): ResolvedDeck {
+  const legend = map.get(normalizeSearch(seed.legend)) ?? null;
 
-  const items: ResolvedCard[] = [];
-  for (const c of seed.cards) {
-    const card = await resolveByName(c.name);
+  const items: ResolvedCard[] = seed.cards.map((c) => {
+    const card = map.get(normalizeSearch(c.name)) ?? null;
     const unitPriceCents = card?.lowestPriceCents ?? null;
-    items.push({
+    return {
       qty: c.qty,
       inputName: c.name,
       card,
       unitPriceCents,
       lineCents: unitPriceCents != null ? unitPriceCents * c.qty : 0,
-    });
-  }
+    };
+  });
 
   const legendLine = legend?.lowestPriceCents != null ? legend.lowestPriceCents : 0;
   const totalCards = seed.cards.reduce((n, c) => n + c.qty, 0) + 1; // +1 legend
@@ -108,8 +119,15 @@ export async function resolveDeck(seed: MetaDeckSeed): Promise<ResolvedDeck> {
   };
 }
 
+export async function resolveDeck(seed: MetaDeckSeed): Promise<ResolvedDeck> {
+  const map = await buildCardMap([seed.legend, ...seed.cards.map((c) => c.name)]);
+  return resolveDeckFromMap(seed, map);
+}
+
 export async function resolveAllDecks(): Promise<ResolvedDeck[]> {
-  return Promise.all(META_DECKS.map(resolveDeck));
+  const allNames = META_DECKS.flatMap((d) => [d.legend, ...d.cards.map((c) => c.name)]);
+  const map = await buildCardMap(allNames);
+  return META_DECKS.map((d) => resolveDeckFromMap(d, map));
 }
 
 export function getDeckSeed(slug: string): MetaDeckSeed | undefined {

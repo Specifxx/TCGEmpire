@@ -58,6 +58,8 @@ export function Filters() {
       0
     ) +
     (params.get("variant") ? 1 : 0) +
+    (params.get("sig") ? 1 : 0) +
+    (params.get("promo") ? 1 : 0) +
     (params.get("priced") ? 1 : 0) +
     (params.get("min") || params.get("max") ? 1 : 0);
 
@@ -146,8 +148,12 @@ export function Filters() {
             </div>
           </Section>
 
-          <Section title="Art" last>
-            <Check checked={params.get("variant") === "alt"} onChange={() => update((p) => (p.get("variant") === "alt" ? p.delete("variant") : p.set("variant", "alt")))} label="Alternate art only" dot="#f5a524" />
+          <Section title="Printing" last defaultOpen>
+            <div className="flex flex-col gap-1">
+              <Check checked={params.get("variant") === "alt"} onChange={() => update((p) => (p.get("variant") === "alt" ? p.delete("variant") : p.set("variant", "alt")))} label="Alternate art" dot="#f5a524" />
+              <Check checked={params.get("sig") === "1"} onChange={() => update((p) => (p.get("sig") === "1" ? p.delete("sig") : p.set("sig", "1")))} label="Signature" dot="#f59e0b" />
+              <Check checked={params.get("promo") === "1"} onChange={() => update((p) => (p.get("promo") === "1" ? p.delete("promo") : p.set("promo", "1")))} label="Promo" dot="#06b6d4" />
+            </div>
           </Section>
         </div>
       </div>

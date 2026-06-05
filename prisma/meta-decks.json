@@ -123,6 +123,66 @@
         { "name": "Armed Assailant", "qty": 2 },
         { "name": "Battering Ram", "qty": 2 }
       ]
+    },
+    {
+      "slug": "starter-garen-demacia",
+      "name": "Garen Demacia Starter",
+      "legend": "Garen, Might of Demacia - Starter",
+      "tier": "Beginner",
+      "archetype": "Beginner · Midrange",
+      "domains": ["Body"],
+      "category": "beginner",
+      "description": "A great first deck for new players — cheap, sturdy Body units that trade up and swing in. Built almost entirely from commons, so it costs very little to assemble.",
+      "cards": [
+        { "name": "Cithria of Cloudfield", "qty": 3 },
+        { "name": "Dauntless Vanguard", "qty": 3 },
+        { "name": "Decisive Strike", "qty": 3 },
+        { "name": "Concentrate", "qty": 2 },
+        { "name": "Confront", "qty": 2 },
+        { "name": "Challenge", "qty": 2 },
+        { "name": "Call to Battle", "qty": 2 },
+        { "name": "Crackshot Corsair", "qty": 3 }
+      ]
+    },
+    {
+      "slug": "starter-annie-fury",
+      "name": "Annie Fury Starter",
+      "legend": "Annie, Dark Child - Starter",
+      "tier": "Beginner",
+      "archetype": "Beginner · Aggro",
+      "domains": ["Fury"],
+      "category": "beginner",
+      "description": "An easy, aggressive starting point — cheap Fury units and burn to learn the game fast without spending much. Ideal for your first games.",
+      "cards": [
+        { "name": "Dancing Grenade", "qty": 3 },
+        { "name": "Detonate", "qty": 3 },
+        { "name": "Cleave", "qty": 2 },
+        { "name": "Blood Rush", "qty": 2 },
+        { "name": "Death from Below", "qty": 2 },
+        { "name": "Blazing Scorcher", "qty": 2 },
+        { "name": "Armed Assailant", "qty": 2 },
+        { "name": "Battering Ram", "qty": 2 }
+      ]
+    },
+    {
+      "slug": "starter-master-yi-wuju",
+      "name": "Wuju Bladesman Starter",
+      "legend": "Master, Wuju Bladesman - Starter",
+      "tier": "Beginner",
+      "archetype": "Beginner · Tempo",
+      "domains": ["Calm"],
+      "category": "beginner",
+      "description": "Learn combat tricks with this low-cost Calm tempo starter. Cheap units plus reactive spells teach the fundamentals of trading and tempo.",
+      "cards": [
+        { "name": "Alpha Strike", "qty": 3 },
+        { "name": "Counter Strike", "qty": 3 },
+        { "name": "Block", "qty": 2 },
+        { "name": "Back Off", "qty": 2 },
+        { "name": "Discipline", "qty": 2 },
+        { "name": "Combat Experience", "qty": 2 },
+        { "name": "Doran's Shield", "qty": 2 },
+        { "name": "Apprentice Smith", "qty": 2 }
+      ]
     }
   ]
 }

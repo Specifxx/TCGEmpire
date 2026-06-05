@@ -273,14 +273,23 @@ export async function importPrices(): Promise<ImportSummary> {
       const cardId = resolveCardId(p);
       if (!cardId) { unmatched++; continue; }
       matched++;
-      // Only IN-STOCK variants count — out-of-stock listings are excluded from
-      // the price comparison entirely.
-      const avail = p.variants.filter((v) => v.available && parseFloat(v.price) > 0);
-      if (!avail.length) continue;
-      const best = avail.reduce((a, b) => (parseFloat(a.price) <= parseFloat(b.price) ? a : b));
+      // Prefer in-stock variants. If none are available but the store still LISTS
+      // the card with a price, record it as out-of-stock so the card page can show
+      // "Store had it — currently sold out" (useful demand/availability signal).
+      const priced = p.variants.filter((v) => parseFloat(v.price) > 0);
+      if (!priced.length) continue;
+      const avail = priced.filter((v) => v.available);
+      const inStock = avail.length > 0;
+      const pool = inStock ? avail : priced;
+      const best = pool.reduce((a, b) => (parseFloat(a.price) <= parseFloat(b.price) ? a : b));
       const priceCents = Math.round(parseFloat(best.price) * 100);
       const prev = rows.get(cardId);
-      if (prev && prev.priceCents <= priceCents) continue;
+      // Keep the best listing per store+card: in-stock beats out-of-stock, then
+      // cheaper beats dearer.
+      if (prev) {
+        if (prev.inStock && !inStock) continue;
+        if (prev.inStock === inStock && prev.priceCents <= priceCents) continue;
+      }
       rows.set(cardId, {
         cardId,
         retailer: store.key,
@@ -291,7 +300,7 @@ export async function importPrices(): Promise<ImportSummary> {
         isFoil: /foil/i.test(p.title),
         priceCents,
         currency: "AUD",
-        inStock: true,
+        inStock,
       });
     }
     await prisma.retailerPrice.createMany({ data: Array.from(rows.values()) });
@@ -344,16 +353,20 @@ export async function importPrices(): Promise<ImportSummary> {
     summary.stores.push({ name: "eBay", products: allCards.length, priced: ebayRows.length, matched: ebayRows.length, unmatched: 0 });
   }
 
-  // Recompute each card's lowest live price (prefer in-stock).
-  const priced = await prisma.retailerPrice.groupBy({ by: ["cardId"], _min: { priceCents: true } });
+  // Recompute each card's lowest live price from IN-STOCK listings only, so the
+  // catalogue "from" price never reflects a sold-out listing. (Out-of-stock rows
+  // still exist and are shown on the card page, just not used for the headline price.)
+  const priced = await prisma.retailerPrice.groupBy({
+    by: ["cardId"],
+    where: { inStock: true },
+    _min: { priceCents: true },
+  });
   await prisma.card.updateMany({ data: { lowestPriceCents: null } });
   for (const row of priced) {
-    const inStockMin = await prisma.retailerPrice.aggregate({
-      where: { cardId: row.cardId, inStock: true },
-      _min: { priceCents: true },
+    await prisma.card.update({
+      where: { id: row.cardId },
+      data: { lowestPriceCents: row._min.priceCents ?? null },
     });
-    const lowest = inStockMin._min.priceCents ?? row._min.priceCents ?? null;
-    await prisma.card.update({ where: { id: row.cardId }, data: { lowestPriceCents: lowest } });
   }
   summary.cardsPriced = priced.length;
   return summary;
