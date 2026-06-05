@@ -6,7 +6,7 @@
  * Usage: npx tsx scripts/import-ebay.ts   (requires EBAY_CLIENT_ID/SECRET in env)
  */
 import { PrismaClient } from "@prisma/client";
-import { isEbayEnabled, searchEbayLowest } from "../src/lib/ebay";
+import { isEbayEnabled, isEbayRateLimited, searchEbayLowest } from "../src/lib/ebay";
 
 const prisma = new PrismaClient();
 
@@ -15,17 +15,18 @@ async function main() {
     console.log("eBay keys not set — aborting.");
     return;
   }
-  await prisma.retailerPrice.deleteMany({ where: { retailer: "ebay" } });
-
   const cards = await prisma.card.findMany({
     where: { isPromo: false },
     select: { id: true, name: true, setCode: true, collectorNumber: true },
   });
   console.log(`Querying eBay for ${cards.length} cards…`);
 
-  let count = 0;
+  // Buffer results, then replace in one shot. If we got nothing (rate-limited /
+  // 429), DON'T delete existing eBay prices — a throttled run must not wipe data.
+  const ebayRows: any[] = [];
   let done = 0;
   for (const c of cards) {
+    if (isEbayRateLimited()) { console.warn("eBay rate-limited (429) — aborting eBay pass."); break; }
     const [rawNum, total] = c.collectorNumber.split("/");
     try {
       const r = await searchEbayLowest({
@@ -33,31 +34,36 @@ async function main() {
         setCode: c.setCode,
         number: rawNum.replace(/\*/g, ""),
         total: total ?? "",
+        isSignature: c.collectorNumber.includes("*"),
       });
       if (r) {
-        await prisma.retailerPrice.create({
-          data: {
-            cardId: c.id,
-            retailer: "ebay",
-            retailerName: "eBay",
-            title: r.title,
-            url: r.url,
-            condition: r.condition ?? null,
-            isFoil: /foil/i.test(r.title),
-            priceCents: r.priceCents,
-            shippingCents: r.shippingCents,
-            currency: "AUD",
-            inStock: true,
-          },
+        ebayRows.push({
+          cardId: c.id,
+          retailer: "ebay",
+          retailerName: "eBay",
+          title: r.title,
+          url: r.url,
+          condition: r.condition ?? null,
+          isFoil: /foil/i.test(r.title),
+          priceCents: r.priceCents,
+          shippingCents: r.shippingCents,
+          currency: "AUD",
+          inStock: true,
         });
-        count++;
       }
     } catch {
       // skip on error
     }
     done++;
-    if (done % 100 === 0) console.log(`  …${done}/${cards.length} checked, ${count} eBay prices`);
+    if (done % 100 === 0) console.log(`  …${done}/${cards.length} checked, ${ebayRows.length} eBay prices`);
   }
+  if (ebayRows.length === 0) {
+    console.warn("eBay returned 0 results (rate-limited?) — keeping existing eBay prices, aborting.");
+    return;
+  }
+  await prisma.retailerPrice.deleteMany({ where: { retailer: "ebay" } });
+  await prisma.retailerPrice.createMany({ data: ebayRows });
+  const count = ebayRows.length;
   console.log(`Created ${count} eBay prices.`);
 
   // Recompute each card's lowest live price including eBay. Reset all first so a

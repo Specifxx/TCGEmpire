@@ -3,9 +3,10 @@
 // rows + Card.lowestPriceCents. Called by scripts/import-prices.ts (CLI) and the
 // scheduled /api/cron/refresh-prices route.
 
+import { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { RETAILER_LIST, RetailerInfo } from "./retailers";
-import { isEbayEnabled, searchEbayLowest } from "./ebay";
+import { isEbayEnabled, isEbayRateLimited, searchEbayLowest } from "./ebay";
 
 interface ShopifyVariant { title: string; price: string; available: boolean }
 interface ShopifyProduct { title: string; handle: string; variants: ShopifyVariant[] }
@@ -31,7 +32,10 @@ const STOP =
 
 function numKey(seg: string): string {
   const m = seg.match(/^0*(\d+)([a-z]*)/i);
-  return m ? m[1] + m[2].toLowerCase() : seg.toLowerCase();
+  const base = m ? m[1] + m[2].toLowerCase() : seg.toLowerCase();
+  // A "*" marks a Signature print (e.g. "223*/221"), a DIFFERENT card from the
+  // plain overnumbered "223/221" — keep their keys distinct so listings don't mix.
+  return seg.includes("*") ? `${base}s` : base;
 }
 function nameKey(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -46,11 +50,11 @@ function cleanProductName(title: string): string {
 //   "(299*/298)", "(053/219)", "OGN-128/298", "[OGN - 213/298]", "239*/221"
 // Keys are normalised via numKey so "039" and "39" compare equal (the leading-zero
 // bug that previously mis-assigned base cards to their alt-art printings).
-function parseNumber(title: string): { setCode: string | null; key: string } | null {
-  const pref = title.match(/\b([A-Za-z]{2,4})\s*-\s*(\d+)([a-z*]*)\s*\/\s*\d+/);
-  if (pref) return { setCode: pref[1].toUpperCase(), key: numKey(pref[2] + pref[3].replace(/\*/g, "")) };
-  const bare = title.match(/(\d+)([a-z*]*)\s*\/\s*\d+/);
-  if (bare) return { setCode: null, key: numKey(bare[1] + bare[2].replace(/\*/g, "")) };
+function parseNumber(title: string): { setCode: string | null; key: string; total: string } | null {
+  const pref = title.match(/\b([A-Za-z]{2,4})\s*-\s*(\d+)([a-z*]*)\s*\/\s*(\d+)/);
+  if (pref) return { setCode: pref[1].toUpperCase(), key: numKey(pref[2] + pref[3]), total: pref[4] };
+  const bare = title.match(/(\d+)([a-z*]*)\s*\/\s*(\d+)/);
+  if (bare) return { setCode: null, key: numKey(bare[1] + bare[2]), total: bare[3] };
   return null;
 }
 
@@ -136,10 +140,24 @@ export async function importPrices(): Promise<ImportSummary> {
     push(byName, nameKey(c.name), c);
   }
 
+  // The collector-number TOTAL uniquely identifies the set, so a title like
+  // "Existential Dread - 134/219" (no set code) is unambiguously UNL — never the
+  // OGN card numbered 134/298. This is authoritative and prevents cross-set bleed.
+  const setFromTotal = (total?: string): string | null => {
+    switch (parseInt(total ?? "", 10)) {
+      case 298: return "OGN";
+      case 221: return "SFD";
+      case 219: return "UNL";
+      case 24: return "OGS";
+      default: return null;
+    }
+  };
+
   function resolveCardId(p: ShopifyProduct): string | null {
     const t = p.title;
     const num = parseNumber(t);
-    const setCode = num?.setCode ?? SET_FROM_TITLE.find(([re]) => re.test(t))?.[1] ?? "OGN";
+    const setCode =
+      num?.setCode ?? setFromTotal(num?.total) ?? SET_FROM_TITLE.find(([re]) => re.test(t))?.[1] ?? "OGN";
     // NOTE: "Foil" is NOT an alt-art signal — nearly every listing (incl. base
     // cards) says Foil. Only these markers (or a lettered number like 039a) mean
     // an alt-art/special printing.
@@ -147,21 +165,53 @@ export async function importPrices(): Promise<ImportSummary> {
       /showcase|signature|overnumbered|alternate\s*art|alt\s*art/i.test(t) ||
       /\d+[a-z]/.test(num?.key ?? "");
 
-    // 1) name match, disambiguated by number then variant.
+    // Special-print signals in the title. Signature ("*"/signed) and Overnumbered
+    // (number beyond the set count) are SEPARATE cards from the base/alt printings
+    // and must never be mixed with them — nor with each other.
+    const titleSig = /\bsignature\b|\bsigned\b/i.test(t) || /\d\s*\*/.test(t);
+    const titleOver = !titleSig && /\bovernumber\w*/i.test(t);
+    const isStar = (c: (typeof cards)[number]) => c.collectorNumber.includes("*");
+    const isOverCard = (c: (typeof cards)[number]) => {
+      if (isStar(c)) return false;
+      const [d, tt] = c.collectorNumber.split("/");
+      return parseInt(d, 10) > parseInt(tt ?? "0", 10);
+    };
+    const pickByNum = <T extends { collectorNumber: string }>(arr: T[]): T | undefined =>
+      num ? arr.find((c) => numKey(c.collectorNumber.split("/")[0]) === num.key) : undefined;
+
+    // 1) name match, disambiguated by special-print → number → variant.
     const cand = byName.get(nameKey(cleanProductName(t)));
     if (cand && cand.length) {
-      if (cand.length === 1) return cand[0].id;
-      if (num) {
-        const exact = cand.find((c) => numKey(c.collectorNumber.split("/")[0]) === num.key);
-        if (exact) return exact.id;
+      // A Signature listing belongs ONLY to a "*" card of that name. If we don't
+      // have one, leave it unmatched rather than mis-attaching to a sibling.
+      if (titleSig) {
+        const sigs = cand.filter(isStar);
+        if (!sigs.length) return null;
+        return (pickByNum(sigs) ?? sigs[0]).id;
       }
-      const v = cand.find((c) => (isAlt ? c.variant || c.rarity === "Showcase" : !c.variant && c.rarity !== "Showcase"));
+      // Likewise an Overnumbered listing belongs only to an overnumbered card.
+      if (titleOver) {
+        const overs = cand.filter(isOverCard);
+        if (!overs.length) return null;
+        return (pickByNum(overs) ?? overs[0]).id;
+      }
+      if (cand.length === 1) return cand[0].id;
+      const exact = pickByNum(cand);
+      if (exact) return exact.id;
+      // A plain (non-special) listing must never resolve to a "*" Signature or an
+      // overnumbered chase card — those only match explicit special-print titles.
+      const pool = cand.filter((c) => !isStar(c) && !isOverCard(c));
+      const search = pool.length ? pool : cand;
+      const v = search.find((c) => (isAlt ? c.variant || c.rarity === "Showcase" : !c.variant && c.rarity !== "Showcase"));
       if (v) return v.id;
-      return cand[0].id;
+      return search[0].id;
     }
 
-    // 2) number-only match.
-    if (num) {
+    // 2) number-only match. Skipped for special-print listings: a Signature/
+    // Overnumbered title whose number is written without the "*" (e.g. "225/221
+    // (Signature)") would otherwise resolve to the plain sibling here. If section 1
+    // didn't name-match it, we don't have that exact card — leave it unmatched.
+    if (num && !titleSig && !titleOver) {
       const setHit = byNum.get(`${setCode}|${num.key}`);
       if (setHit?.length === 1) return setHit[0];
       const anyHit = byNumAny.get(num.key);
@@ -232,39 +282,46 @@ export async function importPrices(): Promise<ImportSummary> {
 
   // ---- eBay AU (optional; only runs when EBAY_CLIENT_ID/SECRET are set) --------
   if (isEbayEnabled()) {
-    await prisma.retailerPrice.deleteMany({ where: { retailer: "ebay" } });
     const allCards = await prisma.card.findMany({
       where: { isPromo: false },
       select: { id: true, name: true, setCode: true, collectorNumber: true },
     });
-    let ebayPriced = 0;
+    // Buffer results, then replace in one shot. CRUCIAL: if the run produced no
+    // results (e.g. the eBay API is rate-limited / 429), we DON'T delete the
+    // existing eBay prices — a throttled refresh must never wipe live data to zero.
+    const ebayRows: Prisma.RetailerPriceCreateManyInput[] = [];
     for (const c of allCards) {
+      if (isEbayRateLimited()) break; // quota hit — stop firing doomed requests
       const [rawNum, total] = c.collectorNumber.split("/");
       const r = await searchEbayLowest({
         name: c.name,
         setCode: c.setCode,
         number: rawNum.replace(/\*/g, ""),
         total: total ?? "",
+        isSignature: c.collectorNumber.includes("*"),
       });
       if (!r) continue;
-      await prisma.retailerPrice.create({
-        data: {
-          cardId: c.id,
-          retailer: "ebay",
-          retailerName: "eBay",
-          title: r.title,
-          url: r.url,
-          condition: r.condition ?? null,
-          isFoil: /foil/i.test(r.title),
-          priceCents: r.priceCents,
-          shippingCents: r.shippingCents,
-          currency: "AUD",
-          inStock: true,
-        },
+      ebayRows.push({
+        cardId: c.id,
+        retailer: "ebay",
+        retailerName: "eBay",
+        title: r.title,
+        url: r.url,
+        condition: r.condition ?? null,
+        isFoil: /foil/i.test(r.title),
+        priceCents: r.priceCents,
+        shippingCents: r.shippingCents,
+        currency: "AUD",
+        inStock: true,
       });
-      ebayPriced++;
     }
-    summary.stores.push({ name: "eBay", products: allCards.length, priced: ebayPriced, matched: ebayPriced, unmatched: 0 });
+    if (ebayRows.length > 0) {
+      await prisma.retailerPrice.deleteMany({ where: { retailer: "ebay" } });
+      await prisma.retailerPrice.createMany({ data: ebayRows });
+    } else {
+      console.warn("eBay returned 0 results (rate-limited?) — keeping existing eBay prices.");
+    }
+    summary.stores.push({ name: "eBay", products: allCards.length, priced: ebayRows.length, matched: ebayRows.length, unmatched: 0 });
   }
 
   // Recompute each card's lowest live price (prefer in-stock).

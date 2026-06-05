@@ -4,7 +4,7 @@ export const metadata = {
   title: "Deck Builder & Pricing — RiftCompareAU",
 };
 
-export default function DeckPage() {
+export default function DeckPage({ searchParams }: { searchParams: { list?: string } }) {
   return (
     <div>
       <div className="mb-5">
@@ -14,7 +14,7 @@ export default function DeckPage() {
           Australian price and a full deck total.
         </p>
       </div>
-      <DeckBuilder />
+      <DeckBuilder initialList={searchParams.list} />
     </div>
   );
 }

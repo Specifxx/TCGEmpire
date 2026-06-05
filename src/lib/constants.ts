@@ -107,10 +107,16 @@ export function rarityInfo(key: string): RarityInfo {
   return RARITIES[key] ?? RARITIES.Common;
 }
 
-// Overnumbered = collector number beyond the set's base count (e.g. 238/219) or
-// a "*" signature marker (e.g. 299*/298).
+// Signature = a "*" in the collector number (e.g. 223*/221). Takes precedence
+// over the plain overnumbered badge.
+export function isSignature(collectorNumber: string): boolean {
+  return collectorNumber.includes("*");
+}
+
+// Overnumbered = collector number beyond the set's base count (e.g. 238/219),
+// EXCLUDING signatures (those show the Signature badge instead).
 export function isOvernumbered(collectorNumber: string): boolean {
-  if (collectorNumber.includes("*")) return true;
+  if (collectorNumber.includes("*")) return false;
   const m = collectorNumber.match(/^(\d+)[a-z]?\/(\d+)/i);
   return m ? parseInt(m[1], 10) > parseInt(m[2], 10) : false;
 }

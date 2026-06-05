@@ -4,12 +4,28 @@ import NextTopLoader from "nextjs-toploader";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
-import { CONTACT_EMAIL } from "@/lib/site";
+import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "RiftCompareAU — Riftbound Card Database & Price Comparison",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "RiftCompareAU — Riftbound Card Database & Price Comparison",
+    template: "%s — RiftCompareAU",
+  },
   description:
     "Australia's Riftbound TCG card database. Browse every card and compare live prices across Australian stores to find the cheapest place to buy.",
+  applicationName: SITE_NAME,
+  keywords: ["Riftbound", "Riftbound TCG", "Riftbound prices", "Riftbound Australia", "League of Legends TCG", "card prices"],
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    url: SITE_URL,
+    title: "RiftCompareAU — Riftbound Card Database & Price Comparison",
+    description:
+      "Compare live Riftbound TCG card prices across Australian stores and find the cheapest place to buy.",
+  },
+  twitter: { card: "summary_large_image" },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

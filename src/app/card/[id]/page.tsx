@@ -1,13 +1,39 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { CardImage } from "@/components/CardImage";
-import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge } from "@/components/Badge";
-import { isOvernumbered } from "@/lib/constants";
+import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge } from "@/components/Badge";
+import { isOvernumbered, isSignature } from "@/lib/constants";
 import { WishlistButton } from "@/components/WishlistButton";
 import { formatAUD, timeAgo } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const card = await prisma.card.findUnique({
+    where: { id: params.id },
+    select: { name: true, setName: true, setCode: true, collectorNumber: true, lowestPriceCents: true, imageUrl: true, imageThumbUrl: true },
+  });
+  if (!card) return { title: "Card not found" };
+
+  const price = card.lowestPriceCents != null ? ` from ${formatAUD(card.lowestPriceCents)}` : "";
+  const title = `${card.name} (${card.setCode} ${card.collectorNumber}) — Riftbound price in Australia`;
+  const description = `Compare live Australian prices for ${card.name}, Riftbound ${card.setName} ${card.collectorNumber}${price}. Find the cheapest store to buy this card in Australia.`;
+  const image = card.imageUrl ?? card.imageThumbUrl ?? undefined;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: `/card/${params.id}` },
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      images: image ? [{ url: image }] : undefined,
+    },
+  };
+}
 
 export default async function CardPage({ params }: { params: { id: string } }) {
   const card = await prisma.card.findUnique({
@@ -25,8 +51,31 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     .map((p) => ({ ...p, delivered: p.priceCents + (p.shippingCents ?? 0) }))
     .sort((a, b) => a.priceCents - b.priceCents);
 
+  // Structured data so Google can show a rich price snippet ("$X, N stores").
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: card.name,
+    category: "Trading Card",
+    description: `${card.name} — Riftbound ${card.setName} (${card.setCode}) ${card.collectorNumber}. Compare Australian prices.`,
+    ...(card.imageUrl ? { image: card.imageUrl } : {}),
+    ...(prices.length && card.lowestPriceCents != null
+      ? {
+          offers: {
+            "@type": "AggregateOffer",
+            priceCurrency: "AUD",
+            lowPrice: (card.lowestPriceCents / 100).toFixed(2),
+            highPrice: (prices[prices.length - 1].priceCents / 100).toFixed(2),
+            offerCount: prices.length,
+            availability: "https://schema.org/InStock",
+          },
+        }
+      : {}),
+  };
+
   return (
     <div>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <Link href="/browse" className="mb-4 inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white">
         ← Back to database
       </Link>
@@ -47,6 +96,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               <RarityBadge rarity={card.rarity} />
               <span className="chip bg-ink-800 text-slate-300">{card.type}</span>
               <VariantBadge variant={card.variant} />
+              <SignatureBadge show={isSignature(card.collectorNumber)} />
               <OvernumberedBadge show={isOvernumbered(card.collectorNumber)} />
               <PromoBadge show={card.isPromo} />
             </div>

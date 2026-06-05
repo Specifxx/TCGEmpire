@@ -64,6 +64,19 @@ export function VariantBadge({ variant }: { variant?: string | null }) {
   );
 }
 
+export function SignatureBadge({ show }: { show?: boolean }) {
+  if (!show) return null;
+  return (
+    <span
+      className="chip font-semibold uppercase"
+      style={{ background: "linear-gradient(90deg,#f59e0b,#b45309)", color: "#fff" }}
+      title="Signature (artist-autographed overnumbered print)"
+    >
+      ✍ Signature
+    </span>
+  );
+}
+
 export function OvernumberedBadge({ show }: { show?: boolean }) {
   if (!show) return null;
   return (

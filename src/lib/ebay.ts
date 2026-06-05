@@ -17,6 +17,13 @@ export function isEbayEnabled(): boolean {
   return !!(process.env.EBAY_CLIENT_ID && process.env.EBAY_CLIENT_SECRET);
 }
 
+// Set when the Browse API returns 429 (daily quota exceeded). Importers check this
+// to abort the eBay pass early instead of firing ~950 doomed requests.
+let rateLimited = false;
+export function isEbayRateLimited(): boolean {
+  return rateLimited;
+}
+
 let cachedToken: { value: string; expires: number } | null = null;
 
 async function getToken(): Promise<string | null> {
@@ -93,6 +100,14 @@ function numberMatches(title: string, number: string, total: string, setCode: st
   return false;
 }
 
+// Is this listing a Signature print? ("223*" or signature/signed keywords)
+function titleIsSignature(title: string, n: number): boolean {
+  return (
+    /\bsignature\b|\bsigned\b|\bautograph|\bsig\b/i.test(title) ||
+    new RegExp(`\\b0*${n}\\s*\\*`).test(title)
+  );
+}
+
 // Lowest legitimate single-card AU listing for a specific card. Requires the
 // listing title to actually contain the card's name (rejects bundles/lots/wrong
 // cards) and excludes obvious multi-card/non-English listings.
@@ -101,6 +116,7 @@ export async function searchEbayLowest(card: {
   setCode: string;
   number: string;
   total: string;
+  isSignature: boolean;
 }): Promise<EbayResult | null> {
   const token = await getToken();
   if (!token) return null;
@@ -108,8 +124,10 @@ export async function searchEbayLowest(card: {
   const params = new URLSearchParams({
     // Include the collector number so the exact card ranks into the result window —
     // otherwise expensive chase cards (e.g. overnumbered) get pushed past the limit
-    // by cheap noise (keychains, bundles). Correctness still comes from the filters.
-    q: `${card.name} ${card.number.replace(/[^0-9]/g, "")} Riftbound`,
+    // by cheap noise (keychains, bundles). For Signature prints, also add the word
+    // "signature": they cost thousands, so a price-ascending search would otherwise
+    // bury the real listings past the 100-result window behind cheap base copies.
+    q: `${card.name} ${card.number.replace(/[^0-9]/g, "")}${card.isSignature ? " signature" : ""} Riftbound`,
     filter: "buyingOptions:{FIXED_PRICE}",
     sort: "price",
     limit: "100",
@@ -128,6 +146,10 @@ export async function searchEbayLowest(card: {
   } catch {
     return null;
   }
+  if (res.status === 429) {
+    rateLimited = true; // daily quota hit — stop the pass
+    return null;
+  }
   if (!res.ok) return null;
   const data = await res.json();
   const items: any[] = data.itemSummaries ?? [];
@@ -135,10 +157,13 @@ export async function searchEbayLowest(card: {
   // Accept only listings whose collector number matches THIS exact card+printing.
   // No name-only fallback — that mislabelled overnumbered/alt cards with the base
   // card's listing. The number is the reliable identity.
+  const n = parseInt(card.number.replace(/[^0-9]/g, ""), 10);
   const valid = items
     .filter((it) => it?.price?.value)
     .filter((it) => !EXCLUDE.test(it.title ?? ""))
     .filter((it) => numberMatches(it.title ?? "", card.number, card.total, card.setCode))
+    // Signature ("*") and plain overnumbered share a number — keep them apart.
+    .filter((it) => titleIsSignature(it.title ?? "", n) === card.isSignature)
     .sort((a, b) => delivered(a) - delivered(b));
 
   const best = valid[0];

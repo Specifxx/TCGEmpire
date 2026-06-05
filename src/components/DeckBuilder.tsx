@@ -1,8 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatAUD } from "@/lib/format";
+
+// UTF-8-safe base64 so a decklist (incl. accented names) survives a URL round-trip.
+function encodeList(text: string): string {
+  return btoa(unescape(encodeURIComponent(text)));
+}
+function decodeList(code: string): string {
+  try {
+    return decodeURIComponent(escape(atob(code)));
+  } catch {
+    return "";
+  }
+}
 
 interface Item {
   raw: string;
@@ -36,19 +48,21 @@ const SAMPLE = `1 Jinx, Loose Cannon
 2 Darius, Hand of Noxus
 3 Kai'Sa, Evolutionary`;
 
-export function DeckBuilder() {
-  const [text, setText] = useState("");
+export function DeckBuilder({ initialList }: { initialList?: string }) {
+  const [text, setText] = useState(() => (initialList ? decodeList(initialList) : ""));
   const [result, setResult] = useState<Result | null>(null);
   const [loading, setLoading] = useState(false);
+  const [shared, setShared] = useState(false);
+  const autoPriced = useRef(false);
 
-  async function price() {
-    if (!text.trim()) return;
+  async function price(deck: string = text) {
+    if (!deck.trim()) return;
     setLoading(true);
     try {
       const res = await fetch("/api/deck/price", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text: deck }),
       });
       setResult(await res.json());
     } catch {
@@ -56,6 +70,28 @@ export function DeckBuilder() {
     } finally {
       setLoading(false);
     }
+  }
+
+  // If the page was opened from a shared link, price the deck automatically once.
+  useEffect(() => {
+    if (!autoPriced.current && initialList && text.trim()) {
+      autoPriced.current = true;
+      void price(text);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function share() {
+    if (!text.trim()) return;
+    const url = `${window.location.origin}/deck?list=${encodeURIComponent(encodeList(text))}`;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      // Clipboard blocked — fall back to putting the link in the address bar.
+      window.history.replaceState(null, "", url);
+    }
+    setShared(true);
+    setTimeout(() => setShared(false), 2000);
   }
 
   return (
@@ -77,13 +113,22 @@ export function DeckBuilder() {
             className="input font-mono text-sm"
           />
           <div className="mt-3 flex gap-2">
-            <button onClick={price} disabled={loading || !text.trim()} className="btn-primary flex-1">
+            <button onClick={() => price()} disabled={loading || !text.trim()} className="btn-primary flex-1">
               {loading ? "Pricing…" : "Price this deck"}
             </button>
             <button onClick={() => setText(SAMPLE)} className="btn-ghost" type="button">
               Sample
             </button>
           </div>
+          <button
+            onClick={share}
+            disabled={!text.trim()}
+            type="button"
+            className="btn-ghost mt-2 w-full text-sm disabled:opacity-50"
+            title="Copy a link that loads and prices this exact list"
+          >
+            {shared ? "✓ Link copied!" : "🔗 Copy shareable link"}
+          </button>
         </div>
       </div>
 
