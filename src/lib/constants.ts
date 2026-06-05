@@ -41,6 +41,15 @@ export const CARD_TYPES = [
 ] as const;
 export type CardType = (typeof CARD_TYPES)[number];
 
+// Riftbound sets present in the catalogue.
+export const SETS: { code: string; name: string }[] = [
+  { code: "OGN", name: "Origins" },
+  { code: "OGS", name: "Origins: Proving Grounds" },
+  { code: "SFD", name: "Spirit Forged" },
+  { code: "UNL", name: "Unleashed" },
+  { code: "VEN", name: "Vengeance" },
+];
+
 export interface RarityInfo {
   key: string;
   label: string;

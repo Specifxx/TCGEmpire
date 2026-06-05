@@ -48,6 +48,22 @@ export function ConditionBadge({ condition }: { condition: string }) {
   );
 }
 
+export function VariantBadge({ variant }: { variant?: string | null }) {
+  if (!variant) return null;
+  return (
+    <span
+      className="chip font-semibold uppercase"
+      style={{
+        background: "linear-gradient(90deg,#f5a524,#f7c948)",
+        color: "#1a1206",
+      }}
+      title={`Alternate art (${variant})`}
+    >
+      Alt {variant}
+    </span>
+  );
+}
+
 export function FoilBadge() {
   return (
     <span

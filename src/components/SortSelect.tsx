@@ -3,16 +3,16 @@
 import { useRouter, useSearchParams } from "next/navigation";
 
 const OPTIONS = [
-  { value: "newest", label: "Newest listings" },
+  { value: "number", label: "Set & card number" },
+  { value: "name", label: "Name: A–Z" },
   { value: "price_asc", label: "Price: Low to High" },
   { value: "price_desc", label: "Price: High to Low" },
-  { value: "name", label: "Name: A–Z" },
 ];
 
 export function SortSelect() {
   const router = useRouter();
   const params = useSearchParams();
-  const current = params.get("sort") ?? "newest";
+  const current = params.get("sort") ?? "number";
 
   return (
     <select

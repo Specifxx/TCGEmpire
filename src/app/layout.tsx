@@ -1,30 +1,25 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
-import { getCurrentUser } from "@/lib/auth";
 
 export const metadata: Metadata = {
-  title: "TCGEmpire — Riftbound Marketplace (AU)",
+  title: "RiftEmpireAustralia — Riftbound Card Database & Price Comparison",
   description:
-    "Australia's marketplace for Riftbound trading cards. Buy and sell singles with confidence.",
+    "Australia's Riftbound TCG card database. Browse every card and compare live prices across Australian stores to find the cheapest place to buy.",
 };
 
-export default async function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const user = await getCurrentUser();
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en-AU">
       <body className="min-h-screen bg-ink-950">
-        <Navbar user={user} />
+        <Navbar />
         <main className="container-app py-6">{children}</main>
         <footer className="container-app border-t border-ink-800 py-8 text-center text-xs text-slate-500">
           <p>
-            TCGEmpire · Australia&apos;s Riftbound marketplace · MVP demo. Card
-            data is sample data for demonstration. Not affiliated with Riot
-            Games.
+            RiftEmpireAustralia · Riftbound card database &amp; price comparison for
+            Australia. Prices are sourced from public store listings and may be out
+            of date — always confirm on the retailer&apos;s site. Not affiliated with
+            or endorsed by Riot Games.
           </p>
         </footer>
       </body>

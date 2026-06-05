@@ -42,6 +42,8 @@ model Card {
   type            String
   // Common, Uncommon, Rare, Epic, Showcase
   rarity          String
+  // Alt-art / variant suffix from the card number, e.g. "a" for 112a. null = base art.
+  variant         String?
   orientation     String? // portrait | landscape
   energyCost      Int?
   might           Int?
@@ -55,13 +57,18 @@ model Card {
   blurDataUrl     String? // tiny base64 placeholder
   // Reference / market price in AUD cents, used as a default suggested price.
   marketPriceCents Int      @default(0)
+  // Lowest live retailer price across all sources (AUD cents), set by the price
+  // importer. Used for "from $X" and catalogue sorting. null = no price found.
+  lowestPriceCents Int?
   artSeed         Int       @default(0)
   createdAt       DateTime  @default(now())
 
   listings        Listing[]
   buyOrders       BuyOrder[]
+  retailerPrices  RetailerPrice[]
 
   @@index([setCode, collectorNumber])
+  @@index([lowestPriceCents])
   @@index([domain])
   @@index([rarity])
   @@index([type])
@@ -112,6 +119,30 @@ model BuyOrder {
   @@index([buyerId])
   @@index([status])
   @@index([maxPriceCents])
+}
+
+// A live price for a card at an external retailer, used for price comparison.
+// Populated by scripts/import-prices.ts from AU store feeds (Shopify products.json).
+model RetailerPrice {
+  id           String   @id @default(cuid())
+  cardId       String
+  retailer     String // store key, e.g. "cherry", "ozzie"
+  retailerName String // display name, e.g. "Cherry Collectables"
+  title        String // original product title at the retailer
+  url          String // outbound product link (affiliate-ready)
+  condition    String? // e.g. "Near Mint" where the retailer specifies it
+  isFoil       Boolean  @default(false)
+  priceCents   Int
+  currency     String   @default("AUD")
+  inStock      Boolean  @default(true)
+  lastSeen     DateTime @default(now())
+
+  card         Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@unique([cardId, retailer, condition, isFoil])
+  @@index([cardId])
+  @@index([retailer])
+  @@index([priceCents])
 }
 
 // A completed trade. Either a buyer hit a listing (kind LISTING) or a seller

@@ -98,24 +98,14 @@ async function main() {
   });
   console.log("Created demo account: demo@tcgempire.au / password123");
 
-  const sellers = [];
-  for (const s of SELLERS) {
-    sellers.push(
-      await prisma.user.create({
-        data: {
-          email: s.email,
-          passwordHash,
-          displayName: s.displayName,
-          balanceCents: Math.round(s.balance * 100),
-        },
-      })
-    );
-  }
-  const balance = new Map(sellers.map((s) => [s.id, s.balanceCents]));
-
   // ---- cards -----------------------------------------------------------------
-  const cardData = rsCards.map((c, i) => {
-    const total = c.id.split("-")[2] ?? "000";
+  const cardData = rsCards.map((c) => {
+    // The card id encodes the real collector number incl. alt-art suffix,
+    // e.g. "ogn-112a-298" -> number segment "112a", total "298".
+    const parts = c.id.split("-");
+    const numSeg = parts[1] ?? String(c.collector_number);
+    const total = parts[2] ?? "000";
+    const variant = numSeg.match(/^\d+([a-z]+)$/i)?.[1]?.toLowerCase() ?? null;
     const domain = c.faction === "colorless" ? "Colorless" : titleCase(c.faction);
     const rarity = titleCase(c.rarity);
     return {
@@ -123,7 +113,8 @@ async function main() {
       name: c.name,
       setCode: c.set_id,
       setName: SET_NAMES[c.set_id] ?? c.set_id,
-      collectorNumber: `${String(c.collector_number).padStart(3, "0")}/${total}`,
+      collectorNumber: `${numSeg}/${total}`,
+      variant,
       domain,
       type: c.type,
       rarity,
@@ -139,91 +130,14 @@ async function main() {
     };
   });
   await prisma.card.createMany({ data: cardData });
-  const cards = await prisma.card.findMany({
-    select: { id: true, rarity: true, type: true, marketPriceCents: true },
-  });
-  console.log(`Created ${cards.length} cards with real images.`);
+  const variants = cardData.filter((c) => c.variant).length;
+  console.log(`Created ${cardData.length} cards with real images (${variants} alt-art variants).`);
 
-  // ---- listings (deliberately sparse stock) ----------------------------------
-  const listingChance: Record<string, number> = {
-    Common: 0.55, Uncommon: 0.5, Rare: 0.42, Epic: 0.3, Showcase: 0.18,
-  };
-  const listingsData: any[] = [];
-  const cardsWithStock = new Set<string>();
-  for (const card of cards) {
-    if (rng() > (listingChance[card.rarity] ?? 0.4)) continue;
-    cardsWithStock.add(card.id);
-    const max = card.rarity === "Showcase" ? 1 : card.rarity === "Epic" ? 2 : 4;
-    const n = 1 + Math.floor(rng() * max);
-    for (let i = 0; i < n; i++) {
-      const condition = pick(CONDITIONS);
-      const isFoil = rng() < 0.15;
-      const base = card.marketPriceCents * CONDITION_MULT[condition];
-      const price = Math.max(
-        25,
-        Math.round((base * (isFoil ? between(1.6, 2.4) : 1) * between(0.9, 1.18)) / 5) * 5
-      );
-      listingsData.push({
-        cardId: card.id,
-        sellerId: pick(sellers).id,
-        condition,
-        isFoil,
-        priceCents: price,
-        quantity: 1 + Math.floor(rng() * 3),
-        status: "ACTIVE",
-      });
-    }
-  }
-  await prisma.listing.createMany({ data: listingsData });
-  console.log(
-    `Created ${listingsData.length} listings across ${cardsWithStock.size} cards ` +
-      `(${cards.length - cardsWithStock.size} cards have NO stock).`
-  );
-
-  // ---- buy orders (bids) — weighted toward out-of-stock cards -----------------
-  const buyOrdersData: any[] = [];
-  for (const card of cards) {
-    const hasStock = cardsWithStock.has(card.id);
-    const chance = hasStock ? 0.12 : 0.4; // demand concentrates where supply is missing
-    if (rng() > chance) continue;
-    const n = 1 + Math.floor(rng() < 0.3 ? 1 : 0);
-    for (let i = 0; i < n; i++) {
-      const buyer = pick(sellers);
-      const condition = rng() < 0.5 ? "NM" : pick(["ANY", "LP", "NM", "MP"]);
-      const isFoil = rng() < 0.12;
-      const qty = 1 + Math.floor(rng() * 2);
-      // Bids sit a bit below reference, as real bids do.
-      const bid = Math.max(
-        25,
-        Math.round((card.marketPriceCents * between(0.6, 1.0) * (isFoil ? 1.8 : 1)) / 5) * 5
-      );
-      const reserved = bid * qty;
-      const have = balance.get(buyer.id) ?? 0;
-      if (have < reserved) continue; // can't afford to escrow
-      balance.set(buyer.id, have - reserved);
-      buyOrdersData.push({
-        cardId: card.id,
-        buyerId: buyer.id,
-        condition,
-        isFoil,
-        maxPriceCents: bid,
-        quantity: qty,
-        quantityFilled: 0,
-        reservedCents: reserved,
-        status: "OPEN",
-      });
-    }
-  }
-  await prisma.buyOrder.createMany({ data: buyOrdersData });
-  // Persist escrow deductions.
-  for (const s of sellers) {
-    await prisma.user.update({
-      where: { id: s.id },
-      data: { balanceCents: balance.get(s.id) ?? s.balanceCents },
-    });
-  }
-  console.log(`Created ${buyOrdersData.length} open buy orders (bids) with escrow.`);
-  console.log("Seed complete ✔");
+  // NOTE: the peer-to-peer marketplace (listings + buy orders) is stashed while
+  // the site operates as a card database + price-comparison tool. The Listing /
+  // BuyOrder models and routes remain in place for a future revisit. Run the
+  // price importer to populate retailer prices:  npx tsx scripts/import-prices.ts
+  console.log("Seed complete ✔  (next: npx tsx scripts/import-prices.ts)");
 }
 
 main()
