@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import NextTopLoader from "nextjs-toploader";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
@@ -15,6 +16,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en-AU">
       <body className="min-h-screen bg-ink-950">
+        <NextTopLoader
+          color="#34d17e"
+          height={3}
+          showSpinner
+          shadow="0 0 10px #34d17e, 0 0 6px #34d17e"
+          easing="ease"
+          speed={300}
+        />
         <Navbar />
         <main className="container-app py-6">{children}</main>
         <footer className="container-app border-t border-ink-800 py-8 text-center text-xs text-slate-500">
