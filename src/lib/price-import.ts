@@ -17,8 +17,8 @@ export interface ImportSummary {
 }
 
 const SET_FROM_TITLE: [RegExp, string][] = [
-  [/proving grounds|\bOGS\b/i, "OGS"],
-  [/spirit forged|\bSFD\b/i, "SFD"],
+  [/proving\s*grounds|\bOGS\b/i, "OGS"],
+  [/spirit\s*forged|\bSFD\b/i, "SFD"],
   [/unleashed|\bUNL\b/i, "UNL"],
   [/vengeance|\bVEN\b/i, "VEN"],
   [/origins|\bOGN\b/i, "OGN"],
@@ -26,7 +26,7 @@ const SET_FROM_TITLE: [RegExp, string][] = [
 
 // Set/condition/qualifier tokens to strip when isolating the card name.
 const STOP =
-  /\b(riftbound|proving grounds|spirit forged|unleashed|vengeance|origins|showcase|signature|overnumbered|foil|holo(foil)?|near mint|lightly played|moderately played|heavily played|damaged|main set|the game|tcg|single)\b/gi;
+  /\b(riftbound|proving\s*grounds|spirit\s*forged|unleashed|vengeance|origins|showcase|signature|overnumbered|alternate\s*art|alt\s*art|foil|holo(foil)?|near mint|lightly played|moderately played|heavily played|damaged|main set|the game|tcg|single)\b/gi;
 
 function numKey(seg: string): string {
   const m = seg.match(/^0*(\d+)([a-z]*)/i);
@@ -41,12 +41,15 @@ function cleanProductName(title: string): string {
     .replace(/\[[^\]]*\]/g, " ")
     .replace(STOP, " ");
 }
-// Parse a collector number from any of: "(299*/298)", "(199/298)", "OGN-128/298".
+// Parse a collector number from any store title format, e.g.:
+//   "(299*/298)", "(053/219)", "OGN-128/298", "[OGN - 213/298]", "239*/221"
+// Keys are normalised via numKey so "039" and "39" compare equal (the leading-zero
+// bug that previously mis-assigned base cards to their alt-art printings).
 function parseNumber(title: string): { setCode: string | null; key: string } | null {
-  const pref = title.match(/\b([A-Z]{2,4})-(\d+)([a-z*]*)\s*\/\s*\d+/i);
-  if (pref) return { setCode: pref[1].toUpperCase(), key: pref[2] + pref[3].replace(/\*/g, "").toLowerCase() };
-  const bare = title.match(/\(?\s*(\d+)([a-z*]*)\s*\/\s*\d+\s*\)?/);
-  if (bare) return { setCode: null, key: bare[1] + bare[2].replace(/\*/g, "").toLowerCase() };
+  const pref = title.match(/\b([A-Za-z]{2,4})\s*-\s*(\d+)([a-z*]*)\s*\/\s*\d+/);
+  if (pref) return { setCode: pref[1].toUpperCase(), key: numKey(pref[2] + pref[3].replace(/\*/g, "")) };
+  const bare = title.match(/(\d+)([a-z*]*)\s*\/\s*\d+/);
+  if (bare) return { setCode: null, key: numKey(bare[1] + bare[2].replace(/\*/g, "")) };
   return null;
 }
 

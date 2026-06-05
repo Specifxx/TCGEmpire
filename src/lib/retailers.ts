@@ -52,6 +52,48 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     freeOverCents: 8000,
     shippingNote: "est. $2.50 · free over $80",
   },
+  adventurers: {
+    key: "adventurers",
+    name: "The Adventurers Guild",
+    base: "https://www.theadventurersguild.com.au",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  },
+  // NOTE: General Games' product feed reports every item as out-of-stock
+  // (a platform quirk), so it's excluded to honour the "no out-of-stock" rule.
+  // Re-add here if they expose reliable stock, or to show their prices anyway.
+  manamarket: {
+    key: "manamarket",
+    name: "Mana Market",
+    base: "https://manamarket.com.au",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 150,
+    freeOverCents: 3000,
+    shippingNote: "est. $1.50 · free over $30",
+  },
+  steelcity: {
+    key: "steelcity",
+    name: "Steel City Games",
+    base: "https://www.steelcitygames.com.au",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  },
+  cardbot: {
+    key: "cardbot",
+    name: "Cardbot",
+    base: "https://cardbot.com.au",
+    collections: ["riftbound-origins-singles"],
+    shippingFlatCents: 150,
+    freeOverCents: 3000,
+    shippingNote: "est. $1.50 · free over $30",
+  },
+  // Irresistible Force currently lists only events/tickets (no Riftbound singles
+  // feed) and The Card Hub Australia doesn't expose a usable products.json — add
+  // them here once a singles collection URL is available.
 };
 
 export const RETAILER_LIST = Object.values(RETAILERS);

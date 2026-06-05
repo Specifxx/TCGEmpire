@@ -6,6 +6,7 @@ import { Logo } from "@/components/Logo";
 import { AdSlot } from "@/components/AdSlot";
 import { CARD_TILE_SELECT } from "@/lib/cards";
 import { SETS, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
+import { RETAILER_LIST } from "@/lib/retailers";
 
 export const dynamic = "force-dynamic";
 
@@ -55,7 +56,7 @@ export default async function HomePage() {
           <div className="mx-auto mt-8 grid max-w-lg grid-cols-3 gap-4">
             <Stat value={totalCards.toLocaleString()} label="cards" />
             <Stat value={pricedCards.toLocaleString()} label="priced" />
-            <Stat value="4" label="AU stores" />
+            <Stat value={String(RETAILER_LIST.length)} label="AU stores" />
           </div>
         </div>
       </section>
