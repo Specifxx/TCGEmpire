@@ -5,6 +5,7 @@
 
 import { prisma } from "./db";
 import { RETAILER_LIST, RetailerInfo } from "./retailers";
+import { isEbayEnabled, searchEbayLowest } from "./ebay";
 
 interface ShopifyVariant { title: string; price: string; available: boolean }
 interface ShopifyProduct { title: string; handle: string; variants: ShopifyVariant[] }
@@ -224,6 +225,39 @@ export async function importPrices(): Promise<ImportSummary> {
     summary.stores.push({ name: store.name, products: products.length, priced: rows.size, matched, unmatched });
     summary.totalMatched += matched;
     summary.totalUnmatched += unmatched;
+  }
+
+  // ---- eBay AU (optional; only runs when EBAY_CLIENT_ID/SECRET are set) --------
+  if (isEbayEnabled()) {
+    await prisma.retailerPrice.deleteMany({ where: { retailer: "ebay" } });
+    const allCards = await prisma.card.findMany({
+      select: { id: true, name: true, setCode: true, collectorNumber: true },
+    });
+    let ebayPriced = 0;
+    for (const c of allCards) {
+      // e.g. "Jinx, Loose Cannon Riftbound OGN-251"
+      const num = c.collectorNumber.split("/")[0].replace(/\*/g, "");
+      const query = `${c.name} Riftbound ${c.setCode}-${num}`;
+      const r = await searchEbayLowest(query);
+      if (!r) continue;
+      await prisma.retailerPrice.create({
+        data: {
+          cardId: c.id,
+          retailer: "ebay",
+          retailerName: "eBay",
+          title: r.title,
+          url: r.url,
+          condition: r.condition ?? null,
+          isFoil: /foil/i.test(r.title),
+          priceCents: r.priceCents,
+          shippingCents: r.shippingCents,
+          currency: "AUD",
+          inStock: true,
+        },
+      });
+      ebayPriced++;
+    }
+    summary.stores.push({ name: "eBay", products: allCards.length, priced: ebayPriced, matched: ebayPriced, unmatched: 0 });
   }
 
   // Recompute each card's lowest live price (prefer in-stock).

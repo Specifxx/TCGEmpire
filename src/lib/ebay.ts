@@ -40,21 +40,31 @@ async function getToken(): Promise<string | null> {
 
 export interface EbayResult {
   priceCents: number;
+  shippingCents: number | null; // actual listing shipping (null if not provided)
   url: string;
   title: string;
   condition?: string;
 }
 
-// Lowest fixed-price AU listing for a card query (e.g. "Jinx Loose Cannon OGN-251").
+function shippingFromItem(item: any): number | null {
+  const opt = item?.shippingOptions?.[0];
+  if (!opt) return null;
+  const v = opt.shippingCost?.value;
+  if (v == null) return null;
+  return Math.round(parseFloat(v) * 100); // 0 = free shipping (eBay states it)
+}
+
+// Lowest fixed-price AU listing for a card query (e.g. "Jinx Loose Cannon Riftbound").
 export async function searchEbayLowest(query: string): Promise<EbayResult | null> {
   const token = await getToken();
   if (!token) return null;
 
   const params = new URLSearchParams({
     q: query,
+    // Fixed-price only; exclude obvious lots/bundles in the query itself.
     filter: "buyingOptions:{FIXED_PRICE}",
     sort: "price",
-    limit: "5",
+    limit: "10",
   });
   const headers: Record<string, string> = {
     Authorization: `Bearer ${token}`,
@@ -64,16 +74,27 @@ export async function searchEbayLowest(query: string): Promise<EbayResult | null
     headers["X-EBAY-C-ENDUSERCTX"] = `affiliateCampaignId=${process.env.EBAY_AFFILIATE_CAMPAIGN}`;
   }
 
-  const res = await fetch(`${SEARCH_URL}?${params}`, { headers });
+  let res: Response;
+  try {
+    res = await fetch(`${SEARCH_URL}?${params}`, { headers });
+  } catch {
+    return null;
+  }
   if (!res.ok) return null;
   const data = await res.json();
-  const item = data.itemSummaries?.[0];
-  if (!item?.price?.value) return null;
+  const items: any[] = data.itemSummaries ?? [];
+
+  // Skip listings that look like bundles/lots/sets to reduce noise.
+  const candidate = items.find(
+    (it) => it?.price?.value && !/\b(lot|bundle|set of|playset|x\d+|complete set|joblot)\b/i.test(it.title ?? "")
+  );
+  if (!candidate) return null;
 
   return {
-    priceCents: Math.round(parseFloat(item.price.value) * 100),
-    url: item.itemAffiliateWebUrl ?? item.itemWebUrl,
-    title: item.title,
-    condition: item.condition,
+    priceCents: Math.round(parseFloat(candidate.price.value) * 100),
+    shippingCents: shippingFromItem(candidate),
+    url: candidate.itemAffiliateWebUrl ?? candidate.itemWebUrl,
+    title: candidate.title,
+    condition: candidate.condition,
   };
 }

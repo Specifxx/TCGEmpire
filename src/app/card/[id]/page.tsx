@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { CardImage } from "@/components/CardImage";
 import { DomainBadge, RarityBadge, VariantBadge } from "@/components/Badge";
 import { WishlistButton } from "@/components/WishlistButton";
-import { shippingCents, deliveredCents } from "@/lib/retailers";
+import { shippingCents } from "@/lib/retailers";
 import { formatAUD, timeAgo } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -22,11 +22,12 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // Rank by estimated DELIVERED cost (item + shipping), since that's what the
   // buyer actually pays. Out-of-stock listings are already excluded at import.
   const prices = card.retailerPrices
-    .map((p) => ({
-      ...p,
-      ship: shippingCents(p.retailer),
-      delivered: deliveredCents(p.retailer, p.priceCents),
-    }))
+    .map((p) => {
+      // Use the listing's actual shipping if the source provided it (eBay),
+      // otherwise fall back to the per-store flat estimate.
+      const ship = p.shippingCents ?? shippingCents(p.retailer);
+      return { ...p, ship, delivered: p.priceCents + (ship ?? 0) };
+    })
     .sort((a, b) => a.delivered - b.delivered);
   const lowest = prices[0];
 
@@ -102,7 +103,13 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                         {p.condition && <span className="chip bg-ink-800 text-slate-300">{p.condition}</span>}
                         <span className="text-brand-400">● In stock</span>
                         <span>
-                          {p.ship == null ? "shipping unknown" : `+ ~${formatAUD(p.ship)} ship (est.)`}
+                          {p.shippingCents != null
+                            ? p.shippingCents === 0
+                              ? "+ free shipping"
+                              : `+ ${formatAUD(p.shippingCents)} shipping`
+                            : p.ship == null
+                            ? "shipping unknown"
+                            : `+ ~${formatAUD(p.ship)} ship (est.)`}
                         </span>
                       </div>
                     </div>

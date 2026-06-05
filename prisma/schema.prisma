@@ -149,6 +149,9 @@ model RetailerPrice {
   condition    String? // e.g. "Near Mint" where the retailer specifies it
   isFoil       Boolean  @default(false)
   priceCents   Int
+  // Actual shipping for this listing where the source provides it (e.g. eBay).
+  // null = use the per-store flat estimate instead.
+  shippingCents Int?
   currency     String   @default("AUD")
   inStock      Boolean  @default(true)
   lastSeen     DateTime @default(now())
