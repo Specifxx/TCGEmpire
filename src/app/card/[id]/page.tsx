@@ -64,7 +64,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <Metric label="Cheapest delivered" value={lowest ? formatAUD(lowest.delivered) : "—"} highlight />
+              <Metric label="Cheapest price" value={lowest ? formatAUD(lowest.priceCents) : "—"} highlight />
               <Metric label="In stock at" value={`${prices.length} ${prices.length === 1 ? "store" : "stores"}`} />
               {card.energyCost != null && <Metric label="Energy" value={String(card.energyCost)} />}
               {card.might != null && <Metric label="Might" value={String(card.might)} />}
@@ -102,7 +102,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                         {p.condition && <span className="chip bg-ink-800 text-slate-300">{p.condition}</span>}
                         <span className="text-brand-400">● In stock</span>
                         <span>
-                          + {p.ship === 0 ? "free ship" : `${formatAUD(p.ship)} ship`}
+                          {p.ship == null ? "shipping unknown" : `+ ~${formatAUD(p.ship)} ship (est.)`}
                         </span>
                       </div>
                     </div>
@@ -110,9 +110,11 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                       <div className={`text-lg font-bold ${i === 0 ? "text-accent" : "text-white"}`}>
                         {formatAUD(p.priceCents)}
                       </div>
-                      <div className="text-[11px] text-slate-400">
-                        ≈ {formatAUD(p.delivered)} delivered
-                      </div>
+                      {p.ship != null && (
+                        <div className="text-[11px] text-slate-400">
+                          ≈ {formatAUD(p.delivered)} delivered
+                        </div>
+                      )}
                     </div>
                     <a
                       href={p.url}

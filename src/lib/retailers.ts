@@ -160,14 +160,19 @@ export const RETAILERS: Record<string, RetailerInfo> = {
 
 export const RETAILER_LIST = Object.values(RETAILERS);
 
-// Estimated postage to add for a single card at the given price.
-export function shippingCents(retailerKey: string, priceCents: number): number {
+// Estimated postage for a single card, or null when we can't confidently say.
+// We don't have each store's real shipping rules, so anything at/above the
+// estimated free-shipping threshold is reported as UNKNOWN rather than claiming
+// "free". A flat estimate is only returned below that threshold.
+export function shippingCents(retailerKey: string, priceCents: number): number | null {
   const r = RETAILERS[retailerKey];
-  if (!r) return 0;
-  return priceCents >= r.freeOverCents ? 0 : r.shippingFlatCents;
+  if (!r) return null;
+  if (priceCents >= r.freeOverCents) return null;
+  return r.shippingFlatCents;
 }
 
-// Estimated total delivered cost (item + shipping).
+// Estimated delivered cost (item + known shipping). Unknown shipping counts as 0
+// for ranking purposes only — the UI shows "shipping unknown", not "free".
 export function deliveredCents(retailerKey: string, priceCents: number): number {
-  return priceCents + shippingCents(retailerKey, priceCents);
+  return priceCents + (shippingCents(retailerKey, priceCents) ?? 0);
 }
