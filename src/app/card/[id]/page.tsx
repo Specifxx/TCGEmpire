@@ -33,7 +33,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
 
   return (
     <div>
-      <Link href="/" className="mb-4 inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white">
+      <Link href="/browse" className="mb-4 inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white">
         ← Back to database
       </Link>
 

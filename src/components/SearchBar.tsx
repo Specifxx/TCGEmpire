@@ -67,7 +67,7 @@ export function SearchBar() {
     if (active >= 0 && results[active]) return go(results[active].id);
     if (value.trim()) {
       setOpen(false);
-      router.push(`/?q=${encodeURIComponent(value.trim())}`);
+      router.push(`/browse?q=${encodeURIComponent(value.trim())}`);
     }
   }
 

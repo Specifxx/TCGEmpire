@@ -21,7 +21,7 @@ export function SortSelect() {
         const next = new URLSearchParams(Array.from(params.entries()));
         next.set("sort", e.target.value);
         next.delete("page");
-        router.push(`/?${next.toString()}`);
+        router.push(`/browse?${next.toString()}`);
       }}
       className="input w-auto cursor-pointer"
       aria-label="Sort listings"

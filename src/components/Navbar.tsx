@@ -22,8 +22,11 @@ export function Navbar() {
 
         {/* Nav */}
         <nav className="flex items-center gap-1">
-          <Link href="/" className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-ink-800 hover:text-white">
+          <Link href="/browse" className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-ink-800 hover:text-white">
             Database
+          </Link>
+          <Link href="/deck" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-ink-800 hover:text-white sm:block">
+            Deck Builder
           </Link>
           <Link
             href="/wishlist"

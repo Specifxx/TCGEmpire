@@ -29,7 +29,7 @@ export function Filters() {
     const next = new URLSearchParams(Array.from(params.entries()));
     mutate(next);
     next.delete("page");
-    router.push(`/?${next.toString()}`);
+    router.push(`/browse?${next.toString()}`);
   }
 
   function isActive(key: string, value: string) {
@@ -58,7 +58,7 @@ export function Filters() {
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-bold uppercase tracking-wide text-slate-300">Filters</h2>
           {activeCount > 0 && (
-            <button onClick={() => router.push("/")} className="text-xs text-brand-400 hover:underline">
+            <button onClick={() => router.push("/browse")} className="text-xs text-brand-400 hover:underline">
               Clear ({activeCount})
             </button>
           )}

@@ -34,7 +34,7 @@ export default async function WishlistPage() {
           <p className="mt-1 text-sm text-slate-400">
             Tap the ♥ on any card to add it here and track its price.
           </p>
-          <Link href="/" className="btn-primary mt-4">Browse cards</Link>
+          <Link href="/browse" className="btn-primary mt-4">Browse cards</Link>
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
