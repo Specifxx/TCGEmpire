@@ -124,6 +124,19 @@ model BuyOrder {
   @@index([maxPriceCents])
 }
 
+// Feedback / contact-form submissions. Saved here as a backup and forwarded by
+// email to the site owner.
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String?
+  message   String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
 // A live price for a card at an external retailer, used for price comparison.
 // Populated by scripts/import-prices.ts from AU store feeds (Shopify products.json).
 model RetailerPrice {
