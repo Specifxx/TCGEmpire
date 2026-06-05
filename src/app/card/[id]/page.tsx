@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { CardImage } from "@/components/CardImage";
 import { DomainBadge, RarityBadge, VariantBadge } from "@/components/Badge";
-import { AdSlot } from "@/components/AdSlot";
 import { WishlistButton } from "@/components/WishlistButton";
 import { shippingCents, deliveredCents } from "@/lib/retailers";
 import { formatAUD, timeAgo } from "@/lib/format";
@@ -43,7 +42,6 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           <div className="card-surface mx-auto max-w-[320px] p-4">
             <CardImage card={card} full className="aspect-[5/7] w-full" />
           </div>
-          <AdSlot className="mx-auto mt-4 max-w-[320px]" height={250} label="Advertisement" />
         </div>
 
         {/* Details + price comparison */}

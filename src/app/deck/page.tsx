@@ -1,5 +1,4 @@
 import { DeckBuilder } from "@/components/DeckBuilder";
-import { AdSlot } from "@/components/AdSlot";
 
 export const metadata = {
   title: "Deck Builder & Pricing — RiftCompareAU",
@@ -15,7 +14,6 @@ export default function DeckPage() {
           Australian price and a full deck total.
         </p>
       </div>
-      <AdSlot className="mb-5" height={90} />
       <DeckBuilder />
     </div>
   );

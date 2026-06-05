@@ -147,6 +147,15 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     freeOverCents: 5000,
     shippingNote: "est. $2.00 · free over $50",
   },
+  spellroo: {
+    key: "spellroo",
+    name: "Spellroo Gaming",
+    base: "https://spellroogaming.com.au",
+    collections: ["riftbound-league-of-legends-tcg-singles"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  },
 };
 
 export const RETAILER_LIST = Object.values(RETAILERS);

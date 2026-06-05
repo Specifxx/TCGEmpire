@@ -3,7 +3,6 @@ import { prisma } from "@/lib/db";
 import { CardTile } from "@/components/CardTile";
 import { SearchBar } from "@/components/SearchBar";
 import { Logo } from "@/components/Logo";
-import { AdSlot } from "@/components/AdSlot";
 import { CARD_TILE_SELECT } from "@/lib/cards";
 import { SETS, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
 
@@ -61,8 +60,6 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-
-      <AdSlot height={90} />
 
       {/* Most valuable */}
       <section>

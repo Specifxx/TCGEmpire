@@ -3,7 +3,6 @@ import { prisma } from "@/lib/db";
 import { Filters } from "@/components/Filters";
 import { SortSelect } from "@/components/SortSelect";
 import { CardTile } from "@/components/CardTile";
-import { AdSlot } from "@/components/AdSlot";
 import {
   buildCardOrderBy,
   buildCardWhere,
@@ -49,8 +48,6 @@ export default async function BrowsePage({
       <Filters />
 
       <section className="min-w-0 flex-1">
-        <AdSlot className="mb-5" height={90} />
-
         <div className="mb-4 flex items-center justify-between gap-3">
           <p className="text-sm text-slate-400">
             <span className="font-semibold text-white">{total.toLocaleString()}</span>{" "}
