@@ -1,0 +1,64 @@
+import { conditionInfo, domainInfo, rarityInfo } from "@/lib/constants";
+
+function hexWithAlpha(hex: string, alpha: number): string {
+  const a = Math.round(alpha * 255)
+    .toString(16)
+    .padStart(2, "0");
+  return `${hex}${a}`;
+}
+
+export function DomainBadge({ domain }: { domain: string }) {
+  const d = domainInfo(domain);
+  return (
+    <span
+      className="chip"
+      style={{ backgroundColor: hexWithAlpha(d.color, 0.18), color: d.color }}
+    >
+      <span
+        className="h-2 w-2 rounded-full"
+        style={{ backgroundColor: d.color }}
+      />
+      {d.label}
+    </span>
+  );
+}
+
+export function RarityBadge({ rarity }: { rarity: string }) {
+  const r = rarityInfo(rarity);
+  return (
+    <span
+      className="chip"
+      style={{ backgroundColor: hexWithAlpha(r.color, 0.16), color: r.color }}
+    >
+      {r.label}
+    </span>
+  );
+}
+
+export function ConditionBadge({ condition }: { condition: string }) {
+  const c = conditionInfo(condition);
+  return (
+    <span
+      className="chip"
+      style={{ backgroundColor: hexWithAlpha(c.color, 0.16), color: c.color }}
+      title={c.full}
+    >
+      {c.label}
+    </span>
+  );
+}
+
+export function FoilBadge() {
+  return (
+    <span
+      className="chip font-semibold"
+      style={{
+        background:
+          "linear-gradient(90deg,#ff0080,#ffea00,#00ffd5,#7a5cff,#ff0080)",
+        color: "#0a0d13",
+      }}
+    >
+      ✦ Foil
+    </span>
+  );
+}

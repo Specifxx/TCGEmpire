@@ -1,0 +1,137 @@
+// TCGEmpire — Riftbound marketplace database schema
+// SQLite for local MVP. Enums are represented as Strings because the SQLite
+// connector does not support native enums; allowed values are validated in app code.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  displayName  String
+  // Wallet balance in AUD cents (e.g. 25000 = $250.00).
+  // Funds committed to open buy orders are moved out of balance and held as
+  // escrow on the BuyOrder (reservedCents) until the order fills or is cancelled.
+  balanceCents Int       @default(0)
+  isAdmin      Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+
+  listings     Listing[]
+  buyOrders    BuyOrder[]
+  purchases    Order[]   @relation("BuyerOrders")
+  sales        Order[]   @relation("SellerOrders")
+}
+
+model Card {
+  id              String    @id @default(cuid())
+  externalId      String?   @unique // RiftScribe id, e.g. "ogn-001-298"
+  name            String
+  setCode         String // e.g. "OGN"
+  setName         String // e.g. "Origins"
+  collectorNumber String // e.g. "001/298"
+  // One of the Riftbound domains: Fury, Calm, Mind, Body, Chaos, Order, Colorless
+  domain          String
+  // Unit, Spell, Gear, Rune, Battlefield, Legend
+  type            String
+  // Common, Uncommon, Rare, Epic, Showcase
+  rarity          String
+  orientation     String? // portrait | landscape
+  energyCost      Int?
+  might           Int?
+  power           Int?
+  tags            String? // comma-separated keyword tags
+  description     String?
+  flavorText      String?
+  // Real card images (RiftScribe CDN). Falls back to generated SVG art if null.
+  imageUrl        String? // full-resolution
+  imageThumbUrl   String? // smaller webp for grids
+  blurDataUrl     String? // tiny base64 placeholder
+  // Reference / market price in AUD cents, used as a default suggested price.
+  marketPriceCents Int      @default(0)
+  artSeed         Int       @default(0)
+  createdAt       DateTime  @default(now())
+
+  listings        Listing[]
+  buyOrders       BuyOrder[]
+
+  @@index([setCode, collectorNumber])
+  @@index([domain])
+  @@index([rarity])
+  @@index([type])
+}
+
+// A seller's offer to sell (the "ask" side of the book).
+model Listing {
+  id          String   @id @default(cuid())
+  cardId      String
+  sellerId    String
+  condition   String // NM, LP, MP, HP, DMG
+  isFoil      Boolean  @default(false)
+  priceCents  Int
+  quantity    Int      @default(1)
+  status      String   @default("ACTIVE") // ACTIVE, SOLD, CANCELLED
+  createdAt   DateTime @default(now())
+
+  card        Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  seller      User     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  orders      Order[]
+
+  @@index([cardId])
+  @@index([sellerId])
+  @@index([status])
+  @@index([priceCents])
+}
+
+// A buyer's standing request to buy (the "bid" side of the book). Lets demand
+// exist even when there is zero stock — any seller can fill it.
+model BuyOrder {
+  id             String   @id @default(cuid())
+  cardId         String
+  buyerId        String
+  condition      String // desired condition: NM, LP, MP, HP, DMG, or ANY
+  isFoil         Boolean  @default(false)
+  maxPriceCents  Int // bid price the buyer will pay per copy
+  quantity       Int      @default(1)
+  quantityFilled Int      @default(0)
+  reservedCents  Int      @default(0) // escrowed funds still held for unfilled copies
+  status         String   @default("OPEN") // OPEN, FILLED, CANCELLED
+  createdAt      DateTime @default(now())
+
+  card           Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  buyer          User     @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  fills          Order[]
+
+  @@index([cardId])
+  @@index([buyerId])
+  @@index([status])
+  @@index([maxPriceCents])
+}
+
+// A completed trade. Either a buyer hit a listing (kind LISTING) or a seller
+// filled a buy order (kind BUYORDER).
+model Order {
+  id           String   @id @default(cuid())
+  kind         String   @default("LISTING") // LISTING | BUYORDER
+  listingId    String?
+  buyOrderId   String?
+  buyerId      String
+  sellerId     String
+  quantity     Int      @default(1)
+  totalCents   Int
+  createdAt    DateTime @default(now())
+
+  listing      Listing?  @relation(fields: [listingId], references: [id])
+  buyOrder     BuyOrder? @relation(fields: [buyOrderId], references: [id])
+  buyer        User      @relation("BuyerOrders", fields: [buyerId], references: [id])
+  seller       User      @relation("SellerOrders", fields: [sellerId], references: [id])
+
+  @@index([buyerId])
+  @@index([sellerId])
+}
