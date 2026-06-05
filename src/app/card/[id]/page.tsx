@@ -4,7 +4,6 @@ import { prisma } from "@/lib/db";
 import { CardImage } from "@/components/CardImage";
 import { DomainBadge, RarityBadge, VariantBadge } from "@/components/Badge";
 import { WishlistButton } from "@/components/WishlistButton";
-import { shippingCents } from "@/lib/retailers";
 import { formatAUD, timeAgo } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -19,15 +18,10 @@ export default async function CardPage({ params }: { params: { id: string } }) {
 
   if (!card) notFound();
 
-  // Rank by estimated DELIVERED cost (item + shipping), since that's what the
-  // buyer actually pays. Out-of-stock listings are already excluded at import.
+  // Rank by delivered cost where we KNOW the shipping (eBay), else by item price.
+  // We never show estimated shipping — only an actual, confirmed shipping cost.
   const prices = card.retailerPrices
-    .map((p) => {
-      // Use the listing's actual shipping if the source provided it (eBay),
-      // otherwise fall back to the per-store flat estimate.
-      const ship = p.shippingCents ?? shippingCents(p.retailer);
-      return { ...p, ship, delivered: p.priceCents + (ship ?? 0) };
-    })
+    .map((p) => ({ ...p, delivered: p.priceCents + (p.shippingCents ?? 0) }))
     .sort((a, b) => a.delivered - b.delivered);
   const lowest = prices[0];
 
@@ -102,22 +96,18 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                       <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-slate-500">
                         {p.condition && <span className="chip bg-ink-800 text-slate-300">{p.condition}</span>}
                         <span className="text-brand-400">● In stock</span>
-                        <span>
-                          {p.shippingCents != null
-                            ? p.shippingCents === 0
-                              ? "+ free shipping"
-                              : `+ ${formatAUD(p.shippingCents)} shipping`
-                            : p.ship == null
-                            ? "shipping unknown"
-                            : `+ ~${formatAUD(p.ship)} ship (est.)`}
-                        </span>
+                        {p.shippingCents != null && (
+                          <span>
+                            {p.shippingCents === 0 ? "+ free shipping" : `+ ${formatAUD(p.shippingCents)} shipping`}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="text-right">
                       <div className={`text-lg font-bold ${i === 0 ? "text-accent" : "text-white"}`}>
                         {formatAUD(p.priceCents)}
                       </div>
-                      {p.ship != null && (
+                      {p.shippingCents != null && (
                         <div className="text-[11px] text-slate-400">
                           ≈ {formatAUD(p.delivered)} delivered
                         </div>

@@ -18,12 +18,21 @@ function toggleCsv(current: string | null, value: string): string {
   return Array.from(set).join(",");
 }
 
+function Chevron({ open }: { open: boolean }) {
+  return (
+    <svg className={`h-3.5 w-3.5 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
+
 export function Filters() {
   const router = useRouter();
   const params = useSearchParams();
 
   const [min, setMin] = useState(params.get("min") ?? "");
   const [max, setMax] = useState(params.get("max") ?? "");
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   function update(mutate: (p: URLSearchParams) => void) {
     const next = new URLSearchParams(Array.from(params.entries()));
@@ -54,87 +63,120 @@ export function Filters() {
 
   return (
     <aside className="w-full shrink-0 lg:w-64">
-      <div className="card-surface sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto p-4">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-bold uppercase tracking-wide text-slate-300">Filters</h2>
+      {/* Mobile toggle */}
+      <button
+        onClick={() => setMobileOpen((o) => !o)}
+        className="mb-3 flex w-full items-center justify-between rounded-lg border border-ink-700 bg-ink-850 px-4 py-2.5 text-sm font-semibold text-white lg:hidden"
+      >
+        <span className="flex items-center gap-2">
+          Filters
           {activeCount > 0 && (
-            <button onClick={() => router.push("/browse")} className="text-xs text-brand-400 hover:underline">
-              Clear ({activeCount})
-            </button>
+            <span className="rounded-full bg-brand-500 px-2 py-0.5 text-xs">{activeCount}</span>
           )}
+        </span>
+        <Chevron open={mobileOpen} />
+      </button>
+
+      <div className={`${mobileOpen ? "block" : "hidden"} lg:block`}>
+        <div className="card-surface lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto p-4">
+          <div className="mb-1 flex items-center justify-between">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-slate-300">Filters</h2>
+            {activeCount > 0 && (
+              <button onClick={() => router.push("/browse")} className="text-xs text-brand-400 hover:underline">
+                Clear ({activeCount})
+              </button>
+            )}
+          </div>
+
+          <Section title="Price (AUD)" defaultOpen>
+            <div className="flex items-center gap-2">
+              <input type="number" placeholder="Min" value={min} onChange={(e) => setMin(e.target.value)} className="input" />
+              <span className="text-slate-500">–</span>
+              <input type="number" placeholder="Max" value={max} onChange={(e) => setMax(e.target.value)} className="input" />
+            </div>
+            <button
+              onClick={() =>
+                update((p) => {
+                  if (min) p.set("min", min); else p.delete("min");
+                  if (max) p.set("max", max); else p.delete("max");
+                })
+              }
+              className="btn-ghost mt-2 w-full"
+            >
+              Apply
+            </button>
+            <Check
+              className="mt-2"
+              checked={params.get("priced") === "1"}
+              onChange={() => update((p) => (p.get("priced") === "1" ? p.delete("priced") : p.set("priced", "1")))}
+              label="Only cards with a price"
+            />
+          </Section>
+
+          <Section title="Set" defaultOpen>
+            <div className="flex flex-col gap-1">
+              {SETS.map((s) => (
+                <Check key={s.code} checked={isActive("set", s.code)} onChange={() => update((p) => setCsv(p, "set", s.code))} label={`${s.name} (${s.code})`} />
+              ))}
+            </div>
+          </Section>
+
+          <Section title="Domain">
+            <div className="flex flex-col gap-1">
+              {DOMAIN_KEYS.map((k) => {
+                const d = domainInfo(k);
+                return <Check key={k} checked={isActive("domain", k)} onChange={() => update((p) => setCsv(p, "domain", k))} label={d.label} dot={d.color} />;
+              })}
+            </div>
+          </Section>
+
+          <Section title="Rarity">
+            <div className="flex flex-col gap-1">
+              {RARITY_KEYS.map((k) => (
+                <Check key={k} checked={isActive("rarity", k)} onChange={() => update((p) => setCsv(p, "rarity", k))} label={k} dot={rarityInfo(k).color} />
+              ))}
+            </div>
+          </Section>
+
+          <Section title="Card type">
+            <div className="flex flex-col gap-1">
+              {CARD_TYPES.map((k) => (
+                <Check key={k} checked={isActive("type", k)} onChange={() => update((p) => setCsv(p, "type", k))} label={k} />
+              ))}
+            </div>
+          </Section>
+
+          <Section title="Art" last>
+            <Check checked={params.get("variant") === "alt"} onChange={() => update((p) => (p.get("variant") === "alt" ? p.delete("variant") : p.set("variant", "alt")))} label="Alternate art only" dot="#f5a524" />
+          </Section>
         </div>
-
-        <Section title="Price (AUD)">
-          <div className="flex items-center gap-2">
-            <input type="number" placeholder="Min" value={min} onChange={(e) => setMin(e.target.value)} className="input" />
-            <span className="text-slate-500">–</span>
-            <input type="number" placeholder="Max" value={max} onChange={(e) => setMax(e.target.value)} className="input" />
-          </div>
-          <button
-            onClick={() =>
-              update((p) => {
-                if (min) p.set("min", min); else p.delete("min");
-                if (max) p.set("max", max); else p.delete("max");
-              })
-            }
-            className="btn-ghost mt-2 w-full"
-          >
-            Apply
-          </button>
-          <Check
-            className="mt-2"
-            checked={params.get("priced") === "1"}
-            onChange={() => update((p) => (p.get("priced") === "1" ? p.delete("priced") : p.set("priced", "1")))}
-            label="Only cards with a price"
-          />
-        </Section>
-
-        <Section title="Set">
-          <div className="flex flex-col gap-1">
-            {SETS.map((s) => (
-              <Check key={s.code} checked={isActive("set", s.code)} onChange={() => update((p) => setCsv(p, "set", s.code))} label={`${s.name} (${s.code})`} />
-            ))}
-          </div>
-        </Section>
-
-        <Section title="Domain">
-          <div className="flex flex-col gap-1">
-            {DOMAIN_KEYS.map((k) => {
-              const d = domainInfo(k);
-              return <Check key={k} checked={isActive("domain", k)} onChange={() => update((p) => setCsv(p, "domain", k))} label={d.label} dot={d.color} />;
-            })}
-          </div>
-        </Section>
-
-        <Section title="Rarity">
-          <div className="flex flex-col gap-1">
-            {RARITY_KEYS.map((k) => (
-              <Check key={k} checked={isActive("rarity", k)} onChange={() => update((p) => setCsv(p, "rarity", k))} label={k} dot={rarityInfo(k).color} />
-            ))}
-          </div>
-        </Section>
-
-        <Section title="Card type">
-          <div className="flex flex-col gap-1">
-            {CARD_TYPES.map((k) => (
-              <Check key={k} checked={isActive("type", k)} onChange={() => update((p) => setCsv(p, "type", k))} label={k} />
-            ))}
-          </div>
-        </Section>
-
-        <Section title="Art" last>
-          <Check checked={params.get("variant") === "alt"} onChange={() => update((p) => (p.get("variant") === "alt" ? p.delete("variant") : p.set("variant", "alt")))} label="Alternate art only" dot="#f5a524" />
-        </Section>
       </div>
     </aside>
   );
 }
 
-function Section({ title, children, last }: { title: string; children: React.ReactNode; last?: boolean }) {
+function Section({
+  title,
+  children,
+  defaultOpen = false,
+  last,
+}: {
+  title: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+  last?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className={last ? "pt-3" : "border-b border-ink-700 pb-3 pt-3"}>
-      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">{title}</h3>
-      {children}
+    <div className={last ? "" : "border-b border-ink-700"}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center justify-between py-3 text-xs font-semibold uppercase tracking-wide text-slate-400 hover:text-slate-200"
+      >
+        {title}
+        <Chevron open={open} />
+      </button>
+      {open && <div className="pb-3">{children}</div>}
     </div>
   );
 }

@@ -60,7 +60,7 @@ const SET_NAMES: Record<string, string> = {
   OGS: "Origins: Proving Grounds",
   SFD: "Spirit Forged",
   UNL: "Unleashed",
-  VEN: "Vengeance",
+  VEN: "Vendetta",
 };
 
 // Synthesised reference prices (AUD cents) by rarity — RiftScribe has no prices.

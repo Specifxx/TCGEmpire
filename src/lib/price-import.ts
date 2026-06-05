@@ -21,7 +21,7 @@ const SET_FROM_TITLE: [RegExp, string][] = [
   [/proving\s*grounds|\bOGS\b/i, "OGS"],
   [/spirit\s*forged|\bSFD\b/i, "SFD"],
   [/unleashed|\bUNL\b/i, "UNL"],
-  [/vengeance|\bVEN\b/i, "VEN"],
+  [/vendetta|vengeance|\bVEN\b/i, "VEN"],
   [/origins|\bOGN\b/i, "OGN"],
 ];
 
@@ -235,10 +235,8 @@ export async function importPrices(): Promise<ImportSummary> {
     });
     let ebayPriced = 0;
     for (const c of allCards) {
-      // e.g. "Jinx, Loose Cannon Riftbound OGN-251"
       const num = c.collectorNumber.split("/")[0].replace(/\*/g, "");
-      const query = `${c.name} Riftbound ${c.setCode}-${num}`;
-      const r = await searchEbayLowest(query);
+      const r = await searchEbayLowest({ name: c.name, setCode: c.setCode, number: num });
       if (!r) continue;
       await prisma.retailerPrice.create({
         data: {

@@ -41,13 +41,13 @@ export const CARD_TYPES = [
 ] as const;
 export type CardType = (typeof CARD_TYPES)[number];
 
-// Riftbound sets present in the catalogue.
-export const SETS: { code: string; name: string }[] = [
+// Riftbound sets. `comingSoon` sets aren't released yet (no cards/prices).
+export const SETS: { code: string; name: string; comingSoon?: boolean }[] = [
   { code: "OGN", name: "Origins" },
   { code: "OGS", name: "Origins: Proving Grounds" },
   { code: "SFD", name: "Spirit Forged" },
   { code: "UNL", name: "Unleashed" },
-  { code: "VEN", name: "Vengeance" },
+  { code: "VEN", name: "Vendetta", comingSoon: true },
 ];
 
 export interface RarityInfo {
