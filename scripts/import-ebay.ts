@@ -59,7 +59,9 @@ async function main() {
   }
   console.log(`Created ${count} eBay prices.`);
 
-  // Recompute each card's lowest live price including eBay.
+  // Recompute each card's lowest live price including eBay. Reset all first so a
+  // card that lost its only price (e.g. a removed bad eBay match) goes back to null.
+  await prisma.card.updateMany({ data: { lowestPriceCents: null } });
   const priced = await prisma.retailerPrice.groupBy({ by: ["cardId"], _min: { priceCents: true } });
   for (const row of priced) {
     const inStockMin = await prisma.retailerPrice.aggregate({
