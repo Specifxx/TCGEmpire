@@ -138,11 +138,14 @@ async function main() {
 
   // ---- cards -----------------------------------------------------------------
   const cardData = rsCards.map((c) => {
-    // The card id encodes the real collector number incl. alt-art suffix,
-    // e.g. "ogn-112a-298" -> number segment "112a", total "298".
+    // The card id encodes the real collector number. Formats:
+    //   "ogn-112a-298"      -> 112a/298  (alt-art letter in the number segment)
+    //   "unl-231-star-219"  -> 231*/219  (signature/overnumbered "star" card)
     const parts = c.id.split("-");
+    const isStar = parts[2] === "star";
     const numSeg = parts[1] ?? String(c.collector_number);
-    const total = parts[2] ?? "000";
+    const total = (isStar ? parts[3] : parts[2]) ?? "000";
+    const collectorNumber = isStar ? `${numSeg}*/${total}` : `${numSeg}/${total}`;
     const variant = numSeg.match(/^\d+([a-z]+)$/i)?.[1]?.toLowerCase() ?? null;
     const domain = c.faction === "colorless" ? "Colorless" : titleCase(c.faction);
     const rarity = titleCase(c.rarity);
@@ -155,7 +158,7 @@ async function main() {
       nameNormalized: normalizeSearch(name),
       setCode: c.set_id,
       setName: SET_NAMES[c.set_id] ?? c.set_id,
-      collectorNumber: `${numSeg}/${total}`,
+      collectorNumber,
       variant,
       domain,
       type: c.type,
