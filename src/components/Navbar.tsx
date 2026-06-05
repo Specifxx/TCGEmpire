@@ -10,8 +10,8 @@ export function Navbar() {
         <Link href="/" className="flex items-center gap-2 shrink-0">
           <Logo size={36} />
           <span className="hidden text-lg font-extrabold tracking-tight text-white sm:block">
-            Rift<span className="text-brand-400">Empire</span>
-            <span className="text-gold">Australia</span>
+            Rift<span className="text-brand-400">Compare</span>
+            <span className="text-gold">AU</span>
           </span>
         </Link>
 

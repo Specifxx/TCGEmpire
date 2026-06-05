@@ -11,7 +11,7 @@ import { join } from "node:path";
 const SITEMAP = "https://riftbound.gg/cards-latest-sitemap.xml";
 
 async function main() {
-  const res = await fetch(SITEMAP, { headers: { "User-Agent": "Mozilla/5.0 RiftEmpireBot" } });
+  const res = await fetch(SITEMAP, { headers: { "User-Agent": "Mozilla/5.0 RiftCompareAUBot" } });
   if (!res.ok) throw new Error(`sitemap ${res.status}`);
   const xml = await res.text();
   const locs = Array.from(xml.matchAll(/<loc>([^<]+)<\/loc>/g)).map((m) => m[1]);

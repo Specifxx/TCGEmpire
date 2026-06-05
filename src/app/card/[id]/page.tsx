@@ -129,7 +129,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               </ul>
             )}
             <p className="border-t border-ink-800 p-3 text-center text-[11px] text-slate-600">
-              Prices are collected from public store listings and may change. RiftEmpireAustralia
+              Prices are collected from public store listings and may change. RiftCompareAU
               may earn a commission on some outbound links.
             </p>
           </div>

@@ -56,7 +56,7 @@ async function fetchCollection(store: RetailerInfo, handle: string): Promise<Sho
     const url = `${store.base}/collections/${handle}/products.json?limit=250&page=${page}`;
     let res: Response;
     try {
-      res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 RiftEmpireBot" } });
+      res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 RiftCompareAUBot" } });
     } catch {
       break;
     }

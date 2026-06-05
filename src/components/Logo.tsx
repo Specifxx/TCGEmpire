@@ -1,8 +1,8 @@
-// Dice logo for RiftEmpireAustralia — a green die with gold pips (AU colours).
+// Dice logo for RiftCompareAU — a green die with gold pips (AU colours).
 // (Generated vector. Swap in an AI-generated PNG later by replacing this SVG.)
 export function Logo({ size = 36 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 48 48" role="img" aria-label="RiftEmpireAustralia dice logo">
+    <svg width={size} height={size} viewBox="0 0 48 48" role="img" aria-label="RiftCompareAU dice logo">
       <defs>
         <linearGradient id="dieFace" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#34d17e" />
