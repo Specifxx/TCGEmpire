@@ -6,7 +6,7 @@ import { CONDITION_KEYS } from "@/lib/constants";
 
 const schema = z.object({
   cardId: z.string().min(1),
-  condition: z.enum([...CONDITION_KEYS, "ANY"] as [string, ...string[]]),
+  condition: z.enum(["ANY", ...CONDITION_KEYS] as [string, ...string[]]),
   isFoil: z.boolean().default(false),
   maxPriceCents: z.number().int().min(25, "Minimum bid is $0.25").max(100000000),
   quantity: z.number().int().min(1).max(99).default(1),
