@@ -24,7 +24,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   const prices = card.retailerPrices
     .map((p) => ({
       ...p,
-      ship: shippingCents(p.retailer, p.priceCents),
+      ship: shippingCents(p.retailer),
       delivered: deliveredCents(p.retailer, p.priceCents),
     }))
     .sort((a, b) => a.delivered - b.delivered);
