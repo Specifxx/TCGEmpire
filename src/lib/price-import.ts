@@ -83,7 +83,11 @@ async function discoverRiftboundCollections(base: string): Promise<string[]> {
     if (!xml) continue;
     for (const m of xml.matchAll(/\/collections\/([^<\/?#"]+)/g)) {
       const h = m[1];
-      if (/rift/i.test(h) && !NON_SINGLE.test(h)) handles.add(h);
+      // Require "riftbound" (not just "rift" — avoids Pokémon "Paradox Rift"),
+      // and skip sealed/accessory collections and image URLs.
+      if (/riftbound/i.test(h) && !NON_SINGLE.test(h) && !/\.(jpe?g|png|gif|webp|svg)$/i.test(h)) {
+        handles.add(h);
+      }
     }
   }
   return Array.from(handles);

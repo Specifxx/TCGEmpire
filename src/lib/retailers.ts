@@ -129,6 +129,24 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     freeOverCents: 3000,
     shippingNote: "est. $1.50 · free over $30",
   },
+  cardhub: {
+    key: "cardhub",
+    name: "The Card Hub Australia",
+    base: "https://thecardhubaustralia.com.au",
+    collections: [],
+    shippingFlatCents: 200,
+    freeOverCents: 4000,
+    shippingNote: "est. $2.00 · free over $40",
+  },
+  pokebox: {
+    key: "pokebox",
+    name: "PokéBox",
+    base: "https://www.pokebox.com.au",
+    collections: [],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  },
 };
 
 export const RETAILER_LIST = Object.values(RETAILERS);
