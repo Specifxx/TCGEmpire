@@ -58,6 +58,14 @@ function parseNumber(title: string): { setCode: string | null; key: string; tota
   return null;
 }
 
+// Multi-card listings (playsets, lots, bundles) carry a SET price, not a per-card
+// price — matching them to a single card would record a wildly wrong number. Stores
+// like Cherry Collectables list "PLAYSET (3) 3x Watchful Sentry - 096/298". Mirror
+// the bundle/lot guard the eBay matcher uses (EXCLUDE in src/lib/ebay.ts), scoped to
+// the multi-quantity signals that actually appear in store titles.
+export const MULTI_CARD =
+  /\b(playset|lot|lots|bundle|joblot|job lot|x\s*\d+|\d+\s*x|set of|complete set|full set|bulk)\b/i;
+
 const UA = { "User-Agent": "Mozilla/5.0 RiftCompareAUBot" };
 
 async function fetchText(url: string): Promise<string | null> {
@@ -162,6 +170,9 @@ export async function importPrices(): Promise<ImportSummary> {
 
   function resolveCardId(p: ShopifyProduct): string | null {
     const t = p.title;
+    // Never match a multi-card listing (playset/lot/bundle) to a single card — its
+    // price is for the whole group, not one card.
+    if (MULTI_CARD.test(t)) return null;
     const num = parseNumber(t);
     const setCode =
       num?.setCode ?? setFromTotal(num?.total) ?? SET_FROM_TITLE.find(([re]) => re.test(t))?.[1] ?? "OGN";
