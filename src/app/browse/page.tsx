@@ -2,7 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { Filters } from "@/components/Filters";
 import { SortSelect } from "@/components/SortSelect";
-import { CardTile } from "@/components/CardTile";
+import { BrowseGrid } from "@/components/BrowseGrid";
 import {
   buildCardOrderBy,
   buildCardWhere,
@@ -20,7 +20,6 @@ export default async function BrowsePage({
 }) {
   const where = buildCardWhere(searchParams);
   const orderBy = buildCardOrderBy(searchParams.sort);
-  const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
 
   const [total, cards] = await Promise.all([
     prisma.card.count({ where }),
@@ -28,20 +27,15 @@ export default async function BrowsePage({
       where,
       orderBy,
       select: CARD_TILE_SELECT,
-      skip: (page - 1) * CARD_PAGE_SIZE,
       take: CARD_PAGE_SIZE,
     }),
   ]);
 
-  const totalPages = Math.max(1, Math.ceil(total / CARD_PAGE_SIZE));
-
-  function pageHref(p: number) {
-    const next = new URLSearchParams(
-      Object.entries(searchParams).filter(([, v]) => v) as [string, string][]
-    );
-    next.set("page", String(p));
-    return `/browse?${next.toString()}`;
-  }
+  // Serialize the active filters (minus page) so the infinite-scroll API gets the
+  // same query. A key built from this also remounts the grid when filters change.
+  const qs = new URLSearchParams(
+    Object.entries(searchParams).filter(([k, v]) => v && k !== "page") as [string, string][]
+  ).toString();
 
   return (
     <div className="flex flex-col gap-6 lg:flex-row">
@@ -66,19 +60,7 @@ export default async function BrowsePage({
             <Link href="/browse" className="btn-primary mt-4">Reset</Link>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
-            {cards.map((c) => (
-              <CardTile key={c.id} card={c} />
-            ))}
-          </div>
-        )}
-
-        {totalPages > 1 && (
-          <div className="mt-8 flex items-center justify-center gap-2">
-            {page > 1 && <Link href={pageHref(page - 1)} className="btn-ghost">← Prev</Link>}
-            <span className="px-3 text-sm text-slate-400">Page {page} of {totalPages}</span>
-            {page < totalPages && <Link href={pageHref(page + 1)} className="btn-ghost">Next →</Link>}
-          </div>
+          <BrowseGrid key={qs} initial={cards} total={total} query={qs} />
         )}
       </section>
     </div>
