@@ -96,7 +96,12 @@ export async function importPrices(): Promise<ImportSummary> {
     const t = p.title;
     const num = parseNumber(t);
     const setCode = num?.setCode ?? SET_FROM_TITLE.find(([re]) => re.test(t))?.[1] ?? "OGN";
-    const isAlt = /showcase|signature|foil|overnumbered/i.test(t) || /\d+[a-z]\b/.test(num?.key ?? "");
+    // NOTE: "Foil" is NOT an alt-art signal — nearly every listing (incl. base
+    // cards) says Foil. Only these markers (or a lettered number like 039a) mean
+    // an alt-art/special printing.
+    const isAlt =
+      /showcase|signature|overnumbered|alternate\s*art|alt\s*art/i.test(t) ||
+      /\d+[a-z]/.test(num?.key ?? "");
 
     // 1) name match, disambiguated by number then variant.
     const cand = byName.get(nameKey(cleanProductName(t)));
