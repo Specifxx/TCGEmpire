@@ -6,12 +6,11 @@ import { Logo } from "@/components/Logo";
 import { AdSlot } from "@/components/AdSlot";
 import { CARD_TILE_SELECT } from "@/lib/cards";
 import { SETS, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
-import { RETAILER_LIST } from "@/lib/retailers";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [totalCards, pricedCards, valuable] = await Promise.all([
+  const [totalCards, pricedCards, valuable, storeGroups] = await Promise.all([
     prisma.card.count(),
     prisma.card.count({ where: { lowestPriceCents: { not: null } } }),
     prisma.card.findMany({
@@ -20,7 +19,9 @@ export default async function HomePage() {
       take: 6,
       select: CARD_TILE_SELECT,
     }),
+    prisma.retailerPrice.groupBy({ by: ["retailer"] }),
   ]);
+  const storeCount = storeGroups.length;
 
   return (
     <div className="flex flex-col gap-10">
@@ -56,7 +57,7 @@ export default async function HomePage() {
           <div className="mx-auto mt-8 grid max-w-lg grid-cols-3 gap-4">
             <Stat value={totalCards.toLocaleString()} label="cards" />
             <Stat value={pricedCards.toLocaleString()} label="priced" />
-            <Stat value={String(RETAILER_LIST.length)} label="AU stores" />
+            <Stat value={String(storeCount)} label="AU stores" />
           </div>
         </div>
       </section>

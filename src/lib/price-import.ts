@@ -53,13 +53,49 @@ function parseNumber(title: string): { setCode: string | null; key: string } | n
   return null;
 }
 
+const UA = { "User-Agent": "Mozilla/5.0 RiftCompareAUBot" };
+
+async function fetchText(url: string): Promise<string | null> {
+  try {
+    const r = await fetch(url, { headers: UA });
+    return r.ok ? await r.text() : null;
+  } catch {
+    return null;
+  }
+}
+
+// Collection handles that are clearly NOT singles (sealed, accessories, etc.).
+const NON_SINGLE = /sealed|booster|box|bundle|preorder|pre-order|accessor|playmat|sleeve|merch|deck-?box|gift|case|tin|blister|collection-box/i;
+
+// Auto-discover a store's Riftbound singles collections from its Shopify sitemap,
+// so we only need the store's domain (handles vary wildly between stores). This is
+// how an aggregator like Google captures every store without hard-coding URLs.
+async function discoverRiftboundCollections(base: string): Promise<string[]> {
+  const handles = new Set<string>();
+  const index = await fetchText(`${base}/sitemap.xml`);
+  let sitemaps = index
+    ? Array.from(index.matchAll(/<loc>([^<]+)<\/loc>/g)).map((m) => m[1]).filter((u) => /sitemap_collections/i.test(u))
+    : [];
+  if (!sitemaps.length) sitemaps = [`${base}/sitemap_collections_1.xml`];
+
+  for (const sm of sitemaps.slice(0, 8)) {
+    const xml = await fetchText(sm);
+    if (!xml) continue;
+    for (const m of xml.matchAll(/\/collections\/([^<\/?#"]+)/g)) {
+      const h = m[1];
+      if (/rift/i.test(h) && !NON_SINGLE.test(h)) handles.add(h);
+    }
+  }
+  return Array.from(handles);
+}
+
 async function fetchCollection(store: RetailerInfo, handle: string): Promise<ShopifyProduct[]> {
   const all: ShopifyProduct[] = [];
   for (let page = 1; page <= 20; page++) {
     const url = `${store.base}/collections/${handle}/products.json?limit=250&page=${page}`;
     let res: Response;
     try {
-      res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 RiftCompareAUBot" } });
+      res = await fetch(url, { headers: UA });
     } catch {
       break;
     }
@@ -130,9 +166,20 @@ export async function importPrices(): Promise<ImportSummary> {
   const summary: ImportSummary = { stores: [], totalMatched: 0, totalUnmatched: 0, cardsPriced: 0 };
 
   for (const store of RETAILER_LIST) {
+    // Auto-discover the store's Riftbound collections; fall back to any handles
+    // configured explicitly in retailers.ts.
+    let handles = await discoverRiftboundCollections(store.base);
+    if (!handles.length) handles = store.collections ?? [];
+    handles = Array.from(new Set([...handles, ...(store.collections ?? [])]));
+
     const products: ShopifyProduct[] = [];
-    for (const handle of store.collections) {
-      products.push(...(await fetchCollection(store, handle)));
+    const seen = new Set<string>();
+    for (const handle of handles) {
+      for (const p of await fetchCollection(store, handle)) {
+        if (seen.has(p.handle)) continue; // de-dup across overlapping collections
+        seen.add(p.handle);
+        products.push(p);
+      }
     }
     if (!products.length) {
       summary.stores.push({ name: store.name, products: 0, priced: 0, matched: 0, unmatched: 0 });

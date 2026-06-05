@@ -91,9 +91,44 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     freeOverCents: 3000,
     shippingNote: "est. $1.50 · free over $30",
   },
-  // Irresistible Force currently lists only events/tickets (no Riftbound singles
-  // feed) and The Card Hub Australia doesn't expose a usable products.json — add
-  // them here once a singles collection URL is available.
+  // Domain-only entries: collections are auto-discovered from each store's sitemap
+  // (handles vary, e.g. "riftbound-singles-4-or-more", "riftbound-league-of-legends-tcg").
+  ggadelaide: {
+    key: "ggadelaide",
+    name: "Good Games Adelaide",
+    base: "https://ggadelaide.com.au",
+    collections: [],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  },
+  goodgames: {
+    key: "goodgames",
+    name: "Good Games",
+    base: "https://www.goodgames.com.au",
+    collections: [],
+    shippingFlatCents: 300,
+    freeOverCents: 6000,
+    shippingNote: "est. $3.00 · free over $60",
+  },
+  vaultgames: {
+    key: "vaultgames",
+    name: "Vault Games",
+    base: "https://vaultgames.com.au",
+    collections: [],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  },
+  mintcollectables: {
+    key: "mintcollectables",
+    name: "Mint Collectables",
+    base: "https://mintcollectables.com.au",
+    collections: [],
+    shippingFlatCents: 150,
+    freeOverCents: 3000,
+    shippingNote: "est. $1.50 · free over $30",
+  },
 };
 
 export const RETAILER_LIST = Object.values(RETAILERS);
