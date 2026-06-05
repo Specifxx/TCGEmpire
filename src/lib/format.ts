@@ -16,6 +16,12 @@ export function dollarsToCents(value: string | number): number {
   return Math.round(n * 100);
 }
 
+// Normalise text for search: lowercase, strip punctuation/spaces. Lets "kaisa"
+// match "Kai'Sa" and "jinxloosecannon" match "Jinx, Loose Cannon".
+export function normalizeSearch(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
 export function timeAgo(date: Date | string): string {
   const d = typeof date === "string" ? new Date(date) : date;
   const seconds = Math.floor((Date.now() - d.getTime()) / 1000);

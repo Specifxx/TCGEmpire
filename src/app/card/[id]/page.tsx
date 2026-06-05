@@ -4,6 +4,8 @@ import { prisma } from "@/lib/db";
 import { CardImage } from "@/components/CardImage";
 import { DomainBadge, RarityBadge, VariantBadge } from "@/components/Badge";
 import { AdSlot } from "@/components/AdSlot";
+import { WishlistButton } from "@/components/WishlistButton";
+import { shippingCents, deliveredCents } from "@/lib/retailers";
 import { formatAUD, timeAgo } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -18,8 +20,16 @@ export default async function CardPage({ params }: { params: { id: string } }) {
 
   if (!card) notFound();
 
-  const prices = card.retailerPrices;
-  const lowest = prices.find((p) => p.inStock) ?? prices[0];
+  // Rank by estimated DELIVERED cost (item + shipping), since that's what the
+  // buyer actually pays. Out-of-stock listings are already excluded at import.
+  const prices = card.retailerPrices
+    .map((p) => ({
+      ...p,
+      ship: shippingCents(p.retailer, p.priceCents),
+      delivered: deliveredCents(p.retailer, p.priceCents),
+    }))
+    .sort((a, b) => a.delivered - b.delivered);
+  const lowest = prices[0];
 
   return (
     <div>
@@ -45,14 +55,19 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               <span className="chip bg-ink-800 text-slate-300">{card.type}</span>
               <VariantBadge variant={card.variant} />
             </div>
-            <h1 className="mt-3 text-2xl font-extrabold text-white">{card.name}</h1>
-            <p className="mt-1 font-mono text-xs text-slate-500">
-              {card.setName} ({card.setCode}) · {card.collectorNumber}
-            </p>
+            <div className="mt-3 flex items-start justify-between gap-3">
+              <div>
+                <h1 className="text-2xl font-extrabold text-white">{card.name}</h1>
+                <p className="mt-1 font-mono text-xs text-slate-500">
+                  {card.setName} ({card.setCode}) · {card.collectorNumber}
+                </p>
+              </div>
+              <WishlistButton cardId={card.id} variant="full" />
+            </div>
 
             <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <Metric label="Lowest price" value={lowest ? formatAUD(lowest.priceCents) : "—"} highlight />
-              <Metric label="Stores listing" value={String(prices.length)} />
+              <Metric label="Cheapest delivered" value={lowest ? formatAUD(lowest.delivered) : "—"} highlight />
+              <Metric label="In stock at" value={`${prices.length} ${prices.length === 1 ? "store" : "stores"}`} />
               {card.energyCost != null && <Metric label="Energy" value={String(card.energyCost)} />}
               {card.might != null && <Metric label="Might" value={String(card.might)} />}
               {card.might == null && card.power != null && <Metric label="Power" value={String(card.power)} />}
@@ -87,18 +102,19 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                       <div className="font-semibold text-white">{p.retailerName}</div>
                       <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-slate-500">
                         {p.condition && <span className="chip bg-ink-800 text-slate-300">{p.condition}</span>}
-                        {p.inStock ? (
-                          <span className="text-accent">● In stock</span>
-                        ) : (
-                          <span className="text-slate-500">○ Out of stock</span>
-                        )}
+                        <span className="text-brand-400">● In stock</span>
+                        <span>
+                          + {p.ship === 0 ? "free ship" : `${formatAUD(p.ship)} ship`}
+                        </span>
                       </div>
                     </div>
                     <div className="text-right">
                       <div className={`text-lg font-bold ${i === 0 ? "text-accent" : "text-white"}`}>
                         {formatAUD(p.priceCents)}
                       </div>
-                      {i === 0 && <div className="text-[11px] text-accent">cheapest</div>}
+                      <div className="text-[11px] text-slate-400">
+                        ≈ {formatAUD(p.delivered)} delivered
+                      </div>
                     </div>
                     <a
                       href={p.url}

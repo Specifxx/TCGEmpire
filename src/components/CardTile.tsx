@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CardImage } from "./CardImage";
 import { VariantBadge } from "./Badge";
+import { WishlistButton } from "./WishlistButton";
 import { formatAUD } from "@/lib/format";
 import { rarityInfo } from "@/lib/constants";
 
@@ -46,6 +47,9 @@ export function CardTile({ card }: { card: CardTileData }) {
             <VariantBadge variant={card.variant} />
           </div>
         )}
+        <div className="absolute right-2 top-2">
+          <WishlistButton cardId={card.id} />
+        </div>
       </div>
 
       <div className="flex flex-1 flex-col gap-1.5 border-t border-ink-700 p-3">

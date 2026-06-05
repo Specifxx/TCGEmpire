@@ -14,13 +14,14 @@ const config: Config = {
           700: "#222a3d",
           600: "#2c3650",
         },
+        // Australia-themed: green & gold on a dark (CSFloat-style) base.
         brand: {
-          DEFAULT: "#6c5ce7",
-          400: "#8b7cf0",
-          500: "#6c5ce7",
-          600: "#5a48d6",
+          DEFAULT: "#16a34a",
+          400: "#34d17e",
+          500: "#16a34a",
+          600: "#15803d",
         },
-        accent: "#00d1b2",
+        accent: "#f5c518", // gold — used for prices & highlights
         gold: "#f7c948",
       },
       fontFamily: {
@@ -28,7 +29,7 @@ const config: Config = {
       },
       boxShadow: {
         card: "0 1px 2px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.25)",
-        glow: "0 0 0 1px rgba(108,92,231,0.4), 0 8px 30px rgba(108,92,231,0.25)",
+        glow: "0 0 0 1px rgba(22,163,74,0.45), 0 8px 30px rgba(22,163,74,0.22)",
       },
     },
   },

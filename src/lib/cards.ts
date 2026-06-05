@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import { dollarsToCents } from "./format";
+import { dollarsToCents, normalizeSearch } from "./format";
 
 export interface CardQuery {
   q?: string;
@@ -39,10 +39,9 @@ export function buildCardWhere(query: CardQuery): Prisma.CardWhereInput {
   else if (query.variant === "base") where.variant = null;
 
   if (query.q) {
-    // SQLite LIKE is case-insensitive for ASCII, so no `mode` needed here.
+    // Search the normalised name so "kaisa" matches "Kai'Sa". Also match number.
     where.OR = [
-      { name: { contains: query.q } },
-      { tags: { contains: query.q } },
+      { nameNormalized: { contains: normalizeSearch(query.q) } },
       { collectorNumber: { contains: query.q } },
     ];
   }

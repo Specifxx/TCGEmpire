@@ -33,6 +33,8 @@ model Card {
   id              String    @id @default(cuid())
   externalId      String?   @unique // RiftScribe id, e.g. "ogn-001-298"
   name            String
+  // Lowercased, punctuation-stripped name for apostrophe-tolerant search.
+  nameNormalized  String  @default("")
   setCode         String // e.g. "OGN"
   setName         String // e.g. "Origins"
   collectorNumber String // e.g. "001/298"
@@ -68,6 +70,7 @@ model Card {
   retailerPrices  RetailerPrice[]
 
   @@index([setCode, collectorNumber])
+  @@index([nameNormalized])
   @@index([lowestPriceCents])
   @@index([domain])
   @@index([rarity])

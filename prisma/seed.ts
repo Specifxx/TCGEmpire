@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { titleCase } from "../src/lib/constants";
+import { normalizeSearch } from "../src/lib/format";
 
 const prisma = new PrismaClient();
 
@@ -19,6 +20,35 @@ function mulberry32(seed: number) {
 const rng = mulberry32(20260605);
 const pick = <T>(arr: T[]): T => arr[Math.floor(rng() * arr.length)];
 const between = (min: number, max: number) => min + rng() * (max - min);
+
+// ---- Legend name enrichment (TCGplayer-style "Champion, Title") ---------------
+// RiftScribe names Legends by title only ("Loose Cannon"); riftbound.gg slugs
+// carry the champion ("ogn-251-jinx-loose-cannon"). We recover the champion.
+const CHAMP_OVERRIDES: Record<string, string> = {
+  kaisa: "Kai'Sa", velkoz: "Vel'Koz", chogath: "Cho'Gath", khazix: "Kha'Zix",
+  reksai: "Rek'Sai", belveth: "Bel'Veth", ksante: "K'Sante", leblanc: "LeBlanc",
+  drmundo: "Dr. Mundo", "nunu-willump": "Nunu & Willump", "jarvan-iv": "Jarvan IV",
+};
+function titleCaseChamp(slug: string): string {
+  if (CHAMP_OVERRIDES[slug]) return CHAMP_OVERRIDES[slug];
+  const flat = slug.replace(/-/g, "");
+  if (CHAMP_OVERRIDES[flat]) return CHAMP_OVERRIDES[flat];
+  return slug.split("-").map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w)).join(" ");
+}
+function slugify(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+function enrichLegendName(nameSlug: string | undefined, epithet: string): string {
+  if (!nameSlug) return epithet;
+  const epiSlug = slugify(epithet);
+  let champSlug = nameSlug;
+  if (nameSlug.endsWith("-" + epiSlug)) champSlug = nameSlug.slice(0, nameSlug.length - epiSlug.length - 1);
+  else champSlug = nameSlug.split("-")[0];
+  if (!champSlug || champSlug === nameSlug) return epithet;
+  const champ = titleCaseChamp(champSlug);
+  if (epithet.toLowerCase().startsWith(champ.toLowerCase())) return epithet;
+  return `${champ}, ${epithet}`;
+}
 
 const CONDITIONS = ["NM", "NM", "NM", "LP", "LP", "MP", "HP", "DMG"];
 const CONDITION_MULT: Record<string, number> = {
@@ -78,6 +108,14 @@ async function main() {
   const rsCards = JSON.parse(readFileSync(file, "utf8")) as RsCard[];
   console.log(`Loaded ${rsCards.length} real cards from RiftScribe data.`);
 
+  // riftbound.gg name slugs (key like "ogn-251" / "ogn-039a") for legend naming.
+  let nameMap: Record<string, string> = {};
+  try {
+    nameMap = JSON.parse(readFileSync(join(process.cwd(), "prisma", "card-names.json"), "utf8"));
+  } catch {
+    console.warn("card-names.json not found — run scripts/fetch-names.ts to enrich legend names.");
+  }
+
   console.log("Resetting data…");
   await prisma.order.deleteMany();
   await prisma.buyOrder.deleteMany();
@@ -108,9 +146,13 @@ async function main() {
     const variant = numSeg.match(/^\d+([a-z]+)$/i)?.[1]?.toLowerCase() ?? null;
     const domain = c.faction === "colorless" ? "Colorless" : titleCase(c.faction);
     const rarity = titleCase(c.rarity);
+    // Legends get a champion prefix from riftbound.gg ("Loose Cannon" -> "Jinx, Loose Cannon").
+    const nameKey = `${parts[0]}-${numSeg}`;
+    const name = c.type === "Legend" ? enrichLegendName(nameMap[nameKey], c.name) : c.name;
     return {
       externalId: c.id,
-      name: c.name,
+      name,
+      nameNormalized: normalizeSearch(name),
       setCode: c.set_id,
       setName: SET_NAMES[c.set_id] ?? c.set_id,
       collectorNumber: `${numSeg}/${total}`,

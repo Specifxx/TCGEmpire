@@ -140,11 +140,11 @@ export async function importPrices(): Promise<ImportSummary> {
       const cardId = resolveCardId(p);
       if (!cardId) { unmatched++; continue; }
       matched++;
-      const variants = p.variants.filter((v) => parseFloat(v.price) > 0);
-      if (!variants.length) continue;
-      const avail = variants.filter((v) => v.available);
-      const pool = avail.length ? avail : variants;
-      const best = pool.reduce((a, b) => (parseFloat(a.price) <= parseFloat(b.price) ? a : b));
+      // Only IN-STOCK variants count — out-of-stock listings are excluded from
+      // the price comparison entirely.
+      const avail = p.variants.filter((v) => v.available && parseFloat(v.price) > 0);
+      if (!avail.length) continue;
+      const best = avail.reduce((a, b) => (parseFloat(a.price) <= parseFloat(b.price) ? a : b));
       const priceCents = Math.round(parseFloat(best.price) * 100);
       const prev = rows.get(cardId);
       if (prev && prev.priceCents <= priceCents) continue;
@@ -158,7 +158,7 @@ export async function importPrices(): Promise<ImportSummary> {
         isFoil: /foil/i.test(p.title),
         priceCents,
         currency: "AUD",
-        inStock: avail.length > 0,
+        inStock: true,
       });
     }
     await prisma.retailerPrice.createMany({ data: Array.from(rows.values()) });

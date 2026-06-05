@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SearchBar } from "./SearchBar";
+import { Logo } from "./Logo";
 
 export function Navbar() {
   return (
@@ -7,12 +8,10 @@ export function Navbar() {
       <div className="container-app flex h-16 items-center gap-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 shrink-0">
-          <span className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-brand-400 to-brand-600 font-black text-white shadow-glow">
-            RE
-          </span>
+          <Logo size={36} />
           <span className="hidden text-lg font-extrabold tracking-tight text-white sm:block">
             Rift<span className="text-brand-400">Empire</span>
-            <span className="text-slate-400">Australia</span>
+            <span className="text-gold">Australia</span>
           </span>
         </Link>
 
@@ -27,10 +26,13 @@ export function Navbar() {
             Database
           </Link>
           <Link
-            href="/?priced=1&sort=price_desc"
-            className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-ink-800 hover:text-white md:block"
+            href="/wishlist"
+            className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-ink-800 hover:text-white"
           >
-            Top prices
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 21s-7.5-4.6-10-9.2C.4 8.4 2 5 5.2 5c1.9 0 3.2 1 3.8 2.2C9.6 6 11 5 12.8 5 16 5 17.6 8.4 16 11.8 13.5 16.4 12 21 12 21z" />
+            </svg>
+            <span className="hidden sm:inline">Wishlist</span>
           </Link>
         </nav>
       </div>
