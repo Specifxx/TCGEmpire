@@ -8,9 +8,9 @@ import { formatAUD } from "@/lib/format";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Riftbound Meta Decks & Build Cost (Australia)",
+  title: "Riftbound Preconstructed Decks & Build Cost (Australia)",
   description:
-    "The current top-tier Riftbound decks, each priced live across Australian stores. See what it costs to build the meta and where to buy every card.",
+    "Ready-made Riftbound decklists, each priced live across Australian stores. See what it costs to build a deck and where to buy every card.",
   alternates: { canonical: "/decks" },
 };
 
@@ -23,10 +23,11 @@ export default async function DecksPage() {
     <div className="flex flex-col gap-10">
       <div>
         <div className="mb-4">
-          <h1 className="text-2xl font-extrabold text-white">Meta Decks</h1>
+          <h1 className="text-2xl font-extrabold text-white">Preconstructed Decks</h1>
           <p className="mt-1 text-sm text-slate-400">
-            The current top-tier Riftbound archetypes — each priced live across Australian
-            stores so you can see what it costs to build and where to buy every card.
+            Ready-made Riftbound decklists based on the current top-tier archetypes — each
+            priced live across Australian stores so you can see what it costs to build and
+            where to buy every card.
           </p>
         </div>
         <DeckGrid decks={meta} />

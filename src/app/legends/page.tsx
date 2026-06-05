@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Riftbound Legends — Champions & Decks (Australia)",
   description:
-    "Every Riftbound legend in one place. Browse champions by domain, jump straight to their cards, and see featured meta decks with live Australian prices.",
+    "Every Riftbound legend in one place. Browse champions by domain, jump straight to their cards, and see featured preconstructed decks with live Australian prices.",
   alternates: { canonical: "/legends" },
 };
 
@@ -24,7 +24,7 @@ export default async function LegendsPage() {
         <h1 className="text-2xl font-extrabold text-white">Legends</h1>
         <p className="mt-1 text-sm text-slate-400">
           Every Riftbound champion legend, grouped by domain. Jump to a champion&apos;s cards
-          or open a featured meta deck — no scrolling through the whole database.
+          or open a featured preconstructed deck — no scrolling through the whole database.
         </p>
       </div>
 

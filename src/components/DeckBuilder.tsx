@@ -134,7 +134,15 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
 
       {/* Results */}
       <div className="min-w-0">
-        {!result ? (
+        {loading ? (
+          <div className="card-surface grid place-items-center p-16 text-center text-slate-400">
+            <div className="flex flex-col items-center gap-3">
+              <span className="h-8 w-8 animate-spin rounded-full border-2 border-ink-600 border-t-brand-400" />
+              <p className="text-sm font-semibold text-white">Pricing your deck…</p>
+              <p className="text-xs">Matching each card to the cheapest Australian price.</p>
+            </div>
+          </div>
+        ) : !result ? (
           <div className="card-surface grid place-items-center p-16 text-center text-slate-400">
             <div>
               <p className="text-lg font-semibold text-white">Price a whole deck at once</p>

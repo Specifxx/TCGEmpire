@@ -39,7 +39,7 @@ export default async function HomePage() {
 
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <Link href="/browse" className="btn-primary">Browse the database</Link>
-            <Link href="/decks" className="btn-ghost">Meta decks &amp; build cost</Link>
+            <Link href="/decks" className="btn-ghost">Preconstructed decks</Link>
             <Link href="/deck" className="btn-ghost">Deck builder &amp; pricing</Link>
           </div>
 

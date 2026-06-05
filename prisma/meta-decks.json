@@ -1,5 +1,5 @@
 {
-  "_comment": "Curated Riftbound meta archetypes (community reference, June 2026 tier list). Each 'legend' and 'cards[].name' must match a real card name in the DB; the Meta Decks page resolves and live-prices them. Update this file to refresh the meta — keep names exact.",
+  "_comment": "Preconstructed Riftbound decklists (community reference, June 2026 meta). Main deck ~40 cards + legend. Each 'legend' and 'cards[].name' must match a real card name in the DB; the page resolves and live-prices them. Update to refresh the meta — keep names exact.",
   "decks": [
     {
       "slug": "master-yi-wuju",
@@ -13,13 +13,18 @@
         { "name": "Alpha Strike", "qty": 3 },
         { "name": "Counter Strike", "qty": 3 },
         { "name": "Defiant Dance", "qty": 3 },
-        { "name": "Discipline", "qty": 2 },
-        { "name": "Combat Experience", "qty": 2 },
+        { "name": "Discipline", "qty": 3 },
+        { "name": "Combat Experience", "qty": 3 },
         { "name": "Alpha Wildclaw", "qty": 3 },
-        { "name": "Apprentice Smith", "qty": 2 },
-        { "name": "Caitlyn, Patrolling", "qty": 2 },
+        { "name": "Apprentice Smith", "qty": 3 },
+        { "name": "Caitlyn, Patrolling", "qty": 3 },
+        { "name": "Blitzcrank, Impassive", "qty": 2 },
         { "name": "Brutalizer", "qty": 2 },
-        { "name": "Doran's Shield", "qty": 2 }
+        { "name": "Doran's Shield", "qty": 3 },
+        { "name": "Block", "qty": 3 },
+        { "name": "Back Off", "qty": 2 },
+        { "name": "Charm", "qty": 2 },
+        { "name": "Disarming Rake", "qty": 2 }
       ]
     },
     {
@@ -32,15 +37,20 @@
       "description": "Top-performing Tier-1 tempo list (Wins Sydney, Top 2 Suzhou). Flexible Calm threats that snowball board control.",
       "cards": [
         { "name": "Alpha Strike", "qty": 3 },
-        { "name": "Defiant Dance", "qty": 2 },
-        { "name": "Discipline", "qty": 2 },
+        { "name": "Defiant Dance", "qty": 3 },
+        { "name": "Discipline", "qty": 3 },
         { "name": "Counter Strike", "qty": 3 },
-        { "name": "Combat Experience", "qty": 2 },
-        { "name": "Aphelios, Exalted", "qty": 1 },
+        { "name": "Combat Experience", "qty": 3 },
         { "name": "Azir, Ascendant", "qty": 2 },
-        { "name": "Blitzcrank, Impassive", "qty": 2 },
+        { "name": "Blitzcrank, Impassive", "qty": 3 },
         { "name": "Brutalizer", "qty": 2 },
-        { "name": "Doran's Shield", "qty": 2 }
+        { "name": "Doran's Shield", "qty": 3 },
+        { "name": "Block", "qty": 3 },
+        { "name": "Back Off", "qty": 2 },
+        { "name": "Charm", "qty": 2 },
+        { "name": "Apprentice Smith", "qty": 3 },
+        { "name": "Alpha Wildclaw", "qty": 3 },
+        { "name": "Disarming Rake", "qty": 2 }
       ]
     },
     {
@@ -54,14 +64,19 @@
       "cards": [
         { "name": "Diana, Lunari", "qty": 3 },
         { "name": "Crescent Strike", "qty": 3 },
-        { "name": "Eclipse", "qty": 2 },
-        { "name": "Arcane Shift", "qty": 2 },
-        { "name": "Deadly Flourish", "qty": 2 },
+        { "name": "Eclipse", "qty": 3 },
+        { "name": "Arcane Shift", "qty": 3 },
+        { "name": "Deadly Flourish", "qty": 3 },
         { "name": "Ekko, Recurrent", "qty": 2 },
         { "name": "Dr. Mundo, Expert", "qty": 2 },
-        { "name": "Bellows Breath", "qty": 2 },
-        { "name": "Convergent Mutation", "qty": 2 },
-        { "name": "Energy Conduit", "qty": 2 }
+        { "name": "Bellows Breath", "qty": 3 },
+        { "name": "Convergent Mutation", "qty": 3 },
+        { "name": "Energy Conduit", "qty": 2 },
+        { "name": "Card Sharp", "qty": 3 },
+        { "name": "Chakram Dancer", "qty": 2 },
+        { "name": "Consult the Past", "qty": 2 },
+        { "name": "Blastcone Fae", "qty": 3 },
+        { "name": "Blue Sentinel", "qty": 3 }
       ]
     },
     {
@@ -74,14 +89,20 @@
       "description": "Tier-1 control shell (Top 8 Sydney) leaning on Mind card advantage, bounce and reach to grind opponents out.",
       "cards": [
         { "name": "Arcane Shift", "qty": 3 },
-        { "name": "Consult the Past", "qty": 2 },
-        { "name": "Deadly Flourish", "qty": 2 },
-        { "name": "Convergent Mutation", "qty": 2 },
+        { "name": "Consult the Past", "qty": 3 },
+        { "name": "Deadly Flourish", "qty": 3 },
+        { "name": "Convergent Mutation", "qty": 3 },
         { "name": "Bard, Mercurial", "qty": 2 },
-        { "name": "Chakram Dancer", "qty": 2 },
-        { "name": "Eclipse", "qty": 2 },
-        { "name": "Crescent Strike", "qty": 2 },
-        { "name": "Card Sharp", "qty": 2 }
+        { "name": "Chakram Dancer", "qty": 3 },
+        { "name": "Eclipse", "qty": 3 },
+        { "name": "Crescent Strike", "qty": 3 },
+        { "name": "Card Sharp", "qty": 3 },
+        { "name": "Blue Sentinel", "qty": 3 },
+        { "name": "Blastcone Fae", "qty": 3 },
+        { "name": "Bellows Breath", "qty": 2 },
+        { "name": "Energy Conduit", "qty": 2 },
+        { "name": "Aspiring Engineer", "qty": 2 },
+        { "name": "Eager Apprentice", "qty": 2 }
       ]
     },
     {
@@ -95,14 +116,19 @@
       "cards": [
         { "name": "Dancing Grenade", "qty": 3 },
         { "name": "Detonate", "qty": 3 },
-        { "name": "Disintegrate", "qty": 2 },
-        { "name": "Blood Rush", "qty": 2 },
-        { "name": "Cleave", "qty": 2 },
-        { "name": "Death from Below", "qty": 2 },
-        { "name": "Blazing Scorcher", "qty": 2 },
+        { "name": "Disintegrate", "qty": 3 },
+        { "name": "Blood Rush", "qty": 3 },
+        { "name": "Cleave", "qty": 3 },
+        { "name": "Death from Below", "qty": 3 },
+        { "name": "Blazing Scorcher", "qty": 3 },
         { "name": "Arena Kingpin", "qty": 2 },
-        { "name": "Captain Farron", "qty": 1 },
-        { "name": "Curtain Call", "qty": 2 }
+        { "name": "Captain Farron", "qty": 2 },
+        { "name": "Curtain Call", "qty": 2 },
+        { "name": "Armed Assailant", "qty": 3 },
+        { "name": "Battering Ram", "qty": 3 },
+        { "name": "Dangerous Duo", "qty": 2 },
+        { "name": "Angle Shot", "qty": 3 },
+        { "name": "Brazen Buccaneer", "qty": 2 }
       ]
     },
     {
@@ -116,12 +142,19 @@
       "cards": [
         { "name": "Death from Below", "qty": 3 },
         { "name": "Blood Rush", "qty": 3 },
-        { "name": "Dangerous Duo", "qty": 2 },
-        { "name": "Disintegrate", "qty": 2 },
-        { "name": "Detonate", "qty": 2 },
-        { "name": "Blazing Scorcher", "qty": 2 },
-        { "name": "Armed Assailant", "qty": 2 },
-        { "name": "Battering Ram", "qty": 2 }
+        { "name": "Dangerous Duo", "qty": 3 },
+        { "name": "Disintegrate", "qty": 3 },
+        { "name": "Detonate", "qty": 3 },
+        { "name": "Blazing Scorcher", "qty": 3 },
+        { "name": "Armed Assailant", "qty": 3 },
+        { "name": "Battering Ram", "qty": 3 },
+        { "name": "Dancing Grenade", "qty": 3 },
+        { "name": "Cleave", "qty": 2 },
+        { "name": "Angle Shot", "qty": 3 },
+        { "name": "Arena Kingpin", "qty": 2 },
+        { "name": "Brazen Buccaneer", "qty": 2 },
+        { "name": "Curtain Call", "qty": 1 },
+        { "name": "Against the Odds", "qty": 3 }
       ]
     },
     {
@@ -137,11 +170,18 @@
         { "name": "Cithria of Cloudfield", "qty": 3 },
         { "name": "Dauntless Vanguard", "qty": 3 },
         { "name": "Decisive Strike", "qty": 3 },
-        { "name": "Concentrate", "qty": 2 },
-        { "name": "Confront", "qty": 2 },
-        { "name": "Challenge", "qty": 2 },
-        { "name": "Call to Battle", "qty": 2 },
-        { "name": "Crackshot Corsair", "qty": 3 }
+        { "name": "Concentrate", "qty": 3 },
+        { "name": "Confront", "qty": 3 },
+        { "name": "Challenge", "qty": 3 },
+        { "name": "Call to Battle", "qty": 3 },
+        { "name": "Crackshot Corsair", "qty": 3 },
+        { "name": "Demacian Diplomat", "qty": 3 },
+        { "name": "Combat Chef", "qty": 3 },
+        { "name": "Bilgewater Bully", "qty": 2 },
+        { "name": "Buhru Captain", "qty": 2 },
+        { "name": "Boneshiver", "qty": 2 },
+        { "name": "Arena Bar", "qty": 2 },
+        { "name": "Body Rune", "qty": 2 }
       ]
     },
     {
@@ -156,12 +196,19 @@
       "cards": [
         { "name": "Dancing Grenade", "qty": 3 },
         { "name": "Detonate", "qty": 3 },
-        { "name": "Cleave", "qty": 2 },
-        { "name": "Blood Rush", "qty": 2 },
-        { "name": "Death from Below", "qty": 2 },
-        { "name": "Blazing Scorcher", "qty": 2 },
-        { "name": "Armed Assailant", "qty": 2 },
-        { "name": "Battering Ram", "qty": 2 }
+        { "name": "Cleave", "qty": 3 },
+        { "name": "Blood Rush", "qty": 3 },
+        { "name": "Death from Below", "qty": 3 },
+        { "name": "Blazing Scorcher", "qty": 3 },
+        { "name": "Armed Assailant", "qty": 3 },
+        { "name": "Battering Ram", "qty": 3 },
+        { "name": "Angle Shot", "qty": 3 },
+        { "name": "Against the Odds", "qty": 3 },
+        { "name": "Brazen Buccaneer", "qty": 2 },
+        { "name": "Dangerous Duo", "qty": 2 },
+        { "name": "Arena Kingpin", "qty": 2 },
+        { "name": "Blast Corps Cadet", "qty": 2 },
+        { "name": "Bushwhack", "qty": 2 }
       ]
     },
     {
@@ -176,12 +223,19 @@
       "cards": [
         { "name": "Alpha Strike", "qty": 3 },
         { "name": "Counter Strike", "qty": 3 },
-        { "name": "Block", "qty": 2 },
-        { "name": "Back Off", "qty": 2 },
-        { "name": "Discipline", "qty": 2 },
-        { "name": "Combat Experience", "qty": 2 },
-        { "name": "Doran's Shield", "qty": 2 },
-        { "name": "Apprentice Smith", "qty": 2 }
+        { "name": "Block", "qty": 3 },
+        { "name": "Back Off", "qty": 3 },
+        { "name": "Discipline", "qty": 3 },
+        { "name": "Combat Experience", "qty": 3 },
+        { "name": "Doran's Shield", "qty": 3 },
+        { "name": "Apprentice Smith", "qty": 3 },
+        { "name": "Alpha Wildclaw", "qty": 3 },
+        { "name": "Charm", "qty": 3 },
+        { "name": "Disarming Rake", "qty": 2 },
+        { "name": "Calm Rune", "qty": 2 },
+        { "name": "Adaptatron", "qty": 2 },
+        { "name": "Clockwork Keeper", "qty": 2 },
+        { "name": "Defiant Dance", "qty": 2 }
       ]
     }
   ]
