@@ -1,0 +1,31 @@
+name: Refresh prices
+
+# Keeps store prices up to date by running the importer against the production
+# database on a schedule. Runs on GitHub's servers (no serverless time limit).
+#
+# SETUP (one-time): add a repository secret named DATABASE_URL with your Neon
+# Postgres connection string — Settings → Secrets and variables → Actions.
+
+on:
+  schedule:
+    # Twice daily, in UTC. 19:00 UTC ≈ 5am AEST, 07:00 UTC ≈ 5pm AEST.
+    - cron: "0 19 * * *"
+    - cron: "0 7 * * *"
+  workflow_dispatch: {} # allows a manual "Run workflow" button
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Import prices
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx tsx scripts/import-prices.ts
