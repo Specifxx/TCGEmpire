@@ -1,0 +1,128 @@
+{
+  "_comment": "Curated Riftbound meta archetypes (community reference, June 2026 tier list). Each 'legend' and 'cards[].name' must match a real card name in the DB; the Meta Decks page resolves and live-prices them. Update this file to refresh the meta — keep names exact.",
+  "decks": [
+    {
+      "slug": "master-yi-wuju",
+      "name": "Master Yi Wuju Tempo",
+      "legend": "Master Yi, Wuju Master",
+      "tier": "S",
+      "archetype": "Aggro / Tempo",
+      "domains": ["Calm"],
+      "description": "The defining Tier-1 aggro deck of the Unleashed meta — cheap Calm units backed by combat tricks to close games fast.",
+      "cards": [
+        { "name": "Alpha Strike", "qty": 3 },
+        { "name": "Counter Strike", "qty": 3 },
+        { "name": "Defiant Dance", "qty": 3 },
+        { "name": "Discipline", "qty": 2 },
+        { "name": "Combat Experience", "qty": 2 },
+        { "name": "Alpha Wildclaw", "qty": 3 },
+        { "name": "Apprentice Smith", "qty": 2 },
+        { "name": "Caitlyn, Patrolling", "qty": 2 },
+        { "name": "Brutalizer", "qty": 2 },
+        { "name": "Doran's Shield", "qty": 2 }
+      ]
+    },
+    {
+      "slug": "irelia-blade-dancer",
+      "name": "Irelia Blade Dancer",
+      "legend": "Irelia, Blade Dancer",
+      "tier": "S",
+      "archetype": "Tempo",
+      "domains": ["Calm"],
+      "description": "Top-performing Tier-1 tempo list (Wins Sydney, Top 2 Suzhou). Flexible Calm threats that snowball board control.",
+      "cards": [
+        { "name": "Alpha Strike", "qty": 3 },
+        { "name": "Defiant Dance", "qty": 2 },
+        { "name": "Discipline", "qty": 2 },
+        { "name": "Counter Strike", "qty": 3 },
+        { "name": "Combat Experience", "qty": 2 },
+        { "name": "Aphelios, Exalted", "qty": 1 },
+        { "name": "Azir, Ascendant", "qty": 2 },
+        { "name": "Blitzcrank, Impassive", "qty": 2 },
+        { "name": "Brutalizer", "qty": 2 },
+        { "name": "Doran's Shield", "qty": 2 }
+      ]
+    },
+    {
+      "slug": "diana-scorn",
+      "name": "Diana Moonfall",
+      "legend": "Diana, Scorn of the Moon",
+      "tier": "S",
+      "archetype": "Midrange",
+      "domains": ["Mind"],
+      "description": "Tier-1 Mind midrange (Top 2 Xi'an, Top 4 Sydney). Builds tempo with Lunari units and burst combat spells.",
+      "cards": [
+        { "name": "Diana, Lunari", "qty": 3 },
+        { "name": "Crescent Strike", "qty": 3 },
+        { "name": "Eclipse", "qty": 2 },
+        { "name": "Arcane Shift", "qty": 2 },
+        { "name": "Deadly Flourish", "qty": 2 },
+        { "name": "Ekko, Recurrent", "qty": 2 },
+        { "name": "Dr. Mundo, Expert", "qty": 2 },
+        { "name": "Bellows Breath", "qty": 2 },
+        { "name": "Convergent Mutation", "qty": 2 },
+        { "name": "Energy Conduit", "qty": 2 }
+      ]
+    },
+    {
+      "slug": "leblanc-deceiver",
+      "name": "LeBlanc Deception Control",
+      "legend": "LeBlanc, Deceiver",
+      "tier": "A",
+      "archetype": "Control",
+      "domains": ["Mind"],
+      "description": "Tier-1 control shell (Top 8 Sydney) leaning on Mind card advantage, bounce and reach to grind opponents out.",
+      "cards": [
+        { "name": "Arcane Shift", "qty": 3 },
+        { "name": "Consult the Past", "qty": 2 },
+        { "name": "Deadly Flourish", "qty": 2 },
+        { "name": "Convergent Mutation", "qty": 2 },
+        { "name": "Bard, Mercurial", "qty": 2 },
+        { "name": "Chakram Dancer", "qty": 2 },
+        { "name": "Eclipse", "qty": 2 },
+        { "name": "Crescent Strike", "qty": 2 },
+        { "name": "Card Sharp", "qty": 2 }
+      ]
+    },
+    {
+      "slug": "jinx-aggro",
+      "name": "Jinx Burn Aggro",
+      "legend": "Jinx, Loose Cannon",
+      "tier": "A",
+      "archetype": "Aggro / Burn",
+      "domains": ["Fury"],
+      "description": "Explosive Fury burn — chip the opponent down with cheap units, then finish with direct-damage spells.",
+      "cards": [
+        { "name": "Dancing Grenade", "qty": 3 },
+        { "name": "Detonate", "qty": 3 },
+        { "name": "Disintegrate", "qty": 2 },
+        { "name": "Blood Rush", "qty": 2 },
+        { "name": "Cleave", "qty": 2 },
+        { "name": "Death from Below", "qty": 2 },
+        { "name": "Blazing Scorcher", "qty": 2 },
+        { "name": "Arena Kingpin", "qty": 2 },
+        { "name": "Captain Farron", "qty": 1 },
+        { "name": "Curtain Call", "qty": 2 }
+      ]
+    },
+    {
+      "slug": "kaisa-void",
+      "name": "Kai'Sa Void Aggro",
+      "legend": "Kai'Sa, Daughter of the Void",
+      "tier": "B",
+      "archetype": "Aggro",
+      "domains": ["Fury"],
+      "description": "Fast Fury aggro built around Kai'Sa — flood early, pressure with combat tricks and reach.",
+      "cards": [
+        { "name": "Death from Below", "qty": 3 },
+        { "name": "Blood Rush", "qty": 3 },
+        { "name": "Dangerous Duo", "qty": 2 },
+        { "name": "Disintegrate", "qty": 2 },
+        { "name": "Detonate", "qty": 2 },
+        { "name": "Blazing Scorcher", "qty": 2 },
+        { "name": "Armed Assailant", "qty": 2 },
+        { "name": "Battering Ram", "qty": 2 }
+      ]
+    }
+  ]
+}

@@ -133,11 +133,18 @@ export async function importPrices(): Promise<ImportSummary> {
     if (arr) arr.push(v);
     else m.set(k, [v]);
   };
+  // Track which card ids are Signature ("*") or Overnumbered so number-only
+  // matches can be constrained to the right print type.
+  const starIds = new Set<string>();
+  const overIds = new Set<string>();
   for (const c of cards) {
     const nk = numKey(c.collectorNumber.split("/")[0]);
     push(byNum, `${c.setCode}|${nk}`, c.id);
     push(byNumAny, nk, c.id);
     push(byName, nameKey(c.name), c);
+    const [d, tt] = c.collectorNumber.split("/");
+    if (c.collectorNumber.includes("*")) starIds.add(c.id);
+    else if (parseInt(d, 10) > parseInt(tt ?? "0", 10)) overIds.add(c.id);
   }
 
   // The collector-number TOTAL uniquely identifies the set, so a title like
@@ -207,16 +214,29 @@ export async function importPrices(): Promise<ImportSummary> {
       return search[0].id;
     }
 
-    // 2) number-only match. Skipped for special-print listings: a Signature/
-    // Overnumbered title whose number is written without the "*" (e.g. "225/221
-    // (Signature)") would otherwise resolve to the plain sibling here. If section 1
-    // didn't name-match it, we don't have that exact card — leave it unmatched.
-    if (num && !titleSig && !titleOver) {
-      const setHit = byNum.get(`${setCode}|${num.key}`);
-      if (setHit?.length === 1) return setHit[0];
-      const anyHit = byNumAny.get(num.key);
-      if (anyHit?.length === 1) return anyHit[0];
-      if (setHit?.length) return setHit[0];
+    // 2) number-only match (name didn't resolve — e.g. store titles like
+    // "Vayne - Hunter — Signature - 223*/221" where the number/keywords pollute the
+    // name). The number key is print-aware: numKey("223*") = "223s" maps only to the
+    // signature card, so a starred number routes correctly. For special prints we
+    // CONSTRAIN the hit to the matching print type, so a signature title whose number
+    // is written WITHOUT the star (e.g. "225/221 (Signature)") won't wrongly grab the
+    // plain overnumbered sibling — it stays unmatched instead.
+    if (num) {
+      const setHit = byNum.get(`${setCode}|${num.key}`) ?? [];
+      const anyHit = byNumAny.get(num.key) ?? [];
+      const hits = setHit.length ? setHit : anyHit;
+      if (titleSig) {
+        return hits.find((id) => starIds.has(id)) ?? null;
+      }
+      if (titleOver) {
+        return hits.find((id) => overIds.has(id)) ?? null;
+      }
+      // Plain listing: prefer a plain (non-special) card of that number.
+      const plainSet = setHit.filter((id) => !starIds.has(id) && !overIds.has(id));
+      if (plainSet.length) return plainSet[0];
+      const plainAny = anyHit.filter((id) => !starIds.has(id) && !overIds.has(id));
+      if (plainAny.length === 1) return plainAny[0];
+      if (setHit.length) return setHit[0];
     }
     return null;
   }

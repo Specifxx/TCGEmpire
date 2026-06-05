@@ -28,6 +28,9 @@ export function Navbar() {
           <Link href="/browse" className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-ink-800 hover:text-white">
             Database
           </Link>
+          <Link href="/decks" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-ink-800 hover:text-white sm:block">
+            Meta Decks
+          </Link>
           <Link href="/deck" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-ink-800 hover:text-white sm:block">
             Deck Builder
           </Link>
