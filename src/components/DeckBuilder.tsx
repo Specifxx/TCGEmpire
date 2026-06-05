@@ -20,17 +20,20 @@ interface Item {
   raw: string;
   qty: number;
   name: string;
-  card: {
-    id: string;
-    name: string;
-    setCode: string;
-    collectorNumber: string;
-    variant: string | null;
-    imageThumbUrl: string | null;
-    lowestPriceCents: number | null;
-  } | null;
+  card: DeckBuilderCard | null;
   unitPriceCents: number | null;
   lineCents: number;
+}
+
+interface DeckBuilderCard {
+  id: string;
+  name: string;
+  setCode: string;
+  collectorNumber: string;
+  variant: string | null;
+  imageThumbUrl: string | null;
+  imageUrl: string | null;
+  lowestPriceCents: number | null;
 }
 
 interface Result {
@@ -53,6 +56,7 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
   const [result, setResult] = useState<Result | null>(null);
   const [loading, setLoading] = useState(false);
   const [shared, setShared] = useState(false);
+  const [preview, setPreview] = useState<DeckBuilderCard | null>(null);
   const autoPriced = useRef(false);
 
   async function price(deck: string = text) {
@@ -64,7 +68,10 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: deck }),
       });
-      setResult(await res.json());
+      const data: Result = await res.json();
+      setResult(data);
+      // Default the preview to the first matched card.
+      setPreview(data.items.find((i) => i.card)?.card ?? null);
     } catch {
       setResult(null);
     } finally {
@@ -130,6 +137,37 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
             {shared ? "✓ Link copied!" : "🔗 Copy shareable link"}
           </button>
         </div>
+
+        {/* Card preview — fills in when you hover a matched card in the results. */}
+        {result && (
+          <div className="mt-4 hidden lg:block">
+            <div className="card-surface overflow-hidden">
+              <div className="relative aspect-[5/7] w-full bg-ink-900">
+                {preview?.imageUrl || preview?.imageThumbUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={(preview.imageUrl ?? preview.imageThumbUrl) as string}
+                    alt={preview.name}
+                    className="h-full w-full object-cover object-top"
+                  />
+                ) : (
+                  <div className="grid h-full place-items-center p-4 text-center text-xs text-slate-500">
+                    Hover a card in your list to preview it here
+                  </div>
+                )}
+              </div>
+              {preview && (
+                <div className="p-3">
+                  <div className="text-sm font-bold text-white">{preview.name}</div>
+                  <div className="text-[11px] text-slate-500">
+                    {preview.setCode} · {preview.collectorNumber}
+                    {preview.lowestPriceCents != null ? ` · from ${formatAUD(preview.lowestPriceCents)}` : ""}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Results */}
@@ -172,11 +210,15 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
             <div className="card-surface overflow-hidden">
               <ul className="divide-y divide-ink-800">
                 {result.items.map((it, idx) => (
-                  <li key={idx} className="flex items-center gap-3 p-3">
+                  <li
+                    key={idx}
+                    onMouseEnter={() => it.card && setPreview(it.card)}
+                    className="flex items-center gap-3 p-3 transition-colors hover:bg-ink-900/50"
+                  >
                     <div className="w-8 text-center font-bold text-slate-400">{it.qty}×</div>
                     {it.card?.imageThumbUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={it.card.imageThumbUrl} alt="" className="h-12 w-9 shrink-0 rounded object-cover" />
+                      <img src={it.card.imageThumbUrl} alt="" className="h-12 w-9 shrink-0 rounded object-cover ring-1 ring-ink-700" />
                     ) : (
                       <div className="h-12 w-9 shrink-0 rounded bg-ink-800" />
                     )}

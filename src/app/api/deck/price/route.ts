@@ -13,6 +13,7 @@ const cardSelect = {
   collectorNumber: true,
   variant: true,
   imageThumbUrl: true,
+  imageUrl: true,
   lowestPriceCents: true,
 } as const;
 
@@ -24,6 +25,7 @@ type DeckCard = {
   collectorNumber: string;
   variant: string | null;
   imageThumbUrl: string | null;
+  imageUrl: string | null;
   lowestPriceCents: number | null;
 };
 

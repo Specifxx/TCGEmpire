@@ -109,10 +109,14 @@ async function discoverRiftboundCollections(base: string): Promise<string[]> {
 async function fetchCollection(store: RetailerInfo, handle: string): Promise<ShopifyProduct[]> {
   const all: ShopifyProduct[] = [];
   for (let page = 1; page <= 20; page++) {
-    const url = `${store.base}/collections/${handle}/products.json?limit=250&page=${page}`;
+    // Cache-bust: Shopify serves products.json from an aggressive edge cache, so
+    // different fetchers can get different stale snapshots (this caused a card to
+    // show $26 when the live store price was $35). A unique param + no-store forces
+    // a fresh response so the prices we record match what shoppers actually see.
+    const url = `${store.base}/collections/${handle}/products.json?limit=250&page=${page}&_=${Date.now()}`;
     let res: Response;
     try {
-      res = await fetch(url, { headers: UA });
+      res = await fetch(url, { headers: { ...UA, "Cache-Control": "no-cache", Pragma: "no-cache" }, cache: "no-store" });
     } catch {
       break;
     }
