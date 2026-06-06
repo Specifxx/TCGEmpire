@@ -36,7 +36,6 @@ export async function POST(req: Request) {
       email,
       displayName: parsed.data.displayName,
       passwordHash: await hashPassword(parsed.data.password),
-      balanceCents: 10000, // new accounts start with $100 demo credit
     },
   });
 
