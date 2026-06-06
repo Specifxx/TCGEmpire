@@ -461,6 +461,6 @@ export const EBAY_EST_SHIPPING_CENTS = 350;
 //  - else the store's flat estimate.
 export function effectiveShippingCents(retailerKey: string, rowShippingCents: number | null): number {
   if (rowShippingCents != null) return rowShippingCents;
-  if (retailerKey === "ebay") return EBAY_EST_SHIPPING_CENTS;
+  if (retailerKey.startsWith("ebay")) return EBAY_EST_SHIPPING_CENTS;
   return shippingCents(retailerKey) ?? 0;
 }

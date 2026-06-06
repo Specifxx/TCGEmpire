@@ -188,7 +188,7 @@ function bestVariantPrice(variants: ShopifyVariant[]): { priceCents: number } | 
 // one price we actually display per card. Updates the row if it has drifted.
 async function verifyCheapestListings(): Promise<number> {
   const rows = await prisma.retailerPrice.findMany({
-    where: { inStock: true, NOT: { retailer: "ebay" } },
+    where: { inStock: true, NOT: { retailer: { startsWith: "ebay" } } },
     select: { id: true, cardId: true, priceCents: true, url: true, country: true },
     orderBy: { priceCents: "asc" },
   });
@@ -255,9 +255,11 @@ async function verifyCheapestListings(): Promise<number> {
 export async function refreshEbayMarkets(
   cards: { id: string; name: string; setCode: string; collectorNumber: string; isPromo: boolean }[]
 ): Promise<number> {
+  // Each market has its own retailer key so eBay AU + US rows for the same card never
+  // collide on the unique [cardId, retailer, condition, isFoil] key.
   const MARKETS = [
-    { country: "AU", marketplace: "EBAY_AU", currency: "AUD" },
-    { country: "US", marketplace: "EBAY_US", currency: "USD" },
+    { country: "AU", marketplace: "EBAY_AU", currency: "AUD", retailer: "ebay" },
+    { country: "US", marketplace: "EBAY_US", currency: "USD", retailer: "ebay_us" },
   ];
   let written = 0;
   for (const mkt of MARKETS) {
@@ -279,7 +281,7 @@ export async function refreshEbayMarkets(
       if (!r) continue;
       rows.push({
         cardId: c.id,
-        retailer: "ebay",
+        retailer: mkt.retailer,
         retailerName: "eBay",
         title: r.title,
         url: r.url,
@@ -293,7 +295,7 @@ export async function refreshEbayMarkets(
       });
     }
     if (rows.length > 0) {
-      await prisma.retailerPrice.deleteMany({ where: { retailer: "ebay", country: mkt.country } });
+      await prisma.retailerPrice.deleteMany({ where: { retailer: mkt.retailer } });
       await prisma.retailerPrice.createMany({ data: rows });
       written += rows.length;
     } else {
@@ -542,7 +544,7 @@ export async function importPrices(): Promise<ImportSummary> {
   //  - ebayDue:     last eBay refresh was > 20h ago (so it runs ~once a day).
   //  - ebayAllowed: the workflow sets EBAY_REFRESH=false for push/deploy runs.
   const lastEbay = await prisma.retailerPrice.findFirst({
-    where: { retailer: "ebay" },
+    where: { retailer: { startsWith: "ebay" } },
     orderBy: { lastSeen: "desc" },
     select: { lastSeen: true },
   });

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { CardTile } from "@/components/CardTile";
 import { Logo } from "@/components/Logo";
+import { CountryHeroToggle } from "@/components/CountryHeroToggle";
 import { getChaseCards } from "@/lib/chase-cards";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES, priceField } from "@/lib/country";
@@ -58,7 +59,7 @@ export default async function HomePage() {
     // Most-popular cards, seeded from TCGPlayer's best-seller ranking.
     getChaseCards(12, country),
     // Stores serving the selected market (eBay excluded from the count).
-    prisma.retailerPrice.groupBy({ by: ["retailer"], where: { country, NOT: { retailer: "ebay" } } }),
+    prisma.retailerPrice.groupBy({ by: ["retailer"], where: { country, NOT: { retailer: { startsWith: "ebay" } } } }),
   ]);
   const storeCount = storeGroups.length;
 
@@ -86,6 +87,9 @@ export default async function HomePage() {
             <Link href="/decks" className="btn-ghost">Top meta decks</Link>
             <Link href="/deck" className="btn-ghost">Deck builder &amp; pricing</Link>
           </div>
+
+          {/* Country / market toggle */}
+          <CountryHeroToggle />
 
           {/* Stats */}
           <div className="mx-auto mt-8 grid max-w-lg grid-cols-3 gap-4">

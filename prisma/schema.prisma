@@ -255,6 +255,8 @@ model RetailerPrice {
 
   card         Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
 
+  // eBay uses a per-market retailer key ("ebay" = AU, "ebay_us" = US) so the same
+  // card can have a listing in each marketplace without colliding on this key.
   @@unique([cardId, retailer, condition, isFoil])
   @@index([cardId])
   @@index([retailer])
