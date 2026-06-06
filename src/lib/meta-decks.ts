@@ -1,5 +1,7 @@
 import { prisma } from "./db";
 import { normalizeSearch } from "./format";
+import { pickPrice, priceField, type Country } from "./country";
+import type { Prisma } from "@prisma/client";
 import metaDecksData from "../../prisma/meta-decks.json";
 
 export interface MetaDeckSeed {
@@ -69,26 +71,31 @@ const CARD_SELECT = {
   imageThumbUrl: true,
   imageUrl: true,
   lowestPriceCents: true,
+  lowestPriceCentsNz: true,
 } as const;
 
 // Build a name -> cheapest base printing map for a set of card names in ONE query.
 // (Resolving each card individually would fire ~100 queries per page and can
-// exhaust the serverless DB connection pool.)
-async function buildCardMap(names: string[]): Promise<Map<string, ResolvedCardData>> {
+// exhaust the serverless DB connection pool.) Prices reflect the selected market:
+// ResolvedCardData.lowestPriceCents is set to the AU or NZ column accordingly.
+async function buildCardMap(names: string[], country: Country): Promise<Map<string, ResolvedCardData>> {
   const keys = Array.from(new Set(names.map(normalizeSearch)));
+  const field = priceField(country);
   const matches = await prisma.card.findMany({
     where: { nameNormalized: { in: keys }, isPromo: false },
     select: { ...CARD_SELECT },
-    orderBy: [{ lowestPriceCents: { sort: "asc", nulls: "last" } }],
+    orderBy: [{ [field]: { sort: "asc", nulls: "last" } } as Prisma.CardOrderByWithRelationInput],
   });
   const map = new Map<string, ResolvedCardData>();
   for (const m of matches) {
     const nq = m.nameNormalized;
+    // Collapse to the active market's price so the rest of the pricing is market-agnostic.
+    const eff: ResolvedCardData = { ...m, lowestPriceCents: pickPrice(m, country) };
     const isBase = !m.collectorNumber.includes("*") && !/\d+[a-z]/i.test(m.collectorNumber);
     const existing = map.get(nq);
     // Prefer base art; otherwise keep the first (cheapest, due to orderBy).
     if (!existing || (isBase && !(!existing.collectorNumber.includes("*") && !/\d+[a-z]/i.test(existing.collectorNumber)))) {
-      map.set(nq, m);
+      map.set(nq, eff);
     }
   }
   return map;
@@ -138,14 +145,14 @@ function resolveDeckFromMap(seed: MetaDeckSeed, map: Map<string, ResolvedCardDat
   };
 }
 
-export async function resolveDeck(seed: MetaDeckSeed): Promise<ResolvedDeck> {
-  const map = await buildCardMap([seed.legend, ...seed.cards.map((c) => c.name)]);
+export async function resolveDeck(seed: MetaDeckSeed, country: Country = "AU"): Promise<ResolvedDeck> {
+  const map = await buildCardMap([seed.legend, ...seed.cards.map((c) => c.name)], country);
   return resolveDeckFromMap(seed, map);
 }
 
-export async function resolveAllDecks(): Promise<ResolvedDeck[]> {
+export async function resolveAllDecks(country: Country = "AU"): Promise<ResolvedDeck[]> {
   const allNames = META_DECKS.flatMap((d) => [d.legend, ...d.cards.map((c) => c.name)]);
-  const map = await buildCardMap(allNames);
+  const map = await buildCardMap(allNames, country);
   return META_DECKS.map((d) => resolveDeckFromMap(d, map));
 }
 

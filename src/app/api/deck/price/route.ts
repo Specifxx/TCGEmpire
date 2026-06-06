@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { normalizeSearch } from "@/lib/format";
 import { parseDeckList } from "@/lib/deck";
+import { getCountry } from "@/lib/get-country";
+import { pickPrice, priceField } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +18,7 @@ const cardSelect = {
   imageThumbUrl: true,
   imageUrl: true,
   lowestPriceCents: true,
+  lowestPriceCentsNz: true,
 } as const;
 
 type DeckCard = {
@@ -27,9 +31,12 @@ type DeckCard = {
   imageThumbUrl: string | null;
   imageUrl: string | null;
   lowestPriceCents: number | null;
+  lowestPriceCentsNz: number | null;
 };
 
 export async function POST(req: Request) {
+  const country = getCountry();
+  const orderByPrice = [{ [priceField(country)]: { sort: "asc", nulls: "last" } } as Prisma.CardOrderByWithRelationInput];
   const body = await req.json().catch(() => null);
   const text: string = typeof body?.text === "string" ? body.text : "";
   const lines = parseDeckList(text).slice(0, 200);
@@ -44,14 +51,14 @@ export async function POST(req: Request) {
       ? prisma.card.findMany({
           where: { nameNormalized: { in: nqs } },
           select: cardSelect,
-          orderBy: [{ lowestPriceCents: { sort: "asc", nulls: "last" } }],
+          orderBy: orderByPrice,
         })
       : Promise.resolve([] as DeckCard[]),
     numbers.length
       ? prisma.card.findMany({
           where: { OR: numbers.map((n) => ({ collectorNumber: { startsWith: `${n}/` } })) },
           select: cardSelect,
-          orderBy: [{ lowestPriceCents: { sort: "asc", nulls: "last" } }],
+          orderBy: orderByPrice,
         })
       : Promise.resolve([] as DeckCard[]),
   ]);
@@ -86,7 +93,7 @@ export async function POST(req: Request) {
     const fallback = await prisma.card.findMany({
       where: { OR: unresolved.map((u) => ({ nameNormalized: { contains: u.nq } })) },
       select: cardSelect,
-      orderBy: [{ lowestPriceCents: { sort: "asc", nulls: "last" } }],
+      orderBy: orderByPrice,
     });
     for (const u of unresolved) {
       const hit = fallback.find((c) => c.nameNormalized.includes(u.nq));
@@ -95,7 +102,7 @@ export async function POST(req: Request) {
   }
 
   const out = items.map(({ line, card }) => {
-    const unitPriceCents = card?.lowestPriceCents ?? null;
+    const unitPriceCents = card ? pickPrice(card, country) : null;
     return {
       raw: line.raw,
       qty: line.qty,

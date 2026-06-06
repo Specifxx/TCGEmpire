@@ -5,6 +5,7 @@ import { Logo } from "./Logo";
 import { NavWishlistButton } from "./NavWishlistButton";
 import { MobileNav } from "./MobileNav";
 import { NavDropdown } from "./NavDropdown";
+import { CountrySwitcher } from "./CountrySwitcher";
 
 export function Navbar() {
   return (
@@ -54,6 +55,7 @@ export function Navbar() {
               ]}
             />
           </div>
+          <CountrySwitcher className="ml-1" />
           <NavWishlistButton />
           <MobileNav />
         </nav>

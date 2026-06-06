@@ -4,7 +4,7 @@ import Link from "next/link";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { getWishlist, toggleWishlist } from "@/lib/wishlist-client";
 import { cardHref } from "@/lib/card-url";
-import { formatAUD } from "@/lib/format";
+import { useCountry } from "./CountryProvider";
 
 interface MiniCard {
   id: string;
@@ -14,6 +14,7 @@ interface MiniCard {
   collectorNumber: string;
   imageThumbUrl: string | null;
   lowestPriceCents: number | null;
+  lowestPriceCentsNz?: number | null;
 }
 
 const Ctx = createContext<{ open: () => void; close: () => void }>({ open: () => {}, close: () => {} });
@@ -32,6 +33,7 @@ export function WishlistDrawerProvider({ children }: { children: React.ReactNode
 }
 
 function WishlistDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { fmt, price } = useCountry();
   const [cards, setCards] = useState<MiniCard[] | null>(null);
 
   const load = useCallback(async () => {
@@ -81,7 +83,7 @@ function WishlistDrawer({ open, onClose }: { open: boolean; onClose: () => void 
     };
   }, [open, onClose]);
 
-  const total = (cards ?? []).reduce((n, c) => n + (c.lowestPriceCents ?? 0), 0);
+  const total = (cards ?? []).reduce((n, c) => n + (price(c) ?? 0), 0);
 
   return (
     <>
@@ -131,7 +133,7 @@ function WishlistDrawer({ open, onClose }: { open: boolean; onClose: () => void 
                       <div className="truncate text-sm font-semibold text-white">{c.name}</div>
                       <div className="text-[11px] text-slate-500">{c.setCode} · {c.collectorNumber}</div>
                       <div className="text-sm font-bold text-accent">
-                        {c.lowestPriceCents != null ? formatAUD(c.lowestPriceCents) : "No price yet"}
+                        {price(c) != null ? fmt(price(c)!) : "No price yet"}
                       </div>
                     </div>
                   </Link>
@@ -153,7 +155,7 @@ function WishlistDrawer({ open, onClose }: { open: boolean; onClose: () => void 
           <div className="border-t border-ink-700 p-4">
             <div className="mb-3 flex items-center justify-between text-sm">
               <span className="text-slate-400">Total (cheapest)</span>
-              <span className="text-lg font-extrabold text-accent">{formatAUD(total)}</span>
+              <span className="text-lg font-extrabold text-accent">{fmt(total)}</span>
             </div>
             <Link href="/wishlist" onClick={onClose} className="btn-primary w-full text-center">
               Open full wishlist →

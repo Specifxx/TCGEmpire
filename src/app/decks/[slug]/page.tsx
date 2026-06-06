@@ -3,8 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDeckSeed, resolveDeck } from "@/lib/meta-decks";
 import { DeckView } from "@/components/DeckView";
-
-export const revalidate = 900;
+import { getCountry } from "@/lib/get-country";
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const seed = getDeckSeed(params.slug);
@@ -32,7 +31,7 @@ function encodeForBuilder(text: string): string {
 export default async function DeckDetailPage({ params }: { params: { slug: string } }) {
   const seed = getDeckSeed(params.slug);
   if (!seed) notFound();
-  const deck = await resolveDeck(seed);
+  const deck = await resolveDeck(seed, getCountry());
 
   const builderHref = `/deck?list=${encodeForBuilder(deckListText(seed.legend, seed.cards))}`;
 

@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { dollarsToCents, normalizeSearch } from "./format";
+import { priceField, type Country } from "./country";
 
 export interface CardQuery {
   q?: string;
@@ -37,8 +38,9 @@ function csv(v?: string): string[] | undefined {
   return arr.length ? arr : undefined;
 }
 
-export function buildCardWhere(query: CardQuery): Prisma.CardWhereInput {
+export function buildCardWhere(query: CardQuery, country: Country = "AU"): Prisma.CardWhereInput {
   const where: Prisma.CardWhereInput = {};
+  const field = priceField(country);
 
   const domains = csv(query.domain);
   if (domains) where.domain = { in: domains };
@@ -68,21 +70,25 @@ export function buildCardWhere(query: CardQuery): Prisma.CardWhereInput {
   if (query.max) price.lte = dollarsToCents(query.max);
   if (query.priced === "1" || price.gte != null || price.lte != null) {
     price.not = null;
-    where.lowestPriceCents = price;
+    // Filter on the selected market's price column (AU vs NZ).
+    where[field] = price;
   }
 
   return where;
 }
 
 export function buildCardOrderBy(
-  sort?: string
+  sort?: string,
+  country: Country = "AU"
 ): Prisma.CardOrderByWithRelationInput[] {
+  const field = priceField(country);
   switch (sort) {
     case "price_asc":
-      // Nulls last so unpriced cards don't dominate the top.
-      return [{ lowestPriceCents: { sort: "asc", nulls: "last" } }, { name: "asc" }];
+      // Nulls last so unpriced cards don't dominate the top. Sort on the selected
+      // market's price column (AU vs NZ).
+      return [{ [field]: { sort: "asc", nulls: "last" } } as Prisma.CardOrderByWithRelationInput, { name: "asc" }];
     case "price_desc":
-      return [{ lowestPriceCents: { sort: "desc", nulls: "last" } }, { name: "asc" }];
+      return [{ [field]: { sort: "desc", nulls: "last" } } as Prisma.CardOrderByWithRelationInput, { name: "asc" }];
     case "name":
       return [{ name: "asc" }];
     case "number":
@@ -93,26 +99,35 @@ export function buildCardOrderBy(
 
 export { cardSlug, cardHref } from "./card-url";
 
-export const CARD_TILE_SELECT = {
-  id: true,
-  slug: true,
-  name: true,
-  domain: true,
-  type: true,
-  rarity: true,
-  variant: true,
-  isPromo: true,
-  setCode: true,
-  setName: true,
-  collectorNumber: true,
-  energyCost: true,
-  might: true,
-  artSeed: true,
-  orientation: true,
-  imageUrl: true,
-  imageThumbUrl: true,
-  lowestPriceCents: true,
-  // Count only in-stock listings for the "N stores" tile label (out-of-stock
-  // listings are shown on the card page but shouldn't inflate availability).
-  _count: { select: { retailerPrices: { where: { inStock: true } } } },
-} satisfies Prisma.CardSelect;
+// Tile select for a given market. Both price columns are always selected (so client
+// components can switch instantly), but the "N stores" count is filtered to the
+// selected country's in-stock listings.
+export function cardTileSelect(country: Country = "AU") {
+  return {
+    id: true,
+    slug: true,
+    name: true,
+    domain: true,
+    type: true,
+    rarity: true,
+    variant: true,
+    isPromo: true,
+    setCode: true,
+    setName: true,
+    collectorNumber: true,
+    energyCost: true,
+    might: true,
+    artSeed: true,
+    orientation: true,
+    imageUrl: true,
+    imageThumbUrl: true,
+    lowestPriceCents: true,
+    lowestPriceCentsNz: true,
+    // Count only in-stock listings for this market for the "N stores" tile label
+    // (out-of-stock listings are shown on the card page but shouldn't inflate it).
+    _count: { select: { retailerPrices: { where: { inStock: true, country } } } },
+  } satisfies Prisma.CardSelect;
+}
+
+// Default (Australia) tile select, kept for callers that don't vary by market.
+export const CARD_TILE_SELECT = cardTileSelect("AU");

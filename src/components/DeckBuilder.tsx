@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { formatAUD } from "@/lib/format";
+import { useCountry } from "./CountryProvider";
 
 // UTF-8-safe base64 so a decklist (incl. accented names) survives a URL round-trip.
 function encodeList(text: string): string {
@@ -34,6 +34,7 @@ interface DeckBuilderCard {
   imageThumbUrl: string | null;
   imageUrl: string | null;
   lowestPriceCents: number | null;
+  lowestPriceCentsNz?: number | null;
 }
 
 interface Result {
@@ -52,6 +53,7 @@ const SAMPLE = `1 Jinx, Loose Cannon
 3 Kai'Sa, Evolutionary`;
 
 export function DeckBuilder({ initialList }: { initialList?: string }) {
+  const { fmt, price: pickCardPrice, country } = useCountry();
   const [text, setText] = useState(() => (initialList ? decodeList(initialList) : ""));
   const [result, setResult] = useState<Result | null>(null);
   const [loading, setLoading] = useState(false);
@@ -87,6 +89,12 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Re-price when the market (AU/NZ) changes so totals reflect the new currency/stores.
+  useEffect(() => {
+    if (result && text.trim()) void price(text);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [country]);
 
   async function share() {
     if (!text.trim()) return;
@@ -171,7 +179,7 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
                   <div className="text-sm font-bold text-white">{preview.name}</div>
                   <div className="text-[11px] text-slate-500">
                     {preview.setCode} · {preview.collectorNumber}
-                    {preview.lowestPriceCents != null ? ` · from ${formatAUD(preview.lowestPriceCents)}` : ""}
+                    {pickCardPrice(preview) != null ? ` · from ${fmt(pickCardPrice(preview)!)}` : ""}
                   </div>
                 </div>
               )}
@@ -196,7 +204,7 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
               <p className="text-lg font-semibold text-white">Price a whole deck at once</p>
               <p className="mt-1 text-sm">
                 Paste a decklist and we&apos;ll match every card and total up the cheapest
-                Australian prices.
+                {country === "NZ" ? " New Zealand" : " Australian"} prices.
               </p>
             </div>
           </div>
@@ -205,7 +213,7 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
             {/* Summary */}
             <div className="card-surface mb-4 flex flex-wrap items-center justify-between gap-4 p-5">
               <div className="flex gap-6">
-                <Sum label="Deck total" value={formatAUD(result.totalCents)} highlight />
+                <Sum label="Deck total" value={fmt(result.totalCents)} highlight />
                 <Sum label="Cards" value={`${result.totalQty}`} />
                 <Sum label="Matched" value={`${result.matchedCount}/${result.items.length}`} />
               </div>
@@ -251,8 +259,8 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
                     <div className="text-right">
                       {it.unitPriceCents != null ? (
                         <>
-                          <div className="font-bold text-white">{formatAUD(it.lineCents)}</div>
-                          <div className="text-[11px] text-slate-500">{formatAUD(it.unitPriceCents)} ea</div>
+                          <div className="font-bold text-white">{fmt(it.lineCents)}</div>
+                          <div className="text-[11px] text-slate-500">{fmt(it.unitPriceCents)} ea</div>
                         </>
                       ) : (
                         <div className="text-xs text-slate-500">{it.card ? "no price" : "—"}</div>
@@ -265,11 +273,11 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
                 <span className="text-sm text-slate-400">
                   {result.pricedQty} of {result.totalQty} cards priced
                 </span>
-                <span className="text-xl font-extrabold text-accent">{formatAUD(result.totalCents)}</span>
+                <span className="text-xl font-extrabold text-accent">{fmt(result.totalCents)}</span>
               </div>
             </div>
             <p className="mt-3 text-center text-[11px] text-slate-600">
-              Total uses each card&apos;s cheapest in-stock AU price and may span multiple stores.
+              Total uses each card&apos;s cheapest in-stock {country === "NZ" ? "NZ" : "AU"} price and may span multiple stores.
             </p>
           </>
         )}

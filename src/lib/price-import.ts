@@ -74,6 +74,12 @@ function parseNumber(title: string): { setCode: string | null; key: string; tota
 export const MULTI_CARD =
   /\b(playset|lot|lots|bundle|joblot|job lot|x\s*\d+|\d+\s*x|set of|complete set|full set|bulk)\b/i;
 
+// A promo printing shares the base card's collector number, so a listing is only a
+// promo when its title says so. These markers route a listing to the promo card and
+// keep it out of the base card's price.
+export const PROMO_HINT = /\bpromo\b|promotional|pre-?release|gg\s*ez|organi[sz]ed\s*play|nexus\s*night|judge\s*promo/i;
+const PROMO_WORDS = /\b(promo|promotional|pre-?release|gg\s*ez|organi[sz]ed\s*play|nexus\s*night|judge)\b/gi;
+
 // Many TCG stores list a card with condition variants (Near Mint, Lightly Played,
 // …). Picking the absolute cheapest variant records a played/damaged copy's price,
 // which is LOWER than the Near-Mint price shoppers see on the product page (a card
@@ -137,12 +143,14 @@ async function discoverRiftboundCollections(base: string): Promise<string[]> {
 }
 
 async function fetchCollection(store: RetailerInfo, handle: string): Promise<ShopifyProduct[]> {
+  const cc = store.country ?? "AU";
   const all: ShopifyProduct[] = [];
   for (let page = 1; page <= 20; page++) {
-    // country=AU is CRITICAL: Shopify Markets serves a different price per visitor
+    // country=XX is CRITICAL: Shopify Markets serves a different price per visitor
     // country, and our (US) server was getting US/default prices — e.g. $33 when the
-    // real AU price is $45. Forcing the AU market gives the price AU shoppers see.
-    const url = `${store.base}/collections/${handle}/products.json?limit=250&page=${page}&country=AU&_=${Date.now()}`;
+    // real AU price is $45. Forcing the store's market gives the local shopper price
+    // (AUD for AU stores, NZD for NZ stores).
+    const url = `${store.base}/collections/${handle}/products.json?limit=250&page=${page}&country=${cc}&_=${Date.now()}`;
     let res: Response;
     try {
       res = await fetch(url, { headers: { ...UA, "Cache-Control": "no-cache", Pragma: "no-cache" }, cache: "no-store" });
@@ -181,20 +189,24 @@ function bestVariantPrice(variants: ShopifyVariant[]): { priceCents: number } | 
 async function verifyCheapestListings(): Promise<number> {
   const rows = await prisma.retailerPrice.findMany({
     where: { inStock: true, NOT: { retailer: "ebay" } },
-    select: { id: true, cardId: true, priceCents: true, url: true },
+    select: { id: true, cardId: true, priceCents: true, url: true, country: true },
     orderBy: { priceCents: "asc" },
   });
-  const cheapest = new Map<string, { id: string; priceCents: number; url: string }>();
-  for (const r of rows) if (!cheapest.has(r.cardId)) cheapest.set(r.cardId, r);
+  // Cheapest in-stock listing per card PER MARKET (AU and NZ are verified separately).
+  const cheapest = new Map<string, { id: string; priceCents: number; url: string; country: string }>();
+  for (const r of rows) {
+    const k = `${r.cardId}|${r.country}`;
+    if (!cheapest.has(k)) cheapest.set(k, r);
+  }
   const targets = Array.from(cheapest.values());
 
   // Fetch a product's authoritative price. Uses the CLEAN product.json URL (no
   // cache-bust query param — that returned a stale/blocked response from the runner;
   // the plain URL returns the live price) with a browser UA, and one retry.
-  async function fetchProductPrice(url: string): Promise<{ priceCents: number } | null> {
+  async function fetchProductPrice(url: string, country: string): Promise<{ priceCents: number } | null> {
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
-        const res = await fetch(`${url}.json?country=AU`, {
+        const res = await fetch(`${url}.json?country=${country}`, {
           headers: { ...UA, "Cache-Control": "no-cache", Pragma: "no-cache" },
           cache: "no-store",
         });
@@ -216,7 +228,7 @@ async function verifyCheapestListings(): Promise<number> {
     await Promise.all(
       targets.slice(i, i + BATCH).map(async (t) => {
         try {
-          const v = await fetchProductPrice(t.url);
+          const v = await fetchProductPrice(t.url, t.country);
           if (!v) return;
           // Only correct the PRICE — never flip availability from this endpoint
           // (its `available` is unreliable). Guard against absurd values too.
@@ -237,12 +249,24 @@ async function verifyCheapestListings(): Promise<number> {
 }
 
 export async function importPrices(): Promise<ImportSummary> {
-  // Skip promos: they share the base card's number, so matching would steal the
-  // base card's prices. Promos stay unpriced until promo-aware matching exists.
-  const cards = await prisma.card.findMany({
-    where: { isPromo: false },
-    select: { id: true, name: true, setCode: true, collectorNumber: true, rarity: true, variant: true },
+  const allCardRows = await prisma.card.findMany({
+    select: { id: true, name: true, setCode: true, collectorNumber: true, rarity: true, variant: true, isPromo: true },
   });
+  // Base (non-promo) pool drives the normal matching, unchanged.
+  const cards = allCardRows.filter((c) => !c.isPromo);
+  // Promo pool: a promo shares the base card's number, so it's matched ONLY when a
+  // listing title explicitly says "promo" (etc.) — see PROMO_HINT below.
+  const promoRows = allCardRows.filter((c) => c.isPromo);
+  const promoByName = new Map<string, string>();
+  const promoByNum = new Map<string, string>();
+  const promoByNumAny = new Map<string, string>();
+  for (const c of promoRows) {
+    const nk = numKey(c.collectorNumber.split("/")[0]);
+    const nameK = nameKey(c.name);
+    if (!promoByName.has(nameK)) promoByName.set(nameK, c.id);
+    if (!promoByNum.has(`${c.setCode}|${nk}`)) promoByNum.set(`${c.setCode}|${nk}`, c.id);
+    if (!promoByNumAny.has(nk)) promoByNumAny.set(nk, c.id);
+  }
 
   const byNum = new Map<string, string[]>();
   const byNumAny = new Map<string, string[]>();
@@ -287,6 +311,16 @@ export async function importPrices(): Promise<ImportSummary> {
     const num = parseNumber(t);
     const setCode =
       num?.setCode ?? setFromTotal(num?.total) ?? SET_FROM_TITLE.find(([re]) => re.test(t))?.[1] ?? "OGN";
+
+    // Promo listing → resolve against the PROMO pool only (a promo shares the base
+    // card's number, so a promo-marked listing must never price the base card).
+    if (PROMO_HINT.test(t)) {
+      const promoName = nameKey(cleanProductName(t).replace(PROMO_WORDS, " "));
+      const byNameHit = promoByName.get(promoName);
+      if (byNameHit) return byNameHit;
+      if (num) return promoByNum.get(`${setCode}|${num.key}`) ?? promoByNumAny.get(num.key) ?? null;
+      return null;
+    }
     // NOTE: "Foil" is NOT an alt-art signal — nearly every listing (incl. base
     // cards) says Foil. Only these markers (or a lettered number like 039a) mean
     // an alt-art/special printing.
@@ -366,6 +400,7 @@ export async function importPrices(): Promise<ImportSummary> {
   const summary: ImportSummary = { stores: [], totalMatched: 0, totalUnmatched: 0, cardsPriced: 0 };
 
   for (const store of RETAILER_LIST) {
+    const cc = store.country ?? "AU";
     // Auto-discover the store's Riftbound collections; fall back to any handles
     // configured explicitly in retailers.ts.
     let handles = await discoverRiftboundCollections(store.base);
@@ -428,7 +463,8 @@ export async function importPrices(): Promise<ImportSummary> {
         condition: best.title && best.title !== "Default Title" ? best.title : null,
         isFoil: /foil/i.test(p.title),
         priceCents,
-        currency: "AUD",
+        currency: cc === "NZ" ? "NZD" : "AUD",
+        country: cc,
         inStock,
       });
     }
@@ -459,14 +495,15 @@ export async function importPrices(): Promise<ImportSummary> {
   const ebayDue = !lastEbay || Date.now() - lastEbay.lastSeen.getTime() > 20 * 60 * 60 * 1000;
   const ebayAllowed = process.env.EBAY_REFRESH !== "false";
   if (isEbayEnabled() && ebayDue && ebayAllowed) {
+    // Include promos now: they're priced from eBay only (a promo shares the base
+    // card's number, so it's matched by promo-wording in the listing title).
     const allCards = await prisma.card.findMany({
-      where: { isPromo: false },
       orderBy: [
         { searchCount: "desc" },
         { viewCount: "desc" },
         { lowestPriceCents: { sort: "desc", nulls: "last" } },
       ],
-      select: { id: true, name: true, setCode: true, collectorNumber: true },
+      select: { id: true, name: true, setCode: true, collectorNumber: true, isPromo: true },
     });
     console.log(`eBay: searching all ${allCards.length} cards (once-daily).`);
     // Buffer results, then replace in one shot. CRUCIAL: if the run produced no
@@ -482,6 +519,7 @@ export async function importPrices(): Promise<ImportSummary> {
         number: rawNum.replace(/\*/g, ""),
         total: total ?? "",
         isSignature: c.collectorNumber.includes("*"),
+        isPromo: c.isPromo,
       });
       if (!r) continue;
       ebayRows.push({
@@ -495,6 +533,7 @@ export async function importPrices(): Promise<ImportSummary> {
         priceCents: r.priceCents,
         shippingCents: r.shippingCents,
         currency: "AUD",
+        country: "AU", // eBay is AU-only (Browse API rate limit) — never run for NZ
         inStock: true,
       });
     }
@@ -507,29 +546,34 @@ export async function importPrices(): Promise<ImportSummary> {
     summary.stores.push({ name: "eBay", products: allCards.length, priced: ebayRows.length, matched: ebayRows.length, unmatched: 0 });
   }
 
-  // Recompute each card's lowest live price from IN-STOCK listings only, so the
-  // catalogue "from" price never reflects a sold-out listing. (Out-of-stock rows
-  // still exist and are shown on the card page, just not used for the headline price.)
-  const priced = await prisma.retailerPrice.groupBy({
-    by: ["cardId"],
-    where: { inStock: true },
-    _min: { priceCents: true },
-  });
-  await prisma.card.updateMany({ data: { lowestPriceCents: null } });
-  for (const row of priced) {
+  // Recompute each card's lowest live price PER MARKET from IN-STOCK listings only,
+  // so the catalogue "from" price never reflects a sold-out listing. (Out-of-stock
+  // rows still exist and are shown on the card page, just not used for the headline.)
+  //   lowestPriceCents   = cheapest in-stock AU listing (AUD)
+  //   lowestPriceCentsNz = cheapest in-stock NZ listing (NZD)
+  const [pricedAu, pricedNz] = await Promise.all([
+    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "AU" }, _min: { priceCents: true } }),
+    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "NZ" }, _min: { priceCents: true } }),
+  ]);
+  const lowAu = new Map(pricedAu.map((r) => [r.cardId, r._min.priceCents ?? null]));
+  const lowNz = new Map(pricedNz.map((r) => [r.cardId, r._min.priceCents ?? null]));
+  const allIds = new Set([...lowAu.keys(), ...lowNz.keys()]);
+  await prisma.card.updateMany({ data: { lowestPriceCents: null, lowestPriceCentsNz: null } });
+  for (const id of allIds) {
     await prisma.card.update({
-      where: { id: row.cardId },
-      data: { lowestPriceCents: row._min.priceCents ?? null },
+      where: { id },
+      data: { lowestPriceCents: lowAu.get(id) ?? null, lowestPriceCentsNz: lowNz.get(id) ?? null },
     });
   }
-  summary.cardsPriced = priced.length;
+  summary.cardsPriced = lowAu.size;
 
   // Snapshot today's lowest price per card for the price-over-time chart. Backend
   // only for now (no UI) — we want a week+ of history before releasing it. One
   // point per card per Sydney day; a same-day re-run (e.g. a deploy) replaces it.
   try {
     const day = sydneyDay();
-    const points = priced
+    // AU-only for now (the chart is unreleased; AU is the primary market).
+    const points = pricedAu
       .filter((r) => r._min.priceCents != null)
       .map((r) => ({ cardId: r.cardId, day, lowestPriceCents: r._min.priceCents as number }));
     await prisma.priceHistory.deleteMany({ where: { day } });

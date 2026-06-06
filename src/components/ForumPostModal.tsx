@@ -29,6 +29,13 @@ function ago(iso: string) {
   return `${Math.floor(h / 24)}d ago`;
 }
 
+// Absolute date + time, e.g. "6 Jun 2026, 11:30 pm".
+function dateTime(iso: string) {
+  return new Date(iso).toLocaleString("en-AU", {
+    day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit",
+  });
+}
+
 export function ForumPostModal({
   post,
   currentUser,
@@ -130,7 +137,7 @@ export function ForumPostModal({
               <span className="font-medium text-slate-400">{post.authorName}</span>
             )}
             <span>·</span>
-            <span>{ago(post.createdAt)}</span>
+            <span title={ago(post.createdAt)}>Posted {dateTime(post.createdAt)}</span>
             {post.contact && (
               <>
                 <span>·</span>
@@ -152,7 +159,8 @@ export function ForumPostModal({
               {comments.map((c) => (
                 <li key={c.id} className="rounded-xl bg-ink-850 p-3">
                   <div className="text-xs text-slate-500">
-                    <span className="font-medium text-slate-300">{c.authorName}</span> · {ago(c.createdAt)}
+                    <span className="font-medium text-slate-300">{c.authorName}</span>{" "}
+                    · <span title={ago(c.createdAt)}>{dateTime(c.createdAt)}</span>
                   </div>
                   <p className="mt-1 whitespace-pre-wrap text-sm text-slate-200">{c.body}</p>
                 </li>

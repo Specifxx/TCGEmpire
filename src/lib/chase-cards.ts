@@ -1,6 +1,7 @@
 import { prisma } from "./db";
 import { normalizeSearch } from "./format";
-import { CARD_TILE_SELECT } from "./cards";
+import { cardTileSelect } from "./cards";
+import { pickPrice, type Country } from "./country";
 import type { CardTileData } from "@/components/CardTile";
 
 // "Chase cards" — the most sought-after Riftbound cards, ordered by real-world
@@ -55,31 +56,33 @@ export const CHASE_ORDER: string[] = [
 ];
 
 // Rank a printing as a chase representative: prefer ones with a real photo and a
-// live price, then the most valuable (the signature/alt-art version is the chase).
-function score(c: CardTileData): number {
+// live price (in the selected market), then the most valuable (the signature/alt-art
+// version is the chase).
+function score(c: CardTileData, country: Country): number {
   let s = 0;
   if (c.imageThumbUrl || c.imageUrl) s += 1_000_000_000;
-  if (c.lowestPriceCents != null) s += 100_000_000 + c.lowestPriceCents;
+  const p = pickPrice(c, country);
+  if (p != null) s += 100_000_000 + p;
   return s;
 }
 
 // Resolve the chase list to real cards, in popularity order, one card per name.
 // Unmatched names are skipped, so the section always renders a clean list.
-export async function getChaseCards(limit = 12): Promise<CardTileData[]> {
+export async function getChaseCards(limit = 12, country: Country = "AU"): Promise<CardTileData[]> {
   const keyFor = (name: string) => normalizeSearch(name);
   const orderIndex = new Map<string, number>();
   CHASE_ORDER.forEach((name, i) => orderIndex.set(keyFor(name), i));
 
   const cards = (await prisma.card.findMany({
     where: { nameNormalized: { in: [...orderIndex.keys()] } },
-    select: { ...CARD_TILE_SELECT, nameNormalized: true },
+    select: { ...cardTileSelect(country), nameNormalized: true },
   })) as (CardTileData & { nameNormalized: string })[];
 
   // Pick the best representative printing per normalized name.
   const best = new Map<string, CardTileData & { nameNormalized: string }>();
   for (const c of cards) {
     const cur = best.get(c.nameNormalized);
-    if (!cur || score(c) > score(cur)) best.set(c.nameNormalized, c);
+    if (!cur || score(c, country) > score(cur, country)) best.set(c.nameNormalized, c);
   }
 
   return [...best.values()]

@@ -27,9 +27,12 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
       orientation: true,
       artSeed: true,
       lowestPriceCents: true,
+      lowestPriceCentsNz: true,
       retailerPrices: {
         orderBy: { priceCents: "asc" },
-        select: { id: true, retailer: true, retailerName: true, priceCents: true, shippingCents: true, condition: true, url: true, inStock: true },
+        // country is returned so the client can show just the selected market's
+        // listings (keeps this response cacheable regardless of the viewer's country).
+        select: { id: true, retailer: true, retailerName: true, priceCents: true, shippingCents: true, condition: true, url: true, inStock: true, country: true },
       },
     },
   });

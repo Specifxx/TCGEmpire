@@ -5,7 +5,7 @@ import { CardImage } from "./CardImage";
 import { VariantBadge, OvernumberedBadge, SignatureBadge } from "./Badge";
 import { WishlistButton } from "./WishlistButton";
 import { useQuickView } from "./QuickView";
-import { formatAUD } from "@/lib/format";
+import { useCountry } from "./CountryProvider";
 import { cardHref } from "@/lib/card-url";
 import { rarityInfo, isOvernumbered, isSignature } from "@/lib/constants";
 
@@ -28,6 +28,7 @@ export interface CardTileData {
   imageUrl: string | null;
   imageThumbUrl: string | null;
   lowestPriceCents: number | null;
+  lowestPriceCentsNz?: number | null;
   _count: { retailerPrices: number };
 }
 
@@ -35,6 +36,8 @@ export function CardTile({ card }: { card: CardTileData }) {
   const r = rarityInfo(card.rarity);
   const stores = card._count.retailerPrices;
   const { open } = useQuickView();
+  const { fmt, price } = useCountry();
+  const lowest = price(card);
 
   // Left-click opens an instant in-page quick view (no navigation = no lag). The
   // real href is kept for SEO, sharing and middle/ctrl-click (open in new tab),
@@ -79,11 +82,11 @@ export function CardTile({ card }: { card: CardTileData }) {
 
         <div className="mt-auto flex items-end justify-between pt-1">
           <div>
-            {card.lowestPriceCents != null ? (
+            {lowest != null ? (
               <>
                 <div className="text-[11px] text-slate-500">from</div>
                 <div className="text-lg font-bold text-accent">
-                  {formatAUD(card.lowestPriceCents)}
+                  {fmt(lowest)}
                 </div>
               </>
             ) : (

@@ -7,25 +7,29 @@ import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, 
 import { isOvernumbered, isSignature } from "@/lib/constants";
 import { WishlistButton } from "@/components/WishlistButton";
 import { CardViewBeacon } from "@/components/CardViewBeacon";
-import { formatAUD, timeAgo } from "@/lib/format";
+import { formatMoney, timeAgo } from "@/lib/format";
 import { effectiveShippingCents } from "@/lib/retailers";
+import { getCountry } from "@/lib/get-country";
+import { COUNTRIES, pickPrice } from "@/lib/country";
 
-// Revalidate every 3 min so the card page stays in sync with the browse tiles.
-export const revalidate = 180;
+// Dynamic: prices + store listings depend on the selected market (country cookie).
 
 // Accept either the slug ("vayne-hunter-sfd-223-221") or the legacy cuid.
 const whereParam = (p: string) => ({ OR: [{ slug: p }, { id: p }] });
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const country = getCountry();
+  const info = COUNTRIES[country];
   const card = await prisma.card.findFirst({
     where: whereParam(params.id),
-    select: { slug: true, name: true, setName: true, setCode: true, collectorNumber: true, lowestPriceCents: true, imageUrl: true, imageThumbUrl: true },
+    select: { slug: true, name: true, setName: true, setCode: true, collectorNumber: true, lowestPriceCents: true, lowestPriceCentsNz: true, imageUrl: true, imageThumbUrl: true },
   });
   if (!card) return { title: "Card not found" };
 
-  const price = card.lowestPriceCents != null ? ` from ${formatAUD(card.lowestPriceCents)}` : "";
-  const title = `${card.name} (${card.setCode} ${card.collectorNumber}) — Riftbound price in Australia`;
-  const description = `Compare live Australian prices for ${card.name}, Riftbound ${card.setName} ${card.collectorNumber}${price}. Find the cheapest store to buy this card in Australia.`;
+  const lowest = pickPrice(card, country);
+  const price = lowest != null ? ` from ${formatMoney(lowest, info.currency)}` : "";
+  const title = `${card.name} (${card.setCode} ${card.collectorNumber}) — Riftbound price in ${info.label}`;
+  const description = `Compare live ${info.label} prices for ${card.name}, Riftbound ${card.setName} ${card.collectorNumber}${price}. Find the cheapest store to buy this card in ${info.label}.`;
   const image = card.imageUrl ?? card.imageThumbUrl ?? undefined;
 
   return {
@@ -42,14 +46,20 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 }
 
 export default async function CardPage({ params }: { params: { id: string } }) {
+  const country = getCountry();
+  const info = COUNTRIES[country];
+  const fmt = (cents: number) => formatMoney(cents, info.currency);
   const card = await prisma.card.findFirst({
     where: whereParam(params.id),
     include: {
-      retailerPrices: { orderBy: { priceCents: "asc" } },
+      // Only the selected market's store listings (AU stores + eBay AU, or NZ stores).
+      retailerPrices: { where: { country }, orderBy: { priceCents: "asc" } },
     },
   });
 
   if (!card) notFound();
+
+  const lowestPrice = pickPrice(card, country);
 
   // Rank by DELIVERED cost (item + shipping) so a listing isn't shown as cheapest
   // just because its postage reads as $0 — the common eBay case. Shipping is the
@@ -70,14 +80,14 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     "@type": "Product",
     name: card.name,
     category: "Trading Card",
-    description: `${card.name} — Riftbound ${card.setName} (${card.setCode}) ${card.collectorNumber}. Compare Australian prices.`,
+    description: `${card.name} — Riftbound ${card.setName} (${card.setCode}) ${card.collectorNumber}. Compare ${info.label} prices.`,
     ...(card.imageUrl ? { image: card.imageUrl } : {}),
-    ...(prices.length && card.lowestPriceCents != null
+    ...(prices.length && lowestPrice != null
       ? {
           offers: {
             "@type": "AggregateOffer",
-            priceCurrency: "AUD",
-            lowPrice: (card.lowestPriceCents / 100).toFixed(2),
+            priceCurrency: info.currency,
+            lowPrice: (lowestPrice / 100).toFixed(2),
             highPrice: (prices[prices.length - 1].priceCents / 100).toFixed(2),
             offerCount: prices.length,
             availability: "https://schema.org/InStock",
@@ -125,7 +135,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <Metric label="Cheapest price" value={card.lowestPriceCents != null ? formatAUD(card.lowestPriceCents) : "—"} highlight />
+              <Metric label="Cheapest price" value={lowestPrice != null ? fmt(lowestPrice) : "—"} highlight />
               <Metric label="In stock at" value={`${prices.length} ${prices.length === 1 ? "store" : "stores"}`} />
               {card.energyCost != null && <Metric label="Energy" value={String(card.energyCost)} />}
               {card.might != null && <Metric label="Might" value={String(card.might)} />}
@@ -156,7 +166,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               <div className="p-6 text-center text-sm text-slate-400">
                 <p className="font-semibold text-white">Currently sold out everywhere</p>
                 <p className="mt-1">
-                  {outOfStock.length} Australian {outOfStock.length === 1 ? "store has" : "stores have"} listed
+                  {outOfStock.length} {info.label} {outOfStock.length === 1 ? "store has" : "stores have"} listed
                   this card but it&apos;s out of stock right now. See them below.
                 </p>
               </div>
@@ -171,15 +181,15 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                         {p.condition && <span className="chip bg-ink-800 text-slate-300">{p.condition}</span>}
                         <span className="text-brand-400">● In stock</span>
                         <span>
-                          {p.ship === 0 ? "+ free post" : `+ ${formatAUD(p.ship)} post${p.shipEstimated ? " est." : ""}`}
+                          {p.ship === 0 ? "+ free post" : `+ ${fmt(p.ship)} post${p.shipEstimated ? " est." : ""}`}
                         </span>
                       </div>
                     </div>
                     <div className="text-right">
                       <div className={`text-lg font-bold ${i === 0 ? "text-accent" : "text-white"}`}>
-                        {formatAUD(p.priceCents)}
+                        {fmt(p.priceCents)}
                       </div>
-                      <div className="text-[11px] text-slate-400">≈ {formatAUD(p.delivered)} delivered</div>
+                      <div className="text-[11px] text-slate-400">≈ {fmt(p.delivered)} delivered</div>
                     </div>
                     <a
                       href={p.url}
@@ -211,7 +221,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-lg font-bold text-slate-400 line-through">{formatAUD(p.priceCents)}</div>
+                        <div className="text-lg font-bold text-slate-400 line-through">{fmt(p.priceCents)}</div>
                       </div>
                       <a
                         href={p.url}

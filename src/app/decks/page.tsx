@@ -3,9 +3,9 @@ import Link from "next/link";
 import { resolveAllDecks } from "@/lib/meta-decks";
 import { DomainBadge } from "@/components/Badge";
 import { TierBadge } from "@/components/TierBadge";
-import { formatAUD } from "@/lib/format";
-
-export const revalidate = 900;
+import { formatMoney } from "@/lib/format";
+import { getCountry } from "@/lib/get-country";
+import { COUNTRIES } from "@/lib/country";
 
 export const metadata: Metadata = {
   title: "Riftbound Top Meta Decks & Build Cost (Australia)",
@@ -15,7 +15,9 @@ export const metadata: Metadata = {
 };
 
 export default async function DecksPage() {
-  const decks = await resolveAllDecks();
+  const country = getCountry();
+  const info = COUNTRIES[country];
+  const decks = await resolveAllDecks(country);
   const beginner = decks.filter((d) => d.category === "beginner");
   const meta = decks.filter((d) => d.category !== "beginner");
 
@@ -35,11 +37,11 @@ export default async function DecksPage() {
             >
               riftDecks.com
             </a>{" "}
-            — each priced live across Australian stores so you can see what it costs to build and
+            — each priced live across {info.label} stores so you can see what it costs to build and
             where to buy every card.
           </p>
         </div>
-        <DeckGrid decks={meta} />
+        <DeckGrid decks={meta} currency={info.currency} />
       </div>
 
       {beginner.length > 0 && (
@@ -51,7 +53,7 @@ export default async function DecksPage() {
               so you can start playing for as little as possible.
             </p>
           </div>
-          <DeckGrid decks={beginner} />
+          <DeckGrid decks={beginner} currency={info.currency} />
         </div>
       )}
 
@@ -65,14 +67,14 @@ export default async function DecksPage() {
         >
           riftDecks.com
         </a>{" "}
-        and change with the metagame. Build cost uses each card&apos;s cheapest in-stock AU price
-        and may span multiple stores.
+        and change with the metagame. Build cost uses each card&apos;s cheapest in-stock {info.label}{" "}
+        price and may span multiple stores.
       </p>
     </div>
   );
 }
 
-function DeckGrid({ decks }: { decks: Awaited<ReturnType<typeof resolveAllDecks>> }) {
+function DeckGrid({ decks, currency }: { decks: Awaited<ReturnType<typeof resolveAllDecks>>; currency: string }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {decks.map((d) => (
@@ -109,7 +111,7 @@ function DeckGrid({ decks }: { decks: Awaited<ReturnType<typeof resolveAllDecks>
               <div className="mt-auto flex items-end justify-between pt-2">
                 <div>
                   <div className="text-[11px] text-slate-500">build cost from</div>
-                  <div className="text-lg font-bold text-accent">{formatAUD(d.totalCents)}</div>
+                  <div className="text-lg font-bold text-accent">{formatMoney(d.totalCents, currency)}</div>
                 </div>
                 <div className="text-right text-[11px] text-slate-500">
                   {d.pricedCards}/{d.totalCards} cards priced

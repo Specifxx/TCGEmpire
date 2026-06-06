@@ -9,17 +9,19 @@ import { PageSizeSelect } from "@/components/PageSizeSelect";
 import {
   buildCardOrderBy,
   buildCardWhere,
-  CARD_TILE_SELECT,
+  cardTileSelect,
   CardQuery,
   parsePageNum,
   parsePageSize,
 } from "@/lib/cards";
+import { getCountry } from "@/lib/get-country";
 
 export const dynamic = "force-dynamic";
 
 export default async function BrowsePage({ searchParams }: { searchParams: CardQuery }) {
-  const where = buildCardWhere(searchParams);
-  const orderBy = buildCardOrderBy(searchParams.sort);
+  const country = getCountry();
+  const where = buildCardWhere(searchParams, country);
+  const orderBy = buildCardOrderBy(searchParams.sort, country);
   const size = parsePageSize(searchParams.size);
   const page = parsePageNum(searchParams.page);
 
@@ -28,7 +30,7 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
     prisma.card.findMany({
       where,
       orderBy,
-      select: CARD_TILE_SELECT,
+      select: cardTileSelect(country),
       skip: (page - 1) * size,
       take: size,
     }),

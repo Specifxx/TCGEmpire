@@ -58,6 +58,17 @@ function timeAgo(iso: string): string {
   return `${Math.floor(d / 30)}mo ago`;
 }
 
+// Absolute date + time of a post, e.g. "6 Jun 2026, 11:30 pm".
+function formatDateTime(iso: string): string {
+  return new Date(iso).toLocaleString("en-AU", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
 interface SearchResult {
   id: string;
   name: string;
@@ -522,7 +533,7 @@ export function ForumBoard({
                     <span className="font-medium text-slate-400">{p.authorName}</span>
                   )}
                   <span>·</span>
-                  <span>{timeAgo(p.createdAt)}</span>
+                  <span title={timeAgo(p.createdAt)}>{formatDateTime(p.createdAt)}</span>
                   {p.contact && (
                     <>
                       <span>·</span>

@@ -66,6 +66,12 @@ function shippingFromItem(item: any): number | null {
 const EXCLUDE =
   /\b(lot|lots|bundle|joblot|job lot|playset|complete set|full set|master set|set of|bulk|pick your|choose your|your choice|all epic|all rare|all common|all uncommon|all cards|sealed|booster|pack|box|proxy|custom|chinese|japanese|korean|\d+\s*cards|x\s*\d+|keychain|key ?ring|keyring|novelty|sticker|plush|playmat|sleeves?|toploader|top ?loader|binder|lanyard|badge|poster|magnet|funko|pin badge)\b/i;
 
+// A promo printing (organized-play / prerelease / "GG EZ" etc.) shares the base
+// card's collector number, so the ONLY way to tell a promo listing from the base
+// listing is wording like this. Used to route promo listings to the promo card and
+// keep them OUT of the base card's price.
+const PROMO_HINT = /\bpromo\b|promotional|pre-?release|gg\s*ez|organi[sz]ed\s*play|nexus\s*night|judge\s*promo/i;
+
 // Set-name keywords used to confirm the set when a title gives the number without
 // the full "/total" (e.g. "SFD (141)").
 const SET_NAMES: Record<string, string> = {
@@ -118,6 +124,7 @@ export async function searchEbayLowest(card: {
   number: string;
   total: string;
   isSignature: boolean;
+  isPromo?: boolean;
 }): Promise<EbayResult | null> {
   const token = await getToken();
   if (!token) return null;
@@ -126,9 +133,8 @@ export async function searchEbayLowest(card: {
     // Include the collector number so the exact card ranks into the result window —
     // otherwise expensive chase cards (e.g. overnumbered) get pushed past the limit
     // by cheap noise (keychains, bundles). For Signature prints, also add the word
-    // "signature": they cost thousands, so a price-ascending search would otherwise
-    // bury the real listings past the 100-result window behind cheap base copies.
-    q: `${card.name} ${card.number.replace(/[^0-9]/g, "")}${card.isSignature ? " signature" : ""} Riftbound`,
+    // "signature"; for promos add "promo" so the promo printing surfaces.
+    q: `${card.name} ${card.number.replace(/[^0-9]/g, "")}${card.isSignature ? " signature" : ""}${card.isPromo ? " promo" : ""} Riftbound`,
     filter: "buyingOptions:{FIXED_PRICE}",
     sort: "price",
     limit: "100",
@@ -165,6 +171,10 @@ export async function searchEbayLowest(card: {
     .filter((it) => numberMatches(it.title ?? "", card.number, card.total, card.setCode))
     // Signature ("*") and plain overnumbered share a number — keep them apart.
     .filter((it) => titleIsSignature(it.title ?? "", n) === card.isSignature)
+    // Promo and base share a number too. A promo card matches ONLY promo-marked
+    // listings; a base card matches ONLY non-promo listings (so promos don't
+    // pollute the base price and vice versa).
+    .filter((it) => PROMO_HINT.test(it.title ?? "") === !!card.isPromo)
     .sort((a, b) => delivered(a) - delivered(b));
 
   const best = valid[0];

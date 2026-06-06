@@ -73,12 +73,12 @@ async function discoverCollections(base: string): Promise<string[]> {
   return Array.from(handles);
 }
 
-async function fetchProducts(base: string, handle: string): Promise<ShopifyProd[]> {
+async function fetchProducts(base: string, handle: string, country: string): Promise<ShopifyProd[]> {
   const all: ShopifyProd[] = [];
   for (let page = 1; page <= 10; page++) {
-    // country=AU forces the AU market price (Shopify Markets serves a different
-    // price per country, and our server is not in AU).
-    const data = await fetchJson(`${base}/collections/${handle}/products.json?limit=250&page=${page}&country=AU&_=${Date.now()}`);
+    // country=XX forces the store's market price (Shopify Markets serves a different
+    // price per country): AUD for AU stores, NZD for NZ stores.
+    const data = await fetchJson(`${base}/collections/${handle}/products.json?limit=250&page=${page}&country=${country}&_=${Date.now()}`);
     const products: ShopifyProd[] = data?.products ?? [];
     if (!products.length) break;
     all.push(...products);
@@ -107,6 +107,7 @@ function sealedType(title: string): string {
 export async function importSealed(): Promise<number> {
   let count = 0;
   for (const store of RETAILER_LIST) {
+    const cc = store.country ?? "AU";
     const handles = await discoverCollections(store.base);
     if (!handles.length) continue;
 
@@ -114,7 +115,7 @@ export async function importSealed(): Promise<number> {
     const rows = new Map<string, any>(); // groupKey+store -> row (cheapest per store/product)
     let scraped = false; // did we actually read products (vs an empty/failed fetch)?
     for (const handle of handles) {
-      const products = await fetchProducts(store.base, handle);
+      const products = await fetchProducts(store.base, handle, cc);
       if (products.length) scraped = true;
       for (const p of products) {
         if (seen.has(p.handle)) continue;
@@ -143,6 +144,7 @@ export async function importSealed(): Promise<number> {
           priceCents,
           url: `${store.base}/products/${p.handle}`,
           imageUrl: p.images?.[0]?.src ?? null,
+          country: cc,
           inStock,
         });
       }
@@ -158,8 +160,9 @@ export async function importSealed(): Promise<number> {
   }
 
   // eBay AU prices for each sealed product (best-effort; skips when rate-limited).
+  // eBay is AU-only, so we seed/search against the AU groups.
   if (isEbayEnabled()) {
-    const groups = await getSealedGroups();
+    const groups = await getSealedGroups("AU");
     // Always attempt eBay for the per-set promo (Nexus Night) packs — even ones no
     // AU store currently lists (e.g. the Unleashed pack) — so they appear once
     // available, with an image pulled from the eBay listing.
@@ -188,6 +191,7 @@ export async function importSealed(): Promise<number> {
         priceCents: r.priceCents,
         url: r.url,
         imageUrl: r.imageUrl ?? g.imageUrl,
+        country: "AU", // eBay is AU-only
         inStock: true,
       });
     }
@@ -233,9 +237,9 @@ export interface SealedGroup {
   }[];
 }
 
-// Group all sealed listings by product for the /sealed page.
-export async function getSealedGroups(): Promise<SealedGroup[]> {
-  const rows = await prisma.sealedListing.findMany({ orderBy: { priceCents: "asc" } });
+// Group sealed listings by product for the /sealed page, for one market (AU/NZ).
+export async function getSealedGroups(country: "AU" | "NZ" = "AU"): Promise<SealedGroup[]> {
+  const rows = await prisma.sealedListing.findMany({ where: { country }, orderBy: { priceCents: "asc" } });
   const groups = new Map<string, SealedGroup>();
   for (const r of rows) {
     let g = groups.get(r.groupKey);

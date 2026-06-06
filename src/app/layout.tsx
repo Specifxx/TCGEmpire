@@ -7,6 +7,8 @@ import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { QuickViewProvider } from "@/components/QuickView";
 import { WishlistDrawerProvider } from "@/components/WishlistDrawer";
+import { CountryProvider } from "@/components/CountryProvider";
+import { getCountry } from "@/lib/get-country";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
 
 // Body: Sora (modern, energetic, readable). Headings: Space Grotesk (distinctive,
@@ -72,6 +74,7 @@ const orgJsonLd = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const country = getCountry();
   return (
     <html lang="en-AU" className={`${sora.variable} ${spaceGrotesk.variable}`}>
       <head>
@@ -81,12 +84,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen bg-ink-950">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }} />
+        <CountryProvider initial={country}>
         <WishlistDrawerProvider>
           <QuickViewProvider>
             <Navbar />
             <main className="container-app py-6">{children}</main>
           </QuickViewProvider>
         </WishlistDrawerProvider>
+        </CountryProvider>
         <footer className="container-app border-t border-ink-800 py-8 text-center text-xs text-slate-500">
           <div className="mb-2 flex items-center justify-center gap-4 text-sm">
             <Link href="/contact" className="text-slate-300 hover:text-brand-400">Contact &amp; feedback</Link>

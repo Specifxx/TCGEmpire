@@ -1,12 +1,20 @@
-// AUD currency + small formatting helpers. All money is stored as integer cents.
+// Currency + small formatting helpers. All money is stored as integer cents.
 
-export function formatAUD(cents: number): string {
-  return new Intl.NumberFormat("en-AU", {
+const LOCALE_FOR: Record<string, string> = { AUD: "en-AU", NZD: "en-NZ" };
+
+// Format integer cents in the given currency (default AUD). AUD/NZD both render
+// with a "$" symbol — the visible country selector disambiguates which market.
+export function formatMoney(cents: number, currency: string = "AUD"): string {
+  return new Intl.NumberFormat(LOCALE_FOR[currency] ?? "en-AU", {
     style: "currency",
-    currency: "AUD",
+    currency,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(cents / 100);
+}
+
+export function formatAUD(cents: number): string {
+  return formatMoney(cents, "AUD");
 }
 
 // Parse a user-entered dollar string (e.g. "12.50") into integer cents.

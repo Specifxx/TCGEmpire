@@ -7,8 +7,8 @@ import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, 
 import { WishlistButton } from "./WishlistButton";
 import { isOvernumbered, isSignature } from "@/lib/constants";
 import { cardHref } from "@/lib/card-url";
-import { formatAUD } from "@/lib/format";
 import { effectiveShippingCents } from "@/lib/retailers";
+import { useCountry } from "./CountryProvider";
 
 interface RetailerPrice {
   id: string;
@@ -19,6 +19,7 @@ interface RetailerPrice {
   condition: string | null;
   url: string;
   inStock: boolean;
+  country: string;
 }
 
 const Ctx = createContext<{ open: (card: CardTileData) => void }>({ open: () => {} });
@@ -70,6 +71,8 @@ export function QuickViewProvider({ children }: { children: React.ReactNode }) {
 function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => void }) {
   const [prices, setPrices] = useState<RetailerPrice[] | null>(null);
   const href = cardHref(card);
+  const { country, fmt, price } = useCountry();
+  const lowest = price(card);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -93,7 +96,7 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
   // Rank by delivered cost (item + shipping) so eBay's $0-postage listings don't
   // jump to the top. Matches the full card page.
   const inStock = (prices ?? [])
-    .filter((p) => p.inStock)
+    .filter((p) => p.inStock && p.country === country)
     .map((p) => {
       const ship = effectiveShippingCents(p.retailer, p.shippingCents);
       return { ...p, ship, delivered: p.priceCents + ship };
@@ -145,7 +148,7 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
             <div className="mt-3 rounded-lg bg-ink-950/50 p-3">
               <div className="text-[11px] uppercase tracking-wide text-slate-500">Cheapest price</div>
               <div className="text-2xl font-extrabold text-accent">
-                {card.lowestPriceCents != null ? formatAUD(card.lowestPriceCents) : "—"}
+                {lowest != null ? fmt(lowest) : "—"}
               </div>
             </div>
 
@@ -167,8 +170,8 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                         {p.condition && <div className="text-[11px] text-slate-500">{p.condition}</div>}
                       </div>
                       <div className="text-right">
-                        <div className={`text-sm font-bold ${i === 0 ? "text-accent" : "text-white"}`}>{formatAUD(p.priceCents)}</div>
-                        <div className="text-[10px] text-slate-500">≈ {formatAUD(p.delivered)} del.</div>
+                        <div className={`text-sm font-bold ${i === 0 ? "text-accent" : "text-white"}`}>{fmt(p.priceCents)}</div>
+                        <div className="text-[10px] text-slate-500">≈ {fmt(p.delivered)} del.</div>
                       </div>
                       <a href={p.url} target="_blank" rel="nofollow sponsored noopener noreferrer" className="btn-primary px-3 py-1.5 text-xs">
                         View →

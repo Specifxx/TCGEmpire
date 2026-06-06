@@ -62,9 +62,12 @@ model Card {
   blurDataUrl     String? // tiny base64 placeholder
   // Reference / market price in AUD cents, used as a default suggested price.
   marketPriceCents Int      @default(0)
-  // Lowest live retailer price across all sources (AUD cents), set by the price
-  // importer. Used for "from $X" and catalogue sorting. null = no price found.
+  // Lowest live retailer price across all sources, set by the price importer.
+  // Used for "from $X" and catalogue sorting. null = no price found.
+  //   lowestPriceCents   = Australia (AUD cents), from AU stores + eBay AU
+  //   lowestPriceCentsNz = New Zealand (NZD cents), from NZ stores (no eBay)
   lowestPriceCents Int?
+  lowestPriceCentsNz Int?
   artSeed         Int       @default(0)
   // Popularity signals. searchCount (clicks from the search box) is the purer demand
   // metric and drives eBay prioritisation; viewCount (any open, incl. featured
@@ -82,6 +85,7 @@ model Card {
   @@index([setCode, collectorNumber])
   @@index([nameNormalized])
   @@index([lowestPriceCents])
+  @@index([lowestPriceCentsNz])
   @@index([domain])
   @@index([rarity])
   @@index([type])
@@ -132,6 +136,19 @@ model BuyOrder {
   @@index([buyerId])
   @@index([status])
   @@index([maxPriceCents])
+}
+
+// Legacy table from the retired password-reset feature. The feature (pages, API
+// routes, UI) was removed, but the table is kept so its data isn't dropped; nothing
+// in the app references this model anymore.
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 // Feedback / contact-form submissions. Saved here as a backup and forwarded by
@@ -230,12 +247,16 @@ model RetailerPrice {
   inStock      Boolean  @default(true)
   lastSeen     DateTime @default(now())
 
+  // Market: "AU" (Australian stores + eBay AU, AUD) or "NZ" (NZ stores, NZD).
+  country      String   @default("AU")
+
   card         Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
 
   @@unique([cardId, retailer, condition, isFoil])
   @@index([cardId])
   @@index([retailer])
   @@index([priceCents])
+  @@index([cardId, country, inStock])
 }
 
 // Sealed / non-single Riftbound products (booster boxes, packs, Proving Grounds,
@@ -253,10 +274,13 @@ model SealedListing {
   url          String
   imageUrl     String?
   inStock      Boolean  @default(true)
+  // Market: "AU" (Australian stores, AUD) or "NZ" (NZ stores, NZD).
+  country      String   @default("AU")
   lastSeen     DateTime @default(now())
 
   @@index([groupKey])
   @@index([retailer])
+  @@index([country])
 }
 
 // A completed trade. Either a buyer hit a listing (kind LISTING) or a seller

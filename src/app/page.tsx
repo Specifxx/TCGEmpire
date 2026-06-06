@@ -4,9 +4,11 @@ import { prisma } from "@/lib/db";
 import { CardTile } from "@/components/CardTile";
 import { Logo } from "@/components/Logo";
 import { getChaseCards } from "@/lib/chase-cards";
+import { getCountry } from "@/lib/get-country";
+import { COUNTRIES, priceField } from "@/lib/country";
 import { SETS, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
 
-export const revalidate = 180;
+// Dynamic: prices + store counts depend on the selected market (country cookie).
 
 // Homepage-specific metadata targeting the high-intent search phrases.
 export const metadata: Metadata = {
@@ -45,12 +47,16 @@ const FAQS: { q: string; a: string }[] = [
 ];
 
 export default async function HomePage() {
+  const country = getCountry();
+  const info = COUNTRIES[country];
+  const field = priceField(country);
   const [totalCards, pricedCards, chaseCards, storeGroups] = await Promise.all([
     prisma.card.count(),
-    prisma.card.count({ where: { lowestPriceCents: { not: null } } }),
+    prisma.card.count({ where: { [field]: { not: null } } }),
     // Most-popular cards, seeded from TCGPlayer's best-seller ranking.
-    getChaseCards(12),
-    prisma.retailerPrice.groupBy({ by: ["retailer"] }),
+    getChaseCards(12, country),
+    // Stores serving the selected market (eBay excluded from the count).
+    prisma.retailerPrice.groupBy({ by: ["retailer"], where: { country, NOT: { retailer: "ebay" } } }),
   ]);
   const storeCount = storeGroups.length;
 
@@ -66,11 +72,11 @@ export default async function HomePage() {
             </span>
           </div>
           <h1 className="mx-auto max-w-3xl text-2xl font-extrabold text-white sm:text-4xl">
-            Compare Riftbound card prices across Australian stores
+            Compare Riftbound card prices across {info.label} stores
           </h1>
           <p className="mx-auto mt-3 max-w-2xl text-sm text-slate-400 sm:text-base">
-            Find the cheapest place to buy Riftbound TCG cards in Australia — live prices in AUD
-            compared across {storeCount} Australian stores, updated daily.
+            Find the cheapest place to buy Riftbound TCG cards in {info.label} — live prices in{" "}
+            {info.currency} compared across {storeCount} {info.label} stores, updated daily.
           </p>
 
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
@@ -83,7 +89,7 @@ export default async function HomePage() {
           <div className="mx-auto mt-8 grid max-w-lg grid-cols-3 gap-4">
             <Stat value={totalCards.toLocaleString()} label="cards" />
             <Stat value={pricedCards.toLocaleString()} label="priced" />
-            <Stat value={String(storeCount)} label="AU stores" />
+            <Stat value={String(storeCount)} label={`${info.code} stores`} />
           </div>
         </div>
       </section>

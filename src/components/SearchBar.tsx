@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { formatAUD } from "@/lib/format";
 import { cardHref } from "@/lib/card-url";
 import { useQuickView } from "./QuickView";
+import { useCountry } from "./CountryProvider";
 import type { CardTileData } from "./CardTile";
 
 type Result = CardTileData;
@@ -16,6 +16,7 @@ export function SearchBar() {
   const router = useRouter();
   const params = useSearchParams();
   const { open: openQuickView } = useQuickView();
+  const { fmt, price } = useCountry();
   const [value, setValue] = useState(params.get("q") ?? "");
   const [results, setResults] = useState<Result[]>([]);
   const [open, setOpen] = useState(false);
@@ -135,7 +136,7 @@ export function SearchBar() {
                       </div>
                     </div>
                     <div className="shrink-0 text-sm font-bold text-accent">
-                      {r.lowestPriceCents != null ? formatAUD(r.lowestPriceCents) : "—"}
+                      {price(r) != null ? fmt(price(r)!) : "—"}
                     </div>
                   </Link>
                 </li>

@@ -5,7 +5,8 @@ import { useState } from "react";
 import type { ResolvedDeck, ResolvedCardData, ResolvedCard } from "@/lib/meta-decks";
 import { DomainBadge } from "./Badge";
 import { TierBadge } from "./TierBadge";
-import { formatAUD } from "@/lib/format";
+import { useCountry } from "./CountryProvider";
+import { COUNTRIES } from "@/lib/country";
 
 // Tidy display for cards our data labels with a precon suffix (e.g. OGS starter
 // legends imported as "Master, Wuju Bladesman - Starter").
@@ -24,6 +25,8 @@ const GROUPS: { title: string; sections: string[]; muted?: boolean }[] = [
 ];
 
 export function DeckView({ deck, builderHref }: { deck: ResolvedDeck; builderHref: string }) {
+  const { fmt, country } = useCountry();
+  const label = COUNTRIES[country].label;
   // The big image on the left follows whichever card you hover (defaults to legend).
   const [preview, setPreview] = useState<ResolvedCardData | null>(deck.legendCard);
   const bigImage = preview?.imageUrl ?? preview?.imageThumbUrl ?? deck.imageUrl;
@@ -67,8 +70,8 @@ export function DeckView({ deck, builderHref }: { deck: ResolvedDeck; builderHre
         <div className="text-right">
           {item.unitPriceCents != null ? (
             <>
-              <div className="font-bold text-white">{formatAUD(item.unitPriceCents * item.qty)}</div>
-              <div className="text-[11px] text-slate-500">{formatAUD(item.unitPriceCents)} ea</div>
+              <div className="font-bold text-white">{fmt(item.unitPriceCents * item.qty)}</div>
+              <div className="text-[11px] text-slate-500">{fmt(item.unitPriceCents)} ea</div>
             </>
           ) : (
             <div className="text-xs text-slate-500">no price</div>
@@ -115,7 +118,7 @@ export function DeckView({ deck, builderHref }: { deck: ResolvedDeck; builderHre
                 <div className="text-sm font-bold text-white">{cleanName(preview.name)}</div>
                 <div className="text-[11px] text-slate-400">
                   {preview.setCode} · {preview.collectorNumber}
-                  {preview.lowestPriceCents != null ? ` · from ${formatAUD(preview.lowestPriceCents)}` : ""}
+                  {preview.lowestPriceCents != null ? ` · from ${fmt(preview.lowestPriceCents)}` : ""}
                 </div>
               </div>
             )}
@@ -150,14 +153,14 @@ export function DeckView({ deck, builderHref }: { deck: ResolvedDeck; builderHre
             )}
 
             <div className="mt-4 rounded-lg bg-ink-900 p-3">
-              <div className="text-[11px] uppercase tracking-wide text-slate-500">Build cost (cheapest AU)</div>
-              <div className="text-2xl font-extrabold text-accent">{formatAUD(deck.totalCents)}</div>
+              <div className="text-[11px] uppercase tracking-wide text-slate-500">Build cost (cheapest {country})</div>
+              <div className="text-2xl font-extrabold text-accent">{fmt(deck.totalCents)}</div>
               <div className="text-[11px] text-slate-500">
                 {deck.totalCards - 1}-card main deck + legend · {deck.pricedCards}/{deck.totalCards} priced
               </div>
               {deck.sideboardCards > 0 && (
                 <div className="mt-1 text-[11px] text-slate-500">
-                  + {formatAUD(deck.sideboardCents)} side deck ({deck.sideboardCards} cards)
+                  + {fmt(deck.sideboardCents)} side deck ({deck.sideboardCards} cards)
                 </div>
               )}
             </div>
@@ -190,19 +193,19 @@ export function DeckView({ deck, builderHref }: { deck: ResolvedDeck; builderHre
           ))}
 
           <div className="flex items-center justify-between border-t border-ink-700 p-4">
-            <span className="text-sm text-slate-400">Main deck build cost (cheapest in-stock AU)</span>
-            <span className="text-xl font-extrabold text-accent">{formatAUD(deck.totalCents)}</span>
+            <span className="text-sm text-slate-400">Main deck build cost (cheapest in-stock {country})</span>
+            <span className="text-xl font-extrabold text-accent">{fmt(deck.totalCents)}</span>
           </div>
           {deck.sideboardCards > 0 && (
             <div className="flex items-center justify-between border-t border-ink-800 px-4 py-2">
               <span className="text-xs text-slate-500">Side deck ({deck.sideboardCards} cards)</span>
-              <span className="text-sm font-semibold text-slate-400">{formatAUD(deck.sideboardCents)}</span>
+              <span className="text-sm font-semibold text-slate-400">{fmt(deck.sideboardCents)}</span>
             </div>
           )}
         </div>
         <p className="mt-3 text-center text-[11px] text-slate-600">
-          Community reference list — may change with the metagame. Each card links to its full AU
-          price comparison. RiftCompare may earn a commission on some outbound links.
+          Community reference list — may change with the metagame. Each card links to its full {label}
+          {" "}price comparison. RiftCompare may earn a commission on some outbound links.
         </p>
       </div>
     </div>

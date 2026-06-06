@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { getSealedGroups } from "@/lib/sealed-import";
-import { formatAUD } from "@/lib/format";
-
-export const revalidate = 900;
+import { formatMoney } from "@/lib/format";
+import { getCountry } from "@/lib/get-country";
+import { COUNTRIES } from "@/lib/country";
 
 export const metadata: Metadata = {
   title: "Riftbound Sealed Products — Booster Boxes, Packs & Sets (Australia)",
@@ -12,7 +12,10 @@ export const metadata: Metadata = {
 };
 
 export default async function SealedPage() {
-  const groups = await getSealedGroups();
+  const country = getCountry();
+  const info = COUNTRIES[country];
+  const fmt = (cents: number) => formatMoney(cents, info.currency);
+  const groups = await getSealedGroups(country);
 
   return (
     <div>
@@ -20,7 +23,7 @@ export default async function SealedPage() {
         <h1 className="text-2xl font-extrabold text-white">Sealed Products</h1>
         <p className="mt-1 text-sm text-slate-400">
           Booster boxes, packs, Proving Grounds, bundles and other sealed Riftbound
-          products — priced across Australian stores so you can find the cheapest.
+          products — priced across {info.label} stores so you can find the cheapest.
         </p>
       </div>
 
@@ -51,7 +54,7 @@ export default async function SealedPage() {
                   <div className="mt-1 text-sm text-slate-500">
                     {g.lowestPriceCents != null ? (
                       <>
-                        from <span className="text-lg font-bold text-accent">{formatAUD(g.lowestPriceCents)}</span>
+                        from <span className="text-lg font-bold text-accent">{fmt(g.lowestPriceCents)}</span>
                         {" · "}{g.storeCount} {g.storeCount === 1 ? "store" : "stores"}
                       </>
                     ) : (
@@ -70,7 +73,7 @@ export default async function SealedPage() {
                       </div>
                     </div>
                     <div className={`text-sm font-bold ${i === 0 && l.inStock ? "text-accent" : "text-white"} ${!l.inStock ? "text-slate-500 line-through" : ""}`}>
-                      {formatAUD(l.priceCents)}
+                      {fmt(l.priceCents)}
                     </div>
                     <a href={l.url} target="_blank" rel="nofollow sponsored noopener noreferrer" className="btn-primary px-3 py-1.5 text-xs">
                       View →
