@@ -8,12 +8,10 @@ name: Refresh prices
 
 on:
   schedule:
-    # Every 6 hours (UTC) so a store's price change is reflected within ~6h instead
-    # of up to 12h — keeps the displayed "cheapest" closer to live store prices.
-    - cron: "0 1 * * *"
-    - cron: "0 7 * * *"
-    - cron: "0 13 * * *"
-    - cron: "0 19 * * *"
+    # Every 3 hours (UTC). True hourly would exceed the private-repo GitHub Actions
+    # free budget (2000 min/mo); 3-hourly keeps prices fresh within ~3h and well
+    # under budget. Store price changes show on-site within a few hours.
+    - cron: "0 0,3,6,9,12,15,18,21 * * *"
   workflow_dispatch: {} # allows a manual "Run workflow" button
   # Re-import (and recompute stored prices) whenever price/matching logic changes.
   push:

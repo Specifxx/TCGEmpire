@@ -66,6 +66,21 @@ function parseNumber(title: string): { setCode: string | null; key: string; tota
 export const MULTI_CARD =
   /\b(playset|lot|lots|bundle|joblot|job lot|x\s*\d+|\d+\s*x|set of|complete set|full set|bulk)\b/i;
 
+// Many TCG stores list a card with condition variants (Near Mint, Lightly Played,
+// …). Picking the absolute cheapest variant records a played/damaged copy's price,
+// which is LOWER than the Near-Mint price shoppers see on the product page (a card
+// showed $33 when the store's NM price was $45). Rank by condition so we record the
+// best available condition — matching the headline price on the listing.
+function conditionRank(variantTitle: string): number {
+  const t = (variantTitle || "").toLowerCase();
+  if (/near\s*mint|\bnm\b|mint/.test(t)) return 0;
+  if (/light(ly)?\s*play|\blp\b/.test(t)) return 1;
+  if (/moderate(ly)?\s*play|\bmp\b/.test(t)) return 2;
+  if (/heav(ily)?\s*play|\bhp\b/.test(t)) return 3;
+  if (/damaged|\bdmg\b|\bdamage\b/.test(t)) return 4;
+  return 0; // no condition in the title (e.g. "Default Title") → treat as standard/NM
+}
+
 const UA = { "User-Agent": "Mozilla/5.0 RiftCompareAUBot" };
 
 async function fetchText(url: string): Promise<string | null> {
@@ -296,7 +311,14 @@ export async function importPrices(): Promise<ImportSummary> {
       const avail = priced.filter((v) => v.available);
       const inStock = avail.length > 0;
       const pool = inStock ? avail : priced;
-      const best = pool.reduce((a, b) => (parseFloat(a.price) <= parseFloat(b.price) ? a : b));
+      // Best available CONDITION first (NM over LP over …), then cheapest within that
+      // condition — so the price matches the listing's headline, not a played copy.
+      const best = pool.reduce((a, b) => {
+        const ra = conditionRank(a.title);
+        const rb = conditionRank(b.title);
+        if (ra !== rb) return ra < rb ? a : b;
+        return parseFloat(a.price) <= parseFloat(b.price) ? a : b;
+      });
       const priceCents = Math.round(parseFloat(best.price) * 100);
       const prev = rows.get(cardId);
       // Keep the best listing per store+card: in-stock beats out-of-stock, then

@@ -5,7 +5,7 @@ import { Logo } from "./Logo";
 
 export function Navbar() {
   return (
-    <header className="sticky top-0 z-40 border-b border-ink-800 bg-ink-950/90 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-ink-800 bg-ink-950/95">
       <div className="container-app flex h-16 items-center gap-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 shrink-0">

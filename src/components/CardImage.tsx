@@ -62,13 +62,17 @@ export function CardImage({ card, isFoil = false, full = false, className }: Pro
           : { backgroundColor: "#080b11" }
       }
     >
-      {/* darken the blurred backdrop */}
-      <div className="absolute inset-0 bg-ink-950/40 backdrop-blur-sm" />
+      {/* darken the (already-blurred) backdrop. No backdrop-filter here: it's a
+          GPU-expensive effect and with infinite scroll there can be hundreds of
+          tiles on screen, which made scrolling janky. The blurDataUrl background is
+          pre-blurred, so a plain dark overlay gives the same look far cheaper. */}
+      <div className="absolute inset-0 bg-ink-950/40" />
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
         alt={card.name}
         loading="lazy"
+        decoding="async"
         className={`relative z-10 h-full w-full ${
           isLandscape ? "object-contain" : "object-cover"
         }`}

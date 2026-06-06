@@ -50,10 +50,10 @@ export function WishlistButton({
       onClick={click}
       aria-label={on ? "Remove from wishlist" : "Add to wishlist"}
       title={on ? "Remove from wishlist" : "Add to wishlist"}
-      className={`grid h-8 w-8 place-items-center rounded-full border backdrop-blur transition-colors ${
+      className={`grid h-8 w-8 place-items-center rounded-full border transition-colors ${
         on
           ? "border-gold/50 bg-gold/20 text-gold"
-          : "border-ink-600 bg-ink-950/60 text-slate-300 hover:text-gold"
+          : "border-ink-600 bg-ink-950/80 text-slate-300 hover:text-gold"
       }`}
     >
       {heart}
