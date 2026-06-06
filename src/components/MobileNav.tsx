@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-// Database + Market Forum live in the top bar at all sizes, so they're omitted
+// Database + Forum live in the top bar at all sizes, so they're omitted
 // here; this menu holds the rest (shown below the lg breakpoint).
 const LINKS = [
   { href: "/sealed", label: "Sealed Products" },

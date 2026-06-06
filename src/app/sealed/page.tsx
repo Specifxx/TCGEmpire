@@ -84,7 +84,7 @@ export default async function SealedPage() {
       )}
 
       <p className="mt-6 text-center text-[11px] text-slate-600">
-        Sealed prices are collected from public store listings and may change. RiftCompareAU
+        Sealed prices are collected from public store listings and may change. RiftCompare
         may earn a commission on some outbound links.
       </p>
     </div>

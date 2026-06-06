@@ -3,7 +3,7 @@
 // Public contact address — shown on the site and used to forward feedback emails.
 export const CONTACT_EMAIL = "riftcompare@gmail.com";
 
-export const SITE_NAME = "RiftCompareAU";
+export const SITE_NAME = "RiftCompare";
 
 // Canonical origin (no trailing slash). Used for metadata, sitemap and robots.
 export const SITE_URL = "https://riftcompare.com";

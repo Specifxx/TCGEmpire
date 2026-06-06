@@ -15,7 +15,6 @@ export function Navbar() {
           <Logo size={36} />
           <span className="hidden text-lg font-extrabold tracking-tight text-white sm:block">
             Rift<span className="text-brand-400">Compare</span>
-            <span className="text-gold">AU</span>
           </span>
         </Link>
 
@@ -29,8 +28,7 @@ export function Navbar() {
         {/* Nav */}
         <nav className="flex items-center gap-1">
           <Link href="/forum" className="rounded-lg px-2.5 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white">
-            <span className="sm:hidden">Market</span>
-            <span className="hidden sm:inline">Market Forum</span>
+            Forum
           </Link>
           <Link href="/browse" className="rounded-lg px-2.5 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white">
             Database

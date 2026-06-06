@@ -41,9 +41,9 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         name,
         email,
-        subject: subject || "RiftCompareAU feedback",
+        subject: subject || "RiftCompare feedback",
         message,
-        _subject: `RiftCompareAU feedback from ${name}`,
+        _subject: `RiftCompare feedback from ${name}`,
         _template: "table",
         _replyto: email,
       }),

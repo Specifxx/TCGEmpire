@@ -253,7 +253,7 @@ export function ForumBoard({
     <div>
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-extrabold text-white">Market Forum</h1>
+          <h1 className="text-2xl font-extrabold text-white">Forum</h1>
           <p className="mt-1 text-sm text-slate-400">
             Buy, sell and talk Riftbound with other Australian players. List several cards in one post
             and trade directly — grab a bundle from one seller and save on postage.
@@ -277,9 +277,9 @@ export function ForumBoard({
         <div>
           <p className="text-base font-extrabold text-amber-200">🚧 This feature is still in development — use at your own risk</p>
           <p className="mt-1 text-sm text-amber-100/80">
-            The Market Forum is an early work in progress and may be unstable. Trade carefully with people
+            The Forum is an early work in progress and may be unstable. Trade carefully with people
             you don&apos;t know, never share passwords or payment details, and treat every listing as
-            unverified. RiftCompareAU is not a party to any trade.
+            unverified. RiftCompare is not a party to any trade.
           </p>
         </div>
       </div>
@@ -536,7 +536,7 @@ export function ForumBoard({
       )}
 
       <p className="mt-6 text-center text-[11px] text-slate-600">
-        RiftCompareAU hosts these community listings but is not a party to any trade. Deal carefully and meet/pay safely.
+        RiftCompare hosts these community listings but is not a party to any trade. Deal carefully and meet/pay safely.
       </p>
 
       {openPost && (

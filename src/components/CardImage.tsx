@@ -5,6 +5,7 @@ export interface CardImageData {
   domain: string;
   type: string;
   rarity: string;
+  isPromo?: boolean;
   energyCost?: number | null;
   might?: number | null;
   collectorNumber?: string;
@@ -22,6 +23,18 @@ interface Props {
   className?: string;
 }
 
+// Small "PROMO" stamp centred at the bottom of the card art (where the real card's
+// rarity symbol sits) — promo printings reuse the base art, so this marks them.
+function PromoStamp() {
+  return (
+    <div className="pointer-events-none absolute inset-x-0 bottom-1.5 z-20 flex justify-center">
+      <span className="rounded-full bg-gradient-to-br from-amber-400 to-amber-600 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-amber-950 shadow ring-1 ring-amber-300/50">
+        Promo
+      </span>
+    </div>
+  );
+}
+
 // Renders the real Riftbound card image (RiftScribe CDN) over a blurred backdrop
 // so both portrait and landscape cards look good. Falls back to generated SVG art
 // when no image is available.
@@ -32,18 +45,21 @@ export function CardImage({ card, isFoil = false, full = false, className }: Pro
 
   if (!src) {
     return (
-      <CardArt
-        name={card.name}
-        domain={card.domain}
-        type={card.type}
-        rarity={card.rarity}
-        energyCost={card.energyCost}
-        might={card.might}
-        collectorNumber={card.collectorNumber}
-        artSeed={card.artSeed ?? 1}
-        isFoil={isFoil}
-        className={className}
-      />
+      <div className={`relative ${className ?? ""}`}>
+        <CardArt
+          name={card.name}
+          domain={card.domain}
+          type={card.type}
+          rarity={card.rarity}
+          energyCost={card.energyCost}
+          might={card.might}
+          collectorNumber={card.collectorNumber}
+          artSeed={card.artSeed ?? 1}
+          isFoil={isFoil}
+          className="h-full w-full"
+        />
+        {card.isPromo && <PromoStamp />}
+      </div>
     );
   }
 
@@ -86,6 +102,7 @@ export function CardImage({ card, isFoil = false, full = false, className }: Pro
           }}
         />
       )}
+      {card.isPromo && <PromoStamp />}
     </div>
   );
 }

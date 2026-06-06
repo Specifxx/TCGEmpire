@@ -60,7 +60,7 @@ export default async function AdminMessagesPage({
             <li key={m.id} className="rounded-xl border border-ink-700 bg-ink-850 p-4">
               <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                 <div className="font-semibold text-white">
-                  {m.subject || "RiftCompareAU feedback"}
+                  {m.subject || "RiftCompare feedback"}
                 </div>
                 <div className="text-xs text-slate-500">{fmt.format(m.createdAt)}</div>
               </div>
@@ -76,7 +76,7 @@ export default async function AdminMessagesPage({
               <div className="mt-3">
                 <a
                   href={`mailto:${encodeURIComponent(m.email)}?subject=${encodeURIComponent(
-                    "Re: " + (m.subject || "RiftCompareAU feedback")
+                    "Re: " + (m.subject || "RiftCompare feedback")
                   )}`}
                   className="text-xs font-medium text-brand-400 hover:underline"
                 >

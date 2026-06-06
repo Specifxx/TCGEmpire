@@ -42,7 +42,7 @@ export default async function ProfilePage() {
       <div className="card-surface mt-5 p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="font-bold text-white">Your Market Forum listings</h2>
+            <h2 className="font-bold text-white">Your Forum listings</h2>
             <p className="text-sm text-slate-400">
               {posts.length} open · {wts} selling · {wtb} buying
             </p>
@@ -51,13 +51,13 @@ export default async function ProfilePage() {
             {posts.length > 0 && (
               <Link href={`/forum/seller/${user.id}`} className="btn-ghost">Public page</Link>
             )}
-            <Link href="/forum" className="btn-primary">Go to Market Forum →</Link>
+            <Link href="/forum" className="btn-primary">Go to Forum →</Link>
           </div>
         </div>
 
         {posts.length === 0 ? (
           <p className="mt-4 text-sm text-slate-500">
-            You have no open listings. Head to the Market Forum to post a buy/sell listing or start a
+            You have no open listings. Head to the Forum to post a buy/sell listing or start a
             discussion.
           </p>
         ) : (

@@ -1,7 +1,7 @@
 import { ProxySheet } from "@/components/ProxySheet";
 
 export const metadata = {
-  title: "Proxy Sheet — RiftCompareAU",
+  title: "Proxy Sheet — RiftCompare",
   robots: { index: false },
 };
 

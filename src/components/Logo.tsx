@@ -1,4 +1,4 @@
-// RiftCompareAU "RC" monogram logo — white R, glowing green C, lightning slash
+// RiftCompare "RC" monogram logo — white R, glowing green C, lightning slash
 // on a dark gridded tile. Vector so it stays crisp at any size (favicon → hero).
 export function Logo({ size = 36 }: { size?: number }) {
   return (
@@ -7,7 +7,7 @@ export function Logo({ size = 36 }: { size?: number }) {
       height={size}
       viewBox="0 0 48 48"
       role="img"
-      aria-label="RiftCompareAU logo"
+      aria-label="RiftCompare logo"
       xmlns="http://www.w3.org/2000/svg"
     >
       <defs>

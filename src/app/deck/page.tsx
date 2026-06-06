@@ -1,7 +1,7 @@
 import { DeckBuilder } from "@/components/DeckBuilder";
 
 export const metadata = {
-  title: "Deck Builder & Pricing — RiftCompareAU",
+  title: "Deck Builder & Pricing — RiftCompare",
 };
 
 export default function DeckPage({ searchParams }: { searchParams: { list?: string } }) {

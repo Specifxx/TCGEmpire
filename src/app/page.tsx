@@ -10,7 +10,7 @@ export const revalidate = 180;
 
 // Homepage-specific metadata targeting the high-intent search phrases.
 export const metadata: Metadata = {
-  title: { absolute: "Buy & Compare Riftbound Card Prices in Australia | RiftCompareAU" },
+  title: { absolute: "Buy & Compare Riftbound Card Prices in Australia | RiftCompare" },
   description:
     "Compare live Riftbound TCG card prices across Australian stores and find the cheapest place to buy Riftbound cards in Australia. Singles and sealed, prices in AUD, updated daily.",
   keywords: [
@@ -28,14 +28,14 @@ export const metadata: Metadata = {
 const FAQS: { q: string; a: string }[] = [
   {
     q: "Where can I buy Riftbound cards in Australia?",
-    a: "RiftCompareAU compares live Riftbound prices across a wide range of Australian stores plus eBay AU, so you can buy Riftbound cards from whichever shop is cheapest. Search any card to see every store's price and click straight through to buy.",
+    a: "RiftCompare compares live Riftbound prices across a wide range of Australian stores plus eBay AU, so you can buy Riftbound cards from whichever shop is cheapest. Search any card to see every store's price and click straight through to buy.",
   },
   {
     q: "How do I find the cheapest Riftbound prices in Australia?",
     a: "Search or browse the card database and each card shows the lowest live price across Australian stores, ranked by total delivered cost (item plus postage). It's the fastest way to find the cheapest Riftbound cards in Australia.",
   },
   {
-    q: "Does RiftCompareAU cover Riftbound singles and sealed products?",
+    q: "Does RiftCompare cover Riftbound singles and sealed products?",
     a: "Yes — compare prices on individual Riftbound singles as well as sealed product like booster boxes, booster packs, Proving Grounds and Nexus Night packs, all priced across Australian retailers.",
   },
   {
@@ -67,7 +67,6 @@ export default async function HomePage() {
             <span className="animate-float"><Logo size={56} /></span>
             <span className="text-3xl font-extrabold tracking-tight text-white">
               Rift<span className="text-brand-400">Compare</span>
-              <span className="text-gold">AU</span>
             </span>
           </div>
           <h1 className="mx-auto max-w-3xl text-2xl font-extrabold text-white sm:text-4xl">
@@ -179,7 +178,7 @@ export default async function HomePage() {
       <section className="card-surface p-6">
         <h2 className="text-xl font-extrabold text-white">Riftbound prices in Australia, all in one place</h2>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
-          RiftCompareAU is a free, independent price-comparison tool for Riftbound: League of Legends
+          RiftCompare is a free, independent price-comparison tool for Riftbound: League of Legends
           TCG, built for Australian players. We track live prices for every Riftbound card across
           Australian stores and eBay AU so you can buy Riftbound cards in Australia for less — whether
           you&apos;re chasing singles for a deck or sealed booster boxes.

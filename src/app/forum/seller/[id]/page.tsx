@@ -130,7 +130,7 @@ export default async function SellerPage({ params }: { params: { id: string } })
       )}
 
       <p className="mt-6 text-center text-[11px] text-slate-600">
-        RiftCompareAU hosts these community listings but is not a party to any trade. Deal carefully and meet/pay safely.
+        RiftCompare hosts these community listings but is not a party to any trade. Deal carefully and meet/pay safely.
       </p>
     </div>
   );

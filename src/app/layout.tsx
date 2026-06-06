@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Sora, Space_Grotesk } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { QuickViewProvider } from "@/components/QuickView";
@@ -16,8 +17,8 @@ const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-displ
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "RiftCompareAU — Riftbound Card Database & Price Comparison",
-    template: "%s — RiftCompareAU",
+    default: "RiftCompare — Riftbound Card Database & Price Comparison",
+    template: "%s — RiftCompare",
   },
   description:
     "Australia's Riftbound TCG card database. Browse every card and compare live prices across Australian stores to find the cheapest place to buy.",
@@ -28,7 +29,7 @@ export const metadata: Metadata = {
     type: "website",
     siteName: SITE_NAME,
     url: SITE_URL,
-    title: "RiftCompareAU — Riftbound Card Database & Price Comparison",
+    title: "RiftCompare — Riftbound Card Database & Price Comparison",
     description:
       "Compare live Riftbound TCG card prices across Australian stores and find the cheapest place to buy.",
   },
@@ -93,13 +94,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <a href={`mailto:${CONTACT_EMAIL}`} className="text-gold hover:underline">{CONTACT_EMAIL}</a>
           </div>
           <p>
-            RiftCompareAU · Riftbound card database &amp; price comparison for
+            RiftCompare · Riftbound card database &amp; price comparison for
             Australia. Prices are sourced from public store listings and may be out
             of date — always confirm on the retailer&apos;s site. Not affiliated with
             or endorsed by Riot Games.
           </p>
         </footer>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

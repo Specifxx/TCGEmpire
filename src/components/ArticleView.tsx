@@ -16,7 +16,7 @@ export function ArticleView({ article }: { article: Article }) {
     description: article.excerpt,
     datePublished: article.date,
     author: { "@type": "Organization", name: article.author },
-    publisher: { "@type": "Organization", name: "RiftCompareAU" },
+    publisher: { "@type": "Organization", name: "RiftCompare" },
     mainEntityOfPage: `${SITE_URL}/${article.category === "guide" ? "guides" : "blog"}/${article.slug}`,
   };
 

@@ -55,8 +55,8 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         </h1>
         <p className="mt-1 text-sm text-slate-400">
           {isRegister
-            ? "Create a free account to post in the Market Forum."
-            : "Sign in to post and manage your Market Forum listings."}
+            ? "Create a free account to post in the Forum."
+            : "Sign in to post and manage your Forum listings."}
         </p>
 
         <form onSubmit={submit} className="mt-5 flex flex-col gap-3">

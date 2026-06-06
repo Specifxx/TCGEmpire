@@ -202,7 +202,7 @@ export function DeckView({ deck, builderHref }: { deck: ResolvedDeck; builderHre
         </div>
         <p className="mt-3 text-center text-[11px] text-slate-600">
           Community reference list — may change with the metagame. Each card links to its full AU
-          price comparison. RiftCompareAU may earn a commission on some outbound links.
+          price comparison. RiftCompare may earn a commission on some outbound links.
         </p>
       </div>
     </div>

@@ -20,16 +20,16 @@ export const ARTICLES: Article[] = [
   {
     slug: "welcome-to-riftcompareau",
     category: "blog",
-    title: "Welcome to RiftCompareAU",
+    title: "Welcome to RiftCompare",
     excerpt:
-      "What RiftCompareAU is, why we built it, and how it helps Australian Riftbound players find the cheapest cards.",
-    author: "RiftCompareAU",
+      "What RiftCompare is, why we built it, and how it helps Australian Riftbound players find the cheapest cards.",
+    author: "RiftCompare",
     date: "2026-06-06",
     readMins: 2,
     tags: ["news", "about"],
-    body: `RiftCompareAU is a free price-comparison tool for **Riftbound: League of Legends TCG**, built for Australian players.
+    body: `RiftCompare is a free price-comparison tool for **Riftbound: League of Legends TCG**, built for Australian players.
 
-Riftbound is exciting, but tracking down the cheapest copy of a card across a dozen different stores is tedious — every shop prices differently, stock changes daily, and overseas sites quietly show you the wrong currency. We built RiftCompareAU to do that legwork for you.
+Riftbound is exciting, but tracking down the cheapest copy of a card across a dozen different stores is tedious — every shop prices differently, stock changes daily, and overseas sites quietly show you the wrong currency. We built RiftCompare to do that legwork for you.
 
 ## What you can do here
 
@@ -50,7 +50,7 @@ We're just getting started — the database, decks and price coverage grow every
     title: "Riftbound Unleashed Meta Snapshot — June 2026",
     excerpt:
       "The decks defining the Unleashed metagame right now, from the current tournament data — and what each costs to build in Australia.",
-    author: "RiftCompareAU",
+    author: "RiftCompare",
     date: "2026-06-06",
     readMins: 3,
     tags: ["meta", "decks"],
@@ -80,7 +80,7 @@ Decklists are sourced from riftDecks.com and refresh with the metagame — we'll
     title: "How a Riftbound Deck Is Built",
     excerpt:
       "Legend, Champion, main deck, runes, battlefields and sideboard — the anatomy of a Riftbound deck, explained with real examples.",
-    author: "RiftCompareAU",
+    author: "RiftCompare",
     date: "2026-06-06",
     readMins: 4,
     tags: ["beginner", "deckbuilding"],
@@ -112,8 +112,8 @@ This guide is a work in progress — we'll expand it with mulligan and sideboard
     category: "guide",
     title: "Where to Buy Riftbound Cards in Australia",
     excerpt:
-      "How to find the cheapest Riftbound singles and sealed product in Australia — and how RiftCompareAU does the comparison for you.",
-    author: "RiftCompareAU",
+      "How to find the cheapest Riftbound singles and sealed product in Australia — and how RiftCompare does the comparison for you.",
+    author: "RiftCompare",
     date: "2026-06-06",
     readMins: 3,
     tags: ["buying", "australia"],

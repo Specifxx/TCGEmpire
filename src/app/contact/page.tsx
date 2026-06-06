@@ -2,8 +2,8 @@ import { ContactForm } from "@/components/ContactForm";
 import { CONTACT_EMAIL } from "@/lib/site";
 
 export const metadata = {
-  title: "Contact & Feedback — RiftCompareAU",
-  description: "Send feedback, report a price issue, or suggest a store to add to RiftCompareAU.",
+  title: "Contact & Feedback — RiftCompare",
+  description: "Send feedback, report a price issue, or suggest a store to add to RiftCompare.",
 };
 
 export default function ContactPage() {

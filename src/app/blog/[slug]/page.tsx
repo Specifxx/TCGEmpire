@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const a = getArticle(params.slug);
   if (!a || a.category !== "blog") return { title: "Post not found" };
   return {
-    title: `${a.title} — RiftCompareAU Blog`,
+    title: `${a.title} — RiftCompare Blog`,
     description: a.excerpt,
     alternates: { canonical: `/blog/${a.slug}` },
     openGraph: { type: "article", title: a.title, description: a.excerpt },

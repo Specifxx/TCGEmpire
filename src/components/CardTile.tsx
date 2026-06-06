@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { CardImage } from "./CardImage";
-import { VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge } from "./Badge";
+import { VariantBadge, OvernumberedBadge, SignatureBadge } from "./Badge";
 import { WishlistButton } from "./WishlistButton";
 import { useQuickView } from "./QuickView";
 import { formatAUD } from "@/lib/format";
@@ -66,7 +66,6 @@ export function CardTile({ card }: { card: CardTileData }) {
             <VariantBadge variant={card.variant} />
             <SignatureBadge show={isSignature(card.collectorNumber)} />
             <OvernumberedBadge show={isOvernumbered(card.collectorNumber)} />
-            <PromoBadge show={card.isPromo} />
           </div>
         </div>
 
