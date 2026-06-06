@@ -182,3 +182,18 @@ export function shippingCents(retailerKey: string): number | null {
 export function deliveredCents(retailerKey: string, priceCents: number): number {
   return priceCents + (shippingCents(retailerKey) ?? 0);
 }
+
+// eBay listings often don't expose a postage figure (calculated/located shipping).
+// Use a modest tracked-letter estimate so an eBay listing isn't shown as the
+// cheapest purely because its shipping reads as $0.
+export const EBAY_EST_SHIPPING_CENTS = 350;
+
+// The shipping we should use for a single listing when ranking by delivered cost:
+//  - a real per-listing value when we have one (incl. 0 = the seller states free),
+//  - else eBay's estimate for eBay rows,
+//  - else the store's flat estimate.
+export function effectiveShippingCents(retailerKey: string, rowShippingCents: number | null): number {
+  if (rowShippingCents != null) return rowShippingCents;
+  if (retailerKey === "ebay") return EBAY_EST_SHIPPING_CENTS;
+  return shippingCents(retailerKey) ?? 0;
+}

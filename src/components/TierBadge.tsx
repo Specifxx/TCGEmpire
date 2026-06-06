@@ -1,14 +1,15 @@
+// Flat, low-saturation chips (no bright gradients) — a colour-coded ring + tinted
+// text reads clean rather than "gamer/AI".
 const TIER_COLORS: Record<string, { bg: string; fg: string }> = {
-  // Numeric tiers (riftDecks.com metashare tiers).
-  "1": { bg: "linear-gradient(90deg,#f43f5e,#fb7185)", fg: "#fff" },
-  "2": { bg: "linear-gradient(90deg,#f59e0b,#fbbf24)", fg: "#1a1206" },
-  "3": { bg: "linear-gradient(90deg,#3b82f6,#60a5fa)", fg: "#fff" },
-  "4": { bg: "linear-gradient(90deg,#64748b,#94a3b8)", fg: "#fff" },
+  "1": { bg: "rgba(225,90,95,0.12)", fg: "#e3989b" },
+  "2": { bg: "rgba(203,171,99,0.12)", fg: "#cbab63" },
+  "3": { bg: "rgba(120,160,210,0.12)", fg: "#9fb8d6" },
+  "4": { bg: "rgba(148,163,184,0.12)", fg: "#9aa6b8" },
   // Legacy letter tiers.
-  S: { bg: "linear-gradient(90deg,#f43f5e,#fb7185)", fg: "#fff" },
-  A: { bg: "linear-gradient(90deg,#f59e0b,#fbbf24)", fg: "#1a1206" },
-  B: { bg: "linear-gradient(90deg,#3b82f6,#60a5fa)", fg: "#fff" },
-  C: { bg: "linear-gradient(90deg,#64748b,#94a3b8)", fg: "#fff" },
+  S: { bg: "rgba(225,90,95,0.12)", fg: "#e3989b" },
+  A: { bg: "rgba(203,171,99,0.12)", fg: "#cbab63" },
+  B: { bg: "rgba(120,160,210,0.12)", fg: "#9fb8d6" },
+  C: { bg: "rgba(148,163,184,0.12)", fg: "#9aa6b8" },
 };
 
 export function TierBadge({ tier }: { tier: string }) {

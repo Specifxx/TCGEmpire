@@ -5,32 +5,35 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // CSFloat-inspired dark palette
+        // Clean, low-saturation dark palette (CSFloat-style): near-black surfaces,
+        // cool grey borders, restrained accents — no neon.
         ink: {
-          950: "#0b0e14",
-          900: "#0f131c",
-          850: "#141925",
-          800: "#1a2030",
-          700: "#222a3d",
-          600: "#2c3650",
+          950: "#0a0c10",
+          900: "#0e1116",
+          850: "#13171f",
+          800: "#191e28",
+          700: "#252b38",
+          600: "#333b4d",
         },
-        // Australia-themed: green & gold on a dark (CSFloat-style) base.
+        // Restrained green accent (used sparingly), muted gold for prices. Lower
+        // saturation than before so nothing reads as "bright/tacky".
         brand: {
-          DEFAULT: "#16a34a",
-          400: "#34d17e",
-          500: "#16a34a",
-          600: "#15803d",
+          DEFAULT: "#3aa06a",
+          400: "#5bb98a",
+          500: "#3aa06a",
+          600: "#2f8456",
         },
-        accent: "#f5c518", // gold — used for prices & highlights
-        gold: "#f7c948",
+        accent: "#cbab63", // muted gold — prices & highlights
+        gold: "#cbab63",
       },
       fontFamily: {
         sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"],
         display: ["var(--font-display)", "var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       boxShadow: {
-        card: "0 1px 2px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.25)",
-        glow: "0 0 0 1px rgba(22,163,74,0.45), 0 8px 30px rgba(22,163,74,0.22)",
+        // Flat, neutral elevation — no coloured glow.
+        card: "0 1px 0 rgba(255,255,255,0.02), 0 6px 20px rgba(0,0,0,0.35)",
+        glow: "0 0 0 1px rgba(255,255,255,0.08), 0 8px 28px rgba(0,0,0,0.5)",
       },
     },
   },

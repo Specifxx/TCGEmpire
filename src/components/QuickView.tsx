@@ -8,9 +8,11 @@ import { WishlistButton } from "./WishlistButton";
 import { isOvernumbered, isSignature } from "@/lib/constants";
 import { cardHref } from "@/lib/card-url";
 import { formatAUD } from "@/lib/format";
+import { effectiveShippingCents } from "@/lib/retailers";
 
 interface RetailerPrice {
   id: string;
+  retailer: string;
   retailerName: string;
   priceCents: number;
   shippingCents: number | null;
@@ -88,7 +90,15 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
     };
   }, [card, onClose]);
 
-  const inStock = (prices ?? []).filter((p) => p.inStock);
+  // Rank by delivered cost (item + shipping) so eBay's $0-postage listings don't
+  // jump to the top. Matches the full card page.
+  const inStock = (prices ?? [])
+    .filter((p) => p.inStock)
+    .map((p) => {
+      const ship = effectiveShippingCents(p.retailer, p.shippingCents);
+      return { ...p, ship, delivered: p.priceCents + ship };
+    })
+    .sort((a, b) => a.delivered - b.delivered);
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true">
@@ -156,7 +166,10 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                         <div className="truncate text-sm font-semibold text-white">{p.retailerName}</div>
                         {p.condition && <div className="text-[11px] text-slate-500">{p.condition}</div>}
                       </div>
-                      <div className={`text-sm font-bold ${i === 0 ? "text-accent" : "text-white"}`}>{formatAUD(p.priceCents)}</div>
+                      <div className="text-right">
+                        <div className={`text-sm font-bold ${i === 0 ? "text-accent" : "text-white"}`}>{formatAUD(p.priceCents)}</div>
+                        <div className="text-[10px] text-slate-500">≈ {formatAUD(p.delivered)} del.</div>
+                      </div>
                       <a href={p.url} target="_blank" rel="nofollow sponsored noopener noreferrer" className="btn-primary px-3 py-1.5 text-xs">
                         View →
                       </a>

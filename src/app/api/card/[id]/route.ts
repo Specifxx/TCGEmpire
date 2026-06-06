@@ -29,7 +29,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
       lowestPriceCents: true,
       retailerPrices: {
         orderBy: { priceCents: "asc" },
-        select: { id: true, retailerName: true, priceCents: true, shippingCents: true, condition: true, url: true, inStock: true },
+        select: { id: true, retailer: true, retailerName: true, priceCents: true, shippingCents: true, condition: true, url: true, inStock: true },
       },
     },
   });

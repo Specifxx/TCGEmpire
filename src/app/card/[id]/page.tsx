@@ -8,6 +8,7 @@ import { isOvernumbered, isSignature } from "@/lib/constants";
 import { WishlistButton } from "@/components/WishlistButton";
 import { CardViewBeacon } from "@/components/CardViewBeacon";
 import { formatAUD, timeAgo } from "@/lib/format";
+import { effectiveShippingCents } from "@/lib/retailers";
 
 // Revalidate every 3 min so the card page stays in sync with the browse tiles.
 export const revalidate = 180;
@@ -50,12 +51,16 @@ export default async function CardPage({ params }: { params: { id: string } }) {
 
   if (!card) notFound();
 
-  // Sort by ITEM price so the cheapest shown here matches the catalogue tile's
-  // "from" price (Card.lowestPriceCents). In-stock listings come first; sold-out
-  // listings (the store had it but it's currently unavailable) are shown after.
+  // Rank by DELIVERED cost (item + shipping) so a listing isn't shown as cheapest
+  // just because its postage reads as $0 — the common eBay case. Shipping is the
+  // listing's real figure when known, otherwise an estimate (eBay tracked letter,
+  // or the store's flat single-card rate). In-stock first, then sold-out.
   const all = card.retailerPrices
-    .map((p) => ({ ...p, delivered: p.priceCents + (p.shippingCents ?? 0) }))
-    .sort((a, b) => a.priceCents - b.priceCents);
+    .map((p) => {
+      const ship = effectiveShippingCents(p.retailer, p.shippingCents);
+      return { ...p, ship, shipEstimated: p.shippingCents == null, delivered: p.priceCents + ship };
+    })
+    .sort((a, b) => a.delivered - b.delivered);
   const prices = all.filter((p) => p.inStock);
   const outOfStock = all.filter((p) => !p.inStock);
 
@@ -165,22 +170,16 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                       <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-slate-500">
                         {p.condition && <span className="chip bg-ink-800 text-slate-300">{p.condition}</span>}
                         <span className="text-brand-400">● In stock</span>
-                        {p.shippingCents != null && (
-                          <span>
-                            {p.shippingCents === 0 ? "+ free shipping" : `+ ${formatAUD(p.shippingCents)} shipping`}
-                          </span>
-                        )}
+                        <span>
+                          {p.ship === 0 ? "+ free post" : `+ ${formatAUD(p.ship)} post${p.shipEstimated ? " est." : ""}`}
+                        </span>
                       </div>
                     </div>
                     <div className="text-right">
                       <div className={`text-lg font-bold ${i === 0 ? "text-accent" : "text-white"}`}>
                         {formatAUD(p.priceCents)}
                       </div>
-                      {p.shippingCents != null && (
-                        <div className="text-[11px] text-slate-400">
-                          ≈ {formatAUD(p.delivered)} delivered
-                        </div>
-                      )}
+                      <div className="text-[11px] text-slate-400">≈ {formatAUD(p.delivered)} delivered</div>
                     </div>
                     <a
                       href={p.url}
