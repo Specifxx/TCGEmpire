@@ -20,6 +20,8 @@ const schema = z.object({
   items: z.array(itemSchema).max(60).optional(),
   body: z.string().min(5, "Add a few details").max(4000),
   contact: z.string().max(160).optional(),
+  country: z.string().max(60).optional(),
+  state: z.string().max(60).optional(),
   website: z.string().optional(), // honeypot
 });
 
@@ -94,6 +96,8 @@ export async function POST(req: Request) {
       marketCents,
       body: d.body.trim(),
       contact,
+      country: isDiscussion ? null : d.country?.trim() || null,
+      state: isDiscussion ? null : d.state?.trim() || null,
       authorName: user.displayName,
       userId: user.id,
     },

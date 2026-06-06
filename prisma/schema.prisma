@@ -181,6 +181,9 @@ model ForumPost {
   marketCents Int?
   body        String
   contact     String   @default("") // how to reach the poster (email/Discord); blank for discussions
+  // Seller/buyer location for postage estimates (WTB/WTS only).
+  country     String?
+  state       String?
   authorName  String
   userId      String?  // set if posted while logged in
   score       Int      @default(0)

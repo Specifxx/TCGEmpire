@@ -30,6 +30,8 @@ export default async function ForumPage() {
     marketCents: p.marketCents,
     body: p.body,
     contact: p.contact,
+    country: p.country,
+    state: p.state,
     authorName: p.authorName,
     userId: p.userId,
     score: p.score,

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { formatAUD } from "@/lib/format";
+import { AU_STATES, COUNTRIES, DEFAULT_COUNTRY } from "@/lib/locations";
 
 export type ForumKind = "WTB" | "WTS" | "DISCUSSION";
 
@@ -26,6 +27,8 @@ export interface ForumPostDTO {
   marketCents: number | null;
   body: string;
   contact: string;
+  country: string | null;
+  state: string | null;
   authorName: string;
   userId: string | null;
   score: number;
@@ -121,7 +124,16 @@ function CardPicker({ onAdd }: { onAdd: (it: ForumItem) => void }) {
   );
 }
 
-const emptyForm = { kind: "WTS" as ForumKind, title: "", price: "", body: "", contact: "", website: "" };
+const emptyForm = {
+  kind: "WTS" as ForumKind,
+  title: "",
+  price: "",
+  body: "",
+  contact: "",
+  country: DEFAULT_COUNTRY,
+  state: "",
+  website: "",
+};
 
 export function ForumBoard({
   initialPosts,
@@ -213,7 +225,7 @@ export function ForumBoard({
     }
   }
 
-  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
 
   return (
@@ -315,6 +327,22 @@ export function ForumBoard({
             />
           )}
 
+          {!isDiscussion && (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <select value={form.country} onChange={set("country")} className="input" aria-label="Country">
+                {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+              {form.country === "Australia" ? (
+                <select value={form.state} onChange={set("state")} className="input" aria-label="State or territory">
+                  <option value="">State / territory (optional)</option>
+                  {AU_STATES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+                </select>
+              ) : (
+                <input value={form.state} onChange={set("state")} placeholder="State / region (optional)" className="input" maxLength={60} />
+              )}
+            </div>
+          )}
+
           <textarea
             value={form.body}
             onChange={set("body")}
@@ -397,6 +425,9 @@ export function ForumBoard({
                     {p.priceCents != null && <span className="chip bg-ink-800 font-bold text-accent">{formatAUD(p.priceCents)} asking</span>}
                     {p.priceCents == null && p.marketCents != null && (
                       <span className="chip bg-ink-800 font-bold text-accent">≈ {formatAUD(p.marketCents)} market</span>
+                    )}
+                    {(p.state || p.country) && (
+                      <span className="chip bg-ink-800 text-slate-300">{[p.state, p.country].filter(Boolean).join(", ")}</span>
                     )}
                   </div>
 

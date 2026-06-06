@@ -39,6 +39,9 @@ function PostRow({ p }: { p: Post }) {
         </span>
         {p.priceCents != null && <span className="chip bg-ink-800 font-bold text-accent">{formatAUD(p.priceCents)} asking</span>}
         {p.priceCents == null && p.marketCents != null && <span className="chip bg-ink-800 font-bold text-accent">≈ {formatAUD(p.marketCents)} market</span>}
+        {(p.state || p.country) && (
+          <span className="chip bg-ink-800 text-slate-300">{[p.state, p.country].filter(Boolean).join(", ")}</span>
+        )}
         <span className="ml-auto text-xs text-slate-500">{timeAgo(p.createdAt)}</span>
       </div>
       <h3 className="mt-2 font-bold text-white">{p.title}</h3>
