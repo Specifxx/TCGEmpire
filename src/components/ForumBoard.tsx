@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { formatAUD } from "@/lib/format";
 
@@ -14,6 +15,7 @@ export interface ForumPostDTO {
   body: string;
   contact: string;
   authorName: string;
+  userId: string | null;
   score: number;
   createdAt: string; // ISO
 }
@@ -42,22 +44,21 @@ const emptyForm = {
   condition: "",
   price: "",
   body: "",
-  authorName: "",
   contact: "",
   website: "", // honeypot
 };
 
 export function ForumBoard({
   initialPosts,
-  defaultName,
+  currentUser,
 }: {
   initialPosts: ForumPostDTO[];
-  defaultName: string;
+  currentUser: { id: string; name: string } | null;
 }) {
   const [posts, setPosts] = useState<ForumPostDTO[]>(initialPosts);
   const [filter, setFilter] = useState<"all" | "WTB" | "WTS">("all");
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ ...emptyForm, authorName: defaultName });
+  const [form, setForm] = useState({ ...emptyForm });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [votes, setVotes] = useState<Record<string, 1 | -1>>({});
@@ -123,7 +124,7 @@ export function ForumBoard({
         setError(data.error || "Something went wrong");
       } else if (data.post) {
         setPosts((ps) => [data.post as ForumPostDTO, ...ps]);
-        setForm({ ...emptyForm, authorName: form.authorName });
+        setForm({ ...emptyForm });
         setShowForm(false);
       }
     } catch {
@@ -146,9 +147,15 @@ export function ForumBoard({
             buy or sell and connect directly with other collectors.
           </p>
         </div>
-        <button onClick={() => setShowForm((s) => !s)} className="btn-primary shrink-0">
-          {showForm ? "Close" : "+ New post"}
-        </button>
+        {currentUser ? (
+          <button onClick={() => setShowForm((s) => !s)} className="btn-primary shrink-0">
+            {showForm ? "Close" : "+ New post"}
+          </button>
+        ) : (
+          <Link href="/login?next=/forum" className="btn-primary shrink-0">
+            Log in to post
+          </Link>
+        )}
       </div>
 
       {/* New post form */}
@@ -195,11 +202,15 @@ export function ForumBoard({
             </select>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <input value={form.price} onChange={set("price")} placeholder="Price A$ (optional)" inputMode="decimal" className="input" />
-            <input value={form.authorName} onChange={set("authorName")} placeholder="Your name / handle" className="input" maxLength={60} />
             <input value={form.contact} onChange={set("contact")} placeholder="Contact — email or Discord" className="input" maxLength={160} />
           </div>
+
+          <p className="text-[11px] text-slate-500">
+            Selling several cards? List them all in one post — buyers can see everything you offer on
+            your seller page and save on combined postage.
+          </p>
 
           <textarea
             value={form.body}
@@ -222,8 +233,8 @@ export function ForumBoard({
           {error && <p className="text-sm text-rose-400">{error}</p>}
           <div className="flex items-center justify-between gap-3">
             <p className="text-[11px] text-slate-500">
-              Your name &amp; contact are public. Never share passwords or financial details. Trade
-              at your own risk.
+              Posting as <span className="text-slate-300">{currentUser?.name}</span>. Your name &amp;
+              contact are public. Never share passwords or financial details.
             </p>
             <button type="submit" disabled={submitting} className="btn-primary shrink-0 disabled:opacity-50">
               {submitting ? "Posting…" : "Post"}
@@ -309,7 +320,13 @@ export function ForumBoard({
                   <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-slate-300">{p.body}</p>
 
                   <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
-                    <span className="font-medium text-slate-400">{p.authorName}</span>
+                    {p.userId ? (
+                      <Link href={`/forum/seller/${p.userId}`} className="font-medium text-brand-400 hover:underline">
+                        {p.authorName}
+                      </Link>
+                    ) : (
+                      <span className="font-medium text-slate-400">{p.authorName}</span>
+                    )}
                     <span>·</span>
                     <span>{timeAgo(p.createdAt)}</span>
                     <span>·</span>

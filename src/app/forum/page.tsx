@@ -29,9 +29,15 @@ export default async function ForumPage() {
     body: p.body,
     contact: p.contact,
     authorName: p.authorName,
+    userId: p.userId,
     score: p.score,
     createdAt: p.createdAt.toISOString(),
   }));
 
-  return <ForumBoard initialPosts={posts} defaultName={user?.displayName ?? ""} />;
+  return (
+    <ForumBoard
+      initialPosts={posts}
+      currentUser={user ? { id: user.id, name: user.displayName } : null}
+    />
+  );
 }

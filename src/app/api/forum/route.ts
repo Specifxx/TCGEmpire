@@ -15,7 +15,6 @@ const schema = z.object({
   price: z.union([z.number(), z.string()]).optional(),
   body: z.string().min(5, "Add a few details").max(4000),
   contact: z.string().min(3, "Add a contact (email or Discord)").max(160),
-  authorName: z.string().min(1, "Add your name").max(60),
   website: z.string().optional(), // honeypot — bots fill it, humans don't
 });
 
@@ -32,6 +31,13 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  // Posting requires an account so every listing is tied to a real seller/buyer
+  // (and so buyers can see everything one person offers). Reading stays open.
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json({ error: "Please log in to post a listing." }, { status: 401 });
+  }
+
   const body = await req.json().catch(() => null);
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
@@ -47,7 +53,6 @@ export async function POST(req: Request) {
   const dollars = raw ? parseFloat(raw) : NaN;
   const priceCents = Number.isFinite(dollars) ? Math.round(dollars * 100) : null;
 
-  const user = await getCurrentUser();
   const post = await prisma.forumPost.create({
     data: {
       kind: d.kind,
@@ -58,8 +63,8 @@ export async function POST(req: Request) {
       priceCents,
       body: d.body.trim(),
       contact: d.contact.trim(),
-      authorName: d.authorName.trim(),
-      userId: user?.id ?? null,
+      authorName: user.displayName,
+      userId: user.id,
     },
   });
   return NextResponse.json({ ok: true, post });
