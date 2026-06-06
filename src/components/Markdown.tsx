@@ -7,7 +7,8 @@ import React from "react";
 
 function inline(text: string, kp: string): React.ReactNode[] {
   const nodes: React.ReactNode[] = [];
-  const re = /(\*\*([^*]+)\*\*)|(\[([^\]]+)\]\(([^)]+)\))|(`([^`]+)`)/g;
+  // Order matters: **bold** before *italic* so the double-star wins.
+  const re = /(\*\*([^*]+)\*\*)|(\*([^*\n]+)\*)|(\[([^\]]+)\]\(([^)]+)\))|(`([^`]+)`)/g;
   let last = 0;
   let m: RegExpExecArray | null;
   let i = 0;
@@ -16,7 +17,9 @@ function inline(text: string, kp: string): React.ReactNode[] {
     if (m[1]) {
       nodes.push(<strong key={`${kp}b${i}`} className="font-semibold text-white">{m[2]}</strong>);
     } else if (m[3]) {
-      const href = m[5];
+      nodes.push(<em key={`${kp}i${i}`} className="italic text-slate-200">{m[4]}</em>);
+    } else if (m[5]) {
+      const href = m[7];
       const ext = /^https?:/i.test(href);
       nodes.push(
         <a
@@ -25,13 +28,13 @@ function inline(text: string, kp: string): React.ReactNode[] {
           className="text-brand-400 underline hover:text-brand-300"
           {...(ext ? { target: "_blank", rel: "noopener noreferrer" } : {})}
         >
-          {m[4]}
+          {m[6]}
         </a>
       );
-    } else if (m[6]) {
+    } else if (m[8]) {
       nodes.push(
         <code key={`${kp}c${i}`} className="rounded bg-ink-800 px-1 py-0.5 text-[0.85em] text-slate-200">
-          {m[7]}
+          {m[9]}
         </code>
       );
     }
