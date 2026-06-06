@@ -1,10 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Sora, Space_Grotesk } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
+
+// Body: Sora (modern, energetic, readable). Headings: Space Grotesk (distinctive,
+// gives the brand more life). Exposed as CSS vars wired into Tailwind.
+const sora = Sora({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
+const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-display", display: "swap" });
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -57,7 +63,7 @@ const orgJsonLd = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en-AU">
+    <html lang="en-AU" className={`${sora.variable} ${spaceGrotesk.variable}`}>
       <head>
         {/* Warm up the image CDN connection so card thumbnails start loading sooner. */}
         <link rel="preconnect" href="https://cdn.riftscribe.gg" crossOrigin="" />

@@ -55,7 +55,7 @@ export default async function HomePage() {
       {/* Most valuable — compact horizontal scroll */}
       <section>
         <div className="mb-4 flex items-end justify-between">
-          <h2 className="text-xl font-extrabold text-white">Most valuable right now</h2>
+          <h2 className="text-xl font-extrabold text-white">Chase cards</h2>
           <Link href="/browse?priced=1&sort=price_desc" className="btn-ghost text-xs">View all →</Link>
         </div>
         <div className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-2">

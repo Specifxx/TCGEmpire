@@ -166,6 +166,27 @@ model RetailerPrice {
   @@index([priceCents])
 }
 
+// Sealed / non-single Riftbound products (booster boxes, packs, Proving Grounds,
+// bundles, …). One row per store listing; the /sealed page groups by groupKey to
+// show the cheapest price per product across stores.
+model SealedListing {
+  id           String   @id @default(cuid())
+  groupKey     String // normalised product identity for cross-store grouping
+  title        String
+  productType  String // "Booster Box", "Booster Pack", "Bundle", "Proving Grounds", …
+  setCode      String? // OGN/SFD/UNL/OGS/VEN if detectable
+  retailer     String
+  retailerName String
+  priceCents   Int
+  url          String
+  imageUrl     String?
+  inStock      Boolean  @default(true)
+  lastSeen     DateTime @default(now())
+
+  @@index([groupKey])
+  @@index([retailer])
+}
+
 // A completed trade. Either a buyer hit a listing (kind LISTING) or a seller
 // filled a buy order (kind BUYORDER).
 model Order {

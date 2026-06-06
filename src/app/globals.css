@@ -13,8 +13,36 @@ body {
 }
 
 body {
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+/* Headings use the display font (Space Grotesk) for a more dynamic, energetic feel. */
+h1, h2, h3 {
+  font-family: var(--font-display), var(--font-sans), sans-serif;
+  letter-spacing: -0.015em;
+}
+
+/* Proxy print sheets: real 63x88mm cards, 3x3 per A4 page for cutting out. */
+.proxy-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 63mm);
+  gap: 0;
+  justify-content: center;
+}
+.proxy-card {
+  width: 63mm;
+  height: 88mm;
+  overflow: hidden;
+  outline: 1px dashed #94a3b8; /* cut guide */
+}
+.proxy-card img { width: 100%; height: 100%; object-fit: cover; }
+@media print {
+  @page { size: A4; margin: 6mm; }
+  body { background: #fff !important; }
+  .no-print { display: none !important; }
+  .proxy-card { outline: 1px dashed #cbd5e1; break-inside: avoid; }
 }
 
 /* Thin custom scrollbar to match the dark marketplace aesthetic */

@@ -7,6 +7,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { RETAILER_LIST, RetailerInfo } from "./retailers";
 import { isEbayEnabled, isEbayRateLimited, searchEbayLowest } from "./ebay";
+import { importSealed } from "./sealed-import";
 
 interface ShopifyVariant { title: string; price: string; available: boolean }
 interface ShopifyProduct { title: string; handle: string; variants: ShopifyVariant[] }
@@ -475,5 +476,15 @@ export async function importPrices(): Promise<ImportSummary> {
     });
   }
   summary.cardsPriced = priced.length;
+
+  // Also refresh sealed / non-single products (booster boxes, packs, …). Isolated
+  // in try/catch so a hiccup here never fails the singles import.
+  try {
+    const n = await importSealed();
+    console.log(`Sealed products: ${n} listings.`);
+  } catch (e) {
+    console.warn("Sealed import failed:", e);
+  }
+
   return summary;
 }
