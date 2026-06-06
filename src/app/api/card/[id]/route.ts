@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { NZ_ENABLED } from "@/lib/country";
+import { getCountry } from "@/lib/get-country";
 
 // Card detail (incl. live retailer prices) for the quick-view modal. Resolves by
 // slug or legacy id. Short CDN cache since prices refresh every ~3h.
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
+  // While NZ is off, hard-filter to AU so no NZ rows ever reach the client (the
+  // client still filters by country, but this is defence-in-depth). When NZ is on
+  // we return all markets and let the client switch without a re-fetch.
+  const priceWhere = NZ_ENABLED ? undefined : { country: getCountry() };
   const card = await prisma.card.findFirst({
     where: { OR: [{ slug: params.id }, { id: params.id }] },
     select: {
@@ -29,6 +35,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
       lowestPriceCents: true,
       lowestPriceCentsNz: true,
       retailerPrices: {
+        where: priceWhere,
         orderBy: { priceCents: "asc" },
         // country is returned so the client can show just the selected market's
         // listings (keeps this response cacheable regardless of the viewer's country).
