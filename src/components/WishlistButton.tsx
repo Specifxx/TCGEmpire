@@ -16,7 +16,12 @@ export function WishlistButton({
   useEffect(() => {
     setMounted(true);
     setOn(isWishlisted(cardId));
-    const h = () => setOn(isWishlisted(cardId));
+    // Only react when THIS card changed (the event carries the affected id), so a
+    // toggle doesn't re-render every wishlist button on the page.
+    const h = (e: Event) => {
+      const changed = (e as CustomEvent<{ id?: string }>).detail?.id;
+      if (changed === undefined || changed === cardId) setOn(isWishlisted(cardId));
+    };
     window.addEventListener("wishlist-change", h);
     return () => window.removeEventListener("wishlist-change", h);
   }, [cardId]);
