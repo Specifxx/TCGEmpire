@@ -41,7 +41,7 @@ export default async function ForumPage() {
   return (
     <ForumBoard
       initialPosts={posts}
-      currentUser={user ? { id: user.id, name: user.displayName } : null}
+      currentUser={user ? { id: user.id, name: user.displayName, isAdmin: user.isAdmin } : null}
     />
   );
 }

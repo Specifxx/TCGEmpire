@@ -140,11 +140,12 @@ export function ForumBoard({
   currentUser,
 }: {
   initialPosts: ForumPostDTO[];
-  currentUser: { id: string; name: string } | null;
+  currentUser: { id: string; name: string; isAdmin: boolean } | null;
 }) {
   const [posts, setPosts] = useState<ForumPostDTO[]>(initialPosts);
   const [filter, setFilter] = useState<"all" | ForumKind>("all");
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ ...emptyForm });
   const [items, setItems] = useState<ForumItem[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -196,27 +197,64 @@ export function ForumBoard({
     } catch { /* keep optimistic */ }
   }
 
+  function resetForm() {
+    setForm({ ...emptyForm });
+    setItems([]);
+    setShowForm(false);
+    setEditingId(null);
+    setError(null);
+  }
+
+  function startEdit(p: ForumPostDTO) {
+    setEditingId(p.id);
+    setForm({
+      kind: p.kind,
+      title: p.title,
+      price: p.priceCents != null ? (p.priceCents / 100).toString() : "",
+      body: p.body ?? "",
+      contact: p.contact ?? "",
+      country: p.country ?? DEFAULT_COUNTRY,
+      state: p.state ?? "",
+      website: "",
+    });
+    setItems(p.items ?? []);
+    setShowForm(true);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  async function deletePost(id: string) {
+    if (typeof window !== "undefined" && !window.confirm("Delete this post? This can't be undone.")) return;
+    const prev = posts;
+    setPosts((ps) => ps.filter((p) => p.id !== id)); // optimistic
+    try {
+      const res = await fetch(`/api/forum/${id}`, { method: "DELETE" });
+      if (!res.ok) setPosts(prev); // restore on failure
+    } catch {
+      setPosts(prev);
+    }
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
     try {
-      const res = await fetch("/api/forum", {
-        method: "POST",
+      const payload = {
+        ...form,
+        items: isDiscussion ? [] : items.map((i) => ({ name: i.name, setCode: i.setCode, condition: i.condition, qty: i.qty })),
+      };
+      const res = await fetch(editingId ? `/api/forum/${editingId}` : "/api/forum", {
+        method: editingId ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          items: isDiscussion ? [] : items.map((i) => ({ name: i.name, setCode: i.setCode, condition: i.condition, qty: i.qty })),
-        }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || "Something went wrong");
       } else if (data.post) {
-        setPosts((ps) => [data.post as ForumPostDTO, ...ps]);
-        setForm({ ...emptyForm });
-        setItems([]);
-        setShowForm(false);
+        const post = data.post as ForumPostDTO;
+        setPosts((ps) => (editingId ? ps.map((p) => (p.id === post.id ? post : p)) : [post, ...ps]));
+        resetForm();
       }
     } catch {
       setError("Network error — please try again");
@@ -239,7 +277,7 @@ export function ForumBoard({
           </p>
         </div>
         {currentUser ? (
-          <button onClick={() => setShowForm((s) => !s)} className="btn-primary shrink-0">
+          <button onClick={() => (showForm ? resetForm() : setShowForm(true))} className="btn-primary shrink-0">
             {showForm ? "Close" : "+ New post"}
           </button>
         ) : (
@@ -249,6 +287,12 @@ export function ForumBoard({
 
       {showForm && (
         <form onSubmit={submit} className="card-surface mb-6 space-y-3 p-4">
+          {editingId && (
+            <div className="flex items-center justify-between rounded-lg bg-ink-900 px-3 py-2 text-xs">
+              <span className="font-semibold text-brand-400">Editing your post</span>
+              <button type="button" onClick={resetForm} className="text-slate-400 hover:text-white">Cancel</button>
+            </div>
+          )}
           <div className="flex flex-wrap gap-2">
             {(["WTB", "WTS", "DISCUSSION"] as const).map((k) => (
               <button
@@ -377,7 +421,7 @@ export function ForumBoard({
               Posting as <span className="text-slate-300">{currentUser?.name}</span>. Never share passwords or financial details.
             </p>
             <button type="submit" disabled={submitting} className="btn-primary shrink-0 disabled:opacity-50">
-              {submitting ? "Posting…" : "Post"}
+              {submitting ? (editingId ? "Saving…" : "Posting…") : editingId ? "Save changes" : "Post"}
             </button>
           </div>
         </form>
@@ -477,6 +521,19 @@ export function ForumBoard({
                       <>
                         <span>·</span>
                         <span>Contact: <span className="text-slate-300">{p.contact}</span></span>
+                      </>
+                    )}
+                    {currentUser && p.userId === currentUser.id && (
+                      <>
+                        <span>·</span>
+                        <button onClick={() => startEdit(p)} className="text-brand-400 hover:underline">Edit</button>
+                        <button onClick={() => deletePost(p.id)} className="text-rose-400 hover:underline">Delete</button>
+                      </>
+                    )}
+                    {currentUser?.isAdmin && p.userId !== currentUser.id && (
+                      <>
+                        <span>·</span>
+                        <button onClick={() => deletePost(p.id)} className="text-rose-400 hover:underline">Delete</button>
                       </>
                     )}
                   </div>

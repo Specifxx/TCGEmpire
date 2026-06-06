@@ -29,7 +29,7 @@ const SET_NAMES: Record<string, string> = {
 // A sealed product title looks like one of these. "nexus night" (not bare "nexus",
 // which also matches the single card "Power Nexus").
 const SEALED_TITLE =
-  /booster\s*box|booster\s*pack|booster\s*display|display\s*box|booster\s*bundle|\bbundle\b|elite|collector|gift\s*box|blister|proving\s*grounds|nexus\s*night|two[-\s]?player|starter\s*(deck|set)|precon|\bcase\b|mega\s*box|\btin\b|sealed/i;
+  /booster\s*box|booster\s*pack|booster\s*display|display\s*box|booster\s*bundle|\bbundle\b|elite|collector|gift\s*box|blister|proving\s*grounds|nexus\s*night|promo\s*pack|two[-\s]?player|starter\s*(deck|set)|precon|\bcase\b|mega\s*box|\btin\b|sealed/i;
 // …but never these. Singles / accessories / bulk / break slots / non-English slip
 // through otherwise. Condition codes (NM/LP/…) and a set name in parentheses
 // (e.g. "(Origins: Proving Grounds)") are tell-tale signs of a single card.
@@ -94,7 +94,7 @@ function detectSet(title: string): string | null {
 function sealedType(title: string): string {
   const t = title.toLowerCase();
   if (/proving\s*grounds/.test(t)) return "Proving Grounds";
-  if (/nexus\s*night/.test(t)) return "Nexus Night Pack";
+  if (/nexus\s*night|promo\s*pack/.test(t)) return "Promo Pack";
   if (/booster\s*box|display\s*box|booster\s*display|\bdisplay\b/.test(t)) return "Booster Box";
   if (/\bcase\b/.test(t)) return "Booster Case";
   if (/booster\s*bundle|\bbundle\b|gift/.test(t)) return "Bundle";
@@ -160,12 +160,13 @@ export async function importSealed(): Promise<number> {
   // eBay AU prices for each sealed product (best-effort; skips when rate-limited).
   if (isEbayEnabled()) {
     const groups = await getSealedGroups();
-    // Always attempt eBay for the per-set Nexus Night packs — even ones no AU store
-    // currently lists (e.g. the Unleashed pack) — so they appear once available.
+    // Always attempt eBay for the per-set promo (Nexus Night) packs — even ones no
+    // AU store currently lists (e.g. the Unleashed pack) — so they appear once
+    // available, with an image pulled from the eBay listing.
     const NEXUS_SEEDS = [
-      { groupKey: "OGN|Nexus Night Pack", setCode: "OGN", name: "Origins Nexus Night Pack", productType: "Nexus Night Pack", imageUrl: null as string | null },
-      { groupKey: "SFD|Nexus Night Pack", setCode: "SFD", name: "Spiritforged Nexus Night Pack", productType: "Nexus Night Pack", imageUrl: null as string | null },
-      { groupKey: "UNL|Nexus Night Pack", setCode: "UNL", name: "Unleashed Nexus Night Pack", productType: "Nexus Night Pack", imageUrl: null as string | null },
+      { groupKey: "OGN|Promo Pack", setCode: "OGN", name: "Origins Nexus Night Promo Pack", productType: "Promo Pack", imageUrl: null as string | null },
+      { groupKey: "SFD|Promo Pack", setCode: "SFD", name: "Spiritforged Nexus Night Promo Pack", productType: "Promo Pack", imageUrl: null as string | null },
+      { groupKey: "UNL|Promo Pack", setCode: "UNL", name: "Unleashed Nexus Night Promo Pack", productType: "Promo Pack", imageUrl: null as string | null },
     ];
     const haveKeys = new Set(groups.map((g) => g.groupKey));
     const searchList = [
@@ -186,7 +187,7 @@ export async function importSealed(): Promise<number> {
         retailerName: "eBay",
         priceCents: r.priceCents,
         url: r.url,
-        imageUrl: g.imageUrl,
+        imageUrl: r.imageUrl ?? g.imageUrl,
         inStock: true,
       });
     }
@@ -269,7 +270,7 @@ export async function getSealedGroups(): Promise<SealedGroup[]> {
     return g;
   });
   // Boxes/cases first, then by price.
-  const order = ["Booster Box", "Booster Case", "Proving Grounds", "Starter Set", "Bundle", "Nexus Night Pack", "Booster Pack", "Tin", "Sealed"];
+  const order = ["Booster Box", "Booster Case", "Proving Grounds", "Starter Set", "Bundle", "Promo Pack", "Booster Pack", "Tin", "Sealed"];
   out.sort((a, b) => {
     const oa = order.indexOf(a.productType);
     const ob = order.indexOf(b.productType);

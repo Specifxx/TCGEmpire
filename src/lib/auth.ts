@@ -8,6 +8,17 @@ const secret = new TextEncoder().encode(
   process.env.AUTH_SECRET ?? "tcgempire-dev-secret-change-me"
 );
 
+// Moderator emails (override via ADMIN_EMAILS env, comma-separated). These accounts
+// get delete-any privileges. Not surfaced anywhere in the UI.
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "mastermisclick@gmail.com")
+  .split(",")
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean);
+
+export function isAdminEmail(email: string): boolean {
+  return ADMIN_EMAILS.includes(email.toLowerCase());
+}
+
 export interface SessionUser {
   id: string;
   email: string;
@@ -60,7 +71,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
       email: user.email,
       displayName: user.displayName,
       balanceCents: user.balanceCents,
-      isAdmin: user.isAdmin,
+      isAdmin: user.isAdmin || isAdminEmail(user.email),
     };
   } catch {
     return null;

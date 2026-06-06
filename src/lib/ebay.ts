@@ -51,6 +51,7 @@ export interface EbayResult {
   url: string;
   title: string;
   condition?: string;
+  imageUrl?: string | null; // listing image (used for sealed product thumbnails)
 }
 
 function shippingFromItem(item: any): number | null {
@@ -175,6 +176,7 @@ export async function searchEbayLowest(card: {
     url: best.itemAffiliateWebUrl ?? best.itemWebUrl,
     title: best.title,
     condition: best.condition,
+    imageUrl: best.image?.imageUrl ?? best.thumbnailImages?.[0]?.imageUrl ?? null,
   };
 }
 
@@ -185,7 +187,7 @@ const SEALED_TYPE_KW: Record<string, RegExp> = {
   "Booster Pack": /booster\s*pack/i,
   Bundle: /bundle|gift/i,
   "Proving Grounds": /proving\s*grounds/i,
-  "Nexus Night Pack": /nexus\s*night/i,
+  "Promo Pack": /nexus\s*night|promo\s*pack/i,
   "Starter Set": /starter|two[-\s]?player/i,
   Tin: /\btin\b/i,
 };
@@ -243,5 +245,6 @@ export async function searchEbaySealed(name: string, productType: string, setCod
     url: best.itemAffiliateWebUrl ?? best.itemWebUrl,
     title: best.title,
     condition: best.condition,
+    imageUrl: best.image?.imageUrl ?? best.thumbnailImages?.[0]?.imageUrl ?? null,
   };
 }
