@@ -108,7 +108,11 @@ export async function importSealed(): Promise<number> {
   let count = 0;
   for (const store of RETAILER_LIST) {
     const cc = store.country ?? "AU";
-    const handles = await discoverCollections(store.base);
+    // Auto-discover from the sitemap, but fall back to the store's configured
+    // collections (some stores' sitemaps don't expose their collection handles —
+    // this is why NZ sealed stores were being skipped). Mirrors price-import.ts.
+    let handles = await discoverCollections(store.base);
+    handles = Array.from(new Set([...handles, ...(store.collections ?? [])]));
     if (!handles.length) continue;
 
     const seen = new Set<string>();
