@@ -14,6 +14,12 @@ interface Row {
   unit: number | null;
 }
 
+// Tidy display for cards our data labels with a precon suffix (e.g. OGS starter
+// legends imported as "Master, Wuju Bladesman - Starter").
+function cleanName(name: string): string {
+  return name.replace(/\s*-\s*Starter$/i, "");
+}
+
 export function DeckView({ deck, builderHref }: { deck: ResolvedDeck; builderHref: string }) {
   const rows: Row[] = [
     { qty: 1, name: deck.legend, card: deck.legendCard, unit: deck.legendPriceCents },
@@ -56,8 +62,26 @@ export function DeckView({ deck, builderHref }: { deck: ResolvedDeck; builderHre
               ))}
             </div>
             <h1 className="text-xl font-extrabold text-white">{deck.name}</h1>
-            <p className="mt-0.5 text-xs text-slate-500">{deck.archetype} · {deck.legend}</p>
+            <p className="mt-0.5 text-xs text-slate-500">{deck.archetype} · {cleanName(deck.legend)}</p>
             <p className="mt-3 text-sm text-slate-400">{deck.description}</p>
+
+            {deck.sourceUrl && (
+              <a
+                href={deck.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                className="mt-3 flex items-start gap-1.5 text-[11px] text-slate-500 hover:text-brand-400"
+              >
+                <svg className="mt-0.5 h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1" />
+                  <path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1" />
+                </svg>
+                <span>
+                  Decklist source: <span className="underline">riftDecks.com</span>
+                  {deck.source ? ` — ${deck.source}` : ""}
+                </span>
+              </a>
+            )}
 
             <div className="mt-4 rounded-lg bg-ink-900 p-3">
               <div className="text-[11px] uppercase tracking-wide text-slate-500">Build cost (cheapest AU)</div>
@@ -101,10 +125,10 @@ export function DeckView({ deck, builderHref }: { deck: ResolvedDeck; builderHre
                 <div className="min-w-0 flex-1">
                   {r.card ? (
                     <Link href={`/card/${r.card.id}`} className="font-medium text-white hover:text-brand-400">
-                      {r.card.name}
+                      {cleanName(r.card.name)}
                     </Link>
                   ) : (
-                    <span className="font-medium text-slate-400">{r.name}</span>
+                    <span className="font-medium text-slate-400">{cleanName(r.name)}</span>
                   )}
                   <div className="text-xs text-slate-500">
                     {r.card ? <>{r.card.setCode} · {r.card.collectorNumber} · {r.card.type}</> : "not found"}

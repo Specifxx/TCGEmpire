@@ -25,8 +25,17 @@ export default async function DecksPage() {
         <div className="mb-4">
           <h1 className="text-2xl font-extrabold text-white">Top Meta Decks</h1>
           <p className="mt-1 text-sm text-slate-400">
-            Ready-made Riftbound decklists based on the current top-tier archetypes — each
-            priced live across Australian stores so you can see what it costs to build and
+            Real top-finishing tournament decklists from the current Unleashed metagame, sourced
+            from{" "}
+            <a
+              href="https://riftdecks.com/legends"
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              className="text-brand-400 underline hover:text-brand-300"
+            >
+              riftDecks.com
+            </a>{" "}
+            — each priced live across Australian stores so you can see what it costs to build and
             where to buy every card.
           </p>
         </div>
@@ -47,8 +56,17 @@ export default async function DecksPage() {
       )}
 
       <p className="text-center text-[11px] text-slate-600">
-        Decks are a community reference based on recent results and may change. Build cost uses
-        each card&apos;s cheapest in-stock AU price and may span multiple stores.
+        Decklists are real tournament results sourced from{" "}
+        <a
+          href="https://riftdecks.com/legends"
+          target="_blank"
+          rel="noopener noreferrer nofollow"
+          className="underline hover:text-slate-400"
+        >
+          riftDecks.com
+        </a>{" "}
+        and change with the metagame. Build cost uses each card&apos;s cheapest in-stock AU price
+        and may span multiple stores.
       </p>
     </div>
   );
@@ -81,7 +99,7 @@ function DeckGrid({ decks }: { decks: Awaited<ReturnType<typeof resolveAllDecks>
               <div className="flex items-start justify-between gap-2">
                 <h2 className="font-bold text-white">{d.name}</h2>
               </div>
-              <p className="text-xs text-slate-500">{d.archetype} · {d.legend}</p>
+              <p className="text-xs text-slate-500">{d.archetype} · {d.legend.replace(/\s*-\s*Starter$/i, "")}</p>
               <div className="flex flex-wrap gap-1">
                 {d.domains.map((dom) => (
                   <DomainBadge key={dom} domain={dom} />

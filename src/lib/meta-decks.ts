@@ -11,6 +11,9 @@ export interface MetaDeckSeed {
   domains: string[];
   description: string;
   category?: "meta" | "beginner";
+  // Attribution: the real tournament list this deck is copied from.
+  sourceUrl?: string;
+  source?: string; // e.g. "Player · 1st, Event (Jun 2026)"
   cards: { name: string; qty: number }[];
 }
 
