@@ -197,7 +197,23 @@ export async function importSealed(): Promise<number> {
     }
   }
 
+  // Self-heal: drop any stored rows that no longer qualify (e.g. a store that
+  // failed to re-scrape this run still holds an old mis-detected single, or rows
+  // from before the filters tightened).
+  await cleanupStaleSealed();
+
   return count;
+}
+
+// Delete stored sealed rows whose title should now be excluded — independent of
+// scraping, so stale data gets cleaned even when a store didn't refresh.
+export async function cleanupStaleSealed(): Promise<number> {
+  const rows = await prisma.sealedListing.findMany({ select: { id: true, title: true } });
+  const ids = rows
+    .filter((r) => !SEALED_TITLE.test(r.title) || SEALED_EXCLUDE.test(r.title))
+    .map((r) => r.id);
+  if (ids.length) await prisma.sealedListing.deleteMany({ where: { id: { in: ids } } });
+  return ids.length;
 }
 
 export interface SealedGroup {

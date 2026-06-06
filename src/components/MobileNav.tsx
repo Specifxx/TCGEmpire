@@ -9,6 +9,8 @@ const LINKS = [
   { href: "/decks", label: "Meta Decks" },
   { href: "/deck", label: "Deck Builder" },
   { href: "/forum", label: "Forum" },
+  { href: "/guides", label: "Guides" },
+  { href: "/blog", label: "Blog" },
   { href: "/wishlist", label: "Wishlist" },
 ];
 
@@ -24,7 +26,7 @@ export function MobileNav() {
   }, []);
 
   return (
-    <div className="sm:hidden">
+    <div className="lg:hidden">
       <button
         onClick={() => setOpen((o) => !o)}
         aria-label="Menu"

@@ -30,17 +30,23 @@ export function Navbar() {
           <Link href="/browse" className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-ink-800 hover:text-white">
             Database
           </Link>
-          <Link href="/sealed" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-ink-800 hover:text-white sm:block">
+          <Link href="/sealed" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-ink-800 hover:text-white lg:block">
             Sealed
           </Link>
-          <Link href="/decks" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-ink-800 hover:text-white sm:block">
+          <Link href="/decks" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-ink-800 hover:text-white lg:block">
             Meta Decks
           </Link>
-          <Link href="/deck" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-ink-800 hover:text-white sm:block">
+          <Link href="/deck" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-ink-800 hover:text-white lg:block">
             Deck Builder
           </Link>
-          <Link href="/forum" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-ink-800 hover:text-white sm:block">
+          <Link href="/forum" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-ink-800 hover:text-white lg:block">
             Forum
+          </Link>
+          <Link href="/guides" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-ink-800 hover:text-white lg:block">
+            Guides
+          </Link>
+          <Link href="/blog" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-ink-800 hover:text-white lg:block">
+            Blog
           </Link>
           <NavWishlistButton />
           <MobileNav />
