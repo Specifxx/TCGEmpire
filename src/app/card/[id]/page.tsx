@@ -8,7 +8,9 @@ import { isOvernumbered, isSignature } from "@/lib/constants";
 import { WishlistButton } from "@/components/WishlistButton";
 import { formatAUD, timeAgo } from "@/lib/format";
 
-export const dynamic = "force-dynamic";
+// Cache each card page and revalidate every 10 min (prices refresh every ~3h, so
+// this keeps navigation instant without showing meaningfully stale prices).
+export const revalidate = 600;
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const card = await prisma.card.findUnique({

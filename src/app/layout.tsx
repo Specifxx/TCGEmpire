@@ -58,6 +58,11 @@ const orgJsonLd = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en-AU">
+      <head>
+        {/* Warm up the image CDN connection so card thumbnails start loading sooner. */}
+        <link rel="preconnect" href="https://cdn.riftscribe.gg" crossOrigin="" />
+        <link rel="dns-prefetch" href="https://cdn.riftscribe.gg" />
+      </head>
       <body className="min-h-screen bg-ink-950">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }} />
         <NextTopLoader

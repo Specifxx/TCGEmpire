@@ -6,7 +6,7 @@ import { TierBadge } from "@/components/TierBadge";
 import { DOMAIN_KEYS, domainInfo } from "@/lib/constants";
 import { formatAUD } from "@/lib/format";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 900;
 
 export const metadata: Metadata = {
   title: "Riftbound Legends — Champions & Decks (Australia)",

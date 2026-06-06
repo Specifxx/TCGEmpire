@@ -8,8 +8,6 @@ import {
   CardQuery,
 } from "@/lib/cards";
 
-export const dynamic = "force-dynamic";
-
 // Paginated card feed for the Browse infinite-scroll. Same filters/sort as the
 // server-rendered first page, just the next slice.
 export async function GET(req: Request) {
@@ -27,5 +25,10 @@ export async function GET(req: Request) {
     take: CARD_PAGE_SIZE,
   });
 
-  return NextResponse.json({ cards, page });
+  // Cache identical scroll/filter requests at the CDN for a couple of minutes
+  // (prices refresh every ~3h) so repeated scrolling is instant.
+  return NextResponse.json(
+    { cards, page },
+    { headers: { "Cache-Control": "public, s-maxage=120, stale-while-revalidate=600" } }
+  );
 }

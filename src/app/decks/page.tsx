@@ -5,7 +5,7 @@ import { DomainBadge } from "@/components/Badge";
 import { TierBadge } from "@/components/TierBadge";
 import { formatAUD } from "@/lib/format";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 900;
 
 export const metadata: Metadata = {
   title: "Riftbound Preconstructed Decks & Build Cost (Australia)",
