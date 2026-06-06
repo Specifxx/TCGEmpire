@@ -23,15 +23,18 @@ const SET_FROM_TITLE: [RegExp, string][] = [
   [/origins|\bOGN\b/i, "OGN"],
 ];
 const SET_NAMES: Record<string, string> = {
-  OGN: "Origins", OGS: "Proving Grounds", SFD: "Spirit Forged", UNL: "Unleashed", VEN: "Vendetta",
+  OGN: "Origins", OGS: "Proving Grounds", SFD: "Spiritforged", UNL: "Unleashed", VEN: "Vendetta",
 };
 
-// A sealed product title looks like one of these.
+// A sealed product title looks like one of these. "nexus night" (not bare "nexus",
+// which also matches the single card "Power Nexus").
 const SEALED_TITLE =
-  /booster\s*box|booster\s*pack|booster\s*display|display\s*box|booster\s*bundle|\bbundle\b|elite|collector|gift\s*box|blister|proving\s*grounds|nexus|two[-\s]?player|starter\s*(deck|set)|precon|\bcase\b|mega\s*box|\btin\b|sealed/i;
-// …but never these (singles / accessories / non-English slip through otherwise).
+  /booster\s*box|booster\s*pack|booster\s*display|display\s*box|booster\s*bundle|\bbundle\b|elite|collector|gift\s*box|blister|proving\s*grounds|nexus\s*night|two[-\s]?player|starter\s*(deck|set)|precon|\bcase\b|mega\s*box|\btin\b|sealed/i;
+// …but never these. Singles / accessories / bulk / break slots / non-English slip
+// through otherwise. Condition codes (NM/LP/…) and a set name in parentheses
+// (e.g. "(Origins: Proving Grounds)") are tell-tale signs of a single card.
 const SEALED_EXCLUDE =
-  /\bsingle\b|playmat|sleeve|deck\s*box|binder|toploader|top\s*loader|dice|counter|token|card\s*\d|\/\d{2,3}\b|chinese|japanese|korean|simplified|traditional/i;
+  /\bsingle\b|playmat|sleeve|deck\s*box|binder|toploader|top\s*loader|dice|counter|token|card\s*\d|\/\d{2,3}\b|chinese|japanese|korean|simplified|traditional|\bbulk\b|\bopened\b|live\s*break|\b(?:nm|lp|mp|hp|dmg)\b|near\s*mint|lightly\s*played|moderately\s*played|heavily\s*played|\([^)]*\b(?:origins|spirit\s*forged|spiritforged|unleashed|vendetta|proving\s*grounds)\b[^)]*\)/i;
 
 async function fetchJson(url: string): Promise<any | null> {
   try {
@@ -91,7 +94,7 @@ function detectSet(title: string): string | null {
 function sealedType(title: string): string {
   const t = title.toLowerCase();
   if (/proving\s*grounds/.test(t)) return "Proving Grounds";
-  if (/nexus/.test(t)) return "Nexus Knights";
+  if (/nexus\s*night/.test(t)) return "Nexus Night Pack";
   if (/booster\s*box|display\s*box|booster\s*display|\bdisplay\b/.test(t)) return "Booster Box";
   if (/\bcase\b/.test(t)) return "Booster Case";
   if (/booster\s*bundle|\bbundle\b|gift/.test(t)) return "Bundle";
@@ -151,8 +154,20 @@ export async function importSealed(): Promise<number> {
   // eBay AU prices for each sealed product (best-effort; skips when rate-limited).
   if (isEbayEnabled()) {
     const groups = await getSealedGroups();
+    // Always attempt eBay for the per-set Nexus Night packs — even ones no AU store
+    // currently lists (e.g. the Unleashed pack) — so they appear once available.
+    const NEXUS_SEEDS = [
+      { groupKey: "OGN|Nexus Night Pack", setCode: "OGN", name: "Origins Nexus Night Pack", productType: "Nexus Night Pack", imageUrl: null as string | null },
+      { groupKey: "SFD|Nexus Night Pack", setCode: "SFD", name: "Spiritforged Nexus Night Pack", productType: "Nexus Night Pack", imageUrl: null as string | null },
+      { groupKey: "UNL|Nexus Night Pack", setCode: "UNL", name: "Unleashed Nexus Night Pack", productType: "Nexus Night Pack", imageUrl: null as string | null },
+    ];
+    const haveKeys = new Set(groups.map((g) => g.groupKey));
+    const searchList = [
+      ...groups.map((g) => ({ groupKey: g.groupKey, setCode: g.setCode, name: g.name, productType: g.productType, imageUrl: g.imageUrl })),
+      ...NEXUS_SEEDS.filter((s) => !haveKeys.has(s.groupKey)),
+    ];
     const ebayRows: any[] = [];
-    for (const g of groups) {
+    for (const g of searchList) {
       if (isEbayRateLimited()) break;
       const r = await searchEbaySealed(g.name, g.productType, g.setCode);
       if (!r) continue;
@@ -232,7 +247,7 @@ export async function getSealedGroups(): Promise<SealedGroup[]> {
     return g;
   });
   // Boxes/cases first, then by price.
-  const order = ["Booster Box", "Booster Case", "Proving Grounds", "Starter Set", "Bundle", "Nexus Knights", "Booster Pack", "Tin", "Sealed"];
+  const order = ["Booster Box", "Booster Case", "Proving Grounds", "Starter Set", "Bundle", "Nexus Night Pack", "Booster Pack", "Tin", "Sealed"];
   out.sort((a, b) => {
     const oa = order.indexOf(a.productType);
     const ob = order.indexOf(b.productType);

@@ -1,0 +1,37 @@
+import type { Metadata } from "next";
+import { prisma } from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth";
+import { ForumBoard, type ForumPostDTO } from "@/components/ForumBoard";
+
+export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Riftbound Buy & Sell Forum (Australia)",
+  description:
+    "Community board for Australian Riftbound TCG players to post want-to-buy (WTB) and want-to-sell (WTS) listings and trade cards directly.",
+  alternates: { canonical: "/forum" },
+};
+
+export default async function ForumPage() {
+  const [rows, user] = await Promise.all([
+    prisma.forumPost.findMany({ where: { status: "OPEN" }, orderBy: { createdAt: "desc" }, take: 200 }),
+    getCurrentUser(),
+  ]);
+
+  const posts: ForumPostDTO[] = rows.map((p) => ({
+    id: p.id,
+    kind: p.kind as "WTB" | "WTS",
+    title: p.title,
+    cardName: p.cardName,
+    setCode: p.setCode,
+    condition: p.condition,
+    priceCents: p.priceCents,
+    body: p.body,
+    contact: p.contact,
+    authorName: p.authorName,
+    score: p.score,
+    createdAt: p.createdAt.toISOString(),
+  }));
+
+  return <ForumBoard initialPosts={posts} defaultName={user?.displayName ?? ""} />;
+}

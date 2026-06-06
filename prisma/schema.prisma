@@ -165,6 +165,29 @@ model PriceHistory {
   @@index([cardId, day])
 }
 
+// A community marketplace post: a user's "want to buy" (WTB) or "want to sell"
+// (WTS) listing for Riftbound cards. Reddit-style board at /forum.
+model ForumPost {
+  id          String   @id @default(cuid())
+  kind        String   // "WTB" | "WTS"
+  title       String
+  cardName    String?
+  setCode     String?
+  condition   String?  // NM, LP, MP, HP, DMG, or "Any"
+  priceCents  Int?     // asking / offering price per card
+  body        String
+  contact     String   // how to reach the poster (email / Discord / phone)
+  authorName  String
+  userId      String?  // set if posted while logged in
+  score       Int      @default(0)
+  status      String   @default("OPEN") // OPEN | CLOSED
+  createdAt   DateTime @default(now())
+
+  @@index([kind])
+  @@index([createdAt])
+  @@index([status])
+}
+
 // A live price for a card at an external retailer, used for price comparison.
 // Populated by scripts/import-prices.ts from AU store feeds (Shopify products.json).
 model RetailerPrice {

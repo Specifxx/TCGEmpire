@@ -8,6 +8,7 @@ const LINKS = [
   { href: "/sealed", label: "Sealed Products" },
   { href: "/decks", label: "Meta Decks" },
   { href: "/deck", label: "Deck Builder" },
+  { href: "/forum", label: "Forum" },
   { href: "/wishlist", label: "Wishlist" },
 ];
 

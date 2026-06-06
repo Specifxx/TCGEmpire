@@ -39,6 +39,9 @@ export function Navbar() {
           <Link href="/deck" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-ink-800 hover:text-white sm:block">
             Deck Builder
           </Link>
+          <Link href="/forum" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-ink-800 hover:text-white sm:block">
+            Forum
+          </Link>
           <NavWishlistButton />
           <MobileNav />
         </nav>

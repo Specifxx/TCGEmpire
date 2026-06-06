@@ -185,7 +185,7 @@ const SEALED_TYPE_KW: Record<string, RegExp> = {
   "Booster Pack": /booster\s*pack/i,
   Bundle: /bundle|gift/i,
   "Proving Grounds": /proving\s*grounds/i,
-  "Nexus Knights": /nexus/i,
+  "Nexus Night Pack": /nexus\s*night/i,
   "Starter Set": /starter|two[-\s]?player/i,
   Tin: /\btin\b/i,
 };
