@@ -12,7 +12,8 @@ import { effectiveShippingCents } from "@/lib/retailers";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES, pickPrice } from "@/lib/country";
 
-// Dynamic: prices + store listings depend on the selected market (country cookie).
+// ISR while AU-only; dynamic per-request once NZ mode is enabled (cookie-driven).
+export const revalidate = 180;
 
 // Accept either the slug ("vayne-hunter-sfd-223-221") or the legacy cuid.
 const whereParam = (p: string) => ({ OR: [{ slug: p }, { id: p }] });

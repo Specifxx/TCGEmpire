@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { COUNTRY_LIST } from "@/lib/country";
+import { COUNTRY_LIST, NZ_ENABLED } from "@/lib/country";
 import { useCountry } from "./CountryProvider";
 
 // Market chooser: 🇦🇺 Australia (default) / 🇳🇿 New Zealand. Switching reloads
-// prices + store lists for the chosen country and persists via cookie.
+// prices + store lists for the chosen country and persists via cookie. Hidden while
+// NZ mode is in development (the site is AU-only then).
 export function CountrySwitcher({ className = "" }: { className?: string }) {
   const { country, setCountry } = useCountry();
   const [open, setOpen] = useState(false);
@@ -19,6 +20,8 @@ export function CountrySwitcher({ className = "" }: { className?: string }) {
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
+
+  if (!NZ_ENABLED) return null;
 
   return (
     <div ref={ref} className={`relative ${className}`}>

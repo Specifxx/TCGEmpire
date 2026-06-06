@@ -22,6 +22,13 @@ export const COUNTRY_LIST = Object.values(COUNTRIES);
 export const DEFAULT_COUNTRY: Country = "AU";
 export const COUNTRY_COOKIE = "country";
 
+// New Zealand mode is still IN DEVELOPMENT (its prices need cleaning up). While this
+// flag is off, the ENTIRE site behaves as AU-only — no NZ stores or prices anywhere,
+// and the country switcher is hidden — so live Australian users are never affected by
+// the in-progress NZ data. Set NEXT_PUBLIC_NZ_ENABLED=true (e.g. on a preview/branch
+// deploy, or locally) to turn NZ on and work on it.
+export const NZ_ENABLED = process.env.NEXT_PUBLIC_NZ_ENABLED === "true";
+
 // Coerce any cookie/query value to a valid Country (defaults to AU).
 export function normalizeCountry(v: string | undefined | null): Country {
   return v === "NZ" ? "NZ" : "AU";

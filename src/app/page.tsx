@@ -8,7 +8,9 @@ import { getCountry } from "@/lib/get-country";
 import { COUNTRIES, priceField } from "@/lib/country";
 import { SETS, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
 
-// Dynamic: prices + store counts depend on the selected market (country cookie).
+// ISR while AU-only; becomes dynamic per-request when NZ mode is enabled (getCountry
+// then reads the country cookie).
+export const revalidate = 180;
 
 // Homepage-specific metadata targeting the high-intent search phrases.
 export const metadata: Metadata = {

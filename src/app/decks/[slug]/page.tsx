@@ -5,6 +5,8 @@ import { getDeckSeed, resolveDeck } from "@/lib/meta-decks";
 import { DeckView } from "@/components/DeckView";
 import { getCountry } from "@/lib/get-country";
 
+export const revalidate = 900;
+
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const seed = getDeckSeed(params.slug);
   if (!seed) return { title: "Deck not found" };

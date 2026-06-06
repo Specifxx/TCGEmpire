@@ -7,6 +7,8 @@ import { formatMoney } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 
+export const revalidate = 900;
+
 export const metadata: Metadata = {
   title: "Riftbound Top Meta Decks & Build Cost (Australia)",
   description:
