@@ -66,9 +66,11 @@ model Card {
   // importer. Used for "from $X" and catalogue sorting. null = no price found.
   lowestPriceCents Int?
   artSeed         Int       @default(0)
-  // Popularity signal from real card views (modal opens + card-page visits). Drives
-  // which cards we spend the limited eBay API budget on.
+  // Popularity signals. searchCount (clicks from the search box) is the purer demand
+  // metric and drives eBay prioritisation; viewCount (any open, incl. featured
+  // homepage clicks) is kept for general "trending" use.
   viewCount       Int       @default(0)
+  searchCount     Int       @default(0)
   lastViewedAt    DateTime?
   createdAt       DateTime  @default(now())
 

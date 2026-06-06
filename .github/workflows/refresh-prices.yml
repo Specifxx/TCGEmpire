@@ -8,10 +8,11 @@ name: Refresh prices
 
 on:
   schedule:
-    # Every 3 hours (UTC). True hourly would exceed the private-repo GitHub Actions
-    # free budget (2000 min/mo); 3-hourly keeps prices fresh within ~3h and well
-    # under budget. Store price changes show on-site within a few hours.
-    - cron: "0 0,3,6,9,12,15,18,21 * * *"
+    # Twice daily (UTC): 07:00 ≈ 5pm AEST, 19:00 ≈ 5am AEST. Two refreshes/day keeps
+    # eBay well within its ~5,000 calls/day Browse API limit (2 x 500 = 1,000) and
+    # stays light on the GitHub Actions budget.
+    - cron: "0 7 * * *"
+    - cron: "0 19 * * *"
   workflow_dispatch: {} # allows a manual "Run workflow" button
   # Re-import (and recompute stored prices) whenever price/matching logic changes.
   push:

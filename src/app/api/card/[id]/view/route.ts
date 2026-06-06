@@ -3,13 +3,17 @@ import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-// Record a card view (modal open / card-page visit). Fire-and-forget from the
-// client. Accepts slug or id. This popularity signal drives eBay prioritisation.
-export async function POST(_req: Request, { params }: { params: { id: string } }) {
+// Record a card view. Fire-and-forget from the client; accepts slug or id.
+// ?source=search marks it as a SEARCH click (the demand signal that drives eBay
+// prioritisation); any other open just bumps the general view count.
+export async function POST(req: Request, { params }: { params: { id: string } }) {
+  const isSearch = new URL(req.url).searchParams.get("source") === "search";
   try {
     await prisma.card.updateMany({
       where: { OR: [{ slug: params.id }, { id: params.id }] },
-      data: { viewCount: { increment: 1 }, lastViewedAt: new Date() },
+      data: isSearch
+        ? { searchCount: { increment: 1 }, lastViewedAt: new Date() }
+        : { viewCount: { increment: 1 }, lastViewedAt: new Date() },
     });
   } catch {
     /* best-effort */

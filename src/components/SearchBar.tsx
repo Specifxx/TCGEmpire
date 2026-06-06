@@ -109,6 +109,9 @@ export function SearchBar() {
                     href={cardHref(r)}
                     prefetch={false}
                     onClick={(e) => {
+                      // A search-result click is the key demand signal (drives eBay
+                      // priority) — record it however they open the card.
+                      fetch(`/api/card/${r.slug ?? r.id}/view?source=search`, { method: "POST", keepalive: true }).catch(() => {});
                       // Left-click opens the instant modal (fast); modifier/middle
                       // click still opens the full page in a new tab.
                       if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
