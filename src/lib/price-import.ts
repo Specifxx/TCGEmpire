@@ -437,22 +437,21 @@ export async function importPrices(): Promise<ImportSummary> {
   if (corrected) console.log(`Verified cheapest listings — corrected ${corrected} stale prices.`);
 
   // ---- eBay AU (optional; only runs when EBAY_CLIENT_ID/SECRET are set) --------
-  // eBay's Browse API allows ~5,000 calls/day. We run 2 imports/day and search the
-  // top EBAY_TOP_N cards by SEARCH demand (clicks from the search box — a purer
-  // signal than views, which featured homepage cards inflate), with view count then
-  // value as tiebreakers. 2 x 500 = 1,000 calls/day, comfortably under the limit, and
-  // the budget is spent on what users actually search for (e.g. Sabotage).
-  const EBAY_TOP_N = 500;
-  // Gate eBay to at most once per ~10h so that pushes (which also trigger an import)
-  // can't compound into a daily-quota overrun — eBay effectively refreshes twice a
-  // day in line with the schedule.
+  // eBay covers EVERY card, but only ONCE a day, and NEVER on a deploy (push) so
+  // deploys can't add to the daily quota. ~950 calls once/day is well under eBay's
+  // ~5,000/day Browse API limit. Cards are ordered by search demand so that if the
+  // limit is ever reached, the most-searched cards are already covered.
+  //  - ebayDue:     last eBay refresh was > 20h ago (so it runs once a day even with
+  //                 a twice-daily store schedule).
+  //  - ebayAllowed: the workflow sets EBAY_REFRESH=false for push/deploy runs.
   const lastEbay = await prisma.retailerPrice.findFirst({
     where: { retailer: "ebay" },
     orderBy: { lastSeen: "desc" },
     select: { lastSeen: true },
   });
-  const ebayDue = !lastEbay || Date.now() - lastEbay.lastSeen.getTime() > 10 * 60 * 60 * 1000;
-  if (isEbayEnabled() && ebayDue) {
+  const ebayDue = !lastEbay || Date.now() - lastEbay.lastSeen.getTime() > 20 * 60 * 60 * 1000;
+  const ebayAllowed = process.env.EBAY_REFRESH !== "false";
+  if (isEbayEnabled() && ebayDue && ebayAllowed) {
     const allCards = await prisma.card.findMany({
       where: { isPromo: false },
       orderBy: [
@@ -460,10 +459,9 @@ export async function importPrices(): Promise<ImportSummary> {
         { viewCount: "desc" },
         { lowestPriceCents: { sort: "desc", nulls: "last" } },
       ],
-      take: EBAY_TOP_N,
       select: { id: true, name: true, setCode: true, collectorNumber: true },
     });
-    console.log(`eBay: searching top ${allCards.length} cards by search demand.`);
+    console.log(`eBay: searching all ${allCards.length} cards (once-daily).`);
     // Buffer results, then replace in one shot. CRUCIAL: if the run produced no
     // results (e.g. the eBay API is rate-limited / 429), we DON'T delete the
     // existing eBay prices — a throttled refresh must never wipe live data to zero.

@@ -33,11 +33,14 @@ export const metadata: Metadata = {
       "Compare live Riftbound TCG card prices across Australian stores and find the cheapest place to buy.",
   },
   twitter: { card: "summary_large_image" },
-  // Google Search Console verification. Set GOOGLE_SITE_VERIFICATION in Vercel env
-  // (the code from Search Console's "HTML tag" method) — or just paste it here.
-  verification: process.env.GOOGLE_SITE_VERIFICATION
-    ? { google: process.env.GOOGLE_SITE_VERIFICATION }
-    : undefined,
+  // Search engine site verification. Google's "HTML tag" method verifies a
+  // URL-prefix property INSTANTLY (no DNS propagation wait) — the token below is
+  // served in <head> on every page. Override per-deploy via env if needed.
+  verification: {
+    google:
+      process.env.GOOGLE_SITE_VERIFICATION ??
+      "fPFxAkXOBeYdNPNbNGo-ZItApU0457uWVkbPkfzzzXs",
+  },
 };
 
 const orgJsonLd = {

@@ -8,9 +8,10 @@ name: Refresh prices
 
 on:
   schedule:
-    # Twice daily (UTC): 07:00 ≈ 5pm AEST, 19:00 ≈ 5am AEST. Two refreshes/day keeps
-    # eBay well within its ~5,000 calls/day Browse API limit (2 x 500 = 1,000) and
-    # stays light on the GitHub Actions budget.
+    # Twice daily (UTC): 07:00 ≈ 5pm AEST, 19:00 ≈ 5am AEST. Store prices refresh on
+    # both runs; eBay is gated to ONCE per day (it covers every card, ~950 calls,
+    # well under eBay's ~5,000/day Browse API limit). The 20h gate in price-import.ts
+    # means only the first run each day actually calls eBay.
     - cron: "0 7 * * *"
     - cron: "0 19 * * *"
   workflow_dispatch: {} # allows a manual "Run workflow" button
@@ -47,4 +48,8 @@ jobs:
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
           EBAY_AFFILIATE_CAMPAIGN: ${{ secrets.EBAY_AFFILIATE_CAMPAIGN }}
+          # Deploys (push to main) also trigger this workflow to recompute store
+          # prices, but must NOT spend eBay quota. Only scheduled / manual runs are
+          # allowed to call eBay, so frequent deploys can never add to the daily count.
+          EBAY_REFRESH: ${{ github.event_name != 'push' }}
         run: npx tsx scripts/import-prices.ts
