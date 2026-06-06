@@ -8,9 +8,8 @@ import { isOvernumbered, isSignature } from "@/lib/constants";
 import { WishlistButton } from "@/components/WishlistButton";
 import { formatAUD, timeAgo } from "@/lib/format";
 
-// Cache each card page and revalidate every 10 min (prices refresh every ~3h, so
-// this keeps navigation instant without showing meaningfully stale prices).
-export const revalidate = 600;
+// Revalidate every 3 min so the card page stays in sync with the browse tiles.
+export const revalidate = 180;
 
 // Accept either the slug ("vayne-hunter-sfd-223-221") or the legacy cuid.
 const whereParam = (p: string) => ({ OR: [{ slug: p }, { id: p }] });

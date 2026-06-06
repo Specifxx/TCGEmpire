@@ -177,3 +177,71 @@ export async function searchEbayLowest(card: {
     condition: best.condition,
   };
 }
+
+// Keyword each sealed product type must appear as in an eBay title.
+const SEALED_TYPE_KW: Record<string, RegExp> = {
+  "Booster Box": /booster\s*box|booster\s*display|display\s*box/i,
+  "Booster Case": /\bcase\b/i,
+  "Booster Pack": /booster\s*pack/i,
+  Bundle: /bundle|gift/i,
+  "Proving Grounds": /proving\s*grounds/i,
+  "Nexus Knights": /nexus/i,
+  "Starter Set": /starter|two[-\s]?player/i,
+  Tin: /\btin\b/i,
+};
+const SEALED_EXCLUDE_EBAY =
+  /\bsingle\b|proxy|sleeve|playmat|empty|\bcard\b|\d+\s*\/\s*\d+|chinese|japanese|korean|toploader|binder/i;
+
+// Lowest legitimate AU eBay listing for a sealed product (booster box, pack, …).
+export async function searchEbaySealed(name: string, productType: string, setCode: string | null): Promise<EbayResult | null> {
+  const token = await getToken();
+  if (!token) return null;
+  const kw = SEALED_TYPE_KW[productType];
+
+  const params = new URLSearchParams({
+    q: `Riftbound ${name}`,
+    filter: "buyingOptions:{FIXED_PRICE}",
+    sort: "price",
+    limit: "50",
+  });
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${token}`,
+    "X-EBAY-C-MARKETPLACE-ID": MARKETPLACE,
+  };
+  if (process.env.EBAY_AFFILIATE_CAMPAIGN) {
+    headers["X-EBAY-C-ENDUSERCTX"] = `affiliateCampaignId=${process.env.EBAY_AFFILIATE_CAMPAIGN}`;
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(`${SEARCH_URL}?${params}`, { headers });
+  } catch {
+    return null;
+  }
+  if (res.status === 429) {
+    rateLimited = true;
+    return null;
+  }
+  if (!res.ok) return null;
+  const data = await res.json();
+  const items: any[] = data.itemSummaries ?? [];
+
+  const setName = setCode ? (SET_NAMES[setCode] ?? setCode) : null;
+  const valid = items
+    .filter((it) => it?.price?.value)
+    .filter((it) => /riftbound/i.test(it.title ?? ""))
+    .filter((it) => !kw || kw.test(it.title ?? ""))
+    .filter((it) => !setName || new RegExp(setName.replace(/\s+/g, "\\s*"), "i").test(it.title ?? "") || !setCode)
+    .filter((it) => !SEALED_EXCLUDE_EBAY.test(it.title ?? ""))
+    .sort((a, b) => delivered(a) - delivered(b));
+
+  const best = valid[0];
+  if (!best) return null;
+  return {
+    priceCents: Math.round(parseFloat(best.price.value) * 100),
+    shippingCents: shippingFromItem(best),
+    url: best.itemAffiliateWebUrl ?? best.itemWebUrl,
+    title: best.title,
+    condition: best.condition,
+  };
+}

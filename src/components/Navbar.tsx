@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { SearchBar } from "./SearchBar";
 import { Logo } from "./Logo";
 import { NavWishlistButton } from "./NavWishlistButton";
+import { MobileNav } from "./MobileNav";
 
 export function Navbar() {
   return (
@@ -39,6 +40,7 @@ export function Navbar() {
             Deck Builder
           </Link>
           <NavWishlistButton />
+          <MobileNav />
         </nav>
       </div>
     </header>

@@ -3,6 +3,7 @@
 // singles importer (price-import.ts) deliberately skips these; this complements it.
 import { prisma } from "./db";
 import { RETAILER_LIST } from "./retailers";
+import { isEbayEnabled, isEbayRateLimited, searchEbaySealed } from "./ebay";
 
 const UA = {
   "User-Agent":
@@ -144,6 +145,35 @@ export async function importSealed(): Promise<number> {
       count += rows.size;
     }
   }
+
+  // eBay AU prices for each sealed product (best-effort; skips when rate-limited).
+  if (isEbayEnabled()) {
+    const groups = await getSealedGroups();
+    const ebayRows: any[] = [];
+    for (const g of groups) {
+      if (isEbayRateLimited()) break;
+      const r = await searchEbaySealed(g.name, g.productType, g.setCode);
+      if (!r) continue;
+      ebayRows.push({
+        groupKey: g.groupKey,
+        title: r.title,
+        productType: g.productType,
+        setCode: g.setCode,
+        retailer: "ebay",
+        retailerName: "eBay",
+        priceCents: r.priceCents,
+        url: r.url,
+        imageUrl: g.imageUrl,
+        inStock: true,
+      });
+    }
+    if (ebayRows.length > 0) {
+      await prisma.sealedListing.deleteMany({ where: { retailer: "ebay" } });
+      await prisma.sealedListing.createMany({ data: ebayRows });
+      count += ebayRows.length;
+    }
+  }
+
   return count;
 }
 

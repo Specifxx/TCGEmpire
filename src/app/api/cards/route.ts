@@ -38,10 +38,9 @@ export async function GET(req: Request) {
     take: CARD_PAGE_SIZE,
   });
 
-  // Cache identical scroll/filter requests at the CDN for a couple of minutes
-  // (prices refresh every ~3h) so repeated scrolling is instant.
+  // Short cache so tiles stay consistent with the card page (both ~1-2 min fresh).
   return NextResponse.json(
     { cards, page },
-    { headers: { "Cache-Control": "public, s-maxage=120, stale-while-revalidate=600" } }
+    { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120" } }
   );
 }

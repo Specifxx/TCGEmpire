@@ -5,7 +5,7 @@ import { Logo } from "@/components/Logo";
 import { CARD_TILE_SELECT } from "@/lib/cards";
 import { SETS, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
 
-export const revalidate = 300;
+export const revalidate = 180;
 
 export default async function HomePage() {
   const [totalCards, pricedCards, valuable, storeGroups] = await Promise.all([
