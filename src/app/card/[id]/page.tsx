@@ -6,6 +6,7 @@ import { CardImage } from "@/components/CardImage";
 import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge } from "@/components/Badge";
 import { isOvernumbered, isSignature } from "@/lib/constants";
 import { WishlistButton } from "@/components/WishlistButton";
+import { CardViewBeacon } from "@/components/CardViewBeacon";
 import { formatAUD, timeAgo } from "@/lib/format";
 
 // Revalidate every 3 min so the card page stays in sync with the browse tiles.
@@ -83,6 +84,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   return (
     <div>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <CardViewBeacon idOrSlug={card.slug ?? card.id} />
       <Link href="/browse" className="mb-4 inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white">
         ← Back to database
       </Link>

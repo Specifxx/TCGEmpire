@@ -438,21 +438,20 @@ export async function importPrices(): Promise<ImportSummary> {
 
   // ---- eBay AU (optional; only runs when EBAY_CLIENT_ID/SECRET are set) --------
   // eBay's Browse API allows ~5,000 calls/day. Searching every card on every 3-hourly
-  // import (950 x 8 = 7,600) blows that limit, so eBay ends up rate-limited and empty.
-  // Two guards: (1) only run at most once every ~8h, (2) only search cards where eBay
-  // actually matters — chase/valuable cards (>= $10) or cards with no store price.
-  const lastEbay = await prisma.retailerPrice.findFirst({
-    where: { retailer: "ebay" },
-    orderBy: { lastSeen: "desc" },
-    select: { lastSeen: true },
-  });
-  const ebayFresh = lastEbay && Date.now() - lastEbay.lastSeen.getTime() < 8 * 60 * 60 * 1000;
-  if (isEbayEnabled() && !ebayFresh) {
+  // import (950 x 8 = 7,600) blows that limit, so eBay used to get rate-limited and
+  // go empty. Instead, spend the budget on the cards users actually look at: order by
+  // real popularity (views), with value as the tiebreaker before view data exists,
+  // and cap at EBAY_TOP_N (x8 imports/day stays well under the limit). As the site
+  // grows, popular cards (e.g. Sabotage) rise to the top and always get covered.
+  const EBAY_TOP_N = 300;
+  if (isEbayEnabled()) {
     const allCards = await prisma.card.findMany({
-      where: { isPromo: false, OR: [{ lowestPriceCents: { gte: 1000 } }, { lowestPriceCents: null }] },
+      where: { isPromo: false },
+      orderBy: [{ viewCount: "desc" }, { lowestPriceCents: { sort: "desc", nulls: "last" } }],
+      take: EBAY_TOP_N,
       select: { id: true, name: true, setCode: true, collectorNumber: true },
     });
-    console.log(`eBay: searching ${allCards.length} valuable/unpriced cards.`);
+    console.log(`eBay: searching top ${allCards.length} cards by popularity.`);
     // Buffer results, then replace in one shot. CRUCIAL: if the run produced no
     // results (e.g. the eBay API is rate-limited / 429), we DON'T delete the
     // existing eBay prices — a throttled refresh must never wipe live data to zero.

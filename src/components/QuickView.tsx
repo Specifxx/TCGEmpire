@@ -74,7 +74,10 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
     let alive = true;
-    fetch(`/api/card/${card.slug ?? card.id}`)
+    const ref = card.slug ?? card.id;
+    // Record the view (popularity signal) — fire-and-forget.
+    fetch(`/api/card/${ref}/view`, { method: "POST", keepalive: true }).catch(() => {});
+    fetch(`/api/card/${ref}`)
       .then((r) => r.json())
       .then((d) => { if (alive) setPrices(d.retailerPrices ?? []); })
       .catch(() => { if (alive) setPrices([]); });

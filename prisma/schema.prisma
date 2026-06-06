@@ -66,6 +66,10 @@ model Card {
   // importer. Used for "from $X" and catalogue sorting. null = no price found.
   lowestPriceCents Int?
   artSeed         Int       @default(0)
+  // Popularity signal from real card views (modal opens + card-page visits). Drives
+  // which cards we spend the limited eBay API budget on.
+  viewCount       Int       @default(0)
+  lastViewedAt    DateTime?
   createdAt       DateTime  @default(now())
 
   listings        Listing[]
