@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { CardTile } from "@/components/CardTile";
@@ -6,6 +7,42 @@ import { CARD_TILE_SELECT } from "@/lib/cards";
 import { SETS, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
 
 export const revalidate = 180;
+
+// Homepage-specific metadata targeting the high-intent search phrases.
+export const metadata: Metadata = {
+  title: { absolute: "Buy & Compare Riftbound Card Prices in Australia | RiftCompareAU" },
+  description:
+    "Compare live Riftbound TCG card prices across Australian stores and find the cheapest place to buy Riftbound cards in Australia. Singles and sealed, prices in AUD, updated daily.",
+  keywords: [
+    "buy Riftbound cards Australia",
+    "Riftbound prices Australia",
+    "compare Riftbound card prices Australia",
+    "cheapest Riftbound cards Australia",
+    "Riftbound singles Australia",
+    "Riftbound card prices",
+    "Riftbound TCG Australia",
+  ],
+  alternates: { canonical: "/" },
+};
+
+const FAQS: { q: string; a: string }[] = [
+  {
+    q: "Where can I buy Riftbound cards in Australia?",
+    a: "RiftCompareAU compares live Riftbound prices across a wide range of Australian stores plus eBay AU, so you can buy Riftbound cards from whichever shop is cheapest. Search any card to see every store's price and click straight through to buy.",
+  },
+  {
+    q: "How do I find the cheapest Riftbound prices in Australia?",
+    a: "Search or browse the card database and each card shows the lowest live price across Australian stores, ranked by total delivered cost (item plus postage). It's the fastest way to find the cheapest Riftbound cards in Australia.",
+  },
+  {
+    q: "Does RiftCompareAU cover Riftbound singles and sealed products?",
+    a: "Yes — compare prices on individual Riftbound singles as well as sealed product like booster boxes, booster packs, Proving Grounds and Nexus Night packs, all priced across Australian retailers.",
+  },
+  {
+    q: "Are the Riftbound prices shown in Australian dollars?",
+    a: "Yes. Every price is the live Australian price in AUD, so there are no surprise currency conversions — what you see is what you pay locally.",
+  },
+];
 
 export default async function HomePage() {
   const [totalCards, pricedCards, valuable, storeGroups] = await Promise.all([
@@ -36,6 +73,10 @@ export default async function HomePage() {
           <h1 className="mx-auto max-w-3xl text-2xl font-extrabold text-white sm:text-4xl">
             Compare Riftbound card prices across Australian stores
           </h1>
+          <p className="mx-auto mt-3 max-w-2xl text-sm text-slate-400 sm:text-base">
+            Find the cheapest place to buy Riftbound TCG cards in Australia — live prices in AUD
+            compared across {storeCount} Australian stores, updated daily.
+          </p>
 
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <Link href="/browse" className="btn-primary">Browse the database</Link>
@@ -133,6 +174,40 @@ export default async function HomePage() {
           })}
         </div>
       </section>
+
+      {/* About + FAQ — keyword-relevant content for search */}
+      <section className="card-surface p-6">
+        <h2 className="text-xl font-extrabold text-white">Riftbound prices in Australia, all in one place</h2>
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+          RiftCompareAU is a free, independent price-comparison tool for Riftbound: League of Legends
+          TCG, built for Australian players. We track live prices for every Riftbound card across
+          Australian stores and eBay AU so you can buy Riftbound cards in Australia for less — whether
+          you&apos;re chasing singles for a deck or sealed booster boxes.
+        </p>
+        <div className="mt-6 grid gap-5 sm:grid-cols-2">
+          {FAQS.map((f) => (
+            <div key={f.q}>
+              <h3 className="font-semibold text-white">{f.q}</h3>
+              <p className="mt-1 text-sm leading-relaxed text-slate-400">{f.a}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: FAQS.map((f) => ({
+              "@type": "Question",
+              name: f.q,
+              acceptedAnswer: { "@type": "Answer", text: f.a },
+            })),
+          }),
+        }}
+      />
     </div>
   );
 }
