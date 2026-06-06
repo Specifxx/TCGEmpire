@@ -12,6 +12,13 @@ import { importSealed } from "./sealed-import";
 interface ShopifyVariant { title: string; price: string; available: boolean }
 interface ShopifyProduct { title: string; handle: string; variants: ShopifyVariant[] }
 
+// Calendar day (date-only) in Australia/Sydney, used as the price-history x-axis
+// bucket so there's exactly one snapshot per card per local day.
+function sydneyDay(d = new Date()): Date {
+  const ymd = new Intl.DateTimeFormat("en-CA", { timeZone: "Australia/Sydney" }).format(d);
+  return new Date(`${ymd}T00:00:00.000Z`);
+}
+
 export interface ImportSummary {
   stores: { name: string; products: number; priced: number; matched: number; unmatched: number }[];
   totalMatched: number;
@@ -516,6 +523,23 @@ export async function importPrices(): Promise<ImportSummary> {
     });
   }
   summary.cardsPriced = priced.length;
+
+  // Snapshot today's lowest price per card for the price-over-time chart. Backend
+  // only for now (no UI) — we want a week+ of history before releasing it. One
+  // point per card per Sydney day; a same-day re-run (e.g. a deploy) replaces it.
+  try {
+    const day = sydneyDay();
+    const points = priced
+      .filter((r) => r._min.priceCents != null)
+      .map((r) => ({ cardId: r.cardId, day, lowestPriceCents: r._min.priceCents as number }));
+    await prisma.priceHistory.deleteMany({ where: { day } });
+    if (points.length > 0) {
+      await prisma.priceHistory.createMany({ data: points });
+    }
+    console.log(`Price history: recorded ${points.length} points for ${day.toISOString().slice(0, 10)}.`);
+  } catch (e) {
+    console.warn("Price-history snapshot failed:", e);
+  }
 
   // Also refresh sealed / non-single products (booster boxes, packs, …). Isolated
   // in try/catch so a hiccup here never fails the singles import.

@@ -77,6 +77,7 @@ model Card {
   listings        Listing[]
   buyOrders       BuyOrder[]
   retailerPrices  RetailerPrice[]
+  priceHistory    PriceHistory[]
 
   @@index([setCode, collectorNumber])
   @@index([nameNormalized])
@@ -144,6 +145,24 @@ model ContactMessage {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+}
+
+// Daily snapshot of a card's lowest live price, for the price-over-time chart
+// (CSFloat-style). Written by the importer: at most one row per card per
+// Australia/Sydney day — a same-day re-run (e.g. a deploy) replaces that day's
+// value. Collected in the backend now; the chart ships once a week+ exists.
+model PriceHistory {
+  id               String   @id @default(cuid())
+  cardId           String
+  // Calendar day in Australia/Sydney (stored date-only), the chart's x-axis.
+  day              DateTime @db.Date
+  lowestPriceCents Int
+  recordedAt       DateTime @default(now())
+
+  card             Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@unique([cardId, day])
+  @@index([cardId, day])
 }
 
 // A live price for a card at an external retailer, used for price comparison.
