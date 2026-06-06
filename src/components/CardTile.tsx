@@ -27,7 +27,6 @@ export interface CardTileData {
   orientation: string | null;
   imageUrl: string | null;
   imageThumbUrl: string | null;
-  blurDataUrl: string | null;
   lowestPriceCents: number | null;
   _count: { retailerPrices: number };
 }

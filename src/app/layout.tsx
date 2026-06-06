@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Sora, Space_Grotesk } from "next/font/google";
-import NextTopLoader from "nextjs-toploader";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { QuickViewProvider } from "@/components/QuickView";
+import { WishlistDrawerProvider } from "@/components/WishlistDrawer";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
 
 // Body: Sora (modern, energetic, readable). Headings: Space Grotesk (distinctive,
@@ -72,18 +72,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen bg-ink-950">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }} />
-        <NextTopLoader
-          color="#34d17e"
-          height={3}
-          showSpinner
-          shadow="0 0 10px #34d17e, 0 0 6px #34d17e"
-          easing="ease"
-          speed={300}
-        />
-        <QuickViewProvider>
-          <Navbar />
-          <main className="container-app py-6">{children}</main>
-        </QuickViewProvider>
+        <WishlistDrawerProvider>
+          <QuickViewProvider>
+            <Navbar />
+            <main className="container-app py-6">{children}</main>
+          </QuickViewProvider>
+        </WishlistDrawerProvider>
         <footer className="container-app border-t border-ink-800 py-8 text-center text-xs text-slate-500">
           <div className="mb-2 flex items-center justify-center gap-4 text-sm">
             <Link href="/contact" className="text-slate-300 hover:text-brand-400">Contact &amp; feedback</Link>

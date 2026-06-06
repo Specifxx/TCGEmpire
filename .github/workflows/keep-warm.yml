@@ -1,0 +1,23 @@
+name: Keep warm
+
+# Pings the site so Neon's serverless compute doesn't suspend (which causes a
+# multi-second cold start on the next DB query). GitHub's scheduler can be delayed,
+# so for rock-solid warmth also add a free uptime monitor (e.g. UptimeRobot) hitting
+# https://riftcompare.com/api/ping every 4 minutes.
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: keep-warm
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping warm endpoint + browse API
+        run: |
+          curl -s -m 20 "https://riftcompare.com/api/ping" || true
+          curl -s -m 20 "https://riftcompare.com/api/cards?page=1" -o /dev/null || true

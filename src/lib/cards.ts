@@ -99,7 +99,6 @@ export const CARD_TILE_SELECT = {
   orientation: true,
   imageUrl: true,
   imageThumbUrl: true,
-  blurDataUrl: true,
   lowestPriceCents: true,
   // Count only in-stock listings for the "N stores" tile label (out-of-stock
   // listings are shown on the card page but shouldn't inflate availability).
