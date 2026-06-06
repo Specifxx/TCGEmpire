@@ -3,7 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { CardTile } from "@/components/CardTile";
 import { Logo } from "@/components/Logo";
-import { CARD_TILE_SELECT } from "@/lib/cards";
+import { getChaseCards } from "@/lib/chase-cards";
 import { SETS, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
 
 export const revalidate = 180;
@@ -45,15 +45,11 @@ const FAQS: { q: string; a: string }[] = [
 ];
 
 export default async function HomePage() {
-  const [totalCards, pricedCards, valuable, storeGroups] = await Promise.all([
+  const [totalCards, pricedCards, chaseCards, storeGroups] = await Promise.all([
     prisma.card.count(),
     prisma.card.count({ where: { lowestPriceCents: { not: null } } }),
-    prisma.card.findMany({
-      where: { lowestPriceCents: { not: null } },
-      orderBy: { lowestPriceCents: "desc" },
-      take: 12,
-      select: CARD_TILE_SELECT,
-    }),
+    // Most-popular cards, seeded from TCGPlayer's best-seller ranking.
+    getChaseCards(12),
     prisma.retailerPrice.groupBy({ by: ["retailer"] }),
   ]);
   const storeCount = storeGroups.length;
@@ -107,14 +103,17 @@ export default async function HomePage() {
         <Link href="/forum" className="btn-primary shrink-0">Open the forum →</Link>
       </section>
 
-      {/* Most valuable — compact horizontal scroll */}
+      {/* Chase cards — the most popular Riftbound cards, in a compact scroll */}
       <section>
-        <div className="mb-4 flex items-end justify-between">
-          <h2 className="text-xl font-extrabold text-white">Chase cards</h2>
-          <Link href="/browse?priced=1&sort=price_desc" className="btn-ghost text-xs">View all →</Link>
+        <div className="mb-4 flex items-end justify-between gap-3">
+          <div>
+            <h2 className="text-xl font-extrabold text-white">Chase cards</h2>
+            <p className="mt-0.5 text-xs text-slate-500">The most sought-after Riftbound cards right now.</p>
+          </div>
+          <Link href="/browse?priced=1&sort=price_desc" className="btn-ghost text-xs shrink-0">View all →</Link>
         </div>
         <div className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-2">
-          {valuable.map((c) => (
+          {chaseCards.map((c) => (
             <div key={c.id} className="w-36 shrink-0 sm:w-44">
               <CardTile card={c} />
             </div>
