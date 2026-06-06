@@ -9,7 +9,7 @@ async function main() {
   const decks = metaDecksData.decks as {
     slug: string;
     legend: string;
-    cards: { name: string; qty: number }[];
+    cards: { name: string; qty: number; section: string }[];
   }[];
 
   // Collect unique names (legend + cards).
@@ -45,11 +45,12 @@ async function main() {
     console.log("All deck cards resolve. ✓");
   }
 
-  // Per-deck count sanity.
-  console.log("\nPer-deck main-deck size (should be 56 incl. legend):");
+  // Per-deck count sanity: main (incl. legend) should be 56, sideboard 8.
+  console.log("\nPer-deck size (main incl. legend = 56, side = 8):");
   for (const d of decks) {
-    const total = d.cards.reduce((n, c) => n + c.qty, 0) + 1;
-    console.log(`  ${d.slug}: ${total}`);
+    const main = d.cards.filter((c) => c.section !== "sideboard").reduce((n, c) => n + c.qty, 0) + 1;
+    const side = d.cards.filter((c) => c.section === "sideboard").reduce((n, c) => n + c.qty, 0);
+    console.log(`  ${d.slug}: main ${main}, side ${side}`);
   }
   await prisma.$disconnect();
 }

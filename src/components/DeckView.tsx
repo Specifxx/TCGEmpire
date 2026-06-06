@@ -2,17 +2,10 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import type { ResolvedDeck, ResolvedCardData } from "@/lib/meta-decks";
+import type { ResolvedDeck, ResolvedCardData, ResolvedCard } from "@/lib/meta-decks";
 import { DomainBadge } from "./Badge";
 import { TierBadge } from "./TierBadge";
 import { formatAUD } from "@/lib/format";
-
-interface Row {
-  qty: number;
-  name: string;
-  card: ResolvedCardData | null;
-  unit: number | null;
-}
 
 // Tidy display for cards our data labels with a precon suffix (e.g. OGS starter
 // legends imported as "Master, Wuju Bladesman - Starter").
@@ -20,15 +13,88 @@ function cleanName(name: string): string {
   return name.replace(/\s*-\s*Starter$/i, "");
 }
 
-export function DeckView({ deck, builderHref }: { deck: ResolvedDeck; builderHref: string }) {
-  const rows: Row[] = [
-    { qty: 1, name: deck.legend, card: deck.legendCard, unit: deck.legendPriceCents },
-    ...deck.items.map((i) => ({ qty: i.qty, name: i.inputName, card: i.card, unit: i.unitPriceCents })),
-  ];
+// Decklist display groups (riftDecks-style), in order. The legend is shown above.
+// "Main Deck" folds the unit/gear/spell cards together.
+const GROUPS: { title: string; sections: string[]; muted?: boolean }[] = [
+  { title: "Champion", sections: ["champion"] },
+  { title: "Main Deck", sections: ["unit", "gear", "spell"] },
+  { title: "Battlefields", sections: ["battlefield"] },
+  { title: "Runes", sections: ["rune"] },
+  { title: "Side Deck", sections: ["sideboard"], muted: true },
+];
 
+export function DeckView({ deck, builderHref }: { deck: ResolvedDeck; builderHref: string }) {
   // The big image on the left follows whichever card you hover (defaults to legend).
   const [preview, setPreview] = useState<ResolvedCardData | null>(deck.legendCard);
   const bigImage = preview?.imageUrl ?? preview?.imageThumbUrl ?? deck.imageUrl;
+
+  // The legend rendered as its own pseudo-row in the "Legend" group.
+  const legendRow: ResolvedCard = {
+    qty: 1,
+    inputName: deck.legend,
+    section: "legend",
+    card: deck.legendCard,
+    unitPriceCents: deck.legendPriceCents,
+    lineCents: deck.legendPriceCents ?? 0,
+  };
+
+  function CardRow({ item }: { item: ResolvedCard }) {
+    return (
+      <li
+        onMouseEnter={() => item.card && setPreview(item.card)}
+        onFocus={() => item.card && setPreview(item.card)}
+        className="flex items-center gap-3 p-3 hover:bg-ink-900/50"
+      >
+        <div className="w-8 text-center font-bold text-slate-400">{item.qty}×</div>
+        {item.card?.imageThumbUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={item.card.imageThumbUrl} alt="" className="h-12 w-9 shrink-0 rounded object-cover ring-1 ring-ink-700" />
+        ) : (
+          <div className="h-12 w-9 shrink-0 rounded bg-ink-800" />
+        )}
+        <div className="min-w-0 flex-1">
+          {item.card ? (
+            <Link href={`/card/${item.card.id}`} className="font-medium text-white hover:text-brand-400">
+              {cleanName(item.card.name)}
+            </Link>
+          ) : (
+            <span className="font-medium text-slate-400">{cleanName(item.inputName)}</span>
+          )}
+          <div className="text-xs text-slate-500">
+            {item.card ? <>{item.card.setCode} · {item.card.collectorNumber} · {item.card.type}</> : "not found"}
+          </div>
+        </div>
+        <div className="text-right">
+          {item.unitPriceCents != null ? (
+            <>
+              <div className="font-bold text-white">{formatAUD(item.unitPriceCents * item.qty)}</div>
+              <div className="text-[11px] text-slate-500">{formatAUD(item.unitPriceCents)} ea</div>
+            </>
+          ) : (
+            <div className="text-xs text-slate-500">no price</div>
+          )}
+        </div>
+      </li>
+    );
+  }
+
+  function Section({ title, items, muted }: { title: string; items: ResolvedCard[]; muted?: boolean }) {
+    if (items.length === 0) return null;
+    const count = items.reduce((n, i) => n + i.qty, 0);
+    return (
+      <div className={muted ? "bg-ink-950/40" : ""}>
+        <div className="flex items-center justify-between border-b border-ink-700 bg-ink-900/50 px-4 py-2">
+          <h3 className="text-xs font-bold uppercase tracking-wide text-slate-300">{title}</h3>
+          <span className="text-[11px] text-slate-500">{count} {count === 1 ? "card" : "cards"}</span>
+        </div>
+        <ul className="divide-y divide-ink-800">
+          {items.map((it, i) => (
+            <CardRow key={i} item={it} />
+          ))}
+        </ul>
+      </div>
+    );
+  }
 
   return (
     <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
@@ -46,7 +112,7 @@ export function DeckView({ deck, builderHref }: { deck: ResolvedDeck; builderHre
             )}
             {preview && (
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink-950 to-transparent p-3">
-                <div className="text-sm font-bold text-white">{preview.name}</div>
+                <div className="text-sm font-bold text-white">{cleanName(preview.name)}</div>
                 <div className="text-[11px] text-slate-400">
                   {preview.setCode} · {preview.collectorNumber}
                   {preview.lowestPriceCents != null ? ` · from ${formatAUD(preview.lowestPriceCents)}` : ""}
@@ -89,6 +155,11 @@ export function DeckView({ deck, builderHref }: { deck: ResolvedDeck; builderHre
               <div className="text-[11px] text-slate-500">
                 {deck.totalCards - 1}-card main deck + legend · {deck.pricedCards}/{deck.totalCards} priced
               </div>
+              {deck.sideboardCards > 0 && (
+                <div className="mt-1 text-[11px] text-slate-500">
+                  + {formatAUD(deck.sideboardCents)} side deck ({deck.sideboardCards} cards)
+                </div>
+              )}
             </div>
 
             <Link href={builderHref} className="btn-primary mt-3 w-full text-center">
@@ -99,7 +170,7 @@ export function DeckView({ deck, builderHref }: { deck: ResolvedDeck; builderHre
         </div>
       </div>
 
-      {/* Decklist */}
+      {/* Decklist (grouped) */}
       <div className="min-w-0">
         <div className="card-surface overflow-hidden">
           <div className="border-b border-ink-700 p-4">
@@ -107,50 +178,27 @@ export function DeckView({ deck, builderHref }: { deck: ResolvedDeck; builderHre
               Decklist <span className="text-slate-500">· {deck.totalCards - 1} cards + legend</span>
             </h2>
           </div>
-          <ul className="divide-y divide-ink-800">
-            {rows.map((r, i) => (
-              <li
-                key={i}
-                onMouseEnter={() => r.card && setPreview(r.card)}
-                onFocus={() => r.card && setPreview(r.card)}
-                className="flex items-center gap-3 p-3 hover:bg-ink-900/50"
-              >
-                <div className="w-8 text-center font-bold text-slate-400">{r.qty}×</div>
-                {r.card?.imageThumbUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={r.card.imageThumbUrl} alt="" className="h-12 w-9 shrink-0 rounded object-cover ring-1 ring-ink-700" />
-                ) : (
-                  <div className="h-12 w-9 shrink-0 rounded bg-ink-800" />
-                )}
-                <div className="min-w-0 flex-1">
-                  {r.card ? (
-                    <Link href={`/card/${r.card.id}`} className="font-medium text-white hover:text-brand-400">
-                      {cleanName(r.card.name)}
-                    </Link>
-                  ) : (
-                    <span className="font-medium text-slate-400">{cleanName(r.name)}</span>
-                  )}
-                  <div className="text-xs text-slate-500">
-                    {r.card ? <>{r.card.setCode} · {r.card.collectorNumber} · {r.card.type}</> : "not found"}
-                  </div>
-                </div>
-                <div className="text-right">
-                  {r.unit != null ? (
-                    <>
-                      <div className="font-bold text-white">{formatAUD(r.unit * r.qty)}</div>
-                      <div className="text-[11px] text-slate-500">{formatAUD(r.unit)} ea</div>
-                    </>
-                  ) : (
-                    <div className="text-xs text-slate-500">no price</div>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
+
+          <Section title="Legend" items={[legendRow]} />
+          {GROUPS.map((g) => (
+            <Section
+              key={g.title}
+              title={g.title}
+              items={deck.items.filter((i) => g.sections.includes(i.section))}
+              muted={g.muted}
+            />
+          ))}
+
           <div className="flex items-center justify-between border-t border-ink-700 p-4">
-            <span className="text-sm text-slate-400">Total build cost (cheapest in-stock AU)</span>
+            <span className="text-sm text-slate-400">Main deck build cost (cheapest in-stock AU)</span>
             <span className="text-xl font-extrabold text-accent">{formatAUD(deck.totalCents)}</span>
           </div>
+          {deck.sideboardCards > 0 && (
+            <div className="flex items-center justify-between border-t border-ink-800 px-4 py-2">
+              <span className="text-xs text-slate-500">Side deck ({deck.sideboardCards} cards)</span>
+              <span className="text-sm font-semibold text-slate-400">{formatAUD(deck.sideboardCents)}</span>
+            </div>
+          )}
         </div>
         <p className="mt-3 text-center text-[11px] text-slate-600">
           Community reference list — may change with the metagame. Each card links to its full AU

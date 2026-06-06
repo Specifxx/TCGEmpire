@@ -14,7 +14,8 @@ export interface MetaDeckSeed {
   // Attribution: the real tournament list this deck is copied from.
   sourceUrl?: string;
   source?: string; // e.g. "Player · 1st, Event (Jun 2026)"
-  cards: { name: string; qty: number }[];
+  // section: champion | unit | gear | spell | battlefield | rune | sideboard
+  cards: { name: string; qty: number; section: string }[];
 }
 
 export const META_DECKS: MetaDeckSeed[] = (metaDecksData.decks ?? []) as MetaDeckSeed[];
@@ -36,6 +37,7 @@ export interface ResolvedCardData {
 export interface ResolvedCard {
   qty: number;
   inputName: string;
+  section: string;
   card: ResolvedCardData | null;
   unitPriceCents: number | null;
   lineCents: number;
@@ -45,9 +47,13 @@ export interface ResolvedDeck extends MetaDeckSeed {
   legendCard: ResolvedCardData | null;
   legendPriceCents: number | null;
   items: ResolvedCard[];
+  // Main deck = everything except the sideboard, plus the legend.
   totalCards: number;
   totalCents: number;
   pricedCards: number;
+  // Sideboard, priced separately from the headline build cost.
+  sideboardCards: number;
+  sideboardCents: number;
   imageUrl: string | null;
 }
 
@@ -97,18 +103,26 @@ function resolveDeckFromMap(seed: MetaDeckSeed, map: Map<string, ResolvedCardDat
     return {
       qty: c.qty,
       inputName: c.name,
+      section: c.section,
       card,
       unitPriceCents,
       lineCents: unitPriceCents != null ? unitPriceCents * c.qty : 0,
     };
   });
 
+  // The headline build cost is the MAIN deck (everything except the sideboard)
+  // plus the legend; the sideboard is summed separately.
+  const main = items.filter((i) => i.section !== "sideboard");
+  const side = items.filter((i) => i.section === "sideboard");
+
   const legendLine = legend?.lowestPriceCents != null ? legend.lowestPriceCents : 0;
-  const totalCards = seed.cards.reduce((n, c) => n + c.qty, 0) + 1; // +1 legend
-  const totalCents = items.reduce((n, i) => n + i.lineCents, 0) + legendLine;
+  const totalCards = main.reduce((n, i) => n + i.qty, 0) + 1; // +1 legend
+  const totalCents = main.reduce((n, i) => n + i.lineCents, 0) + legendLine;
   const pricedCards =
-    items.filter((i) => i.unitPriceCents != null).reduce((n, i) => n + i.qty, 0) +
+    main.filter((i) => i.unitPriceCents != null).reduce((n, i) => n + i.qty, 0) +
     (legend?.lowestPriceCents != null ? 1 : 0);
+  const sideboardCards = side.reduce((n, i) => n + i.qty, 0);
+  const sideboardCents = side.reduce((n, i) => n + i.lineCents, 0);
 
   return {
     ...seed,
@@ -118,6 +132,8 @@ function resolveDeckFromMap(seed: MetaDeckSeed, map: Map<string, ResolvedCardDat
     totalCards,
     totalCents,
     pricedCards,
+    sideboardCards,
+    sideboardCents,
     imageUrl: legend?.imageUrl ?? legend?.imageThumbUrl ?? null,
   };
 }

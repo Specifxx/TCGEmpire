@@ -18,8 +18,12 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 }
 
 // Build a deck-builder text blob so users can re-price/tweak the list in one click.
-function deckListText(legend: string, cards: { name: string; qty: number }[]): string {
-  return [`1 ${legend}`, ...cards.map((c) => `${c.qty} ${c.name}`)].join("\n");
+// The sideboard is excluded — the builder prices the main deck.
+function deckListText(legend: string, cards: { name: string; qty: number; section: string }[]): string {
+  return [
+    `1 ${legend}`,
+    ...cards.filter((c) => c.section !== "sideboard").map((c) => `${c.qty} ${c.name}`),
+  ].join("\n");
 }
 function encodeForBuilder(text: string): string {
   return encodeURIComponent(Buffer.from(text, "utf8").toString("base64"));
