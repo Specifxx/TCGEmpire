@@ -24,6 +24,13 @@ h1, h2, h3 {
   letter-spacing: -0.015em;
 }
 
+/* Skip rendering off-screen card tiles so a long infinite-scroll grid stays smooth
+   (the browser only lays out / paints tiles near the viewport). */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 340px;
+}
+
 /* Proxy print sheets: real 63x88mm cards, 3x3 per A4 page for cutting out. */
 .proxy-grid {
   display: grid;

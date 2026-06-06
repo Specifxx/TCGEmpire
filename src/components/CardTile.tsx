@@ -34,7 +34,7 @@ export function CardTile({ card }: { card: CardTileData }) {
     // Outer wrapper holds the hover state and the wishlist button. The wishlist
     // button is a SIBLING of the link (not inside it) so toggling it never triggers
     // navigation or the top loading bar.
-    <div className="group card-surface relative flex flex-col overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-glow">
+    <div className="cv-auto group card-surface relative flex flex-col overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-glow">
       <div className="absolute right-2 top-2 z-10">
         <WishlistButton cardId={card.id} />
       </div>
@@ -45,7 +45,7 @@ export function CardTile({ card }: { card: CardTileData }) {
         >
           <CardImage
             card={card}
-            className="h-full w-full drop-shadow-lg transition-transform duration-300 group-hover:scale-[1.03]"
+            className="h-full w-full transition-transform duration-300 group-hover:scale-[1.03]"
           />
           <div className="absolute left-2 top-2 flex flex-col items-start gap-1">
             <VariantBadge variant={card.variant} />
