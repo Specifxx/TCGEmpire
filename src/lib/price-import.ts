@@ -144,21 +144,20 @@ async function fetchCollection(store: RetailerInfo, handle: string): Promise<Sho
   return all;
 }
 
-// Pick the price+stock of a product the same way the importer does (best available
-// condition, then cheapest). Used to re-verify a listing against its own product.json.
-function bestVariantPrice(variants: ShopifyVariant[]): { priceCents: number; inStock: boolean } | null {
+// Best-condition (then cheapest) price among a product's variants. NOTE: the
+// individual /products/<handle>.json endpoint does NOT reliably report `available`
+// (it's often null there), so this only derives the PRICE — availability is taken
+// from the collection feed, which does report it correctly.
+function bestVariantPrice(variants: ShopifyVariant[]): { priceCents: number } | null {
   const priced = variants.filter((v) => parseFloat(v.price) > 0);
   if (!priced.length) return null;
-  const avail = priced.filter((v) => v.available);
-  const inStock = avail.length > 0;
-  const pool = inStock ? avail : priced;
-  const best = pool.reduce((a, b) => {
+  const best = priced.reduce((a, b) => {
     const ra = conditionRank(a.title);
     const rb = conditionRank(b.title);
     if (ra !== rb) return ra < rb ? a : b;
     return parseFloat(a.price) <= parseFloat(b.price) ? a : b;
   });
-  return { priceCents: Math.round(parseFloat(best.price) * 100), inStock };
+  return { priceCents: Math.round(parseFloat(best.price) * 100) };
 }
 
 // Re-verify each card's CHEAPEST in-stock store listing against its authoritative
@@ -191,10 +190,12 @@ async function verifyCheapestListings(): Promise<number> {
           if (!variants?.length) return;
           const v = bestVariantPrice(variants);
           if (!v) return;
-          if (v.priceCents !== t.priceCents || !v.inStock) {
+          // Only correct the PRICE — never flip availability from this endpoint
+          // (its `available` is unreliable). Guard against absurd values too.
+          if (v.priceCents !== t.priceCents && v.priceCents > 0) {
             await prisma.retailerPrice.update({
               where: { id: t.id },
-              data: { priceCents: v.priceCents, inStock: v.inStock },
+              data: { priceCents: v.priceCents },
             });
             corrected++;
           }
