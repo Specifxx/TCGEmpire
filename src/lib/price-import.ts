@@ -144,6 +144,69 @@ async function fetchCollection(store: RetailerInfo, handle: string): Promise<Sho
   return all;
 }
 
+// Pick the price+stock of a product the same way the importer does (best available
+// condition, then cheapest). Used to re-verify a listing against its own product.json.
+function bestVariantPrice(variants: ShopifyVariant[]): { priceCents: number; inStock: boolean } | null {
+  const priced = variants.filter((v) => parseFloat(v.price) > 0);
+  if (!priced.length) return null;
+  const avail = priced.filter((v) => v.available);
+  const inStock = avail.length > 0;
+  const pool = inStock ? avail : priced;
+  const best = pool.reduce((a, b) => {
+    const ra = conditionRank(a.title);
+    const rb = conditionRank(b.title);
+    if (ra !== rb) return ra < rb ? a : b;
+    return parseFloat(a.price) <= parseFloat(b.price) ? a : b;
+  });
+  return { priceCents: Math.round(parseFloat(best.price) * 100), inStock };
+}
+
+// Re-verify each card's CHEAPEST in-stock store listing against its authoritative
+// product.json. The collection products.json feed we scrape can lag the live
+// product page (a card showed $33 when the product page was $45), so we confirm the
+// one price we actually display per card. Updates the row if it has drifted.
+async function verifyCheapestListings(): Promise<number> {
+  const rows = await prisma.retailerPrice.findMany({
+    where: { inStock: true, NOT: { retailer: "ebay" } },
+    select: { id: true, cardId: true, priceCents: true, url: true },
+    orderBy: { priceCents: "asc" },
+  });
+  const cheapest = new Map<string, { id: string; priceCents: number; url: string }>();
+  for (const r of rows) if (!cheapest.has(r.cardId)) cheapest.set(r.cardId, r);
+  const targets = Array.from(cheapest.values());
+
+  let corrected = 0;
+  const BATCH = 8;
+  for (let i = 0; i < targets.length; i += BATCH) {
+    await Promise.all(
+      targets.slice(i, i + BATCH).map(async (t) => {
+        try {
+          const res = await fetch(`${t.url}.json?_=${Date.now()}`, {
+            headers: { ...UA, "Cache-Control": "no-cache" },
+            cache: "no-store",
+          });
+          if (!res.ok) return;
+          const data = (await res.json()) as { product?: { variants?: ShopifyVariant[] } };
+          const variants = data.product?.variants;
+          if (!variants?.length) return;
+          const v = bestVariantPrice(variants);
+          if (!v) return;
+          if (v.priceCents !== t.priceCents || !v.inStock) {
+            await prisma.retailerPrice.update({
+              where: { id: t.id },
+              data: { priceCents: v.priceCents, inStock: v.inStock },
+            });
+            corrected++;
+          }
+        } catch {
+          /* leave the feed price as-is on any failure */
+        }
+      })
+    );
+  }
+  return corrected;
+}
+
 export async function importPrices(): Promise<ImportSummary> {
   // Skip promos: they share the base card's number, so matching would steal the
   // base card's prices. Promos stay unpriced until promo-aware matching exists.
@@ -345,6 +408,11 @@ export async function importPrices(): Promise<ImportSummary> {
     summary.totalMatched += matched;
     summary.totalUnmatched += unmatched;
   }
+
+  // Confirm each card's displayed (cheapest) price against the live product page,
+  // since the collection feed can lag it.
+  const corrected = await verifyCheapestListings();
+  if (corrected) console.log(`Verified cheapest listings — corrected ${corrected} stale prices.`);
 
   // ---- eBay AU (optional; only runs when EBAY_CLIENT_ID/SECRET are set) --------
   if (isEbayEnabled()) {
