@@ -85,7 +85,7 @@ h1, h2, h3 {
     @apply btn bg-gradient-to-br from-gold to-accent text-ink-950 hover:brightness-105;
   }
   .input {
-    @apply w-full rounded-xl border border-ink-700 bg-ink-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40;
+    @apply w-full rounded-xl border border-ink-700 bg-ink-900 px-3 py-2 text-base text-slate-100 placeholder:text-slate-500 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40 sm:text-sm;
   }
   .card-surface {
     @apply rounded-2xl border border-ink-700/70 bg-ink-850 shadow-card;

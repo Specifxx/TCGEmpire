@@ -9,7 +9,8 @@ import { NavDropdown } from "./NavDropdown";
 export function Navbar() {
   return (
     <header className="sticky top-0 z-40 border-b border-ink-800 bg-ink-950/95">
-      <div className="container-app flex h-16 items-center gap-4">
+      <div className="container-app">
+       <div className="flex h-16 items-center gap-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 shrink-0">
           <Logo size={36} />
@@ -18,15 +19,15 @@ export function Navbar() {
           </span>
         </Link>
 
-        {/* Search */}
-        <div className="flex-1">
+        {/* Search — inline on desktop; on smaller screens it gets its own full-width row below */}
+        <div className="hidden flex-1 lg:block">
           <Suspense fallback={<div className="input max-w-xl" />}>
             <SearchBar />
           </Suspense>
         </div>
 
         {/* Nav */}
-        <nav className="flex items-center gap-1">
+        <nav className="ml-auto flex items-center gap-1 lg:ml-0">
           <Link href="/forum" className="rounded-lg px-2.5 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white">
             Forum
           </Link>
@@ -47,6 +48,7 @@ export function Navbar() {
               label="More"
               items={[
                 { href: "/sealed", label: "Sealed Products", desc: "Boxes, packs & promos" },
+                { href: "/proxy", label: "Proxy Printer", desc: "Pick & print test cards" },
                 { href: "/guides", label: "Guides", desc: "Learn Riftbound" },
                 { href: "/blog", label: "Blog", desc: "News & meta" },
               ]}
@@ -55,6 +57,15 @@ export function Navbar() {
           <NavWishlistButton />
           <MobileNav />
         </nav>
+       </div>
+
+        {/* Search gets its own full-width row below the lg breakpoint (so it's
+            never cramped on phones/tablets). */}
+        <div className="pb-3 lg:hidden">
+          <Suspense fallback={<div className="input" />}>
+            <SearchBar />
+          </Suspense>
+        </div>
       </div>
     </header>
   );

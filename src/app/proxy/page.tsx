@@ -1,10 +1,10 @@
-import { ProxySheet } from "@/components/ProxySheet";
+import { ProxyBuilder } from "@/components/ProxyBuilder";
 
 export const metadata = {
-  title: "Proxy Sheet — RiftCompare",
+  title: "Proxy Printer — pick cards to print | RiftCompare",
   robots: { index: false },
 };
 
 export default function ProxyPage({ searchParams }: { searchParams: { list?: string } }) {
-  return <ProxySheet initialList={searchParams.list} />;
+  return <ProxyBuilder initialList={searchParams.list} />;
 }
