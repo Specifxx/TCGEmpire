@@ -15,11 +15,11 @@ const itemSchema = z.object({
 
 const schema = z.object({
   kind: z.enum(["WTB", "WTS", "DISCUSSION"]),
-  title: z.string().min(4, "Add a short title").max(140),
+  title: z.string().min(4, "Add a short title").max(140), // the only required field
   price: z.union([z.number(), z.string()]).optional(), // seller's asking price (dollars)
   items: z.array(itemSchema).max(60).optional(),
-  body: z.string().min(5, "Add a few details").max(4000),
-  contact: z.string().max(160).optional(),
+  body: z.string().max(4000).optional(), // description is optional
+  contact: z.string().max(160).optional(), // contact is optional
   country: z.string().max(60).optional(),
   state: z.string().max(60).optional(),
   website: z.string().optional(), // honeypot
@@ -49,10 +49,7 @@ export async function POST(req: Request) {
   if (d.website) return NextResponse.json({ ok: true }); // honeypot
 
   const isDiscussion = d.kind === "DISCUSSION";
-  const contact = (d.contact ?? "").trim();
-  if (!isDiscussion && contact.length < 3) {
-    return NextResponse.json({ error: "Add a contact (email or Discord)." }, { status: 400 });
-  }
+  const contact = (d.contact ?? "").trim(); // optional
 
   // Resolve each listed card's current market value server-side (authoritative)
   // and sum them — this is the "recommended" total price.
@@ -94,7 +91,7 @@ export async function POST(req: Request) {
       priceCents,
       items: itemsOut.length ? itemsOut : undefined,
       marketCents,
-      body: d.body.trim(),
+      body: (d.body ?? "").trim(),
       contact,
       country: isDiscussion ? null : d.country?.trim() || null,
       state: isDiscussion ? null : d.state?.trim() || null,

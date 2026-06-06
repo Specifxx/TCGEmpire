@@ -265,9 +265,10 @@ export function ForumBoard({
           <input
             value={form.title}
             onChange={set("title")}
-            placeholder={isDiscussion ? "Title — e.g. Best budget Calm deck?" : "Title — e.g. Selling my Origins doubles"}
+            placeholder={isDiscussion ? "Title (required) — e.g. Best budget Calm deck?" : "Title (required) — e.g. Selling my Origins doubles"}
             className="input"
             maxLength={140}
+            required
           />
 
           {!isDiscussion && (
@@ -346,19 +347,25 @@ export function ForumBoard({
           <textarea
             value={form.body}
             onChange={set("body")}
-            placeholder={isDiscussion ? "What's on your mind?" : "Details — condition notes, location, postage, combined-postage offers, etc."}
+            placeholder={isDiscussion ? "What's on your mind? (optional)" : "Description (optional) — condition notes, location, postage, combined-postage offers, etc."}
             className="input min-h-[90px]"
             maxLength={4000}
           />
 
           {!isDiscussion && (
-            <input
-              value={form.contact}
-              onChange={set("contact")}
-              placeholder="Contact — email or Discord (shown publicly)"
-              className="input"
-              maxLength={160}
-            />
+            <div>
+              <input
+                value={form.contact}
+                onChange={set("contact")}
+                placeholder="Contact — email or Discord (optional, shown publicly)"
+                className="input"
+                maxLength={160}
+              />
+              <p className="mt-1 text-[11px] text-slate-500">
+                Contact is optional — but buyers can only reach you directly if you add one. Only the
+                title is required.
+              </p>
+            </div>
           )}
 
           {/* Honeypot */}
