@@ -62,7 +62,9 @@ export function DeckView({ deck, builderHref }: { deck: ResolvedDeck; builderHre
             <div className="mt-4 rounded-lg bg-ink-900 p-3">
               <div className="text-[11px] uppercase tracking-wide text-slate-500">Build cost (cheapest AU)</div>
               <div className="text-2xl font-extrabold text-accent">{formatAUD(deck.totalCents)}</div>
-              <div className="text-[11px] text-slate-500">{deck.totalCards} cards · {deck.pricedCards} priced</div>
+              <div className="text-[11px] text-slate-500">
+                {deck.totalCards - 1}-card main deck + legend · {deck.pricedCards}/{deck.totalCards} priced
+              </div>
             </div>
 
             <Link href={builderHref} className="btn-primary mt-3 w-full text-center">
@@ -77,7 +79,9 @@ export function DeckView({ deck, builderHref }: { deck: ResolvedDeck; builderHre
       <div className="min-w-0">
         <div className="card-surface overflow-hidden">
           <div className="border-b border-ink-700 p-4">
-            <h2 className="font-bold text-white">Decklist <span className="text-slate-500">({deck.totalCards})</span></h2>
+            <h2 className="font-bold text-white">
+              Decklist <span className="text-slate-500">· {deck.totalCards - 1} cards + legend</span>
+            </h2>
           </div>
           <ul className="divide-y divide-ink-800">
             {rows.map((r, i) => (

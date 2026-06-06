@@ -82,7 +82,14 @@ function conditionRank(variantTitle: string): number {
   return 0; // no condition in the title (e.g. "Default Title") → treat as standard/NM
 }
 
-const UA = { "User-Agent": "Mozilla/5.0 RiftCompareAUBot" };
+// Use a realistic browser User-Agent. Some stores (e.g. Mint Collectables) serve a
+// stale/cached price to obvious bot UAs but the fresh price to browsers, which was a
+// source of wrong prices.
+const UA = {
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+  Accept: "application/json, text/plain, */*",
+};
 
 async function fetchText(url: string): Promise<string | null> {
   try {
@@ -175,21 +182,35 @@ async function verifyCheapestListings(): Promise<number> {
   for (const r of rows) if (!cheapest.has(r.cardId)) cheapest.set(r.cardId, r);
   const targets = Array.from(cheapest.values());
 
+  // Fetch a product's authoritative price. Uses the CLEAN product.json URL (no
+  // cache-bust query param — that returned a stale/blocked response from the runner;
+  // the plain URL returns the live price) with a browser UA, and one retry.
+  async function fetchProductPrice(url: string): Promise<{ priceCents: number } | null> {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const res = await fetch(`${url}.json`, {
+          headers: { ...UA, "Cache-Control": "no-cache", Pragma: "no-cache" },
+          cache: "no-store",
+        });
+        if (!res.ok) continue;
+        const data = (await res.json()) as { product?: { variants?: ShopifyVariant[] } };
+        const variants = data.product?.variants;
+        if (!variants?.length) return null;
+        return bestVariantPrice(variants);
+      } catch {
+        /* retry */
+      }
+    }
+    return null;
+  }
+
   let corrected = 0;
-  const BATCH = 8;
+  const BATCH = 6;
   for (let i = 0; i < targets.length; i += BATCH) {
     await Promise.all(
       targets.slice(i, i + BATCH).map(async (t) => {
         try {
-          const res = await fetch(`${t.url}.json?_=${Date.now()}`, {
-            headers: { ...UA, "Cache-Control": "no-cache" },
-            cache: "no-store",
-          });
-          if (!res.ok) return;
-          const data = (await res.json()) as { product?: { variants?: ShopifyVariant[] } };
-          const variants = data.product?.variants;
-          if (!variants?.length) return;
-          const v = bestVariantPrice(variants);
+          const v = await fetchProductPrice(t.url);
           if (!v) return;
           // Only correct the PRICE — never flip availability from this endpoint
           // (its `available` is unreliable). Guard against absurd values too.
