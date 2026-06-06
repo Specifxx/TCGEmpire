@@ -27,21 +27,44 @@ async function getPosts(userId: string) {
   });
 }
 
+interface Item { name: string; setCode: string | null; condition: string | null; qty: number; marketCents: number | null }
+
 function PostRow({ p }: { p: Post }) {
+  const items = (p.items as Item[] | null) ?? null;
   return (
     <li className="card-surface p-4">
       <div className="flex flex-wrap items-center gap-2">
         <span className={`chip font-bold ${p.kind === "WTB" ? "bg-emerald-500/15 text-emerald-300" : "bg-gold/15 text-gold"}`}>
           {p.kind === "WTB" ? "WANT TO BUY" : "WANT TO SELL"}
         </span>
-        {p.setCode && <span className="chip bg-ink-800 text-slate-300">{p.setCode}</span>}
-        {p.condition && <span className="chip bg-ink-800 text-slate-300">{p.condition}</span>}
-        {p.priceCents != null && <span className="chip bg-ink-800 font-bold text-accent">{formatAUD(p.priceCents)}</span>}
+        {p.priceCents != null && <span className="chip bg-ink-800 font-bold text-accent">{formatAUD(p.priceCents)} asking</span>}
+        {p.priceCents == null && p.marketCents != null && <span className="chip bg-ink-800 font-bold text-accent">≈ {formatAUD(p.marketCents)} market</span>}
         <span className="ml-auto text-xs text-slate-500">{timeAgo(p.createdAt)}</span>
       </div>
       <h3 className="mt-2 font-bold text-white">{p.title}</h3>
-      {p.cardName && <p className="text-xs text-brand-400">{p.cardName}</p>}
-      <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-slate-300">{p.body}</p>
+      {items && items.length > 0 && (
+        <div className="mt-2 rounded-lg border border-ink-700 bg-ink-900/40 p-2">
+          <ul className="divide-y divide-ink-800/70">
+            {items.map((it, i) => (
+              <li key={i} className="flex items-center gap-2 py-1 text-sm">
+                <span className="w-7 shrink-0 text-slate-500">{it.qty}×</span>
+                <span className="min-w-0 flex-1 truncate text-slate-200">
+                  {it.name}
+                  {it.condition && it.condition !== "Any" ? <span className="text-xs text-slate-500"> · {it.condition}</span> : null}
+                </span>
+                <span className="shrink-0 text-xs text-slate-400">{it.marketCents != null ? formatAUD(it.marketCents) : "—"}</span>
+              </li>
+            ))}
+          </ul>
+          {p.marketCents != null && (
+            <div className="mt-1 flex items-center justify-between border-t border-ink-800 px-1 pt-1 text-xs">
+              <span className="text-slate-500">Recommended (market) total</span>
+              <span className="font-bold text-accent">{formatAUD(p.marketCents)}</span>
+            </div>
+          )}
+        </div>
+      )}
+      {p.body && <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-300">{p.body}</p>}
     </li>
   );
 }

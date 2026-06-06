@@ -27,7 +27,11 @@ export function Navbar() {
 
         {/* Nav */}
         <nav className="flex items-center gap-1">
-          <Link href="/browse" className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-ink-800 hover:text-white">
+          <Link href="/forum" className="rounded-lg px-2.5 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white">
+            <span className="sm:hidden">Market</span>
+            <span className="hidden sm:inline">Market Forum</span>
+          </Link>
+          <Link href="/browse" className="rounded-lg px-2.5 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white">
             Database
           </Link>
           <Link href="/sealed" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-ink-800 hover:text-white lg:block">
@@ -38,9 +42,6 @@ export function Navbar() {
           </Link>
           <Link href="/deck" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-ink-800 hover:text-white lg:block">
             Deck Builder
-          </Link>
-          <Link href="/forum" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-ink-800 hover:text-white lg:block">
-            Forum
           </Link>
           <Link href="/guides" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-ink-800 hover:text-white lg:block">
             Guides

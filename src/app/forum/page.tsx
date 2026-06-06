@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { ForumBoard, type ForumPostDTO } from "@/components/ForumBoard";
+import { ForumBoard, type ForumItem, type ForumKind, type ForumPostDTO } from "@/components/ForumBoard";
 
 export const dynamic = "force-dynamic";
 
@@ -20,12 +20,14 @@ export default async function ForumPage() {
 
   const posts: ForumPostDTO[] = rows.map((p) => ({
     id: p.id,
-    kind: p.kind as "WTB" | "WTS",
+    kind: p.kind as ForumKind,
     title: p.title,
     cardName: p.cardName,
     setCode: p.setCode,
     condition: p.condition,
     priceCents: p.priceCents,
+    items: (p.items as ForumItem[] | null) ?? null,
+    marketCents: p.marketCents,
     body: p.body,
     contact: p.contact,
     authorName: p.authorName,

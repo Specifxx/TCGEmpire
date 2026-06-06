@@ -169,14 +169,18 @@ model PriceHistory {
 // (WTS) listing for Riftbound cards. Reddit-style board at /forum.
 model ForumPost {
   id          String   @id @default(cuid())
-  kind        String   // "WTB" | "WTS"
+  kind        String   // "WTB" | "WTS" | "DISCUSSION"
   title       String
   cardName    String?
   setCode     String?
   condition   String?  // NM, LP, MP, HP, DMG, or "Any"
-  priceCents  Int?     // asking / offering price per card
+  priceCents  Int?     // seller's asking price for the whole listing (optional)
+  // Multi-card listings: [{ name, setCode?, condition?, qty, marketCents? }].
+  items       Json?
+  // Sum of the items' current market value — the "recommended" total price.
+  marketCents Int?
   body        String
-  contact     String   // how to reach the poster (email / Discord / phone)
+  contact     String   @default("") // how to reach the poster (email/Discord); blank for discussions
   authorName  String
   userId      String?  // set if posted while logged in
   score       Int      @default(0)

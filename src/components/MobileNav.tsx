@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+// Database + Market Forum live in the top bar at all sizes, so they're omitted
+// here; this menu holds the rest (shown below the lg breakpoint).
 const LINKS = [
-  { href: "/browse", label: "Card Database" },
   { href: "/sealed", label: "Sealed Products" },
   { href: "/decks", label: "Meta Decks" },
   { href: "/deck", label: "Deck Builder" },
-  { href: "/forum", label: "Forum" },
   { href: "/guides", label: "Guides" },
   { href: "/blog", label: "Blog" },
   { href: "/wishlist", label: "Wishlist" },
