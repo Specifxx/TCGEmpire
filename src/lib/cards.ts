@@ -79,8 +79,11 @@ export function buildCardOrderBy(
   }
 }
 
+export { cardSlug, cardHref } from "./card-url";
+
 export const CARD_TILE_SELECT = {
   id: true,
+  slug: true,
   name: true,
   domain: true,
   type: true,

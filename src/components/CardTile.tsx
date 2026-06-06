@@ -1,12 +1,17 @@
+"use client";
+
 import Link from "next/link";
 import { CardImage } from "./CardImage";
 import { VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge } from "./Badge";
 import { WishlistButton } from "./WishlistButton";
+import { useQuickView } from "./QuickView";
 import { formatAUD } from "@/lib/format";
+import { cardHref } from "@/lib/card-url";
 import { rarityInfo, isOvernumbered, isSignature } from "@/lib/constants";
 
 export interface CardTileData {
   id: string;
+  slug: string | null;
   name: string;
   domain: string;
   type: string;
@@ -14,6 +19,7 @@ export interface CardTileData {
   variant: string | null;
   isPromo: boolean;
   setCode: string;
+  setName: string;
   collectorNumber: string;
   energyCost: number | null;
   might: number | null;
@@ -29,6 +35,16 @@ export interface CardTileData {
 export function CardTile({ card }: { card: CardTileData }) {
   const r = rarityInfo(card.rarity);
   const stores = card._count.retailerPrices;
+  const { open } = useQuickView();
+
+  // Left-click opens an instant in-page quick view (no navigation = no lag). The
+  // real href is kept for SEO, sharing and middle/ctrl-click (open in new tab),
+  // and prefetch is off so scrolling a long grid doesn't fire hundreds of prefetches.
+  function onClick(e: React.MouseEvent) {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    e.preventDefault();
+    open(card);
+  }
 
   return (
     // Outer wrapper holds the hover state and the wishlist button. The wishlist
@@ -38,7 +54,7 @@ export function CardTile({ card }: { card: CardTileData }) {
       <div className="absolute right-2 top-2 z-10">
         <WishlistButton cardId={card.id} />
       </div>
-      <Link href={`/card/${card.id}`} className="flex flex-1 flex-col">
+      <Link href={cardHref(card)} prefetch={false} onClick={onClick} className="flex flex-1 flex-col">
         <div
           className="relative aspect-[5/7] w-full overflow-hidden p-3"
           style={{ background: `radial-gradient(120% 80% at 50% 0%, ${r.color}22, transparent 60%)` }}

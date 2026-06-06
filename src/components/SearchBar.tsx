@@ -7,6 +7,7 @@ import { formatAUD } from "@/lib/format";
 
 interface Result {
   id: string;
+  slug: string | null;
   name: string;
   setCode: string;
   collectorNumber: string;
@@ -110,7 +111,7 @@ export function SearchBar() {
               {results.map((r) => (
                 <li key={r.id}>
                   <Link
-                    href={`/card/${r.id}`}
+                    href={`/card/${r.slug ?? r.id}`}
                     onClick={() => setOpen(false)}
                     className="flex items-center gap-3 px-3 py-2 hover:bg-ink-800"
                   >

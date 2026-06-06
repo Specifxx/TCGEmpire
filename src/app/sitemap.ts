@@ -8,7 +8,7 @@ export const revalidate = 86400;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const cards = await prisma.card.findMany({
-    select: { id: true, lowestPriceCents: true },
+    select: { id: true, slug: true, lowestPriceCents: true },
     orderBy: { lowestPriceCents: { sort: "desc", nulls: "last" } },
   });
 
@@ -27,7 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   const cardRoutes: MetadataRoute.Sitemap = cards.map((c) => ({
-    url: `${SITE_URL}/card/${c.id}`,
+    url: `${SITE_URL}/card/${c.slug ?? c.id}`,
     changeFrequency: "daily",
     // Priced cards (the ones people search for) rank slightly higher.
     priority: c.lowestPriceCents != null ? 0.8 : 0.5,

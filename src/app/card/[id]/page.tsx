@@ -12,10 +12,13 @@ import { formatAUD, timeAgo } from "@/lib/format";
 // this keeps navigation instant without showing meaningfully stale prices).
 export const revalidate = 600;
 
+// Accept either the slug ("vayne-hunter-sfd-223-221") or the legacy cuid.
+const whereParam = (p: string) => ({ OR: [{ slug: p }, { id: p }] });
+
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-  const card = await prisma.card.findUnique({
-    where: { id: params.id },
-    select: { name: true, setName: true, setCode: true, collectorNumber: true, lowestPriceCents: true, imageUrl: true, imageThumbUrl: true },
+  const card = await prisma.card.findFirst({
+    where: whereParam(params.id),
+    select: { slug: true, name: true, setName: true, setCode: true, collectorNumber: true, lowestPriceCents: true, imageUrl: true, imageThumbUrl: true },
   });
   if (!card) return { title: "Card not found" };
 
@@ -27,7 +30,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   return {
     title,
     description,
-    alternates: { canonical: `/card/${params.id}` },
+    alternates: { canonical: `/card/${card.slug ?? params.id}` },
     openGraph: {
       title,
       description,
@@ -38,8 +41,8 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 }
 
 export default async function CardPage({ params }: { params: { id: string } }) {
-  const card = await prisma.card.findUnique({
-    where: { id: params.id },
+  const card = await prisma.card.findFirst({
+    where: whereParam(params.id),
     include: {
       retailerPrices: { orderBy: { priceCents: "asc" } },
     },

@@ -21,6 +21,7 @@ export async function GET(req: Request) {
     take: 8,
     select: {
       id: true,
+      slug: true,
       name: true,
       setCode: true,
       collectorNumber: true,

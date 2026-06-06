@@ -5,6 +5,7 @@ import NextTopLoader from "nextjs-toploader";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
+import { QuickViewProvider } from "@/components/QuickView";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
 
 // Body: Sora (modern, energetic, readable). Headings: Space Grotesk (distinctive,
@@ -79,8 +80,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           easing="ease"
           speed={300}
         />
-        <Navbar />
-        <main className="container-app py-6">{children}</main>
+        <QuickViewProvider>
+          <Navbar />
+          <main className="container-app py-6">{children}</main>
+        </QuickViewProvider>
         <footer className="container-app border-t border-ink-800 py-8 text-center text-xs text-slate-500">
           <div className="mb-2 flex items-center justify-center gap-4 text-sm">
             <Link href="/contact" className="text-slate-300 hover:text-brand-400">Contact &amp; feedback</Link>

@@ -32,6 +32,7 @@ model User {
 model Card {
   id              String    @id @default(cuid())
   externalId      String?   @unique // RiftScribe id, e.g. "ogn-001-298"
+  slug            String?   @unique // human-readable URL, e.g. "vayne-hunter-sfd-223s-221"
   name            String
   // Lowercased, punctuation-stripped name for apostrophe-tolerant search.
   nameNormalized  String  @default("")
