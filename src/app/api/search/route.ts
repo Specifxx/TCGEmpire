@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { normalizeSearch } from "@/lib/format";
+import { CARD_TILE_SELECT } from "@/lib/cards";
 
-// Typeahead search for the navbar dropdown.
+// Typeahead search for the navbar dropdown. Returns full tile data so a result can
+// open the same instant quick-view modal as the browse grid.
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const q = (searchParams.get("q") ?? "").trim();
@@ -19,16 +21,7 @@ export async function GET(req: Request) {
     // Priced cards first, then by name.
     orderBy: [{ lowestPriceCents: { sort: "desc", nulls: "last" } }, { name: "asc" }],
     take: 8,
-    select: {
-      id: true,
-      slug: true,
-      name: true,
-      setCode: true,
-      collectorNumber: true,
-      variant: true,
-      imageThumbUrl: true,
-      lowestPriceCents: true,
-    },
+    select: CARD_TILE_SELECT,
   });
 
   return NextResponse.json({ results: cards });

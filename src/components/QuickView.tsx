@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { CardTileData } from "./CardTile";
 import { CardImage } from "./CardImage";
 import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge } from "./Badge";
@@ -25,11 +24,43 @@ export const useQuickView = () => useContext(Ctx);
 
 export function QuickViewProvider({ children }: { children: React.ReactNode }) {
   const [card, setCard] = useState<CardTileData | null>(null);
-  const open = useCallback((c: CardTileData) => setCard(c), []);
+  const pushedRef = useRef(false);
+
+  // Open the modal AND give it a shareable address: the URL bar becomes /card/slug
+  // (via history, no navigation = no slow page load), so users can copy/share it,
+  // the browser Back button closes the modal, and visiting that URL directly still
+  // renders the full card page.
+  const open = useCallback((c: CardTileData) => {
+    setCard(c);
+    const url = cardHref(c);
+    if (typeof window !== "undefined" && window.location.pathname !== url) {
+      window.history.pushState({ quickView: true }, "", url);
+      pushedRef.current = true;
+    }
+  }, []);
+
+  const close = useCallback(() => {
+    setCard(null);
+    if (pushedRef.current) {
+      pushedRef.current = false;
+      window.history.back(); // restore the previous URL
+    }
+  }, []);
+
+  // Back/forward button: just close the modal (the URL has already changed).
+  useEffect(() => {
+    const onPop = () => {
+      pushedRef.current = false;
+      setCard(null);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
   return (
     <Ctx.Provider value={{ open }}>
       {children}
-      {card && <QuickViewModal card={card} onClose={() => setCard(null)} />}
+      {card && <QuickViewModal card={card} onClose={close} />}
     </Ctx.Provider>
   );
 }
@@ -72,9 +103,11 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
           {/* Card image — shows instantly from the tile data */}
           <div className="bg-ink-950/40 p-4">
             <CardImage card={card} full className="aspect-[5/7] w-full" />
-            <Link href={href} className="btn-ghost mt-3 flex w-full justify-center text-sm">
+            {/* Plain anchor = a real navigation to the full page (the URL is already
+                /card/slug via history, so this loads the full server-rendered page). */}
+            <a href={href} className="btn-ghost mt-3 flex w-full justify-center text-sm">
               View full page →
-            </Link>
+            </a>
           </div>
 
           {/* Details + live prices */}
@@ -129,9 +162,9 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                 </ul>
               )}
               {prices && inStock.length > 6 && (
-                <Link href={href} className="mt-2 block text-center text-xs text-brand-400 hover:underline">
+                <a href={href} className="mt-2 block text-center text-xs text-brand-400 hover:underline">
                   See all {inStock.length} stores →
-                </Link>
+                </a>
               )}
             </div>
           </div>

@@ -4,23 +4,18 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { formatAUD } from "@/lib/format";
+import { cardHref } from "@/lib/card-url";
+import { useQuickView } from "./QuickView";
+import type { CardTileData } from "./CardTile";
 
-interface Result {
-  id: string;
-  slug: string | null;
-  name: string;
-  setCode: string;
-  collectorNumber: string;
-  variant: string | null;
-  imageThumbUrl: string | null;
-  lowestPriceCents: number | null;
-}
+type Result = CardTileData;
 
 // Search with a live preview dropdown (debounced + abortable so typing stays
 // snappy). Submitting still does a real navigation to the results page.
 export function SearchBar() {
   const router = useRouter();
   const params = useSearchParams();
+  const { open: openQuickView } = useQuickView();
   const [value, setValue] = useState(params.get("q") ?? "");
   const [results, setResults] = useState<Result[]>([]);
   const [open, setOpen] = useState(false);
@@ -111,8 +106,16 @@ export function SearchBar() {
               {results.map((r) => (
                 <li key={r.id}>
                   <Link
-                    href={`/card/${r.slug ?? r.id}`}
-                    onClick={() => setOpen(false)}
+                    href={cardHref(r)}
+                    prefetch={false}
+                    onClick={(e) => {
+                      // Left-click opens the instant modal (fast); modifier/middle
+                      // click still opens the full page in a new tab.
+                      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                      e.preventDefault();
+                      setOpen(false);
+                      openQuickView(r);
+                    }}
                     className="flex items-center gap-3 px-3 py-2 hover:bg-ink-800"
                   >
                     <div className="h-12 w-9 shrink-0 overflow-hidden rounded bg-ink-900">
