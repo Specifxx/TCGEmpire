@@ -1,16 +1,16 @@
 // Currency + small formatting helpers. All money is stored as integer cents.
 
-const LOCALE_FOR: Record<string, string> = { AUD: "en-AU", NZD: "en-NZ" };
+// Distinct symbols so every price is unambiguous about its market (a plain "$"
+// could be AUD, NZD or USD). A$ = Australia, NZ$ = New Zealand, US$ = United States.
+const SYMBOL: Record<string, string> = { AUD: "A$", NZD: "NZ$", USD: "US$" };
 
-// Format integer cents in the given currency (default AUD). AUD/NZD both render
-// with a "$" symbol — the visible country selector disambiguates which market.
+// Format integer cents in the given currency (default AUD), e.g. "A$12.50".
 export function formatMoney(cents: number, currency: string = "AUD"): string {
-  return new Intl.NumberFormat(LOCALE_FOR[currency] ?? "en-AU", {
-    style: "currency",
-    currency,
+  const n = new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(cents / 100);
+  return `${SYMBOL[currency] ?? "$"}${n}`;
 }
 
 export function formatAUD(cents: number): string {
