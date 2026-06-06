@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import {
   DOMAIN_KEYS,
   RARITY_KEYS,
@@ -29,39 +29,56 @@ function Chevron({ open }: { open: boolean }) {
 export function Filters() {
   const router = useRouter();
   const params = useSearchParams();
+  const paramsStr = params.toString();
+  const [, startTransition] = useTransition();
+
+  // Optimistic copy of the query string so a checkbox toggles INSTANTLY on click,
+  // without waiting for the server round-trip. We resync to the real URL whenever
+  // it actually changes (navigation finished, or browser back/forward).
+  const [optimistic, setOptimistic] = useState(paramsStr);
+  useEffect(() => setOptimistic(paramsStr), [paramsStr]);
+  const sp = useMemo(() => new URLSearchParams(optimistic), [optimistic]);
 
   const [min, setMin] = useState(params.get("min") ?? "");
   const [max, setMax] = useState(params.get("max") ?? "");
   const [mobileOpen, setMobileOpen] = useState(false);
 
   function update(mutate: (p: URLSearchParams) => void) {
-    const next = new URLSearchParams(Array.from(params.entries()));
+    // Build from the optimistic state (not the URL) so rapid clicks accumulate.
+    const next = new URLSearchParams(optimistic);
     mutate(next);
     next.delete("page");
-    router.push(`/browse?${next.toString()}`);
+    const qs = next.toString();
+    setOptimistic(qs); // instant: the checkbox flips immediately
+    startTransition(() => router.push(qs ? `/browse?${qs}` : "/browse")); // data loads in the background
+  }
+
+  function clearAll() {
+    setOptimistic("");
+    startTransition(() => router.push("/browse"));
   }
 
   function isActive(key: string, value: string) {
-    const v = params.get(key);
+    const v = sp.get(key);
     return v ? v.split(",").includes(value) : false;
   }
 
   function setCsv(p: URLSearchParams, key: string, value: string) {
-    const nextVal = toggleCsv(params.get(key), value);
+    const nextVal = toggleCsv(sp.get(key), value);
     if (nextVal) p.set(key, nextVal);
     else p.delete(key);
   }
 
   const activeCount =
     ["domain", "rarity", "type", "set"].reduce(
-      (n, k) => n + (params.get(k)?.split(",").filter(Boolean).length ?? 0),
+      (n, k) => n + (sp.get(k)?.split(",").filter(Boolean).length ?? 0),
       0
     ) +
-    (params.get("variant") ? 1 : 0) +
-    (params.get("sig") ? 1 : 0) +
-    (params.get("promo") ? 1 : 0) +
-    (params.get("priced") ? 1 : 0) +
-    (params.get("min") || params.get("max") ? 1 : 0);
+    (sp.get("variant") ? 1 : 0) +
+    (sp.get("sig") ? 1 : 0) +
+    (sp.get("promo") ? 1 : 0) +
+    (sp.get("priced") ? 1 : 0) +
+    (sp.get("min") || sp.get("max") ? 1 : 0);
 
   return (
     <aside className="w-full shrink-0 lg:w-64">
@@ -84,7 +101,7 @@ export function Filters() {
           <div className="mb-1 flex items-center justify-between">
             <h2 className="text-sm font-bold uppercase tracking-wide text-slate-300">Filters</h2>
             {activeCount > 0 && (
-              <button onClick={() => router.push("/browse")} className="text-xs text-brand-400 hover:underline">
+              <button onClick={clearAll} className="text-xs text-brand-400 hover:underline">
                 Clear ({activeCount})
               </button>
             )}
@@ -109,7 +126,7 @@ export function Filters() {
             </button>
             <Check
               className="mt-2"
-              checked={params.get("priced") === "1"}
+              checked={sp.get("priced") === "1"}
               onChange={() => update((p) => (p.get("priced") === "1" ? p.delete("priced") : p.set("priced", "1")))}
               label="Only cards with a price"
             />
@@ -150,9 +167,9 @@ export function Filters() {
 
           <Section title="Printing" last defaultOpen>
             <div className="flex flex-col gap-1">
-              <Check checked={params.get("variant") === "alt"} onChange={() => update((p) => (p.get("variant") === "alt" ? p.delete("variant") : p.set("variant", "alt")))} label="Alternate art" dot="#f5a524" />
-              <Check checked={params.get("sig") === "1"} onChange={() => update((p) => (p.get("sig") === "1" ? p.delete("sig") : p.set("sig", "1")))} label="Signature" dot="#f59e0b" />
-              <Check checked={params.get("promo") === "1"} onChange={() => update((p) => (p.get("promo") === "1" ? p.delete("promo") : p.set("promo", "1")))} label="Promo" dot="#06b6d4" />
+              <Check checked={sp.get("variant") === "alt"} onChange={() => update((p) => (p.get("variant") === "alt" ? p.delete("variant") : p.set("variant", "alt")))} label="Alternate art" dot="#f5a524" />
+              <Check checked={sp.get("sig") === "1"} onChange={() => update((p) => (p.get("sig") === "1" ? p.delete("sig") : p.set("sig", "1")))} label="Signature" dot="#f59e0b" />
+              <Check checked={sp.get("promo") === "1"} onChange={() => update((p) => (p.get("promo") === "1" ? p.delete("promo") : p.set("promo", "1")))} label="Promo" dot="#06b6d4" />
             </div>
           </Section>
         </div>

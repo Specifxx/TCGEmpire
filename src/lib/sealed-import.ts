@@ -112,8 +112,11 @@ export async function importSealed(): Promise<number> {
 
     const seen = new Set<string>();
     const rows = new Map<string, any>(); // groupKey+store -> row (cheapest per store/product)
+    let scraped = false; // did we actually read products (vs an empty/failed fetch)?
     for (const handle of handles) {
-      for (const p of await fetchProducts(store.base, handle)) {
+      const products = await fetchProducts(store.base, handle);
+      if (products.length) scraped = true;
+      for (const p of products) {
         if (seen.has(p.handle)) continue;
         seen.add(p.handle);
         const title = p.title ?? "";
@@ -144,9 +147,12 @@ export async function importSealed(): Promise<number> {
         });
       }
     }
-    if (rows.size) {
+    // Refresh when the scrape succeeded — this also CLEARS stale rows when a
+    // previously mis-detected single no longer matches (rows.size can be 0). If
+    // the fetch failed entirely (no products at all), keep the existing rows.
+    if (scraped) {
       await prisma.sealedListing.deleteMany({ where: { retailer: store.key } });
-      await prisma.sealedListing.createMany({ data: Array.from(rows.values()) });
+      if (rows.size) await prisma.sealedListing.createMany({ data: Array.from(rows.values()) });
       count += rows.size;
     }
   }
