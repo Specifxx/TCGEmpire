@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { Filters } from "@/components/Filters";
+import { ActiveFilters } from "@/components/ActiveFilters";
 import { SortSelect } from "@/components/SortSelect";
 import { CardTile } from "@/components/CardTile";
 import { Pagination } from "@/components/Pagination";
@@ -54,6 +55,8 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
           </div>
         </div>
 
+        <ActiveFilters />
+
         {cards.length === 0 ? (
           <div className="card-surface grid place-items-center p-16 text-center">
             <p className="text-lg font-semibold text-white">
@@ -66,7 +69,7 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
               {cards.map((c) => (
                 <CardTile key={c.id} card={c} />
               ))}
