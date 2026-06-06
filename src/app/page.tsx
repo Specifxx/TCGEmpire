@@ -61,10 +61,10 @@ export default async function HomePage() {
   return (
     <div className="flex flex-col gap-10">
       {/* Hero */}
-      <section className="card-surface overflow-hidden">
-        <div className="relative bg-gradient-to-b from-ink-800/60 to-ink-850 px-6 py-10 text-center">
+      <section className="card-surface animate-fade-up overflow-hidden">
+        <div className="relative bg-gradient-to-br from-brand-600/25 via-ink-850 to-gold/15 px-6 py-12 text-center">
           <div className="mx-auto mb-4 flex items-center justify-center gap-3">
-            <Logo size={56} />
+            <span className="animate-float"><Logo size={56} /></span>
             <span className="text-3xl font-extrabold tracking-tight text-white">
               Rift<span className="text-brand-400">Compare</span>
               <span className="text-gold">AU</span>

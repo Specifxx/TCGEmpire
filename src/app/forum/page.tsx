@@ -14,7 +14,12 @@ export const metadata: Metadata = {
 
 export default async function ForumPage() {
   const [rows, user] = await Promise.all([
-    prisma.forumPost.findMany({ where: { status: "OPEN" }, orderBy: { createdAt: "desc" }, take: 200 }),
+    prisma.forumPost.findMany({
+      where: { status: "OPEN" },
+      orderBy: { createdAt: "desc" },
+      take: 200,
+      include: { _count: { select: { comments: true } } },
+    }),
     getCurrentUser(),
   ]);
 
@@ -34,7 +39,7 @@ export default async function ForumPage() {
     state: p.state,
     authorName: p.authorName,
     userId: p.userId,
-    score: p.score,
+    commentCount: p._count.comments,
     createdAt: p.createdAt.toISOString(),
   }));
 

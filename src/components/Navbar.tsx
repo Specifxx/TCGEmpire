@@ -4,6 +4,7 @@ import { SearchBar } from "./SearchBar";
 import { Logo } from "./Logo";
 import { NavWishlistButton } from "./NavWishlistButton";
 import { MobileNav } from "./MobileNav";
+import { NavDropdown } from "./NavDropdown";
 
 export function Navbar() {
   return (
@@ -34,21 +35,25 @@ export function Navbar() {
           <Link href="/browse" className="rounded-lg px-2.5 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white">
             Database
           </Link>
-          <Link href="/sealed" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-ink-800 hover:text-white lg:block">
-            Sealed
-          </Link>
-          <Link href="/decks" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-ink-800 hover:text-white lg:block">
-            Meta Decks
-          </Link>
-          <Link href="/deck" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-ink-800 hover:text-white lg:block">
-            Deck Builder
-          </Link>
-          <Link href="/guides" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-ink-800 hover:text-white lg:block">
-            Guides
-          </Link>
-          <Link href="/blog" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-ink-800 hover:text-white lg:block">
-            Blog
-          </Link>
+          <div className="hidden lg:block">
+            <NavDropdown
+              label="Decks"
+              items={[
+                { href: "/decks", label: "Meta Decks", desc: "Top tournament decklists" },
+                { href: "/deck", label: "Deck Builder", desc: "Build & price your own" },
+              ]}
+            />
+          </div>
+          <div className="hidden lg:block">
+            <NavDropdown
+              label="More"
+              items={[
+                { href: "/sealed", label: "Sealed Products", desc: "Boxes, packs & promos" },
+                { href: "/guides", label: "Guides", desc: "Learn Riftbound" },
+                { href: "/blog", label: "Blog", desc: "News & meta" },
+              ]}
+            />
+          </div>
           <NavWishlistButton />
           <MobileNav />
         </nav>

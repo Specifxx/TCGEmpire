@@ -73,24 +73,24 @@ h1, h2, h3 {
     @apply mx-auto w-full max-w-[1400px] px-4 sm:px-6;
   }
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-150 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-primary {
-    @apply btn bg-brand-500 text-white hover:bg-brand-600;
+    @apply btn bg-gradient-to-br from-brand-400 to-brand-600 text-white shadow-glow hover:brightness-110;
   }
   .btn-ghost {
     @apply btn bg-ink-800 text-slate-200 hover:bg-ink-700;
   }
   .btn-accent {
-    @apply btn bg-accent text-ink-950 hover:opacity-90;
+    @apply btn bg-gradient-to-br from-gold to-accent text-ink-950 hover:brightness-105;
   }
   .input {
-    @apply w-full rounded-lg border border-ink-700 bg-ink-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500;
+    @apply w-full rounded-xl border border-ink-700 bg-ink-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40;
   }
   .card-surface {
-    @apply rounded-lg border border-ink-700/70 bg-ink-850 shadow-card;
+    @apply rounded-2xl border border-ink-700/70 bg-ink-850 shadow-card;
   }
   .chip {
-    @apply inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium;
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
   }
 }

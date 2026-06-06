@@ -15,9 +15,21 @@ export interface CardQuery {
   max?: string;
   sort?: string;
   page?: string;
+  size?: string;
 }
 
-export const CARD_PAGE_SIZE = 36;
+export const CARD_PAGE_SIZE = 36; // legacy (infinite-scroll API)
+
+// Paginated browse: user-selectable page size, default 10.
+export const PAGE_SIZES = [10, 20, 50, 100] as const;
+export function parsePageSize(v?: string): number {
+  const n = parseInt(v ?? "", 10);
+  return (PAGE_SIZES as readonly number[]).includes(n) ? n : 10;
+}
+export function parsePageNum(v?: string): number {
+  const n = parseInt(v ?? "", 10);
+  return Number.isFinite(n) && n > 0 ? n : 1;
+}
 
 function csv(v?: string): string[] | undefined {
   if (!v) return undefined;

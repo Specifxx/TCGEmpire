@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { formatAUD } from "@/lib/format";
 import { AU_STATES, COUNTRIES, DEFAULT_COUNTRY } from "@/lib/locations";
+import { ForumPostModal } from "./ForumPostModal";
 
 export type ForumKind = "WTB" | "WTS" | "DISCUSSION";
 
@@ -31,12 +32,11 @@ export interface ForumPostDTO {
   state: string | null;
   authorName: string;
   userId: string | null;
-  score: number;
+  commentCount: number;
   createdAt: string; // ISO
 }
 
 const CONDITIONS = ["NM", "LP", "MP", "HP", "DMG", "Any"];
-const VOTES_KEY = "rc_forum_votes";
 
 const KIND_LABEL: Record<ForumKind, string> = { WTB: "Want to buy", WTS: "Want to sell", DISCUSSION: "Discussion" };
 const KIND_BADGE: Record<ForumKind, string> = {
@@ -150,11 +150,7 @@ export function ForumBoard({
   const [items, setItems] = useState<ForumItem[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [votes, setVotes] = useState<Record<string, 1 | -1>>({});
-
-  useEffect(() => {
-    try { setVotes(JSON.parse(localStorage.getItem(VOTES_KEY) || "{}")); } catch { /* ignore */ }
-  }, []);
+  const [openPost, setOpenPost] = useState<ForumPostDTO | null>(null);
 
   const filtered = useMemo(
     () => (filter === "all" ? posts : posts.filter((p) => p.kind === filter)),
@@ -175,26 +171,9 @@ export function ForumBoard({
     setItems((arr) => arr.filter((_, i) => i !== idx));
   }
 
-  function persistVotes(next: Record<string, 1 | -1>) {
-    setVotes(next);
-    try { localStorage.setItem(VOTES_KEY, JSON.stringify(next)); } catch { /* ignore */ }
-  }
-
-  async function vote(id: string, dir: 1 | -1) {
-    const current = votes[id] ?? 0;
-    const target = current === dir ? 0 : dir;
-    const delta = target - current;
-    if (delta === 0) return;
-    setPosts((ps) => ps.map((p) => (p.id === id ? { ...p, score: p.score + delta } : p)));
-    const nextVotes = { ...votes };
-    if (target === 0) delete nextVotes[id];
-    else nextVotes[id] = target;
-    persistVotes(nextVotes);
-    try {
-      const res = await fetch(`/api/forum/${id}/vote?delta=${delta}`, { method: "POST" });
-      const data = await res.json();
-      if (typeof data.score === "number") setPosts((ps) => ps.map((p) => (p.id === id ? { ...p, score: data.score } : p)));
-    } catch { /* keep optimistic */ }
+  function bumpCommentCount(postId: string) {
+    setPosts((ps) => ps.map((p) => (p.id === postId ? { ...p, commentCount: p.commentCount + 1 } : p)));
+    setOpenPost((op) => (op && op.id === postId ? { ...op, commentCount: op.commentCount + 1 } : op));
   }
 
   function resetForm() {
@@ -253,7 +232,11 @@ export function ForumBoard({
         setError(data.error || "Something went wrong");
       } else if (data.post) {
         const post = data.post as ForumPostDTO;
-        setPosts((ps) => (editingId ? ps.map((p) => (p.id === post.id ? post : p)) : [post, ...ps]));
+        setPosts((ps) =>
+          editingId
+            ? ps.map((p) => (p.id === post.id ? { ...post, commentCount: p.commentCount } : p))
+            : [{ ...post, commentCount: 0 }, ...ps]
+        );
         resetForm();
       }
     } catch {
@@ -283,6 +266,22 @@ export function ForumBoard({
         ) : (
           <Link href="/login?next=/forum" className="btn-primary shrink-0">Log in to post</Link>
         )}
+      </div>
+
+      {/* Work-in-progress warning */}
+      <div className="mb-5 flex items-start gap-3 rounded-2xl border-2 border-amber-500/50 bg-gradient-to-br from-amber-500/15 to-amber-500/5 p-4">
+        <svg className="mt-0.5 h-7 w-7 shrink-0 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" />
+          <path d="M12 9v4M12 17h.01" />
+        </svg>
+        <div>
+          <p className="text-base font-extrabold text-amber-200">🚧 This feature is still in development — use at your own risk</p>
+          <p className="mt-1 text-sm text-amber-100/80">
+            The Market Forum is an early work in progress and may be unstable. Trade carefully with people
+            you don&apos;t know, never share passwords or payment details, and treat every listing as
+            unverified. RiftCompareAU is not a party to any trade.
+          </p>
+        </div>
       </div>
 
       {showForm && (
@@ -454,99 +453,100 @@ export function ForumBoard({
         </div>
       ) : (
         <ul className="space-y-3">
-          {filtered.map((p) => {
-            const v = votes[p.id] ?? 0;
-            return (
-              <li key={p.id} className="card-surface flex overflow-hidden">
-                <div className="flex w-12 shrink-0 flex-col items-center justify-start gap-0.5 bg-ink-900/50 py-3">
-                  <button onClick={() => vote(p.id, 1)} aria-label="Upvote" className={`grid h-6 w-6 place-items-center rounded hover:bg-ink-800 ${v === 1 ? "text-brand-400" : "text-slate-500"}`}>
-                    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
-                  </button>
-                  <span className={`text-sm font-bold ${v === 1 ? "text-brand-400" : v === -1 ? "text-rose-400" : "text-slate-300"}`}>{p.score}</span>
-                  <button onClick={() => vote(p.id, -1)} aria-label="Downvote" className={`grid h-6 w-6 place-items-center rounded hover:bg-ink-800 ${v === -1 ? "text-rose-400" : "text-slate-500"}`}>
-                    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
-                  </button>
-                </div>
-
-                <div className="min-w-0 flex-1 p-4">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className={`chip font-bold ${KIND_BADGE[p.kind]}`}>
-                      {p.kind === "DISCUSSION" ? "DISCUSSION" : p.kind === "WTB" ? "WANT TO BUY" : "WANT TO SELL"}
-                    </span>
-                    {p.priceCents != null && <span className="chip bg-ink-800 font-bold text-accent">{formatAUD(p.priceCents)} asking</span>}
-                    {p.priceCents == null && p.marketCents != null && (
-                      <span className="chip bg-ink-800 font-bold text-accent">≈ {formatAUD(p.marketCents)} market</span>
-                    )}
-                    {(p.state || p.country) && (
-                      <span className="chip bg-ink-800 text-slate-300">{[p.state, p.country].filter(Boolean).join(", ")}</span>
-                    )}
-                  </div>
-
-                  <h2 className="mt-2 font-bold text-white">{p.title}</h2>
-
-                  {p.items && p.items.length > 0 && (
-                    <div className="mt-2 rounded-lg border border-ink-700 bg-ink-900/40 p-2">
-                      <ul className="divide-y divide-ink-800/70">
-                        {p.items.map((it, i) => (
-                          <li key={i} className="flex items-center gap-2 py-1 text-sm">
-                            <span className="w-7 shrink-0 text-slate-500">{it.qty}×</span>
-                            <span className="min-w-0 flex-1 truncate text-slate-200">
-                              {it.name}
-                              {it.condition && it.condition !== "Any" ? <span className="text-xs text-slate-500"> · {it.condition}</span> : null}
-                            </span>
-                            <span className="shrink-0 text-xs text-slate-400">{it.marketCents != null ? formatAUD(it.marketCents) : "—"}</span>
-                          </li>
-                        ))}
-                      </ul>
-                      {p.marketCents != null && (
-                        <div className="mt-1 flex items-center justify-between border-t border-ink-800 px-1 pt-1 text-xs">
-                          <span className="text-slate-500">Recommended (market) total</span>
-                          <span className="font-bold text-accent">{formatAUD(p.marketCents)}</span>
-                        </div>
-                      )}
-                    </div>
+          {filtered.map((p) => (
+            <li key={p.id} className="card-surface overflow-hidden transition-colors hover:border-brand-500/40">
+              <div onClick={() => setOpenPost(p)} className="cursor-pointer p-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={`chip font-bold ${KIND_BADGE[p.kind]}`}>
+                    {p.kind === "DISCUSSION" ? "DISCUSSION" : p.kind === "WTB" ? "WANT TO BUY" : "WANT TO SELL"}
+                  </span>
+                  {p.priceCents != null && <span className="chip bg-ink-800 font-bold text-accent">{formatAUD(p.priceCents)} asking</span>}
+                  {p.priceCents == null && p.marketCents != null && (
+                    <span className="chip bg-ink-800 font-bold text-accent">≈ {formatAUD(p.marketCents)} market</span>
                   )}
+                  {(p.state || p.country) && (
+                    <span className="chip bg-ink-800 text-slate-300">{[p.state, p.country].filter(Boolean).join(", ")}</span>
+                  )}
+                  <span className="ml-auto flex items-center gap-1 rounded-full bg-ink-800 px-2 py-0.5 text-xs text-slate-300" title="Comments">
+                    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+                    {p.commentCount}
+                  </span>
+                </div>
 
-                  {p.body && <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-300">{p.body}</p>}
+                <h2 className="mt-2 font-bold text-white">{p.title}</h2>
 
-                  <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
-                    {p.userId ? (
-                      <Link href={`/forum/seller/${p.userId}`} className="font-medium text-brand-400 hover:underline">{p.authorName}</Link>
-                    ) : (
-                      <span className="font-medium text-slate-400">{p.authorName}</span>
-                    )}
-                    <span>·</span>
-                    <span>{timeAgo(p.createdAt)}</span>
-                    {p.contact && (
-                      <>
-                        <span>·</span>
-                        <span>Contact: <span className="text-slate-300">{p.contact}</span></span>
-                      </>
-                    )}
-                    {currentUser && p.userId === currentUser.id && (
-                      <>
-                        <span>·</span>
-                        <button onClick={() => startEdit(p)} className="text-brand-400 hover:underline">Edit</button>
-                        <button onClick={() => deletePost(p.id)} className="text-rose-400 hover:underline">Delete</button>
-                      </>
-                    )}
-                    {currentUser?.isAdmin && p.userId !== currentUser.id && (
-                      <>
-                        <span>·</span>
-                        <button onClick={() => deletePost(p.id)} className="text-rose-400 hover:underline">Delete</button>
-                      </>
+                {p.items && p.items.length > 0 && (
+                  <div className="mt-2 rounded-xl border border-ink-700 bg-ink-900/40 p-2">
+                    <ul className="divide-y divide-ink-800/70">
+                      {p.items.slice(0, 6).map((it, i) => (
+                        <li key={i} className="flex items-center gap-2 py-1 text-sm">
+                          <span className="w-7 shrink-0 text-slate-500">{it.qty}×</span>
+                          <span className="min-w-0 flex-1 truncate text-slate-200">
+                            {it.name}
+                            {it.condition && it.condition !== "Any" ? <span className="text-xs text-slate-500"> · {it.condition}</span> : null}
+                          </span>
+                          <span className="shrink-0 text-xs text-slate-400">{it.marketCents != null ? formatAUD(it.marketCents) : "—"}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    {p.items.length > 6 && <p className="px-1 pt-1 text-[11px] text-slate-500">+{p.items.length - 6} more — open to see all</p>}
+                    {p.marketCents != null && (
+                      <div className="mt-1 flex items-center justify-between border-t border-ink-800 px-1 pt-1 text-xs">
+                        <span className="text-slate-500">Recommended (market) total</span>
+                        <span className="font-bold text-accent">{formatAUD(p.marketCents)}</span>
+                      </div>
                     )}
                   </div>
+                )}
+
+                {p.body && <p className="mt-2 line-clamp-3 whitespace-pre-wrap text-sm leading-relaxed text-slate-300">{p.body}</p>}
+
+                <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
+                  {p.userId ? (
+                    <Link href={`/forum/seller/${p.userId}`} onClick={(e) => e.stopPropagation()} className="font-medium text-brand-400 hover:underline">{p.authorName}</Link>
+                  ) : (
+                    <span className="font-medium text-slate-400">{p.authorName}</span>
+                  )}
+                  <span>·</span>
+                  <span>{timeAgo(p.createdAt)}</span>
+                  {p.contact && (
+                    <>
+                      <span>·</span>
+                      <span>Contact: <span className="text-slate-300">{p.contact}</span></span>
+                    </>
+                  )}
+                  {currentUser && p.userId === currentUser.id && (
+                    <>
+                      <span>·</span>
+                      <button onClick={(e) => { e.stopPropagation(); startEdit(p); }} className="text-brand-400 hover:underline">Edit</button>
+                      <button onClick={(e) => { e.stopPropagation(); deletePost(p.id); }} className="text-rose-400 hover:underline">Delete</button>
+                    </>
+                  )}
+                  {currentUser?.isAdmin && p.userId !== currentUser.id && (
+                    <>
+                      <span>·</span>
+                      <button onClick={(e) => { e.stopPropagation(); deletePost(p.id); }} className="text-rose-400 hover:underline">Delete</button>
+                    </>
+                  )}
                 </div>
-              </li>
-            );
-          })}
+              </div>
+            </li>
+          ))}
         </ul>
       )}
 
       <p className="mt-6 text-center text-[11px] text-slate-600">
         RiftCompareAU hosts these community listings but is not a party to any trade. Deal carefully and meet/pay safely.
       </p>
+
+      {openPost && (
+        <ForumPostModal
+          post={openPost}
+          currentUser={currentUser ? { id: currentUser.id, name: currentUser.name } : null}
+          onClose={() => setOpenPost(null)}
+          onCommentAdded={bumpCommentCount}
+        />
+      )}
     </div>
   );
 }
