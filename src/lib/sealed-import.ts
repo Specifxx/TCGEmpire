@@ -73,7 +73,9 @@ async function discoverCollections(base: string): Promise<string[]> {
 async function fetchProducts(base: string, handle: string): Promise<ShopifyProd[]> {
   const all: ShopifyProd[] = [];
   for (let page = 1; page <= 10; page++) {
-    const data = await fetchJson(`${base}/collections/${handle}/products.json?limit=250&page=${page}&_=${Date.now()}`);
+    // country=AU forces the AU market price (Shopify Markets serves a different
+    // price per country, and our server is not in AU).
+    const data = await fetchJson(`${base}/collections/${handle}/products.json?limit=250&page=${page}&country=AU&_=${Date.now()}`);
     const products: ShopifyProd[] = data?.products ?? [];
     if (!products.length) break;
     all.push(...products);
