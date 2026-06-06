@@ -10,7 +10,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const seed = getDeckSeed(params.slug);
   if (!seed) return { title: "Deck not found" };
   return {
-    title: `${seed.name} — Riftbound preconstructed deck & build cost`,
+    title: `${seed.name} — Riftbound meta deck & build cost`,
     description: `${seed.description} See the full ${seed.legend} decklist priced live across Australian stores.`,
     alternates: { canonical: `/decks/${params.slug}` },
   };
@@ -34,7 +34,7 @@ export default async function DeckDetailPage({ params }: { params: { slug: strin
   return (
     <div>
       <Link href="/decks" className="mb-4 inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white">
-        ← All preconstructed decks
+        ← All meta decks
       </Link>
       <DeckView deck={deck} builderHref={builderHref} />
     </div>

@@ -8,7 +8,7 @@ import { formatAUD } from "@/lib/format";
 export const revalidate = 900;
 
 export const metadata: Metadata = {
-  title: "Riftbound Preconstructed Decks & Build Cost (Australia)",
+  title: "Riftbound Top Meta Decks & Build Cost (Australia)",
   description:
     "Ready-made Riftbound decklists, each priced live across Australian stores. See what it costs to build a deck and where to buy every card.",
   alternates: { canonical: "/decks" },
@@ -23,7 +23,7 @@ export default async function DecksPage() {
     <div className="flex flex-col gap-10">
       <div>
         <div className="mb-4">
-          <h1 className="text-2xl font-extrabold text-white">Preconstructed Decks</h1>
+          <h1 className="text-2xl font-extrabold text-white">Top Meta Decks</h1>
           <p className="mt-1 text-sm text-slate-400">
             Ready-made Riftbound decklists based on the current top-tier archetypes — each
             priced live across Australian stores so you can see what it costs to build and
