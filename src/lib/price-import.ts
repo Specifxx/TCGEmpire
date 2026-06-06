@@ -437,11 +437,22 @@ export async function importPrices(): Promise<ImportSummary> {
   if (corrected) console.log(`Verified cheapest listings — corrected ${corrected} stale prices.`);
 
   // ---- eBay AU (optional; only runs when EBAY_CLIENT_ID/SECRET are set) --------
-  if (isEbayEnabled()) {
+  // eBay's Browse API allows ~5,000 calls/day. Searching every card on every 3-hourly
+  // import (950 x 8 = 7,600) blows that limit, so eBay ends up rate-limited and empty.
+  // Two guards: (1) only run at most once every ~8h, (2) only search cards where eBay
+  // actually matters — chase/valuable cards (>= $10) or cards with no store price.
+  const lastEbay = await prisma.retailerPrice.findFirst({
+    where: { retailer: "ebay" },
+    orderBy: { lastSeen: "desc" },
+    select: { lastSeen: true },
+  });
+  const ebayFresh = lastEbay && Date.now() - lastEbay.lastSeen.getTime() < 8 * 60 * 60 * 1000;
+  if (isEbayEnabled() && !ebayFresh) {
     const allCards = await prisma.card.findMany({
-      where: { isPromo: false },
+      where: { isPromo: false, OR: [{ lowestPriceCents: { gte: 1000 } }, { lowestPriceCents: null }] },
       select: { id: true, name: true, setCode: true, collectorNumber: true },
     });
+    console.log(`eBay: searching ${allCards.length} valuable/unpriced cards.`);
     // Buffer results, then replace in one shot. CRUCIAL: if the run produced no
     // results (e.g. the eBay API is rate-limited / 429), we DON'T delete the
     // existing eBay prices — a throttled refresh must never wipe live data to zero.
