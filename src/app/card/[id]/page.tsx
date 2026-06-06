@@ -75,6 +75,14 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   const prices = all.filter((p) => p.inStock);
   const outOfStock = all.filter((p) => !p.inStock);
 
+  // Riftbound cards come in both standard and FOIL finishes (same collector number,
+  // different price). Surface the cheapest of each so foil buyers/collectors can
+  // compare — they were previously indistinguishable in the list.
+  const minPrice = (rows: typeof prices) =>
+    rows.reduce<number | null>((m, p) => (m == null || p.priceCents < m ? p.priceCents : m), null);
+  const cheapestStandard = minPrice(prices.filter((p) => !p.isFoil));
+  const cheapestFoil = minPrice(prices.filter((p) => p.isFoil));
+
   // Structured data so Google can show a rich price snippet ("$X, N stores").
   const jsonLd = {
     "@context": "https://schema.org",
@@ -136,11 +144,12 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <Metric label="Cheapest price" value={lowestPrice != null ? fmt(lowestPrice) : "—"} highlight />
+              <Metric label={cheapestFoil != null ? "Standard from" : "Cheapest price"} value={(cheapestStandard ?? lowestPrice) != null ? fmt((cheapestStandard ?? lowestPrice)!) : "—"} highlight />
+              {cheapestFoil != null && <Metric label="✦ Foil from" value={fmt(cheapestFoil)} highlight />}
               <Metric label="In stock at" value={`${prices.length} ${prices.length === 1 ? "store" : "stores"}`} />
               {card.energyCost != null && <Metric label="Energy" value={String(card.energyCost)} />}
-              {card.might != null && <Metric label="Might" value={String(card.might)} />}
-              {card.might == null && card.power != null && <Metric label="Power" value={String(card.power)} />}
+              {card.might != null && cheapestFoil == null && <Metric label="Might" value={String(card.might)} />}
+              {card.might == null && card.power != null && cheapestFoil == null && <Metric label="Power" value={String(card.power)} />}
             </div>
           </div>
 
@@ -179,6 +188,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                     <div className="flex-1">
                       <div className="font-semibold text-white">{p.retailerName}</div>
                       <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                        {p.isFoil && <span className="chip bg-gold/15 font-semibold text-gold">✦ Foil</span>}
                         {p.condition && <span className="chip bg-ink-800 text-slate-300">{p.condition}</span>}
                         <span className="text-brand-400">● In stock</span>
                         <span>

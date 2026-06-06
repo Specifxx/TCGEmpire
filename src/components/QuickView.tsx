@@ -20,6 +20,7 @@ interface RetailerPrice {
   url: string;
   inStock: boolean;
   country: string;
+  isFoil: boolean;
 }
 
 const Ctx = createContext<{ open: (card: CardTileData) => void }>({ open: () => {} });
@@ -167,7 +168,10 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                     <li key={p.id} className="flex items-center gap-3 py-2">
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-sm font-semibold text-white">{p.retailerName}</div>
-                        {p.condition && <div className="text-[11px] text-slate-500">{p.condition}</div>}
+                        <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
+                          {p.isFoil && <span className="font-semibold text-gold">✦ Foil</span>}
+                          {p.condition && <span>{p.condition}</span>}
+                        </div>
                       </div>
                       <div className="text-right">
                         <div className={`text-sm font-bold ${i === 0 ? "text-accent" : "text-white"}`}>{fmt(p.priceCents)}</div>

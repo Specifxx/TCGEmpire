@@ -40,7 +40,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
         orderBy: { priceCents: "asc" },
         // country is returned so the client can show just the selected market's
         // listings (keeps this response cacheable regardless of the viewer's country).
-        select: { id: true, retailer: true, retailerName: true, priceCents: true, shippingCents: true, condition: true, url: true, inStock: true, country: true },
+        select: { id: true, retailer: true, retailerName: true, priceCents: true, shippingCents: true, condition: true, url: true, inStock: true, country: true, isFoil: true },
       },
     },
   });
