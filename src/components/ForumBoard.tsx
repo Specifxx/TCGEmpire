@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { formatAUD } from "@/lib/format";
 import { AU_STATES, COUNTRIES, DEFAULT_COUNTRY } from "@/lib/locations";
@@ -151,6 +152,12 @@ export function ForumBoard({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [openPost, setOpenPost] = useState<ForumPostDTO | null>(null);
+  const router = useRouter();
+
+  async function logout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.refresh();
+  }
 
   const filtered = useMemo(
     () => (filter === "all" ? posts : posts.filter((p) => p.kind === filter)),
@@ -260,9 +267,17 @@ export function ForumBoard({
           </p>
         </div>
         {currentUser ? (
-          <button onClick={() => (showForm ? resetForm() : setShowForm(true))} className="btn-primary shrink-0">
-            {showForm ? "Close" : "+ New post"}
-          </button>
+          <div className="flex shrink-0 flex-col items-end gap-1.5">
+            <span className="text-xs text-slate-400">
+              Signed in as <span className="font-semibold text-white">{currentUser.name}</span>
+            </span>
+            <div className="flex items-center gap-2">
+              <button onClick={logout} className="btn-ghost text-sm">Log out</button>
+              <button onClick={() => (showForm ? resetForm() : setShowForm(true))} className="btn-primary">
+                {showForm ? "Close" : "+ New post"}
+              </button>
+            </div>
+          </div>
         ) : (
           <Link href="/login?next=/forum" className="btn-primary shrink-0">Log in to post</Link>
         )}
@@ -310,7 +325,6 @@ export function ForumBoard({
             onChange={set("title")}
             placeholder={isDiscussion ? "Title (required) — e.g. Best budget Calm deck?" : "Title (required) — e.g. Selling my Origins doubles"}
             className="input"
-            maxLength={140}
             required
           />
 
@@ -392,7 +406,6 @@ export function ForumBoard({
             onChange={set("body")}
             placeholder={isDiscussion ? "What's on your mind? (optional)" : "Description (optional) — condition notes, location, postage, combined-postage offers, etc."}
             className="input min-h-[90px]"
-            maxLength={4000}
           />
 
           {!isDiscussion && (
@@ -461,16 +474,17 @@ export function ForumBoard({
                     {p.kind === "DISCUSSION" ? "DISCUSSION" : p.kind === "WTB" ? "WANT TO BUY" : "WANT TO SELL"}
                   </span>
                   {p.priceCents != null && <span className="chip bg-ink-800 font-bold text-accent">{formatAUD(p.priceCents)} asking</span>}
-                  {p.priceCents == null && p.marketCents != null && (
-                    <span className="chip bg-ink-800 font-bold text-accent">≈ {formatAUD(p.marketCents)} market</span>
-                  )}
                   {(p.state || p.country) && (
                     <span className="chip bg-ink-800 text-slate-300">{[p.state, p.country].filter(Boolean).join(", ")}</span>
                   )}
-                  <span className="ml-auto flex items-center gap-1 rounded-full bg-ink-800 px-2 py-0.5 text-xs text-slate-300" title="Comments">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setOpenPost(p); }}
+                    className="ml-auto flex items-center gap-1 rounded-full bg-ink-800 px-2.5 py-1 text-xs text-slate-300 hover:bg-ink-700 hover:text-white"
+                    title="View comments"
+                  >
                     <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
-                    {p.commentCount}
-                  </span>
+                    {p.commentCount} {p.commentCount === 1 ? "comment" : "comments"}
+                  </button>
                 </div>
 
                 <h2 className="mt-2 font-bold text-white">{p.title}</h2>

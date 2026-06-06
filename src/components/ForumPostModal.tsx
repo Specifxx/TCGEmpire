@@ -102,7 +102,6 @@ export function ForumPostModal({
           <div className="flex flex-wrap items-center gap-2">
             <span className={`chip font-bold ${KIND_BADGE[post.kind]}`}>{KIND_TEXT[post.kind]}</span>
             {post.priceCents != null && <span className="chip bg-ink-800 font-bold text-accent">{formatAUD(post.priceCents)} asking</span>}
-            {post.priceCents == null && post.marketCents != null && <span className="chip bg-ink-800 font-bold text-accent">≈ {formatAUD(post.marketCents)} market</span>}
             {location && <span className="chip bg-ink-800 text-slate-300">{location}</span>}
           </div>
           <h2 className="mt-2 text-lg font-bold text-white">{post.title}</h2>

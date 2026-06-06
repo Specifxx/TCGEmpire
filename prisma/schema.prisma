@@ -134,6 +134,17 @@ model BuyOrder {
   @@index([maxPriceCents])
 }
 
+// One-time password-reset tokens, emailed to the user.
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
 // Feedback / contact-form submissions. Saved here as a backup and forwarded by
 // email to the site owner.
 model ContactMessage {

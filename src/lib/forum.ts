@@ -11,10 +11,10 @@ export const forumItemSchema = z.object({
 
 export const forumSchema = z.object({
   kind: z.enum(["WTB", "WTS", "DISCUSSION"]),
-  title: z.string().min(4, "Add a short title").max(140), // the only required field
+  title: z.string().min(4, "Add a short title"), // the only required field, no max
   price: z.union([z.number(), z.string()]).optional(),
   items: z.array(forumItemSchema).max(60).optional(),
-  body: z.string().max(4000).optional(),
+  body: z.string().optional(), // no length limit
   contact: z.string().max(160).optional(),
   country: z.string().max(60).optional(),
   state: z.string().max(60).optional(),

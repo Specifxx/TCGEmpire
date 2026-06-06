@@ -97,6 +97,12 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
             />
           </label>
 
+          {!isRegister && (
+            <div className="-mt-1 text-right">
+              <Link href="/forgot-password" className="text-xs text-brand-400 hover:underline">Forgot password?</Link>
+            </div>
+          )}
+
           {error && (
             <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400">{error}</p>
           )}
