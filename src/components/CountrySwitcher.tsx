@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { COUNTRY_LIST, NZ_ENABLED } from "@/lib/country";
+import { COUNTRY_LIST, INTL_ENABLED } from "@/lib/country";
 import { useCountry } from "./CountryProvider";
 
 // Market chooser: 🇦🇺 Australia (default) / 🇳🇿 New Zealand. Switching reloads
@@ -21,7 +21,7 @@ export function CountrySwitcher({ className = "" }: { className?: string }) {
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
-  if (!NZ_ENABLED) return null;
+  if (!INTL_ENABLED) return null;
 
   return (
     <div ref={ref} className={`relative ${className}`}>

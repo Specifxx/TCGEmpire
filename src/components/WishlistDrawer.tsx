@@ -15,6 +15,7 @@ interface MiniCard {
   imageThumbUrl: string | null;
   lowestPriceCents: number | null;
   lowestPriceCentsNz?: number | null;
+  lowestPriceCentsUs?: number | null;
 }
 
 const Ctx = createContext<{ open: () => void; close: () => void }>({ open: () => {}, close: () => {} });

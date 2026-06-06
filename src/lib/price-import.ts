@@ -248,6 +248,61 @@ async function verifyCheapestListings(): Promise<number> {
   return corrected;
 }
 
+// Refresh eBay prices for the AU (AUD) and US (USD) markets. Returns the total rows
+// written. Each market is buffered then atomically replaced, scoped by country, so a
+// rate-limited (0-result) market keeps its existing rows and never wipes the other.
+// Promos are matched by promo-wording in the listing title (they share base numbers).
+export async function refreshEbayMarkets(
+  cards: { id: string; name: string; setCode: string; collectorNumber: string; isPromo: boolean }[]
+): Promise<number> {
+  const MARKETS = [
+    { country: "AU", marketplace: "EBAY_AU", currency: "AUD" },
+    { country: "US", marketplace: "EBAY_US", currency: "USD" },
+  ];
+  let written = 0;
+  for (const mkt of MARKETS) {
+    if (isEbayRateLimited()) break;
+    console.log(`eBay ${mkt.country}: searching ${cards.length} cards…`);
+    const rows: Prisma.RetailerPriceCreateManyInput[] = [];
+    for (const c of cards) {
+      if (isEbayRateLimited()) break;
+      const [rawNum, total] = c.collectorNumber.split("/");
+      const r = await searchEbayLowest({
+        name: c.name,
+        setCode: c.setCode,
+        number: rawNum.replace(/\*/g, ""),
+        total: total ?? "",
+        isSignature: c.collectorNumber.includes("*"),
+        isPromo: c.isPromo,
+        marketplace: mkt.marketplace,
+      });
+      if (!r) continue;
+      rows.push({
+        cardId: c.id,
+        retailer: "ebay",
+        retailerName: "eBay",
+        title: r.title,
+        url: r.url,
+        condition: r.condition ?? null,
+        isFoil: /foil/i.test(r.title),
+        priceCents: r.priceCents,
+        shippingCents: r.shippingCents,
+        currency: mkt.currency,
+        country: mkt.country,
+        inStock: true,
+      });
+    }
+    if (rows.length > 0) {
+      await prisma.retailerPrice.deleteMany({ where: { retailer: "ebay", country: mkt.country } });
+      await prisma.retailerPrice.createMany({ data: rows });
+      written += rows.length;
+    } else {
+      console.warn(`eBay ${mkt.country}: 0 results (rate-limited?) — keeping existing rows.`);
+    }
+  }
+  return written;
+}
+
 export async function importPrices(): Promise<ImportSummary> {
   const allCardRows = await prisma.card.findMany({
     select: { id: true, name: true, setCode: true, collectorNumber: true, rarity: true, variant: true, isPromo: true },
@@ -463,7 +518,7 @@ export async function importPrices(): Promise<ImportSummary> {
         condition: best.title && best.title !== "Default Title" ? best.title : null,
         isFoil: /foil/i.test(p.title),
         priceCents,
-        currency: cc === "NZ" ? "NZD" : "AUD",
+        currency: cc === "NZ" ? "NZD" : cc === "US" ? "USD" : "AUD",
         country: cc,
         inStock,
       });
@@ -479,13 +534,12 @@ export async function importPrices(): Promise<ImportSummary> {
   const corrected = await verifyCheapestListings();
   if (corrected) console.log(`Verified cheapest listings — corrected ${corrected} stale prices.`);
 
-  // ---- eBay AU (optional; only runs when EBAY_CLIENT_ID/SECRET are set) --------
-  // eBay covers EVERY card, but only ONCE a day, and NEVER on a deploy (push) so
-  // deploys can't add to the daily quota. ~950 calls once/day is well under eBay's
-  // ~5,000/day Browse API limit. Cards are ordered by search demand so that if the
-  // limit is ever reached, the most-searched cards are already covered.
-  //  - ebayDue:     last eBay refresh was > 20h ago (so it runs once a day even with
-  //                 a twice-daily store schedule).
+  // ---- eBay AU + US (optional; only when EBAY_CLIENT_ID/SECRET are set) ---------
+  // eBay covers EVERY card per market, but only ONCE a day, and NEVER on a deploy
+  // (push). AU (AUD) + US (USD) ≈ 2×~1k calls, under eBay's ~5,000/day Browse limit.
+  // NZ is store-only (no eBay). Cards are ordered by search demand so the most-wanted
+  // are covered first if the quota is ever hit.
+  //  - ebayDue:     last eBay refresh was > 20h ago (so it runs ~once a day).
   //  - ebayAllowed: the workflow sets EBAY_REFRESH=false for push/deploy runs.
   const lastEbay = await prisma.retailerPrice.findFirst({
     where: { retailer: "ebay" },
@@ -495,9 +549,7 @@ export async function importPrices(): Promise<ImportSummary> {
   const ebayDue = !lastEbay || Date.now() - lastEbay.lastSeen.getTime() > 20 * 60 * 60 * 1000;
   const ebayAllowed = process.env.EBAY_REFRESH !== "false";
   if (isEbayEnabled() && ebayDue && ebayAllowed) {
-    // Include promos now: they're priced from eBay only (a promo shares the base
-    // card's number, so it's matched by promo-wording in the listing title).
-    const allCards = await prisma.card.findMany({
+    const ebayCards = await prisma.card.findMany({
       orderBy: [
         { searchCount: "desc" },
         { viewCount: "desc" },
@@ -505,45 +557,8 @@ export async function importPrices(): Promise<ImportSummary> {
       ],
       select: { id: true, name: true, setCode: true, collectorNumber: true, isPromo: true },
     });
-    console.log(`eBay: searching all ${allCards.length} cards (once-daily).`);
-    // Buffer results, then replace in one shot. CRUCIAL: if the run produced no
-    // results (e.g. the eBay API is rate-limited / 429), we DON'T delete the
-    // existing eBay prices — a throttled refresh must never wipe live data to zero.
-    const ebayRows: Prisma.RetailerPriceCreateManyInput[] = [];
-    for (const c of allCards) {
-      if (isEbayRateLimited()) break; // quota hit — stop firing doomed requests
-      const [rawNum, total] = c.collectorNumber.split("/");
-      const r = await searchEbayLowest({
-        name: c.name,
-        setCode: c.setCode,
-        number: rawNum.replace(/\*/g, ""),
-        total: total ?? "",
-        isSignature: c.collectorNumber.includes("*"),
-        isPromo: c.isPromo,
-      });
-      if (!r) continue;
-      ebayRows.push({
-        cardId: c.id,
-        retailer: "ebay",
-        retailerName: "eBay",
-        title: r.title,
-        url: r.url,
-        condition: r.condition ?? null,
-        isFoil: /foil/i.test(r.title),
-        priceCents: r.priceCents,
-        shippingCents: r.shippingCents,
-        currency: "AUD",
-        country: "AU", // eBay is AU-only (Browse API rate limit) — never run for NZ
-        inStock: true,
-      });
-    }
-    if (ebayRows.length > 0) {
-      await prisma.retailerPrice.deleteMany({ where: { retailer: "ebay" } });
-      await prisma.retailerPrice.createMany({ data: ebayRows });
-    } else {
-      console.warn("eBay returned 0 results (rate-limited?) — keeping existing eBay prices.");
-    }
-    summary.stores.push({ name: "eBay", products: allCards.length, priced: ebayRows.length, matched: ebayRows.length, unmatched: 0 });
+    const n = await refreshEbayMarkets(ebayCards);
+    summary.stores.push({ name: "eBay (AU+US)", products: ebayCards.length, priced: n, matched: n, unmatched: 0 });
   }
 
   // Recompute each card's lowest live price PER MARKET from IN-STOCK listings only,
@@ -551,18 +566,25 @@ export async function importPrices(): Promise<ImportSummary> {
   // rows still exist and are shown on the card page, just not used for the headline.)
   //   lowestPriceCents   = cheapest in-stock AU listing (AUD)
   //   lowestPriceCentsNz = cheapest in-stock NZ listing (NZD)
-  const [pricedAu, pricedNz] = await Promise.all([
+  //   lowestPriceCentsUs = cheapest in-stock US listing (USD)
+  const [pricedAu, pricedNz, pricedUs] = await Promise.all([
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "AU" }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "NZ" }, _min: { priceCents: true } }),
+    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "US" }, _min: { priceCents: true } }),
   ]);
   const lowAu = new Map(pricedAu.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowNz = new Map(pricedNz.map((r) => [r.cardId, r._min.priceCents ?? null]));
-  const allIds = new Set([...lowAu.keys(), ...lowNz.keys()]);
-  await prisma.card.updateMany({ data: { lowestPriceCents: null, lowestPriceCentsNz: null } });
+  const lowUs = new Map(pricedUs.map((r) => [r.cardId, r._min.priceCents ?? null]));
+  const allIds = new Set([...lowAu.keys(), ...lowNz.keys(), ...lowUs.keys()]);
+  await prisma.card.updateMany({ data: { lowestPriceCents: null, lowestPriceCentsNz: null, lowestPriceCentsUs: null } });
   for (const id of allIds) {
     await prisma.card.update({
       where: { id },
-      data: { lowestPriceCents: lowAu.get(id) ?? null, lowestPriceCentsNz: lowNz.get(id) ?? null },
+      data: {
+        lowestPriceCents: lowAu.get(id) ?? null,
+        lowestPriceCentsNz: lowNz.get(id) ?? null,
+        lowestPriceCentsUs: lowUs.get(id) ?? null,
+      },
     });
   }
   summary.cardsPriced = lowAu.size;

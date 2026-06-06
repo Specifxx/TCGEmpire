@@ -241,8 +241,8 @@ export interface SealedGroup {
   }[];
 }
 
-// Group sealed listings by product for the /sealed page, for one market (AU/NZ).
-export async function getSealedGroups(country: "AU" | "NZ" = "AU"): Promise<SealedGroup[]> {
+// Group sealed listings by product for the /sealed page, for one market (AU/NZ/US).
+export async function getSealedGroups(country: "AU" | "NZ" | "US" = "AU"): Promise<SealedGroup[]> {
   const rows = await prisma.sealedListing.findMany({ where: { country }, orderBy: { priceCents: "asc" } });
   const groups = new Map<string, SealedGroup>();
   for (const r of rows) {

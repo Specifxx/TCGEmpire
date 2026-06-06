@@ -35,6 +35,7 @@ interface DeckBuilderCard {
   imageUrl: string | null;
   lowestPriceCents: number | null;
   lowestPriceCentsNz?: number | null;
+  lowestPriceCentsUs?: number | null;
 }
 
 interface Result {

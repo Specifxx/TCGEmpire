@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { NZ_ENABLED } from "@/lib/country";
+import { INTL_ENABLED } from "@/lib/country";
 import { getCountry } from "@/lib/get-country";
 
 // Card detail (incl. live retailer prices) for the quick-view modal. Resolves by
@@ -9,7 +9,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   // While NZ is off, hard-filter to AU so no NZ rows ever reach the client (the
   // client still filters by country, but this is defence-in-depth). When NZ is on
   // we return all markets and let the client switch without a re-fetch.
-  const priceWhere = NZ_ENABLED ? undefined : { country: getCountry() };
+  const priceWhere = INTL_ENABLED ? undefined : { country: getCountry() };
   const card = await prisma.card.findFirst({
     where: { OR: [{ slug: params.id }, { id: params.id }] },
     select: {
@@ -34,6 +34,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
       artSeed: true,
       lowestPriceCents: true,
       lowestPriceCentsNz: true,
+      lowestPriceCentsUs: true,
       retailerPrices: {
         where: priceWhere,
         orderBy: { priceCents: "asc" },

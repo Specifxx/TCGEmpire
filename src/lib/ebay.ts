@@ -11,7 +11,9 @@
 
 const TOKEN_URL = "https://api.ebay.com/identity/v1/oauth2/token";
 const SEARCH_URL = "https://api.ebay.com/buy/browse/v1/item_summary/search";
-const MARKETPLACE = "EBAY_AU";
+// eBay marketplace per country (results priced in that marketplace's currency).
+export const EBAY_MARKETPLACE: Record<string, string> = { AU: "EBAY_AU", US: "EBAY_US" };
+const DEFAULT_MARKETPLACE = "EBAY_AU";
 
 export function isEbayEnabled(): boolean {
   return !!(process.env.EBAY_CLIENT_ID && process.env.EBAY_CLIENT_SECRET);
@@ -125,6 +127,7 @@ export async function searchEbayLowest(card: {
   total: string;
   isSignature: boolean;
   isPromo?: boolean;
+  marketplace?: string; // "EBAY_AU" (default) | "EBAY_US"
 }): Promise<EbayResult | null> {
   const token = await getToken();
   if (!token) return null;
@@ -141,7 +144,7 @@ export async function searchEbayLowest(card: {
   });
   const headers: Record<string, string> = {
     Authorization: `Bearer ${token}`,
-    "X-EBAY-C-MARKETPLACE-ID": MARKETPLACE,
+    "X-EBAY-C-MARKETPLACE-ID": card.marketplace ?? DEFAULT_MARKETPLACE,
   };
   if (process.env.EBAY_AFFILIATE_CAMPAIGN) {
     headers["X-EBAY-C-ENDUSERCTX"] = `affiliateCampaignId=${process.env.EBAY_AFFILIATE_CAMPAIGN}`;
@@ -218,7 +221,7 @@ export async function searchEbaySealed(name: string, productType: string, setCod
   });
   const headers: Record<string, string> = {
     Authorization: `Bearer ${token}`,
-    "X-EBAY-C-MARKETPLACE-ID": MARKETPLACE,
+    "X-EBAY-C-MARKETPLACE-ID": DEFAULT_MARKETPLACE,
   };
   if (process.env.EBAY_AFFILIATE_CAMPAIGN) {
     headers["X-EBAY-C-ENDUSERCTX"] = `affiliateCampaignId=${process.env.EBAY_AFFILIATE_CAMPAIGN}`;

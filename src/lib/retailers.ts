@@ -13,9 +13,9 @@ export interface RetailerInfo {
   shippingFlatCents: number; // estimated postage for a single card
   freeOverCents: number; // order total at/above which shipping is free
   shippingNote: string;
-  // Market the store serves. Omitted = "AU" (the original Australian stores).
-  // NZ stores are scraped with ?country=NZ and priced in NZD; eBay is AU-only.
-  country?: "AU" | "NZ";
+  // Market the store serves. Omitted = "AU" (the original Australian stores). NZ/US
+  // stores are scraped with ?country=NZ/US and priced in NZD/USD. eBay runs for AU+US.
+  country?: "AU" | "NZ" | "US";
 }
 
 export const RETAILERS: Record<string, RetailerInfo> = {
@@ -272,12 +272,167 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. NZ$3.50 · free over NZ$60",
     country: "NZ",
   },
+
+  // ---- United States stores (country: "US"; prices in USD; uses eBay US) --------
+  // The US market is much deeper — these carry thousands of in-stock singles between
+  // them. Collections are mostly auto-discovered; an explicit singles handle is given
+  // as a fallback. Shipping figures are USD estimates.
+  bardsandcards: {
+    key: "bardsandcards",
+    name: "Bards & Cards",
+    base: "https://singles.bardsandcards.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 100,
+    freeOverCents: 3000,
+    shippingNote: "est. US$1.00 · free over US$30",
+    country: "US",
+  },
+  mythicstore: {
+    key: "mythicstore",
+    name: "The Mythic Store",
+    base: "https://themythicstore.com",
+    collections: ["riftbound-origins-singles"],
+    shippingFlatCents: 199,
+    freeOverCents: 5000,
+    shippingNote: "est. US$1.99 · free over US$50",
+    country: "US",
+  },
+  cgrealm: {
+    key: "cgrealm",
+    name: "The CG Realm",
+    base: "https://thecgrealm.com",
+    collections: ["riftbound"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.00 · free over US$50",
+    country: "US",
+  },
+  danireon: {
+    key: "danireon",
+    name: "Danireon Cards & Games",
+    base: "https://www.danireon.com",
+    collections: ["riftbound-tcg-singles"],
+    shippingFlatCents: 499,
+    freeOverCents: 10000,
+    shippingNote: "est. US$4.99 · free over US$100",
+    country: "US",
+  },
+  punkouter: {
+    key: "punkouter",
+    name: "PunkOuter Games",
+    base: "https://punkouter.com",
+    collections: ["riftbound-singles-in-stock"],
+    shippingFlatCents: 150,
+    freeOverCents: 4000,
+    shippingNote: "est. US$1.50 · free over US$40",
+    country: "US",
+  },
+  geargaming: {
+    key: "geargaming",
+    name: "Gear Gaming",
+    base: "https://bentonville.geargamingstore.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.00 · free over US$50",
+    country: "US",
+  },
+  gglegends: {
+    key: "gglegends",
+    name: "GG Legends",
+    base: "https://store.gglehi.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  },
+  stompinggrounds: {
+    key: "stompinggrounds",
+    name: "Stomping Grounds TCG",
+    base: "https://singles.stompinggroundstcg.com",
+    collections: ["riftbound-league-of-legends"],
+    shippingFlatCents: 199,
+    freeOverCents: 3500,
+    shippingNote: "est. US$1.99 · free over US$35",
+    country: "US",
+  },
+  cardboardanddie: {
+    key: "cardboardanddie",
+    name: "Cardboard and Die",
+    base: "https://cardboardanddie.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 150,
+    freeOverCents: 4000,
+    shippingNote: "est. US$1.50 · free over US$40",
+    country: "US",
+  },
+  mistymountain: {
+    key: "mistymountain",
+    name: "Misty Mountain Games",
+    base: "https://www.mistymountaingames.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.00 · free over US$50",
+    country: "US",
+  },
+  theboosterbox: {
+    key: "theboosterbox",
+    name: "The Booster Box",
+    base: "https://theboosterbox.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  },
+  npcollectibles: {
+    key: "npcollectibles",
+    name: "NP Collectibles",
+    base: "https://npcollectibles.com",
+    collections: ["riftbound-origin-singles"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.00 · free over US$50",
+    country: "US",
+  },
+  capefear: {
+    key: "capefear",
+    name: "Cape Fear Collectibles",
+    base: "https://www.capefearcollectibles.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.00 · free over US$50",
+    country: "US",
+  },
+  hobbiesville: {
+    key: "hobbiesville",
+    name: "Hobbiesville",
+    base: "https://hobbiesville.com",
+    collections: ["riftbound-singles-league-of-legends-tcg"],
+    shippingFlatCents: 499,
+    freeOverCents: 17500,
+    shippingNote: "est. US$4.99 · free over US$175",
+    country: "US",
+  },
+  gamersguildaz: {
+    key: "gamersguildaz",
+    name: "Gamers Guild AZ",
+    base: "https://gamersguildaz.com",
+    collections: ["riftbound-league-of-legends-tcg"],
+    shippingFlatCents: 300,
+    freeOverCents: 5000,
+    shippingNote: "est. US$3.00 · free over US$50",
+    country: "US",
+  },
 };
 
 export const RETAILER_LIST = Object.values(RETAILERS);
 
 // The market a store serves (defaults to AU for the original stores).
-export function retailerCountry(retailerKey: string): "AU" | "NZ" {
+export function retailerCountry(retailerKey: string): "AU" | "NZ" | "US" {
   return RETAILERS[retailerKey]?.country ?? "AU";
 }
 

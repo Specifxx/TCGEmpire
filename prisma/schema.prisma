@@ -66,8 +66,10 @@ model Card {
   // Used for "from $X" and catalogue sorting. null = no price found.
   //   lowestPriceCents   = Australia (AUD cents), from AU stores + eBay AU
   //   lowestPriceCentsNz = New Zealand (NZD cents), from NZ stores (no eBay)
+  //   lowestPriceCentsUs = United States (USD cents), from US stores + eBay US
   lowestPriceCents Int?
   lowestPriceCentsNz Int?
+  lowestPriceCentsUs Int?
   artSeed         Int       @default(0)
   // Popularity signals. searchCount (clicks from the search box) is the purer demand
   // metric and drives eBay prioritisation; viewCount (any open, incl. featured
@@ -86,6 +88,7 @@ model Card {
   @@index([nameNormalized])
   @@index([lowestPriceCents])
   @@index([lowestPriceCentsNz])
+  @@index([lowestPriceCentsUs])
   @@index([domain])
   @@index([rarity])
   @@index([type])

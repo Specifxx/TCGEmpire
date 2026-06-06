@@ -29,6 +29,7 @@ export interface CardTileData {
   imageThumbUrl: string | null;
   lowestPriceCents: number | null;
   lowestPriceCentsNz?: number | null;
+  lowestPriceCentsUs?: number | null;
   _count: { retailerPrices: number };
 }
 
