@@ -47,7 +47,9 @@ export function AdSlot({
     }
   }, [live]);
 
-  if (!live) {
+  // No publisher id at all (e.g. local dev): show a styled placeholder so the
+  // layout is visible while building. This is never reached in production.
+  if (!ADSENSE_ENABLED) {
     return (
       <div
         className={`grid place-items-center rounded-xl border border-dashed border-ink-700 bg-ink-900/60 text-center ${className ?? ""}`}
@@ -63,6 +65,12 @@ export function AdSlot({
       </div>
     );
   }
+
+  // Live publisher id but no manual slot id for this placement yet: render NOTHING
+  // (never an empty/placeholder box for real visitors). Auto ads, enabled in the
+  // AdSense dashboard, fill the page automatically. Set the slot id to take manual
+  // control of this exact spot.
+  if (!live) return null;
 
   return (
     <ins

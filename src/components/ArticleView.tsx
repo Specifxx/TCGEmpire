@@ -41,6 +41,8 @@ export function ArticleView({ article }: { article: Article }) {
         {article.author} · {fmtDate(article.date)} · {article.readMins} min read
       </div>
 
+      <AdSlot slot={ADSENSE_SLOTS.article} className="mt-6" height={120} />
+
       <div className="mt-6 border-t border-ink-800 pt-4">
         <Markdown content={article.body} />
       </div>

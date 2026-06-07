@@ -9,8 +9,11 @@
 // Leaving it empty disables ALL ad code: no loader script, no /ads.txt, and the
 // AdSlot component renders a harmless styled placeholder instead of an ad unit.
 
-// AdSense publisher id, e.g. "ca-pub-1234567890123456".
-export const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT ?? "";
+// AdSense publisher id, e.g. "ca-pub-1234567890123456". Public by design (it is
+// emitted in the page HTML and /ads.txt), so the live account id is the safe code
+// default — matching how affiliate ids are handled in lib/affiliate.ts. Override
+// per-environment via NEXT_PUBLIC_ADSENSE_CLIENT if it ever rotates.
+export const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT ?? "ca-pub-6842128782879909";
 
 // True only when a syntactically valid publisher id is configured. Guards every
 // place that emits real ad markup so we never ship a broken/empty <ins>.
@@ -24,6 +27,8 @@ export const ADSENSE_SLOTS = {
   article: process.env.NEXT_PUBLIC_ADSENSE_SLOT_ARTICLE ?? "",
   // Leaderboard unit at the top of the browse/marketplace grid.
   browse: process.env.NEXT_PUBLIC_ADSENSE_SLOT_BROWSE ?? "",
+  // In-content unit on the card detail / price-comparison page (highest traffic).
+  card: process.env.NEXT_PUBLIC_ADSENSE_SLOT_CARD ?? "",
 };
 
 // Numeric publisher id ("pub-XXXXXXXXXXXXXXXX") used in /ads.txt, derived from the
