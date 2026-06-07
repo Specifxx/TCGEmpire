@@ -11,11 +11,12 @@ export async function GET(req: Request) {
   const kind = new URL(req.url).searchParams.get("kind");
   // Players only see posts for their own market (AU/NZ/US).
   const market = getCountry();
+  const status = { in: ["OPEN", "SOLD"] };
   const where: Prisma.ForumPostWhereInput =
     kind === "WTB" || kind === "WTS" || kind === "DISCUSSION"
-      ? { kind, status: "OPEN", market }
-      : { status: "OPEN", market };
-  const posts = await prisma.forumPost.findMany({ where, orderBy: { createdAt: "desc" }, take: 200 });
+      ? { kind, status, market }
+      : { status, market };
+  const posts = await prisma.forumPost.findMany({ where, orderBy: { createdAt: "desc" }, take: 400 });
   return NextResponse.json({ posts }, { headers: { "Cache-Control": "no-store" } });
 }
 

@@ -11,6 +11,7 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
+    "db:seed-forum": "tsx scripts/seed-forum.ts",
     "db:reset": "prisma db push --force-reset && tsx prisma/seed.ts",
     "setup": "prisma generate && prisma db push && tsx prisma/seed.ts"
   },

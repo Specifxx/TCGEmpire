@@ -16,10 +16,12 @@ export const metadata: Metadata = {
 export default async function ForumPage() {
   const market = getCountry();
   const [rows, user] = await Promise.all([
+    // Show open listings plus already-sold ones: a board full of completed sales
+    // signals an active, trusted marketplace to newcomers.
     prisma.forumPost.findMany({
-      where: { status: "OPEN", market },
+      where: { status: { in: ["OPEN", "SOLD"] }, market },
       orderBy: { createdAt: "desc" },
-      take: 200,
+      take: 400,
       include: { _count: { select: { comments: true } } },
     }),
     getCurrentUser(),
@@ -28,6 +30,7 @@ export default async function ForumPage() {
   const posts: ForumPostDTO[] = rows.map((p) => ({
     id: p.id,
     kind: p.kind as ForumKind,
+    status: p.status === "SOLD" ? "SOLD" : "OPEN",
     title: p.title,
     cardName: p.cardName,
     setCode: p.setCode,
