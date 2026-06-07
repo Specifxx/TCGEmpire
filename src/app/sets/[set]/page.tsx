@@ -4,14 +4,21 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { CardTile } from "@/components/CardTile";
 import { cardTileSelect } from "@/lib/cards";
-import { getCountry } from "@/lib/get-country";
-import { COUNTRIES, pickPrice } from "@/lib/country";
+import { pickPrice, DEFAULT_COUNTRY } from "@/lib/country";
 import { SETS, setBySlug } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
 
-// Reading the country cookie in getCountry() already makes valid set pages render
-// per request (Googlebot gets the AU default); we avoid force-dynamic so notFound()
-// returns a real 404 for unknown slugs instead of a soft-404.
+// Statically generated per set (great for SEO/speed) and revalidated so prices stay
+// fresh. Rendered on the AU baseline server-side; the card tiles show each visitor's
+// own market price client-side (the card data carries all three price columns).
+export const revalidate = 1800;
+
+// Only the real set slugs are valid routes; anything else is a hard 404 (no
+// soft-404). Valid pages still render per request (getCountry reads the cookie).
+export const dynamicParams = false;
+export function generateStaticParams() {
+  return SETS.map((s) => ({ set: s.slug }));
+}
 
 export async function generateMetadata({ params }: { params: { set: string } }): Promise<Metadata> {
   const set = setBySlug(params.set);
@@ -40,8 +47,7 @@ export default async function SetPage({ params }: { params: { set: string } }) {
   const set = setBySlug(params.set);
   if (!set) notFound();
 
-  const country = getCountry();
-  const info = COUNTRIES[country];
+  const country = DEFAULT_COUNTRY; // AU baseline; client tiles localise the price
 
   const cards = await prisma.card.findMany({
     where: { setCode: set.code },
@@ -88,9 +94,9 @@ export default async function SetPage({ params }: { params: { set: string } }) {
         </h1>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
           {set.comingSoon ? (
-            <>Riftbound <strong className="text-slate-200">{set.name}</strong> isn&apos;t out yet. This page will list every {set.name} card with live {info.adjective} prices the moment it releases — check back soon.</>
+            <>Riftbound <strong className="text-slate-200">{set.name}</strong> isn&apos;t out yet. This page will list every {set.name} card with live prices the moment it releases — check back soon.</>
           ) : (
-            <>Browse all {cards.length} Riftbound <strong className="text-slate-200">{set.name}</strong> cards and compare live prices across {info.adjective} stores to find the cheapest singles. {priced.toLocaleString()} cards are priced right now, in {info.currency}, updated daily.</>
+            <>Browse all {cards.length} Riftbound <strong className="text-slate-200">{set.name}</strong> cards and compare live prices across stores to find the cheapest singles. {priced.toLocaleString()} cards are priced right now, updated daily — switch your country at the top to see local prices.</>
           )}
         </p>
       </div>
@@ -132,7 +138,7 @@ export default async function SetPage({ params }: { params: { set: string } }) {
           <h2 className="text-xl font-extrabold text-white">About Riftbound {set.name}</h2>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
             {set.name} is a set in Riftbound: League of Legends TCG. RiftCompare tracks live prices
-            for every {set.name} card across {info.adjective} stores so you can find the cheapest place
+            for every {set.name} card across stores so you can find the cheapest place
             to buy {set.name} singles — whether you&apos;re chasing a specific card or completing the set.
             Click any card to see every store&apos;s price ranked by total delivered cost.
           </p>
