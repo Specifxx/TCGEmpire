@@ -2,7 +2,9 @@ import Link from "next/link";
 import type { Article } from "@/lib/articles";
 import { Markdown } from "./Markdown";
 import { fmtDate } from "./ArticleList";
+import { AdSlot } from "./AdSlot";
 import { SITE_URL } from "@/lib/site";
+import { ADSENSE_SLOTS } from "@/lib/ads";
 
 export function ArticleView({ article }: { article: Article }) {
   const isGuide = article.category === "guide";
@@ -42,6 +44,8 @@ export function ArticleView({ article }: { article: Article }) {
       <div className="mt-6 border-t border-ink-800 pt-4">
         <Markdown content={article.body} />
       </div>
+
+      <AdSlot slot={ADSENSE_SLOTS.article} className="mt-8" height={120} />
     </article>
   );
 }

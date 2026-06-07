@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Script from "next/script";
 import { Sora, Space_Grotesk } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -11,6 +12,7 @@ import { CountryProvider } from "@/components/CountryProvider";
 import { getCountry } from "@/lib/get-country";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
 import { IMPACT_SITE_VERIFICATION } from "@/lib/affiliate";
+import { ADSENSE_CLIENT, ADSENSE_ENABLED } from "@/lib/ads";
 
 // Body: Sora (modern, energetic, readable). Headings: Space Grotesk (distinctive,
 // gives the brand more life). Exposed as CSS vars wired into Tailwind.
@@ -84,6 +86,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Impact / TCGplayer affiliate site-ownership verification. Impact looks for
             the non-standard `value` attribute, so spread it past the meta typing. */}
         <meta {...({ name: "impact-site-verification", value: IMPACT_SITE_VERIFICATION } as any)} />
+        {/* Google AdSense site verification. Present as soon as a publisher id is set
+            so AdSense can confirm ownership of the site when you add it. */}
+        {ADSENSE_ENABLED && <meta name="google-adsense-account" content={ADSENSE_CLIENT} />}
         {/* Warm up the image CDN connection so card thumbnails start loading sooner. */}
         <link rel="preconnect" href="https://cdn.riftscribe.gg" crossOrigin="" />
         <link rel="dns-prefetch" href="https://cdn.riftscribe.gg" />
@@ -99,8 +104,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </WishlistDrawerProvider>
         </CountryProvider>
         <footer className="container-app border-t border-ink-800 py-8 text-center text-xs text-slate-500">
-          <div className="mb-2 flex items-center justify-center gap-4 text-sm">
+          <div className="mb-2 flex flex-wrap items-center justify-center gap-4 text-sm">
             <Link href="/contact" className="text-slate-300 hover:text-brand-400">Contact &amp; feedback</Link>
+            <span className="text-ink-700">·</span>
+            <Link href="/privacy" className="text-slate-300 hover:text-brand-400">Privacy policy</Link>
             <span className="text-ink-700">·</span>
             <a href={`mailto:${CONTACT_EMAIL}`} className="text-gold hover:underline">{CONTACT_EMAIL}</a>
           </div>
@@ -111,6 +118,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             or endorsed by Riot Games.
           </p>
         </footer>
+        {/* Google AdSense loader. Loaded once for the whole site; powers both Auto
+            ads (toggle in the AdSense dashboard) and the manual <AdSlot /> units. */}
+        {ADSENSE_ENABLED && (
+          <Script
+            id="adsbygoogle-init"
+            strategy="afterInteractive"
+            crossOrigin="anonymous"
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
+          />
+        )}
         <Analytics />
         <SpeedInsights />
       </body>
