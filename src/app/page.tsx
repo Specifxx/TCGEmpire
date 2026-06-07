@@ -74,6 +74,7 @@ export default async function HomePage() {
     prisma.retailerPrice.groupBy({ by: ["retailer"], where: { country, NOT: { retailer: { startsWith: "ebay" } } } }),
   ]);
   const storeCount = storeGroups.length;
+  const storeWord = storeCount === 1 ? "store" : "stores";
 
   return (
     <div className="flex flex-col gap-10">
@@ -89,7 +90,7 @@ export default async function HomePage() {
           </h1>
           <p className="mx-auto mt-3 max-w-2xl text-sm text-slate-400 sm:text-base">
             Find the cheapest place to buy Riftbound TCG cards in {info.place} — live prices in{" "}
-            {info.currency} compared across {storeCount} {info.adjective} stores, updated daily.
+            {info.currency} compared across {storeCount} {info.adjective} {storeWord}, updated daily.
           </p>
 
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
@@ -105,7 +106,7 @@ export default async function HomePage() {
           <div className="mx-auto mt-8 grid max-w-lg grid-cols-3 gap-4">
             <Stat value={totalCards.toLocaleString()} label="cards" />
             <Stat value={pricedCards.toLocaleString()} label="priced" />
-            <Stat value={String(storeCount)} label={`${info.code} stores`} />
+            <Stat value={String(storeCount)} label={`${info.code} ${storeWord}`} />
           </div>
         </div>
       </section>
@@ -116,7 +117,7 @@ export default async function HomePage() {
           <div>
             <h2 className="text-xl font-extrabold text-white">Cheapest Riftbound cards</h2>
             <p className="mt-0.5 text-xs text-slate-500">
-              The lowest live prices right now — we check {storeCount} {info.adjective} stores for every card so you always pay the least.
+              The lowest live prices right now — we check {storeCount} {info.adjective} {storeWord} for every card so you always pay the least.
             </p>
           </div>
           <Link href="/browse?priced=1&sort=price_asc" className="btn-ghost text-xs shrink-0">View all →</Link>
