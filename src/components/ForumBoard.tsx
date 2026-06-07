@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { COUNTRIES, DEFAULT_COUNTRY, MARKET_COUNTRY, statesFor } from "@/lib/locations";
 import { useCountry } from "./CountryProvider";
@@ -187,11 +186,11 @@ export function ForumBoard({
   const [error, setError] = useState<string | null>(null);
   const [openPost, setOpenPost] = useState<ForumPostDTO | null>(null);
   const [resentVerify, setResentVerify] = useState(false);
-  const router = useRouter();
 
   async function logout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.refresh();
+    await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+    // Full reload so the server re-renders signed-out with the cleared cookie.
+    window.location.reload();
   }
 
   async function resendVerify() {

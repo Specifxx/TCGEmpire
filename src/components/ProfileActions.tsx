@@ -4,17 +4,21 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export function LogoutButton() {
-  const router = useRouter();
+  const [loading, setLoading] = useState(false);
   return (
     <button
+      disabled={loading}
       onClick={async () => {
-        await fetch("/api/auth/logout", { method: "POST" });
-        router.push("/");
-        router.refresh();
+        setLoading(true);
+        await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+        // Hard navigation so the server re-renders with the cleared session cookie,
+        // bypassing the App Router client cache that can otherwise keep showing the
+        // signed-in UI until a manual refresh.
+        window.location.assign("/");
       }}
       className="btn-ghost"
     >
-      Sign out
+      {loading ? "Signing out…" : "Sign out"}
     </button>
   );
 }

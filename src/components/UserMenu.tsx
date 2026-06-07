@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { formatMoney } from "@/lib/format";
 
 export interface MenuUser {
@@ -19,7 +18,6 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
   const [open, setOpen] = useState(false);
   const [resent, setResent] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const router = useRouter();
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -48,10 +46,11 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
   const initials = user.displayName.split(/\s+/).map((s) => s[0]).join("").slice(0, 2).toUpperCase() || "U";
 
   async function signOut() {
-    await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
     setOpen(false);
-    router.refresh();
-    router.push("/");
+    await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+    // Hard navigation so the server re-renders signed-out with the cleared cookie,
+    // instead of the App Router client cache keeping the logged-in navbar.
+    window.location.assign("/");
   }
   async function resendVerify() {
     await fetch("/api/auth/resend-verify", { method: "POST" }).catch(() => {});
