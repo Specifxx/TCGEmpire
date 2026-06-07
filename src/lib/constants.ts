@@ -41,14 +41,18 @@ export const CARD_TYPES = [
 ] as const;
 export type CardType = (typeof CARD_TYPES)[number];
 
-// Riftbound sets. `comingSoon` sets aren't released yet (no cards/prices).
-export const SETS: { code: string; name: string; comingSoon?: boolean }[] = [
-  { code: "OGN", name: "Origins" },
-  { code: "OGS", name: "Origins: Proving Grounds" },
-  { code: "SFD", name: "Spirit Forged" },
-  { code: "UNL", name: "Unleashed" },
-  { code: "VEN", name: "Vendetta", comingSoon: true },
+// Riftbound sets. `comingSoon` sets aren't released yet (no cards/prices). `slug`
+// is the SEO landing-page path (/sets/<slug>).
+export interface SetInfo { code: string; name: string; slug: string; comingSoon?: boolean }
+export const SETS: SetInfo[] = [
+  { code: "OGN", name: "Origins", slug: "origins" },
+  { code: "OGS", name: "Origins: Proving Grounds", slug: "proving-grounds" },
+  { code: "SFD", name: "Spirit Forged", slug: "spiritforged" },
+  { code: "UNL", name: "Unleashed", slug: "unleashed" },
+  { code: "VEN", name: "Vendetta", slug: "vendetta", comingSoon: true },
 ];
+export const setBySlug = (slug: string): SetInfo | undefined => SETS.find((s) => s.slug === slug);
+export const setByCode = (code: string): SetInfo | undefined => SETS.find((s) => s.code === code);
 
 export interface RarityInfo {
   key: string;

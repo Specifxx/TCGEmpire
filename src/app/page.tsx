@@ -148,7 +148,7 @@ export default async function HomePage() {
             ) : (
               <Link
                 key={s.code}
-                href={`/browse?set=${s.code}`}
+                href={`/sets/${s.slug}`}
                 className="card-surface flex flex-col gap-1 p-4 transition-colors hover:border-brand-500"
               >
                 <span className="text-lg font-bold text-white">{s.code}</span>

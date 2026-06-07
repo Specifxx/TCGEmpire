@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { SITE_URL } from "@/lib/site";
 import { META_DECKS } from "@/lib/meta-decks";
 import { getArticles } from "@/lib/articles";
+import { SETS } from "@/lib/constants";
 
 // Regenerate at most once per day — the card set is stable.
 export const revalidate = 86400;
@@ -30,6 +31,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
+  // Set landing pages (high-value head terms, e.g. "Riftbound Origins prices").
+  const setRoutes: MetadataRoute.Sitemap = SETS.filter((s) => !s.comingSoon).map((s) => ({
+    url: `${SITE_URL}/sets/${s.slug}`,
+    changeFrequency: "daily",
+    priority: 0.85,
+  }));
+
   const deckRoutes: MetadataRoute.Sitemap = META_DECKS.map((d) => ({
     url: `${SITE_URL}/decks/${d.slug}`,
     changeFrequency: "weekly",
@@ -43,5 +51,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: c.lowestPriceCents != null ? 0.8 : 0.5,
   }));
 
-  return [...staticRoutes, ...deckRoutes, ...articleRoutes, ...cardRoutes];
+  return [...staticRoutes, ...setRoutes, ...deckRoutes, ...articleRoutes, ...cardRoutes];
 }
