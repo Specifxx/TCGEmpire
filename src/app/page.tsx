@@ -32,7 +32,7 @@ export const metadata: Metadata = {
 
 // eBay marketplace label per market (NZ has no eBay).
 function ebayLabel(country: string): string | null {
-  return country === "AU" ? "eBay AU" : country === "US" ? "eBay US" : null;
+  return country === "AU" ? "eBay AU" : country === "US" ? "eBay US" : country === "UK" ? "eBay UK" : null;
 }
 
 // FAQ content tailored to the visitor's market. Uses `place` after "in" (so US

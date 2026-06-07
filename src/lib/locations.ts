@@ -40,6 +40,7 @@ export const MARKET_COUNTRY: Record<string, string> = {
   AU: "Australia",
   NZ: "New Zealand",
   US: "United States",
+  UK: "United Kingdom",
 };
 
 // The state/region dropdown options for a country name (null = free-text region).

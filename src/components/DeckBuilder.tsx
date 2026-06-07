@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useCountry } from "./CountryProvider";
+import { COUNTRIES } from "@/lib/country";
 
 // UTF-8-safe base64 so a decklist (incl. accented names) survives a URL round-trip.
 function encodeList(text: string): string {
@@ -204,8 +205,8 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
             <div>
               <p className="text-lg font-semibold text-white">Price a whole deck at once</p>
               <p className="mt-1 text-sm">
-                Paste a decklist and we&apos;ll match every card and total up the cheapest
-                {country === "NZ" ? " New Zealand" : " Australian"} prices.
+                Paste a decklist and we&apos;ll match every card and total up the cheapest{" "}
+                {COUNTRIES[country].adjective} prices.
               </p>
             </div>
           </div>
@@ -278,7 +279,7 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
               </div>
             </div>
             <p className="mt-3 text-center text-[11px] text-slate-600">
-              Total uses each card&apos;s cheapest in-stock {country === "NZ" ? "NZ" : "AU"} price and may span multiple stores.
+              Total uses each card&apos;s cheapest in-stock {country} price and may span multiple stores.
             </p>
           </>
         )}

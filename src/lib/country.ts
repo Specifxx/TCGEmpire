@@ -22,10 +22,9 @@ export const COUNTRIES: Record<Country, CountryInfo> = {
   UK: { code: "UK", label: "United Kingdom", adjective: "UK", place: "the United Kingdom", flag: "🇬🇧", currency: "GBP", locale: "en-GB" },
 };
 
-// Order shown in the switcher. UK is fully plumbed (GBP, eBay UK, TCGplayer) but
-// stays OUT of the picker until its data is populated and CardTrader is wired in —
-// so we never show an empty market. Add COUNTRIES.UK here to launch it.
-export const COUNTRY_LIST: CountryInfo[] = [COUNTRIES.AU, COUNTRIES.NZ, COUNTRIES.US];
+// Order shown in the switcher. UK is live, priced in GBP (TCGplayer now; eBay UK
+// joins on the next daily import, CardTrader once its API token is set).
+export const COUNTRY_LIST: CountryInfo[] = [COUNTRIES.AU, COUNTRIES.NZ, COUNTRIES.US, COUNTRIES.UK];
 export const DEFAULT_COUNTRY: Country = "AU";
 export const COUNTRY_COOKIE = "country";
 
