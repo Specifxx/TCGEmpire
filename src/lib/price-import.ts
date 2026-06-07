@@ -593,18 +593,28 @@ export async function importPrices(): Promise<ImportSummary> {
   const lowAu = new Map(pricedAu.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowNz = new Map(pricedNz.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowUs = new Map(pricedUs.map((r) => [r.cardId, r._min.priceCents ?? null]));
-  const allIds = new Set([...lowAu.keys(), ...lowNz.keys(), ...lowUs.keys()]);
-  await prisma.card.updateMany({ data: { lowestPriceCents: null, lowestPriceCentsNz: null, lowestPriceCentsUs: null } });
-  for (const id of allIds) {
-    await prisma.card.update({
-      where: { id },
-      data: {
-        lowestPriceCents: lowAu.get(id) ?? null,
-        lowestPriceCentsNz: lowNz.get(id) ?? null,
-        lowestPriceCentsUs: lowUs.get(id) ?? null,
-      },
-    });
+  // Diff-based update: write each card STRAIGHT to its new lowest only when it
+  // changed. We must NOT reset every card to null first (the old approach) — that
+  // briefly showed "No price yet" for the whole catalogue on every import/deploy
+  // while the per-card repopulation loop caught up. Now each card transitions
+  // old → new atomically and is never transiently null.
+  const existing = await prisma.card.findMany({
+    select: { id: true, lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true },
+  });
+  let changed = 0;
+  for (const c of existing) {
+    const nAu = lowAu.get(c.id) ?? null;
+    const nNz = lowNz.get(c.id) ?? null;
+    const nUs = lowUs.get(c.id) ?? null;
+    if (nAu !== c.lowestPriceCents || nNz !== c.lowestPriceCentsNz || nUs !== c.lowestPriceCentsUs) {
+      await prisma.card.update({
+        where: { id: c.id },
+        data: { lowestPriceCents: nAu, lowestPriceCentsNz: nNz, lowestPriceCentsUs: nUs },
+      });
+      changed++;
+    }
   }
+  console.log(`Lowest recompute: ${changed} cards changed (no null-reset window).`);
   summary.cardsPriced = lowAu.size;
 
   // Snapshot today's lowest price per card for the price-over-time chart. Backend
