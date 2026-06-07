@@ -10,6 +10,7 @@ import { WishlistDrawerProvider } from "@/components/WishlistDrawer";
 import { CountryProvider } from "@/components/CountryProvider";
 import { getCountry } from "@/lib/get-country";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
+import { IMPACT_SITE_VERIFICATION } from "@/lib/affiliate";
 
 // Body: Sora (modern, energetic, readable). Headings: Space Grotesk (distinctive,
 // gives the brand more life). Exposed as CSS vars wired into Tailwind.
@@ -78,6 +79,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en-AU" className={`${sora.variable} ${spaceGrotesk.variable}`}>
       <head>
+        {/* Impact / TCGplayer affiliate site-ownership verification. Impact looks for
+            the non-standard `value` attribute, so spread it past the meta typing. */}
+        <meta {...({ name: "impact-site-verification", value: IMPACT_SITE_VERIFICATION } as any)} />
         {/* Warm up the image CDN connection so card thumbnails start loading sooner. */}
         <link rel="preconnect" href="https://cdn.riftscribe.gg" crossOrigin="" />
         <link rel="dns-prefetch" href="https://cdn.riftscribe.gg" />

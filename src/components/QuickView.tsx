@@ -8,6 +8,7 @@ import { WishlistButton } from "./WishlistButton";
 import { isOvernumbered, isSignature } from "@/lib/constants";
 import { cardHref } from "@/lib/card-url";
 import { effectiveShippingCents } from "@/lib/retailers";
+import { affiliateUrl } from "@/lib/affiliate";
 import { useCountry } from "./CountryProvider";
 
 interface RetailerPrice {
@@ -178,7 +179,7 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                         <div className={`text-sm font-bold ${i === 0 ? "text-accent" : "text-white"}`}>{fmt(p.priceCents)}</div>
                         <div className="text-[10px] text-slate-500">≈ {fmt(p.delivered)} del.</div>
                       </div>
-                      <a href={p.url} target="_blank" rel="nofollow sponsored noopener noreferrer" className="btn-primary px-3 py-1.5 text-xs">
+                      <a href={affiliateUrl(p.url)} target="_blank" rel="nofollow sponsored noopener noreferrer" className="btn-primary px-3 py-1.5 text-xs">
                         View →
                       </a>
                     </li>

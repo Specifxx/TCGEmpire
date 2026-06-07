@@ -9,6 +9,7 @@ import { WishlistButton } from "@/components/WishlistButton";
 import { CardViewBeacon } from "@/components/CardViewBeacon";
 import { formatMoney, timeAgo } from "@/lib/format";
 import { effectiveShippingCents } from "@/lib/retailers";
+import { affiliateUrl } from "@/lib/affiliate";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES, pickPrice } from "@/lib/country";
 
@@ -203,7 +204,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                       <div className="text-[11px] text-slate-400">≈ {fmt(p.delivered)} delivered</div>
                     </div>
                     <a
-                      href={p.url}
+                      href={affiliateUrl(p.url)}
                       target="_blank"
                       rel="nofollow sponsored noopener noreferrer"
                       className="btn-primary"
@@ -235,7 +236,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                         <div className="text-lg font-bold text-slate-400 line-through">{fmt(p.priceCents)}</div>
                       </div>
                       <a
-                        href={p.url}
+                        href={affiliateUrl(p.url)}
                         target="_blank"
                         rel="nofollow sponsored noopener noreferrer"
                         className="btn-ghost"

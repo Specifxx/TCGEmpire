@@ -9,6 +9,8 @@
 // so nothing breaks. eBay listings are free-text and noisier than store feeds, so
 // treat results as a secondary signal (lowest Buy-It-Now, AU marketplace).
 
+import { EBAY_CAMPAIGN_ID } from "./affiliate";
+
 const TOKEN_URL = "https://api.ebay.com/identity/v1/oauth2/token";
 const SEARCH_URL = "https://api.ebay.com/buy/browse/v1/item_summary/search";
 // eBay marketplace per country (results priced in that marketplace's currency).
@@ -146,8 +148,8 @@ export async function searchEbayLowest(card: {
     Authorization: `Bearer ${token}`,
     "X-EBAY-C-MARKETPLACE-ID": card.marketplace ?? DEFAULT_MARKETPLACE,
   };
-  if (process.env.EBAY_AFFILIATE_CAMPAIGN) {
-    headers["X-EBAY-C-ENDUSERCTX"] = `affiliateCampaignId=${process.env.EBAY_AFFILIATE_CAMPAIGN}`;
+  if (EBAY_CAMPAIGN_ID) {
+    headers["X-EBAY-C-ENDUSERCTX"] = `affiliateCampaignId=${EBAY_CAMPAIGN_ID}`;
   }
 
   let res: Response;
@@ -223,8 +225,8 @@ export async function searchEbaySealed(name: string, productType: string, setCod
     Authorization: `Bearer ${token}`,
     "X-EBAY-C-MARKETPLACE-ID": DEFAULT_MARKETPLACE,
   };
-  if (process.env.EBAY_AFFILIATE_CAMPAIGN) {
-    headers["X-EBAY-C-ENDUSERCTX"] = `affiliateCampaignId=${process.env.EBAY_AFFILIATE_CAMPAIGN}`;
+  if (EBAY_CAMPAIGN_ID) {
+    headers["X-EBAY-C-ENDUSERCTX"] = `affiliateCampaignId=${EBAY_CAMPAIGN_ID}`;
   }
 
   let res: Response;
