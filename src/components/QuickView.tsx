@@ -7,7 +7,7 @@ import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, 
 import { WishlistButton } from "./WishlistButton";
 import { isOvernumbered, isSignature } from "@/lib/constants";
 import { cardHref } from "@/lib/card-url";
-import { effectiveShippingCents } from "@/lib/retailers";
+import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
 import { affiliateUrl } from "@/lib/affiliate";
 import { useCountry } from "./CountryProvider";
 
@@ -178,7 +178,19 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                       <div className="text-right">
                         <div className={`text-sm font-bold ${i === 0 ? "text-accent" : "text-white"}`}>{fmt(p.priceCents)}</div>
                         <div className="text-[10px] text-slate-500">
-                          {p.ship == null ? "+ postage" : p.ship === 0 ? "free post" : `≈ ${fmt(p.delivered)} del.`}
+                          {p.ship == null ? (
+                            shippingPolicyUrl(p.retailer) ? (
+                              <a href={shippingPolicyUrl(p.retailer)!} target="_blank" rel="nofollow noopener noreferrer" className="underline decoration-dotted hover:text-slate-300">
+                                + postage ↗
+                              </a>
+                            ) : (
+                              "+ postage"
+                            )
+                          ) : p.ship === 0 ? (
+                            "free post"
+                          ) : (
+                            `≈ ${fmt(p.delivered)} del.`
+                          )}
                         </div>
                       </div>
                       <a href={affiliateUrl(p.url)} target="_blank" rel="nofollow sponsored noopener noreferrer" className="btn-primary px-3 py-1.5 text-xs">

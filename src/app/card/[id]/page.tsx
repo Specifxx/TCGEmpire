@@ -8,7 +8,7 @@ import { isOvernumbered, isSignature } from "@/lib/constants";
 import { WishlistButton } from "@/components/WishlistButton";
 import { CardViewBeacon } from "@/components/CardViewBeacon";
 import { formatMoney, timeAgo } from "@/lib/format";
-import { effectiveShippingCents } from "@/lib/retailers";
+import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
 import { affiliateUrl } from "@/lib/affiliate";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES, pickPrice } from "@/lib/country";
@@ -197,6 +197,16 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                         <span>
                           {p.ship == null ? "postage at checkout" : p.ship === 0 ? "free postage" : `+ ${fmt(p.ship)} postage`}
                         </span>
+                        {p.ship == null && shippingPolicyUrl(p.retailer) && (
+                          <a
+                            href={shippingPolicyUrl(p.retailer)!}
+                            target="_blank"
+                            rel="nofollow noopener noreferrer"
+                            className="text-slate-400 underline decoration-dotted underline-offset-2 hover:text-slate-200"
+                          >
+                            shipping policy ↗
+                          </a>
+                        )}
                       </div>
                     </div>
                     <div className="text-right">

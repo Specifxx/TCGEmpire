@@ -499,3 +499,23 @@ export function deliveredCents(retailerKey: string, priceCents: number): number 
 export function effectiveShippingCents(rowShippingCents: number | null): number | null {
   return rowShippingCents;
 }
+
+// Stores with a verified Shopify shipping-policy page (all at /policies/shipping-policy).
+// We can't reliably parse a flat rate from the free-text policy, so rather than
+// fabricate a number we link customers straight to the policy for the real current
+// rate. (Verified by probing every store; 42/45 have one.)
+const STORES_WITH_POLICY = new Set([
+  "cherry", "finalboss", "plenty", "adventurers", "manamarket", "cardbot", "ggadelaide",
+  "goodgames", "vaultgames", "mintcollectables", "cardhub", "pokebox", "spellroo", "spindown",
+  "cardmasters", "tcgcollectornz", "cardmerchant", "ironknight", "calicokeep", "cardbotnz",
+  "gamingdna", "beagames", "shuffleandcut", "gameroost", "bardsandcards", "mythicstore",
+  "cgrealm", "danireon", "punkouter", "gglegends", "stompinggrounds", "cardboardanddie",
+  "mistymountain", "theboosterbox", "npcollectibles", "capefear", "hobbiesville",
+  "gamersguildaz", "kanzengames", "mysterymtg", "hauntedgamecafe", "hobbyaddicts",
+]);
+
+// The store's shipping-policy page URL, or null if it doesn't have one / isn't a store.
+export function shippingPolicyUrl(retailerKey: string): string | null {
+  const r = RETAILERS[retailerKey];
+  return r && STORES_WITH_POLICY.has(retailerKey) ? `${r.base}/policies/shipping-policy` : null;
+}
