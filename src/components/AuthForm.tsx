@@ -19,7 +19,7 @@ const OAUTH_ERRORS: Record<string, string> = {
   oauth_noemail: "That provider didn't share an email address, which we need to create your account.",
 };
 
-export function AuthForm({ mode }: { mode: "login" | "register" }) {
+export function AuthForm({ mode, providers }: { mode: "login" | "register"; providers: ("google" | "discord")[] }) {
   const router = useRouter();
   const isRegister = mode === "register";
   const [email, setEmail] = useState("");
@@ -70,19 +70,28 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
             : "Sign in to sync your wishlist, post in the forum and manage your listings."}
         </p>
 
-        {/* OAuth */}
-        <div className="mt-5 flex flex-col gap-2.5">
-          <a href="/api/auth/oauth/google" className="flex items-center justify-center gap-2.5 rounded-xl border border-ink-600 bg-white py-2.5 text-sm font-semibold text-ink-950 hover:brightness-95">
-            <GoogleIcon /> Continue with Google
-          </a>
-          <a href="/api/auth/oauth/discord" className="flex items-center justify-center gap-2.5 rounded-xl bg-[#5865F2] py-2.5 text-sm font-semibold text-white hover:brightness-110">
-            <DiscordIcon /> Continue with Discord
-          </a>
-        </div>
+        {/* OAuth — only render a provider's button when its env keys are configured,
+            so we never show a button that just redirects back with an error. */}
+        {providers.length > 0 && (
+          <>
+            <div className="mt-5 flex flex-col gap-2.5">
+              {providers.includes("google") && (
+                <a href="/api/auth/oauth/google" className="flex items-center justify-center gap-2.5 rounded-xl border border-ink-600 bg-white py-2.5 text-sm font-semibold text-ink-950 hover:brightness-95">
+                  <GoogleIcon /> Continue with Google
+                </a>
+              )}
+              {providers.includes("discord") && (
+                <a href="/api/auth/oauth/discord" className="flex items-center justify-center gap-2.5 rounded-xl bg-[#5865F2] py-2.5 text-sm font-semibold text-white hover:brightness-110">
+                  <DiscordIcon /> Continue with Discord
+                </a>
+              )}
+            </div>
 
-        <div className="my-5 flex items-center gap-3 text-xs text-slate-500">
-          <span className="h-px flex-1 bg-ink-700" /> or with email <span className="h-px flex-1 bg-ink-700" />
-        </div>
+            <div className="my-5 flex items-center gap-3 text-xs text-slate-500">
+              <span className="h-px flex-1 bg-ink-700" /> or with email <span className="h-px flex-1 bg-ink-700" />
+            </div>
+          </>
+        )}
 
         <form onSubmit={submit} className="flex flex-col gap-3">
           {isRegister && (
