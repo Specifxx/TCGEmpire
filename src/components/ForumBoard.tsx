@@ -155,7 +155,7 @@ export function ForumBoard({
   currentUser,
 }: {
   initialPosts: ForumPostDTO[];
-  currentUser: { id: string; name: string; isAdmin: boolean } | null;
+  currentUser: { id: string; name: string; isAdmin: boolean; emailVerified: boolean } | null;
 }) {
   const [posts, setPosts] = useState<ForumPostDTO[]>(initialPosts);
   const [filter, setFilter] = useState<"all" | ForumKind>("all");
@@ -168,11 +168,17 @@ export function ForumBoard({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [openPost, setOpenPost] = useState<ForumPostDTO | null>(null);
+  const [resentVerify, setResentVerify] = useState(false);
   const router = useRouter();
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
     router.refresh();
+  }
+
+  async function resendVerify() {
+    await fetch("/api/auth/resend-verify", { method: "POST" }).catch(() => {});
+    setResentVerify(true);
   }
 
   const filtered = useMemo(
@@ -278,11 +284,27 @@ export function ForumBoard({
         <div>
           <h1 className="text-2xl font-extrabold text-white">Forum</h1>
           <p className="mt-1 text-sm text-slate-400">
-            Buy, sell and talk Riftbound with other Australian players. List several cards in one post
-            and trade directly — grab a bundle from one seller and save on postage.
+            Buy, sell and talk Riftbound with other players in {myCountryName}. List several cards in one
+            post and trade directly — grab a bundle from one seller and save on postage.
           </p>
         </div>
-        {currentUser ? (
+        {!currentUser ? (
+          <Link href="/login?next=/forum" className="btn-primary shrink-0">Log in to post</Link>
+        ) : !currentUser.emailVerified ? (
+          <div className="flex shrink-0 flex-col items-end gap-1.5 text-right">
+            <span className="text-xs text-slate-400">
+              Signed in as <span className="font-semibold text-white">{currentUser.name}</span>
+            </span>
+            <span className="text-xs text-gold">
+              Confirm your email to post.{" "}
+              {resentVerify ? (
+                <span className="font-semibold">Sent — check your inbox.</span>
+              ) : (
+                <button onClick={resendVerify} className="font-semibold underline hover:text-white">Resend email</button>
+              )}
+            </span>
+          </div>
+        ) : (
           <div className="flex shrink-0 flex-col items-end gap-1.5">
             <span className="text-xs text-slate-400">
               Signed in as <span className="font-semibold text-white">{currentUser.name}</span>
@@ -294,25 +316,20 @@ export function ForumBoard({
               </button>
             </div>
           </div>
-        ) : (
-          <Link href="/login?next=/forum" className="btn-primary shrink-0">Log in to post</Link>
         )}
       </div>
 
-      {/* Work-in-progress warning */}
-      <div className="mb-5 flex items-start gap-3 rounded-2xl border-2 border-amber-500/50 bg-gradient-to-br from-amber-500/15 to-amber-500/5 p-4">
-        <svg className="mt-0.5 h-7 w-7 shrink-0 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" />
-          <path d="M12 9v4M12 17h.01" />
+      {/* Trade-safely notice (standard P2P disclaimer) */}
+      <div className="mb-5 flex items-start gap-3 rounded-xl border border-ink-700 bg-ink-900/60 p-3.5">
+        <svg className="mt-0.5 h-5 w-5 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 8v4M12 16h.01" />
         </svg>
-        <div>
-          <p className="text-base font-extrabold text-amber-200">🚧 This feature is still in development — use at your own risk</p>
-          <p className="mt-1 text-sm text-amber-100/80">
-            The Forum is an early work in progress and may be unstable. Trade carefully with people
-            you don&apos;t know, never share passwords or payment details, and treat every listing as
-            unverified. RiftCompare is not a party to any trade.
-          </p>
-        </div>
+        <p className="text-xs leading-relaxed text-slate-400">
+          <span className="font-semibold text-slate-300">Trade safely.</span> Listings are posted by other
+          players — treat them as unverified. Never share passwords or financial details, and prefer secure,
+          tracked payment and postage. RiftCompare is not a party to any trade between members.
+        </p>
       </div>
 
       {showForm && (

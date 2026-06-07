@@ -37,6 +37,9 @@ export async function Navbar() {
           <Link href="/browse" className="rounded-lg px-2.5 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white">
             Database
           </Link>
+          <Link href="/forum" className="rounded-lg px-2.5 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white">
+            Forum
+          </Link>
           <div className="hidden lg:block">
             <NavDropdown
               label="Decks"
@@ -54,7 +57,6 @@ export async function Navbar() {
                 { href: "/proxy", label: "Proxy Printer", desc: "Pick & print test cards" },
                 { href: "/guides", label: "Guides", desc: "Learn Riftbound" },
                 { href: "/blog", label: "Blog", desc: "News & meta" },
-                { href: "/forum", label: "Forum", desc: "Buy & sell with collectors" },
               ]}
             />
           </div>

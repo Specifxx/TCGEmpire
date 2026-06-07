@@ -14,7 +14,6 @@ const LINKS = [
   { href: "/proxy", label: "Proxy Printer" },
   { href: "/guides", label: "Guides" },
   { href: "/blog", label: "Blog" },
-  { href: "/forum", label: "Forum" },
   { href: "/wishlist", label: "Wishlist" },
 ];
 

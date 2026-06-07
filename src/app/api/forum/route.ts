@@ -23,6 +23,13 @@ export async function POST(req: Request) {
   // Posting requires an account so every listing is tied to a real person.
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Please log in to post a listing." }, { status: 401 });
+  // …and a confirmed email, so posters are reachable and harder to spoof.
+  if (!user.emailVerified) {
+    return NextResponse.json(
+      { error: "Please confirm your email before posting. Check your inbox, or resend from your profile menu." },
+      { status: 403 }
+    );
+  }
 
   const body = await req.json().catch(() => null);
   const parsed = forumSchema.safeParse(body);
