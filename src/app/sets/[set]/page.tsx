@@ -9,8 +9,9 @@ import { COUNTRIES, pickPrice } from "@/lib/country";
 import { SETS, setBySlug } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
 
-// Reads the country cookie → rendered per request (Googlebot gets the AU default).
-export const dynamic = "force-dynamic";
+// Reading the country cookie in getCountry() already makes valid set pages render
+// per request (Googlebot gets the AU default); we avoid force-dynamic so notFound()
+// returns a real 404 for unknown slugs instead of a soft-404.
 
 export async function generateMetadata({ params }: { params: { set: string } }): Promise<Metadata> {
   const set = setBySlug(params.set);
