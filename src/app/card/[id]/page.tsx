@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   const info = COUNTRIES[country];
   const card = await prisma.card.findFirst({
     where: whereParam(params.id),
-    select: { slug: true, name: true, setName: true, setCode: true, collectorNumber: true, lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, imageUrl: true, imageThumbUrl: true },
+    select: { slug: true, name: true, setName: true, setCode: true, collectorNumber: true, lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, imageUrl: true, imageThumbUrl: true },
   });
   if (!card) return { title: "Card not found" };
 
