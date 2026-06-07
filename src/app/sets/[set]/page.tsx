@@ -8,21 +8,17 @@ import { pickPrice, DEFAULT_COUNTRY } from "@/lib/country";
 import { SETS, setBySlug } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
 
-// Statically generated per set (great for SEO/speed) and revalidated so prices stay
-// fresh. Rendered on the AU baseline server-side; the card tiles show each visitor's
-// own market price client-side (the card data carries all three price columns).
+// Rendered on the AU baseline server-side (country-neutral copy); the card tiles
+// localise each visitor's price client-side from the three price columns in the
+// card data. (The root layout reads the country cookie, so pages render per request.)
 export const revalidate = 1800;
-
-// Only the real set slugs are valid routes; anything else is a hard 404 (no
-// soft-404). Valid pages still render per request (getCountry reads the cookie).
-export const dynamicParams = false;
-export function generateStaticParams() {
-  return SETS.map((s) => ({ set: s.slug }));
-}
 
 export async function generateMetadata({ params }: { params: { set: string } }): Promise<Metadata> {
   const set = setBySlug(params.set);
-  if (!set) return { title: "Set not found" };
+  // The whole site renders dynamically (the layout reads the country cookie), so
+  // notFound() can't return a hard 404 here; mark unknown slugs noindex so Google
+  // never indexes the soft-404 (nothing links to them anyway).
+  if (!set) return { title: "Set not found", robots: { index: false, follow: false } };
   // Market-neutral title (no country) so it ranks globally; the page itself is
   // tailored to the visitor's market.
   const title = `Riftbound ${set.name} Card Prices, Values & Full Card List`;
