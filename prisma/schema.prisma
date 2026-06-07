@@ -204,6 +204,9 @@ model ForumPost {
   // Seller/buyer location for postage estimates (WTB/WTS only).
   country     String?
   state       String?
+  // Market the post belongs to ("AU" | "NZ" | "US"), from the poster's selected
+  // country. Players only see posts for their own market.
+  market      String   @default("AU")
   authorName  String
   userId      String?  // set if posted while logged in
   score       Int      @default(0)
@@ -215,6 +218,7 @@ model ForumPost {
   @@index([kind])
   @@index([createdAt])
   @@index([status])
+  @@index([market])
 }
 
 // A comment on a forum post (Reddit-style discussion).

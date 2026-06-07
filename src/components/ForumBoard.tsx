@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { formatAUD } from "@/lib/format";
-import { AU_STATES, COUNTRIES, DEFAULT_COUNTRY } from "@/lib/locations";
+import { COUNTRIES, DEFAULT_COUNTRY, MARKET_COUNTRY, statesFor } from "@/lib/locations";
+import { useCountry } from "./CountryProvider";
 import { ForumPostModal } from "./ForumPostModal";
 
 export type ForumKind = "WTB" | "WTS" | "DISCUSSION";
@@ -76,10 +76,13 @@ interface SearchResult {
   setCode: string;
   collectorNumber: string;
   lowestPriceCents: number | null;
+  lowestPriceCentsNz?: number | null;
+  lowestPriceCentsUs?: number | null;
 }
 
 // Autocomplete that adds a real DB card (with its live market price) to the list.
 function CardPicker({ onAdd }: { onAdd: (it: ForumItem) => void }) {
+  const { fmt, price } = useCountry();
   const [q, setQ] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [open, setOpen] = useState(false);
@@ -116,7 +119,7 @@ function CardPicker({ onAdd }: { onAdd: (it: ForumItem) => void }) {
               <button
                 type="button"
                 onClick={() => {
-                  onAdd({ name: r.name, setCode: r.setCode, condition: "NM", qty: 1, marketCents: r.lowestPriceCents ?? null });
+                  onAdd({ name: r.name, setCode: r.setCode, condition: "NM", qty: 1, marketCents: price(r) });
                   setQ(""); setResults([]); setOpen(false);
                 }}
                 className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-ink-800"
@@ -125,7 +128,7 @@ function CardPicker({ onAdd }: { onAdd: (it: ForumItem) => void }) {
                   {r.name} <span className="text-xs text-slate-500">{r.setCode} {r.collectorNumber}</span>
                 </span>
                 <span className="shrink-0 text-xs text-accent">
-                  {r.lowestPriceCents != null ? formatAUD(r.lowestPriceCents) : "—"}
+                  {price(r) != null ? fmt(price(r)!) : "—"}
                 </span>
               </button>
             </li>
@@ -157,8 +160,10 @@ export function ForumBoard({
   const [posts, setPosts] = useState<ForumPostDTO[]>(initialPosts);
   const [filter, setFilter] = useState<"all" | ForumKind>("all");
   const [showForm, setShowForm] = useState(false);
+  const { country, fmt } = useCountry();
+  const myCountryName = MARKET_COUNTRY[country] ?? DEFAULT_COUNTRY;
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState({ ...emptyForm });
+  const [form, setForm] = useState({ ...emptyForm, country: myCountryName });
   const [items, setItems] = useState<ForumItem[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -195,7 +200,7 @@ export function ForumBoard({
   }
 
   function resetForm() {
-    setForm({ ...emptyForm });
+    setForm({ ...emptyForm, country: myCountryName });
     setItems([]);
     setShowForm(false);
     setEditingId(null);
@@ -210,7 +215,7 @@ export function ForumBoard({
       price: p.priceCents != null ? (p.priceCents / 100).toString() : "",
       body: p.body ?? "",
       contact: p.contact ?? "",
-      country: p.country ?? DEFAULT_COUNTRY,
+      country: p.country ?? myCountryName,
       state: p.state ?? "",
       website: "",
     });
@@ -355,7 +360,7 @@ export function ForumBoard({
                           {it.name} <span className="text-xs text-slate-500">{it.setCode ?? ""}</span>
                         </div>
                         <div className="text-[11px] text-slate-500">
-                          {it.marketCents != null ? `${formatAUD(it.marketCents)} market ea` : "no market price"}
+                          {it.marketCents != null ? `${fmt(it.marketCents)} market ea` : "no market price"}
                         </div>
                       </div>
                       <select
@@ -376,7 +381,7 @@ export function ForumBoard({
 
                   <div className="flex items-center justify-between rounded-lg bg-ink-900 px-3 py-2 text-sm">
                     <span className="text-slate-400">Recommended total · {totalQty} {totalQty === 1 ? "card" : "cards"}</span>
-                    <span className="font-bold text-accent">{formatAUD(recommendedCents)}</span>
+                    <span className="font-bold text-accent">{fmt(recommendedCents)}</span>
                   </div>
                   <p className="text-[11px] text-slate-500">
                     Based on current lowest market prices — a guide for pricing the bundle.
@@ -390,7 +395,7 @@ export function ForumBoard({
             <input
               value={form.price}
               onChange={set("price")}
-              placeholder="Your asking price for the lot A$ (optional)"
+              placeholder="Your asking price for the lot (optional)"
               inputMode="decimal"
               className="input"
             />
@@ -401,10 +406,10 @@ export function ForumBoard({
               <select value={form.country} onChange={set("country")} className="input" aria-label="Country">
                 {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
-              {form.country === "Australia" ? (
-                <select value={form.state} onChange={set("state")} className="input" aria-label="State or territory">
-                  <option value="">State / territory (optional)</option>
-                  {AU_STATES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+              {statesFor(form.country) ? (
+                <select value={form.state} onChange={set("state")} className="input" aria-label="State or region">
+                  <option value="">State / region (optional)</option>
+                  {statesFor(form.country)!.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
                 </select>
               ) : (
                 <input value={form.state} onChange={set("state")} placeholder="State / region (optional)" className="input" maxLength={60} />
@@ -484,7 +489,7 @@ export function ForumBoard({
                   <span className={`chip font-bold ${KIND_BADGE[p.kind]}`}>
                     {p.kind === "DISCUSSION" ? "DISCUSSION" : p.kind === "WTB" ? "WANT TO BUY" : "WANT TO SELL"}
                   </span>
-                  {p.priceCents != null && <span className="chip bg-ink-800 font-bold text-accent">{formatAUD(p.priceCents)} asking</span>}
+                  {p.priceCents != null && <span className="chip bg-ink-800 font-bold text-accent">{fmt(p.priceCents)} asking</span>}
                   {(p.state || p.country) && (
                     <span className="chip bg-ink-800 text-slate-300">{[p.state, p.country].filter(Boolean).join(", ")}</span>
                   )}
@@ -510,7 +515,7 @@ export function ForumBoard({
                             {it.name}
                             {it.condition && it.condition !== "Any" ? <span className="text-xs text-slate-500"> · {it.condition}</span> : null}
                           </span>
-                          <span className="shrink-0 text-xs text-slate-400">{it.marketCents != null ? formatAUD(it.marketCents) : "—"}</span>
+                          <span className="shrink-0 text-xs text-slate-400">{it.marketCents != null ? fmt(it.marketCents) : "—"}</span>
                         </li>
                       ))}
                     </ul>
@@ -518,7 +523,7 @@ export function ForumBoard({
                     {p.marketCents != null && (
                       <div className="mt-1 flex items-center justify-between border-t border-ink-800 px-1 pt-1 text-xs">
                         <span className="text-slate-500">Recommended (market) total</span>
-                        <span className="font-bold text-accent">{formatAUD(p.marketCents)}</span>
+                        <span className="font-bold text-accent">{fmt(p.marketCents)}</span>
                       </div>
                     )}
                   </div>

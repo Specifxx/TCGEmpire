@@ -13,7 +13,42 @@ export const AU_STATES: { value: string; label: string }[] = [
   { value: "NT", label: "Northern Territory (NT)" },
 ];
 
+export const NZ_REGIONS: { value: string; label: string }[] = [
+  "Auckland", "Wellington", "Canterbury", "Waikato", "Bay of Plenty", "Otago",
+  "Manawatū-Whanganui", "Hawke's Bay", "Taranaki", "Northland", "Southland",
+  "Nelson", "Tasman", "Marlborough", "Gisborne", "West Coast",
+].map((r) => ({ value: r, label: r }));
+
+export const US_STATES: { value: string; label: string }[] = [
+  ["AL","Alabama"],["AK","Alaska"],["AZ","Arizona"],["AR","Arkansas"],["CA","California"],
+  ["CO","Colorado"],["CT","Connecticut"],["DE","Delaware"],["DC","District of Columbia"],
+  ["FL","Florida"],["GA","Georgia"],["HI","Hawaii"],["ID","Idaho"],["IL","Illinois"],
+  ["IN","Indiana"],["IA","Iowa"],["KS","Kansas"],["KY","Kentucky"],["LA","Louisiana"],
+  ["ME","Maine"],["MD","Maryland"],["MA","Massachusetts"],["MI","Michigan"],["MN","Minnesota"],
+  ["MS","Mississippi"],["MO","Missouri"],["MT","Montana"],["NE","Nebraska"],["NV","Nevada"],
+  ["NH","New Hampshire"],["NJ","New Jersey"],["NM","New Mexico"],["NY","New York"],
+  ["NC","North Carolina"],["ND","North Dakota"],["OH","Ohio"],["OK","Oklahoma"],["OR","Oregon"],
+  ["PA","Pennsylvania"],["RI","Rhode Island"],["SC","South Carolina"],["SD","South Dakota"],
+  ["TN","Tennessee"],["TX","Texas"],["UT","Utah"],["VT","Vermont"],["VA","Virginia"],
+  ["WA","Washington"],["WV","West Virginia"],["WI","Wisconsin"],["WY","Wyoming"],
+].map(([value, label]) => ({ value, label: `${label} (${value})` }));
+
 export const DEFAULT_COUNTRY = "Australia";
+
+// Country name for a market code, used as the default location on a forum post.
+export const MARKET_COUNTRY: Record<string, string> = {
+  AU: "Australia",
+  NZ: "New Zealand",
+  US: "United States",
+};
+
+// The state/region dropdown options for a country name (null = free-text region).
+export function statesFor(country: string): { value: string; label: string }[] | null {
+  if (country === "Australia") return AU_STATES;
+  if (country === "New Zealand") return NZ_REGIONS;
+  if (country === "United States") return US_STATES;
+  return null;
+}
 
 // Standard country list, Australia first then alphabetical.
 export const COUNTRIES: string[] = [

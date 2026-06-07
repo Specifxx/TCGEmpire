@@ -2,16 +2,19 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { getCountry } from "@/lib/get-country";
 import { forumSchema, prepareForumData } from "@/lib/forum";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
   const kind = new URL(req.url).searchParams.get("kind");
-  const where =
+  // Players only see posts for their own market (AU/NZ/US).
+  const market = getCountry();
+  const where: Prisma.ForumPostWhereInput =
     kind === "WTB" || kind === "WTS" || kind === "DISCUSSION"
-      ? { kind, status: "OPEN" }
-      : { status: "OPEN" };
+      ? { kind, status: "OPEN", market }
+      : { status: "OPEN", market };
   const posts = await prisma.forumPost.findMany({ where, orderBy: { createdAt: "desc" }, take: 200 });
   return NextResponse.json({ posts }, { headers: { "Cache-Control": "no-store" } });
 }
@@ -28,10 +31,12 @@ export async function POST(req: Request) {
   }
   if (parsed.data.website) return NextResponse.json({ ok: true }); // honeypot
 
-  const { fields, items } = await prepareForumData(parsed.data);
+  const market = getCountry();
+  const { fields, items } = await prepareForumData(parsed.data, market);
   const post = await prisma.forumPost.create({
     data: {
       ...fields,
+      market,
       items: items.length ? (items as unknown as Prisma.InputJsonValue) : undefined,
       authorName: user.displayName,
       userId: user.id,

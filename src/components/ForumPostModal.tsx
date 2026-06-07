@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { formatAUD } from "@/lib/format";
+import { useCountry } from "./CountryProvider";
 import type { ForumKind, ForumPostDTO } from "./ForumBoard";
 
 interface Comment {
@@ -47,6 +47,7 @@ export function ForumPostModal({
   onClose: () => void;
   onCommentAdded: (postId: string) => void;
 }) {
+  const { fmt } = useCountry();
   const [comments, setComments] = useState<Comment[] | null>(null);
   const [text, setText] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -108,7 +109,7 @@ export function ForumPostModal({
           {/* Post detail */}
           <div className="flex flex-wrap items-center gap-2">
             <span className={`chip font-bold ${KIND_BADGE[post.kind]}`}>{KIND_TEXT[post.kind]}</span>
-            {post.priceCents != null && <span className="chip bg-ink-800 font-bold text-accent">{formatAUD(post.priceCents)} asking</span>}
+            {post.priceCents != null && <span className="chip bg-ink-800 font-bold text-accent">{fmt(post.priceCents)} asking</span>}
             {location && <span className="chip bg-ink-800 text-slate-300">{location}</span>}
           </div>
           <h2 className="mt-2 text-lg font-bold text-white">{post.title}</h2>
@@ -122,7 +123,7 @@ export function ForumPostModal({
                     {it.name}
                     {it.condition && it.condition !== "Any" ? <span className="text-xs text-slate-500"> · {it.condition}</span> : null}
                   </span>
-                  <span className="shrink-0 text-xs text-slate-400">{it.marketCents != null ? formatAUD(it.marketCents) : "—"}</span>
+                  <span className="shrink-0 text-xs text-slate-400">{it.marketCents != null ? fmt(it.marketCents) : "—"}</span>
                 </li>
               ))}
             </ul>

@@ -13,26 +13,23 @@ import { SETS, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
 // then reads the country cookie).
 export const revalidate = 180;
 
-// Homepage metadata, tailored to the visitor's market so a US/NZ visitor isn't
-// greeted as Australia.
-export async function generateMetadata(): Promise<Metadata> {
-  const info = COUNTRIES[getCountry()];
-  const L = info.label;
-  return {
-    title: { absolute: `Buy & Compare Riftbound Card Prices in ${L} | RiftCompare` },
-    description: `Compare live Riftbound TCG card prices across ${L} stores and find the cheapest place to buy Riftbound cards in ${L}. Singles and sealed, prices in ${info.currency}, updated daily.`,
-    keywords: [
-      `buy Riftbound cards ${L}`,
-      `Riftbound prices ${L}`,
-      `compare Riftbound card prices ${L}`,
-      `cheapest Riftbound cards ${L}`,
-      `Riftbound singles ${L}`,
-      "Riftbound card prices",
-      `Riftbound TCG ${L}`,
-    ],
-    alternates: { canonical: "/" },
-  };
-}
+// Market-neutral metadata (no country in the title) so search results aren't biased
+// to one country — the visible page below is still tailored to the visitor's market.
+export const metadata: Metadata = {
+  title: { absolute: "Buy & Compare Riftbound Card Prices | RiftCompare" },
+  description:
+    "Compare live Riftbound TCG card prices across stores in Australia, New Zealand and the United States, and find the cheapest place to buy Riftbound singles and sealed. Updated daily.",
+  keywords: [
+    "buy Riftbound cards",
+    "Riftbound prices",
+    "compare Riftbound card prices",
+    "cheapest Riftbound cards",
+    "Riftbound singles",
+    "Riftbound TCG",
+    "Riftbound card prices",
+  ],
+  alternates: { canonical: "/" },
+};
 
 // eBay marketplace label per market (NZ has no eBay).
 function ebayLabel(country: string): string | null {

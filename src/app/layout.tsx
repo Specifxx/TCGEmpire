@@ -23,9 +23,9 @@ export const metadata: Metadata = {
     template: "%s — RiftCompare",
   },
   description:
-    "Australia's Riftbound TCG card database. Browse every card and compare live prices across Australian stores to find the cheapest place to buy.",
+    "The Riftbound TCG card database and price comparison. Browse every card and compare live prices across stores in Australia, New Zealand and the United States to find the cheapest place to buy.",
   applicationName: SITE_NAME,
-  keywords: ["Riftbound", "Riftbound TCG", "Riftbound prices", "Riftbound Australia", "League of Legends TCG", "card prices"],
+  keywords: ["Riftbound", "Riftbound TCG", "Riftbound prices", "Riftbound singles", "League of Legends TCG", "card prices"],
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     url: SITE_URL,
     title: "RiftCompare — Riftbound Card Database & Price Comparison",
     description:
-      "Compare live Riftbound TCG card prices across Australian stores and find the cheapest place to buy.",
+      "Compare live Riftbound TCG card prices across stores in Australia, New Zealand and the US to find the cheapest place to buy.",
   },
   twitter: { card: "summary_large_image" },
   // Search engine site verification. Google's "HTML tag" method verifies a
@@ -56,7 +56,7 @@ const orgJsonLd = {
       url: SITE_URL,
       logo: `${SITE_URL}/icon`,
       description:
-        "Australia's Riftbound TCG card database and live price-comparison site.",
+        "Riftbound TCG card database and live price-comparison across Australia, New Zealand and the US.",
     },
     {
       "@type": "WebSite",

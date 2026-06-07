@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { prisma } from "./db";
 import { normalizeSearch } from "./format";
+import { pickPrice, type Country } from "./country";
 
 export const forumItemSchema = z.object({
   name: z.string().min(1).max(120),
@@ -33,7 +34,7 @@ export interface PreparedForumItem {
 
 // Validate-and-normalise a forum post payload: resolves each listed card's current
 // market value server-side (authoritative) and sums them. Shared by create + edit.
-export async function prepareForumData(d: ForumInput) {
+export async function prepareForumData(d: ForumInput, country: Country = "AU") {
   const isDiscussion = d.kind === "DISCUSSION";
 
   let items: PreparedForumItem[] = [];
@@ -42,12 +43,13 @@ export async function prepareForumData(d: ForumInput) {
     const norms = Array.from(new Set(d.items.map((i) => normalizeSearch(i.name))));
     const cards = await prisma.card.findMany({
       where: { nameNormalized: { in: norms }, isPromo: false },
-      select: { nameNormalized: true, lowestPriceCents: true },
-      orderBy: { lowestPriceCents: { sort: "asc", nulls: "last" } },
+      select: { nameNormalized: true, lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true },
     });
+    // Use the poster's market price for each item (AUD/NZD/USD).
     const priceByNorm = new Map<string, number>();
     for (const c of cards) {
-      if (c.lowestPriceCents != null && !priceByNorm.has(c.nameNormalized)) priceByNorm.set(c.nameNormalized, c.lowestPriceCents);
+      const p = pickPrice(c, country);
+      if (p != null && !priceByNorm.has(c.nameNormalized)) priceByNorm.set(c.nameNormalized, p);
     }
     let sum = 0;
     let anyPriced = false;
