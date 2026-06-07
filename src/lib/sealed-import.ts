@@ -4,6 +4,7 @@
 import { prisma } from "./db";
 import { RETAILER_LIST } from "./retailers";
 import { isEbayEnabled, isEbayRateLimited, searchEbaySealed } from "./ebay";
+import { fetchTcgplayerSealed, tcgProductUrl, tcgImageUrl } from "./tcgplayer";
 
 const UA = {
   "User-Agent":
@@ -42,12 +43,12 @@ function isRiftboundSealed(title: string): boolean {
 // A sealed product title looks like one of these. "nexus night" (not bare "nexus",
 // which also matches the single card "Power Nexus").
 const SEALED_TITLE =
-  /booster\s*box|booster\s*pack|booster\s*display|display\s*box|booster\s*bundle|\bbundle\b|elite|collector|gift\s*box|blister|proving\s*grounds|nexus\s*night|promo\s*pack|two[-\s]?player|starter\s*(deck|set)|precon|\bcase\b|mega\s*box|\btin\b|sealed/i;
+  /booster\s*box|booster\s*pack|booster\s*display|display\s*box|display\s*case|booster\s*bundle|\bbundle\b|box\s*set|champion\s*deck|pre-?rift|event\s*kit|elite|collector|gift\s*box|blister|proving\s*grounds|nexus\s*night|promo\s*pack|two[-\s]?player|starter\s*(deck|set)|precon|\bcase\b|mega\s*box|\btin\b|sealed/i;
 // …but never these. Singles / accessories / bulk / break slots / non-English slip
 // through otherwise. Condition codes (NM/LP/…) and a set name in parentheses
 // (e.g. "(Origins: Proving Grounds)") are tell-tale signs of a single card.
 const SEALED_EXCLUDE =
-  /\bsingle\b|playmat|sleeve|deck\s*box|binder|toploader|top\s*loader|dice|counter|token|card\s*\d|\/\d{2,3}\b|chinese|japanese|korean|simplified|traditional|\bbulk\b|\bopened\b|live\s*break|\b(?:nm|lp|mp|hp|dmg)\b|near\s*mint|lightly\s*played|moderately\s*played|heavily\s*played|\([^)]*\b(?:origins|spirit\s*forged|spiritforged|unleashed|vendetta|proving\s*grounds)\b[^)]*\)/i;
+  /\bsingle\b|playmat|deck\s*box|binder|toploader|top\s*loader|dice|counter|\btoken\b|card\s*\d|\/\d{2,3}\b|chinese|japanese|korean|simplified|traditional|\bbulk\s+(?:lot|cards|commons?|singles?)\b|\bopened\b|live\s*break|\bticket\b|\b(?:nm|lp|mp|hp|dmg)\b|near\s*mint|lightly\s*played|moderately\s*played|heavily\s*played|\([^)]*\b(?:origins|spirit\s*forged|spiritforged|unleashed|vendetta|proving\s*grounds)\b[^)]*\)/i;
 
 async function fetchJson(url: string): Promise<any | null> {
   try {
@@ -104,17 +105,39 @@ function detectSet(title: string): string | null {
   return SET_FROM_TITLE.find(([re]) => re.test(title))?.[1] ?? null;
 }
 
-function sealedType(title: string): string {
+// Classify a sealed product into a specific type. Shared by store scraping and the
+// TCGplayer catalogue so the same product groups together. Champion Decks keep the
+// champion name so each is distinct (e.g. "Champion Deck (Viktor)").
+export function classifySealed(title: string): string {
   const t = title.toLowerCase();
-  if (/proving\s*grounds/.test(t)) return "Proving Grounds";
-  if (/nexus\s*night|promo\s*pack/.test(t)) return "Promo Pack";
-  if (/booster\s*box|display\s*box|booster\s*display|\bdisplay\b/.test(t)) return "Booster Box";
-  if (/\bcase\b/.test(t)) return "Booster Case";
-  if (/booster\s*bundle|\bbundle\b|gift/.test(t)) return "Bundle";
+  const champ = title.match(/champion\s*deck\s*\(([^)]+)\)/i)?.[1]?.trim();
+  if (/proving\s*grounds/.test(t)) return /\bcase\b/.test(t) ? "Proving Grounds Case" : "Proving Grounds";
+  if (/nexus\s*night/.test(t)) return "Nexus Night Pack";
+  if (/champion\s*deck/.test(t)) { const n = champ ? ` (${champ})` : ""; return /\bdisplay\b/.test(t) ? `Champion Deck${n} Display` : `Champion Deck${n}`; }
+  if (/sleeved\s*booster/.test(t)) return /\[set of|art\s*bundle/.test(t) ? "Sleeved Booster (Art Set)" : "Sleeved Booster";
+  if (/(?:display|booster\s*box|sealed)\s*case|booster\s*display\s*case/.test(t)) return "Booster Case";
+  if (/booster\s*box|booster\s*display|display\s*box|\bdisplay\b/.test(t)) return "Booster Box";
+  if (/pre-?rift\s*event\s*kit/.test(t)) return "Pre-Rift Event Kit";
+  if (/pre-?rift|event\s*kit|pre-?release\s*kit/.test(t)) return "Pre-Rift Kit";
+  if (/bulk\s*runes/.test(t)) return /\bcase\b/.test(t) ? "Bulk Runes Case" : "Bulk Runes";
+  if (/arcane\s*box\s*set|box\s*set/.test(t)) return "Box Set";
+  if (/vault\s*bundle|worlds\s*bundle|booster\s*bundle|\bbundle\b|gift\s*box/.test(t)) return "Bundle";
   if (/two[-\s]?player|starter|precon/.test(t)) return "Starter Set";
   if (/\btin\b/.test(t)) return "Tin";
-  if (/booster\s*pack|\bpack\b|blister/.test(t)) return "Booster Pack";
+  if (/promo\s*pack/.test(t)) return "Promo Pack";
+  if (/booster\s*pack|\bblister\b|\bpack\b/.test(t)) return "Booster Pack";
   return "Sealed";
+}
+
+// Map a TCGplayer setName to our set code (null for cross-set promo products).
+function setCodeFromSetName(setName: string): string | null {
+  const s = (setName ?? "").toLowerCase();
+  if (/proving\s*grounds/.test(s)) return "OGS";
+  if (/spiritforged|spirit\s*forged/.test(s)) return "SFD";
+  if (/unleashed/.test(s)) return "UNL";
+  if (/vendetta/.test(s)) return "VEN";
+  if (/origins/.test(s)) return "OGN";
+  return null;
 }
 
 export async function importSealed(): Promise<number> {
@@ -147,7 +170,7 @@ export async function importSealed(): Promise<number> {
         const pool = inStock ? avail : priced;
         const priceCents = Math.round(Math.min(...pool.map((v) => parseFloat(v.price))) * 100);
         const setCode = detectSet(title);
-        const type = sealedType(title);
+        const type = classifySealed(title);
         const groupKey = setCode ? `${setCode}|${type}` : title.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 40);
         const key = `${groupKey}|${store.key}`;
         const prev = rows.get(key);
@@ -185,9 +208,9 @@ export async function importSealed(): Promise<number> {
     // AU store currently lists (e.g. the Unleashed pack) — so they appear once
     // available, with an image pulled from the eBay listing.
     const NEXUS_SEEDS = [
-      { groupKey: "OGN|Promo Pack", setCode: "OGN", name: "Origins Nexus Night Promo Pack", productType: "Promo Pack", imageUrl: null as string | null },
-      { groupKey: "SFD|Promo Pack", setCode: "SFD", name: "Spiritforged Nexus Night Promo Pack", productType: "Promo Pack", imageUrl: null as string | null },
-      { groupKey: "UNL|Promo Pack", setCode: "UNL", name: "Unleashed Nexus Night Promo Pack", productType: "Promo Pack", imageUrl: null as string | null },
+      { groupKey: "OGN|Nexus Night Pack", setCode: "OGN", name: "Origins Nexus Night Promo Pack", productType: "Nexus Night Pack", imageUrl: null as string | null },
+      { groupKey: "SFD|Nexus Night Pack", setCode: "SFD", name: "Spiritforged Nexus Night Promo Pack", productType: "Nexus Night Pack", imageUrl: null as string | null },
+      { groupKey: "UNL|Nexus Night Pack", setCode: "UNL", name: "Unleashed Nexus Night Promo Pack", productType: "Nexus Night Pack", imageUrl: null as string | null },
     ];
     const haveKeys = new Set(groups.map((g) => g.groupKey));
     const searchList = [
@@ -220,6 +243,15 @@ export async function importSealed(): Promise<number> {
     }
   }
 
+  // TCGplayer's official sealed catalogue (US market prices) — adds products the
+  // store scrape misses (Champion Decks, cases, sleeved boosters, Pre-Rift kits,
+  // Nexus Night packs). Isolated so a hiccup never fails the rest.
+  try {
+    count += await refreshTcgplayerSealed();
+  } catch (e) {
+    console.warn("TCGplayer sealed import failed:", e);
+  }
+
   // Self-heal: drop any stored rows that no longer qualify (e.g. a store that
   // failed to re-scrape this run still holds an old mis-detected single, or rows
   // from before the filters tightened).
@@ -228,12 +260,55 @@ export async function importSealed(): Promise<number> {
   return count;
 }
 
+// Pull TCGplayer's official sealed catalogue (US market prices) into SealedListing.
+// TCGplayer is the dominant US marketplace and lists the full sealed line-up
+// (booster displays/cases, Champion Decks, Nexus Night packs, Pre-Rift kits,
+// sleeved boosters), so this fills the gaps the store scrape misses for the US.
+export async function refreshTcgplayerSealed(): Promise<number> {
+  let products;
+  try {
+    products = await fetchTcgplayerSealed();
+  } catch (e) {
+    console.warn("TCGplayer sealed fetch failed:", (e as Error).message);
+    return 0;
+  }
+  const rows: any[] = [];
+  for (const p of products) {
+    const title = (p.productName ?? "").trim();
+    const market = p.marketPrice;
+    if (!title || market == null || market <= 0) continue;
+    if (UNRELEASED_SET.test(title)) continue; // Vendetta / Radiance not released yet
+    const setCode = setCodeFromSetName(p.setName ?? "");
+    if (setCode && UNRELEASED_SET.test(setCode)) continue;
+    const type = classifySealed(title);
+    const groupKey = setCode ? `${setCode}|${type}` : title.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 40);
+    rows.push({
+      groupKey,
+      title,
+      productType: type,
+      setCode,
+      retailer: "tcgplayer",
+      retailerName: "TCGplayer",
+      priceCents: Math.round(market * 100),
+      url: tcgProductUrl(p),
+      imageUrl: tcgImageUrl(p.productId),
+      country: "US",
+      inStock: true,
+    });
+  }
+  await prisma.sealedListing.deleteMany({ where: { retailer: "tcgplayer" } });
+  if (rows.length) await prisma.sealedListing.createMany({ data: rows });
+  console.log(`TCGplayer sealed: ${rows.length} products.`);
+  return rows.length;
+}
+
 // Delete stored sealed rows whose title should now be excluded — independent of
 // scraping, so stale data gets cleaned even when a store didn't refresh.
 export async function cleanupStaleSealed(): Promise<number> {
-  const rows = await prisma.sealedListing.findMany({ select: { id: true, title: true } });
+  const rows = await prisma.sealedListing.findMany({ select: { id: true, title: true, retailer: true } });
   const ids = rows
-    .filter((r) => !SEALED_TITLE.test(r.title) || SEALED_EXCLUDE.test(r.title) || !isRiftboundSealed(r.title))
+    // TCGplayer rows come from the official sealed catalogue — never title-filter them.
+    .filter((r) => r.retailer !== "tcgplayer" && (!SEALED_TITLE.test(r.title) || SEALED_EXCLUDE.test(r.title) || !isRiftboundSealed(r.title)))
     .map((r) => r.id);
   if (ids.length) await prisma.sealedListing.deleteMany({ where: { id: { in: ids } } });
   return ids.length;
@@ -292,11 +367,21 @@ export async function getSealedGroups(country: "AU" | "NZ" | "US" = "AU"): Promi
     return g;
   });
   // Boxes/cases first, then by price.
-  const order = ["Booster Box", "Booster Case", "Proving Grounds", "Starter Set", "Bundle", "Promo Pack", "Booster Pack", "Tin", "Sealed"];
+  const order = [
+    "Booster Box", "Booster Case", "Proving Grounds", "Proving Grounds Case", "Box Set",
+    "Pre-Rift Event Kit", "Pre-Rift Kit", "Bundle", "Starter Set",
+    "Nexus Night Pack", "Promo Pack", "Sleeved Booster (Art Set)", "Sleeved Booster",
+    "Booster Pack", "Bulk Runes Case", "Bulk Runes", "Tin", "Sealed",
+  ];
+  // Champion Decks slot between bundles and packs (display boxes before singles).
+  const rank = (t: string) => {
+    if (/champion deck/i.test(t)) return /display/i.test(t) ? 8.4 : 8.6;
+    const i = order.indexOf(t);
+    return i < 0 ? 99 : i;
+  };
   out.sort((a, b) => {
-    const oa = order.indexOf(a.productType);
-    const ob = order.indexOf(b.productType);
-    if (oa !== ob) return (oa < 0 ? 99 : oa) - (ob < 0 ? 99 : ob);
+    const ra = rank(a.productType), rb = rank(b.productType);
+    if (ra !== rb) return ra - rb;
     return (a.lowestPriceCents ?? 9e9) - (b.lowestPriceCents ?? 9e9);
   });
   return out;

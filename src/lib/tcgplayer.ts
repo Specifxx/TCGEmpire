@@ -51,16 +51,14 @@ export type TcgProduct = {
   customAttributes?: { number?: string };
 };
 
-function searchBody(from: number) {
+function searchBody(from: number, productTypeName?: string[]) {
+  const term: Record<string, string[]> = { productLineName: [PRODUCT_LINE] };
+  if (productTypeName) term.productTypeName = productTypeName;
   return {
     algorithm: "sales_synonym_v2",
     from,
     size: PAGE_SIZE,
-    filters: {
-      term: { productLineName: [PRODUCT_LINE] },
-      range: {},
-      match: {},
-    },
+    filters: { term, range: {}, match: {} },
     listingSearch: {
       context: { cart: {} },
       filters: { term: { sellerStatus: "Live", channelId: 0 }, range: { quantity: { gte: 1 } }, exclude: { channelExclusion: 0 } },
@@ -71,7 +69,7 @@ function searchBody(from: number) {
   };
 }
 
-async function fetchPage(from: number): Promise<{ items: TcgProduct[]; total: number }> {
+async function fetchPage(from: number, productTypeName?: string[]): Promise<{ items: TcgProduct[]; total: number }> {
   const res = await fetch(SEARCH_URL, {
     method: "POST",
     headers: {
@@ -81,7 +79,7 @@ async function fetchPage(from: number): Promise<{ items: TcgProduct[]; total: nu
       Referer: "https://www.tcgplayer.com/",
       "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36",
     },
-    body: JSON.stringify(searchBody(from)),
+    body: JSON.stringify(searchBody(from, productTypeName)),
   });
   if (!res.ok) throw new Error(`TCGplayer search ${res.status}: ${(await res.text()).slice(0, 200)}`);
   const data: any = await res.json();
@@ -109,12 +107,37 @@ export async function fetchTcgplayerProducts(): Promise<TcgProduct[]> {
   return out.filter((p) => !p.sealed);
 }
 
-function productUrl(p: TcgProduct): string {
+// Fetch the SEALED product catalogue (booster boxes/cases, packs, Champion Decks,
+// Nexus Night promo packs, Pre-Rift kits, …) — a separate product type from cards.
+export async function fetchTcgplayerSealed(): Promise<TcgProduct[]> {
+  const PT = ["Sealed Products"];
+  const first = await fetchPage(0, PT);
+  const out: TcgProduct[] = [...first.items];
+  for (let from = PAGE_SIZE; from < first.total; from += PAGE_SIZE) {
+    await sleep(250);
+    try {
+      const pg = await fetchPage(from, PT);
+      if (pg.items.length === 0) break;
+      out.push(...pg.items);
+    } catch (e) {
+      console.warn(`TCGplayer sealed page from=${from} failed:`, (e as Error).message);
+      break;
+    }
+  }
+  return out;
+}
+
+export function tcgProductUrl(p: TcgProduct): string {
   const slug = `${p.productLineUrlName ?? "riftbound-league-of-legends-trading-card-game"}-${p.setUrlName ?? ""}-${p.productUrlName ?? ""}`
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
   return `https://www.tcgplayer.com/product/${p.productId}/${slug}`;
+}
+
+// TCGplayer product image CDN.
+export function tcgImageUrl(productId: number): string {
+  return `https://tcgplayer-cdn.tcgplayer.com/product/${productId}_in_1000x1000.jpg`;
 }
 
 export type TcgMatchResult = {
@@ -165,7 +188,7 @@ export async function buildTcgplayerRows(products?: TcgProduct[]): Promise<TcgMa
       retailer: "tcgplayer",
       retailerName: "TCGplayer",
       title: p.productName,
-      url: productUrl(p),
+      url: tcgProductUrl(p),
       condition: "NM",
       isFoil,
       priceCents: Math.round(market * 100),
