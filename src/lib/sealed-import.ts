@@ -108,9 +108,15 @@ function detectSet(title: string): string | null {
 // Classify a sealed product into a specific type. Shared by store scraping and the
 // TCGplayer catalogue so the same product groups together. Champion Decks keep the
 // champion name so each is distinct (e.g. "Champion Deck (Viktor)").
+// Champions that have Champion Decks (parens form on TCGplayer; free-form in store
+// titles like "… Champion Deck - Vex" or "Jinx Champion Deck"). Longest names first
+// so "Viktor"/"Vex" win before the short "Vi".
+const CHAMPIONS = /\b(Lee\s*Sin|Viktor|Rumble|Fiora|Garen|Annie|Lux|Master\s*Yi|Jinx|Vex|Vi)\b/i;
+
 export function classifySealed(title: string): string {
   const t = title.toLowerCase();
-  const champ = title.match(/champion\s*deck\s*\(([^)]+)\)/i)?.[1]?.trim();
+  const rawChamp = title.match(/champion\s*deck\s*\(([^)]+)\)/i)?.[1]?.trim() || title.match(CHAMPIONS)?.[1];
+  const champ = rawChamp ? rawChamp.toLowerCase().replace(/\s+/g, " ").replace(/\b\w/g, (m) => m.toUpperCase()) : null;
   if (/proving\s*grounds/.test(t)) return /\bcase\b/.test(t) ? "Proving Grounds Case" : "Proving Grounds";
   if (/nexus\s*night/.test(t)) return "Nexus Night Pack";
   if (/champion\s*deck/.test(t)) { const n = champ ? ` (${champ})` : ""; return /\bdisplay\b/.test(t) ? `Champion Deck${n} Display` : `Champion Deck${n}`; }
