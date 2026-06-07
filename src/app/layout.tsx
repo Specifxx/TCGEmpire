@@ -54,6 +54,7 @@ const orgJsonLd = {
       "@type": "Organization",
       "@id": `${SITE_URL}/#org`,
       name: SITE_NAME,
+      alternateName: ["Rift Compare", "RiftCompare.com"],
       url: SITE_URL,
       logo: `${SITE_URL}/icon-512.png`,
       description:
@@ -64,6 +65,7 @@ const orgJsonLd = {
       "@id": `${SITE_URL}/#website`,
       url: SITE_URL,
       name: SITE_NAME,
+      alternateName: ["Rift Compare", "RiftCompare.com"],
       publisher: { "@id": `${SITE_URL}/#org` },
       potentialAction: {
         "@type": "SearchAction",
