@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { SearchBar } from "./SearchBar";
-import { Wordmark } from "./Wordmark";
 import { NavWishlistButton } from "./NavWishlistButton";
 import { MobileNav } from "./MobileNav";
 import { NavDropdown } from "./NavDropdown";
@@ -12,11 +11,13 @@ export function Navbar() {
     <header className="sticky top-0 z-40 border-b border-ink-800 bg-ink-950/95">
       <div className="container-app">
        <div className="flex h-16 items-center gap-4">
-        {/* Logo / wordmark */}
-        <Link href="/" className="flex shrink-0 items-center" aria-label="RiftCompare home">
+        {/* Logo: standalone R mark + text wordmark */}
+        <Link href="/" className="flex shrink-0 items-center gap-2" aria-label="RiftCompare home">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-rc.png" alt="" aria-hidden className="h-7 w-auto sm:hidden" />
-          <Wordmark className="hidden text-xl sm:flex" />
+          <img src="/logo-r-green.png" alt="" aria-hidden className="h-9 w-auto" />
+          <span className="hidden text-lg font-extrabold tracking-tight text-white sm:block">
+            Rift<span className="text-brand-400">Compare</span>
+          </span>
         </Link>
 
         {/* Search — inline on desktop; on smaller screens it gets its own full-width row below */}

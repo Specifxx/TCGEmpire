@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { CardTile } from "@/components/CardTile";
-import { Wordmark } from "@/components/Wordmark";
 import { CountryHeroToggle } from "@/components/CountryHeroToggle";
 import { getChaseCards } from "@/lib/chase-cards";
 import { getCountry } from "@/lib/get-country";
@@ -82,7 +81,8 @@ export default async function HomePage() {
       <section className="card-surface animate-fade-up overflow-hidden">
         <div className="relative bg-gradient-to-br from-brand-600/25 via-ink-850 to-gold/15 px-6 py-12 text-center">
           <div className="mx-auto mb-5 flex items-center justify-center">
-            <Wordmark className="animate-fade-up text-4xl sm:text-5xl" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-r-green.png" alt="RiftCompare" className="animate-float h-16 w-auto sm:h-20" />
           </div>
           <h1 className="mx-auto max-w-3xl text-2xl font-extrabold text-white sm:text-4xl">
             Compare Riftbound card prices across {info.adjective} stores

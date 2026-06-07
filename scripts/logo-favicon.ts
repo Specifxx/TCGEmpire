@@ -29,13 +29,13 @@ async function main() {
       d[i + 3] = 255;
     }
   }
-  const rc = await Jimp.read("public/logo-rc.png");
-  rc.resize({ w: Math.round(S * 0.78) });
-  const x = Math.round((S - rc.bitmap.width) / 2);
-  const y = Math.round((S - rc.bitmap.height) / 2);
-  icon.composite(rc, x, y);
+  const mark = await Jimp.read("public/logo-r-green.png");
+  mark.resize({ h: Math.round(S * 0.70) });
+  const x = Math.round((S - mark.bitmap.width) / 2);
+  const y = Math.round((S - mark.bitmap.height) / 2);
+  icon.composite(mark, x, y);
   await icon.write("src/app/icon.png" as `${string}.png`);
   await icon.write("public/icon-512.png" as `${string}.png`);
-  console.log(`wrote src/app/icon.png + public/icon-512.png (${S}x${S}), mark ${rc.bitmap.width}x${rc.bitmap.height}`);
+  console.log(`wrote src/app/icon.png + public/icon-512.png (${S}x${S}), mark ${mark.bitmap.width}x${mark.bitmap.height}`);
 }
 main().catch((e) => { console.error(e); process.exit(1); });
