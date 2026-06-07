@@ -37,6 +37,14 @@ function setFromTotal(total?: string): string | null {
   }
 }
 
+// A single marketplace listing from the search response's per-product preview.
+export type TcgListing = {
+  price: number; // item price (excludes shipping)
+  languageId: number; // 1 = English
+  quantity: number;
+  condition?: string;
+};
+
 export type TcgProduct = {
   productId: number;
   productName: string;
@@ -49,7 +57,21 @@ export type TcgProduct = {
   foilOnly: boolean;
   sealed: boolean;
   customAttributes?: { number?: string };
+  listings?: TcgListing[];
 };
+
+// The cheapest in-stock ENGLISH Near-Mint listing in the search preview, or null if
+// none. Listings come back cheapest-first, and the preview is already English-only
+// (see searchBody), so this is the actual lowest price a buyer pays for a clean
+// English copy — far better than the all-language lowest (Chinese etc.) and more
+// useful than the algorithmic market price. Near-Mint keeps it comparable + honest
+// (our TCGplayer rows are labelled NM).
+export function englishNmLowest(p: TcgProduct): number | null {
+  const ls = (p.listings ?? []).filter(
+    (l) => l.languageId === 1 && (l.quantity ?? 0) > 0 && /near mint/i.test(l.condition ?? "")
+  );
+  return ls.length ? Math.min(...ls.map((l) => l.price)) : null;
+}
 
 function searchBody(from: number, productTypeName?: string[]) {
   const term: Record<string, string[]> = { productLineName: [PRODUCT_LINE] };
@@ -61,7 +83,10 @@ function searchBody(from: number, productTypeName?: string[]) {
     filters: { term, range: {}, match: {} },
     listingSearch: {
       context: { cart: {} },
-      filters: { term: { sellerStatus: "Live", channelId: 0 }, range: { quantity: { gte: 1 } }, exclude: { channelExclusion: 0 } },
+      // language:["English"] makes the per-product `listings` preview English-only, so
+      // we can take the actual lowest ENGLISH price without foreign-language (e.g.
+      // Chinese) listings corrupting it.
+      filters: { term: { sellerStatus: "Live", channelId: 0, language: ["English"] }, range: { quantity: { gte: 1 } }, exclude: { channelExclusion: 0 } },
     },
     context: { cart: {}, shippingCountry: "US", userProfile: {} },
     settings: { useFuzzySearch: true, didYouMean: {} },
@@ -167,13 +192,16 @@ export const TCG_UK: TcgMarket = { retailer: "tcgplayer_uk", country: "UK", curr
 // decides). Exported separately so a dry-run can inspect the match quality.
 export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: TcgProduct[]): Promise<TcgMatchResult> {
   const items = products ?? (await fetchTcgplayerProducts());
-  const cards = await prisma.card.findMany({ select: { id: true, collectorNumber: true } });
+  const cards = await prisma.card.findMany({ select: { id: true, collectorNumber: true, externalId: true } });
   const byKey = new Map<string, string>();
+  const byExternal = new Map<string, string>();
   for (const c of cards) {
     const [num, total] = c.collectorNumber.split("/");
     const sc = setFromTotal(total);
-    if (!sc) continue;
-    byKey.set(`${sc}|${numKey(num)}`, c.id);
+    if (sc) byKey.set(`${sc}|${numKey(num)}`, c.id);
+    // Cards we created FROM TCGplayer carry externalId "tcg-<productId>" — price them
+    // directly by that link (their numbers, e.g. promo runes "R03a", don't parse to a set).
+    if (c.externalId) byExternal.set(c.externalId, c.id);
   }
 
   const rows: Prisma.RetailerPriceCreateManyInput[] = [];
@@ -183,14 +211,16 @@ export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: Tcg
 
   for (const p of items) {
     const numStr = p.customAttributes?.number;
-    const market = p.marketPrice;
-    if (!numStr || market == null || market <= 0) continue;
-    const [num, total] = numStr.split("/");
+    // Actual lowest English Near-Mint price; fall back to the market price only when
+    // the listing sample has no English NM copy (so we never lose a price).
+    const price = englishNmLowest(p) ?? p.marketPrice;
+    if (price == null || price <= 0) continue;
+    const [num, total] = (numStr ?? "").split("/");
     const sc = setFromTotal(total);
-    if (!sc) continue;
-    const cardId = byKey.get(`${sc}|${numKey(num)}`);
+    // Match by set+number first; otherwise by externalId (our TCGplayer-created cards).
+    const cardId = (sc ? byKey.get(`${sc}|${numKey(num)}`) : undefined) ?? byExternal.get(`tcg-${p.productId}`);
     if (!cardId) {
-      if (unmatchedSamples.length < 25) unmatchedSamples.push(`${p.productName} ${numStr} $${market}`);
+      if (unmatchedSamples.length < 25) unmatchedSamples.push(`${p.productName} ${numStr ?? "?"} $${price}`);
       continue;
     }
     matched++;
@@ -207,7 +237,7 @@ export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: Tcg
       url: tcgProductUrl(p),
       condition: "NM",
       isFoil,
-      priceCents: Math.round(market * 100 * mkt.fx),
+      priceCents: Math.round(price * 100 * mkt.fx),
       currency: mkt.currency,
       country: mkt.country,
       inStock: true,
