@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { getSealedGroups } from "@/lib/sealed-import";
 import { formatMoney } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
@@ -13,11 +14,21 @@ export const metadata: Metadata = {
   alternates: { canonical: "/sealed" },
 };
 
-export default async function SealedPage() {
+export default async function SealedPage({ searchParams }: { searchParams: { q?: string | string[] } }) {
   const country = getCountry();
   const info = COUNTRIES[country];
   const fmt = (cents: number) => formatMoney(cents, info.currency);
-  const groups = await getSealedGroups(country);
+  const all = await getSealedGroups(country);
+  const q = (typeof searchParams.q === "string" ? searchParams.q : "").trim();
+  const ql = q.toLowerCase();
+  const groups = ql
+    ? all.filter(
+        (g) =>
+          g.name.toLowerCase().includes(ql) ||
+          g.productType.toLowerCase().includes(ql) ||
+          (g.setCode ?? "").toLowerCase().includes(ql)
+      )
+    : all;
 
   return (
     <div>
@@ -27,13 +38,27 @@ export default async function SealedPage() {
           Booster boxes, packs, Proving Grounds, bundles and other sealed Riftbound
           products — priced across {info.adjective} stores so you can find the cheapest.
         </p>
+        {q && (
+          <p className="mt-2 text-sm text-slate-400">
+            Showing matches for <span className="text-brand-400">“{q}”</span>.{" "}
+            <Link href="/sealed" className="text-brand-400 hover:underline">Show all</Link>
+          </p>
+        )}
       </div>
 
       {groups.length === 0 ? (
         <div className="card-surface grid place-items-center p-16 text-center text-slate-400">
           <div>
-            <p className="text-lg font-semibold text-white">No sealed products yet</p>
-            <p className="mt-1 text-sm">Our feeds refresh regularly — check back soon.</p>
+            <p className="text-lg font-semibold text-white">
+              {q ? `No sealed products match “${q}”` : "No sealed products yet"}
+            </p>
+            <p className="mt-1 text-sm">
+              {q ? (
+                <Link href="/sealed" className="text-brand-400 hover:underline">Show all sealed products</Link>
+              ) : (
+                "Our feeds refresh regularly — check back soon."
+              )}
+            </p>
           </div>
         </div>
       ) : (

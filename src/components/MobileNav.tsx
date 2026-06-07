@@ -5,17 +5,16 @@ import { useEffect, useState } from "react";
 import { COUNTRY_LIST, INTL_ENABLED } from "@/lib/country";
 import { useCountry } from "./CountryProvider";
 
-// Database stays in the top bar at all sizes; Forum is only in the top bar on
-// sm+ screens, so it's listed here for phones. This menu holds everything else
-// (shown below the lg breakpoint).
-const LINKS: { href: string; label: string; phoneOnly?: boolean }[] = [
-  { href: "/forum", label: "Forum", phoneOnly: true },
+// Database stays in the top bar at all sizes; this menu holds everything else
+// (shown below the lg breakpoint, mirroring the desktop "Decks"/"More" dropdowns).
+const LINKS = [
   { href: "/sealed", label: "Sealed Products" },
   { href: "/decks", label: "Meta Decks" },
   { href: "/deck", label: "Deck Builder" },
   { href: "/proxy", label: "Proxy Printer" },
   { href: "/guides", label: "Guides" },
   { href: "/blog", label: "Blog" },
+  { href: "/forum", label: "Forum" },
   { href: "/wishlist", label: "Wishlist" },
 ];
 
@@ -77,7 +76,7 @@ export function MobileNav() {
             )}
             <ul className="py-1">
               {LINKS.map((l) => (
-                <li key={l.href} className={l.phoneOnly ? "sm:hidden" : undefined}>
+                <li key={l.href}>
                   <Link
                     href={l.href}
                     onClick={() => setOpen(false)}

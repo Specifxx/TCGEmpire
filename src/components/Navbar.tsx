@@ -29,11 +29,6 @@ export function Navbar() {
 
         {/* Nav */}
         <nav className="ml-auto flex items-center gap-1 lg:ml-0">
-          {/* Forum is de-emphasised on phones (lives in the hamburger menu there) to
-              keep the mobile top bar uncluttered; Database stays prominent everywhere. */}
-          <Link href="/forum" className="hidden rounded-lg px-2.5 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:block">
-            Forum
-          </Link>
           <Link href="/browse" className="rounded-lg px-2.5 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white">
             Database
           </Link>
@@ -54,6 +49,7 @@ export function Navbar() {
                 { href: "/proxy", label: "Proxy Printer", desc: "Pick & print test cards" },
                 { href: "/guides", label: "Guides", desc: "Learn Riftbound" },
                 { href: "/blog", label: "Blog", desc: "News & meta" },
+                { href: "/forum", label: "Forum", desc: "Buy & sell with collectors" },
               ]}
             />
           </div>

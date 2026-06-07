@@ -19,12 +19,25 @@ const SET_FROM_TITLE: [RegExp, string][] = [
   [/proving\s*grounds|\bOGS\b/i, "OGS"],
   [/spirit\s*forged|\bSFD\b/i, "SFD"],
   [/unleashed|\bUNL\b/i, "UNL"],
-  [/vendetta|\bVEN\b/i, "VEN"],
   [/origins|\bOGN\b/i, "OGN"],
 ];
 const SET_NAMES: Record<string, string> = {
-  OGN: "Origins", OGS: "Proving Grounds", SFD: "Spiritforged", UNL: "Unleashed", VEN: "Vendetta",
+  OGN: "Origins", OGS: "Proving Grounds", SFD: "Spiritforged", UNL: "Unleashed",
 };
+
+// A sealed product must be identifiably RIFTBOUND. Other games slip in when a store
+// files them under a shared/mismatched collection — e.g. Gundam "… [Starter Deck 06:
+// Clan Unity]" matches "starter deck" — so we require an explicit Riftbound/League
+// marker (set name, "Riftbound", "League of Legends", Proving Grounds, Nexus Night).
+const RIFTBOUND_HINT =
+  /riftbound|league\s*of\s*legends|proving\s*grounds|nexus\s*night|spirit\s*forged|spiritforged|\borigins\b|\bunleashed\b|\b(?:OGN|OGS|SFD|UNL)\b/i;
+
+// Sets that aren't released yet — never list their (pre-order) sealed products.
+const UNRELEASED_SET = /\bvendetta\b|\bradiance\b|\b(?:VEN|RAD)\b/i;
+
+function isRiftboundSealed(title: string): boolean {
+  return RIFTBOUND_HINT.test(title) && !UNRELEASED_SET.test(title);
+}
 
 // A sealed product title looks like one of these. "nexus night" (not bare "nexus",
 // which also matches the single card "Power Nexus").
@@ -126,6 +139,7 @@ export async function importSealed(): Promise<number> {
         seen.add(p.handle);
         const title = p.title ?? "";
         if (!SEALED_TITLE.test(title) || SEALED_EXCLUDE.test(title)) continue;
+        if (!isRiftboundSealed(title)) continue; // drop non-Riftbound + unreleased sets
         const priced = p.variants.filter((v) => parseFloat(v.price) > 0);
         if (!priced.length) continue;
         const avail = priced.filter((v) => v.available);
@@ -219,7 +233,7 @@ export async function importSealed(): Promise<number> {
 export async function cleanupStaleSealed(): Promise<number> {
   const rows = await prisma.sealedListing.findMany({ select: { id: true, title: true } });
   const ids = rows
-    .filter((r) => !SEALED_TITLE.test(r.title) || SEALED_EXCLUDE.test(r.title))
+    .filter((r) => !SEALED_TITLE.test(r.title) || SEALED_EXCLUDE.test(r.title) || !isRiftboundSealed(r.title))
     .map((r) => r.id);
   if (ids.length) await prisma.sealedListing.deleteMany({ where: { id: { in: ids } } });
   return ids.length;

@@ -9,6 +9,14 @@ import { useCountry } from "./CountryProvider";
 import type { CardTileData } from "./CardTile";
 
 type Result = CardTileData;
+type SealedResult = {
+  groupKey: string;
+  name: string;
+  productType: string;
+  setCode: string | null;
+  imageUrl: string | null;
+  lowestPriceCents: number | null;
+};
 
 // Search with a live preview dropdown (debounced + abortable so typing stays
 // snappy). Submitting still does a real navigation to the results page.
@@ -19,6 +27,7 @@ export function SearchBar() {
   const { fmt, price } = useCountry();
   const [value, setValue] = useState(params.get("q") ?? "");
   const [results, setResults] = useState<Result[]>([]);
+  const [sealed, setSealed] = useState<SealedResult[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
@@ -29,6 +38,7 @@ export function SearchBar() {
     const q = value.trim();
     if (q.length < 2) {
       setResults([]);
+      setSealed([]);
       setLoading(false);
       return;
     }
@@ -41,6 +51,7 @@ export function SearchBar() {
         const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`, { signal: ctrl.signal });
         const data = await res.json();
         setResults(data.results ?? []);
+        setSealed(data.sealed ?? []);
       } catch {
         /* aborted or failed — ignore */
       } finally {
@@ -98,7 +109,7 @@ export function SearchBar() {
 
       {showDropdown && (
         <div className="absolute z-50 mt-2 w-full overflow-hidden rounded-xl border border-ink-700 bg-ink-850 shadow-2xl">
-          {results.length === 0 ? (
+          {results.length === 0 && sealed.length === 0 ? (
             <div className="px-4 py-3 text-sm text-slate-400">
               {loading ? "Searching…" : "No matches — press Enter to search anyway."}
             </div>
@@ -141,6 +152,41 @@ export function SearchBar() {
                   </Link>
                 </li>
               ))}
+              {sealed.length > 0 && (
+                <>
+                  <li className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                    Sealed products
+                  </li>
+                  {sealed.map((s) => (
+                    <li key={s.groupKey}>
+                      <Link
+                        href={`/sealed?q=${encodeURIComponent(s.name)}`}
+                        onClick={() => setOpen(false)}
+                        className="flex items-center gap-3 px-3 py-2 hover:bg-ink-800"
+                      >
+                        <div className="grid h-12 w-9 shrink-0 place-items-center overflow-hidden rounded bg-ink-900">
+                          {s.imageUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={s.imageUrl} alt="" className="h-full w-full object-contain" loading="lazy" />
+                          ) : (
+                            <span className="text-[8px] font-semibold text-slate-600">SEALED</span>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm font-semibold text-white">{s.name}</div>
+                          <div className="text-xs text-slate-500">
+                            {s.productType}{s.setCode ? ` · ${s.setCode}` : ""}
+                          </div>
+                        </div>
+                        <div className="shrink-0 text-sm font-bold text-accent">
+                          {s.lowestPriceCents != null ? fmt(s.lowestPriceCents) : "—"}
+                        </div>
+                      </Link>
+                    </li>
+                  ))}
+                </>
+              )}
+
               <li className="border-t border-ink-800">
                 <button
                   type="button"
