@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { formatAUD } from "@/lib/format";
-import { LogoutButton } from "@/components/ProfileActions";
+import { LogoutButton, ResendVerifyButton } from "@/components/ProfileActions";
 
 export const dynamic = "force-dynamic";
 
@@ -17,26 +17,67 @@ export default async function ProfilePage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/profile");
 
-  const posts = await prisma.forumPost.findMany({
-    where: { userId: user.id, status: "OPEN" },
-    orderBy: { createdAt: "desc" },
-  });
+  const [posts, account] = await Promise.all([
+    prisma.forumPost.findMany({ where: { userId: user.id, status: "OPEN" }, orderBy: { createdAt: "desc" } }),
+    prisma.user.findUnique({ where: { id: user.id }, select: { googleId: true, discordId: true, passwordHash: true } }),
+  ]);
   const wts = posts.filter((p) => p.kind === "WTS").length;
   const wtb = posts.filter((p) => p.kind === "WTB").length;
+
+  const methods = [
+    { label: "Password", on: !!account?.passwordHash },
+    { label: "Google", on: !!account?.googleId },
+    { label: "Discord", on: !!account?.discordId },
+  ];
 
   return (
     <div className="mx-auto max-w-3xl">
       <div className="card-surface flex flex-wrap items-center justify-between gap-4 p-5">
         <div className="flex items-center gap-4">
-          <div className="grid h-14 w-14 place-items-center rounded-full bg-brand-500 text-2xl font-black text-white">
-            {user.displayName.slice(0, 1).toUpperCase()}
-          </div>
+          {user.avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={user.avatarUrl} alt="" className="h-14 w-14 rounded-full object-cover" referrerPolicy="no-referrer" />
+          ) : (
+            <div className="grid h-14 w-14 place-items-center rounded-full bg-brand-500 text-2xl font-black text-white">
+              {user.displayName.slice(0, 1).toUpperCase()}
+            </div>
+          )}
           <div>
             <h1 className="text-xl font-extrabold text-white">{user.displayName}</h1>
             <p className="text-sm text-slate-400">{user.email}</p>
           </div>
         </div>
         <LogoutButton />
+      </div>
+
+      {/* Account & security */}
+      <div className="card-surface mt-5 p-5">
+        <h2 className="font-bold text-white">Account &amp; security</h2>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-b border-ink-800 pb-3 text-sm">
+          <span className="text-slate-400">Email</span>
+          {user.emailVerified ? (
+            <span className="chip bg-brand-500/15 text-brand-300">✓ Verified</span>
+          ) : (
+            <span className="flex items-center gap-2">
+              <span className="chip bg-gold/15 text-gold">Not confirmed</span>
+              <ResendVerifyButton />
+            </span>
+          )}
+        </div>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">
+          <span className="text-slate-400">Sign-in methods</span>
+          <span className="flex gap-1.5">
+            {methods.map((m) => (
+              <span key={m.label} className={`chip ${m.on ? "bg-ink-800 text-slate-200" : "bg-ink-900 text-slate-600"}`}>
+                {m.on ? "✓ " : ""}{m.label}
+              </span>
+            ))}
+          </span>
+        </div>
+        <p className="mt-3 text-xs text-slate-500">
+          Link more sign-in options any time from the <Link href="/login" className="text-brand-400 hover:underline">sign-in page</Link>, or manage your{" "}
+          <Link href="/wishlist" className="text-brand-400 hover:underline">wishlist</Link>.
+        </p>
       </div>
 
       <div className="card-surface mt-5 p-5">
