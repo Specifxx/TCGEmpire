@@ -87,16 +87,30 @@ async function upsertOAuthUser(
     provider === "google"
       ? await prisma.user.findFirst({ where: { googleId: providerId } })
       : await prisma.user.findFirst({ where: { discordId: providerId } });
-  const existing = byProvider ?? (await prisma.user.findUnique({ where: { email } }));
-
   const link = provider === "google" ? { googleId: providerId } : { discordId: providerId };
-  if (existing) {
+
+  // Already linked to this provider id → just refresh avatar / verification.
+  if (byProvider) {
     return prisma.user.update({
-      where: { id: existing.id },
+      where: { id: byProvider.id },
+      data: { emailVerified: byProvider.emailVerified ?? new Date(), avatarUrl: byProvider.avatarUrl ?? avatar },
+    });
+  }
+
+  // Otherwise link to an existing account with the same email (the provider has
+  // verified this email, so it's the same person). Security: if that account was
+  // NEVER email-verified yet has a password, the password was set without proving
+  // inbox ownership (a possible squatter) — discard it, since the OAuth provider is
+  // now the authority on this email. The real owner can set a fresh one via /forgot.
+  const byEmail = await prisma.user.findUnique({ where: { email } });
+  if (byEmail) {
+    return prisma.user.update({
+      where: { id: byEmail.id },
       data: {
         ...link,
-        emailVerified: existing.emailVerified ?? new Date(), // provider verified it
-        avatarUrl: existing.avatarUrl ?? avatar,
+        emailVerified: byEmail.emailVerified ?? new Date(),
+        avatarUrl: byEmail.avatarUrl ?? avatar,
+        ...(!byEmail.emailVerified && byEmail.passwordHash ? { passwordHash: null } : {}),
       },
     });
   }

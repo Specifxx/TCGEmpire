@@ -12,9 +12,12 @@ export async function POST(req: Request) {
 
   const email = parsed.data.email.toLowerCase();
   const user = await prisma.user.findUnique({ where: { email } });
-  // Only send if the account exists AND has a password (OAuth-only accounts can't
-  // reset a password). Always respond ok so we never leak which emails are registered.
-  if (user && user.passwordHash) {
+  // Send to any existing account. This doubles as "set a password": a Google/Discord
+  // user (or one whose unverified password was cleared on OAuth link) can use it to
+  // add password login, since they control this provider-verified inbox. The reset
+  // route writes passwordHash regardless of whether one existed.
+  // Always respond ok so we never leak which emails are registered.
+  if (user) {
     const token = await createAuthToken(user.id, "reset");
     await sendPasswordResetEmail(email, token);
   }
