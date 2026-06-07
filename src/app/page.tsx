@@ -6,7 +6,7 @@ import { Wordmark } from "@/components/Wordmark";
 import { CountryHeroToggle } from "@/components/CountryHeroToggle";
 import { getChaseCards } from "@/lib/chase-cards";
 import { getCountry } from "@/lib/get-country";
-import { COUNTRIES, priceField } from "@/lib/country";
+import { COUNTRIES, priceField, type CountryInfo } from "@/lib/country";
 import { SETS, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
 
 // ISR while AU-only; becomes dynamic per-request when NZ mode is enabled (getCountry
@@ -36,24 +36,26 @@ function ebayLabel(country: string): string | null {
   return country === "AU" ? "eBay AU" : country === "US" ? "eBay US" : null;
 }
 
-// FAQ content tailored to the visitor's market (label, currency, eBay availability).
-function faqsFor(L: string, currency: string, ebay: string | null): { q: string; a: string }[] {
+// FAQ content tailored to the visitor's market. Uses `place` after "in" (so US
+// reads "in the United States") and `adjective` before nouns ("Australian stores").
+function faqsFor(info: CountryInfo, ebay: string | null): { q: string; a: string }[] {
+  const { adjective, place, currency } = info;
   return [
     {
-      q: `Where can I buy Riftbound cards in ${L}?`,
-      a: `RiftCompare compares live Riftbound prices across a wide range of ${L} stores${ebay ? ` plus ${ebay}` : ""}, so you can buy Riftbound cards from whichever shop is cheapest. Search any card to see every store's price and click straight through to buy.`,
+      q: `Where can I buy Riftbound cards in ${place}?`,
+      a: `RiftCompare compares live Riftbound prices across a wide range of ${adjective} stores${ebay ? ` plus ${ebay}` : ""}, so you can buy Riftbound cards from whichever shop is cheapest. Search any card to see every store's price and click straight through to buy.`,
     },
     {
-      q: `How do I find the cheapest Riftbound prices in ${L}?`,
-      a: `Search or browse the card database and each card shows the lowest live price across ${L} stores, ranked by total delivered cost (item plus shipping). It's the fastest way to find the cheapest Riftbound cards in ${L}.`,
+      q: `How do I find the cheapest Riftbound prices in ${place}?`,
+      a: `Search or browse the card database and each card shows the lowest live price across ${adjective} stores, ranked by total delivered cost (item plus shipping). It's the fastest way to find the cheapest Riftbound cards in ${place}.`,
     },
     {
       q: "Does RiftCompare cover Riftbound singles and sealed products?",
-      a: `Yes — compare prices on individual Riftbound singles as well as sealed product like booster boxes, booster packs, Proving Grounds and Nexus Night packs, all priced across ${L} retailers.`,
+      a: `Yes — compare prices on individual Riftbound singles as well as sealed products like booster boxes, booster packs, Proving Grounds and Nexus Night packs, all priced across ${adjective} retailers.`,
     },
     {
       q: `Are the Riftbound prices shown in ${currency}?`,
-      a: `Yes. Every price is the live ${L} price in ${currency}, so there are no surprise currency conversions — what you see is what you pay locally.`,
+      a: `Yes. Every price is the live ${adjective} price in ${currency}, so there are no surprise currency conversions — what you see is what you pay locally.`,
     },
   ];
 }
@@ -62,7 +64,7 @@ export default async function HomePage() {
   const country = getCountry();
   const info = COUNTRIES[country];
   const ebay = ebayLabel(country);
-  const faqs = faqsFor(info.label, info.currency, ebay);
+  const faqs = faqsFor(info, ebay);
   const field = priceField(country);
   const [totalCards, pricedCards, chaseCards, storeGroups] = await Promise.all([
     prisma.card.count(),
@@ -83,11 +85,11 @@ export default async function HomePage() {
             <Wordmark className="animate-fade-up text-4xl sm:text-5xl" />
           </div>
           <h1 className="mx-auto max-w-3xl text-2xl font-extrabold text-white sm:text-4xl">
-            Compare Riftbound card prices across {info.label} stores
+            Compare Riftbound card prices across {info.adjective} stores
           </h1>
           <p className="mx-auto mt-3 max-w-2xl text-sm text-slate-400 sm:text-base">
-            Find the cheapest place to buy Riftbound TCG cards in {info.label} — live prices in{" "}
-            {info.currency} compared across {storeCount} {info.label} stores, updated daily.
+            Find the cheapest place to buy Riftbound TCG cards in {info.place} — live prices in{" "}
+            {info.currency} compared across {storeCount} {info.adjective} stores, updated daily.
           </p>
 
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
@@ -113,7 +115,7 @@ export default async function HomePage() {
         <div>
           <div className="flex items-center gap-2">
             <span className="chip bg-brand-500/15 text-brand-400">New</span>
-            <h2 className="text-lg font-bold text-white">Buy &amp; sell with other {info.code} players</h2>
+            <h2 className="text-lg font-bold text-white">Buy &amp; sell with other {info.adjective} players</h2>
           </div>
           <p className="mt-1 max-w-xl text-sm text-slate-400">
             Post want-to-buy and want-to-sell listings on the community forum, and trade directly with
@@ -195,11 +197,11 @@ export default async function HomePage() {
 
       {/* About + FAQ — keyword-relevant content for search */}
       <section className="card-surface p-6">
-        <h2 className="text-xl font-extrabold text-white">Riftbound prices in {info.label}, all in one place</h2>
+        <h2 className="text-xl font-extrabold text-white">Riftbound prices in {info.place}, all in one place</h2>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
           RiftCompare is a free, independent price-comparison tool for Riftbound: League of Legends
-          TCG, built for {info.label} players. We track live prices for every Riftbound card across
-          {" "}{info.label} stores{ebay ? ` and ${ebay}` : ""} so you can buy Riftbound cards in {info.label} for
+          TCG, built for {info.adjective} players. We track live prices for every Riftbound card across
+          {" "}{info.adjective} stores{ebay ? ` and ${ebay}` : ""} so you can buy Riftbound cards in {info.place} for
           less — whether you&apos;re chasing singles for a deck or sealed booster boxes.
         </p>
         <div className="mt-6 grid gap-5 sm:grid-cols-2">

@@ -25,7 +25,7 @@ export default async function SealedPage() {
         <h1 className="text-2xl font-extrabold text-white">Sealed Products</h1>
         <p className="mt-1 text-sm text-slate-400">
           Booster boxes, packs, Proving Grounds, bundles and other sealed Riftbound
-          products — priced across {info.label} stores so you can find the cheapest.
+          products — priced across {info.adjective} stores so you can find the cheapest.
         </p>
       </div>
 

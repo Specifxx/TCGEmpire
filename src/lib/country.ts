@@ -7,16 +7,18 @@ export type Country = "AU" | "NZ" | "US";
 
 export interface CountryInfo {
   code: Country;
-  label: string;
+  label: string; // display name, e.g. "United States" (switcher, "in {label}" only where it reads right)
+  adjective: string; // attributive form, e.g. "US stores", "Australian players"
+  place: string; // prepositional form with any article, e.g. "the United States" → "buy in {place}"
   flag: string; // emoji
   currency: string; // ISO 4217
   locale: string;
 }
 
 export const COUNTRIES: Record<Country, CountryInfo> = {
-  AU: { code: "AU", label: "Australia", flag: "🇦🇺", currency: "AUD", locale: "en-AU" },
-  NZ: { code: "NZ", label: "New Zealand", flag: "🇳🇿", currency: "NZD", locale: "en-NZ" },
-  US: { code: "US", label: "United States", flag: "🇺🇸", currency: "USD", locale: "en-US" },
+  AU: { code: "AU", label: "Australia", adjective: "Australian", place: "Australia", flag: "🇦🇺", currency: "AUD", locale: "en-AU" },
+  NZ: { code: "NZ", label: "New Zealand", adjective: "New Zealand", place: "New Zealand", flag: "🇳🇿", currency: "NZD", locale: "en-NZ" },
+  US: { code: "US", label: "United States", adjective: "US", place: "the United States", flag: "🇺🇸", currency: "USD", locale: "en-US" },
 };
 
 // Order shown in the switcher.

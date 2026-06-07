@@ -29,8 +29,8 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 
   const lowest = pickPrice(card, country);
   const price = lowest != null ? ` from ${formatMoney(lowest, info.currency)}` : "";
-  const title = `${card.name} (${card.setCode} ${card.collectorNumber}) — Riftbound price in ${info.label}`;
-  const description = `Compare live ${info.label} prices for ${card.name}, Riftbound ${card.setName} ${card.collectorNumber}${price}. Find the cheapest store to buy this card in ${info.label}.`;
+  const title = `${card.name} (${card.setCode} ${card.collectorNumber}) — Riftbound price in ${info.place}`;
+  const description = `Compare live ${info.adjective} prices for ${card.name}, Riftbound ${card.setName} ${card.collectorNumber}${price}. Find the cheapest store to buy this card in ${info.place}.`;
   const image = card.imageUrl ?? card.imageThumbUrl ?? undefined;
 
   return {
@@ -89,7 +89,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     "@type": "Product",
     name: card.name,
     category: "Trading Card",
-    description: `${card.name} — Riftbound ${card.setName} (${card.setCode}) ${card.collectorNumber}. Compare ${info.label} prices.`,
+    description: `${card.name} — Riftbound ${card.setName} (${card.setCode}) ${card.collectorNumber}. Compare ${info.adjective} prices.`,
     ...(card.imageUrl ? { image: card.imageUrl } : {}),
     ...(prices.length && lowestPrice != null
       ? {
@@ -176,7 +176,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               <div className="p-6 text-center text-sm text-slate-400">
                 <p className="font-semibold text-white">Currently sold out everywhere</p>
                 <p className="mt-1">
-                  {outOfStock.length} {info.label} {outOfStock.length === 1 ? "store has" : "stores have"} listed
+                  {outOfStock.length} {info.adjective} {outOfStock.length === 1 ? "store has" : "stores have"} listed
                   this card but it&apos;s out of stock right now. See them below.
                 </p>
               </div>

@@ -39,7 +39,7 @@ export default async function DecksPage() {
             >
               riftDecks.com
             </a>{" "}
-            — each priced live across {info.label} stores so you can see what it costs to build and
+            — each priced live across {info.adjective} stores so you can see what it costs to build and
             where to buy every card.
           </p>
         </div>
@@ -69,7 +69,7 @@ export default async function DecksPage() {
         >
           riftDecks.com
         </a>{" "}
-        and change with the metagame. Build cost uses each card&apos;s cheapest in-stock {info.label}{" "}
+        and change with the metagame. Build cost uses each card&apos;s cheapest in-stock {info.adjective}{" "}
         price and may span multiple stores.
       </p>
     </div>
