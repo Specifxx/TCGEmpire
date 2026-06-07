@@ -65,12 +65,14 @@ export default async function CardPage({ params }: { params: { id: string } }) {
 
   // Rank by DELIVERED cost (item + shipping) so a listing isn't shown as cheapest
   // just because its postage reads as $0 — the common eBay case. Shipping is the
-  // listing's real figure when known, otherwise an estimate (eBay tracked letter,
-  // or the store's flat single-card rate). In-stock first, then sold-out.
+  // postage is only shown when we genuinely know it (eBay's real per-listing figure);
+  // otherwise it's "at checkout" and excluded from the delivered total. Rank by the
+  // known delivered cost (item + known postage), treating unknown postage as item
+  // price only. In-stock first, then sold-out.
   const all = card.retailerPrices
     .map((p) => {
-      const ship = effectiveShippingCents(p.retailer, p.shippingCents);
-      return { ...p, ship, shipEstimated: p.shippingCents == null, delivered: p.priceCents + ship };
+      const ship = effectiveShippingCents(p.shippingCents); // number | null (null = unknown)
+      return { ...p, ship, delivered: p.priceCents + (ship ?? 0) };
     })
     .sort((a, b) => a.delivered - b.delivered);
   const prices = all.filter((p) => p.inStock);
@@ -193,7 +195,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                         {p.condition && <span className="chip bg-ink-800 text-slate-300">{p.condition}</span>}
                         <span className="text-brand-400">● In stock</span>
                         <span>
-                          {p.ship === 0 ? "+ free post" : `+ ${fmt(p.ship)} post${p.shipEstimated ? " est." : ""}`}
+                          {p.ship == null ? "postage at checkout" : p.ship === 0 ? "free postage" : `+ ${fmt(p.ship)} postage`}
                         </span>
                       </div>
                     </div>
@@ -201,7 +203,9 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                       <div className={`text-lg font-bold ${i === 0 ? "text-accent" : "text-white"}`}>
                         {fmt(p.priceCents)}
                       </div>
-                      <div className="text-[11px] text-slate-400">≈ {fmt(p.delivered)} delivered</div>
+                      {p.ship != null && (
+                        <div className="text-[11px] text-slate-400">≈ {fmt(p.delivered)} delivered</div>
+                      )}
                     </div>
                     <a
                       href={affiliateUrl(p.url)}

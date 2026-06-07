@@ -95,13 +95,13 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
     };
   }, [card, onClose]);
 
-  // Rank by delivered cost (item + shipping) so eBay's $0-postage listings don't
-  // jump to the top. Matches the full card page.
+  // Rank by delivered cost where postage is known (eBay), else by item price.
+  // We never fabricate a postage estimate — unknown postage shows "at checkout".
   const inStock = (prices ?? [])
     .filter((p) => p.inStock && p.country === country)
     .map((p) => {
-      const ship = effectiveShippingCents(p.retailer, p.shippingCents);
-      return { ...p, ship, delivered: p.priceCents + ship };
+      const ship = effectiveShippingCents(p.shippingCents); // number | null (null = unknown)
+      return { ...p, ship, delivered: p.priceCents + (ship ?? 0) };
     })
     .sort((a, b) => a.delivered - b.delivered);
 
@@ -177,7 +177,9 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                       </div>
                       <div className="text-right">
                         <div className={`text-sm font-bold ${i === 0 ? "text-accent" : "text-white"}`}>{fmt(p.priceCents)}</div>
-                        <div className="text-[10px] text-slate-500">≈ {fmt(p.delivered)} del.</div>
+                        <div className="text-[10px] text-slate-500">
+                          {p.ship == null ? "+ postage" : p.ship === 0 ? "free post" : `≈ ${fmt(p.delivered)} del.`}
+                        </div>
                       </div>
                       <a href={affiliateUrl(p.url)} target="_blank" rel="nofollow sponsored noopener noreferrer" className="btn-primary px-3 py-1.5 text-xs">
                         View →

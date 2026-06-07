@@ -490,23 +490,12 @@ export function deliveredCents(retailerKey: string, priceCents: number): number 
   return priceCents + (shippingCents(retailerKey) ?? 0);
 }
 
-// eBay listings often don't expose a postage figure (calculated/located shipping).
-// Use a modest tracked-letter estimate so an eBay listing isn't shown as the
-// cheapest purely because its shipping reads as $0.
-export const EBAY_EST_SHIPPING_CENTS = 350;
-
-// TCGplayer ships singles cheaply (≈US$1.29 standard; often free over US$5 via
-// Direct). Use a modest per-card estimate so its market price isn't ranked as if
-// it shipped free.
-export const TCG_EST_SHIPPING_CENTS = 130;
-
-// The shipping we should use for a single listing when ranking by delivered cost:
-//  - a real per-listing value when we have one (incl. 0 = the seller states free),
-//  - else eBay's / TCGplayer's estimate for those rows,
-//  - else the store's flat estimate.
-export function effectiveShippingCents(retailerKey: string, rowShippingCents: number | null): number {
-  if (rowShippingCents != null) return rowShippingCents;
-  if (retailerKey.startsWith("ebay")) return EBAY_EST_SHIPPING_CENTS;
-  if (retailerKey === "tcgplayer") return TCG_EST_SHIPPING_CENTS;
-  return shippingCents(retailerKey) ?? 0;
+// The shipping cost for a single listing — returned ONLY when we genuinely know it.
+// eBay's Browse API gives a real per-listing figure (including 0 = seller states
+// free post), so those are exact. Everywhere else (Shopify stores, TCGplayer)
+// postage is calculated at checkout and we don't actually know it, so we return
+// `null` = "unknown" rather than a fabricated flat estimate. Accuracy over
+// exhaustiveness — wrong delivery prices erode trust (and drew user complaints).
+export function effectiveShippingCents(rowShippingCents: number | null): number | null {
+  return rowShippingCents;
 }
