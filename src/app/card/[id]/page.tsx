@@ -87,30 +87,52 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   const cheapestFoil = minPrice(prices.filter((p) => p.isFoil));
 
   // Structured data so Google can show a rich price snippet ("$X, N stores").
-  const jsonLd = {
+  // Google requires a Product to carry "offers", "review", or "aggregateRating";
+  // a Product without any of these is a critical Search Console error. So we only
+  // emit the Product markup when we actually have priced, in-stock offers to back
+  // it — unpriced cards simply omit it rather than emit an invalid empty Product.
+  const hasOffers = prices.length > 0 && lowestPrice != null;
+  const jsonLd = hasOffers
+    ? {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        name: card.name,
+        category: "Trading Card",
+        description: `${card.name} — Riftbound ${card.setName} (${card.setCode}) ${card.collectorNumber}. Compare ${info.adjective} prices.`,
+        ...(card.imageUrl ? { image: card.imageUrl } : {}),
+        offers: {
+          "@type": "AggregateOffer",
+          priceCurrency: info.currency,
+          lowPrice: (lowestPrice / 100).toFixed(2),
+          highPrice: (prices[prices.length - 1].priceCents / 100).toFixed(2),
+          offerCount: prices.length,
+          availability: "https://schema.org/InStock",
+        },
+      }
+    : null;
+
+  // Unique editorial copy + FAQ so each card page carries substantive, crawlable
+  // text rather than just a price table (thin content ranks poorly). Everything
+  // below is generated from this card's own attributes, so no two pages match.
+  const tags = (card.tags ?? "").split(",").map((t) => t.trim()).filter(Boolean);
+  const about = buildAbout(card, info, lowestPrice, prices.length, fmt);
+  const faqs = buildFaqs(card, info, lowestPrice, prices.length, fmt);
+  const faqLd = {
     "@context": "https://schema.org",
-    "@type": "Product",
-    name: card.name,
-    category: "Trading Card",
-    description: `${card.name} — Riftbound ${card.setName} (${card.setCode}) ${card.collectorNumber}. Compare ${info.adjective} prices.`,
-    ...(card.imageUrl ? { image: card.imageUrl } : {}),
-    ...(prices.length && lowestPrice != null
-      ? {
-          offers: {
-            "@type": "AggregateOffer",
-            priceCurrency: info.currency,
-            lowPrice: (lowestPrice / 100).toFixed(2),
-            highPrice: (prices[prices.length - 1].priceCents / 100).toFixed(2),
-            offerCount: prices.length,
-            availability: "https://schema.org/InStock",
-          },
-        }
-      : {}),
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
   };
 
   return (
     <div>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      {jsonLd && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      )}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       <CardViewBeacon idOrSlug={card.slug ?? card.id} />
       <Link href="/browse" className="mb-4 inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white">
         ← Back to database
@@ -268,10 +290,102 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               may earn a commission on some outbound links.
             </p>
           </div>
+
+          {/* Unique, crawlable editorial content — keeps each card page from being
+              thin (a bare price table). Generated per-card, so no duplication. */}
+          <section className="card-surface mt-6 p-5">
+            <h2 className="font-bold text-white">About {card.name}</h2>
+            <div className="mt-3 space-y-3 text-sm leading-relaxed text-slate-300">
+              {about.map((p, i) => (
+                <p key={i}>{p}</p>
+              ))}
+              {card.description && <p className="text-slate-400">{card.description}</p>}
+              {card.flavorText && <p className="italic text-slate-500">&ldquo;{card.flavorText}&rdquo;</p>}
+            </div>
+            {tags.length > 0 && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {tags.map((t) => (
+                  <span key={t} className="chip bg-ink-800 text-slate-400">
+                    {t}
+                  </span>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="card-surface mt-6 p-5">
+            <h2 className="font-bold text-white">Frequently asked questions</h2>
+            <dl className="mt-3 space-y-4">
+              {faqs.map((f) => (
+                <div key={f.q}>
+                  <dt className="font-semibold text-white">{f.q}</dt>
+                  <dd className="mt-1 text-sm leading-relaxed text-slate-400">{f.a}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
         </div>
       </div>
     </div>
   );
+}
+
+type CardForCopy = {
+  name: string;
+  setName: string;
+  setCode: string;
+  collectorNumber: string;
+  domain: string;
+  type: string;
+  rarity: string;
+  variant: string | null;
+  isPromo: boolean;
+  energyCost: number | null;
+  might: number | null;
+  power: number | null;
+};
+type Info = { adjective: string; place: string };
+type Fmt = (cents: number) => string;
+
+// Builds 2 short paragraphs of unique prose from the card's own attributes.
+function buildAbout(card: CardForCopy, info: Info, lowest: number | null, stores: number, fmt: Fmt): string[] {
+  let p1 = `${card.name} is a ${card.rarity.toLowerCase()} ${card.type.toLowerCase()} card from ${card.setName} (${card.setCode}), a set in the Riftbound trading card game, with collector number ${card.collectorNumber}.`;
+  p1 += card.domain === "Colorless"
+    ? " It is a Colorless card, so it fits into decks of any domain."
+    : ` It belongs to the ${card.domain} domain.`;
+  if (card.energyCost != null) {
+    p1 += ` ${card.name} costs ${card.energyCost} energy to play`;
+    if (card.might != null) p1 += ` and has ${card.might} might`;
+    else if (card.power != null) p1 += ` and has ${card.power} power`;
+    p1 += ".";
+  }
+  if (card.variant) p1 += ` This listing covers the alternate-art (${card.variant}) printing.`;
+  if (card.isPromo) p1 += " It is a promotional printing.";
+
+  const p2 = lowest != null && stores > 0
+    ? `The lowest ${info.adjective} price for ${card.name} today is ${fmt(lowest)}, available across ${stores} ${stores === 1 ? "store" : "stores"}. RiftCompare checks ${info.adjective} retailers daily so you always see the cheapest place to buy it in ${info.place}, postage included.`
+    : `We're currently tracking down ${info.adjective} listings for ${card.name}. Prices refresh daily, so check back soon or add it to your wishlist to be ready the moment it's back in stock.`;
+
+  return [p1, p2];
+}
+
+function buildFaqs(card: CardForCopy, info: Info, lowest: number | null, stores: number, fmt: Fmt): { q: string; a: string }[] {
+  return [
+    {
+      q: `How much does ${card.name} cost in ${info.place}?`,
+      a: lowest != null && stores > 0
+        ? `The cheapest ${info.adjective} price for ${card.name} (${card.setCode} ${card.collectorNumber}) is currently ${fmt(lowest)}, found across ${stores} ${stores === 1 ? "store" : "stores"}. Prices update daily.`
+        : `We don't have a live ${info.adjective} price for ${card.name} right now. Prices refresh daily — check back soon for the cheapest place to buy it.`,
+    },
+    {
+      q: `What set is ${card.name} from?`,
+      a: `${card.name} is card ${card.collectorNumber} from ${card.setName} (${card.setCode}) in the Riftbound TCG. It is a ${card.rarity.toLowerCase()} ${card.type.toLowerCase()}${card.domain === "Colorless" ? "" : ` in the ${card.domain} domain`}.`,
+    },
+    {
+      q: `Where can I buy ${card.name}?`,
+      a: `Compare every ${info.adjective} store selling ${card.name} on this page, then buy from whichever retailer offers the lowest total price including postage. RiftCompare links straight through to each store.`,
+    },
+  ];
 }
 
 function Metric({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
