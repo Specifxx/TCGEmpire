@@ -20,14 +20,54 @@ export const IMPACT_SITE_VERIFICATION = "ebb0400c-dec0-45ae-a56e-e7bb1596e965";
 // links pass through untouched (no tracking) while the application is in review.
 export const TCGPLAYER_IMPACT_LINK = process.env.TCGPLAYER_IMPACT_LINK ?? "";
 
+// eBay Partner Network link parameters per marketplace. The Browse API is supposed
+// to return pre-tagged URLs (itemAffiliateWebUrl) when we pass the campaign, but in
+// practice it often returns the plain itemWebUrl, so we tag links ourselves here —
+// this is the standard "ePN smart link" format and is what actually credits clicks.
+// mkevt=1 is the critical flag (without it the click is NOT tracked); mkrid is the
+// marketplace rotation id (verified against eBay's EPN docs).
+const EBAY_MARKETS: Record<string, { mkrid: string; siteid: string; customid: string }> = {
+  "ebay.com.au": { mkrid: "705-53470-19255-0", siteid: "15", customid: "rc-au" },
+  "ebay.com": { mkrid: "711-53200-19255-0", siteid: "0", customid: "rc-us" },
+};
+
+function ebayMarket(hostname: string) {
+  const h = hostname.replace(/^www\./i, "").toLowerCase();
+  if (EBAY_MARKETS[h]) return EBAY_MARKETS[h];
+  // Any other eBay TLD still gets tracked — fall back to the US rotation.
+  if (/(?:^|\.)ebay\./i.test(h)) return EBAY_MARKETS["ebay.com"];
+  return null;
+}
+
+// Turn a plain eBay item/search URL into an affiliate-tracked one.
+export function ebayAffiliateUrl(url: string): string {
+  try {
+    const u = new URL(url);
+    const m = ebayMarket(u.hostname);
+    if (!m) return url;
+    u.searchParams.set("mkevt", "1"); // marks the click as a tracked EPN event (required)
+    u.searchParams.set("mkcid", "1"); // channel: eBay Partner Network
+    u.searchParams.set("mkrid", m.mkrid); // marketplace rotation id
+    u.searchParams.set("siteid", m.siteid);
+    u.searchParams.set("campid", EBAY_CAMPAIGN_ID);
+    u.searchParams.set("toolid", "10001");
+    u.searchParams.set("customid", m.customid); // sub-id so EPN reports are segmentable
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
+
 // Append our affiliate identifier to an outbound product link where we belong to a
-// program. eBay links are already affiliate-tagged at import time (the Browse API
-// returns itemAffiliateWebUrl when the campaign is set), so this mainly handles
-// Amazon; other links pass through unchanged. Safe on any string.
+// program (eBay EPN, Amazon Associates, TCGplayer via Impact). Other links pass
+// through unchanged. Safe on any string.
 export function affiliateUrl(url: string | null | undefined): string {
   if (!url) return "#";
   try {
     const u = new URL(url);
+    if (/(?:^|\.)ebay\./i.test(u.hostname)) {
+      return ebayAffiliateUrl(url);
+    }
     if (/(?:^|\.)amazon\./i.test(u.hostname)) {
       u.searchParams.set("tag", AMAZON_ASSOCIATE_TAG);
       return u.toString();

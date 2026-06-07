@@ -332,6 +332,7 @@ export interface SealedGroup {
   lowestPriceCents: number | null;
   storeCount: number;
   listings: {
+    retailer: string;
     retailerName: string;
     priceCents: number;
     url: string;
@@ -365,7 +366,7 @@ export async function getSealedGroups(country: "AU" | "NZ" | "US" = "AU"): Promi
       groups.set(r.groupKey, g);
     }
     if (!g.imageUrl && r.imageUrl) g.imageUrl = r.imageUrl;
-    g.listings.push({ retailerName: r.retailerName, priceCents: r.priceCents, url: r.url, inStock: r.inStock });
+    g.listings.push({ retailer: r.retailer, retailerName: r.retailerName, priceCents: r.priceCents, url: r.url, inStock: r.inStock });
   }
   const out = Array.from(groups.values()).map((g) => {
     g.listings.sort((a, b) => a.priceCents - b.priceCents);

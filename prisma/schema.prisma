@@ -352,3 +352,18 @@ model Order {
   @@index([buyerId])
   @@index([sellerId])
 }
+
+// Outbound affiliate-link clicks, logged via a tiny click beacon so we can confirm
+// our store/eBay links are actually being used — independent of each partner's own
+// (slower, sometimes confusing) dashboard. One row per click; aggregate by day and
+// retailer in queries. Used to verify eBay tracking is live.
+model ClickEvent {
+  id        String   @id @default(cuid())
+  retailer  String // store key, e.g. "ebay", "cardbot", "tcgplayer"
+  country   String // market the visitor was shopping (AU/NZ/US)
+  kind      String   @default("single") // "single" | "sealed"
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([retailer, createdAt])
+}

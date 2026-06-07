@@ -10,6 +10,7 @@ import { CardViewBeacon } from "@/components/CardViewBeacon";
 import { formatMoney, timeAgo } from "@/lib/format";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
 import { affiliateUrl } from "@/lib/affiliate";
+import { OutboundLink } from "@/components/OutboundLink";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES, pickPrice } from "@/lib/country";
 
@@ -217,14 +218,14 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                         <div className="text-[11px] text-slate-400">≈ {fmt(p.delivered)} delivered</div>
                       )}
                     </div>
-                    <a
+                    <OutboundLink
                       href={affiliateUrl(p.url)}
-                      target="_blank"
-                      rel="nofollow sponsored noopener noreferrer"
+                      retailer={p.retailer}
+                      country={country}
                       className="btn-primary"
                     >
                       View →
-                    </a>
+                    </OutboundLink>
                   </li>
                 ))}
               </ul>
@@ -249,14 +250,14 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                       <div className="text-right">
                         <div className="text-lg font-bold text-slate-400 line-through">{fmt(p.priceCents)}</div>
                       </div>
-                      <a
+                      <OutboundLink
                         href={affiliateUrl(p.url)}
-                        target="_blank"
-                        rel="nofollow sponsored noopener noreferrer"
+                        retailer={p.retailer}
+                        country={country}
                         className="btn-ghost"
                       >
                         Check →
-                      </a>
+                      </OutboundLink>
                     </li>
                   ))}
                 </ul>

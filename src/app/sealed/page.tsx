@@ -5,6 +5,7 @@ import { formatMoney } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { affiliateUrl } from "@/lib/affiliate";
+import { OutboundLink } from "@/components/OutboundLink";
 
 export const revalidate = 900;
 
@@ -103,9 +104,9 @@ export default async function SealedPage({ searchParams }: { searchParams: { q?:
                     <div className={`text-sm font-bold ${i === 0 && l.inStock ? "text-accent" : "text-white"} ${!l.inStock ? "text-slate-500 line-through" : ""}`}>
                       {fmt(l.priceCents)}
                     </div>
-                    <a href={affiliateUrl(l.url)} target="_blank" rel="nofollow sponsored noopener noreferrer" className="btn-primary px-3 py-1.5 text-xs">
+                    <OutboundLink href={affiliateUrl(l.url)} retailer={l.retailer} country={country} kind="sealed" className="btn-primary px-3 py-1.5 text-xs">
                       View →
-                    </a>
+                    </OutboundLink>
                   </li>
                 ))}
               </ul>
