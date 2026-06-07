@@ -11,6 +11,8 @@ import { formatMoney, timeAgo } from "@/lib/format";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
 import { affiliateUrl } from "@/lib/affiliate";
 import { OutboundLink } from "@/components/OutboundLink";
+import { AdSlot } from "@/components/AdSlot";
+import { ADSENSE_SLOTS } from "@/lib/ads";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES, pickPrice } from "@/lib/country";
 
@@ -290,6 +292,10 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               may earn a commission on some outbound links.
             </p>
           </div>
+
+          {/* In-content ad — below the price table the visitor came for, so it never
+              gets between them and the prices. Activates when a slot id is set. */}
+          <AdSlot slot={ADSENSE_SLOTS.card} className="mt-6" height={120} />
 
           {/* Unique, crawlable editorial content — keeps each card page from being
               thin (a bare price table). Generated per-card, so no duplication. */}
