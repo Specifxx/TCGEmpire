@@ -226,6 +226,22 @@ async function main() {
   const NZ = Number(process.env.FORUM_NZ ?? 12);
   const US = Number(process.env.FORUM_US ?? 10);
 
+  // One-shot mode (used by the production build hook): if the forum has already
+  // been seeded, skip entirely so deploys don't churn the backlog. Manual runs
+  // (`npm run db:seed-forum`) omit the flag and always refresh.
+  if (process.env.FORUM_SEED_ONLY_IF_EMPTY) {
+    const personaUsers = await prisma.user.findMany({
+      where: { email: { endsWith: SEED_DOMAIN } },
+      select: { id: true },
+    });
+    const ids = personaUsers.map((u) => u.id);
+    const existing = ids.length ? await prisma.forumPost.count({ where: { userId: { in: ids } } }) : 0;
+    if (existing > 0) {
+      console.log(`Forum already seeded (${existing} synthetic posts) — skipping (FORUM_SEED_ONLY_IF_EMPTY).`);
+      return;
+    }
+  }
+
   const cards = (await prisma.card.findMany({
     where: { isPromo: false },
     select: {

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build && (node -e \"process.exit(process.env.VERCEL_ENV==='production'&&process.env.DATABASE_URL?0:1)\" && tsx scripts/seed-forum.ts || true)",
+    "build": "prisma generate && next build && (node -e \"process.exit(process.env.VERCEL_ENV==='production'&&process.env.DATABASE_URL?0:1)\" && FORUM_SEED_ONLY_IF_EMPTY=1 tsx scripts/seed-forum.ts || true)",
     "start": "next start",
     "import:prices": "tsx scripts/import-prices.ts",
     "lint": "next lint",
