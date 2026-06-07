@@ -12,7 +12,8 @@ export async function GET() {
   }
 
   const key = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM ?? "RiftCompare <onboarding@resend.dev>";
+  // Mirror lib/email.ts so this tests the REAL sender used by reset/verify emails.
+  const from = process.env.EMAIL_FROM ?? "RiftCompare <noreply@riftcompare.com>";
   if (!key) {
     return NextResponse.json({ ok: false, problem: "RESEND_API_KEY is not set in this deployment." });
   }
