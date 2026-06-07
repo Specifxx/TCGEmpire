@@ -5,9 +5,33 @@ import bcrypt from "bcryptjs";
 import { prisma } from "./db";
 
 const SESSION_COOKIE = "tcge_session";
-const secret = new TextEncoder().encode(
-  process.env.AUTH_SECRET ?? "tcgempire-dev-secret-change-me"
-);
+
+// Resolve the session-signing secret lazily so a missing value fails at request
+// time (not build time). In production we refuse to fall back to a known default —
+// signing sessions with a public, hardcoded secret would let anyone forge a cookie
+// for any user (full account takeover). Outside production we allow a dev-only
+// secret with a loud warning.
+let cachedSecret: Uint8Array | null = null;
+function getSecret(): Uint8Array {
+  if (cachedSecret) return cachedSecret;
+  const s = process.env.AUTH_SECRET;
+  if (!s || s === "change-me-in-production" || s === "tcgempire-dev-secret-change-me") {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "AUTH_SECRET is not set (or still the insecure default). Refusing to sign/verify " +
+          "sessions in production. Generate one with: " +
+          "node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\""
+      );
+    }
+    console.warn(
+      "[auth] AUTH_SECRET not set — using an insecure development-only secret. NEVER use this in production."
+    );
+    cachedSecret = new TextEncoder().encode("tcgempire-dev-secret-change-me");
+    return cachedSecret;
+  }
+  cachedSecret = new TextEncoder().encode(s);
+  return cachedSecret;
+}
 
 // Moderator emails (override via ADMIN_EMAILS env, comma-separated). These accounts
 // get delete-any privileges. Not surfaced anywhere in the UI.
@@ -69,7 +93,7 @@ export async function createSession(userId: string): Promise<void> {
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("30d")
-    .sign(secret);
+    .sign(getSecret());
 
   cookies().set(SESSION_COOKIE, token, {
     httpOnly: true,
@@ -89,7 +113,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   const token = cookies().get(SESSION_COOKIE)?.value;
   if (!token) return null;
   try {
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, getSecret());
     const userId = payload.sub as string;
     if (!userId) return null;
     const user = await prisma.user.findUnique({ where: { id: userId } });

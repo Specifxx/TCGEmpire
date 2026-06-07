@@ -2,13 +2,18 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { consumeAuthToken, hashPassword, createSession } from "@/lib/auth";
+import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit";
 
 const schema = z.object({
   token: z.string().min(1),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
 export async function POST(req: Request) {
+  // Limit reset-token guessing.
+  const limit = rateLimit(`reset:ip:${clientIp(req)}`, 15, 60 * 60_000);
+  if (!limit.ok) return tooManyRequests(limit.retryAfter);
+
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.errors[0]?.message ?? "Invalid input" }, { status: 400 });

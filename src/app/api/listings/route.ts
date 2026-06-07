@@ -8,7 +8,9 @@ const schema = z.object({
   cardId: z.string().min(1),
   condition: z.enum(CONDITION_KEYS as [string, ...string[]]),
   isFoil: z.boolean().default(false),
-  priceCents: z.number().int().min(25, "Minimum price is $0.25").max(100000000),
+  // Max $100,000/unit. Kept well under the DB Int (32-bit) limit even at qty 99
+  // (100_000 × 100 cents × 99 ≈ 9.9e8 < 2.1e9) so totals can never overflow.
+  priceCents: z.number().int().min(25, "Minimum price is $0.25").max(10000000, "Maximum price is $100,000"),
   quantity: z.number().int().min(1).max(99).default(1),
 });
 

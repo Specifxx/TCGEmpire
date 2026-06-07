@@ -8,7 +8,8 @@ const schema = z.object({
   cardId: z.string().min(1),
   condition: z.enum(["ANY", ...CONDITION_KEYS] as [string, ...string[]]),
   isFoil: z.boolean().default(false),
-  maxPriceCents: z.number().int().min(25, "Minimum bid is $0.25").max(100000000),
+  // Max $100,000/unit — keeps the escrowed total (× qty 99) under the DB Int limit.
+  maxPriceCents: z.number().int().min(25, "Minimum bid is $0.25").max(10000000, "Maximum bid is $100,000"),
   quantity: z.number().int().min(1).max(99).default(1),
 });
 

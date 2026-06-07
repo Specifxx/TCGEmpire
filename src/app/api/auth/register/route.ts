@@ -3,10 +3,11 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { createSession, hashPassword, createAuthToken } from "@/lib/auth";
 import { sendVerificationEmail } from "@/lib/email";
+import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit";
 
 const schema = z.object({
   email: z.string().email("Enter a valid email"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
   displayName: z
     .string()
     .min(2, "Display name must be at least 2 characters")
@@ -14,6 +15,10 @@ const schema = z.object({
 });
 
 export async function POST(req: Request) {
+  // Cap new accounts (and the verification emails they trigger) per IP.
+  const limit = rateLimit(`register:ip:${clientIp(req)}`, 5, 60 * 60_000);
+  if (!limit.ok) return tooManyRequests(limit.retryAfter);
+
   const body = await req.json().catch(() => null);
   const parsed = schema.safeParse(body);
   if (!parsed.success) {

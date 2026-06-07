@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { createSession, verifyPassword } from "@/lib/auth";
+import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit";
 
 const schema = z.object({
   email: z.string().email(),
@@ -16,14 +17,18 @@ export async function POST(req: Request) {
   }
 
   const email = parsed.data.email.toLowerCase();
+
+  // Throttle brute force: per IP (credential stuffing) and per email (a targeted
+  // single-account attack from many IPs that share an instance).
+  const ipLimit = rateLimit(`login:ip:${clientIp(req)}`, 20, 5 * 60_000);
+  if (!ipLimit.ok) return tooManyRequests(ipLimit.retryAfter);
+  const emailLimit = rateLimit(`login:email:${email}`, 8, 15 * 60_000);
+  if (!emailLimit.ok) return tooManyRequests(emailLimit.retryAfter);
+
   const user = await prisma.user.findUnique({ where: { email } });
-  // Account created via Google/Discord has no password — point them to that.
-  if (user && !user.passwordHash) {
-    return NextResponse.json(
-      { error: "This account uses Google or Discord sign-in — use that button above." },
-      { status: 401 }
-    );
-  }
+  // One generic message for every failure (no account, wrong password, or an
+  // OAuth-only account) so an attacker can't enumerate which emails are registered
+  // or how they sign in.
   if (!user || !user.passwordHash || !(await verifyPassword(parsed.data.password, user.passwordHash))) {
     return NextResponse.json(
       { error: "Incorrect email or password" },
