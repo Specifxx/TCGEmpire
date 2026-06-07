@@ -106,9 +106,11 @@ model Card {
   //   lowestPriceCents   = Australia (AUD cents), from AU stores + eBay AU
   //   lowestPriceCentsNz = New Zealand (NZD cents), from NZ stores (no eBay)
   //   lowestPriceCentsUs = United States (USD cents), from US stores + eBay US
+  //   lowestPriceCentsUk = United Kingdom (GBP cents), from UK stores + eBay UK + TCGplayer
   lowestPriceCents Int?
   lowestPriceCentsNz Int?
   lowestPriceCentsUs Int?
+  lowestPriceCentsUk Int?
   artSeed         Int       @default(0)
   // Popularity signals. searchCount (clicks from the search box) is the purer demand
   // metric and drives eBay prioritisation; viewCount (any open, incl. featured
@@ -128,6 +130,7 @@ model Card {
   @@index([lowestPriceCents])
   @@index([lowestPriceCentsNz])
   @@index([lowestPriceCentsUs])
+  @@index([lowestPriceCentsUk])
   @@index([domain])
   @@index([rarity])
   @@index([type])

@@ -64,18 +64,17 @@ export default async function CardPage({ params }: { params: { id: string } }) {
 
   const lowestPrice = pickPrice(card, country);
 
-  // Rank by DELIVERED cost (item + shipping) so a listing isn't shown as cheapest
-  // just because its postage reads as $0 — the common eBay case. Shipping is the
-  // postage is only shown when we genuinely know it (eBay's real per-listing figure);
-  // otherwise it's "at checkout" and excluded from the delivered total. Rank by the
-  // known delivered cost (item + known postage), treating unknown postage as item
-  // price only. In-stock first, then sold-out.
+  // Rank by ITEM price — the "lowest price" is the cheapest card price, full stop.
+  // Postage is shown for transparency when we genuinely know it (eBay's real
+  // per-listing figure), but it must NOT decide which listing is cheapest (otherwise
+  // a store would be penalised vs eBay just because eBay's postage is known and a
+  // store's is "at checkout"). Cheaper known postage only breaks ties on equal price.
   const all = card.retailerPrices
     .map((p) => {
       const ship = effectiveShippingCents(p.shippingCents); // number | null (null = unknown)
       return { ...p, ship, delivered: p.priceCents + (ship ?? 0) };
     })
-    .sort((a, b) => a.delivered - b.delivered);
+    .sort((a, b) => a.priceCents - b.priceCents || a.delivered - b.delivered);
   const prices = all.filter((p) => p.inStock);
   const outOfStock = all.filter((p) => !p.inStock);
 

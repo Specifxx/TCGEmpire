@@ -9,6 +9,7 @@ import { RETAILER_LIST, RetailerInfo } from "./retailers";
 import { isEbayEnabled, isEbayRateLimited, searchEbayLowest, primeEbayBudget, ebaySpentThisRun } from "./ebay";
 import { importSealed } from "./sealed-import";
 import { refreshTcgplayerPrices } from "./tcgplayer";
+import { isoCountry, type Country } from "./country";
 
 interface ShopifyVariant { title: string; price: string; available: boolean }
 interface ShopifyProduct { title: string; handle: string; variants: ShopifyVariant[] }
@@ -151,7 +152,7 @@ async function fetchCollection(store: RetailerInfo, handle: string): Promise<Sho
     // country, and our (US) server was getting US/default prices — e.g. $33 when the
     // real AU price is $45. Forcing the store's market gives the local shopper price
     // (AUD for AU stores, NZD for NZ stores).
-    const url = `${store.base}/collections/${handle}/products.json?limit=250&page=${page}&country=${cc}&_=${Date.now()}`;
+    const url = `${store.base}/collections/${handle}/products.json?limit=250&page=${page}&country=${isoCountry(cc)}&_=${Date.now()}`;
     let res: Response;
     try {
       res = await fetch(url, { headers: { ...UA, "Cache-Control": "no-cache", Pragma: "no-cache" }, cache: "no-store" });
@@ -207,7 +208,7 @@ async function verifyCheapestListings(): Promise<number> {
   async function fetchProductPrice(url: string, country: string): Promise<{ priceCents: number } | null> {
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
-        const res = await fetch(`${url}.json?country=${country}`, {
+        const res = await fetch(`${url}.json?country=${isoCountry(country as Country)}`, {
           headers: { ...UA, "Cache-Control": "no-cache", Pragma: "no-cache" },
           cache: "no-store",
         });
@@ -261,6 +262,7 @@ export async function refreshEbayMarkets(
   const MARKETS = [
     { country: "AU", marketplace: "EBAY_AU", currency: "AUD", retailer: "ebay" },
     { country: "US", marketplace: "EBAY_US", currency: "USD", retailer: "ebay_us" },
+    { country: "UK", marketplace: "EBAY_GB", currency: "GBP", retailer: "ebay_uk" },
   ];
   // Check the live quota and set a spend budget (leaves a reserve) so this can never
   // exhaust eBay's 5,000/day limit, however many times the importer runs.
@@ -525,7 +527,7 @@ export async function importPrices(): Promise<ImportSummary> {
         condition: best.title && best.title !== "Default Title" ? best.title : null,
         isFoil: /foil/i.test(p.title),
         priceCents,
-        currency: cc === "NZ" ? "NZD" : cc === "US" ? "USD" : "AUD",
+        currency: cc === "NZ" ? "NZD" : cc === "US" ? "USD" : cc === "UK" ? "GBP" : "AUD",
         country: cc,
         inStock,
       });
@@ -585,31 +587,39 @@ export async function importPrices(): Promise<ImportSummary> {
   //   lowestPriceCents   = cheapest in-stock AU listing (AUD)
   //   lowestPriceCentsNz = cheapest in-stock NZ listing (NZD)
   //   lowestPriceCentsUs = cheapest in-stock US listing (USD)
-  const [pricedAu, pricedNz, pricedUs] = await Promise.all([
+  const [pricedAu, pricedNz, pricedUs, pricedUk] = await Promise.all([
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "AU" }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "NZ" }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "US" }, _min: { priceCents: true } }),
+    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "UK" }, _min: { priceCents: true } }),
   ]);
   const lowAu = new Map(pricedAu.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowNz = new Map(pricedNz.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowUs = new Map(pricedUs.map((r) => [r.cardId, r._min.priceCents ?? null]));
+  const lowUk = new Map(pricedUk.map((r) => [r.cardId, r._min.priceCents ?? null]));
   // Diff-based update: write each card STRAIGHT to its new lowest only when it
   // changed. We must NOT reset every card to null first (the old approach) — that
   // briefly showed "No price yet" for the whole catalogue on every import/deploy
   // while the per-card repopulation loop caught up. Now each card transitions
   // old → new atomically and is never transiently null.
   const existing = await prisma.card.findMany({
-    select: { id: true, lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true },
+    select: { id: true, lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true },
   });
   let changed = 0;
   for (const c of existing) {
     const nAu = lowAu.get(c.id) ?? null;
     const nNz = lowNz.get(c.id) ?? null;
     const nUs = lowUs.get(c.id) ?? null;
-    if (nAu !== c.lowestPriceCents || nNz !== c.lowestPriceCentsNz || nUs !== c.lowestPriceCentsUs) {
+    const nUk = lowUk.get(c.id) ?? null;
+    if (
+      nAu !== c.lowestPriceCents ||
+      nNz !== c.lowestPriceCentsNz ||
+      nUs !== c.lowestPriceCentsUs ||
+      nUk !== c.lowestPriceCentsUk
+    ) {
       await prisma.card.update({
         where: { id: c.id },
-        data: { lowestPriceCents: nAu, lowestPriceCentsNz: nNz, lowestPriceCentsUs: nUs },
+        data: { lowestPriceCents: nAu, lowestPriceCentsNz: nNz, lowestPriceCentsUs: nUs, lowestPriceCentsUk: nUk },
       });
       changed++;
     }

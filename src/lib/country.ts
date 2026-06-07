@@ -3,7 +3,7 @@
 // safe to import from both server and client components. The server-side cookie +
 // geo reader lives in get-country.ts.
 
-export type Country = "AU" | "NZ" | "US";
+export type Country = "AU" | "NZ" | "US" | "UK";
 
 export interface CountryInfo {
   code: Country;
@@ -19,9 +19,12 @@ export const COUNTRIES: Record<Country, CountryInfo> = {
   AU: { code: "AU", label: "Australia", adjective: "Australian", place: "Australia", flag: "🇦🇺", currency: "AUD", locale: "en-AU" },
   NZ: { code: "NZ", label: "New Zealand", adjective: "New Zealand", place: "New Zealand", flag: "🇳🇿", currency: "NZD", locale: "en-NZ" },
   US: { code: "US", label: "United States", adjective: "US", place: "the United States", flag: "🇺🇸", currency: "USD", locale: "en-US" },
+  UK: { code: "UK", label: "United Kingdom", adjective: "UK", place: "the United Kingdom", flag: "🇬🇧", currency: "GBP", locale: "en-GB" },
 };
 
-// Order shown in the switcher.
+// Order shown in the switcher. UK is fully plumbed (GBP, eBay UK, TCGplayer) but
+// stays OUT of the picker until its data is populated and CardTrader is wired in —
+// so we never show an empty market. Add COUNTRIES.UK here to launch it.
 export const COUNTRY_LIST: CountryInfo[] = [COUNTRIES.AU, COUNTRIES.NZ, COUNTRIES.US];
 export const DEFAULT_COUNTRY: Country = "AU";
 export const COUNTRY_COOKIE = "country";
@@ -30,28 +33,48 @@ export const COUNTRY_COOKIE = "country";
 // quickly if a market's data needs work, without code surgery.)
 export const INTL_ENABLED = process.env.NEXT_PUBLIC_INTL_DISABLED !== "true";
 
-const VALID = new Set<Country>(["AU", "NZ", "US"]);
+const VALID = new Set<Country>(["AU", "NZ", "US", "UK"]);
 
 // Coerce any cookie/geo/query value to a supported Country (defaults to AU). Accepts
 // ISO country codes from the geo header too (e.g. "US", "NZ"); anything else → AU.
 export function normalizeCountry(v: string | undefined | null): Country {
-  const up = (v ?? "").toUpperCase();
+  let up = (v ?? "").toUpperCase();
+  // The geo header / Shopify use the ISO code "GB" for the United Kingdom; we use "UK".
+  if (up === "GB") up = "UK";
   return VALID.has(up as Country) ? (up as Country) : "AU";
 }
 
+// The Shopify storefront ?country= param + eBay use ISO 3166 alpha-2, where the UK
+// is "GB" (not "UK"). Everywhere else we use our own "UK" code.
+export function isoCountry(country: Country): string {
+  return country === "UK" ? "GB" : country;
+}
+
 // The Card column holding the lowest price for this market.
-export type PriceField = "lowestPriceCents" | "lowestPriceCentsNz" | "lowestPriceCentsUs";
+export type PriceField = "lowestPriceCents" | "lowestPriceCentsNz" | "lowestPriceCentsUs" | "lowestPriceCentsUk";
 export function priceField(country: Country): PriceField {
-  return country === "NZ" ? "lowestPriceCentsNz" : country === "US" ? "lowestPriceCentsUs" : "lowestPriceCents";
+  return country === "NZ"
+    ? "lowestPriceCentsNz"
+    : country === "US"
+    ? "lowestPriceCentsUs"
+    : country === "UK"
+    ? "lowestPriceCentsUk"
+    : "lowestPriceCents";
 }
 
 // Pick the effective lowest price for the selected market from a card-like object.
 export function pickPrice(
-  card: { lowestPriceCents: number | null; lowestPriceCentsNz?: number | null; lowestPriceCentsUs?: number | null },
+  card: {
+    lowestPriceCents: number | null;
+    lowestPriceCentsNz?: number | null;
+    lowestPriceCentsUs?: number | null;
+    lowestPriceCentsUk?: number | null;
+  },
   country: Country
 ): number | null {
   if (country === "NZ") return card.lowestPriceCentsNz ?? null;
   if (country === "US") return card.lowestPriceCentsUs ?? null;
+  if (country === "UK") return card.lowestPriceCentsUk ?? null;
   return card.lowestPriceCents;
 }
 

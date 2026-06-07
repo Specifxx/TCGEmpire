@@ -29,6 +29,7 @@ export const TCGPLAYER_IMPACT_LINK = process.env.TCGPLAYER_IMPACT_LINK ?? "";
 const EBAY_MARKETS: Record<string, { mkrid: string; siteid: string; customid: string }> = {
   "ebay.com.au": { mkrid: "705-53470-19255-0", siteid: "15", customid: "rc-au" },
   "ebay.com": { mkrid: "711-53200-19255-0", siteid: "0", customid: "rc-us" },
+  "ebay.co.uk": { mkrid: "710-53481-19255-0", siteid: "3", customid: "rc-uk" },
 };
 
 function ebayMarket(hostname: string) {

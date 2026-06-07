@@ -147,9 +147,25 @@ export type TcgMatchResult = {
   unmatchedSamples: string[];
 };
 
+// TCGplayer is a US marketplace priced in USD. We surface it as a source in both the
+// US market (as-is) and the UK market (converted to GBP — the user explicitly wants
+// TCGplayer there). UK rows use a separate retailer key so they never collide with US
+// rows on the unique [cardId, retailer, condition, isFoil] key.
+export interface TcgMarket {
+  retailer: string;
+  country: string;
+  currency: string;
+  fx: number; // multiplier applied to the USD market price
+}
+// Approximate USD→GBP rate for the UK conversion. Refreshed periodically by hand;
+// exact FX isn't critical for a "reference price" comparison.
+export const USD_TO_GBP = 0.79;
+export const TCG_US: TcgMarket = { retailer: "tcgplayer", country: "US", currency: "USD", fx: 1 };
+export const TCG_UK: TcgMarket = { retailer: "tcgplayer_uk", country: "UK", currency: "GBP", fx: USD_TO_GBP };
+
 // Match products to cards and build RetailerPrice rows (no DB writes — caller
 // decides). Exported separately so a dry-run can inspect the match quality.
-export async function buildTcgplayerRows(products?: TcgProduct[]): Promise<TcgMatchResult> {
+export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: TcgProduct[]): Promise<TcgMatchResult> {
   const items = products ?? (await fetchTcgplayerProducts());
   const cards = await prisma.card.findMany({ select: { id: true, collectorNumber: true } });
   const byKey = new Map<string, string>();
@@ -185,31 +201,39 @@ export async function buildTcgplayerRows(products?: TcgProduct[]): Promise<TcgMa
     seen.add(dedupe);
     rows.push({
       cardId,
-      retailer: "tcgplayer",
+      retailer: mkt.retailer,
       retailerName: "TCGplayer",
       title: p.productName,
       url: tcgProductUrl(p),
       condition: "NM",
       isFoil,
-      priceCents: Math.round(market * 100),
-      currency: "USD",
-      country: "US",
+      priceCents: Math.round(market * 100 * mkt.fx),
+      currency: mkt.currency,
+      country: mkt.country,
       inStock: true,
     });
   }
   return { total: items.length, matched, rows, unmatchedSamples };
 }
 
-// Replace all TCGplayer rows with a fresh pull. Returns the number written.
+// Replace all TCGplayer rows with a fresh pull, for both the US (USD) and UK (GBP)
+// markets. Products are fetched ONCE and reused for both. Returns total rows written.
 export async function refreshTcgplayerPrices(): Promise<number> {
-  const { total, matched, rows, unmatchedSamples } = await buildTcgplayerRows();
-  console.log(`TCGplayer: ${total} products, ${matched} matched, ${rows.length} rows.`);
-  if (unmatchedSamples.length) console.log(`TCGplayer unmatched (sample): ${unmatchedSamples.slice(0, 8).join(" | ")}`);
-  if (rows.length === 0) {
-    console.warn("TCGplayer: 0 rows built — keeping existing rows.");
-    return 0;
+  const products = await fetchTcgplayerProducts();
+  let written = 0;
+  for (const mkt of [TCG_US, TCG_UK]) {
+    const { total, matched, rows, unmatchedSamples } = await buildTcgplayerRows(mkt, products);
+    console.log(`TCGplayer ${mkt.country}: ${total} products, ${matched} matched, ${rows.length} rows.`);
+    if (unmatchedSamples.length && mkt === TCG_US) {
+      console.log(`TCGplayer unmatched (sample): ${unmatchedSamples.slice(0, 8).join(" | ")}`);
+    }
+    if (rows.length === 0) {
+      console.warn(`TCGplayer ${mkt.country}: 0 rows built — keeping existing rows.`);
+      continue;
+    }
+    await prisma.retailerPrice.deleteMany({ where: { retailer: mkt.retailer } });
+    await prisma.retailerPrice.createMany({ data: rows });
+    written += rows.length;
   }
-  await prisma.retailerPrice.deleteMany({ where: { retailer: "tcgplayer" } });
-  await prisma.retailerPrice.createMany({ data: rows });
-  return rows.length;
+  return written;
 }

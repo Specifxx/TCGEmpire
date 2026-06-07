@@ -96,15 +96,16 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
     };
   }, [card, onClose]);
 
-  // Rank by delivered cost where postage is known (eBay), else by item price.
-  // We never fabricate a postage estimate — unknown postage shows "at checkout".
+  // Rank by ITEM price — the cheapest card price is the "lowest price". Known postage
+  // (eBay) is shown for transparency but must not change which listing is cheapest;
+  // it only breaks ties. Unknown postage shows "at checkout" (never fabricated).
   const inStock = (prices ?? [])
     .filter((p) => p.inStock && p.country === country)
     .map((p) => {
       const ship = effectiveShippingCents(p.shippingCents); // number | null (null = unknown)
       return { ...p, ship, delivered: p.priceCents + (ship ?? 0) };
     })
-    .sort((a, b) => a.delivered - b.delivered);
+    .sort((a, b) => a.priceCents - b.priceCents || a.delivered - b.delivered);
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true">

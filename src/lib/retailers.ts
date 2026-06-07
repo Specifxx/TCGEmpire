@@ -13,9 +13,10 @@ export interface RetailerInfo {
   shippingFlatCents: number; // estimated postage for a single card
   freeOverCents: number; // order total at/above which shipping is free
   shippingNote: string;
-  // Market the store serves. Omitted = "AU" (the original Australian stores). NZ/US
-  // stores are scraped with ?country=NZ/US and priced in NZD/USD. eBay runs for AU+US.
-  country?: "AU" | "NZ" | "US";
+  // Market the store serves. Omitted = "AU" (the original Australian stores). NZ/US/UK
+  // stores are scraped with ?country=NZ/US/GB and priced in NZD/USD/GBP. eBay runs for
+  // AU + US + UK.
+  country?: "AU" | "NZ" | "US" | "UK";
 }
 
 export const RETAILERS: Record<string, RetailerInfo> = {
@@ -472,7 +473,7 @@ export const RETAILERS: Record<string, RetailerInfo> = {
 export const RETAILER_LIST = Object.values(RETAILERS);
 
 // The market a store serves (defaults to AU for the original stores).
-export function retailerCountry(retailerKey: string): "AU" | "NZ" | "US" {
+export function retailerCountry(retailerKey: string): "AU" | "NZ" | "US" | "UK" {
   return RETAILERS[retailerKey]?.country ?? "AU";
 }
 

@@ -124,6 +124,7 @@ export function cardTileSelect(country: Country = "AU") {
     lowestPriceCents: true,
     lowestPriceCentsNz: true,
     lowestPriceCentsUs: true,
+    lowestPriceCentsUk: true,
     // Count only in-stock listings for this market for the "N stores" tile label
     // (out-of-stock listings are shown on the card page but shouldn't inflate it).
     _count: { select: { retailerPrices: { where: { inStock: true, country } } } },
