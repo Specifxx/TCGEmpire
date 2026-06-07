@@ -54,7 +54,7 @@ const orgJsonLd = {
       "@id": `${SITE_URL}/#org`,
       name: SITE_NAME,
       url: SITE_URL,
-      logo: `${SITE_URL}/icon`,
+      logo: `${SITE_URL}/icon-512.png`,
       description:
         "Riftbound TCG card database and live price-comparison across Australia, New Zealand and the US.",
     },

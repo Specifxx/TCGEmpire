@@ -11,10 +11,13 @@ const clamp = (v: number) => Math.max(0, Math.min(255, Math.round(v)));
 // R = the green glyph: how green-dominant the pixel is. C = the white glyph: how far
 // above the grey background its darkest channel is. Grey checkerboard scores ~0 on both.
 function alphaGreen(r: number, g: number, b: number) {
-  return clamp((((g - Math.max(r, b)) - 14) / 55) * 255); // grey (~0 greenness) -> 0
+  const raw = clamp((((g - Math.max(r, b)) - 16) / 50) * 255); // soft mask
+  // Sharpen: steepen the alpha ramp so the R is crisp, not glowy.
+  return clamp((raw - 96) * 1.8 + 110);
 }
 function alphaWhite(r: number, g: number, b: number) {
-  return clamp(((Math.min(r, g, b) - 150) / 85) * 255); // grey (min<=120) -> 0; white -> 255
+  const raw = clamp(((Math.min(r, g, b) - 150) / 85) * 255);
+  return clamp((raw - 110) * 1.3 + 120); // C: a touch crisper, mostly unchanged
 }
 
 async function main() {

@@ -36,9 +36,6 @@ next-env.d.ts
 
 # Logo preview artifacts (pending approval)
 /public/rc-source.png
-/public/logo-r.png
-/public/logo-c.png
-/public/logo-rc.png
 /public/logo-preview.html
 /public/preview-mark.png
 /public/preview-wordmark.png

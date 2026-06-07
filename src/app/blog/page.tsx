@@ -4,9 +4,9 @@ import { ArticleList } from "@/components/ArticleList";
 import { WipBanner } from "@/components/WipBanner";
 
 export const metadata: Metadata = {
-  title: "Riftbound Blog — News, Meta & Set Updates (Australia)",
+  title: "Riftbound Blog — News, Meta & Set Updates",
   description:
-    "News, metagame snapshots and updates for Riftbound: League of Legends TCG, written for Australian players by RiftCompare.",
+    "News, metagame snapshots and updates for Riftbound: League of Legends TCG, from RiftCompare.",
   alternates: { canonical: "/blog" },
 };
 
