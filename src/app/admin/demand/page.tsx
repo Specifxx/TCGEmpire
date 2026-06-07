@@ -53,6 +53,7 @@ export default async function AdminDemandPage({
     lowestPriceCents: true,
     lowestPriceCentsNz: true,
     lowestPriceCentsUs: true,
+    lowestPriceCentsUk: true,
   } as const;
 
   const [topSearched, topViewed, clicksRecent, clicksAll] = await Promise.all([
