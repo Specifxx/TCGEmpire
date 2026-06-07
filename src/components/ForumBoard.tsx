@@ -17,9 +17,12 @@ export interface ForumItem {
   marketCents: number | null;
 }
 
+export type ForumStatus = "OPEN" | "SOLD";
+
 export interface ForumPostDTO {
   id: string;
   kind: ForumKind;
+  status: ForumStatus;
   title: string;
   cardName: string | null;
   setCode: string | null;
@@ -38,6 +41,7 @@ export interface ForumPostDTO {
 }
 
 const CONDITIONS = ["NM", "LP", "MP", "HP", "DMG", "Any"];
+const PER_PAGE = 10;
 
 const KIND_LABEL: Record<ForumKind, string> = { WTB: "Want to buy", WTS: "Want to sell", DISCUSSION: "Discussion" };
 const KIND_BADGE: Record<ForumKind, string> = {
@@ -45,6 +49,19 @@ const KIND_BADGE: Record<ForumKind, string> = {
   WTS: "bg-gold/15 text-gold",
   DISCUSSION: "bg-sky-500/15 text-sky-300",
 };
+
+// Condensed page list with ellipses, e.g. [1, "…", 4, 5, 6, "…", 12].
+function pageWindow(current: number, total: number): (number | "…")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const out: (number | "…")[] = [1];
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+  if (start > 2) out.push("…");
+  for (let n = start; n <= end; n++) out.push(n);
+  if (end < total - 1) out.push("…");
+  out.push(total);
+  return out;
+}
 
 function timeAgo(iso: string): string {
   const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
@@ -159,6 +176,7 @@ export function ForumBoard({
 }) {
   const [posts, setPosts] = useState<ForumPostDTO[]>(initialPosts);
   const [filter, setFilter] = useState<"all" | ForumKind>("all");
+  const [page, setPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const { country, fmt } = useCountry();
   const myCountryName = MARKET_COUNTRY[country] ?? DEFAULT_COUNTRY;
@@ -185,6 +203,23 @@ export function ForumBoard({
     () => (filter === "all" ? posts : posts.filter((p) => p.kind === filter)),
     [posts, filter]
   );
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+  // Keep the current page in range when the filtered list shrinks (filter change, delete).
+  const safePage = Math.min(page, pageCount);
+  const pageItems = useMemo(
+    () => filtered.slice((safePage - 1) * PER_PAGE, safePage * PER_PAGE),
+    [filtered, safePage]
+  );
+
+  function goToPage(n: number) {
+    const clamped = Math.min(Math.max(1, n), pageCount);
+    setPage(clamped);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // Reset to the first page whenever the active filter changes.
+  useEffect(() => { setPage(1); }, [filter]);
 
   const isDiscussion = form.kind === "DISCUSSION";
   const recommendedCents = items.reduce((s, it) => s + (it.marketCents ?? 0) * it.qty, 0);
@@ -499,13 +534,19 @@ export function ForumBoard({
         </div>
       ) : (
         <ul className="space-y-3">
-          {filtered.map((p) => (
-            <li key={p.id} className="card-surface overflow-hidden transition-colors hover:border-brand-500/40">
+          {pageItems.map((p) => (
+            <li
+              key={p.id}
+              className={`card-surface overflow-hidden transition-colors hover:border-brand-500/40 ${p.status === "SOLD" ? "opacity-75" : ""}`}
+            >
               <div onClick={() => setOpenPost(p)} className="cursor-pointer p-4">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className={`chip font-bold ${KIND_BADGE[p.kind]}`}>
                     {p.kind === "DISCUSSION" ? "DISCUSSION" : p.kind === "WTB" ? "WANT TO BUY" : "WANT TO SELL"}
                   </span>
+                  {p.status === "SOLD" && (
+                    <span className="chip bg-rose-500/15 font-bold text-rose-300 ring-1 ring-rose-500/30">SOLD</span>
+                  )}
                   {p.priceCents != null && <span className="chip bg-ink-800 font-bold text-accent">{fmt(p.priceCents)} asking</span>}
                   {(p.state || p.country) && (
                     <span className="chip bg-ink-800 text-slate-300">{[p.state, p.country].filter(Boolean).join(", ")}</span>
@@ -580,6 +621,39 @@ export function ForumBoard({
             </li>
           ))}
         </ul>
+      )}
+
+      {pageCount > 1 && (
+        <nav className="mt-6 flex flex-wrap items-center justify-center gap-1.5" aria-label="Forum pagination">
+          <button
+            onClick={() => goToPage(safePage - 1)}
+            disabled={safePage <= 1}
+            className="chip bg-ink-800 font-semibold text-slate-300 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            ← Prev
+          </button>
+          {pageWindow(safePage, pageCount).map((n, i) =>
+            n === "…" ? (
+              <span key={`gap-${i}`} className="px-1.5 text-sm text-slate-600">…</span>
+            ) : (
+              <button
+                key={n}
+                onClick={() => goToPage(n)}
+                aria-current={n === safePage ? "page" : undefined}
+                className={`chip font-semibold ${n === safePage ? "bg-brand-500/20 text-brand-400 ring-1 ring-brand-500/40" : "bg-ink-800 text-slate-400 hover:text-white"}`}
+              >
+                {n}
+              </button>
+            )
+          )}
+          <button
+            onClick={() => goToPage(safePage + 1)}
+            disabled={safePage >= pageCount}
+            className="chip bg-ink-800 font-semibold text-slate-300 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Next →
+          </button>
+        </nav>
       )}
 
       <p className="mt-6 text-center text-[11px] text-slate-600">

@@ -22,7 +22,7 @@ function timeAgo(d: Date): string {
 type Post = Awaited<ReturnType<typeof getPosts>>[number];
 async function getPosts(userId: string) {
   return prisma.forumPost.findMany({
-    where: { userId, status: "OPEN" },
+    where: { userId, status: { in: ["OPEN", "SOLD"] } },
     orderBy: { createdAt: "desc" },
   });
 }
@@ -37,6 +37,9 @@ function PostRow({ p }: { p: Post }) {
         <span className={`chip font-bold ${p.kind === "WTB" ? "bg-emerald-500/15 text-emerald-300" : "bg-gold/15 text-gold"}`}>
           {p.kind === "WTB" ? "WANT TO BUY" : "WANT TO SELL"}
         </span>
+        {p.status === "SOLD" && (
+          <span className="chip bg-rose-500/15 font-bold text-rose-300 ring-1 ring-rose-500/30">SOLD</span>
+        )}
         {p.priceCents != null && <span className="chip bg-ink-800 font-bold text-accent">{formatAUD(p.priceCents)} asking</span>}
         {p.priceCents == null && p.marketCents != null && <span className="chip bg-ink-800 font-bold text-accent">≈ {formatAUD(p.marketCents)} market</span>}
         {(p.state || p.country) && (
@@ -82,6 +85,7 @@ export default async function SellerPage({ params }: { params: { id: string } })
   const posts = await getPosts(user.id);
   const wts = posts.filter((p) => p.kind === "WTS");
   const wtb = posts.filter((p) => p.kind === "WTB");
+  const soldCount = posts.filter((p) => p.status === "SOLD").length;
   const contact = posts[0]?.contact ?? null;
 
   return (
@@ -93,7 +97,8 @@ export default async function SellerPage({ params }: { params: { id: string } })
       <div className="card-surface p-5">
         <h1 className="text-2xl font-extrabold text-white">{user.displayName}</h1>
         <p className="mt-1 text-sm text-slate-400">
-          {wts.length} selling · {wtb.length} buying · member since{" "}
+          {wts.length} selling · {wtb.length} buying
+          {soldCount > 0 && <> · <span className="text-rose-300">{soldCount} sold</span></>} · member since{" "}
           {user.createdAt.toLocaleDateString("en-AU", { month: "short", year: "numeric" })}
         </p>
         {contact && (
@@ -110,7 +115,7 @@ export default async function SellerPage({ params }: { params: { id: string } })
 
       {posts.length === 0 ? (
         <div className="card-surface mt-6 grid place-items-center p-12 text-center text-slate-400">
-          This seller has no open listings right now.
+          This seller has no listings right now.
         </div>
       ) : (
         <>
