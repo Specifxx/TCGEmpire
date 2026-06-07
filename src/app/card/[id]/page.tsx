@@ -87,30 +87,35 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   const cheapestFoil = minPrice(prices.filter((p) => p.isFoil));
 
   // Structured data so Google can show a rich price snippet ("$X, N stores").
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: card.name,
-    category: "Trading Card",
-    description: `${card.name} — Riftbound ${card.setName} (${card.setCode}) ${card.collectorNumber}. Compare ${info.adjective} prices.`,
-    ...(card.imageUrl ? { image: card.imageUrl } : {}),
-    ...(prices.length && lowestPrice != null
-      ? {
-          offers: {
-            "@type": "AggregateOffer",
-            priceCurrency: info.currency,
-            lowPrice: (lowestPrice / 100).toFixed(2),
-            highPrice: (prices[prices.length - 1].priceCents / 100).toFixed(2),
-            offerCount: prices.length,
-            availability: "https://schema.org/InStock",
-          },
-        }
-      : {}),
-  };
+  // Google requires a Product to carry "offers", "review", or "aggregateRating";
+  // a Product without any of these is a critical Search Console error. So we only
+  // emit the Product markup when we actually have priced, in-stock offers to back
+  // it — unpriced cards simply omit it rather than emit an invalid empty Product.
+  const hasOffers = prices.length > 0 && lowestPrice != null;
+  const jsonLd = hasOffers
+    ? {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        name: card.name,
+        category: "Trading Card",
+        description: `${card.name} — Riftbound ${card.setName} (${card.setCode}) ${card.collectorNumber}. Compare ${info.adjective} prices.`,
+        ...(card.imageUrl ? { image: card.imageUrl } : {}),
+        offers: {
+          "@type": "AggregateOffer",
+          priceCurrency: info.currency,
+          lowPrice: (lowestPrice / 100).toFixed(2),
+          highPrice: (prices[prices.length - 1].priceCents / 100).toFixed(2),
+          offerCount: prices.length,
+          availability: "https://schema.org/InStock",
+        },
+      }
+    : null;
 
   return (
     <div>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      {jsonLd && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      )}
       <CardViewBeacon idOrSlug={card.slug ?? card.id} />
       <Link href="/browse" className="mb-4 inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white">
         ← Back to database
