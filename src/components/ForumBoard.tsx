@@ -106,6 +106,7 @@ interface SearchResult {
   lowestPriceCents: number | null;
   lowestPriceCentsNz?: number | null;
   lowestPriceCentsUs?: number | null;
+  lowestPriceCentsUk?: number | null;
 }
 
 // Autocomplete that adds a real DB card (with its live market price) to the list.
