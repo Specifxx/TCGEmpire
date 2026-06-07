@@ -117,9 +117,10 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
         </button>
 
         <div className="grid max-h-[88vh] gap-0 overflow-y-auto sm:grid-cols-[260px_1fr]">
-          {/* Card image — shows instantly from the tile data */}
+          {/* Card image — shows instantly from the tile data. Capped on phones so the
+              price comparison sits closer to the top (less scrolling on mobile). */}
           <div className="bg-ink-950/40 p-4">
-            <CardImage card={card} full className="aspect-[5/7] w-full" />
+            <CardImage card={card} full className="mx-auto aspect-[5/7] w-full max-w-[190px] sm:max-w-none" />
             {/* Plain anchor = a real navigation to the full page (the URL is already
                 /card/slug via history, so this loads the full server-rendered page). */}
             <a href={href} className="btn-ghost mt-3 flex w-full justify-center text-sm">

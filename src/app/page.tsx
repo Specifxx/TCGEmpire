@@ -110,21 +110,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Marketplace promo */}
-      <section className="card-surface flex flex-col items-start gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="chip bg-brand-500/15 text-brand-400">New</span>
-            <h2 className="text-lg font-bold text-white">Buy &amp; sell with other {info.adjective} players</h2>
-          </div>
-          <p className="mt-1 max-w-xl text-sm text-slate-400">
-            Post want-to-buy and want-to-sell listings on the community forum, and trade directly with
-            other collectors. Grab several cards from one seller and save on postage — singles add up fast.
-          </p>
-        </div>
-        <Link href="/forum" className="btn-primary shrink-0">Open the forum →</Link>
-      </section>
-
       {/* Chase cards — the most popular Riftbound cards, in a compact scroll */}
       <section>
         <div className="mb-4 flex items-end justify-between gap-3">
