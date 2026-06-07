@@ -6,7 +6,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { RETAILER_LIST, RetailerInfo } from "./retailers";
-import { isEbayEnabled, isEbayRateLimited, searchEbayLowest } from "./ebay";
+import { isEbayEnabled, isEbayRateLimited, searchEbayLowest, primeEbayBudget, ebaySpentThisRun } from "./ebay";
 import { importSealed } from "./sealed-import";
 import { refreshTcgplayerPrices } from "./tcgplayer";
 
@@ -262,6 +262,9 @@ export async function refreshEbayMarkets(
     { country: "AU", marketplace: "EBAY_AU", currency: "AUD", retailer: "ebay" },
     { country: "US", marketplace: "EBAY_US", currency: "USD", retailer: "ebay_us" },
   ];
+  // Check the live quota and set a spend budget (leaves a reserve) so this can never
+  // exhaust eBay's 5,000/day limit, however many times the importer runs.
+  await primeEbayBudget();
   let written = 0;
   for (const mkt of MARKETS) {
     if (isEbayRateLimited()) break;
@@ -303,6 +306,7 @@ export async function refreshEbayMarkets(
       console.warn(`eBay ${mkt.country}: 0 results (rate-limited?) — keeping existing rows.`);
     }
   }
+  console.log(`eBay singles: spent ${ebaySpentThisRun()} Browse calls this run.`);
   return written;
 }
 

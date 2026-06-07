@@ -3,7 +3,7 @@
 // singles importer (price-import.ts) deliberately skips these; this complements it.
 import { prisma } from "./db";
 import { RETAILER_LIST } from "./retailers";
-import { isEbayEnabled, isEbayRateLimited, searchEbaySealed } from "./ebay";
+import { isEbayEnabled, isEbayRateLimited, searchEbaySealed, primeEbayBudget } from "./ebay";
 import { fetchTcgplayerSealed, tcgProductUrl, tcgImageUrl } from "./tcgplayer";
 
 const UA = {
@@ -208,7 +208,10 @@ export async function importSealed(): Promise<number> {
 
   // eBay AU prices for each sealed product (best-effort; skips when rate-limited).
   // eBay is AU-only, so we seed/search against the AU groups.
-  if (isEbayEnabled()) {
+  // Deploys (push) set EBAY_REFRESH=false so they never spend eBay quota; only
+  // scheduled / manual runs search eBay (and even then, within the live budget).
+  if (isEbayEnabled() && process.env.EBAY_REFRESH !== "false") {
+    await primeEbayBudget(); // respect the live daily quota for sealed searches too
     const groups = await getSealedGroups("AU");
     // Always attempt eBay for the per-set promo (Nexus Night) packs — even ones no
     // AU store currently lists (e.g. the Unleashed pack) — so they appear once

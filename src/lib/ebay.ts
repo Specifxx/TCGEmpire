@@ -21,11 +21,75 @@ export function isEbayEnabled(): boolean {
   return !!(process.env.EBAY_CLIENT_ID && process.env.EBAY_CLIENT_SECRET);
 }
 
-// Set when the Browse API returns 429 (daily quota exceeded). Importers check this
-// to abort the eBay pass early instead of firing ~950 doomed requests.
+// Set when the Browse API returns 429 (daily quota exceeded) OR our own budget is
+// spent. Importers check this to abort the eBay pass early.
 let rateLimited = false;
 export function isEbayRateLimited(): boolean {
   return rateLimited;
+}
+
+// ---- Quota-aware budget ------------------------------------------------------
+// eBay's Browse API allows 5,000 calls/day. We must never exhaust it (that 429s the
+// rest of the run and any other usage). Before an eBay pass we ask eBay how many
+// calls are actually left today and only spend down to a reserve — so even if the
+// importer runs several times a day (schedule delays, deploys, manual runs) the
+// quota can never hit zero.
+const QUOTA_RESERVE = Number(process.env.EBAY_QUOTA_RESERVE ?? 600); // always leave this many
+const FALLBACK_BUDGET = Number(process.env.EBAY_MAX_CALLS ?? 2200); // used only if the live count can't be read (covers ~1 full run)
+let spendable = Infinity; // Browse calls we may still make this run
+let spentThisRun = 0;
+
+// Live remaining Browse-API calls for today (null if it can't be read). Uses the
+// Developer Analytics API, which has its own separate limit (doesn't cost Browse quota).
+async function fetchRemaining(): Promise<number | null> {
+  const token = await getToken();
+  if (!token) return null;
+  try {
+    const res = await fetch(
+      "https://api.ebay.com/developer/analytics/v1_beta/rate_limit/?api_context=buy&api_name=Browse",
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    if (!res.ok) return null;
+    const data: any = await res.json();
+    for (const grp of data.rateLimits ?? []) {
+      for (const r of grp.resources ?? []) {
+        if (r.name === "buy.browse") return r.rates?.[0]?.remaining ?? null;
+      }
+    }
+  } catch {
+    /* ignore — fall back to the fixed budget */
+  }
+  return null;
+}
+
+// Call once at the start of an eBay pass. Sets how many calls we may spend so we
+// stop with QUOTA_RESERVE to spare, regardless of how often the importer runs.
+export async function primeEbayBudget(): Promise<{ remaining: number | null; budget: number }> {
+  rateLimited = false;
+  spentThisRun = 0;
+  const remaining = await fetchRemaining();
+  spendable = remaining == null ? FALLBACK_BUDGET : Math.max(0, remaining - QUOTA_RESERVE);
+  if (spendable <= 0) rateLimited = true;
+  console.log(
+    `eBay quota: ${remaining ?? "unknown"}/5000 remaining today → budget ${spendable} calls this run (reserve ${QUOTA_RESERVE}).`
+  );
+  return { remaining, budget: spendable };
+}
+
+export function ebaySpentThisRun(): number {
+  return spentThisRun;
+}
+
+// Account for one Browse API call; flips the rate-limit flag when the budget runs
+// out so importer loops stop early. Returns false when we must NOT make the call.
+function spend(): boolean {
+  if (spendable <= 0) {
+    rateLimited = true;
+    return false;
+  }
+  spendable--;
+  spentThisRun++;
+  return true;
 }
 
 let cachedToken: { value: string; expires: number } | null = null;
@@ -152,6 +216,8 @@ export async function searchEbayLowest(card: {
     headers["X-EBAY-C-ENDUSERCTX"] = `affiliateCampaignId=${EBAY_CAMPAIGN_ID}`;
   }
 
+  if (!spend()) return null; // budget exhausted — don't make the call
+
   let res: Response;
   try {
     res = await fetch(`${SEARCH_URL}?${params}`, { headers });
@@ -228,6 +294,8 @@ export async function searchEbaySealed(name: string, productType: string, setCod
   if (EBAY_CAMPAIGN_ID) {
     headers["X-EBAY-C-ENDUSERCTX"] = `affiliateCampaignId=${EBAY_CAMPAIGN_ID}`;
   }
+
+  if (!spend()) return null; // budget exhausted — don't make the call
 
   let res: Response;
   try {
