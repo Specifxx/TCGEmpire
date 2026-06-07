@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { COUNTRIES, DEFAULT_COUNTRY, MARKET_COUNTRY, statesFor } from "@/lib/locations";
 import { useCountry } from "./CountryProvider";
@@ -33,10 +34,21 @@ export interface ForumPostDTO {
   contact: string;
   country: string | null;
   state: string | null;
+  market: string; // "AU" | "NZ" | "US" — the region this listing belongs to
   authorName: string;
   userId: string | null;
   commentCount: number;
   createdAt: string; // ISO
+}
+
+export type AdminMarket = "AU" | "NZ" | "US" | "ALL";
+
+// Admin-only context: region the admin is currently viewing, per-region listing
+// counts, and how many synthetic seed posts exist (for the "clear" tool).
+export interface ForumAdminView {
+  market: AdminMarket;
+  counts: { AU: number; NZ: number; US: number; total: number };
+  seedCount: number;
 }
 
 const CONDITIONS = ["NM", "LP", "MP", "HP", "DMG", "Any"];
@@ -169,14 +181,18 @@ const emptyForm = {
 export function ForumBoard({
   initialPosts,
   currentUser,
+  adminView = null,
 }: {
   initialPosts: ForumPostDTO[];
   currentUser: { id: string; name: string; isAdmin: boolean; emailVerified: boolean } | null;
+  adminView?: ForumAdminView | null;
 }) {
+  const router = useRouter();
   const [posts, setPosts] = useState<ForumPostDTO[]>(initialPosts);
   const [filter, setFilter] = useState<"all" | ForumKind>("all");
   const [page, setPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
+  const [clearingSeed, setClearingSeed] = useState(false);
   const { country, fmt } = useCountry();
   const myCountryName = MARKET_COUNTRY[country] ?? DEFAULT_COUNTRY;
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -187,10 +203,35 @@ export function ForumBoard({
   const [openPost, setOpenPost] = useState<ForumPostDTO | null>(null);
   const [resentVerify, setResentVerify] = useState(false);
 
+  // A server re-render (admin region switch, country change, router.refresh)
+  // delivers a fresh list — sync it in and jump back to the first page.
+  useEffect(() => {
+    setPosts(initialPosts);
+    setPage(1);
+  }, [initialPosts]);
+
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
     // Full reload so the server re-renders signed-out with the cleared cookie.
     window.location.reload();
+  }
+
+  // Admin-only: wipe all synthetic seed listings + comments, then re-fetch.
+  async function clearSeedData() {
+    const n = adminView?.seedCount ?? 0;
+    if (typeof window !== "undefined" &&
+        !window.confirm(`Delete all ${n} synthetic seed listing${n === 1 ? "" : "s"} (and their comments)? This can't be undone.`)) {
+      return;
+    }
+    setClearingSeed(true);
+    try {
+      const res = await fetch("/api/admin/forum/clear-seed", { method: "POST" });
+      if (res.ok) router.refresh();
+    } catch {
+      /* ignore — list is unchanged on failure */
+    } finally {
+      setClearingSeed(false);
+    }
   }
 
   async function resendVerify() {
@@ -352,6 +393,43 @@ export function ForumBoard({
           </div>
         )}
       </div>
+
+      {/* Admin-only control bar: switch region view + clear synthetic seed data */}
+      {currentUser?.isAdmin && adminView && (
+        <div className="mb-5 rounded-xl border border-brand-500/30 bg-brand-500/5 p-3.5">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <span className="text-xs font-bold uppercase tracking-wide text-brand-400">Admin · region view</span>
+            <div className="flex flex-wrap gap-2">
+              {([
+                ["ALL", "All regions", adminView.counts.total],
+                ["AU", "Australia", adminView.counts.AU],
+                ["NZ", "New Zealand", adminView.counts.NZ],
+                ["US", "United States", adminView.counts.US],
+              ] as const).map(([m, label, count]) => (
+                <Link
+                  key={m}
+                  href={`/forum?market=${m}`}
+                  scroll={false}
+                  className={`chip font-semibold ${adminView.market === m ? "bg-brand-500/20 text-brand-400 ring-1 ring-brand-500/40" : "bg-ink-800 text-slate-400 hover:text-white"}`}
+                >
+                  {label} <span className="text-slate-500">({count})</span>
+                </Link>
+              ))}
+            </div>
+            <button
+              onClick={clearSeedData}
+              disabled={clearingSeed || adminView.seedCount === 0}
+              className="chip ml-auto bg-rose-500/15 font-semibold text-rose-300 ring-1 ring-rose-500/30 hover:bg-rose-500/25 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {clearingSeed ? "Deleting…" : `Delete dummy data (${adminView.seedCount})`}
+            </button>
+          </div>
+          <p className="mt-2 text-[11px] text-slate-500">
+            Only admins can see this bar. Region buttons show listings from any market; “Delete dummy
+            data” removes only the synthetic seed listings, never real members’ posts.
+          </p>
+        </div>
+      )}
 
       {/* Trade-safely notice (standard P2P disclaimer) */}
       <div className="mb-5 flex items-start gap-3 rounded-xl border border-ink-700 bg-ink-900/60 p-3.5">
@@ -545,6 +623,9 @@ export function ForumBoard({
                   </span>
                   {p.status === "SOLD" && (
                     <span className="chip bg-rose-500/15 font-bold text-rose-300 ring-1 ring-rose-500/30">SOLD</span>
+                  )}
+                  {adminView?.market === "ALL" && (
+                    <span className="chip bg-ink-800 font-bold text-slate-300">{p.market}</span>
                   )}
                   {p.priceCents != null && <span className="chip bg-ink-800 font-bold text-accent">{fmt(p.priceCents)} asking</span>}
                   {(p.state || p.country) && (
