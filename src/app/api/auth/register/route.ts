@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { createSession, hashPassword } from "@/lib/auth";
+import { createSession, hashPassword, createAuthToken } from "@/lib/auth";
+import { sendVerificationEmail } from "@/lib/email";
 
 const schema = z.object({
   email: z.string().email("Enter a valid email"),
@@ -40,5 +41,12 @@ export async function POST(req: Request) {
   });
 
   await createSession(user.id);
+  // Send a confirmation email (best-effort; no-op until RESEND_API_KEY is set).
+  try {
+    const token = await createAuthToken(user.id, "verify");
+    await sendVerificationEmail(email, token);
+  } catch (e) {
+    console.warn("verification email failed:", e);
+  }
   return NextResponse.json({ ok: true });
 }

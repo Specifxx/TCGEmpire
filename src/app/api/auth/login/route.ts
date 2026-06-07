@@ -17,7 +17,14 @@ export async function POST(req: Request) {
 
   const email = parsed.data.email.toLowerCase();
   const user = await prisma.user.findUnique({ where: { email } });
-  if (!user || !(await verifyPassword(parsed.data.password, user.passwordHash))) {
+  // Account created via Google/Discord has no password — point them to that.
+  if (user && !user.passwordHash) {
+    return NextResponse.json(
+      { error: "This account uses Google or Discord sign-in — use that button above." },
+      { status: 401 }
+    );
+  }
+  if (!user || !user.passwordHash || !(await verifyPassword(parsed.data.password, user.passwordHash))) {
     return NextResponse.json(
       { error: "Incorrect email or password" },
       { status: 401 }

@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { randomBytes } from "node:crypto";
 import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
 import { prisma } from "./db";
@@ -23,12 +24,39 @@ export interface SessionUser {
   id: string;
   email: string;
   displayName: string;
+  avatarUrl: string | null;
+  emailVerified: boolean;
   balanceCents: number;
   isAdmin: boolean;
 }
 
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 10);
+}
+
+// One-time tokens for email verification / password reset.
+export async function createAuthToken(
+  userId: string,
+  purpose: "verify" | "reset",
+  ttlMs = 60 * 60 * 1000
+): Promise<string> {
+  const token = randomBytes(32).toString("hex");
+  await prisma.authToken.create({
+    data: { token, purpose, userId, expiresAt: new Date(Date.now() + ttlMs) },
+  });
+  return token;
+}
+
+// Consume a token: returns the userId if valid+unexpired (and deletes it), else null.
+export async function consumeAuthToken(
+  token: string,
+  purpose: "verify" | "reset"
+): Promise<string | null> {
+  const row = await prisma.authToken.findUnique({ where: { token } });
+  if (!row || row.purpose !== purpose) return null;
+  await prisma.authToken.delete({ where: { id: row.id } }).catch(() => {});
+  if (row.expiresAt.getTime() < Date.now()) return null;
+  return row.userId;
 }
 
 export async function verifyPassword(password: string, hash: string): Promise<boolean> {
@@ -70,6 +98,8 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
       id: user.id,
       email: user.email,
       displayName: user.displayName,
+      avatarUrl: user.avatarUrl,
+      emailVerified: !!user.emailVerified,
       balanceCents: user.balanceCents,
       isAdmin: user.isAdmin || isAdminEmail(user.email),
     };

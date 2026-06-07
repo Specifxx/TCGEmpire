@@ -27,6 +27,13 @@ export function getWishlist(): string[] {
   return load().slice();
 }
 
+// Replace the whole list (used to merge a signed-in user's saved wishlist on login).
+export function setWishlist(ids: string[]): void {
+  cache = Array.from(new Set(ids));
+  persist();
+  window.dispatchEvent(new CustomEvent("wishlist-change", { detail: { id: null } }));
+}
+
 export function isWishlisted(id: string): boolean {
   return load().includes(id);
 }

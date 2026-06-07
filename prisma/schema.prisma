@@ -14,8 +14,17 @@ datasource db {
 model User {
   id           String    @id @default(cuid())
   email        String    @unique
-  passwordHash String
+  // Optional — accounts created via Google/Discord sign-in have no password.
+  passwordHash String?
   displayName  String
+  avatarUrl    String?
+  // Set when the email is confirmed (instantly for OAuth, which is pre-verified).
+  emailVerified DateTime?
+  // OAuth identities (one per provider). Lets a user link Google and/or Discord.
+  // Indexed (not DB-unique) so the push stays additive; uniqueness is enforced in
+  // the OAuth callback (we find-or-create by provider id, then by email).
+  googleId     String?
+  discordId    String?
   // Wallet balance in AUD cents (e.g. 25000 = $250.00).
   // Funds committed to open buy orders are moved out of balance and held as
   // escrow on the BuyOrder (reservedCents) until the order fills or is cancelled.
@@ -27,6 +36,36 @@ model User {
   buyOrders    BuyOrder[]
   purchases    Order[]   @relation("BuyerOrders")
   sales        Order[]   @relation("SellerOrders")
+  wishlist     WishlistItem[]
+  authTokens   AuthToken[]
+
+  @@index([googleId])
+  @@index([discordId])
+}
+
+// One-time tokens for email verification and password reset (purpose-tagged).
+model AuthToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  purpose   String   // "verify" | "reset"
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// Per-account wishlist (server-side). The cookie wishlist is merged in on sign-in.
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  cardId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, cardId])
+  @@index([userId])
 }
 
 model Card {

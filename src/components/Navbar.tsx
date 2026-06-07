@@ -5,10 +5,15 @@ import { NavWishlistButton } from "./NavWishlistButton";
 import { MobileNav } from "./MobileNav";
 import { NavDropdown } from "./NavDropdown";
 import { CountrySwitcher } from "./CountrySwitcher";
+import { UserMenu } from "./UserMenu";
+import { WishlistSync } from "./WishlistSync";
+import { getCurrentUser } from "@/lib/auth";
 
-export function Navbar() {
+export async function Navbar() {
+  const user = await getCurrentUser();
   return (
     <header className="sticky top-0 z-40 border-b border-ink-800 bg-ink-950/95">
+      <WishlistSync loggedIn={!!user} />
       <div className="container-app">
        <div className="flex h-16 items-center gap-4">
         {/* Logo: standalone R mark + text wordmark */}
@@ -55,6 +60,19 @@ export function Navbar() {
           </div>
           <CountrySwitcher className="ml-1" />
           <NavWishlistButton />
+          <UserMenu
+            user={
+              user
+                ? {
+                    displayName: user.displayName,
+                    email: user.email,
+                    avatarUrl: user.avatarUrl,
+                    emailVerified: user.emailVerified,
+                    balanceCents: user.balanceCents,
+                  }
+                : null
+            }
+          />
           <MobileNav />
         </nav>
        </div>
