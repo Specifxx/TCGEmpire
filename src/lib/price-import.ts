@@ -8,6 +8,7 @@ import { prisma } from "./db";
 import { RETAILER_LIST, RetailerInfo } from "./retailers";
 import { isEbayEnabled, isEbayRateLimited, searchEbayLowest } from "./ebay";
 import { importSealed } from "./sealed-import";
+import { refreshTcgplayerPrices } from "./tcgplayer";
 
 interface ShopifyVariant { title: string; price: string; available: boolean }
 interface ShopifyProduct { title: string; handle: string; variants: ShopifyVariant[] }
@@ -561,6 +562,17 @@ export async function importPrices(): Promise<ImportSummary> {
     });
     const n = await refreshEbayMarkets(ebayCards);
     summary.stores.push({ name: "eBay (AU+US)", products: ebayCards.length, priced: n, matched: n, unmatched: 0 });
+  }
+
+  // ---- TCGplayer (US market price) ---------------------------------------------
+  // TCGplayer is the dominant US marketplace. We add its MARKET price (not the
+  // lowest listing, which is often a different-language card) as a US source.
+  // Isolated so a TCGplayer hiccup never fails the rest of the import.
+  try {
+    const n = await refreshTcgplayerPrices();
+    if (n > 0) summary.stores.push({ name: "TCGplayer (US)", products: n, priced: n, matched: n, unmatched: 0 });
+  } catch (e) {
+    console.warn("TCGplayer import failed:", e);
   }
 
   // Recompute each card's lowest live price PER MARKET from IN-STOCK listings only,
