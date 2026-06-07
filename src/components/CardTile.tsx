@@ -95,7 +95,7 @@ export function CardTile({ card }: { card: CardTileData }) {
             )}
           </div>
           {stores > 0 && (
-            <div className="text-right text-[11px] text-slate-500">
+            <div className="text-right text-[11px] font-semibold text-brand-400">
               {stores} {stores === 1 ? "store" : "stores"}
             </div>
           )}
