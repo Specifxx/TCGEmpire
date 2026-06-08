@@ -8,6 +8,19 @@
 // Defined here (client-safe) so both server pricing and client UI agree on the key.
 export const TCGPLAYER_UK_RETAILER = "tcgplayer_uk";
 
+// Retailer key for the Cardmarket price surfaced in the UK market. Cardmarket's
+// public price-guide is EUR-denominated and we convert it to GBP, so — exactly like
+// TCGplayer-UK — it's a converted reference: a marketplace "from" aggregate, not a
+// single verified in-stock UK listing. It's therefore treated as a fallback too.
+export const CARDMARKET_RETAILER = "cardmarket";
+
+// Converted, non-buyable-as-shown UK price sources. These are EXCLUDED from the UK
+// "from" price and HIDDEN from the UK listing breakdown whenever a genuine GBP
+// listing exists, and only used as a fallback when none does. Real UK stores and
+// eBay UK are never in this set. One source of truth shared by the importer
+// (headline computation) and the UI (breakdown filtering).
+export const UK_FALLBACK_RETAILERS: readonly string[] = [TCGPLAYER_UK_RETAILER, CARDMARKET_RETAILER];
+
 export type DomainKey =
   | "Fury"
   | "Calm"

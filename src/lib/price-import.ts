@@ -8,7 +8,9 @@ import { prisma } from "./db";
 import { RETAILER_LIST, RetailerInfo } from "./retailers";
 import { isEbayEnabled, isEbayRateLimited, searchEbayLowest, primeEbayBudget, ebaySpentThisRun } from "./ebay";
 import { importSealed } from "./sealed-import";
-import { refreshTcgplayerPrices, TCG_UK } from "./tcgplayer";
+import { refreshTcgplayerPrices } from "./tcgplayer";
+import { refreshCardmarketPrices } from "./cardmarket";
+import { UK_FALLBACK_RETAILERS } from "./constants";
 import { isoCountry, type Country } from "./country";
 
 interface ShopifyVariant { title: string; price: string; available: boolean }
@@ -581,6 +583,21 @@ export async function importPrices(): Promise<ImportSummary> {
     console.warn("TCGplayer import failed:", e);
   }
 
+  // ---- Cardmarket (UK fallback price) ------------------------------------------
+  // Flag-gated OFF (CARDMARKET_ENABLED) and pending a ToS sign-off — see cardmarket.ts.
+  // When enabled it adds an EUR→GBP-converted marketplace "from" price as a UK
+  // FALLBACK source (UK_FALLBACK_RETAILERS). Isolated so it never fails the import.
+  try {
+    const r = await refreshCardmarketPrices();
+    if (!r.skipped && r.written > 0) {
+      summary.stores.push({ name: "Cardmarket (UK)", products: r.written, priced: r.written, matched: r.written, unmatched: 0 });
+    } else if (r.skipped) {
+      console.log(`Cardmarket: skipped (${r.reason}).`);
+    }
+  } catch (e) {
+    console.warn("Cardmarket import failed:", e);
+  }
+
   // Recompute each card's lowest live price PER MARKET from IN-STOCK listings only,
   // so the catalogue "from" price never reflects a sold-out listing. (Out-of-stock
   // rows still exist and are shown on the card page, just not used for the headline.)
@@ -588,22 +605,23 @@ export async function importPrices(): Promise<ImportSummary> {
   //   lowestPriceCentsNz = cheapest in-stock NZ listing (NZD)
   //   lowestPriceCentsUs = cheapest in-stock US listing (USD)
   //   lowestPriceCentsUk = cheapest in-stock real GBP listing (UK store / eBay UK),
-  //     falling back to the converted TCGplayer reference only when no real GBP
-  //     listing exists — TCGplayer's USD→GBP figure otherwise undercuts genuine UK
-  //     stores and made the "from" price look unrealistically low.
-  const [pricedAu, pricedNz, pricedUs, pricedUkReal, pricedUkTcg] = await Promise.all([
+  //     falling back to a converted reference (TCGplayer-UK / Cardmarket — see
+  //     UK_FALLBACK_RETAILERS) only when no real GBP listing exists. Those converted
+  //     figures otherwise undercut genuine UK stores and made the "from" price look
+  //     unrealistically low.
+  const [pricedAu, pricedNz, pricedUs, pricedUkReal, pricedUkFallback] = await Promise.all([
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "AU" }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "NZ" }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "US" }, _min: { priceCents: true } }),
-    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "UK", retailer: { not: TCG_UK.retailer } }, _min: { priceCents: true } }),
-    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "UK", retailer: TCG_UK.retailer }, _min: { priceCents: true } }),
+    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "UK", retailer: { notIn: [...UK_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
+    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "UK", retailer: { in: [...UK_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
   ]);
   const lowAu = new Map(pricedAu.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowNz = new Map(pricedNz.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowUs = new Map(pricedUs.map((r) => [r.cardId, r._min.priceCents ?? null]));
-  // Real GBP lows first; the TCGplayer-converted price is consulted per-card only as a fallback.
+  // Real GBP lows first; the converted fallback prices are consulted per-card only when none exists.
   const lowUkReal = new Map(pricedUkReal.map((r) => [r.cardId, r._min.priceCents ?? null]));
-  const lowUkTcg = new Map(pricedUkTcg.map((r) => [r.cardId, r._min.priceCents ?? null]));
+  const lowUkFallback = new Map(pricedUkFallback.map((r) => [r.cardId, r._min.priceCents ?? null]));
   // Diff-based update: write each card STRAIGHT to its new lowest only when it
   // changed. We must NOT reset every card to null first (the old approach) — that
   // briefly showed "No price yet" for the whole catalogue on every import/deploy
@@ -617,8 +635,8 @@ export async function importPrices(): Promise<ImportSummary> {
     const nAu = lowAu.get(c.id) ?? null;
     const nNz = lowNz.get(c.id) ?? null;
     const nUs = lowUs.get(c.id) ?? null;
-    // Prefer a real GBP listing; fall back to the converted TCGplayer price only when none exists.
-    const nUk = lowUkReal.get(c.id) ?? lowUkTcg.get(c.id) ?? null;
+    // Prefer a real GBP listing; fall back to a converted reference price only when none exists.
+    const nUk = lowUkReal.get(c.id) ?? lowUkFallback.get(c.id) ?? null;
     if (
       nAu !== c.lowestPriceCents ||
       nNz !== c.lowestPriceCentsNz ||
