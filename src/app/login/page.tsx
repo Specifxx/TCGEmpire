@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { enabledProviders } from "@/lib/oauth";
 
 function safe(next?: string): string {
-  return next && next.startsWith("/") && !next.startsWith("//") ? next : "/forum";
+  return next && next.startsWith("/") && !next.startsWith("//") ? next : "/profile";
 }
 
 export default async function LoginPage({ searchParams }: { searchParams: { next?: string } }) {

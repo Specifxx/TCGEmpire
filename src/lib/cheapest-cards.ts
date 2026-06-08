@@ -1,7 +1,28 @@
+import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { buildCardWhere, buildCardOrderBy, cardTileSelect } from "./cards";
-import { pickPrice, type Country } from "./country";
+import { pickPrice, priceField, type Country } from "./country";
 import type { CardTileData } from "@/components/CardTile";
+
+// "Most popular cards" — the most-SEARCHED Riftbound singles in the visitor's market,
+// surfaced on the homepage. Search clicks are the purest demand signal we have. Ties
+// (e.g. lots of cards with the same search count) break toward the MORE EXPENSIVE
+// card, so the section leads with the chase/high-value cards people actually want.
+// Priced-only so every tile shows a real price.
+export async function getPopularCards(limit = 12, country: Country = "AU"): Promise<CardTileData[]> {
+  const field = priceField(country);
+  const cards = (await prisma.card.findMany({
+    where: buildCardWhere({ priced: "1" }, country),
+    orderBy: [
+      { searchCount: "desc" },
+      { [field]: { sort: "desc", nulls: "last" } } as Prisma.CardOrderByWithRelationInput,
+      { viewCount: "desc" },
+    ],
+    take: limit,
+    select: cardTileSelect(country),
+  })) as CardTileData[];
+  return cards;
+}
 
 // "Cheapest cards" — the lowest-priced Riftbound singles in the visitor's market,
 // surfaced on the homepage to show off two things at once: how cheaply you can buy

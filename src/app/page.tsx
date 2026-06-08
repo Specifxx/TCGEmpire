@@ -3,7 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { CardTile } from "@/components/CardTile";
 import { CountryHeroToggle } from "@/components/CountryHeroToggle";
-import { getCheapestCards } from "@/lib/cheapest-cards";
+import { getPopularCards } from "@/lib/cheapest-cards";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES, priceField, type CountryInfo } from "@/lib/country";
 import { SETS, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
@@ -65,11 +65,11 @@ export default async function HomePage() {
   const ebay = ebayLabel(country);
   const faqs = faqsFor(info, ebay);
   const field = priceField(country);
-  const [totalCards, pricedCards, cheapestCards, storeGroups] = await Promise.all([
+  const [totalCards, pricedCards, popularCards, storeGroups] = await Promise.all([
     prisma.card.count(),
     prisma.card.count({ where: { [field]: { not: null } } }),
-    // Lowest-priced singles, leading with the best-stocked bargains (price, then coverage).
-    getCheapestCards(12, country),
+    // Most-searched singles (ties → more expensive card) — the cards people most want.
+    getPopularCards(12, country),
     // Stores serving the selected market (eBay excluded from the count).
     prisma.retailerPrice.groupBy({ by: ["retailer"], where: { country, NOT: { retailer: { startsWith: "ebay" } } } }),
   ]);
@@ -111,19 +111,19 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Cheapest cards — lowest live prices, showing how many stores we compare per card */}
+      {/* Most popular cards — the most-searched Riftbound singles right now */}
       <section>
         <div className="mb-4 flex items-end justify-between gap-3">
           <div>
-            <h2 className="text-xl font-extrabold text-white">Cheapest Riftbound cards</h2>
+            <h2 className="text-xl font-extrabold text-white">Most popular Riftbound cards</h2>
             <p className="mt-0.5 text-xs text-slate-500">
-              The lowest live prices right now — we check {storeCount} {info.adjective} {storeWord} for every card so you always pay the least.
+              The most-searched cards right now — compare {storeCount} {info.adjective} {storeWord} for every one to find the best price.
             </p>
           </div>
-          <Link href="/browse?priced=1&sort=price_asc" className="btn-ghost text-xs shrink-0">View all →</Link>
+          <Link href="/browse" className="btn-ghost text-xs shrink-0">View all →</Link>
         </div>
         <div className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-2">
-          {cheapestCards.map((c) => (
+          {popularCards.map((c) => (
             <div key={c.id} className="w-36 shrink-0 sm:w-44">
               <CardTile card={c} />
             </div>

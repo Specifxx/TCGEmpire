@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 function safeNext(): string {
   if (typeof window === "undefined") return "/";
   const n = new URLSearchParams(window.location.search).get("next");
-  return n && n.startsWith("/") && !n.startsWith("//") ? n : "/";
+  return n && n.startsWith("/") && !n.startsWith("//") ? n : "/profile";
 }
 
 const OAUTH_ERRORS: Record<string, string> = {

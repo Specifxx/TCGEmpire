@@ -73,7 +73,8 @@ export async function GET(req: Request, { params }: { params: { provider: string
   // 4) Find-or-create the user (by provider id, then by email) and link the identity.
   const user = await upsertOAuthUser(provider, providerId, email, name, avatar);
   await createSession(user.id);
-  return NextResponse.redirect(new URL("/", req.url));
+  // Land new/returning sign-ins on their profile by default.
+  return NextResponse.redirect(new URL("/profile", req.url));
 }
 
 async function upsertOAuthUser(
