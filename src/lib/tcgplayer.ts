@@ -1,14 +1,15 @@
 // TCGplayer as a US price source.
 //
 // TCGplayer is the dominant US marketplace, so its prices belong in the US (and a
-// GBP-converted UK reference) comparison. We price each product from its actual
-// LOWEST ENGLISH listing — Near-Mint first, then any English condition. We never use
-// a product's algorithmic marketPrice as a fallback for a product with no English
-// listing, because TCGplayer's Riftbound catalogue ALSO contains non-English (e.g.
-// Simplified Chinese) printings that share our cards' collector numbers; their cheap
-// foreign marketPrice was leaking in as our "cheapest" price (e.g. Dazzling Aurora
-// showed a Chinese price). Foreign-language products are dropped outright, and any
-// product without a genuine English listing is skipped rather than priced.
+// GBP-converted UK reference) comparison. We record each product's MARKET PRICE — the
+// English fair-market value TCGplayer headlines — NOT the lowest listing. The lowest
+// listing is frequently a foreign-language (Simplified Chinese) copy that a seller
+// listed under the English product; TCGplayer's search preview tags every listing
+// with the product LINE's language (English), so they can't be filtered per-listing,
+// and that cheap Chinese listing was leaking in as our "cheapest" (the Dazzling Aurora
+// bug). Market price sidesteps that entirely. On top of it we drop obviously foreign
+// products and, when an English + Chinese print share a collector number, keep the one
+// with the higher market price (the English print).
 //
 // Data comes from TCGplayer's public search API (the same endpoint the website
 // uses). Products are matched to our cards by collector number + set, reusing
@@ -229,52 +230,65 @@ export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: Tcg
     if (c.externalId) byExternal.set(c.externalId, c.id);
   }
 
-  const rows: Prisma.RetailerPriceCreateManyInput[] = [];
-  const seen = new Set<string>();
   const unmatchedSamples: string[] = [];
-  let matched = 0;
+
+  // Best (English) product per card+printing. Several products can share a collector
+  // number — crucially an English print AND a Simplified-Chinese print. We keep the one
+  // with the higher MARKET price (the English print — a Chinese print's market is far
+  // lower) and record that MARKET price, NOT the lowest listing.
+  //
+  // Why market price, not lowest listing: the cheapest listing is frequently a
+  // foreign-language (Chinese) copy that a seller listed UNDER the English product, and
+  // TCGplayer's search preview tags every listing with the product LINE's language
+  // (English), so we cannot filter those out per-listing — `languageId` is 1 for the
+  // Chinese listing too. Market price is the English fair-market value TCGplayer itself
+  // headlines, so it's the only Chinese-proof figure. (This was the Dazzling Aurora bug.)
+  const best = new Map<string, { market: number; price: number; p: TcgProduct }>();
 
   for (const p of items) {
-    // Drop non-English (e.g. Chinese) printings outright — they share collector
-    // numbers with our cards but are a different product, and their cheap foreign
-    // price was leaking in as our "cheapest".
-    if (isNonEnglishProduct(p)) continue;
+    if (isNonEnglishProduct(p)) continue; // drop obvious foreign-language products
     const numStr = p.customAttributes?.number;
-    // Price ONLY from a genuine English listing (Near-Mint first, then any English
-    // condition). We intentionally do NOT fall back to marketPrice when a product has
-    // no English listing — that fallback is exactly what surfaced foreign (Chinese)
-    // prices. A product with no in-stock English copy is skipped instead.
-    const price = englishNmLowest(p) ?? englishAnyLowest(p);
-    if (price == null || price <= 0) continue;
     const [num, total] = (numStr ?? "").split("/");
     const sc = setFromTotal(total);
     // Match by set+number first; otherwise by externalId (our TCGplayer-created cards).
     const cardId = (sc ? byKey.get(`${sc}|${numKey(num)}`) : undefined) ?? byExternal.get(`tcg-${p.productId}`);
+    // English MARKET price; fall back to lowest English NM listing only when a
+    // (usually brand-new) product has no market price yet.
+    const market = p.marketPrice && p.marketPrice > 0 ? p.marketPrice : null;
+    const price = market ?? englishNmLowest(p);
     if (!cardId) {
-      if (unmatchedSamples.length < 25) unmatchedSamples.push(`${p.productName} ${numStr ?? "?"} $${price}`);
+      if (price && price > 0 && unmatchedSamples.length < 25) {
+        unmatchedSamples.push(`${p.productName} ${numStr ?? "?"} $${price}`);
+      }
       continue;
     }
-    matched++;
-    // foilOnly products are foil prints; everything else is the base/normal market.
-    const isFoil = !!p.foilOnly;
-    const dedupe = `${cardId}|${isFoil}`;
-    if (seen.has(dedupe)) continue; // one row per card+printing (unique key)
-    seen.add(dedupe);
+    if (price == null || price <= 0) continue;
+    const key = `${cardId}|${p.foilOnly ? "true" : "false"}`;
+    const prev = best.get(key);
+    // When collector numbers collide, the higher market price is the English print.
+    const marketForCompare = market ?? price;
+    if (!prev || marketForCompare > prev.market) best.set(key, { market: marketForCompare, price, p });
+  }
+
+  const rows: Prisma.RetailerPriceCreateManyInput[] = [];
+  for (const [key, b] of best) {
+    const isFoil = key.endsWith("|true");
+    const cardId = key.slice(0, key.lastIndexOf("|"));
     rows.push({
       cardId,
       retailer: mkt.retailer,
       retailerName: "TCGplayer",
-      title: p.productName,
-      url: tcgProductUrl(p),
+      title: b.p.productName,
+      url: tcgProductUrl(b.p),
       condition: "NM",
       isFoil,
-      priceCents: Math.round(price * 100 * mkt.fx),
+      priceCents: Math.round(b.price * 100 * mkt.fx),
       currency: mkt.currency,
       country: mkt.country,
       inStock: true,
     });
   }
-  return { total: items.length, matched, rows, unmatchedSamples };
+  return { total: items.length, matched: rows.length, rows, unmatchedSamples };
 }
 
 // Replace all TCGplayer rows with a fresh pull, for both the US (USD) and UK (GBP)

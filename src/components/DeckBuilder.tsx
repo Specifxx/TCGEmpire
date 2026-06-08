@@ -62,6 +62,10 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
   const [loading, setLoading] = useState(false);
   const [shared, setShared] = useState(false);
   const [preview, setPreview] = useState<DeckBuilderCard | null>(null);
+  // Trade-value controls: a global % multiplier (e.g. settle cash at 90%) and a
+  // per-line manual price override (cents), keyed by item index.
+  const [adjustPct, setAdjustPct] = useState(100);
+  const [overrides, setOverrides] = useState<Record<number, number>>({});
   const autoPriced = useRef(false);
 
   async function price(deck: string = text) {
@@ -75,6 +79,7 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
       });
       const data: Result = await res.json();
       setResult(data);
+      setOverrides({}); // fresh list → clear any manual overrides
       // Default the preview to the first matched card.
       setPreview(data.items.find((i) => i.card)?.card ?? null);
     } catch {
@@ -111,6 +116,20 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
     setShared(true);
     setTimeout(() => setShared(false), 2000);
   }
+
+  // Effective per-unit price for a line: manual override if set, else the matched
+  // price, then scaled by the global adjustment %. Null when there's no price.
+  const factor = adjustPct / 100;
+  function effUnitCents(it: Item, idx: number): number | null {
+    const base = overrides[idx] ?? it.unitPriceCents;
+    return base != null ? Math.round(base * factor) : null;
+  }
+  const adjTotalCents = result
+    ? result.items.reduce((sum, it, idx) => {
+        const u = effUnitCents(it, idx);
+        return sum + (u != null ? u * it.qty : 0);
+      }, 0)
+    : 0;
 
   return (
     <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
@@ -214,17 +233,41 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
         ) : (
           <>
             {/* Summary */}
-            <div className="card-surface mb-4 flex flex-wrap items-center justify-between gap-4 p-5">
-              <div className="flex gap-6">
-                <Sum label="Deck total" value={fmt(result.totalCents)} highlight />
-                <Sum label="Cards" value={`${result.totalQty}`} />
-                <Sum label="Matched" value={`${result.matchedCount}/${result.items.length}`} />
+            <div className="card-surface mb-4 p-5">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex gap-6">
+                  <Sum label={adjustPct === 100 ? "Deck total" : `Trade value (${adjustPct}%)`} value={fmt(adjTotalCents)} highlight />
+                  <Sum label="Cards" value={`${result.totalQty}`} />
+                  <Sum label="Matched" value={`${result.matchedCount}/${result.items.length}`} />
+                </div>
+                {result.unmatchedCount > 0 && (
+                  <p className="text-xs text-gold">
+                    {result.unmatchedCount} line(s) couldn&apos;t be matched — check spelling or add a set code.
+                  </p>
+                )}
               </div>
-              {result.unmatchedCount > 0 && (
-                <p className="text-xs text-gold">
-                  {result.unmatchedCount} line(s) couldn&apos;t be matched — check spelling or add a set code.
-                </p>
-              )}
+              {/* Trade-value % — settle in-person cash differences at, say, 90%. */}
+              <div className="mt-4 flex items-center gap-3 border-t border-ink-800 pt-4">
+                <label htmlFor="adjustPct" className="shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  Adjust value
+                </label>
+                <input
+                  id="adjustPct"
+                  type="range"
+                  min={50}
+                  max={100}
+                  step={1}
+                  value={adjustPct}
+                  onChange={(e) => setAdjustPct(Number(e.target.value))}
+                  className="h-1 flex-1 cursor-pointer accent-brand-500"
+                />
+                <span className="w-10 shrink-0 text-right text-sm font-bold text-white">{adjustPct}%</span>
+                {adjustPct !== 100 && (
+                  <button type="button" onClick={() => setAdjustPct(100)} className="shrink-0 text-xs text-slate-500 hover:text-brand-400">
+                    reset
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Items */}
@@ -260,13 +303,30 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
                       </div>
                     </div>
                     <div className="text-right">
-                      {it.unitPriceCents != null ? (
+                      {it.card || it.unitPriceCents != null ? (
                         <>
-                          <div className="font-bold text-white">{fmt(it.lineCents)}</div>
-                          <div className="text-[11px] text-slate-500">{fmt(it.unitPriceCents)} ea</div>
+                          <div className="font-bold text-white">{fmt((effUnitCents(it, idx) ?? 0) * it.qty)}</div>
+                          <div className="mt-0.5 flex items-center justify-end gap-1 text-[11px] text-slate-500">
+                            <span>$</span>
+                            <input
+                              type="number"
+                              min={0}
+                              step="0.01"
+                              value={((overrides[idx] ?? it.unitPriceCents ?? 0) / 100).toFixed(2)}
+                              onChange={(e) => {
+                                const v = parseFloat(e.target.value);
+                                setOverrides((o) => ({ ...o, [idx]: Number.isFinite(v) && v >= 0 ? Math.round(v * 100) : 0 }));
+                              }}
+                              onFocus={(e) => e.target.select()}
+                              className="w-16 rounded border border-ink-700 bg-ink-900 px-1 py-0.5 text-right text-[11px] text-slate-200 outline-none focus:border-brand-500"
+                              aria-label="Override unit price"
+                              title="Edit this card's unit value"
+                            />
+                            <span>ea</span>
+                          </div>
                         </>
                       ) : (
-                        <div className="text-xs text-slate-500">{it.card ? "no price" : "—"}</div>
+                        <div className="text-xs text-slate-500">—</div>
                       )}
                     </div>
                   </li>
@@ -276,11 +336,12 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
                 <span className="text-sm text-slate-400">
                   {result.pricedQty} of {result.totalQty} cards priced
                 </span>
-                <span className="text-xl font-extrabold text-accent">{fmt(result.totalCents)}</span>
+                <span className="text-xl font-extrabold text-accent">{fmt(adjTotalCents)}</span>
               </div>
             </div>
             <p className="mt-3 text-center text-[11px] text-slate-600">
-              Total uses each card&apos;s cheapest in-stock {country} price and may span multiple stores.
+              Starts from each card&apos;s cheapest in-stock {country} price (may span multiple stores).
+              Edit any card&apos;s value, or use the slider to settle a trade at a % — great for in-person cash.
             </p>
           </>
         )}

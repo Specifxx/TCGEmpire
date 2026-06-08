@@ -162,6 +162,13 @@ function WishlistDrawer({ open, onClose }: { open: boolean; onClose: () => void 
             <Link href="/wishlist" onClick={onClose} className="btn-primary w-full text-center">
               Open full wishlist →
             </Link>
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent("price-alert-open"))}
+              className="mt-2 flex w-full items-center justify-center gap-1.5 text-xs text-slate-500 hover:text-brand-400"
+            >
+              🔔 Get price-drop email alerts
+            </button>
           </div>
         )}
       </aside>

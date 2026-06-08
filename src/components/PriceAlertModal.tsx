@@ -7,6 +7,10 @@ import { useCountry } from "./CountryProvider";
 // Where we remember the visitor's email so a second wishlist heart doesn't
 // re-prompt — it silently extends their existing watch instead.
 const EMAIL_KEY = "rc_alert_email";
+// Set once the modal has auto-opened a single time, so we NEVER auto-pop it again on
+// later wishlist adds. The visitor can re-open it deliberately from the wishlist's
+// "price-drop alerts" button (which dispatches `price-alert-open`).
+const PROMPTED_KEY = "rc_alert_prompted";
 
 // Fired by WishlistButton when a card is ADDED to the wishlist. detail.cardId is
 // the card just added (used only for nicer copy; we subscribe the whole wishlist).
@@ -58,8 +62,12 @@ export function PriceAlertModal() {
 
   // React to wishlist additions.
   useEffect(() => {
+    const ls = () => (typeof localStorage !== "undefined" ? localStorage : null);
+
+    // Auto-prompt: fired by WishlistButton when a card is ADDED. Opens the modal at
+    // most ONCE ever; after that, adds are silent (a tiny toast, no modal).
     const handler = () => {
-      const saved = typeof localStorage !== "undefined" ? localStorage.getItem(EMAIL_KEY) : null;
+      const saved = ls()?.getItem(EMAIL_KEY) ?? null;
       if (saved) {
         // Returning subscriber — extend their watch quietly, no modal.
         void subscribe(saved).then((r) => {
@@ -67,13 +75,35 @@ export function PriceAlertModal() {
         });
         return;
       }
-      // First time — ask for an email.
+      // Only ever auto-open once. After that, stay out of the way.
+      if (ls()?.getItem(PROMPTED_KEY) === "1") {
+        flashToast("Added to wishlist ✓");
+        return;
+      }
+      try {
+        ls()?.setItem(PROMPTED_KEY, "1");
+      } catch {
+        /* private mode — worst case it can prompt once more next session */
+      }
       setPhase("form");
       setEmail("");
       setOpen(true);
     };
+
+    // Manual open: fired by the subtle "price-drop alerts" button in the wishlist.
+    // Always opens the form, regardless of the one-time auto-prompt rule.
+    const openHandler = () => {
+      setEmail(ls()?.getItem(EMAIL_KEY) ?? "");
+      setPhase("form");
+      setOpen(true);
+    };
+
     window.addEventListener("price-alert-prompt", handler as EventListener);
-    return () => window.removeEventListener("price-alert-prompt", handler as EventListener);
+    window.addEventListener("price-alert-open", openHandler as EventListener);
+    return () => {
+      window.removeEventListener("price-alert-prompt", handler as EventListener);
+      window.removeEventListener("price-alert-open", openHandler as EventListener);
+    };
   }, [subscribe, flashToast]);
 
   // Close on Escape.

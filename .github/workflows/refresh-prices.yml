@@ -22,6 +22,9 @@ on:
       - "src/lib/ebay.ts"
       - "src/lib/price-import.ts"
       - "src/lib/retailers.ts"
+      - "src/lib/tcgplayer.ts"
+      - "src/lib/cardmarket.ts"
+      - "src/lib/sealed-import.ts"
       - "scripts/import-prices.ts"
 
 # Never run two price imports at once (they both write to the same DB).
