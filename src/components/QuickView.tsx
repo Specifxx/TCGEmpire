@@ -5,7 +5,7 @@ import { CardTileData } from "./CardTile";
 import { CardImage } from "./CardImage";
 import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge } from "./Badge";
 import { WishlistButton } from "./WishlistButton";
-import { isOvernumbered, isSignature } from "@/lib/constants";
+import { isOvernumbered, isSignature, TCGPLAYER_UK_RETAILER } from "@/lib/constants";
 import { cardHref } from "@/lib/card-url";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
 import { affiliateUrl } from "@/lib/affiliate";
@@ -99,8 +99,12 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
   // Rank by ITEM price — the cheapest card price is the "lowest price". Known postage
   // (eBay) is shown for transparency but must not change which listing is cheapest;
   // it only breaks ties. Unknown postage shows "at checkout" (never fabricated).
-  const inStock = (prices ?? [])
-    .filter((p) => p.inStock && p.country === country)
+  const countryRows = (prices ?? []).filter((p) => p.inStock && p.country === country);
+  // TCGplayer's converted GBP price is a UK fallback only: hide it when a real GBP
+  // listing exists so the cheapest shown matches the "from" price (which excludes it).
+  const ukHasRealGbp = country === "UK" && countryRows.some((p) => p.retailer !== TCGPLAYER_UK_RETAILER);
+  const inStock = countryRows
+    .filter((p) => !(ukHasRealGbp && p.retailer === TCGPLAYER_UK_RETAILER))
     .map((p) => {
       const ship = effectiveShippingCents(p.shippingCents); // number | null (null = unknown)
       return { ...p, ship, delivered: p.priceCents + (ship ?? 0) };

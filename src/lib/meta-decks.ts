@@ -73,6 +73,7 @@ const CARD_SELECT = {
   lowestPriceCents: true,
   lowestPriceCentsNz: true,
   lowestPriceCentsUs: true,
+  lowestPriceCentsUk: true,
 } as const;
 
 // Build a name -> cheapest base printing map for a set of card names in ONE query.

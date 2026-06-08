@@ -8,7 +8,7 @@ import { prisma } from "./db";
 import { RETAILER_LIST, RetailerInfo } from "./retailers";
 import { isEbayEnabled, isEbayRateLimited, searchEbayLowest, primeEbayBudget, ebaySpentThisRun } from "./ebay";
 import { importSealed } from "./sealed-import";
-import { refreshTcgplayerPrices } from "./tcgplayer";
+import { refreshTcgplayerPrices, TCG_UK } from "./tcgplayer";
 import { isoCountry, type Country } from "./country";
 
 interface ShopifyVariant { title: string; price: string; available: boolean }
@@ -587,16 +587,23 @@ export async function importPrices(): Promise<ImportSummary> {
   //   lowestPriceCents   = cheapest in-stock AU listing (AUD)
   //   lowestPriceCentsNz = cheapest in-stock NZ listing (NZD)
   //   lowestPriceCentsUs = cheapest in-stock US listing (USD)
-  const [pricedAu, pricedNz, pricedUs, pricedUk] = await Promise.all([
+  //   lowestPriceCentsUk = cheapest in-stock real GBP listing (UK store / eBay UK),
+  //     falling back to the converted TCGplayer reference only when no real GBP
+  //     listing exists — TCGplayer's USD→GBP figure otherwise undercuts genuine UK
+  //     stores and made the "from" price look unrealistically low.
+  const [pricedAu, pricedNz, pricedUs, pricedUkReal, pricedUkTcg] = await Promise.all([
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "AU" }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "NZ" }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "US" }, _min: { priceCents: true } }),
-    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "UK" }, _min: { priceCents: true } }),
+    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "UK", retailer: { not: TCG_UK.retailer } }, _min: { priceCents: true } }),
+    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "UK", retailer: TCG_UK.retailer }, _min: { priceCents: true } }),
   ]);
   const lowAu = new Map(pricedAu.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowNz = new Map(pricedNz.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowUs = new Map(pricedUs.map((r) => [r.cardId, r._min.priceCents ?? null]));
-  const lowUk = new Map(pricedUk.map((r) => [r.cardId, r._min.priceCents ?? null]));
+  // Real GBP lows first; the TCGplayer-converted price is consulted per-card only as a fallback.
+  const lowUkReal = new Map(pricedUkReal.map((r) => [r.cardId, r._min.priceCents ?? null]));
+  const lowUkTcg = new Map(pricedUkTcg.map((r) => [r.cardId, r._min.priceCents ?? null]));
   // Diff-based update: write each card STRAIGHT to its new lowest only when it
   // changed. We must NOT reset every card to null first (the old approach) — that
   // briefly showed "No price yet" for the whole catalogue on every import/deploy
@@ -610,7 +617,8 @@ export async function importPrices(): Promise<ImportSummary> {
     const nAu = lowAu.get(c.id) ?? null;
     const nNz = lowNz.get(c.id) ?? null;
     const nUs = lowUs.get(c.id) ?? null;
-    const nUk = lowUk.get(c.id) ?? null;
+    // Prefer a real GBP listing; fall back to the converted TCGplayer price only when none exists.
+    const nUk = lowUkReal.get(c.id) ?? lowUkTcg.get(c.id) ?? null;
     if (
       nAu !== c.lowestPriceCents ||
       nNz !== c.lowestPriceCentsNz ||

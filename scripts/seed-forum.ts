@@ -16,11 +16,9 @@
 import { PrismaClient, Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { AU_STATES, NZ_REGIONS, US_STATES } from "../src/lib/locations";
+import { SEED_DOMAIN } from "../src/lib/forum-seed";
 
 const prisma = new PrismaClient();
-
-// Marker for the synthetic accounts so re-seeding only clears its own data.
-const SEED_DOMAIN = "@riftcompare.seed";
 
 // ---- deterministic PRNG so re-seeding produces the same believable backlog ----
 function mulberry32(seed: number) {
