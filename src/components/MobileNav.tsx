@@ -8,6 +8,8 @@ import { useCountry } from "./CountryProvider";
 // Database stays in the top bar at all sizes; this menu holds everything else
 // (shown below the lg breakpoint, mirroring the desktop "Decks"/"More" dropdowns).
 const LINKS = [
+  { href: "/forum", label: "Forum" },
+  { href: "/rewards", label: "Rewards" },
   { href: "/sealed", label: "Sealed Products" },
   { href: "/decks", label: "Meta Decks" },
   { href: "/deck", label: "Deck Builder" },

@@ -37,8 +37,9 @@ export async function Navbar() {
           <Link href="/browse" className="rounded-lg px-2.5 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white">
             Database
           </Link>
-          <Link href="/forum" className="rounded-lg px-2.5 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white">
-            Forum
+          {/* Trade Calculator — front-and-centre so players can reach it fast at locals. */}
+          <Link href="/trade" className="rounded-lg px-2.5 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white">
+            Trade
           </Link>
           <div className="hidden lg:block">
             <NavDropdown
@@ -53,6 +54,7 @@ export async function Navbar() {
             <NavDropdown
               label="More"
               items={[
+                { href: "/forum", label: "Forum", desc: "Buy, sell & trade with players" },
                 { href: "/rewards", label: "Rewards", desc: "Earn Shards & redeem perks" },
                 { href: "/sealed", label: "Sealed Products", desc: "Boxes, packs & promos" },
                 { href: "/proxy", label: "Proxy Printer", desc: "Pick & print test cards" },
