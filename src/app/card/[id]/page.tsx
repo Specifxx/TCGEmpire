@@ -9,7 +9,7 @@ import { WishlistButton } from "@/components/WishlistButton";
 import { CardViewBeacon } from "@/components/CardViewBeacon";
 import { formatMoney, timeAgo } from "@/lib/format";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
-import { affiliateUrl } from "@/lib/affiliate";
+import { affiliateUrl, SOVRN_VERIFY_CARD_SLUG, SOVRN_VERIFY_URL } from "@/lib/affiliate";
 import { OutboundLink } from "@/components/OutboundLink";
 import { AdSlot } from "@/components/AdSlot";
 import { ADSENSE_SLOTS } from "@/lib/ads";
@@ -191,6 +191,23 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               {card.might == null && card.power != null && cheapestFoil == null && <Metric label="Power" value={String(card.power)} />}
             </div>
           </div>
+
+          {/* Sovrn Commerce account-verification link (this card only). A plain,
+              crawlable anchor straight to Sovrn's monetised URL — NOT routed through
+              affiliateUrl, so it isn't double-wrapped. Remove once Sovrn approves. */}
+          {card.slug === SOVRN_VERIFY_CARD_SLUG && (
+            <a
+              href={SOVRN_VERIFY_URL}
+              target="_blank"
+              rel="sponsored noopener noreferrer"
+              className="card-surface mt-6 flex items-center justify-between gap-3 p-4 transition-colors hover:border-brand-500/50"
+            >
+              <span className="text-sm text-slate-300">
+                <span className="font-semibold text-white">Partner offer:</span> buy {card.name} via our retail partner
+              </span>
+              <span className="btn-primary shrink-0 text-sm">View offer →</span>
+            </a>
+          )}
 
           {/* Price comparison */}
           <div className="card-surface mt-6 overflow-hidden">
