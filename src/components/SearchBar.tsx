@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { cardHref } from "@/lib/card-url";
+import { cardDisplayName } from "@/lib/card-name";
 import { useQuickView } from "./QuickView";
 import { useCountry } from "./CountryProvider";
 import type { CardTileData } from "./CardTile";
@@ -140,10 +141,9 @@ export function SearchBar() {
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-semibold text-white">{r.name}</div>
+                      <div className="truncate text-sm font-semibold text-white">{cardDisplayName(r.name, r)}</div>
                       <div className="text-xs text-slate-500">
                         {r.setCode} · {r.collectorNumber}
-                        {r.variant ? ` · Alt ${r.variant}` : ""}
                       </div>
                     </div>
                     <div className="shrink-0 text-sm font-bold text-accent">

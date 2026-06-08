@@ -1,10 +1,14 @@
 // TCGplayer as a US price source.
 //
-// TCGplayer is the dominant US marketplace, so its prices belong in the US
-// comparison. We deliberately use each product's MARKET PRICE (the algorithmic
-// fair-market value for English/NM), NOT the lowest listing — the cheapest
-// listing is frequently a different-language card and badly misrepresents the
-// real price. Market price is the number TCGplayer itself headlines.
+// TCGplayer is the dominant US marketplace, so its prices belong in the US (and a
+// GBP-converted UK reference) comparison. We price each product from its actual
+// LOWEST ENGLISH listing — Near-Mint first, then any English condition. We never use
+// a product's algorithmic marketPrice as a fallback for a product with no English
+// listing, because TCGplayer's Riftbound catalogue ALSO contains non-English (e.g.
+// Simplified Chinese) printings that share our cards' collector numbers; their cheap
+// foreign marketPrice was leaking in as our "cheapest" price (e.g. Dazzling Aurora
+// showed a Chinese price). Foreign-language products are dropped outright, and any
+// product without a genuine English listing is skipped rather than priced.
 //
 // Data comes from TCGplayer's public search API (the same endpoint the website
 // uses). Products are matched to our cards by collector number + set, reusing
@@ -72,6 +76,26 @@ export function englishNmLowest(p: TcgProduct): number | null {
     (l) => l.languageId === 1 && (l.quantity ?? 0) > 0 && /near mint/i.test(l.condition ?? "")
   );
   return ls.length ? Math.min(...ls.map((l) => l.price)) : null;
+}
+
+// Lowest English listing of ANY condition — used only when the preview has no English
+// Near-Mint copy. English-only (languageId 1), so a foreign-language listing can never
+// count. Returns null when the product has NO in-stock English listing at all, which
+// is the signal we use to skip non-English / unavailable products entirely.
+export function englishAnyLowest(p: TcgProduct): number | null {
+  const ls = (p.listings ?? []).filter((l) => l.languageId === 1 && (l.quantity ?? 0) > 0);
+  return ls.length ? Math.min(...ls.map((l) => l.price)) : null;
+}
+
+// A non-English (e.g. Simplified Chinese / Japanese / Korean) printing. It shares our
+// cards' collector numbers but is a different product, so it must never be priced as
+// our card. CJK characters in the product/set name, or an explicit language word, are
+// dead giveaways. (Defence-in-depth: the English-listing requirement below already
+// drops these, since their English-filtered listing preview is empty.)
+const CJK_RE = /[\u3400-\u9fff\u3040-\u30ff\uac00-\ud7af]/;
+export function isNonEnglishProduct(p: TcgProduct): boolean {
+  const s = `${p.productName ?? ""} ${p.setName ?? ""}`;
+  return CJK_RE.test(s) || /\b(chinese|simplified|traditional|japanese|korean)\b/i.test(s);
 }
 
 function searchBody(from: number, productTypeName?: string[]) {
@@ -211,10 +235,16 @@ export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: Tcg
   let matched = 0;
 
   for (const p of items) {
+    // Drop non-English (e.g. Chinese) printings outright — they share collector
+    // numbers with our cards but are a different product, and their cheap foreign
+    // price was leaking in as our "cheapest".
+    if (isNonEnglishProduct(p)) continue;
     const numStr = p.customAttributes?.number;
-    // Actual lowest English Near-Mint price; fall back to the market price only when
-    // the listing sample has no English NM copy (so we never lose a price).
-    const price = englishNmLowest(p) ?? p.marketPrice;
+    // Price ONLY from a genuine English listing (Near-Mint first, then any English
+    // condition). We intentionally do NOT fall back to marketPrice when a product has
+    // no English listing — that fallback is exactly what surfaced foreign (Chinese)
+    // prices. A product with no in-stock English copy is skipped instead.
+    const price = englishNmLowest(p) ?? englishAnyLowest(p);
     if (price == null || price <= 0) continue;
     const [num, total] = (numStr ?? "").split("/");
     const sc = setFromTotal(total);

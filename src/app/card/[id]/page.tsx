@@ -10,6 +10,7 @@ import { CardViewBeacon } from "@/components/CardViewBeacon";
 import { formatMoney, timeAgo } from "@/lib/format";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
 import { affiliateUrl, SOVRN_VERIFY_CARD_SLUG, SOVRN_VERIFY_RETAILER, SOVRN_VERIFY_URL } from "@/lib/affiliate";
+import { cardDisplayName } from "@/lib/card-name";
 import { OutboundLink } from "@/components/OutboundLink";
 import { AdSlot } from "@/components/AdSlot";
 import { ADSENSE_SLOTS } from "@/lib/ads";
@@ -182,7 +183,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             </div>
             <div className="mt-3 flex items-start justify-between gap-3">
               <div>
-                <h1 className="text-2xl font-extrabold text-white">{card.name}</h1>
+                <h1 className="text-2xl font-extrabold text-white">{cardDisplayName(card.name, card)}</h1>
                 <p className="mt-1 font-mono text-xs text-slate-500">
                   {card.setName} ({card.setCode}) · {card.collectorNumber}
                 </p>

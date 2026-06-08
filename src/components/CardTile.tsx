@@ -8,6 +8,7 @@ import { useQuickView } from "./QuickView";
 import { useCountry } from "./CountryProvider";
 import { cardHref } from "@/lib/card-url";
 import { rarityInfo, isOvernumbered, isSignature } from "@/lib/constants";
+import { cardDisplayName } from "@/lib/card-name";
 
 export interface CardTileData {
   id: string;
@@ -75,8 +76,8 @@ export function CardTile({ card }: { card: CardTileData }) {
         </div>
 
         <div className="flex flex-1 flex-col gap-1.5 border-t border-ink-700 p-3">
-        <h3 className="line-clamp-1 text-sm font-semibold text-white" title={card.name}>
-          {card.name}
+        <h3 className="line-clamp-1 text-sm font-semibold text-white" title={cardDisplayName(card.name, card)}>
+          {cardDisplayName(card.name, card)}
         </h3>
         <p className="text-xs text-slate-500">
           {card.setCode} · {card.collectorNumber}

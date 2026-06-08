@@ -7,6 +7,7 @@ import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, 
 import { WishlistButton } from "./WishlistButton";
 import { isOvernumbered, isSignature, UK_FALLBACK_RETAILERS } from "@/lib/constants";
 import { cardHref } from "@/lib/card-url";
+import { cardDisplayName } from "@/lib/card-name";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
 import { affiliateUrl } from "@/lib/affiliate";
 import { OutboundLink } from "./OutboundLink";
@@ -148,7 +149,7 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
             </div>
             <div className="mt-2 flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <h2 className="truncate text-xl font-extrabold text-white">{card.name}</h2>
+                <h2 className="truncate text-xl font-extrabold text-white">{cardDisplayName(card.name, card)}</h2>
                 <p className="font-mono text-xs text-slate-500">{card.setName} ({card.setCode}) · {card.collectorNumber}</p>
               </div>
               <WishlistButton cardId={card.id} variant="full" />
