@@ -6,6 +6,19 @@
 // back already affiliate-tagged (itemAffiliateWebUrl). See lib/ebay.ts.
 export const EBAY_CAMPAIGN_ID = process.env.EBAY_AFFILIATE_CAMPAIGN ?? "5339155912";
 
+// Skimlinks client-side auto-affiliate. The publisher id is PUBLIC (it appears in
+// the page HTML), so the live id is the safe code default — override via env if it
+// ever rotates. Loaded once site-wide in layout.tsx; the script rewrites outbound
+// merchant links to affiliate links automatically.
+//
+// IMPORTANT: in the Skimlinks dashboard, EXCLUDE ebay.*, amazon.* and tcgplayer.com
+// so the snippet doesn't override our higher-paying DIRECT programs (we already tag
+// those ourselves in affiliateUrl below, and Skimlinks would take a rev-share cut).
+//
+// This is an ALTERNATIVE to the server-side AFFILIATE_NETWORK_ID wrapping further
+// down — use one or the other, not both, or links get wrapped twice.
+export const SKIMLINKS_PUBLISHER_ID = process.env.SKIMLINKS_PUBLISHER_ID ?? "304377X1792550";
+
 // Amazon Associates store/tracking id, appended to amazon.* product links.
 export const AMAZON_ASSOCIATE_TAG = process.env.AMAZON_ASSOCIATE_TAG ?? "riftcompare-20";
 
