@@ -14,6 +14,7 @@ import { IMPACT_SITE_VERIFICATION } from "@/lib/affiliate";
 import { ADSENSE_CLIENT, ADSENSE_ENABLED } from "@/lib/ads";
 import { NativeShell } from "@/components/NativeShell";
 import { WebAdsLoader } from "@/components/WebAdsLoader";
+import { GoogleTag } from "@/components/GoogleTag";
 
 // Body: Sora (modern, energetic, readable). Headings: Space Grotesk (distinctive,
 // gives the brand more life). Exposed as CSS vars wired into Tailwind.
@@ -126,6 +127,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Detects the Capacitor native runtime and shows native AdMob ads, styles
             the status bar and wires the Android back button. No-op on the web. */}
         <NativeShell />
+        {/* Google tag (gtag.js) — powers PAID Google Ads conversion tracking &
+            remarketing (and optional GA4). Web only; no-op until an id is set in
+            env. See GOOGLE_ADS_SETUP.md to run paid Search campaigns. */}
+        <GoogleTag />
         <Analytics />
         <SpeedInsights />
       </body>

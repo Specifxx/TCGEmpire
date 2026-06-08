@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { reportOutboundConversion } from "@/lib/google-ads";
 
 // An outbound "buy" link that fires a click beacon before navigating, so we can
 // count how many times each store/eBay link is used (verified in our own DB, no
@@ -28,6 +29,10 @@ export function OutboundLink({
     } catch {
       /* sendBeacon unsupported or blocked — ignore, never block the click */
     }
+    // Report the outbound "Buy / View deal" click as a Google Ads conversion so
+    // paid Search campaigns can optimise toward the action that earns us money.
+    // No-op unless a conversion is configured in env (see lib/google-ads.ts).
+    reportOutboundConversion();
   }
   function onClick(e: React.MouseEvent<HTMLAnchorElement>) {
     log();
