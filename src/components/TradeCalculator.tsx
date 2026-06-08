@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useCountry } from "./CountryProvider";
+import { cardDisplayName } from "@/lib/card-name";
 
 // A card added to one side of a trade. We store the full set of market prices so
 // the totals re-compute live when the visitor switches country/currency.
@@ -10,6 +11,11 @@ interface TradeCard {
   name: string;
   setCode: string;
   collectorNumber: string;
+  // Printing credentials, so same-name cards (base vs promo vs alt-art vs signature)
+  // are distinguishable in the name — see cardDisplayName().
+  variant?: string | null;
+  isPromo?: boolean;
+  rarity?: string;
   imageThumbUrl: string | null;
   lowestPriceCents: number | null;
   lowestPriceCentsNz?: number | null;
@@ -286,7 +292,7 @@ function TradeColumn({
                   <div className="h-12 w-9 shrink-0 rounded bg-ink-800" />
                 )}
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium text-white">{c.name}</div>
+                  <div className="truncate text-sm font-medium text-white">{cardDisplayName(c.name, c)}</div>
                   <div className="flex items-center gap-1 text-xs text-slate-500">
                     <span className="truncate">{c.setCode} {c.collectorNumber}</span>
                     <span>·</span>
@@ -392,7 +398,7 @@ function CardPicker({ onAdd }: { onAdd: (r: SearchResult) => void }) {
                   <div className="h-9 w-7 shrink-0 rounded bg-ink-800" />
                 )}
                 <span className="min-w-0 flex-1 truncate text-sm text-white">
-                  {r.name} <span className="text-xs text-slate-500">{r.setCode} {r.collectorNumber}</span>
+                  {cardDisplayName(r.name, r)} <span className="text-xs text-slate-500">{r.setCode} {r.collectorNumber}</span>
                 </span>
               </button>
             </li>
