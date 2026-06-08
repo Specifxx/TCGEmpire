@@ -43,7 +43,7 @@ export async function prepareForumData(d: ForumInput, country: Country = "AU") {
     const norms = Array.from(new Set(d.items.map((i) => normalizeSearch(i.name))));
     const cards = await prisma.card.findMany({
       where: { nameNormalized: { in: norms }, isPromo: false },
-      select: { nameNormalized: true, lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true },
+      select: { nameNormalized: true, lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true },
     });
     // Use the poster's market price for each item (AUD/NZD/USD).
     const priceByNorm = new Map<string, number>();
