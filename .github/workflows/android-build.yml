@@ -1,0 +1,96 @@
+# Builds the RiftCompare Android app in CI.
+#
+# • Every run produces an installable DEBUG APK (download it from the run's
+#   Artifacts and sideload onto any Android phone — no local setup needed).
+# • When the signing secrets below are configured, it ALSO produces a signed
+#   release .aab ready to upload to the Google Play Console.
+#
+# Run it: GitHub → Actions → "Android build" → Run workflow.
+#
+# Optional repository secrets for the signed release build (Settings → Secrets and
+# variables → Actions):
+#   ANDROID_KEYSTORE_BASE64   base64 of your upload keystore:  base64 -w0 my.keystore
+#   ANDROID_KEYSTORE_PASSWORD store password
+#   ANDROID_KEY_ALIAS         key alias (e.g. riftcompare)
+#   ANDROID_KEY_PASSWORD      key password
+name: Android build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/riftcompare-mobile-app-hBUYw]
+    paths:
+      - "mobile/**"
+      - ".github/workflows/android-build.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    env:
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Capacitor deps
+        run: npm ci
+
+      - name: Sync Capacitor (copies web assets + plugins into the native project)
+        run: npx cap sync android
+
+      - name: Build debug APK
+        run: ./gradlew --no-daemon assembleDebug
+        working-directory: mobile/android
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: riftcompare-debug-apk
+          path: mobile/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+
+      # --- Signed release bundle (only when signing secrets are present) ---
+      - name: Configure release signing
+        if: env.ANDROID_KEYSTORE_BASE64 != ''
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/release.keystore
+          cat > android/keystore.properties <<EOF
+          storeFile=release.keystore
+          storePassword=$ANDROID_KEYSTORE_PASSWORD
+          keyAlias=$ANDROID_KEY_ALIAS
+          keyPassword=$ANDROID_KEY_PASSWORD
+          EOF
+
+      - name: Build release AAB
+        if: env.ANDROID_KEYSTORE_BASE64 != ''
+        run: ./gradlew --no-daemon bundleRelease
+        working-directory: mobile/android
+
+      - name: Upload release AAB
+        if: env.ANDROID_KEYSTORE_BASE64 != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: riftcompare-release-aab
+          path: mobile/android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
