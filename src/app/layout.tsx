@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Script from "next/script";
 import { Sora, Space_Grotesk } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -13,6 +12,8 @@ import { getCountry } from "@/lib/get-country";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
 import { IMPACT_SITE_VERIFICATION } from "@/lib/affiliate";
 import { ADSENSE_CLIENT, ADSENSE_ENABLED } from "@/lib/ads";
+import { NativeShell } from "@/components/NativeShell";
+import { WebAdsLoader } from "@/components/WebAdsLoader";
 
 // Body: Sora (modern, energetic, readable). Headings: Space Grotesk (distinctive,
 // gives the brand more life). Exposed as CSS vars wired into Tailwind.
@@ -118,16 +119,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             or endorsed by Riot Games.
           </p>
         </footer>
-        {/* Google AdSense loader. Loaded once for the whole site; powers both Auto
-            ads (toggle in the AdSense dashboard) and the manual <AdSlot /> units. */}
-        {ADSENSE_ENABLED && (
-          <Script
-            id="adsbygoogle-init"
-            strategy="afterInteractive"
-            crossOrigin="anonymous"
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
-          />
-        )}
+        {/* Google AdSense loader — web only. Powers Auto ads + the manual <AdSlot />
+            units. Inside the native app this renders nothing (native AdMob is used
+            instead, and AdSense isn't allowed in app WebViews). */}
+        <WebAdsLoader />
+        {/* Detects the Capacitor native runtime and shows native AdMob ads, styles
+            the status bar and wires the Android back button. No-op on the web. */}
+        <NativeShell />
         <Analytics />
         <SpeedInsights />
       </body>

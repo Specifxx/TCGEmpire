@@ -29,13 +29,26 @@ export function OutboundLink({
       /* sendBeacon unsupported or blocked — ignore, never block the click */
     }
   }
+  function onClick(e: React.MouseEvent<HTMLAnchorElement>) {
+    log();
+    // Inside the native app, open retailer links in the system browser so the user
+    // leaves our WebView (and can come back), instead of getting stuck on the
+    // store's site. On the web this branch never runs — it's a normal link.
+    const cap = (window as any).Capacitor;
+    if (cap?.isNativePlatform?.()) {
+      e.preventDefault();
+      import("@capacitor/browser")
+        .then(({ Browser }) => Browser.open({ url: href }))
+        .catch(() => window.open(href, "_blank"));
+    }
+  }
   return (
     <a
       href={href}
       target="_blank"
       rel="nofollow sponsored noopener noreferrer"
       className={className}
-      onClick={log}
+      onClick={onClick}
       onAuxClick={log}
     >
       {children}

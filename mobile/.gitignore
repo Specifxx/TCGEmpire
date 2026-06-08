@@ -1,0 +1,6 @@
+# Capacitor mobile project — dependencies & OS cruft.
+# The native projects (android/, ios/) ARE committed; their own .gitignore files
+# exclude build artifacts (build/, Pods/, DerivedData, *.apk/*.aab, etc.).
+node_modules/
+.DS_Store
+*.log

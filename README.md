@@ -43,6 +43,15 @@ It is pre-loaded alongside 6 seller accounts, 54 cards (the "Origins" set) and
 - **Accounts + wallet** — register/login, AUD wallet with demo top-up, profile
   with your active listings, purchase history and sales history.
 
+## Mobile app (iOS + Android)
+
+A native iOS + Android app lives in [`mobile/`](mobile/). It's a
+[Capacitor](https://capacitorjs.com) shell that loads the live site and shows
+native **Google AdMob** ads, so it reuses 100% of this web app and stays in sync
+automatically (a website deploy updates every installed app — no store update).
+See [`mobile/README.md`](mobile/README.md) for build & store-release steps. The
+website is app-aware via `src/components/NativeShell.tsx` and `src/lib/admob.ts`.
+
 ## Useful scripts
 
 | Command | Description |

@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">RiftCompare</string>
+    <string name="title_activity_main">RiftCompare</string>
+    <string name="package_name">com.riftcompare.app</string>
+    <string name="custom_url_scheme">com.riftcompare.app</string>
+    <!-- Google AdMob app id. This is Google's official TEST app id. Replace with
+         your real one (ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY) from the AdMob
+         console before publishing. The ad UNIT ids live in the web app
+         (src/lib/admob.ts), not here. -->
+    <string name="admob_app_id">ca-app-pub-3940256099942544~3347511713</string>
+</resources>
