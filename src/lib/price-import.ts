@@ -557,7 +557,10 @@ export async function importPrices(): Promise<ImportSummary> {
     orderBy: { lastSeen: "desc" },
     select: { lastSeen: true },
   });
-  const ebayDue = !lastEbay || Date.now() - lastEbay.lastSeen.getTime() > 20 * 60 * 60 * 1000;
+  // EBAY_FORCE=1 bypasses the once-a-day gate, e.g. to push out an eBay matching fix
+  // (like the Chinese-listing exclusion) the same day instead of waiting ~20h.
+  const ebayForced = process.env.EBAY_FORCE === "1";
+  const ebayDue = ebayForced || !lastEbay || Date.now() - lastEbay.lastSeen.getTime() > 20 * 60 * 60 * 1000;
   const ebayAllowed = process.env.EBAY_REFRESH !== "false";
   if (isEbayEnabled() && ebayDue && ebayAllowed) {
     const ebayCards = await prisma.card.findMany({

@@ -14,7 +14,12 @@ on:
     # means only the first run each day actually calls eBay.
     - cron: "0 7 * * *"
     - cron: "0 19 * * *"
-  workflow_dispatch: {} # allows a manual "Run workflow" button
+  workflow_dispatch: # manual "Run workflow" button
+    inputs:
+      ebay_force:
+        description: "Force an eBay refresh even if it ran in the last 20h"
+        type: boolean
+        default: false
   # Re-import (and recompute stored prices) whenever price/matching logic changes.
   push:
     branches: [main]
@@ -55,4 +60,6 @@ jobs:
           # prices, but must NOT spend eBay quota. Only scheduled / manual runs are
           # allowed to call eBay, so frequent deploys can never add to the daily count.
           EBAY_REFRESH: ${{ github.event_name != 'push' }}
+          # Manual run with "ebay_force" ticked bypasses the once-a-day eBay gate.
+          EBAY_FORCE: ${{ inputs.ebay_force && '1' || '' }}
         run: npx tsx scripts/import-prices.ts

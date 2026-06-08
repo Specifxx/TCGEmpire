@@ -134,6 +134,24 @@ function shippingFromItem(item: any): number | null {
 const EXCLUDE =
   /\b(lot|lots|bundle|joblot|job lot|playset|complete set|full set|master set|set of|bulk|pick your|choose your|your choice|all epic|all rare|all common|all uncommon|all cards|sealed|booster|pack|box|proxy|custom|chinese|japanese|korean|\d+\s*cards|x\s*\d+|keychain|key ?ring|keyring|novelty|sticker|plush|playmat|sleeves?|toploader|top ?loader|binder|lanyard|badge|poster|magnet|funko|pin badge)\b/i;
 
+// Foreign-language / non-English printings that EXCLUDE's English word-list misses.
+// Riftbound's Chinese release shares our cards' collector numbers but trades far
+// cheaper, so a Chinese listing kept surfacing as the "cheapest" (e.g. a $40 Kai'Sa
+// Survivor AA). We catch them by: any CJK character in the title (a Chinese/Japanese/
+// Korean card name, or 中文/简体/繁體), OR short region/language codes EXCLUDE can't
+// (cn/chs/cht/jp/kr/asia/simplified/traditional/…).
+const FOREIGN_LANG =
+  /[\u3400-\u9fff\u3040-\u30ff\uac00-\ud7af]|\b(cn|chs|cht|jp|jpn|kr|kor|asia|asian|simplified|traditional|mandarin|cantonese)\b/i;
+
+// A listing that is (or is very likely) a non-English printing — by title language or
+// by shipping from mainland China (overwhelmingly the Simplified-Chinese print when an
+// English-market search returns it). Hong Kong and elsewhere are kept (more mixed).
+function isForeignListing(it: any): boolean {
+  if (FOREIGN_LANG.test(it?.title ?? "")) return true;
+  if ((it?.itemLocation?.country ?? "") === "CN") return true;
+  return false;
+}
+
 // A promo printing (organized-play / prerelease / "GG EZ" etc.) shares the base
 // card's collector number, so the ONLY way to tell a promo listing from the base
 // listing is wording like this. Used to route promo listings to the promo card and
@@ -239,6 +257,9 @@ export async function searchEbayLowest(card: {
   const valid = items
     .filter((it) => it?.price?.value)
     .filter((it) => !EXCLUDE.test(it.title ?? ""))
+    // Drop non-English (Chinese etc.) printings — they share collector numbers with
+    // our English cards but trade much cheaper, so they leak in as the "cheapest".
+    .filter((it) => !isForeignListing(it))
     .filter((it) => numberMatches(it.title ?? "", card.number, card.total, card.setCode))
     // Signature ("*") and plain overnumbered share a number — keep them apart.
     .filter((it) => titleIsSignature(it.title ?? "", n) === card.isSignature)
@@ -318,6 +339,7 @@ export async function searchEbaySealed(name: string, productType: string, setCod
     .filter((it) => !kw || kw.test(it.title ?? ""))
     .filter((it) => !setName || new RegExp(setName.replace(/\s+/g, "\\s*"), "i").test(it.title ?? "") || !setCode)
     .filter((it) => !SEALED_EXCLUDE_EBAY.test(it.title ?? ""))
+    .filter((it) => !isForeignListing(it))
     .sort((a, b) => delivered(a) - delivered(b));
 
   const best = valid[0];
