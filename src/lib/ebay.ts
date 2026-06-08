@@ -152,6 +152,28 @@ function isForeignListing(it: any): boolean {
   return false;
 }
 
+function median(nums: number[]): number {
+  const s = [...nums].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+
+// Return the cheapest listing AFTER discarding gross low-price outliers — the
+// signature of a foreign printing that escaped the title/location filters. We drop
+// the cheapest while it's < 40% of the median price (computed in dollars), requiring
+// >= 4 listings and a median >= $5 so it never mis-fires on cheap cards or thin data.
+// `items` must already be sorted cheapest-first.
+function pruneCheapOutliers(items: any[]): any | undefined {
+  let arr = items;
+  while (arr.length >= 4) {
+    const prices = arr.map((it) => parseFloat(it.price.value));
+    const med = median(prices);
+    if (med >= 5 && prices[0] / med < 0.4) arr = arr.slice(1);
+    else break;
+  }
+  return arr[0];
+}
+
 // A promo printing (organized-play / prerelease / "GG EZ" etc.) shares the base
 // card's collector number, so the ONLY way to tell a promo listing from the base
 // listing is wording like this. Used to route promo listings to the promo card and
@@ -269,7 +291,13 @@ export async function searchEbayLowest(card: {
     .filter((it) => PROMO_HINT.test(it.title ?? "") === !!card.isPromo)
     .sort((a, b) => delivered(a) - delivered(b));
 
-  const best = valid[0];
+  // Final safety net for a foreign printing that slipped past the title/location
+  // filters (e.g. a Chinese card with an all-English title from a non-CN seller).
+  // Such listings are priced FAR below the genuine English market, so we drop the
+  // cheapest listing while it's a gross outlier — under 40% of the median price —
+  // and there are enough comparison listings for the median to be trustworthy. This
+  // only bites on clear outliers ($40 among $100s), never on normally-priced cards.
+  const best = pruneCheapOutliers(valid);
   if (!best) return null;
 
   return {
