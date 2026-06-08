@@ -9,7 +9,7 @@ import { WishlistButton } from "@/components/WishlistButton";
 import { CardViewBeacon } from "@/components/CardViewBeacon";
 import { formatMoney, timeAgo } from "@/lib/format";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
-import { affiliateUrl, SOVRN_VERIFY_CARD_SLUG, SOVRN_VERIFY_URL } from "@/lib/affiliate";
+import { affiliateUrl, SOVRN_VERIFY_CARD_SLUG, SOVRN_VERIFY_RETAILER, SOVRN_VERIFY_URL } from "@/lib/affiliate";
 import { OutboundLink } from "@/components/OutboundLink";
 import { AdSlot } from "@/components/AdSlot";
 import { ADSENSE_SLOTS } from "@/lib/ads";
@@ -128,6 +128,14 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // Unique editorial copy + FAQ so each card page carries substantive, crawlable
   // text rather than just a price table (thin content ranks poorly). Everything
   // below is generated from this card's own attributes, so no two pages match.
+  // Outbound "buy" URL for a retailer row. Normally our affiliate-tagged link, but
+  // for the Sovrn account-verification card the Plenty of Games listing routes
+  // through Sovrn's monetised URL instead (replacing that one store link in place).
+  const buyHref = (p: { url: string; retailer: string }) =>
+    card.slug === SOVRN_VERIFY_CARD_SLUG && p.retailer === SOVRN_VERIFY_RETAILER
+      ? SOVRN_VERIFY_URL
+      : affiliateUrl(p.url, p.retailer);
+
   const tags = (card.tags ?? "").split(",").map((t) => t.trim()).filter(Boolean);
   const about = buildAbout(card, info, lowestPrice, prices.length, fmt);
   const faqs = buildFaqs(card, info, lowestPrice, prices.length, fmt);
@@ -192,23 +200,6 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             </div>
           </div>
 
-          {/* Sovrn Commerce account-verification link (this card only). A plain,
-              crawlable anchor straight to Sovrn's monetised URL — NOT routed through
-              affiliateUrl, so it isn't double-wrapped. Remove once Sovrn approves. */}
-          {card.slug === SOVRN_VERIFY_CARD_SLUG && (
-            <a
-              href={SOVRN_VERIFY_URL}
-              target="_blank"
-              rel="sponsored noopener noreferrer"
-              className="card-surface mt-6 flex items-center justify-between gap-3 p-4 transition-colors hover:border-brand-500/50"
-            >
-              <span className="text-sm text-slate-300">
-                <span className="font-semibold text-white">Partner offer:</span> buy {card.name} via our retail partner
-              </span>
-              <span className="btn-primary shrink-0 text-sm">View offer →</span>
-            </a>
-          )}
-
           {/* Price comparison */}
           <div className="card-surface mt-6 overflow-hidden">
             <div className="flex items-center justify-between border-b border-ink-700 p-4">
@@ -271,7 +262,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                       )}
                     </div>
                     <OutboundLink
-                      href={affiliateUrl(p.url, p.retailer)}
+                      href={buyHref(p)}
                       retailer={p.retailer}
                       country={country}
                       className="btn-primary"
@@ -303,7 +294,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                         <div className="text-lg font-bold text-slate-400 line-through">{fmt(p.priceCents)}</div>
                       </div>
                       <OutboundLink
-                        href={affiliateUrl(p.url, p.retailer)}
+                        href={buyHref(p)}
                         retailer={p.retailer}
                         country={country}
                         className="btn-ghost"
