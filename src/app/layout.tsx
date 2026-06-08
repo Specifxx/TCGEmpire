@@ -15,6 +15,7 @@ import { IMPACT_SITE_VERIFICATION, SKIMLINKS_PUBLISHER_ID } from "@/lib/affiliat
 import { ADSENSE_CLIENT, ADSENSE_ENABLED } from "@/lib/ads";
 import { NativeShell } from "@/components/NativeShell";
 import { WebAdsLoader } from "@/components/WebAdsLoader";
+import { PriceAlertModal } from "@/components/PriceAlertModal";
 
 // Body: Sora (modern, energetic, readable). Headings: Space Grotesk (distinctive,
 // gives the brand more life). Exposed as CSS vars wired into Tailwind.
@@ -102,6 +103,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <QuickViewProvider>
             <Navbar />
             <main className="container-app py-6">{children}</main>
+            <PriceAlertModal />
           </QuickViewProvider>
         </WishlistDrawerProvider>
         </CountryProvider>

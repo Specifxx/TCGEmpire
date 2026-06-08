@@ -124,6 +124,7 @@ model Card {
   buyOrders       BuyOrder[]
   retailerPrices  RetailerPrice[]
   priceHistory    PriceHistory[]
+  priceAlerts     PriceAlert[]
 
   @@index([setCode, collectorNumber])
   @@index([nameNormalized])
@@ -225,6 +226,37 @@ model PriceHistory {
 
   @@unique([cardId, day])
   @@index([cardId, day])
+}
+
+// An email subscription for wishlist price-drop alerts. No account required — the
+// pop-up on the wishlist heart collects an email and creates one row per card per
+// market. A daily cron (/api/cron/price-alerts) compares each card's current
+// lowest price for that market against lastPriceCents; when it falls, the
+// subscriber is emailed and the new (lower) baseline is recorded so the same drop
+// is never notified twice. lastPriceCents also tracks rises so a later dip is
+// measured against the most recent price, not a stale one.
+model PriceAlert {
+  id             String    @id @default(cuid())
+  // Lowercased, trimmed recipient address.
+  email          String
+  cardId         String
+  market         String    @default("AU") // AU | NZ | US | UK
+  // Last lowest price observed for this card+market (the baseline a drop is
+  // measured against). null until the card first has a price in this market.
+  lastPriceCents Int?
+  // Per-email secret powering one-click unsubscribe (shared across all of an
+  // email's rows, so one link can remove every alert for that address).
+  unsubToken     String
+  createdAt      DateTime  @default(now())
+  // When we last emailed this subscriber about a drop on this card.
+  lastNotifiedAt DateTime?
+
+  card           Card      @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@unique([email, cardId, market])
+  @@index([cardId])
+  @@index([email])
+  @@index([unsubToken])
 }
 
 // A community marketplace post: a user's "want to buy" (WTB) or "want to sell"

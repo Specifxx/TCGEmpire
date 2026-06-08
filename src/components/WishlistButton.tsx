@@ -29,7 +29,13 @@ export function WishlistButton({
   function click(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    setOn(toggleWishlist(cardId));
+    const nowOn = toggleWishlist(cardId);
+    setOn(nowOn);
+    // Adding a card? Offer price-drop email alerts (the global PriceAlertModal
+    // decides whether to prompt or silently extend an existing subscription).
+    if (nowOn) {
+      window.dispatchEvent(new CustomEvent("price-alert-prompt", { detail: { cardId } }));
+    }
   }
 
   const heart = (
