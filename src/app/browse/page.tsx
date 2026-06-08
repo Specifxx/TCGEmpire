@@ -1,5 +1,7 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+import { COUNTRIES } from "@/lib/country";
 import { Filters } from "@/components/Filters";
 import { ActiveFilters } from "@/components/ActiveFilters";
 import { SortSelect } from "@/components/SortSelect";
@@ -20,8 +22,24 @@ import { getCountry } from "@/lib/get-country";
 
 export const dynamic = "force-dynamic";
 
+// Browse is the main "buy Riftbound cards" landing page, so give it a strong title
+// and description. Internal search-result views (?q=) are noindex'd (Google
+// discourages indexing site-search results) and all variants canonicalise to the
+// clean /browse so crawl signals concentrate on the one page we want ranked.
+export async function generateMetadata({ searchParams }: { searchParams: CardQuery }): Promise<Metadata> {
+  const info = COUNTRIES[getCountry()];
+  const q = (searchParams.q ?? "").trim();
+  return {
+    title: q ? `${q} — Riftbound cards & prices` : "Buy Riftbound Cards — Browse Every Single & Compare Prices",
+    description: `Browse every Riftbound TCG card and compare live ${info.adjective} prices across stores to find the cheapest place to buy Riftbound singles in ${info.place}. Updated daily.`,
+    alternates: { canonical: "/browse" },
+    robots: q ? { index: false, follow: true } : undefined,
+  };
+}
+
 export default async function BrowsePage({ searchParams }: { searchParams: CardQuery }) {
   const country = getCountry();
+  const info = COUNTRIES[country];
   const where = buildCardWhere(searchParams, country);
   const orderBy = buildCardOrderBy(searchParams.sort, country);
   const size = parsePageSize(searchParams.size);
@@ -44,6 +62,15 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
       <Filters />
 
       <section className="min-w-0 flex-1">
+        {!searchParams.q && (
+          <div className="mb-4">
+            <h1 className="font-display text-2xl font-extrabold text-white">Buy Riftbound Cards</h1>
+            <p className="mt-1 max-w-2xl text-sm text-slate-400">
+              Browse every Riftbound TCG single and compare live {info.adjective} prices across stores to
+              find the cheapest place to buy in {info.place}.
+            </p>
+          </div>
+        )}
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-slate-400">
             <span className="font-semibold text-white">{total.toLocaleString()}</span>{" "}

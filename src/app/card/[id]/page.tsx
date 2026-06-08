@@ -16,7 +16,8 @@ import { AdSlot } from "@/components/AdSlot";
 import { ADSENSE_SLOTS } from "@/lib/ads";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES, pickPrice } from "@/lib/country";
-import { UK_FALLBACK_RETAILERS } from "@/lib/constants";
+import { UK_FALLBACK_RETAILERS, setByCode } from "@/lib/constants";
+import { SITE_URL } from "@/lib/site";
 import { PriceHistoryChart } from "@/components/PriceHistoryChart";
 
 // ISR while AU-only; dynamic per-request once NZ mode is enabled (cookie-driven).
@@ -150,16 +151,43 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     })),
   };
 
+  // Breadcrumbs: real internal links (Home → Cards → Set → Card) plus matching
+  // structured data. This deepens internal linking — the single biggest lever for
+  // getting the long-tail card pages crawled and indexed — and earns breadcrumb
+  // rich results in Google.
+  const setInfo = setByCode(card.setCode);
+  const setUrl = setInfo && !setInfo.comingSoon ? `/sets/${setInfo.slug}` : "/browse";
+  const cardUrl = `/card/${card.slug ?? params.id}`;
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+      { "@type": "ListItem", position: 2, name: "Cards", item: `${SITE_URL}/browse` },
+      { "@type": "ListItem", position: 3, name: card.setName, item: `${SITE_URL}${setUrl}` },
+      { "@type": "ListItem", position: 4, name: card.name, item: `${SITE_URL}${cardUrl}` },
+    ],
+  };
+
   return (
     <div>
       {jsonLd && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       )}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       <CardViewBeacon idOrSlug={card.slug ?? card.id} />
-      <Link href="/browse" className="mb-4 inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white">
-        ← Back to database
-      </Link>
+      <nav aria-label="Breadcrumb" className="mb-4 text-sm text-slate-400">
+        <ol className="flex flex-wrap items-center gap-1.5">
+          <li><Link href="/" className="hover:text-white">Home</Link></li>
+          <li className="text-ink-700">/</li>
+          <li><Link href="/browse" className="hover:text-white">Cards</Link></li>
+          <li className="text-ink-700">/</li>
+          <li><Link href={setUrl} className="hover:text-white">{card.setName}</Link></li>
+          <li className="text-ink-700">/</li>
+          <li className="text-slate-300" aria-current="page">{card.name}</li>
+        </ol>
+      </nav>
 
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
         {/* Card visual */}

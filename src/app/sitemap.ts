@@ -52,5 +52,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: c.lowestPriceCents != null ? 0.8 : 0.5,
   }));
 
-  return [...staticRoutes, ...setRoutes, ...deckRoutes, ...articleRoutes, ...cardRoutes];
+  // Stamp every URL with a lastModified so Google has a freshness signal to
+  // prioritise crawling (prices/content refresh daily; this sitemap regenerates
+  // daily via `revalidate`).
+  const now = new Date();
+  return [...staticRoutes, ...setRoutes, ...deckRoutes, ...articleRoutes, ...cardRoutes].map((e) => ({
+    lastModified: now,
+    ...e,
+  }));
 }
