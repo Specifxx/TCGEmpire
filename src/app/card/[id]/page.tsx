@@ -15,7 +15,7 @@ import { AdSlot } from "@/components/AdSlot";
 import { ADSENSE_SLOTS } from "@/lib/ads";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES, pickPrice } from "@/lib/country";
-import { TCGPLAYER_UK_RETAILER } from "@/lib/constants";
+import { UK_FALLBACK_RETAILERS } from "@/lib/constants";
 
 // ISR while AU-only; dynamic per-request once NZ mode is enabled (cookie-driven).
 export const revalidate = 180;
@@ -72,14 +72,15 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // per-listing figure), but it must NOT decide which listing is cheapest (otherwise
   // a store would be penalised vs eBay just because eBay's postage is known and a
   // store's is "at checkout"). Cheaper known postage only breaks ties on equal price.
-  // TCGplayer's converted GBP price is a UK fallback only: hide it from the listing
-  // breakdown whenever a real GBP listing exists, so the cheapest shown matches the
-  // "from" price (which already excludes it). When it's the only UK source, keep it.
+  // Converted UK reference prices (TCGplayer-UK / Cardmarket) are fallbacks only: hide
+  // them from the listing breakdown whenever a real GBP listing exists, so the cheapest
+  // shown matches the "from" price (which already excludes them). When a fallback is the
+  // only UK source, keep it.
   const ukHasRealGbp =
     country === "UK" &&
-    card.retailerPrices.some((p) => p.inStock && p.retailer !== TCGPLAYER_UK_RETAILER);
+    card.retailerPrices.some((p) => p.inStock && !UK_FALLBACK_RETAILERS.includes(p.retailer));
   const sourceRows = ukHasRealGbp
-    ? card.retailerPrices.filter((p) => p.retailer !== TCGPLAYER_UK_RETAILER)
+    ? card.retailerPrices.filter((p) => !UK_FALLBACK_RETAILERS.includes(p.retailer))
     : card.retailerPrices;
   const all = sourceRows
     .map((p) => {
