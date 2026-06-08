@@ -16,6 +16,7 @@ import { ADSENSE_SLOTS } from "@/lib/ads";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES, pickPrice } from "@/lib/country";
 import { UK_FALLBACK_RETAILERS } from "@/lib/constants";
+import { PriceHistoryChart } from "@/components/PriceHistoryChart";
 
 // ISR while AU-only; dynamic per-request once NZ mode is enabled (cookie-driven).
 export const revalidate = 180;
@@ -303,6 +304,10 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               may earn a commission on some outbound links.
             </p>
           </div>
+
+          {/* Early-access price-history chart (Shard perk). Renders a locked teaser
+              for non-owners, promoting the loyalty system on every card page. */}
+          <PriceHistoryChart cardId={card.id} />
 
           {/* In-content ad — below the price table the visitor came for, so it never
               gets between them and the prices. Activates when a slot id is set. */}

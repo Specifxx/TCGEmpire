@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { awardPoints } from "@/lib/points";
 
 export const dynamic = "force-dynamic";
 
@@ -41,5 +42,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       body: parsed.data.body.trim(),
     },
   });
+  // Reward commenting (capped per day inside awardPoints).
+  await awardPoints(user.id, "forum_comment").catch(() => {});
   return NextResponse.json({ ok: true, comment });
 }

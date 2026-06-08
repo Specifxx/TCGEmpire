@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { COUNTRIES, DEFAULT_COUNTRY, MARKET_COUNTRY, statesFor } from "@/lib/locations";
 import { useCountry } from "./CountryProvider";
 import { ForumPostModal } from "./ForumPostModal";
+import { type PublicBadge } from "@/lib/points-config";
 
 export type ForumKind = "WTB" | "WTS" | "DISCUSSION";
 
@@ -179,12 +180,34 @@ const emptyForm = {
   website: "",
 };
 
+// Small author-standing chips (Shard level + equipped flair/badge) shown by names.
+function AuthorBadges({ badge }: { badge?: PublicBadge }) {
+  if (!badge) return null;
+  return (
+    <span className="inline-flex items-center gap-1">
+      {badge.badge && <span title="Badge">{badge.badge}</span>}
+      <span
+        className="chip px-1.5 py-0 text-[10px] font-bold leading-4"
+        style={{ background: badge.levelBg, color: badge.levelColor }}
+        title={`${badge.levelName} level`}
+      >
+        {badge.levelName}
+      </span>
+      {badge.flair && (
+        <span className="chip bg-brand-500/15 px-1.5 py-0 text-[10px] font-semibold leading-4 text-brand-300">{badge.flair}</span>
+      )}
+    </span>
+  );
+}
+
 export function ForumBoard({
   initialPosts,
+  badges = {},
   currentUser,
   adminView = null,
 }: {
   initialPosts: ForumPostDTO[];
+  badges?: Record<string, PublicBadge>;
   currentUser: { id: string; name: string; isAdmin: boolean; emailVerified: boolean } | null;
   adminView?: ForumAdminView | null;
 }) {
@@ -676,6 +699,7 @@ export function ForumBoard({
                   ) : (
                     <span className="font-medium text-slate-400">{p.authorName}</span>
                   )}
+                  {p.userId && <AuthorBadges badge={badges[p.userId]} />}
                   <span>·</span>
                   <span title={timeAgo(p.createdAt)}>{formatDateTime(p.createdAt)}</span>
                   {p.contact && (

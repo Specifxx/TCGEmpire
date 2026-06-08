@@ -2,6 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { getPointsState } from "@/lib/points";
+import { SHARD } from "@/lib/points-config";
 import { formatAUD } from "@/lib/format";
 import { LogoutButton, ResendVerifyButton } from "@/components/ProfileActions";
 
@@ -17,9 +19,10 @@ export default async function ProfilePage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/profile");
 
-  const [posts, account] = await Promise.all([
+  const [posts, account, points] = await Promise.all([
     prisma.forumPost.findMany({ where: { userId: user.id, status: "OPEN" }, orderBy: { createdAt: "desc" } }),
     prisma.user.findUnique({ where: { id: user.id }, select: { googleId: true, discordId: true, passwordHash: true } }),
+    getPointsState(user.id),
   ]);
   const wts = posts.filter((p) => p.kind === "WTS").length;
   const wtb = posts.filter((p) => p.kind === "WTB").length;
@@ -49,6 +52,32 @@ export default async function ProfilePage() {
         </div>
         <LogoutButton />
       </div>
+
+      {/* Shards / rewards summary */}
+      {points && (
+        <Link href="/rewards" className="card-surface mt-5 flex flex-wrap items-center justify-between gap-4 p-5 transition-colors hover:border-brand-500/50">
+          <div className="flex items-center gap-4">
+            <span
+              className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-xl font-black"
+              style={{ background: points.level.bg, color: points.level.color, boxShadow: `inset 0 0 0 1.5px ${points.level.color}55` }}
+            >
+              {SHARD.glyph}
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="font-bold text-white">{points.level.name}</h2>
+                {points.streakDays > 0 && <span className="chip bg-orange-500/15 text-orange-300">🔥 {points.streakDays}d</span>}
+                {points.canCheckIn && <span className="chip bg-brand-500/15 text-brand-300">Check in today</span>}
+              </div>
+              <p className="text-sm text-slate-400">
+                {SHARD.glyph} <span className="font-semibold text-accent">{points.points.toLocaleString()}</span> {SHARD.name}
+                {points.next && <span className="text-slate-500"> · {points.progress.remaining.toLocaleString()} to {points.next.name}</span>}
+              </p>
+            </div>
+          </div>
+          <span className="btn-ghost">Open rewards →</span>
+        </Link>
+      )}
 
       {/* Account & security */}
       <div className="card-surface mt-5 p-5">

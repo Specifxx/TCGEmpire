@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { getCountry } from "@/lib/get-country";
 import { forumSchema, prepareForumData } from "@/lib/forum";
+import { awardPoints, getPublicBadges } from "@/lib/points";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,13 @@ export async function GET(req: Request) {
       ? { kind, status, market }
       : { status, market };
   const posts = await prisma.forumPost.findMany({ where, orderBy: { createdAt: "desc" }, take: 400 });
-  return NextResponse.json({ posts }, { headers: { "Cache-Control": "no-store" } });
+  // Decorate authors with their Shard level + equipped flair/badge so the board
+  // shows community standing (Reddit-medal style) next to each name.
+  const badges = await getPublicBadges(posts.map((p) => p.userId ?? "").filter(Boolean));
+  return NextResponse.json(
+    { posts, badges: Object.fromEntries(badges) },
+    { headers: { "Cache-Control": "no-store" } }
+  );
 }
 
 export async function POST(req: Request) {
@@ -50,5 +57,7 @@ export async function POST(req: Request) {
       userId: user.id,
     },
   });
+  // Reward forum participation (capped per day inside awardPoints).
+  await awardPoints(user.id, "forum_post").catch(() => {});
   return NextResponse.json({ ok: true, post });
 }
