@@ -169,6 +169,15 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     freeOverCents: 5000,
     shippingNote: "est. $2.00 · free over $50",
   },
+  gamesarena88: {
+    key: "gamesarena88",
+    name: "88 Games Arena",
+    base: "https://www.88gamesarena.com.au",
+    collections: ["riftbound-singles-australia-88-games-arena"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.50 · free over $50",
+  },
 
   // ---- New Zealand stores (country: "NZ"; prices in NZD; never use eBay) -------
   // Collections are mostly auto-discovered from each store's Shopify sitemap; a few
@@ -654,6 +663,7 @@ export function effectiveShippingCents(rowShippingCents: number | null): number 
 const STORES_WITH_POLICY = new Set([
   "cherry", "finalboss", "plenty", "adventurers", "manamarket", "cardbot", "ggadelaide",
   "goodgames", "vaultgames", "mintcollectables", "cardhub", "pokebox", "spellroo", "spindown",
+  "gamesarena88",
   "cardmasters", "tcgcollectornz", "cardmerchant", "ironknight", "calicokeep", "cardbotnz",
   "gamingdna", "beagames", "shuffleandcut", "gameroost", "bardsandcards", "mythicstore",
   "cgrealm", "danireon", "punkouter", "gglegends", "stompinggrounds", "cardboardanddie",
