@@ -7,10 +7,13 @@
 export const EBAY_CAMPAIGN_ID = process.env.EBAY_AFFILIATE_CAMPAIGN ?? "5339155912";
 
 // Sovrn Commerce account-verification link. To approve the account, Sovrn asks us
-// to place one of their monetised links live on the site; this one was generated
-// for the "Rengar, Trophy Hunter" card and is rendered on that card's page. Safe to
+// to place one of their monetised links live on the site. This one was generated
+// for the "Rengar, Trophy Hunter" card's Plenty of Games listing, so on that card
+// page the Plenty of Games "buy" link points to the Sovrn URL instead of the raw
+// store URL (it replaces that one link rather than adding a new element). Safe to
 // remove once the Sovrn application is approved.
 export const SOVRN_VERIFY_CARD_SLUG = "rengar-trophy-hunter-unl-120a-219";
+export const SOVRN_VERIFY_RETAILER = "plenty";
 export const SOVRN_VERIFY_URL = process.env.SOVRN_VERIFY_URL ?? "https://sovrn.co/1kdtzqj";
 
 // Amazon Associates store/tracking id, appended to amazon.* product links.
