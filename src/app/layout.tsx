@@ -111,6 +111,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="mb-2 flex flex-wrap items-center justify-center gap-4 text-sm">
             <Link href="/contact" className="text-slate-300 hover:text-brand-400">Contact &amp; feedback</Link>
             <span className="text-ink-700">·</span>
+            <Link href="/rewards" className="text-slate-300 hover:text-brand-400">Rewards</Link>
+            <span className="text-ink-700">·</span>
             <Link href="/privacy" className="text-slate-300 hover:text-brand-400">Privacy policy</Link>
             <span className="text-ink-700">·</span>
             <a href={`mailto:${CONTACT_EMAIL}`} className="text-gold hover:underline">{CONTACT_EMAIL}</a>

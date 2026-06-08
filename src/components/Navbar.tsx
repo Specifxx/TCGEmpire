@@ -53,6 +53,7 @@ export async function Navbar() {
             <NavDropdown
               label="More"
               items={[
+                { href: "/rewards", label: "Rewards", desc: "Earn Shards & redeem perks" },
                 { href: "/sealed", label: "Sealed Products", desc: "Boxes, packs & promos" },
                 { href: "/proxy", label: "Proxy Printer", desc: "Pick & print test cards" },
                 { href: "/guides", label: "Guides", desc: "Learn Riftbound" },
@@ -71,6 +72,8 @@ export async function Navbar() {
                     avatarUrl: user.avatarUrl,
                     emailVerified: user.emailVerified,
                     balanceCents: user.balanceCents,
+                    points: user.points,
+                    canCheckIn: user.canCheckIn,
                   }
                 : null
             }

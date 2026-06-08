@@ -30,6 +30,16 @@ model User {
   // escrow on the BuyOrder (reservedCents) until the order fills or is cancelled.
   balanceCents Int       @default(0)
   isAdmin      Boolean   @default(false)
+  // ── Shards: the site's gamification / loyalty points (see lib/points.ts). ──
+  // Distinct from balanceCents (real money) — Shards are earned by engaging with
+  // the site and redeemed for cosmetics, perks and personalised experiences.
+  points         Int       @default(0) // spendable Shard balance
+  lifetimePoints Int       @default(0) // total ever earned; drives the level/medal
+  streakDays     Int       @default(0) // current consecutive daily check-in streak
+  lastCheckinAt  DateTime?            // when the daily check-in was last claimed
+  equippedFlair  String?              // reward key of the name flair shown by the user
+  equippedBadge  String?              // reward key of the medal/badge shown by the user
+  ownedRewards   Json?                // string[] of redeemed cosmetic/perk reward keys
   createdAt    DateTime  @default(now())
 
   listings     Listing[]
@@ -38,6 +48,8 @@ model User {
   sales        Order[]   @relation("SellerOrders")
   wishlist     WishlistItem[]
   authTokens   AuthToken[]
+  pointsLedger PointsLedger[]
+  redemptions  Redemption[]
 
   @@index([googleId])
   @@index([discordId])
@@ -257,6 +269,47 @@ model PriceAlert {
   @@index([cardId])
   @@index([email])
   @@index([unsubToken])
+}
+
+// One Shard transaction (earn or spend). The append-only ledger is the source of
+// truth for how points were accrued/used and powers daily caps + idempotent grants.
+model PointsLedger {
+  id        String   @id @default(cuid())
+  userId    String
+  delta     Int      // +earned / -spent Shards
+  reason    String   // machine key, e.g. "checkin", "forum_post", "redeem:badge_gem"
+  // Set for grants that must happen at most once (e.g. "verify_email", or a given
+  // day's "checkin:2026-06-08"); null for repeatable awards. Unique per user, so a
+  // duplicate insert is rejected — the cheap, race-safe way to dedupe one-off grants.
+  dedupeKey String?
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dedupeKey])
+  @@index([userId, createdAt])
+  @@index([userId, reason, createdAt])
+}
+
+// A redeemed reward. Cosmetics/perks are FULFILLED instantly (and added to the
+// user's ownedRewards); personalised "experiences" land as PENDING for an admin to
+// action from /admin/redemptions, then marked DONE.
+model Redemption {
+  id         String   @id @default(cuid())
+  userId     String
+  rewardKey  String
+  rewardName String
+  cost       Int
+  kind       String   // flair | badge | perk | experience
+  status     String   @default("FULFILLED") // FULFILLED | PENDING | DONE
+  note       String?  // optional context the user supplies (e.g. a deck link)
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
 }
 
 // A community marketplace post: a user's "want to buy" (WTB) or "want to sell"

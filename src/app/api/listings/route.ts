@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { CONDITION_KEYS } from "@/lib/constants";
+import { awardPoints } from "@/lib/points";
 
 const schema = z.object({
   cardId: z.string().min(1),
@@ -46,6 +47,8 @@ export async function POST(req: Request) {
     },
   });
 
+  // Reward listing a card (capped per day inside awardPoints).
+  await awardPoints(user.id, "create_listing").catch(() => {});
   return NextResponse.json({ ok: true, listingId: listing.id, cardId: card.id });
 }
 

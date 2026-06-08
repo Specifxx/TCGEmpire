@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { formatAUD } from "@/lib/format";
+import { levelFor, rewardByKey } from "@/lib/points-config";
 
 export const dynamic = "force-dynamic";
 
@@ -78,9 +79,13 @@ function PostRow({ p }: { p: Post }) {
 export default async function SellerPage({ params }: { params: { id: string } }) {
   const user = await prisma.user.findUnique({
     where: { id: params.id },
-    select: { id: true, displayName: true, createdAt: true },
+    select: { id: true, displayName: true, createdAt: true, lifetimePoints: true, equippedFlair: true, equippedBadge: true },
   });
   if (!user) notFound();
+
+  const level = levelFor(user.lifetimePoints);
+  const flair = user.equippedFlair ? rewardByKey(user.equippedFlair)?.display : null;
+  const badgeEmoji = user.equippedBadge ? rewardByKey(user.equippedBadge)?.display : null;
 
   const posts = await getPosts(user.id);
   const wts = posts.filter((p) => p.kind === "WTS");
@@ -95,7 +100,12 @@ export default async function SellerPage({ params }: { params: { id: string } })
       </Link>
 
       <div className="card-surface p-5">
-        <h1 className="text-2xl font-extrabold text-white">{user.displayName}</h1>
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="text-2xl font-extrabold text-white">{user.displayName}</h1>
+          {badgeEmoji && <span className="text-xl" title="Badge">{badgeEmoji}</span>}
+          <span className="chip font-bold" style={{ background: level.bg, color: level.color }} title={`${level.name} level`}>{level.name}</span>
+          {flair && <span className="chip bg-brand-500/15 font-semibold text-brand-300">{flair}</span>}
+        </div>
         <p className="mt-1 text-sm text-slate-400">
           {wts.length} selling · {wtb.length} buying
           {soldCount > 0 && <> · <span className="text-rose-300">{soldCount} sold</span></>} · member since{" "}

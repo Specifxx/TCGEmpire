@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { getCountry } from "@/lib/get-country";
 import { SEED_DOMAIN } from "@/lib/forum-seed";
+import { getPublicBadges } from "@/lib/points";
 import { ForumBoard, type ForumItem, type ForumKind, type ForumPostDTO } from "@/components/ForumBoard";
 
 export const dynamic = "force-dynamic";
@@ -93,9 +94,13 @@ export default async function ForumPage({
     createdAt: p.createdAt.toISOString(),
   }));
 
+  // Author standing badges (Shard level + equipped flair/badge), keyed by userId.
+  const badges = Object.fromEntries(await getPublicBadges(rows.map((p) => p.userId ?? "").filter(Boolean)));
+
   return (
     <ForumBoard
       initialPosts={posts}
+      badges={badges}
       currentUser={user ? { id: user.id, name: user.displayName, isAdmin: user.isAdmin, emailVerified: user.emailVerified } : null}
       adminView={adminView}
     />

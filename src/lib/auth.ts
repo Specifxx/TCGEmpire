@@ -52,6 +52,10 @@ export interface SessionUser {
   emailVerified: boolean;
   balanceCents: number;
   isAdmin: boolean;
+  // Shards (gamification). points = spendable balance; canCheckIn drives the daily
+  // check-in nudge in the navbar.
+  points: number;
+  canCheckIn: boolean;
 }
 
 export async function hashPassword(password: string): Promise<string> {
@@ -118,6 +122,9 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     if (!userId) return null;
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return null;
+    // "Today" in UTC, matching the check-in dedupe key in lib/points.
+    const today = new Date().toISOString().slice(0, 10);
+    const lastCheckin = user.lastCheckinAt ? user.lastCheckinAt.toISOString().slice(0, 10) : null;
     return {
       id: user.id,
       email: user.email,
@@ -126,6 +133,8 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
       emailVerified: !!user.emailVerified,
       balanceCents: user.balanceCents,
       isAdmin: user.isAdmin || isAdminEmail(user.email),
+      points: user.points,
+      canCheckIn: lastCheckin !== today,
     };
   } catch {
     return null;
