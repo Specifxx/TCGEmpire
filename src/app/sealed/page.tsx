@@ -104,7 +104,7 @@ export default async function SealedPage({ searchParams }: { searchParams: { q?:
                     <div className={`text-sm font-bold ${i === 0 && l.inStock ? "text-accent" : "text-white"} ${!l.inStock ? "text-slate-500 line-through" : ""}`}>
                       {fmt(l.priceCents)}
                     </div>
-                    <OutboundLink href={affiliateUrl(l.url)} retailer={l.retailer} country={country} kind="sealed" className="btn-primary px-3 py-1.5 text-xs">
+                    <OutboundLink href={affiliateUrl(l.url, l.retailer)} retailer={l.retailer} country={country} kind="sealed" className="btn-primary px-3 py-1.5 text-xs">
                       View →
                     </OutboundLink>
                   </li>

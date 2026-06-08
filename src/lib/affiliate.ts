@@ -59,10 +59,67 @@ export function ebayAffiliateUrl(url: string): string {
   }
 }
 
-// Append our affiliate identifier to an outbound product link where we belong to a
-// program (eBay EPN, Amazon Associates, TCGplayer via Impact). Other links pass
-// through unchanged. Safe on any string.
-export function affiliateUrl(url: string | null | undefined): string {
+// ---- Auto-affiliate network (the long tail of Shopify stores) -----------------
+// eBay, Amazon and TCGplayer pay us DIRECTLY (best rate — no middleman cut), so
+// they're handled above and never touched here. Every OTHER outbound store click
+// (the 60+ Shopify shops we compare) earns nothing unless we route it through a
+// link-monetisation network that has those merchants under one integration.
+//
+// Skimlinks is the default (largest merchant network → best coverage → best
+// expected return). Sovrn/VigLink is supported as an alternative. Configure:
+//   AFFILIATE_NETWORK=skimlinks                 (default)
+//   AFFILIATE_NETWORK_ID=123456X1234567         (your publisher/site id)
+// Leaving the id EMPTY = links pass through untouched (zero behaviour change),
+// exactly like the TCGplayer link stays inert until approved. So this is safe to
+// ship now and "turns on" the moment you paste your id into the env.
+const AFFILIATE_NETWORK = (process.env.AFFILIATE_NETWORK ?? "skimlinks").toLowerCase();
+const AFFILIATE_NETWORK_ID = process.env.AFFILIATE_NETWORK_ID ?? "";
+
+// Hosts that must NEVER be wrapped by the network: our own site, and the partners
+// we already monetise directly (their direct programs always pay more).
+const NEVER_WRAP = /(?:^|\.)(riftcompare\.com|ebay\.|amazon\.|tcgplayer\.com)$/i;
+
+// Wrap a destination URL in the configured network's redirect. `subId` is passed
+// through as the network's custom-tracking field so earnings are segmentable by
+// store in the network dashboard (complements our own click analytics). Returns
+// null when no network id is set (→ caller falls back to the plain URL).
+function networkUrl(url: string, subId: string): string | null {
+  if (!AFFILIATE_NETWORK_ID) return null;
+  const enc = encodeURIComponent(url);
+  const xcust = encodeURIComponent(subId);
+  switch (AFFILIATE_NETWORK) {
+    case "skimlinks":
+      // https://go.skimresources.com/?id=<pubId>&xs=1&xcust=<subid>&url=<dest>
+      return `https://go.skimresources.com/?id=${AFFILIATE_NETWORK_ID}&xs=1&xcust=${xcust}&url=${enc}`;
+    case "sovrn":
+    case "viglink":
+      return `https://redirect.viglink.com/?format=go&key=${AFFILIATE_NETWORK_ID}&u=${enc}&cuid=${xcust}`;
+    default:
+      return null;
+  }
+}
+
+// Per-store DIRECT affiliate programs, added as you sign them (Shopify Collabs /
+// Refersion / UpPromote, etc.). A direct program beats the network because there's
+// no revenue share, so these are checked BEFORE the network fallback. Use your
+// outbound-click leaderboard to prioritise which stores to sign first. Example:
+//   "cherrycollectables.com.au": (u) => { u.searchParams.set("ref", "riftcompare"); return u.toString(); },
+const DIRECT_PROGRAMS: Record<string, (u: URL) => string> = {
+  // add approved programs here — they override the network automatically
+};
+
+function directProgramUrl(u: URL): string | null {
+  const host = u.hostname.replace(/^www\./i, "").toLowerCase();
+  const fn = DIRECT_PROGRAMS[host];
+  return fn ? fn(u) : null;
+}
+
+// Append our affiliate identifier to an outbound product link.
+//   Priority: eBay EPN → Amazon Associates → TCGplayer (Impact) → per-store DIRECT
+//   program → auto-affiliate network (Skimlinks) → plain link.
+// `subId` (defaults to the store/retailer key when callers pass it) is used as the
+// network's custom-tracking tag. Safe on any string.
+export function affiliateUrl(url: string | null | undefined, subId = "riftcompare"): string {
   if (!url) return "#";
   try {
     const u = new URL(url);
@@ -76,6 +133,14 @@ export function affiliateUrl(url: string | null | undefined): string {
     // TCGplayer via Impact — only once an approved deep-link base is configured.
     if (TCGPLAYER_IMPACT_LINK && /(?:^|\.)tcgplayer\.com$/i.test(u.hostname)) {
       return `${TCGPLAYER_IMPACT_LINK}?u=${encodeURIComponent(url)}`;
+    }
+    // A signed direct store program always beats the network — check it first.
+    const direct = directProgramUrl(u);
+    if (direct) return direct;
+    // Otherwise auto-monetise via the network (no-op until an id is configured).
+    if ((u.protocol === "https:" || u.protocol === "http:") && !NEVER_WRAP.test(u.hostname)) {
+      const net = networkUrl(url, subId);
+      if (net) return net;
     }
   } catch {
     /* not an absolute URL — leave it untouched */

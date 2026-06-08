@@ -253,7 +253,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                       )}
                     </div>
                     <OutboundLink
-                      href={affiliateUrl(p.url)}
+                      href={affiliateUrl(p.url, p.retailer)}
                       retailer={p.retailer}
                       country={country}
                       className="btn-primary"
@@ -285,7 +285,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                         <div className="text-lg font-bold text-slate-400 line-through">{fmt(p.priceCents)}</div>
                       </div>
                       <OutboundLink
-                        href={affiliateUrl(p.url)}
+                        href={affiliateUrl(p.url, p.retailer)}
                         retailer={p.retailer}
                         country={country}
                         className="btn-ghost"
