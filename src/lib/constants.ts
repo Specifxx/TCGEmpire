@@ -1,6 +1,13 @@
 // Shared domain knowledge for Riftbound cards: domains, rarities, types and
 // card conditions, plus the colors used to render them throughout the UI.
 
+// Retailer key for the TCGplayer price surfaced in the UK market (USD market price
+// converted to GBP). It's a fallback reference only: excluded from the UK "from"
+// price and hidden from the UK listing breakdown whenever a real GBP listing
+// exists, so the cheapest figure shown reflects a genuinely buyable UK price.
+// Defined here (client-safe) so both server pricing and client UI agree on the key.
+export const TCGPLAYER_UK_RETAILER = "tcgplayer_uk";
+
 export type DomainKey =
   | "Fury"
   | "Calm"

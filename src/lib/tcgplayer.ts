@@ -12,6 +12,7 @@
 // never collapsed onto its base card.
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
+import { TCGPLAYER_UK_RETAILER } from "@/lib/constants";
 
 const SEARCH_URL = "https://mp-search-api.tcgplayer.com/v1/search/request?q=&isList=false";
 const PRODUCT_LINE = "riftbound-league-of-legends-trading-card-game";
@@ -186,7 +187,7 @@ export interface TcgMarket {
 // exact FX isn't critical for a "reference price" comparison.
 export const USD_TO_GBP = 0.79;
 export const TCG_US: TcgMarket = { retailer: "tcgplayer", country: "US", currency: "USD", fx: 1 };
-export const TCG_UK: TcgMarket = { retailer: "tcgplayer_uk", country: "UK", currency: "GBP", fx: USD_TO_GBP };
+export const TCG_UK: TcgMarket = { retailer: TCGPLAYER_UK_RETAILER, country: "UK", currency: "GBP", fx: USD_TO_GBP };
 
 // Match products to cards and build RetailerPrice rows (no DB writes — caller
 // decides). Exported separately so a dry-run can inspect the match quality.
