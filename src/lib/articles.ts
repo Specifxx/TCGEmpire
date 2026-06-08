@@ -18,6 +18,76 @@ export interface Article {
 
 export const ARTICLES: Article[] = [
   {
+    slug: "where-to-buy-riftbound-cards",
+    category: "guide",
+    title: "Where to Buy Riftbound Cards (Australia, NZ, US & UK)",
+    excerpt:
+      "The complete guide to buying Riftbound: League of Legends TCG cards — singles and sealed — in Australia, New Zealand, the United States and the United Kingdom, and how to always find the cheapest price.",
+    author: "RiftCompare",
+    date: "2026-06-08",
+    readMins: 6,
+    tags: ["buying", "guide", "stores", "singles", "sealed"],
+    body: `Want to buy **Riftbound: League of Legends TCG** cards but not sure where to start? Whether you're chasing a single chase card, completing a deck, or grabbing a sealed booster box, this guide covers exactly **where to buy Riftbound cards** in **Australia, New Zealand, the United States and the United Kingdom** — and how to make sure you never overpay.
+
+The short version: prices for the same card vary a lot between shops and change daily, so the smartest move is to **[compare every store at once on RiftCompare](/browse)** and buy from whichever is cheapest in your country. Here's how to do it region by region.
+
+## How to find the cheapest Riftbound card price
+
+1. **[Search the card database](/browse)** and open the card you want.
+2. Each card shows the **lowest live price across every store we track**, sorted cheapest-first, with a one-click link straight to the shop.
+3. Use the **country switcher** (top of the page) to set your region — prices then show in your local currency (AUD, NZD, USD or GBP), sourced from local stores, so what you see is what you'll actually pay.
+
+You can also **[price a whole deck at once](/deck)** or **[compare sealed products](/sealed)** like booster boxes and Proving Grounds.
+
+## 🇦🇺 Buying Riftbound cards in Australia
+
+Australia has a healthy spread of Riftbound retailers — dedicated TCG shops, hobby stores and local game stores (LGS) — plus eBay Australia for harder-to-find singles. Because postage and stock differ wildly between shops, the cheapest *delivered* price is rarely the first shop you check.
+
+- **Singles:** [Browse the card database](/browse) with the country set to **Australia** to see the lowest AUD price across Australian stores and eBay AU.
+- **Sealed:** booster boxes, packs and Proving Grounds kits are on the **[sealed page](/sealed)**.
+- **Tip:** many AU stores offer free shipping over a threshold — buying a few cards from one shop can beat splitting an order across three.
+
+## 🇳🇿 Buying Riftbound cards in New Zealand
+
+New Zealand's Riftbound scene is growing fast, with several Kiwi TCG stores stocking singles in NZD. Buying locally avoids international shipping and currency surprises.
+
+- Set the country switcher to **New Zealand** and **[browse singles](/browse)** to compare live NZD prices across NZ stores.
+- For boxes and packs, check the **[sealed products page](/sealed)**.
+- **Tip:** NZ stock can be thinner than AU/US for rare cards — wishlist the ones you want so you're ready when they're listed.
+
+## 🇺🇸 Buying Riftbound cards in the United States
+
+The US is the deepest Riftbound market by far — thousands of in-stock singles across dozens of stores, plus eBay US and the big marketplaces. That depth means the best deals are out there, but only if you compare.
+
+- Switch the country to the **United States** and **[search the database](/browse)** for live USD prices across US stores, eBay US and major marketplaces.
+- Sealed product (booster boxes, cases, Proving Grounds) is on the **[sealed page](/sealed)**.
+- **Tip:** for high-value chase cards, condition matters — we surface Near-Mint English prices so you're comparing like for like, not a cheaper played or foreign-language copy.
+
+## 🇬🇧 Buying Riftbound cards in the United Kingdom
+
+UK players can buy Riftbound singles in GBP from a growing list of British TCG retailers, with eBay UK filling the gaps. Buying from UK stores avoids customs and import fees.
+
+- Set the country to the **United Kingdom** and **[browse singles](/browse)** for live GBP prices across UK stores and eBay UK.
+- **[Sealed products](/sealed)** are listed too.
+- **Tip:** the UK singles market is still maturing, so for some cards a converted reference price is shown until a genuine in-stock GBP listing appears — always confirm on the retailer's page before buying.
+
+## Singles vs sealed: which should you buy?
+
+- **Buying specific cards** (to finish a deck or grab a chase card)? Buy **singles** — it's almost always cheaper than ripping packs and chasing the card you need. Start on the **[card database](/browse)**.
+- **Want the opening experience, or to invest/collect?** Buy **sealed** — booster boxes and Proving Grounds. Compare box prices on the **[sealed page](/sealed)**.
+
+## Tips for buying Riftbound cards safely
+
+- **Compare delivered cost, not just the sticker price** — shipping can flip which store is cheapest.
+- **Check the condition** — Near Mint (NM) is standard; played copies should cost less.
+- **Watch for the right printing** — alt-art, Showcase, Signature, Overnumbered and promo versions all trade at different prices, so make sure you're buying the exact one you want.
+- **Buy the English print** unless you specifically want another language — non-English copies are cheaper but aren't the same card.
+
+## Ready to buy?
+
+Set your country, **[open the card database](/browse)**, find your card, and click through to the cheapest store. New to Riftbound? Browse our other **[guides](/guides)** or check the current **[meta decks](/decks)** to see what's worth building.`,
+  },
+  {
     slug: "welcome-to-riftcompareau",
     category: "blog",
     title: "Welcome to RiftCompare",
