@@ -1,4 +1,6 @@
 import { SITE_NAME, SITE_URL } from "./site";
+import { formatMoney } from "./format";
+import { currencyOf, type Country } from "./country";
 
 export function isEmailEnabled(): boolean {
   return !!process.env.RESEND_API_KEY;
@@ -65,4 +67,80 @@ export async function sendPasswordResetEmail(to: string, token: string): Promise
       url: `${SITE_URL}/reset?token=${encodeURIComponent(token)}`,
     })
   );
+}
+
+// ─── Wishlist price-drop alerts ──────────────────────────────────────────────
+
+export interface AlertCard {
+  name: string;
+  setCode: string;
+  collectorNumber: string;
+  url: string; // absolute card-page link
+}
+
+export interface PriceDropItem extends AlertCard {
+  oldCents: number;
+  newCents: number;
+  market: Country;
+}
+
+// Footer with an unsubscribe link, appended to every alert email so recipients
+// always have a one-click way out (and so we stay CAN-SPAM/GDPR-friendly).
+function alertFooter(unsubUrl: string): string {
+  return `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">
+    You're getting this because you asked RiftCompare to watch your wishlist for price drops.<br/>
+    <a href="${unsubUrl}" style="color:#9aa4b2;text-decoration:underline">Unsubscribe from price-drop emails</a> · RiftCompare · Riftbound card price comparison.
+  </td></tr>`;
+}
+
+function emailShell(heading: string, inner: string, unsubUrl: string): string {
+  return `<!doctype html><html><body style="margin:0;background:#0b0e14;font-family:Arial,Helvetica,sans-serif">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0b0e14;padding:32px 0"><tr><td align="center">
+    <table role="presentation" width="520" cellpadding="0" cellspacing="0" style="background:#131a26;border:1px solid #233047;border-radius:16px">
+      <tr><td style="padding:28px 32px 6px"><div style="font-size:22px;font-weight:800;color:#fff">Rift<span style="color:#34d17e">Compare</span></div></td></tr>
+      <tr><td style="padding:6px 32px 4px"><h1 style="margin:0;font-size:20px;color:#fff">${heading}</h1></td></tr>
+      ${inner}
+      ${alertFooter(unsubUrl)}
+    </table></td></tr></table></body></html>`;
+}
+
+// One row in the price-drop table.
+function dropRow(item: PriceDropItem): string {
+  const cur = currencyOf(item.market);
+  const pct = item.oldCents > 0 ? Math.round(((item.oldCents - item.newCents) / item.oldCents) * 100) : 0;
+  return `<tr><td style="padding:12px 0;border-bottom:1px solid #233047">
+    <a href="${item.url}" style="color:#fff;font-weight:700;text-decoration:none;font-size:15px">${item.name}</a>
+    <div style="font-size:12px;color:#6b7585;margin-top:2px">${item.setCode} · ${item.collectorNumber}</div>
+    <div style="margin-top:6px;font-size:14px;color:#b8c0cc">
+      <span style="color:#6b7585;text-decoration:line-through">${formatMoney(item.oldCents, cur)}</span>
+      &nbsp;→&nbsp;<span style="color:#34d17e;font-weight:700">${formatMoney(item.newCents, cur)}</span>
+      ${pct > 0 ? `&nbsp;<span style="background:#13351f;color:#34d17e;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px">-${pct}%</span>` : ""}
+    </div>
+  </td></tr>`;
+}
+
+// The daily "a card on your wishlist got cheaper" email. Lists every card that
+// dropped since the last check in one message.
+export async function sendPriceDropEmail(to: string, items: PriceDropItem[], unsubUrl: string): Promise<boolean> {
+  const count = items.length;
+  const heading = count === 1 ? "A wishlist card just got cheaper" : `${count} wishlist cards just got cheaper`;
+  const intro = `Good news — ${count === 1 ? "a card you're watching" : "some cards you're watching"} dropped in price:`;
+  const inner = `
+    <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">${intro}</td></tr>
+    <tr><td style="padding:4px 32px 12px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${items.map(dropRow).join("")}</table></td></tr>
+    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/wishlist" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">View your wishlist</a></td></tr>`;
+  const subject = count === 1 ? `Price drop: ${items[0]!.name} is now ${formatMoney(items[0]!.newCents, currencyOf(items[0]!.market))}` : `Price drops on ${count} of your wishlist cards`;
+  return sendEmail(to, subject, emailShell(heading, inner, unsubUrl));
+}
+
+// Sent once when someone subscribes via the wishlist pop-up, confirming the watch
+// and surfacing the unsubscribe link up front.
+export async function sendAlertConfirmationEmail(to: string, cardCount: number, unsubUrl: string): Promise<boolean> {
+  const inner = `
+    <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      You're all set — we'll email you whenever the price drops on
+      ${cardCount === 1 ? "the card" : `any of the ${cardCount} cards`} on your wishlist. We check prices once a day.
+    </td></tr>
+    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/wishlist" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">View your wishlist</a></td></tr>`;
+  return sendEmail(to, "You're watching your RiftCompare wishlist for price drops", emailShell("Price-drop alerts are on", inner, unsubUrl));
 }
