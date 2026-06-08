@@ -6,19 +6,6 @@
 // back already affiliate-tagged (itemAffiliateWebUrl). See lib/ebay.ts.
 export const EBAY_CAMPAIGN_ID = process.env.EBAY_AFFILIATE_CAMPAIGN ?? "5339155912";
 
-// Skimlinks client-side auto-affiliate. The publisher id is PUBLIC (it appears in
-// the page HTML), so the live id is the safe code default — override via env if it
-// ever rotates. Loaded once site-wide in layout.tsx; the script rewrites outbound
-// merchant links to affiliate links automatically.
-//
-// IMPORTANT: in the Skimlinks dashboard, EXCLUDE ebay.*, amazon.* and tcgplayer.com
-// so the snippet doesn't override our higher-paying DIRECT programs (we already tag
-// those ourselves in affiliateUrl below, and Skimlinks would take a rev-share cut).
-//
-// This is an ALTERNATIVE to the server-side AFFILIATE_NETWORK_ID wrapping further
-// down — use one or the other, not both, or links get wrapped twice.
-export const SKIMLINKS_PUBLISHER_ID = process.env.SKIMLINKS_PUBLISHER_ID ?? "304377X1792550";
-
 // Amazon Associates store/tracking id, appended to amazon.* product links.
 export const AMAZON_ASSOCIATE_TAG = process.env.AMAZON_ASSOCIATE_TAG ?? "riftcompare-20";
 
@@ -78,14 +65,15 @@ export function ebayAffiliateUrl(url: string): string {
 // (the 60+ Shopify shops we compare) earns nothing unless we route it through a
 // link-monetisation network that has those merchants under one integration.
 //
-// Skimlinks is the default (largest merchant network → best coverage → best
-// expected return). Sovrn/VigLink is supported as an alternative. Configure:
-//   AFFILIATE_NETWORK=skimlinks                 (default)
-//   AFFILIATE_NETWORK_ID=123456X1234567         (your publisher/site id)
+// Sovrn Commerce (formerly VigLink) is the default network: a Skimlinks-style
+// auto-affiliate that converts outbound merchant links on the fly across ~30k
+// merchants, with a lower acceptance bar than Skimlinks. Configure:
+//   AFFILIATE_NETWORK=sovrn                      (default)
+//   AFFILIATE_NETWORK_ID=<your Sovrn API key>    (Sovrn dashboard → "API key")
 // Leaving the id EMPTY = links pass through untouched (zero behaviour change),
 // exactly like the TCGplayer link stays inert until approved. So this is safe to
 // ship now and "turns on" the moment you paste your id into the env.
-const AFFILIATE_NETWORK = (process.env.AFFILIATE_NETWORK ?? "skimlinks").toLowerCase();
+const AFFILIATE_NETWORK = (process.env.AFFILIATE_NETWORK ?? "sovrn").toLowerCase();
 const AFFILIATE_NETWORK_ID = process.env.AFFILIATE_NETWORK_ID ?? "";
 
 // Hosts that must NEVER be wrapped by the network: our own site, and the partners
@@ -101,11 +89,10 @@ function networkUrl(url: string, subId: string): string | null {
   const enc = encodeURIComponent(url);
   const xcust = encodeURIComponent(subId);
   switch (AFFILIATE_NETWORK) {
-    case "skimlinks":
-      // https://go.skimresources.com/?id=<pubId>&xs=1&xcust=<subid>&url=<dest>
-      return `https://go.skimresources.com/?id=${AFFILIATE_NETWORK_ID}&xs=1&xcust=${xcust}&url=${enc}`;
     case "sovrn":
     case "viglink":
+      // Sovrn Commerce "Anywhere" redirect (key = your Sovrn API key). cuid is the
+      // custom sub-id so earnings stay segmentable by store in the dashboard.
       return `https://redirect.viglink.com/?format=go&key=${AFFILIATE_NETWORK_ID}&u=${enc}&cuid=${xcust}`;
     default:
       return null;
@@ -129,7 +116,7 @@ function directProgramUrl(u: URL): string | null {
 
 // Append our affiliate identifier to an outbound product link.
 //   Priority: eBay EPN → Amazon Associates → TCGplayer (Impact) → per-store DIRECT
-//   program → auto-affiliate network (Skimlinks) → plain link.
+//   program → auto-affiliate network (Sovrn) → plain link.
 // `subId` (defaults to the store/retailer key when callers pass it) is used as the
 // network's custom-tracking tag. Safe on any string.
 export function affiliateUrl(url: string | null | undefined, subId = "riftcompare"): string {
