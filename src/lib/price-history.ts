@@ -10,15 +10,20 @@ import type { CardTileData } from "@/components/CardTile";
 export type PricePoint = { t: number; v: number };
 
 // Daily lowest-price points for one card in one market (oldest → newest). Each
-// market is priced in its own currency.
+// market is priced in its own currency. Resilient: returns [] on any DB error so a
+// page never crashes over the chart.
 export async function getPriceHistory(cardId: string, country = "AU", take = 180): Promise<PricePoint[]> {
-  const rows = await prisma.priceHistory.findMany({
-    where: { cardId, country },
-    orderBy: { day: "asc" },
-    take,
-    select: { day: true, lowestPriceCents: true },
-  });
-  return rows.map((r) => ({ t: r.day.getTime(), v: r.lowestPriceCents }));
+  try {
+    const rows = await prisma.priceHistory.findMany({
+      where: { cardId, country },
+      orderBy: { day: "asc" },
+      take,
+      select: { day: true, lowestPriceCents: true },
+    });
+    return rows.map((r) => ({ t: r.day.getTime(), v: r.lowestPriceCents }));
+  } catch {
+    return [];
+  }
 }
 
 export type Mover = {
@@ -41,13 +46,15 @@ const LIST_SIZE = 5;
 // largest discounts off a card's recent high). Cheap enough to run inside the
 // homepage's ISR window.
 export async function getPriceMovers(country: Country = "AU"): Promise<PriceMovers> {
+ const empty: PriceMovers = { spiking: [], plummeting: [], value: [] };
+ try {
   const cutoff = new Date(Date.now() - WINDOW_DAYS * 86400_000);
   const rows = await prisma.priceHistory.findMany({
     where: { country, day: { gte: cutoff } },
     orderBy: { day: "asc" },
     select: { cardId: true, day: true, lowestPriceCents: true },
   });
-  if (!rows.length) return { spiking: [], plummeting: [], value: [] };
+  if (!rows.length) return empty;
 
   // Group into per-card series.
   const series = new Map<string, PricePoint[]>();
@@ -81,7 +88,7 @@ export async function getPriceMovers(country: Country = "AU"): Promise<PriceMove
 
   // Hydrate tile data for every card we'll show (in the requested market's currency).
   const ids = Array.from(new Set([...spikingStats, ...plummetStats, ...valueStats].map((s) => s.cardId)));
-  if (!ids.length) return { spiking: [], plummeting: [], value: [] };
+  if (!ids.length) return empty;
   const cards = await prisma.card.findMany({ where: { id: { in: ids } }, select: cardTileSelect(country) });
   const byId = new Map(cards.map((c) => [c.id, c as unknown as CardTileData]));
 
@@ -97,4 +104,7 @@ export async function getPriceMovers(country: Country = "AU"): Promise<PriceMove
     plummeting: clean(plummetStats.map((s) => toMover(s, s.ref7, s.pct7))),
     value: clean(valueStats.map((s) => toMover(s, s.high, -s.discount))),
   };
+ } catch {
+  return empty;
+ }
 }
