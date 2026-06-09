@@ -44,6 +44,24 @@ export function CardScanner() {
   const [results, setResults] = useState<CardTileData[]>([]);
   const [lastText, setLastText] = useState("");
   const [manual, setManual] = useState("");
+  // Per-result add-to-collection state.
+  const [added, setAdded] = useState<Record<string, "saving" | "done" | "signin" | "error">>({});
+
+  async function addToCollection(cardId: string) {
+    setAdded((s) => ({ ...s, [cardId]: "saving" }));
+    try {
+      const res = await fetch("/api/collection", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cardId }),
+      });
+      if (res.status === 401) return setAdded((s) => ({ ...s, [cardId]: "signin" }));
+      if (!res.ok) return setAdded((s) => ({ ...s, [cardId]: "error" }));
+      setAdded((s) => ({ ...s, [cardId]: "done" }));
+    } catch {
+      setAdded((s) => ({ ...s, [cardId]: "error" }));
+    }
+  }
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -256,33 +274,50 @@ export function CardScanner() {
         <div className="mt-4">
           <h2 className="mb-2 text-sm font-semibold text-slate-300">Matches</h2>
           <ul className="card-surface divide-y divide-ink-800 overflow-hidden">
-            {results.map((r) => (
-              <li key={r.id}>
-                <Link
-                  href={cardHref(r)}
-                  prefetch={false}
-                  onClick={(e) => {
-                    fetch(`/api/card/${r.slug ?? r.id}/view?source=scan`, { method: "POST", keepalive: true }).catch(() => {});
-                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
-                    e.preventDefault();
-                    openQuickView(r);
-                  }}
-                  className="flex items-center gap-3 px-3 py-2.5 hover:bg-ink-800"
-                >
-                  <div className="h-14 w-10 shrink-0 overflow-hidden rounded bg-ink-900">
-                    {r.imageThumbUrl && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={r.imageThumbUrl} alt="" className="h-full w-full object-cover" loading="lazy" />
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-semibold text-white">{cardDisplayName(r.name, r)}</div>
-                    <div className="text-xs text-slate-500">{r.setCode} · {r.collectorNumber}</div>
-                  </div>
-                  <div className="shrink-0 text-sm font-bold text-accent">{price(r) != null ? fmt(price(r)!) : "—"}</div>
-                </Link>
-              </li>
-            ))}
+            {results.map((r) => {
+              const state = added[r.id];
+              return (
+                <li key={r.id} className="flex items-center gap-1 px-1 hover:bg-ink-800">
+                  <Link
+                    href={cardHref(r)}
+                    prefetch={false}
+                    onClick={(e) => {
+                      fetch(`/api/card/${r.slug ?? r.id}/view?source=scan`, { method: "POST", keepalive: true }).catch(() => {});
+                      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                      e.preventDefault();
+                      openQuickView(r);
+                    }}
+                    className="flex min-w-0 flex-1 items-center gap-3 px-2 py-2.5"
+                  >
+                    <div className="h-14 w-10 shrink-0 overflow-hidden rounded bg-ink-900">
+                      {r.imageThumbUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={r.imageThumbUrl} alt="" className="h-full w-full object-cover" loading="lazy" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-semibold text-white">{cardDisplayName(r.name, r)}</div>
+                      <div className="text-xs text-slate-500">{r.setCode} · {r.collectorNumber}</div>
+                    </div>
+                    <div className="shrink-0 text-sm font-bold text-accent">{price(r) != null ? fmt(price(r)!) : "—"}</div>
+                  </Link>
+                  {state === "signin" ? (
+                    <Link href="/login?next=/scan" className="btn-ghost mr-1 shrink-0 px-2 py-1 text-xs">Sign in</Link>
+                  ) : (
+                    <button
+                      onClick={() => addToCollection(r.id)}
+                      disabled={state === "saving" || state === "done"}
+                      title="Add to My Cards"
+                      className={`mr-1 shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-semibold ${
+                        state === "done" ? "bg-brand-500/20 text-brand-300" : "bg-ink-800 text-slate-200 hover:bg-ink-700"
+                      }`}
+                    >
+                      {state === "done" ? "✓ Added" : state === "saving" ? "…" : state === "error" ? "Retry" : "+ My Cards"}
+                    </button>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}

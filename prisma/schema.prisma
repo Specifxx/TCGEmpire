@@ -54,6 +54,7 @@ model User {
   redemptions         Redemption[]
   sellerProfile       SellerProfile?
   marketplaceListings MarketplaceListing[]
+  collection          CollectionCard[]
 
   @@index([googleId])
   @@index([discordId])
@@ -142,6 +143,7 @@ model Card {
   priceHistory        PriceHistory[]
   priceAlerts         PriceAlert[]
   marketplaceListings MarketplaceListing[]
+  collectedBy         CollectionCard[]
 
   @@index([setCode, collectorNumber])
   @@index([nameNormalized])
@@ -513,4 +515,26 @@ model MarketplaceListing {
   @@index([status])
   @@index([cardId, country, status])
   @@index([priceCents])
+}
+
+// A card a user owns in their personal collection ("My Cards"). One row per
+// (user, card, condition, foil); quantity aggregates duplicates. Populated by the
+// card scanner ("add to my cards") and editable from the profile.
+model CollectionCard {
+  id        String   @id @default(cuid())
+  userId    String
+  cardId    String
+  condition String   @default("NM") // NM, LP, MP, HP, DMG
+  isFoil    Boolean  @default(false)
+  quantity  Int      @default(1)
+  note      String? // optional free-text (e.g. "graded PSA 9", "for trade")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, cardId, condition, isFoil])
+  @@index([userId])
+  @@index([cardId])
 }

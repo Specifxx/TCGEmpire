@@ -6,6 +6,7 @@ import { getPointsState } from "@/lib/points";
 import { SHARD } from "@/lib/points-config";
 import { formatAUD } from "@/lib/format";
 import { LogoutButton, ResendVerifyButton } from "@/components/ProfileActions";
+import { MyCollection } from "@/components/MyCollection";
 
 export const dynamic = "force-dynamic";
 
@@ -78,6 +79,9 @@ export default async function ProfilePage() {
           <span className="btn-ghost">Open rewards →</span>
         </Link>
       )}
+
+      {/* My Cards — personal collection (populated by the scanner) */}
+      <MyCollection />
 
       {/* Account & security */}
       <div className="card-surface mt-5 p-5">
