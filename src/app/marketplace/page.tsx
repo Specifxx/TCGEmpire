@@ -32,10 +32,11 @@ export default async function MarketplacePage() {
             Buy Riftbound cards directly from verified sellers — fast, secure, with prices you can trust. We&apos;re
             putting the finishing touches on payments and shipping.
           </p>
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
-            {user?.isVerifiedSeller && <Link href="/marketplace/sell" className="btn-primary">Open your seller dashboard →</Link>}
-            <Link href="/contact" className="btn-ghost text-sm">Want to sell with us?</Link>
-          </div>
+          {user?.isVerifiedSeller && (
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+              <Link href="/marketplace/sell" className="btn-primary">Open your seller dashboard →</Link>
+            </div>
+          )}
         </div>
       </div>
     );
