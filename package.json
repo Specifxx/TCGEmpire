@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build && (node -e \"process.exit(process.env.VERCEL_ENV==='production'&&process.env.DATABASE_URL?0:1)\" && prisma db push --skip-generate && tsx scripts/marketplace-seed.ts && FORUM_SEED_ONLY_IF_EMPTY=1 tsx scripts/seed-forum.ts && tsx scripts/compute-card-hashes.ts || true)",
+    "build": "prisma generate && next build && (node -e \"process.exit(process.env.VERCEL_ENV==='production'&&process.env.DATABASE_URL?0:1)\" && prisma db push --skip-generate && tsx scripts/marketplace-seed.ts && FORUM_SEED_ONLY_IF_EMPTY=1 tsx scripts/seed-forum.ts || true)",
     "start": "next start",
     "import:prices": "tsx scripts/import-prices.ts",
     "lint": "next lint",
@@ -34,6 +34,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "stripe": "^17.7.0",
+    "tesseract.js": "^5.1.1",
     "zod": "^3.23.8"
   },
   "devDependencies": {
