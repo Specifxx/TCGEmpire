@@ -52,6 +52,7 @@ export interface SessionUser {
   emailVerified: boolean;
   balanceCents: number;
   isAdmin: boolean;
+  isVerifiedSeller: boolean;
   // Shards (gamification). points = spendable balance; canCheckIn drives the daily
   // check-in nudge in the navbar.
   points: number;
@@ -133,6 +134,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
       emailVerified: !!user.emailVerified,
       balanceCents: user.balanceCents,
       isAdmin: user.isAdmin || isAdminEmail(user.email),
+      isVerifiedSeller: user.isVerifiedSeller || user.isAdmin || isAdminEmail(user.email),
       points: user.points,
       canCheckIn: lastCheckin !== today,
     };

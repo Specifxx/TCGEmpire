@@ -12,44 +12,48 @@ datasource db {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
+  id               String    @id @default(cuid())
+  email            String    @unique
   // Optional — accounts created via Google/Discord sign-in have no password.
-  passwordHash String?
-  displayName  String
-  avatarUrl    String?
+  passwordHash     String?
+  displayName      String
+  avatarUrl        String?
   // Set when the email is confirmed (instantly for OAuth, which is pre-verified).
-  emailVerified DateTime?
+  emailVerified    DateTime?
   // OAuth identities (one per provider). Lets a user link Google and/or Discord.
   // Indexed (not DB-unique) so the push stays additive; uniqueness is enforced in
   // the OAuth callback (we find-or-create by provider id, then by email).
-  googleId     String?
-  discordId    String?
+  googleId         String?
+  discordId        String?
   // Wallet balance in AUD cents (e.g. 25000 = $250.00).
   // Funds committed to open buy orders are moved out of balance and held as
   // escrow on the BuyOrder (reservedCents) until the order fills or is cancelled.
-  balanceCents Int       @default(0)
-  isAdmin      Boolean   @default(false)
+  balanceCents     Int       @default(0)
+  isAdmin          Boolean   @default(false)
+  // Verified sellers may list cards in the RiftCompare marketplace (see /marketplace).
+  isVerifiedSeller Boolean   @default(false)
   // ── Shards: the site's gamification / loyalty points (see lib/points.ts). ──
   // Distinct from balanceCents (real money) — Shards are earned by engaging with
   // the site and redeemed for cosmetics, perks and personalised experiences.
-  points         Int       @default(0) // spendable Shard balance
-  lifetimePoints Int       @default(0) // total ever earned; drives the level/medal
-  streakDays     Int       @default(0) // current consecutive daily check-in streak
-  lastCheckinAt  DateTime?            // when the daily check-in was last claimed
-  equippedFlair  String?              // reward key of the name flair shown by the user
-  equippedBadge  String?              // reward key of the medal/badge shown by the user
-  ownedRewards   Json?                // string[] of redeemed cosmetic/perk reward keys
-  createdAt    DateTime  @default(now())
+  points           Int       @default(0) // spendable Shard balance
+  lifetimePoints   Int       @default(0) // total ever earned; drives the level/medal
+  streakDays       Int       @default(0) // current consecutive daily check-in streak
+  lastCheckinAt    DateTime? // when the daily check-in was last claimed
+  equippedFlair    String? // reward key of the name flair shown by the user
+  equippedBadge    String? // reward key of the medal/badge shown by the user
+  ownedRewards     Json? // string[] of redeemed cosmetic/perk reward keys
+  createdAt        DateTime  @default(now())
 
-  listings     Listing[]
-  buyOrders    BuyOrder[]
-  purchases    Order[]   @relation("BuyerOrders")
-  sales        Order[]   @relation("SellerOrders")
-  wishlist     WishlistItem[]
-  authTokens   AuthToken[]
-  pointsLedger PointsLedger[]
-  redemptions  Redemption[]
+  listings            Listing[]
+  buyOrders           BuyOrder[]
+  purchases           Order[]              @relation("BuyerOrders")
+  sales               Order[]              @relation("SellerOrders")
+  wishlist            WishlistItem[]
+  authTokens          AuthToken[]
+  pointsLedger        PointsLedger[]
+  redemptions         Redemption[]
+  sellerProfile       SellerProfile?
+  marketplaceListings MarketplaceListing[]
 
   @@index([googleId])
   @@index([discordId])
@@ -59,7 +63,7 @@ model User {
 model AuthToken {
   id        String   @id @default(cuid())
   token     String   @unique
-  purpose   String   // "verify" | "reset"
+  purpose   String // "verify" | "reset"
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
@@ -81,62 +85,63 @@ model WishlistItem {
 }
 
 model Card {
-  id              String    @id @default(cuid())
-  externalId      String?   @unique // RiftScribe id, e.g. "ogn-001-298"
-  slug            String?   @unique // human-readable URL, e.g. "vayne-hunter-sfd-223s-221"
-  name            String
+  id                 String    @id @default(cuid())
+  externalId         String?   @unique // RiftScribe id, e.g. "ogn-001-298"
+  slug               String?   @unique // human-readable URL, e.g. "vayne-hunter-sfd-223s-221"
+  name               String
   // Lowercased, punctuation-stripped name for apostrophe-tolerant search.
-  nameNormalized  String  @default("")
-  setCode         String // e.g. "OGN"
-  setName         String // e.g. "Origins"
-  collectorNumber String // e.g. "001/298"
+  nameNormalized     String    @default("")
+  setCode            String // e.g. "OGN"
+  setName            String // e.g. "Origins"
+  collectorNumber    String // e.g. "001/298"
   // One of the Riftbound domains: Fury, Calm, Mind, Body, Chaos, Order, Colorless
-  domain          String
+  domain             String
   // Unit, Spell, Gear, Rune, Battlefield, Legend
-  type            String
+  type               String
   // Common, Uncommon, Rare, Epic, Showcase
-  rarity          String
+  rarity             String
   // Alt-art / variant suffix from the card number, e.g. "a" for 112a. null = base art.
-  variant         String?
+  variant            String?
   // Promo printing (prerelease / organized-play). Shares the base card's art.
-  isPromo         Boolean @default(false)
-  orientation     String? // portrait | landscape
-  energyCost      Int?
-  might           Int?
-  power           Int?
-  tags            String? // comma-separated keyword tags
-  description     String?
-  flavorText      String?
+  isPromo            Boolean   @default(false)
+  orientation        String? // portrait | landscape
+  energyCost         Int?
+  might              Int?
+  power              Int?
+  tags               String? // comma-separated keyword tags
+  description        String?
+  flavorText         String?
   // Real card images (RiftScribe CDN). Falls back to generated SVG art if null.
-  imageUrl        String? // full-resolution
-  imageThumbUrl   String? // smaller webp for grids
-  blurDataUrl     String? // tiny base64 placeholder
+  imageUrl           String? // full-resolution
+  imageThumbUrl      String? // smaller webp for grids
+  blurDataUrl        String? // tiny base64 placeholder
   // Reference / market price in AUD cents, used as a default suggested price.
-  marketPriceCents Int      @default(0)
+  marketPriceCents   Int       @default(0)
   // Lowest live retailer price across all sources, set by the price importer.
   // Used for "from $X" and catalogue sorting. null = no price found.
   //   lowestPriceCents   = Australia (AUD cents), from AU stores + eBay AU
   //   lowestPriceCentsNz = New Zealand (NZD cents), from NZ stores (no eBay)
   //   lowestPriceCentsUs = United States (USD cents), from US stores + eBay US
   //   lowestPriceCentsUk = United Kingdom (GBP cents), from UK stores + eBay UK + TCGplayer
-  lowestPriceCents Int?
+  lowestPriceCents   Int?
   lowestPriceCentsNz Int?
   lowestPriceCentsUs Int?
   lowestPriceCentsUk Int?
-  artSeed         Int       @default(0)
+  artSeed            Int       @default(0)
   // Popularity signals. searchCount (clicks from the search box) is the purer demand
   // metric and drives eBay prioritisation; viewCount (any open, incl. featured
   // homepage clicks) is kept for general "trending" use.
-  viewCount       Int       @default(0)
-  searchCount     Int       @default(0)
-  lastViewedAt    DateTime?
-  createdAt       DateTime  @default(now())
+  viewCount          Int       @default(0)
+  searchCount        Int       @default(0)
+  lastViewedAt       DateTime?
+  createdAt          DateTime  @default(now())
 
-  listings        Listing[]
-  buyOrders       BuyOrder[]
-  retailerPrices  RetailerPrice[]
-  priceHistory    PriceHistory[]
-  priceAlerts     PriceAlert[]
+  listings            Listing[]
+  buyOrders           BuyOrder[]
+  retailerPrices      RetailerPrice[]
+  priceHistory        PriceHistory[]
+  priceAlerts         PriceAlert[]
+  marketplaceListings MarketplaceListing[]
 
   @@index([setCode, collectorNumber])
   @@index([nameNormalized])
@@ -151,19 +156,19 @@ model Card {
 
 // A seller's offer to sell (the "ask" side of the book).
 model Listing {
-  id          String   @id @default(cuid())
-  cardId      String
-  sellerId    String
-  condition   String // NM, LP, MP, HP, DMG
-  isFoil      Boolean  @default(false)
-  priceCents  Int
-  quantity    Int      @default(1)
-  status      String   @default("ACTIVE") // ACTIVE, SOLD, CANCELLED
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  cardId     String
+  sellerId   String
+  condition  String // NM, LP, MP, HP, DMG
+  isFoil     Boolean  @default(false)
+  priceCents Int
+  quantity   Int      @default(1)
+  status     String   @default("ACTIVE") // ACTIVE, SOLD, CANCELLED
+  createdAt  DateTime @default(now())
 
-  card        Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
-  seller      User     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  orders      Order[]
+  card   Card    @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  seller User    @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  orders Order[]
 
   @@index([cardId])
   @@index([sellerId])
@@ -186,9 +191,9 @@ model BuyOrder {
   status         String   @default("OPEN") // OPEN, FILLED, CANCELLED
   createdAt      DateTime @default(now())
 
-  card           Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
-  buyer          User     @relation(fields: [buyerId], references: [id], onDelete: Cascade)
-  fills          Order[]
+  card  Card    @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  buyer User    @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  fills Order[]
 
   @@index([cardId])
   @@index([buyerId])
@@ -234,7 +239,7 @@ model PriceHistory {
   lowestPriceCents Int
   recordedAt       DateTime @default(now())
 
-  card             Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
 
   @@unique([cardId, day])
   @@index([cardId, day])
@@ -263,7 +268,7 @@ model PriceAlert {
   // When we last emailed this subscriber about a drop on this card.
   lastNotifiedAt DateTime?
 
-  card           Card      @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
 
   @@unique([email, cardId, market])
   @@index([cardId])
@@ -276,8 +281,8 @@ model PriceAlert {
 model PointsLedger {
   id        String   @id @default(cuid())
   userId    String
-  delta     Int      // +earned / -spent Shards
-  reason    String   // machine key, e.g. "checkin", "forum_post", "redeem:badge_gem"
+  delta     Int // +earned / -spent Shards
+  reason    String // machine key, e.g. "checkin", "forum_post", "redeem:badge_gem"
   // Set for grants that must happen at most once (e.g. "verify_email", or a given
   // day's "checkin:2026-06-08"); null for repeatable awards. Unique per user, so a
   // duplicate insert is rejected — the cheap, race-safe way to dedupe one-off grants.
@@ -285,7 +290,7 @@ model PointsLedger {
   meta      Json?
   createdAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, dedupeKey])
   @@index([userId, createdAt])
@@ -301,12 +306,12 @@ model Redemption {
   rewardKey  String
   rewardName String
   cost       Int
-  kind       String   // flair | badge | perk | experience
+  kind       String // flair | badge | perk | experience
   status     String   @default("FULFILLED") // FULFILLED | PENDING | DONE
-  note       String?  // optional context the user supplies (e.g. a deck link)
+  note       String? // optional context the user supplies (e.g. a deck link)
   createdAt  DateTime @default(now())
 
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
   @@index([status, createdAt])
@@ -316,12 +321,12 @@ model Redemption {
 // (WTS) listing for Riftbound cards. Reddit-style board at /forum.
 model ForumPost {
   id          String   @id @default(cuid())
-  kind        String   // "WTB" | "WTS" | "DISCUSSION"
+  kind        String // "WTB" | "WTS" | "DISCUSSION"
   title       String
   cardName    String?
   setCode     String?
-  condition   String?  // NM, LP, MP, HP, DMG, or "Any"
-  priceCents  Int?     // seller's asking price for the whole listing (optional)
+  condition   String? // NM, LP, MP, HP, DMG, or "Any"
+  priceCents  Int? // seller's asking price for the whole listing (optional)
   // Multi-card listings: [{ name, setCode?, condition?, qty, marketCents? }].
   items       Json?
   // Sum of the items' current market value — the "recommended" total price.
@@ -335,12 +340,12 @@ model ForumPost {
   // country. Players only see posts for their own market.
   market      String   @default("AU")
   authorName  String
-  userId      String?  // set if posted while logged in
+  userId      String? // set if posted while logged in
   score       Int      @default(0)
   status      String   @default("OPEN") // OPEN | CLOSED
   createdAt   DateTime @default(now())
 
-  comments    ForumComment[]
+  comments ForumComment[]
 
   @@index([kind])
   @@index([createdAt])
@@ -357,7 +362,7 @@ model ForumComment {
   body       String
   createdAt  DateTime @default(now())
 
-  post       ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  post ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@index([postId])
 }
@@ -365,26 +370,26 @@ model ForumComment {
 // A live price for a card at an external retailer, used for price comparison.
 // Populated by scripts/import-prices.ts from AU store feeds (Shopify products.json).
 model RetailerPrice {
-  id           String   @id @default(cuid())
-  cardId       String
-  retailer     String // store key, e.g. "cherry", "ozzie"
-  retailerName String // display name, e.g. "Cherry Collectables"
-  title        String // original product title at the retailer
-  url          String // outbound product link (affiliate-ready)
-  condition    String? // e.g. "Near Mint" where the retailer specifies it
-  isFoil       Boolean  @default(false)
-  priceCents   Int
+  id            String   @id @default(cuid())
+  cardId        String
+  retailer      String // store key, e.g. "cherry", "ozzie"
+  retailerName  String // display name, e.g. "Cherry Collectables"
+  title         String // original product title at the retailer
+  url           String // outbound product link (affiliate-ready)
+  condition     String? // e.g. "Near Mint" where the retailer specifies it
+  isFoil        Boolean  @default(false)
+  priceCents    Int
   // Actual shipping for this listing where the source provides it (e.g. eBay).
   // null = use the per-store flat estimate instead.
   shippingCents Int?
-  currency     String   @default("AUD")
-  inStock      Boolean  @default(true)
-  lastSeen     DateTime @default(now())
+  currency      String   @default("AUD")
+  inStock       Boolean  @default(true)
+  lastSeen      DateTime @default(now())
 
   // Market: "AU" (Australian stores + eBay AU, AUD) or "NZ" (NZ stores, NZD).
-  country      String   @default("AU")
+  country String @default("AU")
 
-  card         Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
 
   // eBay uses a per-market retailer key ("ebay" = AU, "ebay_us" = US) so the same
   // card can have a listing in each marketplace without colliding on this key.
@@ -422,20 +427,22 @@ model SealedListing {
 // A completed trade. Either a buyer hit a listing (kind LISTING) or a seller
 // filled a buy order (kind BUYORDER).
 model Order {
-  id           String   @id @default(cuid())
-  kind         String   @default("LISTING") // LISTING | BUYORDER
-  listingId    String?
-  buyOrderId   String?
-  buyerId      String
-  sellerId     String
-  quantity     Int      @default(1)
-  totalCents   Int
-  createdAt    DateTime @default(now())
+  id                   String   @id @default(cuid())
+  kind                 String   @default("LISTING") // LISTING | BUYORDER | MARKETPLACE
+  listingId            String?
+  buyOrderId           String?
+  // Marketplace purchases reference a MarketplaceListing (soft link, no relation).
+  marketplaceListingId String?
+  buyerId              String
+  sellerId             String
+  quantity             Int      @default(1)
+  totalCents           Int
+  createdAt            DateTime @default(now())
 
-  listing      Listing?  @relation(fields: [listingId], references: [id])
-  buyOrder     BuyOrder? @relation(fields: [buyOrderId], references: [id])
-  buyer        User      @relation("BuyerOrders", fields: [buyerId], references: [id])
-  seller       User      @relation("SellerOrders", fields: [sellerId], references: [id])
+  listing  Listing?  @relation(fields: [listingId], references: [id])
+  buyOrder BuyOrder? @relation(fields: [buyOrderId], references: [id])
+  buyer    User      @relation("BuyerOrders", fields: [buyerId], references: [id])
+  seller   User      @relation("SellerOrders", fields: [sellerId], references: [id])
 
   @@index([buyerId])
   @@index([sellerId])
@@ -454,4 +461,54 @@ model ClickEvent {
 
   @@index([createdAt])
   @@index([retailer, createdAt])
+}
+
+// ── RiftCompare Marketplace ────────────────────────────────────────────────────
+// A verified seller's storefront identity + shipping policy. One per user.
+model SellerProfile {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  shopName          String
+  bio               String?
+  // Market this seller serves; their listings inherit it (AU/NZ/US/UK).
+  country           String   @default("AU")
+  currency          String   @default("AUD")
+  // Shipping: a flat postage estimate per order, free over a threshold (0 = never).
+  shippingFlatCents Int      @default(0)
+  freeOverCents     Int      @default(0)
+  shippingNote      String?
+  handlingDays      Int      @default(2) // typical dispatch time in days
+  // Payouts (Stripe Connect) — populated once the seller onboards. Optional for now.
+  stripeAccountId   String?
+  payoutsEnabled    Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// A verified seller's listing of a single card for sale in our own marketplace.
+// Surfaced in the card price comparison as the "RiftCompare Marketplace" source.
+model MarketplaceListing {
+  id         String   @id @default(cuid())
+  sellerId   String
+  cardId     String
+  condition  String // NM, LP, MP, HP, DMG
+  isFoil     Boolean  @default(false)
+  priceCents Int
+  quantity   Int      @default(1)
+  currency   String   @default("AUD")
+  country    String   @default("AU") // market this listing serves
+  status     String   @default("ACTIVE") // ACTIVE, SOLD_OUT, PAUSED, REMOVED
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  seller User @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  card   Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@index([cardId])
+  @@index([sellerId])
+  @@index([status])
+  @@index([cardId, country, status])
+  @@index([priceCents])
 }

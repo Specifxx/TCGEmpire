@@ -7,7 +7,10 @@ export default function Loading() {
         <div className="card-surface h-72 animate-pulse" />
       </aside>
       <section className="min-w-0 flex-1">
-        <div className="mb-4 h-5 w-40 animate-pulse rounded bg-ink-800" />
+        <p className="mb-4 flex items-center gap-2 text-sm text-slate-500">
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-ink-700 border-t-brand-400" />
+          Loading the card database…
+        </p>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {Array.from({ length: 15 }).map((_, i) => (
             <div key={i} className="card-surface overflow-hidden">

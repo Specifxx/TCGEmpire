@@ -51,6 +51,24 @@ export function ForumPostModal({
   const [comments, setComments] = useState<Comment[] | null>(null);
   const [text, setText] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  // Local SOLD/OPEN state so the author can flip it without a full reload.
+  const [status, setStatus] = useState(post.status);
+  const isAuthor = !!currentUser && !!post.userId && currentUser.id === post.userId;
+
+  async function setSold(sold: boolean) {
+    const prev = status;
+    setStatus(sold ? "SOLD" : "OPEN"); // optimistic
+    try {
+      const res = await fetch(`/api/forum/${post.id}/sold`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sold }),
+      });
+      if (!res.ok) setStatus(prev);
+    } catch {
+      setStatus(prev);
+    }
+  }
 
   useEffect(() => {
     let alive = true;
@@ -109,11 +127,20 @@ export function ForumPostModal({
           {/* Post detail */}
           <div className="flex flex-wrap items-center gap-2">
             <span className={`chip font-bold ${KIND_BADGE[post.kind]}`}>{KIND_TEXT[post.kind]}</span>
-            {post.status === "SOLD" && (
+            {status === "SOLD" && (
               <span className="chip bg-rose-500/15 font-bold text-rose-300 ring-1 ring-rose-500/30">SOLD</span>
             )}
             {post.priceCents != null && <span className="chip bg-ink-800 font-bold text-accent">{fmt(post.priceCents)} asking</span>}
             {location && <span className="chip bg-ink-800 text-slate-300">{location}</span>}
+            {isAuthor && post.kind !== "DISCUSSION" && (
+              <button
+                onClick={() => setSold(status !== "SOLD")}
+                className="chip bg-ink-800 text-slate-300 ring-1 ring-ink-600 hover:text-white"
+                title={status === "SOLD" ? "Mark this listing as available again" : "Mark this listing as sold"}
+              >
+                {status === "SOLD" ? "↩ Mark available" : "✓ Mark as sold"}
+              </button>
+            )}
           </div>
           <h2 className="mt-2 text-lg font-bold text-white">{post.title}</h2>
 
