@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { unstable_cache } from "next/cache";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { normalizeSearch } from "@/lib/format";
@@ -33,7 +34,9 @@ export async function GET(req: Request) {
       take: 8,
       select: cardTileSelect(country),
     }),
-    getSealedGroups(country),
+    // Sealed groups load + group the whole sealed table — far too heavy to redo on
+    // every keystroke. Cache per market; sealed prices only change on the import.
+    unstable_cache(() => getSealedGroups(country), ["sealed-groups", country], { revalidate: 600 })(),
   ]);
 
   const ql = q.toLowerCase();

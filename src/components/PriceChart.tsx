@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useId, useMemo, useRef, useState } from "react";
 import { formatMoney } from "@/lib/format";
 import type { PricePoint } from "@/lib/price-history";
 
@@ -22,6 +22,8 @@ export function PriceChart({ points, currency = "AUD", compact = false }: { poin
   const [range, setRange] = useState<RangeKey>("ALL");
   const [hover, setHover] = useState<number | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
+  // Unique gradient id — two charts can coexist in the DOM (card page + modal).
+  const fillId = useId();
 
   const data = useMemo(() => {
     const days = RANGES.find((r) => r.key === range)!.days;
@@ -111,7 +113,7 @@ export function PriceChart({ points, currency = "AUD", compact = false }: { poin
       >
         <svg viewBox={`0 0 ${W} ${H}`} className={compact ? "h-36 w-full" : "h-48 w-full"} preserveAspectRatio="none" role="img" aria-label="Price history chart">
           <defs>
-            <linearGradient id="pc-fill" x1="0" y1="0" x2="0" y2="1">
+            <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#34d17e" stopOpacity="0.26" />
               <stop offset="100%" stopColor="#34d17e" stopOpacity="0" />
             </linearGradient>
@@ -125,7 +127,7 @@ export function PriceChart({ points, currency = "AUD", compact = false }: { poin
             </g>
           ))}
 
-          <polygon points={area} fill="url(#pc-fill)" />
+          <polygon points={area} fill={`url(#${fillId})`} />
           <polyline points={line} fill="none" stroke="#34d17e" strokeWidth="2.25" strokeLinejoin="round" strokeLinecap="round" />
 
           {/* scatter dots (skip when very dense) */}

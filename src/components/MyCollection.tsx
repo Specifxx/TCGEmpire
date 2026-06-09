@@ -94,7 +94,7 @@ export function MyCollection() {
   }
 
   return (
-    <div className="card-surface mt-5 p-5">
+    <div id="collection" className="card-surface mt-5 scroll-mt-20 p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="font-bold text-white">My Collection</h2>

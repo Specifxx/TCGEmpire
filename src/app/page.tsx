@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { CardTile } from "@/components/CardTile";
 import { CountryHeroToggle } from "@/components/CountryHeroToggle";
@@ -74,8 +75,10 @@ export default async function HomePage() {
     getPopularCards(12, country),
     // Stores serving the selected market (eBay excluded from the count).
     prisma.retailerPrice.groupBy({ by: ["retailer"], where: { country, NOT: { retailer: { startsWith: "ebay" } } } }),
-    // This week's biggest price movers (viewer's market) for the Price Watch panel.
-    getPriceMovers(country),
+    // This week's biggest price movers (viewer's market). The cookie read makes this
+    // page per-request, so cache the heavy 35-day aggregation server-side per market
+    // (prices only change on the ~3-hourly import anyway).
+    unstable_cache(() => getPriceMovers(country), ["price-movers", country], { revalidate: 600 })(),
   ]);
   const storeCount = storeGroups.length;
   const storeWord = storeCount === 1 ? "store" : "stores";

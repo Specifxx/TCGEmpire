@@ -70,7 +70,9 @@ export function QuickViewProvider({ children }: { children: React.ReactNode }) {
   return (
     <Ctx.Provider value={{ open }}>
       {children}
-      {card && <QuickViewModal card={card} onClose={close} />}
+      {/* Keyed by card so switching cards remounts the modal (resets collection
+          state, prices and chart instead of leaking them across cards). */}
+      {card && <QuickViewModal key={card.id} card={card} onClose={close} />}
     </Ctx.Provider>
   );
 }
@@ -266,8 +268,10 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
               )}
             </div>
 
-            {/* Price history — free for everyone, right in the preview (viewer's market) */}
-            {history && history.length >= 2 && (
+            {/* Price history — free for everyone, right in the preview (viewer's
+                market). With <2 points (new markets still accumulating) PriceChart
+                renders a "still collecting" note rather than the section vanishing. */}
+            {history && (
               <div className="mt-5 border-t border-ink-800 pt-4">
                 <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
                   Price history <span className="font-normal normal-case text-slate-600">· {country}</span>

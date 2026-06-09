@@ -248,6 +248,8 @@ model PriceHistory {
 
   @@unique([cardId, country, day])
   @@index([cardId, country, day])
+  // Serves the Price Watch movers query (all cards in one market over a window).
+  @@index([country, day])
 }
 
 // An email subscription for wishlist price-drop alerts. No account required — the

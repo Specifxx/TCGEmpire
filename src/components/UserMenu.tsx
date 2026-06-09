@@ -110,6 +110,7 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
 
           <div className="py-1">
             <MenuLink href="/profile" onClick={() => setOpen(false)}>Profile</MenuLink>
+            <MenuLink href="/profile#collection" onClick={() => setOpen(false)}>My collection</MenuLink>
             <MenuLink href="/rewards" onClick={() => setOpen(false)}>{SHARD.name} &amp; rewards</MenuLink>
             <MenuLink href="/wishlist" onClick={() => setOpen(false)}>Wishlist</MenuLink>
             <MenuLink href="/forum" onClick={() => setOpen(false)}>My forum posts</MenuLink>
