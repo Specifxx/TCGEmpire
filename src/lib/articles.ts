@@ -160,6 +160,114 @@ On RiftCompare, each of these printings is labelled in the card's name (e.g. *(A
 Want to find your grail? **[Browse every Riftbound card](/browse)** and sort by price, or read our **[guide to where to buy Riftbound cards](/guides/where-to-buy-riftbound-cards)** for the best place to buy in your region.`,
   },
   {
+    slug: "riftbound-for-beginners",
+    category: "guide",
+    title: "Riftbound for Beginners: How to Start & What to Buy First",
+    excerpt:
+      "New to Riftbound: League of Legends TCG? Here's how the game works, how to start playing, and exactly what to buy first without overspending.",
+    author: "RiftCompare",
+    date: "2026-06-08",
+    readMins: 5,
+    tags: ["beginners", "guide", "how to start"],
+    body: `**Riftbound** is the **League of Legends Trading Card Game** from Riot Games (published in English by UVS Games). If you're brand new, here's how to start playing — and exactly what to buy first without overspending.
+
+## What is Riftbound?
+
+Riftbound is a collectible card game set in the League of Legends universe. You build a deck around a **Legend** (your champion) using cards across the game's domains — **Fury, Calm, Mind, Body, Chaos, Order** and Colorless — and card types like **Units, Spells, Gear, Runes and Battlefields**. Sets so far include **Origins (OGN)**, **Proving Grounds**, **Spirit Forged (SFD)** and **Unleashed (UNL)**.
+
+## The easiest way to start
+
+1. **Grab a ready-to-play product.** A preconstructed deck or a Proving Grounds kit gives you a complete, playable deck out of the box — the cheapest way in. Compare prices on the **[sealed products page](/sealed)**.
+2. **Learn the deck**, then upgrade it card-by-card with **[singles](/browse)** — far cheaper than buying booster boxes hoping to pull what you need.
+3. **Find the cheapest copies** with RiftCompare — see our **[where to buy Riftbound cards guide](/guides/where-to-buy-riftbound-cards)**.
+
+## What to buy first (on a budget)
+
+- **A preconstructed / Proving Grounds deck** — instant playability.
+- **A handful of singles** to upgrade weak spots — look up exact prices on the **[card database](/browse)**.
+- **Skip the chase cards at first** — alt-arts and Signatures look great but aren't needed to play well.
+
+## Tips for new players
+
+- **Want to test a deck before buying?** Print proxies with the **[proxy sheet tool](/proxy)**, then buy the real cards once you've settled on a list.
+- **Browse the meta** on the **[decks page](/decks)** to see what top players run — and what it costs to build.
+
+Ready to dive in? **[Browse the Riftbound card database](/browse)** or **[compare sealed products](/sealed)** to get started.`,
+  },
+  {
+    slug: "riftbound-singles-vs-sealed",
+    category: "guide",
+    title: "Riftbound Singles vs Sealed: What's Better Value?",
+    excerpt:
+      "Should you buy Riftbound singles or sealed booster boxes? A simple breakdown of when each makes sense and how to get the best value.",
+    author: "RiftCompare",
+    date: "2026-06-08",
+    readMins: 4,
+    tags: ["buying", "guide", "singles", "sealed", "value"],
+    body: `Should you buy **Riftbound** singles or sealed booster boxes? It depends on your goal. Here's a simple breakdown to help you spend wisely.
+
+## Buy singles when…
+
+- You want **specific cards** to build or finish a deck.
+- You're chasing a particular **alt-art, Signature or promo** card.
+- You want the **cheapest path** to a competitive deck — buying the exact cards you need almost always beats ripping boxes.
+
+Look up any card's live price across stores on the **[card database](/browse)**, and price a whole list at once with the **[deck pricer](/deck)**.
+
+## Buy sealed when…
+
+- You enjoy the **opening experience** or want to draft.
+- You're **collecting or investing** and want unopened product.
+- You're after the occasional **chase pull** and don't mind the variance.
+
+Compare booster box and pack prices on the **[sealed products page](/sealed)** — see our **[cheapest booster boxes guide](/guides/cheapest-riftbound-booster-boxes)**.
+
+## The value reality
+
+A booster box has a fixed expected value spread across many cards. If you only need a few specific cards, you'll usually pay **less by buying those singles directly** than by opening boxes and hoping. If you value the experience or want everything sealed, boxes win. There's no wrong answer — just buy whichever at the best price, which is exactly what RiftCompare is for.
+
+## Bottom line
+
+- **Building a deck?** → **[Buy singles](/browse).**
+- **Opening / collecting / investing?** → **[Buy sealed](/sealed).**
+
+Either way, **compare prices first** — see **[where to buy Riftbound cards](/guides/where-to-buy-riftbound-cards)**.`,
+  },
+  {
+    slug: "budget-riftbound-decks",
+    category: "guide",
+    title: "Best Budget Riftbound Decks & How to Build Cheap",
+    excerpt:
+      "How to build a competitive Riftbound: League of Legends TCG deck on a budget — and price every card before you buy.",
+    author: "RiftCompare",
+    date: "2026-06-08",
+    readMins: 5,
+    tags: ["decks", "guide", "budget"],
+    body: `You don't need a huge budget to play **Riftbound** competitively. Here's how to build a strong deck cheaply — and price it before you buy.
+
+## Start from a known list
+
+The quickest budget route is to start from a proven decklist and trim the expensive cards. Browse current **[meta and preconstructed decks](/decks)** — each shows a **live build cost** so you can see what a deck costs in your region before committing.
+
+## Price your deck before you buy
+
+Paste any decklist into the **[deck pricer](/deck)** and it matches every card to its cheapest live price across stores, then totals it up. Tweak the list, re-price, and watch the cost drop — the fastest way to find the cheapest version of a deck.
+
+## Budget-building tips
+
+- **Lean on Commons and Uncommons** — they do most of the work for a fraction of chase-rare prices.
+- **Use base printings, not alt-arts** — the base card plays identically for far less. RiftCompare labels each printing in the card name so you can pick the cheap base version on the **[card database](/browse)**.
+- **Buy singles, not boxes** — for a specific list, singles are almost always cheaper.
+- **Consolidate orders** — buying several cards from one store can unlock free shipping and beat splitting an order.
+- **Test before you buy** — print a deck with the **[proxy sheet tool](/proxy)**, make sure you like it, then buy the real cards.
+
+## Then find the cheapest cards
+
+Once you've locked a list, **[search the database](/browse)** for each card and buy from whichever store is cheapest — or read our **[where to buy Riftbound cards guide](/guides/where-to-buy-riftbound-cards)** for the best option in your region.
+
+Build smart, compare prices, and you'll have a competitive Riftbound deck without overspending.`,
+  },
+  {
     slug: "welcome-to-riftcompareau",
     category: "blog",
     title: "Welcome to RiftCompare",
