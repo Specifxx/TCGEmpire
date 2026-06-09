@@ -46,7 +46,7 @@ interface CartItem {
 
 const CART_KEY = "rc_mkt_cart";
 
-export function MarketplaceClient({ cards, place }: { cards: MktCard[]; place: string }) {
+export function MarketplaceClient({ cards, place, stripeEnabled = false }: { cards: MktCard[]; place: string; stripeEnabled?: boolean }) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [openCard, setOpenCard] = useState<MktCard | null>(null);
@@ -106,7 +106,10 @@ export function MarketplaceClient({ cards, place }: { cards: MktCard[]; place: s
     if (items.length === 0) return;
     setBusy(true);
     try {
-      const res = await fetch("/api/marketplace/checkout", {
+      // When Stripe is live, pay by card via the hosted Checkout (stock is reserved
+      // server-side while the buyer pays). Otherwise settle the demo wallet.
+      const endpoint = stripeEnabled ? "/api/marketplace/stripe/checkout" : "/api/marketplace/checkout";
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ items }),
@@ -114,13 +117,19 @@ export function MarketplaceClient({ cards, place }: { cards: MktCard[]; place: s
       const data = await res.json();
       if (!res.ok) {
         toast(data.error ?? "Checkout failed", 3000);
-      } else {
-        setCart([]);
-        setCartOpen(false);
-        setOpenCard(null);
-        toast(`✓ Order placed — ${formatMoney(data.totalCents, cartCurrency)}`, 2500);
-        setTimeout(() => location.reload(), 900);
+        return;
       }
+      if (stripeEnabled && data.url) {
+        // Hand off to Stripe's hosted checkout.
+        toast("Redirecting to secure checkout…", 4000);
+        window.location.href = data.url;
+        return;
+      }
+      setCart([]);
+      setCartOpen(false);
+      setOpenCard(null);
+      toast(`✓ Order placed — ${formatMoney(data.totalCents, cartCurrency)}`, 2500);
+      setTimeout(() => location.reload(), 900);
     } catch {
       toast("Network error — try again", 3000);
     } finally {

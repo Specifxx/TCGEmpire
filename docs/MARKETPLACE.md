@@ -92,6 +92,43 @@ payouts + escrow. Steps & resources:
 
 Effort: ~1–2 weeks. Fees: ~1.7%+30¢ AU card + Connect payout fees, on top of your 3%.
 
+### Stripe (single-seller) foundations — what's wired now
+
+Because the marketplace is now **single-seller** (you, Specifix), we DON'T need Connect:
+payment from a sale lands straight in your Stripe account. We use **plain Stripe
+Checkout** (hosted) + a webhook, with **Skinport-style stock reservation**. All of it
+is INERT until `STRIPE_SECRET_KEY` is set — the marketplace falls back to the demo
+wallet, so nothing changes until you flip it on.
+
+Scaffolded:
+
+- **`src/lib/stripe.ts`** — lazy Stripe client, `stripeEnabled()`, and
+  `releaseExpiredReservations()` (restores stock for abandoned holds; called
+  opportunistically — no cron needed).
+- **`POST /api/marketplace/stripe/checkout`** — validates the cart, **reserves stock**
+  (decrements availability + opens `PENDING` orders with a `reservedUntil` hold),
+  then creates a Checkout Session and returns its `url`. Rolls the reservation back if
+  the session can't be created.
+- **`POST /api/marketplace/stripe/webhook`** — `checkout.session.completed` /
+  `async_payment_succeeded` → orders `PAID` (stock stays gone); `expired` /
+  `async_payment_failed` → orders `CANCELLED` + stock restored.
+- **`Order`** gained `status`, `shippingCents`, `feeCents`, `stripeSessionId`,
+  `stripePaymentIntent`, `reservedUntil`. Wallet/forum orders default to `PAID` so
+  existing flows are unaffected.
+- **Client**: `MarketplaceClient` takes `stripeEnabled`; when on, "Buy"/cart redirect
+  to Stripe and back to `/marketplace?purchase=success|cancelled`.
+- **Env** (`.env.example`): `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
+  optional `MARKETPLACE_RESERVE_MINUTES`.
+
+**To switch it on:** add `STRIPE_SECRET_KEY` (Stripe → Developers → API keys) and a
+webhook at `/api/marketplace/stripe/webhook` (events above) → put its signing secret in
+`STRIPE_WEBHOOK_SECRET`, redeploy. Use `sk_test_…` + a test card first.
+
+**Still rough / next refinements:** buyer shipping-address collection (Stripe Checkout
+can collect it — wire `shipping_address_collection`), order-history UI for buyer &
+seller, email receipts, refunds/disputes, and tax. Known to be iterative — built as a
+foundation to harden.
+
 ## Option B — Shopify
 
 Shopify is excellent for a **single-store** shopfront, less so for a **multi-seller

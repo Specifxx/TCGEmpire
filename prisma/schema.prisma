@@ -439,6 +439,15 @@ model Order {
   sellerId             String
   quantity             Int      @default(1)
   totalCents           Int
+  // Payment/fulfilment state. Wallet & forum orders settle instantly (PAID);
+  // Stripe-checkout orders start PENDING (stock reserved) and flip to PAID via the
+  // webhook, or CANCELLED if the session expires / payment fails (stock released).
+  status               String    @default("PAID") // PENDING | PAID | CANCELLED | REFUNDED
+  shippingCents        Int       @default(0)
+  feeCents             Int       @default(0)
+  stripeSessionId      String?
+  stripePaymentIntent  String?
+  reservedUntil        DateTime? // while PENDING, the stock-reservation expiry
   createdAt            DateTime @default(now())
 
   listing  Listing?  @relation(fields: [listingId], references: [id])
@@ -448,6 +457,8 @@ model Order {
 
   @@index([buyerId])
   @@index([sellerId])
+  @@index([stripeSessionId])
+  @@index([status])
 }
 
 // Outbound affiliate-link clicks, logged via a tiny click beacon so we can confirm

@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { canViewMarketplaceListings } from "@/lib/marketplace";
+import { stripeEnabled } from "@/lib/stripe";
 import { MarketplaceClient, type MktCard } from "@/components/MarketplaceClient";
 
 export const dynamic = "force-dynamic";
@@ -75,5 +76,5 @@ export default async function MarketplacePage() {
   // Cards with the cheapest offer first.
   cards.sort((a, b) => Math.min(...a.offers.map((o) => o.priceCents)) - Math.min(...b.offers.map((o) => o.priceCents)));
 
-  return <MarketplaceClient cards={cards} place={info.place} />;
+  return <MarketplaceClient cards={cards} place={info.place} stripeEnabled={stripeEnabled()} />;
 }
