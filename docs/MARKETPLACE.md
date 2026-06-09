@@ -111,6 +111,42 @@ marketplace** out of the box:
   verified sellers use the Stripe-Connect marketplace. This matches "as the official
   store I go first": Shopify powers your store; Connect powers the rest.
 
+### Shopify foundations — what's wired now
+
+Since the marketplace is now **single-seller** (you, Specifix, are the only seller),
+the Shopify "official store" path is the clean fit: Shopify owns payments, tax, fraud
+and carrier-calculated shipping; we just surface the catalog and hand off checkout.
+
+Scaffolded (inert until env is set):
+
+- **`src/lib/shopify.ts`** — Storefront API client. `shopifyEnabled()`,
+  `storefront()` (GraphQL fetch), `getShopifyProducts()` (normalised catalog with
+  per-variant price/SKU/stock), `createCheckout(lines)` (→ Shopify hosted
+  `checkoutUrl`), and a SKU convention (`card:<slug>`) to map a Shopify variant back
+  to a RiftCompare card.
+- **`GET /api/shopify/products`** — read-only catalog proxy. Returns
+  `{ enabled:false, products:[] }` until configured.
+- **`POST /api/shopify/cart`** — body `{ lines:[{ merchandiseId, quantity }] }` →
+  `{ checkoutUrl }`. The client redirects the buyer to Shopify to pay.
+- **Env** (`.env.example`): `SHOPIFY_STORE_DOMAIN`, `SHOPIFY_STOREFRONT_TOKEN`,
+  optional `SHOPIFY_API_VERSION`.
+
+**Not yet wired (deliberate, needs your store + decisions):** rendering the Shopify
+catalog inside `/marketplace`, swapping the test-wallet "Buy" for the Shopify
+checkout redirect, and importing Shopify prices into the price comparison as the
+official source. These are a small follow-up once the store exists and the catalog
+is tagged with `card:<slug>` SKUs.
+
+**What I need from you to switch it on:**
+1. A Shopify store (any plan; Basic is fine) with your inventory.
+2. A **Storefront API access token**: Shopify admin → *Settings → Apps and sales
+   channels → Develop apps → Create an app → Storefront API → Install*, granting
+   `unauthenticated_read_product_listings` + `unauthenticated_write_checkouts`.
+3. Your `*.myshopify.com` domain.
+4. Set `SHOPIFY_STORE_DOMAIN` + `SHOPIFY_STOREFRONT_TOKEN` in Vercel env and redeploy.
+5. (For card-level matching in the comparison) set each variant's **SKU** to
+   `card:<riftcompare-slug>` so we can link products to cards.
+
 ## Dynamic (location-based) shipping
 
 Instead of a flat per-seller rate, calculate postage from **seller origin → buyer
