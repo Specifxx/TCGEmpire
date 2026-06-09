@@ -31,14 +31,16 @@ const STORAGE_KEY = "rc_trade";
 type SearchResult = Omit<TradeCard, "qty">;
 
 export function TradeCalculator() {
-  const { fmt, price } = useCountry();
+  const { fmt, price, country } = useCountry();
   const [yours, setYours] = useState<TradeCard[]>([]);
   const [theirs, setTheirs] = useState<TradeCard[]>([]);
-  // Cash-difference %: people settling a trade in cash often pay a % of the value gap
-  // (e.g. 90%). The slider scales the final cash figure without touching card values.
-  const [cashPct, setCashPct] = useState(100);
-  // Per-card manual value override (cents), keyed by card id — for when you and your
-  // trade partner agree a card is worth something other than the market price.
+  // Each side has its OWN value % — so each player can discount their cards (e.g. value
+  // them at 90%) independently. The cash difference is then the gap between the two
+  // adjusted totals.
+  const [yoursPct, setYoursPct] = useState(100);
+  const [theirsPct, setTheirsPct] = useState(100);
+  // Per-card value override (cents), keyed by card id — set by typing a value or by
+  // picking a specific store's price.
   const [overrides, setOverrides] = useState<Record<string, number>>({});
   const [loaded, setLoaded] = useState(false);
 
@@ -51,7 +53,8 @@ export function TradeCalculator() {
         if (Array.isArray(data.yours)) setYours(data.yours);
         if (Array.isArray(data.theirs)) setTheirs(data.theirs);
         if (data.overrides && typeof data.overrides === "object") setOverrides(data.overrides);
-        if (typeof data.cashPct === "number") setCashPct(data.cashPct);
+        if (typeof data.yoursPct === "number") setYoursPct(data.yoursPct);
+        if (typeof data.theirsPct === "number") setTheirsPct(data.theirsPct);
       }
     } catch {
       /* ignore corrupt state */
@@ -62,11 +65,11 @@ export function TradeCalculator() {
   useEffect(() => {
     if (!loaded) return;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ yours, theirs, overrides, cashPct }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ yours, theirs, overrides, yoursPct, theirsPct }));
     } catch {
       /* quota/private mode — fine */
     }
-  }, [yours, theirs, overrides, cashPct, loaded]);
+  }, [yours, theirs, overrides, yoursPct, theirsPct, loaded]);
 
   const setter = (side: Side) => (side === "yours" ? setYours : setTheirs);
 
@@ -100,25 +103,23 @@ export function TradeCalculator() {
   function swapSides() {
     setYours(theirs);
     setTheirs(yours);
+    setYoursPct(theirsPct);
+    setTheirsPct(yoursPct);
   }
 
-  // Effective per-unit value: a manual override if set, else the live market price.
+  // Effective per-unit value: a manual/selected override if set, else the live price.
   const effUnit = (c: TradeCard) => overrides[c.id] ?? price(c);
   const onOverride = (id: string, cents: number) => setOverrides((o) => ({ ...o, [id]: cents }));
 
-  const sideTotal = (list: TradeCard[]) =>
-    list.reduce((sum, c) => sum + (effUnit(c) ?? 0) * c.qty, 0);
-  // Unpriced only when there's neither an override nor a market price.
+  const sideTotal = (list: TradeCard[]) => list.reduce((sum, c) => sum + (effUnit(c) ?? 0) * c.qty, 0);
   const sideUnpriced = (list: TradeCard[]) => list.filter((c) => effUnit(c) == null).length;
 
-  const yoursTotal = sideTotal(yours);
-  const theirsTotal = sideTotal(theirs);
-  const diff = theirsTotal - yoursTotal; // + = you receive more value
-  const larger = Math.max(yoursTotal, theirsTotal);
-  // "Even" if within $1 or 2% of the larger pile.
-  const even = larger === 0 || Math.abs(diff) <= Math.max(100, larger * 0.02);
-  // Cash settlement: scale the value gap by the chosen % (e.g. settle at 90%).
-  const cashDiff = diff * (cashPct / 100);
+  const rawYours = sideTotal(yours);
+  const rawTheirs = sideTotal(theirs);
+  const adjYours = Math.round((rawYours * yoursPct) / 100);
+  const adjTheirs = Math.round((rawTheirs * theirsPct) / 100);
+  const cashDiff = adjTheirs - adjYours; // who pays whom is left to the traders
+  const hasCards = yours.length + theirs.length > 0;
   const unpriced = sideUnpriced(yours) + sideUnpriced(theirs);
 
   return (
@@ -129,7 +130,11 @@ export function TradeCalculator() {
           subtitle="What you're giving"
           accent="rose"
           list={yours}
-          total={yoursTotal}
+          raw={rawYours}
+          adjusted={adjYours}
+          pct={yoursPct}
+          onPct={setYoursPct}
+          country={country}
           fmt={fmt}
           price={price}
           overrides={overrides}
@@ -144,7 +149,11 @@ export function TradeCalculator() {
           subtitle="What you're receiving"
           accent="emerald"
           list={theirs}
-          total={theirsTotal}
+          raw={rawTheirs}
+          adjusted={adjTheirs}
+          pct={theirsPct}
+          onPct={setTheirsPct}
+          country={country}
           fmt={fmt}
           price={price}
           overrides={overrides}
@@ -156,79 +165,49 @@ export function TradeCalculator() {
         />
       </div>
 
-      {/* Verdict / summary — sticky at the bottom so it's always in view on a phone. */}
+      {/* Summary — sticky so it's always in view on a phone. */}
       <div className="sticky bottom-3 z-20 mt-4">
         <div className="card-surface border-ink-600 bg-ink-900/95 p-4 shadow-2xl backdrop-blur">
           <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
             <div className="flex items-center gap-4 text-sm">
               <div>
                 <div className="text-xs text-slate-500">You give</div>
-                <div className="font-bold text-white">{fmt(yoursTotal)}</div>
+                <div className="font-bold text-white">
+                  {fmt(rawYours)}
+                  {yoursPct !== 100 && <span className="ml-1 text-xs font-normal text-brand-300">({fmt(adjYours)})</span>}
+                </div>
               </div>
               <div className="text-2xl text-slate-600">⇄</div>
               <div>
                 <div className="text-xs text-slate-500">You receive</div>
-                <div className="font-bold text-white">{fmt(theirsTotal)}</div>
+                <div className="font-bold text-white">
+                  {fmt(rawTheirs)}
+                  {theirsPct !== 100 && <span className="ml-1 text-xs font-normal text-brand-300">({fmt(adjTheirs)})</span>}
+                </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              {yours.length + theirs.length > 0 && (
+            <div className="flex items-center gap-4">
+              {hasCards && (
                 <button onClick={swapSides} className="btn-ghost text-sm" title="Swap the two sides">⇅ Swap</button>
               )}
-              <Verdict even={even} diff={cashDiff} fmt={fmt} empty={larger === 0} />
+              {hasCards && (
+                <div className="text-right">
+                  <div className="text-xs text-slate-500">Cash difference</div>
+                  <div className="font-bold text-accent">{fmt(Math.abs(cashDiff))}</div>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Cash-difference % — settle the value gap in cash at, say, 90%. */}
-          {yours.length + theirs.length > 0 && (
-            <div className="mt-3 flex items-center gap-3 border-t border-ink-800 pt-3">
-              <label htmlFor="cashPct" className="shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                Cash&nbsp;%
-              </label>
-              <input
-                id="cashPct"
-                type="range"
-                min={50}
-                max={100}
-                step={1}
-                value={cashPct}
-                onChange={(e) => setCashPct(Number(e.target.value))}
-                className="h-1 flex-1 cursor-pointer accent-brand-500"
-                aria-label="Cash settlement percentage"
-              />
-              <div className="flex shrink-0 items-center">
-                <input
-                  type="number"
-                  min={1}
-                  max={100}
-                  value={cashPct}
-                  onChange={(e) => {
-                    const v = Math.round(Number(e.target.value));
-                    if (Number.isFinite(v)) setCashPct(Math.min(100, Math.max(1, v)));
-                  }}
-                  onFocus={(e) => e.target.select()}
-                  className="w-12 rounded border border-ink-700 bg-ink-900 px-1 py-0.5 text-right text-sm font-bold text-white outline-none focus:border-brand-500"
-                  aria-label="Cash settlement percentage"
-                />
-                <span className="ml-0.5 text-sm font-bold text-white">%</span>
-              </div>
-              {cashPct !== 100 && (
-                <button type="button" onClick={() => setCashPct(100)} className="shrink-0 text-xs text-slate-500 hover:text-brand-400">
-                  reset
-                </button>
-              )}
-            </div>
-          )}
-
           {unpriced > 0 && (
             <p className="mt-2 text-xs text-gold">
-              {unpriced} card{unpriced === 1 ? "" : "s"} have no price — tap the price to set one manually.
+              {unpriced} card{unpriced === 1 ? "" : "s"} have no price — type a value or pick a store price.
             </p>
           )}
           <p className="mt-2 text-[11px] text-slate-600">
-            Values start from RiftCompare&apos;s lowest live market price (tap any price to override).
-            {cashPct !== 100 ? ` Cash difference shown at ${cashPct}%.` : ""} A guide for fair trades — always agree the final deal between yourselves.
+            Values start from RiftCompare&apos;s lowest live price (tap a price to type your own or pick a store).
+            Each side has its own value % for cash settlement. A guide for fair trades — always agree the final deal yourselves.
           </p>
         </div>
       </div>
@@ -236,20 +215,16 @@ export function TradeCalculator() {
   );
 }
 
-function Verdict({ even, diff, fmt, empty }: { even: boolean; diff: number; fmt: (c: number) => string; empty: boolean }) {
-  if (empty) return <span className="chip bg-ink-800 text-slate-400">Add cards to compare</span>;
-  if (even) return <span className="chip bg-brand-500/15 font-bold text-brand-300">✓ Even trade</span>;
-  if (diff > 0)
-    return <span className="chip bg-emerald-500/15 font-bold text-emerald-300">You come out ahead by {fmt(diff)}</span>;
-  return <span className="chip bg-rose-500/15 font-bold text-rose-300">You give {fmt(-diff)} more</span>;
-}
-
 function TradeColumn({
   title,
   subtitle,
   accent,
   list,
-  total,
+  raw,
+  adjusted,
+  pct,
+  onPct,
+  country,
   fmt,
   price,
   overrides,
@@ -263,7 +238,11 @@ function TradeColumn({
   subtitle: string;
   accent: "rose" | "emerald";
   list: TradeCard[];
-  total: number;
+  raw: number;
+  adjusted: number;
+  pct: number;
+  onPct: (pct: number) => void;
+  country: string;
   fmt: (c: number) => string;
   price: (c: TradeCard) => number | null;
   overrides: Record<string, number>;
@@ -274,6 +253,7 @@ function TradeColumn({
   onClear: () => void;
 }) {
   const ring = accent === "rose" ? "border-t-rose-500/50" : "border-t-emerald-500/50";
+  const count = list.reduce((n, c) => n + c.qty, 0);
   return (
     <section className={`card-surface border-t-2 ${ring} p-4`}>
       <div className="mb-3 flex items-center justify-between">
@@ -299,12 +279,12 @@ function TradeColumn({
             const ov = overrides[c.id];
             const unit = ov ?? base; // override beats market price
             return (
-              <li key={c.id} className="flex items-center gap-3 py-2.5">
+              <li key={c.id} className="flex items-start gap-3 py-2.5">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 {c.imageThumbUrl ? (
-                  <img src={c.imageThumbUrl} alt="" className="h-12 w-9 shrink-0 rounded object-cover" />
+                  <img src={c.imageThumbUrl} alt="" className="mt-0.5 h-12 w-9 shrink-0 rounded object-cover" />
                 ) : (
-                  <div className="h-12 w-9 shrink-0 rounded bg-ink-800" />
+                  <div className="mt-0.5 h-12 w-9 shrink-0 rounded bg-ink-800" />
                 )}
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-medium text-white">{cardDisplayName(c.name, c)}</div>
@@ -325,32 +305,152 @@ function TradeColumn({
                       className={`w-14 rounded border bg-ink-900 px-1 py-0.5 text-right text-[11px] outline-none focus:border-brand-500 ${
                         ov != null ? "border-brand-500/60 text-brand-300" : "border-ink-700 text-slate-300"
                       }`}
-                      aria-label="Card value (override)"
-                      title={ov != null ? "Custom value — edit or clear to revert" : "Market value — type to override"}
+                      aria-label="Card value"
+                      title={ov != null ? "Custom value — edit, or pick a store price below" : "Market value — type to override"}
                     />
                     <span>ea</span>
                   </div>
+                  {/* Pick a specific store's price in case the cheapest is wrong. */}
+                  <StorePrices cardId={c.id} country={country} fmt={fmt} onPick={(cents) => onOverride(c.id, cents)} />
                 </div>
-                <div className="flex shrink-0 items-center gap-1.5">
+                <div className="mt-0.5 flex shrink-0 items-center gap-1.5">
                   <button onClick={() => onQty(c.id, -1)} className="grid h-6 w-6 place-items-center rounded-md bg-ink-800 text-slate-300 hover:bg-ink-700" aria-label="Decrease quantity">−</button>
                   <span className="w-5 text-center text-sm font-semibold text-white">{c.qty}</span>
                   <button onClick={() => onQty(c.id, 1)} className="grid h-6 w-6 place-items-center rounded-md bg-ink-800 text-slate-300 hover:bg-ink-700" aria-label="Increase quantity">+</button>
                 </div>
-                <div className="w-16 shrink-0 text-right text-sm font-semibold text-accent">
+                <div className="mt-0.5 w-16 shrink-0 text-right text-sm font-semibold text-accent">
                   {unit != null ? fmt(unit * c.qty) : "—"}
                 </div>
-                <button onClick={() => onRemove(c.id)} className="shrink-0 text-slate-600 hover:text-rose-300" aria-label="Remove">✕</button>
+                <button onClick={() => onRemove(c.id)} className="mt-0.5 shrink-0 text-slate-600 hover:text-rose-300" aria-label="Remove">✕</button>
               </li>
             );
           })}
         </ul>
       )}
 
-      <div className="mt-3 flex items-center justify-between border-t border-ink-700 pt-3">
-        <span className="text-sm text-slate-400">{list.reduce((n, c) => n + c.qty, 0)} card{list.reduce((n, c) => n + c.qty, 0) === 1 ? "" : "s"}</span>
-        <span className="text-lg font-extrabold text-white">{fmt(total)}</span>
+      <div className="mt-3 border-t border-ink-700 pt-3">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-slate-400">{count} card{count === 1 ? "" : "s"}</span>
+          <span className="text-lg font-extrabold text-white">
+            {fmt(raw)}
+            {pct !== 100 && <span className="ml-1 text-sm font-semibold text-accent">→ {fmt(adjusted)}</span>}
+          </span>
+        </div>
+        {/* This side's value % — for cash settlement (e.g. value your cards at 90%). */}
+        {list.length > 0 && (
+          <div className="mt-2 flex items-center gap-2">
+            <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Value %</span>
+            <input
+              type="range"
+              min={1}
+              max={100}
+              value={pct}
+              onChange={(e) => onPct(Number(e.target.value))}
+              className="h-1 flex-1 cursor-pointer accent-brand-500"
+              aria-label={`${title} value percentage`}
+            />
+            <input
+              type="number"
+              min={1}
+              max={100}
+              value={pct}
+              onChange={(e) => {
+                const v = Math.round(Number(e.target.value));
+                if (Number.isFinite(v)) onPct(Math.min(100, Math.max(1, v)));
+              }}
+              onFocus={(e) => e.target.select()}
+              className="w-11 rounded border border-ink-700 bg-ink-900 px-1 py-0.5 text-right text-xs font-bold text-white outline-none focus:border-brand-500"
+              aria-label={`${title} value percentage`}
+            />
+            <span className="text-xs text-slate-400">%</span>
+          </div>
+        )}
       </div>
     </section>
+  );
+}
+
+// Expandable list of a card's in-stock store prices for the current market, so a
+// trader can pick a specific store's price if the auto-cheapest one looks wrong.
+// Picking sets that card's value override.
+function StorePrices({
+  cardId,
+  country,
+  fmt,
+  onPick,
+}: {
+  cardId: string;
+  country: string;
+  fmt: (c: number) => string;
+  onPick: (cents: number) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [rows, setRows] = useState<
+    { retailerName: string; priceCents: number; condition: string | null; isFoil: boolean }[] | null
+  >(null);
+
+  async function toggle() {
+    const next = !open;
+    setOpen(next);
+    if (next && rows == null) {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/card/${cardId}`);
+        const data = await res.json();
+        const list = ((data.retailerPrices ?? []) as any[])
+          .filter((p) => p.inStock && p.country === country)
+          .map((p) => ({
+            retailerName: p.retailerName as string,
+            priceCents: p.priceCents as number,
+            condition: (p.condition ?? null) as string | null,
+            isFoil: !!p.isFoil,
+          }))
+          .sort((a, b) => a.priceCents - b.priceCents);
+        setRows(list);
+      } catch {
+        setRows([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+  }
+
+  return (
+    <div className="mt-0.5">
+      <button type="button" onClick={toggle} className="text-[11px] text-slate-500 hover:text-brand-400">
+        {open ? "hide store prices ▴" : "pick store price ▾"}
+      </button>
+      {open && (
+        <ul className="mt-1 max-h-40 overflow-auto rounded-md border border-ink-700 bg-ink-900">
+          {loading ? (
+            <li className="px-2 py-1 text-[11px] text-slate-500">Loading…</li>
+          ) : !rows || rows.length === 0 ? (
+            <li className="px-2 py-1 text-[11px] text-slate-500">No in-stock store prices for this market.</li>
+          ) : (
+            rows.map((p, i) => (
+              <li key={i}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onPick(p.priceCents);
+                    setOpen(false);
+                  }}
+                  className="flex w-full items-center justify-between gap-2 px-2 py-1 text-left text-[11px] hover:bg-ink-800"
+                >
+                  <span className="truncate text-slate-300">
+                    {p.retailerName}
+                    {p.isFoil ? " · Foil" : ""}
+                    {p.condition ? ` · ${p.condition}` : ""}
+                  </span>
+                  <span className="shrink-0 font-semibold text-accent">{fmt(p.priceCents)}</span>
+                </button>
+              </li>
+            ))
+          )}
+        </ul>
+      )}
+    </div>
   );
 }
 
