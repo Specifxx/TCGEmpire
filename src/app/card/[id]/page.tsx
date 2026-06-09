@@ -19,6 +19,7 @@ import { COUNTRIES, pickPrice } from "@/lib/country";
 import { UK_FALLBACK_RETAILERS, setByCode } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
 import { PriceHistoryChart } from "@/components/PriceHistoryChart";
+import { AiInsight } from "@/components/AiInsight";
 
 // ISR while AU-only; dynamic per-request once NZ mode is enabled (cookie-driven).
 export const revalidate = 180;
@@ -342,9 +343,13 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             </p>
           </div>
 
-          {/* Early-access price-history chart (Shard perk). Renders a locked teaser
-              for non-owners, promoting the loyalty system on every card page. */}
+          {/* Price-history chart — free for everyone. */}
           <PriceHistoryChart cardId={card.id} />
+
+          {/* AI Tips — funny, narrative buy/hold/wait take grounded in the price data. */}
+          <section className="card-surface mt-6 p-5">
+            <AiInsight cardId={card.id} />
+          </section>
 
           {/* In-content ad — below the price table the visitor came for, so it never
               gets between them and the prices. Activates when a slot id is set. */}

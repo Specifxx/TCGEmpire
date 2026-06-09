@@ -37,7 +37,7 @@ const KIND_TITLE: Record<RewardKind, string> = {
   perk: "Feature unlocks",
   experience: "Personalised experiences",
 };
-const KIND_ORDER: RewardKind[] = ["badge", "flair", "perk", "experience"];
+const KIND_ORDER: RewardKind[] = ["badge", "flair", "experience"];
 
 function shard(n: number) {
   return `${SHARD.glyph} ${n.toLocaleString()}`;

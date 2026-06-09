@@ -132,9 +132,6 @@ export const REWARDS: Reward[] = [
   { key: "badge_star", name: "⭐ Star badge", description: "A classic gold star.", cost: 200, kind: "badge", display: "⭐" },
   { key: "badge_crown", name: "👑 Crown badge", description: "For the elite. Gold level and up.", cost: 800, kind: "badge", display: "👑", minLevel: "gold" },
 
-  // Perks — functional unlocks the app checks for.
-  { key: "perk_price_charts", name: "Early access: price charts", description: "Unlock the price-history chart on card pages before everyone else.", cost: 600, kind: "perk", minLevel: "bronze" },
-
   // Experiences — personalised, fulfilled by the team (epal-style).
   { key: "exp_deck_review", name: "Personalised deck review", description: "A RiftCompare expert reviews your deck and emails back tailored feedback.", cost: 1000, kind: "experience", needsEmail: true, minLevel: "silver" },
   { key: "exp_shoutout", name: "Community shout-out", description: "Get featured to the RiftCompare community.", cost: 800, kind: "experience", needsEmail: true },

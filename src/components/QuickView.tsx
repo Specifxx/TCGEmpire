@@ -12,6 +12,9 @@ import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
 import { affiliateUrl } from "@/lib/affiliate";
 import { OutboundLink } from "./OutboundLink";
 import { useCountry } from "./CountryProvider";
+import { PriceChart } from "./PriceChart";
+import { AiInsight } from "./AiInsight";
+import type { PricePoint } from "@/lib/price-history";
 
 interface RetailerPrice {
   id: string;
@@ -74,6 +77,7 @@ export function QuickViewProvider({ children }: { children: React.ReactNode }) {
 
 function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => void }) {
   const [prices, setPrices] = useState<RetailerPrice[] | null>(null);
+  const [history, setHistory] = useState<PricePoint[] | null>(null);
   const href = cardHref(card);
   const { country, fmt, price } = useCountry();
   const lowest = price(card);
@@ -88,8 +92,8 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
     fetch(`/api/card/${ref}/view`, { method: "POST", keepalive: true }).catch(() => {});
     fetch(`/api/card/${ref}`)
       .then((r) => r.json())
-      .then((d) => { if (alive) setPrices(d.retailerPrices ?? []); })
-      .catch(() => { if (alive) setPrices([]); });
+      .then((d) => { if (alive) { setPrices(d.retailerPrices ?? []); setHistory(d.priceHistory ?? []); } })
+      .catch(() => { if (alive) { setPrices([]); setHistory([]); } });
     return () => {
       alive = false;
       document.body.style.overflow = "";
@@ -212,6 +216,21 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                   See all {inStock.length} stores →
                 </a>
               )}
+            </div>
+
+            {/* Price history — free for everyone, right in the preview */}
+            {history && history.length >= 2 && (
+              <div className="mt-5 border-t border-ink-800 pt-4">
+                <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  Price history <span className="font-normal normal-case text-slate-600">· AU</span>
+                </div>
+                <PriceChart points={history} currency="AUD" compact />
+              </div>
+            )}
+
+            {/* AI Tips — funny buy/hold/wait take */}
+            <div className="mt-4">
+              <AiInsight cardId={card.id} compact />
             </div>
           </div>
         </div>

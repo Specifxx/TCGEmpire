@@ -4,6 +4,8 @@ import { prisma } from "@/lib/db";
 import { CardTile } from "@/components/CardTile";
 import { CountryHeroToggle } from "@/components/CountryHeroToggle";
 import { getPopularCards } from "@/lib/cheapest-cards";
+import { getPriceMovers } from "@/lib/price-history";
+import { PriceWatch } from "@/components/PriceWatch";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES, priceField, type CountryInfo } from "@/lib/country";
 import { SETS, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
@@ -65,13 +67,15 @@ export default async function HomePage() {
   const ebay = ebayLabel(country);
   const faqs = faqsFor(info, ebay);
   const field = priceField(country);
-  const [totalCards, pricedCards, popularCards, storeGroups] = await Promise.all([
+  const [totalCards, pricedCards, popularCards, storeGroups, movers] = await Promise.all([
     prisma.card.count(),
     prisma.card.count({ where: { [field]: { not: null } } }),
     // Most-searched singles (ties → more expensive card) — the cards people most want.
     getPopularCards(12, country),
     // Stores serving the selected market (eBay excluded from the count).
     prisma.retailerPrice.groupBy({ by: ["retailer"], where: { country, NOT: { retailer: { startsWith: "ebay" } } } }),
+    // This week's biggest price movers (AU market) for the Price Watch panel.
+    getPriceMovers(),
   ]);
   const storeCount = storeGroups.length;
   const storeWord = storeCount === 1 ? "store" : "stores";
@@ -130,6 +134,9 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* Price Watch — this week's movers (AU) */}
+      <PriceWatch movers={movers} />
 
       {/* Browse by set */}
       <section>
