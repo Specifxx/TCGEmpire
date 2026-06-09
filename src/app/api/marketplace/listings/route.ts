@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { validateListingInput, importMarketplaceListings } from "@/lib/marketplace";
+import { validateListingInput, importMarketplaceListings, MARKETPLACE_COUNTRIES, CURRENCY_BY_COUNTRY } from "@/lib/marketplace";
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +36,11 @@ export async function GET(req: Request) {
   return NextResponse.json({ listings });
 }
 
-const schema = z.object({ cardId: z.string().min(1) });
+const schema = z.object({
+  cardId: z.string().min(1),
+  // Seller chooses which market this listing serves; defaults to their shop's market.
+  country: z.enum(MARKETPLACE_COUNTRIES).optional(),
+});
 
 export async function POST(req: Request) {
   const user = await getCurrentUser();
@@ -55,6 +59,10 @@ export async function POST(req: Request) {
   const card = await prisma.card.findUnique({ where: { id: base.data.cardId }, select: { id: true } });
   if (!card) return NextResponse.json({ error: "Card not found" }, { status: 404 });
 
+  // Per-listing region (defaults to the shop's market); currency follows the region.
+  const country = base.data.country ?? profile.country;
+  const currency = CURRENCY_BY_COUNTRY[country] ?? profile.currency;
+
   const listing = await prisma.marketplaceListing.create({
     data: {
       sellerId: user.id,
@@ -63,8 +71,8 @@ export async function POST(req: Request) {
       isFoil: v.isFoil,
       priceCents: v.priceCents,
       quantity: v.quantity,
-      currency: profile.currency,
-      country: profile.country,
+      currency,
+      country,
       status: "ACTIVE",
     },
   });

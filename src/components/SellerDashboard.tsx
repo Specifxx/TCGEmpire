@@ -44,6 +44,7 @@ interface Listing {
   priceCents: number;
   quantity: number;
   currency: string;
+  country: string;
   status: string;
   card: SearchCard;
 }
@@ -187,8 +188,10 @@ function AddListing({ country, currency, onAdded }: { country: Country; currency
   const [isFoil, setIsFoil] = useState(false);
   const [price, setPrice] = useState("");
   const [qty, setQty] = useState("1");
+  const [region, setRegion] = useState<Country>(country);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const cur = CURRENCY_BY_COUNTRY[region];
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -204,6 +207,7 @@ function AddListing({ country, currency, onAdded }: { country: Country; currency
         isFoil,
         priceCents: Math.round(parseFloat(price || "0") * 100),
         quantity: parseInt(qty || "1", 10),
+        country: region,
       }),
     });
     const data = await res.json();
@@ -220,7 +224,7 @@ function AddListing({ country, currency, onAdded }: { country: Country; currency
     }
   }
 
-  const cheapest = card ? lowestFor(card, country) : null;
+  const cheapest = card ? lowestFor(card, region) : null;
 
   return (
     <form onSubmit={submit} className="card-surface p-5">
@@ -235,14 +239,20 @@ function AddListing({ country, currency, onAdded }: { country: Country; currency
             <div className="truncate text-sm font-semibold text-white">{cardDisplayName(card.name, card)}</div>
             <div className="text-xs text-slate-500">
               {card.setCode} {card.collectorNumber}
-              {cheapest != null && <> · current cheapest <span className="text-accent">{formatMoney(cheapest, currency)}</span></>}
+              {cheapest != null && <> · current cheapest in {region} <span className="text-accent">{formatMoney(cheapest, cur)}</span></>}
             </div>
           </div>
           <button type="button" onClick={() => setCard(null)} className="text-xs text-slate-500 hover:text-rose-300">change</button>
         </div>
       )}
 
-      <div className="mt-3 grid gap-3 sm:grid-cols-4">
+      <div className="mt-3 grid gap-3 sm:grid-cols-5">
+        <label className="text-sm">
+          <span className="mb-1 block text-slate-400">Region</span>
+          <select value={region} onChange={(e) => setRegion(e.target.value as Country)} className="input">
+            {(Object.keys(COUNTRY_LABEL) as Country[]).map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </label>
         <label className="text-sm">
           <span className="mb-1 block text-slate-400">Condition</span>
           <select value={condition} onChange={(e) => setCondition(e.target.value)} className="input">
@@ -250,7 +260,7 @@ function AddListing({ country, currency, onAdded }: { country: Country; currency
           </select>
         </label>
         <label className="text-sm">
-          <span className="mb-1 block text-slate-400">Price ({currency})</span>
+          <span className="mb-1 block text-slate-400">Price ({cur})</span>
           <input type="number" min={0} step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} required className="input" />
         </label>
         <label className="text-sm">
@@ -311,15 +321,6 @@ function CardSearch({ onPick }: { onPick: (c: SearchCard) => void }) {
 }
 
 function MyListings({ listings, onChange }: { listings: Listing[]; onChange: () => void }) {
-  async function patch(id: string, body: Record<string, unknown>) {
-    await fetch(`/api/marketplace/listings/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    onChange();
-  }
-  async function remove(id: string) {
-    await fetch(`/api/marketplace/listings/${id}`, { method: "DELETE" });
-    onChange();
-  }
-
   return (
     <div className="card-surface p-5">
       <h2 className="mb-3 font-bold text-white">Your listings ({listings.length})</h2>
@@ -327,28 +328,74 @@ function MyListings({ listings, onChange }: { listings: Listing[]; onChange: () 
         <p className="text-sm text-slate-500">No listings yet — list a card above.</p>
       ) : (
         <ul className="divide-y divide-ink-800">
-          {listings.map((l) => (
-            <li key={l.id} className="flex flex-wrap items-center gap-3 py-2.5">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              {l.card.imageThumbUrl ? <img src={l.card.imageThumbUrl} alt="" className="h-12 w-9 rounded object-cover" /> : <div className="h-12 w-9 rounded bg-ink-800" />}
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-medium text-white">{cardDisplayName(l.card.name, l.card)}</div>
-                <div className="text-xs text-slate-500">{l.card.setCode} {l.card.collectorNumber} · {l.condition}{l.isFoil ? " · Foil" : ""} · <span className={l.status === "ACTIVE" ? "text-brand-300" : "text-slate-500"}>{l.status.toLowerCase()}</span></div>
-              </div>
-              <span className="text-sm font-bold text-accent">{formatMoney(l.priceCents, l.currency)}</span>
-              <span className="text-xs text-slate-500">×{l.quantity}</span>
-              <div className="flex items-center gap-1.5">
-                {l.status === "ACTIVE" ? (
-                  <button onClick={() => patch(l.id, { status: "PAUSED" })} className="rounded bg-ink-800 px-2 py-1 text-[11px] text-slate-300 hover:bg-ink-700">Pause</button>
-                ) : l.status === "PAUSED" ? (
-                  <button onClick={() => patch(l.id, { status: "ACTIVE" })} className="rounded bg-ink-800 px-2 py-1 text-[11px] text-brand-300 hover:bg-ink-700">Resume</button>
-                ) : null}
-                <button onClick={() => remove(l.id)} className="rounded bg-ink-800 px-2 py-1 text-[11px] text-rose-300 hover:bg-ink-700">Remove</button>
-              </div>
-            </li>
-          ))}
+          {listings.map((l) => <ListingRow key={l.id} l={l} onChange={onChange} />)}
         </ul>
       )}
     </div>
+  );
+}
+
+function ListingRow({ l, onChange }: { l: Listing; onChange: () => void }) {
+  const [editing, setEditing] = useState(false);
+  const [price, setPrice] = useState((l.priceCents / 100).toFixed(2));
+  const [qty, setQty] = useState(String(l.quantity));
+  const [region, setRegion] = useState<Country>((l.country as Country) ?? "AU");
+  const [busy, setBusy] = useState(false);
+
+  async function patch(body: Record<string, unknown>) {
+    setBusy(true);
+    await fetch(`/api/marketplace/listings/${l.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    setBusy(false);
+    setEditing(false);
+    onChange();
+  }
+  async function remove() {
+    if (typeof window !== "undefined" && !window.confirm("Remove this listing?")) return;
+    await fetch(`/api/marketplace/listings/${l.id}`, { method: "DELETE" });
+    onChange();
+  }
+  function save() {
+    void patch({ priceCents: Math.round(parseFloat(price || "0") * 100), quantity: parseInt(qty || "0", 10), country: region });
+  }
+
+  return (
+    <li className="flex flex-wrap items-center gap-3 py-2.5">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      {l.card.imageThumbUrl ? <img src={l.card.imageThumbUrl} alt="" className="h-12 w-9 rounded object-cover" /> : <div className="h-12 w-9 rounded bg-ink-800" />}
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-sm font-medium text-white">{cardDisplayName(l.card.name, l.card)}</div>
+        <div className="text-xs text-slate-500">
+          {l.card.setCode} {l.card.collectorNumber} · {l.condition}{l.isFoil ? " · Foil" : ""} · {l.country} ·{" "}
+          <span className={l.status === "ACTIVE" ? "text-brand-300" : "text-slate-500"}>{l.status.toLowerCase()}</span>
+        </div>
+      </div>
+
+      {editing ? (
+        <>
+          <select value={region} onChange={(e) => setRegion(e.target.value as Country)} className="input w-16 py-1 text-xs" aria-label="Region">
+            {(Object.keys(COUNTRY_LABEL) as Country[]).map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <span className="text-xs text-slate-500">{CURRENCY_BY_COUNTRY[region]}</span>
+          <input type="number" min={0} step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} className="input w-20 py-1 text-sm" aria-label="Price" />
+          <input type="number" min={0} max={999} value={qty} onChange={(e) => setQty(e.target.value)} className="input w-14 py-1 text-sm" aria-label="Quantity" />
+          <button onClick={save} disabled={busy} className="rounded bg-brand-500/20 px-2 py-1 text-[11px] font-semibold text-brand-300 hover:bg-brand-500/30">{busy ? "…" : "Save"}</button>
+          <button onClick={() => setEditing(false)} className="rounded bg-ink-800 px-2 py-1 text-[11px] text-slate-400 hover:bg-ink-700">Cancel</button>
+        </>
+      ) : (
+        <>
+          <span className="text-sm font-bold text-accent">{formatMoney(l.priceCents, l.currency)}</span>
+          <span className="text-xs text-slate-500">×{l.quantity}</span>
+          <div className="flex items-center gap-1.5">
+            <button onClick={() => setEditing(true)} className="rounded bg-ink-800 px-2 py-1 text-[11px] text-slate-200 hover:bg-ink-700">Edit</button>
+            {l.status === "ACTIVE" ? (
+              <button onClick={() => patch({ status: "PAUSED" })} className="rounded bg-ink-800 px-2 py-1 text-[11px] text-slate-300 hover:bg-ink-700">Pause</button>
+            ) : l.status === "PAUSED" ? (
+              <button onClick={() => patch({ status: "ACTIVE" })} className="rounded bg-ink-800 px-2 py-1 text-[11px] text-brand-300 hover:bg-ink-700">Resume</button>
+            ) : null}
+            <button onClick={remove} className="rounded bg-ink-800 px-2 py-1 text-[11px] text-rose-300 hover:bg-ink-700">Remove</button>
+          </div>
+        </>
+      )}
+    </li>
   );
 }

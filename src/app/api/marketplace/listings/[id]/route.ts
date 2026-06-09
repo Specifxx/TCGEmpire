@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { importMarketplaceListings } from "@/lib/marketplace";
+import { importMarketplaceListings, MARKETPLACE_COUNTRIES, CURRENCY_BY_COUNTRY } from "@/lib/marketplace";
 
 export const dynamic = "force-dynamic";
 
 const patchSchema = z.object({
   priceCents: z.number().int().min(1).max(100_000_00).optional(),
   quantity: z.number().int().min(0).max(999).optional(),
+  country: z.enum(MARKETPLACE_COUNTRIES).optional(),
   status: z.enum(["ACTIVE", "PAUSED"]).optional(),
 });
 
@@ -33,6 +34,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     data: {
       ...(d.priceCents != null ? { priceCents: d.priceCents } : {}),
       ...(d.quantity != null ? { quantity: d.quantity } : {}),
+      ...(d.country ? { country: d.country, currency: CURRENCY_BY_COUNTRY[d.country] } : {}),
       status,
     },
   });
