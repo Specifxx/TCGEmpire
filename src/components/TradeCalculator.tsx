@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useCountry } from "./CountryProvider";
 import { cardDisplayName } from "@/lib/card-name";
+import { tradeGremlin, type TradeTone } from "@/lib/trade-gremlin";
 
 // A card added to one side of a trade. We store the full set of market prices so
 // the totals re-compute live when the visitor switches country/currency.
@@ -30,10 +31,21 @@ const STORAGE_KEY = "rc_trade";
 // What /api/search returns per card (a superset of what we keep).
 type SearchResult = Omit<TradeCard, "qty">;
 
+// Visual styling per gremlin verdict tone.
+const TRADE_TONE: Record<TradeTone, { ring: string }> = {
+  robbed: { ring: "border-rose-500/40 bg-rose-500/5" },
+  winning: { ring: "border-brand-500/40 bg-brand-500/5" },
+  fair: { ring: "border-ink-600 bg-ink-950/40" },
+  donation: { ring: "border-ink-700 bg-ink-950/40" },
+};
+
 export function TradeCalculator() {
-  const { fmt, price, country } = useCountry();
+  const { fmt, price, country, currency } = useCountry();
   const [yours, setYours] = useState<TradeCard[]>([]);
   const [theirs, setTheirs] = useState<TradeCard[]>([]);
+  // The gremlin's spicier on-demand take (LLM if a key is set, else the rule line).
+  const [roast, setRoast] = useState<{ text: string; source: "ai" | "rules" } | null>(null);
+  const [roasting, setRoasting] = useState(false);
   // Each side has its OWN value % — so each player can discount their cards (e.g. value
   // them at 90%) independently. The cash difference is then the gap between the two
   // adjusted totals.
@@ -122,6 +134,35 @@ export function TradeCalculator() {
   const hasCards = yours.length + theirs.length > 0;
   const unpriced = sideUnpriced(yours) + sideUnpriced(theirs);
 
+  // Live gremlin fairness verdict (free, instant). adjYours = you give; adjTheirs = you get.
+  const gremlin = hasCards ? tradeGremlin(adjYours, adjTheirs, currency) : null;
+
+  // The on-demand roast is a snapshot — clear it whenever the trade changes.
+  useEffect(() => { setRoast(null); }, [adjYours, adjTheirs]);
+
+  async function getRoast() {
+    setRoasting(true);
+    try {
+      const res = await fetch("/api/trade-roast", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          giveCents: adjYours,
+          getCents: adjTheirs,
+          currency,
+          yours: yours.map((c) => `${c.name}${c.qty > 1 ? ` x${c.qty}` : ""}`),
+          theirs: theirs.map((c) => `${c.name}${c.qty > 1 ? ` x${c.qty}` : ""}`),
+        }),
+      });
+      const d = await res.json();
+      if (d.text) setRoast({ text: d.text, source: d.source ?? "rules" });
+    } catch {
+      /* ignore — the live line is still shown */
+    } finally {
+      setRoasting(false);
+    }
+  }
+
   return (
     <div>
       <div className="grid gap-4 md:grid-cols-2">
@@ -205,6 +246,30 @@ export function TradeCalculator() {
               {unpriced} card{unpriced === 1 ? "" : "s"} have no price — type a value or pick a store price.
             </p>
           )}
+
+          {/* Trade Gremlin — funny live fairness verdict; tap to get a spicier roast */}
+          {gremlin && (
+            <div className={`mt-3 rounded-xl border p-3 ${TRADE_TONE[gremlin.tone].ring}`}>
+              <div className="mb-1 flex items-center gap-2">
+                <span className="text-base">🤖</span>
+                <span className="text-[11px] font-bold uppercase tracking-wide text-slate-300">Trade Gremlin</span>
+                {roast?.source === "ai" ? (
+                  <span className="chip bg-fuchsia-500/15 text-[10px] font-semibold uppercase tracking-wide text-fuchsia-300">✨ Live AI</span>
+                ) : (
+                  <span className="chip bg-brand-500/10 text-[10px] font-semibold uppercase tracking-wide text-brand-300">Beta</span>
+                )}
+                <button
+                  onClick={getRoast}
+                  disabled={roasting}
+                  className="ml-auto rounded-md bg-ink-800 px-2 py-1 text-[11px] font-semibold text-slate-200 hover:bg-ink-700 disabled:opacity-60"
+                >
+                  {roasting ? "Cooking… 🔥" : "🔮 Roast this trade"}
+                </button>
+              </div>
+              <p className="text-sm leading-relaxed text-slate-100">{roast?.text ?? gremlin.line}</p>
+            </div>
+          )}
+
           <p className="mt-2 text-[11px] text-slate-600">
             Values start from RiftCompare&apos;s lowest live price (tap a price to type your own or pick a store).
             Each side has its own value % for cash settlement. A guide for fair trades — always agree the final deal yourselves.
