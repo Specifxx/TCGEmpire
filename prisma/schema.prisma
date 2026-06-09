@@ -116,6 +116,7 @@ model Card {
   imageUrl           String? // full-resolution
   imageThumbUrl      String? // smaller webp for grids
   blurDataUrl        String? // tiny base64 placeholder
+  imageHash          String? // 64-bit perceptual dHash (hex) of the card image, for the camera scanner
   // Reference / market price in AUD cents, used as a default suggested price.
   marketPriceCents   Int       @default(0)
   // Lowest live retailer price across all sources, set by the price importer.

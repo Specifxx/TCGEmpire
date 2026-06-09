@@ -4,37 +4,22 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cardHref } from "@/lib/card-url";
 import { cardDisplayName } from "@/lib/card-name";
+import { DHASH_W, DHASH_H, dHashFromGray, luma, hammingHex } from "@/lib/image-hash";
 import { useQuickView } from "./QuickView";
 import { useCountry } from "./CountryProvider";
 import type { CardTileData } from "./CardTile";
 
 type Phase = "idle" | "starting" | "live" | "scanning" | "results" | "denied" | "error";
+type CardHash = { id: string; h: string };
 
-// Clean raw OCR text into a search-friendly card-name guess: letters/digits/spaces
-// only, collapse whitespace, drop tiny noise tokens.
-function cleanOcr(text: string): string[] {
-  return text
-    .split("\n")
-    .map((l) => l.replace(/[^A-Za-z0-9' ]+/g, " ").replace(/\s+/g, " ").trim())
-    .filter((l) => l.replace(/[^A-Za-z]/g, "").length >= 3)
-    // Longest lines first — the card name is usually the biggest readable text.
-    .sort((a, b) => b.length - a.length)
-    .slice(0, 4);
-}
-
-// From a cleaned line, produce progressively shorter query candidates so a noisy
-// tail ("...Augment Zaun") still matches on the leading words.
-function candidatesFrom(lines: string[]): string[] {
-  const out: string[] = [];
-  for (const line of lines) {
-    const words = line.split(" ").filter(Boolean);
-    for (let n = Math.min(words.length, 4); n >= 1; n--) {
-      const q = words.slice(0, n).join(" ");
-      if (q.length >= 3 && !out.includes(q)) out.push(q);
-    }
-  }
-  return out.slice(0, 10);
-}
+// Card aspect (standard TCG ~63×88mm). The guide outline and the capture crop both
+// use this so what the user frames is exactly what we hash.
+const CARD_AR_H_OVER_W = 88 / 63; // ≈ 1.397
+// Guide box height as a fraction of the viewport height.
+const GUIDE_H_FRAC = 0.82;
+// Max Hamming distance (of 64 bits) we'll surface as a candidate.
+const MATCH_THRESHOLD = 20;
+const STRONG_MATCH = 12;
 
 export function CardScanner() {
   const { open: openQuickView } = useQuickView();
@@ -42,10 +27,38 @@ export function CardScanner() {
   const [phase, setPhase] = useState<Phase>("idle");
   const [status, setStatus] = useState("");
   const [results, setResults] = useState<CardTileData[]>([]);
-  const [lastText, setLastText] = useState("");
+  const [bestDist, setBestDist] = useState<number | null>(null);
   const [manual, setManual] = useState("");
-  // Per-result add-to-collection state.
   const [added, setAdded] = useState<Record<string, "saving" | "done" | "signin" | "error">>({});
+
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  // Card-image hashes, fetched once and reused for every scan.
+  const hashesRef = useRef<CardHash[] | null>(null);
+
+  const stopCamera = useCallback(() => {
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    return () => stopCamera();
+  }, [stopCamera]);
+
+  // Warm the hash index as soon as the page opens so the first scan is instant.
+  useEffect(() => {
+    fetch("/api/scan/hashes")
+      .then((r) => (r.ok ? r.json() : { hashes: [] }))
+      .then((d) => { hashesRef.current = d.hashes ?? []; })
+      .catch(() => { hashesRef.current = []; });
+  }, []);
+
+  async function ensureHashes(): Promise<CardHash[]> {
+    if (hashesRef.current) return hashesRef.current;
+    const d = await fetch("/api/scan/hashes").then((r) => r.json()).catch(() => ({ hashes: [] }));
+    hashesRef.current = d.hashes ?? [];
+    return hashesRef.current!;
+  }
 
   async function addToCollection(cardId: string) {
     setAdded((s) => ({ ...s, [cardId]: "saving" }));
@@ -63,23 +76,6 @@ export function CardScanner() {
     }
   }
 
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const workerRef = useRef<any>(null);
-
-  const stopCamera = useCallback(() => {
-    streamRef.current?.getTracks().forEach((t) => t.stop());
-    streamRef.current = null;
-  }, []);
-
-  // Tidy up camera + OCR worker on unmount.
-  useEffect(() => {
-    return () => {
-      stopCamera();
-      workerRef.current?.terminate?.().catch?.(() => {});
-    };
-  }, [stopCamera]);
-
   const startCamera = useCallback(async () => {
     if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
       setPhase("error");
@@ -90,7 +86,7 @@ export function CardScanner() {
     setStatus("");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } },
+        video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } },
         audio: false,
       });
       streamRef.current = stream;
@@ -100,90 +96,102 @@ export function CardScanner() {
       }
       setPhase("live");
     } catch (e: any) {
-      if (e?.name === "NotAllowedError" || e?.name === "SecurityError") {
-        setPhase("denied");
-      } else {
+      if (e?.name === "NotAllowedError" || e?.name === "SecurityError") setPhase("denied");
+      else {
         setPhase("error");
         setStatus("Couldn't start the camera. You can still search by name below.");
       }
     }
   }, []);
 
-  async function search(queries: string[]): Promise<CardTileData[]> {
-    for (const q of queries) {
-      try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
-        const data = await res.json();
-        if (Array.isArray(data.results) && data.results.length) return data.results as CardTileData[];
-      } catch {
-        /* ignore and try the next candidate */
-      }
-    }
-    return [];
+  // Hydrate matched card ids into full tile data (for prices + quick view).
+  async function hydrate(ids: string[]): Promise<CardTileData[]> {
+    if (!ids.length) return [];
+    const d = await fetch(`/api/cards?ids=${ids.join(",")}`).then((r) => r.json()).catch(() => ({ cards: [] }));
+    return (d.cards ?? []) as CardTileData[];
   }
 
+  // Compute the dHash of the framed card region and find nearest cards.
   const scan = useCallback(async () => {
     const video = videoRef.current;
     if (!video || !video.videoWidth) return;
     setPhase("scanning");
-    setStatus("Reading the card…");
+    setStatus("Matching card…");
     setResults([]);
+    setBestDist(null);
 
-    // Capture the guide strip (the card-name band): a wide, short region centred
-    // in the frame. Cropping to the name area massively improves OCR accuracy.
+    // Map the on-screen guide box (centred, card-shaped) to the video's native
+    // pixels, accounting for object-cover cropping, then crop exactly that region.
+    const cw = video.clientWidth;
+    const ch = video.clientHeight;
     const vw = video.videoWidth;
     const vh = video.videoHeight;
-    const cropW = Math.round(vw * 0.86);
-    const cropH = Math.round(vh * 0.16);
-    const cropX = Math.round((vw - cropW) / 2);
-    const cropY = Math.round(vh * 0.16);
+    const scale = Math.max(cw / vw, ch / vh); // object-cover
+    const offX = (vw * scale - cw) / 2;
+    const offY = (vh * scale - ch) / 2;
 
-    // Upscale the crop ~2x for sharper glyphs.
-    const scale = 2;
+    const gh = GUIDE_H_FRAC * ch;
+    const gw = gh / CARD_AR_H_OVER_W;
+    const gx = (cw - gw) / 2;
+    const gy = (ch - gh) / 2;
+    const sx = (gx + offX) / scale;
+    const sy = (gy + offY) / scale;
+    const sw = gw / scale;
+    const sh = gh / scale;
+
+    // Downscale the crop straight to the dHash grid (single step, mirroring the
+    // server-side Jimp resize so the hashes are comparable).
     const canvas = document.createElement("canvas");
-    canvas.width = cropW * scale;
-    canvas.height = cropH * scale;
-    const ctx = canvas.getContext("2d");
+    canvas.width = DHASH_W;
+    canvas.height = DHASH_H;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
     if (!ctx) return;
     ctx.imageSmoothingEnabled = true;
-    ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, DHASH_W, DHASH_H);
+    const { data } = ctx.getImageData(0, 0, DHASH_W, DHASH_H);
+    const gray: number[] = [];
+    for (let i = 0; i < data.length; i += 4) gray.push(luma(data[i], data[i + 1], data[i + 2]));
+    const hash = dHashFromGray(gray);
 
-    try {
-      setStatus("Loading the scanner (first run downloads ~5 MB)…");
-      if (!workerRef.current) {
-        const { createWorker } = await import("tesseract.js");
-        workerRef.current = await createWorker("eng");
-      }
-      setStatus("Reading the card…");
-      const { data } = await workerRef.current.recognize(canvas);
-      const text: string = data?.text ?? "";
-      setLastText(text.trim());
-
-      const lines = cleanOcr(text);
-      const queries = candidatesFrom(lines);
-      if (!queries.length) {
-        setPhase("results");
-        setStatus("Couldn't read the card name. Try again — fill the box with the card's title.");
-        return;
-      }
-      const found = await search(queries);
-      setResults(found);
+    const hashes = await ensureHashes();
+    if (!hashes.length) {
       setPhase("results");
-      setStatus(found.length ? "" : "No match found. Try again or search by name below.");
-    } catch (e) {
-      setPhase("results");
-      setStatus("Scan failed. Try again, or search by name below.");
+      setStatus("The scanner index isn't ready yet. Please try again shortly, or search by name below.");
+      return;
     }
+
+    // Nearest neighbours by Hamming distance.
+    const ranked = hashes
+      .map((c) => ({ id: c.id, d: hammingHex(hash, c.h) }))
+      .sort((a, b) => a.d - b.d);
+    const best = ranked[0]?.d ?? 64;
+    setBestDist(best);
+
+    const top = ranked.filter((r) => r.d <= MATCH_THRESHOLD).slice(0, 6);
+    if (!top.length) {
+      setPhase("results");
+      setStatus("No confident match. Fill the frame with the whole card, avoid glare, and try again — or search by name below.");
+      return;
+    }
+    const cards = await hydrate(top.map((t) => t.id));
+    setResults(cards);
+    setPhase("results");
+    setStatus(best <= STRONG_MATCH ? "" : "Best guesses below — if none are right, reframe and rescan.");
   }, []);
 
-  async function manualSearch(e: React.FormEvent) {
+  async function searchByName(e: React.FormEvent) {
     e.preventDefault();
     const q = manual.trim();
     if (q.length < 2) return;
     setStatus("Searching…");
-    const found = await search([q]);
-    setResults(found);
-    setStatus(found.length ? "" : "No match found.");
+    try {
+      const d = await fetch(`/api/search?q=${encodeURIComponent(q)}`).then((r) => r.json());
+      setResults((d.results ?? []) as CardTileData[]);
+      setStatus(d.results?.length ? "" : "No match found.");
+      setBestDist(null);
+    } catch {
+      setStatus("Search failed.");
+    }
   }
 
   return (
@@ -194,48 +202,49 @@ export function CardScanner() {
           <span className="chip bg-brand-500/15 text-[11px] font-bold uppercase tracking-wide text-brand-300">Beta</span>
         </div>
         <p className="mt-1 text-sm text-slate-400">
-          Point your camera at a Riftbound card&apos;s name and we&apos;ll find it in the database — with live prices.
+          Line a Riftbound card up inside the frame and we&apos;ll match it against the database by its artwork — with live prices.
         </p>
       </div>
 
       <div className="card-surface overflow-hidden">
-        {/* Camera viewport */}
-        <div className="relative aspect-[4/3] w-full bg-ink-950">
+        <div className="relative aspect-[3/4] w-full bg-ink-950 sm:aspect-[4/3]">
           {/* Kept mounted & never display:none — iOS Safari refuses to attach/play a
               hidden <video>. Non-live states are covered by the opaque overlay below. */}
-          <video
-            ref={videoRef}
-            playsInline
-            autoPlay
-            muted
-            className="h-full w-full object-cover"
-          />
+          <video ref={videoRef} playsInline autoPlay muted className="h-full w-full object-cover" />
 
-          {/* Guide frame — line up the card NAME inside this box */}
+          {/* Full-card guide outline — frame the WHOLE card inside it */}
           {(phase === "live" || phase === "scanning") && (
-            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-start">
-              <div className="mt-[16%] h-[16%] w-[86%] rounded-lg border-2 border-brand-400/90 shadow-[0_0_0_2000px_rgba(0,0,0,0.35)]" />
-              <span className="mt-2 rounded bg-black/60 px-2 py-0.5 text-[11px] font-medium text-white">
-                Line up the card name in the box
+            <div className="pointer-events-none absolute inset-0 grid place-items-center">
+              <div
+                className="relative rounded-xl border-2 border-brand-400 shadow-[0_0_0_2000px_rgba(0,0,0,0.45)]"
+                style={{ height: `${GUIDE_H_FRAC * 100}%`, aspectRatio: `63 / 88` }}
+              >
+                {/* corner ticks */}
+                <span className="absolute -left-0.5 -top-0.5 h-5 w-5 rounded-tl-xl border-l-4 border-t-4 border-brand-300" />
+                <span className="absolute -right-0.5 -top-0.5 h-5 w-5 rounded-tr-xl border-r-4 border-t-4 border-brand-300" />
+                <span className="absolute -bottom-0.5 -left-0.5 h-5 w-5 rounded-bl-xl border-b-4 border-l-4 border-brand-300" />
+                <span className="absolute -bottom-0.5 -right-0.5 h-5 w-5 rounded-br-xl border-b-4 border-r-4 border-brand-300" />
+              </div>
+              <span className="absolute bottom-3 rounded bg-black/65 px-2.5 py-1 text-xs font-medium text-white">
+                Fit the whole card inside the frame
               </span>
             </div>
           )}
 
-          {/* Idle / permission / error states — opaque so they hide the video feed */}
           {phase !== "live" && phase !== "scanning" && (
             <div className="absolute inset-0 grid place-items-center bg-ink-950 p-6 text-center">
               {phase === "idle" && (
                 <div>
                   <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-ink-900 text-2xl">📷</div>
                   <button onClick={startCamera} className="btn-primary">Start camera</button>
-                  <p className="mt-3 text-xs text-slate-500">We never upload your photos — scanning runs on your device.</p>
+                  <p className="mt-3 text-xs text-slate-500">Matching runs on your device — your camera images never leave your phone.</p>
                 </div>
               )}
               {phase === "starting" && <p className="text-sm text-slate-400">Starting camera…</p>}
               {phase === "denied" && (
                 <div>
                   <p className="text-sm text-slate-300">Camera permission was blocked.</p>
-                  <p className="mt-1 text-xs text-slate-500">Allow camera access in your browser settings, then try again — or search by name below.</p>
+                  <p className="mt-1 text-xs text-slate-500">Allow camera access for this site in your browser settings, then try again — or search by name below.</p>
                   <button onClick={startCamera} className="btn-ghost mt-3 text-sm">Try again</button>
                 </div>
               )}
@@ -250,32 +259,23 @@ export function CardScanner() {
           )}
         </div>
 
-        {/* Controls */}
         {(phase === "live" || phase === "scanning") && (
           <div className="flex items-center justify-center gap-3 border-t border-ink-800 p-3">
             <button onClick={scan} disabled={phase === "scanning"} className="btn-primary min-w-40">
-              {phase === "scanning" ? "Scanning…" : "Scan card"}
+              {phase === "scanning" ? "Matching…" : "Scan card"}
             </button>
-            <button
-              onClick={() => {
-                stopCamera();
-                setPhase("idle");
-              }}
-              className="btn-ghost text-sm"
-            >
-              Stop
-            </button>
+            <button onClick={() => { stopCamera(); setPhase("idle"); }} className="btn-ghost text-sm">Stop</button>
           </div>
         )}
       </div>
 
-      {/* Status line */}
       {status && phase !== "error" && <p className="mt-3 text-center text-sm text-slate-400">{status}</p>}
 
-      {/* Results */}
       {results.length > 0 && (
         <div className="mt-4">
-          <h2 className="mb-2 text-sm font-semibold text-slate-300">Matches</h2>
+          <h2 className="mb-2 text-sm font-semibold text-slate-300">
+            {bestDist != null && bestDist <= STRONG_MATCH ? "Match" : "Closest matches"}
+          </h2>
           <ul className="card-surface divide-y divide-ink-800 overflow-hidden">
             {results.map((r) => {
               const state = added[r.id];
@@ -326,8 +326,8 @@ export function CardScanner() {
       )}
 
       {/* Manual fallback search */}
-      <form onSubmit={manualSearch} className="mt-4">
-        <label className="mb-1 block text-xs font-medium text-slate-500">Scanner struggling? Search by name</label>
+      <form onSubmit={searchByName} className="mt-4">
+        <label className="mb-1 block text-xs font-medium text-slate-500">Can&apos;t get a match? Search by name</label>
         <div className="flex gap-2">
           <input
             value={manual}
@@ -340,12 +340,8 @@ export function CardScanner() {
         </div>
       </form>
 
-      {/* Debug: what the OCR read (helps you tune during beta) */}
-      {lastText && (
-        <details className="mt-4 text-xs text-slate-600">
-          <summary className="cursor-pointer">What the scanner read</summary>
-          <pre className="mt-1 whitespace-pre-wrap rounded bg-ink-900 p-2 text-slate-500">{lastText}</pre>
-        </details>
+      {bestDist != null && (
+        <p className="mt-3 text-center text-[11px] text-slate-600">Match confidence: {Math.max(0, Math.round((1 - bestDist / 64) * 100))}%</p>
       )}
     </div>
   );
