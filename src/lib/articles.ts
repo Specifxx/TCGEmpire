@@ -88,6 +88,78 @@ UK players can buy Riftbound singles in GBP from a growing list of British TCG r
 Set your country, **[open the card database](/browse)**, find your card, and click through to the cheapest store. New to Riftbound? Browse our other **[guides](/guides)** or check the current **[meta decks](/decks)** to see what's worth building.`,
   },
   {
+    slug: "cheapest-riftbound-booster-boxes",
+    category: "guide",
+    title: "Cheapest Riftbound Booster Boxes & Sealed (AU, NZ, US & UK)",
+    excerpt:
+      "How to find the cheapest Riftbound: League of Legends TCG booster boxes and sealed product across Australia, New Zealand, the US and the UK — and whether boxes or singles are better value.",
+    author: "RiftCompare",
+    date: "2026-06-08",
+    readMins: 5,
+    tags: ["buying", "guide", "sealed", "booster box"],
+    body: `Booster boxes are the most exciting — and most expensive — way to buy into **Riftbound: League of Legends TCG**. But box prices swing a lot between shops and over time, so before you buy, it pays to compare. This guide covers **where to find the cheapest Riftbound booster boxes** and sealed product in **Australia, New Zealand, the United States and the United Kingdom**.
+
+## Compare every sealed price in one place
+
+Head to the **[sealed products page](/sealed)** to see live prices for booster boxes, booster packs, Proving Grounds kits and other sealed Riftbound product across the stores we track — sorted so the cheapest is easy to spot. Set the **country switcher** to your region first so prices show in your local currency (AUD, NZD, USD or GBP).
+
+## By region
+
+- **🇦🇺 Australia:** Riftbound boxes sell out fast at launch — compare AUD prices across Australian stores on the **[sealed page](/sealed)** and watch for restocks.
+- **🇳🇿 New Zealand:** fewer stockists than AU, so comparing NZD prices is the easiest way to avoid overpaying.
+- **🇺🇸 United States:** the deepest market — the most competitive box pricing is usually here. Compare USD prices and check shipping.
+- **🇬🇧 United Kingdom:** UK retailers price sealed in GBP; buying domestically avoids import duty.
+
+## Booster box vs singles: which is better value?
+
+- **If you want specific cards** (to finish a deck or grab a chase card), **[buying singles](/browse) is almost always cheaper** than ripping boxes hoping to pull them.
+- **If you want the opening experience, to draft, or to collect/invest**, a sealed box is the way — just buy it at the best price.
+
+## Tips before you buy a box
+
+- **Check the price history feel** — box prices often spike at launch and settle later; if you're not in a rush, waiting can save money.
+- **Factor in shipping** — a slightly dearer box with free postage can beat a cheaper one plus delivery.
+- **Buy from reputable stockists** — we link straight to each store so you can check their returns and shipping policy.
+
+Ready to buy? **[Compare Riftbound booster box prices now](/sealed)**, or if you only need a few cards, **[search the singles database](/browse)** instead.`,
+  },
+  {
+    slug: "most-valuable-riftbound-cards",
+    category: "guide",
+    title: "The Most Valuable Riftbound Cards & Chase Cards",
+    excerpt:
+      "What makes a Riftbound: League of Legends TCG card valuable — the chase rares, alt-arts, Showcase, Signature and promo printings — and how to check any card's live price.",
+    author: "RiftCompare",
+    date: "2026-06-08",
+    readMins: 5,
+    tags: ["collecting", "guide", "chase cards", "value"],
+    body: `Every **Riftbound: League of Legends TCG** set has its chase cards — the ones collectors and players pay a premium for. This guide explains **what makes a Riftbound card valuable** and how to find the most expensive cards and check their live price.
+
+## See the most valuable cards right now
+
+The fastest way to spot the chase cards is to **[browse the card database](/browse)** and sort by price (high to low). That surfaces the current most-valuable Riftbound singles in your region, with live prices across every store we track.
+
+## What makes a Riftbound card valuable?
+
+- **Rarity** — Epic and **Showcase** cards are scarcer than Commons and Uncommons, so they command higher prices.
+- **Alt-art printings** — alternate-art versions (collector numbers like *120a*) of popular cards are prized by collectors.
+- **Signature cards** — artist-signed, overnumbered "Signature" printings are some of the rarest pulls in the game.
+- **Overnumbered / secret cards** — cards numbered beyond the set's base count are special chase pulls.
+- **Promos** — organized-play, prerelease and Nexus Night promo printings are limited and often sought-after.
+- **Playability** — a card that defines the **[current meta](/decks)** holds value because players need playsets of it.
+
+On RiftCompare, each of these printings is labelled in the card's name (e.g. *(Alt Art)*, *(Signature)*, *(Promo)*) so you always know exactly which version you're looking at.
+
+## Buying and selling chase cards safely
+
+- **Compare across stores** — high-value cards have the widest price spread, so comparing saves the most here. Open any card to see **every store's price** sorted cheapest-first.
+- **Mind the condition** — Near Mint (NM) is the benchmark; played copies should cost noticeably less.
+- **Buy the English print** unless you specifically want another language — foreign copies are cheaper but aren't the same card.
+- **Check the exact printing** — make sure you're buying the alt-art / signature / promo you actually want, not the base card (or vice versa).
+
+Want to find your grail? **[Browse every Riftbound card](/browse)** and sort by price, or read our **[guide to where to buy Riftbound cards](/guides/where-to-buy-riftbound-cards)** for the best place to buy in your region.`,
+  },
+  {
     slug: "welcome-to-riftcompareau",
     category: "blog",
     title: "Welcome to RiftCompare",
