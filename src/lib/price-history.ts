@@ -4,14 +4,16 @@
 // is AU-priced.
 import { prisma } from "./db";
 import { cardTileSelect } from "./cards";
+import type { Country } from "./country";
 import type { CardTileData } from "@/components/CardTile";
 
 export type PricePoint = { t: number; v: number };
 
-// Daily lowest-price points for one card (oldest → newest).
-export async function getPriceHistory(cardId: string, take = 180): Promise<PricePoint[]> {
+// Daily lowest-price points for one card in one market (oldest → newest). Each
+// market is priced in its own currency.
+export async function getPriceHistory(cardId: string, country = "AU", take = 180): Promise<PricePoint[]> {
   const rows = await prisma.priceHistory.findMany({
-    where: { cardId },
+    where: { cardId, country },
     orderBy: { day: "asc" },
     take,
     select: { day: true, lowestPriceCents: true },
@@ -38,10 +40,10 @@ const LIST_SIZE = 5;
 // Compute this-week's biggest gainers, biggest fallers, and best-value buys (the
 // largest discounts off a card's recent high). Cheap enough to run inside the
 // homepage's ISR window.
-export async function getPriceMovers(): Promise<PriceMovers> {
+export async function getPriceMovers(country: Country = "AU"): Promise<PriceMovers> {
   const cutoff = new Date(Date.now() - WINDOW_DAYS * 86400_000);
   const rows = await prisma.priceHistory.findMany({
-    where: { day: { gte: cutoff } },
+    where: { country, day: { gte: cutoff } },
     orderBy: { day: "asc" },
     select: { cardId: true, day: true, lowestPriceCents: true },
   });
@@ -77,10 +79,10 @@ export async function getPriceMovers(): Promise<PriceMovers> {
   // Best value = biggest discount off the recent high (and actually down, not flat).
   const valueStats = stats.filter((s) => s.discount > 5 && s.now < s.high).sort((a, b) => b.discount - a.discount).slice(0, LIST_SIZE);
 
-  // Hydrate tile data for every card we'll show (AU prices).
+  // Hydrate tile data for every card we'll show (in the requested market's currency).
   const ids = Array.from(new Set([...spikingStats, ...plummetStats, ...valueStats].map((s) => s.cardId)));
   if (!ids.length) return { spiking: [], plummeting: [], value: [] };
-  const cards = await prisma.card.findMany({ where: { id: { in: ids } }, select: cardTileSelect("AU") });
+  const cards = await prisma.card.findMany({ where: { id: { in: ids } }, select: cardTileSelect(country) });
   const byId = new Map(cards.map((c) => [c.id, c as unknown as CardTileData]));
 
   const toMover = (s: Stat, ref: number, pct: number): Mover | null => {

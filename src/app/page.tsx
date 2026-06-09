@@ -74,8 +74,8 @@ export default async function HomePage() {
     getPopularCards(12, country),
     // Stores serving the selected market (eBay excluded from the count).
     prisma.retailerPrice.groupBy({ by: ["retailer"], where: { country, NOT: { retailer: { startsWith: "ebay" } } } }),
-    // This week's biggest price movers (AU market) for the Price Watch panel.
-    getPriceMovers(),
+    // This week's biggest price movers (viewer's market) for the Price Watch panel.
+    getPriceMovers(country),
   ]);
   const storeCount = storeGroups.length;
   const storeWord = storeCount === 1 ? "store" : "stores";
@@ -135,8 +135,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Price Watch — this week's movers (AU) */}
-      <PriceWatch movers={movers} />
+      {/* Price Watch — this week's movers in the viewer's market */}
+      <PriceWatch movers={movers} currency={info.currency} place={info.place} />
 
       {/* Browse by set */}
       <section>

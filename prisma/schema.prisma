@@ -237,6 +237,8 @@ model ContactMessage {
 model PriceHistory {
   id               String   @id @default(cuid())
   cardId           String
+  // Market this point is for (AU/NZ/US/UK); each market is priced in its own currency.
+  country          String   @default("AU")
   // Calendar day in Australia/Sydney (stored date-only), the chart's x-axis.
   day              DateTime @db.Date
   lowestPriceCents Int
@@ -244,8 +246,8 @@ model PriceHistory {
 
   card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
 
-  @@unique([cardId, day])
-  @@index([cardId, day])
+  @@unique([cardId, country, day])
+  @@index([cardId, country, day])
 }
 
 // An email subscription for wishlist price-drop alerts. No account required — the

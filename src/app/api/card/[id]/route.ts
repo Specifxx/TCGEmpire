@@ -48,16 +48,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
 
   if (!card) return NextResponse.json({ error: "not found" }, { status: 404 });
 
-  // Daily lowest-price history (AU) for the quick-view chart.
-  const history = await prisma.priceHistory.findMany({
-    where: { cardId: card.id },
-    orderBy: { day: "asc" },
-    take: 180,
-    select: { day: true, lowestPriceCents: true },
-  });
-  const priceHistory = history.map((h) => ({ t: h.day.getTime(), v: h.lowestPriceCents }));
-
-  return NextResponse.json({ ...card, priceHistory }, {
+  return NextResponse.json(card, {
     headers: { "Cache-Control": "public, s-maxage=120, stale-while-revalidate=600" },
   });
 }

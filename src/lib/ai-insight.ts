@@ -24,11 +24,11 @@ export function aiEnabled(): boolean {
 const SYSTEM_PROMPT =
   "You are RiftCompare's gremlin market oracle for the Riftbound TCG — a chaotic, very online, Grok-style hot-take machine. Given price signals for ONE card, deliver a funny, narrative, slightly unhinged 1–2 sentence verdict on whether to BUY the single right now. Be dramatic, witty and irreverent — crack a joke, paint a tiny scene, roast the price action — but ground EVERYTHING in the actual numbers given and end with a clear lean (buy / hold / wait). Keep it PG-13: no slurs, no hate, no real financial-advice claims, no targeting real people. No preamble, no markdown, no hashtags, no emoji spam (one emoji max), under 50 words. Output the take only.";
 
-function buildData(card: { name: string; rarity: string; setCode: string }, s: Signals, verdict: Verdict): string {
+function buildData(card: { name: string; rarity: string; setCode: string }, s: Signals, verdict: Verdict, currency: string): string {
   return [
     `Card: ${card.name} (${card.setCode}, ${card.rarity})`,
-    `Current AU price: ${formatMoney(s.nowCents, "AUD")}`,
-    `Recent low / high: ${formatMoney(s.minCents, "AUD")} / ${formatMoney(s.maxCents, "AUD")}`,
+    `Current price: ${formatMoney(s.nowCents, currency)}`,
+    `Recent low / high: ${formatMoney(s.minCents, currency)} / ${formatMoney(s.maxCents, currency)}`,
     `Where current price sits in that range: ${Math.round(s.posPct * 100)}% (0% = at the low)`,
     `Change over 7 days: ${s.trend7}% · over 30 days: ${s.trend30}%`,
     `Day-to-day volatility: ${s.volatilityPct}%`,
@@ -105,11 +105,11 @@ function pick<T>(arr: T[], seed: number): T {
 
 // Funny, varied, signal-grounded fallback "AI" lines — fully free, no LLM. Each
 // card draws a different template seeded by its id, with the real numbers woven in.
-function ruleVerdict(s: Signals, seedKey: string): { verdict: Verdict; summary: string } {
+function ruleVerdict(s: Signals, seedKey: string, currency: string): { verdict: Verdict; summary: string } {
   const seed = seedFrom(seedKey);
-  const now = formatMoney(s.nowCents, "AUD");
-  const low = formatMoney(s.minCents, "AUD");
-  const high = formatMoney(s.maxCents, "AUD");
+  const now = formatMoney(s.nowCents, currency);
+  const low = formatMoney(s.minCents, currency);
+  const high = formatMoney(s.maxCents, currency);
   const down7 = s.trend7 < 0 ? ` — down ${Math.abs(s.trend7)}% this week` : "";
   const up7 = s.trend7 > 0 ? ` (up ${s.trend7}% this week)` : "";
   const month = s.trend30 !== 0 ? ` (${s.trend30 > 0 ? "+" : ""}${s.trend30}% over the month)` : "";
@@ -158,72 +158,75 @@ function ruleVerdict(s: Signals, seedKey: string): { verdict: Verdict; summary: 
   };
 }
 
-async function claudeSummary(card: { name: string; rarity: string; setCode: string }, s: Signals, verdict: Verdict): Promise<string | null> {
+// Generic LLM text generation, provider-agnostic. Claude if configured, else
+// Gemini (free tier), else null. Reused by card insights and the trade roast.
+async function callClaude(system: string, user: string): Promise<string | null> {
   try {
     const client = new Anthropic({ apiKey: API_KEY });
     const res = await client.messages.create({
       model: MODEL,
-      max_tokens: 200,
+      max_tokens: 220,
       thinking: { type: "disabled" },
       output_config: { effort: "low" },
-      system: SYSTEM_PROMPT,
-      messages: [{ role: "user", content: buildData(card, s, verdict) }],
+      system,
+      messages: [{ role: "user", content: user }],
     });
-    const text = res.content.find((b): b is Anthropic.TextBlock => b.type === "text")?.text?.trim();
-    return text || null;
+    return res.content.find((b): b is Anthropic.TextBlock => b.type === "text")?.text?.trim() || null;
   } catch {
     return null;
   }
 }
 
-// Google Gemini (free tier) via REST — no SDK needed.
-async function geminiSummary(card: { name: string; rarity: string; setCode: string }, s: Signals, verdict: Verdict): Promise<string | null> {
+async function callGemini(system: string, user: string): Promise<string | null> {
   try {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`;
     const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-        contents: [{ role: "user", parts: [{ text: buildData(card, s, verdict) }] }],
-        generationConfig: { maxOutputTokens: 200, temperature: 1.0 },
+        system_instruction: { parts: [{ text: system }] },
+        contents: [{ role: "user", parts: [{ text: user }] }],
+        generationConfig: { maxOutputTokens: 220, temperature: 1.0 },
       }),
     });
     if (!res.ok) return null;
     const json = await res.json();
-    const text = json?.candidates?.[0]?.content?.parts?.map((p: any) => p?.text ?? "").join("").trim();
-    return text || null;
+    return json?.candidates?.[0]?.content?.parts?.map((p: any) => p?.text ?? "").join("").trim() || null;
   } catch {
     return null;
   }
 }
 
-// Pick whichever provider is configured (Claude takes precedence if both set).
-async function llmSummary(card: { name: string; rarity: string; setCode: string }, s: Signals, verdict: Verdict): Promise<string | null> {
-  if (API_KEY) return claudeSummary(card, s, verdict);
-  if (GEMINI_KEY) return geminiSummary(card, s, verdict);
+export async function llmText(system: string, user: string): Promise<string | null> {
+  if (API_KEY) return callClaude(system, user);
+  if (GEMINI_KEY) return callGemini(system, user);
   return null;
 }
 
-// Small in-memory cache so we make at most one Claude call per card per day per
-// serverless instance (the HTTP layer adds CDN caching on top).
+// Small in-memory cache so we make at most one LLM call per card per market per day
+// per serverless instance (the HTTP layer adds CDN caching on top).
 const cache = new Map<string, Insight>();
-function dayKey(cardId: string) {
-  return `${cardId}:${new Date().toISOString().slice(0, 10)}`;
+function dayKey(cardId: string, country: string) {
+  return `${cardId}:${country}:${new Date().toISOString().slice(0, 10)}`;
 }
 
-export async function getInsight(card: { id: string; name: string; rarity: string; setCode: string }, points: PricePoint[]): Promise<Insight> {
-  const key = dayKey(card.id);
+export async function getInsight(
+  card: { id: string; name: string; rarity: string; setCode: string },
+  points: PricePoint[],
+  currency = "AUD",
+  country = "AU",
+): Promise<Insight> {
+  const key = dayKey(card.id, country);
   const hit = cache.get(key);
   if (hit) return hit;
 
   const signals = computeSignals(points);
-  const rule = ruleVerdict(signals, dayKey(card.id));
+  const rule = ruleVerdict(signals, key, currency);
   let summary = rule.summary;
   let source: "ai" | "rules" = "rules";
 
   if (aiEnabled() && signals.n >= 4) {
-    const ai = await llmSummary(card, signals, rule.verdict);
+    const ai = await llmText(SYSTEM_PROMPT, buildData(card, signals, rule.verdict, currency));
     if (ai) { summary = ai; source = "ai"; }
   }
 

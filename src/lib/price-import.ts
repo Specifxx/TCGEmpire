@@ -667,20 +667,25 @@ export async function importPrices(): Promise<ImportSummary> {
   console.log(`Lowest recompute: ${changed} cards changed (no null-reset window).`);
   summary.cardsPriced = lowAu.size;
 
-  // Snapshot today's lowest price per card for the price-over-time chart. Backend
-  // only for now (no UI) — we want a week+ of history before releasing it. One
-  // point per card per Sydney day; a same-day re-run (e.g. a deploy) replaces it.
+  // Snapshot today's lowest price per card PER MARKET for the price-over-time chart
+  // (each market in its own currency). One point per card per market per Sydney day;
+  // a same-day re-run (e.g. a deploy) replaces the day's rows.
   try {
     const day = sydneyDay();
-    // AU-only for now (the chart is unreleased; AU is the primary market).
-    const points = pricedAu
-      .filter((r) => r._min.priceCents != null)
-      .map((r) => ({ cardId: r.cardId, day, lowestPriceCents: r._min.priceCents as number }));
-    await prisma.priceHistory.deleteMany({ where: { day } });
-    if (points.length > 0) {
-      await prisma.priceHistory.createMany({ data: points });
+    const rows: { cardId: string; country: string; day: Date; lowestPriceCents: number }[] = [];
+    for (const c of existing) {
+      const au = lowAu.get(c.id) ?? null;
+      const nz = lowNz.get(c.id) ?? null;
+      const us = lowUs.get(c.id) ?? null;
+      const uk = lowUkReal.get(c.id) ?? lowUkFallback.get(c.id) ?? null;
+      if (au != null) rows.push({ cardId: c.id, country: "AU", day, lowestPriceCents: au });
+      if (nz != null) rows.push({ cardId: c.id, country: "NZ", day, lowestPriceCents: nz });
+      if (us != null) rows.push({ cardId: c.id, country: "US", day, lowestPriceCents: us });
+      if (uk != null) rows.push({ cardId: c.id, country: "UK", day, lowestPriceCents: uk });
     }
-    console.log(`Price history: recorded ${points.length} points for ${day.toISOString().slice(0, 10)}.`);
+    await prisma.priceHistory.deleteMany({ where: { day } });
+    if (rows.length > 0) await prisma.priceHistory.createMany({ data: rows });
+    console.log(`Price history: recorded ${rows.length} points (AU/NZ/US/UK) for ${day.toISOString().slice(0, 10)}.`);
   } catch (e) {
     console.warn("Price-history snapshot failed:", e);
   }

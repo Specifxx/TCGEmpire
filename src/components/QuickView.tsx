@@ -81,7 +81,7 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
   const [coll, setColl] = useState<"idle" | "saving" | "added" | "signin" | "error">("idle");
   const [collFoil, setCollFoil] = useState(false);
   const href = cardHref(card);
-  const { country, fmt, price } = useCountry();
+  const { country, currency, fmt, price } = useCountry();
   const lowest = price(card);
 
   async function addToCollection() {
@@ -110,14 +110,19 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
     fetch(`/api/card/${ref}/view`, { method: "POST", keepalive: true }).catch(() => {});
     fetch(`/api/card/${ref}`)
       .then((r) => r.json())
-      .then((d) => { if (alive) { setPrices(d.retailerPrices ?? []); setHistory(d.priceHistory ?? []); } })
-      .catch(() => { if (alive) { setPrices([]); setHistory([]); } });
+      .then((d) => { if (alive) setPrices(d.retailerPrices ?? []); })
+      .catch(() => { if (alive) setPrices([]); });
+    // Region-specific price history (its own currency), keyed by URL for clean caching.
+    fetch(`/api/card/${ref}/history?country=${country}`)
+      .then((r) => r.json())
+      .then((d) => { if (alive) setHistory(d.points ?? []); })
+      .catch(() => { if (alive) setHistory([]); });
     return () => {
       alive = false;
       document.body.style.overflow = "";
       window.removeEventListener("keydown", onKey);
     };
-  }, [card, onClose]);
+  }, [card, onClose, country]);
 
   // Rank by ITEM price — the cheapest card price is the "lowest price". Known postage
   // (eBay) is shown for transparency but must not change which listing is cheapest;
@@ -261,13 +266,13 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
               )}
             </div>
 
-            {/* Price history — free for everyone, right in the preview */}
+            {/* Price history — free for everyone, right in the preview (viewer's market) */}
             {history && history.length >= 2 && (
               <div className="mt-5 border-t border-ink-800 pt-4">
                 <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                  Price history <span className="font-normal normal-case text-slate-600">· AU</span>
+                  Price history <span className="font-normal normal-case text-slate-600">· {country}</span>
                 </div>
-                <PriceChart points={history} currency="AUD" compact />
+                <PriceChart points={history} currency={currency} compact />
               </div>
             )}
 

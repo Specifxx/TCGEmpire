@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useCountry } from "./CountryProvider";
 
 type Verdict = "BUY" | "HOLD" | "CAUTION" | "UNKNOWN";
 type Insight = { verdict: Verdict; label: string; summary: string; source: "ai" | "rules" };
@@ -15,17 +16,20 @@ const STYLE: Record<Verdict, { chip: string; ring: string; emoji: string }> = {
 // "AI Tips" — a funny, narrative buy/hold/wait take on a card. Fetched lazily so it
 // never blocks the rest of the card view.
 export function AiInsight({ cardId, compact = false }: { cardId: string; compact?: boolean }) {
+  const { country } = useCountry();
   const [insight, setInsight] = useState<Insight | null>(null);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     let alive = true;
-    fetch(`/api/card/${cardId}/insight`)
+    setInsight(null);
+    setFailed(false);
+    fetch(`/api/card/${cardId}/insight?country=${country}`)
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d) => { if (alive) setInsight(d); })
       .catch(() => { if (alive) setFailed(true); });
     return () => { alive = false; };
-  }, [cardId]);
+  }, [cardId, country]);
 
   if (failed) return null;
   const s = insight ? STYLE[insight.verdict] : STYLE.UNKNOWN;
