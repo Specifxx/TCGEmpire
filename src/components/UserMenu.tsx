@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { formatMoney } from "@/lib/format";
 import { SHARD } from "@/lib/points-config";
 
 export interface MenuUser {
@@ -86,9 +85,6 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
           <div className="border-b border-ink-700 px-4 py-3">
             <div className="truncate text-sm font-semibold text-white">{user.displayName}</div>
             <div className="truncate text-xs text-slate-500">{user.email}</div>
-            {user.balanceCents > 0 && (
-              <div className="mt-1 text-xs text-slate-400">Balance: <span className="font-semibold text-gold">{formatMoney(user.balanceCents, "AUD")}</span></div>
-            )}
             <Link
               href="/rewards"
               onClick={() => setOpen(false)}
