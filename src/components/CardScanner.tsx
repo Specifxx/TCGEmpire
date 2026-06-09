@@ -201,11 +201,14 @@ export function CardScanner() {
       <div className="card-surface overflow-hidden">
         {/* Camera viewport */}
         <div className="relative aspect-[4/3] w-full bg-ink-950">
+          {/* Kept mounted & never display:none — iOS Safari refuses to attach/play a
+              hidden <video>. Non-live states are covered by the opaque overlay below. */}
           <video
             ref={videoRef}
             playsInline
+            autoPlay
             muted
-            className={`h-full w-full object-cover ${phase === "live" || phase === "scanning" ? "" : "hidden"}`}
+            className="h-full w-full object-cover"
           />
 
           {/* Guide frame — line up the card NAME inside this box */}
@@ -218,9 +221,9 @@ export function CardScanner() {
             </div>
           )}
 
-          {/* Idle / permission / error states */}
+          {/* Idle / permission / error states — opaque so they hide the video feed */}
           {phase !== "live" && phase !== "scanning" && (
-            <div className="absolute inset-0 grid place-items-center p-6 text-center">
+            <div className="absolute inset-0 grid place-items-center bg-ink-950 p-6 text-center">
               {phase === "idle" && (
                 <div>
                   <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-ink-900 text-2xl">📷</div>

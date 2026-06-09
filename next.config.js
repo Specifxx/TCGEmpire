@@ -15,8 +15,11 @@ const securityHeaders = [
   { key: "X-Frame-Options", value: "SAMEORIGIN" },
   // Don't leak full URLs (incl. any ?key=… tokens) to third parties via Referer.
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  // We don't use these device APIs — deny them.
-  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+  // Allow the camera for our OWN origin (the /scan card scanner needs it); keep
+  // microphone and geolocation denied since we don't use them. NOTE: `camera=()`
+  // blocks the camera for everyone INCLUDING us — `camera=(self)` is what permits
+  // getUserMedia on our pages.
+  { key: "Permissions-Policy", value: "camera=(self), microphone=(), geolocation=()" },
 ];
 
 const nextConfig = {
