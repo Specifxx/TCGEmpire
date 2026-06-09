@@ -1,9 +1,9 @@
 // AI market insight for a single card — a free "is this worth buying now?" read.
 //
 // The VERDICT is always computed deterministically from our own price data (so it's
-// trustworthy and free). When ANTHROPIC_API_KEY is set, Claude writes a sharper
-// natural-language tip grounded in those same signals; otherwise we fall back to a
-// rule-based sentence. Either way the section is always populated.
+// trustworthy and free). The prose is written by an LLM when a key is set —
+// Anthropic (Claude) OR Google Gemini's free tier — otherwise a funny rule-based
+// fallback. Either way the section is always populated.
 import Anthropic from "@anthropic-ai/sdk";
 import type { PricePoint } from "./price-history";
 import { formatMoney } from "./format";
@@ -12,9 +12,30 @@ const API_KEY = process.env.ANTHROPIC_API_KEY ?? "";
 // Skill default is Opus; override to a cheaper model (e.g. claude-haiku-4-5) via env.
 const MODEL = process.env.AI_INSIGHT_MODEL ?? "claude-opus-4-8";
 
+// Google Gemini — free tier, no credit card (aistudio.google.com).
+const GEMINI_KEY = process.env.GEMINI_API_KEY ?? "";
+const GEMINI_MODEL = process.env.GEMINI_MODEL ?? "gemini-2.0-flash";
+
 export function aiEnabled(): boolean {
-  return Boolean(API_KEY);
+  return Boolean(API_KEY || GEMINI_KEY);
 }
+
+// Shared persona + the per-card data both providers receive.
+const SYSTEM_PROMPT =
+  "You are RiftCompare's gremlin market oracle for the Riftbound TCG — a chaotic, very online, Grok-style hot-take machine. Given price signals for ONE card, deliver a funny, narrative, slightly unhinged 1–2 sentence verdict on whether to BUY the single right now. Be dramatic, witty and irreverent — crack a joke, paint a tiny scene, roast the price action — but ground EVERYTHING in the actual numbers given and end with a clear lean (buy / hold / wait). Keep it PG-13: no slurs, no hate, no real financial-advice claims, no targeting real people. No preamble, no markdown, no hashtags, no emoji spam (one emoji max), under 50 words. Output the take only.";
+
+function buildData(card: { name: string; rarity: string; setCode: string }, s: Signals, verdict: Verdict): string {
+  return [
+    `Card: ${card.name} (${card.setCode}, ${card.rarity})`,
+    `Current AU price: ${formatMoney(s.nowCents, "AUD")}`,
+    `Recent low / high: ${formatMoney(s.minCents, "AUD")} / ${formatMoney(s.maxCents, "AUD")}`,
+    `Where current price sits in that range: ${Math.round(s.posPct * 100)}% (0% = at the low)`,
+    `Change over 7 days: ${s.trend7}% · over 30 days: ${s.trend30}%`,
+    `Day-to-day volatility: ${s.volatilityPct}%`,
+    `Our rule-based call: ${verdict}`,
+  ].join("\n");
+}
+
 
 export type Verdict = "BUY" | "HOLD" | "CAUTION" | "UNKNOWN";
 export type Signals = {
@@ -140,29 +161,48 @@ function ruleVerdict(s: Signals, seedKey: string): { verdict: Verdict; summary: 
 async function claudeSummary(card: { name: string; rarity: string; setCode: string }, s: Signals, verdict: Verdict): Promise<string | null> {
   try {
     const client = new Anthropic({ apiKey: API_KEY });
-    const data = [
-      `Card: ${card.name} (${card.setCode}, ${card.rarity})`,
-      `Current AU price: ${formatMoney(s.nowCents, "AUD")}`,
-      `Recent low / high: ${formatMoney(s.minCents, "AUD")} / ${formatMoney(s.maxCents, "AUD")}`,
-      `Where current price sits in that range: ${Math.round(s.posPct * 100)}% (0% = at the low)`,
-      `Change over 7 days: ${s.trend7}% · over 30 days: ${s.trend30}%`,
-      `Day-to-day volatility: ${s.volatilityPct}%`,
-      `Our rule-based call: ${verdict}`,
-    ].join("\n");
     const res = await client.messages.create({
       model: MODEL,
       max_tokens: 200,
       thinking: { type: "disabled" },
       output_config: { effort: "low" },
-      system:
-        "You are RiftCompare's gremlin market oracle for the Riftbound TCG — a chaotic, very online, Grok-style hot-take machine. Given price signals for ONE card, deliver a funny, narrative, slightly unhinged 1–2 sentence verdict on whether to BUY the single right now. Be dramatic, witty and irreverent — crack a joke, paint a tiny scene, roast the price action — but ground EVERYTHING in the actual numbers given and end with a clear lean (buy / hold / wait). Keep it PG-13: no slurs, no hate, no real financial-advice claims, no targeting real people. No preamble, no markdown, no hashtags, no emoji spam (one emoji max), under 50 words. Output the take only.",
-      messages: [{ role: "user", content: data }],
+      system: SYSTEM_PROMPT,
+      messages: [{ role: "user", content: buildData(card, s, verdict) }],
     });
     const text = res.content.find((b): b is Anthropic.TextBlock => b.type === "text")?.text?.trim();
     return text || null;
   } catch {
     return null;
   }
+}
+
+// Google Gemini (free tier) via REST — no SDK needed.
+async function geminiSummary(card: { name: string; rarity: string; setCode: string }, s: Signals, verdict: Verdict): Promise<string | null> {
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        contents: [{ role: "user", parts: [{ text: buildData(card, s, verdict) }] }],
+        generationConfig: { maxOutputTokens: 200, temperature: 1.0 },
+      }),
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    const text = json?.candidates?.[0]?.content?.parts?.map((p: any) => p?.text ?? "").join("").trim();
+    return text || null;
+  } catch {
+    return null;
+  }
+}
+
+// Pick whichever provider is configured (Claude takes precedence if both set).
+async function llmSummary(card: { name: string; rarity: string; setCode: string }, s: Signals, verdict: Verdict): Promise<string | null> {
+  if (API_KEY) return claudeSummary(card, s, verdict);
+  if (GEMINI_KEY) return geminiSummary(card, s, verdict);
+  return null;
 }
 
 // Small in-memory cache so we make at most one Claude call per card per day per
@@ -183,7 +223,7 @@ export async function getInsight(card: { id: string; name: string; rarity: strin
   let source: "ai" | "rules" = "rules";
 
   if (aiEnabled() && signals.n >= 4) {
-    const ai = await claudeSummary(card, signals, rule.verdict);
+    const ai = await llmSummary(card, signals, rule.verdict);
     if (ai) { summary = ai; source = "ai"; }
   }
 
