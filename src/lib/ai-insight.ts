@@ -71,18 +71,70 @@ export function computeSignals(points: PricePoint[]): Signals {
   };
 }
 
-function ruleVerdict(s: Signals): { verdict: Verdict; summary: string } {
-  if (s.n < 4) {
-    return { verdict: "UNKNOWN", summary: "Barely any price history on this one yet — the oracle is squinting into the fog. Check back in a few days." };
-  }
+// Deterministic per-card seed so each card gets a different line, but the same card
+// stays stable within the day (matches the once-a-day cache).
+function seedFrom(str: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function pick<T>(arr: T[], seed: number): T {
+  return arr[seed % arr.length];
+}
+
+// Funny, varied, signal-grounded fallback "AI" lines — fully free, no LLM. Each
+// card draws a different template seeded by its id, with the real numbers woven in.
+function ruleVerdict(s: Signals, seedKey: string): { verdict: Verdict; summary: string } {
+  const seed = seedFrom(seedKey);
   const now = formatMoney(s.nowCents, "AUD");
+  const low = formatMoney(s.minCents, "AUD");
+  const high = formatMoney(s.maxCents, "AUD");
+  const down7 = s.trend7 < 0 ? ` — down ${Math.abs(s.trend7)}% this week` : "";
+  const up7 = s.trend7 > 0 ? ` (up ${s.trend7}% this week)` : "";
+  const month = s.trend30 !== 0 ? ` (${s.trend30 > 0 ? "+" : ""}${s.trend30}% over the month)` : "";
+  const volTag = s.volatilityPct >= 8 ? ` Fair warning: it's swinging ~${s.volatilityPct}% a day, so blink and the price moves.` : "";
+
+  if (s.n < 4) {
+    return {
+      verdict: "UNKNOWN",
+      summary: pick([
+        "Barely any price history on this one — the gremlin is squinting into the fog. Give it a few days.",
+        "Not enough data yet to have an opinion, and the gremlin refuses to make things up (today). Check back soon.",
+        "The chart's basically a single dot. Come back when this card has a story to tell.",
+      ], seed),
+    };
+  }
   if (s.posPct <= 0.3 || (s.trend7 <= -8 && s.posPct <= 0.6)) {
-    return { verdict: "BUY", summary: `${now} and basically in the bargain bin${s.trend7 < 0 ? ` — down ${Math.abs(s.trend7)}% this week like it personally owes you money` : ""}. If you wanted it, the universe is handing you a window. Snag it. 🪙` };
+    return {
+      verdict: "BUY",
+      summary: pick([
+        `${now} and basically in the bargain bin${down7}. The market's gift-wrapping it. Grab it before it remembers its worth. 🪙`,
+        `Down at ${now}, hugging its ${low} floor like it's scared of heights. If you wanted it, this is the dip you screenshot later. Buy.`,
+        `${now} — cheaper than it's been in a while${down7}. Either everyone forgot this card exists, or you're early. Either way: snag it.`,
+        `It's ${now}, slumming near its low${down7}. The kind of price future-you brags about getting. Pull the trigger.`,
+      ], seed) + volTag,
+    };
   }
   if (s.posPct >= 0.8 || s.trend7 >= 12) {
-    return { verdict: "CAUTION", summary: `${now} and strutting near its all-time high${s.trend7 > 0 ? `, up ${s.trend7}% this week with zero chill` : ""}. Buy now and future-you might file a complaint. Maybe let it cool off.` };
+    return {
+      verdict: "CAUTION",
+      summary: pick([
+        `${now} and flexing near its ${high} ceiling${up7}. Buy here and you're the one holding the top. Let it breathe.`,
+        `Strutting at ${now}${up7}, with the confidence of a card that hasn't checked its own chart. Wait for the comedown.`,
+        `${now}?? It's mooning${up7}. Chase it now and future-you files a formal complaint. Patience, champ.`,
+        `Near record highs at ${now}${up7}. Hot cards cool off — give it a minute before you overpay.`,
+      ], seed) + volTag,
+    };
   }
-  return { verdict: "HOLD", summary: `${now}, parked comfortably in its usual lane${s.trend30 !== 0 ? ` (${s.trend30 > 0 ? "+" : ""}${s.trend30}% over the month, riveting stuff)` : ""}. Not a steal, not a robbery — a perfectly fine price for a perfectly fine card.` };
+  return {
+    verdict: "HOLD",
+    summary: pick([
+      `${now}, cruising in its usual lane${month}. Not a steal, not a scam — just a card being a card. Buy if you need it, shrug if you don't.`,
+      `Parked at ${now}${month}. The chart's flatter than week-old soda. Fine price, zero drama.`,
+      `${now} and boringly stable${month}. No heroics here — if it's for your deck, grab it; if it's an "investment", lower your expectations.`,
+      `Holding steady at ${now}${month}. The gremlin has checked twice and still has nothing spicy to report. It's just fine.`,
+    ], seed) + volTag,
+  };
 }
 
 async function claudeSummary(card: { name: string; rarity: string; setCode: string }, s: Signals, verdict: Verdict): Promise<string | null> {
@@ -126,7 +178,7 @@ export async function getInsight(card: { id: string; name: string; rarity: strin
   if (hit) return hit;
 
   const signals = computeSignals(points);
-  const rule = ruleVerdict(signals);
+  const rule = ruleVerdict(signals, dayKey(card.id));
   let summary = rule.summary;
   let source: "ai" | "rules" = "rules";
 
