@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { cardTileSelect } from "@/lib/cards";
+import { normalizeSearch } from "@/lib/format";
 import { SETS } from "@/lib/constants";
 import type { Country } from "@/lib/country";
 
@@ -11,6 +12,7 @@ const COUNTRIES = ["AU", "NZ", "US", "UK"] as const;
 const schema = z.object({
   text: z.string().min(1).max(400),
   country: z.enum(COUNTRIES).optional(),
+  isPromo: z.boolean().optional(),
 });
 
 const SET_CODES = SETS.map((s) => s.code); // OGN, OGS, SFD, UNL, VEN
@@ -58,34 +60,57 @@ export async function POST(req: Request) {
   const country = (parsed.data.country ?? "AU") as Country;
   const id = parseIdentifier(parsed.data.text);
 
-  if (id.num == null) {
-    return NextResponse.json({ cards: [], parsed: id, reason: "no-number" });
+  const select = cardTileSelect(country);
+  const promoBias = (a: { isPromo?: boolean }, b: { isPromo?: boolean }) =>
+    parsed.data.isPromo ? Number(!!b.isPromo) - Number(!!a.isPromo) : 0;
+
+  // 1) Exact-ish match on the set + collector number (the reliable path).
+  if (id.num != null) {
+    const pool = await prisma.card.findMany({
+      where: id.setCode ? { setCode: id.setCode } : {},
+      select: { ...select, collectorNumber: true, isPromo: true },
+    });
+    const matches = pool.filter((c) => {
+      const seg = c.collectorNumber.split("/")[0]; // "039" | "112a" | "231*"
+      const segNum = parseInt(seg.replace(/[^0-9]/g, ""), 10);
+      if (segNum !== id.num) return false;
+      const segLetter = seg.match(/([a-z])/i)?.[1]?.toLowerCase() ?? null;
+      if (id.letter) return segLetter === id.letter;
+      return true;
+    });
+    matches.sort((a, b) => {
+      const p = promoBias(a, b);
+      if (p) return p;
+      const av = /[a-z*]/i.test(a.collectorNumber.split("/")[0]) ? 1 : 0;
+      const bv = /[a-z*]/i.test(b.collectorNumber.split("/")[0]) ? 1 : 0;
+      return av - bv;
+    });
+    if (matches.length) return NextResponse.json({ cards: matches.slice(0, 6), parsed: id, via: "number" });
   }
 
-  const select = cardTileSelect(country);
-  // Pull the candidate pool (a whole set is small) and match the numeric part of
-  // the stored "NNN/total" collector number — robust to OCR dropping leading zeros.
-  const pool = await prisma.card.findMany({
-    where: id.setCode ? { setCode: id.setCode } : {},
-    select: { ...select, collectorNumber: true },
-  });
+  // 2) Fuzzy fallback on the card NAME read elsewhere on the card — so we always
+  // return the closest cards to pick from rather than nothing.
+  const tokens = Array.from(
+    new Set(
+      normalizeSearch(parsed.data.text)
+        .split(" ")
+        .map((t) => t.trim())
+        .filter((t) => t.length >= 3)
+    )
+  ).slice(0, 8);
 
-  const matches = pool.filter((c) => {
-    const seg = c.collectorNumber.split("/")[0]; // e.g. "039" or "112a" or "231*"
-    const segNum = parseInt(seg.replace(/[^0-9]/g, ""), 10);
-    if (segNum !== id.num) return false;
-    const segLetter = seg.match(/([a-z])/i)?.[1]?.toLowerCase() ?? null;
-    // If OCR read an alt-art letter, require it; otherwise prefer the base print.
-    if (id.letter) return segLetter === id.letter;
-    return true;
-  });
+  if (tokens.length) {
+    const pool = await prisma.card.findMany({
+      where: { OR: tokens.map((t) => ({ nameNormalized: { contains: t } })) },
+      select: { ...select, nameNormalized: true, isPromo: true },
+      take: 60,
+    });
+    const ranked = pool
+      .map((c) => ({ c, score: tokens.reduce((n, t) => n + (c.nameNormalized.includes(t) ? 1 : 0), 0) }))
+      .sort((a, b) => b.score - a.score || promoBias(a.c, b.c))
+      .map((x) => x.c);
+    if (ranked.length) return NextResponse.json({ cards: ranked.slice(0, 6), parsed: id, via: "name" });
+  }
 
-  // Base print (no variant letter / star) first so the common case leads.
-  matches.sort((a, b) => {
-    const av = /[a-z*]/i.test(a.collectorNumber.split("/")[0]) ? 1 : 0;
-    const bv = /[a-z*]/i.test(b.collectorNumber.split("/")[0]) ? 1 : 0;
-    return av - bv;
-  });
-
-  return NextResponse.json({ cards: matches.slice(0, 6), parsed: id });
+  return NextResponse.json({ cards: [], parsed: id, reason: "no-match" });
 }

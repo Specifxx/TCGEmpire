@@ -2,19 +2,19 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { cardHref } from "@/lib/card-url";
 import { cardDisplayName } from "@/lib/card-name";
 import { COUNTRIES, type Country } from "@/lib/country";
+import { DHASH_W, DHASH_H, dHashFromGray, luma, hammingHex } from "@/lib/image-hash";
 import { useQuickView } from "./QuickView";
 import { useCountry } from "./CountryProvider";
 import type { CardTileData } from "./CardTile";
 
 type Phase = "region" | "idle" | "starting" | "live" | "scanning" | "results" | "denied" | "error";
-
-// Card aspect (standard TCG ~63×88mm) for the guide outline & capture crop.
-const CARD_AR_H_OVER_W = 88 / 63;
-const GUIDE_H_FRAC = 0.82;
+type CardHash = { id: string; h: string };
 const REGIONS: Country[] = ["AU", "NZ", "US", "UK"];
+// Capture box inset (fraction of each side) — a big central frame the card fills.
+const FRAME_INSET = 0.06;
+const VISUAL_THRESHOLD = 26; // max Hamming distance to surface a visual candidate
 
 export function CardScanner() {
   const { open: openQuickView } = useQuickView();
@@ -23,34 +23,38 @@ export function CardScanner() {
   const [status, setStatus] = useState("");
   const [results, setResults] = useState<CardTileData[]>([]);
   const [manual, setManual] = useState("");
+  const [isFoil, setIsFoil] = useState(false);
+  const [isPromo, setIsPromo] = useState(false);
   const [added, setAdded] = useState<Record<string, "saving" | "done" | "signin" | "error">>({});
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const workerRef = useRef<any>(null);
+  const hashesRef = useRef<CardHash[] | null>(null);
 
   const stopCamera = useCallback(() => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
   }, []);
 
-  useEffect(() => {
-    return () => {
-      stopCamera();
-      workerRef.current?.terminate?.().catch?.(() => {});
-    };
+  useEffect(() => () => {
+    stopCamera();
+    workerRef.current?.terminate?.().catch?.(() => {});
   }, [stopCamera]);
 
-  // Lazily create + warm the OCR worker (downloads once, then cached). Tuned to read
-  // the small bottom-left set code + collector number only.
+  // Warm the visual-hash index up front.
+  useEffect(() => {
+    fetch("/api/scan/hashes")
+      .then((r) => (r.ok ? r.json() : { hashes: [] }))
+      .then((d) => { hashesRef.current = d.hashes ?? []; })
+      .catch(() => { hashesRef.current = []; });
+  }, []);
+
   async function ensureWorker() {
     if (workerRef.current) return workerRef.current;
     const { createWorker } = await import("tesseract.js");
     const worker = await createWorker("eng");
-    await worker.setParameters({
-      tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/*",
-      tessedit_pageseg_mode: "7", // PSM.SINGLE_LINE
-    } as any);
+    await worker.setParameters({ tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789/* '," } as any);
     workerRef.current = worker;
     return worker;
   }
@@ -61,7 +65,7 @@ export function CardScanner() {
       const res = await fetch("/api/collection", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cardId }),
+        body: JSON.stringify({ cardId, isFoil }),
       });
       if (res.status === 401) return setAdded((s) => ({ ...s, [cardId]: "signin" }));
       if (!res.ok) return setAdded((s) => ({ ...s, [cardId]: "error" }));
@@ -79,7 +83,6 @@ export function CardScanner() {
     }
     setPhase("starting");
     setStatus("");
-    // Warm the OCR worker in the background so the first scan is fast.
     ensureWorker().catch(() => {});
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -94,10 +97,7 @@ export function CardScanner() {
       setPhase("live");
     } catch (e: any) {
       if (e?.name === "NotAllowedError" || e?.name === "SecurityError") setPhase("denied");
-      else {
-        setPhase("error");
-        setStatus("Couldn't start the camera. You can still search by name below.");
-      }
+      else { setPhase("error"); setStatus("Couldn't start the camera. You can still search by name below."); }
     }
   }, []);
 
@@ -106,19 +106,22 @@ export function CardScanner() {
     startCamera();
   }
 
-  // Map the on-screen guide box to native video pixels (object-cover aware) and
-  // return the card region in video coordinates.
-  function cardRegion(video: HTMLVideoElement) {
+  // The capture box in native video pixels (object-cover aware).
+  function captureRect(video: HTMLVideoElement) {
     const cw = video.clientWidth, ch = video.clientHeight;
     const vw = video.videoWidth, vh = video.videoHeight;
     const scale = Math.max(cw / vw, ch / vh);
     const offX = (vw * scale - cw) / 2;
     const offY = (vh * scale - ch) / 2;
-    const gh = GUIDE_H_FRAC * ch;
-    const gw = gh / CARD_AR_H_OVER_W;
-    const gx = (cw - gw) / 2;
-    const gy = (ch - gh) / 2;
-    return { gx, gy, gw, gh, scale, offX, offY };
+    const dx = FRAME_INSET * cw, dy = FRAME_INSET * ch;
+    const dw = cw - 2 * dx, dh = ch - 2 * dy;
+    return { sx: (dx + offX) / scale, sy: (dy + offY) / scale, sw: dw / scale, sh: dh / scale };
+  }
+
+  async function hydrate(ids: string[]): Promise<CardTileData[]> {
+    if (!ids.length) return [];
+    const d = await fetch(`/api/cards?ids=${ids.join(",")}`).then((r) => r.json()).catch(() => ({ cards: [] }));
+    return (d.cards ?? []) as CardTileData[];
   }
 
   const scan = useCallback(async () => {
@@ -128,76 +131,93 @@ export function CardScanner() {
     setStatus("Reading the card…");
     setResults([]);
 
-    const { gx, gy, gw, gh, scale, offX, offY } = cardRegion(video);
-    // Bottom-left identifier strip (set code + collector number) within the card.
-    const subDX = gx + 0.015 * gw;
-    const subDY = gy + 0.885 * gh;
-    const subDW = 0.62 * gw;
-    const subDH = 0.10 * gh;
-    // → video pixels
-    const sx = (subDX + offX) / scale;
-    const sy = (subDY + offY) / scale;
-    const sw = subDW / scale;
-    const sh = subDH / scale;
+    const { sx, sy, sw, sh } = captureRect(video);
 
-    // Upscale the strip for sharper OCR.
-    const targetW = 760;
-    const targetH = Math.max(1, Math.round(targetW * (sh / sw)));
-    const canvas = document.createElement("canvas");
-    canvas.width = targetW;
-    canvas.height = targetH;
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    if (!ctx) return;
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
-    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, targetW, targetH);
-    // Grayscale + contrast stretch to help the OCR on small text.
-    const img = ctx.getImageData(0, 0, targetW, targetH);
-    const d = img.data;
-    for (let i = 0; i < d.length; i += 4) {
-      let v = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-      v = (v - 128) * 1.5 + 128; // contrast
+    // (a) OCR canvas — upscaled, grayscale + contrast.
+    const oc = document.createElement("canvas");
+    const ow = 1100, oh = Math.max(1, Math.round(ow * (sh / sw)));
+    oc.width = ow; oc.height = oh;
+    const octx = oc.getContext("2d", { willReadFrequently: true })!;
+    octx.imageSmoothingQuality = "high";
+    octx.drawImage(video, sx, sy, sw, sh, 0, 0, ow, oh);
+    const oimg = octx.getImageData(0, 0, ow, oh);
+    for (let i = 0; i < oimg.data.length; i += 4) {
+      let v = luma(oimg.data[i], oimg.data[i + 1], oimg.data[i + 2]);
+      v = (v - 128) * 1.5 + 128;
       v = v < 0 ? 0 : v > 255 ? 255 : v;
-      d[i] = d[i + 1] = d[i + 2] = v;
+      oimg.data[i] = oimg.data[i + 1] = oimg.data[i + 2] = v;
     }
-    ctx.putImageData(img, 0, 0);
+    octx.putImageData(oimg, 0, 0);
 
+    // (b) Visual hash of the whole capture (0° and 180° to allow upside-down).
+    const hc = document.createElement("canvas");
+    hc.width = DHASH_W; hc.height = DHASH_H;
+    const hctx = hc.getContext("2d", { willReadFrequently: true })!;
+    hctx.imageSmoothingEnabled = true;
+    hctx.drawImage(video, sx, sy, sw, sh, 0, 0, DHASH_W, DHASH_H);
+    const hd = hctx.getImageData(0, 0, DHASH_W, DHASH_H).data;
+    const gray: number[] = [];
+    for (let i = 0; i < hd.length; i += 4) gray.push(luma(hd[i], hd[i + 1], hd[i + 2]));
+    const hashA = dHashFromGray(gray);
+    const hashB = dHashFromGray([...gray].reverse());
+
+    // Visual nearest neighbours.
+    let visualIds: string[] = [];
+    const idx = hashesRef.current ?? [];
+    if (idx.length) {
+      visualIds = idx
+        .map((c) => ({ id: c.id, d: Math.min(hammingHex(hashA, c.h), hammingHex(hashB, c.h)) }))
+        .filter((x) => x.d <= VISUAL_THRESHOLD)
+        .sort((a, b) => a.d - b.d)
+        .slice(0, 6)
+        .map((x) => x.id);
+    }
+
+    // OCR text.
     let text = "";
     try {
       const worker = await ensureWorker();
-      const { data } = await worker.recognize(canvas);
+      const { data } = await worker.recognize(oc);
       text = (data?.text ?? "").trim();
-    } catch {
-      setPhase("results");
-      setStatus("Scan failed — try again, or search by name below.");
-      return;
+    } catch { /* fall back to visual only */ }
+
+    // Ask the server to resolve the OCR text (set+number, else fuzzy name).
+    let ocrCards: CardTileData[] = [];
+    if (text) {
+      try {
+        const d = await fetch("/api/scan/identify", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text, country, isPromo }),
+        }).then((r) => r.json());
+        ocrCards = (d.cards ?? []) as CardTileData[];
+        // A single number hit is an exact match → jump straight to its stores.
+        if (d.via === "number" && ocrCards.length === 1) {
+          setResults(ocrCards);
+          setPhase("results");
+          setStatus("");
+          openQuickView(ocrCards[0]);
+          stopCamera();
+          return;
+        }
+      } catch { /* ignore */ }
     }
 
-    try {
-      const res = await fetch("/api/scan/identify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, country }),
-      });
-      const data = await res.json();
-      const cards = (data.cards ?? []) as CardTileData[];
-      setResults(cards);
-      setPhase("results");
-      if (cards.length === 1) {
-        // One exact match → jump straight to the store comparison (cheapest first).
-        setStatus("");
-        openQuickView(cards[0]);
-        stopCamera();
-      } else if (cards.length > 1) {
-        setStatus("A few prints match — pick the right one for prices.");
-      } else {
-        setStatus("Couldn't read the card's set & number. Fill the frame, keep the bottom-left sharp, and try again — or search by name below.");
-      }
-    } catch {
-      setPhase("results");
-      setStatus("Network error — try again.");
+    // Merge OCR candidates + visual candidates (dedup, OCR first).
+    const visualCards = await hydrate(visualIds.filter((id) => !ocrCards.some((c) => c.id === id)));
+    let merged = [...ocrCards, ...visualCards];
+    if (isPromo) merged = [...merged].sort((a, b) => Number(b.isPromo) - Number(a.isPromo));
+    merged = merged.slice(0, 6);
+
+    setResults(merged);
+    setPhase("results");
+    if (!merged.length) {
+      setStatus("Couldn't identify the card. Fill the frame, reduce glare, keep it upright — or search by name below.");
+    } else if (ocrCards.length) {
+      setStatus("Closest matches — tap the right card for prices.");
+    } else {
+      setStatus("Best visual guesses — tap the right card for prices, or search by name below.");
     }
-  }, [country, openQuickView, stopCamera]);
+  }, [country, isPromo, openQuickView, stopCamera]);
 
   async function searchByName(e: React.FormEvent) {
     e.preventDefault();
@@ -208,12 +228,19 @@ export function CardScanner() {
       const d = await fetch(`/api/search?q=${encodeURIComponent(q)}`).then((r) => r.json());
       setResults((d.results ?? []) as CardTileData[]);
       setStatus(d.results?.length ? "" : "No match found.");
-    } catch {
-      setStatus("Search failed.");
-    }
+    } catch { setStatus("Search failed."); }
   }
 
   const regionInfo = COUNTRIES[country];
+  const Toggle = ({ on, set, label }: { on: boolean; set: (v: boolean) => void; label: string }) => (
+    <button
+      type="button"
+      onClick={() => set(!on)}
+      className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${on ? "bg-brand-500/25 text-brand-200 ring-1 ring-brand-400" : "bg-ink-800 text-slate-300 hover:bg-ink-700"}`}
+    >
+      {on ? "✓ " : ""}{label}
+    </button>
+  );
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -224,7 +251,7 @@ export function CardScanner() {
             <span className="chip bg-brand-500/15 text-[11px] font-bold uppercase tracking-wide text-brand-300">Beta</span>
           </div>
           <p className="mt-1 text-sm text-slate-400">
-            Scan a Riftbound card&apos;s bottom-left (set &amp; number) to identify it and see the cheapest store.
+            Point your camera at a Riftbound card — we match it visually and read its set &amp; number, then show the cheapest store.
           </p>
         </div>
         {phase !== "region" && (
@@ -238,27 +265,17 @@ export function CardScanner() {
         )}
       </div>
 
-      {/* Step 1 — region (decides which market's prices you see) */}
       {phase === "region" && (
         <div className="card-surface p-6">
           <h2 className="text-center font-display text-lg font-bold text-white">Where are you shopping from?</h2>
-          <p className="mx-auto mt-1 max-w-sm text-center text-sm text-slate-400">
-            We&apos;ll show prices from this market when we find your card.
-          </p>
+          <p className="mx-auto mt-1 max-w-sm text-center text-sm text-slate-400">We&apos;ll show prices from this market when we find your card.</p>
           <div className="mx-auto mt-5 grid max-w-md grid-cols-2 gap-3">
             {REGIONS.map((code) => {
               const c = COUNTRIES[code];
               return (
-                <button
-                  key={code}
-                  onClick={() => chooseRegion(code)}
-                  className="flex items-center gap-3 rounded-xl border border-ink-700 bg-ink-900/50 px-4 py-3 text-left transition-colors hover:border-brand-500"
-                >
+                <button key={code} onClick={() => chooseRegion(code)} className="flex items-center gap-3 rounded-xl border border-ink-700 bg-ink-900/50 px-4 py-3 text-left transition-colors hover:border-brand-500">
                   <span className="text-2xl leading-none">{c.flag}</span>
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-semibold text-white">{c.label}</span>
-                    <span className="text-xs text-slate-500">{c.currency}</span>
-                  </span>
+                  <span className="min-w-0"><span className="block truncate text-sm font-semibold text-white">{c.label}</span><span className="text-xs text-slate-500">{c.currency}</span></span>
                 </button>
               );
             })}
@@ -266,24 +283,17 @@ export function CardScanner() {
         </div>
       )}
 
-      {/* Step 2 — camera */}
       {phase !== "region" && (
         <div className="card-surface overflow-hidden">
           <div className="relative aspect-[3/4] w-full bg-ink-950 sm:aspect-[4/3]">
             <video ref={videoRef} playsInline autoPlay muted className="h-full w-full object-cover" />
 
             {(phase === "live" || phase === "scanning") && (
-              <div className="pointer-events-none absolute inset-0 grid place-items-center">
-                <div
-                  className="relative rounded-xl border-2 border-brand-400 shadow-[0_0_0_2000px_rgba(0,0,0,0.45)]"
-                  style={{ height: `${GUIDE_H_FRAC * 100}%`, aspectRatio: `63 / 88` }}
-                >
-                  {/* bottom-left target where the set & number sit */}
-                  <div className="absolute bottom-[2%] left-[1.5%] h-[10%] w-[62%] rounded border-2 border-dashed border-gold/90" />
-                  <span className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-black/65 px-2 py-0.5 text-[11px] font-medium text-white">
-                    Fit the whole card — keep the bottom-left sharp
-                  </span>
-                </div>
+              <div className="pointer-events-none absolute inset-0">
+                <div className="absolute rounded-xl border-2 border-brand-400 shadow-[0_0_0_2000px_rgba(0,0,0,0.4)]" style={{ inset: `${FRAME_INSET * 100}%` }} />
+                <span className="absolute inset-x-0 bottom-3 mx-auto w-fit rounded bg-black/65 px-2.5 py-1 text-[11px] font-medium text-white">
+                  Fill the frame with the card · any orientation · keep it sharp
+                </span>
               </div>
             )}
 
@@ -310,11 +320,18 @@ export function CardScanner() {
           </div>
 
           {(phase === "live" || phase === "scanning") && (
-            <div className="flex items-center justify-center gap-3 border-t border-ink-800 p-3">
-              <button onClick={scan} disabled={phase === "scanning"} className="btn-primary min-w-40">
-                {phase === "scanning" ? "Reading…" : "Scan card"}
-              </button>
-              <button onClick={() => { stopCamera(); setPhase("idle"); }} className="btn-ghost text-sm">Stop</button>
+            <div className="border-t border-ink-800 p-3">
+              <div className="mb-2 flex items-center justify-center gap-2">
+                <span className="text-[11px] text-slate-500">Hard to read?</span>
+                <Toggle on={isFoil} set={setIsFoil} label="Foil" />
+                <Toggle on={isPromo} set={setIsPromo} label="Promo" />
+              </div>
+              <div className="flex items-center justify-center gap-3">
+                <button onClick={scan} disabled={phase === "scanning"} className="btn-primary min-w-40">
+                  {phase === "scanning" ? "Reading…" : "Scan card"}
+                </button>
+                <button onClick={() => { stopCamera(); setPhase("idle"); }} className="btn-ghost text-sm">Stop</button>
+              </div>
             </div>
           )}
         </div>
@@ -324,16 +341,13 @@ export function CardScanner() {
 
       {results.length > 0 && (
         <div className="mt-4">
-          <h2 className="mb-2 text-sm font-semibold text-slate-300">{results.length === 1 ? "Match" : "Pick your print"}</h2>
+          <h2 className="mb-2 text-sm font-semibold text-slate-300">{results.length === 1 ? "Match" : "Pick your card"}</h2>
           <ul className="card-surface divide-y divide-ink-800 overflow-hidden">
             {results.map((r) => {
               const state = added[r.id];
               return (
                 <li key={r.id} className="flex items-center gap-1 px-1 hover:bg-ink-800">
-                  <button
-                    onClick={() => openQuickView(r)}
-                    className="flex min-w-0 flex-1 items-center gap-3 px-2 py-2.5 text-left"
-                  >
+                  <button onClick={() => openQuickView(r)} className="flex min-w-0 flex-1 items-center gap-3 px-2 py-2.5 text-left">
                     <div className="h-14 w-10 shrink-0 overflow-hidden rounded bg-ink-900">
                       {r.imageThumbUrl && (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -341,7 +355,7 @@ export function CardScanner() {
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-semibold text-white">{cardDisplayName(r.name, r)}</div>
+                      <div className="truncate text-sm font-semibold text-white">{cardDisplayName(r.name, r)}{isFoil ? " · Foil" : ""}</div>
                       <div className="text-xs text-slate-500">{r.setCode} · {r.collectorNumber}</div>
                     </div>
                     <div className="shrink-0 text-right">
@@ -352,14 +366,8 @@ export function CardScanner() {
                   {state === "signin" ? (
                     <Link href="/login?next=/scan" className="btn-ghost mr-1 shrink-0 px-2 py-1 text-xs">Sign in</Link>
                   ) : (
-                    <button
-                      onClick={() => addToCollection(r.id)}
-                      disabled={state === "saving" || state === "done"}
-                      title="Add to My Cards"
-                      className={`mr-1 shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-semibold ${
-                        state === "done" ? "bg-brand-500/20 text-brand-300" : "bg-ink-800 text-slate-200 hover:bg-ink-700"
-                      }`}
-                    >
+                    <button onClick={() => addToCollection(r.id)} disabled={state === "saving" || state === "done"} title="Add to My Cards"
+                      className={`mr-1 shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-semibold ${state === "done" ? "bg-brand-500/20 text-brand-300" : "bg-ink-800 text-slate-200 hover:bg-ink-700"}`}>
                       {state === "done" ? "✓ Added" : state === "saving" ? "…" : state === "error" ? "Retry" : "+ My Cards"}
                     </button>
                   )}
@@ -373,13 +381,7 @@ export function CardScanner() {
       <form onSubmit={searchByName} className="mt-4">
         <label className="mb-1 block text-xs font-medium text-slate-500">Can&apos;t get a match? Search by name</label>
         <div className="flex gap-2">
-          <input
-            value={manual}
-            onChange={(e) => setManual(e.target.value)}
-            placeholder="e.g. Viktor, Machine Herald"
-            className="input flex-1"
-            autoComplete="off"
-          />
+          <input value={manual} onChange={(e) => setManual(e.target.value)} placeholder="e.g. Viktor, Machine Herald" className="input flex-1" autoComplete="off" />
           <button type="submit" className="btn-ghost">Search</button>
         </div>
       </form>
