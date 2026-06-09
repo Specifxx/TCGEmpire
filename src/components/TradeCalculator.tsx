@@ -197,7 +197,22 @@ export function TradeCalculator() {
                 className="h-1 flex-1 cursor-pointer accent-brand-500"
                 aria-label="Cash settlement percentage"
               />
-              <span className="w-10 shrink-0 text-right text-sm font-bold text-white">{cashPct}%</span>
+              <div className="flex shrink-0 items-center">
+                <input
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={cashPct}
+                  onChange={(e) => {
+                    const v = Math.round(Number(e.target.value));
+                    if (Number.isFinite(v)) setCashPct(Math.min(100, Math.max(1, v)));
+                  }}
+                  onFocus={(e) => e.target.select()}
+                  className="w-12 rounded border border-ink-700 bg-ink-900 px-1 py-0.5 text-right text-sm font-bold text-white outline-none focus:border-brand-500"
+                  aria-label="Cash settlement percentage"
+                />
+                <span className="ml-0.5 text-sm font-bold text-white">%</span>
+              </div>
               {cashPct !== 100 && (
                 <button type="button" onClick={() => setCashPct(100)} className="shrink-0 text-xs text-slate-500 hover:text-brand-400">
                   reset
