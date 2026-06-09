@@ -16,6 +16,19 @@ async function main() {
   });
   console.log(`Verified seller: flagged ${verified.count} account(s).`);
 
+  // Mark the owner's shop as the official store (ranks first) if a profile exists.
+  const owner = await prisma.user.findFirst({
+    where: { OR: [{ email: "mastermisclick@gmail.com" }, { displayName: "Specifix" }] },
+    select: { id: true },
+  });
+  if (owner) {
+    const official = await prisma.sellerProfile.updateMany({
+      where: { userId: owner.id },
+      data: { isOfficial: true },
+    });
+    if (official.count) console.log("Official store: flagged the owner's shop.");
+  }
+
   // 2) Test buyer account (test@test.com / testing1234) with demo wallet funds so the
   //    marketplace buy flow can be tried end-to-end before real payments are live.
   const email = "test@test.com";

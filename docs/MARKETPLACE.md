@@ -73,3 +73,61 @@ handling) was scoped earlier and applies directly here.
 - [ ] Escrow + dispute flow; tracked-shipping requirement.
 - [ ] ToS / refund policy / GST handling.
 - [ ] Replace the test-wallet buy with the Stripe checkout.
+
+---
+
+# Research: payments & shipping options
+
+## Option A — Stripe Connect (recommended for a custom marketplace)
+
+Best fit because we own the UX (CSFloat/TCGplayer-style) and need multi-seller
+payouts + escrow. Steps & resources:
+
+1. **Create a Stripe account** → enable **Connect** (Platform). https://dashboard.stripe.com/connect
+2. **Seller onboarding (Express):** create a connected account per seller, redirect them through Stripe-hosted KYC. Store `SellerProfile.stripeAccountId`; gate listing/payout on `payoutsEnabled` (from the `account.updated` webhook). Docs: https://stripe.com/docs/connect/express-accounts
+3. **Checkout (separate charges & transfers):** a `PaymentIntent` charges the buyer to the *platform* balance (held). After delivery, create a **Transfer** to each seller (= escrow), keeping `MARKETPLACE_FEE_BPS` as the application fee. Docs: https://stripe.com/docs/connect/separate-charges-and-transfers
+4. **Webhooks** (`/api/stripe/webhook`): `payment_intent.succeeded`, `account.updated`, `charge.dispute.created`; verify signature + dedupe. Docs: https://stripe.com/docs/webhooks
+5. **Escrow + disputes**: the `Order` state machine + a `Dispute` table + tracked-shipping requirement (chargeback evidence).
+6. **Legal**: Stripe is the regulated money-mover, so you avoid your own AFSL/AUSTRAC — confirm with a lawyer; GST on your fee.
+
+Effort: ~1–2 weeks. Fees: ~1.7%+30¢ AU card + Connect payout fees, on top of your 3%.
+
+## Option B — Shopify
+
+Shopify is excellent for a **single-store** shopfront, less so for a **multi-seller
+marketplace** out of the box:
+
+- **Shopify (standard):** great if *you* are the only seller (your "official store").
+  Shopify Payments handles cards, taxes and **carrier-calculated (dynamic) shipping**
+  natively. But it's a separate storefront — it won't live inside RiftCompare's UI or
+  show listings inside the price comparison without custom work (Storefront API).
+- **Multi-seller on Shopify** needs an app like **Webkul Multi-Vendor Marketplace** or
+  **Multivendor Marketplace by CedCommerce**, or **Shopify Collective** — workable but
+  you inherit their UX and per-seller payout model, and embedding it in our site is
+  awkward.
+- **Hybrid worth considering:** run **your own official store on Shopify** (fast,
+  compliant, dynamic shipping, payouts solved) and pull its inventory/prices into
+  RiftCompare via the **Storefront API** as the "official" source — while other
+  verified sellers use the Stripe-Connect marketplace. This matches "as the official
+  store I go first": Shopify powers your store; Connect powers the rest.
+
+## Dynamic (location-based) shipping
+
+Instead of a flat per-seller rate, calculate postage from **seller origin → buyer
+address** at checkout. Options:
+
+- **Shopify Shipping / carrier-calculated rates** — if the seller is on Shopify, this
+  is built in (Australia Post, etc.). Best "it just works" if using Shopify.
+- **EasyPost** (https://www.easypost.com) or **Shippo** (https://goshippo.com) — carrier
+  rate APIs (Australia Post, USPS, Royal Mail, etc.). At checkout, POST {fromZip,
+  toZip, weight, dimensions} → get live rates; pick the cheapest. Cleanest for a custom
+  marketplace; needs each card's weight (cards are ~light, so a flat "letter vs parcel"
+  band by quantity is usually enough).
+- **Zone bands (cheap first step, no API):** seller sets a few bands — *same state /
+  domestic / international* — and the buyer's selected country (we already have it) +
+  state picks the band. Add `state` to the buyer flow; we already store seller `state`.
+
+**Recommendation:** ship the marketplace beta with the seller's flat rate (done), then
+add **EasyPost** (custom marketplace) or lean on **Shopify Shipping** for the official
+store. To collect the buyer address needed for dynamic rates, add an address step to
+checkout when real payments go in.

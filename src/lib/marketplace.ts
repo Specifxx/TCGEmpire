@@ -26,6 +26,23 @@ export const MARKETPLACE_RETAILER_NAME = "RiftCompare Marketplace";
 // buyer's price; deducted from the seller's payout.
 export const MARKETPLACE_FEE_BPS = Number(process.env.MARKETPLACE_FEE_BPS ?? 300);
 
+// ── Private beta gating ────────────────────────────────────────────────────────
+// While false, marketplace listings are NOT shown in the public price comparison
+// and are only visible/buyable to the allow-listed beta emails (the test buyer).
+// Flip MARKETPLACE_PUBLIC=1 (env) to launch publicly.
+export const MARKETPLACE_PUBLIC = process.env.MARKETPLACE_PUBLIC === "1";
+export const MARKETPLACE_BETA_EMAILS = (process.env.MARKETPLACE_BETA_EMAILS ?? "test@test.com")
+  .split(",")
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean);
+
+// Who may see/buy listings right now. Public when launched; otherwise only the
+// allow-listed beta testers (so the owner's real listings stay private during testing).
+export function canViewMarketplaceListings(email?: string | null): boolean {
+  if (MARKETPLACE_PUBLIC) return true;
+  return !!email && MARKETPLACE_BETA_EMAILS.includes(email.toLowerCase());
+}
+
 export const MARKETPLACE_COUNTRIES = ["AU", "NZ", "US", "UK"] as const;
 export const CURRENCY_BY_COUNTRY: Record<string, string> = { AU: "AUD", NZ: "NZD", US: "USD", UK: "GBP" };
 
@@ -58,6 +75,8 @@ export function validateListingInput(input: any):
 export async function importMarketplaceListings(): Promise<number> {
   // Replace all marketplace rows across every market key.
   await prisma.retailerPrice.deleteMany({ where: { retailer: { in: MARKETPLACE_RETAILER_KEYS } } });
+  // During private beta, keep listings OUT of the public comparison entirely.
+  if (!MARKETPLACE_PUBLIC) return 0;
 
   const listings = await prisma.marketplaceListing.findMany({
     where: { status: "ACTIVE", quantity: { gt: 0 } },

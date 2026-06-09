@@ -478,6 +478,8 @@ model SellerProfile {
   freeOverCents     Int      @default(0)
   shippingNote      String?
   handlingDays      Int      @default(2) // typical dispatch time in days
+  // The platform's own official store ranks first in marketplace listings.
+  isOfficial        Boolean  @default(false)
   // Payouts (Stripe Connect) — populated once the seller onboards. Optional for now.
   stripeAccountId   String?
   payoutsEnabled    Boolean  @default(false)
