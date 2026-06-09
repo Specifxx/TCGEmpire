@@ -9,7 +9,6 @@ import { useCountry } from "./CountryProvider";
 // (shown below the lg breakpoint, mirroring the desktop "Decks"/"More" dropdowns).
 const LINKS = [
   { href: "/forum", label: "Forum" },
-  { href: "/scan", label: "Card Scanner (Beta)" },
   { href: "/sealed", label: "Sealed Products" },
   { href: "/decks", label: "Meta Decks" },
   { href: "/deck", label: "Deck Builder" },
