@@ -78,9 +78,27 @@ export function QuickViewProvider({ children }: { children: React.ReactNode }) {
 function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => void }) {
   const [prices, setPrices] = useState<RetailerPrice[] | null>(null);
   const [history, setHistory] = useState<PricePoint[] | null>(null);
+  const [coll, setColl] = useState<"idle" | "saving" | "added" | "signin" | "error">("idle");
+  const [collFoil, setCollFoil] = useState(false);
   const href = cardHref(card);
   const { country, fmt, price } = useCountry();
   const lowest = price(card);
+
+  async function addToCollection() {
+    setColl("saving");
+    try {
+      const res = await fetch("/api/collection", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cardId: card.id, isFoil: collFoil }),
+      });
+      if (res.status === 401) return setColl("signin");
+      if (!res.ok) return setColl("error");
+      setColl("added");
+    } catch {
+      setColl("error");
+    }
+  }
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -164,6 +182,31 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
               <div className="text-2xl font-extrabold text-accent">
                 {lowest != null ? fmt(lowest) : "—"}
               </div>
+            </div>
+
+            {/* Add to collection — track & value your whole collection in your profile */}
+            <div className="mt-3 flex items-center gap-2">
+              {coll === "signin" ? (
+                <a href="/login?next=/profile" className="btn-ghost flex-1 justify-center text-sm">Sign in to track your collection</a>
+              ) : coll === "added" ? (
+                <div className="flex flex-1 items-center justify-between rounded-lg border border-brand-500/30 bg-brand-500/10 px-3 py-2 text-sm">
+                  <span className="font-semibold text-brand-300">✓ Added to your collection</span>
+                  <button onClick={addToCollection} className="text-xs text-slate-300 hover:text-white">Add another +1</button>
+                </div>
+              ) : (
+                <>
+                  <button onClick={addToCollection} disabled={coll === "saving"} className="btn-primary flex-1 justify-center text-sm">
+                    {coll === "saving" ? "Adding…" : coll === "error" ? "Try again" : "＋ Add to collection"}
+                  </button>
+                  <button
+                    onClick={() => setCollFoil((f) => !f)}
+                    title="Mark as foil"
+                    className={`shrink-0 rounded-lg px-3 py-2 text-sm font-semibold ${collFoil ? "bg-gold/20 text-gold ring-1 ring-gold/40" : "bg-ink-800 text-slate-400 hover:text-slate-200"}`}
+                  >
+                    ✦ Foil
+                  </button>
+                </>
+              )}
             </div>
 
             <div className="mt-4">
