@@ -83,8 +83,8 @@ export function CardTile({ card }: { card: CardTileData }) {
           {card.setCode} · {card.collectorNumber}
         </p>
 
-        <div className="mt-auto flex items-end justify-between pt-1">
-          <div>
+        <div className="mt-auto flex items-end justify-between gap-2 pt-1">
+          <div className="min-w-0">
             {lowest != null ? (
               <>
                 <div className="text-[11px] text-slate-500">from</div>
@@ -97,7 +97,7 @@ export function CardTile({ card }: { card: CardTileData }) {
             )}
           </div>
           {stores > 0 && (
-            <div className="text-right text-[11px] font-semibold text-brand-400">
+            <div className="shrink-0 whitespace-nowrap pb-0.5 text-right text-[11px] font-semibold text-brand-400">
               {stores} {stores === 1 ? "store" : "stores"}
             </div>
           )}

@@ -192,12 +192,24 @@ export default async function HomePage() {
           {" "}{info.adjective} stores{ebay ? ` and ${ebay}` : ""} so you can buy Riftbound cards in {info.place} for
           less — whether you&apos;re chasing singles for a deck or sealed booster boxes.
         </p>
-        <div className="mt-6 grid gap-5 sm:grid-cols-2">
+        {/* Collapsible FAQ — tidy on mobile; answers still in the DOM for SEO. */}
+        <div className="mt-5 divide-y divide-ink-800 border-t border-ink-800">
           {faqs.map((f) => (
-            <div key={f.q}>
-              <h3 className="font-semibold text-white">{f.q}</h3>
-              <p className="mt-1 text-sm leading-relaxed text-slate-400">{f.a}</p>
-            </div>
+            <details key={f.q} className="group py-1">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-3 font-semibold text-white [&::-webkit-details-marker]:hidden">
+                <span>{f.q}</span>
+                <svg
+                  className="h-4 w-4 shrink-0 text-slate-500 transition-transform group-open:rotate-180"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </summary>
+              <p className="pb-3 text-sm leading-relaxed text-slate-400">{f.a}</p>
+            </details>
           ))}
         </div>
       </section>
