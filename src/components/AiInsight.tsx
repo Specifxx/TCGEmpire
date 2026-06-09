@@ -35,7 +35,11 @@ export function AiInsight({ cardId, compact = false }: { cardId: string; compact
       <div className="mb-1.5 flex items-center gap-2">
         <span className="text-base">🤖</span>
         <span className="text-xs font-bold uppercase tracking-wide text-slate-300">AI Tips</span>
-        <span className="chip bg-brand-500/10 text-[10px] font-semibold uppercase tracking-wide text-brand-300">Beta</span>
+        {insight?.source === "ai" ? (
+          <span className="chip bg-fuchsia-500/15 text-[10px] font-semibold uppercase tracking-wide text-fuchsia-300">✨ Live AI</span>
+        ) : (
+          <span className="chip bg-brand-500/10 text-[10px] font-semibold uppercase tracking-wide text-brand-300">Beta</span>
+        )}
         {insight && (
           <span className={`ml-auto chip text-[11px] font-bold ${s.chip}`}>{s.emoji} {insight.label}</span>
         )}
