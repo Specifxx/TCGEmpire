@@ -9,11 +9,12 @@
 // Leaving it empty disables ALL ad code: no loader script, no /ads.txt, and the
 // AdSlot component renders a harmless styled placeholder instead of an ad unit.
 
-// AdSense publisher id, e.g. "ca-pub-1234567890123456". Public by design (it is
-// emitted in the page HTML and /ads.txt), so the live account id is the safe code
-// default — matching how affiliate ids are handled in lib/affiliate.ts. Override
-// per-environment via NEXT_PUBLIC_ADSENSE_CLIENT if it ever rotates.
-export const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT ?? "ca-pub-6842128782879909";
+// AdSense publisher id, e.g. "ca-pub-1234567890123456". Public by design, so the
+// live account id is the safe code default. NOTE: we use `||` (not `??`) so an env
+// var accidentally set to an EMPTY string still falls back to this id — an empty
+// value was silently disabling the loader/meta tag. Override with a real id to
+// point at a different account.
+export const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || "ca-pub-6842128782879909";
 
 // True only when a syntactically valid publisher id is configured. Guards every
 // place that emits real ad markup so we never ship a broken/empty <ins>.
