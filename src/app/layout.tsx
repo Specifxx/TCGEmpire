@@ -114,6 +114,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <span className="text-ink-700">·</span>
             <a href={`mailto:${CONTACT_EMAIL}`} className="text-gold hover:underline">{CONTACT_EMAIL}</a>
           </div>
+          {/* Cross-promotion: our sister site for the Pokémon TCG. */}
+          <p className="mb-2">
+            Collect <strong className="font-semibold text-slate-400">Pokémon</strong> cards too? Compare
+            prices across every English card on our sister site{" "}
+            <a
+              href="https://dexcompare.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-brand-400 hover:underline"
+            >
+              DexCompare.com
+            </a>
+            .
+          </p>
           <p>
             RiftCompare · Riftbound card database &amp; price comparison for
             Australia. Prices are sourced from public store listings and may be out
