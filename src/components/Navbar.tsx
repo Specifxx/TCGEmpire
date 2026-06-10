@@ -16,7 +16,7 @@ export async function Navbar() {
     <header className="sticky top-0 z-40 border-b border-ink-800 bg-ink-950/95">
       <WishlistSync loggedIn={!!user} />
       <div className="container-app">
-       <div className="flex h-16 items-center gap-2 sm:gap-4">
+       <div className="flex h-16 w-full items-center justify-between gap-2 sm:gap-4">
         {/* Logo: standalone R mark + text wordmark */}
         <Link href="/" className="flex shrink-0 items-center gap-2" aria-label="RiftCompare home">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -34,7 +34,7 @@ export async function Navbar() {
         </div>
 
         {/* Nav */}
-        <nav className="ml-auto flex items-center gap-0.5 sm:gap-1 lg:ml-0">
+        <nav className="flex shrink-0 items-center gap-0.5 sm:gap-1">
           <Link href="/browse" className="rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:px-2.5">
             Database
           </Link>
