@@ -78,9 +78,14 @@ async function main() {
     created++;
     if (!dry) {
       const { id, createdAt, ...rest } = base;
+      // Alt-art ("variant") prints are a Showcase-tier treatment — don't let them
+      // inherit the base card's rarity (e.g. "Rare") or they pollute that rarity
+      // filter with what looks like the base art. Promos keep their base rarity
+      // (they carry their own PROMO badge).
+      const rarity = variant != null ? "Showcase" : rest.rarity;
       await prisma.card.create({
         data: {
-          ...rest, externalId, collectorNumber, slug, variant, isPromo,
+          ...rest, rarity, externalId, collectorNumber, slug, variant, isPromo,
           viewCount: 0, searchCount: 0, lastViewedAt: null, marketPriceCents: 0,
           lowestPriceCents: null, lowestPriceCentsNz: null, lowestPriceCentsUs: null, lowestPriceCentsUk: null,
         },

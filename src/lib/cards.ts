@@ -11,6 +11,7 @@ export interface CardQuery {
   variant?: string; // "alt" = alt-art only, "base" = base art only
   sig?: string; // "1" = signature ("*") cards only
   promo?: string; // "1" = promo printings only
+  printing?: string; // "normal" = base prints only (no alt-art / signature / promo)
   priced?: string; // "1" = only cards with a live price
   min?: string;
   max?: string;
@@ -56,6 +57,14 @@ export function buildCardWhere(query: CardQuery, country: Country = "AU"): Prism
 
   if (query.sig === "1") where.collectorNumber = { contains: "*" };
   if (query.promo === "1") where.isPromo = true;
+
+  // "Normal only" — hide the special prints (alt-art, signature, promo) so players
+  // browsing for the standard card aren't shown showcase/promo variants.
+  if (query.printing === "normal") {
+    where.variant = null;
+    where.isPromo = false;
+    where.collectorNumber = { not: { contains: "*" } };
+  }
 
   if (query.q) {
     // Search the normalised name so "kaisa" matches "Kai'Sa". Also match number.

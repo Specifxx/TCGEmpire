@@ -77,6 +77,7 @@ export function Filters() {
     (sp.get("variant") ? 1 : 0) +
     (sp.get("sig") ? 1 : 0) +
     (sp.get("promo") ? 1 : 0) +
+    (sp.get("printing") ? 1 : 0) +
     (sp.get("priced") ? 1 : 0) +
     (sp.get("min") || sp.get("max") ? 1 : 0);
 
@@ -167,9 +168,22 @@ export function Filters() {
 
           <Section title="Printing" last defaultOpen>
             <div className="flex flex-col gap-1">
-              <Check checked={sp.get("variant") === "alt"} onChange={() => update((p) => (p.get("variant") === "alt" ? p.delete("variant") : p.set("variant", "alt")))} label="Alternate art" dot="#f5a524" />
-              <Check checked={sp.get("sig") === "1"} onChange={() => update((p) => (p.get("sig") === "1" ? p.delete("sig") : p.set("sig", "1")))} label="Signature" dot="#f59e0b" />
-              <Check checked={sp.get("promo") === "1"} onChange={() => update((p) => (p.get("promo") === "1" ? p.delete("promo") : p.set("promo", "1")))} label="Promo" dot="#06b6d4" />
+              {/* Normal hides all special prints; it's mutually exclusive with the
+                  alt-art / signature / promo toggles below. */}
+              <Check
+                checked={sp.get("printing") === "normal"}
+                onChange={() =>
+                  update((p) => {
+                    if (p.get("printing") === "normal") p.delete("printing");
+                    else { p.set("printing", "normal"); p.delete("variant"); p.delete("sig"); p.delete("promo"); }
+                  })
+                }
+                label="Normal only"
+                dot="#34d17e"
+              />
+              <Check checked={sp.get("variant") === "alt"} onChange={() => update((p) => { p.delete("printing"); p.get("variant") === "alt" ? p.delete("variant") : p.set("variant", "alt"); })} label="Alternate art" dot="#f5a524" />
+              <Check checked={sp.get("sig") === "1"} onChange={() => update((p) => { p.delete("printing"); p.get("sig") === "1" ? p.delete("sig") : p.set("sig", "1"); })} label="Signature" dot="#f59e0b" />
+              <Check checked={sp.get("promo") === "1"} onChange={() => update((p) => { p.delete("printing"); p.get("promo") === "1" ? p.delete("promo") : p.set("promo", "1"); })} label="Promo" dot="#06b6d4" />
             </div>
           </Section>
         </div>
