@@ -9,7 +9,8 @@ export const RIFTLE_ATTEMPTS = 8;
 // Rarity ladder for higher/lower hints (Showcase prints are excluded from the pool).
 const RARITY_ORDER = ["Common", "Uncommon", "Rare", "Epic"];
 // Guessable card types — Battlefields/Runes are too niche to be fun answers.
-const POOL_TYPES = ["Unit", "Champion Unit", "Spell", "Gear", "Legend"];
+// (Champions are type "Unit" in the DB.)
+const POOL_TYPES = ["Unit", "Spell", "Gear", "Legend"];
 
 export type RiftleCard = {
   id: string;

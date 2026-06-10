@@ -150,7 +150,13 @@ export function Riftle() {
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter" && suggestions.length) submit(suggestions[0]); }}
+            onKeyDown={(e) => {
+              if (e.key !== "Enter") return;
+              // Prefer the exactly-typed name; fall back to the top suggestion.
+              const exact = names.find((n) => n.toLowerCase() === input.trim().toLowerCase());
+              if (exact) submit(exact);
+              else if (suggestions.length) submit(suggestions[0]);
+            }}
             placeholder={day ? `Guess ${rows.length + 1} of ${attempts} — type a card name…` : "Loading today's card…"}
             disabled={!day || busy}
             className="input"
