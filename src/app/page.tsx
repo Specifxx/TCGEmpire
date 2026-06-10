@@ -104,6 +104,7 @@ export default async function HomePage() {
             <Link href="/browse" className="btn-primary">Browse the database</Link>
             <Link href="/decks" className="btn-ghost">Top meta decks</Link>
             <Link href="/deck" className="btn-ghost">Deck builder &amp; pricing</Link>
+            <Link href="/learn" className="btn-ghost">🎓 New to Riftbound?</Link>
           </div>
 
           {/* Country / market toggle */}

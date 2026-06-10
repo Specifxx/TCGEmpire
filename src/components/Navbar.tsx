@@ -56,6 +56,8 @@ export async function Navbar() {
               label="More"
               items={[
                 { href: "/forum", label: "Forum", desc: "Buy, sell & trade with players" },
+                { href: "/learn", label: "Learn Riftbound", desc: "New player? Start here — free" },
+                { href: "/riftle", label: "Riftle", desc: "Daily guess-the-card game" },
                 { href: "/sealed", label: "Sealed Products", desc: "Boxes, packs & promos" },
                 { href: "/proxy", label: "Proxy Printer", desc: "Pick & print test cards" },
                 { href: "/guides", label: "Guides", desc: "Learn Riftbound" },
