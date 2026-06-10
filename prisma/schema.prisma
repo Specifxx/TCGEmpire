@@ -136,6 +136,10 @@ model Card {
   viewCount          Int       @default(0)
   searchCount        Int       @default(0)
   lastViewedAt       DateTime?
+  // Last time the eBay pass actually QUERIED this card. If a card has no eBay
+  // listing and this is stale/null, the pass never reached it (budget/quota ran
+  // out) → the card page offers a "search eBay" affiliate link instead.
+  ebayCheckedAt      DateTime?
   createdAt          DateTime  @default(now())
 
   listings            Listing[]

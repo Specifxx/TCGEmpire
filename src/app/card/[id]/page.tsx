@@ -9,7 +9,7 @@ import { WishlistButton } from "@/components/WishlistButton";
 import { CardViewBeacon } from "@/components/CardViewBeacon";
 import { formatMoney, timeAgo } from "@/lib/format";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
-import { affiliateUrl, SOVRN_VERIFY_CARD_SLUG, SOVRN_VERIFY_RETAILER, SOVRN_VERIFY_URL } from "@/lib/affiliate";
+import { affiliateUrl, ebayAffiliateUrl, SOVRN_VERIFY_CARD_SLUG, SOVRN_VERIFY_RETAILER, SOVRN_VERIFY_URL } from "@/lib/affiliate";
 import { cardDisplayName } from "@/lib/card-name";
 import { OutboundLink } from "@/components/OutboundLink";
 import { AdSlot } from "@/components/AdSlot";
@@ -94,6 +94,24 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     .sort((a, b) => a.priceCents - b.priceCents || a.delivered - b.delivered);
   const prices = all.filter((p) => p.inStock);
   const outOfStock = all.filter((p) => !p.inStock);
+
+  // eBay fallback link. eBay's quota is finite, so the daily pass prioritises the
+  // most-searched cards and skips the long tail once the budget runs out. When this
+  // card has NO eBay listing in the viewer's market AND the pass never reached it
+  // recently (ebayCheckedAt stale/null), we couldn't check eBay — so offer an
+  // affiliate-tagged eBay search instead of pretending none exist. (NZ has no eBay.)
+  const EBAY_MKT: Record<string, { domain: string; label: string } | undefined> = {
+    AU: { domain: "ebay.com.au", label: "eBay Australia" },
+    US: { domain: "ebay.com", label: "eBay" },
+    UK: { domain: "ebay.co.uk", label: "eBay UK" },
+  };
+  const ebayMkt = EBAY_MKT[country];
+  const hasEbay = card.retailerPrices.some((p) => p.retailer.startsWith("ebay") && p.inStock);
+  const ebayUnchecked = !card.ebayCheckedAt || Date.now() - card.ebayCheckedAt.getTime() > 28 * 60 * 60 * 1000;
+  const ebaySearchUrl =
+    ebayMkt && !hasEbay && ebayUnchecked
+      ? ebayAffiliateUrl(`https://www.${ebayMkt.domain}/sch/i.html?_nkw=${encodeURIComponent(`${card.name} Riftbound`)}`)
+      : null;
 
   // Riftbound cards come in both standard and FOIL finishes (same collector number,
   // different price). Surface the cheapest of each so foil buyers/collectors can
@@ -342,6 +360,29 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               may earn a commission on some outbound links.
             </p>
           </div>
+
+          {/* eBay fallback — shown only when we couldn't reach this card's eBay
+              listings this cycle (quota), not for cards that genuinely have none. */}
+          {ebaySearchUrl && ebayMkt && (
+            <div className="card-surface mt-4 flex flex-wrap items-center justify-between gap-3 border-amber-500/25 bg-amber-500/[0.04] p-4">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 text-sm font-semibold text-white">
+                  <span aria-hidden>🔎</span> No live {ebayMkt.label} price for this card right now
+                </div>
+                <p className="mt-1 text-xs text-slate-400">
+                  We couldn&apos;t load {ebayMkt.label} listings for {cardDisplayName(card.name, card)} this cycle — search eBay directly to see what&apos;s on offer.
+                </p>
+              </div>
+              <a
+                href={ebaySearchUrl}
+                target="_blank"
+                rel="sponsored nofollow noopener noreferrer"
+                className="btn-primary shrink-0 text-sm"
+              >
+                Search {ebayMkt.label} →
+              </a>
+            </div>
+          )}
 
           {/* Price-history chart — free for everyone. */}
           <PriceHistoryChart cardId={card.id} />

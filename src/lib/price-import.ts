@@ -271,12 +271,16 @@ export async function refreshEbayMarkets(
   // exhaust eBay's 5,000/day limit, however many times the importer runs.
   await primeEbayBudget();
   let written = 0;
+  // Cards the pass actually queried (before the budget/quota cut it off). Used to
+  // tell "no eBay listing because none exist" apart from "we never got to check".
+  const checkedIds = new Set<string>();
   for (const mkt of MARKETS) {
     if (isEbayRateLimited()) break;
     console.log(`eBay ${mkt.country}: searching ${cards.length} cards…`);
     const rows: Prisma.RetailerPriceCreateManyInput[] = [];
     for (const c of cards) {
       if (isEbayRateLimited()) break;
+      checkedIds.add(c.id); // we have budget and are about to query this card
       const [rawNum, total] = c.collectorNumber.split("/");
       const r = await searchEbayLowest({
         name: c.name,
@@ -311,7 +315,16 @@ export async function refreshEbayMarkets(
       console.warn(`eBay ${mkt.country}: 0 results (rate-limited?) — keeping existing rows.`);
     }
   }
-  console.log(`eBay singles: spent ${ebaySpentThisRun()} Browse calls this run.`);
+  // Stamp every card the pass reached so the card page can distinguish a genuine
+  // "no eBay listing" from a budget-skipped one. Done in chunks to avoid a giant IN.
+  if (checkedIds.size > 0) {
+    const ids = [...checkedIds];
+    const now = new Date();
+    for (let i = 0; i < ids.length; i += 1000) {
+      await prisma.card.updateMany({ where: { id: { in: ids.slice(i, i + 1000) } }, data: { ebayCheckedAt: now } });
+    }
+  }
+  console.log(`eBay singles: spent ${ebaySpentThisRun()} Browse calls this run (checked ${checkedIds.size} cards).`);
   return written;
 }
 
