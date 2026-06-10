@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { COUNTRY_LIST, INTL_ENABLED } from "@/lib/country";
+import { DISCORD_URL } from "@/lib/site";
 import { useCountry } from "./CountryProvider";
 
 // Database stays in the top bar at all sizes; this menu holds everything else
@@ -88,6 +89,19 @@ export function MobileNav() {
                   </Link>
                 </li>
               ))}
+              {/* Discord — the top-bar icon is hidden on the narrowest screens, so
+                  surface it here too. */}
+              <li className="border-t border-ink-700">
+                <a
+                  href={DISCORD_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setOpen(false)}
+                  className="block px-4 py-3 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-[#5865F2]"
+                >
+                  Join our Discord ↗
+                </a>
+              </li>
             </ul>
           </div>
         </>
