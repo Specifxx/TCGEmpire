@@ -68,9 +68,12 @@ export default async function HomePage() {
   const ebay = ebayLabel(country);
   const faqs = faqsFor(info, ebay);
   const field = priceField(country);
-  const [totalCards, pricedCards, popularCards, storeGroups, movers] = await Promise.all([
+  const [totalCards, pricedCards, inStockUnits, popularCards, storeGroups, movers] = await Promise.all([
     prisma.card.count(),
     prisma.card.count({ where: { [field]: { not: null } } }),
+    // Live, in-stock store listings analysed in this market — the real units we
+    // compared (the market-guide reference rows are not a buyable unit, so excluded).
+    prisma.retailerPrice.count({ where: { country, inStock: true, NOT: { retailer: { startsWith: "marketguide" } } } }),
     // Most-searched singles (ties → more expensive card) — the cards people most want.
     getPopularCards(12, country),
     // Stores serving the selected market (eBay excluded from the count).
@@ -111,9 +114,10 @@ export default async function HomePage() {
           <CountryHeroToggle />
 
           {/* Stats */}
-          <div className="mx-auto mt-8 grid max-w-lg grid-cols-3 gap-4">
+          <div className="mx-auto mt-8 grid max-w-2xl grid-cols-2 gap-4 sm:grid-cols-4">
             <Stat value={totalCards.toLocaleString()} label="cards" />
             <Stat value={pricedCards.toLocaleString()} label="priced" />
+            <Stat value={inStockUnits.toLocaleString()} label="in-stock listings" />
             <Stat value={String(storeCount)} label={`${info.code} ${storeWord}`} />
           </div>
         </div>

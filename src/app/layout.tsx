@@ -119,12 +119,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             Collect <strong className="font-semibold text-slate-400">Pokémon</strong> cards too? Compare
             prices across every English card on our sister site{" "}
             <a
-              href="https://dexcompare.com"
+              href="https://dexcompare.app"
               target="_blank"
               rel="noopener noreferrer"
               className="font-semibold text-brand-400 hover:underline"
             >
-              DexCompare.com
+              DexCompare.app
             </a>
             .
           </p>
