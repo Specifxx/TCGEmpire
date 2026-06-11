@@ -58,7 +58,7 @@ async function main() {
     select: {
       id: true, slug: true, name: true, nameNormalized: true, externalId: true,
       setCode: true, setName: true, collectorNumber: true, variant: true,
-      isPromo: true, domain: true, type: true, rarity: true, imageUrl: true,
+      isPromo: true, domain: true, type: true, rarity: true, imageUrl: true, imageThumbUrl: true,
       lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true,
       lowestPriceCentsUk: true, ebayCheckedAt: true,
     },
@@ -165,6 +165,67 @@ async function main() {
   if (!hist.length) { issues++; console.log("  ✗ PriceHistory is EMPTY — movers/charts have no data"); }
   const ebayFresh = cards.filter((c) => c.ebayCheckedAt && Date.now() - c.ebayCheckedAt.getTime() < 28 * 3600_000).length;
   console.log(`  eBay pass reached ${ebayFresh}/${cards.length} cards in the last 28h`);
+
+  // ── Images: identity + liveness ──────────────────────────────────────────────
+  // (a) The CDN filename embeds the card id ("ogn-001-298-<hash>.png") — verify it
+  //     matches the card it's attached to (set code + collector digits). Cloned
+  //     printings (promos / signatures) share the base card's art by design, so the
+  //     number must match but suffixes ("a", "*") need not.
+  // (b) Fetch every unique URL and verify it returns 200 with real image bytes.
+  section("Images (identity + liveness)");
+  const urlToCards = new Map<string, string[]>();
+  const wrongArt: string[] = [];
+  for (const c of cards) {
+    for (const u of [c.imageUrl, c.imageThumbUrl]) {
+      if (!u) continue;
+      const arr = urlToCards.get(u) ?? [];
+      arr.push(label(c));
+      urlToCards.set(u, arr);
+    }
+    if (c.imageUrl) {
+      const m = c.imageUrl.match(/\/([a-z]{2,4})-(\d+)[a-z]*(?:-star)?-\d+-[0-9a-f]+\.\w+$/i);
+      if (m) {
+        const [, urlSet, urlNum] = m;
+        const cardNum = c.collectorNumber.match(/\d+/)?.[0] ?? "";
+        if (urlSet.toUpperCase() !== c.setCode || urlNum !== cardNum) {
+          wrongArt.push(`${label(c)} → image is ${urlSet}-${urlNum} (${c.imageUrl})`);
+        }
+      }
+    }
+  }
+  report("cards whose image belongs to a DIFFERENT card", wrongArt);
+
+  const checkImage = async (u: string): Promise<string | null> => {
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 20_000);
+      const r = await fetch(u, {
+        headers: { "User-Agent": "RiftCompare-audit/1.0", Range: "bytes=0-63" },
+        signal: ctrl.signal,
+      });
+      clearTimeout(t);
+      if (r.status !== 200 && r.status !== 206) return `HTTP ${r.status}`;
+      const buf = Buffer.from(await r.arrayBuffer());
+      const isPng = buf.subarray(0, 4).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+      const isWebp = buf.subarray(0, 4).toString() === "RIFF" && buf.subarray(8, 12).toString() === "WEBP";
+      const isJpg = buf[0] === 0xff && buf[1] === 0xd8;
+      if (!isPng && !isWebp && !isJpg) return `not image bytes (starts "${buf.subarray(0, 8).toString("hex")}")`;
+      return null;
+    } catch (e) {
+      return e instanceof Error ? e.message.slice(0, 80) : "fetch failed";
+    }
+  };
+  const allUrls = [...urlToCards.keys()];
+  const broken: string[] = [];
+  const POOL = 25;
+  for (let i = 0; i < allUrls.length; i += POOL) {
+    const batch = allUrls.slice(i, i + POOL);
+    const results = await Promise.all(batch.map(checkImage));
+    results.forEach((why, j) => {
+      if (why) broken.push(`${urlToCards.get(batch[j])![0]}: ${why} — ${batch[j]}`);
+    });
+  }
+  report(`broken image URLs (of ${allUrls.length} checked)`, broken);
 
   // ── Fixes ────────────────────────────────────────────────────────────────────
   if (FIX && (missingSlug.length || badIndex.length)) {
