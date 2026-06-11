@@ -12,6 +12,15 @@ body {
   color: #e8eaee;
 }
 
+/* Guard against horizontal overflow on mobile: if any element ever exceeds the
+   viewport width (a long flex child, an oversized table, a wide grid), clip it
+   instead of opening a sideways scroll into dead space. `overflow-x: clip` is used
+   deliberately over `hidden` — it neither creates a scroll container nor forces the
+   other axis to `auto`, so the sticky navbar keeps working. */
+html {
+  overflow-x: clip;
+}
+
 body {
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
