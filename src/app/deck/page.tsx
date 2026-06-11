@@ -1,7 +1,12 @@
+import type { Metadata } from "next";
 import { DeckBuilder } from "@/components/DeckBuilder";
 
-export const metadata = {
-  title: "Deck Builder & Pricing — RiftCompare",
+// NOTE: the layout's title template appends "— RiftCompare"; don't add it here.
+export const metadata: Metadata = {
+  title: "Riftbound Deck Builder & Deck Price Calculator",
+  description:
+    "Paste any Riftbound decklist and price every card instantly — each one matched to its cheapest live store price, with a full deck total. Free deck builder and pricing tool.",
+  alternates: { canonical: "/deck" },
 };
 
 export default function DeckPage({ searchParams }: { searchParams: { list?: string } }) {

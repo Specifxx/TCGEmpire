@@ -36,7 +36,9 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     where: whereParam(params.id),
     select: { slug: true, name: true, setName: true, setCode: true, collectorNumber: true, lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, imageUrl: true, imageThumbUrl: true },
   });
-  if (!card) return { title: "Card not found" };
+  // noindex like the set page: the layout's cookie read makes pages render
+  // dynamically, so make sure an unknown slug can never be indexed as a soft-404.
+  if (!card) return { title: "Card not found", robots: { index: false, follow: false } };
 
   const lowest = pickPrice(card, country);
   const price = lowest != null ? ` from ${formatMoney(lowest, info.currency)}` : "";

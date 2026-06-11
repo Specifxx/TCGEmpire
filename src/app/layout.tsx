@@ -9,7 +9,7 @@ import { QuickViewProvider } from "@/components/QuickView";
 import { WishlistDrawerProvider } from "@/components/WishlistDrawer";
 import { CountryProvider } from "@/components/CountryProvider";
 import { getCountry } from "@/lib/get-country";
-import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
+import { CONTACT_EMAIL, DISCORD_URL, SITE_NAME, SITE_URL } from "@/lib/site";
 import { IMPACT_SITE_VERIFICATION } from "@/lib/affiliate";
 import { ADSENSE_CLIENT, ADSENSE_ENABLED } from "@/lib/ads";
 import { NativeShell } from "@/components/NativeShell";
@@ -65,6 +65,8 @@ const orgJsonLd = {
       alternateName: ["Rift Compare", "RiftCompare.com"],
       url: SITE_URL,
       logo: `${SITE_URL}/icon-512.png`,
+      // Linked profiles — entity signals tying the org to its community presence.
+      sameAs: [DISCORD_URL],
       description:
         "Riftbound TCG card database and live price-comparison across Australia, New Zealand and the US.",
     },

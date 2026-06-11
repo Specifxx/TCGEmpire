@@ -1,7 +1,7 @@
 import { ProxyBuilder } from "@/components/ProxyBuilder";
 
 export const metadata = {
-  title: "Proxy Printer — pick cards to print | RiftCompare",
+  title: "Proxy Printer — Pick Cards to Print",
   robots: { index: false },
 };
 

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { CONTACT_EMAIL } from "@/lib/site";
 
 export const metadata = {
-  title: "Contact & Feedback — RiftCompare",
+  title: "Contact & Feedback",
   description: "Get in touch with RiftCompare — report a price issue, suggest a store to add, or send feedback.",
   alternates: { canonical: "/contact" },
 };
