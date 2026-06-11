@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { GameLoading, GameResultExtras, GameShell, cardUrl, useBestScore, useGameCards, useShare, type GameCard } from "./shared";
+import { GameLoading, GameResultExtras, GameShell, RunRecap, cardUrl, useBestScore, useGameCards, useShare, type GameCard } from "./shared";
 
 // Zoomed In — name the card from a tight crop of its art. Four choices per
 // round; "zoom out" once for a better look at half points. Five rounds.
@@ -23,7 +23,7 @@ function shuffle<T>(arr: T[]): T[] {
 type Round = { answer: GameCard; options: string[]; originX: number; originY: number };
 
 export function Zoomed() {
-  const { cards, error, reload } = useGameCards(ROUNDS * CHOICES + 4);
+  const { cards, currency, error, reload } = useGameCards(ROUNDS * CHOICES + 4);
   const { best, record } = useBestScore("rc_game_zoom_best");
   const { copied, share } = useShare();
 
@@ -179,6 +179,7 @@ export function Zoomed() {
             <Link href="/games" className="btn-ghost text-sm">More games →</Link>
           </div>
           <GameResultExtras game="zoomed" score={score} />
+          <RunRecap cards={rounds.map((x) => x.answer)} currency={currency} title="💸 The cards behind the art" />
         </div>
       )}
     </GameShell>
