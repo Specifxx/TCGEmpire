@@ -9,10 +9,15 @@ import { SETS } from "@/lib/constants";
 export const revalidate = 86400;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const cards = await prisma.card.findMany({
-    select: { id: true, slug: true, lowestPriceCents: true },
-    orderBy: { lowestPriceCents: { sort: "desc", nulls: "last" } },
-  });
+  // Resilient to a DB blip: a sitemap build-time prerender failure hard-fails
+  // the entire Vercel deploy (P1001 during a Neon hiccup). Fall back to the
+  // static routes — the next revalidate restores full coverage.
+  const cards = await prisma.card
+    .findMany({
+      select: { id: true, slug: true, lowestPriceCents: true },
+      orderBy: { lowestPriceCents: { sort: "desc", nulls: "last" } },
+    })
+    .catch(() => []);
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${SITE_URL}/`, changeFrequency: "daily", priority: 1 },
