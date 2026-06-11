@@ -4,6 +4,7 @@ import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { CardTile } from "@/components/CardTile";
 import { CountryHeroToggle } from "@/components/CountryHeroToggle";
+import { Partners } from "@/components/Partners";
 import { getPopularCards } from "@/lib/cheapest-cards";
 import { getPriceMovers } from "@/lib/price-history";
 import { PriceWatch } from "@/components/PriceWatch";
@@ -122,6 +123,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Official partner programs — credibility strip (approved affiliates). */}
+      <Partners country={country} />
 
       {/* Most popular cards — the most-searched Riftbound singles right now */}
       <section>
