@@ -5,39 +5,58 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Feedback, RiftleCard } from "@/lib/riftle";
 import { RIFTLE_HINT_GATES } from "@/lib/riftle";
 
-// Riftle — free daily guess-the-card game. State persists per Sydney day in
-// localStorage; share button copies a Wordle-style emoji grid.
-type Saved = { day: string; rows: Feedback[]; done: "win" | "lose" | null; answer: RiftleCard | null; hintsUsed?: number };
+// Riftle — free guess-the-card game with two modes:
+//   • Daily: one card per Sydney day, shared by everyone; progress + streak persist.
+//   • Unlimited: an endless run of random cards (its own stats), so you can keep
+//     playing after the daily is done.
+// Each game's answer is resolved server-side from a seed, so it never reaches the
+// client. State persists in localStorage; the share button copies an emoji grid.
+type Mode = "daily" | "unlimited";
+type SavedDaily = { day: string; rows: Feedback[]; done: "win" | "lose" | null; answer: RiftleCard | null; hintsUsed?: number };
+type SavedUnlimited = { seed: string; rows: Feedback[]; done: "win" | "lose" | null; answer: RiftleCard | null; hintsUsed?: number };
 type Stats = { played: number; wins: number; streak: number; lastWinDay: string | null };
 
 const KEY = "rc_riftle";
 const KEY_STATS = "rc_riftle_stats";
+const KEY_U = "rc_riftle_unlimited";
+const KEY_U_STATS = "rc_riftle_unlimited_stats";
+const KEY_MODE = "rc_riftle_mode";
 const COLS = ["set", "type", "domain", "rarity", "cost", "might"] as const;
 const COL_LABEL: Record<(typeof COLS)[number], string> = {
   set: "Set", type: "Type", domain: "Domain", rarity: "Rarity", cost: "Cost", might: "Might",
 };
 
-function loadStats(): Stats {
-  try { return JSON.parse(localStorage.getItem(KEY_STATS) || "") as Stats; } catch { return { played: 0, wins: 0, streak: 0, lastWinDay: null }; }
+const EMPTY_STATS: Stats = { played: 0, wins: 0, streak: 0, lastWinDay: null };
+function loadStatsFrom(key: string): Stats {
+  try { return JSON.parse(localStorage.getItem(key) || "") as Stats; } catch { return { ...EMPTY_STATS }; }
+}
+function genSeed(): string {
+  try { return crypto.randomUUID(); } catch { return `${Date.now()}-${Math.random().toString(36).slice(2)}`; }
 }
 
 export function Riftle() {
   const [day, setDay] = useState<string | null>(null);
   const [attempts, setAttempts] = useState(8);
   const [names, setNames] = useState<string[]>([]);
+
+  const [mode, setMode] = useState<Mode>("daily");
+  const [seed, setSeed] = useState<string | null>(null); // current Unlimited game's seed
+
   const [rows, setRows] = useState<Feedback[]>([]);
   const [done, setDone] = useState<"win" | "lose" | null>(null);
   const [answer, setAnswer] = useState<RiftleCard | null>(null);
+  const [hints, setHints] = useState<string[]>([]);
+  const [hintsUsed, setHintsUsed] = useState(0);
+
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [stats, setStats] = useState<Stats>({ played: 0, wins: 0, streak: 0, lastWinDay: null });
-  const [hints, setHints] = useState<string[]>([]);
-  const [hintsUsed, setHintsUsed] = useState(0);
+  const [stats, setStats] = useState<Stats>({ ...EMPTY_STATS });
+  const [uStats, setUStats] = useState<Stats>({ ...EMPTY_STATS });
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Load puzzle meta + restore today's progress.
+  // Load puzzle meta, restore the daily game, then re-open whichever mode was last used.
   useEffect(() => {
     fetch("/api/riftle")
       .then((r) => r.json())
@@ -45,60 +64,137 @@ export function Riftle() {
         setDay(d.day);
         setAttempts(d.attempts ?? 8);
         setNames(d.names ?? []);
+        setStats(loadStatsFrom(KEY_STATS));
+        setUStats(loadStatsFrom(KEY_U_STATS));
+
+        // Restore today's daily progress into the board by default.
+        let restoredDailyHints = 0;
         try {
-          const saved = JSON.parse(localStorage.getItem(KEY) || "") as Saved;
+          const saved = JSON.parse(localStorage.getItem(KEY) || "") as SavedDaily;
           if (saved.day === d.day) {
             setRows(saved.rows ?? []);
             setDone(saved.done ?? null);
             setAnswer(saved.answer ?? null);
             setHintsUsed(saved.hintsUsed ?? 0);
-            // Re-fetch the hint text the player had already unlocked so it shows again.
-            if ((saved.hintsUsed ?? 0) > 0) loadHints();
+            restoredDailyHints = saved.hintsUsed ?? 0;
           }
         } catch { /* fresh day */ }
-        setStats(loadStats());
+
+        // If the player was last in Unlimited mode, switch them back into it.
+        const lastMode = (localStorage.getItem(KEY_MODE) as Mode) || "daily";
+        if (lastMode === "unlimited") {
+          openUnlimited();
+        } else if (restoredDailyHints > 0) {
+          fetchHints(null).then(setHints);
+        }
       })
       .catch(() => setError("Couldn't load today's puzzle — refresh to try again."));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function persist(nextRows: Feedback[], nextDone: Saved["done"], nextAnswer: RiftleCard | null, nextHints = hintsUsed) {
-    if (!day) return;
-    try { localStorage.setItem(KEY, JSON.stringify({ day, rows: nextRows, done: nextDone, answer: nextAnswer, hintsUsed: nextHints } satisfies Saved)); } catch { /* full */ }
+  // Persist the active game to its mode's slot.
+  function persist(nextRows: Feedback[], nextDone: "win" | "lose" | null, nextAnswer: RiftleCard | null, nextHints = hintsUsed) {
+    try {
+      if (mode === "unlimited") {
+        if (!seed) return;
+        localStorage.setItem(KEY_U, JSON.stringify({ seed, rows: nextRows, done: nextDone, answer: nextAnswer, hintsUsed: nextHints } satisfies SavedUnlimited));
+      } else {
+        if (!day) return;
+        localStorage.setItem(KEY, JSON.stringify({ day, rows: nextRows, done: nextDone, answer: nextAnswer, hintsUsed: nextHints } satisfies SavedDaily));
+      }
+    } catch { /* storage full */ }
   }
 
-  // Lazily fetch the hint list (kept out of the default puzzle payload). Returns the
-  // hints so callers can act on them; caches into state so we only fetch once.
-  async function loadHints(): Promise<string[]> {
-    if (hints.length) return hints;
-    try {
-      const d = await fetch("/api/riftle?hints=1").then((r) => r.json());
-      const list: string[] = d.hints ?? [];
-      setHints(list);
-      return list;
-    } catch {
-      return [];
-    }
+  // Fetch the hint list for a given game (null seed = daily). No state read, so it's
+  // safe to call right after a mode switch where `seed`/`mode` haven't settled yet.
+  async function fetchHints(forSeed: string | null): Promise<string[]> {
+    const qs = forSeed ? `?hints=1&seed=${encodeURIComponent(forSeed)}` : "?hints=1";
+    try { return (await fetch(`/api/riftle${qs}`).then((r) => r.json())).hints ?? []; } catch { return []; }
   }
 
   async function revealHint() {
     if (done || hintsUsed >= RIFTLE_HINT_GATES.length) return;
     if (rows.length < RIFTLE_HINT_GATES[hintsUsed]) return; // not unlocked yet
-    await loadHints();
+    if (hints.length === 0) setHints(await fetchHints(mode === "unlimited" ? seed : null));
     const next = hintsUsed + 1;
     setHintsUsed(next);
     persist(rows, done, answer, next);
   }
 
+  function resetBoard() {
+    setRows([]); setDone(null); setAnswer(null); setHints([]); setHintsUsed(0); setInput(""); setError(null);
+  }
+
+  // Start a brand-new Unlimited game (random seed).
+  function startUnlimited() {
+    const s = genSeed();
+    setMode("unlimited");
+    setSeed(s);
+    resetBoard();
+    try {
+      localStorage.setItem(KEY_MODE, "unlimited");
+      localStorage.setItem(KEY_U, JSON.stringify({ seed: s, rows: [], done: null, answer: null, hintsUsed: 0 } satisfies SavedUnlimited));
+    } catch { /* storage full */ }
+    setTimeout(() => inputRef.current?.focus(), 0);
+  }
+
+  // Enter Unlimited mode, resuming an in-progress game if there is one.
+  function openUnlimited() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(KEY_U) || "") as SavedUnlimited;
+      if (saved?.seed) {
+        setMode("unlimited");
+        setSeed(saved.seed);
+        setRows(saved.rows ?? []);
+        setDone(saved.done ?? null);
+        setAnswer(saved.answer ?? null);
+        setHintsUsed(saved.hintsUsed ?? 0);
+        setHints([]);
+        setInput(""); setError(null);
+        try { localStorage.setItem(KEY_MODE, "unlimited"); } catch { /* full */ }
+        if ((saved.hintsUsed ?? 0) > 0) fetchHints(saved.seed).then(setHints);
+        return;
+      }
+    } catch { /* none saved */ }
+    startUnlimited();
+  }
+
+  // Enter Daily mode, restoring today's progress.
+  function openDaily() {
+    setMode("daily");
+    setSeed(null);
+    try { localStorage.setItem(KEY_MODE, "daily"); } catch { /* full */ }
+    let used = 0;
+    try {
+      const saved = JSON.parse(localStorage.getItem(KEY) || "") as SavedDaily;
+      if (saved.day === day) {
+        setRows(saved.rows ?? []); setDone(saved.done ?? null); setAnswer(saved.answer ?? null);
+        setHintsUsed(saved.hintsUsed ?? 0); used = saved.hintsUsed ?? 0;
+      } else { resetBoard(); }
+    } catch { resetBoard(); }
+    setHints([]);
+    setInput(""); setError(null);
+    if (used > 0) fetchHints(null).then(setHints);
+  }
+
+  function switchMode(next: Mode) {
+    if (next === mode) return;
+    if (next === "unlimited") openUnlimited();
+    else openDaily();
+  }
+
   function finish(win: boolean) {
-    const s = loadStats();
-    const next: Stats = {
-      played: s.played + 1,
-      wins: s.wins + (win ? 1 : 0),
-      streak: win ? s.streak + 1 : 0,
-      lastWinDay: win ? day : s.lastWinDay,
-    };
-    try { localStorage.setItem(KEY_STATS, JSON.stringify(next)); } catch { /* full */ }
-    setStats(next);
+    if (mode === "unlimited") {
+      const s = loadStatsFrom(KEY_U_STATS);
+      const nx: Stats = { played: s.played + 1, wins: s.wins + (win ? 1 : 0), streak: win ? s.streak + 1 : 0, lastWinDay: s.lastWinDay };
+      try { localStorage.setItem(KEY_U_STATS, JSON.stringify(nx)); } catch { /* full */ }
+      setUStats(nx);
+    } else {
+      const s = loadStatsFrom(KEY_STATS);
+      const nx: Stats = { played: s.played + 1, wins: s.wins + (win ? 1 : 0), streak: win ? s.streak + 1 : 0, lastWinDay: win ? day : s.lastWinDay };
+      try { localStorage.setItem(KEY_STATS, JSON.stringify(nx)); } catch { /* full */ }
+      setStats(nx);
+    }
   }
 
   const suggestions = useMemo(() => {
@@ -116,7 +212,7 @@ export function Riftle() {
       const res = await fetch("/api/riftle", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify(mode === "unlimited" && seed ? { name, seed } : { name }),
       });
       const d = await res.json();
       if (!res.ok) { setError(d.error ?? "Something went wrong"); return; }
@@ -126,7 +222,8 @@ export function Riftle() {
       if (d.feedback.correct) {
         setDone("win"); setAnswer(d.card ?? null); persist(nextRows, "win", d.card ?? null); finish(true);
       } else if (nextRows.length >= attempts) {
-        const rev = await fetch("/api/riftle?reveal=1").then((r) => r.json()).catch(() => null);
+        const revealUrl = mode === "unlimited" && seed ? `/api/riftle?reveal=1&seed=${encodeURIComponent(seed)}` : "/api/riftle?reveal=1";
+        const rev = await fetch(revealUrl).then((r) => r.json()).catch(() => null);
         setDone("lose"); setAnswer(rev?.card ?? null); persist(nextRows, "lose", rev?.card ?? null); finish(false);
       } else {
         persist(nextRows, null, null);
@@ -140,14 +237,17 @@ export function Riftle() {
   }
 
   function share() {
-    if (!day) return;
     const grid = rows
       .map((r) => COLS.map((c) => (r.cells[c].state === "hit" ? "🟩" : r.cells[c].hint ? (r.cells[c].hint === "higher" ? "🔼" : "🔽") : "⬛")).join(""))
       .join("\n");
     const score = done === "win" ? `${rows.length}/${attempts}` : `X/${attempts}`;
-    const text = `Riftle ${day} ${score}\n${grid}\nriftcompare.com/riftle`;
+    const tag = mode === "unlimited" ? "Riftle ∞" : `Riftle ${day}`;
+    const text = `${tag} ${score}\n${grid}\nriftcompare.com/riftle`;
     navigator.clipboard?.writeText(text).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1800); });
   }
+
+  const shownStats = mode === "unlimited" ? uStats : stats;
+  const ready = mode === "unlimited" ? !!seed : !!day;
 
   const cell = (c: Feedback["cells"][(typeof COLS)[number]]) => (
     <div className={`flex h-11 items-center justify-center gap-0.5 rounded-md px-1 text-center text-[11px] font-semibold sm:text-xs ${c.state === "hit" ? "bg-brand-500/25 text-brand-200 ring-1 ring-brand-500/50" : "bg-ink-800 text-slate-300"}`}>
@@ -161,15 +261,38 @@ export function Riftle() {
       <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
         <div>
           <h1 className="flex items-center gap-2 font-display text-2xl font-extrabold text-white">
-            🃏 Riftle <span className="chip bg-brand-500/15 text-[11px] font-bold uppercase tracking-wide text-brand-300">Daily</span>
+            🃏 Riftle{" "}
+            <span className="chip bg-brand-500/15 text-[11px] font-bold uppercase tracking-wide text-brand-300">
+              {mode === "unlimited" ? "Unlimited" : "Daily"}
+            </span>
           </h1>
-          <p className="mt-1 text-sm text-slate-400">Guess the Riftbound card of the day in {attempts} tries. Free, no signup — a new card every midnight AEST.</p>
+          <p className="mt-1 text-sm text-slate-400">
+            {mode === "unlimited"
+              ? `Guess a random Riftbound card in ${attempts} tries — play as many as you like.`
+              : `Guess the Riftbound card of the day in ${attempts} tries. A new card every midnight AEST.`}
+          </p>
         </div>
         <div className="flex gap-3 text-center text-xs text-slate-400">
-          <div><div className="text-base font-extrabold text-white">{stats.played}</div>played</div>
-          <div><div className="text-base font-extrabold text-white">{stats.wins}</div>wins</div>
-          <div><div className="text-base font-extrabold text-gold">🔥 {stats.streak}</div>streak</div>
+          <div><div className="text-base font-extrabold text-white">{shownStats.played}</div>played</div>
+          <div><div className="text-base font-extrabold text-white">{shownStats.wins}</div>wins</div>
+          <div><div className="text-base font-extrabold text-gold">🔥 {shownStats.streak}</div>streak</div>
         </div>
+      </div>
+
+      {/* Mode toggle */}
+      <div className="mb-4 inline-flex rounded-lg border border-ink-700 bg-ink-900 p-0.5 text-sm">
+        <button
+          onClick={() => switchMode("daily")}
+          className={`rounded-md px-3 py-1.5 font-semibold transition-colors ${mode === "daily" ? "bg-brand-500/20 text-brand-200" : "text-slate-400 hover:text-white"}`}
+        >
+          Daily
+        </button>
+        <button
+          onClick={() => switchMode("unlimited")}
+          className={`rounded-md px-3 py-1.5 font-semibold transition-colors ${mode === "unlimited" ? "bg-brand-500/20 text-brand-200" : "text-slate-400 hover:text-white"}`}
+        >
+          ♾️ Unlimited
+        </button>
       </div>
 
       {/* Guess input */}
@@ -181,13 +304,12 @@ export function Riftle() {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
               if (e.key !== "Enter") return;
-              // Prefer the exactly-typed name; fall back to the top suggestion.
               const exact = names.find((n) => n.toLowerCase() === input.trim().toLowerCase());
               if (exact) submit(exact);
               else if (suggestions.length) submit(suggestions[0]);
             }}
-            placeholder={day ? `Guess ${rows.length + 1} of ${attempts} — type a card name…` : "Loading today's card…"}
-            disabled={!day || busy}
+            placeholder={ready ? `Guess ${rows.length + 1} of ${attempts} — type a card name…` : "Loading…"}
+            disabled={!ready || busy}
             className="input"
             autoComplete="off"
           />
@@ -205,7 +327,7 @@ export function Riftle() {
       {error && <p className="mt-2 text-sm text-rose-400">{error}</p>}
 
       {/* Hints + a way out to the full database for anyone who wants to explore */}
-      {!done && day && (
+      {!done && ready && (
         <div className="mt-3 space-y-2">
           {hintsUsed > 0 && hints.length > 0 && (
             <ul className="space-y-1.5">
@@ -287,11 +409,17 @@ export function Riftle() {
             </div>
           )}
           <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-            <button onClick={share} className="btn-primary">{copied ? "✓ Copied!" : "Share result"}</button>
+            {mode === "unlimited" ? (
+              <button onClick={startUnlimited} className="btn-primary">▶ Play again</button>
+            ) : (
+              <button onClick={() => switchMode("unlimited")} className="btn-primary">♾️ Play unlimited</button>
+            )}
+            <button onClick={share} className="btn-ghost text-sm">{copied ? "✓ Copied!" : "Share result"}</button>
             <Link href="/browse" className="btn-ghost text-sm">Browse all cards →</Link>
-            <Link href="/learn" className="btn-ghost text-sm">Learn Riftbound →</Link>
           </div>
-          <p className="mt-3 text-xs text-slate-500">New card at midnight AEST. Come back tomorrow!</p>
+          <p className="mt-3 text-xs text-slate-500">
+            {mode === "unlimited" ? "Keep going — there's always another card." : "New daily card at midnight AEST. Come back tomorrow!"}
+          </p>
         </div>
       )}
     </div>

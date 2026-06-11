@@ -70,10 +70,18 @@ const getPool = unstable_cache(
   { revalidate: 3600 }
 );
 
-export async function getDailyCard(day = riftleDay()): Promise<RiftleCard | null> {
+// Pick a pool card deterministically from any seed string. The daily puzzle is just
+// the seed `riftle:<day>`; Unlimited mode passes a random per-game seed, so every
+// game draws a different (but server-verifiable) card while the server stays
+// stateless and the answer never reaches the client.
+export async function getCardForSeed(seed: string): Promise<RiftleCard | null> {
   const pool = await getPool();
   if (!pool.length) return null;
-  return pool[hash(`riftle:${day}`) % pool.length];
+  return pool[hash(seed) % pool.length];
+}
+
+export async function getDailyCard(day = riftleDay()): Promise<RiftleCard | null> {
+  return getCardForSeed(`riftle:${day}`);
 }
 
 // Resolve a player's typed guess to a pool card (exact name match, case-insensitive).
@@ -153,9 +161,13 @@ export function buildHints(c: RiftleCard): string[] {
   ];
 }
 
-// Today's hints (computed from the daily card). Served on demand so they aren't in
+// Hints for whichever card a seed resolves to. Served on demand so they aren't in
 // the default puzzle payload until a stuck player asks for them.
-export async function getDailyHints(day = riftleDay()): Promise<string[]> {
-  const c = await getDailyCard(day);
+export async function getHintsForSeed(seed: string): Promise<string[]> {
+  const c = await getCardForSeed(seed);
   return c ? buildHints(c) : [];
+}
+
+export async function getDailyHints(day = riftleDay()): Promise<string[]> {
+  return getHintsForSeed(`riftle:${day}`);
 }
