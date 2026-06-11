@@ -18,6 +18,157 @@ export interface Article {
 
 export const ARTICLES: Article[] = [
   {
+    slug: "riftbound-price-movers-how-to-track",
+    category: "blog",
+    title: "What's Moving in Riftbound This Week — and How to Track It",
+    excerpt:
+      "Riftbound card prices change every day. Here's how to spot which singles are spiking, which are dropping, and where the best-value buys are — before everyone else does.",
+    author: "RiftCompare",
+    date: "2026-06-11",
+    readMins: 4,
+    tags: ["news", "prices", "movers", "investing"],
+    body: `Riftbound card prices are never still. A card that defines a winning deck at the weekend can jump 30% by Monday; a reprint or a cooling meta can send another sliding. If you buy and sell singles, knowing **which way prices are moving** is half the battle — and we built a page to show you exactly that.
+
+## Track the movers in one place
+
+Head to the **[Price Movers page](/movers)** to see, for your region, this week's:
+
+- **📈 Biggest risers** — the cards spiking up the most over the last 7 days.
+- **📉 Biggest drops** — the singles that have fallen the most, often the best time to buy.
+- **💎 Best value right now** — cards trading furthest below their recent high.
+
+Every figure is the live local price in your currency (AUD, NZD, USD or GBP), compared across the stores we track and updated daily. Switch your country at the top of the page to see your market's movers.
+
+## Why prices move
+
+- **The metagame.** When a deck starts winning events, demand for its key cards spikes. Watch the **[meta decks page](/decks)** and you'll often see a card climb right after a strong tournament weekend.
+- **Supply.** New set releases, restocks and reprints add supply and usually cool prices; cards that stop being printed drift up.
+- **Hype and spoilers.** Anticipation for an upcoming set can move prices on related cards before a single pack is opened.
+
+## How to use this as a buyer
+
+- **Buying to play?** Check the drops and best-value lists first — you'll often find the card you need is cheaper than it was a week ago.
+- **Completing a set or chasing a grail?** Set a price alert: tap the heart on any card to get an email when it falls.
+- **Always compare delivered cost.** A spiking headline price still varies store to store — open the card to see every shop ranked cheapest-first.
+
+## How to use this as a seller
+
+If you have cards sitting in a binder, the risers list tells you what's worth listing right now. Post them on the **[forum](/forum)** or, if you're a verified seller, in the **[marketplace](/marketplace)** while demand is hot.
+
+Want to dive in? **[See this week's Riftbound price movers](/movers)**, or **[browse the full database](/browse)** and sort by price to find your next pickup.`,
+  },
+  {
+    slug: "riftbound-vendetta-next-set",
+    category: "blog",
+    title: "Riftbound Vendetta: The Next Set & How to Be Ready",
+    excerpt:
+      "Vendetta is the next Riftbound: League of Legends TCG set. Here's what a new set release means for prices, and how to be ready to grab cards the moment it drops.",
+    author: "RiftCompare",
+    date: "2026-06-10",
+    readMins: 4,
+    tags: ["news", "set", "vendetta", "release"],
+    body: `**Vendetta (VEN)** is the next set on the Riftbound: League of Legends TCG release calendar, following Origins, Proving Grounds, Spirit Forged and Unleashed. It isn't out yet — but a new set is the single biggest event for card prices, so it pays to be ready before launch day.
+
+## Track Vendetta on RiftCompare
+
+We've already set up the **[Vendetta set page](/sets/vendetta)**. The moment cards are released, every VEN single will appear there with live prices compared across stores — so you can find the cheapest copy of any new card from day one, in your local currency.
+
+## What a new set means for prices
+
+- **Launch-day volatility.** Sealed product and the first chase singles tend to spike at release when supply is tight, then settle over the following weeks as stock catches up. If you're not in a rush, waiting often saves money.
+- **Meta shake-up.** New cards reshape the **[metagame](/decks)**. Cards that enable a strong new deck can climb fast — keep an eye on the **[price movers](/movers)** in the weeks after release.
+- **Ripple effects on older sets.** A new set can raise demand for older cards that combo with it, and cool cards it replaces.
+
+## How to be ready
+
+1. **Wishlist now.** Browse the **[card database](/browse)** and wishlist the cards you already know you want — you'll get an email if a price drops.
+2. **Compare sealed early.** When VEN booster boxes and packs list, the **[sealed page](/sealed)** will rank them cheapest-first across stores. Boxes move quickly at launch.
+3. **Have your deck ready to price.** Drop your planned list into the **[deck builder](/deck)** so you can re-price it the moment the new cards go live.
+4. **Don't overpay in the rush.** Launch hype pushes prices up; RiftCompare always shows you the cheapest delivered price so you never pay the first number you see.
+
+We'll update the **[Vendetta page](/sets/vendetta)** and post a meta snapshot here on the blog as the set lands. In the meantime, **[browse the current sets](/browse)** or read **[where to buy Riftbound cards](/guides/where-to-buy-riftbound-cards)** to get familiar with how it all works.`,
+  },
+  {
+    slug: "how-to-sell-riftbound-cards",
+    category: "blog",
+    title: "How to Sell Riftbound Cards for the Best Price",
+    excerpt:
+      "Sitting on Riftbound cards you don't need? Here's how to price them accurately, where to sell, and how to get the most for your singles and sealed.",
+    author: "RiftCompare",
+    date: "2026-06-09",
+    readMins: 5,
+    tags: ["selling", "marketplace", "forum", "prices"],
+    body: `Got a stack of Riftbound cards gathering dust — duplicates, cards from a deck you've moved on from, or pulls you don't need? Here's how to turn them into cash (or store credit) and get a fair price.
+
+## 1. Price your cards accurately first
+
+Before you list anything, find out what your cards are actually worth **today**. Look each one up on the **[card database](/browse)** to see its live price across every store we track. A few things to get right:
+
+- **The exact printing.** Base, alt-art, Showcase, Signature, Overnumbered and promo versions all trade at very different prices. RiftCompare labels each printing in the card name so you can match yours precisely.
+- **Condition.** Near Mint (NM) is the benchmark; lightly to heavily played copies sell for less. Be honest — it builds trust and avoids returns.
+- **Which cards are worth listing now.** Check the **[price movers](/movers)** — if one of your cards is spiking this week, that's the one to list first.
+
+## 2. Choose where to sell
+
+- **The RiftCompare forum.** Post a free **want-to-sell** listing on the **[forum](/forum)** — it reaches players actively looking to buy, with no listing fees. Great for singles, bulk and trades.
+- **The RiftCompare marketplace.** If you sell regularly, becoming a **[verified seller](/marketplace)** puts your listings right inside the price comparison, in front of buyers at the moment they're choosing where to buy.
+- **eBay and local stores.** For high-value chase cards, a wider audience can help — just factor in fees and postage when you compare your net.
+
+## 3. Set a competitive price
+
+The cards that sell fastest are the ones priced at or just under the cheapest comparable listing. Open the card on RiftCompare, see the lowest current price, and pitch yours accordingly:
+
+- **Want a fast sale?** Undercut the cheapest in-stock listing slightly.
+- **Not in a hurry?** Price at market and wait — especially if the card is trending up.
+- **Selling a whole deck?** Price it as a bundle with the **[deck pricer](/deck)** so buyers can see the value at a glance.
+
+## 4. Ship smart and build a reputation
+
+- Use a rigid mailer and a sleeve + top-loader so cards arrive in the condition you described.
+- Post quickly and communicate — repeat buyers come from good experiences.
+- Bundle small cards together so postage doesn't eat the value of a cheap sale.
+
+Ready to list? **[Post on the forum](/forum)** or **[browse the database](/browse)** to price your collection first. Selling to fund your next deck? See **[where to buy Riftbound cards](/guides/where-to-buy-riftbound-cards)** to spend it well.`,
+  },
+  {
+    slug: "beginner-mistakes-buying-riftbound-cards",
+    category: "blog",
+    title: "5 Beginner Mistakes When Buying Riftbound Cards (and How to Avoid Them)",
+    excerpt:
+      "New to buying Riftbound singles? Avoid these five common — and expensive — mistakes, and you'll build your collection for a lot less.",
+    author: "RiftCompare",
+    date: "2026-06-09",
+    readMins: 5,
+    tags: ["beginners", "buying", "tips"],
+    body: `Getting into Riftbound: League of Legends TCG is exciting — but it's easy to overspend when you're new. Here are the five mistakes we see most often, and how to dodge every one.
+
+## 1. Buying from the first store you find
+
+The same Riftbound card can cost wildly different amounts from shop to shop, and stock changes daily. Buying from the first store you land on is the quickest way to overpay. Instead, **[search the card database](/browse)** and you'll see the lowest live price across every store we track, sorted cheapest-first, with a one-click link straight to the shop.
+
+## 2. Ignoring shipping
+
+A card that's 50c cheaper isn't a deal if it adds postage from a separate store. Always compare the **delivered** cost, not just the sticker price — RiftCompare shows an estimated shipping figure per shop, and buying several cards from one store often unlocks free shipping and beats splitting your order across three.
+
+## 3. Buying the wrong printing
+
+Alt-art, Showcase, Signature, Overnumbered and promo versions of a card can cost many times more than the base print — and they play identically. If you just want the card for your deck, buy the cheap base version. RiftCompare labels each printing right in the card name, so you always know exactly which one you're adding to cart.
+
+## 4. Ripping boxes hoping to pull what you need
+
+Opening booster boxes is fun, but if you need **specific** cards to finish a deck, buying those singles directly is almost always cheaper than chasing them in packs. Save sealed for when you want the opening experience or to collect — and even then, **[compare box prices](/sealed)** first. See our breakdown: **[singles vs sealed](/guides/riftbound-singles-vs-sealed)**.
+
+## 5. Overpaying during hype spikes
+
+Prices jump around tournaments and new-set launches. Paying the first (inflated) number you see during a spike is a classic beginner trap. Check the **[price movers](/movers)** to see whether a card is riding a spike or sitting at a fair price, and set a price alert (tap the heart on any card) to get an email when it drops back down.
+
+## The one habit that fixes all five
+
+Compare before you buy. Set your country at the top of the page, **[open the card database](/browse)**, look up what you want, and click through to the cheapest store. Do that every time and you'll build the same collection for a lot less.
+
+New to the game entirely? Start with **[Riftbound for beginners](/guides/riftbound-for-beginners)**, then come back and shop smart.`,
+  },
+  {
     slug: "where-to-buy-riftbound-cards",
     category: "guide",
     title: "Where to Buy Riftbound Cards (Australia, NZ, US & UK)",
@@ -355,7 +506,21 @@ Riftbound has seven domains — **Fury, Calm, Mind, Body, Chaos, Order** and **C
 
 A deck's cost is dominated by a handful of chase cards — the commons, runes and battlefields are cheap. On every **[meta deck page](/decks)** we show the build cost broken down card-by-card and priced across Australian stores, so you can see exactly where the money goes and where to save. Want to tweak a list? Open it in the **[Deck Builder](/deck)** to re-price your own version.
 
-This guide is a work in progress — we'll expand it with mulligan and sideboarding tips as the section grows.`,
+## Mulligan: keep or ship your opening hand
+
+After you draw your opening hand you get one chance to mulligan — shuffle back any number of cards and redraw that many. A good keep usually has:
+
+- **Enough runes to cast your early plays** — a hand with no resources, or all resources and no spells, is a mulligan.
+- **Something to do on your first few turns** — a cheap unit or a tempo spell so you're not passing turns.
+- **A plan that matches your domains** — if your runes can't cast the expensive cards in hand, ship the dead weight.
+
+Against aggressive decks, keep cheap blockers and removal; against slower decks, you can keep a slightly greedier hand with your stronger mid-game cards.
+
+## Sideboarding between games
+
+At tournaments you play best-of-three, and between games you can swap up to your full sideboard (8 cards) in and out. The idea is to tune your deck to the matchup: bring in extra removal against go-wide decks, more resilient threats against control, or anti-aggro tools when you're on the back foot. Plan your swaps **before** the event — for each common matchup, decide which cards come out and which come in, so you're not guessing at the table.
+
+Want to test these ideas without buying in first? Print a list with the **[proxy sheet tool](/proxy)**, practise your mulligans and sideboard plan, then **[price the final deck](/deck)** and buy the cheapest copies across stores.`,
   },
   {
     slug: "where-to-buy-riftbound-australia",
