@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
+import { getPriceMovers } from "@/lib/price-history";
+import { getCountry } from "@/lib/get-country";
+import { COUNTRIES } from "@/lib/country";
+import { formatMoney } from "@/lib/format";
+import { cardHref } from "@/lib/card-url";
 import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -73,6 +79,14 @@ const GAMES = [
 
 export default async function GamesPage() {
   const user = await getCurrentUser();
+  // The bridge from the arcade to the shop: today's best-value cards (furthest
+  // below their recent high), in the visitor's market. Same cached movers data
+  // the homepage uses, so this costs nothing extra.
+  const country = getCountry();
+  const info = COUNTRIES[country];
+  const deals = (
+    await unstable_cache(() => getPriceMovers(country, 6), ["price-movers", country], { revalidate: 600 })()
+  ).value.slice(0, 6);
   const breadcrumbLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -139,6 +153,36 @@ export default async function GamesPage() {
           </Link>
         ))}
       </div>
+
+      {/* Arcade → shop: today's best buys, while they're here */}
+      {deals.length > 0 && (
+        <section className="mt-10">
+          <div className="mb-3 flex items-end justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-extrabold text-white">💸 Between games: today&apos;s best buys</h2>
+              <p className="mt-0.5 text-xs text-slate-500">
+                Real {info.adjective} cards trading furthest below their recent high — the games run on these prices.
+              </p>
+            </div>
+            <Link href="/movers" className="btn-ghost shrink-0 text-xs">All movers →</Link>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            {deals.map((m) => (
+              <Link key={m.card.id} href={cardHref(m.card)} className="card-surface group p-2.5 transition-all hover:-translate-y-0.5 hover:shadow-glow">
+                {m.card.imageThumbUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={m.card.imageThumbUrl} alt={m.card.name} width={300} height={420} loading="lazy" className="aspect-[5/7] w-full rounded-md object-cover" />
+                )}
+                <div className="mt-2 truncate text-xs font-semibold text-white" title={m.card.name}>{m.card.name}</div>
+                <div className="flex items-baseline justify-between">
+                  <span className="text-sm font-extrabold text-accent">{formatMoney(m.nowCents, info.currency)}</span>
+                  <span className="text-[11px] font-bold text-brand-400">▼{Math.abs(Math.round(m.pct))}%</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <p className="mt-8 text-center text-xs text-slate-600">
         Got an idea for a game? Tell us via the <Link href="/contact" className="text-brand-400 hover:underline">contact form</Link>.

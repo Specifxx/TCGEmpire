@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { GameLoading, GameResultExtras, GameShell, useGameCards, useShare, type GameCard } from "./shared";
+import { GameLoading, GameResultExtras, GameShell, RunRecap, useGameCards, useShare, type GameCard } from "./shared";
 
 // Pairs — classic memory with real card art: 8 cards × 2 = a 4×4 grid. Fewest
 // moves wins; the clock keeps you honest. Best (lowest) move count is stored
@@ -24,7 +24,7 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 export function Pairs() {
-  const { cards, error, reload } = useGameCards(PAIRS + 2);
+  const { cards, currency, error, reload } = useGameCards(PAIRS + 2);
   const { copied, share } = useShare();
 
   const deck: Tile[] = useMemo(() => {
@@ -169,6 +169,7 @@ export function Pairs() {
             <Link href="/games" className="btn-ghost text-sm">More games →</Link>
           </div>
           <GameResultExtras game="pairs" score={moves} seconds={seconds} />
+          <RunRecap cards={cards.slice(0, PAIRS)} currency={currency} title="💸 The cards you matched" />
         </div>
       )}
     </GameShell>

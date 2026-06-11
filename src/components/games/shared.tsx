@@ -5,6 +5,8 @@
 // feels like part of one arcade.
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { formatMoney } from "@/lib/format";
+import { WishlistButton } from "../WishlistButton";
 
 export type GameCard = {
   id: string;
@@ -205,6 +207,53 @@ export function GameResultExtras({ game, score, seconds }: { game: string; score
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Run recap: the bridge from playing to shopping ────────────────────────────
+// The game-over screen is the moment of highest attention, and the player has
+// just *seen* these cards — so show them again with live prices, a wishlist heart
+// (which feeds the price-alert email loop via the global PriceAlertModal), and a
+// one-tap jump into the price comparison. Sorted dearest-first: chase cards are
+// what people actually want to track.
+export function RunRecap({ cards, currency, title = "💸 The cards from this run" }: { cards: GameCard[]; currency: string; title?: string }) {
+  const seen = new Set<string>();
+  const rows = cards
+    .filter((c) => (seen.has(c.id) ? false : (seen.add(c.id), true)))
+    .sort((a, b) => b.priceCents - a.priceCents)
+    .slice(0, 8);
+  if (rows.length === 0) return null;
+
+  return (
+    <div className="card-surface mt-4 overflow-hidden text-left">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-ink-700 px-4 py-2.5">
+        <h3 className="text-sm font-bold text-white">{title}</h3>
+        <span className="text-[11px] text-slate-500">live prices · ♡ = email me when it drops</span>
+      </div>
+      <ul className="divide-y divide-ink-800">
+        {rows.map((c) => (
+          <li key={c.id} className="flex items-center gap-3 px-4 py-2 hover:bg-ink-900/50">
+            <Link href={cardUrl(c)} className="flex min-w-0 flex-1 items-center gap-2.5">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={c.img} alt="" width={28} height={39} loading="lazy" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
+              <span className="min-w-0">
+                <span className="block truncate text-sm font-semibold text-white">{c.name}</span>
+                <span className="block text-[11px] text-slate-500">{c.setCode} · {c.collectorNumber}</span>
+              </span>
+            </Link>
+            <span className="shrink-0 text-sm font-bold text-accent">{formatMoney(c.priceCents, currency)}</span>
+            <WishlistButton cardId={c.id} />
+            <Link href={cardUrl(c)} className="btn-ghost shrink-0 px-2.5 py-1.5 text-xs">
+              Compare →
+            </Link>
+          </li>
+        ))}
+      </ul>
+      <div className="border-t border-ink-800 px-4 py-2.5 text-center text-xs text-slate-500">
+        Every price is the cheapest live store we track.{" "}
+        <Link href="/movers" className="font-semibold text-brand-400 hover:underline">See today&apos;s biggest price moves →</Link>
+      </div>
     </div>
   );
 }

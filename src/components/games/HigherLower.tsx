@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { formatMoney } from "@/lib/format";
-import { GameLoading, GameResultExtras, GameShell, cardUrl, useBestScore, useGameCards, useShare, type GameCard } from "./shared";
+import { GameLoading, GameResultExtras, GameShell, RunRecap, cardUrl, useBestScore, useGameCards, useShare, type GameCard } from "./shared";
 
 // Higher or Lower — the classic streak game, with live card prices. One card's
 // price is shown; guess whether the challenger costs more or less. One mistake
@@ -133,6 +133,7 @@ export function HigherLower() {
             <Link href="/games" className="btn-ghost text-sm">More games →</Link>
           </div>
           <GameResultExtras game="higher-lower" score={streak} />
+          <RunRecap cards={cards.slice(0, pos + 1)} currency={currency} />
         </div>
       )}
     </GameShell>
