@@ -44,8 +44,9 @@ const LIST_SIZE = 5;
 
 // Compute this-week's biggest gainers, biggest fallers, and best-value buys (the
 // largest discounts off a card's recent high). Cheap enough to run inside the
-// homepage's ISR window.
-export async function getPriceMovers(country: Country = "AU"): Promise<PriceMovers> {
+// homepage's ISR window. `limit` caps each of the three lists — the homepage shows
+// a teaser (5); the dedicated /movers page asks for a deeper list.
+export async function getPriceMovers(country: Country = "AU", limit = LIST_SIZE): Promise<PriceMovers> {
  const empty: PriceMovers = { spiking: [], plummeting: [], value: [] };
  try {
   const cutoff = new Date(Date.now() - WINDOW_DAYS * 86400_000);
@@ -81,10 +82,10 @@ export async function getPriceMovers(country: Country = "AU"): Promise<PriceMove
     stats.push({ cardId, points: pts, now, ref7: ref7.v, high, pct7, discount });
   }
 
-  const spikingStats = stats.filter((s) => s.pct7 > 1).sort((a, b) => b.pct7 - a.pct7).slice(0, LIST_SIZE);
-  const plummetStats = stats.filter((s) => s.pct7 < -1).sort((a, b) => a.pct7 - b.pct7).slice(0, LIST_SIZE);
+  const spikingStats = stats.filter((s) => s.pct7 > 1).sort((a, b) => b.pct7 - a.pct7).slice(0, limit);
+  const plummetStats = stats.filter((s) => s.pct7 < -1).sort((a, b) => a.pct7 - b.pct7).slice(0, limit);
   // Best value = biggest discount off the recent high (and actually down, not flat).
-  const valueStats = stats.filter((s) => s.discount > 5 && s.now < s.high).sort((a, b) => b.discount - a.discount).slice(0, LIST_SIZE);
+  const valueStats = stats.filter((s) => s.discount > 5 && s.now < s.high).sort((a, b) => b.discount - a.discount).slice(0, limit);
 
   // Hydrate tile data for every card we'll show (in the requested market's currency).
   const ids = Array.from(new Set([...spikingStats, ...plummetStats, ...valueStats].map((s) => s.cardId)));
