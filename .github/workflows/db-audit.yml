@@ -12,6 +12,13 @@ on:
         description: "Apply safe fixes (backfill missing slugs, recompute search index)"
         type: boolean
         default: false
+  # Also run (read-only) when the audit itself changes — and because the
+  # workflow_dispatch API can't see a workflow until it exists on the default
+  # branch, this is what lets the audit run from a feature branch at all.
+  push:
+    paths:
+      - "scripts/db-audit.ts"
+      - ".github/workflows/db-audit.yml"
 
 jobs:
   audit:
