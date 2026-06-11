@@ -23,7 +23,11 @@ export function WebAdsLoader() {
   return (
     <Script
       id="adsbygoogle-init"
-      strategy="afterInteractive"
+      // lazyOnload (browser idle) instead of afterInteractive: AdSense is the
+      // heaviest third-party script we load, and pulling it off the critical
+      // path is the biggest mobile-PageSpeed lever we control. Ads paint a beat
+      // later; the page becomes interactive sooner.
+      strategy="lazyOnload"
       crossOrigin="anonymous"
       src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
     />

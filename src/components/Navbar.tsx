@@ -20,7 +20,7 @@ export async function Navbar() {
         {/* Logo: standalone R mark + text wordmark */}
         <Link href="/" className="flex shrink-0 items-center gap-2" aria-label="RiftCompare home">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-r-green.png" alt="" aria-hidden className="h-9 w-auto" />
+          <img src="/logo-r-green.png" alt="" aria-hidden width={359} height={353} className="h-9 w-auto" />
           <span className="hidden text-lg font-extrabold tracking-tight text-white sm:block">
             Rift<span className="text-brand-400">Compare</span>
           </span>
