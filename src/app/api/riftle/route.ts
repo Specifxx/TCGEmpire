@@ -1,17 +1,25 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { riftleDay, getDailyCard, resolveGuess, compareGuess, getPoolNames, RIFTLE_ATTEMPTS } from "@/lib/riftle";
+import { riftleDay, getDailyCard, resolveGuess, compareGuess, getPoolNames, getDailyHints, RIFTLE_ATTEMPTS } from "@/lib/riftle";
 
 export const dynamic = "force-dynamic";
 
 // GET → today's puzzle meta + autocomplete names. `?reveal=1` returns the answer
 // (used after the player runs out of guesses — honor system, it's a casual game).
+// `?hints=1` returns the progressive hint list (loaded lazily when first requested).
 export async function GET(req: Request) {
   const day = riftleDay();
   const url = new URL(req.url);
   if (url.searchParams.get("reveal") === "1") {
     const card = await getDailyCard(day);
     return NextResponse.json({ day, card });
+  }
+  if (url.searchParams.get("hints") === "1") {
+    const hints = await getDailyHints(day);
+    return NextResponse.json(
+      { day, hints },
+      { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600" } }
+    );
   }
   const names = await getPoolNames();
   return NextResponse.json(

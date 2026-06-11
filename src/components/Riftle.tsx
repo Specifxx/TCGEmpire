@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Feedback, RiftleCard } from "@/lib/riftle";
+import { RIFTLE_HINT_GATES } from "@/lib/riftle";
 
 // Riftle — free daily guess-the-card game. State persists per Sydney day in
 // localStorage; share button copies a Wordle-style emoji grid.
-type Saved = { day: string; rows: Feedback[]; done: "win" | "lose" | null; answer: RiftleCard | null };
+type Saved = { day: string; rows: Feedback[]; done: "win" | "lose" | null; answer: RiftleCard | null; hintsUsed?: number };
 type Stats = { played: number; wins: number; streak: number; lastWinDay: string | null };
 
 const KEY = "rc_riftle";
@@ -32,6 +33,8 @@ export function Riftle() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [stats, setStats] = useState<Stats>({ played: 0, wins: 0, streak: 0, lastWinDay: null });
+  const [hints, setHints] = useState<string[]>([]);
+  const [hintsUsed, setHintsUsed] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Load puzzle meta + restore today's progress.
@@ -48,6 +51,9 @@ export function Riftle() {
             setRows(saved.rows ?? []);
             setDone(saved.done ?? null);
             setAnswer(saved.answer ?? null);
+            setHintsUsed(saved.hintsUsed ?? 0);
+            // Re-fetch the hint text the player had already unlocked so it shows again.
+            if ((saved.hintsUsed ?? 0) > 0) loadHints();
           }
         } catch { /* fresh day */ }
         setStats(loadStats());
@@ -55,9 +61,32 @@ export function Riftle() {
       .catch(() => setError("Couldn't load today's puzzle — refresh to try again."));
   }, []);
 
-  function persist(nextRows: Feedback[], nextDone: Saved["done"], nextAnswer: RiftleCard | null) {
+  function persist(nextRows: Feedback[], nextDone: Saved["done"], nextAnswer: RiftleCard | null, nextHints = hintsUsed) {
     if (!day) return;
-    try { localStorage.setItem(KEY, JSON.stringify({ day, rows: nextRows, done: nextDone, answer: nextAnswer } satisfies Saved)); } catch { /* full */ }
+    try { localStorage.setItem(KEY, JSON.stringify({ day, rows: nextRows, done: nextDone, answer: nextAnswer, hintsUsed: nextHints } satisfies Saved)); } catch { /* full */ }
+  }
+
+  // Lazily fetch the hint list (kept out of the default puzzle payload). Returns the
+  // hints so callers can act on them; caches into state so we only fetch once.
+  async function loadHints(): Promise<string[]> {
+    if (hints.length) return hints;
+    try {
+      const d = await fetch("/api/riftle?hints=1").then((r) => r.json());
+      const list: string[] = d.hints ?? [];
+      setHints(list);
+      return list;
+    } catch {
+      return [];
+    }
+  }
+
+  async function revealHint() {
+    if (done || hintsUsed >= RIFTLE_HINT_GATES.length) return;
+    if (rows.length < RIFTLE_HINT_GATES[hintsUsed]) return; // not unlocked yet
+    await loadHints();
+    const next = hintsUsed + 1;
+    setHintsUsed(next);
+    persist(rows, done, answer, next);
   }
 
   function finish(win: boolean) {
@@ -175,6 +204,40 @@ export function Riftle() {
       )}
       {error && <p className="mt-2 text-sm text-rose-400">{error}</p>}
 
+      {/* Hints + a way out to the full database for anyone who wants to explore */}
+      {!done && day && (
+        <div className="mt-3 space-y-2">
+          {hintsUsed > 0 && hints.length > 0 && (
+            <ul className="space-y-1.5">
+              {hints.slice(0, hintsUsed).map((h, i) => (
+                <li key={i} className="flex items-start gap-2 rounded-lg border border-gold/25 bg-gold/[0.06] px-3 py-2 text-sm text-amber-100/90">
+                  <span aria-hidden>💡</span>
+                  <span>{h}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5">
+            {hintsUsed < RIFTLE_HINT_GATES.length ? (
+              rows.length >= RIFTLE_HINT_GATES[hintsUsed] ? (
+                <button onClick={revealHint} className="btn-ghost text-sm">
+                  💡 Reveal a hint ({hintsUsed + 1}/{RIFTLE_HINT_GATES.length})
+                </button>
+              ) : (
+                <span className="text-xs text-slate-500">
+                  💡 Next hint unlocks after {RIFTLE_HINT_GATES[hintsUsed]} {RIFTLE_HINT_GATES[hintsUsed] === 1 ? "guess" : "guesses"}
+                </span>
+              )
+            ) : (
+              <span className="text-xs text-slate-500">All hints revealed — good luck!</span>
+            )}
+            <Link href="/browse" className="text-sm text-brand-400 hover:underline">
+              Explore every card in the database →
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Board */}
       {rows.length > 0 && (
         <div className="mt-4 overflow-x-auto">
@@ -223,8 +286,9 @@ export function Riftle() {
               </div>
             </div>
           )}
-          <div className="mt-4 flex items-center justify-center gap-3">
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
             <button onClick={share} className="btn-primary">{copied ? "✓ Copied!" : "Share result"}</button>
+            <Link href="/browse" className="btn-ghost text-sm">Browse all cards →</Link>
             <Link href="/learn" className="btn-ghost text-sm">Learn Riftbound →</Link>
           </div>
           <p className="mt-3 text-xs text-slate-500">New card at midnight AEST. Come back tomorrow!</p>
