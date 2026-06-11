@@ -26,6 +26,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/trade`, changeFrequency: "monthly", priority: 0.7 },
     { url: `${SITE_URL}/learn`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE_URL}/riftle`, changeFrequency: "daily", priority: 0.7 },
+    { url: `${SITE_URL}/games`, changeFrequency: "weekly", priority: 0.7 },
+    { url: `${SITE_URL}/games/higher-lower`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${SITE_URL}/games/price-check`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${SITE_URL}/games/zoomed`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${SITE_URL}/games/pairs`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${SITE_URL}/guides`, changeFrequency: "weekly", priority: 0.7 },
     { url: `${SITE_URL}/blog`, changeFrequency: "weekly", priority: 0.7 },
   ];

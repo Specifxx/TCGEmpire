@@ -277,7 +277,8 @@ export function Riftle() {
               : `Guess the Riftbound card of the day in ${attempts} tries. A new card every midnight AEST.`}
           </p>
         </div>
-        <div className="flex gap-3 text-center text-xs text-slate-400">
+        <div className="flex items-center gap-3 text-center text-xs text-slate-400">
+          <Link href="/games" className="btn-ghost text-xs">🎮 More games</Link>
           <div><div className="text-base font-extrabold text-white">{shownStats.played}</div>played</div>
           <div><div className="text-base font-extrabold text-white">{shownStats.wins}</div>wins</div>
           <div><div className="text-base font-extrabold text-gold">🔥 {shownStats.streak}</div>streak</div>
