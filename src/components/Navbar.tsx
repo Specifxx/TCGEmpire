@@ -53,13 +53,25 @@ export async function Navbar() {
           </div>
           <div className="hidden lg:block">
             <NavDropdown
+              label="Games"
+              items={[
+                { href: "/riftle", label: "Riftle", desc: "The daily guess-the-card puzzle" },
+                { href: "/games/higher-lower", label: "Higher or Lower", desc: "Which card costs more?" },
+                { href: "/games/price-check", label: "Price Check", desc: "Guess the price, score by closeness" },
+                { href: "/games/zoomed", label: "Zoomed In", desc: "Name the card from its art" },
+                { href: "/games/pairs", label: "Pairs", desc: "Card-art memory match" },
+                { href: "/games", label: "All games", desc: "The whole arcade" },
+              ]}
+            />
+          </div>
+          <div className="hidden lg:block">
+            <NavDropdown
               label="More"
               items={[
                 { href: "/market", label: "RiftCompare Index", desc: "The market in one number" },
                 { href: "/movers", label: "Price Movers", desc: "Biggest risers & drops this week" },
                 { href: "/forum", label: "Forum", desc: "Buy, sell & trade with players" },
                 { href: "/learn", label: "Learn Riftbound", desc: "New player? Start here — free" },
-                { href: "/riftle", label: "Riftle", desc: "Daily guess-the-card game" },
                 { href: "/sealed", label: "Sealed Products", desc: "Boxes, packs & promos" },
                 { href: "/proxy", label: "Proxy Printer", desc: "Pick & print test cards" },
                 { href: "/guides", label: "Guides", desc: "Learn Riftbound" },

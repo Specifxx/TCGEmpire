@@ -13,6 +13,7 @@ const LINKS = [
   { href: "/movers", label: "Price Movers" },
   { href: "/forum", label: "Forum" },
   { href: "/learn", label: "Learn Riftbound" },
+  { href: "/games", label: "Games" },
   { href: "/riftle", label: "Riftle (daily game)" },
   { href: "/sealed", label: "Sealed Products" },
   { href: "/decks", label: "Meta Decks" },
