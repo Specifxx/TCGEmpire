@@ -9,12 +9,19 @@ import { isOvernumbered, isSignature, UK_FALLBACK_RETAILERS } from "@/lib/consta
 import { cardHref } from "@/lib/card-url";
 import { cardDisplayName } from "@/lib/card-name";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
-import { affiliateUrl } from "@/lib/affiliate";
+import { affiliateUrl, ebayAffiliateUrl } from "@/lib/affiliate";
 import { OutboundLink } from "./OutboundLink";
 import { useCountry } from "./CountryProvider";
 import { PriceChart } from "./PriceChart";
 import { AiInsight } from "./AiInsight";
 import type { PricePoint } from "@/lib/price-history";
+
+// eBay marketplace per country for the quota-fallback search link (NZ has no eBay).
+const EBAY_MKT: Record<string, { domain: string; label: string } | undefined> = {
+  AU: { domain: "ebay.com.au", label: "eBay Australia" },
+  US: { domain: "ebay.com", label: "eBay" },
+  UK: { domain: "ebay.co.uk", label: "eBay UK" },
+};
 
 interface RetailerPrice {
   id: string;
@@ -79,6 +86,7 @@ export function QuickViewProvider({ children }: { children: React.ReactNode }) {
 
 function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => void }) {
   const [prices, setPrices] = useState<RetailerPrice[] | null>(null);
+  const [ebayCheckedAt, setEbayCheckedAt] = useState<string | null>(null);
   const [history, setHistory] = useState<PricePoint[] | null>(null);
   const [coll, setColl] = useState<"idle" | "saving" | "added" | "signin" | "error">("idle");
   const [collFoil, setCollFoil] = useState(false);
@@ -112,7 +120,7 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
     fetch(`/api/card/${ref}/view`, { method: "POST", keepalive: true }).catch(() => {});
     fetch(`/api/card/${ref}`)
       .then((r) => r.json())
-      .then((d) => { if (alive) setPrices(d.retailerPrices ?? []); })
+      .then((d) => { if (alive) { setPrices(d.retailerPrices ?? []); setEbayCheckedAt(d.ebayCheckedAt ?? null); } })
       .catch(() => { if (alive) setPrices([]); });
     // Region-specific price history (its own currency), keyed by URL for clean caching.
     fetch(`/api/card/${ref}/history?country=${country}`)
@@ -140,6 +148,17 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
       return { ...p, ship, delivered: p.priceCents + (ship ?? 0) };
     })
     .sort((a, b) => a.priceCents - b.priceCents || a.delivered - b.delivered);
+
+  // eBay quota fallback — mirrors the full card page (src/app/card/[id]/page.tsx).
+  // When this market's eBay listing is missing AND the eBay pass never reached this
+  // card recently (budget/quota), offer an affiliate-tagged eBay search. NZ has no eBay.
+  const ebayMkt = EBAY_MKT[country];
+  const hasEbay = (prices ?? []).some((p) => p.retailer.startsWith("ebay") && p.inStock && p.country === country);
+  const ebayUnchecked = !ebayCheckedAt || Date.now() - new Date(ebayCheckedAt).getTime() > 28 * 60 * 60 * 1000;
+  const ebaySearchUrl =
+    prices !== null && ebayMkt && !hasEbay && ebayUnchecked
+      ? ebayAffiliateUrl(`https://www.${ebayMkt.domain}/sch/i.html?_nkw=${encodeURIComponent(`${card.name} Riftbound`)}`)
+      : null;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true">
@@ -267,6 +286,22 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                 </a>
               )}
             </div>
+
+            {/* eBay quota fallback — only when we couldn't reach this card's eBay
+                listings this cycle (not for cards that genuinely have none). */}
+            {ebaySearchUrl && ebayMkt && (
+              <a
+                href={ebaySearchUrl}
+                target="_blank"
+                rel="sponsored nofollow noopener noreferrer"
+                className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-amber-500/25 bg-amber-500/[0.05] p-3 hover:border-amber-500/45"
+              >
+                <span className="min-w-0 text-xs text-slate-300">
+                  <span className="font-semibold text-white">No live {ebayMkt.label} price right now</span> — search eBay for it directly.
+                </span>
+                <span className="shrink-0 text-xs font-semibold text-amber-300">Search {ebayMkt.label} →</span>
+              </a>
+            )}
 
             {/* Price history — free for everyone, right in the preview (viewer's
                 market). With <2 points (new markets still accumulating) PriceChart

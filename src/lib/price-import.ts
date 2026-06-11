@@ -291,6 +291,9 @@ export async function refreshEbayMarkets(
         isPromo: c.isPromo,
         marketplace: mkt.marketplace,
       });
+      // The budget can run out INSIDE the call (its own spend() check), meaning this
+      // card was never actually queried — don't leave it stamped as checked.
+      if (!r && isEbayRateLimited()) { checkedIds.delete(c.id); break; }
       if (!r) continue;
       rows.push({
         cardId: c.id,

@@ -36,6 +36,8 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
       lowestPriceCentsNz: true,
       lowestPriceCentsUs: true,
       lowestPriceCentsUk: true,
+      // Last time the eBay pass reached this card — drives the "search eBay" fallback.
+      ebayCheckedAt: true,
       retailerPrices: {
         where: priceWhere,
         orderBy: { priceCents: "asc" },
