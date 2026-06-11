@@ -37,7 +37,23 @@ function report(label: string, items: string[], total = items.length) {
   if (total > MAX_SAMPLES) console.log(`      … and ${total - MAX_SAMPLES} more`);
 }
 
+// Neon (serverless Postgres) auto-suspends when idle; the first connection after
+// a cold start can exceed Prisma's connect timeout. Knock politely until it wakes.
+async function wakeDb(tries = 6, delayMs = 10_000): Promise<void> {
+  for (let i = 1; i <= tries; i++) {
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      return;
+    } catch (e) {
+      if (i === tries) throw e;
+      console.log(`  …database cold (attempt ${i}/${tries}), retrying in ${delayMs / 1000}s`);
+      await new Promise((r) => setTimeout(r, delayMs));
+    }
+  }
+}
+
 async function main() {
+  await wakeDb();
   const cards = await prisma.card.findMany({
     select: {
       id: true, slug: true, name: true, nameNormalized: true, externalId: true,
