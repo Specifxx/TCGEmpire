@@ -25,6 +25,7 @@ export function AuthForm({ mode, providers }: { mode: "login" | "register"; prov
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [leaderboardEmails, setLeaderboardEmails] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -42,7 +43,7 @@ export function AuthForm({ mode, providers }: { mode: "login" | "register"; prov
       const res = await fetch(`/api/auth/${mode}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(isRegister ? { email, password, displayName } : { email, password }),
+        body: JSON.stringify(isRegister ? { email, password, displayName, leaderboardEmails } : { email, password }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -113,6 +114,21 @@ export function AuthForm({ mode, providers }: { mode: "login" | "register"; prov
             </div>
             <input type="password" className="input" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={isRegister ? "new-password" : "current-password"} minLength={6} required />
           </label>
+
+          {isRegister && (
+            <label className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-ink-700 bg-ink-900/50 p-3">
+              <input
+                type="checkbox"
+                checked={leaderboardEmails}
+                onChange={(e) => setLeaderboardEmails(e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 accent-brand-500"
+              />
+              <span className="text-xs leading-relaxed text-slate-400">
+                Email me the occasional leaderboard update (when I&apos;m knocked off a top spot, plus a
+                weekly high-score recap). Optional — unsubscribe anytime in one click.
+              </span>
+            </label>
+          )}
 
           {error && <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400">{error}</p>}
 

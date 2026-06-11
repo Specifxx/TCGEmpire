@@ -13,6 +13,9 @@ const schema = z.object({
     .string()
     .min(2, "Display name must be at least 2 characters")
     .max(24, "Display name is too long"),
+  // Opt-in (default off) for leaderboard emails — captured with consent at signup,
+  // honoured only via a real unsubscribe. Never a default-on / unsolicited send.
+  leaderboardEmails: z.boolean().optional(),
 });
 
 export async function POST(req: Request) {
@@ -43,6 +46,7 @@ export async function POST(req: Request) {
       email,
       displayName: parsed.data.displayName,
       passwordHash: await hashPassword(parsed.data.password),
+      leaderboardEmails: parsed.data.leaderboardEmails ?? false,
     },
   });
 

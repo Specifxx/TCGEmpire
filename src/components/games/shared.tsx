@@ -121,6 +121,94 @@ export function GameLoading({ error, retry }: { error: string | null; retry: () 
   );
 }
 
+// ── Leaderboard ───────────────────────────────────────────────────────────────
+type LeaderRow = { rank: number; name: string; score: number; isYou: boolean };
+type Board = { unit: string; rows: LeaderRow[]; you: { rank: number; score: number } | null; total: number; signedIn: boolean };
+
+// Drop into a game's result screen: submits this run's score (once), tells the
+// player where they landed, prompts a sign-up if they're logged out, and shows the
+// live top 10. `seconds` is an optional tiebreak (Pairs).
+export function GameResultExtras({ game, score, seconds }: { game: string; score: number; seconds?: number }) {
+  const [board, setBoard] = useState<Board | null>(null);
+  const [status, setStatus] = useState<"saving" | "saved" | "signin" | "error">("saving");
+  const [myRank, setMyRank] = useState<number | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/games/score", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ game, score, ...(seconds != null ? { seconds } : {}) }),
+        });
+        if (!alive) return;
+        if (res.status === 401) setStatus("signin");
+        else if (res.ok) { const d = await res.json(); setMyRank(d.rank ?? null); setStatus("saved"); }
+        else setStatus("error");
+      } catch { if (alive) setStatus("error"); }
+      // Always show the board, signed in or not.
+      try {
+        const b = await fetch(`/api/games/leaderboard?game=${encodeURIComponent(game)}`).then((r) => r.json());
+        if (alive && b?.rows) setBoard(b);
+      } catch { /* leave board null */ }
+    })();
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const next = `/games/${game}`;
+  return (
+    <div className="mt-5 text-left">
+      {status === "signin" ? (
+        <div className="rounded-xl border border-brand-500/40 bg-brand-500/10 p-4 text-center">
+          <p className="text-sm font-semibold text-white">🏆 Want on the leaderboard?</p>
+          <p className="mt-1 text-xs text-slate-300">
+            Create a free account to save your scores and climb the global rankings — it takes a few seconds.
+          </p>
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+            <Link href={`/register?next=${encodeURIComponent(next)}`} className="btn-primary text-sm">Create account</Link>
+            <Link href={`/login?next=${encodeURIComponent(next)}`} className="btn-ghost text-sm">Sign in</Link>
+          </div>
+        </div>
+      ) : status === "saved" && myRank != null ? (
+        <p className="text-center text-sm font-semibold text-brand-300">
+          ✓ Score saved — you&apos;re <span className="text-white">#{myRank}</span> on the leaderboard!
+        </p>
+      ) : null}
+
+      {board && board.rows.length > 0 && (
+        <div className="card-surface mt-4 overflow-hidden">
+          <div className="flex items-center justify-between border-b border-ink-700 px-4 py-2.5">
+            <h3 className="text-sm font-bold text-white">🏆 Leaderboard</h3>
+            <span className="text-[11px] text-slate-500">{board.total} {board.total === 1 ? "player" : "players"}</span>
+          </div>
+          <ul className="divide-y divide-ink-800">
+            {board.rows.map((r) => (
+              <li key={r.rank} className={`flex items-center gap-3 px-4 py-2 text-sm ${r.isYou ? "bg-brand-500/10" : ""}`}>
+                <span className={`w-6 text-center font-bold ${r.rank === 1 ? "text-gold" : r.rank <= 3 ? "text-slate-300" : "text-slate-500"}`}>
+                  {r.rank === 1 ? "🥇" : r.rank === 2 ? "🥈" : r.rank === 3 ? "🥉" : r.rank}
+                </span>
+                <span className={`flex-1 truncate ${r.isYou ? "font-bold text-white" : "text-slate-300"}`}>
+                  {r.name}{r.isYou ? " (you)" : ""}
+                </span>
+                <span className="font-bold text-white">{r.score} <span className="text-[11px] font-normal text-slate-500">{board.unit}</span></span>
+              </li>
+            ))}
+          </ul>
+          {board.signedIn && board.you && !board.rows.some((r) => r.isYou) && (
+            <div className="flex items-center gap-3 border-t border-ink-700 bg-brand-500/10 px-4 py-2 text-sm">
+              <span className="w-6 text-center font-bold text-slate-400">#{board.you.rank}</span>
+              <span className="flex-1 truncate font-bold text-white">You</span>
+              <span className="font-bold text-white">{board.you.score} <span className="text-[11px] font-normal text-slate-500">{board.unit}</span></span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Copy a Wordle-style share blurb.
 export function useShare() {
   const [copied, setCopied] = useState(false);

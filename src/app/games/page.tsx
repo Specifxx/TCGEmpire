@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getCurrentUser } from "@/lib/auth";
 import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -70,7 +71,8 @@ const GAMES = [
   },
 ];
 
-export default function GamesPage() {
+export default async function GamesPage() {
+  const user = await getCurrentUser();
   const breadcrumbLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -91,6 +93,25 @@ export default function GamesPage() {
           the card pool and the market. No signup, no paywall, play forever.
         </p>
       </div>
+
+      {/* Leaderboard / account prompt */}
+      {user ? (
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-brand-500/30 bg-brand-500/10 px-4 py-3">
+          <p className="text-sm text-slate-200">
+            🏆 You&apos;re signed in as <strong className="text-white">{user.displayName}</strong> — every game you finish counts toward the global leaderboards.
+          </p>
+        </div>
+      ) : (
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-brand-500/30 bg-brand-500/10 px-4 py-3">
+          <p className="text-sm text-slate-200">
+            🏆 <strong className="text-white">Make a free account</strong> to save your scores and climb the global leaderboards.
+          </p>
+          <div className="flex shrink-0 gap-2">
+            <Link href="/register?next=/games" className="btn-primary text-sm">Create account</Link>
+            <Link href="/login?next=/games" className="btn-ghost text-sm">Sign in</Link>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         {GAMES.map((g) => (

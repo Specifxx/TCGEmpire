@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { GameLoading, GameShell, useGameCards, useShare, type GameCard } from "./shared";
+import { GameLoading, GameResultExtras, GameShell, useGameCards, useShare, type GameCard } from "./shared";
 
 // Pairs — classic memory with real card art: 8 cards × 2 = a 4×4 grid. Fewest
 // moves wins; the clock keeps you honest. Best (lowest) move count is stored
@@ -168,6 +168,7 @@ export function Pairs() {
             </button>
             <Link href="/games" className="btn-ghost text-sm">More games →</Link>
           </div>
+          <GameResultExtras game="pairs" score={moves} seconds={seconds} />
         </div>
       )}
     </GameShell>
