@@ -279,20 +279,28 @@ export function Riftle() {
         </div>
       </div>
 
-      {/* Mode toggle */}
-      <div className="mb-4 inline-flex rounded-lg border border-ink-700 bg-ink-900 p-0.5 text-sm">
-        <button
-          onClick={() => switchMode("daily")}
-          className={`rounded-md px-3 py-1.5 font-semibold transition-colors ${mode === "daily" ? "bg-brand-500/20 text-brand-200" : "text-slate-400 hover:text-white"}`}
-        >
-          Daily
-        </button>
-        <button
-          onClick={() => switchMode("unlimited")}
-          className={`rounded-md px-3 py-1.5 font-semibold transition-colors ${mode === "unlimited" ? "bg-brand-500/20 text-brand-200" : "text-slate-400 hover:text-white"}`}
-        >
-          ♾️ Unlimited
-        </button>
+      {/* Mode toggle + (Unlimited) new-game */}
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <div className="inline-flex rounded-lg border border-ink-700 bg-ink-900 p-0.5 text-sm">
+          <button
+            onClick={() => switchMode("daily")}
+            className={`rounded-md px-3 py-1.5 font-semibold transition-colors ${mode === "daily" ? "bg-brand-500/20 text-brand-200" : "text-slate-400 hover:text-white"}`}
+          >
+            Daily
+          </button>
+          <button
+            onClick={() => switchMode("unlimited")}
+            className={`rounded-md px-3 py-1.5 font-semibold transition-colors ${mode === "unlimited" ? "bg-brand-500/20 text-brand-200" : "text-slate-400 hover:text-white"}`}
+          >
+            ♾️ Unlimited
+          </button>
+        </div>
+        {/* Skip the current card any time — abandoning mid-game doesn't count a loss. */}
+        {mode === "unlimited" && !done && (
+          <button onClick={startUnlimited} disabled={busy} className="btn-ghost text-sm" title="Deal a fresh card">
+            ↻ New game
+          </button>
+        )}
       </div>
 
       {/* Guess input */}
