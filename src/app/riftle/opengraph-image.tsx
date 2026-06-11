@@ -1,8 +1,8 @@
 import { ImageResponse } from "next/og";
 
 // Social-share card for /riftle — drawn with plain divs (no font/emoji fetches) so
-// it renders deterministically on the edge. Mimics the game's wordle-style grid.
-export const runtime = "edge";
+// it renders deterministically and can be statically generated once at build.
+// Mimics the game's wordle-style grid.
 export const alt = "Riftle — the daily Riftbound card guessing game on RiftCompare";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
