@@ -8,6 +8,7 @@
 import { PrismaClient } from "@prisma/client";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { cardSlug } from "../src/lib/card-url";
 
 const prisma = new PrismaClient();
 
@@ -37,9 +38,28 @@ async function main() {
       noBase++;
       continue;
     }
-    const { id, createdAt, ...rest } = base;
+    // Don't clone identity or per-printing state from the base:
+    //  - slug is @unique → cloning it makes the insert throw; promos get their own
+    //    ("-promo"-suffixed) slug.
+    //  - lowest prices (ALL four markets) belong to the base's listings, not this
+    //    new printing — the importer fills them in once real promo listings match.
+    //  - view/search counts and eBay state are per-printing popularity signals.
+    const { id, createdAt, slug, ...rest } = base;
     await prisma.card.create({
-      data: { ...rest, externalId, isPromo: true, lowestPriceCents: null },
+      data: {
+        ...rest,
+        externalId,
+        isPromo: true,
+        slug: cardSlug({ ...base, isPromo: true }),
+        lowestPriceCents: null,
+        lowestPriceCentsNz: null,
+        lowestPriceCentsUs: null,
+        lowestPriceCentsUk: null,
+        viewCount: 0,
+        searchCount: 0,
+        lastViewedAt: null,
+        ebayCheckedAt: null,
+      },
     });
     created++;
   }

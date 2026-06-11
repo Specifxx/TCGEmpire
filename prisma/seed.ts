@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { titleCase } from "../src/lib/constants";
 import { normalizeSearch } from "../src/lib/format";
+import { cardSlug } from "../src/lib/card-url";
 
 const prisma = new PrismaClient();
 
@@ -174,7 +175,17 @@ async function main() {
       artSeed: Math.floor(rng() * 1_000_000),
     };
   });
-  await prisma.card.createMany({ data: cardData });
+  // Human-readable URL slugs at creation (production sets them via backfill; the
+  // seed must match so dev links look and behave like prod). Collision guard for
+  // safety — name+set+number should be unique, but the slug column is @unique.
+  const usedSlugs = new Set<string>();
+  const slugged = cardData.map((c, i) => {
+    let slug = cardSlug(c);
+    if (usedSlugs.has(slug)) slug = `${slug}-${i}`;
+    usedSlugs.add(slug);
+    return { ...c, slug };
+  });
+  await prisma.card.createMany({ data: slugged });
   const variants = cardData.filter((c) => c.variant).length;
   console.log(`Created ${cardData.length} cards with real images (${variants} alt-art variants).`);
 
@@ -183,15 +194,19 @@ async function main() {
     const promoList = JSON.parse(
       readFileSync(join(process.cwd(), "prisma", "promos.json"), "utf8")
     ) as { set: string; num: string }[];
-    const baseByKey = new Map<string, (typeof cardData)[number]>();
-    for (const c of cardData) {
+    const baseByKey = new Map<string, (typeof slugged)[number]>();
+    for (const c of slugged) {
       if (!c.variant) baseByKey.set(`${c.setCode}-${parseInt(c.collectorNumber, 10)}`, c);
     }
     const promoData = [];
     for (const pr of promoList) {
       const base = baseByKey.get(`${pr.set}-${parseInt(pr.num, 10)}`);
       if (!base) continue;
-      promoData.push({ ...base, externalId: `${pr.set.toLowerCase()}-${pr.num}-p`, isPromo: true });
+      // Fresh "-promo" slug — cloning the base's slug would violate @unique.
+      let slug = cardSlug({ ...base, isPromo: true });
+      if (usedSlugs.has(slug)) slug = `${slug}-${promoData.length}`;
+      usedSlugs.add(slug);
+      promoData.push({ ...base, externalId: `${pr.set.toLowerCase()}-${pr.num}-p`, isPromo: true, slug });
     }
     if (promoData.length) await prisma.card.createMany({ data: promoData });
     console.log(`Created ${promoData.length} promo cards.`);

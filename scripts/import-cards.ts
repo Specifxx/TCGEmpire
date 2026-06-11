@@ -11,9 +11,9 @@
  *     "setCode": "OGN",
  *     "setName": "Origins",
  *     "collectorNumber": "012/298",
- *     "domain": "Fury",            // Fury|Calm|Mind|Body|Chaos|Order|Neutral
- *     "type": "Champion",          // Champion|Unit|Spell|Gear|Rune|Battlefield|Legend
- *     "rarity": "Legendary",       // Common|Uncommon|Rare|Epic|Legendary|Mythic
+ *     "domain": "Fury",            // Fury|Calm|Mind|Body|Chaos|Order|Colorless
+ *     "type": "Unit",              // Unit|Spell|Gear|Rune|Battlefield|Legend
+ *     "rarity": "Rare",            // Common|Uncommon|Rare|Epic|Showcase
  *     "energyCost": 5,
  *     "might": 6,
  *     "tags": "Zaun, Marksman",
@@ -28,6 +28,8 @@
  */
 import { readFileSync } from "node:fs";
 import { PrismaClient } from "@prisma/client";
+import { cardSlug } from "../src/lib/card-url";
+import { normalizeSearch } from "../src/lib/format";
 
 const prisma = new PrismaClient();
 
@@ -66,6 +68,9 @@ async function main() {
   for (const c of cards) {
     const data = {
       name: c.name,
+      // Keep the search index in sync — a card with an empty nameNormalized can
+      // NEVER be found by name search (the box matches on this column).
+      nameNormalized: normalizeSearch(c.name),
       setCode: c.setCode,
       setName: c.setName,
       collectorNumber: c.collectorNumber,
@@ -86,13 +91,15 @@ async function main() {
     });
 
     if (existing) {
+      // Keep the existing slug — it's the card's public URL; renames shouldn't
+      // break inbound links. (Only a missing slug is backfilled.)
       await prisma.card.update({
         where: { id: existing.id },
-        data: { ...data, artSeed: existing.artSeed },
+        data: { ...data, artSeed: existing.artSeed, slug: existing.slug ?? cardSlug(c) },
       });
       updated++;
     } else {
-      await prisma.card.create({ data });
+      await prisma.card.create({ data: { ...data, slug: cardSlug(c) } });
       created++;
     }
   }
