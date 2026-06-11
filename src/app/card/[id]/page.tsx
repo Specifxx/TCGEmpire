@@ -278,11 +278,14 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             ) : (
               <ul className="divide-y divide-ink-800">
                 {prices.map((p, i) => (
-                  <li key={p.id} className="flex items-center gap-3 p-4 hover:bg-ink-900/50">
-                    <div className="w-6 text-center text-sm font-bold text-slate-500">{i + 1}</div>
-                    <div className="flex-1">
-                      <div className="font-semibold text-white">{p.retailerName}</div>
-                      <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                  <li
+                    key={p.id}
+                    className="flex flex-wrap items-center gap-x-3 gap-y-2 p-3 hover:bg-ink-900/50 sm:flex-nowrap sm:p-4"
+                  >
+                    <div className="w-5 shrink-0 text-center text-sm font-bold text-slate-500 sm:w-6">{i + 1}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate font-semibold text-white">{p.retailerName}</div>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
                         {p.isFoil && <span className="chip bg-gold/15 font-semibold text-gold">✦ Foil</span>}
                         {p.condition && <span className="chip bg-ink-800 text-slate-300">{p.condition}</span>}
                         <span className="text-brand-400">● In stock</span>
@@ -301,7 +304,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                         )}
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="shrink-0 text-right">
                       <div className={`text-lg font-bold ${i === 0 ? "text-accent" : "text-white"}`}>
                         {fmt(p.priceCents)}
                       </div>
@@ -309,13 +312,14 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                         <div className="text-[11px] text-slate-400">≈ {fmt(p.delivered)} delivered</div>
                       )}
                     </div>
+                    {/* Full-width below the row on phones; inline button on sm+. */}
                     <OutboundLink
                       href={buyHref(p)}
                       retailer={p.retailer}
                       country={country}
-                      className="btn-primary"
+                      className="btn-primary order-last w-full basis-full justify-center sm:order-none sm:w-auto sm:basis-auto"
                     >
-                      View →
+                      View deal →
                     </OutboundLink>
                   </li>
                 ))}
@@ -329,23 +333,23 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                 </div>
                 <ul className="divide-y divide-ink-800">
                   {outOfStock.map((p) => (
-                    <li key={p.id} className="flex items-center gap-3 p-4 opacity-60">
-                      <div className="w-6 text-center text-slate-600">—</div>
-                      <div className="flex-1">
-                        <div className="font-semibold text-slate-300">{p.retailerName}</div>
-                        <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                    <li key={p.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 p-3 opacity-60 sm:flex-nowrap sm:p-4">
+                      <div className="w-5 shrink-0 text-center text-slate-600 sm:w-6">—</div>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate font-semibold text-slate-300">{p.retailerName}</div>
+                        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
                           {p.condition && <span className="chip bg-ink-800 text-slate-400">{p.condition}</span>}
                           <span className="text-slate-500">● Out of stock</span>
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="shrink-0 text-right">
                         <div className="text-lg font-bold text-slate-400 line-through">{fmt(p.priceCents)}</div>
                       </div>
                       <OutboundLink
                         href={buyHref(p)}
                         retailer={p.retailer}
                         country={country}
-                        className="btn-ghost"
+                        className="btn-ghost order-last w-full basis-full justify-center sm:order-none sm:w-auto sm:basis-auto"
                       >
                         Check →
                       </OutboundLink>
