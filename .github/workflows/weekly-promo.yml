@@ -1,0 +1,54 @@
+name: Weekly promo pack
+
+# Free, automated marketing: every week, generate a "price movers" digest from
+# live data, auto-post it to the community Discord, and email a ready-to-paste
+# Reddit post + X blurb to the site owner. See scripts/weekly-promo.ts.
+#
+# SETUP (one-time), Settings → Secrets and variables → Actions:
+#   Secrets (DATABASE_URL should already exist for refresh-prices):
+#     DATABASE_URL          Neon Postgres connection string
+#     DISCORD_WEBHOOK_URL   Discord → channel → Integrations → Webhooks → New
+#     RESEND_API_KEY        (optional) enables the promo-pack email
+#     EMAIL_FROM            (optional) verified sender
+#     PROMO_EMAIL           (optional) recipient; defaults to the site contact email
+#   Variables (optional):
+#     PROMO_MARKET          AU | NZ | US | UK — market the digest prices (default AU)
+
+on:
+  schedule:
+    # Friday 20:30 UTC = Saturday 06:30 AEST — right after the Friday-evening
+    # price refresh (19:00 UTC), so the digest uses the freshest prices and lands
+    # at the top of the owner's Saturday-morning inbox, ready to post.
+    - cron: "30 20 * * 5"
+  workflow_dispatch: # manual "Run workflow" button
+    inputs:
+      dry_run:
+        description: "Print the generated content in the job log instead of posting/emailing"
+        type: boolean
+        default: false
+
+concurrency:
+  group: weekly-promo
+  cancel-in-progress: false
+
+jobs:
+  promo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Generate and send promo pack
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          PROMO_EMAIL: ${{ secrets.PROMO_EMAIL }}
+          PROMO_MARKET: ${{ vars.PROMO_MARKET }}
+        run: npx tsx scripts/weekly-promo.ts ${{ inputs.dry_run && '--dry-run' || '' }}

@@ -11,6 +11,8 @@ import { formatMoney, timeAgo } from "@/lib/format";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
 import { affiliateUrl, ebayAffiliateUrl, SOVRN_VERIFY_CARD_SLUG, SOVRN_VERIFY_RETAILER, SOVRN_VERIFY_URL } from "@/lib/affiliate";
 import { cardDisplayName } from "@/lib/card-name";
+import { CardTile } from "@/components/CardTile";
+import { cardTileSelect } from "@/lib/cards";
 import { OutboundLink } from "@/components/OutboundLink";
 import { AdSlot } from "@/components/AdSlot";
 import { ADSENSE_SLOTS } from "@/lib/ads";
@@ -34,7 +36,9 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     where: whereParam(params.id),
     select: { slug: true, name: true, setName: true, setCode: true, collectorNumber: true, lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, imageUrl: true, imageThumbUrl: true },
   });
-  if (!card) return { title: "Card not found" };
+  // noindex like the set page: the layout's cookie read makes pages render
+  // dynamically, so make sure an unknown slug can never be indexed as a soft-404.
+  if (!card) return { title: "Card not found", robots: { index: false, follow: false } };
 
   const lowest = pickPrice(card, country);
   const price = lowest != null ? ` from ${formatMoney(lowest, info.currency)}` : "";
@@ -51,6 +55,12 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       description,
       type: "website",
       images: image ? [{ url: image }] : undefined,
+    },
+    twitter: {
+      card: image ? "summary_large_image" : "summary",
+      title,
+      description,
+      images: image ? [image] : undefined,
     },
   };
 }
@@ -187,6 +197,39 @@ export default async function CardPage({ params }: { params: { id: string } }) {
       { "@type": "ListItem", position: 4, name: card.name, item: `${SITE_URL}${cardUrl}` },
     ],
   };
+
+  // Similar cards — more from the same set, same domain first. This is the single
+  // biggest internal-linking lever: every long-tail card page now links out to ~12
+  // sibling card pages, which is what gets them crawled and indexed. Priced cards
+  // first (more useful, and they're the ones people search). Falls back to other
+  // cards in the set when a domain is thin, so the row is never near-empty.
+  const SIMILAR_TAKE = 12;
+  const similarSelect = cardTileSelect(country);
+  const similarOrder = [
+    { lowestPriceCents: { sort: "desc" as const, nulls: "last" as const } },
+    { collectorNumber: "asc" as const },
+  ];
+  const sameDomain = await prisma.card.findMany({
+    where: { setCode: card.setCode, domain: card.domain, id: { not: card.id } },
+    orderBy: similarOrder,
+    take: SIMILAR_TAKE,
+    select: similarSelect,
+  });
+  let similar = sameDomain;
+  if (similar.length < 6) {
+    const seen = new Set(similar.map((c) => c.id));
+    const fill = await prisma.card.findMany({
+      where: { setCode: card.setCode, id: { notIn: [card.id, ...seen] } },
+      orderBy: similarOrder,
+      take: SIMILAR_TAKE - similar.length,
+      select: similarSelect,
+    });
+    similar = [...similar, ...fill];
+  }
+  const similarHeading =
+    card.domain === "Colorless"
+      ? `More cards from ${card.setName}`
+      : `More ${card.domain} cards from ${card.setName}`;
 
   return (
     <div>
@@ -431,6 +474,29 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           </section>
         </div>
       </div>
+
+      {/* Similar cards — internal links to sibling card pages (same set/domain).
+          Server-rendered so the links are in the crawlable HTML. */}
+      {similar.length > 0 && (
+        <section className="mt-10">
+          <div className="mb-4 flex items-end justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-extrabold text-white">{similarHeading}</h2>
+              <p className="mt-0.5 text-xs text-slate-500">
+                Compare prices on similar Riftbound {card.setName} singles.
+              </p>
+            </div>
+            <Link href={setUrl} className="btn-ghost text-xs shrink-0">
+              View all {card.setName} →
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            {similar.map((c) => (
+              <CardTile key={c.id} card={c} />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

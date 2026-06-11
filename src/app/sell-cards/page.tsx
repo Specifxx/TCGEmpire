@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 // Standalone buylist page — "Sell us your cards". Deliberately NOT linked from any
 // nav/menu; reachable by direct URL only (like /marketplace).
 export const metadata: Metadata = {
-  title: "Sell us your Riftbound cards — RiftCompare buylist",
+  title: "Sell Us Your Riftbound Cards — Buylist",
   description:
     "Sell your Riftbound singles and sealed product directly to RiftCompare. Send us your list, get a quote, post your cards, get paid.",
   robots: { index: false, follow: false },

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { getArticles } from "@/lib/articles";
 import { ArticleList } from "@/components/ArticleList";
-import { WipBanner } from "@/components/WipBanner";
 
 export const metadata: Metadata = {
   title: "Riftbound Guides — Learn the Game & Build Decks (Australia)",
@@ -20,7 +19,6 @@ export default function GuidesPage() {
           Learn Riftbound — deckbuilding basics, buying tips and more, for Australian players.
         </p>
       </div>
-      <WipBanner />
       <ArticleList articles={articles} basePath="/guides" />
     </div>
   );

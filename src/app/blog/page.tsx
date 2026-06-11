@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { getArticles } from "@/lib/articles";
 import { ArticleList } from "@/components/ArticleList";
-import { WipBanner } from "@/components/WipBanner";
 
 export const metadata: Metadata = {
   title: "Riftbound Blog — News, Meta & Set Updates",
@@ -20,7 +19,6 @@ export default function BlogPage() {
           News, meta snapshots and updates for Riftbound in Australia.
         </p>
       </div>
-      <WipBanner />
       <ArticleList articles={articles} basePath="/blog" />
     </div>
   );

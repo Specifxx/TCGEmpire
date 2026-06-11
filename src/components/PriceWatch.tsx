@@ -1,30 +1,49 @@
 "use client";
 
+import Link from "next/link";
 import { formatMoney } from "@/lib/format";
 import { cardDisplayName } from "@/lib/card-name";
 import type { Mover, PriceMovers } from "@/lib/price-history";
 import { useQuickView } from "./QuickView";
 import { Sparkline } from "./PriceChart";
 
-// Homepage "Price Watch" — this week's biggest movers and best-value buys in the
-// viewer's market (its own currency). Rows open the quick-view (with its interactive
-// chart). Built to feel analytical (sparklines + signed % deltas), à la Steam.
-export function PriceWatch({ movers, currency, place }: { movers: PriceMovers; currency: string; place: string }) {
+// "Price Watch" — this week's biggest movers and best-value buys in the viewer's
+// market (its own currency). Rows open the quick-view (with its interactive chart).
+// Built to feel analytical (sparklines + signed % deltas), à la Steam. Used both as
+// the homepage teaser (showHeader, with a "see all" link to the full /movers page)
+// and as the body of the dedicated /movers page (showHeader off — that page brings
+// its own <h1>).
+export function PriceWatch({
+  movers,
+  currency,
+  place,
+  showHeader = true,
+}: {
+  movers: PriceMovers;
+  currency: string;
+  place: string;
+  showHeader?: boolean;
+}) {
   const { spiking, plummeting, value } = movers;
   if (!spiking.length && !plummeting.length && !value.length) return null;
 
   return (
     <section>
-      <div className="mb-4 flex items-end justify-between gap-3">
-        <div>
-          <h2 className="flex items-center gap-2 text-xl font-extrabold text-white">
-            📈 Price Watch
-          </h2>
-          <p className="mt-0.5 text-xs text-slate-500">
-            This week&apos;s biggest movers across {place} — tap any card for its full price chart.
-          </p>
+      {showHeader && (
+        <div className="mb-4 flex items-end justify-between gap-3">
+          <div>
+            <h2 className="flex items-center gap-2 text-xl font-extrabold text-white">
+              📈 Price Watch
+            </h2>
+            <p className="mt-0.5 text-xs text-slate-500">
+              This week&apos;s biggest movers across {place} — tap any card for its full price chart.
+            </p>
+          </div>
+          <Link href="/movers" className="btn-ghost text-xs shrink-0">
+            See all movers →
+          </Link>
         </div>
-      </div>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Panel title="Spiking this week" accent="text-rose-400" subtitle="Up the most (7 days)" movers={spiking} kind="up" currency={currency} empty="No notable risers yet." />

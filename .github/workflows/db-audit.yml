@@ -1,0 +1,38 @@
+name: DB audit
+
+# On-demand card-database integrity audit (scripts/db-audit.ts): identity/search
+# index, duplicates, taxonomy, price consistency, zombie listings, freshness.
+# Read-only unless "fix" is ticked (which repairs only missing slugs + broken
+# search indexes — the two safe derived fields).
+
+on:
+  workflow_dispatch:
+    inputs:
+      fix:
+        description: "Apply safe fixes (backfill missing slugs, recompute search index)"
+        type: boolean
+        default: false
+  # Also run (read-only) when the audit itself changes — and because the
+  # workflow_dispatch API can't see a workflow until it exists on the default
+  # branch, this is what lets the audit run from a feature branch at all.
+  push:
+    paths:
+      - "scripts/db-audit.ts"
+      - ".github/workflows/db-audit.yml"
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Run audit
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx tsx scripts/db-audit.ts ${{ inputs.fix && '--fix' || '' }}

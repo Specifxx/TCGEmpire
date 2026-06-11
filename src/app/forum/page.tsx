@@ -9,7 +9,7 @@ import { ForumBoard, type ForumItem, type ForumKind, type ForumPostDTO } from "@
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Riftbound Buy & Sell Forum — RiftCompare",
+  title: "Riftbound Buy & Sell Forum",
   description:
     "Community board for Riftbound TCG players to post want-to-buy (WTB) and want-to-sell (WTS) listings and trade cards directly with others in your country.",
   alternates: { canonical: "/forum" },

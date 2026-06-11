@@ -17,6 +17,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${SITE_URL}/`, changeFrequency: "daily", priority: 1 },
     { url: `${SITE_URL}/browse`, changeFrequency: "daily", priority: 0.9 },
+    { url: `${SITE_URL}/movers`, changeFrequency: "daily", priority: 0.8 },
     { url: `${SITE_URL}/sealed`, changeFrequency: "daily", priority: 0.8 },
     { url: `${SITE_URL}/decks`, changeFrequency: "weekly", priority: 0.8 },
     { url: `${SITE_URL}/deck`, changeFrequency: "weekly", priority: 0.6 },
@@ -32,6 +33,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     url: `${SITE_URL}/${a.category === "guide" ? "guides" : "blog"}/${a.slug}`,
     changeFrequency: "monthly",
     priority: 0.6,
+    // Real publish date — articles don't change daily, and an honest signal
+    // beats stamping everything "today" (Google learns to distrust the latter).
+    lastModified: new Date(`${a.date}T09:00:00+10:00`),
   }));
 
   // Set landing pages (high-value head terms, e.g. "Riftbound Origins prices").

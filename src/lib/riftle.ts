@@ -70,10 +70,18 @@ const getPool = unstable_cache(
   { revalidate: 3600 }
 );
 
-export async function getDailyCard(day = riftleDay()): Promise<RiftleCard | null> {
+// Pick a pool card deterministically from any seed string. The daily puzzle is just
+// the seed `riftle:<day>`; Unlimited mode passes a random per-game seed, so every
+// game draws a different (but server-verifiable) card while the server stays
+// stateless and the answer never reaches the client.
+export async function getCardForSeed(seed: string): Promise<RiftleCard | null> {
   const pool = await getPool();
   if (!pool.length) return null;
-  return pool[hash(`riftle:${day}`) % pool.length];
+  return pool[hash(seed) % pool.length];
+}
+
+export async function getDailyCard(day = riftleDay()): Promise<RiftleCard | null> {
+  return getCardForSeed(`riftle:${day}`);
 }
 
 // Resolve a player's typed guess to a pool card (exact name match, case-insensitive).
@@ -124,4 +132,42 @@ export function compareGuess(guess: RiftleCard, answer: RiftleCard): Feedback {
 export async function getPoolNames(): Promise<string[]> {
   const pool = await getPool();
   return pool.map((c) => c.name);
+}
+
+// How many guesses a player must have made before each successive hint can be
+// revealed — so hints reward persistence rather than replacing the puzzle.
+export const RIFTLE_HINT_GATES = [2, 3, 4, 5];
+
+// Progressive hints for one card, ordered least → most revealing (the last gives
+// the initial letter). Derived purely from the card's own attributes — no rules
+// text we can't back up. Shown one at a time in the UI, gated by RIFTLE_HINT_GATES.
+export function buildHints(c: RiftleCard): string[] {
+  const cost =
+    c.energyCost == null
+      ? "It has no energy cost."
+      : c.might != null
+        ? `It costs ${c.energyCost} energy and has ${c.might} might.`
+        : `It costs ${c.energyCost} energy to play.`;
+  const words = c.name.trim().split(/\s+/).length;
+  const rarity = c.rarity.toLowerCase();
+  const article = /^[aeiou]/.test(rarity) ? "an" : "a"; // "an epic", "an uncommon"
+  return [
+    c.domain === "Colorless"
+      ? "It's a Colorless card — it fits into a deck of any domain."
+      : `It belongs to the ${c.domain} domain.`,
+    `It's ${article} ${rarity} ${c.type.toLowerCase()}.`,
+    cost,
+    `Its name starts with “${c.name[0]?.toUpperCase() ?? "?"}” and is ${words} word${words === 1 ? "" : "s"} long.`,
+  ];
+}
+
+// Hints for whichever card a seed resolves to. Served on demand so they aren't in
+// the default puzzle payload until a stuck player asks for them.
+export async function getHintsForSeed(seed: string): Promise<string[]> {
+  const c = await getCardForSeed(seed);
+  return c ? buildHints(c) : [];
+}
+
+export async function getDailyHints(day = riftleDay()): Promise<string[]> {
+  return getHintsForSeed(`riftle:${day}`);
 }

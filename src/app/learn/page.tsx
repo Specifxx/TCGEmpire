@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db";
 import { DOMAINS, DOMAIN_KEYS } from "@/lib/constants";
 
 export const metadata: Metadata = {
-  title: "Learn Riftbound — free new-player guide | RiftCompare",
+  title: "Learn Riftbound — Free New-Player Guide",
   description:
     "New to Riftbound, the League of Legends TCG? Start here: how to learn the game in 15 minutes, the six domains, every card type explained with real examples, beginner buying guides and a free daily card game. No signup, no paywall.",
   alternates: { canonical: "/learn" },

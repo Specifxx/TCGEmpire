@@ -9,12 +9,18 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const a = getArticle(params.slug);
-  if (!a || a.category !== "guide") return { title: "Guide not found" };
+  if (!a || a.category !== "guide") return { title: "Guide not found", robots: { index: false, follow: false } };
   return {
-    title: `${a.title} — RiftCompare Guides`,
+    title: { absolute: `${a.title} — RiftCompare Guides` },
     description: a.excerpt,
     alternates: { canonical: `/guides/${a.slug}` },
-    openGraph: { type: "article", title: a.title, description: a.excerpt },
+    openGraph: {
+      type: "article",
+      title: a.title,
+      description: a.excerpt,
+      publishedTime: a.date,
+      authors: [a.author],
+    },
   };
 }
 

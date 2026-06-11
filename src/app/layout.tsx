@@ -9,7 +9,7 @@ import { QuickViewProvider } from "@/components/QuickView";
 import { WishlistDrawerProvider } from "@/components/WishlistDrawer";
 import { CountryProvider } from "@/components/CountryProvider";
 import { getCountry } from "@/lib/get-country";
-import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
+import { CONTACT_EMAIL, DISCORD_URL, SITE_NAME, SITE_URL } from "@/lib/site";
 import { IMPACT_SITE_VERIFICATION } from "@/lib/affiliate";
 import { ADSENSE_CLIENT, ADSENSE_ENABLED } from "@/lib/ads";
 import { NativeShell } from "@/components/NativeShell";
@@ -31,7 +31,11 @@ export const metadata: Metadata = {
     "The Riftbound TCG card database and price comparison. Browse every card and compare live prices across stores in Australia, New Zealand and the United States to find the cheapest place to buy.",
   applicationName: SITE_NAME,
   keywords: ["Riftbound", "Riftbound TCG", "Riftbound prices", "Riftbound singles", "League of Legends TCG", "card prices"],
-  alternates: { canonical: "/" },
+  alternates: {
+    canonical: "/",
+    // RSS auto-discovery for feed readers and auto-posting/aggregator services.
+    types: { "application/rss+xml": "/feed.xml" },
+  },
   openGraph: {
     type: "website",
     siteName: SITE_NAME,
@@ -61,6 +65,8 @@ const orgJsonLd = {
       alternateName: ["Rift Compare", "RiftCompare.com"],
       url: SITE_URL,
       logo: `${SITE_URL}/icon-512.png`,
+      // Linked profiles — entity signals tying the org to its community presence.
+      sameAs: [DISCORD_URL],
       description:
         "Riftbound TCG card database and live price-comparison across Australia, New Zealand and the US.",
     },
