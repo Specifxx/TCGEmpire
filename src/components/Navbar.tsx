@@ -55,6 +55,7 @@ export async function Navbar() {
             <NavDropdown
               label="More"
               items={[
+                { href: "/market", label: "RiftCompare Index", desc: "The market in one number" },
                 { href: "/movers", label: "Price Movers", desc: "Biggest risers & drops this week" },
                 { href: "/forum", label: "Forum", desc: "Buy, sell & trade with players" },
                 { href: "/learn", label: "Learn Riftbound", desc: "New player? Start here — free" },

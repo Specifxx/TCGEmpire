@@ -18,7 +18,20 @@ const RANGES = [
 ] as const;
 type RangeKey = (typeof RANGES)[number]["key"];
 
-export function PriceChart({ points, currency = "AUD", compact = false }: { points: PricePoint[]; currency?: string; compact?: boolean }) {
+// `fmt` overrides how values are labelled (default: money). Lets the same chart
+// plot non-currency series like the RiftCompare Index ("104.2 pts").
+export function PriceChart({
+  points,
+  currency = "AUD",
+  compact = false,
+  fmt,
+}: {
+  points: PricePoint[];
+  currency?: string;
+  compact?: boolean;
+  fmt?: (v: number) => string;
+}) {
+  const label = fmt ?? ((v: number) => formatMoney(v, currency));
   const [range, setRange] = useState<RangeKey>("ALL");
   const [hover, setHover] = useState<number | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -78,9 +91,9 @@ export function PriceChart({ points, currency = "AUD", compact = false }: { poin
       {/* Stats header */}
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
-          <span className="text-white">Now <span className="font-bold text-accent">{formatMoney(last, currency)}</span></span>
-          <span className="text-slate-500">Low {formatMoney(min, currency)}</span>
-          <span className="text-slate-500">High {formatMoney(max, currency)}</span>
+          <span className="text-white">Now <span className="font-bold text-accent">{label(last)}</span></span>
+          <span className="text-slate-500">Low {label(min)}</span>
+          <span className="text-slate-500">High {label(max)}</span>
           {!flat && (
             <span className={up ? "font-semibold text-rose-400" : "font-semibold text-brand-400"}>
               {up ? "▲" : "▼"} {Math.abs(pct)}%
@@ -123,7 +136,7 @@ export function PriceChart({ points, currency = "AUD", compact = false }: { poin
           {gridVals.map((gv, i) => (
             <g key={i}>
               <line x1={PAD.l} x2={W - PAD.r} y1={y(gv)} y2={y(gv)} stroke="#ffffff" strokeOpacity="0.06" strokeWidth="1" />
-              <text x={PAD.l - 6} y={y(gv) + 3} textAnchor="end" className="fill-slate-500" fontSize="10">{formatMoney(gv, currency)}</text>
+              <text x={PAD.l - 6} y={y(gv) + 3} textAnchor="end" className="fill-slate-500" fontSize="10">{label(gv)}</text>
             </g>
           ))}
 
@@ -152,7 +165,7 @@ export function PriceChart({ points, currency = "AUD", compact = false }: { poin
             className="pointer-events-none absolute -translate-x-1/2 rounded-lg border border-ink-700 bg-ink-950/95 px-2.5 py-1.5 text-center shadow-xl"
             style={{ left: `${(x(hover!) / W) * 100}%`, top: 0 }}
           >
-            <div className="text-sm font-bold text-accent">{formatMoney(hp.v, currency)}</div>
+            <div className="text-sm font-bold text-accent">{label(hp.v)}</div>
             <div className="whitespace-nowrap text-[10px] text-slate-400">{new Date(hp.t).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}</div>
           </div>
         )}
