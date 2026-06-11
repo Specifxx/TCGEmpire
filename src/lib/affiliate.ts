@@ -27,12 +27,12 @@ export const AMAZON_ASSOCIATE_TAG = process.env.AMAZON_ASSOCIATE_TAG || "riftcom
 // <meta> in the document <head>.
 export const IMPACT_SITE_VERIFICATION = "ebb0400c-dec0-45ae-a56e-e7bb1596e965";
 
-// TCGplayer's affiliate program runs through Impact. Once the application is
-// APPROVED, set this to your Impact deep-link base from the dashboard, e.g.
-//   https://tcgplayer.pxf.io/c/<accountSID>/<campaignID>/<propertyID>
-// and every tcgplayer.com outbound link is wrapped to earn commission. Empty =
-// links pass through untouched (no tracking) while the application is in review.
-export const TCGPLAYER_IMPACT_LINK = process.env.TCGPLAYER_IMPACT_LINK ?? "";
+// TCGplayer's affiliate program runs through Impact (APPROVED). Every
+// tcgplayer.com outbound link is wrapped through this deep-link base to earn
+// commission. `||` (not `??`) so an empty-string env var still falls back to the
+// approved link — an empty base would silently un-monetise every TCGplayer click.
+export const TCGPLAYER_IMPACT_LINK =
+  process.env.TCGPLAYER_IMPACT_LINK || "https://partner.tcgplayer.com/c/7385758/1780961/21018";
 
 // eBay Partner Network link parameters per marketplace. The Browse API is supposed
 // to return pre-tagged URLs (itemAffiliateWebUrl) when we pass the campaign, but in
