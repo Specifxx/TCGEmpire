@@ -9,6 +9,8 @@ import { useCountry } from "./CountryProvider";
 // Database stays in the top bar at all sizes; this menu holds everything else
 // (shown below the lg breakpoint, mirroring the desktop "Decks"/"More" dropdowns).
 const LINKS = [
+  { href: "/market", label: "RiftCompare Index" },
+  { href: "/movers", label: "Price Movers" },
   { href: "/forum", label: "Forum" },
   { href: "/learn", label: "Learn Riftbound" },
   { href: "/riftle", label: "Riftle (daily game)" },
