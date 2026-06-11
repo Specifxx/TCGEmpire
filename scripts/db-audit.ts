@@ -182,7 +182,10 @@ async function main() {
       arr.push(label(c));
       urlToCards.set(u, arr);
     }
-    if (c.imageUrl) {
+    // Identity check only applies to standard "N/M"-numbered cards. Rune promos
+    // ("R01"…) intentionally share their base rune's art, which lives at a regular
+    // OGN number (Fury Rune R01 → ogn-007), so a number comparison can't apply.
+    if (c.imageUrl && /^\d/.test(c.collectorNumber)) {
       const m = c.imageUrl.match(/\/([a-z]{2,4})-(\d+)[a-z]*(?:-star)?-\d+-[0-9a-f]+\.\w+$/i);
       if (m) {
         const [, urlSet, urlNum] = m;
