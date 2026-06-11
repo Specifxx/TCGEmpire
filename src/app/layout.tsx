@@ -31,7 +31,11 @@ export const metadata: Metadata = {
     "The Riftbound TCG card database and price comparison. Browse every card and compare live prices across stores in Australia, New Zealand and the United States to find the cheapest place to buy.",
   applicationName: SITE_NAME,
   keywords: ["Riftbound", "Riftbound TCG", "Riftbound prices", "Riftbound singles", "League of Legends TCG", "card prices"],
-  alternates: { canonical: "/" },
+  alternates: {
+    canonical: "/",
+    // RSS auto-discovery for feed readers and auto-posting/aggregator services.
+    types: { "application/rss+xml": "/feed.xml" },
+  },
   openGraph: {
     type: "website",
     siteName: SITE_NAME,
