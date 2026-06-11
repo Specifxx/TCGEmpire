@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { GameLoading, GameShell, cardUrl, useBestScore, useGameCards, useShare, type GameCard } from "./shared";
+import { GameLoading, GameResultExtras, GameShell, cardUrl, useBestScore, useGameCards, useShare, type GameCard } from "./shared";
 
 // Zoomed In — name the card from a tight crop of its art. Four choices per
 // round; "zoom out" once for a better look at half points. Five rounds.
@@ -178,6 +178,7 @@ export function Zoomed() {
             </button>
             <Link href="/games" className="btn-ghost text-sm">More games →</Link>
           </div>
+          <GameResultExtras game="zoomed" score={score} />
         </div>
       )}
     </GameShell>

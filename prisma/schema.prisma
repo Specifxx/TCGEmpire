@@ -42,6 +42,9 @@ model User {
   equippedFlair    String? // reward key of the name flair shown by the user
   equippedBadge    String? // reward key of the medal/badge shown by the user
   ownedRewards     Json? // string[] of redeemed cosmetic/perk reward keys
+  // OPT-IN (default off): the user ticked "email me leaderboard updates" at signup.
+  // Honoured only with a working unsubscribe — never used to send unsolicited mail.
+  leaderboardEmails Boolean  @default(false)
   createdAt        DateTime  @default(now())
 
   listings            Listing[]
@@ -55,9 +58,29 @@ model User {
   sellerProfile       SellerProfile?
   marketplaceListings MarketplaceListing[]
   collection          CollectionCard[]
+  gameScores          GameScore[]
 
   @@index([googleId])
   @@index([discordId])
+}
+
+// A player's best score in an arcade mini-game (/games/*). One row per user per
+// game — a better result replaces it. Whether higher or lower wins is per-game
+// (see lib/games.ts) and applied in app code, so `score` is stored raw with an
+// optional tiebreak (e.g. Pairs clear time) in `meta`.
+model GameScore {
+  id        String   @id @default(cuid())
+  userId    String
+  game      String // "higher-lower" | "price-check" | "zoomed" | "pairs"
+  score     Int
+  meta      Json? // e.g. { seconds } for the Pairs tiebreak
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, game])
+  @@index([game, score])
 }
 
 // One-time tokens for email verification and password reset (purpose-tagged).
