@@ -112,8 +112,11 @@ async function main() {
   report("unknown type", cards.filter((c) => !types.has(c.type)).map((c) => `${label(c)} → "${c.type}"`));
   report("set code missing from SETS (no /sets page, breadcrumbs fall back)",
     cards.filter((c) => !setCodes.has(c.setCode)).map((c) => `${label(c)} → "${c.setCode}"`));
+  // Valid shapes: "112/298", "112a/298" (alt-art), "223*/221" (signature),
+  // "t06/000" (token), and bare rune numbers "R01" / "R03a".
+  const numOk = (n: string) => /^[a-z]?\d+[a-z]*\*?\/\d+$/i.test(n) || /^r\d+[a-z]*$/i.test(n);
   report("malformed collector number",
-    cards.filter((c) => !/^\d+[a-z]*\*?\/\d+$/i.test(c.collectorNumber)).map((c) => `${label(c)} → "${c.collectorNumber}"`));
+    cards.filter((c) => !numOk(c.collectorNumber)).map((c) => `${label(c)} → "${c.collectorNumber}"`));
   report("cards without an image (SVG fallback art)", cards.filter((c) => !c.imageUrl).map(label));
 
   // ── Price consistency (Card.lowestPrice vs live in-stock listings) ──────────
