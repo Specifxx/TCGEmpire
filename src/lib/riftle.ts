@@ -96,7 +96,11 @@ export type Feedback = {
   name: string;
   imageThumbUrl: string | null;
   correct: boolean;
-  cells: { set: Cell; type: Cell; domain: Cell; rarity: Cell; cost: Cell; might: Cell };
+  // `num` (collector number) exists so every card is uniquely identifiable from the
+  // board: set+number pins down exactly one card, which kills the "all columns green
+  // but it's the wrong card" failure mode (Legends share set/type/domain/rarity and
+  // have no cost/might, so the other columns alone can't separate them).
+  cells: { set: Cell; num: Cell; type: Cell; domain: Cell; rarity: Cell; cost: Cell; might: Cell };
 };
 
 function numCell(guess: number | null, answer: number | null): Cell {
@@ -106,6 +110,13 @@ function numCell(guess: number | null, answer: number | null): Cell {
   return { value: show, state: "miss", hint: answer > guess ? "higher" : "lower" };
 }
 
+// Leading integer of a collector number ("187/219" → 187). Pool cards always have
+// a standard N/M number (tokens/runes are excluded from POOL_TYPES).
+function collectorNum(n: string): number | null {
+  const m = n.match(/^\d+/);
+  return m ? parseInt(m[0], 10) : null;
+}
+
 export function compareGuess(guess: RiftleCard, answer: RiftleCard): Feedback {
   const gi = RARITY_ORDER.indexOf(guess.rarity);
   const ai = RARITY_ORDER.indexOf(answer.rarity);
@@ -113,12 +124,27 @@ export function compareGuess(guess: RiftleCard, answer: RiftleCard): Feedback {
     guess.rarity === answer.rarity
       ? { value: guess.rarity, state: "hit" }
       : { value: guess.rarity, state: "miss", ...(gi >= 0 && ai >= 0 ? { hint: ai > gi ? ("higher" as const) : ("lower" as const) } : {}) };
+  // Collector number: compare the numeric part; display it without the "/total"
+  // denominator to keep the cell compact. Hit requires the FULL number to match
+  // (same set+number = the card itself, give or take printing, which the pool
+  // dedupes), so a row can only be all-green when it IS the answer.
+  const gNum = collectorNum(guess.collectorNumber);
+  const aNum = collectorNum(answer.collectorNumber);
+  const num: Cell =
+    guess.setCode === answer.setCode && guess.collectorNumber === answer.collectorNumber
+      ? { value: String(gNum ?? guess.collectorNumber), state: "hit" }
+      : {
+          value: String(gNum ?? guess.collectorNumber),
+          state: "miss",
+          ...(gNum != null && aNum != null && gNum !== aNum ? { hint: aNum > gNum ? ("higher" as const) : ("lower" as const) } : {}),
+        };
   return {
     name: guess.name,
     imageThumbUrl: guess.imageThumbUrl,
     correct: guess.id === answer.id,
     cells: {
       set: { value: guess.setCode, state: guess.setCode === answer.setCode ? "hit" : "miss" },
+      num,
       type: { value: guess.type, state: guess.type === answer.type ? "hit" : "miss" },
       domain: { value: guess.domain, state: guess.domain === answer.domain ? "hit" : "miss" },
       rarity,

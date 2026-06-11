@@ -21,9 +21,9 @@ const KEY_STATS = "rc_riftle_stats";
 const KEY_U = "rc_riftle_unlimited";
 const KEY_U_STATS = "rc_riftle_unlimited_stats";
 const KEY_MODE = "rc_riftle_mode";
-const COLS = ["set", "type", "domain", "rarity", "cost", "might"] as const;
+const COLS = ["set", "num", "type", "domain", "rarity", "cost", "might"] as const;
 const COL_LABEL: Record<(typeof COLS)[number], string> = {
-  set: "Set", type: "Type", domain: "Domain", rarity: "Rarity", cost: "Cost", might: "Might",
+  set: "Set", num: "#", type: "Type", domain: "Domain", rarity: "Rarity", cost: "Cost", might: "Might",
 };
 
 const EMPTY_STATS: Stats = { played: 0, wins: 0, streak: 0, lastWinDay: null };
@@ -249,12 +249,17 @@ export function Riftle() {
   const shownStats = mode === "unlimited" ? uStats : stats;
   const ready = mode === "unlimited" ? !!seed : !!day;
 
-  const cell = (c: Feedback["cells"][(typeof COLS)[number]]) => (
-    <div className={`flex h-11 items-center justify-center gap-0.5 rounded-md px-1 text-center text-[11px] font-semibold sm:text-xs ${c.state === "hit" ? "bg-brand-500/25 text-brand-200 ring-1 ring-brand-500/50" : "bg-ink-800 text-slate-300"}`}>
-      <span className="truncate">{c.value}</span>
-      {c.hint && <span className="text-slate-400">{c.hint === "higher" ? "▲" : "▼"}</span>}
-    </div>
-  );
+  // `c` can be undefined for rows saved before a column was added (e.g. "#") —
+  // render a neutral placeholder instead of crashing the restored game.
+  const cell = (c: Feedback["cells"][(typeof COLS)[number]] | undefined) =>
+    c ? (
+      <div className={`flex h-11 items-center justify-center gap-0.5 rounded-md px-1 text-center text-[11px] font-semibold sm:text-xs ${c.state === "hit" ? "bg-brand-500/25 text-brand-200 ring-1 ring-brand-500/50" : "bg-ink-800 text-slate-300"}`}>
+        <span className="truncate">{c.value}</span>
+        {c.hint && <span className="text-slate-400">{c.hint === "higher" ? "▲" : "▼"}</span>}
+      </div>
+    ) : (
+      <div className="flex h-11 items-center justify-center rounded-md bg-ink-800 text-[11px] text-slate-600">—</div>
+    );
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -371,14 +376,14 @@ export function Riftle() {
       {/* Board */}
       {rows.length > 0 && (
         <div className="mt-4 overflow-x-auto">
-          <div className="min-w-[560px]">
-            <div className="mb-1 grid grid-cols-[1.6fr_repeat(6,1fr)] gap-1 text-center text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+          <div className="min-w-[620px]">
+            <div className="mb-1 grid grid-cols-[1.6fr_repeat(7,1fr)] gap-1 text-center text-[10px] font-semibold uppercase tracking-wide text-slate-500">
               <div className="text-left">Card</div>
               {COLS.map((c) => <div key={c}>{COL_LABEL[c]}</div>)}
             </div>
             <div className="space-y-1">
               {rows.map((r, i) => (
-                <div key={i} className="grid grid-cols-[1.6fr_repeat(6,1fr)] gap-1">
+                <div key={i} className="grid grid-cols-[1.6fr_repeat(7,1fr)] gap-1">
                   <div className="flex h-11 items-center gap-2 overflow-hidden rounded-md bg-ink-900 px-2">
                     {r.imageThumbUrl && (
                       // eslint-disable-next-line @next/next/no-img-element
