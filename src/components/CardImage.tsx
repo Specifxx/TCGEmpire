@@ -83,12 +83,17 @@ export function CardImage({ card, isFoil = false, full = false, className }: Pro
           tiles on screen, which made scrolling janky. The blurDataUrl background is
           pre-blurred, so a plain dark overlay gives the same look far cheaper. */}
       <div className="absolute inset-0 bg-ink-950/40" />
+      {/* Intrinsic dimensions (5:7 card ratio) satisfy Lighthouse's "explicit
+          width and height" audit and stop layout shift anywhere a wrapper doesn't
+          already fix the aspect; the h-full/w-full CSS still controls rendered size. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
         alt={card.name}
         loading="lazy"
         decoding="async"
+        width={isLandscape ? 420 : 300}
+        height={isLandscape ? 300 : 420}
         className={`relative z-10 h-full w-full ${
           isLandscape ? "object-contain" : "object-cover"
         }`}
