@@ -5,6 +5,8 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
+import { NewsletterSignup } from "@/components/NewsletterSignup";
+import { SideNav } from "@/components/SideNav";
 import { QuickViewProvider } from "@/components/QuickView";
 import { WishlistDrawerProvider } from "@/components/WishlistDrawer";
 import { CountryProvider } from "@/components/CountryProvider";
@@ -125,7 +127,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <WishlistDrawerProvider>
           <QuickViewProvider>
             <Navbar />
-            <main className="container-app py-6">{children}</main>
+            <div className="container-app flex gap-6 py-6">
+              <SideNav />
+              <main className="min-w-0 flex-1">{children}</main>
+            </div>
             <PriceAlertModal />
           </QuickViewProvider>
         </WishlistDrawerProvider>
@@ -134,6 +139,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             (games included) carries at least one monetised placement. */}
         <TcgplayerAd size="leaderboard" country={country} className="container-app pb-8" />
         <footer className="container-app border-t border-ink-800 py-8 text-center text-xs text-slate-500">
+          <NewsletterSignup siteName="RiftCompare" />
           <div className="mb-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm">
             <Link href="/about" className="text-slate-300 hover:text-brand-400">About</Link>
             <span className="text-ink-700">·</span>
@@ -161,7 +167,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </p>
           <p>
             RiftCompare · Riftbound card database &amp; price comparison for
-            Australia. Prices are sourced from public store listings and may be out
+            Australia, New Zealand, the US and the UK. Prices are sourced from public store listings and may be out
             of date — always confirm on the retailer&apos;s site. Not affiliated with
             or endorsed by Riot Games.
           </p>

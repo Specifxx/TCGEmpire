@@ -6,6 +6,7 @@ import { CardImage } from "@/components/CardImage";
 import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge } from "@/components/Badge";
 import { isOvernumbered, isSignature } from "@/lib/constants";
 import { WishlistButton } from "@/components/WishlistButton";
+import { ShareButton } from "@/components/ShareButton";
 import { CardViewBeacon } from "@/components/CardViewBeacon";
 import { formatMoney, timeAgo } from "@/lib/format";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
@@ -284,6 +285,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                 </p>
               </div>
               <WishlistButton cardId={card.id} variant="full" />
+              <ShareButton />
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
