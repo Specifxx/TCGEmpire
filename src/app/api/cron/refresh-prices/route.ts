@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { importPrices } from "@/lib/price-import";
+import { pingAfterPriceRefresh } from "@/lib/indexnow";
 
 // Scheduled price refresh. Triggered by Vercel Cron (see vercel.json) or any
 // scheduler hitting this URL with the Authorization: Bearer <CRON_SECRET> header.
@@ -17,7 +18,10 @@ export async function GET(req: Request) {
   }
   try {
     const summary = await importPrices();
-    return NextResponse.json({ ok: true, ...summary });
+    // Fresh prices = fresh page content: tell IndexNow-capable engines to recrawl
+    // (best-effort — a failed ping never fails the refresh).
+    const indexnow = await pingAfterPriceRefresh();
+    return NextResponse.json({ ok: true, indexnow, ...summary });
   } catch (e) {
     const message = e instanceof Error ? e.message : "import failed";
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
