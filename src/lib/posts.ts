@@ -4,6 +4,7 @@
 // them identically.
 import { prisma } from "./db";
 import { ARTICLES, getArticle, type Article } from "./articles";
+import { parseReportData, type ReportData } from "./market-report";
 
 const REPORT_AUTHOR = "RiftCompare Markets Desk";
 const REPORT_TAGS = ["market report", "RiftCompare Index", "prices", "daily"];
@@ -42,6 +43,29 @@ export async function getBlogPost(slug: string): Promise<Article | null> {
     .findUnique({ where: { slug }, select: { slug: true, day: true, title: true, excerpt: true, body: true } })
     .catch(() => null);
   return r ? reportToArticle(r) : null;
+}
+
+// A market report with its structured chart payload (null for rows that predate
+// charts — those fall back to the plain ArticleView).
+export interface MarketReportPost {
+  article: Article;
+  day: string;
+  data: ReportData | null;
+}
+
+const REPORT_SELECT = { slug: true, day: true, title: true, excerpt: true, body: true, data: true } as const;
+
+export async function getMarketReportPost(slug: string): Promise<MarketReportPost | null> {
+  const r = await prisma.marketReport.findUnique({ where: { slug }, select: REPORT_SELECT }).catch(() => null);
+  return r ? { article: reportToArticle(r), day: r.day, data: parseReportData(r.data) } : null;
+}
+
+// The newest report, for the featured "Daily Market Wrap" section on /blog.
+export async function getLatestMarketReport(): Promise<MarketReportPost | null> {
+  const r = await prisma.marketReport
+    .findFirst({ orderBy: { day: "desc" }, select: REPORT_SELECT })
+    .catch(() => null);
+  return r ? { article: reportToArticle(r), day: r.day, data: parseReportData(r.data) } : null;
 }
 
 // Slugs of all market-report posts (for the sitemap). Best-effort.

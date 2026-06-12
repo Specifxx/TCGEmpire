@@ -3,10 +3,12 @@
 // history. One report per Sydney calendar day, persisted as a MarketReport row and
 // surfaced in the blog. Everything here is grounded ONLY in the numbers — we never
 // invent a reason for a move.
+import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { getMarketIndex } from "./market-index";
 import { COUNTRY_LIST, COUNTRIES, type Country } from "./country";
 import { formatMoney } from "./format";
+import type { PricePoint } from "./price-history";
 
 // Sydney calendar day (matches the PriceHistory key + the rest of the site).
 export function reportDay(): string {
@@ -16,6 +18,12 @@ function longDate(day: string): string {
   return new Date(`${day}T00:00:00+10:00`).toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric" });
 }
 
+// A chartable daily close. `d` is the ISO day so the payload survives JSON.
+export type SeriesPoint = { d: string; v: number };
+const isoDay = (t: number) => new Date(t).toISOString().slice(0, 10);
+const toSeries = (pts: PricePoint[], keep: number): SeriesPoint[] =>
+  pts.slice(-keep).map((p) => ({ d: isoDay(p.t), v: p.v }));
+
 interface MarketLine {
   code: Country;
   place: string;
@@ -24,25 +32,69 @@ interface MarketLine {
   d1: number | null;
   d7: number | null;
   d30: number | null;
+  series: SeriesPoint[]; // its own daily closes (sparkline)
 }
 
 export interface GlobalSnapshot {
   markets: MarketLine[];
   liveMarkets: MarketLine[]; // those with an index
-  globalLevel: number | null; // mean of live levels
-  globalD1: number | null; // mean of live 1-day moves — the headline
+  globalLevel: number | null; // composite close (fallback: mean of live levels)
+  globalD1: number | null; // composite 1-day move — the headline
   globalD7: number | null;
   globalD30: number | null;
+  globalSeries: SeriesPoint[]; // the composite, charted
   fellCount: number;
   roseCount: number;
+  flatCount: number;
   standout: MarketLine | null; // biggest absolute 1-day move
 }
 
 const mean = (xs: number[]): number | null =>
   xs.length ? Math.round((xs.reduce((a, b) => a + b, 0) / xs.length) * 100) / 100 : null;
+const pct = (now: number, then: number | undefined | null): number | null =>
+  then == null || then === 0 ? null : Math.round(((now - then) / then) * 100 * 100) / 100;
+
+// The global composite: every regional index rebased to 100 at their COMMON history
+// start (the youngest region's first day), then equal-weight averaged day by day.
+// Rebasing first means a young market joining can't jump the composite the way a
+// naive average of differently-aged base-100 series would.
+function compositeSeries(pointSets: PricePoint[][]): PricePoint[] {
+  const live = pointSets.filter((p) => p.length >= 2);
+  if (!live.length) return [];
+  const start = Math.max(...live.map((p) => p[0].t));
+  const rebased = live
+    .map((pts) => {
+      let base: number | null = null;
+      for (const p of pts) {
+        if (p.t <= start) base = p.v;
+        else break;
+      }
+      if (base == null || base === 0) return null;
+      return pts.filter((p) => p.t >= start).map((p) => ({ t: p.t, v: (p.v / base) * 100 }));
+    })
+    .filter((x): x is PricePoint[] => x != null);
+  if (!rebased.length) return [];
+  const days = [...new Set(rebased.flatMap((pts) => pts.map((p) => p.t)))].sort((a, b) => a - b);
+  const cursor = rebased.map(() => 0);
+  // Every series is exactly 100 at its base point (≤ start), so 100 is the correct
+  // carry-forward seed for any gap day before a region's first on-window point.
+  const lastV = rebased.map(() => 100);
+  const out: PricePoint[] = [];
+  for (const t of days) {
+    rebased.forEach((pts, i) => {
+      while (cursor[i] < pts.length && pts[cursor[i]].t <= t) {
+        lastV[i] = pts[cursor[i]].v;
+        cursor[i]++;
+      }
+    });
+    out.push({ t, v: Math.round((lastV.reduce((a, b) => a + b, 0) / lastV.length) * 10) / 10 });
+  }
+  return out;
+}
 
 export async function getGlobalSnapshot(): Promise<GlobalSnapshot> {
   const markets: MarketLine[] = [];
+  const pointSets: PricePoint[][] = [];
   for (const info of COUNTRY_LIST) {
     const idx = await getMarketIndex(info.code).catch(() => null);
     markets.push({
@@ -53,22 +105,40 @@ export async function getGlobalSnapshot(): Promise<GlobalSnapshot> {
       d1: idx?.d1 ?? null,
       d7: idx?.d7 ?? null,
       d30: idx?.d30 ?? null,
+      series: toSeries(idx?.points ?? [], 30),
     });
+    if (idx) pointSets.push(idx.points);
   }
   const live = markets.filter((m) => m.level != null);
   const d1s = markets.map((m) => m.d1).filter((x): x is number => x != null);
   const standout = [...markets]
     .filter((m) => m.d1 != null)
     .sort((a, b) => Math.abs(b.d1!) - Math.abs(a.d1!))[0] ?? null;
+
+  // Headline figures come from the composite when it has history; each falls back
+  // to the mean of the regional figures while the common window is still short.
+  const comp = compositeSeries(pointSets);
+  const lastC = comp[comp.length - 1];
+  const lookback = (daysBack: number): number | undefined => {
+    let best: PricePoint | undefined;
+    for (const p of comp) if (p.t <= lastC.t - daysBack * 86400_000) best = p;
+    return best?.v;
+  };
   return {
     markets,
     liveMarkets: live,
-    globalLevel: mean(live.map((m) => m.level!)),
-    globalD1: mean(d1s),
-    globalD7: mean(markets.map((m) => m.d7).filter((x): x is number => x != null)),
-    globalD30: mean(markets.map((m) => m.d30).filter((x): x is number => x != null)),
+    globalLevel: comp.length ? lastC.v : mean(live.map((m) => m.level!)),
+    globalD1: (comp.length >= 2 ? pct(lastC.v, comp[comp.length - 2].v) : null) ?? mean(d1s),
+    globalD7:
+      (comp.length >= 2 ? pct(lastC.v, lookback(7)) : null) ??
+      mean(markets.map((m) => m.d7).filter((x): x is number => x != null)),
+    globalD30:
+      (comp.length >= 2 ? pct(lastC.v, lookback(30)) : null) ??
+      mean(markets.map((m) => m.d30).filter((x): x is number => x != null)),
+    globalSeries: toSeries(comp, 30),
     fellCount: d1s.filter((x) => x < 0).length,
     roseCount: d1s.filter((x) => x > 0).length,
+    flatCount: d1s.filter((x) => x === 0).length,
     standout,
   };
 }
@@ -165,6 +235,35 @@ export async function getGlobalDailyMovers(limit = 6): Promise<{ risers: DailyMo
   return { risers: clean(riserStats.map(shape)), fallers: clean(fallerStats.map(shape)) };
 }
 
+// ── Structured payload for the rich article view ────────────────────────────────
+// Persisted to MarketReport.data so the diagrams render from a stored snapshot —
+// the article never changes after publication, exactly like a printed market wrap.
+export interface ReportRegion {
+  code: Country;
+  level: number | null;
+  d1: number | null;
+  d7: number | null;
+  d30: number | null;
+  series: SeriesPoint[];
+}
+
+export interface ReportData {
+  v: 1;
+  day: string;
+  global: { level: number | null; d1: number | null; d7: number | null; d30: number | null; series: SeriesPoint[] };
+  regions: ReportRegion[];
+  breadth: { rose: number; fell: number; flat: number };
+  movers: { risers: DailyMover[]; fallers: DailyMover[] };
+  // Markdown prose sections, interleaved between the charts by MarketReportView.
+  prose: { lede: string; spotlight: string | null; spotlightPlace: string | null; takeaway: string };
+}
+
+// Validate a stored JSON payload back into ReportData (null → render prose-only).
+export function parseReportData(json: unknown): ReportData | null {
+  const d = json as ReportData | null;
+  return d && typeof d === "object" && d.v === 1 && d.global && Array.isArray(d.regions) ? d : null;
+}
+
 // ── Prose ───────────────────────────────────────────────────────────────────────
 function verb(pct: number | null): { word: string; emoji: string } {
   if (pct == null) return { word: "holds steady", emoji: "➖" };
@@ -189,16 +288,41 @@ export function buildReport(day: string, snap: GlobalSnapshot, movers: { risers:
       ? `The RiftCompare Index is establishing its baseline across the Riftbound singles market. Here's where each region stands today.`
       : `The global RiftCompare Index ${v.word} ${signed(snap.globalD1)} to ${lvl} as ${snap.fellCount} of ${n} tracked markets ${snap.fellCount === 1 ? "fell" : "fell"}. A region-by-region breakdown of the Riftbound market.`;
 
+  // Prose sections are built once and reused twice: interleaved with the charts in
+  // the rich view (via ReportData.prose) and stitched into the markdown body that
+  // older rows / fallback rendering use.
+  const lede =
+    snap.globalD1 == null
+      ? `The **RiftCompare Index** — our cross-market gauge of the Riftbound singles market — is still building its first days of history. Below is where each region stands as the data accrues.`
+      : `The **RiftCompare Index** ${v.emoji} ${v.word} **${signed(snap.globalD1)}** overnight to **${lvl}**, as the Riftbound singles market ${snap.globalD1 < 0 ? "came off" : snap.globalD1 > 0 ? "pushed" : "held"} ahead of the Wall Street pre-market open. ${snap.fellCount} of the ${n} regional markets we track ${snap.fellCount === 1 ? "closed lower" : "closed lower"} on the day, with ${snap.roseCount} ${snap.roseCount === 1 ? "higher" : "higher"}.`;
+
+  let spotlight: string | null = null;
+  let spotlightPlace: string | null = null;
+  if (snap.standout && snap.standout.d1 != null && Math.abs(snap.standout.d1) >= 0.2) {
+    const s = snap.standout;
+    const sd1 = s.d1 ?? 0;
+    spotlightPlace = s.place;
+    spotlight = `${COUNTRIES[s.code].flag} **${s.place}** was the standout, its index **${sd1 > 0 ? "up" : "down"} ${signed(sd1)}** on the day — the largest one-day move of any region${
+      snap.globalD1 != null && Math.abs(sd1 - snap.globalD1) > 0.2
+        ? `, diverging from the **${signed(snap.globalD1)}** global average`
+        : ""
+    }. Over the past week it is ${arrow(s.d7)} ${signed(s.d7)}, and over 30 days ${arrow(s.d30)} ${signed(s.d30)}.`;
+  }
+
+  const takeaway = `${
+    snap.globalD1 == null
+      ? "With the Index still finding its feet, the picture sharpens daily."
+      : Math.abs(snap.globalD1) < 0.15
+        ? "A quiet session overall — the kind of flat tape that often precedes a set release or a tournament weekend rather than reacting to one."
+        : snap.globalD1 < 0
+          ? "A softer session for sellers, but softer prices are exactly when buyers find value — check the drops before they bounce."
+          : "A firmer session across the board — momentum worth watching if you're holding singles."
+  } Track the live numbers any time on the **[RiftCompare Index](/market)**, see the full **[price movers](/movers)**, or **[browse every card](/browse)** to find your next pickup.`;
+
   const md: string[] = [];
 
   // Lede
-  if (snap.globalD1 == null) {
-    md.push(`The **RiftCompare Index** — our cross-market gauge of the Riftbound singles market — is still building its first days of history. Below is where each region stands as the data accrues.`);
-  } else {
-    md.push(
-      `The **RiftCompare Index** ${v.emoji} ${v.word} **${signed(snap.globalD1)}** overnight to **${lvl}**, as the Riftbound singles market ${snap.globalD1 < 0 ? "came off" : snap.globalD1 > 0 ? "pushed" : "held"} ahead of the Wall Street pre-market open. ${snap.fellCount} of the ${n} regional markets we track ${snap.fellCount === 1 ? "closed lower" : "closed lower"} on the day, with ${snap.roseCount} ${snap.roseCount === 1 ? "higher" : "higher"}.`
-    );
-  }
+  md.push(lede);
 
   // Regional breakdown (bulleted — our Markdown renderer doesn't do tables).
   md.push(`## Markets at a glance\n\n${snap.markets
@@ -209,17 +333,7 @@ export function buildReport(day: string, snap: GlobalSnapshot, movers: { risers:
     .join("\n")}`);
 
   // Regional spotlight
-  if (snap.standout && snap.standout.d1 != null && Math.abs(snap.standout.d1) >= 0.2) {
-    const s = snap.standout;
-    const sd1 = s.d1 ?? 0;
-    md.push(
-      `## Regional spotlight: ${s.place}\n\n${COUNTRIES[s.code].flag} **${s.place}** was the standout, its index **${sd1 > 0 ? "up" : "down"} ${signed(sd1)}** on the day — the largest one-day move of any region${
-        snap.globalD1 != null && Math.abs(sd1 - snap.globalD1) > 0.2
-          ? `, diverging from the **${signed(snap.globalD1)}** global average`
-          : ""
-      }. Over the past week it is ${arrow(s.d7)} ${signed(s.d7)}, and over 30 days ${arrow(s.d30)} ${signed(s.d30)}.`
-    );
-  }
+  if (spotlight) md.push(`## Regional spotlight: ${spotlightPlace}\n\n${spotlight}`);
 
   // Movers
   const moverLines = (arr: DailyMover[]) =>
@@ -232,41 +346,50 @@ export function buildReport(day: string, snap: GlobalSnapshot, movers: { risers:
   }
 
   // Outlook + links
-  md.push(
-    `## The takeaway\n\n${
-      snap.globalD1 == null
-        ? "With the Index still finding its feet, the picture sharpens daily."
-        : Math.abs(snap.globalD1) < 0.15
-          ? "A quiet session overall — the kind of flat tape that often precedes a set release or a tournament weekend rather than reacting to one."
-          : snap.globalD1 < 0
-            ? "A softer session for sellers, but softer prices are exactly when buyers find value — check the drops before they bounce."
-            : "A firmer session across the board — momentum worth watching if you're holding singles."
-    } Track the live numbers any time on the **[RiftCompare Index](/market)**, see the full **[price movers](/movers)**, or **[browse every card](/browse)** to find your next pickup.`
-  );
+  md.push(`## The takeaway\n\n${takeaway}`);
 
-  md.push(`---\n\n*The RiftCompare Index is a search-weighted gauge of the most-traded Riftbound cards in each market, rebased to 100 at the start of its history; the global figure is the average of the regional indices. Generated automatically from live data each day at Wall Street pre-market open. Informational only — not financial advice.*`);
+  md.push(`---\n\n*${METHODOLOGY}*`);
 
   const body = md.join("\n\n");
   const readMins = Math.max(2, Math.round(body.split(/\s+/).length / 200));
-  return { title, excerpt, body, readMins };
+
+  const data: ReportData = {
+    v: 1,
+    day,
+    global: { level: snap.globalLevel, d1: snap.globalD1, d7: snap.globalD7, d30: snap.globalD30, series: snap.globalSeries },
+    regions: snap.markets.map((m) => ({ code: m.code, level: m.level, d1: m.d1, d7: m.d7, d30: m.d30, series: m.series })),
+    breadth: { rose: snap.roseCount, fell: snap.fellCount, flat: snap.flatCount },
+    movers,
+    prose: { lede, spotlight, spotlightPlace, takeaway },
+  };
+
+  return { title, excerpt, body, readMins, data };
 }
 
+export const METHODOLOGY = `The RiftCompare Index is a search-weighted gauge of the most-traded Riftbound cards in each market, rebased to 100 at the start of its history; the global figure is an equal-weighted composite of the regional indices, rebased at their common history start. Generated automatically from live data each day at Wall Street pre-market open. Informational only — not financial advice.`;
+
 // Idempotent: create today's report if it doesn't exist; returns the row.
+// Rows written before the chart payload existed are upgraded in place the first
+// time they're touched (same day, fresh numbers — the slug never changes).
 export async function ensureMarketReport(day = reportDay()): Promise<{ slug: string; created: boolean } | null> {
-  const existing = await prisma.marketReport.findUnique({ where: { day }, select: { slug: true } });
-  if (existing) return { slug: existing.slug, created: false };
+  const existing = await prisma.marketReport.findUnique({ where: { day }, select: { slug: true, data: true } });
+  if (existing && existing.data != null) return { slug: existing.slug, created: false };
 
   const snap = await getGlobalSnapshot();
   // Don't publish an empty report if there's literally no index yet.
-  if (!snap.liveMarkets.length) return null;
+  if (!snap.liveMarkets.length) return existing ? { slug: existing.slug, created: false } : null;
   const movers = await getGlobalDailyMovers(6);
-  const { title, excerpt, body, readMins } = buildReport(day, snap, movers);
+  const { title, excerpt, body, readMins, data } = buildReport(day, snap, movers);
   const slug = `riftbound-market-report-${day}`;
+  const row = { title, excerpt, body, globalChangePct: snap.globalD1 ?? null, data: data as unknown as Prisma.InputJsonValue };
 
+  if (existing) {
+    // Backfill the diagrams onto a pre-chart row.
+    await prisma.marketReport.update({ where: { day }, data: row }).catch(() => {});
+    return { slug: existing.slug, created: false };
+  }
   try {
-    await prisma.marketReport.create({
-      data: { slug, day, title, excerpt, body, globalChangePct: snap.globalD1 ?? null },
-    });
+    await prisma.marketReport.create({ data: { slug, day, ...row } });
   } catch {
     // Unique race — another request created it first.
     return { slug, created: false };
