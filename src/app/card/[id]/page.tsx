@@ -15,6 +15,7 @@ import { CardTile } from "@/components/CardTile";
 import { cardTileSelect } from "@/lib/cards";
 import { OutboundLink } from "@/components/OutboundLink";
 import { AdSlot } from "@/components/AdSlot";
+import { TcgplayerAd } from "@/components/TcgplayerAd";
 import { ADSENSE_SLOTS } from "@/lib/ads";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES, pickPrice } from "@/lib/country";
@@ -430,6 +431,10 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               </a>
             </div>
           )}
+
+          {/* TCGplayer affiliate banner — pays commission on click-through
+              purchases, so it gets the prime spot under the price table. */}
+          <TcgplayerAd size="rect" mobile="rect" country={country} className="mt-6" />
 
           {/* Price-history chart — free for everyone. */}
           <PriceHistoryChart cardId={card.id} />

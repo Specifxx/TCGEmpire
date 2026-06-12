@@ -220,6 +220,7 @@ export default async function IndexPage() {
           <Link href="/sealed" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-brand-500">Sealed prices →</Link>
         </div>
       </section>
+
     </div>
   );
 }

@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { TcgplayerAd } from "@/components/TcgplayerAd";
+import { getCountry } from "@/lib/get-country";
 import { HigherLower } from "@/components/games/HigherLower";
 
 export const metadata: Metadata = {
@@ -9,5 +11,11 @@ export const metadata: Metadata = {
 };
 
 export default function HigherLowerPage() {
-  return <HigherLower />;
+  const country = getCountry();
+  return (
+    <div>
+      <HigherLower />
+      <TcgplayerAd size="leaderboard" country={country} className="mt-8" />
+    </div>
+  );
 }

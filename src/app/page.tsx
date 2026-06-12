@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { CardTile } from "@/components/CardTile";
 import { CountryHeroToggle } from "@/components/CountryHeroToggle";
 import { Partners } from "@/components/Partners";
+import { TcgplayerAd } from "@/components/TcgplayerAd";
 import { getPopularCards } from "@/lib/cheapest-cards";
 import { getPriceMovers } from "@/lib/price-history";
 import { PriceWatch } from "@/components/PriceWatch";
@@ -148,6 +149,10 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* TCGplayer affiliate banner — billboard on desktop, 300x250 rectangle on
+          phones (the strongest mobile in-content unit). */}
+      <TcgplayerAd size="billboard" mobile="rect" country={country} />
+
       {/* Price Watch — this week's movers in the viewer's market */}
       <PriceWatch movers={movers} currency={info.currency} place={info.place} />
 
@@ -202,6 +207,10 @@ export default async function HomePage() {
           })}
         </div>
       </section>
+
+      {/* Second TCGplayer banner — far enough from the first that it never
+          shares a viewport with it. */}
+      <TcgplayerAd size="leaderboard" country={country} />
 
       {/* About + FAQ — keyword-relevant content for search */}
       <section className="card-surface p-6">

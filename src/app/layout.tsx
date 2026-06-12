@@ -13,6 +13,7 @@ import { CONTACT_EMAIL, DISCORD_URL, SITE_NAME, SITE_URL } from "@/lib/site";
 import { IMPACT_SITE_VERIFICATION } from "@/lib/affiliate";
 import { ADSENSE_CLIENT, ADSENSE_ENABLED } from "@/lib/ads";
 import { NativeShell } from "@/components/NativeShell";
+import { TcgplayerAd } from "@/components/TcgplayerAd";
 import { WebAdsLoader } from "@/components/WebAdsLoader";
 import { SovrnLoader } from "@/components/SovrnLoader";
 import { PriceAlertModal } from "@/components/PriceAlertModal";
@@ -113,6 +114,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </QuickViewProvider>
         </WishlistDrawerProvider>
         </CountryProvider>
+        {/* Site-wide TCGplayer banner above the footer — guarantees every page
+            (games included) carries at least one monetised placement. */}
+        <TcgplayerAd size="leaderboard" country={country} className="container-app pb-8" />
         <footer className="container-app border-t border-ink-800 py-8 text-center text-xs text-slate-500">
           <div className="mb-2 flex flex-wrap items-center justify-center gap-4 text-sm">
             <Link href="/contact" className="text-slate-300 hover:text-brand-400">Contact &amp; feedback</Link>
