@@ -17,6 +17,8 @@ export const GAMES: Record<string, GameMeta> = {
   "price-check": { label: "Price Check", dir: "desc", min: 0, max: 500, unit: "pts" },
   zoomed: { label: "Zoomed In", dir: "desc", min: 0, max: 10, unit: "pts" },
   pairs: { label: "Pairs", dir: "asc", min: 8, max: 400, unit: "moves" },
+  twenty48: { label: "Riftbound 2048", dir: "desc", min: 0, max: 1_000_000, unit: "pts" },
+  "card-smash": { label: "Card Smash", dir: "desc", min: 0, max: 100_000, unit: "pts" },
 };
 
 export function isGameKey(k: string): k is keyof typeof GAMES {
