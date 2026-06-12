@@ -341,8 +341,29 @@ export interface SealedGroup {
 }
 
 // Group sealed listings by product for the /sealed page, for one market (AU/NZ/US).
+//
+// CACHED IN PROCESS MEMORY: this pulls the market's entire sealed table on
+// every call — fetching it from Neon per request is the network-transfer
+// pattern that burned through dexcompare's free-tier allowance. unstable_cache
+// can't hold large items (2 MB limit fails silently), so it uses the same
+// globalThis memo pattern as the games pool: one DB pull per market per warm
+// lambda per TTL.
+type SealedMemo = Map<string, { at: number; data: SealedGroup[] }>;
+const sealedMemo: SealedMemo = ((globalThis as unknown as { __sealedGroups?: SealedMemo }).__sealedGroups ??= new Map());
+const SEALED_MEMO_TTL_MS = 15 * 60_000;
+
 export async function getSealedGroups(country: "AU" | "NZ" | "US" | "UK" = "AU"): Promise<SealedGroup[]> {
-  const rows = await prisma.sealedListing.findMany({ where: { country }, orderBy: { priceCents: "asc" } });
+  const hit = sealedMemo.get(country);
+  if (hit && Date.now() - hit.at < SEALED_MEMO_TTL_MS) return hit.data;
+  // Only the fields the grouping uses — no point hauling unused columns.
+  const rows = await prisma.sealedListing.findMany({
+    where: { country },
+    orderBy: { priceCents: "asc" },
+    select: {
+      groupKey: true, title: true, productType: true, setCode: true, imageUrl: true,
+      retailer: true, retailerName: true, priceCents: true, url: true, inStock: true,
+    },
+  });
   const groups = new Map<string, SealedGroup>();
   for (const r of rows) {
     let g = groups.get(r.groupKey);
@@ -394,5 +415,6 @@ export async function getSealedGroups(country: "AU" | "NZ" | "US" | "UK" = "AU")
     if (ra !== rb) return ra - rb;
     return (a.lowestPriceCents ?? 9e9) - (b.lowestPriceCents ?? 9e9);
   });
+  sealedMemo.set(country, { at: Date.now(), data: out });
   return out;
 }
