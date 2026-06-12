@@ -48,6 +48,7 @@ export async function Navbar() {
               items={[
                 { href: "/decks", label: "Meta Decks", desc: "Top tournament decklists" },
                 { href: "/deck", label: "Deck Builder", desc: "Build & price your own" },
+                { href: "/tools/box-ev", label: "Box EV Calculator", desc: "Is a booster box worth opening?" },
               ]}
             />
           </div>
@@ -69,6 +70,7 @@ export async function Navbar() {
               label="More"
               items={[
                 { href: "/market", label: "RiftCompare Index", desc: "The market in one number" },
+                { href: "/premium", label: "Premium ★", desc: "Portfolio tracking & power tools" },
                 { href: "/movers", label: "Price Movers", desc: "Biggest risers & drops this week" },
                 { href: "/forum", label: "Forum", desc: "Buy, sell & trade with players" },
                 { href: "/learn", label: "Learn Riftbound", desc: "New player? Start here — free" },
