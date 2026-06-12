@@ -14,6 +14,7 @@ import { IMPACT_SITE_VERIFICATION } from "@/lib/affiliate";
 import { ADSENSE_CLIENT, ADSENSE_ENABLED } from "@/lib/ads";
 import { NativeShell } from "@/components/NativeShell";
 import { WebAdsLoader } from "@/components/WebAdsLoader";
+import { SovrnLoader } from "@/components/SovrnLoader";
 import { PriceAlertModal } from "@/components/PriceAlertModal";
 
 // Body: Sora (modern, energetic, readable). Headings: Space Grotesk (distinctive,
@@ -145,6 +146,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             units. Inside the native app this renders nothing (native AdMob is used
             instead, and AdSense isn't allowed in app WebViews). */}
         <WebAdsLoader />
+        {/* Sovrn auto-affiliate (deferred to idle) — monetises the long-tail
+            store links; skips anything already affiliate-tagged. */}
+        <SovrnLoader />
         {/* Detects the Capacitor native runtime and shows native AdMob ads, styles
             the status bar and wires the Android back button. No-op on the web. */}
         <NativeShell />

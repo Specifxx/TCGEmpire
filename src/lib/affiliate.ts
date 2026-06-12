@@ -23,6 +23,12 @@ export const SOVRN_VERIFY_URL = process.env.SOVRN_VERIFY_URL || "https://sovrn.c
 // `||` (not `??`) so an empty-string env var still falls back to the default.
 export const AMAZON_ASSOCIATE_TAG = process.env.AMAZON_ASSOCIATE_TAG || "riftcompare-20";
 
+// Sovrn Commerce (VigLink) API key — APPROVED. Used twice: the client-side
+// vglnk.js install snippet (components/SovrnLoader.tsx, which Sovrn's install
+// check looks for) and the server-side redirect wrapper below. Public by design
+// (it ships in the page HTML either way).
+export const SOVRN_KEY = process.env.NEXT_PUBLIC_SOVRN_KEY || "1a16f011fe9fa529aa7722b8b7127476";
+
 // Impact (TCGplayer affiliate) site-ownership verification token. Rendered as a
 // <meta> in the document <head>.
 export const IMPACT_SITE_VERIFICATION = "ebb0400c-dec0-45ae-a56e-e7bb1596e965";
@@ -88,7 +94,9 @@ export function ebayAffiliateUrl(url: string): string {
 // exactly like the TCGplayer link stays inert until approved. So this is safe to
 // ship now and "turns on" the moment you paste your id into the env.
 const AFFILIATE_NETWORK = (process.env.AFFILIATE_NETWORK ?? "sovrn").toLowerCase();
-const AFFILIATE_NETWORK_ID = process.env.AFFILIATE_NETWORK_ID ?? "";
+// Defaults to the approved Sovrn key, so the 60+ Shopify store links are
+// monetised out of the box; override or empty via env to switch networks/off.
+const AFFILIATE_NETWORK_ID = process.env.AFFILIATE_NETWORK_ID ?? SOVRN_KEY;
 
 // Hosts that must NEVER be wrapped by the network: our own site, and the partners
 // we already monetise directly (their direct programs always pay more).
