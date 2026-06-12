@@ -88,6 +88,23 @@ model StorePartner {
   @@index([retailer])
 }
 
+// An auto-generated daily market report (AFR-style "market wrap" for the Riftbound
+// singles market). One per calendar day, written by /api/cron/market-report at
+// Wall St pre-market open and surfaced in the blog alongside the editorial posts.
+model MarketReport {
+  id              String   @id @default(cuid())
+  slug            String   @unique // riftbound-market-report-YYYY-MM-DD
+  day             String   @unique // YYYY-MM-DD (Australia/Sydney), one report per day
+  title           String
+  excerpt         String
+  body            String // markdown
+  // Snapshot the headline numbers so we can render cards/sitemap without recompute.
+  globalChangePct Float?
+  createdAt       DateTime @default(now())
+
+  @@index([createdAt])
+}
+
 // A player's best score in an arcade mini-game (/games/*). One row per user per
 // game — a better result replaces it. Whether higher or lower wins is per-game
 // (see lib/games.ts) and applied in app code, so `score` is stored raw with an

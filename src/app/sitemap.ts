@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { SITE_URL } from "@/lib/site";
 import { META_DECKS } from "@/lib/meta-decks";
 import { getArticles } from "@/lib/articles";
+import { getMarketReportSlugs } from "@/lib/posts";
 import { SETS } from "@/lib/constants";
 
 // Regenerate at most once per day — the card set is stable.
@@ -58,6 +59,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: new Date(`${a.date}T09:00:00+10:00`),
   }));
 
+  // Auto-generated daily market reports (DB-backed blog posts).
+  const reports = await getMarketReportSlugs();
+  const reportRoutes: MetadataRoute.Sitemap = reports.map((r) => ({
+    url: `${SITE_URL}/blog/${r.slug}`,
+    changeFrequency: "monthly" as const,
+    priority: 0.6,
+    lastModified: new Date(`${r.day}T09:00:00+10:00`),
+  }));
+
   // Set landing pages (high-value head terms, e.g. "Riftbound Origins prices").
   const setRoutes: MetadataRoute.Sitemap = SETS.filter((s) => !s.comingSoon).map((s) => ({
     url: `${SITE_URL}/sets/${s.slug}`,
@@ -82,7 +92,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // prioritise crawling (prices/content refresh daily; this sitemap regenerates
   // daily via `revalidate`).
   const now = new Date();
-  return [...staticRoutes, ...setRoutes, ...deckRoutes, ...articleRoutes, ...cardRoutes].map((e) => ({
+  return [...staticRoutes, ...setRoutes, ...deckRoutes, ...articleRoutes, ...reportRoutes, ...cardRoutes].map((e) => ({
     lastModified: now,
     ...e,
   }));
