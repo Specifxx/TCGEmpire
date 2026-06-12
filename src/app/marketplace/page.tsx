@@ -45,6 +45,9 @@ export default async function MarketplacePage() {
 
   const listings = await prisma.marketplaceListing.findMany({
     where: { status: "ACTIVE", quantity: { gt: 0 }, country },
+    orderBy: { createdAt: "desc" },
+    take: 300, // egress rule: no unbounded reads on a per-request page
+
     include: {
       card: {
         select: {

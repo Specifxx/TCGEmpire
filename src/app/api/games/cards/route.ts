@@ -16,7 +16,8 @@ const idsForMarket = unstable_cache(
   async (field: ReturnType<typeof priceField>) => {
     const where: Prisma.CardWhereInput = { imageThumbUrl: { not: null } };
     where[field] = { not: null };
-    const rows = await prisma.card.findMany({ where, select: { id: true } });
+    // ids only (~25 bytes/row) but cap anyway — egress rule: no unbounded reads.
+    const rows = await prisma.card.findMany({ where, select: { id: true }, take: 5000 });
     return rows.map((r) => r.id);
   },
   ["games-card-ids"],

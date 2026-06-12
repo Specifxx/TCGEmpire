@@ -16,9 +16,11 @@ import { PriceChart } from "./PriceChart";
 import { AiInsight } from "./AiInsight";
 import type { PricePoint } from "@/lib/price-history";
 
-// eBay marketplace per country for the quota-fallback search link (NZ has no eBay).
+// eBay marketplace per country for the quota-fallback search link. NZ has no
+// eBay of its own — eBay AU ships there, so NZ falls back to it.
 const EBAY_MKT: Record<string, { domain: string; label: string } | undefined> = {
   AU: { domain: "ebay.com.au", label: "eBay Australia" },
+  NZ: { domain: "ebay.com.au", label: "eBay AU (ships to NZ)" },
   US: { domain: "ebay.com", label: "eBay" },
   UK: { domain: "ebay.co.uk", label: "eBay UK" },
 };
@@ -156,7 +158,7 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
   const hasEbay = (prices ?? []).some((p) => p.retailer.startsWith("ebay") && p.inStock && p.country === country);
   const ebayUnchecked = !ebayCheckedAt || Date.now() - new Date(ebayCheckedAt).getTime() > 28 * 60 * 60 * 1000;
   const ebaySearchUrl =
-    prices !== null && ebayMkt && !hasEbay && ebayUnchecked
+    prices !== null && ebayMkt && !hasEbay && (ebayUnchecked || country === "NZ" || inStock.length === 0)
       ? ebayAffiliateUrl(`https://www.${ebayMkt.domain}/sch/i.html?_nkw=${encodeURIComponent(`${card.name} Riftbound`)}`)
       : null;
 
@@ -243,7 +245,21 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                   Loading live prices…
                 </div>
               ) : inStock.length === 0 ? (
-                <p className="py-4 text-sm text-slate-500">No in-stock listings right now.</p>
+                <div className="py-4 text-sm text-slate-500">
+                  <p>No in-stock listings right now.</p>
+                  {/* Never a dead end: a zero-stock modal still offers the
+                      affiliate eBay search (eBay AU for NZ, which has no eBay). */}
+                  {ebaySearchUrl && ebayMkt && (
+                    <a
+                      href={ebaySearchUrl}
+                      target="_blank"
+                      rel={outboundRel(ebaySearchUrl)}
+                      className="btn-primary mt-3 inline-flex text-xs"
+                    >
+                      Search {ebayMkt.label} →
+                    </a>
+                  )}
+                </div>
               ) : (
                 <ul className="divide-y divide-ink-800">
                   {inStock.slice(0, 6).map((p, i) => (
