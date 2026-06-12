@@ -15,7 +15,7 @@ import { ADSENSE_CLIENT, ADSENSE_ENABLED } from "@/lib/ads";
 import { NativeShell } from "@/components/NativeShell";
 import { TcgplayerAd } from "@/components/TcgplayerAd";
 import { WebAdsLoader } from "@/components/WebAdsLoader";
-import { SovrnLoader } from "@/components/SovrnLoader";
+import { SovrnSnippet } from "@/components/SovrnSnippet";
 import { PriceAlertModal } from "@/components/PriceAlertModal";
 
 // Body: Sora (modern, energetic, readable). Headings: Space Grotesk (distinctive,
@@ -156,7 +156,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <WebAdsLoader />
         {/* Sovrn auto-affiliate (deferred to idle) — monetises the long-tail
             store links; skips anything already affiliate-tagged. */}
-        <SovrnLoader />
+        <SovrnSnippet />
         {/* Detects the Capacitor native runtime and shows native AdMob ads, styles
             the status bar and wires the Android back button. No-op on the web. */}
         <NativeShell />

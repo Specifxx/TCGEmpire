@@ -9,7 +9,7 @@ import { WishlistButton } from "@/components/WishlistButton";
 import { CardViewBeacon } from "@/components/CardViewBeacon";
 import { formatMoney, timeAgo } from "@/lib/format";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
-import { affiliateUrl, ebayAffiliateUrl, SOVRN_VERIFY_CARD_SLUG, SOVRN_VERIFY_RETAILER, SOVRN_VERIFY_URL } from "@/lib/affiliate";
+import { affiliateUrl, ebayAffiliateUrl, outboundRel } from "@/lib/affiliate";
 import { cardDisplayName } from "@/lib/card-name";
 import { CardTile } from "@/components/CardTile";
 import { cardTileSelect } from "@/lib/cards";
@@ -160,13 +160,10 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // Unique editorial copy + FAQ so each card page carries substantive, crawlable
   // text rather than just a price table (thin content ranks poorly). Everything
   // below is generated from this card's own attributes, so no two pages match.
-  // Outbound "buy" URL for a retailer row. Normally our affiliate-tagged link, but
-  // for the Sovrn account-verification card the Plenty of Games listing routes
-  // through Sovrn's monetised URL instead (replacing that one store link in place).
-  const buyHref = (p: { url: string; retailer: string }) =>
-    card.slug === SOVRN_VERIFY_CARD_SLUG && p.retailer === SOVRN_VERIFY_RETAILER
-      ? SOVRN_VERIFY_URL
-      : affiliateUrl(p.url, p.retailer);
+  // Outbound "buy" URL for a retailer row — affiliate-tagged (the Sovrn
+  // account-verification special case is gone; the account is approved and
+  // every store link now monetises through the normal affiliateUrl flow).
+  const buyHref = (p: { url: string; retailer: string }) => affiliateUrl(p.url, p.retailer);
 
   const tags = (card.tags ?? "").split(",").map((t) => t.trim()).filter(Boolean);
   const about = buildAbout(card, info, lowestPrice, prices.length, fmt);
@@ -424,7 +421,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               <a
                 href={ebaySearchUrl}
                 target="_blank"
-                rel="sponsored nofollow noopener noreferrer"
+                rel={outboundRel(ebaySearchUrl)}
                 className="btn-primary shrink-0 text-sm"
               >
                 Search {ebayMkt.label} →

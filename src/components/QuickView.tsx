@@ -9,7 +9,7 @@ import { isOvernumbered, isSignature, UK_FALLBACK_RETAILERS } from "@/lib/consta
 import { cardHref } from "@/lib/card-url";
 import { cardDisplayName } from "@/lib/card-name";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
-import { affiliateUrl, ebayAffiliateUrl } from "@/lib/affiliate";
+import { affiliateUrl, ebayAffiliateUrl, outboundRel } from "@/lib/affiliate";
 import { OutboundLink } from "./OutboundLink";
 import { useCountry } from "./CountryProvider";
 import { PriceChart } from "./PriceChart";
@@ -293,7 +293,7 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
               <a
                 href={ebaySearchUrl}
                 target="_blank"
-                rel="sponsored nofollow noopener noreferrer"
+                rel={outboundRel(ebaySearchUrl)}
                 className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-amber-500/25 bg-amber-500/[0.05] p-3 hover:border-amber-500/45"
               >
                 <span className="min-w-0 text-xs text-slate-300">
