@@ -44,21 +44,32 @@ export default async function BoxEvPage() {
     },
   }).catch(() => []);
 
-  const agg = new Map<string, Map<string, { sum: number; n: number }>>();
+  // Average value of a RANDOM card of each rarity — the honest input to EV. The
+  // key fix vs. the naive version: divide by EVERY card of that rarity, not just
+  // the ones that currently have a listing. Most commons/uncommons are bulk with
+  // no live price; counting only priced cards made each slot worth the average of
+  // the *valuable* cards and massively overstated every box. Unpriced bulk counts
+  // as ~$0 — which is what a random bulk pull is actually worth.
+  const agg = new Map<string, Map<string, { sum: number; priced: number; total: number }>>();
   for (const c of cards) {
-    const p = pickPrice(c, country);
-    if (p == null) continue;
     const bySet = agg.get(c.setCode) ?? agg.set(c.setCode, new Map()).get(c.setCode)!;
-    const cell = bySet.get(c.rarity) ?? { sum: 0, n: 0 };
-    cell.sum += p;
-    cell.n += 1;
+    const cell = bySet.get(c.rarity) ?? { sum: 0, priced: 0, total: 0 };
+    cell.total += 1;
+    const p = pickPrice(c, country);
+    if (p != null) {
+      cell.sum += p;
+      cell.priced += 1;
+    }
     bySet.set(c.rarity, cell);
   }
   const sets: SetRarityData[] = SETS.filter((s) => !s.comingSoon && agg.has(s.code)).map((s) => ({
     setCode: s.code,
     setName: s.name,
     rarities: Object.fromEntries(
-      [...(agg.get(s.code) ?? new Map())].map(([rarity, { sum, n }]) => [rarity, { avgCents: Math.round(sum / n), count: n }])
+      [...(agg.get(s.code) ?? new Map())].map(([rarity, { sum, priced, total }]) => [
+        rarity,
+        { avgCents: total > 0 ? Math.round(sum / total) : 0, priced, total },
+      ])
     ),
   }));
 
