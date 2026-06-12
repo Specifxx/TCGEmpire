@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: { params: { set: string } }):
   // The whole site renders dynamically (the layout reads the country cookie), so
   // notFound() can't return a hard 404 here; mark unknown slugs noindex so Google
   // never indexes the soft-404 (nothing links to them anyway).
-  if (!set) return { title: "Set not found", robots: { index: false, follow: false } };
+  if (!set) notFound(); // real 404 — metadata resolves before streaming
   // Market-neutral title (no country) so it ranks globally; the page itself is
   // tailored to the visitor's market.
   const title = `Riftbound ${set.name} Card Prices, Values & Full Card List`;

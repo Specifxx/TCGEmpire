@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   });
   // noindex like the set page: the layout's cookie read makes pages render
   // dynamically, so make sure an unknown slug can never be indexed as a soft-404.
-  if (!card) return { title: "Card not found", robots: { index: false, follow: false } };
+  if (!card) notFound(); // real 404 — metadata resolves before streaming
 
   const lowest = pickPrice(card, country);
   const price = lowest != null ? ` from ${formatMoney(lowest, info.currency)}` : "";

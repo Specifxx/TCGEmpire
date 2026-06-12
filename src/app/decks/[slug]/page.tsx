@@ -9,7 +9,7 @@ export const revalidate = 900;
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const seed = getDeckSeed(params.slug);
-  if (!seed) return { title: "Deck not found" };
+  if (!seed) notFound(); // real 404 — metadata resolves before streaming
   const legendName = seed.legend.replace(/\s*-\s*Starter$/i, "");
   return {
     title: `${seed.name} — Riftbound meta deck & build cost`,
