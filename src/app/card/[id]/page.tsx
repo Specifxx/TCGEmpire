@@ -17,6 +17,7 @@ import { cardTileSelect } from "@/lib/cards";
 import { OutboundLink } from "@/components/OutboundLink";
 import { AdSlot } from "@/components/AdSlot";
 import { TcgplayerAd } from "@/components/TcgplayerAd";
+import { EmbedCardButton } from "@/components/EmbedCardButton";
 import { EbayAd } from "@/components/EbayAd";
 import { ADSENSE_SLOTS } from "@/lib/ads";
 import { getCountry } from "@/lib/get-country";
@@ -519,6 +520,9 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           </div>
         </section>
       )}
+
+      {/* Embeddable live-price widget — a free backlink/brand engine. */}
+      <EmbedCardButton slug={card.slug ?? card.id} market={country} />
     </div>
   );
 }
