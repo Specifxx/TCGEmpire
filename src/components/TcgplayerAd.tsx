@@ -1,75 +1,92 @@
 import { OutboundLink } from "./OutboundLink";
 
-// TCGplayer display banners from the approved Impact contract. First-party
-// placements (no ad network): the <a> is the Impact tracking link (commission
-// on click-through purchases), the image is Impact's hosted creative, and the
-// 1px image fires the impression beacon. Fixed dimensions = zero CLS.
-//
-// Creative selection is region-aware: US visitors see the seasonal campaign
-// (Mayhem 2026); AU/NZ/UK see the "TCGplayer ships international" creative —
-// the exact objection those visitors actually have.
+// TCGplayer affiliate banners (approved Impact contract). First-party placements,
+// no ad network. We render our OWN evergreen creative rather than Impact's hosted
+// banner images: those are seasonal campaign art (e.g. "Mayhem 2026") that expires
+// the moment the campaign ends, leaving stale/irrelevant ads — and a click link
+// tied to a deactivated creative can stop paying commission. Our banner is
+// always-relevant and region-aware; clicks route through the evergreen tracking
+// ids below (commission on click-through purchases). Fixed dimensions = zero CLS.
 const ACCOUNT = "7385758";
 const PROGRAM = "21018";
 
 type Variant = "rect" | "leaderboard" | "billboard" | "mobile" | "mobileRect";
 
-// Ad ids from the Impact ads export (seasonal "us" creatives can be swapped
-// here when campaigns rotate; the international ones are evergreen).
-const ADS: Record<Variant, { us: string; intl: string; w: number; h: number }> = {
-  rect: { us: "3913671", intl: "3841228", w: 336, h: 280 }, // large rectangle
-  leaderboard: { us: "3904321", intl: "3841229", w: 728, h: 90 },
-  billboard: { us: "3913669", intl: "3841226", w: 970, h: 90 }, // large leaderboard
-  mobile: { us: "3913670", intl: "3841227", w: 320, h: 100 }, // large mobile banner
-  mobileRect: { us: "3904323", intl: "3841225", w: 300, h: 250 }, // medium rectangle
+// Evergreen tracking ids (the non-seasonal "international" creatives from the
+// Impact ads export). Used ONLY for the click/commission link — never expire, so
+// attribution can't silently break when a seasonal campaign rotates out.
+const ADS: Record<Variant, { id: string; w: number; h: number }> = {
+  rect: { id: "3841228", w: 336, h: 280 }, // large rectangle
+  leaderboard: { id: "3841229", w: 728, h: 90 },
+  billboard: { id: "3841226", w: 970, h: 90 }, // large leaderboard
+  mobile: { id: "3841227", w: 320, h: 100 }, // large mobile banner
+  mobileRect: { id: "3841225", w: 300, h: 250 }, // medium rectangle
 };
 
 const click = (id: string) => `https://partner.tcgplayer.com/c/${ACCOUNT}/${id}/${PROGRAM}`;
-const creative = (id: string) => `https://a.impactradius-go.com/display-ad/${PROGRAM}-${id}`;
-const impression = (id: string) => `https://partner.tcgplayer.com/i/${ACCOUNT}/${id}/${PROGRAM}`;
 
-function Banner({ id, w, h, country }: { id: string; w: number; h: number; country: string }) {
+// Region-aware tagline — the actual objection each visitor has. US shoppers care
+// about speed; everyone else cares whether TCGplayer ships to them.
+function tagline(country: string): string {
+  if (country === "US") return "Fast US shipping";
+  if (country === "NZ") return "Ships to New Zealand";
+  if (country === "UK") return "Ships to the UK";
+  if (country === "AU") return "Ships to Australia";
+  return "Ships worldwide";
+}
+
+function Banner({ w, h, country }: { w: number; h: number; country: string }) {
+  const horizontal = w >= 2.5 * h; // leaderboard / billboard / mobile strip
   return (
     <span
-      className="relative inline-block overflow-hidden rounded-lg border border-ink-700 bg-ink-900"
+      className="relative inline-block overflow-hidden rounded-lg border border-sky-500/30 bg-gradient-to-r from-ink-900 via-[#0d1828] to-ink-900"
       style={{ width: w, height: h }}
     >
-      {/* House fallback layer: ad blockers block/hide Impact's creative CDN, which
-          used to leave an empty bordered box. The loaded creative fully covers
-          this layer; when it's blocked, the pitch shows instead — same fixed
-          dimensions either way, so zero CLS. */}
-      <span className="absolute inset-0 flex flex-col items-center justify-center gap-0.5 px-3 text-center">
-        <span className="text-sm font-extrabold text-white">TCGplayer</span>
-        <span className="text-[11px] text-slate-400">Shop Riftbound singles &amp; sealed</span>
-        <span className="mt-1 text-[11px] font-bold text-brand-400">Shop now →</span>
-      </span>
       <OutboundLink
-        href={click(id)}
+        href={click(pickId(w, h))}
         retailer="tcgplayer_banner"
         country={country}
-        className="absolute inset-0 block"
-        aria-label="TCGplayer — shop Riftbound singles and sealed"
+        className="absolute inset-0 block transition-colors hover:bg-sky-500/5"
       >
-        {/* Decorative (alt="") so a blocked creative renders nothing rather than
-            broken-image chrome over the fallback; the link carries the name. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={creative(id)} alt="" width={w} height={h} loading="lazy" className="relative h-full w-full" />
+        <span
+          className={`absolute inset-0 flex px-4 ${
+            horizontal ? "flex-row items-center justify-center gap-3 text-left" : "flex-col items-center justify-center gap-1 text-center"
+          }`}
+        >
+          <span className="text-base font-extrabold tracking-tight text-white">
+            TCG<span className="text-sky-400">player</span>
+          </span>
+          <span className={horizontal ? "" : "leading-tight"}>
+            <span className="block text-[13px] font-semibold text-slate-200">Shop Riftbound singles &amp; sealed</span>
+            <span className="block text-[11px] text-slate-400">{tagline(country)}</span>
+          </span>
+          <span
+            className={`shrink-0 rounded-md bg-sky-500/15 px-2.5 py-1 text-[11px] font-bold text-sky-300 ${
+              horizontal ? "" : "mt-1.5"
+            }`}
+          >
+            Shop now →
+          </span>
+        </span>
       </OutboundLink>
-      <span className="pointer-events-none absolute left-1 top-1 rounded bg-ink-950/70 px-1 text-[9px] font-semibold uppercase tracking-wide text-slate-400">
+      <span className="pointer-events-none absolute left-1 top-1 rounded bg-ink-950/70 px-1 text-[9px] font-semibold uppercase tracking-wide text-slate-500">
         Ad
       </span>
-      {/* Impact impression beacon. */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={impression(id)} alt="" width={0} height={0} loading="lazy" className="absolute h-0 w-0" />
     </span>
   );
+}
+
+// Map a rendered size back to its evergreen tracking id (banners are fixed-size,
+// so dimensions identify the variant unambiguously).
+function pickId(w: number, h: number): string {
+  const match = Object.values(ADS).find((a) => a.w === w && a.h === h);
+  return match?.id ?? ADS.leaderboard.id;
 }
 
 // Responsive placement: `size` for larger screens, a mobile unit below `sm`.
 // `mobile="rect"` swaps the slim 320x100 banner for the 300x250 rectangle — a
 // far better in-content unit on phones. The billboard steps down to the 728
-// leaderboard between sm and lg so it never overflows. Hidden variants' lazy
-// images never intersect the viewport, so they aren't fetched (no double
-// impressions).
+// leaderboard between sm and lg so it never overflows.
 export function TcgplayerAd({
   size = "rect",
   mobile = "banner",
@@ -81,11 +98,10 @@ export function TcgplayerAd({
   country: string;
   className?: string;
 }) {
-  const intl = country !== "US";
-  const ad = (v: Variant) => ({ id: intl ? ADS[v].intl : ADS[v].us, w: ADS[v].w, h: ADS[v].h });
-  const desk = ad(size);
-  const mid = ad("leaderboard");
-  const mob = ad(mobile === "rect" ? "mobileRect" : "mobile");
+  const dims = (v: Variant) => ({ w: ADS[v].w, h: ADS[v].h });
+  const desk = dims(size);
+  const mid = dims("leaderboard");
+  const mob = dims(mobile === "rect" ? "mobileRect" : "mobile");
   return (
     <div className={`flex justify-center ${className ?? ""}`}>
       {size === "billboard" ? (
