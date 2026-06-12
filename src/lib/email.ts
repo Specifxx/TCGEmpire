@@ -93,14 +93,14 @@ function alertFooter(unsubUrl: string): string {
   </td></tr>`;
 }
 
-function emailShell(heading: string, inner: string, unsubUrl: string): string {
+function emailShell(heading: string, inner: string, footer: string): string {
   return `<!doctype html><html><body style="margin:0;background:#0b0e14;font-family:Arial,Helvetica,sans-serif">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0b0e14;padding:32px 0"><tr><td align="center">
     <table role="presentation" width="520" cellpadding="0" cellspacing="0" style="background:#131a26;border:1px solid #233047;border-radius:16px">
       <tr><td style="padding:28px 32px 6px"><div style="font-size:22px;font-weight:800;color:#fff">Rift<span style="color:#34d17e">Compare</span></div></td></tr>
       <tr><td style="padding:6px 32px 4px"><h1 style="margin:0;font-size:20px;color:#fff">${heading}</h1></td></tr>
       ${inner}
-      ${alertFooter(unsubUrl)}
+      ${footer}
     </table></td></tr></table></body></html>`;
 }
 
@@ -130,7 +130,7 @@ export async function sendPriceDropEmail(to: string, items: PriceDropItem[], uns
     <tr><td style="padding:4px 32px 12px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${items.map(dropRow).join("")}</table></td></tr>
     <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/wishlist" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">View your wishlist</a></td></tr>`;
   const subject = count === 1 ? `Price drop: ${items[0]!.name} is now ${formatMoney(items[0]!.newCents, currencyOf(items[0]!.market))}` : `Price drops on ${count} of your wishlist cards`;
-  return sendEmail(to, subject, emailShell(heading, inner, unsubUrl));
+  return sendEmail(to, subject, emailShell(heading, inner, alertFooter(unsubUrl)));
 }
 
 // Sent once when someone subscribes via the wishlist pop-up, confirming the watch
@@ -142,5 +142,35 @@ export async function sendAlertConfirmationEmail(to: string, cardCount: number, 
       ${cardCount === 1 ? "the card" : `any of the ${cardCount} cards`} on your wishlist. We check prices once a day.
     </td></tr>
     <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/wishlist" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">View your wishlist</a></td></tr>`;
-  return sendEmail(to, "You're watching your RiftCompare wishlist for price drops", emailShell("Price-drop alerts are on", inner, unsubUrl));
+  return sendEmail(to, "You're watching your RiftCompare wishlist for price drops", emailShell("Price-drop alerts are on", inner, alertFooter(unsubUrl)));
+}
+
+// ─── Weekly newsletter digest ────────────────────────────────────────────────
+
+// Newsletter footer: the audience opted in via the footer signup, so the copy
+// reflects that consent (distinct from the wishlist-alert footer above).
+function newsletterFooter(unsubUrl: string): string {
+  return `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">
+    You're getting this because you signed up for the weekly ${SITE_NAME} Index summary.<br/>
+    <a href="${unsubUrl}" style="color:#9aa4b2;text-decoration:underline">Unsubscribe</a> · RiftCompare · Riftbound card price comparison.
+  </td></tr>`;
+}
+
+// The weekly digest itself; `inner` is built by lib/newsletter.ts so the content
+// (movers tables, Index summary) lives next to the data that produces it.
+export async function sendNewsletterDigestEmail(to: string, subject: string, heading: string, inner: string, unsubUrl: string): Promise<boolean> {
+  return sendEmail(to, subject, emailShell(heading, inner, newsletterFooter(unsubUrl)));
+}
+
+// Sent once on first signup so subscribers hear from us immediately (and get the
+// unsubscribe link up front) instead of silence until Friday.
+export async function sendNewsletterWelcomeEmail(to: string, unsubUrl: string): Promise<boolean> {
+  const inner = `
+    <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      You're on the list — every week you'll get the ${SITE_NAME} Index summary: the cards that spiked,
+      the cards that dropped, and where the best value is across AU, NZ, US and UK stores.
+      The next edition lands this Saturday morning (Sydney time).
+    </td></tr>
+    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/movers?utm_source=newsletter&utm_medium=email&utm_campaign=welcome" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">See this week's movers</a></td></tr>`;
+  return sendEmail(to, `You're on the ${SITE_NAME} weekly Index summary`, emailShell("Welcome aboard", inner, newsletterFooter(unsubUrl)));
 }
