@@ -31,8 +31,6 @@ export const revalidate = 180;
 const whereParam = (p: string) => ({ OR: [{ slug: p }, { id: p }] });
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-  const country = getCountry();
-  const info = COUNTRIES[country];
   const card = await prisma.card.findFirst({
     where: whereParam(params.id),
     select: { slug: true, name: true, setName: true, setCode: true, collectorNumber: true, lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, imageUrl: true, imageThumbUrl: true },
@@ -41,10 +39,12 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   // dynamically, so make sure an unknown slug can never be indexed as a soft-404.
   if (!card) notFound(); // real 404 — metadata resolves before streaming
 
-  const lowest = pickPrice(card, country);
-  const price = lowest != null ? ` from ${formatMoney(lowest, info.currency)}` : "";
-  const title = `${card.name} (${card.setCode} ${card.collectorNumber}) — Riftbound price in ${info.place}`;
-  const description = `Compare live ${info.adjective} prices for ${card.name}, Riftbound ${card.setName} ${card.collectorNumber}${price}. Find the cheapest store to buy this card in ${info.place}.`;
+  // MARKET-NEUTRAL metadata: Googlebot crawls from US IPs, so cookie-derived
+  // copy ("price in the United States") would be what gets indexed for every
+  // market — fragmented snippets at catalogue scale. Neutral title also stays
+  // under the ~60-char SERP truncation point.
+  const title = `${card.name} (${card.setCode} ${card.collectorNumber}) — Riftbound Card Price`;
+  const description = `Compare live prices for ${card.name}, Riftbound ${card.setName} ${card.collectorNumber}, across stores in Australia, New Zealand, the US and the UK — find the cheapest place to buy.`;
   const image = card.imageUrl ?? card.imageThumbUrl ?? undefined;
 
   return {
@@ -110,9 +110,14 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // most-searched cards and skips the long tail once the budget runs out. When this
   // card has NO eBay listing in the viewer's market AND the pass never reached it
   // recently (ebayCheckedAt stale/null), we couldn't check eBay — so offer an
-  // affiliate-tagged eBay search instead of pretending none exist. (NZ has no eBay.)
+  // affiliate-tagged eBay search instead of pretending none exist.
+  // NZ has no eBay marketplace of its own, so NZ never has eBay rows and the
+  // quota gate never applies — eBay AU ships to NZ and is ALWAYS offered when
+  // nothing local is in stock (a zero-listing card page must never be a dead
+  // end with no monetisable action).
   const EBAY_MKT: Record<string, { domain: string; label: string } | undefined> = {
     AU: { domain: "ebay.com.au", label: "eBay Australia" },
+    NZ: { domain: "ebay.com.au", label: "eBay AU (ships to NZ)" },
     US: { domain: "ebay.com", label: "eBay" },
     UK: { domain: "ebay.co.uk", label: "eBay UK" },
   };
@@ -120,7 +125,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   const hasEbay = card.retailerPrices.some((p) => p.retailer.startsWith("ebay") && p.inStock);
   const ebayUnchecked = !card.ebayCheckedAt || Date.now() - card.ebayCheckedAt.getTime() > 28 * 60 * 60 * 1000;
   const ebaySearchUrl =
-    ebayMkt && !hasEbay && ebayUnchecked
+    ebayMkt && !hasEbay && (ebayUnchecked || country === "NZ")
       ? ebayAffiliateUrl(`https://www.${ebayMkt.domain}/sch/i.html?_nkw=${encodeURIComponent(`${card.name} Riftbound`)}`)
       : null;
 
@@ -153,6 +158,8 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           highPrice: (prices[prices.length - 1].priceCents / 100).toFixed(2),
           offerCount: prices.length,
           availability: "https://schema.org/InStock",
+          // Prices refresh daily — valid until tomorrow keeps the markup honest.
+          priceValidUntil: new Date(Date.now() + 86400e3).toISOString().slice(0, 10),
         },
       }
     : null;
@@ -415,7 +422,9 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                   <span aria-hidden>🔎</span> No live {ebayMkt.label} price for this card right now
                 </div>
                 <p className="mt-1 text-xs text-slate-400">
-                  We couldn&apos;t load {ebayMkt.label} listings for {cardDisplayName(card.name, card)} this cycle — search eBay directly to see what&apos;s on offer.
+                  {country === "NZ"
+                    ? <>New Zealand has no eBay marketplace of its own, but eBay Australia ships here — search it directly to see what&apos;s on offer for {cardDisplayName(card.name, card)}.</>
+                    : <>We couldn&apos;t load {ebayMkt.label} listings for {cardDisplayName(card.name, card)} this cycle — search eBay directly to see what&apos;s on offer.</>}
                 </p>
               </div>
               <a

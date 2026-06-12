@@ -13,6 +13,8 @@ export async function GET() {
   const items = await prisma.collectionCard.findMany({
     where: { userId: user.id },
     orderBy: { updatedAt: "desc" },
+    take: 2000, // egress rule: even power collections stay bounded per request
+
     include: {
       card: {
         select: {

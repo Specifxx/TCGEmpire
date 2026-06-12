@@ -51,7 +51,18 @@ export function PremiumCta({ checkoutLive, signedIn }: { checkoutLive: boolean; 
       <button onClick={subscribe} disabled={busy} className="btn-primary mt-3 text-sm disabled:opacity-50">
         {busy ? "Opening checkout…" : "★ Subscribe"}
       </button>
-      {error && <p className="mt-2 text-xs text-rose-400">{error}</p>}
+      {error && (
+        <div className="mt-2 text-xs">
+          <p className="text-rose-400">{error}</p>
+          {/* Recovery path — a failed checkout must never be a dead end. */}
+          <p className="mt-1 text-slate-400">
+            <button onClick={subscribe} className="text-brand-400 hover:underline">Try again</button>
+            {" · or "}
+            <Link href="/contact" className="text-brand-400 hover:underline">join the waitlist</Link>
+            {" and we'll email you when it's sorted."}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

@@ -44,7 +44,7 @@ export default async function ForumPage({
   const rows = await prisma.forumPost.findMany({
     where,
     orderBy: { createdAt: "desc" },
-    take: 400,
+    take: 150, // egress rule: enough to show a lively board without a multi-MB pull
     include: { _count: { select: { comments: true } } },
   });
 
