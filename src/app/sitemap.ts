@@ -13,21 +13,33 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Whole-function fence: a sitemap prerender failure hard-fails the entire
   // Vercel build, so ANY error here degrades to static routes instead.
   let cards: { id: string; slug: string | null; lowestPriceCents: number | null }[] = [];
+  // Honest lastModified for price-bearing pages: the day of the latest price
+  // snapshot (i.e. when the page's content really last changed). Stamping
+  // every URL with "now" on every regeneration teaches Google to DISTRUST the
+  // sitemap's dates entirely — a classic route into "Crawled - currently not
+  // indexed". Evergreen pages (privacy, games, about…) carry no lastModified
+  // at all rather than a fake one.
+  let priceDay: Date | undefined;
   try {
     cards = await prisma.card.findMany({
       select: { id: true, slug: true, lowestPriceCents: true },
       orderBy: { lowestPriceCents: { sort: "desc", nulls: "last" } },
     });
+    priceDay = (
+      await prisma.priceHistory.findFirst({ orderBy: { day: "desc" }, select: { day: true } })
+    )?.day;
   } catch (e) {
     console.error("sitemap: card query failed, serving static routes:", e);
   }
 
   const staticRoutes: MetadataRoute.Sitemap = [
-    { url: `${SITE_URL}/`, changeFrequency: "daily", priority: 1 },
-    { url: `${SITE_URL}/browse`, changeFrequency: "daily", priority: 0.9 },
-    { url: `${SITE_URL}/movers`, changeFrequency: "daily", priority: 0.8 },
-    { url: `${SITE_URL}/market`, changeFrequency: "daily", priority: 0.8 },
-    { url: `${SITE_URL}/sealed`, changeFrequency: "daily", priority: 0.8 },
+    // Price-bearing pages: their content genuinely changes with each snapshot,
+    // so the latest snapshot day is an HONEST lastModified.
+    { url: `${SITE_URL}/`, changeFrequency: "daily", priority: 1, lastModified: priceDay },
+    { url: `${SITE_URL}/browse`, changeFrequency: "daily", priority: 0.9, lastModified: priceDay },
+    { url: `${SITE_URL}/movers`, changeFrequency: "daily", priority: 0.8, lastModified: priceDay },
+    { url: `${SITE_URL}/market`, changeFrequency: "daily", priority: 0.8, lastModified: priceDay },
+    { url: `${SITE_URL}/sealed`, changeFrequency: "daily", priority: 0.8, lastModified: priceDay },
     { url: `${SITE_URL}/decks`, changeFrequency: "weekly", priority: 0.8 },
     { url: `${SITE_URL}/deck`, changeFrequency: "weekly", priority: 0.6 },
     { url: `${SITE_URL}/forum`, changeFrequency: "hourly", priority: 0.7 },
@@ -73,6 +85,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     url: `${SITE_URL}/sets/${s.slug}`,
     changeFrequency: "daily",
     priority: 0.85,
+    lastModified: priceDay,
   }));
 
   const deckRoutes: MetadataRoute.Sitemap = META_DECKS.map((d) => ({
@@ -84,16 +97,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const cardRoutes: MetadataRoute.Sitemap = cards.map((c) => ({
     url: `${SITE_URL}/card/${c.slug ?? c.id}`,
     changeFrequency: "daily",
-    // Priced cards (the ones people search for) rank slightly higher.
+    // Priced cards (the ones people search for) rank slightly higher; their
+    // prices refresh with every snapshot, so that day is their real lastmod.
     priority: c.lowestPriceCents != null ? 0.8 : 0.5,
+    lastModified: c.lowestPriceCents != null ? priceDay : undefined,
   }));
 
-  // Stamp every URL with a lastModified so Google has a freshness signal to
-  // prioritise crawling (prices/content refresh daily; this sitemap regenerates
-  // daily via `revalidate`).
-  const now = new Date();
-  return [...staticRoutes, ...setRoutes, ...deckRoutes, ...articleRoutes, ...reportRoutes, ...cardRoutes].map((e) => ({
-    lastModified: now,
-    ...e,
-  }));
+  // NOTE: deliberately NO blanket "lastModified: now" — evergreen pages
+  // (privacy, games, deck guides…) carry no date rather than a fake one.
+  return [...staticRoutes, ...setRoutes, ...deckRoutes, ...articleRoutes, ...reportRoutes, ...cardRoutes];
 }

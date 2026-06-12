@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AuthForm } from "@/components/AuthForm";
 import { getCurrentUser } from "@/lib/auth";
 import { enabledProviders } from "@/lib/oauth";
+
+export const metadata: Metadata = { robots: { index: false } }; // auth/utility — never indexed
 
 function safe(next?: string): string {
   return next && next.startsWith("/") && !next.startsWith("//") ? next : "/forum";

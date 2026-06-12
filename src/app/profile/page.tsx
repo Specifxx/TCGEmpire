@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
@@ -7,6 +8,8 @@ import { SHARD } from "@/lib/points-config";
 import { formatAUD } from "@/lib/format";
 import { LogoutButton, ResendVerifyButton } from "@/components/ProfileActions";
 import { MyCollection } from "@/components/MyCollection";
+
+export const metadata: Metadata = { robots: { index: false } }; // auth/utility — never indexed
 
 export const dynamic = "force-dynamic";
 

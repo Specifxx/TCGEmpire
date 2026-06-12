@@ -11,6 +11,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: `${SHARD.name} & Rewards`,
   description: `Earn ${SHARD.name} just by using RiftCompare — daily check-ins, posting on the forum and more — then redeem them for badges, flair, early-access features and personalised experiences.`,
+  alternates: { canonical: "/rewards" },
 };
 
 export default async function RewardsPage() {
