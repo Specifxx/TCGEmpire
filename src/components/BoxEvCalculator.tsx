@@ -18,16 +18,20 @@ export interface SetRarityData {
 }
 
 const RARITY_ORDER = ["Common", "Uncommon", "Rare", "Epic", "Showcase"];
-// Editable starting assumptions (per pack). Deliberately conservative and clearly
-// labelled in the UI as estimates to tune against the printed pack breakdown.
+// Per-pack pull rates for Riftbound: Origins, from the magicalmeta.ink community
+// pull-rate visual guide. These are grounded in observed box/case data, not a
+// guess: a box yields ~168 Common, 72 Uncommon, 48 Rare, 6 Epic, and a Showcase
+// roughly 1 in every 3 boxes. Showcase is the chase rarity, so getting its rate
+// right (~1 in 72 packs, NOT ~1 in 12) is what keeps box EV realistic. Editable —
+// tune to whichever set you're opening.
 const DEFAULT_RATES: Record<string, number> = {
   Common: 7,
   Uncommon: 3,
-  Rare: 1,
-  Epic: 0.25,
-  Showcase: 0.08,
+  Rare: 2, // ~48 per 24-pack box
+  Epic: 0.25, // ~1 in 4 packs (6 per box)
+  Showcase: 0.0139, // ~1 in 72 packs (~1 per 3 boxes)
 };
-const DEFAULT_PACKS = 24;
+const DEFAULT_PACKS = 24; // 168 Commons per box ÷ 7 per pack
 
 export function BoxEvCalculator({ sets, currency }: { sets: SetRarityData[]; currency: string }) {
   const [setCode, setSetCode] = useState(sets[0]?.setCode ?? "");
@@ -102,8 +106,9 @@ export function BoxEvCalculator({ sets, currency }: { sets: SetRarityData[]; cur
             <button onClick={() => setRates({ ...DEFAULT_RATES })} className="text-[11px] text-brand-400 hover:underline">reset</button>
           </div>
           <p className="mt-0.5 text-[11px] text-slate-600">
-            Starting estimates — official per-pack odds aren&apos;t published, so tune these to the
-            printed pack breakdown on your box. Fractions are fine (0.25 = one in four packs).
+            Defaults follow a community pull-rate guide for Riftbound: Origins — Rare ~2/pack, Epic
+            ~1 in 4 packs, Showcase ~1 in 72. Tune to your set; fractions are fine (0.25 = one in
+            four packs, 0.0139 = one in 72).
           </p>
           <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-5">
             {RARITY_ORDER.filter((r) => set.rarities[r]).map((r) => (

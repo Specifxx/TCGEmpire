@@ -4,27 +4,20 @@
 // game never asserts rules text it can't back up.
 import { prisma } from "./db";
 import { unstable_cache } from "next/cache";
+import { RIFTLE_ATTEMPTS, RIFTLE_HINT_GATES, type Cell, type Feedback, type RiftleCard } from "./riftle-shared";
 
-export const RIFTLE_ATTEMPTS = 8;
+// Re-export the client-safe constants/types so existing importers of "@/lib/riftle"
+// (the API route) keep working. The actual definitions live in riftle-shared.ts,
+// which is free of server imports so the Riftle CLIENT component can import them
+// without dragging prisma into the browser bundle (that leak crashed /riftle).
+export { RIFTLE_ATTEMPTS, RIFTLE_HINT_GATES };
+export type { Cell, Feedback, RiftleCard };
+
 // Rarity ladder for higher/lower hints (Showcase prints are excluded from the pool).
 const RARITY_ORDER = ["Common", "Uncommon", "Rare", "Epic"];
 // Guessable card types — Battlefields/Runes are too niche to be fun answers.
 // (Champions are type "Unit" in the DB.)
 const POOL_TYPES = ["Unit", "Spell", "Gear", "Legend"];
-
-export type RiftleCard = {
-  id: string;
-  name: string;
-  slug: string | null;
-  setCode: string;
-  collectorNumber: string;
-  imageThumbUrl: string | null;
-  domain: string;
-  type: string;
-  rarity: string;
-  energyCost: number | null;
-  might: number | null;
-};
 
 const SELECT = {
   id: true, name: true, slug: true, setCode: true, collectorNumber: true,
@@ -91,18 +84,6 @@ export async function resolveGuess(name: string): Promise<RiftleCard | null> {
   return pool.find((c) => c.name.toLowerCase() === q) ?? null;
 }
 
-export type Cell = { value: string; state: "hit" | "miss"; hint?: "higher" | "lower" };
-export type Feedback = {
-  name: string;
-  imageThumbUrl: string | null;
-  correct: boolean;
-  // `num` (collector number) exists so every card is uniquely identifiable from the
-  // board: set+number pins down exactly one card, which kills the "all columns green
-  // but it's the wrong card" failure mode (Legends share set/type/domain/rarity and
-  // have no cost/might, so the other columns alone can't separate them).
-  cells: { set: Cell; num: Cell; type: Cell; domain: Cell; rarity: Cell; cost: Cell; might: Cell };
-};
-
 function numCell(guess: number | null, answer: number | null): Cell {
   const show = guess == null ? "—" : String(guess);
   if (guess === answer) return { value: show, state: "hit" };
@@ -159,10 +140,6 @@ export async function getPoolNames(): Promise<string[]> {
   const pool = await getPool();
   return pool.map((c) => c.name);
 }
-
-// How many guesses a player must have made before each successive hint can be
-// revealed — so hints reward persistence rather than replacing the puzzle.
-export const RIFTLE_HINT_GATES = [2, 3, 4, 5];
 
 // Progressive hints for one card, ordered least → most revealing (the last gives
 // the initial letter). Derived purely from the card's own attributes — no rules

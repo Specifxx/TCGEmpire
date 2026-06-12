@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { Feedback, RiftleCard } from "@/lib/riftle";
-import { RIFTLE_HINT_GATES } from "@/lib/riftle";
+// Import from the server-free shared module — importing the VALUE RIFTLE_HINT_GATES
+// from "@/lib/riftle" dragged prisma into this client bundle and crashed the page
+// at load (uncatchable by error boundaries). See lib/riftle-shared.ts.
+import type { Feedback, RiftleCard } from "@/lib/riftle-shared";
+import { RIFTLE_HINT_GATES } from "@/lib/riftle-shared";
 
 // Riftle — free guess-the-card game with two modes:
 //   • Daily: one card per Sydney day, shared by everyone; progress + streak persist.
