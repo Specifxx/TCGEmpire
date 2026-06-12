@@ -8,17 +8,6 @@
 // back to this id — an empty value emits `campid=` and silently untracks clicks.
 export const EBAY_CAMPAIGN_ID = process.env.EBAY_AFFILIATE_CAMPAIGN || "5339155912";
 
-// Sovrn Commerce account-verification link. To approve the account, Sovrn asks us
-// to place one of their monetised links live on the site. This one was generated
-// for the "Rengar, Trophy Hunter" card's Plenty of Games listing, so on that card
-// page the Plenty of Games "buy" link points to the Sovrn URL instead of the raw
-// store URL (it replaces that one link rather than adding a new element). Safe to
-// remove once the Sovrn application is approved.
-export const SOVRN_VERIFY_CARD_SLUG = "rengar-trophy-hunter-unl-120a-219";
-export const SOVRN_VERIFY_RETAILER = "plenty";
-// `||` (not `??`) so an empty-string env var still falls back to the default.
-export const SOVRN_VERIFY_URL = process.env.SOVRN_VERIFY_URL || "https://sovrn.co/1kdtzqj";
-
 // Amazon Associates store/tracking id, appended to amazon.* product links.
 // `||` (not `??`) so an empty-string env var still falls back to the default.
 export const AMAZON_ASSOCIATE_TAG = process.env.AMAZON_ASSOCIATE_TAG || "riftcompare-20";
@@ -168,4 +157,14 @@ export function affiliateUrl(url: string | null | undefined, subId = "riftcompar
     /* not an absolute URL — leave it untouched */
   }
   return url;
+}
+
+// rel attribute for outbound merchant anchors. Sovrn's on-page script
+// (vglnk.js) honours "norewrite": links that are already affiliated — eBay EPN
+// (campid), TCGplayer Impact, Amazon (tag), or Sovrn's own server-side
+// redirect — must keep their full-rate direct attribution, so the script is
+// told to leave them alone.
+export function outboundRel(href: string): string {
+  const affiliated = /partner\.tcgplayer\.com|redirect\.viglink\.com|[?&]campid=|[?&]tag=/.test(href);
+  return `nofollow sponsored noopener noreferrer${affiliated ? " norewrite" : ""}`;
 }
