@@ -14,7 +14,6 @@ import { IMPACT_SITE_VERIFICATION } from "@/lib/affiliate";
 import { ADSENSE_CLIENT, ADSENSE_ENABLED } from "@/lib/ads";
 import { NativeShell } from "@/components/NativeShell";
 import { TcgplayerAd } from "@/components/TcgplayerAd";
-import { WebAdsLoader } from "@/components/WebAdsLoader";
 import { SovrnSnippet } from "@/components/SovrnSnippet";
 import { PriceAlertModal } from "@/components/PriceAlertModal";
 
@@ -99,6 +98,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Google AdSense site verification. Present as soon as a publisher id is set
             so AdSense can confirm ownership of the site when you add it. */}
         {ADSENSE_ENABLED && <meta name="google-adsense-account" content={ADSENSE_CLIENT} />}
+        {/* Official AdSense snippet, server-rendered in <head> so Google's
+            application review reliably finds the code on every page (their
+            checker reads the raw HTML — the deferred WebAdsLoader injection is
+            invisible to it). Async, so it doesn't block rendering.
+            NOTE: this also loads in the native-app WebView (policy concern) —
+            re-gate via WebAdsLoader before any app-store release. */}
+        {ADSENSE_ENABLED && (
+          // eslint-disable-next-line @next/next/no-sync-scripts
+          <script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
+            crossOrigin="anonymous"
+          />
+        )}
         {/* Warm up the image CDN connection so card thumbnails start loading sooner. */}
         <link rel="preconnect" href="https://cdn.riftscribe.gg" crossOrigin="" />
         <link rel="dns-prefetch" href="https://cdn.riftscribe.gg" />
@@ -153,7 +166,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Google AdSense loader — web only. Powers Auto ads + the manual <AdSlot />
             units. Inside the native app this renders nothing (native AdMob is used
             instead, and AdSense isn't allowed in app WebViews). */}
-        <WebAdsLoader />
         {/* Sovrn auto-affiliate (deferred to idle) — monetises the long-tail
             store links; skips anything already affiliate-tagged. */}
         <SovrnSnippet />
