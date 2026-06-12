@@ -118,10 +118,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             (games included) carries at least one monetised placement. */}
         <TcgplayerAd size="leaderboard" country={country} className="container-app pb-8" />
         <footer className="container-app border-t border-ink-800 py-8 text-center text-xs text-slate-500">
-          <div className="mb-2 flex flex-wrap items-center justify-center gap-4 text-sm">
+          <div className="mb-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm">
+            <Link href="/about" className="text-slate-300 hover:text-brand-400">About</Link>
+            <span className="text-ink-700">·</span>
             <Link href="/contact" className="text-slate-300 hover:text-brand-400">Contact &amp; feedback</Link>
             <span className="text-ink-700">·</span>
             <Link href="/privacy" className="text-slate-300 hover:text-brand-400">Privacy policy</Link>
+            <span className="text-ink-700">·</span>
+            <Link href="/terms" className="text-slate-300 hover:text-brand-400">Terms</Link>
             <span className="text-ink-700">·</span>
             <a href={`mailto:${CONTACT_EMAIL}`} className="text-gold hover:underline">{CONTACT_EMAIL}</a>
           </div>

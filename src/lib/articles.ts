@@ -18,6 +18,173 @@ export interface Article {
 
 export const ARTICLES: Article[] = [
   {
+    slug: "is-riftbound-worth-getting-into",
+    category: "blog",
+    title: "Is Riftbound Worth Getting Into? An Honest Look",
+    excerpt:
+      "Thinking about picking up Riftbound: League of Legends TCG? An honest, hype-free look at what the game is, what it costs to start, and who it's for.",
+    author: "RiftCompare",
+    date: "2026-06-12",
+    readMins: 4,
+    tags: ["beginners", "opinion", "buying"],
+    body: `Riftbound — the League of Legends Trading Card Game — is one of the newest TCGs around, and "should I get into it?" is the question we hear most. Here's an honest answer, without the hype.
+
+## What you're actually getting
+
+Riftbound is a strategy card game set in the League of Legends universe. You build a deck around a **Legend** (your champion), across the game's domains — Fury, Calm, Mind, Body, Chaos, Order and Colorless — and battle for control of battlefields. If you enjoy deckbuilding and tactical card games (or you already love League's characters), it lands in a very familiar, very satisfying place.
+
+## The good
+
+- **It's early.** Getting in now means learning the game as the community grows and the meta is still wide open — a genuinely fun time to play.
+- **The IP is huge.** League's characters and art carry real appeal, and the card art is gorgeous.
+- **You don't need to spend big to play.** Preconstructed decks and Proving Grounds kits give you a complete, playable deck cheaply.
+
+## The honest caveats
+
+- **It's a new game**, so the local scene depends on where you live — check whether stores near you run events before you go deep.
+- **Like any TCG, it can get expensive** if you chase chase-cards. The good news: you rarely *need* them to play well.
+
+## What it costs to start
+
+The cheapest route in is a **preconstructed or Proving Grounds deck** — a ready-to-play deck out of the box. From there you upgrade card-by-card with **singles**, which is far cheaper than ripping boxes hoping to pull what you need. Want to know the real cost? Drop a decklist into our **[deck pricer](/deck)** and it totals every card at the cheapest live price.
+
+## Who it's for
+
+If you like building decks, enjoy League, or want to get into a TCG on the ground floor, Riftbound is an easy yes. If you only want a quick filler game with no collecting, it might be more than you're after.
+
+## Try before you spend
+
+You can get a feel for the cards completely free: play **[Riftle](/riftle)**, our daily card game, print test decks with the **[proxy tool](/proxy)**, and read **[Riftbound for beginners](/guides/riftbound-for-beginners)**. When you're ready to buy, **[compare every store](/browse)** so you start out paying the least.`,
+  },
+  {
+    slug: "buying-singles-vs-opening-packs",
+    category: "blog",
+    title: "Buying Singles vs Opening Packs: The Smart-Money Guide",
+    excerpt:
+      "Should you buy the exact Riftbound cards you want, or open packs and hope? The maths, the fun factor, and how to decide every time.",
+    author: "RiftCompare",
+    date: "2026-06-11",
+    readMins: 4,
+    tags: ["buying", "singles", "sealed", "value"],
+    body: `It's the eternal TCG question: do you buy the **singles** you need, or open **packs** and chase them? Here's how to decide — every time.
+
+## The case for singles
+
+If you want **specific cards** — to finish a deck, complete a playset, or grab a chase card — buying singles is almost always cheaper than opening packs to find them. You pay for exactly what you want, with zero variance. Look any card up on the **[database](/browse)** and buy the cheapest copy across stores.
+
+## The case for packs
+
+Opening packs is **fun** — the rip, the chase, the surprise. Packs and boxes also make sense if you want to draft, collect sealed product, or you genuinely enjoy the gamble. Just go in knowing the expected value: on average a box returns less than the sum of the singles inside, because you're paying for the experience.
+
+## The maths in one line
+
+A booster box has a fixed *expected value* spread across many random cards. If you need a few particular cards, you'll usually pay **less** buying those singles directly than opening boxes hoping to hit them. Curious about a specific set? Our **[Box EV calculator](/tools/box-ev)** works out a box's expected value from live singles prices, so you can see whether opening is +EV before you buy.
+
+## A simple rule of thumb
+
+- **Building or upgrading a deck?** → Buy **[singles](/browse)**.
+- **Want the opening experience, to draft, or to collect sealed?** → Buy a box — and **[compare box prices first](/sealed)**.
+- **Not sure?** → Run the **[Box EV calculator](/tools/box-ev)** and let the numbers decide.
+
+Either way, the smart move is the same: compare prices before you spend. That's the whole reason RiftCompare exists.`,
+  },
+  {
+    slug: "how-to-store-and-protect-riftbound-cards",
+    category: "guide",
+    title: "How to Store & Protect Your Riftbound Cards",
+    excerpt:
+      "Sleeves, top-loaders, binders and boxes — a plain-English guide to keeping your Riftbound cards (and their value) in mint condition.",
+    author: "RiftCompare",
+    date: "2026-06-12",
+    readMins: 5,
+    tags: ["collecting", "guide", "condition", "storage"],
+    body: `A Riftbound card's condition is a big part of its value — a Near Mint copy can be worth far more than a played one. Here's how to protect your cards properly, whether you're holding a chase card or just keeping a deck tidy.
+
+## Why condition matters
+
+Prices on RiftCompare assume **Near Mint (NM)** — the benchmark condition. As cards pick up whitening, scratches, dents or bends they drop through Lightly Played, Moderately Played, Heavily Played and Damaged, and each step down means a lower price. Protecting a card is the cheapest way to protect its value.
+
+## The basics: sleeves
+
+Every card you care about should be in a **sleeve**. There are two main types:
+
+- **Penny sleeves** — cheap, thin, soft plastic. Perfect as a first layer for storage and bulk.
+- **Deck sleeves** — sturdier, often coloured or art-printed, made for shuffling and play. If you're actually playing with a deck, these are what you want.
+
+For valuable cards, the collector standard is **double-sleeving**: a snug "perfect fit" inner sleeve, then a standard sleeve over the top, so dust and moisture can't creep in.
+
+## For valuable singles: top-loaders & one-touches
+
+- **Top-loaders** are rigid plastic holders that stop a sleeved card from bending — ideal for posting cards or storing your best singles.
+- **Magnetic "one-touch" holders** are premium display cases for your grails (signatures, chase alt-arts). Make sure you buy the right thickness for foils or thicker cards.
+
+Never put an unsleeved card straight into a top-loader — the card can rub against the plastic.
+
+## For collections: binders & boxes
+
+- **Binders** with side-loading pockets are great for sets and showing off a collection. Avoid old PVC binders (they can damage cards over time) — look for acid-free, side-loading pages.
+- **Storage/deck boxes** keep bulk and built decks organised. Keep everything somewhere cool, dry and out of direct sunlight — heat and UV fade cards and warp foils.
+
+## Foils need extra care
+
+Foil cards are more prone to **curving** as the foil layer reacts to humidity. Double-sleeving helps them lie flat, and storing them under light, even pressure (in a packed binder page or a tight box) keeps them straight.
+
+## Quick checklist
+
+- Sleeve everything you care about; double-sleeve the good stuff.
+- Top-loader or one-touch for valuable singles and anything you post.
+- Acid-free, side-loading binders for sets; cool, dry, dark storage.
+- Keep foils flat and away from humidity.
+
+Looking after your cards keeps them at the condition our prices assume — so when you check a card's value on the **[database](/browse)**, that's the value you'll actually get. New to buying? Start with **[where to buy Riftbound cards](/guides/where-to-buy-riftbound-cards)**.`,
+  },
+  {
+    slug: "understanding-riftbound-card-rarity",
+    category: "guide",
+    title: "Understanding Riftbound Card Rarity & Printings",
+    excerpt:
+      "Common to Showcase, alt-arts, Signatures, Overnumbered and promos — what every Riftbound rarity and special printing means, and why it changes the price.",
+    author: "RiftCompare",
+    date: "2026-06-11",
+    readMins: 5,
+    tags: ["collecting", "guide", "rarity", "printings"],
+    body: `Two copies of the "same" Riftbound card can have very different prices — because they're different *printings*. Here's how rarity and special treatments work, so you always know exactly what you're buying.
+
+## The rarity ladder
+
+Every base Riftbound card has a rarity, shown on RiftCompare with a coloured badge:
+
+- **Common** — the backbone of the set; cheap and plentiful.
+- **Uncommon** — a step up in scarcity.
+- **Rare** — less common, often deck staples.
+- **Epic** — scarcer still, and home to many chase cards.
+- **Showcase** — special alternate-art treatments; the rarest pulls and usually the priciest.
+
+Higher rarity generally means a higher price, but **playability** matters too — a Rare that defines the meta can cost more than an Epic nobody plays.
+
+## Special printings (and how we label them)
+
+Beyond rarity, the same card can appear in several printings. RiftCompare labels each one right in the card name so you're never guessing:
+
+- **Alt Art** — an alternate-artwork version of a card (collector numbers like *112a*). Plays identically to the base card; priced as a collectible.
+- **Showcase** — the premium alt-art treatment (see above).
+- **Signature** — artist-signed, "overnumbered" cards marked with a *★* in the collector number (e.g. *223★/221*). Among the rarest cards in the game.
+- **Overnumbered** — cards numbered beyond the set's base count (e.g. *238/219*) — special chase pulls.
+- **Promo** — limited printings from prereleases, organised play and events. A promo shares the base card's art and number but trades at its own price.
+
+## Why the same card has multiple prices
+
+Because each printing is, to a collector, a different card. The **base print** is what you want for a deck — it plays the same and costs the least. The fancy versions (alt-art, Signature, promo) cost more because they're scarcer, not because they're better in play. On any **[card page](/browse)** the printing is spelled out in the title, so you can pick exactly the version you mean to buy.
+
+## The practical takeaway
+
+- **Building a deck?** Buy the cheapest base print — it plays identically.
+- **Collecting?** Decide which treatment you're chasing (alt-art, Signature, promo) and confirm the label before you buy.
+- **Selling?** Make sure you list the right printing — mixing them up is the most common pricing mistake.
+
+Want to see the chase cards in action? Read **[the most valuable Riftbound cards](/guides/most-valuable-riftbound-cards)**, then **[browse the database](/browse)** and sort by price.`,
+  },
+  {
     slug: "riftbound-price-movers-how-to-track",
     category: "blog",
     title: "What's Moving in Riftbound This Week — and How to Track It",
