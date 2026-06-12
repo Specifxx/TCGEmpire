@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { TcgplayerAd } from "@/components/TcgplayerAd";
+import { getCountry } from "@/lib/get-country";
 import { Pairs } from "@/components/games/Pairs";
 
 export const metadata: Metadata = {
@@ -9,5 +11,11 @@ export const metadata: Metadata = {
 };
 
 export default function PairsPage() {
-  return <Pairs />;
+  const country = getCountry();
+  return (
+    <div>
+      <Pairs />
+      <TcgplayerAd size="leaderboard" country={country} className="mt-8" />
+    </div>
+  );
 }

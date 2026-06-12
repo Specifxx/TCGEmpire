@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { TcgplayerAd } from "@/components/TcgplayerAd";
+import { getCountry } from "@/lib/get-country";
 import { PriceCheck } from "@/components/games/PriceCheck";
 
 export const metadata: Metadata = {
@@ -9,5 +11,11 @@ export const metadata: Metadata = {
 };
 
 export default function PriceCheckPage() {
-  return <PriceCheck />;
+  const country = getCountry();
+  return (
+    <div>
+      <PriceCheck />
+      <TcgplayerAd size="leaderboard" country={country} className="mt-8" />
+    </div>
+  );
 }
