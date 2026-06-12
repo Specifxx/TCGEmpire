@@ -1,0 +1,28 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth";
+import { MarketplaceOrders } from "@/components/MarketplaceOrders";
+
+export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "My orders & offers — Marketplace",
+  robots: { index: false, follow: false }, // hidden back-office, never indexed
+};
+
+export default async function MarketplaceOrdersPage() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login?next=/marketplace/orders");
+  return (
+    <div className="mx-auto max-w-3xl">
+      <nav className="mb-3 flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
+        <Link href="/marketplace" className="hover:text-slate-300">Marketplace</Link>
+        <span>/</span>
+        <span className="text-slate-300">My orders &amp; offers</span>
+      </nav>
+      <h1 className="mb-4 font-display text-2xl font-extrabold text-white">📦 My orders &amp; offers</h1>
+      <MarketplaceOrders />
+    </div>
+  );
+}

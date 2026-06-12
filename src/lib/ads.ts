@@ -30,6 +30,10 @@ export const ADSENSE_SLOTS = {
   browse: process.env.NEXT_PUBLIC_ADSENSE_SLOT_BROWSE ?? "",
   // In-content unit on the card detail / price-comparison page (highest traffic).
   card: process.env.NEXT_PUBLIC_ADSENSE_SLOT_CARD ?? "",
+  // Games hub + under every arcade game (high dwell time, repeat sessions).
+  games: process.env.NEXT_PUBLIC_ADSENSE_SLOT_GAMES ?? "",
+  // Generic in-content unit reused across movers / market index / learn.
+  content: process.env.NEXT_PUBLIC_ADSENSE_SLOT_CONTENT ?? "",
 };
 
 // Numeric publisher id ("pub-XXXXXXXXXXXXXXXX") used in /ads.txt, derived from the

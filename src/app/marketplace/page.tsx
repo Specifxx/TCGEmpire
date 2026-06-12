@@ -3,8 +3,8 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { getCountry } from "@/lib/get-country";
-import { COUNTRIES } from "@/lib/country";
-import { canViewMarketplaceListings } from "@/lib/marketplace";
+import { COUNTRIES, pickPrice } from "@/lib/country";
+import { canViewMarketplaceListings, getSellerRatings } from "@/lib/marketplace";
 import { stripeEnabled } from "@/lib/stripe";
 import { MarketplaceClient, type MktCard } from "@/components/MarketplaceClient";
 
@@ -46,14 +46,24 @@ export default async function MarketplacePage() {
   const listings = await prisma.marketplaceListing.findMany({
     where: { status: "ACTIVE", quantity: { gt: 0 }, country },
     include: {
-      card: { select: { id: true, name: true, slug: true, setCode: true, collectorNumber: true, imageThumbUrl: true, variant: true, isPromo: true, rarity: true } },
-      seller: { select: { displayName: true, sellerProfile: { select: { shopName: true, isOfficial: true, shippingNote: true } } } },
+      card: {
+        select: {
+          id: true, name: true, slug: true, setCode: true, collectorNumber: true,
+          imageThumbUrl: true, variant: true, isPromo: true, rarity: true,
+          lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true,
+        },
+      },
+      seller: { select: { id: true, displayName: true, sellerProfile: { select: { shopName: true, isOfficial: true, shippingNote: true } } } },
     },
   });
+
+  // Seller ratings in one query for every seller on the page.
+  const ratings = await getSellerRatings([...new Set(listings.map((l) => l.sellerId))]);
 
   // Group by card; sort each card's offers official-store-first, then cheapest.
   const byCard = new Map<string, MktCard>();
   for (const l of listings) {
+    const r = ratings.get(l.sellerId);
     const offer = {
       id: l.id,
       priceCents: l.priceCents,
@@ -61,13 +71,22 @@ export default async function MarketplacePage() {
       isFoil: l.isFoil,
       quantity: l.quantity,
       currency: l.currency,
+      sellerId: l.sellerId,
       sellerName: l.seller.sellerProfile?.shopName ?? l.seller.displayName,
       isOfficial: !!l.seller.sellerProfile?.isOfficial,
       shippingNote: l.seller.sellerProfile?.shippingNote ?? null,
+      ratingAvg: r?.avg ?? null,
+      ratingCount: r?.count ?? 0,
     };
     const existing = byCard.get(l.cardId);
     if (existing) existing.offers.push(offer);
-    else byCard.set(l.cardId, { card: l.card, offers: [offer] });
+    else {
+      // The site's own lowest store price for this market — the delta benchmark
+      // ("12% under market") shown against every offer.
+      const marketCents = pickPrice(l.card, country);
+      const { lowestPriceCents, lowestPriceCentsNz, lowestPriceCentsUs, lowestPriceCentsUk, ...cardLite } = l.card;
+      byCard.set(l.cardId, { card: cardLite, marketCents, offers: [offer] });
+    }
   }
   const cards: MktCard[] = [...byCard.values()].map((c) => {
     c.offers.sort((a, b) => Number(b.isOfficial) - Number(a.isOfficial) || a.priceCents - b.priceCents);
@@ -76,5 +95,5 @@ export default async function MarketplacePage() {
   // Cards with the cheapest offer first.
   cards.sort((a, b) => Math.min(...a.offers.map((o) => o.priceCents)) - Math.min(...b.offers.map((o) => o.priceCents)));
 
-  return <MarketplaceClient cards={cards} place={info.place} stripeEnabled={stripeEnabled()} />;
+  return <MarketplaceClient cards={cards} place={info.place} stripeEnabled={stripeEnabled()} signedIn={!!user} />;
 }

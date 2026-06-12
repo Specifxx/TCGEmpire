@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Riftle } from "@/components/Riftle";
+import { AdSlot } from "@/components/AdSlot";
+import { ADSENSE_SLOTS } from "@/lib/ads";
 
 export const metadata: Metadata = {
   title: "Riftle — the daily Riftbound card guessing game",
@@ -9,5 +11,12 @@ export const metadata: Metadata = {
 };
 
 export default function RiftlePage() {
-  return <Riftle />;
+  return (
+    <>
+      <Riftle />
+      <div className="mx-auto max-w-2xl">
+        <AdSlot slot={ADSENSE_SLOTS.games} className="mt-8" height={100} />
+      </div>
+    </>
+  );
 }

@@ -8,6 +8,8 @@ import { COUNTRIES } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { cardHref } from "@/lib/card-url";
 import { SITE_URL } from "@/lib/site";
+import { AdSlot } from "@/components/AdSlot";
+import { ADSENSE_SLOTS } from "@/lib/ads";
 
 // Recompute at most twice an hour — the underlying PriceHistory only changes on
 // the daily import, but search-driven constituents drift during the day.
@@ -186,6 +188,8 @@ export default async function IndexPage() {
           </div>
         </div>
       )}
+
+      <AdSlot slot={ADSENSE_SLOTS.content} height={100} />
 
       {/* Methodology — written to be citable */}
       <section id="cite" className="card-surface p-6">
