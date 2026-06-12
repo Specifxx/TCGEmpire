@@ -1,6 +1,8 @@
 export default function Loading() {
   return (
-    <div>
+    // min-h fills the viewport so the footer/banner below start off-screen and
+    // aren't shoved down when the board streams in (CLS).
+    <div className="min-h-[calc(100dvh-6rem)]">
       <div className="mb-5 h-7 w-44 animate-pulse rounded bg-ink-800" />
       <div className="mb-4 flex gap-2">
         {[0, 1, 2, 3].map((i) => (

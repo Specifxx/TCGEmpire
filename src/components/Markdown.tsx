@@ -15,9 +15,11 @@ function inline(text: string, kp: string): React.ReactNode[] {
   while ((m = re.exec(text)) !== null) {
     if (m.index > last) nodes.push(text.slice(last, m.index));
     if (m[1]) {
-      nodes.push(<strong key={`${kp}b${i}`} className="font-semibold text-white">{m[2]}</strong>);
+      // Recurse so nested marks render — e.g. **[link](url)** is a linked bold,
+      // not the literal "[link](url)" text.
+      nodes.push(<strong key={`${kp}b${i}`} className="font-semibold text-white">{inline(m[2], `${kp}b${i}_`)}</strong>);
     } else if (m[3]) {
-      nodes.push(<em key={`${kp}i${i}`} className="italic text-slate-200">{m[4]}</em>);
+      nodes.push(<em key={`${kp}i${i}`} className="italic text-slate-200">{inline(m[4], `${kp}i${i}_`)}</em>);
     } else if (m[5]) {
       const href = m[7];
       const ext = /^https?:/i.test(href);
@@ -28,7 +30,7 @@ function inline(text: string, kp: string): React.ReactNode[] {
           className="text-brand-400 underline hover:text-brand-300"
           {...(ext ? { target: "_blank", rel: "noopener noreferrer" } : {})}
         >
-          {m[6]}
+          {inline(m[6], `${kp}l${i}_`)}
         </a>
       );
     } else if (m[8]) {
