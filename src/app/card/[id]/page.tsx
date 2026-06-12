@@ -434,7 +434,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
 
           {/* TCGplayer affiliate banner — pays commission on click-through
               purchases, so it gets the prime spot under the price table. */}
-          <TcgplayerAd size="rect" country={country} className="mt-6" />
+          <TcgplayerAd size="rect" mobile="rect" country={country} className="mt-6" />
 
           {/* Price-history chart — free for everyone. */}
           <PriceHistoryChart cardId={card.id} />

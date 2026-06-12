@@ -11,14 +11,16 @@ import { OutboundLink } from "./OutboundLink";
 const ACCOUNT = "7385758";
 const PROGRAM = "21018";
 
-type Variant = "rect" | "leaderboard" | "mobile";
+type Variant = "rect" | "leaderboard" | "billboard" | "mobile" | "mobileRect";
 
 // Ad ids from the Impact ads export (seasonal "us" creatives can be swapped
 // here when campaigns rotate; the international ones are evergreen).
 const ADS: Record<Variant, { us: string; intl: string; w: number; h: number }> = {
   rect: { us: "3913671", intl: "3841228", w: 336, h: 280 }, // large rectangle
   leaderboard: { us: "3904321", intl: "3841229", w: 728, h: 90 },
+  billboard: { us: "3913669", intl: "3841226", w: 970, h: 90 }, // large leaderboard
   mobile: { us: "3913670", intl: "3841227", w: 320, h: 100 }, // large mobile banner
+  mobileRect: { us: "3904323", intl: "3841225", w: 300, h: 250 }, // medium rectangle
 };
 
 const click = (id: string) => `https://partner.tcgplayer.com/c/${ACCOUNT}/${id}/${PROGRAM}`;
@@ -49,21 +51,46 @@ function Banner({ id, w, h, country }: { id: string; w: number; h: number; count
   );
 }
 
-// Responsive placement: `size` for sm+ screens, the mobile banner below that.
-// Hidden variant's lazy image never intersects the viewport, so it isn't
-// fetched (no double impressions).
-export function TcgplayerAd({ size = "rect", country, className }: { size?: "rect" | "leaderboard"; country: string; className?: string }) {
+// Responsive placement: `size` for larger screens, a mobile unit below `sm`.
+// `mobile="rect"` swaps the slim 320x100 banner for the 300x250 rectangle — a
+// far better in-content unit on phones. The billboard steps down to the 728
+// leaderboard between sm and lg so it never overflows. Hidden variants' lazy
+// images never intersect the viewport, so they aren't fetched (no double
+// impressions).
+export function TcgplayerAd({
+  size = "rect",
+  mobile = "banner",
+  country,
+  className,
+}: {
+  size?: "rect" | "leaderboard" | "billboard";
+  mobile?: "banner" | "rect";
+  country: string;
+  className?: string;
+}) {
   const intl = country !== "US";
-  const pick = (v: Variant) => (intl ? ADS[v].intl : ADS[v].us);
-  const big = ADS[size];
-  const mob = ADS.mobile;
+  const ad = (v: Variant) => ({ id: intl ? ADS[v].intl : ADS[v].us, w: ADS[v].w, h: ADS[v].h });
+  const desk = ad(size);
+  const mid = ad("leaderboard");
+  const mob = ad(mobile === "rect" ? "mobileRect" : "mobile");
   return (
     <div className={`flex justify-center ${className ?? ""}`}>
-      <span className="hidden sm:inline-block">
-        <Banner id={pick(size)} w={big.w} h={big.h} country={country} />
-      </span>
+      {size === "billboard" ? (
+        <>
+          <span className="hidden lg:inline-block">
+            <Banner {...desk} country={country} />
+          </span>
+          <span className="hidden sm:inline-block lg:hidden">
+            <Banner {...mid} country={country} />
+          </span>
+        </>
+      ) : (
+        <span className="hidden sm:inline-block">
+          <Banner {...desk} country={country} />
+        </span>
+      )}
       <span className="sm:hidden">
-        <Banner id={pick("mobile")} w={mob.w} h={mob.h} country={country} />
+        <Banner {...mob} country={country} />
       </span>
     </div>
   );
