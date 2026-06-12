@@ -173,12 +173,14 @@ export function BoxEvCalculator({ sets, currency }: { sets: SetRarityData[]; cur
         </table>
         <p className="mt-3 text-[11px] leading-relaxed text-slate-600">
           <strong className="text-slate-500">Avg card value</strong> is the average over <em>every</em> {set.setCode} card
-          of that rarity in your market — including bulk cards with no live listing, counted as $0,
-          because that&apos;s what a random bulk pull is really worth. (Averaging only the priced cards
-          is the classic mistake that makes every box look EV-positive.) EV is an average across many
-          boxes: any single box can run hot or cold, and bulk commons are hard to actually sell. Want a
-          specific card? <Link href="/browse" className="text-brand-400 hover:underline">Buying the single</Link> is
-          almost always the surer play. Compare live box prices on the <Link href="/sealed" className="text-brand-400 hover:underline">sealed page</Link>.
+          of that rarity, using the cheapest tracked <strong className="text-slate-500">store</strong> listing in your
+          market — <strong className="text-slate-500">eBay is excluded</strong> because its per-card shipping/minimum-price
+          floor (~a few dollars) overstates bulk that&apos;s really worth cents. Bulk cards with no store listing count as
+          $0 (what a random bulk pull is actually worth), and any single mispriced listing is capped, so one outlier
+          can&apos;t skew a rarity. EV is still an average across many boxes — a single box can run hot or cold, and
+          bulk commons are hard to actually sell. Want a specific card?{" "}
+          <Link href="/browse" className="text-brand-400 hover:underline">Buying the single</Link> is almost always the
+          surer play. Compare live box prices on the <Link href="/sealed" className="text-brand-400 hover:underline">sealed page</Link>.
         </p>
       </div>
     </div>
