@@ -19,6 +19,8 @@ const GROUPS: { title: string; links: { href: string; label: string; emoji: stri
       { href: "/movers", label: "Price Movers", emoji: "📈" },
       { href: "/market", label: "Market Index", emoji: "📊" },
       { href: "/wishlist", label: "Wishlist", emoji: "❤️" },
+      { href: "/portfolio", label: "My Portfolio", emoji: "💼" },
+      { href: "/premium", label: "Premium", emoji: "⭐" },
     ],
   },
   {
@@ -35,6 +37,7 @@ const GROUPS: { title: string; links: { href: string; label: string; emoji: stri
       { href: "/deck", label: "Deck Builder", emoji: "🛠️" },
       { href: "/trade", label: "Trade Calculator", emoji: "🔁" },
       { href: "/proxy", label: "Proxy Printer", emoji: "🖨️" },
+      { href: "/tools/box-ev", label: "Box EV Calc", emoji: "📦" },
     ],
   },
   {

@@ -29,13 +29,21 @@ export async function POST(req: Request) {
       case "checkout.session.completed":
       case "checkout.session.async_payment_succeeded": {
         const session = event.data.object as Stripe.Checkout.Session;
-        await markPaid(session);
+        if (session.metadata?.kind === "premium") await premiumStarted(session);
+        else await markPaid(session);
         break;
       }
       case "checkout.session.expired":
       case "checkout.session.async_payment_failed": {
         const session = event.data.object as Stripe.Checkout.Session;
-        await releaseSession(session);
+        if (session.metadata?.kind !== "premium") await releaseSession(session);
+        break;
+      }
+      // Premium renewals: every successful subscription invoice re-stamps
+      // premiumUntil with the new period end. A cancelled/lapsed sub simply
+      // stops getting stamped and entitlement runs out on its own.
+      case "invoice.paid": {
+        await premiumRenewed(event.data.object as Stripe.Invoice);
         break;
       }
       default:
@@ -90,4 +98,58 @@ async function releaseSession(session: Stripe.Checkout.Session) {
     });
   }
   await importMarketplaceListings().catch(() => {});
+}
+
+// ── RiftCompare Premium (subscriptions) ────────────────────────────────────────
+
+// First successful premium checkout: link the Stripe customer to the account and
+// grant the first period (the period end comes off the subscription itself).
+async function premiumStarted(session: Stripe.Checkout.Session) {
+  const userId = session.metadata?.userId ?? session.client_reference_id;
+  if (!userId) return;
+  const customerId = typeof session.customer === "string" ? session.customer : null;
+  const subId = typeof session.subscription === "string" ? session.subscription : null;
+
+  let until: Date | null = null;
+  if (subId) {
+    try {
+      const sub = await stripe().subscriptions.retrieve(subId);
+      until = new Date(sub.current_period_end * 1000);
+    } catch {
+      /* fall through to the grace default */
+    }
+  }
+  // Even if the subscription read fails, grant ~a month — the invoice.paid event
+  // (and the next renewal) will re-stamp the precise period end.
+  if (!until) until = new Date(Date.now() + 32 * 86400_000);
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { premiumUntil: until, ...(customerId ? { stripeCustomerId: customerId } : {}) },
+  }).catch(() => {});
+}
+
+// Renewal invoices: resolve the user via subscription metadata (preferred) or the
+// stored Stripe customer id, then extend premiumUntil to the new period end.
+async function premiumRenewed(invoice: Stripe.Invoice) {
+  const subId = typeof invoice.subscription === "string" ? invoice.subscription : null;
+  if (!subId) return; // not a subscription invoice
+
+  let userId: string | null = null;
+  let until: Date | null = null;
+  try {
+    const sub = await stripe().subscriptions.retrieve(subId);
+    userId = (sub.metadata?.userId as string | undefined) ?? null;
+    until = new Date(sub.current_period_end * 1000);
+  } catch {
+    return;
+  }
+  if (!userId) {
+    const customerId = typeof invoice.customer === "string" ? invoice.customer : null;
+    if (!customerId) return;
+    const u = await prisma.user.findFirst({ where: { stripeCustomerId: customerId }, select: { id: true } });
+    userId = u?.id ?? null;
+  }
+  if (!userId || !until) return;
+  await prisma.user.update({ where: { id: userId }, data: { premiumUntil: until } }).catch(() => {});
 }

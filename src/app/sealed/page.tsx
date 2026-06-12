@@ -54,6 +54,8 @@ export default async function SealedPage({ searchParams }: { searchParams: { q?:
         <p className="mt-1 text-sm text-slate-400">
           Booster boxes, packs, Proving Grounds, bundles and other sealed Riftbound
           products — priced across {info.adjective} stores so you can find the cheapest.
+          Wondering if a box is worth ripping?{" "}
+          <Link href="/tools/box-ev" className="text-brand-400 hover:underline">Run the EV calculator →</Link>
         </p>
         {q && (
           <p className="mt-2 text-sm text-slate-400">

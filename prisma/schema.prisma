@@ -45,6 +45,12 @@ model User {
   // OPT-IN (default off): the user ticked "email me leaderboard updates" at signup.
   // Honoured only with a working unsubscribe — never used to send unsolicited mail.
   leaderboardEmails Boolean   @default(false)
+  // ── RiftCompare Premium (Stripe subscription) ──
+  // premiumUntil = end of the current paid period (renewals extend it via webhook;
+  // a lapsed/cancelled sub simply stops extending). stripeCustomerId links renewal
+  // invoices back to the account.
+  premiumUntil      DateTime?
+  stripeCustomerId  String?
   createdAt         DateTime  @default(now())
 
   listings            Listing[]
@@ -66,6 +72,20 @@ model User {
 
   @@index([googleId])
   @@index([discordId])
+  @@index([stripeCustomerId])
+}
+
+// A store on the B2B repricer programme: each partner store gets a secret token
+// that unlocks /stores/report — a live "your prices vs the market" dashboard for
+// THEIR retailer key. Created by an admin (see /api/admin/store-partners).
+model StorePartner {
+  id        String   @id @default(cuid())
+  retailer  String // the store's RetailerPrice key, e.g. "cherry"
+  name      String // display name for the report header
+  token     String   @unique // secret access token (capability URL)
+  createdAt DateTime @default(now())
+
+  @@index([retailer])
 }
 
 // A player's best score in an arcade mini-game (/games/*). One row per user per
