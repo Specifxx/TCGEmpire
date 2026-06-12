@@ -61,13 +61,22 @@ export default async function BoxEvPage() {
 
   // Average value of a RANDOM card of each rarity — the honest input to EV.
   //  • divide by EVERY card of the rarity, not just priced ones (unpriced bulk = $0);
-  //  • cap any single card at 12× the rarity's median priced value, so one
-  //    mispriced/mismatched store listing can't balloon the whole average.
-  const median = (xs: number[]): number => {
-    if (!xs.length) return 0;
-    const s = [...xs].sort((a, b) => a - b);
+  //  • cap each card so one mis-/over-priced listing can't define a rarity. Epic and
+  //    Showcase have FEW cards, so a single bad listing skews the whole mean — and a
+  //    median-anchored cap doesn't help when n is tiny (with n=2 the median IS the
+  //    outlier's average). So for small samples we anchor the cap on the MINIMUM
+  //    priced value (which a high outlier can't move); larger samples use the median
+  //    so legitimate price spread is preserved.
+  const median = (s: number[]): number => {
     const m = Math.floor(s.length / 2);
     return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+  };
+  // Robust sum of per-card values for one rarity (values already collected).
+  const robustSum = (values: number[]): number => {
+    if (!values.length) return 0;
+    const sorted = [...values].sort((a, b) => a - b);
+    const cap = sorted.length < 6 ? sorted[0] * 4 : median(sorted) * 4;
+    return sorted.reduce((a, v) => a + Math.min(v, cap), 0);
   };
   const agg = new Map<string, Map<string, { values: number[]; total: number }>>();
   for (const c of cards) {
@@ -82,12 +91,10 @@ export default async function BoxEvPage() {
     setCode: s.code,
     setName: s.name,
     rarities: Object.fromEntries(
-      [...(agg.get(s.code) ?? new Map<string, { values: number[]; total: number }>())].map(([rarity, { values, total }]) => {
-        const med = median(values);
-        const cap = med > 0 ? med * 12 : Infinity; // clip only egregious outliers
-        const sum = values.reduce((a, v) => a + Math.min(v, cap), 0);
-        return [rarity, { avgCents: total > 0 ? Math.round(sum / total) : 0, priced: values.length, total }];
-      })
+      [...(agg.get(s.code) ?? new Map<string, { values: number[]; total: number }>())].map(([rarity, { values, total }]) => [
+        rarity,
+        { avgCents: total > 0 ? Math.round(robustSum(values) / total) : 0, priced: values.length, total },
+      ])
     ),
   }));
 
