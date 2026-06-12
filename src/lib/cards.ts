@@ -26,7 +26,8 @@ export const CARD_PAGE_SIZE = 36; // legacy (infinite-scroll API)
 export const PAGE_SIZES = [10, 20, 50, 100] as const;
 export function parsePageSize(v?: string): number {
   const n = parseInt(v ?? "", 10);
-  return (PAGE_SIZES as readonly number[]).includes(n) ? n : 10;
+  // Default 100 (user feedback: 10 felt like a static list, not a database).
+  return (PAGE_SIZES as readonly number[]).includes(n) ? n : 100;
 }
 export function parsePageNum(v?: string): number {
   const n = parseInt(v ?? "", 10);

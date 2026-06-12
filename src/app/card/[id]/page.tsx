@@ -6,6 +6,7 @@ import { CardImage } from "@/components/CardImage";
 import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge } from "@/components/Badge";
 import { isOvernumbered, isSignature } from "@/lib/constants";
 import { WishlistButton } from "@/components/WishlistButton";
+import { ShareButton } from "@/components/ShareButton";
 import { CardViewBeacon } from "@/components/CardViewBeacon";
 import { formatMoney, timeAgo } from "@/lib/format";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
@@ -16,6 +17,7 @@ import { cardTileSelect } from "@/lib/cards";
 import { OutboundLink } from "@/components/OutboundLink";
 import { AdSlot } from "@/components/AdSlot";
 import { TcgplayerAd } from "@/components/TcgplayerAd";
+import { EbayAd } from "@/components/EbayAd";
 import { ADSENSE_SLOTS } from "@/lib/ads";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES, pickPrice } from "@/lib/country";
@@ -284,6 +286,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                 </p>
               </div>
               <WishlistButton cardId={card.id} variant="full" />
+              <ShareButton />
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -441,6 +444,10 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           {/* TCGplayer affiliate banner — pays commission on click-through
               purchases, so it gets the prime spot under the price table. */}
           <TcgplayerAd size="rect" mobile="rect" country={country} className="mt-6" />
+
+          {/* Contextual eBay banner — searches for THIS card (new, used & graded);
+              the most relevant eBay placement converts far better than a generic one. */}
+          <EbayAd size="leaderboard" country={country} query={`${card.name} ${card.collectorNumber}`} className="mt-4" />
 
           {/* Price-history chart — free for everyone. */}
           <PriceHistoryChart cardId={card.id} />

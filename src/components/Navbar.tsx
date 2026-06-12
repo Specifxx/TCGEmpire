@@ -44,7 +44,7 @@ export async function Navbar() {
           </Link>
           {/* One grouped Menu (same groups as the phone sheet) instead of the
               old Decks/Games/More dropdown trio. */}
-          <div className="hidden lg:block">
+          <div className="hidden lg:block xl:hidden">
             <NavMenu />
           </div>
           {/* Join our Discord — opens the permanent invite in a new tab */}

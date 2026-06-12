@@ -679,3 +679,12 @@ model CollectionCard {
   @@index([userId])
   @@index([cardId])
 }
+
+// Footer newsletter capture — "weekly Index summary in your inbox". The weekly
+// send itself is a workflow; this table is the direct-audience list.
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  market    String   @default("AU")
+  createdAt DateTime @default(now())
+}
