@@ -20,7 +20,8 @@ export type GameCard = {
   priceCents: number;
 };
 
-export function cardUrl(c: GameCard): string {
+// Only needs slug/id, so accept any card-like object (GameCard, PackCard, …).
+export function cardUrl(c: { slug: string | null; id: string }): string {
   return `/card/${c.slug ?? c.id}`;
 }
 

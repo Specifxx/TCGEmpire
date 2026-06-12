@@ -14,10 +14,12 @@ import { ADSENSE_SLOTS } from "@/lib/ads";
 export const metadata: Metadata = {
   title: "Riftbound Games — Free Daily Puzzles & Arcade",
   description:
-    "Free Riftbound mini-games: Riftle (the daily guess-the-card puzzle), Higher or Lower with live card prices, Price Check, the Zoomed In art quiz and Pairs memory. No signup, endlessly replayable.",
+    "Free Riftbound mini-games: Riftle (the daily guess-the-card puzzle), a pack opening simulator, Riftbound 2048, Card Smash, Higher or Lower with live card prices, Price Check, the Zoomed In art quiz and Pairs memory. No signup, endlessly replayable.",
   keywords: [
     "Riftbound games",
     "Riftle",
+    "Riftbound pack simulator",
+    "Riftbound 2048",
     "Riftbound daily game",
     "card price game",
     "higher or lower TCG",
@@ -76,6 +78,30 @@ const GAMES = [
     tag: "Memory",
     desc: "Classic memory with real card art. Match all eight pairs in the fewest moves.",
     accent: "from-blue-500/20 to-ink-850",
+  },
+  {
+    href: "/games/pack-sim",
+    emoji: "🎁",
+    name: "Pack Opening Simulator",
+    tag: "Rip packs",
+    desc: "Open virtual Riftbound packs built from real cards and live prices. See what your pull is worth — no money, all the dopamine.",
+    accent: "from-emerald-500/20 to-ink-850",
+  },
+  {
+    href: "/games/twenty48",
+    emoji: "🧬",
+    name: "Riftbound 2048",
+    tag: "Puzzle",
+    desc: "Slide and merge cards up the rarity ladder — two Commons make an Uncommon, all the way to Legend. Arrow keys or swipe.",
+    accent: "from-cyan-500/20 to-ink-850",
+  },
+  {
+    href: "/games/card-smash",
+    emoji: "💥",
+    name: "Card Smash",
+    tag: "Reflex",
+    desc: "Whack-a-mole with cards: tap them as they pop, dodge the bombs, beat the clock. Pricier cards score more.",
+    accent: "from-orange-500/20 to-ink-850",
   },
 ];
 
