@@ -11,8 +11,10 @@ import { formatMoney } from "@/lib/format";
 export interface SetRarityData {
   setCode: string;
   setName: string;
-  // avg lowest in-stock price per rarity (cents) + how many distinct cards back it
-  rarities: Record<string, { avgCents: number; count: number }>;
+  // Average value of a random card of this rarity (cents) — sum of live prices
+  // over the TOTAL card count of the rarity (unpriced bulk counts as $0), plus
+  // how many of the rarity's cards currently carry a live price.
+  rarities: Record<string, { avgCents: number; priced: number; total: number }>;
 }
 
 const RARITY_ORDER = ["Common", "Uncommon", "Rare", "Epic", "Showcase"];
@@ -43,7 +45,7 @@ export function BoxEvCalculator({ sets, currency }: { sets: SetRarityData[]; cur
       const avg = set.rarities[r].avgCents;
       const contribution = rate * avg;
       evPackCents += contribution;
-      return { rarity: r, rate, avgCents: avg, contributionCents: Math.round(contribution), count: set.rarities[r].count };
+      return { rarity: r, rate, avgCents: avg, contributionCents: Math.round(contribution), priced: set.rarities[r].priced, total: set.rarities[r].total };
     });
     const evBoxCents = Math.round(evPackCents * Math.max(1, packs));
     const priceCents = Math.round((parseFloat(boxPrice) || 0) * 100);
@@ -146,7 +148,7 @@ export function BoxEvCalculator({ sets, currency }: { sets: SetRarityData[]; cur
           <thead>
             <tr className="border-b border-ink-700 text-left text-[10px] uppercase tracking-wide text-slate-500">
               <th className="py-2 font-semibold">Rarity</th>
-              <th className="py-2 text-right font-semibold">Live avg price</th>
+              <th className="py-2 text-right font-semibold">Avg card value</th>
               <th className="py-2 text-right font-semibold">Per pack</th>
               <th className="py-2 text-right font-semibold">EV / pack</th>
             </tr>
@@ -155,7 +157,7 @@ export function BoxEvCalculator({ sets, currency }: { sets: SetRarityData[]; cur
             {calc.lines.map((l) => (
               <tr key={l.rarity}>
                 <td className="py-2 font-semibold text-white">
-                  {l.rarity} <span className="text-[10px] font-normal text-slate-600">({l.count} priced cards)</span>
+                  {l.rarity} <span className="text-[10px] font-normal text-slate-600">({l.priced}/{l.total} priced)</span>
                 </td>
                 <td className="py-2 text-right text-slate-300">{formatMoney(l.avgCents, currency)}</td>
                 <td className="py-2 text-right text-slate-300">×{l.rate}</td>
@@ -165,9 +167,12 @@ export function BoxEvCalculator({ sets, currency }: { sets: SetRarityData[]; cur
           </tbody>
         </table>
         <p className="mt-3 text-[11px] leading-relaxed text-slate-600">
-          Average prices are the live lowest in-stock price of every priced {set.setCode} card per
-          rarity, in your market — refreshed daily. EV is an average across many boxes: any single
-          box can run hot or cold. Want a specific card? <Link href="/browse" className="text-brand-400 hover:underline">Buying the single</Link> is
+          <strong className="text-slate-500">Avg card value</strong> is the average over <em>every</em> {set.setCode} card
+          of that rarity in your market — including bulk cards with no live listing, counted as $0,
+          because that&apos;s what a random bulk pull is really worth. (Averaging only the priced cards
+          is the classic mistake that makes every box look EV-positive.) EV is an average across many
+          boxes: any single box can run hot or cold, and bulk commons are hard to actually sell. Want a
+          specific card? <Link href="/browse" className="text-brand-400 hover:underline">Buying the single</Link> is
           almost always the surer play. Compare live box prices on the <Link href="/sealed" className="text-brand-400 hover:underline">sealed page</Link>.
         </p>
       </div>

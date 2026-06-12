@@ -28,7 +28,21 @@ const COL_LABEL: Record<(typeof COLS)[number], string> = {
 
 const EMPTY_STATS: Stats = { played: 0, wins: 0, streak: 0, lastWinDay: null };
 function loadStatsFrom(key: string): Stats {
-  try { return JSON.parse(localStorage.getItem(key) || "") as Stats; } catch { return { ...EMPTY_STATS }; }
+  // Validate the parsed shape: JSON.parse("null"/"5"/"true") returns a non-object
+  // WITHOUT throwing, and returning that would make the render read `.played` on a
+  // primitive and crash the whole page. Coerce anything unexpected to empty stats.
+  try {
+    const v = JSON.parse(localStorage.getItem(key) || "") as Partial<Stats> | null;
+    if (!v || typeof v !== "object") return { ...EMPTY_STATS };
+    return {
+      played: Number(v.played) || 0,
+      wins: Number(v.wins) || 0,
+      streak: Number(v.streak) || 0,
+      lastWinDay: typeof v.lastWinDay === "string" ? v.lastWinDay : null,
+    };
+  } catch {
+    return { ...EMPTY_STATS };
+  }
 }
 function genSeed(): string {
   try { return crypto.randomUUID(); } catch { return `${Date.now()}-${Math.random().toString(36).slice(2)}`; }
@@ -238,7 +252,9 @@ export function Riftle() {
 
   function share() {
     const grid = rows
-      .map((r) => COLS.map((c) => (r.cells[c].state === "hit" ? "🟩" : r.cells[c].hint ? (r.cells[c].hint === "higher" ? "🔼" : "🔽") : "⬛")).join(""))
+      // A cell can be missing on rows saved before a column ("#") was added — fall
+      // back to a blank square instead of throwing on `.state` of undefined.
+      .map((r) => COLS.map((c) => { const cell = r.cells[c]; return !cell ? "⬜" : cell.state === "hit" ? "🟩" : cell.hint ? (cell.hint === "higher" ? "🔼" : "🔽") : "⬛"; }).join(""))
       .join("\n");
     const score = done === "win" ? `${rows.length}/${attempts}` : `X/${attempts}`;
     const tag = mode === "unlimited" ? "Riftle ∞" : `Riftle ${day}`;
