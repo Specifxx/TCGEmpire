@@ -33,7 +33,10 @@ export const metadata: Metadata = {
   applicationName: SITE_NAME,
   keywords: ["Riftbound", "Riftbound TCG", "Riftbound prices", "Riftbound singles", "League of Legends TCG", "card prices"],
   alternates: {
-    canonical: "/",
+    // NO site-wide canonical here: it propagates to every page that doesn't set
+    // its own, telling Google those pages are duplicates of the homepage (GSC:
+    // "Alternate page with proper canonical tag"). Each indexable page declares
+    // its own canonical; the home page sets "/" in app/page.tsx.
     // RSS auto-discovery for feed readers and auto-posting/aggregator services.
     types: { "application/rss+xml": "/feed.xml" },
   },

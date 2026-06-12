@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { SearchBar } from "./SearchBar";
 import { NavWishlistButton } from "./NavWishlistButton";
 import { MobileNav } from "./MobileNav";
-import { NavDropdown } from "./NavDropdown";
+import { NavMenu } from "./NavMenu";
 import { CountrySwitcher } from "./CountrySwitcher";
 import { UserMenu } from "./UserMenu";
 import { WishlistSync } from "./WishlistSync";
@@ -42,44 +42,10 @@ export async function Navbar() {
           <Link href="/trade" className="rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:px-2.5">
             Trade
           </Link>
+          {/* One grouped Menu (same groups as the phone sheet) instead of the
+              old Decks/Games/More dropdown trio. */}
           <div className="hidden lg:block">
-            <NavDropdown
-              label="Decks"
-              items={[
-                { href: "/decks", label: "Meta Decks", desc: "Top tournament decklists" },
-                { href: "/deck", label: "Deck Builder", desc: "Build & price your own" },
-                { href: "/tools/box-ev", label: "Box EV Calculator", desc: "Is a booster box worth opening?" },
-              ]}
-            />
-          </div>
-          <div className="hidden lg:block">
-            <NavDropdown
-              label="Games"
-              items={[
-                { href: "/riftle", label: "Riftle", desc: "The daily guess-the-card puzzle" },
-                { href: "/games/higher-lower", label: "Higher or Lower", desc: "Which card costs more?" },
-                { href: "/games/price-check", label: "Price Check", desc: "Guess the price, score by closeness" },
-                { href: "/games/zoomed", label: "Zoomed In", desc: "Name the card from its art" },
-                { href: "/games/pairs", label: "Pairs", desc: "Card-art memory match" },
-                { href: "/games", label: "All games", desc: "The whole arcade" },
-              ]}
-            />
-          </div>
-          <div className="hidden lg:block">
-            <NavDropdown
-              label="More"
-              items={[
-                { href: "/market", label: "RiftCompare Index", desc: "The market in one number" },
-                { href: "/premium", label: "Premium ★", desc: "Portfolio tracking & power tools" },
-                { href: "/movers", label: "Price Movers", desc: "Biggest risers & drops this week" },
-                { href: "/forum", label: "Forum", desc: "Buy, sell & trade with players" },
-                { href: "/learn", label: "Learn Riftbound", desc: "New player? Start here — free" },
-                { href: "/sealed", label: "Sealed Products", desc: "Boxes, packs & promos" },
-                { href: "/proxy", label: "Proxy Printer", desc: "Pick & print test cards" },
-                { href: "/guides", label: "Guides", desc: "Learn Riftbound" },
-                { href: "/blog", label: "Blog", desc: "News & meta" },
-              ]}
-            />
+            <NavMenu />
           </div>
           {/* Join our Discord — opens the permanent invite in a new tab */}
           <a

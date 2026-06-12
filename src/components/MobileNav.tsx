@@ -5,51 +5,13 @@ import { useEffect, useState } from "react";
 import { COUNTRY_LIST, INTL_ENABLED } from "@/lib/country";
 import { DISCORD_URL } from "@/lib/site";
 import { useCountry } from "./CountryProvider";
+import { NAV_GROUPS } from "./nav-groups";
 
 // The phone menu (shown below the lg breakpoint). Organised, not a flat list:
 // a compact one-row country picker, then labelled groups in a two-column grid —
 // prices (the core product) first, then games, deck tools, and community. Each
-// link carries an emoji so the eye can scan by icon, like an app launcher.
-const GROUPS: { title: string; links: { href: string; label: string; emoji: string }[] }[] = [
-  {
-    title: "Prices",
-    links: [
-      { href: "/browse", label: "Card Database", emoji: "🗃️" },
-      { href: "/sealed", label: "Sealed Products", emoji: "📦" },
-      { href: "/movers", label: "Price Movers", emoji: "📈" },
-      { href: "/market", label: "Market Index", emoji: "📊" },
-      { href: "/wishlist", label: "Wishlist", emoji: "❤️" },
-      { href: "/portfolio", label: "My Portfolio", emoji: "💼" },
-      { href: "/premium", label: "Premium", emoji: "⭐" },
-    ],
-  },
-  {
-    title: "Games",
-    links: [
-      { href: "/riftle", label: "Riftle (daily)", emoji: "🃏" },
-      { href: "/games", label: "All Games", emoji: "🎮" },
-    ],
-  },
-  {
-    title: "Decks & tools",
-    links: [
-      { href: "/decks", label: "Meta Decks", emoji: "🏆" },
-      { href: "/deck", label: "Deck Builder", emoji: "🛠️" },
-      { href: "/trade", label: "Trade Calculator", emoji: "🔁" },
-      { href: "/proxy", label: "Proxy Printer", emoji: "🖨️" },
-      { href: "/tools/box-ev", label: "Box EV Calc", emoji: "📦" },
-    ],
-  },
-  {
-    title: "Community & learn",
-    links: [
-      { href: "/forum", label: "Forum", emoji: "💬" },
-      { href: "/learn", label: "Learn Riftbound", emoji: "🎓" },
-      { href: "/guides", label: "Guides", emoji: "📖" },
-      { href: "/blog", label: "Blog", emoji: "📰" },
-    ],
-  },
-];
+// link carries an emoji so the eye can scan by icon, like an app launcher. The
+// groups live in nav-groups.ts, shared with the desktop NavMenu.
 
 // Hamburger menu so phone users can reach every section (the desktop links are
 // hidden below the sm breakpoint).
@@ -113,7 +75,7 @@ export function MobileNav() {
 
             {/* Grouped links, two per row — scannable like an app launcher. */}
             <div className="space-y-3 p-3">
-              {GROUPS.map((g) => (
+              {NAV_GROUPS.map((g) => (
                 <div key={g.title}>
                   <div className="pb-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
                     {g.title}
