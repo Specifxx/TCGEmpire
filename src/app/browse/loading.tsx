@@ -2,7 +2,9 @@
 // "page is loading" state instead of a silent lag.
 export default function Loading() {
   return (
-    <div className="flex flex-col gap-6 lg:flex-row">
+    // min-h fills the viewport so the footer/banner can't sit in view during the
+    // load and get shoved down by the arriving grid (CLS).
+    <div className="flex min-h-[calc(100dvh-6rem)] flex-col gap-6 lg:flex-row">
       <aside className="w-full shrink-0 lg:w-64">
         <div className="card-surface h-72 animate-pulse" />
       </aside>
