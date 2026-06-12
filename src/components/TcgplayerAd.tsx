@@ -29,19 +29,32 @@ const impression = (id: string) => `https://partner.tcgplayer.com/i/${ACCOUNT}/$
 
 function Banner({ id, w, h, country }: { id: string; w: number; h: number; country: string }) {
   return (
-    <span className="relative inline-block" style={{ width: w, height: h }}>
-      <OutboundLink href={click(id)} retailer="tcgplayer_banner" country={country} className="block">
+    <span
+      className="relative inline-block overflow-hidden rounded-lg border border-ink-700 bg-ink-900"
+      style={{ width: w, height: h }}
+    >
+      {/* House fallback layer: ad blockers block/hide Impact's creative CDN, which
+          used to leave an empty bordered box. The loaded creative fully covers
+          this layer; when it's blocked, the pitch shows instead — same fixed
+          dimensions either way, so zero CLS. */}
+      <span className="absolute inset-0 flex flex-col items-center justify-center gap-0.5 px-3 text-center">
+        <span className="text-sm font-extrabold text-white">TCGplayer</span>
+        <span className="text-[11px] text-slate-400">Shop Riftbound singles &amp; sealed</span>
+        <span className="mt-1 text-[11px] font-bold text-brand-400">Shop now →</span>
+      </span>
+      <OutboundLink
+        href={click(id)}
+        retailer="tcgplayer_banner"
+        country={country}
+        className="absolute inset-0 block"
+        aria-label="TCGplayer — shop Riftbound singles and sealed"
+      >
+        {/* Decorative (alt="") so a blocked creative renders nothing rather than
+            broken-image chrome over the fallback; the link carries the name. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={creative(id)}
-          alt="TCGplayer — shop singles and sealed"
-          width={w}
-          height={h}
-          loading="lazy"
-          className="rounded-lg border border-ink-700"
-        />
+        <img src={creative(id)} alt="" width={w} height={h} loading="lazy" className="relative h-full w-full" />
       </OutboundLink>
-      <span className="absolute left-1 top-1 rounded bg-ink-950/70 px-1 text-[9px] font-semibold uppercase tracking-wide text-slate-400">
+      <span className="pointer-events-none absolute left-1 top-1 rounded bg-ink-950/70 px-1 text-[9px] font-semibold uppercase tracking-wide text-slate-400">
         Ad
       </span>
       {/* Impact impression beacon. */}
