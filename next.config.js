@@ -22,7 +22,23 @@ const securityHeaders = [
 const nextConfig = {
   reactStrictMode: true,
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      // Embeddable price widget (/embed/*): must be frameable on ANY third-party
+      // site, so it can't carry X-Frame-Options: SAMEORIGIN. Allow cross-origin
+      // framing via CSP frame-ancestors while keeping the other safe defaults.
+      {
+        source: "/embed/:path*",
+        headers: [
+          { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Content-Security-Policy", value: "frame-ancestors *" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+        ],
+      },
+      // Everything else keeps the clickjacking-protective defaults (negative
+      // lookahead so this rule never double-sets headers on /embed/*).
+      { source: "/((?!embed/).*)", headers: securityHeaders },
+    ];
   },
 };
 
