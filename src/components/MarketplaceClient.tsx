@@ -5,6 +5,7 @@ import Link from "next/link";
 import { formatMoney } from "@/lib/format";
 import { cardDisplayName } from "@/lib/card-name";
 import { cardHref } from "@/lib/card-url";
+import { CONDITION_KEYS } from "@/lib/constants";
 
 export interface MktOffer {
   id: string;
@@ -13,9 +14,12 @@ export interface MktOffer {
   isFoil: boolean;
   quantity: number;
   currency: string;
+  sellerId: string;
   sellerName: string;
   isOfficial: boolean;
   shippingNote: string | null;
+  ratingAvg: number | null;
+  ratingCount: number;
 }
 interface MktCardInner {
   id: string;
@@ -30,6 +34,9 @@ interface MktCardInner {
 }
 export interface MktCard {
   card: MktCardInner;
+  // The site's lowest live STORE price for this card in the viewer's market —
+  // the benchmark behind the "under market" badges. null = no store price yet.
+  marketCents: number | null;
   offers: MktOffer[];
 }
 
@@ -45,15 +52,61 @@ interface CartItem {
 }
 
 const CART_KEY = "rc_mkt_cart";
+const SORTS = [
+  { key: "price_asc", label: "Cheapest first" },
+  { key: "price_desc", label: "Dearest first" },
+  { key: "deal", label: "Best vs market" },
+  { key: "name", label: "Name A–Z" },
+] as const;
+type SortKey = (typeof SORTS)[number]["key"];
 
-export function MarketplaceClient({ cards, place, stripeEnabled = false }: { cards: MktCard[]; place: string; stripeEnabled?: boolean }) {
+// Signed % of an offer vs the site's market price (negative = under market).
+function deltaPct(offerCents: number, marketCents: number | null): number | null {
+  if (marketCents == null || marketCents <= 0) return null;
+  return Math.round(((offerCents - marketCents) / marketCents) * 100);
+}
+
+function DeltaBadge({ pct }: { pct: number | null }) {
+  if (pct == null) return null;
+  if (pct <= -3)
+    return <span className="chip bg-brand-500/15 text-[10px] font-bold text-brand-300">{Math.abs(pct)}% under market</span>;
+  if (pct >= 5)
+    return <span className="chip bg-rose-500/10 text-[10px] font-semibold text-rose-300/90">{pct}% over market</span>;
+  return <span className="chip bg-ink-800 text-[10px] font-semibold text-slate-400">≈ market price</span>;
+}
+
+function Stars({ avg, count }: { avg: number | null; count: number }) {
+  if (avg == null || count === 0) return <span className="text-[10px] text-slate-600">no reviews yet</span>;
+  return (
+    <span className="text-[11px] font-semibold text-gold" title={`${avg}/5 from ${count} review${count === 1 ? "" : "s"}`}>
+      ★ {avg} <span className="font-normal text-slate-500">({count})</span>
+    </span>
+  );
+}
+
+export function MarketplaceClient({
+  cards,
+  place,
+  stripeEnabled = false,
+  signedIn = false,
+}: {
+  cards: MktCard[];
+  place: string;
+  stripeEnabled?: boolean;
+  signedIn?: boolean;
+}) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [openCard, setOpenCard] = useState<MktCard | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [cond, setCond] = useState("all");
+  const [foil, setFoil] = useState("all"); // all | foil | normal
+  const [setCode, setSetCode] = useState("all");
+  const [sort, setSort] = useState<SortKey>("price_asc");
   const [busy, setBusy] = useState(false);
   const [flash, setFlash] = useState<string | null>(null);
+  const [offerFor, setOfferFor] = useState<{ card: MktCardInner; offer: MktOffer } | null>(null);
 
   useEffect(() => {
     try {
@@ -71,6 +124,7 @@ export function MarketplaceClient({ cards, place, stripeEnabled = false }: { car
   const cartCount = cart.reduce((n, c) => n + c.quantity, 0);
   const cartTotal = cart.reduce((n, c) => n + c.priceCents * c.quantity, 0);
   const cartCurrency = cart[0]?.currency ?? "AUD";
+  const sets = useMemo(() => [...new Set(cards.map((c) => c.card.setCode))].sort(), [cards]);
 
   function toast(msg: string, ms = 1800) {
     setFlash(msg);
@@ -120,7 +174,6 @@ export function MarketplaceClient({ cards, place, stripeEnabled = false }: { car
         return;
       }
       if (stripeEnabled && data.url) {
-        // Hand off to Stripe's hosted checkout.
         toast("Redirecting to secure checkout…", 4000);
         window.location.href = data.url;
         return;
@@ -137,23 +190,71 @@ export function MarketplaceClient({ cards, place, stripeEnabled = false }: { car
     }
   }
 
+  async function submitOffer(listingId: string, dollars: number, qty: number, message: string) {
+    setBusy(true);
+    try {
+      const res = await fetch("/api/marketplace/offers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ listingId, priceCents: Math.round(dollars * 100), quantity: qty, message: message || undefined }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast(data.error ?? "Couldn't send the offer", 3000);
+        return;
+      }
+      setOfferFor(null);
+      toast("✓ Offer sent — the seller has 72h to respond. Track it in My orders.", 3500);
+    } catch {
+      toast("Network error — try again", 3000);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return cards;
-    return cards.filter(
-      (c) => c.card.name.toLowerCase().includes(q) || `${c.card.setCode} ${c.card.collectorNumber}`.toLowerCase().includes(q)
-    );
-  }, [cards, query]);
+    let list = cards
+      .map((c) => {
+        // Filter offers first; a card stays visible while any offer matches.
+        const offers = c.offers.filter(
+          (o) =>
+            (cond === "all" || o.condition === cond) &&
+            (foil === "all" || (foil === "foil") === o.isFoil)
+        );
+        return { ...c, offers };
+      })
+      .filter(
+        (c) =>
+          c.offers.length > 0 &&
+          (setCode === "all" || c.card.setCode === setCode) &&
+          (!q || c.card.name.toLowerCase().includes(q) || `${c.card.setCode} ${c.card.collectorNumber}`.toLowerCase().includes(q))
+      );
+    const cheapest = (c: MktCard) => Math.min(...c.offers.map((o) => o.priceCents));
+    const bestDelta = (c: MktCard) => {
+      const ds = c.offers.map((o) => deltaPct(o.priceCents, c.marketCents)).filter((d): d is number => d != null);
+      return ds.length ? Math.min(...ds) : 999;
+    };
+    switch (sort) {
+      case "price_desc": list.sort((a, b) => cheapest(b) - cheapest(a)); break;
+      case "deal": list.sort((a, b) => bestDelta(a) - bestDelta(b)); break;
+      case "name": list.sort((a, b) => a.card.name.localeCompare(b.card.name)); break;
+      default: list.sort((a, b) => cheapest(a) - cheapest(b));
+    }
+    return list;
+  }, [cards, query, cond, foil, setCode, sort]);
 
   return (
     <div>
-      <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-extrabold text-white">Marketplace</h1>
           <p className="text-sm text-slate-500">Buy Riftbound cards from verified sellers in {place}.</p>
         </div>
-        <div className="flex items-center gap-3">
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search cards…" className="input max-w-[180px]" />
+        <div className="flex items-center gap-2">
+          {signedIn && (
+            <Link href="/marketplace/orders" className="btn-ghost text-sm">📦 My orders &amp; offers</Link>
+          )}
           <button onClick={() => setCartOpen(true)} className="btn-primary relative">
             Cart
             {cartCount > 0 && (
@@ -163,6 +264,27 @@ export function MarketplaceClient({ cards, place, stripeEnabled = false }: { car
         </div>
       </div>
 
+      {/* Filter bar */}
+      <div className="mb-5 flex flex-wrap items-center gap-2">
+        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search cards…" className="input max-w-[200px] py-2 text-sm" />
+        <select value={setCode} onChange={(e) => setSetCode(e.target.value)} className="input w-auto py-2 text-sm" aria-label="Set">
+          <option value="all">All sets</option>
+          {sets.map((s) => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <select value={cond} onChange={(e) => setCond(e.target.value)} className="input w-auto py-2 text-sm" aria-label="Condition">
+          <option value="all">Any condition</option>
+          {CONDITION_KEYS.map((c) => <option key={c} value={c}>{c}</option>)}
+        </select>
+        <select value={foil} onChange={(e) => setFoil(e.target.value)} className="input w-auto py-2 text-sm" aria-label="Finish">
+          <option value="all">Foil + normal</option>
+          <option value="normal">Normal only</option>
+          <option value="foil">✦ Foil only</option>
+        </select>
+        <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} className="input ml-auto w-auto py-2 text-sm" aria-label="Sort">
+          {SORTS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+        </select>
+      </div>
+
       {flash && (
         <div className="fixed inset-x-0 bottom-4 z-[90] flex justify-center px-4">
           <div className="rounded-xl border border-brand-500/40 bg-ink-900/95 px-4 py-2.5 text-sm font-medium text-slate-100 shadow-2xl">{flash}</div>
@@ -170,18 +292,26 @@ export function MarketplaceClient({ cards, place, stripeEnabled = false }: { car
       )}
 
       {filtered.length === 0 ? (
-        <div className="card-surface grid place-items-center p-16 text-center text-slate-400">No cards listed yet.</div>
+        <div className="card-surface grid place-items-center p-16 text-center text-slate-400">
+          {cards.length === 0 ? "No cards listed yet." : "Nothing matches those filters."}
+        </div>
       ) : (
         <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {filtered.map((c) => {
             const from = Math.min(...c.offers.map((o) => o.priceCents));
             const cur = c.offers[0].currency;
+            const pct = deltaPct(from, c.marketCents);
             return (
               <li key={c.card.id}>
                 <button onClick={() => setOpenCard(c)} className="card-surface flex w-full flex-col overflow-hidden text-left transition-colors hover:border-brand-500/50">
-                  <div className="aspect-[5/7] w-full bg-ink-900">
+                  <div className="relative aspect-[5/7] w-full bg-ink-900">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    {c.card.imageThumbUrl ? <img src={c.card.imageThumbUrl} alt="" className="h-full w-full object-cover" /> : null}
+                    {c.card.imageThumbUrl ? <img src={c.card.imageThumbUrl} alt="" width={300} height={420} loading="lazy" className="h-full w-full object-cover" /> : null}
+                    {pct != null && pct <= -3 && (
+                      <span className="absolute left-1.5 top-1.5 rounded-full bg-brand-500 px-2 py-0.5 text-[10px] font-extrabold text-ink-950 shadow">
+                        {Math.abs(pct)}% under market
+                      </span>
+                    )}
                   </div>
                   <div className="p-3">
                     <div className="truncate text-sm font-semibold text-white">{cardDisplayName(c.card.name, c.card)}</div>
@@ -199,7 +329,24 @@ export function MarketplaceClient({ cards, place, stripeEnabled = false }: { car
       )}
 
       {openCard && (
-        <OffersModal card={openCard} busy={busy} onClose={() => setOpenCard(null)} onAdd={addToCart} onBuyNow={(o, q) => checkout([{ listingId: o.id, quantity: q }])} />
+        <OffersModal
+          card={openCard}
+          busy={busy}
+          signedIn={signedIn}
+          onClose={() => setOpenCard(null)}
+          onAdd={addToCart}
+          onBuyNow={(o, q) => checkout([{ listingId: o.id, quantity: q }])}
+          onMakeOffer={(o) => setOfferFor({ card: openCard.card, offer: o })}
+        />
+      )}
+      {offerFor && (
+        <OfferModal
+          card={offerFor.card}
+          offer={offerFor.offer}
+          busy={busy}
+          onClose={() => setOfferFor(null)}
+          onSubmit={submitOffer}
+        />
       )}
       {cartOpen && (
         <CartDrawer
@@ -224,15 +371,19 @@ export function MarketplaceClient({ cards, place, stripeEnabled = false }: { car
 function OffersModal({
   card,
   busy,
+  signedIn,
   onClose,
   onAdd,
   onBuyNow,
+  onMakeOffer,
 }: {
   card: MktCard;
   busy: boolean;
+  signedIn: boolean;
   onClose: () => void;
   onAdd: (card: MktCardInner, o: MktOffer, qty: number) => void;
   onBuyNow: (o: MktOffer, qty: number) => void;
+  onMakeOffer: (o: MktOffer) => void;
 }) {
   const [qty, setQty] = useState<Record<string, number>>({});
   const getQty = (o: MktOffer) => qty[o.id] ?? 1;
@@ -246,7 +397,10 @@ function OffersModal({
           <div className="min-w-0">
             <h2 className="truncate text-lg font-bold text-white">{cardDisplayName(card.card.name, card.card)}</h2>
             <p className="text-xs text-slate-500">
-              {card.card.setCode} {card.card.collectorNumber} · <Link href={cardHref(card.card)} className="text-brand-400 hover:underline">compare all stores</Link>
+              {card.card.setCode} {card.card.collectorNumber}
+              {card.marketCents != null && <> · market {formatMoney(card.marketCents, card.offers[0]?.currency ?? "AUD")}</>}
+              {" · "}
+              <Link href={cardHref(card.card)} className="text-brand-400 hover:underline">compare all stores</Link>
             </p>
           </div>
           <button onClick={onClose} aria-label="Close" className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full text-slate-400 hover:bg-ink-800 hover:text-white">✕</button>
@@ -255,11 +409,15 @@ function OffersModal({
           {card.offers.map((o) => (
             <li key={o.id} className="flex flex-wrap items-center gap-3 p-3">
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 text-sm font-semibold text-white">
-                  {o.sellerName}
+                <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-white">
+                  <Link href={`/marketplace/seller/${o.sellerId}`} className="hover:text-brand-300 hover:underline">{o.sellerName}</Link>
                   {o.isOfficial && <span className="chip bg-brand-500/15 text-[10px] font-bold text-brand-300">★ OFFICIAL</span>}
+                  <Stars avg={o.ratingAvg} count={o.ratingCount} />
                 </div>
-                <div className="text-xs text-slate-500">{o.condition}{o.isFoil ? " · Foil" : ""} · {o.quantity} available{o.shippingNote ? ` · ${o.shippingNote}` : ""}</div>
+                <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                  <span>{o.condition}{o.isFoil ? " · ✦ Foil" : ""} · {o.quantity} available{o.shippingNote ? ` · ${o.shippingNote}` : ""}</span>
+                  <DeltaBadge pct={deltaPct(o.priceCents, card.marketCents)} />
+                </div>
               </div>
               <span className="text-base font-extrabold text-accent">{formatMoney(o.priceCents, o.currency)}</span>
               <input
@@ -272,12 +430,83 @@ function OffersModal({
                 aria-label="Quantity"
               />
               <div className="flex gap-1.5">
+                {signedIn && (
+                  <button onClick={() => onMakeOffer(o)} className="btn-ghost text-xs" title="Negotiate a lower price">💬 Offer</button>
+                )}
                 <button onClick={() => onAdd(card.card, o, getQty(o))} className="btn-ghost text-xs">Add to cart</button>
                 <button onClick={() => onBuyNow(o, getQty(o))} disabled={busy} className="btn-primary text-xs disabled:opacity-50">Buy now</button>
               </div>
             </li>
           ))}
         </ul>
+      </div>
+    </div>
+  );
+}
+
+// "Make an offer" — eBay-style price negotiation on a single listing.
+function OfferModal({
+  card,
+  offer,
+  busy,
+  onClose,
+  onSubmit,
+}: {
+  card: MktCardInner;
+  offer: MktOffer;
+  busy: boolean;
+  onClose: () => void;
+  onSubmit: (listingId: string, dollars: number, qty: number, message: string) => void;
+}) {
+  const [dollars, setDollars] = useState("");
+  const [qty, setQty] = useState(1);
+  const [message, setMessage] = useState("");
+  const asking = offer.priceCents / 100;
+  const amount = parseFloat(dollars);
+  const valid = Number.isFinite(amount) && amount > 0 && amount * 100 < offer.priceCents;
+
+  return (
+    <div className="fixed inset-0 z-[85] flex items-center justify-center p-4" role="dialog" aria-modal="true">
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-md rounded-2xl border border-ink-700 bg-ink-900 p-5 shadow-2xl">
+        <h2 className="text-lg font-extrabold text-white">💬 Make an offer</h2>
+        <p className="mt-1 text-sm text-slate-400">
+          {card.name} · {offer.condition}{offer.isFoil ? " · ✦ Foil" : ""} — asking{" "}
+          <span className="font-bold text-white">{formatMoney(offer.priceCents, offer.currency)}</span> from {offer.sellerName}
+        </p>
+        <div className="mt-4 flex gap-2">
+          <label className="block flex-1">
+            <span className="mb-1 block text-xs font-medium text-slate-400">Your offer ({offer.currency}, per copy)</span>
+            <input
+              type="number" min="0.01" step="0.01" max={asking}
+              value={dollars}
+              onChange={(e) => setDollars(e.target.value)}
+              placeholder={`under ${asking.toFixed(2)}`}
+              className="input"
+              autoFocus
+            />
+          </label>
+          <label className="block w-20">
+            <span className="mb-1 block text-xs font-medium text-slate-400">Qty</span>
+            <input
+              type="number" min={1} max={offer.quantity}
+              value={qty}
+              onChange={(e) => setQty(Math.max(1, Math.min(offer.quantity, Number(e.target.value) || 1)))}
+              className="input text-center"
+            />
+          </label>
+        </div>
+        <label className="mt-3 block">
+          <span className="mb-1 block text-xs font-medium text-slate-400">Message to the seller (optional)</span>
+          <input value={message} onChange={(e) => setMessage(e.target.value.slice(0, 280))} placeholder="e.g. Would you do this for the pair?" className="input" />
+        </label>
+        <p className="mt-2 text-[11px] text-slate-600">Offers expire after 72 hours. If the seller accepts, you complete the purchase at your offered price.</p>
+        <div className="mt-4 flex justify-end gap-2">
+          <button onClick={onClose} className="btn-ghost text-sm">Cancel</button>
+          <button onClick={() => onSubmit(offer.id, amount, qty, message.trim())} disabled={!valid || busy} className="btn-primary text-sm disabled:opacity-50">
+            {busy ? "Sending…" : "Send offer"}
+          </button>
+        </div>
       </div>
     </div>
   );

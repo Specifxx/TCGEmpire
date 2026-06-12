@@ -4,10 +4,25 @@ import { getSealedGroups } from "@/lib/sealed-import";
 import { formatMoney } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
-import { affiliateUrl } from "@/lib/affiliate";
+import { affiliateUrl, ebayAffiliateUrl } from "@/lib/affiliate";
 import { OutboundLink } from "@/components/OutboundLink";
 
 export const revalidate = 900;
+
+// Marketplace hosts per site market (NZ has no local eBay/Amazon — the AU sites
+// are the closest and ship there).
+const MARKETPLACE_HOSTS: Record<string, { ebay: string; amazon: string }> = {
+  AU: { ebay: "ebay.com.au", amazon: "amazon.com.au" },
+  NZ: { ebay: "ebay.com.au", amazon: "amazon.com.au" },
+  US: { ebay: "ebay.com", amazon: "amazon.com" },
+  UK: { ebay: "ebay.co.uk", amazon: "amazon.co.uk" },
+};
+const SEALED_SEARCHES = [
+  { label: "Booster boxes", q: "Riftbound booster box" },
+  { label: "Booster packs", q: "Riftbound booster pack" },
+  { label: "Proving Grounds kits", q: "Riftbound Proving Grounds" },
+  { label: "All sealed Riftbound", q: "Riftbound TCG sealed" },
+];
 
 export const metadata: Metadata = {
   title: "Riftbound Sealed Products — Booster Boxes, Packs & Sets (Australia)",
@@ -114,6 +129,46 @@ export default async function SealedPage({ searchParams }: { searchParams: { q?:
           ))}
         </div>
       )}
+
+      {/* High-AOV marketplace searches: sealed boxes are the biggest baskets on the
+          site, and eBay/Amazon both carry them. Affiliate-tagged per market. */}
+      <section className="card-surface mt-8 p-5">
+        <h2 className="text-lg font-extrabold text-white">🛒 More sealed deals on the big marketplaces</h2>
+        <p className="mt-1 max-w-2xl text-sm text-slate-400">
+          Boxes sell out and restock constantly — eBay and Amazon often have stock (or better
+          prices) when stores don&apos;t. Worth a look before you buy.
+        </p>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          {SEALED_SEARCHES.map((x) => {
+            const mkt = MARKETPLACE_HOSTS[country] ?? MARKETPLACE_HOSTS.AU;
+            return (
+              <div key={x.q} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-ink-700 bg-ink-900/60 px-3 py-2.5">
+                <span className="text-sm font-semibold text-white">{x.label}</span>
+                <span className="flex gap-1.5">
+                  <OutboundLink
+                    href={ebayAffiliateUrl(`https://www.${mkt.ebay}/sch/i.html?_nkw=${encodeURIComponent(x.q)}`)}
+                    retailer="ebay_sealed_search"
+                    country={country}
+                    kind="sealed"
+                    className="btn-ghost px-2.5 py-1 text-xs"
+                  >
+                    eBay →
+                  </OutboundLink>
+                  <OutboundLink
+                    href={affiliateUrl(`https://www.${mkt.amazon}/s?k=${encodeURIComponent(x.q)}`, "amazon_sealed")}
+                    retailer="amazon_sealed_search"
+                    country={country}
+                    kind="sealed"
+                    className="btn-ghost px-2.5 py-1 text-xs"
+                  >
+                    Amazon →
+                  </OutboundLink>
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </section>
 
       <p className="mt-6 text-center text-[11px] text-slate-600">
         Sealed prices are collected from public store listings and may change. RiftCompare

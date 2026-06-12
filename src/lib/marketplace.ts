@@ -50,6 +50,43 @@ export function platformFeeCents(priceCents: number): number {
   return Math.round((priceCents * MARKETPLACE_FEE_BPS) / 10000);
 }
 
+// ── Offers ─────────────────────────────────────────────────────────────────────
+// "Make an offer" guardrails: offers live 72h, and a lowball below 30% of asking
+// is rejected outright (it's spam, not negotiation).
+export const OFFER_EXPIRY_HOURS = 72;
+export const OFFER_MIN_RATIO = 0.3;
+
+export function offerExpiry(): Date {
+  return new Date(Date.now() + OFFER_EXPIRY_HOURS * 3600_000);
+}
+
+// A seller's aggregate rating from marketplace reviews (null avg = no reviews yet).
+export async function getSellerRating(sellerId: string): Promise<{ avg: number | null; count: number }> {
+  const agg = await prisma.marketplaceReview.aggregate({
+    where: { sellerId },
+    _avg: { rating: true },
+    _count: { _all: true },
+  });
+  return {
+    avg: agg._avg.rating != null ? Math.round(agg._avg.rating * 10) / 10 : null,
+    count: agg._count._all,
+  };
+}
+
+// Ratings for many sellers in one query (for listing grids).
+export async function getSellerRatings(sellerIds: string[]): Promise<Map<string, { avg: number; count: number }>> {
+  if (!sellerIds.length) return new Map();
+  const rows = await prisma.marketplaceReview.groupBy({
+    by: ["sellerId"],
+    where: { sellerId: { in: sellerIds } },
+    _avg: { rating: true },
+    _count: { _all: true },
+  });
+  return new Map(
+    rows.map((r) => [r.sellerId, { avg: Math.round((r._avg.rating ?? 0) * 10) / 10, count: r._count._all }])
+  );
+}
+
 // Validate a listing payload from a seller. Returns a normalised object or an error.
 export function validateListingInput(input: any):
   | { ok: true; condition: string; isFoil: boolean; priceCents: number; quantity: number }

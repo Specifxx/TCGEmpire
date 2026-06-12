@@ -12,40 +12,40 @@ datasource db {
 }
 
 model User {
-  id               String    @id @default(cuid())
-  email            String    @unique
+  id                String    @id @default(cuid())
+  email             String    @unique
   // Optional — accounts created via Google/Discord sign-in have no password.
-  passwordHash     String?
-  displayName      String
-  avatarUrl        String?
+  passwordHash      String?
+  displayName       String
+  avatarUrl         String?
   // Set when the email is confirmed (instantly for OAuth, which is pre-verified).
-  emailVerified    DateTime?
+  emailVerified     DateTime?
   // OAuth identities (one per provider). Lets a user link Google and/or Discord.
   // Indexed (not DB-unique) so the push stays additive; uniqueness is enforced in
   // the OAuth callback (we find-or-create by provider id, then by email).
-  googleId         String?
-  discordId        String?
+  googleId          String?
+  discordId         String?
   // Wallet balance in AUD cents (e.g. 25000 = $250.00).
   // Funds committed to open buy orders are moved out of balance and held as
   // escrow on the BuyOrder (reservedCents) until the order fills or is cancelled.
-  balanceCents     Int       @default(0)
-  isAdmin          Boolean   @default(false)
+  balanceCents      Int       @default(0)
+  isAdmin           Boolean   @default(false)
   // Verified sellers may list cards in the RiftCompare marketplace (see /marketplace).
-  isVerifiedSeller Boolean   @default(false)
+  isVerifiedSeller  Boolean   @default(false)
   // ── Shards: the site's gamification / loyalty points (see lib/points.ts). ──
   // Distinct from balanceCents (real money) — Shards are earned by engaging with
   // the site and redeemed for cosmetics, perks and personalised experiences.
-  points           Int       @default(0) // spendable Shard balance
-  lifetimePoints   Int       @default(0) // total ever earned; drives the level/medal
-  streakDays       Int       @default(0) // current consecutive daily check-in streak
-  lastCheckinAt    DateTime? // when the daily check-in was last claimed
-  equippedFlair    String? // reward key of the name flair shown by the user
-  equippedBadge    String? // reward key of the medal/badge shown by the user
-  ownedRewards     Json? // string[] of redeemed cosmetic/perk reward keys
+  points            Int       @default(0) // spendable Shard balance
+  lifetimePoints    Int       @default(0) // total ever earned; drives the level/medal
+  streakDays        Int       @default(0) // current consecutive daily check-in streak
+  lastCheckinAt     DateTime? // when the daily check-in was last claimed
+  equippedFlair     String? // reward key of the name flair shown by the user
+  equippedBadge     String? // reward key of the medal/badge shown by the user
+  ownedRewards      Json? // string[] of redeemed cosmetic/perk reward keys
   // OPT-IN (default off): the user ticked "email me leaderboard updates" at signup.
   // Honoured only with a working unsubscribe — never used to send unsolicited mail.
-  leaderboardEmails Boolean  @default(false)
-  createdAt        DateTime  @default(now())
+  leaderboardEmails Boolean   @default(false)
+  createdAt         DateTime  @default(now())
 
   listings            Listing[]
   buyOrders           BuyOrder[]
@@ -59,6 +59,10 @@ model User {
   marketplaceListings MarketplaceListing[]
   collection          CollectionCard[]
   gameScores          GameScore[]
+  offersMade          MarketplaceOffer[]   @relation("OffersMade")
+  offersReceived      MarketplaceOffer[]   @relation("OffersReceived")
+  reviewsWritten      MarketplaceReview[]  @relation("ReviewsWritten")
+  reviewsReceived     MarketplaceReview[]  @relation("ReviewsReceived")
 
   @@index([googleId])
   @@index([discordId])
@@ -461,15 +465,15 @@ model SealedListing {
 // A completed trade. Either a buyer hit a listing (kind LISTING) or a seller
 // filled a buy order (kind BUYORDER).
 model Order {
-  id                   String   @id @default(cuid())
-  kind                 String   @default("LISTING") // LISTING | BUYORDER | MARKETPLACE
+  id                   String    @id @default(cuid())
+  kind                 String    @default("LISTING") // LISTING | BUYORDER | MARKETPLACE
   listingId            String?
   buyOrderId           String?
   // Marketplace purchases reference a MarketplaceListing (soft link, no relation).
   marketplaceListingId String?
   buyerId              String
   sellerId             String
-  quantity             Int      @default(1)
+  quantity             Int       @default(1)
   totalCents           Int
   // Payment/fulfilment state. Wallet & forum orders settle instantly (PAID);
   // Stripe-checkout orders start PENDING (stock reserved) and flip to PAID via the
@@ -480,7 +484,14 @@ model Order {
   stripeSessionId      String?
   stripePaymentIntent  String?
   reservedUntil        DateTime? // while PENDING, the stock-reservation expiry
-  createdAt            DateTime @default(now())
+  // Marketplace fulfilment: seller marks shipped (-> SHIPPED, with an optional
+  // tracking note), buyer confirms delivery (-> COMPLETED). Reviews unlock at SHIPPED.
+  shippedAt            DateTime?
+  trackingNote         String?
+  receivedAt           DateTime?
+  createdAt            DateTime  @default(now())
+
+  review MarketplaceReview?
 
   listing  Listing?  @relation(fields: [listingId], references: [id])
   buyOrder BuyOrder? @relation(fields: [buyOrderId], references: [id])
@@ -550,14 +561,60 @@ model MarketplaceListing {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  seller User @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  card   Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  seller User               @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  card   Card               @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  offers MarketplaceOffer[]
 
   @@index([cardId])
   @@index([sellerId])
   @@index([status])
   @@index([cardId, country, status])
   @@index([priceCents])
+}
+
+// A buyer's offer on a marketplace listing (eBay-style "Make an offer"). One
+// PENDING offer per buyer+listing at a time; the seller accepts or declines,
+// the buyer can cancel, and offers auto-expire after OFFER_EXPIRY_HOURS.
+// ACCEPTED offers are bought at the offered price via the normal buy endpoint
+// (which marks them COMPLETED).
+model MarketplaceOffer {
+  id          String    @id @default(cuid())
+  listingId   String
+  buyerId     String
+  sellerId    String
+  priceCents  Int // offered price PER COPY
+  quantity    Int       @default(1)
+  message     String? // optional note to the seller
+  status      String    @default("PENDING") // PENDING|ACCEPTED|DECLINED|CANCELLED|EXPIRED|COMPLETED
+  expiresAt   DateTime
+  respondedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  listing MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyer   User               @relation("OffersMade", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller  User               @relation("OffersReceived", fields: [sellerId], references: [id], onDelete: Cascade)
+
+  @@index([listingId, status])
+  @@index([buyerId, status])
+  @@index([sellerId, status])
+}
+
+// A buyer's review of a completed marketplace order — one per order. Aggregated
+// into the seller's rating shown on listings and their storefront.
+model MarketplaceReview {
+  id        String   @id @default(cuid())
+  orderId   String   @unique
+  buyerId   String
+  sellerId  String
+  rating    Int // 1..5 (validated in app code)
+  comment   String?
+  createdAt DateTime @default(now())
+
+  order  Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  buyer  User  @relation("ReviewsWritten", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller User  @relation("ReviewsReceived", fields: [sellerId], references: [id], onDelete: Cascade)
+
+  @@index([sellerId, createdAt])
 }
 
 // A card a user owns in their personal collection ("My Cards"). One row per
