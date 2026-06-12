@@ -15,7 +15,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const a = await getBlogPost(params.slug);
-  if (!a) return { title: "Post not found", robots: { index: false, follow: false } };
+  if (!a) notFound(); // real 404 — metadata resolves before streaming
   return {
     title: { absolute: `${a.title} — RiftCompare Blog` },
     description: a.excerpt,
