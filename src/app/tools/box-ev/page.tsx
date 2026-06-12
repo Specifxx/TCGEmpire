@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { getCountry } from "@/lib/get-country";
-import { COUNTRIES, pickPrice } from "@/lib/country";
+import { COUNTRIES } from "@/lib/country";
 import { SETS } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
 import { BoxEvCalculator, type SetRarityData } from "@/components/BoxEvCalculator";
@@ -34,42 +34,60 @@ export default async function BoxEvPage() {
   const country = getCountry();
   const info = COUNTRIES[country];
 
-  // Live average price per (set, rarity) for the viewer's market — base prints
-  // only (boxes contain base prints; alt-art/promo pricing would skew the mean).
-  const cards = await prisma.card.findMany({
-    where: { variant: null, isPromo: false },
-    select: {
-      setCode: true, rarity: true,
-      lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true,
-    },
-  }).catch(() => []);
+  // Store-only lowest price per card for the viewer's market. We EXCLUDE eBay
+  // (retailer keys "ebay"/"ebay_us"/"ebay_uk") on purpose: an eBay single-card
+  // listing carries a structural shipping + minimum-viable-listing floor of
+  // roughly $3–5 that has nothing to do with a bulk card's real value. Because
+  // most commons/uncommons have an eBay listing, that floor was systematically
+  // inflating every rarity's average (and so every box's EV). The cheapest
+  // tracked STORE listing reflects what bulk actually changes hands for; cards
+  // with no store listing are genuine bulk and count as $0.
+  const storeLows = await prisma.retailerPrice
+    .groupBy({
+      by: ["cardId"],
+      where: { inStock: true, country, NOT: { retailer: { startsWith: "ebay" } } },
+      _min: { priceCents: true },
+    })
+    .catch(() => [] as { cardId: string; _min: { priceCents: number | null } }[]);
+  const lowByCard = new Map<string, number>();
+  for (const r of storeLows) if (r._min.priceCents != null) lowByCard.set(r.cardId, r._min.priceCents);
 
-  // Average value of a RANDOM card of each rarity — the honest input to EV. The
-  // key fix vs. the naive version: divide by EVERY card of that rarity, not just
-  // the ones that currently have a listing. Most commons/uncommons are bulk with
-  // no live price; counting only priced cards made each slot worth the average of
-  // the *valuable* cards and massively overstated every box. Unpriced bulk counts
-  // as ~$0 — which is what a random bulk pull is actually worth.
-  const agg = new Map<string, Map<string, { sum: number; priced: number; total: number }>>();
+  const cards = await prisma.card
+    .findMany({
+      where: { variant: null, isPromo: false },
+      select: { id: true, setCode: true, rarity: true },
+    })
+    .catch(() => []);
+
+  // Average value of a RANDOM card of each rarity — the honest input to EV.
+  //  • divide by EVERY card of the rarity, not just priced ones (unpriced bulk = $0);
+  //  • cap any single card at 12× the rarity's median priced value, so one
+  //    mispriced/mismatched store listing can't balloon the whole average.
+  const median = (xs: number[]): number => {
+    if (!xs.length) return 0;
+    const s = [...xs].sort((a, b) => a - b);
+    const m = Math.floor(s.length / 2);
+    return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+  };
+  const agg = new Map<string, Map<string, { values: number[]; total: number }>>();
   for (const c of cards) {
     const bySet = agg.get(c.setCode) ?? agg.set(c.setCode, new Map()).get(c.setCode)!;
-    const cell = bySet.get(c.rarity) ?? { sum: 0, priced: 0, total: 0 };
+    const cell = bySet.get(c.rarity) ?? { values: [], total: 0 };
     cell.total += 1;
-    const p = pickPrice(c, country);
-    if (p != null) {
-      cell.sum += p;
-      cell.priced += 1;
-    }
+    const p = lowByCard.get(c.id);
+    if (p != null) cell.values.push(p);
     bySet.set(c.rarity, cell);
   }
   const sets: SetRarityData[] = SETS.filter((s) => !s.comingSoon && agg.has(s.code)).map((s) => ({
     setCode: s.code,
     setName: s.name,
     rarities: Object.fromEntries(
-      [...(agg.get(s.code) ?? new Map())].map(([rarity, { sum, priced, total }]) => [
-        rarity,
-        { avgCents: total > 0 ? Math.round(sum / total) : 0, priced, total },
-      ])
+      [...(agg.get(s.code) ?? new Map<string, { values: number[]; total: number }>())].map(([rarity, { values, total }]) => {
+        const med = median(values);
+        const cap = med > 0 ? med * 12 : Infinity; // clip only egregious outliers
+        const sum = values.reduce((a, v) => a + Math.min(v, cap), 0);
+        return [rarity, { avgCents: total > 0 ? Math.round(sum / total) : 0, priced: values.length, total }];
+      })
     ),
   }));
 
