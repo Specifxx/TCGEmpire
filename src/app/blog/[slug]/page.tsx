@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getArticles } from "@/lib/articles";
-import { getBlogPost } from "@/lib/posts";
+import { getArticle, getArticles } from "@/lib/articles";
+import { getBlogPost, getMarketReportPost } from "@/lib/posts";
 import { ArticleView } from "@/components/ArticleView";
+import { MarketReportView } from "@/components/MarketReportView";
 
 // Pre-render the file-based posts; DB-backed market reports render on demand
 // (dynamicParams defaults to true) and are cached by `revalidate`.
@@ -30,7 +31,17 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 }
 
 export default async function BlogArticlePage({ params }: { params: { slug: string } }) {
-  const a = await getBlogPost(params.slug);
-  if (!a) notFound();
-  return <ArticleView article={a} />;
+  // File-based editorial posts render as plain articles.
+  const file = getArticle(params.slug);
+  if (file && file.category === "blog") return <ArticleView article={file} />;
+
+  // Market reports get the chart-rich view when their payload is stored; rows
+  // that predate the charts fall back to the markdown body.
+  const report = await getMarketReportPost(params.slug);
+  if (!report) notFound();
+  return report.data ? (
+    <MarketReportView article={report.article} data={report.data} />
+  ) : (
+    <ArticleView article={report.article} />
+  );
 }
