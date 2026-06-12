@@ -681,10 +681,17 @@ model CollectionCard {
 }
 
 // Footer newsletter capture — "weekly Index summary in your inbox". The weekly
-// send itself is a workflow; this table is the direct-audience list.
+// digest itself is sent by /api/cron/newsletter (lib/newsletter.ts); this table
+// is the direct-audience list.
 model NewsletterSubscriber {
   id        String   @id @default(cuid())
   email     String   @unique
   market    String   @default("AU")
   createdAt DateTime @default(now())
+  // One-click unsubscribe token. Nullable so `db push` works on existing rows;
+  // backfilled lazily the first time we email the subscriber.
+  unsubToken String? @unique
+  // Last digest edition delivered (e.g. "2026-W24") — makes the weekly send
+  // idempotent: reruns and resumed partial runs only email who's still due.
+  lastEditionKey String?
 }
