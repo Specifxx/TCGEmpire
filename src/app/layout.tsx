@@ -16,6 +16,7 @@ import { IMPACT_SITE_VERIFICATION } from "@/lib/affiliate";
 import { ADSENSE_CLIENT, ADSENSE_ENABLED } from "@/lib/ads";
 import { NativeShell } from "@/components/NativeShell";
 import { TcgplayerAd } from "@/components/TcgplayerAd";
+import { EbayAd } from "@/components/EbayAd";
 import { SovrnSnippet } from "@/components/SovrnSnippet";
 import { PriceAlertModal } from "@/components/PriceAlertModal";
 
@@ -135,9 +136,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </QuickViewProvider>
         </WishlistDrawerProvider>
         </CountryProvider>
-        {/* Site-wide TCGplayer banner above the footer — guarantees every page
-            (games included) carries at least one monetised placement. */}
-        <TcgplayerAd size="leaderboard" country={country} className="container-app pb-8" />
+        {/* Site-wide affiliate banners above the footer — BOTH live partners
+            (TCGplayer Impact + eBay Partner Network) on every page, so no page
+            is left unmonetised. Both are CPC/affiliate: they pay on click-through
+            purchases, so placement-where-relevant beats raw banner count. */}
+        <div className="container-app flex flex-col items-center gap-3 pb-8">
+          <TcgplayerAd size="leaderboard" country={country} />
+          <EbayAd size="leaderboard" country={country} />
+        </div>
         <footer className="container-app border-t border-ink-800 py-8 text-center text-xs text-slate-500">
           <NewsletterSignup siteName="RiftCompare" />
           <div className="mb-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm">
