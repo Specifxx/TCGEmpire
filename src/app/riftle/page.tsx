@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Riftle } from "@/components/Riftle";
+import { GameBoundary } from "@/components/GameBoundary";
 import { AdSlot } from "@/components/AdSlot";
 import { ADSENSE_SLOTS } from "@/lib/ads";
 import { TcgplayerAd } from "@/components/TcgplayerAd";
@@ -16,7 +17,11 @@ export default function RiftlePage() {
   const country = getCountry();
   return (
     <>
-      <Riftle />
+      {/* Contained boundary: a Riftle crash shows its message + retry in place
+          instead of replacing the whole page with the route error screen. */}
+      <GameBoundary>
+        <Riftle />
+      </GameBoundary>
       {/* TCGplayer banner under the puzzle — the game's daily repeat visitors
           are exactly the audience these creatives convert. */}
       <TcgplayerAd size="leaderboard" country={country} className="mt-8" />
