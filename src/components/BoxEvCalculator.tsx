@@ -162,7 +162,10 @@ export function BoxEvCalculator({ sets, currency }: { sets: SetRarityData[]; cur
             {calc.lines.map((l) => (
               <tr key={l.rarity}>
                 <td className="py-2 font-semibold text-white">
-                  {l.rarity} <span className="text-[10px] font-normal text-slate-600">({l.priced}/{l.total} priced)</span>
+                  {l.rarity}{" "}
+                  <span className="text-[10px] font-normal text-slate-600">
+                    ({l.priced}/{l.total} priced{l.priced > 0 && l.priced < 6 ? " · low sample" : ""})
+                  </span>
                 </td>
                 <td className="py-2 text-right text-slate-300">{formatMoney(l.avgCents, currency)}</td>
                 <td className="py-2 text-right text-slate-300">×{l.rate}</td>
