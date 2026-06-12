@@ -6,6 +6,7 @@ import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { affiliateUrl, ebayAffiliateUrl } from "@/lib/affiliate";
 import { OutboundLink } from "@/components/OutboundLink";
+import { TcgplayerAd } from "@/components/TcgplayerAd";
 
 export const revalidate = 900;
 
@@ -169,6 +170,8 @@ export default async function SealedPage({ searchParams }: { searchParams: { q?:
           })}
         </div>
       </section>
+
+      <TcgplayerAd size="leaderboard" country={country} className="mt-6" />
 
       <p className="mt-6 text-center text-[11px] text-slate-600">
         Sealed prices are collected from public store listings and may change. RiftCompare

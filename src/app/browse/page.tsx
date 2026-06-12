@@ -9,6 +9,7 @@ import { CardTile } from "@/components/CardTile";
 import { Pagination } from "@/components/Pagination";
 import { PageSizeSelect } from "@/components/PageSizeSelect";
 import { AdSlot } from "@/components/AdSlot";
+import { TcgplayerAd } from "@/components/TcgplayerAd";
 import { ADSENSE_SLOTS } from "@/lib/ads";
 import {
   buildCardOrderBy,
@@ -108,6 +109,7 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
               ))}
             </div>
             <Pagination page={page} totalPages={totalPages} params={searchParams as Record<string, string | undefined>} />
+            <TcgplayerAd size="leaderboard" country={country} className="mt-6" />
           </>
         )}
       </section>

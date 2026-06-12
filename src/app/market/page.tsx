@@ -3,6 +3,7 @@ import Link from "next/link";
 import { unstable_cache } from "next/cache";
 import { getMarketIndex, INDEX_SIZE } from "@/lib/market-index";
 import { IndexChart } from "@/components/IndexChart";
+import { TcgplayerAd } from "@/components/TcgplayerAd";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
@@ -220,6 +221,8 @@ export default async function IndexPage() {
           <Link href="/sealed" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-brand-500">Sealed prices →</Link>
         </div>
       </section>
+
+      <TcgplayerAd size="leaderboard" country={country} className="mt-6" />
     </div>
   );
 }
