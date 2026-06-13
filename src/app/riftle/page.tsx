@@ -5,13 +5,39 @@ import { AdSlot } from "@/components/AdSlot";
 import { ADSENSE_SLOTS } from "@/lib/ads";
 import { TcgplayerAd } from "@/components/TcgplayerAd";
 import { getCountry } from "@/lib/get-country";
+import { SITE_URL } from "@/lib/site";
+import { RIFTLE_ATTEMPTS } from "@/lib/riftle-shared";
 
-export const metadata: Metadata = {
-  title: "Riftle — the daily Riftbound card guessing game",
-  description:
-    "Guess the Riftbound card of the day in 8 tries — or switch to Unlimited mode and play endless random cards. A free puzzle for League of Legends TCG players, with progressive hints and Wordle-style feedback on set, domain, type, rarity, cost and might.",
-  alternates: { canonical: "/riftle" },
-};
+const DESCRIPTION =
+  "Guess the Riftbound card of the day in 8 tries — or switch to Unlimited mode and play endless random cards. A free puzzle for League of Legends TCG players, with progressive hints and Wordle-style feedback on set, domain, type, rarity, cost and might.";
+
+// Dynamic share image: when a player shares their result the URL carries ?r=<n>
+// (solved in n) or ?r=x (stumped), so the link unfurls with a custom OG card —
+// the viral loop that brings their friends in. A plain /riftle link is unchanged.
+export function generateMetadata({ searchParams }: { searchParams?: { r?: string } }): Metadata {
+  const base: Metadata = {
+    title: "Riftle — the daily Riftbound card guessing game",
+    description: DESCRIPTION,
+    alternates: { canonical: "/riftle" },
+  };
+  const r = typeof searchParams?.r === "string" ? searchParams.r : null;
+  if (!r) return base;
+
+  const won = /^\d{1,2}$/.test(r);
+  const stat = won ? `${r}/${RIFTLE_ATTEMPTS}` : `X/${RIFTLE_ATTEMPTS}`;
+  const sub = won
+    ? `I guessed today's Riftbound card in ${r}/${RIFTLE_ATTEMPTS}. Can you beat that?`
+    : "Today's Riftbound card stumped me. Can you guess it?";
+  const img = `${SITE_URL}/api/og?t=${encodeURIComponent("RIFTLE")}&s=${encodeURIComponent(stat)}&l=${encodeURIComponent(
+    won ? "today's card" : "stumped"
+  )}&b=${encodeURIComponent(sub)}`;
+
+  return {
+    ...base,
+    openGraph: { title: "Riftle — daily Riftbound card game", description: sub, images: [{ url: img, width: 1200, height: 630 }] },
+    twitter: { card: "summary_large_image", title: "Riftle", description: sub, images: [img] },
+  };
+}
 
 export default function RiftlePage() {
   const country = getCountry();
