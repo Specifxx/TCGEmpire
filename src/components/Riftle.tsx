@@ -261,7 +261,13 @@ export function Riftle() {
       .join("\n");
     const score = done === "win" ? `${rows.length}/${attempts}` : `X/${attempts}`;
     const tag = mode === "unlimited" ? "Riftle ∞" : `Riftle ${day}`;
-    const text = `${tag} ${score}\n${grid}\nriftcompare.com/riftle`;
+    // Daily shares carry ?r=<result> so the link unfurls with a custom OG card
+    // (see app/riftle/generateMetadata). Unlimited has no shared answer → plain link.
+    const url =
+      mode === "unlimited"
+        ? "riftcompare.com/riftle"
+        : `riftcompare.com/riftle?r=${done === "win" ? rows.length : "x"}`;
+    const text = `${tag} ${score}\n${grid}\n${url}`;
     navigator.clipboard?.writeText(text).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1800); });
   }
 
