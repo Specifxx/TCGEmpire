@@ -95,7 +95,7 @@ export function PackSim({ sets }: { sets: { code: string; name: string }[] }) {
   const shareText = () =>
     `🎁 I opened a ${setName || "Riftbound"} pack on RiftCompare and pulled ${formatMoney(total, currency)} of cards${
       bestPull && (bestPull.priceCents ?? 0) > 0 ? ` — best card: ${bestPull.name} (${formatMoney(bestPull.priceCents ?? 0, currency)})` : ""
-    }!\nRip your own → riftcompare.com/games/pack-sim`;
+    }!\nRip your own → riftcompare.com/games/pack-sim?v=${encodeURIComponent(formatMoney(total, currency))}`;
 
   return (
     <GameShell
