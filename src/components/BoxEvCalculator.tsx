@@ -175,13 +175,14 @@ export function BoxEvCalculator({ sets, currency }: { sets: SetRarityData[]; cur
           </tbody>
         </table>
         <p className="mt-3 text-[11px] leading-relaxed text-slate-600">
-          <strong className="text-slate-500">Avg card value</strong> is the average over <em>every</em> {set.setCode} card
+          <strong className="text-slate-500">Avg card value</strong> is the average over <em>every</em> base {set.setCode} card
           of that rarity, using the cheapest tracked <strong className="text-slate-500">store</strong> listing in your
           market — <strong className="text-slate-500">eBay is excluded</strong> because its per-card shipping/minimum-price
-          floor (~a few dollars) overstates bulk that&apos;s really worth cents. Bulk cards with no store listing count as
-          $0 (what a random bulk pull is actually worth), and any single mispriced listing is capped, so one outlier
-          can&apos;t skew a rarity. EV is still an average across many boxes — a single box can run hot or cold, and
-          bulk commons are hard to actually sell. Want a specific card?{" "}
+          floor (~a few dollars) overstates bulk that&apos;s really worth cents. Signature, alt-art and over-numbered
+          chase prints are left out of the base pools (they&apos;re a separate 1-in-72 to 1-in-720 tier, not a normal
+          pull). Bulk cards with no store listing count as $0, and any single mispriced listing is capped, so one
+          outlier can&apos;t skew a rarity. EV is still an average across many boxes — a single box can run hot or cold,
+          and bulk commons are hard to actually sell. Want a specific card?{" "}
           <Link href="/browse" className="text-brand-400 hover:underline">Buying the single</Link> is almost always the
           surer play. Compare live box prices on the <Link href="/sealed" className="text-brand-400 hover:underline">sealed page</Link>.
         </p>
