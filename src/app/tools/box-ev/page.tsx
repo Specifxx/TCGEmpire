@@ -55,9 +55,25 @@ export default async function BoxEvPage() {
   const cards = await prisma.card
     .findMany({
       where: { variant: null, isPromo: false },
-      select: { id: true, setCode: true, rarity: true },
+      select: { id: true, setCode: true, rarity: true, collectorNumber: true },
     })
     .catch(() => []);
+
+  // EXCLUDE special chase prints from the base-rarity pools. Cloned alt-art prints
+  // already carry variant != null (filtered above), but native over-number/secret
+  // and SIGNATURE cards come straight from the feed with variant = null and a real
+  // rarity (usually Showcase/Epic) — e.g. "223s/221" (signature) or "300/298"
+  // (numbered above the set's base size). Averaging those expensive 1-in-72 to
+  // 1-in-720 chase cards into the base Epic/Showcase pull was inflating EV. A base
+  // pack pull of rarity R should be a base card of R, so leave the chase tier out.
+  const isSpecialPrint = (collectorNumber: string): boolean => {
+    const [numPart, denomPart] = collectorNumber.split("/");
+    if (!numPart) return false;
+    if (/[a-z]/i.test(numPart.trim())) return true; // signature/alt-art suffix, e.g. 223s, 112a
+    const num = parseInt(numPart, 10);
+    const denom = parseInt((denomPart ?? "").trim(), 10);
+    return Number.isFinite(num) && Number.isFinite(denom) && denom > 0 && num > denom; // over-number/secret
+  };
 
   // Average value of a RANDOM card of each rarity — the honest input to EV.
   //  • divide by EVERY card of the rarity, not just priced ones (unpriced bulk = $0);
@@ -80,6 +96,7 @@ export default async function BoxEvPage() {
   };
   const agg = new Map<string, Map<string, { values: number[]; total: number }>>();
   for (const c of cards) {
+    if (isSpecialPrint(c.collectorNumber)) continue; // chase tier, not a base pull
     const bySet = agg.get(c.setCode) ?? agg.set(c.setCode, new Map()).get(c.setCode)!;
     const cell = bySet.get(c.rarity) ?? { values: [], total: 0 };
     cell.total += 1;
