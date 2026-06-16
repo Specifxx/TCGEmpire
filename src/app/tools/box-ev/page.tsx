@@ -7,7 +7,6 @@ import { SETS } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
 import { BoxEvCalculator, type SetRarityData } from "@/components/BoxEvCalculator";
 import { AdSlot } from "@/components/AdSlot";
-import { ADSENSE_SLOTS } from "@/lib/ads";
 
 export const revalidate = 1800;
 
@@ -150,7 +149,7 @@ export default async function BoxEvPage() {
         <BoxEvCalculator sets={sets} currency={info.currency} />
       )}
 
-      <AdSlot slot={ADSENSE_SLOTS.content} className="mt-6" height={100} />
+      <AdSlot className="mt-6" height={100} />
 
       <section className="card-surface mt-6 p-5">
         <h2 className="font-bold text-white">How this works (and what EV can't tell you)</h2>

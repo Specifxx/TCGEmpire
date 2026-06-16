@@ -9,7 +9,6 @@ import { CardTile } from "@/components/CardTile";
 import { Pagination } from "@/components/Pagination";
 import { PageSizeSelect } from "@/components/PageSizeSelect";
 import { AdSlot } from "@/components/AdSlot";
-import { ADSENSE_SLOTS } from "@/lib/ads";
 import {
   buildCardOrderBy,
   buildCardWhere,
@@ -88,7 +87,7 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
 
         <ActiveFilters />
 
-        <AdSlot slot={ADSENSE_SLOTS.browse} format="horizontal" height={90} className="mb-4" />
+        <AdSlot format="horizontal" height={90} className="mb-4" />
 
         {cards.length === 0 ? (
           <div className="card-surface grid place-items-center p-16 text-center">

@@ -8,7 +8,6 @@ import { COUNTRIES } from "@/lib/country";
 import { SETS } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
 import { AdSlot } from "@/components/AdSlot";
-import { ADSENSE_SLOTS } from "@/lib/ads";
 
 // ISR: the underlying PriceHistory is rewritten once per day by the price-refresh
 // workflow (GitHub Action → import-prices), so a 30-minute window keeps the page
@@ -140,7 +139,7 @@ export default async function MoversPage() {
         </div>
       </section>
 
-      <AdSlot slot={ADSENSE_SLOTS.content} height={100} />
+      <AdSlot height={100} />
 
       {/* Keyword-relevant copy for search */}
       <section className="card-surface p-6">
