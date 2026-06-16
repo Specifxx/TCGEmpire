@@ -40,6 +40,7 @@ export function MyCollection() {
   const { fmt, price } = useCountry();
   const [items, setItems] = useState<Item[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
 
   useEffect(() => {
     fetch("/api/collection")
@@ -107,8 +108,21 @@ export function MyCollection() {
               : `${summary.distinct} ${summary.distinct === 1 ? "card" : "cards"} · ${summary.total} total${summary.priced ? ` · worth ~${fmt(summary.value)}` : ""}`}
           </p>
         </div>
-        <Link href="/browse" className="btn-primary">Browse cards →</Link>
+        <div className="flex shrink-0 gap-2">
+          <button onClick={() => setImporting((v) => !v)} className="btn-ghost text-sm">📋 Import a list</button>
+          <Link href="/browse" className="btn-primary">Browse cards →</Link>
+        </div>
       </div>
+
+      {importing && (
+        <BulkImport
+          onDone={async (res) => {
+            const fresh = await fetch("/api/collection").then((r) => r.json()).catch(() => null);
+            if (fresh?.items) setItems(fresh.items);
+            return res;
+          }}
+        />
+      )}
 
       {items != null && items.length === 0 && (
         <p className="mt-4 text-sm text-slate-500">
@@ -179,6 +193,72 @@ export function MyCollection() {
             );
           })}
         </ul>
+      )}
+    </div>
+  );
+}
+
+// Bulk import: paste a list ("3 Jinx, Loose Cannon" per line) to add many cards at
+// once. Matches by name; reports how many were added and anything it couldn't find.
+function BulkImport({ onDone }: { onDone: (res: unknown) => Promise<unknown> }) {
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<{ added: number; matchedCards: number; unmatched: string[] } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit() {
+    setBusy(true);
+    setError(null);
+    setResult(null);
+    try {
+      const res = await fetch("/api/collection/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        setError(d.error ?? "Import failed");
+        return;
+      }
+      setResult(d);
+      setText("");
+      await onDone(d);
+    } catch {
+      setError("Network error — try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mt-4 rounded-xl border border-ink-700 bg-ink-900/60 p-4">
+      <label className="mb-1 block text-xs font-medium text-slate-400">
+        Paste a list — one card per line, e.g. <span className="text-slate-300">3 Jinx, Loose Cannon</span>
+      </label>
+      <textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        rows={5}
+        placeholder={"4 Jinx, Loose Cannon\n2 Vayne, Hunter\n1 Yasuo, the Unforgiven"}
+        className="input font-mono text-sm"
+      />
+      <div className="mt-2 flex items-center gap-2">
+        <button onClick={submit} disabled={busy || !text.trim()} className="btn-primary text-sm disabled:opacity-50">
+          {busy ? "Importing…" : "Add to collection"}
+        </button>
+        <span className="text-[11px] text-slate-600">Adds at Near Mint · adjust condition/qty/cost after.</span>
+      </div>
+      {error && <p className="mt-2 text-sm text-rose-400">{error}</p>}
+      {result && (
+        <div className="mt-2 text-sm">
+          <p className="font-semibold text-brand-300">✓ Added {result.matchedCards} card{result.matchedCards === 1 ? "" : "s"} to your collection.</p>
+          {result.unmatched.length > 0 && (
+            <p className="mt-1 text-xs text-amber-300/90">
+              Couldn&apos;t match: <span className="text-slate-400">{result.unmatched.join(" · ")}</span>
+            </p>
+          )}
+        </div>
       )}
     </div>
   );
