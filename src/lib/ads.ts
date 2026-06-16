@@ -1,12 +1,21 @@
-// ── HilltopAds (primary ad network) ────────────────────────────────────────────
-// HilltopAds replaces Google AdSense as the primary ad source (AdSense rejected
-// the site). This is the MultiTag "zone" loader URL — PUBLIC by design (it ships
-// in the page HTML). The live zone is the code default so ads work with no env
-// config; override per-deploy with NEXT_PUBLIC_HILLTOPADS_SRC, or set it to "" to
-// turn HilltopAds off. Protocol-relative so it inherits the page's https.
-export const HILLTOPADS_SRC =
-  process.env.NEXT_PUBLIC_HILLTOPADS_SRC ||
-  "//deliciouslip.com/buX.VwsIdaGXlC0MYuWRcH/oeTm/9BuOZSUoldkqPPT/cgxZNiD/EHzdN/zjMWtNNEziEi0GMkTPMT3gN-wh";
+// Ad-network configuration.
+//
+// Google AdSense has been removed — the site now monetises via HilltopAds. These
+// values are PUBLIC by design (they ship in the page HTML).
 
-// Guards the loader so an empty/"" zone ships no script at all.
-export const HILLTOPADS_ENABLED = HILLTOPADS_SRC.length > 0;
+// ── HilltopAds (primary ad network) ────────────────────────────────────────────
+// HilltopAds zone loader URLs, all loaded site-wide (see HilltopAdsLoader).
+// HilltopAds does its own device/geo targeting and per-zone frequency capping, so
+// every zone loads on every page and each fills only its eligible traffic (e.g. the
+// mobile zone fills on phones). Protocol-relative so they inherit the page's https.
+export const HILLTOPADS_ZONES: string[] = [
+  // Banner / MultiTag (display + popup).
+  "//deliciouslip.com/buX.VwsIdaGXlC0MYuWRcH/oeTm/9BuOZSUoldkqPPT/cgxZNiD/EHzdN/zjMWtNNEziEi0GMkTPMT3gN-wh",
+  // Popunder.
+  "//pleased-report.com/bs3iVi0CP.3bplvfbbm/V/JQZWDB0A3ZMpT/Qax/NCTDAw5fLuT/c-xwNBDtEI1VM/T/Mn",
+  // Mobile.
+  "//deliciouslip.com/bcXqVNs.d/G/l/0/YtWdcK/veymD9SuRZrUhl/kwPCTVcexXNjDRE/1hMCTYc-tiNdzMEW0/M/TwULy/MpQG",
+];
+
+// True when at least one zone is configured. Guards the loader.
+export const HILLTOPADS_ENABLED = HILLTOPADS_ZONES.length > 0;
