@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ADSENSE_CLIENT, ADSENSE_ENABLED } from "@/lib/ads";
+import { usePremium } from "./PremiumProvider";
 
 declare global {
   interface Window {
@@ -79,6 +80,7 @@ export function AdSlot({
   responsive?: boolean;
   className?: string;
 }) {
+  const premium = usePremium(); // Premium members get an ad-free site.
   const live = ADSENSE_ENABLED && !!slot;
   const boxRef = useRef<HTMLDivElement>(null);
   // Effects run twice under React strict mode in dev; guard the push so we never
@@ -118,6 +120,8 @@ export function AdSlot({
       clearTimeout(t2);
     };
   }, [live]);
+
+  if (premium) return null; // ad-free for subscribers
 
   return (
     <div ref={boxRef} className={`relative overflow-hidden ${className ?? ""}`} style={{ height }}>

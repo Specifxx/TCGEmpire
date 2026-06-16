@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { cache } from "react";
 import { randomBytes } from "node:crypto";
 import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
@@ -57,6 +58,8 @@ export interface SessionUser {
   // check-in nudge in the navbar.
   points: number;
   canCheckIn: boolean;
+  // End of the current paid Premium period (drives the ad-free site etc.).
+  premiumUntil: Date | null;
 }
 
 export async function hashPassword(password: string): Promise<string> {
@@ -114,7 +117,10 @@ export function destroySession(): void {
 }
 
 // Read + verify the session cookie and load the current user, or null.
-export async function getCurrentUser(): Promise<SessionUser | null> {
+// Request-memoised so the layout and the page can both read the user within one
+// render without a second DB round-trip (needed now the root layout reads it for
+// the ad-free Premium check).
+export const getCurrentUser = cache(async function getCurrentUser(): Promise<SessionUser | null> {
   const token = cookies().get(SESSION_COOKIE)?.value;
   if (!token) return null;
   try {
@@ -137,8 +143,9 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
       isVerifiedSeller: user.isVerifiedSeller || user.isAdmin || isAdminEmail(user.email),
       points: user.points,
       canCheckIn: lastCheckin !== today,
+      premiumUntil: user.premiumUntil,
     };
   } catch {
     return null;
   }
-}
+});

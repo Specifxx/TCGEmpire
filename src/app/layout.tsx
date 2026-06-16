@@ -10,7 +10,10 @@ import { SideNav } from "@/components/SideNav";
 import { QuickViewProvider } from "@/components/QuickView";
 import { WishlistDrawerProvider } from "@/components/WishlistDrawer";
 import { CountryProvider } from "@/components/CountryProvider";
+import { PremiumProvider } from "@/components/PremiumProvider";
 import { getCountry } from "@/lib/get-country";
+import { getCurrentUser } from "@/lib/auth";
+import { isPremium } from "@/lib/premium";
 import { CONTACT_EMAIL, DISCORD_URL, SITE_NAME, SITE_URL } from "@/lib/site";
 import { IMPACT_SITE_VERIFICATION } from "@/lib/affiliate";
 import { ADSENSE_CLIENT, ADSENSE_ENABLED } from "@/lib/ads";
@@ -93,8 +96,12 @@ const orgJsonLd = {
   ],
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const country = getCountry();
+  // Premium members get an ad-free site: no AdSense loader, no banner, and the
+  // ad components self-hide via PremiumProvider. getCurrentUser is request-cached.
+  const user = await getCurrentUser();
+  const adFree = isPremium(user);
   return (
     <html lang="en-AU" className={`${sora.variable} ${spaceGrotesk.variable}`}>
       <head>
@@ -110,7 +117,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             invisible to it). Async, so it doesn't block rendering.
             NOTE: this also loads in the native-app WebView (policy concern) —
             re-gate via WebAdsLoader before any app-store release. */}
-        {ADSENSE_ENABLED && (
+        {ADSENSE_ENABLED && !adFree && (
           // eslint-disable-next-line @next/next/no-sync-scripts
           <script
             async
@@ -124,6 +131,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen bg-ink-950">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }} />
+        <PremiumProvider value={adFree}>
         <CountryProvider initial={country}>
         <WishlistDrawerProvider>
           <QuickViewProvider>
@@ -189,6 +197,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <NativeShell />
         <Analytics />
         <SpeedInsights />
+        </PremiumProvider>
       </body>
     </html>
   );

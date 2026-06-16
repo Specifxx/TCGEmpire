@@ -1,4 +1,7 @@
+"use client";
+
 import { OutboundLink } from "./OutboundLink";
+import { usePremium } from "./PremiumProvider";
 
 // TCGplayer affiliate banners (approved Impact contract). First-party placements,
 // no ad network. We render our OWN evergreen creative rather than Impact's hosted
@@ -98,6 +101,7 @@ export function TcgplayerAd({
   country: string;
   className?: string;
 }) {
+  if (usePremium()) return null; // ad-free for Premium subscribers
   const dims = (v: Variant) => ({ w: ADS[v].w, h: ADS[v].h });
   const desk = dims(size);
   const mid = dims("leaderboard");
