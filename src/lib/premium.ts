@@ -15,6 +15,12 @@ export function premiumCheckoutEnabled(): boolean {
   return Boolean(process.env.STRIPE_SECRET_KEY && PREMIUM_PRICE_ID);
 }
 
+// The portfolio tracker (value history, cost-basis P&L, benchmark, CSV export) is
+// FREE for now to drive adoption — flip this to false to put it back behind
+// Premium. Gates read `isPremium(user) || PORTFOLIO_FREE`, so re-gating is a
+// one-line change with no other edits.
+export const PORTFOLIO_FREE = true;
+
 export function isPremium(user: { premiumUntil: Date | null } | null | undefined): boolean {
   return !!user?.premiumUntil && user.premiumUntil.getTime() > Date.now();
 }

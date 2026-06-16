@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { getPortfolio, isPremium } from "@/lib/premium";
+import { getPortfolio, isPremium, PORTFOLIO_FREE } from "@/lib/premium";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 
@@ -8,12 +8,13 @@ export const dynamic = "force-dynamic";
 
 const esc = (s: string) => (/[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s);
 
-// Premium: download the collection as CSV (current values, condition-adjusted).
+// Download the collection as CSV (current values, condition-adjusted). Free while
+// PORTFOLIO_FREE; otherwise a Premium feature.
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return new Response("Sign in", { status: 401 });
   const dbUser = await prisma.user.findUnique({ where: { id: user.id }, select: { premiumUntil: true } });
-  if (!isPremium(dbUser)) return new Response("CSV export is a Premium feature", { status: 403 });
+  if (!isPremium(dbUser) && !PORTFOLIO_FREE) return new Response("CSV export is a Premium feature", { status: 403 });
 
   const country = getCountry();
   const currency = COUNTRIES[country].currency;

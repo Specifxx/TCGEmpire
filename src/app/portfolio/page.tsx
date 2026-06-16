@@ -3,12 +3,13 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { getPortfolio, isPremium, type Portfolio } from "@/lib/premium";
+import { getPortfolio, isPremium, PORTFOLIO_FREE, type Portfolio } from "@/lib/premium";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { IndexChart } from "@/components/IndexChart";
 import { PriceChart } from "@/components/PriceChart";
+import { MyCollection } from "@/components/MyCollection";
 
 export const dynamic = "force-dynamic";
 
@@ -108,6 +109,9 @@ export default async function PortfolioPage() {
     prisma.user.findUnique({ where: { id: user.id }, select: { premiumUntil: true } }),
   ]);
   const premium = isPremium(dbUser);
+  // Portfolio analytics are free for now (PORTFOLIO_FREE); `pro` gates the
+  // value-history chart, P&L panel and CSV export so re-gating is one flag.
+  const pro = premium || PORTFOLIO_FREE;
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6">
@@ -118,25 +122,10 @@ export default async function PortfolioPage() {
             Your collection valued at the live {info.adjective} lowest prices, condition-adjusted.
           </p>
         </div>
-        {premium ? (
-          <span className="chip bg-gold/15 text-xs font-bold text-gold">★ PREMIUM</span>
-        ) : (
-          <Link href="/premium" className="btn-ghost text-sm">★ Go Premium</Link>
-        )}
+        {premium && <span className="chip bg-gold/15 text-xs font-bold text-gold">★ PREMIUM</span>}
       </div>
 
-      {portfolio.holdings.length === 0 ? (
-        <div className="card-surface grid place-items-center p-14 text-center text-slate-400">
-          <div>
-            <p className="text-lg font-semibold text-white">No cards in your collection yet</p>
-            <p className="mt-1 max-w-md text-sm">
-              Add cards from any card page (or the scanner in the app) and your collection&apos;s live
-              value — with daily history — appears here.
-            </p>
-            <Link href="/browse" className="btn-primary mt-4">Browse cards →</Link>
-          </div>
-        </div>
-      ) : (
+      {portfolio.holdings.length > 0 && (
         <>
           {/* Headline value */}
           <section className="card-surface p-5">
@@ -160,9 +149,9 @@ export default async function PortfolioPage() {
               </div>
             </div>
 
-            {/* Value-over-time: the premium hook. Free users see a teaser. */}
+            {/* Value-over-time (free for now via PORTFOLIO_FREE). */}
             <div className="mt-4">
-              {premium ? (
+              {pro ? (
                 portfolio.series.length >= 2 ? (
                   <PriceChart points={portfolio.series} currency={info.currency} />
                 ) : (
@@ -190,20 +179,19 @@ export default async function PortfolioPage() {
               )}
             </div>
 
-            {premium && (
+            {pro && (
               <div className="mt-3 text-right">
                 <a href="/api/portfolio/export" className="btn-ghost text-xs">⬇ Export CSV</a>
               </div>
             )}
           </section>
 
-          {/* Cost-basis P&L + market benchmark — the investor view (Premium). */}
+          {/* Cost-basis P&L + market benchmark — the investor view. */}
           <section className="card-surface p-5">
             <div className="flex items-center justify-between gap-2">
               <h2 className="text-lg font-extrabold text-white">📊 Profit &amp; Loss</h2>
-              {!premium && <span className="chip bg-gold/15 text-xs font-bold text-gold">★ Premium</span>}
             </div>
-            {premium ? (
+            {pro ? (
               portfolio.pnl ? (
                 <PnlView pnl={portfolio.pnl} index={portfolio.index} d7={portfolio.d7} d30={portfolio.d30} currency={info.currency} />
               ) : (
@@ -247,9 +235,9 @@ export default async function PortfolioPage() {
                     <th className="px-4 py-2.5 font-semibold">Card</th>
                     <th className="px-2 py-2.5 text-right font-semibold">Qty</th>
                     <th className="px-2 py-2.5 text-right font-semibold">Unit</th>
-                    {premium && <th className="px-2 py-2.5 text-right font-semibold">Paid</th>}
+                    <th className="px-2 py-2.5 text-right font-semibold">Paid</th>
                     <th className="px-2 py-2.5 text-right font-semibold">Value</th>
-                    {premium && <th className="px-2 py-2.5 text-right font-semibold">P&amp;L</th>}
+                    <th className="px-2 py-2.5 text-right font-semibold">P&amp;L</th>
                     <th className="px-4 py-2.5 text-right font-semibold">7-day</th>
                   </tr>
                 </thead>
@@ -272,13 +260,11 @@ export default async function PortfolioPage() {
                       </td>
                       <td className="px-2 py-2 text-right text-slate-300">×{h.quantity}</td>
                       <td className="px-2 py-2 text-right text-slate-300">{h.unitCents != null ? formatMoney(h.unitCents, info.currency) : "—"}</td>
-                      {premium && <td className="px-2 py-2 text-right text-slate-400">{h.costBasisCents != null ? formatMoney(h.costBasisCents, info.currency) : "—"}</td>}
+                      <td className="px-2 py-2 text-right text-slate-400">{h.costBasisCents != null ? formatMoney(h.costBasisCents, info.currency) : "—"}</td>
                       <td className="px-2 py-2 text-right font-semibold text-white">{h.valueCents > 0 ? formatMoney(h.valueCents, info.currency) : "—"}</td>
-                      {premium && (
-                        <td className={`px-2 py-2 text-right font-semibold ${pctClass(h.plCents)}`}>
-                          {h.plCents == null ? "—" : `${h.plCents >= 0 ? "+" : "−"}${formatMoney(Math.abs(h.plCents), info.currency)}`}
-                        </td>
-                      )}
+                      <td className={`px-2 py-2 text-right font-semibold ${pctClass(h.plCents)}`}>
+                        {h.plCents == null ? "—" : `${h.plCents >= 0 ? "+" : "−"}${formatMoney(Math.abs(h.plCents), info.currency)}`}
+                      </td>
                       <td className={`px-4 py-2 text-right font-semibold ${h.d7pct == null ? "text-slate-600" : h.d7pct > 0 ? "text-brand-400" : h.d7pct < 0 ? "text-rose-400" : "text-slate-400"}`}>
                         {h.d7pct == null ? "—" : `${h.d7pct > 0 ? "▲" : h.d7pct < 0 ? "▼" : ""} ${Math.abs(h.d7pct)}%`}
                       </td>
@@ -294,6 +280,11 @@ export default async function PortfolioPage() {
           </section>
         </>
       )}
+
+      {/* Add & edit your collection: quantity, condition, foil and what you paid
+          (the "paid" price powers the profit/loss above). Handles its own empty
+          state and "add a card" guidance, so it shows for new users too. */}
+      <MyCollection />
     </div>
   );
 }

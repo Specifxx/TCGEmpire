@@ -38,6 +38,10 @@ export async function Navbar() {
           <Link href="/browse" className="rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:px-2.5">
             Database
           </Link>
+          {/* Portfolio tracker — a headline feature, right after the database. */}
+          <Link href="/portfolio" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:block sm:px-2.5">
+            Portfolio
+          </Link>
           {/* Trade Calculator — front-and-centre so players can reach it fast at locals. */}
           <Link href="/trade" className="rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:px-2.5">
             Trade
