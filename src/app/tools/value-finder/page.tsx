@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { CardQuickLink } from "@/components/CardQuickLink";
 import { getCurrentUser } from "@/lib/auth";
 import { isPremium } from "@/lib/premium";
 import { getUndervalued } from "@/lib/screener";
@@ -76,18 +77,18 @@ export default async function ValueFinderPage() {
             </thead>
             <tbody className="divide-y divide-ink-800">
               {picks.map((p) => (
-                <tr key={p.id} className="hover:bg-ink-900/50">
+                <tr key={p.card.id} className="hover:bg-ink-900/50">
                   <td className="px-4 py-2">
-                    <Link href={`/card/${p.slug ?? p.id}`} className="flex items-center gap-2.5">
-                      {p.imageThumbUrl && (
+                    <CardQuickLink card={p.card} className="flex items-center gap-2.5">
+                      {p.card.imageThumbUrl && (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={p.imageThumbUrl} alt="" width={28} height={39} loading="lazy" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
+                        <img src={p.card.imageThumbUrl} alt="" width={28} height={39} loading="lazy" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
                       )}
                       <span className="min-w-0">
-                        <span className="block truncate font-semibold text-white">{p.name}</span>
-                        <span className="block text-[11px] text-slate-500">{p.setCode} · {p.collectorNumber}</span>
+                        <span className="block truncate font-semibold text-white">{p.card.name}</span>
+                        <span className="block text-[11px] text-slate-500">{p.card.setCode} · {p.card.collectorNumber}</span>
                       </span>
-                    </Link>
+                    </CardQuickLink>
                   </td>
                   <td className="px-2 py-2 text-right font-semibold text-accent">{formatMoney(p.currentCents, info.currency)}</td>
                   <td className="px-2 py-2 text-right text-slate-400">{formatMoney(p.avgCents, info.currency)}</td>
