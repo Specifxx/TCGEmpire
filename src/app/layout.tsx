@@ -16,7 +16,6 @@ import { getCurrentUser } from "@/lib/auth";
 import { isPremium } from "@/lib/premium";
 import { CONTACT_EMAIL, DISCORD_URL, SITE_NAME, SITE_URL } from "@/lib/site";
 import { IMPACT_SITE_VERIFICATION } from "@/lib/affiliate";
-import { ADSENSE_CLIENT, ADSENSE_ENABLED } from "@/lib/ads";
 import { NativeShell } from "@/components/NativeShell";
 import { HilltopAdsLoader } from "@/components/HilltopAdsLoader";
 import { TcgplayerAd } from "@/components/TcgplayerAd";
@@ -99,8 +98,8 @@ const orgJsonLd = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const country = getCountry();
-  // Premium members get an ad-free site: no AdSense loader, no banner, and the
-  // ad components self-hide via PremiumProvider. getCurrentUser is request-cached.
+  // Premium members get an ad-free site: no ad loader and the ad components
+  // self-hide via PremiumProvider. getCurrentUser is request-cached.
   const user = await getCurrentUser();
   const adFree = isPremium(user);
   return (
@@ -111,23 +110,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <meta {...({ name: "impact-site-verification", value: IMPACT_SITE_VERIFICATION } as any)} />
         {/* HilltopAds site-ownership verification (homepage). */}
         <meta name="f56d4c757e10b95b149b998706568143dfa0d0e9" content="f56d4c757e10b95b149b998706568143dfa0d0e9" />
-        {/* Google AdSense site verification. Present as soon as a publisher id is set
-            so AdSense can confirm ownership of the site when you add it. */}
-        {ADSENSE_ENABLED && <meta name="google-adsense-account" content={ADSENSE_CLIENT} />}
-        {/* Official AdSense snippet, server-rendered in <head> so Google's
-            application review reliably finds the code on every page (their
-            checker reads the raw HTML — the deferred WebAdsLoader injection is
-            invisible to it). Async, so it doesn't block rendering.
-            NOTE: this also loads in the native-app WebView (policy concern) —
-            re-gate via WebAdsLoader before any app-store release. */}
-        {ADSENSE_ENABLED && !adFree && (
-          // eslint-disable-next-line @next/next/no-sync-scripts
-          <script
-            async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
-            crossOrigin="anonymous"
-          />
-        )}
         {/* Warm up the image CDN connection so card thumbnails start loading sooner. */}
         <link rel="preconnect" href="https://cdn.riftscribe.gg" crossOrigin="" />
         <link rel="dns-prefetch" href="https://cdn.riftscribe.gg" />
@@ -189,9 +171,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             or endorsed by Riot Games.
           </p>
         </footer>
-        {/* Google AdSense loader — web only. Powers Auto ads + the manual <AdSlot />
-            units. Inside the native app this renders nothing (native AdMob is used
-            instead, and AdSense isn't allowed in app WebViews). */}
         {/* Sovrn auto-affiliate (deferred to idle) — monetises the long-tail
             store links; skips anything already affiliate-tagged. */}
         <SovrnSnippet />

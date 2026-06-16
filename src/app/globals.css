@@ -110,12 +110,6 @@ h1, h2, h3 {
    when the site is running inside the iOS/Android shell.
    --------------------------------------------------------------------------- */
 
-/* Web AdSense units are hidden in-app — the app shows native AdMob instead, and
-   AdSense is not permitted inside an app WebView. */
-html.capacitor-native .adsbygoogle {
-  display: none !important;
-}
-
 /* Reserve space at the bottom for the native AdMob banner so it never covers the
    footer or the last row of content. */
 html.capacitor-native.has-native-banner body {

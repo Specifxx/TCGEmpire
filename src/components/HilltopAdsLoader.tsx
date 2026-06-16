@@ -4,9 +4,8 @@ import { useEffect } from "react";
 import { HILLTOPADS_ENABLED, HILLTOPADS_SRC } from "@/lib/ads";
 import { usePremium } from "./PremiumProvider";
 
-// Loads the HilltopAds MultiTag zone — the primary ad network now that AdSense
-// rejected the site. Injected once, site-wide, from the root layout so it runs on
-// every page. Mirrors WebAdsLoader's guards:
+// Loads the HilltopAds MultiTag zone — the site's primary ad network. Injected
+// once, site-wide, from the root layout so it runs on every page. Guards:
 //   • web only — skipped inside the Capacitor native-app WebView, where loading a
 //     third-party ad-network script (popunder/popup) breaks app-store policy; the
 //     native app shows AdMob banners instead (see NativeShell).

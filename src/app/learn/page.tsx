@@ -5,7 +5,6 @@ import { prisma } from "@/lib/db";
 import { DOMAINS, DOMAIN_KEYS } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
 import { AdSlot } from "@/components/AdSlot";
-import { ADSENSE_SLOTS } from "@/lib/ads";
 import { DomainExplorer, type DomainInfoProp } from "@/components/learn/DomainExplorer";
 import { DeckAnatomy } from "@/components/learn/DeckAnatomy";
 import { GameFlow } from "@/components/learn/GameFlow";
@@ -258,7 +257,7 @@ export default async function LearnPage() {
         <LegendQuiz legends={data.quizLegends} domains={[...DOMAIN_KEYS.filter((k) => k !== "Colorless")]} />
       </section>
 
-      <AdSlot slot={ADSENSE_SLOTS.content} height={100} />
+      <AdSlot height={100} />
 
       {/* Learning path */}
       <section>
