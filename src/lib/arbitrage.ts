@@ -1,20 +1,38 @@
-// Arbitrage finder: cards you can BUY cheap from a tracked store and SELL on eBay
-// for a profit. For each card in a market we take the cheapest in-stock STORE price
-// (the buy) and the cheapest eBay price (the achievable sell — you'd undercut it),
-// then net off eBay's ~final-value fee. A free flipper tool.
+// Arbitrage finder, Pricempire-style: pick which sources count as the BUY side and
+// which count as the SELL side, then see the cards with the biggest gap. By default
+// you buy from the cheapest tracked store and sell on eBay, but either side can be
+// any combination of stores and/or eBay. eBay's ~final-value fee is only netted off
+// when the winning SELL source is eBay (selling to a store has no marketplace fee).
 //
-// Egress-bounded: two groupBy aggregates (one row per card) rank everything;
-// per-listing detail (urls/store name) is only fetched for the page being shown.
+// Egress-bounded: a few groupBy aggregates rank everything; per-listing detail
+// (urls/names) is fetched only for the page being shown.
 import { prisma } from "./db";
 import type { Country } from "./country";
+import { RETAILERS } from "./retailers";
 
-// Approximate eBay final-value fee (managed payments). Varies by category/market;
-// ~13% is a fair single-number estimate, surfaced as such in the UI.
-export const EBAY_FEE = 0.13;
-const MIN_BUY_CENTS = 300; // ignore sub-$3 buys (bulk / noise)
-const MIN_NET_CENTS = 100; // need ≥ $1 net profit to be worth listing
+export const EBAY_FEE = 0.13; // approx eBay final-value fee
+const MIN_BUY_CENTS = 300;
+const MIN_NET_CENTS = 100;
 
 export type ArbSort = "profit" | "margin";
+
+export interface ArbSource {
+  key: string;
+  name: string;
+  isEbay: boolean;
+}
+
+// eBay retailer key per market (NZ has no eBay coverage).
+const EBAY_KEY: Record<Country, string | null> = { AU: "ebay", NZ: null, US: "ebay_us", UK: "ebay_uk" };
+
+// All selectable sources for a market: its tracked stores + eBay.
+export function getArbSources(country: Country): ArbSource[] {
+  const stores = Object.values(RETAILERS)
+    .filter((r) => (r.country ?? "AU") === country)
+    .map((r) => ({ key: r.key, name: r.name, isEbay: false }));
+  const ek = EBAY_KEY[country];
+  return ek ? [{ key: ek, name: "eBay", isEbay: true }, ...stores] : stores;
+}
 
 export interface ArbItem {
   id: string;
@@ -27,11 +45,12 @@ export interface ArbItem {
   buyStore: string;
   buyStoreName: string;
   buyUrl: string;
-  sellCents: number; // cheapest current eBay price
+  sellCents: number; // gross sell price (cheapest on the sell side)
+  sellName: string;
   sellUrl: string;
-  grossCents: number; // sell − buy (before fees)
-  netCents: number; // sell×(1−fee) − buy
-  marginPct: number; // net ÷ buy
+  sellIsEbay: boolean;
+  netCents: number; // sell (less eBay fee if eBay) − buy
+  marginPct: number;
 }
 
 export interface ArbPage {
@@ -42,27 +61,67 @@ export interface ArbPage {
   pageCount: number;
 }
 
-const isEbay = { retailer: { startsWith: "ebay" } };
+async function minByCard(country: Country, keys: string[]) {
+  if (!keys.length) return new Map<string, number>();
+  const rows = await prisma.retailerPrice.groupBy({
+    by: ["cardId"],
+    where: { country, inStock: true, retailer: { in: keys } },
+    _min: { priceCents: true },
+  });
+  return new Map(rows.filter((r) => r._min.priceCents != null).map((r) => [r.cardId, r._min.priceCents!]));
+}
 
-export async function getArbitrage(country: Country, sort: ArbSort, page = 1, pageSize = 25): Promise<ArbPage> {
+export async function getArbitrage(
+  country: Country,
+  opts: { buy: string[]; sell: string[]; sort: ArbSort; page?: number; pageSize?: number }
+): Promise<ArbPage> {
+  const page = opts.page ?? 1;
+  const pageSize = opts.pageSize ?? 25;
   try {
-    const [storeLows, ebayLows] = await Promise.all([
-      prisma.retailerPrice.groupBy({ by: ["cardId"], where: { country, inStock: true, NOT: isEbay }, _min: { priceCents: true } }),
-      prisma.retailerPrice.groupBy({ by: ["cardId"], where: { country, inStock: true, ...isEbay }, _min: { priceCents: true } }),
-    ]);
-    const ebayMap = new Map(ebayLows.map((r) => [r.cardId, r._min.priceCents ?? null]));
+    const sources = getArbSources(country);
+    const valid = new Set(sources.map((s) => s.key));
+    const ebayKeys = new Set(sources.filter((s) => s.isEbay).map((s) => s.key));
 
-    type Row = { cardId: string; buy: number; sell: number; gross: number; net: number; margin: number };
+    const buyKeys = opts.buy.filter((k) => valid.has(k));
+    const sellKeys = opts.sell.filter((k) => valid.has(k));
+    if (!buyKeys.length || !sellKeys.length) return { items: [], total: 0, page, pageSize, pageCount: 1 };
+
+    const sellEbayKeys = sellKeys.filter((k) => ebayKeys.has(k));
+    const sellStoreKeys = sellKeys.filter((k) => !ebayKeys.has(k));
+
+    const [buyMin, sellEbayMin, sellStoreMin] = await Promise.all([
+      minByCard(country, buyKeys),
+      minByCard(country, sellEbayKeys),
+      minByCard(country, sellStoreKeys),
+    ]);
+
+    type Row = { cardId: string; buy: number; sellGross: number; sellIsEbay: boolean; net: number; margin: number };
     const rows: Row[] = [];
-    for (const s of storeLows) {
-      const buy = s._min.priceCents;
-      const sell = ebayMap.get(s.cardId) ?? null;
-      if (buy == null || sell == null || buy < MIN_BUY_CENTS) continue;
-      const net = Math.round(sell * (1 - EBAY_FEE)) - buy;
+    for (const [cardId, buy] of buyMin) {
+      if (buy < MIN_BUY_CENTS) continue;
+      const eg = sellEbayMin.get(cardId);
+      const sg = sellStoreMin.get(cardId);
+      // Best sell by NET (eBay nets less the fee; a store sells at face).
+      let sellGross: number | null = null;
+      let sellNet: number | null = null;
+      let sellIsEbay = false;
+      if (eg != null) {
+        const net = Math.round(eg * (1 - EBAY_FEE));
+        sellGross = eg;
+        sellNet = net;
+        sellIsEbay = true;
+      }
+      if (sg != null && (sellNet == null || sg > sellNet)) {
+        sellGross = sg;
+        sellNet = sg;
+        sellIsEbay = false;
+      }
+      if (sellGross == null || sellNet == null) continue;
+      const net = sellNet - buy;
       if (net < MIN_NET_CENTS) continue;
-      rows.push({ cardId: s.cardId, buy, sell, gross: sell - buy, net, margin: Math.round((net / buy) * 1000) / 10 });
+      rows.push({ cardId, buy, sellGross, sellIsEbay, net, margin: Math.round((net / buy) * 1000) / 10 });
     }
-    rows.sort((a, b) => (sort === "margin" ? b.margin - a.margin || b.net - a.net : b.net - a.net || b.margin - a.margin));
+    rows.sort((a, b) => (opts.sort === "margin" ? b.margin - a.margin || b.net - a.net : b.net - a.net || b.margin - a.margin));
 
     const total = rows.length;
     const pageCount = Math.max(1, Math.ceil(total / pageSize));
@@ -71,39 +130,48 @@ export async function getArbitrage(country: Country, sort: ArbSort, page = 1, pa
     if (!slice.length) return { items: [], total, page: p, pageSize, pageCount };
 
     const ids = slice.map((r) => r.cardId);
-    const [cards, storeListings, ebayListings] = await Promise.all([
+    const sellKeysFor = (isEbay: boolean) => (isEbay ? sellEbayKeys : sellStoreKeys);
+    const [cards, buyListings, sellListings] = await Promise.all([
       prisma.card.findMany({
         where: { id: { in: ids } },
         select: { id: true, name: true, slug: true, setCode: true, collectorNumber: true, imageThumbUrl: true },
       }),
       prisma.retailerPrice.findMany({
-        where: { cardId: { in: ids }, country, inStock: true, NOT: isEbay },
+        where: { cardId: { in: ids }, country, inStock: true, retailer: { in: buyKeys } },
         select: { cardId: true, retailer: true, retailerName: true, priceCents: true, url: true },
         orderBy: { priceCents: "asc" },
       }),
       prisma.retailerPrice.findMany({
-        where: { cardId: { in: ids }, country, inStock: true, ...isEbay },
-        select: { cardId: true, priceCents: true, url: true },
+        where: { cardId: { in: ids }, country, inStock: true, retailer: { in: sellKeys } },
+        select: { cardId: true, retailer: true, retailerName: true, priceCents: true, url: true },
         orderBy: { priceCents: "asc" },
       }),
     ]);
     const cardMap = new Map(cards.map((c) => [c.id, c]));
-    const bestStore = new Map<string, (typeof storeListings)[number]>();
-    for (const l of storeListings) if (!bestStore.has(l.cardId)) bestStore.set(l.cardId, l); // first = cheapest
-    const bestEbay = new Map<string, (typeof ebayListings)[number]>();
-    for (const l of ebayListings) if (!bestEbay.has(l.cardId)) bestEbay.set(l.cardId, l);
+    const bestBuy = new Map<string, (typeof buyListings)[number]>();
+    for (const l of buyListings) if (!bestBuy.has(l.cardId)) bestBuy.set(l.cardId, l);
+    // Cheapest sell listing on the WINNING side (eBay vs store) per card.
+    const bestSell = new Map<string, (typeof sellListings)[number]>();
+    const winnerSide = new Map(slice.map((r) => [r.cardId, r.sellIsEbay]));
+    for (const l of sellListings) {
+      const wantEbay = winnerSide.get(l.cardId);
+      const isEbayRow = ebayKeys.has(l.retailer);
+      if (wantEbay !== isEbayRow) continue;
+      if (!sellKeysFor(!!wantEbay).includes(l.retailer)) continue;
+      if (!bestSell.has(l.cardId)) bestSell.set(l.cardId, l);
+    }
 
     const items = slice
       .map((r): ArbItem | null => {
         const c = cardMap.get(r.cardId);
-        const st = bestStore.get(r.cardId);
-        const eb = bestEbay.get(r.cardId);
-        if (!c || !st || !eb) return null;
+        const b = bestBuy.get(r.cardId);
+        const s = bestSell.get(r.cardId);
+        if (!c || !b || !s) return null;
         return {
           id: c.id, name: c.name, slug: c.slug, setCode: c.setCode, collectorNumber: c.collectorNumber, imageThumbUrl: c.imageThumbUrl,
-          buyCents: r.buy, buyStore: st.retailer, buyStoreName: st.retailerName, buyUrl: st.url,
-          sellCents: r.sell, sellUrl: eb.url,
-          grossCents: r.gross, netCents: r.net, marginPct: r.margin,
+          buyCents: r.buy, buyStore: b.retailer, buyStoreName: b.retailerName, buyUrl: b.url,
+          sellCents: r.sellGross, sellName: s.retailerName, sellUrl: s.url, sellIsEbay: r.sellIsEbay,
+          netCents: r.net, marginPct: r.margin,
         };
       })
       .filter((x): x is ArbItem => x !== null);
