@@ -10,6 +10,7 @@ const patchSchema = z.object({
   quantity: z.number().int().min(0).max(999).optional(),
   condition: z.enum(CONDITION_KEYS as [string, ...string[]]).optional(),
   isFoil: z.boolean().optional(),
+  costBasisCents: z.number().int().min(0).max(100_000_000).optional().nullable(),
   note: z.string().trim().max(120).optional().nullable(),
 });
 
@@ -60,6 +61,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       ...(d.quantity != null ? { quantity: d.quantity } : {}),
       ...(d.condition ? { condition: d.condition } : {}),
       ...(d.isFoil != null ? { isFoil: d.isFoil } : {}),
+      ...(d.costBasisCents !== undefined ? { costBasisCents: d.costBasisCents } : {}),
       ...(d.note !== undefined ? { note: d.note } : {}),
     },
   });

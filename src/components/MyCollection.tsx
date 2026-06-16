@@ -28,6 +28,7 @@ type Item = {
   condition: string;
   isFoil: boolean;
   quantity: number;
+  costBasisCents: number | null;
   note: string | null;
   card: CollCard;
 };
@@ -165,6 +166,8 @@ export function MyCollection() {
                       <span className="min-w-8 px-2 text-center text-sm font-semibold text-white">{it.quantity}</span>
                       <button onClick={() => patch(it.id, { quantity: Math.min(999, it.quantity + 1) })} disabled={busy === it.id} className="px-2 py-1 text-sm text-slate-300 hover:bg-ink-800" aria-label="Increase quantity">+</button>
                     </div>
+                    {/* Price paid per unit — powers the Premium profit/loss view on /portfolio. */}
+                    <CostInput cents={it.costBasisCents} disabled={busy === it.id} onSave={(cents) => patch(it.id, { costBasisCents: cents })} />
                     <button onClick={() => remove(it.id)} disabled={busy === it.id} className="ml-auto text-xs text-slate-500 hover:text-red-400">Remove</button>
                   </div>
                 </div>
@@ -178,5 +181,44 @@ export function MyCollection() {
         </ul>
       )}
     </div>
+  );
+}
+
+// Inline "paid $" editor for a holding's cost basis. Commits on blur/Enter; an
+// empty value clears the cost basis. Stored in cents, edited in dollars.
+function CostInput({ cents, disabled, onSave }: { cents: number | null; disabled: boolean; onSave: (cents: number | null) => void }) {
+  const [val, setVal] = useState(cents != null ? (cents / 100).toString() : "");
+  useEffect(() => setVal(cents != null ? (cents / 100).toString() : ""), [cents]);
+
+  function commit() {
+    const t = val.trim();
+    if (t === "") {
+      if (cents != null) onSave(null);
+      return;
+    }
+    const n = Math.round(parseFloat(t) * 100);
+    if (Number.isFinite(n) && n >= 0 && n !== cents) onSave(n);
+  }
+
+  return (
+    <label className="flex items-center gap-1 rounded-md border border-ink-700 bg-ink-900 px-1.5 py-1 text-xs text-slate-500" title="What you paid per card — used for your portfolio profit/loss">
+      paid
+      <input
+        type="number"
+        min="0"
+        step="0.01"
+        inputMode="decimal"
+        value={val}
+        onChange={(e) => setVal(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+        }}
+        disabled={disabled}
+        placeholder="—"
+        aria-label="Price paid per unit"
+        className="w-14 bg-transparent text-right text-white outline-none placeholder:text-slate-600"
+      />
+    </label>
   );
 }
