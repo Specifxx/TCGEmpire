@@ -71,6 +71,107 @@ async function minByCard(country: Country, keys: string[]) {
   return new Map(rows.filter((r) => r._min.priceCents != null).map((r) => [r.cardId, r._min.priceCents!]));
 }
 
+// ── Cheapest-on-eBay deals ───────────────────────────────────────────────────────
+// Cards where eBay is the cheapest place to BUY — its price beats every tracked
+// store. A buyer's view (the inverse of the flipper arbitrage): grab it on eBay.
+export type DealSort = "saving" | "pct";
+
+export interface EbayDeal {
+  id: string;
+  name: string;
+  slug: string | null;
+  setCode: string;
+  collectorNumber: string;
+  imageThumbUrl: string | null;
+  ebayCents: number;
+  ebayUrl: string;
+  storeCents: number; // cheapest store price (what you'd otherwise pay)
+  storeName: string;
+  savingCents: number; // storeCents − ebayCents
+  savingPct: number;
+}
+
+export interface EbayDealPage {
+  items: EbayDeal[];
+  total: number;
+  page: number;
+  pageSize: number;
+  pageCount: number;
+}
+
+const DEAL_MIN_SAVING_CENTS = 50;
+const DEAL_MIN_PRICE_CENTS = 100;
+
+export async function getEbayCheapest(country: Country, sort: DealSort, page = 1, pageSize = 25): Promise<EbayDealPage> {
+  try {
+    const sources = getArbSources(country);
+    const ebayKeys = sources.filter((s) => s.isEbay).map((s) => s.key);
+    const storeKeys = sources.filter((s) => !s.isEbay).map((s) => s.key);
+    if (!ebayKeys.length) return { items: [], total: 0, page, pageSize, pageCount: 1 };
+
+    const [ebayMin, storeMin] = await Promise.all([minByCard(country, ebayKeys), minByCard(country, storeKeys)]);
+
+    type Row = { cardId: string; ebay: number; store: number; saving: number; pct: number };
+    const rows: Row[] = [];
+    for (const [cardId, ebay] of ebayMin) {
+      const store = storeMin.get(cardId);
+      if (store == null || ebay >= store) continue; // eBay must actually be cheapest
+      if (ebay < DEAL_MIN_PRICE_CENTS) continue;
+      const saving = store - ebay;
+      if (saving < DEAL_MIN_SAVING_CENTS) continue;
+      rows.push({ cardId, ebay, store, saving, pct: Math.round((saving / store) * 1000) / 10 });
+    }
+    rows.sort((a, b) => (sort === "pct" ? b.pct - a.pct || b.saving - a.saving : b.saving - a.saving || b.pct - a.pct));
+
+    const total = rows.length;
+    const pageCount = Math.max(1, Math.ceil(total / pageSize));
+    const p = Math.min(Math.max(1, page), pageCount);
+    const slice = rows.slice((p - 1) * pageSize, p * pageSize);
+    if (!slice.length) return { items: [], total, page: p, pageSize, pageCount };
+
+    const ids = slice.map((r) => r.cardId);
+    const [cards, ebayListings, storeListings] = await Promise.all([
+      prisma.card.findMany({
+        where: { id: { in: ids } },
+        select: { id: true, name: true, slug: true, setCode: true, collectorNumber: true, imageThumbUrl: true },
+      }),
+      prisma.retailerPrice.findMany({
+        where: { cardId: { in: ids }, country, inStock: true, retailer: { in: ebayKeys } },
+        select: { cardId: true, priceCents: true, url: true },
+        orderBy: { priceCents: "asc" },
+      }),
+      prisma.retailerPrice.findMany({
+        where: { cardId: { in: ids }, country, inStock: true, retailer: { in: storeKeys } },
+        select: { cardId: true, retailerName: true, priceCents: true },
+        orderBy: { priceCents: "asc" },
+      }),
+    ]);
+    const cardMap = new Map(cards.map((c) => [c.id, c]));
+    const bestEbay = new Map<string, (typeof ebayListings)[number]>();
+    for (const l of ebayListings) if (!bestEbay.has(l.cardId)) bestEbay.set(l.cardId, l);
+    const bestStore = new Map<string, (typeof storeListings)[number]>();
+    for (const l of storeListings) if (!bestStore.has(l.cardId)) bestStore.set(l.cardId, l);
+
+    const items = slice
+      .map((r): EbayDeal | null => {
+        const c = cardMap.get(r.cardId);
+        const e = bestEbay.get(r.cardId);
+        const s = bestStore.get(r.cardId);
+        if (!c || !e || !s) return null;
+        return {
+          id: c.id, name: c.name, slug: c.slug, setCode: c.setCode, collectorNumber: c.collectorNumber, imageThumbUrl: c.imageThumbUrl,
+          ebayCents: r.ebay, ebayUrl: e.url, storeCents: r.store, storeName: s.retailerName,
+          savingCents: r.saving, savingPct: r.pct,
+        };
+      })
+      .filter((x): x is EbayDeal => x !== null);
+
+    return { items, total, page: p, pageSize, pageCount };
+  } catch {
+    return { items: [], total: 0, page, pageSize, pageCount: 1 };
+  }
+}
+
 export async function getArbitrage(
   country: Country,
   opts: { buy: string[]; sell: string[]; sort: ArbSort; page?: number; pageSize?: number }
