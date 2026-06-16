@@ -18,6 +18,7 @@ import { BUYMEACOFFEE_URL, CONTACT_EMAIL, DISCORD_URL, SITE_NAME, SITE_URL } fro
 import { IMPACT_SITE_VERIFICATION } from "@/lib/affiliate";
 import { ADSENSE_CLIENT, ADSENSE_ENABLED } from "@/lib/ads";
 import { NativeShell } from "@/components/NativeShell";
+import { HilltopAdsLoader } from "@/components/HilltopAdsLoader";
 import { TcgplayerAd } from "@/components/TcgplayerAd";
 import { EbayAd } from "@/components/EbayAd";
 import { SovrnSnippet } from "@/components/SovrnSnippet";
@@ -203,6 +204,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {/* Sovrn auto-affiliate (deferred to idle) — monetises the long-tail
             store links; skips anything already affiliate-tagged. */}
         <SovrnSnippet />
+        {/* HilltopAds zone loader — the primary ad network (web only, non-premium).
+            Skipped inside the native app, which shows AdMob banners via NativeShell. */}
+        <HilltopAdsLoader />
         {/* Detects the Capacitor native runtime and shows native AdMob ads, styles
             the status bar and wires the Android back button. No-op on the web. */}
         <NativeShell />
