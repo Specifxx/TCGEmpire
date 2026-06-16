@@ -105,11 +105,8 @@ export default async function PortfolioPage() {
 
   const country = getCountry();
   const info = COUNTRIES[country];
-  const [portfolio, dbUser] = await Promise.all([
-    getPortfolio(user.id, country),
-    prisma.user.findUnique({ where: { id: user.id }, select: { premiumUntil: true } }),
-  ]);
-  const premium = isPremium(dbUser);
+  const portfolio = await getPortfolio(user.id, country);
+  const premium = isPremium(user); // session user carries premiumUntil + isAdmin
   // Portfolio analytics are free for now (PORTFOLIO_FREE); `pro` gates the
   // value-history chart, P&L panel and CSV export so re-gating is one flag.
   const pro = premium || PORTFOLIO_FREE;

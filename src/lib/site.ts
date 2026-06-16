@@ -13,7 +13,7 @@ export const SITE_URL = "https://riftcompare.com";
 
 // "Buy me a coffee" tip link, shown at the foot of every page. Override the handle
 // with NEXT_PUBLIC_BUYMEACOFFEE_URL if the username differs.
-export const BUYMEACOFFEE_URL = process.env.NEXT_PUBLIC_BUYMEACOFFEE_URL || "https://www.buymeacoffee.com/riftcompare";
+export const BUYMEACOFFEE_URL = process.env.NEXT_PUBLIC_BUYMEACOFFEE_URL || "https://buymeacoffee.com/riftcompare";
 
 // Display price for RiftCompare Premium (e.g. "$4.99/mo"). Set
 // NEXT_PUBLIC_PREMIUM_PRICE to match the price you created in Stripe so the

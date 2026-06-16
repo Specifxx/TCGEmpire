@@ -21,8 +21,12 @@ export function premiumCheckoutEnabled(): boolean {
 // one-line change with no other edits.
 export const PORTFOLIO_FREE = true;
 
-export function isPremium(user: { premiumUntil: Date | null } | null | undefined): boolean {
-  return !!user?.premiumUntil && user.premiumUntil.getTime() > Date.now();
+export function isPremium(user: { premiumUntil: Date | null; isAdmin?: boolean } | null | undefined): boolean {
+  if (!user) return false;
+  // Admins always count as Premium — the team can use every paid feature without
+  // holding a subscription. Otherwise it's an active paid period.
+  if (user.isAdmin) return true;
+  return !!user.premiumUntil && user.premiumUntil.getTime() > Date.now();
 }
 
 export async function getPremiumUntil(userId: string): Promise<Date | null> {
