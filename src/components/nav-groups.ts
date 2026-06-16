@@ -38,6 +38,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/decks", label: "Meta Decks", emoji: "🏆" },
       { href: "/deck", label: "Deck Builder", emoji: "🛠️" },
       { href: "/tools/best-basket", label: "Best Basket", emoji: "🧺" },
+      { href: "/tools/value-finder", label: "Value Finder", emoji: "🔎" },
       { href: "/trade", label: "Trade Calculator", emoji: "🔁" },
       { href: "/proxy", label: "Proxy Printer", emoji: "🖨️" },
       { href: "/tools/box-ev", label: "Box EV Calc", emoji: "📦" },
