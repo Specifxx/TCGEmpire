@@ -8,6 +8,8 @@ import { prisma } from "./db";
 import { pickPrice, priceField, type Country } from "./country";
 import { CONDITION_MULTIPLIER } from "./constants";
 import { getMarketIndex } from "./market-index";
+import { cardTileSelect } from "./cards";
+import type { CardTileData } from "@/components/CardTile";
 import type { PricePoint } from "./price-history";
 
 export const PREMIUM_PRICE_ID = process.env.STRIPE_PREMIUM_PRICE_ID ?? "";
@@ -37,6 +39,7 @@ export async function getPremiumUntil(userId: string): Promise<Date | null> {
 // ── Portfolio ─────────────────────────────────────────────────────────────────
 
 export interface Holding {
+  card: CardTileData; // full tile data so a holding can open the QuickView popup
   cardId: string;
   name: string;
   slug: string | null;
@@ -91,12 +94,7 @@ export async function getPortfolio(userId: string, country: Country, windowDays 
   const rows = await prisma.collectionCard.findMany({
     where: { userId },
     include: {
-      card: {
-        select: {
-          id: true, name: true, slug: true, setCode: true, collectorNumber: true, imageThumbUrl: true,
-          lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true,
-        },
-      },
+      card: { select: cardTileSelect(country) },
     },
   });
 
@@ -138,6 +136,7 @@ export async function getPortfolio(userId: string, country: Country, windowDays 
       const plCents = cost != null && unit != null ? valueCents - cost * r.quantity : null;
       const plPct = plCents != null && investedRow != null && investedRow > 0 ? Math.round((plCents / investedRow) * 1000) / 10 : null;
       return {
+        card: r.card as unknown as CardTileData,
         cardId: r.cardId,
         name: r.card.name,
         slug: r.card.slug,

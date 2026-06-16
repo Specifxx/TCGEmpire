@@ -8,6 +8,8 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { pickPrice, priceField, type Country } from "./country";
+import { cardTileSelect } from "./cards";
+import type { CardTileData } from "@/components/CardTile";
 
 const SCAN_CARDS = 400; // most-searched priced cards to consider
 const WINDOW_DAYS = 30;
@@ -16,12 +18,7 @@ const MIN_PRICE_CENTS = 300; // ignore sub-$3 noise
 const MIN_DISCOUNT = 0.08; // at least 8% below the average to list
 
 export interface ValuePick {
-  id: string;
-  name: string;
-  slug: string | null;
-  setCode: string;
-  collectorNumber: string;
-  imageThumbUrl: string | null;
+  card: CardTileData; // full tile data so the row can open the QuickView popup
   currentCents: number;
   avgCents: number; // mean lowest over the window
   highCents: number; // max lowest over the window
@@ -38,10 +35,7 @@ export async function getUndervalued(country: Country, limit = 24): Promise<Valu
       where,
       orderBy: [{ searchCount: "desc" }, { viewCount: "desc" }],
       take: SCAN_CARDS,
-      select: {
-        id: true, name: true, slug: true, setCode: true, collectorNumber: true, imageThumbUrl: true,
-        lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true,
-      },
+      select: cardTileSelect(country),
     });
     if (!cards.length) return [];
 
@@ -64,7 +58,7 @@ export async function getUndervalued(country: Country, limit = 24): Promise<Valu
       const discount = (avg - current) / avg;
       if (discount < MIN_DISCOUNT) continue;
       picks.push({
-        id: c.id, name: c.name, slug: c.slug, setCode: c.setCode, collectorNumber: c.collectorNumber, imageThumbUrl: c.imageThumbUrl,
+        card: c as unknown as CardTileData,
         currentCents: current,
         avgCents: Math.round(avg),
         highCents: high,

@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { formatMoney } from "@/lib/format";
 import type { Holding } from "@/lib/premium";
+import { CardQuickLink } from "./CardQuickLink";
 
 // Visual showcase of a collection: the actual card art, big, in a responsive grid,
 // with quantity, live value and profit/loss read straight off each card. Dearest
@@ -11,10 +11,10 @@ export function HoldingsGrid({ holdings, currency }: { holdings: Holding[]; curr
       {holdings.map((h, i) => {
         const pl = h.plCents;
         return (
-          <Link
+          <CardQuickLink
             key={`${h.cardId}-${h.condition}-${h.isFoil}-${i}`}
-            href={`/card/${h.slug ?? h.cardId}`}
-            className="group relative overflow-hidden rounded-xl border border-ink-700 bg-ink-900 transition-all hover:-translate-y-1 hover:border-brand-500 hover:shadow-glow"
+            card={h.card}
+            className="group relative block overflow-hidden rounded-xl border border-ink-700 bg-ink-900 transition-all hover:-translate-y-1 hover:border-brand-500 hover:shadow-glow"
           >
             <div className="relative aspect-[5/7]">
               {h.imageThumbUrl ? (
@@ -53,7 +53,7 @@ export function HoldingsGrid({ holdings, currency }: { holdings: Holding[]; curr
                 </div>
               </div>
             </div>
-          </Link>
+          </CardQuickLink>
         );
       })}
     </div>

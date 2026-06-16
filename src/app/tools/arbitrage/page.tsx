@@ -6,6 +6,8 @@ import { COUNTRIES } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { OutboundLink } from "@/components/OutboundLink";
 import { ArbitrageFilters } from "@/components/ArbitrageFilters";
+import { CardQuickLink } from "@/components/CardQuickLink";
+import type { CardTileData } from "@/components/CardTile";
 import { SITE_URL } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -142,8 +144,8 @@ async function FlipView({
               </thead>
               <tbody className="divide-y divide-ink-800">
                 {data.items.map((it) => (
-                  <tr key={it.id} className="hover:bg-ink-900/50">
-                    <CardCell id={it.id} slug={it.slug} name={it.name} setCode={it.setCode} collectorNumber={it.collectorNumber} imageThumbUrl={it.imageThumbUrl} />
+                  <tr key={it.card.id} className="hover:bg-ink-900/50">
+                    <CardCell card={it.card} />
                     <td className="px-2 py-2 text-right">
                       <OutboundLink href={it.buyUrl} retailer={it.buyStore} country={country} className="font-semibold text-white hover:text-brand-400">
                         {formatMoney(it.buyCents, info.currency)}
@@ -213,8 +215,8 @@ async function DealsView({
               </thead>
               <tbody className="divide-y divide-ink-800">
                 {data.items.map((it) => (
-                  <tr key={it.id} className="hover:bg-ink-900/50">
-                    <CardCell id={it.id} slug={it.slug} name={it.name} setCode={it.setCode} collectorNumber={it.collectorNumber} imageThumbUrl={it.imageThumbUrl} />
+                  <tr key={it.card.id} className="hover:bg-ink-900/50">
+                    <CardCell card={it.card} />
                     <td className="px-2 py-2 text-right">
                       <OutboundLink href={it.ebayUrl} retailer="ebay_deal" country={country} className="font-semibold text-sky-300 hover:text-sky-200">
                         {formatMoney(it.ebayCents, info.currency)}
@@ -246,19 +248,19 @@ async function DealsView({
 }
 
 // ── Shared bits ──────────────────────────────────────────────────────────────────
-function CardCell({ id, slug, name, setCode, collectorNumber, imageThumbUrl }: { id: string; slug: string | null; name: string; setCode: string; collectorNumber: string; imageThumbUrl: string | null }) {
+function CardCell({ card }: { card: CardTileData }) {
   return (
     <td className="px-4 py-2">
-      <Link href={`/card/${slug ?? id}`} className="flex items-center gap-2.5">
-        {imageThumbUrl && (
+      <CardQuickLink card={card} className="flex items-center gap-2.5">
+        {card.imageThumbUrl && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageThumbUrl} alt="" width={28} height={39} loading="lazy" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
+          <img src={card.imageThumbUrl} alt="" width={28} height={39} loading="lazy" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
         )}
         <span className="min-w-0">
-          <span className="block truncate font-semibold text-white">{name}</span>
-          <span className="block text-[11px] text-slate-500">{setCode} · {collectorNumber}</span>
+          <span className="block truncate font-semibold text-white">{card.name}</span>
+          <span className="block text-[11px] text-slate-500">{card.setCode} · {card.collectorNumber}</span>
         </span>
-      </Link>
+      </CardQuickLink>
     </td>
   );
 }

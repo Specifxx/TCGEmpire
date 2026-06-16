@@ -9,6 +9,8 @@
 import { prisma } from "./db";
 import type { Country } from "./country";
 import { RETAILERS } from "./retailers";
+import { cardTileSelect } from "./cards";
+import type { CardTileData } from "@/components/CardTile";
 
 export const EBAY_FEE = 0.13; // approx eBay final-value fee
 const MIN_BUY_CENTS = 300;
@@ -35,12 +37,7 @@ export function getArbSources(country: Country): ArbSource[] {
 }
 
 export interface ArbItem {
-  id: string;
-  name: string;
-  slug: string | null;
-  setCode: string;
-  collectorNumber: string;
-  imageThumbUrl: string | null;
+  card: CardTileData; // full tile data so the row can open the QuickView popup
   buyCents: number;
   buyStore: string;
   buyStoreName: string;
@@ -77,12 +74,7 @@ async function minByCard(country: Country, keys: string[]) {
 export type DealSort = "saving" | "pct";
 
 export interface EbayDeal {
-  id: string;
-  name: string;
-  slug: string | null;
-  setCode: string;
-  collectorNumber: string;
-  imageThumbUrl: string | null;
+  card: CardTileData; // full tile data so the row can open the QuickView popup
   ebayCents: number;
   ebayUrl: string;
   storeCents: number; // cheapest store price (what you'd otherwise pay)
@@ -146,7 +138,7 @@ export async function getEbayCheapest(country: Country, sort: DealSort, page = 1
         orderBy: { priceCents: "asc" },
       }),
     ]);
-    const cardMap = new Map(cards.map((c) => [c.id, c]));
+    const cardMap = new Map(cards.map((c) => [c.id, c as unknown as CardTileData]));
     const bestEbay = new Map<string, (typeof ebayListings)[number]>();
     for (const l of ebayListings) if (!bestEbay.has(l.cardId)) bestEbay.set(l.cardId, l);
     const bestStore = new Map<string, (typeof storeListings)[number]>();
@@ -159,7 +151,7 @@ export async function getEbayCheapest(country: Country, sort: DealSort, page = 1
         const s = bestStore.get(r.cardId);
         if (!c || !e || !s) return null;
         return {
-          id: c.id, name: c.name, slug: c.slug, setCode: c.setCode, collectorNumber: c.collectorNumber, imageThumbUrl: c.imageThumbUrl,
+          card: c,
           ebayCents: r.ebay, ebayUrl: e.url, storeCents: r.store, storeName: s.retailerName,
           savingCents: r.saving, savingPct: r.pct,
         };
@@ -233,10 +225,7 @@ export async function getArbitrage(
     const ids = slice.map((r) => r.cardId);
     const sellKeysFor = (isEbay: boolean) => (isEbay ? sellEbayKeys : sellStoreKeys);
     const [cards, buyListings, sellListings] = await Promise.all([
-      prisma.card.findMany({
-        where: { id: { in: ids } },
-        select: { id: true, name: true, slug: true, setCode: true, collectorNumber: true, imageThumbUrl: true },
-      }),
+      prisma.card.findMany({ where: { id: { in: ids } }, select: cardTileSelect(country) }),
       prisma.retailerPrice.findMany({
         where: { cardId: { in: ids }, country, inStock: true, retailer: { in: buyKeys } },
         select: { cardId: true, retailer: true, retailerName: true, priceCents: true, url: true },
@@ -248,7 +237,7 @@ export async function getArbitrage(
         orderBy: { priceCents: "asc" },
       }),
     ]);
-    const cardMap = new Map(cards.map((c) => [c.id, c]));
+    const cardMap = new Map(cards.map((c) => [c.id, c as unknown as CardTileData]));
     const bestBuy = new Map<string, (typeof buyListings)[number]>();
     for (const l of buyListings) if (!bestBuy.has(l.cardId)) bestBuy.set(l.cardId, l);
     // Cheapest sell listing on the WINNING side (eBay vs store) per card.
@@ -269,7 +258,7 @@ export async function getArbitrage(
         const s = bestSell.get(r.cardId);
         if (!c || !b || !s) return null;
         return {
-          id: c.id, name: c.name, slug: c.slug, setCode: c.setCode, collectorNumber: c.collectorNumber, imageThumbUrl: c.imageThumbUrl,
+          card: c,
           buyCents: r.buy, buyStore: b.retailer, buyStoreName: b.retailerName, buyUrl: b.url,
           sellCents: r.sellGross, sellName: s.retailerName, sellUrl: s.url, sellIsEbay: r.sellIsEbay,
           netCents: r.net, marginPct: r.margin,
