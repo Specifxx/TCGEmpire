@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { cardHref } from "@/lib/card-url";
 import { cardDisplayName } from "@/lib/card-name";
 import { CONDITIONS, CONDITION_KEYS } from "@/lib/constants";
@@ -95,6 +95,12 @@ export function MyCollection() {
     }
   }
 
+  // Re-pull the collection after an add/import.
+  const refresh = useCallback(async () => {
+    const fresh = await fetch("/api/collection").then((r) => r.json()).catch(() => null);
+    if (fresh?.items) setItems(fresh.items);
+  }, []);
+
   return (
     <div id="collection" className="card-surface mt-5 scroll-mt-20 p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -108,25 +114,19 @@ export function MyCollection() {
               : `${summary.distinct} ${summary.distinct === 1 ? "card" : "cards"} · ${summary.total} total${summary.priced ? ` · worth ~${fmt(summary.value)}` : ""}`}
           </p>
         </div>
-        <div className="flex shrink-0 gap-2">
-          <button onClick={() => setImporting((v) => !v)} className="btn-ghost text-sm">📋 Import a list</button>
-          <Link href="/browse" className="btn-primary">Browse cards →</Link>
-        </div>
+        <button onClick={() => setImporting((v) => !v)} className="btn-ghost shrink-0 text-sm">📋 Import a list</button>
       </div>
 
-      {importing && (
-        <BulkImport
-          onDone={async (res) => {
-            const fresh = await fetch("/api/collection").then((r) => r.json()).catch(() => null);
-            if (fresh?.items) setItems(fresh.items);
-            return res;
-          }}
-        />
-      )}
+      {/* Search any card and add it without leaving the page. */}
+      <div className="mt-3">
+        <CollectionSearch onAdded={refresh} />
+      </div>
+
+      {importing && <BulkImport onDone={refresh} />}
 
       {items != null && items.length === 0 && (
         <p className="mt-4 text-sm text-slate-500">
-          Open any card and tap <span className="font-semibold text-brand-300">＋ Add to collection</span> to start tracking what you own — we&apos;ll value the whole thing live as prices move. It&apos;s separate from your{" "}
+          Search a card above (or <span className="font-semibold text-brand-300">📋 Import a list</span>) to start tracking what you own — we&apos;ll value the whole thing live as prices move. It&apos;s separate from your{" "}
           <Link href="/wishlist" className="text-brand-400 hover:underline">wishlist</Link>.
         </p>
       )}
@@ -192,6 +192,105 @@ export function MyCollection() {
               </li>
             );
           })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+type SearchCard = {
+  id: string;
+  name: string;
+  slug: string | null;
+  setCode: string | null;
+  collectorNumber: string | null;
+  imageThumbUrl: string | null;
+};
+
+// In-page card search: type a name, pick a result, and it's added to the collection
+// (1× Near Mint) without leaving the page. Reuses the navbar typeahead endpoint.
+function CollectionSearch({ onAdded }: { onAdded: () => void | Promise<void> }) {
+  const [q, setQ] = useState("");
+  const [results, setResults] = useState<SearchCard[]>([]);
+  const [open, setOpen] = useState(false);
+  const [adding, setAdding] = useState<string | null>(null);
+  const [justAdded, setJustAdded] = useState<string | null>(null);
+
+  useEffect(() => {
+    const t = q.trim();
+    if (t.length < 2) {
+      setResults([]);
+      return;
+    }
+    const ctrl = new AbortController();
+    const id = setTimeout(() => {
+      fetch(`/api/search?q=${encodeURIComponent(t)}`, { signal: ctrl.signal })
+        .then((r) => r.json())
+        .then((d) => {
+          setResults((d.results ?? []) as SearchCard[]);
+          setOpen(true);
+        })
+        .catch(() => {});
+    }, 200);
+    return () => {
+      clearTimeout(id);
+      ctrl.abort();
+    };
+  }, [q]);
+
+  async function add(card: SearchCard) {
+    setAdding(card.id);
+    try {
+      const res = await fetch("/api/collection", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cardId: card.id }),
+      });
+      if (res.ok) {
+        setJustAdded(card.id);
+        setTimeout(() => setJustAdded((v) => (v === card.id ? null : v)), 1500);
+        await onAdded();
+      }
+    } finally {
+      setAdding(null);
+    }
+  }
+
+  return (
+    <div className="relative">
+      <input
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        onFocus={() => results.length > 0 && setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        placeholder="🔎 Search a card to add to your collection…"
+        className="input"
+        autoComplete="off"
+      />
+      {open && results.length > 0 && (
+        <ul className="absolute z-30 mt-1 max-h-80 w-full overflow-y-auto rounded-xl border border-ink-700 bg-ink-900 shadow-2xl">
+          {results.map((c) => (
+            <li key={c.id}>
+              <button
+                onMouseDown={(e) => e.preventDefault()} // keep dropdown open through the click
+                onClick={() => add(c)}
+                disabled={adding === c.id}
+                className="flex w-full items-center gap-2.5 px-3 py-2 text-left hover:bg-ink-800 disabled:opacity-60"
+              >
+                {c.imageThumbUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={c.imageThumbUrl} alt="" width={28} height={39} loading="lazy" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
+                )}
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium text-white">{c.name}</span>
+                  <span className="block text-[11px] text-slate-500">{c.setCode} · {c.collectorNumber}</span>
+                </span>
+                <span className={`shrink-0 text-xs font-semibold ${justAdded === c.id ? "text-brand-400" : "text-slate-400"}`}>
+                  {adding === c.id ? "…" : justAdded === c.id ? "✓ Added" : "+ Add"}
+                </span>
+              </button>
+            </li>
+          ))}
         </ul>
       )}
     </div>
