@@ -10,6 +10,7 @@ import { formatMoney } from "@/lib/format";
 import { IndexChart } from "@/components/IndexChart";
 import { PriceChart } from "@/components/PriceChart";
 import { MyCollection } from "@/components/MyCollection";
+import { HoldingsGrid } from "@/components/HoldingsGrid";
 
 export const dynamic = "force-dynamic";
 
@@ -128,7 +129,7 @@ export default async function PortfolioPage() {
       {portfolio.holdings.length > 0 && (
         <>
           {/* Headline value */}
-          <section className="card-surface p-5">
+          <section className="card-surface overflow-hidden bg-gradient-to-br from-brand-600/15 via-ink-850 to-gold/10 p-5">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
                 <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
@@ -225,57 +226,17 @@ export default async function PortfolioPage() {
             )}
           </section>
 
-          {/* Holdings */}
+          {/* Your cards — a visual showcase, dearest first. */}
           <section>
-            <h2 className="mb-2 text-lg font-extrabold text-white">Holdings</h2>
-            <div className="card-surface overflow-x-auto">
-              <table className="w-full min-w-[560px] text-sm">
-                <thead>
-                  <tr className="border-b border-ink-700 text-left text-[10px] uppercase tracking-wide text-slate-500">
-                    <th className="px-4 py-2.5 font-semibold">Card</th>
-                    <th className="px-2 py-2.5 text-right font-semibold">Qty</th>
-                    <th className="px-2 py-2.5 text-right font-semibold">Unit</th>
-                    <th className="px-2 py-2.5 text-right font-semibold">Paid</th>
-                    <th className="px-2 py-2.5 text-right font-semibold">Value</th>
-                    <th className="px-2 py-2.5 text-right font-semibold">P&amp;L</th>
-                    <th className="px-4 py-2.5 text-right font-semibold">7-day</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-ink-800">
-                  {portfolio.holdings.map((h, i) => (
-                    <tr key={`${h.cardId}-${h.condition}-${h.isFoil}-${i}`} className="hover:bg-ink-900/50">
-                      <td className="px-4 py-2">
-                        <Link href={`/card/${h.slug ?? h.cardId}`} className="flex items-center gap-2.5">
-                          {h.imageThumbUrl && (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={h.imageThumbUrl} alt="" width={28} height={39} loading="lazy" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
-                          )}
-                          <span className="min-w-0">
-                            <span className="block truncate font-semibold text-white">{h.name}</span>
-                            <span className="block text-[11px] text-slate-500">
-                              {h.setCode} · {h.collectorNumber} · {h.condition}{h.isFoil ? " · ✦" : ""}
-                            </span>
-                          </span>
-                        </Link>
-                      </td>
-                      <td className="px-2 py-2 text-right text-slate-300">×{h.quantity}</td>
-                      <td className="px-2 py-2 text-right text-slate-300">{h.unitCents != null ? formatMoney(h.unitCents, info.currency) : "—"}</td>
-                      <td className="px-2 py-2 text-right text-slate-400">{h.costBasisCents != null ? formatMoney(h.costBasisCents, info.currency) : "—"}</td>
-                      <td className="px-2 py-2 text-right font-semibold text-white">{h.valueCents > 0 ? formatMoney(h.valueCents, info.currency) : "—"}</td>
-                      <td className={`px-2 py-2 text-right font-semibold ${pctClass(h.plCents)}`}>
-                        {h.plCents == null ? "—" : `${h.plCents >= 0 ? "+" : "−"}${formatMoney(Math.abs(h.plCents), info.currency)}`}
-                      </td>
-                      <td className={`px-4 py-2 text-right font-semibold ${h.d7pct == null ? "text-slate-600" : h.d7pct > 0 ? "text-brand-400" : h.d7pct < 0 ? "text-rose-400" : "text-slate-400"}`}>
-                        {h.d7pct == null ? "—" : `${h.d7pct > 0 ? "▲" : h.d7pct < 0 ? "▼" : ""} ${Math.abs(h.d7pct)}%`}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="mb-3 flex items-end justify-between gap-2">
+              <h2 className="text-lg font-extrabold text-white">Your cards</h2>
+              <span className="text-xs text-slate-500">{portfolio.holdings.length} {portfolio.holdings.length === 1 ? "entry" : "entries"} · dearest first</span>
             </div>
-            <p className="mt-2 text-[11px] text-slate-600">
-              Unit prices are the live lowest in-stock store price × the standard condition multiplier
+            <HoldingsGrid holdings={portfolio.holdings} currency={info.currency} />
+            <p className="mt-3 text-[11px] text-slate-600">
+              Values are the live lowest in-stock store price × the standard condition multiplier
               ({Object.entries({ NM: 1, LP: 0.85, MP: 0.7, HP: 0.55, DMG: 0.4 }).map(([k, v]) => `${k} ${v * 100}%`).join(" · ")}).
+              The green/red chip is your profit/loss where you&apos;ve recorded what you paid.
             </p>
           </section>
         </>
