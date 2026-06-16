@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { getPortfolio, isPremium } from "@/lib/premium";
+import { getPortfolio, isPremium, type Portfolio } from "@/lib/premium";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
@@ -26,6 +26,73 @@ function Delta({ label, pct }: { label: string; pct: number | null }) {
       <div className={`text-sm font-extrabold ${pct === 0 ? "text-slate-300" : up ? "text-brand-400" : "text-rose-400"}`}>
         {pct === 0 ? "—" : `${up ? "▲" : "▼"} ${Math.abs(pct)}%`}
       </div>
+    </div>
+  );
+}
+
+const pctText = (p: number | null) => (p == null ? "—" : `${p > 0 ? "+" : ""}${p}%`);
+const pctClass = (p: number | null) => (p == null || p === 0 ? "text-slate-300" : p > 0 ? "text-brand-400" : "text-rose-400");
+
+// The Premium "investor" panel: cost-basis P&L + how the portfolio is tracking
+// against the RiftCompare Index over the same windows.
+function PnlView({
+  pnl,
+  index,
+  d7,
+  d30,
+  currency,
+}: {
+  pnl: NonNullable<Portfolio["pnl"]>;
+  index: Portfolio["index"];
+  d7: number | null;
+  d30: number | null;
+  currency: string;
+}) {
+  const beat = (port: number | null, idx: number | null) => (port != null && idx != null ? Math.round((port - idx) * 10) / 10 : null);
+  return (
+    <div className="mt-3 space-y-4">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <Stat label="Invested" value={formatMoney(pnl.investedCents, currency)} />
+        <Stat label="Current value" value={formatMoney(pnl.valueCents, currency)} />
+        <Stat label="Profit / loss" value={`${pnl.plCents >= 0 ? "+" : "−"}${formatMoney(Math.abs(pnl.plCents), currency)}`} cls={pctClass(pnl.plCents)} />
+        <Stat label="Return" value={pctText(pnl.plPct)} cls={pctClass(pnl.plPct)} />
+      </div>
+      {index && (index.d7 != null || index.d30 != null) && (
+        <div className="rounded-lg border border-ink-700 bg-ink-900/60 p-3 text-sm">
+          <div className="mb-1 text-[11px] font-bold uppercase tracking-wide text-slate-500">vs the market (RiftCompare Index)</div>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { w: "7-day", port: d7, idx: index.d7 },
+              { w: "30-day", port: d30, idx: index.d30 },
+            ].map(({ w, port, idx }) => {
+              const b = beat(port, idx);
+              return (
+                <div key={w} className="flex flex-col">
+                  <span className="text-xs text-slate-500">{w}: you <span className={pctClass(port)}>{pctText(port)}</span> · index <span className={pctClass(idx)}>{pctText(idx)}</span></span>
+                  {b != null && (
+                    <span className={`text-sm font-bold ${pctClass(b)}`}>
+                      {b > 0 ? `▲ Beating the market by ${b}%` : b < 0 ? `▼ Trailing the market by ${Math.abs(b)}%` : "Matching the market"}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+      <p className="text-[11px] text-slate-600">
+        P&amp;L covers the {pnl.costedRows} holding{pnl.costedRows === 1 ? "" : "s"} you&apos;ve recorded a purchase price for. Add a
+        &quot;paid&quot; price on any card in <a href="#collection" className="text-brand-400 hover:underline">My Collection</a> to include it.
+      </p>
+    </div>
+  );
+}
+
+function Stat({ label, value, cls }: { label: string; value: string; cls?: string }) {
+  return (
+    <div className="rounded-lg bg-ink-900 px-3 py-2">
+      <div className="text-[10px] uppercase tracking-wide text-slate-500">{label}</div>
+      <div className={`text-base font-extrabold ${cls ?? "text-white"}`}>{value}</div>
     </div>
   );
 }
@@ -130,6 +197,46 @@ export default async function PortfolioPage() {
             )}
           </section>
 
+          {/* Cost-basis P&L + market benchmark — the investor view (Premium). */}
+          <section className="card-surface p-5">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-lg font-extrabold text-white">📊 Profit &amp; Loss</h2>
+              {!premium && <span className="chip bg-gold/15 text-xs font-bold text-gold">★ Premium</span>}
+            </div>
+            {premium ? (
+              portfolio.pnl ? (
+                <PnlView pnl={portfolio.pnl} index={portfolio.index} d7={portfolio.d7} d30={portfolio.d30} currency={info.currency} />
+              ) : (
+                <p className="mt-2 text-sm text-slate-400">
+                  Record what you paid for a card (the <strong className="text-slate-200">paid</strong> field in My Collection below) and
+                  your profit/loss — plus how you&apos;re tracking against the RiftCompare Index — appears here.
+                </p>
+              )
+            ) : (
+              <div className="relative mt-3 overflow-hidden rounded-xl border border-ink-700">
+                <div aria-hidden className="pointer-events-none select-none p-1 opacity-30 blur-[3px]">
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    {["Invested", "Current value", "Profit / loss", "Return"].map((l) => (
+                      <div key={l} className="rounded-lg bg-ink-900 px-3 py-2">
+                        <div className="text-[10px] uppercase tracking-wide text-slate-500">{l}</div>
+                        <div className="text-base font-extrabold text-white">{formatMoney(12345, info.currency)}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="absolute inset-0 grid place-items-center bg-ink-950/40 p-4 text-center">
+                  <div>
+                    <p className="text-sm font-bold text-white">💰 Profit &amp; Loss is a Premium feature</p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      Record what you paid, see your real gains, and track your collection against the market.
+                    </p>
+                    <Link href="/premium" className="btn-primary mt-3 text-sm">See Premium →</Link>
+                  </div>
+                </div>
+              </div>
+            )}
+          </section>
+
           {/* Holdings */}
           <section>
             <h2 className="mb-2 text-lg font-extrabold text-white">Holdings</h2>
@@ -140,7 +247,9 @@ export default async function PortfolioPage() {
                     <th className="px-4 py-2.5 font-semibold">Card</th>
                     <th className="px-2 py-2.5 text-right font-semibold">Qty</th>
                     <th className="px-2 py-2.5 text-right font-semibold">Unit</th>
+                    {premium && <th className="px-2 py-2.5 text-right font-semibold">Paid</th>}
                     <th className="px-2 py-2.5 text-right font-semibold">Value</th>
+                    {premium && <th className="px-2 py-2.5 text-right font-semibold">P&amp;L</th>}
                     <th className="px-4 py-2.5 text-right font-semibold">7-day</th>
                   </tr>
                 </thead>
@@ -163,7 +272,13 @@ export default async function PortfolioPage() {
                       </td>
                       <td className="px-2 py-2 text-right text-slate-300">×{h.quantity}</td>
                       <td className="px-2 py-2 text-right text-slate-300">{h.unitCents != null ? formatMoney(h.unitCents, info.currency) : "—"}</td>
+                      {premium && <td className="px-2 py-2 text-right text-slate-400">{h.costBasisCents != null ? formatMoney(h.costBasisCents, info.currency) : "—"}</td>}
                       <td className="px-2 py-2 text-right font-semibold text-white">{h.valueCents > 0 ? formatMoney(h.valueCents, info.currency) : "—"}</td>
+                      {premium && (
+                        <td className={`px-2 py-2 text-right font-semibold ${pctClass(h.plCents)}`}>
+                          {h.plCents == null ? "—" : `${h.plCents >= 0 ? "+" : "−"}${formatMoney(Math.abs(h.plCents), info.currency)}`}
+                        </td>
+                      )}
                       <td className={`px-4 py-2 text-right font-semibold ${h.d7pct == null ? "text-slate-600" : h.d7pct > 0 ? "text-brand-400" : h.d7pct < 0 ? "text-rose-400" : "text-slate-400"}`}>
                         {h.d7pct == null ? "—" : `${h.d7pct > 0 ? "▲" : h.d7pct < 0 ? "▼" : ""} ${Math.abs(h.d7pct)}%`}
                       </td>

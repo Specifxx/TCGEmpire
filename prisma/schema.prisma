@@ -668,6 +668,9 @@ model CollectionCard {
   condition String   @default("NM") // NM, LP, MP, HP, DMG
   isFoil    Boolean  @default(false)
   quantity  Int      @default(1)
+  // What the owner paid PER UNIT (market currency, cents). Optional — powers the
+  // Premium cost-basis / profit-and-loss view. null = unknown (no P&L for that row).
+  costBasisCents Int?
   note      String? // optional free-text (e.g. "graded PSA 9", "for trade")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

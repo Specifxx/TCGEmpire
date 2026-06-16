@@ -33,6 +33,8 @@ const schema = z.object({
   condition: z.enum(CONDITION_KEYS as [string, ...string[]]).default("NM"),
   isFoil: z.boolean().default(false),
   quantity: z.number().int().min(1).max(999).default(1),
+  // What the owner paid per unit (cents). Optional — powers the Premium P&L view.
+  costBasisCents: z.number().int().min(0).max(100_000_000).optional().nullable(),
   note: z.string().trim().max(120).optional().nullable(),
 });
 
@@ -51,8 +53,8 @@ export async function POST(req: Request) {
 
   const item = await prisma.collectionCard.upsert({
     where: { userId_cardId_condition_isFoil: { userId: user.id, cardId: d.cardId, condition: d.condition, isFoil: d.isFoil } },
-    create: { userId: user.id, cardId: d.cardId, condition: d.condition, isFoil: d.isFoil, quantity: d.quantity, note: d.note ?? null },
-    update: { quantity: { increment: d.quantity }, ...(d.note ? { note: d.note } : {}) },
+    create: { userId: user.id, cardId: d.cardId, condition: d.condition, isFoil: d.isFoil, quantity: d.quantity, note: d.note ?? null, costBasisCents: d.costBasisCents ?? null },
+    update: { quantity: { increment: d.quantity }, ...(d.note ? { note: d.note } : {}), ...(d.costBasisCents !== undefined ? { costBasisCents: d.costBasisCents } : {}) },
   });
   return NextResponse.json({ ok: true, item });
 }

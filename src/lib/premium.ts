@@ -7,6 +7,7 @@
 import { prisma } from "./db";
 import { pickPrice, priceField, type Country } from "./country";
 import { CONDITION_MULTIPLIER } from "./constants";
+import { getMarketIndex } from "./market-index";
 import type { PricePoint } from "./price-history";
 
 export const PREMIUM_PRICE_ID = process.env.STRIPE_PREMIUM_PRICE_ID ?? "";
@@ -38,6 +39,19 @@ export interface Holding {
   unitCents: number | null; // current lowest market price × condition multiplier
   valueCents: number; // unit × quantity (0 when unpriced)
   d7pct: number | null; // the card's own 7-day price move
+  costBasisCents: number | null; // what the owner paid per unit (null = unknown)
+  plCents: number | null; // unrealised profit/loss for this row (null without cost+price)
+  plPct: number | null;
+}
+
+// Cost-basis profit & loss, over holdings that have BOTH a recorded cost and a
+// current price (so the comparison is coherent).
+export interface PnL {
+  investedCents: number; // total paid across costed holdings
+  valueCents: number; // current value of those same holdings
+  plCents: number;
+  plPct: number | null;
+  costedRows: number; // how many holdings have a cost basis recorded
 }
 
 export interface Portfolio {
@@ -49,6 +63,10 @@ export interface Portfolio {
   d1: number | null; // % move of the total vs yesterday
   d7: number | null;
   d30: number | null;
+  pnl: PnL | null; // null when no cost basis is recorded anywhere
+  // Benchmark: the RiftCompare Index move over the same windows, so the portfolio's
+  // performance can be read against the market ("you're beating the market by X").
+  index: { d7: number | null; d30: number | null } | null;
 }
 
 const condMult = (condition: string) => CONDITION_MULTIPLIER[condition] ?? 1;
@@ -103,6 +121,12 @@ export async function getPortfolio(userId: string, country: Country, windowDays 
     .map((r) => {
       const market = pickPrice(r.card, country);
       const unit = market != null ? Math.round(market * condMult(r.condition)) : null;
+      const valueCents = (unit ?? 0) * r.quantity;
+      const cost = r.costBasisCents ?? null;
+      const investedRow = cost != null ? cost * r.quantity : null;
+      // P&L only when we know both what they paid AND the current value.
+      const plCents = cost != null && unit != null ? valueCents - cost * r.quantity : null;
+      const plPct = plCents != null && investedRow != null && investedRow > 0 ? Math.round((plCents / investedRow) * 1000) / 10 : null;
       return {
         cardId: r.cardId,
         name: r.card.name,
@@ -114,11 +138,36 @@ export async function getPortfolio(userId: string, country: Country, windowDays 
         condition: r.condition,
         isFoil: r.isFoil,
         unitCents: unit,
-        valueCents: (unit ?? 0) * r.quantity,
+        valueCents,
         d7pct: d7ByCard.get(r.cardId) ?? null,
+        costBasisCents: cost,
+        plCents,
+        plPct,
       };
     })
     .sort((a, b) => b.valueCents - a.valueCents);
+
+  // Aggregate P&L over holdings that have both a cost and a current price.
+  const costed = holdings.filter((h) => h.costBasisCents != null && h.unitCents != null);
+  const anyCost = holdings.some((h) => h.costBasisCents != null);
+  const pnl: PnL | null = anyCost
+    ? (() => {
+        const investedCents = costed.reduce((s, h) => s + (h.costBasisCents ?? 0) * h.quantity, 0);
+        const valueCents = costed.reduce((s, h) => s + h.valueCents, 0);
+        const plCents = valueCents - investedCents;
+        return {
+          investedCents,
+          valueCents,
+          plCents,
+          plPct: investedCents > 0 ? Math.round((plCents / investedCents) * 1000) / 10 : null,
+          costedRows: holdings.filter((h) => h.costBasisCents != null).length,
+        };
+      })()
+    : null;
+
+  // Market benchmark for the same windows (best-effort — never block the page).
+  const idx = await getMarketIndex(country).catch(() => null);
+  const index = idx ? { d7: idx.d7, d30: idx.d30 } : null;
 
   // Daily total series (carry-forward per card so gaps don't crater the line).
   const days = [...daySet].sort((a, b) => a - b);
@@ -153,6 +202,8 @@ export async function getPortfolio(userId: string, country: Country, windowDays 
     d1: pctChange(latest, series[series.length - 2]?.v),
     d7: pctChange(latest, at(7)),
     d30: pctChange(latest, at(30)),
+    pnl,
+    index,
   };
 }
 
