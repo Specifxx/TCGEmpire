@@ -48,6 +48,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/riftle`, changeFrequency: "daily", priority: 0.7 },
     { url: `${SITE_URL}/games`, changeFrequency: "weekly", priority: 0.7 },
     { url: `${SITE_URL}/tools/box-ev`, changeFrequency: "weekly", priority: 0.7 },
+    { url: `${SITE_URL}/tools/best-basket`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${SITE_URL}/premium`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${SITE_URL}/stores`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${SITE_URL}/games/higher-lower`, changeFrequency: "monthly", priority: 0.6 },
