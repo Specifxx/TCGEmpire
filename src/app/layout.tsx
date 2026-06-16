@@ -14,7 +14,7 @@ import { PremiumProvider } from "@/components/PremiumProvider";
 import { getCountry } from "@/lib/get-country";
 import { getCurrentUser } from "@/lib/auth";
 import { isPremium } from "@/lib/premium";
-import { CONTACT_EMAIL, DISCORD_URL, SITE_NAME, SITE_URL } from "@/lib/site";
+import { BUYMEACOFFEE_URL, CONTACT_EMAIL, DISCORD_URL, SITE_NAME, SITE_URL } from "@/lib/site";
 import { IMPACT_SITE_VERIFICATION } from "@/lib/affiliate";
 import { ADSENSE_CLIENT, ADSENSE_ENABLED } from "@/lib/ads";
 import { NativeShell } from "@/components/NativeShell";
@@ -185,6 +185,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             of date — always confirm on the retailer&apos;s site. Not affiliated with
             or endorsed by Riot Games.
           </p>
+          {/* Buy me a coffee — a low-friction tip option at the very bottom. */}
+          <a
+            href={BUYMEACOFFEE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#FFDD00] px-4 py-2 text-sm font-bold text-[#0d0c0c] transition-transform hover:-translate-y-0.5"
+          >
+            <span aria-hidden>☕</span> Buy me a coffee
+          </a>
         </footer>
         {/* Google AdSense loader — web only. Powers Auto ads + the manual <AdSlot />
             units. Inside the native app this renders nothing (native AdMob is used

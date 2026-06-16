@@ -4,23 +4,22 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { isPremium, premiumCheckoutEnabled } from "@/lib/premium";
 import { PremiumCta } from "@/components/PremiumCta";
-import { SITE_URL } from "@/lib/site";
+import { SITE_URL, PREMIUM_PRICE_LABEL } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "RiftCompare Premium — track your collection like a portfolio",
+  title: "RiftCompare Premium — power tools for buyers & flippers",
   description:
-    "RiftCompare Premium: daily collection value history, CSV exports, unlimited price alerts and an ad-free site — for the price of a booster pack a month.",
+    "RiftCompare Premium: the Best-Basket optimiser (cheapest multi-store cart), the Value Finder screener and an ad-free site — for about the price of a booster pack a month. The portfolio tracker stays free.",
   alternates: { canonical: "/premium" },
 };
 
 const FEATURES = [
-  { emoji: "📈", title: "Collection value history", body: "Your binder, charted like a portfolio — daily value snapshots in your market, with 1/7/30-day moves." },
-  { emoji: "⬇️", title: "CSV exports", body: "Download your whole collection with live condition-adjusted values — for insurance, trades or spreadsheets." },
-  { emoji: "🔔", title: "Unlimited price alerts", body: "Watch as many cards as you like; we email the moment one drops." },
-  { emoji: "🚫", title: "Ad-free everywhere", body: "No ads on any page while you're Premium." },
-  { emoji: "🏆", title: "Founding-member badge", body: "A permanent mark on your profile and the leaderboards." },
+  { emoji: "🧺", title: "Best-Basket optimiser", body: "The cheapest way to actually buy a whole deck or wishlist — the smartest split across stores once postage and free-shipping thresholds are in." },
+  { emoji: "🔎", title: "Value Finder", body: "A screener for cards trading below their own recent average — spot undervalued cards before they bounce back." },
+  { emoji: "🚫", title: "Ad-free everywhere", body: "No ads on any page while you're Premium — just the data." },
+  { emoji: "💚", title: "Keep RiftCompare independent", body: "Premium pays for the servers and the price data, and keeps the core — including the portfolio tracker — free for everyone." },
 ];
 
 export default async function PremiumPage() {
@@ -40,7 +39,7 @@ export default async function PremiumPage() {
             "@context": "https://schema.org",
             "@type": "Product",
             name: "RiftCompare Premium",
-            description: "Collection value tracking, CSV exports, unlimited price alerts and an ad-free RiftCompare.",
+            description: "The Best-Basket optimiser, the Value Finder screener and an ad-free RiftCompare.",
             brand: { "@type": "Organization", name: "RiftCompare", url: SITE_URL },
           }),
         }}
@@ -50,11 +49,11 @@ export default async function PremiumPage() {
         <div className="bg-gradient-to-br from-gold/20 via-ink-850 to-brand-600/15 px-6 py-10 text-center">
           <span className="chip mb-3 inline-flex bg-gold/15 font-bold uppercase tracking-wide text-gold">★ Premium</span>
           <h1 className="mx-auto max-w-xl font-display text-3xl font-extrabold text-white">
-            Track your collection like a portfolio
+            Power tools for buyers &amp; flippers
           </h1>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-300">
-            Everything free stays free — Premium adds the power tools, for about the price of one
-            booster pack a month. It also keeps RiftCompare independent and running.
+            The portfolio tracker and price comparison stay <strong className="text-white">free</strong>. Premium adds the
+            power tools — for about the price of one booster pack a month — and keeps RiftCompare independent.
           </p>
         </div>
       </div>
@@ -73,10 +72,17 @@ export default async function PremiumPage() {
           {already ? (
             <div>
               <p className="text-lg font-extrabold text-gold">You&apos;re Premium ★</p>
-              <Link href="/portfolio" className="btn-primary mt-3 text-sm">Open your portfolio →</Link>
+              <Link href="/tools/best-basket" className="btn-primary mt-3 text-sm">Open Best Basket →</Link>
             </div>
           ) : (
-            <PremiumCta checkoutLive={checkoutLive} signedIn={!!user} />
+            <div>
+              {PREMIUM_PRICE_LABEL && (
+                <p className="mb-2 text-2xl font-extrabold text-white">
+                  {PREMIUM_PRICE_LABEL}
+                </p>
+              )}
+              <PremiumCta checkoutLive={checkoutLive} signedIn={!!user} />
+            </div>
           )}
         </div>
       </div>
