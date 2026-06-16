@@ -17,11 +17,11 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "Prices",
     links: [
       { href: "/browse", label: "Card Database", emoji: "🗃️" },
+      { href: "/portfolio", label: "My Portfolio", emoji: "💼" },
       { href: "/sealed", label: "Sealed Products", emoji: "📦" },
       { href: "/movers", label: "Price Movers", emoji: "📈" },
       { href: "/market", label: "Market Index", emoji: "📊" },
       { href: "/wishlist", label: "Wishlist", emoji: "❤️" },
-      { href: "/portfolio", label: "My Portfolio", emoji: "💼" },
       { href: "/premium", label: "Premium", emoji: "⭐" },
     ],
   },
