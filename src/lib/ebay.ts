@@ -130,9 +130,13 @@ function shippingFromItem(item: any): number | null {
   return Math.round(parseFloat(v) * 100); // 0 = free shipping (eBay states it)
 }
 
-// Titles that mean a bundle/lot/non-English/sealed/non-card listing — never a single.
+// Titles that mean a bundle/lot/non-English/sealed/non-card/graded listing — never
+// a raw single. NOTE: "starter"/"deck" alone are NOT here — they appear in real card
+// names (e.g. "Annie, Dark Child — Starter"); only the sealed-PRODUCT phrases
+// ("starter deck", "structure deck", "precon") and graded slabs are excluded, since
+// those trade far above a raw single and were leaking in as wrong prices.
 const EXCLUDE =
-  /\b(lot|lots|bundle|joblot|job lot|playset|complete set|full set|master set|set of|bulk|pick your|choose your|your choice|all epic|all rare|all common|all uncommon|all cards|sealed|booster|pack|box|proxy|custom|chinese|japanese|korean|\d+\s*cards|x\s*\d+|keychain|key ?ring|keyring|novelty|sticker|plush|playmat|sleeves?|toploader|top ?loader|binder|lanyard|badge|poster|magnet|funko|pin badge)\b/i;
+  /\b(lot|lots|bundle|joblot|job lot|playset|complete set|full set|master set|set of|bulk|pick your|choose your|your choice|all epic|all rare|all common|all uncommon|all cards|sealed|booster|pack|box|starter deck|structure deck|preconstructed|precon|intro deck|challenger deck|deck box|proxy|custom|chinese|japanese|korean|\d+\s*cards|x\s*\d+|psa|bgs|cgc|sgc|graded|gem mint|keychain|key ?ring|keyring|novelty|sticker|plush|playmat|sleeves?|toploader|top ?loader|binder|lanyard|badge|poster|magnet|funko|pin badge)\b/i;
 
 // Foreign-language / non-English printings that EXCLUDE's English word-list misses.
 // Riftbound's Chinese release shares our cards' collector numbers but trades far
@@ -234,6 +238,12 @@ export async function searchEbayLowest(card: {
   isSignature: boolean;
   isPromo?: boolean;
   marketplace?: string; // "EBAY_AU" (default) | "EBAY_US"
+  // The card's known value in this market (cheapest tracked STORE price, cents). When
+  // present, listings priced absurdly above it are dropped as mismatches — a promo,
+  // signature, graded slab or sealed deck that slipped past the keyword/number checks
+  // (e.g. a $1,986 "Annie" leaking onto a $10 starter card). A legit cheaper listing
+  // can still win, so this never blanks a card that has a real eBay single.
+  referenceCents?: number;
 }): Promise<EbayResult | null> {
   const token = await getToken();
   if (!token) return null;
@@ -289,6 +299,15 @@ export async function searchEbayLowest(card: {
     // listings; a base card matches ONLY non-promo listings (so promos don't
     // pollute the base price and vice versa).
     .filter((it) => PROMO_HINT.test(it.title ?? "") === !!card.isPromo)
+    // Sanity guard: a single can legitimately cost a bit more on eBay than in a
+    // store, but not 8×+. A listing that far above the card's store value (and over
+    // an absolute floor so cheap-card noise isn't over-filtered) is a mismatch.
+    .filter((it) => {
+      const ref = card.referenceCents;
+      if (!ref || ref <= 0) return true; // no reference — can't judge
+      const price = delivered(it);
+      return !(price > ref * 8 && price > 4000);
+    })
     .sort((a, b) => delivered(a) - delivered(b));
 
   // Final safety net for a foreign printing that slipped past the title/location

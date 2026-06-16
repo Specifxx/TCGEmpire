@@ -277,6 +277,15 @@ export async function refreshEbayMarkets(
   for (const mkt of MARKETS) {
     if (isEbayRateLimited()) break;
     console.log(`eBay ${mkt.country}: searching ${cards.length} cards…`);
+    // Reference value per card = cheapest tracked STORE price in this market (eBay
+    // excluded). Stores are imported before this pass, so it's current. Lets
+    // searchEbayLowest drop mismatched listings priced far above the card's value.
+    const storeLows = await prisma.retailerPrice
+      .groupBy({ by: ["cardId"], where: { country: mkt.country, inStock: true, NOT: { retailer: { startsWith: "ebay" } } }, _min: { priceCents: true } })
+      .catch(() => [] as { cardId: string; _min: { priceCents: number | null } }[]);
+    const refByCard = new Map<string, number>();
+    for (const s of storeLows) if (s._min.priceCents != null) refByCard.set(s.cardId, s._min.priceCents);
+
     const rows: Prisma.RetailerPriceCreateManyInput[] = [];
     for (const c of cards) {
       if (isEbayRateLimited()) break;
@@ -290,6 +299,7 @@ export async function refreshEbayMarkets(
         isSignature: c.collectorNumber.includes("*"),
         isPromo: c.isPromo,
         marketplace: mkt.marketplace,
+        referenceCents: refByCard.get(c.id),
       });
       // The budget can run out INSIDE the call (its own spend() check), meaning this
       // card was never actually queried — don't leave it stamped as checked.
