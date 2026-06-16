@@ -13,8 +13,7 @@ const esc = (s: string) => (/[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s)
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return new Response("Sign in", { status: 401 });
-  const dbUser = await prisma.user.findUnique({ where: { id: user.id }, select: { premiumUntil: true } });
-  if (!isPremium(dbUser) && !PORTFOLIO_FREE) return new Response("CSV export is a Premium feature", { status: 403 });
+  if (!isPremium(user) && !PORTFOLIO_FREE) return new Response("CSV export is a Premium feature", { status: 403 });
 
   const country = getCountry();
   const currency = COUNTRIES[country].currency;

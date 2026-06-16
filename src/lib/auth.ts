@@ -36,7 +36,7 @@ function getSecret(): Uint8Array {
 
 // Moderator emails (override via ADMIN_EMAILS env, comma-separated). These accounts
 // get delete-any privileges. Not surfaced anywhere in the UI.
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "mastermisclick@gmail.com")
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "mastermisclick@gmail.com,bill.jyang101@gmail.com")
   .split(",")
   .map((e) => e.trim().toLowerCase())
   .filter(Boolean);
