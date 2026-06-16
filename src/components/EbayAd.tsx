@@ -1,5 +1,8 @@
+"use client";
+
 import { OutboundLink } from "./OutboundLink";
 import { ebayAffiliateUrl } from "@/lib/affiliate";
+import { usePremium } from "./PremiumProvider";
 
 // eBay Partner Network banner. eBay retired its hosted display creatives, so
 // this is a FIRST-PARTY house banner that links to an affiliate-tagged eBay
@@ -87,6 +90,7 @@ export function EbayAd({
   query?: string;
   className?: string;
 }) {
+  if (usePremium()) return null; // ad-free for Premium subscribers
   const q = query ? `Riftbound ${query}` : "Riftbound TCG cards";
   const href = searchUrl(q, country);
   const label = query ? `Find ${query.length > 28 ? query.slice(0, 27) + "…" : query} on eBay` : "Shop Riftbound cards on eBay";
