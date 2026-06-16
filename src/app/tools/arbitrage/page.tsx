@@ -31,11 +31,11 @@ export default async function ArbitragePage({ searchParams }: { searchParams: { 
   const storeKeys = sources.filter((s) => !s.isEbay).map((s) => s.key);
   const ebay = sources.find((s) => s.isEbay);
 
-  // Defaults: buy from every store (= cheapest store), sell on eBay (or all stores
-  // in NZ where there's no eBay). Both fully overridable via the pickers.
+  // Sell is fixed to eBay — the only marketplace we can price a resale on right now.
+  // Buy defaults to every store (= cheapest store) and is fully selectable.
   const parse = (v?: string) => (v ? v.split(",").map((s) => s.trim()).filter(Boolean) : null);
   const buy = parse(searchParams.buy) ?? storeKeys;
-  const sell = parse(searchParams.sell) ?? (ebay ? [ebay.key] : storeKeys);
+  const sell = ebay ? [ebay.key] : [];
   const sort: ArbSort = searchParams.sort === "margin" ? "margin" : "profit";
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
 
@@ -53,12 +53,22 @@ export default async function ArbitragePage({ searchParams }: { searchParams: { 
         </nav>
         <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">💱 Arbitrage Finder</h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-          Buy a card cheap on one source and resell it on another for a profit. Pick your buy and sell sources below —
-          by default you buy from the cheapest {info.adjective} store and sell on eBay. Net figures are after an estimated{" "}
-          {Math.round(EBAY_FEE * 100)}% eBay fee (only when selling on eBay); postage and your time aren&apos;t included.
+          Buy a card cheap from a {info.adjective} store and resell it on <strong className="text-slate-200">eBay</strong> for a
+          profit. Pick which stores to buy from below (default: the cheapest). Net figures are after an estimated{" "}
+          {Math.round(EBAY_FEE * 100)}% eBay fee; postage and your time aren&apos;t included.
+        </p>
+        <p className="mt-1.5 text-xs text-slate-500">
+          eBay is the only marketplace we can price a resale on right now. Know another store that buys cards?{" "}
+          <Link href="/contact" className="text-brand-400 hover:underline">Email us</Link> and we&apos;ll add it as a sell option.
         </p>
       </div>
 
+      {!ebay ? (
+        <div className="card-surface grid place-items-center p-12 text-center text-sm text-slate-400">
+          eBay arbitrage isn&apos;t available in {info.place} yet — it&apos;s eBay-only for now, and eBay doesn&apos;t cover this market.
+        </div>
+      ) : (
+        <>
       {/* Source pickers + sort */}
       <div className="card-surface mb-4 flex flex-wrap items-end justify-between gap-4 p-4">
         <ArbitrageFilters sources={sources} buy={buy} sell={sell} sort={sort} />
@@ -143,6 +153,8 @@ export default async function ArbitragePage({ searchParams }: { searchParams: { 
             ~{Math.round(EBAY_FEE * 100)}% fee) − buy; it excludes postage, supplies and your time, and thin or one-off
             listings can mislead — sanity-check the card page before you commit.
           </p>
+        </>
+      )}
         </>
       )}
     </div>
