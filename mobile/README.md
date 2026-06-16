@@ -46,9 +46,9 @@ running inside the native app?" check, so the same code serves web and app:
 | --- | --- |
 | `src/components/NativeShell.tsx` | Detects Capacitor, shows the AdMob banner, styles the status bar, wires the Android back button. No-op on the web. |
 | `src/lib/admob.ts` | AdMob **ad-unit** ids (test by default, override via `NEXT_PUBLIC_ADMOB_*`). |
-| `src/components/WebAdsLoader.tsx` | Loads web AdSense **only** on the web (never in-app). |
+| `src/components/HilltopAdsLoader.tsx` | Loads the HilltopAds web ad zone **only** on the web (never in-app). |
 | `src/components/OutboundLink.tsx` | Opens retailer "buy" links in the system browser when in-app. |
-| `src/app/globals.css` | Hides AdSense in-app + reserves space for the banner. |
+| `src/app/globals.css` | Reserves space for the native AdMob banner. |
 
 The AdMob **app** id (not the unit ids) lives natively:
 `android/app/src/main/res/values/strings.xml` and `ios/App/App/Info.plist`.

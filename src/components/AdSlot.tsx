@@ -1,23 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ADSENSE_CLIENT, ADSENSE_ENABLED } from "@/lib/ads";
 import { usePremium } from "./PremiumProvider";
 
-declare global {
-  interface Window {
-    // The loader script sets `.loaded = true` when it runs; with an ad blocker the
-    // request 404s/never fires, so the property stays undefined — our tell.
-    adsbygoogle?: unknown[] & { loaded?: boolean };
-  }
-}
-
 // ── House promos ─────────────────────────────────────────────────────────────────
-// First-party fallback units shown wherever AdSense can't serve: no slot id
-// configured yet, the script is blocked by an ad blocker (~30% of desktop), or
-// the network returned no fill. First-party content sails through filter lists,
-// so a blocked impression becomes a site promo instead of dead space.
+// First-party promo units. Google AdSense has been removed — the site now monetises
+// via HilltopAds, whose MultiTag zone is loaded site-wide from the root layout (see
+// HilltopAdsLoader). HilltopAds serves at the page level (popunder/banner), not as a
+// per-slot fill, so these in-content placements show a first-party promo instead of
+// dead space. Premium members get an ad-free site (renders nothing).
 const HOUSE_ADS = [
   { emoji: "📈", title: "Today's biggest price moves", sub: "Risers, drops and best-value buys — updated daily", cta: "See the movers", href: "/movers" },
   { emoji: "🎲", title: "Is that booster box worth opening?", sub: "Run the numbers against live singles prices", cta: "Box EV calculator", href: "/tools/box-ev" },
@@ -33,7 +24,7 @@ function hashStr(s: string): number {
   return h;
 }
 
-export function HouseAd({ seed, height }: { seed: string; height: number }) {
+function HouseAd({ seed, height }: { seed: string; height: number }) {
   const ad = HOUSE_ADS[hashStr(seed) % HOUSE_ADS.length];
   return (
     <Link
@@ -58,19 +49,12 @@ export function HouseAd({ seed, height }: { seed: string; height: number }) {
   );
 }
 
-// ── The ad placement ─────────────────────────────────────────────────────────────
-// Renders a Google AdSense unit inside a FIXED-height, overflow-hidden frame:
-// the box occupies exactly `height` px from first paint and never grows or
-// collapses, whether the ad fills, no-fills, or is blocked — zero CLS by
-// construction (ad injection into unreserved space was a top layout-shift
-// source). If AdSense can't serve (no slot id, blocked, unfilled), the frame
-// shows a first-party HouseAd instead of empty space.
+// In-content placement: a fixed-height, overflow-hidden frame (zero CLS by
+// construction) showing a first-party HouseAd. Premium members see nothing.
 export function AdSlot({
   slot,
   label = "Advertisement",
   height = 90,
-  format = "auto",
-  responsive = true,
   className,
 }: {
   slot?: string;
@@ -80,67 +64,11 @@ export function AdSlot({
   responsive?: boolean;
   className?: string;
 }) {
-  const premium = usePremium(); // Premium members get an ad-free site.
-  const live = ADSENSE_ENABLED && !!slot;
-  const boxRef = useRef<HTMLDivElement>(null);
-  // Effects run twice under React strict mode in dev; guard the push so we never
-  // call adsbygoogle twice for the same slot (which throws).
-  const pushed = useRef(false);
-  // House promo: immediate when AdSense can't serve here at all (no slot id —
-  // also the local-dev state); otherwise flipped on once detection says the
-  // script is blocked or the unit went unfilled.
-  const [house, setHouse] = useState(!live);
-
-  useEffect(() => {
-    if (!live) return;
-    if (!pushed.current) {
-      try {
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-        pushed.current = true;
-      } catch {
-        // adsbygoogle.js not loaded yet / blocked — detection below decides.
-      }
-    }
-    let alive = true;
-    const verdict = (final: boolean) => {
-      if (!alive) return;
-      const ins = boxRef.current?.querySelector("ins.adsbygoogle");
-      const status = ins?.getAttribute("data-ad-status");
-      if (status === "filled") return setHouse(false);
-      if (status === "unfilled") return setHouse(true);
-      // No verdict from AdSense yet. The loader uses lazyOnload (browser idle),
-      // so only the FINAL check treats a script that never ran as blocked.
-      if (final && !window.adsbygoogle?.loaded) setHouse(true);
-    };
-    const t1 = setTimeout(() => verdict(false), 4000);
-    const t2 = setTimeout(() => verdict(true), 9000);
-    return () => {
-      alive = false;
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
-  }, [live]);
-
-  if (premium) return null; // ad-free for subscribers
-
+  const premium = usePremium();
+  if (premium) return null;
   return (
-    <div ref={boxRef} className={`relative overflow-hidden ${className ?? ""}`} style={{ height }}>
-      {live && (
-        <ins
-          className="adsbygoogle block"
-          style={{ display: "block", width: "100%", height }}
-          data-ad-client={ADSENSE_CLIENT}
-          data-ad-slot={slot}
-          data-ad-format={format}
-          data-full-width-responsive={responsive ? "true" : "false"}
-          aria-label={label}
-        />
-      )}
-      {house && (
-        <div className="absolute inset-0">
-          <HouseAd seed={slot || label} height={height} />
-        </div>
-      )}
+    <div className={`relative overflow-hidden ${className ?? ""}`} style={{ height }}>
+      <HouseAd seed={slot || `${label}-${height}-${className ?? ""}`} height={height} />
     </div>
   );
 }

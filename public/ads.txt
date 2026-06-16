@@ -1,1 +1,1 @@
-google.com, pub-6842128782879909, DIRECT, f08c47fec0942fa0
+# Ads served by HilltopAds. Add the HilltopAds ads.txt line(s) from your dashboard here.

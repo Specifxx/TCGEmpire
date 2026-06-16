@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Riftle } from "@/components/Riftle";
 import { GameBoundary } from "@/components/GameBoundary";
 import { AdSlot } from "@/components/AdSlot";
-import { ADSENSE_SLOTS } from "@/lib/ads";
 import { TcgplayerAd } from "@/components/TcgplayerAd";
 import { getCountry } from "@/lib/get-country";
 import { SITE_URL } from "@/lib/site";
@@ -52,7 +51,7 @@ export default function RiftlePage() {
           are exactly the audience these creatives convert. */}
       <TcgplayerAd size="leaderboard" country={country} className="mt-8" />
       <div className="mx-auto max-w-2xl">
-        <AdSlot slot={ADSENSE_SLOTS.games} className="mt-8" height={100} />
+        <AdSlot className="mt-8" height={100} />
       </div>
     </>
   );

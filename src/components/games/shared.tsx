@@ -8,7 +8,6 @@ import { useCallback, useEffect, useState } from "react";
 import { formatMoney } from "@/lib/format";
 import { WishlistButton } from "../WishlistButton";
 import { AdSlot } from "../AdSlot";
-import { ADSENSE_SLOTS } from "@/lib/ads";
 
 export type GameCard = {
   id: string;
@@ -105,7 +104,7 @@ export function GameShell({
       {children}
       {/* Below the game, above the footer — monetises the dwell time without ever
           sitting between the player and the controls. */}
-      <AdSlot slot={ADSENSE_SLOTS.games} className="mt-6" height={100} />
+      <AdSlot className="mt-6" height={100} />
       <p className="mt-6 text-center text-xs text-slate-600">
         Prices are live from the stores RiftCompare tracks — every game doubles as market research.{" "}
         <Link href="/games" className="text-brand-400 hover:underline">More games →</Link>

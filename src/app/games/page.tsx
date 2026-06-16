@@ -9,7 +9,6 @@ import { formatMoney } from "@/lib/format";
 import { cardHref } from "@/lib/card-url";
 import { SITE_URL } from "@/lib/site";
 import { AdSlot } from "@/components/AdSlot";
-import { ADSENSE_SLOTS } from "@/lib/ads";
 
 export const metadata: Metadata = {
   title: "Riftbound Games — Free Daily Puzzles & Arcade",
@@ -182,7 +181,7 @@ export default async function GamesPage() {
         ))}
       </div>
 
-      <AdSlot slot={ADSENSE_SLOTS.games} className="mt-8" height={100} />
+      <AdSlot className="mt-8" height={100} />
 
       {/* Arcade → shop: today's best buys, while they're here */}
       {deals.length > 0 && (

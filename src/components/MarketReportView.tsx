@@ -7,7 +7,6 @@ import { Markdown } from "./Markdown";
 import { fmtDate } from "./ArticleList";
 import { AdSlot } from "./AdSlot";
 import { SITE_URL } from "@/lib/site";
-import { ADSENSE_SLOTS } from "@/lib/ads";
 import { BreadthBar, DeltaChip, DivergingBar, IndexAreaChart, Sparkline, trendColor } from "./MarketReportCharts";
 
 // The rich rendering of an auto-generated daily market report: the prose sections
@@ -115,7 +114,7 @@ export function MarketReportView({ article, data }: { article: Article; data: Re
         <Markdown content={data.prose.lede} />
       </div>
 
-      <AdSlot slot={ADSENSE_SLOTS.article} className="mt-6" height={120} />
+      <AdSlot className="mt-6" height={120} />
 
       {/* Markets at a glance: a card per region with its own sparkline */}
       <h2 className="mt-8 text-xl font-bold text-white">Markets at a glance</h2>
@@ -233,7 +232,7 @@ export function MarketReportView({ article, data }: { article: Article; data: Re
         {METHODOLOGY}
       </div>
 
-      <AdSlot slot={ADSENSE_SLOTS.article} className="mt-8" height={120} />
+      <AdSlot className="mt-8" height={120} />
     </article>
   );
 }
