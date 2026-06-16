@@ -108,6 +108,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {/* Impact / TCGplayer affiliate site-ownership verification. Impact looks for
             the non-standard `value` attribute, so spread it past the meta typing. */}
         <meta {...({ name: "impact-site-verification", value: IMPACT_SITE_VERIFICATION } as any)} />
+        {/* HilltopAds site-ownership verification (homepage). */}
+        <meta name="f56d4c757e10b95b149b998706568143dfa0d0e9" content="f56d4c757e10b95b149b998706568143dfa0d0e9" />
         {/* Google AdSense site verification. Present as soon as a publisher id is set
             so AdSense can confirm ownership of the site when you add it. */}
         {ADSENSE_ENABLED && <meta name="google-adsense-account" content={ADSENSE_CLIENT} />}
