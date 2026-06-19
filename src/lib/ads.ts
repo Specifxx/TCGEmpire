@@ -3,18 +3,19 @@
 // Google AdSense has been removed — the site now monetises via HilltopAds. These
 // values are PUBLIC by design (they ship in the page HTML).
 
-// ── HilltopAds (primary ad network) ────────────────────────────────────────────
-// HilltopAds zone loader URLs, all loaded site-wide (see HilltopAdsLoader).
-// HilltopAds does its own device/geo targeting and per-zone frequency capping, so
-// every zone loads on every page and each fills only its eligible traffic (e.g. the
-// mobile zone fills on phones). Protocol-relative so they inherit the page's https.
+// ── HilltopAds (display banner only) ────────────────────────────────────────────
+// HilltopAds zone loader URLs, loaded site-wide (see HilltopAdsLoader). We keep ONLY
+// the low-key display banner: the popunder and mobile pop zones were removed because
+// pop/popunder ads bounce first-time visitors and erode trust, which costs more in
+// lost organic growth than the low CPM earns on a site this size. The clean,
+// on-topic TCGplayer/eBay affiliate banners cover the rest of display monetisation.
+//
+// NOTE: the remaining "MultiTag" zone can still serve a popup unless that format is
+// turned OFF for this zone in the HilltopAds dashboard — disable it there for a
+// fully banner-only experience (it can't be controlled from code).
 export const HILLTOPADS_ZONES: string[] = [
-  // Banner / MultiTag (display + popup).
+  // Banner / MultiTag (display).
   "//deliciouslip.com/buX.VwsIdaGXlC0MYuWRcH/oeTm/9BuOZSUoldkqPPT/cgxZNiD/EHzdN/zjMWtNNEziEi0GMkTPMT3gN-wh",
-  // Popunder.
-  "//pleased-report.com/bs3iVi0CP.3bplvfbbm/V/JQZWDB0A3ZMpT/Qax/NCTDAw5fLuT/c-xwNBDtEI1VM/T/Mn",
-  // Mobile.
-  "//deliciouslip.com/bcXqVNs.d/G/l/0/YtWdcK/veymD9SuRZrUhl/kwPCTVcexXNjDRE/1hMCTYc-tiNdzMEW0/M/TwULy/MpQG",
 ];
 
 // True when at least one zone is configured. Guards the loader.
