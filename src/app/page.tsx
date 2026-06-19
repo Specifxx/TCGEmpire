@@ -10,6 +10,7 @@ import { getPopularCards } from "@/lib/cheapest-cards";
 import { getPriceMovers } from "@/lib/price-history";
 import { PriceWatch } from "@/components/PriceWatch";
 import { CountUp } from "@/components/CountUp";
+import { Reveal } from "@/components/Reveal";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES, priceField, type CountryInfo } from "@/lib/country";
 import { SETS, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
@@ -155,10 +156,12 @@ export default async function HomePage() {
       </section>
 
       {/* Official partner programs — credibility strip (approved affiliates). */}
-      <Partners country={country} />
+      <Reveal>
+        <Partners country={country} />
+      </Reveal>
 
       {/* Most popular cards — the most-searched Riftbound singles right now */}
-      <section className="reveal">
+      <section>
         <div className="mb-4 flex items-end justify-between gap-3">
           <div>
             <h2 className="text-xl font-extrabold text-white">Most popular Riftbound cards</h2>
@@ -168,13 +171,13 @@ export default async function HomePage() {
           </div>
           <Link href="/browse" className="btn-ghost text-xs shrink-0">View all →</Link>
         </div>
-        <div className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-2">
+        <Reveal stagger className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-2">
           {popularCards.map((c) => (
             <div key={c.id} className="w-36 shrink-0 sm:w-44">
               <CardTile card={c} />
             </div>
           ))}
-        </div>
+        </Reveal>
       </section>
 
       {/* TCGplayer affiliate banner — billboard on desktop, 300x250 rectangle on
@@ -182,12 +185,14 @@ export default async function HomePage() {
       <TcgplayerAd size="billboard" mobile="rect" country={country} />
 
       {/* Price Watch — this week's movers in the viewer's market */}
-      <PriceWatch movers={movers} currency={info.currency} place={info.place} />
+      <Reveal>
+        <PriceWatch movers={movers} currency={info.currency} place={info.place} />
+      </Reveal>
 
       {/* Browse by set */}
-      <section className="reveal">
+      <section>
         <h2 className="mb-4 text-xl font-extrabold text-white">Browse by set</h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <Reveal stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {SETS.map((s) =>
             s.comingSoon ? (
               <div
@@ -212,13 +217,13 @@ export default async function HomePage() {
               </Link>
             )
           )}
-        </div>
+        </Reveal>
       </section>
 
       {/* Browse by domain */}
-      <section className="reveal">
+      <section>
         <h2 className="mb-4 text-xl font-extrabold text-white">Browse by domain</h2>
-        <div className="flex flex-wrap gap-2">
+        <Reveal stagger className="flex flex-wrap gap-2">
           {DOMAIN_KEYS.map((k) => {
             const d = domainInfo(k);
             return (
@@ -233,7 +238,7 @@ export default async function HomePage() {
               </Link>
             );
           })}
-        </div>
+        </Reveal>
       </section>
 
       {/* Second TCGplayer banner — far enough from the first that it never
@@ -241,7 +246,7 @@ export default async function HomePage() {
       <TcgplayerAd size="leaderboard" country={country} />
 
       {/* About + FAQ — keyword-relevant content for search */}
-      <section className="card-surface reveal p-6">
+      <section className="card-surface p-6">
         <h2 className="text-xl font-extrabold text-white">Riftbound prices in {info.place}, all in one place</h2>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
           RiftCompare is a free, independent price-comparison tool for Riftbound: League of Legends
