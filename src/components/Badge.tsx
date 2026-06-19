@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { conditionInfo, domainInfo, rarityInfo } from "@/lib/constants";
 
 function hexWithAlpha(hex: string, alpha: number): string {
@@ -7,18 +8,28 @@ function hexWithAlpha(hex: string, alpha: number): string {
   return `${hex}${a}`;
 }
 
-export function DomainBadge({ domain }: { domain: string }) {
+// `href` makes the badge a link to the domain hub. Only pass it where the badge is
+// NOT already inside another link (nested <a> is invalid) — e.g. the card page, not
+// the card tiles (which are wrapped in a Link).
+export function DomainBadge({ domain, href }: { domain: string; href?: string }) {
   const d = domainInfo(domain);
-  return (
-    <span
-      className="chip"
-      style={{ backgroundColor: hexWithAlpha(d.color, 0.18), color: d.color }}
-    >
-      <span
-        className="h-2 w-2 rounded-full"
-        style={{ backgroundColor: d.color }}
-      />
+  const style = { backgroundColor: hexWithAlpha(d.color, 0.18), color: d.color };
+  const inner = (
+    <>
+      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: d.color }} />
       {d.label}
+    </>
+  );
+  if (href) {
+    return (
+      <Link href={href} className="chip transition-opacity hover:opacity-80" style={style}>
+        {inner}
+      </Link>
+    );
+  }
+  return (
+    <span className="chip" style={style}>
+      {inner}
     </span>
   );
 }

@@ -22,6 +22,15 @@ export interface MetaDeckSeed {
 
 export const META_DECKS: MetaDeckSeed[] = (metaDecksData.decks ?? []) as MetaDeckSeed[];
 
+// Meta decks that play a card with this name (loose match so "Kai'Sa" == "kaisa").
+// Static seed data — no DB call. Powers the "Played in" section on card pages, which
+// adds card ↔ deck internal links (and a useful "what's this card for?" signal).
+export function decksUsingCard(cardName: string): MetaDeckSeed[] {
+  const target = normalizeSearch(cardName);
+  if (!target) return [];
+  return META_DECKS.filter((d) => d.cards.some((c) => normalizeSearch(c.name) === target));
+}
+
 export interface ResolvedCardData {
   id: string;
   name: string;
