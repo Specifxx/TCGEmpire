@@ -3,9 +3,9 @@ import { getArticles } from "@/lib/articles";
 import { ArticleList } from "@/components/ArticleList";
 
 export const metadata: Metadata = {
-  title: "Riftbound Guides — Learn the Game & Build Decks (Australia)",
+  title: "Riftbound Guides — Learn the Game & Build Decks",
   description:
-    "Beginner-friendly guides for Riftbound: League of Legends TCG — deckbuilding, where to buy in Australia, and more.",
+    "Beginner-friendly guides for Riftbound: League of Legends TCG — deckbuilding, where to buy, and more.",
   alternates: { canonical: "/guides" },
 };
 

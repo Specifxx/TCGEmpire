@@ -22,7 +22,7 @@ export const revalidate = 180;
 export const metadata: Metadata = {
   title: { absolute: "Buy & Compare Riftbound Card Prices | RiftCompare" },
   description:
-    "Compare live Riftbound TCG card prices across stores in Australia, New Zealand and the United States, and find the cheapest place to buy Riftbound singles and sealed. Updated daily.",
+    "Compare live Riftbound TCG card prices across stores in Australia, New Zealand, the United States and the United Kingdom, and find the cheapest place to buy Riftbound singles and sealed. Updated daily.",
   keywords: [
     "buy Riftbound cards",
     "Riftbound prices",

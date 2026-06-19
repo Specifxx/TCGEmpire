@@ -10,9 +10,9 @@ import { COUNTRIES } from "@/lib/country";
 export const revalidate = 900;
 
 export const metadata: Metadata = {
-  title: "Riftbound Top Meta Decks & Build Cost (Australia)",
+  title: "Riftbound Top Meta Decks & Build Cost",
   description:
-    "Ready-made Riftbound decklists, each priced live across Australian stores. See what it costs to build a deck and where to buy every card.",
+    "Ready-made Riftbound decklists, each priced live across stores. See what it costs to build a deck and where to buy every card.",
   alternates: { canonical: "/decks" },
 };
 
