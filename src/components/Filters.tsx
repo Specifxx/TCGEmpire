@@ -85,6 +85,8 @@ export function Filters() {
     <aside className="w-full shrink-0 lg:w-64">
       {/* Mobile toggle */}
       <button
+        type="button"
+        aria-expanded={mobileOpen}
         onClick={() => setMobileOpen((o) => !o)}
         className="mb-3 flex w-full items-center justify-between rounded-lg border border-ink-700 bg-ink-850 px-4 py-2.5 text-sm font-semibold text-white lg:hidden"
       >
@@ -102,7 +104,7 @@ export function Filters() {
           <div className="mb-1 flex items-center justify-between">
             <h2 className="text-sm font-bold uppercase tracking-wide text-slate-300">Filters</h2>
             {activeCount > 0 && (
-              <button onClick={clearAll} className="text-xs text-brand-400 hover:underline">
+              <button type="button" onClick={clearAll} className="text-xs text-brand-400 hover:underline">
                 Clear ({activeCount})
               </button>
             )}
@@ -110,11 +112,12 @@ export function Filters() {
 
           <Section title="Price (AUD)" defaultOpen>
             <div className="flex items-center gap-2">
-              <input type="number" placeholder="Min" value={min} onChange={(e) => setMin(e.target.value)} className="input" />
+              <input type="number" aria-label="Minimum price" placeholder="Min" value={min} onChange={(e) => setMin(e.target.value)} className="input" />
               <span className="text-slate-500">–</span>
-              <input type="number" placeholder="Max" value={max} onChange={(e) => setMax(e.target.value)} className="input" />
+              <input type="number" aria-label="Maximum price" placeholder="Max" value={max} onChange={(e) => setMax(e.target.value)} className="input" />
             </div>
             <button
+              type="button"
               onClick={() =>
                 update((p) => {
                   if (min) p.set("min", min); else p.delete("min");
@@ -207,6 +210,8 @@ function Section({
   return (
     <div className={last ? "" : "border-b border-ink-700"}>
       <button
+        type="button"
+        aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
         className="flex w-full items-center justify-between py-3 text-xs font-semibold uppercase tracking-wide text-slate-400 hover:text-slate-200"
       >

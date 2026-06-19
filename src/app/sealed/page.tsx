@@ -25,9 +25,9 @@ const SEALED_SEARCHES = [
 ];
 
 export const metadata: Metadata = {
-  title: "Riftbound Sealed Products — Booster Boxes, Packs & Sets (Australia)",
+  title: "Riftbound Sealed Products — Booster Boxes, Packs & Sets",
   description:
-    "Compare prices on sealed Riftbound products — booster boxes, booster packs, Proving Grounds, bundles and more — across Australian stores to find the cheapest.",
+    "Compare prices on sealed Riftbound products — booster boxes, booster packs, Proving Grounds, bundles and more — across stores to find the cheapest.",
   alternates: { canonical: "/sealed" },
 };
 
