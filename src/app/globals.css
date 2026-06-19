@@ -115,3 +115,76 @@ h1, h2, h3 {
 html.capacitor-native.has-native-banner body {
   padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
 }
+
+/* ---------------------------------------------------------------------------
+   Homepage motion & flair
+   All decorative. Every effect anchors to a visible end-state so content is
+   never hidden when JS/scroll-timelines are unavailable, and the block at the
+   bottom disables it all under prefers-reduced-motion.
+   --------------------------------------------------------------------------- */
+
+/* Soft dotted texture for the hero, masked to fade out toward the edges. */
+.hero-dots {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.16) 1px, transparent 1px);
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 0%, transparent 72%);
+  mask-image: radial-gradient(ellipse at center, #000 0%, transparent 72%);
+}
+
+/* Animated brand→gold→brand gradient sweep for a headline keyword. */
+@keyframes brand-shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.brand-shimmer {
+  background-image: linear-gradient(90deg, #34d17e, #f2c84f, #34d17e);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: brand-shimmer 6s ease-in-out infinite;
+}
+
+/* Light sweep across a button to draw the eye, clipped to its rounded box. */
+@keyframes cta-shine {
+  0% { transform: translateX(-160%) skewX(-18deg); }
+  60%, 100% { transform: translateX(280%) skewX(-18deg); }
+}
+.cta-shine { position: relative; overflow: hidden; }
+.cta-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 38%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: translateX(-160%) skewX(-18deg);
+  animation: cta-shine 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Scroll-driven section reveal — progressive enhancement. Only browsers that
+   support scroll timelines apply it (others render content normally), and it
+   resolves to the visible state so nothing is ever hidden. */
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(28px); }
+  to { opacity: 1; transform: none; }
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal {
+      animation: reveal-up linear both;
+      animation-timeline: view();
+      animation-range: entry 4% cover 20%;
+    }
+  }
+}
+
+/* Respect users who prefer less motion: neutralise every animation/transition. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

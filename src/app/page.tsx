@@ -9,6 +9,7 @@ import { TcgplayerAd } from "@/components/TcgplayerAd";
 import { getPopularCards } from "@/lib/cheapest-cards";
 import { getPriceMovers } from "@/lib/price-history";
 import { PriceWatch } from "@/components/PriceWatch";
+import { CountUp } from "@/components/CountUp";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES, priceField, type CountryInfo } from "@/lib/country";
 import { SETS, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
@@ -91,37 +92,64 @@ export default async function HomePage() {
   return (
     <div className="flex flex-col gap-10">
       {/* Hero */}
-      <section className="card-surface animate-fade-up overflow-hidden">
-        <div className="relative bg-gradient-to-br from-brand-600/25 via-ink-850 to-gold/15 px-6 py-12 text-center">
+      <section className="card-surface animate-fade-up relative overflow-hidden">
+        {/* Animated ambient background: blurred brand/gold "aurora" blobs + a soft
+            dotted texture. Decorative only, so hidden from assistive tech. */}
+        <div className="pointer-events-none absolute inset-0" aria-hidden>
+          <div className="absolute -left-24 -top-28 h-80 w-80 rounded-full bg-brand-500/25 blur-3xl animate-blob" />
+          <div className="absolute -right-20 -top-4 h-72 w-72 rounded-full bg-gold/15 blur-3xl animate-blob [animation-delay:3s]" />
+          <div className="absolute -bottom-28 left-1/3 h-80 w-80 rounded-full bg-brand-400/20 blur-3xl animate-blob [animation-delay:6s]" />
+          <div className="hero-dots absolute inset-0 opacity-60" />
+        </div>
+
+        <div className="relative bg-gradient-to-br from-brand-600/20 via-ink-850/40 to-gold/10 px-6 py-14 text-center">
           <div className="mx-auto mb-5 flex items-center justify-center">
-            {/* Above-the-fold LCP candidate: explicit size (no CLS) + high fetch priority. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-r-green.png" alt="RiftCompare" width={359} height={353} fetchPriority="high" className="animate-float h-16 w-auto sm:h-20" />
+            <div className="relative animate-float">
+              {/* Gentle glow halo behind the mark. */}
+              <div className="absolute inset-0 -z-10 rounded-full bg-brand-500/30 blur-2xl animate-glow-pulse" aria-hidden />
+              {/* Above-the-fold LCP candidate: explicit size (no CLS) + high fetch priority. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-r-green.png" alt="RiftCompare" width={359} height={353} fetchPriority="high" className="h-16 w-auto drop-shadow-[0_8px_24px_rgba(52,209,126,0.35)] sm:h-20" />
+            </div>
           </div>
-          <h1 className="mx-auto max-w-3xl text-2xl font-extrabold text-white sm:text-4xl">
-            Compare Riftbound card prices across {info.adjective} stores
+
+          {/* Live badge */}
+          <div className="animate-fade-in [animation-delay:60ms]">
+            <span className="chip mb-4 border border-brand-500/30 bg-brand-500/10 text-brand-300">
+              <span className="relative mr-0.5 flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-400" />
+              </span>
+              Live prices · updated daily
+            </span>
+          </div>
+
+          <h1 className="animate-fade-in [animation-delay:120ms] mx-auto max-w-3xl text-3xl font-extrabold text-white sm:text-5xl">
+            Compare <span className="brand-shimmer">Riftbound</span> card prices across {info.adjective} stores
           </h1>
-          <p className="mx-auto mt-3 max-w-2xl text-sm text-slate-400 sm:text-base">
+          <p className="animate-fade-in [animation-delay:200ms] mx-auto mt-4 max-w-2xl text-sm text-slate-300 sm:text-base">
             Find the cheapest place to buy Riftbound TCG cards in {info.place} — live prices in{" "}
             {info.currency} compared across {storeCount} {info.adjective} {storeWord}, updated daily.
           </p>
 
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <Link href="/browse" className="btn-primary">Browse the database</Link>
+          <div className="animate-fade-in [animation-delay:280ms] mt-7 flex flex-wrap items-center justify-center gap-3">
+            <Link href="/browse" className="btn-primary cta-shine">Browse the database</Link>
             <Link href="/decks" className="btn-ghost">Top meta decks</Link>
             <Link href="/deck" className="btn-ghost">Deck builder &amp; pricing</Link>
             <Link href="/learn" className="btn-ghost">🎓 New to Riftbound?</Link>
           </div>
 
           {/* Country / market toggle */}
-          <CountryHeroToggle />
+          <div className="animate-fade-in [animation-delay:340ms]">
+            <CountryHeroToggle />
+          </div>
 
           {/* Stats */}
-          <div className="mx-auto mt-8 grid max-w-2xl grid-cols-2 gap-4 sm:grid-cols-4">
-            <Stat value={totalCards.toLocaleString()} label="cards" />
-            <Stat value={pricedCards.toLocaleString()} label="priced" />
-            <Stat value={inStockUnits.toLocaleString()} label="in-stock listings" />
-            <Stat value={String(storeCount)} label={`${info.code} ${storeWord}`} />
+          <div className="animate-fade-in [animation-delay:420ms] mx-auto mt-8 grid max-w-2xl grid-cols-2 gap-4 sm:grid-cols-4">
+            <Stat value={totalCards} label="cards" />
+            <Stat value={pricedCards} label="priced" />
+            <Stat value={inStockUnits} label="in-stock listings" />
+            <Stat value={storeCount} label={`${info.code} ${storeWord}`} />
           </div>
         </div>
       </section>
@@ -130,7 +158,7 @@ export default async function HomePage() {
       <Partners country={country} />
 
       {/* Most popular cards — the most-searched Riftbound singles right now */}
-      <section>
+      <section className="reveal">
         <div className="mb-4 flex items-end justify-between gap-3">
           <div>
             <h2 className="text-xl font-extrabold text-white">Most popular Riftbound cards</h2>
@@ -157,7 +185,7 @@ export default async function HomePage() {
       <PriceWatch movers={movers} currency={info.currency} place={info.place} />
 
       {/* Browse by set */}
-      <section>
+      <section className="reveal">
         <h2 className="mb-4 text-xl font-extrabold text-white">Browse by set</h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {SETS.map((s) =>
@@ -177,7 +205,7 @@ export default async function HomePage() {
               <Link
                 key={s.code}
                 href={`/sets/${s.slug}`}
-                className="card-surface flex flex-col gap-1 p-4 transition-colors hover:border-brand-500"
+                className="card-surface flex flex-col gap-1 p-4 transition-all duration-200 hover:-translate-y-1 hover:border-brand-500 hover:shadow-glow"
               >
                 <span className="text-lg font-bold text-white">{s.code}</span>
                 <span className="text-xs text-slate-400">{s.name}</span>
@@ -188,7 +216,7 @@ export default async function HomePage() {
       </section>
 
       {/* Browse by domain */}
-      <section>
+      <section className="reveal">
         <h2 className="mb-4 text-xl font-extrabold text-white">Browse by domain</h2>
         <div className="flex flex-wrap gap-2">
           {DOMAIN_KEYS.map((k) => {
@@ -197,7 +225,7 @@ export default async function HomePage() {
               <Link
                 key={k}
                 href={`/browse?domain=${k}`}
-                className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-brand-500"
+                className="chip border border-ink-700 px-3 py-1.5 text-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-105 hover:border-brand-500"
                 style={{ color: d.color }}
               >
                 <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: d.color }} />
@@ -213,7 +241,7 @@ export default async function HomePage() {
       <TcgplayerAd size="leaderboard" country={country} />
 
       {/* About + FAQ — keyword-relevant content for search */}
-      <section className="card-surface p-6">
+      <section className="card-surface reveal p-6">
         <h2 className="text-xl font-extrabold text-white">Riftbound prices in {info.place}, all in one place</h2>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
           RiftCompare is a free, independent price-comparison tool for Riftbound: League of Legends
@@ -261,10 +289,12 @@ export default async function HomePage() {
   );
 }
 
-function Stat({ value, label }: { value: string; label: string }) {
+function Stat({ value, label }: { value: number; label: string }) {
   return (
-    <div className="rounded-lg bg-ink-900/70 p-3">
-      <div className="text-xl font-extrabold text-gold">{value}</div>
+    <div className="rounded-xl border border-ink-700/50 bg-ink-900/70 p-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-500/40">
+      <div className="text-xl font-extrabold text-gold sm:text-2xl">
+        <CountUp value={value} />
+      </div>
       <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
     </div>
   );

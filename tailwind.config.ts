@@ -39,14 +39,32 @@ const config: Config = {
           "0%": { opacity: "0", transform: "translateY(12px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        "fade-in": {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
         float: {
           "0%,100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-4px)" },
         },
+        // Slow, organic drift for the blurred hero "aurora" blobs.
+        blob: {
+          "0%,100%": { transform: "translate(0px,0px) scale(1)" },
+          "33%": { transform: "translate(26px,-18px) scale(1.08)" },
+          "66%": { transform: "translate(-20px,14px) scale(0.94)" },
+        },
+        // Gentle brand-glow breathing for emphasis chips/icons.
+        "glow-pulse": {
+          "0%,100%": { opacity: "0.5", transform: "scale(1)" },
+          "50%": { opacity: "0.85", transform: "scale(1.06)" },
+        },
       },
       animation: {
         "fade-up": "fade-up 0.5s ease-out both",
+        "fade-in": "fade-in 0.6s ease-out both",
         float: "float 4s ease-in-out infinite",
+        blob: "blob 16s ease-in-out infinite",
+        "glow-pulse": "glow-pulse 3.4s ease-in-out infinite",
       },
     },
   },
