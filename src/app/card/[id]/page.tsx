@@ -22,6 +22,8 @@ import { EbayAd } from "@/components/EbayAd";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES, pickPrice } from "@/lib/country";
 import { UK_FALLBACK_RETAILERS, setByCode } from "@/lib/constants";
+import { domainSlug } from "@/lib/domains";
+import { decksUsingCard } from "@/lib/meta-decks";
 import { SITE_URL } from "@/lib/site";
 import { PriceHistoryChart } from "@/components/PriceHistoryChart";
 import { AiInsight } from "@/components/AiInsight";
@@ -238,6 +240,10 @@ export default async function CardPage({ params }: { params: { id: string } }) {
       ? `More cards from ${card.setName}`
       : `More ${card.domain} cards from ${card.setName}`;
 
+  // Meta decks that play this card — card ↔ deck internal links (and a "what's this
+  // card for?" signal for shoppers). Static seed lookup, no DB call.
+  const relatedDecks = decksUsingCard(card.name).slice(0, 6);
+
   return (
     <div>
       {jsonLd && (
@@ -270,7 +276,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
         <div className="min-w-0">
           <div className="card-surface p-5">
             <div className="flex flex-wrap items-center gap-2">
-              <DomainBadge domain={card.domain} />
+              <DomainBadge domain={card.domain} href={`/domains/${domainSlug(card.domain)}`} />
               <RarityBadge rarity={card.rarity} />
               <span className="chip bg-ink-800 text-slate-300">{card.type}</span>
               <VariantBadge variant={card.variant} />
@@ -496,6 +502,37 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           </section>
         </div>
       </div>
+
+      {/* Played in — meta decks that run this card. Card ↔ deck internal links,
+          and a useful "what do I build with this?" prompt for buyers. */}
+      {relatedDecks.length > 0 && (
+        <section className="mt-10">
+          <h2 className="mb-1 text-xl font-extrabold text-white">Played in these decks</h2>
+          <p className="mb-4 text-xs text-slate-500">
+            {cardDisplayName(card.name, card)} sees play in {relatedDecks.length === 1 ? "this meta deck" : `${relatedDecks.length} meta decks`} — open one for the full list and its build cost.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {relatedDecks.map((d) => (
+              <Link
+                key={d.slug}
+                href={`/decks/${d.slug}`}
+                className="card-surface group flex flex-col gap-1 p-4 transition-colors hover:border-brand-500"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-white group-hover:text-brand-300">{d.name}</span>
+                  {d.tier && <span className="chip ml-auto bg-ink-800 text-[10px] text-slate-400">{d.tier}</span>}
+                </div>
+                <span className="text-xs text-slate-500">{d.archetype}</span>
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  {d.domains.map((dm) => (
+                    <DomainBadge key={dm} domain={dm} />
+                  ))}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Similar cards — internal links to sibling card pages (same set/domain).
           Server-rendered so the links are in the crawlable HTML. */}

@@ -5,6 +5,7 @@ import { META_DECKS } from "@/lib/meta-decks";
 import { getArticles } from "@/lib/articles";
 import { getMarketReportSlugs } from "@/lib/posts";
 import { SETS } from "@/lib/constants";
+import { DOMAIN_PAGES } from "@/lib/domains";
 
 // Regenerate at most once per day — the card set is stable.
 export const revalidate = 86400;
@@ -53,6 +54,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/tools/arbitrage`, changeFrequency: "daily", priority: 0.7 },
     { url: `${SITE_URL}/premium`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${SITE_URL}/widgets`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${SITE_URL}/domains`, changeFrequency: "weekly", priority: 0.7 },
     { url: `${SITE_URL}/stores`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${SITE_URL}/games/higher-lower`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${SITE_URL}/games/price-check`, changeFrequency: "monthly", priority: 0.6 },
@@ -95,6 +97,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: priceDay,
   }));
 
+  // Domain landing pages (e.g. "Riftbound Fury cards") — topical hubs that link
+  // out to every card in the domain.
+  const domainRoutes: MetadataRoute.Sitemap = DOMAIN_PAGES.map((d) => ({
+    url: `${SITE_URL}/domains/${d.slug}`,
+    changeFrequency: "daily",
+    priority: 0.8,
+    lastModified: priceDay,
+  }));
+
   const deckRoutes: MetadataRoute.Sitemap = META_DECKS.map((d) => ({
     url: `${SITE_URL}/decks/${d.slug}`,
     changeFrequency: "weekly",
@@ -112,5 +123,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // NOTE: deliberately NO blanket "lastModified: now" — evergreen pages
   // (privacy, games, deck guides…) carry no date rather than a fake one.
-  return [...staticRoutes, ...setRoutes, ...deckRoutes, ...articleRoutes, ...reportRoutes, ...cardRoutes];
+  return [...staticRoutes, ...setRoutes, ...domainRoutes, ...deckRoutes, ...articleRoutes, ...reportRoutes, ...cardRoutes];
 }

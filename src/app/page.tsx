@@ -229,7 +229,7 @@ export default async function HomePage() {
             return (
               <Link
                 key={k}
-                href={`/browse?domain=${k}`}
+                href={`/domains/${k.toLowerCase()}`}
                 className="chip border border-ink-700 px-3 py-1.5 text-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-105 hover:border-brand-500"
                 style={{ color: d.color }}
               >
