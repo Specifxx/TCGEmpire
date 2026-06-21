@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 import { getPointsState } from "@/lib/points";
 import { RewardsDashboard } from "@/components/RewardsDashboard";
 import { RewardCatalogPreview } from "@/components/RewardsDashboard";
+import { InviteCard } from "@/components/InviteCard";
 import { SHARD } from "@/lib/points-config";
 
 export const dynamic = "force-dynamic";
@@ -45,9 +47,15 @@ export default async function RewardsPage() {
     return <div className="mx-auto max-w-4xl card-surface p-6 text-slate-300">Couldn&apos;t load your rewards. Please refresh.</div>;
   }
 
+  // How many friends this user has successfully referred (one ledger row each).
+  const referrals = await prisma.pointsLedger.count({
+    where: { userId: user.id, reason: "referral" },
+  });
+
   return (
     <div className="mx-auto max-w-4xl">
       <RewardsDashboard initial={state} />
+      <InviteCard userId={user.id} referrals={referrals} />
     </div>
   );
 }

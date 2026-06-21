@@ -18,6 +18,7 @@ import { BUYMEACOFFEE_URL, CONTACT_EMAIL, DISCORD_URL, SITE_NAME, SITE_URL } fro
 import { IMPACT_SITE_VERIFICATION } from "@/lib/affiliate";
 import { NativeShell } from "@/components/NativeShell";
 import { HilltopAdsLoader } from "@/components/HilltopAdsLoader";
+import { ReferralCapture } from "@/components/ReferralCapture";
 import { TcgplayerAd } from "@/components/TcgplayerAd";
 import { EbayAd } from "@/components/EbayAd";
 import { SovrnSnippet } from "@/components/SovrnSnippet";
@@ -191,6 +192,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {/* Detects the Capacitor native runtime and shows native AdMob ads, styles
             the status bar and wires the Android back button. No-op on the web. */}
         <NativeShell />
+        {/* Stashes an inbound ?ref=<userId> into a cookie for referral credit. */}
+        <ReferralCapture />
         <Analytics />
         <SpeedInsights />
         </PremiumProvider>

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
 import { createSession } from "@/lib/auth";
+import { awardPoints } from "@/lib/points";
+import { applyReferral } from "@/lib/referral";
 import { providerConfig, isProviderEnabled, isOAuthProvider, redirectUri, type OAuthProvider } from "@/lib/oauth";
 
 function fail(req: Request, code: string) {
@@ -71,8 +73,13 @@ export async function GET(req: Request, { params }: { params: { provider: string
   if (!providerId || !email) return fail(req, "oauth_noemail");
 
   // 4) Find-or-create the user (by provider id, then by email) and link the identity.
-  const user = await upsertOAuthUser(provider, providerId, email, name, avatar);
+  const { user, isNew } = await upsertOAuthUser(provider, providerId, email, name, avatar);
   await createSession(user.id);
+  if (isNew) {
+    // First-ever sign-in: seed the loyalty economy and credit any referrer.
+    await awardPoints(user.id, "welcome").catch(() => {});
+    await applyReferral(user.id);
+  }
   // Land new/returning sign-ins on their profile by default.
   return NextResponse.redirect(new URL("/profile", req.url));
 }
@@ -92,10 +99,11 @@ async function upsertOAuthUser(
 
   // Already linked to this provider id → just refresh avatar / verification.
   if (byProvider) {
-    return prisma.user.update({
+    const user = await prisma.user.update({
       where: { id: byProvider.id },
       data: { emailVerified: byProvider.emailVerified ?? new Date(), avatarUrl: byProvider.avatarUrl ?? avatar },
     });
+    return { user, isNew: false };
   }
 
   // Otherwise link to an existing account with the same email (the provider has
@@ -105,7 +113,7 @@ async function upsertOAuthUser(
   // now the authority on this email. The real owner can set a fresh one via /forgot.
   const byEmail = await prisma.user.findUnique({ where: { email } });
   if (byEmail) {
-    return prisma.user.update({
+    const user = await prisma.user.update({
       where: { id: byEmail.id },
       data: {
         ...link,
@@ -114,8 +122,9 @@ async function upsertOAuthUser(
         ...(!byEmail.emailVerified && byEmail.passwordHash ? { passwordHash: null } : {}),
       },
     });
+    return { user, isNew: false };
   }
-  return prisma.user.create({
+  const user = await prisma.user.create({
     data: {
       email,
       displayName: (name ?? email.split("@")[0]).slice(0, 24),
@@ -124,4 +133,5 @@ async function upsertOAuthUser(
       avatarUrl: avatar,
     },
   });
+  return { user, isNew: true };
 }

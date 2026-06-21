@@ -5,6 +5,7 @@ import { createSession, hashPassword, createAuthToken } from "@/lib/auth";
 import { sendVerificationEmail } from "@/lib/email";
 import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit";
 import { awardPoints } from "@/lib/points";
+import { applyReferral } from "@/lib/referral";
 
 const schema = z.object({
   email: z.string().email("Enter a valid email"),
@@ -53,6 +54,8 @@ export async function POST(req: Request) {
   await createSession(user.id);
   // Welcome Shards — seeds the loyalty economy the moment they join.
   await awardPoints(user.id, "welcome").catch(() => {});
+  // Credit a referrer if they arrived via a /?ref=<userId> link (best-effort).
+  await applyReferral(user.id);
   // Send a confirmation email (best-effort; no-op until RESEND_API_KEY is set).
   try {
     const token = await createAuthToken(user.id, "verify");
