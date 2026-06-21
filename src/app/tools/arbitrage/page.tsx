@@ -9,13 +9,16 @@ import { ArbitrageFilters } from "@/components/ArbitrageFilters";
 import { CardQuickLink } from "@/components/CardQuickLink";
 import type { CardTileData } from "@/components/CardTile";
 import { SITE_URL } from "@/lib/site";
+import { getCurrentUser } from "@/lib/auth";
+import { isPremium, premiumCheckoutEnabled } from "@/lib/premium";
+import { PremiumCta } from "@/components/PremiumCta";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: { absolute: "Riftbound Arbitrage & eBay Deals | RiftCompare" },
   description:
-    "Live Riftbound flipping arbitrage (buy cheap from a store, sell on eBay) plus the cards eBay is cheapest to buy. Sortable, paginated, updated daily, with direct buy/sell links. Free.",
+    "A RiftCompare Premium tool: live Riftbound flipping arbitrage (buy cheap from a store, sell on eBay) plus the cards eBay is cheapest to buy. Sortable, paginated, updated daily, with direct buy/sell links.",
   alternates: { canonical: "/tools/arbitrage" },
   openGraph: { title: "Riftbound Arbitrage & eBay Deals", url: `${SITE_URL}/tools/arbitrage` },
 };
@@ -37,6 +40,14 @@ export default async function ArbitragePage({
 }) {
   const country = getCountry();
   const info = COUNTRIES[country];
+
+  // Arbitrage is a RiftCompare Premium feature. Admins always have access.
+  const user = await getCurrentUser();
+  const unlocked = isPremium(user) || !!user?.isAdmin;
+  if (!unlocked) {
+    return <ArbitrageLocked signedIn={!!user} checkoutLive={premiumCheckoutEnabled()} />;
+  }
+
   const sources = getArbSources(country);
   const storeKeys = sources.filter((s) => !s.isEbay).map((s) => s.key);
   const ebay = sources.find((s) => s.isEbay);
@@ -81,6 +92,58 @@ export default async function ArbitragePage({
       ) : (
         await FlipView({ country, info, sort: searchParams.sort === "margin" ? "margin" : "profit", page, buy: searchParams.buy, sources, ebayKey: ebay.key, storeKeys })
       )}
+    </div>
+  );
+}
+
+// ── Locked state (non-Premium visitors) ─────────────────────────────────────────
+// Keeps the page indexable as a Premium upsell rather than redirecting away — the
+// teaser sells the feature, the CTA routes to checkout/sign-in.
+function ArbitrageLocked({ signedIn, checkoutLive }: { signedIn: boolean; checkoutLive: boolean }) {
+  const perks = [
+    ["💱 Flip to eBay", "Buy cheap from a store, sell on eBay — ranked by profit and margin, fees included."],
+    ["🛒 Cheapest on eBay", "The cards eBay is cheapest to buy right now, by biggest saving or best % off."],
+    ["🔎 Sortable & paginated", "Filter the buy side, sort either view, and page through every opportunity."],
+    ["🔗 Direct buy/sell links", "Jump straight to the listing on each side. Refreshed with the daily price import."],
+  ];
+  return (
+    <div className="mx-auto max-w-3xl">
+      <div className="mb-4">
+        <nav className="mb-3 flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
+          <Link href="/" className="hover:text-slate-300">Home</Link>
+          <span>/</span>
+          <span className="text-slate-300">Arbitrage</span>
+        </nav>
+        <div className="flex items-center gap-3">
+          <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">💱 Arbitrage &amp; eBay Deals</h1>
+          <span className="chip bg-gold/15 text-xs font-bold text-gold">★ PREMIUM</span>
+        </div>
+        <p className="mt-2 text-sm text-slate-400">
+          Live flipping arbitrage and the cheapest eBay buys for Riftbound singles — a RiftCompare Premium tool.
+        </p>
+      </div>
+
+      <div className="card-surface overflow-hidden bg-gradient-to-br from-gold/10 via-ink-850 to-brand-600/10 p-6">
+        <div className="grid gap-3 sm:grid-cols-2">
+          {perks.map(([title, body]) => (
+            <div key={title} className="rounded-xl border border-ink-700 bg-ink-900/60 p-4">
+              <div className="text-sm font-bold text-white">{title}</div>
+              <p className="mt-1 text-xs leading-relaxed text-slate-400">{body}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-5 rounded-xl border border-gold/30 bg-gold/5 p-4">
+          <PremiumCta checkoutLive={checkoutLive} signedIn={signedIn} />
+        </div>
+
+        {signedIn && (
+          <p className="mt-3 text-center text-xs text-slate-500">
+            Already Premium?{" "}
+            <Link href="/login?next=/tools/arbitrage" className="text-brand-400 hover:underline">Sign in again</Link> to refresh your access.
+          </p>
+        )}
+      </div>
     </div>
   );
 }
