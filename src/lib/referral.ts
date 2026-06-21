@@ -9,8 +9,11 @@
 import { cookies } from "next/headers";
 import { prisma } from "./db";
 import { awardPoints } from "./points";
+import { REFERRAL_COOKIE } from "./referral-cookie";
 
-export const REFERRAL_COOKIE = "rc_ref";
+// Re-exported so existing `@/lib/referral` importers keep working; the source of
+// truth is the client-safe referral-cookie module.
+export { REFERRAL_COOKIE };
 
 export async function applyReferral(newUserId: string): Promise<void> {
   try {
