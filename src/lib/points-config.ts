@@ -40,6 +40,11 @@ export const AWARDS = defineAwards({
   forum_comment: { amount: 5, dailyCap: 10, label: "Commented on the forum" },
   create_listing: { amount: 20, dailyCap: 10, label: "Listed a card for sale" },
   create_buy_order: { amount: 20, dailyCap: 10, label: "Posted a buy order" },
+  // Referrals — the referrer earns per friend who signs up (deduped per referred
+  // user, daily-capped to blunt fake-account farming); the new joiner gets a
+  // one-time head-start bonus. Drives word-of-mouth growth.
+  referral: { amount: 75, dailyCap: 10, label: "Referred a friend" },
+  referral_welcome: { amount: 50, oneTime: true, label: "Joined via a friend" },
 });
 
 export type AwardReason = keyof typeof AWARDS;
