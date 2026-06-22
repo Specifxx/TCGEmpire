@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { unstable_cache } from "next/cache";
-import { getMarketIndex, INDEX_SIZE } from "@/lib/market-index";
+import { getMarketIndex, INDEX_SIZE, type MarketScope } from "@/lib/market-index";
 import { IndexChart } from "@/components/IndexChart";
-import { getCountry } from "@/lib/get-country";
-import { COUNTRIES } from "@/lib/country";
+import { MarketSwitcher } from "@/components/MarketSwitcher";
+import { COUNTRIES, type Country } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { cardHref } from "@/lib/card-url";
 import { SITE_URL } from "@/lib/site";
@@ -17,7 +17,7 @@ export const revalidate = 1800;
 export const metadata: Metadata = {
   title: { absolute: "The RiftCompare Index — Riftbound Market Tracker | RiftCompare" },
   description:
-    "One number for the health of the Riftbound TCG market. The RiftCompare Index tracks the prices of the most-searched Riftbound cards as a weighted daily index — like a stock index for the game. Updated daily, free to cite.",
+    "One number for the health of the global Riftbound TCG market. The RiftCompare Index tracks the prices of the most-searched Riftbound cards as a weighted daily index — like a stock index for the game. Switch to any region. Updated daily, free to cite.",
   keywords: [
     "RiftCompare Index",
     "Riftbound market index",
@@ -30,10 +30,15 @@ export const metadata: Metadata = {
   openGraph: {
     title: "The RiftCompare Index — the Riftbound market in one number",
     description:
-      "A weighted daily index of the most-searched Riftbound cards — like a stock index for the game. Updated daily, free to cite.",
+      "A weighted daily index of the most-searched Riftbound cards — like a stock index for the game. Global by default, switchable by region. Updated daily, free to cite.",
     url: `${SITE_URL}/market`,
   },
 };
+
+function parseMarket(v?: string): MarketScope {
+  const up = (v ?? "").toUpperCase();
+  return up === "AU" || up === "NZ" || up === "US" || up === "UK" ? (up as Country) : "GLOBAL";
+}
 
 function Delta({ label, pct }: { label: string; pct: number | null }) {
   if (pct == null) return null;
@@ -49,12 +54,18 @@ function Delta({ label, pct }: { label: string; pct: number | null }) {
   );
 }
 
-export default async function IndexPage() {
-  const country = getCountry();
-  const info = COUNTRIES[country];
-  const index = await unstable_cache(() => getMarketIndex(country), ["market-index", country], {
+export default async function IndexPage({ searchParams }: { searchParams: { market?: string } }) {
+  const market = parseMarket(searchParams.market);
+  const isGlobal = market === "GLOBAL";
+  const index = await unstable_cache(() => getMarketIndex(market), ["market-index", market], {
     revalidate: 1800,
   })();
+
+  // Display chrome. GLOBAL has no single currency/region, so prices fall back to the
+  // composite's reference region (carried on the index as `currency`/`priceMarket`).
+  const heading = isGlobal ? "🌍 Global" : `${COUNTRIES[market as Country].flag} ${COUNTRIES[market as Country].code}`;
+  const currency = index?.currency ?? (isGlobal ? "USD" : COUNTRIES[market as Country].currency);
+  const priceMarket = index?.priceMarket ?? "AU";
 
   const breadcrumbLd = {
     "@context": "https://schema.org",
@@ -69,7 +80,7 @@ export default async function IndexPage() {
         "@context": "https://schema.org",
         "@type": "Dataset",
         name: "The RiftCompare Index",
-        description: `Daily weighted price index of the ${index.constituents.length} most-searched Riftbound TCG cards. Base 100 on ${index.startDay}.`,
+        description: `Daily weighted price index of the ${index.constituents.length} most-searched Riftbound TCG cards${isGlobal ? " across every market we track" : ""}. Base 100 on ${index.startDay}.`,
         url: `${SITE_URL}/market`,
         creator: { "@type": "Organization", name: "RiftCompare", url: SITE_URL },
         license: `${SITE_URL}/market#cite`,
@@ -91,13 +102,20 @@ export default async function IndexPage() {
           <span>/</span>
           <span className="text-slate-300">RiftCompare Index</span>
         </nav>
-        <h1 className="text-2xl font-extrabold text-white sm:text-3xl">📊 The RiftCompare Index</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-2xl font-extrabold text-white sm:text-3xl">📊 The RiftCompare Index</h1>
+          <MarketSwitcher value={market} />
+        </div>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
           The Riftbound market in one number. The Index tracks the live prices of the{" "}
           {index?.constituents.length ?? INDEX_SIZE} most-searched cards on RiftCompare as a
           search-weighted daily index — like a stock index for the game. When the cards players
-          actually chase get dearer, the Index rises; when the market cools, it falls. Priced from{" "}
-          {info.adjective} stores; switch country at the top for your market.
+          actually chase get dearer, the Index rises; when the market cools, it falls.{" "}
+          {isGlobal ? (
+            <>By default it&apos;s the <strong className="text-slate-200">global composite</strong> — every region we track, blended into one currency-agnostic number. Use the Market selector to drill into a single region.</>
+          ) : (
+            <>You&apos;re viewing the <strong className="text-slate-200">{COUNTRIES[market as Country].place}</strong> market, priced from {COUNTRIES[market as Country].adjective} stores. Switch back to Global at the top right.</>
+          )}
         </p>
       </div>
 
@@ -108,7 +126,7 @@ export default async function IndexPage() {
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
                 <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
-                  {info.code} market · base 100 on {index.startDay}
+                  {heading} {isGlobal ? "composite" : "market"} · base 100 on {index.startDay}
                 </div>
                 <div className="font-display text-5xl font-extrabold text-white">
                   {index.latest.toFixed(1)}
@@ -133,8 +151,11 @@ export default async function IndexPage() {
           <section>
             <h2 className="mb-1 text-xl font-extrabold text-white">What&apos;s in the Index</h2>
             <p className="mb-3 text-sm text-slate-400">
-              The {index.constituents.length} most-searched cards with a live {info.code} price,
-              weighted by search volume (capped at 20% each).
+              The {index.constituents.length} most-searched cards with a live price, weighted by
+              search volume (capped at 20% each).
+              {isGlobal && (
+                <> Prices shown in {currency}, from the {COUNTRIES[priceMarket].place} market as a global reference.</>
+              )}
             </p>
             <div className="card-surface overflow-x-auto">
               <table className="w-full min-w-[560px] text-sm">
@@ -164,7 +185,7 @@ export default async function IndexPage() {
                         </Link>
                       </td>
                       <td className="px-2 py-2 text-right font-mono text-xs text-slate-400">{c.weightPct}%</td>
-                      <td className="px-2 py-2 text-right font-semibold text-white">{formatMoney(c.priceCents, info.currency)}</td>
+                      <td className="px-2 py-2 text-right font-semibold text-white">{formatMoney(c.priceCents, currency)}</td>
                       <td className={`px-4 py-2 text-right font-semibold ${c.d7pct == null ? "text-slate-600" : c.d7pct > 0 ? "text-rose-400" : c.d7pct < 0 ? "text-brand-400" : "text-slate-400"}`}>
                         {c.d7pct == null ? "—" : `${c.d7pct > 0 ? "▲" : c.d7pct < 0 ? "▼" : ""} ${Math.abs(c.d7pct)}%`}
                       </td>
@@ -180,8 +201,9 @@ export default async function IndexPage() {
           <div>
             <p className="text-lg font-semibold text-white">The Index is warming up</p>
             <p className="mt-1 text-sm">
-              We need a few days of price history in this market before the chart means anything.
-              Check back soon — or see what&apos;s moving today.
+              We need a few days of price history{isGlobal ? "" : " in this market"} before the chart
+              means anything. Check back soon{isGlobal ? "" : " — or switch to Global"}, or see
+              what&apos;s moving today.
             </p>
             <Link href="/movers" className="btn-primary mt-4">📈 Price movers →</Link>
           </div>
@@ -202,6 +224,12 @@ export default async function IndexPage() {
             single card dominates it. Each day&apos;s value is the weighted average of the
             constituents&apos; lowest in-stock prices across every store we track, normalised to 100
             at the start of the series: an Index of 112 means the watched market is up 12%.
+          </p>
+          <p>
+            <strong className="text-slate-300">The Global composite</strong> (the default) rebases
+            each regional index to 100 at their common start, then equal-weight averages them day by
+            day — so it tracks worldwide price direction without mixing currencies. Pick a region
+            from the Market selector to see that market&apos;s own index in its local currency.
           </p>
           <p>
             Constituents are refreshed from live search data, so the basket evolves with the

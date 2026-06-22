@@ -5,7 +5,7 @@
 // invent a reason for a move.
 import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
-import { getMarketIndex } from "./market-index";
+import { getMarketIndex, compositeSeries } from "./market-index";
 import { COUNTRY_LIST, COUNTRIES, type Country } from "./country";
 import { formatMoney } from "./format";
 import type { PricePoint } from "./price-history";
@@ -54,43 +54,9 @@ const mean = (xs: number[]): number | null =>
 const pct = (now: number, then: number | undefined | null): number | null =>
   then == null || then === 0 ? null : Math.round(((now - then) / then) * 100 * 100) / 100;
 
-// The global composite: every regional index rebased to 100 at their COMMON history
-// start (the youngest region's first day), then equal-weight averaged day by day.
-// Rebasing first means a young market joining can't jump the composite the way a
-// naive average of differently-aged base-100 series would.
-function compositeSeries(pointSets: PricePoint[][]): PricePoint[] {
-  const live = pointSets.filter((p) => p.length >= 2);
-  if (!live.length) return [];
-  const start = Math.max(...live.map((p) => p[0].t));
-  const rebased = live
-    .map((pts) => {
-      let base: number | null = null;
-      for (const p of pts) {
-        if (p.t <= start) base = p.v;
-        else break;
-      }
-      if (base == null || base === 0) return null;
-      return pts.filter((p) => p.t >= start).map((p) => ({ t: p.t, v: (p.v / base) * 100 }));
-    })
-    .filter((x): x is PricePoint[] => x != null);
-  if (!rebased.length) return [];
-  const days = [...new Set(rebased.flatMap((pts) => pts.map((p) => p.t)))].sort((a, b) => a - b);
-  const cursor = rebased.map(() => 0);
-  // Every series is exactly 100 at its base point (≤ start), so 100 is the correct
-  // carry-forward seed for any gap day before a region's first on-window point.
-  const lastV = rebased.map(() => 100);
-  const out: PricePoint[] = [];
-  for (const t of days) {
-    rebased.forEach((pts, i) => {
-      while (cursor[i] < pts.length && pts[cursor[i]].t <= t) {
-        lastV[i] = pts[cursor[i]].v;
-        cursor[i]++;
-      }
-    });
-    out.push({ t, v: Math.round((lastV.reduce((a, b) => a + b, 0) / lastV.length) * 10) / 10 });
-  }
-  return out;
-}
+// The global composite (every regional index rebased to a common start, then
+// equal-weight averaged) is shared with the Index page — see compositeSeries in
+// ./market-index.
 
 export async function getGlobalSnapshot(): Promise<GlobalSnapshot> {
   const markets: MarketLine[] = [];
