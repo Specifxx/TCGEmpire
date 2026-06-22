@@ -272,9 +272,13 @@ async function main() {
   const webhook = process.env.DISCORD_WEBHOOK_URL;
   const emailTo = process.env.PROMO_EMAIL || CONTACT_EMAIL;
   if (!webhook && !isEmailEnabled()) {
-    throw new Error(
-      "No delivery channel configured. Set DISCORD_WEBHOOK_URL (auto Discord post) and/or RESEND_API_KEY (promo-pack email) as repository secrets."
+    // No delivery channel set up yet — skip quietly instead of failing the weekly
+    // cron (a red run every Friday is just noise). Set DISCORD_WEBHOOK_URL and/or
+    // RESEND_API_KEY as repository secrets to actually post the promo.
+    console.warn(
+      "[promo] No delivery channel configured — skipping. Set DISCORD_WEBHOOK_URL (auto Discord post) and/or RESEND_API_KEY (promo-pack email) as repository secrets to enable it."
     );
+    return;
   }
 
   let attempted = 0;
