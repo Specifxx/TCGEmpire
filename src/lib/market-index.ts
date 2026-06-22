@@ -2,7 +2,7 @@
 // market, like a stock index for the game. Methodology (kept simple enough to
 // explain to a journalist in two sentences):
 //
-//   • CONSTITUENTS: the 25 most-searched cards on RiftCompare that currently have
+//   • CONSTITUENTS: the 200 most-searched cards on RiftCompare that currently have
 //     a live price in the selected market. Search volume is our purest demand
 //     signal — the index tracks what players actually care about.
 //   • WEIGHTS: proportional to each card's search volume, capped at 20% so no
@@ -19,7 +19,7 @@ import { prisma } from "./db";
 import { pickPrice, priceField, type Country } from "./country";
 import type { PricePoint } from "./price-history";
 
-export const INDEX_SIZE = 25;
+export const INDEX_SIZE = 200;
 const WINDOW_DAYS = 180;
 const MAX_WEIGHT_SHARE = 0.2; // no constituent above 20%
 // Don't chart a day until most of the basket (by weight) has price data — early
