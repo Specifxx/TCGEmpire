@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { REFERRAL_COOKIE } from "@/lib/referral";
+import { REFERRAL_COOKIE } from "@/lib/referral-cookie";
 
 // Persists an inbound referral code (?ref=<userId>) into a cookie so it survives
 // the browse → sign-up journey and the OAuth round-trip. Read server-side by

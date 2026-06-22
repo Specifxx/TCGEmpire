@@ -9,8 +9,9 @@
 import { cookies } from "next/headers";
 import { prisma } from "./db";
 import { awardPoints } from "./points";
+import { REFERRAL_COOKIE } from "./referral-cookie";
 
-export const REFERRAL_COOKIE = "rc_ref";
+export { REFERRAL_COOKIE };
 
 export async function applyReferral(newUserId: string): Promise<void> {
   try {
