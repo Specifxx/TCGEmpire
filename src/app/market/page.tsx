@@ -96,29 +96,35 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
         dangerouslySetInnerHTML={{ __html: JSON.stringify(datasetLd ? [breadcrumbLd, datasetLd] : [breadcrumbLd]) }}
       />
 
-      {/* Breadcrumb + hero */}
-      <div>
-        <nav className="mb-3 flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
-          <Link href="/" className="hover:text-slate-300">Home</Link>
-          <span>/</span>
-          <span className="text-slate-300">RiftCompare Index</span>
-        </nav>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-2xl font-extrabold text-white sm:text-3xl">📊 The RiftCompare Index</h1>
-          <MarketSwitcher value={market} />
+      {/* Breadcrumb + hero — same aurora idiom as the sealed/sets pages */}
+      <section className="card-surface animate-fade-up relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-0" aria-hidden>
+          <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-brand-500/15 blur-3xl animate-blob" />
+          <div className="hero-dots absolute inset-0 opacity-50" />
         </div>
-        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
-          The Riftbound market in one number. The Index tracks the live prices of the{" "}
-          {index?.constituents.length ?? INDEX_SIZE} most-searched cards on RiftCompare as a
-          search-weighted daily index — like a stock index for the game. When the cards players
-          actually chase get dearer, the Index rises; when the market cools, it falls.{" "}
-          {isGlobal ? (
-            <>By default it&apos;s the <strong className="text-slate-200">global composite</strong> — every region we track, blended into one currency-agnostic number. Use the Market selector to drill into a single region.</>
-          ) : (
-            <>You&apos;re viewing the <strong className="text-slate-200">{COUNTRIES[market as Country].place}</strong> market, priced from {COUNTRIES[market as Country].adjective} stores. Switch back to Global at the top right.</>
-          )}
-        </p>
-      </div>
+        <div className="relative bg-gradient-to-br from-brand-600/20 via-ink-850/40 to-gold/10 px-6 py-8">
+          <nav className="mb-3 flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
+            <Link href="/" className="hover:text-slate-300">Home</Link>
+            <span>/</span>
+            <span className="text-slate-300">RiftCompare Index</span>
+          </nav>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h1 className="text-2xl font-extrabold text-white sm:text-3xl">📊 The RiftCompare Index</h1>
+            <MarketSwitcher value={market} />
+          </div>
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+            The Riftbound market in one number. The Index tracks the live prices of the{" "}
+            {index?.constituents.length ?? INDEX_SIZE} most-searched cards on RiftCompare as a
+            search-weighted daily index — like a stock index for the game. When the cards players
+            actually chase get dearer, the Index rises; when the market cools, it falls.{" "}
+            {isGlobal ? (
+              <>By default it&apos;s the <strong className="text-slate-200">global composite</strong> — every region we track, blended into one currency-agnostic number. Use the Market selector to drill into a single region.</>
+            ) : (
+              <>You&apos;re viewing the <strong className="text-slate-200">{COUNTRIES[market as Country].place}</strong> market, priced from {COUNTRIES[market as Country].adjective} stores. Switch back to Global at the top right.</>
+            )}
+          </p>
+        </div>
+      </section>
 
       {index ? (
         <>

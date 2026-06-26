@@ -89,18 +89,25 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
         return [...groups]
           .sort((a, b) => a.lowestPriceCents! - b.lowestPriceCents!)
           .slice(0, perType)
-          .map((g) => ({
-            dealType: "cheapest-sealed" as const,
-            title: g.name,
-            subtitle: g.productType,
-            href: null,
-            outboundUrl: g.listings[0] ? affiliateUrl(g.listings[0].url, g.listings[0].retailer) : null,
-            outboundRetailer: g.listings[0]?.retailer ?? null,
-            imageUrl: g.imageUrl,
-            priceCents: g.lowestPriceCents!,
-            pctLabel: null,
-            note: g.listings[0]?.retailerName ?? null,
-          }));
+          .map((g) => {
+            // lowestPriceCents is the cheapest IN-STOCK price, but listings[0] is the
+            // cheapest overall (may be sold out) — link the cheapest in-stock listing
+            // so the headline price and the buy link agree. One is guaranteed to exist
+            // because the group was filtered to lowestPriceCents != null.
+            const best = g.listings.find((l) => l.inStock) ?? g.listings[0];
+            return {
+              dealType: "cheapest-sealed" as const,
+              title: g.name,
+              subtitle: g.productType,
+              href: null,
+              outboundUrl: best ? affiliateUrl(best.url, best.retailer) : null,
+              outboundRetailer: best?.retailer ?? null,
+              imageUrl: g.imageUrl,
+              priceCents: g.lowestPriceCents!,
+              pctLabel: null,
+              note: best?.retailerName ?? null,
+            };
+          });
       } catch {
         return [];
       }
