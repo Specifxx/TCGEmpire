@@ -61,15 +61,18 @@ export const CARD_TYPES = [
 ] as const;
 export type CardType = (typeof CARD_TYPES)[number];
 
-// Riftbound sets. `comingSoon` sets aren't released yet (no cards/prices). `slug`
-// is the SEO landing-page path (/sets/<slug>).
-export interface SetInfo { code: string; name: string; slug: string; comingSoon?: boolean }
+// Riftbound sets. `comingSoon` = the singles/cards aren't released yet (no Card
+// rows, so the set stays out of the database, sitemap, movers, box-EV, pack-sim
+// etc). `sealedAvailable` = sealed products (booster boxes/packs) are already
+// buyable and listed on /sealed even while the cards are still pending — Vendetta is
+// exactly this state. `slug` is the SEO landing-page path (/sets/<slug>).
+export interface SetInfo { code: string; name: string; slug: string; comingSoon?: boolean; sealedAvailable?: boolean }
 export const SETS: SetInfo[] = [
   { code: "OGN", name: "Origins", slug: "origins" },
   { code: "OGS", name: "Origins: Proving Grounds", slug: "proving-grounds" },
   { code: "SFD", name: "Spirit Forged", slug: "spiritforged" },
   { code: "UNL", name: "Unleashed", slug: "unleashed" },
-  { code: "VEN", name: "Vendetta", slug: "vendetta", comingSoon: true },
+  { code: "VEN", name: "Vendetta", slug: "vendetta", comingSoon: true, sealedAvailable: true },
 ];
 export const setBySlug = (slug: string): SetInfo | undefined => SETS.find((s) => s.slug === slug);
 export const setByCode = (code: string): SetInfo | undefined => SETS.find((s) => s.code === code);
