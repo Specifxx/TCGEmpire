@@ -16,8 +16,12 @@
 // given day (no divisor gymnastics); history may revise slightly as demand shifts.
 import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
-import { pickPrice, priceField, type Country } from "./country";
+import { pickPrice, priceField, COUNTRY_LIST, COUNTRIES, type Country } from "./country";
 import type { PricePoint } from "./price-history";
+
+// A market the Index can be computed for: one region, or the GLOBAL composite that
+// blends every region into a single currency-agnostic number (the default).
+export type MarketScope = Country | "GLOBAL";
 
 export const INDEX_SIZE = 200;
 const WINDOW_DAYS = 180;
@@ -39,7 +43,9 @@ export type IndexConstituent = {
 };
 
 export type MarketIndex = {
-  market: Country;
+  market: MarketScope;
+  currency: string; // currency the constituent prices below are quoted in
+  priceMarket: Country; // region the constituent prices are sourced from (= market, or the reference region for GLOBAL)
   points: PricePoint[]; // daily closes, base 100 (v = index value)
   latest: number;
   d1: number | null; // % vs previous close
@@ -55,7 +61,7 @@ const pctChange = (now: number, then: number | undefined): number | null =>
 
 // Resilient like getPriceMovers: any DB error returns null (the page shows its
 // "warming up" state) instead of crashing the page or the build.
-export async function getMarketIndex(country: Country = "AU"): Promise<MarketIndex | null> {
+async function getRegionIndex(country: Country): Promise<MarketIndex | null> {
  try {
   const field = priceField(country);
 
@@ -163,6 +169,8 @@ export async function getMarketIndex(country: Country = "AU"): Promise<MarketInd
 
   return {
     market: country,
+    currency: COUNTRIES[country].currency,
+    priceMarket: country,
     points,
     latest,
     d1: pctChange(latest, points[points.length - 2]?.v),
@@ -175,4 +183,88 @@ export async function getMarketIndex(country: Country = "AU"): Promise<MarketInd
  } catch {
   return null;
  }
+}
+
+// ── Global composite ────────────────────────────────────────────────────────────
+// Every regional index rebased to 100 at the COMMON history start (the youngest
+// region's first day), then equal-weight averaged day by day. Rebasing first means
+// a young market joining can't jump the composite the way a naive average of
+// differently-aged base-100 series would. (Shared with the daily market report.)
+export function compositeSeries(pointSets: PricePoint[][]): PricePoint[] {
+  const live = pointSets.filter((p) => p.length >= 2);
+  if (!live.length) return [];
+  const start = Math.max(...live.map((p) => p[0].t));
+  const rebased = live
+    .map((pts) => {
+      let base: number | null = null;
+      for (const p of pts) {
+        if (p.t <= start) base = p.v;
+        else break;
+      }
+      if (base == null || base === 0) return null;
+      return pts.filter((p) => p.t >= start).map((p) => ({ t: p.t, v: (p.v / base) * 100 }));
+    })
+    .filter((x): x is PricePoint[] => x != null);
+  if (!rebased.length) return [];
+  const days = [...new Set(rebased.flatMap((pts) => pts.map((p) => p.t)))].sort((a, b) => a - b);
+  const cursor = rebased.map(() => 0);
+  // Every series is exactly 100 at its base point (≤ start), so 100 is the correct
+  // carry-forward seed for any gap day before a region's first on-window point.
+  const lastV = rebased.map(() => 100);
+  const out: PricePoint[] = [];
+  for (const t of days) {
+    rebased.forEach((pts, i) => {
+      while (cursor[i] < pts.length && pts[cursor[i]].t <= t) {
+        lastV[i] = pts[cursor[i]].v;
+        cursor[i]++;
+      }
+    });
+    out.push({ t, v: Math.round((lastV.reduce((a, b) => a + b, 0) / lastV.length) * 10) / 10 });
+  }
+  return out;
+}
+
+// Headline figures (latest + window moves) from a base-100 series.
+function pointStats(points: PricePoint[]) {
+  const latest = points[points.length - 1].v;
+  const at = (daysBack: number): number | undefined => {
+    const target = points[points.length - 1].t - daysBack * 86400_000;
+    let best: PricePoint | undefined;
+    for (const p of points) if (p.t <= target) best = p;
+    return best?.v;
+  };
+  return {
+    latest,
+    d1: pctChange(latest, points[points.length - 2]?.v),
+    d7: pctChange(latest, at(7)),
+    d30: pctChange(latest, at(30)),
+    sinceStart: pctChange(latest, points[0].v),
+    startDay: new Date(points[0].t).toISOString().slice(0, 10),
+  };
+}
+
+async function getGlobalIndex(): Promise<MarketIndex | null> {
+  const regions = (await Promise.all(COUNTRY_LIST.map((c) => getRegionIndex(c.code)))).filter(
+    (r): r is MarketIndex => r != null
+  );
+  if (!regions.length) return null;
+  const points = compositeSeries(regions.map((r) => r.points));
+  if (points.length < 2) return null;
+  // The composite is currency-agnostic, but its constituent table needs real prices:
+  // source them from a reference region — US (the de-facto global TCG price) when
+  // live, otherwise whichever region has data.
+  const ref = regions.find((r) => r.market === "US") ?? regions[0];
+  return {
+    market: "GLOBAL",
+    currency: ref.currency,
+    priceMarket: ref.priceMarket,
+    points,
+    ...pointStats(points),
+    constituents: ref.constituents,
+  };
+}
+
+// Default is the GLOBAL composite; pass a region for that market's own index.
+export async function getMarketIndex(market: MarketScope = "GLOBAL"): Promise<MarketIndex | null> {
+  return market === "GLOBAL" ? getGlobalIndex() : getRegionIndex(market);
 }

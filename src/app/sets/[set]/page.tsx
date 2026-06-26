@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { CardTile } from "@/components/CardTile";
+import { CountUp } from "@/components/CountUp";
+import { Reveal } from "@/components/Reveal";
 import { cardTileSelect } from "@/lib/cards";
 import { pickPrice, DEFAULT_COUNTRY } from "@/lib/country";
 import { SETS, setBySlug } from "@/lib/constants";
@@ -77,41 +79,80 @@ export default async function SetPage({ params }: { params: { set: string } }) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumb, collection]) }} />
 
       {/* Breadcrumb + hero */}
-      <div>
-        <nav className="mb-3 flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
-          <Link href="/" className="hover:text-slate-300">Home</Link>
-          <span>/</span>
-          <Link href="/browse" className="hover:text-slate-300">Database</Link>
-          <span>/</span>
-          <span className="text-slate-300">{set.name}</span>
-        </nav>
-        <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
-          Riftbound {set.name} — card prices &amp; full list
-        </h1>
-        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
-          {set.comingSoon ? (
-            <>Riftbound <strong className="text-slate-200">{set.name}</strong> isn&apos;t out yet. This page will list every {set.name} card with live prices the moment it releases — check back soon.</>
-          ) : (
-            <>Browse all {cards.length} Riftbound <strong className="text-slate-200">{set.name}</strong> cards and compare live prices across stores to find the cheapest singles. {priced.toLocaleString()} cards are priced right now, updated daily — switch your country at the top to see local prices.</>
+      <section className="card-surface animate-fade-up relative overflow-hidden">
+        {/* Decorative ambient aurora (one brand blob) + dotted texture. */}
+        <div className="pointer-events-none absolute inset-0" aria-hidden>
+          <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-brand-500/20 blur-3xl animate-blob" />
+          <div className="hero-dots absolute inset-0 opacity-60" />
+        </div>
+
+        <div className="relative bg-gradient-to-br from-brand-600/20 via-ink-850/40 to-gold/10 px-6 py-8">
+          <nav className="mb-3 flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
+            <Link href="/" className="hover:text-slate-300">Home</Link>
+            <span>/</span>
+            <Link href="/browse" className="hover:text-slate-300">Database</Link>
+            <span>/</span>
+            <span className="text-slate-300">{set.name}</span>
+          </nav>
+
+          <div className="mb-3 inline-flex items-center gap-2 rounded-lg border border-brand-500/30 bg-brand-500/10 px-3 py-1.5 font-display text-lg font-bold tracking-wide text-brand-300">
+            {set.code}
+          </div>
+
+          <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
+            Riftbound {set.name} — card prices &amp; full list
+          </h1>
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+            {set.comingSoon ? (
+              <>
+                Riftbound <strong className="text-slate-200">{set.name}</strong> singles aren&apos;t out yet. This page will list every {set.name} card with live prices the moment they release — check back soon.
+                {set.sealedAvailable && (
+                  <> {set.name} sealed products (booster boxes &amp; packs) are available now — <Link href={`/sealed?q=${set.name.toLowerCase()}`} className="text-brand-300 underline-offset-2 hover:underline">compare them on the sealed page</Link>.</>
+                )}
+              </>
+            ) : (
+              <>Browse all {cards.length} Riftbound <strong className="text-slate-200">{set.name}</strong> cards and compare live prices across stores to find the cheapest singles. {priced.toLocaleString()} cards are priced right now, updated daily — switch your country at the top to see local prices.</>
+            )}
+          </p>
+
+          {/* Count pills (released sets only) */}
+          {!set.comingSoon && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              <span className="chip bg-brand-500/15 text-brand-300">
+                <CountUp value={cards.length} className="font-bold" />&nbsp;cards
+              </span>
+              <span className="chip bg-gold/20 text-gold">
+                <CountUp value={priced} className="font-bold" />&nbsp;priced
+              </span>
+            </div>
           )}
-        </p>
-      </div>
+        </div>
+      </section>
 
       {/* Card grid */}
       {set.comingSoon || cards.length === 0 ? (
         <div className="card-surface grid place-items-center p-16 text-center text-slate-400">
           <div>
-            <p className="text-lg font-semibold text-white">{set.name} cards aren&apos;t available yet</p>
-            <p className="mt-1 text-sm">We&apos;ll have the full list with live prices as soon as the set drops.</p>
-            <Link href="/browse" className="btn-primary mt-4">Browse released sets</Link>
+            <p className="text-lg font-semibold text-white">{set.name} singles aren&apos;t available yet</p>
+            <p className="mt-1 text-sm">
+              {set.sealedAvailable
+                ? <>We&apos;ll have the full singles list with live prices as soon as {set.name} drops — its sealed products are buyable right now.</>
+                : <>We&apos;ll have the full list with live prices as soon as the set drops.</>}
+            </p>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+              {set.sealedAvailable && (
+                <Link href={`/sealed?q=${set.name.toLowerCase()}`} className="btn-primary">Browse {set.name} sealed →</Link>
+              )}
+              <Link href="/browse" className={set.sealedAvailable ? "btn-ghost" : "btn-primary"}>Browse released sets</Link>
+            </div>
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
+        <Reveal stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
           {cards.map((c) => (
             <CardTile key={c.id} card={c} />
           ))}
-        </div>
+        </Reveal>
       )}
 
       {/* Internal links to the other sets (crawl + UX) */}
@@ -119,12 +160,12 @@ export default async function SetPage({ params }: { params: { set: string } }) {
         <h2 className="mb-3 text-lg font-bold text-white">Other Riftbound sets</h2>
         <div className="flex flex-wrap gap-2">
           {otherSets.map((s) => (
-            <Link key={s.slug} href={`/sets/${s.slug}`} className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-brand-500">
+            <Link key={s.slug} href={`/sets/${s.slug}`} className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-brand-500 hover:-translate-y-0.5 hover:scale-105 transition-transform">
               {s.name}
             </Link>
           ))}
-          <Link href="/browse" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-brand-500">All cards →</Link>
-          <Link href="/sealed" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-brand-500">Sealed products →</Link>
+          <Link href="/browse" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-brand-500 hover:-translate-y-0.5 hover:scale-105 transition-transform">All cards →</Link>
+          <Link href="/sealed" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-brand-500 hover:-translate-y-0.5 hover:scale-105 transition-transform">Sealed products →</Link>
         </div>
       </section>
 
@@ -137,6 +178,19 @@ export default async function SetPage({ params }: { params: { set: string } }) {
             for every {set.name} card across stores so you can find the cheapest place
             to buy {set.name} singles — whether you&apos;re chasing a specific card or completing the set.
             Click any card to see every store&apos;s price ranked by total delivered cost.
+          </p>
+        </section>
+      )}
+
+      {/* Sealed-live note for sets whose singles haven't dropped yet. */}
+      {set.comingSoon && set.sealedAvailable && (
+        <section className="card-surface p-6">
+          <h2 className="text-xl font-extrabold text-white">Riftbound {set.name} sealed is live now</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+            {set.name} singles haven&apos;t released yet, but sealed {set.name} products — booster boxes and
+            packs — are already buyable. RiftCompare compares live sealed prices across stores so you can
+            lock in the cheapest {set.name} sealed today.{" "}
+            <Link href={`/sealed?q=${set.name.toLowerCase()}`} className="text-brand-300 underline-offset-2 hover:underline">Compare {set.name} sealed →</Link>
           </p>
         </section>
       )}

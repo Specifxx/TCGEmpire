@@ -20,10 +20,11 @@ const SET_FROM_TITLE: [RegExp, string][] = [
   [/proving\s*grounds|\bOGS\b/i, "OGS"],
   [/spirit\s*forged|\bSFD\b/i, "SFD"],
   [/unleashed|\bUNL\b/i, "UNL"],
+  [/vendetta|\bVEN\b/i, "VEN"],
   [/origins|\bOGN\b/i, "OGN"],
 ];
 const SET_NAMES: Record<string, string> = {
-  OGN: "Origins", OGS: "Proving Grounds", SFD: "Spiritforged", UNL: "Unleashed",
+  OGN: "Origins", OGS: "Proving Grounds", SFD: "Spiritforged", UNL: "Unleashed", VEN: "Vendetta",
 };
 
 // A sealed product must be identifiably RIFTBOUND. Other games slip in when a store
@@ -31,10 +32,12 @@ const SET_NAMES: Record<string, string> = {
 // Clan Unity]" matches "starter deck" — so we require an explicit Riftbound/League
 // marker (set name, "Riftbound", "League of Legends", Proving Grounds, Nexus Night).
 const RIFTBOUND_HINT =
-  /riftbound|league\s*of\s*legends|proving\s*grounds|nexus\s*night|spirit\s*forged|spiritforged|\borigins\b|\bunleashed\b|\b(?:OGN|OGS|SFD|UNL)\b/i;
+  /riftbound|league\s*of\s*legends|proving\s*grounds|nexus\s*night|spirit\s*forged|spiritforged|\borigins\b|\bunleashed\b|\bvendetta\b|\b(?:OGN|OGS|SFD|UNL|VEN)\b/i;
 
 // Sets that aren't released yet — never list their (pre-order) sealed products.
-const UNRELEASED_SET = /\bvendetta\b|\bradiance\b|\b(?:VEN|RAD)\b/i;
+// Vendetta sealed IS available now (its singles are still pending — those are kept
+// out separately by SEALED_EXCLUDE + the empty Card table), so only Radiance remains.
+const UNRELEASED_SET = /\bradiance\b|\bRAD\b/i;
 
 function isRiftboundSealed(title: string): boolean {
   return RIFTBOUND_HINT.test(title) && !UNRELEASED_SET.test(title);

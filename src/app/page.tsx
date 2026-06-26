@@ -14,6 +14,8 @@ import { Reveal } from "@/components/Reveal";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES, priceField, type CountryInfo } from "@/lib/country";
 import { SETS, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
+import { getTopDeals } from "@/lib/top-deals";
+import { TodaysTopDeals } from "@/components/TodaysTopDeals";
 
 // ISR while AU-only; becomes dynamic per-request when NZ mode is enabled (getCountry
 // then reads the country cookie).
@@ -72,7 +74,7 @@ export default async function HomePage() {
   const ebay = ebayLabel(country);
   const faqs = faqsFor(info, ebay);
   const field = priceField(country);
-  const [totalCards, pricedCards, inStockUnits, popularCards, storeGroups, movers] = await Promise.all([
+  const [totalCards, pricedCards, inStockUnits, popularCards, storeGroups, movers, topDeals] = await Promise.all([
     prisma.card.count(),
     prisma.card.count({ where: { [field]: { not: null } } }),
     // Live, in-stock store listings analysed in this market — the real units we
@@ -86,6 +88,8 @@ export default async function HomePage() {
     // page per-request, so cache the heavy 35-day aggregation server-side per market
     // (prices only change on the ~3-hourly import anyway).
     unstable_cache(() => getPriceMovers(country), ["price-movers", country], { revalidate: 600 })(),
+    // Today's Top Deals blends four signals; cache per-market like the movers above.
+    unstable_cache(() => getTopDeals(country), ["top-deals", country], { revalidate: 600 })(),
   ]);
   const storeCount = storeGroups.length;
   const storeWord = storeCount === 1 ? "store" : "stores";
@@ -180,6 +184,14 @@ export default async function HomePage() {
         </Reveal>
       </section>
 
+      {/* Today's Top Deals — the best live opportunities across four signals
+          (premium columns reveal only the top pick). Hidden if no market has data. */}
+      {topDeals.hasAny && (
+        <Reveal>
+          <TodaysTopDeals deals={topDeals} country={country} currency={info.currency} place={info.place} />
+        </Reveal>
+      )}
+
       {/* TCGplayer affiliate banner — billboard on desktop, 300x250 rectangle on
           phones (the strongest mobile in-content unit). */}
       <TcgplayerAd size="billboard" mobile="rect" country={country} />
@@ -194,7 +206,9 @@ export default async function HomePage() {
         <h2 className="mb-4 text-xl font-extrabold text-white">Browse by set</h2>
         <Reveal stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {SETS.map((s) =>
-            s.comingSoon ? (
+            // Fully unreleased (no cards, no sealed) → disabled tile. Vendetta has
+            // sealed live, so it links through with a "Cards soon · Sealed now" cue.
+            s.comingSoon && !s.sealedAvailable ? (
               <div
                 key={s.code}
                 className="card-surface flex flex-col gap-1 p-4 opacity-60"
@@ -212,7 +226,15 @@ export default async function HomePage() {
                 href={`/sets/${s.slug}`}
                 className="card-surface flex flex-col gap-1 p-4 transition-all duration-200 hover:-translate-y-1 hover:border-brand-500 hover:shadow-glow"
               >
-                <span className="text-lg font-bold text-white">{s.code}</span>
+                <span className="flex flex-wrap items-center gap-1.5 text-lg font-bold text-white">
+                  {s.code}
+                  {s.comingSoon && s.sealedAvailable && (
+                    <>
+                      <span className="chip bg-gold/20 text-gold">Cards soon</span>
+                      <span className="chip bg-brand-500/15 text-brand-300">Sealed now</span>
+                    </>
+                  )}
+                </span>
                 <span className="text-xs text-slate-400">{s.name}</span>
               </Link>
             )
