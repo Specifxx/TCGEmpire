@@ -6,6 +6,7 @@ import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { affiliateUrl, ebayAffiliateUrl } from "@/lib/affiliate";
 import { OutboundLink } from "@/components/OutboundLink";
+import { Reveal } from "@/components/Reveal";
 
 export const revalidate = 900;
 
@@ -18,6 +19,7 @@ const MARKETPLACE_HOSTS: Record<string, { ebay: string; amazon: string }> = {
   UK: { ebay: "ebay.co.uk", amazon: "amazon.co.uk" },
 };
 const SEALED_SEARCHES = [
+  { label: "Vendetta sealed", q: "Riftbound Vendetta sealed" },
   { label: "Booster boxes", q: "Riftbound booster box" },
   { label: "Booster packs", q: "Riftbound booster pack" },
   { label: "Proving Grounds kits", q: "Riftbound Proving Grounds" },
@@ -45,25 +47,66 @@ export default async function SealedPage({ searchParams }: { searchParams: { q?:
           g.productType.toLowerCase().includes(ql) ||
           (g.setCode ?? "").toLowerCase().includes(ql)
       )
-    : all;
+    : // Default view: float the freshly-live Vendetta (VEN) sealed to the top via a
+      // stable sort, leaving every other group in its original order.
+      all
+        .map((g, i) => [g, i] as const)
+        .sort((a, b) => {
+          const av = a[0].setCode === "VEN" ? 0 : 1;
+          const bv = b[0].setCode === "VEN" ? 0 : 1;
+          return av - bv || a[1] - b[1];
+        })
+        .map(([g]) => g);
+
+  // Show the "Vendetta is here" callout only on the unfiltered view, and only when
+  // Vendetta sealed actually exists in the feed.
+  const hasVendetta = !q && all.some((g) => g.setCode === "VEN");
 
   return (
     <div>
-      <div className="mb-5">
-        <h1 className="text-2xl font-extrabold text-white">Sealed Products</h1>
-        <p className="mt-1 text-sm text-slate-400">
-          Booster boxes, packs, Proving Grounds, bundles and other sealed Riftbound
-          products — priced across {info.adjective} stores so you can find the cheapest.
-          Wondering if a box is worth ripping?{" "}
-          <Link href="/tools/box-ev" className="text-brand-400 hover:underline">Run the EV calculator →</Link>
-        </p>
-        {q && (
-          <p className="mt-2 text-sm text-slate-400">
-            Showing matches for <span className="text-brand-400">“{q}”</span>.{" "}
-            <Link href="/sealed" className="text-brand-400 hover:underline">Show all</Link>
+      <nav className="mb-3 flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
+        <Link href="/" className="hover:text-slate-300">Home</Link>
+        <span>/</span>
+        <span className="text-slate-300">Sealed</span>
+      </nav>
+
+      {/* Compact hero: aurora blob + dotted texture behind a brand→gold wash. The
+          decorative layer is hidden from assistive tech. */}
+      <section className="card-surface animate-fade-up relative mb-5 overflow-hidden">
+        <div className="pointer-events-none absolute inset-0" aria-hidden>
+          <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-brand-500/20 blur-3xl animate-blob" />
+          <div className="hero-dots absolute inset-0 opacity-60" />
+        </div>
+        <div className="relative bg-gradient-to-br from-brand-600/20 via-ink-850/40 to-gold/10 px-6 py-8">
+          <h1 className="text-2xl font-extrabold text-white">Sealed Products</h1>
+          <p className="mt-1 max-w-2xl text-sm text-slate-400">
+            Booster boxes, packs, Proving Grounds, bundles and other sealed Riftbound
+            products — priced across {info.adjective} stores so you can find the cheapest.
+            Wondering if a box is worth ripping?{" "}
+            <Link href="/tools/box-ev" className="text-brand-400 hover:underline">Run the EV calculator →</Link>
           </p>
-        )}
-      </div>
+          {q && (
+            <p className="mt-2 text-sm text-slate-400">
+              Showing matches for <span className="text-brand-400">“{q}”</span>.{" "}
+              <Link href="/sealed" className="text-brand-400 hover:underline">Show all</Link>
+            </p>
+          )}
+        </div>
+      </section>
+
+      {/* Freshly-live Vendetta sealed callout — only on the default (unfiltered) view. */}
+      {hasVendetta && (
+        <div className="card-surface mb-5 flex flex-wrap items-center gap-3 bg-gradient-to-br from-gold/10 via-ink-850/40 to-brand-600/10 px-5 py-4">
+          <span className="chip bg-gold/20 font-semibold text-gold">✨ NEW</span>
+          <p className="min-w-0 flex-1 text-sm text-slate-300">
+            <span className="font-semibold text-white">Vendetta sealed is here</span> — booster
+            boxes &amp; packs available now, priced across stores.
+          </p>
+          <Link href="/sealed?q=vendetta" className="btn-primary px-3 py-1.5 text-xs">
+            Shop Vendetta →
+          </Link>
+        </div>
+      )}
 
       {groups.length === 0 ? (
         <div className="card-surface grid place-items-center p-16 text-center text-slate-400">
@@ -81,9 +124,9 @@ export default async function SealedPage({ searchParams }: { searchParams: { q?:
           </div>
         </div>
       ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <Reveal stagger className="grid gap-4 lg:grid-cols-2">
           {groups.map((g) => (
-            <div key={g.groupKey} className="card-surface overflow-hidden">
+            <div key={g.groupKey} className="card-surface overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-glow">
               <div className="flex gap-4 p-4">
                 <div className="h-28 w-28 shrink-0 overflow-hidden rounded-lg bg-ink-900">
                   {g.imageUrl && (
@@ -118,10 +161,13 @@ export default async function SealedPage({ searchParams }: { searchParams: { q?:
                         {l.inStock ? <span className="text-brand-400">● In stock</span> : <span className="text-slate-500">● Out of stock</span>}
                       </div>
                     </div>
+                    {i === 0 && l.inStock && (
+                      <span className="chip bg-gold/20 text-gold">Best price</span>
+                    )}
                     <div className={`text-sm font-bold ${i === 0 && l.inStock ? "text-accent" : "text-white"} ${!l.inStock ? "text-slate-500 line-through" : ""}`}>
                       {fmt(l.priceCents)}
                     </div>
-                    <OutboundLink href={affiliateUrl(l.url, l.retailer)} retailer={l.retailer} country={country} kind="sealed" className="btn-primary px-3 py-1.5 text-xs">
+                    <OutboundLink href={affiliateUrl(l.url, l.retailer)} retailer={l.retailer} country={country} kind="sealed" className={`${i === 0 && l.inStock ? "btn-accent" : "btn-primary"} px-3 py-1.5 text-xs`}>
                       View →
                     </OutboundLink>
                   </li>
@@ -129,7 +175,7 @@ export default async function SealedPage({ searchParams }: { searchParams: { q?:
               </ul>
             </div>
           ))}
-        </div>
+        </Reveal>
       )}
 
       {/* High-AOV marketplace searches: sealed boxes are the biggest baskets on the

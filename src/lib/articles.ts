@@ -234,7 +234,7 @@ Want to dive in? **[See this week's Riftbound price movers](/movers)**, or **[br
     date: "2026-06-10",
     readMins: 4,
     tags: ["news", "set", "vendetta", "release"],
-    body: `**Vendetta (VEN)** is the next set on the Riftbound: League of Legends TCG release calendar, following Origins, Proving Grounds, Spirit Forged and Unleashed. It isn't out yet — but a new set is the single biggest event for card prices, so it pays to be ready before launch day.
+    body: `**Vendetta (VEN)** is the next set on the Riftbound: League of Legends TCG release calendar, following Origins, Proving Grounds, Spirit Forged and Unleashed. Its sealed product — booster boxes and packs — is landing now and already listed on RiftCompare; the singles follow the moment cards release. A new set is the single biggest event for card prices, so it pays to be ready.
 
 ## Track Vendetta on RiftCompare
 
@@ -249,11 +249,11 @@ We've already set up the **[Vendetta set page](/sets/vendetta)**. The moment car
 ## How to be ready
 
 1. **Wishlist now.** Browse the **[card database](/browse)** and wishlist the cards you already know you want — you'll get an email if a price drops.
-2. **Compare sealed early.** When VEN booster boxes and packs list, the **[sealed page](/sealed)** will rank them cheapest-first across stores. Boxes move quickly at launch.
+2. **Compare sealed early.** VEN booster boxes and packs are listing now — the **[sealed page](/sealed)** ranks them cheapest-first across stores. Boxes move quickly at launch.
 3. **Have your deck ready to price.** Drop your planned list into the **[deck builder](/deck)** so you can re-price it the moment the new cards go live.
 4. **Don't overpay in the rush.** Launch hype pushes prices up; RiftCompare always shows you the cheapest delivered price so you never pay the first number you see.
 
-We'll update the **[Vendetta page](/sets/vendetta)** and post a meta snapshot here on the blog as the set lands. In the meantime, **[browse the current sets](/browse)** or read **[where to buy Riftbound cards](/guides/where-to-buy-riftbound-cards)** to get familiar with how it all works.`,
+Vendetta sealed is live now, and the singles will populate the **[Vendetta page](/sets/vendetta)** as cards release — we'll post a meta snapshot here on the blog as the set lands. In the meantime, **[browse the current sets](/browse)** or read **[where to buy Riftbound cards](/guides/where-to-buy-riftbound-cards)** to get familiar with how it all works.`,
   },
   {
     slug: "how-to-sell-riftbound-cards",

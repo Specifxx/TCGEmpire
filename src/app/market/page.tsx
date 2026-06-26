@@ -9,6 +9,7 @@ import { formatMoney } from "@/lib/format";
 import { cardHref } from "@/lib/card-url";
 import { SITE_URL } from "@/lib/site";
 import { AdSlot } from "@/components/AdSlot";
+import { Reveal } from "@/components/Reveal";
 
 // Recompute at most twice an hour — the underlying PriceHistory only changes on
 // the daily import, but search-driven constituents drift during the day.
@@ -122,32 +123,45 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
       {index ? (
         <>
           {/* Headline number + chart */}
-          <section className="card-surface p-5">
-            <div className="flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
-                  {heading} {isGlobal ? "composite" : "market"} · base 100 on {index.startDay}
-                </div>
-                <div className="font-display text-5xl font-extrabold text-white">
-                  {index.latest.toFixed(1)}
-                </div>
+          <Reveal>
+            <section className="card-surface relative overflow-hidden p-5">
+              <div className="pointer-events-none absolute inset-0" aria-hidden>
+                <div
+                  className={`absolute -right-16 -top-20 h-64 w-64 rounded-full blur-3xl animate-blob ${
+                    index.sinceStart == null || index.sinceStart <= 0 ? "bg-brand-500/15" : "bg-rose-500/15"
+                  }`}
+                />
+                <div className="hero-dots absolute inset-0 opacity-50" />
               </div>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                <Delta label="1 day" pct={index.d1} />
-                <Delta label="7 days" pct={index.d7} />
-                <Delta label="30 days" pct={index.d30} />
-                <Delta label="All time" pct={index.sinceStart} />
+              <div className="relative">
+                <div className="flex flex-wrap items-end justify-between gap-4">
+                  <div>
+                    <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                      {heading} {isGlobal ? "composite" : "market"} · base 100 on {index.startDay}
+                    </div>
+                    <div className="font-display text-5xl font-extrabold text-white">
+                      {index.latest.toFixed(1)}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    <Delta label="1 day" pct={index.d1} />
+                    <Delta label="7 days" pct={index.d7} />
+                    <Delta label="30 days" pct={index.d30} />
+                    <Delta label="All time" pct={index.sinceStart} />
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <IndexChart points={index.points} />
+                </div>
+                <p className="mt-2 text-[11px] text-slate-600">
+                  ▲ rising prices · ▼ falling prices · recalculated daily after the price refresh.
+                </p>
               </div>
-            </div>
-            <div className="mt-4">
-              <IndexChart points={index.points} />
-            </div>
-            <p className="mt-2 text-[11px] text-slate-600">
-              ▲ rising prices · ▼ falling prices · recalculated daily after the price refresh.
-            </p>
-          </section>
+            </section>
+          </Reveal>
 
           {/* Constituents */}
+          <Reveal delayMs={120}>
           <section>
             <h2 className="mb-1 text-xl font-extrabold text-white">What&apos;s in the Index</h2>
             <p className="mb-3 text-sm text-slate-400">
@@ -171,7 +185,9 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
                 <tbody className="divide-y divide-ink-800">
                   {index.constituents.map((c, i) => (
                     <tr key={c.id} className="hover:bg-ink-900/50">
-                      <td className="px-4 py-2 font-bold text-slate-500">{i + 1}</td>
+                      <td className="px-4 py-2 font-bold text-slate-500">
+                        {i < 3 ? <span className="chip bg-gold/20 text-gold">{i + 1}</span> : i + 1}
+                      </td>
                       <td className="px-2 py-2">
                         <Link href={cardHref(c)} className="flex items-center gap-2.5">
                           {c.imageThumbUrl && (
@@ -195,10 +211,15 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
               </table>
             </div>
           </section>
+          </Reveal>
         </>
       ) : (
-        <div className="card-surface grid place-items-center p-16 text-center text-slate-400">
-          <div>
+        <div className="card-surface relative grid overflow-hidden place-items-center p-16 text-center text-slate-400">
+          <div className="pointer-events-none absolute inset-0" aria-hidden>
+            <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full bg-brand-500/15 blur-3xl animate-blob" />
+            <div className="hero-dots absolute inset-0 opacity-50" />
+          </div>
+          <div className="relative">
             <p className="text-lg font-semibold text-white">The Index is warming up</p>
             <p className="mt-1 text-sm">
               We need a few days of price history{isGlobal ? "" : " in this market"} before the chart
