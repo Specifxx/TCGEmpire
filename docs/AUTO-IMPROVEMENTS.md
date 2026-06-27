@@ -23,7 +23,8 @@ repo secret `CLAUDE_CODE_OAUTH_TOKEN`.
 - [ ] Pages missing canonical/robots: noindex utility/auth/admin pages (login, register,
       verify, forgot, profile, admin/*, marketplace orders) rather than canonical;
       add canonical to real content pages that lack it. *(Audited — already done site-wide)*
-- [ ] JSON-LD coverage check (Org/Breadcrumb/FAQ/Dataset present); add ItemList/Product where useful.
+- [x] JSON-LD coverage check — added BreadcrumbList + ItemList to `/guides`; blog index, `/browse`, `/marketplace` still candidates.
+- [ ] JSON-LD: add ItemList/CollectionPage to blog index, marketplace, and individual game pages.
 - [x] Internal-link audit: added footer site-map grid (NAV_GROUPS) so every feature is
       linked on every page even when the xl SideNav is absent (mobile, homepage, smaller desktops).
 
@@ -56,3 +57,7 @@ repo secret `CLAUDE_CODE_OAUTH_TOKEN`.
   (Card Database, Arbitrage, Meta Decks, Games, Forum, etc.) is linked from every page even
   when the xl SideNav is absent (mobile, homepage, smaller desktops). 2-col → 3-col → 6-col
   responsive. Visual — verify on Vercel.
+- **SEO: JSON-LD BreadcrumbList + ItemList on /guides** — the Guides index page now emits
+  two schema.org blocks: a BreadcrumbList (Home → Guides) and an ItemList enumerating every
+  guide with its title, URL, and excerpt. Enables rich results for the guides listing in
+  Google Search. Build-time safe (reads static ARTICLES array, no DB call).
