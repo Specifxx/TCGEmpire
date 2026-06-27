@@ -22,10 +22,10 @@ repo secret `CLAUDE_CODE_OAUTH_TOKEN`.
 ### SEO
 - [ ] Pages missing canonical/robots: noindex utility/auth/admin pages (login, register,
       verify, forgot, profile, admin/*, marketplace orders) rather than canonical;
-      add canonical to real content pages that lack it.
+      add canonical to real content pages that lack it. *(Audited — already done site-wide)*
 - [ ] JSON-LD coverage check (Org/Breadcrumb/FAQ/Dataset present); add ItemList/Product where useful.
-- [ ] Internal-link audit now that the homepage SideNav is hidden + ToolDeck removed
-      (ensure feature pages are still well-linked; consider a footer section list).
+- [x] Internal-link audit: added footer site-map grid (NAV_GROUPS) so every feature is
+      linked on every page even when the xl SideNav is absent (mobile, homepage, smaller desktops).
 
 ### Performance
 - [ ] Audit unnecessary `"use client"` boundaries; trim homepage/browse client JS.
@@ -50,3 +50,8 @@ repo secret `CLAUDE_CODE_OAUTH_TOKEN`.
   `aria-label="Decrease quantity"` / `"Increase quantity"` to the icon-only −/+ buttons in
   ForumBoard.tsx and ProxyBuilder.tsx (all other icon controls were already labelled).
   Deleted Partners.tsx (zero imports; replaced by inline trust-line in CinematicHero).
+- **SEO/internal-links: footer site-map grid** — added a `<nav aria-label="Site map">` grid
+  in `layout.tsx` footer, driven by the shared `NAV_GROUPS` data. Ensures every feature page
+  (Card Database, Arbitrage, Meta Decks, Games, Forum, etc.) is linked from every page even
+  when the xl SideNav is absent (mobile, homepage, smaller desktops). 2-col → 3-col → 6-col
+  responsive. Visual — verify on Vercel.
