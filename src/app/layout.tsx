@@ -7,6 +7,7 @@ import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { SideNav } from "@/components/SideNav";
+import { SideNavGate } from "@/components/SideNavGate";
 import { QuickViewProvider } from "@/components/QuickView";
 import { WishlistDrawerProvider } from "@/components/WishlistDrawer";
 import { CountryProvider } from "@/components/CountryProvider";
@@ -123,7 +124,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <QuickViewProvider>
             <Navbar />
             <div className="container-app flex gap-6 py-6">
-              <SideNav />
+              <SideNavGate>
+                <SideNav />
+              </SideNavGate>
               <main className="min-w-0 flex-1">{children}</main>
             </div>
             <PriceAlertModal />
