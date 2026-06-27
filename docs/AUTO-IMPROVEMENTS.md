@@ -25,7 +25,8 @@ repo secret `CLAUDE_CODE_OAUTH_TOKEN`.
       add canonical to real content pages that lack it. *(Audited — already done site-wide)*
 - [x] JSON-LD coverage check — added BreadcrumbList + ItemList to `/guides`; blog index, `/browse`, `/marketplace` still candidates.
 - [x] JSON-LD: add Blog + BreadcrumbList to blog index — done.
-- [ ] JSON-LD: add ItemList/CollectionPage to marketplace and individual game pages.
+- [x] JSON-LD: add ItemList to games page — done.
+- [ ] JSON-LD: add CollectionPage to marketplace (currently noindex / private beta; defer until public launch).
 - [x] Internal-link audit: added footer site-map grid (NAV_GROUPS) so every feature is
       linked on every page even when the xl SideNav is absent (mobile, homepage, smaller desktops).
 
@@ -66,3 +67,6 @@ repo secret `CLAUDE_CODE_OAUTH_TOKEN`.
   (Home → Blog) and a Blog schema with up to 20 BlogPosting entries (headline, url, description,
   datePublished, author). Enables rich results for the blog listing. Payload capped at 20 items
   to stay lean even as market reports accumulate.
+- **SEO: JSON-LD ItemList on /games** — the Games hub now emits a BreadcrumbList (Home → Games)
+  and an ItemList enumerating all 8 games with their name, URL, and description. Enables rich
+  results for the games arcade in Google Search. Build-time safe (reads static GAMES array, no DB call).

@@ -123,9 +123,26 @@ export default async function GamesPage() {
     ],
   };
 
+  const itemListLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Riftbound Games",
+    description:
+      "Free Riftbound mini-games built on live card data — Riftle, Higher or Lower, Price Check, Zoomed In, Pairs, Pack Opening Simulator, Riftbound 2048 and Card Smash.",
+    url: `${SITE_URL}/games`,
+    numberOfItems: GAMES.length,
+    itemListElement: GAMES.map((g, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: g.name,
+      url: `${SITE_URL}${g.href}`,
+      description: g.desc,
+    })),
+  };
+
   return (
     <div className="mx-auto max-w-4xl">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumbLd, itemListLd]) }} />
 
       <div className="mb-6 text-center">
         <h1 className="font-display text-3xl font-extrabold text-white">🎮 Riftbound Games</h1>
