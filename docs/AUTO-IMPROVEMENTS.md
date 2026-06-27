@@ -24,7 +24,8 @@ repo secret `CLAUDE_CODE_OAUTH_TOKEN`.
       verify, forgot, profile, admin/*, marketplace orders) rather than canonical;
       add canonical to real content pages that lack it. *(Audited — already done site-wide)*
 - [x] JSON-LD coverage check — added BreadcrumbList + ItemList to `/guides`; blog index, `/browse`, `/marketplace` still candidates.
-- [ ] JSON-LD: add ItemList/CollectionPage to blog index, marketplace, and individual game pages.
+- [x] JSON-LD: add Blog + BreadcrumbList to blog index — done.
+- [ ] JSON-LD: add ItemList/CollectionPage to marketplace and individual game pages.
 - [x] Internal-link audit: added footer site-map grid (NAV_GROUPS) so every feature is
       linked on every page even when the xl SideNav is absent (mobile, homepage, smaller desktops).
 
@@ -61,3 +62,7 @@ repo secret `CLAUDE_CODE_OAUTH_TOKEN`.
   two schema.org blocks: a BreadcrumbList (Home → Guides) and an ItemList enumerating every
   guide with its title, URL, and excerpt. Enables rich results for the guides listing in
   Google Search. Build-time safe (reads static ARTICLES array, no DB call).
+- **SEO: JSON-LD BreadcrumbList + Blog on /blog** — the Blog index now emits a BreadcrumbList
+  (Home → Blog) and a Blog schema with up to 20 BlogPosting entries (headline, url, description,
+  datePublished, author). Enables rich results for the blog listing. Payload capped at 20 items
+  to stay lean even as market reports accumulate.

@@ -3,6 +3,7 @@ import { getBlogPosts, getLatestMarketReport } from "@/lib/posts";
 import { ensureMarketReport } from "@/lib/market-report";
 import { ArticleList } from "@/components/ArticleList";
 import { DailyWrapHero } from "@/components/DailyWrapHero";
+import { SITE_URL } from "@/lib/site";
 
 // Revalidate often enough that a freshly-generated daily report appears promptly.
 export const revalidate = 600;
@@ -21,8 +22,39 @@ export default async function BlogPage() {
   const [articles, latestWrap] = await Promise.all([getBlogPosts(), getLatestMarketReport()]);
   // The featured wrap gets the hero slot; don't list it twice.
   const rest = latestWrap ? articles.filter((a) => a.slug !== latestWrap.article.slug) : articles;
+
+  const breadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+      { "@type": "ListItem", position: 2, name: "Blog", item: `${SITE_URL}/blog` },
+    ],
+  };
+
+  const blog = {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    name: "Riftbound Blog — News, Meta & Daily Market Reports",
+    description:
+      "News, metagame snapshots, buying guides and the automated daily Riftbound market report from RiftCompare.",
+    url: `${SITE_URL}/blog`,
+    blogPost: articles.slice(0, 20).map((a) => ({
+      "@type": "BlogPosting",
+      headline: a.title,
+      url: `${SITE_URL}/blog/${a.slug}`,
+      description: a.excerpt,
+      datePublished: a.date,
+      author: { "@type": "Person", name: a.author },
+    })),
+  };
+
   return (
     <div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumb, blog]) }}
+      />
       <div className="mb-5">
         <h1 className="text-2xl font-extrabold text-white">Blog</h1>
         <p className="mt-1 text-sm text-slate-400">
