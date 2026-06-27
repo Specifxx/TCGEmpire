@@ -33,6 +33,13 @@ h1, h2, h3 {
   letter-spacing: -0.015em;
 }
 
+/* Accessible, brand-consistent keyboard focus ring on every interactive element.
+   Uses :focus-visible so it only shows for keyboard/AT users, never on mouse click. */
+:focus-visible {
+  outline: 2px solid #34d17e;
+  outline-offset: 2px;
+}
+
 /* Skip rendering off-screen card tiles so a long infinite-scroll grid stays smooth
    (the browser only lays out / paints tiles near the viewport). */
 .cv-auto {
