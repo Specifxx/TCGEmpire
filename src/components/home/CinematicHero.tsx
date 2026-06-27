@@ -162,12 +162,13 @@ function Stat({ value, label }: { value: number; label: string }) {
 }
 
 // Full-bleed breakout shell. `-mt-6` cancels the layout's top padding so the hero
-// kisses the navbar; `left-1/2 w-screen -translate-x-1/2` breaks out to the
-// viewport (safe because globals.css sets html{overflow-x:clip}); on xl the SideNav
-// is present, so we simply fill the content column instead of breaking out.
+// kisses the navbar; `left-1/2 w-screen -translate-x-1/2` breaks the hero out to the
+// full viewport (safe because globals.css sets html{overflow-x:clip}). The homepage
+// hides the SideNav (see SideNavGate), so `main` is centred in the viewport on every
+// breakpoint and the breakout is symmetric — no xl special-case needed.
 function ParallaxShell({ children }: { children: React.ReactNode }) {
   return (
-    <ParallaxRoot className="relative -mt-6 flex min-h-[86vh] w-screen -translate-x-1/2 items-center overflow-hidden left-1/2 xl:left-0 xl:w-full xl:translate-x-0">
+    <ParallaxRoot className="relative left-1/2 -mt-6 flex min-h-[86vh] w-screen -translate-x-1/2 items-center overflow-hidden">
       {children}
     </ParallaxRoot>
   );
