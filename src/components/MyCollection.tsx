@@ -141,7 +141,7 @@ export function MyCollection() {
                 <Link href={cardHref(it.card as any)} className="h-14 w-10 shrink-0 overflow-hidden rounded bg-ink-900">
                   {it.card.imageThumbUrl && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={it.card.imageThumbUrl} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" />
+                    <img src={it.card.imageThumbUrl} alt={cardDisplayName(it.card.name, it.card)} className="h-full w-full object-cover" loading="lazy" decoding="async" />
                   )}
                 </Link>
 

@@ -45,6 +45,7 @@ repo secret `CLAUDE_CODE_OAUTH_TOKEN`.
 - (none yet)
 
 ## Done
+- **a11y: meaningful alt text on image-only link in MyCollection** — the card thumbnail `<Link>` in My Collection contained only a `<img alt="">`, giving screen readers an unlabelled "link" with no context. Added `alt={cardDisplayName(it.card.name, it.card)}` so the link gets an accessible name equal to the card name (WCAG 2.4.4 Link Purpose). All other card-image links/buttons in the codebase were confirmed correct (they either contain adjacent text providing the accessible name, or have `aria-label` on the button).
 - **a11y: `role="alert"` on all dynamic error messages (WCAG 4.1.3)** — added `role="alert"` to 10 conditional error `<p>`/`<div>` blocks across AuthForm, AccountForms, BuyOrderActions, SellForm, PremiumCta, BestBasket, Riftle, ForumBoard, and PackSim; added `role="status"` to the success result block in MyCollection. Previously no `role="alert"` or `aria-live` existed anywhere in the codebase — screen readers never auto-announced form errors after submission.
 - **a11y: "Skip to main content" link** — added a WCAG 2.4.1 Level A skip link as the first focusable element in the layout. Visually hidden until tabbed to (`sr-only` / `focus:not-sr-only`), then appears fixed top-left in brand colours. Added `id="main-content"` to the `<main>` element as the anchor target. Lets keyboard and screen-reader users bypass the navbar on every page. Visual — verify on Vercel.
 - **a11y: global `:focus-visible` ring** — keyboard users now get a brand-green focus
