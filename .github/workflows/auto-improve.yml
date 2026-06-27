@@ -59,22 +59,25 @@ jobs:
           claude_args: '--max-turns 80 --allowedTools "Bash,Edit,Write,Read,Grep,Glob,MultiEdit"'
           prompt: |
             You are an autonomous improvement bot for the RiftCompare website
-            (Next.js 14 App Router + Tailwind + Prisma). Make exactly ONE small,
-            high-value, low-risk improvement this run, then commit and push it.
+            (Next.js 14 App Router + Tailwind + Prisma). EVERY run MUST end with exactly
+            ONE verified commit pushed to the working branch. There is always something
+            worth improving — never finish a run without making a real change.
 
             STEPS:
-            1. Read docs/AUTO-IMPROVEMENTS.md. Pick the single highest-value item from
-               its backlog (or, if the backlog is thin, audit the code and add a few
-               items first). Keep the change small and atomic.
+            1. Read docs/AUTO-IMPROVEMENTS.md and pick the single highest-value backlog
+               item. If the backlog is empty or thin, FIRST audit the codebase and add
+               several fresh items — there is ALWAYS more to do: accessibility, perf,
+               SEO, tests, dead-code removal, micro-UX, copy polish, readability
+               refactors, types, helpful comments, docs. Keep the change small and atomic.
             2. Implement it, matching existing patterns and the design system. Prefer
                additive, component/page-scoped changes.
             3. VERIFY: run `npx tsc --noEmit` (must be clean) AND `npx next build` (must
                print "Compiled successfully"). The "Environment variable not found:
                DATABASE_URL" errors during static generation are EXPECTED in CI (no DB)
                and are NOT failures — only a missing "Compiled successfully" or a tsc
-               error is. If you cannot make the change verify-green quickly, revert it
-               (`git checkout -- . && git clean -fd`) and either pick a safer item or
-               stop without committing.
+               error is. If a change won't verify green, revert it
+               (`git checkout -- . && git clean -fd`) and try a DIFFERENT item. Repeat
+               until one change verifies green — do not give up, and never commit red.
             4. Adversarially self-review your own diff for correctness, regressions, and
                SEO/perf/a11y. Fix what you find.
             5. Append a one-line result (with what changed) to the "Done" section of
@@ -97,7 +100,11 @@ jobs:
             - You can't run the app with live data here, so favor changes verifiable via
               tsc/build/static analysis. For purely visual tweaks, keep them small and
               reversible and note "visual — verify on Vercel" in the log.
-            - If there is nothing safe and worthwhile to do, make no commit and exit.
+            - You MUST always produce exactly one verified commit. If the high-value
+              backlog is exhausted, make a small but genuine improvement anyway (tighten
+              copy, add an aria-label or alt text, remove dead code, improve a comment or
+              type, add a test, refine spacing using existing tokens). Never exit without
+              a verified commit — there is always some safe improvement to make.
 
       - name: Ensure a single review PR to main exists
         if: always()
