@@ -1,9 +1,15 @@
 # RiftCompare — Autonomous Improvements Log
 
 Self-driven improvement loop. Branch: `claude/riftcompare-mobile-app-hBUYw`. Every item
-is verified (`tsc --noEmit` + `next build` green) before commit; deploy to `main` ~hourly.
+is verified (`tsc --noEmit` + `next build` "Compiled successfully") before commit.
 Constraint: the app can't be run with live data here, so visual-only tweaks are kept small
 and reversible and flagged "visual — verify on Vercel".
+
+**Driver:** `.github/workflows/auto-improve.yml` — a scheduled GitHub Action (every 30 min)
+runs Claude Code headlessly to make one verified improvement per run and keep a single PR
+to `main` open for review. This runs on GitHub's infrastructure, so it's reliable 24/7
+(unlike an in-session timer, which dies when the web container is reclaimed). Requires the
+repo secret `CLAUDE_CODE_OAUTH_TOKEN`.
 
 ## Backlog (prioritized)
 

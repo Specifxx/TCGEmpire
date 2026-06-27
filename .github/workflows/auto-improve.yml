@@ -1,0 +1,116 @@
+name: Auto-improve (Claude)
+
+# Reliable 24/7 self-improvement loop. Runs on GitHub's infrastructure on a schedule
+# (independent of any Claude Code web session, which lives in an ephemeral container),
+# makes ONE small, verified improvement per run on the working branch, pushes it, and
+# keeps a single PR to main open for review.
+#
+# SETUP (one-time, by a maintainer):
+#   1. Generate a token:  run `claude setup-token`  (needs Claude Pro/Max) locally.
+#   2. Repo → Settings → Secrets and variables → Actions → New repository secret:
+#        Name:  CLAUDE_CODE_OAUTH_TOKEN
+#        Value: <the token from step 1>
+#   3. That's it — the cron below fires every 30 min once this file is on `main`
+#      (GitHub only runs scheduled workflows from the default branch).
+#
+# Cadence is the */30 cron below — change it to taper cost (e.g. "0 */3 * * *" = every
+# 3h). Scheduled runs can be delayed under GitHub load, and GitHub disables schedules
+# after 60 days of repo inactivity.
+
+on:
+  schedule:
+    - cron: "*/30 * * * *" # every 30 minutes
+  workflow_dispatch: {}
+
+concurrency:
+  group: auto-improve
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  improve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout working branch
+        uses: actions/checkout@v4
+        with:
+          ref: claude/riftcompare-mobile-app-hBUYw
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prisma generate (so tsc/next build work)
+        run: npx prisma generate
+
+      - name: Claude — make one verified improvement
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: '--max-turns 80 --allowedTools "Bash,Edit,Write,Read,Grep,Glob,MultiEdit"'
+          prompt: |
+            You are an autonomous improvement bot for the RiftCompare website
+            (Next.js 14 App Router + Tailwind + Prisma). Make exactly ONE small,
+            high-value, low-risk improvement this run, then commit and push it.
+
+            STEPS:
+            1. Read docs/AUTO-IMPROVEMENTS.md. Pick the single highest-value item from
+               its backlog (or, if the backlog is thin, audit the code and add a few
+               items first). Keep the change small and atomic.
+            2. Implement it, matching existing patterns and the design system. Prefer
+               additive, component/page-scoped changes.
+            3. VERIFY: run `npx tsc --noEmit` (must be clean) AND `npx next build` (must
+               print "Compiled successfully"). The "Environment variable not found:
+               DATABASE_URL" errors during static generation are EXPECTED in CI (no DB)
+               and are NOT failures — only a missing "Compiled successfully" or a tsc
+               error is. If you cannot make the change verify-green quickly, revert it
+               (`git checkout -- . && git clean -fd`) and either pick a safer item or
+               stop without committing.
+            4. Adversarially self-review your own diff for correctness, regressions, and
+               SEO/perf/a11y. Fix what you find.
+            5. Append a one-line result (with what changed) to the "Done" section of
+               docs/AUTO-IMPROVEMENTS.md.
+            6. Commit atomically with a clear, conventional message and push to the
+               current branch: `git push origin HEAD`. Make exactly ONE commit.
+
+            HARD RULES:
+            - NEVER commit a red build. If tsc fails or "Compiled successfully" is
+              absent, do not commit.
+            - Do NOT change the global Tailwind palette or the high-ripple shared
+              components (src/components/CardTile.tsx, src/components/Reveal.tsx) unless
+              the change is tiny and you have verified it in isolation.
+            - PRESERVE: all SEO metadata + JSON-LD, CLS/LCP, prefers-reduced-motion
+              safety, the Premium gating (isPremium — never expose premium-only data to
+              free users), and affiliate links.
+            - Do NOT merge or push to main, do NOT touch any other repo or branch, do
+              NOT force-push or rewrite history, do NOT delete data/migrations, do NOT
+              add paid services or heavy dependencies.
+            - You can't run the app with live data here, so favor changes verifiable via
+              tsc/build/static analysis. For purely visual tweaks, keep them small and
+              reversible and note "visual — verify on Vercel" in the log.
+            - If there is nothing safe and worthwhile to do, make no commit and exit.
+
+      - name: Ensure a single review PR to main exists
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh pr view claude/riftcompare-mobile-app-hBUYw --json number >/dev/null 2>&1; then
+            gh pr create \
+              --base main \
+              --head claude/riftcompare-mobile-app-hBUYw \
+              --title "Auto-improvements (Claude)" \
+              --body "Automated, verified small improvements — one per scheduled run. Review the diff and merge when you're happy. See docs/AUTO-IMPROVEMENTS.md for the running log." \
+            || echo "No PR created (likely no diff vs main yet, or one already exists)."
+          else
+            echo "PR already open for this branch."
+          fi
