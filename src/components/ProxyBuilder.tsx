@@ -137,7 +137,7 @@ export function ProxyBuilder({ initialList }: { initialList?: string }) {
                     <div className="h-12 w-9 shrink-0 overflow-hidden rounded bg-ink-900">
                       {(r.imageThumbUrl ?? r.imageUrl) && (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={r.imageThumbUrl ?? r.imageUrl ?? ""} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" />
+                        <img src={r.imageThumbUrl ?? r.imageUrl ?? ""} alt="" aria-hidden="true" className="h-full w-full object-cover" loading="lazy" decoding="async" />
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -164,7 +164,7 @@ export function ProxyBuilder({ initialList }: { initialList?: string }) {
                 <div className="h-12 w-9 shrink-0 overflow-hidden rounded bg-ink-950">
                   {c.img && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={c.img} alt="" className="h-full w-full object-cover" />
+                    <img src={c.img} alt="" aria-hidden="true" className="h-full w-full object-cover" />
                   )}
                 </div>
                 <div className="min-w-0 flex-1">

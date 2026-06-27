@@ -347,7 +347,7 @@ function TradeColumn({
               <li key={c.id} className="flex items-start gap-3 py-2.5">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 {c.imageThumbUrl ? (
-                  <img src={c.imageThumbUrl} alt="" className="mt-0.5 h-12 w-9 shrink-0 rounded object-cover" />
+                  <img src={c.imageThumbUrl} alt="" aria-hidden="true" className="mt-0.5 h-12 w-9 shrink-0 rounded object-cover" />
                 ) : (
                   <div className="mt-0.5 h-12 w-9 shrink-0 rounded bg-ink-800" />
                 )}
@@ -573,7 +573,7 @@ function CardPicker({ onAdd }: { onAdd: (r: SearchResult) => void }) {
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 {r.imageThumbUrl ? (
-                  <img src={r.imageThumbUrl} alt="" className="h-9 w-7 shrink-0 rounded object-cover" />
+                  <img src={r.imageThumbUrl} alt="" aria-hidden="true" className="h-9 w-7 shrink-0 rounded object-cover" />
                 ) : (
                   <div className="h-9 w-7 shrink-0 rounded bg-ink-800" />
                 )}

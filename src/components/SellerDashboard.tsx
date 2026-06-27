@@ -234,7 +234,7 @@ function AddListing({ country, currency, onAdded }: { country: Country; currency
       ) : (
         <div className="flex items-center gap-3 rounded-lg border border-ink-700 bg-ink-900 p-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          {card.imageThumbUrl ? <img src={card.imageThumbUrl} alt="" className="h-14 w-10 rounded object-cover" /> : <div className="h-14 w-10 rounded bg-ink-800" />}
+          {card.imageThumbUrl ? <img src={card.imageThumbUrl} alt="" aria-hidden="true" className="h-14 w-10 rounded object-cover" /> : <div className="h-14 w-10 rounded bg-ink-800" />}
           <div className="min-w-0 flex-1">
             <div className="truncate text-sm font-semibold text-white">{cardDisplayName(card.name, card)}</div>
             <div className="text-xs text-slate-500">
@@ -309,7 +309,7 @@ function CardSearch({ onPick }: { onPick: (c: SearchCard) => void }) {
             <li key={r.id}>
               <button type="button" onClick={() => { onPick(r); setQ(""); setResults([]); }} className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-ink-800">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                {r.imageThumbUrl ? <img src={r.imageThumbUrl} alt="" className="h-9 w-7 rounded object-cover" /> : <div className="h-9 w-7 rounded bg-ink-800" />}
+                {r.imageThumbUrl ? <img src={r.imageThumbUrl} alt="" aria-hidden="true" className="h-9 w-7 rounded object-cover" /> : <div className="h-9 w-7 rounded bg-ink-800" />}
                 <span className="min-w-0 flex-1 truncate text-sm text-white">{cardDisplayName(r.name, r)} <span className="text-xs text-slate-500">{r.setCode} {r.collectorNumber}</span></span>
               </button>
             </li>
@@ -361,7 +361,7 @@ function ListingRow({ l, onChange }: { l: Listing; onChange: () => void }) {
   return (
     <li className="flex flex-wrap items-center gap-3 py-2.5">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      {l.card.imageThumbUrl ? <img src={l.card.imageThumbUrl} alt="" className="h-12 w-9 rounded object-cover" /> : <div className="h-12 w-9 rounded bg-ink-800" />}
+      {l.card.imageThumbUrl ? <img src={l.card.imageThumbUrl} alt="" aria-hidden="true" className="h-12 w-9 rounded object-cover" /> : <div className="h-12 w-9 rounded bg-ink-800" />}
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm font-medium text-white">{cardDisplayName(l.card.name, l.card)}</div>
         <div className="text-xs text-slate-500">

@@ -74,7 +74,7 @@ function CardCell({ l }: { l: NonNullable<OrderRow["listing"]> | OfferRow["listi
   return (
     <Link href={`/card/${l.card.slug ?? l.card.id}`} className="flex min-w-0 items-center gap-2.5">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      {l.card.imageThumbUrl ? <img src={l.card.imageThumbUrl} alt="" className="h-12 w-9 shrink-0 rounded-sm object-cover" loading="lazy" decoding="async" /> : <div className="h-12 w-9 shrink-0 rounded-sm bg-ink-800" />}
+      {l.card.imageThumbUrl ? <img src={l.card.imageThumbUrl} alt="" aria-hidden="true" className="h-12 w-9 shrink-0 rounded-sm object-cover" loading="lazy" decoding="async" /> : <div className="h-12 w-9 shrink-0 rounded-sm bg-ink-800" />}
       <span className="min-w-0">
         <span className="block truncate text-sm font-semibold text-white">{l.card.name}</span>
         <span className="block text-[11px] text-slate-500">
