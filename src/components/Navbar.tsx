@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { NavbarShell } from "./NavbarShell";
 import { SearchBar } from "./SearchBar";
 import { NavWishlistButton } from "./NavWishlistButton";
 import { MobileNav } from "./MobileNav";
@@ -13,7 +14,7 @@ import { DISCORD_URL } from "@/lib/site";
 export async function Navbar() {
   const user = await getCurrentUser();
   return (
-    <header className="sticky top-0 z-40 border-b border-ink-800 bg-ink-950/95">
+    <NavbarShell>
       <WishlistSync loggedIn={!!user} />
       <div className="container-app">
        <div className="flex h-16 w-full items-center justify-between gap-2 sm:gap-4">
@@ -93,6 +94,6 @@ export async function Navbar() {
           </Suspense>
         </div>
       </div>
-    </header>
+    </NavbarShell>
   );
 }

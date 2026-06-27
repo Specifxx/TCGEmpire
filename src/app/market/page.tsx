@@ -48,7 +48,7 @@ function Delta({ label, pct }: { label: string; pct: number | null }) {
   return (
     <div className="rounded-lg bg-ink-900 px-3 py-2 text-center">
       <div className="text-[10px] uppercase tracking-wide text-slate-500">{label}</div>
-      <div className={`text-sm font-extrabold ${flat ? "text-slate-300" : up ? "text-rose-400" : "text-brand-400"}`}>
+      <div className={`text-sm font-extrabold ${flat ? "text-slate-300" : up ? "text-brand-400" : "text-rose-400"}`}>
         {flat ? "—" : `${up ? "▲" : "▼"} ${Math.abs(pct)}%`}
       </div>
     </div>
@@ -134,7 +134,7 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
               <div className="pointer-events-none absolute inset-0" aria-hidden>
                 <div
                   className={`absolute -right-16 -top-20 h-64 w-64 rounded-full blur-3xl animate-blob ${
-                    index.sinceStart == null || index.sinceStart <= 0 ? "bg-brand-500/15" : "bg-rose-500/15"
+                    index.sinceStart != null && index.sinceStart > 0 ? "bg-brand-500/15" : "bg-rose-500/15"
                   }`}
                 />
                 <div className="hero-dots absolute inset-0 opacity-50" />
@@ -208,7 +208,7 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
                       </td>
                       <td className="px-2 py-2 text-right font-mono text-xs text-slate-400">{c.weightPct}%</td>
                       <td className="px-2 py-2 text-right font-semibold text-white">{formatMoney(c.priceCents, currency)}</td>
-                      <td className={`px-4 py-2 text-right font-semibold ${c.d7pct == null ? "text-slate-600" : c.d7pct > 0 ? "text-rose-400" : c.d7pct < 0 ? "text-brand-400" : "text-slate-400"}`}>
+                      <td className={`px-4 py-2 text-right font-semibold ${c.d7pct == null ? "text-slate-600" : c.d7pct > 0 ? "text-brand-400" : c.d7pct < 0 ? "text-rose-400" : "text-slate-400"}`}>
                         {c.d7pct == null ? "—" : `${c.d7pct > 0 ? "▲" : c.d7pct < 0 ? "▼" : ""} ${Math.abs(c.d7pct)}%`}
                       </td>
                     </tr>

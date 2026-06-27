@@ -17,7 +17,7 @@ function Delta({ label, pct }: { label: string; pct: number | null }) {
   return (
     <span className="inline-flex items-baseline gap-1 rounded-lg bg-ink-900 px-2.5 py-1 text-xs">
       <span className="text-slate-500">{label}</span>
-      <span className={`font-bold ${flat ? "text-slate-300" : up ? "text-rose-400" : "text-brand-400"}`}>
+      <span className={`font-bold ${flat ? "text-slate-300" : up ? "text-brand-400" : "text-rose-400"}`}>
         {flat ? "—" : `${up ? "▲" : "▼"} ${Math.abs(pct)}%`}
       </span>
     </span>
@@ -89,7 +89,7 @@ export function MarketPulse({
             <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Market Pulse</div>
             <div className="mt-1 flex items-end gap-3">
               <span className="font-display text-4xl font-extrabold text-white">{index.latest.toFixed(1)}</span>
-              <span className="mb-1.5"><Sparkline points={index.points} up={index.d7 != null && index.d7 > 0} /></span>
+              <span className="mb-1.5"><Sparkline points={index.points} up={index.d7 != null && index.d7 > 0} upIsGood /></span>
             </div>
             <div className="mt-2 flex flex-wrap gap-2">
               <Delta label="7d" pct={index.d7} />
