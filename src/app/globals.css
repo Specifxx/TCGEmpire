@@ -204,6 +204,24 @@ html.capacitor-native.has-native-banner body {
 .reveal-stagger.reveal-in > *:nth-child(10) { transition-delay: 495ms; }
 .reveal-stagger.reveal-in > *:nth-child(n + 11) { transition-delay: 545ms; }
 
+/* Cinematic hero parallax. The layers read CSS custom properties set at runtime by
+   useParallax (scroll/pointer); the var() fallbacks of 0 mean the server HTML and
+   any no-JS / reduced-motion render compose as a clean, flat hero. Transform-only,
+   so it's GPU-composited and never triggers layout. */
+.parallax-art {
+  transform: translate3d(calc(var(--px, 0) * 14px), calc(var(--py, 0) * 14px + var(--sy, 0) * 60px), 0) scale(1.1);
+  will-change: transform;
+}
+.parallax-aurora {
+  transform: translate3d(calc(var(--px, 0) * -8px), calc(var(--py, 0) * -8px + var(--sy, 0) * 28px), 0);
+  will-change: transform;
+}
+
+/* Cinematic vignette: darken the corners to frame the hero content. */
+.hero-vignette {
+  background: radial-gradient(120% 90% at 50% 32%, transparent 55%, rgba(8, 10, 14, 0.55) 100%);
+}
+
 /* Respect users who prefer less motion: neutralise every animation/transition. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
