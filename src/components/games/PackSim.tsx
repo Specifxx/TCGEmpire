@@ -151,7 +151,7 @@ export function PackSim({ sets }: { sets: { code: string; name: string }[] }) {
                       title={`${c.name} — ${c.rarity}`}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={c.img} alt={c.name} className="h-full w-full object-cover" loading="lazy" />
+                      <img src={c.img} alt={c.name} className="h-full w-full object-cover" loading="lazy" decoding="async" />
                       <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink-950 to-transparent px-1.5 pb-1 pt-4 text-center">
                         <span className="block truncate text-[10px] font-bold text-white">{c.name}</span>
                         <span className="block text-[10px] font-bold" style={{ color }}>

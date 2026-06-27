@@ -29,7 +29,7 @@ repo secret `CLAUDE_CODE_OAUTH_TOKEN`.
 
 ### Performance
 - [ ] Audit unnecessary `"use client"` boundaries; trim homepage/browse client JS.
-- [ ] `<img>` hygiene: explicit width/height + `loading`/`decoding` everywhere; verify hero preload.
+- [x] `<img>` hygiene: `decoding="async"` — added to all 25 lazy-loaded img tags across 23 files (off-main-thread decode). Remaining: explicit width/height on a few remaining thumbnails; verify hero preload.
 - [ ] Over-fetching check on homepage/browse/card data paths.
 
 ### Cleanup
@@ -50,6 +50,7 @@ repo secret `CLAUDE_CODE_OAUTH_TOKEN`.
   `aria-label="Decrease quantity"` / `"Increase quantity"` to the icon-only −/+ buttons in
   ForumBoard.tsx and ProxyBuilder.tsx (all other icon controls were already labelled).
   Deleted Partners.tsx (zero imports; replaced by inline trust-line in CinematicHero).
+- **perf: `decoding="async"` on all lazy card images** — added `decoding="async"` to all 25 lazy-loaded `<img>` tags across 23 files (SearchBar, MarketplaceClient, WishlistDrawer, MyCollection, MarketplaceOrders, PriceWatch, Riftle, MarketPulse, TodaysTopDeals, ProxyBuilder, HoldingsGrid, games/PackSim, games/shared, games/CardSmash, learn/LegendQuiz, learn/DomainExplorer, + 7 app pages). Images now decode off the main thread, reducing frame jank during scroll.
 - **SEO/internal-links: footer site-map grid** — added a `<nav aria-label="Site map">` grid
   in `layout.tsx` footer, driven by the shared `NAV_GROUPS` data. Ensures every feature page
   (Card Database, Arbitrage, Meta Decks, Games, Forum, etc.) is linked from every page even

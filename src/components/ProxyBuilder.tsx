@@ -137,7 +137,7 @@ export function ProxyBuilder({ initialList }: { initialList?: string }) {
                     <div className="h-12 w-9 shrink-0 overflow-hidden rounded bg-ink-900">
                       {(r.imageThumbUrl ?? r.imageUrl) && (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={r.imageThumbUrl ?? r.imageUrl ?? ""} alt="" className="h-full w-full object-cover" loading="lazy" />
+                        <img src={r.imageThumbUrl ?? r.imageUrl ?? ""} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" />
                       )}
                     </div>
                     <div className="min-w-0 flex-1">

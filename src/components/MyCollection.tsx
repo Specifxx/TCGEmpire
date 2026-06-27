@@ -141,7 +141,7 @@ export function MyCollection() {
                 <Link href={cardHref(it.card as any)} className="h-14 w-10 shrink-0 overflow-hidden rounded bg-ink-900">
                   {it.card.imageThumbUrl && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={it.card.imageThumbUrl} alt="" className="h-full w-full object-cover" loading="lazy" />
+                    <img src={it.card.imageThumbUrl} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" />
                   )}
                 </Link>
 
@@ -279,7 +279,7 @@ function CollectionSearch({ onAdded }: { onAdded: () => void | Promise<void> }) 
               >
                 {c.imageThumbUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={c.imageThumbUrl} alt="" width={28} height={39} loading="lazy" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
+                  <img src={c.imageThumbUrl} alt="" width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
                 )}
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium text-white">{c.name}</span>

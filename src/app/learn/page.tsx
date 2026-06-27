@@ -234,7 +234,7 @@ export default async function LearnPage() {
                 {ex?.img ? (
                   <Link href={ex.href} className="shrink-0" title={ex.name}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={ex.img} alt={ex.name} className="h-14 w-10 rounded object-cover ring-1 ring-white/10 transition-transform hover:scale-110" loading="lazy" />
+                    <img src={ex.img} alt={ex.name} className="h-14 w-10 rounded object-cover ring-1 ring-white/10 transition-transform hover:scale-110" loading="lazy" decoding="async" />
                   </Link>
                 ) : (
                   <div className="h-14 w-10 shrink-0 rounded bg-ink-800" />

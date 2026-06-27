@@ -84,7 +84,7 @@ function Row({ m, up, currency }: { m: Mover; up: boolean; currency: string }) {
         <div className="h-12 w-9 shrink-0 overflow-hidden rounded bg-ink-900">
           {c.imageThumbUrl && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={c.imageThumbUrl} alt="" className="h-full w-full object-cover" loading="lazy" />
+            <img src={c.imageThumbUrl} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" />
           )}
         </div>
         <div className="min-w-0 flex-1">

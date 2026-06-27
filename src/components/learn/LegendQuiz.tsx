@@ -84,7 +84,7 @@ export function LegendQuiz({ legends, domains }: { legends: QuizLegend[]; domain
       <div key={`${gameId}-${round}`} className="animate-fade-up mt-3 flex flex-wrap items-center gap-5">
         {q.img && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={q.img} alt="" className="h-44 w-[126px] shrink-0 rounded-lg object-cover shadow-xl ring-1 ring-white/10" loading="lazy" />
+          <img src={q.img} alt="" className="h-44 w-[126px] shrink-0 rounded-lg object-cover shadow-xl ring-1 ring-white/10" loading="lazy" decoding="async" />
         )}
         <div className="min-w-0 flex-1">
           <h3 className="font-extrabold text-white">

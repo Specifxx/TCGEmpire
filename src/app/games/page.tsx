@@ -200,7 +200,7 @@ export default async function GamesPage() {
               <Link key={m.card.id} href={cardHref(m.card)} className="card-surface group p-2.5 transition-all hover:-translate-y-0.5 hover:shadow-glow">
                 {m.card.imageThumbUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={m.card.imageThumbUrl} alt={m.card.name} width={300} height={420} loading="lazy" className="aspect-[5/7] w-full rounded-md object-cover" />
+                  <img src={m.card.imageThumbUrl} alt={m.card.name} width={300} height={420} loading="lazy" decoding="async" className="aspect-[5/7] w-full rounded-md object-cover" />
                 )}
                 <div className="mt-2 truncate text-xs font-semibold text-white" title={m.card.name}>{m.card.name}</div>
                 <div className="flex items-baseline justify-between">

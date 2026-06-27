@@ -173,7 +173,7 @@ export function CardSmash() {
                     ) : (
                       <>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={t.card!.img} alt="" className="h-full w-full object-cover" loading="lazy" />
+                        <img src={t.card!.img} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" />
                         <span className="absolute inset-x-0 bottom-0 bg-ink-950/70 text-center text-[10px] font-bold text-accent">
                           {formatMoney(t.card!.priceCents, currency)}
                         </span>

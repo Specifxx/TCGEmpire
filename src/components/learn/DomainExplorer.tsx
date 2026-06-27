@@ -58,6 +58,7 @@ export function DomainExplorer({ domains }: { domains: DomainInfoProp[] }) {
                 alt={d.example.name}
                 className="h-40 w-[114px] rounded-lg object-cover shadow-xl ring-1 ring-white/10 transition-transform group-hover:scale-105"
                 loading="lazy"
+                decoding="async"
               />
             </Link>
           )}

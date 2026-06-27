@@ -19,7 +19,7 @@ export function HoldingsGrid({ holdings, currency }: { holdings: Holding[]; curr
             <div className="relative aspect-[5/7]">
               {h.imageThumbUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={h.imageThumbUrl} alt={h.name} loading="lazy" className="h-full w-full object-cover" />
+                <img src={h.imageThumbUrl} alt={h.name} loading="lazy" decoding="async" className="h-full w-full object-cover" />
               ) : (
                 <div className="grid h-full w-full place-items-center bg-ink-850 text-3xl">🃏</div>
               )}

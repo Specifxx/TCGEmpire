@@ -131,7 +131,7 @@ export default async function SealedPage({ searchParams }: { searchParams: { q?:
                 <div className="h-28 w-28 shrink-0 overflow-hidden rounded-lg bg-ink-900">
                   {g.imageUrl && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={g.imageUrl} alt={g.name} className="h-full w-full object-contain" loading="lazy" />
+                    <img src={g.imageUrl} alt={g.name} className="h-full w-full object-contain" loading="lazy" decoding="async" />
                   )}
                 </div>
                 <div className="min-w-0 flex-1">

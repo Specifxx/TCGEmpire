@@ -306,7 +306,7 @@ export function MarketplaceClient({
                 <button onClick={() => setOpenCard(c)} className="card-surface flex w-full flex-col overflow-hidden text-left transition-colors hover:border-brand-500/50">
                   <div className="relative aspect-[5/7] w-full bg-ink-900">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    {c.card.imageThumbUrl ? <img src={c.card.imageThumbUrl} alt="" width={300} height={420} loading="lazy" className="h-full w-full object-cover" /> : null}
+                    {c.card.imageThumbUrl ? <img src={c.card.imageThumbUrl} alt="" width={300} height={420} loading="lazy" decoding="async" className="h-full w-full object-cover" /> : null}
                     {pct != null && pct <= -3 && (
                       <span className="absolute left-1.5 top-1.5 rounded-full bg-brand-500 px-2 py-0.5 text-[10px] font-extrabold text-ink-950 shadow">
                         {Math.abs(pct)}% under market

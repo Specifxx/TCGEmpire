@@ -90,7 +90,7 @@ export default async function SellerStorefrontPage({ params }: { params: { id: s
                 <Link href={`/card/${l.card.slug ?? l.card.id}`} className="card-surface flex h-full flex-col overflow-hidden transition-colors hover:border-brand-500/50">
                   <div className="aspect-[5/7] w-full bg-ink-900">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    {l.card.imageThumbUrl ? <img src={l.card.imageThumbUrl} alt="" width={300} height={420} loading="lazy" className="h-full w-full object-cover" /> : null}
+                    {l.card.imageThumbUrl ? <img src={l.card.imageThumbUrl} alt="" width={300} height={420} loading="lazy" decoding="async" className="h-full w-full object-cover" /> : null}
                   </div>
                   <div className="p-2.5">
                     <div className="truncate text-xs font-semibold text-white">{cardDisplayName(l.card.name, l.card)}</div>

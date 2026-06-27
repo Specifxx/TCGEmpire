@@ -413,7 +413,7 @@ export function Riftle() {
                   <div className="flex h-11 items-center gap-2 overflow-hidden rounded-md bg-ink-900 px-2">
                     {r.imageThumbUrl && (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={r.imageThumbUrl} alt="" className="h-9 w-7 shrink-0 rounded-sm object-cover" loading="lazy" />
+                      <img src={r.imageThumbUrl} alt="" className="h-9 w-7 shrink-0 rounded-sm object-cover" loading="lazy" decoding="async" />
                     )}
                     <span className="truncate text-xs font-semibold text-white">{r.name}</span>
                   </div>
