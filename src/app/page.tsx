@@ -13,7 +13,6 @@ import { TodaysTopDeals } from "@/components/TodaysTopDeals";
 import { getMarketIndex } from "@/lib/market-index";
 import { CinematicHero } from "@/components/home/CinematicHero";
 import { MarketPulse } from "@/components/home/MarketPulse";
-import { ToolDeck } from "@/components/home/ToolDeck";
 
 // ISR while AU-only; becomes dynamic per-request when NZ mode is enabled (getCountry
 // then reads the country cookie).
@@ -195,10 +194,6 @@ export default async function HomePage() {
           })}
         </Reveal>
       </section>
-
-      {/* Command deck — the whole site at a glance (relocates the desktop SideNav,
-          which is hidden on the homepage so the hero can run full-bleed). */}
-      <ToolDeck />
 
       {/* About + FAQ — keyword-relevant content for search */}
       <section className="card-surface p-6">
