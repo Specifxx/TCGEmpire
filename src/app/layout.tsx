@@ -119,6 +119,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="dns-prefetch" href="https://cdn.riftscribe.gg" />
       </head>
       <body className="min-h-screen bg-ink-950">
+        {/* Skip link: lets keyboard/AT users bypass the navbar and jump straight
+            to content. Visually hidden until focused (WCAG 2.4.1 Level A). */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded-lg focus:bg-ink-900 focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-brand-400 focus:ring-2 focus:ring-brand-400"
+        >
+          Skip to main content
+        </a>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }} />
         <PremiumProvider value={adFree}>
         <CountryProvider initial={country}>
@@ -130,7 +138,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <SideNavGate>
                   <SideNav />
                 </SideNavGate>
-                <main className="min-w-0 flex-1">{children}</main>
+                <main id="main-content" className="min-w-0 flex-1">{children}</main>
               </div>
               <PriceAlertModal />
             </CommandLauncherProvider>

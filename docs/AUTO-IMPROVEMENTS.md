@@ -45,6 +45,7 @@ repo secret `CLAUDE_CODE_OAUTH_TOKEN`.
 - (none yet)
 
 ## Done
+- **a11y: "Skip to main content" link** — added a WCAG 2.4.1 Level A skip link as the first focusable element in the layout. Visually hidden until tabbed to (`sr-only` / `focus:not-sr-only`), then appears fixed top-left in brand colours. Added `id="main-content"` to the `<main>` element as the anchor target. Lets keyboard and screen-reader users bypass the navbar on every page. Visual — verify on Vercel.
 - **a11y: global `:focus-visible` ring** — keyboard users now get a brand-green focus
   outline on every interactive element site-wide (there was none). Mouse clicks
   unaffected (`:focus-visible`). Self-review caught/removed a stray `border-radius`
