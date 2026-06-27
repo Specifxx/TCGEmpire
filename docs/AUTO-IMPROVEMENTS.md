@@ -15,7 +15,7 @@ repo secret `CLAUDE_CODE_OAUTH_TOKEN`.
 
 ### Accessibility
 - [x] Global `:focus-visible` keyboard focus ring (none existed) — shipped.
-- [ ] `aria-label` audit on icon-only controls (wishlist, user menu, mobile nav, switchers).
+- [x] `aria-label` audit on icon-only controls — all major controls already labelled; added missing labels to ±qty buttons in ForumBoard + ProxyBuilder.
 - [ ] Decorative `<img>` → `alt="" aria-hidden`; meaningful images get real alt text.
 - [ ] Reduced-motion: confirm any new motion respects it.
 
@@ -33,7 +33,7 @@ repo secret `CLAUDE_CODE_OAUTH_TOKEN`.
 - [ ] Over-fetching check on homepage/browse/card data paths.
 
 ### Cleanup
-- [ ] Remove dead `Partners.tsx` (replaced by the hero trust line) — confirm zero imports first.
+- [x] Remove dead `Partners.tsx` (replaced by the hero trust line) — confirmed zero imports, deleted.
 
 ### Mobile UX / polish
 - [ ] 375px mental-model pass on key pages; tap-target sizes ≥ 40px.
@@ -46,3 +46,7 @@ repo secret `CLAUDE_CODE_OAUTH_TOKEN`.
   outline on every interactive element site-wide (there was none). Mouse clicks
   unaffected (`:focus-visible`). Self-review caught/removed a stray `border-radius`
   that would have squared off focused elements.
+- **a11y + cleanup: aria-labels on ±qty buttons + delete dead Partners.tsx** — added
+  `aria-label="Decrease quantity"` / `"Increase quantity"` to the icon-only −/+ buttons in
+  ForumBoard.tsx and ProxyBuilder.tsx (all other icon controls were already labelled).
+  Deleted Partners.tsx (zero imports; replaced by inline trust-line in CinematicHero).
