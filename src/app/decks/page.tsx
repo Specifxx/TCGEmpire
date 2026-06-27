@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { resolveAllDecks } from "@/lib/meta-decks";
+import { resolveAllDecks, META_DECKS } from "@/lib/meta-decks";
 import { DomainBadge } from "@/components/Badge";
 import { TierBadge } from "@/components/TierBadge";
 import { formatMoney } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
+import { SITE_URL } from "@/lib/site";
 
 export const revalidate = 900;
 
@@ -23,7 +24,32 @@ export default async function DecksPage() {
   const beginner = decks.filter((d) => d.category === "beginner");
   const meta = decks.filter((d) => d.category !== "beginner");
 
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+      { "@type": "ListItem", position: 2, name: "Meta Decks", item: `${SITE_URL}/decks` },
+    ],
+  };
+  const itemListLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Riftbound Top Meta Decks",
+    url: `${SITE_URL}/decks`,
+    itemListElement: META_DECKS.map((d, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: d.name,
+      url: `${SITE_URL}/decks/${d.slug}`,
+      description: d.description,
+    })),
+  };
+
   return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }} />
     <div className="flex flex-col gap-10">
       <div>
         <div className="mb-4">
@@ -73,6 +99,7 @@ export default async function DecksPage() {
         price and may span multiple stores.
       </p>
     </div>
+    </>
   );
 }
 
