@@ -3,19 +3,16 @@ import Link from "next/link";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { CardTile } from "@/components/CardTile";
-import { CountryHeroToggle } from "@/components/CountryHeroToggle";
-import { Partners } from "@/components/Partners";
-import { TcgplayerAd } from "@/components/TcgplayerAd";
-import { getPopularCards } from "@/lib/cheapest-cards";
-import { getPriceMovers } from "@/lib/price-history";
-import { PriceWatch } from "@/components/PriceWatch";
-import { CountUp } from "@/components/CountUp";
 import { Reveal } from "@/components/Reveal";
+import { getPopularCards } from "@/lib/cheapest-cards";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES, priceField, type CountryInfo } from "@/lib/country";
 import { SETS, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
 import { getTopDeals } from "@/lib/top-deals";
 import { TodaysTopDeals } from "@/components/TodaysTopDeals";
+import { getMarketIndex } from "@/lib/market-index";
+import { CinematicHero } from "@/components/home/CinematicHero";
+import { MarketPulse } from "@/components/home/MarketPulse";
 
 // ISR while AU-only; becomes dynamic per-request when NZ mode is enabled (getCountry
 // then reads the country cookie).
@@ -74,7 +71,7 @@ export default async function HomePage() {
   const ebay = ebayLabel(country);
   const faqs = faqsFor(info, ebay);
   const field = priceField(country);
-  const [totalCards, pricedCards, inStockUnits, popularCards, storeGroups, movers, topDeals] = await Promise.all([
+  const [totalCards, pricedCards, inStockUnits, popularCards, storeGroups, topDeals, index] = await Promise.all([
     prisma.card.count(),
     prisma.card.count({ where: { [field]: { not: null } } }),
     // Live, in-stock store listings analysed in this market — the real units we
@@ -84,84 +81,33 @@ export default async function HomePage() {
     getPopularCards(12, country),
     // Stores serving the selected market (eBay excluded from the count).
     prisma.retailerPrice.groupBy({ by: ["retailer"], where: { country, NOT: { retailer: { startsWith: "ebay" } } } }),
-    // This week's biggest price movers (viewer's market). The cookie read makes this
-    // page per-request, so cache the heavy 35-day aggregation server-side per market
-    // (prices only change on the ~3-hourly import anyway).
-    unstable_cache(() => getPriceMovers(country), ["price-movers", country], { revalidate: 600 })(),
-    // Today's Top Deals blends four signals; cache per-market like the movers above.
+    // Today's Top Deals blends four signals; cache per-market.
     unstable_cache(() => getTopDeals(country), ["top-deals", country], { revalidate: 600 })(),
+    // The GLOBAL RiftCompare Index for the hero + Market Pulse. Global = always
+    // populated (PriceHistory is AU-only today) and its base-100 level is
+    // currency-agnostic, so it reads the same for every market.
+    unstable_cache(() => getMarketIndex("GLOBAL"), ["home-index-global"], { revalidate: 600 })(),
   ]);
   const storeCount = storeGroups.length;
   const storeWord = storeCount === 1 ? "store" : "stores";
 
   return (
-    <div className="flex flex-col gap-10">
-      {/* Hero */}
-      <section className="card-surface animate-fade-up relative overflow-hidden">
-        {/* Animated ambient background: blurred brand/gold "aurora" blobs + a soft
-            dotted texture. Decorative only, so hidden from assistive tech. */}
-        <div className="pointer-events-none absolute inset-0" aria-hidden>
-          <div className="absolute -left-24 -top-28 h-80 w-80 rounded-full bg-brand-500/25 blur-3xl animate-blob" />
-          <div className="absolute -right-20 -top-4 h-72 w-72 rounded-full bg-gold/15 blur-3xl animate-blob [animation-delay:3s]" />
-          <div className="absolute -bottom-28 left-1/3 h-80 w-80 rounded-full bg-brand-400/20 blur-3xl animate-blob [animation-delay:6s]" />
-          <div className="hero-dots absolute inset-0 opacity-60" />
-        </div>
+    <div className="flex flex-col gap-12">
+      {/* Cinematic full-bleed hero */}
+      <CinematicHero
+        country={country}
+        info={info}
+        storeCount={storeCount}
+        storeWord={storeWord}
+        totalCards={totalCards}
+        pricedCards={pricedCards}
+        inStockUnits={inStockUnits}
+        index={index}
+      />
 
-        <div className="relative bg-gradient-to-br from-brand-600/20 via-ink-850/40 to-gold/10 px-6 py-14 text-center">
-          <div className="mx-auto mb-5 flex items-center justify-center">
-            <div className="relative animate-float">
-              {/* Gentle glow halo behind the mark. */}
-              <div className="absolute inset-0 -z-10 rounded-full bg-brand-500/30 blur-2xl animate-glow-pulse" aria-hidden />
-              {/* Above-the-fold LCP candidate: explicit size (no CLS) + high fetch priority. */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo-r-green.png" alt="RiftCompare" width={359} height={353} fetchPriority="high" className="h-16 w-auto drop-shadow-[0_8px_24px_rgba(52,209,126,0.35)] sm:h-20" />
-            </div>
-          </div>
-
-          {/* Live badge */}
-          <div className="animate-fade-in [animation-delay:60ms]">
-            <span className="chip mb-4 border border-brand-500/30 bg-brand-500/10 text-brand-300">
-              <span className="relative mr-0.5 flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-400 opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-400" />
-              </span>
-              Live prices · updated daily
-            </span>
-          </div>
-
-          <h1 className="animate-fade-in [animation-delay:120ms] mx-auto max-w-3xl text-3xl font-extrabold text-white sm:text-5xl">
-            Compare <span className="brand-shimmer">Riftbound</span> card prices across {info.adjective} stores
-          </h1>
-          <p className="animate-fade-in [animation-delay:200ms] mx-auto mt-4 max-w-2xl text-sm text-slate-300 sm:text-base">
-            Find the cheapest place to buy Riftbound TCG cards in {info.place} — live prices in{" "}
-            {info.currency} compared across {storeCount} {info.adjective} {storeWord}, updated daily.
-          </p>
-
-          <div className="animate-fade-in [animation-delay:280ms] mt-7 flex flex-wrap items-center justify-center gap-3">
-            <Link href="/browse" className="btn-primary cta-shine">Browse the database</Link>
-            <Link href="/decks" className="btn-ghost">Top meta decks</Link>
-            <Link href="/deck" className="btn-ghost">Deck builder &amp; pricing</Link>
-            <Link href="/learn" className="btn-ghost">🎓 New to Riftbound?</Link>
-          </div>
-
-          {/* Country / market toggle */}
-          <div className="animate-fade-in [animation-delay:340ms]">
-            <CountryHeroToggle />
-          </div>
-
-          {/* Stats */}
-          <div className="animate-fade-in [animation-delay:420ms] mx-auto mt-8 grid max-w-2xl grid-cols-2 gap-4 sm:grid-cols-4">
-            <Stat value={totalCards} label="cards" />
-            <Stat value={pricedCards} label="priced" />
-            <Stat value={inStockUnits} label="in-stock listings" />
-            <Stat value={storeCount} label={`${info.code} ${storeWord}`} />
-          </div>
-        </div>
-      </section>
-
-      {/* Official partner programs — credibility strip (approved affiliates). */}
+      {/* Market Pulse — the one signature data moment (replaces PriceWatch) */}
       <Reveal>
-        <Partners country={country} />
+        <MarketPulse index={index} currency={info.currency} deals={topDeals} country={country} place={info.place} />
       </Reveal>
 
       {/* Most popular cards — the most-searched Riftbound singles right now */}
@@ -192,28 +138,17 @@ export default async function HomePage() {
         </Reveal>
       )}
 
-      {/* TCGplayer affiliate banner — billboard on desktop, 300x250 rectangle on
-          phones (the strongest mobile in-content unit). */}
-      <TcgplayerAd size="billboard" mobile="rect" country={country} />
-
-      {/* Price Watch — this week's movers in the viewer's market */}
-      <Reveal>
-        <PriceWatch movers={movers} currency={info.currency} place={info.place} />
-      </Reveal>
-
-      {/* Browse by set */}
+      {/* Explore — sets + domains consolidated into one entry point */}
       <section>
-        <h2 className="mb-4 text-xl font-extrabold text-white">Browse by set</h2>
+        <h2 className="mb-4 text-xl font-extrabold text-white">Explore the database</h2>
+
+        <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">By set</div>
         <Reveal stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {SETS.map((s) =>
             // Fully unreleased (no cards, no sealed) → disabled tile. Vendetta has
             // sealed live, so it links through with a "Cards soon · Sealed now" cue.
             s.comingSoon && !s.sealedAvailable ? (
-              <div
-                key={s.code}
-                className="card-surface flex flex-col gap-1 p-4 opacity-60"
-                aria-disabled
-              >
+              <div key={s.code} className="card-surface flex flex-col gap-1 p-4 opacity-60" aria-disabled>
                 <span className="flex items-center gap-2 text-lg font-bold text-white">
                   {s.code}
                   <span className="chip bg-gold/20 text-gold">Coming soon</span>
@@ -240,11 +175,8 @@ export default async function HomePage() {
             )
           )}
         </Reveal>
-      </section>
 
-      {/* Browse by domain */}
-      <section>
-        <h2 className="mb-4 text-xl font-extrabold text-white">Browse by domain</h2>
+        <div className="mb-2 mt-6 text-xs font-semibold uppercase tracking-wide text-slate-500">By domain</div>
         <Reveal stagger className="flex flex-wrap gap-2">
           {DOMAIN_KEYS.map((k) => {
             const d = domainInfo(k);
@@ -262,10 +194,6 @@ export default async function HomePage() {
           })}
         </Reveal>
       </section>
-
-      {/* Second TCGplayer banner — far enough from the first that it never
-          shares a viewport with it. */}
-      <TcgplayerAd size="leaderboard" country={country} />
 
       {/* About + FAQ — keyword-relevant content for search */}
       <section className="card-surface p-6">
@@ -312,17 +240,6 @@ export default async function HomePage() {
           }),
         }}
       />
-    </div>
-  );
-}
-
-function Stat({ value, label }: { value: number; label: string }) {
-  return (
-    <div className="rounded-xl border border-ink-700/50 bg-ink-900/70 p-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-500/40">
-      <div className="text-xl font-extrabold text-gold sm:text-2xl">
-        <CountUp value={value} />
-      </div>
-      <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
     </div>
   );
 }
