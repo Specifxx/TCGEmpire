@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { NavbarShell } from "./NavbarShell";
+import { CommandLauncherButton } from "./CommandLauncher";
 import { SearchBar } from "./SearchBar";
 import { NavWishlistButton } from "./NavWishlistButton";
 import { MobileNav } from "./MobileNav";
@@ -36,6 +37,8 @@ export async function Navbar() {
 
         {/* Nav */}
         <nav className="flex shrink-0 items-center gap-0.5 sm:gap-1">
+          {/* Command launcher — every page can reach every page from here (⌘K). */}
+          <CommandLauncherButton />
           <Link href="/browse" className="rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:px-2.5">
             Database
           </Link>

@@ -9,6 +9,7 @@ import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { SideNav } from "@/components/SideNav";
 import { SideNavGate } from "@/components/SideNavGate";
 import { QuickViewProvider } from "@/components/QuickView";
+import { CommandLauncherProvider } from "@/components/CommandLauncher";
 import { WishlistDrawerProvider } from "@/components/WishlistDrawer";
 import { CountryProvider } from "@/components/CountryProvider";
 import { PremiumProvider } from "@/components/PremiumProvider";
@@ -122,14 +123,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <CountryProvider initial={country}>
         <WishlistDrawerProvider>
           <QuickViewProvider>
-            <Navbar />
-            <div className="container-app flex gap-6 py-6">
-              <SideNavGate>
-                <SideNav />
-              </SideNavGate>
-              <main className="min-w-0 flex-1">{children}</main>
-            </div>
-            <PriceAlertModal />
+            <CommandLauncherProvider>
+              <Navbar />
+              <div className="container-app flex gap-6 py-6">
+                <SideNavGate>
+                  <SideNav />
+                </SideNavGate>
+                <main className="min-w-0 flex-1">{children}</main>
+              </div>
+              <PriceAlertModal />
+            </CommandLauncherProvider>
           </QuickViewProvider>
         </WishlistDrawerProvider>
         </CountryProvider>

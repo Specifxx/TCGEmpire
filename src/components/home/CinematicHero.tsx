@@ -3,6 +3,7 @@ import { ParallaxRoot } from "./ParallaxRoot";
 import { CountUp } from "@/components/CountUp";
 import { CountryHeroToggle } from "@/components/CountryHeroToggle";
 import { OutboundLink } from "@/components/OutboundLink";
+import { CommandLauncherButton } from "@/components/CommandLauncher";
 import { Sparkline } from "@/components/PriceChart";
 import { affiliateUrl, ebayAffiliateUrl } from "@/lib/affiliate";
 import type { CountryInfo, Country } from "@/lib/country";
@@ -116,10 +117,11 @@ export function CinematicHero({
           {info.currency} compared across {storeCount} {info.adjective} {storeWord}, updated daily.
         </p>
 
-        {/* CTAs (one primary + one secondary) */}
+        {/* CTAs (one primary + one secondary + the all-features launcher) */}
         <div className="animate-fade-in [animation-delay:300ms] mt-8 flex flex-wrap items-center justify-center gap-3">
           <Link href="/browse" className="btn-primary cta-shine px-5 py-2.5 text-base">Browse the database</Link>
           <Link href="/decks" className="btn-ghost px-5 py-2.5 text-base">Top meta decks</Link>
+          <CommandLauncherButton variant="hero" />
         </div>
 
         {/* Market toggle */}
