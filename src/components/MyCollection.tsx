@@ -348,9 +348,9 @@ function BulkImport({ onDone }: { onDone: (res: unknown) => Promise<unknown> }) 
         </button>
         <span className="text-[11px] text-slate-600">Adds at Near Mint · adjust condition/qty/cost after.</span>
       </div>
-      {error && <p className="mt-2 text-sm text-rose-400">{error}</p>}
+      {error && <p role="alert" className="mt-2 text-sm text-rose-400">{error}</p>}
       {result && (
-        <div className="mt-2 text-sm">
+        <div role="status" className="mt-2 text-sm">
           <p className="font-semibold text-brand-300">✓ Added {result.matchedCards} card{result.matchedCards === 1 ? "" : "s"} to your collection.</p>
           {result.unmatched.length > 0 && (
             <p className="mt-1 text-xs text-amber-300/90">

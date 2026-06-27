@@ -119,7 +119,7 @@ export function PackSim({ sets }: { sets: { code: string; name: string }[] }) {
         </button>
       </div>
 
-      {error && <p className="mt-3 text-sm text-rose-400">{error}</p>}
+      {error && <p role="alert" className="mt-3 text-sm text-rose-400">{error}</p>}
 
       {!pack && !loading && !error && (
         <div className="card-surface mt-4 grid place-items-center p-10 text-center text-sm text-slate-400">

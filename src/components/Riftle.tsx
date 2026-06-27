@@ -363,7 +363,7 @@ export function Riftle() {
           )}
         </div>
       )}
-      {error && <p className="mt-2 text-sm text-rose-400">{error}</p>}
+      {error && <p role="alert" className="mt-2 text-sm text-rose-400">{error}</p>}
 
       {/* Hints + a way out to the full database for anyone who wants to explore */}
       {!done && ready && (

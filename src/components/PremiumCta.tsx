@@ -52,7 +52,7 @@ export function PremiumCta({ checkoutLive, signedIn }: { checkoutLive: boolean; 
         {busy ? "Opening checkout…" : "★ Subscribe"}
       </button>
       {error && (
-        <div className="mt-2 text-xs">
+        <div role="alert" className="mt-2 text-xs">
           <p className="text-rose-400">{error}</p>
           {/* Recovery path — a failed checkout must never be a dead end. */}
           <p className="mt-1 text-slate-400">

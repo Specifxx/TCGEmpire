@@ -130,7 +130,7 @@ export function AuthForm({ mode, providers }: { mode: "login" | "register"; prov
             </label>
           )}
 
-          {error && <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400">{error}</p>}
+          {error && <p role="alert" className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400">{error}</p>}
 
           <button type="submit" className="btn-primary mt-1" disabled={loading}>
             {loading ? "Please wait…" : isRegister ? "Create account" : "Sign in"}

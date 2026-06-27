@@ -596,7 +596,7 @@ export function ForumBoard({
           {/* Honeypot */}
           <input value={form.website} onChange={set("website")} tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
 
-          {error && <p className="text-sm text-rose-400">{error}</p>}
+          {error && <p role="alert" className="text-sm text-rose-400">{error}</p>}
           <div className="flex items-center justify-between gap-3">
             <p className="text-[11px] text-slate-500">
               Posting as <span className="text-slate-300">{currentUser?.name}</span>. Never share passwords or financial details.
