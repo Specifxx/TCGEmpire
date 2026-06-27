@@ -25,11 +25,15 @@ export function PriceChart({
   currency = "AUD",
   compact = false,
   fmt,
+  upIsGood = false,
 }: {
   points: PricePoint[];
   currency?: string;
   compact?: boolean;
   fmt?: (v: number) => string;
+  // For a market INDEX, rising = good = green (stock convention). Default false keeps
+  // the per-card buyer convention (rising price = bad for the buyer = red).
+  upIsGood?: boolean;
 }) {
   const label = fmt ?? ((v: number) => formatMoney(v, currency));
   const [range, setRange] = useState<RangeKey>("ALL");
@@ -95,7 +99,7 @@ export function PriceChart({
           <span className="text-slate-500">Low {label(min)}</span>
           <span className="text-slate-500">High {label(max)}</span>
           {!flat && (
-            <span className={up ? "font-semibold text-rose-400" : "font-semibold text-brand-400"}>
+            <span className={`font-semibold ${up === upIsGood ? "text-brand-400" : "text-rose-400"}`}>
               {up ? "▲" : "▼"} {Math.abs(pct)}%
             </span>
           )}
@@ -174,8 +178,9 @@ export function PriceChart({
   );
 }
 
-// Tiny non-interactive sparkline for the homepage Price Watch rows.
-export function Sparkline({ points, up }: { points: PricePoint[]; up: boolean }) {
+// Tiny non-interactive sparkline. `upIsGood` flips the colour convention for a market
+// index (rising = green) vs the default per-card buyer convention (rising = red).
+export function Sparkline({ points, up, upIsGood = false }: { points: PricePoint[]; up: boolean; upIsGood?: boolean }) {
   if (points.length < 2) return <div className="h-8 w-20" />;
   const w = 80, h = 32, pad = 3;
   const vs = points.map((p) => p.v);
@@ -184,7 +189,7 @@ export function Sparkline({ points, up }: { points: PricePoint[]; up: boolean })
   const xx = (i: number) => pad + (i / (n - 1)) * (w - 2 * pad);
   const yy = (v: number) => pad + (1 - (v - min) / span) * (h - 2 * pad);
   const line = points.map((p, i) => `${xx(i).toFixed(1)},${yy(p.v).toFixed(1)}`).join(" ");
-  const color = up ? "#fb7185" : "#34d17e";
+  const color = up === upIsGood ? "#34d17e" : "#fb7185";
   return (
     <svg viewBox={`0 0 ${w} ${h}`} className="h-8 w-20" preserveAspectRatio="none" aria-hidden>
       <polyline points={line} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />

@@ -98,11 +98,11 @@ export function CinematicHero({
               <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">RiftCompare Index</span>
               <span className="font-display text-lg font-extrabold leading-none text-white">{index.latest.toFixed(1)}</span>
               {index.d7 != null && (
-                <span className={`text-xs font-bold ${indexUp ? "text-rose-400" : "text-brand-400"}`}>
+                <span className={`text-xs font-bold ${indexUp ? "text-brand-400" : "text-rose-400"}`}>
                   {indexUp ? "▲" : "▼"} {Math.abs(index.d7)}% · 7d
                 </span>
               )}
-              <span className="hidden sm:block"><Sparkline points={index.points} up={indexUp} /></span>
+              <span className="hidden sm:block"><Sparkline points={index.points} up={indexUp} upIsGood /></span>
             </span>
           </div>
         )}
