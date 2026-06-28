@@ -83,12 +83,12 @@ export function MarketPulse({
       </div>
 
       <div className="relative grid gap-6 md:grid-cols-2">
-        {/* Live Index */}
+        {/* Live Index — the whole block is a button through to the full Index. */}
         {index ? (
-          <div>
+          <Link href="/market" className="group -m-2 block rounded-xl p-2 transition-colors hover:bg-ink-900/40">
             <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Market Pulse</div>
             <div className="mt-1 flex items-end gap-3">
-              <span className="font-display text-4xl font-extrabold text-white">{index.latest.toFixed(1)}</span>
+              <span className="font-display text-4xl font-extrabold text-white transition-colors group-hover:text-brand-300">{index.latest.toFixed(1)}</span>
               <span className="mb-1.5"><Sparkline points={index.points} up={index.d7 != null && index.d7 > 0} upIsGood /></span>
             </div>
             <div className="mt-2 flex flex-wrap gap-2">
@@ -96,10 +96,10 @@ export function MarketPulse({
               <Delta label="30d" pct={index.d30} />
               <Delta label="All" pct={index.sinceStart} />
             </div>
-            <Link href="/market" className="mt-3 inline-block text-sm font-semibold text-brand-400 hover:underline">
+            <span className="mt-3 inline-block text-sm font-semibold text-brand-400 group-hover:underline">
               The RiftCompare Index →
-            </Link>
-          </div>
+            </span>
+          </Link>
         ) : (
           <div />
         )}
