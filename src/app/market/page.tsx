@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { unstable_cache } from "next/cache";
-import { getMarketIndex, INDEX_SIZE, type MarketScope } from "@/lib/market-index";
+import { getMarketIndex, INDEX_SIZE, type MarketScope, type IndexConstituent } from "@/lib/market-index";
+import { prisma } from "@/lib/db";
 import { IndexChart } from "@/components/IndexChart";
 import { MarketSwitcher } from "@/components/MarketSwitcher";
 import { COUNTRIES, type Country } from "@/lib/country";
@@ -41,6 +42,52 @@ function parseMarket(v?: string): MarketScope {
   return up === "AU" || up === "NZ" || up === "US" || up === "UK" ? (up as Country) : "GLOBAL";
 }
 
+// Recent daily market-wrap reports (the auto-generated "what moved the market"
+// posts). Resilient to a missing DB (build/static-gen) — returns [] on error.
+async function getRecentReports() {
+  try {
+    return await prisma.marketReport.findMany({
+      orderBy: { day: "desc" },
+      take: 6,
+      select: { slug: true, day: true, title: true, excerpt: true, globalChangePct: true },
+    });
+  } catch {
+    return [];
+  }
+}
+
+// A compact gainers/fallers column derived from the Index constituents' own 7-day moves.
+function MoverCol({ title, cards, positive, currency }: { title: string; cards: IndexConstituent[]; positive: boolean; currency: string }) {
+  return (
+    <div className="card-surface p-4">
+      <div className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">{title}</div>
+      {cards.length === 0 ? (
+        <p className="text-sm text-slate-500">No notable moves this week.</p>
+      ) : (
+        <ul className="divide-y divide-ink-800">
+          {cards.map((c) => (
+            <li key={c.id}>
+              <Link href={cardHref(c)} className="flex items-center gap-2.5 rounded-lg px-1 py-2 transition-colors hover:bg-ink-900/50">
+                {c.imageThumbUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={c.imageThumbUrl} alt="" aria-hidden="true" width={28} height={39} loading="lazy" decoding="async" className="h-9 w-7 shrink-0 rounded-sm object-cover" />
+                )}
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-semibold text-white">{c.name}</span>
+                  <span className="block text-[11px] text-slate-500">{formatMoney(c.priceCents, currency)}</span>
+                </span>
+                <span className={`shrink-0 text-sm font-bold ${positive ? "text-brand-400" : "text-rose-400"}`}>
+                  {positive ? "▲" : "▼"} {Math.abs(c.d7pct ?? 0)}%
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function Delta({ label, pct }: { label: string; pct: number | null }) {
   if (pct == null) return null;
   const up = pct > 0;
@@ -61,6 +108,18 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
   const index = await unstable_cache(() => getMarketIndex(market), ["market-index", market], {
     revalidate: 1800,
   })();
+  const reports = await unstable_cache(getRecentReports, ["market-reports-recent"], { revalidate: 1800 })();
+
+  // Biggest 7-day movers among the Index constituents (stock-index style gainers/losers).
+  const constituents = index?.constituents ?? [];
+  const gainers = constituents
+    .filter((c) => c.d7pct != null && c.d7pct > 0)
+    .sort((a, b) => (b.d7pct ?? 0) - (a.d7pct ?? 0))
+    .slice(0, 5);
+  const fallers = constituents
+    .filter((c) => c.d7pct != null && c.d7pct < 0)
+    .sort((a, b) => (a.d7pct ?? 0) - (b.d7pct ?? 0))
+    .slice(0, 5);
 
   // Display chrome. GLOBAL has no single currency/region, so prices fall back to the
   // composite's reference region (carried on the index as `currency`/`priceMarket`).
@@ -218,6 +277,19 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
             </div>
           </section>
           </Reveal>
+
+          {/* Biggest movers — stock-index style gainers/losers from the constituents */}
+          {(gainers.length > 0 || fallers.length > 0) && (
+            <Reveal delayMs={180}>
+              <section>
+                <h2 className="mb-3 text-xl font-extrabold text-white">Biggest movers (7-day)</h2>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <MoverCol title="Top gainers" cards={gainers} positive currency={currency} />
+                  <MoverCol title="Top fallers" cards={fallers} positive={false} currency={currency} />
+                </div>
+              </section>
+            </Reveal>
+          )}
         </>
       ) : (
         <div className="card-surface relative grid overflow-hidden place-items-center p-16 text-center text-slate-400">
@@ -235,6 +307,38 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
             <Link href="/movers" className="btn-primary mt-4">📈 Price movers →</Link>
           </div>
         </div>
+      )}
+
+      {/* Daily market-wrap reports — recent auto-generated posts, so /market reads like
+          a real market tracker (history + commentary), not just a single number. */}
+      {reports.length > 0 && (
+        <Reveal delayMs={120}>
+          <section>
+            <div className="mb-3 flex items-end justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-extrabold text-white">📰 Daily market wrap</h2>
+                <p className="mt-0.5 text-xs text-slate-500">Auto-generated each day — what moved the Riftbound market and why.</p>
+              </div>
+              <Link href="/blog" className="btn-ghost shrink-0 text-xs">All reports →</Link>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {reports.map((r) => (
+                <Link key={r.slug} href={`/blog/${r.slug}`} className="card-surface p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-500/60 hover:shadow-glow">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[11px] uppercase tracking-wide text-slate-500">{r.day}</span>
+                    {r.globalChangePct != null && (
+                      <span className={`text-xs font-bold ${r.globalChangePct > 0 ? "text-brand-400" : r.globalChangePct < 0 ? "text-rose-400" : "text-slate-400"}`}>
+                        {r.globalChangePct > 0 ? "▲" : r.globalChangePct < 0 ? "▼" : ""} {Math.abs(r.globalChangePct).toFixed(2)}%
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="mt-1 line-clamp-2 text-sm font-bold text-white">{r.title}</h3>
+                  <p className="mt-1 line-clamp-2 text-xs text-slate-400">{r.excerpt}</p>
+                </Link>
+              ))}
+            </div>
+          </section>
+        </Reveal>
       )}
 
       <AdSlot height={100} />
