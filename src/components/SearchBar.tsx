@@ -137,7 +137,7 @@ export function SearchBar() {
                     <div className="h-12 w-9 shrink-0 overflow-hidden rounded bg-ink-900">
                       {r.imageThumbUrl && (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={r.imageThumbUrl} alt="" className="h-full w-full object-cover" loading="lazy" />
+                        <img src={r.imageThumbUrl} alt="" aria-hidden="true" className="h-full w-full object-cover" loading="lazy" decoding="async" />
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -167,7 +167,7 @@ export function SearchBar() {
                         <div className="grid h-12 w-9 shrink-0 place-items-center overflow-hidden rounded bg-ink-900">
                           {s.imageUrl ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={s.imageUrl} alt="" className="h-full w-full object-contain" loading="lazy" />
+                            <img src={s.imageUrl} alt="" aria-hidden="true" className="h-full w-full object-contain" loading="lazy" decoding="async" />
                           ) : (
                             <span className="text-[8px] font-semibold text-slate-600">SEALED</span>
                           )}

@@ -82,7 +82,7 @@ export default async function ValueFinderPage() {
                     <CardQuickLink card={p.card} className="flex items-center gap-2.5">
                       {p.card.imageThumbUrl && (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={p.card.imageThumbUrl} alt="" width={28} height={39} loading="lazy" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
+                        <img src={p.card.imageThumbUrl} alt="" aria-hidden="true" width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
                       )}
                       <span className="min-w-0">
                         <span className="block truncate font-semibold text-white">{p.card.name}</span>

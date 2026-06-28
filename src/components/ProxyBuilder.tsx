@@ -137,7 +137,7 @@ export function ProxyBuilder({ initialList }: { initialList?: string }) {
                     <div className="h-12 w-9 shrink-0 overflow-hidden rounded bg-ink-900">
                       {(r.imageThumbUrl ?? r.imageUrl) && (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={r.imageThumbUrl ?? r.imageUrl ?? ""} alt="" className="h-full w-full object-cover" loading="lazy" />
+                        <img src={r.imageThumbUrl ?? r.imageUrl ?? ""} alt="" aria-hidden="true" className="h-full w-full object-cover" loading="lazy" decoding="async" />
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -164,15 +164,15 @@ export function ProxyBuilder({ initialList }: { initialList?: string }) {
                 <div className="h-12 w-9 shrink-0 overflow-hidden rounded bg-ink-950">
                   {c.img && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={c.img} alt="" className="h-full w-full object-cover" />
+                    <img src={c.img} alt="" aria-hidden="true" className="h-full w-full object-cover" />
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-xs font-medium text-white">{c.name}</div>
                   <div className="mt-1 flex items-center gap-1">
-                    <button onClick={() => setQty(c.id, c.qty - 1)} className="grid h-5 w-5 place-items-center rounded bg-ink-800 text-slate-300 hover:bg-ink-700">−</button>
+                    <button aria-label="Decrease quantity" onClick={() => setQty(c.id, c.qty - 1)} className="grid h-5 w-5 place-items-center rounded bg-ink-800 text-slate-300 hover:bg-ink-700">−</button>
                     <span className="w-5 text-center text-xs text-white">{c.qty}</span>
-                    <button onClick={() => setQty(c.id, c.qty + 1)} className="grid h-5 w-5 place-items-center rounded bg-ink-800 text-slate-300 hover:bg-ink-700">+</button>
+                    <button aria-label="Increase quantity" onClick={() => setQty(c.id, c.qty + 1)} className="grid h-5 w-5 place-items-center rounded bg-ink-800 text-slate-300 hover:bg-ink-700">+</button>
                     <button onClick={() => remove(c.id)} aria-label="Remove" className="ml-1 text-slate-500 hover:text-rose-400">✕</button>
                   </div>
                 </div>

@@ -69,7 +69,7 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
       >
         {user.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+          <img src={user.avatarUrl} alt="" aria-hidden="true" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
         ) : (
           initials
         )}

@@ -152,7 +152,7 @@ export function PlaceBuyOrderForm({
         {formatAUD(total)} will be held from your wallet until filled or cancelled.
       </p>
 
-      {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
+      {error && <p role="alert" className="mt-2 text-xs text-red-400">{error}</p>}
 
       <button type="submit" disabled={loading} className="btn-primary mt-3 w-full">
         {loading ? "Placing…" : `Place bid · ${formatAUD(total)}`}

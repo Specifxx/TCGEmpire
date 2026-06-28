@@ -58,7 +58,7 @@ export function BestBasket({ currency }: { currency: string }) {
             Use my wishlist
           </button>
         </div>
-        {error && <p className="mt-2 text-sm text-rose-400">{error}</p>}
+        {error && <p role="alert" className="mt-2 text-sm text-rose-400">{error}</p>}
       </div>
 
       {plan && (

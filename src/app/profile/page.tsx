@@ -43,7 +43,7 @@ export default async function ProfilePage() {
         <div className="flex items-center gap-4">
           {user.avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={user.avatarUrl} alt="" className="h-14 w-14 rounded-full object-cover" referrerPolicy="no-referrer" />
+            <img src={user.avatarUrl} alt="" aria-hidden="true" className="h-14 w-14 rounded-full object-cover" referrerPolicy="no-referrer" />
           ) : (
             <div className="grid h-14 w-14 place-items-center rounded-full bg-brand-500 text-2xl font-black text-white">
               {user.displayName.slice(0, 1).toUpperCase()}

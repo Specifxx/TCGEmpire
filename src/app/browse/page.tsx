@@ -18,6 +18,7 @@ import {
   parsePageSize,
 } from "@/lib/cards";
 import { getCountry } from "@/lib/get-country";
+import { SITE_URL } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -56,8 +57,30 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
   ]);
   const totalPages = Math.max(1, Math.ceil(total / size));
 
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+      { "@type": "ListItem", position: 2, name: "Browse Cards", item: `${SITE_URL}/browse` },
+    ],
+  };
+  const collectionLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "Buy Riftbound Cards — Browse Every Single & Compare Prices",
+    url: `${SITE_URL}/browse`,
+    description:
+      "Browse every Riftbound TCG card and compare live prices across stores to find the cheapest place to buy Riftbound singles. Updated daily.",
+    isPartOf: { "@type": "WebSite", name: "RiftCompare", url: SITE_URL },
+  };
+
   return (
     <div className="flex flex-col gap-6 lg:flex-row">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumbLd, collectionLd]) }}
+      />
       <Filters />
 
       <section className="min-w-0 flex-1">

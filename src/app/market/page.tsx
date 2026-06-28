@@ -198,7 +198,7 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
                         <Link href={cardHref(c)} className="flex items-center gap-2.5">
                           {c.imageThumbUrl && (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={c.imageThumbUrl} alt="" width={28} height={39} loading="lazy" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
+                            <img src={c.imageThumbUrl} alt="" aria-hidden="true" width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
                           )}
                           <span className="min-w-0">
                             <span className="block truncate font-semibold text-white">{c.name}</span>

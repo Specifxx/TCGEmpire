@@ -241,7 +241,7 @@ export function RunRecap({ cards, currency, title = "💸 The cards from this ru
           <li key={c.id} className="flex items-center gap-3 px-4 py-2 hover:bg-ink-900/50">
             <Link href={cardUrl(c)} className="flex min-w-0 flex-1 items-center gap-2.5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={c.img} alt="" width={28} height={39} loading="lazy" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
+              <img src={c.img} alt="" aria-hidden="true" width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
               <span className="min-w-0">
                 <span className="block truncate text-sm font-semibold text-white">{c.name}</span>
                 <span className="block text-[11px] text-slate-500">{c.setCode} · {c.collectorNumber}</span>

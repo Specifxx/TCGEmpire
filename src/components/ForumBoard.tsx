@@ -524,9 +524,9 @@ export function ForumBoard({
                         {CONDITIONS.map((c) => <option key={c}>{c}</option>)}
                       </select>
                       <div className="flex items-center gap-1">
-                        <button type="button" onClick={() => updateItem(idx, { qty: Math.max(1, it.qty - 1) })} className="grid h-6 w-6 place-items-center rounded bg-ink-800 text-slate-300 hover:bg-ink-700">−</button>
+                        <button type="button" aria-label="Decrease quantity" onClick={() => updateItem(idx, { qty: Math.max(1, it.qty - 1) })} className="grid h-6 w-6 place-items-center rounded bg-ink-800 text-slate-300 hover:bg-ink-700">−</button>
                         <span className="w-5 text-center text-sm text-white">{it.qty}</span>
-                        <button type="button" onClick={() => updateItem(idx, { qty: Math.min(99, it.qty + 1) })} className="grid h-6 w-6 place-items-center rounded bg-ink-800 text-slate-300 hover:bg-ink-700">+</button>
+                        <button type="button" aria-label="Increase quantity" onClick={() => updateItem(idx, { qty: Math.min(99, it.qty + 1) })} className="grid h-6 w-6 place-items-center rounded bg-ink-800 text-slate-300 hover:bg-ink-700">+</button>
                       </div>
                       <button type="button" onClick={() => removeItem(idx)} aria-label="Remove" className="px-1 text-slate-500 hover:text-rose-400">✕</button>
                     </div>
@@ -596,7 +596,7 @@ export function ForumBoard({
           {/* Honeypot */}
           <input value={form.website} onChange={set("website")} tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
 
-          {error && <p className="text-sm text-rose-400">{error}</p>}
+          {error && <p role="alert" className="text-sm text-rose-400">{error}</p>}
           <div className="flex items-center justify-between gap-3">
             <p className="text-[11px] text-slate-500">
               Posting as <span className="text-slate-300">{currentUser?.name}</span>. Never share passwords or financial details.

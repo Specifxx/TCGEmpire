@@ -306,7 +306,7 @@ export function MarketplaceClient({
                 <button onClick={() => setOpenCard(c)} className="card-surface flex w-full flex-col overflow-hidden text-left transition-colors hover:border-brand-500/50">
                   <div className="relative aspect-[5/7] w-full bg-ink-900">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    {c.card.imageThumbUrl ? <img src={c.card.imageThumbUrl} alt="" width={300} height={420} loading="lazy" className="h-full w-full object-cover" /> : null}
+                    {c.card.imageThumbUrl ? <img src={c.card.imageThumbUrl} alt="" aria-hidden="true" width={300} height={420} loading="lazy" decoding="async" className="h-full w-full object-cover" /> : null}
                     {pct != null && pct <= -3 && (
                       <span className="absolute left-1.5 top-1.5 rounded-full bg-brand-500 px-2 py-0.5 text-[10px] font-extrabold text-ink-950 shadow">
                         {Math.abs(pct)}% under market
@@ -393,7 +393,7 @@ function OffersModal({
       <div className="relative z-10 grid max-h-[88vh] w-full max-w-2xl grid-rows-[auto_1fr] overflow-hidden rounded-2xl border border-ink-700 bg-ink-900 shadow-2xl">
         <div className="flex items-center gap-3 border-b border-ink-800 p-4 pr-12">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          {card.card.imageThumbUrl ? <img src={card.card.imageThumbUrl} alt="" className="h-16 w-12 rounded object-cover" /> : <div className="h-16 w-12 rounded bg-ink-800" />}
+          {card.card.imageThumbUrl ? <img src={card.card.imageThumbUrl} alt="" aria-hidden="true" className="h-16 w-12 rounded object-cover" /> : <div className="h-16 w-12 rounded bg-ink-800" />}
           <div className="min-w-0">
             <h2 className="truncate text-lg font-bold text-white">{cardDisplayName(card.card.name, card.card)}</h2>
             <p className="text-xs text-slate-500">
@@ -546,7 +546,7 @@ function CartDrawer({
             {cart.map((it) => (
               <li key={it.listingId} className="flex items-center gap-3 p-3">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                {it.image ? <img src={it.image} alt="" className="h-12 w-9 rounded object-cover" /> : <div className="h-12 w-9 rounded bg-ink-800" />}
+                {it.image ? <img src={it.image} alt="" aria-hidden="true" className="h-12 w-9 rounded object-cover" /> : <div className="h-12 w-9 rounded bg-ink-800" />}
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-medium text-white">{it.cardName}</div>
                   <div className="truncate text-xs text-slate-500">{it.sub} · {it.sellerName}</div>

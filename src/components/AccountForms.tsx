@@ -96,7 +96,7 @@ export function ResetForm({ token }: { token: string }) {
         <span className="mb-1 block text-xs font-medium text-slate-400">New password</span>
         <input type="password" className="input" value={password} onChange={(e) => setPassword(e.target.value)} minLength={6} required autoFocus autoComplete="new-password" />
       </label>
-      {error && <p className="mt-3 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400">{error}</p>}
+      {error && <p role="alert" className="mt-3 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400">{error}</p>}
       <button type="submit" className="btn-primary mt-4 w-full" disabled={loading}>
         {loading ? "Saving…" : "Set password & sign in"}
       </button>

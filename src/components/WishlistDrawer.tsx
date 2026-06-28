@@ -127,7 +127,7 @@ function WishlistDrawer({ open, onClose }: { open: boolean; onClose: () => void 
                   <Link href={cardHref(c)} onClick={onClose} className="flex min-w-0 flex-1 items-center gap-3">
                     {c.imageThumbUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={c.imageThumbUrl} alt="" className="h-14 w-10 shrink-0 rounded object-cover" loading="lazy" />
+                      <img src={c.imageThumbUrl} alt="" aria-hidden="true" className="h-14 w-10 shrink-0 rounded object-cover" loading="lazy" decoding="async" />
                     ) : (
                       <div className="h-14 w-10 shrink-0 rounded bg-ink-800" />
                     )}

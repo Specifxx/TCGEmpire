@@ -51,7 +51,7 @@ export function DeckView({ deck, builderHref }: { deck: ResolvedDeck; builderHre
         <div className="w-8 text-center font-bold text-slate-400">{item.qty}×</div>
         {item.card?.imageThumbUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.card.imageThumbUrl} alt="" className="h-12 w-9 shrink-0 rounded object-cover ring-1 ring-ink-700" />
+          <img src={item.card.imageThumbUrl} alt="" aria-hidden="true" className="h-12 w-9 shrink-0 rounded object-cover ring-1 ring-ink-700" />
         ) : (
           <div className="h-12 w-9 shrink-0 rounded bg-ink-800" />
         )}

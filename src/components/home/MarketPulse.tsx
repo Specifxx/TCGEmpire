@@ -30,7 +30,7 @@ function OppRow({ deal, currency, country }: { deal: Deal; currency: string; cou
       <div className="h-10 w-8 shrink-0 overflow-hidden rounded bg-ink-900">
         {deal.imageUrl && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={deal.imageUrl} alt="" width={32} height={40} loading="lazy" className="h-full w-full object-cover" />
+          <img src={deal.imageUrl} alt="" aria-hidden="true" width={32} height={40} loading="lazy" decoding="async" className="h-full w-full object-cover" />
         )}
       </div>
       <div className="min-w-0 flex-1">

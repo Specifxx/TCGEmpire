@@ -137,7 +137,7 @@ export function Pairs() {
               >
                 {up ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={t.card.img} alt="" width={300} height={420} className="animate-fade-up h-full w-full object-cover" />
+                  <img src={t.card.img} alt="" aria-hidden="true" width={300} height={420} className="animate-fade-up h-full w-full object-cover" />
                 ) : (
                   <span className="grid h-full w-full place-items-center bg-gradient-to-br from-ink-850 to-ink-900">
                     <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-500/15 text-base font-extrabold text-brand-400">R</span>

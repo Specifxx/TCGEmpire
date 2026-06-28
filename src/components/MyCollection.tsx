@@ -141,7 +141,7 @@ export function MyCollection() {
                 <Link href={cardHref(it.card as any)} className="h-14 w-10 shrink-0 overflow-hidden rounded bg-ink-900">
                   {it.card.imageThumbUrl && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={it.card.imageThumbUrl} alt="" className="h-full w-full object-cover" loading="lazy" />
+                    <img src={it.card.imageThumbUrl} alt={cardDisplayName(it.card.name, it.card)} className="h-full w-full object-cover" loading="lazy" decoding="async" />
                   )}
                 </Link>
 
@@ -279,7 +279,7 @@ function CollectionSearch({ onAdded }: { onAdded: () => void | Promise<void> }) 
               >
                 {c.imageThumbUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={c.imageThumbUrl} alt="" width={28} height={39} loading="lazy" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
+                  <img src={c.imageThumbUrl} alt="" aria-hidden="true" width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
                 )}
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium text-white">{c.name}</span>
@@ -348,9 +348,9 @@ function BulkImport({ onDone }: { onDone: (res: unknown) => Promise<unknown> }) 
         </button>
         <span className="text-[11px] text-slate-600">Adds at Near Mint · adjust condition/qty/cost after.</span>
       </div>
-      {error && <p className="mt-2 text-sm text-rose-400">{error}</p>}
+      {error && <p role="alert" className="mt-2 text-sm text-rose-400">{error}</p>}
       {result && (
-        <div className="mt-2 text-sm">
+        <div role="status" className="mt-2 text-sm">
           <p className="font-semibold text-brand-300">✓ Added {result.matchedCards} card{result.matchedCards === 1 ? "" : "s"} to your collection.</p>
           {result.unmatched.length > 0 && (
             <p className="mt-1 text-xs text-amber-300/90">

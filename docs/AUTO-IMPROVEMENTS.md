@@ -15,25 +15,28 @@ repo secret `CLAUDE_CODE_OAUTH_TOKEN`.
 
 ### Accessibility
 - [x] Global `:focus-visible` keyboard focus ring (none existed) — shipped.
-- [ ] `aria-label` audit on icon-only controls (wishlist, user menu, mobile nav, switchers).
-- [ ] Decorative `<img>` → `alt="" aria-hidden`; meaningful images get real alt text.
+- [x] `aria-label` audit on icon-only controls — all major controls already labelled; added missing labels to ±qty buttons in ForumBoard + ProxyBuilder.
+- [x] Decorative `<img>` → `alt="" aria-hidden`; meaningful images get real alt text — done.
 - [ ] Reduced-motion: confirm any new motion respects it.
 
 ### SEO
 - [ ] Pages missing canonical/robots: noindex utility/auth/admin pages (login, register,
       verify, forgot, profile, admin/*, marketplace orders) rather than canonical;
-      add canonical to real content pages that lack it.
-- [ ] JSON-LD coverage check (Org/Breadcrumb/FAQ/Dataset present); add ItemList/Product where useful.
-- [ ] Internal-link audit now that the homepage SideNav is hidden + ToolDeck removed
-      (ensure feature pages are still well-linked; consider a footer section list).
+      add canonical to real content pages that lack it. *(Audited — already done site-wide)*
+- [x] JSON-LD coverage check — added BreadcrumbList + ItemList to `/guides`; blog index, `/browse`, `/marketplace` still candidates.
+- [x] JSON-LD: add Blog + BreadcrumbList to blog index — done.
+- [x] JSON-LD: add ItemList to games page — done.
+- [ ] JSON-LD: add CollectionPage to marketplace (currently noindex / private beta; defer until public launch).
+- [x] Internal-link audit: added footer site-map grid (NAV_GROUPS) so every feature is
+      linked on every page even when the xl SideNav is absent (mobile, homepage, smaller desktops).
 
 ### Performance
 - [ ] Audit unnecessary `"use client"` boundaries; trim homepage/browse client JS.
-- [ ] `<img>` hygiene: explicit width/height + `loading`/`decoding` everywhere; verify hero preload.
+- [x] `<img>` hygiene: `decoding="async"` — added to all 25 lazy-loaded img tags across 23 files (off-main-thread decode). Remaining: explicit width/height on a few remaining thumbnails; verify hero preload.
 - [ ] Over-fetching check on homepage/browse/card data paths.
 
 ### Cleanup
-- [ ] Remove dead `Partners.tsx` (replaced by the hero trust line) — confirm zero imports first.
+- [x] Remove dead `Partners.tsx` (replaced by the hero trust line) — confirmed zero imports, deleted.
 
 ### Mobile UX / polish
 - [ ] 375px mental-model pass on key pages; tap-target sizes ≥ 40px.
@@ -42,7 +45,34 @@ repo secret `CLAUDE_CODE_OAUTH_TOKEN`.
 - (none yet)
 
 ## Done
+- **SEO: JSON-LD BreadcrumbList + CollectionPage on /browse** — the main card-listing page now emits a `BreadcrumbList` (Home → Browse Cards) and a `CollectionPage` schema with name, URL, and description. Uses static constants only (no DB call). Enables rich breadcrumb results and helps Google classify /browse as a collection/product-listing page — the highest-traffic content page previously without structured data.
+- **SEO: JSON-LD BreadcrumbList + ItemList on /decks** — the Meta Decks index now emits a BreadcrumbList (Home → Meta Decks) and an ItemList enumerating every deck with its name, URL, and description. Uses the static `META_DECKS` array so it adds zero DB calls at render time. Enables rich results for the decks listing in Google Search.
+- **a11y: `aria-hidden="true"` on all decorative card/avatar thumbnails** — added `aria-hidden="true"` to 31 decorative `alt=""` `<img>` tags across 24 files (UserMenu avatar, profile avatar, SearchBar results, MarketplaceClient, MarketplaceOrders, WishlistDrawer, DeckBuilder, DeckView, PriceWatch, ProxyBuilder, Riftle, SellerDashboard, TradeCalculator, games/CardSmash, games/Pairs, games/shared, learn/LegendQuiz, home/MarketPulse, TodaysTopDeals, and 5 app pages). All images are confirmed decorative — adjacent card-name text or parent `aria-label` provides the accessible name. Prevents edge-case AT from announcing "blank" for empty-alt images.
+- **a11y: meaningful alt text on image-only link in MyCollection** — the card thumbnail `<Link>` in My Collection contained only a `<img alt="">`, giving screen readers an unlabelled "link" with no context. Added `alt={cardDisplayName(it.card.name, it.card)}` so the link gets an accessible name equal to the card name (WCAG 2.4.4 Link Purpose). All other card-image links/buttons in the codebase were confirmed correct (they either contain adjacent text providing the accessible name, or have `aria-label` on the button).
+- **a11y: `role="alert"` on all dynamic error messages (WCAG 4.1.3)** — added `role="alert"` to 10 conditional error `<p>`/`<div>` blocks across AuthForm, AccountForms, BuyOrderActions, SellForm, PremiumCta, BestBasket, Riftle, ForumBoard, and PackSim; added `role="status"` to the success result block in MyCollection. Previously no `role="alert"` or `aria-live` existed anywhere in the codebase — screen readers never auto-announced form errors after submission.
+- **a11y: "Skip to main content" link** — added a WCAG 2.4.1 Level A skip link as the first focusable element in the layout. Visually hidden until tabbed to (`sr-only` / `focus:not-sr-only`), then appears fixed top-left in brand colours. Added `id="main-content"` to the `<main>` element as the anchor target. Lets keyboard and screen-reader users bypass the navbar on every page. Visual — verify on Vercel.
 - **a11y: global `:focus-visible` ring** — keyboard users now get a brand-green focus
   outline on every interactive element site-wide (there was none). Mouse clicks
   unaffected (`:focus-visible`). Self-review caught/removed a stray `border-radius`
   that would have squared off focused elements.
+- **a11y + cleanup: aria-labels on ±qty buttons + delete dead Partners.tsx** — added
+  `aria-label="Decrease quantity"` / `"Increase quantity"` to the icon-only −/+ buttons in
+  ForumBoard.tsx and ProxyBuilder.tsx (all other icon controls were already labelled).
+  Deleted Partners.tsx (zero imports; replaced by inline trust-line in CinematicHero).
+- **perf: `decoding="async"` on all lazy card images** — added `decoding="async"` to all 25 lazy-loaded `<img>` tags across 23 files (SearchBar, MarketplaceClient, WishlistDrawer, MyCollection, MarketplaceOrders, PriceWatch, Riftle, MarketPulse, TodaysTopDeals, ProxyBuilder, HoldingsGrid, games/PackSim, games/shared, games/CardSmash, learn/LegendQuiz, learn/DomainExplorer, + 7 app pages). Images now decode off the main thread, reducing frame jank during scroll.
+- **SEO/internal-links: footer site-map grid** — added a `<nav aria-label="Site map">` grid
+  in `layout.tsx` footer, driven by the shared `NAV_GROUPS` data. Ensures every feature page
+  (Card Database, Arbitrage, Meta Decks, Games, Forum, etc.) is linked from every page even
+  when the xl SideNav is absent (mobile, homepage, smaller desktops). 2-col → 3-col → 6-col
+  responsive. Visual — verify on Vercel.
+- **SEO: JSON-LD BreadcrumbList + ItemList on /guides** — the Guides index page now emits
+  two schema.org blocks: a BreadcrumbList (Home → Guides) and an ItemList enumerating every
+  guide with its title, URL, and excerpt. Enables rich results for the guides listing in
+  Google Search. Build-time safe (reads static ARTICLES array, no DB call).
+- **SEO: JSON-LD BreadcrumbList + Blog on /blog** — the Blog index now emits a BreadcrumbList
+  (Home → Blog) and a Blog schema with up to 20 BlogPosting entries (headline, url, description,
+  datePublished, author). Enables rich results for the blog listing. Payload capped at 20 items
+  to stay lean even as market reports accumulate.
+- **SEO: JSON-LD ItemList on /games** — the Games hub now emits a BreadcrumbList (Home → Games)
+  and an ItemList enumerating all 8 games with their name, URL, and description. Enables rich
+  results for the games arcade in Google Search. Build-time safe (reads static GAMES array, no DB call).

@@ -50,9 +50,10 @@ export async function Navbar() {
           <Link href="/trade" className="rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:px-2.5">
             Trade
           </Link>
-          {/* One grouped Menu (same groups as the phone sheet) instead of the
-              old Decks/Games/More dropdown trio. */}
-          <div className="hidden lg:block xl:hidden">
+          {/* One grouped "Menu" mega-dropdown (same groups as the phone sheet). Now
+              that the desktop left rail is gone, this is the full-nav surface on every
+              desktop size, alongside the ⌘K command launcher. */}
+          <div className="hidden lg:block">
             <NavMenu />
           </div>
           {/* Join our Discord — opens the permanent invite in a new tab */}
