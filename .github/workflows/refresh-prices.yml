@@ -31,6 +31,7 @@ on:
       - "src/lib/cardmarket.ts"
       - "src/lib/sealed-import.ts"
       - "scripts/import-prices.ts"
+      - "scripts/import-sealed.ts"
 
 # Never run two price imports at once (they both write to the same DB).
 concurrency:
@@ -63,3 +64,14 @@ jobs:
           # Manual run with "ebay_force" ticked bypasses the once-a-day eBay gate.
           EBAY_FORCE: ${{ inputs.ebay_force && '1' || '' }}
         run: npx tsx scripts/import-prices.ts
+      - name: Import sealed products
+        # Populate the /sealed page (booster boxes/packs across AU/NZ/US). Nothing
+        # else scheduled this before, so the table went empty.
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
+          EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
+          EBAY_AFFILIATE_CAMPAIGN: ${{ secrets.EBAY_AFFILIATE_CAMPAIGN }}
+          EBAY_REFRESH: ${{ github.event_name != 'push' }}
+          EBAY_FORCE: ${{ inputs.ebay_force && '1' || '' }}
+        run: npx tsx scripts/import-sealed.ts

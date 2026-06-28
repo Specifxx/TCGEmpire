@@ -36,8 +36,17 @@ export const metadata: Metadata = {
 export default async function SealedPage({ searchParams }: { searchParams: { q?: string | string[] } }) {
   const country = getCountry();
   const info = COUNTRIES[country];
-  const fmt = (cents: number) => formatMoney(cents, info.currency);
-  const all = await getSealedGroups(country);
+  // Sealed data is sourced per market (AU/NZ stores + US TCGplayer). For a market
+  // with no rows of its own (e.g. UK), fall back to AU so the page is never blank —
+  // and price it in AUD so the currency stays honest.
+  let all = await getSealedGroups(country);
+  let priceCountry = country;
+  if (all.length === 0 && country !== "AU") {
+    all = await getSealedGroups("AU");
+    priceCountry = "AU";
+  }
+  const usingFallback = priceCountry !== country;
+  const fmt = (cents: number) => formatMoney(cents, COUNTRIES[priceCountry].currency);
   const q = (typeof searchParams.q === "string" ? searchParams.q : "").trim();
   const ql = q.toLowerCase();
   const groups = ql
@@ -85,6 +94,11 @@ export default async function SealedPage({ searchParams }: { searchParams: { q?:
             Wondering if a box is worth ripping?{" "}
             <Link href="/tools/box-ev" className="text-brand-400 hover:underline">Run the EV calculator →</Link>
           </p>
+          {usingFallback && (
+            <p className="mt-2 text-xs text-slate-500">
+              We don&apos;t track {info.adjective} sealed stores yet — showing Australian listings (prices in AUD). Boxes ship internationally.
+            </p>
+          )}
           {q && (
             <p className="mt-2 text-sm text-slate-400">
               Showing matches for <span className="text-brand-400">“{q}”</span>.{" "}
