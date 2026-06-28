@@ -94,7 +94,11 @@ export function CinematicHero({
         {/* Live RiftCompare Index accent */}
         {index && (
           <div className="animate-fade-in [animation-delay:100ms] mt-3 flex justify-center">
-            <span className="inline-flex items-center gap-2 rounded-full border border-ink-700/70 bg-ink-950/60 px-3 py-1.5 shadow-glow backdrop-blur">
+            <Link
+              href="/market"
+              aria-label="View the RiftCompare Index"
+              className="inline-flex items-center gap-2 rounded-full border border-ink-700/70 bg-ink-950/60 px-3 py-1.5 shadow-glow backdrop-blur transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-500/60"
+            >
               <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">RiftCompare Index</span>
               <span className="font-display text-lg font-extrabold leading-none text-white">{index.latest.toFixed(1)}</span>
               {index.d7 != null && (
@@ -103,7 +107,8 @@ export function CinematicHero({
                 </span>
               )}
               <span className="hidden sm:block"><Sparkline points={index.points} up={indexUp} upIsGood /></span>
-            </span>
+              <span className="text-slate-500" aria-hidden>→</span>
+            </Link>
           </div>
         )}
 

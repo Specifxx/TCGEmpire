@@ -17,7 +17,9 @@ export async function Navbar() {
   return (
     <NavbarShell>
       <WishlistSync loggedIn={!!user} />
-      <div className="container-app">
+      {/* Full-window header (not capped at the content max-width) so the nav fits the
+          whole window on wide screens. */}
+      <div className="mx-auto w-full px-4 sm:px-6 lg:px-8">
        <div className="flex h-16 w-full items-center justify-between gap-2 sm:gap-4">
         {/* Logo: standalone R mark + text wordmark */}
         <Link href="/" className="flex shrink-0 items-center gap-2" aria-label="RiftCompare home">
@@ -42,9 +44,9 @@ export async function Navbar() {
           <Link href="/browse" className="rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:px-2.5">
             Database
           </Link>
-          {/* Portfolio tracker — a headline feature, right after the database. */}
-          <Link href="/portfolio" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:block sm:px-2.5">
-            Portfolio
+          {/* Sealed products — high-AOV, right after the database. */}
+          <Link href="/sealed" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:block sm:px-2.5">
+            Sealed
           </Link>
           {/* Trade Calculator — front-and-centre so players can reach it fast at locals. */}
           <Link href="/trade" className="rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:px-2.5">

@@ -53,7 +53,11 @@ export function Reveal({
           }
         }
       },
-      { threshold: 0.12, rootMargin: "0px 0px -8% 0px" }
+      // threshold 0 (not 0.12): a grid taller than the viewport can never reach 12%
+      // visibility, so it would never reveal and its children would stay at opacity 0
+      // (this is why the tall /sealed grid showed nothing). 0 reveals as soon as any
+      // part enters the viewport (minus the 8% bottom margin) — works at any height.
+      { threshold: 0, rootMargin: "0px 0px -8% 0px" }
     );
     io.observe(el);
     return () => io.disconnect();
