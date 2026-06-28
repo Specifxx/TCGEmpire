@@ -6,8 +6,6 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
-import { SideNav } from "@/components/SideNav";
-import { SideNavGate } from "@/components/SideNavGate";
 import { QuickViewProvider } from "@/components/QuickView";
 import { CommandLauncherProvider } from "@/components/CommandLauncher";
 import { WishlistDrawerProvider } from "@/components/WishlistDrawer";
@@ -134,12 +132,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <QuickViewProvider>
             <CommandLauncherProvider>
               <Navbar />
-              <div className="container-app flex gap-6 py-6">
-                <SideNavGate>
-                  <SideNav />
-                </SideNavGate>
-                <main id="main-content" className="min-w-0 flex-1">{children}</main>
-              </div>
+              <main id="main-content" className="container-app min-w-0 py-6">{children}</main>
               <PriceAlertModal />
             </CommandLauncherProvider>
           </QuickViewProvider>

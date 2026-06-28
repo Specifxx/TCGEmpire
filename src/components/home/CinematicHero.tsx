@@ -15,9 +15,8 @@ const EBAY_DOMAIN: Record<string, string> = {
 };
 
 // The cinematic, full-bleed homepage hero. Breaks out of the centered content
-// column to fill the viewport (left-1/2 + w-screen + -translate-x-1/2; on xl the
-// SideNav is present so we just fill the content column instead). All decorative
-// layers are aria-hidden; the foreground re-aligns to the normal grid via
+// column to fill the viewport (left-1/2 + w-screen + -translate-x-1/2). All
+// decorative layers are aria-hidden; the foreground re-aligns to the normal grid via
 // container-app. Parallax is layered on by ParallaxRoot (client) and degrades to a
 // clean static composition with no JS / reduced motion.
 export function CinematicHero({
@@ -165,9 +164,8 @@ function Stat({ value, label }: { value: number; label: string }) {
 
 // Full-bleed breakout shell. `-mt-6` cancels the layout's top padding so the hero
 // kisses the navbar; `left-1/2 w-screen -translate-x-1/2` breaks the hero out to the
-// full viewport (safe because globals.css sets html{overflow-x:clip}). The homepage
-// hides the SideNav (see SideNavGate), so `main` is centred in the viewport on every
-// breakpoint and the breakout is symmetric — no xl special-case needed.
+// full viewport (safe because globals.css sets html{overflow-x:clip}). `main` is
+// centred in the viewport on every breakpoint, so the breakout is symmetric.
 function ParallaxShell({ children }: { children: React.ReactNode }) {
   return (
     <ParallaxRoot className="relative left-1/2 -mt-6 flex min-h-[86vh] w-screen -translate-x-1/2 items-center overflow-hidden">
