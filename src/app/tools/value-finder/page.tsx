@@ -14,10 +14,39 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: { absolute: "Value Finder — Undervalued Riftbound Cards | RiftCompare" },
   description:
-    "A Premium screener for Riftbound cards trading below their recent average — a mean-reversion signal for value buyers and flippers, ranked by how far below their usual price they are.",
+    "A Premium screener for Riftbound cards trading below their recent average — a mean-reversion signal for value buyers and flippers, ranked by how far below their usual price they are. Just want to check what a card is worth? Use the free value checker.",
+  keywords: [
+    "undervalued riftbound cards",
+    "riftbound card deals",
+    "riftbound cards below average price",
+    "riftbound value finder",
+    "riftbound card investing",
+    "riftbound card prices",
+  ],
   alternates: { canonical: "/tools/value-finder" },
   openGraph: { title: "Value Finder — undervalued Riftbound cards", url: `${SITE_URL}/tools/value-finder` },
 };
+
+// Public, crawlable explainer so the page isn't thin to search engines behind the
+// Premium gate (an anonymous crawler would otherwise see only the paywall card).
+const VF_FAQS = [
+  {
+    q: "What is the Riftbound Value Finder?",
+    a: "A screener that surfaces Riftbound cards currently trading below their own recent average price — a mean-reversion signal for value buyers and flippers. Cards are ranked by how far below their usual price they sit and how far off their recent high they are.",
+  },
+  {
+    q: "How is “undervalued” calculated?",
+    a: "We compare a card's current lowest price to the mean of its lowest price over the last 30 days. The bigger the gap below that average, the higher it ranks. It's a signal, not advice — thin markets and one-off listings can mislead, so always sanity-check the card page.",
+  },
+  {
+    q: "How can I just check what one card is worth?",
+    a: "Use the free Riftbound card value checker: search any card to see its live market value plus real store prices in your country. The Value Finder is the opposite lens — it scans the whole market for cards trading below their norm.",
+  },
+  {
+    q: "Does undervalued mean the price will go up?",
+    a: "Not necessarily. A card below its average can keep falling if demand is genuinely cooling. Treat the screen as a starting point for research, not a guarantee — check the card's price history and current demand before buying to flip.",
+  },
+];
 
 export default async function ValueFinderPage() {
   const user = await getCurrentUser();
@@ -56,8 +85,13 @@ export default async function ValueFinderPage() {
             ) : (
               <Link href="/register?next=/tools/value-finder" className="btn-primary text-sm">Create a free account</Link>
             )}
-            <Link href="/movers" className="btn-ghost text-sm">Free price movers →</Link>
+            <Link href="/card-value" className="btn-ghost text-sm">Free value checker →</Link>
           </div>
+          <p className="mx-auto mt-3 max-w-md text-xs text-slate-500">
+            Just want to know what a card is worth? The free{" "}
+            <Link href="/card-value" className="font-semibold text-brand-400 hover:underline">Riftbound card value checker</Link>{" "}
+            shows any card&apos;s live value and store prices — no account needed.
+          </p>
         </div>
       ) : picks.length === 0 ? (
         <div className="card-surface grid place-items-center p-12 text-center text-sm text-slate-400">
@@ -104,6 +138,42 @@ export default async function ValueFinderPage() {
           </p>
         </div>
       )}
+
+      {/* Public, always-rendered explainer + FAQ so the page carries real indexable
+          content for crawlers regardless of the Premium gate. */}
+      <section className="mt-10">
+        <h2 className="mb-3 text-xl font-extrabold text-white">How the Value Finder works</h2>
+        <div className="card-surface divide-y divide-ink-800">
+          {VF_FAQS.map((f) => (
+            <div key={f.q} className="px-5 py-4">
+              <h3 className="font-bold text-white">{f.q}</h3>
+              <p className="mt-1 text-sm leading-relaxed text-slate-400">{f.a}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify([
+            {
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              mainEntity: VF_FAQS.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+            },
+            {
+              "@context": "https://schema.org",
+              "@type": "BreadcrumbList",
+              itemListElement: [
+                { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+                { "@type": "ListItem", position: 2, name: "Tools", item: `${SITE_URL}/tools` },
+                { "@type": "ListItem", position: 3, name: "Value Finder", item: `${SITE_URL}/tools/value-finder` },
+              ],
+            },
+          ]),
+        }}
+      />
     </div>
   );
 }
