@@ -219,8 +219,20 @@ html.capacitor-native.has-native-banner body {
   background: radial-gradient(120% 90% at 50% 32%, transparent 55%, rgba(8, 10, 14, 0.55) 100%);
 }
 
+/* Cinematic full-screen nav: staggered entrance for the category panels, tied to
+   the `.cine-open` state so it replays each time the overlay opens. Delay per item
+   is injected via --cine-delay. */
+.cine-item {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--cine-delay, 0ms);
+}
+.cine-open .cine-item { opacity: 1; transform: none; }
+
 /* Respect users who prefer less motion: neutralise every animation/transition. */
 @media (prefers-reduced-motion: reduce) {
+  .cine-item { opacity: 1 !important; transform: none !important; transition: none !important; }
   *, *::before, *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;

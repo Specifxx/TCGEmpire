@@ -8,6 +8,7 @@ import { Navbar } from "@/components/Navbar";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { QuickViewProvider } from "@/components/QuickView";
 import { CommandLauncherProvider } from "@/components/CommandLauncher";
+import { MegaMenuProvider } from "@/components/MegaMenuProvider";
 import { WishlistDrawerProvider } from "@/components/WishlistDrawer";
 import { CountryProvider } from "@/components/CountryProvider";
 import { PremiumProvider } from "@/components/PremiumProvider";
@@ -135,9 +136,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <WishlistDrawerProvider>
           <QuickViewProvider>
             <CommandLauncherProvider>
-              <Navbar />
-              <main id="main-content" className="container-app min-w-0 py-6">{children}</main>
-              <PriceAlertModal />
+              <MegaMenuProvider>
+                <Navbar />
+                <main id="main-content" className="container-app min-w-0 py-6">{children}</main>
+                <PriceAlertModal />
+              </MegaMenuProvider>
             </CommandLauncherProvider>
           </QuickViewProvider>
         </WishlistDrawerProvider>
