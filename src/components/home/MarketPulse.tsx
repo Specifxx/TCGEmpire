@@ -90,10 +90,12 @@ export function MarketPulse({
               <Delta label="7d" pct={index.d7} />
               <Delta label="30d" pct={index.d30} />
               <Delta label="All" pct={index.sinceStart} />
-              <span className="inline-flex items-baseline gap-1 rounded-md bg-ink-900 px-2.5 py-1 text-xs">
-                <span className="text-slate-500">Cap</span>
-                <span className="num font-bold text-slate-200">{formatMoneyCompact(index.stats.marketCapCents, index.currency)}</span>
-              </span>
+              {index.stats && (
+                <span className="inline-flex items-baseline gap-1 rounded-md bg-ink-900 px-2.5 py-1 text-xs">
+                  <span className="text-slate-500">Cap</span>
+                  <span className="num font-bold text-slate-200">{formatMoneyCompact(index.stats.marketCapCents, index.currency)}</span>
+                </span>
+              )}
             </div>
             <span className="mt-3 inline-block text-sm font-semibold text-brand-400 group-hover:underline">
               The RiftCompare Index →

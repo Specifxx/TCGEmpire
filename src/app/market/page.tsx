@@ -109,7 +109,10 @@ function Delta({ label, pct }: { label: string; pct: number | null }) {
 export default async function IndexPage({ searchParams }: { searchParams: { market?: string } }) {
   const market = parseMarket(searchParams.market);
   const isGlobal = market === "GLOBAL";
-  const index = await unstable_cache(() => getMarketIndex(market), ["market-index", market], {
+  // Cache key is versioned (v2): the cached MarketIndex shape gained `stats`, and the
+  // data cache persists across deploys — a stale pre-stats blob would otherwise crash
+  // the stats panel. Bumping the key forces a fresh compute with the new shape.
+  const index = await unstable_cache(() => getMarketIndex(market), ["market-index-v2", market], {
     revalidate: 1800,
   })();
   const reports = await unstable_cache(getRecentReports, ["market-reports-recent"], { revalidate: 1800 })();

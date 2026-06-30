@@ -18,6 +18,8 @@ function Stat({ label, value, sub, tone }: { label: string; value: string; sub?:
 
 export function IndexStats({ index }: { index: MarketIndex }) {
   const s = index.stats;
+  // Defensive: a MarketIndex served from a pre-`stats` cache blob would lack this.
+  if (!s) return null;
   const cur = index.currency;
   return (
     <div>

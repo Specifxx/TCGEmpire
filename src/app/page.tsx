@@ -88,7 +88,9 @@ export default async function HomePage() {
     // The GLOBAL RiftCompare Index for the hero + Market Pulse. Global = always
     // populated (PriceHistory is AU-only today) and its base-100 level is
     // currency-agnostic, so it reads the same for every market.
-    unstable_cache(() => getMarketIndex("GLOBAL"), ["home-index-global"], { revalidate: 600 })(),
+    // Key versioned (v2): the MarketIndex shape gained `stats`; the data cache
+    // persists across deploys, so a stale pre-stats blob would crash Market Pulse.
+    unstable_cache(() => getMarketIndex("GLOBAL"), ["home-index-global-v2"], { revalidate: 600 })(),
   ]);
   const storeCount = storeGroups.length;
   const storeWord = storeCount === 1 ? "store" : "stores";
