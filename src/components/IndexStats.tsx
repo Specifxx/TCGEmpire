@@ -28,7 +28,7 @@ export function IndexStats({ index }: { index: MarketIndex }) {
         <Stat
           label="Index value"
           value={formatMoneyCompact(s.basketValueCents, cur)}
-          sub={`1 of each · ${s.constituentCount} cards`}
+          sub="1 of each card"
         />
         <Stat
           label="Avg card"
