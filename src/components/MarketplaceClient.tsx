@@ -69,9 +69,9 @@ function deltaPct(offerCents: number, marketCents: number | null): number | null
 function DeltaBadge({ pct }: { pct: number | null }) {
   if (pct == null) return null;
   if (pct <= -3)
-    return <span className="chip bg-brand-500/15 text-[10px] font-bold text-brand-300">{Math.abs(pct)}% under market</span>;
+    return <span className="chip bg-brand-500/15 text-[10px] font-bold text-brand-300"><span className="num">{Math.abs(pct)}%</span> under market</span>;
   if (pct >= 5)
-    return <span className="chip bg-rose-500/10 text-[10px] font-semibold text-rose-300/90">{pct}% over market</span>;
+    return <span className="chip bg-down/10 text-[10px] font-semibold text-down"><span className="num">{pct}%</span> over market</span>;
   return <span className="chip bg-ink-800 text-[10px] font-semibold text-slate-400">≈ market price</span>;
 }
 
@@ -153,7 +153,7 @@ export function MarketplaceClient({
         },
       ];
     });
-    toast("Added to cart ✓");
+    toast("Added to cart");
   }
 
   async function checkout(items: { listingId: string; quantity: number }[]) {
@@ -181,7 +181,7 @@ export function MarketplaceClient({
       setCart([]);
       setCartOpen(false);
       setOpenCard(null);
-      toast(`✓ Order placed — ${formatMoney(data.totalCents, cartCurrency)}`, 2500);
+      toast(`Order placed — ${formatMoney(data.totalCents, cartCurrency)}`, 2500);
       setTimeout(() => location.reload(), 900);
     } catch {
       toast("Network error — try again", 3000);
@@ -204,7 +204,7 @@ export function MarketplaceClient({
         return;
       }
       setOfferFor(null);
-      toast("✓ Offer sent — the seller has 72h to respond. Track it in My orders.", 3500);
+      toast("Offer sent — the seller has 72h to respond. Track it in My orders.", 3500);
     } catch {
       toast("Network error — try again", 3000);
     } finally {
@@ -253,12 +253,12 @@ export function MarketplaceClient({
         </div>
         <div className="flex items-center gap-2">
           {signedIn && (
-            <Link href="/marketplace/orders" className="btn-ghost text-sm">📦 My orders &amp; offers</Link>
+            <Link href="/marketplace/orders" className="btn-ghost text-sm">My orders &amp; offers</Link>
           )}
           <button onClick={() => setCartOpen(true)} className="btn-primary relative">
             Cart
             {cartCount > 0 && (
-              <span className="absolute -right-1.5 -top-1.5 grid h-5 min-w-[20px] place-items-center rounded-full bg-accent px-1 text-[11px] font-bold text-ink-950">{cartCount}</span>
+              <span className="num absolute -right-1.5 -top-1.5 grid h-5 min-w-[20px] place-items-center rounded-full bg-accent px-1 text-[11px] font-bold text-ink-950">{cartCount}</span>
             )}
           </button>
         </div>
@@ -287,7 +287,7 @@ export function MarketplaceClient({
 
       {flash && (
         <div className="fixed inset-x-0 bottom-4 z-[90] flex justify-center px-4">
-          <div className="rounded-xl border border-brand-500/40 bg-ink-900/95 px-4 py-2.5 text-sm font-medium text-slate-100 shadow-2xl">{flash}</div>
+          <div className="rounded-lg border border-brand-500/40 bg-ink-900/95 px-4 py-2.5 text-sm font-medium text-slate-100 shadow-2xl">{flash}</div>
         </div>
       )}
 
@@ -309,16 +309,16 @@ export function MarketplaceClient({
                     {c.card.imageThumbUrl ? <img src={c.card.imageThumbUrl} alt="" aria-hidden="true" width={300} height={420} loading="lazy" decoding="async" className="h-full w-full object-cover" /> : null}
                     {pct != null && pct <= -3 && (
                       <span className="absolute left-1.5 top-1.5 rounded-full bg-brand-500 px-2 py-0.5 text-[10px] font-extrabold text-ink-950 shadow">
-                        {Math.abs(pct)}% under market
+                        <span className="num">{Math.abs(pct)}%</span> under market
                       </span>
                     )}
                   </div>
                   <div className="p-3">
                     <div className="truncate text-sm font-semibold text-white">{cardDisplayName(c.card.name, c.card)}</div>
-                    <div className="text-[11px] text-slate-500">{c.card.setCode} {c.card.collectorNumber}</div>
+                    <div className="num text-[11px] text-slate-500">{c.card.setCode} {c.card.collectorNumber}</div>
                     <div className="mt-1 flex items-baseline justify-between">
-                      <span className="text-base font-extrabold text-accent">from {formatMoney(from, cur)}</span>
-                      <span className="text-[11px] text-slate-500">{c.offers.length} {c.offers.length === 1 ? "offer" : "offers"}</span>
+                      <span className="num text-base font-extrabold text-accent">from {formatMoney(from, cur)}</span>
+                      <span className="text-[11px] text-slate-500"><span className="num">{c.offers.length}</span> {c.offers.length === 1 ? "offer" : "offers"}</span>
                     </div>
                   </div>
                 </button>
@@ -390,7 +390,7 @@ function OffersModal({
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center p-4" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-black/70" onClick={onClose} />
-      <div className="relative z-10 grid max-h-[88vh] w-full max-w-2xl grid-rows-[auto_1fr] overflow-hidden rounded-2xl border border-ink-700 bg-ink-900 shadow-2xl">
+      <div className="relative z-10 grid max-h-[88vh] w-full max-w-2xl grid-rows-[auto_1fr] overflow-hidden rounded-lg border border-ink-700 bg-ink-900 shadow-2xl">
         <div className="flex items-center gap-3 border-b border-ink-800 p-4 pr-12">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           {card.card.imageThumbUrl ? <img src={card.card.imageThumbUrl} alt="" aria-hidden="true" className="h-16 w-12 rounded object-cover" /> : <div className="h-16 w-12 rounded bg-ink-800" />}
@@ -419,7 +419,7 @@ function OffersModal({
                   <DeltaBadge pct={deltaPct(o.priceCents, card.marketCents)} />
                 </div>
               </div>
-              <span className="text-base font-extrabold text-accent">{formatMoney(o.priceCents, o.currency)}</span>
+              <span className="num text-base font-extrabold text-accent">{formatMoney(o.priceCents, o.currency)}</span>
               <input
                 type="number"
                 min={1}
@@ -431,7 +431,7 @@ function OffersModal({
               />
               <div className="flex gap-1.5">
                 {signedIn && (
-                  <button onClick={() => onMakeOffer(o)} className="btn-ghost text-xs" title="Negotiate a lower price">💬 Offer</button>
+                  <button onClick={() => onMakeOffer(o)} className="btn-ghost text-xs" title="Negotiate a lower price">Offer</button>
                 )}
                 <button onClick={() => onAdd(card.card, o, getQty(o))} className="btn-ghost text-xs">Add to cart</button>
                 <button onClick={() => onBuyNow(o, getQty(o))} disabled={busy} className="btn-primary text-xs disabled:opacity-50">Buy now</button>
@@ -468,11 +468,11 @@ function OfferModal({
   return (
     <div className="fixed inset-0 z-[85] flex items-center justify-center p-4" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-black/70" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-md rounded-2xl border border-ink-700 bg-ink-900 p-5 shadow-2xl">
-        <h2 className="text-lg font-extrabold text-white">💬 Make an offer</h2>
+      <div className="relative z-10 w-full max-w-md rounded-lg border border-ink-700 bg-ink-900 p-5 shadow-2xl">
+        <h2 className="text-lg font-extrabold text-white">Make an offer</h2>
         <p className="mt-1 text-sm text-slate-400">
           {card.name} · {offer.condition}{offer.isFoil ? " · ✦ Foil" : ""} — asking{" "}
-          <span className="font-bold text-white">{formatMoney(offer.priceCents, offer.currency)}</span> from {offer.sellerName}
+          <span className="num font-bold text-white">{formatMoney(offer.priceCents, offer.currency)}</span> from {offer.sellerName}
         </p>
         <div className="mt-4 flex gap-2">
           <label className="block flex-1">
@@ -552,7 +552,7 @@ function CartDrawer({
                   <div className="truncate text-xs text-slate-500">{it.sub} · {it.sellerName}</div>
                 </div>
                 <input type="number" min={1} value={it.quantity} onChange={(e) => onQty(it.listingId, Number(e.target.value) || 1)} className="input w-12 py-1 text-center text-sm" aria-label="Quantity" />
-                <span className="w-16 text-right text-sm font-bold text-accent">{formatMoney(it.priceCents * it.quantity, it.currency)}</span>
+                <span className="num w-16 text-right text-sm font-bold text-accent">{formatMoney(it.priceCents * it.quantity, it.currency)}</span>
                 <button onClick={() => onRemove(it.listingId)} aria-label="Remove" className="text-slate-600 hover:text-rose-300">✕</button>
               </li>
             ))}
@@ -561,7 +561,7 @@ function CartDrawer({
         <div className="border-t border-ink-700 p-4">
           <div className="mb-3 flex items-center justify-between">
             <span className="text-sm text-slate-400">Subtotal</span>
-            <span className="text-xl font-extrabold text-accent">{formatMoney(total, currency)}</span>
+            <span className="num text-xl font-extrabold text-accent">{formatMoney(total, currency)}</span>
           </div>
           <button onClick={onCheckout} disabled={busy || cart.length === 0} className="btn-primary w-full disabled:opacity-50">
             {busy ? "Placing order…" : "Checkout"}

@@ -48,43 +48,17 @@ export function CinematicHero({
 
   return (
     <ParallaxShell>
-      {/* ── Background layers (decorative) ───────────────────────────────────── */}
+      {/* ── Background (flat terminal panel) ─────────────────────────────────── */}
       <div className="pointer-events-none absolute inset-0 z-0" aria-hidden>
-        {/* Branded atmospheric glow from the R mark — large, blurred, low-opacity
-            (the asset is small, so it's used as texture, not a sharp photo). */}
-        <div className="parallax-art absolute inset-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/r2-source.png"
-            alt=""
-            width={391}
-            height={376}
-            fetchPriority="high"
-            decoding="async"
-            className="absolute left-1/2 top-1/2 h-[150%] w-auto max-w-none -translate-x-1/2 -translate-y-1/2 opacity-[0.16] blur-2xl saturate-150"
-          />
-        </div>
-        {/* Aurora blobs (parallax at a slower rate than the artwork for depth). */}
-        <div className="parallax-aurora absolute inset-0">
-          <div className="absolute -left-24 -top-28 h-96 w-96 rounded-full bg-brand-500/25 blur-3xl animate-blob" />
-          <div className="absolute -right-20 top-8 h-80 w-80 rounded-full bg-gold/15 blur-3xl animate-blob [animation-delay:3s]" />
-          <div className="absolute -bottom-24 left-1/3 h-96 w-96 rounded-full bg-brand-400/20 blur-3xl animate-blob [animation-delay:6s]" />
-        </div>
-        {/* Colour grade to seat the text + blend into the page below. */}
-        <div className="absolute inset-0 bg-gradient-to-b from-ink-950/60 via-ink-950/30 to-ink-950" />
-        <div className="absolute inset-0 bg-gradient-to-br from-brand-600/20 via-transparent to-gold/10" />
-        {/* Dot texture + cinematic vignette. */}
-        <div className="hero-dots absolute inset-0 opacity-60" />
-        <div className="hero-vignette absolute inset-0" />
+        <div className="absolute inset-0 bg-ink-950 border-b border-ink-800" />
       </div>
 
       {/* ── Foreground content (re-aligned to the normal grid) ───────────────── */}
       <div className="container-app relative z-10 w-full py-16 text-center sm:py-20">
         {/* Live badge */}
         <div className="animate-fade-in [animation-delay:60ms]">
-          <span className="chip border border-brand-500/30 bg-ink-950/60 text-brand-300 backdrop-blur">
+          <span className="chip border border-brand-500/30 bg-ink-900 text-brand-300">
             <span className="relative mr-0.5 flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-400" />
             </span>
             Live prices · updated daily
@@ -97,13 +71,13 @@ export function CinematicHero({
             <Link
               href="/market"
               aria-label="View the RiftCompare Index"
-              className="inline-flex items-center gap-2 rounded-full border border-ink-700/70 bg-ink-950/60 px-3 py-1.5 shadow-glow backdrop-blur transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-500/60"
+              className="inline-flex items-center gap-2 rounded-md border border-ink-700 bg-ink-900 px-3 py-1.5 transition-colors duration-200 hover:border-brand-500 hover:bg-ink-800"
             >
               <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">RiftCompare Index</span>
-              <span className="font-display text-lg font-extrabold leading-none text-white">{index.latest.toFixed(1)}</span>
+              <span className="num text-lg font-extrabold leading-none text-white">{index.latest.toFixed(1)}</span>
               {index.d7 != null && (
-                <span className={`text-xs font-bold ${indexUp ? "text-brand-400" : "text-rose-400"}`}>
-                  {indexUp ? "▲" : "▼"} {Math.abs(index.d7)}% · 7d
+                <span className={`num text-xs font-bold ${indexUp ? "text-up" : "text-down"}`}>
+                  {indexUp ? "+" : "−"}{Math.abs(index.d7)}% · 7d
                 </span>
               )}
               <span className="hidden sm:block"><Sparkline points={index.points} up={indexUp} upIsGood /></span>
@@ -114,7 +88,7 @@ export function CinematicHero({
 
         {/* Kinetic headline */}
         <h1 className="animate-fade-in [animation-delay:160ms] mx-auto mt-5 max-w-4xl text-4xl font-extrabold leading-[1.05] tracking-tight text-white sm:text-6xl lg:text-7xl">
-          Compare <span className="brand-shimmer">Riftbound</span> card prices across {info.adjective} stores
+          Compare <span className="text-brand-400">Riftbound</span> card prices across {info.adjective} stores
         </h1>
         <p className="animate-fade-in [animation-delay:240ms] mx-auto mt-5 max-w-2xl text-base text-slate-300 sm:text-lg">
           Find the cheapest place to buy Riftbound TCG cards in {info.place} — live prices in{" "}
@@ -123,7 +97,7 @@ export function CinematicHero({
 
         {/* CTAs (one primary + one secondary + the all-features launcher) */}
         <div className="animate-fade-in [animation-delay:300ms] mt-8 flex flex-wrap items-center justify-center gap-3">
-          <Link href="/browse" className="btn-primary cta-shine px-5 py-2.5 text-base">Browse the database</Link>
+          <Link href="/browse" className="btn-primary px-5 py-2.5 text-base">Browse the database</Link>
           <Link href="/decks" className="btn-ghost px-5 py-2.5 text-base">Top meta decks</Link>
           <CommandLauncherButton variant="hero" />
         </div>
@@ -158,8 +132,8 @@ export function CinematicHero({
 
 function Stat({ value, label }: { value: number; label: string }) {
   return (
-    <div className="rounded-xl border border-ink-700/50 bg-ink-950/50 p-3 backdrop-blur transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-500/40">
-      <div className="text-xl font-extrabold text-gold sm:text-2xl">
+    <div className="rounded-lg border border-ink-800 bg-ink-900 p-3 transition-colors duration-200 hover:border-brand-500/40 hover:bg-ink-800">
+      <div className="num text-xl font-extrabold text-accent sm:text-2xl">
         <CountUp value={value} />
       </div>
       <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>

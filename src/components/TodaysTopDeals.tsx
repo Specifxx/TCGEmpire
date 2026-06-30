@@ -11,7 +11,6 @@ import { OutboundLink } from "@/components/OutboundLink";
 // columns (a signal with no data in this market) are dropped entirely.
 type ColumnDef = {
   key: keyof Omit<TopDeals, "hasAny">;
-  icon: string;
   label: string;
   premium: boolean;
   allHref: string;
@@ -19,17 +18,17 @@ type ColumnDef = {
 };
 
 const COLUMNS: ColumnDef[] = [
-  { key: "savingsVsMarket", icon: "💸", label: "Biggest savings", premium: true, allHref: "/tools/arbitrage", allLabel: "All arbitrage" },
-  { key: "priceDrops", icon: "📉", label: "Price drops", premium: false, allHref: "/movers", allLabel: "All movers" },
-  { key: "cheapestSealed", icon: "📦", label: "Cheapest sealed", premium: false, allHref: "/sealed", allLabel: "All sealed" },
-  { key: "undervalued", icon: "🔎", label: "Undervalued", premium: true, allHref: "/tools/value-finder", allLabel: "Value Finder" },
+  { key: "savingsVsMarket", label: "Biggest savings", premium: true, allHref: "/tools/arbitrage", allLabel: "All arbitrage" },
+  { key: "priceDrops", label: "Price drops", premium: false, allHref: "/movers", allLabel: "All movers" },
+  { key: "cheapestSealed", label: "Cheapest sealed", premium: false, allHref: "/sealed", allLabel: "All sealed" },
+  { key: "undervalued", label: "Undervalued", premium: true, allHref: "/tools/value-finder", allLabel: "Value Finder" },
 ];
 
 function PctBadge({ deal }: { deal: Deal }) {
   if (deal.pctLabel == null) return null;
   const text =
-    deal.dealType === "savings-vs-market" ? `Save ${deal.pctLabel}%` : `▼ ${deal.pctLabel}%`;
-  return <span className="chip shrink-0 bg-brand-500/15 text-brand-300">{text}</span>;
+    deal.dealType === "savings-vs-market" ? `Save ${deal.pctLabel}%` : `−${deal.pctLabel}%`;
+  return <span className="chip num shrink-0 bg-brand-500/15 text-brand-300">{text}</span>;
 }
 
 function DealRow({ deal, currency, country }: { deal: Deal; currency: string; country: Country }) {
@@ -49,7 +48,7 @@ function DealRow({ deal, currency, country }: { deal: Deal; currency: string; co
         </div>
       </div>
       <div className="flex shrink-0 flex-col items-end gap-1">
-        <span className="text-sm font-bold text-accent">{formatMoney(deal.priceCents, currency)}</span>
+        <span className="num text-sm font-bold text-accent">{formatMoney(deal.priceCents, currency)}</span>
         <PctBadge deal={deal} />
       </div>
     </>
@@ -97,7 +96,7 @@ export function TodaysTopDeals({ deals, country, currency, place }: { deals: Top
     <section>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-xl font-extrabold text-white">🔥 Today&apos;s Top Deals</h2>
+          <h2 className="text-xl font-extrabold text-white">Today&apos;s Top Deals</h2>
           <p className="mt-0.5 text-sm text-slate-400">The best live opportunities in {place} right now — refreshed daily.</p>
         </div>
         <Link href="/tools/arbitrage" className="btn-ghost hidden text-sm sm:inline-flex">Browse all deals →</Link>
@@ -109,10 +108,9 @@ export function TodaysTopDeals({ deals, country, currency, place }: { deals: Top
           const shown = def.premium ? items.slice(0, 1) : items;
           const skeletons = def.premium ? Math.min(3, Math.max(2, items.length - 1)) : 0;
           return (
-            <div key={def.key} className="card-surface flex flex-col p-3 transition-all duration-200 hover:border-brand-500/60 hover:shadow-glow">
+            <div key={def.key} className="card-surface flex flex-col p-3 transition-colors duration-200 hover:border-brand-500/60 hover:bg-ink-800">
               <div className="mb-1 flex items-center justify-between gap-2 px-1">
                 <span className="flex items-center gap-1.5 text-sm font-extrabold text-white">
-                  <span aria-hidden>{def.icon}</span>
                   {def.label}
                 </span>
                 {def.premium && <span className="chip bg-gold/20 text-gold">Premium</span>}
@@ -129,9 +127,9 @@ export function TodaysTopDeals({ deals, country, currency, place }: { deals: Top
 
               <Link
                 href={def.allHref}
-                className="mt-1.5 flex items-center justify-center gap-1 rounded-lg border border-ink-700 px-3 py-1.5 text-xs font-semibold text-slate-300 transition-colors hover:border-brand-500 hover:text-white"
+                className="mt-1.5 flex items-center justify-center gap-1 rounded-md border border-ink-700 px-3 py-1.5 text-xs font-semibold text-slate-300 transition-colors hover:border-brand-500 hover:text-white"
               >
-                {def.premium ? `🔒 ${def.allLabel}` : def.allLabel} →
+                {def.allLabel} →
               </Link>
             </div>
           );

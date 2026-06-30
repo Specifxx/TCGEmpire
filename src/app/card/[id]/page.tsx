@@ -362,11 +362,11 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                       </div>
                     </div>
                     <div className="shrink-0 text-right">
-                      <div className={`text-lg font-bold ${i === 0 ? "text-accent" : "text-white"}`}>
+                      <div className={`num text-lg font-bold ${i === 0 ? "text-accent" : "text-white"}`}>
                         {fmt(p.priceCents)}
                       </div>
                       {p.ship != null && (
-                        <div className="text-[11px] text-slate-400">≈ {fmt(p.delivered)} delivered</div>
+                        <div className="num text-[11px] text-slate-400">≈ {fmt(p.delivered)} delivered</div>
                       )}
                     </div>
                     {/* Full-width below the row on phones; inline button on sm+. */}
@@ -400,7 +400,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                         </div>
                       </div>
                       <div className="shrink-0 text-right">
-                        <div className="text-lg font-bold text-slate-400 line-through">{fmt(p.priceCents)}</div>
+                        <div className="num text-lg font-bold text-slate-400 line-through">{fmt(p.priceCents)}</div>
                       </div>
                       <OutboundLink
                         href={buyHref(p)}
@@ -428,7 +428,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             <div className="card-surface mt-4 flex flex-wrap items-center justify-between gap-3 border-amber-500/25 bg-amber-500/[0.04] p-4">
               <div className="min-w-0">
                 <div className="flex items-center gap-2 text-sm font-semibold text-white">
-                  <span aria-hidden>🔎</span> No live {ebayMkt.label} price for this card right now
+                  No live {ebayMkt.label} price for this card right now
                 </div>
                 <p className="mt-1 text-xs text-slate-400">
                   {country === "NZ"
@@ -625,7 +625,7 @@ function Metric({ label, value, highlight }: { label: string; value: string; hig
   return (
     <div className="rounded-lg bg-ink-900 p-3">
       <div className="text-[11px] uppercase tracking-wide text-slate-500">{label}</div>
-      <div className={`text-lg font-bold ${highlight ? "text-accent" : "text-white"}`}>{value}</div>
+      <div className={`num text-lg font-bold ${highlight ? "text-accent" : "text-white"}`}>{value}</div>
     </div>
   );
 }

@@ -14,14 +14,14 @@ export function HoldingsGrid({ holdings, currency }: { holdings: Holding[]; curr
           <CardQuickLink
             key={`${h.cardId}-${h.condition}-${h.isFoil}-${i}`}
             card={h.card}
-            className="group relative block overflow-hidden rounded-xl border border-ink-700 bg-ink-900 transition-all hover:-translate-y-1 hover:border-brand-500 hover:shadow-glow"
+            className="group relative block overflow-hidden rounded-lg border border-ink-700 bg-ink-900 transition-colors hover:border-ink-600"
           >
             <div className="relative aspect-[5/7]">
               {h.imageThumbUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={h.imageThumbUrl} alt={h.name} loading="lazy" decoding="async" className="h-full w-full object-cover" />
               ) : (
-                <div className="grid h-full w-full place-items-center bg-ink-850 text-3xl">🃏</div>
+                <div className="grid h-full w-full place-items-center bg-ink-850 text-xs text-slate-600">No image</div>
               )}
 
               {/* quantity + foil badges */}
@@ -38,17 +38,17 @@ export function HoldingsGrid({ holdings, currency }: { holdings: Holding[]; curr
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink-950 via-ink-950/85 to-transparent px-2 pb-2 pt-7">
                 <div className="truncate text-[11px] font-semibold text-white" title={h.name}>{h.name}</div>
                 <div className="mt-0.5 flex items-center justify-between gap-1">
-                  <span className="text-sm font-extrabold text-accent">
+                  <span className="num text-sm font-extrabold text-accent">
                     {h.valueCents > 0 ? formatMoney(h.valueCents, currency) : "—"}
                   </span>
                   {pl != null && (
-                    <span className={`rounded px-1 text-[10px] font-bold ${pl >= 0 ? "bg-brand-500/20 text-brand-300" : "bg-rose-500/20 text-rose-300"}`}>
+                    <span className={`num rounded px-1 text-[10px] font-bold ${pl >= 0 ? "bg-up/15 text-up" : "bg-down/15 text-down"}`}>
                       {pl >= 0 ? "+" : "−"}{formatMoney(Math.abs(pl), currency)}
                     </span>
                   )}
                 </div>
                 <div className="mt-0.5 flex items-center justify-between text-[9px] text-slate-500">
-                  <span>{h.setCode} · {h.collectorNumber}</span>
+                  <span className="num">{h.setCode} · {h.collectorNumber}</span>
                   <span>{h.condition}</span>
                 </div>
               </div>

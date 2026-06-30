@@ -67,17 +67,17 @@ function MoverCol({ title, cards, positive, currency }: { title: string; cards: 
         <ul className="divide-y divide-ink-800">
           {cards.map((c) => (
             <li key={c.id}>
-              <Link href={cardHref(c)} className="flex items-center gap-2.5 rounded-lg px-1 py-2 transition-colors hover:bg-ink-900/50">
+              <Link href={cardHref(c)} className="flex items-center gap-2.5 rounded-md px-1 py-2 transition-colors hover:bg-ink-800">
                 {c.imageThumbUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={c.imageThumbUrl} alt="" aria-hidden="true" width={28} height={39} loading="lazy" decoding="async" className="h-9 w-7 shrink-0 rounded-sm object-cover" />
                 )}
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-semibold text-white">{c.name}</span>
-                  <span className="block text-[11px] text-slate-500">{formatMoney(c.priceCents, currency)}</span>
+                  <span className="num block text-[11px] text-slate-500">{formatMoney(c.priceCents, currency)}</span>
                 </span>
-                <span className={`shrink-0 text-sm font-bold ${positive ? "text-brand-400" : "text-rose-400"}`}>
-                  {positive ? "▲" : "▼"} {Math.abs(c.d7pct ?? 0)}%
+                <span className={`num shrink-0 text-sm font-bold ${positive ? "text-up" : "text-down"}`}>
+                  {positive ? "+" : "−"}{Math.abs(c.d7pct ?? 0)}%
                 </span>
               </Link>
             </li>
@@ -93,10 +93,10 @@ function Delta({ label, pct }: { label: string; pct: number | null }) {
   const up = pct > 0;
   const flat = pct === 0;
   return (
-    <div className="rounded-lg bg-ink-900 px-3 py-2 text-center">
+    <div className="rounded-md bg-ink-900 px-3 py-2 text-center">
       <div className="text-[10px] uppercase tracking-wide text-slate-500">{label}</div>
-      <div className={`text-sm font-extrabold ${flat ? "text-slate-300" : up ? "text-brand-400" : "text-rose-400"}`}>
-        {flat ? "—" : `${up ? "▲" : "▼"} ${Math.abs(pct)}%`}
+      <div className={`num text-sm font-extrabold ${flat ? "text-slate-300" : up ? "text-up" : "text-down"}`}>
+        {flat ? "—" : `${up ? "+" : "−"}${Math.abs(pct)}%`}
       </div>
     </div>
   );
@@ -123,7 +123,7 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
 
   // Display chrome. GLOBAL has no single currency/region, so prices fall back to the
   // composite's reference region (carried on the index as `currency`/`priceMarket`).
-  const heading = isGlobal ? "🌍 Global" : `${COUNTRIES[market as Country].flag} ${COUNTRIES[market as Country].code}`;
+  const heading = isGlobal ? "Global" : `${COUNTRIES[market as Country].code}`;
   const currency = index?.currency ?? (isGlobal ? "USD" : COUNTRIES[market as Country].currency);
   const priceMarket = index?.priceMarket ?? "AU";
 
@@ -155,20 +155,16 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
         dangerouslySetInnerHTML={{ __html: JSON.stringify(datasetLd ? [breadcrumbLd, datasetLd] : [breadcrumbLd]) }}
       />
 
-      {/* Breadcrumb + hero — same aurora idiom as the sealed/sets pages */}
-      <section className="card-surface animate-fade-up relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0" aria-hidden>
-          <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-brand-500/15 blur-3xl animate-blob" />
-          <div className="hero-dots absolute inset-0 opacity-50" />
-        </div>
-        <div className="relative bg-gradient-to-br from-brand-600/20 via-ink-850/40 to-gold/10 px-6 py-8">
+      {/* Breadcrumb + hero — flat panel with a brand accent rule */}
+      <section className="card-surface animate-fade-up overflow-hidden border-l-2 border-brand-500 bg-ink-900">
+        <div className="px-6 py-8">
           <nav className="mb-3 flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-slate-300">Home</Link>
             <span>/</span>
             <span className="text-slate-300">RiftCompare Index</span>
           </nav>
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h1 className="text-2xl font-extrabold text-white sm:text-3xl">📊 The RiftCompare Index</h1>
+            <h1 className="text-2xl font-extrabold text-white sm:text-3xl">The RiftCompare Index</h1>
             <MarketSwitcher value={market} />
           </div>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
@@ -189,22 +185,14 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
         <>
           {/* Headline number + chart */}
           <Reveal>
-            <section className="card-surface relative overflow-hidden p-5">
-              <div className="pointer-events-none absolute inset-0" aria-hidden>
-                <div
-                  className={`absolute -right-16 -top-20 h-64 w-64 rounded-full blur-3xl animate-blob ${
-                    index.sinceStart != null && index.sinceStart > 0 ? "bg-brand-500/15" : "bg-rose-500/15"
-                  }`}
-                />
-                <div className="hero-dots absolute inset-0 opacity-50" />
-              </div>
-              <div className="relative">
+            <section className="card-surface p-5">
+              <div>
                 <div className="flex flex-wrap items-end justify-between gap-4">
                   <div>
                     <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
                       {heading} {isGlobal ? "composite" : "market"} · base 100 on {index.startDay}
                     </div>
-                    <div className="font-display text-5xl font-extrabold text-white">
+                    <div className="num text-5xl font-extrabold text-white">
                       {index.latest.toFixed(1)}
                     </div>
                   </div>
@@ -219,7 +207,7 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
                   <IndexChart points={index.points} />
                 </div>
                 <p className="mt-2 text-[11px] text-slate-600">
-                  ▲ rising prices · ▼ falling prices · recalculated daily after the price refresh.
+                  + rising prices · − falling prices · recalculated daily after the price refresh.
                 </p>
               </div>
             </section>
@@ -249,7 +237,7 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
                 </thead>
                 <tbody className="divide-y divide-ink-800">
                   {index.constituents.map((c, i) => (
-                    <tr key={c.id} className="hover:bg-ink-900/50">
+                    <tr key={c.id} className="hover:bg-ink-800">
                       <td className="px-4 py-2 font-bold text-slate-500">
                         {i < 3 ? <span className="chip bg-gold/20 text-gold">{i + 1}</span> : i + 1}
                       </td>
@@ -265,10 +253,10 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
                           </span>
                         </Link>
                       </td>
-                      <td className="px-2 py-2 text-right font-mono text-xs text-slate-400">{c.weightPct}%</td>
-                      <td className="px-2 py-2 text-right font-semibold text-white">{formatMoney(c.priceCents, currency)}</td>
-                      <td className={`px-4 py-2 text-right font-semibold ${c.d7pct == null ? "text-slate-600" : c.d7pct > 0 ? "text-brand-400" : c.d7pct < 0 ? "text-rose-400" : "text-slate-400"}`}>
-                        {c.d7pct == null ? "—" : `${c.d7pct > 0 ? "▲" : c.d7pct < 0 ? "▼" : ""} ${Math.abs(c.d7pct)}%`}
+                      <td className="num px-2 py-2 text-right text-xs text-slate-400">{c.weightPct}%</td>
+                      <td className="num px-2 py-2 text-right font-semibold text-white">{formatMoney(c.priceCents, currency)}</td>
+                      <td className={`num px-4 py-2 text-right font-semibold ${c.d7pct == null ? "text-slate-600" : c.d7pct > 0 ? "text-up" : c.d7pct < 0 ? "text-down" : "text-slate-400"}`}>
+                        {c.d7pct == null ? "—" : `${c.d7pct > 0 ? "+" : c.d7pct < 0 ? "−" : ""}${Math.abs(c.d7pct)}%`}
                       </td>
                     </tr>
                   ))}
@@ -292,19 +280,15 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
           )}
         </>
       ) : (
-        <div className="card-surface relative grid overflow-hidden place-items-center p-16 text-center text-slate-400">
-          <div className="pointer-events-none absolute inset-0" aria-hidden>
-            <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full bg-brand-500/15 blur-3xl animate-blob" />
-            <div className="hero-dots absolute inset-0 opacity-50" />
-          </div>
-          <div className="relative">
+        <div className="card-surface grid place-items-center p-16 text-center text-slate-400">
+          <div>
             <p className="text-lg font-semibold text-white">The Index is warming up</p>
             <p className="mt-1 text-sm">
               We need a few days of price history{isGlobal ? "" : " in this market"} before the chart
               means anything. Check back soon{isGlobal ? "" : " — or switch to Global"}, or see
               what&apos;s moving today.
             </p>
-            <Link href="/movers" className="btn-primary mt-4">📈 Price movers →</Link>
+            <Link href="/movers" className="btn-primary mt-4">Price movers →</Link>
           </div>
         </div>
       )}
@@ -316,19 +300,19 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
           <section>
             <div className="mb-3 flex items-end justify-between gap-3">
               <div>
-                <h2 className="text-xl font-extrabold text-white">📰 Daily market wrap</h2>
+                <h2 className="text-xl font-extrabold text-white">Daily market wrap</h2>
                 <p className="mt-0.5 text-xs text-slate-500">Auto-generated each day — what moved the Riftbound market and why.</p>
               </div>
               <Link href="/blog" className="btn-ghost shrink-0 text-xs">All reports →</Link>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {reports.map((r) => (
-                <Link key={r.slug} href={`/blog/${r.slug}`} className="card-surface p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-500/60 hover:shadow-glow">
+                <Link key={r.slug} href={`/blog/${r.slug}`} className="card-surface p-4 transition-colors hover:border-ink-600">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-[11px] uppercase tracking-wide text-slate-500">{r.day}</span>
                     {r.globalChangePct != null && (
-                      <span className={`text-xs font-bold ${r.globalChangePct > 0 ? "text-brand-400" : r.globalChangePct < 0 ? "text-rose-400" : "text-slate-400"}`}>
-                        {r.globalChangePct > 0 ? "▲" : r.globalChangePct < 0 ? "▼" : ""} {Math.abs(r.globalChangePct).toFixed(2)}%
+                      <span className={`num text-xs font-bold ${r.globalChangePct > 0 ? "text-up" : r.globalChangePct < 0 ? "text-down" : "text-slate-400"}`}>
+                        {r.globalChangePct > 0 ? "+" : r.globalChangePct < 0 ? "−" : ""}{Math.abs(r.globalChangePct).toFixed(2)}%
                       </span>
                     )}
                   </div>
@@ -373,9 +357,9 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
           </p>
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
-          <Link href="/movers" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-brand-500">📈 This week&apos;s movers →</Link>
-          <Link href="/browse" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-brand-500">Browse all cards →</Link>
-          <Link href="/sealed" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-brand-500">Sealed prices →</Link>
+          <Link href="/movers" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-ink-600">This week&apos;s movers →</Link>
+          <Link href="/browse" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-ink-600">Browse all cards →</Link>
+          <Link href="/sealed" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-ink-600">Sealed prices →</Link>
         </div>
       </section>
 

@@ -11,10 +11,7 @@ export default function ContactPage() {
   return (
     <div className="mx-auto max-w-xl">
       <div className="card-surface overflow-hidden">
-        <div className="relative bg-gradient-to-br from-brand-600/25 via-ink-850 to-gold/15 px-6 py-10 text-center">
-          <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-ink-950/60 text-2xl shadow-glow">
-            ✉️
-          </div>
+        <div className="relative border-l-2 border-brand-500 bg-ink-900 px-6 py-10 text-center">
           <h1 className="text-2xl font-extrabold text-white">Contact &amp; Feedback</h1>
           <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-slate-300">
             Spotted a wrong price, a missing store, or have an idea to make RiftCompare better?
@@ -25,7 +22,7 @@ export default function ContactPage() {
             href={`mailto:${CONTACT_EMAIL}?subject=RiftCompare%20feedback`}
             className="btn-primary mt-6 inline-flex text-base"
           >
-            ✉️ Email {CONTACT_EMAIL}
+            Email {CONTACT_EMAIL}
           </a>
 
           <p className="mt-4 text-xs text-slate-500">

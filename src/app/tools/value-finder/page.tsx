@@ -14,10 +14,39 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: { absolute: "Value Finder — Undervalued Riftbound Cards | RiftCompare" },
   description:
-    "A Premium screener for Riftbound cards trading below their recent average — a mean-reversion signal for value buyers and flippers, ranked by how far below their usual price they are.",
+    "A Premium screener for Riftbound cards trading below their recent average — a mean-reversion signal for value buyers and flippers, ranked by how far below their usual price they are. Just want to check what a card is worth? Use the free value checker.",
+  keywords: [
+    "undervalued riftbound cards",
+    "riftbound card deals",
+    "riftbound cards below average price",
+    "riftbound value finder",
+    "riftbound card investing",
+    "riftbound card prices",
+  ],
   alternates: { canonical: "/tools/value-finder" },
   openGraph: { title: "Value Finder — undervalued Riftbound cards", url: `${SITE_URL}/tools/value-finder` },
 };
+
+// Public, crawlable explainer so the page isn't thin to search engines behind the
+// Premium gate (an anonymous crawler would otherwise see only the paywall card).
+const VF_FAQS = [
+  {
+    q: "What is the Riftbound Value Finder?",
+    a: "A screener that surfaces Riftbound cards currently trading below their own recent average price — a mean-reversion signal for value buyers and flippers. Cards are ranked by how far below their usual price they sit and how far off their recent high they are.",
+  },
+  {
+    q: "How is “undervalued” calculated?",
+    a: "We compare a card's current lowest price to the mean of its lowest price over the last 30 days. The bigger the gap below that average, the higher it ranks. It's a signal, not advice — thin markets and one-off listings can mislead, so always sanity-check the card page.",
+  },
+  {
+    q: "How can I just check what one card is worth?",
+    a: "Use the free Riftbound card value checker: search any card to see its live market value plus real store prices in your country. The Value Finder is the opposite lens — it scans the whole market for cards trading below their norm.",
+  },
+  {
+    q: "Does undervalued mean the price will go up?",
+    a: "Not necessarily. A card below its average can keep falling if demand is genuinely cooling. Treat the screen as a starting point for research, not a guarantee — check the card's price history and current demand before buying to flip.",
+  },
+];
 
 export default async function ValueFinderPage() {
   const user = await getCurrentUser();
@@ -34,7 +63,7 @@ export default async function ValueFinderPage() {
           <span>/</span>
           <span className="text-slate-300">Value Finder</span>
         </nav>
-        <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">🔎 Value Finder</h1>
+        <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">Value Finder</h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
           {info.adjective} cards trading <strong className="text-slate-200">below their own recent average</strong> — a
           mean-reversion signal for value buyers and flippers. Ranked by how far below their usual price they sit, not just
@@ -44,20 +73,24 @@ export default async function ValueFinderPage() {
 
       {!premium ? (
         <div className="card-surface p-6 text-center">
-          <p className="text-4xl" aria-hidden>🔎</p>
-          <h2 className="mt-2 text-lg font-extrabold text-white">Value Finder is a Premium tool</h2>
+          <h2 className="text-lg font-extrabold text-white">Value Finder is a Premium tool</h2>
           <p className="mx-auto mt-1 max-w-md text-sm text-slate-400">
             Premium members get the screener: the cards trading furthest below their 30-day average right now, with the
             discount and how far off their recent high each one is.
           </p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
             {user ? (
-              <Link href="/premium" className="btn-primary text-sm">★ See Premium</Link>
+              <Link href="/premium" className="btn-primary text-sm">See Premium</Link>
             ) : (
               <Link href="/register?next=/tools/value-finder" className="btn-primary text-sm">Create a free account</Link>
             )}
-            <Link href="/movers" className="btn-ghost text-sm">Free price movers →</Link>
+            <Link href="/card-value" className="btn-ghost text-sm">Free value checker →</Link>
           </div>
+          <p className="mx-auto mt-3 max-w-md text-xs text-slate-500">
+            Just want to know what a card is worth? The free{" "}
+            <Link href="/card-value" className="font-semibold text-brand-400 hover:underline">Riftbound card value checker</Link>{" "}
+            shows any card&apos;s live value and store prices — no account needed.
+          </p>
         </div>
       ) : picks.length === 0 ? (
         <div className="card-surface grid place-items-center p-12 text-center text-sm text-slate-400">
@@ -77,7 +110,7 @@ export default async function ValueFinderPage() {
             </thead>
             <tbody className="divide-y divide-ink-800">
               {picks.map((p) => (
-                <tr key={p.card.id} className="hover:bg-ink-900/50">
+                <tr key={p.card.id} className="hover:bg-ink-800">
                   <td className="px-4 py-2">
                     <CardQuickLink card={p.card} className="flex items-center gap-2.5">
                       {p.card.imageThumbUrl && (
@@ -90,10 +123,10 @@ export default async function ValueFinderPage() {
                       </span>
                     </CardQuickLink>
                   </td>
-                  <td className="px-2 py-2 text-right font-semibold text-accent">{formatMoney(p.currentCents, info.currency)}</td>
-                  <td className="px-2 py-2 text-right text-slate-400">{formatMoney(p.avgCents, info.currency)}</td>
-                  <td className="px-2 py-2 text-right font-bold text-brand-400">▼ {p.discountPct}%</td>
-                  <td className="px-4 py-2 text-right text-slate-300">{p.offHighPct}%</td>
+                  <td className="num px-2 py-2 text-right font-semibold text-accent">{formatMoney(p.currentCents, info.currency)}</td>
+                  <td className="num px-2 py-2 text-right text-slate-400">{formatMoney(p.avgCents, info.currency)}</td>
+                  <td className="num px-2 py-2 text-right font-bold text-brand-400">−{p.discountPct}%</td>
+                  <td className="num px-4 py-2 text-right text-slate-300">{p.offHighPct}%</td>
                 </tr>
               ))}
             </tbody>
@@ -104,6 +137,42 @@ export default async function ValueFinderPage() {
           </p>
         </div>
       )}
+
+      {/* Public, always-rendered explainer + FAQ so the page carries real indexable
+          content for crawlers regardless of the Premium gate. */}
+      <section className="mt-10">
+        <h2 className="mb-3 text-xl font-extrabold text-white">How the Value Finder works</h2>
+        <div className="card-surface divide-y divide-ink-800">
+          {VF_FAQS.map((f) => (
+            <div key={f.q} className="px-5 py-4">
+              <h3 className="font-bold text-white">{f.q}</h3>
+              <p className="mt-1 text-sm leading-relaxed text-slate-400">{f.a}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify([
+            {
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              mainEntity: VF_FAQS.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+            },
+            {
+              "@context": "https://schema.org",
+              "@type": "BreadcrumbList",
+              itemListElement: [
+                { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+                { "@type": "ListItem", position: 2, name: "Tools", item: `${SITE_URL}/tools` },
+                { "@type": "ListItem", position: 3, name: "Value Finder", item: `${SITE_URL}/tools/value-finder` },
+              ],
+            },
+          ]),
+        }}
+      />
     </div>
   );
 }

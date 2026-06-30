@@ -86,7 +86,7 @@ export default async function MoversPage() {
           <span className="text-slate-300">Price Movers</span>
         </nav>
         <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
-          📈 Riftbound price movers — this week
+          Riftbound price movers — this week
         </h1>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
           The Riftbound cards moving the most right now in {info.place}: which singles are{" "}
@@ -122,18 +122,18 @@ export default async function MoversPage() {
             <Link
               key={s.slug}
               href={`/sets/${s.slug}`}
-              className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-brand-500"
+              className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-ink-600"
             >
               {s.name}
             </Link>
           ))}
-          <Link href="/market" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-brand-500">
-            📊 RiftCompare Index →
+          <Link href="/market" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-ink-600">
+            RiftCompare Index →
           </Link>
-          <Link href="/browse" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-brand-500">
+          <Link href="/browse" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-ink-600">
             All cards →
           </Link>
-          <Link href="/sealed" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-brand-500">
+          <Link href="/sealed" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-ink-600">
             Sealed products →
           </Link>
         </div>

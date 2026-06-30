@@ -15,6 +15,12 @@ import type { CardTileData } from "@/components/CardTile";
 export const EBAY_FEE = 0.13; // approx eBay final-value fee
 const MIN_BUY_CENTS = 300;
 const MIN_NET_CENTS = 100;
+// Outlier guards. A flip margin this large means the buy and sell aren't the same
+// product (e.g. a $9 Spindown die vs a $1,986 mispriced eBay listing) — bad data,
+// not an 18,000% opportunity. Likewise a ≥80% "cheaper on eBay" saving is almost
+// always a wrong/mismatched listing, not a real deal.
+const MAX_MARGIN_PCT = 300;
+const MAX_DEAL_PCT = 80;
 
 export type ArbSort = "profit" | "margin";
 
@@ -111,7 +117,9 @@ export async function getEbayCheapest(country: Country, sort: DealSort, page = 1
       if (ebay < DEAL_MIN_PRICE_CENTS) continue;
       const saving = store - ebay;
       if (saving < DEAL_MIN_SAVING_CENTS) continue;
-      rows.push({ cardId, ebay, store, saving, pct: Math.round((saving / store) * 1000) / 10 });
+      const pct = Math.round((saving / store) * 1000) / 10;
+      if (pct >= MAX_DEAL_PCT) continue; // ≥80% cheaper = mismatched/junk listing, not a deal
+      rows.push({ cardId, ebay, store, saving, pct });
     }
     rows.sort((a, b) => (sort === "pct" ? b.pct - a.pct || b.saving - a.saving : b.saving - a.saving || b.pct - a.pct));
 
@@ -212,7 +220,9 @@ export async function getArbitrage(
       if (sellGross == null || sellNet == null) continue;
       const net = sellNet - buy;
       if (net < MIN_NET_CENTS) continue;
-      rows.push({ cardId, buy, sellGross, sellIsEbay, net, margin: Math.round((net / buy) * 1000) / 10 });
+      const margin = Math.round((net / buy) * 1000) / 10;
+      if (margin > MAX_MARGIN_PCT) continue; // absurd flip margin = buy/sell mismatch, drop it
+      rows.push({ cardId, buy, sellGross, sellIsEbay, net, margin });
     }
     rows.sort((a, b) => (opts.sort === "margin" ? b.margin - a.margin || b.net - a.net : b.net - a.net || b.margin - a.margin));
 

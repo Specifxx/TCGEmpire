@@ -133,7 +133,7 @@ export default async function BoxEvPage() {
           <span>/</span>
           <span className="text-slate-300">Box EV Calculator</span>
         </nav>
-        <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">📦 Booster Box EV Calculator</h1>
+        <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">Booster Box EV Calculator</h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
           Is a Riftbound booster box worth opening? We feed in the <strong className="text-slate-200">live average
           singles price of every rarity</strong> in {info.place} (updated daily) — you tune the pull rates to your

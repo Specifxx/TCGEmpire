@@ -15,24 +15,34 @@ const config: Config = {
           700: "#252b38",
           600: "#333b4d",
         },
-        // Friendly, vibrant green accent + a warm gold for prices.
+        // The single sharp accent — RiftCompare green, used sparingly for primary
+        // actions + active states. Everything else stays neutral graphite.
         brand: {
           DEFAULT: "#1ea65c",
           400: "#34d17e",
           500: "#1ea65c",
           600: "#188a4c",
         },
-        accent: "#ecc14e", // warm gold — prices & highlights
-        gold: "#f2c84f",
+        // "accent" now reads as the high-contrast NUMERAL colour — a near-white ink
+        // for prices, so figures stay crisp and neutral like a trading desk.
+        accent: "#eef1f5",
+        // Muted brass — reserved for genuine gold/foil semantics only, never UI chrome.
+        gold: "#caa85a",
+        // Market deltas: gains/losses on the terminal. Calm, not neon.
+        up: "#3fb950",
+        down: "#f0506e",
       },
       fontFamily: {
         sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"],
         display: ["var(--font-display)", "var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
+        // Monospace — prices, tickers, tabular figures (the terminal voice).
+        mono: ["var(--font-mono)", "ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"],
       },
       boxShadow: {
-        // Soft elevation + a gentle brand glow for the bubbly look.
-        card: "0 1px 0 rgba(255,255,255,0.03), 0 8px 24px rgba(0,0,0,0.35)",
-        glow: "0 0 0 1px rgba(52,209,126,0.25), 0 10px 30px rgba(52,209,126,0.16)",
+        // Flat panels: a hairline top highlight + a quiet drop. No coloured glow.
+        card: "0 1px 0 rgba(255,255,255,0.02), 0 1px 2px rgba(0,0,0,0.4)",
+        // Kept for API compatibility, neutralised to a quiet elevation (no neon).
+        glow: "0 1px 0 rgba(255,255,255,0.03), 0 4px 12px rgba(0,0,0,0.45)",
       },
       keyframes: {
         "fade-up": {

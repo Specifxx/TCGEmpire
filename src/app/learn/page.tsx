@@ -178,7 +178,7 @@ export default async function LearnPage() {
 
       {/* Hero */}
       <section className="card-surface overflow-hidden">
-        <div className="bg-gradient-to-br from-brand-600/25 via-ink-850 to-gold/15 px-6 py-10 text-center">
+        <div className="border-l-2 border-brand-500 bg-ink-900 px-6 py-10 text-center">
           <h1 className="mx-auto max-w-2xl font-display text-3xl font-extrabold text-white">Learn Riftbound</h1>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-slate-300 sm:text-base">
             The interactive guide to the League of Legends TCG. Step through how a game flows, explore
@@ -194,21 +194,21 @@ export default async function LearnPage() {
             >
               Official how-to-play (15 min) ↗
             </a>
-            <Link href="/riftle" className="btn-ghost">🃏 Play today&apos;s Riftle</Link>
+            <Link href="/riftle" className="btn-ghost">Play today&apos;s Riftle</Link>
           </div>
         </div>
       </section>
 
       {/* The shape of a game — interactive stepper */}
       <section>
-        <h2 className="mb-1 text-xl font-extrabold text-white">⚡ The shape of a game</h2>
+        <h2 className="mb-1 text-xl font-extrabold text-white">The shape of a game</h2>
         <p className="mb-3 text-sm text-slate-400">Five steps from sitting down to winning — tap through.</p>
         <GameFlow />
       </section>
 
       {/* The six domains — interactive explorer with real cards */}
       <section>
-        <h2 className="mb-1 text-xl font-extrabold text-white">🎨 Explore the domains</h2>
+        <h2 className="mb-1 text-xl font-extrabold text-white">Explore the domains</h2>
         <p className="mb-3 text-sm text-slate-400">
           Every card belongs to a domain — the game&apos;s colour system. Tap one to meet it.
         </p>
@@ -217,14 +217,14 @@ export default async function LearnPage() {
 
       {/* Deck anatomy — interactive diagram */}
       <section>
-        <h2 className="mb-1 text-xl font-extrabold text-white">🧩 What goes in a deck</h2>
+        <h2 className="mb-1 text-xl font-extrabold text-white">What goes in a deck</h2>
         <p className="mb-3 text-sm text-slate-400">Every part of a tournament list, to scale — tap each segment.</p>
         <DeckAnatomy />
       </section>
 
       {/* Card types — live data with real example cards */}
       <section>
-        <h2 className="mb-1 text-xl font-extrabold text-white">🃏 Every card type, in plain words</h2>
+        <h2 className="mb-1 text-xl font-extrabold text-white">Every card type, in plain words</h2>
         <p className="mb-3 text-sm text-slate-400">The high-level idea of each — the official tutorial covers the exact rules.</p>
         <div className="card-surface divide-y divide-ink-800">
           {data.types.map((t) => {
@@ -234,7 +234,7 @@ export default async function LearnPage() {
                 {ex?.img ? (
                   <Link href={ex.href} className="shrink-0" title={ex.name}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={ex.img} alt={ex.name} className="h-14 w-10 rounded object-cover ring-1 ring-white/10 transition-transform hover:scale-110" loading="lazy" decoding="async" />
+                    <img src={ex.img} alt={ex.name} className="h-14 w-10 rounded object-cover ring-1 ring-white/10 transition-opacity hover:opacity-80" loading="lazy" decoding="async" />
                   </Link>
                 ) : (
                   <div className="h-14 w-10 shrink-0 rounded bg-ink-800" />
@@ -242,7 +242,7 @@ export default async function LearnPage() {
                 <div className="w-24 shrink-0 font-bold text-white">{t.type}</div>
                 <p className="min-w-0 flex-1 text-sm text-slate-400">{TYPE_BLURBS[t.type] ?? ""}</p>
                 <Link href={`/browse?type=${encodeURIComponent(t.type)}`} className="shrink-0 text-xs font-semibold text-brand-400 hover:underline">
-                  {t._count} cards →
+                  <span className="num">{t._count}</span> cards →
                 </Link>
               </div>
             );
@@ -252,7 +252,7 @@ export default async function LearnPage() {
 
       {/* Quiz — real cards from the DB */}
       <section>
-        <h2 className="mb-1 text-xl font-extrabold text-white">🎓 Quick quiz: guess the domain</h2>
+        <h2 className="mb-1 text-xl font-extrabold text-white">Quick quiz: guess the domain</h2>
         <p className="mb-3 text-sm text-slate-400">Five real Legends from the database — can you place them?</p>
         <LegendQuiz legends={data.quizLegends} domains={[...DOMAIN_KEYS.filter((k) => k !== "Colorless")]} />
       </section>
@@ -261,7 +261,7 @@ export default async function LearnPage() {
 
       {/* Learning path */}
       <section>
-        <h2 className="mb-3 text-xl font-extrabold text-white">🗺️ Your first week, step by step</h2>
+        <h2 className="mb-3 text-xl font-extrabold text-white">Your first week, step by step</h2>
         <ol className="grid gap-3 sm:grid-cols-2">
           {[
             { n: 1, title: "Learn the rules", body: "Riot's official quick-start teaches the game in about 15 minutes — the best first stop.", href: "https://riftbound.leagueoflegends.com/en-us/news/rules-and-releases/how-to-play-get-started/", label: "Official guide ↗", ext: true },
@@ -271,7 +271,7 @@ export default async function LearnPage() {
           ].map((s) => (
             <li key={s.n} className="card-surface p-4">
               <div className="flex items-center gap-2">
-                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-brand-500/20 text-sm font-extrabold text-brand-300">{s.n}</span>
+                <span className="num grid h-7 w-7 shrink-0 place-items-center rounded-full bg-brand-500/20 text-sm font-extrabold text-brand-300">{s.n}</span>
                 <h3 className="font-bold text-white">{s.title}</h3>
               </div>
               <p className="mt-2 text-sm leading-relaxed text-slate-400">{s.body}</p>
@@ -287,7 +287,7 @@ export default async function LearnPage() {
 
       {/* Glossary — game words + collector words */}
       <section>
-        <h2 className="mb-3 text-xl font-extrabold text-white">📖 Speak the language</h2>
+        <h2 className="mb-3 text-xl font-extrabold text-white">Speak the language</h2>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="card-surface p-4">
             <h3 className="mb-2 text-sm font-bold uppercase tracking-wide text-brand-400">Game terms</h3>
@@ -325,7 +325,7 @@ export default async function LearnPage() {
 
       {/* FAQ (matches the FAQPage JSON-LD) */}
       <section>
-        <h2 className="mb-3 text-xl font-extrabold text-white">❓ New-player questions</h2>
+        <h2 className="mb-3 text-xl font-extrabold text-white">New-player questions</h2>
         <div className="card-surface divide-y divide-ink-800">
           {FAQS.map((f) => (
             <div key={f.q} className="px-5 py-4">
@@ -338,9 +338,9 @@ export default async function LearnPage() {
 
       {/* Riftle banner */}
       <section className="card-surface overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-4 bg-gradient-to-r from-ink-850 to-brand-600/15 p-6">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-l-2 border-brand-500 bg-ink-900 p-6">
           <div>
-            <h2 className="text-lg font-extrabold text-white">🃏 Riftle — the card game about the card game</h2>
+            <h2 className="text-lg font-extrabold text-white">Riftle — the card game about the card game</h2>
             <p className="mt-1 max-w-md text-sm text-slate-400">
               The fun way to learn the card pool: guess the mystery card with hints on set, domain, type,
               rarity, cost and might. A new daily card — or play Unlimited. Free forever.

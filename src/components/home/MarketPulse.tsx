@@ -15,10 +15,10 @@ function Delta({ label, pct }: { label: string; pct: number | null }) {
   const up = pct > 0;
   const flat = pct === 0;
   return (
-    <span className="inline-flex items-baseline gap-1 rounded-lg bg-ink-900 px-2.5 py-1 text-xs">
+    <span className="inline-flex items-baseline gap-1 rounded-md bg-ink-900 px-2.5 py-1 text-xs">
       <span className="text-slate-500">{label}</span>
-      <span className={`font-bold ${flat ? "text-slate-300" : up ? "text-brand-400" : "text-rose-400"}`}>
-        {flat ? "—" : `${up ? "▲" : "▼"} ${Math.abs(pct)}%`}
+      <span className={`num font-bold ${flat ? "text-slate-300" : up ? "text-up" : "text-down"}`}>
+        {flat ? "—" : `${up ? "+" : "−"}${Math.abs(pct)}%`}
       </span>
     </span>
   );
@@ -40,16 +40,16 @@ function OppRow({ deal, currency, country }: { deal: Deal; currency: string; cou
         </div>
       </div>
       <div className="flex shrink-0 flex-col items-end gap-1">
-        <span className="text-sm font-bold text-accent">{formatMoney(deal.priceCents, currency)}</span>
+        <span className="num text-sm font-bold text-accent">{formatMoney(deal.priceCents, currency)}</span>
         {deal.pctLabel != null && (
-          <span className="chip bg-brand-500/15 text-brand-300">
-            {deal.dealType === "price-drops" ? `▼ ${deal.pctLabel}%` : `${deal.pctLabel}%`}
+          <span className="chip num bg-brand-500/15 text-brand-300">
+            {deal.dealType === "price-drops" ? `−${deal.pctLabel}%` : `${deal.pctLabel}%`}
           </span>
         )}
       </div>
     </>
   );
-  const cls = "flex items-center gap-2.5 rounded-lg px-2 py-2 transition-colors hover:bg-ink-900/60";
+  const cls = "flex items-center gap-2.5 rounded-md px-2 py-2 transition-colors hover:bg-ink-900/60";
   return deal.outboundUrl ? (
     <OutboundLink href={deal.outboundUrl} retailer={deal.outboundRetailer ?? "sealed"} country={country} kind="sealed" className={cls}>
       {inner}
@@ -76,19 +76,14 @@ export function MarketPulse({
   if (!index && opps.length === 0) return null;
 
   return (
-    <section className="card-surface relative overflow-hidden p-5 sm:p-6">
-      <div className="pointer-events-none absolute inset-0" aria-hidden>
-        <div className="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-brand-500/10 blur-3xl animate-blob" />
-        <div className="hero-dots absolute inset-0 opacity-40" />
-      </div>
-
+    <section className="card-surface relative overflow-hidden border-l-2 border-l-brand-500 p-5 sm:p-6">
       <div className="relative grid gap-6 md:grid-cols-2">
         {/* Live Index — the whole block is a button through to the full Index. */}
         {index ? (
-          <Link href="/market" className="group -m-2 block rounded-xl p-2 transition-colors hover:bg-ink-900/40">
+          <Link href="/market" className="group -m-2 block rounded-lg p-2 transition-colors hover:bg-ink-900/40">
             <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Market Pulse</div>
             <div className="mt-1 flex items-end gap-3">
-              <span className="font-display text-4xl font-extrabold text-white transition-colors group-hover:text-brand-300">{index.latest.toFixed(1)}</span>
+              <span className="num text-4xl font-extrabold text-white transition-colors group-hover:text-brand-300">{index.latest.toFixed(1)}</span>
               <span className="mb-1.5"><Sparkline points={index.points} up={index.d7 != null && index.d7 > 0} upIsGood /></span>
             </div>
             <div className="mt-2 flex flex-wrap gap-2">

@@ -33,7 +33,7 @@ export function PriceWatch({
         <div className="mb-4 flex items-end justify-between gap-3">
           <div>
             <h2 className="flex items-center gap-2 text-xl font-extrabold text-white">
-              📈 Price Watch
+              Price Watch
             </h2>
             <p className="mt-0.5 text-xs text-slate-500">
               This week&apos;s biggest movers across {place} — tap any card for its full price chart.
@@ -46,8 +46,8 @@ export function PriceWatch({
       )}
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <Panel title="Spiking this week" accent="text-rose-400" subtitle="Up the most (7 days)" movers={spiking} kind="up" currency={currency} empty="No notable risers yet." />
-        <Panel title="Biggest drops this week" accent="text-brand-400" subtitle="Down the most (7 days)" movers={plummeting} kind="down" currency={currency} empty="No notable fallers yet." />
+        <Panel title="Spiking this week" accent="text-up" subtitle="Up the most (7 days)" movers={spiking} kind="up" currency={currency} empty="No notable risers yet." />
+        <Panel title="Biggest drops this week" accent="text-down" subtitle="Down the most (7 days)" movers={plummeting} kind="down" currency={currency} empty="No notable fallers yet." />
         <Panel title="Best value right now" accent="text-gold" subtitle="Largest discount off recent high" movers={value} kind="down" currency={currency} empty="No standout deals yet." />
       </div>
     </section>
@@ -93,9 +93,9 @@ function Row({ m, up, currency }: { m: Mover; up: boolean; currency: string }) {
         </div>
         <Sparkline points={m.points} up={up} />
         <div className="w-16 shrink-0 text-right">
-          <div className="text-sm font-bold text-white">{formatMoney(m.nowCents, currency)}</div>
-          <div className={`text-[11px] font-semibold ${pos ? "text-rose-400" : "text-brand-400"}`}>
-            {pos ? "▲" : "▼"} {Math.abs(m.pct)}%
+          <div className="num text-sm font-bold text-white">{formatMoney(m.nowCents, currency)}</div>
+          <div className={`num text-[11px] font-semibold ${pos ? "text-up" : "text-down"}`}>
+            {pos ? "+" : "−"}{Math.abs(m.pct)}%
           </div>
         </div>
       </button>

@@ -57,6 +57,9 @@ export async function getUndervalued(country: Country, limit = 24): Promise<Valu
       if (avg <= 0) continue;
       const discount = (avg - current) / avg;
       if (discount < MIN_DISCOUNT) continue;
+      // Outlier guard: ≥80% below its own average isn't a value signal, it's a
+      // data-quality artifact (a mismatched/one-off junk price). Skip it.
+      if (discount >= 0.8) continue;
       picks.push({
         card: c as unknown as CardTileData,
         currentCents: current,

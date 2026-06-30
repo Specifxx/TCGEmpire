@@ -80,13 +80,7 @@ export default async function SetPage({ params }: { params: { set: string } }) {
 
       {/* Breadcrumb + hero */}
       <section className="card-surface animate-fade-up relative overflow-hidden">
-        {/* Decorative ambient aurora (one brand blob) + dotted texture. */}
-        <div className="pointer-events-none absolute inset-0" aria-hidden>
-          <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-brand-500/20 blur-3xl animate-blob" />
-          <div className="hero-dots absolute inset-0 opacity-60" />
-        </div>
-
-        <div className="relative bg-gradient-to-br from-brand-600/20 via-ink-850/40 to-gold/10 px-6 py-8">
+        <div className="relative border-l-2 border-brand-500 bg-ink-900 px-6 py-8">
           <nav className="mb-3 flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-slate-300">Home</Link>
             <span>/</span>
@@ -119,10 +113,10 @@ export default async function SetPage({ params }: { params: { set: string } }) {
           {!set.comingSoon && (
             <div className="mt-4 flex flex-wrap gap-2">
               <span className="chip bg-brand-500/15 text-brand-300">
-                <CountUp value={cards.length} className="font-bold" />&nbsp;cards
+                <CountUp value={cards.length} className="num font-bold" />&nbsp;cards
               </span>
               <span className="chip bg-gold/20 text-gold">
-                <CountUp value={priced} className="font-bold" />&nbsp;priced
+                <CountUp value={priced} className="num font-bold" />&nbsp;priced
               </span>
             </div>
           )}
@@ -160,12 +154,12 @@ export default async function SetPage({ params }: { params: { set: string } }) {
         <h2 className="mb-3 text-lg font-bold text-white">Other Riftbound sets</h2>
         <div className="flex flex-wrap gap-2">
           {otherSets.map((s) => (
-            <Link key={s.slug} href={`/sets/${s.slug}`} className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-brand-500 hover:-translate-y-0.5 hover:scale-105 transition-transform">
+            <Link key={s.slug} href={`/sets/${s.slug}`} className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">
               {s.name}
             </Link>
           ))}
-          <Link href="/browse" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-brand-500 hover:-translate-y-0.5 hover:scale-105 transition-transform">All cards →</Link>
-          <Link href="/sealed" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-brand-500 hover:-translate-y-0.5 hover:scale-105 transition-transform">Sealed products →</Link>
+          <Link href="/browse" className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">All cards →</Link>
+          <Link href="/sealed" className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">Sealed products →</Link>
         </div>
       </section>
 

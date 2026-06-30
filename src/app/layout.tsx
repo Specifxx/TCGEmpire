@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Sora, Space_Grotesk } from "next/font/google";
+import { Sora, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
@@ -8,6 +8,7 @@ import { Navbar } from "@/components/Navbar";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { QuickViewProvider } from "@/components/QuickView";
 import { CommandLauncherProvider } from "@/components/CommandLauncher";
+import { MegaMenuProvider } from "@/components/MegaMenuProvider";
 import { WishlistDrawerProvider } from "@/components/WishlistDrawer";
 import { CountryProvider } from "@/components/CountryProvider";
 import { PremiumProvider } from "@/components/PremiumProvider";
@@ -27,8 +28,12 @@ import { PriceAlertModal } from "@/components/PriceAlertModal";
 
 // Body: Sora (modern, energetic, readable). Headings: Space Grotesk (distinctive,
 // gives the brand more life). Exposed as CSS vars wired into Tailwind.
-const sora = Sora({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
-const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-display", display: "swap" });
+// display: "optional" — never swaps late (zero font-CLS); first paint uses the
+// metric-matched fallback, the brand font appears from cache thereafter.
+const sora = Sora({ subsets: ["latin"], variable: "--font-sans", display: "optional" });
+const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-display", display: "optional" });
+// Monospace for prices / tabular figures — the "market terminal" numeral voice.
+const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "optional" });
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -105,7 +110,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const user = await getCurrentUser();
   const adFree = isPremium(user);
   return (
-    <html lang="en-AU" className={`${sora.variable} ${spaceGrotesk.variable}`}>
+    <html lang="en-AU" className={`${sora.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}>
       <head>
         {/* Impact / TCGplayer affiliate site-ownership verification. Impact looks for
             the non-standard `value` attribute, so spread it past the meta typing. */}
@@ -131,9 +136,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <WishlistDrawerProvider>
           <QuickViewProvider>
             <CommandLauncherProvider>
-              <Navbar />
-              <main id="main-content" className="container-app min-w-0 py-6">{children}</main>
-              <PriceAlertModal />
+              <MegaMenuProvider>
+                <Navbar />
+                <main id="main-content" className="container-app min-w-0 py-6">{children}</main>
+                <PriceAlertModal />
+              </MegaMenuProvider>
             </CommandLauncherProvider>
           </QuickViewProvider>
         </WishlistDrawerProvider>
