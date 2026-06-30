@@ -1,0 +1,74 @@
+name: GSC indexing monitor — RiftCompare
+
+# Daily Google Search Console check: reports how many pages are getting Google
+# impressions (a proxy for "indexed + ranking"), the top queries/pages, and the
+# submitted-sitemap status. Read-only — it WATCHES indexing, it can't force it
+# (there is no public Google API to bulk-index normal pages).
+#
+# Setup (one-time): create a Google Cloud service account, enable the "Google
+# Search Console API", download its JSON key, add the service-account email as a
+# user (Full) on the riftcompare.com Search Console property, and store the JSON
+# as the repo secret GSC_SA_KEY. Until then this workflow no-ops.
+on:
+  workflow_dispatch:
+    inputs:
+      property:
+        description: "GSC property (e.g. https://riftcompare.com/ or sc-domain:riftcompare.com)"
+        required: false
+        default: ""
+  schedule:
+    - cron: "20 7 * * *" # daily, 07:20 UTC
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Report Google indexing & search performance
+        env:
+          GSC_SA_KEY: ${{ secrets.GSC_SA_KEY }}
+          GSC_PROPERTY: ${{ inputs.property || 'https://riftcompare.com/' }}
+        run: |
+          if [ -z "$GSC_SA_KEY" ]; then
+            echo "No GSC_SA_KEY secret set — add a Search Console service-account JSON key to enable monitoring. Skipping." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          node <<'JS'
+          const crypto = require("crypto"); const fs = require("fs");
+          const sa = JSON.parse(process.env.GSC_SA_KEY);
+          const property = process.env.GSC_PROPERTY;
+          const site = encodeURIComponent(property);
+          const b64 = (b) => Buffer.from(b).toString("base64").replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+          const day = (n) => new Date(Date.now() - n*864e5).toISOString().slice(0,10);
+          async function token() {
+            const now = Math.floor(Date.now()/1000);
+            const h = b64(JSON.stringify({alg:"RS256",typ:"JWT"}));
+            const c = b64(JSON.stringify({iss:sa.client_email,scope:"https://www.googleapis.com/auth/webmasters.readonly",aud:"https://oauth2.googleapis.com/token",iat:now,exp:now+3600}));
+            const s = crypto.createSign("RSA-SHA256"); s.update(h+"."+c);
+            const jwt = h+"."+c+"."+b64(s.sign(sa.private_key));
+            const r = await fetch("https://oauth2.googleapis.com/token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({grant_type:"urn:ietf:params:oauth:grant-type:jwt-bearer",assertion:jwt})});
+            const j = await r.json(); if (!j.access_token) throw new Error("auth failed: "+JSON.stringify(j)); return j.access_token;
+          }
+          async function q(at, body){ const r = await fetch(`https://searchconsole.googleapis.com/webmasters/v3/sites/${site}/searchAnalytics/query`,{method:"POST",headers:{Authorization:"Bearer "+at,"Content-Type":"application/json"},body:JSON.stringify(body)}); return r.json(); }
+          (async () => {
+            const at = await token();
+            const start = day(28), end = day(2);
+            const byPage = await q(at,{startDate:start,endDate:end,dimensions:["page"],rowLimit:25000});
+            if (byPage.error) throw new Error("searchAnalytics: "+JSON.stringify(byPage.error));
+            const byQuery = await q(at,{startDate:start,endDate:end,dimensions:["query"],rowLimit:10});
+            const pages = byPage.rows || [];
+            const impr = pages.reduce((a,r)=>a+(r.impressions||0),0);
+            const clicks = pages.reduce((a,r)=>a+(r.clicks||0),0);
+            let sm = {}; try { const r = await fetch(`https://searchconsole.googleapis.com/webmasters/v3/sites/${site}/sitemaps`,{headers:{Authorization:"Bearer "+at}}); sm = await r.json(); } catch {}
+            const out = [];
+            out.push(`### ${property} — Google indexing & performance (last 28d)`);
+            out.push(`- **${pages.length}** pages received Google impressions (proxy for indexed + ranking)`);
+            out.push(`- **${impr.toLocaleString()}** impressions · **${clicks.toLocaleString()}** clicks`);
+            if ((sm.sitemap||[]).length) out.push(`- Sitemaps submitted: ` + sm.sitemap.map(s=>`${s.path.split("/").pop()}${s.lastDownloaded?` (crawled ${String(s.lastDownloaded).slice(0,10)})`:" (not yet crawled)"}`).join(", "));
+            out.push("", "**Top queries:**", ...(byQuery.rows||[]).map(r=>`- \`${r.keys[0]}\` — ${r.clicks} clicks / ${r.impressions} impr`));
+            out.push("", "**Top pages:**", ...pages.slice().sort((a,b)=>b.impressions-a.impressions).slice(0,10).map(r=>`- ${r.keys[0].replace(property.replace(/\/$/,""),"")||"/"} — ${r.impressions} impr`));
+            const txt = out.join("\n");
+            console.log(txt);
+            if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, txt + "\n");
+          })().catch(e => { console.error("GSC monitor failed:", e.message); process.exit(1); });
+          JS

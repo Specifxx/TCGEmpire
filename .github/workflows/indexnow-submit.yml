@@ -5,6 +5,10 @@ name: IndexNow submit (Bing/Yandex) — RiftCompare
 # (so it works right after a deploy), then posts the sitemap URLs in batches.
 on:
   workflow_dispatch:
+  schedule:
+    # Daily resubmit of the whole sitemap to Bing/Yandex (belt-and-braces on top of
+    # the per-import ping). 06:10 UTC.
+    - cron: "10 6 * * *"
 
 jobs:
   submit:
