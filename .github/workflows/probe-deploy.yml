@@ -1,0 +1,49 @@
+name: Probe RiftCompare deploy state
+
+# Read-only debugging aid: lists the repo's recent GitHub deployments (Vercel
+# records one per deploy when the Git integration is connected) with their SHA
+# + status, and fingerprints the live site so we can tell WHICH commit
+# production is serving and whether new deploys are flowing.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  deployments: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Recent Vercel deployments (via GitHub Deployments API)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          DEPLOYS=$(curl -fsSL -H "Authorization: Bearer $GH_TOKEN" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/deployments?per_page=10")
+          echo "$DEPLOYS" | python3 -c '
+          import json,sys
+          ds = json.load(sys.stdin)
+          if not ds:
+              print("NO deployment records at all."); sys.exit(0)
+          for d in ds:
+              print(d["created_at"], "|", d["environment"], "|", d["sha"][:10], "|", d["statuses_url"])
+          print("--- statuses of newest ---")
+          import urllib.request
+          req = urllib.request.Request(ds[0]["statuses_url"], headers={"Authorization":"Bearer '"$GH_TOKEN"'","User-Agent":"probe"})
+          for s in json.load(urllib.request.urlopen(req)):
+              print("status:", s["state"], s["created_at"], s.get("description",""))
+          '
+
+      - name: Fingerprint live site (riftcompare.com)
+        run: |
+          for p in / /sealed /browse /sitemap.xml /robots.txt; do
+            CODE=$(curl -s -o /tmp/body -w "%{http_code}" --max-time 30 "https://riftcompare.com$p")
+            ERR=$(grep -c "Application error\|server-side exception" /tmp/body || true)
+            SIZE=$(wc -c < /tmp/body)
+            echo "$CODE  err=$ERR  ${SIZE}B  $p"
+          done
+          echo "--- title ---"
+          curl -fsSL --max-time 30 https://riftcompare.com/ | grep -o "<title>[^<]*</title>" | head -1 || true
