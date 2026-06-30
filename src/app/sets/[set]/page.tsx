@@ -36,7 +36,11 @@ export async function generateMetadata({ params }: { params: { set: string } }):
       `cheapest Riftbound ${set.name} cards`,
       `Riftbound ${set.name} value`,
     ],
-    alternates: { canonical: `/sets/${set.slug}` },
+    alternates: {
+      canonical: `/sets/${set.slug}`,
+      // Single cookie-switched URL is the global default for all four markets.
+      languages: { "x-default": `${SITE_URL}/sets/${set.slug}` },
+    },
     openGraph: { title: `${title} | RiftCompare`, description, url: `${SITE_URL}/sets/${set.slug}` },
   };
 }
@@ -72,6 +76,20 @@ export default async function SetPage({ params }: { params: { set: string } }) {
     url: `${SITE_URL}/sets/${set.slug}`,
     description: `Live prices for every Riftbound ${set.name} card.`,
     isPartOf: { "@type": "WebSite", name: "RiftCompare", url: SITE_URL },
+    // ItemList of the cards actually rendered on the page (ranked positionally).
+    ...(cards.length > 0
+      ? {
+          mainEntity: {
+            "@type": "ItemList",
+            itemListElement: cards.map((c, i) => ({
+              "@type": "ListItem",
+              position: i + 1,
+              name: c.name,
+              url: `${SITE_URL}/card/${c.slug ?? c.id}`,
+            })),
+          },
+        }
+      : {}),
   };
 
   return (

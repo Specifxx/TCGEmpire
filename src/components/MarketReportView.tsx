@@ -57,20 +57,33 @@ export function MarketReportView({ article, data }: { article: Article; data: Re
   const movers = [...data.movers.risers, ...data.movers.fallers];
   const moverScale = Math.max(1, ...movers.map((m) => Math.abs(m.pct)));
 
+  const reportUrl = `${SITE_URL}/blog/${article.slug}`;
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
     headline: article.title,
     description: article.excerpt,
     datePublished: article.date,
+    // The report is regenerated through its Sydney calendar day, so the report's
+    // own day stamp is the honest dateModified.
+    dateModified: data.day ?? article.updated ?? article.date,
     author: { "@type": "Organization", name: article.author },
     publisher: { "@type": "Organization", name: "RiftCompare" },
-    mainEntityOfPage: `${SITE_URL}/blog/${article.slug}`,
+    mainEntityOfPage: reportUrl,
+  };
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+      { "@type": "ListItem", position: 2, name: "Blog", item: `${SITE_URL}/blog` },
+      { "@type": "ListItem", position: 3, name: article.title, item: reportUrl },
+    ],
   };
 
   return (
     <article className="mx-auto max-w-3xl">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify([jsonLd, breadcrumbLd]) }} />
 
       <Link href="/blog" className="mb-4 inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white">
         ← All posts
@@ -229,7 +242,10 @@ export function MarketReportView({ article, data }: { article: Article; data: Re
       </div>
 
       <div className="mt-8 border-t border-ink-800 pt-4 text-xs italic leading-relaxed text-slate-500">
-        {METHODOLOGY}
+        {METHODOLOGY}{" "}
+        <Link href="/about#methodology" className="not-italic text-brand-400 hover:underline">
+          How RiftCompare works →
+        </Link>
       </div>
 
       <AdSlot className="mt-8" height={120} />

@@ -18,6 +18,7 @@ export default function robots(): MetadataRoute.Robots {
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,
-    host: SITE_URL,
+    // NOTE: no `host` directive — it's non-standard (Bing/Google ignore it);
+    // host canonicalisation is handled by 301 redirects, not robots.txt.
   };
 }

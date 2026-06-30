@@ -122,10 +122,21 @@ export default async function BoxEvPage() {
       { "@type": "ListItem", position: 2, name: "Box EV Calculator", item: `${SITE_URL}/tools/box-ev` },
     ],
   };
+  const appLd = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "Riftbound Booster Box EV Calculator",
+    url: `${SITE_URL}/tools/box-ev`,
+    applicationCategory: "UtilitiesApplication",
+    operatingSystem: "Web",
+    offers: { "@type": "Offer", price: "0", priceCurrency: info.currency },
+    description:
+      "Free Riftbound booster box expected-value calculator: tune pull rates and see whether opening beats buying singles, from live prices.",
+  };
 
   return (
     <div className="mx-auto max-w-3xl">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumbLd, appLd]) }} />
 
       <div className="mb-5">
         <nav className="mb-3 flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">

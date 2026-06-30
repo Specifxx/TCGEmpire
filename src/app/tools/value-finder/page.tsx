@@ -170,6 +170,17 @@ export default async function ValueFinderPage() {
                 { "@type": "ListItem", position: 3, name: "Value Finder", item: `${SITE_URL}/tools/value-finder` },
               ],
             },
+            {
+              "@context": "https://schema.org",
+              "@type": "WebApplication",
+              name: "Riftbound Value Finder",
+              url: `${SITE_URL}/tools/value-finder`,
+              applicationCategory: "UtilitiesApplication",
+              operatingSystem: "Web",
+              offers: { "@type": "Offer", price: "0", priceCurrency: info.currency },
+              description:
+                "A screener for Riftbound cards trading below their recent average — a mean-reversion signal for value buyers and flippers.",
+            },
           ]),
         }}
       />

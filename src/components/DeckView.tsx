@@ -110,6 +110,8 @@ export function DeckView({ deck, builderHref }: { deck: ResolvedDeck; builderHre
               <img
                 src={bigImage}
                 alt={preview?.name ?? deck.legend}
+                width={300}
+                height={420}
                 className="h-full w-full object-cover object-top transition-opacity duration-150"
               />
             )}

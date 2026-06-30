@@ -10,20 +10,34 @@ export function ArticleView({ article }: { article: Article }) {
   const backHref = isGuide ? "/guides" : "/blog";
   const backLabel = isGuide ? "All guides" : "All posts";
 
-  const jsonLd = {
+  const articleUrl = `${SITE_URL}/${isGuide ? "guides" : "blog"}/${article.slug}`;
+  const articleLd = {
     "@context": "https://schema.org",
     "@type": isGuide ? "TechArticle" : "BlogPosting",
     headline: article.title,
     description: article.excerpt,
     datePublished: article.date,
+    // dateModified defaults to the publish date until an article carries an
+    // explicit `updated` — never older than datePublished.
+    dateModified: article.updated ?? article.date,
     author: { "@type": "Organization", name: article.author },
     publisher: { "@type": "Organization", name: "RiftCompare" },
-    mainEntityOfPage: `${SITE_URL}/${article.category === "guide" ? "guides" : "blog"}/${article.slug}`,
+    mainEntityOfPage: articleUrl,
+  };
+  // Breadcrumb mirrors the visible "← back" link: Home → Blog|Guides → {title}.
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+      { "@type": "ListItem", position: 2, name: isGuide ? "Guides" : "Blog", item: `${SITE_URL}${backHref}` },
+      { "@type": "ListItem", position: 3, name: article.title, item: articleUrl },
+    ],
   };
 
   return (
     <article className="mx-auto max-w-3xl">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify([articleLd, breadcrumbLd]) }} />
 
       <Link href={backHref} className="mb-4 inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white">
         ← {backLabel}

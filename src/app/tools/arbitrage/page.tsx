@@ -54,6 +54,33 @@ export default async function ArbitragePage({
 
   return (
     <div className="mx-auto max-w-3xl">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify([
+            {
+              "@context": "https://schema.org",
+              "@type": "BreadcrumbList",
+              itemListElement: [
+                { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+                { "@type": "ListItem", position: 2, name: "Tools", item: `${SITE_URL}/tools` },
+                { "@type": "ListItem", position: 3, name: "Arbitrage", item: `${SITE_URL}/tools/arbitrage` },
+              ],
+            },
+            {
+              "@context": "https://schema.org",
+              "@type": "WebApplication",
+              name: "Riftbound Arbitrage & eBay Deals",
+              url: `${SITE_URL}/tools/arbitrage`,
+              applicationCategory: "UtilitiesApplication",
+              operatingSystem: "Web",
+              offers: { "@type": "Offer", price: "0", priceCurrency: info.currency },
+              description:
+                "Live Riftbound flipping arbitrage (buy cheap from a store, sell on eBay) plus the cards eBay is cheapest to buy.",
+            },
+          ]),
+        }}
+      />
       <div className="mb-4">
         <nav className="mb-3 flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
           <Link href="/" className="hover:text-slate-300">Home</Link>

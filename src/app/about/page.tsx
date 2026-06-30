@@ -38,7 +38,7 @@ export default function AboutPage() {
           </p>
         </section>
 
-        <section className="space-y-2">
+        <section id="methodology" className="scroll-mt-24 space-y-2">
           <h2 className="text-lg font-bold text-white">How it works</h2>
           <p>
             Several times a day we collect public price and stock information from store catalogues and

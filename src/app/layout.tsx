@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { Sora, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
@@ -52,6 +52,10 @@ export const metadata: Metadata = {
     // its own canonical; the home page sets "/" in app/page.tsx.
     // RSS auto-discovery for feed readers and auto-posting/aggregator services.
     types: { "application/rss+xml": "/feed.xml" },
+    // x-default baseline: markets are cookie-driven on ONE URL set (not URL-
+    // segmented), so we declare the canonical home as the global default rather
+    // than fabricating per-locale hreflang variants.
+    languages: { "x-default": SITE_URL },
   },
   openGraph: {
     type: "website",
@@ -62,6 +66,13 @@ export const metadata: Metadata = {
       "Compare live Riftbound TCG card prices across stores in Australia, New Zealand and the US to find the cheapest place to buy.",
   },
   twitter: { card: "summary_large_image" },
+  // Opt into large image thumbnails + full text snippets in Google/Bing results
+  // (Search-Essentials best practice). Per-page noindex still overrides this.
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 },
+  },
   // Search engine site verification. Google's "HTML tag" method verifies a
   // URL-prefix property INSTANTLY (no DNS propagation wait) — the token below is
   // served in <head> on every page. Override per-deploy via env if needed.
@@ -71,6 +82,10 @@ export const metadata: Metadata = {
       "fPFxAkXOBeYdNPNbNGo-ZItApU0457uWVkbPkfzzzXs",
   },
 };
+
+// Brand chrome colour for the browser UI / installed-PWA theme (matches the
+// site's ink-950 background). Paired with the web manifest (app/manifest.ts).
+export const viewport: Viewport = { themeColor: "#0b0e14" };
 
 const orgJsonLd = {
   "@context": "https://schema.org",
@@ -109,8 +124,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // self-hide via PremiumProvider. getCurrentUser is request-cached.
   const user = await getCurrentUser();
   const adFree = isPremium(user);
+  // Neutral lang="en": one cookie-switched URL serves all four English markets
+  // (AU/NZ/US/UK), so a single market tag like en-AU would mislabel the others.
   return (
-    <html lang="en-AU" className={`${sora.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" className={`${sora.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}>
       <head>
         {/* Impact / TCGplayer affiliate site-ownership verification. Impact looks for
             the non-standard `value` attribute, so spread it past the meta typing. */}

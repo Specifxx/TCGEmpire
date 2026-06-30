@@ -13,7 +13,7 @@ export const revalidate = 86400;
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Whole-function fence: a sitemap prerender failure hard-fails the entire
   // Vercel build, so ANY error here degrades to static routes instead.
-  let cards: { id: string; slug: string | null; lowestPriceCents: number | null }[] = [];
+  let cards: { id: string; slug: string | null; lowestPriceCents: number | null; imageUrl: string | null }[] = [];
   // Honest lastModified for price-bearing pages: the day of the latest price
   // snapshot (i.e. when the page's content really last changed). Stamping
   // every URL with "now" on every regeneration teaches Google to DISTRUST the
@@ -23,7 +23,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let priceDay: Date | undefined;
   try {
     cards = await prisma.card.findMany({
-      select: { id: true, slug: true, lowestPriceCents: true },
+      select: { id: true, slug: true, lowestPriceCents: true, imageUrl: true },
       orderBy: { lowestPriceCents: { sort: "desc", nulls: "last" } },
     });
     priceDay = (
@@ -121,6 +121,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // prices refresh with every snapshot, so that day is their real lastmod.
     priority: c.lowestPriceCents != null ? 0.8 : 0.5,
     lastModified: c.lowestPriceCents != null ? priceDay : undefined,
+    // Image sitemap: surface each card's unique art to image search (absolute URLs only).
+    ...(c.imageUrl && c.imageUrl.startsWith("http") ? { images: [c.imageUrl] } : {}),
   }));
 
   // NOTE: deliberately NO blanket "lastModified: now" — evergreen pages

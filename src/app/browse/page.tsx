@@ -73,6 +73,20 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
     description:
       "Browse every Riftbound TCG card and compare live prices across stores to find the cheapest place to buy Riftbound singles. Updated daily.",
     isPartOf: { "@type": "WebSite", name: "RiftCompare", url: SITE_URL },
+    // ItemList of the cards actually rendered on this page (ranked positionally).
+    ...(cards.length > 0
+      ? {
+          mainEntity: {
+            "@type": "ItemList",
+            itemListElement: cards.map((c, i) => ({
+              "@type": "ListItem",
+              position: i + 1,
+              name: c.name,
+              url: `${SITE_URL}/card/${c.slug ?? c.id}`,
+            })),
+          },
+        }
+      : {}),
   };
 
   return (

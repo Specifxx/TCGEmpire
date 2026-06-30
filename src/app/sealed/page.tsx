@@ -7,6 +7,7 @@ import { COUNTRIES } from "@/lib/country";
 import { affiliateUrl, ebayAffiliateUrl } from "@/lib/affiliate";
 import { OutboundLink } from "@/components/OutboundLink";
 import { Reveal } from "@/components/Reveal";
+import { SITE_URL } from "@/lib/site";
 
 export const revalidate = 900;
 
@@ -26,12 +27,21 @@ const SEALED_SEARCHES = [
   { label: "All sealed Riftbound", q: "Riftbound TCG sealed" },
 ];
 
-export const metadata: Metadata = {
-  title: "Riftbound Sealed Products — Booster Boxes, Packs & Sets",
-  description:
-    "Compare prices on sealed Riftbound products — booster boxes, booster packs, Proving Grounds, bundles and more — across stores to find the cheapest.",
-  alternates: { canonical: "/sealed" },
-};
+// Internal search-result views (?q=) are noindex'd (Google/Bing discourage indexing
+// site-search results); every variant canonicalises to the clean /sealed so crawl
+// signals concentrate on the one page we want ranked. Mirrors browse/page.tsx.
+export async function generateMetadata({ searchParams }: { searchParams: { q?: string | string[] } }): Promise<Metadata> {
+  const q = (typeof searchParams.q === "string" ? searchParams.q : "").trim();
+  return {
+    title: q
+      ? `${q} — Riftbound sealed products`
+      : "Riftbound Sealed Products — Booster Boxes, Packs & Sets",
+    description:
+      "Compare prices on sealed Riftbound products — booster boxes, booster packs, Proving Grounds, bundles and more — across stores to find the cheapest.",
+    alternates: { canonical: "/sealed" },
+    robots: q ? { index: false, follow: true } : undefined,
+  };
+}
 
 export default async function SealedPage({ searchParams }: { searchParams: { q?: string | string[] } }) {
   const country = getCountry();
@@ -71,8 +81,57 @@ export default async function SealedPage({ searchParams }: { searchParams: { q?:
   // Vendetta sealed actually exists in the feed.
   const hasVendetta = !q && all.some((g) => g.setCode === "VEN");
 
+  // Structured data: BreadcrumbList (mirrors the visible nav) + an ItemList of the
+  // rendered groups. Each group with a live price AND ≥1 in-stock listing carries a
+  // Product + AggregateOffer — gated exactly like the card page, so "currently
+  // unavailable" groups emit no offers (an empty/unpriced Product is a GSC error).
+  const currency = COUNTRIES[priceCountry].currency;
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+      { "@type": "ListItem", position: 2, name: "Sealed", item: `${SITE_URL}/sealed` },
+    ],
+  };
+  const itemListLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Riftbound Sealed Products",
+    url: `${SITE_URL}/sealed`,
+    itemListElement: groups.map((g, i) => {
+      const inStockCount = g.listings.filter((l) => l.inStock).length;
+      const hasOffers = g.lowestPriceCents != null && inStockCount > 0;
+      return {
+        "@type": "ListItem",
+        position: i + 1,
+        item: {
+          "@type": "Product",
+          name: g.name,
+          category: "Trading Card Game Sealed Product",
+          ...(g.imageUrl ? { image: g.imageUrl } : {}),
+          ...(hasOffers
+            ? {
+                offers: {
+                  "@type": "AggregateOffer",
+                  priceCurrency: currency,
+                  lowPrice: (g.lowestPriceCents! / 100).toFixed(2),
+                  offerCount: inStockCount,
+                  availability: "https://schema.org/InStock",
+                },
+              }
+            : {}),
+        },
+      };
+    }),
+  };
+
   return (
     <div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumbLd, itemListLd]) }}
+      />
       <nav className="mb-3 flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
         <Link href="/" className="hover:text-slate-300">Home</Link>
         <span>/</span>

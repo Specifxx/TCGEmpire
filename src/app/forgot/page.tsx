@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ForgotForm } from "@/components/AccountForms";
 
-export const metadata: Metadata = { title: "Reset password", robots: { index: false } };
+export const metadata: Metadata = { title: "Forgot password", robots: { index: false } };
 
 export default function ForgotPage() {
   return (

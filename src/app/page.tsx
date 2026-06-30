@@ -8,6 +8,7 @@ import { getPopularCards } from "@/lib/cheapest-cards";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES, priceField, type CountryInfo } from "@/lib/country";
 import { SETS, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
+import { SITE_URL } from "@/lib/site";
 import { getTopDeals } from "@/lib/top-deals";
 import { TodaysTopDeals } from "@/components/TodaysTopDeals";
 import { getMarketIndex } from "@/lib/market-index";
@@ -230,15 +231,33 @@ export default async function HomePage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            mainEntity: faqs.map((f) => ({
-              "@type": "Question",
-              name: f.q,
-              acceptedAnswer: { "@type": "Answer", text: f.a },
-            })),
-          }),
+          __html: JSON.stringify([
+            {
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              mainEntity: faqs.map((f) => ({
+                "@type": "Question",
+                name: f.q,
+                acceptedAnswer: { "@type": "Answer", text: f.a },
+              })),
+            },
+            // ItemList of the "Most popular Riftbound cards" actually rendered above.
+            ...(popularCards.length > 0
+              ? [
+                  {
+                    "@context": "https://schema.org",
+                    "@type": "ItemList",
+                    name: "Most popular Riftbound cards",
+                    itemListElement: popularCards.map((c, i) => ({
+                      "@type": "ListItem",
+                      position: i + 1,
+                      name: c.name,
+                      url: `${SITE_URL}/card/${c.slug ?? c.id}`,
+                    })),
+                  },
+                ]
+              : []),
+          ]),
         }}
       />
     </div>

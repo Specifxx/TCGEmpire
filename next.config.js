@@ -1,10 +1,33 @@
 /** @type {import('next').NextConfig} */
 
+// An ENFORCING Content-Security-Policy is still deliberately omitted: a wrong one
+// silently breaks ads/affiliates, so it must be tuned in Report-Only first (below).
+// The Report-Only policy reports violations without blocking anything, so we can
+// watch the report stream and promote a verified policy to enforcing later.
+//
+// Allow-list rationale (third parties that actually load on the site):
+//  • Vercel Analytics + Speed Insights (va.vercel-scripts.com, *.vercel-insights.com)
+//  • HilltopAds delivery (deliciouslip.com) — the primary ad network
+//  • Sovrn / VigLink auto-affiliate (cdn.viglink.com)
+//  • Card art CDN (cdn.riftscribe.gg) + sealed/marketplace product images
+//  • TCGplayer + eBay affiliate banners (partner.tcgplayer.com, *.ebay.com)
+// 'unsafe-inline' is permitted for script/style because Next streams inline
+// hydration scripts and the JSON-LD blocks; a nonce-based policy is a later step.
+const cspReportOnly = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://*.vercel-insights.com https://deliciouslip.com https://cdn.viglink.com",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https:",
+  "font-src 'self' data:",
+  "connect-src 'self' https://*.vercel-insights.com https://vitals.vercel-insights.com https://deliciouslip.com https://cdn.viglink.com https://cdn.riftscribe.gg",
+  "frame-src 'self' https:",
+  "frame-ancestors 'self'",
+  "base-uri 'self'",
+  "form-action 'self'",
+].join("; ");
+
 // Baseline security headers applied to every response. These are safe defaults
-// that don't depend on the page's content. A Content-Security-Policy is
-// deliberately omitted here: a strict CSP needs per-app tuning (Next.js inline
-// hydration scripts, Vercel Analytics/Speed Insights, the external image CDNs)
-// and a wrong one silently breaks the site — add it separately once tested.
+// that don't depend on the page's content.
 const securityHeaders = [
   // Force HTTPS for two years, including subdomains. Vercel serves HTTPS already;
   // this tells browsers to never even attempt plain HTTP.
@@ -17,6 +40,9 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   // We don't use these device APIs — deny them.
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+  // Report-only CSP: surfaces violations without blocking, so it can be tuned
+  // before being promoted to an enforcing Content-Security-Policy.
+  { key: "Content-Security-Policy-Report-Only", value: cspReportOnly },
 ];
 
 const nextConfig = {

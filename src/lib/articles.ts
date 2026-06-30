@@ -10,7 +10,8 @@ export interface Article {
   title: string;
   excerpt: string;
   author: string;
-  date: string; // ISO (YYYY-MM-DD)
+  date: string; // ISO (YYYY-MM-DD) — first published
+  updated?: string; // ISO (YYYY-MM-DD) — last substantive edit; defaults to `date`
   readMins: number;
   tags: string[];
   body: string; // markdown

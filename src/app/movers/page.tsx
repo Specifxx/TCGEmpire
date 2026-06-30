@@ -60,6 +60,11 @@ export default async function MoversPage() {
       { "@type": "ListItem", position: 2, name: "Price Movers", item: `${SITE_URL}/movers` },
     ],
   };
+  // ItemList of the cards actually rendered (risers → drops → value), deduplicated
+  // so a card appearing in two lists is listed once, ranked positionally.
+  const renderedCards = [...movers.spiking, ...movers.plummeting, ...movers.value].map((m) => m.card);
+  const seenIds = new Set<string>();
+  const uniqueCards = renderedCards.filter((c) => (seenIds.has(c.id) ? false : (seenIds.add(c.id), true)));
   const collection = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
@@ -67,6 +72,19 @@ export default async function MoversPage() {
     url: `${SITE_URL}/movers`,
     description: "This week's biggest Riftbound card price movers — risers, drops and best-value buys.",
     isPartOf: { "@type": "WebSite", name: "RiftCompare", url: SITE_URL },
+    ...(uniqueCards.length > 0
+      ? {
+          mainEntity: {
+            "@type": "ItemList",
+            itemListElement: uniqueCards.map((c, i) => ({
+              "@type": "ListItem",
+              position: i + 1,
+              name: c.name,
+              url: `${SITE_URL}/card/${c.slug ?? c.id}`,
+            })),
+          },
+        }
+      : {}),
   };
 
   const liveSets = SETS.filter((s) => !s.comingSoon);

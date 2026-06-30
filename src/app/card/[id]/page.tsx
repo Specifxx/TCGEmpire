@@ -54,7 +54,11 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   return {
     title,
     description,
-    alternates: { canonical: `/card/${card.slug ?? params.id}` },
+    alternates: {
+      canonical: `/card/${card.slug ?? params.id}`,
+      // Single cookie-switched URL is the global default for all four markets.
+      languages: { "x-default": `${SITE_URL}/card/${card.slug ?? params.id}` },
+    },
     openGraph: {
       title,
       description,
@@ -147,6 +151,11 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // emit the Product markup when we actually have priced, in-stock offers to back
   // it — unpriced cards simply omit it rather than emit an invalid empty Product.
   const hasOffers = prices.length > 0 && lowestPrice != null;
+  // Derive availability from whether any priced offer is actually in stock rather
+  // than hardcoding InStock. `prices` is the inStock-filtered array today, so this
+  // is always InStock — but computing it means a future change to that filter can't
+  // silently misrepresent stock in the markup.
+  const anyInStock = prices.some((p) => p.inStock);
   const jsonLd = hasOffers
     ? {
         "@context": "https://schema.org",
@@ -161,8 +170,9 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           lowPrice: (lowestPrice / 100).toFixed(2),
           highPrice: (prices[prices.length - 1].priceCents / 100).toFixed(2),
           offerCount: prices.length,
-          availability: "https://schema.org/InStock",
-          // Prices refresh daily — valid until tomorrow keeps the markup honest.
+          availability: anyInStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+          // priceValidUntil = now + 1 day: prices refresh on the daily import, so
+          // each snapshot is honest only until the next day's pass overwrites it.
           priceValidUntil: new Date(Date.now() + 86400e3).toISOString().slice(0, 10),
         },
       }
@@ -268,7 +278,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
         {/* Card visual */}
         <div className="lg:sticky lg:top-20 lg:self-start">
           <div className="card-surface mx-auto max-w-[320px] p-4">
-            <CardImage card={card} full className="aspect-[5/7] w-full" />
+            <CardImage card={card} full priority className="aspect-[5/7] w-full" />
           </div>
         </div>
 

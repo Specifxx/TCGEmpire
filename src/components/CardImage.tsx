@@ -21,6 +21,10 @@ interface Props {
   isFoil?: boolean;
   full?: boolean; // use full-res image instead of the thumbnail
   className?: string;
+  // Set on the LCP image (the card-detail hero) so it loads eagerly with high
+  // fetch priority instead of being lazy-loaded. Default false keeps every grid/
+  // list tile lazy — only the one above-the-fold hero should opt in.
+  priority?: boolean;
 }
 
 // Small "PROMO" stamp centred at the bottom of the card art (where the real card's
@@ -38,7 +42,7 @@ function PromoStamp() {
 // Renders the real Riftbound card image (RiftScribe CDN) over a blurred backdrop
 // so both portrait and landscape cards look good. Falls back to generated SVG art
 // when no image is available.
-export function CardImage({ card, isFoil = false, full = false, className }: Props) {
+export function CardImage({ card, isFoil = false, full = false, className, priority = false }: Props) {
   const src = full
     ? card.imageUrl ?? card.imageThumbUrl
     : card.imageThumbUrl ?? card.imageUrl;
@@ -90,8 +94,11 @@ export function CardImage({ card, isFoil = false, full = false, className }: Pro
       <img
         src={src}
         alt={card.name}
-        loading="lazy"
-        decoding="async"
+        // The card-detail hero is the LCP element: load it eagerly with high fetch
+        // priority. Every other call site (grids, lists) keeps lazy + async decode.
+        {...(priority
+          ? { loading: "eager" as const, fetchPriority: "high" as const }
+          : { loading: "lazy" as const, decoding: "async" as const })}
         width={isLandscape ? 420 : 300}
         height={isLandscape ? 300 : 420}
         className={`relative z-10 h-full w-full ${

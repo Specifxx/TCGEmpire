@@ -118,6 +118,8 @@ function DeckGrid({ decks, currency }: { decks: Awaited<ReturnType<typeof resolv
                 <img
                   src={d.imageUrl}
                   alt={d.legend}
+                  width={640}
+                  height={360}
                   className="h-full w-full object-cover object-top"
                 />
               )}
