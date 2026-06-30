@@ -95,7 +95,7 @@ export function MarketPulse({
                   className="inline-flex items-baseline gap-1 rounded-md bg-ink-900 px-2.5 py-1 text-xs"
                   title="Index value — the cost of one copy of each card in the Index"
                 >
-                  <span className="text-slate-500">1×</span>
+                  <span className="text-slate-500">Index value</span>
                   <span className="num font-bold text-slate-200">{formatMoneyCompact(index.stats.basketValueCents, index.currency)}</span>
                 </span>
               )}
