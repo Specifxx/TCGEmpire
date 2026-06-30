@@ -18,8 +18,12 @@ name: Auto-improve (Claude)
 # after 60 days of repo inactivity.
 
 on:
-  schedule:
-    - cron: "*/30 * * * *" # every 30 minutes
+  # PAUSED: main is the single source of truth and an active redesign is in progress,
+  # so the auto-improver does NOT run on a schedule (it was diverging from main and
+  # creating conflicts). Re-enable by uncommenting the schedule below. Manual runs
+  # still work via the "Run workflow" button.
+  # schedule:
+  #   - cron: "*/30 * * * *" # every 30 minutes
   workflow_dispatch: {}
 
 concurrency:
