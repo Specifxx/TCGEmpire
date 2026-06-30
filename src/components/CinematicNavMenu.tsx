@@ -81,7 +81,7 @@ export function CinematicNavMenu() {
             <div className="flex items-center justify-between gap-4">
               <Link href="/" onClick={close} className="flex items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/logo-r-green.png" alt="" aria-hidden width={359} height={353} className="h-9 w-auto" />
+                <img src="/logo-r-green.png" alt="RiftCompare logo" width={359} height={353} className="h-9 w-auto" />
                 <span className="font-display text-lg font-extrabold text-white">
                   Rift<span className="text-brand-400">Compare</span>
                 </span>

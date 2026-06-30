@@ -22,8 +22,9 @@ export const revalidate = 180;
 // to one country — the visible page below is still tailored to the visitor's market.
 export const metadata: Metadata = {
   title: { absolute: "Buy & Compare Riftbound Card Prices | RiftCompare" },
+  // Kept to 25–160 chars (Bing/Google snippet limit) while staying market-neutral.
   description:
-    "Compare live Riftbound TCG card prices across stores in Australia, New Zealand, the United States and the United Kingdom, and find the cheapest place to buy Riftbound singles and sealed. Updated daily.",
+    "Compare live Riftbound TCG card prices across AU, NZ, US & UK stores to find the cheapest place to buy singles and sealed. Updated daily.",
   keywords: [
     "buy Riftbound cards",
     "Riftbound prices",
