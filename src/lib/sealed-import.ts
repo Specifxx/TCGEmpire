@@ -3,7 +3,7 @@
 // singles importer (price-import.ts) deliberately skips these; this complements it.
 import { prisma } from "./db";
 import { RETAILER_LIST } from "./retailers";
-import { isEbayEnabled, isEbayRateLimited, searchEbaySealed, primeEbayBudget } from "./ebay";
+import { isEbayEnabled, isEbayRateLimited, searchEbaySealed, primeEbayBudget, sealedFloorCents } from "./ebay";
 import { fetchTcgplayerSealed, tcgProductUrl, tcgImageUrl } from "./tcgplayer";
 
 const UA = {
@@ -51,7 +51,7 @@ const SEALED_TITLE =
 // through otherwise. Condition codes (NM/LP/…) and a set name in parentheses
 // (e.g. "(Origins: Proving Grounds)") are tell-tale signs of a single card.
 const SEALED_EXCLUDE =
-  /\bsingle\b|playmat|deck\s*box|binder|toploader|top\s*loader|dice|counter|\btoken\b|card\s*\d|\/\d{2,3}\b|chinese|japanese|korean|simplified|traditional|\bbulk\s+(?:lot|cards|commons?|singles?)\b|\bopened\b|live\s*break|\bticket\b|\b(?:nm|lp|mp|hp|dmg)\b|near\s*mint|lightly\s*played|moderately\s*played|heavily\s*played|\([^)]*\b(?:origins|spirit\s*forged|spiritforged|unleashed|vendetta|proving\s*grounds)\b[^)]*\)/i;
+  /\bsingle\b|playmat|deck\s*box|binder|toploader|top\s*loader|dice|counter|\btoken\b|card\s*\d|\/\d{2,3}\b|chinese|japanese|korean|simplified|traditional|\bbulk\s+(?:lot|cards|commons?|singles?)\b|\bopened\b|live\s*break|\bticket\b|protector|acrylic|magnetic|\bempty\b|box\s*only|storage|\bstand\b|\bholder\b|divider|topper|\binsert\b|\b(?:nm|lp|mp|hp|dmg)\b|near\s*mint|lightly\s*played|moderately\s*played|heavily\s*played|\([^)]*\b(?:origins|spirit\s*forged|spiritforged|unleashed|vendetta|proving\s*grounds)\b[^)]*\)/i;
 
 async function fetchJson(url: string): Promise<any | null> {
   try {
@@ -225,14 +225,20 @@ export async function importSealed(): Promise<number> {
       { groupKey: "UNL|Nexus Night Pack", setCode: "UNL", name: "Unleashed Nexus Night Promo Pack", productType: "Nexus Night Pack", imageUrl: null as string | null },
     ];
     const haveKeys = new Set(groups.map((g) => g.groupKey));
+    // Trusted reference = cheapest NON-eBay (store/TCGplayer) price for the product, so
+    // the eBay search can reject listings priced implausibly below the real product.
+    const trustedRef = (g: SealedGroup): number | null => {
+      const nonEbay = g.listings.filter((l) => l.retailer !== "ebay").map((l) => l.priceCents);
+      return nonEbay.length ? Math.min(...nonEbay) : null;
+    };
     const searchList = [
-      ...groups.map((g) => ({ groupKey: g.groupKey, setCode: g.setCode, name: g.name, productType: g.productType, imageUrl: g.imageUrl })),
-      ...NEXUS_SEEDS.filter((s) => !haveKeys.has(s.groupKey)),
+      ...groups.map((g) => ({ groupKey: g.groupKey, setCode: g.setCode, name: g.name, productType: g.productType, imageUrl: g.imageUrl, referenceCents: trustedRef(g) })),
+      ...NEXUS_SEEDS.filter((s) => !haveKeys.has(s.groupKey)).map((s) => ({ ...s, referenceCents: null as number | null })),
     ];
     const ebayRows: any[] = [];
     for (const g of searchList) {
       if (isEbayRateLimited()) break;
-      const r = await searchEbaySealed(g.name, g.productType, g.setCode);
+      const r = await searchEbaySealed(g.name, g.productType, g.setCode, g.referenceCents);
       if (!r) continue;
       ebayRows.push({
         groupKey: g.groupKey,
@@ -317,10 +323,26 @@ export async function refreshTcgplayerSealed(): Promise<number> {
 // Delete stored sealed rows whose title should now be excluded — independent of
 // scraping, so stale data gets cleaned even when a store didn't refresh.
 export async function cleanupStaleSealed(): Promise<number> {
-  const rows = await prisma.sealedListing.findMany({ select: { id: true, title: true, retailer: true } });
+  const rows = await prisma.sealedListing.findMany({
+    select: { id: true, title: true, retailer: true, productType: true, groupKey: true, country: true, priceCents: true },
+  });
+  // Trusted reference per market+product: the cheapest NON-eBay (store/TCGplayer) price.
+  const trusted = new Map<string, number>();
+  for (const r of rows) {
+    if (r.retailer === "ebay") continue;
+    const k = `${r.country}|${r.groupKey}`;
+    const cur = trusted.get(k);
+    if (cur == null || r.priceCents < cur) trusted.set(k, r.priceCents);
+  }
   const ids = rows
-    // TCGplayer rows come from the official sealed catalogue — never title-filter them.
-    .filter((r) => r.retailer !== "tcgplayer" && (!SEALED_TITLE.test(r.title) || SEALED_EXCLUDE.test(r.title) || !isRiftboundSealed(r.title)))
+    .filter((r) => {
+      // Title filters — TCGplayer's official catalogue is trusted, never title-filter it.
+      if (r.retailer !== "tcgplayer" && (!SEALED_TITLE.test(r.title) || SEALED_EXCLUDE.test(r.title) || !isRiftboundSealed(r.title))) return true;
+      // eBay price-sanity: drop listings priced implausibly below the trusted price /
+      // per-type floor (an accessory or mis-listing that escaped the title filter).
+      if (r.retailer === "ebay" && r.priceCents < sealedFloorCents(r.productType, trusted.get(`${r.country}|${r.groupKey}`) ?? null)) return true;
+      return false;
+    })
     .map((r) => r.id);
   if (ids.length) await prisma.sealedListing.deleteMany({ where: { id: { in: ids } } });
   return ids.length;

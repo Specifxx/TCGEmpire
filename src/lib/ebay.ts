@@ -340,11 +340,51 @@ const SEALED_TYPE_KW: Record<string, RegExp> = {
   "Starter Set": /starter|two[-\s]?player/i,
   Tin: /\btin\b/i,
 };
+// Accessories and non-product listings that share a sealed product's keywords — a
+// "booster box PROTECTOR", "acrylic display CASE", "EMPTY box", a single art/code
+// card, etc. These are the main source of absurd low "sealed" prices (a $22 Origins
+// "booster box" that's really a display-box protector), so exclude them outright.
 const SEALED_EXCLUDE_EBAY =
-  /\bsingle\b|proxy|sleeve|playmat|empty|\bcard\b|\d+\s*\/\s*\d+|chinese|japanese|korean|toploader|binder/i;
+  /\bsingle\b|proxy|sleeve|playmat|\bempty\b|\bcard\b|\d+\s*\/\s*\d+|chinese|japanese|korean|toploader|binder|protector|acrylic|magnetic|\bfits\b|storage|box\s*only|no\s*(?:cards?|packs?)|\bopened\b|\bstand\b|\bholder\b|divider|topper|spacer|\binsert\b|figure|plush|keychain|key\s*ring|sticker|lanyard|poster|wallpaper|digital|code\s*card|art\s*card/i;
+
+// Per-type minimum plausible price (AUD cents) for an eBay sealed listing. A real
+// booster box is never $22 — anything below the floor is an accessory/empty/mis-listed
+// item that escaped the keyword filter. The floor is the LARGER of this absolute
+// minimum and half the trusted (store/TCGplayer) reference price, so it adapts per
+// product yet still bites when no reference exists (e.g. the Nexus Night seeds).
+const SEALED_MIN_CENTS: Record<string, number> = {
+  "Booster Box": 4000,
+  "Booster Case": 12000,
+  "Booster Display": 4000,
+  "Proving Grounds Case": 5000,
+  "Box Set": 1500,
+  Bundle: 1500,
+  "Pre-Rift Event Kit": 1500,
+  "Pre-Rift Kit": 800,
+  "Proving Grounds": 800,
+  "Starter Set": 800,
+  Tin: 800,
+  "Champion Deck": 800,
+  "Sleeved Booster (Art Set)": 800,
+  "Nexus Night Pack": 200,
+  "Promo Pack": 200,
+  "Sleeved Booster": 200,
+  "Booster Pack": 300,
+};
+
+// The minimum price an eBay sealed listing must clear to be trusted: the larger of the
+// per-type floor and 50% of the known store/TCGplayer reference (when we have one).
+export function sealedFloorCents(productType: string, referenceCents?: number | null): number {
+  const absolute = SEALED_MIN_CENTS[productType] ?? 300;
+  const relative = referenceCents && referenceCents > 0 ? Math.round(referenceCents * 0.5) : 0;
+  return Math.max(absolute, relative);
+}
 
 // Lowest legitimate AU eBay listing for a sealed product (booster box, pack, …).
-export async function searchEbaySealed(name: string, productType: string, setCode: string | null): Promise<EbayResult | null> {
+// `referenceCents` is the trusted store/TCGplayer price for this product (when known)
+// — listings priced implausibly below it (or below the per-type floor) are dropped as
+// accessories / mis-listings.
+export async function searchEbaySealed(name: string, productType: string, setCode: string | null, referenceCents?: number | null): Promise<EbayResult | null> {
   const token = await getToken();
   if (!token) return null;
   const kw = SEALED_TYPE_KW[productType];
@@ -380,6 +420,7 @@ export async function searchEbaySealed(name: string, productType: string, setCod
   const items: any[] = data.itemSummaries ?? [];
 
   const setName = setCode ? (SET_NAMES[setCode] ?? setCode) : null;
+  const floor = sealedFloorCents(productType, referenceCents);
   const valid = items
     .filter((it) => it?.price?.value)
     .filter((it) => /riftbound/i.test(it.title ?? ""))
@@ -387,9 +428,14 @@ export async function searchEbaySealed(name: string, productType: string, setCod
     .filter((it) => !setName || new RegExp(setName.replace(/\s+/g, "\\s*"), "i").test(it.title ?? "") || !setCode)
     .filter((it) => !SEALED_EXCLUDE_EBAY.test(it.title ?? ""))
     .filter((it) => !isForeignListing(it))
+    // Price-sanity: drop anything below the per-type / reference floor (the $22
+    // "booster box" accessory class).
+    .filter((it) => Math.round(parseFloat(it.price.value) * 100) >= floor)
     .sort((a, b) => delivered(a) - delivered(b));
 
-  const best = valid[0];
+  // Secondary net for a low outlier that cleared the floor (e.g. a mis-listed item in
+  // a thin result set): drop the cheapest while it's a gross outlier vs the median.
+  const best = pruneCheapOutliers(valid);
   if (!best) return null;
   return {
     priceCents: Math.round(parseFloat(best.price.value) * 100),
