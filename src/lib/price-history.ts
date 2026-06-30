@@ -82,10 +82,16 @@ export async function getPriceMovers(country: Country = "AU", limit = LIST_SIZE)
     stats.push({ cardId, points: pts, now, ref7: ref7.v, high, pct7, discount });
   }
 
-  const spikingStats = stats.filter((s) => s.pct7 > 1).sort((a, b) => b.pct7 - a.pct7).slice(0, limit);
-  const plummetStats = stats.filter((s) => s.pct7 < -1).sort((a, b) => a.pct7 - b.pct7).slice(0, limit);
+  // Outlier guard: a ≥80% one-week swing (or ≥80% off the recent high) is almost
+  // always a data-quality artifact — a mismatched listing or a one-off junk price —
+  // not a real market move, so we drop it rather than headline an absurd %. An
+  // equally-absurd spike (≥300%) is the same bug in the other direction.
+  const OUTLIER_DROP = 80;
+  const OUTLIER_SPIKE = 300;
+  const spikingStats = stats.filter((s) => s.pct7 > 1 && s.pct7 < OUTLIER_SPIKE).sort((a, b) => b.pct7 - a.pct7).slice(0, limit);
+  const plummetStats = stats.filter((s) => s.pct7 < -1 && s.pct7 > -OUTLIER_DROP).sort((a, b) => a.pct7 - b.pct7).slice(0, limit);
   // Best value = biggest discount off the recent high (and actually down, not flat).
-  const valueStats = stats.filter((s) => s.discount > 5 && s.now < s.high).sort((a, b) => b.discount - a.discount).slice(0, limit);
+  const valueStats = stats.filter((s) => s.discount > 5 && s.discount < OUTLIER_DROP && s.now < s.high).sort((a, b) => b.discount - a.discount).slice(0, limit);
 
   // Hydrate tile data for every card we'll show (in the requested market's currency).
   const ids = Array.from(new Set([...spikingStats, ...plummetStats, ...valueStats].map((s) => s.cardId)));
