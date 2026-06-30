@@ -118,6 +118,10 @@ jobs:
             echo "No new commit this run — nothing to push."
             exit 0
           fi
+          # The Claude action revokes its installation token in its post-step and can
+          # clobber the git credential actions/checkout persisted, so re-point origin at
+          # an explicitly-authenticated URL (workflow GITHUB_TOKEN) before pushing.
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           # Always exactly "main + today's commit": force-push to the bot's own branch.
           git push --force origin HEAD:claude/daily-growth
           if ! gh pr view claude/daily-growth --json number >/dev/null 2>&1; then
