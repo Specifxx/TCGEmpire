@@ -1,0 +1,65 @@
+name: IndexNow submit (Bing/Yandex) — RiftCompare
+
+# On-demand: submit every URL in the live sitemap to IndexNow so Bing/Yandex
+# recrawl now. Safe to re-run anytime. Waits for the key file to be live first
+# (so it works right after a deploy), then posts the sitemap URLs in batches.
+on:
+  workflow_dispatch:
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Submit sitemap URLs to IndexNow
+        run: |
+          python3 - <<'PY'
+          import urllib.request, json, time, re, sys
+          HOST = "riftcompare.com"
+          KEY  = "43ac93dd97a44d4894bedf52d621c57c"
+          KEYLOC = f"https://{HOST}/indexnow.txt"
+
+          def get(url, timeout=30):
+              req = urllib.request.Request(url, headers={"User-Agent": "indexnow-submit"})
+              return urllib.request.urlopen(req, timeout=timeout).read().decode("utf-8", "replace")
+
+          # 1) Wait for the key file to serve the key (handles fresh deploys).
+          ok = False
+          for _ in range(30):
+              try:
+                  if get(KEYLOC, 10).strip() == KEY:
+                      ok = True; break
+              except Exception as e:
+                  print("key file not ready:", e)
+              time.sleep(10)
+          if not ok:
+              print("Key file never served the key — aborting (re-run after deploy)."); sys.exit(0)
+          print("Key file verified live.")
+
+          # 2) Collect page URLs from the sitemap (follow a sitemap index if present).
+          def locs(xml): return re.findall(r"<loc>\s*(.*?)\s*</loc>", xml)
+          root = get(f"https://{HOST}/sitemap.xml")
+          found = locs(root)
+          urls, children = [], [u for u in found if u.endswith(".xml")]
+          urls += [u for u in found if not u.endswith(".xml")]
+          for c in children:
+              try: urls += [u for u in locs(get(c)) if not u.endswith(".xml")]
+              except Exception as e: print("child sitemap failed", c, e)
+          urls = sorted(set(urls))
+          print("Collected", len(urls), "URLs.")
+          if not urls: sys.exit(0)
+
+          # 3) Submit in batches (IndexNow cap = 10k URLs/request).
+          for i in range(0, len(urls), 10000):
+              batch = urls[i:i+10000]
+              body = json.dumps({"host": HOST, "key": KEY, "keyLocation": KEYLOC, "urlList": batch}).encode()
+              req = urllib.request.Request("https://api.indexnow.org/indexnow", data=body,
+                                           headers={"Content-Type": "application/json; charset=utf-8"})
+              try:
+                  r = urllib.request.urlopen(req, timeout=30)
+                  print(f"batch {i//10000}: HTTP {r.status} ({len(batch)} URLs)")
+              except urllib.error.HTTPError as e:
+                  print(f"batch {i//10000}: HTTP {e.code} ({len(batch)} URLs) — {e.read().decode('utf-8','replace')[:200]}")
+              except Exception as e:
+                  print(f"batch {i//10000}: error {e}")
+          PY
