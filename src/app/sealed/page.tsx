@@ -7,9 +7,25 @@ import { COUNTRIES } from "@/lib/country";
 import { affiliateUrl, ebayAffiliateUrl } from "@/lib/affiliate";
 import { OutboundLink } from "@/components/OutboundLink";
 import { Reveal } from "@/components/Reveal";
+import { SealedFilters } from "@/components/SealedFilters";
+import { SealedSort } from "@/components/SealedSort";
 import { SITE_URL } from "@/lib/site";
 
 export const revalidate = 900;
+
+interface SealedParams {
+  q?: string | string[];
+  type?: string | string[];
+  set?: string | string[];
+  min?: string | string[];
+  max?: string | string[];
+  instock?: string | string[];
+  sort?: string | string[];
+}
+const one = (v?: string | string[]) => (Array.isArray(v) ? v[0] ?? "" : v ?? "");
+const csvParam = (v?: string | string[]) => one(v).split(",").map((s) => s.trim()).filter(Boolean);
+const isFilteredParams = (sp: SealedParams) =>
+  Boolean(one(sp.q) || one(sp.type) || one(sp.set) || one(sp.min) || one(sp.max) || one(sp.instock));
 
 // Marketplace hosts per site market (NZ has no local eBay/Amazon — the AU sites
 // are the closest and ship there).
@@ -30,8 +46,8 @@ const SEALED_SEARCHES = [
 // Internal search-result views (?q=) are noindex'd (Google/Bing discourage indexing
 // site-search results); every variant canonicalises to the clean /sealed so crawl
 // signals concentrate on the one page we want ranked. Mirrors browse/page.tsx.
-export async function generateMetadata({ searchParams }: { searchParams: { q?: string | string[] } }): Promise<Metadata> {
-  const q = (typeof searchParams.q === "string" ? searchParams.q : "").trim();
+export async function generateMetadata({ searchParams }: { searchParams: SealedParams }): Promise<Metadata> {
+  const q = one(searchParams.q).trim();
   return {
     title: q
       ? `${q} — Riftbound sealed products`
@@ -39,11 +55,11 @@ export async function generateMetadata({ searchParams }: { searchParams: { q?: s
     description:
       "Compare prices on sealed Riftbound products — booster boxes, booster packs, Proving Grounds, bundles and more — across stores to find the cheapest.",
     alternates: { canonical: "/sealed" },
-    robots: q ? { index: false, follow: true } : undefined,
+    robots: isFilteredParams(searchParams) ? { index: false, follow: true } : undefined,
   };
 }
 
-export default async function SealedPage({ searchParams }: { searchParams: { q?: string | string[] } }) {
+export default async function SealedPage({ searchParams }: { searchParams: SealedParams }) {
   const country = getCountry();
   const info = COUNTRIES[country];
   // Sealed data is sourced per market (AU/NZ stores + US TCGplayer). For a market
@@ -57,29 +73,54 @@ export default async function SealedPage({ searchParams }: { searchParams: { q?:
   }
   const usingFallback = priceCountry !== country;
   const fmt = (cents: number) => formatMoney(cents, COUNTRIES[priceCountry].currency);
-  const q = (typeof searchParams.q === "string" ? searchParams.q : "").trim();
+  const q = one(searchParams.q).trim();
   const ql = q.toLowerCase();
-  const groups = ql
-    ? all.filter(
-        (g) =>
-          g.name.toLowerCase().includes(ql) ||
-          g.productType.toLowerCase().includes(ql) ||
-          (g.setCode ?? "").toLowerCase().includes(ql)
-      )
-    : // Default view: float the freshly-live Vendetta (VEN) sealed to the top via a
-      // stable sort, leaving every other group in its original order.
-      all
-        .map((g, i) => [g, i] as const)
-        .sort((a, b) => {
-          const av = a[0].setCode === "VEN" ? 0 : 1;
-          const bv = b[0].setCode === "VEN" ? 0 : 1;
-          return av - bv || a[1] - b[1];
-        })
-        .map(([g]) => g);
+  const typesSel = csvParam(searchParams.type);
+  const setsSel = csvParam(searchParams.set);
+  const minCents = one(searchParams.min) ? Math.round(parseFloat(one(searchParams.min)) * 100) : null;
+  const maxCents = one(searchParams.max) ? Math.round(parseFloat(one(searchParams.max)) * 100) : null;
+  const instock = one(searchParams.instock) === "1";
+  const sort = one(searchParams.sort);
+  const isFiltered = isFilteredParams(searchParams);
+
+  // Facet options — only the product types / sets that actually exist in the feed.
+  const typeOptions = [...new Set(all.map((g) => g.productType))].sort((a, b) => a.localeCompare(b));
+  const setOptions = [...new Set(all.map((g) => g.setCode).filter((c): c is string => !!c))]
+    .sort()
+    .map((code) => ({ code, name: code }));
+
+  let groups = all;
+  if (typesSel.length) groups = groups.filter((g) => typesSel.includes(g.productType));
+  if (setsSel.length) groups = groups.filter((g) => g.setCode != null && setsSel.includes(g.setCode));
+  if (instock) groups = groups.filter((g) => g.storeCount > 0);
+  if (minCents != null) groups = groups.filter((g) => g.lowestPriceCents != null && g.lowestPriceCents >= minCents);
+  if (maxCents != null) groups = groups.filter((g) => g.lowestPriceCents != null && g.lowestPriceCents <= maxCents);
+  if (ql)
+    groups = groups.filter(
+      (g) =>
+        g.name.toLowerCase().includes(ql) ||
+        g.productType.toLowerCase().includes(ql) ||
+        (g.setCode ?? "").toLowerCase().includes(ql)
+    );
+
+  if (sort === "price_asc") groups = [...groups].sort((a, b) => (a.lowestPriceCents ?? Infinity) - (b.lowestPriceCents ?? Infinity));
+  else if (sort === "price_desc") groups = [...groups].sort((a, b) => (b.lowestPriceCents ?? -1) - (a.lowestPriceCents ?? -1));
+  else if (sort === "name") groups = [...groups].sort((a, b) => a.name.localeCompare(b.name));
+  else
+    // Default: float the freshly-live Vendetta (VEN) sealed to the top via a stable
+    // sort, leaving every other group in its (already-filtered) order.
+    groups = groups
+      .map((g, i) => [g, i] as const)
+      .sort((a, b) => {
+        const av = a[0].setCode === "VEN" ? 0 : 1;
+        const bv = b[0].setCode === "VEN" ? 0 : 1;
+        return av - bv || a[1] - b[1];
+      })
+      .map(([g]) => g);
 
   // Show the "Vendetta is here" callout only on the unfiltered view, and only when
   // Vendetta sealed actually exists in the feed.
-  const hasVendetta = !q && all.some((g) => g.setCode === "VEN");
+  const hasVendetta = !isFiltered && all.some((g) => g.setCode === "VEN");
 
   // Structured data: BreadcrumbList (mirrors the visible nav) + an ItemList of the
   // rendered groups. Each group with a live price AND ≥1 in-stock listing carries a
@@ -176,23 +217,34 @@ export default async function SealedPage({ searchParams }: { searchParams: { q?:
         </div>
       )}
 
-      {groups.length === 0 ? (
-        <div className="card-surface grid place-items-center p-16 text-center text-slate-400">
-          <div>
-            <p className="text-lg font-semibold text-white">
-              {q ? `No sealed products match “${q}”` : "No sealed products yet"}
+      <div className="flex flex-col gap-6 lg:flex-row">
+        <SealedFilters types={typeOptions} sets={setOptions} currency={currency} />
+        <section className="min-w-0 flex-1">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-slate-400">
+              <span className="num font-semibold text-white">{groups.length.toLocaleString()}</span>{" "}
+              {groups.length === 1 ? "product" : "products"}
+              {q && <> for <span className="text-brand-400">&ldquo;{q}&rdquo;</span></>}
             </p>
-            <p className="mt-1 text-sm">
-              {q ? (
-                <Link href="/sealed" className="text-brand-400 hover:underline">Show all sealed products</Link>
-              ) : (
-                "Our feeds refresh regularly — check back soon."
-              )}
-            </p>
+            <SealedSort />
           </div>
-        </div>
-      ) : (
-        <Reveal stagger className="grid gap-4 lg:grid-cols-2">
+          {groups.length === 0 ? (
+            <div className="card-surface grid place-items-center p-16 text-center text-slate-400">
+              <div>
+                <p className="text-lg font-semibold text-white">
+                  {isFiltered ? "No sealed products match your filters" : "No sealed products yet"}
+                </p>
+                <p className="mt-1 text-sm">
+                  {isFiltered ? (
+                    <Link href="/sealed" className="text-brand-400 hover:underline">Clear filters</Link>
+                  ) : (
+                    "Our feeds refresh regularly — check back soon."
+                  )}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <Reveal stagger className="grid gap-4 lg:grid-cols-2">
           {groups.map((g) => (
             <div key={g.groupKey} className="card-surface overflow-hidden transition-colors hover:border-ink-600">
               <div className="flex gap-4 p-4">
@@ -243,8 +295,10 @@ export default async function SealedPage({ searchParams }: { searchParams: { q?:
               </ul>
             </div>
           ))}
-        </Reveal>
-      )}
+            </Reveal>
+          )}
+        </section>
+      </div>
 
       {/* High-AOV marketplace searches: sealed boxes are the biggest baskets on the
           site, and eBay/Amazon both carry them. Affiliate-tagged per market. */}
