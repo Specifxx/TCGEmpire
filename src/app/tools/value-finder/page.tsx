@@ -63,7 +63,7 @@ export default async function ValueFinderPage() {
           <span>/</span>
           <span className="text-slate-300">Value Finder</span>
         </nav>
-        <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">🔎 Value Finder</h1>
+        <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">Value Finder</h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
           {info.adjective} cards trading <strong className="text-slate-200">below their own recent average</strong> — a
           mean-reversion signal for value buyers and flippers. Ranked by how far below their usual price they sit, not just
@@ -73,15 +73,14 @@ export default async function ValueFinderPage() {
 
       {!premium ? (
         <div className="card-surface p-6 text-center">
-          <p className="text-4xl" aria-hidden>🔎</p>
-          <h2 className="mt-2 text-lg font-extrabold text-white">Value Finder is a Premium tool</h2>
+          <h2 className="text-lg font-extrabold text-white">Value Finder is a Premium tool</h2>
           <p className="mx-auto mt-1 max-w-md text-sm text-slate-400">
             Premium members get the screener: the cards trading furthest below their 30-day average right now, with the
             discount and how far off their recent high each one is.
           </p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
             {user ? (
-              <Link href="/premium" className="btn-primary text-sm">★ See Premium</Link>
+              <Link href="/premium" className="btn-primary text-sm">See Premium</Link>
             ) : (
               <Link href="/register?next=/tools/value-finder" className="btn-primary text-sm">Create a free account</Link>
             )}
@@ -111,7 +110,7 @@ export default async function ValueFinderPage() {
             </thead>
             <tbody className="divide-y divide-ink-800">
               {picks.map((p) => (
-                <tr key={p.card.id} className="hover:bg-ink-900/50">
+                <tr key={p.card.id} className="hover:bg-ink-800">
                   <td className="px-4 py-2">
                     <CardQuickLink card={p.card} className="flex items-center gap-2.5">
                       {p.card.imageThumbUrl && (
@@ -124,10 +123,10 @@ export default async function ValueFinderPage() {
                       </span>
                     </CardQuickLink>
                   </td>
-                  <td className="px-2 py-2 text-right font-semibold text-accent">{formatMoney(p.currentCents, info.currency)}</td>
-                  <td className="px-2 py-2 text-right text-slate-400">{formatMoney(p.avgCents, info.currency)}</td>
-                  <td className="px-2 py-2 text-right font-bold text-brand-400">▼ {p.discountPct}%</td>
-                  <td className="px-4 py-2 text-right text-slate-300">{p.offHighPct}%</td>
+                  <td className="num px-2 py-2 text-right font-semibold text-accent">{formatMoney(p.currentCents, info.currency)}</td>
+                  <td className="num px-2 py-2 text-right text-slate-400">{formatMoney(p.avgCents, info.currency)}</td>
+                  <td className="num px-2 py-2 text-right font-bold text-brand-400">−{p.discountPct}%</td>
+                  <td className="num px-4 py-2 text-right text-slate-300">{p.offHighPct}%</td>
                 </tr>
               ))}
             </tbody>

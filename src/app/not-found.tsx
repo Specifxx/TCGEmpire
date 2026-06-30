@@ -7,7 +7,7 @@ export default function NotFound() {
   const liveSets = SETS.filter((s) => !s.comingSoon);
   return (
     <div className="mx-auto max-w-2xl py-12 text-center">
-      <p className="font-mono text-6xl font-extrabold text-brand-400">404</p>
+      <p className="num text-6xl font-extrabold text-brand-400">404</p>
       <h1 className="mt-3 text-2xl font-extrabold text-white">This page doesn&apos;t exist</h1>
       <p className="mt-2 text-sm leading-relaxed text-slate-400">
         The card or page you&apos;re after may have moved or never existed. Try searching the
@@ -15,7 +15,7 @@ export default function NotFound() {
       </p>
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
         <Link href="/browse" className="btn-primary">Search the card database</Link>
-        <Link href="/movers" className="btn-ghost">📈 Price movers</Link>
+        <Link href="/movers" className="btn-ghost">Price movers</Link>
         <Link href="/sealed" className="btn-ghost">Sealed products</Link>
       </div>
       <div className="mt-8">

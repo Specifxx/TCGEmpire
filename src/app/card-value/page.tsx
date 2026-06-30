@@ -98,8 +98,8 @@ export default async function CardValuePage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify([faqLd, breadcrumbLd, appLd]) }} />
 
       {/* Hero — search-first */}
-      <section className="card-surface overflow-hidden">
-        <div className="bg-gradient-to-br from-brand-600/25 via-ink-850 to-gold/15 px-6 py-10 text-center">
+      <section className="card-surface overflow-hidden border-l-2 border-brand-500 bg-ink-900">
+        <div className="px-6 py-10 text-center">
           <h1 className="mx-auto max-w-2xl font-display text-3xl font-extrabold text-white sm:text-4xl">
             Riftbound card value checker
           </h1>
@@ -157,15 +157,15 @@ export default async function CardValuePage() {
 
       {/* Routes deeper into value content */}
       <section className="grid gap-4 sm:grid-cols-3">
-        <Link href="/guides/most-valuable-riftbound-cards" className="card-surface p-4 transition-colors hover:border-brand-500/60">
+        <Link href="/guides/most-valuable-riftbound-cards" className="card-surface p-4 transition-colors hover:border-ink-600">
           <div className="text-sm font-extrabold text-white">Most valuable cards, explained</div>
           <p className="mt-1 text-xs text-slate-400">The chase cards and why they cost what they do.</p>
         </Link>
-        <Link href="/movers" className="card-surface p-4 transition-colors hover:border-brand-500/60">
+        <Link href="/movers" className="card-surface p-4 transition-colors hover:border-ink-600">
           <div className="text-sm font-extrabold text-white">Price movers</div>
           <p className="mt-1 text-xs text-slate-400">What&apos;s rising and falling across the market this week.</p>
         </Link>
-        <Link href="/tools/value-finder" className="card-surface p-4 transition-colors hover:border-brand-500/60">
+        <Link href="/tools/value-finder" className="card-surface p-4 transition-colors hover:border-ink-600">
           <div className="text-sm font-extrabold text-white">Value Finder <span className="text-[10px] font-bold uppercase text-gold">Premium</span></div>
           <p className="mt-1 text-xs text-slate-400">Screen for cards trading below their recent average.</p>
         </Link>

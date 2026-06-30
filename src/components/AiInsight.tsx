@@ -6,11 +6,11 @@ import { useCountry } from "./CountryProvider";
 type Verdict = "BUY" | "HOLD" | "CAUTION" | "UNKNOWN";
 type Insight = { verdict: Verdict; label: string; summary: string; source: "ai" | "rules" };
 
-const STYLE: Record<Verdict, { chip: string; ring: string; emoji: string }> = {
-  BUY: { chip: "bg-brand-500/20 text-brand-300", ring: "border-brand-500/30", emoji: "🟢" },
-  HOLD: { chip: "bg-gold/15 text-gold", ring: "border-gold/25", emoji: "🟡" },
-  CAUTION: { chip: "bg-rose-500/15 text-rose-300", ring: "border-rose-500/25", emoji: "🔴" },
-  UNKNOWN: { chip: "bg-ink-800 text-slate-400", ring: "border-ink-700", emoji: "🔮" },
+const STYLE: Record<Verdict, { chip: string; ring: string; dot: string }> = {
+  BUY: { chip: "bg-brand-500/20 text-brand-300", ring: "border-brand-500/30", dot: "bg-up" },
+  HOLD: { chip: "bg-gold/15 text-gold", ring: "border-gold/25", dot: "bg-gold" },
+  CAUTION: { chip: "bg-rose-500/15 text-rose-300", ring: "border-rose-500/25", dot: "bg-down" },
+  UNKNOWN: { chip: "bg-ink-800 text-slate-400", ring: "border-ink-700", dot: "bg-ink-600" },
 };
 
 // "AI Tips" — a funny, narrative buy/hold/wait take on a card. Fetched lazily so it
@@ -35,17 +35,19 @@ export function AiInsight({ cardId, compact = false }: { cardId: string; compact
   const s = insight ? STYLE[insight.verdict] : STYLE.UNKNOWN;
 
   return (
-    <div className={`rounded-xl border ${s.ring} bg-ink-950/40 p-4`}>
+    <div className={`rounded-lg border ${s.ring} bg-ink-950/40 p-4`}>
       <div className="mb-1.5 flex items-center gap-2">
-        <span className="text-base">🤖</span>
         <span className="text-xs font-bold uppercase tracking-wide text-slate-300">AI Tips</span>
         {insight?.source === "ai" ? (
-          <span className="chip bg-fuchsia-500/15 text-[10px] font-semibold uppercase tracking-wide text-fuchsia-300">✨ Live AI</span>
+          <span className="chip bg-brand-500/15 text-[10px] font-semibold uppercase tracking-wide text-brand-300">Live AI</span>
         ) : (
           <span className="chip bg-brand-500/10 text-[10px] font-semibold uppercase tracking-wide text-brand-300">Beta</span>
         )}
         {insight && (
-          <span className={`ml-auto chip text-[11px] font-bold ${s.chip}`}>{s.emoji} {insight.label}</span>
+          <span className={`ml-auto chip inline-flex items-center gap-1.5 text-[11px] font-bold ${s.chip}`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} aria-hidden />
+            {insight.label}
+          </span>
         )}
       </div>
       {insight ? (

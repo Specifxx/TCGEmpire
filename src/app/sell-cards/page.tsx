@@ -59,10 +59,7 @@ export default function SellCardsPage() {
     <div className="mx-auto max-w-3xl">
       {/* Hero */}
       <div className="card-surface overflow-hidden">
-        <div className="relative bg-gradient-to-br from-brand-600/25 via-ink-850 to-gold/15 px-6 py-10 text-center">
-          <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-ink-950/60 text-2xl shadow-glow">
-            💸
-          </div>
+        <div className="relative border-l-2 border-brand-500 bg-ink-900 px-6 py-10 text-center">
           <h1 className="font-display text-3xl font-extrabold text-white">Sell us your cards</h1>
           <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-slate-300">
             Clearing out a collection or off-loading spares? Sell your Riftbound singles and sealed
@@ -70,7 +67,7 @@ export default function SellCardsPage() {
             and make the whole thing painless.
           </p>
           <a href={mailto("Buylist — cards I'd like to sell")} className="btn-primary mt-6 inline-flex text-base">
-            ✉️ Email your list to get a quote
+            Email your list to get a quote
           </a>
           <p className="mt-3 text-xs text-slate-500">No account needed. Quotes are obligation-free.</p>
         </div>
@@ -164,7 +161,7 @@ export default function SellCardsPage() {
           Send through your list and we&apos;ll get a quote back to you, usually within a day.
         </p>
         <a href={mailto("Buylist — cards I'd like to sell")} className="btn-primary mt-4 inline-flex">
-          ✉️ Email {CONTACT_EMAIL}
+          Email {CONTACT_EMAIL}
         </a>
       </div>
     </div>

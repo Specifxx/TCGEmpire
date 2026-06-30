@@ -16,30 +16,26 @@ export const metadata: Metadata = {
 
 // Each Premium feature, with where to go once you've unlocked it. Features without
 // a destination (ad-free, supporting the site) show "✓ Active" instead of a link.
-const FEATURES: { emoji: string; title: string; body: string; href: string | null; cta: string | null }[] = [
+const FEATURES: { title: string; body: string; href: string | null; cta: string | null }[] = [
   {
-    emoji: "🧺",
     title: "Best-Basket optimiser",
     body: "The cheapest way to actually buy a whole deck or wishlist — the smartest split across stores once postage and free-shipping thresholds are in.",
     href: "/tools/best-basket",
     cta: "Open Best Basket",
   },
   {
-    emoji: "🔎",
     title: "Value Finder",
     body: "A screener for cards trading below their own recent average — spot undervalued cards before they bounce back.",
     href: "/tools/value-finder",
     cta: "Open Value Finder",
   },
   {
-    emoji: "🚫",
     title: "Ad-free everywhere",
     body: "No ads on any page while you're Premium — it's automatic, nothing to switch on.",
     href: null,
     cta: null,
   },
   {
-    emoji: "💚",
     title: "You keep RiftCompare independent",
     body: "Premium pays for the servers and the price data, and keeps the core — including the portfolio tracker — free for everyone.",
     href: null,
@@ -68,13 +64,13 @@ export default async function PremiumPage() {
       />
 
       <div className="card-surface overflow-hidden">
-        <div className="bg-gradient-to-br from-gold/20 via-ink-850 to-brand-600/15 px-6 py-10 text-center">
-          <span className="chip mb-3 inline-flex bg-gold/15 font-bold uppercase tracking-wide text-gold">★ Premium</span>
+        <div className="border-l-2 border-brand-500 bg-ink-900 px-6 py-10 text-center">
+          <span className="chip mb-3 inline-flex bg-gold/15 font-bold uppercase tracking-wide text-gold">Premium</span>
           {already ? (
             <>
-              <h1 className="mx-auto max-w-xl font-display text-3xl font-extrabold text-white">You&apos;re Premium ★</h1>
+              <h1 className="mx-auto max-w-xl font-display text-3xl font-extrabold text-white">You&apos;re Premium</h1>
               <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-300">
-                Here&apos;s everything you&apos;ve unlocked — jump straight into any of it below. Thanks for supporting RiftCompare 💚
+                Here&apos;s everything you&apos;ve unlocked — jump straight into any of it below. Thanks for supporting RiftCompare.
               </p>
             </>
           ) : (
@@ -91,11 +87,8 @@ export default async function PremiumPage() {
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2">
         {FEATURES.map((f) => (
-          <div key={f.title} className="card-surface flex flex-col p-4">
-            <div className="flex items-center gap-2.5">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gold/10 text-lg" aria-hidden>{f.emoji}</span>
-              <h2 className="font-bold text-white">{f.title}</h2>
-            </div>
+          <div key={f.title} className="card-surface flex flex-col border-l-2 border-brand-500 p-4">
+            <h2 className="font-bold text-white">{f.title}</h2>
             <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-400">{f.body}</p>
             {already &&
               (f.href ? (
@@ -109,7 +102,7 @@ export default async function PremiumPage() {
         {!already && (
           <div className="card-surface grid place-items-center border-gold/30 p-4 text-center">
             <div>
-              {PREMIUM_PRICE_LABEL && <p className="mb-2 text-2xl font-extrabold text-white">{PREMIUM_PRICE_LABEL}</p>}
+              {PREMIUM_PRICE_LABEL && <p className="num mb-2 text-2xl font-extrabold text-white">{PREMIUM_PRICE_LABEL}</p>}
               <PremiumCta checkoutLive={checkoutLive} signedIn={!!user} />
             </div>
           </div>
@@ -118,10 +111,10 @@ export default async function PremiumPage() {
 
       {already && (
         <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-sm">
-          <Link href="/portfolio" className="btn-ghost">💼 Portfolio</Link>
-          <Link href="/tools/arbitrage" className="btn-ghost">💱 Arbitrage</Link>
-          <Link href="/movers" className="btn-ghost">📈 Movers</Link>
-          <Link href="/market" className="btn-ghost">📊 Market Index</Link>
+          <Link href="/portfolio" className="btn-ghost">Portfolio</Link>
+          <Link href="/tools/arbitrage" className="btn-ghost">Arbitrage</Link>
+          <Link href="/movers" className="btn-ghost">Movers</Link>
+          <Link href="/market" className="btn-ghost">Market Index</Link>
         </div>
       )}
 

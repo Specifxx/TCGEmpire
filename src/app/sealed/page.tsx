@@ -79,14 +79,9 @@ export default async function SealedPage({ searchParams }: { searchParams: { q?:
         <span className="text-slate-300">Sealed</span>
       </nav>
 
-      {/* Compact hero: aurora blob + dotted texture behind a brand→gold wash. The
-          decorative layer is hidden from assistive tech. */}
-      <section className="card-surface animate-fade-up relative mb-5 overflow-hidden">
-        <div className="pointer-events-none absolute inset-0" aria-hidden>
-          <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-brand-500/20 blur-3xl animate-blob" />
-          <div className="hero-dots absolute inset-0 opacity-60" />
-        </div>
-        <div className="relative bg-gradient-to-br from-brand-600/20 via-ink-850/40 to-gold/10 px-6 py-8">
+      {/* Compact hero: flat panel with a brand accent rule. */}
+      <section className="card-surface animate-fade-up mb-5 overflow-hidden border-l-2 border-brand-500 bg-ink-900">
+        <div className="px-6 py-8">
           <h1 className="text-2xl font-extrabold text-white">Sealed Products</h1>
           <p className="mt-1 max-w-2xl text-sm text-slate-400">
             Booster boxes, packs, Proving Grounds, bundles and other sealed Riftbound
@@ -110,8 +105,8 @@ export default async function SealedPage({ searchParams }: { searchParams: { q?:
 
       {/* Freshly-live Vendetta sealed callout — only on the default (unfiltered) view. */}
       {hasVendetta && (
-        <div className="card-surface mb-5 flex flex-wrap items-center gap-3 bg-gradient-to-br from-gold/10 via-ink-850/40 to-brand-600/10 px-5 py-4">
-          <span className="chip bg-gold/20 font-semibold text-gold">✨ NEW</span>
+        <div className="card-surface mb-5 flex flex-wrap items-center gap-3 border-l-2 border-brand-500 bg-ink-900 px-5 py-4">
+          <span className="chip bg-gold/20 font-semibold text-gold">NEW</span>
           <p className="min-w-0 flex-1 text-sm text-slate-300">
             <span className="font-semibold text-white">Vendetta sealed is here</span> — booster
             boxes &amp; packs available now, priced across stores.
@@ -140,7 +135,7 @@ export default async function SealedPage({ searchParams }: { searchParams: { q?:
       ) : (
         <Reveal stagger className="grid gap-4 lg:grid-cols-2">
           {groups.map((g) => (
-            <div key={g.groupKey} className="card-surface overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-glow">
+            <div key={g.groupKey} className="card-surface overflow-hidden transition-colors hover:border-ink-600">
               <div className="flex gap-4 p-4">
                 <div className="h-28 w-28 shrink-0 overflow-hidden rounded-lg bg-ink-900">
                   {g.imageUrl && (
@@ -157,7 +152,7 @@ export default async function SealedPage({ searchParams }: { searchParams: { q?:
                   <div className="mt-1 text-sm text-slate-500">
                     {g.lowestPriceCents != null ? (
                       <>
-                        from <span className="text-lg font-bold text-accent">{fmt(g.lowestPriceCents)}</span>
+                        from <span className="num text-lg font-bold text-accent">{fmt(g.lowestPriceCents)}</span>
                         {" · "}{g.storeCount} {g.storeCount === 1 ? "store" : "stores"}
                       </>
                     ) : (
@@ -178,7 +173,7 @@ export default async function SealedPage({ searchParams }: { searchParams: { q?:
                     {i === 0 && l.inStock && (
                       <span className="chip bg-gold/20 text-gold">Best price</span>
                     )}
-                    <div className={`text-sm font-bold ${i === 0 && l.inStock ? "text-accent" : "text-white"} ${!l.inStock ? "text-slate-500 line-through" : ""}`}>
+                    <div className={`num text-sm font-bold ${i === 0 && l.inStock ? "text-accent" : "text-white"} ${!l.inStock ? "text-slate-500 line-through" : ""}`}>
                       {fmt(l.priceCents)}
                     </div>
                     <OutboundLink href={affiliateUrl(l.url, l.retailer)} retailer={l.retailer} country={country} kind="sealed" className={`${i === 0 && l.inStock ? "btn-accent" : "btn-primary"} px-3 py-1.5 text-xs`}>
@@ -195,7 +190,7 @@ export default async function SealedPage({ searchParams }: { searchParams: { q?:
       {/* High-AOV marketplace searches: sealed boxes are the biggest baskets on the
           site, and eBay/Amazon both carry them. Affiliate-tagged per market. */}
       <section className="card-surface mt-8 p-5">
-        <h2 className="text-lg font-extrabold text-white">🛒 More sealed deals on the big marketplaces</h2>
+        <h2 className="text-lg font-extrabold text-white">More sealed deals on the big marketplaces</h2>
         <p className="mt-1 max-w-2xl text-sm text-slate-400">
           Boxes sell out and restock constantly — eBay and Amazon often have stock (or better
           prices) when stores don&apos;t. Worth a look before you buy.

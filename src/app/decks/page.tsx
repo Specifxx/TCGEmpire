@@ -110,7 +110,7 @@ function DeckGrid({ decks, currency }: { decks: Awaited<ReturnType<typeof resolv
           <Link
             key={d.slug}
             href={`/decks/${d.slug}`}
-            className="group card-surface flex flex-col overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-glow"
+            className="group card-surface flex flex-col overflow-hidden transition-colors hover:border-ink-600"
           >
             <div className="relative aspect-[16/9] w-full overflow-hidden bg-ink-900">
               {d.imageUrl && (
@@ -118,7 +118,7 @@ function DeckGrid({ decks, currency }: { decks: Awaited<ReturnType<typeof resolv
                 <img
                   src={d.imageUrl}
                   alt={d.legend}
-                  className="h-full w-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
+                  className="h-full w-full object-cover object-top"
                 />
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/20 to-transparent" />
@@ -140,9 +140,9 @@ function DeckGrid({ decks, currency }: { decks: Awaited<ReturnType<typeof resolv
               <div className="mt-auto flex items-end justify-between pt-2">
                 <div>
                   <div className="text-[11px] text-slate-500">build cost from</div>
-                  <div className="text-lg font-bold text-accent">{formatMoney(d.totalCents, currency)}</div>
+                  <div className="num text-lg font-bold text-accent">{formatMoney(d.totalCents, currency)}</div>
                 </div>
-                <div className="text-right text-[11px] text-slate-500">
+                <div className="num text-right text-[11px] text-slate-500">
                   {d.pricedCards}/{d.totalCards} cards priced
                 </div>
               </div>

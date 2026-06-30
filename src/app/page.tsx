@@ -159,7 +159,7 @@ export default async function HomePage() {
               <Link
                 key={s.code}
                 href={`/sets/${s.slug}`}
-                className="card-surface flex flex-col gap-1 p-4 transition-all duration-200 hover:-translate-y-1 hover:border-brand-500 hover:shadow-glow"
+                className="card-surface flex flex-col gap-1 p-4 transition-colors duration-200 hover:border-brand-500 hover:bg-ink-800"
               >
                 <span className="flex flex-wrap items-center gap-1.5 text-lg font-bold text-white">
                   {s.code}
@@ -184,7 +184,7 @@ export default async function HomePage() {
               <Link
                 key={k}
                 href={`/domains/${k.toLowerCase()}`}
-                className="chip border border-ink-700 px-3 py-1.5 text-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-105 hover:border-brand-500"
+                className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors duration-200 hover:border-brand-500 hover:bg-ink-800"
                 style={{ color: d.color }}
               >
                 <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: d.color }} />
