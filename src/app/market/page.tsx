@@ -112,7 +112,7 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
   // Cache key is versioned (v2): the cached MarketIndex shape gained `stats`, and the
   // data cache persists across deploys — a stale pre-stats blob would otherwise crash
   // the stats panel. Bumping the key forces a fresh compute with the new shape.
-  const index = await unstable_cache(() => getMarketIndex(market), ["market-index-v2", market], {
+  const index = await unstable_cache(() => getMarketIndex(market), ["market-index-v3", market], {
     revalidate: 1800,
   })();
   const reports = await unstable_cache(getRecentReports, ["market-reports-recent"], { revalidate: 1800 })();
@@ -389,12 +389,14 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
             from the Market selector to see that market&apos;s own index in its local currency.
           </p>
           <p>
-            <strong className="text-slate-300">Key statistics.</strong> Market cap is the aggregate
-            value of the basket — the sum of every constituent&apos;s lowest in-stock price (what it
-            would cost to buy one of each), in the market&apos;s currency. Range is the index&apos;s
-            own low–high over the tracked window (a 52-week-range analogue). Breadth counts how many
-            constituents rose vs fell over the last 7 days, and volatility is the 30-day standard
-            deviation of the index&apos;s daily moves.
+            <strong className="text-slate-300">Key statistics.</strong> Index value is what it would
+            cost to buy <em>one copy of each card</em> in the Index — the sum of every
+            constituent&apos;s lowest in-stock price, in the market&apos;s currency. It is deliberately
+            <strong> not</strong> a circulating-supply market cap: trading-card singles have no public
+            float, so a true price×supply capitalisation can&apos;t be computed — this is the
+            one-of-each basket value. Range is the index&apos;s own low–high over the tracked window (a
+            52-week-range analogue). Breadth counts how many constituents rose vs fell over the last 7
+            days, and volatility is the 30-day standard deviation of the index&apos;s daily moves.
           </p>
           <p>
             Constituents are refreshed from live search data, so the basket evolves with the

@@ -45,7 +45,10 @@ export type IndexConstituent = {
 // The "key statistics" a market is expected to report, derived from the basket and
 // the index series — so both the regional indices and the GLOBAL composite carry them.
 export type MarketStats = {
-  marketCapCents: number; // aggregate value of the basket (Σ constituent lowest prices)
+  // "Index value" = the cost to buy ONE copy of each constituent (Σ of their lowest
+  // prices). NOT a circulating-supply market cap — singles have no public float, so a
+  // true price×supply cap can't be computed; this is the one-of-each basket value.
+  basketValueCents: number;
   avgPriceCents: number; // mean constituent price (priced cards only)
   medianPriceCents: number; // median constituent price
   constituentCount: number; // cards in the basket
@@ -75,9 +78,9 @@ export type MarketIndex = {
 // Derive the market statistics from the (base-100) series and the basket. Pure.
 function computeStats(points: PricePoint[], constituents: IndexConstituent[]): MarketStats {
   const prices = constituents.map((c) => c.priceCents).filter((p) => p > 0);
-  const marketCapCents = prices.reduce((a, b) => a + b, 0);
+  const basketValueCents = prices.reduce((a, b) => a + b, 0); // one of each card
   const priced = prices.length;
-  const avgPriceCents = priced ? Math.round(marketCapCents / priced) : 0;
+  const avgPriceCents = priced ? Math.round(basketValueCents / priced) : 0;
   const sorted = [...prices].sort((a, b) => a - b);
   const medianPriceCents = !priced
     ? 0
@@ -120,7 +123,7 @@ function computeStats(points: PricePoint[], constituents: IndexConstituent[]): M
   }
 
   return {
-    marketCapCents,
+    basketValueCents,
     avgPriceCents,
     medianPriceCents,
     constituentCount: constituents.length,

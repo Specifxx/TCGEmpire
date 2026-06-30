@@ -2,7 +2,7 @@ import { formatMoney, formatMoneyCompact } from "@/lib/format";
 import type { MarketIndex } from "@/lib/market-index";
 
 // The "key statistics" panel for the RiftCompare Index — the stats a real market
-// reports: market cap, average/median price, the period range (52-week-style),
+// reports: index value (one-of-each basket), average/median price, the period range,
 // breadth (advancers vs decliners) and realised volatility. Server component.
 function Stat({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: "up" | "down" }) {
   return (
@@ -26,9 +26,9 @@ export function IndexStats({ index }: { index: MarketIndex }) {
       <div className="mb-2 text-[11px] font-bold uppercase tracking-wide text-slate-500">Key statistics</div>
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
         <Stat
-          label="Market cap"
-          value={formatMoneyCompact(s.marketCapCents, cur)}
-          sub={`${s.constituentCount} cards`}
+          label="Index value"
+          value={formatMoneyCompact(s.basketValueCents, cur)}
+          sub={`1 of each · ${s.constituentCount} cards`}
         />
         <Stat
           label="Avg card"

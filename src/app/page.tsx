@@ -90,7 +90,7 @@ export default async function HomePage() {
     // currency-agnostic, so it reads the same for every market.
     // Key versioned (v2): the MarketIndex shape gained `stats`; the data cache
     // persists across deploys, so a stale pre-stats blob would crash Market Pulse.
-    unstable_cache(() => getMarketIndex("GLOBAL"), ["home-index-global-v2"], { revalidate: 600 })(),
+    unstable_cache(() => getMarketIndex("GLOBAL"), ["home-index-global-v3"], { revalidate: 600 })(),
   ]);
   const storeCount = storeGroups.length;
   const storeWord = storeCount === 1 ? "store" : "stores";

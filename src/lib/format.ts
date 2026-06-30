@@ -18,7 +18,7 @@ export function formatAUD(cents: number): string {
   return formatMoney(cents, "AUD");
 }
 
-// Compact money for large aggregate figures (e.g. an index's market cap), e.g.
+// Compact money for large aggregate figures (e.g. an index's basket value), e.g.
 // "A$48.2k" or "US$1.31M". Falls back to two-decimal money under $1,000.
 export function formatMoneyCompact(cents: number, currency: string = "AUD"): string {
   const sym = SYMBOL[currency] ?? "$";
