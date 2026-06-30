@@ -21,14 +21,21 @@ export async function Navbar() {
           whole window on wide screens. */}
       <div className="mx-auto w-full px-4 sm:px-6 lg:px-8">
        <div className="flex h-16 w-full items-center justify-between gap-2 sm:gap-4">
-        {/* Logo: standalone R mark + text wordmark */}
-        <Link href="/" className="flex shrink-0 items-center gap-2" aria-label="RiftCompare home">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-r-green.png" alt="" aria-hidden width={359} height={353} className="h-9 w-auto" />
-          <span className="hidden text-lg font-extrabold tracking-tight text-white sm:block">
-            Rift<span className="text-brand-400">Compare</span>
-          </span>
-        </Link>
+        {/* Logo + the primary Database link, kept together on the left. On phones the
+            right-hand inline nav collapses into the hamburger, so the Database tab lives
+            here in the header's open space instead. */}
+        <div className="flex shrink-0 items-center gap-1 sm:gap-3">
+          <Link href="/" className="flex shrink-0 items-center gap-2" aria-label="RiftCompare home">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-r-green.png" alt="" aria-hidden width={359} height={353} className="h-9 w-auto" />
+            <span className="hidden text-lg font-extrabold tracking-tight text-white sm:block">
+              Rift<span className="text-brand-400">Compare</span>
+            </span>
+          </Link>
+          <Link href="/browse" className="rounded-lg px-2.5 py-1.5 text-sm font-semibold text-slate-200 hover:bg-ink-800 hover:text-white lg:hidden">
+            Database
+          </Link>
+        </div>
 
         {/* Search — inline on desktop; on smaller screens it gets its own full-width row below */}
         <div className="hidden flex-1 lg:block">
@@ -46,7 +53,8 @@ export async function Navbar() {
           <span className="hidden sm:inline-flex">
             <CommandLauncherButton />
           </span>
-          <Link href="/browse" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:block sm:px-2.5">
+          {/* Database is beside the logo on smaller screens; keep it in the right nav on desktop. */}
+          <Link href="/browse" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:px-2.5 lg:block">
             Database
           </Link>
           {/* Sealed products — high-AOV, right after the database. */}
