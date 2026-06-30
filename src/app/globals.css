@@ -19,6 +19,9 @@ body {
    other axis to `auto`, so the sticky navbar keeps working. */
 html {
   overflow-x: clip;
+  /* Smooth in-page jumps for anchor navs (e.g. the /market section nav). The
+     reduced-motion block below forces this back to `auto`. */
+  scroll-behavior: smooth;
 }
 
 body {

@@ -68,6 +68,18 @@ export async function getLatestMarketReport(): Promise<MarketReportPost | null> 
   return r ? { article: reportToArticle(r), day: r.day, data: parseReportData(r.data) } : null;
 }
 
+// A lightweight list of every daily market wrap (no body/data) for the wrap
+// archive grid. Newest first; best-effort (a DB blip just yields []).
+export async function getMarketReportList(limit = 120) {
+  return prisma.marketReport
+    .findMany({
+      orderBy: { day: "desc" },
+      take: limit,
+      select: { slug: true, day: true, title: true, excerpt: true, globalChangePct: true },
+    })
+    .catch(() => [] as { slug: string; day: string; title: string; excerpt: string; globalChangePct: number | null }[]);
+}
+
 // Slugs of all market-report posts (for the sitemap). Best-effort.
 export async function getMarketReportSlugs(): Promise<{ slug: string; day: string }[]> {
   return prisma.marketReport.findMany({ orderBy: { day: "desc" }, select: { slug: true, day: true } }).catch(() => []);

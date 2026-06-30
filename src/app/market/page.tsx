@@ -11,6 +11,9 @@ import { cardHref } from "@/lib/card-url";
 import { SITE_URL } from "@/lib/site";
 import { AdSlot } from "@/components/AdSlot";
 import { Reveal } from "@/components/Reveal";
+import { DailyWrapHero } from "@/components/DailyWrapHero";
+import { MarketSectionNav } from "@/components/MarketSectionNav";
+import { getLatestMarketReport } from "@/lib/posts";
 
 // Recompute at most twice an hour — the underlying PriceHistory only changes on
 // the daily import, but search-driven constituents drift during the day.
@@ -109,6 +112,8 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
     revalidate: 1800,
   })();
   const reports = await unstable_cache(getRecentReports, ["market-reports-recent"], { revalidate: 1800 })();
+  // The newest wrap, featured prominently near the top of the page (with charts).
+  const latestWrap = await unstable_cache(getLatestMarketReport, ["market-wrap-latest"], { revalidate: 1800 })();
 
   // Biggest 7-day movers among the Index constituents (stock-index style gainers/losers).
   const constituents = index?.constituents ?? [];
@@ -148,6 +153,56 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
       }
     : null;
 
+  // Daily wrap block: the featured latest report up top + a few recent ones. Exclude
+  // the featured one from the small grid so it isn't shown twice.
+  const featuredSlug = latestWrap?.article.slug;
+  const gridReports = reports.filter((r) => r.slug !== featuredSlug).slice(0, 3);
+  const hasWrap = !!latestWrap || gridReports.length > 0;
+
+  // Jump nav (sticky on desktop) — only the sections that actually render, in DOM order.
+  const sections = [
+    ...(index ? [{ id: "index", label: "Index" }] : []),
+    ...(hasWrap ? [{ id: "wrap", label: "Market wrap" }] : []),
+    ...(index ? [{ id: "constituents", label: "Constituents" }] : []),
+    ...(index && (gainers.length > 0 || fallers.length > 0) ? [{ id: "movers", label: "Movers" }] : []),
+    { id: "cite", label: "Methodology" },
+  ];
+
+  // The featured wrap + recent grid, rendered once and slotted in just under the
+  // headline number (so the daily wrap is reachable near the top, not only the bottom).
+  const wrapBlock = hasWrap ? (
+    <Reveal delayMs={80}>
+      <section id="wrap" className="scroll-mt-32">
+        <div className="mb-3 flex items-end justify-between gap-3">
+          <div>
+            <h2 className="text-xl font-extrabold text-white">Daily market wrap</h2>
+            <p className="mt-0.5 text-xs text-slate-500">What moved the market — auto-generated each day after the price refresh.</p>
+          </div>
+          <Link href="/market/wrap" className="btn-ghost shrink-0 text-xs">Explore all wraps →</Link>
+        </div>
+        {latestWrap && <DailyWrapHero post={latestWrap} />}
+        {gridReports.length > 0 && (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {gridReports.map((r) => (
+              <Link key={r.slug} href={`/blog/${r.slug}`} className="card-surface p-4 transition-colors hover:border-ink-600">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] uppercase tracking-wide text-slate-500">{r.day}</span>
+                  {r.globalChangePct != null && (
+                    <span className={`num text-xs font-bold ${r.globalChangePct > 0 ? "text-up" : r.globalChangePct < 0 ? "text-down" : "text-slate-400"}`}>
+                      {r.globalChangePct > 0 ? "+" : r.globalChangePct < 0 ? "−" : ""}{Math.abs(r.globalChangePct).toFixed(2)}%
+                    </span>
+                  )}
+                </div>
+                <h3 className="mt-1 line-clamp-2 text-sm font-bold text-white">{r.title}</h3>
+                <p className="mt-1 line-clamp-2 text-xs text-slate-400">{r.excerpt}</p>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
+    </Reveal>
+  ) : null;
+
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-8">
       <script
@@ -181,11 +236,14 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
         </div>
       </section>
 
+      {/* Sticky jump nav — makes the long page easy to scan/navigate while scrolling. */}
+      <MarketSectionNav sections={sections} />
+
       {index ? (
         <>
           {/* Headline number + chart */}
           <Reveal>
-            <section className="card-surface p-5">
+            <section id="index" className="card-surface scroll-mt-32 p-5">
               <div>
                 <div className="flex flex-wrap items-end justify-between gap-4">
                   <div>
@@ -213,9 +271,12 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
             </section>
           </Reveal>
 
+          {/* Daily wrap — featured near the top, just under the headline number. */}
+          {wrapBlock}
+
           {/* Constituents */}
           <Reveal delayMs={120}>
-          <section>
+          <section id="constituents" className="scroll-mt-32">
             <h2 className="mb-1 text-xl font-extrabold text-white">What&apos;s in the Index</h2>
             <p className="mb-3 text-sm text-slate-400">
               The {index.constituents.length} most-searched cards with a live price, weighted by
@@ -269,7 +330,7 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
           {/* Biggest movers — stock-index style gainers/losers from the constituents */}
           {(gainers.length > 0 || fallers.length > 0) && (
             <Reveal delayMs={180}>
-              <section>
+              <section id="movers" className="scroll-mt-32">
                 <h2 className="mb-3 text-xl font-extrabold text-white">Biggest movers (7-day)</h2>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <MoverCol title="Top gainers" cards={gainers} positive currency={currency} />
@@ -293,42 +354,14 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
         </div>
       )}
 
-      {/* Daily market-wrap reports — recent auto-generated posts, so /market reads like
-          a real market tracker (history + commentary), not just a single number. */}
-      {reports.length > 0 && (
-        <Reveal delayMs={120}>
-          <section>
-            <div className="mb-3 flex items-end justify-between gap-3">
-              <div>
-                <h2 className="text-xl font-extrabold text-white">Daily market wrap</h2>
-                <p className="mt-0.5 text-xs text-slate-500">Auto-generated each day — what moved the Riftbound market and why.</p>
-              </div>
-              <Link href="/blog" className="btn-ghost shrink-0 text-xs">All reports →</Link>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {reports.map((r) => (
-                <Link key={r.slug} href={`/blog/${r.slug}`} className="card-surface p-4 transition-colors hover:border-ink-600">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[11px] uppercase tracking-wide text-slate-500">{r.day}</span>
-                    {r.globalChangePct != null && (
-                      <span className={`num text-xs font-bold ${r.globalChangePct > 0 ? "text-up" : r.globalChangePct < 0 ? "text-down" : "text-slate-400"}`}>
-                        {r.globalChangePct > 0 ? "+" : r.globalChangePct < 0 ? "−" : ""}{Math.abs(r.globalChangePct).toFixed(2)}%
-                      </span>
-                    )}
-                  </div>
-                  <h3 className="mt-1 line-clamp-2 text-sm font-bold text-white">{r.title}</h3>
-                  <p className="mt-1 line-clamp-2 text-xs text-slate-400">{r.excerpt}</p>
-                </Link>
-              ))}
-            </div>
-          </section>
-        </Reveal>
-      )}
+      {/* When the index is cold but wraps exist, still surface them here so the page
+          isn't empty. (When the index renders, the wrap block sits up under it.) */}
+      {!index && wrapBlock}
 
       <AdSlot height={100} />
 
       {/* Methodology — written to be citable */}
-      <section id="cite" className="card-surface p-6">
+      <section id="cite" className="card-surface scroll-mt-32 p-6">
         <h2 className="text-xl font-extrabold text-white">Methodology</h2>
         <div className="mt-2 max-w-3xl space-y-3 text-sm leading-relaxed text-slate-400">
           <p>
@@ -357,6 +390,7 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
           </p>
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
+          <Link href="/market/wrap" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-ink-600">Daily market wrap →</Link>
           <Link href="/movers" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-ink-600">This week&apos;s movers →</Link>
           <Link href="/browse" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-ink-600">Browse all cards →</Link>
           <Link href="/sealed" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-ink-600">Sealed prices →</Link>
