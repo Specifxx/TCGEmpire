@@ -18,6 +18,16 @@ export function formatAUD(cents: number): string {
   return formatMoney(cents, "AUD");
 }
 
+// Compact money for large aggregate figures (e.g. an index's market cap), e.g.
+// "A$48.2k" or "US$1.31M". Falls back to two-decimal money under $1,000.
+export function formatMoneyCompact(cents: number, currency: string = "AUD"): string {
+  const sym = SYMBOL[currency] ?? "$";
+  const dollars = cents / 100;
+  if (dollars >= 1_000_000) return `${sym}${(dollars / 1_000_000).toFixed(2)}M`;
+  if (dollars >= 1_000) return `${sym}${(dollars / 1_000).toFixed(1)}k`;
+  return formatMoney(cents, currency);
+}
+
 // Parse a user-entered dollar string (e.g. "12.50") into integer cents.
 export function dollarsToCents(value: string | number): number {
   const n = typeof value === "number" ? value : parseFloat(value);

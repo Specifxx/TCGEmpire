@@ -42,6 +42,21 @@ export type IndexConstituent = {
   d7pct: number | null; // its own 7-day move, %
 };
 
+// The "key statistics" a market is expected to report, derived from the basket and
+// the index series — so both the regional indices and the GLOBAL composite carry them.
+export type MarketStats = {
+  marketCapCents: number; // aggregate value of the basket (Σ constituent lowest prices)
+  avgPriceCents: number; // mean constituent price (priced cards only)
+  medianPriceCents: number; // median constituent price
+  constituentCount: number; // cards in the basket
+  high: number; // index high over the tracked window
+  low: number; // index low over the tracked window
+  advancing: number; // constituents up over 7 days (market breadth)
+  declining: number; // constituents down over 7 days
+  unchanged: number; // flat / no 7-day read
+  volatilityPct: number | null; // 30-day realised volatility (stdev of daily % returns)
+};
+
 export type MarketIndex = {
   market: MarketScope;
   currency: string; // currency the constituent prices below are quoted in
@@ -54,7 +69,69 @@ export type MarketIndex = {
   sinceStart: number | null; // % vs base (= latest - 100)
   startDay: string; // ISO day the series starts (the base-100 day)
   constituents: IndexConstituent[];
+  stats: MarketStats;
 };
+
+// Derive the market statistics from the (base-100) series and the basket. Pure.
+function computeStats(points: PricePoint[], constituents: IndexConstituent[]): MarketStats {
+  const prices = constituents.map((c) => c.priceCents).filter((p) => p > 0);
+  const marketCapCents = prices.reduce((a, b) => a + b, 0);
+  const priced = prices.length;
+  const avgPriceCents = priced ? Math.round(marketCapCents / priced) : 0;
+  const sorted = [...prices].sort((a, b) => a - b);
+  const medianPriceCents = !priced
+    ? 0
+    : priced % 2
+      ? sorted[(priced - 1) / 2]
+      : Math.round((sorted[priced / 2 - 1] + sorted[priced / 2]) / 2);
+
+  let high = -Infinity;
+  let low = Infinity;
+  for (const p of points) {
+    if (p.v > high) high = p.v;
+    if (p.v < low) low = p.v;
+  }
+  if (!points.length) {
+    high = 0;
+    low = 0;
+  }
+
+  let advancing = 0;
+  let declining = 0;
+  let unchanged = 0;
+  for (const c of constituents) {
+    if (c.d7pct == null || c.d7pct === 0) unchanged++;
+    else if (c.d7pct > 0) advancing++;
+    else declining++;
+  }
+
+  // 30-day realised volatility: standard deviation of daily % returns.
+  const recent = points.slice(-31);
+  const returns: number[] = [];
+  for (let i = 1; i < recent.length; i++) {
+    const prev = recent[i - 1].v;
+    if (prev) returns.push(((recent[i].v - prev) / prev) * 100);
+  }
+  let volatilityPct: number | null = null;
+  if (returns.length >= 5) {
+    const mean = returns.reduce((a, b) => a + b, 0) / returns.length;
+    const variance = returns.reduce((a, b) => a + (b - mean) ** 2, 0) / returns.length;
+    volatilityPct = Math.round(Math.sqrt(variance) * 100) / 100;
+  }
+
+  return {
+    marketCapCents,
+    avgPriceCents,
+    medianPriceCents,
+    constituentCount: constituents.length,
+    high: Math.round(high * 10) / 10,
+    low: Math.round(low * 10) / 10,
+    advancing,
+    declining,
+    unchanged,
+    volatilityPct,
+  };
+}
 
 const pctChange = (now: number, then: number | undefined): number | null =>
   then == null || then === 0 ? null : Math.round(((now - then) / then) * 1000) / 10;
@@ -179,6 +256,7 @@ async function getRegionIndex(country: Country): Promise<MarketIndex | null> {
     sinceStart: pctChange(latest, points[0].v),
     startDay: new Date(points[0].t).toISOString().slice(0, 10),
     constituents,
+    stats: computeStats(points, constituents),
   };
  } catch {
   return null;
@@ -261,6 +339,7 @@ async function getGlobalIndex(): Promise<MarketIndex | null> {
     points,
     ...pointStats(points),
     constituents: ref.constituents,
+    stats: computeStats(points, ref.constituents),
   };
 }
 

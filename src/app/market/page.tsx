@@ -13,6 +13,7 @@ import { AdSlot } from "@/components/AdSlot";
 import { Reveal } from "@/components/Reveal";
 import { DailyWrapHero } from "@/components/DailyWrapHero";
 import { MarketSectionNav } from "@/components/MarketSectionNav";
+import { IndexStats } from "@/components/IndexStats";
 import { getLatestMarketReport } from "@/lib/posts";
 
 // Recompute at most twice an hour — the underlying PriceHistory only changes on
@@ -267,6 +268,9 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
                 <p className="mt-2 text-[11px] text-slate-600">
                   + rising prices · − falling prices · recalculated daily after the price refresh.
                 </p>
+                <div className="mt-5 border-t border-ink-800 pt-4">
+                  <IndexStats index={index} />
+                </div>
               </div>
             </section>
           </Reveal>
@@ -280,15 +284,17 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
             <h2 className="mb-1 text-xl font-extrabold text-white">What&apos;s in the Index</h2>
             <p className="mb-3 text-sm text-slate-400">
               The {index.constituents.length} most-searched cards with a live price, weighted by
-              search volume (capped at 20% each).
+              search volume (capped at 20% each). Scroll within the list to see them all.
               {isGlobal && (
                 <> Prices shown in {currency}, from the {COUNTRIES[priceMarket].place} market as a global reference.</>
               )}
             </p>
-            <div className="card-surface overflow-x-auto">
+            {/* Capped-height inner scroll so 200 rows don't stretch the page — the
+                header sticks while you scroll the list. */}
+            <div className="card-surface max-h-[34rem] overflow-auto overscroll-contain">
               <table className="w-full min-w-[560px] text-sm">
                 <thead>
-                  <tr className="border-b border-ink-700 text-left text-[10px] uppercase tracking-wide text-slate-500">
+                  <tr className="text-left text-[10px] uppercase tracking-wide text-slate-500 [&>th]:sticky [&>th]:top-0 [&>th]:z-10 [&>th]:border-b [&>th]:border-ink-700 [&>th]:bg-ink-900">
                     <th className="px-4 py-2.5 font-semibold">#</th>
                     <th className="px-2 py-2.5 font-semibold">Card</th>
                     <th className="px-2 py-2.5 text-right font-semibold">Weight</th>
@@ -378,6 +384,14 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
             each regional index to 100 at their common start, then equal-weight averages them day by
             day — so it tracks worldwide price direction without mixing currencies. Pick a region
             from the Market selector to see that market&apos;s own index in its local currency.
+          </p>
+          <p>
+            <strong className="text-slate-300">Key statistics.</strong> Market cap is the aggregate
+            value of the basket — the sum of every constituent&apos;s lowest in-stock price (what it
+            would cost to buy one of each), in the market&apos;s currency. Range is the index&apos;s
+            own low–high over the tracked window (a 52-week-range analogue). Breadth counts how many
+            constituents rose vs fell over the last 7 days, and volatility is the 30-day standard
+            deviation of the index&apos;s daily moves.
           </p>
           <p>
             Constituents are refreshed from live search data, so the basket evolves with the
