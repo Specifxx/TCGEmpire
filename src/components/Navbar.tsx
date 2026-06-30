@@ -40,8 +40,13 @@ export async function Navbar() {
         {/* Nav */}
         <nav className="flex shrink-0 items-center gap-0.5 sm:gap-1">
           {/* Command launcher — every page can reach every page from here (⌘K). */}
-          <CommandLauncherButton />
-          <Link href="/browse" className="rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:px-2.5">
+          {/* Inline text/⌘K nav is desktop-only — on phones it overflowed the bar
+              (worse once the logged-in avatar showed). Everything here is reachable
+              from the hamburger pop-up menu, so hide it below sm. */}
+          <span className="hidden sm:inline-flex">
+            <CommandLauncherButton />
+          </span>
+          <Link href="/browse" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:block sm:px-2.5">
             Database
           </Link>
           {/* Sealed products — high-AOV, right after the database. */}
@@ -49,7 +54,7 @@ export async function Navbar() {
             Sealed
           </Link>
           {/* Trade Calculator — front-and-centre so players can reach it fast at locals. */}
-          <Link href="/trade" className="rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:px-2.5">
+          <Link href="/trade" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:block sm:px-2.5">
             Trade
           </Link>
           {/* One grouped "Menu" mega-dropdown (same groups as the phone sheet). Now
