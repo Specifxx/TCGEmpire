@@ -13,7 +13,7 @@ import { prisma } from "./db";
 import { SITE_URL } from "./site";
 import { SETS } from "./constants";
 
-export const INDEXNOW_KEY = process.env.INDEXNOW_KEY || "b84a2a49fcda23c396d8b5320a45f218";
+export const INDEXNOW_KEY = process.env.INDEXNOW_KEY || "43ac93dd97a44d4894bedf52d621c57c";
 
 // Ping only from real production: previews/dev would submit URLs the engines
 // then crawl against the canonical host at the wrong moment. (Vercel crons only
