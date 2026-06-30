@@ -5,7 +5,6 @@ import { CommandLauncherButton } from "./CommandLauncher";
 import { SearchBar } from "./SearchBar";
 import { NavWishlistButton } from "./NavWishlistButton";
 import { MobileNav } from "./MobileNav";
-import { NavMenu } from "./NavMenu";
 import { CountrySwitcher } from "./CountrySwitcher";
 import { UserMenu } from "./UserMenu";
 import { WishlistSync } from "./WishlistSync";
@@ -65,12 +64,9 @@ export async function Navbar() {
           <Link href="/trade" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:block sm:px-2.5">
             Trade
           </Link>
-          {/* One grouped "Menu" mega-dropdown (same groups as the phone sheet). Now
-              that the desktop left rail is gone, this is the full-nav surface on every
-              desktop size, alongside the ⌘K command launcher. */}
-          <div className="hidden lg:block">
-            <NavMenu />
-          </div>
+          {/* Single nav entry point: the ⌘K "Explore" command launcher (above) is the
+              full-nav surface on desktop — it lists the same NAV_GROUPS searchably — so
+              the separate "Menu" mega-dropdown is gone (matches DexCompare's one-tab model). */}
           {/* Join our Discord — opens the permanent invite in a new tab */}
           <a
             href={DISCORD_URL}
