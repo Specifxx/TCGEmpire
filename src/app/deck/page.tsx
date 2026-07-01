@@ -3,7 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { DeckBuilder } from "@/components/DeckBuilder";
 import { prisma } from "@/lib/db";
 import { getCountry } from "@/lib/get-country";
-import { currencyOf, pickPrice, priceField } from "@/lib/country";
+import { currencyOf, pickPrice, priceField, COUNTRIES } from "@/lib/country";
 import { parseDeckList } from "@/lib/deck";
 import { normalizeSearch, formatMoney } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
@@ -71,13 +71,14 @@ export async function generateMetadata({ searchParams }: { searchParams: { list?
 }
 
 export default function DeckPage({ searchParams }: { searchParams: { list?: string } }) {
+  const info = COUNTRIES[getCountry()];
   return (
     <div>
       <div className="mb-5">
         <h1 className="text-2xl font-extrabold text-white">Deck Builder &amp; Pricing</h1>
         <p className="mt-1 text-sm text-slate-400">
           Paste a Riftbound decklist and get every card matched with the cheapest
-          Australian price and a full deck total.
+          {" "}{info.adjective} price and a full deck total.
         </p>
       </div>
       <DeckBuilder initialList={searchParams.list} />

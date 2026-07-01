@@ -299,7 +299,7 @@ export function Riftle() {
           <p className="mt-1 text-sm text-slate-400">
             {mode === "unlimited"
               ? `Guess a random Riftbound card in ${attempts} tries — play as many as you like.`
-              : `Guess the Riftbound card of the day in ${attempts} tries. A new card every midnight AEST.`}
+              : `Guess the Riftbound card of the day in ${attempts} tries. A new card every midnight Sydney time.`}
           </p>
         </div>
         <div className="flex items-center gap-3 text-center text-xs text-slate-400">
@@ -457,7 +457,7 @@ export function Riftle() {
             <Link href="/browse" className="btn-ghost text-sm">Browse all cards →</Link>
           </div>
           <p className="mt-3 text-xs text-slate-500">
-            {mode === "unlimited" ? "Keep going — there's always another card." : "New daily card at midnight AEST. Come back tomorrow!"}
+            {mode === "unlimited" ? "Keep going — there's always another card." : "New daily card at midnight Sydney time. Come back tomorrow!"}
           </p>
         </div>
       )}
