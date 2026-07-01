@@ -9,9 +9,36 @@ export const metadata: Metadata = {
   alternates: { canonical: "/about" },
 };
 
+const breadcrumbLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+    { "@type": "ListItem", position: 2, name: "About", item: `${SITE_URL}/about` },
+  ],
+};
+const aboutLd = {
+  "@context": "https://schema.org",
+  "@type": "AboutPage",
+  name: `About ${SITE_NAME}`,
+  url: `${SITE_URL}/about`,
+  description:
+    "How RiftCompare sources Riftbound: League of Legends TCG prices, our data methodology, the stores and markets we cover, and who's behind it.",
+  publisher: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
+};
+
 export default function AboutPage() {
   return (
     <article className="mx-auto max-w-3xl">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumbLd, aboutLd]) }}
+      />
+      <nav className="mb-3 flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
+        <Link href="/" className="hover:text-slate-300">Home</Link>
+        <span>/</span>
+        <span className="text-slate-300">About</span>
+      </nav>
       <h1 className="text-3xl font-extrabold leading-tight text-white">About {SITE_NAME}</h1>
       <p className="mt-2 text-sm text-slate-500">An independent community project for Riftbound players.</p>
 
