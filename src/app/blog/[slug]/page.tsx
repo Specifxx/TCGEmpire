@@ -4,6 +4,7 @@ import { getArticle, getArticles } from "@/lib/articles";
 import { getBlogPost, getMarketReportPost } from "@/lib/posts";
 import { ArticleView } from "@/components/ArticleView";
 import { MarketReportView } from "@/components/MarketReportView";
+import { SITE_URL } from "@/lib/site";
 
 // Pre-render the file-based posts; DB-backed market reports render on demand
 // (dynamicParams defaults to true) and are cached by `revalidate`.
@@ -19,7 +20,10 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   return {
     title: { absolute: `${a.title} — RiftCompare Blog` },
     description: a.excerpt,
-    alternates: { canonical: `/blog/${a.slug}` },
+    alternates: {
+      canonical: `/blog/${a.slug}`,
+      types: { "text/markdown": `${SITE_URL}/llm/blog/${a.slug}` },
+    },
     openGraph: {
       type: "article",
       title: a.title,
@@ -39,9 +43,31 @@ export default async function BlogArticlePage({ params }: { params: { slug: stri
   // that predate the charts fall back to the markdown body.
   const report = await getMarketReportPost(params.slug);
   if (!report) notFound();
-  return report.data ? (
-    <MarketReportView article={report.article} data={report.data} />
-  ) : (
-    <ArticleView article={report.article} />
+  // Daily market reports are timely, dated news → NewsArticle (freshness signal for
+  // Google News / AI answer engines, which weight recency heavily).
+  const published = `${report.day}T09:00:00+10:00`;
+  const newsLd = {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    headline: report.article.title,
+    description: report.article.excerpt,
+    datePublished: published,
+    dateModified: published,
+    author: { "@id": `${SITE_URL}/#org`, name: "RiftCompare" },
+    publisher: { "@id": `${SITE_URL}/#org` },
+    mainEntityOfPage: `${SITE_URL}/blog/${report.article.slug}`,
+    url: `${SITE_URL}/blog/${report.article.slug}`,
+    isAccessibleForFree: true,
+    articleSection: "Market report",
+  };
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(newsLd) }} />
+      {report.data ? (
+        <MarketReportView article={report.article} data={report.data} />
+      ) : (
+        <ArticleView article={report.article} />
+      )}
+    </>
   );
 }

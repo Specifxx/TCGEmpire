@@ -50,8 +50,8 @@ export const metadata: Metadata = {
     // its own, telling Google those pages are duplicates of the homepage (GSC:
     // "Alternate page with proper canonical tag"). Each indexable page declares
     // its own canonical; the home page sets "/" in app/page.tsx.
-    // RSS auto-discovery for feed readers and auto-posting/aggregator services.
-    types: { "application/rss+xml": "/feed.xml" },
+    // RSS + JSON Feed auto-discovery for feed readers, agents and auto-posting services.
+    types: { "application/rss+xml": "/feed.xml", "application/feed+json": "/feed.json" },
     // x-default baseline: markets are cookie-driven on ONE URL set (not URL-
     // segmented), so we declare the canonical home as the global default rather
     // than fabricating per-locale hreflang variants.
@@ -98,9 +98,35 @@ const orgJsonLd = {
       url: SITE_URL,
       logo: `${SITE_URL}/icon-512.png`,
       // Linked profiles — entity signals tying the org to its community presence.
+      // ADD real profile URLs here as they exist (X/Twitter, YouTube, Reddit) and a
+      // Wikidata item once created; each `sameAs` strengthens entity disambiguation
+      // for AI answer engines (Gemini/Perplexity) where brand signals outweigh links.
       sameAs: [DISCORD_URL],
+      // What this entity is authoritative about — helps NER map "RiftCompare" to the
+      // specific TCG-pricing entity rather than a generic term.
+      knowsAbout: [
+        "Riftbound",
+        "Riftbound: League of Legends TCG",
+        "Trading card game prices",
+        "Trading card price comparison",
+        "The RiftCompare Index",
+        "Sealed trading card products",
+      ],
+      // Markets served (drives regional entity understanding without per-locale URLs).
+      areaServed: [
+        { "@type": "Country", name: "Australia" },
+        { "@type": "Country", name: "New Zealand" },
+        { "@type": "Country", name: "United States" },
+        { "@type": "Country", name: "United Kingdom" },
+      ],
+      contactPoint: {
+        "@type": "ContactPoint",
+        contactType: "customer support",
+        email: CONTACT_EMAIL,
+        availableLanguage: "English",
+      },
       description:
-        "Riftbound TCG card database and live price-comparison across Australia, New Zealand and the US.",
+        "Riftbound: League of Legends TCG card database and live price-comparison across Australia, New Zealand, the United States and the United Kingdom, home of the RiftCompare Index.",
     },
     {
       "@type": "WebSite",

@@ -49,7 +49,6 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   // under the ~60-char SERP truncation point.
   const title = `${card.name} (${card.setCode} ${card.collectorNumber}) — Riftbound Card Price`;
   const description = `Compare live prices for ${card.name}, Riftbound ${card.setName} ${card.collectorNumber}, across stores in Australia, New Zealand, the US and the UK — find the cheapest place to buy.`;
-  const image = card.imageUrl ?? card.imageThumbUrl ?? undefined;
 
   return {
     title,
@@ -58,18 +57,20 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       canonical: `/card/${card.slug ?? params.id}`,
       // Single cookie-switched URL is the global default for all four markets.
       languages: { "x-default": `${SITE_URL}/card/${card.slug ?? params.id}` },
+      // Machine-readable markdown for AI agents (rel=alternate type=text/markdown).
+      types: { "text/markdown": `${SITE_URL}/llm/card/${card.slug ?? params.id}` },
     },
+    // og:image + twitter:image are provided by the co-located opengraph-image.tsx
+    // (a branded price card: art + name + lowest live price).
     openGraph: {
       title,
       description,
       type: "website",
-      images: image ? [{ url: image }] : undefined,
     },
     twitter: {
-      card: image ? "summary_large_image" : "summary",
+      card: "summary_large_image",
       title,
       description,
-      images: image ? [image] : undefined,
     },
   };
 }

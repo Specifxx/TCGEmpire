@@ -14,6 +14,7 @@ import { Reveal } from "@/components/Reveal";
 import { DailyWrapHero } from "@/components/DailyWrapHero";
 import { MarketSectionNav } from "@/components/MarketSectionNav";
 import { IndexStats } from "@/components/IndexStats";
+import { EmbedSnippet } from "@/components/EmbedSnippet";
 import { getLatestMarketReport } from "@/lib/posts";
 
 // Recompute at most twice an hour — the underlying PriceHistory only changes on
@@ -32,7 +33,10 @@ export const metadata: Metadata = {
     "Riftbound market health",
     "TCG market index",
   ],
-  alternates: { canonical: "/market" },
+  alternates: {
+    canonical: "/market",
+    types: { "text/markdown": `${SITE_URL}/llm/market` },
+  },
   openGraph: {
     title: "The RiftCompare Index — the Riftbound market in one number",
     description:
@@ -144,6 +148,10 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
       { "@type": "ListItem", position: 2, name: "RiftCompare Index", item: `${SITE_URL}/market` },
     ],
   };
+  // Honest dateModified = the last day the series actually has data for.
+  const lastDataDay = index?.points.length
+    ? new Date(index.points[index.points.length - 1].t).toISOString().slice(0, 10)
+    : undefined;
   const datasetLd = index
     ? {
         "@context": "https://schema.org",
@@ -151,9 +159,20 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
         name: "The RiftCompare Index",
         description: `Daily weighted price index of the ${index.constituents.length} most-searched Riftbound TCG cards${isGlobal ? " across every market we track" : ""}. Base 100 on ${index.startDay}.`,
         url: `${SITE_URL}/market`,
-        creator: { "@type": "Organization", name: "RiftCompare", url: SITE_URL },
+        creator: { "@type": "Organization", name: "RiftCompare", "@id": `${SITE_URL}/#org`, url: SITE_URL },
         license: `${SITE_URL}/market#cite`,
+        isAccessibleForFree: true,
         temporalCoverage: `${index.startDay}/..`,
+        dateModified: lastDataDay,
+        variableMeasured: "RiftCompare Index level (base 100)",
+        keywords: ["Riftbound", "TCG price index", "trading card market", "RiftCompare Index"],
+        // Machine-readable distribution — marks the site as a primary data source AI
+        // engines can fetch and cite, not just a page to scrape.
+        distribution: {
+          "@type": "DataDownload",
+          encodingFormat: "application/json",
+          contentUrl: `${SITE_URL}/api/v1/index.json`,
+        },
       }
     : null;
 
@@ -265,6 +284,14 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
                     <Delta label="All time" pct={index.sinceStart} />
                   </div>
                 </div>
+                {/* One self-contained, quotable summary sentence — the format AI answer
+                    engines lift verbatim (a real, dated statistic). */}
+                <p className="mt-3 max-w-2xl text-sm text-slate-400">
+                  As of {lastDataDay ?? index.startDay}, the RiftCompare {isGlobal ? "global" : heading} index sits at{" "}
+                  <strong className="text-slate-200">{index.latest.toFixed(1)}</strong>
+                  {index.d7 == null ? null : <> — {index.d7 > 0 ? "up" : index.d7 < 0 ? "down" : "flat"} {Math.abs(index.d7)}% over 7 days</>}
+                  {index.stats ? <>, with {index.stats.advancing} of {index.constituents.length} tracked cards higher on the week</> : null}.
+                </p>
                 <div className="mt-4">
                   <IndexChart points={index.points} />
                 </div>
@@ -413,6 +440,19 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
           <Link href="/movers" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-ink-600">This week&apos;s movers →</Link>
           <Link href="/browse" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-ink-600">Browse all cards →</Link>
           <Link href="/sealed" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-ink-600">Sealed prices →</Link>
+        </div>
+      </section>
+
+      {/* Embed the Index — a free, self-updating widget creators can drop on their
+          own sites; every embed is a compounding backlink + brand mention. */}
+      <section>
+        <h2 className="mb-1 text-xl font-extrabold text-white">Embed the Index</h2>
+        <p className="mb-3 text-sm text-slate-400">
+          Put the live RiftCompare Index on your site, blog or newsletter — it updates itself and
+          links back here.
+        </p>
+        <div className="max-w-md">
+          <EmbedSnippet src={`${SITE_URL}/embed/index`} title="The RiftCompare Index" width={340} height={230} />
         </div>
       </section>
 

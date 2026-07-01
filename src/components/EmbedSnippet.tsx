@@ -4,9 +4,9 @@ import { useState } from "react";
 
 // A single ready-to-copy widget example: a live preview of the embed plus its
 // copy-paste <iframe> snippet. Used on the /widgets distribution page.
-export function EmbedSnippet({ src, title }: { src: string; title: string }) {
+export function EmbedSnippet({ src, title, width = 340, height = 150 }: { src: string; title: string; width?: number; height?: number }) {
   const [copied, setCopied] = useState(false);
-  const snippet = `<iframe src="${src}" width="340" height="150" style="border:0;overflow:hidden" loading="lazy" title="RiftCompare live price — ${title}"></iframe>`;
+  const snippet = `<iframe src="${src}" width="${width}" height="${height}" style="border:0;overflow:hidden" loading="lazy" title="RiftCompare live price — ${title}"></iframe>`;
 
   const copy = () => {
     navigator.clipboard?.writeText(snippet).then(() => {
@@ -20,8 +20,8 @@ export function EmbedSnippet({ src, title }: { src: string; title: string }) {
       <div className="mb-1 text-sm font-semibold text-white">{title}</div>
       <iframe
         src={src}
-        width={340}
-        height={150}
+        width={width}
+        height={height}
         style={{ border: 0, overflow: "hidden", maxWidth: "100%" }}
         loading="lazy"
         title={`RiftCompare live price — ${title}`}

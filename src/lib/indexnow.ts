@@ -62,5 +62,5 @@ export async function pingAfterPriceRefresh(): Promise<number> {
 
 // After the daily market report exists: the new post + the pages that list it.
 export function pingAfterMarketReport(slug: string): Promise<number> {
-  return pingIndexNow([`/blog/${slug}`, "/blog", "/feed.xml"]);
+  return pingIndexNow([`/blog/${slug}`, "/blog", "/feed.xml", "/feed.json"]);
 }
