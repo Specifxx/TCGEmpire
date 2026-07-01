@@ -49,6 +49,53 @@ jobs:
       - name: Prisma generate (so tsc/next build work)
         run: npx prisma generate
 
+      # Close the SEO loop: pull pages that get Google impressions but low CTR so
+      # the bot rewrites THOSE titles/descriptions first. Writes GSC-TARGETS.md
+      # (gitignored, read by the prompt). No-ops without GSC_SA_KEY; never fails.
+      - name: Fetch GSC targets (low-CTR / high-impression pages) — optional
+        env:
+          GSC_SA_KEY: ${{ secrets.GSC_SA_KEY }}
+          GSC_PROPERTY: "https://riftcompare.com/"
+        run: |
+          if [ -z "$GSC_SA_KEY" ]; then
+            echo "No GSC_SA_KEY — skipping GSC targets; bot works from the static backlog."
+            exit 0
+          fi
+          node <<'JS'
+          const crypto = require("crypto"); const fs = require("fs");
+          const sa = JSON.parse(process.env.GSC_SA_KEY);
+          const property = process.env.GSC_PROPERTY;
+          const site = encodeURIComponent(property);
+          const b64 = (b) => Buffer.from(b).toString("base64").replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+          const day = (n) => new Date(Date.now() - n*864e5).toISOString().slice(0,10);
+          async function token(){ const now=Math.floor(Date.now()/1000); const h=b64(JSON.stringify({alg:"RS256",typ:"JWT"})); const c=b64(JSON.stringify({iss:sa.client_email,scope:"https://www.googleapis.com/auth/webmasters.readonly",aud:"https://oauth2.googleapis.com/token",iat:now,exp:now+3600})); const s=crypto.createSign("RSA-SHA256"); s.update(h+"."+c); const jwt=h+"."+c+"."+b64(s.sign(sa.private_key)); const r=await fetch("https://oauth2.googleapis.com/token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({grant_type:"urn:ietf:params:oauth:grant-type:jwt-bearer",assertion:jwt})}); const j=await r.json(); if(!j.access_token) throw new Error("auth failed: "+JSON.stringify(j)); return j.access_token; }
+          async function q(at,body){ const r=await fetch(`https://searchconsole.googleapis.com/webmasters/v3/sites/${site}/searchAnalytics/query`,{method:"POST",headers:{Authorization:"Bearer "+at,"Content-Type":"application/json"},body:JSON.stringify(body)}); return r.json(); }
+          (async()=>{
+            const at=await token();
+            const start=day(28), end=day(2);
+            const byPage=await q(at,{startDate:start,endDate:end,dimensions:["page"],rowLimit:25000});
+            if(byPage.error) throw new Error("searchAnalytics: "+JSON.stringify(byPage.error));
+            const byQuery=await q(at,{startDate:start,endDate:end,dimensions:["query"],rowLimit:25});
+            const pages=(byPage.rows||[]).map(r=>({url:r.keys[0],clicks:r.clicks,impr:r.impressions,ctr:r.ctr,pos:r.position}));
+            const targets=pages.filter(p=>p.impr>=20&&p.ctr<0.03&&p.pos<=20.5).sort((a,b)=>b.impr-a.impr).slice(0,25);
+            const striking=pages.filter(p=>p.pos>=4.5&&p.pos<=20.5&&p.impr>=10).sort((a,b)=>b.impr-a.impr).slice(0,15);
+            const q28=(byQuery.rows||[]).map(r=>({q:r.keys[0],clicks:r.clicks,impr:r.impressions,ctr:r.ctr,pos:r.position}));
+            const rel=(u)=>u.replace(property.replace(/\/$/,""),"")||"/";
+            const out=[];
+            out.push(`# GSC targets — auto-generated, last 28d (gitignored, do not commit)`);
+            out.push(``,`Highest-leverage title/meta rewrites: pages with real impressions but low`,`CTR (seen in search, few clicks) — a sharper title converts them into clicks.`);
+            out.push(``,`## Low-CTR, high-impression pages (rewrite titles/descriptions first)`,`| page | impr | ctr | pos |`,`|---|---|---|---|`);
+            for(const p of targets) out.push(`| ${rel(p.url)} | ${p.impr} | ${(p.ctr*100).toFixed(1)}% | ${p.pos.toFixed(1)} |`);
+            if(!targets.length) out.push(`| (not enough impressions yet) | | | |`);
+            out.push(``,`## Striking distance (rank ~5-20; a nudge reaches page 1)`,`| page | impr | pos |`,`|---|---|---|`);
+            for(const p of striking) out.push(`| ${rel(p.url)} | ${p.impr} | ${p.pos.toFixed(1)} |`);
+            out.push(``,`## Top queries (last 28d) — align titles/content to these`,`| query | clicks | impr | ctr | pos |`,`|---|---|---|---|---|`);
+            for(const x of q28) out.push(`| ${x.q} | ${x.clicks} | ${x.impr} | ${(x.ctr*100).toFixed(1)}% | ${x.pos.toFixed(1)} |`);
+            fs.writeFileSync("GSC-TARGETS.md", out.join("\n")+"\n");
+            console.log(`GSC targets: ${targets.length} low-CTR, ${striking.length} striking, ${q28.length} queries -> GSC-TARGETS.md`);
+          })().catch(e=>{ console.error("GSC targets step failed (non-fatal):",e.message); process.exit(0); });
+          JS
+
       - name: Claude — one verified growth improvement
         uses: anthropics/claude-code-action@v1
         with:
@@ -61,6 +108,15 @@ jobs:
             that helps the site GET MORE VISITORS and turn them into users — drawn from
             proven, white-hat web-growth playbooks (SEO, content, internal linking,
             shareability, performance-for-rankings, conversion, retention).
+
+            DATA-DRIVEN FIRST: if `GSC-TARGETS.md` exists in the repo root (fresh Search
+            Console data written this run), READ IT FIRST. The highest-leverage win is
+            rewriting the <title> + meta description of the top "low-CTR, high-impression"
+            page listed there — those pages already rank but few click, so a sharper title
+            (real buyer intent + a concrete hook; ≤~60 char title, ≤~155 desc; human, no
+            stuffing) converts impressions into clicks fast. Also consider the "striking
+            distance" pages and align copy to the listed top queries. It is gitignored —
+            never commit it.
 
             STEPS:
             1. Pick today's growth lever. Maintain docs/GROWTH-LOG.md (create it if

@@ -39,3 +39,6 @@ next-env.d.ts
 /public/logo-preview.html
 /public/preview-mark.png
 /public/preview-wordmark.png
+
+# Growth bot GSC targets (regenerated each run, never committed)
+GSC-TARGETS.md
