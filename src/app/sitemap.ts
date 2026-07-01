@@ -92,11 +92,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   // Set landing pages (high-value head terms, e.g. "Riftbound Origins prices").
-  const setRoutes: MetadataRoute.Sitemap = SETS.filter((s) => !s.comingSoon).map((s) => ({
+  // comingSoon sets are included too at lower priority: pre-release query volume
+  // ("riftbound vendetta") is real, the page is live/indexable and linked from
+  // the blog, and it self-upgrades the day singles land.
+  const setRoutes: MetadataRoute.Sitemap = SETS.map((s) => ({
     url: `${SITE_URL}/sets/${s.slug}`,
-    changeFrequency: "daily",
-    priority: 0.85,
-    lastModified: priceDay,
+    changeFrequency: "daily" as const,
+    priority: s.comingSoon ? 0.6 : 0.85,
+    ...(s.comingSoon ? {} : { lastModified: priceDay }),
   }));
 
   // Domain landing pages (e.g. "Riftbound Fury cards") — topical hubs that link
