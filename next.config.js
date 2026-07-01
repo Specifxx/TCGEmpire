@@ -47,6 +47,19 @@ const securityHeaders = [
 
 const nextConfig = {
   reactStrictMode: true,
+  async redirects() {
+    return [
+      // Confirmed 404 in Search Console: an incomplete/truncated deck slug (the
+      // real deck is "master-yi-wuju-bladesman" in prisma/meta-decks.json). A 301
+      // tells Google the old URL is permanently gone rather than leaving a dead
+      // page indexed.
+      {
+        source: "/decks/master-yi-wuju",
+        destination: "/decks/master-yi-wuju-bladesman",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       // Embeddable price widget (/embed/*): must be frameable on ANY third-party
