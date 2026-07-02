@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { CONTACT_EMAIL } from "@/lib/site";
 
-export const dynamic = "force-dynamic";
+// (No force-dynamic: this is pure static content — the old export was
+// gratuitous and opted the page out of caching for nothing.)
 
 // Standalone buylist page — "Sell us your cards". Deliberately NOT linked from any
 // nav/menu; reachable by direct URL only (like /marketplace).

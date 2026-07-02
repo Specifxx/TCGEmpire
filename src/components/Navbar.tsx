@@ -6,16 +6,16 @@ import { SearchBar } from "./SearchBar";
 import { NavWishlistButton } from "./NavWishlistButton";
 import { MobileNav } from "./MobileNav";
 import { CountrySwitcher } from "./CountrySwitcher";
-import { UserMenu } from "./UserMenu";
-import { WishlistSync } from "./WishlistSync";
-import { getCurrentUser } from "@/lib/auth";
+import { NavUser } from "./NavUser";
 import { DISCORD_URL } from "@/lib/site";
 
-export async function Navbar() {
-  const user = await getCurrentUser();
+// NO server-side session read here: the navbar renders on every route, so a
+// cookies() read would force the whole site dynamic (killing ISR). NavUser
+// fetches the session client-side via /api/me and renders WishlistSync +
+// UserMenu from the same fetch.
+export function Navbar() {
   return (
     <NavbarShell>
-      <WishlistSync loggedIn={!!user} />
       {/* Full-window header (not capped at the content max-width) so the nav fits the
           whole window on wide screens. */}
       <div className="mx-auto w-full px-4 sm:px-6 lg:px-8">
@@ -82,21 +82,7 @@ export async function Navbar() {
           </a>
           <CountrySwitcher className="ml-0.5 sm:ml-1" />
           <NavWishlistButton />
-          <UserMenu
-            user={
-              user
-                ? {
-                    displayName: user.displayName,
-                    email: user.email,
-                    avatarUrl: user.avatarUrl,
-                    emailVerified: user.emailVerified,
-                    balanceCents: user.balanceCents,
-                    points: user.points,
-                    canCheckIn: user.canCheckIn,
-                  }
-                : null
-            }
-          />
+          <NavUser />
           <MobileNav />
         </nav>
        </div>

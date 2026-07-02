@@ -5,8 +5,7 @@ import { prisma } from "@/lib/db";
 import { CardTile } from "@/components/CardTile";
 import { Reveal } from "@/components/Reveal";
 import { getPopularCards } from "@/lib/cheapest-cards";
-import { getCountry } from "@/lib/get-country";
-import { COUNTRIES, priceField, type CountryInfo } from "@/lib/country";
+import { COUNTRIES, DEFAULT_COUNTRY, priceField } from "@/lib/country";
 import { SETS, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
 import { getTopDeals } from "@/lib/top-deals";
@@ -15,8 +14,10 @@ import { getMarketIndex } from "@/lib/market-index";
 import { CinematicHero } from "@/components/home/CinematicHero";
 import { MarketPulse } from "@/components/home/MarketPulse";
 
-// ISR while AU-only; becomes dynamic per-request when NZ mode is enabled (getCountry
-// then reads the country cookie).
+// REAL ISR: renders a market-NEUTRAL baseline (no cookie/header reads — the
+// indexed copy names all four markets, data is fetched for the AU baseline) so
+// Google gets one coherent global page and every visitor gets cached HTML.
+// Client components localise prices after hydration via CountryProvider.
 export const revalidate = 180;
 
 // Market-neutral metadata (no country in the title) so search results aren't biased
@@ -38,40 +39,34 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-// eBay marketplace label per market (NZ has no eBay).
-function ebayLabel(country: string): string | null {
-  return country === "AU" ? "eBay AU" : country === "US" ? "eBay US" : country === "UK" ? "eBay UK" : null;
-}
-
-// FAQ content tailored to the visitor's market. Uses `place` after "in" (so US
-// reads "in the United States") and `adjective` before nouns ("Australian stores").
-function faqsFor(info: CountryInfo, ebay: string | null): { q: string; a: string }[] {
-  const { adjective, place, currency } = info;
-  return [
-    {
-      q: `Where can I buy Riftbound cards in ${place}?`,
-      a: `RiftCompare compares live Riftbound prices across a wide range of ${adjective} stores${ebay ? ` plus ${ebay}` : ""}, so you can buy Riftbound cards from whichever shop is cheapest. Search any card to see every store's price and click straight through to buy.`,
-    },
-    {
-      q: `How do I find the cheapest Riftbound prices in ${place}?`,
-      a: `Search or browse the card database and each card shows the lowest live price across ${adjective} stores, ranked by total delivered cost (item plus shipping). It's the fastest way to find the cheapest Riftbound cards in ${place}.`,
-    },
-    {
-      q: "Does RiftCompare cover Riftbound singles and sealed products?",
-      a: `Yes — compare prices on individual Riftbound singles as well as sealed products like booster boxes, booster packs, Proving Grounds and Nexus Night packs, all priced across ${adjective} retailers.`,
-    },
-    {
-      q: `Are the Riftbound prices shown in ${currency}?`,
-      a: `Yes. Every price is the live ${adjective} price in ${currency}, so there are no surprise currency conversions — what you see is what you pay locally.`,
-    },
-  ];
-}
+// MARKET-NEUTRAL FAQs: this page is cached (real ISR) and Googlebot crawls
+// from US IPs, so exactly one version is ever indexed — copy that names all
+// four markets ranks in all four, and the country names double as keywords.
+const FAQS: { q: string; a: string }[] = [
+  {
+    q: "Where can I buy Riftbound cards?",
+    a: "RiftCompare compares live Riftbound prices across a wide range of local stores in Australia, New Zealand, the US and the UK, plus eBay (AU, US and UK), so you can buy Riftbound cards from whichever shop is cheapest. Search any card to see every store's price and click straight through to buy.",
+  },
+  {
+    q: "How do I find the cheapest Riftbound prices?",
+    a: "Search or browse the card database — every card shows the lowest live price across the stores in your market, ranked by total delivered cost (item plus shipping). It's the fastest way to find the cheapest Riftbound cards wherever you are.",
+  },
+  {
+    q: "Does RiftCompare cover Riftbound singles and sealed products?",
+    a: "Yes — compare prices on individual Riftbound singles as well as sealed products like booster boxes, booster packs, Proving Grounds and Nexus Night packs, all priced across local retailers.",
+  },
+  {
+    q: "Are the Riftbound prices shown in my local currency?",
+    a: "Yes. Prices are shown in the local currency of your selected market — AUD in Australia, NZD in New Zealand, USD in the US and GBP in the UK — so there are no surprise currency conversions.",
+  },
+];
 
 export default async function HomePage() {
-  const country = getCountry();
+  // AU-baseline data on the cached render (deal sections are honestly labelled
+  // "Australia"); CardTile re-prices to the visitor's market after hydration.
+  // The copy Google indexes (hero, FAQs, about) is market-neutral.
+  const country = DEFAULT_COUNTRY;
   const info = COUNTRIES[country];
-  const ebay = ebayLabel(country);
-  const faqs = faqsFor(info, ebay);
   const field = priceField(country);
   const [totalCards, pricedCards, inStockUnits, popularCards, storeGroups, topDeals, index] = await Promise.all([
     prisma.card.count(),
@@ -120,7 +115,7 @@ export default async function HomePage() {
           <div>
             <h2 className="text-xl font-extrabold text-white">Most popular Riftbound cards</h2>
             <p className="mt-0.5 text-xs text-slate-500">
-              The most-searched cards right now — compare {storeCount} {info.adjective} {storeWord} for every one to find the best price.
+              The most-searched cards right now — compare {storeCount} local {storeWord} for every one to find the best price.
             </p>
           </div>
           <Link href="/browse" className="btn-ghost text-xs shrink-0">View all →</Link>
@@ -201,16 +196,16 @@ export default async function HomePage() {
 
       {/* About + FAQ — keyword-relevant content for search */}
       <section className="card-surface p-6">
-        <h2 className="text-xl font-extrabold text-white">Riftbound prices in {info.place}, all in one place</h2>
+        <h2 className="text-xl font-extrabold text-white">Riftbound prices in Australia, New Zealand, the US &amp; UK — all in one place</h2>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
           RiftCompare is a free, independent price-comparison tool for Riftbound: League of Legends
-          TCG, built for {info.adjective} players. We track live prices for every Riftbound card across
-          {" "}{info.adjective} stores{ebay ? ` and ${ebay}` : ""} so you can buy Riftbound cards in {info.place} for
+          TCG. We track live prices for every Riftbound card across local stores in Australia, New
+          Zealand, the US and the UK, plus eBay (AU, US and UK), so you can buy Riftbound cards for
           less — whether you&apos;re chasing singles for a deck or sealed booster boxes.
         </p>
         {/* Collapsible FAQ — tidy on mobile; answers still in the DOM for SEO. */}
         <div className="mt-5 divide-y divide-ink-800 border-t border-ink-800">
-          {faqs.map((f) => (
+          {FAQS.map((f) => (
             <details key={f.q} className="group py-1">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-3 font-semibold text-white [&::-webkit-details-marker]:hidden">
                 <span>{f.q}</span>
@@ -237,7 +232,7 @@ export default async function HomePage() {
             {
               "@context": "https://schema.org",
               "@type": "FAQPage",
-              mainEntity: faqs.map((f) => ({
+              mainEntity: FAQS.map((f) => ({
                 "@type": "Question",
                 name: f.q,
                 acceptedAnswer: { "@type": "Answer", text: f.a },

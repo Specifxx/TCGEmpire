@@ -86,13 +86,15 @@ export function CinematicHero({
           </div>
         )}
 
-        {/* Kinetic headline */}
+        {/* Kinetic headline — MARKET-NEUTRAL: this page is cached (ISR), so one
+            version serves every visitor and crawler; naming all four markets
+            ranks in all four. Prices localise client-side after hydration. */}
         <h1 className="animate-fade-in [animation-delay:160ms] mx-auto mt-5 max-w-4xl text-4xl font-extrabold leading-[1.05] tracking-tight text-white sm:text-6xl lg:text-7xl">
-          Compare <span className="text-brand-400">Riftbound</span> card prices across {info.adjective} stores
+          Compare <span className="text-brand-400">Riftbound</span> card prices across AU, NZ, US &amp; UK stores
         </h1>
         <p className="animate-fade-in [animation-delay:240ms] mx-auto mt-5 max-w-2xl text-base text-slate-300 sm:text-lg">
-          Find the cheapest place to buy Riftbound TCG cards in {info.place} — live prices in{" "}
-          {info.currency} compared across {storeCount} {info.adjective} {storeWord}, updated daily.
+          Find the cheapest place to buy Riftbound TCG cards — live local prices in AUD, NZD, USD &amp; GBP
+          compared across stores in Australia, New Zealand, the US and the UK, updated daily.
         </p>
 
         {/* CTAs (one primary + one secondary + the all-features launcher) */}
@@ -112,7 +114,7 @@ export function CinematicHero({
           <Stat value={totalCards} label="cards" />
           <Stat value={pricedCards} label="priced" />
           <Stat value={inStockUnits} label="in-stock listings" />
-          <Stat value={storeCount} label={`${info.code} ${storeWord}`} />
+          <Stat value={storeCount} label={`AU ${storeWord}`} />
         </div>
 
         {/* Trust line — approved affiliate partners (absorbs the old Partners strip) */}

@@ -12,17 +12,14 @@ import { MegaMenuProvider } from "@/components/MegaMenuProvider";
 import { WishlistDrawerProvider } from "@/components/WishlistDrawer";
 import { CountryProvider } from "@/components/CountryProvider";
 import { PremiumProvider } from "@/components/PremiumProvider";
-import { getCountry } from "@/lib/get-country";
-import { getCurrentUser } from "@/lib/auth";
-import { isPremium } from "@/lib/premium";
+import { DEFAULT_COUNTRY } from "@/lib/country";
 import { BUYMEACOFFEE_URL, CONTACT_EMAIL, DISCORD_URL, SITE_NAME, SITE_URL } from "@/lib/site";
 import { IMPACT_SITE_VERIFICATION } from "@/lib/affiliate";
 import { NAV_GROUPS } from "@/components/nav-groups";
 import { NativeShell } from "@/components/NativeShell";
 import { HilltopAdsLoader } from "@/components/HilltopAdsLoader";
 import { ReferralCapture } from "@/components/ReferralCapture";
-import { TcgplayerAd } from "@/components/TcgplayerAd";
-import { EbayAd } from "@/components/EbayAd";
+import { FooterAds } from "@/components/FooterAds";
 import { SovrnSnippet } from "@/components/SovrnSnippet";
 import { PriceAlertModal } from "@/components/PriceAlertModal";
 
@@ -144,12 +141,13 @@ const orgJsonLd = {
   ],
 };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const country = getCountry();
-  // Premium members get an ad-free site: no ad loader and the ad components
-  // self-hide via PremiumProvider. getCurrentUser is request-cached.
-  const user = await getCurrentUser();
-  const adFree = isPremium(user);
+// CRITICAL FOR CACHING: this layout must never read cookies()/headers()
+// (directly or via getCountry()/getCurrentUser()). A dynamic-API read in the
+// root layout opts EVERY route into per-request rendering, silently disabling
+// all page-level `revalidate` exports. Market, session and Premium status are
+// resolved client-side instead (CountryProvider reconciles from
+// document.cookie + /api/geo; NavUser/PremiumProvider fetch /api/me).
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   // Neutral lang="en": one cookie-switched URL serves all four English markets
   // (AU/NZ/US/UK), so a single market tag like en-AU would mislabel the others.
   return (
@@ -174,8 +172,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           Skip to main content
         </a>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }} />
-        <PremiumProvider value={adFree}>
-        <CountryProvider initial={country}>
+        <PremiumProvider>
+        <CountryProvider initial={DEFAULT_COUNTRY}>
         <WishlistDrawerProvider>
           <QuickViewProvider>
             <CommandLauncherProvider>
@@ -187,15 +185,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </CommandLauncherProvider>
           </QuickViewProvider>
         </WishlistDrawerProvider>
-        </CountryProvider>
         {/* Site-wide affiliate banners above the footer — BOTH live partners
             (TCGplayer Impact + eBay Partner Network) on every page, so no page
             is left unmonetised. Both are CPC/affiliate: they pay on click-through
-            purchases, so placement-where-relevant beats raw banner count. */}
-        <div className="container-app flex flex-col items-center gap-3 pb-8">
-          <TcgplayerAd size="leaderboard" country={country} />
-          <EbayAd size="leaderboard" country={country} />
-        </div>
+            purchases, so placement-where-relevant beats raw banner count.
+            FooterAds reads the market from the client country context (inside
+            CountryProvider) so the layout stays cookie-free and cacheable. */}
+        <FooterAds />
+        </CountryProvider>
         <footer className="container-app border-t border-ink-800 py-8 text-center text-xs text-slate-500">
           <NewsletterSignup siteName="RiftCompare" />
           {/* Site-map — surfaced here so every page links to every feature even
