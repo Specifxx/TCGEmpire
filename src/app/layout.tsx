@@ -7,6 +7,7 @@ import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { QuickViewProvider } from "@/components/QuickView";
+import { SealedQuickViewProvider } from "@/components/SealedQuickView";
 import { CommandLauncherProvider } from "@/components/CommandLauncher";
 import { MegaMenuProvider } from "@/components/MegaMenuProvider";
 import { WishlistDrawerProvider } from "@/components/WishlistDrawer";
@@ -176,6 +177,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <CountryProvider initial={DEFAULT_COUNTRY}>
         <WishlistDrawerProvider>
           <QuickViewProvider>
+          <SealedQuickViewProvider>
             <CommandLauncherProvider>
               <MegaMenuProvider>
                 <Navbar />
@@ -183,6 +185,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <PriceAlertModal />
               </MegaMenuProvider>
             </CommandLauncherProvider>
+          </SealedQuickViewProvider>
           </QuickViewProvider>
         </WishlistDrawerProvider>
         {/* Site-wide affiliate banners above the footer — BOTH live partners

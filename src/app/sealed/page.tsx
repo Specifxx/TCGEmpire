@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getSealedGroups } from "@/lib/sealed-import";
-import { formatMoney } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { affiliateUrl, ebayAffiliateUrl } from "@/lib/affiliate";
@@ -9,6 +8,7 @@ import { OutboundLink } from "@/components/OutboundLink";
 import { Reveal } from "@/components/Reveal";
 import { SealedFilters } from "@/components/SealedFilters";
 import { SealedSort } from "@/components/SealedSort";
+import { SealedTile } from "@/components/SealedTile";
 import { SITE_URL } from "@/lib/site";
 
 export const revalidate = 900;
@@ -73,7 +73,6 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
     priceCountry = "AU";
   }
   const usingFallback = priceCountry !== country;
-  const fmt = (cents: number) => formatMoney(cents, COUNTRIES[priceCountry].currency);
   const q = one(searchParams.q).trim();
   const ql = q.toLowerCase();
   const typesSel = csvParam(searchParams.type);
@@ -247,72 +246,10 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
               </div>
             </div>
           ) : (
-            <Reveal stagger className="grid gap-4 lg:grid-cols-2">
-          {groups.map((g) => (
-            <div key={g.groupKey} className="card-surface overflow-hidden transition-colors hover:border-ink-600">
-              <div className="flex gap-4 p-4">
-                <div className="h-28 w-28 shrink-0 overflow-hidden rounded-lg bg-ink-900">
-                  {g.imageUrl && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={g.imageUrl} alt={g.name} className="h-full w-full object-contain" loading="lazy" decoding="async" />
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="chip bg-brand-500/15 font-semibold text-brand-300">{g.productType}</span>
-                    {g.setCode && <span className="chip bg-ink-800 text-slate-300">{g.setCode}</span>}
-                  </div>
-                  <h2 className="mt-1 font-bold text-white">{g.name}</h2>
-                  <div className="mt-1 text-sm text-slate-500">
-                    {g.lowestPriceCents != null ? (
-                      <>
-                        from <span className="num text-lg font-bold text-accent">{fmt(g.lowestPriceCents)}</span>
-                        {" · "}{g.storeCount} {g.storeCount === 1 ? "store" : "stores"}
-                      </>
-                    ) : (
-                      "currently unavailable"
-                    )}
-                  </div>
-                  {/* Availability-at-MSRP signal (A4): buyers of a hyped sealed
-                      product care most whether they can still get it at RRP. */}
-                  {g.lowestPriceCents != null && g.msrpCents != null && (
-                    <div className="mt-1.5">
-                      {g.atMsrp ? (
-                        <span className="chip bg-emerald-500/15 font-semibold text-emerald-400">
-                          ✓ In stock at MSRP ({fmt(g.msrpCents)})
-                        </span>
-                      ) : g.overMsrpPct != null && g.overMsrpPct > 0 ? (
-                        <span className="chip bg-red-500/15 font-semibold text-red-400">
-                          {Math.round(g.overMsrpPct)}% over MSRP ({fmt(g.msrpCents)})
-                        </span>
-                      ) : null}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <ul className="divide-y divide-ink-800 border-t border-ink-800">
-                {g.listings.slice(0, 6).map((l, i) => (
-                  <li key={i} className="flex items-center gap-3 px-4 py-2.5">
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-medium text-white">{l.retailerName}</div>
-                      <div className="text-xs">
-                        {l.inStock ? <span className="text-brand-400">● In stock</span> : <span className="text-slate-500">● Out of stock</span>}
-                      </div>
-                    </div>
-                    {i === 0 && l.inStock && (
-                      <span className="chip bg-gold/20 text-gold">Best price</span>
-                    )}
-                    <div className={`num text-sm font-bold ${i === 0 && l.inStock ? "text-accent" : "text-white"} ${!l.inStock ? "text-slate-500 line-through" : ""}`}>
-                      {fmt(l.priceCents)}
-                    </div>
-                    <OutboundLink href={affiliateUrl(l.url, l.retailer)} retailer={l.retailer} country={country} kind="sealed" className={`${i === 0 && l.inStock ? "btn-accent" : "btn-primary"} px-3 py-1.5 text-xs`}>
-                      View →
-                    </OutboundLink>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+            <Reveal stagger className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+              {groups.map((g) => (
+                <SealedTile key={g.groupKey} group={g} currency={currency} />
+              ))}
             </Reveal>
           )}
         </section>
