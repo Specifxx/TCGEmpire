@@ -348,6 +348,8 @@ export async function cleanupStaleSealed(): Promise<number> {
   return ids.length;
 }
 
+import { msrpCents, isAtMsrp, overMsrpPct } from "@/lib/msrp";
+
 export interface SealedGroup {
   groupKey: string;
   name: string;
@@ -356,6 +358,12 @@ export interface SealedGroup {
   imageUrl: string | null;
   lowestPriceCents: number | null;
   storeCount: number;
+  // Availability-at-MSRP (A4): the RRP in the viewer's market (null if none
+  // published), whether the cheapest in-stock listing is at/below it, and how
+  // far over RRP that price sits (positive = scalped).
+  msrpCents: number | null;
+  atMsrp: boolean;
+  overMsrpPct: number | null;
   listings: {
     retailer: string;
     retailerName: string;
@@ -407,6 +415,9 @@ export async function getSealedGroups(country: "AU" | "NZ" | "US" | "UK" = "AU")
         imageUrl: r.imageUrl,
         lowestPriceCents: null,
         storeCount: 0,
+        msrpCents: null,
+        atMsrp: false,
+        overMsrpPct: null,
         listings: [],
       };
       groups.set(r.groupKey, g);
@@ -420,6 +431,10 @@ export async function getSealedGroups(country: "AU" | "NZ" | "US" | "UK" = "AU")
     // Headline price comes from IN-STOCK listings only (null = sold out everywhere).
     g.lowestPriceCents = inStock[0]?.priceCents ?? null;
     g.storeCount = new Set(inStock.map((l) => l.retailerName)).size;
+    // Availability-at-MSRP for this market.
+    g.msrpCents = msrpCents(g.productType, country);
+    g.atMsrp = g.lowestPriceCents != null && isAtMsrp(g.lowestPriceCents, g.productType, country);
+    g.overMsrpPct = g.lowestPriceCents != null ? overMsrpPct(g.lowestPriceCents, g.productType, country) : null;
     return g;
   });
   // Boxes/cases first, then by price.

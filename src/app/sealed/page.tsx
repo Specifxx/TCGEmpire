@@ -20,12 +20,13 @@ interface SealedParams {
   min?: string | string[];
   max?: string | string[];
   instock?: string | string[];
+  atmsrp?: string | string[];
   sort?: string | string[];
 }
 const one = (v?: string | string[]) => (Array.isArray(v) ? v[0] ?? "" : v ?? "");
 const csvParam = (v?: string | string[]) => one(v).split(",").map((s) => s.trim()).filter(Boolean);
 const isFilteredParams = (sp: SealedParams) =>
-  Boolean(one(sp.q) || one(sp.type) || one(sp.set) || one(sp.min) || one(sp.max) || one(sp.instock));
+  Boolean(one(sp.q) || one(sp.type) || one(sp.set) || one(sp.min) || one(sp.max) || one(sp.instock) || one(sp.atmsrp));
 
 // Marketplace hosts per site market (NZ has no local eBay/Amazon — the AU sites
 // are the closest and ship there).
@@ -80,6 +81,7 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
   const minCents = one(searchParams.min) ? Math.round(parseFloat(one(searchParams.min)) * 100) : null;
   const maxCents = one(searchParams.max) ? Math.round(parseFloat(one(searchParams.max)) * 100) : null;
   const instock = one(searchParams.instock) === "1";
+  const atMsrpOnly = one(searchParams.atmsrp) === "1";
   const sort = one(searchParams.sort);
   const isFiltered = isFilteredParams(searchParams);
 
@@ -93,6 +95,7 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
   if (typesSel.length) groups = groups.filter((g) => typesSel.includes(g.productType));
   if (setsSel.length) groups = groups.filter((g) => g.setCode != null && setsSel.includes(g.setCode));
   if (instock) groups = groups.filter((g) => g.storeCount > 0);
+  if (atMsrpOnly) groups = groups.filter((g) => g.atMsrp);
   if (minCents != null) groups = groups.filter((g) => g.lowestPriceCents != null && g.lowestPriceCents >= minCents);
   if (maxCents != null) groups = groups.filter((g) => g.lowestPriceCents != null && g.lowestPriceCents <= maxCents);
   if (ql)
@@ -270,6 +273,21 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
                       "currently unavailable"
                     )}
                   </div>
+                  {/* Availability-at-MSRP signal (A4): buyers of a hyped sealed
+                      product care most whether they can still get it at RRP. */}
+                  {g.lowestPriceCents != null && g.msrpCents != null && (
+                    <div className="mt-1.5">
+                      {g.atMsrp ? (
+                        <span className="chip bg-emerald-500/15 font-semibold text-emerald-400">
+                          ✓ In stock at MSRP ({fmt(g.msrpCents)})
+                        </span>
+                      ) : g.overMsrpPct != null && g.overMsrpPct > 0 ? (
+                        <span className="chip bg-red-500/15 font-semibold text-red-400">
+                          {Math.round(g.overMsrpPct)}% over MSRP ({fmt(g.msrpCents)})
+                        </span>
+                      ) : null}
+                    </div>
+                  )}
                 </div>
               </div>
               <ul className="divide-y divide-ink-800 border-t border-ink-800">

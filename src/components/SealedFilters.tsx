@@ -83,6 +83,7 @@ export function SealedFilters({
   const activeCount =
     ["type", "set"].reduce((n, k) => n + (sp.get(k)?.split(",").filter(Boolean).length ?? 0), 0) +
     (sp.get("instock") ? 1 : 0) +
+    (sp.get("atmsrp") ? 1 : 0) +
     (sp.get("min") || sp.get("max") ? 1 : 0);
 
   return (
@@ -132,6 +133,12 @@ export function SealedFilters({
               checked={sp.get("instock") === "1"}
               onChange={() => update((p) => (p.get("instock") === "1" ? p.delete("instock") : p.set("instock", "1")))}
               label="In stock only"
+            />
+            <Check
+              className="mt-2"
+              checked={sp.get("atmsrp") === "1"}
+              onChange={() => update((p) => (p.get("atmsrp") === "1" ? p.delete("atmsrp") : p.set("atmsrp", "1")))}
+              label="In stock at MSRP"
             />
           </Section>
 
