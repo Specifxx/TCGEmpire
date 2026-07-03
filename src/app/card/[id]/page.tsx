@@ -22,6 +22,7 @@ import { domainSlug } from "@/lib/domains";
 import { decksUsingCard } from "@/lib/meta-decks";
 import { SITE_URL } from "@/lib/site";
 import { PriceHistoryChart } from "@/components/PriceHistoryChart";
+import { NetProceeds } from "@/components/NetProceeds";
 import { AiInsight } from "@/components/AiInsight";
 import { CardPriceMetrics, CardPriceComparison, type EbaySearchMap } from "@/components/CardMarketSection";
 import { computeMarket, type MarketRow } from "@/lib/market-rows";
@@ -356,6 +357,23 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           <section className="card-surface mt-6 p-5">
             <AiInsight cardId={card.id} />
           </section>
+
+          {/* Thinking of selling? Net-proceeds — what you'd actually pocket after
+              fees. Prefilled with the AU-baseline price (the component re-prices
+              to the visitor's market); collapsed so it never blocks a buyer. */}
+          {card.lowestPriceCents != null && (
+            <details className="mt-6 card-surface group">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold text-white [&::-webkit-details-marker]:hidden">
+                <span>Thinking of selling? See what you&apos;d pocket</span>
+                <svg className="h-4 w-4 shrink-0 text-slate-500 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </summary>
+              <div className="border-t border-ink-700 p-4">
+                <NetProceeds initialPriceCents={card.lowestPriceCents} />
+              </div>
+            </details>
+          )}
 
           {/* In-content ad — below the price table the visitor came for, so it never
               gets between them and the prices. Activates when a slot id is set. */}
