@@ -1,12 +1,14 @@
 import { getPriceHistory } from "@/lib/price-history";
-import { getCountry } from "@/lib/get-country";
-import { currencyOf } from "@/lib/country";
+import { currencyOf, DEFAULT_COUNTRY } from "@/lib/country";
 import { PriceChart } from "./PriceChart";
 
-// Price-history chart on the card page — free for everyone, in the viewer's market.
-// Data comes from the daily per-market PriceHistory snapshots (lowest price).
+// Price-history chart on the card page — free for everyone, on the AU baseline
+// market (the series is collected there). MUST stay cookie-free: a getCountry()
+// read here would opt the whole /card/[id] route back into per-request rendering
+// and kill its ISR cache — the exact regression behind the "Discovered – currently
+// not indexed" backlog. The chart is honestly labelled with its market.
 export async function PriceHistoryChart({ cardId }: { cardId: string }) {
-  const country = getCountry();
+  const country = DEFAULT_COUNTRY;
   const points = await getPriceHistory(cardId, country);
 
   return (

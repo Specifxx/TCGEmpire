@@ -8,47 +8,86 @@ import { isOvernumbered, isSignature } from "@/lib/constants";
 import { WishlistButton } from "@/components/WishlistButton";
 import { ShareButton } from "@/components/ShareButton";
 import { CardViewBeacon } from "@/components/CardViewBeacon";
-import { formatMoney, timeAgo } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
-import { affiliateUrl, ebayAffiliateUrl, outboundRel } from "@/lib/affiliate";
+import { affiliateUrl, ebayAffiliateUrl } from "@/lib/affiliate";
 import { cardDisplayName } from "@/lib/card-name";
 import { CardTile } from "@/components/CardTile";
 import { cardTileSelect } from "@/lib/cards";
-import { OutboundLink } from "@/components/OutboundLink";
 import { AdSlot } from "@/components/AdSlot";
-import { TcgplayerAd } from "@/components/TcgplayerAd";
 import { EmbedCardButton } from "@/components/EmbedCardButton";
-import { EbayAd } from "@/components/EbayAd";
-import { getCountry } from "@/lib/get-country";
-import { COUNTRIES, pickPrice } from "@/lib/country";
-import { UK_FALLBACK_RETAILERS, setByCode } from "@/lib/constants";
+import { DEFAULT_COUNTRY } from "@/lib/country";
+import { setByCode } from "@/lib/constants";
 import { domainSlug } from "@/lib/domains";
 import { decksUsingCard } from "@/lib/meta-decks";
 import { SITE_URL } from "@/lib/site";
 import { PriceHistoryChart } from "@/components/PriceHistoryChart";
 import { AiInsight } from "@/components/AiInsight";
+import { CardPriceMetrics, CardPriceComparison, type EbaySearchMap } from "@/components/CardMarketSection";
+import { computeMarket, type MarketRow } from "@/lib/market-rows";
 
-// ISR while AU-only; dynamic per-request once NZ mode is enabled (cookie-driven).
-export const revalidate = 180;
+// REAL ISR: no cookie/header reads anywhere in this route's tree — the page is
+// rendered once on the AU baseline and served from cache to every visitor and
+// crawler. The market-dependent UI (metrics, store list, eBay fallback) ships ALL
+// markets' rows to a client component that localises after hydration, so switching
+// country never needs a server render. This is the fix for GSC's "Discovered –
+// currently not indexed" backlog: Googlebot gets fast cached 200s instead of a
+// full per-request render on every one of ~1,200 card URLs.
+export const revalidate = 1800;
+
+// Prewarm the most-searched cards at build so their first crawl hits the cache;
+// the long tail renders on demand and is then cached by `revalidate`. The build
+// sandbox has no DATABASE_URL, so degrade to on-demand-only rather than failing.
+export async function generateStaticParams() {
+  try {
+    const cards = await prisma.card.findMany({
+      orderBy: [{ searchCount: "desc" }, { viewCount: "desc" }],
+      take: 200,
+      select: { slug: true, id: true },
+    });
+    return cards.map((c) => ({ id: c.slug ?? c.id }));
+  } catch {
+    return [];
+  }
+}
 
 // Accept either the slug ("vayne-hunter-sfd-223-221") or the legacy cuid.
 const whereParam = (p: string) => ({ OR: [{ slug: p }, { id: p }] });
 
+const fmtAud = (cents: number) => formatMoney(cents); // AUD — the cached baseline market
+
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const card = await prisma.card.findFirst({
     where: whereParam(params.id),
-    select: { slug: true, name: true, setName: true, setCode: true, collectorNumber: true, lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, imageUrl: true, imageThumbUrl: true },
+    select: {
+      slug: true, name: true, setName: true, setCode: true, collectorNumber: true,
+      variant: true, isPromo: true, rarity: true,
+      lowestPriceCents: true,
+      // Live AU in-stock retailer keys — a real number in the snippet is the CTR
+      // lever this vertical runs on (competitors' snippets show "$X / N stores").
+      // Rows are unique per [retailer, condition, isFoil], so count DISTINCT
+      // retailers or one store's NM + foil listings would read as "2 stores".
+      retailerPrices: { where: { country: "AU", inStock: true }, select: { retailer: true } },
+    },
   });
-  // noindex like the set page: the layout's cookie read makes pages render
-  // dynamically, so make sure an unknown slug can never be indexed as a soft-404.
   if (!card) notFound(); // real 404 — metadata resolves before streaming
 
-  // MARKET-NEUTRAL metadata: Googlebot crawls from US IPs, so cookie-derived
-  // copy ("price in the United States") would be what gets indexed for every
-  // market — fragmented snippets at catalogue scale. Neutral title also stays
-  // under the ~60-char SERP truncation point.
-  const title = `${card.name} (${card.setCode} ${card.collectorNumber}) — Riftbound Card Price`;
-  const description = `Compare live prices for ${card.name}, Riftbound ${card.setName} ${card.collectorNumber}, across stores in Australia, New Zealand, the US and the UK — find the cheapest place to buy.`;
+  // MARKET-NEUTRAL metadata (the page is cached once for all markets). The
+  // display name carries the printing credentials (Promo/Alt Art/Signature…) so
+  // variant printings that share a name + number stop emitting byte-identical
+  // titles — duplicate-looking clusters are exactly what Google leaves unindexed.
+  const displayName = cardDisplayName(card.name, card);
+  // Adaptive title: the full form busts the ~60-char SERP window for long legend
+  // names and credentialed printings, so those fall back to a compact form — the
+  // query phrase ("{name} Price") must survive truncation for every name length.
+  // (setCode keeps same-name printings in DIFFERENT sets from sharing a title.)
+  const fullTitle = `${displayName} Price — Riftbound ${card.setName} ${card.collectorNumber}`;
+  const title = fullTitle.length > 52 ? `${displayName} Price — Riftbound ${card.setCode}` : fullTitle;
+  const stores = new Set(card.retailerPrices.map((r) => r.retailer)).size;
+  const description =
+    card.lowestPriceCents != null && stores > 0
+      ? `Live ${displayName} prices from ${fmtAud(card.lowestPriceCents)} across ${stores} ${stores === 1 ? "store" : "stores"} — compare AU, NZ, US & UK, with price history. Updated daily.`
+      : `Compare live ${displayName} prices across AU, NZ, US & UK stores — Riftbound ${card.setName} ${card.collectorNumber}. Price history included. Updated daily.`;
 
   return {
     title,
@@ -76,102 +115,86 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 }
 
 export default async function CardPage({ params }: { params: { id: string } }) {
-  const country = getCountry();
-  const info = COUNTRIES[country];
-  const fmt = (cents: number) => formatMoney(cents, info.currency);
   const card = await prisma.card.findFirst({
     where: whereParam(params.id),
     include: {
-      // Only the selected market's store listings (AU stores + eBay AU, or NZ stores).
-      retailerPrices: { where: { country }, orderBy: { priceCents: "asc" } },
+      // ALL markets' listings — the client market section filters to the visitor's
+      // country, so a market switch is instant and never re-renders the server page.
+      retailerPrices: { orderBy: { priceCents: "asc" } },
     },
   });
 
   if (!card) notFound();
 
-  const lowestPrice = pickPrice(card, country);
+  const displayName = cardDisplayName(card.name, card);
 
-  // Rank by ITEM price — the "lowest price" is the cheapest card price, full stop.
-  // Postage is shown for transparency when we genuinely know it (eBay's real
-  // per-listing figure), but it must NOT decide which listing is cheapest (otherwise
-  // a store would be penalised vs eBay just because eBay's postage is known and a
-  // store's is "at checkout"). Cheaper known postage only breaks ties on equal price.
-  // Converted UK reference prices (TCGplayer-UK / Cardmarket) are fallbacks only: hide
-  // them from the listing breakdown whenever a real GBP listing exists, so the cheapest
-  // shown matches the "from" price (which already excludes them). When a fallback is the
-  // only UK source, keep it.
-  const ukHasRealGbp =
-    country === "UK" &&
-    card.retailerPrices.some((p) => p.inStock && !UK_FALLBACK_RETAILERS.includes(p.retailer));
-  const sourceRows = ukHasRealGbp
-    ? card.retailerPrices.filter((p) => !UK_FALLBACK_RETAILERS.includes(p.retailer))
-    : card.retailerPrices;
-  const all = sourceRows
-    .map((p) => {
-      const ship = effectiveShippingCents(p.shippingCents); // number | null (null = unknown)
-      return { ...p, ship, delivered: p.priceCents + (ship ?? 0) };
-    })
-    .sort((a, b) => a.priceCents - b.priceCents || a.delivered - b.delivered);
-  const prices = all.filter((p) => p.inStock);
-  const outOfStock = all.filter((p) => !p.inStock);
+  // Serialize + enrich rows for the client market section. Affiliate URLs and
+  // shipping-policy lookups are server-only tables, so they're resolved here once
+  // rather than shipping those libs to the browser.
+  const rows: MarketRow[] = card.retailerPrices.map((p) => ({
+    id: p.id,
+    country: p.country,
+    retailer: p.retailer,
+    retailerName: p.retailerName,
+    priceCents: p.priceCents,
+    ship: effectiveShippingCents(p.shippingCents),
+    condition: p.condition,
+    isFoil: p.isFoil,
+    inStock: p.inStock,
+    lastSeen: p.lastSeen.toISOString(),
+    buyHref: affiliateUrl(p.url, p.retailer),
+    policyUrl: shippingPolicyUrl(p.retailer),
+  }));
 
-  // eBay fallback link. eBay's quota is finite, so the daily pass prioritises the
-  // most-searched cards and skips the long tail once the budget runs out. When this
-  // card has NO eBay listing in the viewer's market AND the pass never reached it
-  // recently (ebayCheckedAt stale/null), we couldn't check eBay — so offer an
-  // affiliate-tagged eBay search instead of pretending none exist.
-  // NZ has no eBay marketplace of its own, so NZ never has eBay rows and the
-  // quota gate never applies — eBay AU ships to NZ and is ALWAYS offered when
-  // nothing local is in stock (a zero-listing card page must never be a dead
-  // end with no monetisable action).
-  const EBAY_MKT: Record<string, { domain: string; label: string } | undefined> = {
+  // AU baseline view — powers the cached HTML's structured data and prose (the
+  // same market the SSR'd client components render before hydration).
+  const au = computeMarket(rows, DEFAULT_COUNTRY);
+
+  // eBay fallback search per market, precomputed (affiliate tagging is server-side).
+  // Shown by the client section only when that market has no live eBay rows AND we
+  // couldn't check eBay this cycle (quota) — NZ always qualifies (no local eBay;
+  // eBay AU ships there, and a zero-listing page must never be a dead end).
+  const EBAY_MKT: Record<string, { domain: string; label: string }> = {
     AU: { domain: "ebay.com.au", label: "eBay Australia" },
     NZ: { domain: "ebay.com.au", label: "eBay AU (ships to NZ)" },
     US: { domain: "ebay.com", label: "eBay" },
     UK: { domain: "ebay.co.uk", label: "eBay UK" },
   };
-  const ebayMkt = EBAY_MKT[country];
-  const hasEbay = card.retailerPrices.some((p) => p.retailer.startsWith("ebay") && p.inStock);
   const ebayUnchecked = !card.ebayCheckedAt || Date.now() - card.ebayCheckedAt.getTime() > 28 * 60 * 60 * 1000;
-  const ebaySearchUrl =
-    ebayMkt && !hasEbay && (ebayUnchecked || country === "NZ")
-      ? ebayAffiliateUrl(`https://www.${ebayMkt.domain}/sch/i.html?_nkw=${encodeURIComponent(`${card.name} Riftbound`)}`)
-      : null;
-
-  // Riftbound cards come in both standard and FOIL finishes (same collector number,
-  // different price). Surface the cheapest of each so foil buyers/collectors can
-  // compare — they were previously indistinguishable in the list.
-  const minPrice = (rows: typeof prices) =>
-    rows.reduce<number | null>((m, p) => (m == null || p.priceCents < m ? p.priceCents : m), null);
-  const cheapestStandard = minPrice(prices.filter((p) => !p.isFoil));
-  const cheapestFoil = minPrice(prices.filter((p) => p.isFoil));
+  const ebaySearch: EbaySearchMap = Object.fromEntries(
+    Object.entries(EBAY_MKT).map(([c, mkt]) => [
+      c,
+      ebayUnchecked || c === "NZ"
+        ? {
+            url: ebayAffiliateUrl(`https://www.${mkt.domain}/sch/i.html?_nkw=${encodeURIComponent(`${card.name} Riftbound`)}`),
+            label: mkt.label,
+            nz: c === "NZ",
+          }
+        : null,
+    ])
+  );
 
   // Structured data so Google can show a rich price snippet ("$X, N stores").
   // Google requires a Product to carry "offers", "review", or "aggregateRating";
   // a Product without any of these is a critical Search Console error. So we only
   // emit the Product markup when we actually have priced, in-stock offers to back
   // it — unpriced cards simply omit it rather than emit an invalid empty Product.
-  const hasOffers = prices.length > 0 && lowestPrice != null;
-  // Derive availability from whether any priced offer is actually in stock rather
-  // than hardcoding InStock. `prices` is the inStock-filtered array today, so this
-  // is always InStock — but computing it means a future change to that filter can't
-  // silently misrepresent stock in the markup.
-  const anyInStock = prices.some((p) => p.inStock);
+  const hasOffers = au.prices.length > 0 && au.lowest != null;
   const jsonLd = hasOffers
     ? {
         "@context": "https://schema.org",
         "@type": "Product",
-        name: card.name,
+        name: displayName,
         category: "Trading Card",
-        description: `${card.name} — Riftbound ${card.setName} (${card.setCode}) ${card.collectorNumber}. Compare ${info.adjective} prices.`,
+        description: `${displayName} — Riftbound ${card.setName} (${card.setCode}) ${card.collectorNumber}. Compare live store prices.`,
         ...(card.imageUrl ? { image: card.imageUrl } : {}),
         offers: {
           "@type": "AggregateOffer",
-          priceCurrency: info.currency,
-          lowPrice: (lowestPrice / 100).toFixed(2),
-          highPrice: (prices[prices.length - 1].priceCents / 100).toFixed(2),
-          offerCount: prices.length,
-          availability: anyInStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+          priceCurrency: "AUD",
+          lowPrice: (au.lowest! / 100).toFixed(2),
+          highPrice: (au.prices[au.prices.length - 1].priceCents / 100).toFixed(2),
+          offerCount: au.prices.length,
+          availability: "https://schema.org/InStock",
           // priceValidUntil = now + 1 day: prices refresh on the daily import, so
           // each snapshot is honest only until the next day's pass overwrites it.
           priceValidUntil: new Date(Date.now() + 86400e3).toISOString().slice(0, 10),
@@ -182,14 +205,9 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // Unique editorial copy + FAQ so each card page carries substantive, crawlable
   // text rather than just a price table (thin content ranks poorly). Everything
   // below is generated from this card's own attributes, so no two pages match.
-  // Outbound "buy" URL for a retailer row — affiliate-tagged (the Sovrn
-  // account-verification special case is gone; the account is approved and
-  // every store link now monetises through the normal affiliateUrl flow).
-  const buyHref = (p: { url: string; retailer: string }) => affiliateUrl(p.url, p.retailer);
-
   const tags = (card.tags ?? "").split(",").map((t) => t.trim()).filter(Boolean);
-  const about = buildAbout(card, info, lowestPrice, prices.length, fmt);
-  const faqs = buildFaqs(card, info, lowestPrice, prices.length, fmt);
+  const about = buildAbout(card, au.lowest, au.storeCount);
+  const faqs = buildFaqs(card, au.lowest, au.storeCount);
   const faqLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -218,13 +236,23 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     ],
   };
 
+  // Other printings of this exact card (promo / alt-art / Signature share the
+  // name). Cross-links the variant cluster so each printing has distinct inbound
+  // anchors + copy — near-duplicate clusters with no differentiation are a classic
+  // "Discovered/Crawled – currently not indexed" cause.
+  const printings = await prisma.card.findMany({
+    where: { name: card.name, id: { not: card.id } },
+    orderBy: [{ setCode: "asc" }, { collectorNumber: "asc" }],
+    select: cardTileSelect(DEFAULT_COUNTRY),
+  });
+
   // Similar cards — more from the same set, same domain first. This is the single
-  // biggest internal-linking lever: every long-tail card page now links out to ~12
+  // biggest internal-linking lever: every long-tail card page links out to ~12
   // sibling card pages, which is what gets them crawled and indexed. Priced cards
   // first (more useful, and they're the ones people search). Falls back to other
   // cards in the set when a domain is thin, so the row is never near-empty.
   const SIMILAR_TAKE = 12;
-  const similarSelect = cardTileSelect(country);
+  const similarSelect = cardTileSelect(DEFAULT_COUNTRY);
   const similarOrder = [
     { lowestPriceCents: { sort: "desc" as const, nulls: "last" as const } },
     { collectorNumber: "asc" as const },
@@ -297,7 +325,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             </div>
             <div className="mt-3 flex items-start justify-between gap-3">
               <div>
-                <h1 className="text-2xl font-extrabold text-white">{cardDisplayName(card.name, card)}</h1>
+                <h1 className="text-2xl font-extrabold text-white">{displayName}</h1>
                 <p className="mt-1 font-mono text-xs text-slate-500">
                   {card.setName} ({card.setCode}) · {card.collectorNumber}
                 </p>
@@ -306,167 +334,22 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               <ShareButton />
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <Metric label={cheapestFoil != null ? "Standard from" : "Cheapest price"} value={(cheapestStandard ?? lowestPrice) != null ? fmt((cheapestStandard ?? lowestPrice)!) : "—"} highlight />
-              {cheapestFoil != null && <Metric label="✦ Foil from" value={fmt(cheapestFoil)} highlight />}
-              <Metric label="In stock at" value={`${prices.length} ${prices.length === 1 ? "store" : "stores"}`} />
-              {card.energyCost != null && <Metric label="Energy" value={String(card.energyCost)} />}
-              {card.might != null && cheapestFoil == null && <Metric label="Might" value={String(card.might)} />}
-              {card.might == null && card.power != null && cheapestFoil == null && <Metric label="Power" value={String(card.power)} />}
-            </div>
+            {/* Market-localised metrics (SSR = AU baseline; client reconciles). */}
+            <CardPriceMetrics rows={rows} energyCost={card.energyCost} might={card.might} power={card.power} />
           </div>
 
-          {/* Price comparison */}
-          <div className="card-surface mt-6 overflow-hidden">
-            <div className="flex items-center justify-between border-b border-ink-700 p-4">
-              <h2 className="font-bold text-white">
-                Price comparison <span className="text-slate-500">({prices.length})</span>
-              </h2>
-              {prices[0] && (
-                <span className="text-xs text-slate-500">updated {timeAgo(prices[0].lastSeen)}</span>
-              )}
-            </div>
+          {/* Price comparison + eBay fallback + contextual affiliate banners —
+              everything that varies with the visitor's market lives in the client
+              section so the route itself stays cookie-free and ISR-cacheable. */}
+          <CardPriceComparison
+            rows={rows}
+            displayName={displayName}
+            ebaySearch={ebaySearch}
+            ebayQuery={`${card.name} ${card.collectorNumber}`}
+          />
 
-            {prices.length === 0 && outOfStock.length === 0 ? (
-              <div className="p-8 text-center text-sm text-slate-400">
-                <p className="font-semibold text-white">No prices found yet</p>
-                <p className="mt-1">
-                  We haven&apos;t matched this card to a store listing. Check back soon —
-                  our price feeds refresh regularly.
-                </p>
-              </div>
-            ) : prices.length === 0 ? (
-              <div className="p-6 text-center text-sm text-slate-400">
-                <p className="font-semibold text-white">Currently sold out everywhere</p>
-                <p className="mt-1">
-                  {outOfStock.length} {info.adjective} {outOfStock.length === 1 ? "store has" : "stores have"} listed
-                  this card but it&apos;s out of stock right now. See them below.
-                </p>
-              </div>
-            ) : (
-              <ul className="divide-y divide-ink-800">
-                {prices.map((p, i) => (
-                  <li
-                    key={p.id}
-                    className="flex flex-wrap items-center gap-x-3 gap-y-2 p-3 hover:bg-ink-900/50 sm:flex-nowrap sm:p-4"
-                  >
-                    <div className="w-5 shrink-0 text-center text-sm font-bold text-slate-500 sm:w-6">{i + 1}</div>
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate font-semibold text-white">{p.retailerName}</div>
-                      <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
-                        {p.isFoil && <span className="chip bg-gold/15 font-semibold text-gold">✦ Foil</span>}
-                        {p.condition && <span className="chip bg-ink-800 text-slate-300">{p.condition}</span>}
-                        <span className="text-brand-400">● In stock</span>
-                        <span>
-                          {p.ship == null ? "postage at checkout" : p.ship === 0 ? "free postage" : `+ ${fmt(p.ship)} postage`}
-                        </span>
-                        {p.ship == null && shippingPolicyUrl(p.retailer) && (
-                          <a
-                            href={shippingPolicyUrl(p.retailer)!}
-                            target="_blank"
-                            rel="nofollow noopener noreferrer"
-                            className="text-slate-400 underline decoration-dotted underline-offset-2 hover:text-slate-200"
-                          >
-                            shipping policy ↗
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <div className={`num text-lg font-bold ${i === 0 ? "text-accent" : "text-white"}`}>
-                        {fmt(p.priceCents)}
-                      </div>
-                      {p.ship != null && (
-                        <div className="num text-[11px] text-slate-400">≈ {fmt(p.delivered)} delivered</div>
-                      )}
-                    </div>
-                    {/* Full-width below the row on phones; inline button on sm+. */}
-                    <OutboundLink
-                      href={buyHref(p)}
-                      retailer={p.retailer}
-                      country={country}
-                      className="btn-primary order-last w-full basis-full justify-center sm:order-none sm:w-auto sm:basis-auto"
-                    >
-                      View deal →
-                    </OutboundLink>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {outOfStock.length > 0 && (
-              <div className="border-t border-ink-800">
-                <div className="bg-ink-900/40 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Out of stock ({outOfStock.length}) · last listed price
-                </div>
-                <ul className="divide-y divide-ink-800">
-                  {outOfStock.map((p) => (
-                    <li key={p.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 p-3 opacity-60 sm:flex-nowrap sm:p-4">
-                      <div className="w-5 shrink-0 text-center text-slate-600 sm:w-6">—</div>
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate font-semibold text-slate-300">{p.retailerName}</div>
-                        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
-                          {p.condition && <span className="chip bg-ink-800 text-slate-400">{p.condition}</span>}
-                          <span className="text-slate-500">● Out of stock</span>
-                        </div>
-                      </div>
-                      <div className="shrink-0 text-right">
-                        <div className="num text-lg font-bold text-slate-400 line-through">{fmt(p.priceCents)}</div>
-                      </div>
-                      <OutboundLink
-                        href={buyHref(p)}
-                        retailer={p.retailer}
-                        country={country}
-                        className="btn-ghost order-last w-full basis-full justify-center sm:order-none sm:w-auto sm:basis-auto"
-                      >
-                        Check →
-                      </OutboundLink>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            <p className="border-t border-ink-800 p-3 text-center text-[11px] text-slate-600">
-              Prices are collected from public store listings and may change. RiftCompare
-              may earn a commission on some outbound links.
-            </p>
-          </div>
-
-          {/* eBay fallback — shown only when we couldn't reach this card's eBay
-              listings this cycle (quota), not for cards that genuinely have none. */}
-          {ebaySearchUrl && ebayMkt && (
-            <div className="card-surface mt-4 flex flex-wrap items-center justify-between gap-3 border-amber-500/25 bg-amber-500/[0.04] p-4">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 text-sm font-semibold text-white">
-                  No live {ebayMkt.label} price for this card right now
-                </div>
-                <p className="mt-1 text-xs text-slate-400">
-                  {country === "NZ"
-                    ? <>New Zealand has no eBay marketplace of its own, but eBay Australia ships here — search it directly to see what&apos;s on offer for {cardDisplayName(card.name, card)}.</>
-                    : <>We couldn&apos;t load {ebayMkt.label} listings for {cardDisplayName(card.name, card)} this cycle — search eBay directly to see what&apos;s on offer.</>}
-                </p>
-              </div>
-              <a
-                href={ebaySearchUrl}
-                target="_blank"
-                rel={outboundRel(ebaySearchUrl)}
-                className="btn-primary shrink-0 text-sm"
-              >
-                Search {ebayMkt.label} →
-              </a>
-            </div>
-          )}
-
-          {/* TCGplayer affiliate banner — pays commission on click-through
-              purchases, so it gets the prime spot under the price table. */}
-          <TcgplayerAd size="rect" mobile="rect" country={country} className="mt-6" />
-
-          {/* Contextual eBay banner — searches for THIS card (new, used & graded);
-              the most relevant eBay placement converts far better than a generic one. */}
-          <EbayAd size="leaderboard" country={country} query={`${card.name} ${card.collectorNumber}`} className="mt-4" />
-
-          {/* Price-history chart — free for everyone. */}
+          {/* Price-history chart — free for everyone (AU history; the series is
+              collected on the AU baseline market). */}
           <PriceHistoryChart cardId={card.id} />
 
           {/* AI Tips — funny, narrative buy/hold/wait take grounded in the price data. */}
@@ -514,13 +397,30 @@ export default async function CardPage({ params }: { params: { id: string } }) {
         </div>
       </div>
 
+      {/* Other printings — promo/alt-art/Signature versions of this exact card.
+          Cross-links the variant cluster (each printing is its own product with its
+          own price) so no printing is an unreferenced near-duplicate. */}
+      {printings.length > 0 && (
+        <section className="mt-10">
+          <h2 className="mb-1 text-xl font-extrabold text-white">Other printings of {card.name}</h2>
+          <p className="mb-4 text-xs text-slate-500">
+            Same card, different printing — promos, alternate arts and premium prints each trade at their own price.
+          </p>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            {printings.map((c) => (
+              <CardTile key={c.id} card={c} />
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Played in — meta decks that run this card. Card ↔ deck internal links,
           and a useful "what do I build with this?" prompt for buyers. */}
       {relatedDecks.length > 0 && (
         <section className="mt-10">
           <h2 className="mb-1 text-xl font-extrabold text-white">Played in these decks</h2>
           <p className="mb-4 text-xs text-slate-500">
-            {cardDisplayName(card.name, card)} sees play in {relatedDecks.length === 1 ? "this meta deck" : `${relatedDecks.length} meta decks`} — open one for the full list and its build cost.
+            {displayName} sees play in {relatedDecks.length === 1 ? "this meta deck" : `${relatedDecks.length} meta decks`} — open one for the full list and its build cost.
           </p>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {relatedDecks.map((d) => (
@@ -568,8 +468,9 @@ export default async function CardPage({ params }: { params: { id: string } }) {
         </section>
       )}
 
-      {/* Embeddable live-price widget — a free backlink/brand engine. */}
-      <EmbedCardButton slug={card.slug ?? card.id} market={country} />
+      {/* Embeddable live-price widget — a free backlink/brand engine. (AU default
+          market in the snippet; the widget itself accepts a ?market= override.) */}
+      <EmbedCardButton slug={card.slug ?? card.id} market={DEFAULT_COUNTRY} />
     </div>
   );
 }
@@ -588,11 +489,11 @@ type CardForCopy = {
   might: number | null;
   power: number | null;
 };
-type Info = { adjective: string; place: string };
-type Fmt = (cents: number) => string;
 
 // Builds 2 short paragraphs of unique prose from the card's own attributes.
-function buildAbout(card: CardForCopy, info: Info, lowest: number | null, stores: number, fmt: Fmt): string[] {
+// MARKET-NEUTRAL (this page is cached once for all four markets): the price cited
+// is the AU baseline, named explicitly, with the other markets acknowledged.
+function buildAbout(card: CardForCopy, lowest: number | null, stores: number): string[] {
   let p1 = `${card.name} is a ${card.rarity.toLowerCase()} ${card.type.toLowerCase()} card from ${card.setName} (${card.setCode}), a set in the Riftbound trading card game, with collector number ${card.collectorNumber}.`;
   p1 += card.domain === "Colorless"
     ? " It is a Colorless card, so it fits into decks of any domain."
@@ -603,23 +504,28 @@ function buildAbout(card: CardForCopy, info: Info, lowest: number | null, stores
     else if (card.power != null) p1 += ` and has ${card.power} power`;
     p1 += ".";
   }
-  if (card.variant) p1 += ` This listing covers the alternate-art (${card.variant}) printing.`;
-  if (card.isPromo) p1 += " It is a promotional printing.";
+  // Printing credentials — each printing is a distinct product with its own price,
+  // and spelling that out is what keeps variant pages from reading as duplicates.
+  if (card.rarity === "Showcase") p1 += ` This is the Showcase printing — a special-art version of the base card with its own market price.`;
+  else if (card.variant) p1 += ` This listing covers the alternate-art (${card.variant}) printing, which trades separately from the base version.`;
+  if (isSignature(card.collectorNumber)) p1 += " As a Signature print (numbered beyond the set), it is pulled far less often than base cards and commands a premium.";
+  else if (isOvernumbered(card.collectorNumber)) p1 += " As an overnumbered print (numbered beyond the set's base size), it is rarer than the base printing.";
+  if (card.isPromo) p1 += " It is a promotional printing — it shares the base card's collector number but is a distinct product with its own price.";
 
   const p2 = lowest != null && stores > 0
-    ? `The lowest ${info.adjective} price for ${card.name} today is ${fmt(lowest)}, available across ${stores} ${stores === 1 ? "store" : "stores"}. RiftCompare checks ${info.adjective} retailers daily so you always see the cheapest place to buy it in ${info.place}, postage included.`
-    : `We're currently tracking down ${info.adjective} listings for ${card.name}. Prices refresh daily, so check back soon or add it to your wishlist to be ready the moment it's back in stock.`;
+    ? `The lowest tracked price for ${card.name} today is ${formatMoney(lowest)} in Australia, across ${stores} ${stores === 1 ? "store" : "stores"} — RiftCompare also compares New Zealand, US and UK stores, ranked by delivered cost and refreshed daily.`
+    : `We're currently tracking down store listings for ${card.name}. Prices refresh daily across Australian, New Zealand, US and UK stores — check back soon or add it to your wishlist to be ready the moment it's in stock.`;
 
   return [p1, p2];
 }
 
-function buildFaqs(card: CardForCopy, info: Info, lowest: number | null, stores: number, fmt: Fmt): { q: string; a: string }[] {
+function buildFaqs(card: CardForCopy, lowest: number | null, stores: number): { q: string; a: string }[] {
   return [
     {
-      q: `How much does ${card.name} cost in ${info.place}?`,
+      q: `How much does ${card.name} cost?`,
       a: lowest != null && stores > 0
-        ? `The cheapest ${info.adjective} price for ${card.name} (${card.setCode} ${card.collectorNumber}) is currently ${fmt(lowest)}, found across ${stores} ${stores === 1 ? "store" : "stores"}. Prices update daily.`
-        : `We don't have a live ${info.adjective} price for ${card.name} right now. Prices refresh daily — check back soon for the cheapest place to buy it.`,
+        ? `The cheapest live price for ${card.name} (${card.setCode} ${card.collectorNumber}) is currently ${formatMoney(lowest)} across ${stores} Australian ${stores === 1 ? "store" : "stores"}; New Zealand, US and UK prices are compared on this page too. Prices update daily.`
+        : `We don't have a live price for ${card.name} right now. Prices refresh daily across AU, NZ, US and UK stores — check back soon for the cheapest place to buy it.`,
     },
     {
       q: `What set is ${card.name} from?`,
@@ -627,16 +533,7 @@ function buildFaqs(card: CardForCopy, info: Info, lowest: number | null, stores:
     },
     {
       q: `Where can I buy ${card.name}?`,
-      a: `Compare every ${info.adjective} store selling ${card.name} on this page, then buy from whichever retailer offers the lowest total price including postage. RiftCompare links straight through to each store.`,
+      a: `Compare every store selling ${card.name} across Australia, New Zealand, the US and the UK on this page, then buy from whichever retailer offers the lowest total price including postage. RiftCompare links straight through to each store.`,
     },
   ];
-}
-
-function Metric({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
-  return (
-    <div className="rounded-lg bg-ink-900 p-3">
-      <div className="text-[11px] uppercase tracking-wide text-slate-500">{label}</div>
-      <div className={`num text-lg font-bold ${highlight ? "text-accent" : "text-white"}`}>{value}</div>
-    </div>
-  );
 }
