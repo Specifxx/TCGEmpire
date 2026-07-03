@@ -26,12 +26,15 @@ import { PriceAlertModal } from "@/components/PriceAlertModal";
 
 // Body: Sora (modern, energetic, readable). Headings: Space Grotesk (distinctive,
 // gives the brand more life). Exposed as CSS vars wired into Tailwind.
-// display: "optional" — never swaps late (zero font-CLS); first paint uses the
-// metric-matched fallback, the brand font appears from cache thereafter.
-const sora = Sora({ subsets: ["latin"], variable: "--font-sans", display: "optional" });
-const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-display", display: "optional" });
+// display: "swap" — the brand fonts ALWAYS render (the "market terminal" look is
+// consistent on every load, cached or not), rather than "optional" which silently
+// keeps the system fallback whenever the font misses the ~100ms first-paint window.
+// adjustFontFallback (next/font default) size-matches the fallback so the swap-in
+// causes negligible layout shift.
+const sora = Sora({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
+const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-display", display: "swap" });
 // Monospace for prices / tabular figures — the "market terminal" numeral voice.
-const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "optional" });
+const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
