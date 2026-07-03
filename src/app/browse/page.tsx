@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { COUNTRIES } from "@/lib/country";
+import { getCountry } from "@/lib/get-country";
 import { Filters } from "@/components/Filters";
 import { ActiveFilters } from "@/components/ActiveFilters";
 import { SortSelect } from "@/components/SortSelect";
@@ -17,29 +17,55 @@ import {
   parsePageNum,
   parsePageSize,
 } from "@/lib/cards";
-import { getCountry } from "@/lib/get-country";
 import { SITE_URL } from "@/lib/site";
 
+// searchParams-driven (filters/pagination), so the route stays dynamic.
 export const dynamic = "force-dynamic";
 
 // Browse is the main "buy Riftbound cards" landing page, so give it a strong title
-// and description. Internal search-result views (?q=) are noindex'd (Google
-// discourages indexing site-search results) and all variants canonicalise to the
-// clean /browse so crawl signals concentrate on the one page we want ranked.
+// and description. Metadata is market-neutral: Googlebot crawls mostly from US IPs,
+// so geo-derived copy would index the US variant for every market. Internal
+// search-result views (?q=) are noindex'd (Google discourages indexing site-search
+// results) and canonicalise to the clean /browse.
+//
+// Pagination canonicals: ONLY the clean default view (?page=N and nothing else)
+// self-canonicalises — per Google's guidance paginated pages are not duplicates of
+// page 1, and folding them into /browse discards the card links only those pages
+// carry. Any sized/sorted/filtered variant still canonicalises to /browse (its
+// content is a permutation, and /browse?page=2&size=10 shows entirely different
+// cards than /browse?page=2 — they must never share a canonical). Out-of-range
+// pages are noindex'd so the scheme can't manufacture indexable empty soft-404s.
+const isCleanPagination = (searchParams: CardQuery) =>
+  Object.entries(searchParams).every(([k, v]) => k === "page" || v == null || v === "");
+
 export async function generateMetadata({ searchParams }: { searchParams: CardQuery }): Promise<Metadata> {
-  const info = COUNTRIES[getCountry()];
   const q = (searchParams.q ?? "").trim();
-  return {
-    title: q ? `${q} — Riftbound cards & prices` : "Buy Riftbound Cards — Browse Every Single & Compare Prices",
-    description: `Browse every Riftbound TCG card and compare live ${info.adjective} prices across stores to find the cheapest place to buy Riftbound singles in ${info.place}. Updated daily.`,
-    alternates: { canonical: "/browse" },
-    robots: q ? { index: false, follow: true } : undefined,
+  const page = parsePageNum(searchParams.page);
+  const base = {
+    title: q ? `${q} — Riftbound cards & prices` : "Riftbound Card Database — All Cards & Prices",
+    description:
+      "Browse every Riftbound TCG card and compare live prices across local stores in AU, NZ, US & UK to find the cheapest place to buy singles. Updated daily.",
   };
+  if (q) return { ...base, alternates: { canonical: "/browse" }, robots: { index: false, follow: true } };
+  if (page > 1 && isCleanPagination(searchParams)) {
+    // Guard the self-canonical against out-of-range pages (a 200 with an empty
+    // grid must not become an indexable canonical target). Default page size —
+    // the clean view has no size param by definition.
+    const total = await prisma.card.count().catch(() => 0);
+    const totalPages = Math.max(1, Math.ceil(total / parsePageSize(undefined)));
+    if (page > totalPages) return { ...base, alternates: { canonical: "/browse" }, robots: { index: false, follow: true } };
+    return { ...base, alternates: { canonical: `/browse?page=${page}` } };
+  }
+  return { ...base, alternates: { canonical: "/browse" } };
 }
 
 export default async function BrowsePage({ searchParams }: { searchParams: CardQuery }) {
+  // The route reads searchParams so it is per-request dynamic regardless — the
+  // cookie read costs nothing extra here, and sort/filter MUST use the visitor's
+  // market or the grid renders local prices in AU-column order (US$12 above US$3)
+  // and price filters drop cards with no AU listing. Only the METADATA is
+  // market-neutral (that's what Googlebot indexes).
   const country = getCountry();
-  const info = COUNTRIES[country];
   const where = buildCardWhere(searchParams, country);
   const orderBy = buildCardOrderBy(searchParams.sort, country);
   const size = parsePageSize(searchParams.size);
@@ -68,8 +94,13 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
   const collectionLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: "Buy Riftbound Cards — Browse Every Single & Compare Prices",
-    url: `${SITE_URL}/browse`,
+    name: "Riftbound Card Database — All Cards & Prices",
+    // Matches the page's canonical: clean paginated views self-canonicalise, so
+    // their structured data must not contradict that with a bare /browse url.
+    url:
+      page > 1 && isCleanPagination(searchParams) && page <= totalPages
+        ? `${SITE_URL}/browse?page=${page}`
+        : `${SITE_URL}/browse`,
     description:
       "Browse every Riftbound TCG card and compare live prices across stores to find the cheapest place to buy Riftbound singles. Updated daily.",
     isPartOf: { "@type": "WebSite", name: "RiftCompare", url: SITE_URL },
@@ -102,8 +133,8 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
           <div className="mb-4">
             <h1 className="font-display text-2xl font-extrabold text-white">Buy Riftbound Cards</h1>
             <p className="mt-1 max-w-2xl text-sm text-slate-400">
-              Browse every Riftbound TCG single and compare live {info.adjective} prices across stores to
-              find the cheapest place to buy in {info.place}.
+              Browse every Riftbound TCG single and compare live prices across local stores in AU, NZ,
+              US &amp; UK to find the cheapest place to buy.
             </p>
           </div>
         )}

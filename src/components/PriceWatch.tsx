@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { formatMoney } from "@/lib/format";
+import { cardHref } from "@/lib/card-url";
 import { cardDisplayName } from "@/lib/card-name";
 import type { Mover, PriceMovers } from "@/lib/price-history";
 import { useQuickView } from "./QuickView";
@@ -80,7 +81,18 @@ function Row({ m, up, currency }: { m: Mover; up: boolean; currency: string }) {
   const pos = m.pct > 0;
   return (
     <li>
-      <button onClick={() => open(c)} className="flex w-full items-center gap-2.5 py-2 text-left hover:bg-ink-800/50">
+      {/* Real href for crawlers, sharing and middle/ctrl-click; a plain left-click
+          still opens the instant quick view (same pattern as CardTile). */}
+      <Link
+        href={cardHref(c)}
+        prefetch={false}
+        onClick={(e) => {
+          if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+          e.preventDefault();
+          open(c);
+        }}
+        className="flex w-full items-center gap-2.5 py-2 text-left hover:bg-ink-800/50"
+      >
         <div className="h-12 w-9 shrink-0 overflow-hidden rounded bg-ink-900">
           {c.imageThumbUrl && (
             // eslint-disable-next-line @next/next/no-img-element
@@ -98,7 +110,7 @@ function Row({ m, up, currency }: { m: Mover; up: boolean; currency: string }) {
             {pos ? "+" : "−"}{Math.abs(m.pct)}%
           </div>
         </div>
-      </button>
+      </Link>
     </li>
   );
 }

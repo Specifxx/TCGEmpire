@@ -12,7 +12,8 @@ import { SITE_URL } from "@/lib/site";
 
 // Rendered on the AU baseline server-side (country-neutral copy); the card tiles
 // localise each visitor's price client-side from the three price columns in the
-// card data. (The root layout reads the country cookie, so pages render per request.)
+// card data. (The root layout is cookie-free since be98c66, so this revalidate
+// actually applies — the page is on-demand ISR, not per-request dynamic.)
 export const revalidate = 1800;
 
 export async function generateMetadata({ params }: { params: { set: string } }): Promise<Metadata> {
@@ -23,8 +24,8 @@ export async function generateMetadata({ params }: { params: { set: string } }):
   if (!set) notFound(); // real 404 — metadata resolves before streaming
   // Market-neutral title (no country) so it ranks globally; the page itself is
   // tailored to the visitor's market.
-  const title = `Riftbound ${set.name} Card Prices, Values & Full Card List`;
-  const description = `Every Riftbound ${set.name} card with live prices compared across stores — find the cheapest ${set.name} singles. Full ${set.name} card list and values, updated daily.`;
+  const title = `Riftbound ${set.name} Prices & Full Card List`;
+  const description = `Every Riftbound ${set.name} card with live prices compared across stores — find the cheapest singles. Full card list and values, updated daily.`;
   return {
     title: { absolute: `${title} | RiftCompare` },
     description,

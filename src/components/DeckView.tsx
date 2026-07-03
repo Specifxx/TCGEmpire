@@ -7,6 +7,7 @@ import { DomainBadge } from "./Badge";
 import { TierBadge } from "./TierBadge";
 import { useCountry } from "./CountryProvider";
 import { COUNTRIES } from "@/lib/country";
+import { cardHref } from "@/lib/card-url";
 
 // Tidy display for cards our data labels with a precon suffix (e.g. OGS starter
 // legends imported as "Master, Wuju Bladesman - Starter").
@@ -57,7 +58,7 @@ export function DeckView({ deck, builderHref }: { deck: ResolvedDeck; builderHre
         )}
         <div className="min-w-0 flex-1">
           {item.card ? (
-            <Link href={`/card/${item.card.id}`} className="font-medium text-white hover:text-brand-400">
+            <Link href={cardHref(item.card)} className="font-medium text-white hover:text-brand-400">
               {cleanName(item.card.name)}
             </Link>
           ) : (

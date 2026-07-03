@@ -3,6 +3,7 @@ import { CardImage } from "./CardImage";
 import { ConditionBadge, FoilBadge } from "./Badge";
 import { formatAUD } from "@/lib/format";
 import { rarityInfo } from "@/lib/constants";
+import { cardHref } from "@/lib/card-url";
 
 export interface ListingTile {
   id: string;
@@ -12,6 +13,7 @@ export interface ListingTile {
   seller: { displayName: string };
   card: {
     id: string;
+    slug?: string | null;
     name: string;
     domain: string;
     type: string;
@@ -38,7 +40,7 @@ export function ListingCard({ listing }: { listing: ListingTile }) {
 
   return (
     <Link
-      href={`/card/${card.id}`}
+      href={cardHref(card)}
       className="group card-surface flex flex-col overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-glow"
     >
       {/* Art */}

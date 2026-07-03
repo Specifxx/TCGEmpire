@@ -24,7 +24,7 @@ export const revalidate = 1800;
 export const metadata: Metadata = {
   title: { absolute: "The RiftCompare Index — Riftbound Market Tracker | RiftCompare" },
   description:
-    "One number for the health of the global Riftbound TCG market. The RiftCompare Index tracks the prices of the most-searched Riftbound cards as a weighted daily index — like a stock index for the game. Switch to any region. Updated daily, free to cite.",
+    "One number for the global Riftbound market: a weighted daily index of the most-searched cards — like a stock index for the game. Updated daily, free to cite.",
   keywords: [
     "RiftCompare Index",
     "Riftbound market index",
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "The RiftCompare Index — the Riftbound market in one number",
     description:
-      "A weighted daily index of the most-searched Riftbound cards — like a stock index for the game. Global by default, switchable by region. Updated daily, free to cite.",
+      "One number for the global Riftbound market: a weighted daily index of the most-searched cards — like a stock index for the game. Updated daily, free to cite.",
     url: `${SITE_URL}/market`,
   },
 };

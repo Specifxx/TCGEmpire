@@ -3,8 +3,7 @@ import Link from "next/link";
 import { unstable_cache } from "next/cache";
 import { getPriceMovers } from "@/lib/price-history";
 import { PriceWatch } from "@/components/PriceWatch";
-import { getCountry } from "@/lib/get-country";
-import { COUNTRIES } from "@/lib/country";
+import { COUNTRIES, DEFAULT_COUNTRY } from "@/lib/country";
 import { SETS } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
 import { AdSlot } from "@/components/AdSlot";
@@ -15,11 +14,11 @@ import { AdSlot } from "@/components/AdSlot";
 export const revalidate = 1800;
 
 // Market-neutral metadata (no country in the title) so the page can rank globally;
-// the body below is still localised to the visitor's market.
+// the body is the AU-baseline market the cached page is built from.
 export const metadata: Metadata = {
-  title: { absolute: "Riftbound Price Movers — Biggest Risers, Drops & Deals This Week | RiftCompare" },
+  title: { absolute: "Riftbound Price Movers — Top Risers & Drops | RiftCompare" },
   description:
-    "This week's biggest Riftbound card price movers — the cards spiking up, the biggest drops, and the best-value buys off their recent highs. Live prices compared across stores, updated daily.",
+    "This week's biggest Riftbound card price movers — top risers, biggest drops and best-value deals, compared across stores. Updated daily.",
   keywords: [
     "Riftbound price movers",
     "Riftbound card prices going up",
@@ -30,20 +29,21 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: "/movers" },
   openGraph: {
-    title: "Riftbound Price Movers — Biggest Risers, Drops & Deals This Week",
+    title: "Riftbound Price Movers — Top Risers & Drops",
     description:
-      "This week's biggest Riftbound card price movers: spikes, drops and the best-value buys, compared across stores and updated daily.",
+      "This week's biggest Riftbound card price movers — top risers, biggest drops and best-value deals, compared across stores. Updated daily.",
     url: `${SITE_URL}/movers`,
   },
 };
 
 export default async function MoversPage() {
-  const country = getCountry();
+  // AU baseline, no cookie read: a getCountry() call would force this route
+  // dynamic and kill the revalidate above, so the page is genuinely static.
+  const country = DEFAULT_COUNTRY;
   const info = COUNTRIES[country];
 
   // Deeper list than the homepage teaser. Cache the heavy 35-day aggregation
-  // per-market (the cookie read makes this page per-request, but the data only
-  // changes on the daily import).
+  // across regenerations (the data only changes on the daily import).
   const movers = await unstable_cache(
     () => getPriceMovers(country, 20),
     ["price-movers-page", country],
@@ -111,9 +111,8 @@ export default async function MoversPage() {
           <strong className="text-slate-200">spiking</strong>, which are seeing the{" "}
           <strong className="text-slate-200">biggest drops</strong>, and where the{" "}
           <strong className="text-slate-200">best value</strong> is off a card&apos;s recent high. Every
-          figure is the live {info.adjective} lowest price in {info.currency}, compared across stores and
-          updated daily — switch your country at the top to see local movers. Tap any card for its full
-          price-history chart.
+          figure is the latest {info.adjective} lowest price in {info.currency}, compared across stores
+          and updated daily. Tap any card for its full price-history chart.
         </p>
       </div>
 

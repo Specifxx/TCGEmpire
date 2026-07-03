@@ -51,9 +51,9 @@ export async function generateMetadata({ searchParams }: { searchParams: SealedP
   return {
     title: q
       ? `${q} — Riftbound sealed products`
-      : "Riftbound Sealed Products — Booster Boxes, Packs & Sets",
+      : "Riftbound Sealed Prices — Boxes, Packs & Sets",
     description:
-      "Compare prices on sealed Riftbound products — booster boxes, booster packs, Proving Grounds, bundles and more — across stores to find the cheapest.",
+      "Compare live prices on Riftbound booster boxes, packs, bundles & Proving Grounds across AU, NZ, US & UK stores — find the cheapest sealed. Updated daily.",
     alternates: { canonical: "/sealed" },
     robots: isFilteredParams(searchParams) ? { index: false, follow: true } : undefined,
   };
