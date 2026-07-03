@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDeckSeed, resolveDeck } from "@/lib/meta-decks";
 import { DeckView } from "@/components/DeckView";
+import { DeckCart } from "@/components/DeckCart";
+import type { DeckCartLine } from "@/lib/deck-basket";
 import { getCountry } from "@/lib/get-country";
 
 export const revalidate = 900;
@@ -33,9 +35,26 @@ function encodeForBuilder(text: string): string {
 export default async function DeckDetailPage({ params }: { params: { slug: string } }) {
   const seed = getDeckSeed(params.slug);
   if (!seed) notFound();
-  const deck = await resolveDeck(seed, getCountry());
+  const country = getCountry();
+  const deck = await resolveDeck(seed, country);
 
   const builderHref = `/deck?list=${encodeForBuilder(deckListText(seed.legend, seed.cards))}`;
+
+  // Cheapest-cart buy list: main-deck cards (excl. sideboard) that matched a
+  // real card, plus the legend. Deduped by card id with summed quantities.
+  const cartLineMap = new Map<string, DeckCartLine>();
+  const addLine = (card: { id: string; name: string; slug: string | null } | null, qty: number) => {
+    if (!card || qty <= 0) return;
+    const ex = cartLineMap.get(card.id);
+    if (ex) ex.qty += qty;
+    else cartLineMap.set(card.id, { cardId: card.id, name: card.name, slug: card.slug, qty });
+  };
+  for (const item of deck.items) {
+    if (item.section === "sideboard") continue;
+    addLine(item.card, item.qty);
+  }
+  addLine(deck.legendCard, 1);
+  const cartLines = [...cartLineMap.values()];
 
   return (
     <div>
@@ -43,6 +62,7 @@ export default async function DeckDetailPage({ params }: { params: { slug: strin
         ← All meta decks
       </Link>
       <DeckView deck={deck} builderHref={builderHref} />
+      <DeckCart lines={cartLines} country={country} />
     </div>
   );
 }
