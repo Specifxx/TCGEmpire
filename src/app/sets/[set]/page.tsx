@@ -14,7 +14,7 @@ import { SITE_URL } from "@/lib/site";
 // localise each visitor's price client-side from the three price columns in the
 // card data. (The root layout is cookie-free since be98c66, so this revalidate
 // actually applies — the page is on-demand ISR, not per-request dynamic.)
-export const revalidate = 1800;
+export const revalidate = 3600;
 
 export async function generateMetadata({ params }: { params: { set: string } }): Promise<Metadata> {
   const set = setBySlug(params.set);

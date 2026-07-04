@@ -17,9 +17,9 @@ import { IndexStats } from "@/components/IndexStats";
 import { EmbedSnippet } from "@/components/EmbedSnippet";
 import { getLatestMarketReport } from "@/lib/posts";
 
-// Recompute at most twice an hour — the underlying PriceHistory only changes on
-// the daily import, but search-driven constituents drift during the day.
-export const revalidate = 1800;
+// Recompute hourly — the underlying PriceHistory only changes on the daily import,
+// so a longer cache window keeps DB egress down without losing meaningful freshness.
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: { absolute: "The RiftCompare Index — Riftbound Market Tracker | RiftCompare" },

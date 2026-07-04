@@ -34,7 +34,7 @@ import { computeMarket, type MarketRow } from "@/lib/market-rows";
 // country never needs a server render. This is the fix for GSC's "Discovered –
 // currently not indexed" backlog: Googlebot gets fast cached 200s instead of a
 // full per-request render on every one of ~1,200 card URLs.
-export const revalidate = 1800;
+export const revalidate = 3600;
 
 // Prewarm the most-searched cards at build so their first crawl hits the cache;
 // the long tail renders on demand and is then cached by `revalidate`. The build
@@ -121,7 +121,16 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     include: {
       // ALL markets' listings — the client market section filters to the visitor's
       // country, so a market switch is instant and never re-renders the server page.
-      retailerPrices: { orderBy: { priceCents: "asc" } },
+      // Select ONLY the columns MarketRow needs: this query returns the most rows
+      // (every listing × 4 markets), so trimming columns is the biggest per-render
+      // egress cut on the site's highest-volume page.
+      retailerPrices: {
+        orderBy: { priceCents: "asc" },
+        select: {
+          id: true, country: true, retailer: true, retailerName: true, priceCents: true,
+          shippingCents: true, condition: true, isFoil: true, inStock: true, lastSeen: true, url: true,
+        },
+      },
     },
   });
 

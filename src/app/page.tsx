@@ -18,7 +18,7 @@ import { MarketPulse } from "@/components/home/MarketPulse";
 // indexed copy names all four markets, data is fetched for the AU baseline) so
 // Google gets one coherent global page and every visitor gets cached HTML.
 // Client components localise prices after hydration via CountryProvider.
-export const revalidate = 180;
+export const revalidate = 3600;
 
 // Market-neutral metadata (no country in the title) so search results aren't biased
 // to one country — the visible page below is still tailored to the visitor's market.

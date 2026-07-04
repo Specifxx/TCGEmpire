@@ -7,7 +7,7 @@ import { DeckCart } from "@/components/DeckCart";
 import type { DeckCartLine } from "@/lib/deck-basket";
 import { getCountry } from "@/lib/get-country";
 
-export const revalidate = 900;
+export const revalidate = 3600;
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const seed = getDeckSeed(params.slug);
