@@ -47,4 +47,8 @@ Verify gate: `tsc --noEmit` clean + `next build` "Compiled successfully" (the CI
       nudges; returning-visitor hooks (the daily market wrap, Riftle).
 
 ## Done
-- (the bot appends one line per shipped change here)
+- 2026-07-04: CTR rewrite for `/sets/[set]` title+description (shared template hits
+  `/sets/unleashed`, `/sets/proving-grounds`, `/sets/spiritforged` — 763 combined GSC
+  impressions at 0.3–2.9% CTR). Title now leads with "Cheapest Sellers" hook instead of
+  generic "Full Card List"; description front-loads "cheapest" and is more concrete.
+  Also shortens the longest title (Proving Grounds) from ~88 to 74 chars.
