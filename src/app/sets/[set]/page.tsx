@@ -24,8 +24,10 @@ export async function generateMetadata({ params }: { params: { set: string } }):
   if (!set) notFound(); // real 404 — metadata resolves before streaming
   // Market-neutral title (no country) so it ranks globally; the page itself is
   // tailored to the visitor's market.
-  const title = `Riftbound ${set.name} Prices & Full Card List`;
-  const description = `Every Riftbound ${set.name} card with live prices compared across stores — find the cheapest singles. Full card list and values, updated daily.`;
+  // Front-loads the "cheapest" buyer hook (GSC: these pages ranked but had very
+  // low CTR — "Prices & Full Card List" read as generic next to competitors).
+  const title = `Riftbound ${set.name} Prices — Cheapest Sellers`;
+  const description = `Find the cheapest Riftbound ${set.name} singles — every card, live prices compared across stores, updated daily.`;
   // A set with no imported cards yet (pre-release, or a data gap where a released
   // set was registered before its cards were imported) renders only a placeholder —
   // thin content. Noindex it so Google doesn't sink crawl budget into a soft-thin
