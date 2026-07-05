@@ -14,7 +14,7 @@ import { SITE_URL } from "@/lib/site";
 // young TCG: "riftbound card value / prices / what are my cards worth". The product
 // behind it is the same database; this page frames it for that intent. ISR (like the
 // homepage) so crawlers get fast, cached HTML — no force-dynamic.
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: { absolute: "Riftbound Card Value Checker — What Are Your Cards Worth?" },

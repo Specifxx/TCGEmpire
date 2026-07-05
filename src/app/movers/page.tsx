@@ -11,7 +11,7 @@ import { AdSlot } from "@/components/AdSlot";
 // ISR: the underlying PriceHistory is rewritten once per day by the price-refresh
 // workflow (GitHub Action → import-prices), so a 30-minute window keeps the page
 // fresh without recomputing the 35-day aggregation on every request.
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 // Market-neutral metadata (no country in the title) so the page can rank globally;
 // the body is the AU-baseline market the cached page is built from.

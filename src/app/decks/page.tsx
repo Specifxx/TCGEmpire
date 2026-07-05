@@ -8,7 +8,7 @@ import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { SITE_URL } from "@/lib/site";
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: "Riftbound Top Meta Decks & Build Cost",

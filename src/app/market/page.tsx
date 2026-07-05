@@ -16,6 +16,7 @@ import { MarketSectionNav } from "@/components/MarketSectionNav";
 import { IndexStats } from "@/components/IndexStats";
 import { EmbedSnippet } from "@/components/EmbedSnippet";
 import { getLatestMarketReport } from "@/lib/posts";
+import { CONTENT_TAG } from "@/lib/revalidate-content";
 
 // Recompute hourly — the underlying PriceHistory only changes on the daily import,
 // so a longer cache window keeps DB egress down without losing meaningful freshness.
@@ -116,12 +117,17 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
   // Cache key is versioned (v2): the cached MarketIndex shape gained `stats`, and the
   // data cache persists across deploys — a stale pre-stats blob would otherwise crash
   // the stats panel. Bumping the key forces a fresh compute with the new shape.
+  // Long TTL + CONTENT_TAG: /market is searchParams-dynamic (per-request), so this
+  // unstable_cache — not a page revalidate — is what bounds its DB reads. The daily
+  // import clears CONTENT_TAG, so the heavy index compute runs ~once per import
+  // instead of every 30 min, with a 24h fallback.
   const index = await unstable_cache(() => getMarketIndex(market), ["market-index-v3", market], {
-    revalidate: 1800,
+    revalidate: 86400,
+    tags: [CONTENT_TAG],
   })();
-  const reports = await unstable_cache(getRecentReports, ["market-reports-recent"], { revalidate: 1800 })();
+  const reports = await unstable_cache(getRecentReports, ["market-reports-recent"], { revalidate: 86400, tags: [CONTENT_TAG] })();
   // The newest wrap, featured prominently near the top of the page (with charts).
-  const latestWrap = await unstable_cache(getLatestMarketReport, ["market-wrap-latest"], { revalidate: 1800 })();
+  const latestWrap = await unstable_cache(getLatestMarketReport, ["market-wrap-latest"], { revalidate: 86400, tags: [CONTENT_TAG] })();
 
   // Biggest 7-day movers among the Index constituents (stock-index style gainers/losers).
   const constituents = index?.constituents ?? [];

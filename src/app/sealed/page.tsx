@@ -11,7 +11,7 @@ import { SealedSort } from "@/components/SealedSort";
 import { SealedTile } from "@/components/SealedTile";
 import { SITE_URL } from "@/lib/site";
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 interface SealedParams {
   q?: string | string[];

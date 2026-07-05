@@ -34,7 +34,7 @@ import { computeMarket, type MarketRow } from "@/lib/market-rows";
 // country never needs a server render. This is the fix for GSC's "Discovered –
 // currently not indexed" backlog: Googlebot gets fast cached 200s instead of a
 // full per-request render on every one of ~1,200 card URLs.
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 // Prewarm the most-searched cards at build so their first crawl hits the cache;
 // the long tail renders on demand and is then cached by `revalidate`. The build

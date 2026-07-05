@@ -10,7 +10,7 @@ import { SITE_URL } from "@/lib/site";
 
 // AU baseline server render (country-neutral copy); card tiles localise the price
 // client-side from the per-market price columns, like the set pages.
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const domain = domainBySlug(params.slug);

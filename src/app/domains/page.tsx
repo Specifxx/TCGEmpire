@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { DOMAIN_PAGES } from "@/lib/domains";
 import { SITE_URL } from "@/lib/site";
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: { absolute: "Riftbound Domains — Fury, Calm, Mind, Body, Chaos & Order | RiftCompare" },

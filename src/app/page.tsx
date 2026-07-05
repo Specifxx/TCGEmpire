@@ -13,12 +13,13 @@ import { TodaysTopDeals } from "@/components/TodaysTopDeals";
 import { getMarketIndex } from "@/lib/market-index";
 import { CinematicHero } from "@/components/home/CinematicHero";
 import { MarketPulse } from "@/components/home/MarketPulse";
+import { CONTENT_TAG } from "@/lib/revalidate-content";
 
 // REAL ISR: renders a market-NEUTRAL baseline (no cookie/header reads — the
 // indexed copy names all four markets, data is fetched for the AU baseline) so
 // Google gets one coherent global page and every visitor gets cached HTML.
 // Client components localise prices after hydration via CountryProvider.
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 // Market-neutral metadata (no country in the title) so search results aren't biased
 // to one country — the visible page below is still tailored to the visitor's market.
@@ -78,14 +79,15 @@ export default async function HomePage() {
     getPopularCards(12, country),
     // Stores serving the selected market (eBay excluded from the count).
     prisma.retailerPrice.groupBy({ by: ["retailer"], where: { country, NOT: { retailer: { startsWith: "ebay" } } } }),
-    // Today's Top Deals blends four signals; cache per-market.
-    unstable_cache(() => getTopDeals(country), ["top-deals", country], { revalidate: 600 })(),
+    // Today's Top Deals blends four signals; cache per-market. Tagged so the daily
+    // import refreshes it on-demand (the page itself is cached 24h).
+    unstable_cache(() => getTopDeals(country), ["top-deals", country], { revalidate: 86400, tags: [CONTENT_TAG] })(),
     // The GLOBAL RiftCompare Index for the hero + Market Pulse. Global = always
     // populated (PriceHistory is AU-only today) and its base-100 level is
     // currency-agnostic, so it reads the same for every market.
     // Key versioned (v2): the MarketIndex shape gained `stats`; the data cache
     // persists across deploys, so a stale pre-stats blob would crash Market Pulse.
-    unstable_cache(() => getMarketIndex("GLOBAL"), ["home-index-global-v3"], { revalidate: 600 })(),
+    unstable_cache(() => getMarketIndex("GLOBAL"), ["home-index-global-v3"], { revalidate: 86400, tags: [CONTENT_TAG] })(),
   ]);
   const storeCount = storeGroups.length;
   const storeWord = storeCount === 1 ? "store" : "stores";

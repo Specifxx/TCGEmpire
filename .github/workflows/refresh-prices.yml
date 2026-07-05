@@ -75,3 +75,23 @@ jobs:
           EBAY_REFRESH: ${{ github.event_name != 'push' }}
           EBAY_FORCE: ${{ inputs.ebay_force && '1' || '' }}
         run: npx tsx scripts/import-sealed.ts
+
+      - name: Revalidate site pages (on-demand ISR)
+        # New prices just landed, so regenerate the ISR pages NOW. This is what lets
+        # the public pages carry a 24h revalidate fallback instead of re-querying
+        # Neon on a short timer — the fix for the DB's public-transfer allowance.
+        # Reuses CRON_SECRET (the existing cron token). Add it as an Actions secret;
+        # a missing/failed ping is non-fatal (pages just fall back to the 24h TTL).
+        if: always()
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: "https://riftcompare.com"
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "No CRON_SECRET secret — skipping revalidation (pages fall back to their 24h TTL)."
+            exit 0
+          fi
+          code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 -X POST \
+            "$SITE_URL/api/revalidate" -H "Authorization: Bearer $CRON_SECRET")
+          echo "revalidate -> HTTP $code"
+          [ "$code" = "200" ] || echo "Non-200 (pages still refresh on their 24h TTL); not failing the run."

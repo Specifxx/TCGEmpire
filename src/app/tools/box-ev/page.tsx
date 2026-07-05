@@ -8,7 +8,7 @@ import { SITE_URL } from "@/lib/site";
 import { BoxEvCalculator, type SetRarityData } from "@/components/BoxEvCalculator";
 import { AdSlot } from "@/components/AdSlot";
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: { absolute: "Riftbound Booster Box EV Calculator — Is a Box Worth Opening? | RiftCompare" },
