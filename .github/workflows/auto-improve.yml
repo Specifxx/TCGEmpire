@@ -118,6 +118,28 @@ jobs:
             distance" pages and align copy to the listed top queries. It is gitignored —
             never commit it.
 
+            CONTENT CADENCE (the compounding lever): title/meta tweaks only help pages
+            that ALREADY rank. To grow the surface, roughly every THIRD run — or whenever
+            the last two "Done" entries in docs/GROWTH-LOG.md were title/meta edits — the
+            highest-leverage move is to CREATE ONE new, genuinely useful hub/landing page
+            for a WINNABLE, buyer-intent query, not another title tweak. Source the target
+            from GSC-TARGETS.md ("Top queries" / "striking distance"): pick a high-impression,
+            NON-branded, buyer-intent query (e.g. "cheapest riftbound singles",
+            "<set> card list & prices", "best budget riftbound cards", "where to buy
+            riftbound <thing>") that has NO dedicated page yet — GREP the repo (src/app,
+            src/lib/articles.ts) to CONFIRM nothing already targets it. Build it the reuse
+            way: append an Article to src/lib/articles.ts (it auto-routes at
+            /guides|/blog/<slug>, auto-sitemaps, and auto-emits Article + Breadcrumb JSON-LD;
+            the body is markdown and [text](/card/<slug>) / [text](/sets/<slug>) links render
+            as crawlable anchors), OR clone an existing hub page (src/app/movers, the /sets
+            index). Cross-link 15–20 SPECIFIC cards (cardHref from @/lib/card-url) + the
+            relevant set/domain hubs. Make it 2–5× better than whatever currently ranks
+            (real prose, an AU/NZ angle where competition is thin) — Apollo Digital's bar.
+            HARD LIMIT: at most ONE new page per run; NEVER batch-generate or programmatically
+            create pages (a new site that can't index its existing pages must not add thin
+            ones). If you can't make the page genuinely excellent this run, fall back to a
+            title/meta tweak instead.
+
             STEPS:
             1. Pick today's growth lever. Maintain docs/GROWTH-LOG.md (create it if
                missing): a short backlog of growth ideas + a "Done" log of what shipped.
@@ -162,6 +184,8 @@ jobs:
               high-ripple shared components like CardTile/Reveal unless tiny + verified).
             - Small and additive. No data/migration deletes, no new paid services or
               heavy dependencies, no touching other repos.
+            - At most ONE new page per run, and never batch/programmatically generate
+              pages — thin pages on a low-authority site actively hurt indexation.
             - You MUST end with exactly ONE verified commit — there is always a
               worthwhile, safe growth improvement to make.
 
