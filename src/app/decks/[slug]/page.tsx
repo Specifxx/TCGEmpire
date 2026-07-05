@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { unstable_cache } from "next/cache";
 import { getDeckSeed, resolveDeck } from "@/lib/meta-decks";
 import { DeckView } from "@/components/DeckView";
 import { DeckCart } from "@/components/DeckCart";
 import type { DeckCartLine } from "@/lib/deck-basket";
 import { getCountry } from "@/lib/get-country";
+import { CONTENT_TAG } from "@/lib/revalidate-content";
 
 export const revalidate = 86400;
 
@@ -36,7 +38,12 @@ export default async function DeckDetailPage({ params }: { params: { slug: strin
   const seed = getDeckSeed(params.slug);
   if (!seed) notFound();
   const country = getCountry();
-  const deck = await resolveDeck(seed, country);
+  // Per-market build cost → per-request; cache the deck's card-pricing behind
+  // CONTENT_TAG (cleared by the daily import) so Neon is read ~2/day, not per hit.
+  const deck = await unstable_cache(() => resolveDeck(seed, country), ["deck", params.slug, country], {
+    revalidate: 86400,
+    tags: [CONTENT_TAG],
+  })();
 
   const builderHref = `/deck?list=${encodeForBuilder(deckListText(seed.legend, seed.cards))}`;
 

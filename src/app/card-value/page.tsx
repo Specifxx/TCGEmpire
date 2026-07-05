@@ -1,19 +1,22 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { unstable_cache } from "next/cache";
 import { SearchBar } from "@/components/SearchBar";
 import { CardTile } from "@/components/CardTile";
 import { AdSlot } from "@/components/AdSlot";
 import { getValuableCards } from "@/lib/cheapest-cards";
 import { getCountry } from "@/lib/get-country";
+import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { COUNTRIES } from "@/lib/country";
 import { SITE_URL } from "@/lib/site";
 
 // Public value-checker lander — the consumer counterpart to the Premium
 // /tools/value-finder screener. Targets the biggest evergreen query family for a
 // young TCG: "riftbound card value / prices / what are my cards worth". The product
-// behind it is the same database; this page frames it for that intent. ISR (like the
-// homepage) so crawlers get fast, cached HTML — no force-dynamic.
+// behind it is the same database; this page frames it for that intent. It reads the
+// country cookie for per-market copy (so it renders per-request), but its DB read is
+// cached behind CONTENT_TAG — cleared by the daily import — so Neon is read ~2/day.
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
@@ -66,7 +69,10 @@ const FAQS = [
 export default async function CardValuePage() {
   const country = getCountry();
   const info = COUNTRIES[country];
-  const valuable = await getValuableCards(12, country);
+  const valuable = await unstable_cache(() => getValuableCards(12, country), ["valuable-cards", country], {
+    revalidate: 86400,
+    tags: [CONTENT_TAG],
+  })();
 
   const faqLd = {
     "@context": "https://schema.org",

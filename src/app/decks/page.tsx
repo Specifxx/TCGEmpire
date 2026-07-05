@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import { resolveAllDecks, META_DECKS } from "@/lib/meta-decks";
+import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { DomainBadge } from "@/components/Badge";
 import { TierBadge } from "@/components/TierBadge";
 import { formatMoney } from "@/lib/format";
@@ -20,7 +22,13 @@ export const metadata: Metadata = {
 export default async function DecksPage() {
   const country = getCountry();
   const info = COUNTRIES[country];
-  const decks = await resolveAllDecks(country);
+  // This page reads the country cookie (per-market build costs) so it renders
+  // per-request; bound its heavy all-decks pricing to ~2/day (per import) by
+  // caching behind CONTENT_TAG, which the daily import clears. 24h TTL fallback.
+  const decks = await unstable_cache(() => resolveAllDecks(country), ["decks-all", country], {
+    revalidate: 86400,
+    tags: [CONTENT_TAG],
+  })();
   const beginner = decks.filter((d) => d.category === "beginner");
   const meta = decks.filter((d) => d.category !== "beginner");
 

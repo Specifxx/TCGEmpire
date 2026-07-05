@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { getCountry } from "@/lib/get-country";
+import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { COUNTRIES } from "@/lib/country";
 import { SETS } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
@@ -41,22 +43,30 @@ export default async function BoxEvPage() {
   // inflating every rarity's average (and so every box's EV). The cheapest
   // tracked STORE listing reflects what bulk actually changes hands for; cards
   // with no store listing are genuine bulk and count as $0.
-  const storeLows = await prisma.retailerPrice
-    .groupBy({
-      by: ["cardId"],
-      where: { inStock: true, country, NOT: { retailer: { startsWith: "ebay" } } },
-      _min: { priceCents: true },
-    })
-    .catch(() => [] as { cardId: string; _min: { priceCents: number | null } }[]);
+  // Per-market store lows → per-request; cache both reads behind CONTENT_TAG (cleared
+  // by the daily import) so Neon is read ~2/day per market, not on every hit.
+  const { storeLows, cards } = await unstable_cache(
+    async () => {
+      const storeLows = await prisma.retailerPrice
+        .groupBy({
+          by: ["cardId"],
+          where: { inStock: true, country, NOT: { retailer: { startsWith: "ebay" } } },
+          _min: { priceCents: true },
+        })
+        .catch(() => [] as { cardId: string; _min: { priceCents: number | null } }[]);
+      const cards = await prisma.card
+        .findMany({
+          where: { variant: null, isPromo: false },
+          select: { id: true, setCode: true, rarity: true, collectorNumber: true },
+        })
+        .catch(() => [] as { id: string; setCode: string; rarity: string; collectorNumber: string }[]);
+      return { storeLows, cards };
+    },
+    ["box-ev-data", country],
+    { revalidate: 86400, tags: [CONTENT_TAG] }
+  )();
   const lowByCard = new Map<string, number>();
   for (const r of storeLows) if (r._min.priceCents != null) lowByCard.set(r.cardId, r._min.priceCents);
-
-  const cards = await prisma.card
-    .findMany({
-      where: { variant: null, isPromo: false },
-      select: { id: true, setCode: true, rarity: true, collectorNumber: true },
-    })
-    .catch(() => []);
 
   // EXCLUDE special chase prints from the base-rarity pools. Cloned alt-art prints
   // already carry variant != null (filtered above), but native over-number/secret
