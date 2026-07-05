@@ -26,6 +26,12 @@ export async function generateMetadata({ params }: { params: { set: string } }):
   // tailored to the visitor's market.
   const title = `Riftbound ${set.name} Prices & Full Card List`;
   const description = `Every Riftbound ${set.name} card with live prices compared across stores — find the cheapest singles. Full card list and values, updated daily.`;
+  // A set with no imported cards yet (pre-release, or a data gap where a released
+  // set was registered before its cards were imported) renders only a placeholder —
+  // thin content. Noindex it so Google doesn't sink crawl budget into a soft-thin
+  // page; these empty set URLs are the bulk of the "discovered/crawled – not indexed"
+  // pile. It flips back to indexable automatically the moment cards are imported.
+  const cardCount = await prisma.card.count({ where: { setCode: set.code } });
   return {
     title: { absolute: `${title} | RiftCompare` },
     description,
@@ -42,6 +48,7 @@ export async function generateMetadata({ params }: { params: { set: string } }):
       // Single cookie-switched URL is the global default for all four markets.
       languages: { "x-default": `${SITE_URL}/sets/${set.slug}` },
     },
+    ...(cardCount === 0 ? { robots: { index: false, follow: true } } : {}),
     openGraph: { title: `${title} | RiftCompare`, description, url: `${SITE_URL}/sets/${set.slug}` },
   };
 }
@@ -77,20 +84,9 @@ export default async function SetPage({ params }: { params: { set: string } }) {
     url: `${SITE_URL}/sets/${set.slug}`,
     description: `Live prices for every Riftbound ${set.name} card.`,
     isPartOf: { "@type": "WebSite", name: "RiftCompare", url: SITE_URL },
-    // ItemList of the cards actually rendered on the page (ranked positionally).
-    ...(cards.length > 0
-      ? {
-          mainEntity: {
-            "@type": "ItemList",
-            itemListElement: cards.map((c, i) => ({
-              "@type": "ListItem",
-              position: i + 1,
-              name: c.name,
-              url: `${SITE_URL}/card/${c.slug ?? c.id}`,
-            })),
-          },
-        }
-      : {}),
+    // No mainEntity ItemList: the visible card grid already links every card as a
+    // crawlable <a href>, so serializing the entire list again just doubled a big
+    // set's HTML weight (≈1 MB / 1.8k links on Origins) for zero extra crawl value.
   };
 
   return (

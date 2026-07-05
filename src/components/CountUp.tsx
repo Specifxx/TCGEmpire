@@ -7,7 +7,10 @@ import { useEffect, useRef, useState } from "react";
 // motion (or the value is non-positive), it shows the final number immediately.
 export function CountUp({ value, className }: { value: number; className?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
-  const [display, setDisplay] = useState(value > 0 ? 0 : value);
+  // SSR + pre-hydration render the REAL value, so crawlers and no-JS visitors see
+  // the true number (e.g. "287 cards") — not a "0" that only fills in after JS,
+  // which read as thin content. The count-up animation runs on the client only.
+  const [display, setDisplay] = useState(value);
 
   useEffect(() => {
     const el = ref.current;
@@ -19,6 +22,8 @@ export function CountUp({ value, className }: { value: number; className?: strin
       setDisplay(value);
       return;
     }
+    // Client-only: start the count-up from 0 (server already showed the real value).
+    setDisplay(0);
 
     let raf = 0;
     const run = () => {

@@ -18,6 +18,7 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "Prices",
     links: [
       { href: "/browse", label: "Card Database", emoji: "🗃️" },
+      { href: "/sets", label: "Browse by Set", emoji: "🗂️" },
       { href: "/sealed", label: "Sealed Products", emoji: "📦" },
       { href: "/card-value", label: "Card Value Checker", emoji: "💎" },
       { href: "/movers", label: "Price Movers", emoji: "📈" },
