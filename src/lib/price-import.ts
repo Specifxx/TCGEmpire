@@ -8,6 +8,7 @@ import { prisma } from "./db";
 import { RETAILER_LIST, RetailerInfo } from "./retailers";
 import { isEbayEnabled, isEbayRateLimited, searchEbayLowest, primeEbayBudget, ebaySpentThisRun } from "./ebay";
 import { importSealed } from "./sealed-import";
+import { snapshotDemand } from "./demand-snapshot";
 import { refreshTcgplayerPrices } from "./tcgplayer";
 import { importMarketplaceListings } from "./marketplace";
 import { refreshCardmarketPrices } from "./cardmarket";
@@ -715,6 +716,12 @@ export async function importPrices(): Promise<ImportSummary> {
   } catch (e) {
     console.warn("Price-history snapshot failed:", e);
   }
+
+  // Snapshot today's cumulative demand counters (search/view) alongside the price
+  // history — the daily diff is the demand-velocity signal the rise predictor uses.
+  // Self-guarded; never fails the import.
+  const demandRows = await snapshotDemand();
+  if (demandRows) console.log(`Demand snapshot: ${demandRows} cards.`);
 
   // Also refresh sealed / non-single products (booster boxes, packs, …). Isolated
   // in try/catch so a hiccup here never fails the singles import.

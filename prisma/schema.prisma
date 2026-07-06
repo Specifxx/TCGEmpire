@@ -214,6 +214,7 @@ model Card {
   buyOrders           BuyOrder[]
   retailerPrices      RetailerPrice[]
   priceHistory        PriceHistory[]
+  demandSnapshots     DemandSnapshot[]
   priceAlerts         PriceAlert[]
   marketplaceListings MarketplaceListing[]
   collectedBy         CollectionCard[]
@@ -322,6 +323,28 @@ model PriceHistory {
   @@index([cardId, country, day])
   // Serves the Price Watch movers query (all cards in one market over a window).
   @@index([country, day])
+}
+
+// Daily snapshot of a card's cumulative demand counters (searchCount/viewCount),
+// mirroring PriceHistory. searchCount/viewCount on Card are running totals with no
+// history, so this is the ONLY way to measure demand VELOCITY (rising interest) —
+// the leading signal for a near-future price rise. Written by the importer: one row
+// per card per Australia/Sydney day (a same-day re-run replaces it). Country-agnostic
+// (search/view demand isn't per-market). The rise predictor's velocity component
+// activates automatically once a few days of snapshots exist.
+model DemandSnapshot {
+  id          String   @id @default(cuid())
+  cardId      String
+  day         DateTime @db.Date // Australia/Sydney calendar day
+  searchCount Int
+  viewCount   Int
+  recordedAt  DateTime @default(now())
+
+  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@unique([cardId, day])
+  @@index([day])
+  @@index([cardId, day])
 }
 
 // An email subscription for wishlist price-drop alerts. No account required — the
