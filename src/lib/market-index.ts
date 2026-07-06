@@ -16,6 +16,7 @@
 // given day (no divisor gymnastics); history may revise slightly as demand shifts.
 import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
+import { dbHistory } from "./db-history";
 import { pickPrice, priceField, COUNTRY_LIST, COUNTRIES, type Country } from "./country";
 import type { PricePoint } from "./price-history";
 
@@ -175,7 +176,7 @@ async function getRegionIndex(country: Country): Promise<MarketIndex | null> {
 
   // 3. Price history for the basket.
   const cutoff = new Date(Date.now() - WINDOW_DAYS * 86400_000);
-  const hist = await prisma.priceHistory.findMany({
+  const hist = await dbHistory.priceHistory.findMany({
     where: { country, cardId: { in: cards.map((c) => c.id) }, day: { gte: cutoff } },
     orderBy: { day: "asc" },
     select: { cardId: true, day: true, lowestPriceCents: true },

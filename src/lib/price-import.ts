@@ -5,6 +5,7 @@
 
 import { Prisma } from "@prisma/client";
 import { prisma } from "./db";
+import { dbHistory } from "./db-history";
 import { RETAILER_LIST, RetailerInfo } from "./retailers";
 import { isEbayEnabled, isEbayRateLimited, searchEbayLowest, primeEbayBudget, ebaySpentThisRun } from "./ebay";
 import { importSealed } from "./sealed-import";
@@ -710,8 +711,8 @@ export async function importPrices(): Promise<ImportSummary> {
       if (us != null) rows.push({ cardId: c.id, country: "US", day, lowestPriceCents: us });
       if (uk != null) rows.push({ cardId: c.id, country: "UK", day, lowestPriceCents: uk });
     }
-    await prisma.priceHistory.deleteMany({ where: { day } });
-    if (rows.length > 0) await prisma.priceHistory.createMany({ data: rows });
+    await dbHistory.priceHistory.deleteMany({ where: { day } });
+    if (rows.length > 0) await dbHistory.priceHistory.createMany({ data: rows });
     console.log(`Price history: recorded ${rows.length} points (AU/NZ/US/UK) for ${day.toISOString().slice(0, 10)}.`);
   } catch (e) {
     console.warn("Price-history snapshot failed:", e);

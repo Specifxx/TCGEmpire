@@ -3,6 +3,7 @@
 // market only (one lowest-price point per card per Sydney day), so everything here
 // is AU-priced.
 import { prisma } from "./db";
+import { dbHistory } from "./db-history";
 import { cardTileSelect } from "./cards";
 import type { Country } from "./country";
 import type { CardTileData } from "@/components/CardTile";
@@ -14,7 +15,7 @@ export type PricePoint = { t: number; v: number };
 // page never crashes over the chart.
 export async function getPriceHistory(cardId: string, country = "AU", take = 180): Promise<PricePoint[]> {
   try {
-    const rows = await prisma.priceHistory.findMany({
+    const rows = await dbHistory.priceHistory.findMany({
       where: { cardId, country },
       orderBy: { day: "asc" },
       take,
@@ -50,7 +51,7 @@ export async function getPriceMovers(country: Country = "AU", limit = LIST_SIZE)
  const empty: PriceMovers = { spiking: [], plummeting: [], value: [] };
  try {
   const cutoff = new Date(Date.now() - WINDOW_DAYS * 86400_000);
-  const rows = await prisma.priceHistory.findMany({
+  const rows = await dbHistory.priceHistory.findMany({
     where: { country, day: { gte: cutoff } },
     orderBy: { day: "asc" },
     select: { cardId: true, day: true, lowestPriceCents: true },

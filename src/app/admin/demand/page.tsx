@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
+import { dbHistory } from "@/lib/db-history";
 import { getCurrentUser } from "@/lib/auth";
 import { formatMoney } from "@/lib/format";
 import { normalizeCountry, pickPrice, currencyOf, COUNTRY_LIST } from "@/lib/country";
@@ -69,13 +70,13 @@ export default async function AdminDemandPage({
       take: TOP_N,
       select: cardSelect,
     }),
-    prisma.clickEvent.groupBy({
+    dbHistory.clickEvent.groupBy({
       by: ["retailer"],
       where: { country, createdAt: { gte: since } },
       _count: { _all: true },
       orderBy: { _count: { retailer: "desc" } },
     }),
-    prisma.clickEvent.groupBy({
+    dbHistory.clickEvent.groupBy({
       by: ["retailer"],
       where: { country },
       _count: { _all: true },

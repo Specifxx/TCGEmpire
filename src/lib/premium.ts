@@ -5,6 +5,7 @@
 // check — no live Stripe call on page loads, and a lapsed sub just stops being
 // extended. Inert until STRIPE_PREMIUM_PRICE_ID is configured.
 import { prisma } from "./db";
+import { dbHistory } from "./db-history";
 import { pickPrice, priceField, type Country } from "./country";
 import { CONDITION_MULTIPLIER } from "./constants";
 import { getMarketIndex } from "./market-index";
@@ -101,7 +102,7 @@ export async function getPortfolio(userId: string, country: Country, windowDays 
   const cardIds = [...new Set(rows.map((r) => r.cardId))];
   const cutoff = new Date(Date.now() - windowDays * 86400_000);
   const hist = cardIds.length
-    ? await prisma.priceHistory.findMany({
+    ? await dbHistory.priceHistory.findMany({
         where: { country, cardId: { in: cardIds }, day: { gte: cutoff } },
         orderBy: { day: "asc" },
         select: { cardId: true, day: true, lowestPriceCents: true },

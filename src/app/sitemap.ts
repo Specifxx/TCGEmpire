@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/db";
+import { dbHistory } from "@/lib/db-history";
 import { SITE_URL } from "@/lib/site";
 import { META_DECKS } from "@/lib/meta-decks";
 import { getArticles } from "@/lib/articles";
@@ -27,7 +28,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       orderBy: { lowestPriceCents: { sort: "desc", nulls: "last" } },
     });
     priceDay = (
-      await prisma.priceHistory.findFirst({ orderBy: { day: "desc" }, select: { day: true } })
+      await dbHistory.priceHistory.findFirst({ orderBy: { day: "desc" }, select: { day: true } })
     )?.day;
   } catch (e) {
     console.error("sitemap: card query failed, serving static routes:", e);

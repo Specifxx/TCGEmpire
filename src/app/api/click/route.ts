@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { dbHistory } from "@/lib/db-history";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,7 @@ export async function POST(req: Request) {
     if (!retailer) return ok;
     const country = COUNTRIES.has(body.country) ? body.country : "AU";
     const kind = KINDS.has(body.kind) ? body.kind : "single";
-    await prisma.clickEvent.create({ data: { retailer, country, kind } });
+    await dbHistory.clickEvent.create({ data: { retailer, country, kind } });
   } catch {
     /* never fail a beacon */
   }

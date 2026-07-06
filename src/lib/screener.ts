@@ -7,6 +7,7 @@
 // pull just those cards' recent history — never the whole PriceHistory table.
 import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
+import { dbHistory } from "./db-history";
 import { pickPrice, priceField, type Country } from "./country";
 import { cardTileSelect } from "./cards";
 import type { CardTileData } from "@/components/CardTile";
@@ -40,7 +41,7 @@ export async function getUndervalued(country: Country, limit = 24): Promise<Valu
     if (!cards.length) return [];
 
     const cutoff = new Date(Date.now() - WINDOW_DAYS * 86400_000);
-    const hist = await prisma.priceHistory.findMany({
+    const hist = await dbHistory.priceHistory.findMany({
       where: { country, cardId: { in: cards.map((c) => c.id) }, day: { gte: cutoff } },
       select: { cardId: true, lowestPriceCents: true },
     });

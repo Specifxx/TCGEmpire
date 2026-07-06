@@ -5,6 +5,7 @@
 // invent a reason for a move.
 import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
+import { dbHistory } from "./db-history";
 import { getMarketIndex, compositeSeries } from "./market-index";
 import { COUNTRY_LIST, COUNTRIES, type Country } from "./country";
 import { formatMoney } from "./format";
@@ -125,7 +126,7 @@ const MIN_MOVER_CENTS = 300; // ignore sub-$3 noise
 
 export async function getGlobalDailyMovers(limit = 6): Promise<{ risers: DailyMover[]; fallers: DailyMover[] }> {
   const since = new Date(Date.now() - 5 * 86400_000);
-  const rows = await prisma.priceHistory
+  const rows = await dbHistory.priceHistory
     .findMany({
       where: { day: { gte: since } },
       select: { cardId: true, country: true, day: true, lowestPriceCents: true },
