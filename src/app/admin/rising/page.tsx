@@ -4,9 +4,9 @@ import type { Metadata } from "next";
 import { unstable_cache } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { formatMoney } from "@/lib/format";
-import { normalizeCountry, currencyOf, COUNTRY_LIST } from "@/lib/country";
+import { currencyOf, COUNTRY_LIST } from "@/lib/country";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
-import { getRisingCards, type RisePick, type RiseComponents } from "@/lib/rise-predictor";
+import { getRisingCards, type RisePick, type RiseComponents, type RiseScope } from "@/lib/rise-predictor";
 
 export const dynamic = "force-dynamic";
 
@@ -84,12 +84,15 @@ export default async function AdminRisingPage({
   const authed = keyOk || !!user?.isAdmin;
   if (!authed) notFound(); // don't reveal the page exists
 
-  const country = normalizeCountry(searchParams.country);
-  const currency = currencyOf(country);
+  // Scope defaults to GLOBAL (like the RiftCompare Index): demand is market-agnostic,
+  // so Global uses each card's best-covered price series + total cross-market supply.
+  const raw = (searchParams.country ?? "").toUpperCase();
+  const scope: RiseScope = raw === "AU" || raw === "NZ" || raw === "US" || raw === "UK" ? (raw as RiseScope) : "GLOBAL";
+  const isGlobal = scope === "GLOBAL";
 
-  // Cache the heavy scan (400 cards × price history) per market; refreshed on the
+  // Cache the heavy scan (400 cards × price history) per scope; refreshed on the
   // daily import via CONTENT_TAG so repeated admin loads don't re-hit Neon.
-  const analysis = await unstable_cache(() => getRisingCards(country), ["rising-cards", country], {
+  const analysis = await unstable_cache(() => getRisingCards(scope), ["rising-cards", scope], {
     revalidate: 3600,
     tags: [CONTENT_TAG],
   })();
@@ -109,19 +112,19 @@ export default async function AdminRisingPage({
           </p>
         </div>
         <div className="flex gap-1 rounded-lg border border-ink-700 bg-ink-850 p-1">
-          {COUNTRY_LIST.map((c) => {
-            const active = c.code === country;
+          {[{ code: "GLOBAL" as RiseScope, flag: "🌐", label: "Global" }, ...COUNTRY_LIST.map((c) => ({ code: c.code as RiseScope, flag: c.flag, label: c.code }))].map((opt) => {
+            const active = opt.code === scope;
             const params = new URLSearchParams();
             if (searchParams.key) params.set("key", searchParams.key);
-            if (c.code !== "AU") params.set("country", c.code);
+            if (opt.code !== "GLOBAL") params.set("country", opt.code);
             const qs = params.toString();
             return (
               <Link
-                key={c.code}
+                key={opt.code}
                 href={`/admin/rising${qs ? `?${qs}` : ""}`}
                 className={`rounded-md px-2.5 py-1 text-sm ${active ? "bg-brand-500 font-medium text-white" : "text-slate-400 hover:text-white"}`}
               >
-                {c.flag} {c.code}
+                {opt.flag} {opt.label}
               </Link>
             );
           })}
@@ -156,7 +159,7 @@ export default async function AdminRisingPage({
 
       {analysis.picks.length === 0 ? (
         <div className="rounded-xl border border-ink-700 bg-ink-850 px-4 py-12 text-center text-slate-400">
-          Not enough price history yet in {country}. Signals appear once the daily importer has
+          Not enough price history yet in {isGlobal ? "any market" : scope}. Signals appear once the daily importer has
           recorded a few days of price + demand snapshots.
         </div>
       ) : (
@@ -168,7 +171,7 @@ export default async function AdminRisingPage({
                 <th className="px-3 py-2 font-medium">Card</th>
                 <th className="px-3 py-2 text-right font-medium">Score</th>
                 <th className="px-3 py-2 font-medium">Signal breakdown</th>
-                <th className="px-3 py-2 text-right font-medium">Price ({currency})</th>
+                <th className="px-3 py-2 text-right font-medium">Price{isGlobal ? "" : ` (${currencyOf(scope)})`}</th>
                 <th className="px-3 py-2 text-right font-medium">7d</th>
                 <th className="px-3 py-2 text-right font-medium">In range</th>
                 <th className="px-3 py-2 text-right font-medium">Searches</th>
@@ -207,7 +210,7 @@ export default async function AdminRisingPage({
                       ))}
                     </div>
                   </td>
-                  <td className="px-3 py-2 text-right num tabular-nums text-slate-200">{p.priceCents != null ? formatMoney(p.priceCents, currency) : "—"}</td>
+                  <td className="px-3 py-2 text-right num tabular-nums text-slate-200">{p.priceCents != null ? formatMoney(p.priceCents, p.currency) : "—"}</td>
                   <td className="px-3 py-2 text-right tabular-nums"><Pct v={p.trend7} /></td>
                   <td className="px-3 py-2 text-right num tabular-nums text-slate-300">{Math.round(p.posPct * 100)}%</td>
                   <td className="px-3 py-2 text-right num tabular-nums text-slate-300">{p.searchCount.toLocaleString()}</td>

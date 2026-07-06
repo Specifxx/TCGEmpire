@@ -1,5 +1,5 @@
 import { prisma } from "./db";
-import { priceField, pickPrice, type Country } from "./country";
+import { priceField, pickPrice, currencyOf, type Country } from "./country";
 import { computeSignals, type Signals } from "./ai-insight";
 import type { PricePoint } from "./price-history";
 import { cardDisplayName } from "./card-name";
@@ -18,6 +18,13 @@ import { zScores, percentileRanks, spearman, mean, median, clamp } from "./stats
 // to accrue — until then that component is 0 and only demand LEVEL is used. (2) The
 // backtest validates the price-timing signal only (demand isn't historically
 // reconstructable). (3) Thin price history ⇒ low confidence. Not financial advice.
+
+// Scope: a single market, or GLOBAL. Demand (search/view) is already market-agnostic,
+// and the price-timing signals (trend7/posPct/volatility) are percentages — currency-
+// neutral — so GLOBAL uses each card's best-covered market series for timing and its
+// total cross-market supply. The DISPLAYED price uses that card's basis market.
+export type RiseScope = Country | "GLOBAL";
+const MARKET_PREF: Country[] = ["AU", "US", "NZ", "UK"]; // reference order for a GLOBAL card's displayed price
 
 const SCAN = 400; // universe: most-searched priced cards
 const HISTORY_DAYS = 120;
@@ -50,6 +57,8 @@ export interface RisePick {
   score: number; // 0–100 percentile of the composite
   components: RiseComponents;
   priceCents: number | null;
+  currency: string; // currency of the displayed price (the card's basis market)
+  basisMarket: Country; // market whose price series drove this card's timing signals
   searchCount: number;
   viewCount: number;
   trend7: number;
@@ -83,7 +92,7 @@ export interface RiseAnalysis {
   snapshotDays: number;
   backtest: RiseBacktest | null;
   generatedAt: string;
-  country: Country;
+  scope: RiseScope;
 }
 
 type UniverseCard = {
@@ -142,11 +151,22 @@ function backtest(seriesById: Map<string, PricePoint[]>): RiseBacktest | null {
   };
 }
 
-export async function getRisingCards(country: Country): Promise<RiseAnalysis> {
-  const field = priceField(country);
+export async function getRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
+  const isGlobal = scope === "GLOBAL";
+  // Universe: most-searched cards priced in the scope market (any market for GLOBAL).
+  const priced = isGlobal
+    ? {
+        OR: [
+          { lowestPriceCents: { not: null } },
+          { lowestPriceCentsNz: { not: null } },
+          { lowestPriceCentsUs: { not: null } },
+          { lowestPriceCentsUk: { not: null } },
+        ],
+      }
+    : { [priceField(scope)]: { not: null } };
 
   const universe = (await prisma.card.findMany({
-    where: { searchCount: { gt: 0 }, [field]: { not: null } },
+    where: { searchCount: { gt: 0 }, ...priced },
     orderBy: [{ searchCount: "desc" }, { viewCount: "desc" }],
     take: SCAN,
     select: {
@@ -159,32 +179,60 @@ export async function getRisingCards(country: Country): Promise<RiseAnalysis> {
 
   const ids = universe.map((c) => c.id);
   if (!ids.length) {
-    return { picks: [], universeSize: 0, qualifying: 0, demandPriceSpearman: 0, velocityActive: false, snapshotDays: 0, backtest: null, generatedAt: new Date().toISOString(), country };
+    return { picks: [], universeSize: 0, qualifying: 0, demandPriceSpearman: 0, velocityActive: false, snapshotDays: 0, backtest: null, generatedAt: new Date().toISOString(), scope };
   }
 
-  // Bulk fetch — never per-card. Price history for the whole universe in one query.
+  // Bulk fetch — never per-card. For GLOBAL, pull every market's history/supply (no
+  // country filter); for a single market, filter to it.
   const cutoff = new Date(Date.now() - HISTORY_DAYS * 86400_000);
   const [histRows, supplyRows, velocity, snapshotDays] = await Promise.all([
     prisma.priceHistory.findMany({
-      where: { cardId: { in: ids }, country, day: { gte: cutoff } },
+      where: { cardId: { in: ids }, day: { gte: cutoff }, ...(isGlobal ? {} : { country: scope }) },
       orderBy: { day: "asc" },
-      select: { cardId: true, day: true, lowestPriceCents: true },
+      select: { cardId: true, country: true, day: true, lowestPriceCents: true },
     }),
     prisma.retailerPrice.groupBy({
       by: ["cardId"],
-      where: { cardId: { in: ids }, country, inStock: true },
+      where: { cardId: { in: ids }, inStock: true, ...(isGlobal ? {} : { country: scope }) },
       _count: { _all: true },
     }),
     getDemandVelocity(ids),
     demandSnapshotDays(),
   ]);
 
+  // Price series per card. Single market → its rows. GLOBAL → the market with the MOST
+  // points for that card (best coverage); % timing signals are currency-neutral, so
+  // this is sound. basisById records which market drove each card.
   const seriesById = new Map<string, PricePoint[]>();
-  for (const r of histRows) {
-    (seriesById.get(r.cardId) ?? seriesById.set(r.cardId, []).get(r.cardId)!).push({ t: r.day.getTime(), v: r.lowestPriceCents });
+  const basisById = new Map<string, Country>();
+  if (isGlobal) {
+    const byCardCountry = new Map<string, Map<Country, PricePoint[]>>();
+    for (const r of histRows) {
+      const c = (r.country as Country) || "AU";
+      let m = byCardCountry.get(r.cardId);
+      if (!m) byCardCountry.set(r.cardId, (m = new Map()));
+      (m.get(c) ?? m.set(c, []).get(c)!).push({ t: r.day.getTime(), v: r.lowestPriceCents });
+    }
+    for (const [cardId, m] of byCardCountry) {
+      let best: Country = "AU";
+      let bestLen = -1;
+      for (const [c, pts] of m) if (pts.length > bestLen) { bestLen = pts.length; best = c; }
+      seriesById.set(cardId, m.get(best)!);
+      basisById.set(cardId, best);
+    }
+  } else {
+    for (const r of histRows) {
+      (seriesById.get(r.cardId) ?? seriesById.set(r.cardId, []).get(r.cardId)!).push({ t: r.day.getTime(), v: r.lowestPriceCents });
+      basisById.set(r.cardId, scope);
+    }
   }
   const supplyById = new Map<string, number>(supplyRows.map((r) => [r.cardId, r._count._all]));
   const velocityActive = velocity.size > 0;
+
+  // Market for a card's displayed price: its series market, else (GLOBAL) the first
+  // market that actually has a price, else the scope market.
+  const basisMarketOf = (card: UniverseCard): Country =>
+    basisById.get(card.id) ?? (isGlobal ? MARKET_PREF.find((c) => pickPrice(card, c) != null) ?? "AU" : scope);
 
   // Qualifying set: enough price history to trust the signals.
   type Row = { card: UniverseCard; s: Signals; points: PricePoint[]; listings: number };
@@ -196,7 +244,7 @@ export async function getRisingCards(country: Country): Promise<RiseAnalysis> {
   }
   const qualifying = rows.length;
   if (!qualifying) {
-    return { picks: [], universeSize: universe.length, qualifying: 0, demandPriceSpearman: 0, velocityActive, snapshotDays, backtest: backtest(seriesById), generatedAt: new Date().toISOString(), country };
+    return { picks: [], universeSize: universe.length, qualifying: 0, demandPriceSpearman: 0, velocityActive, snapshotDays, backtest: backtest(seriesById), generatedAt: new Date().toISOString(), scope };
   }
 
   // Feature vectors → cross-sectional z-scores (fair comparison across cards).
@@ -231,6 +279,7 @@ export async function getRisingCards(country: Country): Promise<RiseAnalysis> {
   const built: { pick: RisePick; raw: number }[] = rows.map((r, i) => {
     const vel = velocity.get(r.card.id);
     const pts = r.points.length;
+    const bm = basisMarketOf(r.card);
     const confidence: RisePick["confidence"] =
       pts >= 14 && r.listings >= 3 ? "High" : pts >= 7 ? "Medium" : "Low";
     const pick: RisePick = {
@@ -249,7 +298,9 @@ export async function getRisingCards(country: Country): Promise<RiseAnalysis> {
         momentum: Math.round(zmom[i] * 100) / 100,
         volatility: Math.round(zvol[i] * 100) / 100,
       },
-      priceCents: pickPrice(r.card, country),
+      priceCents: pickPrice(r.card, bm),
+      currency: currencyOf(bm),
+      basisMarket: bm,
       searchCount: r.card.searchCount,
       viewCount: r.card.viewCount,
       trend7: r.s.trend7,
@@ -270,7 +321,7 @@ export async function getRisingCards(country: Country): Promise<RiseAnalysis> {
 
   // Context: how correlated demand rank is with price rank (positive is normal; the
   // picks are the high-demand / low-price residuals the score surfaces).
-  const demandPriceSpearman = Math.round(spearman(rows.map((r) => r.card.searchCount), rows.map((r) => pickPrice(r.card, country) ?? 0)) * 100) / 100;
+  const demandPriceSpearman = Math.round(spearman(rows.map((r) => r.card.searchCount), rows.map((r) => pickPrice(r.card, basisMarketOf(r.card)) ?? 0)) * 100) / 100;
 
   return {
     picks,
@@ -281,6 +332,6 @@ export async function getRisingCards(country: Country): Promise<RiseAnalysis> {
     snapshotDays,
     backtest: backtest(seriesById),
     generatedAt: new Date().toISOString(),
-    country,
+    scope,
   };
 }
