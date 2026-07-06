@@ -152,7 +152,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     isFoil: p.isFoil,
     inStock: p.inStock,
     lastSeen: p.lastSeen.toISOString(),
-    buyHref: affiliateUrl(p.url, p.retailer),
+    buyHref: affiliateUrl(p.url, p.retailer, `${SITE_URL}/card/${card.slug ?? params.id}`),
     policyUrl: shippingPolicyUrl(p.retailer),
   }));
 

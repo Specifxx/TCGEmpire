@@ -2,6 +2,8 @@
 // outbound URLs and in the page HTML — so they're safe as code defaults (override
 // via env if you ever rotate them).
 
+import { SITE_URL } from "./site";
+
 // eBay Partner Network campaign id. Passed to the Browse API so listing URLs come
 // back already affiliate-tagged (itemAffiliateWebUrl). See lib/ebay.ts.
 // NOTE: `||` (not `??`) so a var accidentally set to an EMPTY string still falls
@@ -93,9 +95,10 @@ const NEVER_WRAP = /(?:^|\.)(riftcompare\.com|ebay\.|amazon\.|tcgplayer\.com)$/i
 
 // Wrap a destination URL in the configured network's redirect. `subId` is passed
 // through as the network's custom-tracking field so earnings are segmentable by
-// store in the network dashboard (complements our own click analytics). Returns
-// null when no network id is set (→ caller falls back to the plain URL).
-function networkUrl(url: string, subId: string): string | null {
+// store in the network dashboard (complements our own click analytics). `loc` is
+// the source page the click originates from. Returns null when no network id is
+// set (→ caller falls back to the plain URL).
+function networkUrl(url: string, subId: string, loc: string): string | null {
   if (!AFFILIATE_NETWORK_ID) return null;
   const enc = encodeURIComponent(url);
   const xcust = encodeURIComponent(subId);
@@ -104,7 +107,12 @@ function networkUrl(url: string, subId: string): string | null {
     case "viglink":
       // Sovrn Commerce "Anywhere" redirect (key = your Sovrn API key). cuid is the
       // custom sub-id so earnings stay segmentable by store in the dashboard.
-      return `https://redirect.viglink.com/?format=go&key=${AFFILIATE_NETWORK_ID}&u=${enc}&cuid=${xcust}`;
+      // loc=<source page> + v=1 mirror the params Sovrn's own on-page script emits:
+      // WITHOUT loc, Sovrn can't see the click came from our domain (our outbound
+      // anchors are rel="noreferrer", so the Referer header is stripped too), which
+      // blocks the automatic domain approval that gates clicks showing in the
+      // dashboard. See the Sovrn "Getting Started"/"Analytics in Commerce" docs.
+      return `https://redirect.viglink.com/?format=go&key=${AFFILIATE_NETWORK_ID}&u=${enc}&cuid=${xcust}&loc=${encodeURIComponent(loc)}&v=1`;
     default:
       return null;
   }
@@ -129,8 +137,14 @@ function directProgramUrl(u: URL): string | null {
 //   Priority: eBay EPN → Amazon Associates → TCGplayer (Impact) → per-store DIRECT
 //   program → auto-affiliate network (Sovrn) → plain link.
 // `subId` (defaults to the store/retailer key when callers pass it) is used as the
-// network's custom-tracking tag. Safe on any string.
-export function affiliateUrl(url: string | null | undefined, subId = "riftcompare"): string {
+// network's custom-tracking tag. `loc` is the source page URL passed to the network
+// so it can attribute the click to our domain (defaults to the site root; pass the
+// specific page URL where available). Safe on any string.
+export function affiliateUrl(
+  url: string | null | undefined,
+  subId = "riftcompare",
+  loc: string = SITE_URL,
+): string {
   if (!url) return "#";
   try {
     const u = new URL(url);
@@ -150,7 +164,7 @@ export function affiliateUrl(url: string | null | undefined, subId = "riftcompar
     if (direct) return direct;
     // Otherwise auto-monetise via the network (no-op until an id is configured).
     if ((u.protocol === "https:" || u.protocol === "http:") && !NEVER_WRAP.test(u.hostname)) {
-      const net = networkUrl(url, subId);
+      const net = networkUrl(url, subId, loc);
       if (net) return net;
     }
   } catch {
