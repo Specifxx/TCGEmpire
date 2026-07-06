@@ -246,12 +246,16 @@ export default async function AdminRisingPage({
         <p className="mt-2">
           {bt ? (
             <>
-              Lookahead‑free backtest on {bt.n} cards: the &ldquo;room to run&rdquo; signal measured {bt.lagDays} days
+              Backtest (no forward leakage) on {bt.n} cards: the &ldquo;room to run&rdquo; signal measured {bt.lagDays} days
               ago has a rank correlation of <strong className="text-slate-300">ρ={bt.spearman}</strong> with the
               realised {bt.lagDays}‑day forward return; the strongest‑signal third returned{" "}
               <strong className="text-slate-300">{bt.topTercileReturnPct > 0 ? "+" : ""}{bt.topTercileReturnPct}%</strong> vs a
-              median of {bt.medianReturnPct > 0 ? "+" : ""}{bt.medianReturnPct}%. Only the price‑timing component is
-              backtestable — demand isn&apos;t historically reconstructable.
+              median of {bt.medianReturnPct > 0 ? "+" : ""}{bt.medianReturnPct}%. The historical signal uses only price data
+              up to T−{bt.lagDays}d, but two caveats <strong className="text-slate-300">bias the returns upward</strong>: the
+              cohort is today&apos;s top‑searched, still‑priced cards (so cards that have since delisted or faded are excluded —
+              survivorship), and only the price‑timing component is backtestable (demand isn&apos;t historically
+              reconstructable). Read ρ and the tercile spread as <em>directional evidence the signal has some edge</em>, not a
+              track record.
             </>
           ) : (
             <>The backtest needs more price history than exists yet ({analysis.qualifying} cards qualify; ≥{20} with a {14}‑day window are required). It activates automatically as PriceHistory accrues.</>
