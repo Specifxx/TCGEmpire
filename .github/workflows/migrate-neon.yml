@@ -7,19 +7,18 @@ name: Migrate RiftCompare to split Neon DBs (one-off, manual)
 # ClickEvent to the history project and everything else to the main project, each
 # with its own fresh monthly allowance.
 #
-# Runs entirely in CI (GitHub can reach Neon), so you never touch pg_dump locally.
+# Runs pg_dump/psql from the official postgres:17 Docker image (already on the
+# runner) so the client version always matches Neon and there's no apt/gpg setup.
 #
 # ONE-TIME SETUP — add these three repo secrets (Settings → Secrets and variables →
 # Actions → New repository secret) BEFORE running:
 #   OLD_DATABASE_URL          — your current (near-limit) RiftCompare Neon URL
 #   NEW_MAIN_DATABASE_URL     — the new "main" Neon project's pooled connection URL
 #   NEW_HISTORY_DATABASE_URL  — the new "history" Neon project's pooled connection URL
-# Use the POOLED connection string from the Neon dashboard (…-pooler…), and make sure
-# it ends with `?sslmode=require`.
+# Use the POOLED connection string from the Neon dashboard (…-pooler…), ending in
+# `?sslmode=require`.
 #
-# Then: Actions tab → "Migrate RiftCompare to split Neon DBs" → Run workflow.
-# Safe to re-run (the new DBs are wiped-and-reloaded each run via the schema drop
-# in pg_dump's plain output; if a table already exists the CREATE is skipped).
+# Then: Actions tab → this workflow → Run workflow.
 
 on:
   workflow_dispatch:
@@ -33,19 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - name: Install PostgreSQL 17 client (matches Neon)
-        run: |
-          set -e
-          sudo install -d /usr/share/postgresql-common/pgdg
-          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
-            | sudo gpg --dearmor -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.gpg
-          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.gpg] http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
-            | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq postgresql-client-17
-          pg_dump --version && psql --version
-
-      - name: Dump OLD, restore into NEW MAIN + NEW HISTORY
+      - name: Dump OLD → restore into NEW MAIN + NEW HISTORY (postgres:17)
         env:
           OLD: ${{ secrets.OLD_DATABASE_URL }}
           MAIN: ${{ secrets.NEW_MAIN_DATABASE_URL }}
@@ -57,33 +44,43 @@ jobs:
             if [ -z "$val" ]; then echo "::error::repo secret ${v}_DATABASE_URL is not set"; exit 1; fi
           done
 
+          # The migration runs INSIDE the postgres:17 container (pg_dump + psql 17,
+          # matching Neon). The heredoc is quoted ('SCRIPT') so $OLD/$MAIN/$HIST are
+          # expanded in the container, where they arrive via `docker run -e`.
+          cat > "$RUNNER_TEMP/migrate.sh" <<'SCRIPT'
+          set -e
           echo "== dumping OLD database (full: schema + data) =="
           pg_dump --no-owner --no-privileges --format=plain "$OLD" > /tmp/dump.sql
           echo "dump size: $(wc -c </tmp/dump.sql) bytes"
 
-          restore () {
-            local name="$1" url="$2"
+          restore() {
+            name="$1"; url="$2"
             echo "== restoring into $name =="
             # ON_ERROR_STOP=0 so benign notices (extension already exists, etc.) don't abort.
-            psql "$url" -v ON_ERROR_STOP=0 -q -f /tmp/dump.sql > "/tmp/${name}.log" 2>&1 || true
+            psql "$url" -v ON_ERROR_STOP=0 -q -f /tmp/dump.sql > "/tmp/$name.log" 2>&1 || true
             echo "--- unexpected errors in $name (should be none) ---"
-            grep -iE '^psql:.*ERROR' "/tmp/${name}.log" \
+            grep -iE '^psql:.*ERROR' "/tmp/$name.log" \
               | grep -viE 'already exists|does not exist, skipping|multiple primary keys' | head -20 \
               || echo "  (none)"
             echo "--- row counts in $name ---"
-            echo "  Card:         $(psql "$url" -tAc 'SELECT count(*) FROM "Card";' 2>/dev/null | tr -d ' ' || echo '?')"
-            echo "  RetailerPrice:$(psql "$url" -tAc 'SELECT count(*) FROM "RetailerPrice";' 2>/dev/null | tr -d ' ' || echo '?')"
-            echo "  PriceHistory: $(psql "$url" -tAc 'SELECT count(*) FROM "PriceHistory";' 2>/dev/null | tr -d ' ' || echo '?')"
-            echo "  User:         $(psql "$url" -tAc 'SELECT count(*) FROM "User";' 2>/dev/null | tr -d ' ' || echo '?')"
+            echo "  Card:          $(psql "$url" -tAc 'SELECT count(*) FROM "Card";' 2>/dev/null | tr -d ' ' || echo '?')"
+            echo "  RetailerPrice: $(psql "$url" -tAc 'SELECT count(*) FROM "RetailerPrice";' 2>/dev/null | tr -d ' ' || echo '?')"
+            echo "  PriceHistory:  $(psql "$url" -tAc 'SELECT count(*) FROM "PriceHistory";' 2>/dev/null | tr -d ' ' || echo '?')"
+            echo "  User:          $(psql "$url" -tAc 'SELECT count(*) FROM "User";' 2>/dev/null | tr -d ' ' || echo '?')"
           }
 
           restore MAIN "$MAIN"
           restore HISTORY "$HIST"
+          SCRIPT
+
+          docker run --rm -e OLD -e MAIN -e HIST \
+            -v "$RUNNER_TEMP/migrate.sh:/migrate.sh:ro" \
+            postgres:17 bash /migrate.sh
 
           echo ""
           echo "✅ Migration complete — both new DBs now hold a full copy of OLD."
-          echo "NEXT STEPS (do these, then redeploy):"
-          echo "  1. Vercel → Project → Settings → Environment Variables (Production):"
+          echo "NEXT STEPS (then redeploy):"
+          echo "  1. Vercel → Settings → Environment Variables (Production):"
           echo "       DATABASE_URL         = <NEW_MAIN pooled URL>"
           echo "       HISTORY_DATABASE_URL = <NEW_HISTORY pooled URL>"
           echo "  2. GitHub → Settings → Secrets → Actions: set the same two so the"
