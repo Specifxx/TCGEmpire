@@ -4,9 +4,8 @@ import { useMemo, useState } from "react";
 import { formatMoney, dollarsToCents } from "@/lib/format";
 import { computeGradeEv } from "@/lib/grade-ev";
 import { GRADING_TIERS } from "@/lib/net-proceeds";
+import { USD_TO } from "@/lib/fx";
 import { useCountry } from "./CountryProvider";
-
-const USD_TO: Record<string, number> = { USD: 1, AUD: 1.5, NZD: 1.65, GBP: 0.78 };
 
 // "Should I grade this?" calculator. Raw value → expected graded value across
 // gem-mint / 9 / other outcomes, net of grading cost, with a plain verdict.

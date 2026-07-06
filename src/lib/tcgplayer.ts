@@ -18,6 +18,7 @@
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
 import { TCGPLAYER_UK_RETAILER } from "@/lib/constants";
+import { USD_TO } from "@/lib/fx";
 
 const SEARCH_URL = "https://mp-search-api.tcgplayer.com/v1/search/request?q=&isList=false";
 const PRODUCT_LINE = "riftbound-league-of-legends-trading-card-game";
@@ -208,9 +209,9 @@ export interface TcgMarket {
   currency: string;
   fx: number; // multiplier applied to the USD market price
 }
-// Approximate USD→GBP rate for the UK conversion. Refreshed periodically by hand;
-// exact FX isn't critical for a "reference price" comparison.
-export const USD_TO_GBP = 0.79;
+// Approximate USD→GBP rate for the UK conversion, from the shared FX table
+// (lib/fx.ts). Exact FX isn't critical for a "reference price" comparison.
+export const USD_TO_GBP = USD_TO.GBP;
 export const TCG_US: TcgMarket = { retailer: "tcgplayer", country: "US", currency: "USD", fx: 1 };
 export const TCG_UK: TcgMarket = { retailer: TCGPLAYER_UK_RETAILER, country: "UK", currency: "GBP", fx: USD_TO_GBP };
 

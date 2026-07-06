@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useCountry } from "./CountryProvider";
 import { OutboundLink } from "./OutboundLink";
+import { TcgMarketPrice } from "./TcgMarketPrice";
 import { TcgplayerAd } from "./TcgplayerAd";
 import { EbayAd } from "./EbayAd";
 import { timeAgo } from "@/lib/format";
@@ -78,6 +79,24 @@ export function CardPriceComparison({
   const m = useMemo(() => computeMarket(rows, country), [rows, country]);
   const { prices, outOfStock } = m;
   const ebay = m.hasEbay ? null : ebaySearch[country] ?? null;
+  // TCGplayer publishes ONE USD market price; its US row is serialized onto every
+  // card page (market-neutral — no country filter server-side). Convert it to the
+  // visitor's currency and surface it as a reference — but ONLY in markets where
+  // TCGplayer isn't already in the buyable table (US shows the native USD row, UK the
+  // GBP `tcgplayer_uk` row), so it's purely additive for AU/NZ and never duplicates an
+  // existing row. It's a reference figure regardless: it never feeds `prices`/
+  // `storeCount`/the cheapest metrics (those come only from computeMarket).
+  const tcg = useMemo(() => {
+    const shownNatively = rows.some(
+      (r) => (r.retailer === "tcgplayer" || r.retailer === "tcgplayer_uk") && r.country === country,
+    );
+    if (shownNatively) return null;
+    const std = rows.find((r) => r.retailer === "tcgplayer" && !r.isFoil);
+    const foil = rows.find((r) => r.retailer === "tcgplayer" && r.isFoil);
+    const src = std ?? foil;
+    if (!src) return null;
+    return { usdCents: std?.priceCents ?? null, usdCentsFoil: foil?.priceCents ?? null, href: src.buyHref };
+  }, [rows, country]);
   // Wall-clock-relative text ("updated 47m ago") is frozen in the ISR-cached HTML
   // and almost never matches the string recomputed at hydration — render it
   // client-only so it can't throw a hydration mismatch on every page view.
@@ -199,6 +218,10 @@ export function CardPriceComparison({
           may earn a commission on some outbound links.
         </p>
       </div>
+
+      {/* TCGplayer market price (reference, currency-converted) — rendered below the
+          buyable table so it still appears on cards with no local listings. */}
+      {tcg && <TcgMarketPrice usdCents={tcg.usdCents} usdCentsFoil={tcg.usdCentsFoil} href={tcg.href} />}
 
       {/* eBay fallback — shown only when we couldn't reach this card's eBay
           listings this cycle (quota), not for cards that genuinely have none. */}

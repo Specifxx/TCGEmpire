@@ -8,6 +8,8 @@
 // 2026 — they shift, so we label outputs as estimates and keep the numbers here
 // where they're easy to update. No external data dependency.
 
+import { USD_TO } from "./fx";
+
 export type Marketplace = "ebay" | "tcgplayer" | "cardmarket" | "private";
 
 export interface MarketplaceFee {
@@ -78,9 +80,8 @@ export const GRADING_TIERS: GradingTier[] = [
   { key: "cgc", label: "CGC (mid tier)", usdCents: 2500, note: "≈US$25/card; a common CGC economy option." },
 ];
 
-// Rough USD→local multipliers, for showing grading cost in the seller's market.
-// Indicative only (grading itself is billed in USD). Kept crude on purpose.
-const USD_TO: Record<string, number> = { USD: 1, AUD: 1.5, NZD: 1.65, GBP: 0.78 };
+// Rough USD→local multipliers for showing grading cost in the seller's market are
+// the shared USD_TO table (imported above); grading itself is billed in USD.
 
 export interface NetProceedsInput {
   salePriceCents: number; // what the card sells for, in the market currency
