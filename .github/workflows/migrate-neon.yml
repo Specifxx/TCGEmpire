@@ -7,7 +7,7 @@ name: Migrate RiftCompare to split Neon DBs (one-off, manual)
 # ClickEvent to the history project and everything else to the main project, each
 # with its own fresh monthly allowance.
 #
-# Runs pg_dump/psql from the official postgres:17 Docker image (already on the
+# Runs pg_dump/psql from the official postgres:18 Docker image (already on the
 # runner) so the client version always matches Neon and there's no apt/gpg setup.
 #
 # ONE-TIME SETUP — add these three repo secrets (Settings → Secrets and variables →
@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - name: Dump OLD → restore into NEW MAIN + NEW HISTORY (postgres:17)
+      - name: Dump OLD → restore into NEW MAIN + NEW HISTORY (postgres:18)
         env:
           OLD: ${{ secrets.OLD_DATABASE_URL }}
           MAIN: ${{ secrets.NEW_MAIN_DATABASE_URL }}
@@ -44,7 +44,7 @@ jobs:
             if [ -z "$val" ]; then echo "::error::repo secret ${v}_DATABASE_URL is not set"; exit 1; fi
           done
 
-          # The migration runs INSIDE the postgres:17 container (pg_dump + psql 17,
+          # The migration runs INSIDE the postgres:18 container (pg_dump + psql 17,
           # matching Neon). The heredoc is quoted ('SCRIPT') so $OLD/$MAIN/$HIST are
           # expanded in the container, where they arrive via `docker run -e`.
           cat > "$RUNNER_TEMP/migrate.sh" <<'SCRIPT'
@@ -75,7 +75,7 @@ jobs:
 
           docker run --rm -e OLD -e MAIN -e HIST \
             -v "$RUNNER_TEMP/migrate.sh:/migrate.sh:ro" \
-            postgres:17 bash /migrate.sh
+            postgres:18 bash /migrate.sh
 
           echo ""
           echo "✅ Migration complete — both new DBs now hold a full copy of OLD."
