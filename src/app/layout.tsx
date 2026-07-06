@@ -23,6 +23,7 @@ import { ReferralCapture } from "@/components/ReferralCapture";
 import { FooterAds } from "@/components/FooterAds";
 import { SovrnSnippet } from "@/components/SovrnSnippet";
 import { PriceAlertModal } from "@/components/PriceAlertModal";
+import { MetaPixel } from "@/components/MetaPixel";
 
 // Body: Sora (modern, energetic, readable). Headings: Space Grotesk (distinctive,
 // gives the brand more life). Exposed as CSS vars wired into Tailwind.
@@ -281,6 +282,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ReferralCapture />
         <Analytics />
         <SpeedInsights />
+        {/* Meta Pixel — ad measurement + retargeting for Meta (Facebook/Instagram)
+            ads. Production + web only; see the component for the guards. */}
+        <MetaPixel />
         </PremiumProvider>
       </body>
     </html>
