@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import Link from "next/link";
 import { useMe } from "@/lib/use-me";
-import { PREMIUM_PRICE_LABEL } from "@/lib/site";
+import { PREMIUM_PRICE_LABEL, PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD } from "@/lib/site";
 
 // A site-wide Premium upsell dialog so users can subscribe / start the trial from
 // wherever they hit a wall — no navigating to /premium first. Any client component
@@ -18,6 +18,7 @@ export function usePremiumDialog() {
 const FEATURES: { k: string; v: string }[] = [
   { k: "Best-Basket optimiser", v: "cheapest multi-store cart" },
   { k: "Value Finder", v: "undervalued-card screener" },
+  { k: "Arbitrage finder", v: "full flips & deals list" },
   { k: "Ad-free", v: "no ads on any page" },
 ];
 
@@ -120,6 +121,10 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
               </div>
             ) : (
               <>
+                <div className="mb-3 flex items-baseline justify-center gap-1">
+                  <span className="num text-3xl font-extrabold text-white">{PREMIUM_PRICE_AMOUNT}</span>
+                  <span className="text-sm text-slate-400">/{PREMIUM_PRICE_PERIOD}</span>
+                </div>
                 <button onClick={checkout} disabled={busy} className={GOLD_BTN}>
                   {busy ? "Opening checkout…" : trialEligible ? "Start 1-day free trial →" : "Upgrade to Premium →"}
                 </button>

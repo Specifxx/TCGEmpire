@@ -7,6 +7,7 @@ import { NavWishlistButton } from "./NavWishlistButton";
 import { MobileNav } from "./MobileNav";
 import { CountrySwitcher } from "./CountrySwitcher";
 import { NavUser } from "./NavUser";
+import { PremiumButton } from "./PremiumButton";
 import { DISCORD_URL } from "@/lib/site";
 
 // NO server-side session read here: the navbar renders on every route, so a
@@ -64,6 +65,10 @@ export function Navbar() {
           <Link href="/trade" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:block sm:px-2.5">
             Trade
           </Link>
+          {/* Premium — one-click into the upsell dialog from anywhere. */}
+          <PremiumButton className="hidden rounded-lg px-2 py-2 text-sm font-semibold text-gold hover:bg-ink-800 sm:block sm:px-2.5">
+            ✦ Premium
+          </PremiumButton>
           {/* Single nav entry point: the ⌘K "Explore" command launcher (above) is the
               full-nav surface on desktop — it lists the same NAV_GROUPS searchably — so
               the separate "Menu" mega-dropdown is gone (matches DexCompare's one-tab model). */}

@@ -20,8 +20,10 @@ export const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID ?? "421029741
 // with NEXT_PUBLIC_BUYMEACOFFEE_URL if the username differs.
 export const BUYMEACOFFEE_URL = process.env.NEXT_PUBLIC_BUYMEACOFFEE_URL || "https://buymeacoffee.com/riftcompare";
 
-// Display price for RiftCompare Premium (e.g. "$4.99/mo"). Set
-// NEXT_PUBLIC_PREMIUM_PRICE to match the price you created in Stripe so the
-// /premium page shows the real cost. Empty = show the generic "booster pack a
-// month" copy instead of a number.
-export const PREMIUM_PRICE_LABEL = process.env.NEXT_PUBLIC_PREMIUM_PRICE || "";
+// Display price for RiftCompare Premium. Amount + period render the big price on the
+// /premium pricing card; PREMIUM_PRICE_LABEL is the compact "$4.99/mo" used in CTAs.
+// These are DISPLAY ONLY — set them to match the recurring price you created in
+// Stripe (override any of them via the NEXT_PUBLIC_* env vars).
+export const PREMIUM_PRICE_AMOUNT = process.env.NEXT_PUBLIC_PREMIUM_PRICE_AMOUNT || "$4.99";
+export const PREMIUM_PRICE_PERIOD = process.env.NEXT_PUBLIC_PREMIUM_PRICE_PERIOD || "month";
+export const PREMIUM_PRICE_LABEL = process.env.NEXT_PUBLIC_PREMIUM_PRICE || `${PREMIUM_PRICE_AMOUNT}/mo`;

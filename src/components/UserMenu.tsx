@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { SHARD } from "@/lib/points-config";
+import { useMe } from "@/lib/use-me";
+import { usePremiumDialog } from "./PremiumDialog";
 
 export interface MenuUser {
   displayName: string;
@@ -20,6 +22,8 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
   const [open, setOpen] = useState(false);
   const [resent, setResent] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const { premium } = useMe();
+  const { open: openPremium } = usePremiumDialog();
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -109,6 +113,16 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
           )}
 
           <div className="py-1">
+            {premium ? (
+              <MenuLink href="/premium" onClick={() => setOpen(false)}>✦ Premium</MenuLink>
+            ) : (
+              <button
+                onClick={() => { setOpen(false); openPremium(); }}
+                className="block w-full px-4 py-2.5 text-left text-sm font-bold text-gold hover:bg-ink-800"
+              >
+                ✦ Get Premium
+              </button>
+            )}
             <MenuLink href="/profile" onClick={() => setOpen(false)}>Profile</MenuLink>
             <MenuLink href="/profile#collection" onClick={() => setOpen(false)}>My collection</MenuLink>
             <MenuLink href="/rewards" onClick={() => setOpen(false)}>{SHARD.name} &amp; rewards</MenuLink>
