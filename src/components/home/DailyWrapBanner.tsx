@@ -22,11 +22,7 @@ export function DailyWrapBanner({ post }: { post: MarketReportPost }) {
     >
       {/* Left — badge + headline */}
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
-          <span className="relative flex h-1.5 w-1.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
-          </span>
+        <span className="inline-flex w-fit items-center rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
           Daily Market Wrap
         </span>
         <span className="truncate text-sm font-bold text-white group-hover:text-emerald-200 sm:text-base">
@@ -34,10 +30,13 @@ export function DailyWrapBanner({ post }: { post: MarketReportPost }) {
         </span>
       </div>
 
-      {/* Right — compact RiftCompare Index */}
+      {/* Right — compact RiftCompare Index. The sparkline shows on every screen
+          (incl. mobile); the level/move and regional flags progressively appear on
+          larger screens. */}
       {g && (
-        <div className="hidden shrink-0 items-center gap-3 border-l border-ink-700 pl-4 sm:flex">
-          <div className="flex flex-col items-end leading-tight">
+        <div className="flex shrink-0 items-center gap-2.5 border-l border-ink-700 pl-3 sm:gap-3 sm:pl-4">
+          {/* level + move — sm and up */}
+          <div className="hidden flex-col items-end leading-tight sm:flex">
             <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Index</span>
             <div className="flex items-baseline gap-1.5">
               <span className="num text-lg font-extrabold text-white">{g.level != null ? g.level.toFixed(1) : "—"}</span>
@@ -48,11 +47,13 @@ export function DailyWrapBanner({ post }: { post: MarketReportPost }) {
               )}
             </div>
           </div>
+          {/* sparkline — always, including mobile */}
           {g.series.length >= 2 && (
-            <span className="hidden md:block">
-              <Sparkline series={g.series} id="wrap-banner" width={110} height={34} />
+            <span className="block w-20 shrink-0 sm:w-24">
+              <Sparkline series={g.series} id="wrap-banner" width={96} height={32} />
             </span>
           )}
+          {/* regional flags — lg and up */}
           {regions.length > 0 && (
             <span className="hidden items-center gap-2 border-l border-ink-700 pl-3 lg:flex">
               {regions.map((r) => (

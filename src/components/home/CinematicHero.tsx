@@ -5,7 +5,9 @@ import { CountryHeroToggle } from "@/components/CountryHeroToggle";
 import { OutboundLink } from "@/components/OutboundLink";
 import { CommandLauncherButton } from "@/components/CommandLauncher";
 import { affiliateUrl, ebayAffiliateUrl } from "@/lib/affiliate";
+import { DailyWrapBanner } from "./DailyWrapBanner";
 import type { CountryInfo, Country } from "@/lib/country";
+import type { MarketReportPost } from "@/lib/posts";
 
 // eBay marketplace domain per market (NZ has no eBay of its own → AU).
 const EBAY_DOMAIN: Record<string, string> = {
@@ -25,6 +27,7 @@ export function CinematicHero({
   totalCards,
   pricedCards,
   inStockUnits,
+  wrap,
 }: {
   country: Country;
   info: CountryInfo;
@@ -33,6 +36,8 @@ export function CinematicHero({
   totalCards: number;
   pricedCards: number;
   inStockUnits: number;
+  // Today's market wrap, shown as a banner directly under the live badge.
+  wrap?: MarketReportPost | null;
 }) {
   const ebayHref = ebayAffiliateUrl(
     `https://www.${EBAY_DOMAIN[country] ?? "ebay.com"}/sch/i.html?_nkw=${encodeURIComponent("Riftbound TCG")}`
@@ -58,6 +63,13 @@ export function CinematicHero({
             Live prices · updated daily
           </span>
         </div>
+
+        {/* Today's market wrap — embedded right under the live badge. */}
+        {wrap && (
+          <div className="animate-fade-in [animation-delay:100ms] mx-auto mt-4 max-w-2xl text-left">
+            <DailyWrapBanner post={wrap} />
+          </div>
+        )}
 
         {/* Kinetic headline — MARKET-NEUTRAL: this page is cached (ISR), so one
             version serves every visitor and crawler; naming all four markets
