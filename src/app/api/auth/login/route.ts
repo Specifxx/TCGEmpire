@@ -36,6 +36,16 @@ export async function POST(req: Request) {
     );
   }
 
+  // Credentials are correct — now require a verified email before granting a session.
+  // (Only a caller who already knows the password reaches this, so the specific
+  // message doesn't help account enumeration.)
+  if (!user.emailVerified) {
+    return NextResponse.json(
+      { error: "Please verify your email before signing in — check your inbox for the verification link.", needsVerify: true },
+      { status: 403 }
+    );
+  }
+
   await createSession(user.id);
   return NextResponse.json({ ok: true });
 }

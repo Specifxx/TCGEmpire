@@ -25,9 +25,11 @@ export function AuthForm({ mode, providers }: { mode: "login" | "register"; prov
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
-  const [leaderboardEmails, setLeaderboardEmails] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [registered, setRegistered] = useState(false); // show "check your email" after signup
+  const [needsVerify, setNeedsVerify] = useState(false); // login blocked: email not verified
+  const [resendMsg, setResendMsg] = useState<string | null>(null);
 
   // Surface OAuth failures redirected back as ?error=…
   useEffect(() => {
@@ -38,16 +40,24 @@ export function AuthForm({ mode, providers }: { mode: "login" | "register"; prov
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setNeedsVerify(false);
     setLoading(true);
     try {
       const res = await fetch(`/api/auth/${mode}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(isRegister ? { email, password, displayName, leaderboardEmails } : { email, password }),
+        body: JSON.stringify(isRegister ? { email, password, displayName } : { email, password }),
       });
       const data = await res.json();
       if (!res.ok) {
         setError(data.error ?? "Something went wrong");
+        if (data.needsVerify) setNeedsVerify(true); // login: unverified email
+        setLoading(false);
+        return;
+      }
+      // New accounts must verify their email before they can sign in.
+      if (isRegister) {
+        setRegistered(true);
         setLoading(false);
         return;
       }
@@ -59,7 +69,43 @@ export function AuthForm({ mode, providers }: { mode: "login" | "register"; prov
     }
   }
 
+  async function resendVerification() {
+    setResendMsg(null);
+    try {
+      const res = await fetch("/api/auth/resend-verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      setResendMsg(
+        res.ok ? "Verification email sent — check your inbox (and spam)." : "Couldn't resend right now — try again shortly.",
+      );
+    } catch {
+      setResendMsg("Network error — try again.");
+    }
+  }
+
   const nextQ = typeof window !== "undefined" ? window.location.search.replace(/[?&]error=[^&]*/g, "").replace(/^&/, "?") : "";
+
+  // After signup: the account exists but can't sign in until the email is verified.
+  if (registered) {
+    return (
+      <div className="mx-auto max-w-md py-10">
+        <div className="card-surface p-6 text-center">
+          <h1 className="text-xl font-extrabold text-white">Check your email</h1>
+          <p className="mt-2 text-sm leading-relaxed text-slate-400">
+            We&apos;ve sent a verification link to <span className="font-medium text-slate-200">{email}</span>. Click it
+            to activate your account, then sign in.
+          </p>
+          <button onClick={resendVerification} className="btn-ghost mt-4 text-sm">Resend verification email</button>
+          {resendMsg && <p className="mt-2 text-xs text-slate-400">{resendMsg}</p>}
+          <p className="mt-4 text-sm">
+            <Link href={`/login${nextQ}`} className="text-brand-400 hover:underline">Go to sign in →</Link>
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-md py-10">
@@ -115,22 +161,15 @@ export function AuthForm({ mode, providers }: { mode: "login" | "register"; prov
             <input type="password" className="input" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={isRegister ? "new-password" : "current-password"} minLength={6} required />
           </label>
 
-          {isRegister && (
-            <label className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-ink-700 bg-ink-900/50 p-3">
-              <input
-                type="checkbox"
-                checked={leaderboardEmails}
-                onChange={(e) => setLeaderboardEmails(e.target.checked)}
-                className="mt-0.5 h-4 w-4 shrink-0 accent-brand-500"
-              />
-              <span className="text-xs leading-relaxed text-slate-400">
-                Email me the occasional leaderboard update (when I&apos;m knocked off a top spot, plus a
-                weekly high-score recap). Optional — unsubscribe anytime in one click.
-              </span>
-            </label>
-          )}
-
           {error && <p role="alert" className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400">{error}</p>}
+          {needsVerify && (
+            <p className="text-xs text-slate-400">
+              <button type="button" onClick={resendVerification} className="font-medium text-brand-400 hover:underline">
+                Resend verification email
+              </button>
+              {resendMsg && <span className="ml-2">{resendMsg}</span>}
+            </p>
+          )}
 
           <button type="submit" className="btn-primary mt-1" disabled={loading}>
             {loading ? "Please wait…" : isRegister ? "Create account" : "Sign in"}

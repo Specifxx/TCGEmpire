@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { createSession, hashPassword, createAuthToken } from "@/lib/auth";
+import { hashPassword, createAuthToken } from "@/lib/auth";
 import { sendVerificationEmail } from "@/lib/email";
 import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit";
 import { awardPoints } from "@/lib/points";
@@ -51,17 +51,17 @@ export async function POST(req: Request) {
     },
   });
 
-  await createSession(user.id);
-  // Welcome Shards — seeds the loyalty economy the moment they join.
+  // NOTE: no session is created here — the account must verify its email before it
+  // can sign in (see the login route). Welcome Shards + referral credit still apply.
   await awardPoints(user.id, "welcome").catch(() => {});
   // Credit a referrer if they arrived via a /?ref=<userId> link (best-effort).
   await applyReferral(user.id);
-  // Send a confirmation email (best-effort; no-op until RESEND_API_KEY is set).
+  // Send the verification email — the link activates the account for sign-in.
   try {
     const token = await createAuthToken(user.id, "verify");
     await sendVerificationEmail(email, token);
   } catch (e) {
     console.warn("verification email failed:", e);
   }
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, verify: true });
 }
