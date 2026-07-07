@@ -1,10 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { SHARD } from "@/lib/points-config";
 import { useMe } from "@/lib/use-me";
 import { usePremiumDialog } from "./PremiumDialog";
+
+// Auth routes we never want to "return to" after sign-in (would loop).
+const AUTH_PATHS = ["/login", "/register", "/forgot", "/reset", "/verify"];
 
 export interface MenuUser {
   displayName: string;
@@ -24,6 +28,13 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
   const ref = useRef<HTMLDivElement>(null);
   const { premium } = useMe();
   const { open: openPremium } = usePremiumDialog();
+  const pathname = usePathname();
+  // Carry the current page as ?next= so signing in returns the user here (not always
+  // /profile). Skip auth pages to avoid a redirect loop.
+  const loginHref =
+    pathname && pathname !== "/" && !AUTH_PATHS.some((p) => pathname.startsWith(p))
+      ? `/login?next=${encodeURIComponent(pathname)}`
+      : "/login";
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -36,7 +47,7 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
   if (!user) {
     return (
       <Link
-        href="/login"
+        href={loginHref}
         aria-label="Sign in"
         title="Sign in"
         className="grid h-9 w-9 place-items-center rounded-lg text-slate-200 hover:bg-ink-800 hover:text-white"
