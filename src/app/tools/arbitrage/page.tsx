@@ -6,6 +6,7 @@ import { COUNTRIES } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { OutboundLink } from "@/components/OutboundLink";
 import { PremiumButton } from "@/components/PremiumButton";
+import { RegionToggle } from "@/components/RegionToggle";
 import { ArbitrageFilters } from "@/components/ArbitrageFilters";
 import { CardQuickLink } from "@/components/CardQuickLink";
 import type { CardTileData } from "@/components/CardTile";
@@ -88,7 +89,10 @@ export default async function ArbitragePage({
           <span>/</span>
           <span className="text-slate-300">Arbitrage</span>
         </nav>
-        <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">Arbitrage &amp; eBay Deals</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">Arbitrage &amp; eBay Deals</h1>
+          <RegionToggle />
+        </div>
       </div>
 
       {/* Tabs */}

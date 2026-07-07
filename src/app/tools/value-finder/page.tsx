@@ -9,6 +9,7 @@ import { COUNTRIES } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
 import { PremiumButton } from "@/components/PremiumButton";
+import { RegionToggle } from "@/components/RegionToggle";
 
 export const dynamic = "force-dynamic";
 
@@ -64,7 +65,10 @@ export default async function ValueFinderPage() {
           <span>/</span>
           <span className="text-slate-300">Value Finder</span>
         </nav>
-        <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">Value Finder</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">Value Finder</h1>
+          <RegionToggle />
+        </div>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
           {info.adjective} cards trading <strong className="text-slate-200">below their own recent average</strong> — a
           mean-reversion signal for value buyers and flippers. Ranked by how far below their usual price they sit, not just
