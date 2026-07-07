@@ -55,8 +55,11 @@ export function HowItWorks({ totalCards }: { totalCards: number }) {
       </Reveal>
 
       <div className="mt-4">
-        <Link href="/browse" className="btn-primary text-sm">
-          Start comparing — browse the database →
+        <Link
+          href="/stores/tracked"
+          className="inline-flex items-center gap-2 rounded-md border border-ink-600 bg-ink-900 px-4 py-2 font-mono text-sm font-semibold text-slate-200 transition-colors hover:border-brand-500 hover:text-white"
+        >
+          <span className="text-brand-400" aria-hidden>▸</span> View our store list
         </Link>
       </div>
     </section>
