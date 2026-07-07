@@ -6,11 +6,8 @@ import { DeltaChip, Sparkline, trendColor } from "./MarketReportCharts";
 
 // The featured "Daily Market Wrap" banner at the top of /blog — today's report,
 // styled like a terminal ticker so it stands apart from the editorial posts.
-// showIndex=false hides the right-hand Global Index panel — used on the homepage,
-// where a compact version of that panel lives in the hero, so the index isn't
-// duplicated (the card then carries just the headline + excerpt + link).
-export function DailyWrapHero({ post, showIndex = true }: { post: MarketReportPost; showIndex?: boolean }) {
-  const g = showIndex ? post.data?.global ?? null : null;
+export function DailyWrapHero({ post }: { post: MarketReportPost }) {
+  const g = post.data?.global ?? null;
   return (
     <Link
       href={`/blog/${post.article.slug}`}

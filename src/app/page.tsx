@@ -15,7 +15,7 @@ import { getLatestMarketReport } from "@/lib/posts";
 import { CinematicHero } from "@/components/home/CinematicHero";
 import { MarketPulse } from "@/components/home/MarketPulse";
 import { HowItWorks } from "@/components/home/HowItWorks";
-import { DailyWrapHero } from "@/components/DailyWrapHero";
+import { DailyWrapBanner } from "@/components/home/DailyWrapBanner";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 
 // REAL ISR: renders a market-NEUTRAL baseline (no cookie/header reads — the
@@ -109,17 +109,14 @@ export default async function HomePage() {
         totalCards={totalCards}
         pricedCards={pricedCards}
         inStockUnits={inStockUnits}
-        index={index}
-        wrap={latestWrap}
       />
 
-      {/* Featured daily market wrap — the homepage's signature data moment: today's
-          automated read on the market (chart graphic + headline), linking through to
-          the full wrap. Falls back to the live Index pulse until the first wrap
-          exists, so the slot is never empty. */}
+      {/* Daily market wrap — a compact banner (headline + RiftCompare Index) linking
+          to today's full wrap; the one wrap/index element on the page. Falls back to
+          the live Index pulse until the first wrap exists, so the slot is never empty. */}
       <Reveal>
         {latestWrap ? (
-          <DailyWrapHero post={latestWrap} showIndex={false} />
+          <DailyWrapBanner post={latestWrap} />
         ) : (
           <MarketPulse index={index} currency={info.currency} deals={topDeals} country={country} place={info.place} />
         )}
