@@ -133,6 +133,32 @@ export default async function HomePage() {
           mechanic before the deeper data sections. */}
       <HowItWorks totalCards={totalCards} />
 
+      {/* Featured guide — timely Vendetta deck guide (spoiler season / pre-launch). */}
+      <Reveal>
+        <Link
+          href="/guides/best-riftbound-vendetta-decks"
+          className="group block overflow-hidden rounded-2xl border border-emerald-500/25 bg-gradient-to-br from-emerald-500/[0.06] via-ink-900 to-cyan-500/[0.06] transition-all hover:-translate-y-0.5 hover:border-emerald-400/50 hover:shadow-glow"
+        >
+          <div className="grid md:grid-cols-2">
+            <div className="relative h-44 overflow-hidden border-b border-ink-800 md:h-full md:border-b-0 md:border-r">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/vendetta-archetypes.png" alt="Riftbound Vendetta deck archetypes" className="h-full w-full object-cover object-left" loading="lazy" decoding="async" />
+            </div>
+            <div className="flex flex-col justify-center gap-2 p-6">
+              <span className="chip w-fit bg-emerald-500/15 text-[11px] font-bold uppercase tracking-wider text-emerald-300">New guide · Vendetta</span>
+              <h2 className="text-xl font-extrabold text-white group-hover:text-emerald-200">Best Riftbound Vendetta Decks</h2>
+              <p className="max-w-md text-sm leading-relaxed text-slate-400">
+                Three archetype blueprints — Flow, Burn and Empower — with the synergies that win, how to build them
+                legally, and how to pilot each. Updated through spoiler season ahead of the 31 July launch.
+              </p>
+              <span className="mt-1 inline-flex items-center gap-1 text-sm font-bold text-emerald-400 group-hover:gap-2 [transition:gap_.15s]">
+                Read the deck guide →
+              </span>
+            </div>
+          </div>
+        </Link>
+      </Reveal>
+
       {/* Most popular cards — the most-searched Riftbound singles right now */}
       <section>
         <div className="mb-4 flex items-end justify-between gap-3">
