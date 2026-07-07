@@ -81,7 +81,7 @@ export default async function ValueFinderPage() {
           </p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
             {user ? (
-              <PremiumButton>See Premium</PremiumButton>
+              <PremiumButton />
             ) : (
               <Link href="/register?next=/tools/value-finder" className="btn-primary text-sm">Create a free account</Link>
             )}

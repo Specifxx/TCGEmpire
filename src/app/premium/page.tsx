@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { isPremium, premiumCheckoutEnabled, premiumTrialEnabled } from "@/lib/premium";
+import { isPremium, premiumCheckoutEnabled, premiumTrialEnabled, PREMIUM_TRIAL_DAYS } from "@/lib/premium";
 import { PremiumCta } from "@/components/PremiumCta";
 import { ManageSubscriptionButton } from "@/components/ManageSubscriptionButton";
 import { SITE_URL, PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD } from "@/lib/site";
@@ -124,10 +124,10 @@ export default async function PremiumPage() {
                 <span className="num text-5xl font-extrabold text-white">{PREMIUM_PRICE_AMOUNT}</span>
                 <span className="text-sm text-slate-400">/{PREMIUM_PRICE_PERIOD}</span>
               </div>
-              {trialEligible && <p className="mt-1 text-xs font-semibold text-gold">Starts with a 1-day free trial</p>}
+              {trialEligible && <p className="mt-1 text-xs font-semibold text-gold">Starts with a {PREMIUM_TRIAL_DAYS}-day free trial</p>}
             </div>
             <div className="px-6 py-5">
-              <PremiumCta checkoutLive={checkoutLive} signedIn={!!user} trialEligible={trialEligible} priceLabel={compactPrice} />
+              <PremiumCta checkoutLive={checkoutLive} signedIn={!!user} trialEligible={trialEligible} priceLabel={compactPrice} trialDays={PREMIUM_TRIAL_DAYS} />
               <ul className="mt-4 space-y-2 text-sm">
                 {INCLUDED.map((x) => (
                   <li key={x} className="flex items-center gap-2 text-slate-300">
@@ -197,7 +197,7 @@ export default async function PremiumPage() {
         {already ? (
           <>Update your card or cancel anytime via &ldquo;Manage subscription&rdquo; above. </>
         ) : trialEligible ? (
-          <>The free trial needs a card and converts to {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} after 24 hours unless you cancel first. </>
+          <>The free trial needs a card and converts to {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} after {PREMIUM_TRIAL_DAYS} day{PREMIUM_TRIAL_DAYS === 1 ? "" : "s"} unless you cancel first. </>
         ) : (
           <>Cancel anytime — your benefits run to the end of the paid period. </>
         )}

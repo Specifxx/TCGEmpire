@@ -15,12 +15,15 @@ export function PremiumCta({
   signedIn,
   trialEligible = false,
   priceLabel = "",
+  trialDays = 0,
 }: {
   checkoutLive: boolean;
   signedIn: boolean;
   trialEligible?: boolean;
   priceLabel?: string;
+  trialDays?: number;
 }) {
+  const dayPhrase = `${trialDays} day${trialDays === 1 ? "" : "s"}`;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,13 +65,13 @@ export function PremiumCta({
   return (
     <div>
       <button onClick={subscribe} disabled={busy} className={`${GOLD_BTN} disabled:opacity-50`}>
-        {busy ? "Opening checkout…" : trialEligible ? "Start 1-day free trial →" : "Upgrade to Premium →"}
+        {busy ? "Opening checkout…" : trialEligible ? `Start ${trialDays}-day free trial →` : "Upgrade to Premium →"}
       </button>
       {trialEligible && (
         // Required disclosure for a card-gated trial (Stripe / card-network rules):
         // state the auto-charge and the cancel path up front.
         <p className="mt-2 text-[11px] leading-snug text-slate-400">
-          Card required. Free for 24 hours, then {priceLabel ? `${priceLabel} ` : "billed monthly "}
+          Card required. Free for {dayPhrase}, then {priceLabel ? `${priceLabel} ` : "billed monthly "}
           — cancel anytime before it ends and you won&apos;t be charged.
         </p>
       )}

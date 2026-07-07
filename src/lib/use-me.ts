@@ -12,9 +12,10 @@ export interface Me {
   premium: boolean;
   premiumCheckout: boolean; // Stripe premium checkout is configured
   trialEligible: boolean; // signed in, not premium, trial on + never trialed
+  trialDays: number; // configured free-trial length (0 = trial off)
 }
 
-const EMPTY_ME: Me = { user: null, premium: false, premiumCheckout: false, trialEligible: false };
+const EMPTY_ME: Me = { user: null, premium: false, premiumCheckout: false, trialEligible: false, trialDays: 0 };
 
 let mePromise: Promise<Me> | null = null;
 
@@ -27,6 +28,7 @@ function fetchMe(): Promise<Me> {
         premium: !!d.premium,
         premiumCheckout: !!d.premiumCheckout,
         trialEligible: !!d.trialEligible,
+        trialDays: Number(d.trialDays) || 0,
       }))
       .catch(() => EMPTY_ME);
   }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { isPremium, premiumCheckoutEnabled, premiumTrialEnabled } from "@/lib/premium";
+import { isPremium, premiumCheckoutEnabled, premiumTrialEnabled, PREMIUM_TRIAL_DAYS } from "@/lib/premium";
 
 // Session endpoint for the client-side chrome (UserMenu, wishlist sync,
 // premium ad-hiding).
@@ -31,6 +31,7 @@ export async function GET() {
       // Premium upsell state for the client (the one-click Premium dialog).
       premiumCheckout: premiumCheckoutEnabled(),
       trialEligible: !!user && !isPremium(user) && premiumTrialEnabled() && !user.trialStartedAt,
+      trialDays: PREMIUM_TRIAL_DAYS,
     },
     { headers: { "Cache-Control": "no-store" } }
   );

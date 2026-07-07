@@ -357,7 +357,7 @@ function LockedTable({ children, signedIn }: { children: React.ReactNode; signed
           </p>
           <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
             {signedIn ? (
-              <PremiumButton>Unlock with Premium</PremiumButton>
+              <PremiumButton />
             ) : (
               <Link href="/register?next=/tools/arbitrage" className="btn-primary text-sm">Create a free account</Link>
             )}

@@ -38,7 +38,8 @@ export function PremiumDialogProvider({ children }: { children: React.ReactNode 
 }
 
 function PremiumDialog({ onClose }: { onClose: () => void }) {
-  const { user, premium, premiumCheckout, trialEligible, loaded } = useMe();
+  const { user, premium, premiumCheckout, trialEligible, trialDays, loaded } = useMe();
+  const dayPhrase = `${trialDays} day${trialDays === 1 ? "" : "s"}`;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -126,11 +127,11 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
                   <span className="text-sm text-slate-400">/{PREMIUM_PRICE_PERIOD}</span>
                 </div>
                 <button onClick={checkout} disabled={busy} className={GOLD_BTN}>
-                  {busy ? "Opening checkout…" : trialEligible ? "Start 1-day free trial →" : "Upgrade to Premium →"}
+                  {busy ? "Opening checkout…" : trialEligible ? `Start ${trialDays}-day free trial →` : "Upgrade to Premium →"}
                 </button>
                 <p className="mt-2 text-center text-[11px] leading-snug text-slate-500">
                   {trialEligible ? (
-                    <>Card required. Free for 24 hours, then {PREMIUM_PRICE_LABEL ? `${PREMIUM_PRICE_LABEL} ` : "billed monthly "}— cancel anytime.</>
+                    <>Card required. Free for {dayPhrase}, then {PREMIUM_PRICE_LABEL ? `${PREMIUM_PRICE_LABEL} ` : "billed monthly "}— cancel anytime.</>
                   ) : (
                     <>{PREMIUM_PRICE_LABEL ? `${PREMIUM_PRICE_LABEL} · ` : ""}cancel anytime.</>
                   )}
