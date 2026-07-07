@@ -84,7 +84,7 @@ export function CinematicHero({
                 aria-label="Read today's daily market wrap"
                 className="group inline-flex w-full max-w-md items-center gap-3 rounded-lg border border-ink-700 bg-ink-900 px-4 py-2 text-left transition-colors duration-200 hover:border-brand-500 hover:bg-ink-800 sm:max-w-lg"
               >
-                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-brand-500/15 text-sm" aria-hidden>📊</span>
+                <span className="shrink-0"><Sparkline points={index.points} up={indexUp} upIsGood /></span>
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-2">
                     <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-300">Daily Market Wrap</span>
