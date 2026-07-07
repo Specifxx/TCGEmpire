@@ -18,6 +18,16 @@ export function premiumCheckoutEnabled(): boolean {
   return Boolean(process.env.STRIPE_SECRET_KEY && PREMIUM_PRICE_ID);
 }
 
+// Free-trial length (days) for a first-time subscriber. 0 = OFF (immediate charge,
+// the default and current behaviour). Set PREMIUM_TRIAL_DAYS=1 to switch on the
+// card-gated free trial — do this ONLY after enabling the Stripe customer portal +
+// the trial-ending reminder email, so trialists can cancel and aren't surprise-
+// charged. Abuse is blocked by card fingerprint regardless (see the webhook).
+export const PREMIUM_TRIAL_DAYS = Math.max(0, Math.floor(Number(process.env.PREMIUM_TRIAL_DAYS ?? 0)));
+export function premiumTrialEnabled(): boolean {
+  return PREMIUM_TRIAL_DAYS > 0;
+}
+
 // The portfolio tracker (value history, cost-basis P&L, benchmark, CSV export) is
 // FREE for now to drive adoption — flip this to false to put it back behind
 // Premium. Gates read `isPremium(user) || PORTFOLIO_FREE`, so re-gating is a

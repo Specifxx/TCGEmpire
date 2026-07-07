@@ -6,7 +6,17 @@ import { useState } from "react";
 // The Premium subscribe button. Three states: checkout live (Stripe hosted
 // checkout), signed out (route through login first), or checkout not yet
 // configured (honest waitlist CTA via the contact form — no fake buy button).
-export function PremiumCta({ checkoutLive, signedIn }: { checkoutLive: boolean; signedIn: boolean }) {
+export function PremiumCta({
+  checkoutLive,
+  signedIn,
+  trialEligible = false,
+  priceLabel = "",
+}: {
+  checkoutLive: boolean;
+  signedIn: boolean;
+  trialEligible?: boolean;
+  priceLabel?: string;
+}) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,10 +57,20 @@ export function PremiumCta({ checkoutLive, signedIn }: { checkoutLive: boolean; 
   }
   return (
     <div>
-      <p className="text-sm font-semibold text-white">Become a founding member</p>
+      <p className="text-sm font-semibold text-white">
+        {trialEligible ? "Try Premium free for 1 day" : "Become a founding member"}
+      </p>
       <button onClick={subscribe} disabled={busy} className="btn-primary mt-3 text-sm disabled:opacity-50">
-        {busy ? "Opening checkout…" : "★ Subscribe"}
+        {busy ? "Opening checkout…" : trialEligible ? "★ Start 1-day free trial" : "★ Subscribe"}
       </button>
+      {trialEligible && (
+        // Required disclosure for a card-gated trial (Stripe / card-network rules):
+        // state the auto-charge and the cancel path up front.
+        <p className="mt-2 text-[11px] leading-snug text-slate-400">
+          Card required. Free for 24 hours, then {priceLabel ? `${priceLabel} ` : "billed monthly "}
+          — cancel anytime before it ends and you won&apos;t be charged.
+        </p>
+      )}
       {error && (
         <div role="alert" className="mt-2 text-xs">
           <p className="text-rose-400">{error}</p>

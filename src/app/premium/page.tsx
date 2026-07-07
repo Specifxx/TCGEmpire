@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { isPremium, premiumCheckoutEnabled } from "@/lib/premium";
+import { isPremium, premiumCheckoutEnabled, premiumTrialEnabled } from "@/lib/premium";
 import { PremiumCta } from "@/components/PremiumCta";
+import { ManageSubscriptionButton } from "@/components/ManageSubscriptionButton";
 import { SITE_URL, PREMIUM_PRICE_LABEL } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -47,6 +49,9 @@ export default async function PremiumPage() {
   const user = await getCurrentUser();
   const already = isPremium(user); // session user carries premiumUntil + isAdmin
   const checkoutLive = premiumCheckoutEnabled();
+  // Trial eligible = signed in, not already Premium, and never trialed before.
+  const dbUser = user ? await prisma.user.findUnique({ where: { id: user.id }, select: { trialStartedAt: true } }) : null;
+  const trialEligible = premiumTrialEnabled() && !!user && !already && !dbUser?.trialStartedAt;
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -103,7 +108,7 @@ export default async function PremiumPage() {
           <div className="card-surface grid place-items-center border-gold/30 p-4 text-center">
             <div>
               {PREMIUM_PRICE_LABEL && <p className="num mb-2 text-2xl font-extrabold text-white">{PREMIUM_PRICE_LABEL}</p>}
-              <PremiumCta checkoutLive={checkoutLive} signedIn={!!user} />
+              <PremiumCta checkoutLive={checkoutLive} signedIn={!!user} trialEligible={trialEligible} priceLabel={PREMIUM_PRICE_LABEL} />
             </div>
           </div>
         )}
@@ -115,12 +120,15 @@ export default async function PremiumPage() {
           <Link href="/tools/arbitrage" className="btn-ghost">Arbitrage</Link>
           <Link href="/movers" className="btn-ghost">Movers</Link>
           <Link href="/market" className="btn-ghost">Market Index</Link>
+          {checkoutLive && <ManageSubscriptionButton />}
         </div>
       )}
 
       <p className="mt-6 text-center text-xs text-slate-600">
         {already ? (
-          <>Manage or cancel your subscription anytime via your Stripe receipt email. Questions? </>
+          <>Update your card or cancel anytime via “Manage subscription” above. Questions? </>
+        ) : trialEligible ? (
+          <>Your 1-day free trial needs a card and converts to a paid plan after 24 hours unless you cancel first — cancel anytime from this page. Questions? </>
         ) : (
           <>Cancel anytime — your benefits run to the end of the paid period. Questions? </>
         )}

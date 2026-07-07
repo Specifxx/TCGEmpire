@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { stripe } from "@/lib/stripe";
-import { premiumCheckoutEnabled, PREMIUM_PRICE_ID } from "@/lib/premium";
+import { premiumCheckoutEnabled, premiumTrialEnabled, PREMIUM_PRICE_ID, PREMIUM_TRIAL_DAYS } from "@/lib/premium";
 import { SITE_URL } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -19,8 +19,14 @@ export async function POST() {
 
   const dbUser = await prisma.user.findUnique({
     where: { id: user.id },
-    select: { stripeCustomerId: true, email: true },
+    select: { stripeCustomerId: true, email: true, trialStartedAt: true },
   });
+
+  // One free trial per account: only first-timers get the trial; everyone else
+  // subscribes normally (charged immediately). The webhook independently re-checks
+  // by card fingerprint, so this client-facing gate can't be bypassed for a free
+  // trial by simply re-hitting the endpoint.
+  const trialEligible = premiumTrialEnabled() && !dbUser?.trialStartedAt;
 
   try {
     const session = await stripe().checkout.sessions.create({
@@ -31,8 +37,21 @@ export async function POST() {
         ? { customer: dbUser.stripeCustomerId }
         : { customer_email: dbUser?.email }),
       client_reference_id: user.id,
-      metadata: { kind: "premium", userId: user.id },
-      subscription_data: { metadata: { userId: user.id } },
+      metadata: { kind: "premium", userId: user.id, trial: trialEligible ? "1" : "0" },
+      subscription_data: {
+        metadata: { userId: user.id },
+        // 1-day free trial for first-timers. A card is still required up front
+        // (payment_method_collection below), so the trial auto-converts to paid
+        // unless cancelled — and we can fingerprint the card to block trial abuse.
+        ...(trialEligible
+          ? {
+              trial_period_days: PREMIUM_TRIAL_DAYS,
+              trial_settings: { end_behavior: { missing_payment_method: "cancel" } },
+            }
+          : {}),
+      },
+      // Force card collection even though $0 is due now during a trial.
+      ...(trialEligible ? { payment_method_collection: "always" as const } : {}),
       success_url: `${SITE_URL}/portfolio?upgraded=1`,
       cancel_url: `${SITE_URL}/premium`,
       allow_promotion_codes: true,

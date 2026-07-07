@@ -51,6 +51,9 @@ model User {
   // invoices back to the account.
   premiumUntil      DateTime?
   stripeCustomerId  String?
+  // Set the first time this account starts a free trial → one trial per account
+  // (a returning user just subscribes, no second trial).
+  trialStartedAt    DateTime?
   createdAt         DateTime  @default(now())
 
   listings            Listing[]
@@ -73,6 +76,20 @@ model User {
   @@index([googleId])
   @@index([discordId])
   @@index([stripeCustomerId])
+}
+
+// Anti-abuse ledger for the Premium free trial. Stripe assigns every card a stable
+// `fingerprint` that is the SAME across different customers/accounts, so recording
+// it here lets us refuse a second free trial for a card that's already had one —
+// defeating "make a new account, trial again" abuse. A blocked card can still
+// subscribe (paid), it just doesn't get another free trial.
+model TrialRedemption {
+  id              String   @id @default(cuid())
+  cardFingerprint String   @unique
+  userId          String
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
 }
 
 // A store on the B2B repricer programme: each partner store gets a secret token

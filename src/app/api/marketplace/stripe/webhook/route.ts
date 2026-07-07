@@ -103,29 +103,58 @@ async function releaseSession(session: Stripe.Checkout.Session) {
 // ── RiftCompare Premium (subscriptions) ────────────────────────────────────────
 
 // First successful premium checkout: link the Stripe customer to the account and
-// grant the first period (the period end comes off the subscription itself).
+// grant the first period (the period end comes off the subscription itself). For a
+// free trial, the card is fingerprinted and checked against past trials FIRST — a
+// reused card's trial is cancelled and NO entitlement is granted (entitlement is
+// only ever written here, so a blocked abuser never gets a moment of access).
 async function premiumStarted(session: Stripe.Checkout.Session) {
   const userId = session.metadata?.userId ?? session.client_reference_id;
   if (!userId) return;
+  const isTrial = session.metadata?.trial === "1";
   const customerId = typeof session.customer === "string" ? session.customer : null;
   const subId = typeof session.subscription === "string" ? session.subscription : null;
 
   let until: Date | null = null;
   if (subId) {
     try {
-      const sub = await stripe().subscriptions.retrieve(subId);
+      // Expand the default payment method so we can read the card fingerprint.
+      const sub = await stripe().subscriptions.retrieve(subId, { expand: ["default_payment_method"] });
       until = new Date(sub.current_period_end * 1000);
+
+      if (isTrial) {
+        const pm = sub.default_payment_method;
+        const fingerprint = pm && typeof pm !== "string" ? pm.card?.fingerprint ?? null : null;
+        if (fingerprint) {
+          const seen = await prisma.trialRedemption.findUnique({ where: { cardFingerprint: fingerprint } });
+          if (seen && seen.userId !== userId) {
+            // This card already had a free trial (on any account) → refuse this one.
+            await stripe().subscriptions.cancel(subId).catch(() => {});
+            // Mark the account as having attempted a trial so it can't loop, but grant
+            // nothing.
+            await prisma.user.update({ where: { id: userId }, data: { trialStartedAt: new Date() } }).catch(() => {});
+            return;
+          }
+          if (!seen) {
+            await prisma.trialRedemption.create({ data: { cardFingerprint: fingerprint, userId } }).catch(() => {});
+          }
+        }
+      }
     } catch {
       /* fall through to the grace default */
     }
   }
-  // Even if the subscription read fails, grant ~a month — the invoice.paid event
-  // (and the next renewal) will re-stamp the precise period end.
-  if (!until) until = new Date(Date.now() + 32 * 86400_000);
+  // If the subscription read failed: grant a short grace window that the precise
+  // period end (invoice.paid / renewal) will correct — 1 day for a trial, ~a month
+  // for a paid start.
+  if (!until) until = new Date(Date.now() + (isTrial ? 1 : 32) * 86400_000);
 
   await prisma.user.update({
     where: { id: userId },
-    data: { premiumUntil: until, ...(customerId ? { stripeCustomerId: customerId } : {}) },
+    data: {
+      premiumUntil: until,
+      ...(customerId ? { stripeCustomerId: customerId } : {}),
+      ...(isTrial ? { trialStartedAt: new Date() } : {}),
+    },
   }).catch(() => {});
 }
 
