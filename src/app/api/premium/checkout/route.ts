@@ -28,10 +28,10 @@ export async function POST(req: Request) {
     select: { stripeCustomerId: true, email: true, trialStartedAt: true },
   });
 
-  // One free trial per account, and only on the MONTHLY plan (annual is a direct
-  // discounted purchase). The webhook independently re-checks by card fingerprint,
+  // One free trial per account, on EITHER plan (annual trials convert to the yearly
+  // price after the trial). The webhook independently re-checks by card fingerprint,
   // so this gate can't be bypassed for a free trial by re-hitting the endpoint.
-  const trialEligible = !annual && premiumTrialEnabled() && !dbUser?.trialStartedAt;
+  const trialEligible = premiumTrialEnabled() && !dbUser?.trialStartedAt;
 
   try {
     const session = await stripe().checkout.sessions.create({

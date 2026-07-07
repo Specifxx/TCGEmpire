@@ -3,7 +3,8 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import Link from "next/link";
 import { useMe } from "@/lib/use-me";
-import { PREMIUM_PRICE_LABEL, PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD } from "@/lib/site";
+import { AnnualPriceBlock } from "./AnnualPriceBlock";
+import { PREMIUM_PRICE_LABEL, PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, PREMIUM_ANNUAL_AMOUNT, annualSavingPct } from "@/lib/site";
 
 // A site-wide Premium upsell dialog so users can subscribe / start the trial from
 // wherever they hit a wall — no navigating to /premium first. Any client component
@@ -38,10 +39,14 @@ export function PremiumDialogProvider({ children }: { children: React.ReactNode 
 }
 
 function PremiumDialog({ onClose }: { onClose: () => void }) {
-  const { user, premium, premiumCheckout, trialEligible, trialDays, loaded } = useMe();
+  const { user, premium, premiumCheckout, trialEligible, trialDays, premiumAnnual, loaded } = useMe();
   const dayPhrase = `${trialDays} day${trialDays === 1 ? "" : "s"}`;
+  const savePct = annualSavingPct();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Default to the best-value plan when annual is offered; force monthly otherwise.
+  const [plan, setPlan] = useState<"monthly" | "annual">("annual");
+  const activePlan = premiumAnnual ? plan : "monthly";
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -54,11 +59,15 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
     };
   }, [onClose]);
 
-  async function checkout() {
+  async function checkout(selected: "monthly" | "annual") {
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch("/api/premium/checkout", { method: "POST" });
+      const res = await fetch("/api/premium/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: selected }),
+      });
       const d = await res.json();
       if (!res.ok) {
         setError(d.error ?? "Couldn't start checkout");
@@ -122,19 +131,56 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
               </div>
             ) : (
               <>
-                <div className="mb-3 flex items-baseline justify-center gap-1">
-                  <span className="num text-3xl font-extrabold text-white">{PREMIUM_PRICE_AMOUNT}</span>
-                  <span className="text-sm text-slate-400">/{PREMIUM_PRICE_PERIOD}</span>
-                </div>
-                <button onClick={checkout} disabled={busy} className={GOLD_BTN}>
-                  {busy ? "Opening checkout…" : trialEligible ? `Start ${trialDays}-day free trial →` : "Upgrade to Premium →"}
+                {/* Plan toggle (only when annual is configured) */}
+                {premiumAnnual && (
+                  <div className="mb-3 flex items-center gap-1 rounded-lg border border-ink-700 bg-ink-950/50 p-1">
+                    <button
+                      onClick={() => setPlan("monthly")}
+                      aria-pressed={activePlan === "monthly"}
+                      className={`flex-1 rounded-md px-3 py-1.5 text-xs font-bold transition-colors ${activePlan === "monthly" ? "bg-ink-800 text-white" : "text-slate-400 hover:text-white"}`}
+                    >
+                      Monthly
+                    </button>
+                    <button
+                      onClick={() => setPlan("annual")}
+                      aria-pressed={activePlan === "annual"}
+                      className={`flex-1 rounded-md px-3 py-1.5 text-xs font-bold transition-colors ${activePlan === "annual" ? "bg-ink-800 text-white" : "text-slate-400 hover:text-white"}`}
+                    >
+                      Annual{savePct > 0 && <span className="ml-1 text-[10px] font-extrabold text-brand-300">−{savePct}%</span>}
+                    </button>
+                  </div>
+                )}
+
+                {/* Price for the selected plan */}
+                {activePlan === "annual" ? (
+                  <div className="mb-3">
+                    <AnnualPriceBlock size="sm" />
+                  </div>
+                ) : (
+                  <div className="mb-3 flex items-baseline justify-center gap-1">
+                    <span className="num text-3xl font-extrabold text-white">{PREMIUM_PRICE_AMOUNT}</span>
+                    <span className="text-sm text-slate-400">/{PREMIUM_PRICE_PERIOD}</span>
+                  </div>
+                )}
+
+                <button onClick={() => checkout(activePlan)} disabled={busy} className={GOLD_BTN}>
+                  {busy
+                    ? "Opening checkout…"
+                    : trialEligible
+                    ? `Start ${trialDays}-day free trial →`
+                    : activePlan === "annual"
+                    ? `Get annual — ${PREMIUM_ANNUAL_AMOUNT}/yr →`
+                    : "Upgrade to Premium →"}
                 </button>
                 <p className="mt-2 text-center text-[11px] leading-snug text-slate-500">
-                  {trialEligible ? (
-                    <>Card required. Free for {dayPhrase}, then {PREMIUM_PRICE_LABEL ? `${PREMIUM_PRICE_LABEL} ` : "billed monthly "}— cancel anytime.</>
-                  ) : (
-                    <>{PREMIUM_PRICE_LABEL ? `${PREMIUM_PRICE_LABEL} · ` : ""}cancel anytime.</>
-                  )}
+                  {(() => {
+                    const priceAfter = activePlan === "annual" ? `${PREMIUM_ANNUAL_AMOUNT}/yr` : PREMIUM_PRICE_LABEL || "billed monthly";
+                    return trialEligible ? (
+                      <>Card required. Free for {dayPhrase}, then {priceAfter} — cancel anytime.</>
+                    ) : (
+                      <>{priceAfter} · cancel anytime.</>
+                    );
+                  })()}
                 </p>
                 {error && <p role="alert" className="mt-2 text-center text-xs text-rose-400">{error}</p>}
               </>

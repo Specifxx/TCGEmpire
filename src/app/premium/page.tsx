@@ -5,7 +5,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { isPremium, premiumCheckoutEnabled, premiumTrialEnabled, premiumAnnualEnabled, PREMIUM_TRIAL_DAYS } from "@/lib/premium";
 import { PremiumCta } from "@/components/PremiumCta";
 import { ManageSubscriptionButton } from "@/components/ManageSubscriptionButton";
-import { SITE_URL, PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, PREMIUM_ANNUAL_AMOUNT, PREMIUM_ANNUAL_PERIOD, annualSavingPct } from "@/lib/site";
+import { AnnualPriceBlock } from "@/components/AnnualPriceBlock";
+import { SITE_URL, PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, PREMIUM_ANNUAL_AMOUNT } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -79,9 +80,7 @@ export default async function PremiumPage() {
   const priceNumeric = PREMIUM_PRICE_AMOUNT.replace(/[^0-9.]/g, "") || "4.99";
   const compactPrice = `${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD === "month" ? "mo" : PREMIUM_PRICE_PERIOD}`;
   const annualLive = premiumAnnualEnabled();
-  const savePct = annualSavingPct();
-  const annualNum = Number(PREMIUM_ANNUAL_AMOUNT.replace(/[^0-9.]/g, "")) || 0;
-  const annualPerMonth = annualNum ? `$${(annualNum / 12).toFixed(2)}` : "";
+  const annualCompact = `${PREMIUM_ANNUAL_AMOUNT}/yr`;
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -142,17 +141,20 @@ export default async function PremiumPage() {
               <div className="card-surface relative flex flex-col overflow-hidden rounded-2xl border-2 border-gold/60">
                 <span className="absolute right-0 top-0 rounded-bl-lg bg-gold px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-ink-950">Best value</span>
                 <div className="border-b border-ink-800 bg-ink-900 px-6 py-6 text-center">
-                  <div className="text-[11px] font-bold uppercase tracking-widest text-gold">Annual</div>
-                  <div className="mt-2 flex items-baseline justify-center gap-1">
-                    <span className="num text-4xl font-extrabold text-white">{PREMIUM_ANNUAL_AMOUNT}</span>
-                    <span className="text-sm text-slate-400">/{PREMIUM_ANNUAL_PERIOD}</span>
-                  </div>
-                  <p className="mt-1 text-xs font-semibold text-gold">
-                    {annualPerMonth && `${annualPerMonth}/mo`}{savePct > 0 && `${annualPerMonth ? " · " : ""}save ${savePct}%`}
-                  </p>
+                  <div className="mb-2 text-[11px] font-bold uppercase tracking-widest text-gold">Annual</div>
+                  <AnnualPriceBlock />
+                  {trialEligible && <p className="mt-2 text-xs font-semibold text-gold">Starts with a {PREMIUM_TRIAL_DAYS}-day free trial</p>}
                 </div>
                 <div className="flex flex-1 items-end px-6 py-5">
-                  <PremiumCta checkoutLive={checkoutLive} signedIn={!!user} plan="annual" ctaLabel={`Get annual — ${PREMIUM_ANNUAL_AMOUNT}/yr`} />
+                  <PremiumCta
+                    checkoutLive={checkoutLive}
+                    signedIn={!!user}
+                    trialEligible={trialEligible}
+                    trialDays={PREMIUM_TRIAL_DAYS}
+                    priceLabel={annualCompact}
+                    plan="annual"
+                    ctaLabel={trialEligible ? undefined : `Get annual — ${PREMIUM_ANNUAL_AMOUNT}/yr`}
+                  />
                 </div>
               </div>
             )}
