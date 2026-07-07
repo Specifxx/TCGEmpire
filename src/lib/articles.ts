@@ -1117,6 +1117,113 @@ Nine new Legends arrive, including **Nasus, Renekton, Akali, Mel, Ambessa, Zed a
 
 More cards are still being revealed before the 31 July launch, so treat this as a living guide — we'll add concrete decklists and synergies as the set fully spoils. For the full set overview, read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)**, and track live prices on the **[Vendetta set page](/sets/vendetta)** the moment cards go live.`,
   },
+  {
+    slug: "best-riftbound-vendetta-decks",
+    category: "guide",
+    title: "Best Riftbound Vendetta Decks: Archetypes, Synergies & How to Build Them",
+    excerpt:
+      "Three strong deck blueprints for Riftbound Vendetta — Flow Value, Burn and Empower Midrange — with the synergies that make them work, how to build them legally, and how to pilot them. Updated through spoiler season.",
+    author: "RiftCompare",
+    date: "2026-07-07",
+    updated: "2026-07-07",
+    readMins: 9,
+    tags: ["vendetta", "decks", "deckbuilding", "strategy", "synergies", "meta", "guide"],
+    body: `![Three Riftbound Vendetta archetypes to build — Flow Value, Burn, and Empower Midrange](/vendetta-archetypes.png)
+
+Riftbound: Vendetta lands **31 July 2026**, and its preview season is revealing cards through mid-July — so this is the moment to plan the decks you'll build on day one. Below are three strong archetype blueprints, each grounded in Vendetta's confirmed mechanics and domain pairings, with the synergies that make them tick and how to pilot them.
+
+An honest note up front: only the first cards are spoiled so far (like **Jayce, Brilliant Inventor** and **Mel**), so these are **blueprints, not netdecks**. We give you the shell — the roles each deck needs — and we'll drop the exact lists in as cards are revealed. Bookmark it; it updates through spoiler season.
+
+## First, the deckbuilding rules (the quick version)
+
+Every legal Riftbound deck is built around one thing: your **Legend**. The Legend sets your identity and the **domains** you can build in, and every card you run has to be castable by your **runes** — your rune base has to produce the domains your cards demand. Two rules of thumb keep a deck legal and consistent:
+
+- **Stay in your Legend's domains.** A Fury/Calm Legend runs Fury and Calm cards; you can't splash a card whose domain your runes can't pay for.
+- **Keep your rune base focused.** The more domains you stretch across, the less reliably you cast on curve. Vendetta's two-domain pairings are the sweet spot.
+
+New to this? Read **[how a Riftbound deck is built](/guides/how-a-riftbound-deck-is-built)** first — it covers Legends, runes and domains in full.
+
+## What makes a deck "synergistic" (and what doesn't)
+
+![What good synergy looks like — a repeatable Setup, Engine, Payoff, Recur loop](/vendetta-synergy-loop.png)
+
+"Synergy" gets thrown around for any two cards that look nice together. A real synergy is an **engine** — a repeatable loop where each piece feeds the next, so the deck gets stronger the longer the game runs. That's exactly where Vendetta's new mechanics point:
+
+- **Setup** — cheap enablers that fill your trash or lay down gear.
+- **Engine** — the loop itself: **Burn** feeds **Flow**, and gear re-readies for value.
+- **Payoff** — cash the loop in: **Empower** a threat, or replay a big card from the trash.
+- **Recur** — Flow buys your enablers back, and you do it again.
+
+If your combo only works once, it's a nice card — not a synergy. Every deck below is built around one of these loops.
+
+## Archetype 1 — Flow Value (Fury + Calm)
+
+**Identity:** grind the game long, recur your best cards, and win on raw card advantage.
+
+**The engine:** the purest expression of **Burn + Flow**. Self-Burn stocks your trash quickly; Flow lets you replay from it, so every card effectively gets used twice. Against aggro you trade and rebuy; against control you never run out of gas.
+
+**The shell (fill exact cards as they spoil):**
+- **Legend:** a Fury/Calm Legend with a recursion or trash payoff.
+- **4–6 enablers:** cheap cards that Burn your own deck or cycle to fill the trash.
+- **3–4 Flow payoffs:** your best units and spells that you *want* to replay from the trash.
+- **6–8 interaction:** removal and combat tricks to survive to the long game.
+- **Runes:** an even Fury/Calm base — you need both colours online reliably.
+
+**How to play it:** you're the grinder. Trade early, don't over-commit into removal, and treat your trash as a second hand — sequence so the cards you Burn are the ones Flow most wants back.
+
+## Archetype 2 — Burn / Disruption (Chaos + Order)
+
+**Identity:** the aggressive, disruptive take on Burn — attack the opponent's deck as a clock while self-Burn powers your own payoffs.
+
+**The engine:** Chaos/Order leans into the **opponent-facing** side of Burn. You chip their deck directly (Riftbound's take on mill) while using self-Burn to fuel Empower and Flow payoffs. Two-pronged: they're racing your clock *and* your board.
+
+**The shell:**
+- **Legend:** a Chaos/Order Legend that rewards Burn or aggression.
+- **4–6 Burn pieces:** a mix of opponent-deck Burn and self-Burn fuel.
+- **3–4 payoffs:** threats paid off by a full trash or by Empower.
+- **6–8 tempo/removal:** to protect your clock.
+- **Runes:** Chaos/Order base, tuned toward whichever colour holds your Burn.
+
+**How to play it:** apply pressure on two axes. Don't tunnel on decking them out — the deck-Burn is a clock that forces bad decisions, while your board usually closes the game. Highest skill ceiling of the three, and the easiest to mis-sequence.
+
+## Archetype 3 — Empower Midrange (Mind + Body)
+
+**Identity:** deploy efficient bodies early, then pay to **Empower** them into late-game threats. The most "fair" and beginner-friendly of the three — and the one with the most revealed support already.
+
+**The engine:** **Empower** rewards curving out and then reinvesting. Two revealed Legends already point the way:
+
+- **Jayce, Brilliant Inventor** — a rare dual-domain **Mind/Body** Legend built around **gear that stays on the board**. When he readies he picks up a combat mode, so decks that tap and re-ready gear squeeze extra value every turn.
+- **Mel** — a **Mind** Legend whose **Empower** (pay energy) makes your Might-reduction effects trigger twice. Build a package of "shrink their unit" spells and each one does double duty.
+
+**The shell:**
+- **Legend:** Jayce (gear/value) or Mel (Might-reduction).
+- **6–8 efficient units:** cheap bodies that are fine early and great once Empowered.
+- **3–4 Empower payoffs / gear:** the cards you reinvest energy into.
+- **4–6 Might-reduction or removal:** doubly good under Mel.
+- **Runes:** Mind-heavy with a Body splash (or the reverse for a Jayce build).
+
+**How to play it:** curve out, but don't rush your energy. The trap is spending everything early — hold energy to Empower at the right moment so a cheap unit becomes the biggest threat on the board.
+
+## Piloting any of these decks
+
+- **Mulligan for your engine, not your payoff.** A hand with enablers and a way to start the loop beats a hand of finishers you can't fuel yet.
+- **Protect the engine.** Once your loop is running the game is yours — bait or answer removal before committing the key piece.
+- **Sequence around energy.** Empower and Flow both want energy banked; plan the turn you go over the top.
+
+## What to watch as spoilers drop (6–17 July)
+
+- **Flow Value:** the best cheap self-Burn enabler and the marquee Flow payoff — those two cards define the deck.
+- **Burn:** how fast the opponent-Burn clock actually is, and whether it's a real win condition or just disruption.
+- **Empower:** more Mind/Body support around Jayce and Mel, and how expensive the strongest Empower effects are.
+
+We'll update this guide with concrete lists as those land — and keep an eye on the **[price movers](/movers)**, since the cards that enable the first strong decks climb fastest at launch.
+
+## Price your list before you buy
+
+The moment you've got a list, drop it into the **[deck pricer](/deck)** to total every card at the cheapest live price across stores, in your currency — the fastest way to build a new-set deck without overpaying in the launch rush. For a brand-new set, **[singles are usually cheaper than sealed](/guides/riftbound-singles-vs-sealed)** for a specific deck.
+
+For the full picture, read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** and the **[new mechanics explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**, and track live prices on the **[Vendetta set page](/sets/vendetta)** as cards release.`,
+  },
 ];
 
 export function getArticles(category?: ArticleCategory): Article[] {

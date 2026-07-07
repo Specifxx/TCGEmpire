@@ -167,6 +167,7 @@ export default async function SetPage({ params }: { params: { set: string } }) {
                   <li><Link href="/blog/riftbound-vendetta-new-mechanics-flow-burn-empower" className="text-brand-400 hover:underline">New mechanics: Flow, Burn &amp; Empower →</Link></li>
                   <li><Link href="/blog/riftbound-vendetta-unit-gear-decrees" className="text-brand-400 hover:underline">New card types: Unit-Gear &amp; Decrees →</Link></li>
                   <li><Link href="/guides/building-for-riftbound-vendetta" className="text-brand-400 hover:underline">Deckbuilding guide &amp; synergies →</Link></li>
+                  <li><Link href="/guides/best-riftbound-vendetta-decks" className="text-brand-400 hover:underline">Best Vendetta decks &amp; archetypes →</Link></li>
                 </ul>
               </div>
             )}
