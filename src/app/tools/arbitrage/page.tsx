@@ -5,6 +5,7 @@ import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { OutboundLink } from "@/components/OutboundLink";
+import { PremiumButton } from "@/components/PremiumButton";
 import { ArbitrageFilters } from "@/components/ArbitrageFilters";
 import { CardQuickLink } from "@/components/CardQuickLink";
 import type { CardTileData } from "@/components/CardTile";
@@ -356,7 +357,7 @@ function LockedTable({ children, signedIn }: { children: React.ReactNode; signed
           </p>
           <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
             {signedIn ? (
-              <Link href="/premium" className="btn-primary text-sm">Unlock with Premium</Link>
+              <PremiumButton>Unlock with Premium</PremiumButton>
             ) : (
               <Link href="/register?next=/tools/arbitrage" className="btn-primary text-sm">Create a free account</Link>
             )}

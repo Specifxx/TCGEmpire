@@ -60,6 +60,8 @@ export interface SessionUser {
   canCheckIn: boolean;
   // End of the current paid Premium period (drives the ad-free site etc.).
   premiumUntil: Date | null;
+  // When this account first started a free trial (null = never → trial-eligible).
+  trialStartedAt: Date | null;
 }
 
 export async function hashPassword(password: string): Promise<string> {
@@ -144,6 +146,7 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Ses
       points: user.points,
       canCheckIn: lastCheckin !== today,
       premiumUntil: user.premiumUntil,
+      trialStartedAt: user.trialStartedAt,
     };
   } catch {
     return null;

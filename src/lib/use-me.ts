@@ -10,16 +10,25 @@ import type { MenuUser } from "@/components/UserMenu";
 export interface Me {
   user: MenuUser | null;
   premium: boolean;
+  premiumCheckout: boolean; // Stripe premium checkout is configured
+  trialEligible: boolean; // signed in, not premium, trial on + never trialed
 }
+
+const EMPTY_ME: Me = { user: null, premium: false, premiumCheckout: false, trialEligible: false };
 
 let mePromise: Promise<Me> | null = null;
 
 function fetchMe(): Promise<Me> {
   if (!mePromise) {
     mePromise = fetch("/api/me", { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : { user: null, premium: false }))
-      .then((d) => ({ user: d.user ?? null, premium: !!d.premium }))
-      .catch(() => ({ user: null, premium: false }));
+      .then((r) => (r.ok ? r.json() : EMPTY_ME))
+      .then((d) => ({
+        user: d.user ?? null,
+        premium: !!d.premium,
+        premiumCheckout: !!d.premiumCheckout,
+        trialEligible: !!d.trialEligible,
+      }))
+      .catch(() => EMPTY_ME);
   }
   return mePromise;
 }
@@ -29,12 +38,8 @@ export function invalidateMe() {
   mePromise = null;
 }
 
-export function useMe(): { user: MenuUser | null; premium: boolean; loaded: boolean } {
-  const [state, setState] = useState<{ user: MenuUser | null; premium: boolean; loaded: boolean }>({
-    user: null,
-    premium: false,
-    loaded: false,
-  });
+export function useMe(): Me & { loaded: boolean } {
+  const [state, setState] = useState<Me & { loaded: boolean }>({ ...EMPTY_ME, loaded: false });
 
   useEffect(() => {
     let cancelled = false;

@@ -8,6 +8,7 @@ import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
+import { PremiumButton } from "@/components/PremiumButton";
 
 export const dynamic = "force-dynamic";
 
@@ -80,7 +81,7 @@ export default async function ValueFinderPage() {
           </p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
             {user ? (
-              <Link href="/premium" className="btn-primary text-sm">See Premium</Link>
+              <PremiumButton>See Premium</PremiumButton>
             ) : (
               <Link href="/register?next=/tools/value-finder" className="btn-primary text-sm">Create a free account</Link>
             )}

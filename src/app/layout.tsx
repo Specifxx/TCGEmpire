@@ -13,6 +13,7 @@ import { MegaMenuProvider } from "@/components/MegaMenuProvider";
 import { WishlistDrawerProvider } from "@/components/WishlistDrawer";
 import { CountryProvider } from "@/components/CountryProvider";
 import { PremiumProvider } from "@/components/PremiumProvider";
+import { PremiumDialogProvider } from "@/components/PremiumDialog";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 import { BUYMEACOFFEE_URL, CONTACT_EMAIL, DISCORD_URL, SITE_NAME, SITE_URL } from "@/lib/site";
 import { IMPACT_SITE_VERIFICATION } from "@/lib/affiliate";
@@ -178,6 +179,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </a>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }} />
         <PremiumProvider>
+        <PremiumDialogProvider>
         <CountryProvider initial={DEFAULT_COUNTRY}>
         <WishlistDrawerProvider>
           <QuickViewProvider>
@@ -285,6 +287,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Meta Pixel — ad measurement + retargeting for Meta (Facebook/Instagram)
             ads. Production + web only; see the component for the guards. */}
         <MetaPixel />
+        </PremiumDialogProvider>
         </PremiumProvider>
       </body>
     </html>

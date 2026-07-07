@@ -11,6 +11,7 @@ import { IndexChart } from "@/components/IndexChart";
 import { PriceChart } from "@/components/PriceChart";
 import { MyCollection } from "@/components/MyCollection";
 import { HoldingsGrid } from "@/components/HoldingsGrid";
+import { PremiumButton } from "@/components/PremiumButton";
 
 export const dynamic = "force-dynamic";
 
@@ -170,7 +171,7 @@ export default async function PortfolioPage() {
                     <div>
                       <p className="text-sm font-bold text-white">📈 Value-over-time is a Premium feature</p>
                       <p className="mt-1 text-xs text-slate-400">Daily history, CSV export, unlimited price alerts and an ad-free site.</p>
-                      <Link href="/premium" className="btn-primary mt-3 text-sm">See Premium →</Link>
+                      <div className="mt-3"><PremiumButton>See Premium →</PremiumButton></div>
                     </div>
                   </div>
                 </div>

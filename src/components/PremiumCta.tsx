@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { useState } from "react";
 
+// Gold (not green) — the professional "premium" accent used across the Premium UI.
+const GOLD_BTN =
+  "inline-flex items-center justify-center gap-1.5 rounded-lg bg-gold px-4 py-2.5 text-sm font-bold text-ink-950 transition hover:brightness-110";
+
 // The Premium subscribe button. Three states: checkout live (Stripe hosted
 // checkout), signed out (route through login first), or checkout not yet
 // configured (honest waitlist CTA via the contact form — no fake buy button).
@@ -50,18 +54,15 @@ export function PremiumCta({
     return (
       <div>
         <p className="text-sm font-semibold text-white">Launching very soon</p>
-        <p className="mt-1 text-xs text-slate-400">Want founding-member pricing? Say hi and you&apos;re on the list.</p>
-        <Link href="/contact" className="btn-primary mt-3 text-sm">Join the waitlist →</Link>
+        <p className="mt-1 text-xs text-slate-400">Want early access? Say hi and you&apos;re on the list.</p>
+        <Link href="/contact" className="btn-ghost mt-3 text-sm">Join the waitlist →</Link>
       </div>
     );
   }
   return (
     <div>
-      <p className="text-sm font-semibold text-white">
-        {trialEligible ? "Try Premium free for 1 day" : "Become a founding member"}
-      </p>
-      <button onClick={subscribe} disabled={busy} className="btn-primary mt-3 text-sm disabled:opacity-50">
-        {busy ? "Opening checkout…" : trialEligible ? "★ Start 1-day free trial" : "★ Subscribe"}
+      <button onClick={subscribe} disabled={busy} className={`${GOLD_BTN} disabled:opacity-50`}>
+        {busy ? "Opening checkout…" : trialEligible ? "Start 1-day free trial →" : "Upgrade to Premium →"}
       </button>
       {trialEligible && (
         // Required disclosure for a card-gated trial (Stripe / card-network rules):

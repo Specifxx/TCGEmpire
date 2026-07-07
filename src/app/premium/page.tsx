@@ -69,7 +69,7 @@ export default async function PremiumPage() {
       />
 
       <div className="card-surface overflow-hidden">
-        <div className="border-l-2 border-brand-500 bg-ink-900 px-6 py-10 text-center">
+        <div className="border-l-2 border-gold/50 bg-ink-900 px-6 py-10 text-center">
           <span className="chip mb-3 inline-flex bg-gold/15 font-bold uppercase tracking-wide text-gold">Premium</span>
           {already ? (
             <>
@@ -92,7 +92,7 @@ export default async function PremiumPage() {
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2">
         {FEATURES.map((f) => (
-          <div key={f.title} className="card-surface flex flex-col border-l-2 border-brand-500 p-4">
+          <div key={f.title} className="card-surface flex flex-col border-l-2 border-ink-600 p-4">
             <h2 className="font-bold text-white">{f.title}</h2>
             <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-400">{f.body}</p>
             {already &&
