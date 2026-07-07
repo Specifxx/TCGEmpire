@@ -934,6 +934,177 @@ The part collectors underestimate isn't finding cards, it's keeping an accurate 
 
 Honestly, weigh this against your actual goal. If you want a complete set for the satisfaction of it, then yes, the last few commons matter as much as the chase rares even though they're worth very little individually. If your real goal is having a playable, presentable collection, the last handful of low-value commons are often not worth the shipping cost of a single-card order and are better picked up opportunistically in a bulk lot or a trade. Being honest about which goal you actually have will save you more money than any single buying tactic on this list.`,
   },
+  {
+    slug: "riftbound-vendetta-everything-you-need-to-know",
+    category: "blog",
+    title: "Riftbound Vendetta: Everything You Need to Know",
+    excerpt:
+      "Riftbound: Vendetta lands 31 July 2026 with nine new Legends, three new mechanics, new card types and two-player Showdown Decks. Here's the complete rundown — and how to be ready.",
+    author: "RiftCompare",
+    date: "2026-07-07",
+    updated: "2026-07-07",
+    readMins: 6,
+    tags: ["news", "vendetta", "set", "release", "guide"],
+    body: `Vendetta is the next Riftbound: League of Legends TCG set, and it's a big one — a rivalries-themed expansion built around clashing champions like **Nasus vs Renekton** and **Shen vs Zed**. Here's everything that's been confirmed, in one place.
+
+## Release date
+
+**Riftbound: Vendetta releases on 31 July 2026**, with in-store **Pre-Rift** launch events kicking off from **24 July**. It's the first Riftbound set to launch simultaneously worldwide in English and Simplified Chinese.
+
+Sealed product — booster boxes and packs — is already listing, and you can compare it cheapest-first on our **[sealed page](/sealed)** right now. The singles will populate the **[Vendetta set page](/sets/vendetta)** with live prices the moment cards release.
+
+## What's in the set
+
+- **160+ cards**, including **50+ Showcase cards** and **nine new Champion Legends**.
+- Champions making their Riftbound debut include **Nasus, Renekton, Akali, Mel, Ambessa, Zed and Shen**.
+- **Signed Overnumbered variants** for the nine Legends, plus **22 Rival Overnumbers** — diptych cards that celebrate League's greatest rivalries and are designed to be displayed as a pair.
+
+## Three new mechanics
+
+Vendetta introduces **Flow**, **Burn** and **Empower** — three mechanics that add whole new ways to play. We break each one down in **[Vendetta's new mechanics explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**, but in short:
+
+- **Flow** lets you play cards from your trash instead of your hand.
+- **Burn** sends cards from a deck to the trash — to fuel your own synergies, or to attack your opponent's deck directly.
+- **Empower** lets a card gain new abilities once it's in play, often after paying a cost.
+
+## New card types
+
+Vendetta also adds two new card concepts — **Unit-Gear** (a card that counts as both a unit and a piece of gear) and **Decrees** (a cycle of rivalry spells). Full detail in **[Vendetta's new card types](/blog/riftbound-vendetta-unit-gear-decrees)**.
+
+## A new way to play: Showdown Decks
+
+Vendetta debuts **Showdown Decks** — Riftbound's first ready-to-play **two-player** product, so two people can open one box and battle straight away. The first pairing is fittingly **Shen versus Zed**.
+
+## New domain pairings
+
+Vendetta leans into new two-domain colour pairings for deckbuilding: **Fury + Calm** (red + green), **Mind + Body** (blue + orange) and **Chaos + Order** (purple + yellow) — rival domains forced together. If you're planning a deck, our **[Vendetta deckbuilding guide](/guides/building-for-riftbound-vendetta)** walks through what the new mechanics and pairings point toward.
+
+## How to be ready
+
+1. **Wishlist now.** Browse the **[card database](/browse)** and wishlist what you already want — you'll get an alert if a price drops.
+2. **Compare sealed early.** VEN boxes move fast at launch; the **[sealed page](/sealed)** ranks them cheapest-first across stores.
+3. **Have your deck ready to price.** Drop a list into the **[deck pricer](/deck)** so you can total it the moment cards go live.
+4. **Don't overpay in the rush.** Launch hype pushes prices up — RiftCompare always shows the cheapest delivered price so you never pay the first number you see.
+
+More cards are still being revealed ahead of launch, and we'll keep this updated as they are. In the meantime, track everything on the **[Vendetta set page](/sets/vendetta)**.`,
+  },
+  {
+    slug: "riftbound-vendetta-new-mechanics-flow-burn-empower",
+    category: "blog",
+    title: "Riftbound Vendetta's New Mechanics Explained: Flow, Burn & Empower",
+    excerpt:
+      "Vendetta introduces three new Riftbound mechanics — Flow, Burn and Empower. Here's what each one does and how it changes the way you build and play.",
+    author: "RiftCompare",
+    date: "2026-07-07",
+    updated: "2026-07-07",
+    readMins: 5,
+    tags: ["vendetta", "mechanics", "gameplay", "guide"],
+    body: `Riftbound: Vendetta (out **31 July 2026**) adds three brand-new mechanics — **Flow**, **Burn** and **Empower**. Each opens up a new way to play, and together they push the set toward value, recursion and building-up-over-time strategies. Here's what each one does.
+
+## Flow — play from your trash
+
+**Flow lets you play cards from your trash instead of from your hand.** It draws on the League champions who fuel their kits with Energy — your used and discarded cards become a second resource pool rather than dead weight.
+
+In practice, your trash stops being a graveyard and becomes a toolbox. Cards that get used, discarded or destroyed can come back into play, so Flow decks reward you for cycling through cards quickly and knowing what's waiting to be replayed.
+
+## Burn — send cards to the trash
+
+**Burn sends cards from a Main Deck to the trash.** There are two sides to it:
+
+- **Self-Burn** — some cards burn *your own* deck to fuel synergies. If Flow rewards a full trash, Burn is one of the fastest ways to fill it.
+- **Deck attack** — other cards burn your *opponent's* deck directly, chipping away at what they'll draw. It's Riftbound's take on a mill strategy.
+
+Burn and Flow are natural partners: Burn stocks the trash, Flow cashes it in.
+
+## Empower — grow a card after it's down
+
+**Empower gives a card the potential to gain new abilities once it's in play, often after paying a cost.** You can get a unit on the board one turn, then amplify its might or add an effect on a later turn.
+
+That changes sequencing: an Empower card can be a cheap early play *and* a late-game threat, so you're rewarded for planning two turns ahead rather than dumping your hand.
+
+## How they fit together
+
+The three mechanics reward **patience and recursion** over raw tempo. Burn fills the trash, Flow replays from it, and Empower turns early plays into scaling threats. Expect Vendetta decks that grind out long games and get stronger the longer they run.
+
+Want to know what to build with them? Read our **[Vendetta deckbuilding guide](/guides/building-for-riftbound-vendetta)**, see the **[new card types](/blog/riftbound-vendetta-unit-gear-decrees)** that support them, or get the full picture in **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)**. Prices on every card go live on the **[Vendetta set page](/sets/vendetta)** as it releases.`,
+  },
+  {
+    slug: "riftbound-vendetta-unit-gear-decrees",
+    category: "blog",
+    title: "Riftbound Vendetta's New Card Types: Unit-Gear and Decrees",
+    excerpt:
+      "Vendetta adds two new card concepts to Riftbound — Unit-Gear, which is both a unit and a piece of gear, and Decrees, a cycle of rivalry spells. Here's how they work.",
+    author: "RiftCompare",
+    date: "2026-07-07",
+    updated: "2026-07-07",
+    readMins: 4,
+    tags: ["vendetta", "card types", "gameplay", "unit-gear", "decrees"],
+    body: `Alongside its new mechanics, Riftbound: Vendetta (out **31 July 2026**) introduces two new card concepts: **Unit-Gear** and **Decrees**. Both are built around the set's rivalry theme, and both change how you think about deck slots.
+
+## Unit-Gear — a card that's both
+
+**A Unit-Gear counts as both a unit and a piece of gear.** That dual identity is the whole point: it can be played and interacted with as either type, so anything that cares about units *or* gear can work with it.
+
+Why it matters for deckbuilding: a card that fills two roles is a flexible slot. Unit-Gear cards let you run fewer dead draws — the same card can be a body on the board or an equipment payoff depending on what the game needs, which is exactly the flexibility that survives a shifting meta.
+
+## Decrees — spells built on rivalry
+
+**Decrees are a cycle of spells designed around Domain rivalries.** Each Domain gets its own Decree, and each one is built to strike hardest against cards of its **opposite colour** — the mechanical expression of Vendetta's whole "rivalries ignite" theme.
+
+In practice, Decrees are targeted answers: if the field is full of a particular Domain, its rival's Decree is a sharp, on-colour way to punish it. Expect them to shape sideboard-style choices and Domain match-ups as the meta forms.
+
+## The bigger picture
+
+Both card types feed Vendetta's rivalry identity — Domains pitted against their opposites, champions against their nemeses. Pair them with the set's new mechanics (**[Flow, Burn and Empower](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**) and there's a lot of new deckbuilding space to explore. Our **[Vendetta deckbuilding guide](/guides/building-for-riftbound-vendetta)** digs into what to build, and the **[Vendetta set page](/sets/vendetta)** tracks live prices on every card as it releases.`,
+  },
+  {
+    slug: "building-for-riftbound-vendetta",
+    category: "guide",
+    title: "Building for Riftbound Vendetta: Decks, Synergies & What to Look Out For",
+    excerpt:
+      "How Vendetta's new mechanics and domain pairings point toward fresh Riftbound archetypes — plus the champions, chase cards and value to watch as the set rolls out.",
+    author: "RiftCompare",
+    date: "2026-07-07",
+    updated: "2026-07-07",
+    readMins: 6,
+    tags: ["vendetta", "deckbuilding", "strategy", "synergies", "meta", "guide"],
+    body: `Riftbound: Vendetta (out **31 July 2026**) is still being spoiled card-by-card, so nobody has a solved metagame yet. But the confirmed mechanics, champions and domain pairings already point clearly toward the kinds of decks that will define the early set. Here's how to think about building for Vendetta — and what to watch as more cards drop.
+
+## Start with the new domain pairings
+
+Vendetta is built around **rival domains forced together**:
+
+- **Fury + Calm** (red + green)
+- **Mind + Body** (blue + orange)
+- **Chaos + Order** (purple + yellow)
+
+Each pairing marries two colours that usually pull in opposite directions, so the deckbuilding challenge — and the fun — is finding the cards that make the tension work. If you're new to how a Riftbound deck comes together, start with **[how a Riftbound deck is built](/guides/how-a-riftbound-deck-is-built)**.
+
+## Let the mechanics suggest the archetypes
+
+The three new mechanics (full breakdown in **[Flow, Burn & Empower explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**) each hint at a deck style:
+
+- **Flow → recursion / value decks.** Because Flow plays cards from your trash, decks that fill and re-use the trash get a second life out of every card. Prioritise cards that discard, cycle or sacrifice with upside.
+- **Burn → fuel or disruption.** Self-Burn stocks your trash fast for Flow payoffs; opponent-Burn is a genuine mill and disruption angle. Early on, Burn is most reliable as *fuel* for your own engine.
+- **Empower → scaling threats.** Empower rewards curving out and then paying to upgrade. Look for cheap Empower units you can deploy early and grow into finishers.
+
+Combine them and the through-line is clear: **Vendetta rewards patient, grindy decks that get stronger over a long game** rather than pure aggression.
+
+## Watch the champion rivalries
+
+Nine new Legends arrive, including **Nasus, Renekton, Akali, Mel, Ambessa, Zed and Shen** — many as literal rivalries (Nasus/Renekton, Shen/Zed). Champion Legends anchor a deck's identity, so the first strong archetypes will likely be built directly around these debuts. The **[Shen vs Zed Showdown Deck](/sealed)** is also the cheapest way to try two ready-made lists head-to-head.
+
+## What to look out for (and where to save)
+
+- **Chase cards will spike at launch.** Signed Overnumbered Legends and the 22 Rival Overnumber diptychs are the premium collectibles — expect launch-week prices to run hot, then settle. If you can wait, you'll usually pay less.
+- **Watch the movers.** As the meta forms, cards that enable a strong new deck climb fast. Keep the **[price movers](/movers)** open in the weeks after release.
+- **Price your list before you buy.** Drop your planned deck into the **[deck pricer](/deck)** to total every card at the cheapest live price across stores, in your currency.
+- **Sealed vs singles.** For a brand-new set, singles are usually the cheaper route to a specific deck — see **[singles vs sealed](/guides/riftbound-singles-vs-sealed)**.
+
+## We'll keep this updated
+
+More cards are still being revealed before the 31 July launch, so treat this as a living guide — we'll add concrete decklists and synergies as the set fully spoils. For the full set overview, read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)**, and track live prices on the **[Vendetta set page](/sets/vendetta)** the moment cards go live.`,
+  },
 ];
 
 export function getArticles(category?: ArticleCategory): Article[] {
