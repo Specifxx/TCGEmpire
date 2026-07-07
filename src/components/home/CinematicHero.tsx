@@ -28,6 +28,7 @@ export function CinematicHero({
   pricedCards,
   inStockUnits,
   index,
+  wrapHref,
 }: {
   country: Country;
   info: CountryInfo;
@@ -37,6 +38,9 @@ export function CinematicHero({
   pricedCards: number;
   inStockUnits: number;
   index: MarketIndex | null;
+  // When a daily market wrap exists, the live accent links to it (and is labelled
+  // "Daily Market Wrap") instead of the raw Index page.
+  wrapHref?: string | null;
 }) {
   const ebayHref = ebayAffiliateUrl(
     `https://www.${EBAY_DOMAIN[country] ?? "ebay.com"}/sch/i.html?_nkw=${encodeURIComponent("Riftbound TCG")}`
@@ -65,15 +69,17 @@ export function CinematicHero({
           </span>
         </div>
 
-        {/* Live RiftCompare Index accent */}
+        {/* Live market accent — points to today's Daily Market Wrap when one exists,
+            else the RiftCompare Index. The live index level doubles as the wrap's
+            headline number, so the accent stays data-rich either way. */}
         {index && (
           <div className="animate-fade-in [animation-delay:100ms] mt-3 flex justify-center">
             <Link
-              href="/market"
-              aria-label="View the RiftCompare Index"
+              href={wrapHref ?? "/market"}
+              aria-label={wrapHref ? "Read today's daily market wrap" : "View the RiftCompare Index"}
               className="inline-flex items-center gap-2 rounded-md border border-ink-700 bg-ink-900 px-3 py-1.5 transition-colors duration-200 hover:border-brand-500 hover:bg-ink-800"
             >
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">RiftCompare Index</span>
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{wrapHref ? "Daily Market Wrap" : "RiftCompare Index"}</span>
               <span className="num text-lg font-extrabold leading-none text-white">{index.latest.toFixed(1)}</span>
               {index.d7 != null && (
                 <span className={`num text-xs font-bold ${indexUp ? "text-up" : "text-down"}`}>

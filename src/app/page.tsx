@@ -11,8 +11,10 @@ import { SITE_URL } from "@/lib/site";
 import { getTopDeals } from "@/lib/top-deals";
 import { TodaysTopDeals } from "@/components/TodaysTopDeals";
 import { getMarketIndex } from "@/lib/market-index";
+import { getLatestMarketReport } from "@/lib/posts";
 import { CinematicHero } from "@/components/home/CinematicHero";
 import { MarketPulse } from "@/components/home/MarketPulse";
+import { DailyWrapHero } from "@/components/DailyWrapHero";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 
 // REAL ISR: renders a market-NEUTRAL baseline (no cookie/header reads — the
@@ -69,7 +71,7 @@ export default async function HomePage() {
   const country = DEFAULT_COUNTRY;
   const info = COUNTRIES[country];
   const field = priceField(country);
-  const [totalCards, pricedCards, inStockUnits, popularCards, storeGroups, topDeals, index] = await Promise.all([
+  const [totalCards, pricedCards, inStockUnits, popularCards, storeGroups, topDeals, index, latestWrap] = await Promise.all([
     prisma.card.count(),
     prisma.card.count({ where: { [field]: { not: null } } }),
     // Live, in-stock store listings analysed in this market — the real units we
@@ -88,7 +90,12 @@ export default async function HomePage() {
     // Key versioned (v2): the MarketIndex shape gained `stats`; the data cache
     // persists across deploys, so a stale pre-stats blob would crash Market Pulse.
     unstable_cache(() => getMarketIndex("GLOBAL"), ["home-index-global-v3"], { revalidate: 86400, tags: [CONTENT_TAG] })(),
+    // The latest daily market wrap for the homepage's featured data block. Tagged so
+    // a freshly-generated wrap surfaces on the next daily import (page cached 24h).
+    unstable_cache(getLatestMarketReport, ["home-latest-wrap"], { revalidate: 86400, tags: [CONTENT_TAG] })(),
   ]);
+  // Featured wrap → the specific day's report; null until the first wrap is generated.
+  const wrapHref = latestWrap ? `/blog/${latestWrap.article.slug}` : null;
   const storeCount = storeGroups.length;
   const storeWord = storeCount === 1 ? "store" : "stores";
 
@@ -104,11 +111,19 @@ export default async function HomePage() {
         pricedCards={pricedCards}
         inStockUnits={inStockUnits}
         index={index}
+        wrapHref={wrapHref}
       />
 
-      {/* Market Pulse — the one signature data moment (replaces PriceWatch) */}
+      {/* Featured daily market wrap — the homepage's signature data moment: today's
+          automated read on the market (chart graphic + headline), linking through to
+          the full wrap. Falls back to the live Index pulse until the first wrap
+          exists, so the slot is never empty. */}
       <Reveal>
-        <MarketPulse index={index} currency={info.currency} deals={topDeals} country={country} place={info.place} />
+        {latestWrap ? (
+          <DailyWrapHero post={latestWrap} />
+        ) : (
+          <MarketPulse index={index} currency={info.currency} deals={topDeals} country={country} place={info.place} />
+        )}
       </Reveal>
 
       {/* Most popular cards — the most-searched Riftbound singles right now */}
