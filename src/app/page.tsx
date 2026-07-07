@@ -5,7 +5,8 @@ import { prisma } from "@/lib/db";
 import { CardTile } from "@/components/CardTile";
 import { Reveal } from "@/components/Reveal";
 import { getPopularCards } from "@/lib/cheapest-cards";
-import { COUNTRIES, DEFAULT_COUNTRY, priceField } from "@/lib/country";
+import { COUNTRIES, DEFAULT_COUNTRY, priceField, type Country } from "@/lib/country";
+import type { MarketStat } from "@/components/home/HeroStats";
 import { SETS, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
 import { getTopDeals } from "@/lib/top-deals";
@@ -70,31 +71,43 @@ export default async function HomePage() {
   // The copy Google indexes (hero, FAQs, about) is market-neutral.
   const country = DEFAULT_COUNTRY;
   const info = COUNTRIES[country];
-  const field = priceField(country);
-  const [totalCards, pricedCards, inStockUnits, popularCards, storeGroups, topDeals, index, latestWrap] = await Promise.all([
+  const COUNTRY_CODES: Country[] = ["AU", "NZ", "US", "UK"];
+  const [totalCards, pricedCounts, inStockGroups, storeRows, popularCards, topDeals, index, latestWrap] = await Promise.all([
     prisma.card.count(),
-    prisma.card.count({ where: { [field]: { not: null } } }),
-    // Live, in-stock store listings analysed in this market — the real units we
-    // compared (the market-guide reference rows are not a buyable unit, so excluded).
-    prisma.retailerPrice.count({ where: { country, inStock: true, NOT: { retailer: { startsWith: "marketguide" } } } }),
+    // Priced-card count PER MARKET (one indexed count per price column) — the hero
+    // stat tiles localise to the visitor's market client-side, so we serialize all four.
+    Promise.all(COUNTRY_CODES.map((c) => prisma.card.count({ where: { [priceField(c)]: { not: null } } }))),
+    // Live in-stock listings per market, in one grouped count (market-guide reference
+    // rows aren't a buyable unit, so excluded).
+    prisma.retailerPrice.groupBy({
+      by: ["country"],
+      where: { inStock: true, NOT: { retailer: { startsWith: "marketguide" } } },
+      _count: { _all: true },
+    }),
+    // Distinct stores per market (eBay excluded), grouped by country + retailer.
+    prisma.retailerPrice.groupBy({ by: ["country", "retailer"], where: { NOT: { retailer: { startsWith: "ebay" } } } }),
     // Most-searched singles (ties → more expensive card) — the cards people most want.
     getPopularCards(12, country),
-    // Stores serving the selected market (eBay excluded from the count).
-    prisma.retailerPrice.groupBy({ by: ["retailer"], where: { country, NOT: { retailer: { startsWith: "ebay" } } } }),
     // Today's Top Deals blends four signals; cache per-market. Tagged so the daily
     // import refreshes it on-demand (the page itself is cached 24h).
     unstable_cache(() => getTopDeals(country), ["top-deals", country], { revalidate: 86400, tags: [CONTENT_TAG] })(),
     // The GLOBAL RiftCompare Index for the hero + Market Pulse. Global = always
     // populated (PriceHistory is AU-only today) and its base-100 level is
     // currency-agnostic, so it reads the same for every market.
-    // Key versioned (v2): the MarketIndex shape gained `stats`; the data cache
-    // persists across deploys, so a stale pre-stats blob would crash Market Pulse.
     unstable_cache(() => getMarketIndex("GLOBAL"), ["home-index-global-v3"], { revalidate: 86400, tags: [CONTENT_TAG] })(),
     // The latest daily market wrap for the homepage's featured data block. Tagged so
     // a freshly-generated wrap surfaces on the next daily import (page cached 24h).
     unstable_cache(getLatestMarketReport, ["home-latest-wrap"], { revalidate: 86400, tags: [CONTENT_TAG] })(),
   ]);
-  const storeCount = storeGroups.length;
+  // Assemble per-market stat tiles; the client picks the visitor's market after hydration.
+  const inStockByCountry: Record<string, number> = {};
+  for (const g of inStockGroups) inStockByCountry[g.country] = g._count._all;
+  const storesByCountry: Record<string, Set<string>> = {};
+  for (const r of storeRows) (storesByCountry[r.country] ??= new Set()).add(r.retailer);
+  const statsByCountry = Object.fromEntries(
+    COUNTRY_CODES.map((c, i) => [c, { priced: pricedCounts[i], inStock: inStockByCountry[c] ?? 0, stores: storesByCountry[c]?.size ?? 0 }]),
+  ) as Record<Country, MarketStat>;
+  const storeCount = statsByCountry[country].stores;
   const storeWord = storeCount === 1 ? "store" : "stores";
 
   return (
@@ -103,12 +116,8 @@ export default async function HomePage() {
           live badge (see CinematicHero). */}
       <CinematicHero
         country={country}
-        info={info}
-        storeCount={storeCount}
-        storeWord={storeWord}
         totalCards={totalCards}
-        pricedCards={pricedCards}
-        inStockUnits={inStockUnits}
+        statsByCountry={statsByCountry}
         wrap={latestWrap}
       />
 

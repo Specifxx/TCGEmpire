@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { ParallaxRoot } from "./ParallaxRoot";
-import { CountUp } from "@/components/CountUp";
 import { CountryHeroToggle } from "@/components/CountryHeroToggle";
 import { OutboundLink } from "@/components/OutboundLink";
 import { CommandLauncherButton } from "@/components/CommandLauncher";
 import { affiliateUrl, ebayAffiliateUrl } from "@/lib/affiliate";
 import { DailyWrapBanner } from "./DailyWrapBanner";
-import type { CountryInfo, Country } from "@/lib/country";
+import { HeroStats, type MarketStat } from "./HeroStats";
+import type { Country } from "@/lib/country";
 import type { MarketReportPost } from "@/lib/posts";
 
 // eBay marketplace domain per market (NZ has no eBay of its own → AU).
@@ -21,21 +21,14 @@ const EBAY_DOMAIN: Record<string, string> = {
 // clean static composition with no JS / reduced motion.
 export function CinematicHero({
   country,
-  info,
-  storeCount,
-  storeWord,
   totalCards,
-  pricedCards,
-  inStockUnits,
+  statsByCountry,
   wrap,
 }: {
   country: Country;
-  info: CountryInfo;
-  storeCount: number;
-  storeWord: string;
   totalCards: number;
-  pricedCards: number;
-  inStockUnits: number;
+  // Per-market stat tiles — localised to the visitor's market client-side (HeroStats).
+  statsByCountry: Record<Country, MarketStat>;
   // Today's market wrap, shown as a banner directly under the live badge.
   wrap?: MarketReportPost | null;
 }) {
@@ -94,13 +87,8 @@ export function CinematicHero({
           <CountryHeroToggle />
         </div>
 
-        {/* Stats */}
-        <div className="animate-fade-in [animation-delay:420ms] mx-auto mt-8 grid max-w-2xl grid-cols-2 gap-3 sm:grid-cols-4">
-          <Stat value={totalCards} label="cards" />
-          <Stat value={pricedCards} label="priced" />
-          <Stat value={inStockUnits} label="in-stock listings" />
-          <Stat value={storeCount} label={`AU ${storeWord}`} />
-        </div>
+        {/* Stats — reactive to the market switcher (localised client-side). */}
+        <HeroStats totalCards={totalCards} statsByCountry={statsByCountry} />
 
         {/* Trust line — approved affiliate partners (absorbs the old Partners strip) */}
         <div className="animate-fade-in [animation-delay:480ms] mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-slate-500">
@@ -114,17 +102,6 @@ export function CinematicHero({
         </div>
       </div>
     </ParallaxShell>
-  );
-}
-
-function Stat({ value, label }: { value: number; label: string }) {
-  return (
-    <div className="rounded-lg border border-ink-800 bg-ink-900 p-3 transition-colors duration-200 hover:border-brand-500/40 hover:bg-ink-800">
-      <div className="num text-xl font-extrabold text-accent sm:text-2xl">
-        <CountUp value={value} />
-      </div>
-      <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
-    </div>
   );
 }
 
