@@ -105,14 +105,18 @@ function networkUrl(url: string, subId: string, loc: string): string | null {
   switch (AFFILIATE_NETWORK) {
     case "sovrn":
     case "viglink":
-      // Sovrn Commerce "Anywhere" redirect (key = your Sovrn API key). cuid is the
-      // custom sub-id so earnings stay segmentable by store in the dashboard.
-      // loc=<source page> + v=1 mirror the params Sovrn's own on-page script emits:
-      // WITHOUT loc, Sovrn can't see the click came from our domain (our outbound
-      // anchors are rel="noreferrer", so the Referer header is stripped too), which
-      // blocks the automatic domain approval that gates clicks showing in the
-      // dashboard. See the Sovrn "Getting Started"/"Analytics in Commerce" docs.
-      return `https://redirect.viglink.com/?format=go&key=${AFFILIATE_NETWORK_ID}&u=${enc}&cuid=${xcust}&loc=${encodeURIComponent(loc)}&v=1`;
+      // Sovrn Commerce "Anywhere" redirect. We mirror EXACTLY the query shape Sovrn's
+      // own on-page script (vglnk.js) emits for tracked clicks:
+      //   format=go + out=<destination> + key=<api key> + loc=<source page> + v=1
+      // Two things that matter for attribution:
+      //   • `out` (not `u`) is the destination param that pairs with format=go — `u`
+      //     is only for the no-format-go manual/CUID link style, so mixing them broke
+      //     tracking even though the click still redirected to the store.
+      //   • `loc` tells Sovrn the click came from our domain (our outbound anchors are
+      //     rel="noreferrer", so the Referer is stripped) — required for the automatic
+      //     domain approval that gates whether clicks show in the dashboard at all.
+      // cuid is the custom sub-id so earnings stay segmentable by store.
+      return `https://redirect.viglink.com/?format=go&key=${AFFILIATE_NETWORK_ID}&out=${enc}&cuid=${xcust}&loc=${encodeURIComponent(loc)}&v=1`;
     default:
       return null;
   }
