@@ -16,12 +16,16 @@ export function PremiumCta({
   trialEligible = false,
   priceLabel = "",
   trialDays = 0,
+  plan = "monthly",
+  ctaLabel,
 }: {
   checkoutLive: boolean;
   signedIn: boolean;
   trialEligible?: boolean;
   priceLabel?: string;
   trialDays?: number;
+  plan?: "monthly" | "annual";
+  ctaLabel?: string;
 }) {
   const dayPhrase = `${trialDays} day${trialDays === 1 ? "" : "s"}`;
   const [busy, setBusy] = useState(false);
@@ -31,7 +35,11 @@ export function PremiumCta({
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch("/api/premium/checkout", { method: "POST" });
+      const res = await fetch("/api/premium/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan }),
+      });
       const d = await res.json();
       if (!res.ok) {
         setError(d.error ?? "Couldn't start checkout");
@@ -65,7 +73,7 @@ export function PremiumCta({
   return (
     <div>
       <button onClick={subscribe} disabled={busy} className={`${GOLD_BTN} disabled:opacity-50`}>
-        {busy ? "Opening checkout…" : trialEligible ? `Start ${trialDays}-day free trial →` : "Upgrade to Premium →"}
+        {busy ? "Opening checkout…" : ctaLabel ?? (trialEligible ? `Start ${trialDays}-day free trial →` : "Upgrade to Premium →")}
       </button>
       {trialEligible && (
         // Required disclosure for a card-gated trial (Stripe / card-network rules):

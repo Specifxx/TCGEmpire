@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { stripe } from "@/lib/stripe";
-import { premiumCheckoutEnabled, premiumTrialEnabled, PREMIUM_PRICE_ID, PREMIUM_TRIAL_DAYS } from "@/lib/premium";
+import { premiumCheckoutEnabled, premiumTrialEnabled, PREMIUM_PRICE_ID, PREMIUM_TRIAL_DAYS, PREMIUM_ANNUAL_PRICE_ID } from "@/lib/premium";
 import { SITE_URL } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -10,28 +10,33 @@ export const dynamic = "force-dynamic";
 // Start a RiftCompare Premium subscription via Stripe's hosted Checkout.
 // Entitlement is granted by the webhook (invoice.paid → premiumUntil = period
 // end), so a user is only ever premium for time that's actually been paid.
-export async function POST() {
+export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in first" }, { status: 401 });
   if (!premiumCheckoutEnabled()) {
     return NextResponse.json({ error: "Premium checkout isn't configured yet" }, { status: 503 });
   }
 
+  // Which plan — annual (yearly price) or monthly. Annual requires its own Stripe
+  // price to be configured; if requested but unset, fall back to monthly cleanly.
+  const body = await req.json().catch(() => null);
+  const annual = body?.plan === "annual" && !!PREMIUM_ANNUAL_PRICE_ID;
+  const priceId = annual ? PREMIUM_ANNUAL_PRICE_ID : PREMIUM_PRICE_ID;
+
   const dbUser = await prisma.user.findUnique({
     where: { id: user.id },
     select: { stripeCustomerId: true, email: true, trialStartedAt: true },
   });
 
-  // One free trial per account: only first-timers get the trial; everyone else
-  // subscribes normally (charged immediately). The webhook independently re-checks
-  // by card fingerprint, so this client-facing gate can't be bypassed for a free
-  // trial by simply re-hitting the endpoint.
-  const trialEligible = premiumTrialEnabled() && !dbUser?.trialStartedAt;
+  // One free trial per account, and only on the MONTHLY plan (annual is a direct
+  // discounted purchase). The webhook independently re-checks by card fingerprint,
+  // so this gate can't be bypassed for a free trial by re-hitting the endpoint.
+  const trialEligible = !annual && premiumTrialEnabled() && !dbUser?.trialStartedAt;
 
   try {
     const session = await stripe().checkout.sessions.create({
       mode: "subscription",
-      line_items: [{ price: PREMIUM_PRICE_ID, quantity: 1 }],
+      line_items: [{ price: priceId, quantity: 1 }],
       // Reuse the Stripe customer when we have one, so renewals stay linked.
       ...(dbUser?.stripeCustomerId
         ? { customer: dbUser.stripeCustomerId }

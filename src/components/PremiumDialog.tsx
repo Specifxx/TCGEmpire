@@ -141,9 +141,14 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
             )}
           </div>
 
-          <p className="mt-4 text-center text-xs text-slate-600">
+          {!premium && (
+            <p className="mt-3 text-center text-[11px] font-medium text-gold/80">
+              Lock in today&apos;s pricing — plans may rise as we add more tools.
+            </p>
+          )}
+          <p className="mt-3 text-center text-xs text-slate-600">
             <Link href="/premium" onClick={onClose} className="transition hover:text-slate-400 hover:underline">
-              See full details →
+              See all plans &amp; details →
             </Link>
           </p>
         </div>

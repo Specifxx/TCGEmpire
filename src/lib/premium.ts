@@ -28,6 +28,13 @@ export function premiumTrialEnabled(): boolean {
   return PREMIUM_TRIAL_DAYS > 0;
 }
 
+// Annual plan — inert until STRIPE_PREMIUM_ANNUAL_PRICE_ID is set (a yearly Stripe
+// price). When present, the /premium page shows an annual option alongside monthly.
+export const PREMIUM_ANNUAL_PRICE_ID = process.env.STRIPE_PREMIUM_ANNUAL_PRICE_ID ?? "";
+export function premiumAnnualEnabled(): boolean {
+  return premiumCheckoutEnabled() && Boolean(PREMIUM_ANNUAL_PRICE_ID);
+}
+
 // The portfolio tracker (value history, cost-basis P&L, benchmark, CSV export) is
 // FREE for now to drive adoption — flip this to false to put it back behind
 // Premium. Gates read `isPremium(user) || PORTFOLIO_FREE`, so re-gating is a
