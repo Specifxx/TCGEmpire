@@ -64,9 +64,9 @@ export function CinematicHero({
           </span>
         </div>
 
-        {/* Today's market wrap — embedded right under the live badge. */}
+        {/* Today's market wrap — embedded right under the live badge; wide + compact. */}
         {wrap && (
-          <div className="animate-fade-in [animation-delay:100ms] mx-auto mt-4 max-w-2xl text-left">
+          <div className="animate-fade-in [animation-delay:100ms] mx-auto mt-4 max-w-5xl text-left">
             <DailyWrapBanner post={wrap} />
           </div>
         )}

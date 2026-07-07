@@ -18,14 +18,14 @@ export function DailyWrapBanner({ post }: { post: MarketReportPost }) {
     <Link
       href={`/blog/${post.article.slug}`}
       aria-label={`Read today's market wrap: ${post.article.title}`}
-      className="group flex items-center gap-4 overflow-hidden rounded-xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-ink-900 to-cyan-500/10 px-4 py-3 transition-all hover:border-emerald-400/50 hover:shadow-glow sm:px-5"
+      className="group flex items-center gap-3 overflow-hidden rounded-xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-ink-900 to-cyan-500/10 px-4 py-2 transition-all hover:border-emerald-400/50 hover:shadow-glow sm:px-5"
     >
-      {/* Left — badge + headline */}
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <span className="inline-flex w-fit items-center rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+      {/* Left — badge + headline on ONE line (badge never wraps) */}
+      <div className="flex min-w-0 flex-1 items-center gap-2.5">
+        <span className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
           Daily Market Wrap
         </span>
-        <span className="truncate text-sm font-bold text-white group-hover:text-emerald-200 sm:text-base">
+        <span className="truncate text-sm font-semibold text-white group-hover:text-emerald-200">
           {post.article.title}
         </span>
       </div>
