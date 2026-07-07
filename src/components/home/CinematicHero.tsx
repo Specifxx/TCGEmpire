@@ -116,13 +116,14 @@ function Stat({ value, label }: { value: number; label: string }) {
   );
 }
 
-// Full-bleed breakout shell. `-mt-6` cancels the layout's top padding so the hero
-// kisses the navbar; `left-1/2 w-screen -translate-x-1/2` breaks the hero out to the
-// full viewport (safe because globals.css sets html{overflow-x:clip}). `main` is
-// centred in the viewport on every breakpoint, so the breakout is symmetric.
+// Full-bleed breakout shell. `-mt-6` tightens the gap to the wrap banner above;
+// `left-1/2 w-screen -translate-x-1/2` breaks the hero out to the full viewport
+// (safe because globals.css sets html{overflow-x:clip}). `main` is centred in the
+// viewport on every breakpoint, so the breakout is symmetric. min-height is kept
+// modest so the vertically-centred content doesn't leave a large void up top.
 function ParallaxShell({ children }: { children: React.ReactNode }) {
   return (
-    <ParallaxRoot className="relative left-1/2 -mt-6 flex min-h-[86vh] w-screen -translate-x-1/2 items-center overflow-hidden">
+    <ParallaxRoot className="relative left-1/2 -mt-6 flex min-h-[64vh] w-screen -translate-x-1/2 items-center overflow-hidden">
       {children}
     </ParallaxRoot>
   );
