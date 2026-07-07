@@ -100,6 +100,14 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col gap-12">
+      {/* Daily market wrap — a compact banner (headline + RiftCompare Index) linking
+          to today's full wrap, pinned to the very top just under the navbar. */}
+      {latestWrap && (
+        <Reveal>
+          <DailyWrapBanner post={latestWrap} />
+        </Reveal>
+      )}
+
       {/* Cinematic full-bleed hero */}
       <CinematicHero
         country={country}
@@ -111,16 +119,13 @@ export default async function HomePage() {
         inStockUnits={inStockUnits}
       />
 
-      {/* Daily market wrap — a compact banner (headline + RiftCompare Index) linking
-          to today's full wrap; the one wrap/index element on the page. Falls back to
-          the live Index pulse until the first wrap exists, so the slot is never empty. */}
-      <Reveal>
-        {latestWrap ? (
-          <DailyWrapBanner post={latestWrap} />
-        ) : (
+      {/* Live Index pulse — only until the first daily wrap exists; once it does, the
+          top banner is the single wrap/index element and this is skipped. */}
+      {!latestWrap && (
+        <Reveal>
           <MarketPulse index={index} currency={info.currency} deals={topDeals} country={country} place={info.place} />
-        )}
-      </Reveal>
+        </Reveal>
+      )}
 
       {/* How it works — orients first-time visitors to the search → compare → buy
           mechanic before the deeper data sections. */}
