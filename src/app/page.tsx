@@ -14,6 +14,7 @@ import { getMarketIndex } from "@/lib/market-index";
 import { getLatestMarketReport } from "@/lib/posts";
 import { CinematicHero } from "@/components/home/CinematicHero";
 import { MarketPulse } from "@/components/home/MarketPulse";
+import { HowItWorks } from "@/components/home/HowItWorks";
 import { DailyWrapHero } from "@/components/DailyWrapHero";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 
@@ -125,6 +126,10 @@ export default async function HomePage() {
           <MarketPulse index={index} currency={info.currency} deals={topDeals} country={country} place={info.place} />
         )}
       </Reveal>
+
+      {/* How it works — orients first-time visitors to the search → compare → buy
+          mechanic before the deeper data sections. */}
+      <HowItWorks totalCards={totalCards} />
 
       {/* Most popular cards — the most-searched Riftbound singles right now */}
       <section>
