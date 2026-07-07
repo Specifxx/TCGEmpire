@@ -125,7 +125,7 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
 
           <div className="py-1">
             {premium ? (
-              <MenuLink href="/premium" onClick={() => setOpen(false)}>✦ Premium</MenuLink>
+              <MenuLink href="/dashboard" onClick={() => setOpen(false)}>◆ Premium dashboard</MenuLink>
             ) : (
               <button
                 onClick={() => { setOpen(false); openPremium(); }}

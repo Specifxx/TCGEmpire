@@ -169,7 +169,7 @@ export default async function PremiumPage() {
             </ul>
             <p className="mt-4 text-center text-[11px] text-slate-500">Cancel anytime · secure checkout by Stripe</p>
             <p className="mt-1 text-center text-[11px] font-medium text-gold/80">
-              Lock in today&apos;s pricing — plans may rise as RiftCompare adds more tools.
+              Subscribe now and your price is locked in for good — it never goes up while you stay subscribed, even as we add more tools.
             </p>
           </div>
         </>
@@ -178,6 +178,7 @@ export default async function PremiumPage() {
       {/* Member quick links */}
       {already && (
         <div className="mt-6 flex flex-wrap items-center justify-center gap-2 text-sm">
+          <Link href="/dashboard" className="btn-primary">◆ Your dashboard</Link>
           <Link href="/tools/best-basket" className="btn-ghost">Best Basket</Link>
           <Link href="/tools/value-finder" className="btn-ghost">Value Finder</Link>
           <Link href="/tools/arbitrage" className="btn-ghost">Arbitrage</Link>

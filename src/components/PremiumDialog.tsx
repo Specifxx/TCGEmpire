@@ -143,7 +143,7 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
 
           {!premium && (
             <p className="mt-3 text-center text-[11px] font-medium text-gold/80">
-              Lock in today&apos;s pricing — plans may rise as we add more tools.
+              Subscribe now and lock in this price for good — it never rises while you stay subscribed.
             </p>
           )}
           <p className="mt-3 text-center text-xs text-slate-600">
