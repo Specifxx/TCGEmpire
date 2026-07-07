@@ -945,7 +945,9 @@ Honestly, weigh this against your actual goal. If you want a complete set for th
     updated: "2026-07-07",
     readMins: 6,
     tags: ["news", "vendetta", "set", "release", "guide"],
-    body: `Vendetta is the next Riftbound: League of Legends TCG set, and it's a big one — a rivalries-themed expansion built around clashing champions like **Nasus vs Renekton** and **Shen vs Zed**. Here's everything that's been confirmed, in one place.
+    body: `![Riftbound: Vendetta — releases 31 July 2026](/vendetta-hero.png)
+
+Vendetta is the next Riftbound: League of Legends TCG set, and it's a big one — a rivalries-themed expansion built around clashing champions like **Nasus vs Renekton** and **Shen vs Zed**. Here's everything that's been confirmed, in one place.
 
 ## Release date
 
@@ -977,6 +979,8 @@ Vendetta debuts **Showdown Decks** — Riftbound's first ready-to-play **two-pla
 
 ## New domain pairings
 
+![Vendetta's new domain pairings — Fury + Calm, Mind + Body, and Chaos + Order](/vendetta-domains.png)
+
 Vendetta leans into new two-domain colour pairings for deckbuilding: **Fury + Calm** (red + green), **Mind + Body** (blue + orange) and **Chaos + Order** (purple + yellow) — rival domains forced together. If you're planning a deck, our **[Vendetta deckbuilding guide](/guides/building-for-riftbound-vendetta)** walks through what the new mechanics and pairings point toward.
 
 ## How to be ready
@@ -999,7 +1003,9 @@ More cards are still being revealed ahead of launch, and we'll keep this updated
     updated: "2026-07-07",
     readMins: 5,
     tags: ["vendetta", "mechanics", "gameplay", "guide"],
-    body: `Riftbound: Vendetta (out **31 July 2026**) adds three brand-new mechanics — **Flow**, **Burn** and **Empower**. Each opens up a new way to play, and together they push the set toward value, recursion and building-up-over-time strategies. Here's what each one does.
+    body: `![Vendetta's three new mechanics — Flow, Burn and Empower](/vendetta-mechanics.png)
+
+Riftbound: Vendetta (out **31 July 2026**) adds three brand-new mechanics — **Flow**, **Burn** and **Empower**. Each opens up a new way to play, and together they push the set toward value, recursion and building-up-over-time strategies. Here's what each one does.
 
 ## Flow — play from your trash
 
@@ -1039,7 +1045,9 @@ Want to know what to build with them? Read our **[Vendetta deckbuilding guide](/
     updated: "2026-07-07",
     readMins: 4,
     tags: ["vendetta", "card types", "gameplay", "unit-gear", "decrees"],
-    body: `Alongside its new mechanics, Riftbound: Vendetta (out **31 July 2026**) introduces two new card concepts: **Unit-Gear** and **Decrees**. Both are built around the set's rivalry theme, and both change how you think about deck slots.
+    body: `![Riftbound: Vendetta — releases 31 July 2026](/vendetta-hero.png)
+
+Alongside its new mechanics, Riftbound: Vendetta (out **31 July 2026**) introduces two new card concepts: **Unit-Gear** and **Decrees**. Both are built around the set's rivalry theme, and both change how you think about deck slots.
 
 ## Unit-Gear — a card that's both
 
@@ -1068,9 +1076,13 @@ Both card types feed Vendetta's rivalry identity — Domains pitted against thei
     updated: "2026-07-07",
     readMins: 6,
     tags: ["vendetta", "deckbuilding", "strategy", "synergies", "meta", "guide"],
-    body: `Riftbound: Vendetta (out **31 July 2026**) is still being spoiled card-by-card, so nobody has a solved metagame yet. But the confirmed mechanics, champions and domain pairings already point clearly toward the kinds of decks that will define the early set. Here's how to think about building for Vendetta — and what to watch as more cards drop.
+    body: `![Riftbound: Vendetta — releases 31 July 2026](/vendetta-hero.png)
+
+Riftbound: Vendetta (out **31 July 2026**) is still being spoiled card-by-card, so nobody has a solved metagame yet. But the confirmed mechanics, champions and domain pairings already point clearly toward the kinds of decks that will define the early set. Here's how to think about building for Vendetta — and what to watch as more cards drop.
 
 ## Start with the new domain pairings
+
+![Vendetta's new domain pairings — Fury + Calm, Mind + Body, and Chaos + Order](/vendetta-domains.png)
 
 Vendetta is built around **rival domains forced together**:
 

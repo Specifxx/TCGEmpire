@@ -1,9 +1,9 @@
 import React from "react";
 
 // Minimal, dependency-free markdown renderer for our own article content.
-// Supports: ## / ### headings, paragraphs, - and 1. lists, --- rules, and inline
-// **bold**, [links](url) and `code`. (We author the content, so no sanitising
-// of arbitrary HTML is needed.)
+// Supports: ## / ### headings, paragraphs, - and 1. lists, --- rules, a block-level
+// image on its own line (![alt](/src.png)), and inline **bold**, [links](url) and
+// `code`. (We author the content, so no sanitising of arbitrary HTML is needed.)
 
 function inline(text: string, kp: string): React.ReactNode[] {
   const nodes: React.ReactNode[] = [];
@@ -52,13 +52,28 @@ export function Markdown({ content }: { content: string }) {
   const blocks: React.ReactNode[] = [];
   let i = 0;
   let key = 0;
-  const isBreak = (l: string) => /^(#{2,3}\s|[-*]\s|\d+\.\s|---\s*$)/.test(l.trim());
+  const isBreak = (l: string) => /^(#{2,3}\s|[-*]\s|\d+\.\s|---\s*$|!\[)/.test(l.trim());
 
   while (i < lines.length) {
     const trimmed = lines[i].trim();
     if (!trimmed) { i++; continue; }
 
     if (trimmed === "---") { blocks.push(<hr key={key++} className="my-6 border-ink-700" />); i++; continue; }
+
+    // Block-level image on its own line: ![alt/caption](/src.png)
+    const img = trimmed.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+    if (img) {
+      const [, alt, src] = img;
+      blocks.push(
+        <figure key={key++} className="my-6">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={src} alt={alt} loading="lazy" decoding="async" className="w-full rounded-xl border border-ink-700" />
+          {alt && <figcaption className="mt-2 text-center text-xs text-slate-500">{alt}</figcaption>}
+        </figure>
+      );
+      i++;
+      continue;
+    }
     if (trimmed.startsWith("### ")) { blocks.push(<h3 key={key} className="mb-2 mt-6 text-base font-bold text-white">{inline(trimmed.slice(4), `h${key++}`)}</h3>); i++; continue; }
     if (trimmed.startsWith("## ")) { blocks.push(<h2 key={key} className="mb-3 mt-8 text-xl font-extrabold text-white">{inline(trimmed.slice(3), `h${key++}`)}</h2>); i++; continue; }
 
