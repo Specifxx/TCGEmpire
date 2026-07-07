@@ -95,8 +95,6 @@ export default async function HomePage() {
     // a freshly-generated wrap surfaces on the next daily import (page cached 24h).
     unstable_cache(getLatestMarketReport, ["home-latest-wrap"], { revalidate: 86400, tags: [CONTENT_TAG] })(),
   ]);
-  // Featured wrap → the specific day's report; null until the first wrap is generated.
-  const wrapHref = latestWrap ? `/blog/${latestWrap.article.slug}` : null;
   const storeCount = storeGroups.length;
   const storeWord = storeCount === 1 ? "store" : "stores";
 
@@ -112,8 +110,7 @@ export default async function HomePage() {
         pricedCards={pricedCards}
         inStockUnits={inStockUnits}
         index={index}
-        wrapHref={wrapHref}
-        wrapHeadline={latestWrap?.article.title ?? null}
+        wrap={latestWrap}
       />
 
       {/* Featured daily market wrap — the homepage's signature data moment: today's
@@ -122,7 +119,7 @@ export default async function HomePage() {
           exists, so the slot is never empty. */}
       <Reveal>
         {latestWrap ? (
-          <DailyWrapHero post={latestWrap} />
+          <DailyWrapHero post={latestWrap} showIndex={false} />
         ) : (
           <MarketPulse index={index} currency={info.currency} deals={topDeals} country={country} place={info.place} />
         )}
