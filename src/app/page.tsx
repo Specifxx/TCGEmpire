@@ -113,6 +113,7 @@ export default async function HomePage() {
         inStockUnits={inStockUnits}
         index={index}
         wrapHref={wrapHref}
+        wrapHeadline={latestWrap?.article.title ?? null}
       />
 
       {/* Featured daily market wrap — the homepage's signature data moment: today's

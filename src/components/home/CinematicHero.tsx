@@ -29,6 +29,7 @@ export function CinematicHero({
   inStockUnits,
   index,
   wrapHref,
+  wrapHeadline,
 }: {
   country: Country;
   info: CountryInfo;
@@ -39,8 +40,10 @@ export function CinematicHero({
   inStockUnits: number;
   index: MarketIndex | null;
   // When a daily market wrap exists, the live accent links to it (and is labelled
-  // "Daily Market Wrap") instead of the raw Index page.
+  // "Daily Market Wrap") instead of the raw Index page. wrapHeadline is today's wrap
+  // title, shown as a short one-line summary inside the (wider) accent.
   wrapHref?: string | null;
+  wrapHeadline?: string | null;
 }) {
   const ebayHref = ebayAffiliateUrl(
     `https://www.${EBAY_DOMAIN[country] ?? "ebay.com"}/sch/i.html?_nkw=${encodeURIComponent("Riftbound TCG")}`
@@ -69,26 +72,49 @@ export function CinematicHero({
           </span>
         </div>
 
-        {/* Live market accent — points to today's Daily Market Wrap when one exists,
-            else the RiftCompare Index. The live index level doubles as the wrap's
-            headline number, so the accent stays data-rich either way. */}
+        {/* Live market accent — a wider button linking to today's Daily Market Wrap
+            (with its headline as a one-line summary) when one exists, else the compact
+            RiftCompare Index chip. The live index level doubles as the wrap's headline
+            number, so the accent stays data-rich either way. */}
         {index && (
           <div className="animate-fade-in [animation-delay:100ms] mt-3 flex justify-center">
-            <Link
-              href={wrapHref ?? "/market"}
-              aria-label={wrapHref ? "Read today's daily market wrap" : "View the RiftCompare Index"}
-              className="inline-flex items-center gap-2 rounded-md border border-ink-700 bg-ink-900 px-3 py-1.5 transition-colors duration-200 hover:border-brand-500 hover:bg-ink-800"
-            >
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{wrapHref ? "Daily Market Wrap" : "RiftCompare Index"}</span>
-              <span className="num text-lg font-extrabold leading-none text-white">{index.latest.toFixed(1)}</span>
-              {index.d7 != null && (
-                <span className={`num text-xs font-bold ${indexUp ? "text-up" : "text-down"}`}>
-                  {indexUp ? "+" : "−"}{Math.abs(index.d7)}% · 7d
+            {wrapHref ? (
+              <Link
+                href={wrapHref}
+                aria-label="Read today's daily market wrap"
+                className="group inline-flex w-full max-w-md items-center gap-3 rounded-lg border border-ink-700 bg-ink-900 px-4 py-2 text-left transition-colors duration-200 hover:border-brand-500 hover:bg-ink-800 sm:max-w-lg"
+              >
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-brand-500/15 text-sm" aria-hidden>📊</span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-2">
+                    <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-300">Daily Market Wrap</span>
+                    {index.d7 != null && (
+                      <span className={`num text-[11px] font-bold ${indexUp ? "text-up" : "text-down"}`}>
+                        {index.latest.toFixed(1)} · {indexUp ? "+" : "−"}{Math.abs(index.d7)}%
+                      </span>
+                    )}
+                  </span>
+                  {wrapHeadline && <span className="mt-0.5 block truncate text-xs text-slate-400">{wrapHeadline}</span>}
                 </span>
-              )}
-              <span className="hidden sm:block"><Sparkline points={index.points} up={indexUp} upIsGood /></span>
-              <span className="text-slate-500" aria-hidden>→</span>
-            </Link>
+                <span className="shrink-0 text-slate-500 transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden>→</span>
+              </Link>
+            ) : (
+              <Link
+                href="/market"
+                aria-label="View the RiftCompare Index"
+                className="inline-flex items-center gap-2 rounded-md border border-ink-700 bg-ink-900 px-3 py-1.5 transition-colors duration-200 hover:border-brand-500 hover:bg-ink-800"
+              >
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">RiftCompare Index</span>
+                <span className="num text-lg font-extrabold leading-none text-white">{index.latest.toFixed(1)}</span>
+                {index.d7 != null && (
+                  <span className={`num text-xs font-bold ${indexUp ? "text-up" : "text-down"}`}>
+                    {indexUp ? "+" : "−"}{Math.abs(index.d7)}% · 7d
+                  </span>
+                )}
+                <span className="hidden sm:block"><Sparkline points={index.points} up={indexUp} upIsGood /></span>
+                <span className="text-slate-500" aria-hidden>→</span>
+              </Link>
+            )}
           </div>
         )}
 
