@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getArticles } from "@/lib/articles";
-import { ArticleList } from "@/components/ArticleList";
+import { FilterableArticles } from "@/components/FilterableArticles";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { SITE_URL } from "@/lib/site";
@@ -53,7 +53,7 @@ export default function GuidesPage() {
           Learn Riftbound — deckbuilding basics, buying tips and more, for {info.adjective} players.
         </p>
       </div>
-      <ArticleList articles={articles} basePath="/guides" />
+      <FilterableArticles articles={articles} basePath="/guides" />
     </div>
   );
 }

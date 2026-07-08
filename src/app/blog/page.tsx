@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getBlogPosts, getLatestMarketReport } from "@/lib/posts";
 import { ensureMarketReport } from "@/lib/market-report";
-import { ArticleList } from "@/components/ArticleList";
+import { FilterableArticles } from "@/components/FilterableArticles";
 import { DailyWrapHero } from "@/components/DailyWrapHero";
 import { SITE_URL } from "@/lib/site";
 
@@ -62,7 +62,7 @@ export default async function BlogPage() {
         </p>
       </div>
       {latestWrap && <DailyWrapHero post={latestWrap} />}
-      <ArticleList articles={rest} basePath="/blog" />
+      <FilterableArticles articles={rest} basePath="/blog" />
     </div>
   );
 }

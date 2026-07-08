@@ -1224,6 +1224,125 @@ The moment you've got a list, drop it into the **[deck pricer](/deck)** to total
 
 For the full picture, read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** and the **[new mechanics explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**, and track live prices on the **[Vendetta set page](/sets/vendetta)** as cards release.`,
   },
+  {
+    slug: "riftbound-vendetta-countdown-how-long-until-release",
+    category: "blog",
+    title: "Riftbound Vendetta Countdown: How Long Until Release?",
+    excerpt:
+      "Riftbound: Vendetta drops 31 July 2026, with Pre-Rift launch events from 24 July. Here's the live countdown, the key dates, and exactly how to be ready on day one.",
+    author: "RiftCompare",
+    date: "2026-07-08",
+    updated: "2026-07-08",
+    readMins: 3,
+    tags: ["news", "vendetta", "release", "countdown"],
+    body: `![Riftbound: Vendetta — releases 31 July 2026](/vendetta-hero.png)
+
+The wait for **Riftbound: Vendetta** is nearly over. The set releases on **31 July 2026**, and in-store **Pre-Rift** launch events begin on **24 July** — so the real buying window opens in days, not weeks.
+
+We built a live, ticking countdown so you always know exactly how long is left:
+
+> **⏳ [See the live Vendetta release countdown →](/vendetta-countdown)**
+
+It counts down to release day in your own timezone, second by second — bookmark it and check back.
+
+## The key dates
+
+- **24 July 2026** — Pre-Rift launch events begin in participating stores. First chance to open packs and play with Vendetta cards.
+- **31 July 2026** — Full worldwide retail release. Singles start appearing at stores, and the **[Vendetta set page](/sets/vendetta)** begins filling with live prices.
+
+## Why the countdown matters for buyers
+
+New-set launches follow a predictable price curve: chase cards and format staples spike hardest in the **first week** while supply is thin, then settle as more product hits shelves. Knowing exactly when release lands lets you plan — grab what you need early if you're playing at launch, or wait out the initial spike if you're only collecting.
+
+Either way, RiftCompare shows the **cheapest delivered price across every store** the moment cards go live, so you never pay the first (inflated) number you see.
+
+## How to be ready in three steps
+
+1. **Wishlist now.** Add the cards you already know you want from the **[database](/browse)** — you'll be alerted if a price moves.
+2. **Compare sealed early.** VEN boxes sell fast at launch; the **[sealed page](/sealed)** ranks them cheapest-first right now.
+3. **Have your deck list ready.** Draft it with our **[Vendetta deckbuilding guide](/guides/building-for-riftbound-vendetta)** and **[best Vendetta decks](/guides/best-riftbound-vendetta-decks)**, then price it in one click with the **[deck pricer](/deck)** on release day.
+
+For the complete rundown of what's in the set, read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)**. Then **[watch the countdown](/vendetta-countdown)** — it's almost here.`,
+  },
+  {
+    slug: "should-you-buy-riftbound-origins-before-vendetta",
+    category: "blog",
+    title: "Should You Buy Origins Before Vendetta Drops?",
+    excerpt:
+      "A new set changes prices across the whole game. Here's how a Vendetta launch typically moves Origins prices — and whether to buy the singles you want now or wait.",
+    author: "RiftCompare",
+    date: "2026-07-06",
+    updated: "2026-07-06",
+    readMins: 4,
+    tags: ["buying", "vendetta", "value", "opinion"],
+    body: `A new set doesn't just add cards — it moves the price of the cards you already own or want. With **[Vendetta](/sets/vendetta)** landing 31 July, a lot of buyers are asking the same thing: *do I grab my Origins singles now, or wait?* Here's how to think about it.
+
+## What a new set typically does to older singles
+
+There's no single rule, but a few patterns show up again and again when a TCG expansion drops:
+
+- **Attention shifts to the new set.** Demand — and hype-driven prices — concentrate on the newest cards at launch, which can soften prices on the previous set for a while.
+- **Format staples hold or climb.** Older cards that stay legal and see play in the new meta don't get cheaper just because a new set exists — sometimes they rise as new decks want them.
+- **Reprints reset prices.** If a card from an older set gets reprinted or a functionally similar card appears, the old version can drop. Nothing about this is confirmed for Vendetta — treat it as a risk to watch, not a certainty.
+
+## So: buy now or wait?
+
+**Buy now if** the card is something you'll actually use and you don't want to risk it climbing — playable staples rarely get dramatically cheaper, and waiting can cost you.
+
+**Wait if** you're only collecting, the card isn't urgent, and you'd rather see whether launch-week attention softens Origins prices first.
+
+The honest answer for most people: **buy what you'll play, wait on what you don't need yet.**
+
+## Let the data decide instead of guessing
+
+You don't have to predict any of this — you can watch it:
+
+- **[Price movers](/movers)** shows what's climbing and falling right now, so you can see a trend forming instead of guessing.
+- **[Wishlist](/browse)** a card and get alerted when its price actually moves.
+- The **[RiftCompare Index](/market)** tracks the whole market's direction day to day.
+
+When you're ready to buy, **[compare every store](/browse)** so you pay the cheapest delivered price — the single biggest saving is almost always *where* you buy, not *when*.
+
+Planning a Vendetta deck that mixes old and new cards? Our **[best Vendetta decks guide](/guides/best-riftbound-vendetta-decks)** shows which Origins and Unleashed cards the new archetypes want — those are the ones worth locking in early.`,
+  },
+  {
+    slug: "riftbound-vendetta-launch-week-buying-checklist",
+    category: "blog",
+    title: "Riftbound Vendetta Launch-Week Buying Checklist",
+    excerpt:
+      "Pre-Rift events start 24 July and Vendetta releases 31 July. Use this launch-week checklist so you buy smart, avoid the hype tax, and never overpay in the rush.",
+    author: "RiftCompare",
+    date: "2026-07-04",
+    updated: "2026-07-04",
+    readMins: 4,
+    tags: ["buying", "vendetta", "release", "guide"],
+    body: `Launch week is the most expensive time to buy a new set on impulse — and the best time to buy it *well* if you have a plan. Here's a simple checklist to get through Vendetta's launch (Pre-Rift from **24 July**, release **31 July**) without overpaying.
+
+## Before launch (this week)
+
+- **Decide your goal.** Playing at launch, collecting, or investing? Each points to a different buy. Be honest about which you are.
+- **Draft your deck list.** Use the **[Vendetta deckbuilding guide](/guides/building-for-riftbound-vendetta)** and **[best Vendetta decks](/guides/best-riftbound-vendetta-decks)** so you know exactly which cards you need before prices spike.
+- **Wishlist your targets.** Add them from the **[database](/browse)** so a price drop pings you automatically.
+- **Check sealed now.** If you want boxes, the **[sealed page](/sealed)** already ranks VEN sealed cheapest-first — lock in before launch-week scarcity.
+
+## At launch (24–31 July)
+
+- **Don't buy the first price you see.** Launch-day listings are the highest they'll be. Always **[compare delivered prices across stores](/browse)** first — shipping included.
+- **Watch the movers.** The **[price movers](/movers)** page shows what's spiking in real time; the hottest chase cards climb fastest, so decide whether to grab early or wait them out.
+- **Price your whole deck at once.** Drop your list into the **[deck pricer](/deck)** — it totals every card at the cheapest live price in your currency, so you buy the whole thing for the least.
+- **Switch to your region.** Prices show in AUD, NZD, USD or GBP — make sure you're seeing *your* market's real cost, delivered.
+
+## After the dust settles
+
+- **Re-check in week two.** Once more product hits shelves, non-chase singles usually ease. If a card wasn't urgent, this is often the cheaper moment.
+- **Sell into the hype if you're flipping.** If you opened boxes, launch-week demand is when duplicates fetch the most — see **[how to sell Riftbound cards](/blog/how-to-sell-riftbound-cards)**.
+
+## The one rule that always saves money
+
+Wherever you are in that timeline, the biggest lever is *where* you buy, not *when*. The same card can vary a lot between stores once shipping is included — RiftCompare exists to surface the cheapest delivered option every time.
+
+Keep the **[live countdown](/vendetta-countdown)** handy, and read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** so nothing about the set catches you off guard.`,
+  },
 ];
 
 export function getArticles(category?: ArticleCategory): Article[] {
