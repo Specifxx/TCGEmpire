@@ -19,7 +19,7 @@ function split(ms: number) {
 // the SSR'd HTML (which crawlers index) matches the first client render — no hydration
 // mismatch — then it ticks every second. The human date + copy live in the page HTML,
 // so the page is meaningful with JS off / to crawlers.
-export function CountdownTimer({ y, m, d, href = "/sets/vendetta" }: { y: number; m: number; d: number; href?: string }) {
+export function CountdownTimer({ y, m, d, href = "/sets/vendetta", size = "lg" }: { y: number; m: number; d: number; href?: string; size?: "lg" | "sm" }) {
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
     setNow(Date.now());
@@ -40,11 +40,13 @@ export function CountdownTimer({ y, m, d, href = "/sets/vendetta" }: { y: number
   }
 
   const cells = split(remaining ?? 0);
+  const numCls = size === "sm" ? "text-2xl sm:text-3xl" : "text-3xl sm:text-5xl";
+  const pad = size === "sm" ? "p-2.5 sm:p-3" : "p-3 sm:p-5";
   return (
     <div className="grid grid-cols-4 gap-2 sm:gap-4" role="timer" aria-label="Time until Riftbound Vendetta releases">
       {cells.map((c) => (
-        <div key={c.l} className="rounded-xl border border-ink-700 bg-ink-900 p-3 text-center sm:p-5">
-          <div className="num text-3xl font-extrabold tabular-nums text-white sm:text-5xl">
+        <div key={c.l} className={`rounded-xl border border-ink-700 bg-ink-900 text-center ${pad}`}>
+          <div className={`num font-extrabold tabular-nums text-white ${numCls}`}>
             {remaining == null ? "—" : String(c.n).padStart(2, "0")}
           </div>
           <div className="mt-1 text-[10px] font-semibold uppercase tracking-widest text-slate-500 sm:text-xs">{c.l}</div>
