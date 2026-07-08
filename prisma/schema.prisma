@@ -320,6 +320,23 @@ model ContactMessage {
   @@index([createdAt])
 }
 
+// A store submitted via the public "Suggest a store" form. Low-volume operational
+// data (reviewed by hand, then added to src/lib/retailers.ts), so it lives in the
+// main DB rather than the write-heavy history DB. status: pending | added | rejected.
+model StoreSuggestion {
+  id        String   @id @default(cuid())
+  storeName String
+  storeUrl  String
+  country   String   @default("AU") // AU | NZ | US | UK | OTHER
+  email     String? // optional submitter email (for follow-up)
+  note      String? // optional message from the submitter
+  status    String   @default("pending")
+  ip        String? // best-effort, for abuse triage only
+  createdAt DateTime @default(now())
+
+  @@index([status, createdAt])
+}
+
 // Daily snapshot of a card's lowest live price, for the price-over-time chart
 // (CSFloat-style). Written by the importer: at most one row per card per
 // Australia/Sydney day — a same-day re-run (e.g. a deploy) replaces that day's

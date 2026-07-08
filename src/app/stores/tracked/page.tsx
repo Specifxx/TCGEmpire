@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { RETAILER_LIST } from "@/lib/retailers";
 import { COUNTRIES, type Country } from "@/lib/country";
-import { CONTACT_EMAIL, SITE_URL } from "@/lib/site";
+import { SITE_URL } from "@/lib/site";
 
 export const revalidate = 86400;
 
@@ -110,15 +110,12 @@ export default function TrackedStoresPage() {
       <section className="card-surface p-6 text-center">
         <h2 className="text-lg font-bold text-white">Don&apos;t see your store?</h2>
         <p className="mx-auto mt-1 max-w-xl text-sm text-slate-400">
-          We&apos;re always adding retailers. If there&apos;s a Riftbound store you&apos;d like compared, send us the
-          name and website and we&apos;ll look at adding it.
+          We&apos;re always adding retailers. If there&apos;s a Riftbound store you&apos;d like compared — or you run one —
+          suggest it and we&apos;ll look at adding it. Free listing, more customers.
         </p>
-        <a
-          href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Request a store for RiftCompare")}`}
-          className="btn-primary mt-4 inline-flex"
-        >
-          Request a store →
-        </a>
+        <Link href="/stores/suggest" className="btn-primary mt-4 inline-flex">
+          Suggest a store →
+        </Link>
       </section>
     </div>
   );

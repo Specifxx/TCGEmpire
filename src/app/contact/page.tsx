@@ -28,6 +28,13 @@ export default function ContactPage() {
           <p className="mt-4 text-xs text-slate-500">
             We read every message and usually reply within a day or two.
           </p>
+
+          <p className="mt-5 border-t border-ink-800 pt-4 text-sm text-slate-400">
+            Run a shop, or know one we&apos;re missing?{" "}
+            <Link href="/stores/suggest" className="font-semibold text-brand-300 hover:underline">
+              Suggest a store →
+            </Link>
+          </p>
         </div>
       </div>
 
