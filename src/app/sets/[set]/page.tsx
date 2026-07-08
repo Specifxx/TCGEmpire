@@ -163,6 +163,7 @@ export default async function SetPage({ params }: { params: { set: string } }) {
               <div className="mx-auto mt-6 max-w-lg border-t border-ink-800 pt-5 text-left">
                 <p className="mb-2 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">Get ready for Vendetta</p>
                 <ul className="grid gap-1.5 text-sm sm:grid-cols-2">
+                  <li><Link href="/vendetta-countdown" className="font-semibold text-brand-300 hover:underline">⏳ Release countdown →</Link></li>
                   <li><Link href="/blog/riftbound-vendetta-everything-you-need-to-know" className="text-brand-400 hover:underline">Everything you need to know →</Link></li>
                   <li><Link href="/blog/riftbound-vendetta-new-mechanics-flow-burn-empower" className="text-brand-400 hover:underline">New mechanics: Flow, Burn &amp; Empower →</Link></li>
                   <li><Link href="/blog/riftbound-vendetta-unit-gear-decrees" className="text-brand-400 hover:underline">New card types: Unit-Gear &amp; Decrees →</Link></li>
