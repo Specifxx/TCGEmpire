@@ -1011,7 +1011,7 @@ Riftbound: Vendetta (out **31 July 2026**) adds three brand-new mechanics — **
 
 **Flow lets you play cards from your trash instead of from your hand.** It draws on the League champions who fuel their kits with Energy — your used and discarded cards become a second resource pool rather than dead weight.
 
-In practice, your trash stops being a graveyard and becomes a toolbox. Cards that get used, discarded or destroyed can come back into play, so Flow decks reward you for cycling through cards quickly and knowing what's waiting to be replayed.
+In practice, your trash stops being a graveyard and becomes a toolbox. Cards that get used, discarded or destroyed can come back into play, so Flow decks reward you for cycling through cards quickly and knowing what's waiting to be replayed. **→ Full guide: [Riftbound Flow explained](/guides/riftbound-flow-explained).**
 
 ## Burn — send cards to the trash
 
@@ -1020,13 +1020,13 @@ In practice, your trash stops being a graveyard and becomes a toolbox. Cards tha
 - **Self-Burn** — some cards burn *your own* deck to fuel synergies. If Flow rewards a full trash, Burn is one of the fastest ways to fill it.
 - **Deck attack** — other cards burn your *opponent's* deck directly, chipping away at what they'll draw. It's Riftbound's take on a mill strategy.
 
-Burn and Flow are natural partners: Burn stocks the trash, Flow cashes it in.
+Burn and Flow are natural partners: Burn stocks the trash, Flow cashes it in. **→ Full guide: [Riftbound Burn explained](/guides/riftbound-burn-explained).**
 
 ## Empower — grow a card after it's down
 
 **Empower gives a card the potential to gain new abilities once it's in play, often after paying a cost.** You can get a unit on the board one turn, then amplify its might or add an effect on a later turn.
 
-That changes sequencing: an Empower card can be a cheap early play *and* a late-game threat, so you're rewarded for planning two turns ahead rather than dumping your hand.
+That changes sequencing: an Empower card can be a cheap early play *and* a late-game threat, so you're rewarded for planning two turns ahead rather than dumping your hand. **→ Full guide: [Riftbound Empower explained](/guides/riftbound-empower-explained).**
 
 ## How they fit together
 
@@ -1342,6 +1342,145 @@ Planning a Vendetta deck that mixes old and new cards? Our **[best Vendetta deck
 Wherever you are in that timeline, the biggest lever is *where* you buy, not *when*. The same card can vary a lot between stores once shipping is included — RiftCompare exists to surface the cheapest delivered option every time.
 
 Keep the **[live countdown](/vendetta-countdown)** handy, and read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** so nothing about the set catches you off guard.`,
+  },
+  {
+    slug: "riftbound-empower-explained",
+    category: "guide",
+    title: "Riftbound Empower Explained: How the Empower Mechanic Works",
+    excerpt:
+      "A complete guide to Empower — the Riftbound: Vendetta mechanic that lets a card gain new abilities after it's in play. How it works, why it's strong, and how to build around it.",
+    author: "RiftCompare",
+    date: "2026-07-08",
+    updated: "2026-07-08",
+    readMins: 5,
+    tags: ["vendetta", "mechanics", "empower", "gameplay", "guide"],
+    body: `![Vendetta's new mechanics — Flow, Burn and Empower](/vendetta-mechanics.png)
+
+**Empower** is one of three new mechanics arriving with **[Riftbound: Vendetta](/sets/vendetta)** on **31 July 2026**. It's quickly become one of the most searched-for parts of the set — so here's a complete, plain-English guide to what the Empower mechanic does and how to play around it.
+
+## What is Empower in Riftbound?
+
+**Empower gives a card the potential to gain new abilities once it's already in play — usually by paying an additional cost on a later turn.** Instead of a card doing everything the moment it lands, an Empower card can be played cheaply now and then "levelled up" afterwards, adding might, an effect, or a new keyword.
+
+Think of it as a two-stage card: stage one gets a body on the board; stage two, when you have the energy to spare, unlocks its full power.
+
+## How the Empower mechanic works, step by step
+
+1. **Play the card normally.** It enters as a modest, often cheap unit or permanent.
+2. **Bank your energy.** Empower effects generally ask for an extra cost — so you plan a later turn where you can afford to activate it.
+3. **Empower it.** Pay the cost to trigger the upgrade: bigger stats, a new ability, or an on-board effect.
+4. **Repeat where allowed.** Some Empower cards are designed to keep scaling, rewarding a long game.
+
+Because the payoff is deferred, Empower changes your *sequencing* more than your *shopping list*: the skill is knowing which turn to hold up energy for the upgrade instead of over-committing your hand.
+
+## Why Empower is strong
+
+- **It's flexible.** One card is both a cheap early play and a late-game threat, so you draw fewer dead cards.
+- **It rewards planning.** Good Empower players think two turns ahead — a real skill-testing mechanic rather than a "play it and forget it" one.
+- **It scales.** In grindy games, an Empowered board keeps getting bigger while an opponent's tempo deck runs out of gas.
+
+## Building an Empower deck
+
+Empower leans toward **Mind and Body** styles of play — champions like **Jayce** and **Mel** who want to bank resources and go over the top later. It pairs naturally with the set's other new mechanics: **[Flow](/guides/riftbound-flow-explained)** keeps refuelling your options from the trash, and even **[Burn](/guides/riftbound-burn-explained)** can feed a long game plan. The common thread is **patience and value** over raw early aggression.
+
+A few deckbuilding rules of thumb:
+
+- **Curve for the double-spend.** Leave room in your mana curve to both play *and* Empower in the same few turns.
+- **Protect the payoff.** Your Empowered threat is the game — hold up an answer or bait removal before you commit the upgrade.
+- **Don't over-Empower.** Sinking every turn into one unit can be greedy; sometimes a second body wins faster.
+
+For a full archetype breakdown, see the **[best Vendetta decks guide](/guides/best-riftbound-vendetta-decks)** and the **[Vendetta deckbuilding guide](/guides/building-for-riftbound-vendetta)**.
+
+## Empower FAQ
+
+**Is Empower only in Vendetta?** It's introduced as a new mechanic in the Vendetta set. Cards from earlier sets can still support an Empower deck, but the keyword itself is new here.
+
+**Is Empower the same as levelling up a champion?** No — Empower is a general mechanic that upgrades a card in play by paying a cost, not a champion-only level system.
+
+**How is Empower different from Flow and Burn?** Empower grows a card *you already control*; **[Flow](/guides/riftbound-flow-explained)** plays cards *from your trash*; **[Burn](/guides/riftbound-burn-explained)** sends cards *to* the trash. Read all three together in **[Vendetta's new mechanics explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**.
+
+## Get ready for Empower cards
+
+Empower cards will list with live prices on the **[Vendetta set page](/sets/vendetta)** the moment they release — and RiftCompare shows the cheapest delivered price across every store, so you can build your Empower deck for the least. Keep an eye on the **[live countdown](/vendetta-countdown)** — it's almost here.`,
+  },
+  {
+    slug: "riftbound-flow-explained",
+    category: "guide",
+    title: "Riftbound Flow Explained: Playing Cards From Your Trash",
+    excerpt:
+      "A complete guide to Flow — the Riftbound: Vendetta mechanic that lets you play cards from your trash instead of your hand. How it works and how to build around it.",
+    author: "RiftCompare",
+    date: "2026-07-08",
+    updated: "2026-07-08",
+    readMins: 4,
+    tags: ["vendetta", "mechanics", "flow", "gameplay", "guide"],
+    body: `![Vendetta's new mechanics — Flow, Burn and Empower](/vendetta-mechanics.png)
+
+**Flow** is one of three new mechanics in **[Riftbound: Vendetta](/sets/vendetta)** (out **31 July 2026**). It turns your trash from a graveyard into a resource — here's exactly how the Flow mechanic works and how to build around it.
+
+## What is Flow in Riftbound?
+
+**Flow lets you play a card from your trash instead of from your hand.** Cards you've used, discarded or had destroyed aren't gone — with Flow, they become a second pool of plays. It draws on the League champions who fuel their kits with Energy: your spent cards keep on working.
+
+## How the Flow mechanic works
+
+- **Your trash is a second hand.** A card with Flow can be cast straight out of the trash, often for its normal or a modified cost.
+- **Fill the trash on purpose.** The more cards in your trash, the more Flow options you have — so effects that discard, cycle or **[Burn](/guides/riftbound-burn-explained)** your own deck actively *help* a Flow deck.
+- **Know what's waiting.** Flow rewards players who track what's in the trash and sequence replays for maximum value.
+
+## Building a Flow deck
+
+Flow is the recursion engine of Vendetta. Its best partner is **[Burn](/guides/riftbound-burn-explained)**, which stocks your trash quickly — Burn fills it, Flow cashes it in. Deckbuilding pointers:
+
+- **Enable it.** Include cheap ways to get cards into the trash early so Flow is online when you need it.
+- **Grind the long game.** Flow decks win by out-valuing opponents over time, not by racing — plan for longer games.
+- **Watch trash hate.** Effects that exile or shuffle away the trash are your weakness; play around them.
+
+See how Flow fits full decklists in the **[best Vendetta decks guide](/guides/best-riftbound-vendetta-decks)**.
+
+## Flow vs the other new mechanics
+
+**[Empower](/guides/riftbound-empower-explained)** upgrades a card in play; **[Burn](/guides/riftbound-burn-explained)** sends cards to the trash; **Flow** plays them back out of it. All three are covered together in **[Vendetta's new mechanics explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**.
+
+Flow cards will show live prices on the **[Vendetta set page](/sets/vendetta)** as they release — compare every store on RiftCompare so you build your Flow deck for the cheapest total. Track the **[live countdown](/vendetta-countdown)** to release day.`,
+  },
+  {
+    slug: "riftbound-burn-explained",
+    category: "guide",
+    title: "Riftbound Burn Explained: Mill and Self-Fuel in Vendetta",
+    excerpt:
+      "A complete guide to Burn — the Riftbound: Vendetta mechanic that sends cards to the trash, both to fuel your own synergies and to attack your opponent's deck.",
+    author: "RiftCompare",
+    date: "2026-07-08",
+    updated: "2026-07-08",
+    readMins: 4,
+    tags: ["vendetta", "mechanics", "burn", "gameplay", "guide"],
+    body: `![Vendetta's new mechanics — Flow, Burn and Empower](/vendetta-mechanics.png)
+
+**Burn** is one of three new mechanics in **[Riftbound: Vendetta](/sets/vendetta)** (out **31 July 2026**). It has two very different uses — here's how the Burn mechanic works and how to build around it.
+
+## What is Burn in Riftbound?
+
+**Burn sends cards from a Main Deck to the trash.** Which deck it targets is what makes it interesting:
+
+- **Self-Burn** — some cards burn *your own* deck. That sounds bad, but it's the fastest way to stock your trash for **[Flow](/guides/riftbound-flow-explained)** and other trash-payoffs.
+- **Deck attack (mill)** — other cards burn your *opponent's* deck, chipping away at what they'll draw. It's Riftbound's take on a mill strategy.
+
+## How to build with Burn
+
+Burn is a toolbox mechanic — how you use it depends on your plan:
+
+- **As fuel:** pair self-Burn with **[Flow](/guides/riftbound-flow-explained)**. Burn fills the trash, Flow replays from it — the core value engine of the set.
+- **As a clock:** lean into opponent-Burn to win by decking them out. Watch how fast the clock actually is before committing to it as your only win condition — mill needs enough Burn to close the game.
+- **Mind the downside:** self-Burn thins your own deck, so make sure you're getting more value back than you lose.
+
+Full decklists that use Burn are in the **[best Vendetta decks guide](/guides/best-riftbound-vendetta-decks)**.
+
+## Burn vs Flow vs Empower
+
+**Burn** sends cards to the trash; **[Flow](/guides/riftbound-flow-explained)** plays them back out; **[Empower](/guides/riftbound-empower-explained)** grows a card already in play. They're designed to combo — read all three in **[Vendetta's new mechanics explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**.
+
+Burn cards will list with live prices on the **[Vendetta set page](/sets/vendetta)** as they release — RiftCompare compares every store so you pay the cheapest delivered price. Keep the **[live countdown](/vendetta-countdown)** handy.`,
   },
 ];
 
