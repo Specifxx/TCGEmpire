@@ -162,6 +162,30 @@ export async function sendNewsletterDigestEmail(to: string, subject: string, hea
   return sendEmail(to, subject, emailShell(heading, inner, newsletterFooter(unsubUrl)));
 }
 
+// One-off release-day blast for a new set (e.g. Vendetta, 31 Jul 2026). Sent to the
+// countdown/newsletter list from a one-off script/cron on release day — the moment of
+// peak buy-intent the countdown page promises. `setName`/`setSlug` keep it reusable for
+// future sets.
+export async function sendReleaseDayEmail(
+  to: string,
+  setName: string,
+  setSlug: string,
+  unsubUrl: string
+): Promise<boolean> {
+  const base = `${SITE_URL}/sets/${setSlug}?utm_source=newsletter&utm_medium=email&utm_campaign=release-day`;
+  const inner = `
+    <tr><td style="padding:8px 32px 16px;font-size:16px;line-height:1.6;color:#e6ebf2">
+      <strong>${setName} is live.</strong> You asked us to tell you the moment prices went up — they're up now.
+    </td></tr>
+    <tr><td style="padding:0 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      We're comparing every ${setName} card across 60+ stores in AU, NZ, US and the UK, cheapest delivered price
+      first — so you never overpay in the launch rush. Prices move fast on day one; grab what you need before the
+      chase cards spike.
+    </td></tr>
+    <tr><td style="padding:4px 32px 24px"><a href="${base}" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">See every ${setName} price →</a></td></tr>`;
+  return sendEmail(to, `${setName} is out — see every card's cheapest price`, emailShell(`${setName} is here`, inner, newsletterFooter(unsubUrl)));
+}
+
 // Sent once on first signup so subscribers hear from us immediately (and get the
 // unsubscribe link up front) instead of silence until Friday.
 export async function sendNewsletterWelcomeEmail(to: string, unsubUrl: string): Promise<boolean> {
