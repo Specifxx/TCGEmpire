@@ -55,7 +55,11 @@ export default async function ValueFinderPage() {
   const premium = isPremium(user);
   const country = getCountry();
   const info = COUNTRIES[country];
-  const picks = premium ? await getUndervalued(country) : [];
+  // Members get the full screen; non-members get ONLY the single best pick (the full
+  // list never ships, so it can't be un-blurred) as a teaser — the "one row free"
+  // pattern converts far better than a blank paywall.
+  const picks = premium ? await getUndervalued(country) : await getUndervalued(country, 1);
+  const teaser = picks[0];
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -77,25 +81,71 @@ export default async function ValueFinderPage() {
       </div>
 
       {!premium ? (
-        <div className="card-surface p-6 text-center">
-          <h2 className="text-lg font-extrabold text-white">Value Finder is a Premium tool</h2>
-          <p className="mx-auto mt-1 max-w-md text-sm text-slate-400">
-            Premium members get the screener: the cards trading furthest below their 30-day average right now, with the
-            discount and how far off their recent high each one is.
-          </p>
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-            {user ? (
-              <PremiumButton />
-            ) : (
-              <Link href="/register?next=/tools/value-finder" className="btn-primary text-sm">Create a free account</Link>
-            )}
-            <Link href="/browse" className="btn-ghost text-sm">Search the card database →</Link>
+        <div className="card-surface overflow-hidden">
+          {/* One real pick free, then a locked preview + upsell (arbitrage pattern). */}
+          <table className="w-full min-w-[620px] text-sm">
+            <thead>
+              <tr className="border-b border-ink-700 text-left text-[10px] uppercase tracking-wide text-slate-500">
+                <th className="px-4 py-2.5 font-semibold">Card</th>
+                <th className="px-2 py-2.5 text-right font-semibold">Now</th>
+                <th className="px-2 py-2.5 text-right font-semibold">30-day avg</th>
+                <th className="px-2 py-2.5 text-right font-semibold">vs avg</th>
+                <th className="px-4 py-2.5 text-right font-semibold">off high</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-ink-800">
+              {teaser ? (
+                <tr className="hover:bg-ink-800">
+                  <td className="px-4 py-2">
+                    <CardQuickLink card={teaser.card} className="flex items-center gap-2.5">
+                      {teaser.card.imageThumbUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={teaser.card.imageThumbUrl} alt="" aria-hidden="true" width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
+                      )}
+                      <span className="min-w-0">
+                        <span className="block truncate font-semibold text-white">{teaser.card.name}</span>
+                        <span className="block text-[11px] text-slate-500">{teaser.card.setCode} · {teaser.card.collectorNumber}</span>
+                      </span>
+                    </CardQuickLink>
+                  </td>
+                  <td className="num px-2 py-2 text-right font-semibold text-accent">{formatMoney(teaser.currentCents, info.currency)}</td>
+                  <td className="num px-2 py-2 text-right text-slate-400">{formatMoney(teaser.avgCents, info.currency)}</td>
+                  <td className="num px-2 py-2 text-right font-bold text-brand-400">−{teaser.discountPct}%</td>
+                  <td className="num px-4 py-2 text-right text-slate-300">{teaser.offHighPct}%</td>
+                </tr>
+              ) : (
+                <tr><td colSpan={5} className="px-4 py-6 text-center text-sm text-slate-500">The market&apos;s near its averages right now — check back as prices move.</td></tr>
+              )}
+            </tbody>
+          </table>
+          {/* Locked preview rows + upsell */}
+          <div className="relative border-t border-ink-800">
+            <ul className="divide-y divide-ink-800 blur-[5px]" aria-hidden>
+              {[0, 1, 2, 3].map((i) => (
+                <li key={i} className="flex items-center gap-2.5 px-4 py-3 opacity-60">
+                  <div className="h-10 w-7 shrink-0 rounded-sm bg-ink-800" />
+                  <div className="flex-1 space-y-1.5"><div className="h-2.5 w-2/5 rounded bg-ink-800" /><div className="h-2 w-1/4 rounded bg-ink-800" /></div>
+                  <div className="h-3 w-10 rounded bg-ink-800" />
+                </li>
+              ))}
+            </ul>
+            <div className="absolute inset-0 grid place-items-center bg-gradient-to-b from-transparent to-ink-900/60 p-4 text-center">
+              <div>
+                <p className="text-sm font-bold text-white">Unlock the full Value Finder</p>
+                <p className="mx-auto mt-0.5 max-w-sm text-xs text-slate-400">
+                  See every undervalued card — ranked by how far below its 30-day average it&apos;s trading — not just the top pick.
+                </p>
+                <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                  {user ? (
+                    <PremiumButton />
+                  ) : (
+                    <Link href="/register?next=/tools/value-finder" className="btn-primary text-sm">Create a free account</Link>
+                  )}
+                  <Link href="/browse" className="btn-ghost text-sm">Search the database →</Link>
+                </div>
+              </div>
+            </div>
           </div>
-          <p className="mx-auto mt-3 max-w-md text-xs text-slate-500">
-            Just want to know what a card is worth? Search the free{" "}
-            <Link href="/browse" className="font-semibold text-brand-400 hover:underline">Riftbound card database</Link>{" "}
-            to see any card&apos;s live value and store prices — no account needed.
-          </p>
         </div>
       ) : picks.length === 0 ? (
         <div className="card-surface grid place-items-center p-12 text-center text-sm text-slate-400">

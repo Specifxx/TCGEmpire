@@ -7,7 +7,7 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: { absolute: "Free Riftbound TCG Tools & Calculators | RiftCompare" },
   description:
-    "Every free RiftCompare tool in one place: selling-fee (net proceeds) calculator, should-I-grade EV calculator, box EV, cross-market arbitrage, value finder, best basket, deck cost calculator and trade calculator.",
+    "Every RiftCompare tool in one place: selling-fee (net proceeds) calculator, should-I-grade EV calculator, box EV, deck cost and trade calculators, plus the Premium arbitrage and value-finder screeners for flippers.",
   alternates: { canonical: "/tools" },
   keywords: [
     "riftbound tools",
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     title: "Free Riftbound TCG Tools & Calculators",
-    description: "Net proceeds, grading EV, box EV, arbitrage, value finder, best basket and more — all free.",
+    description: "Net proceeds, grading EV, box EV, best basket, deck and trade calculators — plus Premium arbitrage & value-finder screeners.",
     url: `${SITE_URL}/tools`,
   },
 };
@@ -44,12 +44,14 @@ const GROUPS: ToolGroup[] = [
         emoji: "🔎",
         title: "Value finder",
         desc: "Surface the cards trading below their fair value right now — the best buys on the board.",
+        badge: "Premium",
       },
       {
         href: "/tools/arbitrage",
         emoji: "💱",
         title: "Arbitrage",
         desc: "Cards priced lower in one market than another — buy where it's cheap and pocket the spread.",
+        badge: "Premium",
       },
       {
         href: "/tools/best-basket",
@@ -152,8 +154,9 @@ export default function ToolsHubPage() {
 
       <h1 className="text-2xl font-extrabold text-white sm:text-3xl">Tools &amp; calculators</h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-        Every RiftCompare tool in one place — all free, no sign-up. Price-check a card, see what you&apos;d
-        actually pocket after fees, work out whether a box or a grade pays off, and build decks for less.
+        Every RiftCompare tool in one place — most are free, no sign-up. Price-check a card, see what you&apos;d
+        actually pocket after fees, work out whether a box or a grade pays off, and build decks for less. The two
+        pro screeners (<span className="text-gold">Premium</span>) go deeper for flippers and investors.
       </p>
 
       {GROUPS.map((group) => (
@@ -173,7 +176,13 @@ export default function ToolsHubPage() {
                   <div className="flex items-center gap-2">
                     <h3 className="font-bold text-white group-hover:text-brand-300">{t.title}</h3>
                     {t.badge && (
-                      <span className="chip bg-brand-500/15 text-[10px] font-semibold text-brand-300">{t.badge}</span>
+                      <span
+                        className={`chip text-[10px] font-semibold ${
+                          t.badge === "Premium" ? "bg-gold/20 text-gold" : "bg-brand-500/15 text-brand-300"
+                        }`}
+                      >
+                        {t.badge}
+                      </span>
                     )}
                   </div>
                   <p className="mt-0.5 text-xs leading-relaxed text-slate-400">{t.desc}</p>
