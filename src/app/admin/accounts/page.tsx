@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { AccountsExport, type ExportUser } from "@/components/admin/AccountsExport";
 
 export const dynamic = "force-dynamic";
 
@@ -84,6 +85,14 @@ export default async function AccountsAdminPage({
     d ? new Date(d).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" }) : "—";
   const num = (n: number) => n.toLocaleString();
 
+  const exportUsers: ExportUser[] = rows.map((u) => ({
+    name: u.displayName,
+    email: u.email,
+    registered: fmt(u.createdAt),
+    verified: !!u.emailVerified,
+    premium: !!(u.premiumUntil && u.premiumUntil > now),
+  }));
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
       <nav className="mb-2 flex items-center gap-1.5 text-xs text-slate-500">
@@ -102,8 +111,15 @@ export default async function AccountsAdminPage({
         <Stat label="New · 30 days" value={num(totals.new30)} sub={`${num(totals.new7)} in 7d`} />
       </div>
 
+      {/* Export */}
+      {!error && rows.length > 0 && (
+        <div className="mt-5 rounded-xl border border-ink-700 bg-ink-850 p-3">
+          <AccountsExport users={exportUsers} />
+        </div>
+      )}
+
       {/* Search */}
-      <form className="mt-5" action="/admin/accounts" method="get">
+      <form className="mt-4" action="/admin/accounts" method="get">
         {keyOk && !me?.isAdmin && <input type="hidden" name="key" value={token!} />}
         <div className="flex gap-2">
           <input
