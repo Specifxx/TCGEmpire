@@ -9,6 +9,7 @@
 import { cookies } from "next/headers";
 import { prisma } from "./db";
 import { awardPoints } from "./points";
+import { grantPremiumMonths, REFERRAL_PREMIUM_MONTHS } from "./premium";
 import { REFERRAL_COOKIE } from "./referral-cookie";
 
 export { REFERRAL_COOKIE };
@@ -34,6 +35,10 @@ export async function applyReferral(newUserId: string): Promise<void> {
       meta: { referredUserId: newUserId },
     });
     await awardPoints(newUserId, "referral_welcome", { meta: { referrerId: referrer.id } });
+    // Reward the referrer with +1 month of Premium per friend who joins (best-effort).
+    // Called exactly once per new signup (cookie is cleared above), so it's one grant
+    // per referred user. No-op when REFERRAL_PREMIUM_MONTHS=0.
+    await grantPremiumMonths(referrer.id, REFERRAL_PREMIUM_MONTHS).catch(() => {});
   } catch {
     // Referral is a bonus, never a gate — swallow everything.
   }

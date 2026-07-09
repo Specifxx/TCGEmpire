@@ -8,6 +8,7 @@ type State = { kind: "idle" | "loading" | "done" | "error"; msg?: string; grante
 
 export function FeedbackForm({ months }: { months: number }) {
   const { user, premium, loaded } = useMe();
+  const moLabel = `${months} month${months === 1 ? "" : "s"}`;
   const [rating, setRating] = useState(0);
   const [message, setMessage] = useState("");
   const [state, setState] = useState<State>({ kind: "idle" });
@@ -43,7 +44,7 @@ export function FeedbackForm({ months }: { months: number }) {
     return (
       <div className="card-surface p-6 text-center">
         <p className="text-sm text-slate-300">
-          Sign in to send feedback{months > 0 ? <> and claim your <strong className="text-gold">{months} months of Premium</strong></> : null}.
+          Sign in to send feedback{months > 0 ? <> and claim your <strong className="text-gold">{moLabel} of Premium</strong></> : null}.
         </p>
         <Link href="/login?next=/feedback" className="btn-primary mt-4 inline-flex">Sign in →</Link>
         <p className="mt-2 text-xs text-slate-500">
@@ -60,7 +61,7 @@ export function FeedbackForm({ months }: { months: number }) {
         <h2 className="mt-3 text-lg font-bold text-brand-200">Thank you — this genuinely helps.</h2>
         <p className="mx-auto mt-2 max-w-sm text-sm text-slate-300">
           {state.granted
-            ? `Your ${months} months of Premium is now active. Enjoy the pro tools!`
+            ? `Your ${moLabel} of Premium is now active. Enjoy the pro tools!`
             : premium
             ? "You're already Premium — but your feedback still means a lot."
             : "Your feedback is in. (The Premium reward is one per account.)"}
@@ -114,7 +115,7 @@ export function FeedbackForm({ months }: { months: number }) {
       </button>
       {months > 0 && !premium && (
         <p className="text-center text-xs text-slate-500">
-          Your first feedback unlocks <strong className="text-gold">{months} months of Premium</strong> — one per account.
+          Your first feedback unlocks <strong className="text-gold">{moLabel} of Premium</strong> — one per account.
         </p>
       )}
     </form>

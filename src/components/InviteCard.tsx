@@ -7,11 +7,12 @@ import { AWARDS, SHARD } from "@/lib/points-config";
 // "Invite friends" card on the rewards dashboard. The share link is just the
 // signed-in user's id (/?ref=<id>) — ReferralCapture stashes it, applyReferral
 // credits both sides on signup. Double-sided reward = a real reason to share.
-export function InviteCard({ userId, referrals }: { userId: string; referrals: number }) {
+export function InviteCard({ userId, referrals, premiumMonths = 0 }: { userId: string; referrals: number; premiumMonths?: number }) {
   const [copied, setCopied] = useState(false);
   const link = `${SITE_URL}/?ref=${userId}`;
   const referBonus = AWARDS.referral.amount;
   const joinBonus = AWARDS.referral_welcome.amount;
+  const moLabel = `${premiumMonths} month${premiumMonths === 1 ? "" : "s"}`;
   const shareText = `I'm using RiftCompare to find the cheapest Riftbound card prices — join with my link and grab ${joinBonus} ${SHARD.glyph} Shards to start:`;
 
   const copy = () => {
@@ -33,12 +34,18 @@ export function InviteCard({ userId, referrals }: { userId: string; referrals: n
   return (
     <section className="card-surface mt-6 p-6">
       <h2 className="flex items-center gap-2 text-lg font-bold text-white">
-        <span aria-hidden>🎁</span> Invite friends, earn {SHARD.glyph} {SHARD.name}
+        <span aria-hidden>🎁</span> Invite friends{premiumMonths > 0 ? <>, earn <span className="text-gold">free Premium</span></> : <> , earn {SHARD.glyph} {SHARD.name}</>}
       </h2>
       <p className="mt-1 max-w-xl text-sm leading-relaxed text-slate-400">
         Share your link — your friend gets {joinBonus} {SHARD.glyph} to start, and you earn{" "}
-        {referBonus} {SHARD.glyph} every time someone joins through it.
+        {referBonus} {SHARD.glyph}
+        {premiumMonths > 0 && <> <strong className="text-gold">plus {moLabel} of Premium</strong></>} every time someone joins through it.
       </p>
+      {premiumMonths > 0 && (
+        <p className="mt-2 text-xs font-medium text-gold/80">
+          Your Premium months stack — invite {Math.ceil(12 / premiumMonths)} friends and you&apos;ve earned a free year.
+        </p>
+      )}
       {referrals > 0 && (
         <p className="mt-2 text-sm font-medium text-brand-300">
           {referrals} {referrals === 1 ? "friend has" : "friends have"} joined so far — that&apos;s{" "}

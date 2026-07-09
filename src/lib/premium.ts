@@ -58,14 +58,19 @@ export async function getPremiumUntil(userId: string): Promise<Date | null> {
 // These grant Premium WITHOUT Stripe (a comp), by extending premiumUntil directly.
 // Both default to 3 months and are env-tunable; set the months to 0 to switch a
 // promo off (e.g. EARLY_PREMIUM_MONTHS=0, or =12 for a full year).
-export const EARLY_PREMIUM_MONTHS = Math.max(0, Math.floor(Number(process.env.EARLY_PREMIUM_MONTHS ?? 3)));
+export const EARLY_PREMIUM_MONTHS = Math.max(0, Math.floor(Number(process.env.EARLY_PREMIUM_MONTHS ?? 1)));
 export const EARLY_PREMIUM_LIMIT = Math.max(0, Math.floor(Number(process.env.EARLY_PREMIUM_LIMIT ?? 100)));
-export const FEEDBACK_PREMIUM_MONTHS = Math.max(0, Math.floor(Number(process.env.FEEDBACK_PREMIUM_MONTHS ?? 3)));
+export const FEEDBACK_PREMIUM_MONTHS = Math.max(0, Math.floor(Number(process.env.FEEDBACK_PREMIUM_MONTHS ?? 1)));
+// +1 month of Premium to the REFERRER for each friend who signs up via their link.
+export const REFERRAL_PREMIUM_MONTHS = Math.max(0, Math.floor(Number(process.env.REFERRAL_PREMIUM_MONTHS ?? 1)));
 export function earlyPremiumPromoActive(): boolean {
   return EARLY_PREMIUM_MONTHS > 0 && EARLY_PREMIUM_LIMIT > 0;
 }
 export function feedbackPremiumActive(): boolean {
   return FEEDBACK_PREMIUM_MONTHS > 0;
+}
+export function referralPremiumActive(): boolean {
+  return REFERRAL_PREMIUM_MONTHS > 0;
 }
 
 function addMonths(base: Date, months: number): Date {

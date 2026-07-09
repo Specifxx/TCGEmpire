@@ -7,6 +7,7 @@ import { RewardsDashboard } from "@/components/RewardsDashboard";
 import { RewardCatalogPreview } from "@/components/RewardsDashboard";
 import { InviteCard } from "@/components/InviteCard";
 import { SHARD } from "@/lib/points-config";
+import { REFERRAL_PREMIUM_MONTHS, referralPremiumActive } from "@/lib/premium";
 
 export const dynamic = "force-dynamic";
 
@@ -55,7 +56,7 @@ export default async function RewardsPage() {
   return (
     <div className="mx-auto max-w-4xl">
       <RewardsDashboard initial={state} />
-      <InviteCard userId={user.id} referrals={referrals} />
+      <InviteCard userId={user.id} referrals={referrals} premiumMonths={referralPremiumActive() ? REFERRAL_PREMIUM_MONTHS : 0} />
     </div>
   );
 }
