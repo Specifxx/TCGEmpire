@@ -6,6 +6,7 @@ import { sendVerificationEmail } from "@/lib/email";
 import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit";
 import { awardPoints } from "@/lib/points";
 import { applyReferral } from "@/lib/referral";
+import { grantEarlyAdopterPremium } from "@/lib/premium";
 
 const schema = z.object({
   email: z.string().email("Enter a valid email"),
@@ -56,6 +57,8 @@ export async function POST(req: Request) {
   await awardPoints(user.id, "welcome").catch(() => {});
   // Credit a referrer if they arrived via a /?ref=<userId> link (best-effort).
   await applyReferral(user.id);
+  // Early-adopter promo: the first 100 accounts get free Premium (best-effort).
+  await grantEarlyAdopterPremium(user.id).catch(() => {});
   // Send the verification email — the link activates the account for sign-in.
   try {
     const token = await createAuthToken(user.id, "verify");

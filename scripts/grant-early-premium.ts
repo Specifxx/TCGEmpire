@@ -1,0 +1,45 @@
+/**
+ * Backfill the early-adopter Premium comp to the first EARLY_PREMIUM_LIMIT accounts
+ * (by registration date). Idempotent — each account is granted once (guarded by the
+ * earlyPremiumGranted flag), so this is safe to run repeatedly (e.g. on every deploy)
+ * and will simply pick up any newly-registered early users that haven't been granted.
+ *
+ * Controlled by env: EARLY_PREMIUM_MONTHS (default 3, 0 = off), EARLY_PREMIUM_LIMIT
+ * (default 100). Signups already get granted at registration; this covers accounts
+ * created before the promo shipped.
+ *
+ * Usage: npx tsx scripts/grant-early-premium.ts
+ */
+import { prisma } from "../src/lib/db";
+import {
+  grantEarlyAdopterPremium,
+  earlyPremiumPromoActive,
+  EARLY_PREMIUM_LIMIT,
+  EARLY_PREMIUM_MONTHS,
+} from "../src/lib/premium";
+
+async function main() {
+  if (!earlyPremiumPromoActive()) {
+    console.log("early-premium: promo off (EARLY_PREMIUM_MONTHS=0) — nothing to do.");
+    return;
+  }
+  const users = await prisma.user.findMany({
+    orderBy: { createdAt: "asc" },
+    take: EARLY_PREMIUM_LIMIT,
+    select: { id: true },
+  });
+  let granted = 0;
+  for (const u of users) {
+    if (await grantEarlyAdopterPremium(u.id)) granted++;
+  }
+  console.log(
+    `early-premium: ${granted} newly granted ${EARLY_PREMIUM_MONTHS} months (of the first ${users.length} accounts).`,
+  );
+}
+
+main()
+  .catch((e) => {
+    console.error("grant-early-premium failed:", e);
+    process.exitCode = 1;
+  })
+  .finally(() => prisma.$disconnect());

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { createSession } from "@/lib/auth";
 import { awardPoints } from "@/lib/points";
 import { applyReferral } from "@/lib/referral";
+import { grantEarlyAdopterPremium } from "@/lib/premium";
 import { providerConfig, isProviderEnabled, isOAuthProvider, redirectUri, type OAuthProvider } from "@/lib/oauth";
 
 function fail(req: Request, code: string) {
@@ -79,6 +80,8 @@ export async function GET(req: Request, { params }: { params: { provider: string
     // First-ever sign-in: seed the loyalty economy and credit any referrer.
     await awardPoints(user.id, "welcome").catch(() => {});
     await applyReferral(user.id);
+    // Early-adopter promo: the first 100 accounts get free Premium (best-effort).
+    await grantEarlyAdopterPremium(user.id).catch(() => {});
   }
   // Land new/returning sign-ins on their profile by default.
   return NextResponse.redirect(new URL("/profile", req.url));

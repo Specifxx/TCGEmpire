@@ -139,6 +139,9 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
             <MenuLink href="/rewards" onClick={() => setOpen(false)}>{SHARD.name} &amp; rewards</MenuLink>
             <MenuLink href="/wishlist" onClick={() => setOpen(false)}>Wishlist</MenuLink>
             <MenuLink href="/forum" onClick={() => setOpen(false)}>My forum posts</MenuLink>
+            <MenuLink href="/feedback" onClick={() => setOpen(false)}>
+              💬 Feedback{!premium ? <span className="text-gold"> · get Premium</span> : null}
+            </MenuLink>
           </div>
           <div className="border-t border-ink-700 py-1">
             <button onClick={signOut} className="block w-full px-4 py-2.5 text-left text-sm text-slate-300 hover:bg-ink-800 hover:text-white">

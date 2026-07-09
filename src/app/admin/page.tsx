@@ -39,6 +39,12 @@ const TOOLS: Tool[] = [
     desc: "Per-store affiliate click counts (7d / 30d / all-time), by market and type.",
   },
   {
+    href: "/admin/feedback",
+    title: "Feedback",
+    icon: "💬",
+    desc: "Feedback from the on-site form (users earn Premium for their first submission).",
+  },
+  {
     href: "/admin/messages",
     title: "Inbox",
     icon: "✉️",

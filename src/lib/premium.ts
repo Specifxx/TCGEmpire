@@ -54,6 +54,59 @@ export async function getPremiumUntil(userId: string): Promise<Date | null> {
   return u?.premiumUntil ?? null;
 }
 
+// ── Promotional Premium grants (early adopters + feedback reward) ────────────────
+// These grant Premium WITHOUT Stripe (a comp), by extending premiumUntil directly.
+// Both default to 3 months and are env-tunable; set the months to 0 to switch a
+// promo off (e.g. EARLY_PREMIUM_MONTHS=0, or =12 for a full year).
+export const EARLY_PREMIUM_MONTHS = Math.max(0, Math.floor(Number(process.env.EARLY_PREMIUM_MONTHS ?? 3)));
+export const EARLY_PREMIUM_LIMIT = Math.max(0, Math.floor(Number(process.env.EARLY_PREMIUM_LIMIT ?? 100)));
+export const FEEDBACK_PREMIUM_MONTHS = Math.max(0, Math.floor(Number(process.env.FEEDBACK_PREMIUM_MONTHS ?? 3)));
+export function earlyPremiumPromoActive(): boolean {
+  return EARLY_PREMIUM_MONTHS > 0 && EARLY_PREMIUM_LIMIT > 0;
+}
+export function feedbackPremiumActive(): boolean {
+  return FEEDBACK_PREMIUM_MONTHS > 0;
+}
+
+function addMonths(base: Date, months: number): Date {
+  const d = new Date(base);
+  d.setMonth(d.getMonth() + months);
+  return d;
+}
+
+// Extend a user's Premium by `months`, STACKING onto any current future period (so a
+// reward always adds time; it never shortens an existing/paid subscription). Returns
+// the new premiumUntil.
+export async function grantPremiumMonths(userId: string, months: number): Promise<Date | null> {
+  if (months <= 0) return null;
+  const u = await prisma.user.findUnique({ where: { id: userId }, select: { premiumUntil: true } });
+  if (!u) return null;
+  const now = new Date();
+  const base = u.premiumUntil && u.premiumUntil > now ? u.premiumUntil : now;
+  const until = addMonths(base, months);
+  await prisma.user.update({ where: { id: userId }, data: { premiumUntil: until } });
+  return until;
+}
+
+// Grant the early-adopter comp to a user IF they're within the first
+// EARLY_PREMIUM_LIMIT registrations and haven't already been granted. Idempotent via
+// the earlyPremiumGranted flag, so it's safe to run on every signup AND re-run as a
+// backfill. No-op when the promo is off. Returns true if a grant happened.
+export async function grantEarlyAdopterPremium(userId: string): Promise<boolean> {
+  if (!earlyPremiumPromoActive()) return false;
+  const u = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { createdAt: true, earlyPremiumGranted: true },
+  });
+  if (!u || u.earlyPremiumGranted) return false;
+  // Registration rank = how many accounts existed up to and including this one.
+  const rank = await prisma.user.count({ where: { createdAt: { lte: u.createdAt } } });
+  if (rank > EARLY_PREMIUM_LIMIT) return false;
+  await grantPremiumMonths(userId, EARLY_PREMIUM_MONTHS);
+  await prisma.user.update({ where: { id: userId }, data: { earlyPremiumGranted: true } });
+  return true;
+}
+
 // ── Portfolio ─────────────────────────────────────────────────────────────────
 
 export interface Holding {

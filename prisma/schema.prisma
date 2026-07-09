@@ -54,6 +54,9 @@ model User {
   // Set the first time this account starts a free trial → one trial per account
   // (a returning user just subscribes, no second trial).
   trialStartedAt    DateTime?
+  // Set once when the early-adopter "first 100 users get Premium" comp is granted,
+  // so the grant is idempotent (never re-granted / re-extended on re-runs).
+  earlyPremiumGranted Boolean @default(false)
   createdAt         DateTime  @default(now())
 
   listings            Listing[]
@@ -318,6 +321,20 @@ model ContactMessage {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+}
+
+// User feedback submitted via the on-site feedback form. First submission per user
+// earns a Premium grant (see /api/feedback). Kept as its own model (not
+// ContactMessage) so we can tie it to the account and track the reward.
+model Feedback {
+  id        String   @id @default(cuid())
+  userId    String
+  message   String
+  rating    Int? // optional 1–5 star rating
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([userId])
 }
 
 // A "clicked Premium" intent event — someone opened the Premium upsell dialog or
