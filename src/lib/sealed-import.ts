@@ -394,6 +394,34 @@ type SealedMemo = Map<string, { at: number; data: SealedGroup[] }>;
 const sealedMemo: SealedMemo = ((globalThis as unknown as { __sealedGroups?: SealedMemo }).__sealedGroups ??= new Map());
 const SEALED_MEMO_TTL_MS = 15 * 60_000;
 
+// Authoritative product image per groupKey, from TCGplayer's official catalogue.
+// Stores frequently reuse the BOOSTER BOX photo on their booster-PACK (and other)
+// listings, so the cheapest listing's image is often wrong. TCGplayer publishes a
+// correct per-product image, and the art is market-agnostic (a Spiritforged pack looks
+// the same in every currency) — so we key it by groupKey and prefer it for all markets.
+// Memoized (one small query per warm lambda per TTL) alongside the group memo.
+type ImgMemo = { at: number; data: Map<string, string> };
+async function getCanonicalSealedImages(): Promise<Map<string, string>> {
+  const slot = globalThis as unknown as { __sealedCanonImg?: ImgMemo };
+  const cached = slot.__sealedCanonImg;
+  if (cached && Date.now() - cached.at < SEALED_MEMO_TTL_MS) return cached.data;
+  const map = new Map<string, string>();
+  try {
+    const rows = await prisma.sealedListing.findMany({
+      where: { retailer: "tcgplayer", imageUrl: { not: null } },
+      select: { groupKey: true, imageUrl: true },
+    });
+    for (const r of rows) if (r.imageUrl && !map.has(r.groupKey)) map.set(r.groupKey, r.imageUrl);
+  } catch {
+    /* best-effort — fall back to per-listing images */
+  }
+  slot.__sealedCanonImg = { at: Date.now(), data: map };
+  return map;
+}
+
+// Image-source preference within a market: official catalogue > eBay > store photo.
+const imageSourceRank = (retailer: string) => (retailer === "tcgplayer" ? 0 : retailer === "ebay" ? 1 : 2);
+
 export async function getSealedGroups(country: "AU" | "NZ" | "US" | "UK" = "AU"): Promise<SealedGroup[]> {
   const hit = sealedMemo.get(country);
   if (hit && Date.now() - hit.at < SEALED_MEMO_TTL_MS) return hit.data;
@@ -406,7 +434,9 @@ export async function getSealedGroups(country: "AU" | "NZ" | "US" | "UK" = "AU")
       retailer: true, retailerName: true, priceCents: true, url: true, inStock: true,
     },
   });
+  const canonicalImg = await getCanonicalSealedImages();
   const groups = new Map<string, SealedGroup>();
+  const imgRank = new Map<string, number>(); // groupKey -> source rank of the chosen image
   for (const r of rows) {
     // Price-sanity guard: drop any listing priced implausibly low for its type (e.g. a
     // $1 "Booster Case"). Defends the live site against mis-priced rows already in the
@@ -425,7 +455,7 @@ export async function getSealedGroups(country: "AU" | "NZ" | "US" | "UK" = "AU")
         name,
         productType: r.productType,
         setCode: r.setCode,
-        imageUrl: r.imageUrl,
+        imageUrl: null,
         lowestPriceCents: null,
         storeCount: 0,
         msrpCents: null,
@@ -435,8 +465,25 @@ export async function getSealedGroups(country: "AU" | "NZ" | "US" | "UK" = "AU")
       };
       groups.set(r.groupKey, g);
     }
-    if (!g.imageUrl && r.imageUrl) g.imageUrl = r.imageUrl;
+    // Pick the group thumbnail from the most authoritative source (TCGplayer > eBay >
+    // store), not just the cheapest listing — stores reuse the box photo on pack
+    // listings, so the cheapest image is often the wrong product.
+    if (r.imageUrl) {
+      const rank = imageSourceRank(r.retailer);
+      const cur = imgRank.get(r.groupKey);
+      if (cur == null || rank < cur) {
+        g.imageUrl = r.imageUrl;
+        imgRank.set(r.groupKey, rank);
+      }
+    }
     g.listings.push({ retailer: r.retailer, retailerName: r.retailerName, priceCents: r.priceCents, url: r.url, inStock: r.inStock });
+  }
+  // Override with the official TCGplayer catalogue image where we have one — correct
+  // per-product art, market-agnostic, so it fixes markets (AU/NZ/UK) whose only
+  // listings are store photos of the wrong product.
+  for (const g of groups.values()) {
+    const canon = canonicalImg.get(g.groupKey);
+    if (canon) g.imageUrl = canon;
   }
   const out = Array.from(groups.values()).map((g) => {
     g.listings.sort((a, b) => a.priceCents - b.priceCents);
