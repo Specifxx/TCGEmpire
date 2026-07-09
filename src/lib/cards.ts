@@ -9,6 +9,7 @@ export interface CardQuery {
   type?: string;
   set?: string;
   variant?: string; // "alt" = alt-art only, "base" = base art only
+  tag?: string; // keyword tag (from a card page's tag chip)
   sig?: string; // "1" = signature ("*") cards only
   promo?: string; // "1" = promo printings only
   printing?: string; // "normal" = base prints only (no alt-art / signature / promo)
@@ -55,6 +56,10 @@ export function buildCardWhere(query: CardQuery, country: Country = "AU"): Prism
 
   if (query.variant === "alt") where.variant = { not: null };
   else if (query.variant === "base") where.variant = null;
+
+  // Keyword tag filter (tags is a comma-separated string; substring match is fine for
+  // the distinct word-tags we store). Powers the crawlable tag chips on card pages.
+  if (query.tag) where.tags = { contains: query.tag };
 
   if (query.sig === "1") where.collectorNumber = { contains: "*" };
   if (query.promo === "1") where.isPromo = true;

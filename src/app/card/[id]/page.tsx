@@ -22,6 +22,7 @@ import { domainSlug } from "@/lib/domains";
 import { decksUsingCard } from "@/lib/meta-decks";
 import { SITE_URL } from "@/lib/site";
 import { PriceHistoryChart } from "@/components/PriceHistoryChart";
+import { CardConversionCta } from "@/components/CardConversionCta";
 import { NetProceeds } from "@/components/NetProceeds";
 import { AiInsight } from "@/components/AiInsight";
 import { CardPriceMetrics, CardPriceComparison, type EbaySearchMap } from "@/components/CardMarketSection";
@@ -293,6 +294,21 @@ export default async function CardPage({ params }: { params: { id: string } }) {
       ? `More cards from ${card.setName}`
       : `More ${card.domain} cards from ${card.setName}`;
 
+  // "More {Champion} cards" — cross-SET topical cluster (e.g. every Jinx card across
+  // Origins/Unleashed/Spiritforged). The champion is the name before the comma
+  // ("Jinx, Loose Cannon" → "Jinx"); only Legend/unit cards are named that way, so
+  // spells/runes (no comma) simply skip this module. One extra query, champion cards
+  // only. Excludes this card's own other printings (same full name).
+  const champion = card.name.includes(",") ? card.name.split(",")[0].trim() : null;
+  const championCards = champion
+    ? await prisma.card.findMany({
+        where: { name: { startsWith: `${champion},`, not: card.name }, id: { not: card.id } },
+        orderBy: [{ lowestPriceCents: { sort: "desc", nulls: "last" } }, { setCode: "asc" }],
+        take: 6,
+        select: cardTileSelect(DEFAULT_COUNTRY),
+      })
+    : [];
+
   // Meta decks that play this card — card ↔ deck internal links (and a "what's this
   // card for?" signal for shoppers). Static seed lookup, no DB call.
   const relatedDecks = decksUsingCard(card.name).slice(0, 6);
@@ -366,6 +382,12 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               collected on the AU baseline market). */}
           <PriceHistoryChart cardId={card.id} />
 
+          {/* Conversion island (client → route stays ISR): watch-this-price email
+              capture + a Value Finder teaser for non-members. */}
+          <div className="mt-6">
+            <CardConversionCta cardId={card.id} />
+          </div>
+
           {/* AI Tips — funny, narrative buy/hold/wait take grounded in the price data. */}
           <section className="card-surface mt-6 p-5">
             <AiInsight cardId={card.id} />
@@ -406,9 +428,15 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             {tags.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-2">
                 {tags.map((t) => (
-                  <span key={t} className="chip bg-ink-800 text-slate-400">
+                  // Real crawlable links to a tag-filtered browse view — internal-link
+                  // distribution + a "same keyword/archetype" hub (was a dead <span>).
+                  <Link
+                    key={t}
+                    href={`/browse?tag=${encodeURIComponent(t)}`}
+                    className="chip bg-ink-800 text-slate-400 transition-colors hover:bg-ink-700 hover:text-slate-200"
+                  >
                     {t}
-                  </span>
+                  </Link>
                 ))}
               </div>
             )}
@@ -493,6 +521,24 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             {similar.map((c) => (
+              <CardTile key={c.id} card={c} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Cross-set champion cluster — internal links that build the topical hub this
+          vertical ranks on ("Jinx cards", "Ahri cards", …). */}
+      {championCards.length > 0 && champion && (
+        <section className="mt-10">
+          <div className="mb-4 flex items-end justify-between gap-3">
+            <h2 className="text-xl font-extrabold text-white">More {champion} cards</h2>
+            <Link href={`/browse?q=${encodeURIComponent(champion)}`} className="btn-ghost text-xs shrink-0">
+              All {champion} cards →
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            {championCards.map((c) => (
               <CardTile key={c.id} card={c} />
             ))}
           </div>
