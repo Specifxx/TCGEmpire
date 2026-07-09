@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { CardImage } from "@/components/CardImage";
 import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge } from "@/components/Badge";
@@ -135,6 +135,10 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   });
 
   if (!card) notFound();
+  // Consolidate to the canonical slug URL: a legacy/raw-cuid URL 308s to the slug so
+  // link equity, analytics and the ISR cache aren't split across two live URLs for
+  // the same card. (Only when a slug exists — un-backfilled cards still serve on id.)
+  if (card.slug && params.id !== card.slug) permanentRedirect(`/card/${card.slug}`);
 
   const displayName = cardDisplayName(card.name, card);
 

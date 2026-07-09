@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { CONDITION_KEYS } from "@/lib/constants";
 import { awardPoints } from "@/lib/points";
+import { cardHref } from "@/lib/card-url";
 
 const schema = z.object({
   cardId: z.string().min(1),
@@ -49,7 +50,8 @@ export async function POST(req: Request) {
 
   // Reward listing a card (capped per day inside awardPoints).
   await awardPoints(user.id, "create_listing").catch(() => {});
-  return NextResponse.json({ ok: true, listingId: listing.id, cardId: card.id });
+  // Return the canonical slug href so the client lands on /card/<slug>, not the cuid.
+  return NextResponse.json({ ok: true, listingId: listing.id, cardId: card.id, cardHref: cardHref(card) });
 }
 
 // Cancel one of your own listings.

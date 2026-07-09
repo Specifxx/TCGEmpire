@@ -18,6 +18,9 @@ export function cardSlug(card: {
 }
 
 // URL for a card — prefer the slug, fall back to id for any card not yet backfilled.
-export function cardHref(card: { id: string; slug?: string | null }): string {
+// `slug` is REQUIRED (not optional) on purpose: a Prisma select that forgets to pull
+// slug then silently ships raw-cuid URLs. Making it required turns that into a compile
+// error at the call site. Pass `slug: null` explicitly only for genuinely slugless cards.
+export function cardHref(card: { id: string; slug: string | null }): string {
   return `/card/${card.slug ?? card.id}`;
 }

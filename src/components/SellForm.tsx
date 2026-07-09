@@ -93,7 +93,7 @@ export function SellForm({ cards }: { cards: SellCard[] }) {
         setLoading(false);
         return;
       }
-      router.push(`/card/${data.cardId}`);
+      router.push(data.cardHref ?? `/card/${data.cardId}`);
       router.refresh();
     } catch {
       setError("Network error");

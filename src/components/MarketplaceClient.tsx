@@ -24,7 +24,7 @@ export interface MktOffer {
 interface MktCardInner {
   id: string;
   name: string;
-  slug?: string | null;
+  slug: string | null;
   setCode: string;
   collectorNumber: string;
   imageThumbUrl: string | null;

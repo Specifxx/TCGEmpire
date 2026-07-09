@@ -13,7 +13,7 @@ export interface ListingTile {
   seller: { displayName: string };
   card: {
     id: string;
-    slug?: string | null;
+    slug: string | null;
     name: string;
     domain: string;
     type: string;

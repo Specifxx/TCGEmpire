@@ -10,6 +10,7 @@ export const dynamic = "force-dynamic";
 
 const cardSelect = {
   id: true,
+  slug: true,
   name: true,
   nameNormalized: true,
   setCode: true,
@@ -25,6 +26,7 @@ const cardSelect = {
 
 type DeckCard = {
   id: string;
+  slug: string | null;
   name: string;
   nameNormalized: string;
   setCode: string;
