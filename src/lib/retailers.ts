@@ -178,6 +178,15 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     freeOverCents: 5000,
     shippingNote: "est. $2.50 · free over $50",
   },
+  elementalarcade: {
+    key: "elementalarcade",
+    name: "Elemental Arcade",
+    base: "https://elementalarcade.com.au",
+    collections: ["riftbound-tcg-singles"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  },
 
   // ---- New Zealand stores (country: "NZ"; prices in NZD; never use eBay) -------
   // Collections are mostly auto-discovered from each store's Shopify sitemap; a few

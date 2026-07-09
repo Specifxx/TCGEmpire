@@ -777,6 +777,9 @@ model NewsletterSubscriber {
   id        String   @id @default(cuid())
   email     String   @unique
   market    String   @default("AU")
+  // Where the subscriber signed up (footer | movers | countdown | …) so we can
+  // attribute which surface converts. Null for rows created before this existed.
+  source    String?
   createdAt DateTime @default(now())
   // One-click unsubscribe token. Nullable so `db push` works on existing rows;
   // backfilled lazily the first time we email the subscriber.

@@ -5,12 +5,15 @@ import { getPriceMovers } from "@/lib/price-history";
 import { PriceWatch } from "@/components/PriceWatch";
 import { COUNTRIES, DEFAULT_COUNTRY } from "@/lib/country";
 import { SETS } from "@/lib/constants";
-import { SITE_URL } from "@/lib/site";
+import { SITE_URL, SITE_NAME } from "@/lib/site";
 import { AdSlot } from "@/components/AdSlot";
+import { MoversToolsCta } from "@/components/MoversToolsCta";
+import { NewsletterSignup } from "@/components/NewsletterSignup";
 
 // ISR: the underlying PriceHistory is rewritten once per day by the price-refresh
-// workflow (GitHub Action → import-prices), so a 30-minute window keeps the page
-// fresh without recomputing the 35-day aggregation on every request.
+// workflow (GitHub Action → import-prices), so a 24-hour window keeps the page fresh
+// without recomputing the 35-day aggregation on every request. (The inner
+// unstable_cache below has a 10-min TTL so a manual re-import surfaces sooner.)
 export const revalidate = 86400;
 
 // Market-neutral metadata (no country in the title) so the page can rank globally;
@@ -117,7 +120,24 @@ export default async function MoversPage() {
       </div>
 
       {hasAny ? (
-        <PriceWatch movers={movers} currency={info.currency} place={info.place} showHeader={false} />
+        <>
+          <PriceWatch movers={movers} currency={info.currency} place={info.place} showHeader={false} />
+
+          {/* Turn habitual price-checkers into the Premium funnel (client island → the
+              page stays static). */}
+          <MoversToolsCta />
+
+          {/* Owned-channel capture: the page people revisit ~5×/week never offered to
+              email them. Now it does. */}
+          <NewsletterSignup
+            siteName={SITE_NAME}
+            source="movers"
+            variant="card"
+            heading="🔔 Get the week's biggest movers in your inbox"
+            cta="Email me the movers"
+            done="✓ Done — you'll get the movers digest each week."
+          />
+        </>
       ) : (
         <div className="card-surface grid place-items-center p-16 text-center text-slate-400">
           <div>
