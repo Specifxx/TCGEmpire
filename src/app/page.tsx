@@ -9,7 +9,7 @@ import { COUNTRIES, DEFAULT_COUNTRY, priceField, type Country } from "@/lib/coun
 import type { MarketStat } from "@/components/home/HeroStats";
 import { SETS, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
-import { getTopDeals } from "@/lib/top-deals";
+import { getTopDeals, type TopDeals } from "@/lib/top-deals";
 import { TodaysTopDeals } from "@/components/TodaysTopDeals";
 import { getMarketIndex } from "@/lib/market-index";
 import { getLatestMarketReport } from "@/lib/posts";
@@ -73,7 +73,7 @@ export default async function HomePage() {
   const country = DEFAULT_COUNTRY;
   const info = COUNTRIES[country];
   const COUNTRY_CODES: Country[] = ["AU", "NZ", "US", "UK"];
-  const [totalCards, pricedCounts, inStockGroups, storeRows, popularCards, topDeals, index, latestWrap] = await Promise.all([
+  const [totalCards, pricedCounts, inStockGroups, storeRows, popularCards, topDealsArr, index, latestWrap] = await Promise.all([
     prisma.card.count(),
     // Priced-card count PER MARKET (one indexed count per price column) — the hero
     // stat tiles localise to the visitor's market client-side, so we serialize all four.
@@ -89,9 +89,16 @@ export default async function HomePage() {
     prisma.retailerPrice.groupBy({ by: ["country", "retailer"], where: { NOT: { retailer: { startsWith: "ebay" } } } }),
     // Most-searched singles (ties → more expensive card) — the cards people most want.
     getPopularCards(12, country),
-    // Today's Top Deals blends four signals; cache per-market. Tagged so the daily
-    // import refreshes it on-demand (the page itself is cached 24h).
-    unstable_cache(() => getTopDeals(country), ["top-deals", country], { revalidate: 86400, tags: [CONTENT_TAG] })(),
+    // Today's Top Deals blends four signals; cache per-market. We serialize ALL four
+    // markets so the section localises to the visitor's chosen market client-side —
+    // the page is ISR-cached with DEFAULT_COUNTRY baked in, so a single-market render
+    // would show the wrong currency/prices to anyone who switches markets.
+    // Tagged so the daily import refreshes it on-demand (the page itself is cached 24h).
+    Promise.all(
+      COUNTRY_CODES.map((c) =>
+        unstable_cache(() => getTopDeals(c), ["top-deals", c], { revalidate: 86400, tags: [CONTENT_TAG] })(),
+      ),
+    ),
     // The GLOBAL RiftCompare Index for the hero + Market Pulse. Global = always
     // populated (PriceHistory is AU-only today) and its base-100 level is
     // currency-agnostic, so it reads the same for every market.
@@ -110,6 +117,10 @@ export default async function HomePage() {
   ) as Record<Country, MarketStat>;
   const storeCount = statsByCountry[country].stores;
   const storeWord = storeCount === 1 ? "store" : "stores";
+  // Per-market Top Deals, so the section can localise client-side (see above).
+  const topDealsByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, topDealsArr[i]])) as Record<Country, TopDeals>;
+  const topDeals = topDealsByCountry[country]; // default-market view (MarketPulse + section guard)
+  const anyDeals = COUNTRY_CODES.some((c) => topDealsByCountry[c].hasAny);
 
   return (
     <div className="flex flex-col gap-12">
@@ -176,9 +187,9 @@ export default async function HomePage() {
 
       {/* Today's Top Deals — the best live opportunities across four signals
           (premium columns reveal only the top pick). Hidden if no market has data. */}
-      {topDeals.hasAny && (
+      {anyDeals && (
         <Reveal>
-          <TodaysTopDeals deals={topDeals} country={country} currency={info.currency} place={info.place} />
+          <TodaysTopDeals dealsByCountry={topDealsByCountry} />
         </Reveal>
       )}
 

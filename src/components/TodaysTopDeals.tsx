@@ -1,8 +1,11 @@
+"use client";
+
 import Link from "next/link";
-import type { Country } from "@/lib/country";
+import { COUNTRIES, type Country } from "@/lib/country";
 import type { Deal, TopDeals } from "@/lib/top-deals";
 import { formatMoney } from "@/lib/format";
 import { OutboundLink } from "@/components/OutboundLink";
+import { useCountry } from "@/components/CountryProvider";
 
 // Homepage "Today's Top Deals". Four columns, one per signal. The two PREMIUM
 // columns (arbitrage savings, undervalued) reveal only their single best deal —
@@ -88,7 +91,17 @@ function SkeletonRow() {
   );
 }
 
-export function TodaysTopDeals({ deals, country, currency, place }: { deals: TopDeals; country: Country; currency: string; place: string }) {
+// Reactive to the country switcher: the page serializes all four markets' deals and
+// this picks the visitor's market client-side (currency, prices and the "in {place}"
+// label all follow). Prevents the section from showing the baked DEFAULT_COUNTRY
+// currency (e.g. US$ to an AU visitor) — the card tiles already localise this way.
+export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Country, TopDeals> }) {
+  const { country } = useCountry();
+  const info = COUNTRIES[country];
+  const currency = info.currency;
+  const place = info.place;
+  const deals = dealsByCountry[country] ?? dealsByCountry.AU;
+
   const columns = COLUMNS.map((c) => ({ def: c, items: deals[c.key] })).filter((c) => c.items.length > 0);
   if (columns.length === 0) return null;
 

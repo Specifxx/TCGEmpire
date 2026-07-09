@@ -177,9 +177,17 @@ export async function importSealed(): Promise<number> {
         const avail = priced.filter((v) => v.available);
         const inStock = avail.length > 0;
         const pool = inStock ? avail : priced;
-        const priceCents = Math.round(Math.min(...pool.map((v) => parseFloat(v.price))) * 100);
         const setCode = detectSet(title);
         const type = classifySealed(title);
+        // Price-sanity: ignore variants priced implausibly low for the product type —
+        // a $1 "deposit"/sample/add-on variant on a real Booster Case, or an outright
+        // mis-listing. Taking the raw MIN across all variants otherwise surfaces e.g. a
+        // $1.08 "Booster Case" at the top of the homepage's cheapest-sealed column.
+        // If NO variant clears the per-type floor, the product is dropped entirely.
+        const floor = sealedFloorCents(type);
+        const inFloor = pool.filter((v) => Math.round(parseFloat(v.price) * 100) >= floor);
+        if (!inFloor.length) continue;
+        const priceCents = Math.round(Math.min(...inFloor.map((v) => parseFloat(v.price))) * 100);
         const groupKey = setCode ? `${setCode}|${type}` : title.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 40);
         const key = `${groupKey}|${store.key}`;
         const prev = rows.get(key);
@@ -338,9 +346,10 @@ export async function cleanupStaleSealed(): Promise<number> {
     .filter((r) => {
       // Title filters — TCGplayer's official catalogue is trusted, never title-filter it.
       if (r.retailer !== "tcgplayer" && (!SEALED_TITLE.test(r.title) || SEALED_EXCLUDE.test(r.title) || !isRiftboundSealed(r.title))) return true;
-      // eBay price-sanity: drop listings priced implausibly below the trusted price /
-      // per-type floor (an accessory or mis-listing that escaped the title filter).
-      if (r.retailer === "ebay" && r.priceCents < sealedFloorCents(r.productType, trusted.get(`${r.country}|${r.groupKey}`) ?? null)) return true;
+      // Price-sanity (every source except TCGplayer's trusted catalogue): drop listings
+      // priced implausibly below the trusted price / per-type floor — an accessory, a $1
+      // deposit/sample variant, or a mis-listing that escaped the title filter.
+      if (r.retailer !== "tcgplayer" && r.priceCents < sealedFloorCents(r.productType, trusted.get(`${r.country}|${r.groupKey}`) ?? null)) return true;
       return false;
     })
     .map((r) => r.id);
@@ -399,6 +408,10 @@ export async function getSealedGroups(country: "AU" | "NZ" | "US" | "UK" = "AU")
   });
   const groups = new Map<string, SealedGroup>();
   for (const r of rows) {
+    // Price-sanity guard: drop any listing priced implausibly low for its type (e.g. a
+    // $1 "Booster Case"). Defends the live site against mis-priced rows already in the
+    // DB — takes effect on the next memo refresh, before the importer re-cleans them.
+    if (r.priceCents < sealedFloorCents(r.productType)) continue;
     let g = groups.get(r.groupKey);
     if (!g) {
       const setName = r.setCode ? SET_NAMES[r.setCode] ?? r.setCode : null;
