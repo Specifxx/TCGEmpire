@@ -211,6 +211,9 @@ export function Riftle() {
       const nx: Stats = { played: s.played + 1, wins: s.wins + (win ? 1 : 0), streak: win ? s.streak + 1 : 0, lastWinDay: win ? day : s.lastWinDay };
       try { localStorage.setItem(KEY_STATS, JSON.stringify(nx)); } catch { /* full */ }
       setStats(nx);
+      // Award Shards for solving the daily (server dedupes to once/day and no-ops for
+      // logged-out visitors — the result screen nudges them to sign in for it).
+      if (win) fetch("/api/riftle/win", { method: "POST", keepalive: true }).catch(() => {});
     }
   }
 
@@ -267,8 +270,17 @@ export function Riftle() {
       mode === "unlimited"
         ? "riftcompare.com/riftle"
         : `riftcompare.com/riftle?r=${done === "win" ? rows.length : "x"}`;
-    const text = `${tag} ${score}\n${grid}\n${url}`;
-    navigator.clipboard?.writeText(text).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1800); });
+    // The streak is the most motivating (and viral) line in a Wordle-style share.
+    const streakLine = mode !== "unlimited" && done === "win" && stats.streak > 1 ? `🔥 ${stats.streak} day streak\n` : "";
+    const text = `${tag} ${score}\n${streakLine}${grid}\n${url}`;
+    const flash = () => { setCopied(true); setTimeout(() => setCopied(false), 1800); };
+    // Native share sheet on mobile (better on the platforms people actually share to);
+    // clipboard fallback everywhere else.
+    if (typeof navigator !== "undefined" && navigator.share) {
+      navigator.share({ text }).then(flash).catch(() => { navigator.clipboard?.writeText(text).then(flash); });
+    } else {
+      navigator.clipboard?.writeText(text).then(flash);
+    }
   }
 
   const shownStats = mode === "unlimited" ? uStats : stats;
@@ -459,6 +471,23 @@ export function Riftle() {
           <p className="mt-3 text-xs text-slate-500">
             {mode === "unlimited" ? "Keep going — there's always another card." : "New daily card at midnight Sydney time. Come back tomorrow!"}
           </p>
+
+          {/* Chain the daily loop: don't dead-end at "come back tomorrow" — send them to
+              the other two daily habits (the market wrap + the Shard check-in). */}
+          {mode !== "unlimited" && (
+            <div className="mt-3 border-t border-ink-800 pt-3">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">While you&apos;re here</p>
+              <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+                <Link href="/market" className="chip border border-ink-700 px-3 py-1.5 text-xs hover:border-brand-500">📊 Today&apos;s market wrap</Link>
+                <Link href="/rewards" className="chip border border-ink-700 px-3 py-1.5 text-xs hover:border-brand-500">✦ Claim your daily check-in</Link>
+              </div>
+              {done === "win" && (
+                <p className="mt-2 text-[11px] text-slate-500">
+                  <Link href="/register?next=/riftle" className="text-brand-400 hover:underline">Create a free account</Link> to earn ✦ Shards for every daily solve and keep your streak.
+                </p>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

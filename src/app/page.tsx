@@ -165,6 +165,23 @@ export default async function HomePage() {
         </div>
       </Reveal>
 
+      {/* Daily Riftle teaser — surfaces the site's daily-habit game on the top page. */}
+      <Reveal>
+        <Link
+          href="/riftle"
+          className="group flex items-center gap-4 rounded-2xl border border-ink-700 bg-ink-900 p-5 transition-colors hover:border-brand-500/60 hover:bg-ink-800"
+        >
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-brand-500/15 text-2xl" aria-hidden>🃏</span>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg font-extrabold text-white">Play today&apos;s Riftle</h2>
+            <p className="mt-0.5 text-sm text-slate-400">
+              Guess the daily Riftbound card in 8 tries — a new one every day. Signed-in players earn ✦ Shards for solving it.
+            </p>
+          </div>
+          <span className="btn-primary shrink-0 text-sm">Play →</span>
+        </Link>
+      </Reveal>
+
       {/* Most popular cards — the most-searched Riftbound singles right now */}
       <section>
         <div className="mb-4 flex items-end justify-between gap-3">

@@ -45,6 +45,9 @@ export const AWARDS = defineAwards({
   // one-time head-start bonus. Drives word-of-mouth growth.
   referral: { amount: 75, dailyCap: 10, label: "Referred a friend" },
   referral_welcome: { amount: 50, oneTime: true, label: "Joined via a friend" },
+  // Solving the daily Riftle — bundles the daily game into the Shard economy so
+  // players have a reason to sign in (daily-capped to once per day).
+  riftle_daily: { amount: 15, dailyCap: 1, label: "Solved the daily Riftle" },
 });
 
 export type AwardReason = keyof typeof AWARDS;
