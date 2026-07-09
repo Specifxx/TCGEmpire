@@ -422,6 +422,35 @@ async function getCanonicalSealedImages(): Promise<Map<string, string>> {
 // Image-source preference within a market: official catalogue > eBay > store photo.
 const imageSourceRank = (retailer: string) => (retailer === "tcgplayer" ? 0 : retailer === "ebay" ? 1 : 2);
 
+// On-brand, type-correct fallback thumbnails (original RiftCompare graphics in
+// public/sealed/). Used ONLY when we lack an authoritative photo — see below. Keyed
+// by productType; Champion Decks (which carry a name, e.g. "Champion Deck (Vex)") and
+// any unmapped type fall through to the sensible defaults in sealedTypeImage().
+const SEALED_TYPE_IMAGE: Record<string, string> = {
+  "Booster Pack": "/sealed/sealed-pack.png",
+  "Nexus Night Pack": "/sealed/sealed-pack.png",
+  "Promo Pack": "/sealed/sealed-pack.png",
+  "Sleeved Booster": "/sealed/sealed-pack.png",
+  "Sleeved Booster (Art Set)": "/sealed/sealed-pack.png",
+  "Booster Box": "/sealed/sealed-box.png",
+  "Box Set": "/sealed/sealed-box.png",
+  "Booster Case": "/sealed/sealed-case.png",
+  "Proving Grounds Case": "/sealed/sealed-case.png",
+  "Bulk Runes Case": "/sealed/sealed-case.png",
+  "Proving Grounds": "/sealed/sealed-deck.png",
+  "Starter Set": "/sealed/sealed-deck.png",
+};
+function sealedTypeImage(productType: string): string {
+  if (/^Champion Deck/.test(productType)) return "/sealed/sealed-deck.png";
+  return SEALED_TYPE_IMAGE[productType] ?? "/sealed/sealed-generic.png";
+}
+// Product types where stores routinely reuse the BOOSTER BOX photo on the listing, so
+// a store-sourced image is untrustworthy — we replace it with our type-correct graphic
+// (box/case/deck store photos are usually the real product, so those we keep).
+const DISTRUST_STORE_IMAGE = new Set([
+  "Booster Pack", "Nexus Night Pack", "Promo Pack", "Sleeved Booster", "Sleeved Booster (Art Set)",
+]);
+
 export async function getSealedGroups(country: "AU" | "NZ" | "US" | "UK" = "AU"): Promise<SealedGroup[]> {
   const hit = sealedMemo.get(country);
   if (hit && Date.now() - hit.at < SEALED_MEMO_TTL_MS) return hit.data;
@@ -483,7 +512,21 @@ export async function getSealedGroups(country: "AU" | "NZ" | "US" | "UK" = "AU")
   // listings are store photos of the wrong product.
   for (const g of groups.values()) {
     const canon = canonicalImg.get(g.groupKey);
-    if (canon) g.imageUrl = canon;
+    if (canon) {
+      g.imageUrl = canon;
+      imgRank.set(g.groupKey, 0);
+    }
+  }
+  // Type-correct branded fallback: if the only image is a STORE photo of a pack-family
+  // product (stores reuse the box photo on pack listings → the reported "pack shows a
+  // box" bug), or we have no image at all, use our own on-brand, type-correct graphic
+  // instead of a wrong/blank thumbnail. Authoritative photos (TCGplayer/eBay) are kept.
+  for (const g of groups.values()) {
+    const rank = imgRank.get(g.groupKey);
+    const storeOnly = rank == null || rank >= 2;
+    if (g.imageUrl == null || (storeOnly && DISTRUST_STORE_IMAGE.has(g.productType))) {
+      g.imageUrl = sealedTypeImage(g.productType);
+    }
   }
   const out = Array.from(groups.values()).map((g) => {
     g.listings.sort((a, b) => a.priceCents - b.priceCents);

@@ -152,7 +152,7 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
           "@type": "Product",
           name: g.name,
           category: "Trading Card Game Sealed Product",
-          ...(g.imageUrl ? { image: g.imageUrl } : {}),
+          ...(g.imageUrl ? { image: g.imageUrl.startsWith("http") ? g.imageUrl : `${SITE_URL}${g.imageUrl}` } : {}),
           ...(hasOffers
             ? {
                 offers: {
