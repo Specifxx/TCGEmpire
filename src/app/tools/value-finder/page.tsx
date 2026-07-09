@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import { CardQuickLink } from "@/components/CardQuickLink";
+import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { getCurrentUser } from "@/lib/auth";
 import { isPremium } from "@/lib/premium";
 import { getUndervalued } from "@/lib/screener";
@@ -57,9 +59,16 @@ export default async function ValueFinderPage() {
   const info = COUNTRIES[country];
   // Members get the full screen; non-members get ONLY the single best pick (the full
   // list never ships, so it can't be un-blurred) as a teaser — the "one row free"
-  // pattern converts far better than a blank paywall.
-  const picks = premium ? await getUndervalued(country) : await getUndervalued(country, 1);
-  const teaser = picks[0];
+  // pattern converts far better than a blank paywall. The teaser is cached (this page
+  // is force-dynamic + public) so anonymous/crawler hits don't each re-run the full
+  // ~400-card undervalued scan just to reveal one row.
+  const picks = premium ? await getUndervalued(country) : [];
+  const teaser = premium
+    ? undefined
+    : (await unstable_cache(() => getUndervalued(country, 1), ["vf-teaser-v1", country], {
+        revalidate: 3600,
+        tags: [CONTENT_TAG],
+      })())[0];
 
   return (
     <div className="mx-auto max-w-3xl">

@@ -271,7 +271,9 @@ export function Riftle() {
         ? "riftcompare.com/riftle"
         : `riftcompare.com/riftle?r=${done === "win" ? rows.length : "x"}`;
     // The streak is the most motivating (and viral) line in a Wordle-style share.
-    const streakLine = mode !== "unlimited" && done === "win" && stats.streak > 1 ? `🔥 ${stats.streak} day streak\n` : "";
+    // "win streak" (not "day streak"): it counts consecutive WINS and only resets on a
+    // loss — skipped days preserve it, so it isn't a consecutive-calendar-day streak.
+    const streakLine = mode !== "unlimited" && done === "win" && stats.streak > 1 ? `🔥 ${stats.streak} win streak\n` : "";
     const text = `${tag} ${score}\n${streakLine}${grid}\n${url}`;
     const flash = () => { setCopied(true); setTimeout(() => setCopied(false), 1800); };
     // Native share sheet on mobile (better on the platforms people actually share to);
