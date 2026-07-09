@@ -40,6 +40,7 @@ export type IndexConstituent = {
   imageThumbUrl: string | null;
   weightPct: number; // share of the index, 0–100
   priceCents: number; // current lowest price in the market
+  d1pct: number | null; // its own 1-day (day-over-day) move, %
   d7pct: number | null; // its own 7-day move, %
 };
 
@@ -227,6 +228,7 @@ async function getRegionIndex(country: Country): Promise<MarketIndex | null> {
   const constituents: IndexConstituent[] = cards.map((c, i) => {
     const series = byCard.get(c.id);
     let d7: number | null = null;
+    let d1: number | null = null;
     if (series && series.size >= 2) {
       const ts = [...series.keys()].sort((a, b) => a - b);
       const lastT = ts[ts.length - 1];
@@ -234,6 +236,8 @@ async function getRegionIndex(country: Country): Promise<MarketIndex | null> {
       for (const t of ts) if (t <= lastT - 7 * 86400_000) thenT = t;
       d7 = pctChange(series.get(lastT)!, series.get(thenT));
       if (thenT === lastT) d7 = null;
+      // 1-day = day-over-day: last snapshot vs the immediately preceding one.
+      d1 = pctChange(series.get(lastT)!, series.get(ts[ts.length - 2]));
     }
     return {
       id: c.id,
@@ -244,6 +248,7 @@ async function getRegionIndex(country: Country): Promise<MarketIndex | null> {
       imageThumbUrl: c.imageThumbUrl,
       weightPct: Math.round((weights[i] / totalW) * 1000) / 10,
       priceCents: pickPrice(c, country) ?? 0,
+      d1pct: d1,
       d7pct: d7,
     };
   });

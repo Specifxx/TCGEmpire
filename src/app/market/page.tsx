@@ -14,6 +14,7 @@ import { Reveal } from "@/components/Reveal";
 import { DailyWrapHero } from "@/components/DailyWrapHero";
 import { MarketSectionNav } from "@/components/MarketSectionNav";
 import { IndexStats } from "@/components/IndexStats";
+import { IndexConstituents } from "@/components/IndexConstituents";
 import { EmbedSnippet } from "@/components/EmbedSnippet";
 import { getLatestMarketReport } from "@/lib/posts";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
@@ -114,14 +115,14 @@ function Delta({ label, pct }: { label: string; pct: number | null }) {
 export default async function IndexPage({ searchParams }: { searchParams: { market?: string } }) {
   const market = parseMarket(searchParams.market);
   const isGlobal = market === "GLOBAL";
-  // Cache key is versioned (v2): the cached MarketIndex shape gained `stats`, and the
-  // data cache persists across deploys — a stale pre-stats blob would otherwise crash
-  // the stats panel. Bumping the key forces a fresh compute with the new shape.
+  // Cache key is versioned (v4): the cached MarketIndex shape has grown over time
+  // (stats, then per-constituent 1-day moves), and the data cache persists across
+  // deploys — a stale blob would miss the newest fields. Bumping forces a fresh compute.
   // Long TTL + CONTENT_TAG: /market is searchParams-dynamic (per-request), so this
   // unstable_cache — not a page revalidate — is what bounds its DB reads. The daily
   // import clears CONTENT_TAG, so the heavy index compute runs ~once per import
   // instead of every 30 min, with a 24h fallback.
-  const index = await unstable_cache(() => getMarketIndex(market), ["market-index-v3", market], {
+  const index = await unstable_cache(() => getMarketIndex(market), ["market-index-v4", market], {
     revalidate: 86400,
     tags: [CONTENT_TAG],
   })();
@@ -325,47 +326,9 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
                 <> Prices shown in {currency}, from the {COUNTRIES[priceMarket].place} market as a global reference.</>
               )}
             </p>
-            {/* Capped-height inner scroll so 200 rows don't stretch the page — the
-                header sticks while you scroll the list. */}
-            <div className="card-surface max-h-[34rem] overflow-auto overscroll-contain">
-              <table className="w-full min-w-[560px] text-sm">
-                <thead>
-                  <tr className="text-left text-[10px] uppercase tracking-wide text-slate-500 [&>th]:sticky [&>th]:top-0 [&>th]:z-10 [&>th]:border-b [&>th]:border-ink-700 [&>th]:bg-ink-900">
-                    <th className="px-4 py-2.5 font-semibold">#</th>
-                    <th className="px-2 py-2.5 font-semibold">Card</th>
-                    <th className="px-2 py-2.5 text-right font-semibold">Weight</th>
-                    <th className="px-2 py-2.5 text-right font-semibold">Price</th>
-                    <th className="px-4 py-2.5 text-right font-semibold">7-day</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-ink-800">
-                  {index.constituents.map((c, i) => (
-                    <tr key={c.id} className="hover:bg-ink-800">
-                      <td className="px-4 py-2 font-bold text-slate-500">
-                        {i < 3 ? <span className="chip bg-gold/20 text-gold">{i + 1}</span> : i + 1}
-                      </td>
-                      <td className="px-2 py-2">
-                        <Link href={cardHref(c)} className="flex items-center gap-2.5">
-                          {c.imageThumbUrl && (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={c.imageThumbUrl} alt="" aria-hidden="true" width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
-                          )}
-                          <span className="min-w-0">
-                            <span className="block truncate font-semibold text-white">{c.name}</span>
-                            <span className="block text-[11px] text-slate-500">{c.setCode} · {c.collectorNumber}</span>
-                          </span>
-                        </Link>
-                      </td>
-                      <td className="num px-2 py-2 text-right text-xs text-slate-400">{c.weightPct}%</td>
-                      <td className="num px-2 py-2 text-right font-semibold text-white">{formatMoney(c.priceCents, currency)}</td>
-                      <td className={`num px-4 py-2 text-right font-semibold ${c.d7pct == null ? "text-slate-600" : c.d7pct > 0 ? "text-up" : c.d7pct < 0 ? "text-down" : "text-slate-400"}`}>
-                        {c.d7pct == null ? "—" : `${c.d7pct > 0 ? "+" : c.d7pct < 0 ? "−" : ""}${Math.abs(c.d7pct)}%`}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            {/* Interactive: filter by card/gainers/fallers, and click any heading to
+                sort ascending/descending. Capped-height inner scroll + sticky header. */}
+            <IndexConstituents constituents={index.constituents} currency={currency} />
           </section>
           </Reveal>
 
