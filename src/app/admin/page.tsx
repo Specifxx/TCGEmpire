@@ -15,6 +15,18 @@ type Tool = { href: string; title: string; icon: string; desc: string };
 
 const TOOLS: Tool[] = [
   {
+    href: "/admin/accounts",
+    title: "Accounts",
+    icon: "👤",
+    desc: "Every registered user — when they signed up, sign-in method, premium & verification status.",
+  },
+  {
+    href: "/admin/premium",
+    title: "Premium interest",
+    icon: "💎",
+    desc: "Who clicked a Premium CTA or started checkout — interest ahead of conversion.",
+  },
+  {
     href: "/admin/store-suggestions",
     title: "Store suggestions",
     icon: "🏪",

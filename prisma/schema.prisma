@@ -320,6 +320,19 @@ model ContactMessage {
   @@index([createdAt])
 }
 
+// A "clicked Premium" intent event — someone opened the Premium upsell dialog or
+// started checkout. Lets us see interest (and who) before/independent of conversion.
+// userId is null for logged-out visitors. Low volume, so it lives in the main DB.
+model PremiumClick {
+  id        String   @id @default(cuid())
+  userId    String? // null = not signed in
+  source    String   @default("dialog") // dialog | checkout | premium-page | button
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([userId])
+}
+
 // A store submitted via the public "Suggest a store" form. Low-volume operational
 // data (reviewed by hand, then added to src/lib/retailers.ts), so it lives in the
 // main DB rather than the write-heavy history DB. status: pending | added | rejected.

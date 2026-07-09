@@ -28,7 +28,21 @@ const GOLD_BTN =
 
 export function PremiumDialogProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
-  const open = useCallback(() => setIsOpen(true), []);
+  const open = useCallback(() => {
+    setIsOpen(true);
+    // Fire-and-forget premium-interest beacon (who clicked Premium). keepalive so it
+    // still sends if the click navigates away; failures are ignored.
+    try {
+      fetch("/api/premium/click", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ source: "dialog" }),
+        keepalive: true,
+      }).catch(() => {});
+    } catch {
+      /* never let the beacon break opening the dialog */
+    }
+  }, []);
   const close = useCallback(() => setIsOpen(false), []);
   return (
     <PremiumDialogContext.Provider value={{ open }}>

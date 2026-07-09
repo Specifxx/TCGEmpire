@@ -28,6 +28,9 @@ export async function POST(req: Request) {
     select: { stripeCustomerId: true, email: true, trialStartedAt: true },
   });
 
+  // Record the strong "started checkout" interest signal (best-effort).
+  prisma.premiumClick.create({ data: { userId: user.id, source: "checkout" } }).catch(() => {});
+
   // One free trial per account, on EITHER plan (annual trials convert to the yearly
   // price after the trial). The webhook independently re-checks by card fingerprint,
   // so this gate can't be bypassed for a free trial by re-hitting the endpoint.
