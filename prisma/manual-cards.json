@@ -1,0 +1,19 @@
+[
+  {
+    "_note": "BACKSTOP for cards our source (RiftScribe) genuinely doesn't have. Most 'missing' cards are just prod being behind the snapshot — run `npx tsx scripts/sync-cards.ts` FIRST; it adds everything in prisma/riftbound-cards.json. Only add a card here if it's still missing after a sync. Fill EVERY FILL_ME with the real value from TCGplayer, then run `npx tsx scripts/add-manual-cards.ts` (entries with any FILL_ME are skipped, so nothing fabricated is inserted). imageUrl from a TCGplayer product URL tcgplayer.com/product/<ID>/... = https://tcgplayer-cdn.tcgplayer.com/product/<ID>_in_1000x1000.jpg . collectorNumber includes the alt-art letter e.g. '154a/298'. domain: Fury|Calm|Mind|Body|Chaos|Order|Colorless. type: Unit|Spell|Gear|Rune|Battlefield|Legend. rarity: Common|Uncommon|Rare|Epic|Showcase.",
+    "_example": {
+      "name": "Some Card, Title",
+      "setCode": "OGN",
+      "setName": "Origins",
+      "collectorNumber": "FILL_ME",
+      "domain": "FILL_ME",
+      "type": "Unit",
+      "rarity": "Showcase",
+      "variant": "a",
+      "energyCost": null,
+      "might": null,
+      "imageUrl": "FILL_ME",
+      "imageThumbUrl": null
+    }
+  }
+]
