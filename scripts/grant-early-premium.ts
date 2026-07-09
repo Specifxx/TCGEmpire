@@ -16,6 +16,7 @@ import {
   earlyPremiumPromoActive,
   EARLY_PREMIUM_LIMIT,
   EARLY_PREMIUM_MONTHS,
+  NOT_SEED_WHERE,
 } from "../src/lib/premium";
 
 async function main() {
@@ -24,6 +25,7 @@ async function main() {
     return;
   }
   const users = await prisma.user.findMany({
+    where: NOT_SEED_WHERE, // real users only — seed accounts never get the comp
     orderBy: { createdAt: "asc" },
     take: EARLY_PREMIUM_LIMIT,
     select: { id: true },

@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { AccountsExport, type ExportUser } from "@/components/admin/AccountsExport";
+import { DeleteSeedButton } from "@/components/admin/DeleteSeedButton";
+import { NOT_SEED_WHERE } from "@/lib/premium";
 
 export const dynamic = "force-dynamic";
 
@@ -50,14 +52,18 @@ export default async function AccountsAdminPage({
   let totals = { all: 0, verified: 0, premium: 0, new7: 0, new30: 0 };
   let error = false;
   try {
-    const where = q
+    // Never count synthetic seed accounts (forum personas + the marketplace test
+    // buyer) as users — they'd inflate the count and pollute the email export.
+    const notSeed = NOT_SEED_WHERE;
+    const search = q
       ? {
           OR: [
             { email: { contains: q, mode: "insensitive" as const } },
             { displayName: { contains: q, mode: "insensitive" as const } },
           ],
         }
-      : undefined;
+      : {};
+    const where = { AND: [notSeed, search] };
     const [list, all, verified, premium, new7, new30] = await Promise.all([
       prisma.user.findMany({
         where,
@@ -69,11 +75,11 @@ export default async function AccountsAdminPage({
           premiumUntil: true, trialStartedAt: true, lifetimePoints: true, createdAt: true,
         },
       }),
-      prisma.user.count(),
-      prisma.user.count({ where: { emailVerified: { not: null } } }),
-      prisma.user.count({ where: { premiumUntil: { gt: now } } }),
-      prisma.user.count({ where: { createdAt: { gte: d7 } } }),
-      prisma.user.count({ where: { createdAt: { gte: d30 } } }),
+      prisma.user.count({ where: notSeed }),
+      prisma.user.count({ where: { AND: [notSeed, { emailVerified: { not: null } }] } }),
+      prisma.user.count({ where: { AND: [notSeed, { premiumUntil: { gt: now } }] } }),
+      prisma.user.count({ where: { AND: [notSeed, { createdAt: { gte: d7 } }] } }),
+      prisma.user.count({ where: { AND: [notSeed, { createdAt: { gte: d30 } }] } }),
     ]);
     rows = list;
     totals = { all, verified, premium, new7, new30 };
@@ -111,10 +117,19 @@ export default async function AccountsAdminPage({
         <Stat label="New · 30 days" value={num(totals.new30)} sub={`${num(totals.new7)} in 7d`} />
       </div>
 
-      {/* Export */}
+      {/* Export + seed cleanup */}
       {!error && rows.length > 0 && (
-        <div className="mt-5 rounded-xl border border-ink-700 bg-ink-850 p-3">
+        <div className="mt-5 space-y-3 rounded-xl border border-ink-700 bg-ink-850 p-3">
           <AccountsExport users={exportUsers} />
+          {me?.isAdmin && (
+            <div className="border-t border-ink-800 pt-3">
+              <DeleteSeedButton />
+              <p className="mt-1.5 text-xs text-slate-500">
+                Seed accounts (@riftcompare.seed, @tcgempire.au, test@test.com) are already hidden from this list and the
+                export. This button purges the @riftcompare.seed personas from the database.
+              </p>
+            </div>
+          )}
         </div>
       )}
 

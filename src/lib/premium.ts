@@ -93,19 +93,35 @@ export async function grantPremiumMonths(userId: string, months: number): Promis
   return until;
 }
 
+// Synthetic seed accounts (forum personas + the marketplace test buyer) — never real
+// users, so they're excluded from the "first 100 users" promo and its rank count.
+export function isSeedEmail(email: string): boolean {
+  return email.endsWith("@riftcompare.seed") || email.endsWith("@tcgempire.au") || email === "test@test.com";
+}
+export const NOT_SEED_WHERE = {
+  NOT: {
+    OR: [
+      { email: { endsWith: "@riftcompare.seed" } },
+      { email: { endsWith: "@tcgempire.au" } },
+      { email: { equals: "test@test.com" } },
+    ],
+  },
+};
+
 // Grant the early-adopter comp to a user IF they're within the first
-// EARLY_PREMIUM_LIMIT registrations and haven't already been granted. Idempotent via
-// the earlyPremiumGranted flag, so it's safe to run on every signup AND re-run as a
-// backfill. No-op when the promo is off. Returns true if a grant happened.
+// EARLY_PREMIUM_LIMIT REAL registrations and haven't already been granted. Idempotent
+// via the earlyPremiumGranted flag, so it's safe to run on every signup AND re-run as
+// a backfill. Seed accounts are skipped and don't consume a slot. No-op when the promo
+// is off. Returns true if a grant happened.
 export async function grantEarlyAdopterPremium(userId: string): Promise<boolean> {
   if (!earlyPremiumPromoActive()) return false;
   const u = await prisma.user.findUnique({
     where: { id: userId },
-    select: { createdAt: true, earlyPremiumGranted: true },
+    select: { createdAt: true, earlyPremiumGranted: true, email: true },
   });
-  if (!u || u.earlyPremiumGranted) return false;
-  // Registration rank = how many accounts existed up to and including this one.
-  const rank = await prisma.user.count({ where: { createdAt: { lte: u.createdAt } } });
+  if (!u || u.earlyPremiumGranted || isSeedEmail(u.email)) return false;
+  // Registration rank among REAL accounts, up to and including this one.
+  const rank = await prisma.user.count({ where: { AND: [NOT_SEED_WHERE, { createdAt: { lte: u.createdAt } }] } });
   if (rank > EARLY_PREMIUM_LIMIT) return false;
   await grantPremiumMonths(userId, EARLY_PREMIUM_MONTHS);
   await prisma.user.update({ where: { id: userId }, data: { earlyPremiumGranted: true } });
