@@ -28,7 +28,7 @@ export function revalidateContent(): string[] {
   revalidatePath("/sitemap.xml");
 
   // The cookie/searchParams-DYNAMIC price pages (/market, /decks, /decks/[slug],
-  // /card-value, /tools/box-ev) render per-request, so revalidatePath can't purge
+  // /tools/box-ev) render per-request, so revalidatePath can't purge
   // them — but each wraps its heavy DB read in unstable_cache tagged CONTENT_TAG
   // (as does the homepage's cached data). Clearing the tag makes them all refetch on
   // the next request. (/sealed self-refreshes via its own 15-min in-process memo.)

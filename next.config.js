@@ -58,6 +58,13 @@ const nextConfig = {
         destination: "/decks/master-yi-wuju-bladesman",
         permanent: true,
       },
+      // Retired the /card-value lander — the card database is the real value
+      // checker. 301 so any indexed/inbound links flow to /browse instead of 404ing.
+      {
+        source: "/card-value",
+        destination: "/browse",
+        permanent: true,
+      },
     ];
   },
   async headers() {

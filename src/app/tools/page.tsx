@@ -40,12 +40,6 @@ const GROUPS: ToolGroup[] = [
     label: "Buying & value",
     tools: [
       {
-        href: "/card-value",
-        emoji: "💎",
-        title: "Card value checker",
-        desc: "Look up any Riftbound card's live value plus the cheapest real store price across AU, NZ, US & UK.",
-      },
-      {
         href: "/tools/value-finder",
         emoji: "🔎",
         title: "Value finder",

@@ -42,7 +42,7 @@ const VF_FAQS = [
   },
   {
     q: "How can I just check what one card is worth?",
-    a: "Use the free Riftbound card value checker: search any card to see its live market value plus real store prices in your country. The Value Finder is the opposite lens — it scans the whole market for cards trading below their norm.",
+    a: "Search any card in the free card database to see its live market value plus real store prices in your country. The Value Finder is the opposite lens — it scans the whole market for cards trading below their norm.",
   },
   {
     q: "Does undervalued mean the price will go up?",
@@ -89,12 +89,12 @@ export default async function ValueFinderPage() {
             ) : (
               <Link href="/register?next=/tools/value-finder" className="btn-primary text-sm">Create a free account</Link>
             )}
-            <Link href="/card-value" className="btn-ghost text-sm">Free value checker →</Link>
+            <Link href="/browse" className="btn-ghost text-sm">Search the card database →</Link>
           </div>
           <p className="mx-auto mt-3 max-w-md text-xs text-slate-500">
-            Just want to know what a card is worth? The free{" "}
-            <Link href="/card-value" className="font-semibold text-brand-400 hover:underline">Riftbound card value checker</Link>{" "}
-            shows any card&apos;s live value and store prices — no account needed.
+            Just want to know what a card is worth? Search the free{" "}
+            <Link href="/browse" className="font-semibold text-brand-400 hover:underline">Riftbound card database</Link>{" "}
+            to see any card&apos;s live value and store prices — no account needed.
           </p>
         </div>
       ) : picks.length === 0 ? (

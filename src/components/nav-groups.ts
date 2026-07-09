@@ -20,7 +20,6 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/browse", label: "Card Database", emoji: "🗃️" },
       { href: "/sets", label: "Browse by Set", emoji: "🗂️" },
       { href: "/sealed", label: "Sealed Products", emoji: "📦" },
-      { href: "/card-value", label: "Card Value Checker", emoji: "💎" },
       { href: "/movers", label: "Price Movers", emoji: "📈" },
       { href: "/market", label: "Market Index", emoji: "📊" },
       { href: "/stores/tracked", label: "Stores we track", emoji: "🏪" },
