@@ -24,9 +24,11 @@ export const metadata: Metadata = {
 };
 
 const LINKS = [
+  { href: "/guides/riftbound-vendetta-card-list", label: "Full card list (confirmed so far)" },
   { href: "/blog/riftbound-vendetta-everything-you-need-to-know", label: "Everything you need to know" },
   { href: "/blog/riftbound-vendetta-new-mechanics-flow-burn-empower", label: "New mechanics: Flow, Burn & Empower" },
   { href: "/guides/best-riftbound-vendetta-decks", label: "Best decks & archetypes" },
+  { href: "/guides/riftbound-vendetta-overnumbers-explained", label: "Overnumbers & chase cards" },
   { href: "/sets/vendetta", label: "Vendetta set page" },
 ];
 

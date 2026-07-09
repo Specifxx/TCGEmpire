@@ -1482,6 +1482,88 @@ Full decklists that use Burn are in the **[best Vendetta decks guide](/guides/be
 
 Burn cards will list with live prices on the **[Vendetta set page](/sets/vendetta)** as they release — RiftCompare compares every store so you pay the cheapest delivered price. Keep the **[live countdown](/vendetta-countdown)** handy.`,
   },
+  {
+    slug: "riftbound-vendetta-card-list",
+    category: "guide",
+    title: "Riftbound Vendetta Card List — Everything Confirmed So Far",
+    excerpt:
+      "A living tracker of what's confirmed for Riftbound: Vendetta — the new champions, card count, mechanics, product line-up and release date — updated as official reveals land ahead of 31 July 2026.",
+    author: "RiftCompare",
+    date: "2026-07-09",
+    updated: "2026-07-09",
+    readMins: 4,
+    tags: ["vendetta", "card list", "set", "news", "guide"],
+    body: `![Riftbound: Vendetta — releases 31 July 2026](/vendetta-hero.png)
+
+Chasing the full **Riftbound: Vendetta** card list? Cards are still being revealed ahead of the **31 July 2026** launch, so this page tracks everything that's officially confirmed — and we update it as new reveals drop. For the full price list, the **[Vendetta set page](/sets/vendetta)** fills with every card the moment singles go live.
+
+## The set at a glance
+
+- **Release:** 31 July 2026 (worldwide). In-store **Pre-Rift** launch events run from **24 July**.
+- **Size:** 160+ cards, including 50+ Showcase cards.
+- **New champion Legends:** nine, including **Nasus, Renekton, Akali, Mel, Ambessa, Zed and Shen**.
+- **Chase cards:** signed Overnumbered variants for the nine Legends, plus **22 Rival Overnumbers** — diptych cards built to be displayed as a pair. Full detail in **[Vendetta Overnumbers explained](/guides/riftbound-vendetta-overnumbers-explained)**.
+
+## New mechanics (confirmed)
+
+Vendetta adds three mechanics — each has its own full guide:
+
+- **[Flow](/guides/riftbound-flow-explained)** — play cards from your trash.
+- **[Burn](/guides/riftbound-burn-explained)** — send cards to the trash (to fuel yourself, or attack an opponent's deck).
+- **[Empower](/guides/riftbound-empower-explained)** — upgrade a card after it's already in play.
+
+Read all three together in **[Vendetta's new mechanics explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**.
+
+## New card types & products
+
+- **Unit-Gear** and **Decrees** — two new card concepts. See **[new card types explained](/blog/riftbound-vendetta-unit-gear-decrees)**.
+- **Showdown Decks** — Riftbound's first ready-to-play **two-player** product; the debut pairing is **Shen vs Zed**.
+- **New domain pairings** for deckbuilding: **Fury + Calm**, **Mind + Body**, and **Chaos + Order**.
+
+## How to track the full list
+
+Card-by-card reveals roll out right up to launch. Rather than reprint an unofficial list that goes stale hourly, we point you to the two places that stay correct:
+
+1. **The [Vendetta set page](/sets/vendetta)** — populates with every card + live prices the moment singles release.
+2. **This tracker** — we keep the confirmed set facts above current as official reveals land.
+
+Planning a deck already? Our **[best Vendetta decks guide](/guides/best-riftbound-vendetta-decks)** shows which archetypes the confirmed mechanics point toward, and the **[deckbuilding guide](/guides/building-for-riftbound-vendetta)** covers synergies. And keep the **[live countdown](/vendetta-countdown)** handy — it's almost here.`,
+  },
+  {
+    slug: "riftbound-vendetta-overnumbers-explained",
+    category: "guide",
+    title: "Riftbound Vendetta Overnumbers & Rival Cards Explained",
+    excerpt:
+      "What are Overnumbered and Rival Overnumber cards in Riftbound: Vendetta? A guide to the set's premium chase cards — the signed Legend variants and the 22 rivalry diptychs — and why collectors want them.",
+    author: "RiftCompare",
+    date: "2026-07-09",
+    updated: "2026-07-09",
+    readMins: 3,
+    tags: ["vendetta", "overnumber", "collecting", "chase cards", "guide"],
+    body: `![Riftbound: Vendetta — releases 31 July 2026](/vendetta-hero.png)
+
+The most-searched collectibles in **[Riftbound: Vendetta](/sets/vendetta)** are its **Overnumbers** — the set's premium chase cards. Here's what they are and why they matter.
+
+## What is an Overnumbered card?
+
+An **Overnumbered** card is a special printing whose collector number sits *above* the set's base numbering — a signal that it's a rarer, showcase-tier version of a card. In Vendetta, the nine new champion **Legends** each get a **signed Overnumbered variant**: a premium printing carrying an in-universe signature treatment. These are the top-end pulls of the set.
+
+## Rival Overnumbers — the rivalry diptychs
+
+Vendetta's rivalries theme gets its own chase cycle: **22 Rival Overnumbers**. Each is half of a **diptych** — a pair of cards designed to sit side by side, so a rivalry like **Nasus vs Renekton** or **Shen vs Zed** is displayed as a matched set. Collectors chase both halves to complete the pair, which is exactly what makes them desirable (and pricey).
+
+## Why collectors care
+
+- **Scarcity:** Overnumbered and Rival printings appear far less often than base cards, so they command the highest prices in the set.
+- **Display value:** the diptych design rewards owning and displaying the pair — a collecting hook base cards don't have.
+- **Champion appeal:** the signed Legends are the marquee champions of the set, which concentrates demand.
+
+## Buying them without overpaying
+
+Premium chase cards spike hardest in the launch rush and vary a lot store to store. The moment Vendetta releases, RiftCompare compares every Overnumber's live price across 60+ stores in AU, NZ, the US and the UK — cheapest delivered first — on the **[Vendetta set page](/sets/vendetta)**. Watch the **[price movers](/movers)** too; the chase cards climb fastest at launch.
+
+For the full picture of the set, read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** and the **[Vendetta card list tracker](/guides/riftbound-vendetta-card-list)**. Keep the **[live countdown](/vendetta-countdown)** handy — Vendetta drops 31 July 2026.`,
+  },
 ];
 
 export function getArticles(category?: ArticleCategory): Article[] {
