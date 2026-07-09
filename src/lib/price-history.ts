@@ -10,10 +10,12 @@ import type { CardTileData } from "@/components/CardTile";
 
 export type PricePoint = { t: number; v: number };
 
-// Daily lowest-price points for one card in one market (oldest → newest). Each
-// market is priced in its own currency. Resilient: returns [] on any DB error so a
+// Daily lowest-price points for one card in one market (oldest → newest), in that
+// market's OWN currency. The importer records a real point per card per market per
+// Sydney day (AU/NZ/US/UK — see price-import.ts), so each market has its own genuine
+// series — no currency conversion needed. Resilient: returns [] on any DB error so a
 // page never crashes over the chart.
-export async function getPriceHistory(cardId: string, country = "AU", take = 180): Promise<PricePoint[]> {
+export async function getPriceHistory(cardId: string, country: Country = "AU", take = 180): Promise<PricePoint[]> {
   try {
     const rows = await dbHistory.priceHistory.findMany({
       where: { cardId, country },

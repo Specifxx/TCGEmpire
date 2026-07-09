@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getPriceHistory } from "@/lib/price-history";
+import type { Country } from "@/lib/country";
 import { MARKETPLACE_COUNTRIES } from "@/lib/marketplace";
 
 // Daily lowest-price history for one card in a given market (in that market's
@@ -9,7 +10,7 @@ import { MARKETPLACE_COUNTRIES } from "@/lib/marketplace";
 export async function GET(req: Request, { params }: { params: { id: string } }) {
   const url = new URL(req.url);
   const c = (url.searchParams.get("country") ?? "AU").toUpperCase();
-  const country = (MARKETPLACE_COUNTRIES as readonly string[]).includes(c) ? c : "AU";
+  const country: Country = ((MARKETPLACE_COUNTRIES as readonly string[]).includes(c) ? c : "AU") as Country;
 
   const card = await prisma.card.findFirst({
     where: { OR: [{ slug: params.id }, { id: params.id }] },
