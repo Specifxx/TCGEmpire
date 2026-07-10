@@ -162,6 +162,42 @@ export async function sendNewsletterDigestEmail(to: string, subject: string, hea
   return sendEmail(to, subject, emailShell(heading, inner, newsletterFooter(unsubUrl)));
 }
 
+// Sent right after signup to accounts that received the early-adopter Premium comp
+// (the first EARLY_PREMIUM_LIMIT users) — tells them it's already active and shows
+// off the features so they actually use them. Transactional (account status), so it
+// carries a plain footer rather than a newsletter unsubscribe.
+export async function sendEarlyAdopterEmail(to: string, months: number): Promise<boolean> {
+  const mo = `${months} month${months === 1 ? "" : "s"}`;
+  const features: [string, string][] = [
+    ["Best-Basket optimiser", "the cheapest multi-store cart for any want-list"],
+    ["Value Finder", "cards trading below their 30-day average"],
+    ["Arbitrage finder", "buy cheap in one market, flip to eBay"],
+    ["Ad-free", "no ads anywhere on the site"],
+  ];
+  const inner = `
+    <tr><td style="padding:8px 32px 12px;font-size:15px;line-height:1.6;color:#e6ebf2">
+      You're one of RiftCompare's first users — so we've unlocked
+      <strong style="color:#f2c94c">${mo} of RiftCompare Premium</strong> on your account, free.
+      It's already active. No card, no catch — just a thank-you for being early.
+    </td></tr>
+    <tr><td style="padding:0 32px 12px">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        ${features
+          .map(
+            ([k, v]) => `<tr><td style="padding:8px 0;border-bottom:1px solid #233047;font-size:14px">
+              <span style="color:#f2c94c">▸</span>&nbsp;<strong style="color:#fff">${k}</strong>
+              <span style="color:#8b95a5"> — ${v}</span></td></tr>`
+          )
+          .join("")}
+      </table>
+    </td></tr>
+    <tr><td style="padding:8px 32px 24px"><a href="${SITE_URL}/premium?utm_source=email&utm_medium=email&utm_campaign=early-adopter" style="display:inline-block;background:#f2c94c;color:#1a1405;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">See everything Premium does →</a></td></tr>`;
+  const footer = `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">
+    Sent once because your new account qualified for the early-adopter Premium reward. RiftCompare · Riftbound card price comparison.
+  </td></tr>`;
+  return sendEmail(to, `You've got ${mo} of RiftCompare Premium — on us 🎁`, emailShell("Welcome, founding user", inner, footer));
+}
+
 // One-off release-day blast for a new set (e.g. Vendetta, 31 Jul 2026). Sent to the
 // countdown/newsletter list from a one-off script/cron on release day — the moment of
 // peak buy-intent the countdown page promises. `setName`/`setSlug` keep it reusable for

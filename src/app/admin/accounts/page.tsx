@@ -20,7 +20,7 @@ const TAKE = 500; // cap the list; use the search box to find older accounts.
 export default async function AccountsAdminPage({
   searchParams,
 }: {
-  searchParams: { key?: string; q?: string };
+  searchParams: { key?: string; q?: string; f?: string };
 }) {
   const token = process.env.ADMIN_TOKEN;
   const keyOk = !!token && searchParams.key === token;
@@ -28,6 +28,7 @@ export default async function AccountsAdminPage({
   if (!(keyOk || me?.isAdmin)) notFound(); // don't reveal the page exists
 
   const q = (searchParams.q ?? "").trim();
+  const filter = searchParams.f === "premium" || searchParams.f === "verified" ? searchParams.f : null;
   const keySuffix = keyOk && !me?.isAdmin ? `&key=${encodeURIComponent(token!)}` : "";
 
   const now = new Date();
@@ -63,7 +64,10 @@ export default async function AccountsAdminPage({
           ],
         }
       : {};
-    const where = { AND: [notSeed, search] };
+    // Quick filters: premium = active entitlement right now; verified = confirmed email.
+    const quick =
+      filter === "premium" ? { premiumUntil: { gt: now } } : filter === "verified" ? { emailVerified: { not: null } } : {};
+    const where = { AND: [notSeed, search, quick] };
     const [list, all, verified, premium, new7, new30] = await Promise.all([
       prisma.user.findMany({
         where,
@@ -133,9 +137,37 @@ export default async function AccountsAdminPage({
         </div>
       )}
 
+      {/* Quick filters */}
+      <div className="mt-4 flex flex-wrap gap-1.5">
+        {([
+          [null, "All"],
+          ["premium", "◆ Premium"],
+          ["verified", "✓ Verified"],
+        ] as const).map(([f, label]) => {
+          const p = new URLSearchParams();
+          if (q) p.set("q", q);
+          if (f) p.set("f", f);
+          if (keyOk && !me?.isAdmin) p.set("key", token!);
+          const qs = p.toString();
+          const active = filter === f || (!filter && f === null);
+          return (
+            <Link
+              key={label}
+              href={`/admin/accounts${qs ? `?${qs}` : ""}`}
+              className={`chip border px-3 py-1.5 text-xs font-semibold ${
+                active ? "border-brand-500 bg-brand-500/15 text-brand-300" : "border-ink-700 text-slate-400 hover:border-brand-500/50"
+              } ${f === "premium" && active ? "border-gold bg-gold/15 text-gold" : ""}`}
+            >
+              {label}
+            </Link>
+          );
+        })}
+      </div>
+
       {/* Search */}
-      <form className="mt-4" action="/admin/accounts" method="get">
+      <form className="mt-3" action="/admin/accounts" method="get">
         {keyOk && !me?.isAdmin && <input type="hidden" name="key" value={token!} />}
+        {filter && <input type="hidden" name="f" value={filter} />}
         <div className="flex gap-2">
           <input
             type="search"

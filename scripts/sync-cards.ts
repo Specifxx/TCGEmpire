@@ -120,10 +120,32 @@ async function main() {
   }
   console.log(`Syncing ${rsCards.length} cards from the snapshot${DRY ? " (dry run)" : ""}…`);
 
-  let created = 0, updated = 0;
+  let created = 0, updated = 0, adopted = 0;
   for (const c of rsCards) {
     const data = mapCard(c, nameMap);
-    const existing = await prisma.card.findUnique({ where: { externalId: c.id }, select: { id: true, slug: true } });
+    let existing = await prisma.card.findUnique({ where: { externalId: c.id }, select: { id: true, slug: true } });
+    // ADOPTION: pre-release cards imported from the official gallery / manual backstop
+    // (externalId "ven-official-*" / "manual-*") are the SAME card under a provisional
+    // id. When RiftScribe catalogues it properly, update that row in place — keeping
+    // its (permanent, possibly-indexed) slug — instead of creating a duplicate page.
+    if (!existing) {
+      const candidates = await prisma.card.findMany({
+        where: {
+          setCode: data.setCode,
+          nameNormalized: data.nameNormalized,
+          isPromo: false,
+          OR: [{ externalId: { startsWith: "ven-official-" } }, { externalId: { startsWith: "manual-" } }],
+        },
+        select: { id: true, slug: true, variant: true },
+      });
+      const match = candidates.find((x) => (x.variant ?? null) === (data.variant ?? null)) ?? candidates[0];
+      if (match) {
+        console.log(`${DRY ? "(dry) " : ""}ADOPT ${data.name} [${data.setCode} ${data.collectorNumber}] -> existing /card/${match.slug}`);
+        if (!DRY) await prisma.card.update({ where: { id: match.id }, data: { ...data, externalId: c.id } });
+        adopted++;
+        continue;
+      }
+    }
     if (existing) {
       if (!DRY) await prisma.card.update({ where: { id: existing.id }, data: { ...data, slug: existing.slug ?? (await uniqueSlug(cardSlug(data), c.id)) } });
       updated++;
@@ -138,7 +160,7 @@ async function main() {
       created++;
     }
   }
-  console.log(`\nCard sync: ${created} created, ${updated} refreshed${DRY ? " (dry run — no writes)" : ""}.`);
+  console.log(`\nCard sync: ${created} created, ${updated} refreshed, ${adopted} adopted (pre-release rows upgraded in place)${DRY ? " (dry run — no writes)" : ""}.`);
 }
 
 main()

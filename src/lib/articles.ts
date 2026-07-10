@@ -4,6 +4,14 @@
 
 export type ArticleCategory = "blog" | "guide";
 
+// An eBay affiliate search rendered in the article's "Shop this guide" strip
+// (ArticleShopStrip). `query` is the eBay search; the strip localises the eBay
+// domain to the visitor's market and affiliate-tags the link.
+export interface ShopLink {
+  label: string;
+  query: string;
+}
+
 export interface Article {
   slug: string;
   category: ArticleCategory;
@@ -15,6 +23,9 @@ export interface Article {
   readMins: number;
   tags: string[];
   body: string; // markdown
+  // Optional monetisation: eBay searches relevant to THIS article (rendered as a
+  // "Shop this guide" strip under the body). Omit = no strip.
+  shop?: ShopLink[];
 }
 
 export const ARTICLES: Article[] = [
@@ -1354,6 +1365,11 @@ Keep the **[live countdown](/vendetta-countdown)** handy, and read **[everything
     updated: "2026-07-08",
     readMins: 5,
     tags: ["vendetta", "mechanics", "empower", "gameplay", "guide"],
+    shop: [
+      { label: "Jayce singles — the Empower champion", query: "Riftbound Jayce" },
+      { label: "Mel singles", query: "Riftbound Mel" },
+      { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
+    ],
     body: `![Vendetta's new mechanics — Flow, Burn and Empower](/vendetta-mechanics.png)
 
 **Empower** is one of three new mechanics arriving with **[Riftbound: Vendetta](/sets/vendetta)** on **31 July 2026**. It's quickly become one of the most searched-for parts of the set — so here's a complete, plain-English guide to what the Empower mechanic does and how to play around it.
@@ -1414,6 +1430,10 @@ Empower cards will list with live prices on the **[Vendetta set page](/sets/vend
     updated: "2026-07-08",
     readMins: 4,
     tags: ["vendetta", "mechanics", "flow", "gameplay", "guide"],
+    shop: [
+      { label: "Chaos singles — the recursion domain", query: "Riftbound Chaos" },
+      { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
+    ],
     body: `![Vendetta's new mechanics — Flow, Burn and Empower](/vendetta-mechanics.png)
 
 **Flow** is one of three new mechanics in **[Riftbound: Vendetta](/sets/vendetta)** (out **31 July 2026**). It turns your trash from a graveyard into a resource — here's exactly how the Flow mechanic works and how to build around it.
@@ -1455,6 +1475,10 @@ Flow cards will show live prices on the **[Vendetta set page](/sets/vendetta)** 
     updated: "2026-07-08",
     readMins: 4,
     tags: ["vendetta", "mechanics", "burn", "gameplay", "guide"],
+    shop: [
+      { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
+      { label: "Riftbound singles on eBay", query: "Riftbound TCG singles" },
+    ],
     body: `![Vendetta's new mechanics — Flow, Burn and Empower](/vendetta-mechanics.png)
 
 **Burn** is one of three new mechanics in **[Riftbound: Vendetta](/sets/vendetta)** (out **31 July 2026**). It has two very different uses — here's how the Burn mechanic works and how to build around it.
@@ -1540,6 +1564,11 @@ Planning a deck already? Our **[best Vendetta decks guide](/guides/best-riftboun
     updated: "2026-07-09",
     readMins: 3,
     tags: ["vendetta", "overnumber", "collecting", "chase cards", "guide"],
+    shop: [
+      { label: "Vendetta presale listings", query: "Riftbound Vendetta presale" },
+      { label: "Origins Overnumbered chase cards", query: "Riftbound Overnumbered" },
+      { label: "Vendetta booster case presales", query: "Riftbound Vendetta booster case" },
+    ],
     body: `![Riftbound: Vendetta — releases 31 July 2026](/vendetta-hero.png)
 
 The most-searched collectibles in **[Riftbound: Vendetta](/sets/vendetta)** are its **Overnumbers** — the set's premium chase cards. Here's what they are and why they matter.
@@ -1575,6 +1604,10 @@ For the full picture of the set, read **[everything you need to know about Vende
     updated: "2026-07-09",
     readMins: 7,
     tags: ["vendetta", "synergies", "combos", "deckbuilding", "gameplay"],
+    shop: [
+      { label: "Zhonya's Hourglass & Calm gear", query: "Riftbound Zhonya's Hourglass" },
+      { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
+    ],
     body: `![Vendetta's synergy loop — Burn fills the trash, Flow cashes it in](/vendetta-synergy-loop.png)
 
 The most valuable thing to work out before a set drops isn't which new cards are strongest — it's which cards you **already own** suddenly get better. Vendetta's three mechanics (**[Flow](/guides/riftbound-flow-explained)**, **[Burn](/guides/riftbound-burn-explained)**, **[Empower](/guides/riftbound-empower-explained)**) are all engine pieces, and engines need supporting cards. Here's a domain-by-domain look at the synergies, using real cards already in the game.
@@ -1625,6 +1658,63 @@ Vendetta's whole identity is **rivalries**, and the confirmed champion pairings 
 3. **Price the whole deck in one click** with the **[deck pricer](/deck)** on release day, so you buy the new pieces for the least across every store.
 
 Read the mechanics in full — **[Flow](/guides/riftbound-flow-explained)**, **[Burn](/guides/riftbound-burn-explained)**, **[Empower](/guides/riftbound-empower-explained)** — and keep the **[live countdown](/vendetta-countdown)** handy. Vendetta drops **31 July 2026**, and the moment it does we'll compare every card's price across AU, NZ, US &amp; UK on the **[Vendetta set page](/sets/vendetta)**.`,
+  },
+  {
+    slug: "riftbound-vendetta-chase-cards-so-far",
+    category: "blog",
+    title: "Riftbound Vendetta Chase Cards So Far: What Collectors Should Hunt",
+    excerpt:
+      "Spoiler season is live — here's every Vendetta chase-card tier confirmed so far (signed Overnumbered Legends, connecting-art Rival Overnumbers, 50+ Showcases), which champions are teased, and how to buy them without paying the hype tax.",
+    author: "RiftCompare",
+    date: "2026-07-10",
+    updated: "2026-07-10",
+    readMins: 5,
+    tags: ["vendetta", "chase cards", "overnumber", "collecting", "news"],
+    shop: [
+      { label: "Vendetta presale listings", query: "Riftbound Vendetta presale" },
+      { label: "Overnumbered chase cards (current sets)", query: "Riftbound Overnumbered" },
+      { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
+    ],
+    body: `![Riftbound: Vendetta — releases 31 July 2026](/vendetta-hero.png)
+
+Vendetta spoiler season is running right now (reveals through mid-July), and the picture of the set's **chase cards** — the premium pulls that drive box prices — is coming into focus. Here's everything confirmed so far, updated as reveals land.
+
+## The chase structure
+
+Vendetta is a **166-card set with nine champion Legends**, and its premium tiers stack up like this:
+
+- **50+ Showcase cards** — the alternate-art tier, the broadest chase pool in the set.
+- **Signed Overnumbered Legends** — each of the set's champion Legends gets a signed Overnumbered variant, the top-end pull. (New to Overnumbers? Read **[our full explainer](/guides/riftbound-vendetta-overnumbers-explained)**.)
+- **Rival Overnumbers with connecting artwork** — Vendetta's signature twist: Overnumbered cards whose art **connects across multiple cards**, built around the set's rivalry pairs. Completed pairs are the display pieces of the set — and paired chase cards historically concentrate demand, because everyone who pulls one half wants the other.
+
+## The rivalries (confirmed)
+
+The set is built on rival pairings from League lore, confirmed so far:
+
+- **Zed vs Shen** — also the set's first **Showdown Deck**, the new two-player intro product.
+- **Nasus vs Renekton** — the sibling rivalry.
+- **Vi vs Jinx** — the sisters, both fan favourites with proven chase demand in earlier sets.
+- **Jayce vs Viktor** — Piltover against the Arcane; **Jayce, Brilliant Inventor** is among the first rival Legends officially revealed.
+
+## Who's teased for the Overnumbered treatment
+
+Riot has teased the Overnumbered series via card backs, pointing at **Swain, Irelia, Ambessa, Mel, Kennen, Jayce, Akali, Nasus, Vi and Jinx** getting the treatment. Treat that as teased-not-final until each card is officially shown — we'll update this post as reveals confirm them.
+
+## Which chases will be most contested
+
+No prices exist yet (presales aside), so the honest guide is demand structure, not numbers:
+
+1. **Marquee-champion Overnumbers** — Jinx, Vi and Akali have the broadest collector bases from League and Arcane; their signed Overnumbers are the likeliest top of the set.
+2. **Completed Rival pairs** — connecting art means the market prices the *pair*, and the scarcer half sets the cost of completion.
+3. **Showdown-deck rivals (Zed/Shen)** — the faces of the set's headline product tend to see outsized early demand.
+
+## How to buy them without the hype tax
+
+- **Presales**: listings are already up on eBay. Presales can lock a price before launch spikes — but only buy from high-rating sellers and treat quoted prices as speculative until product ships.
+- **Day one**: chase singles spike hardest in week one. The moment Vendetta releases, every card's price lands on the **[Vendetta set page](/sets/vendetta)** compared across every store — check it before paying the first number you see.
+- **Watch the movers**: the **[price movers](/movers)** page shows which chases are climbing or cooling in real time once data starts flowing.
+
+Track the countdown on the **[live release countdown](/vendetta-countdown)**, see the full **[Vendetta card list tracker](/guides/riftbound-vendetta-card-list)**, and read **[everything you need to know](/blog/riftbound-vendetta-everything-you-need-to-know)** for the rest of the set.`,
   },
 ];
 

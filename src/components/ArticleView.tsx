@@ -3,6 +3,7 @@ import type { Article } from "@/lib/articles";
 import { Markdown } from "./Markdown";
 import { fmtDate } from "./ArticleList";
 import { AdSlot } from "./AdSlot";
+import { ArticleShopStrip } from "./ArticleShopStrip";
 import { SITE_URL } from "@/lib/site";
 
 export function ArticleView({ article }: { article: Article }) {
@@ -59,6 +60,10 @@ export function ArticleView({ article }: { article: Article }) {
       <div className="mt-6 border-t border-ink-800 pt-4">
         <Markdown content={article.body} />
       </div>
+
+      {/* Per-article eBay affiliate searches — the reader is at peak intent right
+          after finishing the guide; this is where a well-ranking page converts. */}
+      {article.shop && article.shop.length > 0 && <ArticleShopStrip items={article.shop} />}
 
       <AdSlot className="mt-8" height={120} />
     </article>

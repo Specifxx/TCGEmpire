@@ -116,7 +116,10 @@ export default async function SetPage({ params }: { params: { set: string } }) {
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
             {set.comingSoon ? (
               <>
-                Riftbound <strong className="text-slate-200">{set.name}</strong> singles aren&apos;t out yet. This page will list every {set.name} card with live prices the moment they release — check back soon.
+                Riftbound <strong className="text-slate-200">{set.name}</strong> singles aren&apos;t on sale yet.
+                {cards.length > 0
+                  ? <> Every officially revealed {set.name} card is listed below — live store prices land the moment singles release.</>
+                  : <> This page will list every {set.name} card with live prices the moment they release — check back soon.</>}
                 {set.sealedAvailable && (
                   <> {set.name} sealed products (booster boxes &amp; packs) are available now — <Link href={`/sealed?q=${set.name.toLowerCase()}`} className="text-brand-300 underline-offset-2 hover:underline">compare them on the sealed page</Link>.</>
                 )}
@@ -140,8 +143,10 @@ export default async function SetPage({ params }: { params: { set: string } }) {
         </div>
       </section>
 
-      {/* Card grid */}
-      {set.comingSoon || cards.length === 0 ? (
+      {/* Card grid — shown whenever cards EXIST, even for a comingSoon set: through
+          spoiler season the official-gallery importer populates revealed cards early
+          (unpriced), which is exactly what pre-release searchers want to browse. */}
+      {cards.length === 0 ? (
         <div className="card-surface grid place-items-center p-16 text-center text-slate-400">
           <div>
             <p className="text-lg font-semibold text-white">{set.name} singles aren&apos;t available yet</p>
@@ -176,11 +181,20 @@ export default async function SetPage({ params }: { params: { set: string } }) {
           </div>
         </div>
       ) : (
-        <Reveal stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
-          {cards.map((c) => (
-            <CardTile key={c.id} card={c} />
-          ))}
-        </Reveal>
+        <>
+          {set.comingSoon && (
+            <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 px-4 py-3 text-sm text-slate-300">
+              <strong className="text-emerald-300">Revealed so far.</strong> These are the {set.name} cards officially
+              revealed to date — more land through spoiler season, and live store prices appear here the moment singles
+              go on sale.
+            </div>
+          )}
+          <Reveal stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
+            {cards.map((c) => (
+              <CardTile key={c.id} card={c} />
+            ))}
+          </Reveal>
+        </>
       )}
 
       {/* Internal links to the other sets (crawl + UX) */}
