@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
-import { Sora, Space_Grotesk, JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
@@ -26,16 +26,16 @@ import { SovrnSnippet } from "@/components/SovrnSnippet";
 import { PriceAlertModal } from "@/components/PriceAlertModal";
 import { MetaPixel } from "@/components/MetaPixel";
 
-// Body: Sora (modern, energetic, readable). Headings: Space Grotesk (distinctive,
-// gives the brand more life). Exposed as CSS vars wired into Tailwind.
-// display: "swap" — the brand fonts ALWAYS render (the "market terminal" look is
-// consistent on every load, cached or not), rather than "optional" which silently
-// keeps the system fallback whenever the font misses the ~100ms first-paint window.
-// adjustFontFallback (next/font default) size-matches the fallback so the swap-in
-// causes negligible layout shift.
-const sora = Sora({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
-const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-display", display: "swap" });
-// Monospace for prices / tabular figures — the "market terminal" numeral voice.
+// Market-terminal typography. Body + headings: Inter — the neutral professional
+// grotesk of trading/fintech UIs (replaces the rounded Sora/Space Grotesk pair,
+// which read friendly/consumer rather than desk). Headings differentiate by weight
+// + tight tracking, not by a second family. Exposed as CSS vars wired into Tailwind.
+// display: "swap" — the brand fonts ALWAYS render (consistent on every load) rather
+// than "optional" which silently keeps the system fallback whenever the font misses
+// the ~100ms first-paint window. adjustFontFallback (next/font default) size-matches
+// the fallback so the swap-in causes negligible layout shift.
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
+// Monospace for prices / tabular figures / tickers — the "market terminal" voice.
 const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
 
 export const metadata: Metadata = {
@@ -157,7 +157,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // Neutral lang="en": one cookie-switched URL serves all four English markets
   // (AU/NZ/US/UK), so a single market tag like en-AU would mislabel the others.
   return (
-    <html lang="en" className={`${sora.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
       <head>
         {/* Impact / TCGplayer affiliate site-ownership verification. Impact looks for
             the non-standard `value` attribute, so spread it past the meta typing. */}
