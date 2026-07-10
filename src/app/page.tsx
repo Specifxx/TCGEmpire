@@ -218,7 +218,9 @@ export default async function HomePage() {
         <Reveal stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {SETS.map((s) =>
             // Fully unreleased (no cards, no sealed) → disabled tile. Vendetta has
-            // sealed live, so it links through with a "Cards soon · Sealed now" cue.
+            // revealed cards + sealed live, so it links through with a green "New"
+            // cue (the revealed-card list is browsable now; store prices land at
+            // release).
             s.comingSoon && !s.sealedAvailable ? (
               <div key={s.code} className="card-surface flex flex-col gap-1 p-4 opacity-60" aria-disabled>
                 <span className="flex items-center gap-2 text-lg font-bold text-white">
@@ -237,7 +239,7 @@ export default async function HomePage() {
                   {s.code}
                   {s.comingSoon && s.sealedAvailable && (
                     <>
-                      <span className="chip bg-gold/20 text-gold">Cards soon</span>
+                      <span className="chip bg-up/20 font-bold uppercase tracking-wide text-up">New</span>
                       <span className="chip bg-brand-500/15 text-brand-300">Sealed now</span>
                     </>
                   )}
