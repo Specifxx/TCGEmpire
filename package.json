@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && (node -e \"process.exit(['production','preview'].includes(process.env.VERCEL_ENV)&&process.env.DATABASE_URL?0:1)\" && prisma db push --skip-generate && tsx scripts/marketplace-seed.ts && tsx scripts/fix-altart-rarity.ts && FORUM_SEED_ONLY_IF_EMPTY=1 tsx scripts/seed-forum.ts && tsx scripts/grant-early-premium.ts || true) && (node -e \"process.exit(process.env.VERCEL_ENV==='preview'&&process.env.DATABASE_URL?0:1)\" && IMPORT_ONLY_COUNTRY=SG EBAY_REFRESH=false tsx scripts/import-prices.ts || true) && next build",
+    "build": "prisma generate && (node -e \"process.exit(['production','preview'].includes(process.env.VERCEL_ENV)&&process.env.DATABASE_URL?0:1)\" && prisma db push --skip-generate && (node -e \"process.exit(process.env.HISTORY_DATABASE_URL_2?0:1)\" && DATABASE_URL=\"$HISTORY_DATABASE_URL_2\" prisma db push --skip-generate || true) && tsx scripts/marketplace-seed.ts && tsx scripts/fix-altart-rarity.ts && FORUM_SEED_ONLY_IF_EMPTY=1 tsx scripts/seed-forum.ts && tsx scripts/grant-early-premium.ts || true) && (node -e \"process.exit(process.env.VERCEL_ENV==='preview'&&process.env.DATABASE_URL?0:1)\" && IMPORT_ONLY_COUNTRY=SG EBAY_REFRESH=false tsx scripts/import-prices.ts || true) && next build",
     "start": "next start",
     "grant:early": "tsx scripts/grant-early-premium.ts",
     "cards:sync": "tsx scripts/sync-cards.ts",
