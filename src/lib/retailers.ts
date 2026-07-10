@@ -726,6 +726,19 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. S$2.50 · free over S$80",
     country: "SG",
   },
+  // 1Collectibles' dedicated TCG storefront (SG business, 511 Guillemard Rd; SGD
+  // Shopify). Its /collections/riftbound is Google-indexed but excluded from the
+  // sitemap, so discovery misses it — the explicit handle below covers that.
+  onecollectiblestcg: {
+    key: "onecollectiblestcg",
+    name: "1Collectibles TCG",
+    base: "https://1collectiblestcg.com",
+    collections: ["riftbound"],
+    shippingFlatCents: 250,
+    freeOverCents: 6000,
+    shippingNote: "est. S$2.50 · free over S$60",
+    country: "SG",
+  },
   // Real SG store with live Riftbound stock (online + organized play), but NOT on
   // Shopify — no public products.json, so the importer finds nothing until we add
   // platform support. Listed for directory coverage; never yields fake prices.
