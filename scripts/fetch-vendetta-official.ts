@@ -151,6 +151,27 @@ async function main() {
     mkdirSync(join(process.cwd(), "scratch"), { recursive: true });
     writeFileSync(join(process.cwd(), "scratch", "vendetta-dump.json"), JSON.stringify(jsonBodies, null, 1));
     console.log(`Dumped ${jsonBodies.length} JSON responses to scratch/vendetta-dump.json`);
+    // Print an inline summary so the dump can be inspected straight from CI logs
+    // (artifact downloads aren't always reachable from the authoring environment).
+    for (const r of jsonBodies) {
+      const s = JSON.stringify(r.body);
+      console.log(`DUMP-URL: ${r.url}`);
+      console.log(`DUMP-SIZE: ${s.length}`);
+      console.log(`DUMP-HEAD: ${s.slice(0, 700)}`);
+      console.log("---");
+    }
+    // Also sample the DOM around gallery images — enough markup to write a precise
+    // extractor when the JSON route yields nothing.
+    const domSamples = await page.evaluate(() =>
+      Array.from(document.querySelectorAll("img"))
+        .filter((img) => (img.alt || "").length > 10)
+        .slice(0, 4)
+        .map((img) => {
+          const container = img.closest("li, article, [class*='card' i]") ?? img.parentElement;
+          return (container?.outerHTML ?? "").slice(0, 1200);
+        })
+    );
+    domSamples.forEach((h: string, i: number) => console.log(`DOM-SAMPLE ${i}:\n${h}\n===`));
   }
 
   // 1) Prefer JSON card arrays.
