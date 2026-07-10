@@ -89,6 +89,12 @@ const STORES: [string, string][] = [
   ["CaesarCards", "https://caesarcards.sg"],
   ["ZoomiesGaming", "https://zoomiesgaming.com"],
   ["CardArena", "https://cardarena.sg"],
+  // Round 2 (2026-07-10): 1Collectibles runs a SEPARATE TCG storefront with a live
+  // riftbound collection (missed on round 1, which probed their main domain).
+  ["1CollectiblesTCG", "https://1collectiblestcg.com"],
+  ["BattleBunker", "https://www.battlebunker.com.sg"],
+  ["GamesPI", "https://www.gamespi.com"],
+  ["RapidCulture", "https://rapidculture.sg"],
 ];
 
 (async () => {
