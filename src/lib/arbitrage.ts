@@ -9,6 +9,7 @@
 import { prisma } from "./db";
 import type { Country } from "./country";
 import { RETAILERS } from "./retailers";
+import { affiliateUrl } from "./affiliate";
 import { cardTileSelect } from "./cards";
 import type { CardTileData } from "@/components/CardTile";
 
@@ -269,8 +270,10 @@ export async function getArbitrage(
         if (!c || !b || !s) return null;
         return {
           card: c,
-          buyCents: r.buy, buyStore: b.retailer, buyStoreName: b.retailerName, buyUrl: b.url,
-          sellCents: r.sellGross, sellName: s.retailerName, sellUrl: s.url, sellIsEbay: r.sellIsEbay,
+          // Affiliate-tag both outbound links (eBay EPN / store network) — rows can
+          // hold untagged URLs from before import-time tagging existed.
+          buyCents: r.buy, buyStore: b.retailer, buyStoreName: b.retailerName, buyUrl: affiliateUrl(b.url, b.retailer),
+          sellCents: r.sellGross, sellName: s.retailerName, sellUrl: affiliateUrl(s.url, "ebay_arb"), sellIsEbay: r.sellIsEbay,
           netCents: r.net, marginPct: r.margin,
         };
       })

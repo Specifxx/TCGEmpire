@@ -9,7 +9,7 @@
 // so nothing breaks. eBay listings are free-text and noisier than store feeds, so
 // treat results as a secondary signal (lowest Buy-It-Now, AU marketplace).
 
-import { EBAY_CAMPAIGN_ID } from "./affiliate";
+import { EBAY_CAMPAIGN_ID, ebayAffiliateUrl } from "./affiliate";
 
 const TOKEN_URL = "https://api.ebay.com/identity/v1/oauth2/token";
 const SEARCH_URL = "https://api.ebay.com/buy/browse/v1/item_summary/search";
@@ -322,7 +322,7 @@ export async function searchEbayLowest(card: {
   return {
     priceCents: Math.round(parseFloat(best.price.value) * 100),
     shippingCents: shippingFromItem(best),
-    url: best.itemAffiliateWebUrl ?? best.itemWebUrl,
+    url: ebayAffiliateUrl(best.itemAffiliateWebUrl ?? best.itemWebUrl),
     title: best.title,
     condition: best.condition,
     imageUrl: best.image?.imageUrl ?? best.thumbnailImages?.[0]?.imageUrl ?? null,
@@ -440,7 +440,7 @@ export async function searchEbaySealed(name: string, productType: string, setCod
   return {
     priceCents: Math.round(parseFloat(best.price.value) * 100),
     shippingCents: shippingFromItem(best),
-    url: best.itemAffiliateWebUrl ?? best.itemWebUrl,
+    url: ebayAffiliateUrl(best.itemAffiliateWebUrl ?? best.itemWebUrl),
     title: best.title,
     condition: best.condition,
     imageUrl: best.image?.imageUrl ?? best.thumbnailImages?.[0]?.imageUrl ?? null,
