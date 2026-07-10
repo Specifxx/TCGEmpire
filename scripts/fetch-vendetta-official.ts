@@ -24,12 +24,15 @@ type Scraped = {
   name: string;
   imageUrl: string;
   set: string;
-  cardId?: string; // official gallery id, e.g. "ven-042" / "ven-042a" / "ven-r01"
-  number?: string; // collector segment from cardId, e.g. "042", "r01"
+  cardId?: string; // official gallery id, e.g. "ven-021-166" / "ven-r01"
+  number?: string; // id segment, e.g. "021", "021a", "r01"
+  code?: string; // official collector code, e.g. "021/166", "R01"
   type?: string;
   domain?: string;
   rarity?: string;
   rules?: string;
+  energy?: number | null;
+  might?: number | null;
 };
 
 // "Riftbound Unit: Akali, Deadly Weapon. [Empower] …" → { type: "Unit", name: "Akali, Deadly Weapon", rules }
@@ -194,82 +197,85 @@ async function main() {
   const base = await snapshot();
   console.log(`Baseline snapshot: ${base.length} card images`);
 
-  // The gallery exposes NO domain/rarity filters (only Set / New Cards) — but it's a
-  // Next-style app, so the full card objects live in embedded JSON script tags.
-  // Extract them and mine domain/rarity per official card id.
-  type EmbeddedMeta = { domain?: string; rarity?: string; energy?: number | null; might?: number | null };
-  const metaByCardId = new Map<string, EmbeddedMeta>();
+  // The full card objects live in the page's __NEXT_DATA__ (confirmed schema):
+  //   { id: "ven-021-166", name, publicCode: "VEN-021/166",
+  //     set: { value: { id: "VEN" } }, rarity: { value: { label: "Epic" } },
+  //     domain: { values: [{ label: "Fury" }] }, cardType: { type: [{ label: "Unit" }] },
+  //     cardImage: { url, accessibilityText }, ... }
+  // Extract every VEN card straight from it — authoritative names, numbers, domains,
+  // rarities, types, full-res official images and rules text.
+  type JsonCard = {
+    cardId: string;
+    name: string;
+    code?: string; // "021/166" | "R01"
+    number?: string; // id segment: "021", "021a", "r01"
+    domain?: string;
+    rarity?: string;
+    type?: string;
+    imageUrl?: string;
+    rules?: string;
+    energy?: number | null;
+    might?: number | null;
+  };
+  const jsonCards: JsonCard[] = [];
+  const seenIds = new Set<string>();
+  const walk = (node: unknown): void => {
+    if (Array.isArray(node)) {
+      for (const x of node) walk(x);
+      return;
+    }
+    if (!node || typeof node !== "object") return;
+    const o = node as Record<string, any>;
+    const id = typeof o.id === "string" ? o.id.toLowerCase() : "";
+    const setId = o?.set?.value?.id;
+    if (/^ven-/.test(id) && typeof o.name === "string" && o.cardImage && setId === "VEN") {
+      if (!seenIds.has(id)) {
+        seenIds.add(id);
+        // Stats live under varying keys but always as { label: "Energy"|"Might"|"Power", value: { id: number } }.
+        let energy: number | null = null;
+        let might: number | null = null;
+        for (const v of Object.values(o)) {
+          const lbl = (v as any)?.label;
+          const num = (v as any)?.value?.id;
+          if (typeof num !== "number") continue;
+          if (lbl === "Energy" || lbl === "Cost") energy = num;
+          if (lbl === "Might") might = num;
+        }
+        const alt = String(o.cardImage?.accessibilityText ?? "");
+        const parsedAlt = parseAlt(alt);
+        jsonCards.push({
+          cardId: id,
+          name: String(o.name),
+          code: typeof o.publicCode === "string" ? o.publicCode.replace(/^VEN-/i, "") : undefined,
+          number: id.match(/^ven-([a-z]?\d+[a-z]?|r\d+[a-z]?)/i)?.[1],
+          domain: o?.domain?.values?.[0]?.label,
+          rarity: o?.rarity?.value?.label,
+          type: o?.cardType?.type?.[0]?.label,
+          imageUrl: typeof o.cardImage?.url === "string" ? o.cardImage.url : undefined,
+          rules: parsedAlt?.rules?.slice(0, 500) || undefined,
+          energy,
+          might,
+        });
+      }
+    }
+    for (const v of Object.values(o)) walk(v);
+  };
   const scripts: { id: string; len: number; text: string }[] = await page.evaluate(() =>
     Array.from(document.querySelectorAll("script"))
-      .filter((sc) => sc.id === "__NEXT_DATA__" || sc.type === "application/json" || (sc.textContent ?? "").includes("ven-"))
+      .filter((sc) => sc.id === "__NEXT_DATA__" || sc.type === "application/json")
       .map((sc) => ({ id: sc.id || sc.type || "inline", len: (sc.textContent ?? "").length, text: (sc.textContent ?? "") }))
       .filter((x) => x.len > 1000)
-      .slice(0, 6)
+      .slice(0, 4)
   );
-  console.log(`Embedded scripts captured: ${scripts.map((x) => `${x.id}(${x.len})`).join(", ") || "none"}`);
-  const pickMetaStr = (o: Record<string, unknown>, keys: string[]): string | undefined => {
-    for (const k of keys) {
-      const v = o[k];
-      if (typeof v === "string" && v.trim()) return v.trim();
-      if (Array.isArray(v) && typeof v[0] === "string") return v[0];
-    }
-    return undefined;
-  };
-  const pickMetaNum = (o: Record<string, unknown>, keys: string[]): number | null => {
-    for (const k of keys) if (typeof o[k] === "number") return o[k] as number;
-    return null;
-  };
-  const mineCards = (node: unknown): void => {
-    if (Array.isArray(node)) {
-      for (const x of node) mineCards(x);
-    } else if (node && typeof node === "object") {
-      const o = node as Record<string, unknown>;
-      const id = pickMetaStr(o, ["cardId", "card_id", "id", "slug"]);
-      if (id && /^ven-/i.test(id)) {
-        const domain = pickMetaStr(o, ["domain", "color", "colors", "faction", "domains"]);
-        const rarity = pickMetaStr(o, ["rarity", "rarityName", "rarity_name"]);
-        if ((domain || rarity) && !metaByCardId.has(id.toLowerCase())) {
-          metaByCardId.set(id.toLowerCase(), {
-            domain,
-            rarity,
-            energy: pickMetaNum(o, ["energy", "cost", "energyCost"]),
-            might: pickMetaNum(o, ["might", "power"]),
-          });
-        }
-        // Log one full sample object so the mapping can be hardened if keys differ.
-        if (metaByCardId.size === 1) console.log("SAMPLE-CARD-OBJECT:", JSON.stringify(o).slice(0, 900));
-      }
-      for (const v of Object.values(o)) mineCards(v);
-    }
-  };
   for (const sc of scripts) {
     try {
-      mineCards(JSON.parse(sc.text));
+      walk(JSON.parse(sc.text));
     } catch {
-      // Not pure JSON (e.g. JS assignment) — try to find a JSON blob inside.
-      const m = sc.text.match(/\{.*\}/s);
-      if (m) {
-        try {
-          mineCards(JSON.parse(m[0]));
-        } catch {
-          /* give up on this script */
-        }
-      }
+      /* not parseable */
     }
   }
-  console.log(`Embedded metadata mined for ${metaByCardId.size} ven-* card ids`);
-  if (metaByCardId.size === 0 && scripts.length) {
-    // Print the raw JSON around known markers so the exact card-object schema can be
-    // read straight from the CI log and the mapper hardened precisely.
-    const big = scripts.reduce((acc, x) => (x.len > acc.len ? x : acc), scripts[0]);
-    for (const marker of ['ven-r01', 'ven-0', '"rarity', '"domain']) {
-      const i = big.text.indexOf(marker);
-      console.log(`MARKER ${marker}: ${i === -1 ? "NOT FOUND" : ""}`);
-      if (i !== -1) console.log(`CTX: ${big.text.slice(Math.max(0, i - 250), i + 1400).replace(/\n/g, " ")}`);
-    }
-    const idCount = (big.text.match(/ven-(?:r?\d+[a-z]?)/gi) ?? []).length;
-    console.log(`MARKER-COUNT ven-*: ${idCount}`);
-  }
+  console.log(`__NEXT_DATA__ extraction: ${jsonCards.length} official VEN cards`);
+  if (jsonCards.length) console.log("SAMPLE:", JSON.stringify(jsonCards[0]));
 
   if (DUMP) {
     mkdirSync(join(process.cwd(), "scratch"), { recursive: true });
@@ -283,27 +289,43 @@ async function main() {
 
   await browser.close();
 
-  // Build the card list: parse alts, attach official ids + embedded metadata,
-  // dedupe by image.
-  const seenSrc = new Set<string>();
-  const cards: Scraped[] = [];
-  for (const { alt, src, cardId } of base) {
-    if (seenSrc.has(src)) continue;
-    seenSrc.add(src);
-    const parsed = parseAlt(alt);
-    if (!parsed) continue;
-    const meta = cardId ? metaByCardId.get(cardId.toLowerCase()) : undefined;
-    cards.push({
-      name: parsed.name,
-      imageUrl: src,
+  // Prefer the authoritative __NEXT_DATA__ extraction; fall back to alt parsing
+  // only if the embedded data ever disappears.
+  let cards: Scraped[];
+  if (jsonCards.length >= 10) {
+    cards = jsonCards.map((c) => ({
+      name: c.name,
+      imageUrl: c.imageUrl ?? "",
       set: "VEN",
-      cardId: cardId || undefined,
-      number: cardId ? cardId.replace(/^ven-/i, "") : undefined,
-      type: parsed.type,
-      domain: meta?.domain,
-      rarity: meta?.rarity,
-      rules: parsed.rules.slice(0, 500),
-    });
+      cardId: c.cardId,
+      number: c.number,
+      code: c.code,
+      type: c.type,
+      domain: c.domain,
+      rarity: c.rarity,
+      rules: c.rules,
+      energy: c.energy,
+      might: c.might,
+    }));
+  } else {
+    console.log("WARN: __NEXT_DATA__ yielded too few cards — falling back to alt-text parsing (no domain/rarity).");
+    const seenSrc = new Set<string>();
+    cards = [];
+    for (const { alt, src, cardId } of base) {
+      if (seenSrc.has(src)) continue;
+      seenSrc.add(src);
+      const parsed = parseAlt(alt);
+      if (!parsed) continue;
+      cards.push({
+        name: parsed.name,
+        imageUrl: src,
+        set: "VEN",
+        cardId: cardId || undefined,
+        number: cardId ? cardId.replace(/^ven-/i, "") : undefined,
+        type: parsed.type,
+        rules: parsed.rules.slice(0, 500),
+      });
+    }
   }
 
   writeFileSync(OUT, JSON.stringify(cards, null, 1));
