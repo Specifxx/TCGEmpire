@@ -72,7 +72,7 @@ export function CinematicHero({
         </h1>
         <p className="animate-fade-in [animation-delay:240ms] mx-auto mt-5 max-w-2xl text-base text-slate-300 sm:text-lg">
           Find the cheapest place to buy Riftbound TCG cards — live local prices in AUD, NZD, USD &amp; GBP
-          compared across stores in Australia, New Zealand, the US and the UK, updated daily.
+          compared across stores in Australia, New Zealand, the US, the UK and Singapore, updated daily.
         </p>
 
         {/* CTAs (one primary + one secondary + the all-features launcher) */}

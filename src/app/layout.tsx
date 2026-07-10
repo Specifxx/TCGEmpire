@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     template: "%s — RiftCompare",
   },
   description:
-    "The Riftbound TCG card database and price comparison. Browse every card and compare live prices across stores in Australia, New Zealand and the United States to find the cheapest place to buy.",
+    "The Riftbound TCG card database and price comparison. Browse every card and compare live prices across stores in Australia, New Zealand, the US, the UK and Singapore to find the cheapest place to buy.",
   applicationName: SITE_NAME,
   keywords: ["Riftbound", "Riftbound TCG", "Riftbound prices", "Riftbound singles", "League of Legends TCG", "card prices"],
   alternates: {
@@ -66,7 +66,7 @@ export const metadata: Metadata = {
     url: SITE_URL,
     title: "RiftCompare — Riftbound Card Database & Price Comparison",
     description:
-      "Compare live Riftbound TCG card prices across stores in Australia, New Zealand and the US to find the cheapest place to buy.",
+      "Compare live Riftbound TCG card prices across stores in Australia, New Zealand, the US, the UK and Singapore to find the cheapest place to buy.",
   },
   twitter: { card: "summary_large_image" },
   // Opt into large image thumbnails + full text snippets in Google/Bing results
@@ -130,7 +130,7 @@ const orgJsonLd = {
         availableLanguage: "English",
       },
       description:
-        "Riftbound: League of Legends TCG card database and live price-comparison across Australia, New Zealand, the United States and the United Kingdom, home of the RiftCompare Index.",
+        "Riftbound: League of Legends TCG card database and live price-comparison across Australia, New Zealand, the United States, the United Kingdom and Singapore, home of the RiftCompare Index.",
     },
     {
       "@type": "WebSite",
@@ -258,7 +258,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </p>
           <p>
             RiftCompare · Riftbound card database &amp; price comparison for
-            Australia, New Zealand, the US and the UK. Prices are sourced from public store listings and may be out
+            Australia, New Zealand, the US, the UK and Singapore. Prices are sourced from public store listings and may be out
             of date — always confirm on the retailer&apos;s site. Not affiliated with
             or endorsed by Riot Games.
           </p>

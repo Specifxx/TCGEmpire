@@ -12,7 +12,7 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: { absolute: "Riftbound Sets — Full Card Lists & Prices | RiftCompare" },
   description:
-    "Every Riftbound: League of Legends TCG set — Origins, Proving Grounds, Spirit Forged and more — with the full card list and live prices compared across AU, NZ, US & UK stores.",
+    "Every Riftbound: League of Legends TCG set — Origins, Proving Grounds, Spirit Forged and more — with the full card list and live prices compared across AU, NZ, US, UK & SG stores.",
   alternates: { canonical: "/sets" },
   keywords: ["Riftbound sets", "Riftbound card list", "Riftbound set prices", "Riftbound TCG sets"],
   openGraph: {

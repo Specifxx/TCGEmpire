@@ -88,8 +88,8 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   const stores = new Set(card.retailerPrices.map((r) => r.retailer)).size;
   const description =
     card.lowestPriceCents != null && stores > 0
-      ? `Live ${displayName} prices from ${fmtAud(card.lowestPriceCents)} across ${stores} ${stores === 1 ? "store" : "stores"} — compare AU, NZ, US & UK, with price history. Updated daily.`
-      : `Compare live ${displayName} prices across AU, NZ, US & UK stores — Riftbound ${card.setName} ${card.collectorNumber}. Price history included. Updated daily.`;
+      ? `Live ${displayName} prices from ${fmtAud(card.lowestPriceCents)} across ${stores} ${stores === 1 ? "store" : "stores"} — compare AU, NZ, US, UK & SG, with price history. Updated daily.`
+      : `Compare live ${displayName} prices across AU, NZ, US, UK & SG stores — Riftbound ${card.setName} ${card.collectorNumber}. Price history included. Updated daily.`;
 
   return {
     title,
@@ -592,7 +592,7 @@ function buildAbout(card: CardForCopy, lowest: number | null, stores: number): s
 
   const p2 = lowest != null && stores > 0
     ? `The lowest tracked price for ${card.name} today is ${formatMoney(lowest)} in Australia, across ${stores} ${stores === 1 ? "store" : "stores"} — RiftCompare also compares New Zealand, US and UK stores, ranked by delivered cost and refreshed daily.`
-    : `We're currently tracking down store listings for ${card.name}. Prices refresh daily across Australian, New Zealand, US and UK stores — check back soon or add it to your wishlist to be ready the moment it's in stock.`;
+    : `We're currently tracking down store listings for ${card.name}. Prices refresh daily across Australian, New Zealand, US, UK and Singapore stores — check back soon or add it to your wishlist to be ready the moment it's in stock.`;
 
   return [p1, p2];
 }
@@ -603,7 +603,7 @@ function buildFaqs(card: CardForCopy, lowest: number | null, stores: number): { 
       q: `How much does ${card.name} cost?`,
       a: lowest != null && stores > 0
         ? `The cheapest live price for ${card.name} (${card.setCode} ${card.collectorNumber}) is currently ${formatMoney(lowest)} across ${stores} Australian ${stores === 1 ? "store" : "stores"}; New Zealand, US and UK prices are compared on this page too. Prices update daily.`
-        : `We don't have a live price for ${card.name} right now. Prices refresh daily across AU, NZ, US and UK stores — check back soon for the cheapest place to buy it.`,
+        : `We don't have a live price for ${card.name} right now. Prices refresh daily across AU, NZ, US, UK and SG stores — check back soon for the cheapest place to buy it.`,
     },
     {
       q: `What set is ${card.name} from?`,
@@ -611,7 +611,7 @@ function buildFaqs(card: CardForCopy, lowest: number | null, stores: number): { 
     },
     {
       q: `Where can I buy ${card.name}?`,
-      a: `Compare every store selling ${card.name} across Australia, New Zealand, the US and the UK on this page, then buy from whichever retailer offers the lowest total price including postage. RiftCompare links straight through to each store.`,
+      a: `Compare every store selling ${card.name} across Australia, New Zealand, the US, the UK and Singapore on this page, then buy from whichever retailer offers the lowest total price including postage. RiftCompare links straight through to each store.`,
     },
   ];
 }

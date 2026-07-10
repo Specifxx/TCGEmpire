@@ -45,7 +45,7 @@ const FAQS = [
   },
   {
     q: "Where can I buy Vendetta cards cheapest?",
-    a: "RiftCompare compares live Vendetta prices across 60+ stores in Australia, New Zealand, the US and the UK, delivered cost included. The moment singles go on sale we surface the cheapest store for every card — check the Vendetta set page on release day.",
+    a: "RiftCompare compares live Vendetta prices across 70+ stores in Australia, New Zealand, the US, the UK and Singapore, delivered cost included. The moment singles go on sale we surface the cheapest store for every card — check the Vendetta set page on release day.",
   },
   {
     q: "How many days until Vendetta?",

@@ -9,7 +9,7 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: "Stores we track — every Riftbound retailer in the comparison",
   description:
-    "The full list of Riftbound stores RiftCompare compares prices across, by market (Australia, New Zealand, the US and the UK). Don't see your store? Request it.",
+    "The full list of Riftbound stores RiftCompare compares prices across, by market (Australia, New Zealand, the US, the UK and Singapore). Don't see your store? Request it.",
   alternates: { canonical: "/stores/tracked" },
 };
 
@@ -26,7 +26,7 @@ const FAQS = [
   },
   {
     q: "Which countries does RiftCompare cover?",
-    a: "RiftCompare covers Australia, New Zealand, the United States, and the United Kingdom. Each market shows prices in its local currency (AUD, NZD, USD, GBP) from retailers that actually ship to buyers in that region. Switch markets using the country selector in the navigation.",
+    a: "RiftCompare covers Australia, New Zealand, the United States, the United Kingdom, and Singapore. Each market shows prices in its local currency (AUD, NZD, USD, GBP, SGD) from retailers that actually ship to buyers in that region. Switch markets using the country selector in the navigation.",
   },
   {
     q: "Can I trust the prices shown on RiftCompare?",

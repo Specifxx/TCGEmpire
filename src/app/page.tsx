@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   title: { absolute: "Buy & Compare Riftbound Card Prices | RiftCompare" },
   // Kept to 25–160 chars (Bing/Google snippet limit) while staying market-neutral.
   description:
-    "Compare live Riftbound TCG card prices across AU, NZ, US & UK stores to find the cheapest place to buy singles and sealed. Updated daily.",
+    "Compare live Riftbound TCG card prices across AU, NZ, US, UK & Singapore stores to find the cheapest place to buy singles and sealed. Updated daily.",
   keywords: [
     "buy Riftbound cards",
     "Riftbound prices",
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
 const FAQS: { q: string; a: string }[] = [
   {
     q: "Where can I buy Riftbound cards?",
-    a: "RiftCompare compares live Riftbound prices across a wide range of local stores in Australia, New Zealand, the US and the UK, plus eBay (AU, US and UK), so you can buy Riftbound cards from whichever shop is cheapest. Search any card to see every store's price and click straight through to buy.",
+    a: "RiftCompare compares live Riftbound prices across a wide range of local stores in Australia, New Zealand, the US, the UK and Singapore, plus eBay (AU, US, UK and SG), so you can buy Riftbound cards from whichever shop is cheapest. Search any card to see every store's price and click straight through to buy.",
   },
   {
     q: "How do I find the cheapest Riftbound prices?",
@@ -62,7 +62,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "Are the Riftbound prices shown in my local currency?",
-    a: "Yes. Prices are shown in the local currency of your selected market — AUD in Australia, NZD in New Zealand, USD in the US and GBP in the UK — so there are no surprise currency conversions.",
+    a: "Yes. Prices are shown in the local currency of your selected market — AUD in Australia, NZD in New Zealand, USD in the US, GBP in the UK and SGD in Singapore — so there are no surprise currency conversions.",
   },
 ];
 
@@ -85,8 +85,13 @@ export default async function HomePage() {
       where: { inStock: true, NOT: { retailer: { startsWith: "marketguide" } } },
       _count: { _all: true },
     }),
-    // Distinct stores per market (eBay excluded), grouped by country + retailer.
-    prisma.retailerPrice.groupBy({ by: ["country", "retailer"], where: { NOT: { retailer: { startsWith: "ebay" } } } }),
+    // Distinct stores per market with LIVE PRICE ROWS (eBay excluded). Singles AND
+    // sealed listings both count — a store with live booster-box prices (e.g.
+    // Flagship Games SG) is genuinely priced before it lists singles.
+    Promise.all([
+      prisma.retailerPrice.groupBy({ by: ["country", "retailer"], where: { NOT: { retailer: { startsWith: "ebay" } } } }),
+      prisma.sealedListing.groupBy({ by: ["country", "retailer"], where: { NOT: { retailer: { startsWith: "ebay" } } } }),
+    ]).then(([singles, sealed]) => [...singles, ...sealed]),
     // Most-searched singles (ties → more expensive card) — the cards people most want.
     getPopularCards(12, country),
     // Today's Top Deals blends four signals; cache per-market. We serialize ALL four

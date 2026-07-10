@@ -1827,6 +1827,49 @@ No prices exist yet (presales aside), so the honest guide is demand structure, n
 
 Track the countdown on the **[live release countdown](/vendetta-countdown)**, see the full **[Vendetta card list tracker](/guides/riftbound-vendetta-card-list)**, and read **[everything you need to know](/blog/riftbound-vendetta-everything-you-need-to-know)** for the rest of the set.`,
   },
+  {
+    slug: "riftbound-price-comparison-singapore",
+    category: "blog",
+    title: "Riftbound Price Comparison Is Now Live in Singapore — Compare SGD Prices Across 11 Stores",
+    excerpt:
+      "RiftCompare now covers Singapore: compare live Riftbound: League of Legends TCG card prices in SGD across 11 Singapore stores plus eBay Singapore and TCGplayer — singles, sealed and the new Vendetta set, updated daily.",
+    author: "RiftCompare",
+    date: "2026-07-10",
+    updated: "2026-07-10",
+    readMins: 4,
+    tags: ["singapore", "announcement", "price comparison", "riftbound singles", "sgd"],
+    shop: [
+      { label: "Riftbound singles on eBay", query: "Riftbound singles" },
+      { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
+    ],
+    body: `Singapore, welcome to the Rift. **RiftCompare — the Riftbound: League of Legends TCG price comparison — is now live in Singapore**, with every price in **Singapore dollars (SGD)** and updated daily.
+
+Riftbound officially arrived in Southeast Asia this month, and Singapore's card shops are stocking up fast — which means the same card can be listed at very different prices depending on where you look. That's exactly the problem RiftCompare solves: search any card and see every store's live price side by side, ranked by what you'd actually pay.
+
+## What you get in Singapore
+
+- **Live SGD prices for every Riftbound card** — the full database, every set from Origins to the upcoming [Vendetta](/sets/vendetta), each card showing the cheapest live price in Singapore dollars.
+- **11 Singapore stores tracked** — Hideout, Action Point Games, 1Collectibles TCG, Flagship Games, SC Collection, Mana Pro, OneMtg, Card Arena, Dueller's Point, Caesar Cards and Zoomies Gaming (see the full [stores we track](/stores/tracked) list). Stores without a webstore yet are listed and start showing prices the moment they sell online.
+- **eBay Singapore** — every card is also checked against [ebay.com.sg] listings, so marketplace deals show up right next to local store prices.
+- **TCGplayer reference pricing** — for cards no local store has in stock yet, we show TCGplayer's market price converted to SGD as an honest reference (clearly a reference, never pretending to be a local listing).
+- **Everything else RiftCompare does** — [price history charts](/movers) on every card, the [sealed products comparison](/sealed), the [deck pricer](/deck) that prices a whole 40-card list in one click, and [price-drop alerts](/browse).
+
+## How to buy Riftbound cards cheaper in Singapore
+
+1. **[Search or browse the database](/browse)** — every card shows its lowest live SGD price.
+2. **Open a card** to see the full store-by-store comparison, in stock and ranked by price.
+3. **Click through and buy** from whichever store is cheapest — RiftCompare links straight to the exact listing.
+
+The site auto-detects Singapore visitors, so prices load in SGD from your first visit — or pick 🇸🇬 Singapore from the country selector at the top any time.
+
+## Perfect timing: Vendetta launches July 31
+
+The new set, **[Riftbound: Vendetta](/sets/vendetta)**, releases **31 July 2026** — the first major set launch since Riftbound reached Southeast Asia. Every revealed card is already browsable, [chase cards are mapped tier by tier](/blog/riftbound-vendetta-chase-cards-so-far), and the moment Vendetta singles hit Singapore shelves their prices land here, compared across every store above.
+
+If you run a Singapore card store and want your Riftbound listings compared (free listing, more customers), **[suggest your store](/stores/suggest)** — we're actively expanding local coverage as the SEA scene grows.
+
+Happy hunting — and pay less for the cards you want. Start at the **[card database](/browse)** or jump straight to the **[Vendetta set page](/sets/vendetta)**.`,
+  },
 ];
 
 export function getArticles(category?: ArticleCategory): Article[] {
