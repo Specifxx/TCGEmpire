@@ -88,7 +88,7 @@ export function CardPriceComparison({
   // `storeCount`/the cheapest metrics (those come only from computeMarket).
   const tcg = useMemo(() => {
     const shownNatively = rows.some(
-      (r) => (r.retailer === "tcgplayer" || r.retailer === "tcgplayer_uk") && r.country === country,
+      (r) => (r.retailer === "tcgplayer" || r.retailer === "tcgplayer_uk" || r.retailer === "tcgplayer_sg") && r.country === country,
     );
     if (shownNatively) return null;
     const std = rows.find((r) => r.retailer === "tcgplayer" && !r.isFoil);
@@ -223,8 +223,8 @@ export function CardPriceComparison({
           buyable table so it still appears on cards with no local listings. */}
       {tcg && <TcgMarketPrice usdCents={tcg.usdCents} usdCentsFoil={tcg.usdCentsFoil} href={tcg.href} />}
 
-      {/* eBay fallback — shown only when we couldn't reach this card's eBay
-          listings this cycle (quota), not for cards that genuinely have none. */}
+      {/* eBay fallback — shown whenever this market has no live eBay row for the
+          card, so a thin market is never a dead end (mirrors the NZ behaviour). */}
       {ebay && (
         <div className="card-surface mt-4 flex flex-wrap items-center justify-between gap-3 border-amber-500/25 bg-amber-500/[0.04] p-4">
           <div className="min-w-0">
@@ -234,7 +234,7 @@ export function CardPriceComparison({
             <p className="mt-1 text-xs text-slate-400">
               {ebay.nz
                 ? <>New Zealand has no eBay marketplace of its own, but eBay Australia ships here — search it directly to see what&apos;s on offer for {displayName}.</>
-                : <>We couldn&apos;t load {ebay.label} listings for {displayName} this cycle — search eBay directly to see what&apos;s on offer.</>}
+                : <>We don&apos;t have a live {ebay.label} listing for {displayName} right now — search eBay directly to see what&apos;s on offer.</>}
             </p>
           </div>
           <a href={ebay.url} target="_blank" rel={outboundRel(ebay.url)} className="btn-primary shrink-0 text-sm">

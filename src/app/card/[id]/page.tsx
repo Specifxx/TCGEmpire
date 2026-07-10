@@ -166,9 +166,10 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   const au = computeMarket(rows, DEFAULT_COUNTRY);
 
   // eBay fallback search per market, precomputed (affiliate tagging is server-side).
-  // Shown by the client section only when that market has no live eBay rows AND we
-  // couldn't check eBay this cycle (quota) — NZ always qualifies (no local eBay;
-  // eBay AU ships there, and a zero-listing page must never be a dead end).
+  // Built for EVERY market and shown by the client section whenever that market has
+  // no live eBay row — whether we couldn't check eBay this cycle (quota) or eBay
+  // genuinely had nothing at last check, a zero-listing market must never be a dead
+  // end. NZ has no local eBay; eBay AU ships there.
   const EBAY_MKT: Record<string, { domain: string; label: string }> = {
     AU: { domain: "ebay.com.au", label: "eBay Australia" },
     NZ: { domain: "ebay.com.au", label: "eBay AU (ships to NZ)" },
@@ -176,17 +177,14 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     UK: { domain: "ebay.co.uk", label: "eBay UK" },
     SG: { domain: "ebay.com.sg", label: "eBay Singapore" },
   };
-  const ebayUnchecked = !card.ebayCheckedAt || Date.now() - card.ebayCheckedAt.getTime() > 28 * 60 * 60 * 1000;
   const ebaySearch: EbaySearchMap = Object.fromEntries(
     Object.entries(EBAY_MKT).map(([c, mkt]) => [
       c,
-      ebayUnchecked || c === "NZ"
-        ? {
-            url: ebayAffiliateUrl(`https://www.${mkt.domain}/sch/i.html?_nkw=${encodeURIComponent(`${card.name} Riftbound`)}`),
-            label: mkt.label,
-            nz: c === "NZ",
-          }
-        : null,
+      {
+        url: ebayAffiliateUrl(`https://www.${mkt.domain}/sch/i.html?_nkw=${encodeURIComponent(`${card.name} Riftbound`)}`),
+        label: mkt.label,
+        nz: c === "NZ",
+      },
     ])
   );
 

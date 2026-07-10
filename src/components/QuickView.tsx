@@ -23,6 +23,7 @@ const EBAY_MKT: Record<string, { domain: string; label: string } | undefined> = 
   NZ: { domain: "ebay.com.au", label: "eBay AU (ships to NZ)" },
   US: { domain: "ebay.com", label: "eBay" },
   UK: { domain: "ebay.co.uk", label: "eBay UK" },
+  SG: { domain: "ebay.com.sg", label: "eBay Singapore" },
 };
 
 interface RetailerPrice {
@@ -154,13 +155,13 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
     .sort((a, b) => a.priceCents - b.priceCents || a.delivered - b.delivered);
 
   // eBay quota fallback — mirrors the full card page (src/app/card/[id]/page.tsx).
-  // When this market's eBay listing is missing AND the eBay pass never reached this
-  // card recently (budget/quota), offer an affiliate-tagged eBay search. NZ has no eBay.
+  // Whenever this market has no live eBay row for the card, offer an
+  // affiliate-tagged eBay search — a thin market must never be a dead end.
+  // (NZ has no local eBay; eBay AU ships there.)
   const ebayMkt = EBAY_MKT[country];
   const hasEbay = (prices ?? []).some((p) => p.retailer.startsWith("ebay") && p.inStock && p.country === country);
-  const ebayUnchecked = !ebayCheckedAt || Date.now() - new Date(ebayCheckedAt).getTime() > 28 * 60 * 60 * 1000;
   const ebaySearchUrl =
-    prices !== null && ebayMkt && !hasEbay && (ebayUnchecked || country === "NZ" || inStock.length === 0)
+    prices !== null && ebayMkt && !hasEbay
       ? ebayAffiliateUrl(`https://www.${ebayMkt.domain}/sch/i.html?_nkw=${encodeURIComponent(`${card.name} Riftbound`)}`)
       : null;
 
