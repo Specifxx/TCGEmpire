@@ -715,6 +715,19 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. S$2.50 · free over S$80",
     country: "SG",
   },
+  // Real SG store with live Riftbound stock (online + organized play), but NOT on
+  // Shopify — no public products.json, so the importer finds nothing until we add
+  // platform support. Listed for directory coverage; never yields fake prices.
+  duellerspoint: {
+    key: "duellerspoint",
+    name: "Dueller's Point",
+    base: "https://www.duellerspoint.com",
+    collections: [],
+    shippingFlatCents: 250,
+    freeOverCents: 8000,
+    shippingNote: "est. S$2.50 · free over S$80",
+    country: "SG",
+  },
 };
 
 export const RETAILER_LIST = Object.values(RETAILERS);
