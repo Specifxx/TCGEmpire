@@ -752,6 +752,29 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. S$2.50 · free over S$80",
     country: "SG",
   },
+
+  // Physical SG stores confirmed carrying Riftbound (no scrapeable webstore yet, so
+  // directory-only — the moment either launches a Shopify store, discovery prices it).
+  caesarcards: {
+    key: "caesarcards",
+    name: "Caesar Cards",
+    base: "https://www.caesarcards.com",
+    collections: [],
+    shippingFlatCents: 250,
+    freeOverCents: 8000,
+    shippingNote: "in-store (Yishun) · webstore coming soon",
+    country: "SG",
+  },
+  zoomiesgaming: {
+    key: "zoomiesgaming",
+    name: "Zoomies Gaming",
+    base: "https://linktr.ee/ZoomiesGaming",
+    collections: [],
+    shippingFlatCents: 250,
+    freeOverCents: 8000,
+    shippingNote: "in-store (Bishan) · weekly Riftbound Nexus Nights",
+    country: "SG",
+  },
 };
 
 export const RETAILER_LIST = Object.values(RETAILERS);
