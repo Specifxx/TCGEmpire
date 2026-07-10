@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Article, ArticleEmbed } from "@/lib/articles";
+import type { Article, ArticleCloseUp, ArticleEmbed } from "@/lib/articles";
 import { prisma } from "@/lib/db";
 import { cardTileSelect } from "@/lib/cards";
 import { DEFAULT_COUNTRY } from "@/lib/country";
@@ -87,6 +87,44 @@ async function resolveEmbed(e: ArticleEmbed | undefined): Promise<CardTileData[]
   return [];
 }
 
+// Riftbound portrait card images are 744×1039 (h/w ≈ 1.396). A close-up crops a
+// horizontal band: the wrapper's padding-top sets the band's height (as % of card
+// height, converted to %-of-width) and translateY slides the full-size image up so
+// the requested region shows. Pure CSS on the official image — no derivative files.
+function CardCloseUpFig({ cu, card }: { cu: ArticleCloseUp; card?: CardTileData }) {
+  if (!card?.imageUrl) return null;
+  const top = cu.topPct ?? 56;
+  const height = cu.heightPct ?? 30;
+  return (
+    <figure className="my-6">
+      <div
+        className="relative overflow-hidden rounded-xl border border-ink-700 bg-ink-900"
+        style={{ paddingTop: `${(height * 1039) / 744}%` }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={card.imageUrl}
+          alt={`${card.name} — rules-text close-up`}
+          loading="lazy"
+          className="absolute left-0 top-0 w-full"
+          style={{ transform: `translateY(-${top}%)` }}
+        />
+      </div>
+      <figcaption className="mt-2 text-center text-sm text-slate-400">
+        {cu.caption}
+        {card.slug && (
+          <>
+            {" "}
+            <Link href={`/card/${card.slug}`} className="text-brand-400 hover:underline">
+              (view {card.name} →)
+            </Link>
+          </>
+        )}
+      </figcaption>
+    </figure>
+  );
+}
+
 // One gallery section: title + note + CardTile grid, or (for the self-populating
 // chase mode) an honest "fills as reveals land" placeholder instead of an empty box.
 function EmbedGallery({ embed, cards }: { embed: ArticleEmbed; cards: CardTileData[] }) {
@@ -116,16 +154,22 @@ function EmbedGallery({ embed, cards }: { embed: ArticleEmbed; cards: CardTileDa
 
 export async function ArticleView({ article }: { article: Article }) {
   // All galleries: `embeds` (positioned in the body via [[embed:N]] markers) plus
-  // the legacy single `embed` (always rendered after the body).
+  // the legacy single `embed` (always rendered after the body). Close-ups reuse the
+  // same resolver with take:1, so they can only ever show a real imported card.
   const embeds = article.embeds ?? [];
-  const [embedsCards, legacyCards] = await Promise.all([
+  const closeups = article.closeups ?? [];
+  const [embedsCards, closeupCards, legacyCards] = await Promise.all([
     Promise.all(embeds.map((e) => resolveEmbed(e))),
+    Promise.all(closeups.map((c) => resolveEmbed({ title: "", slugs: c.slugs, rulesContain: c.rulesContain, rulesSet: c.rulesSet, take: 1 }))),
     resolveEmbed(article.embed),
   ]);
-  // Split the body on gallery markers; odd split-indexes are the embed numbers.
-  const bodyParts = article.body.split(/^\[\[embed:(\d+)\]\]$/m);
+  // Split the body on [[embed:N]] / [[closeup:N]] markers. With two capture groups,
+  // split() yields [text, kind, index, text, kind, index, …] — a stride of 3.
+  const bodyParts = article.body.split(/^\[\[(embed|closeup):(\d+)\]\]$/m);
   const placed = new Set<number>();
-  for (let i = 1; i < bodyParts.length; i += 2) placed.add(parseInt(bodyParts[i], 10));
+  for (let i = 1; i < bodyParts.length; i += 3) {
+    if (bodyParts[i] === "embed") placed.add(parseInt(bodyParts[i + 1], 10));
+  }
   const isGuide = article.category === "guide";
   const backHref = isGuide ? "/guides" : "/blog";
   const backLabel = isGuide ? "All guides" : "All posts";
@@ -177,19 +221,20 @@ export async function ArticleView({ article }: { article: Article }) {
       <AdSlot className="mt-6" height={120} />
 
       <div className="mt-6 border-t border-ink-800 pt-4">
-        {/* Body chunks interleaved with their [[embed:N]] galleries — each gallery
-            sits under its own section heading instead of piling up at the end. */}
-        {bodyParts.map((part, i) =>
-          i % 2 === 0 ? (
-            part.trim() ? <Markdown key={i} content={part} /> : null
-          ) : (
-            (() => {
-              const n = parseInt(part, 10);
-              const e = embeds[n];
-              return e ? <EmbedGallery key={i} embed={e} cards={embedsCards[n] ?? []} /> : null;
-            })()
-          )
-        )}
+        {/* Body chunks interleaved with their [[embed:N]] galleries / [[closeup:N]]
+            figures — each sits under its own section heading instead of piling up
+            at the end. Split stride is 3: text, marker kind, marker index. */}
+        {bodyParts.map((part, i) => {
+          if (i % 3 === 0) return part.trim() ? <Markdown key={i} content={part} /> : null;
+          if (i % 3 === 2) return null; // the index token — consumed with its kind below
+          const n = parseInt(bodyParts[i + 1], 10);
+          if (part === "embed") {
+            const e = embeds[n];
+            return e ? <EmbedGallery key={i} embed={e} cards={embedsCards[n] ?? []} /> : null;
+          }
+          const cu = closeups[n];
+          return cu ? <CardCloseUpFig key={i} cu={cu} card={closeupCards[n]?.[0]} /> : null;
+        })}
       </div>
 
       {/* Galleries without a body marker render after the body (incl. the legacy

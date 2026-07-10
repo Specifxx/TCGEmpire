@@ -36,6 +36,19 @@ export interface ArticleEmbed {
   take?: number; // default 12
 }
 
+// A CSS-cropped close-up of one region of a real card's official image (no
+// derivative image files — pure presentation). The card is resolved by the same
+// queries as galleries (explicit slugs, or first match of a rules-text query), so a
+// close-up can never show a card that isn't genuinely in the database.
+export interface ArticleCloseUp {
+  caption: string;
+  slugs?: string[]; // explicit card (first one found in the DB wins)
+  rulesContain?: string; // …or the first card whose rules text contains this
+  rulesSet?: string;
+  topPct?: number; // top edge of the crop, % of full card height (default 56)
+  heightPct?: number; // crop height, % of full card height (default 30)
+}
+
 export interface Article {
   slug: string;
   category: ArticleCategory;
@@ -55,6 +68,8 @@ export interface Article {
   // Multiple galleries. Position each inside `body` with a `[[embed:N]]` marker on
   // its own line (N = index into this array); unplaced embeds render after the body.
   embeds?: ArticleEmbed[];
+  // Card-image close-ups, positioned in `body` with `[[closeup:N]]` markers.
+  closeups?: ArticleCloseUp[];
 }
 
 export const ARTICLES: Article[] = [
@@ -1391,7 +1406,7 @@ Keep the **[live countdown](/vendetta-countdown)** handy, and read **[everything
       "A complete guide to Empower — the Riftbound: Vendetta mechanic that lets a card gain new abilities after it's in play. How it works, why it's strong, and how to build around it.",
     author: "RiftCompare",
     date: "2026-07-08",
-    updated: "2026-07-08",
+    updated: "2026-07-10",
     readMins: 5,
     tags: ["vendetta", "mechanics", "empower", "gameplay", "guide"],
     shop: [
@@ -1408,6 +1423,18 @@ Keep the **[live countdown](/vendetta-countdown)** handy, and read **[everything
       rulesSet: "VEN",
       take: 12,
     },
+    // Zoomed crop of a real Empower card's rules text (resolved from the DB — the
+    // first officially imported [Empower] card), so the guide can point at the
+    // printed line itself instead of describing it in the abstract.
+    closeups: [
+      {
+        caption: "The printed Empower line on a real Vendetta card — the bracketed cost is what you pay on a later turn to unlock the upgrade.",
+        rulesContain: "[Empower]",
+        rulesSet: "VEN",
+        topPct: 54,
+        heightPct: 32,
+      },
+    ],
     body: `![Vendetta's new mechanics — Flow, Burn and Empower](/vendetta-mechanics.png)
 
 **Empower** is one of three new mechanics arriving with **[Riftbound: Vendetta](/sets/vendetta)** on **31 July 2026**. It's quickly become one of the most searched-for parts of the set — so here's a complete, plain-English guide to what the Empower mechanic does and how to play around it.
@@ -1426,6 +1453,12 @@ Think of it as a two-stage card: stage one gets a body on the board; stage two, 
 4. **Repeat where allowed.** Some Empower cards are designed to keep scaling, rewarding a long game.
 
 Because the payoff is deferred, Empower changes your *sequencing* more than your *shopping list*: the skill is knowing which turn to hold up energy for the upgrade instead of over-committing your hand.
+
+## What Empower looks like on the card
+
+Here's the actual printed text on a revealed Vendetta card — the **[Empower]** keyword sits in the rules box with its activation cost in brackets. When you see this line, read it as: *base card now, upgrade later for the bracketed price.*
+
+[[closeup:0]]
 
 ## Why Empower is strong
 
