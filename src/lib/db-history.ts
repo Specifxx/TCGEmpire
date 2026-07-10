@@ -23,7 +23,15 @@ import { PrismaClient } from "@prisma/client";
 // etc. tables it also creates cost negligible storage empty; only PriceHistory /
 // ClickEvent get real traffic).
 
-const HISTORY_URL = process.env.HISTORY_DATABASE_URL || process.env.DATABASE_URL;
+// HISTORY_DATABASE_URL_2 is the CURRENT history project (its predecessor blew its
+// monthly transfer allowance in July 2026 and is kept only as the migration source);
+// the legacy var and the main-DB fallback keep older setups working unchanged.
+const HISTORY_URL =
+  process.env.HISTORY_DATABASE_URL_2 || process.env.HISTORY_DATABASE_URL || process.env.DATABASE_URL;
+
+// True when the history tables live in their OWN database. When split, PriceHistory's
+// Card foreign key means card rows must exist there too — see ensureHistoryCards().
+export const historyIsSplit = HISTORY_URL !== process.env.DATABASE_URL;
 
 function makeClient() {
   const base = new PrismaClient({
@@ -69,4 +77,22 @@ export const dbHistory = globalForPrisma.dbHistory ?? makeClient();
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.dbHistory = dbHistory;
+}
+
+// PriceHistory.cardId carries a foreign key to Card, and in a split setup the
+// history database has its OWN (mostly stub) Card table — a snapshot for a card
+// that doesn't exist THERE yet fails the whole createMany. Before writing history
+// rows, copy any missing Card rows from the operational DB. No-op when the history
+// tables share the main database, and cheap otherwise (id-set diff + tiny insert).
+export async function ensureHistoryCards(cardIds: string[]): Promise<void> {
+  if (!historyIsSplit || cardIds.length === 0) return;
+  const { prisma } = await import("./db");
+  const have = await dbHistory.card.findMany({ where: { id: { in: cardIds } }, select: { id: true } });
+  const haveSet = new Set(have.map((c) => c.id));
+  const missing = cardIds.filter((id) => !haveSet.has(id));
+  if (missing.length === 0) return;
+  const rows = await prisma.card.findMany({ where: { id: { in: missing } } });
+  // Strip nothing — Card has no outgoing FKs, so full rows insert cleanly.
+  await dbHistory.card.createMany({ data: rows, skipDuplicates: true });
+  console.log(`History DB: copied ${rows.length} missing card rows (FK for PriceHistory).`);
 }

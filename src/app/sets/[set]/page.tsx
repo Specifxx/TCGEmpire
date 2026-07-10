@@ -129,8 +129,9 @@ export default async function SetPage({ params }: { params: { set: string } }) {
             )}
           </p>
 
-          {/* Count pills (released sets only) */}
-          {!set.comingSoon && (
+          {/* Count pills. Released sets show cards + priced; an unreleased set with
+              revealed cards gets a green NEW pill + the revealed count instead. */}
+          {!set.comingSoon ? (
             <div className="mt-4 flex flex-wrap gap-2">
               <span className="chip bg-brand-500/15 text-brand-300">
                 <CountUp value={cards.length} className="num font-bold" />&nbsp;cards
@@ -139,7 +140,14 @@ export default async function SetPage({ params }: { params: { set: string } }) {
                 <CountUp value={priced} className="num font-bold" />&nbsp;priced
               </span>
             </div>
-          )}
+          ) : cards.length > 0 ? (
+            <div className="mt-4 flex flex-wrap gap-2">
+              <span className="chip bg-up/20 font-bold uppercase tracking-wide text-up">New</span>
+              <span className="chip bg-brand-500/15 text-brand-300">
+                <CountUp value={cards.length} className="num font-bold" />&nbsp;cards revealed
+              </span>
+            </div>
+          ) : null}
         </div>
       </section>
 

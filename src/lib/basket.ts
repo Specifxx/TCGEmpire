@@ -9,6 +9,8 @@
 // greedy start + single-move hill-climb, which gets within a couple of % of optimal
 // at deck/wishlist sizes and is fully deterministic.
 
+import { affiliateUrl } from "./affiliate";
+
 export interface BasketListing {
   retailer: string; // store key
   retailerName: string;
@@ -142,7 +144,9 @@ export function optimizeBasket(cards: BasketCard[], stores: Stores): BasketPlan 
     const g =
       groups.get(key) ??
       groups.set(key, { key, name: stores[key]?.name ?? key, lines: [], subtotalCents: 0, shippingCents: 0, freeShipping: false }).get(key)!;
-    g.lines.push({ name: c.name, slug: c.slug, qty: c.qty, unitCents: unit, url: listing.url });
+    // Affiliate-tag the outbound line (eBay EPN / TCGplayer Impact / Sovrn) — the
+    // basket bypassed the wrapper the card page uses, leaving these clicks unpaid.
+    g.lines.push({ name: c.name, slug: c.slug, qty: c.qty, unitCents: unit, url: affiliateUrl(listing.url, key) });
     g.subtotalCents += unit * c.qty;
   });
   for (const g of groups.values()) {

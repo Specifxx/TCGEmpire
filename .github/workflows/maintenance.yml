@@ -18,11 +18,21 @@ on:
           - cards-manual     # apply prisma/manual-cards.json (promos/backstop)
           - vendetta-pipeline # scrape official gallery + import VEN reveals
           - probe-sg         # read-only Singapore store scan (no DB writes)
+          - probe-url        # read-only page fetch + font/style diagnostics (url input)
           - import-prices    # run the store price importer for this ref's store list
+          - migrate-history  # copy PriceHistory/ClickEvent to HISTORY_DATABASE_URL_2
       dry_run:
         description: "Dry run (log what would change, write nothing)"
         type: boolean
         default: false
+      ebay_sg:
+        description: "import-prices only: also force an eBay SINGAPORE refresh (~1k calls)"
+        type: boolean
+        default: false
+      url:
+        description: "probe-url only: page to fetch for font/style diagnostics"
+        type: string
+        required: false
 
 jobs:
   run:
@@ -48,7 +58,33 @@ jobs:
 
       - name: Push schema (additive)
         if: inputs.task == 'db-push'
-        run: npx prisma db push --skip-generate
+        env:
+          # The click/price-history tables can live in a SECOND Neon project
+          # (src/lib/db-history.ts). Ordinary pushes never reach it, so new columns
+          # (e.g. ClickEvent.path) 500 the admin clicks page until pushed here too.
+          HISTORY_DB: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 || secrets.HISTORY_DATABASE_URL }}
+        run: |
+          npx prisma db push --skip-generate
+          if [ -n "$HISTORY_DB" ]; then
+            echo "Pushing schema to the HISTORY database too…"
+            DATABASE_URL="$HISTORY_DB" npx prisma db push --skip-generate
+          else
+            echo "No history-database secret — single-database setup, nothing extra to push."
+          fi
+
+      - name: Migrate history to the new history database
+        if: inputs.task == 'migrate-history'
+        env:
+          HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
+          HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
+        run: |
+          if [ -z "$HISTORY_DATABASE_URL_2" ]; then
+            echo "::error::HISTORY_DATABASE_URL_2 is not visible to Actions (checked secrets and vars) — add it as a repository secret."
+            exit 1
+          fi
+          echo "Pushing schema to the new history database…"
+          DATABASE_URL="$HISTORY_DATABASE_URL_2" npx prisma db push --skip-generate
+          npx tsx scripts/migrate-history.ts
 
       - name: Sync cards from RiftScribe (fetch + additive upsert)
         if: inputs.task == 'cards-sync'
@@ -64,13 +100,43 @@ jobs:
         if: inputs.task == 'probe-sg'
         run: npx tsx scripts/probe-sg-stores.ts
 
+      - name: Probe URL (font/style diagnostics)
+        # The dev sandbox's egress proxy blocks most external sites; runners don't.
+        # Prints the fetched page's font stack (next/font @font-face families,
+        # Google Fonts links, font-family declarations) for design-matching work.
+        if: inputs.task == 'probe-url'
+        run: |
+          curl -sSL --max-time 30 -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36" "${{ inputs.url }}" -o page.html
+          echo "== bytes: $(wc -c < page.html)"
+          echo "== font-family declarations:"
+          grep -oiE "font-family:[^;}\"]{1,120}" page.html | sort -u | head -40 || true
+          echo "== next/font face names:"
+          grep -oiE "__[A-Za-z_]+_[0-9a-f]{6}" page.html | sort -u | head -20 || true
+          echo "== google fonts / font links:"
+          grep -oiE "https://fonts[^\"')]+" page.html | sort -u | head -20 || true
+          echo "== linked stylesheets:"
+          grep -oiE "/_next/static/css/[^\"']+" page.html | sort -u | head -10 || true
+          for css in $(grep -oiE "/_next/static/css/[^\"']+" page.html | sort -u | head -4); do
+            echo "== css $css:"
+            base="${{ inputs.url }}"
+            curl -sSL --max-time 20 "${base%/}$css" | grep -oiE "font-family:[^;}]{1,120}" | sort -u | head -20 || true
+          done
+
       - name: Import store prices (this ref's retailer list)
         if: inputs.task == 'import-prices'
         env:
-          # eBay is deliberately NOT refreshed here — the scheduled refresh-prices
-          # workflow owns the daily eBay quota. This task is for store-list changes
-          # (e.g. new-market rollouts) where we want Shopify store prices now.
-          EBAY_REFRESH: "false"
+          # eBay is deliberately NOT refreshed here by default — the scheduled
+          # refresh-prices workflow owns the daily quota. EXCEPTION: the ebay_sg
+          # input forces a SINGLE-market eBay Singapore pass (~1k calls, safe on
+          # top of the daily run) for new-market rollouts.
+          EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
+          EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
+          EBAY_AFFILIATE_CAMPAIGN: ${{ secrets.EBAY_AFFILIATE_CAMPAIGN }}
+          EBAY_REFRESH: ${{ inputs.ebay_sg && 'true' || 'false' }}
+          EBAY_FORCE: ${{ inputs.ebay_sg && '1' || '' }}
+          EBAY_ONLY_MARKET: ${{ inputs.ebay_sg && 'SG' || '' }}
+          # Route history/click writes to the current history project (db-history.ts).
+          HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
         run: npx tsx scripts/import-prices.ts
 
       - name: Vendetta pipeline (official gallery → import)
