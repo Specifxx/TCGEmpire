@@ -24,7 +24,8 @@ export function OutboundLink({
 }) {
   function log() {
     try {
-      const blob = new Blob([JSON.stringify({ retailer, country, kind })], { type: "application/json" });
+      const path = typeof window !== "undefined" ? window.location.pathname : undefined;
+      const blob = new Blob([JSON.stringify({ retailer, country, kind, path })], { type: "application/json" });
       navigator.sendBeacon("/api/click", blob);
     } catch {
       /* sendBeacon unsupported or blocked — ignore, never block the click */

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { dbHistory } from "@/lib/db-history";
+import { ClicksTable, type ClickRow } from "@/components/admin/ClicksTable";
 
 export const dynamic = "force-dynamic";
 
@@ -26,15 +27,18 @@ export default async function ClicksAdminPage({ searchParams }: { searchParams: 
   let rows: Row[] = [];
   let byCountry: { country: string; n: number }[] = [];
   let byKind: { kind: string; n: number }[] = [];
+  let recent: ClickRow[] = [];
   let error = false;
   try {
-    const [all, last30, last7, country30, kind30] = await Promise.all([
+    const [all, last30, last7, country30, kind30, events] = await Promise.all([
       dbHistory.clickEvent.groupBy({ by: ["retailer"], _count: { _all: true } }),
       dbHistory.clickEvent.groupBy({ by: ["retailer"], _count: { _all: true }, where: { createdAt: { gte: d30 } } }),
       dbHistory.clickEvent.groupBy({ by: ["retailer"], _count: { _all: true }, where: { createdAt: { gte: d7 } } }),
       dbHistory.clickEvent.groupBy({ by: ["country"], _count: { _all: true }, where: { createdAt: { gte: d30 } } }),
       dbHistory.clickEvent.groupBy({ by: ["kind"], _count: { _all: true }, where: { createdAt: { gte: d30 } } }),
+      dbHistory.clickEvent.findMany({ orderBy: { createdAt: "desc" }, take: 500, select: { retailer: true, country: true, kind: true, path: true, createdAt: true } }),
     ]);
+    recent = events.map((e) => ({ retailer: e.retailer, country: e.country, kind: e.kind, path: e.path, createdAt: e.createdAt.toISOString() }));
     const m30 = new Map(last30.map((r) => [r.retailer, r._count._all]));
     const m7 = new Map(last7.map((r) => [r.retailer, r._count._all]));
     rows = all
@@ -103,6 +107,18 @@ export default async function ClicksAdminPage({ searchParams }: { searchParams: 
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <Breakdown title="By market · 30d" items={byCountry.map((r) => ({ k: r.country, n: r.n }))} fmt={fmt} />
             <Breakdown title="By type · 30d" items={byKind.map((r) => ({ k: r.kind, n: r.n }))} fmt={fmt} />
+          </div>
+
+          {/* Individual clicks — which store, which page (card/product), which market,
+              and when. Sortable by any column, filterable. */}
+          <div className="mt-8">
+            <h2 className="mb-2 text-lg font-bold text-white">Recent clicks</h2>
+            <p className="mb-3 text-xs text-slate-500">
+              The last {recent.length.toLocaleString()} outbound clicks. Click a column heading to sort (▲▼). The
+              &ldquo;page&rdquo; is the card/product the visitor clicked from (only recorded for clicks after this
+              shipped).
+            </p>
+            <ClicksTable events={recent} />
           </div>
         </>
       )}

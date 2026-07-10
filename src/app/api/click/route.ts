@@ -18,7 +18,9 @@ export async function POST(req: Request) {
     if (!retailer) return ok;
     const country = COUNTRIES.has(body.country) ? body.country : "AU";
     const kind = KINDS.has(body.kind) ? body.kind : "single";
-    await dbHistory.clickEvent.create({ data: { retailer, country, kind } });
+    // The page the click came from (which card/product). Keep it a path only.
+    const path = typeof body?.path === "string" && body.path.startsWith("/") ? body.path.slice(0, 200) : null;
+    await dbHistory.clickEvent.create({ data: { retailer, country, kind, path } });
   } catch {
     /* never fail a beacon */
   }

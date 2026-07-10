@@ -641,6 +641,10 @@ model ClickEvent {
   retailer  String // store key, e.g. "ebay", "cardbot", "tcgplayer"
   country   String // market the visitor was shopping (AU/NZ/US)
   kind      String   @default("single") // "single" | "sealed"
+  // The page the click came FROM (e.g. "/card/lee-sin-centered-ogn-151-298"), so the
+  // admin can see which card/product's link was clicked, not just the store. Null for
+  // rows created before this existed.
+  path      String?
   createdAt DateTime @default(now())
 
   @@index([createdAt])

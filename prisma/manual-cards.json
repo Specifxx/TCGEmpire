@@ -1,19 +1,35 @@
 [
   {
-    "_note": "BACKSTOP for cards our source (RiftScribe) genuinely doesn't have. Most 'missing' cards are just prod being behind the snapshot — run `npx tsx scripts/sync-cards.ts` FIRST; it adds everything in prisma/riftbound-cards.json. Only add a card here if it's still missing after a sync. Fill EVERY FILL_ME with the real value from TCGplayer, then run `npx tsx scripts/add-manual-cards.ts` (entries with any FILL_ME are skipped, so nothing fabricated is inserted). imageUrl from a TCGplayer product URL tcgplayer.com/product/<ID>/... = https://tcgplayer-cdn.tcgplayer.com/product/<ID>_in_1000x1000.jpg . collectorNumber includes the alt-art letter e.g. '154a/298'. domain: Fury|Calm|Mind|Body|Chaos|Order|Colorless. type: Unit|Spell|Gear|Rune|Battlefield|Legend. rarity: Common|Uncommon|Rare|Epic|Showcase.",
-    "_example": {
-      "name": "Some Card, Title",
-      "setCode": "OGN",
-      "setName": "Origins",
-      "collectorNumber": "FILL_ME",
-      "domain": "FILL_ME",
-      "type": "Unit",
-      "rarity": "Showcase",
-      "variant": "a",
-      "energyCost": null,
-      "might": null,
-      "imageUrl": "FILL_ME",
-      "imageThumbUrl": null
-    }
+    "_note": "BACKSTOP for cards RiftScribe genuinely lacks (e.g. TCGplayer Organized-Play / promotional printings). Most 'missing' cards are just prod being behind the snapshot — run `npm run cards:sync` FIRST. Only add a card here if it's still missing after that. `externalId` must be unique and stable (use it for promos so they never clobber the base card). imageUrl from a TCGplayer product URL tcgplayer.com/product/<ID>/... = https://tcgplayer-cdn.tcgplayer.com/product/<ID>_in_1000x1000.jpg . Any FILL_ME = skipped. Run: `npm run cards:manual` (DRY_RUN=1 to preview)."
+  },
+  {
+    "externalId": "promo-ogn-151-lee-sin-centered-op",
+    "name": "Lee Sin, Centered",
+    "setCode": "OGN",
+    "setName": "Origins",
+    "collectorNumber": "151/298",
+    "domain": "Body",
+    "type": "Unit",
+    "rarity": "Showcase",
+    "isPromo": true,
+    "energyCost": null,
+    "might": null,
+    "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/693156_in_1000x1000.jpg",
+    "imageThumbUrl": "https://tcgplayer-cdn.tcgplayer.com/product/693156_in_400x400.jpg"
+  },
+  {
+    "externalId": "promo-ogn-263-teemo-swift-scout-altart",
+    "name": "Teemo, Swift Scout",
+    "setCode": "OGN",
+    "setName": "Origins",
+    "collectorNumber": "263/298",
+    "domain": "Mind",
+    "type": "Legend",
+    "rarity": "Showcase",
+    "isPromo": true,
+    "energyCost": null,
+    "might": null,
+    "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/670598_in_1000x1000.jpg",
+    "imageThumbUrl": "https://tcgplayer-cdn.tcgplayer.com/product/670598_in_400x400.jpg"
   }
 ]
