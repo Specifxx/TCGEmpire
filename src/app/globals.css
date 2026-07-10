@@ -28,12 +28,16 @@ body {
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* Terminal numerals everywhere: lining, tabular figures by default so any digit
+     that ISN'T wrapped in .num still aligns like a trading desk, not a flyer. */
+  font-feature-settings: "tnum" 1, "lnum" 1;
 }
 
-/* Headings use the display font (Space Grotesk) for a more dynamic, energetic feel. */
+/* Headings: same family as the body (Inter), differentiated by weight + tighter
+   tracking — the financial-terminal register, not a decorative display face. */
 h1, h2, h3 {
-  font-family: var(--font-display), var(--font-sans), sans-serif;
-  letter-spacing: -0.015em;
+  font-family: var(--font-sans), sans-serif;
+  letter-spacing: -0.025em;
 }
 
 /* Accessible, brand-consistent keyboard focus ring on every interactive element.

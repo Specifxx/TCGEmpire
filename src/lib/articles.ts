@@ -23,11 +23,30 @@ export interface ArticleEmbed {
   note?: string;
   slugs?: string[];
   chaseSet?: string; // set code, e.g. "VEN"
+  // Chase sub-tier for chaseSet mode (omit = every chase-tier printing):
+  //  - "overnumbered": collector number beyond the set total (e.g. 167/166), plus
+  //    SP-numbered specials — the top-end pulls.
+  //  - "altart": alternate-art printings (variant letter, e.g. 021a).
+  //  - "epic": in-set Epic-rarity base prints — the "hidden chase" tier.
+  chaseTier?: "overnumbered" | "altart" | "epic";
   // Rules-text query: cards whose ability text contains this string (optionally
   // scoped to a set) — e.g. "[Empower]" collects every Empower card as reveals land.
   rulesContain?: string;
   rulesSet?: string;
   take?: number; // default 12
+}
+
+// A CSS-cropped close-up of one region of a real card's official image (no
+// derivative image files — pure presentation). The card is resolved by the same
+// queries as galleries (explicit slugs, or first match of a rules-text query), so a
+// close-up can never show a card that isn't genuinely in the database.
+export interface ArticleCloseUp {
+  caption: string;
+  slugs?: string[]; // explicit card (first one found in the DB wins)
+  rulesContain?: string; // …or the first card whose rules text contains this
+  rulesSet?: string;
+  topPct?: number; // top edge of the crop, % of full card height (default 56)
+  heightPct?: number; // crop height, % of full card height (default 30)
 }
 
 export interface Article {
@@ -46,6 +65,11 @@ export interface Article {
   shop?: ShopLink[];
   // Optional embedded card gallery (real CardTiles → QuickView popup on click).
   embed?: ArticleEmbed;
+  // Multiple galleries. Position each inside `body` with a `[[embed:N]]` marker on
+  // its own line (N = index into this array); unplaced embeds render after the body.
+  embeds?: ArticleEmbed[];
+  // Card-image close-ups, positioned in `body` with `[[closeup:N]]` markers.
+  closeups?: ArticleCloseUp[];
 }
 
 export const ARTICLES: Article[] = [
@@ -1382,7 +1406,7 @@ Keep the **[live countdown](/vendetta-countdown)** handy, and read **[everything
       "A complete guide to Empower — the Riftbound: Vendetta mechanic that lets a card gain new abilities after it's in play. How it works, why it's strong, and how to build around it.",
     author: "RiftCompare",
     date: "2026-07-08",
-    updated: "2026-07-08",
+    updated: "2026-07-10",
     readMins: 5,
     tags: ["vendetta", "mechanics", "empower", "gameplay", "guide"],
     shop: [
@@ -1399,6 +1423,18 @@ Keep the **[live countdown](/vendetta-countdown)** handy, and read **[everything
       rulesSet: "VEN",
       take: 12,
     },
+    // Zoomed crop of a real Empower card's rules text (resolved from the DB — the
+    // first officially imported [Empower] card), so the guide can point at the
+    // printed line itself instead of describing it in the abstract.
+    closeups: [
+      {
+        caption: "The printed Empower line on a real Vendetta card — the bracketed cost is what you pay on a later turn to unlock the upgrade.",
+        rulesContain: "[Empower]",
+        rulesSet: "VEN",
+        topPct: 54,
+        heightPct: 32,
+      },
+    ],
     body: `![Vendetta's new mechanics — Flow, Burn and Empower](/vendetta-mechanics.png)
 
 **Empower** is one of three new mechanics arriving with **[Riftbound: Vendetta](/sets/vendetta)** on **31 July 2026**. It's quickly become one of the most searched-for parts of the set — so here's a complete, plain-English guide to what the Empower mechanic does and how to play around it.
@@ -1417,6 +1453,12 @@ Think of it as a two-stage card: stage one gets a body on the board; stage two, 
 4. **Repeat where allowed.** Some Empower cards are designed to keep scaling, rewarding a long game.
 
 Because the payoff is deferred, Empower changes your *sequencing* more than your *shopping list*: the skill is knowing which turn to hold up energy for the upgrade instead of over-committing your hand.
+
+## What Empower looks like on the card
+
+Here's the actual printed text on a revealed Vendetta card — the **[Empower]** keyword sits in the rules box with its activation cost in brackets. When you see this line, read it as: *base card now, upgrade later for the bracketed price.*
+
+[[closeup:0]]
 
 ## Why Empower is strong
 
@@ -1711,39 +1753,62 @@ Read the mechanics in full — **[Flow](/guides/riftbound-flow-explained)**, **[
       { label: "Overnumbered chase cards (current sets)", query: "Riftbound Overnumbered" },
       { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
     ],
-    // Self-populating gallery: the chase-tier VEN printings (Showcase/Epic, signature
-    // "*", alt-arts) render as clickable CardTiles as the official-gallery importer
-    // adds them — no card is ever named before it's really in the database.
-    embed: {
-      title: "Chase-tier Vendetta cards revealed so far",
-      note: "Every chase-tier printing (Showcase, Epic, signature and alt-art) currently in our database — tap a card for its page and live prices the moment stores list it. This gallery grows as reveals land.",
-      chaseSet: "VEN",
-      take: 16,
-    },
+    // Self-populating tier galleries: each [[embed:N]] marker in the body renders
+    // the matching gallery of real, imported VEN printings — no card is ever named
+    // or shown before it's really in the database, and each tier fills as the
+    // official-gallery importer adds reveals.
+    embeds: [
+      {
+        title: "Overnumbered & special chases revealed so far",
+        note: "Every card numbered beyond the set (or SP-numbered) currently in our database — tap a card for its page and live prices the moment stores list it.",
+        chaseSet: "VEN",
+        chaseTier: "overnumbered",
+        take: 24,
+      },
+      {
+        title: "Alternate-art chases revealed so far",
+        note: "Every alt-art printing currently in our database — the gallery grows as reveals land.",
+        chaseSet: "VEN",
+        chaseTier: "altart",
+        take: 24,
+      },
+      {
+        title: "Epic-rarity picks revealed so far",
+        note: "The in-set Epics — history says one or two of these become the sleeper chases of the set.",
+        chaseSet: "VEN",
+        chaseTier: "epic",
+        take: 24,
+      },
+    ],
     body: `![Riftbound: Vendetta — releases 31 July 2026](/vendetta-hero.png)
 
-Vendetta spoiler season is running right now (reveals through mid-July), and the picture of the set's **chase cards** — the premium pulls that drive box prices — is coming into focus. Here's everything confirmed so far, updated as reveals land — and the **live gallery at the bottom of this post** shows every chase-tier card as it's revealed: tap any card to open its page.
+Vendetta spoiler season is running right now (reveals through mid-July), and the picture of the set's **chase cards** — the premium pulls that drive box prices — is coming into focus. This post breaks the chase down **tier by tier**, with a live gallery of real revealed cards under each tier: tap any card to open its page and see live prices the moment stores list it.
 
-## The chase structure
+## Tier 1: Overnumbered chases
 
-Vendetta is a **166-card set with nine champion Legends**, and its premium tiers stack up like this:
+The top of the pyramid. An **Overnumbered** card carries a collector number *beyond* the set's total — Vendetta is a 166-card set, so anything numbered **167/166 or higher** is printed at a much lower rate than the set proper. (New to Overnumbers? Read **[our full explainer](/guides/riftbound-vendetta-overnumbers-explained)**.)
 
-- **50+ Showcase cards** — the alternate-art tier, the broadest chase pool in the set.
-- **Signed Overnumbered Legends** — each of the set's champion Legends gets a signed Overnumbered variant, the top-end pull. (New to Overnumbers? Read **[our full explainer](/guides/riftbound-vendetta-overnumbers-explained)**.)
-- **Rival Overnumbers with connecting artwork** — Vendetta's signature twist: Overnumbered cards whose art **connects across multiple cards**, built around the set's rivalry pairs. Completed pairs are the display pieces of the set — and paired chase cards historically concentrate demand, because everyone who pulls one half wants the other.
+What's confirmed so far from the official gallery: champion Overnumbers for **Vi, Jinx, Jayce, Viktor, Rengar, Kha'Zix, Gangplank and Illaoi**, a run of Overnumbered spell and gear reprints (Death Mark-style staples with premium treatments), and **SP-numbered specials** like **Ahri, Inquisitive** that sit outside the main numbering entirely. Riot has also teased the treatment for **Swain, Irelia, Ambessa, Mel, Kennen, Akali and Nasus** via card backs — the gallery below updates automatically as each one is officially revealed and imported.
 
-## The rivalries (confirmed)
+Two demand notes: **rival pairs with connecting artwork** get priced as a *pair* (the scarcer half sets the completion cost), and **signed Overnumbered Legends** are the likeliest single most expensive pulls of the set.
 
-The set is built on rival pairings from League lore, confirmed so far:
+[[embed:0]]
 
-- **Zed vs Shen** — also the set's first **Showdown Deck**, the new two-player intro product.
-- **Nasus vs Renekton** — the sibling rivalry.
-- **Vi vs Jinx** — the sisters, both fan favourites with proven chase demand in earlier sets.
-- **Jayce vs Viktor** — Piltover against the Arcane; **Jayce, Brilliant Inventor** is among the first rival Legends officially revealed.
+## Tier 2: Alternate-art chases
 
-## Who's teased for the Overnumbered treatment
+The broadest premium pool: **alt-art printings** of the set's champions and key spells, marked with a letter after the collector number (021a, 138a, …). Fourteen are confirmed already — both faces of the Showdown Deck rivalry get one (**Zed, From the Shadows** and **Shen, Leader of the Kinkou Order**), alongside **Akali, Renekton, Nasus, Jayce, Mel, Kennen and Ambessa**.
 
-Riot has teased the Overnumbered series via card backs, pointing at **Swain, Irelia, Ambessa, Mel, Kennen, Jayce, Akali, Nasus, Vi and Jinx** getting the treatment. Treat that as teased-not-final until each card is officially shown — we'll update this post as reveals confirm them.
+Alt-arts are where art taste drives price more than playability: historically the champions with the biggest fanbases (and the cleanest full-art treatments) hold value even when the base card sees no play.
+
+[[embed:1]]
+
+## Tier 3: The Epic-rarity sleepers
+
+The tier collectors overlook — and shouldn't. In **Origins** the pattern was set by **Kai'Sa**: an Epic that was both *strong in play* and *genuinely beautiful*, and it out-priced plenty of flashier pulls. The way to spot the Vendetta equivalent: an Epic champion that headlines a real deck **and** looks good enough that players want the exact copy they play with.
+
+The candidates so far: **Akali, Deadly Weapon** and **Zed, From the Shadows** (the aggro headliners), **Shen, Leader of the Kinkou Order** (the Showdown Deck's other face), and **Nasus, Ascended**, **Jayce, Brilliant Inventor**, **Mel, Newly Awakened** and **Ambessa, Respected and Feared** rounding out the champion Epics. If one of these ends up defining the early meta, its base Epic print is the value pick against its alt-art.
+
+[[embed:2]]
 
 ## Which chases will be most contested
 
@@ -1751,7 +1816,8 @@ No prices exist yet (presales aside), so the honest guide is demand structure, n
 
 1. **Marquee-champion Overnumbers** — Jinx, Vi and Akali have the broadest collector bases from League and Arcane; their signed Overnumbers are the likeliest top of the set.
 2. **Completed Rival pairs** — connecting art means the market prices the *pair*, and the scarcer half sets the cost of completion.
-3. **Showdown-deck rivals (Zed/Shen)** — the faces of the set's headline product tend to see outsized early demand.
+3. **Showdown-deck rivals (Zed/Shen)** — the faces of the set's headline product tend to see outsized early demand, in every tier they appear in.
+4. **The Kai'Sa-pattern Epic** — whichever Epic champion ends up both meta-defining and pretty. Watch week-one play data, not just pull rates.
 
 ## How to buy them without the hype tax
 

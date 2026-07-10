@@ -34,9 +34,21 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"],
-        display: ["var(--font-display)", "var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
+        // Headings share the body family (Inter) — the terminal look differentiates
+        // by weight and tracking, not by a second decorative face.
+        display: ["var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
         // Monospace — prices, tickers, tabular figures (the terminal voice).
         mono: ["var(--font-mono)", "ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"],
+      },
+      // Tightened radius scale: the default Tailwind curves (12–24px) read soft and
+      // consumer-app; a terminal squares off. One scale change sharpens every panel,
+      // card and button sitewide without touching a component.
+      borderRadius: {
+        md: "4px",
+        lg: "6px",
+        xl: "8px",
+        "2xl": "10px",
+        "3xl": "12px",
       },
       boxShadow: {
         // Flat panels: a hairline top highlight + a quiet drop. No coloured glow.
