@@ -332,6 +332,14 @@ async function main() {
   const withDomain = cards.filter((c) => c.domain).length;
   const withRarity = cards.filter((c) => c.rarity).length;
   console.log(`Saved ${cards.length} cards (${withDomain} with domain, ${withRarity} with rarity) to prisma/vendetta-cards.json`);
+
+  // Compact census — one line per card, sorted by collector number — so a CI log is
+  // enough to see the full revealed set (chase-tier classification, spoiler tracking)
+  // without downloading the artifact.
+  const numOf = (c: Scraped) => parseInt((c.number ?? "").match(/^\d+/)?.[0] ?? "9999", 10);
+  for (const c of [...cards].sort((a, b) => numOf(a) - numOf(b))) {
+    console.log(`CARD ${(c.number ?? "?").padEnd(6)} ${(c.rarity ?? "?").padEnd(10)} ${(c.domain ?? "?").padEnd(8)} ${c.name}`);
+  }
 }
 
 main().catch((e) => {

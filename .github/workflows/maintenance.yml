@@ -17,6 +17,8 @@ on:
           - cards-sync       # fetch latest RiftScribe snapshot + additive upsert
           - cards-manual     # apply prisma/manual-cards.json (promos/backstop)
           - vendetta-pipeline # scrape official gallery + import VEN reveals
+          - probe-sg         # read-only Singapore store scan (no DB writes)
+          - import-prices    # run the store price importer for this ref's store list
       dry_run:
         description: "Dry run (log what would change, write nothing)"
         type: boolean
@@ -25,7 +27,13 @@ on:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
+    # import-prices writes the same tables as the scheduled refresh — join its
+    # concurrency group so the two can never run at once. Other tasks keep a
+    # per-run group (no cross-blocking).
+    concurrency:
+      group: ${{ inputs.task == 'import-prices' && 'refresh-prices' || format('maintenance-{0}', github.run_id) }}
+      cancel-in-progress: false
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
@@ -51,6 +59,19 @@ jobs:
       - name: Apply manual cards (promos / source-gap backstop)
         if: inputs.task == 'cards-manual'
         run: npx tsx scripts/add-manual-cards.ts
+
+      - name: Probe Singapore stores (read-only market scan)
+        if: inputs.task == 'probe-sg'
+        run: npx tsx scripts/probe-sg-stores.ts
+
+      - name: Import store prices (this ref's retailer list)
+        if: inputs.task == 'import-prices'
+        env:
+          # eBay is deliberately NOT refreshed here — the scheduled refresh-prices
+          # workflow owns the daily eBay quota. This task is for store-list changes
+          # (e.g. new-market rollouts) where we want Shopify store prices now.
+          EBAY_REFRESH: "false"
+        run: npx tsx scripts/import-prices.ts
 
       - name: Vendetta pipeline (official gallery → import)
         if: inputs.task == 'vendetta-pipeline'
