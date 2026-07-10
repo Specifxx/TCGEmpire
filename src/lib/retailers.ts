@@ -13,10 +13,10 @@ export interface RetailerInfo {
   shippingFlatCents: number; // estimated postage for a single card
   freeOverCents: number; // order total at/above which shipping is free
   shippingNote: string;
-  // Market the store serves. Omitted = "AU" (the original Australian stores). NZ/US/UK
-  // stores are scraped with ?country=NZ/US/GB and priced in NZD/USD/GBP. eBay runs for
-  // AU + US + UK.
-  country?: "AU" | "NZ" | "US" | "UK";
+  // Market the store serves. Omitted = "AU" (the original Australian stores).
+  // NZ/US/UK/SG stores are scraped with ?country=NZ/US/GB/SG and priced in
+  // NZD/USD/GBP/SGD. eBay runs for AU + US + UK + SG.
+  country?: "AU" | "NZ" | "US" | "UK" | "SG";
 }
 
 export const RETAILERS: Record<string, RetailerInfo> = {
@@ -632,12 +632,58 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. £1.20 · free over £20",
     country: "UK",
   },
+
+  // ---- Singapore stores (country: "SG"; prices in SGD; uses eBay SG) ------------
+  // Verified real Singapore LGS/online shops with live Riftbound singles on Shopify
+  // (legitimacy over quantity — a Riftbound distribution partner among them).
+  // Collections auto-discover from each store's sitemap; the handle is a fallback.
+  // Shipping figures are SGD estimates.
+  hideoutsg: {
+    key: "hideoutsg",
+    name: "Hideout",
+    base: "https://hideoutcg.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 200,
+    freeOverCents: 8000,
+    shippingNote: "est. S$2.00 · free over S$80",
+    country: "SG",
+  },
+  flagshipgames: {
+    key: "flagshipgames",
+    name: "Flagship Games",
+    base: "https://www.flagshipgames.sg",
+    collections: ["riftbound-english"],
+    shippingFlatCents: 250,
+    freeOverCents: 6000,
+    shippingNote: "est. S$2.50 · free over S$60",
+    country: "SG",
+  },
+  sccollection: {
+    key: "sccollection",
+    name: "SC Collection",
+    base: "https://www.sc-collection.sg",
+    collections: ["riftbound"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. S$2.00 · free over S$50",
+    country: "SG",
+  },
+  actionpoint: {
+    key: "actionpoint",
+    name: "Action Point Games",
+    base: "https://actionpoint.sg",
+    collections: ["riftbound"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. S$2.00 · free over S$50",
+    country: "SG",
+  },
 };
 
 export const RETAILER_LIST = Object.values(RETAILERS);
 
 // The market a store serves (defaults to AU for the original stores).
-export function retailerCountry(retailerKey: string): "AU" | "NZ" | "US" | "UK" {
+export function retailerCountry(retailerKey: string): "AU" | "NZ" | "US" | "UK" | "SG" {
   return RETAILERS[retailerKey]?.country ?? "AU";
 }
 

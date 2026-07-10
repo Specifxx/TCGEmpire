@@ -451,7 +451,7 @@ const DISTRUST_STORE_IMAGE = new Set([
   "Booster Pack", "Nexus Night Pack", "Promo Pack", "Sleeved Booster", "Sleeved Booster (Art Set)",
 ]);
 
-export async function getSealedGroups(country: "AU" | "NZ" | "US" | "UK" = "AU"): Promise<SealedGroup[]> {
+export async function getSealedGroups(country: "AU" | "NZ" | "US" | "UK" | "SG" = "AU"): Promise<SealedGroup[]> {
   const hit = sealedMemo.get(country);
   if (hit && Date.now() - hit.at < SEALED_MEMO_TTL_MS) return hit.data;
   // Only the fields the grouping uses — no point hauling unused columns.

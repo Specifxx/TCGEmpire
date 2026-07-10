@@ -14,7 +14,7 @@ import { EBAY_CAMPAIGN_ID } from "./affiliate";
 const TOKEN_URL = "https://api.ebay.com/identity/v1/oauth2/token";
 const SEARCH_URL = "https://api.ebay.com/buy/browse/v1/item_summary/search";
 // eBay marketplace per country (results priced in that marketplace's currency).
-export const EBAY_MARKETPLACE: Record<string, string> = { AU: "EBAY_AU", US: "EBAY_US", UK: "EBAY_GB" };
+export const EBAY_MARKETPLACE: Record<string, string> = { AU: "EBAY_AU", US: "EBAY_US", UK: "EBAY_GB", SG: "EBAY_SG" };
 const DEFAULT_MARKETPLACE = "EBAY_AU";
 
 export function isEbayEnabled(): boolean {

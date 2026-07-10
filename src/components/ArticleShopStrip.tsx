@@ -15,6 +15,7 @@ const EBAY_DOMAIN: Record<string, string> = {
   NZ: "ebay.com.au", // no eBay NZ; eBay AU ships there (same convention as card pages)
   US: "ebay.com",
   UK: "ebay.co.uk",
+  SG: "ebay.com.sg",
 };
 
 export function ArticleShopStrip({ items }: { items: ShopLink[] }) {

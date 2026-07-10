@@ -174,6 +174,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     NZ: { domain: "ebay.com.au", label: "eBay AU (ships to NZ)" },
     US: { domain: "ebay.com", label: "eBay" },
     UK: { domain: "ebay.co.uk", label: "eBay UK" },
+    SG: { domain: "ebay.com.sg", label: "eBay Singapore" },
   };
   const ebayUnchecked = !card.ebayCheckedAt || Date.now() - card.ebayCheckedAt.getTime() > 28 * 60 * 60 * 1000;
   const ebaySearch: EbaySearchMap = Object.fromEntries(

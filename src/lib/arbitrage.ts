@@ -31,7 +31,7 @@ export interface ArbSource {
 }
 
 // eBay retailer key per market (NZ has no eBay coverage).
-const EBAY_KEY: Record<Country, string | null> = { AU: "ebay", NZ: null, US: "ebay_us", UK: "ebay_uk" };
+const EBAY_KEY: Record<Country, string | null> = { AU: "ebay", NZ: null, US: "ebay_us", UK: "ebay_uk", SG: "ebay_sg" };
 
 // All selectable sources for a market: its tracked stores + eBay.
 export function getArbSources(country: Country): ArbSource[] {

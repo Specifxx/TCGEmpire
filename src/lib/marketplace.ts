@@ -43,8 +43,8 @@ export function canViewMarketplaceListings(email?: string | null): boolean {
   return !!email && MARKETPLACE_BETA_EMAILS.includes(email.toLowerCase());
 }
 
-export const MARKETPLACE_COUNTRIES = ["AU", "NZ", "US", "UK"] as const;
-export const CURRENCY_BY_COUNTRY: Record<string, string> = { AU: "AUD", NZ: "NZD", US: "USD", UK: "GBP" };
+export const MARKETPLACE_COUNTRIES = ["AU", "NZ", "US", "UK", "SG"] as const;
+export const CURRENCY_BY_COUNTRY: Record<string, string> = { AU: "AUD", NZ: "NZD", US: "USD", UK: "GBP", SG: "SGD" };
 
 export function platformFeeCents(priceCents: number): number {
   return Math.round((priceCents * MARKETPLACE_FEE_BPS) / 10000);

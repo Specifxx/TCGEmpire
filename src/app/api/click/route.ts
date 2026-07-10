@@ -4,7 +4,7 @@ import { dbHistory } from "@/lib/db-history";
 
 export const dynamic = "force-dynamic";
 
-const COUNTRIES = new Set(["AU", "NZ", "US", "UK"]);
+const COUNTRIES = new Set(["AU", "NZ", "US", "UK", "SG"]);
 const KINDS = new Set(["single", "sealed"]);
 
 // Click beacon: records one outbound affiliate-link click so we can verify our

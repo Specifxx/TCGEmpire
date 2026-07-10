@@ -268,6 +268,9 @@ export async function refreshEbayMarkets(
     { country: "AU", marketplace: "EBAY_AU", currency: "AUD", retailer: "ebay" },
     { country: "US", marketplace: "EBAY_US", currency: "USD", retailer: "ebay_us" },
     { country: "UK", marketplace: "EBAY_GB", currency: "GBP", retailer: "ebay_uk" },
+    // eBay Singapore (SGD). 4 markets ≈ 4×~1k calls — the live-quota budget in
+    // primeEbayBudget() still bounds total spend below the 5,000/day Browse limit.
+    { country: "SG", marketplace: "EBAY_SG", currency: "SGD", retailer: "ebay_sg" },
   ];
   // Check the live quota and set a spend budget (leaves a reserve) so this can never
   // exhaust eBay's 5,000/day limit, however many times the importer runs.
@@ -558,7 +561,7 @@ export async function importPrices(): Promise<ImportSummary> {
         condition: best.title && best.title !== "Default Title" ? best.title : null,
         isFoil: /foil/i.test(p.title),
         priceCents,
-        currency: cc === "NZ" ? "NZD" : cc === "US" ? "USD" : cc === "UK" ? "GBP" : "AUD",
+        currency: cc === "NZ" ? "NZD" : cc === "US" ? "USD" : cc === "UK" ? "GBP" : cc === "SG" ? "SGD" : "AUD",
         country: cc,
         inStock,
       });
@@ -651,16 +654,18 @@ export async function importPrices(): Promise<ImportSummary> {
   //     UK_FALLBACK_RETAILERS) only when no real GBP listing exists. Those converted
   //     figures otherwise undercut genuine UK stores and made the "from" price look
   //     unrealistically low.
-  const [pricedAu, pricedNz, pricedUs, pricedUkReal, pricedUkFallback] = await Promise.all([
+  const [pricedAu, pricedNz, pricedUs, pricedSg, pricedUkReal, pricedUkFallback] = await Promise.all([
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "AU" }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "NZ" }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "US" }, _min: { priceCents: true } }),
+    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "SG" }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "UK", retailer: { notIn: [...UK_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "UK", retailer: { in: [...UK_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
   ]);
   const lowAu = new Map(pricedAu.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowNz = new Map(pricedNz.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowUs = new Map(pricedUs.map((r) => [r.cardId, r._min.priceCents ?? null]));
+  const lowSg = new Map(pricedSg.map((r) => [r.cardId, r._min.priceCents ?? null]));
   // Real GBP lows first; the converted fallback prices are consulted per-card only when none exists.
   const lowUkReal = new Map(pricedUkReal.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowUkFallback = new Map(pricedUkFallback.map((r) => [r.cardId, r._min.priceCents ?? null]));
@@ -670,7 +675,7 @@ export async function importPrices(): Promise<ImportSummary> {
   // while the per-card repopulation loop caught up. Now each card transitions
   // old → new atomically and is never transiently null.
   const existing = await prisma.card.findMany({
-    select: { id: true, lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true },
+    select: { id: true, lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, lowestPriceCentsSg: true },
   });
   let changed = 0;
   for (const c of existing) {
@@ -679,15 +684,17 @@ export async function importPrices(): Promise<ImportSummary> {
     const nUs = lowUs.get(c.id) ?? null;
     // Prefer a real GBP listing; fall back to a converted reference price only when none exists.
     const nUk = lowUkReal.get(c.id) ?? lowUkFallback.get(c.id) ?? null;
+    const nSg = lowSg.get(c.id) ?? null;
     if (
       nAu !== c.lowestPriceCents ||
       nNz !== c.lowestPriceCentsNz ||
       nUs !== c.lowestPriceCentsUs ||
-      nUk !== c.lowestPriceCentsUk
+      nUk !== c.lowestPriceCentsUk ||
+      nSg !== c.lowestPriceCentsSg
     ) {
       await prisma.card.update({
         where: { id: c.id },
-        data: { lowestPriceCents: nAu, lowestPriceCentsNz: nNz, lowestPriceCentsUs: nUs, lowestPriceCentsUk: nUk },
+        data: { lowestPriceCents: nAu, lowestPriceCentsNz: nNz, lowestPriceCentsUs: nUs, lowestPriceCentsUk: nUk, lowestPriceCentsSg: nSg },
       });
       changed++;
     }
@@ -706,14 +713,16 @@ export async function importPrices(): Promise<ImportSummary> {
       const nz = lowNz.get(c.id) ?? null;
       const us = lowUs.get(c.id) ?? null;
       const uk = lowUkReal.get(c.id) ?? lowUkFallback.get(c.id) ?? null;
+      const sg = lowSg.get(c.id) ?? null;
       if (au != null) rows.push({ cardId: c.id, country: "AU", day, lowestPriceCents: au });
       if (nz != null) rows.push({ cardId: c.id, country: "NZ", day, lowestPriceCents: nz });
       if (us != null) rows.push({ cardId: c.id, country: "US", day, lowestPriceCents: us });
       if (uk != null) rows.push({ cardId: c.id, country: "UK", day, lowestPriceCents: uk });
+      if (sg != null) rows.push({ cardId: c.id, country: "SG", day, lowestPriceCents: sg });
     }
     await dbHistory.priceHistory.deleteMany({ where: { day } });
     if (rows.length > 0) await dbHistory.priceHistory.createMany({ data: rows });
-    console.log(`Price history: recorded ${rows.length} points (AU/NZ/US/UK) for ${day.toISOString().slice(0, 10)}.`);
+    console.log(`Price history: recorded ${rows.length} points (AU/NZ/US/UK/SG) for ${day.toISOString().slice(0, 10)}.`);
   } catch (e) {
     console.warn("Price-history snapshot failed:", e);
   }

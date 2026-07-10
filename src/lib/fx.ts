@@ -24,6 +24,7 @@ export const USD_TO: Record<string, number> = {
   AUD: rate(process.env.NEXT_PUBLIC_USD_TO_AUD, 1.5),
   NZD: rate(process.env.NEXT_PUBLIC_USD_TO_NZD, 1.65),
   GBP: rate(process.env.NEXT_PUBLIC_USD_TO_GBP, 0.79),
+  SGD: rate(process.env.NEXT_PUBLIC_USD_TO_SGD, 1.35),
 };
 
 // Convert integer USD cents into integer cents of `currency` (ISO 4217). Unknown

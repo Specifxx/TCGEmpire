@@ -121,6 +121,7 @@ const orgJsonLd = {
         { "@type": "Country", name: "New Zealand" },
         { "@type": "Country", name: "United States" },
         { "@type": "Country", name: "United Kingdom" },
+        { "@type": "Country", name: "Singapore" },
       ],
       contactPoint: {
         "@type": "ContactPoint",

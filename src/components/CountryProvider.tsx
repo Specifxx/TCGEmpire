@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { COUNTRIES, COUNTRY_COOKIE, INTL_ENABLED, normalizeCountry, pickPrice, type Country } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 
-type PricedCard = { lowestPriceCents: number | null; lowestPriceCentsNz?: number | null; lowestPriceCentsUs?: number | null; lowestPriceCentsUk?: number | null };
+type PricedCard = { lowestPriceCents: number | null; lowestPriceCentsNz?: number | null; lowestPriceCentsUs?: number | null; lowestPriceCentsUk?: number | null; lowestPriceCentsSg?: number | null };
 
 interface CountryCtx {
   country: Country;

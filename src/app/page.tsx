@@ -72,7 +72,7 @@ export default async function HomePage() {
   // The copy Google indexes (hero, FAQs, about) is market-neutral.
   const country = DEFAULT_COUNTRY;
   const info = COUNTRIES[country];
-  const COUNTRY_CODES: Country[] = ["AU", "NZ", "US", "UK"];
+  const COUNTRY_CODES: Country[] = ["AU", "NZ", "US", "UK", "SG"];
   const [totalCards, pricedCounts, inStockGroups, storeRows, popularCards, topDealsArr, index, latestWrap] = await Promise.all([
     prisma.card.count(),
     // Priced-card count PER MARKET (one indexed count per price column) — the hero
