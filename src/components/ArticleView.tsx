@@ -25,6 +25,18 @@ async function resolveEmbed(article: Article): Promise<CardTileData[]> {
       const bySlug = new Map(rows.map((r) => [r.slug, r]));
       return e.slugs.map((sl) => bySlug.get(sl)).filter(Boolean) as unknown as CardTileData[];
     }
+    if (e.rulesContain) {
+      const rows = await prisma.card.findMany({
+        where: {
+          ...(e.rulesSet ? { setCode: e.rulesSet } : {}),
+          description: { contains: e.rulesContain },
+        },
+        orderBy: [{ rarity: "asc" }, { collectorNumber: "asc" }],
+        take: e.take ?? 12,
+        select,
+      });
+      return rows as unknown as CardTileData[];
+    }
     if (e.chaseSet) {
       const rows = await prisma.card.findMany({
         where: {
