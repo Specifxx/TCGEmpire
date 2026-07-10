@@ -122,6 +122,12 @@ jobs:
           grep -oiE "https://fonts[^\"')]+" page.html | sort -u | head -20 || true
           echo "== linked stylesheets:"
           grep -oiE "/_next/static/css/[^\"']+" page.html | sort -u | head -10 || true
+          echo "== card links on the page (count + first 40):"
+          grep -oE "/card/[a-z0-9-]+" page.html | sort -u > cards.txt || true
+          wc -l < cards.txt
+          head -40 cards.txt || true
+          echo "== gallery placeholder present?:"
+          grep -c "cards appear here as they" page.html || true
           for css in $(grep -oiE "/_next/static/css/[^\"']+" page.html | sort -u | head -4); do
             echo "== css $css:"
             base="${{ inputs.url }}"

@@ -138,7 +138,11 @@ async function main() {
         },
         select: { id: true, slug: true, variant: true },
       });
-      const match = candidates.find((x) => (x.variant ?? null) === (data.variant ?? null)) ?? candidates[0];
+      // EXACT variant match only. Falling back to candidates[0] once overwrote a
+      // BASE card with its showcase print's data (same set+name, different variant)
+      // — a wrong adoption corrupts a live page, while no adoption merely creates a
+      // fresh (correct) page for the new printing.
+      const match = candidates.find((x) => (x.variant ?? null) === (data.variant ?? null));
       if (match) {
         console.log(`${DRY ? "(dry) " : ""}ADOPT ${data.name} [${data.setCode} ${data.collectorNumber}] -> existing /card/${match.slug}`);
         if (!DRY) await prisma.card.update({ where: { id: match.id }, data: { ...data, externalId: c.id } });

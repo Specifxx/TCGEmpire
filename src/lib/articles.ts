@@ -29,6 +29,9 @@ export interface ArticleEmbed {
   //  - "altart": alternate-art printings (variant letter, e.g. 021a).
   //  - "epic": in-set Epic-rarity base prints — the "hidden chase" tier.
   chaseTier?: "overnumbered" | "altart" | "epic";
+  // Every (non-promo) card of a set, ordered by collector number — the full
+  // spoiler-tracker gallery. Grows automatically as reveals are imported.
+  setAll?: string;
   // Rules-text query: cards whose ability text contains this string (optionally
   // scoped to a set) — e.g. "[Empower]" collects every Empower card as reveals land.
   rulesContain?: string;
@@ -1980,6 +1983,46 @@ Run a US store selling Riftbound? **[Get listed free](/stores/suggest)**. Everyo
 **[Riftbound: Vendetta](/sets/vendetta)** launches 31 July 2026 and UK presale listings are already up. Every revealed card is browsable now, the [chase cards are mapped tier by tier](/blog/riftbound-vendetta-chase-cards-so-far), and the moment Vendetta singles hit UK shelves their prices land here, compared across every store above.
 
 Run a UK store selling Riftbound? **[Get listed free](/stores/suggest)** — free listing, more customers. Everyone else: start at the **[card database](/browse)** and keep more of your budget for the cards themselves.`,
+  },
+  {
+    slug: "every-riftbound-vendetta-card-revealed",
+    category: "blog",
+    title: "Every Riftbound Vendetta Card Revealed So Far — Full Card Gallery",
+    excerpt:
+      "The complete, auto-updating gallery of every officially revealed Riftbound: Vendetta card — all 100+ reveals with images, embedded from the live database. Tap any card for its page and launch-day prices. Updated as spoilers land.",
+    author: "RiftCompare",
+    date: "2026-07-10",
+    updated: "2026-07-10",
+    readMins: 3,
+    tags: ["vendetta", "spoilers", "card gallery", "card list", "news"],
+    shop: [
+      { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
+      { label: "Vendetta presale singles", query: "Riftbound Vendetta" },
+    ],
+    // The full set gallery — every non-promo VEN card in the database, in collector
+    // order. Self-populating: new official reveals appear here automatically.
+    embeds: [
+      {
+        title: "All Vendetta cards revealed so far",
+        note: "Every officially revealed card, straight from our live database in collector-number order — tap any card for its page, rules text and prices the moment stores list it.",
+        setAll: "VEN",
+        take: 400,
+      },
+    ],
+    body: `This is the **complete gallery of every Riftbound: Vendetta card officially revealed so far** — every spoiler from Riot's official card gallery, embedded live from our database in collector-number order. It updates **automatically** as new reveals are imported, so bookmark this page for spoiler season: no edits, no lag, the gallery below simply grows.
+
+**Vendetta releases 31 July 2026.** The set runs **166 main-set cards** plus alternate-art Showcase printings, Overnumbered chase cards (numbered beyond 166), SP-numbered specials, runes and tokens. The mechanics are new too — read up on **[Empower](/guides/riftbound-empower-explained)**, **[Flow](/guides/riftbound-flow-explained)** and **[Burn](/guides/riftbound-burn-explained)** while you browse.
+
+Tap any card below to open its full page: rules text, printings, price history, and live store prices the moment Vendetta singles go on sale — compared across every store we track in Australia, New Zealand, the US, the UK and Singapore.
+
+[[embed:0]]
+
+## Keep going
+
+- **[Chase cards, tier by tier](/blog/riftbound-vendetta-chase-cards-so-far)** — Overnumbers, alt-arts and the sleeper Epics worth hunting.
+- **[Vendetta set page](/sets/vendetta)** — the full sortable card list with live prices at release.
+- **[Release countdown](/vendetta-countdown)** — how long until boosters crack.
+- **[Everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** — products, mechanics, rivalries and release details in one read.`,
   },
 ];
 

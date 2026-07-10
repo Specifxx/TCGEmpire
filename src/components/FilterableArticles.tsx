@@ -11,6 +11,7 @@ import { fmtDate } from "@/components/ArticleList";
 export function FilterableArticles({ articles, basePath }: { articles: Article[]; basePath: string }) {
   const [tag, setTag] = useState<string | null>(null);
   const [q, setQ] = useState("");
+  const [tagsOpen, setTagsOpen] = useState(false);
 
   // Tags ranked by how many articles carry them (most useful filters first).
   const tags = useMemo(() => {
@@ -34,29 +35,56 @@ export function FilterableArticles({ articles, basePath }: { articles: Article[]
 
   return (
     <div>
-      {/* Controls: search box + tag chips (market-terminal styling) */}
-      <div className="mb-5 flex flex-col gap-3">
-        <div className="relative">
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">⌕</span>
-          <input
-            type="search"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search articles…"
-            aria-label="Search articles"
-            className="w-full rounded-lg border border-ink-700 bg-ink-900 py-2 pl-9 pr-3 text-sm text-white placeholder:text-slate-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/40"
-          />
+      {/* Controls: one compact row — search + a collapsed "Topics" toggle (mirrors
+          the database filter's compact pattern), chips only when expanded. */}
+      <div className="mb-5">
+        <div className="flex items-center gap-2">
+          <div className="relative min-w-0 flex-1 sm:max-w-xs">
+            <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-500">⌕</span>
+            <input
+              type="search"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search articles…"
+              aria-label="Search articles"
+              className="w-full rounded-lg border border-ink-700 bg-ink-900 py-1.5 pl-7 pr-2.5 text-xs text-white placeholder:text-slate-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/40"
+            />
+          </div>
+          <button
+            type="button"
+            aria-expanded={tagsOpen}
+            onClick={() => setTagsOpen((o) => !o)}
+            className={`flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors ${
+              tag ? "border-brand-500 bg-brand-500/15 text-brand-300" : "border-ink-700 bg-ink-850 text-slate-300 hover:border-brand-500/50"
+            }`}
+          >
+            Topics
+            {tag && <span className="rounded-full bg-brand-500 px-1.5 py-0.5 text-[10px] text-white">1</span>}
+            <svg className={`h-3 w-3 transition-transform ${tagsOpen ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m6 9 6 6 6-6" /></svg>
+          </button>
+          {tag && !tagsOpen && (
+            <button
+              type="button"
+              onClick={() => setTag(null)}
+              className="chip shrink-0 border border-brand-500/50 bg-brand-500/10 px-2 py-1 text-[11px] text-brand-300 hover:border-brand-500"
+              aria-label={`Clear topic filter ${tag}`}
+            >
+              {tag} ✕
+            </button>
+          )}
         </div>
-        <div className="flex flex-wrap gap-1.5">
-          <FilterChip active={tag === null} onClick={() => setTag(null)}>
-            All <span className="text-slate-500">· {articles.length}</span>
-          </FilterChip>
-          {tags.map(([t, n]) => (
-            <FilterChip key={t} active={tag === t} onClick={() => setTag(tag === t ? null : t)}>
-              {t} <span className={tag === t ? "text-brand-200/70" : "text-slate-500"}>· {n}</span>
+        {tagsOpen && (
+          <div className="mt-2 flex flex-wrap gap-1">
+            <FilterChip active={tag === null} onClick={() => setTag(null)}>
+              All <span className="text-slate-500">· {articles.length}</span>
             </FilterChip>
-          ))}
-        </div>
+            {tags.map(([t, n]) => (
+              <FilterChip key={t} active={tag === t} onClick={() => setTag(tag === t ? null : t)}>
+                {t} <span className={tag === t ? "text-brand-200/70" : "text-slate-500"}>· {n}</span>
+              </FilterChip>
+            ))}
+          </div>
+        )}
       </div>
 
       {filtered.length === 0 ? (
@@ -107,7 +135,7 @@ function FilterChip({ active, onClick, children }: { active: boolean; onClick: (
   return (
     <button
       onClick={onClick}
-      className={`chip border px-3 py-1.5 text-xs font-semibold transition-colors ${
+      className={`chip border px-2 py-1 text-[11px] font-semibold transition-colors ${
         active
           ? "border-brand-500 bg-brand-500/15 text-brand-300"
           : "border-ink-700 text-slate-400 hover:border-brand-500/50 hover:text-slate-200"

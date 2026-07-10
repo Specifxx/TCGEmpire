@@ -102,8 +102,12 @@ async function main() {
     const officialId = (r.cardId ?? "").trim().toLowerCase();
     const numberSeg = (r.number ?? "").trim().toLowerCase();
     let variant: string | null = numberSeg.match(/^\d+([a-z])$/)?.[1] ?? null;
-    if (!variant) {
-      // No official id → repeated names within the scrape are variant printings.
+    if (!variant && !officialId) {
+      // ALT-PARSING FALLBACK ONLY (no official id): repeated names within the scrape
+      // are variant printings. With official ids the number is authoritative — a
+      // repeated name there is a same-name REPRINT (base + overnumber, e.g. Butcher
+      // of the Sands 141/166 and 190/166), NOT an alt-art; tagging the second
+      // occurrence "a" mislabelled seven such cards as Showcase alt-arts.
       const nth = (nameCount.get(name) ?? 0) + 1;
       nameCount.set(name, nth);
       variant = nth > 1 ? String.fromCharCode(95 + nth) : null; // 2nd → "a", 3rd → "b"
