@@ -1,13 +1,18 @@
 /**
  * Import Vendetta cards scraped from the OFFICIAL gallery (prisma/vendetta-cards.json,
  * produced by scripts/fetch-vendetta-official.ts) into the Card table. ADDITIVE and
- * idempotent — never wipes, never touches other sets' cards. Safe to re-run every few
- * days through spoiler season; new reveals get added, existing rows refreshed.
+ * idempotent — never wipes, never touches other sets' cards. Safe to re-run through
+ * spoiler season; new reveals are added, existing rows refreshed.
  *
- * Accuracy rule: rows missing name/image/domain/type/rarity are SKIPPED and reported,
- * never guessed. When RiftScribe later catalogues these cards properly,
- * scripts/sync-cards.ts ADOPTS these rows in place (same set+name), so URLs never
- * change and no duplicates are created.
+ * Accuracy rules:
+ *  - name/type/rules come from the gallery's own alt text; domain from the gallery's
+ *    domain filters; images are official Riot CDN assets. Nothing is invented.
+ *  - rarity is only stored when the gallery exposed it; otherwise "TBC" (honest
+ *    placeholder, auto-corrected when RiftScribe catalogues the card — sync-cards
+ *    ADOPTS these rows in place, so URLs never change and no duplicates form).
+ *  - A card whose NAME already exists in another set is skipped (reprint/filter-bleed
+ *    guard) and reported — better to miss a reprint than mislabel a set.
+ *  - Rows missing name/image/type/domain are skipped and reported.
  *
  * Usage:  DRY_RUN=1 npx tsx scripts/import-vendetta.ts   # preview
  *         npx tsx scripts/import-vendetta.ts             # apply
@@ -24,12 +29,10 @@ type Scraped = {
   name: string;
   imageUrl: string;
   set?: string;
-  number?: string;
-  rarity?: string;
   type?: string;
   domain?: string;
-  energy?: number | null;
-  might?: number | null;
+  rarity?: string;
+  rules?: string;
 };
 
 const DOMAINS = new Set(["Fury", "Calm", "Mind", "Body", "Chaos", "Order", "Colorless"]);
@@ -56,46 +59,55 @@ async function main() {
 
   let created = 0, updated = 0;
   const skipped: string[] = [];
-  const seenExternal = new Set<string>();
+  const nameCount = new Map<string, number>(); // duplicate names in the scrape = alt-art variants
 
   for (const r of rows) {
     const name = (r.name ?? "").trim();
     const imageUrl = (r.imageUrl ?? "").trim();
-    const domain = r.domain ? titleCase(r.domain.trim()) : "";
-    const type = r.type ? titleCase(r.type.trim()) : "";
-    const rarity = r.rarity ? titleCase(r.rarity.trim()) : "";
+    const type = r.type && TYPES.has(titleCase(r.type)) ? titleCase(r.type) : "";
+    const domain = r.domain && DOMAINS.has(titleCase(r.domain)) ? titleCase(r.domain) : "";
+    const rarity = r.rarity && RARITIES.has(titleCase(r.rarity)) ? titleCase(r.rarity) : "TBC";
 
-    // Never guess card data: incomplete or unrecognised rows are skipped + reported.
     const problems: string[] = [];
-    if (!name) problems.push("name");
+    if (!name || /coming soon/i.test(name)) problems.push("name");
     if (!/^https?:\/\//.test(imageUrl)) problems.push("image");
-    if (!DOMAINS.has(domain)) problems.push(`domain(${r.domain ?? "missing"})`);
-    if (!TYPES.has(type)) problems.push(`type(${r.type ?? "missing"})`);
-    if (!RARITIES.has(rarity)) problems.push(`rarity(${r.rarity ?? "missing"})`);
+    if (!type) problems.push(`type(${r.type ?? "missing"})`);
+    if (!domain) problems.push(`domain(${r.domain ?? "missing"})`);
     if (problems.length) {
       skipped.push(`${name || "(unnamed)"} — ${problems.join(", ")}`);
       continue;
     }
 
-    const numRaw = (r.number ?? "").trim();
-    const collectorNumber = numRaw ? (numRaw.includes("/") ? numRaw : numRaw) : "TBA";
-    const externalId = `ven-official-${slugify(name)}${numRaw ? `-${slugify(numRaw)}` : ""}`;
-    if (seenExternal.has(externalId)) continue; // duplicate scrape row
-    seenExternal.add(externalId);
+    // Reprint / filter-bleed guard: if this NAME already exists in a NON-VEN set,
+    // skip rather than risk mislabelling (Vendetta reprints get proper numbers via
+    // the RiftScribe sync later).
+    const sameName = await prisma.card.findFirst({
+      where: { name, setCode: { not: "VEN" } },
+      select: { setCode: true },
+    });
+    if (sameName) {
+      skipped.push(`${name} — exists in ${sameName.setCode} (reprint/bleed guard)`);
+      continue;
+    }
+
+    // Alt-art handling: a repeated name within the scrape is a variant printing.
+    const nth = (nameCount.get(name) ?? 0) + 1;
+    nameCount.set(name, nth);
+    const variant = nth > 1 ? String.fromCharCode(95 + nth) : null; // 2nd → "a", 3rd → "b"
+    const externalId = `ven-official-${slugify(name)}${variant ? `-${variant}` : ""}`;
 
     const data = {
       name,
       nameNormalized: normalizeSearch(name),
       setCode: "VEN",
       setName: "Vendetta",
-      collectorNumber,
+      collectorNumber: "TBA",
       domain,
       type,
       rarity,
-      variant: numRaw.match(/^\d+([a-z]+)/i)?.[1]?.toLowerCase() ?? null,
+      variant,
       isPromo: false,
-      energyCost: r.energy ?? null,
-      might: r.might ?? null,
+      description: r.rules && r.rules !== "[NO TEXT]" ? r.rules : null,
       imageUrl,
       imageThumbUrl: imageUrl,
     };
@@ -105,10 +117,8 @@ async function main() {
       if (!DRY) await prisma.card.update({ where: { id: existing.id }, data });
       updated++;
     } else {
-      // Slug WITHOUT a guessed collector number (numbers may be unknown pre-release;
-      // slugs are permanent, so we never bake in a number we aren't given).
-      const slug = await uniqueSlug(numRaw ? `${slugify(name)}-ven-${slugify(numRaw.split("/")[0])}` : `${slugify(name)}-ven`, externalId);
-      console.log(`${DRY ? "(dry) " : ""}NEW  ${name} [VEN ${collectorNumber}] ${domain}/${type}/${rarity} -> /card/${slug}`);
+      const slug = await uniqueSlug(`${slugify(name)}-ven${variant ? `-${variant}` : ""}`, externalId);
+      console.log(`${DRY ? "(dry) " : ""}NEW  ${name}${variant ? ` (alt ${variant})` : ""} [VEN] ${domain}/${type}/${rarity} -> /card/${slug}`);
       if (!DRY) {
         await prisma.card.create({
           data: { ...data, externalId, slug, marketPriceCents: 0, artSeed: Math.floor(Math.random() * 1_000_000) },
@@ -120,10 +130,9 @@ async function main() {
 
   console.log(`\nVendetta import: ${created} created, ${updated} refreshed, ${skipped.length} skipped${DRY ? " (dry run)" : ""}.`);
   if (skipped.length) {
-    console.log("Skipped (incomplete data — never guessed):");
-    for (const s of skipped.slice(0, 30)) console.log(`  - ${s}`);
-    if (skipped.length > 30) console.log(`  … and ${skipped.length - 30} more`);
-    console.log("If many rows are skipped, re-run the fetch with DUMP=1 and share scratch/vendetta-dump.json.");
+    console.log("Skipped:");
+    for (const s of skipped.slice(0, 40)) console.log(`  - ${s}`);
+    if (skipped.length > 40) console.log(`  … and ${skipped.length - 40} more`);
   }
 }
 
