@@ -5,7 +5,7 @@
 
 import { Prisma } from "@prisma/client";
 import { prisma } from "./db";
-import { dbHistory } from "./db-history";
+import { dbHistory, ensureHistoryCards } from "./db-history";
 import { RETAILER_LIST, RetailerInfo } from "./retailers";
 import { isEbayEnabled, isEbayRateLimited, searchEbayLowest, primeEbayBudget, ebaySpentThisRun } from "./ebay";
 import { importSealed } from "./sealed-import";
@@ -700,6 +700,9 @@ export async function importPrices(): Promise<ImportSummary> {
   // a same-day re-run (e.g. a deploy) replaces the day's rows.
   try {
     const day = sydneyDay();
+    // Split-history setups: make sure every card exists in the history DB first
+    // (PriceHistory has an FK to Card there too). No-op on single-DB setups.
+    await ensureHistoryCards(existing.map((c) => c.id));
     const rows: { cardId: string; country: string; day: Date; lowestPriceCents: number }[] = [];
     for (const c of existing) {
       const au = lowAu.get(c.id) ?? null;
