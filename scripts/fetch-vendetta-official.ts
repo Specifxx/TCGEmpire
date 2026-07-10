@@ -259,7 +259,16 @@ async function main() {
   }
   console.log(`Embedded metadata mined for ${metaByCardId.size} ven-* card ids`);
   if (metaByCardId.size === 0 && scripts.length) {
-    for (const sc of scripts.slice(0, 3)) console.log(`SCRIPT-HEAD ${sc.id}: ${sc.text.slice(0, 700)}`);
+    // Print the raw JSON around known markers so the exact card-object schema can be
+    // read straight from the CI log and the mapper hardened precisely.
+    const big = scripts.reduce((acc, x) => (x.len > acc.len ? x : acc), scripts[0]);
+    for (const marker of ['ven-r01', 'ven-0', '"rarity', '"domain']) {
+      const i = big.text.indexOf(marker);
+      console.log(`MARKER ${marker}: ${i === -1 ? "NOT FOUND" : ""}`);
+      if (i !== -1) console.log(`CTX: ${big.text.slice(Math.max(0, i - 250), i + 1400).replace(/\n/g, " ")}`);
+    }
+    const idCount = (big.text.match(/ven-(?:r?\d+[a-z]?)/gi) ?? []).length;
+    console.log(`MARKER-COUNT ven-*: ${idCount}`);
   }
 
   if (DUMP) {
