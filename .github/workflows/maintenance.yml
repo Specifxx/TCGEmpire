@@ -1,0 +1,71 @@
+name: Maintenance
+
+# On-demand maintenance tasks against the production database — dispatchable so
+# routine data operations (schema push, card syncs, the Vendetta spoiler pipeline)
+# can run without a local dev environment. Each task maps to a scripts/*.ts entry;
+# they are all ADDITIVE/idempotent (see each script's header).
+
+on:
+  workflow_dispatch:
+    inputs:
+      task:
+        description: "Task to run"
+        type: choice
+        required: true
+        options:
+          - db-push          # prisma db push (additive schema sync for this ref)
+          - cards-sync       # fetch latest RiftScribe snapshot + additive upsert
+          - cards-manual     # apply prisma/manual-cards.json (promos/backstop)
+          - vendetta-pipeline # scrape official gallery + import VEN reveals
+      dry_run:
+        description: "Dry run (log what would change, write nothing)"
+        type: boolean
+        default: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+
+      - name: Push schema (additive)
+        if: inputs.task == 'db-push'
+        run: npx prisma db push --skip-generate
+
+      - name: Sync cards from RiftScribe (fetch + additive upsert)
+        if: inputs.task == 'cards-sync'
+        run: |
+          npx tsx scripts/fetch-cards.ts
+          npx tsx scripts/sync-cards.ts
+
+      - name: Apply manual cards (promos / source-gap backstop)
+        if: inputs.task == 'cards-manual'
+        run: npx tsx scripts/add-manual-cards.ts
+
+      - name: Vendetta pipeline (official gallery → import)
+        if: inputs.task == 'vendetta-pipeline'
+        run: |
+          npm i --no-save playwright
+          npx playwright install --with-deps chromium
+          DUMP=1 npx tsx scripts/fetch-vendetta-official.ts
+          npx tsx scripts/import-vendetta.ts
+
+      # The scraped card list + raw JSON dump, for inspection / parser hardening.
+      - uses: actions/upload-artifact@v4
+        if: inputs.task == 'vendetta-pipeline' && always()
+        with:
+          name: vendetta-scrape
+          path: |
+            prisma/vendetta-cards.json
+            scratch/vendetta-dump.json
+          if-no-files-found: ignore

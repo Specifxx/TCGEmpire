@@ -12,6 +12,20 @@ export interface ShopLink {
   query: string;
 }
 
+// An embedded card gallery rendered inside an article (ArticleView queries the DB and
+// renders real CardTiles — click opens the QuickView popup / card page). Two modes:
+//  - `slugs`: explicit card list (missing slugs are skipped silently, so a post never
+//    breaks on a card that isn't imported yet).
+//  - `chaseSet`: auto-select the CHASE-tier printings of a set (Showcase/Epic rarity,
+//    signature "*" numbers, alt-art variants) — self-populates as reveals land.
+export interface ArticleEmbed {
+  title: string;
+  note?: string;
+  slugs?: string[];
+  chaseSet?: string; // set code, e.g. "VEN"
+  take?: number; // default 12
+}
+
 export interface Article {
   slug: string;
   category: ArticleCategory;
@@ -26,6 +40,8 @@ export interface Article {
   // Optional monetisation: eBay searches relevant to THIS article (rendered as a
   // "Shop this guide" strip under the body). Omit = no strip.
   shop?: ShopLink[];
+  // Optional embedded card gallery (real CardTiles → QuickView popup on click).
+  embed?: ArticleEmbed;
 }
 
 export const ARTICLES: Article[] = [
@@ -1675,9 +1691,18 @@ Read the mechanics in full — **[Flow](/guides/riftbound-flow-explained)**, **[
       { label: "Overnumbered chase cards (current sets)", query: "Riftbound Overnumbered" },
       { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
     ],
+    // Self-populating gallery: the chase-tier VEN printings (Showcase/Epic, signature
+    // "*", alt-arts) render as clickable CardTiles as the official-gallery importer
+    // adds them — no card is ever named before it's really in the database.
+    embed: {
+      title: "Chase-tier Vendetta cards revealed so far",
+      note: "Every chase-tier printing (Showcase, Epic, signature and alt-art) currently in our database — tap a card for its page and live prices the moment stores list it. This gallery grows as reveals land.",
+      chaseSet: "VEN",
+      take: 16,
+    },
     body: `![Riftbound: Vendetta — releases 31 July 2026](/vendetta-hero.png)
 
-Vendetta spoiler season is running right now (reveals through mid-July), and the picture of the set's **chase cards** — the premium pulls that drive box prices — is coming into focus. Here's everything confirmed so far, updated as reveals land.
+Vendetta spoiler season is running right now (reveals through mid-July), and the picture of the set's **chase cards** — the premium pulls that drive box prices — is coming into focus. Here's everything confirmed so far, updated as reveals land — and the **live gallery at the bottom of this post** shows every chase-tier card as it's revealed: tap any card to open its page.
 
 ## The chase structure
 
