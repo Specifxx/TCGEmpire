@@ -83,7 +83,12 @@ jobs:
             exit 1
           fi
           echo "Pushing schema to the new history database…"
-          DATABASE_URL="$HISTORY_DATABASE_URL_2" npx prisma db push --skip-generate
+          # Non-fatal: a history DB forked from the main project can carry EXTRA
+          # columns this ref's schema doesn't know (e.g. a preview-branch rollout),
+          # which makes the push refuse. The migration itself doesn't need the push
+          # in that case — the tables already exist.
+          DATABASE_URL="$HISTORY_DATABASE_URL_2" npx prisma db push --skip-generate \
+            || echo "::warning::schema push refused (destructive diff — likely extra columns on a forked DB); continuing"
           npx tsx scripts/migrate-history.ts
 
       - name: Sync cards from RiftScribe (fetch + additive upsert)
