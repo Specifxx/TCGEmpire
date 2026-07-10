@@ -129,6 +129,21 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col gap-12">
+      {/* Vendetta launch ribbon — the set is the site's biggest event until July 31;
+          one slim, always-visible line at the very top routes hype traffic to the
+          set page (every revealed card browsable now, prices land at launch). */}
+      <Link
+        href="/sets/vendetta"
+        className="group -mb-6 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 rounded-lg border border-brand-500/40 bg-gradient-to-r from-brand-500/15 via-ink-900 to-brand-500/15 px-4 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:border-brand-400"
+      >
+        <span className="chip bg-up/20 font-bold uppercase tracking-wide text-up">New set</span>
+        <span>
+          <span className="text-brand-300">Vendetta</span> drops <span className="num">July 31</span> — explore every
+          revealed card now
+        </span>
+        <span className="text-brand-400 transition-transform group-hover:translate-x-0.5">→</span>
+      </Link>
+
       {/* Cinematic full-bleed hero — today's wrap banner sits inside it, under the
           live badge (see CinematicHero). */}
       <CinematicHero

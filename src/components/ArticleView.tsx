@@ -62,20 +62,24 @@ async function resolveEmbed(e: ArticleEmbed | undefined): Promise<CardTileData[]
     }
     if (e.chaseSet && e.chaseTier) {
       // Tier slices need the num>total comparison, so fetch the set and filter here.
+      // Promos are included in the fetch (they're their own tier) and excluded from
+      // every other tier — one tier per card keeps the post's framing.
       const rows = await prisma.card.findMany({
-        where: { setCode: e.chaseSet, isPromo: false },
+        where: { setCode: e.chaseSet },
         orderBy: [{ collectorNumber: "asc" }],
         select,
       });
-      const all = rows as unknown as (CardTileData & { collectorNumber: string; rarity: string; variant: string | null })[];
+      const all = rows as unknown as (CardTileData & { collectorNumber: string; rarity: string; variant: string | null; isPromo: boolean })[];
       const tier =
-        e.chaseTier === "overnumbered"
-          ? all.filter(isOvernumbered)
+        e.chaseTier === "signature"
+          ? all.filter((c) => !c.isPromo && c.collectorNumber.includes("*"))
+          : e.chaseTier === "overnumbered"
+          ? all.filter((c) => !c.isPromo && isOvernumbered(c))
+          : e.chaseTier === "promo"
+          ? all.filter((c) => c.isPromo)
           : e.chaseTier === "altart"
-          ? // Overnumbered prints stay in the overnumbered tier even if they also
-            // carry a variant letter — one tier per card keeps the post's framing.
-            all.filter((c) => c.variant != null && !isOvernumbered(c))
-          : all.filter((c) => c.rarity === "Epic" && c.variant == null && !isOvernumbered(c) && !c.collectorNumber.includes("*"));
+          ? all.filter((c) => !c.isPromo && c.variant != null && !isOvernumbered(c) && !c.collectorNumber.includes("*"))
+          : all.filter((c) => !c.isPromo && c.rarity === "Epic" && c.variant == null && !isOvernumbered(c) && !c.collectorNumber.includes("*"));
       return tier.slice(0, e.take ?? 24);
     }
     if (e.chaseSet) {

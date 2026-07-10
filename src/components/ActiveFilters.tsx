@@ -19,6 +19,7 @@ export function ActiveFilters() {
   }
   if (params.get("variant") === "alt") chips.push({ key: "variant", value: "", label: "Alt art" });
   if (params.get("sig") === "1") chips.push({ key: "sig", value: "", label: "Signature" });
+  if (params.get("over") === "1") chips.push({ key: "over", value: "", label: "Overnumbered" });
   if (params.get("promo") === "1") chips.push({ key: "promo", value: "", label: "Promo" });
   if (params.get("priced") === "1") chips.push({ key: "priced", value: "", label: "Has price" });
   const min = params.get("min");

@@ -24,11 +24,13 @@ export interface ArticleEmbed {
   slugs?: string[];
   chaseSet?: string; // set code, e.g. "VEN"
   // Chase sub-tier for chaseSet mode (omit = every chase-tier printing):
+  //  - "signature": "*"-numbered prints with the stamped artist signature.
   //  - "overnumbered": collector number beyond the set total (e.g. 167/166), plus
-  //    SP-numbered specials — the top-end pulls.
+  //    SP-numbered specials.
+  //  - "promo": promo printings of the set's cards.
   //  - "altart": alternate-art printings (variant letter, e.g. 021a).
   //  - "epic": in-set Epic-rarity base prints — the "hidden chase" tier.
-  chaseTier?: "overnumbered" | "altart" | "epic";
+  chaseTier?: "signature" | "overnumbered" | "promo" | "altart" | "epic";
   // Every (non-promo) card of a set, ordered by collector number — the full
   // spoiler-tracker gallery. Grows automatically as reveals are imported.
   setAll?: string;
@@ -1762,10 +1764,24 @@ Read the mechanics in full — **[Flow](/guides/riftbound-flow-explained)**, **[
     // official-gallery importer adds reveals.
     embeds: [
       {
+        title: "Signature cards revealed so far",
+        note: "Every '*'-numbered signature printing currently in our database — none officially revealed yet; this gallery fills the moment they are.",
+        chaseSet: "VEN",
+        chaseTier: "signature",
+        take: 24,
+      },
+      {
         title: "Overnumbered & special chases revealed so far",
         note: "Every card numbered beyond the set (or SP-numbered) currently in our database — tap a card for its page and live prices the moment stores list it.",
         chaseSet: "VEN",
         chaseTier: "overnumbered",
+        take: 24,
+      },
+      {
+        title: "Vendetta promo cards revealed so far",
+        note: "Promo printings (prerelease, Nexus Night, organized play) — this gallery fills as promos are confirmed and imported.",
+        chaseSet: "VEN",
+        chaseTier: "promo",
         take: 24,
       },
       {
@@ -1785,33 +1801,47 @@ Read the mechanics in full — **[Flow](/guides/riftbound-flow-explained)**, **[
     ],
     body: `![Riftbound: Vendetta — releases 31 July 2026](/vendetta-hero.png)
 
-Vendetta spoiler season is running right now (reveals through mid-July), and the picture of the set's **chase cards** — the premium pulls that drive box prices — is coming into focus. This post breaks the chase down **tier by tier**, with a live gallery of real revealed cards under each tier: tap any card to open its page and see live prices the moment stores list it.
+Vendetta spoiler season is running right now (reveals through mid-July), and the picture of the set's **chase cards** — the premium pulls that drive box prices — is coming into focus. This post breaks the chase down **tier by tier**, from the rarest pull down, with a live gallery of real revealed cards under each tier: tap any card to open its page and see live prices the moment stores list it.
 
-## Tier 1: Overnumbered chases
+## Tier 1: Signature cards
 
-The top of the pyramid. An **Overnumbered** card carries a collector number *beyond* the set's total — Vendetta is a 166-card set, so anything numbered **167/166 or higher** is printed at a much lower rate than the set proper. (New to Overnumbers? Read **[our full explainer](/guides/riftbound-vendetta-overnumbers-explained)**.)
+The absolute top of the pyramid. A **Signature** card carries a **"\\*" in its collector number** (like Spiritforged's 223\\*/221) and the **artist's stamped signature** on the art — the rarest, most contested pulls in any Riftbound set, and the cards that headline box openings. Vendetta continues the Signature series, but **no individual Vendetta signature has been officially revealed yet** — the gallery below is reserved and fills automatically the moment the first one is confirmed and imported.
 
-What's confirmed so far from the official gallery: champion Overnumbers for **Vi, Jinx, Jayce, Viktor, Rengar, Kha'Zix, Gangplank and Illaoi**, a run of Overnumbered spell and gear reprints (Death Mark-style staples with premium treatments), and **SP-numbered specials** like **Ahri, Inquisitive** that sit outside the main numbering entirely. Riot has also teased the treatment for **Swain, Irelia, Ambessa, Mel, Kennen, Akali and Nasus** via card backs — the gallery below updates automatically as each one is officially revealed and imported.
-
-Two demand notes: **rival pairs with connecting artwork** get priced as a *pair* (the scarcer half sets the completion cost), and **signed Overnumbered Legends** are the likeliest single most expensive pulls of the set.
+History says: expect the signed treatments on the set's marquee champions, and expect them to be the most expensive singles in Vendetta by a wide margin.
 
 [[embed:0]]
 
-## Tier 2: Alternate-art chases
+## Tier 2: Overnumbered chases
+
+An **Overnumbered** card carries a collector number *beyond* the set's total — Vendetta is a 166-card set, so anything numbered **167/166 or higher** is printed at a much lower rate than the set proper. (New to Overnumbers? Read **[our full explainer](/guides/riftbound-vendetta-overnumbers-explained)**.)
+
+What's confirmed so far from the official gallery: champion Overnumbers for **Vi, Jinx, Jayce, Viktor, Rengar, Kha'Zix, Gangplank and Illaoi**, a run of Overnumbered spell and gear reprints (Death Mark-style staples with premium treatments), and **SP-numbered specials** like **Ahri, Inquisitive** that sit outside the main numbering entirely. Riot has also teased the treatment for **Swain, Irelia, Ambessa, Mel, Kennen, Akali and Nasus** via card backs — the gallery below updates automatically as each one is officially revealed and imported.
+
+One demand note: **rival pairs with connecting artwork** get priced as a *pair* — the scarcer half sets the cost of completing the display piece.
+
+[[embed:1]]
+
+## Tier 3: Promo cards
+
+**Promos** — prerelease stamps, Nexus Night packs and organized-play printings — are the wildcard tier: print runs are small, distribution is event-bound, and the best ones routinely outprice regular chase cards (Origins' OP promos are the precedent). **No Vendetta promos are confirmed yet**; prerelease events land around the July 31 release, and the gallery below fills as each promo is confirmed and imported.
+
+[[embed:2]]
+
+## Tier 4: Alternate-art chases
 
 The broadest premium pool: **alt-art printings** of the set's champions and key spells, marked with a letter after the collector number (021a, 138a, …). Fourteen are confirmed already — both faces of the Showdown Deck rivalry get one (**Zed, From the Shadows** and **Shen, Leader of the Kinkou Order**), alongside **Akali, Renekton, Nasus, Jayce, Mel, Kennen and Ambessa**.
 
 Alt-arts are where art taste drives price more than playability: historically the champions with the biggest fanbases (and the cleanest full-art treatments) hold value even when the base card sees no play.
 
-[[embed:1]]
+[[embed:3]]
 
-## Tier 3: The Epic-rarity sleepers
+## Tier 5: The Epic-rarity sleepers
 
 The tier collectors overlook — and shouldn't. In **Origins** the pattern was set by **Kai'Sa**: an Epic that was both *strong in play* and *genuinely beautiful*, and it out-priced plenty of flashier pulls. The way to spot the Vendetta equivalent: an Epic champion that headlines a real deck **and** looks good enough that players want the exact copy they play with.
 
 The candidates so far: **Akali, Deadly Weapon** and **Zed, From the Shadows** (the aggro headliners), **Shen, Leader of the Kinkou Order** (the Showdown Deck's other face), and **Nasus, Ascended**, **Jayce, Brilliant Inventor**, **Mel, Newly Awakened** and **Ambessa, Respected and Feared** rounding out the champion Epics. If one of these ends up defining the early meta, its base Epic print is the value pick against its alt-art.
 
-[[embed:2]]
+[[embed:4]]
 
 ## Which chases will be most contested
 

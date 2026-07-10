@@ -14,6 +14,7 @@
  * The card MAPPING below is kept identical to prisma/seed.ts so slugs/numbers match.
  */
 import { PrismaClient } from "@prisma/client";
+import { isOvernumbered } from "../src/lib/constants";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { titleCase } from "../src/lib/constants";
@@ -91,6 +92,7 @@ function mapCard(c: RsCard, nameMap: Record<string, string>) {
     setName: SET_NAMES[c.set_id] ?? c.set_id,
     collectorNumber,
     variant,
+    isOvernumbered: isOvernumbered(collectorNumber),
     domain,
     type: c.type,
     rarity,

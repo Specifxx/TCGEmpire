@@ -21,6 +21,7 @@ import { PrismaClient } from "@prisma/client";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { normalizeSearch } from "../src/lib/format";
+import { isOvernumbered } from "../src/lib/constants";
 
 const prisma = new PrismaClient();
 const DRY = process.env.DRY_RUN === "1";
@@ -128,6 +129,7 @@ async function main() {
       type,
       rarity,
       variant,
+      isOvernumbered: isOvernumbered(collectorNumber),
       isPromo: false,
       energyCost: r.energy ?? null,
       might: r.might ?? null,

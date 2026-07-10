@@ -191,6 +191,10 @@ model Card {
   rarity             String
   // Alt-art / variant suffix from the card number, e.g. "a" for 112a. null = base art.
   variant            String?
+  // Collector number beyond the set total (e.g. 197/166), excluding signatures.
+  // Denormalised (SQL can't compare the two halves of the number string) — set by
+  // the importers and backfilled idempotently on every deploy (fix-altart-rarity).
+  isOvernumbered     Boolean   @default(false)
   // Promo printing (prerelease / organized-play). Shares the base card's art.
   isPromo            Boolean   @default(false)
   orientation        String? // portrait | landscape

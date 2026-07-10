@@ -26,18 +26,29 @@ export async function GET(req: Request) {
           { collectorNumber: { contains: q } },
         ],
       },
-      // Priced cards first (in the selected market), then by name.
+      // Overfetch, then re-rank below: NAME-PREFIX matches first, then priced.
+      // Priced-first alone buried unpriced new reveals (every pre-release Jayce
+      // lost its dropdown slot to priced older Jayces) — "not in the database".
       orderBy: [
         { [priceField(country)]: { sort: "desc", nulls: "last" } } as Prisma.CardOrderByWithRelationInput,
         { name: "asc" },
       ],
-      take: 8,
-      select: cardTileSelect(country),
+      take: 24,
+      // nameNormalized feeds the prefix re-rank below (not part of the tile select).
+      select: { ...cardTileSelect(country), nameNormalized: true },
     }),
     // Sealed groups load + group the whole sealed table — far too heavy to redo on
     // every keystroke. Cache per market; sealed prices only change on the import.
     unstable_cache(() => getSealedGroups(country), ["sealed-groups", country], { revalidate: 600 })(),
   ]);
+
+  // Prefix matches beat substring matches regardless of price; within each group
+  // the DB's priced-first order is preserved. Cap to the dropdown size after.
+  const ranked = [...cards].sort((a, b) => {
+    const ap = (a as { nameNormalized?: string }).nameNormalized?.startsWith(nq) ? 0 : 1;
+    const bp = (b as { nameNormalized?: string }).nameNormalized?.startsWith(nq) ? 0 : 1;
+    return ap - bp;
+  }).slice(0, 10);
 
   const ql = q.toLowerCase();
   const sealed = sealedAll
@@ -57,5 +68,5 @@ export async function GET(req: Request) {
       lowestPriceCents: g.lowestPriceCents,
     }));
 
-  return NextResponse.json({ results: cards, sealed });
+  return NextResponse.json({ results: ranked, sealed });
 }

@@ -14,6 +14,19 @@ async function main() {
     data: { rarity: "Showcase" },
   });
   console.log(`Alt-art rarity fix: reclassified ${res.count} alt-art print(s) to Showcase.`);
+
+  // Backfill the denormalised overnumbered flag (numerator > denominator, "*"
+  // signatures excluded — mirrors isOvernumbered() in lib/constants). Idempotent;
+  // covers rows created before the importers wrote the flag.
+  const over = await prisma.$executeRaw`
+    UPDATE "Card" SET "isOvernumbered" = true
+    WHERE "isOvernumbered" = false
+      AND position('*' in "collectorNumber") = 0
+      AND split_part("collectorNumber", '/', 1) ~ '^[0-9]+[a-zA-Z]?$'
+      AND split_part("collectorNumber", '/', 2) ~ '^[0-9]+$'
+      AND (regexp_replace(split_part("collectorNumber", '/', 1), '[^0-9]', '', 'g'))::int
+          > (split_part("collectorNumber", '/', 2))::int`;
+  console.log(`Overnumbered backfill: flagged ${over} card(s).`);
 }
 
 main()

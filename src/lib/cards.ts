@@ -11,6 +11,7 @@ export interface CardQuery {
   variant?: string; // "alt" = alt-art only, "base" = base art only
   tag?: string; // keyword tag (from a card page's tag chip)
   sig?: string; // "1" = signature ("*") cards only
+  over?: string; // "1" = overnumbered printings only (number beyond the set total)
   promo?: string; // "1" = promo printings only
   printing?: string; // "normal" = base prints only (no alt-art / signature / promo)
   priced?: string; // "1" = only cards with a live price
@@ -62,6 +63,7 @@ export function buildCardWhere(query: CardQuery, country: Country = "AU"): Prism
   if (query.tag) where.tags = { contains: query.tag };
 
   if (query.sig === "1") where.collectorNumber = { contains: "*" };
+  if (query.over === "1") where.isOvernumbered = true;
   if (query.promo === "1") where.isPromo = true;
 
   // "Normal only" — hide the special prints (alt-art, signature, promo) so players
@@ -69,6 +71,7 @@ export function buildCardWhere(query: CardQuery, country: Country = "AU"): Prism
   if (query.printing === "normal") {
     where.variant = null;
     where.isPromo = false;
+    where.isOvernumbered = false;
     where.collectorNumber = { not: { contains: "*" } };
   }
 

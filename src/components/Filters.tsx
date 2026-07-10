@@ -76,6 +76,7 @@ export function Filters() {
     ) +
     (sp.get("variant") ? 1 : 0) +
     (sp.get("sig") ? 1 : 0) +
+    (sp.get("over") ? 1 : 0) +
     (sp.get("promo") ? 1 : 0) +
     (sp.get("printing") ? 1 : 0) +
     (sp.get("priced") ? 1 : 0) +
@@ -178,7 +179,7 @@ export function Filters() {
                 onChange={() =>
                   update((p) => {
                     if (p.get("printing") === "normal") p.delete("printing");
-                    else { p.set("printing", "normal"); p.delete("variant"); p.delete("sig"); p.delete("promo"); }
+                    else { p.set("printing", "normal"); p.delete("variant"); p.delete("sig"); p.delete("promo"); p.delete("over"); }
                   })
                 }
                 label="Normal only"
@@ -186,6 +187,7 @@ export function Filters() {
               />
               <Check checked={sp.get("variant") === "alt"} onChange={() => update((p) => { p.delete("printing"); p.get("variant") === "alt" ? p.delete("variant") : p.set("variant", "alt"); })} label="Alternate art" dot="#f5a524" />
               <Check checked={sp.get("sig") === "1"} onChange={() => update((p) => { p.delete("printing"); p.get("sig") === "1" ? p.delete("sig") : p.set("sig", "1"); })} label="Signature" dot="#f59e0b" />
+              <Check checked={sp.get("over") === "1"} onChange={() => update((p) => { p.delete("printing"); p.get("over") === "1" ? p.delete("over") : p.set("over", "1"); })} label="Overnumbered" dot="#a855f7" />
               <Check checked={sp.get("promo") === "1"} onChange={() => update((p) => { p.delete("printing"); p.get("promo") === "1" ? p.delete("promo") : p.set("promo", "1"); })} label="Promo" dot="#06b6d4" />
             </div>
           </Section>
