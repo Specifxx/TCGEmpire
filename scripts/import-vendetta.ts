@@ -29,10 +29,15 @@ type Scraped = {
   name: string;
   imageUrl: string;
   set?: string;
+  cardId?: string; // official gallery id, e.g. "ven-021-166" / "ven-r01"
+  number?: string; // id segment, e.g. "021", "021a", "r01"
+  code?: string; // official collector code, e.g. "021/166", "R01"
   type?: string;
   domain?: string;
   rarity?: string;
   rules?: string;
+  energy?: number | null;
+  might?: number | null;
 };
 
 const DOMAINS = new Set(["Fury", "Calm", "Mind", "Body", "Chaos", "Order", "Colorless"]);
@@ -78,35 +83,50 @@ async function main() {
       continue;
     }
 
-    // Reprint / filter-bleed guard: if this NAME already exists in a NON-VEN set,
-    // skip rather than risk mislabelling (Vendetta reprints get proper numbers via
-    // the RiftScribe sync later).
-    const sameName = await prisma.card.findFirst({
-      where: { name, setCode: { not: "VEN" } },
-      select: { setCode: true },
-    });
-    if (sameName) {
-      skipped.push(`${name} — exists in ${sameName.setCode} (reprint/bleed guard)`);
-      continue;
+    // Reprint / filter-bleed guard — ONLY for rows without an official gallery id.
+    // Cards extracted from __NEXT_DATA__ carry set.value.id === "VEN", so a familiar
+    // name there is a genuine Vendetta reprint and gets imported with its VEN number.
+    if (!r.cardId) {
+      const sameName = await prisma.card.findFirst({
+        where: { name, setCode: { not: "VEN" } },
+        select: { setCode: true },
+      });
+      if (sameName) {
+        skipped.push(`${name} — exists in ${sameName.setCode} (reprint/bleed guard)`);
+        continue;
+      }
     }
 
-    // Alt-art handling: a repeated name within the scrape is a variant printing.
-    const nth = (nameCount.get(name) ?? 0) + 1;
-    nameCount.set(name, nth);
-    const variant = nth > 1 ? String.fromCharCode(95 + nth) : null; // 2nd → "a", 3rd → "b"
-    const externalId = `ven-official-${slugify(name)}${variant ? `-${variant}` : ""}`;
+    // Prefer the OFFICIAL gallery card id for identity (stable, unique per printing,
+    // carries the real collector segment + alt-art letter). Fall back to name-based.
+    const officialId = (r.cardId ?? "").trim().toLowerCase();
+    const numberSeg = (r.number ?? "").trim().toLowerCase();
+    let variant: string | null = numberSeg.match(/^\d+([a-z])$/)?.[1] ?? null;
+    if (!variant) {
+      // No official id → repeated names within the scrape are variant printings.
+      const nth = (nameCount.get(name) ?? 0) + 1;
+      nameCount.set(name, nth);
+      variant = nth > 1 ? String.fromCharCode(95 + nth) : null; // 2nd → "a", 3rd → "b"
+    }
+    const externalId = officialId
+      ? `ven-official-${officialId}`
+      : `ven-official-${slugify(name)}${variant ? `-${variant}` : ""}`;
+    // Prefer the official collector code ("021/166"); fall back to the id segment.
+    const collectorNumber = (r.code ?? "").trim() ? (r.code as string).trim().toUpperCase() : numberSeg ? numberSeg.toUpperCase() : "TBA";
 
     const data = {
       name,
       nameNormalized: normalizeSearch(name),
       setCode: "VEN",
       setName: "Vendetta",
-      collectorNumber: "TBA",
+      collectorNumber,
       domain,
       type,
       rarity,
       variant,
       isPromo: false,
+      energyCost: r.energy ?? null,
+      might: r.might ?? null,
       description: r.rules && r.rules !== "[NO TEXT]" ? r.rules : null,
       imageUrl,
       imageThumbUrl: imageUrl,
@@ -117,7 +137,7 @@ async function main() {
       if (!DRY) await prisma.card.update({ where: { id: existing.id }, data });
       updated++;
     } else {
-      const slug = await uniqueSlug(`${slugify(name)}-ven${variant ? `-${variant}` : ""}`, externalId);
+      const slug = await uniqueSlug(`${slugify(name)}-ven${numberSeg ? `-${slugify(numberSeg)}` : variant ? `-${variant}` : ""}`, externalId);
       console.log(`${DRY ? "(dry) " : ""}NEW  ${name}${variant ? ` (alt ${variant})` : ""} [VEN] ${domain}/${type}/${rarity} -> /card/${slug}`);
       if (!DRY) {
         await prisma.card.create({

@@ -20,17 +20,19 @@ const GALLERY = process.env.GALLERY_URL ?? "https://playriftbound.com/en-us/card
 const OUT = join(process.cwd(), "prisma", "vendetta-cards.json");
 const DUMP = process.env.DUMP === "1";
 
-const DOMAINS = ["Fury", "Calm", "Mind", "Body", "Chaos", "Order"];
-const RARITIES = ["Common", "Uncommon", "Rare", "Epic", "Showcase", "Overnumbered"];
-
 type Scraped = {
   name: string;
   imageUrl: string;
   set: string;
+  cardId?: string; // official gallery id, e.g. "ven-021-166" / "ven-r01"
+  number?: string; // id segment, e.g. "021", "021a", "r01"
+  code?: string; // official collector code, e.g. "021/166", "R01"
   type?: string;
   domain?: string;
   rarity?: string;
   rules?: string;
+  energy?: number | null;
+  might?: number | null;
 };
 
 // "Riftbound Unit: Akali, Deadly Weapon. [Empower] …" → { type: "Unit", name: "Akali, Deadly Weapon", rules }
@@ -114,7 +116,14 @@ async function main() {
   console.log("FILTER-CANDIDATES:", JSON.stringify(filterTexts));
 
   async function clickFilter(label: string): Promise<boolean> {
-    for (const sel of [`button:has-text("${label}")`, `label:has-text("${label}")`, `li:has-text("${label}")`, `text="${label}"`]) {
+    const sels = [
+      `button:has-text("${label}")`,
+      `[role="checkbox"]:has-text("${label}")`,
+      `label:has-text("${label}")`,
+      `li:has-text("${label}")`,
+      `text="${label}"`,
+    ];
+    for (const sel of sels) {
       try {
         await page.locator(sel).first().click({ timeout: 2500 });
         await page.waitForTimeout(1600);
@@ -123,7 +132,14 @@ async function main() {
         /* try next selector */
       }
     }
-    return false;
+    // Last resort: exact text node.
+    try {
+      await page.getByText(label, { exact: true }).first().click({ timeout: 2500 });
+      await page.waitForTimeout(1600);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   async function scrollAll(): Promise<void> {
@@ -135,11 +151,15 @@ async function main() {
     await page.waitForTimeout(800);
   }
 
-  async function snapshot(): Promise<{ alt: string; src: string }[]> {
+  async function snapshot(): Promise<{ alt: string; src: string; cardId: string }[]> {
     await scrollAll();
     return page.evaluate(() =>
       Array.from(document.querySelectorAll("img"))
-        .map((img) => ({ alt: (img.alt || "").trim(), src: img.currentSrc || img.src }))
+        .map((img) => ({
+          alt: (img.alt || "").trim(),
+          src: img.currentSrc || img.src,
+          cardId: (img.closest("[data-card-id]")?.getAttribute("data-card-id") ?? "").trim(),
+        }))
         .filter((x) => x.alt.startsWith("Riftbound") && /^https?:/.test(x.src))
     );
   }
@@ -148,32 +168,114 @@ async function main() {
   const venClicked = await clickFilter("Vendetta");
   console.log(venClicked ? "Set filter: Vendetta ON" : "WARN: could not click a Vendetta filter — capturing everything; importer guards handle bleed.");
 
+  // The domain/rarity filters live behind a "Show Filters" toggle — open it, then log
+  // what became clickable (drives the next hardening round if labels differ).
+  const filtersOpened = await clickFilter("Show Filters");
+  console.log(filtersOpened ? "Filter panel opened" : "WARN: no Show Filters button found");
+  const panelTexts: string[] = await page.evaluate(() => {
+    const els = Array.from(document.querySelectorAll("button, [role='button'], [role='checkbox'], label, li, span"));
+    const texts = els.map((e) => (e.textContent ?? "").trim()).filter((t) => t && t.length <= 22);
+    return Array.from(new Set(texts)).slice(0, 140);
+  });
+  console.log("PANEL-CANDIDATES:", JSON.stringify(panelTexts));
+  // Mine one card's ancestor markup for domain hints (class/data attributes).
+  const ancestry: string = await page.evaluate(() => {
+    const img = Array.from(document.querySelectorAll("img")).find((i) => (i.alt || "").startsWith("Riftbound"));
+    if (!img) return "no card img";
+    let el: Element | null = img.parentElement;
+    const out: string[] = [];
+    for (let i = 0; i < 5 && el; i++) {
+      const attrs = Array.from(el.attributes).map((a) => `${a.name}="${a.value.slice(0, 80)}"`).join(" ");
+      out.push(`<${el.tagName.toLowerCase()} ${attrs}>`);
+      el = el.parentElement;
+    }
+    return out.join("\n");
+  });
+  console.log("CARD-ANCESTRY:\n" + ancestry);
+
   // Baseline: every Vendetta card (unfiltered by domain/rarity).
   const base = await snapshot();
   console.log(`Baseline snapshot: ${base.length} card images`);
 
-  // Derive DOMAIN per card from the gallery's own domain filters.
-  const domainBySrc = new Map<string, string>();
-  for (const d of DOMAINS) {
-    if (!(await clickFilter(d))) {
-      console.log(`Domain filter "${d}" not clickable — skipping`);
-      continue;
+  // The full card objects live in the page's __NEXT_DATA__ (confirmed schema):
+  //   { id: "ven-021-166", name, publicCode: "VEN-021/166",
+  //     set: { value: { id: "VEN" } }, rarity: { value: { label: "Epic" } },
+  //     domain: { values: [{ label: "Fury" }] }, cardType: { type: [{ label: "Unit" }] },
+  //     cardImage: { url, accessibilityText }, ... }
+  // Extract every VEN card straight from it — authoritative names, numbers, domains,
+  // rarities, types, full-res official images and rules text.
+  type JsonCard = {
+    cardId: string;
+    name: string;
+    code?: string; // "021/166" | "R01"
+    number?: string; // id segment: "021", "021a", "r01"
+    domain?: string;
+    rarity?: string;
+    type?: string;
+    imageUrl?: string;
+    rules?: string;
+    energy?: number | null;
+    might?: number | null;
+  };
+  const jsonCards: JsonCard[] = [];
+  const seenIds = new Set<string>();
+  const walk = (node: unknown): void => {
+    if (Array.isArray(node)) {
+      for (const x of node) walk(x);
+      return;
     }
-    const subset = await snapshot();
-    for (const c of subset) if (!domainBySrc.has(c.src)) domainBySrc.set(c.src, d);
-    console.log(`Domain ${d}: ${subset.length} cards`);
-    await clickFilter(d); // toggle off
+    if (!node || typeof node !== "object") return;
+    const o = node as Record<string, any>;
+    const id = typeof o.id === "string" ? o.id.toLowerCase() : "";
+    const setId = o?.set?.value?.id;
+    if (/^ven-/.test(id) && typeof o.name === "string" && o.cardImage && setId === "VEN") {
+      if (!seenIds.has(id)) {
+        seenIds.add(id);
+        // Stats live under varying keys but always as { label: "Energy"|"Might"|"Power", value: { id: number } }.
+        let energy: number | null = null;
+        let might: number | null = null;
+        for (const v of Object.values(o)) {
+          const lbl = (v as any)?.label;
+          const num = (v as any)?.value?.id;
+          if (typeof num !== "number") continue;
+          if (lbl === "Energy" || lbl === "Cost") energy = num;
+          if (lbl === "Might") might = num;
+        }
+        const alt = String(o.cardImage?.accessibilityText ?? "");
+        const parsedAlt = parseAlt(alt);
+        jsonCards.push({
+          cardId: id,
+          name: String(o.name),
+          code: typeof o.publicCode === "string" ? o.publicCode.replace(/^VEN-/i, "") : undefined,
+          number: id.match(/^ven-([a-z]?\d+[a-z]?|r\d+[a-z]?)/i)?.[1],
+          domain: o?.domain?.values?.[0]?.label,
+          rarity: o?.rarity?.value?.label,
+          type: o?.cardType?.type?.[0]?.label,
+          imageUrl: typeof o.cardImage?.url === "string" ? o.cardImage.url : undefined,
+          rules: parsedAlt?.rules?.slice(0, 500) || undefined,
+          energy,
+          might,
+        });
+      }
+    }
+    for (const v of Object.values(o)) walk(v);
+  };
+  const scripts: { id: string; len: number; text: string }[] = await page.evaluate(() =>
+    Array.from(document.querySelectorAll("script"))
+      .filter((sc) => sc.id === "__NEXT_DATA__" || sc.type === "application/json")
+      .map((sc) => ({ id: sc.id || sc.type || "inline", len: (sc.textContent ?? "").length, text: (sc.textContent ?? "") }))
+      .filter((x) => x.len > 1000)
+      .slice(0, 4)
+  );
+  for (const sc of scripts) {
+    try {
+      walk(JSON.parse(sc.text));
+    } catch {
+      /* not parseable */
+    }
   }
-
-  // Derive RARITY per card the same way (best-effort; not all galleries expose it).
-  const rarityBySrc = new Map<string, string>();
-  for (const r of RARITIES) {
-    if (!(await clickFilter(r))) continue;
-    const subset = await snapshot();
-    for (const c of subset) if (!rarityBySrc.has(c.src)) rarityBySrc.set(c.src, r);
-    console.log(`Rarity ${r}: ${subset.length} cards`);
-    await clickFilter(r); // toggle off
-  }
+  console.log(`__NEXT_DATA__ extraction: ${jsonCards.length} official VEN cards`);
+  if (jsonCards.length) console.log("SAMPLE:", JSON.stringify(jsonCards[0]));
 
   if (DUMP) {
     mkdirSync(join(process.cwd(), "scratch"), { recursive: true });
@@ -187,23 +289,43 @@ async function main() {
 
   await browser.close();
 
-  // Build the card list: parse alts, attach filter-derived metadata, dedupe by image.
-  const seenSrc = new Set<string>();
-  const cards: Scraped[] = [];
-  for (const { alt, src } of base) {
-    if (seenSrc.has(src)) continue;
-    seenSrc.add(src);
-    const parsed = parseAlt(alt);
-    if (!parsed) continue;
-    cards.push({
-      name: parsed.name,
-      imageUrl: src,
+  // Prefer the authoritative __NEXT_DATA__ extraction; fall back to alt parsing
+  // only if the embedded data ever disappears.
+  let cards: Scraped[];
+  if (jsonCards.length >= 10) {
+    cards = jsonCards.map((c) => ({
+      name: c.name,
+      imageUrl: c.imageUrl ?? "",
       set: "VEN",
-      type: parsed.type,
-      domain: domainBySrc.get(src),
-      rarity: rarityBySrc.get(src),
-      rules: parsed.rules.slice(0, 500),
-    });
+      cardId: c.cardId,
+      number: c.number,
+      code: c.code,
+      type: c.type,
+      domain: c.domain,
+      rarity: c.rarity,
+      rules: c.rules,
+      energy: c.energy,
+      might: c.might,
+    }));
+  } else {
+    console.log("WARN: __NEXT_DATA__ yielded too few cards — falling back to alt-text parsing (no domain/rarity).");
+    const seenSrc = new Set<string>();
+    cards = [];
+    for (const { alt, src, cardId } of base) {
+      if (seenSrc.has(src)) continue;
+      seenSrc.add(src);
+      const parsed = parseAlt(alt);
+      if (!parsed) continue;
+      cards.push({
+        name: parsed.name,
+        imageUrl: src,
+        set: "VEN",
+        cardId: cardId || undefined,
+        number: cardId ? cardId.replace(/^ven-/i, "") : undefined,
+        type: parsed.type,
+        rules: parsed.rules.slice(0, 500),
+      });
+    }
   }
 
   writeFileSync(OUT, JSON.stringify(cards, null, 1));

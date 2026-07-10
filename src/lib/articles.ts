@@ -23,6 +23,10 @@ export interface ArticleEmbed {
   note?: string;
   slugs?: string[];
   chaseSet?: string; // set code, e.g. "VEN"
+  // Rules-text query: cards whose ability text contains this string (optionally
+  // scoped to a set) — e.g. "[Empower]" collects every Empower card as reveals land.
+  rulesContain?: string;
+  rulesSet?: string;
   take?: number; // default 12
 }
 
@@ -1386,6 +1390,15 @@ Keep the **[live countdown](/vendetta-countdown)** handy, and read **[everything
       { label: "Mel singles", query: "Riftbound Mel" },
       { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
     ],
+    // Auto-collects every officially revealed VEN card whose rules text carries
+    // [Empower] — real cards, real images, tap → card page. Grows through spoilers.
+    embed: {
+      title: "Empower cards revealed so far",
+      note: "Every officially revealed Vendetta card with the Empower keyword — tap a card for its page and live prices the moment stores list it.",
+      rulesContain: "[Empower]",
+      rulesSet: "VEN",
+      take: 12,
+    },
     body: `![Vendetta's new mechanics — Flow, Burn and Empower](/vendetta-mechanics.png)
 
 **Empower** is one of three new mechanics arriving with **[Riftbound: Vendetta](/sets/vendetta)** on **31 July 2026**. It's quickly become one of the most searched-for parts of the set — so here's a complete, plain-English guide to what the Empower mechanic does and how to play around it.
@@ -1450,6 +1463,13 @@ Empower cards will list with live prices on the **[Vendetta set page](/sets/vend
       { label: "Chaos singles — the recursion domain", query: "Riftbound Chaos" },
       { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
     ],
+    embed: {
+      title: "Flow cards revealed so far",
+      note: "Every officially revealed Vendetta card with the Flow keyword — tap a card for its page.",
+      rulesContain: "[Flow]",
+      rulesSet: "VEN",
+      take: 12,
+    },
     body: `![Vendetta's new mechanics — Flow, Burn and Empower](/vendetta-mechanics.png)
 
 **Flow** is one of three new mechanics in **[Riftbound: Vendetta](/sets/vendetta)** (out **31 July 2026**). It turns your trash from a graveyard into a resource — here's exactly how the Flow mechanic works and how to build around it.
