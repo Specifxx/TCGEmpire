@@ -21,6 +21,7 @@ on:
           - probe-url        # read-only page fetch + font/style diagnostics (url input)
           - import-prices    # run the store price importer for this ref's store list
           - migrate-history  # copy PriceHistory/ClickEvent to HISTORY_DATABASE_URL_2
+          - audit-ven        # read-only census of VEN cards (chase-tier fields)
       dry_run:
         description: "Dry run (log what would change, write nothing)"
         type: boolean
@@ -143,6 +144,10 @@ jobs:
           # Route history/click writes to the current history project (db-history.ts).
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
         run: npx tsx scripts/import-prices.ts
+
+      - name: Audit VEN cards (read-only census)
+        if: inputs.task == 'audit-ven'
+        run: npx tsx scripts/audit-ven.ts
 
       - name: Vendetta pipeline (official gallery → import)
         if: inputs.task == 'vendetta-pipeline'
