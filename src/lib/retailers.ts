@@ -187,6 +187,17 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     freeOverCents: 5000,
     shippingNote: "est. $2.00 · free over $50",
   },
+  // Official Riftbound Gaming Network store (Springwood NSW); Shopify with a live
+  // Riftbound singles + sealed collection.
+  flukeandbox: {
+    key: "flukeandbox",
+    name: "Fluke & Box",
+    base: "https://www.flukeandbox.com",
+    collections: ["riftbound-tcg"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.50 · free over $50",
+  },
 
   // ---- New Zealand stores (country: "NZ"; prices in NZD; never use eBay) -------
   // Collections are mostly auto-discovered from each store's Shopify sitemap; a few
