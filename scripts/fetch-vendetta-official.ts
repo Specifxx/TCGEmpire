@@ -114,7 +114,14 @@ async function main() {
   console.log("FILTER-CANDIDATES:", JSON.stringify(filterTexts));
 
   async function clickFilter(label: string): Promise<boolean> {
-    for (const sel of [`button:has-text("${label}")`, `label:has-text("${label}")`, `li:has-text("${label}")`, `text="${label}"`]) {
+    const sels = [
+      `button:has-text("${label}")`,
+      `[role="checkbox"]:has-text("${label}")`,
+      `label:has-text("${label}")`,
+      `li:has-text("${label}")`,
+      `text="${label}"`,
+    ];
+    for (const sel of sels) {
       try {
         await page.locator(sel).first().click({ timeout: 2500 });
         await page.waitForTimeout(1600);
@@ -123,7 +130,14 @@ async function main() {
         /* try next selector */
       }
     }
-    return false;
+    // Last resort: exact text node.
+    try {
+      await page.getByText(label, { exact: true }).first().click({ timeout: 2500 });
+      await page.waitForTimeout(1600);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   async function scrollAll(): Promise<void> {
@@ -147,6 +161,31 @@ async function main() {
   // Set filter: Vendetta.
   const venClicked = await clickFilter("Vendetta");
   console.log(venClicked ? "Set filter: Vendetta ON" : "WARN: could not click a Vendetta filter — capturing everything; importer guards handle bleed.");
+
+  // The domain/rarity filters live behind a "Show Filters" toggle — open it, then log
+  // what became clickable (drives the next hardening round if labels differ).
+  const filtersOpened = await clickFilter("Show Filters");
+  console.log(filtersOpened ? "Filter panel opened" : "WARN: no Show Filters button found");
+  const panelTexts: string[] = await page.evaluate(() => {
+    const els = Array.from(document.querySelectorAll("button, [role='button'], [role='checkbox'], label, li, span"));
+    const texts = els.map((e) => (e.textContent ?? "").trim()).filter((t) => t && t.length <= 22);
+    return Array.from(new Set(texts)).slice(0, 140);
+  });
+  console.log("PANEL-CANDIDATES:", JSON.stringify(panelTexts));
+  // Mine one card's ancestor markup for domain hints (class/data attributes).
+  const ancestry: string = await page.evaluate(() => {
+    const img = Array.from(document.querySelectorAll("img")).find((i) => (i.alt || "").startsWith("Riftbound"));
+    if (!img) return "no card img";
+    let el: Element | null = img.parentElement;
+    const out: string[] = [];
+    for (let i = 0; i < 5 && el; i++) {
+      const attrs = Array.from(el.attributes).map((a) => `${a.name}="${a.value.slice(0, 80)}"`).join(" ");
+      out.push(`<${el.tagName.toLowerCase()} ${attrs}>`);
+      el = el.parentElement;
+    }
+    return out.join("\n");
+  });
+  console.log("CARD-ANCESTRY:\n" + ancestry);
 
   // Baseline: every Vendetta card (unfiltered by domain/rarity).
   const base = await snapshot();
