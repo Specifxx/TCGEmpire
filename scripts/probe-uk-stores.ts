@@ -1,5 +1,6 @@
 // Market-scan probe: mirrors the importer's sitemap-based discovery to find which UK
 // TCG stores are Shopify AND expose Riftbound SINGLES collections (in GBP).
+export {}; // module scope — avoids global-name collisions with other probe scripts
 const UA = { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36", Accept: "*/*" };
 const NON_SINGLE = /sealed|booster|box|bundle|preorder|pre-order|accessor|playmat|sleeve|merch|deck-?box|gift|case|tin|blister|collection-box/i;
 
