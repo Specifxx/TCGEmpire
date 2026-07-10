@@ -21,6 +21,12 @@ export const CARDMARKET_RETAILER = "cardmarket";
 // (headline computation) and the UI (breakdown filtering).
 export const UK_FALLBACK_RETAILERS: readonly string[] = [TCGPLAYER_UK_RETAILER, CARDMARKET_RETAILER];
 
+// Singapore mirrors the UK pattern: TCGplayer's USD market price converted to SGD is
+// surfaced as a reference source, excluded from the SG "from" price whenever a real
+// SGD listing (local store / eBay SG) exists.
+export const TCGPLAYER_SG_RETAILER = "tcgplayer_sg";
+export const SG_FALLBACK_RETAILERS: readonly string[] = [TCGPLAYER_SG_RETAILER];
+
 export type DomainKey =
   | "Fury"
   | "Calm"

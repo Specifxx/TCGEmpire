@@ -13,7 +13,7 @@ import { snapshotDemand } from "./demand-snapshot";
 import { refreshTcgplayerPrices } from "./tcgplayer";
 import { importMarketplaceListings } from "./marketplace";
 import { refreshCardmarketPrices } from "./cardmarket";
-import { UK_FALLBACK_RETAILERS } from "./constants";
+import { SG_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS } from "./constants";
 import { isoCountry, type Country } from "./country";
 
 interface ShopifyVariant { title: string; price: string; available: boolean }
@@ -272,6 +272,11 @@ export async function refreshEbayMarkets(
     // primeEbayBudget() still bounds total spend below the 5,000/day Browse limit.
     { country: "SG", marketplace: "EBAY_SG", currency: "SGD", retailer: "ebay_sg" },
   ];
+  // EBAY_ONLY_MARKET=SG restricts the pass to one marketplace (~1k calls) — used
+  // for new-market rollouts on top of the daily full run without doubling quota.
+  const onlyMarket = (process.env.EBAY_ONLY_MARKET || "").toUpperCase();
+  const markets = onlyMarket ? MARKETS.filter((m) => m.country === onlyMarket) : MARKETS;
+  if (onlyMarket) console.log(`EBAY_ONLY_MARKET=${onlyMarket} — restricting the eBay pass to ${markets.length} market(s).`);
   // Check the live quota and set a spend budget (leaves a reserve) so this can never
   // exhaust eBay's 5,000/day limit, however many times the importer runs.
   await primeEbayBudget();
@@ -279,7 +284,7 @@ export async function refreshEbayMarkets(
   // Cards the pass actually queried (before the budget/quota cut it off). Used to
   // tell "no eBay listing because none exist" apart from "we never got to check".
   const checkedIds = new Set<string>();
-  for (const mkt of MARKETS) {
+  for (const mkt of markets) {
     if (isEbayRateLimited()) break;
     console.log(`eBay ${mkt.country}: searching ${cards.length} cards…`);
     // Reference value per card = cheapest tracked STORE price in this market (eBay
@@ -669,18 +674,22 @@ export async function importPrices(): Promise<ImportSummary> {
   //     UK_FALLBACK_RETAILERS) only when no real GBP listing exists. Those converted
   //     figures otherwise undercut genuine UK stores and made the "from" price look
   //     unrealistically low.
-  const [pricedAu, pricedNz, pricedUs, pricedSg, pricedUkReal, pricedUkFallback] = await Promise.all([
+  const [pricedAu, pricedNz, pricedUs, pricedSgReal, pricedSgFallback, pricedUkReal, pricedUkFallback] = await Promise.all([
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "AU" }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "NZ" }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "US" }, _min: { priceCents: true } }),
-    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "SG" }, _min: { priceCents: true } }),
+    // SG mirrors the UK pattern: real SGD listings (stores + eBay SG) beat the
+    // converted TCGplayer-SG reference, which is only a per-card fallback.
+    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "SG", retailer: { notIn: [...SG_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
+    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "SG", retailer: { in: [...SG_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "UK", retailer: { notIn: [...UK_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "UK", retailer: { in: [...UK_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
   ]);
   const lowAu = new Map(pricedAu.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowNz = new Map(pricedNz.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowUs = new Map(pricedUs.map((r) => [r.cardId, r._min.priceCents ?? null]));
-  const lowSg = new Map(pricedSg.map((r) => [r.cardId, r._min.priceCents ?? null]));
+  const lowSgReal = new Map(pricedSgReal.map((r) => [r.cardId, r._min.priceCents ?? null]));
+  const lowSgFallback = new Map(pricedSgFallback.map((r) => [r.cardId, r._min.priceCents ?? null]));
   // Real GBP lows first; the converted fallback prices are consulted per-card only when none exists.
   const lowUkReal = new Map(pricedUkReal.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowUkFallback = new Map(pricedUkFallback.map((r) => [r.cardId, r._min.priceCents ?? null]));
@@ -699,7 +708,7 @@ export async function importPrices(): Promise<ImportSummary> {
     const nUs = lowUs.get(c.id) ?? null;
     // Prefer a real GBP listing; fall back to a converted reference price only when none exists.
     const nUk = lowUkReal.get(c.id) ?? lowUkFallback.get(c.id) ?? null;
-    const nSg = lowSg.get(c.id) ?? null;
+    const nSg = lowSgReal.get(c.id) ?? lowSgFallback.get(c.id) ?? null;
     if (
       nAu !== c.lowestPriceCents ||
       nNz !== c.lowestPriceCentsNz ||
@@ -731,7 +740,7 @@ export async function importPrices(): Promise<ImportSummary> {
       const nz = lowNz.get(c.id) ?? null;
       const us = lowUs.get(c.id) ?? null;
       const uk = lowUkReal.get(c.id) ?? lowUkFallback.get(c.id) ?? null;
-      const sg = lowSg.get(c.id) ?? null;
+      const sg = lowSgReal.get(c.id) ?? lowSgFallback.get(c.id) ?? null;
       if (au != null) rows.push({ cardId: c.id, country: "AU", day, lowestPriceCents: au });
       if (nz != null) rows.push({ cardId: c.id, country: "NZ", day, lowestPriceCents: nz });
       if (us != null) rows.push({ cardId: c.id, country: "US", day, lowestPriceCents: us });
