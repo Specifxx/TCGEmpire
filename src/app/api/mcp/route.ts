@@ -18,7 +18,7 @@ const TOOLS = [
       "Get the RiftCompare Index (a daily market index for Riftbound: League of Legends TCG singles): level (base 100), deltas, key stats and constituents. Optional market GLOBAL|AU|NZ|US|UK.",
     inputSchema: {
       type: "object",
-      properties: { market: { type: "string", enum: ["GLOBAL", "AU", "NZ", "US", "UK"] } },
+      properties: { market: { type: "string", enum: ["GLOBAL", "AU", "NZ", "US", "UK", "SG"] } },
       additionalProperties: false,
     },
   },
@@ -36,7 +36,7 @@ const TOOLS = [
 
 function parseMarket(v: unknown): MarketScope {
   const up = String(v ?? "").toUpperCase();
-  return up === "AU" || up === "NZ" || up === "US" || up === "UK" ? (up as MarketScope) : "GLOBAL";
+  return up === "AU" || up === "NZ" || up === "US" || up === "UK" || up === "SG" ? (up as MarketScope) : "GLOBAL";
 }
 
 async function callTool(name: string, args: Record<string, unknown> | undefined): Promise<unknown> {

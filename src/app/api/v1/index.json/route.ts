@@ -8,7 +8,7 @@ export const revalidate = 1800;
 
 function parseMarket(v: string | null): MarketScope {
   const up = (v ?? "").toUpperCase();
-  return up === "AU" || up === "NZ" || up === "US" || up === "UK" ? (up as MarketScope) : "GLOBAL";
+  return up === "AU" || up === "NZ" || up === "US" || up === "UK" || up === "SG" ? (up as MarketScope) : "GLOBAL";
 }
 
 export async function GET(req: Request) {

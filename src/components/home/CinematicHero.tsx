@@ -11,7 +11,7 @@ import type { MarketReportPost } from "@/lib/posts";
 
 // eBay marketplace domain per market (NZ has no eBay of its own → AU).
 const EBAY_DOMAIN: Record<string, string> = {
-  AU: "ebay.com.au", NZ: "ebay.com.au", US: "ebay.com", UK: "ebay.co.uk",
+  AU: "ebay.com.au", NZ: "ebay.com.au", US: "ebay.com", UK: "ebay.co.uk", SG: "ebay.com.sg",
 };
 
 // The cinematic, full-bleed homepage hero. Breaks out of the centered content

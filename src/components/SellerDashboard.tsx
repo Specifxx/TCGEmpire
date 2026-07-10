@@ -7,8 +7,8 @@ import { CURRENCY_BY_COUNTRY } from "@/lib/marketplace";
 import { formatMoney } from "@/lib/format";
 import { cardDisplayName } from "@/lib/card-name";
 
-type Country = "AU" | "NZ" | "US" | "UK";
-const COUNTRY_LABEL: Record<Country, string> = { AU: "Australia", NZ: "New Zealand", US: "United States", UK: "United Kingdom" };
+type Country = "AU" | "NZ" | "US" | "UK" | "SG";
+const COUNTRY_LABEL: Record<Country, string> = { AU: "Australia", NZ: "New Zealand", US: "United States", UK: "United Kingdom", SG: "Singapore" };
 
 interface Profile {
   shopName: string;

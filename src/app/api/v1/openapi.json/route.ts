@@ -25,7 +25,7 @@ export function GET() {
               name: "market",
               in: "query",
               required: false,
-              schema: { type: "string", enum: ["GLOBAL", "AU", "NZ", "US", "UK"], default: "GLOBAL" },
+              schema: { type: "string", enum: ["GLOBAL", "AU", "NZ", "US", "UK", "SG"], default: "GLOBAL" },
               description: "Market scope; GLOBAL is a currency-agnostic composite.",
             },
           ],
