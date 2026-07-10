@@ -193,9 +193,9 @@ function bestVariantPrice(variants: ShopifyVariant[]): { priceCents: number } | 
 // product.json. The collection products.json feed we scrape can lag the live
 // product page (a card showed $33 when the product page was $45), so we confirm the
 // one price we actually display per card. Updates the row if it has drifted.
-async function verifyCheapestListings(): Promise<number> {
+async function verifyCheapestListings(onlyCountry?: string): Promise<number> {
   const rows = await prisma.retailerPrice.findMany({
-    where: { inStock: true, NOT: { retailer: { startsWith: "ebay" } } },
+    where: { inStock: true, NOT: { retailer: { startsWith: "ebay" } }, ...(onlyCountry ? { country: onlyCountry } : {}) },
     select: { id: true, cardId: true, priceCents: true, url: true, country: true },
     orderBy: { priceCents: "asc" },
   });
@@ -497,8 +497,18 @@ export async function importPrices(): Promise<ImportSummary> {
 
   const summary: ImportSummary = { stores: [], totalMatched: 0, totalUnmatched: 0, cardsPriced: 0 };
 
+  // IMPORT_ONLY_COUNTRY=SG restricts the run to one market's stores — used by the
+  // preview build to populate a new market's prices in the PREVIEW database quickly
+  // (minutes, not the full multi-market crawl). External per-market sources (eBay,
+  // TCGplayer, Cardmarket, sealed) are skipped in this mode; the scheduled full
+  // import owns those. The lowest-price/history recompute below still covers every
+  // market (it reads the DB, not this run's scrapes), so nothing is clobbered.
+  const onlyCountry = (process.env.IMPORT_ONLY_COUNTRY || "").toUpperCase();
+  if (onlyCountry) console.log(`IMPORT_ONLY_COUNTRY=${onlyCountry} — restricting to ${onlyCountry} stores.`);
+
   for (const store of RETAILER_LIST) {
     const cc = store.country ?? "AU";
+    if (onlyCountry && cc !== onlyCountry) continue;
     // Auto-discover the store's Riftbound collections; fall back to any handles
     // configured explicitly in retailers.ts.
     let handles = await discoverRiftboundCollections(store.base);
@@ -573,8 +583,9 @@ export async function importPrices(): Promise<ImportSummary> {
   }
 
   // Confirm each card's displayed (cheapest) price against the live product page,
-  // since the collection feed can lag it.
-  const corrected = await verifyCheapestListings();
+  // since the collection feed can lag it. In single-market mode only that market's
+  // rows are verified (the others weren't rescraped this run).
+  const corrected = await verifyCheapestListings(onlyCountry || undefined);
   if (corrected) console.log(`Verified cheapest listings — corrected ${corrected} stale prices.`);
 
   // ---- eBay AU + US (optional; only when EBAY_CLIENT_ID/SECRET are set) ---------
@@ -593,7 +604,7 @@ export async function importPrices(): Promise<ImportSummary> {
   // (like the Chinese-listing exclusion) the same day instead of waiting ~20h.
   const ebayForced = process.env.EBAY_FORCE === "1";
   const ebayDue = ebayForced || !lastEbay || Date.now() - lastEbay.lastSeen.getTime() > 20 * 60 * 60 * 1000;
-  const ebayAllowed = process.env.EBAY_REFRESH !== "false";
+  const ebayAllowed = process.env.EBAY_REFRESH !== "false" && !onlyCountry;
   if (isEbayEnabled() && ebayDue && ebayAllowed) {
     const ebayCards = await prisma.card.findMany({
       orderBy: [
@@ -612,8 +623,10 @@ export async function importPrices(): Promise<ImportSummary> {
   // lowest listing, which is often a different-language card) as a US source.
   // Isolated so a TCGplayer hiccup never fails the rest of the import.
   try {
-    const n = await refreshTcgplayerPrices();
-    if (n > 0) summary.stores.push({ name: "TCGplayer (US)", products: n, priced: n, matched: n, unmatched: 0 });
+    if (!onlyCountry || onlyCountry === "US") {
+      const n = await refreshTcgplayerPrices();
+      if (n > 0) summary.stores.push({ name: "TCGplayer (US)", products: n, priced: n, matched: n, unmatched: 0 });
+    }
   } catch (e) {
     console.warn("TCGplayer import failed:", e);
   }
@@ -623,11 +636,13 @@ export async function importPrices(): Promise<ImportSummary> {
   // When enabled it adds an EUR→GBP-converted marketplace "from" price as a UK
   // FALLBACK source (UK_FALLBACK_RETAILERS). Isolated so it never fails the import.
   try {
-    const r = await refreshCardmarketPrices();
-    if (!r.skipped && r.written > 0) {
-      summary.stores.push({ name: "Cardmarket (UK)", products: r.written, priced: r.written, matched: r.written, unmatched: 0 });
-    } else if (r.skipped) {
-      console.log(`Cardmarket: skipped (${r.reason}).`);
+    if (!onlyCountry || onlyCountry === "UK") {
+      const r = await refreshCardmarketPrices();
+      if (!r.skipped && r.written > 0) {
+        summary.stores.push({ name: "Cardmarket (UK)", products: r.written, priced: r.written, matched: r.written, unmatched: 0 });
+      } else if (r.skipped) {
+        console.log(`Cardmarket: skipped (${r.reason}).`);
+      }
     }
   } catch (e) {
     console.warn("Cardmarket import failed:", e);
@@ -734,10 +749,13 @@ export async function importPrices(): Promise<ImportSummary> {
   if (demandRows) console.log(`Demand snapshot: ${demandRows} cards.`);
 
   // Also refresh sealed / non-single products (booster boxes, packs, …). Isolated
-  // in try/catch so a hiccup here never fails the singles import.
+  // in try/catch so a hiccup here never fails the singles import. Skipped in
+  // single-market mode (the scheduled full import owns sealed).
   try {
-    const n = await importSealed();
-    console.log(`Sealed products: ${n} listings.`);
+    if (!onlyCountry) {
+      const n = await importSealed();
+      console.log(`Sealed products: ${n} listings.`);
+    }
   } catch (e) {
     console.warn("Sealed import failed:", e);
   }

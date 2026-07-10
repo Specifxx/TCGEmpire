@@ -2,7 +2,8 @@
 // Singapore TCG stores are Shopify AND expose Riftbound SINGLES collections, and
 // sniffs each shop's currency + location markers so we only list genuine SGD/SG
 // stores. Read-only (no DB) — run it in CI and read the log to decide the list.
-const UA = { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36", Accept: "*/*" };
+export {}; // module scope — avoids global-name collisions with probe-uk-stores.ts
+const UA ={ "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36", Accept: "*/*" };
 const NON_SINGLE = /sealed|booster|box|bundle|preorder|pre-order|accessor|playmat|sleeve|merch|deck-?box|gift|case|tin|blister|collection-box/i;
 
 async function fetchText(url: string): Promise<string | null> {

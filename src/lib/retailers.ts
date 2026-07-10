@@ -678,6 +678,43 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. S$2.00 · free over S$50",
     country: "SG",
   },
+  // CI market-scan verified 2026-07-10 (scripts/probe-sg-stores.ts): SGD storefront,
+  // live Riftbound collection. Mostly sealed today — singles auto-populate via the
+  // sitemap discovery as SEA distribution ramps up (official launch July 2026).
+  manapro: {
+    key: "manapro",
+    name: "Mana Pro",
+    base: "https://sg-manapro.com",
+    collections: ["riftbound-league-of-legends-tcg"],
+    shippingFlatCents: 250,
+    freeOverCents: 6000,
+    shippingNote: "est. S$2.50 · free over S$60",
+    country: "SG",
+  },
+  // SGD Shopify store; Riftbound collection created but not yet stocked at the
+  // 2026-07-10 scan — tracked so listings appear the moment they stock.
+  onemtg: {
+    key: "onemtg",
+    name: "OneMtg",
+    base: "https://www.onemtg.com.sg",
+    collections: ["riftbound-league-of-legends-tcg"],
+    shippingFlatCents: 250,
+    freeOverCents: 8000,
+    shippingNote: "est. S$2.50 · free over S$80",
+    country: "SG",
+  },
+  // Official Riftbound Gaming Network retailer (Suntec City). SGD Shopify store;
+  // no Riftbound web collection yet — sitemap auto-discovery picks it up when added.
+  cardarena: {
+    key: "cardarena",
+    name: "Card Arena",
+    base: "https://cardarena.sg",
+    collections: [],
+    shippingFlatCents: 250,
+    freeOverCents: 8000,
+    shippingNote: "est. S$2.50 · free over S$80",
+    country: "SG",
+  },
 };
 
 export const RETAILER_LIST = Object.values(RETAILERS);
