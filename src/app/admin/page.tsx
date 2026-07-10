@@ -33,6 +33,12 @@ const TOOLS: Tool[] = [
     desc: "Review stores submitted via the Suggest-a-store form — approve, reject or delete.",
   },
   {
+    href: "/admin/social",
+    title: "Social posts",
+    icon: "📣",
+    desc: "Paste-ready X posts generated from live data — daily market post, spoiler replies, evergreen.",
+  },
+  {
     href: "/admin/clicks",
     title: "Outbound clicks",
     icon: "📈",
