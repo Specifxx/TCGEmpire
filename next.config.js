@@ -8,18 +8,17 @@
 // Allow-list rationale (third parties that actually load on the site):
 //  • Vercel Analytics + Speed Insights (va.vercel-scripts.com, *.vercel-insights.com)
 //  • HilltopAds delivery (deliciouslip.com) — the primary ad network
-//  • Sovrn / VigLink auto-affiliate (cdn.viglink.com)
 //  • Card art CDN (cdn.riftscribe.gg) + sealed/marketplace product images
 //  • TCGplayer + eBay affiliate banners (partner.tcgplayer.com, *.ebay.com)
 // 'unsafe-inline' is permitted for script/style because Next streams inline
 // hydration scripts and the JSON-LD blocks; a nonce-based policy is a later step.
 const cspReportOnly = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://*.vercel-insights.com https://deliciouslip.com https://cdn.viglink.com",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://*.vercel-insights.com https://deliciouslip.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  "connect-src 'self' https://*.vercel-insights.com https://vitals.vercel-insights.com https://deliciouslip.com https://cdn.viglink.com https://cdn.riftscribe.gg",
+  "connect-src 'self' https://*.vercel-insights.com https://vitals.vercel-insights.com https://deliciouslip.com https://cdn.riftscribe.gg",
   "frame-src 'self' https:",
   "frame-ancestors 'self'",
   "base-uri 'self'",

@@ -22,7 +22,6 @@ import { NativeShell } from "@/components/NativeShell";
 import { HilltopAdsLoader } from "@/components/HilltopAdsLoader";
 import { ReferralCapture } from "@/components/ReferralCapture";
 import { FooterAds } from "@/components/FooterAds";
-import { SovrnSnippet } from "@/components/SovrnSnippet";
 import { PriceAlertModal } from "@/components/PriceAlertModal";
 import { MetaPixel } from "@/components/MetaPixel";
 
@@ -272,9 +271,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <span aria-hidden>☕</span> Buy me a coffee
           </a>
         </footer>
-        {/* Sovrn auto-affiliate (deferred to idle) — monetises the long-tail
-            store links; skips anything already affiliate-tagged. */}
-        <SovrnSnippet />
         {/* HilltopAds zone loader — the primary ad network (web only, non-premium).
             Skipped inside the native app, which shows AdMob banners via NativeShell. */}
         <HilltopAdsLoader />

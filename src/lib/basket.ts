@@ -144,7 +144,7 @@ export function optimizeBasket(cards: BasketCard[], stores: Stores): BasketPlan 
     const g =
       groups.get(key) ??
       groups.set(key, { key, name: stores[key]?.name ?? key, lines: [], subtotalCents: 0, shippingCents: 0, freeShipping: false }).get(key)!;
-    // Affiliate-tag the outbound line (eBay EPN / TCGplayer Impact / Sovrn) — the
+    // Affiliate-tag the outbound line (eBay EPN / TCGplayer Impact / per-store) — the
     // basket bypassed the wrapper the card page uses, leaving these clicks unpaid.
     g.lines.push({ name: c.name, slug: c.slug, qty: c.qty, unitCents: unit, url: affiliateUrl(listing.url, key) });
     g.subtotalCents += unit * c.qty;

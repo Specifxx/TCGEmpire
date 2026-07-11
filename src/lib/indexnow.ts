@@ -7,7 +7,7 @@
 //
 // Protocol: https://www.indexnow.org/documentation — the key below is verified by
 // the engines fetching ${SITE_URL}/indexnow.txt (see app/indexnow.txt/route.ts),
-// which must return it. PUBLIC by design, like the AdSense/Sovrn ids: it only
+// which must return it. PUBLIC by design, like the AdSense id: it only
 // authorises "please recrawl riftcompare.com URLs", never anything destructive.
 import { prisma } from "./db";
 import { SITE_URL } from "./site";
