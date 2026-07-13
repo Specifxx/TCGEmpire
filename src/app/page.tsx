@@ -16,7 +16,6 @@ import { getLatestMarketReport } from "@/lib/posts";
 import { CinematicHero } from "@/components/home/CinematicHero";
 import { MarketPulse } from "@/components/home/MarketPulse";
 import { HowItWorks } from "@/components/home/HowItWorks";
-import { CountdownTimer } from "@/components/CountdownTimer";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 
 // REAL ISR: renders a market-NEUTRAL baseline (no cookie/header reads — the
@@ -129,20 +128,8 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col gap-12">
-      {/* Vendetta launch ribbon — the set is the site's biggest event until July 31;
-          one slim, always-visible line at the very top routes hype traffic to the
-          set page (every revealed card browsable now, prices land at launch). */}
-      <Link
-        href="/sets/vendetta"
-        className="group -mb-6 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 rounded-lg border border-brand-500/40 bg-gradient-to-r from-brand-500/15 via-ink-900 to-brand-500/15 px-4 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:border-brand-400"
-      >
-        <span className="chip bg-up/20 font-bold uppercase tracking-wide text-up">New set</span>
-        <span>
-          <span className="text-brand-300">Vendetta</span> drops <span className="num">July 31</span> — explore every
-          revealed card now
-        </span>
-        <span className="text-brand-400 transition-transform group-hover:translate-x-0.5">→</span>
-      </Link>
+      {/* Vendetta launch ribbon lives in the layout (attached under the navbar), so
+          it isn't repeated here. */}
 
       {/* Cinematic full-bleed hero — today's wrap banner sits inside it, under the
           live badge (see CinematicHero). */}
@@ -164,26 +151,6 @@ export default async function HomePage() {
       {/* How it works — orients first-time visitors to the search → compare → buy
           mechanic before the deeper data sections. */}
       <HowItWorks totalCards={totalCards} />
-
-      {/* Timely Vendetta release countdown (pre-launch / spoiler season). */}
-      <Reveal>
-        <div className="overflow-hidden rounded-2xl border border-emerald-500/25 bg-gradient-to-br from-emerald-500/[0.06] via-ink-900 to-cyan-500/[0.06] p-5 sm:p-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div className="min-w-0">
-              <span className="chip w-fit bg-emerald-500/15 text-[11px] font-bold uppercase tracking-wider text-emerald-300">Releases 31 July 2026</span>
-              <h2 className="mt-2 text-xl font-extrabold text-white">Riftbound: Vendetta releases in</h2>
-              <p className="mt-1 max-w-md text-sm leading-relaxed text-slate-400">
-                New champions, three new mechanics and fresh decks — and the moment it drops, we&apos;ll compare every
-                card&apos;s price across AU, NZ, US &amp; UK stores.
-              </p>
-            </div>
-            <Link href="/vendetta-countdown" className="btn-primary shrink-0 text-sm">Countdown &amp; full coverage →</Link>
-          </div>
-          <div className="mt-4 max-w-md">
-            <CountdownTimer y={2026} m={7} d={31} size="sm" href="/sets/vendetta" />
-          </div>
-        </div>
-      </Reveal>
 
       {/* Daily Riftle teaser — surfaces the site's daily-habit game on the top page. */}
       <Reveal>

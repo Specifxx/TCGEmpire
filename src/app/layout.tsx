@@ -5,6 +5,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
+import { VendettaRibbon } from "@/components/VendettaRibbon";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { QuickViewProvider } from "@/components/QuickView";
 import { SealedQuickViewProvider } from "@/components/SealedQuickView";
@@ -187,6 +188,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <CommandLauncherProvider>
               <MegaMenuProvider>
                 <Navbar />
+                <VendettaRibbon />
                 <main id="main-content" className="container-app min-w-0 py-6">{children}</main>
                 <PriceAlertModal />
               </MegaMenuProvider>
