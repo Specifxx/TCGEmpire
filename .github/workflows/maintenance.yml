@@ -22,6 +22,7 @@ on:
           - import-prices    # run the store price importer for this ref's store list
           - migrate-history  # copy PriceHistory/ClickEvent to HISTORY_DATABASE_URL_2
           - audit-ven        # read-only census of VEN cards (chase-tier fields)
+          - audit-history    # read-only per-day price-history diagnostic
       dry_run:
         description: "Dry run (log what would change, write nothing)"
         type: boolean
@@ -154,6 +155,13 @@ jobs:
       - name: Audit VEN cards (read-only census)
         if: inputs.task == 'audit-ven'
         run: npx tsx scripts/audit-ven.ts
+
+      - name: Audit price history (read-only)
+        if: inputs.task == 'audit-history'
+        env:
+          HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
+          HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
+        run: npx tsx scripts/audit-history.ts
 
       - name: Vendetta pipeline (official gallery → import)
         if: inputs.task == 'vendetta-pipeline'
