@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { cardTileSelect } from "@/lib/cards";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 import { CardTile, type CardTileData } from "./CardTile";
+import { FilterableCardGallery } from "./FilterableCardGallery";
 import { Markdown } from "./Markdown";
 import { fmtDate } from "./ArticleList";
 import { AdSlot } from "./AdSlot";
@@ -51,14 +52,18 @@ async function resolveEmbed(e: ArticleEmbed | undefined): Promise<CardTileData[]
     }
     if (e.setAll) {
       // EVERY card of a set (spoiler-tracker galleries) — ordered by collector
-      // number, generous default cap so a full set fits.
+      // number, generous default cap so a full set fits. createdAt is included so a
+      // filterable gallery can offer a "most recently added" sort (= newest reveal).
       const rows = await prisma.card.findMany({
         where: { setCode: e.setAll, isPromo: false },
         orderBy: [{ collectorNumber: "asc" }],
         take: e.take ?? 400,
-        select,
+        select: { ...select, createdAt: true },
       });
-      return rows as unknown as CardTileData[];
+      return rows.map((r) => {
+        const { createdAt, ...rest } = r as typeof r & { createdAt: Date };
+        return { ...rest, createdAt: createdAt.toISOString() };
+      }) as unknown as CardTileData[];
     }
     if (e.chaseSet && e.chaseTier) {
       // Tier slices need the num>total comparison, so fetch the set and filter here.
@@ -150,11 +155,15 @@ function EmbedGallery({ embed, cards }: { embed: ArticleEmbed; cards: CardTileDa
       <section className="mt-8">
         <h2 className="text-xl font-extrabold text-white">{embed.title}</h2>
         {embed.note && <p className="mt-1 text-sm text-slate-400">{embed.note}</p>}
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {cards.map((c) => (
-            <CardTile key={c.id} card={c} />
-          ))}
-        </div>
+        {embed.filterable ? (
+          <FilterableCardGallery cards={cards} />
+        ) : (
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {cards.map((c) => (
+              <CardTile key={c.id} card={c} />
+            ))}
+          </div>
+        )}
       </section>
     );
   }

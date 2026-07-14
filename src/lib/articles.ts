@@ -34,6 +34,9 @@ export interface ArticleEmbed {
   // Every (non-promo) card of a set, ordered by collector number — the full
   // spoiler-tracker gallery. Grows automatically as reveals are imported.
   setAll?: string;
+  // Render the gallery with a client-side filter bar (domain/rarity/type + search
+  // + a "most recently added" sort). Best paired with setAll on a large set.
+  filterable?: boolean;
   // Rules-text query: cards whose ability text contains this string (optionally
   // scoped to a set) — e.g. "[Empower]" collects every Empower card as reveals land.
   rulesContain?: string;
@@ -2034,8 +2037,9 @@ Run a UK store selling Riftbound? **[Get listed free](/stores/suggest)** — fre
     embeds: [
       {
         title: "All Vendetta cards revealed so far",
-        note: "Every officially revealed card, straight from our live database in collector-number order — tap any card for its page, rules text and prices the moment stores list it.",
+        note: "Every officially revealed card, straight from our live database — filter by domain, rarity or type, or sort by most recently revealed. Tap any card for its page, rules text and prices the moment stores list it.",
         setAll: "VEN",
+        filterable: true,
         take: 400,
       },
     ],
