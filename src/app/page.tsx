@@ -22,7 +22,12 @@ import { CONTENT_TAG } from "@/lib/revalidate-content";
 // indexed copy names all four markets, data is fetched for the AU baseline) so
 // Google gets one coherent global page and every visitor gets cached HTML.
 // Client components localise prices after hydration via CountryProvider.
-export const revalidate = 86400;
+//
+// 1h (not 24h): on-demand revalidation via /api/revalidate only fires when
+// CRON_SECRET is set; without it the page would sit stale for days (the market
+// index froze at an old date). An hourly ISR fallback self-heals regardless, and
+// the queries below are a handful of bounded aggregates — cheap to run 24×/day.
+export const revalidate = 3600;
 
 // Market-neutral metadata (no country in the title) so search results aren't biased
 // to one country — the visible page below is still tailored to the visitor's market.
@@ -98,18 +103,21 @@ export default async function HomePage() {
     // the page is ISR-cached with DEFAULT_COUNTRY baked in, so a single-market render
     // would show the wrong currency/prices to anyone who switches markets.
     // Tagged so the daily import refreshes it on-demand (the page itself is cached 24h).
+    // These per-datum caches use a 1h TTL, not 24h: the CONTENT_TAG bust only fires
+    // when CRON_SECRET is configured, so a shorter TTL guarantees daily-import data
+    // reaches the homepage even if the on-demand ping is skipped. (v4 index key busts
+    // the stale entry that had frozen the market index at an old date.)
     Promise.all(
       COUNTRY_CODES.map((c) =>
-        unstable_cache(() => getTopDeals(c), ["top-deals", c], { revalidate: 86400, tags: [CONTENT_TAG] })(),
+        unstable_cache(() => getTopDeals(c), ["top-deals", c], { revalidate: 3600, tags: [CONTENT_TAG] })(),
       ),
     ),
     // The GLOBAL RiftCompare Index for the hero + Market Pulse. Global = always
     // populated (PriceHistory is AU-only today) and its base-100 level is
     // currency-agnostic, so it reads the same for every market.
-    unstable_cache(() => getMarketIndex("GLOBAL"), ["home-index-global-v3"], { revalidate: 86400, tags: [CONTENT_TAG] })(),
-    // The latest daily market wrap for the homepage's featured data block. Tagged so
-    // a freshly-generated wrap surfaces on the next daily import (page cached 24h).
-    unstable_cache(getLatestMarketReport, ["home-latest-wrap"], { revalidate: 86400, tags: [CONTENT_TAG] })(),
+    unstable_cache(() => getMarketIndex("GLOBAL"), ["home-index-global-v4"], { revalidate: 3600, tags: [CONTENT_TAG] })(),
+    // The latest daily market wrap for the homepage's featured data block.
+    unstable_cache(getLatestMarketReport, ["home-latest-wrap"], { revalidate: 3600, tags: [CONTENT_TAG] })(),
   ]);
   // Assemble per-market stat tiles; the client picks the visitor's market after hydration.
   const inStockByCountry: Record<string, number> = {};

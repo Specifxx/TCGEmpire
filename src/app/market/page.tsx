@@ -118,17 +118,17 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
   // Cache key is versioned (v4): the cached MarketIndex shape has grown over time
   // (stats, then per-constituent 1-day moves), and the data cache persists across
   // deploys — a stale blob would miss the newest fields. Bumping forces a fresh compute.
-  // Long TTL + CONTENT_TAG: /market is searchParams-dynamic (per-request), so this
-  // unstable_cache — not a page revalidate — is what bounds its DB reads. The daily
-  // import clears CONTENT_TAG, so the heavy index compute runs ~once per import
-  // instead of every 30 min, with a 24h fallback.
+  // 1h TTL + CONTENT_TAG: /market is searchParams-dynamic (per-request), so this
+  // unstable_cache — not a page revalidate — bounds its DB reads. The CONTENT_TAG
+  // bust only fires when CRON_SECRET is set, so the 1h fallback (not 24h) is what
+  // guarantees the index reflects the latest import even without the on-demand ping.
   const index = await unstable_cache(() => getMarketIndex(market), ["market-index-v4", market], {
-    revalidate: 86400,
+    revalidate: 3600,
     tags: [CONTENT_TAG],
   })();
-  const reports = await unstable_cache(getRecentReports, ["market-reports-recent"], { revalidate: 86400, tags: [CONTENT_TAG] })();
+  const reports = await unstable_cache(getRecentReports, ["market-reports-recent"], { revalidate: 3600, tags: [CONTENT_TAG] })();
   // The newest wrap, featured prominently near the top of the page (with charts).
-  const latestWrap = await unstable_cache(getLatestMarketReport, ["market-wrap-latest"], { revalidate: 86400, tags: [CONTENT_TAG] })();
+  const latestWrap = await unstable_cache(getLatestMarketReport, ["market-wrap-latest"], { revalidate: 3600, tags: [CONTENT_TAG] })();
 
   // Biggest 7-day movers among the Index constituents (stock-index style gainers/losers).
   const constituents = index?.constituents ?? [];
