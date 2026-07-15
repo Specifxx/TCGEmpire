@@ -13,7 +13,7 @@ const DESC: Record<string, string> = {
   "/movers": "The biggest Riftbound price rises and falls, updated daily.",
   "/market": "The RiftCompare Index — a daily search-weighted market index for Riftbound singles, with key stats.",
   "/stores/tracked": "The stores whose public prices RiftCompare tracks and compares.",
-  "/tools/arbitrage": "Cross-store / cross-region arbitrage: buy low in one market, sell higher in another.",
+  "/tools/arbitrage": "Deal Finder: cards worth more on eBay than in stores, plus the cheapest cards to buy on eBay.",
   "/tools/value-finder": "Finds undervalued cards trading below their fair market value.",
   "/tools/best-basket": "Cheapest single-store basket for a list of cards (minimises combined shipping).",
   "/tools/box-ev": "Booster-box expected value: the pull value of a sealed box vs its price.",
@@ -28,7 +28,7 @@ const DESC: Record<string, string> = {
   "/blog": "News, metagame snapshots and the automated daily market report.",
   "/portfolio": "Track a collection's value over time.",
   "/wishlist": "Save cards and get price context.",
-  "/premium": "RiftCompare Premium — the arbitrage/value tools and ad-free browsing.",
+  "/premium": "RiftCompare Premium — the Deal Finder / value tools and ad-free browsing.",
   "/forum": "Community forum.",
 };
 

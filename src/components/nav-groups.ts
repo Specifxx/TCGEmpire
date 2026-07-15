@@ -26,10 +26,10 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    // The buyer/flipper tools (several Premium).
-    title: "Buy & flip",
+    // Smart-shopping / value tools (several Premium).
+    title: "Deals & value",
     links: [
-      { href: "/tools/arbitrage", label: "Arbitrage", emoji: "💱" },
+      { href: "/tools/arbitrage", label: "Deal Finder", emoji: "💱" },
       { href: "/tools/value-finder", label: "Value Finder", emoji: "🔎" },
       { href: "/tools/best-basket", label: "Best Basket", emoji: "🧺" },
       { href: "/tools/box-ev", label: "Box EV Calc", emoji: "🎲" },

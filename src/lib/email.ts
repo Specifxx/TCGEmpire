@@ -171,7 +171,7 @@ export async function sendEarlyAdopterEmail(to: string, months: number): Promise
   const features: [string, string][] = [
     ["Best-Basket optimiser", "the cheapest multi-store cart for any want-list"],
     ["Value Finder", "cards trading below their 30-day average"],
-    ["Arbitrage finder", "buy cheap in one market, flip to eBay"],
+    ["Deal Finder", "spot cards worth more on eBay than in stores"],
     ["Ad-free", "no ads anywhere on the site"],
   ];
   const inner = `

@@ -11,9 +11,9 @@ import { SITE_URL, PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, PREMIUM_ANNUAL_AM
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "RiftCompare Premium — power tools for buyers & flippers",
+  title: "RiftCompare Premium — power tools for buyers & sellers",
   description:
-    "RiftCompare Premium: the Best-Basket cart optimiser, the Value Finder screener, the full arbitrage/flipping list and an ad-free site. Price comparison and the portfolio tracker stay free.",
+    "RiftCompare Premium: the Best-Basket cart optimiser, the Value Finder screener, the full Deal Finder list and an ad-free site. Price comparison and the portfolio tracker stay free.",
   alternates: { canonical: "/premium" },
 };
 
@@ -32,10 +32,10 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
     cta: "Open Value Finder",
   },
   {
-    title: "Arbitrage & flipping finder",
-    body: "The full list of profitable flips (buy from a store, sell on eBay) and the cards eBay is cheapest to buy — all sources, sortable, paginated, updated daily. Free shows only the top pick.",
+    title: "Deal Finder",
+    body: "The full list of cards worth more on eBay than in stores (handy if you're selling) and the cards eBay is cheapest to buy — all sources, sortable, updated daily. Free shows only the top pick.",
     href: "/tools/arbitrage",
-    cta: "Open Arbitrage",
+    cta: "Open Deal Finder",
   },
   {
     title: "Ad-free everywhere",
@@ -52,7 +52,7 @@ const COMPARE: { feature: string; free: boolean | string; premium: boolean | str
   { feature: "Portfolio tracker — history, P&L, CSV export", free: true, premium: true },
   { feature: "Price alerts", free: true, premium: true },
   { feature: "RiftCompare Index, movers & daily wrap", free: true, premium: true },
-  { feature: "Arbitrage / flipping finder", free: "Top pick", premium: "Full list" },
+  { feature: "Deal Finder", free: "Top pick", premium: "Full list" },
   { feature: "Best-Basket cart optimiser", free: false, premium: true },
   { feature: "Value Finder screener", free: false, premium: true },
   { feature: "Ad-free experience", free: false, premium: true },
@@ -61,7 +61,7 @@ const COMPARE: { feature: string; free: boolean | string; premium: boolean | str
 const INCLUDED = [
   "Best-Basket cart optimiser",
   "Value Finder screener",
-  "Full arbitrage & flipping list",
+  "Full Deal Finder list",
   "Ad-free on every page",
 ];
 
@@ -91,7 +91,7 @@ export default async function PremiumPage() {
             "@context": "https://schema.org",
             "@type": "Product",
             name: "RiftCompare Premium",
-            description: "The Best-Basket cart optimiser, the Value Finder screener, the full arbitrage list and an ad-free RiftCompare.",
+            description: "The Best-Basket cart optimiser, the Value Finder screener, the full Deal Finder list and an ad-free RiftCompare.",
             brand: { "@type": "Organization", name: "RiftCompare", url: SITE_URL },
             offers: {
               "@type": "Offer",
@@ -108,7 +108,7 @@ export default async function PremiumPage() {
       <div className="text-center">
         <span className="chip mb-3 inline-flex bg-gold/15 font-bold uppercase tracking-wide text-gold">Premium</span>
         <h1 className="font-display text-3xl font-extrabold text-white sm:text-4xl">
-          {already ? "You're Premium" : "Power tools for buyers & flippers"}
+          {already ? "You're Premium" : "Power tools for buyers & sellers"}
         </h1>
         <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-400">
           {already
@@ -183,7 +183,7 @@ export default async function PremiumPage() {
           <Link href="/dashboard" className="btn-primary">◆ Your dashboard</Link>
           <Link href="/tools/best-basket" className="btn-ghost">Best Basket</Link>
           <Link href="/tools/value-finder" className="btn-ghost">Value Finder</Link>
-          <Link href="/tools/arbitrage" className="btn-ghost">Arbitrage</Link>
+          <Link href="/tools/arbitrage" className="btn-ghost">Deal Finder</Link>
           <Link href="/portfolio" className="btn-ghost">Portfolio</Link>
           {checkoutLive && <ManageSubscriptionButton />}
         </div>

@@ -7,7 +7,7 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: { absolute: "Free Riftbound TCG Tools & Calculators | RiftCompare" },
   description:
-    "Every RiftCompare tool in one place: selling-fee (net proceeds) calculator, should-I-grade EV calculator, box EV, deck cost and trade calculators, plus the Premium arbitrage and value-finder screeners for flippers.",
+    "Every RiftCompare tool in one place: selling-fee (net proceeds) calculator, should-I-grade EV calculator, box EV, deck cost and trade calculators, plus the Premium Deal Finder and value screeners.",
   alternates: { canonical: "/tools" },
   keywords: [
     "riftbound tools",
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     title: "Free Riftbound TCG Tools & Calculators",
-    description: "Net proceeds, grading EV, box EV, best basket, deck and trade calculators — plus Premium arbitrage & value-finder screeners.",
+    description: "Net proceeds, grading EV, box EV, best basket, deck and trade calculators — plus the Premium Deal Finder & value screeners.",
     url: `${SITE_URL}/tools`,
   },
 };
@@ -49,8 +49,8 @@ const GROUPS: ToolGroup[] = [
       {
         href: "/tools/arbitrage",
         emoji: "💱",
-        title: "Arbitrage",
-        desc: "Cards priced lower in one market than another — buy where it's cheap and pocket the spread.",
+        title: "Deal Finder",
+        desc: "Spot cards that are cheaper in one place than another — and cards worth more if you resell them.",
         badge: "Premium",
       },
       {
@@ -156,7 +156,7 @@ export default function ToolsHubPage() {
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
         Every RiftCompare tool in one place — most are free, no sign-up. Price-check a card, see what you&apos;d
         actually pocket after fees, work out whether a box or a grade pays off, and build decks for less. The two
-        pro screeners (<span className="text-gold">Premium</span>) go deeper for flippers and investors.
+        pro screeners (<span className="text-gold">Premium</span>) go deeper for keen buyers and collectors.
       </p>
 
       {GROUPS.map((group) => (

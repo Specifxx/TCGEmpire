@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 const TOOLS = [
   { title: "Best Basket", desc: "The cheapest multi-store cart for a whole deck or wishlist.", href: "/tools/best-basket", icon: "🧺" },
   { title: "Value Finder", desc: "Cards trading below their recent average — undervalued picks.", href: "/tools/value-finder", icon: "🔎" },
-  { title: "Arbitrage", desc: "Live flips and the cheapest cards on eBay, updated daily.", href: "/tools/arbitrage", icon: "⚖️" },
+  { title: "Deal Finder", desc: "Cards worth more on eBay and the cheapest eBay buys, updated daily.", href: "/tools/arbitrage", icon: "⚖️" },
 ];
 
 export default async function DashboardPage() {

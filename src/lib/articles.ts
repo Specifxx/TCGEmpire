@@ -1398,7 +1398,7 @@ Planning a Vendetta deck that mixes old and new cards? Our **[best Vendetta deck
 ## After the dust settles
 
 - **Re-check in week two.** Once more product hits shelves, non-chase singles usually ease. If a card wasn't urgent, this is often the cheaper moment.
-- **Sell into the hype if you're flipping.** If you opened boxes, launch-week demand is when duplicates fetch the most — see **[how to sell Riftbound cards](/blog/how-to-sell-riftbound-cards)**.
+- **Sell into the hype if you're selling.** If you opened boxes, launch-week demand is when duplicates fetch the most — see **[how to sell Riftbound cards](/blog/how-to-sell-riftbound-cards)**.
 
 ## The one rule that always saves money
 

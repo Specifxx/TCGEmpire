@@ -17,11 +17,11 @@ import { isPremium } from "@/lib/premium";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: { absolute: "Riftbound Arbitrage & eBay Deals | RiftCompare" },
+  title: { absolute: "Riftbound Deal Finder — Cross-Store & eBay Deals | RiftCompare" },
   description:
-    "Live Riftbound flipping arbitrage (buy cheap from a store, sell on eBay) plus the cards eBay is cheapest to buy. Sortable, paginated, updated daily, with direct buy/sell links. A Premium tool — the top opportunity is free to preview.",
+    "Find the best Riftbound deals: cards worth more on eBay than in stores (handy if you're selling), plus the cards eBay is cheapest to buy. Sortable, updated daily, with direct links. A Premium tool — the top pick is free to preview.",
   alternates: { canonical: "/tools/arbitrage" },
-  openGraph: { title: "Riftbound Arbitrage & eBay Deals", url: `${SITE_URL}/tools/arbitrage` },
+  openGraph: { title: "Riftbound Deal Finder — Cross-Store & eBay Deals", url: `${SITE_URL}/tools/arbitrage` },
 };
 
 const PAGE_SIZE = 25;
@@ -30,8 +30,8 @@ const PAGE_SIZE = 25;
 // to the client to be un-blurred.
 const TEASER_SIZE = 6;
 const FLIP_SORTS: { key: ArbSort; label: string }[] = [
-  { key: "profit", label: "Most profit" },
-  { key: "margin", label: "Best margin" },
+  { key: "profit", label: "Biggest gap" },
+  { key: "margin", label: "Best % gap" },
 ];
 const DEAL_SORTS: { key: DealSort; label: string }[] = [
   { key: "saving", label: "Biggest saving" },
@@ -66,19 +66,19 @@ export default async function ArbitragePage({
               itemListElement: [
                 { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
                 { "@type": "ListItem", position: 2, name: "Tools", item: `${SITE_URL}/tools` },
-                { "@type": "ListItem", position: 3, name: "Arbitrage", item: `${SITE_URL}/tools/arbitrage` },
+                { "@type": "ListItem", position: 3, name: "Deal Finder", item: `${SITE_URL}/tools/arbitrage` },
               ],
             },
             {
               "@context": "https://schema.org",
               "@type": "WebApplication",
-              name: "Riftbound Arbitrage & eBay Deals",
+              name: "Riftbound Deal Finder — Cross-Store & eBay Deals",
               url: `${SITE_URL}/tools/arbitrage`,
               applicationCategory: "UtilitiesApplication",
               operatingSystem: "Web",
               offers: { "@type": "Offer", price: "0", priceCurrency: info.currency },
               description:
-                "Live Riftbound flipping arbitrage (buy cheap from a store, sell on eBay) plus the cards eBay is cheapest to buy.",
+                "Find Riftbound cards worth more on eBay than in stores, plus the cards eBay is cheapest to buy.",
             },
           ]),
         }}
@@ -87,10 +87,10 @@ export default async function ArbitragePage({
         <nav className="mb-3 flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
           <Link href="/" className="hover:text-slate-300">Home</Link>
           <span>/</span>
-          <span className="text-slate-300">Arbitrage</span>
+          <span className="text-slate-300">Deal Finder</span>
         </nav>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">Arbitrage &amp; eBay Deals</h1>
+          <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">Deal Finder</h1>
           <RegionToggle />
         </div>
       </div>
@@ -102,7 +102,7 @@ export default async function ArbitragePage({
           aria-current={view === "flip" ? "page" : undefined}
           className={`flex-1 rounded-md px-3 py-2 text-center text-sm font-bold ${view === "flip" ? "bg-brand-500/20 text-brand-200" : "text-slate-400 hover:text-white"}`}
         >
-          Flip to eBay
+          Worth more on eBay
         </Link>
         <Link
           href="/tools/arbitrage?view=deals"
@@ -166,8 +166,8 @@ async function FlipView({
   return (
     <>
       <p className="mb-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-        Buy a card cheap from a {info.adjective} store and resell it on <strong className="text-slate-200">eBay</strong> for a
-        profit. Net is after an estimated {Math.round(EBAY_FEE * 100)}% eBay fee; postage and your time aren&apos;t included.
+        Cards that sell for more on <strong className="text-slate-200">eBay</strong> than a {info.adjective} store charges —
+        handy if you&apos;re deciding whether to sell one. The gap is after an estimated {Math.round(EBAY_FEE * 100)}% eBay fee; postage isn&apos;t included.
       </p>
       <p className="mb-4 text-xs text-slate-500">
         eBay is the only marketplace we can price a resale on right now. Know another store that buys cards?{" "}
@@ -182,13 +182,13 @@ async function FlipView({
       )}
 
       {data.items.length === 0 ? (
-        <Empty>No profitable arbitrage for these sources right now in {info.place}. Try widening the buy side.</Empty>
+        <Empty>No cards worth more on eBay from these sources right now in {info.place}. Try widening the store side.</Empty>
       ) : premium ? (
         <>
           <div className="card-surface overflow-x-auto">
             <FlipTable items={data.items} country={country} info={info} />
           </div>
-          <Pager total={data.total} page={data.page} pageCount={data.pageCount} hrefFor={href} unit="opportunities" />
+          <Pager total={data.total} page={data.page} pageCount={data.pageCount} hrefFor={href} unit="cards" />
         </>
       ) : (
         <LockedTable signedIn={signedIn}>
