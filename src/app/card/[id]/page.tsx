@@ -26,6 +26,7 @@ import { CardConversionCta } from "@/components/CardConversionCta";
 import { NetProceeds } from "@/components/NetProceeds";
 import { AiInsight } from "@/components/AiInsight";
 import { CardPriceMetrics, CardPriceComparison, type EbaySearchMap } from "@/components/CardMarketSection";
+import { EbayBuyCta } from "@/components/EbayBuyCta";
 import { computeMarket, type MarketRow } from "@/lib/market-rows";
 
 // REAL ISR: no cookie/header reads anywhere in this route's tree — the page is
@@ -365,6 +366,12 @@ export default async function CardPage({ params }: { params: { id: string } }) {
 
             {/* Market-localised metrics (SSR = AU baseline; client reconciles). */}
             <CardPriceMetrics rows={rows} energyCost={card.energyCost} might={card.might} power={card.power} />
+
+            {/* Primary singles buy-path — always present. eBay carries this card
+                (new/used/graded) in every market and pays us a commission, so it's
+                the first, always-visible buy action; the honest local price
+                comparison sits directly below it. */}
+            <EbayBuyCta query={card.name} className="mt-4" />
           </div>
 
           {/* Price comparison + eBay fallback + contextual affiliate banners —

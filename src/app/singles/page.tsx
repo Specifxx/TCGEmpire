@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { SETS, DOMAIN_KEYS, domainInfo } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
+import { EbayBuyCta } from "@/components/EbayBuyCta";
 
 // SEO hub for the "Riftbound singles" search intent. Market-neutral, richly
 // internally-linked, indexable — funnels searchers into the database / sets /
@@ -114,6 +115,10 @@ export default async function SinglesPage() {
               <span className="num text-slate-300">{total.toLocaleString()}</span> Riftbound cards in the database, priced daily.
             </p>
           )}
+          {/* Widest-selection buy-path — eBay carries every Riftbound single
+              (new/used/graded) in every market, so it's the always-available option
+              beside the local store comparison. */}
+          <EbayBuyCta className="mt-5 max-w-2xl" />
         </div>
       </section>
 
