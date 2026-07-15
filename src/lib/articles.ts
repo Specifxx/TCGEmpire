@@ -654,57 +654,71 @@ Build smart, compare prices, and you'll have a competitive Riftbound deck withou
     category: "blog",
     title: "Welcome to RiftCompare",
     excerpt:
-      "What RiftCompare is, why we built it, and how it helps Australian Riftbound players find the cheapest cards.",
+      "What RiftCompare is, why we built it, and everything it now covers — card and sealed prices, decks, tools and games — across AU, NZ, US, UK and Singapore.",
     author: "RiftCompare",
-    date: "2026-06-06",
-    readMins: 2,
+    date: "2026-07-15",
+    readMins: 5,
     tags: ["news", "about"],
-    body: `RiftCompare is a free price-comparison tool for **Riftbound: League of Legends TCG**, built for Australian players.
+    body: `RiftCompare is a free price-comparison tool for **Riftbound: League of Legends TCG**. We started as an Australia-only project; today RiftCompare tracks live prices across **Australia, New Zealand, the US, the UK and Singapore**, and has grown well past a simple price table.
 
-Riftbound is exciting, but tracking down the cheapest copy of a card across a dozen different stores is tedious — every shop prices differently, stock changes daily, and overseas sites quietly show you the wrong currency. We built RiftCompare to do that legwork for you.
+## The problem we built this to solve
+
+Riftbound is exciting, but tracking down the cheapest copy of a specific card across dozens of independent stores is genuinely tedious — every shop prices differently, stock changes daily, overseas sites quietly show you the wrong currency, and postage costs can flip which store is actually cheapest once you account for shipping. RiftCompare does that legwork automatically: search a card once, and see every store's live price side by side, ranked by **total delivered cost** (price plus postage, with free-shipping thresholds factored in), refreshed daily.
 
 ## What you can do here
 
-- **[Browse the card database](/browse)** — every Riftbound card, with the lowest live price across Australian stores.
+- **[Browse the card database](/browse)** — every Riftbound single, filterable by set, domain, rarity and type, with live prices in your market.
+- **[Buy Riftbound singles](/singles)** — the fastest path from "which card do I need" to "who's cheapest right now."
 - **[Compare sealed products](/sealed)** — booster boxes, packs, Proving Grounds and more, priced across shops.
-- **[Explore meta decks](/decks)** — real top-finishing tournament lists, with a live "build cost" so you know what it costs to assemble.
-- **[Buy & sell on the forum](/forum)** — post want-to-buy / want-to-sell listings and trade directly with other AU collectors.
+- **[Explore meta decks](/decks)** — real top-finishing tournament lists, with a live "build cost" so you know exactly what it costs to assemble each one.
+- **[The RiftCompare Index](/market)** and **[price movers](/movers)** — a daily read on the whole Riftbound singles market, and which cards are spiking, cooling, or quietly undervalued.
+- **[Deck pricer](/deck)** — paste or build a decklist and price the entire thing across every store in one pass.
+- **Tools** — an arbitrage/deal finder, a box-EV calculator, and a net-proceeds calculator for anyone selling.
+- **[Riftle](/riftle)** — our free daily Wordle-style "guess the card" game, plus an Unlimited mode.
+- **[Buy & sell on the forum](/forum)** — post want-to-buy / want-to-sell listings and trade directly with other collectors.
+- **Wishlist, price alerts and portfolio tracking** — for a free account, track the cards you want, get notified on price drops, and value your whole collection.
 
 ## How prices work
 
-We pull live prices from public Australian store feeds (and eBay AU) and always request the **Australian price**, so what you see is what you'd actually pay locally. Each card links straight out to the cheapest store so you can buy in a couple of clicks.
+We pull live prices directly from each store's public product feed (and eBay) in that market's own currency — never converted or estimated — so what you see is what you'd actually pay locally. Prices refresh daily, and every listing links straight out to the store so you can buy in a couple of clicks. Where we don't yet have a local listing for a card, we point you to an eBay search for it rather than leaving the page empty.
 
-We're just getting started — the database, decks and price coverage grow every day. Spotted something off, or want a store added? Use the [contact form](/contact) or the [forum](/forum). Thanks for stopping by, and happy hunting.`,
+## Where we're still growing
+
+Store coverage is deepest in Australia and growing fastest in the US, UK and Singapore — we're actively finding and adding new stores in every market. If a store you use is missing, or something looks wrong, tell us: use the [contact form](/contact) or post on the [forum](/forum). Thanks for stopping by, and happy hunting.`,
   },
   {
     slug: "unleashed-meta-snapshot-june-2026",
     category: "blog",
     title: "Riftbound Unleashed Meta Snapshot — June 2026",
     excerpt:
-      "The decks defining the Unleashed metagame right now, from the current tournament data — and what each costs to build in Australia.",
+      "The six decks defining the Unleashed metagame — champion, key cards, archetype and what each actually costs to build, priced live across every store we track.",
     author: "RiftCompare",
-    date: "2026-06-06",
-    readMins: 3,
+    date: "2026-07-15",
+    readMins: 6,
     tags: ["meta", "decks"],
-    body: `The **Unleashed** metagame has settled into a clear top tier. Here's a snapshot of the most-played and best-performing legends right now, based on tournament results aggregated by [riftDecks.com](https://riftdecks.com/legends).
+    body: `The **Unleashed** metagame has settled into a clear top tier. Here's a breakdown of the six most-played and best-performing legends, based on tournament results aggregated by [riftDecks.com](https://riftdecks.com/legends) — what each deck actually does, its key cards, and a link to the full list with a live **build cost** priced across every store we track.
 
 ## Tier 1 — the decks to beat
 
-- **Master Yi, Wuju Bladesman** (Body/Calm) — the defining aggro-tempo deck: cheap units backed by combat tricks to close games fast.
-- **Irelia, Blade Dancer** (Calm/Chaos) — flexible tempo with a deep spell package that snowballs the board.
-- **LeBlanc, Deceiver** (Mind/Order) — go-wide midrange that floods cheap units and converts with value.
+**[Master Yi, Wuju Bladesman](/decks/master-yi-wuju-bladesman)** (Body/Calm) — the defining aggro-tempo deck. It runs Master Yi, Tempered behind a wall of cheap, resilient units (Lonely Poro, Scuttle Crab, First Mate) and closes with Zhonya's Hourglass and Trinity Force turning a single big threat into a game-ending combat trick. It wants to win the early board and never give it back.
+
+**[Irelia, Blade Dancer](/decks/irelia-blade-dancer)** (Calm/Chaos) — flexible tempo built around Irelia, Fervent, backed by Guardian Angel and Boots of Swiftness to keep her attacking through removal. Scuttle Crab and Tideturner give it the same resilient-unit foundation as Yi, but with a deeper trick suite that snowballs the board rather than racing it.
+
+**[LeBlanc, Deceiver](/decks/leblanc-deceiver)** (Mind/Order) — midrange that goes wide and converts with value. LeBlanc, Fragmented sets up disruptive plays alongside Soaring Scout, Watchful Sentry and Black Rose Dignitary, with Baited Hook picking off whatever the board state doesn't already answer.
 
 ## Tier 2 — strong and popular
 
-- **Diana, Scorn of the Moon** (Chaos/Mind) — spell-tempo built around burst finishers like Moonfall.
-- **Fiora, Grand Duelist** (Body/Order) — wide, aggressive units that duel down blockers and race.
-- **Vex, Gloomist** (Calm/Chaos) — evasive threats plus a deep trick suite to dominate combat.
+**[Diana, Scorn of the Moon](/decks/diana-scorn-of-the-moon)** (Chaos/Mind) — spell-tempo built around Diana, Lunari. It leans on Ravenbloom Student and Tideturner for board presence, with Hwei, Brooding Painter adding a second angle of pressure once the spell package takes over.
+
+**[Fiora, Grand Duelist](/decks/fiora-grand-duelist)** (Body/Order) — wide, aggressive units (Pit Rookie, First Mate, Spectral Matron) that duel down blockers and race, equipped with B.F. Sword, Shepherd's Heirloom and Baited Hook to keep Fiora, Victorious swinging through anything that tries to trade with her.
+
+**[Vex, Gloomist](/decks/vex-gloomist)** (Calm/Chaos) — evasive tempo/control. Vex, Apathetic backed by Scuttle Crab, Tideturner and Trevor Snoozebottom, with Boots of Swiftness protecting the pieces that actually close the game once the board is stabilized.
 
 ## See the full lists (and build cost)
 
-Every one of these is a real, legal tournament list on our **[Meta Decks page](/decks)** — card-by-card, split into Legend, Champion, Main Deck, Battlefields, Runes and Sideboard, with a live **build cost** priced across Australian stores so you can see exactly what it takes to assemble.
+Every deck above is a real, legal tournament list on our **[Meta Decks page](/decks)** — card-by-card, split into Legend, Champion, Main Deck, Battlefields, Runes and Sideboard, with a live **build cost** priced across every store RiftCompare tracks (not just Australia — the build cost adapts to your own market). Click through to any deck above to see the exact 40+ cards and what assembling it would cost you today.
 
-Decklists are sourced from riftDecks.com and refresh with the metagame — we'll post a new snapshot as the meta shifts.`,
+Decklists are sourced from riftDecks.com and refresh with the metagame — we'll post a new snapshot as the tier list shifts.`,
   },
   {
     slug: "how-a-riftbound-deck-is-built",

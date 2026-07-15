@@ -22,6 +22,7 @@ import { domainSlug } from "@/lib/domains";
 import { decksUsingCard } from "@/lib/meta-decks";
 import { SITE_URL } from "@/lib/site";
 import { PriceHistoryChart } from "@/components/PriceHistoryChart";
+import { getPriceHistory, type PricePoint } from "@/lib/price-history";
 import { CardConversionCta } from "@/components/CardConversionCta";
 import { NetProceeds } from "@/components/NetProceeds";
 import { AiInsight } from "@/components/AiInsight";
@@ -222,21 +223,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
       }
     : null;
 
-  // Unique editorial copy + FAQ so each card page carries substantive, crawlable
-  // text rather than just a price table (thin content ranks poorly). Everything
-  // below is generated from this card's own attributes, so no two pages match.
   const tags = (card.tags ?? "").split(",").map((t) => t.trim()).filter(Boolean);
-  const about = buildAbout(card, au.lowest, au.storeCount);
-  const faqs = buildFaqs(card, au.lowest, au.storeCount);
-  const faqLd = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: faqs.map((f) => ({
-      "@type": "Question",
-      name: f.q,
-      acceptedAnswer: { "@type": "Answer", text: f.a },
-    })),
-  };
 
   // Breadcrumbs: real internal links (Home → Cards → Set → Card) plus matching
   // structured data. This deepens internal linking — the single biggest lever for
@@ -316,7 +303,41 @@ export default async function CardPage({ params }: { params: { id: string } }) {
 
   // Meta decks that play this card — card ↔ deck internal links (and a "what's this
   // card for?" signal for shoppers). Static seed lookup, no DB call.
-  const relatedDecks = decksUsingCard(card.name).slice(0, 6);
+  const allRelatedDecks = decksUsingCard(card.name);
+  const relatedDecks = allRelatedDecks.slice(0, 6);
+
+  // AU price history (day-cached — see lib/price-history) reused here for the
+  // genuine price-trend paragraph below. Same cache key as the chart's own fetch
+  // (default take=120), so this never doubles the day's history read.
+  const history = await getPriceHistory(card.id, DEFAULT_COUNTRY);
+
+  // Unique editorial copy + FAQ so each card page carries substantive, crawlable
+  // text rather than just a price table (thin content ranks poorly). Built from
+  // this card's own attributes AND its real tracked history/deck/printing data —
+  // no two pages match, and nothing here is asserted without the data to back it.
+  const about = buildAbout(card, {
+    lowest: au.lowest,
+    stores: au.storeCount,
+    history,
+    deckCount: allRelatedDecks.length,
+    printingCount: printings.length,
+  });
+  const faqs = buildFaqs(card, {
+    lowest: au.lowest,
+    stores: au.storeCount,
+    printingCount: printings.length,
+    deckCount: allRelatedDecks.length,
+    deckNames: allRelatedDecks.slice(0, 2).map((d) => d.name),
+  });
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  };
 
   return (
     <div>
@@ -578,10 +599,40 @@ type CardForCopy = {
   power: number | null;
 };
 
-// Builds 2 short paragraphs of unique prose from the card's own attributes.
-// MARKET-NEUTRAL (this page is cached once for all four markets): the price cited
-// is the AU baseline, named explicitly, with the other markets acknowledged.
-function buildAbout(card: CardForCopy, lowest: number | null, stores: number): string[] {
+// Real, tracked min/max/direction over the card's own AU history — never asserts a
+// trend without enough data points to back it (a fresh card just skips this
+// paragraph rather than guessing).
+function buildTrend(name: string, history: PricePoint[]): string | null {
+  if (history.length < 4) return null;
+  const recent = history.slice(-35); // ~5 tracked weeks, matches the chart's usual window
+  const vals = recent.map((p) => p.v);
+  const lo = Math.min(...vals);
+  const hi = Math.max(...vals);
+  const first = recent[0].v;
+  const last = recent[recent.length - 1].v;
+  const days = Math.max(1, Math.round((recent[recent.length - 1].t - recent[0].t) / 86400_000));
+  if (lo === hi) {
+    return `Over the past ${days} days of tracked history, ${name}'s Australian price has held steady at ${formatMoney(lo)}.`;
+  }
+  const trendWord = last > first ? "risen" : last < first ? "fallen" : "held steady";
+  return `Over the past ${days} days, ${name} has traded between ${formatMoney(lo)} and ${formatMoney(hi)} in Australia, and has ${trendWord} since the start of that window — see the full price history chart below.`;
+}
+
+type AboutContext = {
+  lowest: number | null;
+  stores: number;
+  history: PricePoint[];
+  deckCount: number;
+  printingCount: number;
+};
+
+// Builds unique prose from the card's own attributes, its REAL tracked price
+// history and its actual deck/printing data — nothing here is asserted without the
+// data on this page render to back it, so a thin/new card simply gets fewer
+// paragraphs rather than a fabricated one. MARKET-NEUTRAL (this page is cached once
+// for all four markets): the price cited is the AU baseline, named explicitly.
+function buildAbout(card: CardForCopy, ctx: AboutContext): string[] {
+  const { lowest, stores, history, deckCount, printingCount } = ctx;
   let p1 = `${card.name} is a ${card.rarity.toLowerCase()} ${card.type.toLowerCase()} card from ${card.setName} (${card.setCode}), a set in the Riftbound trading card game, with collector number ${card.collectorNumber}.`;
   p1 += card.domain === "Colorless"
     ? " It is a Colorless card, so it fits into decks of any domain."
@@ -604,11 +655,32 @@ function buildAbout(card: CardForCopy, lowest: number | null, stores: number): s
     ? `The lowest tracked price for ${card.name} today is ${formatMoney(lowest)} in Australia, across ${stores} ${stores === 1 ? "store" : "stores"} — RiftCompare also compares New Zealand, US and UK stores, ranked by delivered cost and refreshed daily.`
     : `We're currently tracking down store listings for ${card.name}. Prices refresh daily across Australian, New Zealand, US, UK and Singapore stores — check back soon or add it to your wishlist to be ready the moment it's in stock.`;
 
-  return [p1, p2];
+  const paragraphs = [p1, p2];
+
+  const trend = buildTrend(card.name, history);
+  if (trend) paragraphs.push(trend);
+
+  // Deck usage + sibling-printing context — only the parts that are actually true
+  // for this card, so a card with neither simply doesn't get this paragraph.
+  const bits: string[] = [];
+  if (deckCount > 0) bits.push(`sees play in ${deckCount} meta deck${deckCount === 1 ? "" : "s"} tracked on RiftCompare`);
+  if (printingCount > 0) bits.push(`has ${printingCount} other tracked printing${printingCount === 1 ? "" : "s"} — promo, alternate-art or Signature versions, each trading at its own price`);
+  if (bits.length) paragraphs.push(`${card.name} ${bits.join(", and ")}.`);
+
+  return paragraphs;
 }
 
-function buildFaqs(card: CardForCopy, lowest: number | null, stores: number): { q: string; a: string }[] {
-  return [
+type FaqContext = {
+  lowest: number | null;
+  stores: number;
+  printingCount: number;
+  deckCount: number;
+  deckNames: string[];
+};
+
+function buildFaqs(card: CardForCopy, ctx: FaqContext): { q: string; a: string }[] {
+  const { lowest, stores, printingCount, deckCount, deckNames } = ctx;
+  const faqs = [
     {
       q: `How much does ${card.name} cost?`,
       a: lowest != null && stores > 0
@@ -624,4 +696,20 @@ function buildFaqs(card: CardForCopy, lowest: number | null, stores: number): { 
       a: `Compare every store selling ${card.name} across Australia, New Zealand, the US, the UK and Singapore on this page, then buy from whichever retailer offers the lowest total price including postage. RiftCompare links straight through to each store.`,
     },
   ];
+
+  if (printingCount > 0) {
+    faqs.push({
+      q: `Are there other printings of ${card.name}?`,
+      a: `Yes — RiftCompare tracks ${printingCount} other printing${printingCount === 1 ? "" : "s"} of ${card.name} (promo, alternate-art and/or Signature versions), each a distinct product trading at its own price. See them all further down this page.`,
+    });
+  }
+  if (deckCount > 0) {
+    const named = deckNames.length ? ` including ${deckNames.join(" and ")}` : "";
+    faqs.push({
+      q: `What decks use ${card.name}?`,
+      a: `${card.name} is played in ${deckCount} meta deck${deckCount === 1 ? "" : "s"} tracked on RiftCompare${named}. See the full list and each deck's live build cost further down this page.`,
+    });
+  }
+
+  return faqs;
 }
