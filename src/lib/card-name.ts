@@ -35,3 +35,14 @@ export function cardDisplayName(name: string, c: CardCredentialFields): string {
   const creds = cardCredentials(c);
   return creds.length ? `${name} (${creds.join(", ")})` : name;
 }
+
+// Search-friendly variant for external marketplace queries (eBay's _nkw, etc.) —
+// same credentials as cardDisplayName but appended as plain terms rather than a
+// parenthetical, since search boxes tokenize on words, not punctuation. Without
+// this, searching a Signature/Alt Art/Overnumbered/Showcase/Promo printing just
+// returns the base card's listings, which is functionally useless for the
+// printing the visitor is actually looking at.
+export function cardSearchName(name: string, c: CardCredentialFields): string {
+  const creds = cardCredentials(c);
+  return creds.length ? `${name} ${creds.join(" ")}` : name;
+}

@@ -7,7 +7,7 @@ import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, 
 import { WishlistButton } from "./WishlistButton";
 import { isOvernumbered, isSignature, SG_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS } from "@/lib/constants";
 import { cardHref } from "@/lib/card-url";
-import { cardDisplayName } from "@/lib/card-name";
+import { cardDisplayName, cardSearchName } from "@/lib/card-name";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
 import { affiliateUrl, ebayAffiliateUrl, outboundRel } from "@/lib/affiliate";
 import { OutboundLink } from "./OutboundLink";
@@ -163,7 +163,7 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
   const hasEbay = (prices ?? []).some((p) => p.retailer.startsWith("ebay") && p.inStock && p.country === country);
   const ebaySearchUrl =
     prices !== null && ebayMkt && !hasEbay
-      ? ebayAffiliateUrl(`https://www.${ebayMkt.domain}/sch/i.html?_nkw=${encodeURIComponent(`${card.name} Riftbound`)}`)
+      ? ebayAffiliateUrl(`https://www.${ebayMkt.domain}/sch/i.html?_nkw=${encodeURIComponent(`${cardSearchName(card.name, card)} Riftbound`)}`)
       : null;
 
   return (
@@ -218,7 +218,7 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
 
             {/* Always-present eBay buy-path — the widest singles inventory in every
                 market and our commission source; sits above the local comparison. */}
-            <EbayBuyCta query={card.name} compact className="mt-3" />
+            <EbayBuyCta query={cardSearchName(card.name, card)} compact className="mt-3" />
 
             {/* Add to collection — track & value your whole collection in your profile */}
             <div className="mt-3 flex items-center gap-2">

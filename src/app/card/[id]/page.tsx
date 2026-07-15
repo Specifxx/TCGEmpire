@@ -11,7 +11,7 @@ import { CardViewBeacon } from "@/components/CardViewBeacon";
 import { formatMoney } from "@/lib/format";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
 import { affiliateUrl, ebayAffiliateUrl } from "@/lib/affiliate";
-import { cardDisplayName } from "@/lib/card-name";
+import { cardDisplayName, cardSearchName } from "@/lib/card-name";
 import { CardTile } from "@/components/CardTile";
 import { cardTileSelect } from "@/lib/cards";
 import { AdSlot } from "@/components/AdSlot";
@@ -178,11 +178,16 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     UK: { domain: "ebay.co.uk", label: "eBay UK" },
     SG: { domain: "ebay.com.sg", label: "eBay Singapore" },
   };
+  // Special printings (Signature/Overnumbered/Alt Art/Showcase/Promo) need their
+  // credentials IN the search query — searching just the base name only ever
+  // surfaces the base card's listings, which is useless for the printing this
+  // page is actually about.
+  const ebaySearchTerm = `${cardSearchName(card.name, card)} Riftbound`;
   const ebaySearch: EbaySearchMap = Object.fromEntries(
     Object.entries(EBAY_MKT).map(([c, mkt]) => [
       c,
       {
-        url: ebayAffiliateUrl(`https://www.${mkt.domain}/sch/i.html?_nkw=${encodeURIComponent(`${card.name} Riftbound`)}`),
+        url: ebayAffiliateUrl(`https://www.${mkt.domain}/sch/i.html?_nkw=${encodeURIComponent(ebaySearchTerm)}`),
         label: mkt.label,
         nz: c === "NZ",
       },
@@ -371,7 +376,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                 (new/used/graded) in every market and pays us a commission, so it's
                 the first, always-visible buy action; the honest local price
                 comparison sits directly below it. */}
-            <EbayBuyCta query={card.name} className="mt-4" />
+            <EbayBuyCta query={cardSearchName(card.name, card)} className="mt-4" />
           </div>
 
           {/* Price comparison + eBay fallback + contextual affiliate banners —
@@ -381,7 +386,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             rows={rows}
             displayName={displayName}
             ebaySearch={ebaySearch}
-            ebayQuery={`${card.name} ${card.collectorNumber}`}
+            ebayQuery={`${cardSearchName(card.name, card)} ${card.collectorNumber}`}
           />
 
           {/* Price-history chart — free for everyone (AU history; the series is
