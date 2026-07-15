@@ -14,18 +14,29 @@
 // The constituent set is derived fresh from today's search data and applied
 // retroactively across the window, so the series is internally consistent on any
 // given day (no divisor gymnastics); history may revise slightly as demand shifts.
+import { unstable_cache } from "next/cache";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { dbHistory } from "./db-history";
 import { pickPrice, priceField, COUNTRY_LIST, COUNTRIES, type Country } from "./country";
+import { CONTENT_TAG } from "./revalidate-content";
 import type { PricePoint } from "./price-history";
+
+// Calendar day in Australia/Sydney — the price-history snapshot bucket. Used as a
+// cache-key segment so history-derived aggregates recompute at most ONCE per day
+// (PriceHistory only changes when the daily import writes its snapshot). This is
+// the core of the DB-egress fix: every reader — pages, bots, API, OG images —
+// shares one recompute per day instead of re-reading the history DB per request.
+export function sydneyDayKey(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Australia/Sydney" }).format(new Date());
+}
 
 // A market the Index can be computed for: one region, or the GLOBAL composite that
 // blends every region into a single currency-agnostic number (the default).
 export type MarketScope = Country | "GLOBAL";
 
 export const INDEX_SIZE = 200;
-const WINDOW_DAYS = 180;
+const WINDOW_DAYS = 90; // index chart window (was 180) — halves per-read PriceHistory volume
 const MAX_WEIGHT_SHARE = 0.2; // no constituent above 20%
 // Don't chart a day until most of the basket (by weight) has price data — early
 // sparse days would otherwise swing the base around.
@@ -143,7 +154,7 @@ const pctChange = (now: number, then: number | undefined): number | null =>
 
 // Resilient like getPriceMovers: any DB error returns null (the page shows its
 // "warming up" state) instead of crashing the page or the build.
-async function getRegionIndex(country: Country): Promise<MarketIndex | null> {
+async function computeRegionIndex(country: Country): Promise<MarketIndex | null> {
  try {
   const field = priceField(country);
 
@@ -330,7 +341,18 @@ function pointStats(points: PricePoint[]) {
   };
 }
 
-async function getGlobalIndex(): Promise<MarketIndex | null> {
+// Day-scoped cache around the per-region compute: the first request for a given
+// (market, Sydney-day) reads PriceHistory once; every other caller that day — pages,
+// bots, /api, OG images — gets the cached blob and touches the history DB zero times.
+// Auto-refreshes at the day rollover, so no on-demand ping (CRON_SECRET) is needed.
+function getRegionIndex(country: Country): Promise<MarketIndex | null> {
+  return unstable_cache(() => computeRegionIndex(country), ["rc-region-index", country, sydneyDayKey()], {
+    revalidate: 172800, // 2-day safety TTL; the day-keyed key is what actually refreshes it
+    tags: [CONTENT_TAG],
+  })();
+}
+
+async function computeGlobalIndex(): Promise<MarketIndex | null> {
   const regions = (await Promise.all(COUNTRY_LIST.map((c) => getRegionIndex(c.code)))).filter(
     (r): r is MarketIndex => r != null
   );
@@ -352,7 +374,18 @@ async function getGlobalIndex(): Promise<MarketIndex | null> {
   };
 }
 
-// Default is the GLOBAL composite; pass a region for that market's own index.
+// Day-scoped cache for the GLOBAL composite (its region sub-calls are cached too,
+// but caching the composite avoids re-compositing on every request as well).
+function getGlobalIndex(): Promise<MarketIndex | null> {
+  return unstable_cache(() => computeGlobalIndex(), ["rc-global-index", sydneyDayKey()], {
+    revalidate: 172800,
+    tags: [CONTENT_TAG],
+  })();
+}
+
+// Default is the GLOBAL composite; pass a region for that market's own index. Both
+// paths are day-cached, so the history DB is read at most once per market per day
+// no matter how many pages/bots/API callers hit the index.
 export async function getMarketIndex(market: MarketScope = "GLOBAL"): Promise<MarketIndex | null> {
   return market === "GLOBAL" ? getGlobalIndex() : getRegionIndex(market);
 }

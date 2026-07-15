@@ -5,12 +5,15 @@
 //
 // Egress-bounded: we scan the most-searched (i.e. liquid) priced cards only, then
 // pull just those cards' recent history — never the whole PriceHistory table.
+import { unstable_cache } from "next/cache";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { dbHistory } from "./db-history";
 import { pickPrice, priceField, type Country } from "./country";
 import { cardTileSelect } from "./cards";
 import type { CardTileData } from "@/components/CardTile";
+import { CONTENT_TAG } from "./revalidate-content";
+import { sydneyDayKey } from "./market-index";
 
 const SCAN_CARDS = 400; // most-searched priced cards to consider
 const WINDOW_DAYS = 30;
@@ -27,7 +30,7 @@ export interface ValuePick {
   offHighPct: number; // how far below the window high
 }
 
-export async function getUndervalued(country: Country, limit = 24): Promise<ValuePick[]> {
+async function computeUndervalued(country: Country, limit: number): Promise<ValuePick[]> {
   try {
     const field = priceField(country);
     const where: Prisma.CardWhereInput = { variant: null, isPromo: false };
@@ -75,4 +78,15 @@ export async function getUndervalued(country: Country, limit = 24): Promise<Valu
   } catch {
     return [];
   }
+}
+
+// Day-scoped cache: the undervalued scan reads a chunk of PriceHistory, so run it
+// once per (market, limit) per day and share across every visitor of the
+// value-finder page. Auto-refreshes at the day rollover.
+export function getUndervalued(country: Country, limit = 24): Promise<ValuePick[]> {
+  return unstable_cache(
+    () => computeUndervalued(country, limit),
+    ["rc-undervalued", country, String(limit), sydneyDayKey()],
+    { revalidate: 172800, tags: [CONTENT_TAG] },
+  )();
 }

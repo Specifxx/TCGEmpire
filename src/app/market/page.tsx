@@ -115,17 +115,10 @@ function Delta({ label, pct }: { label: string; pct: number | null }) {
 export default async function IndexPage({ searchParams }: { searchParams: { market?: string } }) {
   const market = parseMarket(searchParams.market);
   const isGlobal = market === "GLOBAL";
-  // Cache key is versioned (v4): the cached MarketIndex shape has grown over time
-  // (stats, then per-constituent 1-day moves), and the data cache persists across
-  // deploys — a stale blob would miss the newest fields. Bumping forces a fresh compute.
-  // 1h TTL + CONTENT_TAG: /market is searchParams-dynamic (per-request), so this
-  // unstable_cache — not a page revalidate — bounds its DB reads. The CONTENT_TAG
-  // bust only fires when CRON_SECRET is set, so the 1h fallback (not 24h) is what
-  // guarantees the index reflects the latest import even without the on-demand ping.
-  const index = await unstable_cache(() => getMarketIndex(market), ["market-index-v4", market], {
-    revalidate: 3600,
-    tags: [CONTENT_TAG],
-  })();
+  // getMarketIndex is day-cached internally (once per market per Sydney day, shared
+  // across every caller), so it needs no page-level wrapper — that only re-serialised
+  // the same blob without cutting history-DB reads. Auto-refreshes at the day rollover.
+  const index = await getMarketIndex(market);
   const reports = await unstable_cache(getRecentReports, ["market-reports-recent"], { revalidate: 3600, tags: [CONTENT_TAG] })();
   // The newest wrap, featured prominently near the top of the page (with charts).
   const latestWrap = await unstable_cache(getLatestMarketReport, ["market-wrap-latest"], { revalidate: 3600, tags: [CONTENT_TAG] })();

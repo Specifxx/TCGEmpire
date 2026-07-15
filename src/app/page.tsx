@@ -112,10 +112,11 @@ export default async function HomePage() {
         unstable_cache(() => getTopDeals(c), ["top-deals", c], { revalidate: 3600, tags: [CONTENT_TAG] })(),
       ),
     ),
-    // The GLOBAL RiftCompare Index for the hero + Market Pulse. Global = always
-    // populated (PriceHistory is AU-only today) and its base-100 level is
-    // currency-agnostic, so it reads the same for every market.
-    unstable_cache(() => getMarketIndex("GLOBAL"), ["home-index-global-v4"], { revalidate: 3600, tags: [CONTENT_TAG] })(),
+    // The GLOBAL RiftCompare Index. getMarketIndex is now day-cached internally
+    // (once per market per Sydney day, shared across every caller), so no extra
+    // page-level cache is needed — a second wrapper would only re-serialise the
+    // same blob and can't reduce history-DB reads further.
+    getMarketIndex("GLOBAL"),
     // The latest daily market wrap for the homepage's featured data block.
     unstable_cache(getLatestMarketReport, ["home-latest-wrap"], { revalidate: 3600, tags: [CONTENT_TAG] })(),
   ]);

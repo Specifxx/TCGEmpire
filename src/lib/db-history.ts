@@ -23,11 +23,15 @@ import { PrismaClient } from "@prisma/client";
 // etc. tables it also creates cost negligible storage empty; only PriceHistory /
 // ClickEvent get real traffic).
 
-// HISTORY_DATABASE_URL_2 is the CURRENT history project (its predecessor blew its
-// monthly transfer allowance in July 2026 and is kept only as the migration source);
-// the legacy var and the main-DB fallback keep older setups working unchanged.
+// HISTORY_DATABASE_URL_3 is the CURRENT history project. Each predecessor blew its
+// monthly network-transfer allowance and was replaced (the read-optimisation in
+// market-index/price-history now bounds reads to ~once/day so this one should last);
+// the older vars + main-DB fallback keep prior setups working unchanged. Newest wins.
 const HISTORY_URL =
-  process.env.HISTORY_DATABASE_URL_2 || process.env.HISTORY_DATABASE_URL || process.env.DATABASE_URL;
+  process.env.HISTORY_DATABASE_URL_3 ||
+  process.env.HISTORY_DATABASE_URL_2 ||
+  process.env.HISTORY_DATABASE_URL ||
+  process.env.DATABASE_URL;
 
 // True when the history tables live in their OWN database. When split, PriceHistory's
 // Card foreign key means card rows must exist there too — see ensureHistoryCards().

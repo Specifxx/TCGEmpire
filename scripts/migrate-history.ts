@@ -1,51 +1,43 @@
 /**
  * One-time migration of the history/analytics tables (PriceHistory + ClickEvent)
- * to a NEW history database — used when a Neon history project blows its monthly
- * network-transfer allowance and gets replaced.
+ * into the NEWEST history database — used when a Neon history project exhausts its
+ * monthly network-transfer allowance and is replaced.
  *
- *   source  = HISTORY_DATABASE_URL   (the exhausted project; reads may be blocked)
- *   target  = HISTORY_DATABASE_URL_2 (the new project; schema must be pushed first)
- *   main    = DATABASE_URL           (operational DB — Card rows + fallback source)
+ *   target  = the newest configured HISTORY_DATABASE_URL_N (schema pushed first)
+ *   sources = main DATABASE_URL + every OLDER history project, in order
  *
- * Steps:
- *   1. Report PriceHistory/ClickEvent counts in main / source / target, so the log
- *      shows exactly where history currently lives (a fallback setup writes it to
- *      the MAIN database — then main is the copy source, not the old history DB).
- *   2. Copy Card rows into the target (PriceHistory carries an FK to Card).
- *   3. Copy PriceHistory + ClickEvent (batched, skipDuplicates → safe to re-run).
- *
- * If the exhausted source refuses reads, its tables are skipped with a loud log —
- * the site still switches to the new DB and history rebuilds from today.
+ * The target is filled from ALL sources with skipDuplicates (the PriceHistory
+ * unique key [cardId, country, day] dedupes overlaps), so running it is safe and
+ * idempotent. A source that refuses reads (an exhausted project) is skipped with a
+ * loud log — whatever copied is kept and the site runs on the new DB regardless.
  *
  * Usage (CI): npx tsx scripts/migrate-history.ts
  */
 import { PrismaClient } from "@prisma/client";
 
 const MAIN_URL = process.env.DATABASE_URL;
-const OLD_URL = process.env.HISTORY_DATABASE_URL;
-const NEW_URL = process.env.HISTORY_DATABASE_URL_2;
+// Newest-first: the target is the highest-numbered history var that's set.
+const TARGET_URL =
+  process.env.HISTORY_DATABASE_URL_3 || process.env.HISTORY_DATABASE_URL_2 || process.env.HISTORY_DATABASE_URL;
 
-if (!NEW_URL) {
-  console.error("HISTORY_DATABASE_URL_2 is not set — nothing to migrate to.");
-  process.exit(1);
-}
-if (!MAIN_URL) {
-  console.error("DATABASE_URL is not set.");
-  process.exit(1);
-}
+if (!MAIN_URL) { console.error("DATABASE_URL is not set."); process.exit(1); }
+if (!TARGET_URL) { console.error("No history-database URL is set (HISTORY_DATABASE_URL_3/_2/_1)."); process.exit(1); }
 
+// Every distinct source to pull from (main + older history projects), excluding the
+// target itself. De-duplicated by URL so we never read the same DB twice.
+const sourceUrls = [
+  { label: "main (DATABASE_URL)", url: MAIN_URL },
+  { label: "HISTORY_DATABASE_URL_2", url: process.env.HISTORY_DATABASE_URL_2 },
+  { label: "HISTORY_DATABASE_URL", url: process.env.HISTORY_DATABASE_URL },
+].filter((s): s is { label: string; url: string } => !!s.url && s.url !== TARGET_URL);
+// Dedupe by URL.
+const seenUrl = new Set<string>();
+const sources = sourceUrls.filter((s) => (seenUrl.has(s.url) ? false : (seenUrl.add(s.url), true)));
+
+const target = new PrismaClient({ datasourceUrl: TARGET_URL });
 const main = new PrismaClient({ datasourceUrl: MAIN_URL });
-const target = new PrismaClient({ datasourceUrl: NEW_URL });
-// The old history DB may not exist as a separate project (fallback setups).
-const source = OLD_URL && OLD_URL !== MAIN_URL ? new PrismaClient({ datasourceUrl: OLD_URL }) : null;
 
-type AnyClient = PrismaClient;
-
-async function counts(label: string, c: AnyClient | null): Promise<{ ph: number; ce: number } | null> {
-  if (!c) {
-    console.log(`${label}: (not configured)`);
-    return null;
-  }
+async function counts(label: string, c: PrismaClient): Promise<{ ph: number; ce: number } | null> {
   try {
     const [ph, ce] = await Promise.all([c.priceHistory.count(), c.clickEvent.count()]);
     console.log(`${label}: PriceHistory=${ph.toLocaleString()} ClickEvent=${ce.toLocaleString()}`);
@@ -56,99 +48,70 @@ async function counts(label: string, c: AnyClient | null): Promise<{ ph: number;
   }
 }
 
-async function copyCards() {
+async function copyCards(validInto: Set<string>) {
   const rows = await main.card.findMany();
   for (let i = 0; i < rows.length; i += 500) {
     await target.card.createMany({ data: rows.slice(i, i + 500), skipDuplicates: true });
   }
+  rows.forEach((r) => validInto.add(r.id));
   console.log(`Cards: ensured ${rows.length.toLocaleString()} rows in the target (FK for PriceHistory).`);
-  return new Set(rows.map((r) => r.id));
 }
 
-async function copyPriceHistory(from: AnyClient, label: string, validCardIds: Set<string>) {
-  let copied = 0;
-  let skippedFk = 0;
-  let cursor: string | undefined;
+async function copyTable(from: PrismaClient, label: string, table: "priceHistory" | "clickEvent", validCardIds?: Set<string>) {
+  let copied = 0, skippedFk = 0, cursor: string | undefined;
   for (;;) {
-    const batch = await from.priceHistory.findMany({
+    const batch: { id: string; cardId?: string }[] = await (from[table] as any).findMany({
       take: 20_000,
       ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
       orderBy: { id: "asc" },
     });
     if (batch.length === 0) break;
     cursor = batch[batch.length - 1].id;
-    // Rows for cards since deleted from the main DB can't satisfy the FK — skip them.
-    const rows = batch.filter((r) => validCardIds.has(r.cardId));
+    // PriceHistory has an FK to Card; drop rows for cards not present in the target.
+    const rows = validCardIds ? batch.filter((r) => r.cardId && validCardIds.has(r.cardId)) : batch;
     skippedFk += batch.length - rows.length;
     for (let i = 0; i < rows.length; i += 5_000) {
-      await target.priceHistory.createMany({ data: rows.slice(i, i + 5_000), skipDuplicates: true });
+      await (target[table] as any).createMany({ data: rows.slice(i, i + 5_000), skipDuplicates: true });
     }
     copied += rows.length;
-    console.log(`PriceHistory ← ${label}: ${copied.toLocaleString()} copied…`);
+    if (copied % 100_000 === 0 || batch.length < 20_000) console.log(`${table} ← ${label}: ${copied.toLocaleString()} copied…`);
     if (batch.length < 20_000) break;
   }
-  if (skippedFk) console.log(`PriceHistory ← ${label}: skipped ${skippedFk} rows for cards no longer in the main DB.`);
+  if (skippedFk) console.log(`${table} ← ${label}: skipped ${skippedFk} rows for cards not in the target.`);
   return copied;
 }
 
-async function copyClickEvents(from: AnyClient, label: string) {
-  let copied = 0;
-  let cursor: string | undefined;
-  for (;;) {
-    const batch = await from.clickEvent.findMany({
-      take: 20_000,
-      ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
-      orderBy: { id: "asc" },
-    });
-    if (batch.length === 0) break;
-    cursor = batch[batch.length - 1].id;
-    for (let i = 0; i < batch.length; i += 5_000) {
-      await target.clickEvent.createMany({ data: batch.slice(i, i + 5_000), skipDuplicates: true });
+async function run() {
+  console.log(`Target: ${TARGET_URL === process.env.HISTORY_DATABASE_URL_3 ? "HISTORY_DATABASE_URL_3" : "HISTORY_DATABASE_URL_2/1"}`);
+  console.log(`Sources: ${sources.map((s) => s.label).join(", ") || "(none)"}\n`);
+
+  console.log("— Counts before —");
+  await counts("target", target);
+
+  const cardIds = new Set<string>();
+  await copyCards(cardIds);
+
+  let ph = 0, ce = 0;
+  for (const src of sources) {
+    const client = src.url === MAIN_URL ? main : new PrismaClient({ datasourceUrl: src.url });
+    const c = await counts(src.label, client);
+    if (c && (c.ph > 0 || c.ce > 0)) {
+      try {
+        if (c.ph > 0) ph += await copyTable(client, src.label, "priceHistory", cardIds);
+        if (c.ce > 0) ce += await copyTable(client, src.label, "clickEvent");
+      } catch (e) {
+        console.warn(`${src.label} read failed mid-copy (transfer cap?): ${(e as Error).message.split("\n")[0]}`);
+        console.warn("Whatever copied so far is kept; the site runs on the new DB either way.");
+      }
     }
-    copied += batch.length;
-    console.log(`ClickEvent ← ${label}: ${copied.toLocaleString()} copied…`);
-    if (batch.length < 20_000) break;
+    if (client !== main) await client.$disconnect();
   }
-  return copied;
+
+  console.log("— Counts after —");
+  await counts("target", target);
+  console.log(`Done. ${ph.toLocaleString()} PriceHistory + ${ce.toLocaleString()} ClickEvent rows copied (deduped).`);
 }
 
-async function mainFn() {
-  console.log("— Where does history live right now? —");
-  const cMain = await counts("main (DATABASE_URL)", main);
-  const cOld = await counts("old history (HISTORY_DATABASE_URL)", source);
-  await counts("new history (HISTORY_DATABASE_URL_2)", target);
-
-  const cardIds = await copyCards();
-
-  // Copy from every source that actually holds rows: fallback-era history sits in
-  // the MAIN database, split-era history in the old project. skipDuplicates makes
-  // the union safe (the [cardId,country,day] unique key dedupes overlaps).
-  let ph = 0;
-  let ce = 0;
-  if (cMain && (cMain.ph > 0 || cMain.ce > 0)) {
-    if (cMain.ph > 0) ph += await copyPriceHistory(main, "main", cardIds);
-    if (cMain.ce > 0) ce += await copyClickEvents(main, "main");
-  }
-  if (source && cOld && (cOld.ph > 0 || cOld.ce > 0)) {
-    try {
-      if (cOld.ph > 0) ph += await copyPriceHistory(source, "old-history", cardIds);
-      if (cOld.ce > 0) ce += await copyClickEvents(source, "old-history");
-    } catch (e) {
-      console.warn(`Old history DB read failed mid-copy (transfer cap?): ${(e as Error).message.split("\n")[0]}`);
-      console.warn("Whatever copied so far is kept; the site runs on the new DB either way.");
-    }
-  }
-
-  console.log("— After migration —");
-  await counts("new history (HISTORY_DATABASE_URL_2)", target);
-  console.log(`Done. ${ph.toLocaleString()} PriceHistory + ${ce.toLocaleString()} ClickEvent rows copied.`);
-}
-
-mainFn()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await Promise.all([main.$disconnect(), target.$disconnect(), source?.$disconnect()]);
-  });
+run()
+  .catch((e) => { console.error(e); process.exit(1); })
+  .finally(async () => { await Promise.all([target.$disconnect(), main.$disconnect()]); });

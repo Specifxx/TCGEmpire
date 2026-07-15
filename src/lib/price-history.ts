@@ -2,11 +2,20 @@
 // "movers" used by the homepage Price Watch. PriceHistory is recorded for the AU
 // market only (one lowest-price point per card per Sydney day), so everything here
 // is AU-priced.
+import { unstable_cache } from "next/cache";
 import { prisma } from "./db";
 import { dbHistory } from "./db-history";
 import { cardTileSelect } from "./cards";
 import type { Country } from "./country";
 import type { CardTileData } from "@/components/CardTile";
+import { CONTENT_TAG } from "./revalidate-content";
+
+// Calendar day in Australia/Sydney — see market-index. PriceHistory changes once a
+// day, so history-derived reads are cached with this in the key (recompute daily,
+// not per request). Kept local to avoid an import cycle with market-index.
+function sydneyDayKey(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Australia/Sydney" }).format(new Date());
+}
 
 export type PricePoint = { t: number; v: number };
 
@@ -15,7 +24,7 @@ export type PricePoint = { t: number; v: number };
 // Sydney day (AU/NZ/US/UK — see price-import.ts), so each market has its own genuine
 // series — no currency conversion needed. Resilient: returns [] on any DB error so a
 // page never crashes over the chart.
-export async function getPriceHistory(cardId: string, country: Country = "AU", take = 180): Promise<PricePoint[]> {
+async function computePriceHistory(cardId: string, country: Country, take: number): Promise<PricePoint[]> {
   try {
     const rows = await dbHistory.priceHistory.findMany({
       where: { cardId, country },
@@ -27,6 +36,18 @@ export async function getPriceHistory(cardId: string, country: Country = "AU", t
   } catch {
     return [];
   }
+}
+
+// Day-scoped cache per (card, market): repeated views of the same card's chart in a
+// day read the history DB once, not once per page load. Only cards actually viewed
+// get cached, so this never over-reads. Window trimmed to 120 days (2× the useful
+// chart range) to cap the per-read payload.
+export function getPriceHistory(cardId: string, country: Country = "AU", take = 120): Promise<PricePoint[]> {
+  return unstable_cache(
+    () => computePriceHistory(cardId, country, take),
+    ["rc-card-history", cardId, country, String(take), sydneyDayKey()],
+    { revalidate: 172800, tags: [CONTENT_TAG] },
+  )();
 }
 
 export type Mover = {
@@ -46,10 +67,10 @@ const WINDOW_DAYS = 35;
 const LIST_SIZE = 5;
 
 // Compute this-week's biggest gainers, biggest fallers, and best-value buys (the
-// largest discounts off a card's recent high). Cheap enough to run inside the
-// homepage's ISR window. `limit` caps each of the three lists — the homepage shows
-// a teaser (5); the dedicated /movers page asks for a deeper list.
-export async function getPriceMovers(country: Country = "AU", limit = LIST_SIZE): Promise<PriceMovers> {
+// largest discounts off a card's recent high). Reads the whole market's 35-day
+// history, so it's day-cached below — the raw compute runs once per (market, limit)
+// per day regardless of how many pages (home, /movers, /games, Discord) ask for it.
+async function computePriceMovers(country: Country, limit: number): Promise<PriceMovers> {
  const empty: PriceMovers = { spiking: [], plummeting: [], value: [] };
  try {
   const cutoff = new Date(Date.now() - WINDOW_DAYS * 86400_000);
@@ -117,4 +138,15 @@ export async function getPriceMovers(country: Country = "AU", limit = LIST_SIZE)
  } catch {
   return empty;
  }
+}
+
+// Day-scoped cache: one raw compute per (market, limit) per day, shared across the
+// homepage, /movers, /games and the Discord bot — instead of a fresh whole-market
+// history read on each. Auto-refreshes at the day rollover.
+export function getPriceMovers(country: Country = "AU", limit = LIST_SIZE): Promise<PriceMovers> {
+  return unstable_cache(
+    () => computePriceMovers(country, limit),
+    ["rc-price-movers", country, String(limit), sydneyDayKey()],
+    { revalidate: 172800, tags: [CONTENT_TAG] },
+  )();
 }

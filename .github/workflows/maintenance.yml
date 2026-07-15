@@ -20,7 +20,7 @@ on:
           - probe-sg         # read-only Singapore store scan (no DB writes)
           - probe-url        # read-only page fetch + font/style diagnostics (url input)
           - import-prices    # run the store price importer for this ref's store list
-          - migrate-history  # copy PriceHistory/ClickEvent to HISTORY_DATABASE_URL_2
+          - migrate-history  # copy PriceHistory/ClickEvent to the newest history DB
           - audit-ven        # read-only census of VEN cards (chase-tier fields)
           - audit-history    # read-only per-day price-history diagnostic
       dry_run:
@@ -64,7 +64,7 @@ jobs:
           # The click/price-history tables can live in a SECOND Neon project
           # (src/lib/db-history.ts). Ordinary pushes never reach it, so new columns
           # (e.g. ClickEvent.path) 500 the admin clicks page until pushed here too.
-          HISTORY_DB: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 || secrets.HISTORY_DATABASE_URL }}
+          HISTORY_DB: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 || secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 || secrets.HISTORY_DATABASE_URL }}
         run: |
           npx prisma db push --skip-generate
           if [ -n "$HISTORY_DB" ]; then
@@ -79,18 +79,18 @@ jobs:
         env:
           HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
+          HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
         run: |
-          if [ -z "$HISTORY_DATABASE_URL_2" ]; then
-            echo "::error::HISTORY_DATABASE_URL_2 is not visible to Actions (checked secrets and vars) — add it as a repository secret."
+          TARGET="${HISTORY_DATABASE_URL_3:-$HISTORY_DATABASE_URL_2}"
+          if [ -z "$TARGET" ]; then
+            echo "::error::No target history DB visible to Actions (HISTORY_DATABASE_URL_3/_2)."
             exit 1
           fi
-          echo "Pushing schema to the new history database…"
-          # Non-fatal: a history DB forked from the main project can carry EXTRA
-          # columns this ref's schema doesn't know (e.g. a preview-branch rollout),
-          # which makes the push refuse. The migration itself doesn't need the push
-          # in that case — the tables already exist.
-          DATABASE_URL="$HISTORY_DATABASE_URL_2" npx prisma db push --skip-generate \
-            || echo "::warning::schema push refused (destructive diff — likely extra columns on a forked DB); continuing"
+          echo "Pushing schema to the target history database…"
+          # Non-fatal: a forked history DB can carry EXTRA columns this ref's schema
+          # doesn't know, which makes the push refuse — the migration doesn't need it.
+          DATABASE_URL="$TARGET" npx prisma db push --skip-generate \
+            || echo "::warning::schema push refused (destructive diff); continuing"
           npx tsx scripts/migrate-history.ts
 
       - name: Sync cards from RiftScribe (fetch + additive upsert)
@@ -149,6 +149,7 @@ jobs:
           EBAY_FORCE: ${{ inputs.ebay_sg && '1' || '' }}
           EBAY_ONLY_MARKET: ${{ inputs.ebay_sg && 'SG' || '' }}
           # Route history/click writes to the current history project (db-history.ts).
+          HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
         run: npx tsx scripts/import-prices.ts
 
@@ -161,6 +162,7 @@ jobs:
         env:
           HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
+          HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
         run: npx tsx scripts/audit-history.ts
 
       - name: Vendetta pipeline (official gallery → import)
