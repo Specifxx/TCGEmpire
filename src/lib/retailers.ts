@@ -849,6 +849,52 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. S$2.50 · free over S$60",
     country: "SG",
   },
+  // ---- More Singapore stores (round 4, user-supplied) -------------------------
+  // 4elements has a confirmed live Riftbound collection; the others are verified
+  // real SG stores. Shopify stores auto-discover their singles collection; the
+  // brick-and-mortar ones are directory-only until they launch a scrapeable store.
+  fourelements: {
+    key: "fourelements",
+    name: "4elements",
+    base: "https://www.4elements.sg",
+    collections: ["riftbound-tcg-unleashed"],
+    shippingFlatCents: 250,
+    freeOverCents: 6000,
+    shippingNote: "est. S$2.50 · free over S$60",
+    country: "SG",
+  },
+  brints: {
+    key: "brints",
+    name: "Brints Collectibles",
+    base: "https://brintsco.com",
+    collections: [],
+    shippingFlatCents: 250,
+    freeOverCents: 6000,
+    shippingNote: "est. S$2.50 · free over S$60",
+    country: "SG",
+  },
+  dimensiongaming: {
+    key: "dimensiongaming",
+    name: "Dimension Gaming",
+    base: "https://dimension.gaming.sg",
+    collections: [],
+    shippingFlatCents: 250,
+    freeOverCents: 6000,
+    shippingNote: "est. S$2.50 · free over S$60",
+    country: "SG",
+  },
+  // Real SG store (Woodlands), but its webstore isn't Shopify (no products.json),
+  // so it's directory-only — never yields fabricated prices.
+  ttcs: {
+    key: "ttcs",
+    name: "The Trading Card Shop",
+    base: "https://www.thetradingcardshop.com",
+    collections: [],
+    shippingFlatCents: 250,
+    freeOverCents: 8000,
+    shippingNote: "in-store (Woodlands) · webstore not auto-priced",
+    country: "SG",
+  },
 };
 
 export const RETAILER_LIST = Object.values(RETAILERS);
