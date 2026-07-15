@@ -34,9 +34,10 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"],
-        // Headings share the body family (Inter) — the terminal look differentiates
-        // by weight and tracking, not by a second decorative face.
-        display: ["var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
+        // Headings: a heavy inscriptional serif (Cinzel) for the official-feeling
+        // brand voice — applied via the `h1`-`h3` base-style rule in globals.css, not
+        // per-component, so it lands sitewide in one place. Body/UI stays Inter.
+        display: ["var(--font-display)", "Georgia", "serif"],
         // Monospace — prices, tickers, tabular figures (the terminal voice).
         mono: ["var(--font-mono)", "ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"],
       },

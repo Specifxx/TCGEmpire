@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono, Cinzel } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
@@ -26,10 +26,13 @@ import { FooterAds } from "@/components/FooterAds";
 import { PriceAlertModal } from "@/components/PriceAlertModal";
 import { MetaPixel } from "@/components/MetaPixel";
 
-// Market-terminal typography. Body + headings: Inter — the neutral professional
-// grotesk of trading/fintech UIs (replaces the rounded Sora/Space Grotesk pair,
-// which read friendly/consumer rather than desk). Headings differentiate by weight
-// + tight tracking, not by a second family. Exposed as CSS vars wired into Tailwind.
+// Market-terminal typography. Body: Inter — the neutral professional grotesk of
+// trading/fintech UIs. Headings: Cinzel — a heavy inscriptional Roman serif that
+// evokes the official Riftbound/League of Legends look (their real brand faces,
+// Beaufort for LOL + Spiegel, are proprietary Riot fonts we can't license or copy,
+// so this is the closest legal look-alike) — used ONLY for display headings; body
+// copy, UI chrome and all prices/tabular figures stay Inter/JetBrains Mono so the
+// terminal voice is untouched. Exposed as CSS vars wired into Tailwind.
 // display: "swap" — the brand fonts ALWAYS render (consistent on every load) rather
 // than "optional" which silently keeps the system fallback whenever the font misses
 // the ~100ms first-paint window. adjustFontFallback (next/font default) size-matches
@@ -37,6 +40,8 @@ import { MetaPixel } from "@/components/MetaPixel";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 // Monospace for prices / tabular figures / tickers — the "market terminal" voice.
 const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
+// Display serif for headings only — see note above.
+const cinzel = Cinzel({ subsets: ["latin"], weight: ["600", "700"], variable: "--font-display", display: "swap" });
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -158,13 +163,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // Neutral lang="en": one cookie-switched URL serves all four English markets
   // (AU/NZ/US/UK), so a single market tag like en-AU would mislabel the others.
   return (
-    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable} ${cinzel.variable}`}>
       <head>
         {/* Impact / TCGplayer affiliate site-ownership verification. Impact looks for
             the non-standard `value` attribute, so spread it past the meta typing. */}
         <meta {...({ name: "impact-site-verification", value: IMPACT_SITE_VERIFICATION } as any)} />
         {/* HilltopAds site-ownership verification (homepage). */}
         <meta name="f56d4c757e10b95b149b998706568143dfa0d0e9" content="f56d4c757e10b95b149b998706568143dfa0d0e9" />
+        {/* Google AdSense site-ownership verification. */}
+        <meta name="google-adsense-account" content="ca-pub-6262011577596407" />
         {/* Warm up the image CDN connection so card thumbnails start loading sooner. */}
         <link rel="preconnect" href="https://cdn.riftscribe.gg" crossOrigin="" />
         <link rel="dns-prefetch" href="https://cdn.riftscribe.gg" />
