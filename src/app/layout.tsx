@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
-import { Inter, JetBrains_Mono, Manrope } from "next/font/google";
+import { Inter, JetBrains_Mono, Fraunces } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
@@ -26,19 +26,32 @@ import { FooterAds } from "@/components/FooterAds";
 import { PriceAlertModal } from "@/components/PriceAlertModal";
 import { MetaPixel } from "@/components/MetaPixel";
 
-// Market-terminal typography. Body: Inter — the neutral professional grotesk of
-// trading/fintech UIs. Headings: Manrope — a highly legible geometric sans,
-// distinct enough from Inter to read as an intentional heading voice without
-// clashing with it. Exposed as CSS vars wired into Tailwind.
-// display: "swap" — the brand fonts ALWAYS render (consistent on every load) rather
-// than "optional" which silently keeps the system fallback whenever the font misses
-// the ~100ms first-paint window. adjustFontFallback (next/font default) size-matches
-// the fallback so the swap-in causes negligible layout shift.
+// PREVIEW BRANCH — emulates the official Riftbound/League of Legends site's
+// typographic DNA (a sharp, flared serif for titling over a clean humanist sans
+// for body/UI) using free, properly-licensed fonts. Riot's actual "Beaufort for
+// LoL" and "Spiegel" are proprietary, custom-commissioned typefaces — there is no
+// legitimate self-hosted or hotlinked @font-face source for them on a third-party
+// site, so this uses look-alikes instead:
+//   Headings — Fraunces: a sharp, high-contrast, slightly flared serif at a heavy
+//     weight. Closest free analog to Beaufort's bold titling character.
+//   Body/UI  — Inter: a clean, highly legible humanist grotesque — the same
+//     family Spiegel itself is often compared to.
+// Exposed as CSS vars wired into Tailwind. display: "swap" — the brand fonts
+// ALWAYS render (consistent on every load) rather than "optional" which silently
+// keeps the system fallback whenever the font misses the ~100ms first-paint
+// window. adjustFontFallback (next/font default) size-matches the fallback so the
+// swap-in causes negligible layout shift.
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 // Monospace for prices / tabular figures / tickers — the "market terminal" voice.
 const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
-// Geometric sans for headings only — see note above.
-const manrope = Manrope({ subsets: ["latin"], weight: ["600", "700", "800"], variable: "--font-display", display: "swap" });
+// Sharp flared serif for headings only — the Beaufort-style look-alike (see note above).
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  weight: ["600", "700", "900"],
+  style: ["normal"],
+  variable: "--font-display",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -160,7 +173,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // Neutral lang="en": one cookie-switched URL serves all four English markets
   // (AU/NZ/US/UK), so a single market tag like en-AU would mislabel the others.
   return (
-    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable} ${manrope.variable}`}>
+    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable} ${fraunces.variable}`}>
       <head>
         {/* Impact / TCGplayer affiliate site-ownership verification. Impact looks for
             the non-standard `value` attribute, so spread it past the meta typing. */}

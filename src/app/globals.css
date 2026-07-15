@@ -33,11 +33,33 @@ body {
   font-feature-settings: "tnum" 1, "lnum" 1;
 }
 
-/* Headings: Manrope — a highly legible geometric sans, distinct from the Inter
-   body copy without clashing with it. Tight tracking for a crisp, modern feel. */
+/* Headings: Fraunces — a sharp, high-contrast, slightly flared serif chosen as a
+   free look-alike for Beaufort for LoL's bold titling character (the genuine
+   Beaufort file is Riot's proprietary, licensed font — there is no legitimate
+   third-party source for it). Heavy weight + tight tracking for a bold, sharp
+   display voice; h1 goes to the heaviest cut for maximum presence. */
 h1, h2, h3 {
-  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
-  letter-spacing: -0.02em;
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+h1 {
+  font-weight: 900;
+}
+
+/* "Eyebrow" micro-heading — the tracked, uppercase treatment the official site
+   uses for section labels and callouts. Opt-in via class rather than applied to
+   h1-h3 by default: real headings here (card names, article titles) are often
+   long, and forcing long strings into tracked-out all-caps hurts legibility —
+   this is for short labels only ("NEW SET", "PRICE MOVERS", etc). */
+.rb-eyebrow {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  line-height: 1.2;
 }
 
 /* Accessible, brand-consistent keyboard focus ring on every interactive element.
