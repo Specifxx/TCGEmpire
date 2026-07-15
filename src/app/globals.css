@@ -33,23 +33,12 @@ body {
   font-feature-settings: "tnum" 1, "lnum" 1;
 }
 
-/* Major headings: Cinzel, a heavy inscriptional serif that carries the
-   official-feeling Riftbound/League brand voice (their real fonts, Beaufort for
-   LOL + Spiegel, are proprietary Riot faces — this is the closest free look-alike).
-   Scoped to h1/h2 only — smaller h3 UI labels stay Inter so dense card/list text
-   keeps reading cleanly at small sizes. */
-h1, h2 {
-  font-family: var(--font-display), Georgia, serif;
-  /* Cinzel is a wide inscriptional face designed for open tracking — negative
-     letter-spacing (right for Inter) crowds its letterforms, so give it room
-     instead of tightening. */
-  letter-spacing: 0.01em;
-}
-
-/* h3 stays the terminal body face, differentiated by weight + tighter tracking. */
-h3 {
-  font-family: var(--font-sans), sans-serif;
-  letter-spacing: -0.025em;
+/* Headings: JetBrains Mono — the same monospace face as prices/tickers, so
+   headings read as part of the market-terminal voice rather than a decorative
+   display face. Differentiated from body copy by weight + tight tracking. */
+h1, h2, h3 {
+  font-family: var(--font-mono), monospace;
+  letter-spacing: -0.02em;
 }
 
 /* Accessible, brand-consistent keyboard focus ring on every interactive element.

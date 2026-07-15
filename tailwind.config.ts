@@ -34,10 +34,10 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"],
-        // Headings: a heavy inscriptional serif (Cinzel) for the official-feeling
-        // brand voice — applied via the `h1`-`h3` base-style rule in globals.css, not
-        // per-component, so it lands sitewide in one place. Body/UI stays Inter.
-        display: ["var(--font-display)", "Georgia", "serif"],
+        // Headings: JetBrains Mono (same face as prices/tickers) — applied via the
+        // `h1`-`h3` base-style rule in globals.css, not per-component, so it lands
+        // sitewide in one place. Body copy stays Inter.
+        display: ["var(--font-mono)", "ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"],
         // Monospace — prices, tickers, tabular figures (the terminal voice).
         mono: ["var(--font-mono)", "ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"],
       },
