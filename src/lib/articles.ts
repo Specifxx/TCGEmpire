@@ -1534,6 +1534,17 @@ Empower cards will list with live prices on the **[Vendetta set page](/sets/vend
       rulesSet: "VEN",
       take: 12,
     },
+    // Zoomed crop of a real Flow card's rules text (resolves from the DB — the
+    // first officially imported [Flow] card; renders nothing until one exists).
+    closeups: [
+      {
+        caption: "The printed Flow line on a real Vendetta card — it can be cast straight from the trash for the cost shown.",
+        rulesContain: "[Flow]",
+        rulesSet: "VEN",
+        topPct: 54,
+        heightPct: 32,
+      },
+    ],
     body: `![Vendetta's new mechanics — Flow, Burn and Empower](/vendetta-mechanics.png)
 
 **Flow** is one of three new mechanics in **[Riftbound: Vendetta](/sets/vendetta)** (out **31 July 2026**). It turns your trash from a graveyard into a resource — here's exactly how the Flow mechanic works and how to build around it.
@@ -1541,6 +1552,12 @@ Empower cards will list with live prices on the **[Vendetta set page](/sets/vend
 ## What is Flow in Riftbound?
 
 **Flow lets you play a card from your trash instead of from your hand.** Cards you've used, discarded or had destroyed aren't gone — with Flow, they become a second pool of plays. It draws on the League champions who fuel their kits with Energy: your spent cards keep on working.
+
+## What Flow looks like on the card
+
+Here's the actual printed text on a revealed Vendetta card — the **[Flow]** keyword sits in the rules box, telling you the card can be cast from the trash instead of the hand.
+
+[[closeup:0]]
 
 ## How the Flow mechanic works
 
@@ -1579,6 +1596,24 @@ Flow cards will show live prices on the **[Vendetta set page](/sets/vendetta)** 
       { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
       { label: "Riftbound singles on eBay", query: "Riftbound TCG singles" },
     ],
+    embed: {
+      title: "Burn cards revealed so far",
+      note: "Every officially revealed Vendetta card with the Burn keyword — tap a card for its page.",
+      rulesContain: "[Burn]",
+      rulesSet: "VEN",
+      take: 12,
+    },
+    // Zoomed crop of a real Burn card's rules text (resolves from the DB — the
+    // first officially imported [Burn] card; renders nothing until one exists).
+    closeups: [
+      {
+        caption: "The printed Burn line on a real Vendetta card — the number shown is how many cards get sent to the trash.",
+        rulesContain: "[Burn]",
+        rulesSet: "VEN",
+        topPct: 54,
+        heightPct: 32,
+      },
+    ],
     body: `![Vendetta's new mechanics — Flow, Burn and Empower](/vendetta-mechanics.png)
 
 **Burn** is one of three new mechanics in **[Riftbound: Vendetta](/sets/vendetta)** (out **31 July 2026**). It has two very different uses — here's how the Burn mechanic works and how to build around it.
@@ -1589,6 +1624,12 @@ Flow cards will show live prices on the **[Vendetta set page](/sets/vendetta)** 
 
 - **Self-Burn** — some cards burn *your own* deck. That sounds bad, but it's the fastest way to stock your trash for **[Flow](/guides/riftbound-flow-explained)** and other trash-payoffs.
 - **Deck attack (mill)** — other cards burn your *opponent's* deck, chipping away at what they'll draw. It's Riftbound's take on a mill strategy.
+
+## What Burn looks like on the card
+
+Here's the actual printed text on a revealed Vendetta card — the **[Burn]** keyword sits in the rules box with the number of cards it sends to the trash.
+
+[[closeup:0]]
 
 ## How to build with Burn
 
