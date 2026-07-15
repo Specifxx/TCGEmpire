@@ -33,11 +33,10 @@ body {
   font-feature-settings: "tnum" 1, "lnum" 1;
 }
 
-/* Headings: JetBrains Mono — the same monospace face as prices/tickers, so
-   headings read as part of the market-terminal voice rather than a decorative
-   display face. Differentiated from body copy by weight + tight tracking. */
+/* Headings: Manrope — a highly legible geometric sans, distinct from the Inter
+   body copy without clashing with it. Tight tracking for a crisp, modern feel. */
 h1, h2, h3 {
-  font-family: var(--font-mono), monospace;
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
   letter-spacing: -0.02em;
 }
 

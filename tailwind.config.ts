@@ -34,10 +34,10 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"],
-        // Headings: JetBrains Mono (same face as prices/tickers) — applied via the
+        // Headings: Manrope, a geometric neo-grotesque sans — applied via the
         // `h1`-`h3` base-style rule in globals.css, not per-component, so it lands
         // sitewide in one place. Body copy stays Inter.
-        display: ["var(--font-mono)", "ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"],
+        display: ["var(--font-display)", "ui-sans-serif", "system-ui", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"],
         // Monospace — prices, tickers, tabular figures (the terminal voice).
         mono: ["var(--font-mono)", "ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"],
       },
