@@ -141,9 +141,20 @@ export async function getPoolNames(): Promise<string[]> {
   return pool.map((c) => c.name);
 }
 
-// Progressive hints for one card, ordered least → most revealing (the last gives
-// the initial letter). Derived purely from the card's own attributes — no rules
-// text we can't back up. Shown one at a time in the UI, gated by RIFTLE_HINT_GATES.
+// Masks a name to its letter-count shape, revealing only the first letter of each
+// word ("Vayne, Hunter" → "V_ _ _ _, H_ _ _ _ _ _") — punctuation and spacing stay
+// intact so the word/name structure itself is visible, not just guessable from the
+// earlier "N words" hint.
+function maskName(name: string): string {
+  return name.replace(/[A-Za-z]+/g, (word) => word[0] + " " + "_ ".repeat(word.length - 1).trim());
+}
+
+// Progressive hints for one card, ordered least → most revealing. Derived purely
+// from the card's own attributes — no rules text we can't back up. Shown one at a
+// time in the UI, gated by RIFTLE_HINT_GATES. The final hint is a deliberate
+// straight giveaway (the card's own art) rather than another attribute clue — pool
+// cards always have imageThumbUrl (see getPool's where clause), so it's always safe
+// to include. The client recognises the "IMG:" prefix and renders it as an image.
 export function buildHints(c: RiftleCard): string[] {
   const cost =
     c.energyCost == null
@@ -161,6 +172,8 @@ export function buildHints(c: RiftleCard): string[] {
     `It's ${article} ${rarity} ${c.type.toLowerCase()}.`,
     cost,
     `Its name starts with “${c.name[0]?.toUpperCase() ?? "?"}” and is ${words} word${words === 1 ? "" : "s"} long.`,
+    `Its name looks like: ${maskName(c.name)}`,
+    `IMG:${c.imageThumbUrl ?? ""}`,
   ];
 }
 

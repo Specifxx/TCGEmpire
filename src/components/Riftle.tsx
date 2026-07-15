@@ -384,12 +384,25 @@ export function Riftle() {
         <div className="mt-3 space-y-2">
           {hintsUsed > 0 && hints.length > 0 && (
             <ul className="space-y-1.5">
-              {hints.slice(0, hintsUsed).map((h, i) => (
-                <li key={i} className="flex items-start gap-2 rounded-lg border border-gold/25 bg-gold/[0.06] px-3 py-2 text-sm text-amber-100/90">
-                  <span aria-hidden>💡</span>
-                  <span>{h}</span>
-                </li>
-              ))}
+              {hints.slice(0, hintsUsed).map((h, i) => {
+                // The final hint is a straight giveaway: the card's own art, sent
+                // as "IMG:<url>" so it renders as an image rather than text.
+                const imgSrc = h.startsWith("IMG:") ? h.slice(4) : null;
+                return (
+                  <li key={i} className="flex items-start gap-2 rounded-lg border border-gold/25 bg-gold/[0.06] px-3 py-2 text-sm text-amber-100/90">
+                    <span aria-hidden>{imgSrc ? "🃏" : "💡"}</span>
+                    {imgSrc ? (
+                      <span className="flex items-center gap-2">
+                        <span className="font-semibold">Last hint — here&apos;s the card:</span>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={imgSrc} alt="" className="h-16 w-12 rounded-md object-cover ring-1 ring-gold/40" loading="lazy" decoding="async" />
+                      </span>
+                    ) : (
+                      <span>{h}</span>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5">

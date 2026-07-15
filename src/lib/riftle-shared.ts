@@ -9,8 +9,11 @@
 export const RIFTLE_ATTEMPTS = 8;
 
 // How many guesses a player must make before each successive hint unlocks — so
-// hints reward persistence rather than replacing the puzzle.
-export const RIFTLE_HINT_GATES = [2, 3, 4, 5];
+// hints reward persistence rather than replacing the puzzle. Six gates across
+// eight attempts: the last hint (unlocked after guess 7, the final attempt) is a
+// straight giveaway — the card's own art — so nobody runs out of guesses on a
+// card they'd have recognized on sight.
+export const RIFTLE_HINT_GATES = [2, 3, 4, 5, 6, 7];
 
 export type RiftleCard = {
   id: string;
