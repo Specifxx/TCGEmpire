@@ -132,7 +132,7 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
             ) : premium ? (
               <div className="text-center">
                 <p className="text-sm font-semibold text-gold">✓ You&apos;re Premium</p>
-                <Link href="/portfolio" onClick={onClose} className="btn-ghost mt-2 text-sm">Go to your tools →</Link>
+                <Link href="/tools" onClick={onClose} className="btn-ghost mt-2 text-sm">Go to your tools →</Link>
               </div>
             ) : !user ? (
               <Link href="/register?next=/premium" onClick={onClose} className={GOLD_BTN}>

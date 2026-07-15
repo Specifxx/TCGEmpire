@@ -4,11 +4,35 @@
 // paid period's end on every successful payment, so entitlement is a simple date
 // check — no live Stripe call on page loads, and a lapsed sub just stops being
 // extended. Inert until STRIPE_PREMIUM_PRICE_ID is configured.
+import { unstable_cache } from "next/cache";
 import { prisma } from "./db";
 import { dbHistory } from "./db-history";
 import { pickPrice, priceField, type Country } from "./country";
 import { CONDITION_MULTIPLIER } from "./constants";
-import { getMarketIndex } from "./market-index";
+import { getMarketIndex, sydneyDayKey } from "./market-index";
+import { CONTENT_TAG } from "./revalidate-content";
+
+// The portfolio's PriceHistory read, day-scoped per (exact card set, market). The
+// wishlist itself is fetched fresh above (edits reflect instantly); only the heavy
+// history read is cached — so viewing your portfolio repeatedly in a day reads the
+// history DB once. Keyed by the sorted card-id list so any wishlist change re-keys.
+function portfolioHistory(
+  cardIds: string[],
+  country: Country,
+  windowDays: number,
+): Promise<{ cardId: string; day: Date; lowestPriceCents: number }[]> {
+  const cutoff = new Date(Date.now() - windowDays * 86400_000);
+  return unstable_cache(
+    () =>
+      dbHistory.priceHistory.findMany({
+        where: { country, cardId: { in: cardIds }, day: { gte: cutoff } },
+        orderBy: { day: "asc" },
+        select: { cardId: true, day: true, lowestPriceCents: true },
+      }),
+    ["rc-portfolio-hist", country, String(windowDays), sydneyDayKey(), cardIds.join(",")],
+    { revalidate: 172800, tags: [CONTENT_TAG] },
+  )();
+}
 import { cardTileSelect } from "./cards";
 import type { CardTileData } from "@/components/CardTile";
 import type { PricePoint } from "./price-history";
@@ -190,15 +214,8 @@ export async function getPortfolio(userId: string, country: Country, windowDays 
     },
   });
 
-  const cardIds = [...new Set(rows.map((r) => r.cardId))];
-  const cutoff = new Date(Date.now() - windowDays * 86400_000);
-  const hist = cardIds.length
-    ? await dbHistory.priceHistory.findMany({
-        where: { country, cardId: { in: cardIds }, day: { gte: cutoff } },
-        orderBy: { day: "asc" },
-        select: { cardId: true, day: true, lowestPriceCents: true },
-      })
-    : [];
+  const cardIds = [...new Set(rows.map((r) => r.cardId))].sort();
+  const hist = cardIds.length ? await portfolioHistory(cardIds, country, windowDays) : [];
 
   // Per-card daily price map + the card's own 7d move.
   const byCard = new Map<string, Map<number, number>>();

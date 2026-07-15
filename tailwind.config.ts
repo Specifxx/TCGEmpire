@@ -80,6 +80,12 @@ const config: Config = {
           "0%,100%": { opacity: "0.5", transform: "scale(1)" },
           "50%": { opacity: "0.85", transform: "scale(1.06)" },
         },
+        // Seamless horizontal ticker: the track holds two identical halves and
+        // slides exactly one half-width, so the loop point is invisible.
+        marquee: {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
       },
       animation: {
         "fade-up": "fade-up 0.5s ease-out both",
@@ -87,6 +93,7 @@ const config: Config = {
         float: "float 4s ease-in-out infinite",
         blob: "blob 16s ease-in-out infinite",
         "glow-pulse": "glow-pulse 3.4s ease-in-out infinite",
+        marquee: "marquee 22s linear infinite",
       },
     },
   },

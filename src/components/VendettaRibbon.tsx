@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-// Full-bleed announcement ribbon attached directly under the navbar (reads as an
-// extension of the header). Logo-green, with a live inline countdown to the
-// Vendetta release. Self-contained countdown so it needs no props; the human copy
-// is in the SSR HTML (crawlable) and the digits tick in after mount (no hydration
-// mismatch — `now` is null on the server render).
+// Full-bleed announcement ribbon attached under the navbar (reads as a header
+// extension). Logo-green, FIXED single-line height on every screen — the message
+// scrolls as a seamless ticker (a "sliding window"), so it never wraps to multiple
+// rows on mobile, and the terminal-style motion fits the brand. Countdown ticks in
+// after mount (null on the server render → no hydration mismatch).
 const TARGET = new Date(2026, 6, 31, 0, 0, 0).getTime(); // 31 Jul 2026, local midnight
 
 export function VendettaRibbon() {
@@ -26,34 +26,39 @@ export function VendettaRibbon() {
   const m = Math.floor((s % 3600) / 60);
   const sec = s % 60;
   const pad = (n: number) => String(n).padStart(2, "0");
+  const countdown = now == null ? "" : released ? "" : ` · ${d}d ${pad(h)}:${pad(m)}:${pad(sec)}`;
+
+  const message = released
+    ? "Riftbound: Vendetta is OUT — explore every card & price"
+    : `Riftbound: Vendetta drops July 31 — explore every revealed card${countdown}`;
+
+  // One ticker segment (repeated to fill any width). Two identical halves make the
+  // marquee loop seamless (see the keyframe: slide exactly -50%).
+  const Segment = () => (
+    <span className="flex shrink-0 items-center gap-8 pr-8" aria-hidden>
+      {[0, 1, 2].map((i) => (
+        <span key={i} className="flex items-center gap-2">
+          <span className="rounded bg-ink-950/15 px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide">
+            New set
+          </span>
+          <span>{message}</span>
+          <span className="opacity-60">→</span>
+        </span>
+      ))}
+    </span>
+  );
 
   return (
     <Link
       href="/sets/vendetta"
       aria-label="Riftbound Vendetta — explore every revealed card"
-      className="group block bg-brand-500 text-ink-950 transition-colors hover:bg-brand-400"
+      className="group block h-8 overflow-hidden bg-brand-500 text-ink-950 transition-colors hover:bg-brand-400"
     >
-      <div className="container-app flex flex-wrap items-center justify-center gap-x-3 gap-y-1 py-2 text-center text-sm font-bold">
-        <span className="rounded bg-ink-950/15 px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wide">
-          New set
-        </span>
-        {released ? (
-          <span>Riftbound: Vendetta is OUT — explore every card &amp; price</span>
-        ) : (
-          <>
-            <span>Riftbound: Vendetta drops July 31 — explore every revealed card</span>
-            <span className="num inline-flex items-center gap-1 rounded bg-ink-950/15 px-2 py-0.5 tabular-nums">
-              {now == null ? (
-                "—"
-              ) : (
-                <>
-                  {d}d <span className="opacity-70">·</span> {pad(h)}:{pad(m)}:{pad(sec)}
-                </>
-              )}
-            </span>
-          </>
-        )}
-        <span aria-hidden className="transition-transform group-hover:translate-x-0.5">→</span>
+      {/* Track: two identical halves; animate-marquee slides one half-width and loops
+          seamlessly. Pauses on hover and for reduced-motion users. */}
+      <div className="flex h-8 w-max animate-marquee items-center whitespace-nowrap text-xs font-bold [animation-play-state:running] group-hover:[animation-play-state:paused] motion-reduce:[animation-play-state:paused] motion-reduce:animate-none motion-reduce:justify-center">
+        <Segment />
+        <Segment />
       </div>
     </Link>
   );
