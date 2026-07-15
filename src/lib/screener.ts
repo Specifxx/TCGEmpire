@@ -83,10 +83,13 @@ async function computeUndervalued(country: Country, limit: number): Promise<Valu
 // Day-scoped cache: the undervalued scan reads a chunk of PriceHistory, so run it
 // once per (market, limit) per day and share across every visitor of the
 // value-finder page. Auto-refreshes at the day rollover.
-export function getUndervalued(country: Country, limit = 24): Promise<ValuePick[]> {
-  return unstable_cache(
-    () => computeUndervalued(country, limit),
-    ["rc-undervalued", country, String(limit), sydneyDayKey()],
+export async function getUndervalued(country: Country, limit = 24): Promise<ValuePick[]> {
+  // Compute at a generous cap keyed by (market, day) only, then slice — so a deeper
+  // list can't trigger a second whole-market history read.
+  const full = await unstable_cache(
+    () => computeUndervalued(country, 100),
+    ["rc-undervalued", country, sydneyDayKey()],
     { revalidate: 172800, tags: [CONTENT_TAG] },
   )();
+  return full.slice(0, limit);
 }

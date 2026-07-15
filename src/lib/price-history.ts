@@ -140,13 +140,21 @@ async function computePriceMovers(country: Country, limit: number): Promise<Pric
  }
 }
 
-// Day-scoped cache: one raw compute per (market, limit) per day, shared across the
-// homepage, /movers, /games and the Discord bot — instead of a fresh whole-market
-// history read on each. Auto-refreshes at the day rollover.
-export function getPriceMovers(country: Country = "AU", limit = LIST_SIZE): Promise<PriceMovers> {
-  return unstable_cache(
-    () => computePriceMovers(country, limit),
-    ["rc-price-movers", country, String(limit), sydneyDayKey()],
+// Day-scoped cache: ONE whole-market history read per market per day, shared across
+// the homepage, /movers, /games and the Discord bot. The raw read is identical for
+// any list size, so we compute at a generous cap (keyed by market+day only, NOT
+// limit) and slice to the caller's limit — so a bigger /movers list can't trigger a
+// second read. Auto-refreshes at the day rollover.
+const MOVERS_MAX = 50;
+export async function getPriceMovers(country: Country = "AU", limit = LIST_SIZE): Promise<PriceMovers> {
+  const full = await unstable_cache(
+    () => computePriceMovers(country, MOVERS_MAX),
+    ["rc-price-movers", country, sydneyDayKey()],
     { revalidate: 172800, tags: [CONTENT_TAG] },
   )();
+  return {
+    spiking: full.spiking.slice(0, limit),
+    plummeting: full.plummeting.slice(0, limit),
+    value: full.value.slice(0, limit),
+  };
 }
