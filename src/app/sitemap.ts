@@ -39,6 +39,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // so the latest snapshot day is an HONEST lastModified.
     { url: `${SITE_URL}/`, changeFrequency: "daily", priority: 1, lastModified: priceDay },
     { url: `${SITE_URL}/browse`, changeFrequency: "daily", priority: 0.9, lastModified: priceDay },
+    { url: `${SITE_URL}/singles`, changeFrequency: "daily", priority: 0.9, lastModified: priceDay },
     { url: `${SITE_URL}/movers`, changeFrequency: "daily", priority: 0.8, lastModified: priceDay },
     { url: `${SITE_URL}/market`, changeFrequency: "daily", priority: 0.8, lastModified: priceDay },
     { url: `${SITE_URL}/sealed`, changeFrequency: "daily", priority: 0.8, lastModified: priceDay },

@@ -2058,6 +2058,67 @@ Tap any card below to open its full page: rules text, printings, price history, 
 - **[Release countdown](/vendetta-countdown)** — how long until boosters crack.
 - **[Everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** — products, mechanics, rivalries and release details in one read.`,
   },
+  {
+    slug: "where-to-buy-riftbound-singles",
+    category: "blog",
+    title: "Where to Buy Riftbound Singles — The Cheapest Place to Buy Single Cards",
+    excerpt:
+      "The complete guide to buying Riftbound: League of Legends TCG singles: what singles are, singles vs packs, how to find the cheapest price for any card across stores in AU, NZ, US, UK & Singapore, and how to buy safely. Free, updated daily.",
+    author: "RiftCompare",
+    date: "2026-07-14",
+    updated: "2026-07-14",
+    readMins: 5,
+    tags: ["singles", "buying guide", "price comparison", "riftbound", "how to buy"],
+    shop: [
+      { label: "Riftbound singles on eBay", query: "Riftbound singles" },
+      { label: "Vendetta singles", query: "Riftbound Vendetta" },
+    ],
+    body: `Want to **buy Riftbound singles** — the exact cards your deck needs, without opening pack after pack? This is the complete guide: what singles are, why they beat packs for deckbuilding, and — most importantly — **how to find the cheapest price for any Riftbound single**, compared across every store at once.
+
+> **The short version:** search any card on the **[RiftCompare singles hub](/singles)**, see every store's live price ranked by what you'd actually pay delivered, and buy from the cheapest. It's free, covers Australia, New Zealand, the US, the UK and Singapore, and updates daily.
+
+## What are Riftbound singles?
+
+A "single" is one individual card from the **Riftbound: League of Legends TCG**, sold on its own instead of sealed inside a booster pack or box. Champions, spells, gear, runes, alt-arts, chase cards — any of them can be bought as a single from a store or marketplace that has pulled and listed it.
+
+Singles are how nearly every competitive TCG player actually builds decks. Packs are for the fun of opening (and for gambling on chase pulls); singles are for getting the specific three copies of a card your list calls for, reliably and usually far cheaper than chasing them through packs.
+
+## Singles vs. packs: which is cheaper?
+
+For **a specific card you want**, singles win almost every time. Opening packs to find one card means buying — and paying for — dozens of cards you didn't need, plus the odds are against you. A single is a known price for the exact card.
+
+Packs and sealed product still make sense when you want the **experience** of opening, or you're speculating on a whole set's chase cards at launch. For everything else — completing a deck, grabbing a missing playset, picking up a chase card you've decided on — buy the single. Our **[sealed vs singles breakdown](/sealed)** shows the sealed side if you want to compare.
+
+## How to find the cheapest Riftbound single
+
+The same card is often priced very differently between stores once postage is counted — a card that's $2 at one shop with $4 tracked shipping isn't cheaper than a $4 card with free post. RiftCompare solves exactly this:
+
+1. **[Search the card database](/browse)** (or the **[singles hub](/singles)**) — every single shows its lowest live price in your market instantly.
+2. **Open the card** for the full store-by-store table, in stock and ranked by **total delivered cost** (price + postage, with free-shipping thresholds factored in automatically).
+3. **Click straight through** to the exact listing at the cheapest store and buy.
+
+Buying a whole deck? The **[deck pricer](/deck)** takes your full 40-card list and works out the cheapest way to buy all of it across every store at once — consolidating orders so you don't pay postage five times.
+
+## Where you can buy Riftbound singles
+
+RiftCompare compares live singles prices across a wide range of local stores plus eBay, in five markets. The full, current list is on the **[stores we track](/stores/tracked)** page. Region-by-region buying guides:
+
+- **[Buy Riftbound singles in the US](/blog/buy-riftbound-cards-us)** — TCGplayer, eBay and 19 independents compared.
+- **[Buy Riftbound singles in Australia](/blog/buy-riftbound-cards-australia)** — 19 AU stores, ranked by delivered cost.
+- **[Buy Riftbound singles in the UK](/blog/buy-riftbound-cards-uk)** — 14 UK stores plus eBay UK.
+- **[Buy Riftbound singles in Singapore](/blog/riftbound-price-comparison-singapore)** — local SGD prices across Singapore stores.
+
+## Buying singles safely
+
+- **Check the total, not the sticker.** Always compare delivered cost — RiftCompare does this for you, but confirm postage at checkout.
+- **Buy near-mint unless you're playing casually.** Store listings note condition; the comparison ranks by the condition shown.
+- **On eBay, prefer high-rating sellers** and treat pre-release/presale prices as speculative until product ships.
+- **Prices move.** Our **[price movers](/movers)** page shows which singles are climbing or cooling, so you can buy before a spike.
+
+## Start here
+
+Browse **[every Riftbound single](/singles)**, jump to a set — **[Origins](/sets/origins)**, **[Spirit Forged](/sets/spiritforged)**, **[Unleashed](/sets/unleashed)** or the new **[Vendetta](/sets/vendetta)** — or go straight to the **[cheapest cards right now](/browse?priced=1&sort=price_asc)**. Every price is compared across every store, updated daily, and completely free.`,
+  },
 ];
 
 export function getArticles(category?: ArticleCategory): Article[] {
