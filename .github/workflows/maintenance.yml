@@ -25,6 +25,7 @@ on:
           - audit-ven        # read-only census of VEN cards (chase-tier fields)
           - audit-history    # read-only per-day price-history diagnostic
           - audit-users      # read-only user/Premium census (no PII printed)
+          - audit-clicks     # read-only outbound-click leaderboard per retailer (affiliate-outreach priority)
       dry_run:
         description: "Dry run (log what would change, write nothing)"
         type: boolean
@@ -194,6 +195,14 @@ jobs:
       - name: Audit users/Premium (read-only census)
         if: inputs.task == 'audit-users'
         run: npx tsx scripts/audit-users.ts
+
+      - name: Audit outbound clicks (read-only leaderboard)
+        if: inputs.task == 'audit-clicks'
+        env:
+          HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
+          HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
+          HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
+        run: npx tsx scripts/audit-clicks.ts
 
       - name: Vendetta pipeline (official gallery → import)
         if: inputs.task == 'vendetta-pipeline'
