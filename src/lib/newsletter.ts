@@ -6,6 +6,17 @@ import { formatMoney } from "./format";
 import { currencyOf, normalizeCountry, COUNTRIES, type Country } from "./country";
 import { cardHref } from "./card-url";
 import { SITE_URL } from "./site";
+import { ebayAffiliateUrl } from "./affiliate";
+
+// Per-market eBay domain, same convention as ArticleShopStrip/EbayBuyCta — NZ has
+// no eBay of its own (eBay AU ships there).
+const EBAY_DOMAIN: Record<Country, string> = {
+  AU: "ebay.com.au",
+  NZ: "ebay.com.au",
+  US: "ebay.com",
+  UK: "ebay.co.uk",
+  SG: "ebay.com.sg",
+};
 
 export interface NewsletterRunSummary {
   edition: string; // e.g. "2026-W24"
@@ -31,23 +42,32 @@ const utm = (path: string) => `${SITE_URL}${path}?utm_source=newsletter&utm_medi
 const signedPct = (pct: number) => `${pct > 0 ? "+" : ""}${pct}%`;
 
 // One card row in a digest section. Same visual language as the price-drop
-// alert rows so the two emails read as one product.
-function moverRow(m: Mover, currency: string): string {
+// alert rows so the two emails read as one product. Every row carries TWO links:
+// the internal card page (its own affiliate-wrapped store table once they land),
+// and a direct eBay affiliate search — so a reader who buys straight from the
+// email still credits our EPN commission, not just readers who click through
+// to the site first.
+function moverRow(m: Mover, currency: string, market: Country): string {
   const color = m.pct > 0 ? "#f08c4a" : "#34d17e";
+  const ebayHref = ebayAffiliateUrl(
+    `https://www.${EBAY_DOMAIN[market]}/sch/i.html?_nkw=${encodeURIComponent(`${m.card.name} Riftbound`)}`,
+  );
+  const ebayTagged = `${ebayHref}${ebayHref.includes("?") ? "&" : "?"}utm_source=newsletter&utm_medium=email&utm_campaign=weekly-digest`;
   return `<tr><td style="padding:10px 0;border-bottom:1px solid #233047">
     <a href="${utm(cardHref(m.card))}" style="color:#fff;font-weight:700;text-decoration:none;font-size:15px">${m.card.name}</a>
     <div style="font-size:12px;color:#6b7585;margin-top:2px">${m.card.setCode} · ${m.card.collectorNumber}</div>
     <div style="margin-top:4px;font-size:14px;color:#b8c0cc">${formatMoney(m.nowCents, currency)}
-      &nbsp;<span style="color:${color};font-weight:700">${signedPct(m.pct)}</span></div>
+      &nbsp;<span style="color:${color};font-weight:700">${signedPct(m.pct)}</span>
+      &nbsp;&nbsp;<a href="${ebayTagged}" style="color:#0079e6;font-weight:700;font-size:12px;text-decoration:none">Buy on eBay →</a></div>
   </td></tr>`;
 }
 
-function section(title: string, items: Mover[], currency: string, take: number): string {
+function section(title: string, items: Mover[], currency: string, take: number, market: Country): string {
   if (!items.length) return "";
   return `<tr><td style="padding:14px 32px 0;font-size:13px;font-weight:700;color:#34d17e">${title}</td></tr>
     <tr><td style="padding:0 32px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${items
       .slice(0, take)
-      .map((m) => moverRow(m, currency))
+      .map((m) => moverRow(m, currency, market))
       .join("")}</table></td></tr>`;
 }
 
@@ -84,9 +104,9 @@ function buildDigest(movers: PriceMovers, market: Country, latestReport: { slug:
     <tr><td style="padding:8px 32px 0;font-size:14px;line-height:1.6;color:#b8c0cc">
       The week's biggest Riftbound price moves, from live lowest in-stock prices compared across ${info.adjective} stores.
     </td></tr>
-    ${section("📈 Spiking this week", movers.spiking, currency, 5)}
-    ${section("📉 Biggest drops", movers.plummeting, currency, 5)}
-    ${section("💎 Best value vs recent high", movers.value, currency, 3)}
+    ${section("📈 Spiking this week", movers.spiking, currency, 5, market)}
+    ${section("📉 Biggest drops", movers.plummeting, currency, 5, market)}
+    ${section("💎 Best value vs recent high", movers.value, currency, 3, market)}
     ${reportRow}
     <tr><td style="padding:18px 32px 24px"><a href="${utm("/movers")}" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">See all movers + price charts</a></td></tr>`;
 
