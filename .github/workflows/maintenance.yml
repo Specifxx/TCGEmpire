@@ -115,6 +115,8 @@ jobs:
         run: |
           curl -sSL --max-time 30 -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36" "${{ inputs.url }}" -o page.html
           echo "== bytes: $(wc -c < page.html)"
+          echo "== raw body sample (first 4000 chars — useful for API/JSON endpoints):"
+          head -c 4000 page.html; echo
           echo "== font-family declarations:"
           grep -oiE "font-family:[^;}\"]{1,120}" page.html | sort -u | head -40 || true
           echo "== next/font face names:"
