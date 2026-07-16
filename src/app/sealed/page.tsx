@@ -125,9 +125,13 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
   const hasVendetta = !isFiltered && all.some((g) => g.setCode === "VEN");
 
   // Structured data: BreadcrumbList (mirrors the visible nav) + an ItemList of the
-  // rendered groups. Each group with a live price AND ≥1 in-stock listing carries a
-  // Product + AggregateOffer — gated exactly like the card page, so "currently
-  // unavailable" groups emit no offers (an empty/unpriced Product is a GSC error).
+  // rendered groups. Google requires a Product to carry "offers", "review", or
+  // "aggregateRating" — a Product without any of these is a Search Console error
+  // (flagged live: every currently-out-of-stock Champion Deck etc. was emitting a
+  // bare Product with no offers). So a group only gets a ListItem at all when it
+  // has a live price AND ≥1 in-stock listing to back a real AggregateOffer;
+  // out-of-stock/unpriced groups are omitted from the structured data entirely
+  // (they still render as a normal, visible "out of stock" tile on the page).
   const currency = COUNTRIES[priceCountry].currency;
   const breadcrumbLd = {
     "@context": "https://schema.org",
@@ -142,31 +146,28 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
     "@type": "ItemList",
     name: "Riftbound Sealed Products",
     url: `${SITE_URL}/sealed`,
-    itemListElement: groups.map((g, i) => {
-      const inStockCount = g.listings.filter((l) => l.inStock).length;
-      const hasOffers = g.lowestPriceCents != null && inStockCount > 0;
-      return {
-        "@type": "ListItem",
-        position: i + 1,
-        item: {
-          "@type": "Product",
-          name: g.name,
-          category: "Trading Card Game Sealed Product",
-          ...(g.imageUrl ? { image: g.imageUrl.startsWith("http") ? g.imageUrl : `${SITE_URL}${g.imageUrl}` } : {}),
-          ...(hasOffers
-            ? {
-                offers: {
-                  "@type": "AggregateOffer",
-                  priceCurrency: currency,
-                  lowPrice: (g.lowestPriceCents! / 100).toFixed(2),
-                  offerCount: inStockCount,
-                  availability: "https://schema.org/InStock",
-                },
-              }
-            : {}),
-        },
-      };
-    }),
+    itemListElement: groups
+      .filter((g) => g.lowestPriceCents != null && g.listings.some((l) => l.inStock))
+      .map((g, i) => {
+        const inStockCount = g.listings.filter((l) => l.inStock).length;
+        return {
+          "@type": "ListItem",
+          position: i + 1,
+          item: {
+            "@type": "Product",
+            name: g.name,
+            category: "Trading Card Game Sealed Product",
+            ...(g.imageUrl ? { image: g.imageUrl.startsWith("http") ? g.imageUrl : `${SITE_URL}${g.imageUrl}` } : {}),
+            offers: {
+              "@type": "AggregateOffer",
+              priceCurrency: currency,
+              lowPrice: (g.lowestPriceCents! / 100).toFixed(2),
+              offerCount: inStockCount,
+              availability: "https://schema.org/InStock",
+            },
+          },
+        };
+      }),
   };
 
   return (
