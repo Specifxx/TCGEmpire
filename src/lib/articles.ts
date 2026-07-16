@@ -1486,48 +1486,70 @@ We'll update this guide the moment any changes to the banlist are announced.
   {
     slug: "jayce-mel-riftbound-empower-explained",
     category: "guide",
-    title: "Jayce & Mel in Riftbound: Vendetta's Empower Champions",
+    title: "Jayce & Mel in Riftbound: Vendetta's New Champion Printings",
     excerpt:
-      "Is there a Jayce Legend card in Riftbound? What we actually know about Jayce and Mel as Vendetta's Empower champions — real card data, not speculation.",
+      "Every confirmed Jayce and Mel printing in Riftbound, including two brand-new Vendetta cards — real stats, domains and rarities, not speculation.",
     author: "RiftCompare",
     date: "2026-07-16",
-    readMins: 4,
+    readMins: 5,
     tags: ["vendetta", "jayce", "mel", "empower", "guide"],
     shop: [
       { label: "Jayce singles", query: "Riftbound Jayce" },
       { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
     ],
     // Positioned inline via [[embed:0]] (plural `embeds` array), right under the
-    // paragraph confirming Jayce's real printing — the card image sits next to the
-    // text explaining it instead of tacked on at the very end.
+    // paragraph confirming the printings — explicit slugs (curated, verified list),
+    // so this can never silently include a wrong card. A slug that stops resolving
+    // is simply omitted (see resolveEmbed), never a broken tile.
     embeds: [
       {
-        title: "Jayce's printings",
-        note: "Every Jayce card in RiftCompare's database right now, with live prices.",
-        slugs: ["jayce-man-of-progress"],
+        title: "Every confirmed Jayce and Mel printing",
+        note: "Live prices will appear here the moment stores list these — Vendetta releases 31 July 2026.",
+        slugs: [
+          "jayce-man-of-progress-sfd-084-221",
+          "jayce-man-of-progress-sfd-084-221-promo",
+          "jayce-man-of-progress-ven-175",
+          "jayce-brilliant-inventor-ven-068",
+          "jayce-brilliant-inventor-ven-068a",
+          "jayce-hammer-in-hand-ven-088",
+          "jayce-hammer-in-hand-ven-088a",
+          "mel-newly-awakened-ven-069",
+          "mel-newly-awakened-ven-069a",
+        ],
       },
     ],
-    body: `Jayce and Mel are two of the most-searched Riftbound names right now, tied to **[Vendetta's Empower mechanic](/guides/riftbound-empower-explained)**. Here's exactly what's confirmed today — no speculation about cards that don't exist yet.
+    body: `Jayce and Mel are two of the most-searched Riftbound names right now, tied to **[Vendetta's Empower mechanic](/guides/riftbound-empower-explained)**. Here's exactly what's confirmed today across both champions — real card data pulled straight from our database, not speculation.
 
-## Is there a Jayce Legend card?
+## Jayce: five printings and counting
 
-Worth clearing up the confusion behind that search first: in Riftbound, a **Legend** is the single card you build your whole deck around, chosen before the game starts — a distinct card type from a **Champion**, a powerful unit you play *during* the game. Legend cards are also typically titled by an epithet rather than the champion's own name — Jinx's Legend, for instance, is printed as "Loose Cannon", shown as "Jinx, Loose Cannon" once it's paired with her on a deck page. That naming quirk means we can't just search "Jayce" to rule a Legend printing in or out by title alone.
+Jayce now has confirmed printings across two sets:
 
-What we *can* confirm: Jayce's one printing in RiftCompare's database today is **Jayce, Man of Progress**, a Champion (card type: Unit) — a Rare from **Spiritforged** (SFD 084/221), in the **Mind** domain, costing 4 energy for 4 might. Whether a separate Jayce-aligned Legend card exists isn't something we can verify with certainty from card data alone — the card gallery just below will simply show it the moment one is officially revealed and added.
+- **Jayce, Man of Progress** (Spiritforged, SFD 084/221) — the original printing. Rare, **Mind** domain, 4 energy for 4 might. Also has a **Promo** variant of the same card.
+- **Jayce, Man of Progress** (Vendetta, VEN 175/166) — a Vendetta reprint of the same card, same stats.
+- **Jayce, Brilliant Inventor** (Vendetta, VEN 068/166) — a brand-new printing. **Epic**, **Mind** domain, 6 energy for 6 might.
+- **Jayce, Hammer in Hand** (Vendetta, VEN 088/166) — a second brand-new printing, this time **Rare**, **Body** domain, 4 energy for 5 might.
 
 [[embed:0]]
 
-## Why Jayce is tied to Empower
+## Is either of these a Jayce Legend card?
 
-Mind is one of Empower's two home domains (alongside Body — see the **[full Empower guide](/guides/riftbound-empower-explained)**), which is why Jayce keeps coming up alongside the mechanic even though his current printing predates Vendetta. If Vendetta gives him a new Empower-keyword printing, it'll appear in the gallery above automatically the moment it's officially revealed and added to our database.
+Worth clearing up the confusion behind that search: in Riftbound, a **Legend** is the single card you build your whole deck around, chosen before the game starts — a distinct card type from a **Champion**, a powerful unit you play *during* the game. Every confirmed Jayce printing above — old and new — is card type **Unit** (a Champion), not Legend. Legend cards are also typically titled by an epithet rather than the champion's own name (Jinx's Legend, for instance, is printed as "Loose Cannon"), so we can't rule out a Jayce-aligned Legend under an unrelated title with total certainty — but nothing bearing his name is a Legend today.
 
-## What about Mel?
+## Why Jayce spans two domains
 
-Mel hasn't appeared in RiftCompare's card database yet — there's no confirmed printing to report. She's expected as an Empower-aligned champion alongside Jayce, and this guide will update the moment a real Mel card is officially revealed. We don't publish placeholder stats for cards that don't exist yet — when she's real, she'll show up here with a genuine card image, domain and cost, the same as everything else on this page.
+Jayce's two brand-new Vendetta printings split neatly across Empower's two home domains — Mind (Brilliant Inventor) and Body (Hammer in Hand) — see the **[full Empower guide](/guides/riftbound-empower-explained)** for why that pairing matters. That's a real, confirmed reason he keeps coming up in the same breath as the mechanic, even before we know which (if any) of his printings actually carries the Empower keyword.
+
+## Mel, Newly Awakened — now confirmed
+
+Mel's first confirmed printing is real: **Mel, Newly Awakened** (Vendetta, VEN 069/166) — **Epic**, **Mind** domain, 4 energy for 4 might, with an alternate-art variant too. She sits one collector number after Jayce's Brilliant Inventor printing (068/069), both Mind, both Epic — a strong sign the two are meant to be played together.
+
+## When will these have prices?
+
+None of the printings above have a live price yet — Vendetta releases **31 July 2026**, and stores haven't listed pre-release singles for it. The gallery above will show real prices the moment they do, the same as every card on RiftCompare.
 
 ## Keep track of both
 
-Bookmark this page — it updates as soon as new Jayce or Mel printings land in the database, with live prices the moment stores list them. For the full picture of Vendetta's new mechanics, see **[Flow, Burn and Empower explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**, and track the set's release with the **[live countdown](/vendetta-countdown)**.`,
+Bookmark this page — it updates as new Jayce or Mel printings land in the database, with live prices the moment stores list them. For the full picture of Vendetta's new mechanics, see **[Flow, Burn and Empower explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**, and track the set's release with the **[live countdown](/vendetta-countdown)**.`,
   },
   {
     slug: "riftbound-empower-explained",
