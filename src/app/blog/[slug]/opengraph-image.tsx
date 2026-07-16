@@ -61,6 +61,7 @@ export default async function Image({ params }: { params: { slug: string } }) {
           </div>
           <div
             style={{
+              display: "flex",
               color: "#e2e8f0",
               fontSize: 28,
               fontWeight: 700,
@@ -91,6 +92,7 @@ export default async function Image({ params }: { params: { slug: string } }) {
         <div style={{ display: "flex", flexDirection: "column", flex: 1, justifyContent: "center", marginTop: 20 }}>
           <div
             style={{
+              display: "flex",
               color: "#ffffff",
               fontSize: title.length > 45 ? 52 : 64,
               fontWeight: 800,
@@ -121,6 +123,7 @@ export default async function Image({ params }: { params: { slug: string } }) {
           <div style={{ display: "flex", alignItems: "center" }}>
             <div
               style={{
+                display: "flex",
                 color: "#64748b",
                 fontSize: 24,
                 fontWeight: 600,
