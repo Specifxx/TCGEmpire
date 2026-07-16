@@ -23,6 +23,7 @@ on:
           - migrate-history  # copy PriceHistory/ClickEvent to the newest history DB
           - audit-ven        # read-only census of VEN cards (chase-tier fields)
           - audit-history    # read-only per-day price-history diagnostic
+          - audit-users      # read-only user/Premium census (no PII printed)
       dry_run:
         description: "Dry run (log what would change, write nothing)"
         type: boolean
@@ -176,6 +177,10 @@ jobs:
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
         run: npx tsx scripts/audit-history.ts
+
+      - name: Audit users/Premium (read-only census)
+        if: inputs.task == 'audit-users'
+        run: npx tsx scripts/audit-users.ts
 
       - name: Vendetta pipeline (official gallery → import)
         if: inputs.task == 'vendetta-pipeline'
