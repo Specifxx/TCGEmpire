@@ -1436,19 +1436,23 @@ Keep the **[live countdown](/vendetta-countdown)** handy, and read **[everything
     // Explicit slugs — a curated, verified list rather than a rules-text match, so
     // this can never silently include or drop a card as the database grows. A slug
     // that doesn't resolve is simply omitted (see resolveEmbed), never a broken card.
-    embed: {
-      title: "The banned cards",
-      note: "All 7 currently-banned cards, with live prices across every store RiftCompare tracks.",
-      slugs: [
-        "scrapheap",
-        "draven-vanquisher",
-        "called-shot",
-        "fight-or-flight",
-        "the-dreaming-tree",
-        "obelisk-of-power",
-        "reavers-row",
-      ],
-    },
+    // Positioned inline via [[embed:0]] (plural `embeds` array), right under the
+    // list, so readers see the real cards next to the text explaining them.
+    embeds: [
+      {
+        title: "The banned cards",
+        note: "All 7 currently-banned cards, with live prices across every store RiftCompare tracks.",
+        slugs: [
+          "scrapheap",
+          "draven-vanquisher",
+          "called-shot",
+          "fight-or-flight",
+          "the-dreaming-tree",
+          "obelisk-of-power",
+          "reavers-row",
+        ],
+      },
+    ],
     body: `Riftbound's first banlist landed on **31 March 2026**, when Riot Games banned seven cards from competitive constructed play. Here's the complete list, why each card was banned, and what it means if you own one.
 
 ## The 7 banned cards
@@ -1460,6 +1464,8 @@ Keep the **[live countdown](/vendetta-countdown)** handy, and read **[everything
 - **Fight or Flight** (Origins) — limited to rein in Chaos decks' overall power level.
 - **The Dreaming Tree** (Origins) — provided so much card flow it tipped the balance toward specific deck styles.
 - **Obelisk of Power** (Origins) — banned for its sheer ubiquity; it was in nearly every competitive list.
+
+[[embed:0]]
 
 ## What "banned" actually means
 
@@ -1491,22 +1497,29 @@ We'll update this guide the moment any changes to the banlist are announced.
       { label: "Jayce singles", query: "Riftbound Jayce" },
       { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
     ],
-    embed: {
-      title: "Jayce's printings",
-      note: "Every Jayce card in RiftCompare's database right now, with live prices.",
-      slugs: ["jayce-man-of-progress"],
-    },
+    // Positioned inline via [[embed:0]] (plural `embeds` array), right under the
+    // paragraph confirming Jayce's real printing — the card image sits next to the
+    // text explaining it instead of tacked on at the very end.
+    embeds: [
+      {
+        title: "Jayce's printings",
+        note: "Every Jayce card in RiftCompare's database right now, with live prices.",
+        slugs: ["jayce-man-of-progress"],
+      },
+    ],
     body: `Jayce and Mel are two of the most-searched Riftbound names right now, tied to **[Vendetta's Empower mechanic](/guides/riftbound-empower-explained)**. Here's exactly what's confirmed today — no speculation about cards that don't exist yet.
 
 ## Is there a Jayce Legend card?
 
 Worth clearing up the confusion behind that search first: in Riftbound, a **Legend** is the single card you build your whole deck around, chosen before the game starts — a distinct card type from a **Champion**, a powerful unit you play *during* the game. Legend cards are also typically titled by an epithet rather than the champion's own name — Jinx's Legend, for instance, is printed as "Loose Cannon", shown as "Jinx, Loose Cannon" once it's paired with her on a deck page. That naming quirk means we can't just search "Jayce" to rule a Legend printing in or out by title alone.
 
-What we *can* confirm: Jayce's one printing in RiftCompare's database today is **Jayce, Man of Progress**, a Champion (card type: Unit) — a Rare from **Spiritforged** (SFD 084/221), in the **Mind** domain, costing 4 energy for 4 might. Whether a separate Jayce-aligned Legend card exists isn't something we can verify with certainty from card data alone — the card database above will simply show it the moment one is officially revealed and added.
+What we *can* confirm: Jayce's one printing in RiftCompare's database today is **Jayce, Man of Progress**, a Champion (card type: Unit) — a Rare from **Spiritforged** (SFD 084/221), in the **Mind** domain, costing 4 energy for 4 might. Whether a separate Jayce-aligned Legend card exists isn't something we can verify with certainty from card data alone — the card gallery just below will simply show it the moment one is officially revealed and added.
+
+[[embed:0]]
 
 ## Why Jayce is tied to Empower
 
-Mind is one of Empower's two home domains (alongside Body — see the **[full Empower guide](/guides/riftbound-empower-explained)**), which is why Jayce keeps coming up alongside the mechanic even though his current printing predates Vendetta. If Vendetta gives him a new Empower-keyword printing, it'll appear in the gallery below automatically the moment it's officially revealed and added to our database.
+Mind is one of Empower's two home domains (alongside Body — see the **[full Empower guide](/guides/riftbound-empower-explained)**), which is why Jayce keeps coming up alongside the mechanic even though his current printing predates Vendetta. If Vendetta gives him a new Empower-keyword printing, it'll appear in the gallery above automatically the moment it's officially revealed and added to our database.
 
 ## What about Mel?
 
