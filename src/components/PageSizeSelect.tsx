@@ -6,7 +6,7 @@ import { PAGE_SIZES } from "@/lib/cards";
 
 // Lets the user choose how many cards to show per page (10/20/50/100). Changing
 // it resets to page 1.
-export function PageSizeSelect({ size }: { size: number }) {
+export function PageSizeSelect({ size, basePath = "/browse" }: { size: number; basePath?: string }) {
   const router = useRouter();
   const params = useSearchParams();
   const [, startTransition] = useTransition();
@@ -15,7 +15,7 @@ export function PageSizeSelect({ size }: { size: number }) {
     const next = new URLSearchParams(Array.from(params.entries()));
     next.set("size", e.target.value);
     next.delete("page");
-    startTransition(() => router.push(`/browse?${next.toString()}`));
+    startTransition(() => router.push(`${basePath}?${next.toString()}`));
   }
 
   return (

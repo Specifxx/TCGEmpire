@@ -9,7 +9,7 @@ const OPTIONS = [
   { value: "price_desc", label: "Price: High to Low" },
 ];
 
-export function SortSelect() {
+export function SortSelect({ basePath = "/browse" }: { basePath?: string }) {
   const router = useRouter();
   const params = useSearchParams();
   const current = params.get("sort") ?? "number";
@@ -21,7 +21,7 @@ export function SortSelect() {
         const next = new URLSearchParams(Array.from(params.entries()));
         next.set("sort", e.target.value);
         next.delete("page");
-        router.push(`/browse?${next.toString()}`);
+        router.push(`${basePath}?${next.toString()}`);
       }}
       className="input w-auto cursor-pointer"
       aria-label="Sort listings"

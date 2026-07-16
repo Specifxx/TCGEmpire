@@ -68,7 +68,7 @@ export function CardTile({ card }: { card: CardTileData }) {
             card={card}
             className="h-full w-full transition-transform duration-300 group-hover:scale-[1.03]"
           />
-          <div className="absolute left-2 top-2 flex flex-col items-start gap-1">
+          <div className="absolute left-2 top-2 z-20 flex flex-col items-start gap-1">
             <VariantBadge variant={card.variant} />
             <SignatureBadge show={isSignature(card.collectorNumber)} />
             <OvernumberedBadge show={isOvernumbered(card.collectorNumber)} />

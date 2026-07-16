@@ -5,18 +5,38 @@ import { prisma } from "@/lib/db";
 import { CardTile } from "@/components/CardTile";
 import { CountUp } from "@/components/CountUp";
 import { Reveal } from "@/components/Reveal";
-import { cardTileSelect } from "@/lib/cards";
-import { pickPrice, DEFAULT_COUNTRY } from "@/lib/country";
+import { Filters } from "@/components/Filters";
+import { ActiveFilters } from "@/components/ActiveFilters";
+import { SortSelect } from "@/components/SortSelect";
+import { PageSizeSelect } from "@/components/PageSizeSelect";
+import { Pagination } from "@/components/Pagination";
+import {
+  buildCardOrderBy,
+  buildCardWhere,
+  cardTileSelect,
+  CardQuery,
+  parsePageNum,
+  parsePageSize,
+} from "@/lib/cards";
+import { getCountry } from "@/lib/get-country";
+import { priceField } from "@/lib/country";
 import { SETS, setBySlug } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
 
-// Rendered on the AU baseline server-side (country-neutral copy); the card tiles
-// localise each visitor's price client-side from the three price columns in the
-// card data. (The root layout is cookie-free since be98c66, so this revalidate
-// actually applies — the page is on-demand ISR, not per-request dynamic.)
-export const revalidate = 86400;
+// searchParams-driven (filters/pagination), so the route stays dynamic — same
+// tradeoff as /browse.
+export const dynamic = "force-dynamic";
 
-export async function generateMetadata({ params }: { params: { set: string } }): Promise<Metadata> {
+const isCleanPagination = (searchParams: CardQuery) =>
+  Object.entries(searchParams).every(([k, v]) => k === "page" || v == null || v === "");
+
+export async function generateMetadata({
+  params,
+  searchParams,
+}: {
+  params: { set: string };
+  searchParams: CardQuery;
+}): Promise<Metadata> {
   const set = setBySlug(params.set);
   // The whole site renders dynamically (the layout reads the country cookie), so
   // notFound() can't return a hard 404 here; mark unknown slugs noindex so Google
@@ -34,6 +54,9 @@ export async function generateMetadata({ params }: { params: { set: string } }):
   // page; these empty set URLs are the bulk of the "discovered/crawled – not indexed"
   // pile. It flips back to indexable automatically the moment cards are imported.
   const cardCount = await prisma.card.count({ where: { setCode: set.code } });
+  // A filtered/searched view (like /browse's ?q=) is a permutation of the same
+  // content, not a distinct page — noindex it and point Google at the clean set page.
+  const filtered = !isCleanPagination(searchParams);
   return {
     title: { absolute: `${title} | RiftCompare` },
     description,
@@ -50,23 +73,48 @@ export async function generateMetadata({ params }: { params: { set: string } }):
       // Single cookie-switched URL is the global default for all four markets.
       languages: { "x-default": `${SITE_URL}/sets/${set.slug}` },
     },
-    ...(cardCount === 0 ? { robots: { index: false, follow: true } } : {}),
+    ...(cardCount === 0 || filtered ? { robots: { index: false, follow: true } } : {}),
     openGraph: { title: `${title} | RiftCompare`, description, url: `${SITE_URL}/sets/${set.slug}` },
   };
 }
 
-export default async function SetPage({ params }: { params: { set: string } }) {
+export default async function SetPage({
+  params,
+  searchParams,
+}: {
+  params: { set: string };
+  searchParams: CardQuery;
+}) {
   const set = setBySlug(params.set);
   if (!set) notFound();
 
-  const country = DEFAULT_COUNTRY; // AU baseline; client tiles localise the price
+  const country = getCountry();
 
-  const cards = await prisma.card.findMany({
-    where: { setCode: set.code },
-    orderBy: [{ collectorNumber: "asc" }],
-    select: cardTileSelect(country),
-  });
-  const priced = cards.filter((c) => pickPrice(c, country) != null).length;
+  // Unfiltered totals for the set (hero copy + the "not released yet" empty
+  // state) — distinct from the filtered/paginated grid below.
+  const [totalInSet, priced] = await Promise.all([
+    prisma.card.count({ where: { setCode: set.code } }),
+    prisma.card.count({ where: { setCode: set.code, [priceField(country)]: { not: null } } }),
+  ]);
+
+  const where = { ...buildCardWhere(searchParams, country), setCode: set.code };
+  const orderBy = buildCardOrderBy(searchParams.sort, country);
+  const size = parsePageSize(searchParams.size);
+  const page = parsePageNum(searchParams.page);
+
+  const [total, cards] = totalInSet === 0
+    ? [0, []]
+    : await Promise.all([
+        prisma.card.count({ where }),
+        prisma.card.findMany({
+          where,
+          orderBy,
+          select: cardTileSelect(country),
+          skip: (page - 1) * size,
+          take: size,
+        }),
+      ]);
+  const totalPages = Math.max(1, Math.ceil(total / size));
 
   const otherSets = SETS.filter((s) => s.slug !== set.slug && !s.comingSoon);
 
@@ -117,7 +165,7 @@ export default async function SetPage({ params }: { params: { set: string } }) {
             {set.comingSoon ? (
               <>
                 Riftbound <strong className="text-slate-200">{set.name}</strong> singles aren&apos;t on sale yet.
-                {cards.length > 0
+                {totalInSet > 0
                   ? <> Every officially revealed {set.name} card is listed below — live store prices land the moment singles release.</>
                   : <> This page will list every {set.name} card with live prices the moment they release — check back soon.</>}
                 {set.sealedAvailable && (
@@ -125,7 +173,7 @@ export default async function SetPage({ params }: { params: { set: string } }) {
                 )}
               </>
             ) : (
-              <>Browse all {cards.length} Riftbound <strong className="text-slate-200">{set.name}</strong> cards and compare live prices across stores to find the cheapest singles. {priced.toLocaleString()} cards are priced right now, updated daily — switch your country at the top to see local prices.</>
+              <>Browse all {totalInSet} Riftbound <strong className="text-slate-200">{set.name}</strong> cards and compare live prices across stores to find the cheapest singles. {priced.toLocaleString()} cards are priced right now, updated daily — switch your country at the top to see local prices.</>
             )}
           </p>
 
@@ -134,17 +182,17 @@ export default async function SetPage({ params }: { params: { set: string } }) {
           {!set.comingSoon ? (
             <div className="mt-4 flex flex-wrap gap-2">
               <span className="chip bg-brand-500/15 text-brand-300">
-                <CountUp value={cards.length} className="num font-bold" />&nbsp;cards
+                <CountUp value={totalInSet} className="num font-bold" />&nbsp;cards
               </span>
               <span className="chip bg-gold/20 text-gold">
                 <CountUp value={priced} className="num font-bold" />&nbsp;priced
               </span>
             </div>
-          ) : cards.length > 0 ? (
+          ) : totalInSet > 0 ? (
             <div className="mt-4 flex flex-wrap gap-2">
               <span className="chip bg-up/20 font-bold uppercase tracking-wide text-up">New</span>
               <span className="chip bg-brand-500/15 text-brand-300">
-                <CountUp value={cards.length} className="num font-bold" />&nbsp;cards revealed
+                <CountUp value={totalInSet} className="num font-bold" />&nbsp;cards revealed
               </span>
             </div>
           ) : null}
@@ -154,7 +202,7 @@ export default async function SetPage({ params }: { params: { set: string } }) {
       {/* Card grid — shown whenever cards EXIST, even for a comingSoon set: through
           spoiler season the official-gallery importer populates revealed cards early
           (unpriced), which is exactly what pre-release searchers want to browse. */}
-      {cards.length === 0 ? (
+      {totalInSet === 0 ? (
         <div className="card-surface grid place-items-center p-16 text-center text-slate-400">
           <div>
             <p className="text-lg font-semibold text-white">{set.name} singles aren&apos;t available yet</p>
@@ -189,20 +237,55 @@ export default async function SetPage({ params }: { params: { set: string } }) {
           </div>
         </div>
       ) : (
-        <>
-          {set.comingSoon && (
-            <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 px-4 py-3 text-sm text-slate-300">
-              <strong className="text-emerald-300">Revealed so far.</strong> These are the {set.name} cards officially
-              revealed to date — more land through spoiler season, and live store prices appear here the moment singles
-              go on sale.
+        <div className="flex flex-col gap-6 lg:flex-row">
+          <Filters basePath={`/sets/${set.slug}`} hideSet />
+
+          <section className="min-w-0 flex-1">
+            {set.comingSoon && (
+              <div className="mb-4 rounded-xl border border-emerald-500/25 bg-emerald-500/5 px-4 py-3 text-sm text-slate-300">
+                <strong className="text-emerald-300">Revealed so far.</strong> These are the {set.name} cards officially
+                revealed to date — more land through spoiler season, and live store prices appear here the moment singles
+                go on sale.
+              </div>
+            )}
+
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-slate-400">
+                <span className="font-semibold text-white">{total.toLocaleString()}</span>{" "}
+                {total === 1 ? "card" : "cards"}
+                {total > 0 && <span className="text-slate-600"> · page {page} of {totalPages}</span>}
+              </p>
+              <div className="flex items-center gap-3">
+                <PageSizeSelect size={size} basePath={`/sets/${set.slug}`} />
+                <SortSelect basePath={`/sets/${set.slug}`} />
+              </div>
             </div>
-          )}
-          <Reveal stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
-            {cards.map((c) => (
-              <CardTile key={c.id} card={c} />
-            ))}
-          </Reveal>
-        </>
+
+            <ActiveFilters basePath={`/sets/${set.slug}`} />
+
+            {cards.length === 0 ? (
+              <div className="card-surface grid place-items-center p-16 text-center">
+                <p className="text-lg font-semibold text-white">Nothing matches those filters</p>
+                <p className="mt-1 text-sm text-slate-400">Try clearing a filter or two.</p>
+                <Link href={`/sets/${set.slug}`} className="btn-primary mt-4">Reset</Link>
+              </div>
+            ) : (
+              <>
+                <Reveal stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
+                  {cards.map((c) => (
+                    <CardTile key={c.id} card={c} />
+                  ))}
+                </Reveal>
+                <Pagination
+                  page={page}
+                  totalPages={totalPages}
+                  params={searchParams as Record<string, string | undefined>}
+                  basePath={`/sets/${set.slug}`}
+                />
+              </>
+            )}
+          </section>
+        </div>
       )}
 
       {/* Internal links to the other sets (crawl + UX) */}

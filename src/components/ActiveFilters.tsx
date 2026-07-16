@@ -7,7 +7,7 @@ const CSV_KEYS = ["domain", "rarity", "type", "set"];
 
 // Skinport-style "applied filters" row: every active filter shown as a removable
 // chip above the results, so it's obvious what's filtered and easy to undo.
-export function ActiveFilters() {
+export function ActiveFilters({ basePath = "/browse" }: { basePath?: string }) {
   const router = useRouter();
   const params = useSearchParams();
   const [, startTransition] = useTransition();
@@ -32,7 +32,7 @@ export function ActiveFilters() {
 
   function go(next: URLSearchParams) {
     next.delete("page");
-    startTransition(() => router.push(`/browse?${next.toString()}`));
+    startTransition(() => router.push(`${basePath}?${next.toString()}`));
   }
 
   function remove(key: string, value: string) {

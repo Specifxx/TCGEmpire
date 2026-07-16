@@ -26,7 +26,7 @@ function Chevron({ open }: { open: boolean }) {
   );
 }
 
-export function Filters() {
+export function Filters({ basePath = "/browse", hideSet = false }: { basePath?: string; hideSet?: boolean }) {
   const router = useRouter();
   const params = useSearchParams();
   const paramsStr = params.toString();
@@ -50,12 +50,12 @@ export function Filters() {
     next.delete("page");
     const qs = next.toString();
     setOptimistic(qs); // instant: the checkbox flips immediately
-    startTransition(() => router.push(qs ? `/browse?${qs}` : "/browse")); // data loads in the background
+    startTransition(() => router.push(qs ? `${basePath}?${qs}` : basePath)); // data loads in the background
   }
 
   function clearAll() {
     setOptimistic("");
-    startTransition(() => router.push("/browse"));
+    startTransition(() => router.push(basePath));
   }
 
   function isActive(key: string, value: string) {
@@ -137,13 +137,15 @@ export function Filters() {
             />
           </Section>
 
-          <Section title="Set" defaultOpen>
-            <div className="flex flex-col gap-1">
-              {SETS.map((s) => (
-                <Check key={s.code} checked={isActive("set", s.code)} onChange={() => update((p) => setCsv(p, "set", s.code))} label={`${s.name} (${s.code})`} />
-              ))}
-            </div>
-          </Section>
+          {!hideSet && (
+            <Section title="Set" defaultOpen>
+              <div className="flex flex-col gap-1">
+                {SETS.map((s) => (
+                  <Check key={s.code} checked={isActive("set", s.code)} onChange={() => update((p) => setCsv(p, "set", s.code))} label={`${s.name} (${s.code})`} />
+                ))}
+              </div>
+            </Section>
+          )}
 
           <Section title="Domain">
             <div className="flex flex-col gap-1">

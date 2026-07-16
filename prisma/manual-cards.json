@@ -18,6 +18,36 @@
     "imageThumbUrl": "https://tcgplayer-cdn.tcgplayer.com/product/693156_in_400x400.jpg"
   },
   {
+    "externalId": "promo-worlds-bundle-2025-panda-teemo",
+    "name": "Teemo, Swift Scout (Panda)",
+    "setCode": "OGN",
+    "setName": "Origins",
+    "collectorNumber": "WB25",
+    "domain": "Mind",
+    "type": "Legend",
+    "rarity": "Showcase",
+    "isPromo": true,
+    "energyCost": null,
+    "might": null,
+    "imageUrl": null,
+    "imageThumbUrl": null
+  },
+  {
+    "externalId": "promo-ogn-p-buff-fist-bump",
+    "name": "Buff // Buff",
+    "setCode": "OGN",
+    "setName": "Origins",
+    "collectorNumber": "P",
+    "domain": "Colorless",
+    "type": "Token",
+    "rarity": "Common",
+    "isPromo": true,
+    "energyCost": null,
+    "might": null,
+    "imageUrl": null,
+    "imageThumbUrl": null
+  },
+  {
     "externalId": "promo-ogn-263-teemo-swift-scout-altart",
     "name": "Teemo, Swift Scout",
     "setCode": "OGN",
