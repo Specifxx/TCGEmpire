@@ -78,6 +78,11 @@ export interface Article {
   embeds?: ArticleEmbed[];
   // Card-image close-ups, positioned in `body` with `[[closeup:N]]` markers.
   closeups?: ArticleCloseUp[];
+  // Override for the "Ready to buy?" CTA at the end of the article — lets a guide
+  // point somewhere more specific than the generic card database (e.g. a browse
+  // view pre-filtered to the mechanic it just explained, or the Index). Omit for
+  // the default /browse CTA.
+  browseCta?: { href: string; label: string; blurb: string };
 }
 
 export const ARTICLES: Article[] = [
@@ -1205,6 +1210,14 @@ More cards are still being revealed before the 31 July launch, so treat this as 
     updated: "2026-07-07",
     readMins: 9,
     tags: ["vendetta", "decks", "deckbuilding", "strategy", "synergies", "meta", "guide"],
+    // These are blueprints for a set still mid-spoil (see the note below), so we
+    // can't link specific unconfirmed cards yet — the Index is the honest next
+    // step: see how the market's already-revealed Vendetta cards are trending.
+    browseCta: {
+      href: "/market#constituents",
+      label: "See the Index →",
+      blurb: "Track how Vendetta's revealed cards are trending on the RiftCompare Index as spoiler season plays out.",
+    },
     body: `![Three Riftbound Vendetta archetypes to build — Flow Value, Burn, and Empower Midrange](/vendetta-archetypes.png)
 
 Riftbound: Vendetta lands **31 July 2026**, and its preview season is revealing cards through mid-July — so this is the moment to plan the decks you'll build on day one. Below are three strong archetype blueprints, each grounded in Vendetta's confirmed mechanics and domain pairings, with the synergies that make them tick and how to pilot them.
@@ -1568,6 +1581,13 @@ Bookmark this page — it updates as new Jayce or Mel printings land in the data
       { label: "Mel singles", query: "Riftbound Mel" },
       { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
     ],
+    // Same filter the embed below uses (rules text contains "[Empower]", scoped to
+    // VEN) — so the CTA and the embed always show the identical set of cards.
+    browseCta: {
+      href: "/browse?rules=%5BEmpower%5D&rulesSet=VEN",
+      label: "Browse every Empower card →",
+      blurb: "Every Vendetta card with the Empower keyword, filterable and sortable, with live prices the moment stores list them.",
+    },
     // Auto-collects every officially revealed VEN card whose rules text carries
     // [Empower] — real cards, real images, tap → card page. Grows through spoilers.
     embed: {

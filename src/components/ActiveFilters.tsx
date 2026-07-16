@@ -21,6 +21,8 @@ export function ActiveFilters() {
   if (params.get("sig") === "1") chips.push({ key: "sig", value: "", label: "Signature" });
   if (params.get("over") === "1") chips.push({ key: "over", value: "", label: "Overnumbered" });
   if (params.get("promo") === "1") chips.push({ key: "promo", value: "", label: "Promo" });
+  const rules = params.get("rules");
+  if (rules) chips.push({ key: "rules", value: "", label: rules.replace(/[[\]]/g, "") });
   if (params.get("priced") === "1") chips.push({ key: "priced", value: "", label: "Has price" });
   const min = params.get("min");
   const max = params.get("max");

@@ -10,6 +10,8 @@ export interface CardQuery {
   set?: string;
   variant?: string; // "alt" = alt-art only, "base" = base art only
   tag?: string; // keyword tag (from a card page's tag chip)
+  rules?: string; // rules-text substring (e.g. "[Empower]") — from a guide's contextual CTA
+  rulesSet?: string; // optional set-code scope for `rules` (e.g. "VEN")
   sig?: string; // "1" = signature ("*") cards only
   over?: string; // "1" = overnumbered printings only (number beyond the set total)
   promo?: string; // "1" = promo printings only
@@ -61,6 +63,14 @@ export function buildCardWhere(query: CardQuery, country: Country = "AU"): Prism
   // Keyword tag filter (tags is a comma-separated string; substring match is fine for
   // the distinct word-tags we store). Powers the crawlable tag chips on card pages.
   if (query.tag) where.tags = { contains: query.tag };
+
+  // Rules-text substring filter (e.g. "[Empower]") — same semantics as the article
+  // embed's `rulesContain`, so a guide's "browse these cards" CTA and its own embed
+  // gallery always show the identical set of cards.
+  if (query.rules) {
+    where.description = { contains: query.rules };
+    if (query.rulesSet) where.setCode = query.rulesSet;
+  }
 
   if (query.sig === "1") where.collectorNumber = { contains: "*" };
   if (query.over === "1") where.isOvernumbered = true;

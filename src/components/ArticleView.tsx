@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Article, ArticleCloseUp, ArticleEmbed } from "@/lib/articles";
+import { ARTICLES } from "@/lib/articles";
 import { prisma } from "@/lib/db";
 import { cardTileSelect } from "@/lib/cards";
 import { DEFAULT_COUNTRY } from "@/lib/country";
@@ -178,7 +179,28 @@ function EmbedGallery({ embed, cards }: { embed: ArticleEmbed; cards: CardTileDa
   return null;
 }
 
+// Other articles sharing at least one tag, most-overlapping (then most-recent)
+// first — a plain data computation, no DB call, so this costs nothing extra.
+function relatedArticles(article: Article, take = 3): Article[] {
+  const tags = new Set(article.tags);
+  return ARTICLES
+    .filter((a) => a.slug !== article.slug && a.tags.some((t) => tags.has(t)))
+    .map((a) => ({ a, overlap: a.tags.filter((t) => tags.has(t)).length }))
+    .sort((x, y) => y.overlap - x.overlap || (y.a.date < x.a.date ? -1 : 1))
+    .slice(0, take)
+    .map((x) => x.a);
+}
+
+const DEFAULT_BROWSE_CTA = {
+  href: "/browse",
+  label: "Browse the card database →",
+  blurb: "Compare live prices for every Riftbound single across every store we track.",
+};
+
 export async function ArticleView({ article }: { article: Article }) {
+  const related = relatedArticles(article);
+  const cta = article.browseCta ?? DEFAULT_BROWSE_CTA;
+
   // All galleries: `embeds` (positioned in the body via [[embed:N]] markers) plus
   // the legacy single `embed` (always rendered after the body). Close-ups reuse the
   // same resolver with take:1, so they can only ever show a real imported card.
@@ -271,6 +293,39 @@ export async function ArticleView({ article }: { article: Article }) {
       {/* Per-article eBay affiliate searches — the reader is at peak intent right
           after finishing the guide; this is where a well-ranking page converts. */}
       {article.shop && article.shop.length > 0 && <ArticleShopStrip items={article.shop} />}
+
+      {/* "Ready to buy?" — every article is fundamentally about Riftbound cards, so
+          always offer the direct path into the live database. Guides can override
+          this to point somewhere more specific (browseCta) instead of the generic
+          /browse — this is the single biggest lever for pages-per-visit, since a
+          reader who finishes an article currently has nowhere obvious to go next. */}
+      <section className="card-surface mt-8 flex flex-wrap items-center justify-between gap-3 p-5">
+        <div>
+          <h2 className="font-bold text-white">Ready to buy?</h2>
+          <p className="mt-1 text-sm text-slate-400">{cta.blurb}</p>
+        </div>
+        <Link href={cta.href} className="btn-primary shrink-0">{cta.label}</Link>
+      </section>
+
+      {/* Related guides — same-tag articles, so a reader who liked this piece has
+          somewhere obvious to go next instead of bouncing. */}
+      {related.length > 0 && (
+        <section className="mt-8">
+          <h2 className="mb-3 text-lg font-extrabold text-white">Related guides</h2>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {related.map((r) => (
+              <Link
+                key={r.slug}
+                href={`/${r.category === "guide" ? "guides" : "blog"}/${r.slug}`}
+                className="card-surface flex flex-col gap-1 p-4 transition-colors hover:border-brand-500 hover:bg-ink-800"
+              >
+                <span className="line-clamp-2 font-semibold text-white">{r.title}</span>
+                <span className="line-clamp-2 text-xs text-slate-500">{r.excerpt}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <AdSlot className="mt-8" height={120} />
     </article>
