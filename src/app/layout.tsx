@@ -24,6 +24,8 @@ import { HilltopAdsLoader } from "@/components/HilltopAdsLoader";
 import { ReferralCapture } from "@/components/ReferralCapture";
 import { FooterAds } from "@/components/FooterAds";
 import { PriceAlertModal } from "@/components/PriceAlertModal";
+import { SignupPromoPopup } from "@/components/SignupPromoPopup";
+import { enabledProviders } from "@/lib/oauth";
 import { MetaPixel } from "@/components/MetaPixel";
 
 // PREVIEW BRANCH — emulates the official Riftbound/League of Legends site's
@@ -208,6 +210,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <VendettaRibbon />
                 <main id="main-content" className="container-app min-w-0 py-6">{children}</main>
                 <PriceAlertModal />
+                <SignupPromoPopup providers={enabledProviders()} />
               </MegaMenuProvider>
             </CommandLauncherProvider>
           </SealedQuickViewProvider>

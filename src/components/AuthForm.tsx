@@ -19,7 +19,18 @@ const OAUTH_ERRORS: Record<string, string> = {
   oauth_noemail: "That provider didn't share an email address, which we need to create your account.",
 };
 
-export function AuthForm({ mode, providers }: { mode: "login" | "register"; providers: ("google" | "discord")[] }) {
+export function AuthForm({
+  mode,
+  providers,
+  bare = false,
+}: {
+  mode: "login" | "register";
+  providers: ("google" | "discord")[];
+  // Skip the outer full-page wrapper (max-width + vertical padding) so this can be
+  // embedded directly inside a modal, which provides its own sizing. The full pages
+  // (/login, /register) omit this and get the original standalone layout.
+  bare?: boolean;
+}) {
   const router = useRouter();
   const isRegister = mode === "register";
   const [email, setEmail] = useState("");
@@ -86,11 +97,12 @@ export function AuthForm({ mode, providers }: { mode: "login" | "register"; prov
   }
 
   const nextQ = typeof window !== "undefined" ? window.location.search.replace(/[?&]error=[^&]*/g, "").replace(/^&/, "?") : "";
+  const wrapperClass = bare ? "" : "mx-auto max-w-md py-10";
 
   // After signup: the account exists but can't sign in until the email is verified.
   if (registered) {
     return (
-      <div className="mx-auto max-w-md py-10">
+      <div className={wrapperClass}>
         <div className="card-surface p-6 text-center">
           <h1 className="text-xl font-extrabold text-white">Check your email</h1>
           <p className="mt-2 text-sm leading-relaxed text-slate-400">
@@ -108,7 +120,7 @@ export function AuthForm({ mode, providers }: { mode: "login" | "register"; prov
   }
 
   return (
-    <div className="mx-auto max-w-md py-10">
+    <div className={wrapperClass}>
       <div className="card-surface p-6">
         <h1 className="text-xl font-extrabold text-white">{isRegister ? "Create your account" : "Sign in"}</h1>
         <p className="mt-1 text-sm text-slate-400">
