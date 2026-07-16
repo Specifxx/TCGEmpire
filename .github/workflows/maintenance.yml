@@ -142,6 +142,10 @@ jobs:
           if [ -n "$PROBE_CONTEXT_MARKER" ]; then
             python3 -c "import os; html = open('page.html', encoding='utf-8', errors='replace').read(); marker = os.environ['PROBE_CONTEXT_MARKER']; i = html.find(marker); print(html[max(0,i-200):i+2500]) if i != -1 else print('MARKER NOT FOUND ON PAGE')"
           fi
+          echo "== ALL occurrences of PROBE_CONTEXT_MARKER, ~180 chars each, up to 40 (if set):"
+          if [ -n "$PROBE_CONTEXT_MARKER" ]; then
+            python3 -c "import os,re; html = open('page.html', encoding='utf-8', errors='replace').read(); marker = os.environ['PROBE_CONTEXT_MARKER']; idxs = [m.start() for m in re.finditer(re.escape(marker), html)][:40]; [print(f'--- match {n+1} @ {i} ---\n' + html[max(0,i-90):i+90].replace(chr(10), ' ')) for n, i in enumerate(idxs)]; print('TOTAL MATCHES:', len(idxs)) if idxs else print('NO MATCHES')"
+          fi
           for css in $(grep -oiE "/_next/static/css/[^\"']+" page.html | sort -u | head -4); do
             echo "== css $css:"
             base="${{ inputs.url }}"
