@@ -472,7 +472,11 @@ UK players can buy Riftbound singles in GBP from a growing list of British TCG r
 
 ## Ready to buy?
 
-Set your country, **[open the card database](/browse)**, find your card, and click through to the cheapest store. New to Riftbound? Browse our other **[guides](/guides)** or check the current **[meta decks](/decks)** to see what's worth building.`,
+Set your country, **[open the card database](/browse)**, find your card, and click through to the cheapest store. New to Riftbound? Browse our other **[guides](/guides)** or check the current **[meta decks](/decks)** to see what's worth building.
+
+## Buying in a specific market?
+
+Deeper dives per region — real store counts, presale links and payment tips: **[Australia](/blog/buy-riftbound-cards-australia)** · **[United States](/blog/buy-riftbound-cards-us)** · **[United Kingdom](/blog/buy-riftbound-cards-uk)**. Just want the cheapest single right now? **[See where to buy singles](/blog/where-to-buy-riftbound-singles)**.`,
   },
   {
     slug: "cheapest-riftbound-booster-boxes",
@@ -799,7 +803,9 @@ Many overseas-hosted stores quietly show prices in the wrong currency depending 
 2. **Watch shipping.** A card that's 20c cheaper isn't a win if it adds postage from a separate store — we show an estimated shipping figure per shop.
 3. **Use the [forum](/forum).** Other AU players list cards for sale (often below retail), and you can post a want-to-buy for anything you're chasing.
 
-We currently compare a wide range of Australian stores plus eBay AU, and we add more regularly. If your favourite shop is missing, let us know via [contact](/contact) — this guide will grow as coverage does.`,
+We currently compare a wide range of Australian stores plus eBay AU, and we add more regularly. If your favourite shop is missing, let us know via [contact](/contact) — this guide will grow as coverage does.
+
+For the full, regularly-updated list of AU stores we track (with real store counts), see **[Where to Buy Riftbound Cards in Australia](/blog/buy-riftbound-cards-australia)** — or compare **[every market we cover](/guides/where-to-buy-riftbound-cards)**.`,
   },
   {
     slug: "riftbound-booster-box-ev-worth-ripping-or-buying-singles",
@@ -2148,7 +2154,9 @@ Happy hunting — and pay less for the cards you want. Start at the **[card data
 
 **[Riftbound: Vendetta](/sets/vendetta)** releases 31 July 2026, and week-one prices always move fast. Every revealed card is already browsable, the [chase cards are mapped tier by tier](/blog/riftbound-vendetta-chase-cards-so-far), and launch-day prices land here compared across every store above. Set a [wishlist](/wishlist) now and you're ready the moment singles go live.
 
-Run an Aussie store selling Riftbound? **[Get listed free](/stores/suggest)** — more visibility, more customers. Everyone else: start at the **[card database](/browse)** and pay less for your next pickup.`,
+Run an Aussie store selling Riftbound? **[Get listed free](/stores/suggest)** — more visibility, more customers. Everyone else: start at the **[card database](/browse)** and pay less for your next pickup.
+
+Buying from overseas, or curious about other markets? See **[the US](/blog/buy-riftbound-cards-us)**, **[the UK](/blog/buy-riftbound-cards-uk)**, or the **[full multi-market guide](/guides/where-to-buy-riftbound-cards)**.`,
   },
   {
     slug: "buy-riftbound-cards-us",
@@ -2185,7 +2193,9 @@ Run an Aussie store selling Riftbound? **[Get listed free](/stores/suggest)** �
 
 **[Riftbound: Vendetta](/sets/vendetta)** drops 31 July 2026. Chase-card prices spike hardest in week one — the [chase-card tier breakdown](/blog/riftbound-vendetta-chase-cards-so-far) shows what to hunt, and every card's launch price lands here compared across all of the above the moment singles list.
 
-Run a US store selling Riftbound? **[Get listed free](/stores/suggest)**. Everyone else: start at the **[card database](/browse)** and stop paying the first price you see.`,
+Run a US store selling Riftbound? **[Get listed free](/stores/suggest)**. Everyone else: start at the **[card database](/browse)** and stop paying the first price you see.
+
+Shopping from **[Australia](/blog/buy-riftbound-cards-australia)** or **[the UK](/blog/buy-riftbound-cards-uk)**? We've got a dedicated breakdown for your market too — or see the **[full multi-market guide](/guides/where-to-buy-riftbound-cards)**.`,
   },
   {
     slug: "buy-riftbound-cards-uk",
@@ -2222,7 +2232,9 @@ Run a US store selling Riftbound? **[Get listed free](/stores/suggest)**. Everyo
 
 **[Riftbound: Vendetta](/sets/vendetta)** launches 31 July 2026 and UK presale listings are already up. Every revealed card is browsable now, the [chase cards are mapped tier by tier](/blog/riftbound-vendetta-chase-cards-so-far), and the moment Vendetta singles hit UK shelves their prices land here, compared across every store above.
 
-Run a UK store selling Riftbound? **[Get listed free](/stores/suggest)** — free listing, more customers. Everyone else: start at the **[card database](/browse)** and keep more of your budget for the cards themselves.`,
+Run a UK store selling Riftbound? **[Get listed free](/stores/suggest)** — free listing, more customers. Everyone else: start at the **[card database](/browse)** and keep more of your budget for the cards themselves.
+
+Shopping from **[Australia](/blog/buy-riftbound-cards-australia)** or **[the US](/blog/buy-riftbound-cards-us)**? We've got a dedicated breakdown for your market too — or see the **[full multi-market guide](/guides/where-to-buy-riftbound-cards)**.`,
   },
   {
     slug: "every-riftbound-vendetta-card-revealed",
@@ -2324,7 +2336,9 @@ RiftCompare compares live singles prices across a wide range of local stores plu
 
 ## Start here
 
-Browse **[every Riftbound single](/singles)**, jump to a set — **[Origins](/sets/origins)**, **[Spirit Forged](/sets/spiritforged)**, **[Unleashed](/sets/unleashed)** or the new **[Vendetta](/sets/vendetta)** — or go straight to the **[cheapest cards right now](/browse?priced=1&sort=price_asc)**. Every price is compared across every store, updated daily, and completely free.`,
+Browse **[every Riftbound single](/singles)**, jump to a set — **[Origins](/sets/origins)**, **[Spirit Forged](/sets/spiritforged)**, **[Unleashed](/sets/unleashed)** or the new **[Vendetta](/sets/vendetta)** — or go straight to the **[cheapest cards right now](/browse?priced=1&sort=price_asc)**. Every price is compared across every store, updated daily, and completely free.
+
+Want the store-by-store breakdown for your market? See **[Australia](/blog/buy-riftbound-cards-australia)**, **[the US](/blog/buy-riftbound-cards-us)**, **[the UK](/blog/buy-riftbound-cards-uk)**, or the **[general buying guide](/guides/where-to-buy-riftbound-cards)**.`,
   },
 ];
 
