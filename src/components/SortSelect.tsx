@@ -9,10 +9,10 @@ const OPTIONS = [
   { value: "price_desc", label: "Price: High to Low" },
 ];
 
-export function SortSelect({ basePath = "/browse" }: { basePath?: string }) {
+export function SortSelect({ basePath = "/browse", defaultSort = "number" }: { basePath?: string; defaultSort?: string }) {
   const router = useRouter();
   const params = useSearchParams();
-  const current = params.get("sort") ?? "number";
+  const current = params.get("sort") ?? defaultSort;
 
   return (
     <select

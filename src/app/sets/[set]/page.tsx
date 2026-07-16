@@ -98,7 +98,9 @@ export default async function SetPage({
   ]);
 
   const where = { ...buildCardWhere(searchParams, country), setCode: set.code };
-  const orderBy = buildCardOrderBy(searchParams.sort, country);
+  // A-Z by default here (unlike /browse's "set & card number") — this page is
+  // already scoped to one set, so a numeric ordering isn't the useful default.
+  const orderBy = buildCardOrderBy(searchParams.sort ?? "name", country);
   const size = parsePageSize(searchParams.size);
   const page = parsePageNum(searchParams.page);
 
@@ -257,7 +259,7 @@ export default async function SetPage({
               </p>
               <div className="flex items-center gap-3">
                 <PageSizeSelect size={size} basePath={`/sets/${set.slug}`} />
-                <SortSelect basePath={`/sets/${set.slug}`} />
+                <SortSelect basePath={`/sets/${set.slug}`} defaultSort="name" />
               </div>
             </div>
 
