@@ -1421,6 +1421,102 @@ Wherever you are in that timeline, the biggest lever is *where* you buy, not *wh
 Keep the **[live countdown](/vendetta-countdown)** handy, and read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** so nothing about the set catches you off guard.`,
   },
   {
+    slug: "riftbound-banlist-explained",
+    category: "guide",
+    title: "Riftbound Banlist Explained: Every Currently Banned Card",
+    excerpt:
+      "The complete, up-to-date Riftbound banlist — every card currently banned from competitive constructed play, the official reason for each ban, and live prices for all of them.",
+    author: "RiftCompare",
+    date: "2026-07-16",
+    readMins: 5,
+    tags: ["banlist", "competitive", "rules", "guide"],
+    shop: [
+      { label: "Riftbound singles on eBay", query: "Riftbound TCG singles" },
+    ],
+    // Explicit slugs — a curated, verified list rather than a rules-text match, so
+    // this can never silently include or drop a card as the database grows. A slug
+    // that doesn't resolve is simply omitted (see resolveEmbed), never a broken card.
+    embed: {
+      title: "The banned cards",
+      note: "All 7 currently-banned cards, with live prices across every store RiftCompare tracks.",
+      slugs: [
+        "scrapheap",
+        "draven-vanquisher",
+        "called-shot",
+        "fight-or-flight",
+        "the-dreaming-tree",
+        "obelisk-of-power",
+        "reavers-row",
+      ],
+    },
+    body: `Riftbound's first banlist landed on **31 March 2026**, when Riot Games banned seven cards from competitive constructed play. Here's the complete list, why each card was banned, and what it means if you own one.
+
+## The 7 banned cards
+
+- **Scrapheap** (Origins) — enabled "Miracle Decks": drawing and playing large numbers of cards at heavily discounted cost.
+- **Called Shot** (Spiritforged) — the same Miracle Deck problem as Scrapheap.
+- **Draven, Vanquisher** (Spiritforged) — a straight power outlier; the design team has called it an outright mistake.
+- **Reaver's Row** (Origins) — synergised too well with Draven and encouraged non-interactive play patterns.
+- **Fight or Flight** (Origins) — limited to rein in Chaos decks' overall power level.
+- **The Dreaming Tree** (Origins) — provided so much card flow it tipped the balance toward specific deck styles.
+- **Obelisk of Power** (Origins) — banned for its sheer ubiquity; it was in nearly every competitive list.
+
+## What "banned" actually means
+
+A banned card can't be included in a deck for **competitive constructed play** — organized tournaments and ranked events run under Riot's official rules. It doesn't necessarily mean your local game store's casual nights follow the same list; check with your local organizer if you're unsure, since casual play often runs looser rules than sanctioned events.
+
+## Does a ban affect a card's price?
+
+It can go either way. A ban can crash a card's price as competitive demand dries up, or it can hold steady (or even rise) on casual and collector demand if the card is popular outside tournament play — especially for a splashy legendary printing like Draven, Vanquisher. Rather than guess, check the live numbers: every banned card above links to its own RiftCompare page with current pricing and price history across every market we track.
+
+## Why ban lists matter for deckbuilding
+
+If you're building a deck today, none of the cards above are legal in sanctioned events — plan around their absence rather than building toward them. If you already own one, it's still a real card for casual games, or worth checking the price on if you're thinking of selling.
+
+We'll update this guide the moment any changes to the banlist are announced.
+
+*Ban reasoning summarized from Riot Games' official announcement and community coverage of Riftbound's first ban list.*`,
+  },
+  {
+    slug: "jayce-mel-riftbound-empower-explained",
+    category: "guide",
+    title: "Jayce & Mel in Riftbound: Vendetta's Empower Champions",
+    excerpt:
+      "Is there a Jayce Legend card in Riftbound? What we actually know about Jayce and Mel as Vendetta's Empower champions — real card data, not speculation.",
+    author: "RiftCompare",
+    date: "2026-07-16",
+    readMins: 4,
+    tags: ["vendetta", "jayce", "mel", "empower", "guide"],
+    shop: [
+      { label: "Jayce singles", query: "Riftbound Jayce" },
+      { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
+    ],
+    embed: {
+      title: "Jayce's printings",
+      note: "Every Jayce card in RiftCompare's database right now, with live prices.",
+      slugs: ["jayce-man-of-progress"],
+    },
+    body: `Jayce and Mel are two of the most-searched Riftbound names right now, tied to **[Vendetta's Empower mechanic](/guides/riftbound-empower-explained)**. Here's exactly what's confirmed today — no speculation about cards that don't exist yet.
+
+## Is there a Jayce Legend card?
+
+Worth clearing up the confusion behind that search first: in Riftbound, a **Legend** is the single card you build your whole deck around, chosen before the game starts — a distinct card type from a **Champion**, a powerful unit you play *during* the game. Legend cards are also typically titled by an epithet rather than the champion's own name — Jinx's Legend, for instance, is printed as "Loose Cannon", shown as "Jinx, Loose Cannon" once it's paired with her on a deck page. That naming quirk means we can't just search "Jayce" to rule a Legend printing in or out by title alone.
+
+What we *can* confirm: Jayce's one printing in RiftCompare's database today is **Jayce, Man of Progress**, a Champion (card type: Unit) — a Rare from **Spiritforged** (SFD 084/221), in the **Mind** domain, costing 4 energy for 4 might. Whether a separate Jayce-aligned Legend card exists isn't something we can verify with certainty from card data alone — the card database above will simply show it the moment one is officially revealed and added.
+
+## Why Jayce is tied to Empower
+
+Mind is one of Empower's two home domains (alongside Body — see the **[full Empower guide](/guides/riftbound-empower-explained)**), which is why Jayce keeps coming up alongside the mechanic even though his current printing predates Vendetta. If Vendetta gives him a new Empower-keyword printing, it'll appear in the gallery below automatically the moment it's officially revealed and added to our database.
+
+## What about Mel?
+
+Mel hasn't appeared in RiftCompare's card database yet — there's no confirmed printing to report. She's expected as an Empower-aligned champion alongside Jayce, and this guide will update the moment a real Mel card is officially revealed. We don't publish placeholder stats for cards that don't exist yet — when she's real, she'll show up here with a genuine card image, domain and cost, the same as everything else on this page.
+
+## Keep track of both
+
+Bookmark this page — it updates as soon as new Jayce or Mel printings land in the database, with live prices the moment stores list them. For the full picture of Vendetta's new mechanics, see **[Flow, Burn and Empower explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**, and track the set's release with the **[live countdown](/vendetta-countdown)**.`,
+  },
+  {
     slug: "riftbound-empower-explained",
     category: "guide",
     title: "Riftbound Empower Explained: How the Empower Mechanic Works",
