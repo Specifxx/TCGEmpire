@@ -43,10 +43,12 @@ function isRiftboundSealed(title: string): boolean {
   return RIFTBOUND_HINT.test(title) && !UNRELEASED_SET.test(title);
 }
 
-// A sealed product title looks like one of these. "nexus night" (not bare "nexus",
-// which also matches the single card "Power Nexus").
+// A sealed product title looks like one of these. "nexus night ... pack" (not bare
+// "nexus night", which also matches a store listing an individual promo card pulled
+// FROM a Nexus Night pack, e.g. "Stalwart Poro Promo Nexus Night 1" — that's a single
+// card, not the sealed 3-card pack itself, and must never be scraped as sealed.
 const SEALED_TITLE =
-  /booster\s*box|booster\s*pack|booster\s*display|display\s*box|display\s*case|booster\s*bundle|\bbundle\b|box\s*set|champion\s*deck|pre-?rift|event\s*kit|elite|collector|gift\s*box|blister|proving\s*grounds|nexus\s*night|promo\s*pack|two[-\s]?player|starter\s*(deck|set)|precon|\bcase\b|mega\s*box|\btin\b|sealed/i;
+  /booster\s*box|booster\s*pack|booster\s*display|display\s*box|display\s*case|booster\s*bundle|\bbundle\b|box\s*set|champion\s*deck|pre-?rift|event\s*kit|elite|collector|gift\s*box|blister|proving\s*grounds|nexus\s*night\s*(?:\d+\s*)?pack|promo\s*pack|two[-\s]?player|starter\s*(deck|set)|precon|\bcase\b|mega\s*box|\btin\b|sealed/i;
 // …but never these. Singles / accessories / bulk / break slots / non-English slip
 // through otherwise. Condition codes (NM/LP/…) and a set name in parentheses
 // (e.g. "(Origins: Proving Grounds)") are tell-tale signs of a single card.
@@ -121,7 +123,7 @@ export function classifySealed(title: string): string {
   const rawChamp = title.match(/champion\s*deck\s*\(([^)]+)\)/i)?.[1]?.trim() || title.match(CHAMPIONS)?.[1];
   const champ = rawChamp ? rawChamp.toLowerCase().replace(/\s+/g, " ").replace(/\b\w/g, (m) => m.toUpperCase()) : null;
   if (/proving\s*grounds/.test(t)) return /\bcase\b/.test(t) ? "Proving Grounds Case" : "Proving Grounds";
-  if (/nexus\s*night/.test(t)) return "Nexus Night Pack";
+  if (/nexus\s*night\s*(?:\d+\s*)?pack/.test(t)) return "Nexus Night Pack";
   if (/champion\s*deck/.test(t)) { const n = champ ? ` (${champ})` : ""; return /\bdisplay\b/.test(t) ? `Champion Deck${n} Display` : `Champion Deck${n}`; }
   if (/sleeved\s*booster/.test(t)) return /\[set of|art\s*bundle/.test(t) ? "Sleeved Booster (Art Set)" : "Sleeved Booster";
   if (/(?:display|booster\s*box|sealed)\s*case|booster\s*display\s*case/.test(t)) return "Booster Case";

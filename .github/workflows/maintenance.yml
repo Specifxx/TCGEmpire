@@ -20,6 +20,7 @@ on:
           - probe-sg         # read-only Singapore store scan (no DB writes)
           - probe-url        # read-only page fetch + font/style diagnostics (url input)
           - import-prices    # run the store price importer for this ref's store list
+          - import-sealed     # refresh sealed products (stores + eBay AU + TCGplayer US) + self-heal stale rows
           - migrate-history  # copy PriceHistory/ClickEvent to the newest history DB
           - audit-ven        # read-only census of VEN cards (chase-tier fields)
           - audit-history    # read-only per-day price-history diagnostic
@@ -169,6 +170,14 @@ jobs:
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
         run: npx tsx scripts/import-prices.ts
+
+      - name: Import sealed products (stores + eBay AU + TCGplayer US)
+        if: inputs.task == 'import-sealed'
+        env:
+          EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
+          EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
+          EBAY_AFFILIATE_CAMPAIGN: ${{ secrets.EBAY_AFFILIATE_CAMPAIGN }}
+        run: npx tsx scripts/import-sealed.ts
 
       - name: Audit VEN cards (read-only census)
         if: inputs.task == 'audit-ven'
