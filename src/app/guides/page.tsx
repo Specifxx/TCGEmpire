@@ -1,9 +1,40 @@
 import type { Metadata } from "next";
 import { getArticles } from "@/lib/articles";
-import { FilterableArticles } from "@/components/FilterableArticles";
+import { FilterableArticles, type ArticleSection } from "@/components/FilterableArticles";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { SITE_URL } from "@/lib/site";
+
+// Curated from real traffic (30-day Top Pages), not a live/self-updating ranking —
+// revisit occasionally as new guides prove themselves. Empower Explained alone
+// outdrew every other guide combined; deck-archetype content is the clear #2.
+const FEATURED_GUIDES = ["riftbound-empower-explained", "best-riftbound-vendetta-decks", "budget-riftbound-decks"];
+
+// Topic clusters for the default (unfiltered) view — matched by tag, first
+// section wins so nothing appears twice. Anything matching none of these still
+// shows up, in a trailing "More" group.
+const GUIDE_SECTIONS: ArticleSection[] = [
+  { title: "Vendetta Guides", accent: "#34d17e", tags: ["vendetta"] },
+  {
+    title: "Buying & Value",
+    accent: "#eab308",
+    tags: [
+      "buying", "value", "arbitrage", "riftcompare-index", "methodology", "market-data",
+      "expected-value", "booster-box", "booster box", "sealed-product", "buying-guide",
+      "sealed", "stores", "australia",
+    ],
+  },
+  {
+    title: "Collecting & Card Knowledge",
+    accent: "#a855f7",
+    tags: ["collecting", "rarity", "printings", "condition", "storage", "chase cards"],
+  },
+  {
+    title: "Getting Started",
+    accent: "#06b6d4",
+    tags: ["beginners", "beginner", "how to start", "budget", "banlist", "competitive", "rules", "deckbuilding"],
+  },
+];
 
 export const metadata: Metadata = {
   title: "Riftbound Guides — Learn the Game & Build Decks",
@@ -53,7 +84,7 @@ export default function GuidesPage() {
           Learn Riftbound — deckbuilding basics, buying tips and more, for {info.adjective} players.
         </p>
       </div>
-      <FilterableArticles articles={articles} basePath="/guides" />
+      <FilterableArticles articles={articles} basePath="/guides" sections={GUIDE_SECTIONS} featured={FEATURED_GUIDES} />
     </div>
   );
 }

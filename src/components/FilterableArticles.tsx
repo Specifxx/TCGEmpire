@@ -5,10 +5,47 @@ import Link from "next/link";
 import type { Article } from "@/lib/articles";
 import { fmtDate } from "@/components/ArticleList";
 
+// A named group of articles for the default (unfiltered) view — e.g. "Vendetta
+// Guides" or "Buying & Value". Matched by tag; `accent` is a hex colour for the
+// section's heading dot, purely decorative (no new data).
+export interface ArticleSection {
+  title: string;
+  tags: string[];
+  accent: string;
+  cap?: number; // show at most this many, then a "See all" link (default: no cap)
+  moreHref?: string;
+  moreLabel?: string; // default "See all →"
+}
+
+// Days-old threshold for the "New" badge — purely derived from each article's own
+// real `date` field at render time, never a fabricated flag.
+const NEW_DAYS = 5;
+function isNew(dateIso: string): boolean {
+  const days = (Date.now() - new Date(dateIso + "T00:00:00").getTime()) / 86_400_000;
+  return days >= 0 && days <= NEW_DAYS;
+}
+
 // Client-side tag + text filter over a list of articles. The full list is rendered
 // server-side (so crawlers still see every article and every link); this just
 // hides/shows cards in the browser — no network, no loss of SEO.
-export function FilterableArticles({ articles, basePath }: { articles: Article[]; basePath: string }) {
+//
+// Default (no search/topic filter) view: an optional "Most read" strip (explicit,
+// curated slugs — picked from real traffic, not a live/self-updating ranking) then
+// the rest of the articles grouped into `sections`. Any article matching no
+// section's tags falls into a "More" bucket so nothing silently disappears.
+// Once the visitor searches or picks a topic, it flattens to one filtered grid —
+// familiar "browse by category, search when you know what you want" pattern.
+export function FilterableArticles({
+  articles,
+  basePath,
+  sections,
+  featured,
+}: {
+  articles: Article[];
+  basePath: string;
+  sections?: ArticleSection[];
+  featured?: string[]; // article slugs, most-read first
+}) {
   const [tag, setTag] = useState<string | null>(null);
   const [q, setQ] = useState("");
   const [tagsOpen, setTagsOpen] = useState(false);
@@ -32,6 +69,31 @@ export function FilterableArticles({ articles, basePath }: { articles: Article[]
       );
     });
   }, [articles, tag, q]);
+
+  const isDefaultView = !tag && !q.trim();
+
+  const featuredArticles = useMemo(() => {
+    if (!featured?.length) return [];
+    const bySlug = new Map(articles.map((a) => [a.slug, a]));
+    return featured.map((s) => bySlug.get(s)).filter((a): a is Article => !!a);
+  }, [articles, featured]);
+
+  // Bucket the rest into `sections` by tag (first matching section wins, so an
+  // article never appears twice); anything matching no section's tags lands in a
+  // trailing "More" group instead of silently vanishing.
+  const grouped = useMemo(() => {
+    if (!sections?.length) return null;
+    const used = new Set(featuredArticles.map((a) => a.slug));
+    const groups = sections.map((sec) => {
+      const items = articles.filter((a) => !used.has(a.slug) && a.tags.some((t) => sec.tags.includes(t)));
+      for (const a of items) used.add(a.slug);
+      return { title: sec.title, accent: sec.accent, items, cap: sec.cap, moreHref: sec.moreHref, moreLabel: sec.moreLabel };
+    });
+    const rest = articles.filter((a) => !used.has(a.slug));
+    return { groups, rest };
+  }, [articles, sections, featuredArticles]);
+
+  const showSectioned = isDefaultView && (featuredArticles.length > 0 || (grouped?.groups.some((g) => g.items.length) ?? false) || (grouped?.rest.length ?? 0) > 0);
 
   return (
     <div>
@@ -105,29 +167,91 @@ export function FilterableArticles({ articles, basePath }: { articles: Article[]
             </p>
           </div>
         </div>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {filtered.map((a) => (
-            <Link
-              key={a.slug}
-              href={`${basePath}/${a.slug}`}
-              className="card-surface flex flex-col p-5 transition-all hover:-translate-y-0.5 hover:shadow-glow"
-            >
-              <div className="flex flex-wrap gap-1.5">
-                {a.tags.slice(0, 3).map((t) => (
-                  <span key={t} className="chip bg-ink-800 text-slate-400">{t}</span>
+      ) : showSectioned ? (
+        <div className="flex flex-col gap-8">
+          {featuredArticles.length > 0 && (
+            <div>
+              <SectionHeading title="Most read" accent="#eab308" />
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {featuredArticles.map((a) => (
+                  <ArticleCard key={a.slug} a={a} basePath={basePath} popular />
                 ))}
               </div>
-              <h2 className="mt-2 text-lg font-bold text-white">{a.title}</h2>
-              <p className="mt-1 line-clamp-3 flex-1 text-sm text-slate-400">{a.excerpt}</p>
-              <div className="mt-3 text-xs text-slate-500">
-                {fmtDate(a.date)} · {a.readMins} min read
+            </div>
+          )}
+          {grouped?.groups.map((g) => {
+            if (g.items.length === 0) return null;
+            const shown = g.cap ? g.items.slice(0, g.cap) : g.items;
+            const hiddenCount = g.items.length - shown.length;
+            return (
+              <div key={g.title}>
+                <SectionHeading title={g.title} accent={g.accent} count={g.items.length} />
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {shown.map((a) => (
+                    <ArticleCard key={a.slug} a={a} basePath={basePath} />
+                  ))}
+                </div>
+                {hiddenCount > 0 && g.moreHref && (
+                  <Link href={g.moreHref} className="mt-3 inline-block text-sm font-semibold text-brand-300 hover:underline">
+                    {g.moreLabel ?? `See all ${g.items.length} →`}
+                  </Link>
+                )}
               </div>
-            </Link>
+            );
+          })}
+          {grouped && grouped.rest.length > 0 && (
+            <div>
+              <SectionHeading title="More" accent="#64748b" count={grouped.rest.length} />
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {grouped.rest.map((a) => (
+                  <ArticleCard key={a.slug} a={a} basePath={basePath} />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((a) => (
+            <ArticleCard key={a.slug} a={a} basePath={basePath} />
           ))}
         </div>
       )}
     </div>
+  );
+}
+
+function SectionHeading({ title, accent, count }: { title: string; accent: string; count?: number }) {
+  return (
+    <div className="mb-3 flex items-center gap-2">
+      <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: accent }} aria-hidden />
+      <h2 className="text-sm font-bold uppercase tracking-wide text-slate-300">{title}</h2>
+      {count != null && <span className="text-xs text-slate-500">· {count}</span>}
+    </div>
+  );
+}
+
+function ArticleCard({ a, basePath, popular }: { a: Article; basePath: string; popular?: boolean }) {
+  return (
+    <Link
+      href={`${basePath}/${a.slug}`}
+      className={`card-surface relative flex flex-col p-5 transition-all hover:-translate-y-0.5 hover:shadow-glow ${
+        popular ? "border-gold/40" : ""
+      }`}
+    >
+      <div className="flex flex-wrap items-center gap-1.5">
+        {popular && <span className="chip bg-gold/15 font-semibold text-gold">Popular</span>}
+        {isNew(a.date) && <span className="chip bg-brand-500/15 font-semibold text-brand-300">New</span>}
+        {a.tags.slice(0, popular || isNew(a.date) ? 2 : 3).map((t) => (
+          <span key={t} className="chip bg-ink-800 text-slate-400">{t}</span>
+        ))}
+      </div>
+      <h2 className="mt-2 text-lg font-bold text-white">{a.title}</h2>
+      <p className="mt-1 line-clamp-3 flex-1 text-sm text-slate-400">{a.excerpt}</p>
+      <div className="mt-3 text-xs text-slate-500">
+        {fmtDate(a.date)} · {a.readMins} min read
+      </div>
+    </Link>
   );
 }
 
