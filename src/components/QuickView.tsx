@@ -12,6 +12,7 @@ import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
 import { affiliateUrl, ebayAffiliateUrl, outboundRel } from "@/lib/affiliate";
 import { OutboundLink } from "./OutboundLink";
 import { EbayBuyCta } from "./EbayBuyCta";
+import { buyButtonClass, buyButtonLabel } from "./CardMarketSection";
 import { useCountry } from "./CountryProvider";
 import { PriceChart } from "./PriceChart";
 import { AiInsight } from "./AiInsight";
@@ -273,7 +274,14 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                   {inStock.slice(0, 6).map((p, i) => (
                     <li key={p.id} className="flex items-center gap-3 py-2">
                       <div className="min-w-0 flex-1">
-                        <div className="truncate text-sm font-semibold text-white">{p.retailerName}</div>
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          <span className="min-w-0 truncate text-sm font-semibold text-white">{p.retailerName}</span>
+                          {i === 0 && inStock.length > 1 && (
+                            <span className="chip shrink-0 bg-brand-500/20 text-[9px] font-bold uppercase tracking-wide text-brand-300">
+                              Cheapest
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
                           {p.isFoil && <span className="font-semibold text-gold">✦ Foil</span>}
                           {p.condition && <span>{p.condition}</span>}
@@ -297,8 +305,8 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                           )}
                         </div>
                       </div>
-                      <OutboundLink href={affiliateUrl(p.url, p.retailer)} retailer={p.retailer} country={country} className="btn-primary px-3 py-1.5 text-xs">
-                        View →
+                      <OutboundLink href={affiliateUrl(p.url, p.retailer)} retailer={p.retailer} country={country} className={`${buyButtonClass(p.retailer)} px-3 py-1.5 text-xs`}>
+                        {buyButtonLabel(p.retailer)}
                       </OutboundLink>
                     </li>
                   ))}

@@ -21,6 +21,22 @@ import { outboundRel } from "@/lib/affiliate";
 // server-only). null = market has live eBay rows or the quota gate doesn't apply.
 export type EbaySearchMap = Record<string, { url: string; label: string; nz: boolean } | null>;
 
+// Brand-coloured buy buttons for the two marketplaces users already recognise by
+// colour — a familiar brand button converts better than a generic green one. Every
+// other (independent-store) row keeps the plain site accent. Reuses the shared
+// `.btn` base (layout/sizing) from globals.css, just swapping the colour utilities.
+// Exported so QuickView's compact price list uses the exact same treatment.
+export function buyButtonClass(retailer: string): string {
+  if (retailer.startsWith("ebay")) return "btn bg-[#0064d2] text-white hover:bg-[#0079e6]";
+  if (retailer.startsWith("tcgplayer")) return "btn bg-[#0a3161] text-white hover:bg-[#124a8f]";
+  return "btn-primary";
+}
+export function buyButtonLabel(retailer: string): string {
+  if (retailer.startsWith("ebay")) return "Buy on eBay →";
+  if (retailer.startsWith("tcgplayer")) return "Buy on TCGplayer →";
+  return "View deal →";
+}
+
 function Metric({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
     <div className="rounded-lg bg-ink-900 p-3">
@@ -138,7 +154,17 @@ export function CardPriceComparison({
               >
                 <div className="w-5 shrink-0 text-center text-sm font-bold text-slate-500 sm:w-6">{i + 1}</div>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate font-semibold text-white">{p.retailerName}</div>
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className="min-w-0 truncate font-semibold text-white">{p.retailerName}</span>
+                    {/* The cheapest row is the one visitors should click — a small
+                        badge draws the eye there, the same way a highlighted price
+                        naturally pulls clicks. */}
+                    {i === 0 && prices.length > 1 && (
+                      <span className="chip shrink-0 bg-brand-500/20 text-[10px] font-bold uppercase tracking-wide text-brand-300">
+                        Cheapest
+                      </span>
+                    )}
+                  </div>
                   <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
                     {p.isFoil && <span className="chip bg-gold/15 font-semibold text-gold">✦ Foil</span>}
                     {p.condition && <span className="chip bg-ink-800 text-slate-300">{p.condition}</span>}
@@ -166,14 +192,16 @@ export function CardPriceComparison({
                     <div className="num text-[11px] text-slate-400">≈ {fmt(p.delivered)} delivered</div>
                   )}
                 </div>
-                {/* Full-width below the row on phones; inline button on sm+. */}
+                {/* Full-width below the row on phones; inline button on sm+. Brand-
+                    coloured for eBay/TCGplayer — a familiar brand button converts
+                    better than a generic one users don't immediately recognise. */}
                 <OutboundLink
                   href={p.buyHref}
                   retailer={p.retailer}
                   country={country}
-                  className="btn-primary order-last w-full basis-full justify-center sm:order-none sm:w-auto sm:basis-auto"
+                  className={`${buyButtonClass(p.retailer)} order-last w-full basis-full justify-center sm:order-none sm:w-auto sm:basis-auto`}
                 >
-                  View deal →
+                  {buyButtonLabel(p.retailer)}
                 </OutboundLink>
               </li>
             ))}
