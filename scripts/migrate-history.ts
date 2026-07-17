@@ -1,10 +1,15 @@
 /**
  * One-time migration of the history/analytics tables (PriceHistory + ClickEvent)
- * into the NEWEST history database — used when a Neon history project exhausts its
+ * into the CURRENT history database — used when a Neon history project exhausts its
  * monthly network-transfer allowance and is replaced.
  *
- *   target  = the newest configured HISTORY_DATABASE_URL_N (schema pushed first)
- *   sources = main DATABASE_URL + every OLDER history project, in order
+ *   target  = HISTORY_DATABASE_URL (the current project; schema pushed first)
+ *   sources = main DATABASE_URL + every OLDER history project (_2, _3), in order
+ *
+ * NOTE (2026-07-17): _3 exhausted its transfer allowance and went fully unreachable
+ * (P1001), so the replacement reuses the base HISTORY_DATABASE_URL var name rather
+ * than bumping to _4 — target resolution below reflects that (base wins, no longer
+ * "highest suffix wins").
  *
  * The target is filled from ALL sources with skipDuplicates (the PriceHistory
  * unique key [cardId, country, day] dedupes overlaps), so running it is safe and
@@ -16,19 +21,17 @@
 import { PrismaClient } from "@prisma/client";
 
 const MAIN_URL = process.env.DATABASE_URL;
-// Newest-first: the target is the highest-numbered history var that's set.
-const TARGET_URL =
-  process.env.HISTORY_DATABASE_URL_3 || process.env.HISTORY_DATABASE_URL_2 || process.env.HISTORY_DATABASE_URL;
+const TARGET_URL = process.env.HISTORY_DATABASE_URL;
 
 if (!MAIN_URL) { console.error("DATABASE_URL is not set."); process.exit(1); }
-if (!TARGET_URL) { console.error("No history-database URL is set (HISTORY_DATABASE_URL_3/_2/_1)."); process.exit(1); }
+if (!TARGET_URL) { console.error("HISTORY_DATABASE_URL is not set — point it at the current history project first."); process.exit(1); }
 
 // Every distinct source to pull from (main + older history projects), excluding the
 // target itself. De-duplicated by URL so we never read the same DB twice.
 const sourceUrls = [
   { label: "main (DATABASE_URL)", url: MAIN_URL },
   { label: "HISTORY_DATABASE_URL_2", url: process.env.HISTORY_DATABASE_URL_2 },
-  { label: "HISTORY_DATABASE_URL", url: process.env.HISTORY_DATABASE_URL },
+  { label: "HISTORY_DATABASE_URL_3", url: process.env.HISTORY_DATABASE_URL_3 },
 ].filter((s): s is { label: string; url: string } => !!s.url && s.url !== TARGET_URL);
 // Dedupe by URL.
 const seenUrl = new Set<string>();
@@ -82,7 +85,7 @@ async function copyTable(from: PrismaClient, label: string, table: "priceHistory
 }
 
 async function run() {
-  console.log(`Target: ${TARGET_URL === process.env.HISTORY_DATABASE_URL_3 ? "HISTORY_DATABASE_URL_3" : "HISTORY_DATABASE_URL_2/1"}`);
+  console.log("Target: HISTORY_DATABASE_URL");
   console.log(`Sources: ${sources.map((s) => s.label).join(", ") || "(none)"}\n`);
 
   console.log("— Counts before —");

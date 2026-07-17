@@ -71,7 +71,9 @@ jobs:
           # The click/price-history tables can live in a SECOND Neon project
           # (src/lib/db-history.ts). Ordinary pushes never reach it, so new columns
           # (e.g. ClickEvent.path) 500 the admin clicks page until pushed here too.
-          HISTORY_DB: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 || secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 || secrets.HISTORY_DATABASE_URL }}
+          # HISTORY_DATABASE_URL is the CURRENT project (base var wins — see
+          # db-history.ts); _2/_3 are older, near/fully-exhausted fallbacks only.
+          HISTORY_DB: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL || secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 || secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
         run: |
           npx prisma db push --skip-generate
           if [ -n "$HISTORY_DB" ]; then
@@ -88,9 +90,9 @@ jobs:
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
         run: |
-          TARGET="${HISTORY_DATABASE_URL_3:-$HISTORY_DATABASE_URL_2}"
+          TARGET="$HISTORY_DATABASE_URL"
           if [ -z "$TARGET" ]; then
-            echo "::error::No target history DB visible to Actions (HISTORY_DATABASE_URL_3/_2)."
+            echo "::error::No target history DB visible to Actions (HISTORY_DATABASE_URL)."
             exit 1
           fi
           echo "Pushing schema to the target history database…"
