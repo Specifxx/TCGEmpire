@@ -10,6 +10,21 @@ import type { Country } from "./country";
 import type { CardTileData } from "@/components/CardTile";
 import { CONTENT_TAG } from "./revalidate-content";
 
+// unstable_cache requires Next.js's request-scoped incremental cache, which doesn't
+// exist when this module is imported by a plain tsx script (e.g. scripts/weekly-promo.ts)
+// run outside the Next.js runtime — it throws "Invariant: incrementalCache missing"
+// rather than caching. There, caching buys nothing anyway (a one-shot process never
+// reuses it), so fall back to calling the function directly instead of failing the
+// whole script. Any OTHER unstable_cache error still throws as normal.
+async function cachedOrDirect<T>(fn: () => Promise<T>, keys: string[], opts: { revalidate: number; tags: string[] }): Promise<T> {
+  try {
+    return await unstable_cache(fn, keys, opts)();
+  } catch (e) {
+    if (e instanceof Error && e.message.includes("incrementalCache missing")) return fn();
+    throw e;
+  }
+}
+
 // Calendar day in Australia/Sydney — see market-index. PriceHistory changes once a
 // day, so history-derived reads are cached with this in the key (recompute daily,
 // not per request). Kept local to avoid an import cycle with market-index.
@@ -43,11 +58,11 @@ async function computePriceHistory(cardId: string, country: Country, take: numbe
 // get cached, so this never over-reads. Window trimmed to 120 days (2× the useful
 // chart range) to cap the per-read payload.
 export function getPriceHistory(cardId: string, country: Country = "AU", take = 120): Promise<PricePoint[]> {
-  return unstable_cache(
+  return cachedOrDirect(
     () => computePriceHistory(cardId, country, take),
     ["rc-card-history", cardId, country, String(take), sydneyDayKey()],
     { revalidate: 172800, tags: [CONTENT_TAG] },
-  )();
+  );
 }
 
 export type Mover = {
@@ -147,11 +162,11 @@ async function computePriceMovers(country: Country, limit: number): Promise<Pric
 // second read. Auto-refreshes at the day rollover.
 const MOVERS_MAX = 50;
 export async function getPriceMovers(country: Country = "AU", limit = LIST_SIZE): Promise<PriceMovers> {
-  const full = await unstable_cache(
+  const full = await cachedOrDirect(
     () => computePriceMovers(country, MOVERS_MAX),
     ["rc-price-movers", country, sydneyDayKey()],
     { revalidate: 172800, tags: [CONTENT_TAG] },
-  )();
+  );
   return {
     spiking: full.spiking.slice(0, limit),
     plummeting: full.plummeting.slice(0, limit),
