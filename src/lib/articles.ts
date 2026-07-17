@@ -1088,7 +1088,7 @@ More cards are still being revealed ahead of launch, and we'll keep this updated
       "Vendetta introduces three new Riftbound mechanics — Flow, Burn and Empower. Here's what each one does and how it changes the way you build and play.",
     author: "RiftCompare",
     date: "2026-07-07",
-    updated: "2026-07-07",
+    updated: "2026-07-17",
     readMins: 5,
     tags: ["vendetta", "mechanics", "gameplay", "guide"],
     body: `![Vendetta's three new mechanics — Flow, Burn and Empower](/vendetta-mechanics.png)
@@ -1112,13 +1112,15 @@ Burn and Flow are natural partners: Burn stocks the trash, Flow cashes it in. **
 
 ## Empower — grow a card after it's down
 
-**Empower gives a card the potential to gain new abilities once it's in play, often after paying a cost.** You can get a unit on the board one turn, then amplify its might or add an effect on a later turn.
+**Empower gives a card the potential to gain new abilities once it's in play, often after paying a cost.** You can get a unit on the board one turn, then amplify its might or add an effect on a later turn. Under the hood, Empower sets a persistent **Empowered** status on the card — it sticks around until the card leaves play or something **Disempowers** it (the exact reverse, stripping the status). Riot's Core Rules confirm Disempower is its own action, so expect some Vendetta cards to attack an opponent's Empowered threat directly instead of just racing it.
 
 That changes sequencing: an Empower card can be a cheap early play *and* a late-game threat, so you're rewarded for planning two turns ahead rather than dumping your hand. **→ Full guide: [Riftbound Empower explained](/guides/riftbound-empower-explained).**
 
 ## How they fit together
 
 The three mechanics reward **patience and recursion** over raw tempo. Burn fills the trash, Flow replays from it, and Empower turns early plays into scaling threats. Expect Vendetta decks that grind out long games and get stronger the longer they run.
+
+Vendetta's Core Rules also add a smaller, one-off action worth knowing: **Skip**, a replacement effect that erases a named part of a turn entirely — no triggers, no procedures, it just doesn't happen. So far it's on a single card rather than a full mechanic, but it's a genuinely new category of effect for the game.
 
 Want to know what to build with them? Read our **[Vendetta deckbuilding guide](/guides/building-for-riftbound-vendetta)**, see the **[new card types](/blog/riftbound-vendetta-unit-gear-decrees)** that support them, or get the full picture in **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)**. Prices on every card go live on the **[Vendetta set page](/sets/vendetta)** as it releases.`,
   },
@@ -1444,10 +1446,11 @@ Keep the **[live countdown](/vendetta-countdown)** handy, and read **[everything
     category: "guide",
     title: "Riftbound Banlist Explained: Every Currently Banned Card",
     excerpt:
-      "The complete, up-to-date Riftbound banlist — every card currently banned from competitive constructed play, the official reason for each ban, and live prices for all of them.",
+      "The complete, up-to-date Riftbound banlist — every card currently banned from competitive constructed play, the new Constructed 2v2 ban list, the official reason for each ban, and live prices for all of them.",
     author: "RiftCompare",
     date: "2026-07-16",
-    readMins: 5,
+    updated: "2026-07-17",
+    readMins: 6,
     tags: ["banlist", "competitive", "rules", "guide"],
     shop: [
       { label: "Riftbound singles on eBay", query: "Riftbound TCG singles" },
@@ -1455,12 +1458,22 @@ Keep the **[live countdown](/vendetta-countdown)** handy, and read **[everything
     // Explicit slugs — a curated, verified list rather than a rules-text match, so
     // this can never silently include or drop a card as the database grows. A slug
     // that doesn't resolve is simply omitted (see resolveEmbed), never a broken card.
-    // Positioned inline via [[embed:0]] (plural `embeds` array), right under the
+    // Positioned inline via [[embed:N]] (plural `embeds` array), right under each
     // list, so readers see the real cards next to the text explaining them.
     embeds: [
       {
-        title: "The banned cards",
-        note: "All 7 currently-banned cards, with live prices across every store RiftCompare tracks.",
+        title: "July 2026 additions",
+        note: "The 4 cards added to the banlist on 17 July 2026 (effective 24 July), with live prices across every store RiftCompare tracks.",
+        slugs: [
+          "stealthy-pursuer-ogn-177-298",
+          "the-arena-s-greatest-ogn-290-298",
+          "aspirant-s-climb-ogn-276-298",
+          "master-wuju-bladesman-starter-ogs-019-024",
+        ],
+      },
+      {
+        title: "The original 7 banned cards",
+        note: "The cards banned from Riftbound's first banlist (31 March 2026), with live prices across every store RiftCompare tracks.",
         slugs: [
           "scrapheap-ogn-182-298",
           "draven-vanquisher-sfd-020-221",
@@ -1473,9 +1486,25 @@ Keep the **[live countdown](/vendetta-countdown)** handy, and read **[everything
         ],
       },
     ],
-    body: `Riftbound's first banlist landed on **31 March 2026**, when Riot Games banned seven cards from competitive constructed play. Here's the complete list, why each card was banned, and what it means if you own one.
+    body: `Riftbound's first banlist landed on **31 March 2026**, when Riot Games banned seven cards from competitive constructed play. On **17 July 2026** Riot announced a second wave — four more bans, effective **24 July 2026** — plus a brand-new **Constructed 2v2 ban list**. Here's the complete, current picture: every banned card, why each was banned, and what it means if you own one.
 
-## The 7 banned cards
+## July 2026 update: 4 more bans + a new 2v2 ban list
+
+Effective **24 July 2026**, Riot added three cards to the Standard banlist and opened a separate ban list for the Constructed 2v2 format:
+
+**Added to the Standard banlist:**
+- **Stealthy Pursuer** (Origins) — enabled a near-infinite Unit combo with Eye of the Herald and Renata Glasc, Industrialist, generating infinite Recruits as early as turn 3. Riot called it out during Vendetta's own preview season once the community found it, and confirmed internal testing showed it stayed consistent even though technically disruptable — "a harsh check on the metagame."
+- **The Arena's Greatest** (Origins, Battlefield) — very popular, but Riot judged it had bent the structure of competitive play in an unhealthy direction.
+- **Aspirant's Climb** (Origins, Battlefield) — banned alongside The Arena's Greatest for the same structural reason.
+
+**New: Constructed 2v2 ban list.** This is the first time Riot has published a ban list specific to the 2v2 format. It starts as the entire Standard banlist (everything above and below) plus one additional card:
+- **Master Yi, Wuju Bladesman** (Legend) — banned in 2v2 only; legal in 1v1 Standard.
+
+Riot's own words on how they decide a ban: *"there are three questions we ask ourselves when considering whether to ban a card: is this card overrepresented in an unhealthy way? Are the problems with this card likely to get better or worse over time? Does this card promote unhealthy play patterns?"* Going forward, Riot says any ban that applies to both formats will say so explicitly — otherwise assume a new Standard ban does **not** automatically apply to 2v2, and vice versa.
+
+[[embed:0]]
+
+## The original 7 banned cards (31 March 2026)
 
 - **Scrapheap** (Origins) — enabled "Miracle Decks": drawing and playing large numbers of cards at heavily discounted cost.
 - **Called Shot** (Spiritforged) — the same Miracle Deck problem as Scrapheap.
@@ -1485,11 +1514,11 @@ Keep the **[live countdown](/vendetta-countdown)** handy, and read **[everything
 - **The Dreaming Tree** (Origins) — provided so much card flow it tipped the balance toward specific deck styles.
 - **Obelisk of Power** (Origins) — banned for its sheer ubiquity; it was in nearly every competitive list.
 
-[[embed:0]]
+[[embed:1]]
 
 ## What "banned" actually means
 
-A banned card can't be included in a deck for **competitive constructed play** — organized tournaments and ranked events run under Riot's official rules. It doesn't necessarily mean your local game store's casual nights follow the same list; check with your local organizer if you're unsure, since casual play often runs looser rules than sanctioned events.
+A banned card can't be included in a deck for **competitive constructed play** — organized tournaments and ranked events run under Riot's official rules. It doesn't necessarily mean your local game store's casual nights follow the same list; check with your local organizer if you're unsure, since casual play often runs looser rules than sanctioned events. And as of July 2026, "banned" isn't one list any more — a card can be banned in Standard, in 2v2 only, or (per Riot) in both if a future update says so explicitly.
 
 ## Does a ban affect a card's price?
 
@@ -1497,11 +1526,66 @@ It can go either way. A ban can crash a card's price as competitive demand dries
 
 ## Why ban lists matter for deckbuilding
 
-If you're building a deck today, none of the cards above are legal in sanctioned events — plan around their absence rather than building toward them. If you already own one, it's still a real card for casual games, or worth checking the price on if you're thinking of selling.
+If you're building a deck today, none of the cards above are legal in sanctioned events for their listed format(s) — plan around their absence rather than building toward them. If you already own one, it's still a real card for casual games, or worth checking the price on if you're thinking of selling.
 
-We'll update this guide the moment any changes to the banlist are announced.
+We'll update this guide the moment any further changes to either ban list are announced.
 
-*Ban reasoning summarized from Riot Games' official announcement and community coverage of Riftbound's first ban list.*`,
+*Ban reasoning summarized from Riot Games' official announcements (31 March 2026 and 17 July 2026) and community coverage of Riftbound's ban history.*`,
+  },
+  {
+    slug: "riftbound-july-2026-ban-list-update",
+    category: "blog",
+    title: "Riftbound's July 2026 Ban List: Stealthy Pursuer, Two Battlefields Banned — Plus a New 2v2 Ban List",
+    excerpt:
+      "Riot just announced Riftbound's second ban wave: Stealthy Pursuer (over an infinite Recruit combo), The Arena's Greatest and Aspirant's Climb, effective 24 July — and a brand-new Constructed 2v2 ban list starting with Master Yi, Wuju Bladesman.",
+    author: "RiftCompare",
+    date: "2026-07-17",
+    readMins: 4,
+    tags: ["banlist", "news", "competitive", "rules", "vendetta"],
+    shop: [
+      { label: "Riftbound singles on eBay", query: "Riftbound TCG singles" },
+    ],
+    embed: {
+      title: "The 4 new bans",
+      note: "The cards added to Riftbound's banlist on 17 July 2026, with live prices across every store RiftCompare tracks.",
+      slugs: [
+        "stealthy-pursuer-ogn-177-298",
+        "the-arena-s-greatest-ogn-290-298",
+        "aspirant-s-climb-ogn-276-298",
+        "master-wuju-bladesman-starter-ogs-019-024",
+      ],
+    },
+    body: `Riot dropped a surprise mid-cycle ban announcement today, ahead of Vendetta's own 31 July release — three new Standard bans, and the first-ever ban list built specifically for **Constructed 2v2**. Here's exactly what changed and why.
+
+## The headline: an infinite combo got caught
+
+**Stealthy Pursuer** is the standout ban, and the reason is a real, documented combo — not a vague power-level complaint. Paired with **Eye of the Herald** and **Renata Glasc, Industrialist**, it enables an infinite Unit loop that generates infinite Recruits as early as turn 3. Riot flagged its intent to ban it back during Vendetta's own preview season, once the community had already found the interaction. Their reasoning: internal testing showed the combo stays consistent even though it's technically disruptable, making it "a harsh check on the metagame" — the kind of turn-three "do you have the answer?" moment that isn't fun for either player.
+
+## Two Battlefields go with it
+
+**The Arena's Greatest** and **Aspirant's Climb** — both Origins Battlefields — are banned too. Riot's own framing is more about structural health than raw power: both cards were "very popular, but not necessarily to the extent that we would feel the need to act," yet Riot judged they'd bent the shape of competitive play in an unhealthy direction.
+
+## A first: the Constructed 2v2 ban list
+
+This is the more structurally significant change. Riftbound has run one shared banlist since launch; as of today, **2v2 Constructed gets its own list** — starting as the full Standard banlist plus one extra card:
+
+- **Master Yi, Wuju Bladesman** (Legend) — banned in 2v2 only. Still fully legal in 1v1 Standard.
+
+Riot says any future ban that's meant to apply to both formats will say so explicitly, so don't assume a Standard-only announcement automatically carries over to 2v2 (or vice versa) going forward.
+
+## When it takes effect
+
+All of the above is **effective 24 July 2026** — a week's notice before it actually kicks in, and just before Vendetta itself releases on 31 July.
+
+[[embed:0]]
+
+## What this means if you own these cards
+
+Same as any ban: these cards stay perfectly playable outside sanctioned events (casual tables, most local game store nights), and whether the price moves depends on how much of each card's demand was competitive versus casual/collector. Check the live price and history on each card page above rather than guessing.
+
+For the complete, always-current picture — including March's original 7 bans — see our **[full Riftbound banlist guide](/guides/riftbound-banlist-explained)**, which we update the moment anything changes.
+
+*Ban reasoning and effective dates are Riot Games' own words from their 17 July 2026 announcement.*`,
   },
   {
     slug: "jayce-mel-riftbound-empower-explained",
@@ -1579,9 +1663,9 @@ Bookmark this page — it updates as new Jayce or Mel printings land in the data
       "A complete guide to Empower — the Riftbound: Vendetta mechanic that lets a card gain new abilities after it's in play. How it works, why it's strong, and how to build around it.",
     author: "RiftCompare",
     date: "2026-07-08",
-    updated: "2026-07-10",
+    updated: "2026-07-17",
     readMins: 5,
-    tags: ["vendetta", "mechanics", "empower", "gameplay", "guide"],
+    tags: ["vendetta", "mechanics", "empower", "disempower", "gameplay", "guide"],
     shop: [
       { label: "Jayce singles — the Empower champion", query: "Riftbound Jayce" },
       { label: "Mel singles", query: "Riftbound Mel" },
@@ -1646,6 +1730,10 @@ Here's the actual printed text on a revealed Vendetta card — the **[Empower]**
 - **It rewards planning.** Good Empower players think two turns ahead — a real skill-testing mechanic rather than a "play it and forget it" one.
 - **It scales.** In grindy games, an Empowered board keeps getting bigger while an opponent's tempo deck runs out of gas.
 
+## Empowered is a status, and Disempower removes it
+
+Riot's own Core Rules confirm exactly how this works under the hood, so here's the precise version rather than the loose one: **Empowered is a status** that sticks to a card indefinitely — it does nothing by itself, but other abilities can check for it (that's the **Empowered** keyword: a *dependent* ability that only turns on while the card has the status). A card stays Empowered until it leaves the board, or until something **Disempowers** it — the exact reverse of Empower, removing the status outright. You can't Disempower a card that isn't Empowered in the first place, and some Vendetta cards use "disempower a card" as their own cost or instruction, so expect to see decks built around stripping an opponent's upgrade, not just stacking your own.
+
 ## Building an Empower deck
 
 Empower leans toward **Mind and Body** styles of play — champions like **Jayce** and **Mel** who want to bank resources and go over the top later. It pairs naturally with the set's other new mechanics: **[Flow](/guides/riftbound-flow-explained)** keeps refuelling your options from the trash, and even **[Burn](/guides/riftbound-burn-explained)** can feed a long game plan. The common thread is **patience and value** over raw early aggression.
@@ -1665,6 +1753,8 @@ For a full archetype breakdown, see the **[best Vendetta decks guide](/guides/be
 **Is Empower the same as levelling up a champion?** No — Empower is a general mechanic that upgrades a card in play by paying a cost, not a champion-only level system.
 
 **How is Empower different from Flow and Burn?** Empower grows a card *you already control*; **[Flow](/guides/riftbound-flow-explained)** plays cards *from your trash*; **[Burn](/guides/riftbound-burn-explained)** sends cards *to* the trash. Read all three together in **[Vendetta's new mechanics explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**.
+
+**What is Disempower?** It's the reverse of Empower — an instruction or cost on some cards that strips the Empowered status from a card, turning off whatever effect its Empowered ability was granting. You can't Disempower something that isn't currently Empowered.
 
 ## Get ready for Empower cards
 
