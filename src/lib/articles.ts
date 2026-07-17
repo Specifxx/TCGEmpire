@@ -1588,6 +1588,65 @@ For the complete, always-current picture — including March's original 7 bans �
 *Ban reasoning and effective dates are Riot Games' own words from their 17 July 2026 announcement.*`,
   },
   {
+    slug: "riftbound-t1-worlds-champion-collection",
+    category: "blog",
+    title: "Riftbound × T1: The 2025 Worlds Champion Collection Explained",
+    excerpt:
+      "Riot's first-ever single-team Riftbound collaboration: a serialised, player-signed Signature Edition and a playable Player Bundle honouring T1's sixth World Championship. Here's what's in each, and the five champions T1 themselves picked.",
+    author: "RiftCompare",
+    date: "2026-07-17",
+    readMins: 4,
+    tags: ["news", "collectibles", "esports"],
+    shop: [
+      { label: "Riftbound singles on eBay", query: "Riftbound TCG singles" },
+    ],
+    // Ambessa (VEN, unreleased — no prices yet) plus the three already-released base
+    // printings T1 picked. Seraphine, Not Alone isn't catalogued on RiftCompare yet
+    // (not yet imported/revealed as a standalone printing), so it's named in the
+    // text but has no embed — never a broken link.
+    embed: {
+      title: "The 5 champions T1 picked (base printings)",
+      note: "The regular, buyable printing of each card T1 selected — not the limited Signature/Player Bundle art, which isn't sold through stores.",
+      slugs: [
+        "ambessa-the-wolf-ven-084",
+        "galio-indefatigable-unl-171-219",
+        "miss-fortune-buccaneer-ogn-193-298",
+        "xin-zhao-vigilant-sfd-176-221",
+      ],
+    },
+    body: `Riot just did something it's never done in Riftbound before: partner with a single esports team, rather than the league as a whole, on a dedicated card collection. The **Riftbound × T1 2025 Worlds Champion Collection** honours T1's sixth World Championship title — and third straight — with signed, serialised cards picked by the players themselves.
+
+## Two products, two very different audiences
+
+**T1 2025 Worlds Champion Signature Edition** — the premium collector's version. Riot is capping production hard: only **10,125 copies per language** (English, Chinese, Korean), each including one card serial-numbered from 1 to 2025 (marking the championship year) with a gold-stamped signature from the corresponding player. The five cards also get a new foiling effect made specifically for this collection.
+
+**T1 2025 Worlds Champion Player Bundle** — the accessible version, for people who actually want to play with these cards. Same five champions with different (non-serialised, non-signed) art, plus a Sleeves Pack, Deckbox, Binder, and a Metal Die — 1 in every 10 dies is a special black-and-gold variant.
+
+## The 5 cards — each hand-picked by a player
+
+Every card was personally chosen by the corresponding member of T1's championship roster:
+
+- **Choi "Doran" Hyeon-jun** → Ambessa, The Wolf
+- **Lee "Faker" Sang-hyeok** → Galio, Indefatigable
+- **Lee "Gumayusi" Min-hyeong** → Miss Fortune, Buccaneer
+- **Ryu "Keria" Min-seok** → Seraphine, Not Alone
+- **Moon "Oner" Hyeon-joon** → Xin Zhao, Vigilant
+
+[[embed:0]]
+
+Seraphine, Not Alone isn't in our card database yet — it hasn't been officially catalogued as a standalone printing outside this reveal, so we can't show a price for it yet. We'll add it the moment it's tracked.
+
+## How to actually get one
+
+Both products are distributed through a **drawing on the Riot Merch Store**, not a normal storefront sale — you enter, you don't just add to cart. The Signature Edition's drawing opens in **August 2026**; the Player Bundle follows later in the year, with more details still to come.
+
+## Should you expect these on RiftCompare?
+
+Not directly — the Signature Edition and Player Bundle art are exclusive to this collection and distributed by drawing, so they won't show up as a normal store listing we can price-compare (any secondary-market copies that surface later on eBay would, like any other collectible). What *is* already trackable right now is the regular base printing of each of the four cataloged champions above — worth a look if the collection has you wanting the "normal" version of Faker's or Doran's pick while you wait on the drawing.
+
+*Product details (print run, contents, availability) are from Riot's own announcement and reporting on it — see the collection's own page on [Riftbound's official site](https://playriftbound.com) for the latest.*`,
+  },
+  {
     slug: "jayce-mel-riftbound-empower-explained",
     category: "guide",
     title: "Jayce & Mel in Riftbound: Vendetta's New Champion Printings",
