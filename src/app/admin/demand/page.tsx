@@ -57,7 +57,7 @@ export default async function AdminDemandPage({
     lowestPriceCentsUk: true,
   } as const;
 
-  const [topSearched, topViewed, clicksRecent, clicksAll] = await Promise.all([
+  const [topSearched, topViewed] = await Promise.all([
     prisma.card.findMany({
       where: { searchCount: { gt: 0 } },
       orderBy: [{ searchCount: "desc" }, { viewCount: "desc" }],
@@ -70,19 +70,34 @@ export default async function AdminDemandPage({
       take: TOP_N,
       select: cardSelect,
     }),
-    dbHistory.clickEvent.groupBy({
-      by: ["retailer"],
-      where: { country, createdAt: { gte: since } },
-      _count: { _all: true },
-      orderBy: { _count: { retailer: "desc" } },
-    }),
-    dbHistory.clickEvent.groupBy({
-      by: ["retailer"],
-      where: { country },
-      _count: { _all: true },
-      orderBy: { _count: { retailer: "desc" } },
-    }),
   ]);
+
+  // Clicks live on the separate history database (see lib/db-history.ts) — if it's
+  // unreachable or a schema push hasn't landed there yet, degrade to an empty click
+  // section instead of crashing the whole page (mirrors /admin/clicks' own guard).
+  type ClickGroup = { retailer: string; _count: { _all: number } };
+  let clicksRecent: ClickGroup[] = [];
+  let clicksAll: ClickGroup[] = [];
+  let clicksError = false;
+  try {
+    [clicksRecent, clicksAll] = await Promise.all([
+      dbHistory.clickEvent.groupBy({
+        by: ["retailer"],
+        where: { country, createdAt: { gte: since } },
+        _count: { _all: true },
+        orderBy: { _count: { retailer: "desc" } },
+      }),
+      dbHistory.clickEvent.groupBy({
+        by: ["retailer"],
+        where: { country },
+        _count: { _all: true },
+        orderBy: { _count: { retailer: "desc" } },
+      }),
+    ]);
+  } catch (e) {
+    console.error("[admin/demand] failed to load click data:", e);
+    clicksError = true;
+  }
 
   const num = new Intl.NumberFormat("en-AU");
   const dateFmt = new Intl.DateTimeFormat("en-AU", {
@@ -232,7 +247,9 @@ export default async function AdminDemandPage({
             {country} · buy-intent · last {RECENT_DAYS}d &amp; all-time
           </span>
         </div>
-        {clickRows.length === 0 ? (
+        {clicksError ? (
+          <Empty>Couldn&apos;t load click data right now.</Empty>
+        ) : clickRows.length === 0 ? (
           <Empty>No outbound clicks recorded for {country} yet.</Empty>
         ) : (
           <div className="overflow-x-auto rounded-xl border border-ink-700 bg-ink-850">
