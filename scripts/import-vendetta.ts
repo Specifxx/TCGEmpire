@@ -136,6 +136,10 @@ async function main() {
       description: r.rules && r.rules !== "[NO TEXT]" ? r.rules : null,
       imageUrl,
       imageThumbUrl: imageUrl,
+      // Battlefields are the only landscape card type in Riftbound (verified against
+      // RiftScribe's own per-card orientation in prisma/riftbound-cards.json); the
+      // official gallery scrape carries no orientation field, so infer it from type.
+      orientation: type === "Battlefield" ? "landscape" : "portrait",
     };
 
     const existing = await prisma.card.findUnique({ where: { externalId }, select: { id: true, slug: true } });
