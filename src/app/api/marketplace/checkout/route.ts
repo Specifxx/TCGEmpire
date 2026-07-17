@@ -16,7 +16,7 @@ const schema = z.object({
 export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Please sign in to buy" }, { status: 401 });
-  if (!canViewMarketplaceListings(user.email)) {
+  if (!canViewMarketplaceListings(user.email, user.isAdmin)) {
     return NextResponse.json({ error: "The marketplace is in private beta" }, { status: 403 });
   }
 

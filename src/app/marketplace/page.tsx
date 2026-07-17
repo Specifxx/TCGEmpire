@@ -23,7 +23,7 @@ export default async function MarketplacePage() {
 
   // Private beta: only allow-listed testers see listings; everyone else gets the
   // Coming-Soon teaser (and verified sellers get their dashboard).
-  if (!canViewMarketplaceListings(user?.email)) {
+  if (!canViewMarketplaceListings(user?.email, user?.isAdmin)) {
     return (
       <div className="mx-auto max-w-3xl">
         <div className="card-surface border-brand-500/30 p-8 text-center">

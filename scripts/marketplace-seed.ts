@@ -1,7 +1,9 @@
 // Idempotent marketplace seed, run on every production deploy (see package.json
 // build script, after `prisma db push`). It:
 //   1. Flags the owner's account as a verified seller.
-//   2. Ensures a test BUYER account exists for trying the (test-mode) buy flow.
+//   2. Ensures the owner has a SellerProfile with the $10 flat AU shipping interim
+//      (dynamic carrier-rate shipping comes later — see docs/MARKETPLACE.md).
+//   3. Ensures a test BUYER account exists for trying the (test-mode) buy flow.
 // Safe to run repeatedly — it only updates/creates, never deletes.
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
@@ -16,17 +18,35 @@ async function main() {
   });
   console.log(`Verified seller: flagged ${verified.count} account(s).`);
 
-  // Mark the owner's shop as the official store (ranks first) if a profile exists.
+  // Mark the owner's shop as the official store (ranks first), creating the
+  // SellerProfile if it doesn't exist yet, and — as an interim, AU-only measure —
+  // charge a flat $10 AUD shipping on the owner's own listings.
   const owner = await prisma.user.findFirst({
     where: { OR: [{ email: "mastermisclick@gmail.com" }, { displayName: "Specifix" }] },
-    select: { id: true },
+    select: { id: true, displayName: true },
   });
   if (owner) {
-    const official = await prisma.sellerProfile.updateMany({
-      where: { userId: owner.id },
-      data: { isOfficial: true },
-    });
-    if (official.count) console.log("Official store: flagged the owner's shop.");
+    const existingProfile = await prisma.sellerProfile.findUnique({ where: { userId: owner.id } });
+    if (existingProfile) {
+      await prisma.sellerProfile.update({
+        where: { userId: owner.id },
+        data: { isOfficial: true },
+      });
+      console.log("Official store: flagged the owner's shop.");
+    } else {
+      await prisma.sellerProfile.create({
+        data: {
+          userId: owner.id,
+          shopName: owner.displayName || "Specifix",
+          country: "AU",
+          currency: "AUD",
+          shippingFlatCents: 1000, // $10.00 flat AU shipping (interim — dynamic rates later)
+          shippingNote: "Tracked shipping within Australia, $10 flat.",
+          isOfficial: true,
+        },
+      });
+      console.log("Seller profile: created for the owner (AU, $10 flat shipping).");
+    }
   }
 
   // 2) Test buyer account (test@test.com / testing1234) with demo wallet funds so the

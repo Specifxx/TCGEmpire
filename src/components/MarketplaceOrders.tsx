@@ -70,6 +70,19 @@ function StatusChip({ s }: { s: string }) {
   return <span className={`chip text-[10px] font-bold ${STATUS_STYLE[s] ?? "bg-ink-800 text-slate-400"}`}>{s}</span>;
 }
 
+// Payout is manual and held until delivery is confirmed via tracking (Stripe
+// payout schedule set to Manual) — this is just a visual signal for when it's
+// safe to trigger that payout, not a real fund transfer.
+function PayoutBadge({ status }: { status: string }) {
+  if (status === "PAID" || status === "SHIPPED") {
+    return <span className="chip bg-ink-800 text-[10px] font-bold text-slate-400" title="Funds held until delivery is confirmed — payout schedule is manual">🔒 Held</span>;
+  }
+  if (status === "COMPLETED") {
+    return <span className="chip bg-brand-500/15 text-[10px] font-bold text-brand-300" title="Delivery confirmed — safe to trigger a manual Stripe payout">🔓 Released</span>;
+  }
+  return null;
+}
+
 function CardCell({ l }: { l: NonNullable<OrderRow["listing"]> | OfferRow["listing"] }) {
   return (
     <Link href={`/card/${l.card.slug ?? l.card.id}`} className="flex min-w-0 items-center gap-2.5">
@@ -209,7 +222,20 @@ export function MarketplaceOrders() {
                   📦 Mark shipped
                 </button>
               )}
+              {o.status === "SHIPPED" && (
+                <button
+                  onClick={() => {
+                    if (typeof window !== "undefined" && !window.confirm("Confirm this order was delivered? Only do this once tracking shows it arrived — this releases the hold on funds for payout.")) return;
+                    act(`/api/marketplace/orders/${o.id}`, { action: "receive" }, "✓ Delivery confirmed — safe to pay out");
+                  }}
+                  disabled={!!busy}
+                  className="btn-ghost text-xs disabled:opacity-50"
+                >
+                  ✅ Confirm delivered
+                </button>
+              )}
               {o.trackingNote && <span className="max-w-[160px] truncate text-[11px] text-slate-500" title={o.trackingNote}>📦 {o.trackingNote}</span>}
+              <PayoutBadge status={o.status} />
             </>
           )}
         />

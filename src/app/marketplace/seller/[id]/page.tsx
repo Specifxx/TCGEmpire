@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 // and their active listings. Beta-gated like the rest of the marketplace.
 export default async function SellerStorefrontPage({ params }: { params: { id: string } }) {
   const user = await getCurrentUser();
-  if (!canViewMarketplaceListings(user?.email)) notFound();
+  if (!canViewMarketplaceListings(user?.email, user?.isAdmin)) notFound();
 
   const profile = await prisma.sellerProfile.findUnique({
     where: { userId: params.id },

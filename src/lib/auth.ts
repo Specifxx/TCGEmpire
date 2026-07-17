@@ -142,7 +142,9 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Ses
       emailVerified: !!user.emailVerified,
       balanceCents: user.balanceCents,
       isAdmin: user.isAdmin || isAdminEmail(user.email),
-      isVerifiedSeller: user.isVerifiedSeller || user.isAdmin || isAdminEmail(user.email),
+      // Selling is admin-only for now (the marketplace is hidden/single-seller) — the
+      // raw per-user DB flag is intentionally NOT honoured here.
+      isVerifiedSeller: user.isAdmin || isAdminEmail(user.email),
       points: user.points,
       canCheckIn: lastCheckin !== today,
       premiumUntil: user.premiumUntil,

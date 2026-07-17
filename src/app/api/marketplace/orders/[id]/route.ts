@@ -12,7 +12,10 @@ const schema = z.object({
 
 // Fulfilment state machine for a marketplace order:
 //   PAID --(seller: ship, optional tracking note)--> SHIPPED
-//   SHIPPED --(buyer: receive)--> COMPLETED
+//   SHIPPED --(buyer, or seller confirming via tracking: receive)--> COMPLETED
+// Funds are held (in the seller's own Stripe balance — payout schedule set to
+// Manual) until COMPLETED, so the seller can also close out an order themselves
+// once tracking shows it delivered, without waiting on the buyer to click confirm.
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in" }, { status: 401 });
@@ -37,8 +40,11 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     return NextResponse.json({ ok: true, status: "SHIPPED" });
   }
 
-  // receive
-  if (order.buyerId !== user.id) return NextResponse.json({ error: "Only the buyer can confirm delivery" }, { status: 403 });
+  // receive — the buyer confirming, or the seller closing it out themselves once
+  // tracking shows delivery (so payout isn't stuck waiting on the buyer).
+  if (order.buyerId !== user.id && order.sellerId !== user.id) {
+    return NextResponse.json({ error: "Only the buyer or seller can confirm delivery" }, { status: 403 });
+  }
   if (order.status !== "SHIPPED") return NextResponse.json({ error: "This order hasn't been shipped yet" }, { status: 400 });
   await prisma.order.update({
     where: { id: order.id },

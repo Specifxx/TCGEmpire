@@ -37,9 +37,10 @@ export const MARKETPLACE_BETA_EMAILS = (process.env.MARKETPLACE_BETA_EMAILS ?? "
   .filter(Boolean);
 
 // Who may see/buy listings right now. Public when launched; otherwise only the
-// allow-listed beta testers (so the owner's real listings stay private during testing).
-export function canViewMarketplaceListings(email?: string | null): boolean {
-  if (MARKETPLACE_PUBLIC) return true;
+// allow-listed beta testers and admins (so admins can manage/test the marketplace
+// while it stays invisible to everyone else — including the owner's own listings).
+export function canViewMarketplaceListings(email?: string | null, isAdmin?: boolean): boolean {
+  if (MARKETPLACE_PUBLIC || isAdmin) return true;
   return !!email && MARKETPLACE_BETA_EMAILS.includes(email.toLowerCase());
 }
 

@@ -9,17 +9,41 @@ sellers + a test buyer get functional (test-mode) access today.
 
 | Piece | Status |
 | --- | --- |
-| `isVerifiedSeller` flag on accounts | ✅ (owner flagged on deploy via `scripts/marketplace-seed.ts`) |
+| `isVerifiedSeller` — **admin-only** (session-computed; the raw per-user DB flag is ignored) | ✅ |
+| Marketplace visibility — hidden from the public (`MARKETPLACE_PUBLIC` unset); admins can always view/manage it even while hidden | ✅ `canViewMarketplaceListings(email, isAdmin)` |
 | `/marketplace` — Coming-Soon page + live listings | ✅ (in the "More" nav) |
-| `/marketplace/sell` — seller dashboard (shop + shipping + listings) | ✅ verified-seller only |
+| `/marketplace/sell` — seller dashboard (shop + shipping + listings) | ✅ admins only |
 | Listing API (`/api/marketplace/listings*`, `/profile`) | ✅ |
 | Listings shown in card price comparison (all regions) | ✅ via `importMarketplaceListings()` |
 | Buy flow (`/api/marketplace/buy`) | ✅ **test mode** — settles the demo wallet, no real money |
-| Real payments + payouts | ⛔ scaffolded only — see below |
+| Real Stripe Checkout (`/api/marketplace/stripe/checkout` + webhook) | ✅ code live — activates automatically once `STRIPE_SECRET_KEY` is set (already set in prod for Premium) |
+| Seller's own shipping: $10 AUD flat, Australia | ✅ interim — seeded via `scripts/marketplace-seed.ts` on the owner's `SellerProfile` |
+| Fund holding until delivery confirmed | ✅ app-side signal (PAID → SHIPPED → COMPLETED, seller or buyer can confirm); real hold requires switching **Stripe Dashboard → Settings → Payouts → Manual** (see "Escrow" below) |
+| Stripe Connect (multi-seller payouts) | ⛔ not needed — single-seller for now, see below |
 
 **Accounts seeded on deploy:**
-- Verified seller: `mastermisclick@gmail.com` / display name `Specifix`.
+- Verified seller (admin-gated): `mastermisclick@gmail.com` / display name `Specifix`.
 - Test buyer: `test@test.com` / password `testing1234` (with a $1,000 demo wallet).
+
+## Holding funds until delivery (single-seller, no Connect)
+
+Because this is a single-seller Stripe Checkout integration (not Connect), a real
+sale's money lands directly in your own Stripe balance per Stripe's normal payout
+schedule — the app has no way to intercept or delay a transfer that never happens
+through it. The practical way to "hold funds until delivered" today:
+
+1. **In the Stripe Dashboard** (you'll need to do this yourself): *Settings → Payouts
+   → Payout schedule → Manual*. This stops Stripe from auto-depositing to your bank;
+   money sits in your Stripe balance until you manually trigger a payout.
+2. **In the app**: every marketplace order tracks `PAID → SHIPPED → COMPLETED`. Mark
+   an order shipped with a tracking number, and either the buyer or you (the seller)
+   can confirm delivery once tracking shows it arrived. The Sales tab shows a
+   🔒 Held / 🔓 Released badge per order — once it says Released, it's safe to go
+   trigger the manual Stripe payout for that money.
+
+This isn't true platform-held escrow (Stripe already has your money either way) but
+it gives you the same practical control: nothing gets paid out to your bank until
+you've confirmed the buyer actually received the card.
 
 ## Data model
 
