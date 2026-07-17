@@ -412,8 +412,13 @@ export async function importPrices(): Promise<ImportSummary> {
     // price is for the whole group, not one card.
     if (MULTI_CARD.test(t)) return null;
     const num = parseNumber(t);
-    const setCode =
-      num?.setCode ?? setFromTotal(num?.total) ?? SET_FROM_TITLE.find(([re]) => re.test(t))?.[1] ?? "OGN";
+    // Only a real signal in the title (an explicit number/total, or a set-name
+    // hint) counts as "confident" — the "OGN" tail is a fallback default for the
+    // number-only path below, NOT evidence the listing is actually OGN, so it must
+    // never be used to pick between same-named cards from different sets.
+    const confidentSetCode =
+      num?.setCode ?? setFromTotal(num?.total) ?? SET_FROM_TITLE.find(([re]) => re.test(t))?.[1] ?? null;
+    const setCode = confidentSetCode ?? "OGN";
 
     // Promo listing → resolve against the PROMO pool only (a promo shares the base
     // card's number, so a promo-marked listing must never price the base card).
@@ -446,8 +451,21 @@ export async function importPrices(): Promise<ImportSummary> {
       num ? arr.find((c) => numKey(c.collectorNumber.split("/")[0]) === num.key) : undefined;
 
     // 1) name match, disambiguated by special-print → number → variant.
-    const cand = byName.get(nameKey(cleanProductName(t)));
+    let cand = byName.get(nameKey(cleanProductName(t)));
     if (cand && cand.length) {
+      // A name can legitimately repeat across sets — e.g. a VEN pre-release reveal
+      // (no collector number yet) sharing a name with its later-catalogued printing
+      // in another set. Never let a same-named card from the WRONG set win just
+      // because it happened to come first in DB order: narrow to the set we have
+      // real evidence for, or leave the listing unmatched rather than mis-attach a
+      // real price to the wrong printing.
+      const distinctSets = new Set(cand.map((c) => c.setCode));
+      if (distinctSets.size > 1) {
+        if (!confidentSetCode) return null;
+        const bySet = cand.filter((c) => c.setCode === confidentSetCode);
+        if (!bySet.length) return null;
+        cand = bySet;
+      }
       // A Signature listing belongs ONLY to a "*" card of that name. If we don't
       // have one, leave it unmatched rather than mis-attaching to a sibling.
       if (titleSig) {
