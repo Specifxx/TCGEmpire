@@ -21,7 +21,7 @@ type ColumnDef = {
 };
 
 const COLUMNS: ColumnDef[] = [
-  { key: "savingsVsMarket", label: "Biggest savings", premium: true, allHref: "/tools/arbitrage", allLabel: "All arbitrage" },
+  { key: "savingsVsMarket", label: "Biggest savings", premium: true, allHref: "/tools/arbitrage", allLabel: "All opportunities" },
   { key: "priceDrops", label: "Price drops", premium: false, allHref: "/movers", allLabel: "All movers" },
   { key: "cheapestSealed", label: "Cheapest sealed", premium: false, allHref: "/sealed", allLabel: "All sealed" },
   { key: "undervalued", label: "Undervalued", premium: true, allHref: "/tools/value-finder", allLabel: "Value Finder" },

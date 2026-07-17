@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getArbitrage, getEbayCheapest, getArbSources, EBAY_FEE, type ArbSort, type DealSort } from "@/lib/arbitrage";
+import { getArbitrage, getArbitrageVsTcgplayer, getEbayCheapest, getArbSources, EBAY_FEE, type ArbSort, type DealSort } from "@/lib/arbitrage";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
@@ -17,11 +17,11 @@ import { isPremium } from "@/lib/premium";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: { absolute: "Riftbound Deal Finder — Cross-Store & eBay Deals | RiftCompare" },
+  title: { absolute: "Riftbound Deal Finder — Cross-Store, eBay & TCGplayer Deals | RiftCompare" },
   description:
-    "Find the best Riftbound deals: cards worth more on eBay than in stores (handy if you're selling), plus the cards eBay is cheapest to buy. Sortable, updated daily, with direct links. A Premium tool — the top pick is free to preview.",
+    "Find the best Riftbound deals: cards worth more on eBay than in stores (handy if you're selling), cards underpriced vs TCGplayer's US market price, and the cards eBay is cheapest to buy. Sortable, updated daily, with direct links. A Premium tool — the top pick is free to preview.",
   alternates: { canonical: "/tools/arbitrage" },
-  openGraph: { title: "Riftbound Deal Finder — Cross-Store & eBay Deals", url: `${SITE_URL}/tools/arbitrage` },
+  openGraph: { title: "Riftbound Deal Finder — Cross-Store, eBay & TCGplayer Deals", url: `${SITE_URL}/tools/arbitrage` },
 };
 
 const PAGE_SIZE = 25;
@@ -51,7 +51,8 @@ export default async function ArbitragePage({
   const sources = getArbSources(country);
   const storeKeys = sources.filter((s) => !s.isEbay).map((s) => s.key);
   const ebay = sources.find((s) => s.isEbay);
-  const view: "flip" | "deals" = searchParams.view === "deals" ? "deals" : "flip";
+  const view: "flip" | "deals" | "tcg" =
+    searchParams.view === "deals" ? "deals" : searchParams.view === "tcg" ? "tcg" : "flip";
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
 
   return (
@@ -105,6 +106,13 @@ export default async function ArbitragePage({
           Worth more on eBay
         </Link>
         <Link
+          href="/tools/arbitrage?view=tcg"
+          aria-current={view === "tcg" ? "page" : undefined}
+          className={`flex-1 rounded-md px-3 py-2 text-center text-sm font-bold ${view === "tcg" ? "bg-gold/20 text-gold" : "text-slate-400 hover:text-white"}`}
+        >
+          Underpriced vs TCGplayer
+        </Link>
+        <Link
           href="/tools/arbitrage?view=deals"
           aria-current={view === "deals" ? "page" : undefined}
           className={`flex-1 rounded-md px-3 py-2 text-center text-sm font-bold ${view === "deals" ? "bg-sky-500/20 text-sky-200" : "text-slate-400 hover:text-white"}`}
@@ -113,9 +121,11 @@ export default async function ArbitragePage({
         </Link>
       </div>
 
-      {!ebay ? (
+      {view === "tcg" ? (
+        await TcgFlipView({ country, info, sort: searchParams.sort === "margin" ? "margin" : "profit", page, storeKeys, premium, signedIn })
+      ) : !ebay ? (
         <div className="card-surface grid place-items-center p-12 text-center text-sm text-slate-400">
-          These views aren&apos;t available in {info.place} yet — they&apos;re eBay-based, and eBay doesn&apos;t cover this market.
+          This view isn&apos;t available in {info.place} yet — it&apos;s eBay-based, and eBay doesn&apos;t cover this market.
         </div>
       ) : view === "deals" ? (
         await DealsView({ country, info, sort: searchParams.sort === "pct" ? "pct" : "saving", page, premium, signedIn })
@@ -248,6 +258,74 @@ async function DealsView({
       ) : (
         <LockedTable signedIn={signedIn}>
           <DealsTable items={data.items} country={country} info={info} />
+        </LockedTable>
+      )}
+    </>
+  );
+}
+
+// ── TCGplayer flip view (buy store → sell benchmark = TCGplayer US market price) ──
+// A second flip benchmark alongside eBay: TCGplayer's own market price (converted to
+// the local currency) instead of the cheapest current eBay listing. Available in
+// every market — including ones with no eBay coverage (e.g. NZ) — since it isn't
+// eBay-based at all.
+async function TcgFlipView({
+  country,
+  info,
+  sort,
+  page,
+  storeKeys,
+  premium,
+  signedIn,
+}: {
+  country: ReturnType<typeof getCountry>;
+  info: (typeof COUNTRIES)[keyof typeof COUNTRIES];
+  sort: ArbSort;
+  page: number;
+  storeKeys: string[];
+  premium: boolean;
+  signedIn: boolean;
+}) {
+  const data = await getArbitrageVsTcgplayer(country, {
+    buy: storeKeys,
+    sort,
+    page: premium ? page : 1,
+    pageSize: premium ? PAGE_SIZE : TEASER_SIZE,
+  });
+  const href = (p: number) => `/tools/arbitrage?view=tcg&sort=${sort}&page=${p}`;
+  const sortHref = (s: ArbSort) => `/tools/arbitrage?view=tcg&sort=${s}&page=1`;
+
+  return (
+    <>
+      <p className="mb-2 max-w-2xl text-sm leading-relaxed text-slate-400">
+        Cards a {info.adjective} store is selling for less than <strong className="text-slate-200">TCGplayer&apos;s</strong> own
+        US market price (converted to {info.currency}) — i.e. underpriced relative to the wider US market. TCGplayer only
+        tracks one market price per card, so this is a reference gap, not a fee-adjusted resale estimate — shipping a card
+        there means a genuine US-bound sale.
+      </p>
+      <p className="mb-4 text-xs text-slate-500">
+        Currency conversion is an approximate reference rate, not a live FX quote — see the card page for the real,
+        in-market prices we track.
+      </p>
+
+      {premium && (
+        <div className="card-surface mb-4 flex flex-wrap items-end justify-end gap-4 p-4">
+          <SortTabs sorts={FLIP_SORTS} active={sort} hrefFor={sortHref} />
+        </div>
+      )}
+
+      {data.items.length === 0 ? (
+        <Empty>No cards look underpriced vs TCGplayer from these stores right now in {info.place}.</Empty>
+      ) : premium ? (
+        <>
+          <div className="card-surface overflow-x-auto">
+            <FlipTable items={data.items} country={country} info={info} />
+          </div>
+          <Pager total={data.total} page={data.page} pageCount={data.pageCount} hrefFor={href} unit="cards" />
+        </>
+      ) : (
+        <LockedTable signedIn={signedIn}>
+          <FlipTable items={data.items} country={country} info={info} />
         </LockedTable>
       )}
     </>

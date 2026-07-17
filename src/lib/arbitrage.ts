@@ -11,6 +11,8 @@ import type { Country } from "./country";
 import { RETAILERS } from "./retailers";
 import { affiliateUrl } from "./affiliate";
 import { cardTileSelect } from "./cards";
+import { TCG_US } from "./tcgplayer";
+import { usdCentsToCountry } from "./fx";
 import type { CardTileData } from "@/components/CardTile";
 
 export const EBAY_FEE = 0.13; // approx eBay final-value fee
@@ -274,6 +276,91 @@ export async function getArbitrage(
           // hold untagged URLs from before import-time tagging existed.
           buyCents: r.buy, buyStore: b.retailer, buyStoreName: b.retailerName, buyUrl: affiliateUrl(b.url, b.retailer),
           sellCents: r.sellGross, sellName: s.retailerName, sellUrl: affiliateUrl(s.url, "ebay_arb"), sellIsEbay: r.sellIsEbay,
+          netCents: r.net, marginPct: r.margin,
+        };
+      })
+      .filter((x): x is ArbItem => x !== null);
+
+    return { items, total, page: p, pageSize, pageCount };
+  } catch {
+    return { items: [], total: 0, page, pageSize, pageCount: 1 };
+  }
+}
+
+// ── Worth more on TCGplayer (US market price, converted) ────────────────────────
+// A second flip benchmark alongside eBay: instead of the cheapest current eBay
+// listing, compare a store's buy price against TCGplayer's own US MARKET price
+// (the algorithmic fair-value figure it headlines — see lib/tcgplayer.ts), converted
+// from USD into the viewer's local currency via the shared fx table. This is a
+// REFERENCE comparison, not a specific listing — TCGplayer only has one retailer row
+// per card (US, in USD), so there's no "cheapest" to pick and no marketplace fee to
+// net off (unlike eBay's ~13% final-value fee). Available in every market, including
+// ones with no eBay coverage (e.g. NZ).
+export async function getArbitrageVsTcgplayer(
+  country: Country,
+  opts: { buy: string[]; sort: ArbSort; page?: number; pageSize?: number }
+): Promise<ArbPage> {
+  const page = opts.page ?? 1;
+  const pageSize = opts.pageSize ?? 25;
+  try {
+    const sources = getArbSources(country);
+    const valid = new Set(sources.map((s) => s.key));
+    const buyKeys = opts.buy.filter((k) => valid.has(k));
+    if (!buyKeys.length) return { items: [], total: 0, page, pageSize, pageCount: 1 };
+
+    const [buyMin, tcgRows] = await Promise.all([
+      minByCard(country, buyKeys),
+      prisma.retailerPrice.findMany({
+        where: { retailer: TCG_US.retailer, inStock: true },
+        select: { cardId: true, priceCents: true, url: true },
+      }),
+    ]);
+    const tcgByCard = new Map(tcgRows.map((r) => [r.cardId, r]));
+
+    type Row = { cardId: string; buy: number; sellGross: number; net: number; margin: number };
+    const rows: Row[] = [];
+    for (const [cardId, buy] of buyMin) {
+      if (buy < MIN_BUY_CENTS) continue;
+      const tcg = tcgByCard.get(cardId);
+      if (!tcg) continue;
+      const sellGross = usdCentsToCountry(tcg.priceCents, country);
+      const net = sellGross - buy; // reference price — no marketplace fee modelled
+      if (net < MIN_NET_CENTS) continue;
+      const margin = Math.round((net / buy) * 1000) / 10;
+      if (margin > MAX_MARGIN_PCT) continue; // absurd flip margin = buy/sell mismatch, drop it
+      rows.push({ cardId, buy, sellGross, net, margin });
+    }
+    rows.sort((a, b) => (opts.sort === "margin" ? b.margin - a.margin || b.net - a.net : b.net - a.net || b.margin - a.margin));
+
+    const total = rows.length;
+    const pageCount = Math.max(1, Math.ceil(total / pageSize));
+    const p = Math.min(Math.max(1, page), pageCount);
+    const slice = rows.slice((p - 1) * pageSize, p * pageSize);
+    if (!slice.length) return { items: [], total, page: p, pageSize, pageCount };
+
+    const ids = slice.map((r) => r.cardId);
+    const [cards, buyListings] = await Promise.all([
+      prisma.card.findMany({ where: { id: { in: ids } }, select: cardTileSelect(country) }),
+      prisma.retailerPrice.findMany({
+        where: { cardId: { in: ids }, country, inStock: true, retailer: { in: buyKeys } },
+        select: { cardId: true, retailer: true, retailerName: true, priceCents: true, url: true },
+        orderBy: { priceCents: "asc" },
+      }),
+    ]);
+    const cardMap = new Map(cards.map((c) => [c.id, c as unknown as CardTileData]));
+    const bestBuy = new Map<string, (typeof buyListings)[number]>();
+    for (const l of buyListings) if (!bestBuy.has(l.cardId)) bestBuy.set(l.cardId, l);
+
+    const items = slice
+      .map((r): ArbItem | null => {
+        const c = cardMap.get(r.cardId);
+        const b = bestBuy.get(r.cardId);
+        const tcg = tcgByCard.get(r.cardId);
+        if (!c || !b || !tcg) return null;
+        return {
+          card: c,
+          buyCents: r.buy, buyStore: b.retailer, buyStoreName: b.retailerName, buyUrl: affiliateUrl(b.url, b.retailer),
+          sellCents: r.sellGross, sellName: "TCGplayer (US market, converted)", sellUrl: affiliateUrl(tcg.url, TCG_US.retailer), sellIsEbay: false,
           netCents: r.net, marginPct: r.margin,
         };
       })
