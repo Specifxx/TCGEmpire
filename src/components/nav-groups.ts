@@ -12,6 +12,28 @@ export interface NavGroup {
   links: NavGroupLink[];
 }
 
+// Kept as a single NEXT_PUBLIC_-prefixed flag (not the server-only
+// MARKETPLACE_PUBLIC in lib/marketplace.ts, which pulls in Prisma and can't be
+// imported into these client-bundled nav components) so nav visibility and the
+// public price-comparison/listing gating flip together from one Vercel env var.
+// While unset, the marketplace is fully live under the hood (routes, Stripe,
+// escrow, cron) but not linked from anywhere a visitor would stumble onto it.
+export const MARKETPLACE_NAV_VISIBLE = process.env.NEXT_PUBLIC_MARKETPLACE_PUBLIC === "1";
+
+// The P2P marketplace nav group — see docs/MARKETPLACE.md. Spread in only once
+// launched (NEXT_PUBLIC_MARKETPLACE_PUBLIC=1); kept as its own object so
+// UserMenu.tsx and layout.tsx's footer can reuse the same visibility flag.
+const MARKETPLACE_GROUP: NavGroup = {
+  title: "Marketplace",
+  links: [
+    { href: "/marketplace", label: "Buy on Marketplace", emoji: "🛒" },
+    { href: "/marketplace/sell", label: "Sell a card", emoji: "🏷️" },
+    { href: "/marketplace/orders", label: "My orders", emoji: "📦" },
+    { href: "/marketplace/funds", label: "Seller funds", emoji: "💰" },
+    { href: "/marketplace/buyer-protection", label: "Buyer protection", emoji: "🛡️" },
+  ],
+};
+
 export const NAV_GROUPS: NavGroup[] = [
   {
     // Core price/data pages — the heart of the site.
@@ -26,18 +48,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/stores/tracked", label: "Stores we track", emoji: "🏪" },
     ],
   },
-  {
-    // The P2P marketplace — buy/sell directly with other collectors, funds held
-    // in escrow until delivery (see docs/MARKETPLACE.md).
-    title: "Marketplace",
-    links: [
-      { href: "/marketplace", label: "Buy on Marketplace", emoji: "🛒" },
-      { href: "/marketplace/sell", label: "Sell a card", emoji: "🏷️" },
-      { href: "/marketplace/orders", label: "My orders", emoji: "📦" },
-      { href: "/marketplace/funds", label: "Seller funds", emoji: "💰" },
-      { href: "/marketplace/buyer-protection", label: "Buyer protection", emoji: "🛡️" },
-    ],
-  },
+  ...(MARKETPLACE_NAV_VISIBLE ? [MARKETPLACE_GROUP] : []),
   {
     // Smart-shopping / value tools (several Premium).
     title: "Deals & value",

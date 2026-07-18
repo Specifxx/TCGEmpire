@@ -60,9 +60,13 @@ export const MARKETPLACE_AUTO_RELEASE_DAYS = Number(process.env.MARKETPLACE_AUTO
 
 // ── Private beta gating ────────────────────────────────────────────────────────
 // While false, marketplace listings are NOT shown in the public price comparison
-// and are only visible/buyable to the allow-listed beta emails (the test buyer).
-// Flip MARKETPLACE_PUBLIC=1 (env) to launch publicly.
-export const MARKETPLACE_PUBLIC = process.env.MARKETPLACE_PUBLIC === "1";
+// and are only visible/buyable to the allow-listed beta emails (the test buyer);
+// the Marketplace nav entries (hamburger menu, UserMenu, footer policy links —
+// see nav-groups.ts) also stay hidden. NEXT_PUBLIC_-prefixed (not just
+// MARKETPLACE_PUBLIC) so the exact same flag/value drives nav-groups.ts's
+// client-side visibility check without a second env var to remember. Flip
+// NEXT_PUBLIC_MARKETPLACE_PUBLIC=1 (env, redeploy) to launch publicly.
+export const MARKETPLACE_PUBLIC = process.env.NEXT_PUBLIC_MARKETPLACE_PUBLIC === "1";
 export const MARKETPLACE_BETA_EMAILS = (process.env.MARKETPLACE_BETA_EMAILS ?? "test@test.com")
   .split(",")
   .map((e) => e.trim().toLowerCase())

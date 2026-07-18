@@ -18,7 +18,7 @@ import { PremiumDialogProvider } from "@/components/PremiumDialog";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 import { BUYMEACOFFEE_URL, CONTACT_EMAIL, DISCORD_URL, SITE_NAME, SITE_URL } from "@/lib/site";
 import { IMPACT_SITE_VERIFICATION } from "@/lib/affiliate";
-import { NAV_GROUPS } from "@/components/nav-groups";
+import { NAV_GROUPS, MARKETPLACE_NAV_VISIBLE } from "@/components/nav-groups";
 import { NativeShell } from "@/components/NativeShell";
 import { HilltopAdsLoader } from "@/components/HilltopAdsLoader";
 import { ReferralCapture } from "@/components/ReferralCapture";
@@ -255,12 +255,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <span className="text-ink-700">·</span>
             <Link href="/terms" className="text-slate-300 hover:text-brand-400">Terms</Link>
             <span className="text-ink-700">·</span>
-            <Link href="/marketplace/terms" className="text-slate-300 hover:text-brand-400">Marketplace terms</Link>
-            <span className="text-ink-700">·</span>
-            <Link href="/marketplace/buyer-protection" className="text-slate-300 hover:text-brand-400">Buyer protection</Link>
-            <span className="text-ink-700">·</span>
-            <Link href="/marketplace/shipping" className="text-slate-300 hover:text-brand-400">Shipping &amp; tracking</Link>
-            <span className="text-ink-700">·</span>
+            {MARKETPLACE_NAV_VISIBLE && (
+              <>
+                <Link href="/marketplace/terms" className="text-slate-300 hover:text-brand-400">Marketplace terms</Link>
+                <span className="text-ink-700">·</span>
+                <Link href="/marketplace/buyer-protection" className="text-slate-300 hover:text-brand-400">Buyer protection</Link>
+                <span className="text-ink-700">·</span>
+                <Link href="/marketplace/shipping" className="text-slate-300 hover:text-brand-400">Shipping &amp; tracking</Link>
+                <span className="text-ink-700">·</span>
+              </>
+            )}
             <Link href="/widgets" className="text-slate-300 hover:text-brand-400">Price widget</Link>
             <span className="text-ink-700">·</span>
             <Link href="/tools/net-proceeds" className="text-slate-300 hover:text-brand-400">Selling fees</Link>
