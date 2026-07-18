@@ -4,6 +4,8 @@
  * makes every 6h. Safe to run any time: the route's jobs are bounded,
  * idempotent maintenance queries, not a destructive one-off action.
  */
+export {};
+
 async function main() {
   const secret = process.env.CRON_SECRET ?? "";
   if (!secret) {
