@@ -60,6 +60,7 @@ export async function GET() {
     shipPostcode: o.shipPostcode,
     shipCountry: o.shipCountry,
     shipPhone: o.shipPhone,
+    releaseRequestedAt: o.releaseRequestedAt,
     reviewed: !!o.review,
     rating: o.review?.rating ?? null,
     counterparty:

@@ -6,7 +6,7 @@ import { sendEmail, emailShell } from "./email";
 import { formatMoney } from "./format";
 import { formatOrderNumber } from "./order-number";
 import { trackingUrl, CARRIER_LABEL, type Carrier } from "./tracking";
-import { SITE_URL } from "./site";
+import { SITE_URL, SUPPORT_EMAIL } from "./site";
 import { MARKETPLACE_SHIP_DEADLINE_DAYS, MARKETPLACE_AUTO_RELEASE_DAYS } from "./marketplace";
 
 function footer(): string {
@@ -110,4 +110,17 @@ export async function sendAutoCancelledSellerEmail(to: string, o: OrderEmailInfo
       within ${MARKETPLACE_SHIP_DEADLINE_DAYS} business days. The listing has been restocked. Please ship promptly to avoid this in future.
     </td></tr>`;
   return sendEmail(to, `Order auto-cancelled — ${num}`, emailShell("Order auto-cancelled", inner + button("View your listings", `${SITE_URL}/marketplace/sell`), footer()));
+}
+
+// Internal notification to the support inbox — a seller believes tracking shows
+// delivered and is asking an admin to check sooner than the 14-day timeout.
+// Never releases anything itself; it just prioritises the admin review queue.
+export async function sendReleaseRequestedEmail(o: OrderEmailInfo): Promise<boolean> {
+  const num = formatOrderNumber(o.orderNumber) ?? o.orderId;
+  const inner = `
+    <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      The seller on order <strong style="color:#fff">${num}</strong> (${o.quantity} × ${o.cardName}, ${formatMoney(o.totalCents, o.currency)})
+      has requested an early release — they believe tracking shows it delivered. Please check the tracking link and approve or hold.
+    </td></tr>`;
+  return sendEmail(SUPPORT_EMAIL, `[RC] Release requested — ${num}`, emailShell("Seller requested release", inner + button("Review in admin →", `${SITE_URL}/admin/marketplace`), footer()));
 }

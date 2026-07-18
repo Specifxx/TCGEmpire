@@ -4,7 +4,8 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { formatMoney } from "@/lib/format";
-import { DisputedOrderActions, SellerSuspendToggle, DelistForm } from "@/components/AdminMarketplaceActions";
+import { trackingUrl, CARRIER_LABEL, type Carrier } from "@/lib/tracking";
+import { DisputedOrderActions, SellerSuspendToggle, DelistForm, DeliveryReviewActions } from "@/components/AdminMarketplaceActions";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,35 @@ export default async function AdminMarketplacePage({ searchParams }: { searchPar
   const keyOk = !!token && searchParams.key === token;
   const user = await getCurrentUser();
   if (!(keyOk || user?.isAdmin)) notFound();
+
+  // The primary workflow now: SHIPPED orders awaiting a human to check tracking
+  // before funds release (see D3/orders route — sellers can no longer
+  // self-confirm their own delivery). Release-requested ones surface first
+  // (seller believes it's delivered), then oldest-shipped first.
+  const awaitingReview = await prisma.order.findMany({
+    where: { kind: "MARKETPLACE", status: "SHIPPED", disputedAt: null },
+    orderBy: { shippedAt: "asc" },
+    take: 200,
+    select: {
+      id: true,
+      orderNumber: true,
+      totalCents: true,
+      currency: true,
+      shippedAt: true,
+      carrier: true,
+      trackingNumber: true,
+      releaseRequestedAt: true,
+      adminReviewedAt: true,
+      adminReviewedBy: true,
+      buyer: { select: { email: true, displayName: true } },
+      seller: { select: { email: true, displayName: true } },
+    },
+  });
+  awaitingReview.sort((a, b) => {
+    if (!!a.releaseRequestedAt !== !!b.releaseRequestedAt) return a.releaseRequestedAt ? -1 : 1;
+    if (a.releaseRequestedAt && b.releaseRequestedAt) return a.releaseRequestedAt.getTime() - b.releaseRequestedAt.getTime();
+    return (a.shippedAt?.getTime() ?? 0) - (b.shippedAt?.getTime() ?? 0);
+  });
 
   const disputed = await prisma.order.findMany({
     where: { kind: "MARKETPLACE", disputedAt: { not: null } },
@@ -53,6 +83,59 @@ export default async function AdminMarketplacePage({ searchParams }: { searchPar
         <h1 className="text-2xl font-bold text-white">Marketplace admin</h1>
         <p className="text-sm text-slate-400">Disputed orders, seller suspensions, and quick delisting.</p>
       </div>
+
+      <section className="mb-8">
+        <h2 className="mb-3 text-lg font-bold text-white">Awaiting delivery confirmation ({awaitingReview.length})</h2>
+        <p className="mb-3 text-xs text-slate-500">
+          Check the tracking link, then approve release, mark as reviewed (keep waiting), or flag a problem. Nothing
+          releases without a buyer confirming or an admin approving here — the auto-release timeout only fires if
+          neither happens within 14 days.
+        </p>
+        {awaitingReview.length === 0 ? (
+          <div className="rounded-xl border border-ink-700 bg-ink-850 px-4 py-8 text-center text-slate-400">Nothing awaiting review.</div>
+        ) : (
+          <ul className="space-y-3">
+            {awaitingReview.map((o) => {
+              const url = trackingUrl(o.carrier, o.trackingNumber);
+              const carrierLabel = o.carrier ? CARRIER_LABEL[o.carrier as Carrier] ?? o.carrier : null;
+              const daysAgo = o.shippedAt ? Math.floor((Date.now() - o.shippedAt.getTime()) / 86_400_000) : null;
+              return (
+                <li key={o.id} className="rounded-xl border border-ink-700 bg-ink-850 p-4">
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                    <div className="font-semibold text-white">
+                      {o.orderNumber != null ? `RC-${o.orderNumber}` : o.id.slice(0, 8)} · {formatMoney(o.totalCents, o.currency)}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {o.releaseRequestedAt && <span className="chip bg-gold/15 text-[10px] font-bold text-gold">🔔 release requested</span>}
+                      <span className="text-xs text-slate-500">shipped {daysAgo}d ago</span>
+                    </div>
+                  </div>
+                  <div className="mt-0.5 text-sm text-slate-400">
+                    Buyer: {o.buyer.displayName} ({o.buyer.email}) · Seller: {o.seller.displayName} ({o.seller.email})
+                  </div>
+                  <div className="mt-1 text-sm">
+                    {o.trackingNumber ? (
+                      url ? (
+                        <a href={url} target="_blank" rel="noopener noreferrer" className="text-brand-400 hover:underline">
+                          📦 {carrierLabel}: {o.trackingNumber} ↗
+                        </a>
+                      ) : (
+                        <span className="text-slate-300">📦 {carrierLabel}: {o.trackingNumber}</span>
+                      )
+                    ) : (
+                      <span className="text-slate-500">No tracking number on file</span>
+                    )}
+                  </div>
+                  {o.adminReviewedAt && (
+                    <div className="mt-1 text-xs text-slate-500">Last reviewed {fmt.format(o.adminReviewedAt)} by {o.adminReviewedBy}</div>
+                  )}
+                  <DeliveryReviewActions orderId={o.id} />
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
 
       <section className="mb-8">
         <h2 className="mb-3 text-lg font-bold text-white">Disputed orders ({disputed.length})</h2>

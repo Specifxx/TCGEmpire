@@ -12,6 +12,49 @@ async function call(action: string, body: Record<string, string>) {
   return res.ok;
 }
 
+// The primary release gate: approve (checked tracking, it's delivered), mark
+// reviewed (checked, not yet — keep waiting, resets the auto-release clock), or
+// flag a problem directly (an admin spotting an issue, not waiting for a report).
+export function DeliveryReviewActions({ orderId }: { orderId: string }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState<string | null>(null);
+
+  async function run(action: string, confirmMsg?: string) {
+    if (confirmMsg && typeof window !== "undefined" && !window.confirm(confirmMsg)) return;
+    setBusy(action);
+    const ok = await call(action, { orderId });
+    setBusy(null);
+    if (ok) router.refresh();
+    else alert("Action failed — check the order's current status.");
+  }
+
+  return (
+    <div className="mt-2 flex flex-wrap gap-1.5">
+      <button
+        onClick={() => run("force-release", "Approve release? Only do this once you've confirmed the carrier's tracking page shows it delivered.")}
+        disabled={!!busy}
+        className="rounded bg-brand-500/20 px-2 py-1 text-[11px] font-semibold text-brand-300 hover:bg-brand-500/30 disabled:opacity-50"
+      >
+        {busy === "force-release" ? "…" : "✅ Approve & release"}
+      </button>
+      <button
+        onClick={() => run("mark-reviewed")}
+        disabled={!!busy}
+        className="rounded bg-ink-800 px-2 py-1 text-[11px] text-slate-300 hover:bg-ink-700 disabled:opacity-50"
+      >
+        {busy === "mark-reviewed" ? "…" : "👀 Mark reviewed — not yet"}
+      </button>
+      <button
+        onClick={() => run("flag-dispute", "Flag this order as disputed? This blocks the auto-release timeout until it's resolved.")}
+        disabled={!!busy}
+        className="rounded bg-rose-500/20 px-2 py-1 text-[11px] font-semibold text-rose-300 hover:bg-rose-500/30 disabled:opacity-50"
+      >
+        {busy === "flag-dispute" ? "…" : "🚩 Flag a problem"}
+      </button>
+    </div>
+  );
+}
+
 export function DisputedOrderActions({ orderId }: { orderId: string }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);

@@ -41,6 +41,7 @@ type OrderRow = {
   shipPostcode: string | null;
   shipCountry: string | null;
   shipPhone: string | null;
+  releaseRequestedAt: string | null;
   listing: {
     id: string;
     condition: string;
@@ -94,7 +95,7 @@ function StatusChip({ s }: { s: string }) {
 // connected Stripe account — see lib/connect.ts's releaseFundsForOrder.
 function PayoutBadge({ status }: { status: string }) {
   if (status === "PAID" || status === "SHIPPED") {
-    return <span className="chip bg-ink-800 text-[10px] font-bold text-slate-400" title="Funds are held until the buyer confirms delivery (or 14 days after shipping)">🔒 Held</span>;
+    return <span className="chip bg-ink-800 text-[10px] font-bold text-slate-400" title="Funds are held until the buyer confirms delivery or an admin verifies tracking — auto-releases after 14 days if neither happens">🔒 Held</span>;
   }
   if (status === "COMPLETED") {
     return <span className="chip bg-brand-500/15 text-[10px] font-bold text-brand-300" title="Delivery confirmed — funds have been transferred to your Stripe account">🔓 Released</span>;
@@ -283,16 +284,18 @@ export function MarketplaceOrders({ offersEnabled = false }: { offersEnabled?: b
                 </button>
               )}
               {o.status === "SHIPPED" && (
-                <button
-                  onClick={() => {
-                    if (typeof window !== "undefined" && !window.confirm("Confirm this order was delivered? Only do this once tracking shows it arrived — this releases funds to your Stripe account.")) return;
-                    act(`/api/marketplace/orders/${o.id}`, { action: "receive" }, "✓ Delivery confirmed — funds released");
-                  }}
-                  disabled={!!busy}
-                  className="btn-ghost text-xs disabled:opacity-50"
-                >
-                  ✅ Confirm delivered
-                </button>
+                o.releaseRequestedAt ? (
+                  <span className="text-[11px] text-gold">🔔 Release requested — awaiting admin review</span>
+                ) : (
+                  <button
+                    onClick={() => act(`/api/marketplace/orders/${o.id}`, { action: "request-release" }, "✓ Requested — an admin will check tracking soon")}
+                    disabled={!!busy}
+                    className="btn-ghost text-xs disabled:opacity-50"
+                    title="Believe it's delivered? Ask an admin to check tracking and release sooner than the 14-day timeout."
+                  >
+                    🔔 Request release
+                  </button>
+                )
               )}
               <TrackingLink o={o} />
               <PayoutBadge status={o.status} />

@@ -557,6 +557,17 @@ model Order {
   // blocks the auto-release cron job until an admin resolves it.
   disputedAt       DateTime?
 
+  // ── Admin-gated fund release ────────────────────────────────────────────────
+  // A seller confirming their OWN delivery is a conflict of interest, so it's no
+  // longer a release trigger (see api/marketplace/orders/[id]/route.ts). Release
+  // now happens via: the BUYER confirming, an admin manually checking tracking
+  // and approving, or the auto-release cron once neither has happened for a
+  // rolling 14 days since shipment/last admin touch (see the cron's comment).
+  releaseRequestedAt DateTime? // seller pinged admins: "I believe this delivered, please check"
+  adminReviewedAt    DateTime? // an admin looked at tracking (whether or not they released) — also resets the auto-release clock
+  adminReviewedBy    String?   // admin email, for the audit trail
+  releasedBy         String?   // BUYER | ADMIN | AUTO — who/what actually triggered release
+
   // Shipping address snapshot, captured at checkout (never trust/re-read the
   // buyer's live saved address for an existing order — they might edit or clear
   // it later). country is always the listing's own market, not buyer-chosen.

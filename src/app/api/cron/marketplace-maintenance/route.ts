@@ -34,13 +34,24 @@ export async function GET(req: Request) {
   return NextResponse.json({ ok: true, releasedReservations, autoReleased, autoCancelled });
 }
 
-// SHIPPED long enough ago with no open dispute → COMPLETED + funds released. This
-// is the real settlement path (a buyer clicking "confirm delivery" is the fast
-// path; most orders will actually complete here).
+// Auto-release is the SAFETY NET, not the primary path — release is meant to be
+// admin-gated (a seller confirming their own delivery is a conflict of interest,
+// so that's no longer a trigger at all; see orders/[id]/route.ts). This only
+// fires once NEITHER the buyer NOR an admin has acted for a rolling window: no
+// admin review within MARKETPLACE_AUTO_RELEASE_DAYS of shipping, AND (if an
+// admin did look at some point) no review within that many days of their last
+// touch either — so an admin's first glance doesn't silence the safety net
+// forever, but genuinely recent admin attention does hold off the timeout.
 async function autoReleaseShipped(): Promise<number> {
   const cutoff = new Date(Date.now() - MARKETPLACE_AUTO_RELEASE_DAYS * 86_400_000);
   const orders = await prisma.order.findMany({
-    where: { kind: "MARKETPLACE", status: "SHIPPED", shippedAt: { lt: cutoff }, disputedAt: null },
+    where: {
+      kind: "MARKETPLACE",
+      status: "SHIPPED",
+      shippedAt: { lt: cutoff },
+      disputedAt: null,
+      OR: [{ adminReviewedAt: null }, { adminReviewedAt: { lt: cutoff } }],
+    },
     select: { id: true, orderNumber: true, quantity: true, totalCents: true, currency: true, sellerId: true, marketplaceListingId: true },
     take: BATCH,
   });
@@ -48,7 +59,7 @@ async function autoReleaseShipped(): Promise<number> {
   let n = 0;
   for (const o of orders) {
     try {
-      await prisma.order.update({ where: { id: o.id }, data: { status: "COMPLETED", receivedAt: new Date() } });
+      await prisma.order.update({ where: { id: o.id }, data: { status: "COMPLETED", receivedAt: new Date(), releasedBy: "AUTO" } });
       await releaseFundsForOrder(o.id);
       n++;
 

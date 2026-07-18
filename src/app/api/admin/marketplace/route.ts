@@ -9,16 +9,28 @@ import { importMarketplaceListings } from "@/lib/marketplace";
 export const dynamic = "force-dynamic";
 
 const schema = z.object({
-  action: z.enum(["force-release", "force-refund", "clear-dispute", "suspend-seller", "unsuspend-seller", "delist-listing"]),
+  action: z.enum([
+    "force-release",
+    "force-refund",
+    "clear-dispute",
+    "mark-reviewed",
+    "flag-dispute",
+    "suspend-seller",
+    "unsuspend-seller",
+    "delist-listing",
+  ]),
   orderId: z.string().optional(),
   userId: z.string().optional(),
   listingId: z.string().optional(),
 });
 
 // Trust & safety tools for admins only — resolving a disputed order (force the
-// payout through or refund the buyer), suspending a bad-actor seller, or pulling
-// a single listing. Every action here is deliberately manual: launch scope has no
-// automated dispute resolution (see plan's "Open risks").
+// payout through or refund the buyer), reviewing a SHIPPED order's tracking
+// before release, suspending a bad-actor seller, or pulling a single listing.
+// force-release/mark-reviewed are THE release gate now: a buyer confirming
+// delivery is the only other trigger, and a seller can no longer self-confirm
+// their own delivery (see orders/[id]/route.ts) — see the auto-release cron for
+// the rolling-window timeout that backstops this when nobody's looked.
 export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!user?.isAdmin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -30,8 +42,37 @@ export async function POST(req: Request) {
   switch (action) {
     case "force-release": {
       if (!orderId) return NextResponse.json({ error: "orderId required" }, { status: 400 });
-      await prisma.order.update({ where: { id: orderId }, data: { status: "COMPLETED", receivedAt: new Date(), disputedAt: null } });
+      await prisma.order.update({
+        where: { id: orderId },
+        data: {
+          status: "COMPLETED",
+          receivedAt: new Date(),
+          disputedAt: null,
+          releasedBy: "ADMIN",
+          adminReviewedAt: new Date(),
+          adminReviewedBy: user.email,
+        },
+      });
       await releaseFundsForOrder(orderId);
+      return NextResponse.json({ ok: true });
+    }
+    // "I checked tracking — not clearly delivered yet, keep waiting." Doesn't
+    // release or dispute anything; just stamps the audit trail and resets the
+    // auto-release cron's rolling window so the order isn't force-completed out
+    // from under an admin who's actively watching it.
+    case "mark-reviewed": {
+      if (!orderId) return NextResponse.json({ error: "orderId required" }, { status: 400 });
+      await prisma.order.update({ where: { id: orderId }, data: { adminReviewedAt: new Date(), adminReviewedBy: user.email } });
+      return NextResponse.json({ ok: true });
+    }
+    // An admin spotting a problem directly (vs. a buyer/seller filing a report) —
+    // blocks auto-release the same way a support-ticket dispute does.
+    case "flag-dispute": {
+      if (!orderId) return NextResponse.json({ error: "orderId required" }, { status: 400 });
+      await prisma.order.update({
+        where: { id: orderId },
+        data: { disputedAt: new Date(), adminReviewedAt: new Date(), adminReviewedBy: user.email },
+      });
       return NextResponse.json({ ok: true });
     }
     case "force-refund": {
@@ -54,7 +95,7 @@ export async function POST(req: Request) {
     }
     case "clear-dispute": {
       if (!orderId) return NextResponse.json({ error: "orderId required" }, { status: 400 });
-      await prisma.order.update({ where: { id: orderId }, data: { disputedAt: null } });
+      await prisma.order.update({ where: { id: orderId }, data: { disputedAt: null, adminReviewedAt: new Date(), adminReviewedBy: user.email } });
       return NextResponse.json({ ok: true });
     }
     case "suspend-seller": {

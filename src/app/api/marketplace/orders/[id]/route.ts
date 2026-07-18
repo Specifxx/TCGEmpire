@@ -5,14 +5,14 @@ import { getCurrentUser } from "@/lib/auth";
 import { CARRIERS } from "@/lib/tracking";
 import { releaseFundsForOrder } from "@/lib/connect";
 import { revalidateCardPage } from "@/lib/revalidate-card";
-import { sendShippedEmail, sendFundsReleasedEmail } from "@/lib/marketplace-email";
+import { sendShippedEmail, sendFundsReleasedEmail, sendReleaseRequestedEmail } from "@/lib/marketplace-email";
 import { nextNumber, formatOrderNumber } from "@/lib/order-number";
 import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 const schema = z.object({
-  action: z.enum(["ship", "receive", "report"]),
+  action: z.enum(["ship", "receive", "report", "request-release"]),
   // ship
   carrier: z.enum(CARRIERS).optional(),
   trackingNumber: z.string().trim().min(3).max(60).optional(),
@@ -24,7 +24,12 @@ const schema = z.object({
 
 // Fulfilment state machine for a marketplace order:
 //   PAID --(seller: ship, carrier + tracking number required)--> SHIPPED
-//   SHIPPED --(buyer, or seller confirming via tracking: receive)--> COMPLETED, funds released
+//   SHIPPED --(BUYER ONLY: receive)--> COMPLETED, funds released
+//   SHIPPED --(seller: request-release)--> pings admins to check tracking sooner;
+//     does NOT release anything itself — a seller confirming their own delivery
+//     is a conflict of interest, so release only ever comes from the buyer, an
+//     admin (see api/admin/marketplace), or the auto-release cron's rolling
+//     14-day timeout.
 //   any --(buyer or seller: report)--> opens a support ticket + disputedAt, blocking auto-release
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   const user = await getCurrentUser();
@@ -50,6 +55,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       totalCents: true,
       currency: true,
       marketplaceListingId: true,
+      releaseRequestedAt: true,
     },
   });
   if (!order || order.kind !== "MARKETPLACE") return NextResponse.json({ error: "Order not found" }, { status: 404 });
@@ -104,15 +110,35 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     return NextResponse.json({ ok: true, ticket: formatOrderNumber(number) });
   }
 
-  // receive — the buyer confirming, or the seller closing it out themselves once
-  // tracking shows delivery (so payout isn't stuck waiting on the buyer).
-  if (order.buyerId !== user.id && order.sellerId !== user.id) {
-    return NextResponse.json({ error: "Only the buyer or seller can confirm delivery" }, { status: 403 });
+  if (action === "request-release") {
+    if (order.sellerId !== user.id) return NextResponse.json({ error: "Only the seller can request a release" }, { status: 403 });
+    if (order.status !== "SHIPPED") return NextResponse.json({ error: "This order hasn't shipped yet" }, { status: 400 });
+    if (order.releaseRequestedAt) return NextResponse.json({ ok: true, alreadyRequested: true });
+
+    await prisma.order.update({ where: { id: order.id }, data: { releaseRequestedAt: new Date() } });
+    const listing = order.marketplaceListingId
+      ? await prisma.marketplaceListing.findUnique({ where: { id: order.marketplaceListingId }, select: { card: { select: { name: true } } } })
+      : null;
+    await sendReleaseRequestedEmail({
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      cardName: listing?.card.name ?? "the item",
+      quantity: order.quantity,
+      totalCents: order.totalCents,
+      currency: order.currency,
+    }).catch(() => {});
+    return NextResponse.json({ ok: true });
+  }
+
+  // receive — BUYER ONLY. A seller confirming their own delivery is exactly the
+  // conflict of interest this whole flow exists to avoid.
+  if (order.buyerId !== user.id) {
+    return NextResponse.json({ error: "Only the buyer can confirm delivery" }, { status: 403 });
   }
   if (order.status !== "SHIPPED") return NextResponse.json({ error: "This order hasn't been shipped yet" }, { status: 400 });
   await prisma.order.update({
     where: { id: order.id },
-    data: { status: "COMPLETED", receivedAt: new Date() },
+    data: { status: "COMPLETED", receivedAt: new Date(), releasedBy: "BUYER" },
   });
 
   await releaseFundsForOrder(order.id).catch(() => {});

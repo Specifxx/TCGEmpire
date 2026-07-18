@@ -29,7 +29,12 @@ export default function BuyerProtectionPage() {
             <li>The seller has {MARKETPLACE_SHIP_DEADLINE_DAYS} business days to ship your order and enter tracking. If they don't, your order is automatically cancelled and refunded in full — no need to ask.</li>
             <li>Once shipped, you get a tracking link straight to the carrier's own tracking page.</li>
             <li>When your order arrives, confirm delivery in <Link href="/marketplace/orders" className="text-brand-400 hover:underline">My orders</Link> — this releases the held funds to the seller.</li>
-            <li>If you don't confirm, funds release automatically {MARKETPLACE_AUTO_RELEASE_DAYS} days after the seller marks it shipped, so a seller isn't left waiting indefinitely for a buyer who forgets to click confirm.</li>
+            <li>
+              If you don't confirm, our team checks the tracking themselves and releases funds once it genuinely
+              shows delivered — sellers can never confirm their own delivery to release their own payout. If nobody
+              (you or an admin) has acted within {MARKETPLACE_AUTO_RELEASE_DAYS} days of shipping, funds release
+              automatically as a backstop, so a seller isn't left waiting indefinitely.
+            </li>
           </ol>
         </section>
 
