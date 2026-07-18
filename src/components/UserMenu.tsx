@@ -125,10 +125,6 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
             <MenuLink href="/profile" onClick={() => setOpen(false)}>Profile</MenuLink>
             <MenuLink href="/profile#collection" onClick={() => setOpen(false)}>My collection</MenuLink>
             <MenuLink href="/wishlist" onClick={() => setOpen(false)}>Wishlist</MenuLink>
-            {/* Seller dashboard is visible even while the rest of the marketplace nav
-                (buy-side browsing, orders, funds) stays hidden pre-launch — sellers can
-                onboard payouts and start listing ahead of the public buyer flip. */}
-            <MenuLink href="/marketplace/sell" onClick={() => setOpen(false)}>🏷️ Sell on RiftCompare</MenuLink>
             {MARKETPLACE_NAV_VISIBLE && (
               <>
                 <MenuLink href="/marketplace/orders" onClick={() => setOpen(false)}>🛒 My marketplace orders</MenuLink>

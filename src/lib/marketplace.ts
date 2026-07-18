@@ -10,9 +10,9 @@ import { prisma } from "./db";
 import type { Prisma } from "@prisma/client";
 import { CONDITION_KEYS } from "./constants";
 import { SITE_URL } from "./site";
-import { MARKETPLACE_LAUNCH_COUNTRIES, isLaunchCountry } from "./marketplace-countries";
+import { MARKETPLACE_LAUNCH_COUNTRIES, isLaunchCountry, CURRENCY_BY_COUNTRY } from "./marketplace-countries";
 
-export { MARKETPLACE_LAUNCH_COUNTRIES, isLaunchCountry };
+export { MARKETPLACE_LAUNCH_COUNTRIES, isLaunchCountry, CURRENCY_BY_COUNTRY };
 
 // Per-market retailer keys, mirroring how eBay uses ebay / ebay_us / ebay_uk. The
 // RetailerPrice unique key is [cardId, retailer, condition, isFoil] (no country), so
@@ -76,7 +76,6 @@ export function canViewMarketplaceListings(email?: string | null, isAdmin?: bool
 }
 
 export const MARKETPLACE_COUNTRIES = ["AU", "NZ", "US", "UK", "SG"] as const;
-export const CURRENCY_BY_COUNTRY: Record<string, string> = { AU: "AUD", NZ: "NZD", US: "USD", UK: "GBP", SG: "SGD" };
 
 export function platformFeeCents(priceCents: number): number {
   return Math.round((priceCents * MARKETPLACE_FEE_BPS) / 10000);

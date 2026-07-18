@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CONDITION_KEYS } from "@/lib/constants";
-import { CURRENCY_BY_COUNTRY } from "@/lib/marketplace";
+import { CURRENCY_BY_COUNTRY } from "@/lib/marketplace-countries";
 import { formatMoney } from "@/lib/format";
 import { cardDisplayName } from "@/lib/card-name";
 
