@@ -10,6 +10,9 @@ import { prisma } from "./db";
 import type { Prisma } from "@prisma/client";
 import { CONDITION_KEYS } from "./constants";
 import { SITE_URL } from "./site";
+import { MARKETPLACE_LAUNCH_COUNTRIES, isLaunchCountry } from "./marketplace-countries";
+
+export { MARKETPLACE_LAUNCH_COUNTRIES, isLaunchCountry };
 
 // Per-market retailer keys, mirroring how eBay uses ebay / ebay_us / ebay_uk. The
 // RetailerPrice unique key is [cardId, retailer, condition, isFoil] (no country), so
@@ -36,14 +39,6 @@ export const MARKETPLACE_PRIVATE_FEE_BPS = Number(process.env.MARKETPLACE_PRIVAT
 // Feature flag for the "make an offer" flow — OFF at launch (offers don't settle
 // through Stripe yet; see MARKETPLACE_RETAILER comment / plan Phase 2 item 1).
 export const MARKETPLACE_OFFERS = process.env.MARKETPLACE_OFFERS === "1";
-
-// Markets open at launch. Buyers may only purchase from a seller in the same
-// country (enforced server-side in stripe/checkout) — cross-region opt-in is a
-// Phase-2 fast-follow, not a launch feature.
-export const MARKETPLACE_LAUNCH_COUNTRIES = ["AU", "UK", "US"] as const;
-export function isLaunchCountry(country: string | null | undefined): boolean {
-  return !!country && (MARKETPLACE_LAUNCH_COUNTRIES as readonly string[]).includes(country);
-}
 
 // New-seller guardrails (D8): until a seller has this many COMPLETED sales, cap
 // how much unsold inventory they can have listed at once — limits exposure from

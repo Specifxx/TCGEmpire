@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { getCountry } from "@/lib/get-country";
 import { canViewMarketplaceListings, platformFeeCents, isLaunchCountry } from "@/lib/marketplace";
+import { estimateShippingCents, validateShippingAddress } from "@/lib/shipping";
 import { stripe, stripeEnabled, releaseExpiredReservations, RESERVATION_MINUTES } from "@/lib/stripe";
 import { nextNumber } from "@/lib/order-number";
 import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit";
@@ -13,6 +13,16 @@ export const dynamic = "force-dynamic";
 
 const schema = z.object({
   items: z.array(z.object({ listingId: z.string().min(1), quantity: z.number().int().positive().max(999) })).min(1).max(50),
+  shippingAddress: z.object({
+    name: z.string().trim().min(2).max(100),
+    line1: z.string().trim().min(3).max(200),
+    line2: z.string().trim().max(200).optional().nullable(),
+    city: z.string().trim().min(1).max(100),
+    region: z.string().trim().min(1).max(100),
+    postcode: z.string().trim().min(1).max(20),
+    phone: z.string().trim().max(30).optional().nullable(),
+  }),
+  saveAddress: z.boolean().optional(),
 });
 
 // Create a Stripe Checkout Session for a marketplace cart. Reserves stock
@@ -22,6 +32,13 @@ const schema = z.object({
 // Launch constraints (single seller per checkout — see plan D1): one parcel, one
 // currency, one refund path, one Connect transfer_group. A cart spanning sellers
 // is rejected up front rather than silently split.
+//
+// The shipping address is collected HERE (not via Stripe's own
+// shipping_address_collection) so we can (a) show a live postcode-based cost
+// estimate before payment and (b) always have somewhere to actually ship the
+// order — Stripe Checkout alone never asked for one, which was a real gap.
+// Country is never buyer-chosen: it's always the listing's own market (checkout
+// is same-region-only), so there's no address/listing mismatch to guard against.
 export async function POST(req: Request) {
   if (!stripeEnabled()) {
     return NextResponse.json({ error: "Card checkout isn't enabled yet" }, { status: 503 });
@@ -41,15 +58,19 @@ export async function POST(req: Request) {
   // Free up any abandoned reservations before we try to reserve.
   await releaseExpiredReservations().catch(() => {});
 
-  const buyerCountry = getCountry();
-
   // Stripe Checkout Sessions expire no sooner than 30 min; keep the stock hold in
   // step with the session so they release together.
   const holdMinutes = Math.min(Math.max(RESERVATION_MINUTES, 30), 1440);
   const reservedUntil = new Date(Date.now() + holdMinutes * 60_000);
 
   let reservation:
-    | { orderIds: string[]; currency: string; lineItems: { name: string; amountCents: number; quantity: number }[]; shippingCents: number }
+    | {
+        orderIds: string[];
+        currency: string;
+        lineItems: { name: string; amountCents: number; quantity: number }[];
+        shippingCents: number;
+        address: { name: string; line1: string; line2: string | null; city: string; region: string; postcode: string; country: string; phone: string | null };
+      }
     | null = null;
 
   try {
@@ -63,7 +84,7 @@ export async function POST(req: Request) {
             seller: {
               select: {
                 id: true,
-                sellerProfile: { select: { shippingFlatCents: true, freeOverCents: true, payoutsEnabled: true, suspendedAt: true } },
+                sellerProfile: { select: { shippingFlatCents: true, freeOverCents: true, postcode: true, payoutsEnabled: true, suspendedAt: true } },
               },
             },
           },
@@ -85,51 +106,47 @@ export async function POST(req: Request) {
         throw new Error("Checkout is one seller at a time — buy each seller's items separately");
       }
 
-      // Same-region only at launch: every listing must be in the buyer's own market.
-      for (const { listing } of lines) {
-        if (!isLaunchCountry(listing.country)) throw new Error("This listing's market isn't open yet");
-        if (listing.country !== buyerCountry) {
-          throw new Error(`This seller only ships within ${listing.country} — switch your market to buy from them`);
-        }
-      }
+      const country = lines[0].listing.country as string;
+      if (!isLaunchCountry(country)) throw new Error("This listing's market isn't open yet");
+
+      // Validate the shipping address against the LISTING's market — country is
+      // never taken from the client, it's always this.
+      const addrCheck = validateShippingAddress(country, parsed.data.shippingAddress);
+      if (!addrCheck.ok) throw new Error(addrCheck.error);
+      const address = addrCheck.address;
 
       const currency = lines[0].listing.currency as string;
+      const profile = lines[0].listing.seller.sellerProfile;
+      const itemCents = lines.reduce((sum, { listing, quantity }) => sum + listing.priceCents * quantity, 0);
 
-      // Combine shipping per seller (free over their threshold) — only one seller
-      // in the cart at this point, but keep the per-seller shape for clarity.
-      const bySeller = new Map<string, { itemCents: number; flat: number; freeOver: number }>();
-      for (const { listing, quantity } of lines) {
-        const g = bySeller.get(listing.sellerId) ?? {
-          itemCents: 0,
-          flat: listing.seller.sellerProfile?.shippingFlatCents ?? 0,
-          freeOver: listing.seller.sellerProfile?.freeOverCents ?? 0,
-        };
-        g.itemCents += listing.priceCents * quantity;
-        bySeller.set(listing.sellerId, g);
-      }
-      let shippingCents = 0;
-      const shipBySeller = new Map<string, number>();
-      for (const [sellerId, g] of bySeller) {
-        const ship = g.freeOver > 0 && g.itemCents >= g.freeOver ? 0 : g.flat;
-        shippingCents += ship;
-        shipBySeller.set(sellerId, ship);
-      }
+      // Authoritative shipping cost — the exact same function the live checkout
+      // preview calls (api/marketplace/shipping-estimate), so what the buyer saw
+      // before paying is exactly what they're charged.
+      const { cents: shippingCents } = estimateShippingCents({
+        country,
+        sellerPostcode: profile?.postcode ?? null,
+        buyerPostcode: address.postcode,
+        baseCents: profile?.shippingFlatCents ?? 0,
+        freeOverCents: profile?.freeOverCents ?? 0,
+        itemCents,
+      });
 
       // Reserve: decrement stock + open a PENDING order per line, each stamped with
-      // its own official order number.
+      // its own official order number and a copy of the shipping address (shipping
+      // cost is attributed to the first line only, matching the single line-item
+      // "Shipping" charge below).
       const orderIds: string[] = [];
       const lineItems: { name: string; amountCents: number; quantity: number }[] = [];
-      const sellerShipApplied = new Set<string>();
+      let shipApplied = false;
       for (const { listing, quantity } of lines) {
         const remaining = listing.quantity - quantity;
         await tx.marketplaceListing.update({
           where: { id: listing.id },
           data: { quantity: remaining, status: remaining <= 0 ? "SOLD_OUT" : "ACTIVE" },
         });
-        // Attribute each seller's combined shipping to their first line.
-        const sellerShip = sellerShipApplied.has(listing.sellerId) ? 0 : (shipBySeller.get(listing.sellerId) ?? 0);
-        sellerShipApplied.add(listing.sellerId);
-        const itemCents = listing.priceCents * quantity;
+        const sellerShip = shipApplied ? 0 : shippingCents;
+        shipApplied = true;
+        const lineItemCents = listing.priceCents * quantity;
         const orderNumber = await nextNumber("orders", tx);
         const order = await tx.order.create({
           data: {
@@ -138,13 +155,21 @@ export async function POST(req: Request) {
             buyerId: user.id,
             sellerId: listing.sellerId,
             quantity,
-            totalCents: itemCents + sellerShip,
+            totalCents: lineItemCents + sellerShip,
             shippingCents: sellerShip,
-            feeCents: platformFeeCents(itemCents),
+            feeCents: platformFeeCents(lineItemCents),
             status: "PENDING",
             reservedUntil,
             orderNumber,
             currency,
+            shipName: address.name,
+            shipLine1: address.line1,
+            shipLine2: address.line2 ?? null,
+            shipCity: address.city,
+            shipRegion: address.region,
+            shipPostcode: address.postcode,
+            shipCountry: country,
+            shipPhone: address.phone ?? null,
           },
         });
         orderIds.push(order.id);
@@ -155,11 +180,31 @@ export async function POST(req: Request) {
           quantity,
         });
       }
-      return { orderIds, currency, lineItems, shippingCents };
+      return { orderIds, currency, lineItems, shippingCents, address: { ...address, country } };
     });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Checkout failed";
     return NextResponse.json({ error: message }, { status: 400 });
+  }
+
+  // Save as the user's new default address for next time (best-effort, never
+  // blocks checkout).
+  if (parsed.data.saveAddress) {
+    await prisma.user
+      .update({
+        where: { id: user.id },
+        data: {
+          shipName: reservation.address.name,
+          shipLine1: reservation.address.line1,
+          shipLine2: reservation.address.line2,
+          shipCity: reservation.address.city,
+          shipRegion: reservation.address.region,
+          shipPostcode: reservation.address.postcode,
+          shipCountry: reservation.address.country,
+          shipPhone: reservation.address.phone,
+        },
+      })
+      .catch(() => {});
   }
 
   // Create the hosted Checkout Session. If this fails, release the reservation.

@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { LogoutButton, ResendVerifyButton } from "@/components/ProfileActions";
 import { MyCollection } from "@/components/MyCollection";
+import { ShippingAddressCard } from "@/components/ShippingAddressCard";
 
 export const metadata: Metadata = { robots: { index: false } }; // auth/utility — never indexed
 
@@ -44,6 +45,9 @@ export default async function ProfilePage() {
 
       {/* My Collection — cards the user owns, valued live (separate from wishlist) */}
       <MyCollection />
+
+      {/* Saved shipping address — prefills Marketplace checkout */}
+      <ShippingAddressCard />
 
       {/* Account & security */}
       <div className="card-surface mt-5 p-5">

@@ -46,6 +46,21 @@ model User {
   earlyPremiumGranted Boolean @default(false)
   createdAt         DateTime  @default(now())
 
+  // ── Saved default shipping address (marketplace checkout) ─────────────────────
+  // Prefills the checkout address step; a fresh snapshot is copied onto each Order
+  // at purchase time (see Order.ship* below) so editing this later never rewrites
+  // history for past orders. country is NOT user-chosen at checkout (always the
+  // listing's own market — same-region-only), but is kept here so a saved address
+  // prefills sensibly the next time.
+  shipName          String?
+  shipLine1         String?
+  shipLine2         String?
+  shipCity          String?
+  shipRegion        String? // state/province/county — free text
+  shipPostcode      String?
+  shipCountry       String?
+  shipPhone         String?
+
   listings            Listing[]
   buyOrders           BuyOrder[]
   purchases           Order[]              @relation("BuyerOrders")
@@ -542,6 +557,18 @@ model Order {
   // blocks the auto-release cron job until an admin resolves it.
   disputedAt       DateTime?
 
+  // Shipping address snapshot, captured at checkout (never trust/re-read the
+  // buyer's live saved address for an existing order — they might edit or clear
+  // it later). country is always the listing's own market, not buyer-chosen.
+  shipName         String?
+  shipLine1        String?
+  shipLine2        String?
+  shipCity         String?
+  shipRegion       String?
+  shipPostcode     String?
+  shipCountry      String?
+  shipPhone        String?
+
   review MarketplaceReview?
 
   listing  Listing?  @relation(fields: [listingId], references: [id])
@@ -591,6 +618,10 @@ model SellerProfile {
   shippingFlatCents Int      @default(0)
   freeOverCents     Int      @default(0)
   shippingNote      String?
+  // "Ships from" postcode — the origin side of the postcode-based shipping
+  // estimate (see lib/shipping.ts). Optional: without it, checkout just falls
+  // back to the flat rate above with no remote-area adjustment.
+  postcode          String?
   handlingDays      Int      @default(2) // typical dispatch time in days
   // The platform's own official store ranks first in marketplace listings.
   isOfficial        Boolean  @default(false)

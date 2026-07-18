@@ -33,6 +33,14 @@ type OrderRow = {
   reviewed: boolean;
   rating: number | null;
   counterparty: string;
+  shipName: string | null;
+  shipLine1: string | null;
+  shipLine2: string | null;
+  shipCity: string | null;
+  shipRegion: string | null;
+  shipPostcode: string | null;
+  shipCountry: string | null;
+  shipPhone: string | null;
   listing: {
     id: string;
     condition: string;
@@ -106,6 +114,23 @@ function TrackingLink({ o }: { o: OrderRow }) {
     </a>
   ) : (
     <span className="text-[11px] text-slate-500">📦 {label}: {o.trackingNumber}</span>
+  );
+}
+
+// Collapsed by default so the order list stays scannable — expand to get what's
+// needed to actually address the parcel. Seller-only (see OrderList).
+function ShippingAddressDetails({ o }: { o: OrderRow }) {
+  return (
+    <details className="basis-full rounded-lg border border-ink-800 bg-ink-950/40 p-2 text-xs text-slate-400">
+      <summary className="cursor-pointer select-none font-semibold text-slate-300">📍 Shipping address</summary>
+      <address className="not-italic mt-1.5 leading-relaxed">
+        {o.shipName}<br />
+        {o.shipLine1}{o.shipLine2 ? <>, {o.shipLine2}</> : null}<br />
+        {o.shipCity}, {o.shipRegion} {o.shipPostcode}<br />
+        {o.shipCountry}
+        {o.shipPhone && <><br />☎ {o.shipPhone}</>}
+      </address>
+    </details>
   );
 }
 
@@ -413,6 +438,7 @@ function OrderList({
           <span className="text-sm font-extrabold text-accent">{formatMoney(o.totalCents, o.listing?.currency ?? "AUD")}</span>
           <StatusChip s={o.status} />
           <div className="flex items-center gap-2">{renderActions(o)}</div>
+          {o.role === "seller" && o.shipLine1 && <ShippingAddressDetails o={o} />}
         </li>
       ))}
     </ul>

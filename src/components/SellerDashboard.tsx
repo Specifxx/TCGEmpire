@@ -22,6 +22,7 @@ interface Profile {
   freeOverCents: number;
   shippingNote: string | null;
   handlingDays: number;
+  postcode: string | null;
 }
 
 interface SearchCard {
@@ -149,6 +150,7 @@ function ShopForm({ profile, onSaved }: { profile: Profile | null; onSaved: () =
   const [freeOver, setFreeOver] = useState(((profile?.freeOverCents ?? 0) / 100).toFixed(2));
   const [note, setNote] = useState(profile?.shippingNote ?? "");
   const [handling, setHandling] = useState(String(profile?.handlingDays ?? 2));
+  const [postcode, setPostcode] = useState(profile?.postcode ?? "");
   const [bio, setBio] = useState(profile?.bio ?? "");
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -168,6 +170,7 @@ function ShopForm({ profile, onSaved }: { profile: Profile | null; onSaved: () =
         freeOverCents: Math.round(parseFloat(freeOver || "0") * 100),
         shippingNote: note.trim() || null,
         handlingDays: parseInt(handling || "0", 10),
+        postcode: postcode.trim() || null,
       }),
     });
     const data = await res.json();
@@ -207,6 +210,10 @@ function ShopForm({ profile, onSaved }: { profile: Profile | null; onSaved: () =
         <label className="text-sm">
           <span className="mb-1 block text-slate-400">Shipping note (optional)</span>
           <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={120} className="input" placeholder="e.g. tracked, ships Mon/Wed/Fri" />
+        </label>
+        <label className="text-sm">
+          <span className="mb-1 block text-slate-400">Ships from postcode (optional)</span>
+          <input value={postcode} onChange={(e) => setPostcode(e.target.value)} maxLength={20} className="input" placeholder="Improves buyers' shipping estimate" />
         </label>
       </div>
       <label className="mt-3 block text-sm">

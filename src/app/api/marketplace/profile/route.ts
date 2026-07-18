@@ -22,6 +22,10 @@ const schema = z.object({
   freeOverCents: z.number().int().min(0).max(100_000_00),
   shippingNote: z.string().trim().max(120).optional().nullable(),
   handlingDays: z.number().int().min(0).max(30),
+  // "Ships from" postcode — improves the buyer-facing shipping estimate (see
+  // lib/shipping.ts); optional, no format validation here since it's informational
+  // to the estimator only, not itself a shipping destination.
+  postcode: z.string().trim().max(20).optional().nullable(),
 });
 
 export async function POST(req: Request) {
@@ -45,6 +49,7 @@ export async function POST(req: Request) {
     freeOverCents: d.freeOverCents,
     shippingNote: d.shippingNote ?? null,
     handlingDays: d.handlingDays,
+    postcode: d.postcode ?? null,
   };
   const profile = await prisma.sellerProfile.upsert({
     where: { userId: user.id },

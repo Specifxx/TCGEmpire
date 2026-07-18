@@ -6,6 +6,7 @@ import { formatMoney } from "@/lib/format";
 import { cardDisplayName } from "@/lib/card-name";
 import { cardHref } from "@/lib/card-url";
 import { CONDITION_KEYS } from "@/lib/constants";
+import { MarketplaceCheckout, type CheckoutItem } from "./MarketplaceCheckout";
 
 export interface MktOffer {
   id: string;
@@ -48,6 +49,7 @@ interface CartItem {
   image: string | null;
   priceCents: number;
   currency: string;
+  sellerId: string;
   sellerName: string;
 }
 
@@ -113,6 +115,7 @@ export function MarketplaceClient({
   const [busy, setBusy] = useState(false);
   const [flash, setFlash] = useState<string | null>(null);
   const [offerFor, setOfferFor] = useState<{ card: MktCardInner; offer: MktOffer } | null>(null);
+  const [checkoutItems, setCheckoutItems] = useState<CheckoutItem[] | null>(null);
 
   useEffect(() => {
     try {
@@ -161,6 +164,7 @@ export function MarketplaceClient({
           image: card.imageThumbUrl,
           priceCents: o.priceCents,
           currency: o.currency,
+          sellerId: o.sellerId,
           sellerName: o.sellerName,
         },
       ];
@@ -168,33 +172,23 @@ export function MarketplaceClient({
     toast("Added to cart");
   }
 
-  async function checkout(items: { listingId: string; quantity: number }[]) {
+  // Opens the shipping-address + live-estimate step (MarketplaceCheckout) inline
+  // rather than posting straight to Stripe — that's where the address is
+  // actually collected now (see api/marketplace/stripe/checkout/route.ts's
+  // header comment for why this replaced Stripe's own address collection).
+  function openCheckout(items: CheckoutItem[]) {
     if (items.length === 0) return;
     if (!stripeEnabled) {
       toast("Card checkout isn't enabled yet", 3000);
       return;
     }
-    setBusy(true);
-    try {
-      // Pay by card via hosted Stripe Checkout — stock is reserved server-side
-      // while the buyer pays, and funds are held in escrow until delivery.
-      const res = await fetch("/api/marketplace/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.url) {
-        toast(data.error ?? "Checkout failed", 3000);
-        return;
-      }
-      toast("Redirecting to secure checkout…", 4000);
-      window.location.href = data.url;
-    } catch {
-      toast("Network error — try again", 3000);
-    } finally {
-      setBusy(false);
+    const sellerIds = new Set(items.map((i) => i.sellerId));
+    if (sellerIds.size > 1) {
+      toast("Checkout is one seller at a time — buy each seller's items separately", 3500);
+      return;
     }
+    setCartOpen(false);
+    setCheckoutItems(items);
   }
 
   async function submitOffer(listingId: string, dollars: number, qty: number, message: string) {
@@ -349,7 +343,20 @@ export function MarketplaceClient({
           offersEnabled={offersEnabled}
           onClose={() => setOpenCard(null)}
           onAdd={addToCart}
-          onBuyNow={(o, q) => checkout([{ listingId: o.id, quantity: q }])}
+          onBuyNow={(o, q) =>
+            openCheckout([
+              {
+                listingId: o.id,
+                quantity: q,
+                cardName: openCard.card.name,
+                sub: `${openCard.card.setCode} ${openCard.card.collectorNumber} · ${o.condition}${o.isFoil ? " · Foil" : ""}`,
+                priceCents: o.priceCents,
+                currency: o.currency,
+                sellerId: o.sellerId,
+                sellerName: o.sellerName,
+              },
+            ])
+          }
           onMakeOffer={(o) => setOfferFor({ card: openCard.card, offer: o })}
         />
       )}
@@ -371,9 +378,10 @@ export function MarketplaceClient({
           onClose={() => setCartOpen(false)}
           onRemove={(id) => setCart((c) => c.filter((x) => x.listingId !== id))}
           onQty={(id, q) => setCart((c) => c.map((x) => (x.listingId === id ? { ...x, quantity: Math.max(1, q) } : x)))}
-          onCheckout={() => checkout(cart.map((c) => ({ listingId: c.listingId, quantity: c.quantity })))}
+          onCheckout={() => openCheckout(cart)}
         />
       )}
+      {checkoutItems && <MarketplaceCheckout items={checkoutItems} onClose={() => setCheckoutItems(null)} />}
 
       <p className="mt-6 text-center text-[11px] text-slate-600">
         🔒 Buyer protection: your payment is held until you confirm delivery.{" "}

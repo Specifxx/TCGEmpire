@@ -49,6 +49,17 @@ export async function GET() {
     carrier: o.carrier,
     trackingNumber: o.trackingNumber,
     disputedAt: o.disputedAt,
+    // Shipping address — only meaningful on the seller's own "Sales" rows (where
+    // to send the parcel); harmless to also echo back to the buyer on their own
+    // "Purchases" rows since it's their own data. Never another party's.
+    shipName: o.shipName,
+    shipLine1: o.shipLine1,
+    shipLine2: o.shipLine2,
+    shipCity: o.shipCity,
+    shipRegion: o.shipRegion,
+    shipPostcode: o.shipPostcode,
+    shipCountry: o.shipCountry,
+    shipPhone: o.shipPhone,
     reviewed: !!o.review,
     rating: o.review?.rating ?? null,
     counterparty:
