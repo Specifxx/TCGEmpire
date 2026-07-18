@@ -7,8 +7,11 @@ import { CURRENCY_BY_COUNTRY } from "@/lib/marketplace";
 import { formatMoney } from "@/lib/format";
 import { cardDisplayName } from "@/lib/card-name";
 
-type Country = "AU" | "NZ" | "US" | "UK" | "SG";
-const COUNTRY_LABEL: Record<Country, string> = { AU: "Australia", NZ: "New Zealand", US: "United States", UK: "United Kingdom", SG: "Singapore" };
+// Launch markets only (AU/UK/US) — see lib/marketplace.ts's MARKETPLACE_LAUNCH_COUNTRIES.
+// The server rejects any other market anyway; keeping the picker in sync avoids a
+// seller picking NZ/SG and then hitting a confusing 400 on save.
+type Country = "AU" | "US" | "UK";
+const COUNTRY_LABEL: Record<Country, string> = { AU: "Australia", US: "United States", UK: "United Kingdom" };
 
 interface Profile {
   shopName: string;
@@ -50,23 +53,25 @@ interface Listing {
 }
 
 const lowestFor = (c: SearchCard, country: Country): number | null =>
-  country === "NZ" ? c.lowestPriceCentsNz ?? null
-  : country === "US" ? c.lowestPriceCentsUs ?? null
+  country === "US" ? c.lowestPriceCentsUs ?? null
   : country === "UK" ? c.lowestPriceCentsUk ?? null
   : c.lowestPriceCents;
 
 export function SellerDashboard() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [listings, setListings] = useState<Listing[]>([]);
+  const [payoutsEnabled, setPayoutsEnabled] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
   const load = useCallback(async () => {
-    const [p, l] = await Promise.all([
+    const [p, l, c] = await Promise.all([
       fetch("/api/marketplace/profile").then((r) => r.json()).catch(() => ({})),
       fetch("/api/marketplace/listings?mine=1").then((r) => r.json()).catch(() => ({ listings: [] })),
+      fetch("/api/marketplace/stripe/connect").then((r) => r.json()).catch(() => ({})),
     ]);
     setProfile(p.profile ?? null);
     setListings(l.listings ?? []);
+    setPayoutsEnabled(!!c.payoutsEnabled);
     setLoaded(true);
   }, []);
 
@@ -81,7 +86,10 @@ export function SellerDashboard() {
           <h1 className="font-display text-2xl font-extrabold text-white">Seller dashboard</h1>
           <p className="text-sm text-slate-500">Manage your RiftCompare Marketplace shop &amp; listings.</p>
         </div>
-        <Link href="/marketplace" className="btn-ghost text-sm">View marketplace →</Link>
+        <div className="flex items-center gap-2">
+          <Link href="/marketplace/funds" className="btn-ghost text-sm">Seller funds →</Link>
+          <Link href="/marketplace" className="btn-ghost text-sm">View marketplace →</Link>
+        </div>
       </div>
 
       {!loaded ? (
@@ -91,14 +99,45 @@ export function SellerDashboard() {
       ) : (
         <div className="flex flex-col gap-6">
           <ShopForm profile={profile} onSaved={load} />
-          {profile ? (
-            <AddListing country={country} currency={profile.currency} onAdded={load} />
-          ) : (
+          {!profile ? (
             <div className="card-surface p-4 text-sm text-gold">Set up your shop above before you can list cards.</div>
+          ) : !payoutsEnabled ? (
+            <PayoutsOnboarding />
+          ) : (
+            <AddListing country={country} currency={profile.currency} onAdded={load} />
           )}
           <MyListings listings={listings} onChange={load} />
         </div>
       )}
+    </div>
+  );
+}
+
+// Blocks listing until Stripe Connect payouts are enabled — Stripe runs the
+// identity/KYC check as part of this flow, so there's nothing custom to build.
+function PayoutsOnboarding() {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function start() {
+    setBusy(true);
+    setError(null);
+    const res = await fetch("/api/marketplace/stripe/connect", { method: "POST" });
+    const data = await res.json().catch(() => ({}));
+    setBusy(false);
+    if (res.ok && data.url) window.location.href = data.url;
+    else setError(data.error ?? "Couldn't reach Stripe — try again shortly");
+  }
+
+  return (
+    <div className="card-surface p-5">
+      <h2 className="mb-1 font-bold text-white">Enable payouts to start listing</h2>
+      <p className="text-sm text-slate-500">
+        RiftCompare uses Stripe Connect to pay sellers directly — Stripe verifies your identity and handles payouts to
+        your bank, so we never touch your funds or your ID. It takes a couple of minutes.
+      </p>
+      <button onClick={start} disabled={busy} className="btn-primary mt-3">{busy ? "Opening Stripe…" : "Set up payouts →"}</button>
+      {error && <p className="mt-2 text-sm text-rose-300">{error}</p>}
     </div>
   );
 }

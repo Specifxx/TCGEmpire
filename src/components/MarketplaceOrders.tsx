@@ -3,12 +3,20 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatMoney } from "@/lib/format";
+import { CARRIERS, CARRIER_LABEL, trackingUrl } from "@/lib/tracking";
+
+// Pure display helper (kept local — lib/order-number.ts pulls in the Prisma
+// client, which can't ship in a "use client" bundle).
+function orderLabel(n: number | null): string | null {
+  return n == null ? null : `RC-${n}`;
+}
 
 // The hidden marketplace back-office for buyers AND sellers: purchases (track,
 // confirm delivery, review), sales (mark shipped with a tracking note), and
 // offers in both directions (accept / decline / cancel / complete the buy).
 type OrderRow = {
   id: string;
+  orderNumber: number | null;
   role: "buyer" | "seller";
   status: string;
   quantity: number;
@@ -19,6 +27,9 @@ type OrderRow = {
   shippedAt: string | null;
   receivedAt: string | null;
   trackingNote: string | null;
+  carrier: string | null;
+  trackingNumber: string | null;
+  disputedAt: string | null;
   reviewed: boolean;
   rating: number | null;
   counterparty: string;
@@ -70,17 +81,32 @@ function StatusChip({ s }: { s: string }) {
   return <span className={`chip text-[10px] font-bold ${STATUS_STYLE[s] ?? "bg-ink-800 text-slate-400"}`}>{s}</span>;
 }
 
-// Payout is manual and held until delivery is confirmed via tracking (Stripe
-// payout schedule set to Manual) — this is just a visual signal for when it's
-// safe to trigger that payout, not a real fund transfer.
+// Funds sit in RiftCompare's Stripe balance (escrow) until the order is marked
+// COMPLETED, at which point they're actually transferred to the seller's
+// connected Stripe account — see lib/connect.ts's releaseFundsForOrder.
 function PayoutBadge({ status }: { status: string }) {
   if (status === "PAID" || status === "SHIPPED") {
-    return <span className="chip bg-ink-800 text-[10px] font-bold text-slate-400" title="Funds held until delivery is confirmed — payout schedule is manual">🔒 Held</span>;
+    return <span className="chip bg-ink-800 text-[10px] font-bold text-slate-400" title="Funds are held until the buyer confirms delivery (or 14 days after shipping)">🔒 Held</span>;
   }
   if (status === "COMPLETED") {
-    return <span className="chip bg-brand-500/15 text-[10px] font-bold text-brand-300" title="Delivery confirmed — safe to trigger a manual Stripe payout">🔓 Released</span>;
+    return <span className="chip bg-brand-500/15 text-[10px] font-bold text-brand-300" title="Delivery confirmed — funds have been transferred to your Stripe account">🔓 Released</span>;
   }
   return null;
+}
+
+// Deep-links straight to the carrier's own public tracking page when we can
+// build one (see lib/tracking.ts); falls back to the raw number as plain text.
+function TrackingLink({ o }: { o: OrderRow }) {
+  if (!o.trackingNumber) return null;
+  const url = trackingUrl(o.carrier, o.trackingNumber);
+  const label = o.carrier ? CARRIER_LABEL[o.carrier as keyof typeof CARRIER_LABEL] ?? o.carrier : "Tracking";
+  return url ? (
+    <a href={url} target="_blank" rel="noopener noreferrer" className="text-[11px] text-brand-300 hover:underline">
+      📦 {label}: {o.trackingNumber}
+    </a>
+  ) : (
+    <span className="text-[11px] text-slate-500">📦 {label}: {o.trackingNumber}</span>
+  );
 }
 
 function CardCell({ l }: { l: NonNullable<OrderRow["listing"]> | OfferRow["listing"] }) {
@@ -98,7 +124,7 @@ function CardCell({ l }: { l: NonNullable<OrderRow["listing"]> | OfferRow["listi
   );
 }
 
-export function MarketplaceOrders() {
+export function MarketplaceOrders({ offersEnabled = false }: { offersEnabled?: boolean }) {
   const [tab, setTab] = useState<Tab>("Purchases");
   const [orders, setOrders] = useState<OrderRow[] | null>(null);
   const [made, setMade] = useState<OfferRow[]>([]);
@@ -107,6 +133,8 @@ export function MarketplaceOrders() {
   const [busy, setBusy] = useState<string | null>(null);
   const [flash, setFlash] = useState<string | null>(null);
   const [reviewFor, setReviewFor] = useState<OrderRow | null>(null);
+  const [shipFor, setShipFor] = useState<OrderRow | null>(null);
+  const [reportFor, setReportFor] = useState<OrderRow | null>(null);
 
   function toast(msg: string, ms = 2200) {
     setFlash(msg);
@@ -133,6 +161,9 @@ export function MarketplaceOrders() {
   useEffect(() => {
     load();
   }, []);
+  useEffect(() => {
+    if (!offersEnabled) setTab((t) => (t === "Offers" ? "Purchases" : t));
+  }, [offersEnabled]);
 
   async function act(url: string, body: unknown, okMsg: string) {
     setBusy(url);
@@ -154,10 +185,6 @@ export function MarketplaceOrders() {
     }
   }
 
-  function shipOrder(o: OrderRow) {
-    const tracking = window.prompt("Tracking number / note for the buyer (optional):") ?? "";
-    act(`/api/marketplace/orders/${o.id}`, { action: "ship", tracking: tracking.trim() || undefined }, "✓ Marked shipped");
-  }
 
   if (error) return <div className="card-surface p-8 text-center text-sm text-rose-400">{error}</div>;
   if (!orders) return <div className="card-surface grid min-h-[200px] place-items-center text-sm text-slate-500">Loading…</div>;
@@ -170,6 +197,9 @@ export function MarketplaceOrders() {
     Offers: made.filter((x) => x.status === "PENDING" || x.status === "ACCEPTED").length +
       received.filter((x) => x.status === "PENDING").length,
   };
+  // Offers don't settle through Stripe yet (Phase 2) — hidden at launch so there's
+  // no dead-end "complete purchase" button. See MARKETPLACE_OFFERS in lib/marketplace.ts.
+  const visibleTabs = offersEnabled ? TABS : TABS.filter((t) => t !== "Offers");
 
   return (
     <div>
@@ -180,7 +210,7 @@ export function MarketplaceOrders() {
       )}
 
       <div className="mb-4 inline-flex rounded-lg border border-ink-700 bg-ink-900 p-0.5 text-sm">
-        {TABS.map((t) => (
+        {visibleTabs.map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -197,6 +227,7 @@ export function MarketplaceOrders() {
           empty="No purchases yet — the marketplace grid is one tab away."
           renderActions={(o) => (
             <>
+              <TrackingLink o={o} />
               {o.status === "SHIPPED" && (
                 <button onClick={() => act(`/api/marketplace/orders/${o.id}`, { action: "receive" }, "✓ Delivery confirmed")} disabled={!!busy} className="btn-primary text-xs disabled:opacity-50">
                   📬 Got it
@@ -206,6 +237,10 @@ export function MarketplaceOrders() {
                 <button onClick={() => setReviewFor(o)} className="btn-ghost text-xs">★ Review seller</button>
               )}
               {o.reviewed && <span className="text-[11px] text-gold">★ {o.rating}/5 left</span>}
+              {["PAID", "SHIPPED", "COMPLETED"].includes(o.status) && !o.disputedAt && (
+                <button onClick={() => setReportFor(o)} className="text-[11px] text-slate-500 hover:text-rose-300">Report a problem</button>
+              )}
+              {o.disputedAt && <span className="text-[11px] text-gold">⚑ Under review</span>}
             </>
           )}
         />
@@ -218,15 +253,15 @@ export function MarketplaceOrders() {
           renderActions={(o) => (
             <>
               {o.status === "PAID" && (
-                <button onClick={() => shipOrder(o)} disabled={!!busy} className="btn-primary text-xs disabled:opacity-50">
+                <button onClick={() => setShipFor(o)} disabled={!!busy} className="btn-primary text-xs disabled:opacity-50">
                   📦 Mark shipped
                 </button>
               )}
               {o.status === "SHIPPED" && (
                 <button
                   onClick={() => {
-                    if (typeof window !== "undefined" && !window.confirm("Confirm this order was delivered? Only do this once tracking shows it arrived — this releases the hold on funds for payout.")) return;
-                    act(`/api/marketplace/orders/${o.id}`, { action: "receive" }, "✓ Delivery confirmed — safe to pay out");
+                    if (typeof window !== "undefined" && !window.confirm("Confirm this order was delivered? Only do this once tracking shows it arrived — this releases funds to your Stripe account.")) return;
+                    act(`/api/marketplace/orders/${o.id}`, { action: "receive" }, "✓ Delivery confirmed — funds released");
                   }}
                   disabled={!!busy}
                   className="btn-ghost text-xs disabled:opacity-50"
@@ -234,8 +269,12 @@ export function MarketplaceOrders() {
                   ✅ Confirm delivered
                 </button>
               )}
-              {o.trackingNote && <span className="max-w-[160px] truncate text-[11px] text-slate-500" title={o.trackingNote}>📦 {o.trackingNote}</span>}
+              <TrackingLink o={o} />
               <PayoutBadge status={o.status} />
+              {["PAID", "SHIPPED", "COMPLETED"].includes(o.status) && !o.disputedAt && (
+                <button onClick={() => setReportFor(o)} className="text-[11px] text-slate-500 hover:text-rose-300">Report a problem</button>
+              )}
+              {o.disputedAt && <span className="text-[11px] text-gold">⚑ Under review</span>}
             </>
           )}
         />
@@ -323,6 +362,30 @@ export function MarketplaceOrders() {
           }}
         />
       )}
+
+      {shipFor && (
+        <ShipModal
+          order={shipFor}
+          busy={!!busy}
+          onClose={() => setShipFor(null)}
+          onSubmit={async (carrier, trackingNumber) => {
+            const ok = await act(`/api/marketplace/orders/${shipFor.id}`, { action: "ship", carrier, trackingNumber }, "✓ Marked shipped");
+            if (ok) setShipFor(null);
+          }}
+        />
+      )}
+
+      {reportFor && (
+        <ReportModal
+          order={reportFor}
+          busy={!!busy}
+          onClose={() => setReportFor(null)}
+          onSubmit={async (message) => {
+            const ok = await act(`/api/marketplace/orders/${reportFor.id}`, { action: "report", message }, "✓ Reported — our team will follow up by email");
+            if (ok) setReportFor(null);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -343,6 +406,7 @@ function OrderList({
         <li key={o.id} className="flex flex-wrap items-center gap-3 p-3">
           {o.listing ? <CardCell l={o.listing} /> : <span className="text-sm text-slate-500">(listing removed)</span>}
           <div className="min-w-0 flex-1 text-xs text-slate-400">
+            {orderLabel(o.orderNumber) && <span className="mr-1.5 text-slate-600">{orderLabel(o.orderNumber)}</span>}
             ×{o.quantity} · {o.role === "buyer" ? "from" : "to"} <span className="font-semibold text-white">{o.counterparty}</span>
             <span className="block text-slate-600">{new Date(o.createdAt).toLocaleDateString()}</span>
           </div>
@@ -397,6 +461,91 @@ function ReviewModal({
           <button onClick={onClose} className="btn-ghost text-sm">Cancel</button>
           <button onClick={() => onSubmit(rating, comment.trim())} disabled={busy} className="btn-primary text-sm disabled:opacity-50">
             {busy ? "Posting…" : "Post review"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Structured tracking entry — carrier + number, deep-linked from the buyer's
+// side via lib/tracking.ts. No carrier account/API needed, so this works from
+// day one without an ABN.
+function ShipModal({
+  order,
+  busy,
+  onClose,
+  onSubmit,
+}: {
+  order: OrderRow;
+  busy: boolean;
+  onClose: () => void;
+  onSubmit: (carrier: string, trackingNumber: string) => void;
+}) {
+  const [carrier, setCarrier] = useState<string>(CARRIERS[0]);
+  const [trackingNumber, setTrackingNumber] = useState("");
+  const valid = trackingNumber.trim().length >= 3;
+  return (
+    <div className="fixed inset-0 z-[85] flex items-center justify-center p-4" role="dialog" aria-modal="true">
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-md rounded-2xl border border-ink-700 bg-ink-900 p-5 shadow-2xl">
+        <h2 className="text-lg font-extrabold text-white">📦 Mark as shipped</h2>
+        <p className="mt-1 text-sm text-slate-400">{order.listing?.card.name} ×{order.quantity} to {order.counterparty}</p>
+        <label className="mt-3 block text-sm">
+          <span className="mb-1 block text-slate-400">Carrier</span>
+          <select value={carrier} onChange={(e) => setCarrier(e.target.value)} className="input">
+            {CARRIERS.map((c) => <option key={c} value={c}>{CARRIER_LABEL[c]}</option>)}
+          </select>
+        </label>
+        <label className="mt-3 block text-sm">
+          <span className="mb-1 block text-slate-400">Tracking number</span>
+          <input value={trackingNumber} onChange={(e) => setTrackingNumber(e.target.value)} maxLength={60} className="input" placeholder="Off your shipping receipt" />
+        </label>
+        <p className="mt-2 text-xs text-slate-600">The buyer gets a link straight to the carrier's tracking page. Funds release once they confirm delivery (or automatically 14 days later).</p>
+        <div className="mt-4 flex justify-end gap-2">
+          <button onClick={onClose} className="btn-ghost text-sm">Cancel</button>
+          <button onClick={() => onSubmit(carrier, trackingNumber.trim())} disabled={busy || !valid} className="btn-primary text-sm disabled:opacity-50">
+            {busy ? "Saving…" : "Mark shipped"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Opens a support ticket against this order and flags it as disputed — that
+// pauses the auto-release cron until an admin resolves it (see /admin/support).
+function ReportModal({
+  order,
+  busy,
+  onClose,
+  onSubmit,
+}: {
+  order: OrderRow;
+  busy: boolean;
+  onClose: () => void;
+  onSubmit: (message: string) => void;
+}) {
+  const [message, setMessage] = useState("");
+  const valid = message.trim().length >= 10;
+  return (
+    <div className="fixed inset-0 z-[85] flex items-center justify-center p-4" role="dialog" aria-modal="true">
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-md rounded-2xl border border-ink-700 bg-ink-900 p-5 shadow-2xl">
+        <h2 className="text-lg font-extrabold text-white">⚑ Report a problem</h2>
+        <p className="mt-1 text-sm text-slate-400">{order.listing?.card.name} ×{order.quantity} — {order.counterparty}</p>
+        <textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value.slice(0, 2000))}
+          placeholder="What went wrong? (item not as described, never arrived, damaged, etc.)"
+          rows={4}
+          className="input mt-3 resize-none"
+        />
+        <p className="mt-2 text-xs text-slate-600">This opens a support ticket and pauses any automatic payout/refund on this order until our team reviews it.</p>
+        <div className="mt-4 flex justify-end gap-2">
+          <button onClick={onClose} className="btn-ghost text-sm">Cancel</button>
+          <button onClick={() => onSubmit(message.trim())} disabled={busy || !valid} className="btn-primary text-sm disabled:opacity-50">
+            {busy ? "Reporting…" : "Submit report"}
           </button>
         </div>
       </div>

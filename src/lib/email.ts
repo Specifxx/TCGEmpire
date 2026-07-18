@@ -93,7 +93,7 @@ function alertFooter(unsubUrl: string): string {
   </td></tr>`;
 }
 
-function emailShell(heading: string, inner: string, footer: string): string {
+export function emailShell(heading: string, inner: string, footer: string): string {
   return `<!doctype html><html><body style="margin:0;background:#0b0e14;font-family:Arial,Helvetica,sans-serif">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0b0e14;padding:32px 0"><tr><td align="center">
     <table role="presentation" width="520" cellpadding="0" cellspacing="0" style="background:#131a26;border:1px solid #233047;border-radius:16px">

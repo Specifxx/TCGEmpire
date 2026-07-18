@@ -625,6 +625,29 @@ model Order {
   receivedAt           DateTime?
   createdAt            DateTime  @default(now())
 
+  // ── P2P marketplace additions (Stripe Connect escrow) ──────────────────────────
+  // Official order number (RC-<n>), assigned via the Counter table at checkout time.
+  // Nullable so legacy pre-existing rows never block `prisma db push` — never make
+  // this required.
+  orderNumber      Int?      @unique
+  // Charge/transfer currency (from the listing at purchase time; AUD/GBP/USD).
+  currency         String    @default("AUD")
+  // Set by the Stripe webhook when the order flips PAID — anchors the ship-deadline
+  // cron job (paidAt + MARKETPLACE_SHIP_DEADLINE_DAYS).
+  paidAt           DateTime?
+  // Structured tracking (carrier + number) — see lib/tracking.ts for deep-links.
+  // trackingNote above stays as free-text for any pre-Connect / non-standard case.
+  carrier          String? // AUSPOST | ROYALMAIL | USPS | OTHER
+  trackingNumber   String?
+  // Stripe Connect payout: set once releaseFundsForOrder() successfully transfers
+  // the seller's share out of the platform's held balance.
+  stripeTransferId String?
+  transferredAt    DateTime?
+  refundedAt       DateTime?
+  // A support ticket was opened against this order (see SupportTicket.orderId) —
+  // blocks the auto-release cron job until an admin resolves it.
+  disputedAt       DateTime?
+
   review MarketplaceReview?
 
   listing  Listing?  @relation(fields: [listingId], references: [id])
@@ -636,6 +659,9 @@ model Order {
   @@index([sellerId])
   @@index([stripeSessionId])
   @@index([status])
+  @@index([sellerId, status]) // funds dashboard (pending/released aggregates)
+  @@index([kind, status, shippedAt]) // cron: auto-release scan
+  @@index([kind, status, paidAt]) // cron: ship-deadline scan
 }
 
 // Outbound affiliate-link clicks, logged via a tiny click beacon so we can confirm
@@ -674,9 +700,15 @@ model SellerProfile {
   handlingDays      Int      @default(2) // typical dispatch time in days
   // The platform's own official store ranks first in marketplace listings.
   isOfficial        Boolean  @default(false)
-  // Payouts (Stripe Connect) — populated once the seller onboards. Optional for now.
+  // Payouts (Stripe Connect Express) — populated once the seller onboards.
   stripeAccountId   String?
   payoutsEnabled    Boolean  @default(false)
+  // Admin trust & safety: a suspended seller's listings are force-PAUSED and they
+  // cannot create new ones (see admin/marketplace).
+  suspendedAt         DateTime?
+  // Denormalised count of COMPLETED marketplace sales — drives the new-seller
+  // listing/value caps (lib/marketplace.ts) and Phase-2 seller tiers.
+  completedSalesCount Int      @default(0)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -753,6 +785,42 @@ model MarketplaceReview {
   seller User  @relation("ReviewsReceived", fields: [sellerId], references: [id], onDelete: Cascade)
 
   @@index([sellerId, createdAt])
+}
+
+// Race-safe sequential counters for human-facing numbers (RC-100001 order numbers,
+// RC-10001 support-ticket numbers). One row per counter `key`, incremented inside
+// a `$queryRaw` UPDATE ... RETURNING so concurrent requests never collide — the repo
+// pushes schema additively (`prisma db push`), so a real Postgres SEQUENCE isn't
+// reachable without a raw-DDL migration channel; this table is the workaround.
+// Rows are seeded lazily (upsert) the first time each key is used, starting at the
+// offsets in lib/order-number.ts (orders @ 100000, tickets @ 10000).
+model Counter {
+  key   String @id
+  value Int
+}
+
+// A buyer/seller support request. Emailed to SUPPORT_EMAIL on creation (see
+// lib/support-email.ts) and worked from /admin/support. userId/orderId are soft
+// links (no Prisma relation), matching Order.marketplaceListingId's convention,
+// so a ticket never blocks on / cascades from user or order deletion.
+model SupportTicket {
+  id        String   @id @default(cuid())
+  number    Int      @unique // RC-<n>, via Counter
+  userId    String? // signed-in submitter, if any
+  email     String
+  name      String
+  category  String   @default("OTHER") // ORDER | PAYMENT | ACCOUNT | SELLER | OTHER
+  orderId   String? // set when opened via "Report a problem" on an order
+  subject   String
+  message   String
+  status    String   @default("OPEN") // OPEN | IN_PROGRESS | RESOLVED | CLOSED
+  adminNote String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([userId])
+  @@index([orderId])
 }
 
 // A card a user owns in their personal collection ("My Cards"). One row per

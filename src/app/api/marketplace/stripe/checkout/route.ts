@@ -2,8 +2,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { canViewMarketplaceListings, platformFeeCents } from "@/lib/marketplace";
+import { getCountry } from "@/lib/get-country";
+import { canViewMarketplaceListings, platformFeeCents, isLaunchCountry } from "@/lib/marketplace";
 import { stripe, stripeEnabled, releaseExpiredReservations, RESERVATION_MINUTES } from "@/lib/stripe";
+import { nextNumber } from "@/lib/order-number";
+import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit";
 import { SITE_URL } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +18,10 @@ const schema = z.object({
 // Create a Stripe Checkout Session for a marketplace cart. Reserves stock
 // (Skinport-style) by opening PENDING orders + decrementing availability for a
 // hold window; the webhook flips them to PAID, expiry releases them.
+//
+// Launch constraints (single seller per checkout — see plan D1): one parcel, one
+// currency, one refund path, one Connect transfer_group. A cart spanning sellers
+// is rejected up front rather than silently split.
 export async function POST(req: Request) {
   if (!stripeEnabled()) {
     return NextResponse.json({ error: "Card checkout isn't enabled yet" }, { status: 503 });
@@ -25,11 +32,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "The marketplace is in private beta" }, { status: 403 });
   }
 
+  const rl = rateLimit(`mp-checkout:${clientIp(req)}:${user.id}`, 10, 3600_000);
+  if (!rl.ok) return tooManyRequests(rl.retryAfter);
+
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Invalid cart" }, { status: 400 });
 
   // Free up any abandoned reservations before we try to reserve.
   await releaseExpiredReservations().catch(() => {});
+
+  const buyerCountry = getCountry();
 
   // Stripe Checkout Sessions expire no sooner than 30 min; keep the stock hold in
   // step with the session so they release together.
@@ -48,19 +60,43 @@ export async function POST(req: Request) {
           where: { id: it.listingId },
           include: {
             card: { select: { name: true, setCode: true, collectorNumber: true } },
-            seller: { select: { id: true, sellerProfile: { select: { shippingFlatCents: true, freeOverCents: true } } } },
+            seller: {
+              select: {
+                id: true,
+                sellerProfile: { select: { shippingFlatCents: true, freeOverCents: true, payoutsEnabled: true, suspendedAt: true } },
+              },
+            },
           },
         });
         if (!listing || listing.status !== "ACTIVE" || listing.quantity < it.quantity) {
           throw new Error("A listing in your cart is no longer available");
         }
         if (listing.sellerId === user.id) throw new Error("You can't buy your own listing");
+        if (listing.seller.sellerProfile?.suspendedAt) throw new Error("This seller is no longer active");
+        if (!listing.seller.sellerProfile?.payoutsEnabled) {
+          throw new Error("This seller hasn't finished payout setup yet — try again later");
+        }
         lines.push({ listing, quantity: it.quantity });
+      }
+
+      // Single seller per checkout — one parcel, one currency, one Connect transfer.
+      const sellerIds = new Set(lines.map((l) => l.listing.sellerId));
+      if (sellerIds.size > 1) {
+        throw new Error("Checkout is one seller at a time — buy each seller's items separately");
+      }
+
+      // Same-region only at launch: every listing must be in the buyer's own market.
+      for (const { listing } of lines) {
+        if (!isLaunchCountry(listing.country)) throw new Error("This listing's market isn't open yet");
+        if (listing.country !== buyerCountry) {
+          throw new Error(`This seller only ships within ${listing.country} — switch your market to buy from them`);
+        }
       }
 
       const currency = lines[0].listing.currency as string;
 
-      // Combine shipping per seller (free over their threshold).
+      // Combine shipping per seller (free over their threshold) — only one seller
+      // in the cart at this point, but keep the per-seller shape for clarity.
       const bySeller = new Map<string, { itemCents: number; flat: number; freeOver: number }>();
       for (const { listing, quantity } of lines) {
         const g = bySeller.get(listing.sellerId) ?? {
@@ -79,7 +115,8 @@ export async function POST(req: Request) {
         shipBySeller.set(sellerId, ship);
       }
 
-      // Reserve: decrement stock + open a PENDING order per line.
+      // Reserve: decrement stock + open a PENDING order per line, each stamped with
+      // its own official order number.
       const orderIds: string[] = [];
       const lineItems: { name: string; amountCents: number; quantity: number }[] = [];
       const sellerShipApplied = new Set<string>();
@@ -93,6 +130,7 @@ export async function POST(req: Request) {
         const sellerShip = sellerShipApplied.has(listing.sellerId) ? 0 : (shipBySeller.get(listing.sellerId) ?? 0);
         sellerShipApplied.add(listing.sellerId);
         const itemCents = listing.priceCents * quantity;
+        const orderNumber = await nextNumber("orders", tx);
         const order = await tx.order.create({
           data: {
             kind: "MARKETPLACE",
@@ -105,6 +143,8 @@ export async function POST(req: Request) {
             feeCents: platformFeeCents(itemCents),
             status: "PENDING",
             reservedUntil,
+            orderNumber,
+            currency,
           },
         });
         orderIds.push(order.id);

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { CURRENCY_BY_COUNTRY, MARKETPLACE_COUNTRIES } from "@/lib/marketplace";
+import { CURRENCY_BY_COUNTRY, MARKETPLACE_COUNTRIES, isLaunchCountry } from "@/lib/marketplace";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +33,9 @@ export async function POST(req: Request) {
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   const d = parsed.data;
+  if (!isLaunchCountry(d.country)) {
+    return NextResponse.json({ error: "RiftCompare Marketplace is AU, UK and US only for now" }, { status: 400 });
+  }
   const data = {
     shopName: d.shopName,
     bio: d.bio ?? null,

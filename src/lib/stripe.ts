@@ -1,15 +1,15 @@
-// Stripe (plain Checkout) — foundations for the single-seller marketplace.
-//
-// Because you (Specifix) are the only seller, we DON'T need Stripe Connect: money
-// from a marketplace sale goes straight to your Stripe account. We just create a
-// hosted Checkout Session, redirect the buyer, and confirm payment via webhook.
+// Stripe (plain Checkout) — foundations shared by Premium subscriptions and the P2P
+// marketplace. The buyer always pays the PLATFORM account via a hosted Checkout
+// Session (this file); per-seller payouts are a separate Connect step that happens
+// later, on delivery — see lib/connect.ts for account onboarding + the escrow
+// transfer. Splitting it this way is what lets funds be held until delivery instead
+// of moving to the seller the moment the buyer pays.
 //
 // Stock is reserved Skinport-style: at checkout we decrement availability and open
 // a PENDING order with a short reservation window. The webhook flips it to PAID on
 // success; expiry/failure releases the stock back.
 //
-// INERT until STRIPE_SECRET_KEY is set — callers check `stripeEnabled()` and fall
-// back to the existing demo-wallet checkout.
+// INERT until STRIPE_SECRET_KEY is set — callers check `stripeEnabled()`.
 import Stripe from "stripe";
 import { prisma } from "./db";
 
