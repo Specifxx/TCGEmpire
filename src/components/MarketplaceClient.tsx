@@ -176,15 +176,14 @@ export function MarketplaceClient({
   // rather than posting straight to Stripe — that's where the address is
   // actually collected now (see api/marketplace/stripe/checkout/route.ts's
   // header comment for why this replaced Stripe's own address collection).
+  // Carts can span multiple sellers — one Checkout Session, one card charge,
+  // one shared delivery address. MarketplaceCheckout computes shipping per
+  // seller (each has their own flat rate/postcode) and the server does the
+  // same authoritative computation before charging.
   function openCheckout(items: CheckoutItem[]) {
     if (items.length === 0) return;
     if (!stripeEnabled) {
       toast("Card checkout isn't enabled yet", 3000);
-      return;
-    }
-    const sellerIds = new Set(items.map((i) => i.sellerId));
-    if (sellerIds.size > 1) {
-      toast("Checkout is one seller at a time — buy each seller's items separately", 3500);
       return;
     }
     setCartOpen(false);

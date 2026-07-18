@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { formatMoney } from "@/lib/format";
 
 export interface CheckoutItem {
@@ -24,11 +24,18 @@ interface SavedAddress {
   shipPhone: string | null;
 }
 
+type Estimate = { cents: number; note: string };
+
 // The address + live shipping-estimate step between "cart" and "pay" — inline
 // (a modal, not a page navigation) so checkout stays a single seamless flow.
-// Prefills from the buyer's saved address (GET /api/account/shipping-address),
-// live-estimates shipping as the postcode is entered (POST
-// /api/marketplace/shipping-estimate), then hands off to Stripe for payment.
+// Prefills from the buyer's saved address (GET /api/account/shipping-address).
+//
+// A cart can span multiple sellers — one Checkout Session, one card charge,
+// one shared delivery address, but EACH seller has their own shipping rate
+// (flat fee + postcode), so this groups items by seller and live-estimates
+// shipping per seller as the postcode is entered (POST
+// /api/marketplace/shipping-estimate, called once per seller group), then
+// hands the whole multi-seller cart off to Stripe as one payment.
 export function MarketplaceCheckout({ items, onClose }: { items: CheckoutItem[]; onClose: () => void }) {
   const [loadingAddress, setLoadingAddress] = useState(true);
   const [name, setName] = useState("");
@@ -40,16 +47,26 @@ export function MarketplaceCheckout({ items, onClose }: { items: CheckoutItem[];
   const [phone, setPhone] = useState("");
   const [saveAddress, setSaveAddress] = useState(true);
 
-  const [estimate, setEstimate] = useState<{ cents: number; note: string } | null>(null);
+  const [estimates, setEstimates] = useState<Record<string, Estimate | null>>({});
   const [estimating, setEstimating] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const sellerGroups = useMemo(() => {
+    const map = new Map<string, { sellerId: string; sellerName: string; items: CheckoutItem[]; itemCents: number }>();
+    for (const item of items) {
+      const g = map.get(item.sellerId) ?? { sellerId: item.sellerId, sellerName: item.sellerName, items: [], itemCents: 0 };
+      g.items.push(item);
+      g.itemCents += item.priceCents * item.quantity;
+      map.set(item.sellerId, g);
+    }
+    return [...map.values()];
+  }, [items]);
+
   const itemCents = items.reduce((sum, i) => sum + i.priceCents * i.quantity, 0);
   const currency = items[0]?.currency ?? "AUD";
-  const sellerId = items[0]?.sellerId;
-  const sellerName = items[0]?.sellerName;
+  const shippingTotal = sellerGroups.reduce((sum, g) => sum + (estimates[g.sellerId]?.cents ?? 0), 0);
 
   useEffect(() => {
     let cancelled = false;
@@ -77,22 +94,29 @@ export function MarketplaceCheckout({ items, onClose }: { items: CheckoutItem[];
 
   useEffect(() => {
     if (debounce.current) clearTimeout(debounce.current);
-    if (!postcode.trim() || !sellerId) {
-      setEstimate(null);
+    if (!postcode.trim() || sellerGroups.length === 0) {
+      setEstimates({});
       return;
     }
     debounce.current = setTimeout(async () => {
       setEstimating(true);
       try {
-        const res = await fetch("/api/marketplace/shipping-estimate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sellerId, postcode: postcode.trim(), itemCents }),
-        });
-        const data = await res.json();
-        setEstimate(res.ok ? { cents: data.cents, note: data.note } : null);
-      } catch {
-        setEstimate(null);
+        const results = await Promise.all(
+          sellerGroups.map(async (g) => {
+            try {
+              const res = await fetch("/api/marketplace/shipping-estimate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ sellerId: g.sellerId, postcode: postcode.trim(), itemCents: g.itemCents }),
+              });
+              const data = await res.json();
+              return [g.sellerId, res.ok ? { cents: data.cents, note: data.note } : null] as const;
+            } catch {
+              return [g.sellerId, null] as const;
+            }
+          })
+        );
+        setEstimates(Object.fromEntries(results));
       } finally {
         setEstimating(false);
       }
@@ -100,7 +124,8 @@ export function MarketplaceCheckout({ items, onClose }: { items: CheckoutItem[];
     return () => {
       if (debounce.current) clearTimeout(debounce.current);
     };
-  }, [postcode, sellerId, itemCents]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [postcode, sellerGroups.map((g) => `${g.sellerId}:${g.itemCents}`).join(",")]);
 
   const addressValid = name.trim().length >= 2 && line1.trim().length >= 3 && city.trim().length >= 1 && region.trim().length >= 1 && postcode.trim().length >= 1;
 
@@ -140,7 +165,7 @@ export function MarketplaceCheckout({ items, onClose }: { items: CheckoutItem[];
     }
   }
 
-  const total = itemCents + (estimate?.cents ?? 0);
+  const total = itemCents + shippingTotal;
 
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center p-4" role="dialog" aria-modal="true">
@@ -152,14 +177,34 @@ export function MarketplaceCheckout({ items, onClose }: { items: CheckoutItem[];
         </div>
 
         <form id="checkout-form" onSubmit={submit} className="overflow-y-auto p-4">
-          <div className="mb-4 rounded-lg border border-ink-700 bg-ink-950/50 p-3 text-xs text-slate-400">
-            {items.map((i) => (
-              <div key={i.listingId} className="flex justify-between gap-2 py-0.5">
-                <span className="truncate">×{i.quantity} {i.cardName} <span className="text-slate-600">({i.sub})</span></span>
-                <span className="shrink-0 text-slate-300">{formatMoney(i.priceCents * i.quantity, i.currency)}</span>
-              </div>
-            ))}
-            <div className="mt-1 border-t border-ink-800 pt-1 text-slate-500">Seller: {sellerName}</div>
+          <div className="mb-4 flex flex-col gap-3">
+            {sellerGroups.map((g) => {
+              const est = estimates[g.sellerId];
+              return (
+                <div key={g.sellerId} className="rounded-lg border border-ink-700 bg-ink-950/50 p-3 text-xs text-slate-400">
+                  <div className="mb-1 font-semibold text-slate-300">{g.sellerName}</div>
+                  {g.items.map((i) => (
+                    <div key={i.listingId} className="flex justify-between gap-2 py-0.5">
+                      <span className="truncate">×{i.quantity} {i.cardName} <span className="text-slate-600">({i.sub})</span></span>
+                      <span className="shrink-0 text-slate-300">{formatMoney(i.priceCents * i.quantity, i.currency)}</span>
+                    </div>
+                  ))}
+                  <div className="mt-1 flex justify-between border-t border-ink-800 pt-1">
+                    <span className="text-slate-500">Shipping</span>
+                    {estimating ? (
+                      <span className="text-slate-500">estimating…</span>
+                    ) : est ? (
+                      <span className="text-right text-slate-300">
+                        {est.cents === 0 ? "Free" : formatMoney(est.cents, g.items[0]?.currency ?? currency)}
+                        <span className="ml-1.5 text-[10px] text-slate-600">{est.note}</span>
+                      </span>
+                    ) : (
+                      <span className="text-slate-600">enter postcode</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {loadingAddress ? (
@@ -205,19 +250,11 @@ export function MarketplaceCheckout({ items, onClose }: { items: CheckoutItem[];
                 Save this address to my account for next time
               </label>
 
-              <div className="mt-1 flex items-center justify-between rounded-lg border border-ink-700 bg-ink-950/50 p-3 text-sm">
-                <span className="text-slate-400">Shipping</span>
-                {estimating ? (
-                  <span className="text-slate-500">estimating…</span>
-                ) : estimate ? (
-                  <span className="text-right">
-                    <span className="font-bold text-white">{estimate.cents === 0 ? "Free" : formatMoney(estimate.cents, currency)}</span>
-                    <span className="block text-[11px] text-slate-500">{estimate.note}</span>
-                  </span>
-                ) : (
-                  <span className="text-slate-600">enter postcode</span>
-                )}
-              </div>
+              {sellerGroups.length > 1 && (
+                <p className="text-[11px] text-slate-600">
+                  Your items ship from {sellerGroups.length} different sellers, each with their own shipping cost shown above — everything is still paid in one card charge.
+                </p>
+              )}
 
               {error && <p className="text-sm text-rose-300">{error}</p>}
             </div>

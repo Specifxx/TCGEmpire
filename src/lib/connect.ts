@@ -121,17 +121,31 @@ export async function releaseFundsForOrder(orderId: string): Promise<void> {
 }
 
 // Refunds a PAID (not yet shipped/delivered) order in full — used by the
-// ship-deadline cron job when a seller never uploads tracking in time. Refunding
-// before any transfer happens is a plain platform-side refund; the seller is
-// unaffected either way since they were never paid.
+// ship-deadline cron job when a seller never uploads tracking in time, and by
+// mutual-cancellation acceptance. Refunding before any transfer happens is a
+// plain platform-side refund; the seller is unaffected either way since they
+// were never paid.
 export async function refundOrder(orderId: string): Promise<void> {
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     select: { id: true, kind: true, stripePaymentIntent: true, refundedAt: true },
   });
   if (!order || order.kind !== "MARKETPLACE" || order.refundedAt) return;
+
   if (order.stripePaymentIntent) {
-    await stripe().refunds.create({ payment_intent: order.stripePaymentIntent });
+    // Every Order row from one checkout shares a single PaymentIntent (one
+    // card charge can span several listing lines, even several sellers — see
+    // orders/route.ts's groupKey). If a sibling order already refunded that
+    // same PaymentIntent, asking Stripe to refund it again would error
+    // ("charge has already been refunded") — just mark this order refunded
+    // too instead of calling Stripe a second time for the same money.
+    const alreadyRefundedSibling = await prisma.order.findFirst({
+      where: { id: { not: order.id }, stripePaymentIntent: order.stripePaymentIntent, refundedAt: { not: null } },
+      select: { id: true },
+    });
+    if (!alreadyRefundedSibling) {
+      await stripe().refunds.create({ payment_intent: order.stripePaymentIntent });
+    }
   }
   await prisma.order.update({ where: { id: order.id }, data: { refundedAt: new Date() } });
 }

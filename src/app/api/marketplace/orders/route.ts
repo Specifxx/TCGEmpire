@@ -36,6 +36,13 @@ export async function GET() {
   const shaped = orders.map((o) => ({
     id: o.id,
     orderNumber: o.orderNumber,
+    // Groups line-item orders that were actually one checkout + one seller
+    // (a multi-item, and/or multi-seller, cart still creates one Order row per
+    // LISTING LINE — this key lets the UI treat "one parcel" as one unit for
+    // bulk ship/confirm actions instead of making the buyer/seller repeat the
+    // same action once per line).
+    groupKey: `${o.stripeSessionId ?? o.id}:${o.sellerId}`,
+    sellerId: o.sellerId,
     role: o.buyerId === user.id ? ("buyer" as const) : ("seller" as const),
     status: o.status,
     quantity: o.quantity,
