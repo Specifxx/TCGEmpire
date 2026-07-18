@@ -26,6 +26,7 @@ on:
           - audit-history    # read-only per-day price-history diagnostic
           - audit-users      # read-only user/Premium census (no PII printed)
           - audit-clicks     # read-only outbound-click leaderboard per retailer (affiliate-outreach priority)
+          - remove-seed-accounts # one-off: delete @riftcompare.seed bot personas (dead since the forum autoseeder was removed)
       dry_run:
         description: "Dry run (log what would change, write nothing)"
         type: boolean
@@ -202,6 +203,10 @@ jobs:
       - name: Audit users/Premium (read-only census)
         if: inputs.task == 'audit-users'
         run: npx tsx scripts/audit-users.ts
+
+      - name: Remove @riftcompare.seed persona accounts
+        if: inputs.task == 'remove-seed-accounts'
+        run: npx tsx scripts/remove-seed-accounts.ts
 
       - name: Audit outbound clicks (read-only leaderboard)
         if: inputs.task == 'audit-clicks'
