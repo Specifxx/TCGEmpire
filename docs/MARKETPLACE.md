@@ -137,7 +137,7 @@ Scaffolded:
   `async_payment_succeeded` → orders `PAID` (stock stays gone); `expired` /
   `async_payment_failed` → orders `CANCELLED` + stock restored.
 - **`Order`** gained `status`, `shippingCents`, `feeCents`, `stripeSessionId`,
-  `stripePaymentIntent`, `reservedUntil`. Wallet/forum orders default to `PAID` so
+  `stripePaymentIntent`, `reservedUntil`. Wallet orders default to `PAID` so
   existing flows are unaffected.
 - **Client**: `MarketplaceClient` takes `stripeEnabled`; when on, "Buy"/cart redirect
   to Stripe and back to `/marketplace?purchase=success|cancelled`.

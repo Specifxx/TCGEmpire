@@ -125,8 +125,8 @@ export function AuthForm({
         <h1 className="text-xl font-extrabold text-white">{isRegister ? "Create your account" : "Sign in"}</h1>
         <p className="mt-1 text-sm text-slate-400">
           {isRegister
-            ? "Create a free account to save your wishlist, post in the forum and more."
-            : "Sign in to sync your wishlist, post in the forum and manage your listings."}
+            ? "Create a free account to save your wishlist and more."
+            : "Sign in to sync your wishlist and manage your listings."}
         </p>
 
         {/* OAuth — only render a provider's button when its env keys are configured,

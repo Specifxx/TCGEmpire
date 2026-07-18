@@ -117,18 +117,15 @@ export async function grantPremiumMonths(userId: string, months: number): Promis
   return until;
 }
 
-// Synthetic seed accounts (forum personas + the marketplace test buyer) — never real
-// users, so they're excluded from the "first 100 users" promo and its rank count.
+// Synthetic seed accounts (local dev-reset personas + the marketplace test buyer) —
+// never real users, so they're excluded from the "first 100 users" promo and its
+// rank count.
 export function isSeedEmail(email: string): boolean {
-  return email.endsWith("@riftcompare.seed") || email.endsWith("@tcgempire.au") || email === "test@test.com";
+  return email.endsWith("@tcgempire.au") || email === "test@test.com";
 }
 export const NOT_SEED_WHERE = {
   NOT: {
-    OR: [
-      { email: { endsWith: "@riftcompare.seed" } },
-      { email: { endsWith: "@tcgempire.au" } },
-      { email: { equals: "test@test.com" } },
-    ],
+    OR: [{ email: { endsWith: "@tcgempire.au" } }, { email: { equals: "test@test.com" } }],
   },
 };
 

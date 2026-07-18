@@ -54,10 +54,6 @@ export interface SessionUser {
   balanceCents: number;
   isAdmin: boolean;
   isVerifiedSeller: boolean;
-  // Shards (gamification). points = spendable balance; canCheckIn drives the daily
-  // check-in nudge in the navbar.
-  points: number;
-  canCheckIn: boolean;
   // End of the current paid Premium period (drives the ad-free site etc.).
   premiumUntil: Date | null;
   // When this account first started a free trial (null = never → trial-eligible).
@@ -131,9 +127,6 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Ses
     if (!userId) return null;
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return null;
-    // "Today" in UTC, matching the check-in dedupe key in lib/points.
-    const today = new Date().toISOString().slice(0, 10);
-    const lastCheckin = user.lastCheckinAt ? user.lastCheckinAt.toISOString().slice(0, 10) : null;
     return {
       id: user.id,
       email: user.email,
@@ -145,8 +138,6 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Ses
       // Selling is admin-only for now (the marketplace is hidden/single-seller) — the
       // raw per-user DB flag is intentionally NOT honoured here.
       isVerifiedSeller: user.isAdmin || isAdminEmail(user.email),
-      points: user.points,
-      canCheckIn: lastCheckin !== today,
       premiumUntil: user.premiumUntil,
       trialStartedAt: user.trialStartedAt,
     };

@@ -6,7 +6,7 @@ The native iOS and Android app for **RiftCompare**, built with
 layers **native Google AdMob** ads on top.
 
 > **Why a wrapper?** The website is a full server-rendered Next.js app (auth,
-> browse, live price comparison, forum). Wrapping it means the app reuses 100% of
+> browse, live price comparison). Wrapping it means the app reuses 100% of
 > that and stays in sync automatically: ship a website change and every installed
 > app gets it instantly — no app-store update needed. Only native changes (icons,
 > ads, plugins, the shell config) require a new store build.
@@ -219,7 +219,7 @@ Requires a **Mac + Xcode** and an **Apple Developer Program** membership
 
 > **Apple guideline 4.2 (minimum functionality).** Apple sometimes rejects apps
 > that are "just a website". RiftCompare has substantial functionality (search,
-> accounts, live multi-store price comparison, forum) plus native ads, splash, and
+> accounts, live multi-store price comparison) plus native ads, splash, and
 > back-button handling, which usually satisfies 4.2 — but if reviewers push back,
 > the fastest fixes are to add a native feature or two (e.g. push notifications
 > for price drops, an offline screen, share sheets). Ask and I'll add them.

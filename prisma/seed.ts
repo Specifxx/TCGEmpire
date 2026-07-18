@@ -95,15 +95,6 @@ function referencePrice(rarity: string, type: string): number {
   return Math.max(20, Math.round(between(lo, hi) * mult));
 }
 
-const SELLERS = [
-  { email: "riftraider@tcgempire.au", displayName: "RiftRaider", balance: 2500 },
-  { email: "hextechhoard@tcgempire.au", displayName: "HextechHoard", balance: 3800 },
-  { email: "summonerscove@tcgempire.au", displayName: "SummonersCove", balance: 4200 },
-  { email: "noxianvault@tcgempire.au", displayName: "NoxianVault", balance: 2100 },
-  { email: "piltoverpulls@tcgempire.au", displayName: "PiltoverPulls", balance: 3400 },
-  { email: "freljordfinds@tcgempire.au", displayName: "FreljordFinds", balance: 2900 },
-];
-
 async function main() {
   const file = join(process.cwd(), "prisma", "riftbound-cards.json");
   const rsCards = JSON.parse(readFileSync(file, "utf8")) as RsCard[];

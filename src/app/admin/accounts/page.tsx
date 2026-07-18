@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { AccountsExport, type ExportUser } from "@/components/admin/AccountsExport";
-import { DeleteSeedButton } from "@/components/admin/DeleteSeedButton";
 import { NOT_SEED_WHERE } from "@/lib/premium";
 
 export const dynamic = "force-dynamic";
@@ -47,13 +46,12 @@ export default async function AccountsAdminPage({
     isVerifiedSeller: boolean;
     premiumUntil: Date | null;
     trialStartedAt: Date | null;
-    lifetimePoints: number;
     createdAt: Date;
   }[] = [];
   let totals = { all: 0, verified: 0, premium: 0, new7: 0, new30: 0 };
   let error = false;
   try {
-    // Never count synthetic seed accounts (forum personas + the marketplace test
+    // Never count synthetic seed accounts (dev-reset personas + the marketplace test
     // buyer) as users — they'd inflate the count and pollute the email export.
     const notSeed = NOT_SEED_WHERE;
     const search = q
@@ -76,7 +74,7 @@ export default async function AccountsAdminPage({
         select: {
           id: true, email: true, displayName: true, emailVerified: true, passwordHash: true,
           googleId: true, discordId: true, isAdmin: true, isVerifiedSeller: true,
-          premiumUntil: true, trialStartedAt: true, lifetimePoints: true, createdAt: true,
+          premiumUntil: true, trialStartedAt: true, createdAt: true,
         },
       }),
       prisma.user.count({ where: notSeed }),
@@ -121,19 +119,13 @@ export default async function AccountsAdminPage({
         <Stat label="New · 30 days" value={num(totals.new30)} sub={`${num(totals.new7)} in 7d`} />
       </div>
 
-      {/* Export + seed cleanup */}
+      {/* Export */}
       {!error && rows.length > 0 && (
         <div className="mt-5 space-y-3 rounded-xl border border-ink-700 bg-ink-850 p-3">
           <AccountsExport users={exportUsers} />
-          {me?.isAdmin && (
-            <div className="border-t border-ink-800 pt-3">
-              <DeleteSeedButton />
-              <p className="mt-1.5 text-xs text-slate-500">
-                Seed accounts (@riftcompare.seed, @tcgempire.au, test@test.com) are already hidden from this list and the
-                export. This button purges the @riftcompare.seed personas from the database.
-              </p>
-            </div>
-          )}
+          <p className="text-xs text-slate-500">
+            Seed accounts (@tcgempire.au, test@test.com) are already hidden from this list and the export.
+          </p>
         </div>
       )}
 
@@ -208,7 +200,6 @@ export default async function AccountsAdminPage({
                   <th className="px-3 py-2 font-medium">Verified</th>
                   <th className="px-3 py-2 font-medium">Sign-in</th>
                   <th className="px-3 py-2 font-medium">Premium</th>
-                  <th className="px-3 py-2 text-right font-medium">Shards</th>
                   <th className="px-3 py-2 font-medium">Flags</th>
                 </tr>
               </thead>
@@ -254,7 +245,6 @@ export default async function AccountsAdminPage({
                           <span className="text-slate-600">—</span>
                         )}
                       </td>
-                      <td className="num whitespace-nowrap px-3 py-2 text-right tabular-nums text-slate-300">{num(u.lifetimePoints)}</td>
                       <td className="px-3 py-2">
                         <div className="flex flex-wrap gap-1">
                           {u.isAdmin && <span className="chip bg-brand-500/15 text-brand-300">admin</span>}

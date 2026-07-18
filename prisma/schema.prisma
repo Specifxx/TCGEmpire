@@ -32,19 +32,6 @@ model User {
   isAdmin           Boolean   @default(false)
   // Verified sellers may list cards in the RiftCompare marketplace (see /marketplace).
   isVerifiedSeller  Boolean   @default(false)
-  // ── Shards: the site's gamification / loyalty points (see lib/points.ts). ──
-  // Distinct from balanceCents (real money) — Shards are earned by engaging with
-  // the site and redeemed for cosmetics, perks and personalised experiences.
-  points            Int       @default(0) // spendable Shard balance
-  lifetimePoints    Int       @default(0) // total ever earned; drives the level/medal
-  streakDays        Int       @default(0) // current consecutive daily check-in streak
-  lastCheckinAt     DateTime? // when the daily check-in was last claimed
-  equippedFlair     String? // reward key of the name flair shown by the user
-  equippedBadge     String? // reward key of the medal/badge shown by the user
-  ownedRewards      Json? // string[] of redeemed cosmetic/perk reward keys
-  // OPT-IN (default off): the user ticked "email me leaderboard updates" at signup.
-  // Honoured only with a working unsubscribe — never used to send unsolicited mail.
-  leaderboardEmails Boolean   @default(false)
   // ── RiftCompare Premium (Stripe subscription) ──
   // premiumUntil = end of the current paid period (renewals extend it via webhook;
   // a lapsed/cancelled sub simply stops extending). stripeCustomerId links renewal
@@ -65,8 +52,6 @@ model User {
   sales               Order[]              @relation("SellerOrders")
   wishlist            WishlistItem[]
   authTokens          AuthToken[]
-  pointsLedger        PointsLedger[]
-  redemptions         Redemption[]
   sellerProfile       SellerProfile?
   marketplaceListings MarketplaceListing[]
   collection          CollectionCard[]
@@ -448,97 +433,6 @@ model PriceAlert {
   @@index([unsubToken])
 }
 
-// One Shard transaction (earn or spend). The append-only ledger is the source of
-// truth for how points were accrued/used and powers daily caps + idempotent grants.
-model PointsLedger {
-  id        String   @id @default(cuid())
-  userId    String
-  delta     Int // +earned / -spent Shards
-  reason    String // machine key, e.g. "checkin", "forum_post", "redeem:badge_gem"
-  // Set for grants that must happen at most once (e.g. "verify_email", or a given
-  // day's "checkin:2026-06-08"); null for repeatable awards. Unique per user, so a
-  // duplicate insert is rejected — the cheap, race-safe way to dedupe one-off grants.
-  dedupeKey String?
-  meta      Json?
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, dedupeKey])
-  @@index([userId, createdAt])
-  @@index([userId, reason, createdAt])
-}
-
-// A redeemed reward. Cosmetics/perks are FULFILLED instantly (and added to the
-// user's ownedRewards); personalised "experiences" land as PENDING for an admin to
-// action from /admin/redemptions, then marked DONE.
-model Redemption {
-  id         String   @id @default(cuid())
-  userId     String
-  rewardKey  String
-  rewardName String
-  cost       Int
-  kind       String // flair | badge | perk | experience
-  status     String   @default("FULFILLED") // FULFILLED | PENDING | DONE
-  note       String? // optional context the user supplies (e.g. a deck link)
-  createdAt  DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId, createdAt])
-  @@index([status, createdAt])
-}
-
-// A community marketplace post: a user's "want to buy" (WTB) or "want to sell"
-// (WTS) listing for Riftbound cards. Reddit-style board at /forum.
-model ForumPost {
-  id          String   @id @default(cuid())
-  kind        String // "WTB" | "WTS" | "DISCUSSION"
-  title       String
-  cardName    String?
-  setCode     String?
-  condition   String? // NM, LP, MP, HP, DMG, or "Any"
-  priceCents  Int? // seller's asking price for the whole listing (optional)
-  // Multi-card listings: [{ name, setCode?, condition?, qty, marketCents? }].
-  items       Json?
-  // Sum of the items' current market value — the "recommended" total price.
-  marketCents Int?
-  body        String
-  contact     String   @default("") // how to reach the poster (email/Discord); blank for discussions
-  // Seller/buyer location for postage estimates (WTB/WTS only).
-  country     String?
-  state       String?
-  // Market the post belongs to ("AU" | "NZ" | "US"), from the poster's selected
-  // country. Players only see posts for their own market.
-  market      String   @default("AU")
-  authorName  String
-  userId      String? // set if posted while logged in
-  score       Int      @default(0)
-  status      String   @default("OPEN") // OPEN | CLOSED
-  createdAt   DateTime @default(now())
-
-  comments ForumComment[]
-
-  @@index([kind])
-  @@index([createdAt])
-  @@index([status])
-  @@index([market])
-}
-
-// A comment on a forum post (Reddit-style discussion).
-model ForumComment {
-  id         String   @id @default(cuid())
-  postId     String
-  userId     String?
-  authorName String
-  body       String
-  createdAt  DateTime @default(now())
-
-  post ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-
-  @@index([postId])
-}
-
 // A live price for a card at an external retailer, used for price comparison.
 // Populated by scripts/import-prices.ts from AU store feeds (Shopify products.json).
 model RetailerPrice {
@@ -609,7 +503,7 @@ model Order {
   sellerId             String
   quantity             Int       @default(1)
   totalCents           Int
-  // Payment/fulfilment state. Wallet & forum orders settle instantly (PAID);
+  // Payment/fulfilment state. Wallet orders settle instantly (PAID);
   // Stripe-checkout orders start PENDING (stock reserved) and flip to PAID via the
   // webhook, or CANCELLED if the session expires / payment fails (stock released).
   status               String    @default("PAID") // PENDING | PAID | CANCELLED | REFUNDED

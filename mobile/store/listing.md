@@ -36,7 +36,6 @@ Shared metadata for the Apple App Store and Google Play. Adjust freely.
 > • Tap straight through to the cheapest store to buy
 > • Build and price-check decks
 > • Wishlist the cards you're hunting
-> • Community forum for trades, deals and discussion
 > • Switch between AU, NZ and US pricing
 >
 > Prices are sourced from public store listings and may change — always confirm on

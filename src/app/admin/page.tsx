@@ -68,12 +68,6 @@ const TOOLS: Tool[] = [
     icon: "🔥",
     desc: "Demand snapshots — what people are searching and wishlisting.",
   },
-  {
-    href: "/admin/redemptions",
-    title: "Redemptions",
-    icon: "🎁",
-    desc: "Experience-points redemptions to review and fulfil.",
-  },
 ];
 
 export default async function AdminHome({ searchParams }: { searchParams: { key?: string } }) {

@@ -29,7 +29,6 @@ const DESC: Record<string, string> = {
   "/portfolio": "Track a collection's value over time.",
   "/wishlist": "Save cards and get price context.",
   "/premium": "RiftCompare Premium — the Deal Finder / value tools and ad-free browsing.",
-  "/forum": "Community forum.",
 };
 
 const abs = (p: string) => `${SITE_URL}${p}`;

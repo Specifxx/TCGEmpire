@@ -211,9 +211,6 @@ export function Riftle() {
       const nx: Stats = { played: s.played + 1, wins: s.wins + (win ? 1 : 0), streak: win ? s.streak + 1 : 0, lastWinDay: win ? day : s.lastWinDay };
       try { localStorage.setItem(KEY_STATS, JSON.stringify(nx)); } catch { /* full */ }
       setStats(nx);
-      // Award Shards for solving the daily (server dedupes to once/day and no-ops for
-      // logged-out visitors — the result screen nudges them to sign in for it).
-      if (win) fetch("/api/riftle/win", { method: "POST", keepalive: true }).catch(() => {});
     }
   }
 
@@ -488,19 +485,13 @@ export function Riftle() {
           </p>
 
           {/* Chain the daily loop: don't dead-end at "come back tomorrow" — send them to
-              the other two daily habits (the market wrap + the Shard check-in). */}
+              the other daily habit (the market wrap). */}
           {mode !== "unlimited" && (
             <div className="mt-3 border-t border-ink-800 pt-3">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">While you&apos;re here</p>
               <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
                 <Link href="/market" className="chip border border-ink-700 px-3 py-1.5 text-xs hover:border-brand-500">📊 Today&apos;s market wrap</Link>
-                <Link href="/rewards" className="chip border border-ink-700 px-3 py-1.5 text-xs hover:border-brand-500">✦ Claim your daily check-in</Link>
               </div>
-              {done === "win" && (
-                <p className="mt-2 text-[11px] text-slate-500">
-                  <Link href="/register?next=/riftle" className="text-brand-400 hover:underline">Create a free account</Link> to earn ✦ Shards for every daily solve and keep your streak.
-                </p>
-              )}
             </div>
           )}
         </div>

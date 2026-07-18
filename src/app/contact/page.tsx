@@ -40,7 +40,7 @@ export default function ContactPage() {
 
       <div className="mt-4 text-center text-sm text-slate-500">
         Looking to buy or sell instead?{" "}
-        <Link href="/forum" className="text-brand-400 hover:underline">Visit the community forum →</Link>
+        <Link href="/marketplace" className="text-brand-400 hover:underline">Visit the Marketplace →</Link>
       </div>
     </div>
   );

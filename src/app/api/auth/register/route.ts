@@ -4,7 +4,6 @@ import { prisma } from "@/lib/db";
 import { hashPassword, createAuthToken } from "@/lib/auth";
 import { sendVerificationEmail } from "@/lib/email";
 import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit";
-import { awardPoints } from "@/lib/points";
 import { applyReferral } from "@/lib/referral";
 import { grantEarlyAdopterPremium, EARLY_PREMIUM_MONTHS } from "@/lib/premium";
 import { sendEarlyAdopterEmail } from "@/lib/email";
@@ -16,9 +15,6 @@ const schema = z.object({
     .string()
     .min(2, "Display name must be at least 2 characters")
     .max(24, "Display name is too long"),
-  // Opt-in (default off) for leaderboard emails — captured with consent at signup,
-  // honoured only via a real unsubscribe. Never a default-on / unsolicited send.
-  leaderboardEmails: z.boolean().optional(),
 });
 
 export async function POST(req: Request) {
@@ -49,13 +45,11 @@ export async function POST(req: Request) {
       email,
       displayName: parsed.data.displayName,
       passwordHash: await hashPassword(parsed.data.password),
-      leaderboardEmails: parsed.data.leaderboardEmails ?? false,
     },
   });
 
   // NOTE: no session is created here — the account must verify its email before it
-  // can sign in (see the login route). Welcome Shards + referral credit still apply.
-  await awardPoints(user.id, "welcome").catch(() => {});
+  // can sign in (see the login route). Referral credit still applies.
   // Credit a referrer if they arrived via a /?ref=<userId> link (best-effort).
   await applyReferral(user.id);
   // Early-adopter promo: the first 100 accounts get free Premium (best-effort) — and

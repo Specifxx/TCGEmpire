@@ -3,7 +3,6 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { CONDITION_KEYS } from "@/lib/constants";
-import { awardPoints } from "@/lib/points";
 
 const schema = z.object({
   cardId: z.string().min(1),
@@ -61,8 +60,6 @@ export async function POST(req: Request) {
       });
       return { order, newBalance: buyer.balanceCents - total };
     });
-    // Reward posting a buy order (capped per day inside awardPoints).
-    await awardPoints(user.id, "create_buy_order").catch(() => {});
     return NextResponse.json({ ok: true, ...result });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Could not place buy order";

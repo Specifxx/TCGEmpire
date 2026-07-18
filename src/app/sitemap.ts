@@ -46,7 +46,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/sets`, changeFrequency: "weekly", priority: 0.8, lastModified: priceDay },
     { url: `${SITE_URL}/decks`, changeFrequency: "weekly", priority: 0.8 },
     { url: `${SITE_URL}/deck`, changeFrequency: "weekly", priority: 0.6 },
-    { url: `${SITE_URL}/forum`, changeFrequency: "hourly", priority: 0.7 },
     { url: `${SITE_URL}/trade`, changeFrequency: "monthly", priority: 0.7 },
     { url: `${SITE_URL}/learn`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE_URL}/riftle`, changeFrequency: "daily", priority: 0.7 },

@@ -289,7 +289,7 @@ Every figure is the live local price in your currency (AUD, NZD, USD or GBP), co
 
 ## How to use this as a seller
 
-If you have cards sitting in a binder, the risers list tells you what's worth listing right now. Post them on the **[forum](/forum)** or, if you're a verified seller, in the **[marketplace](/marketplace)** while demand is hot.
+If you have cards sitting in a binder, the risers list tells you what's worth listing right now. List them in the **[marketplace](/marketplace)** while demand is hot.
 
 Want to dive in? **[See this week's Riftbound price movers](/movers)**, or **[browse the full database](/browse)** and sort by price to find your next pickup.`,
   },
@@ -333,7 +333,7 @@ Vendetta sealed is live now, and the singles will populate the **[Vendetta page]
     author: "RiftCompare",
     date: "2026-06-09",
     readMins: 5,
-    tags: ["selling", "marketplace", "forum", "prices"],
+    tags: ["selling", "marketplace", "prices"],
     body: `Got a stack of Riftbound cards gathering dust — duplicates, cards from a deck you've moved on from, or pulls you don't need? Here's how to turn them into cash (or store credit) and get a fair price.
 
 ## 1. Price your cards accurately first
@@ -346,7 +346,6 @@ Before you list anything, find out what your cards are actually worth **today**.
 
 ## 2. Choose where to sell
 
-- **The RiftCompare forum.** Post a free **want-to-sell** listing on the **[forum](/forum)** — it reaches players actively looking to buy, with no listing fees. Great for singles, bulk and trades.
 - **The RiftCompare marketplace.** If you sell regularly, becoming a **[verified seller](/marketplace)** puts your listings right inside the price comparison, in front of buyers at the moment they're choosing where to buy.
 - **eBay and local stores.** For high-value chase cards, a wider audience can help — just factor in fees and postage when you compare your net.
 
@@ -364,7 +363,7 @@ The cards that sell fastest are the ones priced at or just under the cheapest co
 - Post quickly and communicate — repeat buyers come from good experiences.
 - Bundle small cards together so postage doesn't eat the value of a cheap sale.
 
-Ready to list? **[Post on the forum](/forum)** or **[browse the database](/browse)** to price your collection first. Selling to fund your next deck? See **[where to buy Riftbound cards](/guides/where-to-buy-riftbound-cards)** to spend it well.`,
+Ready to list? **[Sell on the marketplace](/marketplace)** or **[browse the database](/browse)** to price your collection first. Selling to fund your next deck? See **[where to buy Riftbound cards](/guides/where-to-buy-riftbound-cards)** to spend it well.`,
   },
   {
     slug: "beginner-mistakes-buying-riftbound-cards",
@@ -684,7 +683,7 @@ Riftbound is exciting, but tracking down the cheapest copy of a specific card ac
 - **[Deck pricer](/deck)** — paste or build a decklist and price the entire thing across every store in one pass.
 - **Tools** — an arbitrage/deal finder, a box-EV calculator, and a net-proceeds calculator for anyone selling.
 - **[Riftle](/riftle)** — our free daily Wordle-style "guess the card" game, plus an Unlimited mode.
-- **[Buy & sell on the forum](/forum)** — post want-to-buy / want-to-sell listings and trade directly with other collectors.
+- **[Buy & sell on the marketplace](/marketplace)** — trade directly with verified sellers.
 - **Wishlist, price alerts and portfolio tracking** — for a free account, track the cards you want, get notified on price drops, and value your whole collection.
 
 ## How prices work
@@ -693,7 +692,7 @@ We pull live prices directly from each store's public product feed (and eBay) in
 
 ## Where we're still growing
 
-Store coverage is deepest in Australia and growing fastest in the US, UK and Singapore — we're actively finding and adding new stores in every market. If a store you use is missing, or something looks wrong, tell us: use the [contact form](/contact) or post on the [forum](/forum). Thanks for stopping by, and happy hunting.`,
+Store coverage is deepest in Australia and growing fastest in the US, UK and Singapore — we're actively finding and adding new stores in every market. If a store you use is missing, or something looks wrong, tell us via the [contact form](/contact). Thanks for stopping by, and happy hunting.`,
   },
   {
     slug: "unleashed-meta-snapshot-june-2026",
@@ -801,7 +800,7 @@ Many overseas-hosted stores quietly show prices in the wrong currency depending 
 
 1. **Check the build cost on a deck page.** It already finds the cheapest copy of each card across every store we track.
 2. **Watch shipping.** A card that's 20c cheaper isn't a win if it adds postage from a separate store — we show an estimated shipping figure per shop.
-3. **Use the [forum](/forum).** Other AU players list cards for sale (often below retail), and you can post a want-to-buy for anything you're chasing.
+3. **Use the [marketplace](/marketplace).** Verified sellers list cards for sale (often below retail).
 
 We currently compare a wide range of Australian stores plus eBay AU, and we add more regularly. If your favourite shop is missing, let us know via [contact](/contact) — this guide will grow as coverage does.
 

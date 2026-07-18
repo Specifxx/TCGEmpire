@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { SHARD } from "@/lib/points-config";
 import { useMe } from "@/lib/use-me";
 import { usePremiumDialog } from "./PremiumDialog";
 
@@ -16,8 +15,6 @@ export interface MenuUser {
   avatarUrl: string | null;
   emailVerified: boolean;
   balanceCents: number;
-  points: number;
-  canCheckIn: boolean;
 }
 
 // Profile icon (top-right) + dropdown. Signed out → a "sign in" person icon linking
@@ -90,8 +87,6 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
         )}
         {!user.emailVerified ? (
           <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-ink-950 bg-gold" title="Email not verified" />
-        ) : user.canCheckIn ? (
-          <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-ink-950 bg-brand-400" title="Daily check-in available" />
         ) : null}
       </button>
 
@@ -100,14 +95,6 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
           <div className="border-b border-ink-700 px-4 py-3">
             <div className="truncate text-sm font-semibold text-white">{user.displayName}</div>
             <div className="truncate text-xs text-slate-500">{user.email}</div>
-            <Link
-              href="/rewards"
-              onClick={() => setOpen(false)}
-              className="mt-2 flex items-center justify-between rounded-lg border border-ink-700 bg-ink-950/50 px-2.5 py-1.5 hover:border-brand-500"
-            >
-              <span className="text-xs font-semibold text-slate-300">{SHARD.glyph} {user.points.toLocaleString()} {SHARD.name}</span>
-              {user.canCheckIn && <span className="chip bg-brand-500/15 text-[10px] text-brand-300">Check in</span>}
-            </Link>
           </div>
 
           {!user.emailVerified && (
@@ -136,9 +123,7 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
             )}
             <MenuLink href="/profile" onClick={() => setOpen(false)}>Profile</MenuLink>
             <MenuLink href="/profile#collection" onClick={() => setOpen(false)}>My collection</MenuLink>
-            <MenuLink href="/rewards" onClick={() => setOpen(false)}>{SHARD.name} &amp; rewards</MenuLink>
             <MenuLink href="/wishlist" onClick={() => setOpen(false)}>Wishlist</MenuLink>
-            <MenuLink href="/forum" onClick={() => setOpen(false)}>My forum posts</MenuLink>
             <MenuLink href="/feedback" onClick={() => setOpen(false)}>
               💬 Feedback{!premium ? <span className="text-gold"> · get Premium</span> : null}
             </MenuLink>

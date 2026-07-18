@@ -35,7 +35,7 @@ export const US_STATES: { value: string; label: string }[] = [
 
 export const DEFAULT_COUNTRY = "Australia";
 
-// Country name for a market code, used as the default location on a forum post.
+// Country name for a market code.
 export const MARKET_COUNTRY: Record<string, string> = {
   AU: "Australia",
   NZ: "New Zealand",

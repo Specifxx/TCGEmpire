@@ -67,7 +67,6 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     title: "Community & learn",
     links: [
-      { href: "/forum", label: "Forum", emoji: "💬" },
       { href: "/learn", label: "Learn Riftbound", emoji: "🎓" },
       { href: "/guides", label: "Guides", emoji: "📖" },
       { href: "/blog", label: "Blog", emoji: "📰" },

@@ -73,7 +73,7 @@ export default function TermsPage() {
           <ul className="list-disc space-y-1 pl-5">
             <li>scrape, copy or republish the Site&rsquo;s data in bulk without permission;</li>
             <li>disrupt, overload, or attempt to gain unauthorised access to the Site or its systems;</li>
-            <li>post unlawful, misleading, infringing or abusive content where the Site allows submissions (e.g. the forum);</li>
+            <li>post unlawful, misleading, infringing or abusive content where the Site allows submissions;</li>
             <li>use the Site for any unlawful purpose or in breach of these Terms.</li>
           </ul>
         </section>
@@ -81,9 +81,9 @@ export default function TermsPage() {
         <section className="space-y-2">
           <h2 className="text-lg font-bold text-white">6. User content</h2>
           <p>
-            If you post content (for example on the community forum), you remain responsible for it and
-            grant us a non-exclusive licence to display it on the Site. We may remove content that
-            breaches these Terms or that we consider inappropriate.
+            If you post content on the Site, you remain responsible for it and grant us a non-exclusive
+            licence to display it on the Site. We may remove content that breaches these Terms or that we
+            consider inappropriate.
           </p>
         </section>
 

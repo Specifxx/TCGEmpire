@@ -20,7 +20,7 @@ const config: CapacitorConfig = {
   backgroundColor: "#0a0f1a",
   server: {
     // Load the live, server-rendered site. This keeps the app 100% in sync with
-    // the website (auth, browse, price comparison, forum) with zero duplicate code.
+    // the website (auth, browse, price comparison) with zero duplicate code.
     url: "https://riftcompare.com",
     // Never allow plaintext HTTP — the site is HTTPS-only.
     cleartext: false,

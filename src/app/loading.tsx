@@ -4,7 +4,7 @@
 // IMPORTANT: this must fill the whole viewport (minus the navbar). At its old
 // 55vh the footer and the layout-level ad banner sat in view during the load,
 // then got shoved down by the arriving page — a 0.4–0.6 CLS hit on every
-// dynamic route (/, /card, /forum, /decks…), the site's biggest shift source.
+// dynamic route (/, /card, /decks…), the site's biggest shift source.
 export default function Loading() {
   return (
     <div className="flex min-h-[calc(100dvh-6rem)] flex-col items-center justify-center gap-3 text-slate-500">

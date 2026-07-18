@@ -171,7 +171,7 @@ export default async function HomePage() {
           <div className="min-w-0 flex-1">
             <h2 className="text-lg font-extrabold text-white">Play today&apos;s Riftle</h2>
             <p className="mt-0.5 text-sm text-slate-400">
-              Guess the daily Riftbound card in 8 tries — a new one every day. Signed-in players earn ✦ Shards for solving it.
+              Guess the daily Riftbound card in 8 tries — a new one every day.
             </p>
           </div>
           <span className="btn-primary shrink-0 text-sm">Play →</span>

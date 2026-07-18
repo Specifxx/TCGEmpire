@@ -7,7 +7,7 @@ import { enabledProviders } from "@/lib/oauth";
 export const metadata: Metadata = { robots: { index: false } }; // auth/utility — never indexed
 
 function safe(next?: string): string {
-  return next && next.startsWith("/") && !next.startsWith("//") ? next : "/forum";
+  return next && next.startsWith("/") && !next.startsWith("//") ? next : "/profile";
 }
 
 export default async function RegisterPage({ searchParams }: { searchParams: { next?: string } }) {

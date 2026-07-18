@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
 import { createSession } from "@/lib/auth";
-import { awardPoints } from "@/lib/points";
 import { applyReferral } from "@/lib/referral";
 import { grantEarlyAdopterPremium, EARLY_PREMIUM_MONTHS } from "@/lib/premium";
 import { sendEarlyAdopterEmail } from "@/lib/email";
@@ -78,8 +77,7 @@ export async function GET(req: Request, { params }: { params: { provider: string
   const { user, isNew } = await upsertOAuthUser(provider, providerId, email, name, avatar);
   await createSession(user.id);
   if (isNew) {
-    // First-ever sign-in: seed the loyalty economy and credit any referrer.
-    await awardPoints(user.id, "welcome").catch(() => {});
+    // First-ever sign-in: credit any referrer.
     await applyReferral(user.id);
     // Early-adopter promo: the first 100 accounts get free Premium (best-effort) — and
     // an email telling them it's live (only on a real grant; signup paths only).

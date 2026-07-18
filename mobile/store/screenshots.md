@@ -11,7 +11,7 @@ simulator/emulator or device.
   toolbar, or `adb exec-out screencap -p > shot.png`.
 
 Good frames to capture: the **browse/search** grid, a **card price-comparison**
-page (the hero feature), the **deck builder**, and the **forum**.
+page (the hero feature), and the **deck builder**.
 
 ## Apple App Store (required sizes)
 

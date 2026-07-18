@@ -23,8 +23,6 @@ export async function GET() {
             avatarUrl: user.avatarUrl ?? null,
             emailVerified: !!user.emailVerified,
             balanceCents: user.balanceCents,
-            points: user.points,
-            canCheckIn: user.canCheckIn,
           }
         : null,
       premium: isPremium(user),
