@@ -61,6 +61,12 @@ export async function GET() {
     shipCountry: o.shipCountry,
     shipPhone: o.shipPhone,
     releaseRequestedAt: o.releaseRequestedAt,
+    cancelRequestedAt: o.cancelRequestedAt,
+    cancelReason: o.cancelReason,
+    // Which side proposed the cancellation — as a role, not a raw user id, so the
+    // client can just compare it to this row's own `role` (no need to know its
+    // own user id).
+    cancelRequestedByRole: o.cancelRequestedBy == null ? null : o.cancelRequestedBy === o.buyerId ? ("buyer" as const) : ("seller" as const),
     reviewed: !!o.review,
     rating: o.review?.rating ?? null,
     counterparty:

@@ -42,6 +42,9 @@ type OrderRow = {
   shipCountry: string | null;
   shipPhone: string | null;
   releaseRequestedAt: string | null;
+  cancelRequestedAt: string | null;
+  cancelReason: string | null;
+  cancelRequestedByRole: "buyer" | "seller" | null;
   listing: {
     id: string;
     condition: string;
@@ -118,6 +121,73 @@ function TrackingLink({ o }: { o: OrderRow }) {
   );
 }
 
+// Mutual-agreement cancellation status/actions for one row — three states:
+// nothing pending (offer to request one), I'm the requester (waiting on the
+// other party, can withdraw), or the other party requested it (I can accept —
+// full refund — or decline). Shown on both Purchases and Sales.
+function CancelStatus({
+  o,
+  busy,
+  onRequest,
+  onAct,
+}: {
+  o: OrderRow;
+  busy: string | null;
+  onRequest: () => void;
+  onAct: (url: string, body: unknown, okMsg: string) => Promise<boolean>;
+}) {
+  if (o.status !== "PAID" && o.status !== "SHIPPED") return null;
+
+  if (!o.cancelRequestedAt) {
+    return (
+      <button onClick={onRequest} className="text-[11px] text-slate-500 hover:text-rose-300">
+        Request cancellation
+      </button>
+    );
+  }
+
+  const iRequested = o.cancelRequestedByRole === o.role;
+  if (iRequested) {
+    return (
+      <div className="flex items-center gap-1.5 text-[11px] text-gold">
+        <span>⏳ Cancellation requested — awaiting the other party</span>
+        <button
+          onClick={() => onAct(`/api/marketplace/orders/${o.id}`, { action: "withdraw-cancel" }, "Withdrawn")}
+          disabled={!!busy}
+          className="rounded bg-ink-800 px-1.5 py-0.5 text-slate-300 hover:bg-ink-700"
+        >
+          Withdraw
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-1 text-[11px]">
+      <span className="text-slate-400 italic">"{o.cancelReason}"</span>
+      <div className="flex gap-1.5">
+        <button
+          onClick={() => {
+            if (typeof window !== "undefined" && !window.confirm("Accept this cancellation? This issues a full refund to the buyer and restocks the listing — it can't be undone.")) return;
+            onAct(`/api/marketplace/orders/${o.id}`, { action: "accept-cancel" }, "✓ Cancelled and refunded");
+          }}
+          disabled={!!busy}
+          className="rounded bg-brand-500/20 px-2 py-1 font-semibold text-brand-300 hover:bg-brand-500/30 disabled:opacity-50"
+        >
+          ✅ Accept &amp; refund
+        </button>
+        <button
+          onClick={() => onAct(`/api/marketplace/orders/${o.id}`, { action: "decline-cancel" }, "Declined")}
+          disabled={!!busy}
+          className="rounded bg-ink-800 px-2 py-1 text-slate-300 hover:bg-ink-700 disabled:opacity-50"
+        >
+          Decline
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // Collapsed by default so the order list stays scannable — expand to get what's
 // needed to actually address the parcel. Seller-only (see OrderList).
 function ShippingAddressDetails({ o }: { o: OrderRow }) {
@@ -161,6 +231,7 @@ export function MarketplaceOrders({ offersEnabled = false }: { offersEnabled?: b
   const [reviewFor, setReviewFor] = useState<OrderRow | null>(null);
   const [shipFor, setShipFor] = useState<OrderRow | null>(null);
   const [reportFor, setReportFor] = useState<OrderRow | null>(null);
+  const [cancelFor, setCancelFor] = useState<OrderRow | null>(null);
 
   function toast(msg: string, ms = 2200) {
     setFlash(msg);
@@ -254,7 +325,7 @@ export function MarketplaceOrders({ offersEnabled = false }: { offersEnabled?: b
           renderActions={(o) => (
             <>
               <TrackingLink o={o} />
-              {o.status === "SHIPPED" && (
+              {o.status === "SHIPPED" && !o.cancelRequestedAt && (
                 <button onClick={() => act(`/api/marketplace/orders/${o.id}`, { action: "receive" }, "✓ Delivery confirmed")} disabled={!!busy} className="btn-primary text-xs disabled:opacity-50">
                   📬 Got it
                 </button>
@@ -263,6 +334,7 @@ export function MarketplaceOrders({ offersEnabled = false }: { offersEnabled?: b
                 <button onClick={() => setReviewFor(o)} className="btn-ghost text-xs">★ Review seller</button>
               )}
               {o.reviewed && <span className="text-[11px] text-gold">★ {o.rating}/5 left</span>}
+              <CancelStatus o={o} busy={busy} onRequest={() => setCancelFor(o)} onAct={act} />
               {["PAID", "SHIPPED", "COMPLETED"].includes(o.status) && !o.disputedAt && (
                 <button onClick={() => setReportFor(o)} className="text-[11px] text-slate-500 hover:text-rose-300">Report a problem</button>
               )}
@@ -283,7 +355,7 @@ export function MarketplaceOrders({ offersEnabled = false }: { offersEnabled?: b
                   📦 Mark shipped
                 </button>
               )}
-              {o.status === "SHIPPED" && (
+              {o.status === "SHIPPED" && !o.cancelRequestedAt && (
                 o.releaseRequestedAt ? (
                   <span className="text-[11px] text-gold">🔔 Release requested — awaiting admin review</span>
                 ) : (
@@ -299,6 +371,7 @@ export function MarketplaceOrders({ offersEnabled = false }: { offersEnabled?: b
               )}
               <TrackingLink o={o} />
               <PayoutBadge status={o.status} />
+              <CancelStatus o={o} busy={busy} onRequest={() => setCancelFor(o)} onAct={act} />
               {["PAID", "SHIPPED", "COMPLETED"].includes(o.status) && !o.disputedAt && (
                 <button onClick={() => setReportFor(o)} className="text-[11px] text-slate-500 hover:text-rose-300">Report a problem</button>
               )}
@@ -411,6 +484,18 @@ export function MarketplaceOrders({ offersEnabled = false }: { offersEnabled?: b
           onSubmit={async (message) => {
             const ok = await act(`/api/marketplace/orders/${reportFor.id}`, { action: "report", message }, "✓ Reported — our team will follow up by email");
             if (ok) setReportFor(null);
+          }}
+        />
+      )}
+
+      {cancelFor && (
+        <CancelModal
+          order={cancelFor}
+          busy={!!busy}
+          onClose={() => setCancelFor(null)}
+          onSubmit={async (reason) => {
+            const ok = await act(`/api/marketplace/orders/${cancelFor.id}`, { action: "request-cancel", reason }, "✓ Cancellation requested — waiting on the other party");
+            if (ok) setCancelFor(null);
           }}
         />
       )}
@@ -575,6 +660,50 @@ function ReportModal({
           <button onClick={onClose} className="btn-ghost text-sm">Cancel</button>
           <button onClick={() => onSubmit(message.trim())} disabled={busy || !valid} className="btn-primary text-sm disabled:opacity-50">
             {busy ? "Reporting…" : "Submit report"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Proposes a mutual cancellation — nothing happens until the other party
+// accepts (full refund) or declines. No admin gate: both sides consenting
+// removes the conflict-of-interest concern that gates delivery confirmation.
+function CancelModal({
+  order,
+  busy,
+  onClose,
+  onSubmit,
+}: {
+  order: OrderRow;
+  busy: boolean;
+  onClose: () => void;
+  onSubmit: (reason: string) => void;
+}) {
+  const [reason, setReason] = useState("");
+  const valid = reason.trim().length >= 5;
+  return (
+    <div className="fixed inset-0 z-[85] flex items-center justify-center p-4" role="dialog" aria-modal="true">
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-md rounded-2xl border border-ink-700 bg-ink-900 p-5 shadow-2xl">
+        <h2 className="text-lg font-extrabold text-white">Request cancellation</h2>
+        <p className="mt-1 text-sm text-slate-400">{order.listing?.card.name} ×{order.quantity} — {order.counterparty}</p>
+        <textarea
+          value={reason}
+          onChange={(e) => setReason(e.target.value.slice(0, 300))}
+          placeholder="Why do you want to cancel? (e.g. out of stock, changed my mind, wrong item)"
+          rows={3}
+          className="input mt-3 resize-none"
+        />
+        <p className="mt-2 text-xs text-slate-600">
+          {order.counterparty} will be asked to accept or decline. Nothing is refunded or restocked unless they
+          accept.
+        </p>
+        <div className="mt-4 flex justify-end gap-2">
+          <button onClick={onClose} className="btn-ghost text-sm">Back</button>
+          <button onClick={() => onSubmit(reason.trim())} disabled={busy || !valid} className="btn-primary text-sm disabled:opacity-50">
+            {busy ? "Sending…" : "Send request"}
           </button>
         </div>
       </div>

@@ -39,6 +39,15 @@ export default function BuyerProtectionPage() {
         </section>
 
         <section className="space-y-2">
+          <h2 className="text-lg font-bold text-white">Changed your mind, or the seller's out of stock?</h2>
+          <p>
+            Either you or the seller can request to cancel an unfinished order (before it's marked delivered) — the
+            other party just needs to accept in <Link href="/marketplace/orders" className="text-brand-400 hover:underline">My orders</Link>.
+            Once accepted, you're refunded in full immediately; nothing is ever cancelled unilaterally by one side.
+          </p>
+        </section>
+
+        <section className="space-y-2">
           <h2 className="text-lg font-bold text-white">If something goes wrong</h2>
           <p>
             If your order doesn't arrive, arrives damaged, or isn't as described, use the{" "}

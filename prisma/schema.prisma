@@ -568,6 +568,16 @@ model Order {
   adminReviewedBy    String?   // admin email, for the audit trail
   releasedBy         String?   // BUYER | ADMIN | AUTO — who/what actually triggered release
 
+  // ── Mutual-agreement cancellation ──────────────────────────────────────────
+  // Either party can propose cancelling a PAID/SHIPPED order; it only actually
+  // cancels + fully refunds once the OTHER party accepts (no admin gate needed —
+  // both sides consenting removes the conflict-of-interest concern that gates
+  // delivery confirmation). cancelRequestedAt is the "pending" signal; cleared on
+  // decline/withdraw, left set (order moves to CANCELLED) on accept.
+  cancelRequestedBy String? // userId of whoever proposed it
+  cancelRequestedAt DateTime?
+  cancelReason      String?
+
   // Shipping address snapshot, captured at checkout (never trust/re-read the
   // buyer's live saved address for an existing order — they might edit or clear
   // it later). country is always the listing's own market, not buyer-chosen.

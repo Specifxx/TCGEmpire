@@ -124,3 +124,41 @@ export async function sendReleaseRequestedEmail(o: OrderEmailInfo): Promise<bool
     </td></tr>`;
   return sendEmail(SUPPORT_EMAIL, `[RC] Release requested — ${num}`, emailShell("Seller requested release", inner + button("Review in admin →", `${SITE_URL}/admin/marketplace`), footer()));
 }
+
+// ─── Mutual-agreement cancellation ──────────────────────────────────────────
+
+// To whichever party DIDN'T propose the cancellation — asks them to accept or
+// decline in My Orders. Nothing is cancelled/refunded until they respond.
+export async function sendCancelRequestedEmail(to: string, o: OrderEmailInfo, requestedByName: string, reason: string): Promise<boolean> {
+  const num = formatOrderNumber(o.orderNumber) ?? o.orderId;
+  const inner = `
+    <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      <strong style="color:#fff">${requestedByName}</strong> wants to cancel order <strong style="color:#fff">${num}</strong>
+      (${o.quantity} × ${o.cardName}) and issue a full refund.
+    </td></tr>
+    <tr><td style="padding:4px 32px 16px;font-size:14px;color:#b8c0cc;font-style:italic">"${reason}"</td></tr>
+    <tr><td style="padding:0 32px 16px;font-size:13px;color:#8b95a5">Nothing happens until you accept or decline — do that from My orders.</td></tr>`;
+  return sendEmail(to, `Cancellation requested — ${num}`, emailShell("Cancellation requested", inner + button("Review in My orders", `${SITE_URL}/marketplace/orders`), footer()));
+}
+
+// To both buyer and seller once the cancellation is accepted and refunded.
+export async function sendCancelledMutualEmail(to: string, o: OrderEmailInfo): Promise<boolean> {
+  const num = formatOrderNumber(o.orderNumber) ?? o.orderId;
+  const inner = `
+    <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      Order <strong style="color:#fff">${num}</strong> (${o.quantity} × ${o.cardName}) has been cancelled by mutual
+      agreement. The buyer has been refunded ${formatMoney(o.totalCents, o.currency)} in full.
+    </td></tr>`;
+  return sendEmail(to, `Order cancelled — ${num}`, emailShell("Order cancelled", inner + button("View orders", `${SITE_URL}/marketplace/orders`), footer()));
+}
+
+// To whoever proposed the cancellation, if the other party declines.
+export async function sendCancelDeclinedEmail(to: string, o: OrderEmailInfo): Promise<boolean> {
+  const num = formatOrderNumber(o.orderNumber) ?? o.orderId;
+  const inner = `
+    <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      Your request to cancel order <strong style="color:#fff">${num}</strong> was declined — the order continues as
+      normal. If something's still wrong, use "Report a problem" on the order to get an admin involved.
+    </td></tr>`;
+  return sendEmail(to, `Cancellation declined — ${num}`, emailShell("Cancellation declined", inner + button("View order", `${SITE_URL}/marketplace/orders`), footer()));
+}
