@@ -45,11 +45,14 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
   }
 
   // Deep-linked from a card page's marketplace hero (?cardId=…) — narrows to that
-  // one card's listings in the viewer's own market (same-region-only at launch).
+  // one card's listings. Purchases stay same-region-only at launch (no cross-border
+  // shipping surprises), but we no longer hide OTHER regions' listings outright —
+  // they're still useful price signal, so we fetch every region and mark each offer
+  // `inRegion` for the client to gray out/disable instead of dropping silently.
   const listings = await prisma.marketplaceListing.findMany({
-    where: { status: "ACTIVE", quantity: { gt: 0 }, country, ...(cardId ? { cardId } : {}) },
+    where: { status: "ACTIVE", quantity: { gt: 0 }, ...(cardId ? { cardId } : {}) },
     orderBy: { createdAt: "desc" },
-    take: 300, // egress rule: no unbounded reads on a per-request page
+    take: cardId ? 50 : 400, // egress rule: no unbounded reads on a per-request page
 
     include: {
       card: {
@@ -83,6 +86,8 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
       shippingNote: l.seller.sellerProfile?.shippingNote ?? null,
       ratingAvg: r?.avg ?? null,
       ratingCount: r?.count ?? 0,
+      country: l.country,
+      inRegion: l.country === country,
     };
     const existing = byCard.get(l.cardId);
     if (existing) existing.offers.push(offer);
@@ -94,17 +99,28 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
       byCard.set(l.cardId, { card: cardLite, marketCents, offers: [offer] });
     }
   }
+  // Buyable (in-region) offers first, then cross-region reference-only ones;
+  // official-then-cheapest within each group.
   const cards: MktCard[] = [...byCard.values()].map((c) => {
-    c.offers.sort((a, b) => Number(b.isOfficial) - Number(a.isOfficial) || a.priceCents - b.priceCents);
+    c.offers.sort(
+      (a, b) => Number(b.inRegion) - Number(a.inRegion) || Number(b.isOfficial) - Number(a.isOfficial) || a.priceCents - b.priceCents
+    );
     return c;
   });
-  // Cards with the cheapest offer first.
-  cards.sort((a, b) => Math.min(...a.offers.map((o) => o.priceCents)) - Math.min(...b.offers.map((o) => o.priceCents)));
+  // The price a card sorts/displays by: cheapest offer a buyer can actually check out
+  // with (in-region); only fall back to a cross-region price if nobody local sells it.
+  const bestPrice = (c: MktCard) => {
+    const inRegion = c.offers.filter((o) => o.inRegion);
+    const pool = inRegion.length ? inRegion : c.offers;
+    return Math.min(...pool.map((o) => o.priceCents));
+  };
+  cards.sort((a, b) => bestPrice(a) - bestPrice(b));
 
   return (
     <MarketplaceClient
       cards={cards}
       place={info.place}
+      country={country}
       stripeEnabled={stripeEnabled()}
       signedIn={!!user}
       offersEnabled={MARKETPLACE_OFFERS}

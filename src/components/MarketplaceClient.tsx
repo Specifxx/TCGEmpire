@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { formatMoney } from "@/lib/format";
 import { cardDisplayName } from "@/lib/card-name";
 import { cardHref } from "@/lib/card-url";
 import { CONDITION_KEYS } from "@/lib/constants";
+import { COUNTRIES, type Country } from "@/lib/country";
+import { useCountry } from "./CountryProvider";
 import { MarketplaceCheckout, type CheckoutItem } from "./MarketplaceCheckout";
 
 export interface MktOffer {
@@ -21,6 +23,11 @@ export interface MktOffer {
   shippingNote: string | null;
   ratingAvg: number | null;
   ratingCount: number;
+  // The seller's shipping region for this listing, and whether it matches the
+  // viewer's own market. Cross-region offers are shown (price transparency) but
+  // greyed out and non-purchasable — see D6/same-region-only in the plan.
+  country: string;
+  inRegion: boolean;
 }
 interface MktCardInner {
   id: string;
@@ -86,9 +93,19 @@ function Stars({ avg, count }: { avg: number | null; count: number }) {
   );
 }
 
+// Cheapest offer a buyer can actually check out with (in-region); only falls back
+// to a cross-region price so the card still surfaces (as reference-only) if nobody
+// local sells it.
+function bestOffer(offers: MktOffer[]): MktOffer {
+  const inRegion = offers.filter((o) => o.inRegion);
+  const pool = inRegion.length ? inRegion : offers;
+  return pool.reduce((best, o) => (o.priceCents < best.priceCents ? o : best), pool[0]);
+}
+
 export function MarketplaceClient({
   cards,
   place,
+  country,
   stripeEnabled = false,
   signedIn = false,
   offersEnabled = false,
@@ -96,6 +113,7 @@ export function MarketplaceClient({
 }: {
   cards: MktCard[];
   place: string;
+  country: string;
   stripeEnabled?: boolean;
   signedIn?: boolean;
   offersEnabled?: boolean;
@@ -103,6 +121,7 @@ export function MarketplaceClient({
   // offers modal on load instead of making the visitor find it in the grid.
   openCardId?: string;
 }) {
+  const { setCountry } = useCountry();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [openCard, setOpenCard] = useState<MktCard | null>(null);
@@ -230,9 +249,11 @@ export function MarketplaceClient({
           (setCode === "all" || c.card.setCode === setCode) &&
           (!q || c.card.name.toLowerCase().includes(q) || `${c.card.setCode} ${c.card.collectorNumber}`.toLowerCase().includes(q))
       );
-    const cheapest = (c: MktCard) => Math.min(...c.offers.map((o) => o.priceCents));
+    const cheapest = (c: MktCard) => bestOffer(c.offers).priceCents;
     const bestDelta = (c: MktCard) => {
-      const ds = c.offers.map((o) => deltaPct(o.priceCents, c.marketCents)).filter((d): d is number => d != null);
+      const inRegion = c.offers.filter((o) => o.inRegion);
+      const pool = inRegion.length ? inRegion : c.offers;
+      const ds = pool.map((o) => deltaPct(o.priceCents, c.marketCents)).filter((d): d is number => d != null);
       return ds.length ? Math.min(...ds) : 999;
     };
     switch (sort) {
@@ -244,6 +265,12 @@ export function MarketplaceClient({
     return list;
   }, [cards, query, cond, foil, setCode, sort]);
 
+  // True once no card in view has an in-region (buyable) offer — every price shown
+  // would be reference-only. Surfaces a region-switch prompt instead of a page that
+  // just looks broken/empty.
+  const noneInRegion = filtered.length > 0 && filtered.every((c) => !c.offers.some((o) => o.inRegion));
+  const otherRegions = (["AU", "UK", "US"] as Country[]).filter((c) => c !== country);
+
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
@@ -252,7 +279,7 @@ export function MarketplaceClient({
           <p className="text-sm text-slate-500">
             Buy Riftbound cards from verified sellers shipping within <span className="font-semibold text-slate-300">{place}</span>.
             {" "}
-            <span className="chip bg-ink-800 text-[10px] font-bold text-slate-400" title="At launch, buyers only see sellers in their own market — no cross-border shipping surprises">
+            <span className="chip bg-ink-800 text-[10px] font-bold text-slate-400" title="You can only buy from sellers shipping within your own market — no cross-border shipping surprises. Other regions' prices still show for reference.">
               Same-region delivery
             </span>
           </p>
@@ -297,6 +324,22 @@ export function MarketplaceClient({
         </div>
       )}
 
+      {noneInRegion && (
+        <div className="card-surface mb-4 flex flex-wrap items-center justify-between gap-3 border-gold/30 bg-gold/5 p-4">
+          <p className="text-sm text-slate-300">
+            No sellers currently ship to <span className="font-semibold text-white">{place}</span> — prices below are shown for
+            reference only. Switch region to buy from a market that does:
+          </p>
+          <div className="flex gap-1.5">
+            {otherRegions.map((c) => (
+              <button key={c} onClick={() => setCountry(c)} className="btn-ghost text-xs">
+                {COUNTRIES[c].flag} {COUNTRIES[c].label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {filtered.length === 0 ? (
         <div className="card-surface grid place-items-center p-16 text-center text-slate-400">
           {cards.length === 0 ? "No cards listed yet." : "Nothing matches those filters."}
@@ -304,9 +347,9 @@ export function MarketplaceClient({
       ) : (
         <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {filtered.map((c) => {
-            const from = Math.min(...c.offers.map((o) => o.priceCents));
-            const cur = c.offers[0].currency;
-            const pct = deltaPct(from, c.marketCents);
+            const best = bestOffer(c.offers);
+            const cur = best.currency;
+            const pct = deltaPct(best.priceCents, c.marketCents);
             return (
               <li key={c.card.id}>
                 <button onClick={() => setOpenCard(c)} className="card-surface flex w-full flex-col overflow-hidden text-left transition-colors hover:border-brand-500/50">
@@ -318,12 +361,17 @@ export function MarketplaceClient({
                         <span className="num">{Math.abs(pct)}%</span> under market
                       </span>
                     )}
+                    {!best.inRegion && (
+                      <span className="absolute right-1.5 top-1.5 rounded-full bg-ink-950/80 px-2 py-0.5 text-[10px] font-bold text-slate-400">
+                        {best.country} only
+                      </span>
+                    )}
                   </div>
-                  <div className="p-3">
+                  <div className={`p-3 ${!best.inRegion ? "opacity-60" : ""}`}>
                     <div className="truncate text-sm font-semibold text-white">{cardDisplayName(c.card.name, c.card)}</div>
                     <div className="num text-[11px] text-slate-500">{c.card.setCode} {c.card.collectorNumber}</div>
                     <div className="mt-1 flex items-baseline justify-between">
-                      <span className="num text-base font-extrabold text-accent">from {formatMoney(from, cur)}</span>
+                      <span className="num text-base font-extrabold text-accent">from {formatMoney(best.priceCents, cur)}</span>
                       <span className="text-[11px] text-slate-500"><span className="num">{c.offers.length}</span> {c.offers.length === 1 ? "offer" : "offers"}</span>
                     </div>
                   </div>
@@ -413,6 +461,8 @@ function OffersModal({
 }) {
   const [qty, setQty] = useState<Record<string, number>>({});
   const getQty = (o: MktOffer) => qty[o.id] ?? 1;
+  const { setCountry } = useCountry();
+  const firstOtherIndex = card.offers.findIndex((o) => !o.inRegion);
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center p-4" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-black/70" onClick={onClose} />
@@ -432,37 +482,60 @@ function OffersModal({
           <button onClick={onClose} aria-label="Close" className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full text-slate-400 hover:bg-ink-800 hover:text-white">✕</button>
         </div>
         <ul className="divide-y divide-ink-800 overflow-y-auto">
-          {card.offers.map((o) => (
-            <li key={o.id} className="flex flex-wrap items-center gap-3 p-3">
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-white">
-                  <Link href={`/marketplace/seller/${o.sellerId}`} className="hover:text-brand-300 hover:underline">{o.sellerName}</Link>
-                  {o.isOfficial && <span className="chip bg-brand-500/15 text-[10px] font-bold text-brand-300">★ OFFICIAL</span>}
-                  <Stars avg={o.ratingAvg} count={o.ratingCount} />
+          {card.offers.map((o, i) => (
+            <Fragment key={o.id}>
+              {i === firstOtherIndex && firstOtherIndex > 0 && (
+                <li key="divider" className="bg-ink-950/60 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                  Other regions — reference price only
+                </li>
+              )}
+              <li key={o.id} className={`flex flex-wrap items-center gap-3 p-3 ${!o.inRegion ? "opacity-60" : ""}`}>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-white">
+                    <Link href={`/marketplace/seller/${o.sellerId}`} className="hover:text-brand-300 hover:underline">{o.sellerName}</Link>
+                    {o.isOfficial && <span className="chip bg-brand-500/15 text-[10px] font-bold text-brand-300">★ OFFICIAL</span>}
+                    <Stars avg={o.ratingAvg} count={o.ratingCount} />
+                  </div>
+                  <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                    <span>{o.condition}{o.isFoil ? " · ✦ Foil" : ""} · {o.quantity} available{o.shippingNote ? ` · ${o.shippingNote}` : ""}</span>
+                    {o.inRegion ? (
+                      <DeltaBadge pct={deltaPct(o.priceCents, card.marketCents)} />
+                    ) : (
+                      <span className="chip bg-ink-800 text-[10px] font-semibold text-slate-500">ships to {COUNTRIES[o.country as Country]?.label ?? o.country} only</span>
+                    )}
+                  </div>
                 </div>
-                <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                  <span>{o.condition}{o.isFoil ? " · ✦ Foil" : ""} · {o.quantity} available{o.shippingNote ? ` · ${o.shippingNote}` : ""}</span>
-                  <DeltaBadge pct={deltaPct(o.priceCents, card.marketCents)} />
-                </div>
-              </div>
-              <span className="num text-base font-extrabold text-accent">{formatMoney(o.priceCents, o.currency)}</span>
-              <input
-                type="number"
-                min={1}
-                max={o.quantity}
-                value={getQty(o)}
-                onChange={(e) => setQty((q) => ({ ...q, [o.id]: Math.max(1, Math.min(o.quantity, Number(e.target.value) || 1)) }))}
-                className="input w-14 py-1 text-center text-sm"
-                aria-label="Quantity"
-              />
-              <div className="flex gap-1.5">
-                {offersEnabled && signedIn && (
-                  <button onClick={() => onMakeOffer(o)} className="btn-ghost text-xs" title="Negotiate a lower price">Offer</button>
+                <span className="num text-base font-extrabold text-accent">{formatMoney(o.priceCents, o.currency)}</span>
+                {o.inRegion ? (
+                  <>
+                    <input
+                      type="number"
+                      min={1}
+                      max={o.quantity}
+                      value={getQty(o)}
+                      onChange={(e) => setQty((q) => ({ ...q, [o.id]: Math.max(1, Math.min(o.quantity, Number(e.target.value) || 1)) }))}
+                      className="input w-14 py-1 text-center text-sm"
+                      aria-label="Quantity"
+                    />
+                    <div className="flex gap-1.5">
+                      {offersEnabled && signedIn && (
+                        <button onClick={() => onMakeOffer(o)} className="btn-ghost text-xs" title="Negotiate a lower price">Offer</button>
+                      )}
+                      <button onClick={() => onAdd(card.card, o, getQty(o))} className="btn-ghost text-xs">Add to cart</button>
+                      <button onClick={() => onBuyNow(o, getQty(o))} disabled={busy} className="btn-primary text-xs disabled:opacity-50">Buy now</button>
+                    </div>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => { setCountry(o.country as Country); onClose(); }}
+                    className="btn-ghost text-xs"
+                    title={`Switch your region to buy from this ${COUNTRIES[o.country as Country]?.label ?? o.country} seller`}
+                  >
+                    Switch to {COUNTRIES[o.country as Country]?.label ?? o.country} to buy
+                  </button>
                 )}
-                <button onClick={() => onAdd(card.card, o, getQty(o))} className="btn-ghost text-xs">Add to cart</button>
-                <button onClick={() => onBuyNow(o, getQty(o))} disabled={busy} className="btn-primary text-xs disabled:opacity-50">Buy now</button>
-              </div>
-            </li>
+              </li>
+            </Fragment>
           ))}
         </ul>
       </div>
