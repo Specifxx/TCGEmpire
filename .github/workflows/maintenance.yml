@@ -209,37 +209,42 @@ jobs:
         if: inputs.task == 'remove-seed-accounts'
         run: npx tsx scripts/remove-seed-accounts.ts
 
+      # Every smoke-test step below uses always() so one secret being missing
+      # doesn't cascade into GitHub Actions skipping the rest by default (its
+      # normal behaviour once any earlier step fails) — each of these checks is
+      # independent and should report its own real status regardless of the
+      # others.
       - name: "Marketplace smoke test: detect Stripe key mode"
         id: stripe_mode
-        if: inputs.task == 'test-marketplace-stripe'
+        if: always() && inputs.task == 'test-marketplace-stripe'
         env:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
         run: npx tsx scripts/test-stripe-mode.ts
 
       - name: "Marketplace smoke test: TEST mode — Connect account create/delete round-trip"
-        if: inputs.task == 'test-marketplace-stripe' && steps.stripe_mode.outputs.mode == 'test'
+        if: always() && inputs.task == 'test-marketplace-stripe' && steps.stripe_mode.outputs.mode == 'test'
         env:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
         run: npx tsx scripts/test-stripe-connect-account.ts
 
       - name: "Marketplace smoke test: LIVE mode — skipping Connect account test (would create real objects)"
-        if: inputs.task == 'test-marketplace-stripe' && steps.stripe_mode.outputs.mode == 'live'
+        if: always() && inputs.task == 'test-marketplace-stripe' && steps.stripe_mode.outputs.mode == 'live'
         run: echo "STRIPE_SECRET_KEY is live-mode — not creating a real Connect account from an automated test."
 
       - name: "Marketplace smoke test: CRON_SECRET against the live cron endpoint"
-        if: inputs.task == 'test-marketplace-stripe'
+        if: always() && inputs.task == 'test-marketplace-stripe'
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: npx tsx scripts/test-cron-secret.ts
 
       - name: "Marketplace smoke test: main Stripe webhook signature (STRIPE_WEBHOOK_SECRET)"
-        if: inputs.task == 'test-marketplace-stripe'
+        if: always() && inputs.task == 'test-marketplace-stripe'
         env:
           STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
         run: npx tsx scripts/test-stripe-webhook-signature.ts main
 
       - name: "Marketplace smoke test: Connect webhook signature (STRIPE_CONNECT_WEBHOOK_SECRET)"
-        if: inputs.task == 'test-marketplace-stripe'
+        if: always() && inputs.task == 'test-marketplace-stripe'
         env:
           STRIPE_CONNECT_WEBHOOK_SECRET: ${{ secrets.STRIPE_CONNECT_WEBHOOK_SECRET }}
         run: npx tsx scripts/test-stripe-webhook-signature.ts connect
