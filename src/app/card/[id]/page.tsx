@@ -27,6 +27,7 @@ import { CardConversionCta } from "@/components/CardConversionCta";
 import { NetProceeds } from "@/components/NetProceeds";
 import { AiInsight } from "@/components/AiInsight";
 import { CardPriceMetrics, CardPriceComparison, type EbaySearchMap } from "@/components/CardMarketSection";
+import { MarketplaceHeroBlock } from "@/components/MarketplaceHeroBlock";
 import { EbayBuyCta } from "@/components/EbayBuyCta";
 import { computeMarket, type MarketRow } from "@/lib/market-rows";
 
@@ -399,6 +400,12 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                 comparison sits directly below it. */}
             <EbayBuyCta query={cardSearchName(card.name, card)} className="mt-4" />
           </div>
+
+          {/* RiftCompare Marketplace hero — the main attention-grab, shown only
+              when this card actually has active P2P listings. Sits above the
+              store price comparison so a marketplace deal is the first thing a
+              buyer sees when one exists. */}
+          <MarketplaceHeroBlock cardId={card.id} />
 
           {/* Price comparison + eBay fallback + contextual affiliate banners —
               everything that varies with the visitor's market lives in the client

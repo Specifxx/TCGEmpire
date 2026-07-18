@@ -135,9 +135,10 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Ses
       emailVerified: !!user.emailVerified,
       balanceCents: user.balanceCents,
       isAdmin: user.isAdmin || isAdminEmail(user.email),
-      // Selling is admin-only for now (the marketplace is hidden/single-seller) — the
-      // raw per-user DB flag is intentionally NOT honoured here.
-      isVerifiedSeller: user.isAdmin || isAdminEmail(user.email),
+      // Open selling: any signed-in user with a verified email may list on the
+      // marketplace (Stripe Connect onboarding + KYC happens separately, before
+      // payouts are enabled — see lib/connect.ts). Admins can always sell/test.
+      isVerifiedSeller: !!user.emailVerified || user.isAdmin || isAdminEmail(user.email),
       premiumUntil: user.premiumUntil,
       trialStartedAt: user.trialStartedAt,
     };

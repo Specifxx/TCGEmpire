@@ -3,6 +3,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { importMarketplaceListings, MARKETPLACE_COUNTRIES, CURRENCY_BY_COUNTRY } from "@/lib/marketplace";
+import { revalidateCardPage } from "@/lib/revalidate-card";
+import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +23,9 @@ async function ownListing(userId: string, id: string) {
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in" }, { status: 401 });
+  const rl = rateLimit(`mp-listing:${clientIp(req)}:${user.id}`, 20, 3600_000);
+  if (!rl.ok) return tooManyRequests(rl.retryAfter);
+
   const listing = await ownListing(user.id, params.id);
   if (!listing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
@@ -39,15 +44,20 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     },
   });
   await importMarketplaceListings().catch(() => {});
+  await revalidateCardPage(listing.cardId).catch(() => {});
   return NextResponse.json({ ok: true, listing: updated });
 }
 
-export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: { id: string } }) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in" }, { status: 401 });
+  const rl = rateLimit(`mp-listing:${clientIp(req)}:${user.id}`, 20, 3600_000);
+  if (!rl.ok) return tooManyRequests(rl.retryAfter);
+
   const listing = await ownListing(user.id, params.id);
   if (!listing) return NextResponse.json({ error: "Not found" }, { status: 404 });
   await prisma.marketplaceListing.update({ where: { id: listing.id }, data: { status: "REMOVED" } });
   await importMarketplaceListings().catch(() => {});
+  await revalidateCardPage(listing.cardId).catch(() => {});
   return NextResponse.json({ ok: true });
 }

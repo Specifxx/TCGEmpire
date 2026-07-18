@@ -1,0 +1,62 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth";
+
+export const dynamic = "force-dynamic";
+
+// No ledger table (D2 in the plan) — pending/released are derived straight from
+// bounded, indexed Order aggregates. Stripe's own Express dashboard (via the
+// login link from /api/marketplace/stripe/connect) is the source of truth for
+// actual withdrawable balance; we never mirror that number here.
+export async function GET() {
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: "Sign in" }, { status: 401 });
+
+  const profile = await prisma.sellerProfile.findUnique({
+    where: { userId: user.id },
+    select: { stripeAccountId: true, payoutsEnabled: true, completedSalesCount: true },
+  });
+
+  // Held: PAID or SHIPPED — money is in the platform's balance, not yet
+  // transferred. Grouped by currency since a seller can list in more than one.
+  const held = await prisma.order.groupBy({
+    by: ["currency"],
+    where: { sellerId: user.id, kind: "MARKETPLACE", status: { in: ["PAID", "SHIPPED"] } },
+    _sum: { totalCents: true, feeCents: true },
+  });
+
+  // Released: COMPLETED with a recorded transfer — what's actually been paid out.
+  const released = await prisma.order.groupBy({
+    by: ["currency"],
+    where: { sellerId: user.id, kind: "MARKETPLACE", status: "COMPLETED", stripeTransferId: { not: null } },
+    _sum: { totalCents: true, feeCents: true },
+  });
+
+  const recent = await prisma.order.findMany({
+    where: { sellerId: user.id, kind: "MARKETPLACE", status: { in: ["PAID", "SHIPPED", "COMPLETED"] } },
+    orderBy: { createdAt: "desc" },
+    take: 20,
+    select: {
+      id: true,
+      orderNumber: true,
+      status: true,
+      totalCents: true,
+      feeCents: true,
+      currency: true,
+      createdAt: true,
+      transferredAt: true,
+    },
+  });
+
+  const toNet = (rows: typeof held) =>
+    rows.map((r) => ({ currency: r.currency, netCents: (r._sum.totalCents ?? 0) - (r._sum.feeCents ?? 0) }));
+
+  return NextResponse.json({
+    hasAccount: !!profile?.stripeAccountId,
+    payoutsEnabled: !!profile?.payoutsEnabled,
+    completedSalesCount: profile?.completedSalesCount ?? 0,
+    held: toNet(held),
+    released: toNet(released),
+    recent,
+  });
+}

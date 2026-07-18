@@ -57,6 +57,18 @@ const TOOLS: Tool[] = [
     desc: "Contact & feedback messages sent through the site.",
   },
   {
+    href: "/admin/support",
+    title: "Support tickets",
+    icon: "🆘",
+    desc: "Marketplace support requests — order problems, payments, disputes.",
+  },
+  {
+    href: "/admin/marketplace",
+    title: "Marketplace",
+    icon: "🛒",
+    desc: "Disputed orders, seller suspensions, and force release/refund tools.",
+  },
+  {
     href: "/admin/rising",
     title: "Rising cards",
     icon: "🚀",

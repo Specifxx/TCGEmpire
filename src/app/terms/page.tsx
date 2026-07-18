@@ -58,6 +58,19 @@ export default function TermsPage() {
         </section>
 
         <section className="space-y-2">
+          <h2 className="text-lg font-bold text-white">3a. Marketplace</h2>
+          <p>
+            {SITE_NAME} Marketplace lets signed-in users buy and sell Riftbound cards directly with each other.
+            {SITE_NAME} facilitates these transactions (payment, escrow, tracking, dispute support) as described in
+            our dedicated{" "}
+            <Link href="/marketplace/terms" className="text-brand-400 hover:underline">Marketplace Terms</Link>,{" "}
+            <Link href="/marketplace/buyer-protection" className="text-brand-400 hover:underline">Buyer Protection</Link>, and{" "}
+            <Link href="/marketplace/shipping" className="text-brand-400 hover:underline">Shipping &amp; Tracking</Link> pages,
+            which apply in addition to these Terms whenever you use the Marketplace.
+          </p>
+        </section>
+
+        <section className="space-y-2">
           <h2 className="text-lg font-bold text-white">4. Accounts</h2>
           <p>
             Some features require an account. You are responsible for keeping your login details secure

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
+import { MARKETPLACE_OFFERS } from "@/lib/marketplace";
 import { MarketplaceOrders } from "@/components/MarketplaceOrders";
 
 export const dynamic = "force-dynamic";
@@ -22,7 +23,7 @@ export default async function MarketplaceOrdersPage() {
         <span className="text-slate-300">My orders &amp; offers</span>
       </nav>
       <h1 className="mb-4 font-display text-2xl font-extrabold text-white">📦 My orders &amp; offers</h1>
-      <MarketplaceOrders />
+      <MarketplaceOrders offersEnabled={MARKETPLACE_OFFERS} />
     </div>
   );
 }

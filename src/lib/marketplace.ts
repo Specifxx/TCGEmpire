@@ -1,9 +1,11 @@
 // RiftCompare Marketplace — shared config + the price-comparison integration.
 //
-// Verified sellers list cards here; their cheapest active listing per card shows up
-// in the normal price comparison as a "RiftCompare Marketplace" source (one row per
-// market, just like the stores). Buying runs in test/wallet mode for now — real
-// payouts move to Stripe Connect (see docs/MARKETPLACE.md).
+// A P2P marketplace: any signed-in, email-verified user can list and sell. Their
+// cheapest active listing per card shows up in the normal price comparison as a
+// "RiftCompare Marketplace" source (one row per market, just like the stores) AND
+// as the hero block above it (see MarketplaceHeroBlock). Payment is real Stripe
+// Checkout to the platform account; payouts to sellers happen via Stripe Connect
+// once an order is confirmed delivered (see lib/connect.ts) — see docs/MARKETPLACE.md.
 import { prisma } from "./db";
 import type { Prisma } from "@prisma/client";
 import { CONDITION_KEYS } from "./constants";
@@ -22,9 +24,39 @@ export const MARKETPLACE_RETAILER: Record<string, string> = {
 export const MARKETPLACE_RETAILER_KEYS = Object.values(MARKETPLACE_RETAILER);
 export const MARKETPLACE_RETAILER_NAME = "RiftCompare Marketplace";
 
-// Platform fee on a marketplace sale, in basis points (300 = 3%). Kept off the
-// buyer's price; deducted from the seller's payout.
-export const MARKETPLACE_FEE_BPS = Number(process.env.MARKETPLACE_FEE_BPS ?? 300);
+// Platform fee on a marketplace sale, in basis points (500 = 5%). Kept off the
+// buyer's price; deducted from the seller's payout at release time (see
+// lib/connect.ts's releaseFundsForOrder — the fee is simply never transferred).
+export const MARKETPLACE_FEE_BPS = Number(process.env.MARKETPLACE_FEE_BPS ?? 500);
+
+// Private listings (Phase 2, lower priority) get a reduced fee — not wired into
+// checkout yet, but reserved here so the constant has one home.
+export const MARKETPLACE_PRIVATE_FEE_BPS = Number(process.env.MARKETPLACE_PRIVATE_FEE_BPS ?? 200);
+
+// Feature flag for the "make an offer" flow — OFF at launch (offers don't settle
+// through Stripe yet; see MARKETPLACE_RETAILER comment / plan Phase 2 item 1).
+export const MARKETPLACE_OFFERS = process.env.MARKETPLACE_OFFERS === "1";
+
+// Markets open at launch. Buyers may only purchase from a seller in the same
+// country (enforced server-side in stripe/checkout) — cross-region opt-in is a
+// Phase-2 fast-follow, not a launch feature.
+export const MARKETPLACE_LAUNCH_COUNTRIES = ["AU", "UK", "US"] as const;
+export function isLaunchCountry(country: string | null | undefined): boolean {
+  return !!country && (MARKETPLACE_LAUNCH_COUNTRIES as readonly string[]).includes(country);
+}
+
+// New-seller guardrails (D8): until a seller has this many COMPLETED sales, cap
+// how much unsold inventory they can have listed at once — limits exposure from
+// an unproven seller without blocking them from selling at all.
+export const NEW_SELLER_TRUSTED_SALES = 3;
+export const NEW_SELLER_MAX_ACTIVE_LISTINGS = 10;
+export const NEW_SELLER_MAX_ACTIVE_VALUE_CENTS = 500_00;
+
+// Escrow timing (D3 in the plan): a seller must add tracking within this many
+// days of payment or the cron auto-refunds the buyer; once shipped, funds
+// auto-release to the seller this many days later if the buyer never confirms.
+export const MARKETPLACE_SHIP_DEADLINE_DAYS = Number(process.env.MARKETPLACE_SHIP_DEADLINE_DAYS ?? 5);
+export const MARKETPLACE_AUTO_RELEASE_DAYS = Number(process.env.MARKETPLACE_AUTO_RELEASE_DAYS ?? 14);
 
 // ── Private beta gating ────────────────────────────────────────────────────────
 // While false, marketplace listings are NOT shown in the public price comparison
@@ -147,7 +179,7 @@ export async function importMarketplaceListings(): Promise<number> {
       retailer,
       retailerName: MARKETPLACE_RETAILER_NAME,
       title: "RiftCompare Marketplace listing",
-      url: `${SITE_URL}/marketplace`,
+      url: `${SITE_URL}/marketplace?cardId=${l.cardId}`,
       condition: l.condition,
       isFoil: l.isFoil,
       priceCents: l.priceCents,

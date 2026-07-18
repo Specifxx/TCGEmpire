@@ -27,6 +27,18 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    // The P2P marketplace — buy/sell directly with other collectors, funds held
+    // in escrow until delivery (see docs/MARKETPLACE.md).
+    title: "Marketplace",
+    links: [
+      { href: "/marketplace", label: "Buy on Marketplace", emoji: "🛒" },
+      { href: "/marketplace/sell", label: "Sell a card", emoji: "🏷️" },
+      { href: "/marketplace/orders", label: "My orders", emoji: "📦" },
+      { href: "/marketplace/funds", label: "Seller funds", emoji: "💰" },
+      { href: "/marketplace/buyer-protection", label: "Buyer protection", emoji: "🛡️" },
+    ],
+  },
+  {
     // Smart-shopping / value tools (several Premium).
     title: "Deals & value",
     links: [
@@ -70,6 +82,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/learn", label: "Learn Riftbound", emoji: "🎓" },
       { href: "/guides", label: "Guides", emoji: "📖" },
       { href: "/blog", label: "Blog", emoji: "📰" },
+      { href: "/support", label: "Support", emoji: "🆘" },
     ],
   },
 ];

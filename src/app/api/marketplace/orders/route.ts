@@ -35,6 +35,7 @@ export async function GET() {
 
   const shaped = orders.map((o) => ({
     id: o.id,
+    orderNumber: o.orderNumber,
     role: o.buyerId === user.id ? ("buyer" as const) : ("seller" as const),
     status: o.status,
     quantity: o.quantity,
@@ -45,6 +46,9 @@ export async function GET() {
     shippedAt: o.shippedAt,
     receivedAt: o.receivedAt,
     trackingNote: o.trackingNote,
+    carrier: o.carrier,
+    trackingNumber: o.trackingNumber,
+    disputedAt: o.disputedAt,
     reviewed: !!o.review,
     rating: o.review?.rating ?? null,
     counterparty:

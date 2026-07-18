@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES, pickPrice } from "@/lib/country";
-import { canViewMarketplaceListings, getSellerRatings } from "@/lib/marketplace";
+import { canViewMarketplaceListings, getSellerRatings, MARKETPLACE_OFFERS } from "@/lib/marketplace";
 import { stripeEnabled } from "@/lib/stripe";
 import { MarketplaceClient, type MktCard } from "@/components/MarketplaceClient";
 
@@ -16,10 +16,11 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true }, // private beta — not indexed yet
 };
 
-export default async function MarketplacePage() {
+export default async function MarketplacePage({ searchParams }: { searchParams: { cardId?: string } }) {
   const user = await getCurrentUser();
   const country = getCountry();
   const info = COUNTRIES[country];
+  const cardId = searchParams?.cardId;
 
   // Private beta: only allow-listed testers see listings; everyone else gets the
   // Coming-Soon teaser (and verified sellers get their dashboard).
@@ -43,8 +44,10 @@ export default async function MarketplacePage() {
     );
   }
 
+  // Deep-linked from a card page's marketplace hero (?cardId=…) — narrows to that
+  // one card's listings in the viewer's own market (same-region-only at launch).
   const listings = await prisma.marketplaceListing.findMany({
-    where: { status: "ACTIVE", quantity: { gt: 0 }, country },
+    where: { status: "ACTIVE", quantity: { gt: 0 }, country, ...(cardId ? { cardId } : {}) },
     orderBy: { createdAt: "desc" },
     take: 300, // egress rule: no unbounded reads on a per-request page
 
@@ -98,5 +101,14 @@ export default async function MarketplacePage() {
   // Cards with the cheapest offer first.
   cards.sort((a, b) => Math.min(...a.offers.map((o) => o.priceCents)) - Math.min(...b.offers.map((o) => o.priceCents)));
 
-  return <MarketplaceClient cards={cards} place={info.place} stripeEnabled={stripeEnabled()} signedIn={!!user} />;
+  return (
+    <MarketplaceClient
+      cards={cards}
+      place={info.place}
+      stripeEnabled={stripeEnabled()}
+      signedIn={!!user}
+      offersEnabled={MARKETPLACE_OFFERS}
+      openCardId={cardId}
+    />
+  );
 }

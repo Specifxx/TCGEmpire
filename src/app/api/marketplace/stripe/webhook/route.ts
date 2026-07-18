@@ -3,6 +3,8 @@ import type Stripe from "stripe";
 import { prisma } from "@/lib/db";
 import { stripe, stripeEnabled, STRIPE_WEBHOOK_SECRET } from "@/lib/stripe";
 import { importMarketplaceListings } from "@/lib/marketplace";
+import { revalidateCardPage } from "@/lib/revalidate-card";
+import { sendOrderReceiptEmail, sendSaleNotificationEmail } from "@/lib/marketplace-email";
 
 export const dynamic = "force-dynamic";
 // Stripe needs the raw, unparsed body to verify the signature.
@@ -63,16 +65,62 @@ function orderIdsFrom(session: Stripe.Checkout.Session): string[] {
 }
 
 // Payment succeeded → finalise the reserved orders as PAID (stock already
-// decremented at reservation time).
+// decremented at reservation time). Also stamps paidAt (anchors the ship-deadline
+// cron), emails the buyer a receipt + the seller a sale notice, and revalidates
+// each affected card page so the marketplace hero/price row updates immediately.
 async function markPaid(session: Stripe.Checkout.Session) {
   const ids = orderIdsFrom(session);
   if (!ids.length) return;
   const pi = typeof session.payment_intent === "string" ? session.payment_intent : null;
-  await prisma.order.updateMany({
+
+  // Read the still-PENDING orders BEFORE updating, so we know exactly which ones
+  // this call actually finalised (Stripe may retry the same event).
+  const pending = await prisma.order.findMany({
     where: { id: { in: ids }, status: "PENDING" },
-    data: { status: "PAID", reservedUntil: null, stripePaymentIntent: pi },
+    select: {
+      id: true,
+      orderNumber: true,
+      quantity: true,
+      totalCents: true,
+      currency: true,
+      buyerId: true,
+      sellerId: true,
+      marketplaceListingId: true,
+    },
+  });
+  if (!pending.length) return;
+
+  const paidAt = new Date();
+  await prisma.order.updateMany({
+    where: { id: { in: pending.map((o) => o.id) }, status: "PENDING" },
+    data: { status: "PAID", reservedUntil: null, stripePaymentIntent: pi, paidAt },
   });
   await importMarketplaceListings().catch(() => {});
+
+  const listingIds = pending.map((o) => o.marketplaceListingId).filter((x): x is string => !!x);
+  const listings = listingIds.length
+    ? await prisma.marketplaceListing.findMany({ where: { id: { in: listingIds } }, select: { id: true, cardId: true, card: { select: { name: true } } } })
+    : [];
+  const listingById = new Map(listings.map((l) => [l.id, l]));
+
+  const userIds = Array.from(new Set(pending.flatMap((o) => [o.buyerId, o.sellerId])));
+  const users = await prisma.user.findMany({ where: { id: { in: userIds } }, select: { id: true, email: true } });
+  const emailById = new Map(users.map((u) => [u.id, u.email]));
+
+  const seenCards = new Set<string>();
+  for (const o of pending) {
+    const listing = o.marketplaceListingId ? listingById.get(o.marketplaceListingId) : undefined;
+    const cardName = listing?.card.name ?? "your card";
+    const info = { orderId: o.id, orderNumber: o.orderNumber, cardName, quantity: o.quantity, totalCents: o.totalCents, currency: o.currency };
+    const buyerEmail = emailById.get(o.buyerId);
+    const sellerEmail = emailById.get(o.sellerId);
+    if (buyerEmail) await sendOrderReceiptEmail(buyerEmail, info).catch(() => {});
+    if (sellerEmail) await sendSaleNotificationEmail(sellerEmail, info).catch(() => {});
+    if (listing && !seenCards.has(listing.cardId)) {
+      seenCards.add(listing.cardId);
+      await revalidateCardPage(listing.cardId).catch(() => {});
+    }
+  }
 }
 
 // Session expired or payment failed → cancel the PENDING orders and restore stock.

@@ -3,6 +3,10 @@
 // Public contact address — shown on the site and used to forward feedback emails.
 export const CONTACT_EMAIL = "riftcompare@gmail.com";
 
+// Where marketplace support tickets are emailed (see lib/support-email.ts).
+// Same inbox as CONTACT_EMAIL by default; override independently if that changes.
+export const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL ?? CONTACT_EMAIL;
+
 export const SITE_NAME = "RiftCompare";
 
 // Community Discord invite (permanent; opens in a new tab from the navbar icon).

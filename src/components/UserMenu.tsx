@@ -124,6 +124,8 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
             <MenuLink href="/profile" onClick={() => setOpen(false)}>Profile</MenuLink>
             <MenuLink href="/profile#collection" onClick={() => setOpen(false)}>My collection</MenuLink>
             <MenuLink href="/wishlist" onClick={() => setOpen(false)}>Wishlist</MenuLink>
+            <MenuLink href="/marketplace/orders" onClick={() => setOpen(false)}>🛒 My marketplace orders</MenuLink>
+            <MenuLink href="/marketplace/funds" onClick={() => setOpen(false)}>💰 Seller funds</MenuLink>
             <MenuLink href="/feedback" onClick={() => setOpen(false)}>
               💬 Feedback{!premium ? <span className="text-gold"> · get Premium</span> : null}
             </MenuLink>

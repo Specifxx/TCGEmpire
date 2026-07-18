@@ -89,11 +89,17 @@ export function MarketplaceClient({
   place,
   stripeEnabled = false,
   signedIn = false,
+  offersEnabled = false,
+  openCardId,
 }: {
   cards: MktCard[];
   place: string;
   stripeEnabled?: boolean;
   signedIn?: boolean;
+  offersEnabled?: boolean;
+  // Deep-linked from a card page's marketplace hero — auto-opens that card's
+  // offers modal on load instead of making the visitor find it in the grid.
+  openCardId?: string;
 }) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -120,6 +126,12 @@ export function MarketplaceClient({
   useEffect(() => {
     if (loaded) try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch {}
   }, [cart, loaded]);
+  useEffect(() => {
+    if (!openCardId) return;
+    const match = cards.find((c) => c.card.id === openCardId);
+    if (match) setOpenCard(match);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openCardId]);
 
   const cartCount = cart.reduce((n, c) => n + c.quantity, 0);
   const cartTotal = cart.reduce((n, c) => n + c.priceCents * c.quantity, 0);
@@ -158,31 +170,26 @@ export function MarketplaceClient({
 
   async function checkout(items: { listingId: string; quantity: number }[]) {
     if (items.length === 0) return;
+    if (!stripeEnabled) {
+      toast("Card checkout isn't enabled yet", 3000);
+      return;
+    }
     setBusy(true);
     try {
-      // When Stripe is live, pay by card via the hosted Checkout (stock is reserved
-      // server-side while the buyer pays). Otherwise settle the demo wallet.
-      const endpoint = stripeEnabled ? "/api/marketplace/stripe/checkout" : "/api/marketplace/checkout";
-      const res = await fetch(endpoint, {
+      // Pay by card via hosted Stripe Checkout — stock is reserved server-side
+      // while the buyer pays, and funds are held in escrow until delivery.
+      const res = await fetch("/api/marketplace/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ items }),
       });
       const data = await res.json();
-      if (!res.ok) {
+      if (!res.ok || !data.url) {
         toast(data.error ?? "Checkout failed", 3000);
         return;
       }
-      if (stripeEnabled && data.url) {
-        toast("Redirecting to secure checkout…", 4000);
-        window.location.href = data.url;
-        return;
-      }
-      setCart([]);
-      setCartOpen(false);
-      setOpenCard(null);
-      toast(`Order placed — ${formatMoney(data.totalCents, cartCurrency)}`, 2500);
-      setTimeout(() => location.reload(), 900);
+      toast("Redirecting to secure checkout…", 4000);
+      window.location.href = data.url;
     } catch {
       toast("Network error — try again", 3000);
     } finally {
@@ -249,7 +256,13 @@ export function MarketplaceClient({
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-extrabold text-white">Marketplace</h1>
-          <p className="text-sm text-slate-500">Buy Riftbound cards from verified sellers in {place}.</p>
+          <p className="text-sm text-slate-500">
+            Buy Riftbound cards from verified sellers shipping within <span className="font-semibold text-slate-300">{place}</span>.
+            {" "}
+            <span className="chip bg-ink-800 text-[10px] font-bold text-slate-400" title="At launch, buyers only see sellers in their own market — no cross-border shipping surprises">
+              Same-region delivery
+            </span>
+          </p>
         </div>
         <div className="flex items-center gap-2">
           {signedIn && (
@@ -333,13 +346,14 @@ export function MarketplaceClient({
           card={openCard}
           busy={busy}
           signedIn={signedIn}
+          offersEnabled={offersEnabled}
           onClose={() => setOpenCard(null)}
           onAdd={addToCart}
           onBuyNow={(o, q) => checkout([{ listingId: o.id, quantity: q }])}
           onMakeOffer={(o) => setOfferFor({ card: openCard.card, offer: o })}
         />
       )}
-      {offerFor && (
+      {offersEnabled && offerFor && (
         <OfferModal
           card={offerFor.card}
           offer={offerFor.offer}
@@ -362,7 +376,10 @@ export function MarketplaceClient({
       )}
 
       <p className="mt-6 text-center text-[11px] text-slate-600">
-        Private beta. Purchases currently settle against a demo wallet while we finish secure payments &amp; shipping.
+        🔒 Buyer protection: your payment is held until you confirm delivery.{" "}
+        <Link href="/marketplace/buyer-protection" className="text-brand-400 hover:underline">How it works</Link>
+        {" · "}
+        <Link href="/marketplace/terms" className="text-brand-400 hover:underline">Marketplace terms</Link>
       </p>
     </div>
   );
@@ -372,6 +389,7 @@ function OffersModal({
   card,
   busy,
   signedIn,
+  offersEnabled,
   onClose,
   onAdd,
   onBuyNow,
@@ -380,6 +398,7 @@ function OffersModal({
   card: MktCard;
   busy: boolean;
   signedIn: boolean;
+  offersEnabled: boolean;
   onClose: () => void;
   onAdd: (card: MktCardInner, o: MktOffer, qty: number) => void;
   onBuyNow: (o: MktOffer, qty: number) => void;
@@ -430,7 +449,7 @@ function OffersModal({
                 aria-label="Quantity"
               />
               <div className="flex gap-1.5">
-                {signedIn && (
+                {offersEnabled && signedIn && (
                   <button onClick={() => onMakeOffer(o)} className="btn-ghost text-xs" title="Negotiate a lower price">Offer</button>
                 )}
                 <button onClick={() => onAdd(card.card, o, getQty(o))} className="btn-ghost text-xs">Add to cart</button>
@@ -564,9 +583,9 @@ function CartDrawer({
             <span className="num text-xl font-extrabold text-accent">{formatMoney(total, currency)}</span>
           </div>
           <button onClick={onCheckout} disabled={busy || cart.length === 0} className="btn-primary w-full disabled:opacity-50">
-            {busy ? "Placing order…" : "Checkout"}
+            {busy ? "Redirecting…" : "Checkout securely"}
           </button>
-          <p className="mt-2 text-center text-[11px] text-slate-600">+ shipping per seller. Test mode — settles a demo wallet.</p>
+          <p className="mt-2 text-center text-[11px] text-slate-600">+ shipping per seller. Paid via Stripe — funds held until delivery is confirmed.</p>
         </div>
       </aside>
     </div>
