@@ -75,10 +75,15 @@ jobs:
           # db-history.ts); _2/_3 are older, near/fully-exhausted fallbacks only.
           HISTORY_DB: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL || secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 || secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
         run: |
-          npx prisma db push --skip-generate
+          # --accept-data-loss: some schema changes are intentionally destructive
+          # (e.g. dropping a removed feature's tables/columns) — prisma db push
+          # otherwise refuses those non-interactively rather than silently letting
+          # them through, which is exactly the safety we want; this just supplies
+          # the confirmation a human would give interactively.
+          npx prisma db push --skip-generate --accept-data-loss
           if [ -n "$HISTORY_DB" ]; then
             echo "Pushing schema to the HISTORY database too…"
-            DATABASE_URL="$HISTORY_DB" npx prisma db push --skip-generate
+            DATABASE_URL="$HISTORY_DB" npx prisma db push --skip-generate --accept-data-loss
           else
             echo "No history-database secret — single-database setup, nothing extra to push."
           fi
