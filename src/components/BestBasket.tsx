@@ -5,16 +5,16 @@ import { useState } from "react";
 import { formatMoney } from "@/lib/format";
 import type { BasketPlan } from "@/lib/basket";
 
-// The Best-Basket tool UI: paste a decklist or use your wishlist, then see the
-// cheapest way to buy it all across stores (postage and free-shipping thresholds
-// included), grouped by store with direct buy links.
+// The Best-Basket tool UI: paste a decklist, then see the cheapest way to buy
+// it all across stores (postage and free-shipping thresholds included),
+// grouped by store with direct buy links.
 export function BestBasket({ currency }: { currency: string }) {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [plan, setPlan] = useState<BasketPlan | null>(null);
 
-  async function run(source: "text" | "wishlist") {
+  async function run() {
     setLoading(true);
     setError(null);
     setPlan(null);
@@ -22,7 +22,7 @@ export function BestBasket({ currency }: { currency: string }) {
       const res = await fetch("/api/basket", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(source === "wishlist" ? { wishlist: true } : { text }),
+        body: JSON.stringify({ text }),
       });
       const d = await res.json();
       if (!res.ok) {
@@ -51,11 +51,8 @@ export function BestBasket({ currency }: { currency: string }) {
           className="input font-mono text-sm"
         />
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <button onClick={() => run("text")} disabled={loading || !text.trim()} className="btn-primary text-sm disabled:opacity-50">
+          <button onClick={() => run()} disabled={loading || !text.trim()} className="btn-primary text-sm disabled:opacity-50">
             {loading ? "Optimising…" : "🧺 Find the cheapest basket"}
-          </button>
-          <button onClick={() => run("wishlist")} disabled={loading} className="btn-ghost text-sm disabled:opacity-50">
-            Use my wishlist
           </button>
         </div>
         {error && <p role="alert" className="mt-2 text-sm text-rose-400">{error}</p>}

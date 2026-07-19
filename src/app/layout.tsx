@@ -11,7 +11,6 @@ import { QuickViewProvider } from "@/components/QuickView";
 import { SealedQuickViewProvider } from "@/components/SealedQuickView";
 import { CommandLauncherProvider } from "@/components/CommandLauncher";
 import { MegaMenuProvider } from "@/components/MegaMenuProvider";
-import { WishlistDrawerProvider } from "@/components/WishlistDrawer";
 import { CountryProvider } from "@/components/CountryProvider";
 import { PremiumProvider } from "@/components/PremiumProvider";
 import { PremiumDialogProvider } from "@/components/PremiumDialog";
@@ -201,7 +200,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <PremiumProvider>
         <PremiumDialogProvider>
         <CountryProvider initial={DEFAULT_COUNTRY}>
-        <WishlistDrawerProvider>
           <QuickViewProvider>
           <SealedQuickViewProvider>
             <CommandLauncherProvider>
@@ -215,7 +213,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </CommandLauncherProvider>
           </SealedQuickViewProvider>
           </QuickViewProvider>
-        </WishlistDrawerProvider>
         {/* Site-wide affiliate banners above the footer — BOTH live partners
             (TCGplayer Impact + eBay Partner Network) on every page, so no page
             is left unmonetised. Both are CPC/affiliate: they pay on click-through

@@ -21,6 +21,7 @@ import {
 import { nextNumber, formatOrderNumber } from "./order-number";
 import { autoReleaseDate } from "./marketplace-policy";
 import { estimateDeliveryWindow } from "./delivery-estimate";
+import { notify } from "./notifications";
 
 export type ActionResult = { ok: true; [key: string]: unknown } | { ok: false; error: string; httpStatus: number };
 
@@ -90,6 +91,13 @@ export async function shipOrder(
       autoReleaseDate(shippedAt)
     ).catch(() => {});
   }
+  await notify(
+    order.buyerId,
+    "order_shipped",
+    "Order shipped",
+    `${listing?.card.name ?? "Your order"} is on the way.`,
+    "/marketplace/orders"
+  ).catch(() => {});
   return { ok: true, status: "SHIPPED" };
 }
 
@@ -127,6 +135,9 @@ export async function receiveOrder(orderId: string, userId: string): Promise<Act
   if (seller?.email) await sendFundsReleasedEmail(seller.email, info).catch(() => {});
   if (buyer?.email) await sendOrderCompletedBuyerEmail(buyer.email, info, { auto: false }).catch(() => {});
   if (listing) await revalidateCardPage(listing.cardId).catch(() => {});
+
+  await notify(order.sellerId, "funds_released", "Funds released", `Payout sent for ${info.cardName} (order ${formatOrderNumber(info.orderNumber) ?? info.orderId}).`, "/marketplace/funds").catch(() => {});
+  await notify(order.buyerId, "order_completed", "Order complete", `Delivery confirmed for ${info.cardName}.`, "/marketplace/orders").catch(() => {});
 
   return { ok: true, status: "COMPLETED" };
 }
@@ -184,6 +195,14 @@ export async function reportOrder(orderId: string, userId: string, userEmail: st
     }),
     prisma.order.update({ where: { id: order.id }, data: { disputedAt: new Date() } }),
   ]);
+  const otherId = userId === order.buyerId ? order.sellerId : order.buyerId;
+  await notify(
+    otherId,
+    "order_disputed",
+    "A problem was reported",
+    `Order ${formatOrderNumber(order.orderNumber) ?? order.id} has been paused while support looks into it.`,
+    "/marketplace/orders"
+  ).catch(() => {});
   return { ok: true, ticket: formatOrderNumber(number) };
 }
 
@@ -216,6 +235,13 @@ export async function requestCancelOrder(orderId: string, userId: string, userNa
       reason
     ).catch(() => {});
   }
+  await notify(
+    otherId,
+    "cancel_requested",
+    "Cancellation requested",
+    `${userName} wants to cancel order ${formatOrderNumber(order.orderNumber) ?? order.id}.`,
+    "/marketplace/orders"
+  ).catch(() => {});
   return { ok: true };
 }
 
@@ -246,6 +272,7 @@ export async function respondCancelOrder(orderId: string, userId: string, accept
     await prisma.order.update({ where: { id: order.id }, data: { cancelRequestedBy: null, cancelRequestedAt: null, cancelReason: null } });
     const requester = await prisma.user.findUnique({ where: { id: order.cancelRequestedBy }, select: { email: true } });
     if (requester?.email) await sendCancelDeclinedEmail(requester.email, info).catch(() => {});
+    await notify(order.cancelRequestedBy!, "cancel_declined", "Cancellation declined", `Order ${formatOrderNumber(order.orderNumber) ?? order.id} continues as normal.`, "/marketplace/orders").catch(() => {});
     return { ok: true, status: "declined" };
   }
 
@@ -266,6 +293,8 @@ export async function respondCancelOrder(orderId: string, userId: string, accept
   ]);
   if (buyer?.email) await sendCancelledMutualEmail(buyer.email, info).catch(() => {});
   if (seller?.email) await sendCancelledMutualEmail(seller.email, info).catch(() => {});
+  await notify(order.buyerId, "order_cancelled", "Order cancelled", `Order ${formatOrderNumber(order.orderNumber) ?? order.id} was cancelled and refunded.`, "/marketplace/orders").catch(() => {});
+  await notify(order.sellerId, "order_cancelled", "Order cancelled", `Order ${formatOrderNumber(order.orderNumber) ?? order.id} was cancelled and refunded.`, "/marketplace/sell").catch(() => {});
   return { ok: true, status: "CANCELLED" };
 }
 
@@ -324,6 +353,14 @@ export async function reportOrderGroup(orderIds: string[], userId: string, userE
     }),
     prisma.order.updateMany({ where: { id: { in: orders.map((o) => o.id) } }, data: { disputedAt: new Date() } }),
   ]);
+  const otherId = userId === first.buyerId ? first.sellerId : first.buyerId;
+  await notify(
+    otherId,
+    "order_disputed",
+    "A problem was reported",
+    `Order ${formatOrderNumber(first.orderNumber) ?? first.id} has been paused while support looks into it.`,
+    "/marketplace/orders"
+  ).catch(() => {});
   return { ok: true, ticket: formatOrderNumber(number) };
 }
 
@@ -360,6 +397,13 @@ export async function requestCancelGroup(orderIds: string[], userId: string, use
       reason
     ).catch(() => {});
   }
+  await notify(
+    otherId,
+    "cancel_requested",
+    "Cancellation requested",
+    `${userName} wants to cancel order ${formatOrderNumber(first.orderNumber) ?? first.id}.`,
+    "/marketplace/orders"
+  ).catch(() => {});
   return { ok: true };
 }
 
@@ -404,6 +448,7 @@ export async function respondCancelGroup(orderIds: string[], userId: string, acc
     });
     const requester = await prisma.user.findUnique({ where: { id: first.cancelRequestedBy! }, select: { email: true } });
     if (requester?.email) await sendCancelDeclinedEmail(requester.email, info).catch(() => {});
+    await notify(first.cancelRequestedBy!, "cancel_declined", "Cancellation declined", `Order ${formatOrderNumber(first.orderNumber) ?? first.id} continues as normal.`, "/marketplace/orders").catch(() => {});
     return { ok: true, status: "declined" };
   }
 
@@ -438,5 +483,7 @@ export async function respondCancelGroup(orderIds: string[], userId: string, acc
   ]);
   if (buyer?.email) await sendCancelledMutualEmail(buyer.email, info).catch(() => {});
   if (seller?.email) await sendCancelledMutualEmail(seller.email, info).catch(() => {});
+  await notify(first.buyerId, "order_cancelled", "Order cancelled", `Order ${formatOrderNumber(first.orderNumber) ?? first.id} was cancelled and refunded.`, "/marketplace/orders").catch(() => {});
+  await notify(first.sellerId, "order_cancelled", "Order cancelled", `Order ${formatOrderNumber(first.orderNumber) ?? first.id} was cancelled and refunded.`, "/marketplace/sell").catch(() => {});
   return { ok: true, status: "CANCELLED" };
 }

@@ -126,8 +126,8 @@ export function MyCollection() {
 
       {items != null && items.length === 0 && (
         <p className="mt-4 text-sm text-slate-500">
-          Search a card above (or <span className="font-semibold text-brand-300">📋 Import a list</span>) to start tracking what you own — we&apos;ll value the whole thing live as prices move. It&apos;s separate from your{" "}
-          <Link href="/wishlist" className="text-brand-400 hover:underline">wishlist</Link>.
+          Search a card above (or <span className="font-semibold text-brand-300">📋 Import a list</span>) to start tracking what you own — we&apos;ll value the whole thing live as prices move. It&apos;s separate from any{" "}
+          <Link href="/browse" className="text-brand-400 hover:underline">price watches</Link> you&apos;ve set.
         </p>
       )}
 

@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db";
 import { CardImage } from "@/components/CardImage";
 import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge } from "@/components/Badge";
 import { isOvernumbered, isSignature } from "@/lib/constants";
-import { WishlistButton } from "@/components/WishlistButton";
+import { PriceWatchButton } from "@/components/PriceWatchButton";
 import { ShareButton } from "@/components/ShareButton";
 import { CardViewBeacon } from "@/components/CardViewBeacon";
 import { formatMoney } from "@/lib/format";
@@ -387,7 +387,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                   {card.setName} ({card.setCode}) · {card.collectorNumber}
                 </p>
               </div>
-              <WishlistButton cardId={card.id} variant="full" />
+              <PriceWatchButton cardId={card.id} variant="full" />
               <ShareButton />
             </div>
 

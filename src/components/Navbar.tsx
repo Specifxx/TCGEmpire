@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import { NavbarShell } from "./NavbarShell";
 import { CommandLauncherButton } from "./CommandLauncher";
 import { SearchBar } from "./SearchBar";
-import { NavWishlistButton } from "./NavWishlistButton";
 import { MobileNav } from "./MobileNav";
 import { CountrySwitcher } from "./CountrySwitcher";
 import { NavUser } from "./NavUser";
@@ -12,8 +11,8 @@ import { DISCORD_URL } from "@/lib/site";
 
 // NO server-side session read here: the navbar renders on every route, so a
 // cookies() read would force the whole site dynamic (killing ISR). NavUser
-// fetches the session client-side via /api/me and renders WishlistSync +
-// UserMenu from the same fetch.
+// fetches the session client-side via /api/me and renders the notification
+// bell + UserMenu from the same fetch.
 export function Navbar() {
   return (
     <NavbarShell>
@@ -86,7 +85,6 @@ export function Navbar() {
             </svg>
           </a>
           <CountrySwitcher className="ml-0.5 sm:ml-1" />
-          <NavWishlistButton />
           <NavUser />
           <MobileNav />
         </nav>

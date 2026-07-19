@@ -6,7 +6,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { formatMoney } from "@/lib/format";
-import { WishlistButton } from "../WishlistButton";
+import { PriceWatchButton } from "../PriceWatchButton";
 import { AdSlot } from "../AdSlot";
 
 export type GameCard = {
@@ -248,7 +248,7 @@ export function RunRecap({ cards, currency, title = "💸 The cards from this ru
               </span>
             </Link>
             <span className="shrink-0 text-sm font-bold text-accent">{formatMoney(c.priceCents, currency)}</span>
-            <WishlistButton cardId={c.id} />
+            <PriceWatchButton cardId={c.id} />
             <Link href={cardUrl(c)} className="btn-ghost shrink-0 px-2.5 py-1.5 text-xs">
               Compare →
             </Link>

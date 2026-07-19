@@ -2,12 +2,11 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { isWishlisted, toggleWishlist } from "@/lib/wishlist-client";
 import { usePremium } from "@/components/PremiumProvider";
 
 // Conversion island for the card page (the site's biggest landing surface, which had
 // no price-watch CTA and no Premium mention). Client-side so the route stays ISR.
-//  1. "Watch this price" → wishlists the card + opens the email-capture alert modal
+//  1. "Watch this price" → opens the email-capture alert modal for this card
 //     (the single highest-intent action for a land-and-leave price checker).
 //  2. A contextual Value Finder teaser, hidden for members (usePremium).
 export function CardConversionCta({ cardId }: { cardId: string }) {
@@ -15,10 +14,8 @@ export function CardConversionCta({ cardId }: { cardId: string }) {
   const [watching, setWatching] = useState(false);
 
   function watch() {
-    if (!isWishlisted(cardId)) toggleWishlist(cardId);
     setWatching(true);
-    // Open the email-capture modal directly (bypasses the once-ever auto-prompt gate).
-    window.dispatchEvent(new CustomEvent("price-alert-open"));
+    window.dispatchEvent(new CustomEvent("price-alert-open", { detail: { cardId } }));
   }
 
   return (

@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 const FEATURES: { title: string; body: string; href: string | null; cta: string | null }[] = [
   {
     title: "Best-Basket cart optimiser",
-    body: "The cheapest way to buy a whole deck or wishlist — the smartest split across stores once postage and free-shipping thresholds are in, with direct buy links.",
+    body: "The cheapest way to buy a whole deck list — the smartest split across stores once postage and free-shipping thresholds are in, with direct buy links.",
     href: "/tools/best-basket",
     cta: "Open Best Basket",
   },

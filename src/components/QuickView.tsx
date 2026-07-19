@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { CardTileData } from "./CardTile";
 import { CardImage } from "./CardImage";
 import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge } from "./Badge";
-import { WishlistButton } from "./WishlistButton";
+import { PriceWatchButton } from "./PriceWatchButton";
 import { isOvernumbered, isSignature, SG_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS } from "@/lib/constants";
 import { cardHref } from "@/lib/card-url";
 import { cardDisplayName, cardSearchName } from "@/lib/card-name";
@@ -207,7 +207,7 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                 <h2 className="truncate text-xl font-extrabold text-white">{cardDisplayName(card.name, card)}</h2>
                 <p className="font-mono text-xs text-slate-500">{card.setName} ({card.setCode}) · {card.collectorNumber}</p>
               </div>
-              <WishlistButton cardId={card.id} variant="full" />
+              <PriceWatchButton cardId={card.id} variant="full" />
             </div>
 
             <div className="mt-3 rounded-lg bg-ink-950/50 p-3">

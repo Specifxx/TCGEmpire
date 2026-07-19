@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 };
 
 const TOOLS = [
-  { title: "Best Basket", desc: "The cheapest multi-store cart for a whole deck or wishlist.", href: "/tools/best-basket", icon: "🧺" },
+  { title: "Best Basket", desc: "The cheapest multi-store cart for a whole deck list.", href: "/tools/best-basket", icon: "🧺" },
   { title: "Value Finder", desc: "Cards trading below their recent average — undervalued picks.", href: "/tools/value-finder", icon: "🔎" },
   { title: "Deal Finder", desc: "Cards worth more on eBay and the cheapest eBay buys, updated daily.", href: "/tools/arbitrage", icon: "⚖️" },
 ];
@@ -88,7 +88,6 @@ export default async function DashboardPage() {
       <div className="flex flex-wrap gap-2 text-sm">
         <Link href="/movers" className="btn-ghost">Price movers</Link>
         <Link href="/market" className="btn-ghost">RiftCompare Index</Link>
-        <Link href="/wishlist" className="btn-ghost">Wishlist</Link>
         <Link href="/browse" className="btn-ghost">Browse cards</Link>
         <Link href="/premium" className="btn-ghost">Membership</Link>
       </div>

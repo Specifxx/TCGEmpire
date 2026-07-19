@@ -86,7 +86,7 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
             Sign up for full access to RiftCompare
           </h2>
           <p className="mx-auto mt-1.5 max-w-xs text-sm leading-relaxed text-slate-300">
-            Price alerts, wishlists and the marketplace all need a free account — create yours below and we&apos;ll also
+            Price alerts, notifications and the marketplace all need a free account — create yours below and we&apos;ll also
             comp {promo.months} {promo.months === 1 ? "month" : "months"} of Premium free, no card required.
           </p>
         </div>

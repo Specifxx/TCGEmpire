@@ -27,7 +27,6 @@ const DESC: Record<string, string> = {
   "/guides": "Buying guides and strategy articles for Riftbound.",
   "/blog": "News, metagame snapshots and the automated daily market report.",
   "/portfolio": "Track a collection's value over time.",
-  "/wishlist": "Save cards and get price context.",
   "/premium": "RiftCompare Premium — the Deal Finder / value tools and ad-free browsing.",
 };
 

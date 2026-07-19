@@ -19,7 +19,7 @@ export interface MenuUser {
 }
 
 // Profile icon (top-right) + dropdown. Signed out → a "sign in" person icon linking
-// to /login. Signed in → avatar/initials with a menu (profile, wishlist, sign out).
+// to /login. Signed in → avatar/initials with a menu (profile, orders, sign out).
 export function UserMenu({ user }: { user: MenuUser | null }) {
   const [open, setOpen] = useState(false);
   const [resent, setResent] = useState(false);
@@ -124,7 +124,6 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
             )}
             <MenuLink href="/profile" onClick={() => setOpen(false)}>Profile</MenuLink>
             <MenuLink href="/profile#collection" onClick={() => setOpen(false)}>My collection</MenuLink>
-            <MenuLink href="/wishlist" onClick={() => setOpen(false)}>Wishlist</MenuLink>
             <MenuLink href="/marketplace/sell" onClick={() => setOpen(false)}>Seller dashboard</MenuLink>
             {MARKETPLACE_NAV_VISIBLE && (
               <>

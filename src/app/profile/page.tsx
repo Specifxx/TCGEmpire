@@ -74,8 +74,7 @@ export default async function ProfilePage() {
           </span>
         </div>
         <p className="mt-3 text-xs text-slate-500">
-          Link more sign-in options any time from the <Link href="/login" className="text-brand-400 hover:underline">sign-in page</Link>, or manage your{" "}
-          <Link href="/wishlist" className="text-brand-400 hover:underline">wishlist</Link>.
+          Link more sign-in options any time from the <Link href="/login" className="text-brand-400 hover:underline">sign-in page</Link>.
         </p>
       </div>
     </div>

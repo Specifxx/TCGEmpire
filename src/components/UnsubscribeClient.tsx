@@ -105,7 +105,7 @@ export function UnsubscribeClient({ token }: { token: string }) {
             {working ? "Unsubscribing…" : "Unsubscribe from all"}
           </button>
           <Link
-            href="/wishlist"
+            href="/"
             className="mt-2 block text-center text-xs text-slate-500 hover:text-slate-300"
           >
             Keep my alerts

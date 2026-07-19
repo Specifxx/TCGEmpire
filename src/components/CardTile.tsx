@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { CardImage } from "./CardImage";
 import { VariantBadge, OvernumberedBadge, SignatureBadge } from "./Badge";
-import { WishlistButton } from "./WishlistButton";
+import { PriceWatchButton } from "./PriceWatchButton";
 import { useQuickView } from "./QuickView";
 import { useCountry } from "./CountryProvider";
 import { cardHref } from "@/lib/card-url";
@@ -57,7 +57,7 @@ export function CardTile({ card }: { card: CardTileData }) {
     // navigation or the top loading bar.
     <div className="cv-auto group card-surface relative flex flex-col overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-glow">
       <div className="absolute right-2 top-2 z-10">
-        <WishlistButton cardId={card.id} />
+        <PriceWatchButton cardId={card.id} />
       </div>
       <Link href={cardHref(card)} prefetch={false} onClick={onClick} className="flex flex-1 flex-col">
         <div

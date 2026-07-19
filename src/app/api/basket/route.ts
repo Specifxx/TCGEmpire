@@ -12,9 +12,9 @@ import { optimizeBasket, type BasketCard } from "@/lib/basket";
 
 export const dynamic = "force-dynamic";
 
-// Best-Basket optimiser (Premium). Resolve a pasted decklist OR the user's wishlist
-// to cards, pull every in-stock STORE listing in the viewer's market (eBay excluded
-// — its per-item postage isn't comparable), and return the cheapest landed plan.
+// Best-Basket optimiser (Premium). Resolve a pasted decklist to cards, pull every
+// in-stock STORE listing in the viewer's market (eBay excluded — its per-item
+// postage isn't comparable), and return the cheapest landed plan.
 export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in first" }, { status: 401 });
@@ -24,40 +24,29 @@ export async function POST(req: Request) {
 
   const country = getCountry();
   const body = await req.json().catch(() => null);
-  const useWishlist = body?.wishlist === true;
   const text: string = typeof body?.text === "string" ? body.text : "";
 
   // 1. Resolve the requested cards → { cardId, name, slug, qty }.
-  let wanted: { cardId: string; name: string; slug: string | null; qty: number }[] = [];
-  if (useWishlist) {
-    const wl = await prisma.wishlistItem.findMany({ where: { userId: user.id }, take: 300, select: { cardId: true } });
-    const ids = wl.map((w) => w.cardId);
-    const cards = ids.length
-      ? await prisma.card.findMany({ where: { id: { in: ids } }, select: { id: true, name: true, slug: true } })
-      : [];
-    wanted = cards.map((c) => ({ cardId: c.id, name: c.name, slug: c.slug, qty: 1 }));
-  } else {
-    const lines = parseDeckList(text).slice(0, 200).filter((l) => l.name);
-    const nqs = [...new Set(lines.map((l) => normalizeSearch(l.name)))];
-    if (!nqs.length) return NextResponse.json({ error: "Paste a decklist or pick your wishlist." }, { status: 400 });
-    const cards = await prisma.card.findMany({
-      where: { nameNormalized: { in: nqs } },
-      select: { id: true, name: true, slug: true, nameNormalized: true },
-      orderBy: [{ [priceField(country)]: { sort: "asc", nulls: "last" } } as Prisma.CardOrderByWithRelationInput],
-    });
-    const byName = new Map<string, { id: string; name: string; slug: string | null }>();
-    for (const c of cards) if (!byName.has(c.nameNormalized)) byName.set(c.nameNormalized, c);
-    // Merge duplicate lines into a single qty per card.
-    const merged = new Map<string, { cardId: string; name: string; slug: string | null; qty: number }>();
-    for (const l of lines) {
-      const c = byName.get(normalizeSearch(l.name));
-      if (!c) continue;
-      const ex = merged.get(c.id);
-      if (ex) ex.qty += l.qty;
-      else merged.set(c.id, { cardId: c.id, name: c.name, slug: c.slug, qty: l.qty });
-    }
-    wanted = [...merged.values()];
+  const lines = parseDeckList(text).slice(0, 200).filter((l) => l.name);
+  const nqs = [...new Set(lines.map((l) => normalizeSearch(l.name)))];
+  if (!nqs.length) return NextResponse.json({ error: "Paste a decklist." }, { status: 400 });
+  const cards = await prisma.card.findMany({
+    where: { nameNormalized: { in: nqs } },
+    select: { id: true, name: true, slug: true, nameNormalized: true },
+    orderBy: [{ [priceField(country)]: { sort: "asc", nulls: "last" } } as Prisma.CardOrderByWithRelationInput],
+  });
+  const byName = new Map<string, { id: string; name: string; slug: string | null }>();
+  for (const c of cards) if (!byName.has(c.nameNormalized)) byName.set(c.nameNormalized, c);
+  // Merge duplicate lines into a single qty per card.
+  const merged = new Map<string, { cardId: string; name: string; slug: string | null; qty: number }>();
+  for (const l of lines) {
+    const c = byName.get(normalizeSearch(l.name));
+    if (!c) continue;
+    const ex = merged.get(c.id);
+    if (ex) ex.qty += l.qty;
+    else merged.set(c.id, { cardId: c.id, name: c.name, slug: c.slug, qty: l.qty });
   }
+  const wanted = [...merged.values()];
   if (!wanted.length) return NextResponse.json({ error: "No matching cards found." }, { status: 400 });
 
   // 2. Stores serving this market (eBay isn't in RETAILERS, so it's excluded).

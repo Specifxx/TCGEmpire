@@ -65,7 +65,7 @@ model User {
   buyOrders           BuyOrder[]
   purchases           Order[]              @relation("BuyerOrders")
   sales               Order[]              @relation("SellerOrders")
-  wishlist            WishlistItem[]
+  notifications       Notification[]
   authTokens          AuthToken[]
   sellerProfile       SellerProfile?
   marketplaceListings MarketplaceListing[]
@@ -161,16 +161,24 @@ model AuthToken {
   @@index([userId])
 }
 
-// Per-account wishlist (server-side). The cookie wishlist is merged in on sign-in.
-model WishlistItem {
-  id        String   @id @default(cuid())
+// In-app notification center — one row per lifecycle event a user should see
+// (order sold/purchased/shipped/completed/cancelled, etc; see lib/notifications.ts
+// for the single createNotification() call site every trigger goes through).
+// Bounded per-user reads only (see api/notifications/route.ts); nothing here is
+// ever queried without a userId + take limit.
+model Notification {
+  id        String    @id @default(cuid())
   userId    String
-  cardId    String
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String // e.g. "order_shipped", "order_sold" — informational only, not branching logic
+  title     String
+  body      String
+  href      String? // where clicking the notification navigates to
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, cardId])
-  @@index([userId])
+  @@index([userId, createdAt])
+  @@index([userId, readAt])
 }
 
 model Card {

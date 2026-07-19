@@ -128,7 +128,7 @@ export async function sendPriceDropEmail(to: string, items: PriceDropItem[], uns
   const inner = `
     <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">${intro}</td></tr>
     <tr><td style="padding:4px 32px 12px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${items.map(dropRow).join("")}</table></td></tr>
-    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/wishlist" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">View your wishlist</a></td></tr>`;
+    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/browse" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Browse cards</a></td></tr>`;
   const subject = count === 1 ? `Price drop: ${items[0]!.name} is now ${formatMoney(items[0]!.newCents, currencyOf(items[0]!.market))}` : `Price drops on ${count} of your wishlist cards`;
   return sendEmail(to, subject, emailShell(heading, inner, alertFooter(unsubUrl)));
 }
@@ -141,7 +141,7 @@ export async function sendAlertConfirmationEmail(to: string, cardCount: number, 
       You're all set — we'll email you whenever the price drops on
       ${cardCount === 1 ? "the card" : `any of the ${cardCount} cards`} on your wishlist. We check prices once a day.
     </td></tr>
-    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/wishlist" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">View your wishlist</a></td></tr>`;
+    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/browse" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Browse cards</a></td></tr>`;
   return sendEmail(to, "You're watching your RiftCompare wishlist for price drops", emailShell("Price-drop alerts are on", inner, alertFooter(unsubUrl)));
 }
 
