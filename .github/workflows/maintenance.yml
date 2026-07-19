@@ -27,7 +27,7 @@ on:
           - audit-users      # read-only user/Premium census (no PII printed)
           - audit-clicks     # read-only outbound-click leaderboard per retailer (affiliate-outreach priority)
           - remove-seed-accounts # one-off: delete @riftcompare.seed bot personas (dead since the forum autoseeder was removed)
-          - test-marketplace-stripe # smoke-test CRON_SECRET + both Stripe webhook secrets + (test mode only) a Connect account round-trip
+          - test-marketplace-stripe # smoke-test CRON_SECRET + both Stripe webhook secrets + a Connect account create/delete round-trip (test or live)
       dry_run:
         description: "Dry run (log what would change, write nothing)"
         type: boolean
@@ -227,9 +227,11 @@ jobs:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
         run: npx tsx scripts/test-stripe-connect-account.ts
 
-      - name: "Marketplace smoke test: LIVE mode — skipping Connect account test (would create real objects)"
+      - name: "Marketplace smoke test: LIVE mode — Connect account create/delete round-trip"
         if: always() && inputs.task == 'test-marketplace-stripe' && steps.stripe_mode.outputs.mode == 'live'
-        run: echo "STRIPE_SECRET_KEY is live-mode — not creating a real Connect account from an automated test."
+        env:
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+        run: npx tsx scripts/test-stripe-connect-live.ts
 
       - name: "Marketplace smoke test: CRON_SECRET against the live cron endpoint"
         if: always() && inputs.task == 'test-marketplace-stripe'

@@ -38,18 +38,31 @@ export async function POST(req: Request) {
   });
   if (!profile) return NextResponse.json({ error: "Set up your shop first" }, { status: 400 });
 
-  // Already fully onboarded — send them to their own Stripe dashboard instead of
-  // starting a second Express account.
-  if (profile.stripeAccountId && profile.payoutsEnabled) {
-    const url = await createLoginLink(profile.stripeAccountId);
-    return NextResponse.json({ ok: true, url, mode: "dashboard" });
-  }
+  try {
+    // Already fully onboarded — send them to their own Stripe dashboard instead of
+    // starting a second Express account.
+    if (profile.stripeAccountId && profile.payoutsEnabled) {
+      const url = await createLoginLink(profile.stripeAccountId);
+      return NextResponse.json({ ok: true, url, mode: "dashboard" });
+    }
 
-  let accountId = profile.stripeAccountId;
-  if (!accountId) {
-    accountId = await createExpressAccount(profile.country, user.email);
-    await prisma.sellerProfile.update({ where: { userId: user.id }, data: { stripeAccountId: accountId } });
+    let accountId = profile.stripeAccountId;
+    if (!accountId) {
+      accountId = await createExpressAccount(profile.country, user.email);
+      await prisma.sellerProfile.update({ where: { userId: user.id }, data: { stripeAccountId: accountId } });
+    }
+    const url = await createOnboardingLink(accountId);
+    return NextResponse.json({ ok: true, url, mode: "onboarding" });
+  } catch (e) {
+    // Without this, an unhandled Stripe error (e.g. the platform account missing a
+    // required business profile field, or a capability request Stripe rejects) fell
+    // through as a raw 500 HTML page — the client's res.json() couldn't parse it,
+    // so every real cause showed the same opaque "couldn't reach Stripe" message.
+    // Logging the real error server-side (visible in Vercel) and returning Stripe's
+    // own message (safe to show — these are user-actionable, not sensitive) turns
+    // every future failure here into something diagnosable instead of a dead end.
+    console.error("[marketplace/stripe/connect] onboarding failed:", e);
+    const message = e instanceof Error ? e.message : "Couldn't reach Stripe — try again shortly";
+    return NextResponse.json({ error: message }, { status: 502 });
   }
-  const url = await createOnboardingLink(accountId);
-  return NextResponse.json({ ok: true, url, mode: "onboarding" });
 }
