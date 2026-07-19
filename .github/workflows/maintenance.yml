@@ -171,9 +171,16 @@ jobs:
           # with its error text swallowed into the variable (this exact failure
           # happened: the run died here with zero output). set +e so every count is
           # attempted and every error is PRINTED; non-numeric output = mismatch.
+          # Schema-qualify every table (public."Name") rather than relying on
+          # search_path resolution immediately after a fresh restore — the target
+          # inventory above proved every table exists, yet unqualified lookups
+          # failed moments later; qualifying removes that ambiguity outright.
+          # There's also no "Session" table in this schema (auth is JWT-cookie
+          # based, no DB-backed sessions) — dropped from the check list.
+          sleep 3
           set +e
           MISMATCH=0
-          for T in '"User"' '"Card"' '"Order"' '"MarketplaceListing"' '"SellerProfile"' '"Session"' '"Counter"' '"SupportTicket"' '"RetailerPrice"'; do
+          for T in 'public."User"' 'public."Card"' 'public."Order"' 'public."MarketplaceListing"' 'public."SellerProfile"' 'public."Counter"' 'public."SupportTicket"' 'public."RetailerPrice"'; do
             SRC=$(psql "$SOURCE_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
             DST=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
             case "$SRC" in ''|*[!0-9]*) echo "$T source query FAILED: $SRC"; MISMATCH=1; continue;; esac
