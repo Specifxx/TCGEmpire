@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES, pickPrice } from "@/lib/country";
-import { canViewMarketplaceListings, getSellerRatings, MARKETPLACE_OFFERS } from "@/lib/marketplace";
+import { canViewMarketplaceListings, getSellerRatings, MARKETPLACE_OFFERS, MARKETPLACE_PUBLIC } from "@/lib/marketplace";
 import { MARKETPLACE_SHIP_DEADLINE_DAYS } from "@/lib/marketplace-policy";
 import { stripeEnabled } from "@/lib/stripe";
 import { MarketplaceClient, type MktCard } from "@/components/MarketplaceClient";
@@ -14,7 +14,10 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Marketplace — buy Riftbound cards",
   description: "Buy Riftbound cards directly from verified sellers on RiftCompare.",
-  robots: { index: false, follow: true }, // private beta — not indexed yet
+  // Indexable once the marketplace is publicly launched; noindex while the
+  // private beta shows non-testers only a Coming-Soon teaser (NEXT_PUBLIC_ env
+  // is baked at build time, so this resolves at build like the nav flag).
+  ...(MARKETPLACE_PUBLIC ? {} : { robots: { index: false, follow: true } }),
 };
 
 // Shown right after a successful Stripe Checkout redirect back to the

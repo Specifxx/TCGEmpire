@@ -654,15 +654,12 @@ export function MarketplaceOrders({ offersEnabled = false }: { offersEnabled?: b
                     </div>
                     <StatusChip s={of.status} />
                     {of.status === "ACCEPTED" && (
-                      <button
-                        onClick={() =>
-                          act("/api/marketplace/buy", { listingId: of.listing.id, offerId: of.id }, "✓ Deal done — order placed at your offer price!")
-                        }
-                        disabled={!!busy}
-                        className="btn-primary text-xs disabled:opacity-50"
+                      <Link
+                        href={of.listing.card.slug ? `/card/${of.listing.card.slug}` : `/card/${of.listing.card.id}`}
+                        className="btn-primary text-xs"
                       >
-                        🤝 Complete purchase
-                      </button>
+                        🤝 Accepted — buy it from the card page
+                      </Link>
                     )}
                     {of.status === "PENDING" && (
                       <button onClick={() => act(`/api/marketplace/offers/${of.id}`, { action: "cancel" }, "Offer cancelled")} disabled={!!busy} className="btn-ghost text-xs disabled:opacity-50">

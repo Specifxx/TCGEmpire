@@ -669,6 +669,9 @@ model SellerProfile {
   // Denormalised count of COMPLETED marketplace sales — drives the new-seller
   // listing/value caps (lib/marketplace.ts) and Phase-2 seller tiers.
   completedSalesCount Int      @default(0)
+  // Explicit consent to the marketplace seller terms, stamped when the shop
+  // profile is first saved with the "I agree" checkbox ticked.
+  termsAcceptedAt     DateTime?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 

@@ -26,6 +26,9 @@ const schema = z.object({
   // lib/shipping.ts); optional, no format validation here since it's informational
   // to the estimator only, not itself a shipping destination.
   postcode: z.string().trim().max(20).optional().nullable(),
+  // Explicit consent to /marketplace/terms — required until termsAcceptedAt is
+  // stamped, ignored (already agreed) afterwards.
+  agreeTerms: z.boolean().optional(),
 });
 
 export async function POST(req: Request) {
@@ -40,6 +43,11 @@ export async function POST(req: Request) {
   if (!isLaunchCountry(d.country)) {
     return NextResponse.json({ error: "RiftCompare Marketplace is AU, UK and US only for now" }, { status: 400 });
   }
+  const existing = await prisma.sellerProfile.findUnique({ where: { userId: user.id }, select: { termsAcceptedAt: true } });
+  const needsAgreement = !existing?.termsAcceptedAt;
+  if (needsAgreement && d.agreeTerms !== true) {
+    return NextResponse.json({ error: "Please agree to the marketplace seller terms" }, { status: 400 });
+  }
   const data = {
     shopName: d.shopName,
     bio: d.bio ?? null,
@@ -50,6 +58,7 @@ export async function POST(req: Request) {
     shippingNote: d.shippingNote ?? null,
     handlingDays: d.handlingDays,
     postcode: d.postcode ?? null,
+    ...(needsAgreement ? { termsAcceptedAt: new Date() } : {}),
   };
   const profile = await prisma.sellerProfile.upsert({
     where: { userId: user.id },

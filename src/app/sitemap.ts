@@ -7,6 +7,7 @@ import { getArticles } from "@/lib/articles";
 import { getMarketReportSlugs } from "@/lib/posts";
 import { SETS } from "@/lib/constants";
 import { DOMAIN_PAGES } from "@/lib/domains";
+import { MARKETPLACE_PUBLIC } from "@/lib/marketplace";
 
 // Regenerate at most once per day — the card set is stable.
 export const revalidate = 86400;
@@ -124,6 +125,36 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
+  // Marketplace pages — only once publicly launched (pre-launch they're
+  // noindexed, and a sitemap entry pointing at a noindex page is a Search
+  // Console warning). Seller storefronts join for every seller with stock.
+  let marketplaceRoutes: MetadataRoute.Sitemap = [];
+  if (MARKETPLACE_PUBLIC) {
+    marketplaceRoutes = [
+      { url: `${SITE_URL}/marketplace`, changeFrequency: "daily", priority: 0.8 },
+      { url: `${SITE_URL}/marketplace/buyer-protection`, changeFrequency: "monthly", priority: 0.5 },
+      { url: `${SITE_URL}/marketplace/shipping`, changeFrequency: "monthly", priority: 0.4 },
+      { url: `${SITE_URL}/marketplace/terms`, changeFrequency: "yearly", priority: 0.3 },
+    ];
+    try {
+      const sellers = await prisma.marketplaceListing.findMany({
+        where: { status: "ACTIVE", quantity: { gt: 0 } },
+        distinct: ["sellerId"],
+        select: { sellerId: true },
+        take: 1000,
+      });
+      marketplaceRoutes.push(
+        ...sellers.map((s) => ({
+          url: `${SITE_URL}/marketplace/seller/${s.sellerId}`,
+          changeFrequency: "daily" as const,
+          priority: 0.5,
+        }))
+      );
+    } catch (e) {
+      console.error("sitemap: seller query failed, static marketplace routes only:", e);
+    }
+  }
+
   const cardRoutes: MetadataRoute.Sitemap = cards.map((c) => ({
     url: `${SITE_URL}/card/${c.slug ?? c.id}`,
     changeFrequency: "daily",
@@ -137,5 +168,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // NOTE: deliberately NO blanket "lastModified: now" — evergreen pages
   // (privacy, games, deck guides…) carry no date rather than a fake one.
-  return [...staticRoutes, ...setRoutes, ...domainRoutes, ...deckRoutes, ...articleRoutes, ...reportRoutes, ...cardRoutes];
+  return [...staticRoutes, ...marketplaceRoutes, ...setRoutes, ...domainRoutes, ...deckRoutes, ...articleRoutes, ...reportRoutes, ...cardRoutes];
 }

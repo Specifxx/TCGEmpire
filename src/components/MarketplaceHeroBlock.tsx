@@ -18,5 +18,11 @@ export async function MarketplaceHeroBlock({ cardId }: { cardId: string }) {
   });
   if (listings.length === 0) return null;
 
-  return <MarketplaceHeroLive cardId={cardId} initial={listings} />;
+  // The id is the anchor target for the card page's Product JSON-LD offer URLs
+  // (…#marketplace-listings) — keep the two in sync.
+  return (
+    <div id="marketplace-listings">
+      <MarketplaceHeroLive cardId={cardId} initial={listings} />
+    </div>
+  );
 }

@@ -28,6 +28,7 @@ import { NetProceeds } from "@/components/NetProceeds";
 import { AiInsight } from "@/components/AiInsight";
 import { CardPriceMetrics, CardPriceComparison, type EbaySearchMap } from "@/components/CardMarketSection";
 import { MarketplaceHeroBlock } from "@/components/MarketplaceHeroBlock";
+import { getActiveListingsForCard } from "@/lib/marketplace";
 import { EbayBuyCta } from "@/components/EbayBuyCta";
 import { computeMarket, type MarketRow } from "@/lib/market-rows";
 
@@ -201,8 +202,42 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // a Product without any of these is a critical Search Console error. So we only
   // emit the Product markup when we actually have priced, in-stock offers to back
   // it — unpriced cards simply omit it rather than emit an invalid empty Product.
-  const hasOffers = au.prices.length > 0 && au.lowest != null;
-  const jsonLd = hasOffers
+  //
+  // Marketplace listings (once MARKETPLACE_PUBLIC) join as individual Offer
+  // entries alongside the store AggregateOffer — the card page IS the product
+  // page Google sees for each listing; there are deliberately no per-listing
+  // pages (thin/duplicate content that 404s when sold). Freshness is handled by
+  // revalidateCardPage() firing on every listing mutation.
+  const mpListings = await getActiveListingsForCard(card.id).catch(() => []);
+  // priceValidUntil = now + 1 day: store prices refresh on the daily import and
+  // listing churn re-renders the page on-demand, so each snapshot is honest
+  // until the next pass overwrites it.
+  const priceValidUntil = new Date(Date.now() + 86400e3).toISOString().slice(0, 10);
+  const hasStoreOffers = au.prices.length > 0 && au.lowest != null;
+  const offersLd = [
+    ...(hasStoreOffers
+      ? [{
+          "@type": "AggregateOffer",
+          priceCurrency: "AUD",
+          lowPrice: (au.lowest! / 100).toFixed(2),
+          highPrice: (au.prices[au.prices.length - 1].priceCents / 100).toFixed(2),
+          offerCount: au.prices.length,
+          availability: "https://schema.org/InStock",
+          priceValidUntil,
+        }]
+      : []),
+    ...mpListings.map((l) => ({
+      "@type": "Offer",
+      price: (l.priceCents / 100).toFixed(2),
+      priceCurrency: l.currency,
+      availability: "https://schema.org/InStock",
+      itemCondition: l.condition === "NM" ? "https://schema.org/NewCondition" : "https://schema.org/UsedCondition",
+      seller: { "@type": "Organization", name: l.seller.sellerProfile?.shopName ?? l.seller.displayName },
+      url: `${SITE_URL}/card/${card.slug ?? params.id}#marketplace-listings`,
+      priceValidUntil,
+    })),
+  ];
+  const jsonLd = offersLd.length
     ? {
         "@context": "https://schema.org",
         "@type": "Product",
@@ -210,17 +245,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
         category: "Trading Card",
         description: `${displayName} — Riftbound ${card.setName} (${card.setCode}) ${card.collectorNumber}. Compare live store prices.`,
         ...(card.imageUrl ? { image: card.imageUrl } : {}),
-        offers: {
-          "@type": "AggregateOffer",
-          priceCurrency: "AUD",
-          lowPrice: (au.lowest! / 100).toFixed(2),
-          highPrice: (au.prices[au.prices.length - 1].priceCents / 100).toFixed(2),
-          offerCount: au.prices.length,
-          availability: "https://schema.org/InStock",
-          // priceValidUntil = now + 1 day: prices refresh on the daily import, so
-          // each snapshot is honest only until the next day's pass overwrites it.
-          priceValidUntil: new Date(Date.now() + 86400e3).toISOString().slice(0, 10),
-        },
+        offers: offersLd.length === 1 ? offersLd[0] : offersLd,
       }
     : null;
 

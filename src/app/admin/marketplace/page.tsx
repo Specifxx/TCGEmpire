@@ -85,12 +85,76 @@ export default async function AdminMarketplacePage({ searchParams }: { searchPar
 
   const fmt = new Intl.DateTimeFormat("en-AU", { dateStyle: "medium", timeStyle: "short", timeZone: "Australia/Sydney" });
 
+  // GMV + fee revenue, monthly for the last 6 months plus all-time. PAID and
+  // SHIPPED count as money in escrow; COMPLETED as realised — all three carry
+  // a collected fee (cancelled/refunded orders return the buyer's full charge,
+  // fee included, so they're excluded).
+  type RevRow = { month: Date; gmv: bigint; fees: bigint; orders: bigint };
+  const revenue = await prisma.$queryRaw<RevRow[]>`
+    SELECT date_trunc('month', "createdAt") AS month,
+           SUM("totalCents")::bigint AS gmv,
+           SUM("feeCents")::bigint AS fees,
+           COUNT(*)::bigint AS orders
+    FROM "Order"
+    WHERE kind = 'MARKETPLACE' AND status IN ('PAID', 'SHIPPED', 'COMPLETED')
+    GROUP BY 1 ORDER BY 1 DESC LIMIT 6
+  `.catch(() => [] as RevRow[]);
+  const allTime = revenue.length
+    ? await prisma.order.aggregate({
+        where: { kind: "MARKETPLACE", status: { in: ["PAID", "SHIPPED", "COMPLETED"] } },
+        _sum: { totalCents: true, feeCents: true },
+        _count: { _all: true },
+      })
+    : null;
+  const monthFmt = new Intl.DateTimeFormat("en-AU", { month: "short", year: "numeric", timeZone: "UTC" });
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-white">Marketplace admin</h1>
         <p className="text-sm text-slate-400">Exceptions queue: early-release requests, stale shipments, disputes, seller controls.</p>
       </div>
+
+      <section className="mb-8">
+        <h2 className="mb-3 text-lg font-bold text-white">Revenue</h2>
+        {!revenue.length ? (
+          <div className="rounded-xl border border-ink-700 bg-ink-850 px-4 py-8 text-center text-slate-400">No paid marketplace orders yet.</div>
+        ) : (
+          <div className="overflow-x-auto rounded-xl border border-ink-700 bg-ink-850">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-ink-700 text-left text-xs text-slate-500">
+                  <th className="px-4 py-2 font-semibold">Month</th>
+                  <th className="px-4 py-2 text-right font-semibold">Orders</th>
+                  <th className="px-4 py-2 text-right font-semibold">GMV</th>
+                  <th className="px-4 py-2 text-right font-semibold">Fee revenue (5%)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {revenue.map((r) => (
+                  <tr key={r.month.toISOString()} className="border-b border-ink-800 last:border-0">
+                    <td className="px-4 py-2 text-slate-300">{monthFmt.format(r.month)}</td>
+                    <td className="px-4 py-2 text-right text-slate-400">{Number(r.orders)}</td>
+                    <td className="px-4 py-2 text-right text-slate-300">{formatMoney(Number(r.gmv), "AUD")}</td>
+                    <td className="px-4 py-2 text-right font-semibold text-brand-300">{formatMoney(Number(r.fees), "AUD")}</td>
+                  </tr>
+                ))}
+                {allTime && (
+                  <tr className="bg-ink-900/60">
+                    <td className="px-4 py-2 font-semibold text-white">All time</td>
+                    <td className="px-4 py-2 text-right text-slate-400">{allTime._count._all}</td>
+                    <td className="px-4 py-2 text-right text-slate-300">{formatMoney(allTime._sum.totalCents ?? 0, "AUD")}</td>
+                    <td className="px-4 py-2 text-right font-semibold text-brand-300">{formatMoney(allTime._sum.feeCents ?? 0, "AUD")}</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+            <p className="px-4 pb-3 pt-1 text-[11px] text-slate-600">
+              PAID/SHIPPED/COMPLETED orders only (cancelled &amp; refunded excluded). Mixed currencies are summed at face value.
+            </p>
+          </div>
+        )}
+      </section>
 
       <section className="mb-8">
         <h2 className="mb-3 text-lg font-bold text-white">Needs attention ({awaitingReview.length})</h2>

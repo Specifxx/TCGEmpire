@@ -107,6 +107,27 @@ export async function getSellerRatings(sellerIds: string[]): Promise<Map<string,
   );
 }
 
+// Active listings for one card, with the seller's shop name — powers the
+// card page's Product JSON-LD offers (SEO) alongside MarketplaceHeroBlock's
+// aggregate view. Returns [] when the marketplace isn't public yet so the
+// structured data stays byte-identical pre-launch.
+export async function getActiveListingsForCard(cardId: string) {
+  if (!MARKETPLACE_PUBLIC) return [];
+  return prisma.marketplaceListing.findMany({
+    where: { cardId, status: "ACTIVE", quantity: { gt: 0 } },
+    select: {
+      id: true,
+      priceCents: true,
+      currency: true,
+      condition: true,
+      isFoil: true,
+      seller: { select: { sellerProfile: { select: { shopName: true } }, displayName: true } },
+    },
+    orderBy: { priceCents: "asc" },
+    take: 50,
+  });
+}
+
 // Validate a listing payload from a seller. Returns a normalised object or an error.
 export function validateListingInput(input: any):
   | { ok: true; condition: string; isFoil: boolean; priceCents: number; quantity: number }

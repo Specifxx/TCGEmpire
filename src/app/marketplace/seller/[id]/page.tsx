@@ -3,16 +3,22 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { canViewMarketplaceListings, getSellerRating } from "@/lib/marketplace";
+import { canViewMarketplaceListings, getSellerRating, MARKETPLACE_PUBLIC } from "@/lib/marketplace";
 import { formatMoney } from "@/lib/format";
 import { cardDisplayName } from "@/lib/card-name";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Seller storefront — Marketplace",
-  robots: { index: false, follow: false }, // private beta — never indexed
-};
+export function generateMetadata({ params }: { params: { id: string } }): Metadata {
+  return {
+    title: "Seller storefront — Marketplace",
+    // Indexable once launched (canViewMarketplaceListings opens to everyone
+    // when MARKETPLACE_PUBLIC, so crawlers can actually reach the content).
+    ...(MARKETPLACE_PUBLIC
+      ? { alternates: { canonical: `/marketplace/seller/${params.id}` } }
+      : { robots: { index: false, follow: false } }),
+  };
+}
 
 // A seller's public storefront: shop identity, rating, policies, recent reviews
 // and their active listings. Beta-gated like the rest of the marketplace.

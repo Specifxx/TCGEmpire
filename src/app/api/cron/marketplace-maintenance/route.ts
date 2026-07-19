@@ -47,8 +47,25 @@ export async function GET(req: Request) {
   const autoCancelled = await autoCancelUnshipped();
   const shipReminders = await sendShipReminders();
   const deliveryNudges = await sendDeliveryNudges();
+  const prunedNotifications = await pruneNotifications();
 
-  return NextResponse.json({ ok: true, releasedReservations, autoReleased, autoCancelled, shipReminders, deliveryNudges });
+  return NextResponse.json({ ok: true, releasedReservations, autoReleased, autoCancelled, shipReminders, deliveryNudges, prunedNotifications });
+}
+
+// Keep the Notification table bounded: every order event inserts a row, and
+// the bell UI only ever reads the latest 30 — anything read and older than a
+// month (or unread and older than three) is pure dead weight.
+async function pruneNotifications(): Promise<number> {
+  const now = Date.now();
+  try {
+    const [read, ancient] = await Promise.all([
+      prisma.notification.deleteMany({ where: { readAt: { not: null, lt: new Date(now - 30 * 86_400_000) } } }),
+      prisma.notification.deleteMany({ where: { createdAt: { lt: new Date(now - 90 * 86_400_000) } } }),
+    ]);
+    return read.count + ancient.count;
+  } catch {
+    return 0;
+  }
 }
 
 // Auto-release is now the PRIMARY, scheduled release path — every shipped order

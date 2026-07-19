@@ -25,6 +25,7 @@ interface Profile {
   shippingNote: string | null;
   handlingDays: number;
   postcode: string | null;
+  termsAcceptedAt: string | null;
 }
 
 interface SearchCard {
@@ -168,8 +169,12 @@ function ShopForm({ profile, onSaved }: { profile: Profile | null; onSaved: () =
   const [handling, setHandling] = useState(String(profile?.handlingDays ?? 2));
   const [postcode, setPostcode] = useState(profile?.postcode ?? "");
   const [bio, setBio] = useState(profile?.bio ?? "");
+  const [agreed, setAgreed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  // Shown until the seller has agreed once — after that it's stamped server-side
+  // and the checkbox disappears for good.
+  const needsAgreement = !profile?.termsAcceptedAt;
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -187,6 +192,7 @@ function ShopForm({ profile, onSaved }: { profile: Profile | null; onSaved: () =
         shippingNote: note.trim() || null,
         handlingDays: parseInt(handling || "0", 10),
         postcode: postcode.trim() || null,
+        ...(needsAgreement ? { agreeTerms: agreed } : {}),
       }),
     });
     const data = await res.json();
@@ -236,6 +242,18 @@ function ShopForm({ profile, onSaved }: { profile: Profile | null; onSaved: () =
         <span className="mb-1 block text-slate-400">Shop bio (optional)</span>
         <textarea value={bio} onChange={(e) => setBio(e.target.value)} maxLength={400} rows={2} className="input" />
       </label>
+      {needsAgreement && (
+        <label className="mt-3 flex items-start gap-2 text-sm text-slate-300">
+          <input type="checkbox" required checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-0.5" />
+          <span>
+            I agree to the{" "}
+            <Link href="/marketplace/terms" target="_blank" className="text-brand-400 underline hover:text-brand-300">
+              marketplace seller terms
+            </Link>{" "}
+            — including the {MARKETPLACE_FEE_BPS / 100}% fee on each sale and the ship-within-deadline policy.
+          </span>
+        </label>
+      )}
       <div className="mt-3 flex items-center gap-3">
         <button type="submit" disabled={saving} className="btn-primary">{saving ? "Saving…" : "Save shop"}</button>
         {msg && <span className="text-sm text-slate-400">{msg}</span>}
