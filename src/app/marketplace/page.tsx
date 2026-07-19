@@ -62,7 +62,7 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
           lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true,
         },
       },
-      seller: { select: { id: true, displayName: true, sellerProfile: { select: { shopName: true, isOfficial: true, shippingNote: true } } } },
+      seller: { select: { id: true, displayName: true, sellerProfile: { select: { shopName: true, isOfficial: true, shippingNote: true, handlingDays: true } } } },
     },
   });
 
@@ -84,6 +84,7 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
       sellerName: l.seller.sellerProfile?.shopName ?? l.seller.displayName,
       isOfficial: !!l.seller.sellerProfile?.isOfficial,
       shippingNote: l.seller.sellerProfile?.shippingNote ?? null,
+      handlingDays: l.seller.sellerProfile?.handlingDays ?? 2,
       ratingAvg: r?.avg ?? null,
       ratingCount: r?.count ?? 0,
       country: l.country,

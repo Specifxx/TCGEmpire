@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { shipByDate, autoReleaseDate } from "@/lib/marketplace-policy";
 
 export const dynamic = "force-dynamic";
 
@@ -55,12 +56,24 @@ export async function GET() {
       feeCents: true,
       currency: true,
       createdAt: true,
+      paidAt: true,
+      shippedAt: true,
+      receivedAt: true,
       transferredAt: true,
     },
   });
 
   const toNet = (rows: typeof held) =>
     rows.map((r) => ({ currency: r.currency, netCents: (r._sum.totalCents ?? 0) - (r._sum.feeCents ?? 0) }));
+
+  // Per-order concrete dates — "when do I get paid" answered exactly, not with a
+  // generic rule. shipByAt only matters while still PAID; releasesAt (the
+  // auto-release date) only once shipped.
+  const recentWithDates = recent.map((o) => ({
+    ...o,
+    shipByAt: o.status === "PAID" && o.paidAt ? shipByDate(o.paidAt) : null,
+    releasesAt: o.shippedAt ? autoReleaseDate(o.shippedAt) : null,
+  }));
 
   return NextResponse.json({
     hasAccount: !!profile?.stripeAccountId,
@@ -69,6 +82,6 @@ export async function GET() {
     held: toNet(held),
     released: toNet(released),
     readyForPayout: toNet(readyForPayout),
-    recent,
+    recent: recentWithDates,
   });
 }

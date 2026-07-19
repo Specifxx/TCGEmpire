@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { estimateShippingCents, validatePostcode } from "@/lib/shipping";
 import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit";
+import { estimateDeliveryWindow } from "@/lib/delivery-estimate";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
 
   const profile = await prisma.sellerProfile.findUnique({
     where: { userId: sellerId },
-    select: { country: true, shippingFlatCents: true, freeOverCents: true, postcode: true },
+    select: { country: true, shippingFlatCents: true, freeOverCents: true, postcode: true, handlingDays: true },
   });
   if (!profile) return NextResponse.json({ error: "Seller not found" }, { status: 404 });
 
@@ -42,5 +43,9 @@ export async function POST(req: Request) {
     freeOverCents: profile.freeOverCents,
     itemCents,
   });
-  return NextResponse.json(result);
+  // Preview-only estimate, anchored on "paid today" since the order doesn't exist
+  // yet — the real per-order eta (api/marketplace/orders) anchors on the actual
+  // paidAt/shippedAt once it does.
+  const eta = estimateDeliveryWindow({ paidAt: new Date(), shippedAt: null, handlingDays: profile.handlingDays, country: profile.country });
+  return NextResponse.json({ ...result, eta });
 }

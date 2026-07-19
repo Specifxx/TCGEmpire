@@ -5,6 +5,7 @@ import { stripe, stripeEnabled, STRIPE_WEBHOOK_SECRET } from "@/lib/stripe";
 import { importMarketplaceListings } from "@/lib/marketplace";
 import { revalidateCardPage } from "@/lib/revalidate-card";
 import { sendOrderReceiptEmail, sendSaleNotificationEmail } from "@/lib/marketplace-email";
+import { shipByDate } from "@/lib/marketplace-policy";
 
 export const dynamic = "force-dynamic";
 // Stripe needs the raw, unparsed body to verify the signature.
@@ -115,7 +116,7 @@ async function markPaid(session: Stripe.Checkout.Session) {
     const buyerEmail = emailById.get(o.buyerId);
     const sellerEmail = emailById.get(o.sellerId);
     if (buyerEmail) await sendOrderReceiptEmail(buyerEmail, info).catch(() => {});
-    if (sellerEmail) await sendSaleNotificationEmail(sellerEmail, info).catch(() => {});
+    if (sellerEmail) await sendSaleNotificationEmail(sellerEmail, info, shipByDate(paidAt)).catch(() => {});
     if (listing && !seenCards.has(listing.cardId)) {
       seenCards.add(listing.cardId);
       await revalidateCardPage(listing.cardId).catch(() => {});

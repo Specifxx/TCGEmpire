@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { shipByDate, autoReleaseDate } from "@/lib/marketplace-policy";
+import { estimateDeliveryWindow } from "@/lib/delivery-estimate";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +19,7 @@ export async function GET() {
     take: 100,
     include: {
       buyer: { select: { id: true, displayName: true } },
-      seller: { select: { id: true, displayName: true, sellerProfile: { select: { shopName: true } } } },
+      seller: { select: { id: true, displayName: true, sellerProfile: { select: { shopName: true, handlingDays: true } } } },
       review: { select: { rating: true } },
     },
   });
@@ -50,12 +52,25 @@ export async function GET() {
     shippingCents: o.shippingCents,
     feeCents: o.feeCents,
     createdAt: o.createdAt,
+    paidAt: o.paidAt,
     shippedAt: o.shippedAt,
     receivedAt: o.receivedAt,
+    transferredAt: o.transferredAt,
     trackingNote: o.trackingNote,
     carrier: o.carrier,
     trackingNumber: o.trackingNumber,
     disputedAt: o.disputedAt,
+    // Concrete dates computed server-side (never client math — see
+    // marketplace-policy.ts) so the UI always shows exactly what the cron
+    // actually enforces. eta is a no-carrier-API estimate (delivery-estimate.ts).
+    shipByAt: o.paidAt ? shipByDate(o.paidAt) : null,
+    autoReleaseAt: o.shippedAt ? autoReleaseDate(o.shippedAt) : null,
+    eta: estimateDeliveryWindow({
+      paidAt: o.paidAt,
+      shippedAt: o.shippedAt,
+      handlingDays: o.seller.sellerProfile?.handlingDays ?? 2,
+      country: o.shipCountry,
+    }),
     // Shipping address — only meaningful on the seller's own "Sales" rows (where
     // to send the parcel); harmless to also echo back to the buyer on their own
     // "Purchases" rows since it's their own data. Never another party's.

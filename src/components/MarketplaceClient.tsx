@@ -21,6 +21,7 @@ export interface MktOffer {
   sellerName: string;
   isOfficial: boolean;
   shippingNote: string | null;
+  handlingDays: number;
   ratingAvg: number | null;
   ratingCount: number;
   // The seller's shipping region for this listing, and whether it matches the
@@ -498,7 +499,7 @@ function OffersModal({
                     <Stars avg={o.ratingAvg} count={o.ratingCount} />
                   </div>
                   <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                    <span>{o.condition}{o.isFoil ? " · ✦ Foil" : ""} · {o.quantity} available{o.shippingNote ? ` · ${o.shippingNote}` : ""}</span>
+                    <span>{o.condition}{o.isFoil ? " · ✦ Foil" : ""} · {o.quantity} available · ⏱ ships in ~{o.handlingDays}d{o.shippingNote ? ` · ${o.shippingNote}` : ""}</span>
                     {o.inRegion ? (
                       <DeltaBadge pct={deltaPct(o.priceCents, card.marketCents)} />
                     ) : (

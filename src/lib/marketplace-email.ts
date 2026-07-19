@@ -8,6 +8,7 @@ import { formatOrderNumber } from "./order-number";
 import { trackingUrl, CARRIER_LABEL, type Carrier } from "./tracking";
 import { SITE_URL, SUPPORT_EMAIL } from "./site";
 import { MARKETPLACE_SHIP_DEADLINE_DAYS, MARKETPLACE_AUTO_RELEASE_DAYS } from "./marketplace";
+import { formatDay, formatDateRange, type DeliveryWindow } from "./delivery-estimate";
 
 function footer(): string {
   return `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">
@@ -41,14 +42,14 @@ export async function sendOrderReceiptEmail(to: string, o: OrderEmailInfo): Prom
 }
 
 // Seller "you made a sale" — sent alongside the buyer receipt.
-export async function sendSaleNotificationEmail(to: string, o: OrderEmailInfo): Promise<boolean> {
+export async function sendSaleNotificationEmail(to: string, o: OrderEmailInfo, shipBy: Date): Promise<boolean> {
   const num = formatOrderNumber(o.orderNumber) ?? o.orderId;
   const inner = `
     <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
       You've sold <strong style="color:#fff">${o.quantity} × ${o.cardName}</strong> (order ${num}) for
-      ${formatMoney(o.totalCents, o.currency)}. Please ship within <strong style="color:#f2c94c">${MARKETPLACE_SHIP_DEADLINE_DAYS} business days</strong>
-      and add tracking — payout is released once the buyer confirms delivery (or automatically
-      ${MARKETPLACE_AUTO_RELEASE_DAYS} days after you mark it shipped).
+      ${formatMoney(o.totalCents, o.currency)}. Please ship by <strong style="color:#f2c94c">${formatDay(shipBy)}</strong>
+      and add tracking — after that the order auto-refunds. Payout is released once the buyer confirms delivery (or
+      automatically ${MARKETPLACE_AUTO_RELEASE_DAYS} days after you mark it shipped).
     </td></tr>`;
   return sendEmail(to, `You made a sale — ${num}`, emailShell("You made a sale", inner + button("Mark as shipped", `${SITE_URL}/marketplace/sell`), footer()));
 }
@@ -58,7 +59,9 @@ export async function sendShippedEmail(
   to: string,
   o: OrderEmailInfo,
   carrier: string | null,
-  trackingNumber: string | null
+  trackingNumber: string | null,
+  eta: DeliveryWindow | null,
+  autoReleaseAt: Date
 ): Promise<boolean> {
   const num = formatOrderNumber(o.orderNumber) ?? o.orderId;
   const url = trackingUrl(carrier, trackingNumber);
@@ -68,12 +71,17 @@ export async function sendShippedEmail(
         url ? `<a href="${url}" style="color:#34d17e">${trackingNumber}</a>` : trackingNumber
       }</div>`
     : "";
+  const etaLine = eta
+    ? `<tr><td style="padding:0 32px 4px;font-size:14px;color:#b8c0cc">Estimated delivery: <strong style="color:#fff">${formatDateRange(eta.from, eta.to)}</strong> (estimate)</td></tr>`
+    : "";
   const inner = `
     <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
       Your order <strong style="color:#fff">${num}</strong> (${o.quantity} × ${o.cardName}) has shipped.${trackLine}
     </td></tr>
+    ${etaLine}
     <tr><td style="padding:8px 32px 4px;font-size:13px;color:#8b95a5">
-      Funds release to the seller once you confirm delivery, or automatically after ${MARKETPLACE_AUTO_RELEASE_DAYS} days.
+      Funds release to the seller automatically on <strong style="color:#f2c94c">${formatDay(autoReleaseAt)}</strong> — sooner if you
+      confirm delivery, and paused if you report a problem.
     </td></tr>`;
   return sendEmail(to, `Shipped — ${num}`, emailShell("Your order has shipped", inner + button("Confirm delivery", `${SITE_URL}/marketplace/orders`), footer()));
 }
@@ -107,22 +115,64 @@ export async function sendAutoCancelledSellerEmail(to: string, o: OrderEmailInfo
   const inner = `
     <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
       Order <strong style="color:#fff">${num}</strong> was automatically cancelled and refunded because it wasn't marked shipped
-      within ${MARKETPLACE_SHIP_DEADLINE_DAYS} business days. The listing has been restocked. Please ship promptly to avoid this in future.
+      within ${MARKETPLACE_SHIP_DEADLINE_DAYS} days. The listing has been restocked. Please ship promptly to avoid this in future.
     </td></tr>`;
   return sendEmail(to, `Order auto-cancelled — ${num}`, emailShell("Order auto-cancelled", inner + button("View your listings", `${SITE_URL}/marketplace/sell`), footer()));
 }
 
-// Internal notification to the support inbox — a seller believes tracking shows
-// delivered and is asking an admin to check sooner than the 14-day timeout.
-// Never releases anything itself; it just prioritises the admin review queue.
-export async function sendReleaseRequestedEmail(o: OrderEmailInfo): Promise<boolean> {
+// Internal notification to the support inbox — every order auto-releases on its
+// own schedule regardless, so this is purely an EARLY-release request: the
+// seller believes tracking shows it delivered and wants it sooner than the
+// scheduled date. Never releases anything itself; just surfaces it in the
+// admin exception queue.
+export async function sendReleaseRequestedEmail(o: OrderEmailInfo, scheduledReleaseAt: Date): Promise<boolean> {
   const num = formatOrderNumber(o.orderNumber) ?? o.orderId;
   const inner = `
     <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
       The seller on order <strong style="color:#fff">${num}</strong> (${o.quantity} × ${o.cardName}, ${formatMoney(o.totalCents, o.currency)})
-      has requested an early release — they believe tracking shows it delivered. Please check the tracking link and approve or hold.
+      has requested an early release — they believe tracking shows it delivered. It's already scheduled to auto-release on
+      ${formatDay(scheduledReleaseAt)}; check the tracking link and release now, or leave it to auto-release.
     </td></tr>`;
-  return sendEmail(SUPPORT_EMAIL, `[RC] Release requested — ${num}`, emailShell("Seller requested release", inner + button("Review in admin →", `${SITE_URL}/admin/marketplace`), footer()));
+  return sendEmail(SUPPORT_EMAIL, `[RC] Early release requested — ${num}`, emailShell("Early release requested", inner + button("Review in admin →", `${SITE_URL}/admin/marketplace`), footer()));
+}
+
+// Buyer "order complete" + review prompt — fires on BOTH release paths (manual
+// confirm and the 14-day auto-release), since previously neither told the buyer
+// anything and no review nudge existed at all.
+export async function sendOrderCompletedBuyerEmail(to: string, o: OrderEmailInfo, opts: { auto: boolean }): Promise<boolean> {
+  const num = formatOrderNumber(o.orderNumber) ?? o.orderId;
+  const body = opts.auto
+    ? `Order <strong style="color:#fff">${num}</strong> auto-completed ${MARKETPLACE_AUTO_RELEASE_DAYS} days after it shipped, and the seller has been paid. If something's wrong, contact support.`
+    : `Thanks for confirming delivery on order <strong style="color:#fff">${num}</strong> — the seller has been paid.`;
+  const inner = `
+    <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">${body}</td></tr>`;
+  return sendEmail(to, `Order complete — ${num}`, emailShell("Order complete", inner + button("★ Review your seller", `${SITE_URL}/marketplace/orders`), footer()));
+}
+
+// Seller "ship soon" reminder — sent ~24h before the auto-refund deadline for
+// orders still unshipped, so a seller isn't blindsided by the auto-cancel cron.
+export async function sendShipReminderEmail(to: string, o: OrderEmailInfo, shipBy: Date): Promise<boolean> {
+  const num = formatOrderNumber(o.orderNumber) ?? o.orderId;
+  const inner = `
+    <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      Order <strong style="color:#fff">${num}</strong> (${o.quantity} × ${o.cardName}) must ship by
+      <strong style="color:#f2c94c">${formatDay(shipBy)}</strong> — that's within 24 hours. If it isn't marked shipped by
+      then, it's automatically cancelled and the buyer refunded in full.
+    </td></tr>`;
+  return sendEmail(to, `Ship soon — ${num} due ${formatDay(shipBy)}`, emailShell("Ship reminder", inner + button("Mark as shipped", `${SITE_URL}/marketplace/sell`), footer()));
+}
+
+// Buyer "has it arrived?" nudge — sent once the estimated delivery window has
+// passed for a shipped order that's neither been confirmed nor disputed.
+export async function sendDeliveryNudgeEmail(to: string, o: OrderEmailInfo, etaLabel: string, autoReleaseAt: Date): Promise<boolean> {
+  const num = formatOrderNumber(o.orderNumber) ?? o.orderId;
+  const inner = `
+    <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      Order <strong style="color:#fff">${num}</strong> should have arrived by now (estimated ${etaLabel}). Tap "Confirm
+      delivery" once it's landed — or "Report a problem" if something's wrong. If you do nothing, it auto-completes on
+      <strong style="color:#fff">${formatDay(autoReleaseAt)}</strong>.
+    </td></tr>`;
+  return sendEmail(to, `Has your order arrived? — ${num}`, emailShell("Has it arrived?", inner + button("Confirm delivery", `${SITE_URL}/marketplace/orders`), footer()));
 }
 
 // ─── Mutual-agreement cancellation ──────────────────────────────────────────

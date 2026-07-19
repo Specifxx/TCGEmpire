@@ -16,8 +16,11 @@ import {
   sendCancelRequestedEmail,
   sendCancelledMutualEmail,
   sendCancelDeclinedEmail,
+  sendOrderCompletedBuyerEmail,
 } from "./marketplace-email";
 import { nextNumber, formatOrderNumber } from "./order-number";
+import { autoReleaseDate } from "./marketplace-policy";
+import { estimateDeliveryWindow } from "./delivery-estimate";
 
 export type ActionResult = { ok: true; [key: string]: unknown } | { ok: false; error: string; httpStatus: number };
 
@@ -38,6 +41,9 @@ async function loadOrder(orderId: string) {
       releaseRequestedAt: true,
       cancelRequestedBy: true,
       cancelRequestedAt: true,
+      paidAt: true,
+      shippedAt: true,
+      shipCountry: true,
     },
   });
 }
@@ -55,21 +61,33 @@ export async function shipOrder(
   if (order.status !== "PAID") return { ok: false, error: `Can't ship a ${order.status} order`, httpStatus: 400 };
   if (order.cancelRequestedAt) return { ok: false, error: "A cancellation is pending on this order — resolve it first", httpStatus: 400 };
 
+  const shippedAt = new Date();
   await prisma.order.update({
     where: { id: order.id },
-    data: { status: "SHIPPED", shippedAt: new Date(), carrier, trackingNumber, trackingNote: tracking?.trim() || null },
+    data: { status: "SHIPPED", shippedAt, carrier, trackingNumber, trackingNote: tracking?.trim() || null },
   });
 
-  const buyer = await prisma.user.findUnique({ where: { id: order.buyerId }, select: { email: true } });
+  const [buyer, sellerProfile] = await Promise.all([
+    prisma.user.findUnique({ where: { id: order.buyerId }, select: { email: true } }),
+    prisma.sellerProfile.findUnique({ where: { userId: order.sellerId }, select: { handlingDays: true } }),
+  ]);
   const listing = order.marketplaceListingId
     ? await prisma.marketplaceListing.findUnique({ where: { id: order.marketplaceListingId }, select: { card: { select: { name: true } } } })
     : null;
   if (buyer?.email) {
+    const eta = estimateDeliveryWindow({
+      paidAt: order.paidAt,
+      shippedAt,
+      handlingDays: sellerProfile?.handlingDays ?? 2,
+      country: order.shipCountry,
+    });
     await sendShippedEmail(
       buyer.email,
       { orderId: order.id, orderNumber: order.orderNumber, cardName: listing?.card.name ?? "your order", quantity: order.quantity, totalCents: order.totalCents, currency: order.currency },
       carrier,
-      trackingNumber
+      trackingNumber,
+      eta,
+      autoReleaseDate(shippedAt)
     ).catch(() => {});
   }
   return { ok: true, status: "SHIPPED" };
@@ -91,20 +109,23 @@ export async function receiveOrder(orderId: string, userId: string): Promise<Act
 
   await releaseFundsForOrder(order.id).catch(() => {});
 
-  const seller = await prisma.user.findUnique({ where: { id: order.sellerId }, select: { email: true } });
+  const [seller, buyer] = await Promise.all([
+    prisma.user.findUnique({ where: { id: order.sellerId }, select: { email: true } }),
+    prisma.user.findUnique({ where: { id: order.buyerId }, select: { email: true } }),
+  ]);
   const listing = order.marketplaceListingId
     ? await prisma.marketplaceListing.findUnique({ where: { id: order.marketplaceListingId }, select: { cardId: true, card: { select: { name: true } } } })
     : null;
-  if (seller?.email) {
-    await sendFundsReleasedEmail(seller.email, {
-      orderId: order.id,
-      orderNumber: order.orderNumber,
-      cardName: listing?.card.name ?? "your order",
-      quantity: order.quantity,
-      totalCents: order.totalCents,
-      currency: order.currency,
-    }).catch(() => {});
-  }
+  const info = {
+    orderId: order.id,
+    orderNumber: order.orderNumber,
+    cardName: listing?.card.name ?? "your order",
+    quantity: order.quantity,
+    totalCents: order.totalCents,
+    currency: order.currency,
+  };
+  if (seller?.email) await sendFundsReleasedEmail(seller.email, info).catch(() => {});
+  if (buyer?.email) await sendOrderCompletedBuyerEmail(buyer.email, info, { auto: false }).catch(() => {});
   if (listing) await revalidateCardPage(listing.cardId).catch(() => {});
 
   return { ok: true, status: "COMPLETED" };
@@ -126,14 +147,17 @@ export async function requestReleaseOrder(orderId: string, userId: string, notif
     const listing = order.marketplaceListingId
       ? await prisma.marketplaceListing.findUnique({ where: { id: order.marketplaceListingId }, select: { card: { select: { name: true } } } })
       : null;
-    await sendReleaseRequestedEmail({
-      orderId: order.id,
-      orderNumber: order.orderNumber,
-      cardName: listing?.card.name ?? "the item",
-      quantity: order.quantity,
-      totalCents: order.totalCents,
-      currency: order.currency,
-    }).catch(() => {});
+    await sendReleaseRequestedEmail(
+      {
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        cardName: listing?.card.name ?? "the item",
+        quantity: order.quantity,
+        totalCents: order.totalCents,
+        currency: order.currency,
+      },
+      autoReleaseDate(order.shippedAt!)
+    ).catch(() => {});
   }
   return { ok: true };
 }
