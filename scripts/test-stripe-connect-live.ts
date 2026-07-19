@@ -18,12 +18,18 @@ async function main() {
   }
   const stripe = new Stripe(key, { apiVersion: "2025-02-24.acacia" });
 
-  console.log("Creating a throwaway LIVE Express account (AU, individual, transfers requested)...");
+  console.log("Creating a throwaway LIVE Express account (AU, individual, transfers requested, recipient agreement)...");
   const account = await stripe.accounts.create({
     type: "express",
     country: "AU",
     capabilities: { transfers: { requested: true } },
     business_type: "individual",
+    // Matches lib/connect.ts's accountParamsFor() exactly — every seller only
+    // ever RECEIVES transfers (buyers pay the platform, never the connected
+    // account), so the recipient agreement applies regardless of country. The
+    // full Express agreement requesting transfers-without-card_payments hits a
+    // manual Stripe review wall; recipient accounts don't.
+    tos_acceptance: { service_agreement: "recipient" },
     email: `rc-live-smoke-test-${Date.now()}@example.com`,
   });
   console.log(`Created ${account.id} — payouts_enabled=${account.payouts_enabled}`);

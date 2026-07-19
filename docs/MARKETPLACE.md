@@ -1,5 +1,33 @@
 # RiftCompare Marketplace
 
+> Note: most of this doc predates the open-selling P2P rebuild (any signed-in
+> verified-email user can sell; Stripe Connect payouts; system-driven release —
+> see `src/lib/order-actions.ts`, `src/lib/connect.ts`,
+> `src/app/api/cron/marketplace-maintenance/route.ts`). Treat the tables below
+> as historical; the code is the source of truth for current behavior.
+
+## Phase 2 (deferred)
+
+Recorded here rather than built now, in priority order:
+
+- **Carrier-tracking API adapter** (env-gated, e.g. `TRACKING_API_PROVIDER`) —
+  today delivery ETAs are computed estimates (`src/lib/delivery-estimate.ts`),
+  not real carrier scans. A real integration would add `deliveredAt`/
+  `trackingStatus` columns to `Order` and plug into `estimateDeliveryWindow()`
+  as a "real data wins over the estimate" branch, plus trigger the delivery
+  nudge/auto-release cron off an actual delivery scan instead of an estimated
+  window — no call sites need to change, `estimateDeliveryWindow()` is the
+  single seam.
+- **Bulk/CSV listing upload** — `AddListing` in `SellerDashboard.tsx` is one
+  card at a time; painful for sellers with large inventories (also interacts
+  with the new-seller listing cap in `lib/marketplace.ts`).
+- **Shipping-label generation** — sellers currently hand-type a carrier +
+  tracking number after buying postage elsewhere.
+- **In-app notification center** — every order-lifecycle event is email-only
+  today (`src/lib/marketplace-email.ts`); no notification model/UI exists.
+
+---
+
 A verified-seller marketplace built into RiftCompare. Sellers list cards; their
 cheapest active listing per market appears in the normal price comparison as the
 **"RiftCompare Marketplace"** source. Public page is **Coming Soon**; verified
