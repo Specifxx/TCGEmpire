@@ -32,6 +32,17 @@ export async function GET() {
     _sum: { totalCents: true, feeCents: true },
   });
 
+  // Stuck: COMPLETED but never transferred — a sale can finish before a seller
+  // sets up payouts (see api/marketplace/listings + stripe/checkout), so
+  // releaseFundsForOrder() no-ops instead of erroring. This money is real and
+  // owed; it just needs the seller to finish Stripe Connect, which then
+  // auto-releases everything in this bucket (see connect-webhook/route.ts).
+  const readyForPayout = await prisma.order.groupBy({
+    by: ["currency"],
+    where: { sellerId: user.id, kind: "MARKETPLACE", status: "COMPLETED", stripeTransferId: null },
+    _sum: { totalCents: true, feeCents: true },
+  });
+
   const recent = await prisma.order.findMany({
     where: { sellerId: user.id, kind: "MARKETPLACE", status: { in: ["PAID", "SHIPPED", "COMPLETED"] } },
     orderBy: { createdAt: "desc" },
@@ -57,6 +68,7 @@ export async function GET() {
     completedSalesCount: profile?.completedSalesCount ?? 0,
     held: toNet(held),
     released: toNet(released),
+    readyForPayout: toNet(readyForPayout),
     recent,
   });
 }

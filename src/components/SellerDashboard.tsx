@@ -104,10 +104,16 @@ export function SellerDashboard() {
           <ShopForm profile={profile} onSaved={load} />
           {!profile ? (
             <div className="card-surface p-4 text-sm text-gold">Set up your shop above before you can list cards.</div>
-          ) : !payoutsEnabled ? (
-            <PayoutsOnboarding />
           ) : (
-            <AddListing country={country} currency={profile.currency} onAdded={load} />
+            <>
+              {/* Payouts are never required to list or sell — buyers pay RiftCompare
+                  directly, and funds simply stay held until a seller finishes Stripe
+                  Connect onboarding (then release automatically). Shown as a nudge,
+                  not a gate, so a seller without payouts set up yet doesn't block a
+                  buyer who's ready to purchase right now. */}
+              {!payoutsEnabled && <PayoutsOnboarding />}
+              <AddListing country={country} currency={profile.currency} onAdded={load} />
+            </>
           )}
           <MyListings listings={listings} onChange={load} />
         </div>
@@ -116,8 +122,10 @@ export function SellerDashboard() {
   );
 }
 
-// Blocks listing until Stripe Connect payouts are enabled — Stripe runs the
-// identity/KYC check as part of this flow, so there's nothing custom to build.
+// A nudge, not a gate — you can list and sell before finishing this (buyers pay
+// RiftCompare directly), but funds stay held until Stripe Connect is set up, since
+// that's how we actually pay YOU. Stripe runs the identity/KYC check as part of
+// this flow, so there's nothing custom to build.
 function PayoutsOnboarding() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -133,11 +141,12 @@ function PayoutsOnboarding() {
   }
 
   return (
-    <div className="card-surface p-5">
-      <h2 className="mb-1 font-bold text-white">Enable payouts to start listing</h2>
+    <div className="card-surface border-gold/30 p-5">
+      <h2 className="mb-1 font-bold text-white">Set up payouts to get paid</h2>
       <p className="text-sm text-slate-500">
-        RiftCompare uses Stripe Connect to pay sellers directly — Stripe verifies your identity and handles payouts to
-        your bank, so we never touch your funds or your ID. It takes a couple of minutes.
+        You can list and sell right away — but funds from any sale stay held until you set this up, since it's how
+        RiftCompare actually pays you. Stripe verifies your identity and handles payouts to your bank, so we never
+        touch your funds or your ID. It takes a couple of minutes.
       </p>
       <button onClick={start} disabled={busy} className="btn-primary mt-3">{busy ? "Opening Stripe…" : "Set up payouts →"}</button>
       {error && <p className="mt-2 text-sm text-rose-300">{error}</p>}

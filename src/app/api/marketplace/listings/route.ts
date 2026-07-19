@@ -70,9 +70,12 @@ export async function POST(req: Request) {
   const profile = await prisma.sellerProfile.findUnique({ where: { userId: user.id } });
   if (!profile) return NextResponse.json({ error: "Set up your shop (name + shipping) first" }, { status: 400 });
   if (profile.suspendedAt) return NextResponse.json({ error: "Your selling privileges are currently suspended" }, { status: 403 });
-  if (!profile.payoutsEnabled) {
-    return NextResponse.json({ error: "Finish setting up payouts (Stripe Connect) before listing" }, { status: 403 });
-  }
+  // payoutsEnabled is NOT required to list or sell — the buyer always pays the
+  // PLATFORM's Stripe account first (see lib/connect.ts), so nothing about a sale
+  // itself touches the seller's Connect account. Payouts only matter at release
+  // time: releaseFundsForOrder() already holds funds gracefully (no transfer) if
+  // the seller hasn't finished onboarding yet, and the Connect webhook catches
+  // those up automatically once they do (see connect-webhook/route.ts).
 
   const card = await prisma.card.findUnique({ where: { id: base.data.cardId }, select: { id: true } });
   if (!card) return NextResponse.json({ error: "Card not found" }, { status: 404 });

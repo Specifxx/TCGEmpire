@@ -32,10 +32,19 @@ interface Funds {
   completedSalesCount: number;
   held: CurrencyAmount[];
   released: CurrencyAmount[];
+  // COMPLETED sales that never transferred — the seller hadn't finished Stripe
+  // Connect onboarding when the sale completed. Real, owed money; it releases
+  // automatically the moment payouts are enabled (see connect-webhook/route.ts).
+  readyForPayout: CurrencyAmount[];
   recent: RecentOrder[];
 }
 
 const STATUS_LABEL: Record<string, string> = { PAID: "Held — awaiting shipment", SHIPPED: "Held — in transit", COMPLETED: "Released" };
+
+function orderStatusLabel(o: RecentOrder): string {
+  if (o.status === "COMPLETED" && !o.transferredAt) return "Ready — finish payouts to receive it";
+  return STATUS_LABEL[o.status] ?? o.status;
+}
 
 export function SellerFunds() {
   const [funds, setFunds] = useState<Funds | null>(null);
@@ -89,6 +98,21 @@ export function SellerFunds() {
         {error && <p className="mt-2 text-sm text-rose-300">{error}</p>}
       </div>
 
+      {funds.readyForPayout.length > 0 && (
+        <div className="card-surface border-gold/40 bg-gold/5 p-5">
+          <h3 className="mb-1 font-bold text-white">Ready to pay out — finish Stripe setup to receive it</h3>
+          <p className="text-sm text-slate-400">
+            These sales already completed, but you hadn&apos;t finished payout setup yet — the money is real and owed
+            to you. It releases automatically the moment you finish connecting Stripe.
+          </p>
+          <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+            {funds.readyForPayout.map((h) => (
+              <li key={h.currency} className="text-xl font-bold text-gold">{formatMoney(h.netCents, h.currency)}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="card-surface p-5">
           <h3 className="mb-2 text-sm font-semibold text-slate-400">Held (pending delivery)</h3>
@@ -127,7 +151,7 @@ export function SellerFunds() {
             {funds.recent.map((o) => (
               <li key={o.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
                 <span className="text-slate-400">{formatOrderNumber(o.orderNumber) ?? o.id.slice(0, 8)}</span>
-                <span className="text-slate-500">{STATUS_LABEL[o.status] ?? o.status}</span>
+                <span className={o.status === "COMPLETED" && !o.transferredAt ? "text-gold" : "text-slate-500"}>{orderStatusLabel(o)}</span>
                 <span className="font-semibold text-white">{formatMoney(o.totalCents - o.feeCents, o.currency)}</span>
               </li>
             ))}

@@ -92,7 +92,7 @@ export async function POST(req: Request) {
             seller: {
               select: {
                 id: true,
-                sellerProfile: { select: { shopName: true, shippingFlatCents: true, freeOverCents: true, postcode: true, payoutsEnabled: true, suspendedAt: true } },
+                sellerProfile: { select: { shopName: true, shippingFlatCents: true, freeOverCents: true, postcode: true, suspendedAt: true } },
               },
             },
           },
@@ -102,9 +102,11 @@ export async function POST(req: Request) {
         }
         if (listing.sellerId === user.id) throw new Error("You can't buy your own listing");
         if (listing.seller.sellerProfile?.suspendedAt) throw new Error("This seller is no longer active");
-        if (!listing.seller.sellerProfile?.payoutsEnabled) {
-          throw new Error(`${listing.seller.sellerProfile?.shopName ?? "A seller"} hasn't finished payout setup yet — try again later`);
-        }
+        // payoutsEnabled is deliberately NOT checked here — the buyer pays the
+        // PLATFORM's account (see lib/connect.ts), so a seller who hasn't finished
+        // Stripe Connect onboarding yet can still be paid; their funds just stay
+        // held until they do (releaseFundsForOrder no-ops safely, and the Connect
+        // webhook releases held funds automatically once onboarding completes).
         lines.push({ listing, quantity: it.quantity });
       }
 
