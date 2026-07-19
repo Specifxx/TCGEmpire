@@ -15,6 +15,7 @@ import {
   sendDeliveryNudgeEmail,
 } from "@/lib/marketplace-email";
 import { notify } from "@/lib/notifications";
+import { formatMoney } from "@/lib/format";
 
 // Escrow enforcement, run every 6h by .github/workflows/marketplace-maintenance.yml
 // (Vercel's Hobby-plan cron only fires once/day, too coarse for a 14-day release
@@ -61,7 +62,7 @@ async function autoReleaseShipped(): Promise<number> {
   const cutoff = new Date(Date.now() - MARKETPLACE_AUTO_RELEASE_DAYS * 86_400_000);
   const orders = await prisma.order.findMany({
     where: { kind: "MARKETPLACE", status: "SHIPPED", shippedAt: { lt: cutoff }, disputedAt: null },
-    select: { id: true, orderNumber: true, quantity: true, totalCents: true, currency: true, buyerId: true, sellerId: true, marketplaceListingId: true },
+    select: { id: true, orderNumber: true, quantity: true, totalCents: true, feeCents: true, currency: true, buyerId: true, sellerId: true, marketplaceListingId: true },
     take: BATCH,
   });
 
@@ -85,12 +86,13 @@ async function autoReleaseShipped(): Promise<number> {
         cardName: listing?.card.name ?? "your order",
         quantity: o.quantity,
         totalCents: o.totalCents,
+        feeCents: o.feeCents,
         currency: o.currency,
       };
       if (seller?.email) await sendFundsReleasedEmail(seller.email, info).catch(() => {});
       if (buyer?.email) await sendOrderCompletedBuyerEmail(buyer.email, info, { auto: true }).catch(() => {});
       if (listing) await revalidateCardPage(listing.cardId).catch(() => {});
-      await notify(o.sellerId, "funds_released", "Funds released", `Payout sent for ${info.cardName} (order ${o.orderNumber ?? o.id}).`, "/marketplace/funds").catch(() => {});
+      await notify(o.sellerId, "funds_released", "Funds released", `${formatMoney(o.totalCents - o.feeCents, o.currency)} sent for ${info.cardName} (order ${o.orderNumber ?? o.id}).`, "/marketplace/funds").catch(() => {});
       await notify(o.buyerId, "order_completed", "Order complete", `Order for ${info.cardName} auto-completed and the seller has been paid.`, "/marketplace/orders").catch(() => {});
     } catch {
       // Skip this order this run; it's picked up again on the next pass.

@@ -85,6 +85,7 @@ async function markPaid(session: Stripe.Checkout.Session) {
       orderNumber: true,
       quantity: true,
       totalCents: true,
+      feeCents: true,
       currency: true,
       buyerId: true,
       sellerId: true,
@@ -114,13 +115,13 @@ async function markPaid(session: Stripe.Checkout.Session) {
   for (const o of pending) {
     const listing = o.marketplaceListingId ? listingById.get(o.marketplaceListingId) : undefined;
     const cardName = listing?.card.name ?? "your card";
-    const info = { orderId: o.id, orderNumber: o.orderNumber, cardName, quantity: o.quantity, totalCents: o.totalCents, currency: o.currency };
+    const info = { orderId: o.id, orderNumber: o.orderNumber, cardName, quantity: o.quantity, totalCents: o.totalCents, feeCents: o.feeCents, currency: o.currency };
     const buyerEmail = emailById.get(o.buyerId);
     const sellerEmail = emailById.get(o.sellerId);
     if (buyerEmail) await sendOrderReceiptEmail(buyerEmail, info).catch(() => {});
     if (sellerEmail) await sendSaleNotificationEmail(sellerEmail, info, shipByDate(paidAt)).catch(() => {});
     await notify(o.buyerId, "order_confirmed", "Order confirmed", `${o.quantity} × ${cardName} — the seller has been notified.`, "/marketplace/orders").catch(() => {});
-    await notify(o.sellerId, "sale", "You made a sale", `${o.quantity} × ${cardName} sold for ${formatMoney(o.totalCents, o.currency)}.`, "/marketplace/sell").catch(() => {});
+    await notify(o.sellerId, "sale", "You made a sale", `${o.quantity} × ${cardName} sold for ${formatMoney(o.totalCents, o.currency)} — you'll receive ${formatMoney(o.totalCents - o.feeCents, o.currency)} after the 5% fee.`, "/marketplace/sell").catch(() => {});
     if (listing && !seenCards.has(listing.cardId)) {
       seenCards.add(listing.cardId);
       await revalidateCardPage(listing.cardId).catch(() => {});

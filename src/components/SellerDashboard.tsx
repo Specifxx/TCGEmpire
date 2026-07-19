@@ -90,7 +90,10 @@ export function SellerDashboard() {
       <div className="mb-5 flex items-center justify-between">
         <div>
           <h1 className="font-display text-2xl font-extrabold text-white">Seller dashboard</h1>
-          <p className="text-sm text-slate-500">Manage your RiftCompare Marketplace shop &amp; listings.</p>
+          <p className="text-sm text-slate-500">
+            Manage your RiftCompare Marketplace shop &amp; listings. RiftCompare takes a {MARKETPLACE_FEE_BPS / 100}%
+            fee on each sale — you always see exactly what you&apos;ll receive before you list and after you sell.
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <Link href="/marketplace/funds" className="btn-ghost text-sm">Seller funds →</Link>
@@ -460,7 +463,12 @@ function ListingRow({ l, onChange }: { l: Listing; onChange: () => void }) {
         </>
       ) : (
         <>
-          <span className="text-sm font-bold text-accent">{formatMoney(l.priceCents, l.currency)}</span>
+          <span className="text-right">
+            <span className="block text-sm font-bold text-accent">{formatMoney(l.priceCents, l.currency)}</span>
+            <span className="block text-[10px] text-slate-600" title={`After RiftCompare's ${MARKETPLACE_FEE_BPS / 100}% marketplace fee`}>
+              you receive {formatMoney(l.priceCents - platformFeeCents(l.priceCents), l.currency)}
+            </span>
+          </span>
           <span className="text-xs text-slate-500">×{l.quantity}</span>
           <div className="flex items-center gap-1.5">
             <button onClick={() => setEditing(true)} className="rounded bg-ink-800 px-2 py-1 text-[11px] text-slate-200 hover:bg-ink-700">Edit</button>

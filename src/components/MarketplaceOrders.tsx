@@ -77,6 +77,7 @@ interface OrderGroup {
   counterparty: string;
   createdAt: string;
   totalCents: number;
+  feeCents: number;
   currency: string;
   status: string;
   mixedStatus: boolean;
@@ -127,6 +128,7 @@ function groupOrders(rows: OrderRow[]): OrderGroup[] {
       counterparty: first.counterparty,
       createdAt: first.createdAt,
       totalCents: orders.reduce((sum, o) => sum + o.totalCents, 0),
+      feeCents: orders.reduce((sum, o) => sum + o.feeCents, 0),
       currency: first.listing?.currency ?? "AUD",
       status: first.status,
       mixedStatus: orders.some((o) => o.status !== first.status),
@@ -756,7 +758,16 @@ function OrderList({
             </ul>
           </div>
           <div className="flex shrink-0 flex-col items-end gap-1.5">
-            <span className="text-sm font-extrabold text-accent">{formatMoney(g.totalCents, g.currency)}</span>
+            {g.role === "seller" ? (
+              <div className="text-right">
+                <span className="text-sm font-extrabold text-accent">{formatMoney(g.totalCents - g.feeCents, g.currency)}</span>
+                <div className="text-[10px] text-slate-500" title="RiftCompare's 5% marketplace fee">
+                  {formatMoney(g.totalCents, g.currency)} sale − {formatMoney(g.feeCents, g.currency)} fee
+                </div>
+              </div>
+            ) : (
+              <span className="text-sm font-extrabold text-accent">{formatMoney(g.totalCents, g.currency)}</span>
+            )}
             <StatusChip s={g.status} mixed={g.mixedStatus} />
           </div>
           <div className="w-full border-t border-ink-800 pt-2">

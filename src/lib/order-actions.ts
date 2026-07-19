@@ -22,6 +22,7 @@ import { nextNumber, formatOrderNumber } from "./order-number";
 import { autoReleaseDate } from "./marketplace-policy";
 import { estimateDeliveryWindow } from "./delivery-estimate";
 import { notify } from "./notifications";
+import { formatMoney } from "./format";
 
 export type ActionResult = { ok: true; [key: string]: unknown } | { ok: false; error: string; httpStatus: number };
 
@@ -37,6 +38,7 @@ async function loadOrder(orderId: string) {
       orderNumber: true,
       quantity: true,
       totalCents: true,
+      feeCents: true,
       currency: true,
       marketplaceListingId: true,
       releaseRequestedAt: true,
@@ -130,13 +132,14 @@ export async function receiveOrder(orderId: string, userId: string): Promise<Act
     cardName: listing?.card.name ?? "your order",
     quantity: order.quantity,
     totalCents: order.totalCents,
+    feeCents: order.feeCents,
     currency: order.currency,
   };
   if (seller?.email) await sendFundsReleasedEmail(seller.email, info).catch(() => {});
   if (buyer?.email) await sendOrderCompletedBuyerEmail(buyer.email, info, { auto: false }).catch(() => {});
   if (listing) await revalidateCardPage(listing.cardId).catch(() => {});
 
-  await notify(order.sellerId, "funds_released", "Funds released", `Payout sent for ${info.cardName} (order ${formatOrderNumber(info.orderNumber) ?? info.orderId}).`, "/marketplace/funds").catch(() => {});
+  await notify(order.sellerId, "funds_released", "Funds released", `${formatMoney(order.totalCents - order.feeCents, order.currency)} sent for ${info.cardName} (order ${formatOrderNumber(info.orderNumber) ?? info.orderId}).`, "/marketplace/funds").catch(() => {});
   await notify(order.buyerId, "order_completed", "Order complete", `Delivery confirmed for ${info.cardName}.`, "/marketplace/orders").catch(() => {});
 
   return { ok: true, status: "COMPLETED" };

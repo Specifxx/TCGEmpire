@@ -27,6 +27,9 @@ export interface OrderEmailInfo {
   quantity: number;
   totalCents: number;
   currency: string;
+  // Only populated (and only used) by the seller-facing sale/payout emails —
+  // every other email builds an OrderEmailInfo without it.
+  feeCents?: number;
 }
 
 // Buyer receipt — sent when the webhook flips the order to PAID.
@@ -44,12 +47,24 @@ export async function sendOrderReceiptEmail(to: string, o: OrderEmailInfo): Prom
 // Seller "you made a sale" — sent alongside the buyer receipt.
 export async function sendSaleNotificationEmail(to: string, o: OrderEmailInfo, shipBy: Date): Promise<boolean> {
   const num = formatOrderNumber(o.orderNumber) ?? o.orderId;
+  const fee = o.feeCents ?? 0;
+  const net = o.totalCents - fee;
+  const feeLine = fee > 0
+    ? `<tr><td style="padding:0 32px 4px;font-size:13px;color:#8b95a5">
+        Sale price ${formatMoney(o.totalCents, o.currency)} − ${formatMoney(fee, o.currency)} RiftCompare fee (5%) =
+        <strong style="color:#34d17e">${formatMoney(net, o.currency)}</strong> you'll receive.
+      </td></tr>`
+    : "";
   const inner = `
     <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
       You've sold <strong style="color:#fff">${o.quantity} × ${o.cardName}</strong> (order ${num}) for
       ${formatMoney(o.totalCents, o.currency)}. Please ship by <strong style="color:#f2c94c">${formatDay(shipBy)}</strong>
-      and add tracking — after that the order auto-refunds. Payout is released once the buyer confirms delivery (or
-      automatically ${MARKETPLACE_AUTO_RELEASE_DAYS} days after you mark it shipped).
+      and add tracking — after that the order auto-refunds.
+    </td></tr>
+    ${feeLine}
+    <tr><td style="padding:0 32px 4px;font-size:13px;color:#8b95a5">
+      Payout is released once the buyer confirms delivery (or automatically ${MARKETPLACE_AUTO_RELEASE_DAYS} days after
+      you mark it shipped).
     </td></tr>`;
   return sendEmail(to, `You made a sale — ${num}`, emailShell("You made a sale", inner + button("Mark as shipped", `${SITE_URL}/marketplace/sell`), footer()));
 }
@@ -90,10 +105,15 @@ export async function sendShippedEmail(
 // the auto-release cron.
 export async function sendFundsReleasedEmail(to: string, o: OrderEmailInfo): Promise<boolean> {
   const num = formatOrderNumber(o.orderNumber) ?? o.orderId;
+  const fee = o.feeCents ?? 0;
+  const net = o.totalCents - fee;
+  const breakdown = fee > 0
+    ? `${formatMoney(o.totalCents, o.currency)} sale − ${formatMoney(fee, o.currency)} fee (5%) = <strong style="color:#fff">${formatMoney(net, o.currency)}</strong>`
+    : formatMoney(net, o.currency);
   const inner = `
     <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
-      Order <strong style="color:#fff">${num}</strong> is complete — your payout for ${formatMoney(o.totalCents, o.currency)}
-      (minus the platform fee) has been sent to your connected Stripe account and follows your normal payout schedule.
+      Order <strong style="color:#fff">${num}</strong> is complete — your payout of ${breakdown} has been sent to your
+      connected Stripe account and follows your normal payout schedule.
     </td></tr>`;
   return sendEmail(to, `Funds released — ${num}`, emailShell("Funds released", inner + button("View your funds", `${SITE_URL}/marketplace/funds`), footer()));
 }

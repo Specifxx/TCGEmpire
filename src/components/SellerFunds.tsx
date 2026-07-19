@@ -99,6 +99,7 @@ export function SellerFunds() {
               {funds.payoutsEnabled
                 ? "Payouts are enabled — funds transfer to your connected Stripe account once an order completes."
                 : "Connect a Stripe account to receive payouts. Stripe handles identity verification for you."}
+              {" "}All figures below are net of RiftCompare&apos;s 5% marketplace fee — the amount you actually receive.
             </p>
           </div>
           <button onClick={openStripe} disabled={connecting} className="btn-primary whitespace-nowrap">
@@ -166,7 +167,12 @@ export function SellerFunds() {
               <li key={o.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
                 <span className="text-slate-400">{formatOrderNumber(o.orderNumber) ?? o.id.slice(0, 8)}</span>
                 <span className={o.status === "COMPLETED" && !o.transferredAt ? "text-gold" : "text-slate-500"}>{orderStatusLabel(o)}</span>
-                <span className="font-semibold text-white">{formatMoney(o.totalCents - o.feeCents, o.currency)}</span>
+                <span className="text-right">
+                  <span className="block font-semibold text-white">{formatMoney(o.totalCents - o.feeCents, o.currency)}</span>
+                  <span className="block text-[10px] text-slate-600" title="RiftCompare's 5% marketplace fee">
+                    {formatMoney(o.totalCents, o.currency)} sale − {formatMoney(o.feeCents, o.currency)} fee
+                  </span>
+                </span>
               </li>
             ))}
           </ul>
