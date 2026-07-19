@@ -135,7 +135,18 @@ jobs:
             echo "::error::DATABASE_URL_2 secret is not visible to Actions — add it under Settings → Secrets and variables → Actions first."
             exit 1
           fi
-          command -v pg_dump >/dev/null || (sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client)
+
+          # Neon runs a newer Postgres major version than ubuntu-latest's stock
+          # pg_dump (16.x) — pg_dump refuses to dump from a server newer than
+          # itself. Install the matching client from PGDG's own apt repo instead
+          # of guessing a version; it always tracks Postgres's current release.
+          echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-18
+          export PATH="/usr/lib/postgresql/18/bin:$PATH"
           pg_dump --version; psql --version
 
           echo "== Dumping the operational database (schema + data) =="
