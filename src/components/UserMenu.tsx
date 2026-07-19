@@ -125,6 +125,7 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
             <MenuLink href="/profile" onClick={() => setOpen(false)}>Profile</MenuLink>
             <MenuLink href="/profile#collection" onClick={() => setOpen(false)}>My collection</MenuLink>
             <MenuLink href="/wishlist" onClick={() => setOpen(false)}>Wishlist</MenuLink>
+            <MenuLink href="/marketplace/sell" onClick={() => setOpen(false)}>Seller dashboard</MenuLink>
             {MARKETPLACE_NAV_VISIBLE && (
               <>
                 <MenuLink href="/marketplace/orders" onClick={() => setOpen(false)}>🛒 My marketplace orders</MenuLink>
@@ -132,7 +133,7 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
               </>
             )}
             <MenuLink href="/feedback" onClick={() => setOpen(false)}>
-              💬 Feedback{!premium ? <span className="text-gold"> · get Premium</span> : null}
+              Feedback{!premium ? <span className="text-gold"> · get Premium</span> : null}
             </MenuLink>
           </div>
           <div className="border-t border-ink-700 py-1">
