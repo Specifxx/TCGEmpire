@@ -556,15 +556,21 @@ model Order {
   // A support ticket was opened against this order (see SupportTicket.orderId) —
   // blocks the auto-release cron job until an admin resolves it.
   disputedAt       DateTime?
+  // Cron-email dedupe stamps (the only lifecycle facts that can't be computed):
+  // set when the T-24h "ship soon" seller reminder / the "has it arrived?" buyer
+  // nudge was sent, so 6-hourly cron re-runs never double-email an order.
+  shipReminderAt   DateTime?
+  deliveryNudgeAt  DateTime?
 
-  // ── Admin-gated fund release ────────────────────────────────────────────────
-  // A seller confirming their OWN delivery is a conflict of interest, so it's no
-  // longer a release trigger (see api/marketplace/orders/[id]/route.ts). Release
-  // now happens via: the BUYER confirming, an admin manually checking tracking
-  // and approving, or the auto-release cron once neither has happened for a
-  // rolling 14 days since shipment/last admin touch (see the cron's comment).
-  releaseRequestedAt DateTime? // seller pinged admins: "I believe this delivered, please check"
-  adminReviewedAt    DateTime? // an admin looked at tracking (whether or not they released) — also resets the auto-release clock
+  // ── Fund release (system-driven) ───────────────────────────────────────────
+  // A seller confirming their OWN delivery is a conflict of interest, so it's
+  // not a release trigger (see api/marketplace/orders/[id]/route.ts). Release
+  // happens via: the BUYER confirming (instant), or the auto-release cron on a
+  // fixed, buyer-visible date (shippedAt + MARKETPLACE_AUTO_RELEASE_DAYS) unless
+  // disputedAt pauses it. Admins handle exceptions only (early-release requests,
+  // stale shipments, disputes) — they can force-release, but are not a gate.
+  releaseRequestedAt DateTime? // seller asked for early release: "I believe this delivered, please check"
+  adminReviewedAt    DateTime? // an admin looked at tracking (audit trail; no longer delays auto-release)
   adminReviewedBy    String?   // admin email, for the audit trail
   releasedBy         String?   // BUYER | ADMIN | AUTO — who/what actually triggered release
 

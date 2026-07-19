@@ -11,8 +11,12 @@ import type { Prisma } from "@prisma/client";
 import { CONDITION_KEYS } from "./constants";
 import { SITE_URL } from "./site";
 import { MARKETPLACE_LAUNCH_COUNTRIES, isLaunchCountry, CURRENCY_BY_COUNTRY } from "./marketplace-countries";
+import { MARKETPLACE_FEE_BPS, platformFeeCents, MARKETPLACE_SHIP_DEADLINE_DAYS, MARKETPLACE_AUTO_RELEASE_DAYS } from "./marketplace-policy";
 
 export { MARKETPLACE_LAUNCH_COUNTRIES, isLaunchCountry, CURRENCY_BY_COUNTRY };
+// Fee + escrow-timing policy lives in the prisma-free ./marketplace-policy (so
+// client components can import it); re-exported here for all server-side callers.
+export { MARKETPLACE_FEE_BPS, platformFeeCents, MARKETPLACE_SHIP_DEADLINE_DAYS, MARKETPLACE_AUTO_RELEASE_DAYS };
 
 // Per-market retailer keys, mirroring how eBay uses ebay / ebay_us / ebay_uk. The
 // RetailerPrice unique key is [cardId, retailer, condition, isFoil] (no country), so
@@ -26,11 +30,6 @@ export const MARKETPLACE_RETAILER: Record<string, string> = {
 };
 export const MARKETPLACE_RETAILER_KEYS = Object.values(MARKETPLACE_RETAILER);
 export const MARKETPLACE_RETAILER_NAME = "RiftCompare Marketplace";
-
-// Platform fee on a marketplace sale, in basis points (500 = 5%). Kept off the
-// buyer's price; deducted from the seller's payout at release time (see
-// lib/connect.ts's releaseFundsForOrder — the fee is simply never transferred).
-export const MARKETPLACE_FEE_BPS = Number(process.env.MARKETPLACE_FEE_BPS ?? 500);
 
 // Private listings (Phase 2, lower priority) get a reduced fee — not wired into
 // checkout yet, but reserved here so the constant has one home.
@@ -46,12 +45,6 @@ export const MARKETPLACE_OFFERS = process.env.MARKETPLACE_OFFERS === "1";
 export const NEW_SELLER_TRUSTED_SALES = 3;
 export const NEW_SELLER_MAX_ACTIVE_LISTINGS = 10;
 export const NEW_SELLER_MAX_ACTIVE_VALUE_CENTS = 500_00;
-
-// Escrow timing (D3 in the plan): a seller must add tracking within this many
-// days of payment or the cron auto-refunds the buyer; once shipped, funds
-// auto-release to the seller this many days later if the buyer never confirms.
-export const MARKETPLACE_SHIP_DEADLINE_DAYS = Number(process.env.MARKETPLACE_SHIP_DEADLINE_DAYS ?? 5);
-export const MARKETPLACE_AUTO_RELEASE_DAYS = Number(process.env.MARKETPLACE_AUTO_RELEASE_DAYS ?? 14);
 
 // ── Private beta gating ────────────────────────────────────────────────────────
 // While false, marketplace listings are NOT shown in the public price comparison
@@ -76,10 +69,6 @@ export function canViewMarketplaceListings(email?: string | null, isAdmin?: bool
 }
 
 export const MARKETPLACE_COUNTRIES = ["AU", "NZ", "US", "UK", "SG"] as const;
-
-export function platformFeeCents(priceCents: number): number {
-  return Math.round((priceCents * MARKETPLACE_FEE_BPS) / 10000);
-}
 
 // ── Offers ─────────────────────────────────────────────────────────────────────
 // "Make an offer" guardrails: offers live 72h, and a lowball below 30% of asking

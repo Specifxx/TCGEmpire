@@ -154,8 +154,16 @@ jobs:
           echo "Dump size: $(du -h main.dump | cut -f1)"
 
           echo "== Restoring into the new database (existing objects replaced) =="
-          pg_restore --no-owner --no-acl --clean --if-exists -d "$TARGET_DATABASE_URL" main.dump
-          echo "pg_restore exit code: $? — non-zero here is often just harmless ownership/extension warnings on managed Postgres; the row-count check below is the real verification."
+          set +e
+          pg_restore --no-owner --no-acl --clean --if-exists --verbose -d "$TARGET_DATABASE_URL" main.dump > restore.log 2>&1
+          RC=$?
+          set -e
+          echo "pg_restore exit code: $RC — non-zero here is often just harmless ownership/extension warnings on managed Postgres; the row-count check below is the real verification."
+          echo "-- restore.log (first 40 lines) --"; head -40 restore.log
+          echo "-- restore.log (last 20 lines) --"; tail -20 restore.log
+
+          echo "== Target inventory after restore =="
+          psql "$TARGET_DATABASE_URL" -c "SELECT current_database(), current_user" -c "\dn" -c "\dt public.*" 2>&1 | head -60
 
           echo "== Verifying row counts (source vs target) =="
           # GitHub runs steps with `bash -e {0}` and this script sets pipefail, so
