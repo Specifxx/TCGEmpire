@@ -31,23 +31,17 @@ export function DeliveryReviewActions({ orderId }: { orderId: string }) {
   return (
     <div className="mt-2 flex flex-wrap gap-1.5">
       <button
-        onClick={() => run("force-release", "Approve release? Only do this once you've confirmed the carrier's tracking page shows it delivered.")}
+        onClick={() => run("force-release", "Release now? Only do this once you've confirmed the carrier's tracking page shows it delivered. It would otherwise auto-release on its own scheduled date anyway.")}
         disabled={!!busy}
         className="rounded bg-brand-500/20 px-2 py-1 text-[11px] font-semibold text-brand-300 hover:bg-brand-500/30 disabled:opacity-50"
       >
-        {busy === "force-release" ? "…" : "✅ Approve & release"}
+        {busy === "force-release" ? "…" : "✅ Release now"}
       </button>
       <button
-        onClick={() => run("mark-reviewed")}
-        disabled={!!busy}
-        className="rounded bg-ink-800 px-2 py-1 text-[11px] text-slate-300 hover:bg-ink-700 disabled:opacity-50"
-      >
-        {busy === "mark-reviewed" ? "…" : "👀 Mark reviewed — not yet"}
-      </button>
-      <button
-        onClick={() => run("flag-dispute", "Flag this order as disputed? This blocks the auto-release timeout until it's resolved.")}
+        onClick={() => run("flag-dispute", "Flag this order as disputed? This pauses the scheduled auto-release until it's resolved.")}
         disabled={!!busy}
         className="rounded bg-rose-500/20 px-2 py-1 text-[11px] font-semibold text-rose-300 hover:bg-rose-500/30 disabled:opacity-50"
+        title="Pauses the scheduled auto-release"
       >
         {busy === "flag-dispute" ? "…" : "🚩 Flag a problem"}
       </button>

@@ -26,14 +26,14 @@ export default function BuyerProtectionPage() {
           <h2 className="text-lg font-bold text-white">How it works</h2>
           <ol className="list-decimal space-y-2 pl-5">
             <li>You pay securely by card through Stripe at checkout. The charge goes to {SITE_NAME}, not directly to the seller.</li>
-            <li>The seller has {MARKETPLACE_SHIP_DEADLINE_DAYS} business days to ship your order and enter tracking. If they don't, your order is automatically cancelled and refunded in full — no need to ask.</li>
-            <li>Once shipped, you get a tracking link straight to the carrier's own tracking page.</li>
-            <li>When your order arrives, confirm delivery in <Link href="/marketplace/orders" className="text-brand-400 hover:underline">My orders</Link> — this releases the held funds to the seller.</li>
+            <li>The seller has {MARKETPLACE_SHIP_DEADLINE_DAYS} days to ship your order and enter tracking. If they don't, your order is automatically cancelled and refunded in full — no need to ask.</li>
+            <li>Once shipped, you get a tracking link straight to the carrier's own tracking page, plus an estimated delivery window and the exact date shown on your order.</li>
+            <li>When your order arrives, confirm delivery in <Link href="/marketplace/orders" className="text-brand-400 hover:underline">My orders</Link> — this releases the held funds to the seller immediately.</li>
             <li>
-              If you don't confirm, our team checks the tracking themselves and releases funds once it genuinely
-              shows delivered — sellers can never confirm their own delivery to release their own payout. If nobody
-              (you or an admin) has acted within {MARKETPLACE_AUTO_RELEASE_DAYS} days of shipping, funds release
-              automatically as a backstop, so a seller isn't left waiting indefinitely.
+              If you don't confirm, funds release to the seller automatically {MARKETPLACE_AUTO_RELEASE_DAYS} days
+              after shipping — you'll always see the exact date on your order, no guessing. Reporting a problem pauses
+              that release instantly until our team resolves it. Sellers can never confirm their own delivery to
+              release their own payout.
             </li>
           </ol>
         </section>

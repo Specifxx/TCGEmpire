@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES, pickPrice } from "@/lib/country";
 import { canViewMarketplaceListings, getSellerRatings, MARKETPLACE_OFFERS } from "@/lib/marketplace";
+import { MARKETPLACE_SHIP_DEADLINE_DAYS } from "@/lib/marketplace-policy";
 import { stripeEnabled } from "@/lib/stripe";
 import { MarketplaceClient, type MktCard } from "@/components/MarketplaceClient";
 
@@ -16,7 +17,25 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true }, // private beta — not indexed yet
 };
 
-export default async function MarketplacePage({ searchParams }: { searchParams: { cardId?: string } }) {
+// Shown right after a successful Stripe Checkout redirect back to the
+// marketplace — previously the buyer landed on the bare grid with nothing but
+// an email to confirm the purchase actually went through.
+function PurchaseSuccessPanel() {
+  return (
+    <div className="card-surface mb-4 border-brand-500/30 p-5">
+      <h2 className="font-display text-lg font-extrabold text-white">✅ Payment received — you&apos;re all set</h2>
+      <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-slate-300">
+        <li>We&apos;ve notified the seller — they ship within {MARKETPLACE_SHIP_DEADLINE_DAYS} days or you&apos;re automatically refunded in full.</li>
+        <li>You&apos;ll get an email with tracking the moment it ships, plus an estimated delivery window.</li>
+        <li>Your money is held by RiftCompare and only released to the seller after delivery.</li>
+      </ol>
+      <p className="mt-3 text-xs text-slate-500">Your order may take a few seconds to appear below while payment confirms.</p>
+      <Link href="/marketplace/orders" className="btn-primary mt-3 inline-flex text-sm">Track it in My orders →</Link>
+    </div>
+  );
+}
+
+export default async function MarketplacePage({ searchParams }: { searchParams: { cardId?: string; purchase?: string } }) {
   const user = await getCurrentUser();
   const country = getCountry();
   const info = COUNTRIES[country];
@@ -118,14 +137,20 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
   cards.sort((a, b) => bestPrice(a) - bestPrice(b));
 
   return (
-    <MarketplaceClient
-      cards={cards}
-      place={info.place}
-      country={country}
-      stripeEnabled={stripeEnabled()}
-      signedIn={!!user}
-      offersEnabled={MARKETPLACE_OFFERS}
-      openCardId={cardId}
-    />
+    <>
+      {searchParams?.purchase === "success" && <PurchaseSuccessPanel />}
+      {searchParams?.purchase === "cancelled" && (
+        <div className="card-surface mb-4 p-4 text-sm text-slate-400">Checkout cancelled — nothing was charged; your items are still listed.</div>
+      )}
+      <MarketplaceClient
+        cards={cards}
+        place={info.place}
+        country={country}
+        stripeEnabled={stripeEnabled()}
+        signedIn={!!user}
+        offersEnabled={MARKETPLACE_OFFERS}
+        openCardId={cardId}
+      />
+    </>
   );
 }

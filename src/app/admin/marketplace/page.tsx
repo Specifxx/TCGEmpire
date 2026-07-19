@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { formatMoney } from "@/lib/format";
 import { trackingUrl, CARRIER_LABEL, type Carrier } from "@/lib/tracking";
 import { DisputedOrderActions, SellerSuspendToggle, DelistForm, DeliveryReviewActions } from "@/components/AdminMarketplaceActions";
+import { MARKETPLACE_ADMIN_ATTENTION_DAYS, autoReleaseDate } from "@/lib/marketplace-policy";
 
 export const dynamic = "force-dynamic";
 
@@ -20,12 +21,19 @@ export default async function AdminMarketplacePage({ searchParams }: { searchPar
   const user = await getCurrentUser();
   if (!(keyOk || user?.isAdmin)) notFound();
 
-  // The primary workflow now: SHIPPED orders awaiting a human to check tracking
-  // before funds release (see D3/orders route — sellers can no longer
-  // self-confirm their own delivery). Release-requested ones surface first
-  // (seller believes it's delivered), then oldest-shipped first.
+  // EXCEPTIONS ONLY — every shipped order now auto-releases on its own scheduled
+  // date (shippedAt + MARKETPLACE_AUTO_RELEASE_DAYS) unless disputed, so doing
+  // nothing here is the safe, expected default. This queue surfaces only the
+  // two cases that actually need a human: a seller asking for an early release,
+  // or a parcel shipped unusually long ago with no confirmation either way.
+  const attentionCutoff = new Date(Date.now() - MARKETPLACE_ADMIN_ATTENTION_DAYS * 86_400_000);
   const awaitingReview = await prisma.order.findMany({
-    where: { kind: "MARKETPLACE", status: "SHIPPED", disputedAt: null },
+    where: {
+      kind: "MARKETPLACE",
+      status: "SHIPPED",
+      disputedAt: null,
+      OR: [{ releaseRequestedAt: { not: null } }, { shippedAt: { lt: attentionCutoff } }],
+    },
     orderBy: { shippedAt: "asc" },
     take: 200,
     select: {
@@ -81,15 +89,15 @@ export default async function AdminMarketplacePage({ searchParams }: { searchPar
     <div className="mx-auto max-w-3xl px-4 py-10">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-white">Marketplace admin</h1>
-        <p className="text-sm text-slate-400">Disputed orders, seller suspensions, and quick delisting.</p>
+        <p className="text-sm text-slate-400">Exceptions queue: early-release requests, stale shipments, disputes, seller controls.</p>
       </div>
 
       <section className="mb-8">
-        <h2 className="mb-3 text-lg font-bold text-white">Awaiting delivery confirmation ({awaitingReview.length})</h2>
+        <h2 className="mb-3 text-lg font-bold text-white">Needs attention ({awaitingReview.length})</h2>
         <p className="mb-3 text-xs text-slate-500">
-          Check the tracking link, then approve release, mark as reviewed (keep waiting), or flag a problem. Nothing
-          releases without a buyer confirming or an admin approving here — the auto-release timeout only fires if
-          neither happens within 14 days.
+          Everything else releases automatically 14 days after shipping — only exceptions land here: sellers
+          requesting an early release, and parcels shipped over {MARKETPLACE_ADMIN_ATTENTION_DAYS} days ago with no
+          confirmation yet. Disputed orders are in their own section below.
         </p>
         {awaitingReview.length === 0 ? (
           <div className="rounded-xl border border-ink-700 bg-ink-850 px-4 py-8 text-center text-slate-400">Nothing awaiting review.</div>
@@ -106,8 +114,10 @@ export default async function AdminMarketplacePage({ searchParams }: { searchPar
                       {o.orderNumber != null ? `RC-${o.orderNumber}` : o.id.slice(0, 8)} · {formatMoney(o.totalCents, o.currency)}
                     </div>
                     <div className="flex items-center gap-2">
-                      {o.releaseRequestedAt && <span className="chip bg-gold/15 text-[10px] font-bold text-gold">🔔 release requested</span>}
-                      <span className="text-xs text-slate-500">shipped {daysAgo}d ago</span>
+                      {o.releaseRequestedAt && <span className="chip bg-gold/15 text-[10px] font-bold text-gold">🔔 early release requested</span>}
+                      <span className="text-xs text-slate-500">
+                        shipped {daysAgo}d ago{o.shippedAt && ` · auto-releases ${fmt.format(autoReleaseDate(o.shippedAt))}`}
+                      </span>
                     </div>
                   </div>
                   <div className="mt-0.5 text-sm text-slate-400">

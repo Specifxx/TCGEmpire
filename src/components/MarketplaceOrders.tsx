@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatMoney } from "@/lib/format";
 import { CARRIERS, CARRIER_LABEL, trackingUrl } from "@/lib/tracking";
+import { formatDay, formatDateRange } from "@/lib/delivery-estimate";
 
 // Pure display helper (kept local — lib/order-number.ts pulls in the Prisma
 // client, which can't ship in a "use client" bundle).
@@ -26,12 +27,19 @@ type OrderRow = {
   shippingCents: number;
   feeCents: number;
   createdAt: string;
+  paidAt: string | null;
   shippedAt: string | null;
   receivedAt: string | null;
+  transferredAt: string | null;
   trackingNote: string | null;
   carrier: string | null;
   trackingNumber: string | null;
   disputedAt: string | null;
+  // Concrete dates computed server-side (api/marketplace/orders) — never
+  // recomputed client-side, so these always match what the cron enforces.
+  shipByAt: string | null;
+  autoReleaseAt: string | null;
+  eta: { from: string; to: string } | null;
   reviewed: boolean;
   rating: number | null;
   counterparty: string;
@@ -75,6 +83,13 @@ interface OrderGroup {
   carrier: string | null;
   trackingNumber: string | null;
   disputedAt: string | null;
+  paidAt: string | null;
+  shippedAt: string | null;
+  receivedAt: string | null;
+  transferredAt: string | null;
+  shipByAt: string | null;
+  autoReleaseAt: string | null;
+  eta: { from: string; to: string } | null;
   releaseRequestedAt: string | null;
   cancelRequestedAt: string | null;
   cancelReason: string | null;
@@ -118,6 +133,13 @@ function groupOrders(rows: OrderRow[]): OrderGroup[] {
       carrier: shippedRef.carrier,
       trackingNumber: shippedRef.trackingNumber,
       disputedAt: disputed?.disputedAt ?? null,
+      paidAt: shippedRef.paidAt,
+      shippedAt: shippedRef.shippedAt,
+      receivedAt: shippedRef.receivedAt,
+      transferredAt: shippedRef.transferredAt,
+      shipByAt: shippedRef.shipByAt,
+      autoReleaseAt: shippedRef.autoReleaseAt,
+      eta: shippedRef.eta,
       releaseRequestedAt: released?.releaseRequestedAt ?? null,
       cancelRequestedAt: cancelling?.cancelRequestedAt ?? null,
       cancelReason: cancelling?.cancelReason ?? null,
@@ -188,15 +210,92 @@ function StatusChip({ s, mixed }: { s: string; mixed?: boolean }) {
 
 // Funds sit in RiftCompare's Stripe balance (escrow) until the order is marked
 // COMPLETED, at which point they're actually transferred to the seller's
-// connected Stripe account — see lib/connect.ts's releaseFundsForOrder.
-function PayoutBadge({ status }: { status: string }) {
-  if (status === "PAID" || status === "SHIPPED") {
-    return <span className="chip bg-ink-800 text-[10px] font-bold text-slate-400" title="Funds are held until the buyer confirms delivery or an admin verifies tracking — auto-releases after 14 days if neither happens">🔒 Held</span>;
+// connected Stripe account — see lib/connect.ts's releaseFundsForOrder. Shown
+// on BOTH sides now: sellers see when they'll be paid, buyers see their
+// payment protection is live until the same concrete date.
+function PayoutBadge({ g, role }: { g: OrderGroup; role: "buyer" | "seller" }) {
+  if (g.status === "PAID" || g.status === "SHIPPED") {
+    const dateStr = g.autoReleaseAt ? ` on ${formatDay(g.autoReleaseAt)}` : "";
+    const title =
+      role === "seller"
+        ? `Funds release automatically${dateStr} unless a problem is reported — sooner if the buyer confirms delivery`
+        : `Your payment is held by RiftCompare until you confirm delivery${dateStr ? ` (or automatically${dateStr})` : ""}`;
+    return (
+      <span className="chip bg-ink-800 text-[10px] font-bold text-slate-400" title={title}>
+        🔒 {role === "seller" ? "Held" : "Protected"}
+      </span>
+    );
   }
-  if (status === "COMPLETED") {
-    return <span className="chip bg-brand-500/15 text-[10px] font-bold text-brand-300" title="Delivery confirmed — funds have been transferred to your Stripe account">🔓 Released</span>;
+  if (g.status === "COMPLETED") {
+    return (
+      <span className="chip bg-brand-500/15 text-[10px] font-bold text-brand-300" title={role === "seller" ? "Delivery confirmed — funds have been transferred to your Stripe account" : "Delivery confirmed"}>
+        🔓 {role === "seller" ? "Released" : "Complete"}
+      </span>
+    );
   }
   return null;
+}
+
+// Ship-by countdown for a seller's PAID sale — turns red under 24h so the
+// deadline doesn't arrive as a surprise auto-cancellation.
+function ShipByChip({ shipByAt }: { shipByAt: string | null }) {
+  if (!shipByAt) return null;
+  const remainingMs = new Date(shipByAt).getTime() - Date.now();
+  const urgent = remainingMs < 86_400_000;
+  return (
+    <span
+      className={`chip text-[10px] font-bold ${urgent ? "bg-rose-500/15 text-rose-300" : "bg-ink-800 text-slate-400"}`}
+      title="Ship by this date or the order auto-cancels and the buyer is refunded in full"
+    >
+      {urgent ? "⚠ " : ""}Ship by {formatDay(shipByAt)}
+    </span>
+  );
+}
+
+// One concrete-date sentence explaining what happens next, per role/status —
+// replaces vague "14 days" prose with the exact date this order will act on.
+function nextStepLine(g: OrderGroup): string | null {
+  if (g.disputedAt) return "Payout paused while our team reviews your report.";
+  if (g.role === "buyer") {
+    if (g.status === "PAID" && g.shipByAt) return `Seller must ship by ${formatDay(g.shipByAt)} or you're automatically refunded in full.`;
+    if (g.status === "SHIPPED" && g.autoReleaseAt) return `Auto-completes on ${formatDay(g.autoReleaseAt)} unless you report a problem — confirm delivery once it lands.`;
+  } else {
+    if (g.status === "PAID" && g.shipByAt) return `Ship by ${formatDay(g.shipByAt)} — after that the order auto-refunds.`;
+    if (g.status === "SHIPPED" && g.autoReleaseAt) return `Funds release automatically on ${formatDay(g.autoReleaseAt)} — sooner if the buyer confirms.`;
+  }
+  return null;
+}
+
+// Dot-stepper: Ordered → Shipped → Est. delivery (estimate, skipped once
+// unavailable) → Confirmed → Funds released (seller only). Cancelled/refunded
+// parcels just show the status chip already rendered above — no timeline.
+function ParcelTimeline({ g }: { g: OrderGroup }) {
+  if (g.status === "CANCELLED" || g.status === "REFUNDED") return null;
+  const steps: { label: string; done: boolean; sub?: string }[] = [
+    { label: "Ordered", done: true, sub: formatDay(g.paidAt ?? g.createdAt) },
+    { label: "Shipped", done: !!g.shippedAt, sub: g.shippedAt ? formatDay(g.shippedAt) : g.shipByAt ? `by ${formatDay(g.shipByAt)}` : undefined },
+  ];
+  if (g.eta) {
+    steps.push({ label: "Est. delivery", done: !!g.receivedAt, sub: `${formatDateRange(g.eta.from, g.eta.to)} (est.)` });
+  }
+  steps.push({ label: "Confirmed", done: !!g.receivedAt, sub: g.receivedAt ? formatDay(g.receivedAt) : undefined });
+  if (g.role === "seller") {
+    steps.push({ label: "Paid out", done: !!g.transferredAt, sub: g.transferredAt ? formatDay(g.transferredAt) : undefined });
+  }
+  return (
+    <div className="flex w-full flex-wrap items-center gap-x-1.5 gap-y-1 text-[11px]">
+      {steps.map((s, i) => (
+        <div key={s.label} className="flex items-center gap-1.5">
+          <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${s.done ? "bg-brand-400" : "bg-ink-700"}`} />
+          <span className={s.done ? "text-slate-300" : "text-slate-600"}>
+            {s.label}
+            {s.sub ? <span className="text-slate-500"> · {s.sub}</span> : null}
+          </span>
+          {i < steps.length - 1 && <span className="text-ink-700">→</span>}
+        </div>
+      ))}
+    </div>
+  );
 }
 
 // Deep-links straight to the carrier's own public tracking page when we can
@@ -445,6 +544,7 @@ export function MarketplaceOrders({ offersEnabled = false }: { offersEnabled?: b
           renderActions={(g) => (
             <>
               <TrackingLink g={g} />
+              <PayoutBadge g={g} role="buyer" />
               {g.status === "SHIPPED" && !g.cancelRequestedAt && (
                 <button onClick={() => groupAct(g.orderIds, { action: "receive" }, "✓ Delivery confirmed")} disabled={!!busy} className="btn-primary text-xs disabled:opacity-50">
                   📬 Got it
@@ -471,26 +571,29 @@ export function MarketplaceOrders({ offersEnabled = false }: { offersEnabled?: b
           renderActions={(g) => (
             <>
               {g.status === "PAID" && (
-                <button onClick={() => setShipFor(g)} disabled={!!busy} className="btn-primary text-xs disabled:opacity-50">
-                  📦 Mark shipped
-                </button>
+                <>
+                  <ShipByChip shipByAt={g.shipByAt} />
+                  <button onClick={() => setShipFor(g)} disabled={!!busy} className="btn-primary text-xs disabled:opacity-50">
+                    📦 Mark shipped
+                  </button>
+                </>
               )}
               {g.status === "SHIPPED" && !g.cancelRequestedAt && (
                 g.releaseRequestedAt ? (
-                  <span className="text-[11px] text-gold">🔔 Release requested — awaiting admin review</span>
+                  <span className="text-[11px] text-gold">🔔 Early release requested — awaiting admin review</span>
                 ) : (
                   <button
                     onClick={() => groupAct(g.orderIds, { action: "request-release" }, "✓ Requested — an admin will check tracking soon")}
                     disabled={!!busy}
                     className="btn-ghost text-xs disabled:opacity-50"
-                    title="Believe it's delivered? Ask an admin to check tracking and release sooner than the 14-day timeout."
+                    title="This already auto-releases on its scheduled date — ask us to verify tracking and release early instead."
                   >
-                    🔔 Request release
+                    🔔 Ask for early release
                   </button>
                 )
               )}
               <TrackingLink g={g} />
-              <PayoutBadge status={g.status} />
+              <PayoutBadge g={g} role="seller" />
               <CancelStatus g={g} busy={busy} onRequest={() => setCancelFor(g)} onAct={(body, msg) => groupAct(g.orderIds, body, msg)} />
               {["PAID", "SHIPPED", "COMPLETED"].includes(g.status) && !g.disputedAt && (
                 <button onClick={() => setReportFor(g)} className="text-[11px] text-slate-500 hover:text-rose-300">Report a problem</button>
@@ -656,7 +759,11 @@ function OrderList({
             <span className="text-sm font-extrabold text-accent">{formatMoney(g.totalCents, g.currency)}</span>
             <StatusChip s={g.status} mixed={g.mixedStatus} />
           </div>
-          <div className="flex w-full flex-wrap items-center gap-2 border-t border-ink-800 pt-2">{renderActions(g)}</div>
+          <div className="w-full border-t border-ink-800 pt-2">
+            <ParcelTimeline g={g} />
+            {nextStepLine(g) && <p className="mt-1 text-[11px] text-slate-500">{nextStepLine(g)}</p>}
+          </div>
+          <div className="flex w-full flex-wrap items-center gap-2">{renderActions(g)}</div>
           {g.role === "seller" && g.shipLine1 && <ShippingAddressDetails g={g} />}
         </li>
       ))}
@@ -749,7 +856,7 @@ function ShipModal({
           <input value={trackingNumber} onChange={(e) => setTrackingNumber(e.target.value)} maxLength={60} className="input" placeholder="Off your shipping receipt" />
         </label>
         <p className="mt-2 text-xs text-slate-600">
-          {group.orders.length > 1 ? "Applies to every item in this order — enter tracking once." : "The buyer gets a link straight to the carrier's tracking page."} Funds release once the buyer confirms delivery (or automatically 14 days later).
+          {group.orders.length > 1 ? "Applies to every item in this order — enter tracking once." : "The buyer gets a link straight to the carrier's tracking page."} Funds release automatically on a fixed date 14 days from today — sooner if the buyer confirms delivery first.
         </p>
         <div className="mt-4 flex justify-end gap-2">
           <button onClick={onClose} className="btn-ghost text-sm">Cancel</button>
