@@ -158,10 +158,18 @@ jobs:
           echo "pg_restore exit code: $? — non-zero here is often just harmless ownership/extension warnings on managed Postgres; the row-count check below is the real verification."
 
           echo "== Verifying row counts (source vs target) =="
+          # GitHub runs steps with `bash -e {0}` and this script sets pipefail, so
+          # a psql failure inside a command substitution would abort the whole step
+          # with its error text swallowed into the variable (this exact failure
+          # happened: the run died here with zero output). set +e so every count is
+          # attempted and every error is PRINTED; non-numeric output = mismatch.
+          set +e
           MISMATCH=0
           for T in '"User"' '"Card"' '"Order"' '"MarketplaceListing"' '"SellerProfile"' '"Session"' '"Counter"' '"SupportTicket"' '"RetailerPrice"'; do
-            SRC=$(psql "$SOURCE_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1 | tail -1)
-            DST=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1 | tail -1)
+            SRC=$(psql "$SOURCE_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
+            DST=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
+            case "$SRC" in ''|*[!0-9]*) echo "$T source query FAILED: $SRC"; MISMATCH=1; continue;; esac
+            case "$DST" in ''|*[!0-9]*) echo "$T target query FAILED: $DST"; MISMATCH=1; continue;; esac
             if [ "$SRC" = "$DST" ]; then
               echo "$T: source=$SRC target=$DST ✓"
             else
@@ -169,6 +177,7 @@ jobs:
               MISMATCH=1
             fi
           done
+          set -e
           if [ "$MISMATCH" = "1" ]; then
             echo "::error::Row-count mismatch on at least one table — do NOT cut traffic over to DATABASE_URL_2 yet. Re-run this task, or investigate the pg_restore output above."
             exit 1
