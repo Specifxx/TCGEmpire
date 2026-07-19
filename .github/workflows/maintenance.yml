@@ -28,6 +28,7 @@ on:
           - audit-clicks     # read-only outbound-click leaderboard per retailer (affiliate-outreach priority)
           - remove-seed-accounts # one-off: delete @riftcompare.seed bot personas (dead since the forum autoseeder was removed)
           - test-marketplace-stripe # smoke-test CRON_SECRET + both Stripe webhook secrets + a Connect account create/delete round-trip (test or live)
+          - migrate-main-db  # full pg_dump/restore of the OPERATIONAL database (DATABASE_URL) into DATABASE_URL_2 + row-count verification (read-only against the source; does not touch production traffic)
       dry_run:
         description: "Dry run (log what would change, write nothing)"
         type: boolean
@@ -108,6 +109,60 @@ jobs:
           DATABASE_URL="$TARGET" npx prisma db push --skip-generate \
             || echo "::warning::schema push refused (destructive diff); continuing"
           npx tsx scripts/migrate-history.ts
+
+      - name: Migrate main (operational) database to DATABASE_URL_2
+        # Full pg_dump/pg_restore of the ENTIRE operational schema (users, sessions,
+        # cards, orders, marketplace listings, everything) — unlike the history-DB
+        # split, this is transactional data (real accounts, real money via Stripe
+        # order records), so a hand-rolled per-model copy is too risky (FK
+        # ordering, a missed table, a missed sequence). Neon is vanilla Postgres,
+        # so pg_dump/pg_restore copies every table/index/constraint/row exactly in
+        # one pass — the proven, boring, correct tool for "copy an entire database."
+        #
+        # Only READS from DATABASE_URL (the current/old project) — never touches
+        # production traffic, and is safe to re-run as many times as needed (each
+        # run fully re-syncs DATABASE_URL_2 from the source's CURRENT state). Run
+        # it once now to do the bulk copy, then once more immediately before you
+        # actually flip DATABASE_URL over to the new connection string in Vercel +
+        # GitHub secrets, so nothing written in between is lost.
+        if: inputs.task == 'migrate-main-db'
+        env:
+          SOURCE_DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          TARGET_DATABASE_URL: ${{ secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 }}
+        run: |
+          set -uo pipefail
+          if [ -z "$TARGET_DATABASE_URL" ]; then
+            echo "::error::DATABASE_URL_2 secret is not visible to Actions — add it under Settings → Secrets and variables → Actions first."
+            exit 1
+          fi
+          command -v pg_dump >/dev/null || (sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client)
+          pg_dump --version; psql --version
+
+          echo "== Dumping the operational database (schema + data) =="
+          pg_dump "$SOURCE_DATABASE_URL" --no-owner --no-acl --format=custom -f main.dump
+          echo "Dump size: $(du -h main.dump | cut -f1)"
+
+          echo "== Restoring into the new database (existing objects replaced) =="
+          pg_restore --no-owner --no-acl --clean --if-exists -d "$TARGET_DATABASE_URL" main.dump
+          echo "pg_restore exit code: $? — non-zero here is often just harmless ownership/extension warnings on managed Postgres; the row-count check below is the real verification."
+
+          echo "== Verifying row counts (source vs target) =="
+          MISMATCH=0
+          for T in '"User"' '"Card"' '"Order"' '"MarketplaceListing"' '"SellerProfile"' '"Session"' '"Counter"' '"SupportTicket"' '"RetailerPrice"'; do
+            SRC=$(psql "$SOURCE_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1 | tail -1)
+            DST=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1 | tail -1)
+            if [ "$SRC" = "$DST" ]; then
+              echo "$T: source=$SRC target=$DST ✓"
+            else
+              echo "$T: source=$SRC target=$DST ✗ MISMATCH"
+              MISMATCH=1
+            fi
+          done
+          if [ "$MISMATCH" = "1" ]; then
+            echo "::error::Row-count mismatch on at least one table — do NOT cut traffic over to DATABASE_URL_2 yet. Re-run this task, or investigate the pg_restore output above."
+            exit 1
+          fi
+          echo "All verified tables match. Safe to cut over once you're ready — see the task description for the exact steps."
 
       - name: Sync cards from RiftScribe (fetch + additive upsert)
         if: inputs.task == 'cards-sync'
