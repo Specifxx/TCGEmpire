@@ -3,18 +3,31 @@ import { prisma } from "@/lib/db";
 import { releaseExpiredReservations } from "@/lib/stripe";
 import { releaseFundsForOrder, refundOrder } from "@/lib/connect";
 import { importMarketplaceListings, MARKETPLACE_AUTO_RELEASE_DAYS, MARKETPLACE_SHIP_DEADLINE_DAYS } from "@/lib/marketplace";
+import { autoReleaseDate } from "@/lib/marketplace-policy";
+import { estimateDeliveryWindow, formatDateRange } from "@/lib/delivery-estimate";
 import { revalidateCardPage } from "@/lib/revalidate-card";
-import { sendFundsReleasedEmail, sendAutoCancelledBuyerEmail, sendAutoCancelledSellerEmail } from "@/lib/marketplace-email";
+import {
+  sendFundsReleasedEmail,
+  sendAutoCancelledBuyerEmail,
+  sendAutoCancelledSellerEmail,
+  sendOrderCompletedBuyerEmail,
+  sendShipReminderEmail,
+  sendDeliveryNudgeEmail,
+} from "@/lib/marketplace-email";
 
 // Escrow enforcement, run every 6h by .github/workflows/marketplace-maintenance.yml
 // (Vercel's Hobby-plan cron only fires once/day, too coarse for a 14-day release
 // window measured in hours — GH Actions gives us the finer cadence for free).
 //
-// Three bounded jobs (see plan D3), each capped at 200 rows/run so a backlog can
-// never turn one invocation into an unbounded scan:
+// Five bounded jobs, each capped at 200 rows/run so a backlog can never turn one
+// invocation into an unbounded scan:
 //   (a) release abandoned checkout reservations (existing helper)
-//   (b) auto-release funds on SHIPPED orders past the buyer-confirm window
+//   (b) auto-release funds on SHIPPED orders past the buyer-confirm window —
+//       the PRIMARY release path now, not a fallback (see autoReleaseShipped)
 //   (c) auto-refund PAID orders the seller never shipped in time
+//   (d) T-24h "ship soon" reminder to sellers approaching the ship deadline
+//   (e) "has it arrived?" nudge to buyers once the estimated delivery window
+//       has passed on a still-unconfirmed SHIPPED order
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
@@ -30,29 +43,24 @@ export async function GET(req: Request) {
   const releasedReservations = await releaseExpiredReservations().catch(() => 0);
   const autoReleased = await autoReleaseShipped();
   const autoCancelled = await autoCancelUnshipped();
+  const shipReminders = await sendShipReminders();
+  const deliveryNudges = await sendDeliveryNudges();
 
-  return NextResponse.json({ ok: true, releasedReservations, autoReleased, autoCancelled });
+  return NextResponse.json({ ok: true, releasedReservations, autoReleased, autoCancelled, shipReminders, deliveryNudges });
 }
 
-// Auto-release is the SAFETY NET, not the primary path — release is meant to be
-// admin-gated (a seller confirming their own delivery is a conflict of interest,
-// so that's no longer a trigger at all; see orders/[id]/route.ts). This only
-// fires once NEITHER the buyer NOR an admin has acted for a rolling window: no
-// admin review within MARKETPLACE_AUTO_RELEASE_DAYS of shipping, AND (if an
-// admin did look at some point) no review within that many days of their last
-// touch either — so an admin's first glance doesn't silence the safety net
-// forever, but genuinely recent admin attention does hold off the timeout.
+// Auto-release is now the PRIMARY, scheduled release path — every shipped order
+// releases on a fixed, buyer-visible date (shippedAt + MARKETPLACE_AUTO_RELEASE_DAYS)
+// unless disputedAt pauses it. A seller confirming their own delivery is still
+// never a trigger (conflict of interest; see orders/[id]/route.ts). Admin review
+// no longer gates or delays this — admins handle exceptions (early-release
+// requests, stale/disputed orders) via /admin/marketplace, but doing nothing is
+// the expected, safe default for the vast majority of orders.
 async function autoReleaseShipped(): Promise<number> {
   const cutoff = new Date(Date.now() - MARKETPLACE_AUTO_RELEASE_DAYS * 86_400_000);
   const orders = await prisma.order.findMany({
-    where: {
-      kind: "MARKETPLACE",
-      status: "SHIPPED",
-      shippedAt: { lt: cutoff },
-      disputedAt: null,
-      OR: [{ adminReviewedAt: null }, { adminReviewedAt: { lt: cutoff } }],
-    },
-    select: { id: true, orderNumber: true, quantity: true, totalCents: true, currency: true, sellerId: true, marketplaceListingId: true },
+    where: { kind: "MARKETPLACE", status: "SHIPPED", shippedAt: { lt: cutoff }, disputedAt: null },
+    select: { id: true, orderNumber: true, quantity: true, totalCents: true, currency: true, buyerId: true, sellerId: true, marketplaceListingId: true },
     take: BATCH,
   });
 
@@ -63,26 +71,165 @@ async function autoReleaseShipped(): Promise<number> {
       await releaseFundsForOrder(o.id);
       n++;
 
-      const seller = await prisma.user.findUnique({ where: { id: o.sellerId }, select: { email: true } });
+      const [seller, buyer] = await Promise.all([
+        prisma.user.findUnique({ where: { id: o.sellerId }, select: { email: true } }),
+        prisma.user.findUnique({ where: { id: o.buyerId }, select: { email: true } }),
+      ]);
       const listing = o.marketplaceListingId
         ? await prisma.marketplaceListing.findUnique({ where: { id: o.marketplaceListingId }, select: { cardId: true, card: { select: { name: true } } } })
         : null;
-      if (seller?.email) {
-        await sendFundsReleasedEmail(seller.email, {
-          orderId: o.id,
-          orderNumber: o.orderNumber,
-          cardName: listing?.card.name ?? "your order",
-          quantity: o.quantity,
-          totalCents: o.totalCents,
-          currency: o.currency,
-        }).catch(() => {});
-      }
+      const info = {
+        orderId: o.id,
+        orderNumber: o.orderNumber,
+        cardName: listing?.card.name ?? "your order",
+        quantity: o.quantity,
+        totalCents: o.totalCents,
+        currency: o.currency,
+      };
+      if (seller?.email) await sendFundsReleasedEmail(seller.email, info).catch(() => {});
+      if (buyer?.email) await sendOrderCompletedBuyerEmail(buyer.email, info, { auto: true }).catch(() => {});
       if (listing) await revalidateCardPage(listing.cardId).catch(() => {});
     } catch {
       // Skip this order this run; it's picked up again on the next pass.
     }
   }
   return n;
+}
+
+// Parcel-group key mirroring orders/route.ts's groupKey — cron emails must fire
+// once per PARCEL (one Stripe checkout/seller), never once per Order row, or a
+// multi-item cart would get spammed with duplicate reminder/nudge emails.
+function parcelKey(o: { stripeSessionId: string | null; id: string; sellerId: string }): string {
+  return `${o.stripeSessionId ?? o.id}:${o.sellerId}`;
+}
+function buyerParcelKey(o: { stripeSessionId: string | null; id: string; buyerId: string }): string {
+  return `${o.stripeSessionId ?? o.id}:${o.buyerId}`;
+}
+
+// T-24h "ship soon" seller reminder — fires once per parcel for PAID orders
+// approaching the auto-refund deadline that haven't shipped yet. Dedupe via
+// shipReminderAt so 6-hourly re-runs never double-email the same parcel.
+async function sendShipReminders(): Promise<number> {
+  const cutoff = new Date(Date.now() - (MARKETPLACE_SHIP_DEADLINE_DAYS - 1) * 86_400_000);
+  const orders = await prisma.order.findMany({
+    where: { kind: "MARKETPLACE", status: "PAID", shippedAt: null, shipReminderAt: null, cancelRequestedAt: null, paidAt: { lt: cutoff } },
+    select: {
+      id: true,
+      orderNumber: true,
+      quantity: true,
+      totalCents: true,
+      currency: true,
+      sellerId: true,
+      stripeSessionId: true,
+      paidAt: true,
+      marketplaceListingId: true,
+    },
+    take: BATCH,
+  });
+  if (!orders.length) return 0;
+
+  const groups = new Map<string, typeof orders>();
+  for (const o of orders) {
+    const key = parcelKey(o);
+    const g = groups.get(key);
+    if (g) g.push(o);
+    else groups.set(key, [o]);
+  }
+
+  let emailed = 0;
+  for (const rows of groups.values()) {
+    const first = rows[0]!;
+    try {
+      const seller = await prisma.user.findUnique({ where: { id: first.sellerId }, select: { email: true } });
+      if (seller?.email && first.paidAt) {
+        const listing = first.marketplaceListingId
+          ? await prisma.marketplaceListing.findUnique({ where: { id: first.marketplaceListingId }, select: { card: { select: { name: true } } } })
+          : null;
+        const totalCents = rows.reduce((sum, r) => sum + r.totalCents, 0);
+        const cardName = rows.length > 1 ? `${rows.length} items` : listing?.card.name ?? "your item";
+        await sendShipReminderEmail(
+          seller.email,
+          { orderId: first.id, orderNumber: first.orderNumber, cardName, quantity: first.quantity, totalCents, currency: first.currency },
+          new Date(first.paidAt.getTime() + MARKETPLACE_SHIP_DEADLINE_DAYS * 86_400_000)
+        ).catch(() => {});
+        emailed++;
+      }
+    } finally {
+      // Stamp every row in the group regardless of whether the email actually
+      // sent (fire-and-forget convention throughout this file) — a lost email
+      // must not retry forever.
+      await prisma.order.updateMany({ where: { id: { in: rows.map((r) => r.id) } }, data: { shipReminderAt: new Date() } }).catch(() => {});
+    }
+  }
+  return emailed;
+}
+
+// Buyer "has it arrived?" nudge — fires once the ESTIMATED delivery window has
+// passed for a shipped, non-disputed order. Conservative by design (only after
+// the upper bound of the estimate) since there's no carrier data confirming
+// delivery either way. Self-draining: every row either gets nudged+stamped or
+// eventually auto-releases at the 14-day mark and drops out of this query.
+async function sendDeliveryNudges(): Promise<number> {
+  const orders = await prisma.order.findMany({
+    where: { kind: "MARKETPLACE", status: "SHIPPED", deliveryNudgeAt: null, disputedAt: null, shippedAt: { lt: new Date(Date.now() - 3 * 86_400_000) } },
+    select: {
+      id: true,
+      orderNumber: true,
+      quantity: true,
+      totalCents: true,
+      currency: true,
+      buyerId: true,
+      stripeSessionId: true,
+      shippedAt: true,
+      shipCountry: true,
+      sellerId: true,
+      marketplaceListingId: true,
+    },
+    take: BATCH,
+  });
+  if (!orders.length) return 0;
+
+  const now = Date.now();
+  const due = orders.filter((o) => {
+    if (!o.shippedAt) return false;
+    const eta = estimateDeliveryWindow({ paidAt: null, shippedAt: o.shippedAt, handlingDays: 0, country: o.shipCountry });
+    return !!eta && eta.to.getTime() < now;
+  });
+  if (!due.length) return 0;
+
+  const groups = new Map<string, typeof due>();
+  for (const o of due) {
+    const key = buyerParcelKey(o);
+    const g = groups.get(key);
+    if (g) g.push(o);
+    else groups.set(key, [o]);
+  }
+
+  let emailed = 0;
+  for (const rows of groups.values()) {
+    const first = rows[0]!;
+    try {
+      const buyer = await prisma.user.findUnique({ where: { id: first.buyerId }, select: { email: true } });
+      if (buyer?.email && first.shippedAt) {
+        const listing = first.marketplaceListingId
+          ? await prisma.marketplaceListing.findUnique({ where: { id: first.marketplaceListingId }, select: { card: { select: { name: true } } } })
+          : null;
+        const totalCents = rows.reduce((sum, r) => sum + r.totalCents, 0);
+        const cardName = rows.length > 1 ? `${rows.length} items` : listing?.card.name ?? "your order";
+        const eta = estimateDeliveryWindow({ paidAt: null, shippedAt: first.shippedAt, handlingDays: 0, country: first.shipCountry });
+        await sendDeliveryNudgeEmail(
+          buyer.email,
+          { orderId: first.id, orderNumber: first.orderNumber, cardName, quantity: first.quantity, totalCents, currency: first.currency },
+          eta ? formatDateRange(eta.from, eta.to) : "a few days ago",
+          autoReleaseDate(first.shippedAt)
+        ).catch(() => {});
+        emailed++;
+      }
+    } finally {
+      await prisma.order.updateMany({ where: { id: { in: rows.map((r) => r.id) } }, data: { deliveryNudgeAt: new Date() } }).catch(() => {});
+    }
+  }
+  return emailed;
 }
 
 // PAID but never shipped within the deadline → full refund + restock. Protects
