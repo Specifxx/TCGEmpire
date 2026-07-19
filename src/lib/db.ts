@@ -25,8 +25,20 @@ import { PrismaClient } from "@prisma/client";
 const BIG_RESULT_ROWS = 500; // only size-check results at least this long (CPU)
 const BIG_RESULT_BYTES = 1_000_000;
 
+// DATABASE_URL_2 is the new operational Neon project — the original
+// (DATABASE_URL) exhausted its free-tier monthly network-transfer allowance.
+// Prefer it the moment it's set (in both Vercel and GitHub Actions), same
+// pattern as db-history.ts's HISTORY_DATABASE_URL fallback chain. Unlike that
+// analytics-only split, this IS the main operational database (users,
+// sessions, orders), so this is a real cutover, not a long-term dual-source
+// setup — once DATABASE_URL itself is repointed at the new project (or the
+// old one's allowance resets), this fallback becomes a no-op and can be
+// simplified away.
+const OPERATIONAL_URL = process.env.DATABASE_URL_2 || process.env.DATABASE_URL;
+
 function makeClient() {
   const base = new PrismaClient({
+    datasourceUrl: OPERATIONAL_URL,
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
   });
   return base.$extends({

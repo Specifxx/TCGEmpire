@@ -57,7 +57,12 @@ jobs:
       group: ${{ inputs.task == 'import-prices' && 'refresh-prices' || format('maintenance-{0}', github.run_id) }}
       cancel-in-progress: false
     env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      # Prefer the new operational project the moment DATABASE_URL_2 is set —
+      # the original DATABASE_URL exhausted its free-tier monthly network-
+      # transfer allowance. migrate-main-db's own step below still reads
+      # secrets.DATABASE_URL directly for SOURCE_DATABASE_URL regardless (it
+      # needs the OLD project specifically), so this default doesn't affect it.
+      DATABASE_URL: ${{ secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
       DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
     steps:
       - uses: actions/checkout@v4
