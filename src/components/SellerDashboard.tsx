@@ -6,6 +6,7 @@ import { CONDITION_KEYS } from "@/lib/constants";
 import { CURRENCY_BY_COUNTRY } from "@/lib/marketplace-countries";
 import { formatMoney } from "@/lib/format";
 import { cardDisplayName } from "@/lib/card-name";
+import { StripeErrorNotice } from "./StripeErrorNotice";
 
 // Launch markets only (AU/UK/US) — see lib/marketplace.ts's MARKETPLACE_LAUNCH_COUNTRIES.
 // The server rejects any other market anyway; keeping the picker in sync avoids a
@@ -149,7 +150,7 @@ function PayoutsOnboarding() {
         touch your funds or your ID. It takes a couple of minutes.
       </p>
       <button onClick={start} disabled={busy} className="btn-primary mt-3">{busy ? "Opening Stripe…" : "Set up payouts →"}</button>
-      {error && <p className="mt-2 text-sm text-rose-300">{error}</p>}
+      {error && <StripeErrorNotice message={error} />}
     </div>
   );
 }

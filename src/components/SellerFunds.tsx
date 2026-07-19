@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { formatMoney } from "@/lib/format";
+import { StripeErrorNotice } from "./StripeErrorNotice";
 
 // Pure display helper (kept local — lib/order-number.ts pulls in the Prisma
 // client, which can't ship in a "use client" bundle).
@@ -95,7 +96,7 @@ export function SellerFunds() {
             {connecting ? "Opening Stripe…" : funds.payoutsEnabled ? "View Stripe dashboard →" : funds.hasAccount ? "Finish setup →" : "Enable payouts →"}
           </button>
         </div>
-        {error && <p className="mt-2 text-sm text-rose-300">{error}</p>}
+        {error && <StripeErrorNotice message={error} />}
       </div>
 
       {funds.readyForPayout.length > 0 && (
