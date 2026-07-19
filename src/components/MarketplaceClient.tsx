@@ -285,7 +285,7 @@ export function MarketplaceClient({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/marketplace/sell" className="btn-ghost text-sm">🏷️ Sell on RiftCompare</Link>
+          <Link href="/marketplace/sell" className="btn-primary text-sm">Sell</Link>
           {signedIn && (
             <Link href="/marketplace/orders" className="btn-ghost text-sm">My orders &amp; offers</Link>
           )}

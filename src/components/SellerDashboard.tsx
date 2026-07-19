@@ -82,6 +82,9 @@ export function SellerDashboard() {
 
   return (
     <div className="mx-auto max-w-4xl">
+      <Link href="/marketplace" className="mb-3 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-300">
+        ← Back to Marketplace
+      </Link>
       <div className="mb-5 flex items-center justify-between">
         <div>
           <h1 className="font-display text-2xl font-extrabold text-white">Seller dashboard</h1>
@@ -89,7 +92,6 @@ export function SellerDashboard() {
         </div>
         <div className="flex items-center gap-2">
           <Link href="/marketplace/funds" className="btn-ghost text-sm">Seller funds →</Link>
-          <Link href="/marketplace" className="btn-ghost text-sm">View marketplace →</Link>
         </div>
       </div>
 
