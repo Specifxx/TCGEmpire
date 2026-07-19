@@ -15,25 +15,33 @@ import { stripe } from "./stripe";
 import { SITE_URL } from "./site";
 import { platformFeeCents } from "./marketplace";
 
-// Every seller — AU included — only ever RECEIVES transfers; nobody processes
-// card payments on their own connected account (buyers always pay the PLATFORM
-// account, see the header comment). Stripe's "recipient" service agreement is
-// the account shape built exactly for that: transfers-only, no card_payments.
-// Requesting the `transfers` capability WITHOUT `card_payments` under the full
-// Express agreement instead hits a manual-review wall ("Your platform needs
-// approval for accounts to have requested the transfers capability without the
-// card_payments capability") — this was previously restricted to non-AU
-// sellers on a mistaken "cross-border" rationale, which is exactly what
-// triggered that wall for AU accounts. Recipient accounts avoid it entirely,
-// for every country, with no Stripe support ticket needed.
+// Two DISTINCT Stripe walls are in play here, confirmed by live testing
+// (neither can be worked around by contacting neither support nor guessing —
+// this is exactly what each attempt hit):
+//
+// 1. Stripe's "recipient" service agreement (a transfers-only account shape,
+//    no card_payments ever offered) is REJECTED OUTRIGHT for same-country
+//    accounts: "The recipient ToS agreement is not supported for platforms in
+//    AU creating accounts in AU." It only works cross-border (platform in one
+//    country, connected account in another) — exactly what it's document for.
+// 2. The full Express agreement requesting ONLY `transfers` (no
+//    `card_payments`) hits a manual platform-approval wall: "Your platform
+//    needs approval for accounts to have requested the transfers capability
+//    without the card_payments capability."
+//
+// So: same-country (AU platform → AU seller) MUST use the full agreement, and
+// avoids wall #2 by also requesting `card_payments` — never actually used
+// (buyers always pay the PLATFORM account, see the header comment), but its
+// presence is what stops Stripe treating this as an unusual transfers-only
+// shape needing manual review. Cross-border (AU platform → UK/US seller) uses
+// the recipient agreement instead, which is built for exactly that and never
+// needs card_payments at all.
 function accountParamsFor(country: string): import("stripe").Stripe.AccountCreateParams {
-  return {
-    type: "express",
-    country,
-    capabilities: { transfers: { requested: true } },
-    business_type: "individual",
-    tos_acceptance: { service_agreement: "recipient" },
-  };
+  const base = { type: "express" as const, country, business_type: "individual" as const };
+  if (country === "AU") {
+    return { ...base, capabilities: { transfers: { requested: true }, card_payments: { requested: true } } };
+  }
+  return { ...base, capabilities: { transfers: { requested: true } }, tos_acceptance: { service_agreement: "recipient" } };
 }
 
 // Creates the seller's Express account (idempotent per call — always makes a new

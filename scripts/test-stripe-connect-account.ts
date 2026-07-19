@@ -20,11 +20,10 @@ async function main() {
   const account = await stripe.accounts.create({
     type: "express",
     country: "AU",
-    capabilities: { transfers: { requested: true } },
+    // Matches lib/connect.ts's accountParamsFor("AU") exactly — see that
+    // file's comment for why AU requests card_payments alongside transfers.
+    capabilities: { transfers: { requested: true }, card_payments: { requested: true } },
     business_type: "individual",
-    // Matches lib/connect.ts's accountParamsFor() exactly (recipient agreement
-    // for every country — see that file's comment for why).
-    tos_acceptance: { service_agreement: "recipient" },
     email: `rc-smoke-test-${Date.now()}@example.com`,
   });
   console.log(`Created ${account.id} — payouts_enabled=${account.payouts_enabled}`);

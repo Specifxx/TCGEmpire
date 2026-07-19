@@ -18,18 +18,18 @@ async function main() {
   }
   const stripe = new Stripe(key, { apiVersion: "2025-02-24.acacia" });
 
-  console.log("Creating a throwaway LIVE Express account (AU, individual, transfers requested, recipient agreement)...");
+  console.log("Creating a throwaway LIVE Express account (AU, individual, transfers+card_payments requested)...");
   const account = await stripe.accounts.create({
     type: "express",
     country: "AU",
-    capabilities: { transfers: { requested: true } },
+    // Matches lib/connect.ts's accountParamsFor("AU") exactly. Same-country
+    // (AU platform, AU account) can't use the recipient agreement (Stripe
+    // rejects it outright), so this uses the full agreement — and requests
+    // card_payments alongside transfers (never actually used) specifically to
+    // avoid the "transfers without card_payments needs platform approval"
+    // wall. See lib/connect.ts's comment for both confirmed failure modes.
+    capabilities: { transfers: { requested: true }, card_payments: { requested: true } },
     business_type: "individual",
-    // Matches lib/connect.ts's accountParamsFor() exactly — every seller only
-    // ever RECEIVES transfers (buyers pay the platform, never the connected
-    // account), so the recipient agreement applies regardless of country. The
-    // full Express agreement requesting transfers-without-card_payments hits a
-    // manual Stripe review wall; recipient accounts don't.
-    tos_acceptance: { service_agreement: "recipient" },
     email: `rc-live-smoke-test-${Date.now()}@example.com`,
   });
   console.log(`Created ${account.id} — payouts_enabled=${account.payouts_enabled}`);
