@@ -29,7 +29,6 @@ on:
           - remove-seed-accounts # one-off: delete @riftcompare.seed bot personas (dead since the forum autoseeder was removed)
           - test-marketplace-stripe # smoke-test CRON_SECRET + both Stripe webhook secrets + a Connect account create/delete round-trip (test or live)
           - migrate-main-db  # full pg_dump/restore of the OPERATIONAL database (DATABASE_URL) into DATABASE_URL_2 + row-count verification (read-only against the source; does not touch production traffic)
-          - test-stripe-controller # one-off: does Stripe's controller-model account creation allow transfers-only for a same-country (AU) individual without either capability wall?
       dry_run:
         description: "Dry run (log what would change, write nothing)"
         type: boolean
@@ -329,12 +328,6 @@ jobs:
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: npx tsx scripts/test-cron-secret.ts
-
-      - name: "One-off: Stripe controller-model transfers-only test (AU)"
-        if: inputs.task == 'test-stripe-controller'
-        env:
-          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-        run: npx tsx scripts/test-stripe-connect-controller.ts
 
       - name: "Marketplace smoke test: main Stripe webhook signature (STRIPE_WEBHOOK_SECRET)"
         if: always() && inputs.task == 'test-marketplace-stripe'

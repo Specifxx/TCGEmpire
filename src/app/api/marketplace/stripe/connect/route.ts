@@ -48,7 +48,7 @@ export async function POST(req: Request) {
 
     let accountId = profile.stripeAccountId;
     if (!accountId) {
-      accountId = await createExpressAccount(profile.country, user.email);
+      accountId = await createExpressAccount(profile.country, user.email, user.displayName);
       await prisma.sellerProfile.update({ where: { userId: user.id }, data: { stripeAccountId: accountId } });
     }
     const url = await createOnboardingLink(accountId);

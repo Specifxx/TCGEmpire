@@ -46,9 +46,19 @@ function accountParamsFor(country: string): import("stripe").Stripe.AccountCreat
 
 // Creates the seller's Express account (idempotent per call — always makes a new
 // one, so only call this when SellerProfile.stripeAccountId is still null) and
-// returns its id to store on SellerProfile.
-export async function createExpressAccount(country: string, email: string): Promise<string> {
-  const account = await stripe().accounts.create({ ...accountParamsFor(country), email });
+// returns its id to store on SellerProfile. Pre-fills whatever we already know
+// (email, name) so Stripe's hosted onboarding form skips those fields instead
+// of asking again — the account shape itself (capabilities/tos_acceptance) is
+// unavoidable per accountParamsFor's comment, but every already-known field we
+// pass here is one less screen the seller has to fill in themselves.
+export async function createExpressAccount(country: string, email: string, displayName?: string | null): Promise<string> {
+  const [firstName, ...rest] = (displayName ?? "").trim().split(/\s+/).filter(Boolean);
+  const lastName = rest.join(" ");
+  const account = await stripe().accounts.create({
+    ...accountParamsFor(country),
+    email,
+    ...(firstName && lastName ? { individual: { email, first_name: firstName, last_name: lastName } } : {}),
+  });
   return account.id;
 }
 
