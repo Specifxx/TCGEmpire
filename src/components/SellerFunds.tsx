@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { formatMoney } from "@/lib/format";
 import { StripeErrorNotice } from "./StripeErrorNotice";
+import { formatDay } from "@/lib/delivery-estimate";
 
 // Pure display helper (kept local — lib/order-number.ts pulls in the Prisma
 // client, which can't ship in a "use client" bundle).
@@ -25,6 +26,10 @@ interface RecentOrder {
   currency: string;
   createdAt: string;
   transferredAt: string | null;
+  // Server-computed concrete dates (api/marketplace/funds) — "when do I get
+  // paid" answered exactly instead of a generic rule.
+  shipByAt: string | null;
+  releasesAt: string | null;
 }
 
 interface Funds {
@@ -40,11 +45,12 @@ interface Funds {
   recent: RecentOrder[];
 }
 
-const STATUS_LABEL: Record<string, string> = { PAID: "Held — awaiting shipment", SHIPPED: "Held — in transit", COMPLETED: "Released" };
-
 function orderStatusLabel(o: RecentOrder): string {
   if (o.status === "COMPLETED" && !o.transferredAt) return "Ready — finish payouts to receive it";
-  return STATUS_LABEL[o.status] ?? o.status;
+  if (o.status === "COMPLETED") return "Released";
+  if (o.status === "SHIPPED") return o.releasesAt ? `Releases ${formatDay(o.releasesAt)}` : "Held — in transit";
+  if (o.status === "PAID") return o.shipByAt ? `Held — ship by ${formatDay(o.shipByAt)}` : "Held — awaiting shipment";
+  return o.status;
 }
 
 export function SellerFunds() {
@@ -79,6 +85,9 @@ export function SellerFunds() {
       </p>
     );
   }
+
+  const releaseDates = funds.recent.filter((o) => o.status === "SHIPPED" && o.releasesAt).map((o) => new Date(o.releasesAt!).getTime());
+  const earliestRelease = releaseDates.length ? new Date(Math.min(...releaseDates)) : null;
 
   return (
     <div className="flex flex-col gap-5">
@@ -126,7 +135,11 @@ export function SellerFunds() {
               ))}
             </ul>
           )}
-          <p className="mt-2 text-xs text-slate-600">Released to you once the buyer confirms delivery, or automatically 14 days after you mark an order shipped.</p>
+          <p className="mt-2 text-xs text-slate-600">
+            Each shipped order releases automatically 14 days after you mark it shipped — sooner if the buyer
+            confirms. See the exact date per order below.
+            {earliestRelease && <> Earliest: <strong className="text-slate-400">{formatDay(earliestRelease)}</strong>.</>}
+          </p>
         </div>
         <div className="card-surface p-5">
           <h3 className="mb-2 text-sm font-semibold text-slate-400">Released to date</h3>

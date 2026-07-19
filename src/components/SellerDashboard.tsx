@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CONDITION_KEYS } from "@/lib/constants";
 import { CURRENCY_BY_COUNTRY } from "@/lib/marketplace-countries";
+import { MARKETPLACE_FEE_BPS, platformFeeCents } from "@/lib/marketplace-policy";
 import { formatMoney } from "@/lib/format";
 import { cardDisplayName } from "@/lib/card-name";
 import { StripeErrorNotice } from "./StripeErrorNotice";
@@ -288,7 +289,15 @@ function AddListing({ country, currency, onAdded }: { country: Country; currency
     <form onSubmit={submit} className="card-surface p-5">
       <h2 className="mb-3 font-bold text-white">List a card</h2>
       {!card ? (
-        <CardSearch onPick={setCard} />
+        <CardSearch
+          onPick={(c) => {
+            setCard(c);
+            // Prefill from the current cheapest price in this region — still
+            // fully editable, just a sensible starting point instead of blank.
+            const cheapestNow = lowestFor(c, region);
+            if (cheapestNow != null) setPrice((cheapestNow / 100).toFixed(2));
+          }}
+        />
       ) : (
         <div className="flex items-center gap-3 rounded-lg border border-ink-700 bg-ink-900 p-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -329,6 +338,16 @@ function AddListing({ country, currency, onAdded }: { country: Country; currency
           <input type="checkbox" checked={isFoil} onChange={(e) => setIsFoil(e.target.checked)} className="h-4 w-4 accent-brand-500" /> Foil
         </label>
       </div>
+      {(() => {
+        const priceCents = Math.round(parseFloat(price || "0") * 100);
+        if (!priceCents) return null;
+        const net = priceCents - platformFeeCents(priceCents);
+        return (
+          <p className="mt-2 text-xs text-slate-500">
+            You&apos;ll receive ~<span className="font-semibold text-slate-300">{formatMoney(net, cur)}</span> after the {MARKETPLACE_FEE_BPS / 100}% fee.
+          </p>
+        );
+      })()}
       <div className="mt-3 flex items-center gap-3">
         <button type="submit" disabled={saving || !card} className="btn-primary disabled:opacity-50">{saving ? "Listing…" : "List card"}</button>
         {msg && <span className="text-sm text-slate-400">{msg}</span>}

@@ -15,22 +15,25 @@ import { stripe } from "./stripe";
 import { SITE_URL } from "./site";
 import { platformFeeCents } from "./marketplace";
 
-// AU sellers get the full Express service agreement; everyone else onboards as a
-// cross-border "recipient" account (payouts only, no card-charging capability) —
-// Stripe's standard shape for a platform based in one country paying out sellers in
-// another. See docs/MARKETPLACE.md for the test-mode verification this needs before
-// going live in the UK/US markets.
+// Every seller — AU included — only ever RECEIVES transfers; nobody processes
+// card payments on their own connected account (buyers always pay the PLATFORM
+// account, see the header comment). Stripe's "recipient" service agreement is
+// the account shape built exactly for that: transfers-only, no card_payments.
+// Requesting the `transfers` capability WITHOUT `card_payments` under the full
+// Express agreement instead hits a manual-review wall ("Your platform needs
+// approval for accounts to have requested the transfers capability without the
+// card_payments capability") — this was previously restricted to non-AU
+// sellers on a mistaken "cross-border" rationale, which is exactly what
+// triggered that wall for AU accounts. Recipient accounts avoid it entirely,
+// for every country, with no Stripe support ticket needed.
 function accountParamsFor(country: string): import("stripe").Stripe.AccountCreateParams {
-  const base: import("stripe").Stripe.AccountCreateParams = {
+  return {
     type: "express",
     country,
     capabilities: { transfers: { requested: true } },
     business_type: "individual",
+    tos_acceptance: { service_agreement: "recipient" },
   };
-  if (country !== "AU") {
-    base.tos_acceptance = { service_agreement: "recipient" };
-  }
-  return base;
 }
 
 // Creates the seller's Express account (idempotent per call — always makes a new
