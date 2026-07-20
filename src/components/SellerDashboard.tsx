@@ -8,6 +8,7 @@ import { MARKETPLACE_FEE_BPS, platformFeeCents } from "@/lib/marketplace-policy"
 import { formatMoney } from "@/lib/format";
 import { cardDisplayName } from "@/lib/card-name";
 import { StripeErrorNotice } from "./StripeErrorNotice";
+import { MarketplaceBetaBadge } from "./MarketplaceBetaBadge";
 
 // Launch markets only (AU/UK/US) — see lib/marketplace.ts's MARKETPLACE_LAUNCH_COUNTRIES.
 // The server rejects any other market anyway; keeping the picker in sync avoids a
@@ -90,7 +91,10 @@ export function SellerDashboard() {
       </Link>
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <h1 className="font-display text-2xl font-extrabold text-white">Seller dashboard</h1>
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="font-display text-2xl font-extrabold text-white">Seller dashboard</h1>
+            <MarketplaceBetaBadge subject="Seller dashboard bug: " />
+          </div>
           <p className="text-sm text-slate-500">
             Manage your RiftCompare Marketplace shop &amp; listings. RiftCompare takes a {MARKETPLACE_FEE_BPS / 100}%
             fee on each sale — you always see exactly what you&apos;ll receive before you list and after you sell.

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { SellerFunds } from "@/components/SellerFunds";
+import { MarketplaceBetaBadge } from "@/components/MarketplaceBetaBadge";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +22,10 @@ export default async function MarketplaceFundsPage() {
         <span>/</span>
         <span className="text-slate-300">Seller funds</span>
       </nav>
-      <h1 className="mb-4 font-display text-2xl font-extrabold text-white">💰 Seller funds</h1>
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <h1 className="font-display text-2xl font-extrabold text-white">💰 Seller funds</h1>
+        <MarketplaceBetaBadge subject="Seller funds bug: " />
+      </div>
       <SellerFunds />
     </div>
   );

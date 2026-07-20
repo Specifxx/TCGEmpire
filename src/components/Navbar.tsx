@@ -72,9 +72,10 @@ export function Navbar() {
           {MARKETPLACE_NAV_VISIBLE && (
             <Link
               href="/marketplace"
-              className="hidden items-center gap-1 rounded-lg bg-brand-500 px-2.5 py-2 text-sm font-bold text-ink-950 shadow-sm transition-colors hover:bg-brand-400 sm:flex"
+              className="hidden items-center gap-1.5 rounded-lg bg-brand-500 px-2.5 py-2 text-sm font-bold text-ink-950 shadow-sm transition-colors hover:bg-brand-400 sm:flex"
             >
               🛒 Marketplace
+              <span className="rounded bg-ink-950/20 px-1 py-0.5 text-[9px] font-extrabold uppercase tracking-wide">Beta</span>
             </Link>
           )}
           {/* Premium — one-click into the upsell dialog from anywhere. */}

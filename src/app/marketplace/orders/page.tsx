@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { MARKETPLACE_OFFERS } from "@/lib/marketplace";
 import { MarketplaceOrders } from "@/components/MarketplaceOrders";
+import { MarketplaceBetaBadge } from "@/components/MarketplaceBetaBadge";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,10 @@ export default async function MarketplaceOrdersPage() {
         <span>/</span>
         <span className="text-slate-300">My orders &amp; offers</span>
       </nav>
-      <h1 className="mb-4 font-display text-2xl font-extrabold text-white">📦 My orders &amp; offers</h1>
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <h1 className="font-display text-2xl font-extrabold text-white">📦 My orders &amp; offers</h1>
+        <MarketplaceBetaBadge subject="Orders bug: " />
+      </div>
       <MarketplaceOrders offersEnabled={MARKETPLACE_OFFERS} />
     </div>
   );

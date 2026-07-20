@@ -18,17 +18,21 @@ export interface SupportOrderOption {
 export function SupportForm({
   defaultName,
   defaultEmail,
+  defaultCategory,
+  defaultSubject,
   orders = [],
 }: {
   defaultName?: string;
   defaultEmail?: string;
+  defaultCategory?: string;
+  defaultSubject?: string;
   orders?: SupportOrderOption[];
 }) {
   const [name, setName] = useState(defaultName ?? "");
   const [email, setEmail] = useState(defaultEmail ?? "");
-  const [category, setCategory] = useState("OTHER");
+  const [category, setCategory] = useState(CATEGORIES.some((c) => c.key === defaultCategory) ? defaultCategory! : "OTHER");
   const [orderId, setOrderId] = useState("");
-  const [subject, setSubject] = useState("");
+  const [subject, setSubject] = useState(defaultSubject ?? "");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);

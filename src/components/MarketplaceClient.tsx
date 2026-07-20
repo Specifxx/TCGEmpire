@@ -9,6 +9,7 @@ import { CONDITION_KEYS } from "@/lib/constants";
 import { COUNTRIES, type Country } from "@/lib/country";
 import { useCountry } from "./CountryProvider";
 import { MarketplaceCheckout, type CheckoutItem } from "./MarketplaceCheckout";
+import { MarketplaceBetaBadge } from "./MarketplaceBetaBadge";
 
 export interface MktOffer {
   id: string;
@@ -276,7 +277,10 @@ export function MarketplaceClient({
     <div>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl font-extrabold text-white">Marketplace</h1>
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="font-display text-2xl font-extrabold text-white">Marketplace</h1>
+            <MarketplaceBetaBadge subject="Marketplace bug: " />
+          </div>
           <p className="text-sm text-slate-500">
             Buy Riftbound cards from verified sellers shipping within <span className="font-semibold text-slate-300">{place}</span>.
             {" "}

@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/support" },
 };
 
-export default async function SupportPage() {
+export default async function SupportPage({ searchParams }: { searchParams: { category?: string; subject?: string } }) {
   const user = await getCurrentUser();
 
   let orders: SupportOrderOption[] = [];
@@ -40,7 +40,13 @@ export default async function SupportPage() {
         Problem with a marketplace order, payment, or your account? Send us a message and we'll reply by email —
         usually within a day or two.
       </p>
-      <SupportForm defaultName={user?.displayName} defaultEmail={user?.email} orders={orders} />
+      <SupportForm
+        defaultName={user?.displayName}
+        defaultEmail={user?.email}
+        defaultCategory={searchParams.category}
+        defaultSubject={searchParams.subject}
+        orders={orders}
+      />
     </div>
   );
 }
