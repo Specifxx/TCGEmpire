@@ -63,7 +63,7 @@
     "imageThumbUrl": "https://tcgplayer-cdn.tcgplayer.com/product/670598_in_400x400.jpg"
   },
   {
-    "_note": "Nexus Night 1 organized-play promo prints — these were being wrongly scraped and shown on /sealed as a 'Nexus Night Pack' sealed product (fixed in sealed-import.ts), when each is really a single promo printing of an existing base card. Domain/type/rarity inherited from the real OGN base card of the same name. No confirmed distinct collector number exists for these prints, so 'NN1' (Nexus Night 1, the event name on the actual listings) is used as a non-numbered designator, same convention as Buff // Buff's 'P'."
+    "_note": "Nexus Night 1 organized-play promo prints — these were being wrongly scraped and shown on /sealed as a 'Nexus Night Pack' sealed product (fixed in sealed-import.ts), when each is really a single promo printing of an existing base card. Domain/type/rarity inherited from the real OGN base card of the same name. No confirmed distinct collector number exists for these prints, so 'NN1' (Nexus Night 1, the event name on the actual listings) is used as a non-numbered designator, same convention as Buff // Buff's 'P'. Includes the full 6-domain Rune cycle (Fury/Calm/Mind/Body/Chaos/Order) — only Calm and Body were originally added; the other four were the same NN1 promo set and were missing."
   },
   {
     "externalId": "promo-ogn-nn1-stalwart-poro",
@@ -117,6 +117,66 @@
     "setName": "Origins",
     "collectorNumber": "NN1",
     "domain": "Body",
+    "type": "Rune",
+    "rarity": "Showcase",
+    "isPromo": true,
+    "energyCost": null,
+    "might": null,
+    "imageUrl": null,
+    "imageThumbUrl": null
+  },
+  {
+    "externalId": "promo-ogn-nn1-fury-rune",
+    "name": "Fury Rune",
+    "setCode": "OGN",
+    "setName": "Origins",
+    "collectorNumber": "NN1",
+    "domain": "Fury",
+    "type": "Rune",
+    "rarity": "Showcase",
+    "isPromo": true,
+    "energyCost": null,
+    "might": null,
+    "imageUrl": null,
+    "imageThumbUrl": null
+  },
+  {
+    "externalId": "promo-ogn-nn1-mind-rune",
+    "name": "Mind Rune",
+    "setCode": "OGN",
+    "setName": "Origins",
+    "collectorNumber": "NN1",
+    "domain": "Mind",
+    "type": "Rune",
+    "rarity": "Showcase",
+    "isPromo": true,
+    "energyCost": null,
+    "might": null,
+    "imageUrl": null,
+    "imageThumbUrl": null
+  },
+  {
+    "externalId": "promo-ogn-nn1-chaos-rune",
+    "name": "Chaos Rune",
+    "setCode": "OGN",
+    "setName": "Origins",
+    "collectorNumber": "NN1",
+    "domain": "Chaos",
+    "type": "Rune",
+    "rarity": "Showcase",
+    "isPromo": true,
+    "energyCost": null,
+    "might": null,
+    "imageUrl": null,
+    "imageThumbUrl": null
+  },
+  {
+    "externalId": "promo-ogn-nn1-order-rune",
+    "name": "Order Rune",
+    "setCode": "OGN",
+    "setName": "Origins",
+    "collectorNumber": "NN1",
+    "domain": "Order",
     "type": "Rune",
     "rarity": "Showcase",
     "isPromo": true,

@@ -13,6 +13,8 @@ import { affiliateUrl } from "./affiliate";
 import { cardTileSelect } from "./cards";
 import { TCG_US } from "./tcgplayer";
 import { usdCentsToCountry } from "./fx";
+import { MARKETPLACE_RETAILER, MARKETPLACE_PUBLIC } from "./marketplace";
+import { MARKETPLACE_FEE_BPS } from "./marketplace-policy";
 import type { CardTileData } from "@/components/CardTile";
 
 export const EBAY_FEE = 0.13; // approx eBay final-value fee
@@ -31,18 +33,29 @@ export interface ArbSource {
   key: string;
   name: string;
   isEbay: boolean;
+  // Cut taken when SELLING through this source (0 for a plain store — you sell
+  // at face; eBay's final-value fee; RiftCompare Marketplace's 5% platform fee).
+  // Buying is always fee-free, so this only affects sell-side net calculations.
+  feePct: number;
 }
 
 // eBay retailer key per market (NZ has no eBay coverage).
 const EBAY_KEY: Record<Country, string | null> = { AU: "ebay", NZ: null, US: "ebay_us", UK: "ebay_uk", SG: "ebay_sg" };
+const MARKETPLACE_FEE_PCT = MARKETPLACE_FEE_BPS / 10000;
 
-// All selectable sources for a market: its tracked stores + eBay.
+// All selectable sources for a market: its tracked stores + eBay + (once
+// launched) the RiftCompare Marketplace — the marketplace's own listings
+// already feed into RetailerPrice (see importMarketplaceListings), so this is
+// purely about surfacing it as a selectable buy/sell source here too.
 export function getArbSources(country: Country): ArbSource[] {
   const stores = Object.values(RETAILERS)
     .filter((r) => (r.country ?? "AU") === country)
-    .map((r) => ({ key: r.key, name: r.name, isEbay: false }));
+    .map((r) => ({ key: r.key, name: r.name, isEbay: false, feePct: 0 }));
   const ek = EBAY_KEY[country];
-  return ek ? [{ key: ek, name: "eBay", isEbay: true }, ...stores] : stores;
+  const sources = ek ? [{ key: ek, name: "eBay", isEbay: true, feePct: EBAY_FEE }, ...stores] : stores;
+  const mpKey = MARKETPLACE_PUBLIC ? MARKETPLACE_RETAILER[country] : undefined;
+  if (mpKey) sources.unshift({ key: mpKey, name: "RiftCompare Marketplace", isEbay: false, feePct: MARKETPLACE_FEE_PCT });
+  return sources;
 }
 
 export interface ArbItem {
@@ -51,11 +64,11 @@ export interface ArbItem {
   buyStore: string;
   buyStoreName: string;
   buyUrl: string;
-  sellCents: number; // gross sell price (cheapest on the sell side)
+  sellCents: number; // gross sell price (cheapest NET on the sell side)
   sellName: string;
   sellUrl: string;
-  sellIsEbay: boolean;
-  netCents: number; // sell (less eBay fee if eBay) − buy
+  sellRetailer: string; // the winning sell source's retailer key (for click-tracking + labeling)
+  netCents: number; // sell (less that source's fee) − buy
   marginPct: number;
 }
 
@@ -75,6 +88,27 @@ async function minByCard(country: Country, keys: string[]) {
     _min: { priceCents: true },
   });
   return new Map(rows.filter((r) => r._min.priceCents != null).map((r) => [r.cardId, r._min.priceCents!]));
+}
+
+// Cheapest price PER (card, retailer) — used on the sell side, where different
+// sources can carry different fees (store 0%, eBay ~13%, marketplace 5%), so
+// picking the best NET means comparing every source individually rather than
+// just the single cheapest gross price across all of them combined.
+async function minByCardAndRetailer(country: Country, keys: string[]) {
+  const map = new Map<string, Map<string, number>>();
+  if (!keys.length) return map;
+  const rows = await prisma.retailerPrice.groupBy({
+    by: ["cardId", "retailer"],
+    where: { country, inStock: true, retailer: { in: keys } },
+    _min: { priceCents: true },
+  });
+  for (const r of rows) {
+    if (r._min.priceCents == null) continue;
+    const inner = map.get(r.cardId) ?? new Map<string, number>();
+    inner.set(r.retailer, r._min.priceCents);
+    map.set(r.cardId, inner);
+  }
+  return map;
 }
 
 // ── Cheapest-on-eBay deals ───────────────────────────────────────────────────────
@@ -184,48 +218,42 @@ export async function getArbitrage(
   try {
     const sources = getArbSources(country);
     const valid = new Set(sources.map((s) => s.key));
-    const ebayKeys = new Set(sources.filter((s) => s.isEbay).map((s) => s.key));
+    const feeByKey = new Map(sources.map((s) => [s.key, s.feePct]));
 
     const buyKeys = opts.buy.filter((k) => valid.has(k));
     const sellKeys = opts.sell.filter((k) => valid.has(k));
     if (!buyKeys.length || !sellKeys.length) return { items: [], total: 0, page, pageSize, pageCount: 1 };
 
-    const sellEbayKeys = sellKeys.filter((k) => ebayKeys.has(k));
-    const sellStoreKeys = sellKeys.filter((k) => !ebayKeys.has(k));
-
-    const [buyMin, sellEbayMin, sellStoreMin] = await Promise.all([
+    const [buyMin, sellMinByRetailer] = await Promise.all([
       minByCard(country, buyKeys),
-      minByCard(country, sellEbayKeys),
-      minByCard(country, sellStoreKeys),
+      minByCardAndRetailer(country, sellKeys),
     ]);
 
-    type Row = { cardId: string; buy: number; sellGross: number; sellIsEbay: boolean; net: number; margin: number };
+    type Row = { cardId: string; buy: number; sellGross: number; sellRetailer: string; net: number; margin: number };
     const rows: Row[] = [];
     for (const [cardId, buy] of buyMin) {
       if (buy < MIN_BUY_CENTS) continue;
-      const eg = sellEbayMin.get(cardId);
-      const sg = sellStoreMin.get(cardId);
-      // Best sell by NET (eBay nets less the fee; a store sells at face).
-      let sellGross: number | null = null;
-      let sellNet: number | null = null;
-      let sellIsEbay = false;
-      if (eg != null) {
-        const net = Math.round(eg * (1 - EBAY_FEE));
-        sellGross = eg;
-        sellNet = net;
-        sellIsEbay = true;
+      const perRetailer = sellMinByRetailer.get(cardId);
+      if (!perRetailer) continue;
+      // Best sell by NET across every selected sell source individually —
+      // each can carry a different cut (store 0%, eBay ~13%, marketplace 5%).
+      let sellGross = -1;
+      let sellNet = -Infinity;
+      let sellRetailer = "";
+      for (const [retailer, gross] of perRetailer) {
+        const net = Math.round(gross * (1 - (feeByKey.get(retailer) ?? 0)));
+        if (net > sellNet) {
+          sellGross = gross;
+          sellNet = net;
+          sellRetailer = retailer;
+        }
       }
-      if (sg != null && (sellNet == null || sg > sellNet)) {
-        sellGross = sg;
-        sellNet = sg;
-        sellIsEbay = false;
-      }
-      if (sellGross == null || sellNet == null) continue;
+      if (!sellRetailer) continue;
       const net = sellNet - buy;
       if (net < MIN_NET_CENTS) continue;
       const margin = Math.round((net / buy) * 1000) / 10;
       if (margin > MAX_MARGIN_PCT) continue; // absurd flip margin = buy/sell mismatch, drop it
-      rows.push({ cardId, buy, sellGross, sellIsEbay, net, margin });
+      rows.push({ cardId, buy, sellGross, sellRetailer, net, margin });
     }
     rows.sort((a, b) => (opts.sort === "margin" ? b.margin - a.margin || b.net - a.net : b.net - a.net || b.margin - a.margin));
 
@@ -236,7 +264,6 @@ export async function getArbitrage(
     if (!slice.length) return { items: [], total, page: p, pageSize, pageCount };
 
     const ids = slice.map((r) => r.cardId);
-    const sellKeysFor = (isEbay: boolean) => (isEbay ? sellEbayKeys : sellStoreKeys);
     const [cards, buyListings, sellListings] = await Promise.all([
       prisma.card.findMany({ where: { id: { in: ids } }, select: cardTileSelect(country) }),
       prisma.retailerPrice.findMany({
@@ -253,14 +280,12 @@ export async function getArbitrage(
     const cardMap = new Map(cards.map((c) => [c.id, c as unknown as CardTileData]));
     const bestBuy = new Map<string, (typeof buyListings)[number]>();
     for (const l of buyListings) if (!bestBuy.has(l.cardId)) bestBuy.set(l.cardId, l);
-    // Cheapest sell listing on the WINNING side (eBay vs store) per card.
+    // The listing on the WINNING sell source (per card) — matched by retailer
+    // key, not by a bucket, so any number of fee-bearing sources works.
     const bestSell = new Map<string, (typeof sellListings)[number]>();
-    const winnerSide = new Map(slice.map((r) => [r.cardId, r.sellIsEbay]));
+    const winnerRetailer = new Map(slice.map((r) => [r.cardId, r.sellRetailer]));
     for (const l of sellListings) {
-      const wantEbay = winnerSide.get(l.cardId);
-      const isEbayRow = ebayKeys.has(l.retailer);
-      if (wantEbay !== isEbayRow) continue;
-      if (!sellKeysFor(!!wantEbay).includes(l.retailer)) continue;
+      if (winnerRetailer.get(l.cardId) !== l.retailer) continue;
       if (!bestSell.has(l.cardId)) bestSell.set(l.cardId, l);
     }
 
@@ -272,10 +297,12 @@ export async function getArbitrage(
         if (!c || !b || !s) return null;
         return {
           card: c,
-          // Affiliate-tag both outbound links (eBay EPN / store network) — rows can
-          // hold untagged URLs from before import-time tagging existed.
+          // Affiliate-tag both outbound links (eBay EPN / store network / n/a
+          // for an internal marketplace URL, which affiliateUrl passes through
+          // untouched) — rows can hold untagged URLs from before import-time
+          // tagging existed.
           buyCents: r.buy, buyStore: b.retailer, buyStoreName: b.retailerName, buyUrl: affiliateUrl(b.url, b.retailer),
-          sellCents: r.sellGross, sellName: s.retailerName, sellUrl: affiliateUrl(s.url, "ebay_arb"), sellIsEbay: r.sellIsEbay,
+          sellCents: r.sellGross, sellName: s.retailerName, sellUrl: affiliateUrl(s.url, r.sellRetailer), sellRetailer: r.sellRetailer,
           netCents: r.net, marginPct: r.margin,
         };
       })
@@ -360,7 +387,7 @@ export async function getArbitrageVsTcgplayer(
         return {
           card: c,
           buyCents: r.buy, buyStore: b.retailer, buyStoreName: b.retailerName, buyUrl: affiliateUrl(b.url, b.retailer),
-          sellCents: r.sellGross, sellName: "TCGplayer (US market, converted)", sellUrl: affiliateUrl(tcg.url, TCG_US.retailer), sellIsEbay: false,
+          sellCents: r.sellGross, sellName: "TCGplayer (US market, converted)", sellUrl: affiliateUrl(tcg.url, TCG_US.retailer), sellRetailer: TCG_US.retailer,
           netCents: r.net, marginPct: r.margin,
         };
       })

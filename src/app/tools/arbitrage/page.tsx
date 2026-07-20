@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getArbitrage, getArbitrageVsTcgplayer, getEbayCheapest, getArbSources, EBAY_FEE, type ArbSort, type DealSort } from "@/lib/arbitrage";
+import { MARKETPLACE_RETAILER } from "@/lib/marketplace";
+import { MARKETPLACE_FEE_BPS } from "@/lib/marketplace-policy";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
@@ -51,6 +53,7 @@ export default async function ArbitragePage({
   const sources = getArbSources(country);
   const storeKeys = sources.filter((s) => !s.isEbay).map((s) => s.key);
   const ebay = sources.find((s) => s.isEbay);
+  const marketplace = sources.find((s) => s.key === MARKETPLACE_RETAILER[country]);
   const view: "flip" | "deals" | "tcg" =
     searchParams.view === "deals" ? "deals" : searchParams.view === "tcg" ? "tcg" : "flip";
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
@@ -123,20 +126,29 @@ export default async function ArbitragePage({
 
       {view === "tcg" ? (
         await TcgFlipView({ country, info, sort: searchParams.sort === "margin" ? "margin" : "profit", page, storeKeys, premium, signedIn })
-      ) : !ebay ? (
-        <div className="card-surface grid place-items-center p-12 text-center text-sm text-slate-400">
-          This view isn&apos;t available in {info.place} yet — it&apos;s eBay-based, and eBay doesn&apos;t cover this market.
-        </div>
       ) : view === "deals" ? (
-        await DealsView({ country, info, sort: searchParams.sort === "pct" ? "pct" : "saving", page, premium, signedIn })
+        !ebay ? (
+          <div className="card-surface grid place-items-center p-12 text-center text-sm text-slate-400">
+            This view isn&apos;t available in {info.place} yet — it&apos;s eBay-based, and eBay doesn&apos;t cover this market.
+          </div>
+        ) : (
+          await DealsView({ country, info, sort: searchParams.sort === "pct" ? "pct" : "saving", page, premium, signedIn })
+        )
+      ) : !ebay && !marketplace ? (
+        <div className="card-surface grid place-items-center p-12 text-center text-sm text-slate-400">
+          This view isn&apos;t available in {info.place} yet — it needs eBay or marketplace coverage, and neither is available here.
+        </div>
       ) : (
-        await FlipView({ country, info, sort: searchParams.sort === "margin" ? "margin" : "profit", page, buy: searchParams.buy, sources, ebayKey: ebay.key, storeKeys, premium, signedIn })
+        await FlipView({
+          country, info, sort: searchParams.sort === "margin" ? "margin" : "profit", page, buy: searchParams.buy,
+          sources, ebayKey: ebay?.key, marketplaceKey: marketplace?.key, storeKeys, premium, signedIn,
+        })
       )}
     </div>
   );
 }
 
-// ── Flip view (buy store → sell eBay) ────────────────────────────────────────────
+// ── Flip view (buy store → sell eBay / the RiftCompare Marketplace) ─────────────
 async function FlipView({
   country,
   info,
@@ -145,6 +157,7 @@ async function FlipView({
   buy: buyParam,
   sources,
   ebayKey,
+  marketplaceKey,
   storeKeys,
   premium,
   signedIn,
@@ -155,13 +168,14 @@ async function FlipView({
   page: number;
   buy?: string;
   sources: ReturnType<typeof getArbSources>;
-  ebayKey: string;
+  ebayKey?: string;
+  marketplaceKey?: string;
   storeKeys: string[];
   premium: boolean;
   signedIn: boolean;
 }) {
   const buy = buyParam ? buyParam.split(",").map((s) => s.trim()).filter(Boolean) : storeKeys;
-  const sell = [ebayKey];
+  const sell = [ebayKey, marketplaceKey].filter((k): k is string => !!k);
   // Non-Premium: ignore page/source customisation and fetch only the teaser.
   const data = await getArbitrage(country, {
     buy,
@@ -172,17 +186,24 @@ async function FlipView({
   });
   const href = (p: number) => `/tools/arbitrage?buy=${buy.join(",")}&sort=${sort}&page=${p}`;
   const sortHref = (s: ArbSort) => `/tools/arbitrage?buy=${buy.join(",")}&sort=${s}&page=1`;
+  const sellLabel = ebayKey && marketplaceKey ? "eBay or the RiftCompare Marketplace" : marketplaceKey ? "the RiftCompare Marketplace" : "eBay";
+  const feeParts = [
+    ebayKey ? `~${Math.round(EBAY_FEE * 100)}% eBay fee` : null,
+    marketplaceKey ? `${MARKETPLACE_FEE_BPS / 100}% marketplace fee` : null,
+  ].filter(Boolean);
 
   return (
     <>
       <p className="mb-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-        Cards that sell for more on <strong className="text-slate-200">eBay</strong> than a {info.adjective} store charges —
-        handy if you&apos;re deciding whether to sell one. The gap is after an estimated {Math.round(EBAY_FEE * 100)}% eBay fee; postage isn&apos;t included.
+        Cards that sell for more on <strong className="text-slate-200">{sellLabel}</strong> than a {info.adjective} store charges —
+        handy if you&apos;re deciding whether to sell one. The gap is after an estimated {feeParts.join(" / ")}; postage isn&apos;t included.
       </p>
-      <p className="mb-4 text-xs text-slate-500">
-        eBay is the only marketplace we can price a resale on right now. Know another store that buys cards?{" "}
-        <Link href="/contact" className="text-brand-400 hover:underline">Email us</Link> and we&apos;ll add it as a sell option.
-      </p>
+      {!marketplaceKey && (
+        <p className="mb-4 text-xs text-slate-500">
+          eBay is the only resale channel we can price right now in {info.place}. Know another store that buys cards?{" "}
+          <Link href="/contact" className="text-brand-400 hover:underline">Email us</Link> and we&apos;ll add it as a sell option.
+        </p>
+      )}
 
       {premium && (
         <div className="card-surface mb-4 flex flex-wrap items-end justify-between gap-4 p-4">
@@ -364,7 +385,7 @@ function FlipTable({
               <div className="truncate text-[10px] text-slate-500" title={it.buyStoreName}>{it.buyStoreName}</div>
             </td>
             <td className="px-2 py-2 text-right">
-              <OutboundLink href={it.sellUrl} retailer="ebay_arb" country={country} className="num font-semibold text-slate-200 hover:text-brand-400">
+              <OutboundLink href={it.sellUrl} retailer={it.sellRetailer} country={country} className="num font-semibold text-slate-200 hover:text-brand-400">
                 {formatMoney(it.sellCents, info.currency)}
               </OutboundLink>
               <div className="text-[10px] text-sky-400">{it.sellName}</div>
