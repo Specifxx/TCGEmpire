@@ -68,14 +68,18 @@ export function Navbar() {
           {/* Marketplace — filled brand chip (not a plain text link) so the newly
               launched P2P marketplace is the most visually loud thing in the bar
               besides the logo. Only appears once MARKETPLACE_NAV_VISIBLE (mirrors
-              NEXT_PUBLIC_MARKETPLACE_PUBLIC). */}
+              NEXT_PUBLIC_MARKETPLACE_PUBLIC). Always visible (even on phones,
+              unlike Sealed/Trade/Premium/Discord above) — icon-only and compact
+              below sm, full label + Beta tag from sm up. */}
           {MARKETPLACE_NAV_VISIBLE && (
             <Link
               href="/marketplace"
-              className="hidden items-center gap-1.5 rounded-lg bg-brand-500 px-2.5 py-2 text-sm font-bold text-ink-950 shadow-sm transition-colors hover:bg-brand-400 sm:flex"
+              aria-label="Marketplace (beta)"
+              className="flex items-center gap-1 rounded-lg bg-brand-500 px-1.5 py-1.5 text-xs font-bold text-ink-950 shadow-sm transition-colors hover:bg-brand-400 sm:gap-1.5 sm:px-2.5 sm:py-2 sm:text-sm"
             >
-              🛒 Marketplace
-              <span className="rounded bg-ink-950/20 px-1 py-0.5 text-[9px] font-extrabold uppercase tracking-wide">Beta</span>
+              <span aria-hidden>🛒</span>
+              <span className="hidden sm:inline">Marketplace</span>
+              <span className="rounded bg-ink-950/20 px-1 py-0.5 text-[8px] font-extrabold uppercase tracking-wide sm:text-[9px]">Beta</span>
             </Link>
           )}
           {/* Premium — one-click into the upsell dialog from anywhere. */}

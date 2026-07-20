@@ -75,6 +75,7 @@ model User {
   offersReceived      MarketplaceOffer[]   @relation("OffersReceived")
   reviewsWritten      MarketplaceReview[]  @relation("ReviewsWritten")
   reviewsReceived     MarketplaceReview[]  @relation("ReviewsReceived")
+  sentOrderMessages   OrderMessage[]
 
   @@index([googleId])
   @@index([discordId])
@@ -604,7 +605,8 @@ model Order {
   shipCountry      String?
   shipPhone        String?
 
-  review MarketplaceReview?
+  review   MarketplaceReview?
+  messages OrderMessage[]
 
   listing  Listing?  @relation(fields: [listingId], references: [id])
   buyOrder BuyOrder? @relation(fields: [buyOrderId], references: [id])
@@ -618,6 +620,26 @@ model Order {
   @@index([sellerId, status]) // funds dashboard (pending/released aggregates)
   @@index([kind, status, shippedAt]) // cron: auto-release scan
   @@index([kind, status, paidAt]) // cron: ship-deadline scan
+}
+
+// A message between the buyer and seller of a marketplace order — scoped to a
+// real transaction (not pre-purchase listing questions). Threaded per PARCEL:
+// every message stores the id of one anchor Order row shared by the whole
+// group (the alphabetically-first order id among a checkout+seller's rows —
+// see parcelKey()/groupKey in the maintenance cron and MarketplaceOrders.tsx),
+// so a multi-item cart shares one thread instead of one per line item.
+model OrderMessage {
+  id        String    @id @default(cuid())
+  orderId   String
+  senderId  String
+  body      String
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  order  Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  sender User  @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt])
 }
 
 // Outbound affiliate-link clicks, logged via a tiny click beacon so we can confirm

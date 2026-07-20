@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { formatMoney } from "@/lib/format";
 import { CARRIERS, CARRIER_LABEL, trackingUrl } from "@/lib/tracking";
@@ -55,6 +55,7 @@ type OrderRow = {
   cancelRequestedAt: string | null;
   cancelReason: string | null;
   cancelRequestedByRole: "buyer" | "seller" | null;
+  unreadMessages: number;
   listing: {
     id: string;
     condition: string;
@@ -95,6 +96,7 @@ interface OrderGroup {
   cancelRequestedAt: string | null;
   cancelReason: string | null;
   cancelRequestedByRole: "buyer" | "seller" | null;
+  unreadMessages: number;
   reviewed: boolean;
   rating: number | null;
   shipName: string | null;
@@ -146,6 +148,7 @@ function groupOrders(rows: OrderRow[]): OrderGroup[] {
       cancelRequestedAt: cancelling?.cancelRequestedAt ?? null,
       cancelReason: cancelling?.cancelReason ?? null,
       cancelRequestedByRole: cancelling?.cancelRequestedByRole ?? null,
+      unreadMessages: first.unreadMessages,
       reviewed: first.reviewed,
       rating: first.rating,
       shipName: first.shipName,
@@ -251,6 +254,21 @@ function ShipByChip({ shipByAt }: { shipByAt: string | null }) {
     >
       {urgent ? "⚠ " : ""}Ship by {formatDay(shipByAt)}
     </span>
+  );
+}
+
+// Opens the buyer/seller message thread for this parcel — available at any
+// status (buyers may want to ask something before it even ships).
+function MessageButton({ g, onClick }: { g: OrderGroup; onClick: () => void }) {
+  return (
+    <button onClick={onClick} className="btn-ghost relative text-xs">
+      💬 Message
+      {g.unreadMessages > 0 && (
+        <span className="num absolute -right-1.5 -top-1.5 grid h-4 min-w-[16px] place-items-center rounded-full bg-accent px-1 text-[10px] font-bold text-ink-950">
+          {g.unreadMessages > 9 ? "9+" : g.unreadMessages}
+        </span>
+      )}
+    </button>
   );
 }
 
@@ -426,6 +444,7 @@ export function MarketplaceOrders({ offersEnabled = false }: { offersEnabled?: b
   const [shipFor, setShipFor] = useState<OrderGroup | null>(null);
   const [reportFor, setReportFor] = useState<OrderGroup | null>(null);
   const [cancelFor, setCancelFor] = useState<OrderGroup | null>(null);
+  const [messagesFor, setMessagesFor] = useState<OrderGroup | null>(null);
 
   function toast(msg: string, ms = 2200) {
     setFlash(msg);
@@ -545,6 +564,7 @@ export function MarketplaceOrders({ offersEnabled = false }: { offersEnabled?: b
           empty="No purchases yet — the marketplace grid is one tab away."
           renderActions={(g) => (
             <>
+              <MessageButton g={g} onClick={() => setMessagesFor(g)} />
               <TrackingLink g={g} />
               <PayoutBadge g={g} role="buyer" />
               {g.status === "SHIPPED" && !g.cancelRequestedAt && (
@@ -572,6 +592,7 @@ export function MarketplaceOrders({ offersEnabled = false }: { offersEnabled?: b
           empty="No sales yet."
           renderActions={(g) => (
             <>
+              <MessageButton g={g} onClick={() => setMessagesFor(g)} />
               {g.status === "PAID" && (
                 <>
                   <ShipByChip shipByAt={g.shipByAt} />
@@ -718,6 +739,16 @@ export function MarketplaceOrders({ offersEnabled = false }: { offersEnabled?: b
           onSubmit={async (reason) => {
             const ok = await groupAct(cancelFor.orderIds, { action: "request-cancel", reason }, "✓ Cancellation requested — waiting on the other party");
             if (ok) setCancelFor(null);
+          }}
+        />
+      )}
+
+      {messagesFor && (
+        <MessageThreadModal
+          group={messagesFor}
+          onClose={() => {
+            setMessagesFor(null);
+            load(); // refresh unread-count badges now that the thread's been read
           }}
         />
       )}
@@ -912,6 +943,134 @@ function ReportModal({
           <button onClick={onClose} className="btn-ghost text-sm">Cancel</button>
           <button onClick={() => onSubmit(message.trim())} disabled={busy || !valid} className="btn-primary text-sm disabled:opacity-50">
             {busy ? "Reporting…" : "Submit report"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface ThreadMessage {
+  id: string;
+  mine: boolean;
+  body: string;
+  createdAt: string;
+}
+
+// Buyer/seller chat thread for one parcel — scoped to a real order (not
+// pre-purchase listing questions). Polls the anchor order's messages endpoint
+// (see api/marketplace/orders/[id]/messages) — any order id in the group
+// resolves to the same shared thread server-side.
+function MessageThreadModal({ group, onClose }: { group: OrderGroup; onClose: () => void }) {
+  const [messages, setMessages] = useState<ThreadMessage[] | null>(null);
+  const [draft, setDraft] = useState("");
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const anchorOrderId = group.orderIds[0]!;
+
+  const load = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/marketplace/orders/${anchorOrderId}/messages`);
+      const data = await res.json();
+      if (res.ok) setMessages(data.messages ?? []);
+    } catch {
+      /* keep whatever's already shown — a failed poll shouldn't clear the thread */
+    }
+  }, [anchorOrderId]);
+
+  useEffect(() => {
+    void load();
+    const id = setInterval(load, 8000);
+    return () => clearInterval(id);
+  }, [load]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ block: "end" });
+  }, [messages]);
+
+  async function send() {
+    const body = draft.trim();
+    if (!body || sending) return;
+    setSending(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/marketplace/orders/${anchorOrderId}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ body }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Couldn't send — try again");
+        return;
+      }
+      setMessages((prev) => [...(prev ?? []), data.message]);
+      setDraft("");
+    } catch {
+      setError("Network error — try again.");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[85] flex items-center justify-center p-4" role="dialog" aria-modal="true">
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+      <div className="relative z-10 flex w-full max-w-md flex-col overflow-hidden rounded-2xl border border-ink-700 bg-ink-900 shadow-2xl" style={{ height: "min(80vh, 640px)" }}>
+        <div className="flex items-center justify-between border-b border-ink-700 px-4 py-3">
+          <div className="min-w-0">
+            <h2 className="truncate text-sm font-bold text-white">💬 {group.counterparty}</h2>
+            <p className="truncate text-xs text-slate-500">
+              {group.orders.length === 1 ? group.orders[0]!.listing?.card.name : `${group.orders.length} items`}
+            </p>
+          </div>
+          <button onClick={onClose} aria-label="Close" className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-slate-400 hover:bg-ink-800 hover:text-slate-200">✕</button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-4 py-3">
+          {messages === null ? (
+            <p className="mt-6 text-center text-sm text-slate-500">Loading…</p>
+          ) : messages.length === 0 ? (
+            <p className="mt-6 text-center text-sm text-slate-500">No messages yet — say hi 👋</p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {messages.map((m) => (
+                <li key={m.id} className={`flex ${m.mine ? "justify-end" : "justify-start"}`}>
+                  <div
+                    className={`max-w-[80%] whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-sm ${
+                      m.mine ? "bg-brand-500 text-ink-950" : "bg-ink-800 text-slate-200"
+                    }`}
+                  >
+                    {m.body}
+                    <div className={`mt-0.5 text-[10px] ${m.mine ? "text-ink-950/60" : "text-slate-500"}`}>
+                      {new Date(m.createdAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div ref={bottomRef} />
+        </div>
+
+        {error && <p className="px-4 text-xs text-rose-400">{error}</p>}
+        <div className="flex items-end gap-2 border-t border-ink-700 p-3">
+          <textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value.slice(0, 2000))}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                send();
+              }
+            }}
+            placeholder="Message…"
+            rows={1}
+            className="input max-h-24 flex-1 resize-none py-2"
+          />
+          <button onClick={send} disabled={sending || !draft.trim()} className="btn-primary shrink-0 text-sm disabled:opacity-50">
+            {sending ? "…" : "Send"}
           </button>
         </div>
       </div>

@@ -20,6 +20,12 @@ function button(label: string, url: string): string {
   return `<tr><td style="padding:4px 32px 24px"><a href="${url}" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">${label}</a></td></tr>`;
 }
 
+// Free-text (a chat message, unlike every other field in this file) — must be
+// escaped before landing in an HTML email.
+function escHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
 export interface OrderEmailInfo {
   orderId: string;
   orderNumber: number | null;
@@ -231,4 +237,20 @@ export async function sendCancelDeclinedEmail(to: string, o: OrderEmailInfo): Pr
       normal. If something's still wrong, use "Report a problem" on the order to get an admin involved.
     </td></tr>`;
   return sendEmail(to, `Cancellation declined — ${num}`, emailShell("Cancellation declined", inner + button("View order", `${SITE_URL}/marketplace/orders`), footer()));
+}
+
+// ─── Buyer/seller messaging ──────────────────────────────────────────────────
+
+// New message on an order thread — sent to whichever party didn't send it, so
+// a message always reaches them even if they aren't watching the bell.
+export async function sendNewMessageEmail(to: string, o: OrderEmailInfo, fromName: string, body: string): Promise<boolean> {
+  const num = formatOrderNumber(o.orderNumber) ?? o.orderId;
+  const preview = body.length > 300 ? `${body.slice(0, 300)}…` : body;
+  const inner = `
+    <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      <strong style="color:#fff">${escHtml(fromName)}</strong> sent you a message about order <strong style="color:#fff">${num}</strong>
+      (${o.quantity} × ${escHtml(o.cardName)}):
+    </td></tr>
+    <tr><td style="padding:4px 32px 16px;font-size:14px;color:#e2e6ec;font-style:italic;white-space:pre-wrap">"${escHtml(preview)}"</td></tr>`;
+  return sendEmail(to, `New message from ${fromName} — ${num}`, emailShell("New message", inner + button("Reply in My orders", `${SITE_URL}/marketplace/orders`), footer()));
 }

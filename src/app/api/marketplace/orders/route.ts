@@ -35,6 +35,28 @@ export async function GET() {
   });
   const byListing = new Map(listings.map((l) => [l.id, l]));
 
+  // Unread message count per parcel — messages are stored against one anchor
+  // order id per group (the alphabetically-first sibling; see
+  // api/marketplace/orders/[id]/messages/route.ts), so derive that same anchor
+  // per groupKey here to look counts up correctly.
+  const idsByGroupKey = new Map<string, string[]>();
+  for (const o of orders) {
+    const key = `${o.stripeSessionId ?? o.id}:${o.sellerId}`;
+    const arr = idsByGroupKey.get(key) ?? [];
+    arr.push(o.id);
+    idsByGroupKey.set(key, arr);
+  }
+  const anchorByGroupKey = new Map([...idsByGroupKey].map(([key, ids]) => [key, ids.slice().sort()[0]!]));
+  const anchorIds = [...new Set(anchorByGroupKey.values())];
+  const unreadCounts = anchorIds.length
+    ? await prisma.orderMessage.groupBy({
+        by: ["orderId"],
+        where: { orderId: { in: anchorIds }, senderId: { not: user.id }, readAt: null },
+        _count: { _all: true },
+      })
+    : [];
+  const unreadByAnchor = new Map(unreadCounts.map((r) => [r.orderId, r._count._all]));
+
   const shaped = orders.map((o) => ({
     id: o.id,
     orderNumber: o.orderNumber,
@@ -96,6 +118,7 @@ export async function GET() {
         ? o.seller.sellerProfile?.shopName ?? o.seller.displayName
         : o.buyer.displayName,
     listing: byListing.get(o.marketplaceListingId ?? "") ?? null,
+    unreadMessages: unreadByAnchor.get(anchorByGroupKey.get(`${o.stripeSessionId ?? o.id}:${o.sellerId}`)!) ?? 0,
   }));
 
   return NextResponse.json({ orders: shaped });
