@@ -33,7 +33,17 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   if (!parsed.success) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   const d = parsed.data;
 
-  const status = d.status ?? (d.quantity === 0 ? "SOLD_OUT" : listing.status);
+  // Quantity 0 -> SOLD_OUT and, the reverse a seller actually hits often,
+  // restocking (quantity 0 -> positive) auto-relists a SOLD_OUT listing back
+  // to ACTIVE — previously this fell through to `listing.status`, which was
+  // still SOLD_OUT, so bumping the quantity alone never brought it back.
+  const status =
+    d.status ??
+    (d.quantity === 0
+      ? "SOLD_OUT"
+      : d.quantity != null && d.quantity > 0 && listing.status === "SOLD_OUT"
+        ? "ACTIVE"
+        : listing.status);
   const updated = await prisma.marketplaceListing.update({
     where: { id: listing.id },
     data: {

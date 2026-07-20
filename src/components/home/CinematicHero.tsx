@@ -8,6 +8,7 @@ import { DailyWrapBanner } from "./DailyWrapBanner";
 import { HeroStats, type MarketStat } from "./HeroStats";
 import type { Country } from "@/lib/country";
 import type { MarketReportPost } from "@/lib/posts";
+import { MARKETPLACE_NAV_VISIBLE } from "@/components/nav-groups";
 
 // eBay marketplace domain per market (NZ has no eBay of its own → AU).
 const EBAY_DOMAIN: Record<string, string> = {
@@ -75,9 +76,15 @@ export function CinematicHero({
           compared across stores in Australia, New Zealand, the US, the UK and Singapore, updated daily.
         </p>
 
-        {/* CTAs (one primary + one secondary + the all-features launcher) */}
+        {/* CTAs (database + marketplace as the two color-coded primaries, one
+            secondary + the all-features launcher). Browse = blue, Marketplace =
+            green (the site's one brand accent) — deliberately distinct colors so
+            the two main entry points read as separate destinations at a glance. */}
         <div className="animate-fade-in [animation-delay:300ms] mt-8 flex flex-wrap items-center justify-center gap-3">
-          <Link href="/browse" className="btn-primary px-5 py-2.5 text-base">Browse the database</Link>
+          <Link href="/browse" className="btn bg-blue-500 px-5 py-2.5 text-base text-white hover:bg-blue-600">Browse the database</Link>
+          {MARKETPLACE_NAV_VISIBLE && (
+            <Link href="/marketplace" className="btn-primary px-5 py-2.5 text-base">🛒 Marketplace</Link>
+          )}
           <Link href="/decks" className="btn-ghost px-5 py-2.5 text-base">Top meta decks</Link>
           <CommandLauncherButton variant="hero" />
         </div>
