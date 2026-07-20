@@ -23,13 +23,15 @@ import { PrismaClient } from "@prisma/client";
 // etc. tables it also creates cost negligible storage empty; only PriceHistory /
 // ClickEvent get real traffic).
 
-// HISTORY_DATABASE_URL is the CURRENT history project (a fresh free-tier Neon DB,
-// swapped in 2026-07-17 after _3 exhausted its monthly transfer allowance and became
-// unreachable — P1001). _2/_3 are kept ONLY as fallbacks for anything not yet
-// migrated; they should be treated as read-only/near-exhausted, never the primary
-// target. Once _2's remaining data is copied across (see scripts/migrate-history.ts)
-// and nothing references _2/_3 anymore, those vars can be removed entirely.
+// HISTORY_DATABASE_URL_4 is the CURRENT history project (swapped in 2026-07-20
+// after the previous one — the base HISTORY_DATABASE_URL var, itself the
+// 2026-07-17 replacement for _3 — exhausted its monthly transfer allowance in
+// just 3 days). _2/_3/base are kept ONLY as fallbacks for anything not yet
+// migrated; treat them as read-only/near-exhausted, never the primary target.
+// Once everything's copied across (see scripts/migrate-history.ts) and nothing
+// references the older vars anymore, they can be removed entirely.
 const HISTORY_URL =
+  process.env.HISTORY_DATABASE_URL_4 ||
   process.env.HISTORY_DATABASE_URL ||
   process.env.HISTORY_DATABASE_URL_2 ||
   process.env.HISTORY_DATABASE_URL_3 ||

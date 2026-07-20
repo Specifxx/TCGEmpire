@@ -3,13 +3,14 @@
  * into the CURRENT history database — used when a Neon history project exhausts its
  * monthly network-transfer allowance and is replaced.
  *
- *   target  = HISTORY_DATABASE_URL (the current project; schema pushed first)
- *   sources = main DATABASE_URL + every OLDER history project (_2, _3), in order
+ *   target  = HISTORY_DATABASE_URL_4 if set, else HISTORY_DATABASE_URL (the
+ *             current project; schema pushed first) — mirrors src/lib/db-history.ts's
+ *             own priority, so this script always fills whatever the app itself reads.
+ *   sources = main DATABASE_URL + every OLDER history project (base, _2, _3), in order
  *
- * NOTE (2026-07-17): _3 exhausted its transfer allowance and went fully unreachable
- * (P1001), so the replacement reuses the base HISTORY_DATABASE_URL var name rather
- * than bumping to _4 — target resolution below reflects that (base wins, no longer
- * "highest suffix wins").
+ * NOTE (2026-07-20): the base HISTORY_DATABASE_URL project (itself the 2026-07-17
+ * replacement for _3) exhausted its transfer allowance in just 3 days, so this
+ * rotation DOES bump the suffix to _4 rather than reusing the base var name.
  *
  * The target is filled from ALL sources with skipDuplicates (the PriceHistory
  * unique key [cardId, country, day] dedupes overlaps), so running it is safe and
@@ -21,15 +22,16 @@
 import { PrismaClient } from "@prisma/client";
 
 const MAIN_URL = process.env.DATABASE_URL;
-const TARGET_URL = process.env.HISTORY_DATABASE_URL;
+const TARGET_URL = process.env.HISTORY_DATABASE_URL_4 || process.env.HISTORY_DATABASE_URL;
 
 if (!MAIN_URL) { console.error("DATABASE_URL is not set."); process.exit(1); }
-if (!TARGET_URL) { console.error("HISTORY_DATABASE_URL is not set — point it at the current history project first."); process.exit(1); }
+if (!TARGET_URL) { console.error("Neither HISTORY_DATABASE_URL_4 nor HISTORY_DATABASE_URL is set — point one at the current history project first."); process.exit(1); }
 
 // Every distinct source to pull from (main + older history projects), excluding the
 // target itself. De-duplicated by URL so we never read the same DB twice.
 const sourceUrls = [
   { label: "main (DATABASE_URL)", url: MAIN_URL },
+  { label: "HISTORY_DATABASE_URL", url: process.env.HISTORY_DATABASE_URL },
   { label: "HISTORY_DATABASE_URL_2", url: process.env.HISTORY_DATABASE_URL_2 },
   { label: "HISTORY_DATABASE_URL_3", url: process.env.HISTORY_DATABASE_URL_3 },
 ].filter((s): s is { label: string; url: string } => !!s.url && s.url !== TARGET_URL);
@@ -85,7 +87,7 @@ async function copyTable(from: PrismaClient, label: string, table: "priceHistory
 }
 
 async function run() {
-  console.log("Target: HISTORY_DATABASE_URL");
+  console.log(`Target: ${process.env.HISTORY_DATABASE_URL_4 ? "HISTORY_DATABASE_URL_4" : "HISTORY_DATABASE_URL"}`);
   console.log(`Sources: ${sources.map((s) => s.label).join(", ") || "(none)"}\n`);
 
   console.log("— Counts before —");
