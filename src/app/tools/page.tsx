@@ -7,18 +7,17 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: { absolute: "Free Riftbound TCG Tools & Calculators | RiftCompare" },
   description:
-    "Every RiftCompare tool in one place: selling-fee (net proceeds) calculator, should-I-grade EV calculator, box EV, deck cost and trade calculators, plus the Premium Deal Finder and value screeners.",
+    "Every RiftCompare tool in one place: box EV, best basket, deck and trade calculators, plus the Premium Deal Finder and value screeners.",
   alternates: { canonical: "/tools" },
   keywords: [
     "riftbound tools",
     "riftbound tcg calculator",
     "riftbound card value calculator",
-    "riftbound selling fee calculator",
     "riftbound box ev",
   ],
   openGraph: {
     title: "Free Riftbound TCG Tools & Calculators",
-    description: "Net proceeds, grading EV, box EV, best basket, deck and trade calculators — plus the Premium Deal Finder & value screeners.",
+    description: "Box EV, best basket, deck and trade calculators — plus the Premium Deal Finder & value screeners.",
     url: `${SITE_URL}/tools`,
   },
 };
@@ -58,25 +57,6 @@ const GROUPS: ToolGroup[] = [
         emoji: "🧺",
         title: "Best basket",
         desc: "Building a want-list? Find the cheapest single-store (or split) basket to buy it all.",
-      },
-    ],
-  },
-  {
-    label: "Selling & grading",
-    tools: [
-      {
-        href: "/tools/net-proceeds",
-        emoji: "💵",
-        title: "Net-proceeds calculator",
-        desc: "Enter a sale price and see what you actually pocket after eBay / TCGplayer fees, postage and optional grading.",
-        badge: "New",
-      },
-      {
-        href: "/tools/grade-ev",
-        emoji: "🎯",
-        title: "Should I grade it?",
-        desc: "Weigh a raw card's value against PSA 10/9 odds and grading cost to see if submitting it pays off.",
-        badge: "New",
       },
     ],
   },
@@ -154,9 +134,9 @@ export default function ToolsHubPage() {
 
       <h1 className="text-2xl font-extrabold text-white sm:text-3xl">Tools &amp; calculators</h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-        Every RiftCompare tool in one place — most are free, no sign-up. Price-check a card, see what you&apos;d
-        actually pocket after fees, work out whether a box or a grade pays off, and build decks for less. The two
-        pro screeners (<span className="text-gold">Premium</span>) go deeper for keen buyers and collectors.
+        Every RiftCompare tool in one place — most are free, no sign-up. Price-check a card, work out whether a box
+        is worth ripping, and build decks for less. The two pro screeners (<span className="text-gold">Premium</span>)
+        go deeper for keen buyers and collectors.
       </p>
 
       {GROUPS.map((group) => (

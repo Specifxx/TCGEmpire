@@ -681,7 +681,7 @@ Riftbound is exciting, but tracking down the cheapest copy of a specific card ac
 - **[Explore meta decks](/decks)** — real top-finishing tournament lists, with a live "build cost" so you know exactly what it costs to assemble each one.
 - **[The RiftCompare Index](/market)** and **[price movers](/movers)** — a daily read on the whole Riftbound singles market, and which cards are spiking, cooling, or quietly undervalued.
 - **[Deck pricer](/deck)** — paste or build a decklist and price the entire thing across every store in one pass.
-- **Tools** — an arbitrage/deal finder, a box-EV calculator, and a net-proceeds calculator for anyone selling.
+- **Tools** — an arbitrage/deal finder and a box-EV calculator.
 - **[Riftle](/riftle)** — our free daily Wordle-style "guess the card" game, plus an Unlimited mode.
 - **[Buy & sell on the marketplace](/marketplace)** — trade directly with verified sellers.
 - **Wishlist, price alerts and portfolio tracking** — for a free account, track the cards you want, get notified on price drops, and value your whole collection.

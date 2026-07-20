@@ -14,6 +14,11 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Marketplace — buy Riftbound cards",
   description: "Buy Riftbound cards directly from verified sellers on RiftCompare.",
+  // Always canonicalize to the clean URL — ?cardId=… is just a client-side
+  // "open this card" hint now (see the listings query below), not a
+  // different page, so every arrival path (search, a card page's deep link,
+  // a bookmark) points Google at the one real, indexable marketplace URL.
+  alternates: { canonical: "/marketplace" },
   // Indexable once the marketplace is publicly launched; noindex while the
   // private beta shows non-testers only a Coming-Soon teaser (NEXT_PUBLIC_ env
   // is baked at build time, so this resolves at build like the nav flag).
@@ -66,15 +71,23 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
     );
   }
 
-  // Deep-linked from a card page's marketplace hero (?cardId=…) — narrows to that
-  // one card's listings. Purchases stay same-region-only at launch (no cross-border
-  // shipping surprises), but we no longer hide OTHER regions' listings outright —
-  // they're still useful price signal, so we fetch every region and mark each offer
-  // `inRegion` for the client to gray out/disable instead of dropping silently.
+  // ?cardId=… (deep-linked from a card page's marketplace hero) used to FILTER
+  // this query down to just that one card — which meant clicking through from
+  // a card page landed on a thin single-card page instead of the real
+  // marketplace, and made /marketplace?cardId=X a materially different (and
+  // therefore unindexable/duplicate-content) variant of the canonical
+  // /marketplace URL. It's now purely a client-side "scroll to and open this
+  // card" hint (via `openCardId` below) — the query always returns the full
+  // grid, so every visitor sees the real marketplace regardless of how they
+  // arrived. Purchases stay same-region-only at launch (no cross-border
+  // shipping surprises), but we don't hide OTHER regions' listings outright —
+  // they're still useful price signal, so we fetch every region and mark each
+  // offer `inRegion` for the client to gray out/disable instead of dropping
+  // silently.
   const listings = await prisma.marketplaceListing.findMany({
-    where: { status: "ACTIVE", quantity: { gt: 0 }, ...(cardId ? { cardId } : {}) },
+    where: { status: "ACTIVE", quantity: { gt: 0 } },
     orderBy: { createdAt: "desc" },
-    take: cardId ? 50 : 400, // egress rule: no unbounded reads on a per-request page
+    take: 400, // egress rule: no unbounded reads on a per-request page
 
     include: {
       card: {

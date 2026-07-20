@@ -264,10 +264,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             )}
             <Link href="/widgets" className="text-slate-300 hover:text-brand-400">Price widget</Link>
             <span className="text-ink-700">·</span>
-            <Link href="/tools/net-proceeds" className="text-slate-300 hover:text-brand-400">Selling fees</Link>
-            <span className="text-ink-700">·</span>
-            <Link href="/tools/grade-ev" className="text-slate-300 hover:text-brand-400">Grade or not</Link>
-            <span className="text-ink-700">·</span>
             <a href={`mailto:${CONTACT_EMAIL}`} className="text-gold hover:underline">{CONTACT_EMAIL}</a>
           </div>
           {/* Cross-promotion: our sister site for the Pokémon TCG. */}

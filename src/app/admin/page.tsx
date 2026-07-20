@@ -80,6 +80,12 @@ const TOOLS: Tool[] = [
     icon: "🔥",
     desc: "Demand snapshots — what people are searching and wishlisting.",
   },
+  {
+    href: "/admin/loyalty",
+    title: "Loyal users",
+    icon: "🏆",
+    desc: "Top marketplace buyers/sellers, biggest collections, longest-tenured Premium members.",
+  },
 ];
 
 export default async function AdminHome({ searchParams }: { searchParams: { key?: string } }) {
