@@ -1,10 +1,12 @@
 # RiftCompare Marketplace
 
-> Note: most of this doc predates the open-selling P2P rebuild (any signed-in
-> verified-email user can sell; Stripe Connect payouts; system-driven release —
-> see `src/lib/order-actions.ts`, `src/lib/connect.ts`,
-> `src/app/api/cron/marketplace-maintenance/route.ts`). Treat the tables below
-> as historical; the code is the source of truth for current behavior.
+> **Publicly launched** (`NEXT_PUBLIC_MARKETPLACE_PUBLIC=1` in production). Any
+> signed-in, verified-email user can list and sell; real Stripe Connect (Express)
+> escrow handles payouts; funds release system-driven — see
+> `src/lib/order-actions.ts`, `src/lib/connect.ts`,
+> `src/app/api/cron/marketplace-maintenance/route.ts`. The "Research" section
+> and most of the tables further down describe the pre-launch plan and are kept
+> for history; the code is the source of truth for current behavior.
 
 ## Phase 2 (deferred)
 
@@ -23,55 +25,56 @@ Recorded here rather than built now, in priority order:
   with the new-seller listing cap in `lib/marketplace.ts`).
 - **Shipping-label generation** — sellers currently hand-type a carrier +
   tracking number after buying postage elsewhere.
-- **In-app notification center** — every order-lifecycle event is email-only
-  today (`src/lib/marketplace-email.ts`); no notification model/UI exists.
+- Seller slug URLs for storefronts (`/marketplace/seller/[id]` is userId-keyed today).
+- GST/tax handling and buyer receipts/invoices — none exist yet.
 
 ---
 
-A verified-seller marketplace built into RiftCompare. Sellers list cards; their
-cheapest active listing per market appears in the normal price comparison as the
-**"RiftCompare Marketplace"** source. Public page is **Coming Soon**; verified
-sellers + a test buyer get functional (test-mode) access today.
+A self-serve P2P marketplace built into RiftCompare. Any signed-in user with a
+verified email can open a shop and list cards; sellers' cheapest active listing
+per market appears in the normal price comparison as the **"RiftCompare
+Marketplace"** source, and (once public — see below) as `Offer` entries in each
+card page's Product structured data. Buyers pay through real Stripe Checkout;
+funds are held in RiftCompare's platform Stripe balance and only transferred to
+the seller's connected account after delivery is confirmed (by the buyer) or
+auto-released 14 days after shipping.
 
 ## What's live now
 
 | Piece | Status |
 | --- | --- |
-| `isVerifiedSeller` — **admin-only** (session-computed; the raw per-user DB flag is ignored) | ✅ |
-| Marketplace visibility — hidden from the public (`MARKETPLACE_PUBLIC` unset); admins can always view/manage it even while hidden | ✅ `canViewMarketplaceListings(email, isAdmin)` |
-| `/marketplace` — Coming-Soon page + live listings | ✅ (in the "More" nav) |
-| `/marketplace/sell` — seller dashboard (shop + shipping + listings) | ✅ admins only |
+| Marketplace visibility | ✅ **public** — `NEXT_PUBLIC_MARKETPLACE_PUBLIC=1`; `canViewMarketplaceListings()` opens to everyone |
+| `isVerifiedSeller` | ✅ self-serve — any signed-in user with a verified email (`src/lib/auth.ts`), no manual admin approval |
+| `/marketplace` — live grid, checkout, cart | ✅ indexable (nav chip + homepage banner promote it) |
+| `/marketplace/sell` — seller dashboard (shop + shipping + listings), gated on an explicit seller-terms agreement checkbox | ✅ |
 | Listing API (`/api/marketplace/listings*`, `/profile`) | ✅ |
 | Listings shown in card price comparison (all regions) | ✅ via `importMarketplaceListings()` |
-| Buy flow (`/api/marketplace/buy`) | ✅ **test mode** — settles the demo wallet, no real money |
-| Real Stripe Checkout (`/api/marketplace/stripe/checkout` + webhook) | ✅ code live — activates automatically once `STRIPE_SECRET_KEY` is set (already set in prod for Premium) |
-| Seller's own shipping: $10 AUD flat, Australia | ✅ interim — seeded via `scripts/marketplace-seed.ts` on the owner's `SellerProfile` |
-| Fund holding until delivery confirmed | ✅ app-side signal (PAID → SHIPPED → COMPLETED, seller or buyer can confirm); real hold requires switching **Stripe Dashboard → Settings → Payouts → Manual** (see "Escrow" below) |
-| Stripe Connect (multi-seller payouts) | ⛔ not needed — single-seller for now, see below |
+| Real Stripe Checkout + escrow (`/api/marketplace/stripe/checkout` + webhook, `src/lib/connect.ts`) | ✅ live — "separate charges and transfers": buyer's full payment lands in the platform's own Stripe balance; seller is paid `total − 5% fee` via a Transfer only after delivery |
+| Stripe Connect (Express) seller onboarding + payouts | ✅ `SellerProfile.stripeAccountId` / `payoutsEnabled`, gated on the `account.updated` webhook |
+| Per-seller shipping (flat rate + free-over threshold + dispatch days) | ✅ `SellerProfile` |
+| System-driven fund release (no admin review bottleneck) | ✅ auto-release 14d after shipping unless disputed; admin `/admin/marketplace` handles only early-release requests + stale/disputed exceptions |
+| In-app notification center (bell + unread badge) | ✅ `src/lib/notifications.ts`, `NotificationBell.tsx` |
+| Admin GMV / 5% fee-revenue reporting | ✅ `/admin/marketplace` |
+| Google Search (Product JSON-LD offers, indexable pages, sitemap) | ✅ automatic now that the flag is on |
+| Google Shopping feed (`/merchant-feed.xml`) | ✅ code live — still needs the one-time Merchant Center registration (see repo chat history / commit messages for the checklist) |
+| Beta labeling + one-click bug reports | ✅ `MarketplaceBetaBadge` on every marketplace surface, deep-links into `/support` |
 
-**Accounts seeded on deploy:**
-- Verified seller (admin-gated): `mastermisclick@gmail.com` / display name `Specifix`.
-- Test buyer: `test@test.com` / password `testing1234` (with a $1,000 demo wallet).
+## Holding funds until delivery (real Connect escrow)
 
-## Holding funds until delivery (single-seller, no Connect)
+Real platform-held escrow via Stripe's "separate charges and transfers" pattern
+(`src/lib/connect.ts`) — not the single-seller manual-payout workaround this
+section used to describe. A buyer's full payment lands in **RiftCompare's own**
+Stripe balance (no `application_fee_amount`/destination charge at checkout);
+the seller's cut (`total − feeCents`, the 5% platform fee) is only sent to
+their connected Express account via a `Transfer` once `releaseFundsForOrder()`
+runs — triggered by the buyer confirming delivery, or the 14-day auto-release
+cron if they don't. The platform's own fee revenue simply stays in the
+platform Stripe balance and pays out to the owner's bank on that account's own
+normal payout schedule (separate from any seller's Connect payout schedule).
 
-Because this is a single-seller Stripe Checkout integration (not Connect), a real
-sale's money lands directly in your own Stripe balance per Stripe's normal payout
-schedule — the app has no way to intercept or delay a transfer that never happens
-through it. The practical way to "hold funds until delivered" today:
-
-1. **In the Stripe Dashboard** (you'll need to do this yourself): *Settings → Payouts
-   → Payout schedule → Manual*. This stops Stripe from auto-depositing to your bank;
-   money sits in your Stripe balance until you manually trigger a payout.
-2. **In the app**: every marketplace order tracks `PAID → SHIPPED → COMPLETED`. Mark
-   an order shipped with a tracking number, and either the buyer or you (the seller)
-   can confirm delivery once tracking shows it arrived. The Sales tab shows a
-   🔒 Held / 🔓 Released badge per order — once it says Released, it's safe to go
-   trigger the manual Stripe payout for that money.
-
-This isn't true platform-held escrow (Stripe already has your money either way) but
-it gives you the same practical control: nothing gets paid out to your bank until
-you've confirmed the buyer actually received the card.
+Every marketplace order tracks `PENDING → PAID → SHIPPED → COMPLETED` (or
+`CANCELLED`); the Sales/Purchases tabs in My Orders show a 🔒 Held / 🔓
+Released badge and the exact scheduled release date per order.
 
 ## Data model
 
@@ -97,34 +100,31 @@ collides. It runs in the price importer **and** after every listing change, so t
 comparison updates immediately. Marketplace prices feed the per-market "lowest"
 recompute like any other source.
 
-## Going live with real payments — Stripe Connect
+## Going live with real payments — Stripe Connect (✅ done)
 
-The test-mode buy endpoint is the seam. To go live:
+This section originally scoped the Connect migration as future work; it's now
+built and live (`src/lib/connect.ts`, `src/app/api/marketplace/stripe/*`,
+`src/app/api/marketplace/connect-webhook/route.ts`). Kept below for the
+original reasoning/links, not as a to-do list.
 
-1. **Stripe Connect (Express).** Sellers onboard → `SellerProfile.stripeAccountId`, gate listing/payout on `payoutsEnabled` (from `account.updated` webhook).
-2. **Checkout = "separate charges & transfers."** Buyer is charged to the platform balance (held); the seller is paid by a **transfer you create only after delivery is confirmed** (escrow). Keep the platform fee (`MARKETPLACE_FEE_BPS`, default 3%) as the application fee.
-3. **Escrow state machine** on `Order`: `PENDING_PAYMENT → PAID_HELD → SHIPPED → DELIVERED → RELEASED / REFUNDED / DISPUTED` + tracking fields + a `Dispute` table.
-4. **Webhooks** (`/api/stripe/webhook`): `payment_intent.succeeded`, `account.updated`, `charge.dispute.created`, signature-verified + idempotent.
-5. **Legal:** the platform never custodies funds (Stripe does), so no AFSL/AUSTRAC of your own — confirm with a lawyer; GST applies to your fee. Don't ship to Production without ToS + a lawyer/accountant sign-off.
-
-Env to add when ready:
 ```
 STRIPE_SECRET_KEY=...
 STRIPE_WEBHOOK_SECRET=...
+STRIPE_CONNECT_WEBHOOK_SECRET=...
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=...
-MARKETPLACE_FEE_BPS=300   # 3% platform fee (optional override)
+MARKETPLACE_FEE_BPS=500   # 5% platform fee (current default)
 ```
 
-The full Stripe Connect escrow plan (state machine, exact API calls, chargeback
-handling) was scoped earlier and applies directly here.
+Note: no ongoing GST/tax handling or buyer invoices exist yet — see Phase 2.
 
-## Launch checklist
+## Launch checklist (✅ shipped)
 
-- [ ] Decide buyer-facing copy is final; flip the page from "Coming Soon".
-- [ ] Stripe Connect onboarding for sellers + payouts gated on KYC.
-- [ ] Escrow + dispute flow; tracked-shipping requirement.
-- [ ] ToS / refund policy / GST handling.
-- [ ] Replace the test-wallet buy with the Stripe checkout.
+- [x] Public copy finalized; marketplace flipped on (`NEXT_PUBLIC_MARKETPLACE_PUBLIC=1`).
+- [x] Stripe Connect onboarding for sellers + payouts gated on `payoutsEnabled`.
+- [x] Escrow (system-driven release) + dispute flow; admin exception queue.
+- [x] Explicit seller-terms agreement checkbox at shop setup.
+- [x] Real Stripe Checkout replaces the old test-mode/demo-wallet buy flow (demo wallet subsystem deleted).
+- [ ] Formal ToS/refund-policy legal review and GST handling — not yet done, flagged here as outstanding.
 
 ---
 
