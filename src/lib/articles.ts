@@ -2488,6 +2488,172 @@ Browse **[every Riftbound single](/singles)**, jump to a set — **[Origins](/se
 
 Want the store-by-store breakdown for your market? See **[Australia](/blog/buy-riftbound-cards-australia)**, **[the US](/blog/buy-riftbound-cards-us)**, **[the UK](/blog/buy-riftbound-cards-uk)**, or the **[general buying guide](/guides/where-to-buy-riftbound-cards)**.`,
   },
+  {
+    slug: "how-to-buy-on-riftcompare-marketplace",
+    category: "guide",
+    title: "How to Buy Riftbound Cards on the RiftCompare Marketplace",
+    excerpt:
+      "A step-by-step guide to buying Riftbound singles directly from other players on the RiftCompare Marketplace — finding a listing, checking out, and what happens to your money until the card actually arrives.",
+    author: "RiftCompare",
+    date: "2026-07-20",
+    readMins: 6,
+    tags: ["marketplace", "buying", "guide", "escrow", "p2p"],
+    browseCta: {
+      href: "/marketplace",
+      label: "Browse the Marketplace →",
+      blurb: "See live listings from verified sellers in your market, ready to buy right now.",
+    },
+    body: `RiftCompare has always compared prices across stores — now you can also buy **directly from other players** through the **[RiftCompare Marketplace](/marketplace)**, a built-in P2P marketplace with buyer protection baked in. Here's exactly how it works, start to finish.
+
+## 1. Find a listing
+
+Marketplace listings show up two places:
+
+- **[The marketplace grid](/marketplace)** — browse every active listing in your market, filter by card, and see each seller's shop, condition and price.
+- **Right inside the price comparison.** If a seller's price beats every store for a card, it appears as a normal row on that card's page, tagged **"RiftCompare Marketplace."** You don't have to go looking for it separately — it's just another price to compare.
+
+Every listing shows the card's **condition** (Near Mint through Damaged), whether it's **foil**, the **seller's shop name and rating**, and a price in your local currency. Listings only show sellers shipping within your own market — no cross-border shipping surprises.
+
+## 2. Check out
+
+Add what you want to your cart and check out through **Stripe** — the same secure checkout used for card payments everywhere else. You'll see the item price, an estimated shipping cost, and the total before you confirm.
+
+Your payment does **not** go straight to the seller. It's held by RiftCompare until the order is actually delivered — that's the whole point of buying through the marketplace instead of a direct message or a forum trade.
+
+## 3. What happens after you pay
+
+- The seller gets notified immediately and has **5 days to ship** your order and add tracking. If they don't, you're **automatically refunded in full** — no back-and-forth required.
+- Once they mark it shipped, you'll get an email with the carrier and tracking number, plus an estimated delivery window.
+- Your money stays held the whole time your order is in transit.
+
+## 4. Confirm delivery (or let it auto-release)
+
+When your card arrives, open **[My orders](/marketplace/orders)** and tap **"Got it"** to confirm delivery — this instantly releases the seller's payout and closes out the order.
+
+Forget to confirm? No problem — funds **auto-release 14 days after the order ships** either way, so a seller never gets stuck waiting on you to click a button. You can also message the seller directly from the order if you want to check in before then.
+
+## 5. Message the seller
+
+Every order has a built-in chat thread with the seller — ask about shipping, condition, anything. No need to hunt down a Discord or trade forum to sort out a question about your order.
+
+## 6. If something goes wrong
+
+Tap **"Report a problem"** on the order. This pauses the scheduled release immediately and puts a real person on it — not an automated dispute bot. Common cases:
+
+- **Never shipped in time** → automatic full refund, no report needed.
+- **Item not as described / damaged / never arrived** → report it and we'll sort out a refund.
+- **Just have a question first?** Message the seller before it becomes a problem — most things are a shipping delay, not a scam.
+
+## Why this is different from a normal trade
+
+Buying from a random seller in a Discord server or Facebook group means sending money and hoping. On the RiftCompare Marketplace, your payment is never released until you have the card in hand (or the deadline passes with no dispute) — the platform is the thing standing between "I paid" and "I got scammed," not your judgment of a stranger's profile picture.
+
+The marketplace is in **beta**, which just means it's new — if anything looks off, there's a "Found a bug? Report it" link on every marketplace page that comes straight to us.
+
+## Ready to buy?
+
+**[Browse the marketplace](/marketplace)** to see what's listed right now, or check a specific card's page — marketplace listings show up right alongside every store price. Have cards to sell instead? **[Open a shop](/marketplace/sell)** — it's free to list.`,
+  },
+  {
+    slug: "riftcompare-marketplace-buyer-protection-explained",
+    category: "blog",
+    title: "Is the RiftCompare Marketplace Safe? Buyer Protection, Escrow & Refunds Explained",
+    excerpt:
+      "How the RiftCompare Marketplace actually protects your money when buying Riftbound cards from another player — escrow, auto-refunds, ship deadlines and what happens if a trade goes wrong.",
+    author: "RiftCompare",
+    date: "2026-07-20",
+    readMins: 5,
+    tags: ["marketplace", "safety", "escrow", "buyer-protection", "trust"],
+    browseCta: {
+      href: "/marketplace/buyer-protection",
+      label: "Read the full buyer protection policy →",
+      blurb: "The exact rules — ship deadlines, release dates and how disputes are handled.",
+    },
+    body: `Buying a card from a stranger online is always a little nerve-wracking — you're trusting someone you've never met to actually ship what they said they'd ship. The RiftCompare Marketplace is built specifically to remove that risk. Here's exactly how, with no marketing fluff.
+
+## Your money doesn't go to the seller — not yet
+
+When you pay for a marketplace order, the money is held by RiftCompare, not sent to the seller. It only gets released once one of two things happens:
+
+1. **You confirm delivery** — you tap "Got it" once the card arrives, and the seller is paid out right then.
+2. **14 days pass after the order ships** with no dispute — funds auto-release automatically, so a seller isn't left waiting forever on a buyer who forgot to click a button.
+
+Either way, a seller only ever gets paid *after* the card is genuinely on its way to you and the delivery window has had a chance to play out.
+
+## What if the seller just doesn't ship?
+
+Every seller has **5 days from payment** to mark an order shipped and add tracking. Miss that window, and the order **automatically cancels and refunds you in full** — you don't have to notice, complain, or file anything. It just happens.
+
+## What if the card isn't what was listed, or never turns up?
+
+Tap **"Report a problem"** on the order (found in **[My orders](/marketplace/orders)**). This immediately pauses the scheduled fund release — the seller doesn't get paid while your report is open — and puts it in front of our team to sort out, whether that's a refund or getting the seller to make it right.
+
+This is different from most peer-to-peer trading (Discord, Facebook groups, trade forums), where once you've sent payment there's no mechanism to get it back if the other person ghosts.
+
+## Who are these sellers, anyway?
+
+Anyone selling on the marketplace needs a **verified email account** and has to explicitly agree to the marketplace seller terms before their shop goes live. Every seller has a public shop page with **ratings and reviews from past buyers** — check it before buying from someone new, the same way you'd check feedback on any other platform.
+
+## Can I talk to the seller before worrying?
+
+Yes — every order has built-in messaging with the seller. If tracking looks stalled or you have a question about condition, message them first. Most "is this a scam?" moments turn out to be a normal shipping delay once you actually ask.
+
+## The short version
+
+| Question | Answer |
+| --- | --- |
+| Where does my payment go when I pay? | Held by RiftCompare, not the seller |
+| When does the seller get paid? | After you confirm delivery, or 14 days after shipping, whichever comes first |
+| Seller doesn't ship in time? | Automatic full refund, no action needed from you |
+| Item's wrong / damaged / never arrives? | Report it — release pauses instantly, a real person handles it |
+| Can I message the seller? | Yes, directly on the order |
+
+Full details, including the exact policy language, are on the **[buyer protection page](/marketplace/buyer-protection)**.
+
+## Ready to buy?
+
+**[Browse the marketplace](/marketplace)** and buy with your payment protected the whole way through. New here? Start with **[how to buy on the marketplace](/guides/how-to-buy-on-riftcompare-marketplace)**.`,
+  },
+  {
+    slug: "marketplace-vs-stores-where-to-buy-riftbound",
+    category: "blog",
+    title: "Marketplace vs Stores: Where Should You Buy Riftbound Cards?",
+    excerpt:
+      "RiftCompare shows you store prices AND player-to-player marketplace listings side by side. Here's when to buy from a store and when the marketplace is the better (or cheaper) call.",
+    author: "RiftCompare",
+    date: "2026-07-20",
+    readMins: 5,
+    tags: ["marketplace", "buying", "stores", "comparison", "guide"],
+    body: `RiftCompare has always compared prices across dozens of stores. Now it also has a **[player-to-player marketplace](/marketplace)** built in — so which one should you actually buy from? Short answer: you don't have to choose, because we show you both at once. Here's how to think about it.
+
+## They're not competitors — they're the same comparison
+
+Marketplace listings don't live in a separate corner of the site. When a seller's marketplace price beats every store for a card, it shows up as **just another row** in that card's normal price comparison, tagged "RiftCompare Marketplace." You're already comparing both every time you search a card — you just might not have noticed.
+
+## When a store is the better call
+
+- **You want it today, or close to it.** Most stores have same-day or next-day dispatch and established shipping times. Marketplace sellers get 5 days to ship, which is usually faster but isn't guaranteed like a store's stated dispatch time.
+- **You're buying sealed product.** Booster boxes, Proving Grounds and packs are store territory — the marketplace is singles-only.
+- **You want the absolute path of least resistance.** Stores are businesses; there's no seller to coordinate with, no delivery confirmation step. Pay, wait, done.
+
+## When the marketplace is the better call
+
+- **The price is genuinely better.** Individual sellers don't carry store overhead, so marketplace listings frequently undercut retail — that's *why* they show up as the top price on a card page in the first place.
+- **You're after a specific condition or printing** a store doesn't have in stock. Marketplace sellers list exactly what's in their binder, including played copies at played-copy prices, alt-arts, and printings that sell out at retail in minutes.
+- **You want to actually talk to the seller.** Built-in messaging means you can ask "is this really Near Mint?" before you buy, something you can't do with a store listing.
+
+## The trust question, answered honestly
+
+The one real hesitation buying from a store vs. a marketplace seller is trust — a store is a business with a track record; a marketplace seller is a person. That's exactly why the marketplace holds your payment in **escrow** until delivery is confirmed (or auto-releases 14 days after shipping), and auto-refunds you in full if a seller doesn't ship within 5 days. You get the pricing upside of buying peer-to-peer without giving up the safety net of buying from a store. Full breakdown: **[how buyer protection works](/blog/riftcompare-marketplace-buyer-protection-explained)**.
+
+## The practical answer
+
+Just search the card. Whatever's cheapest — store or marketplace listing — shows up first, in your currency, with shipping factored in. You don't need to decide in advance; **[the card database](/browse)** decides for you every time.
+
+## Ready to buy?
+
+**[Search any card](/browse)** to see stores and marketplace listings compared side by side, or go straight to the **[marketplace grid](/marketplace)** to browse player listings. First time buying from a seller? Start with **[how to buy on the marketplace](/guides/how-to-buy-on-riftcompare-marketplace)**.`,
+  },
 ];
 
 export function getArticles(category?: ArticleCategory): Article[] {
