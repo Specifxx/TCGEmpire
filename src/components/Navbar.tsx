@@ -8,6 +8,7 @@ import { CountrySwitcher } from "./CountrySwitcher";
 import { NavUser } from "./NavUser";
 import { PremiumButton } from "./PremiumButton";
 import { DISCORD_URL } from "@/lib/site";
+import { MARKETPLACE_NAV_VISIBLE } from "./nav-groups";
 
 // NO server-side session read here: the navbar renders on every route, so a
 // cookies() read would force the whole site dynamic (killing ISR). NavUser
@@ -64,6 +65,18 @@ export function Navbar() {
           <Link href="/trade" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:block sm:px-2.5">
             Trade
           </Link>
+          {/* Marketplace — filled brand chip (not a plain text link) so the newly
+              launched P2P marketplace is the most visually loud thing in the bar
+              besides the logo. Only appears once MARKETPLACE_NAV_VISIBLE (mirrors
+              NEXT_PUBLIC_MARKETPLACE_PUBLIC). */}
+          {MARKETPLACE_NAV_VISIBLE && (
+            <Link
+              href="/marketplace"
+              className="hidden items-center gap-1 rounded-lg bg-brand-500 px-2.5 py-2 text-sm font-bold text-ink-950 shadow-sm transition-colors hover:bg-brand-400 sm:flex"
+            >
+              🛒 Marketplace
+            </Link>
+          )}
           {/* Premium — one-click into the upsell dialog from anywhere. */}
           <PremiumButton className="hidden rounded-lg px-2 py-2 text-sm font-semibold text-gold hover:bg-ink-800 sm:block sm:px-2.5">
             ✦ Premium

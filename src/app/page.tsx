@@ -17,6 +17,7 @@ import { CinematicHero } from "@/components/home/CinematicHero";
 import { MarketPulse } from "@/components/home/MarketPulse";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
+import { MARKETPLACE_NAV_VISIBLE } from "@/components/nav-groups";
 
 // REAL ISR: renders a market-NEUTRAL baseline (no cookie/header reads — the
 // indexed copy names all four markets, data is fetched for the AU baseline) so
@@ -148,6 +149,29 @@ export default async function HomePage() {
         statsByCountry={statsByCountry}
         wrap={latestWrap}
       />
+
+      {/* Marketplace launch banner — the single most vibrant CTA on the page,
+          right under the hero, so it's the first thing a visitor sees below
+          the fold. Only shown once MARKETPLACE_NAV_VISIBLE (mirrors
+          NEXT_PUBLIC_MARKETPLACE_PUBLIC), same flag as the nav chip. */}
+      {MARKETPLACE_NAV_VISIBLE && (
+        <Reveal>
+          <Link
+            href="/marketplace"
+            className="group flex flex-wrap items-center justify-between gap-4 overflow-hidden rounded-2xl border border-brand-500/50 bg-gradient-to-br from-brand-500/20 via-ink-900 to-ink-900 p-6 transition-colors hover:border-brand-400"
+          >
+            <div className="min-w-0">
+              <span className="chip bg-brand-500 text-[10px] font-extrabold uppercase tracking-wide text-ink-950">New · RiftCompare Marketplace</span>
+              <h2 className="mt-2 text-xl font-extrabold text-white sm:text-2xl">Buy &amp; sell Riftbound cards directly with other players</h2>
+              <p className="mt-1 max-w-2xl text-sm text-slate-300">
+                Browse listings from verified sellers, or open your own shop and start selling — every purchase is
+                protected: funds are held by RiftCompare until your order arrives.
+              </p>
+            </div>
+            <span className="btn-primary shrink-0 whitespace-nowrap text-sm group-hover:brightness-110">🛒 Explore Marketplace →</span>
+          </Link>
+        </Reveal>
+      )}
 
       {/* Live Index pulse — only until the first daily wrap exists; once it does, the
           top banner is the single wrap/index element and this is skipped. */}
