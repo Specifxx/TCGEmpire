@@ -78,12 +78,17 @@ export type PriceMovers = { spiking: Mover[]; plummeting: Mover[]; value: Mover[
 // Only consider cards worth caring about, to keep the lists signal-rich (a $0.50
 // common doubling to $1 isn't interesting).
 const MIN_CENTS = 300; // $3
-const WINDOW_DAYS = 35;
+// 21 (was 35) — cut for history-DB egress: this reads the WHOLE market's history
+// every recompute (~1200 cards × WINDOW_DAYS rows), so each day trimmed here is a
+// direct, proportional cut. 21 days still comfortably covers the 7-day-back
+// reference the movers calc needs; "recent high" just means a slightly shorter
+// lookback (3 weeks instead of 5).
+const WINDOW_DAYS = 21;
 const LIST_SIZE = 5;
 
 // Compute this-week's biggest gainers, biggest fallers, and best-value buys (the
-// largest discounts off a card's recent high). Reads the whole market's 35-day
-// history, so it's day-cached below — the raw compute runs once per (market, limit)
+// largest discounts off a card's recent high). Reads the whole market's history
+// window, so it's day-cached below — the raw compute runs once per (market, limit)
 // per day regardless of how many pages (home, /movers, /games, Discord) ask for it.
 async function computePriceMovers(country: Country, limit: number): Promise<PriceMovers> {
  const empty: PriceMovers = { spiking: [], plummeting: [], value: [] };

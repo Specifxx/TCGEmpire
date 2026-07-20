@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { unstable_cache } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { dbHistory } from "@/lib/db-history";
 import { ClicksTable, type ClickRow } from "@/components/admin/ClicksTable";
@@ -13,6 +14,62 @@ export const metadata: Metadata = {
 };
 
 type Row = { retailer: string; d7: number; d30: number; all: number };
+type ClicksData = { rows: Row[]; byCountry: { country: string; n: number }[]; byKind: { kind: string; n: number }[]; recent: ClickRow[] };
+
+// This page used to re-run 5 groupBys + a 500-row findMany against the history DB
+// on every single load (force-dynamic, zero caching) — the findMany alone was
+// 500 full rows of egress per hit. Diagnostics don't need per-request freshness,
+// so cache the whole fetch for a few minutes; the auth check above still runs
+// fresh every request (cheap — no DB call).
+const loadClicksData = unstable_cache(
+  async (): Promise<{ data: ClicksData | null; error: boolean }> => {
+    const now = Date.now();
+    const d7 = new Date(now - 7 * 86400_000);
+    const d30 = new Date(now - 30 * 86400_000);
+    try {
+      const [all, last30, last7, country30, kind30] = await Promise.all([
+        dbHistory.clickEvent.groupBy({ by: ["retailer"], _count: { _all: true } }),
+        dbHistory.clickEvent.groupBy({ by: ["retailer"], _count: { _all: true }, where: { createdAt: { gte: d30 } } }),
+        dbHistory.clickEvent.groupBy({ by: ["retailer"], _count: { _all: true }, where: { createdAt: { gte: d7 } } }),
+        dbHistory.clickEvent.groupBy({ by: ["country"], _count: { _all: true }, where: { createdAt: { gte: d30 } } }),
+        dbHistory.clickEvent.groupBy({ by: ["kind"], _count: { _all: true }, where: { createdAt: { gte: d30 } } }),
+      ]);
+      // The recent-events list selects the newer `path` column — if the click table
+      // lives in a history database the schema push hasn't reached yet, degrade to
+      // the pathless select instead of failing the whole page.
+      let recent: ClickRow[];
+      try {
+        const events = await dbHistory.clickEvent.findMany({
+          orderBy: { createdAt: "desc" },
+          take: 500,
+          select: { retailer: true, country: true, kind: true, path: true, createdAt: true },
+        });
+        recent = events.map((e) => ({ retailer: e.retailer, country: e.country, kind: e.kind, path: e.path, createdAt: e.createdAt.toISOString() }));
+      } catch (e) {
+        console.error("[admin/clicks] recent-events query failed (path column missing on the history DB?):", e);
+        const events = await dbHistory.clickEvent.findMany({
+          orderBy: { createdAt: "desc" },
+          take: 500,
+          select: { retailer: true, country: true, kind: true, createdAt: true },
+        });
+        recent = events.map((e) => ({ retailer: e.retailer, country: e.country, kind: e.kind, path: null, createdAt: e.createdAt.toISOString() }));
+      }
+      const m30 = new Map(last30.map((r) => [r.retailer, r._count._all]));
+      const m7 = new Map(last7.map((r) => [r.retailer, r._count._all]));
+      const rows = all
+        .map((r) => ({ retailer: r.retailer, all: r._count._all, d30: m30.get(r.retailer) ?? 0, d7: m7.get(r.retailer) ?? 0 }))
+        .sort((a, b) => b.d30 - a.d30 || b.all - a.all);
+      const byCountry = country30.map((r) => ({ country: r.country, n: r._count._all })).sort((a, b) => b.n - a.n);
+      const byKind = kind30.map((r) => ({ kind: r.kind, n: r._count._all })).sort((a, b) => b.n - a.n);
+      return { data: { rows, byCountry, byKind, recent }, error: false };
+    } catch (e) {
+      console.error("[admin/clicks] failed to load click data:", e);
+      return { data: null, error: true };
+    }
+  },
+  ["admin-clicks-data"],
+  { revalidate: 300 }
+);
 
 export default async function ClicksAdminPage({ searchParams }: { searchParams: { key?: string } }) {
   const token = process.env.ADMIN_TOKEN;
@@ -20,53 +77,11 @@ export default async function ClicksAdminPage({ searchParams }: { searchParams: 
   const user = await getCurrentUser();
   if (!(keyOk || user?.isAdmin)) notFound(); // don't reveal the page exists
 
-  const now = Date.now();
-  const d7 = new Date(now - 7 * 86400_000);
-  const d30 = new Date(now - 30 * 86400_000);
-
-  let rows: Row[] = [];
-  let byCountry: { country: string; n: number }[] = [];
-  let byKind: { kind: string; n: number }[] = [];
-  let recent: ClickRow[] = [];
-  let error = false;
-  try {
-    const [all, last30, last7, country30, kind30] = await Promise.all([
-      dbHistory.clickEvent.groupBy({ by: ["retailer"], _count: { _all: true } }),
-      dbHistory.clickEvent.groupBy({ by: ["retailer"], _count: { _all: true }, where: { createdAt: { gte: d30 } } }),
-      dbHistory.clickEvent.groupBy({ by: ["retailer"], _count: { _all: true }, where: { createdAt: { gte: d7 } } }),
-      dbHistory.clickEvent.groupBy({ by: ["country"], _count: { _all: true }, where: { createdAt: { gte: d30 } } }),
-      dbHistory.clickEvent.groupBy({ by: ["kind"], _count: { _all: true }, where: { createdAt: { gte: d30 } } }),
-    ]);
-    // The recent-events list selects the newer `path` column — if the click table
-    // lives in a history database the schema push hasn't reached yet, degrade to
-    // the pathless select instead of failing the whole page.
-    try {
-      const events = await dbHistory.clickEvent.findMany({
-        orderBy: { createdAt: "desc" },
-        take: 500,
-        select: { retailer: true, country: true, kind: true, path: true, createdAt: true },
-      });
-      recent = events.map((e) => ({ retailer: e.retailer, country: e.country, kind: e.kind, path: e.path, createdAt: e.createdAt.toISOString() }));
-    } catch (e) {
-      console.error("[admin/clicks] recent-events query failed (path column missing on the history DB?):", e);
-      const events = await dbHistory.clickEvent.findMany({
-        orderBy: { createdAt: "desc" },
-        take: 500,
-        select: { retailer: true, country: true, kind: true, createdAt: true },
-      });
-      recent = events.map((e) => ({ retailer: e.retailer, country: e.country, kind: e.kind, path: null, createdAt: e.createdAt.toISOString() }));
-    }
-    const m30 = new Map(last30.map((r) => [r.retailer, r._count._all]));
-    const m7 = new Map(last7.map((r) => [r.retailer, r._count._all]));
-    rows = all
-      .map((r) => ({ retailer: r.retailer, all: r._count._all, d30: m30.get(r.retailer) ?? 0, d7: m7.get(r.retailer) ?? 0 }))
-      .sort((a, b) => b.d30 - a.d30 || b.all - a.all);
-    byCountry = country30.map((r) => ({ country: r.country, n: r._count._all })).sort((a, b) => b.n - a.n);
-    byKind = kind30.map((r) => ({ kind: r.kind, n: r._count._all })).sort((a, b) => b.n - a.n);
-  } catch (e) {
-    console.error("[admin/clicks] failed to load click data:", e);
-    error = true;
-  }
+  const { data, error } = await loadClicksData();
+  const rows = data?.rows ?? [];
+  const byCountry = data?.byCountry ?? [];
+  const byKind = data?.byKind ?? [];
+  const recent = data?.recent ?? [];
 
   const total = (k: keyof Omit<Row, "retailer">) => rows.reduce((s, r) => s + r[k], 0);
   const fmt = (n: number) => n.toLocaleString();

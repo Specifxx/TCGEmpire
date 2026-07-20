@@ -36,7 +36,12 @@ export function sydneyDayKey(): string {
 export type MarketScope = Country | "GLOBAL";
 
 export const INDEX_SIZE = 200;
-const WINDOW_DAYS = 90; // index chart window (was 180) — halves per-read PriceHistory volume
+// index chart window: 180 → 90 → 45 (history-DB egress cuts, each halving the
+// per-recompute PriceHistory read — this reads INDEX_SIZE × WINDOW_DAYS rows per
+// region, ×5 regions for the GLOBAL composite). 45 days still clears the 30-day
+// (d30) stat with a 15-day margin; only the visible chart range/high-low window
+// shortens from ~3 months to ~6 weeks.
+const WINDOW_DAYS = 45;
 const MAX_WEIGHT_SHARE = 0.2; // no constituent above 20%
 // Don't chart a day until most of the basket (by weight) has price data — early
 // sparse days would otherwise swing the base around.
