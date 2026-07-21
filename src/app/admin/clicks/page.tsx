@@ -90,9 +90,9 @@ export default async function ClicksAdminPage({ searchParams }: { searchParams: 
     <div className="mx-auto max-w-3xl px-4 py-10">
       <h1 className="text-2xl font-bold text-white">Outbound clicks</h1>
       <p className="mt-1 max-w-2xl text-sm text-slate-400">
-        Every &ldquo;View deal&rdquo; / affiliate click we record ourselves (via the click beacon) — independent of any
-        partner dashboard. Use it to see which stores actually get clicked and to sanity-check that affiliate tracking
-        is live.
+        eBay &ldquo;View deal&rdquo; clicks we record ourselves (via the click beacon) — independent of eBay&apos;s own
+        dashboard. Used to sanity-check that eBay affiliate tracking is live. Non-eBay store clicks stopped being
+        logged here to cut history-DB write volume — rows for other retailers below this date are historical only.
       </p>
 
       {error ? (

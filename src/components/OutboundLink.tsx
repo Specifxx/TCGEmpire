@@ -7,6 +7,14 @@ import { outboundRel } from "@/lib/affiliate";
 // count how many times each store/eBay link is used (verified in our own DB, no
 // dependency on the partner's dashboard). The link itself stays a normal direct
 // <a> — keeping eBay's affiliate attribution clean and adding zero redirect latency.
+//
+// Click logging is eBay-only (retailer keys starting with "ebay") — every other
+// store's clicks used to fire the same beacon too, which meant every outbound
+// click site-wide (card pages, basket, movers, arbitrage, deck cart, sealed...)
+// wrote a row to the already egress-strained history DB. eBay affiliate
+// verification is the one thing this beacon actually needs to guarantee (see
+// /admin/clicks), so every other store's click is dropped client-side before it
+// ever reaches the network.
 export function OutboundLink({
   href,
   retailer,
@@ -23,6 +31,7 @@ export function OutboundLink({
   children: ReactNode;
 }) {
   function log() {
+    if (!retailer.startsWith("ebay")) return;
     try {
       const path = typeof window !== "undefined" ? window.location.pathname : undefined;
       const blob = new Blob([JSON.stringify({ retailer, country, kind, path })], { type: "application/json" });
