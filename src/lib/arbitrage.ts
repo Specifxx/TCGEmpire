@@ -45,8 +45,10 @@ const MARKETPLACE_FEE_PCT = MARKETPLACE_FEE_BPS / 10000;
 
 // All selectable sources for a market: its tracked stores + eBay + (once
 // launched) the RiftCompare Marketplace — the marketplace's own listings
-// already feed into RetailerPrice (see importMarketplaceListings), so this is
-// purely about surfacing it as a selectable buy/sell source here too.
+// already feed into RetailerPrice (see importMarketplaceListings), so it's
+// priced alongside every other store. The page only ever uses it on the BUY
+// side (bucketed in with "every store" via storeKeys); it is never treated as
+// a resale/sell destination — eBay and TCGplayer fill that role instead.
 export function getArbSources(country: Country): ArbSource[] {
   const stores = Object.values(RETAILERS)
     .filter((r) => (r.country ?? "AU") === country)

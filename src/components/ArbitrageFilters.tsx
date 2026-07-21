@@ -4,10 +4,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { ArbSource } from "@/lib/arbitrage";
 
-// Buy-side source picker. Sell is fixed to eBay and/or the RiftCompare
-// Marketplace (whichever resale channels this market actually has), so only
-// the BUY side is selectable. Defaults to every store (cheapest store).
-// Changing it updates the URL so the server re-ranks.
+// Buy-side source picker. Sell is fixed to eBay (the only resale channel this
+// tool models), so only the BUY side is selectable — and the buy side already
+// includes the RiftCompare Marketplace alongside every other store. Defaults
+// to every store (cheapest store). Changing it updates the URL so the server
+// re-ranks.
 function buyLabel(selected: string[], sources: ArbSource[]): string {
   const stores = sources.filter((s) => !s.isEbay);
   if (stores.length > 0 && selected.length === stores.length && stores.every((s) => selected.includes(s.key))) return "Cheapest store";

@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getArbitrage, getArbitrageVsTcgplayer, getEbayCheapest, getArbSources, EBAY_FEE, type ArbSort, type DealSort } from "@/lib/arbitrage";
-import { MARKETPLACE_RETAILER } from "@/lib/marketplace";
-import { MARKETPLACE_FEE_BPS } from "@/lib/marketplace-policy";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
@@ -51,9 +49,13 @@ export default async function ArbitragePage({
   const country = getCountry();
   const info = COUNTRIES[country];
   const sources = getArbSources(country);
+  // storeKeys = every non-eBay source, which already includes the RiftCompare
+  // Marketplace (getArbSources unshifts it in) — so both flip views price the
+  // BUY side across every store plus our own marketplace. Only eBay (this
+  // view) and TCGplayer (the other view) are ever used as the SELL/reference
+  // side; the marketplace is never treated as a resale destination.
   const storeKeys = sources.filter((s) => !s.isEbay).map((s) => s.key);
   const ebay = sources.find((s) => s.isEbay);
-  const marketplace = sources.find((s) => s.key === MARKETPLACE_RETAILER[country]);
   const view: "flip" | "deals" | "tcg" =
     searchParams.view === "deals" ? "deals" : searchParams.view === "tcg" ? "tcg" : "flip";
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
@@ -134,21 +136,21 @@ export default async function ArbitragePage({
         ) : (
           await DealsView({ country, info, sort: searchParams.sort === "pct" ? "pct" : "saving", page, premium, signedIn })
         )
-      ) : !ebay && !marketplace ? (
+      ) : !ebay ? (
         <div className="card-surface grid place-items-center p-12 text-center text-sm text-slate-400">
-          This view isn&apos;t available in {info.place} yet — it needs eBay or marketplace coverage, and neither is available here.
+          This view isn&apos;t available in {info.place} yet — it&apos;s eBay-based, and eBay doesn&apos;t cover this market.
         </div>
       ) : (
         await FlipView({
           country, info, sort: searchParams.sort === "margin" ? "margin" : "profit", page, buy: searchParams.buy,
-          sources, ebayKey: ebay?.key, marketplaceKey: marketplace?.key, storeKeys, premium, signedIn,
+          sources, ebayKey: ebay.key, storeKeys, premium, signedIn,
         })
       )}
     </div>
   );
 }
 
-// ── Flip view (buy store → sell eBay / the RiftCompare Marketplace) ─────────────
+// ── Flip view (buy anywhere — every store + our own Marketplace — sell eBay) ────
 async function FlipView({
   country,
   info,
@@ -157,7 +159,6 @@ async function FlipView({
   buy: buyParam,
   sources,
   ebayKey,
-  marketplaceKey,
   storeKeys,
   premium,
   signedIn,
@@ -168,14 +169,13 @@ async function FlipView({
   page: number;
   buy?: string;
   sources: ReturnType<typeof getArbSources>;
-  ebayKey?: string;
-  marketplaceKey?: string;
+  ebayKey: string;
   storeKeys: string[];
   premium: boolean;
   signedIn: boolean;
 }) {
   const buy = buyParam ? buyParam.split(",").map((s) => s.trim()).filter(Boolean) : storeKeys;
-  const sell = [ebayKey, marketplaceKey].filter((k): k is string => !!k);
+  const sell = [ebayKey];
   // Non-Premium: ignore page/source customisation and fetch only the teaser.
   const data = await getArbitrage(country, {
     buy,
@@ -186,24 +186,15 @@ async function FlipView({
   });
   const href = (p: number) => `/tools/arbitrage?buy=${buy.join(",")}&sort=${sort}&page=${p}`;
   const sortHref = (s: ArbSort) => `/tools/arbitrage?buy=${buy.join(",")}&sort=${s}&page=1`;
-  const sellLabel = ebayKey && marketplaceKey ? "eBay or the RiftCompare Marketplace" : marketplaceKey ? "the RiftCompare Marketplace" : "eBay";
-  const feeParts = [
-    ebayKey ? `~${Math.round(EBAY_FEE * 100)}% eBay fee` : null,
-    marketplaceKey ? `${MARKETPLACE_FEE_BPS / 100}% marketplace fee` : null,
-  ].filter(Boolean);
 
   return (
     <>
       <p className="mb-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-        Cards that sell for more on <strong className="text-slate-200">{sellLabel}</strong> than a {info.adjective} store charges —
-        handy if you&apos;re deciding whether to sell one. The gap is after an estimated {feeParts.join(" / ")}; postage isn&apos;t included.
+        Cards that sell for more on <strong className="text-slate-200">eBay</strong> than the cheapest {info.adjective} store —
+        including our own <Link href="/marketplace" className="text-brand-400 hover:underline">Marketplace</Link> listings — charges.
+        Handy if you&apos;re deciding whether to sell one. The gap is after an estimated ~{Math.round(EBAY_FEE * 100)}% eBay fee;
+        postage isn&apos;t included.
       </p>
-      {!marketplaceKey && (
-        <p className="mb-4 text-xs text-slate-500">
-          eBay is the only resale channel we can price right now in {info.place}. Know another store that buys cards?{" "}
-          <Link href="/contact" className="text-brand-400 hover:underline">Email us</Link> and we&apos;ll add it as a sell option.
-        </p>
-      )}
 
       {premium && (
         <div className="card-surface mb-4 flex flex-wrap items-end justify-between gap-4 p-4">
@@ -319,7 +310,8 @@ async function TcgFlipView({
   return (
     <>
       <p className="mb-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-        Cards a {info.adjective} store is selling for less than <strong className="text-slate-200">TCGplayer&apos;s</strong> own
+        Cards a {info.adjective} store — including our own <Link href="/marketplace" className="text-brand-400 hover:underline">Marketplace</Link> —
+        is selling for less than <strong className="text-slate-200">TCGplayer&apos;s</strong> own
         US market price (converted to {info.currency}) — i.e. underpriced relative to the wider US market. TCGplayer only
         tracks one market price per card, so this is a reference gap, not a fee-adjusted resale estimate — shipping a card
         there means a genuine US-bound sale.
