@@ -47,4 +47,9 @@ Verify gate: `tsc --noEmit` clean + `next build` "Compiled successfully" (the CI
       nudges; returning-visitor hooks (the daily market wrap, Riftle).
 
 ## Done
-- (the bot appends one line per shipped change here)
+- 2026-07-21: CTR sweep — `/guides/riftbound-burn-explained` (428 impr, 0.5% CTR at pos 7.7,
+  the worst CTR-for-position of the three new-mechanic guides per GSC-TARGETS). Title dropped
+  the jargony "Mill and Self-Fuel" subtitle for the same direct "How the Burn Mechanic Works"
+  formula that's already winning on the Empower guide, and the meta description now leads with
+  a concrete hook (fuel combos / mill an opponent) within 155 chars. No layout/content changes —
+  title/excerpt only.

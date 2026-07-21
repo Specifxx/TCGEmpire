@@ -1890,9 +1890,9 @@ Flow cards will show live prices on the **[Vendetta set page](/sets/vendetta)** 
   {
     slug: "riftbound-burn-explained",
     category: "guide",
-    title: "Riftbound Burn Explained: Mill and Self-Fuel in Vendetta",
+    title: "Riftbound Burn Explained: How the Burn Mechanic Works",
     excerpt:
-      "A complete guide to Burn — the Riftbound: Vendetta mechanic that sends cards to the trash, both to fuel your own synergies and to attack your opponent's deck.",
+      "A complete guide to Burn — the Vendetta mechanic that sends cards to the trash to fuel combos or mill an opponent. How it works and how to build around it.",
     author: "RiftCompare",
     date: "2026-07-08",
     updated: "2026-07-08",
