@@ -429,7 +429,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               when this card actually has active P2P listings. Sits above the
               store price comparison so a marketplace deal is the first thing a
               buyer sees when one exists. */}
-          <MarketplaceHeroBlock cardId={card.id} />
+          <MarketplaceHeroBlock cardId={card.id} cardName={displayName} />
 
           {/* Price comparison + eBay fallback + contextual affiliate banners —
               everything that varies with the visitor's market lives in the client

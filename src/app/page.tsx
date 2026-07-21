@@ -234,10 +234,7 @@ export default async function HomePage() {
                 <span className="flex flex-wrap items-center gap-1.5 text-lg font-bold text-white">
                   {s.code}
                   {s.comingSoon && s.sealedAvailable && (
-                    <>
-                      <span className="chip bg-up/20 font-bold uppercase tracking-wide text-up">New</span>
-                      <span className="chip bg-brand-500/15 text-brand-300">Sealed now</span>
-                    </>
+                    <span className="chip bg-up/20 font-bold uppercase tracking-wide text-up">New</span>
                   )}
                 </span>
                 <span className="text-xs text-slate-400">{s.name}</span>

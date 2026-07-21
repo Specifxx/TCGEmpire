@@ -166,7 +166,7 @@ export default async function SetPage({
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
             {set.comingSoon ? (
               <>
-                Riftbound <strong className="text-slate-200">{set.name}</strong> singles aren&apos;t on sale yet.
+                Riftbound <strong className="text-slate-200">{set.name}</strong> is new.
                 {totalInSet > 0
                   ? <> Every officially revealed {set.name} card is listed below — live store prices land the moment singles release.</>
                   : <> This page will list every {set.name} card with live prices the moment they release — check back soon.</>}
@@ -207,7 +207,7 @@ export default async function SetPage({
       {totalInSet === 0 ? (
         <div className="card-surface grid place-items-center p-16 text-center text-slate-400">
           <div>
-            <p className="text-lg font-semibold text-white">{set.name} singles aren&apos;t available yet</p>
+            <p className="text-lg font-semibold text-white">New: {set.name} singles are on the way</p>
             <p className="mt-1 text-sm">
               {set.sealedAvailable
                 ? <>We&apos;ll have the full singles list with live prices as soon as {set.name} drops — its sealed products are buyable right now.</>

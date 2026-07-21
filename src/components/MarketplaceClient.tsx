@@ -7,9 +7,10 @@ import { cardDisplayName } from "@/lib/card-name";
 import { cardHref } from "@/lib/card-url";
 import { CONDITION_KEYS } from "@/lib/constants";
 import { COUNTRIES, type Country } from "@/lib/country";
+import { MARKETPLACE_LAUNCH_COUNTRIES } from "@/lib/marketplace-countries";
 import { useCountry } from "./CountryProvider";
 import { MarketplaceCheckout, type CheckoutItem } from "./MarketplaceCheckout";
-import { MarketplaceBetaBadge } from "./MarketplaceBetaBadge";
+import { MarketplaceReportBug } from "./MarketplaceReportBug";
 
 export interface MktOffer {
   id: string;
@@ -271,7 +272,7 @@ export function MarketplaceClient({
   // would be reference-only. Surfaces a region-switch prompt instead of a page that
   // just looks broken/empty.
   const noneInRegion = filtered.length > 0 && filtered.every((c) => !c.offers.some((o) => o.inRegion));
-  const otherRegions = (["AU", "UK", "US"] as Country[]).filter((c) => c !== country);
+  const otherRegions = (MARKETPLACE_LAUNCH_COUNTRIES as readonly Country[]).filter((c) => c !== country);
 
   return (
     <div>
@@ -279,7 +280,7 @@ export function MarketplaceClient({
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="font-display text-2xl font-extrabold text-white">Marketplace</h1>
-            <MarketplaceBetaBadge subject="Marketplace bug: " />
+            <MarketplaceReportBug subject="Marketplace bug: " />
           </div>
           <p className="text-sm text-slate-500">
             Buy Riftbound cards from verified sellers shipping within <span className="font-semibold text-slate-300">{place}</span>.

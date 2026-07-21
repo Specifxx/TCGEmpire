@@ -2548,7 +2548,7 @@ Tap **"Report a problem"** on the order. This pauses the scheduled release immed
 
 Buying from a random seller in a Discord server or Facebook group means sending money and hoping. On the RiftCompare Marketplace, your payment is never released until you have the card in hand (or the deadline passes with no dispute) — the platform is the thing standing between "I paid" and "I got scammed," not your judgment of a stranger's profile picture.
 
-The marketplace is in **beta**, which just means it's new — if anything looks off, there's a "Found a bug? Report it" link on every marketplace page that comes straight to us.
+The marketplace is new, so if anything looks off, there's a "Found a bug? Report it" link on every marketplace page that comes straight to us.
 
 ## Ready to buy?
 

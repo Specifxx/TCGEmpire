@@ -21,7 +21,7 @@ export function generateMetadata({ params }: { params: { id: string } }): Metada
 }
 
 // A seller's public storefront: shop identity, rating, policies, recent reviews
-// and their active listings. Beta-gated like the rest of the marketplace.
+// and their active listings.
 export default async function SellerStorefrontPage({ params }: { params: { id: string } }) {
   const user = await getCurrentUser();
   if (!canViewMarketplaceListings(user?.email, user?.isAdmin)) notFound();

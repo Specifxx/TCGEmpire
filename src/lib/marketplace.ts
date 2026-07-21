@@ -27,6 +27,7 @@ export const MARKETPLACE_RETAILER: Record<string, string> = {
   NZ: "marketplace_nz",
   US: "marketplace_us",
   UK: "marketplace_uk",
+  SG: "marketplace_sg",
 };
 export const MARKETPLACE_RETAILER_KEYS = Object.values(MARKETPLACE_RETAILER);
 export const MARKETPLACE_RETAILER_NAME = "RiftCompare Marketplace";

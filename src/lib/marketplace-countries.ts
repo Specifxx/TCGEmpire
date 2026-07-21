@@ -2,7 +2,7 @@
 // (which imports the Prisma client and so can't be imported from "use client"
 // components like ShippingAddressCard/MarketplaceCheckout). lib/marketplace.ts
 // re-exports this so there's still one source of truth.
-export const MARKETPLACE_LAUNCH_COUNTRIES = ["AU", "UK", "US"] as const;
+export const MARKETPLACE_LAUNCH_COUNTRIES = ["AU", "UK", "US", "NZ", "SG"] as const;
 
 export function isLaunchCountry(country: string | null | undefined): boolean {
   return !!country && (MARKETPLACE_LAUNCH_COUNTRIES as readonly string[]).includes(country);

@@ -8,13 +8,19 @@ import { MARKETPLACE_FEE_BPS, platformFeeCents } from "@/lib/marketplace-policy"
 import { formatMoney } from "@/lib/format";
 import { cardDisplayName } from "@/lib/card-name";
 import { StripeErrorNotice } from "./StripeErrorNotice";
-import { MarketplaceBetaBadge } from "./MarketplaceBetaBadge";
+import { MarketplaceReportBug } from "./MarketplaceReportBug";
 
-// Launch markets only (AU/UK/US) — see lib/marketplace.ts's MARKETPLACE_LAUNCH_COUNTRIES.
-// The server rejects any other market anyway; keeping the picker in sync avoids a
-// seller picking NZ/SG and then hitting a confusing 400 on save.
-type Country = "AU" | "US" | "UK";
-const COUNTRY_LABEL: Record<Country, string> = { AU: "Australia", US: "United States", UK: "United Kingdom" };
+// Launch markets — see lib/marketplace.ts's MARKETPLACE_LAUNCH_COUNTRIES. The
+// server rejects any other market anyway; keeping the picker in sync avoids a
+// seller picking an unsupported market and then hitting a confusing 400 on save.
+type Country = "AU" | "US" | "UK" | "NZ" | "SG";
+const COUNTRY_LABEL: Record<Country, string> = {
+  AU: "Australia",
+  US: "United States",
+  UK: "United Kingdom",
+  NZ: "New Zealand",
+  SG: "Singapore",
+};
 
 interface Profile {
   shopName: string;
@@ -93,7 +99,7 @@ export function SellerDashboard() {
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="font-display text-2xl font-extrabold text-white">Seller dashboard</h1>
-            <MarketplaceBetaBadge subject="Seller dashboard bug: " />
+            <MarketplaceReportBug subject="Seller dashboard bug: " />
           </div>
           <p className="text-sm text-slate-500">
             Manage your RiftCompare Marketplace shop &amp; listings. RiftCompare takes a {MARKETPLACE_FEE_BPS / 100}%

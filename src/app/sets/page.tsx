@@ -105,7 +105,7 @@ export default async function SetsIndexPage() {
                 className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500"
               >
                 {s.name}
-                {s.sealedAvailable ? " · sealed live" : " · coming soon"}
+                {s.sealedAvailable ? " · sealed live" : " · new"}
               </Link>
             ))}
           </div>
