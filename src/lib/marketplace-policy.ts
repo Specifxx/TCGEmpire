@@ -24,7 +24,7 @@ export function platformFeeCents(priceCents: number): number {
 // days of payment or the cron auto-refunds the buyer; once shipped, funds
 // auto-release to the seller this many days later if the buyer never confirms.
 // CALENDAR days, exactly as the cron measures them.
-export const MARKETPLACE_SHIP_DEADLINE_DAYS = Number(process.env.MARKETPLACE_SHIP_DEADLINE_DAYS ?? 5);
+export const MARKETPLACE_SHIP_DEADLINE_DAYS = Number(process.env.MARKETPLACE_SHIP_DEADLINE_DAYS ?? 14);
 export const MARKETPLACE_AUTO_RELEASE_DAYS = Number(process.env.MARKETPLACE_AUTO_RELEASE_DAYS ?? 14);
 
 // SHIPPED orders older than this land in the admin "needs attention" queue —
