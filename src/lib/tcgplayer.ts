@@ -17,7 +17,7 @@
 // never collapsed onto its base card.
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
-import { TCGPLAYER_SG_RETAILER, TCGPLAYER_UK_RETAILER } from "@/lib/constants";
+import { TCGPLAYER_AU_RETAILER, TCGPLAYER_SG_RETAILER, TCGPLAYER_UK_RETAILER } from "@/lib/constants";
 import { USD_TO } from "@/lib/fx";
 
 const SEARCH_URL = "https://mp-search-api.tcgplayer.com/v1/search/request?q=&isList=false";
@@ -216,6 +216,9 @@ export const TCG_US: TcgMarket = { retailer: "tcgplayer", country: "US", currenc
 export const TCG_UK: TcgMarket = { retailer: TCGPLAYER_UK_RETAILER, country: "UK", currency: "GBP", fx: USD_TO_GBP };
 // Singapore reference price (TCGplayer ships internationally; SGD-converted).
 export const TCG_SG: TcgMarket = { retailer: TCGPLAYER_SG_RETAILER, country: "SG", currency: "SGD", fx: USD_TO.SGD };
+// AU reference price (AUD-converted) — a fallback-only source for the main price
+// comparison (see AU_FALLBACK_RETAILERS), but a real buy source for the Deal Finder.
+export const TCG_AU: TcgMarket = { retailer: TCGPLAYER_AU_RETAILER, country: "AU", currency: "AUD", fx: USD_TO.AUD };
 
 // Match products to cards and build RetailerPrice rows (no DB writes — caller
 // decides). Exported separately so a dry-run can inspect the match quality.
@@ -294,12 +297,13 @@ export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: Tcg
   return { total: items.length, matched: rows.length, rows, unmatchedSamples };
 }
 
-// Replace all TCGplayer rows with a fresh pull, for the US (USD), UK (GBP) and SG
-// (SGD) markets. Products are fetched ONCE and reused for all. Returns rows written.
+// Replace all TCGplayer rows with a fresh pull, for the US (USD), UK (GBP), SG
+// (SGD) and AU (AUD) markets. Products are fetched ONCE and reused for all.
+// Returns rows written.
 export async function refreshTcgplayerPrices(): Promise<number> {
   const products = await fetchTcgplayerProducts();
   let written = 0;
-  for (const mkt of [TCG_US, TCG_UK, TCG_SG]) {
+  for (const mkt of [TCG_US, TCG_UK, TCG_SG, TCG_AU]) {
     const { total, matched, rows, unmatchedSamples } = await buildTcgplayerRows(mkt, products);
     console.log(`TCGplayer ${mkt.country}: ${total} products, ${matched} matched, ${rows.length} rows.`);
     if (unmatchedSamples.length && mkt === TCG_US) {

@@ -4,7 +4,7 @@
 // only import is the UK fallback list; affiliate/shipping enrichment happens on the
 // server before rows are serialized, so this file never drags server libs into the
 // client bundle.
-import { SG_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS } from "./constants";
+import { AU_FALLBACK_RETAILERS, SG_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS } from "./constants";
 import type { Country } from "./country";
 
 // A serialized retailerPrice row, enriched server-side with everything the client
@@ -55,10 +55,14 @@ export function computeMarket(rows: MarketRow[], country: Country): MarketView {
     country === "UK" && mine.some((p) => p.inStock && !UK_FALLBACK_RETAILERS.includes(p.retailer));
   const sgHasRealSgd =
     country === "SG" && mine.some((p) => p.inStock && !SG_FALLBACK_RETAILERS.includes(p.retailer));
+  const auHasRealAud =
+    country === "AU" && mine.some((p) => p.inStock && !AU_FALLBACK_RETAILERS.includes(p.retailer));
   const source = ukHasRealGbp
     ? mine.filter((p) => !UK_FALLBACK_RETAILERS.includes(p.retailer))
     : sgHasRealSgd
     ? mine.filter((p) => !SG_FALLBACK_RETAILERS.includes(p.retailer))
+    : auHasRealAud
+    ? mine.filter((p) => !AU_FALLBACK_RETAILERS.includes(p.retailer))
     : mine;
   const all: ComputedRow[] = source
     .map((p) => ({ ...p, delivered: p.priceCents + (p.ship ?? 0) }))

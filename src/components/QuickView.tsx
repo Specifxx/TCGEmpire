@@ -5,7 +5,7 @@ import { CardTileData } from "./CardTile";
 import { CardImage } from "./CardImage";
 import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge } from "./Badge";
 import { PriceWatchButton } from "./PriceWatchButton";
-import { isOvernumbered, isSignature, SG_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS } from "@/lib/constants";
+import { AU_FALLBACK_RETAILERS, isOvernumbered, isSignature, SG_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS } from "@/lib/constants";
 import { cardHref } from "@/lib/card-url";
 import { cardDisplayName, cardSearchName } from "@/lib/card-name";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
@@ -147,9 +147,11 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
   // them when a real GBP listing exists so the cheapest shown matches the "from" price.
   const ukHasRealGbp = country === "UK" && countryRows.some((p) => !UK_FALLBACK_RETAILERS.includes(p.retailer));
   const sgHasRealSgd = country === "SG" && countryRows.some((p) => !SG_FALLBACK_RETAILERS.includes(p.retailer));
+  const auHasRealAud = country === "AU" && countryRows.some((p) => !AU_FALLBACK_RETAILERS.includes(p.retailer));
   const inStock = countryRows
     .filter((p) => !(ukHasRealGbp && UK_FALLBACK_RETAILERS.includes(p.retailer)))
     .filter((p) => !(sgHasRealSgd && SG_FALLBACK_RETAILERS.includes(p.retailer)))
+    .filter((p) => !(auHasRealAud && AU_FALLBACK_RETAILERS.includes(p.retailer)))
     .map((p) => {
       const ship = effectiveShippingCents(p.shippingCents); // number | null (null = unknown)
       return { ...p, ship, delivered: p.priceCents + (ship ?? 0) };

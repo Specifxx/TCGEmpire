@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getArbitrage, getArbitrageVsTcgplayer, getEbayCheapest, getArbSources, EBAY_FEE, type ArbSort, type DealSort } from "@/lib/arbitrage";
+import { getArbitrage, getArbitrageVsTcgplayer, getEbayCheapest, getArbSources, TCGPLAYER_KEY, EBAY_FEE, type ArbSort, type DealSort } from "@/lib/arbitrage";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
@@ -50,12 +50,16 @@ export default async function ArbitragePage({
   const info = COUNTRIES[country];
   const sources = getArbSources(country);
   // storeKeys = every non-eBay source, which already includes the RiftCompare
-  // Marketplace (getArbSources unshifts it in) — so both flip views price the
-  // BUY side across every store plus our own marketplace. Only eBay (this
-  // view) and TCGplayer (the other view) are ever used as the SELL/reference
-  // side; the marketplace is never treated as a resale destination.
+  // Marketplace and TCGplayer (getArbSources adds both in) — so the "Worth more
+  // on eBay" view prices its BUY side across every store, our own marketplace,
+  // AND TCGplayer, selling on eBay.
   const storeKeys = sources.filter((s) => !s.isEbay).map((s) => s.key);
   const ebay = sources.find((s) => s.isEbay);
+  // The TCGplayer flip view's BUY side is the mirror image: every store, the
+  // marketplace, AND eBay — but never TCGplayer itself (it's the SELL/reference
+  // side there, so buying from it to "flip" against itself would be circular).
+  const tcgKey = TCGPLAYER_KEY[country];
+  const tcgBuyKeys = storeKeys.filter((k) => k !== tcgKey).concat(ebay ? [ebay.key] : []);
   const view: "flip" | "deals" | "tcg" =
     searchParams.view === "deals" ? "deals" : searchParams.view === "tcg" ? "tcg" : "flip";
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
@@ -127,7 +131,7 @@ export default async function ArbitragePage({
       </div>
 
       {view === "tcg" ? (
-        await TcgFlipView({ country, info, sort: searchParams.sort === "margin" ? "margin" : "profit", page, storeKeys, premium, signedIn })
+        await TcgFlipView({ country, info, sort: searchParams.sort === "margin" ? "margin" : "profit", page, buyKeys: tcgBuyKeys, premium, signedIn })
       ) : view === "deals" ? (
         !ebay ? (
           <div className="card-surface grid place-items-center p-12 text-center text-sm text-slate-400">
@@ -150,7 +154,7 @@ export default async function ArbitragePage({
   );
 }
 
-// ── Flip view (buy anywhere — every store + our own Marketplace — sell eBay) ────
+// ── Flip view (buy anywhere — every store + our own Marketplace + TCGplayer — sell eBay) ──
 async function FlipView({
   country,
   info,
@@ -190,8 +194,8 @@ async function FlipView({
   return (
     <>
       <p className="mb-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-        Cards that sell for more on <strong className="text-slate-200">eBay</strong> than the cheapest {info.adjective} store —
-        including our own <Link href="/marketplace" className="text-brand-400 hover:underline">Marketplace</Link> listings — charges.
+        Cards that sell for more on <strong className="text-slate-200">eBay</strong> than the cheapest {info.adjective} store,{" "}
+        our own <Link href="/marketplace" className="text-brand-400 hover:underline">Marketplace</Link>, or <strong className="text-slate-200">TCGplayer</strong> charges.
         Handy if you&apos;re deciding whether to sell one. The gap is after an estimated ~{Math.round(EBAY_FEE * 100)}% eBay fee;
         postage isn&apos;t included.
       </p>
@@ -286,7 +290,7 @@ async function TcgFlipView({
   info,
   sort,
   page,
-  storeKeys,
+  buyKeys,
   premium,
   signedIn,
 }: {
@@ -294,12 +298,12 @@ async function TcgFlipView({
   info: (typeof COUNTRIES)[keyof typeof COUNTRIES];
   sort: ArbSort;
   page: number;
-  storeKeys: string[];
+  buyKeys: string[];
   premium: boolean;
   signedIn: boolean;
 }) {
   const data = await getArbitrageVsTcgplayer(country, {
-    buy: storeKeys,
+    buy: buyKeys,
     sort,
     page: premium ? page : 1,
     pageSize: premium ? PAGE_SIZE : TEASER_SIZE,
@@ -310,8 +314,9 @@ async function TcgFlipView({
   return (
     <>
       <p className="mb-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-        Cards a {info.adjective} store — including our own <Link href="/marketplace" className="text-brand-400 hover:underline">Marketplace</Link> —
-        is selling for less than <strong className="text-slate-200">TCGplayer&apos;s</strong> own
+        Cards a {info.adjective} store, <strong className="text-slate-200">eBay</strong>, or our own{" "}
+        <Link href="/marketplace" className="text-brand-400 hover:underline">Marketplace</Link> is selling for less than{" "}
+        <strong className="text-slate-200">TCGplayer&apos;s</strong> own
         US market price (converted to {info.currency}) — i.e. underpriced relative to the wider US market. TCGplayer only
         tracks one market price per card, so this is a reference gap, not a fee-adjusted resale estimate — shipping a card
         there means a genuine US-bound sale.

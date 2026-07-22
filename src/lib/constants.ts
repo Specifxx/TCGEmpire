@@ -27,6 +27,16 @@ export const UK_FALLBACK_RETAILERS: readonly string[] = [TCGPLAYER_UK_RETAILER, 
 export const TCGPLAYER_SG_RETAILER = "tcgplayer_sg";
 export const SG_FALLBACK_RETAILERS: readonly string[] = [TCGPLAYER_SG_RETAILER];
 
+// AU also gets a TCGplayer (converted to AUD) row — NOT because AU lacks real
+// stores (it has plenty), but so the Deal Finder's arbitrage tools can treat
+// TCGplayer as a normal buy/sell source in every market, not just US/UK/SG. It
+// mirrors the UK/SG fallback pattern exactly: excluded from the AU "from" price
+// and the AU listing breakdown whenever real AU listings exist, so it can never
+// undercut or clutter the main price comparison — it only ever surfaces via the
+// Deal Finder, or as a last-resort fallback if a card has no real AU price at all.
+export const TCGPLAYER_AU_RETAILER = "tcgplayer_au";
+export const AU_FALLBACK_RETAILERS: readonly string[] = [TCGPLAYER_AU_RETAILER];
+
 export type DomainKey =
   | "Fury"
   | "Calm"

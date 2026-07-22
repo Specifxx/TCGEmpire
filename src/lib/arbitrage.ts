@@ -15,6 +15,7 @@ import { TCG_US } from "./tcgplayer";
 import { usdCentsToCountry } from "./fx";
 import { MARKETPLACE_RETAILER, MARKETPLACE_PUBLIC } from "./marketplace";
 import { MARKETPLACE_FEE_BPS } from "./marketplace-policy";
+import { TCGPLAYER_AU_RETAILER, TCGPLAYER_SG_RETAILER, TCGPLAYER_UK_RETAILER } from "./constants";
 import type { CardTileData } from "@/components/CardTile";
 
 export const EBAY_FEE = 0.13; // approx eBay final-value fee
@@ -41,14 +42,26 @@ export interface ArbSource {
 
 // eBay retailer key per market (NZ has no eBay coverage).
 const EBAY_KEY: Record<Country, string | null> = { AU: "ebay", NZ: null, US: "ebay_us", UK: "ebay_uk", SG: "ebay_sg" };
+// TCGplayer retailer key per market — the same converted-reference rows used as a
+// fallback in the main price comparison (see AU_FALLBACK_RETAILERS / UK_FALLBACK_RETAILERS
+// / SG_FALLBACK_RETAILERS) double as a real, always-available BUY source here. NZ has
+// no TCGplayer row at all, so it's the only market without one.
+export const TCGPLAYER_KEY: Record<Country, string | null> = {
+  AU: TCGPLAYER_AU_RETAILER,
+  NZ: null,
+  US: TCG_US.retailer,
+  UK: TCGPLAYER_UK_RETAILER,
+  SG: TCGPLAYER_SG_RETAILER,
+};
 const MARKETPLACE_FEE_PCT = MARKETPLACE_FEE_BPS / 10000;
 
-// All selectable sources for a market: its tracked stores + eBay + (once
-// launched) the RiftCompare Marketplace — the marketplace's own listings
+// All selectable sources for a market: its tracked stores + eBay + TCGplayer +
+// (once launched) the RiftCompare Marketplace — the marketplace's own listings
 // already feed into RetailerPrice (see importMarketplaceListings), so it's
-// priced alongside every other store. The page only ever uses it on the BUY
-// side (bucketed in with "every store" via storeKeys); it is never treated as
-// a resale/sell destination — eBay and TCGplayer fill that role instead.
+// priced alongside every other store. Stores, the Marketplace, and TCGplayer are
+// all BUY-side sources (bucketed in together via storeKeys in the page); eBay is
+// the only one ever used as a resale/sell destination (TCGplayer's own flip view
+// treats it as a fixed reference instead — see getArbitrageVsTcgplayer).
 export function getArbSources(country: Country): ArbSource[] {
   const stores = Object.values(RETAILERS)
     .filter((r) => (r.country ?? "AU") === country)
@@ -57,6 +70,8 @@ export function getArbSources(country: Country): ArbSource[] {
   const sources = ek ? [{ key: ek, name: "eBay", isEbay: true, feePct: EBAY_FEE }, ...stores] : stores;
   const mpKey = MARKETPLACE_PUBLIC ? MARKETPLACE_RETAILER[country] : undefined;
   if (mpKey) sources.unshift({ key: mpKey, name: "RiftCompare Marketplace", isEbay: false, feePct: MARKETPLACE_FEE_PCT });
+  const tcgKey = TCGPLAYER_KEY[country];
+  if (tcgKey) sources.push({ key: tcgKey, name: "TCGplayer", isEbay: false, feePct: 0 });
   return sources;
 }
 
