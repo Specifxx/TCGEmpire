@@ -82,6 +82,85 @@ function ordinal(n: number): string {
   return `${n}${last === 1 ? "st" : last === 2 ? "nd" : last === 3 ? "rd" : "th"}`;
 }
 
+interface PayoutRecord {
+  id: string;
+  amountCents: number;
+  currency: string;
+  status: "pending" | "in_transit" | "paid" | "failed" | "canceled";
+  arrivalDate: string;
+  createdAt: string;
+  automatic: boolean;
+  failureMessage: string | null;
+}
+
+function payoutStatus(p: PayoutRecord): { text: string; tone: string } {
+  switch (p.status) {
+    case "pending":
+      return { text: `Pending — expected ${formatDay(p.arrivalDate)}`, tone: "bg-gold/15 text-gold" };
+    case "in_transit":
+      return { text: `Sent — arriving ${formatDay(p.arrivalDate)}`, tone: "bg-sky-500/15 text-sky-300" };
+    case "paid":
+      return { text: `Paid — arrived ${formatDay(p.arrivalDate)}`, tone: "bg-brand-500/15 text-brand-300" };
+    case "failed":
+      return { text: p.failureMessage ? `Failed — ${p.failureMessage}` : "Failed", tone: "bg-rose-500/15 text-rose-300" };
+    case "canceled":
+      return { text: "Cancelled", tone: "bg-ink-800 text-slate-400" };
+  }
+}
+
+// Real Payout objects from Stripe (never guessed) — this is what answers
+// "when does it actually land in my bank": a pending/in_transit payout's
+// arrivalDate IS Stripe's own expected-arrival date, so there's nothing to
+// predict ourselves, just surface what Stripe has already scheduled.
+function PayoutHistoryCard() {
+  const [payouts, setPayouts] = useState<PayoutRecord[] | null>(null);
+
+  const load = useCallback(async () => {
+    const res = await fetch("/api/marketplace/stripe/payouts").catch(() => null);
+    if (res?.ok) setPayouts((await res.json()).payouts ?? []);
+  }, []);
+
+  useEffect(() => { void load(); }, [load]);
+
+  if (!payouts) {
+    return (
+      <div className="card-surface p-5">
+        <h3 className="font-bold text-white">Payout history</h3>
+        <p className="mt-1 text-sm text-slate-500">Loading…</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="card-surface p-5">
+      <h3 className="mb-1 font-bold text-white">Payout history</h3>
+      <p className="mb-3 text-sm text-slate-500">
+        Real payouts from Stripe to your bank — each one shows exactly when it&apos;s expected, or when it actually arrived.
+      </p>
+      {payouts.length === 0 ? (
+        <p className="text-sm text-slate-500">
+          No payouts yet — this fills in once a release reaches your Stripe balance and gets paid out.
+        </p>
+      ) : (
+        <ul className="divide-y divide-ink-800">
+          {payouts.map((p) => {
+            const { text, tone } = payoutStatus(p);
+            return (
+              <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
+                <span className={`chip ${tone}`}>{text}</span>
+                <span className="flex items-center gap-2">
+                  <span className="font-semibold text-white">{formatMoney(p.amountCents, p.currency.toUpperCase())}</span>
+                  {!p.automatic && <span className="text-[10px] text-slate-500">manual</span>}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 // Payout schedule card — lets a seller choose how Stripe moves their balance to
 // their bank (or hold it entirely and pay themselves out on demand). Only
 // rendered once payouts are enabled; the schedule itself lives on Stripe's side
@@ -298,7 +377,12 @@ export function SellerFunds() {
         </div>
       )}
 
-      {funds.payoutsEnabled && <PayoutScheduleCard />}
+      {funds.payoutsEnabled && (
+        <>
+          <PayoutScheduleCard />
+          <PayoutHistoryCard />
+        </>
+      )}
 
       {funds.readyForPayout.length > 0 && (
         <div className="card-surface border-gold/40 bg-gold/5 p-5">

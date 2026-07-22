@@ -147,6 +147,38 @@ export async function createManualPayout(accountId: string): Promise<void> {
   }
 }
 
+export interface PayoutRecord {
+  id: string;
+  amountCents: number;
+  currency: string;
+  // Stripe's own payout lifecycle: pending (scheduled, not sent yet) ->
+  // in_transit (sent, on its way) -> paid (arrived) — or failed/canceled.
+  status: "pending" | "in_transit" | "paid" | "failed" | "canceled";
+  arrivalDate: string; // Stripe's expected (or, once paid, actual) bank arrival date
+  createdAt: string;
+  automatic: boolean; // false = triggered via "Pay out now", true = the account's own schedule
+  failureMessage: string | null;
+}
+
+// The seller's actual payout HISTORY — real Payout objects from Stripe, not
+// something we track ourselves. This is what answers "when does it actually
+// land in my bank": arrivalDate on a pending/in_transit payout IS Stripe's own
+// expected-arrival date, so there's no need to predict Stripe's scheduling
+// logic ourselves — we just surface what Stripe has already scheduled.
+export async function listPayouts(accountId: string, limit = 10): Promise<PayoutRecord[]> {
+  const payouts = await stripe().payouts.list({ limit }, { stripeAccount: accountId });
+  return payouts.data.map((p) => ({
+    id: p.id,
+    amountCents: p.amount,
+    currency: p.currency,
+    status: p.status as PayoutRecord["status"],
+    arrivalDate: new Date(p.arrival_date * 1000).toISOString(),
+    createdAt: new Date(p.created * 1000).toISOString(),
+    automatic: p.automatic,
+    failureMessage: p.failure_message ?? null,
+  }));
+}
+
 // Self-heals SellerProfile.payoutsEnabled against Stripe directly. The
 // account.updated webhook (connect-webhook/route.ts) is the fast path that
 // normally flips this the moment onboarding finishes — but if that webhook

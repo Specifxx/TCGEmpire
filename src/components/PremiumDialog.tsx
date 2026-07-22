@@ -19,6 +19,7 @@ export function usePremiumDialog() {
 const FEATURES: { k: string; v: string }[] = [
   { k: "Best-Basket optimiser", v: "cheapest multi-store cart" },
   { k: "Value Finder", v: "undervalued-card screener" },
+  { k: "Rising Cards", v: "demand + price-timing screener" },
   { k: "Arbitrage finder", v: "full flips & deals list" },
   { k: "Ad-free", v: "no ads on any page" },
 ];

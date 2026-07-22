@@ -55,6 +55,7 @@ export const NAV_GROUPS: NavGroup[] = [
     links: [
       { href: "/tools/arbitrage", label: "Deal Finder", emoji: "💱" },
       { href: "/tools/value-finder", label: "Value Finder", emoji: "🔎" },
+      { href: "/tools/rising", label: "Rising Cards", emoji: "🚀" },
       { href: "/tools/best-basket", label: "Best Basket", emoji: "🧺" },
       { href: "/tools/box-ev", label: "Box EV Calc", emoji: "🎲" },
       { href: "/tools", label: "All Tools", emoji: "🧰" },

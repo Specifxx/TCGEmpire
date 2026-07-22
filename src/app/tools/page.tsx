@@ -46,6 +46,13 @@ const GROUPS: ToolGroup[] = [
         badge: "Premium",
       },
       {
+        href: "/tools/rising",
+        emoji: "🚀",
+        title: "Rising cards",
+        desc: "Cards ranked by demand and price-timing signals — high or rising interest that hasn't re-rated yet.",
+        badge: "Premium",
+      },
+      {
         href: "/tools/arbitrage",
         emoji: "💱",
         title: "Deal Finder",

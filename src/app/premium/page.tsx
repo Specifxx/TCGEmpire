@@ -13,11 +13,11 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "RiftCompare Premium — power tools for buyers & sellers",
   description:
-    "RiftCompare Premium: the Best-Basket cart optimiser, the Value Finder screener, the full Deal Finder list and an ad-free site. Price comparison and the portfolio tracker stay free.",
+    "RiftCompare Premium: the Best-Basket cart optimiser, the Value Finder screener, Rising Cards, the full Deal Finder list and an ad-free site. Price comparison and the portfolio tracker stay free.",
   alternates: { canonical: "/premium" },
 };
 
-// Detailed feature cards (all four real Premium features).
+// Detailed feature cards (all real Premium features).
 const FEATURES: { title: string; body: string; href: string | null; cta: string | null }[] = [
   {
     title: "Best-Basket cart optimiser",
@@ -30,6 +30,12 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
     body: "Every card trading below its own 30-day average right now, ranked by discount — spot undervalued cards before they bounce back.",
     href: "/tools/value-finder",
     cta: "Open Value Finder",
+  },
+  {
+    title: "Rising Cards",
+    body: "Cards ranked by demand and price-timing signals — high or rising search interest that hasn't re-rated yet. Transparent scoring, backtested. Free shows only the top pick.",
+    href: "/tools/rising",
+    cta: "Open Rising Cards",
   },
   {
     title: "Deal Finder",
@@ -53,6 +59,7 @@ const COMPARE: { feature: string; free: boolean | string; premium: boolean | str
   { feature: "Price alerts", free: true, premium: true },
   { feature: "RiftCompare Index, movers & daily wrap", free: true, premium: true },
   { feature: "Deal Finder", free: "Top pick", premium: "Full list" },
+  { feature: "Rising Cards", free: "Top pick", premium: "Full list" },
   { feature: "Best-Basket cart optimiser", free: false, premium: true },
   { feature: "Value Finder screener", free: false, premium: true },
   { feature: "Ad-free experience", free: false, premium: true },
@@ -61,6 +68,7 @@ const COMPARE: { feature: string; free: boolean | string; premium: boolean | str
 const INCLUDED = [
   "Best-Basket cart optimiser",
   "Value Finder screener",
+  "Rising Cards",
   "Full Deal Finder list",
   "Ad-free on every page",
 ];
@@ -91,7 +99,7 @@ export default async function PremiumPage() {
             "@context": "https://schema.org",
             "@type": "Product",
             name: "RiftCompare Premium",
-            description: "The Best-Basket cart optimiser, the Value Finder screener, the full Deal Finder list and an ad-free RiftCompare.",
+            description: "The Best-Basket cart optimiser, the Value Finder screener, Rising Cards, the full Deal Finder list and an ad-free RiftCompare.",
             brand: { "@type": "Organization", name: "RiftCompare", url: SITE_URL },
             offers: {
               "@type": "Offer",
@@ -183,6 +191,7 @@ export default async function PremiumPage() {
           <Link href="/dashboard" className="btn-primary">◆ Your dashboard</Link>
           <Link href="/tools/best-basket" className="btn-ghost">Best Basket</Link>
           <Link href="/tools/value-finder" className="btn-ghost">Value Finder</Link>
+          <Link href="/tools/rising" className="btn-ghost">Rising Cards</Link>
           <Link href="/tools/arbitrage" className="btn-ghost">Deal Finder</Link>
           <Link href="/portfolio" className="btn-ghost">Portfolio</Link>
           {checkoutLive && <ManageSubscriptionButton />}
