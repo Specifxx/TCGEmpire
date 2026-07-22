@@ -9,6 +9,7 @@ import { formatMoney } from "@/lib/format";
 import { cardDisplayName } from "@/lib/card-name";
 import { StripeErrorNotice } from "./StripeErrorNotice";
 import { MarketplaceReportBug } from "./MarketplaceReportBug";
+import { EarningsChart, type EarningsPoint } from "./EarningsChart";
 
 // Launch markets — see lib/marketplace.ts's MARKETPLACE_LAUNCH_COUNTRIES. The
 // server rejects any other market anyway; keeping the picker in sync avoids a
@@ -72,17 +73,20 @@ export function SellerDashboard() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [listings, setListings] = useState<Listing[]>([]);
   const [payoutsEnabled, setPayoutsEnabled] = useState(false);
+  const [series, setSeries] = useState<{ currency: string; points: EarningsPoint[] } | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   const load = useCallback(async () => {
-    const [p, l, c] = await Promise.all([
+    const [p, l, c, f] = await Promise.all([
       fetch("/api/marketplace/profile").then((r) => r.json()).catch(() => ({})),
       fetch("/api/marketplace/listings?mine=1").then((r) => r.json()).catch(() => ({ listings: [] })),
       fetch("/api/marketplace/stripe/connect").then((r) => r.json()).catch(() => ({})),
+      fetch("/api/marketplace/funds").then((r) => r.json()).catch(() => ({})),
     ]);
     setProfile(p.profile ?? null);
     setListings(l.listings ?? []);
     setPayoutsEnabled(!!c.payoutsEnabled);
+    setSeries(f.series ?? null);
     setLoaded(true);
   }, []);
 
@@ -118,6 +122,15 @@ export function SellerDashboard() {
       ) : (
         <div className="flex flex-col gap-6">
           <ShopForm profile={profile} onSaved={load} />
+          {series && (
+            <div className="card-surface p-5">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <h2 className="font-bold text-white">Earnings over time</h2>
+                <Link href="/marketplace/funds" className="text-xs text-brand-300 hover:underline">Full breakdown &amp; payout settings →</Link>
+              </div>
+              <EarningsChart points={series.points} currency={series.currency} />
+            </div>
+          )}
           {!profile ? (
             <div className="card-surface p-4 text-sm text-gold">Set up your shop above before you can list cards.</div>
           ) : (

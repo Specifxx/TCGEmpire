@@ -6,6 +6,7 @@ import { formatMoney } from "@/lib/format";
 import { StripeErrorNotice } from "./StripeErrorNotice";
 import { formatDay } from "@/lib/delivery-estimate";
 import { MARKETPLACE_FEE_BPS, MARKETPLACE_AUTO_RELEASE_DAYS } from "@/lib/marketplace-policy";
+import { EarningsChart, type EarningsPoint } from "./EarningsChart";
 
 // Pure display helper (kept local — lib/order-number.ts pulls in the Prisma
 // client, which can't ship in a "use client" bundle).
@@ -44,6 +45,7 @@ interface Funds {
   // automatically the moment payouts are enabled (see connect-webhook/route.ts).
   readyForPayout: CurrencyAmount[];
   recent: RecentOrder[];
+  series: { currency: string; points: EarningsPoint[] } | null;
 }
 
 type PayoutInterval = "manual" | "daily" | "weekly" | "monthly";
@@ -288,6 +290,13 @@ export function SellerFunds() {
           </li>
         </ol>
       </div>
+
+      {funds.series && (
+        <div className="card-surface p-5">
+          <h3 className="mb-3 font-bold text-white">Earnings over time</h3>
+          <EarningsChart points={funds.series.points} currency={funds.series.currency} />
+        </div>
+      )}
 
       {funds.payoutsEnabled && <PayoutScheduleCard />}
 

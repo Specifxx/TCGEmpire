@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { stripeEnabled } from "@/lib/stripe";
-import { createExpressAccount, createOnboardingLink, createLoginLink } from "@/lib/connect";
+import { createExpressAccount, createOnboardingLink, createLoginLink, reconcilePayoutStatus } from "@/lib/connect";
 import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
@@ -16,9 +16,17 @@ export async function GET() {
     where: { userId: user.id },
     select: { stripeAccountId: true, payoutsEnabled: true },
   });
+
+  // The webhook is the fast path; this is the fallback so "Enable payouts"
+  // doesn't get stuck showing forever if that webhook ever misses an event.
+  let payoutsEnabled = !!profile?.payoutsEnabled;
+  if (!payoutsEnabled && profile?.stripeAccountId && stripeEnabled()) {
+    payoutsEnabled = await reconcilePayoutStatus(user.id, profile.stripeAccountId);
+  }
+
   return NextResponse.json({
     hasAccount: !!profile?.stripeAccountId,
-    payoutsEnabled: !!profile?.payoutsEnabled,
+    payoutsEnabled,
   });
 }
 

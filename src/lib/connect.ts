@@ -147,6 +147,37 @@ export async function createManualPayout(accountId: string): Promise<void> {
   }
 }
 
+// Self-heals SellerProfile.payoutsEnabled against Stripe directly. The
+// account.updated webhook (connect-webhook/route.ts) is the fast path that
+// normally flips this the moment onboarding finishes — but if that webhook
+// endpoint was never registered in Stripe's dashboard, STRIPE_CONNECT_WEBHOOK_
+// SECRET is wrong/missing, or a single event just got dropped, the stored flag
+// can get stuck false forever even though the seller genuinely finished
+// setup — showing "enable payouts" indefinitely on an account that actually
+// works. Called wherever a seller sees their payout status; only makes a live
+// Stripe call when we don't already believe payouts are enabled, so once the
+// flag catches up this never fires again for that seller.
+export async function reconcilePayoutStatus(userId: string, accountId: string): Promise<boolean> {
+  try {
+    const account = await stripe().accounts.retrieve(accountId);
+    const payoutsEnabled = !!account.payouts_enabled;
+    if (payoutsEnabled) {
+      await prisma.sellerProfile.update({ where: { userId }, data: { payoutsEnabled: true } });
+      // Same catch-up the webhook does: release any COMPLETED sale that was
+      // stuck waiting on payouts to switch on.
+      const stuck = await prisma.order.findMany({
+        where: { sellerId: userId, kind: "MARKETPLACE", status: "COMPLETED", stripeTransferId: null },
+        select: { id: true },
+        take: 200,
+      });
+      for (const o of stuck) await releaseFundsForOrder(o.id).catch(() => {});
+    }
+    return payoutsEnabled;
+  } catch {
+    return false; // Stripe unreachable — report unchanged rather than guess
+  }
+}
+
 // Transfers a completed order's seller share (total − platform fee) out of the
 // platform's held balance into the seller's connected account. Idempotent: a
 // second call on the same order is a no-op if it already has a transfer recorded,
