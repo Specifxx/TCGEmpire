@@ -76,12 +76,75 @@ export async function createOnboardingLink(accountId: string): Promise<string> {
 }
 
 // A one-time login link into the seller's own Stripe Express dashboard — this is
-// where they see their real available/paid-out balance and payout schedule. We
-// deliberately never mirror that number ourselves (see getFundsSummary in
-// lib/marketplace.ts) — Stripe is the single source of truth for it.
+// where they see their real available/paid-out balance, plus everything below
+// (schedule, manual payout) if they'd rather manage it there directly. We
+// deliberately never mirror the BALANCE figure ourselves (see the funds API
+// route) — Stripe is the single source of truth for that. The payout SCHEDULE
+// below is different: it's a low-frequency setting, not a number that can drift
+// out of sync, so reading/writing it here (always live against Stripe, never
+// cached) is just a thin, safe proxy that saves a seller a trip to Stripe's UI.
 export async function createLoginLink(accountId: string): Promise<string> {
   const link = await stripe().accounts.createLoginLink(accountId);
   return link.url;
+}
+
+export type PayoutInterval = "manual" | "daily" | "weekly" | "monthly";
+export interface PayoutSchedule {
+  interval: PayoutInterval;
+  delayDays: number | null; // Stripe/country-assigned minimum days before a transaction is payout-eligible
+  weeklyAnchor: string | null; // day name, only set when interval === "weekly"
+  monthlyAnchor: number | null; // day of month (1-31, or 31 = last day), only set when interval === "monthly"
+}
+
+// Reads the connected account's CURRENT payout schedule straight from Stripe —
+// no local copy, so it can never go stale.
+export async function getPayoutSchedule(accountId: string): Promise<PayoutSchedule> {
+  const account = await stripe().accounts.retrieve(accountId);
+  const schedule = account.settings?.payouts?.schedule;
+  return {
+    interval: (schedule?.interval as PayoutInterval) ?? "daily",
+    delayDays: typeof schedule?.delay_days === "number" ? schedule.delay_days : null,
+    weeklyAnchor: schedule?.weekly_anchor ?? null,
+    monthlyAnchor: schedule?.monthly_anchor ?? null,
+  };
+}
+
+// Updates the schedule sellers can choose from this app: automatic daily/weekly/
+// monthly, or "manual" (Stripe holds the balance until createManualPayout is
+// called — the "hold" option). Deliberately doesn't expose delay_days — that's
+// a country-assigned minimum, not something a seller should be tuning.
+export async function updatePayoutSchedule(
+  accountId: string,
+  schedule: { interval: PayoutInterval; weeklyAnchor?: string; monthlyAnchor?: number }
+): Promise<void> {
+  await stripe().accounts.update(accountId, {
+    settings: {
+      payouts: {
+        schedule: {
+          interval: schedule.interval,
+          ...(schedule.interval === "weekly" && schedule.weeklyAnchor
+            ? { weekly_anchor: schedule.weeklyAnchor as import("stripe").Stripe.AccountUpdateParams.Settings.Payouts.Schedule.WeeklyAnchor }
+            : {}),
+          ...(schedule.interval === "monthly" && schedule.monthlyAnchor ? { monthly_anchor: schedule.monthlyAnchor } : {}),
+        },
+      },
+    },
+  });
+}
+
+// Manually triggers a payout of the account's full available balance in every
+// currency it holds — only meaningful (and only exposed in the UI) when the
+// schedule is "manual"; Stripe pays out automatically otherwise. Lets a seller
+// who's chosen to "hold" funds actually pull them out on demand instead of
+// waiting for the next auto-payout. No-ops (throws nothing) if there's simply
+// nothing available yet.
+export async function createManualPayout(accountId: string): Promise<void> {
+  const balance = await stripe().balance.retrieve({ stripeAccount: accountId });
+  const payable = balance.available.filter((b) => b.amount > 0);
+  if (!payable.length) throw new Error("No funds available to pay out yet");
+  for (const b of payable) {
+    await stripe().payouts.create({ amount: b.amount, currency: b.currency }, { stripeAccount: accountId });
+  }
 }
 
 // Transfers a completed order's seller share (total − platform fee) out of the

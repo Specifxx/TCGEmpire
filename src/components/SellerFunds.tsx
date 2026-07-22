@@ -5,6 +5,7 @@ import Link from "next/link";
 import { formatMoney } from "@/lib/format";
 import { StripeErrorNotice } from "./StripeErrorNotice";
 import { formatDay } from "@/lib/delivery-estimate";
+import { MARKETPLACE_FEE_BPS, MARKETPLACE_AUTO_RELEASE_DAYS } from "@/lib/marketplace-policy";
 
 // Pure display helper (kept local — lib/order-number.ts pulls in the Prisma
 // client, which can't ship in a "use client" bundle).
@@ -45,12 +46,171 @@ interface Funds {
   recent: RecentOrder[];
 }
 
+type PayoutInterval = "manual" | "daily" | "weekly" | "monthly";
+interface PayoutSchedule {
+  interval: PayoutInterval;
+  delayDays: number | null;
+  weeklyAnchor: string | null;
+  monthlyAnchor: number | null;
+}
+
+const WEEKDAYS = ["monday", "tuesday", "wednesday", "thursday", "friday"];
+const WEEKDAY_LABEL: Record<string, string> = {
+  monday: "Monday", tuesday: "Tuesday", wednesday: "Wednesday", thursday: "Thursday", friday: "Friday",
+};
+
 function orderStatusLabel(o: RecentOrder): string {
   if (o.status === "COMPLETED" && !o.transferredAt) return "Ready — finish payouts to receive it";
   if (o.status === "COMPLETED") return "Released";
   if (o.status === "SHIPPED") return o.releasesAt ? `Releases ${formatDay(o.releasesAt)}` : "Held — in transit";
   if (o.status === "PAID") return o.shipByAt ? `Held — ship by ${formatDay(o.shipByAt)}` : "Held — awaiting shipment";
   return o.status;
+}
+
+function scheduleSummary(s: PayoutSchedule): string {
+  if (s.interval === "manual") return "Manual — funds stay in your Stripe balance until you request a payout";
+  if (s.interval === "weekly") return `Automatic — every ${s.weeklyAnchor ? WEEKDAY_LABEL[s.weeklyAnchor] ?? s.weeklyAnchor : "week"}`;
+  if (s.interval === "monthly") return `Automatic — the ${ordinal(s.monthlyAnchor ?? 1)} of each month`;
+  return "Automatic — daily";
+}
+
+function ordinal(n: number): string {
+  if (n >= 29 || (n >= 11 && n <= 13)) return `${n}th`;
+  const last = n % 10;
+  return `${n}${last === 1 ? "st" : last === 2 ? "nd" : last === 3 ? "rd" : "th"}`;
+}
+
+// Payout schedule card — lets a seller choose how Stripe moves their balance to
+// their bank (or hold it entirely and pay themselves out on demand). Only
+// rendered once payouts are enabled; the schedule itself lives on Stripe's side
+// (read/written live, never cached here — see lib/connect.ts).
+function PayoutScheduleCard() {
+  const [schedule, setSchedule] = useState<PayoutSchedule | null>(null);
+  const [draftInterval, setDraftInterval] = useState<PayoutInterval>("daily");
+  const [weeklyAnchor, setWeeklyAnchor] = useState("monday");
+  const [monthlyAnchor, setMonthlyAnchor] = useState(1);
+  const [saving, setSaving] = useState(false);
+  const [payingOut, setPayingOut] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    const res = await fetch("/api/marketplace/stripe/payout-schedule").catch(() => null);
+    if (!res?.ok) return;
+    const data: PayoutSchedule = await res.json();
+    setSchedule(data);
+    setDraftInterval(data.interval);
+    if (data.weeklyAnchor) setWeeklyAnchor(data.weeklyAnchor);
+    if (data.monthlyAnchor) setMonthlyAnchor(data.monthlyAnchor);
+  }, []);
+
+  useEffect(() => { void load(); }, [load]);
+
+  async function save() {
+    setSaving(true);
+    setError(null);
+    setNotice(null);
+    const res = await fetch("/api/marketplace/stripe/payout-schedule", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ interval: draftInterval, weeklyAnchor, monthlyAnchor }),
+    }).catch(() => null);
+    const data = await res?.json().catch(() => ({}));
+    setSaving(false);
+    if (res?.ok) {
+      setSchedule(data);
+      setNotice("Payout schedule updated.");
+    } else {
+      setError(data?.error ?? "Couldn't reach Stripe — try again shortly");
+    }
+  }
+
+  async function payOutNow() {
+    setPayingOut(true);
+    setError(null);
+    setNotice(null);
+    const res = await fetch("/api/marketplace/stripe/payout-now", { method: "POST" }).catch(() => null);
+    const data = await res?.json().catch(() => ({}));
+    setPayingOut(false);
+    if (res?.ok) {
+      setNotice("Payout requested — it's on its way to your bank.");
+    } else {
+      setError(data?.error ?? "Couldn't reach Stripe — try again shortly");
+    }
+  }
+
+  if (!schedule) {
+    return (
+      <div className="card-surface p-5">
+        <h3 className="font-bold text-white">Payout schedule</h3>
+        <p className="mt-1 text-sm text-slate-500">Loading…</p>
+      </div>
+    );
+  }
+
+  const dirty =
+    draftInterval !== schedule.interval ||
+    (draftInterval === "weekly" && weeklyAnchor !== schedule.weeklyAnchor) ||
+    (draftInterval === "monthly" && monthlyAnchor !== schedule.monthlyAnchor);
+
+  return (
+    <div className="card-surface p-5">
+      <h3 className="font-bold text-white">Payout schedule</h3>
+      <p className="mt-1 text-sm text-slate-500">
+        Currently: <strong className="text-slate-300">{scheduleSummary(schedule)}</strong>.
+        {schedule.delayDays != null && (
+          <> Funds become payout-eligible {schedule.delayDays} day{schedule.delayDays === 1 ? "" : "s"} after they land in
+          your Stripe balance (a Stripe/country minimum, not something RiftCompare sets) — then this schedule takes over.</>
+        )}
+      </p>
+
+      <div className="mt-3 flex flex-wrap items-end gap-3">
+        <label className="text-sm">
+          <span className="mb-1 block text-slate-400">Schedule</span>
+          <select value={draftInterval} onChange={(e) => setDraftInterval(e.target.value as PayoutInterval)} className="input">
+            <option value="daily">Automatic — daily</option>
+            <option value="weekly">Automatic — weekly</option>
+            <option value="monthly">Automatic — monthly</option>
+            <option value="manual">Manual — I&apos;ll request payouts myself</option>
+          </select>
+        </label>
+        {draftInterval === "weekly" && (
+          <label className="text-sm">
+            <span className="mb-1 block text-slate-400">Day</span>
+            <select value={weeklyAnchor} onChange={(e) => setWeeklyAnchor(e.target.value)} className="input">
+              {WEEKDAYS.map((d) => <option key={d} value={d}>{WEEKDAY_LABEL[d]}</option>)}
+            </select>
+          </label>
+        )}
+        {draftInterval === "monthly" && (
+          <label className="text-sm">
+            <span className="mb-1 block text-slate-400">Day of month</span>
+            <select value={monthlyAnchor} onChange={(e) => setMonthlyAnchor(Number(e.target.value))} className="input">
+              {Array.from({ length: 28 }, (_, i) => i + 1).map((d) => <option key={d} value={d}>{ordinal(d)}</option>)}
+            </select>
+          </label>
+        )}
+        <button onClick={save} disabled={saving || !dirty} className="btn-primary">
+          {saving ? "Saving…" : "Save schedule"}
+        </button>
+        {schedule.interval === "manual" && (
+          <button onClick={payOutNow} disabled={payingOut} className="btn-ghost">
+            {payingOut ? "Requesting…" : "Pay out now →"}
+          </button>
+        )}
+      </div>
+
+      {draftInterval === "manual" && (
+        <p className="mt-2 text-xs text-slate-600">
+          Manual means Stripe won&apos;t move anything to your bank on its own — your balance just sits there until you
+          click &ldquo;Pay out now&rdquo;. Useful if you&apos;d rather batch withdrawals yourself.
+        </p>
+      )}
+
+      {notice && <p className="mt-2 text-xs text-brand-300">{notice}</p>}
+      {error && <StripeErrorNotice message={error} />}
+    </div>
+  );
 }
 
 export function SellerFunds() {
@@ -99,7 +259,7 @@ export function SellerFunds() {
               {funds.payoutsEnabled
                 ? "Payouts are enabled — funds transfer to your connected Stripe account once an order completes."
                 : "Connect a Stripe account to receive payouts. Stripe handles identity verification for you."}
-              {" "}All figures below are net of RiftCompare&apos;s 5% marketplace fee — the amount you actually receive.
+              {" "}All figures below are net of RiftCompare&apos;s {MARKETPLACE_FEE_BPS / 100}% marketplace fee — the amount you actually receive.
             </p>
           </div>
           <button onClick={openStripe} disabled={connecting} className="btn-primary whitespace-nowrap">
@@ -108,6 +268,28 @@ export function SellerFunds() {
         </div>
         {error && <StripeErrorNotice message={error} />}
       </div>
+
+      {/* Full timeline, spelled out — "when do I actually see this in my bank"
+          answered as three concrete stages instead of one vague sentence. */}
+      <div className="card-surface p-5">
+        <h3 className="font-bold text-white">How &amp; when you get paid</h3>
+        <ol className="mt-2 flex flex-col gap-2 text-sm text-slate-400">
+          <li><strong className="text-slate-200">1. Buyer pays</strong> — RiftCompare holds the money; nothing is yours yet.</li>
+          <li><strong className="text-slate-200">2. You ship it</strong> — mark the order shipped with tracking. The money stays held while it&apos;s in transit.</li>
+          <li>
+            <strong className="text-slate-200">3. It releases to your Stripe balance</strong> — automatically once the buyer
+            confirms receipt, or {MARKETPLACE_AUTO_RELEASE_DAYS} days after you shipped either way, whichever comes first.
+            This is instant and shows up immediately in the &quot;Released to date&quot; figure below.
+          </li>
+          <li>
+            <strong className="text-slate-200">4. Stripe pays your bank</strong> — per the schedule below. New accounts
+            usually see a short extra delay on their very first payout while Stripe finishes verification; after that
+            it&apos;s routine.
+          </li>
+        </ol>
+      </div>
+
+      {funds.payoutsEnabled && <PayoutScheduleCard />}
 
       {funds.readyForPayout.length > 0 && (
         <div className="card-surface border-gold/40 bg-gold/5 p-5">
@@ -137,8 +319,8 @@ export function SellerFunds() {
             </ul>
           )}
           <p className="mt-2 text-xs text-slate-600">
-            Each shipped order releases automatically 14 days after you mark it shipped — sooner if the buyer
-            confirms. See the exact date per order below.
+            Each shipped order releases automatically {MARKETPLACE_AUTO_RELEASE_DAYS} days after you mark it shipped —
+            sooner if the buyer confirms. See the exact date per order below.
             {earliestRelease && <> Earliest: <strong className="text-slate-400">{formatDay(earliestRelease)}</strong>.</>}
           </p>
         </div>
@@ -153,7 +335,9 @@ export function SellerFunds() {
               ))}
             </ul>
           )}
-          <p className="mt-2 text-xs text-slate-600">Paid out to your bank on your Stripe account's normal payout schedule.</p>
+          <p className="mt-2 text-xs text-slate-600">
+            Already in your Stripe balance — paid to your bank per your payout schedule above.
+          </p>
         </div>
       </div>
 
@@ -169,7 +353,7 @@ export function SellerFunds() {
                 <span className={o.status === "COMPLETED" && !o.transferredAt ? "text-gold" : "text-slate-500"}>{orderStatusLabel(o)}</span>
                 <span className="text-right">
                   <span className="block font-semibold text-white">{formatMoney(o.totalCents - o.feeCents, o.currency)}</span>
-                  <span className="block text-[10px] text-slate-600" title="RiftCompare's 5% marketplace fee">
+                  <span className="block text-[10px] text-slate-600" title={`RiftCompare's ${MARKETPLACE_FEE_BPS / 100}% marketplace fee`}>
                     {formatMoney(o.totalCents, o.currency)} sale − {formatMoney(o.feeCents, o.currency)} fee
                   </span>
                 </span>
