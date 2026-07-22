@@ -28,7 +28,7 @@ import { AiInsight } from "@/components/AiInsight";
 import { CardPriceMetrics, CardPriceComparison, type EbaySearchMap } from "@/components/CardMarketSection";
 import { MarketplaceHeroBlock } from "@/components/MarketplaceHeroBlock";
 import { getActiveListingsForCard } from "@/lib/marketplace";
-import { EbayBuyCta } from "@/components/EbayBuyCta";
+import { EbayAdCarousel } from "@/components/EbayAdCarousel";
 import { computeMarket, type MarketRow } from "@/lib/market-rows";
 
 // REAL ISR: no cookie/header reads anywhere in this route's tree — the page is
@@ -421,8 +421,11 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             {/* Primary singles buy-path — always present. eBay carries this card
                 (new/used/graded) in every market and pays us a commission, so it's
                 the first, always-visible buy action; the honest local price
-                comparison sits directly below it. */}
-            <EbayBuyCta query={cardSearchName(card.name, card)} className="mt-4" />
+                comparison sits directly below it. Shows real live listings (a
+                native "eBay Ad" carousel) when the daily import has cached any
+                for this card+market, falling back to the generic search CTA
+                otherwise. */}
+            <EbayAdCarousel cardId={card.id} query={cardSearchName(card.name, card)} className="mt-4" />
           </div>
 
           {/* RiftCompare Marketplace hero — the main attention-grab, shown only

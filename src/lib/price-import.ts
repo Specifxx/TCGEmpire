@@ -7,7 +7,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { dbHistory, ensureHistoryCards } from "./db-history";
 import { RETAILER_LIST, RetailerInfo } from "./retailers";
-import { isEbayEnabled, isEbayRateLimited, searchEbayLowest, primeEbayBudget, ebaySpentThisRun } from "./ebay";
+import { isEbayEnabled, isEbayRateLimited, searchEbayLowest, primeEbayBudget, ebaySpentThisRun, type EbayResult } from "./ebay";
 import { importSealed } from "./sealed-import";
 import { snapshotDemand } from "./demand-snapshot";
 import { refreshTcgplayerPrices } from "./tcgplayer";
@@ -297,19 +297,39 @@ export async function refreshEbayMarkets(
     for (const s of storeLows) if (s._min.priceCents != null) refByCard.set(s.cardId, s._min.priceCents);
 
     const rows: Prisma.RetailerPriceCreateManyInput[] = [];
+    // "eBay Ad" carousel rows for the card page — captured for free from the same
+    // Browse API call above (see searchEbayLowest's captureAdListings param).
+    const adRows: Prisma.EbayAdListingCreateManyInput[] = [];
     for (const c of cards) {
       if (isEbayRateLimited()) break;
       checkedIds.add(c.id); // we have budget and are about to query this card
       const [rawNum, total] = c.collectorNumber.split("/");
-      const r = await searchEbayLowest({
-        name: c.name,
-        setCode: c.setCode,
-        number: rawNum.replace(/\*/g, ""),
-        total: total ?? "",
-        isSignature: c.collectorNumber.includes("*"),
-        isPromo: c.isPromo,
-        marketplace: mkt.marketplace,
-        referenceCents: refByCard.get(c.id),
+      const captured: EbayResult[] = [];
+      const r = await searchEbayLowest(
+        {
+          name: c.name,
+          setCode: c.setCode,
+          number: rawNum.replace(/\*/g, ""),
+          total: total ?? "",
+          isSignature: c.collectorNumber.includes("*"),
+          isPromo: c.isPromo,
+          marketplace: mkt.marketplace,
+          referenceCents: refByCard.get(c.id),
+        },
+        captured
+      );
+      captured.forEach((l, i) => {
+        adRows.push({
+          cardId: c.id,
+          country: mkt.country,
+          rank: i,
+          priceCents: l.priceCents,
+          shippingCents: l.shippingCents,
+          currency: mkt.currency,
+          url: l.url,
+          title: l.title,
+          imageUrl: l.imageUrl ?? null,
+        });
       });
       // The budget can run out INSIDE the call (its own spend() check), meaning this
       // card was never actually queried — don't leave it stamped as checked.
@@ -336,6 +356,15 @@ export async function refreshEbayMarkets(
       written += rows.length;
     } else {
       console.warn(`eBay ${mkt.country}: 0 results (rate-limited?) — keeping existing rows.`);
+    }
+    if (adRows.length > 0) {
+      // Only replace the cards we actually re-queried this pass — a rate-limited
+      // run that skips most cards must not wipe out yesterday's carousel for them.
+      const queriedIds = [...new Set(adRows.map((r) => r.cardId))];
+      for (let i = 0; i < queriedIds.length; i += 1000) {
+        await prisma.ebayAdListing.deleteMany({ where: { country: mkt.country, cardId: { in: queriedIds.slice(i, i + 1000) } } });
+      }
+      await prisma.ebayAdListing.createMany({ data: adRows });
     }
   }
   // Stamp every card the pass reached so the card page can distinguish a genuine

@@ -227,24 +227,42 @@ function titleIsSignature(title: string, n: number): boolean {
   );
 }
 
+function mapEbayItem(it: any): EbayResult {
+  return {
+    priceCents: Math.round(parseFloat(it.price.value) * 100),
+    shippingCents: shippingFromItem(it),
+    url: ebayAffiliateUrl(it.itemAffiliateWebUrl ?? it.itemWebUrl),
+    title: it.title,
+    condition: it.condition,
+    imageUrl: it.image?.imageUrl ?? it.thumbnailImages?.[0]?.imageUrl ?? null,
+  };
+}
+
 // Lowest legitimate single-card AU listing for a specific card. Requires the
 // listing title to actually contain the card's name (rejects bundles/lots/wrong
 // cards) and excludes obvious multi-card/non-English listings.
-export async function searchEbayLowest(card: {
-  name: string;
-  setCode: string;
-  number: string;
-  total: string;
-  isSignature: boolean;
-  isPromo?: boolean;
-  marketplace?: string; // "EBAY_AU" (default) | "EBAY_US"
-  // The card's known value in this market (cheapest tracked STORE price, cents). When
-  // present, listings priced absurdly above it are dropped as mismatches — a promo,
-  // signature, graded slab or sealed deck that slipped past the keyword/number checks
-  // (e.g. a $1,986 "Annie" leaking onto a $10 starter card). A legit cheaper listing
-  // can still win, so this never blanks a card that has a real eBay single.
-  referenceCents?: number;
-}): Promise<EbayResult | null> {
+export async function searchEbayLowest(
+  card: {
+    name: string;
+    setCode: string;
+    number: string;
+    total: string;
+    isSignature: boolean;
+    isPromo?: boolean;
+    marketplace?: string; // "EBAY_AU" (default) | "EBAY_US"
+    // The card's known value in this market (cheapest tracked STORE price, cents). When
+    // present, listings priced absurdly above it are dropped as mismatches — a promo,
+    // signature, graded slab or sealed deck that slipped past the keyword/number checks
+    // (e.g. a $1,986 "Annie" leaking onto a $10 starter card). A legit cheaper listing
+    // can still win, so this never blanks a card that has a real eBay single.
+    referenceCents?: number;
+  },
+  // Optional output array: if provided, filled with the top few (already
+  // legit-filtered) listings for the card page's "eBay Ad" carousel — a side
+  // effect of this SAME search, so the carousel costs zero extra Browse API
+  // calls/quota beyond what this pass already spends for the price comparison.
+  captureAdListings?: EbayResult[]
+): Promise<EbayResult | null> {
   const token = await getToken();
   if (!token) return null;
 
@@ -317,16 +335,13 @@ export async function searchEbayLowest(card: {
   // and there are enough comparison listings for the median to be trustworthy. This
   // only bites on clear outliers ($40 among $100s), never on normally-priced cards.
   const best = pruneCheapOutliers(valid);
-  if (!best) return null;
 
-  return {
-    priceCents: Math.round(parseFloat(best.price.value) * 100),
-    shippingCents: shippingFromItem(best),
-    url: ebayAffiliateUrl(best.itemAffiliateWebUrl ?? best.itemWebUrl),
-    title: best.title,
-    condition: best.condition,
-    imageUrl: best.image?.imageUrl ?? best.thumbnailImages?.[0]?.imageUrl ?? null,
-  };
+  if (captureAdListings) {
+    captureAdListings.push(...valid.slice(0, 4).map(mapEbayItem));
+  }
+
+  if (!best) return null;
+  return mapEbayItem(best);
 }
 
 // Keyword each sealed product type must appear as in an eBay title.

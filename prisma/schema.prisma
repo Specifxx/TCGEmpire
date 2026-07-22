@@ -253,6 +253,7 @@ model Card {
   priceAlerts         PriceAlert[]
   marketplaceListings MarketplaceListing[]
   collectedBy         CollectionCard[]
+  ebayAdListings      EbayAdListing[]
 
   @@index([setCode, collectorNumber])
   @@index([nameNormalized])
@@ -488,6 +489,32 @@ model RetailerPrice {
   @@index([retailer])
   @@index([priceCents])
   @@index([cardId, country, inStock])
+}
+
+// A small cache of real eBay listings per card, used to render a native-style
+// "eBay Ad" carousel on the card page (real thumbnail/title/price, not a plain
+// search link) — see components/EbayAdCarousel.tsx. Captured as a side effect
+// of the existing per-card eBay Browse API call in price-import.ts: that call
+// already fetches + filters up to 100 results down to the single cheapest
+// (RetailerPrice's "ebay" row); this just persists the next few from that SAME
+// response, so it costs zero additional Browse API calls/quota.
+model EbayAdListing {
+  id            String   @id @default(cuid())
+  cardId        String
+  country       String   @default("AU") // marketplace the search ran against
+  rank          Int // 0 = cheapest shown first, etc.
+  priceCents    Int
+  shippingCents Int? // null = unknown; 0 = free shipping (shown as a badge)
+  currency      String   @default("AUD")
+  url           String // affiliate-tagged
+  title         String
+  imageUrl      String?
+  updatedAt     DateTime @updatedAt
+
+  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@unique([cardId, country, rank])
+  @@index([cardId, country])
 }
 
 // Sealed / non-single Riftbound products (booster boxes, packs, Proving Grounds,
