@@ -15,7 +15,7 @@ import { CountryProvider } from "@/components/CountryProvider";
 import { PremiumProvider } from "@/components/PremiumProvider";
 import { PremiumDialogProvider } from "@/components/PremiumDialog";
 import { DEFAULT_COUNTRY } from "@/lib/country";
-import { BUYMEACOFFEE_URL, CONTACT_EMAIL, DISCORD_URL, SITE_NAME, SITE_URL } from "@/lib/site";
+import { CONTACT_EMAIL, DISCORD_URL, SITE_NAME, SITE_URL } from "@/lib/site";
 import { IMPACT_SITE_VERIFICATION } from "@/lib/affiliate";
 import { NAV_GROUPS, MARKETPLACE_NAV_VISIBLE } from "@/components/nav-groups";
 import { NativeShell } from "@/components/NativeShell";
@@ -286,15 +286,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             of date — always confirm on the retailer&apos;s site. Not affiliated with
             or endorsed by Riot Games.
           </p>
-          {/* Buy me a coffee — a low-friction tip option at the very bottom. */}
-          <a
-            href={BUYMEACOFFEE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#FFDD00] px-4 py-2 text-sm font-bold text-[#0d0c0c] transition-transform hover:-translate-y-0.5"
-          >
-            <span aria-hidden>☕</span> Buy me a coffee
-          </a>
         </footer>
         {/* HilltopAds zone loader — the primary ad network (web only, non-premium).
             Skipped inside the native app, which shows AdMob banners via NativeShell. */}

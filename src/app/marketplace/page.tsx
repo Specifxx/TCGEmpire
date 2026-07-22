@@ -124,6 +124,7 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
       ratingCount: r?.count ?? 0,
       country: l.country,
       inRegion: l.country === country,
+      createdAt: l.createdAt.toISOString(),
     };
     const existing = byCard.get(l.cardId);
     if (existing) existing.offers.push(offer);

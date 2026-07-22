@@ -9,9 +9,16 @@ import { AuthForm } from "./AuthForm";
 // convention) — dismissing or signing up both suppress it for good. Never shown
 // signed in, never shown on the auth pages themselves, and never shown unless the
 // promo API confirms real slots remain (never a stale/fabricated count).
+//
+// Skipped entirely on /marketplace — a visitor specifically evaluating the
+// marketplace (e.g. after seeing it linked from a community post) shouldn't be
+// hit with a full-screen signup wall on top of everything else there; a longer
+// delay sitewide (was 6s) avoids the "wall of asks" first impression more
+// broadly (real feedback: ads + subscription pitch + a still-growing
+// marketplace all at once read as overwhelming/untrustworthy to a new visitor).
 const SEEN_KEY = "rc_signup_promo_seen";
-const SHOW_DELAY_MS = 6_000; // let a new visitor look around before pitching anything
-const SKIP_PATHS = ["/login", "/register", "/forgot", "/reset", "/verify"];
+const SHOW_DELAY_MS = 25_000; // let a new visitor actually look around first
+const SKIP_PATHS = ["/login", "/register", "/forgot", "/reset", "/verify", "/marketplace"];
 
 interface PromoStatus {
   active: boolean;

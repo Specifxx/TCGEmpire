@@ -20,10 +20,6 @@ export const SITE_URL = "https://riftcompare.com";
 // NEXT_PUBLIC_META_PIXEL_ID; set it to an empty string to disable the pixel entirely.
 export const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID ?? "4210297419228994";
 
-// "Buy me a coffee" tip link, shown at the foot of every page. Override the handle
-// with NEXT_PUBLIC_BUYMEACOFFEE_URL if the username differs.
-export const BUYMEACOFFEE_URL = process.env.NEXT_PUBLIC_BUYMEACOFFEE_URL || "https://buymeacoffee.com/riftcompare";
-
 // Display price for RiftCompare Premium. Amount + period render the big price on the
 // /premium pricing card; PREMIUM_PRICE_LABEL is the compact "$4.99/mo" used in CTAs.
 // These are DISPLAY ONLY — set them to match the recurring price you created in

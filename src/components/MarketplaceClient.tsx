@@ -2,7 +2,7 @@
 
 import { Fragment, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, timeAgo } from "@/lib/format";
 import { cardDisplayName } from "@/lib/card-name";
 import { cardHref } from "@/lib/card-url";
 import { CONDITION_KEYS } from "@/lib/constants";
@@ -31,6 +31,10 @@ export interface MktOffer {
   // greyed out and non-purchasable — see D6/same-region-only in the plan.
   country: string;
   inRegion: boolean;
+  // When this listing was posted — shown so a buyer can judge freshness
+  // themselves (a listing posted months ago is more likely to be stale/sold
+  // elsewhere than one from today, since sellers self-report availability).
+  createdAt: string;
 }
 interface MktCardInner {
   id: string;
@@ -504,7 +508,7 @@ function OffersModal({
                     <Stars avg={o.ratingAvg} count={o.ratingCount} />
                   </div>
                   <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                    <span>{o.condition}{o.isFoil ? " · ✦ Foil" : ""} · {o.quantity} available · ⏱ ships in ~{o.handlingDays}d{o.shippingNote ? ` · ${o.shippingNote}` : ""}</span>
+                    <span>{o.condition}{o.isFoil ? " · ✦ Foil" : ""} · {o.quantity} available · ⏱ ships in ~{o.handlingDays}d{o.shippingNote ? ` · ${o.shippingNote}` : ""} · listed {timeAgo(o.createdAt)}</span>
                     {o.inRegion ? (
                       <DeltaBadge pct={deltaPct(o.priceCents, card.marketCents)} />
                     ) : (
