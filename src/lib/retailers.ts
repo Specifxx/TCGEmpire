@@ -198,6 +198,23 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     freeOverCents: 5000,
     shippingNote: "est. $2.50 · free over $50",
   },
+  // Shuffled LGS (Adelaide, SA) — sells Riftbound sealed product; no dedicated
+  // Riftbound singles collection found yet (only "Card Sleeves - Riftbound" /
+  // "Playmats - Riftbound" accessory collections as of this add), so collections
+  // is left empty and both the singles + sealed importers' sitemap
+  // auto-discovery (discoverRiftboundCollections/discoverCollections) will pick
+  // up a Riftbound singles collection automatically the moment one exists.
+  // Shipping read from their published policy (a multi-tier table; using the
+  // clearest complete pair — verify if it looks off): $10 standard, free over $150.
+  shuffled: {
+    key: "shuffled",
+    name: "Shuffled LGS",
+    base: "https://shuffled.com.au",
+    collections: [],
+    shippingFlatCents: 1000,
+    freeOverCents: 15000,
+    shippingNote: "est. $10 standard · free over $150",
+  },
 
   // ---- New Zealand stores (country: "NZ"; prices in NZD; never use eBay) -------
   // Collections are mostly auto-discovered from each store's Shopify sitemap; a few
