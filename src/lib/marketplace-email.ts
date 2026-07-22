@@ -57,7 +57,7 @@ export async function sendSaleNotificationEmail(to: string, o: OrderEmailInfo, s
   const net = o.totalCents - fee;
   const feeLine = fee > 0
     ? `<tr><td style="padding:0 32px 4px;font-size:13px;color:#8b95a5">
-        Sale price ${formatMoney(o.totalCents, o.currency)} − ${formatMoney(fee, o.currency)} RiftCompare fee (5%) =
+        Sale price ${formatMoney(o.totalCents, o.currency)} − ${formatMoney(fee, o.currency)} RiftCompare fee =
         <strong style="color:#34d17e">${formatMoney(net, o.currency)}</strong> you'll receive.
       </td></tr>`
     : "";
@@ -114,7 +114,7 @@ export async function sendFundsReleasedEmail(to: string, o: OrderEmailInfo): Pro
   const fee = o.feeCents ?? 0;
   const net = o.totalCents - fee;
   const breakdown = fee > 0
-    ? `${formatMoney(o.totalCents, o.currency)} sale − ${formatMoney(fee, o.currency)} fee (5%) = <strong style="color:#fff">${formatMoney(net, o.currency)}</strong>`
+    ? `${formatMoney(o.totalCents, o.currency)} sale − ${formatMoney(fee, o.currency)} fee = <strong style="color:#fff">${formatMoney(net, o.currency)}</strong>`
     : formatMoney(net, o.currency);
   const inner = `
     <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">

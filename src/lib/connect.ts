@@ -245,6 +245,10 @@ export async function releaseFundsForOrder(orderId: string): Promise<void> {
   const charge = typeof pi.latest_charge === "string" ? pi.latest_charge : pi.latest_charge?.id;
   if (!charge) return;
 
+  // order.feeCents is always stamped at checkout time (with the seller's actual
+  // premium status at time of sale) — this fallback only matters for a legacy/
+  // malformed row missing it, so it deliberately uses the standard (non-Premium)
+  // rate rather than doing an extra lookup for what should never be hit.
   const fee = order.feeCents ?? platformFeeCents(order.totalCents);
   const amount = Math.max(0, order.totalCents - fee);
   if (amount <= 0) return;

@@ -127,7 +127,7 @@ export default async function AdminMarketplacePage({ searchParams }: { searchPar
                   <th className="px-4 py-2 font-semibold">Month</th>
                   <th className="px-4 py-2 text-right font-semibold">Orders</th>
                   <th className="px-4 py-2 text-right font-semibold">GMV</th>
-                  <th className="px-4 py-2 text-right font-semibold">Fee revenue (5%)</th>
+                  <th className="px-4 py-2 text-right font-semibold" title="2% standard, 1% for Premium sellers — real per-order fees, so this reflects the actual mix">Fee revenue</th>
                 </tr>
               </thead>
               <tbody>

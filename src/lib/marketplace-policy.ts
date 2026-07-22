@@ -5,19 +5,29 @@
 //
 // NOTE on env vars in client bundles: these aren't NEXT_PUBLIC_, so any client
 // component importing the *_DAYS/_BPS constants gets the compiled-in defaults
-// (5/14/500) regardless of a Vercel override. That's fine for static prose
-// ("the 5% fee") — but every CONCRETE date shown to users must come from a
-// server-computed API field built with shipByDate()/autoReleaseDate() below,
-// never from client-side math, so an env override can never desync UI dates
-// from what the cron actually enforces.
+// (3/1/14/300/100) regardless of a Vercel override. That's fine for static prose
+// ("a 2% fee, 1% for Premium sellers") — but every CONCRETE date/fee shown for a
+// REAL order must come from server-computed data (the stored Order.feeCents, or
+// an API field built with shipByDate()/autoReleaseDate() below), never from
+// client-side math, so an env override can never desync UI figures from what
+// checkout/the cron actually charged/enforced.
 
-// Platform fee on a marketplace sale, in basis points (500 = 5%). Kept off the
+// Platform fee on a marketplace sale, in basis points (200 = 2%). Kept off the
 // buyer's price; deducted from the seller's payout at release time (see
 // lib/connect.ts's releaseFundsForOrder — the fee is simply never transferred).
-export const MARKETPLACE_FEE_BPS = Number(process.env.MARKETPLACE_FEE_BPS ?? 500);
+// Premium sellers pay the lower MARKETPLACE_PREMIUM_FEE_BPS instead — evaluated
+// fresh at the moment of each sale (checkout time), not locked in at listing
+// time, so a seller who upgrades mid-listing gets the discount on their very
+// next sale.
+export const MARKETPLACE_FEE_BPS = Number(process.env.MARKETPLACE_FEE_BPS ?? 200);
+export const MARKETPLACE_PREMIUM_FEE_BPS = Number(process.env.MARKETPLACE_PREMIUM_FEE_BPS ?? 100);
 
-export function platformFeeCents(priceCents: number): number {
-  return Math.round((priceCents * MARKETPLACE_FEE_BPS) / 10000);
+export function marketplaceFeeBps(sellerIsPremium?: boolean): number {
+  return sellerIsPremium ? MARKETPLACE_PREMIUM_FEE_BPS : MARKETPLACE_FEE_BPS;
+}
+
+export function platformFeeCents(priceCents: number, sellerIsPremium?: boolean): number {
+  return Math.round((priceCents * marketplaceFeeBps(sellerIsPremium)) / 10000);
 }
 
 // Escrow timing (D3 in the plan): a seller must add tracking within this many

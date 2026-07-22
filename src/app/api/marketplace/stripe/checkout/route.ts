@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { canViewMarketplaceListings, platformFeeCents, isLaunchCountry } from "@/lib/marketplace";
+import { isPremium } from "@/lib/premium";
 import { estimateShippingCents, validateShippingAddress } from "@/lib/shipping";
 import { stripe, stripeEnabled, releaseExpiredReservations, RESERVATION_MINUTES } from "@/lib/stripe";
 import { nextNumber } from "@/lib/order-number";
@@ -92,6 +93,8 @@ export async function POST(req: Request) {
             seller: {
               select: {
                 id: true,
+                isAdmin: true,
+                premiumUntil: true,
                 sellerProfile: { select: { shopName: true, shippingFlatCents: true, freeOverCents: true, postcode: true, suspendedAt: true } },
               },
             },
@@ -142,6 +145,9 @@ export async function POST(req: Request) {
         const profile = sellerLines[0].listing.seller.sellerProfile;
         const shopName = profile?.shopName ?? "Seller";
         const itemCents = sellerLines.reduce((sum, { listing, quantity }) => sum + listing.priceCents * quantity, 0);
+        // Evaluated fresh per sale (not locked in at listing time) — a seller who
+        // upgrades to Premium gets the lower fee on their very next sale.
+        const sellerIsPremium = isPremium(sellerLines[0].listing.seller);
 
         // Authoritative shipping cost for THIS seller — the exact same function
         // the live checkout preview calls (api/marketplace/shipping-estimate),
@@ -178,7 +184,7 @@ export async function POST(req: Request) {
               quantity,
               totalCents: lineItemCents + sellerShip,
               shippingCents: sellerShip,
-              feeCents: platformFeeCents(lineItemCents),
+              feeCents: platformFeeCents(lineItemCents, sellerIsPremium),
               status: "PENDING",
               reservedUntil,
               orderNumber,

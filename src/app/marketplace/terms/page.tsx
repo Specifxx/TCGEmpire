@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
-import { MARKETPLACE_FEE_BPS, MARKETPLACE_SHIP_DEADLINE_DAYS, MARKETPLACE_AUTO_RELEASE_DAYS, MARKETPLACE_LAUNCH_COUNTRIES } from "@/lib/marketplace";
+import { MARKETPLACE_FEE_BPS, MARKETPLACE_PREMIUM_FEE_BPS, MARKETPLACE_SHIP_DEADLINE_DAYS, MARKETPLACE_AUTO_RELEASE_DAYS, MARKETPLACE_LAUNCH_COUNTRIES } from "@/lib/marketplace";
 
 export const metadata: Metadata = {
   title: "Marketplace Terms",
@@ -11,6 +11,7 @@ export const metadata: Metadata = {
 
 const UPDATED = "18 July 2026";
 const FEE_PCT = (MARKETPLACE_FEE_BPS / 100).toFixed(0);
+const PREMIUM_FEE_PCT = (MARKETPLACE_PREMIUM_FEE_BPS / 100).toFixed(0);
 
 export default function MarketplaceTermsPage() {
   return (
@@ -61,7 +62,9 @@ export default function MarketplaceTermsPage() {
           <h2 className="text-lg font-bold text-white">4. Fees</h2>
           <p>
             {SITE_NAME} charges a {FEE_PCT}% platform fee on the item price of every completed Marketplace sale,
-            deducted from the seller&rsquo;s payout — buyers never see an added fee at checkout. Where a seller is
+            deducted from the seller&rsquo;s payout — buyers never see an added fee at checkout. Sellers with an active{" "}
+            <Link href="/premium" className="text-brand-400 hover:underline">Premium</Link> subscription pay a reduced{" "}
+            {PREMIUM_FEE_PCT}% instead, evaluated at the moment of each sale. Where a seller is
             registered for GST (or an equivalent local tax) on their sales, that remains the seller&rsquo;s own
             responsibility; the platform fee itself may attract GST once {SITE_NAME} is GST-registered, at which point
             this page will be updated with invoicing detail. Payment processing fees charged by Stripe are separate

@@ -11,12 +11,19 @@ import type { Prisma } from "@prisma/client";
 import { CONDITION_KEYS } from "./constants";
 import { SITE_URL } from "./site";
 import { MARKETPLACE_LAUNCH_COUNTRIES, isLaunchCountry, CURRENCY_BY_COUNTRY } from "./marketplace-countries";
-import { MARKETPLACE_FEE_BPS, platformFeeCents, MARKETPLACE_SHIP_DEADLINE_DAYS, MARKETPLACE_AUTO_RELEASE_DAYS } from "./marketplace-policy";
+import {
+  MARKETPLACE_FEE_BPS,
+  MARKETPLACE_PREMIUM_FEE_BPS,
+  marketplaceFeeBps,
+  platformFeeCents,
+  MARKETPLACE_SHIP_DEADLINE_DAYS,
+  MARKETPLACE_AUTO_RELEASE_DAYS,
+} from "./marketplace-policy";
 
 export { MARKETPLACE_LAUNCH_COUNTRIES, isLaunchCountry, CURRENCY_BY_COUNTRY };
 // Fee + escrow-timing policy lives in the prisma-free ./marketplace-policy (so
 // client components can import it); re-exported here for all server-side callers.
-export { MARKETPLACE_FEE_BPS, platformFeeCents, MARKETPLACE_SHIP_DEADLINE_DAYS, MARKETPLACE_AUTO_RELEASE_DAYS };
+export { MARKETPLACE_FEE_BPS, MARKETPLACE_PREMIUM_FEE_BPS, marketplaceFeeBps, platformFeeCents, MARKETPLACE_SHIP_DEADLINE_DAYS, MARKETPLACE_AUTO_RELEASE_DAYS };
 
 // Per-market retailer keys, mirroring how eBay uses ebay / ebay_us / ebay_uk. The
 // RetailerPrice unique key is [cardId, retailer, condition, isFoil] (no country), so

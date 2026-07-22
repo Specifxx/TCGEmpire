@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { CURRENCY_BY_COUNTRY, MARKETPLACE_COUNTRIES, isLaunchCountry } from "@/lib/marketplace";
+import { isPremium } from "@/lib/premium";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,7 @@ export async function GET() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in" }, { status: 401 });
   const profile = await prisma.sellerProfile.findUnique({ where: { userId: user.id } });
-  return NextResponse.json({ profile, isVerifiedSeller: user.isVerifiedSeller });
+  return NextResponse.json({ profile, isVerifiedSeller: user.isVerifiedSeller, isPremium: isPremium(user) });
 }
 
 const schema = z.object({

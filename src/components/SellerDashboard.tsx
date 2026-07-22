@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CONDITION_KEYS } from "@/lib/constants";
 import { CURRENCY_BY_COUNTRY } from "@/lib/marketplace-countries";
-import { MARKETPLACE_FEE_BPS, platformFeeCents } from "@/lib/marketplace-policy";
+import { MARKETPLACE_FEE_BPS, MARKETPLACE_PREMIUM_FEE_BPS, platformFeeCents } from "@/lib/marketplace-policy";
 import { formatMoney } from "@/lib/format";
 import { cardDisplayName } from "@/lib/card-name";
 import { StripeErrorNotice } from "./StripeErrorNotice";
@@ -73,6 +73,7 @@ export function SellerDashboard() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [listings, setListings] = useState<Listing[]>([]);
   const [payoutsEnabled, setPayoutsEnabled] = useState(false);
+  const [isPremiumSeller, setIsPremiumSeller] = useState(false);
   const [series, setSeries] = useState<{ currency: string; points: EarningsPoint[] } | null>(null);
   const [loaded, setLoaded] = useState(false);
 
@@ -84,6 +85,7 @@ export function SellerDashboard() {
       fetch("/api/marketplace/funds").then((r) => r.json()).catch(() => ({})),
     ]);
     setProfile(p.profile ?? null);
+    setIsPremiumSeller(!!p.isPremium);
     setListings(l.listings ?? []);
     setPayoutsEnabled(!!c.payoutsEnabled);
     setSeries(f.series ?? null);
@@ -106,14 +108,27 @@ export function SellerDashboard() {
             <MarketplaceReportBug subject="Seller dashboard bug: " />
           </div>
           <p className="text-sm text-slate-500">
-            Manage your RiftCompare Marketplace shop &amp; listings. RiftCompare takes a {MARKETPLACE_FEE_BPS / 100}%
-            fee on each sale — you always see exactly what you&apos;ll receive before you list and after you sell.
+            Manage your RiftCompare Marketplace shop &amp; listings. RiftCompare takes a{" "}
+            {isPremiumSeller ? MARKETPLACE_PREMIUM_FEE_BPS / 100 : MARKETPLACE_FEE_BPS / 100}% fee on each sale
+            {isPremiumSeller ? " — your Premium rate" : ` (${MARKETPLACE_PREMIUM_FEE_BPS / 100}% with Premium)`} — you
+            always see exactly what you&apos;ll receive before you list and after you sell.
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Link href="/marketplace/funds" className="btn-ghost text-sm">Seller funds →</Link>
         </div>
       </div>
+
+      {!isPremiumSeller && loaded && (
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gold/30 bg-gold/5 px-4 py-3">
+          <p className="text-sm text-slate-300">
+            <span className="font-bold text-gold">Go Premium</span> and pay just{" "}
+            <strong className="text-white">{MARKETPLACE_PREMIUM_FEE_BPS / 100}%</strong> per sale instead of{" "}
+            {MARKETPLACE_FEE_BPS / 100}% — plus Value Finder, Rising Cards, Deal Finder and an ad-free site.
+          </p>
+          <Link href="/premium" className="btn-primary whitespace-nowrap text-sm">Upgrade →</Link>
+        </div>
+      )}
 
       {!loaded ? (
         <p className="flex items-center gap-2 text-sm text-slate-500">
@@ -141,10 +156,10 @@ export function SellerDashboard() {
                   not a gate, so a seller without payouts set up yet doesn't block a
                   buyer who's ready to purchase right now. */}
               {!payoutsEnabled && <PayoutsOnboarding />}
-              <AddListing country={country} currency={profile.currency} onAdded={load} />
+              <AddListing country={country} currency={profile.currency} isPremiumSeller={isPremiumSeller} onAdded={load} />
             </>
           )}
-          <MyListings listings={listings} onChange={load} />
+          <MyListings listings={listings} isPremiumSeller={isPremiumSeller} onChange={load} />
         </div>
       )}
     </div>
@@ -285,7 +300,7 @@ function ShopForm({ profile, onSaved }: { profile: Profile | null; onSaved: () =
   );
 }
 
-function AddListing({ country, currency, onAdded }: { country: Country; currency: string; onAdded: () => void }) {
+function AddListing({ country, currency, isPremiumSeller, onAdded }: { country: Country; currency: string; isPremiumSeller: boolean; onAdded: () => void }) {
   const [card, setCard] = useState<SearchCard | null>(null);
   const [condition, setCondition] = useState("NM");
   const [isFoil, setIsFoil] = useState(false);
@@ -385,10 +400,12 @@ function AddListing({ country, currency, onAdded }: { country: Country; currency
       {(() => {
         const priceCents = Math.round(parseFloat(price || "0") * 100);
         if (!priceCents) return null;
-        const net = priceCents - platformFeeCents(priceCents);
+        const net = priceCents - platformFeeCents(priceCents, isPremiumSeller);
+        const feePct = isPremiumSeller ? MARKETPLACE_PREMIUM_FEE_BPS / 100 : MARKETPLACE_FEE_BPS / 100;
         return (
           <p className="mt-2 text-xs text-slate-500">
-            You&apos;ll receive ~<span className="font-semibold text-slate-300">{formatMoney(net, cur)}</span> after the {MARKETPLACE_FEE_BPS / 100}% fee.
+            You&apos;ll receive ~<span className="font-semibold text-slate-300">{formatMoney(net, cur)}</span> after the {feePct}% fee
+            {isPremiumSeller && <span className="text-gold"> (your Premium rate)</span>}.
           </p>
         );
       })()}
@@ -441,7 +458,7 @@ function CardSearch({ onPick }: { onPick: (c: SearchCard) => void }) {
   );
 }
 
-function MyListings({ listings, onChange }: { listings: Listing[]; onChange: () => void }) {
+function MyListings({ listings, isPremiumSeller, onChange }: { listings: Listing[]; isPremiumSeller: boolean; onChange: () => void }) {
   return (
     <div className="card-surface p-5">
       <h2 className="mb-3 font-bold text-white">Your listings ({listings.length})</h2>
@@ -449,14 +466,14 @@ function MyListings({ listings, onChange }: { listings: Listing[]; onChange: () 
         <p className="text-sm text-slate-500">No listings yet — list a card above.</p>
       ) : (
         <ul className="divide-y divide-ink-800">
-          {listings.map((l) => <ListingRow key={l.id} l={l} onChange={onChange} />)}
+          {listings.map((l) => <ListingRow key={l.id} l={l} isPremiumSeller={isPremiumSeller} onChange={onChange} />)}
         </ul>
       )}
     </div>
   );
 }
 
-function ListingRow({ l, onChange }: { l: Listing; onChange: () => void }) {
+function ListingRow({ l, isPremiumSeller, onChange }: { l: Listing; isPremiumSeller: boolean; onChange: () => void }) {
   const [editing, setEditing] = useState(false);
   const [price, setPrice] = useState((l.priceCents / 100).toFixed(2));
   const [qty, setQty] = useState(String(l.quantity));
@@ -506,8 +523,11 @@ function ListingRow({ l, onChange }: { l: Listing; onChange: () => void }) {
         <>
           <span className="text-right">
             <span className="block text-sm font-bold text-accent">{formatMoney(l.priceCents, l.currency)}</span>
-            <span className="block text-[10px] text-slate-600" title={`After RiftCompare's ${MARKETPLACE_FEE_BPS / 100}% marketplace fee`}>
-              you receive {formatMoney(l.priceCents - platformFeeCents(l.priceCents), l.currency)}
+            <span
+              className="block text-[10px] text-slate-600"
+              title={`After RiftCompare's ${isPremiumSeller ? MARKETPLACE_PREMIUM_FEE_BPS / 100 : MARKETPLACE_FEE_BPS / 100}% marketplace fee`}
+            >
+              you receive {formatMoney(l.priceCents - platformFeeCents(l.priceCents, isPremiumSeller), l.currency)}
             </span>
           </span>
           <span className="text-xs text-slate-500">×{l.quantity}</span>

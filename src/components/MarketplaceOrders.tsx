@@ -789,7 +789,7 @@ function OrderList({
             {g.role === "seller" ? (
               <div className="text-right">
                 <span className="text-sm font-extrabold text-accent">{formatMoney(g.totalCents - g.feeCents, g.currency)}</span>
-                <div className="text-[10px] text-slate-500" title="RiftCompare's 5% marketplace fee">
+                <div className="text-[10px] text-slate-500" title="RiftCompare's marketplace fee — 2% standard, 1% for Premium sellers">
                   {formatMoney(g.totalCents, g.currency)} sale − {formatMoney(g.feeCents, g.currency)} fee
                 </div>
               </div>

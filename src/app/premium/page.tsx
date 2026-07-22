@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { isPremium, premiumCheckoutEnabled, premiumTrialEnabled, premiumAnnualEnabled, PREMIUM_TRIAL_DAYS } from "@/lib/premium";
+import { MARKETPLACE_FEE_BPS, MARKETPLACE_PREMIUM_FEE_BPS } from "@/lib/marketplace-policy";
 import { PremiumCta } from "@/components/PremiumCta";
 import { ManageSubscriptionButton } from "@/components/ManageSubscriptionButton";
 import { AnnualPriceBlock } from "@/components/AnnualPriceBlock";
@@ -10,15 +11,23 @@ import { SITE_URL, PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, PREMIUM_ANNUAL_AM
 
 export const dynamic = "force-dynamic";
 
+const FEE_PCT = MARKETPLACE_FEE_BPS / 100;
+const PREMIUM_FEE_PCT = MARKETPLACE_PREMIUM_FEE_BPS / 100;
+
 export const metadata: Metadata = {
   title: "RiftCompare Premium — power tools for buyers & sellers",
-  description:
-    "RiftCompare Premium: the Best-Basket cart optimiser, the Value Finder screener, Rising Cards, the full Deal Finder list and an ad-free site. Price comparison and the portfolio tracker stay free.",
+  description: `RiftCompare Premium: a ${PREMIUM_FEE_PCT}% Marketplace seller fee (down from ${FEE_PCT}%), the Best-Basket cart optimiser, the Value Finder screener, Rising Cards, the full Deal Finder list and an ad-free site. Price comparison and the portfolio tracker stay free.`,
   alternates: { canonical: "/premium" },
 };
 
 // Detailed feature cards (all real Premium features).
 const FEATURES: { title: string; body: string; href: string | null; cta: string | null }[] = [
+  {
+    title: "Lower Marketplace seller fee",
+    body: `Sell on the RiftCompare Marketplace for just ${PREMIUM_FEE_PCT}% instead of ${FEE_PCT}% — applies to every sale the moment you're Premium, no separate opt-in.`,
+    href: "/marketplace/sell",
+    cta: "Open seller dashboard",
+  },
   {
     title: "Best-Basket cart optimiser",
     body: "The cheapest way to buy a whole deck list — the smartest split across stores once postage and free-shipping thresholds are in, with direct buy links.",
@@ -58,6 +67,7 @@ const COMPARE: { feature: string; free: boolean | string; premium: boolean | str
   { feature: "Portfolio tracker — history, P&L, CSV export", free: true, premium: true },
   { feature: "Price alerts", free: true, premium: true },
   { feature: "RiftCompare Index, movers & daily wrap", free: true, premium: true },
+  { feature: "Marketplace seller fee", free: `${FEE_PCT}%`, premium: `${PREMIUM_FEE_PCT}%` },
   { feature: "Deal Finder", free: "Top pick", premium: "Full list" },
   { feature: "Rising Cards", free: "Top pick", premium: "Full list" },
   { feature: "Best-Basket cart optimiser", free: false, premium: true },
@@ -66,6 +76,7 @@ const COMPARE: { feature: string; free: boolean | string; premium: boolean | str
 ];
 
 const INCLUDED = [
+  `Marketplace seller fee cut to ${PREMIUM_FEE_PCT}% (from ${FEE_PCT}%)`,
   "Best-Basket cart optimiser",
   "Value Finder screener",
   "Rising Cards",
@@ -99,7 +110,7 @@ export default async function PremiumPage() {
             "@context": "https://schema.org",
             "@type": "Product",
             name: "RiftCompare Premium",
-            description: "The Best-Basket cart optimiser, the Value Finder screener, Rising Cards, the full Deal Finder list and an ad-free RiftCompare.",
+            description: `A ${PREMIUM_FEE_PCT}% Marketplace seller fee, the Best-Basket cart optimiser, the Value Finder screener, Rising Cards, the full Deal Finder list and an ad-free RiftCompare.`,
             brand: { "@type": "Organization", name: "RiftCompare", url: SITE_URL },
             offers: {
               "@type": "Offer",
@@ -193,6 +204,7 @@ export default async function PremiumPage() {
           <Link href="/tools/value-finder" className="btn-ghost">Value Finder</Link>
           <Link href="/tools/rising" className="btn-ghost">Rising Cards</Link>
           <Link href="/tools/arbitrage" className="btn-ghost">Deal Finder</Link>
+          <Link href="/marketplace/sell" className="btn-ghost">Sell on Marketplace</Link>
           <Link href="/portfolio" className="btn-ghost">Portfolio</Link>
           {checkoutLive && <ManageSubscriptionButton />}
         </div>

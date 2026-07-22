@@ -34,7 +34,7 @@ export interface ArbSource {
   name: string;
   isEbay: boolean;
   // Cut taken when SELLING through this source (0 for a plain store — you sell
-  // at face; eBay's final-value fee; RiftCompare Marketplace's 5% platform fee).
+  // at face; eBay's final-value fee; RiftCompare Marketplace's platform fee).
   // Buying is always fee-free, so this only affects sell-side net calculations.
   feePct: number;
 }
@@ -93,7 +93,7 @@ async function minByCard(country: Country, keys: string[]) {
 }
 
 // Cheapest price PER (card, retailer) — used on the sell side, where different
-// sources can carry different fees (store 0%, eBay ~13%, marketplace 5%), so
+// sources can carry different fees (store 0%, eBay ~13%, marketplace fee), so
 // picking the best NET means comparing every source individually rather than
 // just the single cheapest gross price across all of them combined.
 async function minByCardAndRetailer(country: Country, keys: string[]) {
@@ -238,7 +238,7 @@ export async function getArbitrage(
       const perRetailer = sellMinByRetailer.get(cardId);
       if (!perRetailer) continue;
       // Best sell by NET across every selected sell source individually —
-      // each can carry a different cut (store 0%, eBay ~13%, marketplace 5%).
+      // each can carry a different cut (store 0%, eBay ~13%, marketplace fee).
       let sellGross = -1;
       let sellNet = -Infinity;
       let sellRetailer = "";
