@@ -38,14 +38,27 @@ export const INTL_ENABLED = process.env.NEXT_PUBLIC_INTL_DISABLED !== "true";
 
 const VALID = new Set<Country>(["AU", "NZ", "US", "UK", "SG"]);
 
-// Coerce any cookie/geo/query value to a supported Country (defaults to US). Accepts
-// ISO country codes from the geo header too (e.g. "AU", "NZ", "GB"); anything that
-// isn't AU/NZ/UK/US → US, so only AU/NZ/UK geo detections change the default.
+// EU member states (+ EEA/Schengen-adjacent UK-shipping-friendly neighbours) —
+// there's no separate EU store/eBay market, but UK (GBP, real UK stores) is a
+// far closer match for a European shopper's real prices/shipping than the US
+// default: nearer currency, nearer postage, and the site already offers a Euro
+// reference price (see fx.ts's gbpCentsToEur) specifically for this market.
+const EU_ISO = new Set([
+  "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU",
+  "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE",
+]);
+
+// Coerce any cookie/geo/query value to a supported Country. Accepts ISO country
+// codes from the geo header too (e.g. "AU", "NZ", "GB"). AU/NZ/UK/SG geo hits
+// pass straight through; an EU country defaults to UK (see EU_ISO above);
+// everything else (incl. the US and undetectable) falls through to US.
 export function normalizeCountry(v: string | undefined | null): Country {
   let up = (v ?? "").toUpperCase();
   // The geo header / Shopify use the ISO code "GB" for the United Kingdom; we use "UK".
   if (up === "GB") up = "UK";
-  return VALID.has(up as Country) ? (up as Country) : "US";
+  if (VALID.has(up as Country)) return up as Country;
+  if (EU_ISO.has(up)) return "UK";
+  return "US";
 }
 
 // The Shopify storefront ?country= param + eBay use ISO 3166 alpha-2, where the UK

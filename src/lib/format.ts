@@ -2,8 +2,8 @@
 
 // Distinct symbols so every price is unambiguous about its market (a plain "$"
 // could be AUD, NZD or USD). A$ = Australia, NZ$ = New Zealand, US$ = United States,
-// £ = United Kingdom.
-const SYMBOL: Record<string, string> = { AUD: "A$", NZD: "NZ$", USD: "US$", GBP: "£" };
+// £ = United Kingdom, € = the Euro reference figure shown to UK-market visitors.
+const SYMBOL: Record<string, string> = { AUD: "A$", NZD: "NZ$", USD: "US$", GBP: "£", EUR: "€" };
 
 // Format integer cents in the given currency (default AUD), e.g. "A$12.50".
 export function formatMoney(cents: number, currency: string = "AUD"): string {

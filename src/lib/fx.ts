@@ -25,6 +25,9 @@ export const USD_TO: Record<string, number> = {
   NZD: rate(process.env.NEXT_PUBLIC_USD_TO_NZD, 1.65),
   GBP: rate(process.env.NEXT_PUBLIC_USD_TO_GBP, 0.79),
   SGD: rate(process.env.NEXT_PUBLIC_USD_TO_SGD, 1.35),
+  // Not a market currency (no EUR store/eBay market) — just a reference display
+  // conversion offered to UK-market visitors who think in Euro. See gbpCentsToEur.
+  EUR: rate(process.env.NEXT_PUBLIC_USD_TO_EUR, 0.92),
 };
 
 // Convert integer USD cents into integer cents of `currency` (ISO 4217). Unknown
@@ -36,4 +39,19 @@ export function convertUsdCents(usdCents: number, currency: string): number {
 // Convert integer USD cents into the given market's native currency cents.
 export function usdCentsToCountry(usdCents: number, country: Country): number {
   return convertUsdCents(usdCents, currencyOf(country));
+}
+
+// Convert integer cents between any two currencies in USD_TO, via USD as the
+// common base (e.g. GBP -> EUR). Reference-only, like every other rate here.
+export function convertCents(cents: number, from: string, to: string): number {
+  if (from === to) return cents;
+  const usdCents = cents / (USD_TO[from] ?? 1);
+  return Math.round(usdCents * (USD_TO[to] ?? 1));
+}
+
+// A GBP price shown as an approximate Euro equivalent — for European shoppers
+// browsing the UK market (there's no separate EU store/eBay market; this is
+// purely a reference conversion of the real GBP price, not a live quote).
+export function gbpCentsToEur(gbpCents: number): number {
+  return convertCents(gbpCents, "GBP", "EUR");
 }

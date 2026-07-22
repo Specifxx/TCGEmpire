@@ -6,9 +6,10 @@ import { OutboundLink } from "./OutboundLink";
 import { TcgMarketPrice } from "./TcgMarketPrice";
 import { TcgplayerAd } from "./TcgplayerAd";
 import { EbayAd } from "./EbayAd";
-import { timeAgo } from "@/lib/format";
+import { timeAgo, formatMoney } from "@/lib/format";
 import { computeMarket, type MarketRow } from "@/lib/market-rows";
 import { outboundRel } from "@/lib/affiliate";
+import { gbpCentsToEur } from "@/lib/fx";
 
 // The market-dependent half of the card page. The page itself is ISR-cached with
 // the AU baseline (no cookie reads server-side — that's what makes the route
@@ -37,11 +38,12 @@ export function buyButtonLabel(retailer: string): string {
   return "View deal →";
 }
 
-function Metric({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+function Metric({ label, value, highlight, sub }: { label: string; value: string; highlight?: boolean; sub?: string }) {
   return (
     <div className="rounded-lg bg-ink-900 p-3">
       <div className="text-[11px] uppercase tracking-wide text-slate-500">{label}</div>
       <div className={`num text-lg font-bold ${highlight ? "text-accent" : "text-white"}`}>{value}</div>
+      {sub && <div className="num text-[11px] text-slate-500">{sub}</div>}
     </div>
   );
 }
@@ -61,15 +63,19 @@ export function CardPriceMetrics({
 }) {
   const { country, fmt } = useCountry();
   const m = useMemo(() => computeMarket(rows, country), [rows, country]);
+  // UK is priced in GBP (the only real market for it); a Euro reference figure
+  // helps European shoppers gauge cost — never the actual charge, always GBP.
+  const eur = (gbpCents: number | null) => (country === "UK" && gbpCents != null ? `≈ ${formatMoney(gbpCentsToEur(gbpCents), "EUR")}` : undefined);
 
   return (
     <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
       <Metric
         label={m.cheapestFoil != null ? "Standard from" : "Cheapest price"}
         value={(m.cheapestStandard ?? m.lowest) != null ? fmt((m.cheapestStandard ?? m.lowest)!) : "—"}
+        sub={eur(m.cheapestStandard ?? m.lowest)}
         highlight
       />
-      {m.cheapestFoil != null && <Metric label="✦ Foil from" value={fmt(m.cheapestFoil)} highlight />}
+      {m.cheapestFoil != null && <Metric label="✦ Foil from" value={fmt(m.cheapestFoil)} sub={eur(m.cheapestFoil)} highlight />}
       <Metric label="In stock at" value={`${m.storeCount} ${m.storeCount === 1 ? "store" : "stores"}`} />
       {energyCost != null && <Metric label="Energy" value={String(energyCost)} />}
       {might != null && m.cheapestFoil == null && <Metric label="Might" value={String(might)} />}
