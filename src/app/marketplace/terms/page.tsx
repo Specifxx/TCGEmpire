@@ -154,8 +154,9 @@ export default function MarketplaceTermsPage() {
         <section className="space-y-2">
           <h2 className="text-lg font-bold text-white">12. Contact</h2>
           <p>
-            Questions about these terms, or about the Marketplace generally? Visit{" "}
-            <Link href="/support" className="text-brand-400 hover:underline">Support</Link> or email{" "}
+            Questions about these terms, or about the Marketplace generally? Check our{" "}
+            <Link href="/marketplace/faq" className="text-brand-400 hover:underline">Marketplace FAQ</Link>, visit{" "}
+            <Link href="/support" className="text-brand-400 hover:underline">Support</Link>, or email{" "}
             <a href={`mailto:${CONTACT_EMAIL}`} className="text-gold hover:underline">{CONTACT_EMAIL}</a>.
           </p>
         </section>

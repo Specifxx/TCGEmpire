@@ -4,11 +4,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { ArbSource } from "@/lib/arbitrage";
 
-// Buy-side source picker. Sell is fixed to eBay (the only resale channel this
-// tool models), so only the BUY side is selectable — and the buy side already
-// includes the RiftCompare Marketplace alongside every other store. Defaults
-// to every store (cheapest store). Changing it updates the URL so the server
-// re-ranks.
+// Buy-side source picker, shared by both flip views. Sell is always fixed (eBay
+// for the main flip view, TCGplayer's reference price for the other), so only
+// the BUY side is selectable — and it already includes the RiftCompare
+// Marketplace alongside every other store. Defaults to every store (cheapest
+// store). Changing it updates the URL so the server re-ranks.
 function buyLabel(selected: string[], sources: ArbSource[]): string {
   const stores = sources.filter((s) => !s.isEbay);
   if (stores.length > 0 && selected.length === stores.length && stores.every((s) => selected.includes(s.key))) return "Cheapest store";
@@ -17,21 +17,18 @@ function buyLabel(selected: string[], sources: ArbSource[]): string {
   return `${selected.length} sources`;
 }
 
-function sellLabel(sell: string[], sources: ArbSource[]): string {
-  const names = sell.map((k) => sources.find((s) => s.key === k)?.name).filter((n): n is string => !!n);
-  return names.join(" / ") || "eBay";
-}
-
 export function ArbitrageFilters({
   sources,
   buy,
-  sell,
+  sellLabel,
   sort,
+  view,
 }: {
   sources: ArbSource[];
   buy: string[];
-  sell: string[];
+  sellLabel: string; // the fixed sell side's display name (not selectable)
   sort: string;
+  view?: "tcg"; // omit for the default "Worth more on eBay" view
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -39,7 +36,7 @@ export function ArbitrageFilters({
   function toggle(key: string) {
     const next = buy.includes(key) ? buy.filter((k) => k !== key) : [...buy, key];
     if (!next.length) return; // never allow an empty buy side
-    const params = new URLSearchParams({ buy: next.join(","), sell: sell.join(","), sort });
+    const params = new URLSearchParams({ buy: next.join(","), sort, ...(view ? { view } : {}) });
     router.push(`/tools/arbitrage?${params.toString()}`, { scroll: false });
   }
 
@@ -72,7 +69,7 @@ export function ArbitrageFilters({
       <div>
         <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Sell on</div>
         <div className="mt-0.5 flex min-w-[110px] items-center gap-2 rounded-lg border border-sky-500/30 bg-sky-500/10 px-3 py-2 text-sm font-semibold text-sky-300">
-          {sellLabel(sell, sources)}
+          {sellLabel}
         </div>
       </div>
     </div>

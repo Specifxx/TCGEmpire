@@ -83,6 +83,7 @@ export default function BuyerProtectionPage() {
             <Link href="/marketplace/terms" className="text-brand-400 hover:underline">Marketplace Terms</Link>, and
             details on shipping and tracking are in our{" "}
             <Link href="/marketplace/shipping" className="text-brand-400 hover:underline">Shipping &amp; Tracking</Link> page.
+            More common questions are answered in our <Link href="/marketplace/faq" className="text-brand-400 hover:underline">Marketplace FAQ</Link>.
             Questions? Email <a href={`mailto:${CONTACT_EMAIL}`} className="text-gold hover:underline">{CONTACT_EMAIL}</a>.
           </p>
         </section>

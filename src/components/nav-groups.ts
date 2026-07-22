@@ -31,6 +31,7 @@ const MARKETPLACE_GROUP: NavGroup = {
     { href: "/marketplace/orders", label: "My orders", emoji: "📦" },
     { href: "/marketplace/funds", label: "Seller funds", emoji: "💰" },
     { href: "/marketplace/buyer-protection", label: "Buyer protection", emoji: "🛡️" },
+    { href: "/marketplace/faq", label: "Marketplace FAQ", emoji: "❓" },
   ],
 };
 

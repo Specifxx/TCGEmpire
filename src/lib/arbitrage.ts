@@ -15,7 +15,7 @@ import { TCG_US } from "./tcgplayer";
 import { usdCentsToCountry } from "./fx";
 import { MARKETPLACE_RETAILER, MARKETPLACE_PUBLIC } from "./marketplace";
 import { MARKETPLACE_FEE_BPS } from "./marketplace-policy";
-import { TCGPLAYER_AU_RETAILER, TCGPLAYER_SG_RETAILER, TCGPLAYER_UK_RETAILER } from "./constants";
+import { TCGPLAYER_SG_RETAILER, TCGPLAYER_UK_RETAILER } from "./constants";
 import type { CardTileData } from "@/components/CardTile";
 
 export const EBAY_FEE = 0.13; // approx eBay final-value fee
@@ -43,11 +43,13 @@ export interface ArbSource {
 // eBay retailer key per market (NZ has no eBay coverage).
 const EBAY_KEY: Record<Country, string | null> = { AU: "ebay", NZ: null, US: "ebay_us", UK: "ebay_uk", SG: "ebay_sg" };
 // TCGplayer retailer key per market — the same converted-reference rows used as a
-// fallback in the main price comparison (see AU_FALLBACK_RETAILERS / UK_FALLBACK_RETAILERS
-// / SG_FALLBACK_RETAILERS) double as a real, always-available BUY source here. NZ has
-// no TCGplayer row at all, so it's the only market without one.
+// fallback in the main price comparison (see UK_FALLBACK_RETAILERS / SG_FALLBACK_RETAILERS)
+// double as a real, always-available BUY source here. Excluded for AU on purpose:
+// unlike UK/SG (where it fills a genuine coverage gap), AU already has plenty of
+// real tracked stores, so a converted reference price would just add noise rather
+// than a real opportunity. NZ has no TCGplayer row at all, so it has none either.
 export const TCGPLAYER_KEY: Record<Country, string | null> = {
-  AU: TCGPLAYER_AU_RETAILER,
+  AU: null,
   NZ: null,
   US: TCG_US.retailer,
   UK: TCGPLAYER_UK_RETAILER,
@@ -333,7 +335,7 @@ export async function getArbitrage(
 
 // ── Worth more on TCGplayer (US market price, converted) ────────────────────────
 // A second flip benchmark alongside eBay: instead of the cheapest current eBay
-// listing, compare a store's buy price against TCGplayer's own US MARKET price
+// listing, compare a buy price against TCGplayer's own US MARKET price
 // (the algorithmic fair-value figure it headlines — see lib/tcgplayer.ts), converted
 // from USD into the viewer's local currency via the shared fx table. This is a
 // REFERENCE comparison, not a specific listing — TCGplayer only has one retailer row
@@ -352,8 +354,26 @@ export async function getArbitrageVsTcgplayer(
     const buyKeys = opts.buy.filter((k) => valid.has(k));
     if (!buyKeys.length) return { items: [], total: 0, page, pageSize, pageCount: 1 };
 
-    const [buyMin, tcgRows] = await Promise.all([
-      minByCard(country, buyKeys),
+    // eBay gives a REAL per-listing shipping figure (see effectiveShippingCents in
+    // lib/retailers.ts), so when eBay is among the buy sources it's ranked by
+    // DELIVERED cost (item + actual shipping, 0 if the seller states free post) —
+    // otherwise a cheap item price hiding expensive postage would look like a
+    // bigger "underpriced" gap than it really is. Stores stay item-price-only:
+    // their shipping is usually unknown until checkout, and we never fabricate a
+    // number for them (same reasoning as effectiveShippingCents itself). This means
+    // buyMin can't be one simple groupBy — eBay needs its own per-listing pass.
+    const ebayKey = EBAY_KEY[country];
+    const buyEbayKey = ebayKey && buyKeys.includes(ebayKey) ? ebayKey : null;
+    const storeKeys = buyKeys.filter((k) => k !== buyEbayKey);
+
+    const [storeMin, ebayRows, tcgRows] = await Promise.all([
+      minByCard(country, storeKeys),
+      buyEbayKey
+        ? prisma.retailerPrice.findMany({
+            where: { country, inStock: true, retailer: buyEbayKey },
+            select: { cardId: true, priceCents: true, shippingCents: true, url: true },
+          })
+        : Promise.resolve([]),
       prisma.retailerPrice.findMany({
         where: { retailer: TCG_US.retailer, inStock: true },
         select: { cardId: true, priceCents: true, url: true },
@@ -361,9 +381,33 @@ export async function getArbitrageVsTcgplayer(
     ]);
     const tcgByCard = new Map(tcgRows.map((r) => [r.cardId, r]));
 
-    type Row = { cardId: string; buy: number; sellGross: number; net: number; margin: number };
+    // Cheapest DELIVERED eBay listing per card, and which listing achieved it — we
+    // can't ask the DB to rank by a computed item+shipping sum, so this is a small
+    // in-memory reduction over one market's eBay rows.
+    const ebayDeliveredMin = new Map<string, { cents: number; url: string }>();
+    for (const r of ebayRows) {
+      const delivered = r.priceCents + (r.shippingCents ?? 0);
+      const prev = ebayDeliveredMin.get(r.cardId);
+      if (!prev || delivered < prev.cents) ebayDeliveredMin.set(r.cardId, { cents: delivered, url: r.url });
+    }
+
+    type Row = { cardId: string; buy: number; buyIsEbay: boolean; sellGross: number; net: number; margin: number };
     const rows: Row[] = [];
-    for (const [cardId, buy] of buyMin) {
+    const cardIds = new Set([...storeMin.keys(), ...ebayDeliveredMin.keys()]);
+    for (const cardId of cardIds) {
+      const storeBuy = storeMin.get(cardId);
+      const ebayBuy = ebayDeliveredMin.get(cardId)?.cents;
+      let buy: number;
+      let buyIsEbay: boolean;
+      if (storeBuy != null && (ebayBuy == null || storeBuy <= ebayBuy)) {
+        buy = storeBuy;
+        buyIsEbay = false;
+      } else if (ebayBuy != null) {
+        buy = ebayBuy;
+        buyIsEbay = true;
+      } else {
+        continue;
+      }
       if (buy < MIN_BUY_CENTS) continue;
       const tcg = tcgByCard.get(cardId);
       if (!tcg) continue;
@@ -372,7 +416,7 @@ export async function getArbitrageVsTcgplayer(
       if (net < MIN_NET_CENTS) continue;
       const margin = Math.round((net / buy) * 1000) / 10;
       if (margin > MAX_MARGIN_PCT) continue; // absurd flip margin = buy/sell mismatch, drop it
-      rows.push({ cardId, buy, sellGross, net, margin });
+      rows.push({ cardId, buy, buyIsEbay, sellGross, net, margin });
     }
     rows.sort((a, b) => (opts.sort === "margin" ? b.margin - a.margin || b.net - a.net : b.net - a.net || b.margin - a.margin));
 
@@ -383,27 +427,43 @@ export async function getArbitrageVsTcgplayer(
     if (!slice.length) return { items: [], total, page: p, pageSize, pageCount };
 
     const ids = slice.map((r) => r.cardId);
-    const [cards, buyListings] = await Promise.all([
+    const storeWinnerIds = slice.filter((r) => !r.buyIsEbay).map((r) => r.cardId);
+    const [cards, storeListings] = await Promise.all([
       prisma.card.findMany({ where: { id: { in: ids } }, select: cardTileSelect(country) }),
-      prisma.retailerPrice.findMany({
-        where: { cardId: { in: ids }, country, inStock: true, retailer: { in: buyKeys } },
-        select: { cardId: true, retailer: true, retailerName: true, priceCents: true, url: true },
-        orderBy: { priceCents: "asc" },
-      }),
+      storeWinnerIds.length
+        ? prisma.retailerPrice.findMany({
+            where: { cardId: { in: storeWinnerIds }, country, inStock: true, retailer: { in: storeKeys } },
+            select: { cardId: true, retailer: true, retailerName: true, priceCents: true, url: true },
+            orderBy: { priceCents: "asc" },
+          })
+        : Promise.resolve([]),
     ]);
     const cardMap = new Map(cards.map((c) => [c.id, c as unknown as CardTileData]));
-    const bestBuy = new Map<string, (typeof buyListings)[number]>();
-    for (const l of buyListings) if (!bestBuy.has(l.cardId)) bestBuy.set(l.cardId, l);
+    const bestStore = new Map<string, (typeof storeListings)[number]>();
+    for (const l of storeListings) if (!bestStore.has(l.cardId)) bestStore.set(l.cardId, l);
 
     const items = slice
       .map((r): ArbItem | null => {
         const c = cardMap.get(r.cardId);
-        const b = bestBuy.get(r.cardId);
         const tcg = tcgByCard.get(r.cardId);
-        if (!c || !b || !tcg) return null;
+        if (!c || !tcg) return null;
+        let buyStore: string, buyStoreName: string, buyUrl: string;
+        if (r.buyIsEbay) {
+          const e = ebayDeliveredMin.get(r.cardId);
+          if (!e || !buyEbayKey) return null;
+          buyStore = buyEbayKey;
+          buyStoreName = "eBay (delivered)";
+          buyUrl = affiliateUrl(e.url, buyEbayKey);
+        } else {
+          const b = bestStore.get(r.cardId);
+          if (!b) return null;
+          buyStore = b.retailer;
+          buyStoreName = b.retailerName;
+          buyUrl = affiliateUrl(b.url, b.retailer);
+        }
         return {
           card: c,
-          buyCents: r.buy, buyStore: b.retailer, buyStoreName: b.retailerName, buyUrl: affiliateUrl(b.url, b.retailer),
+          buyCents: r.buy, buyStore, buyStoreName, buyUrl,
           sellCents: r.sellGross, sellName: "TCGplayer (US market, converted)", sellUrl: affiliateUrl(tcg.url, TCG_US.retailer), sellRetailer: TCG_US.retailer,
           netCents: r.net, marginPct: r.margin,
         };

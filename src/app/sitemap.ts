@@ -131,6 +131,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (MARKETPLACE_PUBLIC) {
     marketplaceRoutes = [
       { url: `${SITE_URL}/marketplace`, changeFrequency: "daily", priority: 0.8 },
+      { url: `${SITE_URL}/marketplace/faq`, changeFrequency: "monthly", priority: 0.5 },
       { url: `${SITE_URL}/marketplace/buyer-protection`, changeFrequency: "monthly", priority: 0.5 },
       { url: `${SITE_URL}/marketplace/shipping`, changeFrequency: "monthly", priority: 0.4 },
       { url: `${SITE_URL}/marketplace/terms`, changeFrequency: "yearly", priority: 0.3 },

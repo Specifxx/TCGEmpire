@@ -60,6 +60,10 @@ export default async function ArbitragePage({
   // side there, so buying from it to "flip" against itself would be circular).
   const tcgKey = TCGPLAYER_KEY[country];
   const tcgBuyKeys = storeKeys.filter((k) => k !== tcgKey).concat(ebay ? [ebay.key] : []);
+  // Selectable sources for that same view's filter UI — everything except
+  // TCGplayer itself (it's the fixed sell/reference side there, so it's never a
+  // buy option in its own view).
+  const tcgSources = sources.filter((s) => s.key !== tcgKey);
   const view: "flip" | "deals" | "tcg" =
     searchParams.view === "deals" ? "deals" : searchParams.view === "tcg" ? "tcg" : "flip";
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
@@ -131,7 +135,10 @@ export default async function ArbitragePage({
       </div>
 
       {view === "tcg" ? (
-        await TcgFlipView({ country, info, sort: searchParams.sort === "margin" ? "margin" : "profit", page, buyKeys: tcgBuyKeys, premium, signedIn })
+        await TcgFlipView({
+          country, info, sort: searchParams.sort === "margin" ? "margin" : "profit", page, buy: searchParams.buy,
+          sources: tcgSources, defaultBuyKeys: tcgBuyKeys, premium, signedIn,
+        })
       ) : view === "deals" ? (
         !ebay ? (
           <div className="card-surface grid place-items-center p-12 text-center text-sm text-slate-400">
@@ -202,7 +209,7 @@ async function FlipView({
 
       {premium && (
         <div className="card-surface mb-4 flex flex-wrap items-end justify-between gap-4 p-4">
-          <ArbitrageFilters sources={sources} buy={buy} sell={sell} sort={sort} />
+          <ArbitrageFilters sources={sources} buy={buy} sellLabel="eBay" sort={sort} />
           <SortTabs sorts={FLIP_SORTS} active={sort} hrefFor={sortHref} />
         </div>
       )}
@@ -290,7 +297,9 @@ async function TcgFlipView({
   info,
   sort,
   page,
-  buyKeys,
+  buy: buyParam,
+  sources,
+  defaultBuyKeys,
   premium,
   signedIn,
 }: {
@@ -298,18 +307,21 @@ async function TcgFlipView({
   info: (typeof COUNTRIES)[keyof typeof COUNTRIES];
   sort: ArbSort;
   page: number;
-  buyKeys: string[];
+  buy?: string;
+  sources: ReturnType<typeof getArbSources>;
+  defaultBuyKeys: string[];
   premium: boolean;
   signedIn: boolean;
 }) {
+  const buy = buyParam ? buyParam.split(",").map((s) => s.trim()).filter(Boolean) : defaultBuyKeys;
   const data = await getArbitrageVsTcgplayer(country, {
-    buy: buyKeys,
+    buy,
     sort,
     page: premium ? page : 1,
     pageSize: premium ? PAGE_SIZE : TEASER_SIZE,
   });
-  const href = (p: number) => `/tools/arbitrage?view=tcg&sort=${sort}&page=${p}`;
-  const sortHref = (s: ArbSort) => `/tools/arbitrage?view=tcg&sort=${s}&page=1`;
+  const href = (p: number) => `/tools/arbitrage?view=tcg&buy=${buy.join(",")}&sort=${sort}&page=${p}`;
+  const sortHref = (s: ArbSort) => `/tools/arbitrage?view=tcg&buy=${buy.join(",")}&sort=${s}&page=1`;
 
   return (
     <>
@@ -319,7 +331,8 @@ async function TcgFlipView({
         <strong className="text-slate-200">TCGplayer&apos;s</strong> own
         US market price (converted to {info.currency}) — i.e. underpriced relative to the wider US market. TCGplayer only
         tracks one market price per card, so this is a reference gap, not a fee-adjusted resale estimate — shipping a card
-        there means a genuine US-bound sale.
+        there means a genuine US-bound sale. eBay&apos;s side of the comparison includes its real quoted shipping cost
+        (stores&apos; postage is usually unknown until checkout, so those stay item-price-only).
       </p>
       <p className="mb-4 text-xs text-slate-500">
         Currency conversion is an approximate reference rate, not a live FX quote — see the card page for the real,
@@ -327,7 +340,8 @@ async function TcgFlipView({
       </p>
 
       {premium && (
-        <div className="card-surface mb-4 flex flex-wrap items-end justify-end gap-4 p-4">
+        <div className="card-surface mb-4 flex flex-wrap items-end justify-between gap-4 p-4">
+          <ArbitrageFilters sources={sources} buy={buy} sellLabel="TCGplayer" sort={sort} view="tcg" />
           <SortTabs sorts={FLIP_SORTS} active={sort} hrefFor={sortHref} />
         </div>
       )}

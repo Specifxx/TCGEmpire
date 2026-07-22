@@ -445,6 +445,8 @@ export function MarketplaceClient({
         🔒 Buyer protection: your payment is held until you confirm delivery.{" "}
         <Link href="/marketplace/buyer-protection" className="text-brand-400 hover:underline">How it works</Link>
         {" · "}
+        <Link href="/marketplace/faq" className="text-brand-400 hover:underline">FAQ</Link>
+        {" · "}
         <Link href="/marketplace/terms" className="text-brand-400 hover:underline">Marketplace terms</Link>
       </p>
     </div>

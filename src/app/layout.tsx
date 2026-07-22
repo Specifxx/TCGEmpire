@@ -260,6 +260,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <span className="text-ink-700">·</span>
                 <Link href="/marketplace/shipping" className="text-slate-300 hover:text-brand-400">Shipping &amp; tracking</Link>
                 <span className="text-ink-700">·</span>
+                <Link href="/marketplace/faq" className="text-slate-300 hover:text-brand-400">Marketplace FAQ</Link>
+                <span className="text-ink-700">·</span>
               </>
             )}
             <Link href="/widgets" className="text-slate-300 hover:text-brand-400">Price widget</Link>
