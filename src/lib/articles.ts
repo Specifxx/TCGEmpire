@@ -2522,7 +2522,7 @@ Your payment does **not** go straight to the seller. It's held by RiftCompare un
 
 ## 3. What happens after you pay
 
-- The seller gets notified immediately and has **5 days to ship** your order and add tracking. If they don't, you're **automatically refunded in full** — no back-and-forth required.
+- The seller gets notified immediately and has **14 days to ship** your order and add tracking. If they don't, you're **automatically refunded in full** — no back-and-forth required.
 - Once they mark it shipped, you'll get an email with the carrier and tracking number, plus an estimated delivery window.
 - Your money stays held the whole time your order is in transit.
 
@@ -2582,7 +2582,7 @@ Either way, a seller only ever gets paid *after* the card is genuinely on its wa
 
 ## What if the seller just doesn't ship?
 
-Every seller has **5 days from payment** to mark an order shipped and add tracking. Miss that window, and the order **automatically cancels and refunds you in full** — you don't have to notice, complain, or file anything. It just happens.
+Every seller has **14 days from payment** to mark an order shipped and add tracking. Miss that window, and the order **automatically cancels and refunds you in full** — you don't have to notice, complain, or file anything. It just happens.
 
 ## What if the card isn't what was listed, or never turns up?
 
@@ -2632,7 +2632,7 @@ Marketplace listings don't live in a separate corner of the site. When a seller'
 
 ## When a store is the better call
 
-- **You want it today, or close to it.** Most stores have same-day or next-day dispatch and established shipping times. Marketplace sellers get 5 days to ship, which is usually faster but isn't guaranteed like a store's stated dispatch time.
+- **You want it today, or close to it.** Most stores have same-day or next-day dispatch and established shipping times. Marketplace sellers get 14 days to ship, which is usually faster but isn't guaranteed like a store's stated dispatch time.
 - **You're buying sealed product.** Booster boxes, Proving Grounds and packs are store territory — the marketplace is singles-only.
 - **You want the absolute path of least resistance.** Stores are businesses; there's no seller to coordinate with, no delivery confirmation step. Pay, wait, done.
 
@@ -2644,7 +2644,7 @@ Marketplace listings don't live in a separate corner of the site. When a seller'
 
 ## The trust question, answered honestly
 
-The one real hesitation buying from a store vs. a marketplace seller is trust — a store is a business with a track record; a marketplace seller is a person. That's exactly why the marketplace holds your payment in **escrow** until delivery is confirmed (or auto-releases 14 days after shipping), and auto-refunds you in full if a seller doesn't ship within 5 days. You get the pricing upside of buying peer-to-peer without giving up the safety net of buying from a store. Full breakdown: **[how buyer protection works](/blog/riftcompare-marketplace-buyer-protection-explained)**.
+The one real hesitation buying from a store vs. a marketplace seller is trust — a store is a business with a track record; a marketplace seller is a person. That's exactly why the marketplace holds your payment in **escrow** until delivery is confirmed (or auto-releases 14 days after shipping), and auto-refunds you in full if a seller doesn't ship within 14 days. You get the pricing upside of buying peer-to-peer without giving up the safety net of buying from a store. Full breakdown: **[how buyer protection works](/blog/riftcompare-marketplace-buyer-protection-explained)**.
 
 ## The practical answer
 
@@ -2653,6 +2653,53 @@ Just search the card. Whatever's cheapest — store or marketplace listing — s
 ## Ready to buy?
 
 **[Search any card](/browse)** to see stores and marketplace listings compared side by side, or go straight to the **[marketplace grid](/marketplace)** to browse player listings. First time buying from a seller? Start with **[how to buy on the marketplace](/guides/how-to-buy-on-riftcompare-marketplace)**.`,
+  },
+  {
+    slug: "riftcompare-marketplace-fee-cut-2-percent",
+    category: "blog",
+    title: "RiftCompare Marketplace Fees Just Dropped to 2% (1% for Premium)",
+    excerpt:
+      "We've cut the RiftCompare Marketplace seller fee from 5% to 2% — and Premium members now sell for just 1%. Here's what changed, why, and how it stacks up against Cardmarket.",
+    author: "RiftCompare",
+    date: "2026-07-22",
+    readMins: 4,
+    tags: ["marketplace", "fees", "selling", "premium", "announcement"],
+    browseCta: {
+      href: "/marketplace/sell",
+      label: "Open your seller dashboard →",
+      blurb: "List a card and see exactly what you'll receive before you confirm.",
+    },
+    body: `Starting today, selling on the **[RiftCompare Marketplace](/marketplace)** costs less — a lot less. The platform fee is down from 5% to **2%**, and if you're a **[Premium](/premium)** member it's just **1%**. No tiers to unlock, no minimum sales volume to hit first — the rate applies automatically, from your very next sale.
+
+## What actually changed
+
+- **Standard sellers**: 5% → **2%** on every completed sale.
+- **Premium sellers**: **1%** — half the standard rate, on top of everything else Premium already includes (Value Finder, Rising Cards, the full Deal Finder list, Best Basket, and an ad-free site).
+- **Evaluated per sale, not per listing.** The rate that applies is whatever your account status is *at the moment a sale completes* — upgrade to Premium today, and your very next sale is charged at 1%, even on a listing you posted weeks ago.
+- **Nothing else changes.** Same escrow protection, same 14-day ship deadline, same buyer-side experience. This is purely a fee cut.
+
+## Why we did this
+
+RiftCompare's marketplace exists to make it easier — and cheaper — for players to buy and sell directly with each other. A lower fee means more of every sale actually lands in the seller's pocket, which matters most while the marketplace is still building up its base of real listings from real players.
+
+It's also just a better deal than the alternatives. Cardmarket, the biggest general TCG marketplace, charges sellers a tiered commission — 5% for a standard "Private" seller, dropping to 3% or 1.5% only once you qualify for its Professional/Powerseller tiers — plus a Trustee Service fee (0.5–1%) and a 3% currency-conversion charge on cross-border sales, landing around 6–8% all-in for most casual sellers. RiftCompare's 2% (or 1% with Premium) beats that from the first sale, with no tiers to climb and no currency-conversion surprise.
+
+## What you actually take home
+
+Say you sell a card for $20:
+
+| | Fee | You receive |
+|---|---|---|
+| Standard | 2% ($0.40) | **$19.60** |
+| Premium | 1% ($0.20) | **$19.80** |
+
+Your seller dashboard and Seller Funds page always show the exact numbers before you list and after you sell — no need to do this math yourself.
+
+## Selling for the first time?
+
+Any signed-in, email-verified user can list a card in a couple of minutes from the **[seller dashboard](/marketplace/sell)**. Payouts go through Stripe Connect once you've completed a quick identity check, and buyer payments are held in escrow until delivery is confirmed — full details in **[how buyer protection works](/blog/riftcompare-marketplace-buyer-protection-explained)**.
+
+Already selling? The new rate applies automatically — nothing to change, nothing to opt into. Check **[Seller Funds](/marketplace/funds)** to see it reflected on your next completed sale.`,
   },
 ];
 
