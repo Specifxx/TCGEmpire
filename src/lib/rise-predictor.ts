@@ -1,4 +1,5 @@
 import { prisma } from "./db";
+import { dbHistory } from "./db-history";
 import { priceField, pickPrice, currencyOf, type Country } from "./country";
 import { computeSignals, type Signals } from "./ai-insight";
 import type { PricePoint } from "./price-history";
@@ -186,7 +187,12 @@ export async function getRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
   // country filter); for a single market, filter to it.
   const cutoff = new Date(Date.now() - HISTORY_DAYS * 86400_000);
   const [histRows, supplyRows, velocity, snapshotDays] = await Promise.all([
-    prisma.priceHistory.findMany({
+    // PriceHistory lives in the split-off history database (see lib/db-history.ts)
+    // — every other reader of this table (price-history.ts, market-index.ts,
+    // screener.ts) already goes through dbHistory; this one was still reading the
+    // OPERATIONAL client, landing a 400-card × 120-day pull on the database
+    // that's actually strained. Fixed to match the established pattern.
+    dbHistory.priceHistory.findMany({
       where: { cardId: { in: ids }, day: { gte: cutoff }, ...(isGlobal ? {} : { country: scope }) },
       orderBy: { day: "asc" },
       select: { cardId: true, country: true, day: true, lowestPriceCents: true },
