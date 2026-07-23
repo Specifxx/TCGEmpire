@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
-import { normalizeCountry } from "@/lib/country";
+import { COUNTRIES, isEuIso, normalizeCountry } from "@/lib/country";
 
 // Geo-detection endpoint for first-time visitors (no country cookie yet).
 //
@@ -12,9 +12,13 @@ import { normalizeCountry } from "@/lib/country";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const country = normalizeCountry(headers().get("x-vercel-ip-country"));
+  const raw = headers().get("x-vercel-ip-country");
+  const country = normalizeCountry(raw);
+  // An EU visitor geo-defaults into the UK market (real GBP stores) but should see
+  // EUR by default — see get-country.ts's getDisplayCurrency for the full story.
+  const currency = country === "UK" && isEuIso(raw) ? "EUR" : COUNTRIES[country].currency;
   return NextResponse.json(
-    { country },
+    { country, currency },
     // Private per-visitor result; let the browser reuse it for the session.
     { headers: { "Cache-Control": "private, max-age=3600" } }
   );

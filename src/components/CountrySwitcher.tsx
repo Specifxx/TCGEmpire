@@ -8,7 +8,7 @@ import { useCountry } from "./CountryProvider";
 // prices + store lists for the chosen country and persists via cookie. Hidden while
 // NZ mode is in development (the site is AU-only then).
 export function CountrySwitcher({ className = "" }: { className?: string }) {
-  const { country, setCountry } = useCountry();
+  const { country, setCountry, isEurDisplay, setEurDisplay } = useCountry();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const current = COUNTRY_LIST.find((c) => c.code === country) ?? COUNTRY_LIST[0];
@@ -32,7 +32,7 @@ export function CountrySwitcher({ className = "" }: { className?: string }) {
         className="flex items-center gap-1 rounded-lg border border-ink-700 px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:gap-1.5 sm:px-2.5"
       >
         <span className="text-base leading-none">{current.flag}</span>
-        <span className="hidden sm:inline">{current.code}</span>
+        <span className="hidden sm:inline">{current.code}{isEurDisplay && " · €"}</span>
         <svg className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <path d="m6 9 6 6 6-6" />
         </svg>
@@ -57,7 +57,9 @@ export function CountrySwitcher({ className = "" }: { className?: string }) {
               <span className="text-lg leading-none">{c.flag}</span>
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-medium text-white">{c.label}</div>
-                <div className="text-xs text-slate-500">Prices in {c.currency}</div>
+                <div className="text-xs text-slate-500">
+                  Prices in {c.code === "UK" && c.code === country && isEurDisplay ? "EUR (converted)" : c.currency}
+                </div>
               </div>
               {c.code === country && (
                 <svg className="h-4 w-4 text-brand-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -66,6 +68,17 @@ export function CountrySwitcher({ className = "" }: { className?: string }) {
               )}
             </button>
           ))}
+          {/* UK's real stores are always GBP — an EU visitor sees them converted to
+              EUR by default (see CountryProvider), but can flip back, and a genuine
+              UK visitor who somehow landed on EUR can flip back to the real GBP. */}
+          {country === "UK" && (
+            <button
+              onClick={() => setEurDisplay(!isEurDisplay)}
+              className="mt-0.5 flex w-full items-center gap-2.5 rounded-lg border-t border-ink-800 px-3 py-2 pt-2.5 text-left text-xs text-slate-400 hover:bg-ink-800 hover:text-white"
+            >
+              Show UK prices in {isEurDisplay ? "GBP (real price)" : "EUR instead"} →
+            </button>
+          )}
         </div>
       )}
     </div>

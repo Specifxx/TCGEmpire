@@ -6,7 +6,7 @@ import { useCountry } from "./CountryProvider";
 // Prominent market chooser for the homepage hero — pill toggle of 🇦🇺/🇳🇿/🇺🇸 that
 // switches all prices + store lists. Mirrors the compact navbar switcher.
 export function CountryHeroToggle() {
-  const { country, setCountry } = useCountry();
+  const { country, setCountry, currency } = useCountry();
   if (!INTL_ENABLED) return null;
 
   return (
@@ -22,7 +22,7 @@ export function CountryHeroToggle() {
               key={c.code}
               onClick={() => setCountry(c.code)}
               aria-pressed={active}
-              aria-label={`${c.label} (${c.currency})`}
+              aria-label={`${c.label} (${active ? currency : c.currency})`}
               className={`flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-sm font-semibold transition-colors ${
                 active
                   ? "bg-brand-500 text-white"
@@ -31,7 +31,7 @@ export function CountryHeroToggle() {
             >
               <span className="text-base leading-none">{c.flag}</span>
               <span>{c.code}</span>
-              {active && <span className="text-[10px] font-medium text-white/80">{c.currency}</span>}
+              {active && <span className="text-[10px] font-medium text-white/80">{currency}</span>}
             </button>
           );
         })}

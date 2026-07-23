@@ -7,7 +7,7 @@ import { useCountry } from "./CountryProvider";
 // finder, etc.). Switching sets the country cookie and refreshes, so the server page
 // re-runs its queries for the chosen market. Optional label; hidden when INTL is off.
 export function RegionToggle({ label = "Market", className = "" }: { label?: string; className?: string }) {
-  const { country, setCountry } = useCountry();
+  const { country, setCountry, currency } = useCountry();
   if (!INTL_ENABLED) return null;
 
   return (
@@ -21,14 +21,14 @@ export function RegionToggle({ label = "Market", className = "" }: { label?: str
               key={c.code}
               onClick={() => setCountry(c.code)}
               aria-pressed={active}
-              aria-label={`${c.label} (${c.currency})`}
+              aria-label={`${c.label} (${active ? currency : c.currency})`}
               className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-sm font-semibold transition-colors ${
                 active ? "bg-brand-500 text-white" : "text-slate-300 hover:bg-ink-800 hover:text-white"
               }`}
             >
               <span className="text-base leading-none">{c.flag}</span>
               <span>{c.code}</span>
-              {active && <span className="text-[10px] font-medium text-white/80">{c.currency}</span>}
+              {active && <span className="text-[10px] font-medium text-white/80">{currency}</span>}
             </button>
           );
         })}

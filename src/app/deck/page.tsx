@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import type { Prisma } from "@prisma/client";
 import { DeckBuilder } from "@/components/DeckBuilder";
 import { prisma } from "@/lib/db";
-import { getCountry } from "@/lib/get-country";
-import { currencyOf, pickPrice, priceField, COUNTRIES } from "@/lib/country";
+import { getCountry, getDisplayCurrency } from "@/lib/get-country";
+import { pickPrice, priceField, COUNTRIES } from "@/lib/country";
+import { gbpCentsToEur } from "@/lib/fx";
 import { parseDeckList } from "@/lib/deck";
 import { normalizeSearch, formatMoney } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
@@ -54,7 +55,8 @@ export async function generateMetadata({ searchParams }: { searchParams: { list?
     }
     if (total <= 0) return base;
 
-    const stat = formatMoney(total, currencyOf(country));
+    const currency = getDisplayCurrency(country);
+    const stat = formatMoney(country === "UK" && currency === "EUR" ? gbpCentsToEur(total) : total, currency);
     const sub = `${qty} cards · priced free on RiftCompare`;
     const img = `${SITE_URL}/api/og?t=${encodeURIComponent("DECK COST")}&s=${encodeURIComponent(stat)}&l=${encodeURIComponent(
       "to build"

@@ -6,10 +6,9 @@ import { OutboundLink } from "./OutboundLink";
 import { TcgMarketPrice } from "./TcgMarketPrice";
 import { TcgplayerAd } from "./TcgplayerAd";
 import { EbayAd } from "./EbayAd";
-import { timeAgo, formatMoney } from "@/lib/format";
+import { timeAgo } from "@/lib/format";
 import { computeMarket, type MarketRow } from "@/lib/market-rows";
 import { outboundRel } from "@/lib/affiliate";
-import { gbpCentsToEur } from "@/lib/fx";
 
 // The market-dependent half of the card page. The page itself is ISR-cached with
 // the AU baseline (no cookie reads server-side — that's what makes the route
@@ -61,21 +60,22 @@ export function CardPriceMetrics({
   might: number | null;
   power: number | null;
 }) {
-  const { country, fmt } = useCountry();
+  const { country, fmt, secondaryFmt } = useCountry();
   const m = useMemo(() => computeMarket(rows, country), [rows, country]);
-  // UK is priced in GBP (the only real market for it); a Euro reference figure
-  // helps European shoppers gauge cost — never the actual charge, always GBP.
-  const eur = (gbpCents: number | null) => (country === "UK" && gbpCents != null ? `≈ ${formatMoney(gbpCentsToEur(gbpCents), "EUR")}` : undefined);
+  // For a European shopper browsing the UK market, `fmt` above already shows the
+  // EUR-converted price; `secondaryFmt` gives back the real GBP figure (the one
+  // that's actually charged) as a small reference note. null for everyone else.
+  const sub = (gbpCents: number | null) => (gbpCents != null ? secondaryFmt(gbpCents) ?? undefined : undefined);
 
   return (
     <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
       <Metric
         label={m.cheapestFoil != null ? "Standard from" : "Cheapest price"}
         value={(m.cheapestStandard ?? m.lowest) != null ? fmt((m.cheapestStandard ?? m.lowest)!) : "—"}
-        sub={eur(m.cheapestStandard ?? m.lowest)}
+        sub={sub(m.cheapestStandard ?? m.lowest)}
         highlight
       />
-      {m.cheapestFoil != null && <Metric label="✦ Foil from" value={fmt(m.cheapestFoil)} sub={eur(m.cheapestFoil)} highlight />}
+      {m.cheapestFoil != null && <Metric label="✦ Foil from" value={fmt(m.cheapestFoil)} sub={sub(m.cheapestFoil)} highlight />}
       <Metric label="In stock at" value={`${m.storeCount} ${m.storeCount === 1 ? "store" : "stores"}`} />
       {energyCost != null && <Metric label="Energy" value={String(energyCost)} />}
       {might != null && m.cheapestFoil == null && <Metric label="Might" value={String(might)} />}
@@ -97,7 +97,7 @@ export function CardPriceComparison({
   ebaySearch: EbaySearchMap;
   ebayQuery: string;
 }) {
-  const { country, fmt } = useCountry();
+  const { country, fmt, secondaryFmt } = useCountry();
   const m = useMemo(() => computeMarket(rows, country), [rows, country]);
   const { prices, outOfStock } = m;
   const ebay = m.hasEbay ? null : ebaySearch[country] ?? null;
@@ -194,6 +194,9 @@ export function CardPriceComparison({
                   <div className={`num text-lg font-bold ${i === 0 ? "text-accent" : "text-white"}`}>
                     {fmt(p.priceCents)}
                   </div>
+                  {secondaryFmt(p.priceCents) && (
+                    <div className="num text-[11px] text-slate-500">≈ {secondaryFmt(p.priceCents)}</div>
+                  )}
                   {p.ship != null && (
                     <div className="num text-[11px] text-slate-400">≈ {fmt(p.delivered)} delivered</div>
                   )}

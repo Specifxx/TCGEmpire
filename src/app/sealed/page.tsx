@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getSealedGroups } from "@/lib/sealed-import";
-import { getCountry } from "@/lib/get-country";
+import { getCountry, getDisplayCurrency } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
+import { gbpCentsToEur } from "@/lib/fx";
 import { affiliateUrl, ebayAffiliateUrl } from "@/lib/affiliate";
 import { OutboundLink } from "@/components/OutboundLink";
 import { Reveal } from "@/components/Reveal";
@@ -133,6 +134,18 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
   // out-of-stock/unpriced groups are omitted from the structured data entirely
   // (they still render as a normal, visible "out of stock" tile on the page).
   const currency = COUNTRIES[priceCountry].currency;
+  // A European shopper browsing the UK market's real GBP sealed listings sees them
+  // converted to EUR for display — the JSON-LD above stays in the REAL currency
+  // (what Google/the offer actually is), only the visible tiles/filters convert.
+  const displayCurrency = getDisplayCurrency(priceCountry);
+  const showEur = priceCountry === "UK" && displayCurrency === "EUR";
+  const displayGroups = showEur
+    ? groups.map((g) => ({
+        ...g,
+        lowestPriceCents: g.lowestPriceCents != null ? gbpCentsToEur(g.lowestPriceCents) : null,
+        listings: g.listings.map((l) => ({ ...l, priceCents: gbpCentsToEur(l.priceCents) })),
+      }))
+    : groups;
   const breadcrumbLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -221,7 +234,7 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
       )}
 
       <div className="flex flex-col gap-6 lg:flex-row">
-        <SealedFilters types={typeOptions} sets={setOptions} currency={currency} />
+        <SealedFilters types={typeOptions} sets={setOptions} currency={displayCurrency} />
         <section className="min-w-0 flex-1">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-slate-400">
@@ -248,8 +261,8 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
             </div>
           ) : (
             <Reveal stagger className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
-              {groups.map((g) => (
-                <SealedTile key={g.groupKey} group={g} currency={currency} />
+              {displayGroups.map((g) => (
+                <SealedTile key={g.groupKey} group={g} currency={displayCurrency} />
               ))}
             </Reveal>
           )}

@@ -41,12 +41,22 @@ const VALID = new Set<Country>(["AU", "NZ", "US", "UK", "SG"]);
 // EU member states (+ EEA/Schengen-adjacent UK-shipping-friendly neighbours) —
 // there's no separate EU store/eBay market, but UK (GBP, real UK stores) is a
 // far closer match for a European shopper's real prices/shipping than the US
-// default: nearer currency, nearer postage, and the site already offers a Euro
-// reference price (see fx.ts's gbpCentsToEur) specifically for this market.
+// default: nearer currency, nearer postage. A visitor from one of these markets
+// browses the same real UK store inventory as a genuine UK visitor, but SEES
+// prices displayed in EUR by default (see get-country.ts's getDisplayCurrency
+// and CountryProvider's `currency`/`fmt`) — GBP is the real, buyable currency;
+// EUR is a display conversion of it, never a second market.
 const EU_ISO = new Set([
   "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU",
   "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE",
 ]);
+
+// True for a raw ISO geo/cookie value that's an EU market (never GB/UK itself,
+// which has its own code and is never in EU_ISO). Exported so get-country.ts and
+// /api/geo can derive "should this UK-market visitor see EUR?" from the same set.
+export function isEuIso(v: string | undefined | null): boolean {
+  return EU_ISO.has((v ?? "").toUpperCase());
+}
 
 // Coerce any cookie/geo/query value to a supported Country. Accepts ISO country
 // codes from the geo header too (e.g. "AU", "NZ", "GB"). AU/NZ/UK/SG geo hits
@@ -60,6 +70,13 @@ export function normalizeCountry(v: string | undefined | null): Country {
   if (EU_ISO.has(up)) return "UK";
   return "US";
 }
+
+// Explicit override for the UK market's DISPLAY currency (GBP vs EUR) — separate
+// from the `country` cookie so a deliberate switcher pick and an auto-detected
+// EU visitor can both be remembered without conflating "which store inventory"
+// with "which currency to show it in". Values: "EUR" | "GBP". Absent = infer
+// from geo (see get-country.ts's getDisplayCurrency).
+export const EUR_DISPLAY_COOKIE = "eur_display";
 
 // The Shopify storefront ?country= param + eBay use ISO 3166 alpha-2, where the UK
 // is "GB" (not "UK"). Everywhere else we use our own "UK" code.

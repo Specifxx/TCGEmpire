@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { buildDeckCart, type DeckCartLine } from "@/lib/deck-basket";
 import { formatMoney } from "@/lib/format";
-import { COUNTRIES, type Country } from "@/lib/country";
+import { type Country } from "@/lib/country";
+import { getDisplayCurrency } from "@/lib/get-country";
+import { gbpCentsToEur } from "@/lib/fx";
 import { OutboundLink } from "@/components/OutboundLink";
 
 // "Build this deck: cheapest whole cart" — the buy list. Runs the landed-cost
@@ -12,8 +14,11 @@ export async function DeckCart({ lines, country }: { lines: DeckCartLine[]; coun
   const plan = await buildDeckCart(lines, country);
   if (!plan || plan.stores.length === 0) return null;
 
-  const currency = COUNTRIES[country].currency;
-  const fmt = (c: number) => formatMoney(c, currency);
+  // A European shopper browsing the UK market (real GBP stores) sees the cart
+  // total converted to EUR — a reference, not what they're actually charged.
+  const currency = getDisplayCurrency(country);
+  const isEurDisplay = country === "UK" && currency === "EUR";
+  const fmt = (c: number) => formatMoney(isEurDisplay ? gbpCentsToEur(c) : c, currency);
 
   return (
     <section className="card-surface mt-6 overflow-hidden">

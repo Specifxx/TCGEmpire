@@ -3,8 +3,7 @@
 import { useCountry } from "./CountryProvider";
 import { OutboundLink } from "./OutboundLink";
 import { formatMoney } from "@/lib/format";
-import { usdCentsToCountry } from "@/lib/fx";
-import { currencyOf } from "@/lib/country";
+import { convertUsdCents } from "@/lib/fx";
 
 // TCGplayer MARKET PRICE, converted into the visitor's currency — a reference anchor
 // shown on every card that TCGplayer prices, ESPECIALLY the low-data ones with no
@@ -27,14 +26,15 @@ export function TcgMarketPrice({
   usdCentsFoil: number | null; // foil market price, USD cents (if the card has a foil)
   href: string | null; // affiliate-wrapped TCGplayer product URL
 }) {
-  const { country } = useCountry();
+  const { country, currency: cur } = useCountry();
   if (usdCents == null && usdCentsFoil == null) return null;
 
-  const cur = currencyOf(country);
-  // Convert the USD market price into the visitor's currency; keep the original USD
-  // alongside it for honesty. (The parent only renders this block in markets where
-  // TCGplayer isn't natively listed — AU/NZ — so the currency is never USD here.)
-  const local = (usd: number | null) => (usd == null ? null : usdCentsToCountry(usd, country));
+  // Convert the USD market price into the visitor's DISPLAY currency (EUR for a
+  // European shopper browsing the UK market, otherwise the market's own currency);
+  // keep the original USD alongside it for honesty. (The parent only renders this
+  // block in markets where TCGplayer isn't natively listed — AU/NZ — so the
+  // currency is never USD here.)
+  const local = (usd: number | null) => (usd == null ? null : convertUsdCents(usd, cur));
   const std = local(usdCents);
   const foil = local(usdCentsFoil);
 
