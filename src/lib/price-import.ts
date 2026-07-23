@@ -431,6 +431,7 @@ export async function importPrices(): Promise<ImportSummary> {
       case 221: return "SFD";
       case 219: return "UNL";
       case 24: return "OGS";
+      case 166: return "VEN";
       default: return null;
     }
   };

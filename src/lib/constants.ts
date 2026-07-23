@@ -77,18 +77,26 @@ export const CARD_TYPES = [
 ] as const;
 export type CardType = (typeof CARD_TYPES)[number];
 
-// Riftbound sets. `comingSoon` = the singles/cards aren't released yet (no Card
-// rows, so the set stays out of the database, sitemap, movers, box-EV, pack-sim
-// etc). `sealedAvailable` = sealed products (booster boxes/packs) are already
-// buyable and listed on /sealed even while the cards are still pending — Vendetta is
-// exactly this state. `slug` is the SEO landing-page path (/sets/<slug>).
-export interface SetInfo { code: string; name: string; slug: string; comingSoon?: boolean; sealedAvailable?: boolean }
+// Riftbound sets. `comingSoon` = the set isn't officially ON SALE yet (singles
+// aren't buyable in stores) — this keeps it out of the sitemap's fresh-content
+// signal, movers, box-EV, pack-sim etc. It does NOT mean the set has no Card
+// rows: the official-gallery pipeline (scripts/import-vendetta.ts) imports real,
+// unpriced Card rows through spoiler season, well before release day — see
+// /sets/<slug>'s own comingSoon-but-revealed branch. `sealedAvailable` = sealed
+// products (booster boxes/packs) are already buyable and listed on /sealed even
+// while the singles are still pending — Vendetta is exactly this state.
+// `totalCards` = the official main-set card count once Riot confirms it — lets
+// the set page state "all N cards revealed" precisely instead of just "revealed
+// so far", and lets setFromTotal()-style price-import matching recognise the set
+// from a bare "NNN/total" collector number. `slug` is the SEO landing-page path
+// (/sets/<slug>).
+export interface SetInfo { code: string; name: string; slug: string; comingSoon?: boolean; sealedAvailable?: boolean; totalCards?: number }
 export const SETS: SetInfo[] = [
   { code: "OGN", name: "Origins", slug: "origins" },
   { code: "OGS", name: "Origins: Proving Grounds", slug: "proving-grounds" },
   { code: "SFD", name: "Spirit Forged", slug: "spiritforged" },
   { code: "UNL", name: "Unleashed", slug: "unleashed" },
-  { code: "VEN", name: "Vendetta", slug: "vendetta", comingSoon: true, sealedAvailable: true },
+  { code: "VEN", name: "Vendetta", slug: "vendetta", comingSoon: true, sealedAvailable: true, totalCards: 166 },
 ];
 export const setBySlug = (slug: string): SetInfo | undefined => SETS.find((s) => s.slug === slug);
 export const setByCode = (code: string): SetInfo | undefined => SETS.find((s) => s.code === code);

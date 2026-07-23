@@ -119,6 +119,11 @@ export default async function SetPage({
   const totalPages = Math.max(1, Math.ceil(total / size));
 
   const otherSets = SETS.filter((s) => s.slug !== set.slug && !s.comingSoon);
+  // A comingSoon set (singles not on sale yet) can still be FULLY revealed —
+  // Vendetta's official-gallery pipeline had all 166 main-set cards in the DB
+  // before release day. Distinguishing this from "still mid-spoiler-season" (see
+  // set.totalCards in lib/constants.ts) keeps the copy below honest either way.
+  const fullyRevealed = !!set.totalCards && totalInSet >= set.totalCards;
 
   const breadcrumb = {
     "@context": "https://schema.org",
@@ -167,7 +172,9 @@ export default async function SetPage({
             {set.comingSoon ? (
               <>
                 Riftbound <strong className="text-slate-200">{set.name}</strong> is new.
-                {totalInSet > 0
+                {fullyRevealed
+                  ? <> All {set.totalCards} {set.name} cards are officially confirmed and listed below — live store prices land the moment singles release.</>
+                  : totalInSet > 0
                   ? <> Every officially revealed {set.name} card is listed below — live store prices land the moment singles release.</>
                   : <> This page will list every {set.name} card with live prices the moment they release — check back soon.</>}
                 {set.sealedAvailable && (
@@ -192,9 +199,13 @@ export default async function SetPage({
             </div>
           ) : totalInSet > 0 ? (
             <div className="mt-4 flex flex-wrap gap-2">
-              <span className="chip bg-up/20 font-bold uppercase tracking-wide text-up">New</span>
+              <span className="chip bg-up/20 font-bold uppercase tracking-wide text-up">{fullyRevealed ? "Complete" : "New"}</span>
               <span className="chip bg-brand-500/15 text-brand-300">
-                <CountUp value={totalInSet} className="num font-bold" />&nbsp;cards revealed
+                {fullyRevealed ? (
+                  <>All <CountUp value={totalInSet} className="num font-bold" />&nbsp;cards revealed</>
+                ) : (
+                  <><CountUp value={totalInSet} className="num font-bold" />&nbsp;cards revealed</>
+                )}
               </span>
             </div>
           ) : null}
@@ -245,9 +256,13 @@ export default async function SetPage({
           <section className="min-w-0 flex-1">
             {set.comingSoon && (
               <div className="mb-4 rounded-xl border border-emerald-500/25 bg-emerald-500/5 px-4 py-3 text-sm text-slate-300">
-                <strong className="text-emerald-300">Revealed so far.</strong> These are the {set.name} cards officially
-                revealed to date — more land through spoiler season, and live store prices appear here the moment singles
-                go on sale.
+                {fullyRevealed ? (
+                  <><strong className="text-emerald-300">All revealed.</strong> Every one of the {set.totalCards} official {set.name} cards is confirmed below — live store prices appear here the moment singles go on sale.</>
+                ) : (
+                  <><strong className="text-emerald-300">Revealed so far.</strong> These are the {set.name} cards officially
+                  revealed to date — more land through spoiler season, and live store prices appear here the moment singles
+                  go on sale.</>
+                )}
               </div>
             )}
 
