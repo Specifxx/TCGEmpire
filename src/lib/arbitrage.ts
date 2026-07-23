@@ -5,7 +5,12 @@
 // when the winning SELL source is eBay (selling to a store has no marketplace fee).
 //
 // Egress-bounded: a few groupBy aggregates rank everything; per-listing detail
-// (urls/names) is fetched only for the page being shown.
+// (urls/names) is fetched only for the page being shown. The two exceptions
+// (all of one market's eBay rows, all of TCGplayer's US rows — needed to rank by
+// delivered cost, which the DB can't compute in a groupBy) are memoized in
+// process memory below, same pattern as lib/sealed-import.ts's getSealedGroups —
+// a per-request unbounded pull is exactly what has burned through this project's
+// Neon free-tier transfer allowance before.
 import { prisma } from "./db";
 import type { Country } from "./country";
 import { RETAILERS } from "./retailers";
@@ -27,6 +32,42 @@ const MIN_NET_CENTS = 100;
 // always a wrong/mismatched listing, not a real deal.
 const MAX_MARGIN_PCT = 300;
 const MAX_DEAL_PCT = 80;
+
+// One in-memory pull per (country, eBay retailer) per TTL, not per request —
+// see the file header comment. Same globalThis pattern as getSealedGroups so it
+// survives hot-module-reload in dev and is shared across warm lambda invocations.
+const ARB_MEMO_TTL_MS = 15 * 60_000;
+type EbayRow = { cardId: string; priceCents: number; shippingCents: number | null; url: string };
+type EbayRowsMemo = Map<string, { at: number; data: EbayRow[] }>;
+const ebayRowsMemo: EbayRowsMemo = ((globalThis as unknown as { __arbEbayRows?: EbayRowsMemo }).__arbEbayRows ??= new Map());
+
+async function getEbayRowsMemoized(country: Country, ebayKey: string): Promise<EbayRow[]> {
+  const cacheKey = `${country}:${ebayKey}`;
+  const hit = ebayRowsMemo.get(cacheKey);
+  if (hit && Date.now() - hit.at < ARB_MEMO_TTL_MS) return hit.data;
+  const rows = await prisma.retailerPrice.findMany({
+    where: { country, inStock: true, retailer: ebayKey },
+    select: { cardId: true, priceCents: true, shippingCents: true, url: true },
+  });
+  ebayRowsMemo.set(cacheKey, { at: Date.now(), data: rows });
+  return rows;
+}
+
+// TCGplayer's US reference rows are market-neutral (one price per card regardless
+// of the viewer's country), so this is a single global slot, not keyed by country.
+type TcgRow = { cardId: string; priceCents: number; url: string };
+type TcgRowsMemo = { at: number; data: TcgRow[] } | undefined;
+async function getTcgUsRowsMemoized(): Promise<TcgRow[]> {
+  const slot = globalThis as unknown as { __arbTcgRows?: TcgRowsMemo };
+  const hit = slot.__arbTcgRows;
+  if (hit && Date.now() - hit.at < ARB_MEMO_TTL_MS) return hit.data;
+  const rows = await prisma.retailerPrice.findMany({
+    where: { retailer: TCG_US.retailer, inStock: true },
+    select: { cardId: true, priceCents: true, url: true },
+  });
+  slot.__arbTcgRows = { at: Date.now(), data: rows };
+  return rows;
+}
 
 export type ArbSort = "profit" | "margin";
 
@@ -368,16 +409,8 @@ export async function getArbitrageVsTcgplayer(
 
     const [storeMin, ebayRows, tcgRows] = await Promise.all([
       minByCard(country, storeKeys),
-      buyEbayKey
-        ? prisma.retailerPrice.findMany({
-            where: { country, inStock: true, retailer: buyEbayKey },
-            select: { cardId: true, priceCents: true, shippingCents: true, url: true },
-          })
-        : Promise.resolve([]),
-      prisma.retailerPrice.findMany({
-        where: { retailer: TCG_US.retailer, inStock: true },
-        select: { cardId: true, priceCents: true, url: true },
-      }),
+      buyEbayKey ? getEbayRowsMemoized(country, buyEbayKey) : Promise.resolve([]),
+      getTcgUsRowsMemoized(),
     ]);
     const tcgByCard = new Map(tcgRows.map((r) => [r.cardId, r]));
 
