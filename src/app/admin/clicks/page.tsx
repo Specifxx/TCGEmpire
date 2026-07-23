@@ -107,12 +107,12 @@ export default async function ClicksAdminPage({ searchParams }: { searchParams: 
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
-      <h1 className="text-2xl font-bold text-white">Outbound clicks</h1>
+      <h1 className="text-2xl font-bold text-white">Outbound clicks (historical)</h1>
       <p className="mt-1 max-w-2xl text-sm text-slate-400">
-        eBay &ldquo;View deal&rdquo; clicks we record ourselves (via the click beacon) — independent of eBay&apos;s own
-        dashboard. Used to sanity-check that eBay affiliate tracking is live. Non-eBay store clicks stopped being
-        logged here on 2026-07-21 to cut history-DB write volume — the table below still shows their old rows
-        (fading out of the 7d/30d columns over the next few weeks), but the headline totals only ever count eBay.
+        The click beacon itself was switched off on 2026-07-23 to cut history-DB network-transfer usage — nothing
+        below this date is being recorded anymore, for eBay or any other retailer. Everything on this page is
+        historical: it stops growing and will simply fade out of the 7d/30d columns over the next few weeks. Non-eBay
+        store clicks had already stopped being logged on 2026-07-21, before the beacon was disabled entirely.
       </p>
 
       {error ? (

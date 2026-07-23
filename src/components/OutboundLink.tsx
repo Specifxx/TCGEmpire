@@ -3,18 +3,13 @@
 import type { ReactNode } from "react";
 import { outboundRel } from "@/lib/affiliate";
 
-// An outbound "buy" link that fires a click beacon before navigating, so we can
-// count how many times each store/eBay link is used (verified in our own DB, no
-// dependency on the partner's dashboard). The link itself stays a normal direct
-// <a> — keeping eBay's affiliate attribution clean and adding zero redirect latency.
-//
-// Click logging is eBay-only (retailer keys starting with "ebay") — every other
-// store's clicks used to fire the same beacon too, which meant every outbound
-// click site-wide (card pages, basket, movers, arbitrage, deck cart, sealed...)
-// wrote a row to the already egress-strained history DB. eBay affiliate
-// verification is the one thing this beacon actually needs to guarantee (see
-// /admin/clicks), so every other store's click is dropped client-side before it
-// ever reaches the network.
+// An outbound "buy" link. Used to also fire a click beacon (to /api/click) for
+// eBay retailer keys so click counts could be verified in our own DB — that
+// beacon has been turned off (it wrote a row per click to the already
+// egress-strained history DB; see /api/click/route.ts, which is now a no-op
+// kept only so any stale cached page still calling it doesn't 404/error). The
+// link itself stays a normal direct <a> — keeping eBay's affiliate attribution
+// clean and adding zero redirect latency.
 export function OutboundLink({
   href,
   retailer,
@@ -30,18 +25,7 @@ export function OutboundLink({
   className?: string;
   children: ReactNode;
 }) {
-  function log() {
-    if (!retailer.startsWith("ebay")) return;
-    try {
-      const path = typeof window !== "undefined" ? window.location.pathname : undefined;
-      const blob = new Blob([JSON.stringify({ retailer, country, kind, path })], { type: "application/json" });
-      navigator.sendBeacon("/api/click", blob);
-    } catch {
-      /* sendBeacon unsupported or blocked — ignore, never block the click */
-    }
-  }
   function onClick(e: React.MouseEvent<HTMLAnchorElement>) {
-    log();
     // Inside the native app, open retailer links in the system browser so the user
     // leaves our WebView (and can come back), instead of getting stuck on the
     // store's site. On the web this branch never runs — it's a normal link.
@@ -60,7 +44,6 @@ export function OutboundLink({
       rel={outboundRel(href)}
       className={className}
       onClick={onClick}
-      onAuxClick={log}
     >
       {children}
     </a>
