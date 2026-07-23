@@ -27,12 +27,17 @@ const loadClicksData = unstable_cache(
     const d7 = new Date(now - 7 * 86400_000);
     const d30 = new Date(now - 30 * 86400_000);
     try {
+      // country30/kind30 are scoped to eBay retailer keys only (retailer LIKE 'ebay%')
+      // — this page exists specifically to verify eBay affiliate tracking is live (see
+      // the eBay-only beacon in api/click/route.ts), so a breakdown mixing in the
+      // decaying pre-cutover Shopify-store rows (see the `rows` comment below) would
+      // misrepresent what's actually being tracked going forward.
       const [all, last30, last7, country30, kind30] = await Promise.all([
         dbHistory.clickEvent.groupBy({ by: ["retailer"], _count: { _all: true } }),
         dbHistory.clickEvent.groupBy({ by: ["retailer"], _count: { _all: true }, where: { createdAt: { gte: d30 } } }),
         dbHistory.clickEvent.groupBy({ by: ["retailer"], _count: { _all: true }, where: { createdAt: { gte: d7 } } }),
-        dbHistory.clickEvent.groupBy({ by: ["country"], _count: { _all: true }, where: { createdAt: { gte: d30 } } }),
-        dbHistory.clickEvent.groupBy({ by: ["kind"], _count: { _all: true }, where: { createdAt: { gte: d30 } } }),
+        dbHistory.clickEvent.groupBy({ by: ["country"], _count: { _all: true }, where: { createdAt: { gte: d30 }, retailer: { startsWith: "ebay" } } }),
+        dbHistory.clickEvent.groupBy({ by: ["kind"], _count: { _all: true }, where: { createdAt: { gte: d30 }, retailer: { startsWith: "ebay" } } }),
       ]);
       // The recent-events list selects the newer `path` column — if the click table
       // lives in a history database the schema push hasn't reached yet, degrade to
@@ -56,6 +61,13 @@ const loadClicksData = unstable_cache(
       }
       const m30 = new Map(last30.map((r) => [r.retailer, r._count._all]));
       const m7 = new Map(last7.map((r) => [r.retailer, r._count._all]));
+      // Every retailer key we've ever recorded a click for. Only "ebay*" keys are
+      // still LIVE (see api/click/route.ts) — every other retailer's rows are
+      // historical leftovers from before 2026-07-21, still showing up in d7/d30
+      // for a few more weeks until they age out of that window. Kept in the table
+      // (renamed "historical") for reference, but never mixed into the headline
+      // stats or the country/kind breakdowns above, which exist to answer one
+      // question: is eBay tracking actually working right now.
       const rows = all
         .map((r) => ({ retailer: r.retailer, all: r._count._all, d30: m30.get(r.retailer) ?? 0, d7: m7.get(r.retailer) ?? 0 }))
         .sort((a, b) => b.d30 - a.d30 || b.all - a.all);
@@ -83,7 +95,14 @@ export default async function ClicksAdminPage({ searchParams }: { searchParams: 
   const byKind = data?.byKind ?? [];
   const recent = data?.recent ?? [];
 
-  const total = (k: keyof Omit<Row, "retailer">) => rows.reduce((s, r) => s + r[k], 0);
+  // Only "ebay*" retailer keys are still LIVE (see api/click/route.ts's eBay-only
+  // beacon guard) — everything else is a historical leftover from before that
+  // 2026-07-21 cutoff, still surfacing in d7/d30 until those old rows age out.
+  // Headline totals use eBay rows ONLY, since that's what this page exists to
+  // verify; the full table (including historical rows) stays below for reference.
+  const ebayRows = rows.filter((r) => r.retailer.startsWith("ebay"));
+  const otherRows = rows.filter((r) => !r.retailer.startsWith("ebay"));
+  const total = (rs: Row[], k: keyof Omit<Row, "retailer">) => rs.reduce((s, r) => s + r[k], 0);
   const fmt = (n: number) => n.toLocaleString();
 
   return (
@@ -92,7 +111,8 @@ export default async function ClicksAdminPage({ searchParams }: { searchParams: 
       <p className="mt-1 max-w-2xl text-sm text-slate-400">
         eBay &ldquo;View deal&rdquo; clicks we record ourselves (via the click beacon) — independent of eBay&apos;s own
         dashboard. Used to sanity-check that eBay affiliate tracking is live. Non-eBay store clicks stopped being
-        logged here to cut history-DB write volume — rows for other retailers below this date are historical only.
+        logged here on 2026-07-21 to cut history-DB write volume — the table below still shows their old rows
+        (fading out of the 7d/30d columns over the next few weeks), but the headline totals only ever count eBay.
       </p>
 
       {error ? (
@@ -105,42 +125,81 @@ export default async function ClicksAdminPage({ searchParams }: { searchParams: 
         </div>
       ) : (
         <>
-          {/* Totals */}
+          {/* Totals — eBay only, since that's the one thing still live-tracked */}
           <div className="mt-6 grid grid-cols-3 gap-3">
-            <Stat label="Clicks · 7d" value={fmt(total("d7"))} />
-            <Stat label="Clicks · 30d" value={fmt(total("d30"))} />
-            <Stat label="Clicks · all time" value={fmt(total("all"))} />
+            <Stat label="eBay clicks · 7d" value={fmt(total(ebayRows, "d7"))} />
+            <Stat label="eBay clicks · 30d" value={fmt(total(ebayRows, "d30"))} />
+            <Stat label="eBay clicks · all time" value={fmt(total(ebayRows, "all"))} />
           </div>
 
-          {/* Per-store table */}
+          {/* eBay per-context table (search, deal finder, arbitrage, ads, etc.) */}
           <div className="mt-6 overflow-x-auto rounded-xl border border-ink-700 bg-ink-850">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-ink-700 text-left text-xs uppercase tracking-wide text-slate-500">
-                  <th className="px-3 py-2 font-medium">Store</th>
+                  <th className="px-3 py-2 font-medium">eBay context</th>
                   <th className="px-3 py-2 text-right font-medium">7d</th>
                   <th className="px-3 py-2 text-right font-medium">30d</th>
                   <th className="px-3 py-2 text-right font-medium">All time</th>
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r) => (
-                  <tr key={r.retailer} className="border-b border-ink-800 last:border-0 hover:bg-ink-800/60">
-                    <td className="px-3 py-2 font-medium text-white">{r.retailer}</td>
-                    <td className="num px-3 py-2 text-right tabular-nums text-slate-300">{fmt(r.d7)}</td>
-                    <td className="num px-3 py-2 text-right tabular-nums text-slate-300">{fmt(r.d30)}</td>
-                    <td className="num px-3 py-2 text-right tabular-nums text-white">{fmt(r.all)}</td>
+                {ebayRows.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-3 py-4 text-center text-slate-500">No eBay clicks recorded yet.</td>
                   </tr>
-                ))}
+                ) : (
+                  ebayRows.map((r) => (
+                    <tr key={r.retailer} className="border-b border-ink-800 last:border-0 hover:bg-ink-800/60">
+                      <td className="px-3 py-2 font-medium text-white">{r.retailer}</td>
+                      <td className="num px-3 py-2 text-right tabular-nums text-slate-300">{fmt(r.d7)}</td>
+                      <td className="num px-3 py-2 text-right tabular-nums text-slate-300">{fmt(r.d30)}</td>
+                      <td className="num px-3 py-2 text-right tabular-nums text-white">{fmt(r.all)}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
 
-          {/* Breakdowns (last 30 days) */}
+          {/* Breakdowns (last 30 days, eBay only) */}
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <Breakdown title="By market · 30d" items={byCountry.map((r) => ({ k: r.country, n: r.n }))} fmt={fmt} />
-            <Breakdown title="By type · 30d" items={byKind.map((r) => ({ k: r.kind, n: r.n }))} fmt={fmt} />
+            <Breakdown title="eBay clicks by market · 30d" items={byCountry.map((r) => ({ k: r.country, n: r.n }))} fmt={fmt} />
+            <Breakdown title="eBay clicks by type · 30d" items={byKind.map((r) => ({ k: r.kind, n: r.n }))} fmt={fmt} />
           </div>
+
+          {/* Historical — every other retailer, no longer tracked. Kept only so old
+              affiliate-outreach numbers aren't lost; will empty out as rows age past
+              30/90 days (see the notification/history pruning cron for the pattern). */}
+          {otherRows.length > 0 && (
+            <details className="mt-6 rounded-xl border border-ink-700 bg-ink-850">
+              <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-slate-300 hover:text-white">
+                Historical — other retailers, no longer tracked ({otherRows.length})
+              </summary>
+              <div className="overflow-x-auto border-t border-ink-800">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-ink-700 text-left text-xs uppercase tracking-wide text-slate-500">
+                      <th className="px-3 py-2 font-medium">Store</th>
+                      <th className="px-3 py-2 text-right font-medium">7d</th>
+                      <th className="px-3 py-2 text-right font-medium">30d</th>
+                      <th className="px-3 py-2 text-right font-medium">All time</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {otherRows.map((r) => (
+                      <tr key={r.retailer} className="border-b border-ink-800 last:border-0 hover:bg-ink-800/60">
+                        <td className="px-3 py-2 font-medium text-slate-300">{r.retailer}</td>
+                        <td className="num px-3 py-2 text-right tabular-nums text-slate-500">{fmt(r.d7)}</td>
+                        <td className="num px-3 py-2 text-right tabular-nums text-slate-500">{fmt(r.d30)}</td>
+                        <td className="num px-3 py-2 text-right tabular-nums text-slate-400">{fmt(r.all)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </details>
+          )}
 
           {/* Individual clicks — which store, which page (card/product), which market,
               and when. Sortable by any column, filterable. */}
