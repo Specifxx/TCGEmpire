@@ -1026,10 +1026,10 @@ Honestly, weigh this against your actual goal. If you want a complete set for th
     category: "blog",
     title: "Riftbound Vendetta: Everything You Need to Know",
     excerpt:
-      "Riftbound: Vendetta lands 31 July 2026 with nine new Legends, three new mechanics, new card types and two-player Showdown Decks. Here's the complete rundown — and how to be ready.",
+      "Riftbound: Vendetta lands 31 July 2026 with nine new Legends, three new mechanics, new card types and two-player Showdown Decks. Every card is now confirmed — here's the complete rundown.",
     author: "RiftCompare",
     date: "2026-07-07",
-    updated: "2026-07-07",
+    updated: "2026-07-23",
     readMins: 6,
     tags: ["news", "vendetta", "set", "release", "guide"],
     body: `![Riftbound: Vendetta — releases 31 July 2026](/vendetta-hero.png)
@@ -1044,7 +1044,7 @@ Sealed product — booster boxes and packs — is already listing, and you can c
 
 ## What's in the set
 
-- **160+ cards**, including **50+ Showcase cards** and **nine new Champion Legends**.
+- **166 main-set cards** (all officially confirmed), including **50+ Showcase cards** and **nine new Champion Legends**.
 - Champions making their Riftbound debut include **Nasus, Renekton, Akali, Mel, Ambessa, Zed and Shen**.
 - **Signed Overnumbered variants** for the nine Legends, plus **22 Rival Overnumbers** — diptych cards that celebrate League's greatest rivalries and are designed to be displayed as a pair.
 
@@ -1077,7 +1077,7 @@ Vendetta leans into new two-domain colour pairings for deckbuilding: **Fury + Ca
 3. **Have your deck ready to price.** Drop a list into the **[deck pricer](/deck)** so you can total it the moment cards go live.
 4. **Don't overpay in the rush.** Launch hype pushes prices up — RiftCompare always shows the cheapest delivered price so you never pay the first number you see.
 
-More cards are still being revealed ahead of launch, and we'll keep this updated as they are. In the meantime, track everything on the **[Vendetta set page](/sets/vendetta)**.`,
+**All 166 main-set cards are now officially revealed** — spoiler season wrapped up ahead of the 31 July launch. Browse every one of them, live, on the **[Vendetta set page](/sets/vendetta)**, or see the **[complete card gallery](/blog/every-riftbound-vendetta-card-revealed)**.`,
   },
   {
     slug: "riftbound-vendetta-new-mechanics-flow-burn-empower",
@@ -1162,12 +1162,12 @@ Both card types feed Vendetta's rivalry identity — Domains pitted against thei
       "How Vendetta's new mechanics and domain pairings point toward fresh Riftbound archetypes — plus the champions, chase cards and value to watch as the set rolls out.",
     author: "RiftCompare",
     date: "2026-07-07",
-    updated: "2026-07-07",
+    updated: "2026-07-23",
     readMins: 6,
     tags: ["vendetta", "deckbuilding", "strategy", "synergies", "meta", "guide"],
     body: `![Riftbound: Vendetta — releases 31 July 2026](/vendetta-hero.png)
 
-Riftbound: Vendetta (out **31 July 2026**) is still being spoiled card-by-card, so nobody has a solved metagame yet. But the confirmed mechanics, champions and domain pairings already point clearly toward the kinds of decks that will define the early set. Here's how to think about building for Vendetta — and what to watch as more cards drop.
+All 166 Riftbound: Vendetta cards are now officially confirmed, but the set doesn't release until **31 July 2026** — so nobody has a solved metagame yet, since that only comes from real games with real decks. The confirmed mechanics, champions and domain pairings already point clearly toward the kinds of decks that will define the early set. Here's how to think about building for Vendetta ahead of launch.
 
 ## Start with the new domain pairings
 
@@ -1204,32 +1204,32 @@ Nine new Legends arrive, including **Nasus, Renekton, Akali, Mel, Ambessa, Zed a
 
 ## We'll keep this updated
 
-More cards are still being revealed before the 31 July launch, so treat this as a living guide — we'll add concrete decklists and synergies as the set fully spoils. For the full set overview, read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)**, and track live prices on the **[Vendetta set page](/sets/vendetta)** the moment cards go live.`,
+Every card is confirmed, so what's left is what real games reveal — we'll add concrete decklists and synergies once players are actually piloting these archetypes after the 31 July launch. For the full set overview, read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)**, and track live prices on the **[Vendetta set page](/sets/vendetta)** the moment cards go live.`,
   },
   {
     slug: "best-riftbound-vendetta-decks",
     category: "guide",
     title: "Best Riftbound Vendetta Decks: Archetypes, Synergies & How to Build Them",
     excerpt:
-      "Three strong deck blueprints for Riftbound Vendetta — Flow Value, Burn and Empower Midrange — with the synergies that make them work, how to build them legally, and how to pilot them. Updated through spoiler season.",
+      "Three strong deck blueprints for Riftbound Vendetta — Flow Value, Burn and Empower Midrange — with the synergies that make them work, how to build them legally, and how to pilot them. All 166 cards are now confirmed.",
     author: "RiftCompare",
     date: "2026-07-07",
-    updated: "2026-07-07",
+    updated: "2026-07-23",
     readMins: 9,
     tags: ["vendetta", "decks", "deckbuilding", "strategy", "synergies", "meta", "guide"],
-    // These are blueprints for a set still mid-spoil (see the note below), so we
-    // can't link specific unconfirmed cards yet — the Index is the honest next
-    // step: see how the market's already-revealed Vendetta cards are trending.
+    // Every VEN card is confirmed now, but the set hasn't released yet (31 July),
+    // so there's no real tournament data to link specific netdecks to — the Index
+    // is the honest next step: see how the market's already-revealed cards are trending.
     browseCta: {
       href: "/market#constituents",
       label: "See the Index →",
-      blurb: "Track how Vendetta's revealed cards are trending on the RiftCompare Index as spoiler season plays out.",
+      blurb: "Track how Vendetta's cards are trending on the RiftCompare Index ahead of release.",
     },
     body: `![Three Riftbound Vendetta archetypes to build — Flow Value, Burn, and Empower Midrange](/vendetta-archetypes.png)
 
-Riftbound: Vendetta lands **31 July 2026**, and its preview season is revealing cards through mid-July — so this is the moment to plan the decks you'll build on day one. Below are three strong archetype blueprints, each grounded in Vendetta's confirmed mechanics and domain pairings, with the synergies that make them tick and how to pilot them.
+Riftbound: Vendetta lands **31 July 2026**, and every one of its 166 cards is now officially confirmed — so this is the moment to plan the decks you'll build on day one. Below are three strong archetype blueprints, each grounded in Vendetta's confirmed mechanics and domain pairings, with the synergies that make them tick and how to pilot them.
 
-An honest note up front: only the first cards are spoiled so far (like **Jayce, Brilliant Inventor** and **Mel**), so these are **blueprints, not netdecks**. We give you the shell — the roles each deck needs — and we'll drop the exact lists in as cards are revealed. Bookmark it; it updates through spoiler season.
+An honest note up front: the cards are all revealed, but nobody has actually played a real game with them yet — the set isn't out until 31 July — so these are **blueprints, not netdecks**. We give you the shell — the roles each deck needs, built from confirmed cards — and we'll drop pilot notes and results in as real games happen after launch.
 
 ## First, the deckbuilding rules (the quick version)
 
@@ -1259,7 +1259,7 @@ If your combo only works once, it's a nice card — not a synergy. Every deck be
 
 **The engine:** the purest expression of **Burn + Flow**. Self-Burn stocks your trash quickly; Flow lets you replay from it, so every card effectively gets used twice. Against aggro you trade and rebuy; against control you never run out of gas.
 
-**The shell (fill exact cards as they spoil):**
+**The shell (built from confirmed cards):**
 - **Legend:** a Fury/Calm Legend with a recursion or trash payoff.
 - **4–6 enablers:** cheap cards that Burn your own deck or cycle to fill the trash.
 - **3–4 Flow payoffs:** your best units and spells that you *want* to replay from the trash.
@@ -1307,13 +1307,13 @@ If your combo only works once, it's a nice card — not a synergy. Every deck be
 - **Protect the engine.** Once your loop is running the game is yours — bait or answer removal before committing the key piece.
 - **Sequence around energy.** Empower and Flow both want energy banked; plan the turn you go over the top.
 
-## What to watch as spoilers drop (6–17 July)
+## What to watch once the set actually releases (31 July)
 
-- **Flow Value:** the best cheap self-Burn enabler and the marquee Flow payoff — those two cards define the deck.
-- **Burn:** how fast the opponent-Burn clock actually is, and whether it's a real win condition or just disruption.
-- **Empower:** more Mind/Body support around Jayce and Mel, and how expensive the strongest Empower effects are.
+- **Flow Value:** which cheap self-Burn enabler and Flow payoff pairing real pilots settle on — that's what defines the deck in practice.
+- **Burn:** how fast the opponent-Burn clock actually plays out at the table, and whether it's a real win condition or just disruption.
+- **Empower:** how players sequence Jayce/Mel support, and how expensive the strongest Empower effects turn out to be to use well.
 
-We'll update this guide with concrete lists as those land — and keep an eye on the **[price movers](/movers)**, since the cards that enable the first strong decks climb fastest at launch.
+We'll update this guide with concrete lists as real games are played — and keep an eye on the **[price movers](/movers)**, since the cards that enable the first strong decks climb fastest at launch.
 
 ## Price your list before you buy
 
@@ -1956,22 +1956,22 @@ Burn cards will list with live prices on the **[Vendetta set page](/sets/vendett
   {
     slug: "riftbound-vendetta-card-list",
     category: "guide",
-    title: "Riftbound Vendetta Card List — Everything Confirmed So Far",
+    title: "Riftbound Vendetta Card List — All 166 Cards Confirmed",
     excerpt:
-      "A living tracker of what's confirmed for Riftbound: Vendetta — the new champions, card count, mechanics, product line-up and release date — updated as official reveals land ahead of 31 July 2026.",
+      "The complete, confirmed Riftbound: Vendetta card list — every one of the 166 main-set cards, the new champions, mechanics and product line-up, ahead of the 31 July 2026 release.",
     author: "RiftCompare",
     date: "2026-07-09",
-    updated: "2026-07-09",
+    updated: "2026-07-23",
     readMins: 4,
     tags: ["vendetta", "card list", "set", "news", "guide"],
     body: `![Riftbound: Vendetta — releases 31 July 2026](/vendetta-hero.png)
 
-Chasing the full **Riftbound: Vendetta** card list? Cards are still being revealed ahead of the **31 July 2026** launch, so this page tracks everything that's officially confirmed — and we update it as new reveals drop. For the full price list, the **[Vendetta set page](/sets/vendetta)** fills with every card the moment singles go live.
+Chasing the full **Riftbound: Vendetta** card list? Spoiler season is over — **all 166 main-set cards are officially confirmed** ahead of the **31 July 2026** launch. This page rounds up everything confirmed about the set; for the actual card-by-card list with images, see the **[complete card gallery](/blog/every-riftbound-vendetta-card-revealed)**, and the **[Vendetta set page](/sets/vendetta)** fills in live prices the moment singles go on sale.
 
 ## The set at a glance
 
 - **Release:** 31 July 2026 (worldwide). In-store **Pre-Rift** launch events run from **24 July**.
-- **Size:** 160+ cards, including 50+ Showcase cards.
+- **Size:** 166 main-set cards, plus 50+ Showcase alternate-art printings, Overnumbered chase cards, runes and promos.
 - **New champion Legends:** nine, including **Nasus, Renekton, Akali, Mel, Ambessa, Zed and Shen**.
 - **Chase cards:** signed Overnumbered variants for the nine Legends, plus **22 Rival Overnumbers** — diptych cards built to be displayed as a pair. Full detail in **[Vendetta Overnumbers explained](/guides/riftbound-vendetta-overnumbers-explained)**.
 
@@ -1991,12 +1991,10 @@ Read all three together in **[Vendetta's new mechanics explained](/blog/riftboun
 - **Showdown Decks** — Riftbound's first ready-to-play **two-player** product; the debut pairing is **Shen vs Zed**.
 - **New domain pairings** for deckbuilding: **Fury + Calm**, **Mind + Body**, and **Chaos + Order**.
 
-## How to track the full list
+## Where to see the full list
 
-Card-by-card reveals roll out right up to launch. Rather than reprint an unofficial list that goes stale hourly, we point you to the two places that stay correct:
-
-1. **The [Vendetta set page](/sets/vendetta)** — populates with every card + live prices the moment singles release.
-2. **This tracker** — we keep the confirmed set facts above current as official reveals land.
+- **[The complete card gallery](/blog/every-riftbound-vendetta-card-revealed)** — every one of the 166 cards, with images, filterable by domain, rarity and type.
+- **The [Vendetta set page](/sets/vendetta)** — the same full list, plus live prices the moment singles release.
 
 Planning a deck already? Our **[best Vendetta decks guide](/guides/best-riftbound-vendetta-decks)** shows which archetypes the confirmed mechanics point toward, and the **[deckbuilding guide](/guides/building-for-riftbound-vendetta)** covers synergies. And keep the **[live countdown](/vendetta-countdown)** handy — it's almost here.`,
   },
@@ -2109,12 +2107,12 @@ Read the mechanics in full — **[Flow](/guides/riftbound-flow-explained)**, **[
   {
     slug: "riftbound-vendetta-chase-cards-so-far",
     category: "blog",
-    title: "Riftbound Vendetta Chase Cards So Far: What Collectors Should Hunt",
+    title: "Riftbound Vendetta Chase Cards: The Complete Tier-by-Tier Guide",
     excerpt:
-      "Spoiler season is live — here's every Vendetta chase-card tier confirmed so far (signed Overnumbered Legends, connecting-art Rival Overnumbers, 50+ Showcases), which champions are teased, and how to buy them without paying the hype tax.",
+      "Spoiler season is over and the base set is fully confirmed — here's every Vendetta chase-card tier (signed Overnumbered Legends, connecting-art Rival Overnumbers, 50+ Showcases), and how to buy them without paying the hype tax.",
     author: "RiftCompare",
     date: "2026-07-10",
-    updated: "2026-07-10",
+    updated: "2026-07-23",
     readMins: 5,
     tags: ["vendetta", "chase cards", "overnumber", "collecting", "news"],
     shop: [
@@ -2165,7 +2163,7 @@ Read the mechanics in full — **[Flow](/guides/riftbound-flow-explained)**, **[
     ],
     body: `![Riftbound: Vendetta — releases 31 July 2026](/vendetta-hero.png)
 
-Vendetta spoiler season is running right now (reveals through mid-July), and the picture of the set's **chase cards** — the premium pulls that drive box prices — is coming into focus. This post breaks the chase down **tier by tier**, from the rarest pull down, with a live gallery of real revealed cards under each tier: tap any card to open its page and see live prices the moment stores list it.
+Vendetta's spoiler season wrapped up ahead of the **31 July 2026** launch, and the picture of the set's **chase cards** — the premium pulls that drive box prices — is set. This post breaks the chase down **tier by tier**, from the rarest pull down, with a live gallery of every confirmed card under each tier: tap any card to open its page and see live prices the moment stores list it.
 
 ## Tier 1: Signature cards
 
@@ -2387,12 +2385,12 @@ Shopping from **[Australia](/blog/buy-riftbound-cards-australia)** or **[the US]
   {
     slug: "every-riftbound-vendetta-card-revealed",
     category: "blog",
-    title: "Every Riftbound Vendetta Card Revealed So Far — Full Card Gallery",
+    title: "Every Riftbound Vendetta Card — Complete Set Gallery (All 166 Revealed)",
     excerpt:
-      "The complete, auto-updating gallery of every officially revealed Riftbound: Vendetta card — all 100+ reveals with images, embedded from the live database. Tap any card for its page and launch-day prices. Updated as spoilers land.",
+      "The complete gallery of every Riftbound: Vendetta card — all 166 main-set cards officially confirmed, plus Showcase alt-arts, Overnumbers, runes and promos, embedded live from our database. Tap any card for its page and launch-day prices.",
     author: "RiftCompare",
     date: "2026-07-10",
-    updated: "2026-07-10",
+    updated: "2026-07-23",
     readMins: 3,
     tags: ["vendetta", "spoilers", "card gallery", "card list", "news"],
     shop: [
@@ -2403,14 +2401,14 @@ Shopping from **[Australia](/blog/buy-riftbound-cards-australia)** or **[the US]
     // order. Self-populating: new official reveals appear here automatically.
     embeds: [
       {
-        title: "All Vendetta cards revealed so far",
-        note: "Every officially revealed card, straight from our live database — filter by domain, rarity or type, or sort by most recently revealed. Tap any card for its page, rules text and prices the moment stores list it.",
+        title: "All 166 Vendetta cards — complete",
+        note: "Every officially confirmed card, straight from our live database — filter by domain, rarity or type. Tap any card for its page, rules text and prices the moment stores list it.",
         setAll: "VEN",
         filterable: true,
         take: 400,
       },
     ],
-    body: `This is the **complete gallery of every Riftbound: Vendetta card officially revealed so far** — every spoiler from Riot's official card gallery, embedded live from our database in collector-number order. It updates **automatically** as new reveals are imported, so bookmark this page for spoiler season: no edits, no lag, the gallery below simply grows.
+    body: `This is the **complete gallery of every Riftbound: Vendetta card** — all 166 main-set cards, officially confirmed, embedded live from our database in collector-number order. Spoiler season is over, so this is the final list — no more base-set reveals are coming before the 31 July launch.
 
 **Vendetta releases 31 July 2026.** The set runs **166 main-set cards** plus alternate-art Showcase printings, Overnumbered chase cards (numbered beyond 166), SP-numbered specials, runes and tokens. The mechanics are new too — read up on **[Empower](/guides/riftbound-empower-explained)**, **[Flow](/guides/riftbound-flow-explained)** and **[Burn](/guides/riftbound-burn-explained)** while you browse.
 
@@ -2700,6 +2698,62 @@ Your seller dashboard and Seller Funds page always show the exact numbers before
 Any signed-in, email-verified user can list a card in a couple of minutes from the **[seller dashboard](/marketplace/sell)**. Payouts go through Stripe Connect once you've completed a quick identity check, and buyer payments are held in escrow until delivery is confirmed — full details in **[how buyer protection works](/blog/riftcompare-marketplace-buyer-protection-explained)**.
 
 Already selling? The new rate applies automatically — nothing to change, nothing to opt into. Check **[Seller Funds](/marketplace/funds)** to see it reflected on your next completed sale.`,
+  },
+  {
+    slug: "riftbound-vendetta-spoiler-season-complete-166-cards",
+    category: "blog",
+    title: "Riftbound Vendetta Spoiler Season Is Complete: All 166 Cards Confirmed",
+    excerpt:
+      "Riftbound: Vendetta's spoiler season is officially over — every one of the set's 166 main-set cards is confirmed ahead of the 31 July 2026 launch. Here's the full recap: what's in the set, what we learned, and how to be ready.",
+    author: "RiftCompare",
+    date: "2026-07-23",
+    updated: "2026-07-23",
+    readMins: 5,
+    tags: ["vendetta", "spoilers", "news", "set", "card list"],
+    browseCta: {
+      href: "/blog/every-riftbound-vendetta-card-revealed",
+      label: "Browse the full gallery →",
+      blurb: "See all 166 confirmed Vendetta cards, filterable by domain, rarity and type.",
+    },
+    body: `![Riftbound: Vendetta — releases 31 July 2026](/vendetta-hero.png)
+
+Riftbound: Vendetta's spoiler season is done. Every one of the set's **166 main-set cards** is now officially confirmed via Riot's card gallery, a week and a half ahead of the set's **31 July 2026** worldwide release. If you've been tracking the reveals piecemeal, this is the wrap-up: what's in the set, what stood out, and what's left to actually happen before boosters crack.
+
+## The headline numbers
+
+- **166 main-set cards**, plus **50+ Showcase alternate-art printings**, **Overnumbered chase cards** (numbered beyond the set — 167 and up), **SP-numbered specials**, six domain **runes**, and a promo token.
+- **Nine new Champion Legends**, several making their Riftbound debut: **Akali, Renekton, Nasus, Shen, Jayce, Mel, Kennen, Zed and Ambessa**.
+- **Three new mechanics** — Flow, Burn and Empower — see the full breakdowns: **[Flow](/guides/riftbound-flow-explained)**, **[Burn](/guides/riftbound-burn-explained)**, **[Empower](/guides/riftbound-empower-explained)**.
+- **Two new card concepts** — Unit-Gear and Decrees — covered in **[Vendetta's new card types](/blog/riftbound-vendetta-unit-gear-decrees)**.
+- **New domain pairings**: Fury + Calm, Mind + Body, and Chaos + Order — rival colours forced together.
+
+## What the rivalry theme actually delivered
+
+Vendetta's whole identity is built around clashing champions, and the reveals leaned all the way in: **Nasus vs Renekton**, **Shen vs Zed**, and connecting-art **Rival Overnumbers** that are designed to be collected and displayed as pairs rather than single cards. The set's first **Showdown Deck** — Riftbound's first ready-to-play two-player product — pairs **Shen versus Zed**, putting the rivalry directly into the box rather than just the flavour text.
+
+## What's confirmed vs what's still ahead
+
+To be precise about what "fully revealed" does and doesn't mean: every **card** in the set is now known — name, rules text, rarity, art. What hasn't happened yet is the **release** itself. Vendetta singles aren't buyable until **31 July 2026** (in-store Pre-Rift events start **24 July**), so there's no real tournament data, no settled metagame, and no live singles prices yet — only sealed product (booster boxes and packs) is buyable today, already comparable on our **[sealed page](/sealed)**.
+
+That's an important distinction if you're chasing a specific card: the **[Vendetta set page](/sets/vendetta)** already lists every confirmed card, but live store prices only populate once singles actually go on sale.
+
+## Where to go next
+
+- **[Browse every confirmed card](/blog/every-riftbound-vendetta-card-revealed)** — the full, filterable gallery.
+- **[Chase cards, tier by tier](/blog/riftbound-vendetta-chase-cards-so-far)** — which Overnumbers, alt-arts and Epics to actually hunt.
+- **[Best Vendetta decks](/guides/best-riftbound-vendetta-decks)** and the **[deckbuilding guide](/guides/building-for-riftbound-vendetta)** — archetype blueprints built from the confirmed card pool.
+- **[Live release countdown](/vendetta-countdown)** — exactly how long until launch.
+- **[Everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** — the full set rundown in one read.
+
+## Common questions
+
+**Are all Riftbound Vendetta cards revealed?** Yes — all 166 main-set cards are officially confirmed, alongside Showcase alt-arts, Overnumbered chase cards, runes and promos.
+
+**How many cards are in the Vendetta set?** 166 main-set cards, plus alternate printings (Showcase, Overnumbered, SP-numbered) that sit outside that base count.
+
+**When does Riftbound Vendetta release?** 31 July 2026 worldwide, with in-store Pre-Rift launch events from 24 July.
+
+**Can I buy Vendetta singles yet?** Not yet — only sealed product (booster boxes and packs) is currently buyable. Singles go live at release, with prices compared live across every store we track the moment they do.`,
   },
 ];
 
