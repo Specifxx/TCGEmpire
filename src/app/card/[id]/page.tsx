@@ -16,7 +16,7 @@ import { CardTile } from "@/components/CardTile";
 import { cardTileSelect } from "@/lib/cards";
 import { AdSlot } from "@/components/AdSlot";
 import { EmbedCardButton } from "@/components/EmbedCardButton";
-import { DEFAULT_COUNTRY } from "@/lib/country";
+import { DEFAULT_COUNTRY, isoCountry, type Country } from "@/lib/country";
 import { setByCode } from "@/lib/constants";
 import { domainSlug } from "@/lib/domains";
 import { decksUsingCard } from "@/lib/meta-decks";
@@ -213,6 +213,25 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // until the next pass overwrites it.
   const priceValidUntil = new Date(Date.now() + 86400e3).toISOString().slice(0, 10);
   const hasStoreOffers = au.prices.length > 0 && au.lowest != null;
+  // Google's "merchant listing" price/shipping/returns snippet requires every
+  // Offer to declare shippingDetails + hasMerchantReturnPolicy (missing either
+  // is flagged in Search Console and can suppress the enhanced display). We can
+  // only declare these HONESTLY where we're the actual merchant of record —
+  // RiftCompare's own Marketplace, where a listing's real flat shipping rate and
+  // our own (real, documented) buyer-protection terms are known facts. The store
+  // AggregateOffer above aggregates many independent third-party retailers we
+  // don't control shipping/returns for, so it deliberately carries neither field
+  // rather than assert something that isn't true for at least some of them.
+  // Our buyer protection (see /marketplace/buyer-protection) covers "item never
+  // arrived / not as described / damaged", not ordinary change-of-mind returns —
+  // MerchantReturnUnspecified is the honest schema.org category for that shape of
+  // guarantee, rather than overclaiming a standard return window we don't offer.
+  // applicableCountry is per-listing since the Marketplace serves several markets.
+  const marketplaceReturnPolicy = (listingCountry: string) => ({
+    "@type": "MerchantReturnPolicy",
+    returnPolicyCategory: "https://schema.org/MerchantReturnUnspecified",
+    applicableCountry: isoCountry(listingCountry as Country),
+  });
   const offersLd = [
     ...(hasStoreOffers
       ? [{
@@ -225,16 +244,31 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           priceValidUntil,
         }]
       : []),
-    ...mpListings.map((l) => ({
-      "@type": "Offer",
-      price: (l.priceCents / 100).toFixed(2),
-      priceCurrency: l.currency,
-      availability: "https://schema.org/InStock",
-      itemCondition: l.condition === "NM" ? "https://schema.org/NewCondition" : "https://schema.org/UsedCondition",
-      seller: { "@type": "Organization", name: l.seller.sellerProfile?.shopName ?? l.seller.displayName },
-      url: `${SITE_URL}/card/${card.slug ?? params.id}#marketplace-listings`,
-      priceValidUntil,
-    })),
+    ...mpListings.map((l) => {
+      const shipCents = l.seller.sellerProfile?.shippingFlatCents;
+      return {
+        "@type": "Offer",
+        price: (l.priceCents / 100).toFixed(2),
+        priceCurrency: l.currency,
+        availability: "https://schema.org/InStock",
+        itemCondition: l.condition === "NM" ? "https://schema.org/NewCondition" : "https://schema.org/UsedCondition",
+        seller: { "@type": "Organization", name: l.seller.sellerProfile?.shopName ?? l.seller.displayName },
+        url: `${SITE_URL}/card/${card.slug ?? params.id}#marketplace-listings`,
+        priceValidUntil,
+        // The seller's own real flat rate (see SellerProfile.shippingFlatCents) —
+        // omitted rather than guessed when a seller hasn't set one.
+        ...(shipCents != null
+          ? {
+              shippingDetails: {
+                "@type": "OfferShippingDetails",
+                shippingRate: { "@type": "MonetaryAmount", value: (shipCents / 100).toFixed(2), currency: l.currency },
+                shippingDestination: { "@type": "DefinedRegion", addressCountry: isoCountry(l.country as Country) },
+              },
+            }
+          : {}),
+        hasMerchantReturnPolicy: marketplaceReturnPolicy(l.country),
+      };
+    }),
   ];
   const jsonLd = offersLd.length
     ? {
