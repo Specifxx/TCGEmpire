@@ -28,7 +28,7 @@ on:
           - audit-clicks     # read-only outbound-click leaderboard per retailer (affiliate-outreach priority)
           - remove-seed-accounts # one-off: delete @riftcompare.seed bot personas (dead since the forum autoseeder was removed)
           - test-marketplace-stripe # smoke-test CRON_SECRET + both Stripe webhook secrets + a Connect account create/delete round-trip (test or live)
-          - migrate-main-db  # full pg_dump/restore of the OPERATIONAL database (DATABASE_URL) into DATABASE_URL_2 + row-count verification (read-only against the source; does not touch production traffic)
+          - migrate-main-db  # full pg_dump/restore of the OPERATIONAL database (DATABASE_URL_2) into RH5 + row-count verification (read-only against the source; does not touch production traffic)
       dry_run:
         description: "Dry run (log what would change, write nothing)"
         type: boolean
@@ -60,8 +60,13 @@ jobs:
       # Prefer the new operational project the moment DATABASE_URL_2 is set —
       # the original DATABASE_URL exhausted its free-tier monthly network-
       # transfer allowance. migrate-main-db's own step below still reads
-      # secrets.DATABASE_URL directly for SOURCE_DATABASE_URL regardless (it
-      # needs the OLD project specifically), so this default doesn't affect it.
+      # DATABASE_URL_2 directly for SOURCE_DATABASE_URL regardless (it needs the
+      # CURRENTLY-live project specifically), so this default doesn't affect it.
+      # NOTE: this deliberately does NOT prefer RH5 yet — RH5 is the migration
+      # TARGET, still empty/unverified until migrate-main-db's row-count check
+      # passes. Every other task here (import-prices, cards-sync, etc.) must keep
+      # hitting the real live database until the cutover is confirmed safe; only
+      # then does this default flip to RH5 (alongside src/lib/db.ts's own cutover).
       DATABASE_URL: ${{ secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
       DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
     steps:
@@ -116,7 +121,7 @@ jobs:
             || echo "::warning::schema push refused (destructive diff); continuing"
           npx tsx scripts/migrate-history.ts
 
-      - name: Migrate main (operational) database to DATABASE_URL_2
+      - name: Migrate main (operational) database to RH5
         # Full pg_dump/pg_restore of the ENTIRE operational schema (users, sessions,
         # cards, orders, marketplace listings, everything) — unlike the history-DB
         # split, this is transactional data (real accounts, real money via Stripe
@@ -125,20 +130,22 @@ jobs:
         # so pg_dump/pg_restore copies every table/index/constraint/row exactly in
         # one pass — the proven, boring, correct tool for "copy an entire database."
         #
-        # Only READS from DATABASE_URL (the current/old project) — never touches
-        # production traffic, and is safe to re-run as many times as needed (each
-        # run fully re-syncs DATABASE_URL_2 from the source's CURRENT state). Run
-        # it once now to do the bulk copy, then once more immediately before you
-        # actually flip DATABASE_URL over to the new connection string in Vercel +
-        # GitHub secrets, so nothing written in between is lost.
+        # Only READS from the CURRENTLY-LIVE database (DATABASE_URL_2, itself the
+        # replacement for the original DATABASE_URL — now approaching its own
+        # allowance) — never touches production traffic, and is safe to re-run as
+        # many times as needed (each run fully re-syncs RH5 from the source's
+        # CURRENT state). Run it once now to do the bulk copy, then once more
+        # immediately before you actually flip DATABASE_URL over to RH5's
+        # connection string in Vercel + GitHub secrets, so nothing written in
+        # between is lost.
         if: inputs.task == 'migrate-main-db'
         env:
-          SOURCE_DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          TARGET_DATABASE_URL: ${{ secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 }}
+          SOURCE_DATABASE_URL: ${{ secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+          TARGET_DATABASE_URL: ${{ secrets.RH5 || vars.RH5 }}
         run: |
           set -uo pipefail
           if [ -z "$TARGET_DATABASE_URL" ]; then
-            echo "::error::DATABASE_URL_2 secret is not visible to Actions — add it under Settings → Secrets and variables → Actions first."
+            echo "::error::RH5 secret/variable is not visible to Actions — add it under Settings → Secrets and variables → Actions first (Repository secrets or variables, exact name RH5)."
             exit 1
           fi
 
@@ -200,7 +207,7 @@ jobs:
           done
           set -e
           if [ "$MISMATCH" = "1" ]; then
-            echo "::error::Row-count mismatch on at least one table — do NOT cut traffic over to DATABASE_URL_2 yet. Re-run this task, or investigate the pg_restore output above."
+            echo "::error::Row-count mismatch on at least one table — do NOT cut traffic over to RH5 yet. Re-run this task, or investigate the pg_restore output above."
             exit 1
           fi
           echo "All verified tables match. Safe to cut over once you're ready — see the task description for the exact steps."
