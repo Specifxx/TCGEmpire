@@ -1159,15 +1159,30 @@ Both card types feed Vendetta's rivalry identity — Domains pitted against thei
     category: "guide",
     title: "Building for Riftbound Vendetta: Decks, Synergies & What to Look Out For",
     excerpt:
-      "How Vendetta's new mechanics and domain pairings point toward fresh Riftbound archetypes — plus the champions, chase cards and value to watch as the set rolls out.",
+      "How Vendetta's new mechanics and domain pairings point toward fresh Riftbound archetypes — plus the champions, chase cards and value to watch as early singles start trading.",
     author: "RiftCompare",
     date: "2026-07-07",
-    updated: "2026-07-23",
+    updated: "2026-07-24",
     readMins: 6,
     tags: ["vendetta", "deckbuilding", "strategy", "synergies", "meta", "guide"],
-    body: `![Riftbound: Vendetta — releases 31 July 2026](/vendetta-hero.png)
+    shop: [
+      { label: "Jayce singles — the Empower champion", query: "Riftbound Jayce" },
+      { label: "Mel singles", query: "Riftbound Mel" },
+      { label: "Vendetta singles on eBay", query: "Riftbound Vendetta" },
+    ],
+    browseCta: {
+      href: "/sets/vendetta",
+      label: "Shop Vendetta cards now →",
+      blurb: "Every confirmed card, with live prices as early singles and stores list them.",
+    },
+    embed: {
+      title: "Three of Vendetta's new Legends",
+      note: "Ambessa, Jayce and Mel — straight from our live database. Tap a card for its page and live prices.",
+      slugs: ["ambessa-the-wolf-ven-084", "jayce-brilliant-inventor-ven-068", "mel-newly-awakened-ven-069"],
+    },
+    body: `![Riftbound: Vendetta — official street date 31 July 2026](/vendetta-hero.png)
 
-All 166 Riftbound: Vendetta cards are now officially confirmed, but the set doesn't release until **31 July 2026** — so nobody has a solved metagame yet, since that only comes from real games with real decks. The confirmed mechanics, champions and domain pairings already point clearly toward the kinds of decks that will define the early set. Here's how to think about building for Vendetta ahead of launch.
+All 166 Riftbound: Vendetta cards are officially confirmed, and early singles are already trading via Pre-Rift launch events — a week ahead of the **31 July 2026** official street date. There's still no solved metagame (that only comes from a real, settled tournament scene), but the confirmed mechanics, champions and domain pairings already point clearly toward the decks that will define the early set — and you can start acquiring the pieces today instead of waiting for launch day. Here's how to think about building for Vendetta right now.
 
 ## Start with the new domain pairings
 
@@ -1204,32 +1219,66 @@ Nine new Legends arrive, including **Nasus, Renekton, Akali, Mel, Ambessa, Zed a
 
 ## We'll keep this updated
 
-Every card is confirmed, so what's left is what real games reveal — we'll add concrete decklists and synergies once players are actually piloting these archetypes after the 31 July launch. For the full set overview, read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)**, and track live prices on the **[Vendetta set page](/sets/vendetta)** the moment cards go live.`,
+Every card is confirmed and early singles are already trading — so this is genuinely the moment to start assembling a shell instead of waiting. We'll add concrete decklists as real pilots settle in once the full 31 July release lands and a real tournament scene forms. For three ready-to-build archetype blueprints with the shell for each, see **[Best Riftbound Vendetta Decks](/guides/best-riftbound-vendetta-decks)**. For the full set overview, read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)**, and track live prices on the **[Vendetta set page](/sets/vendetta)** as they land.`,
   },
   {
     slug: "best-riftbound-vendetta-decks",
     category: "guide",
     title: "Best Riftbound Vendetta Decks: Archetypes, Synergies & How to Build Them",
     excerpt:
-      "Three strong deck blueprints for Riftbound Vendetta — Flow Value, Burn and Empower Midrange — with the synergies that make them work, how to build them legally, and how to pilot them. All 166 cards are now confirmed.",
+      "Three strong deck blueprints for Riftbound Vendetta — Flow Value, Burn and Empower Midrange — with the synergies that make them work, real card visuals, and how to start buying into each one now that early singles are trading.",
     author: "RiftCompare",
     date: "2026-07-07",
-    updated: "2026-07-23",
+    updated: "2026-07-24",
     readMins: 9,
     tags: ["vendetta", "decks", "deckbuilding", "strategy", "synergies", "meta", "guide"],
-    // Every VEN card is confirmed now, but the set hasn't released yet (31 July),
-    // so there's no real tournament data to link specific netdecks to — the Index
-    // is the honest next step: see how the market's already-revealed cards are trending.
+    shop: [
+      { label: "Jayce singles — the Empower champion", query: "Riftbound Jayce" },
+      { label: "Mel singles", query: "Riftbound Mel" },
+      { label: "Vendetta singles on eBay", query: "Riftbound Vendetta" },
+      { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
+    ],
+    // Early singles are trading (Pre-Rift + early marketplace listings) but there's
+    // still no real tournament data for Vendetta specifically — so the honest CTA
+    // is "go buy the pieces on the set page", not a fabricated netdeck link.
     browseCta: {
-      href: "/market#constituents",
-      label: "See the Index →",
-      blurb: "Track how Vendetta's cards are trending on the RiftCompare Index ahead of release.",
+      href: "/sets/vendetta",
+      label: "Shop Vendetta cards now →",
+      blurb: "Every confirmed card, priced live as early singles and stores list them.",
     },
+    embeds: [
+      {
+        title: "Flow cards revealed so far",
+        note: "Every officially revealed Vendetta card with the Flow keyword — the Flow Value shell above is built from these. Tap a card for its page and live prices.",
+        rulesContain: "[Flow]",
+        rulesSet: "VEN",
+        take: 12,
+      },
+      {
+        title: "Burn cards revealed so far",
+        note: "Every officially revealed Vendetta card with the Burn keyword — the enablers and payoffs for the Burn / Disruption shell.",
+        rulesContain: "[Burn]",
+        rulesSet: "VEN",
+        take: 12,
+      },
+      {
+        title: "Jayce & Mel — the Empower Legends",
+        note: "Vendetta's two Empower-anchored Legends, straight from our live database.",
+        slugs: ["jayce-brilliant-inventor-ven-068", "mel-newly-awakened-ven-069"],
+      },
+      {
+        title: "Empower cards revealed so far",
+        note: "Every officially revealed Vendetta card with the Empower keyword — build the Empower Midrange shell around these.",
+        rulesContain: "[Empower]",
+        rulesSet: "VEN",
+        take: 12,
+      },
+    ],
     body: `![Three Riftbound Vendetta archetypes to build — Flow Value, Burn, and Empower Midrange](/vendetta-archetypes.png)
 
-Riftbound: Vendetta lands **31 July 2026**, and every one of its 166 cards is now officially confirmed — so this is the moment to plan the decks you'll build on day one. Below are three strong archetype blueprints, each grounded in Vendetta's confirmed mechanics and domain pairings, with the synergies that make them tick and how to pilot them.
+Riftbound: Vendetta's official street date is **31 July 2026**, but early singles are already trading via Pre-Rift launch events — a week ahead of schedule. Every one of the set's 166 cards is officially confirmed, so this is the moment to actually start acquiring the pieces for the decks you want to build. Below are three strong archetype blueprints, each grounded in Vendetta's confirmed mechanics and domain pairings, with the synergies that make them tick, real card visuals for each, and how to pilot them.
 
-An honest note up front: the cards are all revealed, but nobody has actually played a real game with them yet — the set isn't out until 31 July — so these are **blueprints, not netdecks**. We give you the shell — the roles each deck needs, built from confirmed cards — and we'll drop pilot notes and results in as real games happen after launch.
+An honest note up front: there's no settled tournament metagame for Vendetta yet — that only comes from a real, mature competitive scene, and the full worldwide release is still a week out — so these are **blueprints, not netdecks**. We give you the shell — the roles each deck needs, built from confirmed cards — and we'll drop pilot notes and results in as a real meta forms after the 31 July launch.
 
 ## First, the deckbuilding rules (the quick version)
 
@@ -1268,6 +1317,8 @@ If your combo only works once, it's a nice card — not a synergy. Every deck be
 
 **How to play it:** you're the grinder. Trade early, don't over-commit into removal, and treat your trash as a second hand — sequence so the cards you Burn are the ones Flow most wants back.
 
+[[embed:0]]
+
 ## Archetype 2 — Burn / Disruption (Chaos + Order)
 
 **Identity:** the aggressive, disruptive take on Burn — attack the opponent's deck as a clock while self-Burn powers your own payoffs.
@@ -1282,6 +1333,8 @@ If your combo only works once, it's a nice card — not a synergy. Every deck be
 - **Runes:** Chaos/Order base, tuned toward whichever colour holds your Burn.
 
 **How to play it:** apply pressure on two axes. Don't tunnel on decking them out — the deck-Burn is a clock that forces bad decisions, while your board usually closes the game. Highest skill ceiling of the three, and the easiest to mis-sequence.
+
+[[embed:1]]
 
 ## Archetype 3 — Empower Midrange (Mind + Body)
 
@@ -1301,23 +1354,27 @@ If your combo only works once, it's a nice card — not a synergy. Every deck be
 
 **How to play it:** curve out, but don't rush your energy. The trap is spending everything early — hold energy to Empower at the right moment so a cheap unit becomes the biggest threat on the board.
 
+[[embed:2]]
+
+[[embed:3]]
+
 ## Piloting any of these decks
 
 - **Mulligan for your engine, not your payoff.** A hand with enablers and a way to start the loop beats a hand of finishers you can't fuel yet.
 - **Protect the engine.** Once your loop is running the game is yours — bait or answer removal before committing the key piece.
 - **Sequence around energy.** Empower and Flow both want energy banked; plan the turn you go over the top.
 
-## What to watch once the set actually releases (31 July)
+## What to watch as the full release (31 July) approaches
 
 - **Flow Value:** which cheap self-Burn enabler and Flow payoff pairing real pilots settle on — that's what defines the deck in practice.
 - **Burn:** how fast the opponent-Burn clock actually plays out at the table, and whether it's a real win condition or just disruption.
 - **Empower:** how players sequence Jayce/Mel support, and how expensive the strongest Empower effects turn out to be to use well.
 
-We'll update this guide with concrete lists as real games are played — and keep an eye on the **[price movers](/movers)**, since the cards that enable the first strong decks climb fastest at launch.
+We'll update this guide with concrete lists as a real meta forms — and keep an eye on the **[price movers](/movers)**, since the cards that enable the first strong decks climb fastest at launch.
 
-## Price your list before you buy
+## Buy into a shell now, before the launch-week rush
 
-The moment you've got a list, drop it into the **[deck pricer](/deck)** to total every card at the cheapest live price across stores, in your currency — the fastest way to build a new-set deck without overpaying in the launch rush. For a brand-new set, **[singles are usually cheaper than sealed](/guides/riftbound-singles-vs-sealed)** for a specific deck.
+Early singles are already trading, which means you don't have to wait until 31 July to start — the **[Vendetta set page](/sets/vendetta)** has live prices on every confirmed card as they list. Once you've settled on a shell, drop it into the **[deck pricer](/deck)** to total every card at the cheapest live price across stores, in your currency — the fastest way to build a new-set deck without overpaying in the launch rush. For a brand-new set, **[singles are usually cheaper than sealed](/guides/riftbound-singles-vs-sealed)** for a specific deck.
 
 For the full picture, read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** and the **[new mechanics explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**, and track live prices on the **[Vendetta set page](/sets/vendetta)** as cards release.`,
   },
@@ -2817,6 +2874,69 @@ Early-window prices on a brand-new set are volatile — a handful of listings ca
 **Are RiftCompare's Vendetta prices live?** Yes — we're comparing every Vendetta listing we track as it appears, delivered cost included, the same as every other set.
 
 **When's the official Vendetta release date?** 31 July 2026, worldwide. That date hasn't moved — what's new is that some singles are trading a few days early.`,
+  },
+  {
+    slug: "how-to-start-buying-riftbound-vendetta-decks",
+    category: "blog",
+    title: "How to Start Buying Into Riftbound Vendetta's First Decks",
+    excerpt:
+      "Vendetta singles are already trading early, days ahead of the 31 July street date. Here's how to actually start buying into Flow Value, Burn/Disruption or Empower Midrange today — without overpaying in the early rush.",
+    author: "RiftCompare",
+    date: "2026-07-24",
+    updated: "2026-07-24",
+    readMins: 5,
+    tags: ["vendetta", "decks", "buying guide", "news", "price comparison"],
+    shop: [
+      { label: "Jayce singles — the Empower champion", query: "Riftbound Jayce" },
+      { label: "Mel singles", query: "Riftbound Mel" },
+      { label: "Vendetta singles on eBay", query: "Riftbound Vendetta" },
+      { label: "Zed vs Shen Showdown Deck", query: "Riftbound Vendetta Showdown Deck" },
+    ],
+    browseCta: {
+      href: "/sets/vendetta",
+      label: "Shop Vendetta cards now →",
+      blurb: "Every confirmed card, priced live as early singles and stores list them.",
+    },
+    embed: {
+      title: "Epic-rarity picks revealed so far",
+      note: "Vendetta's in-set Epics — history says one or two of these become the sleeper chases of the set, so they're worth grabbing early if a shell needs one.",
+      chaseSet: "VEN",
+      chaseTier: "epic",
+      take: 12,
+    },
+    body: `![Riftbound: Vendetta — official street date 31 July 2026](/vendetta-hero.png)
+
+Riftbound: Vendetta singles are already trading — **[a few days early](/blog/riftbound-vendetta-is-here-early-release)**, via Pre-Rift launch events, a week ahead of the official **31 July** street date. If you already know which archetype you want to play, that means you don't have to wait for launch day to start buying — you just have to be smart about it while supply is thin and prices are still settling.
+
+## The three shells, in one line each
+
+Full breakdown (synergies, engine, how to pilot each) is in **[Best Riftbound Vendetta Decks](/guides/best-riftbound-vendetta-decks)** — the short version:
+
+- **Flow Value (Fury + Calm)** — Burn fills your trash, Flow replays from it. Grindy, hard to run out of gas.
+- **Burn / Disruption (Chaos + Order)** — attack their deck as a clock while self-Burn fuels your own payoffs. Highest ceiling, easiest to mis-sequence.
+- **Empower Midrange (Mind + Body)** — curve out cheap bodies, then pay to Empower them into finishers. Built around **Jayce** and **Mel**, the set's two confirmed Empower Legends.
+
+## How to actually buy in during the early trickle
+
+- **Start with the Legend.** Your Legend locks in your domains for everything else, so it's the first card worth securing — chase it on the **[Vendetta set page](/sets/vendetta)** or via the shop links below.
+- **Sealed is the steadier option right now.** Singles supply from Pre-Rift events is thin, so prices can swing hard on a handful of trades. If you want a guaranteed way in, the **[Zed vs Shen Showdown Deck](/sealed)** is a ready-to-play two-player box — a genuine way to try two shells (and the Fury/Calm and Mind/Body-adjacent rivalry) without chasing singles at all.
+- **Compare before you commit.** We track every early listing as it lands, delivered cost included, so a card's page always shows the actual cheapest way to buy it — not just the first store or eBay listing to show up.
+- **Don't overpay for a card that isn't scarce.** Early-window prices are volatile because so few copies are trading; a common enabler that spikes today is usually cheap again within days once real supply lands on 31 July.
+- **Chase cards move first and hardest.** If a shell wants a specific Overnumbered, Showcase alt-art or Epic, that's the piece most likely to be expensive early and to actually hold value — see the Epics below, and the full **[chase card tracker](/blog/riftbound-vendetta-chase-cards-so-far)**.
+
+## Price your shell before you buy
+
+Once you've picked a direction, drop your planned list into the **[deck pricer](/deck)** — it totals every card at the cheapest live price across the stores we track, in your own currency, so you know exactly what a shell costs before you start buying pieces one at a time.
+
+## Common questions
+
+**Can I actually buy Vendetta singles right now?** Some — early Pre-Rift copies are trading on eBay and a handful of stores, days ahead of the 31 July street date. Supply is thin, so prices are still settling.
+
+**Which Vendetta deck should I build first?** Empower Midrange (Jayce or Mel) is the most beginner-friendly of the three confirmed shells; Flow Value is the most resilient long-game grinder. See the **[full archetype guide](/guides/best-riftbound-vendetta-decks)** for the complete breakdown.
+
+**Is sealed or singles cheaper for a new-set deck?** It depends on supply — early in a set's life, thin singles supply can make sealed (or a preconstructed product like the Zed vs Shen Showdown Deck) the steadier option; see **[singles vs sealed](/guides/riftbound-singles-vs-sealed)** for the general rule.
+
+**Are RiftCompare's prices for these cards live?** Yes — every listing we track is compared as it lands, the same as every other Riftbound set.`,
   },
 ];
 
