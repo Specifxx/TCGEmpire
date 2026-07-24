@@ -69,7 +69,7 @@ export function CinematicHero({
             version serves every visitor and crawler; naming all four markets
             ranks in all four. Prices localise client-side after hydration. */}
         <h1 className="animate-fade-in [animation-delay:160ms] mx-auto mt-5 max-w-4xl text-4xl font-extrabold leading-[1.05] tracking-tight text-white sm:text-6xl lg:text-7xl">
-          Compare <span className="text-brand-400">Riftbound</span> card prices across AU, NZ, US &amp; UK stores
+          Compare <span className="bg-gradient-to-r from-[#1ea65c] to-[#e5484d] bg-clip-text text-transparent">Riftbound</span> card prices across AU, NZ, US &amp; UK stores
         </h1>
         <p className="animate-fade-in [animation-delay:240ms] mx-auto mt-5 max-w-2xl text-base text-slate-300 sm:text-lg">
           Find the cheapest place to buy Riftbound TCG cards — live local prices in AUD, NZD, USD &amp; GBP
