@@ -6,6 +6,7 @@ import { Suspense, useEffect, useRef, type CSSProperties } from "react";
 import { useMegaMenu } from "./MegaMenuProvider";
 import { NAV_GROUPS } from "./nav-groups";
 import { SearchBar } from "./SearchBar";
+import { BrandLogo } from "./BrandLogo";
 
 // Full-screen, "movie-like" navigation overlay (ported from DexCompare). Stays
 // mounted and toggles via classes (animates in AND out): scroll-lock, Escape,
@@ -80,8 +81,7 @@ export function CinematicNavMenu() {
             {/* Top bar */}
             <div className="flex items-center justify-between gap-4">
               <Link href="/" onClick={close} className="flex items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/logo-r-green.png" alt="RiftCompare logo" width={359} height={353} className="h-9 w-auto" />
+                <BrandLogo />
                 <span className="font-display text-lg font-extrabold text-white">
                   Rift<span className="text-brand-400">Compare</span>
                 </span>

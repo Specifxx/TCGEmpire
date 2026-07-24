@@ -31,7 +31,8 @@ export function VendettaRibbon() {
     <Link
       href="/sets/vendetta"
       aria-label="Riftbound Vendetta — shop every revealed card"
-      className="group block h-8 overflow-hidden bg-brand-500 text-ink-950 transition-colors hover:bg-brand-400"
+      // Calm green → Fury red — Vendetta's own rivalry-domain palette.
+      className="group block h-8 overflow-hidden bg-gradient-to-r from-[#1ea65c] to-[#e5484d] text-ink-950 transition-[filter] hover:brightness-110"
     >
       {/* Track: two identical halves; animate-marquee slides one half-width and loops
           seamlessly. Pauses on hover and for reduced-motion users. */}

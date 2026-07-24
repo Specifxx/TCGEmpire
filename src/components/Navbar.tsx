@@ -9,6 +9,7 @@ import { NavUser } from "./NavUser";
 import { PremiumButton } from "./PremiumButton";
 import { DISCORD_URL } from "@/lib/site";
 import { MARKETPLACE_NAV_VISIBLE } from "./nav-groups";
+import { BrandLogo } from "./BrandLogo";
 
 // NO server-side session read here: the navbar renders on every route, so a
 // cookies() read would force the whole site dynamic (killing ISR). NavUser
@@ -26,8 +27,7 @@ export function Navbar() {
             here in the header's open space instead. */}
         <div className="flex shrink-0 items-center gap-1 sm:gap-3">
           <Link href="/" className="flex shrink-0 items-center gap-2" aria-label="RiftCompare home">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-r-green.png" alt="RiftCompare logo" width={359} height={353} className="h-9 w-auto" />
+            <BrandLogo />
             <span className="hidden text-lg font-extrabold tracking-tight text-white sm:block">
               Rift<span className="text-brand-400">Compare</span>
             </span>
