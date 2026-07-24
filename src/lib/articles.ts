@@ -2735,7 +2735,9 @@ Vendetta's whole identity is built around clashing champions, and the reveals le
 
 To be precise about what "fully revealed" does and doesn't mean: every **card** in the set is now known — name, rules text, rarity, art. What hasn't happened yet is the **release** itself. Vendetta singles aren't buyable until **31 July 2026** (in-store Pre-Rift events start **24 July**), so there's no real tournament data, no settled metagame, and no live singles prices yet — only sealed product (booster boxes and packs) is buyable today, already comparable on our **[sealed page](/sealed)**.
 
-That's an important distinction if you're chasing a specific card: the **[Vendetta set page](/sets/vendetta)** already lists every confirmed card, but live store prices only populate once singles actually go on sale.
+**Update, 24 July 2026:** Pre-Rift launch events have now started, and the first Vendetta singles are already trading early — see **[Riftbound Vendetta Is Here](/blog/riftbound-vendetta-is-here-early-release)** for what's live right now, days ahead of the 31 July street date.
+
+That's an important distinction if you're chasing a specific card: the **[Vendetta set page](/sets/vendetta)** already lists every confirmed card, and live prices are now populating as early singles surface ahead of the full retail release.
 
 ## Where to go next
 
@@ -2753,7 +2755,68 @@ That's an important distinction if you're chasing a specific card: the **[Vendet
 
 **When does Riftbound Vendetta release?** 31 July 2026 worldwide, with in-store Pre-Rift launch events from 24 July.
 
-**Can I buy Vendetta singles yet?** Not yet — only sealed product (booster boxes and packs) is currently buyable. Singles go live at release, with prices compared live across every store we track the moment they do.`,
+**Can I buy Vendetta singles yet?** Yes, as of the 24 July Pre-Rift launch events — some singles are already trading early, days ahead of the 31 July street date. See **[Riftbound Vendetta Is Here](/blog/riftbound-vendetta-is-here-early-release)** for the details.`,
+  },
+  {
+    slug: "riftbound-vendetta-is-here-early-release",
+    category: "blog",
+    title: "Riftbound: Vendetta Is Here — Singles Are Already Trading Early",
+    excerpt:
+      "Riftbound: Vendetta has arrived early. Pre-Rift launch events kicked off 24 July and singles are already trading days ahead of the 31 July official street date — here's what's live now, where to buy, and what to watch for through launch week.",
+    author: "RiftCompare",
+    date: "2026-07-24",
+    updated: "2026-07-24",
+    readMins: 4,
+    tags: ["vendetta", "news", "release", "buying guide", "price comparison"],
+    browseCta: {
+      href: "/sets/vendetta",
+      label: "Shop the Vendetta set page →",
+      blurb: "Every card, live prices as they land, and sealed product ready to buy now.",
+    },
+    body: `![Riftbound: Vendetta — official street date 31 July 2026](/vendetta-hero.png)
+
+Riftbound: Vendetta is here — a little early. In-store **Pre-Rift launch events** kicked off today, **24 July 2026**, a full week ahead of the set's official **31 July** worldwide street date, and the first Vendetta singles are already changing hands. We're seeing early listings land on eBay and a handful of local stores well before the date everyone had circled — so if you've been waiting to chase a specific card, the wait is already partly over.
+
+## What's actually happening
+
+Pre-Rift events are early, in-store play sessions Riot runs the week before a set's full release — stores get product and run games, and inevitably some of those cards end up listed for sale before the "real" launch day. That's exactly what's playing out now: singles from Pre-Rift copies are surfacing on the secondary market days ahead of schedule, while the coordinated worldwide release is still locked in for **31 July**.
+
+## Is this the full release?
+
+Not quite, and it's worth being precise about it. This is an early trickle, not the release itself — most stores won't have Vendetta singles in stock until 31 July, and the wider market (organised availability across every retailer we track) will only fill in properly once the street date actually hits. What's different starting today is that it's no longer purely theoretical: real cards are being bought and sold, which means real prices to compare.
+
+## Where to buy Vendetta right now
+
+- **[Vendetta set page](/sets/vendetta)** — every one of the 166 confirmed cards, with live prices populating as stores and early listings appear.
+- **[Sealed product](/sealed)** — booster boxes and packs have been buyable for a while and are unaffected by the early singles trickle.
+- eBay is the fastest-moving channel for early copies — watch it closely through launch week, since Pre-Rift-sourced listings tend to be thin on stock and can move in price quickly.
+
+## What to watch for through launch week
+
+Early-window prices on a brand-new set are volatile — a handful of listings can swing the "cheapest" price around by a lot until real supply catches up. A few things worth keeping in mind:
+
+- **Don't panic-buy the first listing you see.** With so few copies trading, the first price isn't necessarily a fair one.
+- **Chase cards move first.** Overnumbers, Showcase alt-arts and Epics are the printings most likely to show up (and sell out) early — see our **[chase card tracker](/blog/riftbound-vendetta-chase-cards-so-far)**.
+- **Compare before you commit.** We're tracking every listing as it lands, delivered cost included, so the card page always shows the actual cheapest way to buy — not just the first store to list.
+- **The 31 July date still matters.** If a card you want isn't trading yet, it almost certainly will be once the full release lands — no need to overpay chasing an early copy.
+
+## Where to go next
+
+- **[Riftbound Vendetta launch-week buying checklist](/blog/riftbound-vendetta-launch-week-buying-checklist)** — how to buy smart through the rush.
+- **[Live release countdown](/vendetta-countdown)** — counting down to the full 31 July street date.
+- **[Vendetta spoiler season recap](/blog/riftbound-vendetta-spoiler-season-complete-166-cards)** — every card in the set, confirmed.
+- **[Chase cards, tier by tier](/blog/riftbound-vendetta-chase-cards-so-far)** — what to actually hunt for.
+- **[Everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** — the full set rundown.
+
+## Common questions
+
+**Has Riftbound Vendetta been released?** Early singles are trading now via Pre-Rift launch events (started 24 July), a week ahead of the official 31 July worldwide street date — so yes, in part, but the full release is still 31 July.
+
+**Can I buy Vendetta singles right now?** Some — early Pre-Rift copies are already surfacing on eBay and a handful of stores. Supply is thin and prices are still settling; check the **[Vendetta set page](/sets/vendetta)** for what's currently live.
+
+**Are RiftCompare's Vendetta prices live?** Yes — we're comparing every Vendetta listing we track as it appears, delivered cost included, the same as every other set.
+
+**When's the official Vendetta release date?** 31 July 2026, worldwide. That date hasn't moved — what's new is that some singles are trading a few days early.`,
   },
 ];
 

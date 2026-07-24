@@ -16,6 +16,7 @@ import { getLatestMarketReport } from "@/lib/posts";
 import { CinematicHero } from "@/components/home/CinematicHero";
 import { MarketPulse } from "@/components/home/MarketPulse";
 import { HowItWorks } from "@/components/home/HowItWorks";
+import { VendettaFeature } from "@/components/home/VendettaFeature";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 
 // REAL ISR: renders a market-NEUTRAL baseline (no cookie/header reads — the
@@ -44,6 +45,8 @@ export const metadata: Metadata = {
     "Riftbound singles",
     "Riftbound TCG",
     "Riftbound card prices",
+    "Riftbound Vendetta",
+    "Riftbound Vendetta prices",
   ],
   alternates: { canonical: "/" },
 };
@@ -149,6 +152,12 @@ export default async function HomePage() {
         wrap={latestWrap}
       />
 
+      {/* Vendetta launch feature — the site's current main story, right under the
+          hero for maximum visibility. */}
+      <Reveal>
+        <VendettaFeature />
+      </Reveal>
+
       {/* Live Index pulse — only until the first daily wrap exists; once it does, the
           top banner is the single wrap/index element and this is skipped. */}
       {!latestWrap && (
@@ -233,7 +242,7 @@ export default async function HomePage() {
               >
                 <span className="flex flex-wrap items-center gap-1.5 text-lg font-bold text-white">
                   {s.code}
-                  {s.comingSoon && s.sealedAvailable && (
+                  {((s.comingSoon && s.sealedAvailable) || s.recentlyReleased) && (
                     <span className="chip bg-up/20 font-bold uppercase tracking-wide text-up">New</span>
                   )}
                 </span>

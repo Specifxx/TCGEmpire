@@ -13,7 +13,7 @@ const RELEASE = { y: 2026, m: 7, d: 31, label: "31 July 2026", iso: "2026-07-31"
 export const metadata: Metadata = {
   title: { absolute: "Riftbound Vendetta Release Countdown — 31 July 2026 | RiftCompare" },
   description:
-    "Live countdown to Riftbound: Vendetta — the new League of Legends TCG set releases 31 July 2026. See exactly how long until it drops, plus the new mechanics, decks and everything you need to know.",
+    "Riftbound: Vendetta singles are already trading early via Pre-Rift launch events, ahead of the 31 July 2026 official street date. Live countdown to full release, plus prices, mechanics and everything you need to know.",
   alternates: { canonical: "/vendetta-countdown" },
   openGraph: {
     title: "Riftbound Vendetta Release Countdown — 31 July 2026",
@@ -37,7 +37,7 @@ const LINKS = [
 const FAQS = [
   {
     q: "When does Riftbound: Vendetta release?",
-    a: "Riftbound: Vendetta releases on 31 July 2026, launching worldwide. In-store Pre-Rift launch events run from 24 July 2026, so you can play with the cards a week before the full retail release.",
+    a: "Riftbound: Vendetta's official worldwide street date is 31 July 2026. In-store Pre-Rift launch events run from 24 July 2026, and singles from those early events are already starting to surface on stores and marketplaces days ahead of the full retail release.",
   },
   {
     q: "What's new in Vendetta?",
@@ -100,9 +100,22 @@ export default function VendettaCountdownPage() {
         <h1 className="mt-3 font-display text-3xl font-extrabold text-white sm:text-4xl">Riftbound: Vendetta releases in</h1>
       </div>
 
+      {/* Early-access note: Pre-Rift launch events kicked off 24 July, and singles from
+          those early events are already trading days ahead of the official street date
+          below — honest both ways: available now, but not yet the full worldwide release. */}
+      <Link
+        href="/sets/vendetta"
+        className="mx-auto mt-5 flex max-w-xl items-center justify-center gap-2 rounded-xl border border-brand-500/30 bg-brand-500/10 px-4 py-3 text-center text-sm font-semibold text-brand-300 transition-colors hover:bg-brand-500/15"
+      >
+        🔥 Vendetta is here early — Pre-Rift singles are already trading. Shop now →
+      </Link>
+
       <div className="mt-6">
         <CountdownTimer y={RELEASE.y} m={RELEASE.m} d={RELEASE.d} href="/sets/vendetta" />
       </div>
+      <p className="mx-auto mt-2 max-w-xl text-center text-xs text-slate-500">
+        Countdown to the full worldwide street date — 31 July 2026.
+      </p>
 
       {/* Capture the highest-intent timed traffic on the site: release-day reminder. */}
       <div className="mx-auto mt-6 max-w-md">
@@ -117,10 +130,11 @@ export default function VendettaCountdownPage() {
       </div>
 
       <p className="mx-auto mt-6 max-w-xl text-center text-sm leading-relaxed text-slate-400">
-        Riftbound: Vendetta — the next set for Riftbound: League of Legends TCG — drops{" "}
+        Riftbound: Vendetta — the next set for Riftbound: League of Legends TCG — has its official worldwide street date on{" "}
         <strong className="text-white">{RELEASE.label}</strong>, with new champions, three new mechanics (Flow, Burn &amp;
-        Empower), new card types and two-player Showdown Decks. In-store Pre-Rift events run from 24 July. The moment it
-        lands, we&apos;ll compare every card&apos;s price across AU, NZ, US &amp; UK stores so you never overpay.
+        Empower), new card types and two-player Showdown Decks. In-store Pre-Rift events started 24 July, and early singles
+        are already trading — we&apos;re comparing every card&apos;s price across AU, NZ, US, UK &amp; Singapore stores as they land,
+        so you never overpay.
       </p>
 
       {/* Read up while you wait */}

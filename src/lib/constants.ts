@@ -89,14 +89,17 @@ export type CardType = (typeof CARD_TYPES)[number];
 // the set page state "all N cards revealed" precisely instead of just "revealed
 // so far", and lets setFromTotal()-style price-import matching recognise the set
 // from a bare "NNN/total" collector number. `slug` is the SEO landing-page path
-// (/sets/<slug>).
-export interface SetInfo { code: string; name: string; slug: string; comingSoon?: boolean; sealedAvailable?: boolean; totalCards?: number }
+// (/sets/<slug>). `recentlyReleased` = purely cosmetic "New" badge for a set that
+// just went on sale (short-lived; drop it once the badge has run its course).
+export interface SetInfo { code: string; name: string; slug: string; comingSoon?: boolean; sealedAvailable?: boolean; totalCards?: number; recentlyReleased?: boolean }
 export const SETS: SetInfo[] = [
   { code: "OGN", name: "Origins", slug: "origins" },
   { code: "OGS", name: "Origins: Proving Grounds", slug: "proving-grounds" },
   { code: "SFD", name: "Spirit Forged", slug: "spiritforged" },
   { code: "UNL", name: "Unleashed", slug: "unleashed" },
-  { code: "VEN", name: "Vendetta", slug: "vendetta", comingSoon: true, sealedAvailable: true, totalCards: 166 },
+  // Singles started trading (Pre-Rift launch events + early marketplace listings)
+  // a few days ahead of the 31 Jul 2026 official street date — treated as released.
+  { code: "VEN", name: "Vendetta", slug: "vendetta", totalCards: 166, recentlyReleased: true },
 ];
 export const setBySlug = (slug: string): SetInfo | undefined => SETS.find((s) => s.slug === slug);
 export const setByCode = (code: string): SetInfo | undefined => SETS.find((s) => s.code === code);
