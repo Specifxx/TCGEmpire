@@ -1226,11 +1226,11 @@ Every card is confirmed and early singles are already trading — so this is gen
     category: "guide",
     title: "Best Riftbound Vendetta Decks: Archetypes, Synergies & How to Build Them",
     excerpt:
-      "Three strong deck blueprints for Riftbound Vendetta — Flow Value, Burn and Empower Midrange — with the synergies that make them work, real card visuals, and how to start buying into each one now that early singles are trading.",
+      "Three full 40-card Riftbound Vendetta decks — Flow Value, Burn and Empower Midrange — with example decklists, sideboards, real card visuals, and how to start buying into each one now that early singles are trading.",
     author: "RiftCompare",
     date: "2026-07-07",
     updated: "2026-07-24",
-    readMins: 9,
+    readMins: 11,
     tags: ["vendetta", "decks", "deckbuilding", "strategy", "synergies", "meta", "guide"],
     shop: [
       { label: "Jayce singles — the Empower champion", query: "Riftbound Jayce" },
@@ -1302,6 +1302,8 @@ New to this? Read **[how a Riftbound deck is built](/guides/how-a-riftbound-deck
 
 If your combo only works once, it's a nice card — not a synergy. Every deck below is built around one of these loops.
 
+Each archetype below now includes a full **40-card example build** (plus battlefields, runes and an 8-card sideboard — a real 64-card tournament-legal total once you add the Legend). These are **RiftCompare's own homebrew constructions**, not official spoiled decklists or tournament results — we built them by pairing each Vendetta Legend with proven cards from Riftbound's existing pool (the game doesn't rotate, so Origins/Spirit Forged/Unleashed staples are just as legal as brand-new Vendetta cards). Treat them as a genuine starting point to buy toward today, not a solved list — swap in Vendetta-specific support as more of it gets confirmed.
+
 ## Archetype 1 — Flow Value (Fury + Calm)
 
 **Identity:** grind the game long, recur your best cards, and win on raw card advantage.
@@ -1314,6 +1316,18 @@ If your combo only works once, it's a nice card — not a synergy. Every deck be
 - **3–4 Flow payoffs:** your best units and spells that you *want* to replay from the trash.
 - **6–8 interaction:** removal and combat tricks to survive to the long game.
 - **Runes:** an even Fury/Calm base — you need both colours online reliably.
+
+**Example 40-card build — "Nasus, Curator of the Sands" (RiftCompare homebrew, not an official or tournament list):**
+
+Nasus anchors the shell on Calm's inevitability, splashing a single copy of his rival Renekton as a Fury finisher — exactly the "forced rivalry" tension Vendetta's domain pairings are built around.
+
+- **Legend:** Nasus, Curator of the Sands
+- **Units (16):** 3× Scuttle Crab · 3× Tideturner · 3× Trevor Snoozebottom · 2× Evelynn, Entrancing · 2× Irelia, Fervent · 2× Disarming Rake · 1× Renekton, Butcher of the Sands (rival splash)
+- **Gear (5):** 3× Boots of Swiftness · 2× Zhonya's Hourglass
+- **Spells (19):** 3× Charm · 3× Defy · 3× Discipline · 3× Back Off · 3× En Garde · 2× Not So Fast · 2× Punch First
+- **Battlefields (3):** Abandoned Hall · Targon's Peak · Star Spring
+- **Runes (12):** 9× Calm Rune · 3× Fury Rune
+- **Sideboard (8):** 2× Not So Fast · 2× Disarming Rake · 1× Star-Crossed · 1× Stare Down · 1× Whiteflame Protector · 1× Unyielding Spirit
 
 **How to play it:** you're the grinder. Trade early, don't over-commit into removal, and treat your trash as a second hand — sequence so the cards you Burn are the ones Flow most wants back.
 
@@ -1331,6 +1345,18 @@ If your combo only works once, it's a nice card — not a synergy. Every deck be
 - **3–4 payoffs:** threats paid off by a full trash or by Empower.
 - **6–8 tempo/removal:** to protect your clock.
 - **Runes:** Chaos/Order base, tuned toward whichever colour holds your Burn.
+
+**Example 40-card build — "Zed, Master of Shadows" (RiftCompare homebrew, not an official or tournament list):**
+
+Zed carries the aggression on Chaos, splashing a single copy of his rival Shen — again leaning into the built-in rivalry — for a disciplined Order finisher.
+
+- **Legend:** Zed, Master of Shadows
+- **Units (16):** 3× Ravenbloom Student · 3× Hwei, Brooding Painter · 2× Vex, Apathetic · 2× Traveling Merchant · 3× Watchful Sentry · 2× Black Rose Dignitary · 1× Shen, Eye of Twilight (rival splash)
+- **Gear (5):** 3× Baited Hook · 2× Guardian Angel
+- **Spells (19):** 3× Gust · 3× Stacked Deck · 2× Hard Bargain · 2× Moonfall · 3× Sacrifice · 3× Mirror Image · 2× Hidden Blade · 1× Turn to Dust
+- **Battlefields (3):** Zaun Warrens · Ravenbloom Conservatory · Aspirant's Climb
+- **Runes (12):** 7× Chaos Rune · 5× Order Rune
+- **Sideboard (8):** 2× Turn to Dust · 1× Moonfall · 1× Star-Crossed · 2× Deathgrip · 1× Safety Inspector · 1× Singularity
 
 **How to play it:** apply pressure on two axes. Don't tunnel on decking them out — the deck-Burn is a clock that forces bad decisions, while your board usually closes the game. Highest skill ceiling of the three, and the easiest to mis-sequence.
 
@@ -1351,6 +1377,19 @@ If your combo only works once, it's a nice card — not a synergy. Every deck be
 - **3–4 Empower payoffs / gear:** the cards you reinvest energy into.
 - **4–6 Might-reduction or removal:** doubly good under Mel.
 - **Runes:** Mind-heavy with a Body splash (or the reverse for a Jayce build).
+
+**Example 40-card build — "Jayce, Brilliant Inventor" (RiftCompare homebrew, not an official or tournament list):**
+
+Jayce is the rare Legend who's dual-domain out of the gate, so this shell runs an even Mind/Body base rather than a splash. Prefer Mel's Might-reduction angle instead? Swap the Body slots below for more single-target removal and lean Mind-heavy — same shell, different payoff.
+
+- **Legend:** Jayce, Brilliant Inventor
+- **Champion:** Jayce, Hammer in Hand
+- **Units (16):** 3× Clockwork Keeper · 3× Lonely Poro · 2× First Mate · 3× Karthus, Eternal · 3× Glasc Mixologist · 2× Vi, Peacekeeper
+- **Gear (6):** 3× Trinity Force · 2× Shepherd's Heirloom · 1× B.F. Sword
+- **Spells (17):** 3× Punch First · 3× Challenge · 3× Riposte · 3× Sacrifice · 3× Mirror Image · 2× Hidden Blade
+- **Battlefields (3):** Grove of the God-Willow · Seat of Power · Windswept Hillock
+- **Runes (12):** 6× Body Rune · 6× Mind Rune
+- **Sideboard (8):** 2× Deathgrip · 2× Safety Inspector · 2× Salvage · 1× Unyielding Spirit · 1× Fiora, Peerless
 
 **How to play it:** curve out, but don't rush your energy. The trap is spending everything early — hold energy to Empower at the right moment so a cheap unit becomes the biggest threat on the board.
 
