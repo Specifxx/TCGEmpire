@@ -48,17 +48,7 @@ export function CinematicHero({
 
       {/* ── Foreground content (re-aligned to the normal grid) ───────────────── */}
       <div className="container-app relative z-10 w-full py-16 text-center sm:py-20">
-        {/* Live badge */}
-        <div className="animate-fade-in [animation-delay:60ms]">
-          <span className="chip border border-brand-500/30 bg-ink-900 text-brand-300">
-            <span className="relative mr-0.5 flex h-2 w-2">
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-400" />
-            </span>
-            Live prices · updated daily
-          </span>
-        </div>
-
-        {/* Today's market wrap — embedded right under the live badge; wide + compact. */}
+        {/* Today's market wrap — wide + compact. */}
         {wrap && (
           <div className="animate-fade-in [animation-delay:100ms] mx-auto mt-4 max-w-5xl text-left">
             <DailyWrapBanner post={wrap} />
