@@ -2977,6 +2977,65 @@ Once you've picked a direction, drop your planned list into the **[deck pricer](
 
 **Are RiftCompare's prices for these cards live?** Yes — every listing we track is compared as it lands, the same as every other Riftbound set.`,
   },
+  {
+    slug: "riftbound-vendetta-card-prices-where-to-buy-cheapest",
+    category: "blog",
+    title: "Riftbound Vendetta Card Prices: Where to Buy for the Lowest Price",
+    excerpt:
+      "RiftCompare tracks every Riftbound Vendetta card's price live across 70+ stores in Australia, New Zealand, the US, the UK and Singapore, plus eBay — so you always find the cheapest place to buy Vendetta singles and sealed.",
+    author: "RiftCompare",
+    date: "2026-07-24",
+    updated: "2026-07-24",
+    readMins: 4,
+    tags: ["vendetta", "price comparison", "buying guide", "news"],
+    shop: [
+      { label: "Vendetta singles on eBay", query: "Riftbound Vendetta" },
+      { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
+    ],
+    browseCta: {
+      href: "/sets/vendetta",
+      label: "See every Vendetta card's price →",
+      blurb: "All 166 cards, ranked by the cheapest live price across every store we track.",
+    },
+    embed: {
+      title: "Every Vendetta card, priced live",
+      note: "Browse all 166 confirmed cards, filterable by domain, rarity and type — tap any card for its full price comparison.",
+      setAll: "VEN",
+      filterable: true,
+      take: 400,
+    },
+    body: `![Riftbound: Vendetta — official street date 31 July 2026](/vendetta-hero.png)
+
+Riftbound: Vendetta singles are trading early, and RiftCompare is tracking every single card's price the moment it appears — live, automatically, across every store we cover. If you're wondering where to buy Vendetta cards for the least money, this is the short answer: search or browse any card on RiftCompare and we've already done the comparison for you.
+
+## How RiftCompare prices Vendetta
+
+- **70+ stores, five markets.** We compare live prices across local stores in Australia, New Zealand, the US, the UK and Singapore, plus eBay in each of those markets — the same coverage as every other Riftbound set.
+- **Ranked by delivered cost, not just sticker price.** A card's "cheapest" price accounts for shipping where we track it, not just the item price — so the store at the top of the list is genuinely the least you'll pay to get the card in hand, not just the lowest-looking number.
+- **All 166 cards, priced as they list.** Every confirmed Vendetta card already has a page tracking its price — most were unpriced through spoiler season (nothing to compare before a card is buyable), and they're filling in live now that early singles and stores are listing them.
+- **Updated continuously, not once a day.** As new listings land during this early trading window, the comparison updates — you're never looking at a stale price from before a store restocked or a new listing undercut it.
+
+## How to actually find the cheapest price
+
+1. **Search the card by name** (or browse the gallery below) to jump straight to its page.
+2. **Check the price table.** Every store and eBay listing we track for that card is ranked cheapest-first, delivered cost included.
+3. **Click straight through to buy.** Every price links directly to the listing — no extra searching, no guessing which store actually has stock.
+4. **Building a whole deck?** Price the entire list at once with the **[deck pricer](/deck)** rather than checking each card one by one.
+
+## Why prices are moving fast right now
+
+Vendetta is in its earliest trading window — Pre-Rift launch events started 24 July, a week ahead of the 31 July official street date — so supply is thin and prices can swing quickly on just a handful of trades. That's exactly when comparing pays off most: the gap between the cheapest and most expensive listing for the same card is usually widest right after a set drops, before supply catches up. Track the **[price movers](/movers)** if you want to watch which cards are climbing or falling fastest.
+
+## Common questions
+
+**Where can I find the cheapest Riftbound Vendetta cards?** On RiftCompare — every confirmed Vendetta card is priced live across 70+ stores and eBay in five markets, ranked cheapest first. Search or browse the **[Vendetta set page](/sets/vendetta)** to see them all.
+
+**Are Vendetta prices live yet?** Yes — as early singles and stores list cards, we track and compare them automatically. Coverage will keep filling in through launch week and the 31 July street date.
+
+**Does RiftCompare account for shipping?** Yes, where we track it — a card's ranked price reflects delivered cost, not just the item price, so the top listing is the genuinely cheapest way to get it in hand.
+
+**Can I price a whole Vendetta deck at once?** Yes — drop your list into the **[deck pricer](/deck)** to total every card at its cheapest live price across stores, in your own currency.`,
+  },
 ];
 
 export function getArticles(category?: ArticleCategory): Article[] {

@@ -4,7 +4,7 @@ import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { CardTile } from "@/components/CardTile";
 import { Reveal } from "@/components/Reveal";
-import { getPopularCards } from "@/lib/cheapest-cards";
+import { getPopularCards, getCheapestCardsForSet } from "@/lib/cheapest-cards";
 import { COUNTRIES, DEFAULT_COUNTRY, priceField, type Country } from "@/lib/country";
 import type { MarketStat } from "@/components/home/HeroStats";
 import { SETS, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
@@ -80,7 +80,7 @@ export default async function HomePage() {
   const country = DEFAULT_COUNTRY;
   const info = COUNTRIES[country];
   const COUNTRY_CODES: Country[] = ["AU", "NZ", "US", "UK", "SG"];
-  const [totalCards, pricedCounts, inStockGroups, storeRows, popularCards, topDealsArr, index, latestWrap] = await Promise.all([
+  const [totalCards, pricedCounts, inStockGroups, storeRows, popularCards, cheapestVendetta, topDealsArr, index, latestWrap] = await Promise.all([
     prisma.card.count(),
     // Priced-card count PER MARKET (one indexed count per price column) — the hero
     // stat tiles localise to the visitor's market client-side, so we serialize all four.
@@ -101,6 +101,10 @@ export default async function HomePage() {
     ]).then(([singles, sealed]) => [...singles, ...sealed]),
     // Most-searched singles (ties → more expensive card) — the cards people most want.
     getPopularCards(12, country),
+    // Live proof for the Vendetta price-comparison pitch — real cheapest-priced
+    // Vendetta singles right now, not just a claim. Empty (no section shown) until
+    // enough early listings are actually priced.
+    getCheapestCardsForSet("VEN", 8, country),
     // Today's Top Deals blends four signals; cache per-market. We serialize ALL four
     // markets so the section localises to the visitor's chosen market client-side —
     // the page is ISR-cached with DEFAULT_COUNTRY baked in, so a single-market render
@@ -157,6 +161,31 @@ export default async function HomePage() {
       <Reveal>
         <VendettaFeature />
       </Reveal>
+
+      {/* Real live-price proof, right under the feature banner — backs up the
+          "buy Vendetta for less" pitch with actual cheapest-right-now cards
+          instead of just a claim. Hidden entirely until enough early listings
+          are priced (see getCheapestCardsForSet). */}
+      {cheapestVendetta.length > 0 && (
+        <section>
+          <div className="mb-4 flex items-end justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-extrabold text-white">Cheapest Vendetta cards right now</h2>
+              <p className="mt-0.5 text-xs text-slate-500">
+                Live prices compared across every store we track — tap a card to see every listing and buy the cheapest.
+              </p>
+            </div>
+            <Link href="/sets/vendetta" className="btn-ghost text-xs shrink-0">See all Vendetta prices →</Link>
+          </div>
+          <Reveal stagger className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-2">
+            {cheapestVendetta.map((c) => (
+              <div key={c.id} className="w-36 shrink-0 sm:w-44">
+                <CardTile card={c} />
+              </div>
+            ))}
+          </Reveal>
+        </section>
+      )}
 
       {/* Live Index pulse — only until the first daily wrap exists; once it does, the
           top banner is the single wrap/index element and this is skipped. */}

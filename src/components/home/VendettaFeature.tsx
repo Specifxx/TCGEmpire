@@ -26,19 +26,20 @@ export function VendettaFeature() {
           Riftbound: Vendetta is here
         </h2>
         <p className="max-w-lg text-sm leading-relaxed text-slate-300 sm:text-base">
-          Pre-Rift launch events kicked off early and Vendetta singles are already trading — days ahead of the
-          31 July official street date. All 166 cards are in the database; we&apos;re comparing live prices across
-          every store as they land.
+          Pre-Rift launch events kicked off early and singles are already trading — days ahead of the 31 July
+          official street date. All 166 cards are tracked and priced live across every AU, NZ, US, UK &amp;
+          Singapore store we compare (plus eBay), so you always find the lowest price — automatically, as new
+          listings land.
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-3">
           <Link href="/sets/vendetta" className="btn-primary px-5 py-2.5 text-sm sm:text-base">
-            Shop Vendetta now →
+            Find the cheapest Vendetta prices →
           </Link>
           <Link
-            href="/blog/riftbound-vendetta-is-here-early-release"
+            href="/blog/riftbound-vendetta-card-prices-where-to-buy-cheapest"
             className="btn-ghost px-5 py-2.5 text-sm text-slate-200 sm:text-base"
           >
-            Read the story →
+            How we track Vendetta prices →
           </Link>
         </div>
       </div>

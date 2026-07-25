@@ -60,3 +60,28 @@ export async function getValuableCards(limit = 12, country: Country = "AU"): Pro
   })) as CardTileData[];
   return cards;
 }
+
+// Cheapest priced cards within ONE set — same coverage-tiebreak idea as
+// getCheapestCards, scoped to a single setCode. Powers the Vendetta homepage
+// price-proof strip (real live prices, not a claim) and reusable for any other
+// set's own "cheapest right now" section later.
+export async function getCheapestCardsForSet(
+  setCode: string,
+  limit = 8,
+  country: Country = "AU"
+): Promise<CardTileData[]> {
+  const cards = (await prisma.card.findMany({
+    where: buildCardWhere({ set: setCode, priced: "1" }, country),
+    orderBy: buildCardOrderBy("price_asc", country),
+    take: limit * 5,
+    select: cardTileSelect(country),
+  })) as CardTileData[];
+
+  return cards
+    .sort(
+      (a, b) =>
+        (pickPrice(a, country)! - pickPrice(b, country)!) ||
+        b._count.retailerPrices - a._count.retailerPrices
+    )
+    .slice(0, limit);
+}
