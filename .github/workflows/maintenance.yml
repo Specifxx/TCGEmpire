@@ -16,6 +16,7 @@ on:
           - db-push          # prisma db push (additive schema sync for this ref)
           - cards-sync       # fetch latest RiftScribe snapshot + additive upsert
           - cards-manual     # apply prisma/manual-cards.json (promos/backstop)
+          - tcg-printings    # create printings TCGplayer lists that we lack (Showcase/alt-art variants + the R-numbered rune cycle)
           - vendetta-pipeline # scrape official gallery + import VEN reveals
           - probe-sg         # read-only Singapore store scan (no DB writes)
           - probe-url        # read-only page fetch + font/style diagnostics (url input)
@@ -221,6 +222,16 @@ jobs:
       - name: Apply manual cards (promos / source-gap backstop)
         if: inputs.task == 'cards-manual'
         run: npx tsx scripts/add-manual-cards.ts
+
+      # Creates any printing TCGplayer sells that our RiftScribe-derived catalogue
+      # lacks — Showcase/alt-art variants and, crucially, the R-numbered rune cycle
+      # ("R04a", "R06b"), which carries no set in its number and no unique name, so
+      # it needs TCGplayer's setName to be placed at all. Additive + idempotent:
+      # existing printings are skipped by (set|number) and by externalId.
+      # Run with dry_run first to review what it would create.
+      - name: Add missing TCGplayer printings (variants + rune cycle)
+        if: inputs.task == 'tcg-printings'
+        run: npx tsx scripts/add-tcg-printings.ts ${{ inputs.dry_run && '--dry' || '' }}
 
       - name: Probe Singapore stores (read-only market scan)
         if: inputs.task == 'probe-sg'

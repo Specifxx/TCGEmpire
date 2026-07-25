@@ -7,9 +7,6 @@ import {
   MARKETPLACE_SHIP_DEADLINE_DAYS,
   MARKETPLACE_AUTO_RELEASE_DAYS,
   MARKETPLACE_LAUNCH_COUNTRIES,
-  NEW_SELLER_TRUSTED_SALES,
-  NEW_SELLER_MAX_ACTIVE_LISTINGS,
-  NEW_SELLER_MAX_ACTIVE_VALUE_CENTS,
 } from "@/lib/marketplace";
 
 export const metadata: Metadata = {
@@ -20,7 +17,6 @@ export const metadata: Metadata = {
 
 const FEE_PCT = (MARKETPLACE_FEE_BPS / 100).toFixed(0);
 const PREMIUM_FEE_PCT = (MARKETPLACE_PREMIUM_FEE_BPS / 100).toFixed(0);
-const NEW_SELLER_VALUE = (NEW_SELLER_MAX_ACTIVE_VALUE_CENTS / 100).toFixed(0);
 
 interface Faq { q: string; a: React.ReactNode }
 interface FaqGroup { title: string; items: Faq[] }
@@ -166,13 +162,13 @@ const FAQ_GROUPS: FaqGroup[] = [
         ),
       },
       {
-        q: "Are there limits for new sellers?",
+        q: "Is there a limit on how many cards I can list?",
         a: (
           <>
-            Yes, until your first {NEW_SELLER_TRUSTED_SALES} sales complete: up to {NEW_SELLER_MAX_ACTIVE_LISTINGS}{" "}
-            active listings, and a combined active-listing value capped around {NEW_SELLER_VALUE} (in your local
-            currency). This protects buyers from an unproven account listing a huge, high-value catalogue on day one —
-            the limits lift automatically once you&apos;ve built a track record.
+            No — you can list as much inventory as you like, at any value, from your very first day. There&apos;s no
+            listing fee and no cap on the number of active listings or their combined value. Buyers stay protected by
+            escrow (funds are only released to the seller once delivery is confirmed), the {MARKETPLACE_SHIP_DEADLINE_DAYS}
+            -day shipping deadline and {SITE_NAME} buyer protection.
           </>
         ),
       },
@@ -263,8 +259,8 @@ const FAQ_LD_ANSWERS: Record<string, string> = {
     "Open your seller dashboard, set up payouts through Stripe (which also verifies your identity), and list a card with its price, quantity, condition and foil status.",
   "What are the fees?":
     `RiftCompare takes a ${FEE_PCT}% platform fee on the item price of each completed sale, deducted from the seller's payout with no added buyer fee and no listing fee. Premium sellers pay ${PREMIUM_FEE_PCT}% instead.`,
-  "Are there limits for new sellers?":
-    `Until a seller's first ${NEW_SELLER_TRUSTED_SALES} sales complete, they're capped at ${NEW_SELLER_MAX_ACTIVE_LISTINGS} active listings and a combined active-listing value around ${NEW_SELLER_VALUE} in local currency.`,
+  "Is there a limit on how many cards I can list?":
+    `No — sellers can list unlimited inventory at any value from day one, with no listing fee and no cap on active listings or their combined value. Buyers are protected by escrow, the ${MARKETPLACE_SHIP_DEADLINE_DAYS}-day shipping deadline and buyer protection instead.`,
   "How and when do I get paid?":
     `Once a buyer confirms delivery, or ${MARKETPLACE_AUTO_RELEASE_DAYS} days pass with no reported problem, the payout releases to the seller's connected Stripe account and pays out on Stripe's normal schedule.`,
   "What's my shipping deadline, and what happens if I miss it?":

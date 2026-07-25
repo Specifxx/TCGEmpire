@@ -9,6 +9,7 @@
     "grant:early": "tsx scripts/grant-early-premium.ts",
     "cards:sync": "tsx scripts/sync-cards.ts",
     "cards:manual": "tsx scripts/add-manual-cards.ts",
+    "cards:tcg-printings": "tsx scripts/add-tcg-printings.ts",
     "cards:fetch-vendetta": "tsx scripts/fetch-vendetta-official.ts",
     "cards:import-vendetta": "tsx scripts/import-vendetta.ts",
     "import:prices": "tsx scripts/import-prices.ts",

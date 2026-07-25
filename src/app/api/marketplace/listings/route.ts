@@ -7,9 +7,6 @@ import {
   importMarketplaceListings,
   MARKETPLACE_COUNTRIES,
   CURRENCY_BY_COUNTRY,
-  NEW_SELLER_TRUSTED_SALES,
-  NEW_SELLER_MAX_ACTIVE_LISTINGS,
-  NEW_SELLER_MAX_ACTIVE_VALUE_CENTS,
   isLaunchCountry,
 } from "@/lib/marketplace";
 import { revalidateCardPage } from "@/lib/revalidate-card";
@@ -80,28 +77,9 @@ export async function POST(req: Request) {
   const card = await prisma.card.findUnique({ where: { id: base.data.cardId }, select: { id: true } });
   if (!card) return NextResponse.json({ error: "Card not found" }, { status: 404 });
 
-  // New-seller guardrails (D8): until a seller has a track record, cap how much
-  // unsold inventory they can have listed at once — an unproven seller's
-  // downside is bounded without blocking them from selling at all.
-  if (profile.completedSalesCount < NEW_SELLER_TRUSTED_SALES) {
-    const active = await prisma.marketplaceListing.findMany({
-      where: { sellerId: user.id, status: "ACTIVE" },
-      select: { priceCents: true, quantity: true },
-    });
-    const activeValueCents = active.reduce((sum, l) => sum + l.priceCents * l.quantity, 0);
-    if (active.length >= NEW_SELLER_MAX_ACTIVE_LISTINGS) {
-      return NextResponse.json(
-        { error: `New sellers are capped at ${NEW_SELLER_MAX_ACTIVE_LISTINGS} active listings until your first ${NEW_SELLER_TRUSTED_SALES} sales complete` },
-        { status: 403 }
-      );
-    }
-    if (activeValueCents + v.priceCents * v.quantity > NEW_SELLER_MAX_ACTIVE_VALUE_CENTS) {
-      return NextResponse.json(
-        { error: `New sellers are capped at ${(NEW_SELLER_MAX_ACTIVE_VALUE_CENTS / 100).toFixed(0)} total active listing value until your first ${NEW_SELLER_TRUSTED_SALES} sales complete` },
-        { status: 403 }
-      );
-    }
-  }
+  // No new-seller listing caps: sellers may list unlimited inventory at any
+  // value from day one (see the note in lib/marketplace.ts for the protections
+  // that actually bound a bad seller — escrow, ship deadline, suspension).
 
   // Per-listing region (defaults to the shop's market); currency follows the region.
   const country = base.data.country ?? profile.country;

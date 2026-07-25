@@ -8,26 +8,15 @@
  * Usage: npx tsx scripts/add-tcg-printings.ts [--dry]
  */
 import { PrismaClient } from "@prisma/client";
-import { fetchTcgplayerProducts } from "../src/lib/tcgplayer";
+import { fetchTcgplayerProducts, numKey, setFromTotal, setCodeFromSetName } from "../src/lib/tcgplayer";
 import { cardSlug } from "../src/lib/card-url";
 
 const prisma = new PrismaClient();
 
-// Mirror of the importer's matching keys so we agree on what we already have.
-function numKey(seg: string): string {
-  const m = seg.match(/^0*(\d+)([a-z]*)/i);
-  const base = m ? m[1] + m[2].toLowerCase() : seg.toLowerCase();
-  return seg.includes("*") ? `${base}s` : base;
-}
-function setFromTotal(total?: string): string | null {
-  switch (parseInt(total ?? "", 10)) {
-    case 298: return "OGN";
-    case 221: return "SFD";
-    case 219: return "UNL";
-    case 24: return "OGS";
-    default: return null;
-  }
-}
+// numKey / setFromTotal are IMPORTED from lib/tcgplayer, not re-declared here.
+// This file used to keep private copies and they drifted: the local setFromTotal
+// never learned VEN (166), so every Vendetta variant printing silently fell
+// through to "badNum" and was never created.
 
 async function main() {
   const dry = process.argv.includes("--dry");
@@ -37,12 +26,22 @@ async function main() {
 
   const have = new Set<string>();
   const baseBy = new Map<string, (typeof cards)[number]>();
+  // A set-less number ("R04a", "NN1") can only be keyed by the card's OWN setCode.
+  // Without this, `have` never knew about existing rune printings, so every run
+  // either re-created them or (more often) skipped the whole class silently.
+  const baseBySetAndName = new Map<string, (typeof cards)[number]>();
+  // Display set name straight from existing rows, so a cloned card's setName matches
+  // whatever this DB already uses for that set rather than a hardcoded guess.
+  const setNameByCode = new Map<string, string>();
   for (const c of cards) {
     const [num, total] = c.collectorNumber.split("/");
     const sc = setFromTotal(total);
-    if (sc) have.add(`${sc}|${numKey(num)}`);
+    have.add(`${sc ?? c.setCode}|${numKey(num)}`);
+    if (c.setName && !setNameByCode.has(c.setCode)) setNameByCode.set(c.setCode, c.setName);
     if (c.variant == null && !c.isPromo) {
       baseBy.set(`${c.setCode}|${num.replace(/[a-z*]/gi, "")}/${total}`, c);
+      const k = `${c.setCode}|${c.name.toLowerCase()}`;
+      if (!baseBySetAndName.has(k)) baseBySetAndName.set(k, c);
     }
   }
   const existingExternal = new Set(cards.map((c) => c.externalId).filter(Boolean) as string[]);
@@ -57,6 +56,12 @@ async function main() {
   for (const c of cards) if (c.variant == null && !c.isPromo) nameCounts.set(c.name, (nameCounts.get(c.name) || 0) + 1);
   const baseByName = new Map<string, (typeof cards)[number]>();
   for (const c of cards) if (c.variant == null && !c.isPromo && nameCounts.get(c.name) === 1) baseByName.set(c.name, c);
+  // Any base card of a given name, regardless of set — the art/domain/type donor of
+  // last resort. Runes are the reason this exists: "Mind Rune" is printed in EVERY
+  // set, so it is never name-unique and `baseByName` can never hold it, which is
+  // exactly why R-numbered rune printings were being dropped wholesale.
+  const anyBaseByName = new Map<string, (typeof cards)[number]>();
+  for (const c of cards) if (c.variant == null && !c.isPromo && !anyBaseByName.has(c.name.toLowerCase())) anyBaseByName.set(c.name.toLowerCase(), c);
 
   let created = 0, noBase = 0, skipExisting = 0, badNum = 0;
   const samples: string[] = [];
@@ -69,12 +74,24 @@ async function main() {
     if (badSamples.length < 15) badSamples.push(`${(numStr || "(none)").padEnd(12)} ${name.slice(0, 40)}`);
   };
 
-  async function cloneCard(base: (typeof cards)[number], collectorNumber: string, externalId: string, variant: string | null, isPromo: boolean, label: string) {
+  // `setCode` overrides the donor's set — needed when the art/game-data donor lives
+  // in a DIFFERENT set than the printing being created (a UNL rune cloned from the
+  // OGN print of the same rune, because the UNL base rune isn't in our catalogue).
+  async function cloneCard(
+    base: (typeof cards)[number],
+    collectorNumber: string,
+    externalId: string,
+    variant: string | null,
+    isPromo: boolean,
+    label: string,
+    setCode?: string
+  ) {
+    const sc = setCode ?? base.setCode;
     // Fresh unique slug — cloning the base's slug would collide (slug is @unique).
-    const slug = cardSlug({ name: base.name, setCode: base.setCode, collectorNumber, isPromo });
+    const slug = cardSlug({ name: base.name, setCode: sc, collectorNumber, isPromo });
     if (usedSlugs.has(slug)) { dupSkipped++; return; } // a twin listing already creates this printing
     usedSlugs.add(slug);
-    if (samples.length < 25) samples.push(`${label}: ${base.name} ${collectorNumber}${isPromo ? " [promo]" : ""}`);
+    if (samples.length < 25) samples.push(`${label}: ${base.name} ${sc} ${collectorNumber}${isPromo ? " [promo]" : ""}`);
     created++;
     if (!dry) {
       const { id, createdAt, ...rest } = base;
@@ -86,6 +103,7 @@ async function main() {
       await prisma.card.create({
         data: {
           ...rest, rarity, externalId, collectorNumber, slug, variant, isPromo,
+          setCode: sc, setName: setNameByCode.get(sc) ?? rest.setName,
           viewCount: 0, searchCount: 0, lastViewedAt: null, marketPriceCents: 0,
           lowestPriceCents: null, lowestPriceCentsNz: null, lowestPriceCentsUs: null, lowestPriceCentsUk: null,
         },
@@ -114,7 +132,43 @@ async function main() {
       }
     }
 
-    // 2) Promo with non-set numbering (e.g. R-numbered runes): place by unique name.
+    // 2) Set-less number ("R04a", "R06b", "NN1"…): the number carries no set, and the
+    //    name is reused across sets (every set prints all six runes), so NEITHER alone
+    //    can place the card. TCGplayer's own setName is the missing third signal — use
+    //    it to resolve the set, then find the donor within that set (falling back to
+    //    the same card from another set purely for art/domain/type).
+    //
+    //    This is the fix for the whole missing rune class: SFD R04a, UNL R02b/R04b/
+    //    R06a/R06b and friends. They could never match path 1 (no "/NNN") and were
+    //    excluded from the old name-based path below, which requires a GLOBALLY UNIQUE
+    //    base name — something a rune can never have.
+    if (numStr && !SEALED.test(p.productName)) {
+      const sc = setCodeFromSetName(p.setName);
+      const numSeg = numStr.split("/")[0];
+      if (sc && numSeg) {
+        if (have.has(`${sc}|${numKey(numSeg)}`)) continue; // already have it
+        // "R04a" → prefix "R", digits "04", suffix "a" (the Showcase variant letter).
+        const shape = numSeg.match(/^([a-z]*)(\d+)([a-z]*)$/i);
+        const cleanName = p.productName.replace(/\s*\([^)]*\)\s*$/, "").trim();
+        const donor =
+          baseBySetAndName.get(`${sc}|${cleanName.toLowerCase()}`) ??
+          anyBaseByName.get(cleanName.toLowerCase());
+        if (donor) {
+          // A parseable number is a real in-set printing (variant letter = Showcase
+          // treatment); anything else ("NN1", "WB25") is an organized-play promo.
+          const letter = shape ? (shape[3] || "").toLowerCase() || null : null;
+          const isPromo = !shape;
+          await cloneCard(donor, numSeg, externalId, letter, isPromo, isPromo ? "PROMO" : "SETLESS", sc);
+          have.add(`${sc}|${numKey(numSeg)}`);
+          continue;
+        }
+        noBase++;
+        if (samples.length < 25) samples.push(`NO BASE: ${p.productName} ${numStr} (${sc})`);
+        continue;
+      }
+    }
+
+    // 3) Last resort — no usable set signal at all: place by globally unique name.
     if (numStr && !SEALED.test(p.productName) && baseByName.has(p.productName)) {
       await cloneCard(baseByName.get(p.productName)!, numStr, externalId, null, true, "PROMO");
       continue;

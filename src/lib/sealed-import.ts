@@ -4,7 +4,7 @@
 import { prisma } from "./db";
 import { RETAILER_LIST } from "./retailers";
 import { isEbayEnabled, isEbayRateLimited, searchEbaySealed, primeEbayBudget, sealedFloorCents } from "./ebay";
-import { fetchTcgplayerSealed, tcgProductUrl, tcgImageUrl } from "./tcgplayer";
+import { fetchTcgplayerSealed, tcgProductUrl, tcgImageUrl, setCodeFromSetName } from "./tcgplayer";
 
 const UA = {
   "User-Agent":
@@ -143,15 +143,8 @@ export function classifySealed(title: string): string {
 }
 
 // Map a TCGplayer setName to our set code (null for cross-set promo products).
-function setCodeFromSetName(setName: string): string | null {
-  const s = (setName ?? "").toLowerCase();
-  if (/proving\s*grounds/.test(s)) return "OGS";
-  if (/spiritforged|spirit\s*forged/.test(s)) return "SFD";
-  if (/unleashed/.test(s)) return "UNL";
-  if (/vendetta/.test(s)) return "VEN";
-  if (/origins/.test(s)) return "OGN";
-  return null;
-}
+// Canonical implementation lives in lib/tcgplayer.ts — imported, not re-declared,
+// so the two can't drift apart when a new set is added.
 
 export async function importSealed(): Promise<number> {
   let count = 0;

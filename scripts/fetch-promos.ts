@@ -17,7 +17,11 @@ async function main() {
   const promos: { set: string; num: string }[] = [];
   const seen = new Set<string>();
   for (const slug of slugs) {
-    const m = slug.match(/^([a-z]{2,4})-(\d+[a-z]?)-p-/i);
+    // The number segment is usually digits ("001", "021a") but runes are R-numbered
+    // ("r04a", "r06b"). The old pattern demanded a leading digit, so EVERY promo rune
+    // printing was silently dropped from promos.json — the reason SFD/UNL rune
+    // Showcase prints never made it into the database.
+    const m = slug.match(/^([a-z]{2,4})-(r?\d+[a-z]?)-p-/i);
     if (!m) continue;
     const key = `${m[1].toUpperCase()}-${m[2]}`;
     if (seen.has(key)) continue;

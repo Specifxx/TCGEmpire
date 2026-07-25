@@ -47,12 +47,15 @@ export const MARKETPLACE_PRIVATE_FEE_BPS = Number(process.env.MARKETPLACE_PRIVAT
 // through Stripe yet; see MARKETPLACE_RETAILER comment / plan Phase 2 item 1).
 export const MARKETPLACE_OFFERS = process.env.MARKETPLACE_OFFERS === "1";
 
-// New-seller guardrails (D8): until a seller has this many COMPLETED sales, cap
-// how much unsold inventory they can have listed at once — limits exposure from
-// an unproven seller without blocking them from selling at all.
-export const NEW_SELLER_TRUSTED_SALES = 3;
-export const NEW_SELLER_MAX_ACTIVE_LISTINGS = 10;
-export const NEW_SELLER_MAX_ACTIVE_VALUE_CENTS = 500_00;
+// New-seller listing caps (the old D8 guardrail — max active listings + max
+// combined active value until N completed sales) were REMOVED: they were the
+// single biggest blocker to sellers actually loading their inventory, and the
+// real protections against a bad seller don't depend on them — the buyer always
+// pays the platform first and funds sit in escrow until delivery is confirmed
+// (lib/connect.ts), the ship deadline auto-cancels+refunds a no-show seller,
+// buyer protection covers not-received/not-as-described, and an abusive account
+// can be suspended outright (SellerProfile.suspendedAt). Sellers may now list
+// unlimited inventory at any value.
 
 // ── Private beta gating ────────────────────────────────────────────────────────
 // While false, marketplace listings are NOT shown in the public price comparison

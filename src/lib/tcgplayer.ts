@@ -26,15 +26,17 @@ const PAGE_SIZE = 50;
 
 // Mirror of price-import.ts numKey: strip leading zeros, lowercase any letter
 // suffix, and mark a Signature print ("*") with a trailing "s" so 223*/221 and
-// 223/221 stay distinct.
-function numKey(seg: string): string {
+// 223/221 stay distinct. Exported so scripts share ONE implementation — private
+// copies in scripts/ silently drifted (that's how VEN went missing from the
+// script's setFromTotal and Vendetta variants stopped being created).
+export function numKey(seg: string): string {
   const m = seg.match(/^0*(\d+)([a-z]*)/i);
   const base = m ? m[1] + m[2].toLowerCase() : seg.toLowerCase();
   return seg.includes("*") ? `${base}s` : base;
 }
 
 // Set code from the "/NNN" denominator (authoritative, prevents cross-set bleed).
-function setFromTotal(total?: string): string | null {
+export function setFromTotal(total?: string): string | null {
   switch (parseInt(total ?? "", 10)) {
     case 298: return "OGN";
     case 221: return "SFD";
@@ -43,6 +45,30 @@ function setFromTotal(total?: string): string | null {
     case 166: return "VEN";
     default: return null;
   }
+}
+
+// Set code from a TCGplayer setName — the ONLY set signal for printings whose
+// collector number doesn't carry a "/NNN" denominator. That's the whole rune
+// cycle from SFD onward: they're numbered "R01".."R06" (plus "a"/"b" Showcase
+// variants like "R04a"/"R06b") with no set in the number, and the same R-number
+// is reused by every set, so the number alone is ambiguous and name alone is too
+// ("Mind Rune" exists in every set). setName disambiguates both.
+export function setCodeFromSetName(setName?: string): string | null {
+  const s = (setName ?? "").toLowerCase();
+  if (/proving\s*grounds/.test(s)) return "OGS";
+  if (/spiritforged|spirit\s*forged/.test(s)) return "SFD";
+  if (/unleashed/.test(s)) return "UNL";
+  if (/vendetta/.test(s)) return "VEN";
+  if (/origins/.test(s)) return "OGN";
+  return null;
+}
+
+// True for a collector number that carries no set information of its own — i.e.
+// anything without a "/NNN" denominator we recognise ("R04a", "NN1", "WB25").
+// These can only be placed with an external set signal (see setCodeFromSetName).
+export function isSetlessNumber(collectorNumber: string): boolean {
+  const total = collectorNumber.split("/")[1];
+  return setFromTotal(total) == null;
 }
 
 // A single marketplace listing from the search response's per-product preview.
@@ -225,13 +251,20 @@ export const TCG_AU: TcgMarket = { retailer: TCGPLAYER_AU_RETAILER, country: "AU
 // decides). Exported separately so a dry-run can inspect the match quality.
 export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: TcgProduct[]): Promise<TcgMatchResult> {
   const items = products ?? (await fetchTcgplayerProducts());
-  const cards = await prisma.card.findMany({ select: { id: true, collectorNumber: true, externalId: true } });
+  const cards = await prisma.card.findMany({ select: { id: true, setCode: true, collectorNumber: true, externalId: true } });
   const byKey = new Map<string, string>();
   const byExternal = new Map<string, string>();
+  // Set-less numbers (the "R04a"-style rune printings, "NN1", "WB25"…) keyed by the
+  // card's OWN setCode. Their number can't yield a set, so they never land in byKey
+  // and used to be priceable only via externalId — which works for cards we created
+  // from TCGplayer but silently missed every rune added any other way (manual-cards
+  // .json, the official-gallery importer). Matched below against the product's setName.
+  const bySetlessNum = new Map<string, string>();
   for (const c of cards) {
     const [num, total] = c.collectorNumber.split("/");
     const sc = setFromTotal(total);
     if (sc) byKey.set(`${sc}|${numKey(num)}`, c.id);
+    else bySetlessNum.set(`${c.setCode}|${numKey(num)}`, c.id);
     // Cards we created FROM TCGplayer carry externalId "tcg-<productId>" — price them
     // directly by that link (their numbers, e.g. promo runes "R03a", don't parse to a set).
     if (c.externalId) byExternal.set(c.externalId, c.id);
@@ -257,8 +290,14 @@ export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: Tcg
     const numStr = p.customAttributes?.number;
     const [num, total] = (numStr ?? "").split("/");
     const sc = setFromTotal(total);
-    // Match by set+number first; otherwise by externalId (our TCGplayer-created cards).
-    const cardId = (sc ? byKey.get(`${sc}|${numKey(num)}`) : undefined) ?? byExternal.get(`tcg-${p.productId}`);
+    // Match by set+number first; then by externalId (our TCGplayer-created cards);
+    // finally, for set-less numbers ("R04a" runes), by the product's own setName —
+    // the only set signal such a printing has.
+    const setlessSet = sc ? null : setCodeFromSetName(p.setName);
+    const cardId =
+      (sc ? byKey.get(`${sc}|${numKey(num)}`) : undefined) ??
+      byExternal.get(`tcg-${p.productId}`) ??
+      (setlessSet && num ? bySetlessNum.get(`${setlessSet}|${numKey(num)}`) : undefined);
     // English MARKET price; fall back to lowest English NM listing only when a
     // (usually brand-new) product has no market price yet.
     const market = p.marketPrice && p.marketPrice > 0 ? p.marketPrice : null;
