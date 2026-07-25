@@ -8,11 +8,12 @@ import type { CardTileData } from "@/components/CardTile";
 // surfaced on the homepage. Search clicks are the purest demand signal we have. Ties
 // (e.g. lots of cards with the same search count) break toward the MORE EXPENSIVE
 // card, so the section leads with the chase/high-value cards people actually want.
-// Priced-only so every tile shows a real price.
-export async function getPopularCards(limit = 12, country: Country = "AU"): Promise<CardTileData[]> {
+// Priced-only so every tile shows a real price. Optional setCode scopes it to one
+// set (e.g. the Vendetta homepage strip) instead of the whole database.
+export async function getPopularCards(limit = 12, country: Country = "AU", setCode?: string): Promise<CardTileData[]> {
   const field = priceField(country);
   const cards = (await prisma.card.findMany({
-    where: buildCardWhere({ priced: "1" }, country),
+    where: buildCardWhere({ set: setCode, priced: "1" }, country),
     orderBy: [
       { searchCount: "desc" },
       { [field]: { sort: "desc", nulls: "last" } } as Prisma.CardOrderByWithRelationInput,
@@ -59,29 +60,4 @@ export async function getValuableCards(limit = 12, country: Country = "AU"): Pro
     select: cardTileSelect(country),
   })) as CardTileData[];
   return cards;
-}
-
-// Cheapest priced cards within ONE set — same coverage-tiebreak idea as
-// getCheapestCards, scoped to a single setCode. Powers the Vendetta homepage
-// price-proof strip (real live prices, not a claim) and reusable for any other
-// set's own "cheapest right now" section later.
-export async function getCheapestCardsForSet(
-  setCode: string,
-  limit = 8,
-  country: Country = "AU"
-): Promise<CardTileData[]> {
-  const cards = (await prisma.card.findMany({
-    where: buildCardWhere({ set: setCode, priced: "1" }, country),
-    orderBy: buildCardOrderBy("price_asc", country),
-    take: limit * 5,
-    select: cardTileSelect(country),
-  })) as CardTileData[];
-
-  return cards
-    .sort(
-      (a, b) =>
-        (pickPrice(a, country)! - pickPrice(b, country)!) ||
-        b._count.retailerPrices - a._count.retailerPrices
-    )
-    .slice(0, limit);
 }
