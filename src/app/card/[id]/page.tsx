@@ -3,8 +3,8 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { CardImage } from "@/components/CardImage";
-import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge } from "@/components/Badge";
-import { isOvernumbered, isSignature } from "@/lib/constants";
+import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge, CrystalRoseBadge } from "@/components/Badge";
+import { isOvernumbered, isSignature, isCrystalRose } from "@/lib/constants";
 import { PriceWatchButton } from "@/components/PriceWatchButton";
 import { ShareButton } from "@/components/ShareButton";
 import { CardViewBeacon } from "@/components/CardViewBeacon";
@@ -436,6 +436,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               <VariantBadge variant={card.variant} />
               <SignatureBadge show={isSignature(card.collectorNumber)} />
               <OvernumberedBadge show={isOvernumbered(card.collectorNumber)} />
+              <CrystalRoseBadge show={isCrystalRose(card.setCode, card.collectorNumber)} />
               <PromoBadge show={card.isPromo} />
             </div>
             <div className="mt-3 flex items-start justify-between gap-3">
@@ -700,6 +701,7 @@ function buildAbout(card: CardForCopy, ctx: AboutContext): string[] {
   else if (card.variant) p1 += ` This listing covers the alternate-art (${card.variant}) printing, which trades separately from the base version.`;
   if (isSignature(card.collectorNumber)) p1 += " As a Signature print (numbered beyond the set), it is pulled far less often than base cards and commands a premium.";
   else if (isOvernumbered(card.collectorNumber)) p1 += " As an overnumbered print (numbered beyond the set's base size), it is rarer than the base printing.";
+  if (isCrystalRose(card.setCode, card.collectorNumber)) p1 += " It's one of the six Crystal Rose alt-arts — Wild Rift's returning skin line brought to physical cards for Vendetta — appearing at the same rate as other alt-art pulls in booster packs.";
   if (card.isPromo) p1 += " It is a promotional printing — it shares the base card's collector number but is a distinct product with its own price.";
 
   const p2 = lowest != null && stores > 0

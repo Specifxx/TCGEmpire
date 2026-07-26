@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { CardImage } from "./CardImage";
-import { VariantBadge, OvernumberedBadge, SignatureBadge } from "./Badge";
+import { VariantBadge, OvernumberedBadge, SignatureBadge, CrystalRoseBadge } from "./Badge";
 import { PriceWatchButton } from "./PriceWatchButton";
 import { useQuickView } from "./QuickView";
 import { useCountry } from "./CountryProvider";
 import { cardHref } from "@/lib/card-url";
-import { rarityInfo, isOvernumbered, isSignature } from "@/lib/constants";
+import { rarityInfo, isOvernumbered, isSignature, isCrystalRose } from "@/lib/constants";
 import { cardDisplayName } from "@/lib/card-name";
 
 export interface CardTileData {
@@ -72,6 +72,7 @@ export function CardTile({ card }: { card: CardTileData }) {
             <VariantBadge variant={card.variant} />
             <SignatureBadge show={isSignature(card.collectorNumber)} />
             <OvernumberedBadge show={isOvernumbered(card.collectorNumber)} />
+            <CrystalRoseBadge show={isCrystalRose(card.setCode, card.collectorNumber)} />
           </div>
         </div>
 

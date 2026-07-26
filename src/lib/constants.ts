@@ -175,6 +175,14 @@ export function isOvernumbered(collectorNumber: string): boolean {
   return m ? parseInt(m[1], 10) > parseInt(m[2], 10) : false;
 }
 
+// Crystal Rose = Vendetta's 6 Wild Rift crossover alt-arts (Kai'Sa, Sona, Ahri,
+// Sett, Ezreal, Lux), numbered SP1-SP6 instead of a normal "/NNN" — Riot's own
+// wording reserves "Overnumber" for Riftbound-original art, so these get their
+// own badge rather than showing as overnumbered.
+export function isCrystalRose(setCode: string, collectorNumber: string): boolean {
+  return setCode === "VEN" && /^sp\d/i.test(collectorNumber);
+}
+
 export function conditionInfo(key: string): ConditionInfo {
   return CONDITIONS[key] ?? CONDITIONS.NM;
 }

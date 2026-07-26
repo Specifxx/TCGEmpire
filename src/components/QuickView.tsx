@@ -3,9 +3,9 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { CardTileData } from "./CardTile";
 import { CardImage } from "./CardImage";
-import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge } from "./Badge";
+import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge, CrystalRoseBadge } from "./Badge";
 import { PriceWatchButton } from "./PriceWatchButton";
-import { AU_FALLBACK_RETAILERS, isOvernumbered, isSignature, SG_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS } from "@/lib/constants";
+import { AU_FALLBACK_RETAILERS, isOvernumbered, isSignature, isCrystalRose, SG_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS } from "@/lib/constants";
 import { cardHref } from "@/lib/card-url";
 import { cardDisplayName, cardSearchName } from "@/lib/card-name";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
@@ -203,6 +203,7 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
               <VariantBadge variant={card.variant} />
               <SignatureBadge show={isSignature(card.collectorNumber)} />
               <OvernumberedBadge show={isOvernumbered(card.collectorNumber)} />
+              <CrystalRoseBadge show={isCrystalRose(card.setCode, card.collectorNumber)} />
               <PromoBadge show={card.isPromo} />
             </div>
             <div className="mt-2 flex items-start justify-between gap-3">

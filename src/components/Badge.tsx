@@ -101,6 +101,19 @@ export function OvernumberedBadge({ show }: { show?: boolean }) {
   );
 }
 
+export function CrystalRoseBadge({ show }: { show?: boolean }) {
+  if (!show) return null;
+  return (
+    <span
+      className="chip font-semibold uppercase"
+      style={{ background: "linear-gradient(90deg,#f472b6,#c026d3)", color: "#fff" }}
+      title="Crystal Rose — Wild Rift crossover alt art"
+    >
+      ✿ Crystal Rose
+    </span>
+  );
+}
+
 export function PromoBadge({ show }: { show?: boolean }) {
   if (!show) return null;
   return (

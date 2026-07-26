@@ -3036,6 +3036,161 @@ Vendetta is in its earliest trading window — Pre-Rift launch events started 24
 
 **Can I price a whole Vendetta deck at once?** Yes — drop your list into the **[deck pricer](/deck)** to total every card at its cheapest live price across stores, in your own currency.`,
   },
+  {
+    slug: "riftbound-pre-rift-rules-explained",
+    category: "guide",
+    title: "Riftbound Pre-Rift Rules Explained: The Sealed Format for Launch-Week Events",
+    excerpt:
+      "Pre-Rift events let you crack open a new Riftbound set and build a deck before street date — but the deck-building rules are different from Constructed. Here's exactly how Sealed works: deck size, copy limits and domain rules.",
+    author: "RiftCompare",
+    date: "2026-07-26",
+    updated: "2026-07-26",
+    readMins: 4,
+    tags: ["rules", "pre-rift", "sealed", "vendetta", "guide"],
+    browseCta: {
+      href: "/sets/vendetta",
+      label: "See every Vendetta card's price →",
+      blurb: "All 166 confirmed cards, ranked by the cheapest live price across every store we track.",
+    },
+    body: `Pre-Rift events are your first chance to crack open a brand-new Riftbound set and build a deck with it — before the set is even on shelves. Riftbound: Vendetta's Pre-Rift window ran 24–31 July 2026, a full week ahead of the set's official 31 July street date, and stores are running theirs right now. But the deck you build at a Pre-Rift plays by different rules than a normal Constructed deck — here's exactly how.
+
+## Pre-Rift is a Sealed event, not Constructed
+
+At a Pre-Rift, you don't bring your own deck. The store hands you sealed product — booster packs — and you build your deck from whatever you open, on the spot. You can't add cards from your own collection; the entire deck comes from what's in front of you.
+
+That single rule changes everything else about deck-building for the event.
+
+## The Sealed deck-building rules
+
+- **Minimum deck size: 25 cards** (not the higher Constructed minimum) — though nothing stops you running more if you opened enough playables.
+- **No 3-copy limit.** Constructed decks cap most cards at 3 copies; Sealed removes that cap entirely. If you crack four copies of the same card, you can run all four.
+- **Up to 3 domains.** Sealed decks can draw from three domains of cards and Runes — one more than a typical two-domain Constructed build, to make room for whatever you happen to open.
+- **A Legend or Signature card covers two domains.** If you open and run one, it counts toward two of your three domain slots, freeing up your card pool.
+
+## Why this is worth knowing before you go
+
+Pre-Rift decks reward flexibility over a tuned gameplan — you're building around what you open, not what you planned. Go in with an open mind about domain pairings rather than expecting to force a specific Constructed archetype; the format is designed to make every pod's packs playable, not to reward hoarding one domain.
+
+If you're gearing up for Vendetta's own Pre-Rift week, our **[Vendetta early-access guide](/blog/riftbound-vendetta-is-here-early-release)** covers what's already tradeable, and our **[Vendetta card database](/sets/vendetta)** has live prices on every confirmed card the moment it's buyable.
+
+## Common questions
+
+**Is Pre-Rift the same as the official release?** No — Pre-Rift is an early, in-store-only Sealed event the week before a set's street date. The set isn't generally available at retail until the official release date.
+
+**Can I use cards from my own collection at a Pre-Rift?** No — Sealed decks are built entirely from the packs you open at the event itself.
+
+**Is there a maximum deck size?** The rules set a *minimum* (25 cards); you can play more if you have enough playables, though most Sealed pools land close to the minimum.
+
+**Where do these rules come from?** Riot's own [Pre-Rift guide](https://riftbound.gg/vendetta-pre-rift/) and [Rules Hub](https://playriftbound.com/en-us/rules-hub/) — check there for the full, current wording before an event, since organized-play rules can be updated between sets.`,
+  },
+  {
+    slug: "riftbound-2026-regional-qualifier-los-angeles",
+    category: "blog",
+    title: "Riftbound Regional Qualifier: Los Angeles (Sept 25–27, 2026) — Everything We Know",
+    excerpt:
+      "The final Riftbound Regional Qualifier of 2026 lands at the Los Angeles Convention Center, September 25–27 — here's the venue, ticket tiers, requirements and the exclusive promos on offer.",
+    author: "RiftCompare",
+    date: "2026-07-26",
+    updated: "2026-07-26",
+    readMins: 3,
+    tags: ["news", "esports", "tournament", "regional qualifier", "los angeles"],
+    browseCta: {
+      href: "/sets/vendetta",
+      label: "See every Vendetta card's price →",
+      blurb: "Track Vendetta prices now — regional-exclusive promos usually surface online in the weeks after an event.",
+    },
+    body: `Riftbound's competitive scene has its next big stop: the **Riftbound Regional Qualifier: Los Angeles**, running **September 25–27, 2026** at the **Los Angeles Convention Center**. It's the final Regional Qualifier of the year, run by UVS Games, and tickets are on sale now via Eventbrite.
+
+## The details
+
+- **Dates:** Friday 25 – Sunday 27 September 2026, 12pm–6pm each day
+- **Venue:** Los Angeles Convention Center, Los Angeles, CA
+- **Organizer:** UVS Games
+- **Tickets:** via [Eventbrite](https://www.eventbrite.com/e/riftbound-regional-qualifier-los-angeles-tickets-1992778924407) — Competitor and Premium Competitor badge tiers are available, each with different tournament access and perks
+- **Requirement:** a valid Riot Account is required to participate in Riftbound Organized Play
+
+## What Premium badge holders get
+
+Regional Qualifier weekends usually come with exclusive, event-only promos, and LA is no exception — Premium Competitor badges reportedly include an exclusive **Crystal Rose Sona, Harmonious playmat**, plus a **Jayce, Brilliant Inventor** promo stamped with a Vendetta Gold treatment. If chase promos like this are your thing, badge tier matters — check the Eventbrite listing for the exact current perks before you buy, since organized-play promos can be adjusted close to the event.
+
+## Should you go if you're not competing?
+
+Regional Qualifiers are also where a lot of early Vendetta singles and promos change hands in person, well before some of that supply reaches online stores. If you're chasing a specific **[Crystal Rose card](/guides/riftbound-vendetta-crystal-rose-cards)** or an event-exclusive promo, keep an eye on our Vendetta prices in the weeks after — that's usually when regional-exclusive prints start showing up for sale online and we start tracking them.
+
+## Common questions
+
+**Do I need a Riot Account to compete?** Yes — a valid Riot Account is required for all Riftbound Organized Play, including Regional Qualifiers.
+
+**Is this the last Regional Qualifier of 2026?** Based on current event listings, yes — Los Angeles is the final stop of the year's Regional Qualifier circuit.
+
+**Where do I buy tickets?** Through [Eventbrite](https://www.eventbrite.com/e/riftbound-regional-qualifier-los-angeles-tickets-1992778924407) — badge tiers determine what tournament access and event perks you get.
+
+*Event details are from UVS Games' and the venue's own listings — always confirm current dates, badge tiers and requirements on [Eventbrite](https://www.eventbrite.com/e/riftbound-regional-qualifier-los-angeles-tickets-1992778924407) before you book travel.*`,
+  },
+  {
+    slug: "riftbound-vendetta-crystal-rose-cards",
+    category: "guide",
+    title: "Riftbound Vendetta's Crystal Rose Cards: All 6 Wild Rift Alt-Arts, Priced",
+    excerpt:
+      "Vendetta's Crystal Rose line brings six Wild Rift skins to physical cards for the first time — Kai'Sa, Sona, Ahri, Sett, Ezreal and Lux. Here's every card, what makes them different from a normal alt-art, and live prices across every store we track.",
+    author: "RiftCompare",
+    date: "2026-07-26",
+    updated: "2026-07-26",
+    readMins: 4,
+    tags: ["vendetta", "crystal rose", "alt art", "collecting", "chase cards"],
+    shop: [{ label: "Crystal Rose cards on eBay", query: "Riftbound Crystal Rose" }],
+    browseCta: {
+      href: "/sets/vendetta",
+      label: "See every Vendetta card's price →",
+      blurb: "All 166 confirmed cards plus every alt-art and promo, ranked by cheapest live price.",
+    },
+    embed: {
+      title: "The 6 Crystal Rose alt-arts, priced live",
+      note: "Kai'Sa, Sona, Ahri, Sett, Ezreal and Lux — Vendetta's Wild Rift crossover cards, straight from our live database.",
+      slugs: [
+        "kai-sa-survivor-ven",
+        "sona-harmonious-ven",
+        "ahri-inquisitive-ven",
+        "sett-brawler-ven",
+        "ezreal-prodigy-ven",
+        "lux-crownguard-ven",
+      ],
+    },
+    body: `Riftbound: Vendetta's boosters hide six special alt-art cards celebrating League of Legends' Wild Rift **Crystal Rose** skin line — the first time these looks have appeared on physical cards. If you've pulled one, or you're hunting a specific one, here's what makes them different from Vendetta's regular alt-arts, and what they're trading for right now.
+
+## The six Crystal Rose cards
+
+- **Kai'Sa, Survivor**
+- **Sona, Harmonious**
+- **Ahri, Inquisitive**
+- **Sett, Brawler**
+- **Ezreal, Prodigy**
+- **Lux, Crownguard**
+
+## How they're numbered and pulled
+
+Unlike Vendetta's other alt-art printings (which carry a lettered variant of a normal collector number, e.g. "021a"), the six Crystal Rose cards are numbered **SP1 through SP6** — their own dedicated range, separate from the set's regular 1–166 checklist. Riot's own reasoning: the "Overnumber" treatment is reserved for art created specifically for Riftbound, and Crystal Rose art is ported from Wild Rift, so it gets its own numbering instead.
+
+Despite the different numbering, they pull at the **same rate as any other alt-art card** in Vendetta boosters — there's no separate box or bundle required to chase them. Any booster you open has a shot at one.
+
+## Why Kai'Sa and Ezreal stand out
+
+Two of the six — **Kai'Sa, Survivor** and **Ezreal, Prodigy** — are reprints of cards that were already strong and notoriously hard to get before Vendetta. A second printing via the Crystal Rose line means more copies in circulation, which is good news if you've been trying to complete a deck around either of them without paying a premium for the original print.
+
+## Live prices
+
+Every Crystal Rose card's cheapest current price, ranked across every store RiftCompare tracks, is below — tap any card for the full comparison, including eBay.
+
+## Common questions
+
+**Are Crystal Rose cards rarer than a normal alt-art?** No — Riot's own guidance is that they appear at the same rate as Vendetta's other alt-art pulls, not as a rarer "Overnumber"-style pull.
+
+**Do I need a special product to get one?** No — they're distributed through regular Vendetta booster packs, the same as any other alt-art.
+
+**Is this Riftbound's first Wild Rift crossover?** It's the first time these specific Wild Rift Crystal Rose looks have been brought to physical Riftbound cards.
+
+*Card names, numbering and distribution details are from Riot's own Vendetta reveal coverage — see [Riftbound's official site](https://riftbound.gg/riftbound-vendetta-wild-rift-crystal-rose-alt-art-cards/) for the original announcement.*`,
+  },
 ];
 
 export function getArticles(category?: ArticleCategory): Article[] {

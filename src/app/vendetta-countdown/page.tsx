@@ -29,6 +29,8 @@ const LINKS = [
   { href: "/blog/riftbound-vendetta-new-mechanics-flow-burn-empower", label: "New mechanics: Flow, Burn & Empower" },
   { href: "/guides/best-riftbound-vendetta-decks", label: "Best decks & archetypes" },
   { href: "/guides/riftbound-vendetta-overnumbers-explained", label: "Overnumbers & chase cards" },
+  { href: "/guides/riftbound-pre-rift-rules-explained", label: "Pre-Rift rules: how Sealed deck-building works" },
+  { href: "/guides/riftbound-vendetta-crystal-rose-cards", label: "Crystal Rose alt-arts: all 6 cards, priced" },
   { href: "/sets/vendetta", label: "Vendetta set page" },
 ];
 
@@ -50,6 +52,10 @@ const FAQS = [
   {
     q: "How many days until Vendetta?",
     a: "The live countdown at the top of this page ticks down to release day (31 July 2026) in your own timezone — bookmark it and check back.",
+  },
+  {
+    q: "What are the Pre-Rift deck-building rules?",
+    a: "Pre-Rift events are Sealed, not Constructed — you build your deck entirely from the packs you open at the event, with no outside cards. Sealed decks have a 25-card minimum, no 3-copy cap on cards you've opened, and can draw from up to three domains (a Legend or Signature card covers two of those three).",
   },
 ];
 
