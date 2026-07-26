@@ -39,28 +39,43 @@ function EbayMark({ className }: { className?: string }) {
 // so it costs no extra API quota. Falls back to the reliable generic "search
 // eBay" CTA when this market has no cached listings yet (new card, or the
 // daily import hasn't reached it) — the eBay buy-path must always be present.
-export function EbayAdCarouselLive({ listings, query, className }: { listings: AdListing[]; query: string; className?: string }) {
+export function EbayAdCarouselLive({
+  listings,
+  query,
+  className,
+  compact,
+}: {
+  listings: AdListing[];
+  query: string;
+  className?: string;
+  // Tighter tiles + fewer items for space-constrained surfaces (the quick-view
+  // popup) — same live data and links as the full-size carousel.
+  compact?: boolean;
+}) {
   const { country } = useCountry();
-  const items = listings.filter((l) => l.country === country).sort((a, b) => a.rank - b.rank);
+  const items = listings
+    .filter((l) => l.country === country)
+    .sort((a, b) => a.rank - b.rank)
+    .slice(0, compact ? 4 : undefined);
 
   if (items.length === 0) {
-    return <EbayBuyCta query={query} className={className} />;
+    return <EbayBuyCta query={query} compact={compact} className={className} />;
   }
 
   return (
     <div className={className}>
-      <div className="mb-2 flex items-center gap-2">
+      <div className={`mb-1.5 flex items-center gap-2 ${compact ? "" : "mb-2"}`}>
         <EbayMark className="text-sm" />
         <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Ad · live listings on eBay</span>
       </div>
-      <div className="flex gap-3 overflow-x-auto pb-1">
+      <div className={`flex overflow-x-auto pb-1 ${compact ? "gap-2" : "gap-3"}`}>
         {items.map((l) => (
           <OutboundLink
             key={l.rank}
             href={l.url}
             retailer="ebay"
             country={country}
-            className="flex w-32 shrink-0 flex-col rounded-lg border border-ink-700 bg-ink-900 p-2 transition-colors hover:border-[#0064d2]/60 hover:bg-ink-800"
+            className={`flex shrink-0 flex-col rounded-lg border border-ink-700 bg-ink-900 transition-colors hover:border-[#0064d2]/60 hover:bg-ink-800 ${compact ? "w-20 p-1.5" : "w-32 p-2"}`}
           >
             <div className="aspect-[3/4] w-full overflow-hidden rounded bg-ink-950">
               {l.imageUrl && (
@@ -68,9 +83,9 @@ export function EbayAdCarouselLive({ listings, query, className }: { listings: A
                 <img src={l.imageUrl} alt="" aria-hidden="true" loading="lazy" decoding="async" className="h-full w-full object-cover" />
               )}
             </div>
-            <div className="mt-1.5 line-clamp-2 text-[11px] leading-tight text-slate-300">{truncate(l.title, 60)}</div>
-            <div className="num mt-1 text-sm font-extrabold text-white">{formatMoney(l.priceCents, l.currency)}</div>
-            {l.shippingCents === 0 && <div className="text-[10px] text-brand-400">Free shipping</div>}
+            {!compact && <div className="mt-1.5 line-clamp-2 text-[11px] leading-tight text-slate-300">{truncate(l.title, 60)}</div>}
+            <div className={`num mt-1 font-extrabold text-white ${compact ? "text-xs" : "text-sm"}`}>{formatMoney(l.priceCents, l.currency)}</div>
+            {!compact && l.shippingCents === 0 && <div className="text-[10px] text-brand-400">Free shipping</div>}
           </OutboundLink>
         ))}
       </div>

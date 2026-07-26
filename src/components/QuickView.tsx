@@ -11,7 +11,7 @@ import { cardDisplayName, cardSearchName } from "@/lib/card-name";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
 import { affiliateUrl, ebayAffiliateUrl, outboundRel } from "@/lib/affiliate";
 import { OutboundLink } from "./OutboundLink";
-import { EbayBuyCta } from "./EbayBuyCta";
+import { EbayAdCarouselLive, type AdListing } from "./EbayAdCarouselLive";
 import { buyButtonClass, buyButtonLabel } from "./CardMarketSection";
 import { useCountry } from "./CountryProvider";
 import { PriceChart } from "./PriceChart";
@@ -91,6 +91,7 @@ export function QuickViewProvider({ children }: { children: React.ReactNode }) {
 
 function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => void }) {
   const [prices, setPrices] = useState<RetailerPrice[] | null>(null);
+  const [adListings, setAdListings] = useState<AdListing[]>([]);
   const [ebayCheckedAt, setEbayCheckedAt] = useState<string | null>(null);
   const [history, setHistory] = useState<PricePoint[] | null>(null);
   const [coll, setColl] = useState<"idle" | "saving" | "added" | "signin" | "error">("idle");
@@ -125,7 +126,7 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
     fetch(`/api/card/${ref}/view`, { method: "POST", keepalive: true }).catch(() => {});
     fetch(`/api/card/${ref}`)
       .then((r) => r.json())
-      .then((d) => { if (alive) { setPrices(d.retailerPrices ?? []); setEbayCheckedAt(d.ebayCheckedAt ?? null); } })
+      .then((d) => { if (alive) { setPrices(d.retailerPrices ?? []); setAdListings(d.ebayAdListings ?? []); setEbayCheckedAt(d.ebayCheckedAt ?? null); } })
       .catch(() => { if (alive) setPrices([]); });
     // Region-specific price history (its own currency), keyed by URL for clean caching.
     fetch(`/api/card/${ref}/history?country=${country}`)
@@ -220,8 +221,11 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
             </div>
 
             {/* Always-present eBay buy-path — the widest singles inventory in every
-                market and our commission source; sits above the local comparison. */}
-            <EbayBuyCta query={cardSearchName(card.name, card)} compact className="mt-3" />
+                market and our commission source; sits above the local comparison.
+                Real live listings (image/price/free-shipping) when we have cached
+                ones for this market, falling back to the generic search CTA
+                otherwise (same behaviour as the full card page's carousel). */}
+            <EbayAdCarouselLive listings={adListings} query={cardSearchName(card.name, card)} compact className="mt-3" />
 
             {/* Add to collection — track & value your whole collection in your profile */}
             <div className="mt-3 flex items-center gap-2">
