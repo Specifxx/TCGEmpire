@@ -16,6 +16,7 @@ on:
           - db-push          # prisma db push (additive schema sync for this ref)
           - cards-sync       # fetch latest RiftScribe snapshot + additive upsert
           - cards-manual     # apply prisma/manual-cards.json (promos/backstop)
+          - fetch-promos     # scrape riftbound.gg's official card-page sitemap for promo printings (incl. R-numbered promo runes) + apply additively (no dry-run — both scripts are additive/idempotent by design)
           - tcg-printings    # create printings TCGplayer lists that we lack (Showcase/alt-art variants + the R-numbered rune cycle)
           - fix-cloned-art   # scrape real official art for cloned promo/rune printings; clear wrong borrowed art to a placeholder where none exists
           - vendetta-pipeline # scrape official gallery + import VEN reveals
@@ -223,6 +224,19 @@ jobs:
       - name: Apply manual cards (promos / source-gap backstop)
         if: inputs.task == 'cards-manual'
         run: npx tsx scripts/add-manual-cards.ts
+
+      # Separate from tcg-printings/add-tcg-printings.ts (which only sees products
+      # TCGplayer itself sells) — this scrapes riftbound.gg's OWN card-page sitemap,
+      # which is the authoritative "this printing officially exists" source and can
+      # list a promo before TCGplayer ever carries it as a sellable product. This is
+      # the pipeline fetch-promos.ts's regex fix (dropping the "leading digit
+      # required" bug that excluded every R-numbered promo rune slug) was actually
+      # for — it had never been wired into CI, so that fix sat unused until now.
+      - name: Fetch + apply official promo printings (incl. promo runes)
+        if: inputs.task == 'fetch-promos'
+        run: |
+          npx tsx scripts/fetch-promos.ts
+          npx tsx scripts/add-promos.ts
 
       # Creates any printing TCGplayer sells that our RiftScribe-derived catalogue
       # lacks — Showcase/alt-art variants and, crucially, the R-numbered rune cycle
