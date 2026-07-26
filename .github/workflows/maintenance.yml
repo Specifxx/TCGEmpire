@@ -17,6 +17,7 @@ on:
           - cards-sync       # fetch latest RiftScribe snapshot + additive upsert
           - cards-manual     # apply prisma/manual-cards.json (promos/backstop)
           - tcg-printings    # create printings TCGplayer lists that we lack (Showcase/alt-art variants + the R-numbered rune cycle)
+          - fix-cloned-art   # scrape real official art for cloned promo/rune printings; clear wrong borrowed art to a placeholder where none exists
           - vendetta-pipeline # scrape official gallery + import VEN reveals
           - probe-sg         # read-only Singapore store scan (no DB writes)
           - probe-url        # read-only page fetch + font/style diagnostics (url input)
@@ -232,6 +233,21 @@ jobs:
       - name: Add missing TCGplayer printings (variants + rune cycle)
         if: inputs.task == 'tcg-printings'
         run: npx tsx scripts/add-tcg-printings.ts ${{ inputs.dry_run && '--dry' || '' }}
+
+      # Cloned promo/rune printings (add-tcg-printings.ts, add-promos.ts) had no
+      # independent image source and borrowed a donor card's art — sometimes a
+      # different set's version of the same rune, i.e. the wrong specific artwork.
+      # Re-scrapes the official gallery for every set (not just Vendetta) and swaps
+      # in the real photo where it exists; where it genuinely doesn't, clears
+      # Showcase-style variants to the site's existing generated-art placeholder
+      # instead of leaving a misleadingly-wrong borrowed photo in place.
+      - name: Fix cloned promo/rune art (real photos or a clean placeholder)
+        if: inputs.task == 'fix-cloned-art'
+        run: |
+          npm i --no-save playwright
+          npx playwright install --with-deps chromium
+          npx tsx scripts/fetch-official-images.ts
+          npx tsx scripts/fix-cloned-art.ts ${{ inputs.dry_run && '--dry' || '' }}
 
       - name: Probe Singapore stores (read-only market scan)
         if: inputs.task == 'probe-sg'
