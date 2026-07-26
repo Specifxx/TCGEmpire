@@ -25,9 +25,16 @@ export function DailyWrapBanner({ post }: { post: MarketReportPost }) {
         <span className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
           Daily Market Wrap
         </span>
-        <span className="truncate text-sm font-semibold text-white group-hover:text-emerald-200">
-          {post.article.title}
-        </span>
+        {/* Headline slides instead of truncating when it's longer than the space
+            available (same seamless-loop technique as VendettaRibbon: two copies
+            of the text, animate-marquee slides exactly one half-width). Pauses on
+            hover; reduced-motion users get a static first copy instead of a loop. */}
+        <div className="min-w-0 flex-1 overflow-hidden">
+          <div className="flex w-max animate-marquee items-center gap-10 whitespace-nowrap text-sm font-semibold text-white [animation-play-state:running] group-hover:text-emerald-200 group-hover:[animation-play-state:paused] motion-reduce:animate-none">
+            <span>{post.article.title}</span>
+            <span aria-hidden="true">{post.article.title}</span>
+          </div>
+        </div>
       </div>
 
       {/* Right — compact RiftCompare Index. The sparkline shows on every screen
