@@ -43,13 +43,19 @@ async function main() {
       skipped++;
       continue;
     }
+    // A promo of an alt-art printing ("193a") must look up its BASE card by the
+    // bare number ("193") — the base's own collectorNumber never carries the
+    // letter suffix. Without stripping it, every lettered promo (OGN-193a,
+    // SFD-118a/178a/195a, UNL-082b/178a/178b confirmed missing this way) fell
+    // through to "no base card" even though the underlying card obviously exists.
+    const bareNum = pr.num.replace(/[a-z*]/gi, "");
     const base = await prisma.card.findFirst({
       where:
         runeDonorWhere(pr) ?? {
           setCode: pr.set,
           isPromo: false,
           variant: null,
-          collectorNumber: { startsWith: `${pr.num}/` },
+          collectorNumber: { startsWith: `${bareNum}/` },
         },
     });
     if (!base) {
@@ -63,14 +69,14 @@ async function main() {
     //  - lowest prices (ALL four markets) belong to the base's listings, not this
     //    new printing — the importer fills them in once real promo listings match.
     //  - view/search counts and eBay state are per-printing popularity signals.
-    //  - collectorNumber: a rune promo's donor is matched by NAME (see
-    //    runeDonorWhere), not by number, so the donor's own number ("R06", say)
-    //    would otherwise leak onto every one of its promo siblings and collide on
-    //    slug — use pr.num itself (normalized to the DB's "R06b" capitalisation,
-    //    matching every other bare rune number already stored). Regular numbered
-    //    promos already had a number-matched donor, so this is a no-op for them.
+    //  - collectorNumber: the donor is matched by its BARE number (or, for runes,
+    //    by name — see runeDonorWhere) — either way the donor's OWN number lacks
+    //    the promo's distinguishing letter suffix ("193" not "193a"). Rebuilding
+    //    it from pr.num keeps that suffix, so a lettered promo never collides
+    //    (slug included) with its own base card or a sibling lettered promo.
     const { id, createdAt, slug, collectorNumber: donorNumber, ...rest } = base;
-    const collectorNumber = runeDonorWhere(pr) ? pr.num.replace(/^r/i, "R") : donorNumber;
+    const donorTotal = donorNumber.split("/")[1];
+    const collectorNumber = runeDonorWhere(pr) ? pr.num.replace(/^r/i, "R") : `${pr.num}/${donorTotal}`;
     const ok = await prisma.card
       .create({
         data: {
