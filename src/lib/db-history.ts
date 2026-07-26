@@ -23,14 +23,14 @@ import { PrismaClient } from "@prisma/client";
 // etc. tables it also creates cost negligible storage empty; only PriceHistory /
 // ClickEvent get real traffic).
 
-// HISTORY_DATABASE_URL_4 is the CURRENT history project (swapped in 2026-07-20
-// after the previous one — the base HISTORY_DATABASE_URL var, itself the
-// 2026-07-17 replacement for _3 — exhausted its monthly transfer allowance in
-// just 3 days). _2/_3/base are kept ONLY as fallbacks for anything not yet
-// migrated; treat them as read-only/near-exhausted, never the primary target.
-// Once everything's copied across (see scripts/migrate-history.ts) and nothing
-// references the older vars anymore, they can be removed entirely.
+// RH5 (secrets.RH5 / HISTORY_DATABASE_URL_5) is the CURRENT history project
+// (swapped in 2026-07-26 after HISTORY_DATABASE_URL_4 went unreachable —
+// P1001, connection refused). _4/base/_2/_3 are kept ONLY as fallbacks for
+// anything not yet migrated; treat them as dead/read-only, never the primary
+// target. Once everything's copied across (see scripts/migrate-history.ts)
+// and nothing references the older vars anymore, they can be removed entirely.
 const HISTORY_URL =
+  process.env.RH5 ||
   process.env.HISTORY_DATABASE_URL_4 ||
   process.env.HISTORY_DATABASE_URL ||
   process.env.HISTORY_DATABASE_URL_2 ||

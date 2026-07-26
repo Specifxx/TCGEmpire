@@ -1,36 +1,39 @@
 /**
  * One-time migration of the history/analytics tables (PriceHistory + ClickEvent)
  * into the CURRENT history database — used when a Neon history project exhausts its
- * monthly network-transfer allowance and is replaced.
+ * monthly network-transfer allowance or goes unreachable, and is replaced.
  *
- *   target  = HISTORY_DATABASE_URL_4 if set, else HISTORY_DATABASE_URL (the
- *             current project; schema pushed first) — mirrors src/lib/db-history.ts's
- *             own priority, so this script always fills whatever the app itself reads.
- *   sources = main DATABASE_URL + every OLDER history project (base, _2, _3), in order
+ *   target  = RH5 if set, else HISTORY_DATABASE_URL_4, else HISTORY_DATABASE_URL —
+ *             mirrors src/lib/db-history.ts's own priority, so this script always
+ *             fills whatever the app itself reads.
+ *   sources = main DATABASE_URL + every OLDER history project (_4, base, _2, _3),
+ *             in order
  *
- * NOTE (2026-07-20): the base HISTORY_DATABASE_URL project (itself the 2026-07-17
- * replacement for _3) exhausted its transfer allowance in just 3 days, so this
- * rotation DOES bump the suffix to _4 rather than reusing the base var name.
+ * NOTE (2026-07-26): HISTORY_DATABASE_URL_4 (the project in use since 2026-07-20)
+ * went unreachable (P1001, connection refused) — RH5 is its replacement. _4 is now
+ * a source only; it will fail gracefully below (skipped with a loud log) since it
+ * can no longer be read.
  *
  * The target is filled from ALL sources with skipDuplicates (the PriceHistory
  * unique key [cardId, country, day] dedupes overlaps), so running it is safe and
- * idempotent. A source that refuses reads (an exhausted project) is skipped with a
- * loud log — whatever copied is kept and the site runs on the new DB regardless.
+ * idempotent. A source that refuses reads (an exhausted/dead project) is skipped
+ * with a loud log — whatever copied is kept and the site runs on the new DB regardless.
  *
  * Usage (CI): npx tsx scripts/migrate-history.ts
  */
 import { PrismaClient } from "@prisma/client";
 
 const MAIN_URL = process.env.DATABASE_URL;
-const TARGET_URL = process.env.HISTORY_DATABASE_URL_4 || process.env.HISTORY_DATABASE_URL;
+const TARGET_URL = process.env.RH5 || process.env.HISTORY_DATABASE_URL_4 || process.env.HISTORY_DATABASE_URL;
 
 if (!MAIN_URL) { console.error("DATABASE_URL is not set."); process.exit(1); }
-if (!TARGET_URL) { console.error("Neither HISTORY_DATABASE_URL_4 nor HISTORY_DATABASE_URL is set — point one at the current history project first."); process.exit(1); }
+if (!TARGET_URL) { console.error("None of RH5 / HISTORY_DATABASE_URL_4 / HISTORY_DATABASE_URL is set — point one at the current history project first."); process.exit(1); }
 
 // Every distinct source to pull from (main + older history projects), excluding the
 // target itself. De-duplicated by URL so we never read the same DB twice.
 const sourceUrls = [
   { label: "main (DATABASE_URL)", url: MAIN_URL },
+  { label: "HISTORY_DATABASE_URL_4", url: process.env.HISTORY_DATABASE_URL_4 },
   { label: "HISTORY_DATABASE_URL", url: process.env.HISTORY_DATABASE_URL },
   { label: "HISTORY_DATABASE_URL_2", url: process.env.HISTORY_DATABASE_URL_2 },
   { label: "HISTORY_DATABASE_URL_3", url: process.env.HISTORY_DATABASE_URL_3 },
@@ -87,7 +90,7 @@ async function copyTable(from: PrismaClient, label: string, table: "priceHistory
 }
 
 async function run() {
-  console.log(`Target: ${process.env.HISTORY_DATABASE_URL_4 ? "HISTORY_DATABASE_URL_4" : "HISTORY_DATABASE_URL"}`);
+  console.log(`Target: ${process.env.RH5 ? "RH5" : process.env.HISTORY_DATABASE_URL_4 ? "HISTORY_DATABASE_URL_4" : "HISTORY_DATABASE_URL"}`);
   console.log(`Sources: ${sources.map((s) => s.label).join(", ") || "(none)"}\n`);
 
   console.log("— Counts before —");

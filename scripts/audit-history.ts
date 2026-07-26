@@ -1,9 +1,10 @@
 /**
  * Read-only diagnostic for the price-history DB (the one db-history.ts resolves —
- * HISTORY_DATABASE_URL_4 in prod as of 2026-07-20). Prints, for the last 14 Sydney
- * days and per country: row count, distinct cards, and min/median/max
- * lowestPriceCents — so a gap (missing recent days) or a scale jump (broken
- * index) is obvious in the log. Also prints which DB it actually connected to.
+ * RH5 in prod as of 2026-07-26, after HISTORY_DATABASE_URL_4 went unreachable).
+ * Prints, for the last 14 Sydney days and per country: row count, distinct
+ * cards, and min/median/max lowestPriceCents — so a gap (missing recent days)
+ * or a scale jump (broken index) is obvious in the log. Also prints which DB
+ * it actually connected to.
  *
  * Usage: npx tsx scripts/audit-history.ts
  */
@@ -20,7 +21,8 @@ function median(xs: number[]): number {
 async function main() {
   // Mirrors db-history.ts's own resolution order exactly.
   const which =
-    process.env.HISTORY_DATABASE_URL_4 ? "HISTORY_DATABASE_URL_4"
+    process.env.RH5 ? "RH5"
+    : process.env.HISTORY_DATABASE_URL_4 ? "HISTORY_DATABASE_URL_4"
     : process.env.HISTORY_DATABASE_URL ? "HISTORY_DATABASE_URL"
     : process.env.HISTORY_DATABASE_URL_2 ? "HISTORY_DATABASE_URL_2"
     : process.env.HISTORY_DATABASE_URL_3 ? "HISTORY_DATABASE_URL_3"

@@ -87,9 +87,9 @@ jobs:
           # The click/price-history tables can live in a SECOND Neon project
           # (src/lib/db-history.ts). Ordinary pushes never reach it, so new columns
           # (e.g. ClickEvent.path) 500 the admin clicks page until pushed here too.
-          # HISTORY_DATABASE_URL_4 is the CURRENT project (highest suffix wins —
-          # see db-history.ts); base/_2/_3 are older, near/fully-exhausted fallbacks only.
-          HISTORY_DB: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 || secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL || secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 || secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
+          # RH5 is the CURRENT project (2026-07-26, after _4 went unreachable —
+          # see db-history.ts); _4/base/_2/_3 are older, dead/exhausted fallbacks only.
+          HISTORY_DB: ${{ secrets.RH5 || vars.RH5 || secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 || secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL || secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 || secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
         run: |
           # --accept-data-loss: some schema changes are intentionally destructive
           # (e.g. dropping a removed feature's tables/columns) — prisma db push
@@ -107,14 +107,15 @@ jobs:
       - name: Migrate history to the new history database
         if: inputs.task == 'migrate-history'
         env:
+          RH5: ${{ secrets.RH5 || vars.RH5 }}
           HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
           HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
         run: |
-          TARGET="${HISTORY_DATABASE_URL_4:-$HISTORY_DATABASE_URL}"
+          TARGET="${RH5:-${HISTORY_DATABASE_URL_4:-$HISTORY_DATABASE_URL}}"
           if [ -z "$TARGET" ]; then
-            echo "::error::No target history DB visible to Actions (HISTORY_DATABASE_URL_4 / HISTORY_DATABASE_URL)."
+            echo "::error::No target history DB visible to Actions (RH5 / HISTORY_DATABASE_URL_4 / HISTORY_DATABASE_URL)."
             exit 1
           fi
           echo "Pushing schema to the target history database…"
@@ -321,6 +322,7 @@ jobs:
           EBAY_FORCE: ${{ inputs.ebay_sg && '1' || '' }}
           EBAY_ONLY_MARKET: ${{ inputs.ebay_sg && 'SG' || '' }}
           # Route history/click writes to the current history project (db-history.ts).
+          RH5: ${{ secrets.RH5 || vars.RH5 }}
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
           HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
@@ -341,6 +343,7 @@ jobs:
       - name: Audit price history (read-only)
         if: inputs.task == 'audit-history'
         env:
+          RH5: ${{ secrets.RH5 || vars.RH5 }}
           HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
           HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
@@ -400,6 +403,7 @@ jobs:
       - name: Audit outbound clicks (read-only leaderboard)
         if: inputs.task == 'audit-clicks'
         env:
+          RH5: ${{ secrets.RH5 || vars.RH5 }}
           HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
           HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
