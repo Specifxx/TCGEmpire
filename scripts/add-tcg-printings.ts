@@ -116,6 +116,14 @@ async function main() {
   // "(Promo)" or a bare trailing "Promo"/"P" in the name — as opposed to the
   // regular pack-pulled Showcase/alt-art printing of the same numbered card.
   const PROMO_NAME = /\(promo\)|\bpromo\b/i;
+  // TCGplayer sells organized-play/event promos (the Nexus Night rune cycle —
+  // Fury/Calm/Mind/Body/Chaos/Order — "166b/298" etc.) under their OWN "set" in
+  // its taxonomy, even though the number carries a real "/NNN" denominator and
+  // so takes path 1 below, not the setless path 2. Path 1 used to hardcode
+  // isPromo=false for every in-set variant, so these six were created with the
+  // right name/art/number but silently weren't flagged as promos at all — no
+  // PROMO badge, no "-promo" slug, invisible to the isPromo=true browse filter.
+  const OP_SET_NAME = /organized play/i;
   for (const p of products) {
     const numStr = p.customAttributes?.number;
     const externalId = `tcg-${p.productId}`;
@@ -126,11 +134,13 @@ async function main() {
       const [num, total] = numStr.split("/");
       const sc = setFromTotal(total);
       if (sc) {
-        if (have.has(`${sc}|${numKey(num)}`)) continue; // already have it
+        const isOpPromo = OP_SET_NAME.test(p.setName ?? "");
+        const haveKey = isOpPromo ? `${sc}|${numKey(num)}|promo` : `${sc}|${numKey(num)}`;
+        if (have.has(haveKey)) continue; // already have it
         const base = baseBy.get(`${sc}|${num.replace(/[a-z*]/gi, "")}/${total}`);
         if (base) {
           const letter = (num.match(/[a-z]+/i)?.[0] || "").toLowerCase() || null;
-          await cloneCard(base, numStr, externalId, letter, false, "VARIANT");
+          await cloneCard(base, numStr, externalId, letter, isOpPromo, isOpPromo ? "PROMO(org-play)" : "VARIANT");
         } else { noBase++; if (samples.length < 25) samples.push(`NO BASE: ${p.productName} ${numStr}`); }
         continue;
       }
