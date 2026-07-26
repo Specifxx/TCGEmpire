@@ -99,6 +99,7 @@ export async function POST(req: Request) {
       currency,
       country,
       status: "ACTIVE",
+      photoUrls: v.photoUrls,
     },
   });
 

@@ -37,6 +37,11 @@ export function platformFeeCents(priceCents: number, sellerIsPremium?: boolean):
 export const MARKETPLACE_SHIP_DEADLINE_DAYS = Number(process.env.MARKETPLACE_SHIP_DEADLINE_DAYS ?? 14);
 export const MARKETPLACE_AUTO_RELEASE_DAYS = Number(process.env.MARKETPLACE_AUTO_RELEASE_DAYS ?? 14);
 
+// Max seller-uploaded photos per listing (the actual physical copy, not the
+// catalogue art) — client components (the upload widget) need this to cap the
+// file picker/preview the same way the server enforces it.
+export const MARKETPLACE_LISTING_MAX_PHOTOS = 4;
+
 // SHIPPED orders older than this land in the admin "needs attention" queue —
 // most orders auto-release without any admin involvement, but a parcel this old
 // with no buyer confirmation deserves a human glance before its release date.

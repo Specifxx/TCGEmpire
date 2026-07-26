@@ -740,6 +740,11 @@ model MarketplaceListing {
   currency   String   @default("AUD")
   country    String   @default("AU") // market this listing serves
   status     String   @default("ACTIVE") // ACTIVE, SOLD_OUT, PAUSED, REMOVED
+  // Seller-uploaded photos of the ACTUAL physical copy being sold (not the
+  // catalogue art) — builds buyer trust on condition/authenticity. Vercel Blob
+  // URLs only (enforced in lib/marketplace.ts's validateListingInput); empty
+  // for most listings, which still show the catalogue image everywhere.
+  photoUrls  String[] @default([])
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 

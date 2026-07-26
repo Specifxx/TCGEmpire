@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CONDITION_KEYS } from "@/lib/constants";
 import { CURRENCY_BY_COUNTRY } from "@/lib/marketplace-countries";
-import { MARKETPLACE_FEE_BPS, MARKETPLACE_PREMIUM_FEE_BPS, platformFeeCents } from "@/lib/marketplace-policy";
+import { MARKETPLACE_FEE_BPS, MARKETPLACE_PREMIUM_FEE_BPS, platformFeeCents, MARKETPLACE_LISTING_MAX_PHOTOS } from "@/lib/marketplace-policy";
 import { formatMoney } from "@/lib/format";
 import { cardDisplayName } from "@/lib/card-name";
 import { StripeErrorNotice } from "./StripeErrorNotice";
@@ -61,6 +61,7 @@ interface Listing {
   currency: string;
   country: string;
   status: string;
+  photoUrls: string[];
   card: SearchCard;
 }
 
@@ -307,6 +308,7 @@ function AddListing({ country, currency, isPremiumSeller, onAdded }: { country: 
   const [price, setPrice] = useState("");
   const [qty, setQty] = useState("1");
   const [region, setRegion] = useState<Country>(country);
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const cur = CURRENCY_BY_COUNTRY[region];
@@ -326,6 +328,7 @@ function AddListing({ country, currency, isPremiumSeller, onAdded }: { country: 
         priceCents: Math.round(parseFloat(price || "0") * 100),
         quantity: parseInt(qty || "1", 10),
         country: region,
+        photoUrls,
       }),
     });
     const data = await res.json();
@@ -336,6 +339,7 @@ function AddListing({ country, currency, isPremiumSeller, onAdded }: { country: 
       setPrice("");
       setQty("1");
       setIsFoil(false);
+      setPhotoUrls([]);
       onAdded();
     } else {
       setMsg(data.error ?? "Failed to list");
@@ -409,11 +413,83 @@ function AddListing({ country, currency, isPremiumSeller, onAdded }: { country: 
           </p>
         );
       })()}
+      <div className="mt-3">
+        <PhotoUploader photoUrls={photoUrls} onChange={setPhotoUrls} />
+      </div>
       <div className="mt-3 flex items-center gap-3">
         <button type="submit" disabled={saving || !card} className="btn-primary disabled:opacity-50">{saving ? "Listing…" : "List card"}</button>
         {msg && <span className="text-sm text-slate-400">{msg}</span>}
       </div>
     </form>
+  );
+}
+
+// Photos of the ACTUAL card the seller is listing (not the catalogue art) — the
+// single biggest trust signal on a P2P marketplace. Uploads immediately on file
+// pick (via /api/marketplace/photos → Vercel Blob) and hands the resulting URLs
+// back to the parent form/listing, which is all that's ever sent to the listing
+// create/update endpoints.
+function PhotoUploader({ photoUrls, onChange }: { photoUrls: string[]; onChange: (urls: string[]) => void }) {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  async function handleFiles(files: FileList | null) {
+    if (!files || !files.length) return;
+    setError(null);
+    const remaining = MARKETPLACE_LISTING_MAX_PHOTOS - photoUrls.length;
+    if (remaining <= 0) {
+      setError(`Up to ${MARKETPLACE_LISTING_MAX_PHOTOS} photos per listing`);
+      return;
+    }
+    const toUpload = Array.from(files).slice(0, remaining);
+    setUploading(true);
+    const form = new FormData();
+    for (const f of toUpload) form.append("file", f);
+    const res = await fetch("/api/marketplace/photos", { method: "POST", body: form });
+    const data = await res.json().catch(() => ({}));
+    setUploading(false);
+    if (res.ok && Array.isArray(data.urls)) onChange([...photoUrls, ...data.urls]);
+    else setError(data.error ?? "Upload failed");
+    if (inputRef.current) inputRef.current.value = "";
+  }
+
+  return (
+    <div>
+      <span className="mb-1.5 block text-sm text-slate-400">Photos of this exact card (optional)</span>
+      <div className="flex flex-wrap gap-2">
+        {photoUrls.map((u) => (
+          <div key={u} className="relative">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={u} alt="" className="h-16 w-16 rounded-md border border-ink-700 object-cover" />
+            <button
+              type="button"
+              onClick={() => onChange(photoUrls.filter((x) => x !== u))}
+              aria-label="Remove photo"
+              className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-ink-950 text-[10px] text-rose-300 ring-1 ring-ink-700 hover:bg-rose-500/20"
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+        {photoUrls.length < MARKETPLACE_LISTING_MAX_PHOTOS && (
+          <label className="grid h-16 w-16 cursor-pointer place-items-center rounded-md border border-dashed border-ink-700 text-center text-[11px] text-slate-500 hover:border-brand-500 hover:text-brand-300">
+            {uploading ? "…" : "+ Add"}
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              disabled={uploading}
+              onChange={(e) => void handleFiles(e.target.files)}
+              className="hidden"
+            />
+          </label>
+        )}
+      </div>
+      {error && <p className="mt-1 text-xs text-rose-300">{error}</p>}
+      <p className="mt-1 text-[11px] text-slate-600">A real photo of the actual card builds buyer trust — optional but recommended.</p>
+    </div>
   );
 }
 
@@ -478,6 +554,7 @@ function ListingRow({ l, isPremiumSeller, onChange }: { l: Listing; isPremiumSel
   const [price, setPrice] = useState((l.priceCents / 100).toFixed(2));
   const [qty, setQty] = useState(String(l.quantity));
   const [region, setRegion] = useState<Country>((l.country as Country) ?? "AU");
+  const [photoUrls, setPhotoUrls] = useState<string[]>(l.photoUrls);
   const [busy, setBusy] = useState(false);
 
   async function patch(body: Record<string, unknown>) {
@@ -493,13 +570,22 @@ function ListingRow({ l, isPremiumSeller, onChange }: { l: Listing; isPremiumSel
     onChange();
   }
   function save() {
-    void patch({ priceCents: Math.round(parseFloat(price || "0") * 100), quantity: parseInt(qty || "0", 10), country: region });
+    void patch({
+      priceCents: Math.round(parseFloat(price || "0") * 100),
+      quantity: parseInt(qty || "0", 10),
+      country: region,
+      photoUrls,
+    });
   }
 
   return (
     <li className="flex flex-wrap items-center gap-3 py-2.5">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      {l.card.imageThumbUrl ? <img src={l.card.imageThumbUrl} alt="" aria-hidden="true" className="h-12 w-9 rounded object-cover" /> : <div className="h-12 w-9 rounded bg-ink-800" />}
+      {(l.photoUrls[0] ?? l.card.imageThumbUrl) ? (
+        <img src={l.photoUrls[0] ?? l.card.imageThumbUrl!} alt="" aria-hidden="true" className="h-12 w-9 rounded object-cover" />
+      ) : (
+        <div className="h-12 w-9 rounded bg-ink-800" />
+      )}
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm font-medium text-white">{cardDisplayName(l.card.name, l.card)}</div>
         <div className="text-xs text-slate-500">
@@ -518,6 +604,9 @@ function ListingRow({ l, isPremiumSeller, onChange }: { l: Listing; isPremiumSel
           <input type="number" min={0} max={999} value={qty} onChange={(e) => setQty(e.target.value)} className="input w-14 py-1 text-sm" aria-label="Quantity" />
           <button onClick={save} disabled={busy} className="rounded bg-brand-500/20 px-2 py-1 text-[11px] font-semibold text-brand-300 hover:bg-brand-500/30">{busy ? "…" : "Save"}</button>
           <button onClick={() => setEditing(false)} className="rounded bg-ink-800 px-2 py-1 text-[11px] text-slate-400 hover:bg-ink-700">Cancel</button>
+          <div className="mt-2 w-full">
+            <PhotoUploader photoUrls={photoUrls} onChange={setPhotoUrls} />
+          </div>
         </>
       ) : (
         <>
