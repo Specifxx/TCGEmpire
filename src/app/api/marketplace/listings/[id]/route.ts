@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { importMarketplaceListings, MARKETPLACE_COUNTRIES, CURRENCY_BY_COUNTRY, MARKETPLACE_LISTING_MAX_PHOTOS, isOwnBlobUrl } from "@/lib/marketplace";
+import { importMarketplaceListings, MARKETPLACE_COUNTRIES, CURRENCY_BY_COUNTRY } from "@/lib/marketplace";
 import { revalidateCardPage } from "@/lib/revalidate-card";
 import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit";
 
@@ -13,9 +13,6 @@ const patchSchema = z.object({
   quantity: z.number().int().min(0).max(999).optional(),
   country: z.enum(MARKETPLACE_COUNTRIES).optional(),
   status: z.enum(["ACTIVE", "PAUSED"]).optional(),
-  // Same isOwnBlobUrl check as the create path (lib/marketplace.ts) — only our
-  // own Blob-store URLs can ever land on a listing, never an arbitrary/hotlinked one.
-  photoUrls: z.array(z.string().url().refine(isOwnBlobUrl)).max(MARKETPLACE_LISTING_MAX_PHOTOS).optional(),
 });
 
 async function ownListing(userId: string, id: string) {
@@ -53,7 +50,6 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       ...(d.priceCents != null ? { priceCents: d.priceCents } : {}),
       ...(d.quantity != null ? { quantity: d.quantity } : {}),
       ...(d.country ? { country: d.country, currency: CURRENCY_BY_COUNTRY[d.country] } : {}),
-      ...(d.photoUrls != null ? { photoUrls: d.photoUrls } : {}),
       status,
     },
   });

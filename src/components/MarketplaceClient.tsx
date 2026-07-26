@@ -19,9 +19,6 @@ export interface MktOffer {
   isFoil: boolean;
   quantity: number;
   currency: string;
-  // Seller-uploaded photos of the actual physical copy (not the catalogue
-  // art) — empty for most listings, which show the catalogue image only.
-  photoUrls: string[];
   sellerId: string;
   sellerName: string;
   isOfficial: boolean;
@@ -506,16 +503,6 @@ function OffersModal({
                 </li>
               )}
               <li key={o.id} className={`flex flex-wrap items-center gap-3 p-3 ${!o.inRegion ? "opacity-60" : ""}`}>
-                {o.photoUrls.length > 0 && (
-                  <a href={o.photoUrls[0]} target="_blank" rel="noopener noreferrer" className="shrink-0" title="Seller's photo of this exact copy">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={o.photoUrls[0]}
-                      alt="Seller's photo of the actual card"
-                      className="h-14 w-14 rounded-md border border-ink-700 object-cover"
-                    />
-                  </a>
-                )}
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-white">
                     <Link href={`/marketplace/seller/${o.sellerId}`} className="hover:text-brand-300 hover:underline">{o.sellerName}</Link>

@@ -18,21 +18,12 @@ import {
   platformFeeCents,
   MARKETPLACE_SHIP_DEADLINE_DAYS,
   MARKETPLACE_AUTO_RELEASE_DAYS,
-  MARKETPLACE_LISTING_MAX_PHOTOS,
 } from "./marketplace-policy";
 
 export { MARKETPLACE_LAUNCH_COUNTRIES, isLaunchCountry, CURRENCY_BY_COUNTRY };
 // Fee + escrow-timing policy lives in the prisma-free ./marketplace-policy (so
 // client components can import it); re-exported here for all server-side callers.
-export {
-  MARKETPLACE_FEE_BPS,
-  MARKETPLACE_PREMIUM_FEE_BPS,
-  marketplaceFeeBps,
-  platformFeeCents,
-  MARKETPLACE_SHIP_DEADLINE_DAYS,
-  MARKETPLACE_AUTO_RELEASE_DAYS,
-  MARKETPLACE_LISTING_MAX_PHOTOS,
-};
+export { MARKETPLACE_FEE_BPS, MARKETPLACE_PREMIUM_FEE_BPS, marketplaceFeeBps, platformFeeCents, MARKETPLACE_SHIP_DEADLINE_DAYS, MARKETPLACE_AUTO_RELEASE_DAYS };
 
 // Per-market retailer keys, mirroring how eBay uses ebay / ebay_us / ebay_uk. The
 // RetailerPrice unique key is [cardId, retailer, condition, isFoil] (no country), so
@@ -149,23 +140,9 @@ export async function getActiveListingsForCard(cardId: string) {
   });
 }
 
-// Only ever accept URLs pointing at OUR OWN Vercel Blob store (the one
-// /api/marketplace/photos uploads to). Rejecting anything else stops a seller
-// (or a compromised client) from injecting an arbitrary/hotlinked/malicious
-// image URL straight into a listing. Exported so both the create (below) and
-// update (api/marketplace/listings/[id]/route.ts) paths share one check.
-export function isOwnBlobUrl(u: string): boolean {
-  try {
-    const { protocol, hostname } = new URL(u);
-    return protocol === "https:" && hostname.endsWith(".public.blob.vercel-storage.com");
-  } catch {
-    return false;
-  }
-}
-
 // Validate a listing payload from a seller. Returns a normalised object or an error.
 export function validateListingInput(input: any):
-  | { ok: true; condition: string; isFoil: boolean; priceCents: number; quantity: number; photoUrls: string[] }
+  | { ok: true; condition: string; isFoil: boolean; priceCents: number; quantity: number }
   | { ok: false; error: string } {
   const condition = String(input?.condition ?? "").toUpperCase();
   if (!CONDITION_KEYS.includes(condition)) return { ok: false, error: "Invalid condition" };
@@ -178,13 +155,7 @@ export function validateListingInput(input: any):
   if (!Number.isFinite(quantity) || quantity < 1 || quantity > 999) {
     return { ok: false, error: "Quantity must be between 1 and 999" };
   }
-  const rawPhotos = Array.isArray(input?.photoUrls) ? input.photoUrls : [];
-  if (rawPhotos.length > MARKETPLACE_LISTING_MAX_PHOTOS) {
-    return { ok: false, error: `At most ${MARKETPLACE_LISTING_MAX_PHOTOS} photos per listing` };
-  }
-  const photoUrls = rawPhotos.filter((u: unknown) => typeof u === "string" && isOwnBlobUrl(u));
-  if (photoUrls.length !== rawPhotos.length) return { ok: false, error: "Invalid photo URL" };
-  return { ok: true, condition, isFoil, priceCents, quantity, photoUrls };
+  return { ok: true, condition, isFoil, priceCents, quantity };
 }
 
 // Rebuild the marketplace's rows in RetailerPrice from active listings, so listed

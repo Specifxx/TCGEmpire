@@ -115,7 +115,6 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
       isFoil: l.isFoil,
       quantity: l.quantity,
       currency: l.currency,
-      photoUrls: l.photoUrls,
       sellerId: l.sellerId,
       sellerName: l.seller.sellerProfile?.shopName ?? l.seller.displayName,
       isOfficial: !!l.seller.sellerProfile?.isOfficial,
