@@ -26,6 +26,7 @@ on:
           - import-sealed     # refresh sealed products (stores + eBay AU + TCGplayer US) + self-heal stale rows
           - migrate-history  # copy PriceHistory/ClickEvent to the newest history DB
           - audit-ven        # read-only census of VEN cards (chase-tier fields)
+          - diag-ogn-promo   # TEMP: diagnostic for the OGN Nexus Night rune promos
           - audit-history    # read-only per-day price-history diagnostic
           - audit-users      # read-only user/Premium census (no PII printed)
           - audit-clicks     # read-only outbound-click leaderboard per retailer (affiliate-outreach priority)
@@ -339,6 +340,10 @@ jobs:
       - name: Audit VEN cards (read-only census)
         if: inputs.task == 'audit-ven'
         run: npx tsx scripts/audit-ven.ts
+
+      - name: TEMP diagnostic (OGN Nexus Night rune promos)
+        if: inputs.task == 'diag-ogn-promo'
+        run: npx tsx scripts/diag-ogn-promo.ts
 
       - name: Audit price history (read-only)
         if: inputs.task == 'audit-history'
