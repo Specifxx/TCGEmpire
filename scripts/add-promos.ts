@@ -54,6 +54,7 @@ async function main() {
     });
     if (!base) {
       noBase++;
+      if (noBase <= 25) console.log(`  NO BASE: ${pr.set}-${pr.num}`);
       continue;
     }
     // Don't clone identity or per-printing state from the base:

@@ -33,6 +33,8 @@ async function main() {
   writeFileSync(out, JSON.stringify(promos, null, 0));
   console.log(`Saved ${promos.length} promo printings to ${out}`);
   console.log("samples:", promos.slice(0, 5).map((p) => `${p.set}-${p.num}`).join(", "));
+  const runes = promos.filter((p) => /^r/i.test(p.num));
+  console.log(`rune-shaped promos (${runes.length}):`, runes.map((p) => `${p.set}-${p.num}`).join(", "));
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });
