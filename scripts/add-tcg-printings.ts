@@ -112,6 +112,10 @@ async function main() {
   }
 
   const SEALED = /display|booster|bundle|\bbox\b|\bcase\b|\bpack\b|\bdeck\b/i;
+  // TCGplayer's own signal that a product is a distinct promotional printing —
+  // "(Promo)" or a bare trailing "Promo"/"P" in the name — as opposed to the
+  // regular pack-pulled Showcase/alt-art printing of the same numbered card.
+  const PROMO_NAME = /\(promo\)|\bpromo\b/i;
   for (const p of products) {
     const numStr = p.customAttributes?.number;
     const externalId = `tcg-${p.productId}`;
@@ -146,7 +150,17 @@ async function main() {
       const sc = setCodeFromSetName(p.setName);
       const numSeg = numStr.split("/")[0];
       if (sc && numSeg) {
-        if (have.has(`${sc}|${numKey(numSeg)}`)) continue; // already have it
+        // A product explicitly labelled "(Promo)" is a DIFFERENT physical printing
+        // from the plain/Showcase card sharing the same number — e.g. a "R06b" pulled
+        // from packs vs a separately-numbered "R06b P" given out at an event. Keying
+        // it in its OWN namespace (rather than the shared `have` key every other
+        // printing of this number uses) stops the second product from being silently
+        // treated as "already have it" and dropped — that's exactly the bug: R06b P
+        // (and siblings) never got created because R06b's Showcase print claimed the
+        // key first.
+        const isExplicitPromo = PROMO_NAME.test(p.productName);
+        const haveKey = isExplicitPromo ? `${sc}|${numKey(numSeg)}|promo` : `${sc}|${numKey(numSeg)}`;
+        if (have.has(haveKey)) continue; // already have it
         // "R04a" → prefix "R", digits "04", suffix "a" (the Showcase variant letter).
         const shape = numSeg.match(/^([a-z]*)(\d+)([a-z]*)$/i);
         const cleanName = p.productName.replace(/\s*\([^)]*\)\s*$/, "").trim();
@@ -156,10 +170,14 @@ async function main() {
         if (donor) {
           // A parseable number is a real in-set printing (variant letter = Showcase
           // treatment); anything else ("NN1", "WB25") is an organized-play promo.
-          const letter = shape ? (shape[3] || "").toLowerCase() || null : null;
-          const isPromo = !shape;
-          await cloneCard(donor, numSeg, externalId, letter, isPromo, isPromo ? "PROMO" : "SETLESS", sc);
-          have.add(`${sc}|${numKey(numSeg)}`);
+          // An explicit "(Promo)" name always wins regardless of shape, and gets a
+          // "P"-suffixed collector number so it can never collide (slug uniqueness)
+          // with the non-promo printing of the same base number.
+          const letter = !isExplicitPromo && shape ? (shape[3] || "").toLowerCase() || null : null;
+          const isPromo = isExplicitPromo || !shape;
+          const collectorNumber = isExplicitPromo ? `${numSeg}P` : numSeg;
+          await cloneCard(donor, collectorNumber, externalId, letter, isPromo, isExplicitPromo ? "PROMO(named)" : isPromo ? "PROMO" : "SETLESS", sc);
+          have.add(haveKey);
           continue;
         }
         noBase++;
