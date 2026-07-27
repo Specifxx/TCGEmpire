@@ -64,6 +64,14 @@ const nextConfig = {
         destination: "/browse",
         permanent: true,
       },
+      // Retired the proxy printer entirely (thin/low-value utility page, part of
+      // the AdSense Publisher Policy remediation). 301 any indexed/inbound links
+      // (incl. ?list= shares) to the deck pricer, its nearest surviving equivalent.
+      {
+        source: "/proxy",
+        destination: "/deck",
+        permanent: true,
+      },
     ];
   },
   async headers() {

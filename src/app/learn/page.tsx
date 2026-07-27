@@ -137,7 +137,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "How can I practice without buying cards?",
-    a: "Print a test deck with the free proxy tool, learn the card pool with the daily Riftle game, and browse real tournament decklists — all free on RiftCompare.",
+    a: "Learn the card pool with the daily Riftle game, and browse real tournament decklists to see how they're built — all free on RiftCompare.",
   },
 ];
 

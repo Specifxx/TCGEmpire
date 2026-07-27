@@ -106,12 +106,6 @@ const GROUPS: ToolGroup[] = [
         title: "Trade calculator",
         desc: "Value both sides of a card trade fairly before you commit.",
       },
-      {
-        href: "/proxy",
-        emoji: "🖨️",
-        title: "Proxy printer",
-        desc: "Generate print-ready proxy sheets for playtesting before you buy the real cards.",
-      },
     ],
   },
 ];

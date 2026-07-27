@@ -21,7 +21,6 @@ const DESC: Record<string, string> = {
   "/decks": "Tournament meta decks, each costed live from current card prices.",
   "/deck": "Deck builder — assemble a deck and price it in real time.",
   "/trade": "Trade calculator — value two sides of a card trade fairly.",
-  "/proxy": "Proxy printer for playtesting.",
   "/riftle": "Riftle — the daily Riftbound card guessing game.",
   "/games": "Free Riftbound mini-games (Riftle, pack sim, price games and more).",
   "/learn": "Learn Riftbound: an interactive new-player guide with real cards.",

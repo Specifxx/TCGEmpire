@@ -149,16 +149,6 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
           >
             {shared ? "✓ Link copied!" : "🔗 Copy shareable link"}
           </button>
-          <a
-            href={text.trim() ? `/proxy?list=${encodeURIComponent(encodeList(text))}` : undefined}
-            aria-disabled={!text.trim()}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`btn-ghost mt-2 flex w-full justify-center text-sm ${!text.trim() ? "pointer-events-none opacity-50" : ""}`}
-            title="Open printable proxy sheets for this deck"
-          >
-            🖨 Printable proxy sheet
-          </a>
         </div>
 
         {/* Card preview — fills in when you hover a matched card in the results. */}

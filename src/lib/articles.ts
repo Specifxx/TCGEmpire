@@ -123,7 +123,7 @@ If you like building decks, enjoy League, or want to get into a TCG on the groun
 
 ## Try before you spend
 
-You can get a feel for the cards completely free: play **[Riftle](/riftle)**, our daily card game, print test decks with the **[proxy tool](/proxy)**, and read **[Riftbound for beginners](/guides/riftbound-for-beginners)**. When you're ready to buy, **[compare every store](/browse)** so you start out paying the least.`,
+You can get a feel for the cards completely free: play **[Riftle](/riftle)**, our daily card game, and read **[Riftbound for beginners](/guides/riftbound-for-beginners)**. When you're ready to buy, **[compare every store](/browse)** so you start out paying the least.`,
   },
   {
     slug: "buying-singles-vs-opening-packs",
@@ -579,8 +579,8 @@ Riftbound is a collectible card game set in the League of Legends universe. You 
 
 ## Tips for new players
 
-- **Want to test a deck before buying?** Print proxies with the **[proxy sheet tool](/proxy)**, then buy the real cards once you've settled on a list.
 - **Browse the meta** on the **[decks page](/decks)** to see what top players run — and what it costs to build.
+- **Price it before you buy** — drop a decklist into the **[deck pricer](/deck)** to see the full cost across stores before committing.
 
 Ready to dive in? **[Browse the Riftbound card database](/browse)** or **[compare sealed products](/sealed)** to get started.`,
   },
@@ -649,7 +649,7 @@ Paste any decklist into the **[deck pricer](/deck)** and it matches every card t
 - **Use base printings, not alt-arts** — the base card plays identically for far less. RiftCompare labels each printing in the card name so you can pick the cheap base version on the **[card database](/browse)**.
 - **Buy singles, not boxes** — for a specific list, singles are almost always cheaper.
 - **Consolidate orders** — buying several cards from one store can unlock free shipping and beat splitting an order.
-- **Test before you buy** — print a deck with the **[proxy sheet tool](/proxy)**, make sure you like it, then buy the real cards.
+- **Price the whole list first** — the **[deck pricer](/deck)** totals a decklist across every store before you commit to buying.
 
 ## Then find the cheapest cards
 
@@ -773,7 +773,7 @@ Against aggressive decks, keep cheap blockers and removal; against slower decks,
 
 At tournaments you play best-of-three, and between games you can swap up to your full sideboard (8 cards) in and out. The idea is to tune your deck to the matchup: bring in extra removal against go-wide decks, more resilient threats against control, or anti-aggro tools when you're on the back foot. Plan your swaps **before** the event — for each common matchup, decide which cards come out and which come in, so you're not guessing at the table.
 
-Want to test these ideas without buying in first? Print a list with the **[proxy sheet tool](/proxy)**, practise your mulligans and sideboard plan, then **[price the final deck](/deck)** and buy the cheapest copies across stores.`,
+Want to try these ideas out before committing? **[Price the final deck](/deck)** across every store first, so you know exactly what the build costs before you buy.`,
   },
   {
     slug: "where-to-buy-riftbound-australia",
