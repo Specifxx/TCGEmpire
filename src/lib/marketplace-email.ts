@@ -228,6 +228,35 @@ export async function sendCancelledMutualEmail(to: string, o: OrderEmailInfo): P
   return sendEmail(to, `Order cancelled — ${num}`, emailShell("Order cancelled", inner + button("View orders", `${SITE_URL}/marketplace/orders`), footer()));
 }
 
+// To the buyer, when the SELLER unilaterally refunds an order (no mutual
+// agreement needed — see order-actions.ts's sellerRefundOrder). Distinct from
+// sendCancelledMutualEmail: this is one-sided, so the copy doesn't say "by
+// mutual agreement", and includes the seller's reason when they gave one.
+export async function sendSellerRefundedEmail(to: string, o: OrderEmailInfo, reason?: string | null): Promise<boolean> {
+  const num = formatOrderNumber(o.orderNumber) ?? o.orderId;
+  const inner = `
+    <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      The seller has refunded order <strong style="color:#fff">${num}</strong> (${o.quantity} × ${escHtml(o.cardName)})
+      in full — ${formatMoney(o.totalCents, o.currency)} is on its way back to your original payment method
+      (usually 5-10 business days to appear, depending on your bank).
+      ${reason ? `<br><br>Reason given: &ldquo;${escHtml(reason)}&rdquo;` : ""}
+    </td></tr>`;
+  return sendEmail(to, `Order refunded — ${num}`, emailShell("Order refunded", inner + button("View orders", `${SITE_URL}/marketplace/orders`), footer()));
+}
+
+// To the seller, confirming their own refund went through (and, if they'd
+// already been paid out, that the payout was reversed rather than left owing).
+export async function sendSellerRefundConfirmedEmail(to: string, o: OrderEmailInfo, reversedPayout: boolean): Promise<boolean> {
+  const num = formatOrderNumber(o.orderNumber) ?? o.orderId;
+  const inner = `
+    <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      You refunded order <strong style="color:#fff">${num}</strong> (${o.quantity} × ${escHtml(o.cardName)}) —
+      the buyer has been refunded ${formatMoney(o.totalCents, o.currency)} in full.
+      ${reversedPayout ? "Since this sale had already been paid out to you, that payout has been reversed to cover the refund." : ""}
+    </td></tr>`;
+  return sendEmail(to, `Refund sent — ${num}`, emailShell("Refund sent", inner + button("View sales", `${SITE_URL}/marketplace/orders`), footer()));
+}
+
 // To whoever proposed the cancellation, if the other party declines.
 export async function sendCancelDeclinedEmail(to: string, o: OrderEmailInfo): Promise<boolean> {
   const num = formatOrderNumber(o.orderNumber) ?? o.orderId;

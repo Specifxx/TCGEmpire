@@ -444,6 +444,7 @@ export function MarketplaceOrders({ offersEnabled = false }: { offersEnabled?: b
   const [shipFor, setShipFor] = useState<OrderGroup | null>(null);
   const [reportFor, setReportFor] = useState<OrderGroup | null>(null);
   const [cancelFor, setCancelFor] = useState<OrderGroup | null>(null);
+  const [refundFor, setRefundFor] = useState<OrderGroup | null>(null);
   const [messagesFor, setMessagesFor] = useState<OrderGroup | null>(null);
 
   function toast(msg: string, ms = 2200) {
@@ -618,6 +619,11 @@ export function MarketplaceOrders({ offersEnabled = false }: { offersEnabled?: b
               <TrackingLink g={g} />
               <PayoutBadge g={g} role="seller" />
               <CancelStatus g={g} busy={busy} onRequest={() => setCancelFor(g)} onAct={(body, msg) => groupAct(g.orderIds, body, msg)} />
+              {["PAID", "SHIPPED", "COMPLETED"].includes(g.status) && !g.cancelRequestedAt && (
+                <button onClick={() => setRefundFor(g)} disabled={!!busy} className="text-[11px] text-slate-500 hover:text-rose-300 disabled:opacity-50">
+                  ↩ Refund buyer
+                </button>
+              )}
               {["PAID", "SHIPPED", "COMPLETED"].includes(g.status) && !g.disputedAt && (
                 <button onClick={() => setReportFor(g)} className="text-[11px] text-slate-500 hover:text-rose-300">Report a problem</button>
               )}
@@ -739,6 +745,18 @@ export function MarketplaceOrders({ offersEnabled = false }: { offersEnabled?: b
           onSubmit={async (reason) => {
             const ok = await groupAct(cancelFor.orderIds, { action: "request-cancel", reason }, "✓ Cancellation requested — waiting on the other party");
             if (ok) setCancelFor(null);
+          }}
+        />
+      )}
+
+      {refundFor && (
+        <RefundModal
+          group={refundFor}
+          busy={!!busy}
+          onClose={() => setRefundFor(null)}
+          onSubmit={async (reason) => {
+            const ok = await groupAct(refundFor.orderIds, { action: "refund", reason: reason || undefined }, "✓ Refunded — the buyer has been notified");
+            if (ok) setRefundFor(null);
           }}
         />
       )}
@@ -1118,6 +1136,51 @@ function CancelModal({
           <button onClick={onClose} className="btn-ghost text-sm">Back</button>
           <button onClick={() => onSubmit(reason.trim())} disabled={busy || !valid} className="btn-primary text-sm disabled:opacity-50">
             {busy ? "Sending…" : "Send request"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RefundModal({
+  group,
+  busy,
+  onClose,
+  onSubmit,
+}: {
+  group: OrderGroup;
+  busy: boolean;
+  onClose: () => void;
+  onSubmit: (reason: string) => void;
+}) {
+  const [reason, setReason] = useState("");
+  // Reason is optional, but if the seller starts typing one it has to be
+  // substantial enough to be useful to the buyer (same floor as request-cancel).
+  const valid = reason.trim().length === 0 || reason.trim().length >= 5;
+  return (
+    <div className="fixed inset-0 z-[85] flex items-center justify-center p-4" role="dialog" aria-modal="true">
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-md rounded-2xl border border-ink-700 bg-ink-900 p-5 shadow-2xl">
+        <h2 className="text-lg font-extrabold text-white">Refund buyer</h2>
+        <p className="mt-1 text-sm text-slate-400">
+          {group.orders.length === 1 ? `${group.orders[0]!.listing?.card.name} ×${group.orders[0]!.quantity}` : `${group.orders.length} items`} — {group.counterparty}
+        </p>
+        <textarea
+          value={reason}
+          onChange={(e) => setReason(e.target.value.slice(0, 300))}
+          placeholder="Reason for the buyer (optional) — e.g. lost in transit, wrong card sent"
+          rows={3}
+          className="input mt-3 resize-none"
+        />
+        <p className="mt-2 text-xs text-slate-600">
+          This refunds {group.counterparty} in full right away — no need for them to agree first. If you've
+          already been paid out for this item, that payout is reversed automatically. This can't be undone.
+        </p>
+        <div className="mt-4 flex justify-end gap-2">
+          <button onClick={onClose} className="btn-ghost text-sm">Back</button>
+          <button onClick={() => onSubmit(reason.trim())} disabled={busy || !valid} className="btn-primary text-sm disabled:opacity-50">
+            {busy ? "Refunding…" : "Refund buyer"}
           </button>
         </div>
       </div>

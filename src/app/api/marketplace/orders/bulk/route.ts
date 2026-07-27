@@ -11,13 +11,14 @@ import {
   requestCancelGroup,
   withdrawCancelGroup,
   respondCancelGroup,
+  sellerRefundOrderGroup,
 } from "@/lib/order-actions";
 
 export const dynamic = "force-dynamic";
 
 const schema = z.object({
   orderIds: z.array(z.string().min(1)).min(1).max(50),
-  action: z.enum(["ship", "receive", "report", "request-release", "request-cancel", "accept-cancel", "decline-cancel", "withdraw-cancel"]),
+  action: z.enum(["ship", "receive", "report", "request-release", "request-cancel", "accept-cancel", "decline-cancel", "withdraw-cancel", "refund"]),
   carrier: z.enum(CARRIERS).optional(),
   trackingNumber: z.string().trim().min(3).max(60).optional(),
   tracking: z.string().max(120).optional(),
@@ -81,6 +82,11 @@ export async function POST(req: Request) {
     }
     case "decline-cancel": {
       const result = await respondCancelGroup(orderIds, user.id, false);
+      if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.httpStatus });
+      return NextResponse.json(result);
+    }
+    case "refund": {
+      const result = await sellerRefundOrderGroup(orderIds, user.id, reason);
       if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.httpStatus });
       return NextResponse.json(result);
     }

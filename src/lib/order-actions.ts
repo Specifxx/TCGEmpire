@@ -6,7 +6,7 @@
 // Extracting the logic here means the bulk route can loop over order ids
 // calling the exact same rules as the single-order path, with no duplication.
 import { prisma } from "./db";
-import { releaseFundsForOrder, refundOrder } from "./connect";
+import { releaseFundsForOrder, refundOrder, refundOrderBySeller } from "./connect";
 import { revalidateCardPage } from "./revalidate-card";
 import { importMarketplaceListings } from "./marketplace";
 import {
@@ -17,6 +17,8 @@ import {
   sendCancelledMutualEmail,
   sendCancelDeclinedEmail,
   sendOrderCompletedBuyerEmail,
+  sendSellerRefundedEmail,
+  sendSellerRefundConfirmedEmail,
 } from "./marketplace-email";
 import { nextNumber, formatOrderNumber } from "./order-number";
 import { autoReleaseDate } from "./marketplace-policy";
@@ -176,6 +178,50 @@ export async function requestReleaseOrder(orderId: string, userId: string, notif
   return { ok: true };
 }
 
+// Seller-initiated, one-sided refund — unlike requestCancelOrder/respondCancelOrder,
+// this needs no buyer agreement (a seller giving money back is never something a
+// buyer would object to). Allowed from PAID (before shipping), SHIPPED, or even
+// COMPLETED (a seller making good on a problem after the fact); blocked if a
+// mutual-cancellation is already in flight for the same order to avoid the two
+// paths racing on the same refund.
+export async function sellerRefundOrder(orderId: string, userId: string, reason?: string): Promise<ActionResult> {
+  const order = await loadOrder(orderId);
+  if (!order || order.kind !== "MARKETPLACE") return { ok: false, error: "Order not found", httpStatus: 404 };
+  if (order.sellerId !== userId) return { ok: false, error: "Only the seller can refund this order", httpStatus: 403 };
+  if (!["PAID", "SHIPPED", "COMPLETED"].includes(order.status)) {
+    return { ok: false, error: `Can't refund a ${order.status} order`, httpStatus: 400 };
+  }
+  if (order.cancelRequestedAt) return { ok: false, error: "A cancellation is pending on this order — resolve it first", httpStatus: 400 };
+
+  const wasTransferred = !!(await prisma.order.findUnique({ where: { id: order.id }, select: { stripeTransferId: true } }))?.stripeTransferId;
+  await refundOrderBySeller(order.id, reason);
+  await prisma.order.update({ where: { id: order.id }, data: { status: "REFUNDED" } });
+
+  const listing = order.marketplaceListingId
+    ? await prisma.marketplaceListing.findUnique({ where: { id: order.marketplaceListingId }, select: { id: true, cardId: true, status: true, card: { select: { name: true } } } })
+    : null;
+  if (listing) {
+    await prisma.marketplaceListing.update({
+      where: { id: listing.id },
+      data: { quantity: { increment: order.quantity }, ...(listing.status === "SOLD_OUT" ? { status: "ACTIVE" } : {}) },
+    });
+    await importMarketplaceListings().catch(() => {});
+    await revalidateCardPage(listing.cardId).catch(() => {});
+  }
+
+  const info = { orderId: order.id, orderNumber: order.orderNumber, cardName: listing?.card.name ?? "the item", quantity: order.quantity, totalCents: order.totalCents, currency: order.currency };
+  const [buyer, seller] = await Promise.all([
+    prisma.user.findUnique({ where: { id: order.buyerId }, select: { email: true } }),
+    prisma.user.findUnique({ where: { id: order.sellerId }, select: { email: true } }),
+  ]);
+  if (buyer?.email) await sendSellerRefundedEmail(buyer.email, info, reason).catch(() => {});
+  if (seller?.email) await sendSellerRefundConfirmedEmail(seller.email, info, wasTransferred).catch(() => {});
+  await notify(order.buyerId, "order_refunded", "Order refunded", `The seller refunded ${formatMoney(order.totalCents, order.currency)} for ${info.cardName}.`, "/marketplace/orders").catch(() => {});
+  await notify(order.sellerId, "order_refunded", "Refund sent", `You refunded order ${formatOrderNumber(order.orderNumber) ?? order.id}.`, "/marketplace/orders").catch(() => {});
+
+  return { ok: true, status: "REFUNDED" };
+}
+
 export async function reportOrder(orderId: string, userId: string, userEmail: string, userName: string, message: string): Promise<ActionResult> {
   const order = await loadOrder(orderId);
   if (!order || order.kind !== "MARKETPLACE") return { ok: false, error: "Order not found", httpStatus: 404 };
@@ -326,6 +372,7 @@ async function loadGroup(orderIds: string[]) {
       marketplaceListingId: true,
       cancelRequestedBy: true,
       cancelRequestedAt: true,
+      stripeTransferId: true,
     },
   });
   return orders.filter((o) => o.kind === "MARKETPLACE");
@@ -489,4 +536,65 @@ export async function respondCancelGroup(orderIds: string[], userId: string, acc
   await notify(first.buyerId, "order_cancelled", "Order cancelled", `Order ${formatOrderNumber(first.orderNumber) ?? first.id} was cancelled and refunded.`, "/marketplace/orders").catch(() => {});
   await notify(first.sellerId, "order_cancelled", "Order cancelled", `Order ${formatOrderNumber(first.orderNumber) ?? first.id} was cancelled and refunded.`, "/marketplace/sell").catch(() => {});
   return { ok: true, status: "CANCELLED" };
+}
+
+// Seller-initiated refund for a whole parcel — unlike a mutual cancellation,
+// this needs no buyer agreement: the seller just decided to make the buyer
+// whole (item lost in transit, wrong card, buyer complaint, etc). Each row is
+// refunded via refundOrderBySeller (which scopes the Stripe refund to that
+// row's own totalCents, safe even though several sellers can share one
+// PaymentIntent — see lib/connect.ts), then restocked and marked REFUNDED.
+export async function sellerRefundOrderGroup(orderIds: string[], userId: string, reason?: string): Promise<ActionResult> {
+  const orders = await loadGroup(orderIds);
+  if (orders.length === 0) return { ok: false, error: "Order not found", httpStatus: 404 };
+  if (orders.some((o) => o.sellerId !== userId)) {
+    return { ok: false, error: "Only the seller can refund this order", httpStatus: 403 };
+  }
+  if (orders.some((o) => !["PAID", "SHIPPED", "COMPLETED"].includes(o.status))) {
+    return { ok: false, error: "One or more of these items can't be refunded right now", httpStatus: 400 };
+  }
+  if (orders.some((o) => o.cancelRequestedAt)) {
+    return { ok: false, error: "A cancellation is pending on one of these items — resolve it first", httpStatus: 400 };
+  }
+
+  const anyTransferred = orders.some((o) => o.stripeTransferId);
+  for (const o of orders) {
+    await refundOrderBySeller(o.id, reason);
+    await prisma.order.update({ where: { id: o.id }, data: { status: "REFUNDED" } });
+  }
+
+  const listingIds = [...new Set(orders.map((o) => o.marketplaceListingId).filter((x): x is string => !!x))];
+  if (listingIds.length) {
+    const listings = await prisma.marketplaceListing.findMany({ where: { id: { in: listingIds } }, select: { id: true, cardId: true, status: true } });
+    const qtyByListing = new Map<string, number>();
+    for (const o of orders) {
+      if (!o.marketplaceListingId) continue;
+      qtyByListing.set(o.marketplaceListingId, (qtyByListing.get(o.marketplaceListingId) ?? 0) + o.quantity);
+    }
+    for (const l of listings) {
+      await prisma.marketplaceListing.update({
+        where: { id: l.id },
+        data: { quantity: { increment: qtyByListing.get(l.id) ?? 0 }, ...(l.status === "SOLD_OUT" ? { status: "ACTIVE" } : {}) },
+      });
+      await revalidateCardPage(l.cardId).catch(() => {});
+    }
+    await importMarketplaceListings().catch(() => {});
+  }
+
+  const first = orders[0];
+  const totalCents = orders.reduce((sum, o) => sum + o.totalCents, 0);
+  const listing = first.marketplaceListingId
+    ? await prisma.marketplaceListing.findUnique({ where: { id: first.marketplaceListingId }, select: { card: { select: { name: true } } } })
+    : null;
+  const info = { orderId: first.id, orderNumber: first.orderNumber, cardName: orders.length > 1 ? `${orders.length} items` : listing?.card.name ?? "the item", quantity: first.quantity, totalCents, currency: first.currency };
+  const [buyer, seller] = await Promise.all([
+    prisma.user.findUnique({ where: { id: first.buyerId }, select: { email: true } }),
+    prisma.user.findUnique({ where: { id: first.sellerId }, select: { email: true } }),
+  ]);
+  if (buyer?.email) await sendSellerRefundedEmail(buyer.email, info, reason).catch(() => {});
+  if (seller?.email) await sendSellerRefundConfirmedEmail(seller.email, info, anyTransferred).catch(() => {});
+  await notify(first.buyerId, "order_refunded", "Order refunded", `The seller refunded ${formatMoney(totalCents, first.currency)} for ${info.cardName}.`, "/marketplace/orders").catch(() => {});
+  await notify(first.sellerId, "order_refunded", "Refund sent", `You refunded order ${formatOrderNumber(first.orderNumber) ?? first.id}.`, "/marketplace/orders").catch(() => {});
+
+  return { ok: true, status: "REFUNDED" };
 }

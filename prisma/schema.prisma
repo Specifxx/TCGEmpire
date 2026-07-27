@@ -589,6 +589,15 @@ model Order {
   stripeTransferId String?
   transferredAt    DateTime?
   refundedAt       DateTime?
+  // Who/what triggered the refund — SELLER (seller-initiated, see connect.ts's
+  // refundOrderBySeller), BUYER/ADMIN (mutual-cancel or admin force-refund, both
+  // already existed before this field), or AUTO (ship-deadline cron). Nullable so
+  // the two refund paths that predate this field never need a backfill.
+  refundedBy     String?
+  // Free-text reason the seller (or admin) gave for the refund — shown to the
+  // buyer and kept for support/dispute records. Not required: a seller can refund
+  // without explaining why, same as the existing cancel-request flow allows.
+  refundReason   String?
   // A support ticket was opened against this order (see SupportTicket.orderId) —
   // blocks the auto-release cron job until an admin resolves it.
   disputedAt       DateTime?

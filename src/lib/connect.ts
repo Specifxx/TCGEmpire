@@ -300,3 +300,46 @@ export async function refundOrder(orderId: string): Promise<void> {
   }
   await prisma.order.update({ where: { id: order.id }, data: { refundedAt: new Date() } });
 }
+
+// Seller-initiated refund of ONE order. Unlike refundOrder() above (used by the
+// mutual-cancel/ship-deadline paths, where refunding the WHOLE shared PaymentIntent
+// is correct because every order sharing it is being cancelled together), this can
+// legitimately be called on a single seller's order while OTHER sellers' orders
+// from the same multi-seller checkout remain valid and paid — refunding the full
+// PaymentIntent here would wrongly hand back money that belongs to a different
+// seller's still-good sale. So this ALWAYS passes an explicit `amount` (this
+// order's own totalCents), which Stripe treats as a partial refund of the shared
+// charge — safe regardless of how many other orders share the PaymentIntent.
+//
+// Also handles the case where the seller was already paid out (stripeTransferId
+// set): reverses that specific transfer first so the platform recovers the money
+// before refunding the buyer, rather than going negative on its own balance.
+export async function refundOrderBySeller(orderId: string, reason?: string): Promise<void> {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: { id: true, kind: true, stripePaymentIntent: true, refundedAt: true, totalCents: true, feeCents: true, stripeTransferId: true },
+  });
+  if (!order || order.kind !== "MARKETPLACE") throw new Error("Order not found");
+  if (order.refundedAt) return; // already refunded — idempotent no-op
+
+  if (order.stripeTransferId) {
+    // Seller was already paid this order's share — pull it back before refunding
+    // the buyer. Reversal amount matches exactly what was transferred (total minus
+    // platform fee), never the full order total.
+    const reverseAmount = Math.max(0, order.totalCents - order.feeCents);
+    await stripe().transfers.createReversal(order.stripeTransferId, { amount: reverseAmount }).catch((e) => {
+      // Already reversed / nothing left to reverse — proceed to refund the buyer
+      // regardless, since that's the half of this operation the seller actually
+      // asked for and the buyer is owed either way.
+      if (!/already been reversed|insufficient/i.test(e.message ?? "")) throw e;
+    });
+  }
+
+  if (order.stripePaymentIntent) {
+    await stripe().refunds.create({ payment_intent: order.stripePaymentIntent, amount: order.totalCents });
+  }
+  await prisma.order.update({
+    where: { id: order.id },
+    data: { refundedAt: new Date(), refundedBy: "SELLER", refundReason: reason?.trim() || null },
+  });
+}

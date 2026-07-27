@@ -11,12 +11,13 @@ import {
   requestCancelOrder,
   withdrawCancelOrder,
   respondCancelOrder,
+  sellerRefundOrder,
 } from "@/lib/order-actions";
 
 export const dynamic = "force-dynamic";
 
 const schema = z.object({
-  action: z.enum(["ship", "receive", "report", "request-release", "request-cancel", "accept-cancel", "decline-cancel", "withdraw-cancel"]),
+  action: z.enum(["ship", "receive", "report", "request-release", "request-cancel", "accept-cancel", "decline-cancel", "withdraw-cancel", "refund"]),
   carrier: z.enum(CARRIERS).optional(),
   trackingNumber: z.string().trim().min(3).max(60).optional(),
   tracking: z.string().max(120).optional(), // legacy free-text, kept for backward compatibility
@@ -60,6 +61,8 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         return respondCancelOrder(params.id, user.id, true);
       case "decline-cancel":
         return respondCancelOrder(params.id, user.id, false);
+      case "refund":
+        return sellerRefundOrder(params.id, user.id, reason);
     }
   })();
 
