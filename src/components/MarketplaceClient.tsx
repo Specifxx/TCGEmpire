@@ -5,7 +5,7 @@ import Link from "next/link";
 import { formatMoney, timeAgo } from "@/lib/format";
 import { cardDisplayName } from "@/lib/card-name";
 import { cardHref } from "@/lib/card-url";
-import { CONDITION_KEYS } from "@/lib/constants";
+import { CONDITION_KEYS, RARITY_KEYS } from "@/lib/constants";
 import { COUNTRIES, type Country } from "@/lib/country";
 import { MARKETPLACE_LAUNCH_COUNTRIES } from "@/lib/marketplace-countries";
 import { useCountry } from "./CountryProvider";
@@ -71,10 +71,18 @@ const CART_KEY = "rc_mkt_cart";
 const SORTS = [
   { key: "price_asc", label: "Cheapest first" },
   { key: "price_desc", label: "Dearest first" },
-  { key: "deal", label: "Best vs market" },
+  { key: "deal", label: "Biggest % discount" },
+  { key: "newest", label: "Newest listings" },
   { key: "name", label: "Name A–Z" },
 ] as const;
 type SortKey = (typeof SORTS)[number]["key"];
+
+const MIN_DISCOUNTS = [
+  { key: "all", label: "Any discount" },
+  { key: "10", label: "10%+ under market" },
+  { key: "20", label: "20%+ under market" },
+  { key: "30", label: "30%+ under market" },
+] as const;
 
 // Signed % of an offer vs the site's market price (negative = under market).
 function deltaPct(offerCents: number, marketCents: number | null): number | null {
@@ -137,6 +145,10 @@ export function MarketplaceClient({
   const [cond, setCond] = useState("all");
   const [foil, setFoil] = useState("all"); // all | foil | normal
   const [setCode, setSetCode] = useState("all");
+  const [rarity, setRarity] = useState("all");
+  const [minDiscount, setMinDiscount] = useState<(typeof MIN_DISCOUNTS)[number]["key"]>("all");
+  const [inRegionOnly, setInRegionOnly] = useState(false);
+  const [officialOnly, setOfficialOnly] = useState(false);
   const [sort, setSort] = useState<SortKey>("price_asc");
   const [busy, setBusy] = useState(false);
   const [flash, setFlash] = useState<string | null>(null);
@@ -240,13 +252,17 @@ export function MarketplaceClient({
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
+    const minPct = minDiscount === "all" ? null : Number(minDiscount);
     let list = cards
       .map((c) => {
         // Filter offers first; a card stays visible while any offer matches.
         const offers = c.offers.filter(
           (o) =>
             (cond === "all" || o.condition === cond) &&
-            (foil === "all" || (foil === "foil") === o.isFoil)
+            (foil === "all" || (foil === "foil") === o.isFoil) &&
+            (!inRegionOnly || o.inRegion) &&
+            (!officialOnly || o.isOfficial) &&
+            (minPct == null || (deltaPct(o.priceCents, c.marketCents) ?? 0) <= -minPct)
         );
         return { ...c, offers };
       })
@@ -254,6 +270,7 @@ export function MarketplaceClient({
         (c) =>
           c.offers.length > 0 &&
           (setCode === "all" || c.card.setCode === setCode) &&
+          (rarity === "all" || c.card.rarity === rarity) &&
           (!q || c.card.name.toLowerCase().includes(q) || `${c.card.setCode} ${c.card.collectorNumber}`.toLowerCase().includes(q))
       );
     const cheapest = (c: MktCard) => bestOffer(c.offers).priceCents;
@@ -263,14 +280,16 @@ export function MarketplaceClient({
       const ds = pool.map((o) => deltaPct(o.priceCents, c.marketCents)).filter((d): d is number => d != null);
       return ds.length ? Math.min(...ds) : 999;
     };
+    const newest = (c: MktCard) => Math.max(...c.offers.map((o) => new Date(o.createdAt).getTime()));
     switch (sort) {
       case "price_desc": list.sort((a, b) => cheapest(b) - cheapest(a)); break;
       case "deal": list.sort((a, b) => bestDelta(a) - bestDelta(b)); break;
+      case "newest": list.sort((a, b) => newest(b) - newest(a)); break;
       case "name": list.sort((a, b) => a.card.name.localeCompare(b.card.name)); break;
       default: list.sort((a, b) => cheapest(a) - cheapest(b));
     }
     return list;
-  }, [cards, query, cond, foil, setCode, sort]);
+  }, [cards, query, cond, foil, setCode, rarity, minDiscount, inRegionOnly, officialOnly, sort]);
 
   // True once no card in view has an in-region (buyable) offer — every price shown
   // would be reference-only. Surfaces a region-switch prompt instead of a page that
@@ -309,11 +328,15 @@ export function MarketplaceClient({
       </div>
 
       {/* Filter bar */}
-      <div className="mb-5 flex flex-wrap items-center gap-2">
+      <div className="mb-2 flex flex-wrap items-center gap-2">
         <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search cards…" className="input max-w-[200px] py-2 text-sm" />
         <select value={setCode} onChange={(e) => setSetCode(e.target.value)} className="input w-auto py-2 text-sm" aria-label="Set">
           <option value="all">All sets</option>
           {sets.map((s) => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <select value={rarity} onChange={(e) => setRarity(e.target.value)} className="input w-auto py-2 text-sm" aria-label="Rarity">
+          <option value="all">Any rarity</option>
+          {RARITY_KEYS.map((r) => <option key={r} value={r}>{r}</option>)}
         </select>
         <select value={cond} onChange={(e) => setCond(e.target.value)} className="input w-auto py-2 text-sm" aria-label="Condition">
           <option value="all">Any condition</option>
@@ -324,9 +347,39 @@ export function MarketplaceClient({
           <option value="normal">Normal only</option>
           <option value="foil">✦ Foil only</option>
         </select>
+        <select value={minDiscount} onChange={(e) => setMinDiscount(e.target.value as (typeof MIN_DISCOUNTS)[number]["key"])} className="input w-auto py-2 text-sm" aria-label="Minimum discount">
+          {MIN_DISCOUNTS.map((d) => <option key={d.key} value={d.key}>{d.label}</option>)}
+        </select>
         <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} className="input ml-auto w-auto py-2 text-sm" aria-label="Sort">
           {SORTS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
         </select>
+      </div>
+      <div className="mb-5 flex flex-wrap items-center gap-3">
+        <label className="flex items-center gap-1.5 text-xs text-slate-400">
+          <input type="checkbox" checked={inRegionOnly} onChange={(e) => setInRegionOnly(e.target.checked)} className="h-3.5 w-3.5 rounded border-ink-600 bg-ink-800" />
+          Ships to {place} only
+        </label>
+        <label className="flex items-center gap-1.5 text-xs text-slate-400">
+          <input type="checkbox" checked={officialOnly} onChange={(e) => setOfficialOnly(e.target.checked)} className="h-3.5 w-3.5 rounded border-ink-600 bg-ink-800" />
+          ★ Official sellers only
+        </label>
+        {(cond !== "all" || foil !== "all" || setCode !== "all" || rarity !== "all" || minDiscount !== "all" || inRegionOnly || officialOnly || query) && (
+          <button
+            onClick={() => {
+              setQuery("");
+              setCond("all");
+              setFoil("all");
+              setSetCode("all");
+              setRarity("all");
+              setMinDiscount("all");
+              setInRegionOnly(false);
+              setOfficialOnly(false);
+            }}
+            className="text-xs text-brand-400 hover:underline"
+          >
+            Clear filters
+          </button>
+        )}
       </div>
 
       {flash && (
@@ -385,6 +438,11 @@ export function MarketplaceClient({
                       <span className="num text-base font-extrabold text-accent">from {formatMoney(best.priceCents, cur)}</span>
                       <span className="text-[11px] text-slate-500"><span className="num">{c.offers.length}</span> {c.offers.length === 1 ? "offer" : "offers"}</span>
                     </div>
+                    {pct != null && pct > -3 && (
+                      <div className="mt-1">
+                        <DeltaBadge pct={pct} />
+                      </div>
+                    )}
                   </div>
                 </button>
               </li>
