@@ -420,7 +420,7 @@ jobs:
         run: |
           npm i --no-save playwright
           npx playwright install --with-deps chromium
-          DUMP=1 npx tsx scripts/fetch-vendetta-official.ts
+          DUMP=1 DEBUG_LEGEND=1 npx tsx scripts/fetch-vendetta-official.ts
           npx tsx scripts/import-vendetta.ts
 
       # The scraped card list + raw JSON dump, for inspection / parser hardening.

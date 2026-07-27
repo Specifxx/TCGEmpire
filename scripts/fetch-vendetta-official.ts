@@ -231,6 +231,14 @@ async function main() {
     if (/^ven-/.test(id) && typeof o.name === "string" && o.cardImage && setId === "VEN") {
       if (!seenIds.has(id)) {
         seenIds.add(id);
+        // TEMP DEBUG: dump the full raw object for the first Legend card so we can find
+        // whichever field carries the champion attribution (e.g. "Shen" for "Eye of
+        // Twilight") — the card frame shows it separately from `name`, and we need the
+        // real key name before we can enrich Legend names correctly.
+        if (process.env.DEBUG_LEGEND === "1" && o?.cardType?.type?.[0]?.label === "Legend" && !(global as any).__loggedLegend) {
+          (global as any).__loggedLegend = true;
+          console.log("LEGEND-RAW-OBJECT:", JSON.stringify(o, null, 2).slice(0, 6000));
+        }
         // Stats live under varying keys but always as { label: "Energy"|"Might"|"Power", value: { id: number } }.
         let energy: number | null = null;
         let might: number | null = null;
