@@ -18,6 +18,7 @@ import { MarketPulse } from "@/components/home/MarketPulse";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { VendettaFeature } from "@/components/home/VendettaFeature";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
+import { CardsIcon } from "@/components/icons/HomeIcons";
 
 // REAL ISR: renders a market-NEUTRAL baseline (no cookie/header reads — the
 // indexed copy names all four markets, data is fetched for the AU baseline) so
@@ -202,9 +203,11 @@ export default async function HomePage() {
       <Reveal>
         <Link
           href="/riftle"
-          className="group flex items-center gap-4 rounded-2xl border border-ink-700 bg-ink-900 p-5 transition-colors hover:border-brand-500/60 hover:bg-ink-800"
+          className="card-surface group flex items-center gap-4 p-5 transition-colors hover:border-brand-500/60 hover:bg-ink-800"
         >
-          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-brand-500/15 text-2xl" aria-hidden>🃏</span>
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-brand-500/15 text-brand-400">
+            <CardsIcon className="h-6 w-6" />
+          </span>
           <div className="min-w-0 flex-1">
             <h2 className="text-lg font-extrabold text-white">Play today&apos;s Riftle</h2>
             <p className="mt-0.5 text-sm text-slate-400">

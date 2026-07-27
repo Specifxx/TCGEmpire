@@ -10,6 +10,7 @@ import { PremiumButton } from "./PremiumButton";
 import { DISCORD_URL } from "@/lib/site";
 import { MARKETPLACE_NAV_VISIBLE } from "./nav-groups";
 import { BrandLogo } from "./BrandLogo";
+import { CartIcon } from "./icons/HomeIcons";
 
 // NO server-side session read here: the navbar renders on every route, so a
 // cookies() read would force the whole site dynamic (killing ISR). NavUser
@@ -77,7 +78,7 @@ export function Navbar() {
               aria-label="Marketplace"
               className="flex items-center gap-1 rounded-lg bg-brand-500 px-1.5 py-1.5 text-xs font-bold text-ink-950 shadow-sm transition-colors hover:bg-brand-400 sm:gap-1.5 sm:px-2.5 sm:py-2 sm:text-sm"
             >
-              <span aria-hidden>🛒</span>
+              <CartIcon className="h-4 w-4 shrink-0" />
               <span className="hidden sm:inline">Marketplace</span>
             </Link>
           )}
