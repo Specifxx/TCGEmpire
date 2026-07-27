@@ -26,7 +26,6 @@ on:
           - import-sealed     # refresh sealed products (stores + eBay AU + TCGplayer US) + self-heal stale rows
           - migrate-history  # copy PriceHistory/ClickEvent to the newest history DB
           - audit-ven        # read-only census of VEN cards (chase-tier fields)
-          - diag-unpriced     # TEMP: quantify unpriced-card thin-content scope
           - fix-op-promo-flag # flip isPromo=true for organized-play promos add-tcg-printings.ts mis-tagged (Nexus Night rune cycle)
           - audit-history    # read-only per-day price-history diagnostic
           - audit-users      # read-only user/Premium census (no PII printed)
@@ -341,10 +340,6 @@ jobs:
       - name: Audit VEN cards (read-only census)
         if: inputs.task == 'audit-ven'
         run: npx tsx scripts/audit-ven.ts
-
-      - name: TEMP diagnostic (unpriced-card scope)
-        if: inputs.task == 'diag-unpriced'
-        run: npx tsx scripts/diag-unpriced.ts
 
       - name: Fix organized-play promo flag (Nexus Night rune cycle)
         if: inputs.task == 'fix-op-promo-flag'

@@ -16,6 +16,16 @@ export default function HigherLowerPage() {
     <div>
       <HigherLower />
       <TcgplayerAd size="leaderboard" country={country} className="mt-8" />
+      <section className="mx-auto mt-8 max-w-2xl">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">How to play</h2>
+        <p className="mt-2 text-sm leading-relaxed text-slate-400">
+          You&apos;re shown two Riftbound cards and their names — guess which one has the higher live
+          market price. Guess right and the cheaper card is replaced with a new challenger; guess
+          wrong and your streak ends. Every price comes straight from the same store data RiftCompare
+          uses for real price comparisons, so a good streak here means you&apos;re getting a genuine
+          feel for what cards in this game actually cost.
+        </p>
+      </section>
     </div>
   );
 }

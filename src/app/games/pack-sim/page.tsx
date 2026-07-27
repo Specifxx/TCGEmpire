@@ -42,5 +42,20 @@ export function generateMetadata({ searchParams }: { searchParams?: { v?: string
 
 export default function PackSimPage() {
   const sets = SETS.filter((s) => !s.comingSoon).map((s) => ({ code: s.code, name: s.name }));
-  return <PackSim sets={sets} />;
+  return (
+    <div>
+      <PackSim sets={sets} />
+      <section className="mx-auto mt-8 max-w-2xl">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">How it works</h2>
+        <p className="mt-2 text-sm leading-relaxed text-slate-400">
+          Pick a Riftbound set and rip a virtual booster pack, built from that set&apos;s real card
+          pool with the same odds by rarity as a physical pack. Every card you pull is priced against
+          live store data, so you get an honest read on what your pull would actually be worth — no
+          money spent, no risk, just the pull. If you like what you see, the real cards are one click
+          away on the <a href="/browse" className="text-brand-400 hover:underline">card database</a>,
+          each priced across every store RiftCompare tracks.
+        </p>
+      </section>
+    </div>
+  );
 }

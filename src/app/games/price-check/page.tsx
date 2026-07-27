@@ -16,6 +16,16 @@ export default function PriceCheckPage() {
     <div>
       <PriceCheck />
       <TcgplayerAd size="leaderboard" country={country} className="mt-8" />
+      <section className="mx-auto mt-8 max-w-2xl">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">How to play</h2>
+        <p className="mt-2 text-sm leading-relaxed text-slate-400">
+          Five rounds, one card each — guess what it&apos;s actually selling for right now and your
+          score is based on how close your guess lands to the real live market price, the same
+          numbers RiftCompare uses for its price comparisons. Guess too low or too high and you&apos;ll
+          score less; nail it exactly and you&apos;ll top out the round. A fun gut-check for how well
+          you actually know current Riftbound prices.
+        </p>
+      </section>
     </div>
   );
 }

@@ -16,6 +16,16 @@ export default function Twenty48Page() {
     <div>
       <Twenty48 />
       <TcgplayerAd size="leaderboard" country={country} className="mt-8" />
+      <section className="mx-auto mt-8 max-w-2xl">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">How to play</h2>
+        <p className="mt-2 text-sm leading-relaxed text-slate-400">
+          The classic slide-and-merge puzzle, reskinned with Riftbound&apos;s own rarity ladder:
+          slide tiles with the arrow keys or a swipe, and two matching cards merge into the next
+          rarity up — two Commons become an Uncommon, two Uncommons become a Rare, and so on up to
+          Legend. The board fills up fast, so the real skill is keeping your board clear enough to
+          keep merging instead of getting stuck.
+        </p>
+      </section>
     </div>
   );
 }

@@ -52,6 +52,17 @@ export default function RiftlePage() {
       <TcgplayerAd size="leaderboard" country={country} className="mt-8" />
       <div className="mx-auto max-w-2xl">
         <AdSlot className="mt-8" height={100} />
+        <section className="mt-8">
+          <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">How to play</h2>
+          <p className="mt-2 text-sm leading-relaxed text-slate-400">
+            Riftle picks one mystery Riftbound card each day, and you have {RIFTLE_ATTEMPTS} guesses to
+            find it. After every guess you get Wordle-style feedback comparing your pick to the answer
+            across set, domain, type, rarity, cost and might — green means an exact match, so you can
+            narrow the field fast. Everyone gets the same daily card, so it's a fair comparison with
+            friends; switch to Unlimited mode from the game for endless random cards with no daily
+            limit.
+          </p>
+        </section>
       </div>
     </>
   );

@@ -16,6 +16,15 @@ export default function PairsPage() {
     <div>
       <Pairs />
       <TcgplayerAd size="leaderboard" country={country} className="mt-8" />
+      <section className="mx-auto mt-8 max-w-2xl">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">How to play</h2>
+        <p className="mt-2 text-sm leading-relaxed text-slate-400">
+          A classic memory game built from real Riftbound card art: a 4×4 grid of face-down tiles
+          hides eight matching pairs. Flip two tiles at a time — a match stays face-up, a mismatch
+          flips back — and clear the whole board in as few moves as possible. There&apos;s no timer,
+          so it&apos;s a quick, low-pressure way to start recognising card art at a glance.
+        </p>
+      </section>
     </div>
   );
 }
