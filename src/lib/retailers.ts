@@ -514,6 +514,30 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. US$2.00 · free over US$50",
     country: "US",
   },
+  // Verified real US LGS with a dedicated Riftbound singles collection, added to close
+  // the AU-vs-US in-stock-listing gap — the US market is our biggest by revenue but
+  // the deepest US Shopify stores had thinned out (several configured above turned out
+  // to only carry sealed/accessories, matching zero singles).
+  onestoptcg: {
+    key: "onestoptcg",
+    name: "OneStopTCG",
+    base: "https://onestoptcg.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.00 · free over US$50",
+    country: "US",
+  },
+  zamliytcg: {
+    key: "zamliytcg",
+    name: "Zamliy TCG",
+    base: "https://zamliytcg.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.00 · free over US$50",
+    country: "US",
+  },
 
   // ---- United Kingdom stores (country: "UK"; prices in GBP via ?country=GB; uses eBay UK) ----
   // Riftbound singles are still thin on UK Shopify shops — the biggest UK chains (Magic
