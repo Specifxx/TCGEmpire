@@ -2116,17 +2116,48 @@ Planning a deck already? Our **[best Vendetta decks guide](/guides/best-riftboun
       { label: "Origins Overnumbered chase cards", query: "Riftbound Overnumbered" },
       { label: "Vendetta booster case presales", query: "Riftbound Vendetta booster case" },
     ],
+    // Every Overnumbered VEN printing (both the 9 signed Legends and the 22 Rival
+    // reprints), straight from the DB — CardTile renders each one's full credentialed
+    // name (e.g. "Nasus, Curator of the Sands (Overnumbered)"), so this is also the
+    // internal link that ties a specific champion's name to "Overnumbered" for search.
+    // Kept as `embeds` (not the singular `embed`) so the [[embed:0]] marker below can
+    // place it mid-body, right after the two chase-tier sections it illustrates.
+    embeds: [
+      {
+        title: "Every Overnumbered Vendetta card",
+        note: "All 31 Overnumbered printings — the 9 signed Legends and the 22 Rival reprints — straight from our live database. Tap any card for its page and live prices.",
+        chaseSet: "VEN",
+        chaseTier: "overnumbered",
+        take: 40,
+      },
+    ],
     body: `![Riftbound: Vendetta — releases 31 July 2026](/vendetta-hero.png)
 
-The most-searched collectibles in **[Riftbound: Vendetta](/sets/vendetta)** are its **Overnumbers** — the set's premium chase cards. Here's what they are and why they matter.
+The most-searched collectibles in **[Riftbound: Vendetta](/sets/vendetta)** are its **Overnumbers** — the set's premium chase cards. Here's what they are, who has one, and why collectors want them.
 
 ## What is an Overnumbered card?
 
-An **Overnumbered** card is a special printing whose collector number sits *above* the set's base numbering — a signal that it's a rarer, showcase-tier version of a card. In Vendetta, the nine new champion **Legends** each get a **signed Overnumbered variant**: a premium printing carrying an in-universe signature treatment. These are the top-end pulls of the set.
+An **Overnumbered** card is a special printing whose collector number sits *above* the set's base numbering — a signal that it's a rarer, showcase-tier version of a card. In Vendetta, that's everything numbered **167 and up** (the set proper runs 1-166).
+
+## The 9 signed Legend Overnumbers
+
+Nine new champion **Legends** each get their own signed Overnumbered variant — a premium printing carrying an in-universe signature treatment, and the top-end pulls of the whole set:
+
+- **[Akali, Rogue Assassin](/card/rogue-assassin-ven-189)**
+- **[Renekton, Butcher of the Sands](/card/butcher-of-the-sands-ven-190)**
+- **[Zed, Master of Shadows](/card/master-of-shadows-ven-191)**
+- **[Nasus, Curator of the Sands](/card/curator-of-the-sands-ven-192)**
+- **[Shen, Eye of Twilight](/card/eye-of-twilight-ven-193)**
+- **[Jayce, Defender of Tomorrow](/card/defender-of-tomorrow-ven-194)**
+- **[Mel, Soul's Reflection](/card/soul-s-reflection-ven-195)**
+- **[Ambessa, Matriarch of War](/card/matriarch-of-war-ven-196)**
+- **[Kennen, Heart of the Tempest](/card/heart-of-the-tempest-ven-197)**
 
 ## Rival Overnumbers — the rivalry diptychs
 
-Vendetta's rivalries theme gets its own chase cycle: **22 Rival Overnumbers**. Each is half of a **diptych** — a pair of cards designed to sit side by side, so a rivalry like **Nasus vs Renekton** or **Shen vs Zed** is displayed as a matched set. Collectors chase both halves to complete the pair, which is exactly what makes them desirable (and pricey).
+Vendetta's rivalries theme gets its own chase cycle: **22 Rival Overnumbers** — reprints of existing champion cards with a premium treatment. Each is half of a **diptych**, a pair designed to sit side by side, so a rivalry like **[Nasus](/card/nasus-guardian-of-knowledge-ven-178) vs [Renekton](/card/renekton-brute-ven-177)** or **[Shen](/card/shen-scourge-of-shadows-ven-170) vs [Zed](/card/zed-from-the-shadows-ven-169)** is displayed as a matched set. Collectors chase both halves to complete the pair, which is exactly what makes them desirable (and pricey).
+
+[[embed:0]]
 
 ## Why collectors care
 
