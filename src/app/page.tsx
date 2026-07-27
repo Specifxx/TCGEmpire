@@ -16,7 +16,6 @@ import { getLatestMarketReport } from "@/lib/posts";
 import { CinematicHero } from "@/components/home/CinematicHero";
 import { MarketPulse } from "@/components/home/MarketPulse";
 import { HowItWorks } from "@/components/home/HowItWorks";
-import { VendettaFeature } from "@/components/home/VendettaFeature";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { CardsIcon } from "@/components/icons/HomeIcons";
 
@@ -157,13 +156,7 @@ export default async function HomePage() {
         wrap={latestWrap}
       />
 
-      {/* Vendetta launch feature — the site's current main story, right under the
-          hero for maximum visibility. */}
-      <Reveal>
-        <VendettaFeature />
-      </Reveal>
-
-      {/* Most-searched Vendetta cards, right under the feature banner — real demand
+      {/* Most-searched Vendetta cards, right under the hero — real demand
           signal (not a claim), each tile showing the live cheapest price. Hidden
           entirely until enough early listings are actually priced. */}
       {popularVendetta.length > 0 && (
