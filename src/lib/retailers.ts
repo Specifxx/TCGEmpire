@@ -488,16 +488,6 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. US$2.00 · free over US$50",
     country: "US",
   },
-  zamliytcg: {
-    key: "zamliytcg",
-    name: "Zamliy TCG",
-    base: "https://zamliytcg.com",
-    collections: ["riftbound-singles"],
-    shippingFlatCents: 200,
-    freeOverCents: 5000,
-    shippingNote: "est. US$2.00 · free over US$50",
-    country: "US",
-  },
   // Second verified batch (user-supplied leads, each confirmed real + US + a live
   // Riftbound collection before adding — several other leads from the same batch were
   // dropped: unverifiable domains, sealed/event-only collections, non-Shopify platforms
