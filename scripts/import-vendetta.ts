@@ -7,6 +7,10 @@
  * Accuracy rules:
  *  - name/type/rules come from the gallery's own alt text; domain from the gallery's
  *    domain filters; images are official Riot CDN assets. Nothing is invented.
+ *  - Legend cards are named by their epithet alone in the source ("Eye of Twilight");
+ *    the champion they belong to (e.g. "Shen") lives in a separate field the gallery
+ *    exposes (its per-card "tags"), so we prefix it ("Shen, Eye of Twilight") — real
+ *    data from the same source, just two fields instead of one.
  *  - rarity is only stored when the gallery exposed it; otherwise "TBC" (honest
  *    placeholder, auto-corrected when RiftScribe catalogues the card — sync-cards
  *    ADOPTS these rows in place, so URLs never change and no duplicates form).
@@ -39,7 +43,19 @@ type Scraped = {
   rules?: string;
   energy?: number | null;
   might?: number | null;
+  champion?: string; // Legend cards only — the champion this Legend belongs to
 };
+
+// Legend cards are named by their epithet alone in the source data ("Eye of
+// Twilight"), with the champion carried separately (see fetch-vendetta-official.ts).
+// Prefix it to match every other champion card's "Champion, Title" naming on the
+// site (e.g. "Renekton, Rage Fueled") — "Legend" itself is already shown as its
+// own type badge, so it doesn't need to be repeated in the name text.
+function enrichLegendName(name: string, champion: string | undefined): string {
+  if (!champion) return name;
+  if (name.toLowerCase().startsWith(champion.toLowerCase())) return name;
+  return `${champion}, ${name}`;
+}
 
 const DOMAINS = new Set(["Fury", "Calm", "Mind", "Body", "Chaos", "Order", "Colorless"]);
 const TYPES = new Set(["Unit", "Spell", "Gear", "Rune", "Battlefield", "Legend"]);
@@ -68,11 +84,12 @@ async function main() {
   const nameCount = new Map<string, number>(); // duplicate names in the scrape = alt-art variants
 
   for (const r of rows) {
-    const name = (r.name ?? "").trim();
     const imageUrl = (r.imageUrl ?? "").trim();
     const type = r.type && TYPES.has(titleCase(r.type)) ? titleCase(r.type) : "";
     const domain = r.domain && DOMAINS.has(titleCase(r.domain)) ? titleCase(r.domain) : "";
     const rarity = r.rarity && RARITIES.has(titleCase(r.rarity)) ? titleCase(r.rarity) : "TBC";
+    const rawName = (r.name ?? "").trim();
+    const name = type === "Legend" ? enrichLegendName(rawName, r.champion?.trim()) : rawName;
 
     const problems: string[] = [];
     if (!name || /coming soon/i.test(name)) problems.push("name");

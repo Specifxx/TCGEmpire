@@ -33,6 +33,12 @@ type Scraped = {
   rules?: string;
   energy?: number | null;
   might?: number | null;
+  // Legend cards are named by their epithet alone ("Eye of Twilight"), with the
+  // champion they belong to (e.g. "Shen") carried separately in the card's own
+  // "tags" field, not in `name` or the alt text — confirmed against the raw
+  // __NEXT_DATA__ (a Legend's tags array is exactly [ChampionName]). Consumed by
+  // scripts/import-vendetta.ts to build the full "Champion, Epithet" name.
+  champion?: string;
 };
 
 // "Riftbound Unit: Akali, Deadly Weapon. [Empower] …" → { type: "Unit", name: "Akali, Deadly Weapon", rules }
@@ -216,6 +222,7 @@ async function main() {
     rules?: string;
     energy?: number | null;
     might?: number | null;
+    champion?: string;
   };
   const jsonCards: JsonCard[] = [];
   const seenIds = new Set<string>();
@@ -231,14 +238,6 @@ async function main() {
     if (/^ven-/.test(id) && typeof o.name === "string" && o.cardImage && setId === "VEN") {
       if (!seenIds.has(id)) {
         seenIds.add(id);
-        // TEMP DEBUG: dump the full raw object for the first Legend card so we can find
-        // whichever field carries the champion attribution (e.g. "Shen" for "Eye of
-        // Twilight") — the card frame shows it separately from `name`, and we need the
-        // real key name before we can enrich Legend names correctly.
-        if (process.env.DEBUG_LEGEND === "1" && o?.cardType?.type?.[0]?.label === "Legend" && !(global as any).__loggedLegend) {
-          (global as any).__loggedLegend = true;
-          console.log("LEGEND-RAW-OBJECT:", JSON.stringify(o, null, 2).slice(0, 6000));
-        }
         // Stats live under varying keys but always as { label: "Energy"|"Might"|"Power", value: { id: number } }.
         let energy: number | null = null;
         let might: number | null = null;
@@ -263,6 +262,9 @@ async function main() {
           rules: parsedAlt?.rules?.slice(0, 500) || undefined,
           energy,
           might,
+          // Legend cards carry their champion here, e.g. tags: ["Renekton"] on the
+          // "Butcher of the Sands" Legend — confirmed against the raw scrape.
+          champion: typeof o?.tags?.tags?.[0] === "string" ? o.tags.tags[0] : undefined,
         });
       }
     }
@@ -314,6 +316,7 @@ async function main() {
       rules: c.rules,
       energy: c.energy,
       might: c.might,
+      champion: c.champion,
     }));
   } else {
     console.log("WARN: __NEXT_DATA__ yielded too few cards — falling back to alt-text parsing (no domain/rarity).");
