@@ -1539,7 +1539,7 @@ Keep the **[live countdown](/vendetta-countdown)** handy, and read **[everything
   {
     slug: "riftbound-banlist-explained",
     category: "guide",
-    title: "Riftbound Banlist Explained: Every Currently Banned Card",
+    title: "Riftbound Ban List Explained: Every Currently Banned Card",
     excerpt:
       "The complete, up-to-date Riftbound banlist — every card currently banned from competitive constructed play, the new Constructed 2v2 ban list, the official reason for each ban, and live prices for all of them.",
     author: "RiftCompare",
@@ -1917,7 +1917,7 @@ Empower cards will list with live prices on the **[Vendetta set page](/sets/vend
   {
     slug: "riftbound-flow-explained",
     category: "guide",
-    title: "Riftbound Flow Explained: Playing Cards From Your Trash",
+    title: "Riftbound Flow Explained: How the Flow Mechanic Works",
     excerpt:
       "A complete guide to Flow — the Riftbound: Vendetta mechanic that lets you play cards from your trash instead of your hand. How it works and how to build around it.",
     author: "RiftCompare",
@@ -1977,9 +1977,15 @@ Flow is the recursion engine of Vendetta. Its best partner is **[Burn](/guides/r
 
 See how Flow fits full decklists in the **[best Vendetta decks guide](/guides/best-riftbound-vendetta-decks)**.
 
-## Flow vs the other new mechanics
+## Flow FAQ
 
-**[Empower](/guides/riftbound-empower-explained)** upgrades a card in play; **[Burn](/guides/riftbound-burn-explained)** sends cards to the trash; **Flow** plays them back out of it. All three are covered together in **[Vendetta's new mechanics explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**.
+**What is Flow in Riftbound?** Flow is a Vendetta keyword that lets you play a card straight from your trash instead of your hand — your discarded and used cards become a second pool of plays rather than being gone for good.
+
+**How does the Flow mechanic work?** A card printed with Flow can be cast from the trash the same way you'd cast it from hand (often for its normal cost) — so anything that fills your trash first (discarding, cycling, or the **[Burn](/guides/riftbound-burn-explained)** mechanic) sets Flow up to cash in later.
+
+**Is Flow only in Vendetta?** Yes — Flow is introduced as a brand-new keyword in the Vendetta set; it doesn't appear on cards from earlier sets.
+
+**How is Flow different from Empower and Burn?** **Flow** plays cards *from* your trash; **[Burn](/guides/riftbound-burn-explained)** sends cards *to* your trash; **[Empower](/guides/riftbound-empower-explained)** upgrades a card that's already *in play*. Read all three together in **[Vendetta's new mechanics explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**.
 
 Flow cards will show live prices on the **[Vendetta set page](/sets/vendetta)** as they release — compare every store on RiftCompare so you build your Flow deck for the cheapest total. Track the **[live countdown](/vendetta-countdown)** to release day.`,
   },
@@ -2481,9 +2487,9 @@ Shopping from **[Australia](/blog/buy-riftbound-cards-australia)** or **[the US]
   {
     slug: "every-riftbound-vendetta-card-revealed",
     category: "blog",
-    title: "Every Riftbound Vendetta Card — Complete Set Gallery (All 166 Revealed)",
+    title: "Riftbound Vendetta Card List & Gallery — All 166 Cards Revealed",
     excerpt:
-      "The complete gallery of every Riftbound: Vendetta card — all 166 main-set cards officially confirmed, plus Showcase alt-arts, Overnumbers, runes and promos, embedded live from our database. Tap any card for its page and launch-day prices.",
+      "The complete Riftbound Vendetta card list and gallery — all 166 main-set cards officially confirmed, plus Showcase alt-arts, Overnumbers, runes and promos, embedded live from our database. Tap any card for its page and launch-day prices.",
     author: "RiftCompare",
     date: "2026-07-10",
     updated: "2026-07-23",
@@ -2504,7 +2510,7 @@ Shopping from **[Australia](/blog/buy-riftbound-cards-australia)** or **[the US]
         take: 400,
       },
     ],
-    body: `This is the **complete gallery of every Riftbound: Vendetta card** — all 166 main-set cards, officially confirmed, embedded live from our database in collector-number order. Spoiler season is over, so this is the final list — no more base-set reveals are coming before the 31 July launch.
+    body: `This is the **complete Riftbound Vendetta card list and gallery** — all 166 main-set cards, officially confirmed, embedded live from our database in collector-number order. Spoiler season is over, so this is the final list — no more base-set reveals are coming before the 31 July launch.
 
 **Vendetta releases 31 July 2026.** The set runs **166 main-set cards** plus alternate-art Showcase printings, Overnumbered chase cards (numbered beyond 166), SP-numbered specials, runes and tokens. The mechanics are new too — read up on **[Empower](/guides/riftbound-empower-explained)**, **[Flow](/guides/riftbound-flow-explained)** and **[Burn](/guides/riftbound-burn-explained)** while you browse.
 
