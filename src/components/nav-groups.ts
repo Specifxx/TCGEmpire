@@ -41,12 +41,10 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "Prices",
     links: [
       { href: "/browse", label: "Card Database", emoji: "🗃️" },
-      { href: "/singles", label: "Buy Singles", emoji: "💠" },
-      { href: "/sets", label: "Browse by Set", emoji: "🗂️" },
       { href: "/sealed", label: "Sealed Products", emoji: "📦" },
-      { href: "/movers", label: "Price Movers", emoji: "📈" },
       { href: "/market", label: "Market Index", emoji: "📊" },
       { href: "/stores/tracked", label: "Stores we track", emoji: "🏪" },
+      { href: "/bulk-pricer", label: "Bulk Pricer", emoji: "📋" },
     ],
   },
   ...(MARKETPLACE_NAV_VISIBLE ? [MARKETPLACE_GROUP] : []),
