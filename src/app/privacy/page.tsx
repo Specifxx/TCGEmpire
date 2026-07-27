@@ -47,7 +47,7 @@ export default function PrivacyPage() {
           <h2 className="text-lg font-bold text-white">Cookies</h2>
           <p>
             We use cookies and similar technologies to keep you signed in, remember preferences
-            (such as your selected country), measure traffic, and serve advertising. You can disable
+            (such as your selected country) and measure traffic. You can disable
             cookies in your browser settings, though parts of the Site may stop working as expected.
           </p>
         </section>
@@ -55,8 +55,18 @@ export default function PrivacyPage() {
         <section className="space-y-2">
           <h2 className="text-lg font-bold text-white">Advertising &amp; third-party vendors</h2>
           <p>
-            We display advertising to help fund the Site, including ads served by{" "}
-            <strong className="text-white">Google AdSense</strong>.
+            <strong className="text-white">
+              We do not currently serve third-party advertising, and no third-party advertising
+              cookies are set by this Site.
+            </strong>{" "}
+            RiftCompare is funded by affiliate commissions (see below), Premium subscriptions and
+            marketplace fees. The only promotional units on the Site today are our own — links to
+            other RiftCompare pages, served without any third-party ad network.
+          </p>
+          <p>
+            If we introduce a third-party ad network in future (for example{" "}
+            <strong className="text-white">Google AdSense</strong>), the following will apply, and we
+            will update this policy&rsquo;s effective date when it does:
           </p>
           <ul className="list-disc space-y-1 pl-5">
             <li>

@@ -285,8 +285,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <p>
             RiftCompare · Riftbound card database &amp; price comparison for
             Australia, New Zealand, the US, the UK and Singapore. Prices are sourced from public store listings and may be out
-            of date — always confirm on the retailer&apos;s site. Not affiliated with
-            or endorsed by Riot Games.
+            of date — always confirm on the retailer&apos;s site.
+          </p>
+          {/* Riot's Legal Jibber Jabber policy requires this EXACT notice, displayed
+              conspicuously, for any fan project using Riot-owned assets (card art,
+              names, the Riftbound marks). Keep the wording verbatim — it's what
+              licenses our use of the art, and it's the attribution an ad-network or
+              IP reviewer looks for. https://www.riotgames.com/en/legal */}
+          <p>
+            RiftCompare was created under Riot Games&apos; &ldquo;Legal Jibber Jabber&rdquo;
+            policy using assets owned by Riot Games. Riot Games does not endorse or
+            sponsor this project.
           </p>
         </footer>
         {/* HilltopAds zone loader — the primary ad network (web only, non-premium).

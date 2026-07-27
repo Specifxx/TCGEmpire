@@ -49,9 +49,10 @@ export default function TermsPage() {
         <section className="space-y-2">
           <h2 className="text-lg font-bold text-white">3. Affiliate links &amp; advertising</h2>
           <p>
-            The Site is supported by advertising and affiliate commissions. Some outbound links are
-            affiliate links through which we may earn a commission at no extra cost to you. Ads are served
-            by third parties including Google AdSense. See our{" "}
+            The Site is supported by affiliate commissions, Premium subscriptions and marketplace
+            fees. Some outbound links are affiliate links through which we may earn a commission at
+            no extra cost to you. We do not currently serve third-party advertising; any promotional
+            units you see are our own links to other RiftCompare pages. See our{" "}
             <Link href="/privacy" className="text-brand-400 hover:underline">Privacy Policy</Link> for how
             advertising and cookies are handled.
           </p>

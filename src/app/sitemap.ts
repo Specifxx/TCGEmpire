@@ -4,7 +4,6 @@ import { dbHistory } from "@/lib/db-history";
 import { SITE_URL } from "@/lib/site";
 import { META_DECKS } from "@/lib/meta-decks";
 import { getArticles } from "@/lib/articles";
-import { getMarketReportSlugs } from "@/lib/posts";
 import { SETS } from "@/lib/constants";
 import { DOMAIN_PAGES } from "@/lib/domains";
 import { MARKETPLACE_PUBLIC } from "@/lib/marketplace";
@@ -90,14 +89,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: new Date(`${a.date}T09:00:00+10:00`),
   }));
 
-  // Auto-generated daily market reports (DB-backed blog posts).
-  const reports = await getMarketReportSlugs();
-  const reportRoutes: MetadataRoute.Sitemap = reports.map((r) => ({
-    url: `${SITE_URL}/blog/${r.slug}`,
-    changeFrequency: "monthly" as const,
-    priority: 0.6,
-    lastModified: new Date(`${r.day}T09:00:00+10:00`),
-  }));
+  // Auto-generated daily market reports are DELIBERATELY NOT in the sitemap, and
+  // are noindexed at the page level (see src/app/blog/[slug]/page.tsx).
+  //
+  // WHY: one templated post is generated per calendar day, forever. Each carries
+  // only ~2-3 sentences of variable prose (a verb picked from a 5-branch ladder +
+  // a takeaway from 4 fixed strings) wrapped around a numeric table — the rest is
+  // identical boilerplate. Submitting an unbounded, ever-growing set of
+  // near-duplicate pages is the textbook shape of Google's "scaled content abuse"
+  // spam policy, and a live AdSense/Publisher-Policy liability.
+  //
+  // The cost of dropping them is measurably ~zero: across a full Search Console
+  // export (205 page rows / 1,899 impressions) NOT ONE market-report URL appeared
+  // — they earn no search traffic to lose. They remain fully available to humans
+  // via the homepage banner and the /market/wrap archive; this only stops us
+  // *submitting* them to Google. Reversible by restoring this block + the noindex.
+  const reportRoutes: MetadataRoute.Sitemap = [];
 
   // Set landing pages (high-value head terms, e.g. "Riftbound Origins prices").
   // comingSoon sets are included too at lower priority: pre-release query volume
