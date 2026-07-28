@@ -182,10 +182,14 @@ export async function importMarketplaceListings(): Promise<number> {
     },
   });
 
-  // Cheapest active listing per (card, market).
+  // Cheapest active listing per (card, market, foil-status). isFoil MUST be part of
+  // the key: a foil and non-foil printing are different RetailerPrice rows (the
+  // unique key is [cardId, retailer, condition, isFoil]) and different physical
+  // items — without it, a cheaper non-foil listing silently won the slot and the
+  // foil listing (often the one a buyer is actually looking at) never synced at all.
   const best = new Map<string, (typeof listings)[number]>();
   for (const l of listings) {
-    const key = `${l.cardId}|${l.country}`;
+    const key = `${l.cardId}|${l.country}|${l.isFoil}`;
     if (!best.has(key)) best.set(key, l);
   }
 
