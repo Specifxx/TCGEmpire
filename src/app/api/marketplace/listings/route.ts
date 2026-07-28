@@ -38,7 +38,7 @@ export async function GET(req: Request) {
     take: cardId ? 50 : 60,
     include: {
       card: { select: { id: true, name: true, slug: true, setCode: true, collectorNumber: true, imageThumbUrl: true, variant: true, isPromo: true, rarity: true } },
-      seller: { select: { displayName: true, sellerProfile: { select: { shopName: true, shippingNote: true } } } },
+      seller: { select: { displayName: true, sellerProfile: { select: { shopName: true, shippingNote: true, isOfficial: true } } } },
     },
   });
   return NextResponse.json({ listings });
@@ -84,7 +84,7 @@ export async function POST(req: Request) {
   // Per-listing region (defaults to the shop's market); currency follows the region.
   const country = base.data.country ?? profile.country;
   if (!isLaunchCountry(country)) {
-    return NextResponse.json({ error: "This market isn't open yet — AU, UK and US only for now" }, { status: 400 });
+    return NextResponse.json({ error: "This market isn't open yet" }, { status: 400 });
   }
   const currency = CURRENCY_BY_COUNTRY[country] ?? profile.currency;
 

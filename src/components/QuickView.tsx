@@ -144,15 +144,13 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
   // (eBay) is shown for transparency but must not change which listing is cheapest;
   // it only breaks ties. Unknown postage shows "at checkout" (never fabricated).
   const countryRows = (prices ?? []).filter((p) => p.inStock && p.country === country);
-  // Converted UK reference prices (TCGplayer-UK / Cardmarket) are fallbacks only: hide
-  // them when a real GBP listing exists so the cheapest shown matches the "from" price.
-  const ukHasRealGbp = country === "UK" && countryRows.some((p) => !UK_FALLBACK_RETAILERS.includes(p.retailer));
-  const sgHasRealSgd = country === "SG" && countryRows.some((p) => !SG_FALLBACK_RETAILERS.includes(p.retailer));
-  const auHasRealAud = country === "AU" && countryRows.some((p) => !AU_FALLBACK_RETAILERS.includes(p.retailer));
+  // Converted reference prices (TCGplayer-UK/AU/SG, Cardmarket) are never shown as a
+  // buyable "store" here, even when they're the only source for this market — they
+  // aren't real local retailers, so presenting them as one is misleading (mirrors
+  // lib/market-rows.ts's computeMarket, which the full card page uses).
+  const FALLBACK_RETAILERS = [...UK_FALLBACK_RETAILERS, ...SG_FALLBACK_RETAILERS, ...AU_FALLBACK_RETAILERS];
   const inStock = countryRows
-    .filter((p) => !(ukHasRealGbp && UK_FALLBACK_RETAILERS.includes(p.retailer)))
-    .filter((p) => !(sgHasRealSgd && SG_FALLBACK_RETAILERS.includes(p.retailer)))
-    .filter((p) => !(auHasRealAud && AU_FALLBACK_RETAILERS.includes(p.retailer)))
+    .filter((p) => !FALLBACK_RETAILERS.includes(p.retailer))
     .map((p) => {
       const ship = effectiveShippingCents(p.shippingCents); // number | null (null = unknown)
       return { ...p, ship, delivered: p.priceCents + (ship ?? 0) };

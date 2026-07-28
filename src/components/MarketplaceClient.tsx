@@ -420,7 +420,12 @@ export function MarketplaceClient({
                   <div className="relative aspect-[5/7] w-full bg-ink-900">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     {c.card.imageThumbUrl ? <img src={c.card.imageThumbUrl} alt="" aria-hidden="true" width={300} height={420} loading="lazy" decoding="async" className="h-full w-full object-cover" /> : null}
-                    {pct != null && pct <= -3 && (
+                    {best.isOfficial && (
+                      <span className="absolute left-1.5 top-1.5 rounded-full bg-gold px-2 py-0.5 text-[10px] font-extrabold text-ink-950 shadow">
+                        ★ Official
+                      </span>
+                    )}
+                    {!best.isOfficial && pct != null && pct <= -3 && (
                       <span className="absolute left-1.5 top-1.5 rounded-full bg-brand-500 px-2 py-0.5 text-[10px] font-extrabold text-ink-950 shadow">
                         <span className="num">{Math.abs(pct)}%</span> under market
                       </span>

@@ -47,23 +47,16 @@ const minPrice = (rows: ComputedRow[]): number | null =>
 // Rank by ITEM price — postage is shown for transparency but must not decide which
 // listing is cheapest (a store would be penalised vs eBay just because eBay's
 // postage is known and the store's is "at checkout"); known postage breaks ties.
-// Converted UK reference prices (TCGplayer-UK / Cardmarket) are fallbacks only:
-// hidden whenever a real GBP listing exists, kept when they're the only UK source.
+// Converted reference prices (TCGplayer-UK/AU/SG, Cardmarket) are NEVER shown as a
+// buyable "store" in the main comparison — even when they're the only source for
+// that market — because they're not real local retailers (e.g. TCGplayer doesn't
+// operate as an AU store) and presenting them as one is misleading. They still
+// exist in the DB for the Deal Finder / arbitrage tools, and TCGplayer's own market
+// price is shown separately, clearly labeled as a reference (see CardMarketSection's
+// TcgMarketPrice block) — just never blended into "N stores in your market".
 export function computeMarket(rows: MarketRow[], country: Country): MarketView {
-  const mine = rows.filter((r) => r.country === country);
-  const ukHasRealGbp =
-    country === "UK" && mine.some((p) => p.inStock && !UK_FALLBACK_RETAILERS.includes(p.retailer));
-  const sgHasRealSgd =
-    country === "SG" && mine.some((p) => p.inStock && !SG_FALLBACK_RETAILERS.includes(p.retailer));
-  const auHasRealAud =
-    country === "AU" && mine.some((p) => p.inStock && !AU_FALLBACK_RETAILERS.includes(p.retailer));
-  const source = ukHasRealGbp
-    ? mine.filter((p) => !UK_FALLBACK_RETAILERS.includes(p.retailer))
-    : sgHasRealSgd
-    ? mine.filter((p) => !SG_FALLBACK_RETAILERS.includes(p.retailer))
-    : auHasRealAud
-    ? mine.filter((p) => !AU_FALLBACK_RETAILERS.includes(p.retailer))
-    : mine;
+  const FALLBACK = [...AU_FALLBACK_RETAILERS, ...UK_FALLBACK_RETAILERS, ...SG_FALLBACK_RETAILERS];
+  const source = rows.filter((r) => r.country === country && !FALLBACK.includes(r.retailer));
   const all: ComputedRow[] = source
     .map((p) => ({ ...p, delivered: p.priceCents + (p.ship ?? 0) }))
     .sort((a, b) => a.priceCents - b.priceCents || a.delivered - b.delivered);

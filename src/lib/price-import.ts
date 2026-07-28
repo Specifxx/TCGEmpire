@@ -714,39 +714,25 @@ export async function importPrices(): Promise<ImportSummary> {
   // Recompute each card's lowest live price PER MARKET from IN-STOCK listings only,
   // so the catalogue "from" price never reflects a sold-out listing. (Out-of-stock
   // rows still exist and are shown on the card page, just not used for the headline.)
-  //   lowestPriceCents   = cheapest in-stock real AUD listing (AU store / eBay AU),
-  //     falling back to a converted TCGplayer-AU reference (see AU_FALLBACK_RETAILERS)
-  //     only when a card has no real AU listing at all — AU has plenty of native
-  //     stores, so this is purely a last-resort gap-filler, never a competing price.
-  //   lowestPriceCentsNz = cheapest in-stock NZ listing (NZD)
-  //   lowestPriceCentsUs = cheapest in-stock US listing (USD)
-  //   lowestPriceCentsUk = cheapest in-stock real GBP listing (UK store / eBay UK),
-  //     falling back to a converted reference (TCGplayer-UK / Cardmarket — see
-  //     UK_FALLBACK_RETAILERS) only when no real GBP listing exists. Those converted
-  //     figures otherwise undercut genuine UK stores and made the "from" price look
-  //     unrealistically low.
-  const [pricedAuReal, pricedAuFallback, pricedNz, pricedUs, pricedSgReal, pricedSgFallback, pricedUkReal, pricedUkFallback] = await Promise.all([
+  // Converted reference prices (TCGplayer-AU/UK/SG, Cardmarket — see
+  // AU/UK/SG_FALLBACK_RETAILERS) are EXCLUDED here entirely, not just deprioritized:
+  // they aren't real local retailers (e.g. TCGplayer doesn't operate as an AU
+  // store), so a "$X from" badge backed by one would promise a price the card page
+  // then refuses to show as a store (computeMarket in lib/market-rows.ts excludes
+  // them from the comparison too). A card with no real local listing gets null here
+  // — "no price yet" — rather than a misleading converted figure.
+  const [pricedAuReal, pricedNz, pricedUs, pricedSgReal, pricedUkReal] = await Promise.all([
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "AU", retailer: { notIn: [...AU_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
-    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "AU", retailer: { in: [...AU_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "NZ" }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "US" }, _min: { priceCents: true } }),
-    // SG mirrors the UK pattern: real SGD listings (stores + eBay SG) beat the
-    // converted TCGplayer-SG reference, which is only a per-card fallback.
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "SG", retailer: { notIn: [...SG_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
-    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "SG", retailer: { in: [...SG_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "UK", retailer: { notIn: [...UK_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
-    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "UK", retailer: { in: [...UK_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
   ]);
-  // Real AUD lows first; the converted fallback price is consulted per-card only when none exists.
   const lowAuReal = new Map(pricedAuReal.map((r) => [r.cardId, r._min.priceCents ?? null]));
-  const lowAuFallback = new Map(pricedAuFallback.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowNz = new Map(pricedNz.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowUs = new Map(pricedUs.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowSgReal = new Map(pricedSgReal.map((r) => [r.cardId, r._min.priceCents ?? null]));
-  const lowSgFallback = new Map(pricedSgFallback.map((r) => [r.cardId, r._min.priceCents ?? null]));
-  // Real GBP lows first; the converted fallback prices are consulted per-card only when none exists.
   const lowUkReal = new Map(pricedUkReal.map((r) => [r.cardId, r._min.priceCents ?? null]));
-  const lowUkFallback = new Map(pricedUkFallback.map((r) => [r.cardId, r._min.priceCents ?? null]));
   // Diff-based update: write each card STRAIGHT to its new lowest only when it
   // changed. We must NOT reset every card to null first (the old approach) — that
   // briefly showed "No price yet" for the whole catalogue on every import/deploy
@@ -757,13 +743,17 @@ export async function importPrices(): Promise<ImportSummary> {
   });
   let changed = 0;
   for (const c of existing) {
-    // Prefer a real AUD listing; fall back to a converted reference price only when none exists.
-    const nAu = lowAuReal.get(c.id) ?? lowAuFallback.get(c.id) ?? null;
+    // Real listings only — a converted reference price (TCGplayer-AU/UK/SG,
+    // Cardmarket) is never surfaced as THE card's price: it isn't a real local
+    // retailer, so a browse-grid "$X from" badge backed by it would promise a
+    // price the card page then can't show (computeMarket excludes these rows
+    // from the comparison entirely — see lib/market-rows.ts). Reference prices
+    // stay queryable for the Deal Finder via AU/UK/SG_FALLBACK_RETAILERS directly.
+    const nAu = lowAuReal.get(c.id) ?? null;
     const nNz = lowNz.get(c.id) ?? null;
     const nUs = lowUs.get(c.id) ?? null;
-    // Prefer a real GBP listing; fall back to a converted reference price only when none exists.
-    const nUk = lowUkReal.get(c.id) ?? lowUkFallback.get(c.id) ?? null;
-    const nSg = lowSgReal.get(c.id) ?? lowSgFallback.get(c.id) ?? null;
+    const nUk = lowUkReal.get(c.id) ?? null;
+    const nSg = lowSgReal.get(c.id) ?? null;
     if (
       nAu !== c.lowestPriceCents ||
       nNz !== c.lowestPriceCentsNz ||
@@ -779,7 +769,7 @@ export async function importPrices(): Promise<ImportSummary> {
     }
   }
   console.log(`Lowest recompute: ${changed} cards changed (no null-reset window).`);
-  summary.cardsPriced = new Set([...lowAuReal.keys(), ...lowAuFallback.keys()]).size;
+  summary.cardsPriced = lowAuReal.size;
 
   // Snapshot today's lowest price per card PER MARKET for the price-over-time chart
   // (each market in its own currency). One point per card per market per Sydney day;
@@ -791,11 +781,11 @@ export async function importPrices(): Promise<ImportSummary> {
     await ensureHistoryCards(existing.map((c) => c.id));
     const rows: { cardId: string; country: string; day: Date; lowestPriceCents: number }[] = [];
     for (const c of existing) {
-      const au = lowAuReal.get(c.id) ?? lowAuFallback.get(c.id) ?? null;
+      const au = lowAuReal.get(c.id) ?? null;
       const nz = lowNz.get(c.id) ?? null;
       const us = lowUs.get(c.id) ?? null;
-      const uk = lowUkReal.get(c.id) ?? lowUkFallback.get(c.id) ?? null;
-      const sg = lowSgReal.get(c.id) ?? lowSgFallback.get(c.id) ?? null;
+      const uk = lowUkReal.get(c.id) ?? null;
+      const sg = lowSgReal.get(c.id) ?? null;
       if (au != null) rows.push({ cardId: c.id, country: "AU", day, lowestPriceCents: au });
       if (nz != null) rows.push({ cardId: c.id, country: "NZ", day, lowestPriceCents: nz });
       if (us != null) rows.push({ cardId: c.id, country: "US", day, lowestPriceCents: us });

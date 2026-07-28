@@ -22,7 +22,13 @@ export async function MarketplaceHeroBlock({ cardId, cardName }: { cardId: strin
 
   const listings = await prisma.marketplaceListing.findMany({
     where: { cardId, status: "ACTIVE", quantity: { gt: 0 } },
-    select: { priceCents: true, quantity: true, country: true, currency: true },
+    select: {
+      priceCents: true,
+      quantity: true,
+      country: true,
+      currency: true,
+      seller: { select: { displayName: true, sellerProfile: { select: { shopName: true, isOfficial: true } } } },
+    },
     take: 50,
   });
 
