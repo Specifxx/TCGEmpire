@@ -491,7 +491,11 @@ export const RETAILERS: Record<string, RetailerInfo> = {
   // Second verified batch (user-supplied leads, each confirmed real + US + a live
   // Riftbound collection before adding — several other leads from the same batch were
   // dropped: unverifiable domains, sealed/event-only collections, non-Shopify platforms
-  // (CoolStuffInc, CardTrader), or turned out non-US (Universe TCG is Barcelona-based).
+  // (CoolStuffInc, CardTrader), non-US (Universe TCG is Barcelona-based), or — despite
+  // passing the initial verification — came back with a near-empty/all-unmatched
+  // catalogue on the first live scrape (Common Ground Games, Riftgate, Alchemist's
+  // Refuge, Unplugged Gaming all had real "Riftbound" collections that turned out to
+  // be sealed/accessories, not singles) and were removed again.
   onboardgaming: {
     key: "onboardgaming",
     name: "On-Board Gaming",
@@ -510,46 +514,6 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingFlatCents: 300,
     freeOverCents: 15000,
     shippingNote: "est. US$3.00 · free over US$150",
-    country: "US",
-  },
-  commongroundgames: {
-    key: "commongroundgames",
-    name: "Common Ground Games",
-    base: "https://www.boardgamesdallas.com",
-    collections: ["riftbound-tcg"],
-    shippingFlatCents: 300,
-    freeOverCents: 6000,
-    shippingNote: "est. US$3.00 · free over US$60",
-    country: "US",
-  },
-  riftgate: {
-    key: "riftgate",
-    name: "Riftgate",
-    base: "https://riftgate.com",
-    collections: ["riftbound", "riftbound-unleashed"],
-    shippingFlatCents: 300,
-    freeOverCents: 6000,
-    shippingNote: "est. US$3.00 · free over US$60",
-    country: "US",
-  },
-  alchemistsrefuge: {
-    key: "alchemistsrefuge",
-    name: "Alchemist's Refuge",
-    base: "https://alchemistsrefuge.shop",
-    collections: ["riftbound-origins", "riftbound-spiritforged"],
-    shippingFlatCents: 300,
-    freeOverCents: 6000,
-    shippingNote: "est. US$3.00 · free over US$60",
-    country: "US",
-  },
-  unpluggedgaming: {
-    key: "unpluggedgaming",
-    name: "Unplugged Gaming",
-    base: "https://unpluggedgamestore.com",
-    collections: ["riftbound"],
-    shippingFlatCents: 300,
-    freeOverCents: 6000,
-    shippingNote: "est. US$3.00 · free over US$60",
     country: "US",
   },
 
