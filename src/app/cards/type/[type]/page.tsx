@@ -16,7 +16,12 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: { type: string } }): Promise<Metadata> {
   const facet = typeFacetBySlug(params.type);
   if (!facet) return {};
-  const total = await prisma.card.count({ where: buildCardWhere(facet.query, DEFAULT_COUNTRY) }).catch(() => 0);
+  // -1 = "couldn't count" (DB unreachable), which is NOT the same as "few cards".
+  // Falling back to 0 would noindex a perfectly good facet page on any transient
+  // DB blip; only a CONFIRMED low count should trigger the thin-page guard.
+  const total = await prisma.card
+    .count({ where: buildCardWhere(facet.query, DEFAULT_COUNTRY) })
+    .catch(() => -1);
   const title = `Riftbound ${facet.label} Cards — Prices & Full List | RiftCompare`;
   return {
     title: { absolute: title },
@@ -24,7 +29,7 @@ export async function generateMetadata({ params }: { params: { type: string } })
     alternates: { canonical: `/cards/type/${facet.slug}` },
     // A real page with genuine unique copy either way — noindex only guards
     // against a page whose ONLY content would be a near-empty card grid.
-    ...(total < FACET_THIN_THRESHOLD ? { robots: { index: false, follow: true } } : {}),
+    ...(total >= 0 && total < FACET_THIN_THRESHOLD ? { robots: { index: false, follow: true } } : {}),
     openGraph: { title, description: facet.intro, url: `${SITE_URL}/cards/type/${facet.slug}` },
   };
 }

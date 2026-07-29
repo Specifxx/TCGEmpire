@@ -43,6 +43,29 @@ const BIG_RESULT_BYTES = 1_000_000;
 const OPERATIONAL_URL =
   process.env.RM3 || process.env.DATABASE_URL_2 || process.env.DATABASE_URL;
 
+// Which var actually won, by NAME (never the value — it contains credentials).
+// A Neon P1001 ("Can't reach database server at ep-…") names only the host, and
+// with three fallback vars plus a separate history database in play there is no
+// way to tell from the error alone WHICH client was pointed where. Logging the
+// winning var name once at module init makes the next P1001 self-diagnosing —
+// in particular it distinguishes "RM3 is down" from "RM3 is unset in this
+// environment, so we silently fell back to the exhausted old database".
+export const OPERATIONAL_URL_SOURCE = process.env.RM3
+  ? "RM3"
+  : process.env.DATABASE_URL_2
+  ? "DATABASE_URL_2"
+  : process.env.DATABASE_URL
+  ? "DATABASE_URL"
+  : "NONE";
+
+if (OPERATIONAL_URL_SOURCE !== "RM3") {
+  console.warn(
+    `[db] operational database resolved from ${OPERATIONAL_URL_SOURCE}, not RM3. ` +
+      `RM3 is the current project; the others are exhausted/read-only fallbacks kept only so a ` +
+      `deploy can't hard-fail. If this appears in a Vercel build log, RM3 is missing from that environment.`
+  );
+}
+
 function makeClient() {
   const base = new PrismaClient({
     datasourceUrl: OPERATIONAL_URL,

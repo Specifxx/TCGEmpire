@@ -41,8 +41,13 @@ async function storeStats(key: string) {
       }),
     ]);
     return { count, min: agg._min.priceCents, max: agg._max.priceCents, cheapest };
-  } catch {
-    return { count: 0, min: null, max: null, cheapest: [] as never[] };
+  } catch (e) {
+    // count:-1 means "couldn't read", NOT "nothing in stock". Returning 0 here
+    // would noindex all 84 store pages on any transient DB blip (a real Neon
+    // P1001 during a Vercel build is not hypothetical). Only a CONFIRMED low
+    // count should trip the thin-page guard.
+    console.error(`stores/${key}: inventory query failed:`, e);
+    return { count: -1, min: null, max: null, cheapest: [] as never[] };
   }
 }
 
@@ -62,7 +67,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     // deliberately directory-only) would be a page whose only content is
     // "nothing in stock". Real page, still linked, just not submitted for
     // indexing until it has something to show.
-    ...(count < STORE_THIN_THRESHOLD ? { robots: { index: false, follow: true } } : {}),
+    ...(count >= 0 && count < STORE_THIN_THRESHOLD ? { robots: { index: false, follow: true } } : {}),
     openGraph: { title, description: `Live Riftbound prices and stock at ${store.name}.`, url: `${SITE_URL}/stores/${store.slug}` },
   };
 }

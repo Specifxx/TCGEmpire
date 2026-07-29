@@ -53,14 +53,32 @@ export default async function ChampionPage({ params }: { params: { slug: string 
   const currency = COUNTRIES[country].currency;
   const where = championCardWhere(champ);
 
-  const cards = await prisma.card.findMany({
-    where,
-    orderBy: [{ [field]: { sort: "desc", nulls: "last" } }, { setCode: "asc" }, { collectorNumber: "asc" }],
-    take: 60,
-    select: cardTileSelect(country),
-  });
+  // A DB OUTAGE MUST NOT LOOK LIKE "this champion has no cards". Those two
+  // states are indistinguishable if the error is swallowed into an empty array,
+  // and the consequences are opposite: a genuinely card-less champion should
+  // 404, but a transient outage that 404s bakes all 82 champion pages as
+  // permanent-looking 404s into the deploy (and a real Neon P1001 during a
+  // Vercel build is not hypothetical — it happened). So the failure is caught
+  // explicitly and flagged, and only a CONFIRMED empty result 404s.
+  // Declared as a thunk so the result type is inferred from the actual `select`
+  // (cardTileSelect) rather than widening to the full Card model.
+  const fetchCards = () =>
+    prisma.card.findMany({
+      where,
+      orderBy: [{ [field]: { sort: "desc", nulls: "last" } }, { setCode: "asc" }, { collectorNumber: "asc" }],
+      take: 60,
+      select: cardTileSelect(country),
+    });
+  let cards: Awaited<ReturnType<typeof fetchCards>> = [];
+  let dbReachable = true;
+  try {
+    cards = await fetchCards();
+  } catch (e) {
+    dbReachable = false;
+    console.error(`champions/${champ.slug}: card query failed, rendering without the grid:`, e);
+  }
 
-  if (cards.length === 0) notFound();
+  if (dbReachable && cards.length === 0) notFound();
 
   // Price stats from the cards we actually rendered — never a separate query
   // that could disagree with the grid. Nulls excluded rather than zero-filled.

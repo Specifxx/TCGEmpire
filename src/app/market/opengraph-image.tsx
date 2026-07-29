@@ -24,7 +24,16 @@ export default async function Image() {
   const up = d7 != null && d7 > 0;
   const flat = d7 == null || d7 === 0;
   const deltaColor = flat ? "#94a3b8" : up ? "#34d17e" : "#f87171";
-  const deltaText = d7 == null ? "" : `${up ? "▲ +" : d7 < 0 ? "▼ " : "■ "}${Math.abs(d7)}% (7d)`;
+  // ASCII ONLY. This used to render "▲ +2.4%" / "▼ 2.4%" / "■ 0%" (U+25B2 /
+  // U+25BC / U+25A0, the Geometric Shapes block). Satori's built-in font has no
+  // glyph for those, so @vercel/og fell back to fetching one from Google Fonts
+  // at build time — which answers 400 for that request and logged
+  // "Failed to load dynamic font for ▲" on every deploy. The direction is
+  // already carried by deltaColor (green/red/grey), so a +/- sign says the same
+  // thing with no network dependency and no missing-glyph tofu.
+  // The "·" and "—" used in the other OG routes are fine: both are in the
+  // standard Latin set the embedded font covers.
+  const deltaText = d7 == null ? "" : `${up ? "+" : d7 < 0 ? "-" : ""}${Math.abs(d7)}% (7d)`;
   const accent = "#34d17e";
 
   return new ImageResponse(
