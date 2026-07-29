@@ -623,6 +623,20 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                 ))}
               </div>
             )}
+            {/* Facet cross-links — internal-linking fix for the crawled-not-indexed
+                backlog: every card page now links out to its type, rarity and domain
+                hub, not just its own set/champion clusters. */}
+            <div className="mt-4 flex flex-wrap gap-2 border-t border-ink-800 pt-4">
+              <Link href={`/cards/type/${card.type.toLowerCase()}`} className="chip bg-ink-800 text-slate-400 transition-colors hover:bg-ink-700 hover:text-slate-200">
+                More {card.type} cards →
+              </Link>
+              <Link href={`/cards/rarity/${card.rarity.toLowerCase()}`} className="chip bg-ink-800 text-slate-400 transition-colors hover:bg-ink-700 hover:text-slate-200">
+                More {card.rarity} cards →
+              </Link>
+              <Link href={`/domains/${domainSlug(card.domain)}`} className="chip bg-ink-800 text-slate-400 transition-colors hover:bg-ink-700 hover:text-slate-200">
+                More {card.domain} cards →
+              </Link>
+            </div>
           </section>
 
           <section className="card-surface mt-6 p-5">

@@ -8,6 +8,9 @@ import { SETS } from "@/lib/constants";
 import { DOMAIN_PAGES } from "@/lib/domains";
 import { MARKETPLACE_PUBLIC } from "@/lib/marketplace";
 import { KEYWORDS } from "@/lib/keywords";
+import { TYPE_FACETS, RARITY_FACETS, PRINTING_FACETS } from "@/lib/facets";
+import { buildCardWhere } from "@/lib/cards";
+import { DEFAULT_COUNTRY } from "@/lib/country";
 
 // Regenerate at most once per day — the card set is stable.
 export const revalidate = 86400;
@@ -64,6 +67,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/widgets`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${SITE_URL}/domains`, changeFrequency: "weekly", priority: 0.7 },
     { url: `${SITE_URL}/keywords`, changeFrequency: "weekly", priority: 0.7 },
+    { url: `${SITE_URL}/cards`, changeFrequency: "weekly", priority: 0.7 },
     { url: `${SITE_URL}/stores`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${SITE_URL}/games/higher-lower`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${SITE_URL}/games/price-check`, changeFrequency: "monthly", priority: 0.6 },
@@ -140,6 +144,35 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
+  // Facet pages — thin ones (< FACET_THIN_THRESHOLD cards) are noindexed at the
+  // page level, but leaving them out of the sitemap too avoids submitting a URL
+  // Google will just drop as noindex. That check needs a DB count per facet, so
+  // it's done here rather than duplicating it from the page's own metadata.
+  const facetDefs = [
+    ...TYPE_FACETS.map((f) => ({ f, base: "type" })),
+    ...RARITY_FACETS.map((f) => ({ f, base: "rarity" })),
+    ...PRINTING_FACETS.map((f) => ({ f, base: "printing" })),
+  ];
+  let facetRoutes: MetadataRoute.Sitemap = facetDefs.map(({ f, base }) => ({
+    url: `${SITE_URL}/cards/${base}/${f.slug}`,
+    changeFrequency: "daily" as const,
+    priority: 0.6,
+    lastModified: priceDay,
+  }));
+  try {
+    const counts = await Promise.all(facetDefs.map(({ f }) => prisma.card.count({ where: buildCardWhere(f.query, DEFAULT_COUNTRY) })));
+    facetRoutes = facetDefs
+      .filter((_, i) => counts[i] >= 8)
+      .map(({ f, base }) => ({
+        url: `${SITE_URL}/cards/${base}/${f.slug}`,
+        changeFrequency: "daily" as const,
+        priority: 0.6,
+        lastModified: priceDay,
+      }));
+  } catch (e) {
+    console.error("sitemap: facet count query failed, listing all facet routes:", e);
+  }
+
   const deckRoutes: MetadataRoute.Sitemap = META_DECKS.map((d) => ({
     url: `${SITE_URL}/decks/${d.slug}`,
     changeFrequency: "weekly",
@@ -190,5 +223,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // NOTE: deliberately NO blanket "lastModified: now" — evergreen pages
   // (privacy, games, deck guides…) carry no date rather than a fake one.
-  return [...staticRoutes, ...marketplaceRoutes, ...setRoutes, ...domainRoutes, ...keywordRoutes, ...deckRoutes, ...articleRoutes, ...reportRoutes, ...cardRoutes];
+  return [...staticRoutes, ...marketplaceRoutes, ...setRoutes, ...domainRoutes, ...keywordRoutes, ...facetRoutes, ...deckRoutes, ...articleRoutes, ...reportRoutes, ...cardRoutes];
 }

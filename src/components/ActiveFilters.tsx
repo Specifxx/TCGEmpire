@@ -1,9 +1,20 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 
 const CSV_KEYS = ["domain", "rarity", "type", "set"];
+
+// The full set of query keys /browse's Filters component can set. Used to detect
+// "exactly one clean facet is active" so /browse can point at the equivalent
+// static /cards/type|rarity/<value> hub page — real content, real internal links,
+// a stronger indexing signal than a query-param view — without /browse itself
+// trying to compete with (or duplicate) that page.
+const ALL_FILTER_KEYS = [
+  "domain", "rarity", "type", "set", "variant", "sig", "over", "promo",
+  "printing", "priced", "min", "max", "rules", "rulesSet", "q",
+];
 
 // Skinport-style "applied filters" row: every active filter shown as a removable
 // chip above the results, so it's obvious what's filtered and easy to undo.
@@ -29,6 +40,18 @@ export function ActiveFilters({ basePath = "/browse" }: { basePath?: string }) {
   if (min || max) chips.push({ key: "price", value: "", label: `$${min ?? "0"}–${max ?? "∞"}` });
 
   if (chips.length === 0) return null;
+
+  // Exactly one clean single-value type/rarity filter and nothing else → link out
+  // to the equivalent static facet page (see lib/facets.ts) instead of leaving the
+  // visitor stuck on a query-param view with no such link.
+  const activeKeys = ALL_FILTER_KEYS.filter((k) => !!params.get(k));
+  let facetHref: string | null = null;
+  if (activeKeys.length === 1) {
+    const type = params.get("type");
+    const rarity = params.get("rarity");
+    if (type && !type.includes(",")) facetHref = `/cards/type/${type.toLowerCase()}`;
+    else if (rarity && !rarity.includes(",")) facetHref = `/cards/rarity/${rarity.toLowerCase()}`;
+  }
 
   function go(next: URLSearchParams) {
     next.delete("page");
@@ -71,6 +94,11 @@ export function ActiveFilters({ basePath = "/browse" }: { basePath?: string }) {
         </button>
       ))}
       <button onClick={clearAll} className="text-xs text-slate-500 hover:text-white">Clear all</button>
+      {facetHref && (
+        <Link href={facetHref} className="ml-auto text-xs text-brand-400 hover:underline">
+          View this as a page →
+        </Link>
+      )}
     </div>
   );
 }
