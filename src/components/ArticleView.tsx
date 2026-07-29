@@ -246,10 +246,29 @@ export async function ArticleView({ article }: { article: Article }) {
       { "@type": "ListItem", position: 3, name: article.title, item: articleUrl },
     ],
   };
+  // FAQPage schema from the article's structured `faq` field (kept in sync with
+  // the visible "## X FAQ" markdown section by whoever edits the guide — see the
+  // field's doc comment in lib/articles.ts). Omitted entirely when a guide
+  // carries no structured FAQ, rather than parsed out of the markdown body.
+  const faqLd =
+    article.faq && article.faq.length > 0
+      ? {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: article.faq.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        }
+      : null;
 
   return (
     <article className="mx-auto max-w-3xl">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify([articleLd, breadcrumbLd]) }} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify([articleLd, breadcrumbLd, ...(faqLd ? [faqLd] : [])]) }}
+      />
 
       <Link href={backHref} className="mb-4 inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white">
         ← {backLabel}
@@ -264,6 +283,12 @@ export async function ArticleView({ article }: { article: Article }) {
       <h1 className="text-3xl font-extrabold leading-tight text-white">{article.title}</h1>
       <div className="mt-2 text-sm text-slate-500">
         {article.author} · {fmtDate(article.date)} · {article.readMins} min read
+        {/* Real freshness signal — Article.updated already exists on ~30 articles
+            but was never rendered anywhere, so a genuinely-refreshed guide looked
+            exactly as stale as one that hadn't been touched since launch. */}
+        {article.updated && article.updated !== article.date && (
+          <> · <span className="text-slate-400">Updated {fmtDate(article.updated)}</span></>
+        )}
       </div>
 
       <AdSlot className="mt-6" height={120} />

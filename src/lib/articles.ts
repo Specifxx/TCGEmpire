@@ -83,6 +83,11 @@ export interface Article {
   // view pre-filtered to the mechanic it just explained, or the Index). Omit for
   // the default /browse CTA.
   browseCta?: { href: string; label: string; blurb: string };
+  // Structured Q&A for FAQPage schema. Most guides already hand-write a "## X FAQ"
+  // section in `body` (visible, human-facing markdown) — this is the SAME content
+  // duplicated in structured form so ArticleView can emit real FAQPage JSON-LD
+  // without parsing markdown. Keep the two in sync when editing either.
+  faq?: { q: string; a: string }[];
 }
 
 export const ARTICLES: Article[] = [
@@ -1820,6 +1825,12 @@ Bookmark this page — it updates as new Jayce or Mel printings land in the data
     updated: "2026-07-17",
     readMins: 5,
     tags: ["vendetta", "mechanics", "empower", "disempower", "gameplay", "guide"],
+    faq: [
+      { q: "What is Empower in Riftbound?", a: "Empower gives a card the potential to gain new abilities once it's already in play, usually by paying an extra cost on a later turn — a cheap play now, a bigger payoff later." },
+      { q: "Is Empower permanent?", a: "Yes. Empowered is a status that sticks to a card indefinitely — it lasts until the card leaves the board, or until something Disempowers it." },
+      { q: "What is Disempower?", a: "The reverse of Empower — an instruction or cost on some cards that strips the Empowered status from a card. You can't Disempower a card that isn't currently Empowered." },
+      { q: "How is Empower different from Flow and Burn?", a: "Empower grows a card you already control; Flow plays cards from your trash; Burn sends cards to the trash. All three are new in Vendetta and designed to combo." },
+    ],
     shop: [
       { label: "Jayce singles — the Empower champion", query: "Riftbound Jayce" },
       { label: "Mel singles", query: "Riftbound Mel" },
@@ -1855,7 +1866,7 @@ Bookmark this page — it updates as new Jayce or Mel printings land in the data
     ],
     body: `![Vendetta's new mechanics — Flow, Burn and Empower](/vendetta-mechanics.png)
 
-**Empower** is one of three new mechanics arriving with **[Riftbound: Vendetta](/sets/vendetta)** on **31 July 2026**. It's quickly become one of the most searched-for parts of the set — so here's a complete, plain-English guide to what the Empower mechanic does and how to play around it.
+**Empower** is one of three new mechanics arriving with **[Riftbound: Vendetta](/sets/vendetta)** on **31 July 2026**. It's quickly become one of the most searched-for parts of the set — so here's a complete, plain-English guide to what the Empower mechanic does and how to play around it. For the quick rules reference and every Empower card revealed so far, see the **[Empower keyword page](/keywords/empower)**.
 
 ## What is Empower in Riftbound?
 
@@ -1925,6 +1936,12 @@ Empower cards will list with live prices on the **[Vendetta set page](/sets/vend
     updated: "2026-07-08",
     readMins: 4,
     tags: ["vendetta", "mechanics", "flow", "gameplay", "guide"],
+    faq: [
+      { q: "What is Flow in Riftbound?", a: "Flow is a Vendetta keyword that lets you play a card straight from your trash instead of your hand — your discarded and used cards become a second pool of plays rather than being gone for good." },
+      { q: "How does the Flow mechanic work?", a: "A card printed with Flow can be cast from the trash the same way you'd cast it from hand, often for its normal cost — so anything that fills your trash first (discarding, cycling, or the Burn mechanic) sets Flow up to cash in later." },
+      { q: "Is Flow only in Vendetta?", a: "Yes — Flow is introduced as a brand-new keyword in the Vendetta set; it doesn't appear on cards from earlier sets." },
+      { q: "How is Flow different from Empower and Burn?", a: "Flow plays cards from your trash; Burn sends cards to your trash; Empower upgrades a card that's already in play." },
+    ],
     shop: [
       { label: "Chaos singles — the recursion domain", query: "Riftbound Chaos" },
       { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
@@ -1949,7 +1966,7 @@ Empower cards will list with live prices on the **[Vendetta set page](/sets/vend
     ],
     body: `![Vendetta's new mechanics — Flow, Burn and Empower](/vendetta-mechanics.png)
 
-**Flow** is one of three new mechanics in **[Riftbound: Vendetta](/sets/vendetta)** (out **31 July 2026**). It turns your trash from a graveyard into a resource — here's exactly how the Flow mechanic works and how to build around it.
+**Flow** is one of three new mechanics in **[Riftbound: Vendetta](/sets/vendetta)** (out **31 July 2026**). It turns your trash from a graveyard into a resource — here's exactly how the Flow mechanic works and how to build around it. For the quick rules reference and every Flow card revealed so far, see the **[Flow keyword page](/keywords/flow)**.
 
 ## What is Flow in Riftbound?
 
@@ -2000,6 +2017,12 @@ Flow cards will show live prices on the **[Vendetta set page](/sets/vendetta)** 
     updated: "2026-07-08",
     readMins: 4,
     tags: ["vendetta", "mechanics", "burn", "gameplay", "guide"],
+    faq: [
+      { q: "What is Burn in Riftbound?", a: "Burn sends cards from a Main Deck to the trash — either your own (self-Burn, to fuel Flow and other trash-payoffs) or your opponent's (a mill-style deck attack)." },
+      { q: "Is Burn the same as mill?", a: "Deck-attack Burn (burning an opponent's deck) is Riftbound's version of a mill strategy. Self-Burn is a different use of the same keyword — filling your own trash on purpose." },
+      { q: "Is Burn only in Vendetta?", a: "Yes — Burn is introduced as a new keyword in the Vendetta set." },
+      { q: "How is Burn different from Flow and Empower?", a: "Burn sends cards to the trash; Flow plays them back out of the trash; Empower grows a card that's already in play. The three are designed to combo." },
+    ],
     shop: [
       { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
       { label: "Riftbound singles on eBay", query: "Riftbound TCG singles" },
@@ -2024,7 +2047,7 @@ Flow cards will show live prices on the **[Vendetta set page](/sets/vendetta)** 
     ],
     body: `![Vendetta's new mechanics — Flow, Burn and Empower](/vendetta-mechanics.png)
 
-**Burn** is one of three new mechanics in **[Riftbound: Vendetta](/sets/vendetta)** (out **31 July 2026**). It has two very different uses — here's how the Burn mechanic works and how to build around it.
+**Burn** is one of three new mechanics in **[Riftbound: Vendetta](/sets/vendetta)** (out **31 July 2026**). It has two very different uses — here's how the Burn mechanic works and how to build around it. For the quick rules reference and every Burn card revealed so far, see the **[Burn keyword page](/keywords/burn)**.
 
 ## What is Burn in Riftbound?
 

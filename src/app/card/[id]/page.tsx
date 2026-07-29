@@ -30,6 +30,7 @@ import { MarketplaceHeroBlock } from "@/components/MarketplaceHeroBlock";
 import { getActiveListingsForCard } from "@/lib/marketplace";
 import { EbayAdCarousel } from "@/components/EbayAdCarousel";
 import { computeMarket, type MarketRow } from "@/lib/market-rows";
+import { KeywordText } from "@/components/KeywordTooltip";
 
 // REAL ISR: no cookie/header reads anywhere in this route's tree — the page is
 // rendered once on the AU baseline and served from cache to every visitor and
@@ -600,7 +601,11 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               {about.map((p, i) => (
                 <p key={i}>{p}</p>
               ))}
-              {card.description && <p className="text-slate-400">{card.description}</p>}
+              {card.description && (
+                <p className="text-slate-400">
+                  <KeywordText text={card.description} />
+                </p>
+              )}
               {card.flavorText && <p className="italic text-slate-500">&ldquo;{card.flavorText}&rdquo;</p>}
             </div>
             {tags.length > 0 && (

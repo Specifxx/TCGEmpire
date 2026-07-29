@@ -7,6 +7,7 @@ import { getArticles } from "@/lib/articles";
 import { SETS } from "@/lib/constants";
 import { DOMAIN_PAGES } from "@/lib/domains";
 import { MARKETPLACE_PUBLIC } from "@/lib/marketplace";
+import { KEYWORDS } from "@/lib/keywords";
 
 // Regenerate at most once per day — the card set is stable.
 export const revalidate = 86400;
@@ -62,6 +63,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/premium`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${SITE_URL}/widgets`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${SITE_URL}/domains`, changeFrequency: "weekly", priority: 0.7 },
+    { url: `${SITE_URL}/keywords`, changeFrequency: "weekly", priority: 0.7 },
     { url: `${SITE_URL}/stores`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${SITE_URL}/games/higher-lower`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${SITE_URL}/games/price-check`, changeFrequency: "monthly", priority: 0.6 },
@@ -84,9 +86,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     url: `${SITE_URL}/${a.category === "guide" ? "guides" : "blog"}/${a.slug}`,
     changeFrequency: "monthly",
     priority: 0.6,
-    // Real publish date — articles don't change daily, and an honest signal
-    // beats stamping everything "today" (Google learns to distrust the latter).
-    lastModified: new Date(`${a.date}T09:00:00+10:00`),
+    // Real publish OR last-substantive-edit date — articles don't change daily,
+    // and an honest signal beats stamping everything "today" (Google learns to
+    // distrust the latter). `updated` existed on ~30 articles but was never read
+    // here, so a genuinely-refreshed guide's sitemap entry looked exactly as
+    // stale as one untouched since launch.
+    lastModified: new Date(`${a.updated ?? a.date}T09:00:00+10:00`),
   }));
 
   // Auto-generated market reports are DELIBERATELY NOT in the sitemap, and are
@@ -125,6 +130,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: "daily",
     priority: 0.8,
     lastModified: priceDay,
+  }));
+
+  // Keyword reference pages — only the ones with verified rules text (see
+  // lib/keywords.ts); the rest of the glossary index isn't a separate URL.
+  const keywordRoutes: MetadataRoute.Sitemap = KEYWORDS.map((k) => ({
+    url: `${SITE_URL}/keywords/${k.slug}`,
+    changeFrequency: "weekly",
+    priority: 0.7,
   }));
 
   const deckRoutes: MetadataRoute.Sitemap = META_DECKS.map((d) => ({
@@ -177,5 +190,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // NOTE: deliberately NO blanket "lastModified: now" — evergreen pages
   // (privacy, games, deck guides…) carry no date rather than a fake one.
-  return [...staticRoutes, ...marketplaceRoutes, ...setRoutes, ...domainRoutes, ...deckRoutes, ...articleRoutes, ...reportRoutes, ...cardRoutes];
+  return [...staticRoutes, ...marketplaceRoutes, ...setRoutes, ...domainRoutes, ...keywordRoutes, ...deckRoutes, ...articleRoutes, ...reportRoutes, ...cardRoutes];
 }
