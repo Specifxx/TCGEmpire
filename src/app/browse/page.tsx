@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
+import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { getCountry } from "@/lib/get-country";
 import { Filters } from "@/components/Filters";
 import { ActiveFilters } from "@/components/ActiveFilters";
@@ -71,16 +73,40 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
   const size = parsePageSize(searchParams.size);
   const page = parsePageNum(searchParams.page);
 
-  const [total, cards] = await Promise.all([
-    prisma.card.count({ where }),
-    prisma.card.findMany({
-      where,
-      orderBy,
-      select: cardTileSelect(country),
-      skip: (page - 1) * size,
-      take: size,
-    }),
-  ]);
+  // EGRESS: this route is force-dynamic (searchParams), so WITHOUT this every
+  // single visitor and every crawler hit ran two Postgres queries — and /browse
+  // is both the site's main landing page and the deepest crawl surface. That made
+  // it the largest consumer of a Neon network-transfer allowance this project has
+  // already exhausted three times.
+  //
+  // The DEFAULT view (no filters, no sort, no paging — the one crawlers and most
+  // visitors actually get) is identical for every visitor in a given market, so
+  // it's memoised per country. Any filtered/sorted/paged view still queries live:
+  // those are long-tail, per-user, and caching the full permutation space would
+  // be pointless. Tagged CONTENT_TAG so the price import purges it immediately
+  // rather than serving up to an hour of stale prices.
+  //
+  // Payload is ~100 rows of cardTileSelect (tens of KB) — comfortably under the
+  // size ceiling above which Next's Data Cache silently declines to store an
+  // entry and every request falls through to the database (see lib/db.ts).
+  const isDefaultView = Object.values(searchParams).every((v) => v == null || v === "");
+  const runQuery = () =>
+    Promise.all([
+      prisma.card.count({ where }),
+      prisma.card.findMany({
+        where,
+        orderBy,
+        select: cardTileSelect(country),
+        skip: (page - 1) * size,
+        take: size,
+      }),
+    ]);
+  const [total, cards] = isDefaultView
+    ? await unstable_cache(runQuery, ["browse-default", country], {
+        revalidate: 3600,
+        tags: [CONTENT_TAG],
+      })()
+    : await runQuery();
   const totalPages = Math.max(1, Math.ceil(total / size));
 
   const breadcrumbLd = {
