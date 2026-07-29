@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Archivo } from "next/font/google";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { CardTile } from "@/components/CardTile";
@@ -15,6 +16,25 @@ import { CinematicHero } from "@/components/home/CinematicHero";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { CardsIcon } from "@/components/icons/HomeIcons";
+
+// Homepage titling face — a heavy neutral grotesque matching the official
+// Riftbound wordmark lockup ("RIFTBOUND / LEAGUE OF LEGENDS TRADING CARD GAME"),
+// which is set in a bold sans rather than the flared serif the rest of the site
+// uses for headings (Fraunces — see layout.tsx). Archivo is the closest free,
+// properly-licensed analog: same wide, solid, poster-weight grotesque character.
+//
+// Declared HERE rather than in layout.tsx on purpose: next/font only injects and
+// preloads a face on the routes that actually reference it, so scoping the
+// import to this file keeps the extra download off every other page. The var is
+// applied to the homepage wrapper below and inherited by its children (the hero
+// lives in a separate component), then consumed by the `.rb-display-sans` rule
+// in globals.css.
+const archivo = Archivo({
+  subsets: ["latin"],
+  weight: ["600", "700", "800", "900"],
+  variable: "--font-riftbound",
+  display: "swap",
+});
 
 // REAL ISR: renders a market-NEUTRAL baseline (no cookie/header reads — the
 // indexed copy names all four markets, data is fetched for the AU baseline) so
@@ -131,7 +151,7 @@ export default async function HomePage() {
   const anyDeals = COUNTRY_CODES.some((c) => topDealsByCountry[c].hasAny);
 
   return (
-    <div className="flex flex-col gap-12">
+    <div className={`${archivo.variable} rb-display-sans flex flex-col gap-12`}>
       {/* Vendetta launch ribbon lives in the layout (attached under the navbar), so
           it isn't repeated here. */}
 

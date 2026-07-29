@@ -48,6 +48,27 @@ h1 {
   font-weight: 900;
 }
 
+/* HOMEPAGE ONLY — swaps the flared serif above for a heavy neutral grotesque,
+   matching the official Riftbound wordmark lockup (which is set in a bold sans,
+   not a serif). Scoped to the `.rb-display-sans` wrapper applied in
+   src/app/page.tsx, so the rest of the site keeps the Fraunces titling voice.
+   The face itself (--font-riftbound / Archivo) is imported by that same file.
+
+   Deliberately does NOT force text-transform: uppercase. The reference lockup is
+   a single short word; this page's h1 is a full sentence ("Compare Riftbound
+   card prices across AU, NZ, US & UK stores"), and setting a string that long in
+   tracked-out caps hurts legibility badly — the same reason .rb-eyebrow below is
+   opt-in for short labels rather than applied to headings wholesale. Use
+   .rb-eyebrow where you want the tracked all-caps treatment. */
+.rb-display-sans h1,
+.rb-display-sans h2,
+.rb-display-sans h3 {
+  font-family: var(--font-riftbound), var(--font-sans), system-ui, sans-serif;
+  /* Tighter than the serif's -0.01em: a heavy grotesque at display sizes needs
+     more negative tracking to read as one solid mass rather than loose letters. */
+  letter-spacing: -0.025em;
+}
+
 /* "Eyebrow" micro-heading — the tracked, uppercase treatment the official site
    uses for section labels and callouts. Opt-in via class rather than applied to
    h1-h3 by default: real headings here (card names, article titles) are often
