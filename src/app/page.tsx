@@ -17,6 +17,7 @@ import { CinematicHero } from "@/components/home/CinematicHero";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { CardsIcon } from "@/components/icons/HomeIcons";
+import { RETAILER_LIST } from "@/lib/retailers";
 
 // Homepage titling face — a heavy neutral grotesque matching the official
 // Riftbound wordmark lockup ("RIFTBOUND / LEAGUE OF LEGENDS TRADING CARD GAME"),
@@ -149,8 +150,21 @@ export default async function HomePage() {
   // Assemble per-market stat tiles; the client picks the visitor's market after hydration.
   const inStockByCountry: Record<string, number> = {};
   for (const g of inStockGroups) inStockByCountry[g.country] = g._count._all;
+  // "Stores" means real, currently-tracked retailers — intersect the DB rows with
+  // RETAILER_LIST (the single source of truth also used by /stores/tracked) rather
+  // than trusting raw distinct `retailer` values. Without this a store REMOVED from
+  // retailers.ts still counts forever (its old RetailerPrice/SealedListing rows are
+  // never deleted once nothing targets that key again — see the STORES_WITH_POLICY
+  // cleanup note in retailers.ts for the same drift), and TCGplayer/Cardmarket/
+  // Marketplace pseudo-retailers (never in RETAILER_LIST, only excluded here by
+  // name for eBay) get counted as if they were independent "stores" too. This is
+  // the actual reason the homepage stat and /stores/tracked's count could disagree.
+  const validRetailerKeys = new Set(RETAILER_LIST.map((r) => r.key));
   const storesByCountry: Record<string, Set<string>> = {};
-  for (const r of storeRows) (storesByCountry[r.country] ??= new Set()).add(r.retailer);
+  for (const r of storeRows) {
+    if (!validRetailerKeys.has(r.retailer)) continue;
+    (storesByCountry[r.country] ??= new Set()).add(r.retailer);
+  }
   const statsByCountry = Object.fromEntries(
     COUNTRY_CODES.map((c, i) => [c, { priced: pricedCounts[i], inStock: inStockByCountry[c] ?? 0, stores: storesByCountry[c]?.size ?? 0 }]),
   ) as Record<Country, MarketStat>;
