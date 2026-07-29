@@ -274,29 +274,52 @@ export async function refreshEbayMarkets(
 ): Promise<number> {
   // Each market has its own retailer key so eBay AU + US rows for the same card never
   // collide on the unique [cardId, retailer, condition, isFoil] key.
-  const MARKETS = [
+  //
+  // ── QUOTA BUDGET: WHY SG AND CA ALTERNATE BY DAY ────────────────────────────
+  // Every market costs ~1 Browse call per card (~1.1k cards), and the real spendable
+  // budget is `liveRemaining − QUOTA_RESERVE` ≈ 4,400 on a clean day. Six markets
+  // would need ~6.6k and five ~5.5k, so a single pass covering every market EVERY
+  // day is arithmetically impossible — it would always run out partway and leave the
+  // trailing market(s) unrefreshed. Rather than let that happen implicitly (which
+  // silently starves whichever market sorts last), the two newest/smallest markets
+  // take turns: AU/US/UK refresh daily, and SG and CA get every other day. That
+  // fits ~4×1.1k ≈ 4.4k inside the budget, and each rotating market is at most ~24h
+  // staler than the others — far better than one of them being permanently skipped.
+  const ALWAYS = [
     { country: "AU", marketplace: "EBAY_AU", currency: "AUD", retailer: "ebay" },
     { country: "US", marketplace: "EBAY_US", currency: "USD", retailer: "ebay_us" },
     { country: "UK", marketplace: "EBAY_GB", currency: "GBP", retailer: "ebay_uk" },
-    // eBay Singapore (SGD). 4 markets ≈ 4×~1k calls — the live-quota budget in
-    // primeEbayBudget() still bounds total spend below the 5,000/day Browse limit.
+  ];
+  // Rotated one-per-day, in this order. Add a third market here and the rotation
+  // just becomes every-third-day — no other change needed.
+  const ROTATING = [
     { country: "SG", marketplace: "EBAY_SG", currency: "SGD", retailer: "ebay_sg" },
-    // eBay Canada (CAD) — added with the CA market. DELIBERATELY LAST: markets are
-    // walked in array order and primeEbayBudget() hard-stops the pass when the
-    // budget runs out (it can never exhaust eBay's daily quota — it reserves
-    // QUOTA_RESERVE — but it CAN run out mid-pass, and whichever markets come
-    // last are the ones that get skipped). Putting CA last means a tight-quota
-    // run degrades the newest market first and leaves the four established ones
-    // fully refreshed, instead of the other way round. A skipped market keeps its
-    // existing rows (see the `rows.length > 0` guard below), so this degrades to
-    // slightly-stale CA eBay prices, never to wiped or fabricated ones.
     { country: "CA", marketplace: "EBAY_CA", currency: "CAD", retailer: "ebay_ca" },
   ];
+  const ALL = [...ALWAYS, ...ROTATING];
+
   // EBAY_ONLY_MARKET=SG restricts the pass to one marketplace (~1k calls) — used
-  // for new-market rollouts on top of the daily full run without doubling quota.
+  // for new-market rollouts, or to refresh a rotating market off-cycle. It bypasses
+  // the rotation entirely, so `EBAY_ONLY_MARKET=CA` works on an SG day.
   const onlyMarket = (process.env.EBAY_ONLY_MARKET || "").toUpperCase();
-  const markets = onlyMarket ? MARKETS.filter((m) => m.country === onlyMarket) : MARKETS;
-  if (onlyMarket) console.log(`EBAY_ONLY_MARKET=${onlyMarket} — restricting the eBay pass to ${markets.length} market(s).`);
+  let markets: typeof ALL;
+  if (onlyMarket) {
+    markets = ALL.filter((m) => m.country === onlyMarket);
+    console.log(`EBAY_ONLY_MARKET=${onlyMarket} — restricting the eBay pass to ${markets.length} market(s).`);
+  } else {
+    // Keyed off the Australia/Sydney calendar day (the same day boundary the price
+    // history uses), so which market is "today's" is STABLE for the whole day: the
+    // 07:00 and 19:00 UTC runs, a deploy-triggered run and a manual re-run all pick
+    // the same one instead of ping-ponging and double-spending quota.
+    const dayIndex = Math.floor(sydneyDay().getTime() / 86_400_000);
+    const todays = ROTATING[dayIndex % ROTATING.length];
+    markets = [...ALWAYS, todays];
+    console.log(
+      `eBay market rotation: ${ALWAYS.map((m) => m.country).join("/")} daily + ${todays.country} today ` +
+        `(${ROTATING.map((m) => m.country).join("/")} alternate by Sydney day; ` +
+        `use EBAY_ONLY_MARKET=<code> to refresh the other one off-cycle).`
+    );
+  }
   // Check the live quota and set a spend budget (leaves a reserve) so this can never
   // exhaust eBay's 5,000/day limit, however many times the importer runs.
   await primeEbayBudget();

@@ -50,6 +50,33 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx prisma generate
+      # Sync the schema BEFORE importing. This workflow is triggered by pushes to
+      # main touching price-import.ts / retailers.ts / etc, so it runs the NEW code
+      # — but nothing here used to touch the database schema. Schema only reached
+      # the DB via a Vercel build (scripts/build-db-push.sh, which no-ops outside
+      # Vercel) or a manual maintenance.yml db-push. So a commit that added a column
+      # and touched a watched path would run new code against an un-migrated
+      # database and die with P2022 "column does not exist" — which is exactly how
+      # the CA market launch broke this job (Card.lowestPriceCentsCa).
+      #
+      # NOTE: deliberately no --accept-data-loss here (unlike the Vercel build and
+      # the manual maintenance job). Additive changes apply automatically; anything
+      # destructive stops the run instead of quietly dropping a column on a
+      # schedule. Do those by hand via maintenance.yml's db-push task.
+      - name: Sync database schema (additive)
+        env:
+          DATABASE_URL: ${{ secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+        run: |
+          if [ -z "${DATABASE_URL:-}" ]; then
+            echo "::error::No database URL configured — cannot sync schema."
+            exit 1
+          fi
+          if ! npx prisma db push --skip-generate; then
+            echo "::error::prisma db push failed. If this is a DESTRUCTIVE change (dropping a column/table), \
+          run the db-push task in maintenance.yml by hand (it passes --accept-data-loss). \
+          Not applying it automatically here on purpose."
+            exit 1
+          fi
       - name: Import prices
         env:
           DATABASE_URL: ${{ secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
