@@ -21,7 +21,6 @@ import { HilltopAdsLoader } from "@/components/HilltopAdsLoader";
 import { ReferralCapture } from "@/components/ReferralCapture";
 import { TcgplayerAd } from "@/components/TcgplayerAd";
 import { EbayAd } from "@/components/EbayAd";
-import { SovrnSnippet } from "@/components/SovrnSnippet";
 import { PriceAlertModal } from "@/components/PriceAlertModal";
 
 // Body: Sora (modern, energetic, readable). Headings: Space Grotesk (distinctive,
@@ -183,9 +182,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <span aria-hidden>☕</span> Buy me a coffee
           </a>
         </footer>
-        {/* Sovrn auto-affiliate (deferred to idle) — monetises the long-tail
-            store links; skips anything already affiliate-tagged. */}
-        <SovrnSnippet />
         {/* HilltopAds zone loader — the primary ad network (web only, non-premium).
             Skipped inside the native app, which shows AdMob banners via NativeShell. */}
         <HilltopAdsLoader />
