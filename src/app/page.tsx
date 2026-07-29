@@ -165,7 +165,9 @@ export default async function HomePage() {
     // same as popularCards above: it's a real internal-linking/freshness feed,
     // not a per-market data section like Top Deals, so there's no reason to
     // serialize all five markets for client-side localisation.
-    getRecentlyUpdated(country, 12),
+    // 60 (not the carousels' usual ~12): this section's whole point is dozens
+    // of fresh internal links for crawlers, so it stays a wide, dense grid.
+    getRecentlyUpdated(country, 60),
     // Biggest movers (up + down) for the unified popular-cards carousel's third
     // tab — same AU-baseline pattern as popularCards/popularVendetta.
     getPriceMovers(country, 6),
