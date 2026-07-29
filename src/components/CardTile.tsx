@@ -62,7 +62,7 @@ export function CardTile({ card }: { card: CardTileData }) {
       <Link href={cardHref(card)} prefetch={false} onClick={onClick} className="flex flex-1 flex-col">
         <div
           className="relative aspect-[5/7] w-full overflow-hidden p-3"
-          style={{ background: `radial-gradient(120% 80% at 50% 0%, ${r.color}22, transparent 60%)` }}
+          style={{ backgroundColor: `${r.color}14` }}
         >
           <CardImage
             card={card}

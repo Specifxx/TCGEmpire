@@ -51,7 +51,7 @@ export function CinematicHero({
             Sized to lead the page without dominating it — one step down from
             the old 7xl ceiling, matching the tighter section rhythm below. */}
         <h1 className="animate-fade-in [animation-delay:160ms] mx-auto mt-4 max-w-3xl text-3xl font-extrabold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-6xl">
-          Compare <span className="bg-gradient-to-r from-[#1ea65c] to-[#e5484d] bg-clip-text text-transparent">Riftbound</span> card prices across AU, NZ, US &amp; UK stores
+          Compare <span className="text-brand-400">Riftbound</span> card prices across AU, NZ, US &amp; UK stores
         </h1>
         <p className="animate-fade-in [animation-delay:240ms] mx-auto mt-4 max-w-2xl text-base text-slate-300">
           Find the cheapest place to buy Riftbound TCG cards — live local prices in AUD, NZD, USD &amp; GBP
