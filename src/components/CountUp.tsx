@@ -22,12 +22,19 @@ export function CountUp({ value, className }: { value: number; className?: strin
       setDisplay(value);
       return;
     }
-    // Client-only: start the count-up from 0 (server already showed the real value).
-    setDisplay(0);
 
+    // DO NOT zero the display here. This used to run setDisplay(0) immediately and
+    // only reset it once IntersectionObserver fired — so any instance that never
+    // reached the 0.4 threshold (below the fold, inside a collapsed/short
+    // container, or observed on a tiny inline span) stayed visibly stuck on "0"
+    // forever, while the server HTML said the real number. That's what produced
+    // "0 cards / 0 priced" on set pages. Zeroing now happens inside run(), one
+    // frame before the animation actually starts.
     let raf = 0;
     const run = () => {
       const duration = 1100;
+      // Zero only now that we're definitely animating this frame.
+      setDisplay(0);
       let start: number | null = null;
       const step = (t: number) => {
         if (start === null) start = t;

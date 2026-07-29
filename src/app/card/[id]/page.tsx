@@ -16,7 +16,7 @@ import { CardTile } from "@/components/CardTile";
 import { cardTileSelect } from "@/lib/cards";
 import { AdSlot } from "@/components/AdSlot";
 import { EmbedCardButton } from "@/components/EmbedCardButton";
-import { DEFAULT_COUNTRY, isoCountry, type Country } from "@/lib/country";
+import { COUNTRIES, DEFAULT_COUNTRY, isoCountry, priceField, type Country } from "@/lib/country";
 import { setByCode } from "@/lib/constants";
 import { domainSlug } from "@/lib/domains";
 import { decksUsingCard } from "@/lib/meta-decks";
@@ -59,40 +59,83 @@ export async function generateStaticParams() {
 // Accept either the slug ("vayne-hunter-sfd-223-221") or the legacy cuid.
 const whereParam = (p: string) => ({ OR: [{ slug: p }, { id: p }] });
 
-const fmtAud = (cents: number) => formatMoney(cents); // AUD — the cached baseline market
+// The market the cached page is rendered on. Metadata MUST agree with it: the
+// snippet previously quoted the AU column + AU store count while the page body
+// rendered DEFAULT_COUNTRY, so the promised price and the visible price could be
+// from two different countries.
+const BASELINE_CURRENCY = COUNTRIES[DEFAULT_COUNTRY].currency;
+const fmtBaselineMoney = (cents: number) => formatMoney(cents, BASELINE_CURRENCY);
+
+// Trim printed card text down to something that survives a ~160-char meta
+// description without cutting mid-word.
+function clampText(s: string, max: number): string {
+  const flat = s.replace(/\s+/g, " ").trim();
+  if (flat.length <= max) return flat;
+  const cut = flat.slice(0, max);
+  const lastSpace = cut.lastIndexOf(" ");
+  return `${(lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).replace(/[,;:.\s]+$/, "")}…`;
+}
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const card = await prisma.card.findFirst({
     where: whereParam(params.id),
     select: {
       slug: true, name: true, setName: true, setCode: true, collectorNumber: true,
-      variant: true, isPromo: true, rarity: true,
-      lowestPriceCents: true,
-      // Live AU in-stock retailer keys — a real number in the snippet is the CTR
-      // lever this vertical runs on (competitors' snippets show "$X / N stores").
-      // Rows are unique per [retailer, condition, isFoil], so count DISTINCT
-      // retailers or one store's NM + foil listings would read as "2 stores".
-      retailerPrices: { where: { country: "AU", inStock: true }, select: { retailer: true } },
-    },
-  });
+      variant: true, isPromo: true, rarity: true, type: true, domain: true,
+      description: true,
+      [priceField(DEFAULT_COUNTRY)]: true,
+      // Live in-stock retailer keys FOR THE BASELINE MARKET — a real number in the
+      // snippet is the CTR lever this vertical runs on. Rows are unique per
+      // [retailer, condition, isFoil], so count DISTINCT retailers or one store's
+      // NM + foil listings would read as "2 stores".
+      retailerPrices: { where: { country: DEFAULT_COUNTRY, inStock: true }, select: { retailer: true } },
+    } as Record<string, unknown>,
+  }) as (Record<string, unknown> & {
+    slug: string | null; name: string; setName: string; setCode: string; collectorNumber: string;
+    variant: string | null; isPromo: boolean; rarity: string; type: string; domain: string;
+    description: string | null;
+    retailerPrices: { retailer: string }[];
+  }) | null;
   if (!card) notFound(); // real 404 — metadata resolves before streaming
 
-  // MARKET-NEUTRAL metadata (the page is cached once for all markets). The
-  // display name carries the printing credentials (Promo/Alt Art/Signature…) so
-  // variant printings that share a name + number stop emitting byte-identical
+  const lowestCents = card[priceField(DEFAULT_COUNTRY)] as number | null;
+
+  // The display name carries the printing credentials (Promo/Alt Art/Signature…)
+  // so variant printings that share a name + number stop emitting byte-identical
   // titles — duplicate-looking clusters are exactly what Google leaves unindexed.
   const displayName = cardDisplayName(card.name, card);
-  // Adaptive title: the full form busts the ~60-char SERP window for long legend
-  // names and credentialed printings, so those fall back to a compact form — the
-  // query phrase ("{name} Price") must survive truncation for every name length.
-  // (setCode keeps same-name printings in DIFFERENT sets from sharing a title.)
-  const fullTitle = `${displayName} Price — Riftbound ${card.setName} ${card.collectorNumber}`;
-  const title = fullTitle.length > 52 ? `${displayName} Price — Riftbound ${card.setCode}` : fullTitle;
   const stores = new Set(card.retailerPrices.map((r) => r.retailer)).size;
-  const description =
-    card.lowestPriceCents != null && stores > 0
-      ? `Live ${displayName} prices from ${fmtAud(card.lowestPriceCents)} across ${stores} ${stores === 1 ? "store" : "stores"} — compare AU, NZ, US, UK & SG, with price history. Updated daily.`
-      : `Compare live ${displayName} prices across AU, NZ, US, UK & SG stores — Riftbound ${card.setName} ${card.collectorNumber}. Price history included. Updated daily.`;
+  const hasPrice = lowestCents != null && stores > 0;
+
+  // TITLE — card name FIRST (the actual query is "<card name> riftbound", not
+  // "<card name> price"), then the identifiers that disambiguate printings, then
+  // the value props. "Prices" only leads when we genuinely have a price to show;
+  // promising a price on a page that renders "—" is what earns a pogo-stick back
+  // to the SERP and suppresses the whole cluster's CTR.
+  //
+  // Built longest-first and stepped down so the card name + "Riftbound" + set id
+  // always survive Google's ~60-char truncation on even the longest legend names.
+  const ident = `Riftbound ${card.setCode} ${card.collectorNumber}`;
+  const tail = hasPrice ? "Card Text & Live Prices" : "Card Text, Stats & Printings";
+  const titleCandidates = [
+    `${displayName} — ${ident} | ${tail}`,
+    `${displayName} — ${ident} | ${hasPrice ? "Live Prices" : "Card Text"}`,
+    `${displayName} — ${ident}`,
+    `${displayName} — Riftbound ${card.setCode}`,
+  ];
+  const title = titleCandidates.find((t) => t.length <= 62) ?? titleCandidates[titleCandidates.length - 1];
+
+  // DESCRIPTION — lead with what the card DOES (the informational half of the
+  // intent), then the commercial half. Degrades in three steps so a card with no
+  // printed text and no price still gets a unique, non-boilerplate sentence.
+  const textBit = card.description ? clampText(card.description, 90) : null;
+  const statBit = `${card.domain} ${card.type.toLowerCase()} · ${card.rarity}`;
+  const priceBit = hasPrice
+    ? `Live prices from ${fmtBaselineMoney(lowestCents!)} across ${stores} ${stores === 1 ? "store" : "stores"}, updated daily.`
+    : `Compare live prices across AU, NZ, US, UK & SG stores, updated daily.`;
+  const description = textBit
+    ? `${displayName} (${ident}) — ${textBit} ${priceBit}`
+    : `${displayName} — ${statBit} from Riftbound ${card.setName} (${card.collectorNumber}). ${priceBit}`;
 
   return {
     title,
@@ -164,9 +207,23 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     policyUrl: shippingPolicyUrl(p.retailer),
   }));
 
-  // AU baseline view — powers the cached HTML's structured data and prose (the
-  // same market the SSR'd client components render before hydration).
-  const au = computeMarket(rows, DEFAULT_COUNTRY);
+  // BASELINE view for the cached HTML — structured data, prose and FAQ. This is
+  // the same market the SSR'd client components render before hydration, i.e.
+  // DEFAULT_COUNTRY, whatever that currently is.
+  //
+  // It used to be called `au` and everything downstream assumed Australia:
+  // figures were formatted with a hardcoded AUD formatter, the prose said "in
+  // Australia" / "Australian stores", and the Product JSON-LD emitted
+  // priceCurrency:"AUD". DEFAULT_COUNTRY was later changed to "US" and none of
+  // that followed, so every card page was publishing US prices labelled as AUD —
+  // including in structured data, where a figure that contradicts the visible
+  // page is exactly what makes Google drop a Product rich result.
+  //
+  // `baseline` now carries its own market + currency (see MarketView), and every
+  // consumer below reads them from it instead of assuming.
+  const baseline = computeMarket(rows, DEFAULT_COUNTRY);
+  const baselinePlace = COUNTRIES[baseline.market].place;
+  const fmtBaseline = (cents: number) => formatMoney(cents, baseline.currency);
 
   // eBay fallback search per market, precomputed (affiliate tagging is server-side).
   // Built for EVERY market and shown by the client section whenever that market has
@@ -212,7 +269,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // listing churn re-renders the page on-demand, so each snapshot is honest
   // until the next pass overwrites it.
   const priceValidUntil = new Date(Date.now() + 86400e3).toISOString().slice(0, 10);
-  const hasStoreOffers = au.prices.length > 0 && au.lowest != null;
+  const hasStoreOffers = baseline.prices.length > 0 && baseline.lowest != null;
   // Google's "merchant listing" price/shipping/returns snippet requires every
   // Offer to declare shippingDetails + hasMerchantReturnPolicy (missing either
   // is flagged in Search Console and can suppress the enhanced display). We can
@@ -236,10 +293,13 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     ...(hasStoreOffers
       ? [{
           "@type": "AggregateOffer",
-          priceCurrency: "AUD",
-          lowPrice: (au.lowest! / 100).toFixed(2),
-          highPrice: (au.prices[au.prices.length - 1].priceCents / 100).toFixed(2),
-          offerCount: au.prices.length,
+          // From the view itself — NEVER hardcoded. This line said "AUD" while
+          // the figures below were DEFAULT_COUNTRY's (US/USD), publishing a
+          // currency that contradicted the visible page on every card.
+          priceCurrency: baseline.currency,
+          lowPrice: (baseline.lowest! / 100).toFixed(2),
+          highPrice: (baseline.prices[baseline.prices.length - 1].priceCents / 100).toFixed(2),
+          offerCount: baseline.prices.length,
           availability: "https://schema.org/InStock",
           priceValidUntil,
         }]
@@ -375,18 +435,22 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // this card's own attributes AND its real tracked history/deck/printing data —
   // no two pages match, and nothing here is asserted without the data to back it.
   const about = buildAbout(card, {
-    lowest: au.lowest,
-    stores: au.storeCount,
+    lowest: baseline.lowest,
+    stores: baseline.storeCount,
     history,
     deckCount: allRelatedDecks.length,
     printingCount: printings.length,
+    place: baselinePlace,
+    currency: baseline.currency,
   });
   const faqs = buildFaqs(card, {
-    lowest: au.lowest,
-    stores: au.storeCount,
+    lowest: baseline.lowest,
+    stores: baseline.storeCount,
     printingCount: printings.length,
     deckCount: allRelatedDecks.length,
     deckNames: allRelatedDecks.slice(0, 2).map((d) => d.name),
+    place: baselinePlace,
+    currency: baseline.currency,
   });
   const faqLd = {
     "@context": "https://schema.org",
@@ -651,10 +715,12 @@ type CardForCopy = {
   power: number | null;
 };
 
-// Real, tracked min/max/direction over the card's own AU history — never asserts a
-// trend without enough data points to back it (a fresh card just skips this
-// paragraph rather than guessing).
-function buildTrend(name: string, history: PricePoint[]): string | null {
+// Real, tracked min/max/direction over the card's own baseline-market history —
+// never asserts a trend without enough data points to back it (a fresh card just
+// skips this paragraph rather than guessing). `place`/`currency` describe the
+// market the history belongs to; they are passed in rather than assumed, because
+// this used to say "Australian price" over DEFAULT_COUNTRY's figures.
+function buildTrend(name: string, history: PricePoint[], place: string, currency: string): string | null {
   if (history.length < 4) return null;
   const recent = history.slice(-35); // ~5 tracked weeks, matches the chart's usual window
   const vals = recent.map((p) => p.v);
@@ -664,10 +730,10 @@ function buildTrend(name: string, history: PricePoint[]): string | null {
   const last = recent[recent.length - 1].v;
   const days = Math.max(1, Math.round((recent[recent.length - 1].t - recent[0].t) / 86400_000));
   if (lo === hi) {
-    return `Over the past ${days} days of tracked history, ${name}'s Australian price has held steady at ${formatMoney(lo)}.`;
+    return `Over the past ${days} days of tracked history, ${name}'s price in ${place} has held steady at ${formatMoney(lo, currency)}.`;
   }
   const trendWord = last > first ? "risen" : last < first ? "fallen" : "held steady";
-  return `Over the past ${days} days, ${name} has traded between ${formatMoney(lo)} and ${formatMoney(hi)} in Australia, and has ${trendWord} since the start of that window — see the full price history chart below.`;
+  return `Over the past ${days} days, ${name} has traded between ${formatMoney(lo, currency)} and ${formatMoney(hi, currency)} in ${place}, and has ${trendWord} since the start of that window — see the full price history chart below.`;
 }
 
 type AboutContext = {
@@ -676,6 +742,11 @@ type AboutContext = {
   history: PricePoint[];
   deckCount: number;
   printingCount: number;
+  // The baseline market these figures belong to. Passed in rather than assumed:
+  // this prose used to hardcode "Australia"/AUD while the numbers were actually
+  // DEFAULT_COUNTRY's (see the note on `baseline` in CardPage).
+  place: string;
+  currency: string;
 };
 
 // Builds unique prose from the card's own attributes, its REAL tracked price
@@ -684,7 +755,7 @@ type AboutContext = {
 // paragraphs rather than a fabricated one. MARKET-NEUTRAL (this page is cached once
 // for all four markets): the price cited is the AU baseline, named explicitly.
 function buildAbout(card: CardForCopy, ctx: AboutContext): string[] {
-  const { lowest, stores, history, deckCount, printingCount } = ctx;
+  const { lowest, stores, history, deckCount, printingCount, place, currency } = ctx;
   let p1 = `${card.name} is a ${card.rarity.toLowerCase()} ${card.type.toLowerCase()} card from ${card.setName} (${card.setCode}), a set in the Riftbound trading card game, with collector number ${card.collectorNumber}.`;
   p1 += card.domain === "Colorless"
     ? " It is a Colorless card, so it fits into decks of any domain."
@@ -705,12 +776,12 @@ function buildAbout(card: CardForCopy, ctx: AboutContext): string[] {
   if (card.isPromo) p1 += " It is a promotional printing — it shares the base card's collector number but is a distinct product with its own price.";
 
   const p2 = lowest != null && stores > 0
-    ? `The lowest tracked price for ${card.name} today is ${formatMoney(lowest)} in Australia, across ${stores} ${stores === 1 ? "store" : "stores"} — RiftCompare also compares New Zealand, US and UK stores, ranked by delivered cost and refreshed daily.`
+    ? `The lowest tracked price for ${card.name} today is ${formatMoney(lowest, currency)} in ${place}, across ${stores} ${stores === 1 ? "store" : "stores"} — RiftCompare also compares every other market we cover, ranked by delivered cost and refreshed daily.`
     : `We're currently tracking down store listings for ${card.name}. Prices refresh daily across Australian, New Zealand, US, UK and Singapore stores — check back soon or add it to your wishlist to be ready the moment it's in stock.`;
 
   const paragraphs = [p1, p2];
 
-  const trend = buildTrend(card.name, history);
+  const trend = buildTrend(card.name, history, place, currency);
   if (trend) paragraphs.push(trend);
 
   // Deck usage + sibling-printing context — only the parts that are actually true
@@ -729,15 +800,17 @@ type FaqContext = {
   printingCount: number;
   deckCount: number;
   deckNames: string[];
+  place: string;
+  currency: string;
 };
 
 function buildFaqs(card: CardForCopy, ctx: FaqContext): { q: string; a: string }[] {
-  const { lowest, stores, printingCount, deckCount, deckNames } = ctx;
+  const { lowest, stores, printingCount, deckCount, deckNames, place, currency } = ctx;
   const faqs = [
     {
       q: `How much does ${card.name} cost?`,
       a: lowest != null && stores > 0
-        ? `The cheapest live price for ${card.name} (${card.setCode} ${card.collectorNumber}) is currently ${formatMoney(lowest)} across ${stores} Australian ${stores === 1 ? "store" : "stores"}; New Zealand, US and UK prices are compared on this page too. Prices update daily.`
+        ? `The cheapest live price for ${card.name} (${card.setCode} ${card.collectorNumber}) is currently ${formatMoney(lowest, currency)} across ${stores} ${stores === 1 ? "store" : "stores"} in ${place}; every other market we cover is compared on this page too. Prices update daily.`
         : `We don't have a live price for ${card.name} right now. Prices refresh daily across AU, NZ, US, UK and SG stores — check back soon for the cheapest place to buy it.`,
     },
     {

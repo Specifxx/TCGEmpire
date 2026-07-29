@@ -32,6 +32,7 @@ on:
           - audit-clicks     # read-only outbound-click leaderboard per retailer (affiliate-outreach priority)
           - remove-seed-accounts # one-off: delete @riftcompare.seed bot personas (dead since the forum autoseeder was removed)
           - test-marketplace-stripe # smoke-test CRON_SECRET + both Stripe webhook secrets + a Connect account create/delete round-trip (test or live)
+          - check-cards      # read-only: fail if any card page would render a price in one component and "—" in another (hero vs prose vs JSON-LD)
           - migrate-main-db  # full pg_dump/restore of the OPERATIONAL database (old DATABASE_URL_2) into RM3 + row-count verification. Read-only against the source; skips PriceHistory/ClickEvent data (served from RH5) to conserve the source's exhausted transfer allowance. RUN THIS BEFORE any other task once RM3 is set.
       dry_run:
         description: "Dry run (log what would change, write nothing)"
@@ -282,6 +283,15 @@ jobs:
           echo "     set in Vercel (all environments) and redeployed, traffic moves."
           echo "  3. Leave DATABASE_URL_2 in place for a rollback window; delete it"
           echo "     only once RM3 has been serving cleanly for a while."
+
+      - name: Check card-page price consistency (read-only)
+        # Guards the exact class of bug this was written for: /card/[id] derived
+        # "cheapest price" and "in stock at N stores" in five places from three
+        # different sources, and nothing failed when they drifted — every page
+        # still returned 200, just self-contradicting. Exits non-zero on any
+        # contradiction so this can gate a deploy.
+        if: inputs.task == 'check-cards'
+        run: npx tsx scripts/check-card-consistency.ts
 
       - name: Sync cards from RiftScribe (fetch + additive upsert)
         if: inputs.task == 'cards-sync'

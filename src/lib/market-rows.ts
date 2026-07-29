@@ -5,7 +5,7 @@
 // server before rows are serialized, so this file never drags server libs into the
 // client bundle.
 import { AU_FALLBACK_RETAILERS, SG_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS } from "./constants";
-import type { Country } from "./country";
+import { COUNTRIES, type Country } from "./country";
 
 // A serialized retailerPrice row, enriched server-side with everything the client
 // needs (affiliate buy URL, shipping-policy URL, effective shipping) so the client
@@ -30,6 +30,15 @@ export interface ComputedRow extends MarketRow {
 }
 
 export interface MarketView {
+  // THE market this view was computed for, and its ISO-4217 currency. Both are
+  // returned rather than left for the caller to remember, because forgetting was
+  // a real bug: /card/[id] computed its baseline with DEFAULT_COUNTRY (which had
+  // been changed from "AU" to "US") but kept formatting the result as AUD and
+  // describing it as "in Australia" — including in the Product JSON-LD, which
+  // emitted priceCurrency:"AUD" over USD figures. Any surface that prints a
+  // figure from this view MUST take its currency from here.
+  market: Country;
+  currency: string;
   prices: ComputedRow[]; // in stock, cheapest first
   outOfStock: ComputedRow[];
   lowest: number | null; // cheapest in-stock item price
@@ -63,6 +72,8 @@ export function computeMarket(rows: MarketRow[], country: Country): MarketView {
   const prices = all.filter((p) => p.inStock);
   const outOfStock = all.filter((p) => !p.inStock);
   return {
+    market: country,
+    currency: COUNTRIES[country].currency,
     prices,
     outOfStock,
     lowest: prices[0]?.priceCents ?? null,
