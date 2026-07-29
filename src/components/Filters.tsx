@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
+import { track } from "@vercel/analytics";
 import {
   DOMAIN_KEYS,
   RARITY_KEYS,
@@ -43,13 +44,14 @@ export function Filters({ basePath = "/browse", hideSet = false }: { basePath?: 
   const [max, setMax] = useState(params.get("max") ?? "");
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  function update(mutate: (p: URLSearchParams) => void) {
+  function update(mutate: (p: URLSearchParams) => void, facet?: string) {
     // Build from the optimistic state (not the URL) so rapid clicks accumulate.
     const next = new URLSearchParams(optimistic);
     mutate(next);
     next.delete("page");
     const qs = next.toString();
     setOptimistic(qs); // instant: the checkbox flips immediately
+    if (facet) track("filter_change", { facet });
     startTransition(() => router.push(qs ? `${basePath}?${qs}` : basePath)); // data loads in the background
   }
 
@@ -123,7 +125,7 @@ export function Filters({ basePath = "/browse", hideSet = false }: { basePath?: 
                 update((p) => {
                   if (min) p.set("min", min); else p.delete("min");
                   if (max) p.set("max", max); else p.delete("max");
-                })
+                }, "price")
               }
               className="btn-ghost mt-2 w-full"
             >
@@ -132,7 +134,7 @@ export function Filters({ basePath = "/browse", hideSet = false }: { basePath?: 
             <Check
               className="mt-2"
               checked={sp.get("priced") === "1"}
-              onChange={() => update((p) => (p.get("priced") === "1" ? p.delete("priced") : p.set("priced", "1")))}
+              onChange={() => update((p) => (p.get("priced") === "1" ? p.delete("priced") : p.set("priced", "1")), "priced")}
               label="Only cards with a price"
             />
           </Section>
@@ -141,7 +143,7 @@ export function Filters({ basePath = "/browse", hideSet = false }: { basePath?: 
             <Section title="Set" defaultOpen>
               <div className="flex flex-col gap-1">
                 {SETS.map((s) => (
-                  <Check key={s.code} checked={isActive("set", s.code)} onChange={() => update((p) => setCsv(p, "set", s.code))} label={`${s.name} (${s.code})`} />
+                  <Check key={s.code} checked={isActive("set", s.code)} onChange={() => update((p) => setCsv(p, "set", s.code), "set")} label={`${s.name} (${s.code})`} />
                 ))}
               </div>
             </Section>
@@ -151,7 +153,7 @@ export function Filters({ basePath = "/browse", hideSet = false }: { basePath?: 
             <div className="flex flex-col gap-1">
               {DOMAIN_KEYS.map((k) => {
                 const d = domainInfo(k);
-                return <Check key={k} checked={isActive("domain", k)} onChange={() => update((p) => setCsv(p, "domain", k))} label={d.label} dot={d.color} />;
+                return <Check key={k} checked={isActive("domain", k)} onChange={() => update((p) => setCsv(p, "domain", k), "domain")} label={d.label} dot={d.color} />;
               })}
             </div>
           </Section>
@@ -159,7 +161,7 @@ export function Filters({ basePath = "/browse", hideSet = false }: { basePath?: 
           <Section title="Rarity">
             <div className="flex flex-col gap-1">
               {RARITY_KEYS.map((k) => (
-                <Check key={k} checked={isActive("rarity", k)} onChange={() => update((p) => setCsv(p, "rarity", k))} label={k} dot={rarityInfo(k).color} />
+                <Check key={k} checked={isActive("rarity", k)} onChange={() => update((p) => setCsv(p, "rarity", k), "rarity")} label={k} dot={rarityInfo(k).color} />
               ))}
             </div>
           </Section>
@@ -167,7 +169,7 @@ export function Filters({ basePath = "/browse", hideSet = false }: { basePath?: 
           <Section title="Card type">
             <div className="flex flex-col gap-1">
               {CARD_TYPES.map((k) => (
-                <Check key={k} checked={isActive("type", k)} onChange={() => update((p) => setCsv(p, "type", k))} label={k} />
+                <Check key={k} checked={isActive("type", k)} onChange={() => update((p) => setCsv(p, "type", k), "type")} label={k} />
               ))}
             </div>
           </Section>
@@ -182,15 +184,15 @@ export function Filters({ basePath = "/browse", hideSet = false }: { basePath?: 
                   update((p) => {
                     if (p.get("printing") === "normal") p.delete("printing");
                     else { p.set("printing", "normal"); p.delete("variant"); p.delete("sig"); p.delete("promo"); p.delete("over"); }
-                  })
+                  }, "printing:normal")
                 }
                 label="Normal only"
                 dot="#34d17e"
               />
-              <Check checked={sp.get("variant") === "alt"} onChange={() => update((p) => { p.delete("printing"); p.get("variant") === "alt" ? p.delete("variant") : p.set("variant", "alt"); })} label="Alternate art" dot="#f5a524" />
-              <Check checked={sp.get("sig") === "1"} onChange={() => update((p) => { p.delete("printing"); p.get("sig") === "1" ? p.delete("sig") : p.set("sig", "1"); })} label="Signature" dot="#f59e0b" />
-              <Check checked={sp.get("over") === "1"} onChange={() => update((p) => { p.delete("printing"); p.get("over") === "1" ? p.delete("over") : p.set("over", "1"); })} label="Overnumbered" dot="#a855f7" />
-              <Check checked={sp.get("promo") === "1"} onChange={() => update((p) => { p.delete("printing"); p.get("promo") === "1" ? p.delete("promo") : p.set("promo", "1"); })} label="Promo" dot="#06b6d4" />
+              <Check checked={sp.get("variant") === "alt"} onChange={() => update((p) => { p.delete("printing"); p.get("variant") === "alt" ? p.delete("variant") : p.set("variant", "alt"); }, "printing:alt")} label="Alternate art" dot="#f5a524" />
+              <Check checked={sp.get("sig") === "1"} onChange={() => update((p) => { p.delete("printing"); p.get("sig") === "1" ? p.delete("sig") : p.set("sig", "1"); }, "printing:sig")} label="Signature" dot="#f59e0b" />
+              <Check checked={sp.get("over") === "1"} onChange={() => update((p) => { p.delete("printing"); p.get("over") === "1" ? p.delete("over") : p.set("over", "1"); }, "printing:over")} label="Overnumbered" dot="#a855f7" />
+              <Check checked={sp.get("promo") === "1"} onChange={() => update((p) => { p.delete("printing"); p.get("promo") === "1" ? p.delete("promo") : p.set("promo", "1"); }, "printing:promo")} label="Promo" dot="#06b6d4" />
             </div>
           </Section>
         </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { track } from "@vercel/analytics";
 import { useCountry } from "./CountryProvider";
 
 // Where we remember the visitor's email so clicking "watch price" again
@@ -115,6 +116,7 @@ export function PriceAlertModal() {
       } catch {
         /* private mode — fine, we just re-prompt next time */
       }
+      track("price_alert_subscribed", { card: pendingCardId });
       setPhase("success");
     } else {
       setPhase("error");

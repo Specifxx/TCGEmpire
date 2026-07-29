@@ -56,6 +56,27 @@ const BIG_RESULT_BYTES = 1_000_000;
 const OPERATIONAL_URL =
   process.env.RM3 || process.env.DATABASE_URL_2 || process.env.DATABASE_URL;
 
+// Ensure a generous connect_timeout (the standard libpq/Postgres connection
+// param, in seconds) is set. WHY: Neon's pooled compute suspends when idle and
+// takes a moment to resume on the next connection; if that resume takes longer
+// than the driver's default timeout, the very next build/request can see
+// "P1001: Can't reach database server" even though the database is actually
+// fine — it just hadn't finished waking up yet. This is not hypothetical here:
+// db-history.ts's own history records exactly this error ("P1001, connection
+// refused") as the reason a previous history-DB project was swapped out
+// entirely, when a longer timeout might have ridden out a cold start instead.
+// Additive only — a URL that already sets its own connect_timeout is untouched.
+function withConnectTimeout(url: string | undefined, seconds: number): string | undefined {
+  if (!url) return url;
+  try {
+    const u = new URL(url);
+    if (!u.searchParams.has("connect_timeout")) u.searchParams.set("connect_timeout", String(seconds));
+    return u.toString();
+  } catch {
+    return url; // never let a URL-parsing edge case break startup over a timeout tweak
+  }
+}
+
 // Which var actually won, by NAME (never the value — it contains credentials).
 // A Neon P1001 ("Can't reach database server at ep-…") names only the host, and
 // with three fallback vars plus a separate history database in play there is no
@@ -81,7 +102,7 @@ if (OPERATIONAL_URL_SOURCE !== "RM3") {
 
 function makeClient() {
   const base = new PrismaClient({
-    datasourceUrl: OPERATIONAL_URL,
+    datasourceUrl: withConnectTimeout(OPERATIONAL_URL, 15),
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
   });
   return base.$extends({

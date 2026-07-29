@@ -41,9 +41,28 @@ const HISTORY_URL =
 // Card foreign key means card rows must exist there too — see ensureHistoryCards().
 export const historyIsSplit = HISTORY_URL !== process.env.DATABASE_URL;
 
+// Ensure a generous connect_timeout (Postgres/libpq connection param, in
+// seconds). Neon's pooled compute suspends when idle and can take a moment to
+// resume; if that resume takes longer than the default driver timeout, the
+// next connection sees "P1001: Can't reach database server" even though the
+// database is fine. THIS EXACT ERROR is why HISTORY_DATABASE_URL_4 above got
+// swapped for RH5 in the first place ("P1001, connection refused") — a longer
+// timeout might have ridden out a cold start instead of needing a full project
+// swap. Additive only — a URL that already sets its own connect_timeout wins.
+function withConnectTimeout(url: string | undefined, seconds: number): string | undefined {
+  if (!url) return url;
+  try {
+    const u = new URL(url);
+    if (!u.searchParams.has("connect_timeout")) u.searchParams.set("connect_timeout", String(seconds));
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
+
 function makeClient() {
   const base = new PrismaClient({
-    datasourceUrl: HISTORY_URL,
+    datasourceUrl: withConnectTimeout(HISTORY_URL, 15),
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
   });
   // Same egress-visibility guard as db.ts, so a runaway history/analytics query

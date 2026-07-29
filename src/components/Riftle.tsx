@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { track } from "@vercel/analytics";
 // Import from the server-free shared module — importing the VALUE RIFTLE_HINT_GATES
 // from "@/lib/riftle" dragged prisma into this client bundle and crashed the page
 // at load (uncatchable by error boundaries). See lib/riftle-shared.ts.
@@ -238,10 +239,12 @@ export function Riftle() {
       setInput("");
       if (d.feedback.correct) {
         setDone("win"); setAnswer(d.card ?? null); persist(nextRows, "win", d.card ?? null); finish(true);
+        track("riftle_finish", { mode, result: "win", guesses: nextRows.length });
       } else if (nextRows.length >= attempts) {
         const revealUrl = mode === "unlimited" && seed ? `/api/riftle?reveal=1&seed=${encodeURIComponent(seed)}` : "/api/riftle?reveal=1";
         const rev = await fetch(revealUrl).then((r) => r.json()).catch(() => null);
         setDone("lose"); setAnswer(rev?.card ?? null); persist(nextRows, "lose", rev?.card ?? null); finish(false);
+        track("riftle_finish", { mode, result: "lose", guesses: nextRows.length });
       } else {
         persist(nextRows, null, null);
       }
@@ -254,6 +257,7 @@ export function Riftle() {
   }
 
   function share() {
+    track("riftle_share", { mode, result: done ?? "unknown" });
     const grid = rows
       // A cell can be missing on rows saved before a column ("#") was added — fall
       // back to a blank square instead of throwing on `.state` of undefined.
