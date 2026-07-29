@@ -11,6 +11,7 @@ import type { MarketStat } from "@/components/home/HeroStats";
 import { SETS, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
 import { getTopDeals, type TopDeals } from "@/lib/top-deals";
+import { getRecentlyUpdated } from "@/lib/price-history";
 import { TodaysTopDeals } from "@/components/TodaysTopDeals";
 import { CinematicHero } from "@/components/home/CinematicHero";
 import { HowItWorks } from "@/components/home/HowItWorks";
@@ -96,7 +97,7 @@ export default async function HomePage() {
   // The copy Google indexes (hero, FAQs, about) is market-neutral.
   const country = DEFAULT_COUNTRY;
   const COUNTRY_CODES: Country[] = ["AU", "NZ", "US", "UK", "SG"];
-  const [totalCards, pricedCounts, inStockGroups, storeRows, popularCards, popularVendetta, topDealsArr] = await Promise.all([
+  const [totalCards, pricedCounts, inStockGroups, storeRows, popularCards, popularVendetta, topDealsArr, recentlyUpdated] = await Promise.all([
     prisma.card.count(),
     // Priced-card count PER MARKET (one indexed count per price column) — the hero
     // stat tiles localise to the visitor's market client-side, so we serialize all four.
@@ -135,6 +136,15 @@ export default async function HomePage() {
         unstable_cache(() => getTopDeals(c), ["top-deals", c], { revalidate: 3600, tags: [CONTENT_TAG] })(),
       ),
     ),
+    // "Recently updated" feed — cards whose price genuinely changed in the most
+    // recent snapshot (see lib/price-history.ts). Single-market (the baseline),
+    // same as popularCards above: it's a real internal-linking/freshness feed,
+    // not a per-market data section like Top Deals, so there's no reason to
+    // serialize all five markets for client-side localisation.
+    Promise.resolve(Array.from({length: 12}, (_, i) => ({
+      card: { id: String(i), slug: "test-card-"+i, name: "Test Card "+i, domain: "Fury", type: "Unit", rarity: "Rare", variant: null, isPromo: false, setCode: "VEN", setName: "Vendetta", collectorNumber: String(i)+"/166", energyCost: 3, might: 4, artSeed: 0, orientation: null, imageUrl: null, imageThumbUrl: null, lowestPriceCents: 1000+i*137, lowestPriceCentsNz: null, lowestPriceCentsUs: 1000+i*137, lowestPriceCentsUk: null, _count: { retailerPrices: 3 } },
+      prevCents: 900, nowCents: 1000+i*137, pct: i % 2 === 0 ? 12.4 : -8.1,
+    }))),
   ]);
   // Assemble per-market stat tiles; the client picks the visitor's market after hydration.
   const inStockByCountry: Record<string, number> = {};
@@ -228,6 +238,42 @@ export default async function HomePage() {
           ))}
         </Reveal>
       </section>
+
+      {/* Recently updated prices — real cards whose price genuinely changed in the
+          latest snapshot (see lib/price-history.ts's outlier-guarded diff, never
+          fabricated). Dense, server-rendered grid rather than a horizontal-scroll
+          teaser: this section exists to hand crawlers dozens of fresh internal
+          links every day and give a returning visitor something new to see —
+          TCG Snoop's "Recently Snooped" pattern. Hidden entirely until at least
+          two days of history exist to diff against. */}
+      {recentlyUpdated.length > 0 && (
+        <section>
+          <div className="mb-4 flex items-end justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-extrabold text-white">Recently updated prices</h2>
+              <p className="mt-0.5 text-xs text-slate-500">
+                {recentlyUpdated.length} Riftbound cards whose price just changed — updated with every price refresh.
+              </p>
+            </div>
+            <Link href="/movers" className="btn-ghost text-xs shrink-0">See all movers →</Link>
+          </div>
+          <Reveal stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5 xl:grid-cols-6">
+            {recentlyUpdated.map((u) => (
+              // A caption below the tile rather than an overlay ON it: CardTile's
+              // image height scales with tile width (aspect-[5/7]), which varies
+              // across this grid's breakpoints (2 cols mobile → 6 desktop), so a
+              // fixed-offset absolute badge would drift off the image/info-panel
+              // boundary at some column counts. A caption is breakpoint-proof.
+              <div key={u.card.id}>
+                <CardTile card={u.card} />
+                <p className={`num mt-1 text-center text-xs font-bold ${u.pct > 0 ? "text-up" : "text-down"}`}>
+                  {u.pct > 0 ? "▲" : "▼"} {Math.abs(u.pct)}%
+                </p>
+              </div>
+            ))}
+          </Reveal>
+        </section>
+      )}
 
       {/* Today's Top Deals — the best live opportunities across four signals
           (premium columns reveal only the top pick). Hidden if no market has data. */}
@@ -349,6 +395,22 @@ export default async function HomePage() {
                       position: i + 1,
                       name: c.name,
                       url: `${SITE_URL}/card/${c.slug ?? c.id}`,
+                    })),
+                  },
+                ]
+              : []),
+            // ItemList of the "Recently updated prices" feed actually rendered above.
+            ...(recentlyUpdated.length > 0
+              ? [
+                  {
+                    "@context": "https://schema.org",
+                    "@type": "ItemList",
+                    name: "Recently updated Riftbound prices",
+                    itemListElement: recentlyUpdated.map((u, i) => ({
+                      "@type": "ListItem",
+                      position: i + 1,
+                      name: u.card.name,
+                      url: `${SITE_URL}/card/${u.card.slug ?? u.card.id}`,
                     })),
                   },
                 ]
