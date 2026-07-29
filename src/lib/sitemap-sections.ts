@@ -24,6 +24,7 @@ import { TYPE_FACETS, RARITY_FACETS, PRINTING_FACETS, FACET_THIN_THRESHOLD } fro
 import { STORE_PAGES, STORE_THIN_THRESHOLD } from "./store-pages";
 import { buildCardWhere } from "./cards";
 import { DEFAULT_COUNTRY } from "./country";
+import { staticPageDate } from "./static-page-dates";
 
 export interface SitemapEntry {
   url: string;
@@ -52,7 +53,9 @@ export type SectionId = (typeof SECTIONS)[number];
 // snapshot (i.e. when the page's content really last changed). Stamping every URL
 // with "now" on every regeneration teaches Google to DISTRUST the sitemap's dates
 // entirely — a classic route into "Crawled – currently not indexed". Evergreen
-// pages (privacy, games, about…) carry no lastModified at all rather than a fake.
+// pages that carry no price/DB data of their own (privacy, games, about…) get a
+// hand-maintained date instead (see static-page-dates.ts) — every URL needs a
+// real lastmod, but "real" means "true fact about the page", never `new Date()`.
 async function priceDay(): Promise<Date | undefined> {
   try {
     return (await dbHistory.priceHistory.findFirst({ orderBy: { day: "desc" }, select: { day: true } }))?.day;
@@ -63,6 +66,16 @@ async function priceDay(): Promise<Date | undefined> {
 
 async function core(): Promise<SitemapEntry[]> {
   const day = await priceDay();
+  // /guides and /blog are hubs whose own visible content is "whatever articles
+  // exist" — their honest lastmod is the newest article in each category, not a
+  // fabricated date and not the unrelated price-snapshot day.
+  const articles = getArticles();
+  const dateOf = (a: ReturnType<typeof getArticles>[number]) => new Date(`${a.updated ?? a.date}T09:00:00+10:00`).getTime();
+  const guideDates = articles.filter((a) => a.category === "guide").map(dateOf);
+  const blogDates = articles.filter((a) => a.category === "blog").map(dateOf);
+  const latestGuide = guideDates.length ? new Date(Math.max(...guideDates)) : staticPageDate("/guides");
+  const latestBlog = blogDates.length ? new Date(Math.max(...blogDates)) : staticPageDate("/blog");
+
   return [
     { url: `${SITE_URL}/`, changeFrequency: "daily", priority: 1, lastModified: day },
     { url: `${SITE_URL}/browse`, changeFrequency: "daily", priority: 0.9, lastModified: day },
@@ -71,55 +84,55 @@ async function core(): Promise<SitemapEntry[]> {
     { url: `${SITE_URL}/market`, changeFrequency: "daily", priority: 0.8, lastModified: day },
     { url: `${SITE_URL}/sealed`, changeFrequency: "daily", priority: 0.8, lastModified: day },
     { url: `${SITE_URL}/sets`, changeFrequency: "weekly", priority: 0.8, lastModified: day },
-    { url: `${SITE_URL}/decks`, changeFrequency: "weekly", priority: 0.8 },
-    { url: `${SITE_URL}/deck`, changeFrequency: "weekly", priority: 0.6 },
-    { url: `${SITE_URL}/bulk-pricer`, changeFrequency: "weekly", priority: 0.6 },
-    { url: `${SITE_URL}/trade`, changeFrequency: "monthly", priority: 0.7 },
-    { url: `${SITE_URL}/learn`, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${SITE_URL}/riftle`, changeFrequency: "daily", priority: 0.7 },
-    { url: `${SITE_URL}/games`, changeFrequency: "weekly", priority: 0.7 },
-    { url: `${SITE_URL}/tools`, changeFrequency: "weekly", priority: 0.7 },
-    { url: `${SITE_URL}/tools/box-ev`, changeFrequency: "weekly", priority: 0.7 },
-    { url: `${SITE_URL}/tools/best-basket`, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${SITE_URL}/tools/value-finder`, changeFrequency: "daily", priority: 0.6 },
-    { url: `${SITE_URL}/tools/rising`, changeFrequency: "daily", priority: 0.6 },
-    { url: `${SITE_URL}/tools/deal-finder`, changeFrequency: "daily", priority: 0.7 },
-    { url: `${SITE_URL}/stores/tracked`, changeFrequency: "weekly", priority: 0.6 },
-    { url: `${SITE_URL}/stores/suggest`, changeFrequency: "monthly", priority: 0.5 },
-    { url: `${SITE_URL}/premium`, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${SITE_URL}/widgets`, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${SITE_URL}/domains`, changeFrequency: "weekly", priority: 0.7 },
-    { url: `${SITE_URL}/keywords`, changeFrequency: "weekly", priority: 0.7 },
-    { url: `${SITE_URL}/cards`, changeFrequency: "weekly", priority: 0.7 },
+    { url: `${SITE_URL}/decks`, changeFrequency: "weekly", priority: 0.8, lastModified: day },
+    { url: `${SITE_URL}/deck`, changeFrequency: "weekly", priority: 0.6, lastModified: staticPageDate("/deck") },
+    { url: `${SITE_URL}/bulk-pricer`, changeFrequency: "weekly", priority: 0.6, lastModified: staticPageDate("/bulk-pricer") },
+    { url: `${SITE_URL}/trade`, changeFrequency: "monthly", priority: 0.7, lastModified: staticPageDate("/trade") },
+    { url: `${SITE_URL}/learn`, changeFrequency: "monthly", priority: 0.8, lastModified: day },
+    { url: `${SITE_URL}/riftle`, changeFrequency: "daily", priority: 0.7, lastModified: staticPageDate("/riftle") },
+    { url: `${SITE_URL}/games`, changeFrequency: "weekly", priority: 0.7, lastModified: day },
+    { url: `${SITE_URL}/tools`, changeFrequency: "weekly", priority: 0.7, lastModified: staticPageDate("/tools") },
+    { url: `${SITE_URL}/tools/box-ev`, changeFrequency: "weekly", priority: 0.7, lastModified: day },
+    { url: `${SITE_URL}/tools/best-basket`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/tools/best-basket") },
+    { url: `${SITE_URL}/tools/value-finder`, changeFrequency: "daily", priority: 0.6, lastModified: day },
+    { url: `${SITE_URL}/tools/rising`, changeFrequency: "daily", priority: 0.6, lastModified: day },
+    { url: `${SITE_URL}/tools/deal-finder`, changeFrequency: "daily", priority: 0.7, lastModified: day },
+    { url: `${SITE_URL}/stores/tracked`, changeFrequency: "weekly", priority: 0.6, lastModified: staticPageDate("/stores/tracked") },
+    { url: `${SITE_URL}/stores/suggest`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/stores/suggest") },
+    { url: `${SITE_URL}/premium`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/premium") },
+    { url: `${SITE_URL}/widgets`, changeFrequency: "monthly", priority: 0.6, lastModified: day },
+    { url: `${SITE_URL}/domains`, changeFrequency: "weekly", priority: 0.7, lastModified: day },
+    { url: `${SITE_URL}/keywords`, changeFrequency: "weekly", priority: 0.7, lastModified: staticPageDate("/keywords") },
+    { url: `${SITE_URL}/cards`, changeFrequency: "weekly", priority: 0.7, lastModified: day },
     { url: `${SITE_URL}/champions`, changeFrequency: "daily", priority: 0.8, lastModified: day },
-    { url: `${SITE_URL}/stores`, changeFrequency: "monthly", priority: 0.5 },
-    { url: `${SITE_URL}/games/higher-lower`, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${SITE_URL}/games/price-check`, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${SITE_URL}/games/zoomed`, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${SITE_URL}/games/pairs`, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${SITE_URL}/games/pack-sim`, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${SITE_URL}/games/twenty48`, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${SITE_URL}/games/card-smash`, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${SITE_URL}/guides`, changeFrequency: "weekly", priority: 0.7 },
-    { url: `${SITE_URL}/blog`, changeFrequency: "weekly", priority: 0.7 },
-    { url: `${SITE_URL}/vendetta-countdown`, changeFrequency: "daily", priority: 0.8 },
-    { url: `${SITE_URL}/feedback`, changeFrequency: "monthly", priority: 0.5 },
-    { url: `${SITE_URL}/about`, changeFrequency: "monthly", priority: 0.5 },
-    { url: `${SITE_URL}/contact`, changeFrequency: "yearly", priority: 0.4 },
+    { url: `${SITE_URL}/stores`, changeFrequency: "monthly", priority: 0.5, lastModified: day },
+    { url: `${SITE_URL}/games/higher-lower`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/higher-lower") },
+    { url: `${SITE_URL}/games/price-check`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/price-check") },
+    { url: `${SITE_URL}/games/zoomed`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/zoomed") },
+    { url: `${SITE_URL}/games/pairs`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/pairs") },
+    { url: `${SITE_URL}/games/pack-sim`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/pack-sim") },
+    { url: `${SITE_URL}/games/twenty48`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/twenty48") },
+    { url: `${SITE_URL}/games/card-smash`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/card-smash") },
+    { url: `${SITE_URL}/guides`, changeFrequency: "weekly", priority: 0.7, lastModified: latestGuide },
+    { url: `${SITE_URL}/blog`, changeFrequency: "weekly", priority: 0.7, lastModified: latestBlog },
+    { url: `${SITE_URL}/vendetta-countdown`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/vendetta-countdown") },
+    { url: `${SITE_URL}/feedback`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/feedback") },
+    { url: `${SITE_URL}/about`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/about") },
+    { url: `${SITE_URL}/contact`, changeFrequency: "yearly", priority: 0.4, lastModified: staticPageDate("/contact") },
     // Returns policy — deliberately higher priority than the other legal pages:
     // Merchant Center / Shopping surfaces look for a conventional return policy,
     // so it needs to be crawled and indexed, not treated as boilerplate.
-    { url: `${SITE_URL}/returns`, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${SITE_URL}/support`, changeFrequency: "monthly", priority: 0.4 },
-    { url: `${SITE_URL}/privacy`, changeFrequency: "yearly", priority: 0.3 },
-    { url: `${SITE_URL}/terms`, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${SITE_URL}/returns`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/returns") },
+    { url: `${SITE_URL}/support`, changeFrequency: "monthly", priority: 0.4, lastModified: staticPageDate("/support") },
+    { url: `${SITE_URL}/privacy`, changeFrequency: "yearly", priority: 0.3, lastModified: staticPageDate("/privacy") },
+    { url: `${SITE_URL}/terms`, changeFrequency: "yearly", priority: 0.3, lastModified: staticPageDate("/terms") },
   ];
 }
 
 async function cards(): Promise<SitemapEntry[]> {
   const day = await priceDay();
   const rows = await prisma.card.findMany({
-    select: { id: true, slug: true, lowestPriceCents: true, imageUrl: true },
+    select: { id: true, slug: true, lowestPriceCents: true, imageUrl: true, createdAt: true },
     orderBy: { lowestPriceCents: { sort: "desc", nulls: "last" } },
   });
   return rows.map((c) => ({
@@ -128,7 +141,10 @@ async function cards(): Promise<SitemapEntry[]> {
     // Priced cards (the ones people search for) rank slightly higher; their
     // prices refresh with every snapshot, so that day is their real lastmod.
     priority: c.lowestPriceCents != null ? 0.8 : 0.5,
-    lastModified: c.lowestPriceCents != null ? day : undefined,
+    // Unpriced cards have no price history to anchor a date to — their own
+    // import date (createdAt) is still a real fact about the record, never a
+    // fabricated "now". (Also covers a priceDay lookup failure for priced cards.)
+    lastModified: c.lowestPriceCents != null ? day ?? c.createdAt : c.createdAt,
     // Image sitemap: surface each card's unique art to image search (absolute URLs only).
     ...(c.imageUrl && c.imageUrl.startsWith("http") ? { images: [c.imageUrl] } : {}),
   }));
@@ -138,12 +154,14 @@ async function sets(): Promise<SitemapEntry[]> {
   const day = await priceDay();
   // comingSoon sets are included at lower priority: pre-release query volume
   // ("riftbound vendetta") is real, the page is live/indexable and linked from
-  // the blog, and it self-upgrades the day singles land.
+  // the blog, and it self-upgrades the day singles land. All sets share the same
+  // priceDay signal — a comingSoon set with zero cards yet still gets an honest,
+  // non-fabricated date rather than none at all.
   return SETS.map((s) => ({
     url: `${SITE_URL}/sets/${s.slug}`,
     changeFrequency: "daily" as const,
     priority: s.comingSoon ? 0.6 : 0.85,
-    ...(s.comingSoon ? {} : { lastModified: day }),
+    lastModified: day,
   }));
 }
 
@@ -158,12 +176,15 @@ async function domains(): Promise<SitemapEntry[]> {
 }
 
 async function keywords(): Promise<SitemapEntry[]> {
+  const day = await priceDay();
   // Only keywords with verified rules text (see lib/keywords.ts); the rest of the
-  // glossary index isn't a separate URL.
+  // glossary index isn't a separate URL. Each page carries a live "every card
+  // with this keyword" list, so it's price-bearing like the other card hubs.
   return KEYWORDS.map((k) => ({
     url: `${SITE_URL}/keywords/${k.slug}`,
     changeFrequency: "weekly" as const,
     priority: 0.7,
+    lastModified: day,
   }));
 }
 
@@ -226,10 +247,12 @@ async function stores(): Promise<SitemapEntry[]> {
 }
 
 async function decks(): Promise<SitemapEntry[]> {
+  const day = await priceDay();
   return META_DECKS.map((d) => ({
     url: `${SITE_URL}/decks/${d.slug}`,
     changeFrequency: "weekly" as const,
     priority: 0.7,
+    lastModified: day,
   }));
 }
 
@@ -255,12 +278,13 @@ async function marketplace(): Promise<SitemapEntry[]> {
   // Only once publicly launched — pre-launch these are noindexed, and a sitemap
   // entry pointing at a noindex page is a Search Console warning.
   if (!MARKETPLACE_PUBLIC) return [];
+  const day = await priceDay();
   const base: SitemapEntry[] = [
-    { url: `${SITE_URL}/marketplace`, changeFrequency: "daily", priority: 0.8 },
-    { url: `${SITE_URL}/marketplace/faq`, changeFrequency: "monthly", priority: 0.5 },
-    { url: `${SITE_URL}/marketplace/buyer-protection`, changeFrequency: "monthly", priority: 0.5 },
-    { url: `${SITE_URL}/marketplace/shipping`, changeFrequency: "monthly", priority: 0.4 },
-    { url: `${SITE_URL}/marketplace/terms`, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${SITE_URL}/marketplace`, changeFrequency: "daily", priority: 0.8, lastModified: day },
+    { url: `${SITE_URL}/marketplace/faq`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/marketplace/faq") },
+    { url: `${SITE_URL}/marketplace/buyer-protection`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/marketplace/buyer-protection") },
+    { url: `${SITE_URL}/marketplace/shipping`, changeFrequency: "monthly", priority: 0.4, lastModified: staticPageDate("/marketplace/shipping") },
+    { url: `${SITE_URL}/marketplace/terms`, changeFrequency: "yearly", priority: 0.3, lastModified: staticPageDate("/marketplace/terms") },
   ];
   try {
     const sellers = await prisma.marketplaceListing.findMany({
@@ -274,6 +298,7 @@ async function marketplace(): Promise<SitemapEntry[]> {
         url: `${SITE_URL}/marketplace/seller/${s.sellerId}`,
         changeFrequency: "daily" as const,
         priority: 0.5,
+        lastModified: day,
       }))
     );
   } catch (e) {
