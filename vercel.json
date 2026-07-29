@@ -10,10 +10,6 @@
       "schedule": "30 18 * * *"
     },
     {
-      "path": "/api/cron/market-report",
-      "schedule": "0 8 * * *"
-    },
-    {
       "path": "/api/cron/newsletter",
       "schedule": "0 21 * * 5"
     },

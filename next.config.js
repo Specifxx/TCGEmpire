@@ -72,6 +72,16 @@ const nextConfig = {
         destination: "/deck",
         permanent: true,
       },
+      // Retired the daily-market-wrap archive and stopped generating new auto-
+      // reports entirely (see lib/market-report.ts) — a run of near-identical
+      // templated pages, one per day forever, was exactly the "scaled content
+      // abuse" shape putting the AdSense application at risk. 301 to the real
+      // Index tool rather than 404ing any indexed/inbound links.
+      {
+        source: "/market/wrap",
+        destination: "/market",
+        permanent: true,
+      },
     ];
   },
   async headers() {

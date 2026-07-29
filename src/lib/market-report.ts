@@ -1,8 +1,17 @@
-// The automated daily market report — an AFR-style "market wrap" for the Riftbound
-// singles market, generated from the live RiftCompare Index and daily price
-// history. One report per Sydney calendar day, persisted as a MarketReport row and
-// surfaced in the blog. Everything here is grounded ONLY in the numbers — we never
-// invent a reason for a move.
+// The automated MONTHLY market report — an AFR-style "market wrap" for the
+// Riftbound singles market, generated from the live RiftCompare Index and daily
+// price history. One report per Sydney calendar MONTH (stored under the 1st of
+// that month), persisted as a MarketReport row and surfaced in the blog.
+// Everything here is grounded ONLY in the numbers — we never invent a reason
+// for a move.
+//
+// WAS daily: one templated page every day, forever, with only ~2-3 sentences of
+// variable prose around a numeric table — the textbook shape of Google's "scaled
+// content abuse" policy (see sitemap.ts history / the AdSense low-value-content
+// fix earlier this session), so daily reports were excluded from the sitemap and
+// noindexed. Monthly — 12 substantive pages a year, each summarising real
+// month-over-month movement — doesn't have that problem, so these ARE indexed
+// (see sitemap.ts and blog/[slug]/page.tsx).
 import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { dbHistory } from "./db-history";
@@ -11,12 +20,15 @@ import { COUNTRY_LIST, COUNTRIES, type Country } from "./country";
 import { formatMoney } from "./format";
 import type { PricePoint } from "./price-history";
 
-// Sydney calendar day (matches the PriceHistory key + the rest of the site).
-export function reportDay(): string {
-  return new Date().toLocaleDateString("en-CA", { timeZone: "Australia/Sydney" });
+// The 1st of the current Sydney calendar month — one report row per month,
+// keyed the same way daily reports used to key by day (MarketReport.day is
+// still a YYYY-MM-DD string; it's just always "-01" now).
+export function reportMonth(): string {
+  const [y, m] = new Date().toLocaleDateString("en-CA", { timeZone: "Australia/Sydney" }).split("-");
+  return `${y}-${m}-01`;
 }
-function longDate(day: string): string {
-  return new Date(`${day}T00:00:00+10:00`).toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric" });
+function monthLabel(day: string): string {
+  return new Date(`${day}T00:00:00+10:00`).toLocaleDateString("en-AU", { month: "long", year: "numeric" });
 }
 
 // A chartable daily close. `d` is the ISO day so the payload survives JSON.
@@ -110,22 +122,24 @@ export async function getGlobalSnapshot(): Promise<GlobalSnapshot> {
   };
 }
 
-// ── Daily card movers (1-day), averaged across markets for a global view ────────
-export interface DailyMover {
+// ── Card movers over the past MONTH, averaged across markets for a global view ──
+export interface Mover {
   name: string;
   slug: string | null;
   id: string;
   setCode: string;
   collectorNumber: string;
-  pct: number; // mean 1-day % across markets with data
+  pct: number; // mean % change across markets with data, earliest vs latest day in the window
   priceCents: number; // representative current price (AU pref, else any)
   currency: string;
 }
 
 const MIN_MOVER_CENTS = 300; // ignore sub-$3 noise
+const MOVER_WINDOW_DAYS = 35; // covers a full calendar month plus slack for import gaps
+const MIN_MOVER_PCT = 3; // a monthly move is only worth reporting if it's a real move, not daily noise
 
-export async function getGlobalDailyMovers(limit = 6): Promise<{ risers: DailyMover[]; fallers: DailyMover[] }> {
-  const since = new Date(Date.now() - 5 * 86400_000);
+export async function getGlobalMonthlyMovers(limit = 6): Promise<{ risers: Mover[]; fallers: Mover[] }> {
+  const since = new Date(Date.now() - MOVER_WINDOW_DAYS * 86400_000);
   const rows = await dbHistory.priceHistory
     .findMany({
       where: { day: { gte: since } },
@@ -135,7 +149,9 @@ export async function getGlobalDailyMovers(limit = 6): Promise<{ risers: DailyMo
     .catch(() => []);
   if (!rows.length) return { risers: [], fallers: [] };
 
-  // Per market: the two most recent distinct days.
+  // Per market: the earliest and latest distinct day within the window —
+  // approximates "start of month" vs "now" even if the window doesn't line up
+  // exactly with calendar-month boundaries (import gaps, month just started, etc).
   const daysByMarket = new Map<string, number[]>();
   for (const r of rows) {
     const arr = daysByMarket.get(r.country) ?? [];
@@ -143,24 +159,25 @@ export async function getGlobalDailyMovers(limit = 6): Promise<{ risers: DailyMo
     if (!arr.includes(t)) arr.push(t);
     daysByMarket.set(r.country, arr);
   }
-  const lastTwo = new Map<string, [number, number] | null>();
+  const firstLast = new Map<string, [number, number] | null>();
   for (const [mkt, days] of daysByMarket) {
-    const sorted = [...days].sort((a, b) => b - a);
-    lastTwo.set(mkt, sorted.length >= 2 ? [sorted[0], sorted[1]] : null);
+    const sorted = [...days].sort((a, b) => a - b);
+    firstLast.set(mkt, sorted.length >= 2 ? [sorted[sorted.length - 1], sorted[0]] : null);
   }
 
-  // Per (card, market) price at last & prev day.
+  // Per (card, market) price at each seen day.
   const price = new Map<string, number>(); // `${cardId}|${country}|${t}` -> cents
   for (const r of rows) price.set(`${r.cardId}|${r.country}|${r.day.getTime()}`, r.lowestPriceCents);
 
-  // Aggregate per card: mean 1-day % across markets that have both days + min price.
+  // Aggregate per card: mean % change across markets that have both endpoints + min price.
   const agg = new Map<string, { pcts: number[]; auPrice?: number; anyPrice: number }>();
   const cardIds = new Set(rows.map((r) => r.cardId));
   for (const cardId of cardIds) {
-    for (const [mkt, two] of lastTwo) {
-      if (!two) continue;
-      const now = price.get(`${cardId}|${mkt}|${two[0]}`);
-      const prev = price.get(`${cardId}|${mkt}|${two[1]}`);
+    for (const [mkt, ends] of firstLast) {
+      if (!ends) continue;
+      const [latest, earliest] = ends;
+      const now = price.get(`${cardId}|${mkt}|${latest}`);
+      const prev = price.get(`${cardId}|${mkt}|${earliest}`);
       if (now == null || prev == null || prev <= 0 || now < MIN_MOVER_CENTS) continue;
       const pct = ((now - prev) / prev) * 100;
       const a = agg.get(cardId) ?? { pcts: [], anyPrice: now };
@@ -177,7 +194,7 @@ export async function getGlobalDailyMovers(limit = 6): Promise<{ risers: DailyMo
 
   const top = (dir: "up" | "down") =>
     scored
-      .filter((x) => (dir === "up" ? x.pct > 0.5 : x.pct < -0.5))
+      .filter((x) => (dir === "up" ? x.pct > MIN_MOVER_PCT : x.pct < -MIN_MOVER_PCT))
       .sort((a, b) => (dir === "up" ? b.pct - a.pct : a.pct - b.pct))
       .slice(0, limit);
   const riserStats = top("up");
@@ -190,7 +207,7 @@ export async function getGlobalDailyMovers(limit = 6): Promise<{ risers: DailyMo
     select: { id: true, name: true, slug: true, setCode: true, collectorNumber: true },
   });
   const byId = new Map(cards.map((c) => [c.id, c]));
-  const shape = (x: { cardId: string; pct: number; cents: number }): DailyMover | null => {
+  const shape = (x: { cardId: string; pct: number; cents: number }): Mover | null => {
     const c = byId.get(x.cardId);
     if (!c) return null;
     return {
@@ -198,7 +215,7 @@ export async function getGlobalDailyMovers(limit = 6): Promise<{ risers: DailyMo
       pct: Math.round(x.pct * 10) / 10, priceCents: x.cents, currency: "AUD",
     };
   };
-  const clean = (arr: ReturnType<typeof shape>[]) => arr.filter((m): m is DailyMover => m !== null);
+  const clean = (arr: ReturnType<typeof shape>[]) => arr.filter((m): m is Mover => m !== null);
   return { risers: clean(riserStats.map(shape)), fallers: clean(fallerStats.map(shape)) };
 }
 
@@ -220,7 +237,7 @@ export interface ReportData {
   global: { level: number | null; d1: number | null; d7: number | null; d30: number | null; series: SeriesPoint[] };
   regions: ReportRegion[];
   breadth: { rose: number; fell: number; flat: number };
-  movers: { risers: DailyMover[]; fallers: DailyMover[] };
+  movers: { risers: Mover[]; fallers: Mover[] };
   // Markdown prose sections, interleaved between the charts by MarketReportView.
   prose: { lede: string; spotlight: string | null; spotlightPlace: string | null; takeaway: string };
 }
@@ -232,58 +249,61 @@ export function parseReportData(json: unknown): ReportData | null {
 }
 
 // ── Prose ───────────────────────────────────────────────────────────────────────
+// Headline metric is the MONTHLY move (globalD30), not day-over-day — the whole
+// point of moving to monthly cadence was a headline that means something once a
+// month, not noise amplified into a "story" every single day.
 function verb(pct: number | null): { word: string; emoji: string } {
   if (pct == null) return { word: "holds steady", emoji: "➖" };
-  if (pct >= 1) return { word: "rallies", emoji: "📈" };
-  if (pct >= 0.15) return { word: "edges up", emoji: "📈" };
-  if (pct > -0.15) return { word: "holds steady", emoji: "➖" };
-  if (pct > -1) return { word: "eases", emoji: "📉" };
+  if (pct >= 5) return { word: "rallies", emoji: "📈" };
+  if (pct >= 1) return { word: "edges up", emoji: "📈" };
+  if (pct > -1) return { word: "holds steady", emoji: "➖" };
+  if (pct > -5) return { word: "eases", emoji: "📉" };
   return { word: "slides", emoji: "📉" };
 }
 const signed = (p: number | null) => (p == null ? "—" : `${p > 0 ? "+" : ""}${p.toFixed(2)}%`);
 const arrow = (p: number | null) => (p == null ? "" : p > 0 ? "▲" : p < 0 ? "▼" : "■");
 
-export function buildReport(day: string, snap: GlobalSnapshot, movers: { risers: DailyMover[]; fallers: DailyMover[] }) {
-  const v = verb(snap.globalD1);
-  const dateLabel = longDate(day);
+export function buildReport(day: string, snap: GlobalSnapshot, movers: { risers: Mover[]; fallers: Mover[] }) {
+  const v = verb(snap.globalD30);
+  const dateLabel = monthLabel(day);
   const lvl = snap.globalLevel != null ? snap.globalLevel.toFixed(1) : "—";
   const n = snap.liveMarkets.length;
 
-  const title = `RiftCompare Index ${v.word} (${signed(snap.globalD1)}) — Riftbound market report, ${dateLabel}`;
+  const title = `RiftCompare Index ${v.word} (${signed(snap.globalD30)}) — Riftbound monthly market report, ${dateLabel}`;
   const excerpt =
-    snap.globalD1 == null
-      ? `The RiftCompare Index is establishing its baseline across the Riftbound singles market. Here's where each region stands today.`
-      : `The global RiftCompare Index ${v.word} ${signed(snap.globalD1)} to ${lvl} as ${snap.fellCount} of ${n} tracked markets ${snap.fellCount === 1 ? "fell" : "fell"}. A region-by-region breakdown of the Riftbound market.`;
+    snap.globalD30 == null
+      ? `The RiftCompare Index is establishing its baseline across the Riftbound singles market. Here's where each region stood this month.`
+      : `The global RiftCompare Index ${v.word} ${signed(snap.globalD30)} over the month to ${lvl} as ${snap.fellCount} of ${n} tracked markets fell. A region-by-region breakdown of the Riftbound market.`;
 
   // Prose sections are built once and reused twice: interleaved with the charts in
   // the rich view (via ReportData.prose) and stitched into the markdown body that
   // older rows / fallback rendering use.
   const lede =
-    snap.globalD1 == null
-      ? `The **RiftCompare Index** — our cross-market gauge of the Riftbound singles market — is still building its first days of history. Below is where each region stands as the data accrues.`
-      : `The **RiftCompare Index** ${v.emoji} ${v.word} **${signed(snap.globalD1)}** overnight to **${lvl}**, as the Riftbound singles market ${snap.globalD1 < 0 ? "came off" : snap.globalD1 > 0 ? "pushed" : "held"} ahead of the Wall Street pre-market open. ${snap.fellCount} of the ${n} regional markets we track ${snap.fellCount === 1 ? "closed lower" : "closed lower"} on the day, with ${snap.roseCount} ${snap.roseCount === 1 ? "higher" : "higher"}.`;
+    snap.globalD30 == null
+      ? `The **RiftCompare Index** — our cross-market gauge of the Riftbound singles market — is still building its first months of history. Below is where each region stands as the data accrues.`
+      : `The **RiftCompare Index** ${v.emoji} ${v.word} **${signed(snap.globalD30)}** over the past month to **${lvl}**, as the Riftbound singles market ${snap.globalD30 < 0 ? "came off" : snap.globalD30 > 0 ? "pushed" : "held"} through ${dateLabel}. ${snap.fellCount} of the ${n} regional markets we track closed the month lower, with ${snap.roseCount} higher.`;
 
   let spotlight: string | null = null;
   let spotlightPlace: string | null = null;
-  if (snap.standout && snap.standout.d1 != null && Math.abs(snap.standout.d1) >= 0.2) {
+  if (snap.standout && snap.standout.d30 != null && Math.abs(snap.standout.d30) >= 1) {
     const s = snap.standout;
-    const sd1 = s.d1 ?? 0;
+    const sd30 = s.d30 ?? 0;
     spotlightPlace = s.place;
-    spotlight = `${COUNTRIES[s.code].flag} **${s.place}** was the standout, its index **${sd1 > 0 ? "up" : "down"} ${signed(sd1)}** on the day — the largest one-day move of any region${
-      snap.globalD1 != null && Math.abs(sd1 - snap.globalD1) > 0.2
-        ? `, diverging from the **${signed(snap.globalD1)}** global average`
+    spotlight = `${COUNTRIES[s.code].flag} **${s.place}** was the standout, its index **${sd30 > 0 ? "up" : "down"} ${signed(sd30)}** over the month — the largest monthly move of any region${
+      snap.globalD30 != null && Math.abs(sd30 - snap.globalD30) > 1
+        ? `, diverging from the **${signed(snap.globalD30)}** global average`
         : ""
-    }. Over the past week it is ${arrow(s.d7)} ${signed(s.d7)}, and over 30 days ${arrow(s.d30)} ${signed(s.d30)}.`;
+    }. Over the past week it is ${arrow(s.d7)} ${signed(s.d7)}.`;
   }
 
   const takeaway = `${
-    snap.globalD1 == null
-      ? "With the Index still finding its feet, the picture sharpens daily."
-      : Math.abs(snap.globalD1) < 0.15
-        ? "A quiet session overall — the kind of flat tape that often precedes a set release or a tournament weekend rather than reacting to one."
-        : snap.globalD1 < 0
-          ? "A softer session for sellers, but softer prices are exactly when buyers find value — check the drops before they bounce."
-          : "A firmer session across the board — momentum worth watching if you're holding singles."
+    snap.globalD30 == null
+      ? "With the Index still finding its feet, the picture sharpens with each monthly close."
+      : Math.abs(snap.globalD30) < 1
+        ? "A quiet month overall — the kind of flat tape that often precedes a set release or a tournament season rather than reacting to one."
+        : snap.globalD30 < 0
+          ? "A softer month for sellers, but softer prices are exactly when buyers find value — check the drops before they bounce."
+          : "A firmer month across the board — momentum worth watching if you're holding singles."
   } Track the live numbers any time on the **[RiftCompare Index](/market)**, see the full **[price movers](/movers)**, or **[browse every card](/browse)** to find your next pickup.`;
 
   const md: string[] = [];
@@ -295,7 +315,7 @@ export function buildReport(day: string, snap: GlobalSnapshot, movers: { risers:
   md.push(`## Markets at a glance\n\n${snap.markets
     .map(
       (m) =>
-        `- ${COUNTRIES[m.code].flag} **${m.place}** — ${m.level != null ? `Index **${m.level.toFixed(1)}**` : "Index —"} · 1-day ${arrow(m.d1)} ${signed(m.d1)} · 7-day ${arrow(m.d7)} ${signed(m.d7)} · 30-day ${arrow(m.d30)} ${signed(m.d30)}`
+        `- ${COUNTRIES[m.code].flag} **${m.place}** — ${m.level != null ? `Index **${m.level.toFixed(1)}**` : "Index —"} · 30-day ${arrow(m.d30)} ${signed(m.d30)} · 7-day ${arrow(m.d7)} ${signed(m.d7)} · 1-day ${arrow(m.d1)} ${signed(m.d1)}`
     )
     .join("\n")}`);
 
@@ -303,13 +323,13 @@ export function buildReport(day: string, snap: GlobalSnapshot, movers: { risers:
   if (spotlight) md.push(`## Regional spotlight: ${spotlightPlace}\n\n${spotlight}`);
 
   // Movers
-  const moverLines = (arr: DailyMover[]) =>
+  const moverLines = (arr: Mover[]) =>
     arr.map((m) => `- **[${m.name}](/card/${m.slug ?? m.id})** (${m.setCode} ${m.collectorNumber}) — ${arrow(m.pct)} **${m.pct > 0 ? "+" : ""}${m.pct}%** to ${formatMoney(m.priceCents, m.currency)}`).join("\n");
   if (movers.risers.length || movers.fallers.length) {
-    md.push(`## Movers of the day`);
+    md.push(`## Movers of the month`);
     if (movers.risers.length) md.push(`**Biggest risers**\n\n${moverLines(movers.risers)}`);
     if (movers.fallers.length) md.push(`**Biggest fallers**\n\n${moverLines(movers.fallers)}`);
-    md.push(`_Card moves are the average one-day change in the lowest live price across the markets where the card trades._`);
+    md.push(`_Card moves are the average change in the lowest live price over the past month, across the markets where the card trades._`);
   }
 
   // Outlook + links
@@ -333,22 +353,22 @@ export function buildReport(day: string, snap: GlobalSnapshot, movers: { risers:
   return { title, excerpt, body, readMins, data };
 }
 
-export const METHODOLOGY = `The RiftCompare Index is a search-weighted gauge of the most-traded Riftbound cards in each market, rebased to 100 at the start of its history; the global figure is an equal-weighted composite of the regional indices, rebased at their common history start. Generated automatically from live data each day at Wall Street pre-market open. Informational only — not financial advice.`;
+export const METHODOLOGY = `The RiftCompare Index is a search-weighted gauge of the most-traded Riftbound cards in each market, rebased to 100 at the start of its history; the global figure is an equal-weighted composite of the regional indices, rebased at their common history start. Generated automatically once a month from live daily price data. Informational only — not financial advice.`;
 
-// Idempotent: create today's report if it doesn't exist; returns the row.
+// Idempotent: create this month's report if it doesn't exist; returns the row.
 // Rows written before the chart payload existed are upgraded in place the first
-// time they're touched (same day, fresh numbers — the slug never changes).
-export async function ensureMarketReport(day = reportDay()): Promise<{ slug: string; created: boolean } | null> {
+// time they're touched (same month, fresh numbers — the slug never changes).
+export async function ensureMarketReport(day = reportMonth()): Promise<{ slug: string; created: boolean } | null> {
   const existing = await prisma.marketReport.findUnique({ where: { day }, select: { slug: true, data: true } });
   if (existing && existing.data != null) return { slug: existing.slug, created: false };
 
   const snap = await getGlobalSnapshot();
   // Don't publish an empty report if there's literally no index yet.
   if (!snap.liveMarkets.length) return existing ? { slug: existing.slug, created: false } : null;
-  const movers = await getGlobalDailyMovers(6);
+  const movers = await getGlobalMonthlyMovers(6);
   const { title, excerpt, body, readMins, data } = buildReport(day, snap, movers);
   const slug = `riftbound-market-report-${day}`;
-  const row = { title, excerpt, body, globalChangePct: snap.globalD1 ?? null, data: data as unknown as Prisma.InputJsonValue };
+  const row = { title, excerpt, body, globalChangePct: snap.globalD30 ?? null, data: data as unknown as Prisma.InputJsonValue };
 
   if (existing) {
     // Backfill the diagrams onto a pre-chart row.

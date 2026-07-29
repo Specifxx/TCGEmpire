@@ -4,10 +4,8 @@ import { CountryHeroToggle } from "@/components/CountryHeroToggle";
 import { OutboundLink } from "@/components/OutboundLink";
 import { CommandLauncherButton } from "@/components/CommandLauncher";
 import { affiliateUrl, ebayAffiliateUrl } from "@/lib/affiliate";
-import { DailyWrapBanner } from "./DailyWrapBanner";
 import { HeroStats, type MarketStat } from "./HeroStats";
 import type { Country } from "@/lib/country";
-import type { MarketReportPost } from "@/lib/posts";
 import { MARKETPLACE_NAV_VISIBLE } from "@/components/nav-groups";
 import { CartIcon } from "@/components/icons/HomeIcons";
 
@@ -25,14 +23,11 @@ export function CinematicHero({
   country,
   totalCards,
   statsByCountry,
-  wrap,
 }: {
   country: Country;
   totalCards: number;
   // Per-market stat tiles — localised to the visitor's market client-side (HeroStats).
   statsByCountry: Record<Country, MarketStat>;
-  // Today's market wrap, shown as a banner directly under the live badge.
-  wrap?: MarketReportPost | null;
 }) {
   const ebayHref = ebayAffiliateUrl(
     `https://www.${EBAY_DOMAIN[country] ?? "ebay.com"}/sch/i.html?_nkw=${encodeURIComponent("Riftbound TCG")}`
@@ -49,13 +44,6 @@ export function CinematicHero({
 
       {/* ── Foreground content (re-aligned to the normal grid) ───────────────── */}
       <div className="container-app relative z-10 w-full py-10 text-center sm:py-14">
-        {/* Today's market wrap — wide + compact. */}
-        {wrap && (
-          <div className="animate-fade-in [animation-delay:100ms] mx-auto mt-2 max-w-5xl text-left">
-            <DailyWrapBanner post={wrap} />
-          </div>
-        )}
-
         {/* Kinetic headline — MARKET-NEUTRAL: this page is cached (ISR), so one
             version serves every visitor and crawler; naming all four markets
             ranks in all four. Prices localise client-side after hydration.

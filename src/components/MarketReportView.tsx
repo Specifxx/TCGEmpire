@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Article } from "@/lib/articles";
-import { METHODOLOGY, type DailyMover, type ReportData } from "@/lib/market-report";
+import { METHODOLOGY, type Mover, type ReportData } from "@/lib/market-report";
 import { COUNTRIES } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { Markdown } from "./Markdown";
@@ -31,7 +31,7 @@ function StatTile({ label, value, pct, big }: { label: string; value?: string; p
   );
 }
 
-function MoverRow({ m, scale }: { m: DailyMover; scale: number }) {
+function MoverRow({ m, scale }: { m: Mover; scale: number }) {
   return (
     <div className="flex items-center gap-3">
       <Link

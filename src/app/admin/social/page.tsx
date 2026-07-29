@@ -43,7 +43,13 @@ export default async function SocialAdminPage({ searchParams }: { searchParams: 
   if (!(keyOk || user?.isAdmin)) notFound();
 
   // ---- Daily market post (from the latest wrap's data) -------------------------
-  const wrap = await getLatestMarketReport().catch(() => null);
+  // Report generation is stopped entirely (see lib/market-report.ts) — this only
+  // shows real data when a report still happens to be fresh (within 3 days);
+  // otherwise it's an increasingly stale row forever, so gate on age rather than
+  // just existence.
+  const rawWrap = await getLatestMarketReport().catch(() => null);
+  const wrapAgeMs = rawWrap ? Date.now() - new Date(`${rawWrap.day}T00:00:00+10:00`).getTime() : Infinity;
+  const wrap = wrapAgeMs <= 3 * 86400_000 ? rawWrap : null;
   const d = wrap?.data ?? null;
   let marketPost: string | null = null;
   let marketThread: string[] = [];
@@ -70,7 +76,7 @@ export default async function SocialAdminPage({ searchParams }: { searchParams: 
             .map((m) => `▲ ${m.name} ${signed(m.pct)}`)
             .join("\n")}${d.movers.fallers.length ? `\n${d.movers.fallers.slice(0, 3).map((m) => `▼ ${m.name} ${signed(m.pct)}`).join("\n")}` : ""}`
         : "",
-      `Full daily report — every region, every mover, the charts:\n\nriftcompare.com/market/wrap`,
+      `Full breakdown — every region, every mover, the charts:\n\nriftcompare.com/market`,
     ].filter(Boolean);
   }
 
@@ -101,12 +107,12 @@ export default async function SocialAdminPage({ searchParams }: { searchParams: 
       </p>
 
       {marketPost ? (
-        <Section title="1 · Today's market post" hint="Post this, then reply with: riftcompare.com/market/wrap">
+        <Section title="1 · Today's market post" hint="Post this, then reply with: riftcompare.com/market">
           <Post text={marketPost} />
         </Section>
       ) : (
         <Section title="1 · Today's market post">
-          <p className="text-sm text-slate-500">No market wrap generated yet today — check back after the next price refresh.</p>
+          <p className="text-sm text-slate-500">No fresh market wrap available — report generation is stopped (see lib/market-report.ts), so this only shows when a recent row happens to exist.</p>
         </Section>
       )}
 

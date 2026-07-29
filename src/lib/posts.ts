@@ -25,14 +25,15 @@ function reportToArticle(r: ReportRow): Article {
   };
 }
 
-// All blog posts (editorial + market reports), newest first. Resilient: a DB blip
-// just falls back to the file articles.
-export async function getBlogPosts(limit = 200): Promise<Article[]> {
-  const reports = await prisma.marketReport
-    .findMany({ orderBy: { day: "desc" }, take: limit, select: { slug: true, day: true, title: true, excerpt: true, body: true } })
-    .catch(() => [] as ReportRow[]);
-  const fileBlog = ARTICLES.filter((a) => a.category === "blog");
-  return [...fileBlog, ...reports.map(reportToArticle)].sort((a, b) => (a.date < b.date ? 1 : -1));
+// All hand-written blog posts, newest first. Auto-generated MarketReport rows are
+// DELIBERATELY excluded here — this feeds the public /blog list, the RSS/JSON
+// feeds and the Google News sitemap, and a run of near-identical templated pages
+// on those surfaces is exactly the "scaled content abuse" shape that put the
+// AdSense application at risk (see lib/market-report.ts's header comment).
+// Individual report pages still resolve directly via getMarketReportPost/
+// getBlogPost for anyone who already has the URL; they just don't get surfaced.
+export async function getBlogPosts(): Promise<Article[]> {
+  return ARTICLES.filter((a) => a.category === "blog").sort((a, b) => (a.date < b.date ? 1 : -1));
 }
 
 // Resolve a single blog post by slug from either source.
@@ -60,27 +61,13 @@ export async function getMarketReportPost(slug: string): Promise<MarketReportPos
   return r ? { article: reportToArticle(r), day: r.day, data: parseReportData(r.data) } : null;
 }
 
-// The newest report, for the featured "Daily Market Wrap" section on /blog.
+// The newest report row, if one exists. Generation is stopped (see
+// lib/market-report.ts) and nothing on the public site surfaces this anymore —
+// only internal tooling (admin/social, the Discord poster) still reads it, and
+// only when it's actually fresh (see each caller's freshness check).
 export async function getLatestMarketReport(): Promise<MarketReportPost | null> {
   const r = await prisma.marketReport
     .findFirst({ orderBy: { day: "desc" }, select: REPORT_SELECT })
     .catch(() => null);
   return r ? { article: reportToArticle(r), day: r.day, data: parseReportData(r.data) } : null;
-}
-
-// A lightweight list of every daily market wrap (no body/data) for the wrap
-// archive grid. Newest first; best-effort (a DB blip just yields []).
-export async function getMarketReportList(limit = 120) {
-  return prisma.marketReport
-    .findMany({
-      orderBy: { day: "desc" },
-      take: limit,
-      select: { slug: true, day: true, title: true, excerpt: true, globalChangePct: true },
-    })
-    .catch(() => [] as { slug: string; day: string; title: string; excerpt: string; globalChangePct: number | null }[]);
-}
-
-// Slugs of all market-report posts (for the sitemap). Best-effort.
-export async function getMarketReportSlugs(): Promise<{ slug: string; day: string }[]> {
-  return prisma.marketReport.findMany({ orderBy: { day: "desc" }, select: { slug: true, day: true } }).catch(() => []);
 }

@@ -2,8 +2,10 @@ import { getBlogPosts } from "@/lib/posts";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 // Google News-style sitemap: only items published in the last 2 days (the News
-// sitemap spec), so the daily market reports get faster, higher-frequency crawls.
-// Referenced from robots.ts alongside the main sitemap.
+// sitemap spec), so genuinely time-sensitive posts (set-launch coverage, etc.)
+// get faster, higher-frequency crawls. Referenced from robots.ts alongside the
+// main sitemap. getBlogPosts() only returns hand-written posts — auto-generated
+// market reports are excluded (see lib/posts.ts).
 export const revalidate = 600;
 
 const esc = (s: string) =>

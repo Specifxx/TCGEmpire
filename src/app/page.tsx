@@ -5,16 +5,13 @@ import { prisma } from "@/lib/db";
 import { CardTile } from "@/components/CardTile";
 import { Reveal } from "@/components/Reveal";
 import { getPopularCards } from "@/lib/cheapest-cards";
-import { COUNTRIES, DEFAULT_COUNTRY, priceField, type Country } from "@/lib/country";
+import { DEFAULT_COUNTRY, priceField, type Country } from "@/lib/country";
 import type { MarketStat } from "@/components/home/HeroStats";
 import { SETS, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
 import { getTopDeals, type TopDeals } from "@/lib/top-deals";
 import { TodaysTopDeals } from "@/components/TodaysTopDeals";
-import { getMarketIndex } from "@/lib/market-index";
-import { getLatestMarketReport } from "@/lib/posts";
 import { CinematicHero } from "@/components/home/CinematicHero";
-import { MarketPulse } from "@/components/home/MarketPulse";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { CardsIcon } from "@/components/icons/HomeIcons";
@@ -78,9 +75,8 @@ export default async function HomePage() {
   // "Australia"); CardTile re-prices to the visitor's market after hydration.
   // The copy Google indexes (hero, FAQs, about) is market-neutral.
   const country = DEFAULT_COUNTRY;
-  const info = COUNTRIES[country];
   const COUNTRY_CODES: Country[] = ["AU", "NZ", "US", "UK", "SG"];
-  const [totalCards, pricedCounts, inStockGroups, storeRows, popularCards, popularVendetta, topDealsArr, index, latestWrap] = await Promise.all([
+  const [totalCards, pricedCounts, inStockGroups, storeRows, popularCards, popularVendetta, topDealsArr] = await Promise.all([
     prisma.card.count(),
     // Priced-card count PER MARKET (one indexed count per price column) — the hero
     // stat tiles localise to the visitor's market client-side, so we serialize all four.
@@ -119,13 +115,6 @@ export default async function HomePage() {
         unstable_cache(() => getTopDeals(c), ["top-deals", c], { revalidate: 3600, tags: [CONTENT_TAG] })(),
       ),
     ),
-    // The GLOBAL RiftCompare Index. getMarketIndex is now day-cached internally
-    // (once per market per Sydney day, shared across every caller), so no extra
-    // page-level cache is needed — a second wrapper would only re-serialise the
-    // same blob and can't reduce history-DB reads further.
-    getMarketIndex("GLOBAL"),
-    // The latest daily market wrap for the homepage's featured data block.
-    unstable_cache(getLatestMarketReport, ["home-latest-wrap"], { revalidate: 3600, tags: [CONTENT_TAG] })(),
   ]);
   // Assemble per-market stat tiles; the client picks the visitor's market after hydration.
   const inStockByCountry: Record<string, number> = {};
@@ -139,7 +128,6 @@ export default async function HomePage() {
   const storeWord = storeCount === 1 ? "store" : "stores";
   // Per-market Top Deals, so the section can localise client-side (see above).
   const topDealsByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, topDealsArr[i]])) as Record<Country, TopDeals>;
-  const topDeals = topDealsByCountry[country]; // default-market view (MarketPulse + section guard)
   const anyDeals = COUNTRY_CODES.some((c) => topDealsByCountry[c].hasAny);
 
   return (
@@ -147,13 +135,11 @@ export default async function HomePage() {
       {/* Vendetta launch ribbon lives in the layout (attached under the navbar), so
           it isn't repeated here. */}
 
-      {/* Cinematic full-bleed hero — today's wrap banner sits inside it, under the
-          live badge (see CinematicHero). */}
+      {/* Cinematic full-bleed hero. */}
       <CinematicHero
         country={country}
         totalCards={totalCards}
         statsByCountry={statsByCountry}
-        wrap={latestWrap}
       />
 
       {/* Most-searched Vendetta cards, right under the hero — real demand
@@ -178,14 +164,6 @@ export default async function HomePage() {
             ))}
           </Reveal>
         </section>
-      )}
-
-      {/* Live Index pulse — only until the first daily wrap exists; once it does, the
-          top banner is the single wrap/index element and this is skipped. */}
-      {!latestWrap && (
-        <Reveal>
-          <MarketPulse index={index} currency={info.currency} deals={topDeals} country={country} place={info.place} />
-        </Reveal>
       )}
 
       {/* How it works — orients first-time visitors to the search → compare → buy

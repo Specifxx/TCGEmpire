@@ -25,7 +25,7 @@ const DESC: Record<string, string> = {
   "/games": "Free Riftbound mini-games (Riftle, pack sim, price games and more).",
   "/learn": "Learn Riftbound: an interactive new-player guide with real cards.",
   "/guides": "Buying guides and strategy articles for Riftbound.",
-  "/blog": "News, metagame snapshots and the automated daily market report.",
+  "/blog": "News, metagame snapshots and buying guides for Riftbound.",
   "/portfolio": "Track a collection's value over time.",
   "/premium": "RiftCompare Premium — the Deal Finder / value tools and ad-free browsing.",
 };
@@ -53,8 +53,7 @@ export function GET() {
   // Machine-readable data endpoints first — the highest-value surface for agents.
   lines.push("## Data (machine-readable)");
   lines.push(`- [RiftCompare Index (JSON)](${abs("/api/v1/index.json")}): the live index level, deltas, key stats and constituents.`);
-  lines.push(`- [Market wrap archive](${abs("/market/wrap")}): every daily "what moved the market" report.`);
-  lines.push(`- [RSS feed](${abs("/feed.xml")}) · [JSON feed](${abs("/feed.json")}): new articles and daily market reports.`);
+  lines.push(`- [RSS feed](${abs("/feed.xml")}) · [JSON feed](${abs("/feed.json")}): new articles.`);
   lines.push("");
 
   // The curated nav groups, with descriptions. "Your collection", "Games" and

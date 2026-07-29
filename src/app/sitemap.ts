@@ -89,21 +89,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: new Date(`${a.date}T09:00:00+10:00`),
   }));
 
-  // Auto-generated daily market reports are DELIBERATELY NOT in the sitemap, and
-  // are noindexed at the page level (see src/app/blog/[slug]/page.tsx).
+  // Auto-generated market reports are DELIBERATELY NOT in the sitemap, and are
+  // noindexed at the page level (see src/app/blog/[slug]/page.tsx).
   //
-  // WHY: one templated post is generated per calendar day, forever. Each carries
-  // only ~2-3 sentences of variable prose (a verb picked from a 5-branch ladder +
-  // a takeaway from 4 fixed strings) wrapped around a numeric table — the rest is
-  // identical boilerplate. Submitting an unbounded, ever-growing set of
-  // near-duplicate pages is the textbook shape of Google's "scaled content abuse"
-  // spam policy, and a live AdSense/Publisher-Policy liability.
+  // WHY: these were generated daily — one templated post per calendar day,
+  // forever, each carrying only ~2-3 sentences of variable prose wrapped around
+  // a numeric table — the textbook shape of Google's "scaled content abuse" spam
+  // policy, and a real AdSense Publisher-Policy risk. Across a full Search
+  // Console export (205 page rows / 1,899 impressions) NOT ONE market-report URL
+  // appeared — they earned no search traffic to lose.
   //
-  // The cost of dropping them is measurably ~zero: across a full Search Console
-  // export (205 page rows / 1,899 impressions) NOT ONE market-report URL appeared
-  // — they earn no search traffic to lose. They remain fully available to humans
-  // via the homepage banner and the /market/wrap archive; this only stops us
-  // *submitting* them to Google. Reversible by restoring this block + the noindex.
+  // Generation is now stopped entirely (see lib/market-report.ts) rather than
+  // just excluded from the sitemap: the homepage banner and the /market/wrap
+  // archive that used to surface them are both removed, and getBlogPosts()
+  // (lib/posts.ts) no longer merges them into the public blog list/feeds/news
+  // sitemap. Existing report rows stay in the DB and resolve directly by URL
+  // (still noindexed) but are no longer linked from anywhere on the site.
   const reportRoutes: MetadataRoute.Sitemap = [];
 
   // Set landing pages (high-value head terms, e.g. "Riftbound Origins prices").
