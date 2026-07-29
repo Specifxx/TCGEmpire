@@ -24,8 +24,19 @@ export function revalidateContent(): string[] {
   ];
   for (const [p, type] of staticPaths) revalidatePath(p, type);
 
-  // The sitemap is the crawler's discovery source — refresh so new cards appear.
+  // The sitemaps are the crawler's discovery source — refresh so new cards and
+  // fresh prices appear promptly rather than waiting out the 24h ISR fallback.
+  // (The editorial child sitemap isn't price-derived, so it's left on its own
+  // ISR clock here.)
   revalidatePath("/sitemap.xml");
+  for (const p of [
+    "/sitemaps/core/sitemap.xml",
+    "/sitemaps/cards/sitemap.xml",
+    "/sitemaps/champions/sitemap.xml",
+    "/sitemaps/sets-domains-keywords/sitemap.xml",
+    "/sitemaps/stores/sitemap.xml",
+    "/sitemaps/decks/sitemap.xml",
+  ]) revalidatePath(p);
 
   // The cookie/searchParams-DYNAMIC price pages (/market, /decks, /decks/[slug],
   // /tools/box-ev) render per-request, so revalidatePath can't purge
