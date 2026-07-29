@@ -9,6 +9,7 @@ import { DOMAIN_PAGES } from "@/lib/domains";
 import { MARKETPLACE_PUBLIC } from "@/lib/marketplace";
 import { KEYWORDS } from "@/lib/keywords";
 import { CHAMPIONS, championCardWhere } from "@/lib/champions";
+import { STORE_PAGES, STORE_THIN_THRESHOLD } from "@/lib/store-pages";
 import { TYPE_FACETS, RARITY_FACETS, PRINTING_FACETS } from "@/lib/facets";
 import { buildCardWhere } from "@/lib/cards";
 import { DEFAULT_COUNTRY } from "@/lib/country";
@@ -197,6 +198,29 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("sitemap: champion count query failed, omitting champion routes:", e);
   }
 
+  // Store pages — only those with real live inventory. Several tracked retailers
+  // are deliberately directory-only (no webstore, or a catalogue we can't
+  // auto-price); their page exists and is linked, but a page whose only content
+  // is "nothing in stock" is thin, is noindexed at the page level, and shouldn't
+  // be submitted for crawling.
+  let storeRoutes: MetadataRoute.Sitemap = [];
+  try {
+    const stocked = await prisma.retailerPrice.groupBy({
+      by: ["retailer"],
+      where: { inStock: true },
+      _count: { _all: true },
+    });
+    const countByKey = new Map(stocked.map((r) => [r.retailer, r._count._all]));
+    storeRoutes = STORE_PAGES.filter((s) => (countByKey.get(s.key) ?? 0) >= STORE_THIN_THRESHOLD).map((s) => ({
+      url: `${SITE_URL}/stores/${s.slug}`,
+      changeFrequency: "daily" as const,
+      priority: 0.6,
+      lastModified: priceDay,
+    }));
+  } catch (e) {
+    console.error("sitemap: store inventory query failed, omitting store routes:", e);
+  }
+
   const deckRoutes: MetadataRoute.Sitemap = META_DECKS.map((d) => ({
     url: `${SITE_URL}/decks/${d.slug}`,
     changeFrequency: "weekly",
@@ -247,5 +271,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // NOTE: deliberately NO blanket "lastModified: now" — evergreen pages
   // (privacy, games, deck guides…) carry no date rather than a fake one.
-  return [...staticRoutes, ...marketplaceRoutes, ...setRoutes, ...domainRoutes, ...keywordRoutes, ...facetRoutes, ...championRoutes, ...deckRoutes, ...articleRoutes, ...reportRoutes, ...cardRoutes];
+  return [...staticRoutes, ...marketplaceRoutes, ...setRoutes, ...domainRoutes, ...keywordRoutes, ...facetRoutes, ...championRoutes, ...storeRoutes, ...deckRoutes, ...articleRoutes, ...reportRoutes, ...cardRoutes];
 }

@@ -4,6 +4,7 @@ import { RETAILER_LIST } from "@/lib/retailers";
 import { COUNTRIES, type Country } from "@/lib/country";
 import { SITE_URL } from "@/lib/site";
 import { MARKETPLACE_PUBLIC } from "@/lib/marketplace";
+import { storeSlug } from "@/lib/store-pages";
 
 export const revalidate = 86400;
 
@@ -101,17 +102,21 @@ export default function TrackedStoresPage() {
             <span className="num text-sm font-normal text-slate-500">({m.stores.length})</span>
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Now links INTERNALLY to each store's own page rather than straight
+                out to the retailer. Every store page was previously orphaned —
+                nothing on the site linked to one — and an outbound-only directory
+                passes crawl budget away instead of distributing it. The outbound
+                link still exists, on the store page itself. */}
             {m.stores.map((s) => (
-              <a
+              <Link
                 key={s.key}
-                href={s.base}
-                target="_blank"
-                rel="nofollow noopener noreferrer"
+                href={`/stores/${storeSlug(s.key)}`}
                 className="card-surface flex flex-col gap-1 p-4 transition-colors hover:border-brand-500"
               >
                 <span className="font-semibold text-white">{s.name}</span>
                 <span className="text-xs text-slate-500">{s.shippingNote}</span>
-              </a>
+                <span className="mt-1 text-xs text-brand-400">See live prices &amp; stock →</span>
+              </Link>
             ))}
           </div>
         </section>
