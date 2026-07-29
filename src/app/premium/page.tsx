@@ -8,6 +8,7 @@ import { PremiumCta } from "@/components/PremiumCta";
 import { ManageSubscriptionButton } from "@/components/ManageSubscriptionButton";
 import { AnnualPriceBlock } from "@/components/AnnualPriceBlock";
 import { SITE_URL, PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, PREMIUM_ANNUAL_AMOUNT } from "@/lib/site";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const dynamic = "force-dynamic";
 
@@ -103,6 +104,7 @@ export default async function PremiumPage() {
 
   return (
     <div className="mx-auto max-w-4xl">
+      <Breadcrumbs trail={[{ name: "Premium", href: "/premium" }]} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

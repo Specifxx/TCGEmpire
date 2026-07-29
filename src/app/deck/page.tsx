@@ -8,6 +8,7 @@ import { gbpCentsToEur } from "@/lib/fx";
 import { parseDeckList } from "@/lib/deck";
 import { normalizeSearch, formatMoney } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 const TITLE = "Riftbound Deck Builder & Deck Price Calculator";
 const DESC =
@@ -76,6 +77,7 @@ export default function DeckPage({ searchParams }: { searchParams: { list?: stri
   const info = COUNTRIES[getCountry()];
   return (
     <div>
+      <Breadcrumbs trail={[{ name: "Deck Builder", href: "/deck" }]} />
       <div className="mb-5">
         <h1 className="text-2xl font-extrabold text-white">Deck Builder &amp; Pricing</h1>
         <p className="mt-1 text-sm text-slate-400">

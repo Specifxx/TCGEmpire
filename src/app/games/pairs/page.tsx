@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { TcgplayerAd } from "@/components/TcgplayerAd";
 import { getCountry } from "@/lib/get-country";
 import { Pairs } from "@/components/games/Pairs";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Pairs — Riftbound Card Memory Game",
@@ -14,6 +15,7 @@ export default function PairsPage() {
   const country = getCountry();
   return (
     <div>
+      <Breadcrumbs trail={[{ name: "Games", href: "/games" }, { name: "Pairs", href: "/games/pairs" }]} />
       <Pairs />
       <TcgplayerAd size="leaderboard" country={country} className="mt-8" />
       <section className="mx-auto mt-8 max-w-2xl">

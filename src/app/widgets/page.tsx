@@ -6,6 +6,7 @@ import { cardDisplayName } from "@/lib/card-name";
 import { isoCountry } from "@/lib/country";
 import { SITE_URL, SITE_NAME } from "@/lib/site";
 import { EmbedSnippet } from "@/components/EmbedSnippet";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const revalidate = 3600;
 
@@ -37,6 +38,7 @@ export default async function WidgetsPage() {
 
   return (
     <div className="flex flex-col gap-10">
+      <Breadcrumbs trail={[{ name: "Price Widget", href: "/widgets" }]} />
       {/* Hero */}
       <section className="card-surface overflow-hidden">
         <div className="bg-gradient-to-br from-brand-600/20 via-ink-850 to-gold/10 px-6 py-12 text-center">

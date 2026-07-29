@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { TcgplayerAd } from "@/components/TcgplayerAd";
 import { getCountry } from "@/lib/get-country";
 import { Zoomed } from "@/components/games/Zoomed";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Zoomed In — Guess the Riftbound Card from Its Art",
@@ -14,6 +15,7 @@ export default function ZoomedPage() {
   const country = getCountry();
   return (
     <div>
+      <Breadcrumbs trail={[{ name: "Games", href: "/games" }, { name: "Zoomed In", href: "/games/zoomed" }]} />
       <Zoomed />
       <TcgplayerAd size="leaderboard" country={country} className="mt-8" />
       <section className="mx-auto mt-8 max-w-2xl">

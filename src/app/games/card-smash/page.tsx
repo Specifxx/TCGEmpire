@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { TcgplayerAd } from "@/components/TcgplayerAd";
 import { getCountry } from "@/lib/get-country";
 import { CardSmash } from "@/components/games/CardSmash";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Card Smash — Riftbound Whack-a-Mole Reflex Game",
@@ -14,6 +15,7 @@ export default function CardSmashPage() {
   const country = getCountry();
   return (
     <div>
+      <Breadcrumbs trail={[{ name: "Games", href: "/games" }, { name: "Card Smash", href: "/games/card-smash" }]} />
       <CardSmash />
       <TcgplayerAd size="leaderboard" country={country} className="mt-8" />
       <section className="mx-auto mt-8 max-w-2xl">

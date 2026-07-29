@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { SETS } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
 import { PackSim } from "@/components/games/PackSim";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 const DESC =
   "Open virtual Riftbound booster packs for free, built from the real card pool with live prices. See what a pack is actually worth — no money, all the dopamine. Then check the Box EV calculator to see if real packs are worth opening.";
@@ -44,6 +45,7 @@ export default function PackSimPage() {
   const sets = SETS.filter((s) => !s.comingSoon).map((s) => ({ code: s.code, name: s.name }));
   return (
     <div>
+      <Breadcrumbs trail={[{ name: "Games", href: "/games" }, { name: "Pack Opening Simulator", href: "/games/pack-sim" }]} />
       <PackSim sets={sets} />
       <section className="mx-auto mt-8 max-w-2xl">
         <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">How it works</h2>

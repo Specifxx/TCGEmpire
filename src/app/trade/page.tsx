@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { TradeCalculator } from "@/components/TradeCalculator";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Trade Calculator — Compare Riftbound card trade values",
@@ -13,6 +14,7 @@ export const metadata: Metadata = {
 export default function TradePage() {
   return (
     <div className="mx-auto max-w-4xl">
+      <Breadcrumbs trail={[{ name: "Trade Calculator", href: "/trade" }]} />
       <header className="mb-5">
         <h1 className="font-display text-3xl font-extrabold text-white">Trade Calculator</h1>
         <p className="mt-1 text-slate-400">

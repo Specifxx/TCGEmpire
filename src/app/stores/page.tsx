@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { SITE_URL, CONTACT_EMAIL } from "@/lib/site";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const revalidate = 3600;
 
@@ -39,6 +40,7 @@ export default async function StoresPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
+      <Breadcrumbs trail={[{ name: "Stores", href: "/stores" }]} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

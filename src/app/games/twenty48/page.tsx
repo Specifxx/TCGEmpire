@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { TcgplayerAd } from "@/components/TcgplayerAd";
 import { getCountry } from "@/lib/get-country";
 import { Twenty48 } from "@/components/games/Twenty48";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Riftbound 2048 — Merge Cards Up the Rarity Ladder",
@@ -14,6 +15,7 @@ export default function Twenty48Page() {
   const country = getCountry();
   return (
     <div>
+      <Breadcrumbs trail={[{ name: "Games", href: "/games" }, { name: "Riftbound 2048", href: "/games/twenty48" }]} />
       <Twenty48 />
       <TcgplayerAd size="leaderboard" country={country} className="mt-8" />
       <section className="mx-auto mt-8 max-w-2xl">

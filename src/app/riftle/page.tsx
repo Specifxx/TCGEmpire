@@ -6,6 +6,7 @@ import { TcgplayerAd } from "@/components/TcgplayerAd";
 import { getCountry } from "@/lib/get-country";
 import { SITE_URL } from "@/lib/site";
 import { RIFTLE_ATTEMPTS } from "@/lib/riftle-shared";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 const DESCRIPTION =
   "Guess the Riftbound card of the day in 8 tries — or switch to Unlimited mode and play endless random cards. A free puzzle for League of Legends TCG players, with progressive hints and Wordle-style feedback on set, domain, type, rarity, cost and might.";
@@ -42,6 +43,7 @@ export default function RiftlePage() {
   const country = getCountry();
   return (
     <>
+      <Breadcrumbs trail={[{ name: "Riftle", href: "/riftle" }]} />
       {/* Contained boundary: a Riftle crash shows its message + retry in place
           instead of replacing the whole page with the route error screen. */}
       <GameBoundary>

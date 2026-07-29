@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SITE_URL } from "@/lib/site";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const revalidate = 86400;
 
@@ -127,11 +128,9 @@ export default function ToolsHubPage() {
   return (
     <div className="mx-auto max-w-4xl">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }} />
-      <nav className="mb-3 flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
-        <Link href="/" className="hover:text-slate-300">Home</Link>
-        <span>/</span>
-        <span className="text-slate-300">Tools</span>
-      </nav>
+      {/* Was a visible-only breadcrumb with no BreadcrumbList markup behind it —
+          the exact split <Breadcrumbs> exists to close. */}
+      <Breadcrumbs trail={[{ name: "Tools", href: "/tools" }]} />
 
       <h1 className="text-2xl font-extrabold text-white sm:text-3xl">Tools &amp; calculators</h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">

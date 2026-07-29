@@ -8,6 +8,7 @@ import { gbpCentsToEur } from "@/lib/fx";
 import { parseDeckList } from "@/lib/deck";
 import { normalizeSearch, formatMoney } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 const TITLE = "Bulk Riftbound Card Price Checker";
 const DESC =
@@ -89,6 +90,7 @@ export default function BulkPricerPage({ searchParams }: { searchParams: { list?
   const info = COUNTRIES[getCountry()];
   return (
     <div>
+      <Breadcrumbs trail={[{ name: "Bulk Price Checker", href: "/bulk-pricer" }]} />
       <div className="mb-5">
         <h1 className="text-2xl font-extrabold text-white">Bulk Card Price Checker</h1>
         <p className="mt-1 text-sm text-slate-400">
