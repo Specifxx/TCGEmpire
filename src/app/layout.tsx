@@ -252,6 +252,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <span className="text-ink-700">·</span>
             <Link href="/terms" className="text-slate-300 hover:text-brand-400">Terms</Link>
             <span className="text-ink-700">·</span>
+            {/* Returns sits OUTSIDE the MARKETPLACE_NAV_VISIBLE gate on purpose:
+                Google Merchant Center and Shopping ads need a conventional return
+                policy reachable from every page regardless of whether marketplace
+                navigation is currently surfaced. */}
+            <Link href="/returns" className="text-slate-300 hover:text-brand-400">Returns &amp; shipping</Link>
+            <span className="text-ink-700">·</span>
             {MARKETPLACE_NAV_VISIBLE && (
               <>
                 <Link href="/marketplace/terms" className="text-slate-300 hover:text-brand-400">Marketplace terms</Link>

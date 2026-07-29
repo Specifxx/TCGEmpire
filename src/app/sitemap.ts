@@ -82,6 +82,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/feedback`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${SITE_URL}/about`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${SITE_URL}/contact`, changeFrequency: "yearly", priority: 0.4 },
+    // Returns policy — deliberately higher priority than the other legal pages:
+    // Merchant Center / Shopping surfaces look for a conventional return policy,
+    // so it needs to be crawled and indexed, not treated as boilerplate.
+    { url: `${SITE_URL}/returns`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${SITE_URL}/privacy`, changeFrequency: "yearly", priority: 0.3 },
     { url: `${SITE_URL}/terms`, changeFrequency: "yearly", priority: 0.3 },
   ];
