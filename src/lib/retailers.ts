@@ -715,6 +715,25 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. US$2.50 · free over US$50",
     country: "US",
   },
+  // Reclassified out of the original "Step 3 — needs a custom adapter" bucket:
+  // cardshq.com is actually a regular Shopify store (its own /collections/ and
+  // /products/ URLs are Shopify's exact default route shapes, and its policy page
+  // is at /policies/terms-of-service — Shopify's auto-generated path), not the
+  // Next.js custom build originally assumed. Sealed-focused per the original
+  // research (riftbound-boxes), so lower priority, but the existing Shopify
+  // adapter already covers it — no bespoke code needed. Re-verify with
+  // scripts/probe-us-stores.ts before fully trusting this (found via web search in
+  // this sandbox, not a direct fetch — this sandbox can't reach the site itself).
+  cardshq: {
+    key: "cardshq",
+    name: "CardsHQ",
+    base: "https://www.cardshq.com",
+    collections: ["riftbound-boxes"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  },
   // ---- Researched and rejected (US) — do NOT re-add without new evidence -------
   // Consolidated here (instead of scattered per-batch) so this is one place to
   // check before re-researching any of these. From the 2026-07 US batch:
@@ -728,16 +747,46 @@ export const RETAILERS: Record<string, RetailerInfo> = {
   //     lead for whoever next does a UK batch; not added to this file.
   //   - Card Kingdom (cardkingdom.com) — checked, MTG-only, no Riftbound. Listed so
   //     nobody re-checks it.
-  //   - Troll and Toad (trollandtoad.com) — storefront down for a warehouse move as
-  //     of this research pass; revisit later, not a rejection.
+  //   - Star City Games (starcitygames.com) — checked via web search (this sandbox
+  //     can't fetch the site directly): their Terms & Conditions explicitly
+  //     prohibit "any computerized or automated program... to access, extract,
+  //     download, scrape, data mine... materials, data, or information on any Star
+  //     City website" without prior written consent. NOT permitted — do not build
+  //     an adapter for this without written consent from Star City Games first,
+  //     regardless of how valuable the catalogue is. Re-check
+  //     help.starcitygames.com/terms-and-conditions directly if this needs
+  //     revisiting.
+  //   - Troll and Toad (trollandtoad.com) — confirmed via web search still down for
+  //     a warehouse move/relaunch ("orders paused... soft-reopening phase") as of
+  //     this pass; revisit later, not a rejection.
   //
   // ---- Non-Shopify custom-adapter candidates — NOT implemented this pass -------
-  // Star City Games, CoolStuffInc, Trading Card Planet, and CardsHQ (all bespoke
-  // platforms, no Shopify products.json feed) plus a Crystal-Commerce-pattern long
-  // tail (Amazing Discoveries Tucson, Victory Point, and others) each need their own
-  // adapter and a robots.txt/ToS check first. Neither could be done in this pass —
-  // see the session summary for why — so nothing was built or added for any of
-  // them. TODO, not a rejection.
+  // CoolStuffInc and Trading Card Planet (bespoke platforms, no Shopify
+  // products.json feed) plus a Crystal-Commerce-pattern long tail (Amazing
+  // Discoveries Tucson, Victory Point, and ~15 others) each need their own adapter
+  // and a robots.txt/ToS check first — genuinely not done, not just deferred:
+  //   - CoolStuffInc: no ToS statement on scraping and no affiliate/data-feed
+  //     program turned up after three separate searches. Genuinely unresolved,
+  //     not "assumed fine" — needs a direct check (visit
+  //     coolstuffinc.com/robots.txt and their ToS page) before writing anything.
+  //   - Trading Card Planet: one search surfaced "checkout is powered by Shopify,"
+  //     which is NOT the same claim as the original research's "non-Shopify
+  //     despite the /collections/ URL shape" (Shopify Payments/checkout can sit
+  //     behind an otherwise-custom storefront) — noted, not acted on; the
+  //     original firsthand research is more trustworthy than this ambiguous
+  //     secondhand signal.
+  //   - Crystal Commerce: confirmed real via web search — genuine platform, real
+  //     URL shape /catalog/[category]-[subcategory]-[product_type]/[id], and it
+  //     does expose a documented JSON API (variant descriptors like "Condition:
+  //     Near Mint", price_cents, msrp_cents — see docs.crystalcommerce.com/
+  //     json_api.html). BUT that API reads as REST-style with full CRUD (GET/
+  //     POST/PUT/DELETE), which is the shape of a merchant-facing management API,
+  //     not necessarily a public anonymous read feed like Shopify's products.json
+  //     — unconfirmed whether it's fetchable without credentials. Needs a live
+  //     check against ONE real store before building a generic adapter on this
+  //     assumption; deliberately not building a generic "platform adapter"
+  //     abstraction with a single unverified implementation behind it.
+  // See the session summary for the full account of what's blocked and why.
 
   // ---- United Kingdom stores (country: "UK"; prices in GBP via ?country=GB; uses eBay UK) ----
   // Riftbound singles are still thin on UK Shopify shops — the biggest UK chains (Magic
