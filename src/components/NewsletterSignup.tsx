@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { track } from "@vercel/analytics";
 
 // Email capture for the weekly Index-summary list. Used in the footer (default) and
 // inline on high-intent pages (movers, countdown) via the props — `source` attributes
@@ -39,6 +40,7 @@ export function NewsletterSignup({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim(), market: country, source }),
       });
+      if (r.ok) track("newsletter_signup", { source });
       setState(r.ok ? "done" : "error");
     } catch {
       setState("error");

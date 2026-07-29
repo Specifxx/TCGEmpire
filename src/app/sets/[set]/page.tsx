@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
+import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { CardTile } from "@/components/CardTile";
 import { CountUp } from "@/components/CountUp";
 import { Reveal } from "@/components/Reveal";
@@ -104,11 +106,6 @@ export default async function SetPage({
 
   // Unfiltered totals for the set (hero copy + the "not released yet" empty
   // state) — distinct from the filtered/paginated grid below.
-  const [totalInSet, priced] = await Promise.all([
-    prisma.card.count({ where: { setCode: set.code } }),
-    prisma.card.count({ where: { setCode: set.code, [priceField(country)]: { not: null } } }),
-  ]);
-
   const where = { ...buildCardWhere(searchParams, country), setCode: set.code };
   // A-Z by default here (unlike /browse's "set & card number") — this page is
   // already scoped to one set, so a numeric ordering isn't the useful default.
@@ -116,18 +113,32 @@ export default async function SetPage({
   const size = parsePageSize(searchParams.size);
   const page = parsePageNum(searchParams.page);
 
-  const [total, cards] = totalInSet === 0
-    ? [0, []]
-    : await Promise.all([
-        prisma.card.count({ where }),
-        prisma.card.findMany({
-          where,
-          orderBy,
-          select: cardTileSelect(country),
-          skip: (page - 1) * size,
-          take: size,
-        }),
-      ]);
+  // EGRESS: same fix as /browse (also force-dynamic, also both the landing page
+  // for a set AND a deep crawl surface). The DEFAULT view — no filters, sort or
+  // paging — is identical for every visitor in a market, so it's memoised per
+  // (set, country). Any filtered/sorted/paged view still queries live. Tagged
+  // CONTENT_TAG so the price import purges it immediately.
+  const isDefaultView = Object.values(searchParams).every((v) => v == null || v === "");
+  const runQuery = () =>
+    Promise.all([
+      prisma.card.count({ where: { setCode: set.code } }),
+      prisma.card.count({ where: { setCode: set.code, [priceField(country)]: { not: null } } }),
+      prisma.card.count({ where }),
+      prisma.card.findMany({
+        where,
+        orderBy,
+        select: cardTileSelect(country),
+        skip: (page - 1) * size,
+        take: size,
+      }),
+    ]);
+  const [totalInSet, priced, totalFiltered, cardsFiltered] = isDefaultView
+    ? await unstable_cache(runQuery, ["set-default", set.code, country], {
+        revalidate: 3600,
+        tags: [CONTENT_TAG],
+      })()
+    : await runQuery();
+  const [total, cards] = totalInSet === 0 ? [0, []] : [totalFiltered, cardsFiltered];
   const totalPages = Math.max(1, Math.ceil(total / size));
 
   const otherSets = SETS.filter((s) => s.slug !== set.slug && !s.comingSoon);
