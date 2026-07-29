@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
-import { NOT_SEED_WHERE, EARLY_PREMIUM_LIMIT, EARLY_PREMIUM_MONTHS, earlyPremiumPromoActive } from "@/lib/premium";
+import { NOT_SEED_WHERE, EARLY_PREMIUM_LIMIT, EARLY_PREMIUM_DAYS, earlyPremiumPromoActive } from "@/lib/premium";
 import { sydneyDayKey } from "@/lib/market-index";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 
@@ -19,14 +19,14 @@ const getRealUserCount = () =>
 export async function GET() {
   if (!earlyPremiumPromoActive()) {
     return NextResponse.json(
-      { active: false, remaining: 0, months: 0 },
+      { active: false, remaining: 0, days: 0, limit: EARLY_PREMIUM_LIMIT },
       { headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400" } },
     );
   }
   const total = await getRealUserCount().catch(() => EARLY_PREMIUM_LIMIT); // fail closed: promo reads as full, never over-promises
   const remaining = Math.max(0, EARLY_PREMIUM_LIMIT - total);
   return NextResponse.json(
-    { active: remaining > 0, remaining, months: EARLY_PREMIUM_MONTHS },
+    { active: remaining > 0, remaining, days: EARLY_PREMIUM_DAYS, limit: EARLY_PREMIUM_LIMIT },
     { headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400" } },
   );
 }

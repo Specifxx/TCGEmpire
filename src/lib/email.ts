@@ -1,6 +1,7 @@
 import { SITE_NAME, SITE_URL } from "./site";
 import { formatMoney } from "./format";
 import { currencyOf, type Country } from "./country";
+import { formatPremiumDuration } from "./premium-format";
 
 export function isEmailEnabled(): boolean {
   return !!process.env.RESEND_API_KEY;
@@ -166,8 +167,8 @@ export async function sendNewsletterDigestEmail(to: string, subject: string, hea
 // (the first EARLY_PREMIUM_LIMIT users) — tells them it's already active and shows
 // off the features so they actually use them. Transactional (account status), so it
 // carries a plain footer rather than a newsletter unsubscribe.
-export async function sendEarlyAdopterEmail(to: string, months: number): Promise<boolean> {
-  const mo = `${months} month${months === 1 ? "" : "s"}`;
+export async function sendEarlyAdopterEmail(to: string, days: number): Promise<boolean> {
+  const mo = formatPremiumDuration(days);
   const features: [string, string][] = [
     ["Best-Basket optimiser", "the cheapest multi-store cart for any want-list"],
     ["Value Finder", "cards trading below their 30-day average"],

@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
 import { createSession } from "@/lib/auth";
 import { applyReferral } from "@/lib/referral";
-import { grantEarlyAdopterPremium, EARLY_PREMIUM_MONTHS } from "@/lib/premium";
+import { grantEarlyAdopterPremium, EARLY_PREMIUM_DAYS } from "@/lib/premium";
 import { sendEarlyAdopterEmail } from "@/lib/email";
 import { providerConfig, isProviderEnabled, isOAuthProvider, redirectUri, type OAuthProvider } from "@/lib/oauth";
 
@@ -79,10 +79,11 @@ export async function GET(req: Request, { params }: { params: { provider: string
   if (isNew) {
     // First-ever sign-in: credit any referrer.
     await applyReferral(user.id);
-    // Early-adopter promo: the first 100 accounts get free Premium (best-effort) — and
-    // an email telling them it's live (only on a real grant; signup paths only).
+    // Early-adopter promo: the first EARLY_PREMIUM_LIMIT accounts get free Premium
+    // (best-effort) — and an email telling them it's live (only on a real grant;
+    // signup paths only).
     const granted = await grantEarlyAdopterPremium(user.id).catch(() => false);
-    if (granted) await sendEarlyAdopterEmail(user.email, EARLY_PREMIUM_MONTHS).catch(() => {});
+    if (granted) await sendEarlyAdopterEmail(user.email, EARLY_PREMIUM_DAYS).catch(() => {});
   }
   // Land new/returning sign-ins on their profile by default.
   return NextResponse.redirect(new URL("/profile", req.url));

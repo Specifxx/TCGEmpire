@@ -5,7 +5,7 @@ import { hashPassword, createAuthToken } from "@/lib/auth";
 import { sendVerificationEmail } from "@/lib/email";
 import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit";
 import { applyReferral } from "@/lib/referral";
-import { grantEarlyAdopterPremium, EARLY_PREMIUM_MONTHS } from "@/lib/premium";
+import { grantEarlyAdopterPremium, EARLY_PREMIUM_DAYS } from "@/lib/premium";
 import { sendEarlyAdopterEmail } from "@/lib/email";
 
 const schema = z.object({
@@ -52,12 +52,13 @@ export async function POST(req: Request) {
   // can sign in (see the login route). Referral credit still applies.
   // Credit a referrer if they arrived via a /?ref=<userId> link (best-effort).
   await applyReferral(user.id);
-  // Early-adopter promo: the first 100 accounts get free Premium (best-effort) — and
-  // an email telling them it's live (only when the grant actually happened, so the
-  // 101st user never gets a false promise). Signup paths only; the backfill script
-  // stays silent so existing users aren't mass-emailed by a re-run.
+  // Early-adopter promo: the first EARLY_PREMIUM_LIMIT accounts get free Premium
+  // (best-effort) — and an email telling them it's live (only when the grant
+  // actually happened, so the next user in line never gets a false promise).
+  // Signup paths only; the backfill script stays silent so existing users aren't
+  // mass-emailed by a re-run.
   const granted = await grantEarlyAdopterPremium(user.id).catch(() => false);
-  if (granted) await sendEarlyAdopterEmail(email, EARLY_PREMIUM_MONTHS).catch(() => {});
+  if (granted) await sendEarlyAdopterEmail(email, EARLY_PREMIUM_DAYS).catch(() => {});
   // Send the verification email — the link activates the account for sign-in.
   try {
     const token = await createAuthToken(user.id, "verify");

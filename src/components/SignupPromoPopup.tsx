@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useMe } from "@/lib/use-me";
 import { AuthForm } from "./AuthForm";
+import { formatPremiumDuration } from "@/lib/premium-format";
 
 // Shown at most ONCE ever per browser (localStorage, mirrors PriceAlertModal's
 // convention) — dismissing or signing up both suppress it for good. Never shown
@@ -23,7 +24,8 @@ const SKIP_PATHS = ["/login", "/register", "/forgot", "/reset", "/verify", "/mar
 interface PromoStatus {
   active: boolean;
   remaining: number;
-  months: number;
+  days: number;
+  limit: number;
 }
 
 export function SignupPromoPopup({ providers }: { providers: ("google" | "discord")[] }) {
@@ -87,14 +89,14 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
             </svg>
           </div>
           <span className="chip bg-brand-500/15 text-[10px] font-bold uppercase tracking-wide text-brand-300">
-            {promo.remaining} of 100 early-adopter spots left
+            {promo.remaining} of {promo.limit} early-adopter spots left
           </span>
           <h2 className="font-display mt-2 text-xl font-bold text-white">
             Sign up for full access to RiftCompare
           </h2>
           <p className="mx-auto mt-1.5 max-w-xs text-sm leading-relaxed text-slate-300">
             Price alerts, notifications and the marketplace all need a free account — create yours below and we&apos;ll also
-            comp {promo.months} {promo.months === 1 ? "month" : "months"} of Premium free, no card required.
+            comp {formatPremiumDuration(promo.days)} of Premium free, no card required.
           </p>
         </div>
 

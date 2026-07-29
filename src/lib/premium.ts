@@ -80,16 +80,17 @@ export async function getPremiumUntil(userId: string): Promise<Date | null> {
 
 // ── Promotional Premium grants (early adopters + feedback reward) ────────────────
 // These grant Premium WITHOUT Stripe (a comp), by extending premiumUntil directly.
-// Both default to 3 months and are env-tunable; set the months to 0 to switch a
-// promo off (e.g. EARLY_PREMIUM_MONTHS=0, or =12 for a full year).
-export const EARLY_PREMIUM_MONTHS = Math.max(0, Math.floor(Number(process.env.EARLY_PREMIUM_MONTHS ?? 1)));
-export const EARLY_PREMIUM_LIMIT = Math.max(0, Math.floor(Number(process.env.EARLY_PREMIUM_LIMIT ?? 100)));
+// The early-adopter promo is DAY-granular (a week, not a month) and env-tunable;
+// set EARLY_PREMIUM_DAYS=0 to switch it off (or raise it, e.g. =30 for a month).
+export const EARLY_PREMIUM_DAYS = Math.max(0, Math.floor(Number(process.env.EARLY_PREMIUM_DAYS ?? 7)));
+export const EARLY_PREMIUM_LIMIT = Math.max(0, Math.floor(Number(process.env.EARLY_PREMIUM_LIMIT ?? 300)));
 export const FEEDBACK_PREMIUM_MONTHS = Math.max(0, Math.floor(Number(process.env.FEEDBACK_PREMIUM_MONTHS ?? 1)));
 // +1 month of Premium to the REFERRER for each friend who signs up via their link.
 export const REFERRAL_PREMIUM_MONTHS = Math.max(0, Math.floor(Number(process.env.REFERRAL_PREMIUM_MONTHS ?? 1)));
 export function earlyPremiumPromoActive(): boolean {
-  return EARLY_PREMIUM_MONTHS > 0 && EARLY_PREMIUM_LIMIT > 0;
+  return EARLY_PREMIUM_DAYS > 0 && EARLY_PREMIUM_LIMIT > 0;
 }
+export { formatPremiumDuration } from "./premium-format";
 export function feedbackPremiumActive(): boolean {
   return FEEDBACK_PREMIUM_MONTHS > 0;
 }
@@ -100,6 +101,11 @@ export function referralPremiumActive(): boolean {
 function addMonths(base: Date, months: number): Date {
   const d = new Date(base);
   d.setMonth(d.getMonth() + months);
+  return d;
+}
+function addDays(base: Date, days: number): Date {
+  const d = new Date(base);
+  d.setDate(d.getDate() + days);
   return d;
 }
 
@@ -117,9 +123,22 @@ export async function grantPremiumMonths(userId: string, months: number): Promis
   return until;
 }
 
+// Same as grantPremiumMonths, but day-granular — used by the early-adopter promo
+// (a week, not a whole month) where calendar-month math would be the wrong unit.
+export async function grantPremiumDays(userId: string, days: number): Promise<Date | null> {
+  if (days <= 0) return null;
+  const u = await prisma.user.findUnique({ where: { id: userId }, select: { premiumUntil: true } });
+  if (!u) return null;
+  const now = new Date();
+  const base = u.premiumUntil && u.premiumUntil > now ? u.premiumUntil : now;
+  const until = addDays(base, days);
+  await prisma.user.update({ where: { id: userId }, data: { premiumUntil: until } });
+  return until;
+}
+
 // Synthetic seed accounts (local dev-reset personas + the marketplace test buyer) —
-// never real users, so they're excluded from the "first 100 users" promo and its
-// rank count.
+// never real users, so they're excluded from the early-adopter promo (see
+// EARLY_PREMIUM_LIMIT) and its rank count.
 export function isSeedEmail(email: string): boolean {
   return email.endsWith("@tcgempire.au") || email === "test@test.com";
 }
@@ -144,7 +163,7 @@ export async function grantEarlyAdopterPremium(userId: string): Promise<boolean>
   // Registration rank among REAL accounts, up to and including this one.
   const rank = await prisma.user.count({ where: { AND: [NOT_SEED_WHERE, { createdAt: { lte: u.createdAt } }] } });
   if (rank > EARLY_PREMIUM_LIMIT) return false;
-  await grantPremiumMonths(userId, EARLY_PREMIUM_MONTHS);
+  await grantPremiumDays(userId, EARLY_PREMIUM_DAYS);
   await prisma.user.update({ where: { id: userId }, data: { earlyPremiumGranted: true } });
   return true;
 }
