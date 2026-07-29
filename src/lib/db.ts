@@ -12,6 +12,19 @@ import { PrismaClient } from "@prisma/client";
 //      globalThis TTL memo (see lib/sealed-import.ts getSealedGroups). NOT
 //      unstable_cache: it silently no-ops above 2 MB and every request then
 //      hits the database.
+//
+//      VERIFIED against the Next.js source (server/lib/incremental-cache/
+//      index.ts, IncrementalCache.set): entries over 2 MB are dropped — in
+//      development it THROWS, in production it logs a console.warn and returns
+//      without caching, so the loader silently re-runs against Postgres on every
+//      request. unstable_cache definitely takes that path (it calls set() with
+//      fetchCache: true).
+//
+//      THE REAL CEILING IS LOWER THAN 2 MB. unstable_cache stores
+//      `body: JSON.stringify(result)` — a string — and the limit check then runs
+//      JSON.stringify() over the whole entry, so the payload is DOUBLE-ENCODED
+//      and every quote becomes \". A ~1.3-1.6 MB raw payload can trip the 2 MB
+//      check. Budget ~1.2 MB raw as the safe maximum, not 2 MB.
 //   3. Always `select` only the fields you use, and `take` a cap when the row
 //      count is unbounded.
 //   4. Whole-table reads belong in workflows/scripts (daily refresh, seeds),

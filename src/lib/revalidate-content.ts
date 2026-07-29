@@ -1,4 +1,5 @@
 import { revalidatePath, revalidateTag } from "next/cache";
+import { SECTIONS } from "./sitemap-sections";
 
 // On-demand ISR revalidation, invoked after the daily/twice-daily price import
 // writes new data. This is the freshness half of the "don't hammer Neon" strategy:
@@ -24,19 +25,17 @@ export function revalidateContent(): string[] {
   ];
   for (const [p, type] of staticPaths) revalidatePath(p, type);
 
-  // The sitemaps are the crawler's discovery source — refresh so new cards and
-  // fresh prices appear promptly rather than waiting out the 24h ISR fallback.
-  // (The editorial child sitemap isn't price-derived, so it's left on its own
-  // ISR clock here.)
+  // The sitemap is the crawler's discovery source — refresh so new cards appear.
+  // It's now an INDEX plus one child per section (see lib/sitemap-sections.ts),
+  // and the index itself is a static list of section URLs that never changes —
+  // it's the CHILDREN that carry the data, so purging only /sitemap.xml would
+  // leave every actual URL list stale for up to 24h after an import.
+  // Each child is purged BY NAME rather than via the dynamic-route pattern:
+  // revalidatePath's type argument only accepts "page" | "layout", so there's no
+  // supported way to purge every instance of a dynamic ROUTE HANDLER in one call.
+  // Eleven explicit paths are cheap and unambiguous.
   revalidatePath("/sitemap.xml");
-  for (const p of [
-    "/sitemaps/core/sitemap.xml",
-    "/sitemaps/cards/sitemap.xml",
-    "/sitemaps/champions/sitemap.xml",
-    "/sitemaps/sets-domains-keywords/sitemap.xml",
-    "/sitemaps/stores/sitemap.xml",
-    "/sitemaps/decks/sitemap.xml",
-  ]) revalidatePath(p);
+  for (const id of SECTIONS) revalidatePath(`/sitemaps/${id}.xml`);
 
   // The cookie/searchParams-DYNAMIC price pages (/market, /decks, /decks/[slug],
   // /tools/box-ev) render per-request, so revalidatePath can't purge

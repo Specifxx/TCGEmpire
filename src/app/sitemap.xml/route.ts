@@ -1,48 +1,34 @@
-import { getPriceDay, getEditorialDates } from "@/lib/sitemap-data";
-import { SITE_URL } from "@/lib/site";
+import { SECTIONS, sectionUrl } from "@/lib/sitemap-sections";
 
-// /sitemap.xml is now a <sitemapindex> pointing at the 7 section sitemaps under
-// /sitemaps/*/sitemap.xml (src/app/sitemaps/*), instead of one flat 1,641-URL
-// file — that made per-section indexation impossible to monitor in Search
-// Console. The URL stays the same; only the format changes from <urlset> to
-// <sitemapindex>. robots.txt's `Sitemap: .../sitemap.xml` line needs no change.
+// SITEMAP INDEX. /sitemap.xml is now a <sitemapindex> pointing at one child per
+// section (/sitemaps/<id>.xml) rather than a single ~1,500-URL <urlset>.
+//
+// This replaces the app/sitemap.ts metadata convention deliberately, rather than
+// using Next's generateSitemaps(): that helper's output path and whether it emits
+// an index at all have varied across Next versions, and this is the one file the
+// entire crawl depends on. A hand-written index is boring, explicit, and cannot
+// change shape under a framework upgrade.
+//
+// The URL is unchanged, so robots.txt and any existing Search Console submission
+// keep working — Google follows the index to the children automatically. Submit
+// the children individually as well to get PER-SECTION coverage reporting, which
+// is the whole point of the split.
 export const revalidate = 86400;
 
-const esc = (s: string) =>
-  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-
-// Each child sitemap's own query already computes its real lastModified; rather
-// than re-running every section's full query set just to label the index (cards,
-// champions, etc. would all get queried twice per crawl), reuse the same cheap
-// shared signals here: the one priceDay lookup covers every price-bearing
-// section, and the editorial date is derived from local article data (no DB).
 export async function GET() {
-  const priceDay = await getPriceDay();
-  const { guide: latestGuide, blog: latestBlog } = getEditorialDates();
-  const editorialDate = new Date(Math.max(latestGuide.getTime(), latestBlog.getTime()));
-
-  const children: { path: string; lastModified?: Date }[] = [
-    { path: "/sitemaps/core/sitemap.xml", lastModified: priceDay },
-    { path: "/sitemaps/cards/sitemap.xml", lastModified: priceDay },
-    { path: "/sitemaps/champions/sitemap.xml", lastModified: priceDay },
-    { path: "/sitemaps/sets-domains-keywords/sitemap.xml", lastModified: priceDay },
-    { path: "/sitemaps/stores/sitemap.xml", lastModified: priceDay },
-    { path: "/sitemaps/decks/sitemap.xml", lastModified: priceDay },
-    { path: "/sitemaps/editorial/sitemap.xml", lastModified: editorialDate },
-  ];
-
-  const body = children
-    .map(
-      (c) => `  <sitemap>
-    <loc>${esc(SITE_URL + c.path)}</loc>${c.lastModified ? `\n    <lastmod>${c.lastModified.toISOString()}</lastmod>` : ""}
-  </sitemap>`
-    )
-    .join("\n");
-
+  const body = SECTIONS.map((id) => `  <sitemap><loc>${sectionUrl(id)}</loc></sitemap>`).join("\n");
+  // NOTE: no <lastmod> on the index entries. It would have to be the max lastmod
+  // inside each child, which means building every section just to render the
+  // index — the exact per-request cost the split exists to avoid. Google reads
+  // lastmod from the child entries themselves, so nothing is lost.
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${body}
 </sitemapindex>`;
-
-  return new Response(xml, { headers: { "Content-Type": "application/xml; charset=utf-8" } });
+  return new Response(xml, {
+    headers: {
+      "Content-Type": "application/xml; charset=utf-8",
+      "Cache-Control": "public, max-age=0, s-maxage=86400, stale-while-revalidate=86400",
+    },
+  });
 }

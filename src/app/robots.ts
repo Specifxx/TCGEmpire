@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/site";
+import { SECTIONS } from "@/lib/sitemap-sections";
 
 // Citation / answer-engine crawlers we WANT: they read a page and cite/link back
 // (referral traffic + AI-answer visibility). Allowed on all public content plus the
@@ -56,7 +57,15 @@ export default function robots(): MetadataRoute.Robots {
         disallow: "/",
       },
     ],
-    sitemap: [`${SITE_URL}/sitemap.xml`, `${SITE_URL}/news-sitemap.xml`],
+    // /sitemap.xml is a sitemap INDEX pointing at one child per section
+    // (see lib/sitemap-sections.ts). Listing the children here as well is
+    // redundant for discovery — Google follows the index — but it costs nothing
+    // and means a crawler that mishandles indexes still finds every section.
+    sitemap: [
+      `${SITE_URL}/sitemap.xml`,
+      ...SECTIONS.map((id) => `${SITE_URL}/sitemaps/${id}.xml`),
+      `${SITE_URL}/news-sitemap.xml`,
+    ],
     // NOTE: no `host` directive — it's non-standard (Bing/Google ignore it);
     // host canonicalisation is handled by 301 redirects, not robots.txt.
   };

@@ -384,9 +384,11 @@ export interface SealedGroup {
 // CACHED IN PROCESS MEMORY: this pulls the market's entire sealed table on
 // every call — fetching it from Neon per request is the network-transfer
 // pattern that burned through dexcompare's free-tier allowance. unstable_cache
-// can't hold large items (2 MB limit fails silently), so it uses the same
-// globalThis memo pattern as the games pool: one DB pull per market per warm
-// lambda per TTL.
+// can't hold large items (2 MB limit fails silently — verified in the Next.js
+// source; and because the payload is double-encoded on the way in, the real
+// safe ceiling is nearer 1.2 MB raw, see the note in lib/db.ts), so it uses the
+// same globalThis memo pattern as the games pool: one DB pull per market per
+// warm lambda per TTL.
 type SealedMemo = Map<string, { at: number; data: SealedGroup[] }>;
 const sealedMemo: SealedMemo = ((globalThis as unknown as { __sealedGroups?: SealedMemo }).__sealedGroups ??= new Map());
 const SEALED_MEMO_TTL_MS = 15 * 60_000;

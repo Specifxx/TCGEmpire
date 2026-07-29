@@ -31,8 +31,10 @@ export function VendettaRibbon() {
     <Link
       href="/sets/vendetta"
       aria-label="Riftbound Vendetta — shop every revealed card"
-      // Calm green → Fury red — Vendetta's own rivalry-domain palette.
-      className="group block h-8 overflow-hidden bg-gradient-to-r from-[#1ea65c] to-[#e5484d] text-ink-950 transition-[filter] hover:brightness-110"
+      // Flat brand green — was a green→red gradient, but the homepage already
+      // spends its one gradient accent on the nav logo (see BrandLogo.tsx), and
+      // this bar is being replaced by a static Vendetta block (see next task).
+      className="group block h-8 overflow-hidden bg-brand-500 text-ink-950 transition-[filter] hover:brightness-110"
     >
       {/* Track: two identical halves; animate-marquee slides one half-width and loops
           seamlessly. Pauses on hover and for reduced-motion users. */}
