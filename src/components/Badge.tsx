@@ -59,15 +59,18 @@ export function ConditionBadge({ condition }: { condition: string }) {
   );
 }
 
+// Below: flat, single-tone chips — these used to be little linear-gradient
+// swatches, but with ~20 card tiles per homepage viewport each is a repeated
+// gradient element, and the label text already carries the meaning, so the
+// gradient was pure decorative noise. Solid colour keeps the same identity
+// with none of that cost (see the site's one kept gradient accent in
+// BrandLogo.tsx).
 export function VariantBadge({ variant }: { variant?: string | null }) {
   if (!variant) return null;
   return (
     <span
       className="chip font-semibold uppercase"
-      style={{
-        background: "linear-gradient(90deg,#f5a524,#f7c948)",
-        color: "#1a1206",
-      }}
+      style={{ backgroundColor: "#f5a524", color: "#1a1206" }}
       title={`Alternate art (${variant})`}
     >
       Alt {variant}
@@ -80,7 +83,7 @@ export function SignatureBadge({ show }: { show?: boolean }) {
   return (
     <span
       className="chip font-semibold uppercase"
-      style={{ background: "linear-gradient(90deg,#f59e0b,#b45309)", color: "#fff" }}
+      style={{ backgroundColor: "#b45309", color: "#fff" }}
       title="Signature (artist-autographed overnumbered print)"
     >
       ✍ Signature
@@ -93,7 +96,7 @@ export function OvernumberedBadge({ show }: { show?: boolean }) {
   return (
     <span
       className="chip font-semibold uppercase"
-      style={{ background: "linear-gradient(90deg,#a855f7,#7c3aed)", color: "#fff" }}
+      style={{ backgroundColor: "#7c3aed", color: "#fff" }}
       title="Overnumbered (secret/signature print beyond the set count)"
     >
       ★ Overnumbered
@@ -106,7 +109,7 @@ export function CrystalRoseBadge({ show }: { show?: boolean }) {
   return (
     <span
       className="chip font-semibold uppercase"
-      style={{ background: "linear-gradient(90deg,#f472b6,#c026d3)", color: "#fff" }}
+      style={{ backgroundColor: "#c026d3", color: "#fff" }}
       title="Crystal Rose — Wild Rift crossover alt art"
     >
       ✿ Crystal Rose
@@ -119,7 +122,7 @@ export function PromoBadge({ show }: { show?: boolean }) {
   return (
     <span
       className="chip font-semibold uppercase"
-      style={{ background: "linear-gradient(90deg,#06b6d4,#0891b2)", color: "#04222a" }}
+      style={{ backgroundColor: "#0891b2", color: "#04222a" }}
       title="Promo printing"
     >
       ✦ Promo
