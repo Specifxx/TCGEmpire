@@ -6,6 +6,7 @@ import { CardTile } from "@/components/CardTile";
 import { cardTileSelect } from "@/lib/cards";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 import { KEYWORDS, keywordBySlug } from "@/lib/keywords";
+import { getArticle } from "@/lib/articles";
 import { SITE_URL } from "@/lib/site";
 
 export const revalidate = 86400;
@@ -24,21 +25,28 @@ const ARCHETYPE_BY_KEYWORD: Record<string, { name: string; domains: string }> = 
   burn: { name: "Burn / Disruption", domains: "Chaos + Order" },
 };
 
+// This page and its matching /guides/<guideSlug> both target the same mechanic —
+// they used to also target the same QUERY ("riftbound X explained"), which is
+// keyword cannibalisation: two of our own pages competing for one ranking. The
+// guide owns "explained" (long-form: how it works, why it's strong, deckbuilding).
+// This page owns REFERENCE intent instead: a short definition plus the live card
+// list, so it isn't a near-duplicate of the guide it links to.
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const kw = keywordBySlug(params.slug);
   if (!kw) return {};
-  const title = `${kw.name} in Riftbound — What It Does & How It Works | RiftCompare`;
+  const title = `${kw.name} — Riftbound Keyword Reference | RiftCompare`;
+  const description = `Quick rules reference for ${kw.name} in Riftbound, plus every card printed with it so far, live-priced. Want the full breakdown? See the complete ${kw.name} guide.`;
   return {
     title: { absolute: title },
-    description: kw.directAnswer.slice(0, 155),
+    description,
     alternates: { canonical: `/keywords/${kw.slug}` },
     keywords: [
-      `riftbound ${kw.name.toLowerCase()}`,
-      `what is ${kw.name.toLowerCase()} in riftbound`,
-      `riftbound ${kw.name.toLowerCase()} explained`,
+      `riftbound ${kw.name.toLowerCase()} keyword`,
+      `riftbound ${kw.name.toLowerCase()} reference`,
       `riftbound ${kw.name.toLowerCase()} rules`,
+      `riftbound ${kw.name.toLowerCase()} cards`,
     ],
-    openGraph: { title, description: kw.directAnswer.slice(0, 200), url: `${SITE_URL}/keywords/${kw.slug}` },
+    openGraph: { title, description, url: `${SITE_URL}/keywords/${kw.slug}` },
   };
 }
 
@@ -58,6 +66,7 @@ export default async function KeywordPage({ params }: { params: { slug: string }
 
   const archetype = ARCHETYPE_BY_KEYWORD[kw.slug];
   const related = kw.relatedKeywords.map((s) => keywordBySlug(s)).filter((k): k is NonNullable<typeof k> => !!k);
+  const guideTitle = getArticle(kw.guideSlug)?.title ?? `Riftbound ${kw.name} Explained`;
 
   const breadcrumbLd = {
     "@context": "https://schema.org",
@@ -68,33 +77,28 @@ export default async function KeywordPage({ params }: { params: { slug: string }
       { "@type": "ListItem", position: 3, name: kw.name, item: `${SITE_URL}/keywords/${kw.slug}` },
     ],
   };
-  const faqLd =
-    kw.faqs.length > 0
-      ? {
-          "@context": "https://schema.org",
-          "@type": "FAQPage",
-          mainEntity: kw.faqs.map((f) => ({
-            "@type": "Question",
-            name: f.q,
-            acceptedAnswer: { "@type": "Answer", text: f.a },
-          })),
-        }
-      : null;
-  const articleLd = {
+  // DefinedTerm (not TechArticle/FAQPage) — this page is a glossary entry, not a
+  // long-form explainer; the guide at /guides/<guideSlug> is the TechArticle-shaped
+  // page for that intent. Keeping the schema TYPE distinct mirrors the page's own
+  // distinct angle instead of describing two competing pages the same way.
+  const definedTermLd = {
     "@context": "https://schema.org",
-    "@type": "TechArticle",
-    headline: `${kw.name} in Riftbound`,
+    "@type": "DefinedTerm",
+    name: `${kw.name} (Riftbound keyword)`,
     description: kw.directAnswer,
-    mainEntityOfPage: `${SITE_URL}/keywords/${kw.slug}`,
-    publisher: { "@type": "Organization", name: "RiftCompare" },
-    about: { "@type": "Thing", name: `Riftbound ${kw.name} keyword` },
+    url: `${SITE_URL}/keywords/${kw.slug}`,
+    inDefinedTermSet: {
+      "@type": "DefinedTermSet",
+      name: "Riftbound Keywords & Game Actions Glossary",
+      url: `${SITE_URL}/keywords`,
+    },
   };
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumbLd, articleLd, ...(faqLd ? [faqLd] : [])]) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumbLd, definedTermLd]) }}
       />
 
       <div>
@@ -105,11 +109,28 @@ export default async function KeywordPage({ params }: { params: { slug: string }
           <span>/</span>
           <span className="text-slate-300">{kw.name}</span>
         </nav>
-        <h1 className="text-2xl font-extrabold text-white sm:text-3xl">{kw.name} in Riftbound — what it does &amp; how it works</h1>
-        {/* Direct-answer paragraph, first thing on the page — what Google lifts into
-            a featured snippet / AI answer for "what is X in riftbound" queries. */}
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-extrabold text-white sm:text-3xl">{kw.name} — Riftbound keyword reference</h1>
+          <span className="chip shrink-0 bg-ink-800 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Glossary</span>
+        </div>
+        {/* Concise rules definition — the direct answer, nothing more. The full
+            explainer (how it works, why it's strong, how to build around it) lives
+            on the guide linked right below. */}
         <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-200">{kw.directAnswer}</p>
       </div>
+
+      {/* Prominent link to the full guide — this is the primary target for
+          "riftbound {kw.name} explained"-style queries; this page just points there. */}
+      <Link
+        href={`/guides/${kw.guideSlug}`}
+        className="card-surface flex flex-wrap items-center justify-between gap-3 border-brand-500/30 bg-brand-500/5 p-4 transition-colors hover:border-brand-500/60"
+      >
+        <span className="text-sm text-slate-200">
+          <span className="font-bold text-white">Want the full breakdown?</span> Read the complete guide — how {kw.name}
+          works step by step, why it&apos;s strong, and how to build a deck around it.
+        </span>
+        <span className="btn-primary shrink-0 whitespace-nowrap text-sm">{guideTitle} →</span>
+      </Link>
 
       {/* Worked example: a real card actually printed with this keyword, not a
           mock-up — the same asset the matching guide's close-up uses. */}
@@ -129,27 +150,12 @@ export default async function KeywordPage({ params }: { params: { slug: string }
         </section>
       )}
 
-      {kw.sections.map((s) => (
-        <section key={s.heading} className="card-surface p-6">
-          <h2 className="text-xl font-extrabold text-white">{s.heading}</h2>
-          <div className="mt-3 max-w-3xl space-y-2 text-sm leading-relaxed text-slate-300">
-            {s.body.split("\n").map((line, i) => (
-              <p key={i}>{line}</p>
-            ))}
-          </div>
-        </section>
-      ))}
-
       {archetype && (
-        <section className="card-surface p-6">
-          <h2 className="text-xl font-extrabold text-white">Decks that use {kw.name}</h2>
-          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+        <section className="card-surface p-5">
+          <h2 className="text-base font-extrabold text-white">Decks that use {kw.name}</h2>
+          <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-slate-400">
             The <strong className="text-white">{archetype.name}</strong> archetype ({archetype.domains}) is
-            built around {kw.name} — see the shell and full archetype breakdown on{" "}
-            <Link href="/decks" className="text-brand-400 hover:underline">/decks</Link> and the{" "}
-            <Link href="/guides/best-riftbound-vendetta-decks" className="text-brand-400 hover:underline">
-              best Vendetta decks guide
-            </Link>.
+            built around {kw.name} — see the shell on <Link href="/decks" className="text-brand-400 hover:underline">/decks</Link>.
           </p>
         </section>
       )}
@@ -170,20 +176,6 @@ export default async function KeywordPage({ params }: { params: { slug: string }
               <CardTile key={c.id} card={c} />
             ))}
           </div>
-        </section>
-      )}
-
-      {kw.faqs.length > 0 && (
-        <section className="card-surface p-6">
-          <h2 className="text-xl font-extrabold text-white">{kw.name} FAQ</h2>
-          <dl className="mt-3 space-y-4">
-            {kw.faqs.map((f) => (
-              <div key={f.q}>
-                <dt className="font-semibold text-white">{f.q}</dt>
-                <dd className="mt-1 text-sm leading-relaxed text-slate-400">{f.a}</dd>
-              </div>
-            ))}
-          </dl>
         </section>
       )}
 

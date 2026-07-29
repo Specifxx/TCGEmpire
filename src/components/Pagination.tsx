@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { track } from "@vercel/analytics";
 
 // First, last, and a window around the current page, with ellipses.
 function windowed(page: number, total: number): (number | "…")[] {
@@ -57,6 +58,7 @@ export function Pagination({
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
     e.preventDefault();
     if (p === current) return;
+    track("pagination_click", { basePath, page: p });
     setOptimistic(p); // instant visual feedback
     if (typeof window !== "undefined") window.scrollTo(0, 0); // jump to the top of the results
     startTransition(() => router.push(href(p), { scroll: false })); // data loads in the background

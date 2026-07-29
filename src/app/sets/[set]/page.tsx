@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
+import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { CardTile } from "@/components/CardTile";
 import { CountUp } from "@/components/CountUp";
 import { Reveal } from "@/components/Reveal";
@@ -57,6 +59,18 @@ export async function generateMetadata({
   // A filtered/searched view (like /browse's ?q=) is a permutation of the same
   // content, not a distinct page — noindex it and point Google at the clean set page.
   const filtered = !isCleanPagination(searchParams);
+
+  // Clean pagination (?page=N and nothing else) self-canonicalises to its own page —
+  // per Google's guidance a paginated page is not a duplicate of page 1, and page 2+
+  // shows an entirely different slice of the set's cards. Mirrors /browse's logic.
+  // `cardCount` already equals the clean-pagination total (isCleanPagination means no
+  // filter param survived, so buildCardWhere contributes nothing beyond setCode).
+  // Out-of-range pages fall back to the clean canonical, same as before.
+  const page = parsePageNum(searchParams.page);
+  const totalPages = Math.max(1, Math.ceil(cardCount / parsePageSize(searchParams.size)));
+  const selfCanonical = page > 1 && !filtered && page <= totalPages;
+  const canonicalPath = selfCanonical ? `/sets/${set.slug}?page=${page}` : `/sets/${set.slug}`;
+
   return {
     title: { absolute: `${title} | RiftCompare` },
     description,
@@ -69,12 +83,12 @@ export async function generateMetadata({
       `Riftbound ${set.name} value`,
     ],
     alternates: {
-      canonical: `/sets/${set.slug}`,
+      canonical: canonicalPath,
       // Single cookie-switched URL is the global default for all four markets.
-      languages: { "x-default": `${SITE_URL}/sets/${set.slug}` },
+      languages: { "x-default": `${SITE_URL}${canonicalPath}` },
     },
     ...(cardCount === 0 || filtered ? { robots: { index: false, follow: true } } : {}),
-    openGraph: { title: `${title} | RiftCompare`, description, url: `${SITE_URL}/sets/${set.slug}` },
+    openGraph: { title: `${title} | RiftCompare`, description, url: `${SITE_URL}${canonicalPath}` },
   };
 }
 
@@ -92,11 +106,6 @@ export default async function SetPage({
 
   // Unfiltered totals for the set (hero copy + the "not released yet" empty
   // state) — distinct from the filtered/paginated grid below.
-  const [totalInSet, priced] = await Promise.all([
-    prisma.card.count({ where: { setCode: set.code } }),
-    prisma.card.count({ where: { setCode: set.code, [priceField(country)]: { not: null } } }),
-  ]);
-
   const where = { ...buildCardWhere(searchParams, country), setCode: set.code };
   // A-Z by default here (unlike /browse's "set & card number") — this page is
   // already scoped to one set, so a numeric ordering isn't the useful default.
@@ -104,18 +113,32 @@ export default async function SetPage({
   const size = parsePageSize(searchParams.size);
   const page = parsePageNum(searchParams.page);
 
-  const [total, cards] = totalInSet === 0
-    ? [0, []]
-    : await Promise.all([
-        prisma.card.count({ where }),
-        prisma.card.findMany({
-          where,
-          orderBy,
-          select: cardTileSelect(country),
-          skip: (page - 1) * size,
-          take: size,
-        }),
-      ]);
+  // EGRESS: same fix as /browse (also force-dynamic, also both the landing page
+  // for a set AND a deep crawl surface). The DEFAULT view — no filters, sort or
+  // paging — is identical for every visitor in a market, so it's memoised per
+  // (set, country). Any filtered/sorted/paged view still queries live. Tagged
+  // CONTENT_TAG so the price import purges it immediately.
+  const isDefaultView = Object.values(searchParams).every((v) => v == null || v === "");
+  const runQuery = () =>
+    Promise.all([
+      prisma.card.count({ where: { setCode: set.code } }),
+      prisma.card.count({ where: { setCode: set.code, [priceField(country)]: { not: null } } }),
+      prisma.card.count({ where }),
+      prisma.card.findMany({
+        where,
+        orderBy,
+        select: cardTileSelect(country),
+        skip: (page - 1) * size,
+        take: size,
+      }),
+    ]);
+  const [totalInSet, priced, totalFiltered, cardsFiltered] = isDefaultView
+    ? await unstable_cache(runQuery, ["set-default", set.code, country], {
+        revalidate: 3600,
+        tags: [CONTENT_TAG],
+      })()
+    : await runQuery();
+  const [total, cards] = totalInSet === 0 ? [0, []] : [totalFiltered, cardsFiltered];
   const totalPages = Math.max(1, Math.ceil(total / size));
 
   const otherSets = SETS.filter((s) => s.slug !== set.slug && !s.comingSoon);
@@ -134,11 +157,14 @@ export default async function SetPage({
       { "@type": "ListItem", position: 3, name: set.name, item: `${SITE_URL}/sets/${set.slug}` },
     ],
   };
+  // Matches the page's canonical: clean paginated views self-canonicalise, so
+  // their structured data must not contradict that with a bare /sets/<slug> url.
+  const cleanPage = isCleanPagination(searchParams) && page > 1 && page <= totalPages;
   const collection = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     name: `Riftbound ${set.name} Card Prices & List`,
-    url: `${SITE_URL}/sets/${set.slug}`,
+    url: cleanPage ? `${SITE_URL}/sets/${set.slug}?page=${page}` : `${SITE_URL}/sets/${set.slug}`,
     description: `Live prices for every Riftbound ${set.name} card.`,
     isPartOf: { "@type": "WebSite", name: "RiftCompare", url: SITE_URL },
     // No mainEntity ItemList: the visible card grid already links every card as a
