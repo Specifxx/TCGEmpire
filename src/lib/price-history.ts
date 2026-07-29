@@ -1,7 +1,9 @@
-// Price-history helpers: per-card time series for the charts, and the weekly
-// "movers" used by the homepage Price Watch. PriceHistory is recorded for the AU
-// market only (one lowest-price point per card per Sydney day), so everything here
-// is AU-priced.
+// Price-history helpers: per-card time series for the charts, the weekly
+// "movers" used by the homepage Price Watch, and the homepage's "recently
+// updated" feed. PriceHistory records one lowest-price point per card PER
+// MARKET per Sydney day (AU/NZ/US/UK/SG — see price-import.ts's snapshot
+// write), so every function here takes a `country` and is priced in that
+// market's own currency; nothing below is AU-only despite this file's history.
 import { unstable_cache } from "next/cache";
 import { prisma } from "./db";
 import { dbHistory } from "./db-history";
@@ -158,6 +160,103 @@ async function computePriceMovers(country: Country, limit: number): Promise<Pric
  } catch {
   return empty;
  }
+}
+
+export type RecentUpdate = {
+  card: CardTileData;
+  prevCents: number;
+  nowCents: number;
+  pct: number; // signed % change vs the previous recorded point
+};
+
+// Only look back far enough to find each card's PRIOR point — 7 days is generous
+// slack for a card that occasionally misses a day (out of stock, a slow crawl),
+// while staying an order of magnitude cheaper than the movers query's 21-day
+// window. This function only ever needs "yesterday vs today", not a trend.
+const RECENT_WINDOW_DAYS = 7;
+const RECENT_MAX = 80; // upper bound requested for the homepage feed
+
+// Cards whose price genuinely changed in the MOST RECENT snapshot — "just
+// moved", not "moved sometime this week" (that's what /movers already covers
+// with a curated top-5-per-category view over a 21-day window). This is
+// deliberately a wider, rawer list: every real change from the latest import,
+// for a homepage feed that exists to (a) give crawlers dozens of fresh internal
+// links every day and (b) give a returning visitor a reason to look again.
+// Never fabricated — a card only appears here because two consecutive
+// PriceHistory rows for it genuinely differ.
+async function computeRecentlyUpdated(country: Country, limit: number): Promise<RecentUpdate[]> {
+  try {
+    const cutoff = new Date(Date.now() - RECENT_WINDOW_DAYS * 86400_000);
+    const rows = await dbHistory.priceHistory.findMany({
+      where: { country, day: { gte: cutoff } },
+      orderBy: { day: "asc" },
+      select: { cardId: true, day: true, lowestPriceCents: true },
+    });
+    if (!rows.length) return [];
+
+    const latestDay = rows.reduce((max, r) => (r.day > max ? r.day : max), rows[0].day).getTime();
+
+    const series = new Map<string, { day: number; v: number }[]>();
+    for (const r of rows) {
+      const arr = series.get(r.cardId) ?? [];
+      arr.push({ day: r.day.getTime(), v: r.lowestPriceCents });
+      series.set(r.cardId, arr);
+    }
+
+    // Same outlier guard as computePriceMovers: a ≥80% one-step swing is almost
+    // always a mismatched listing or a one-off junk price, not a real move.
+    const OUTLIER_DROP = 80;
+    const OUTLIER_SPIKE = 300;
+    type Stat = { cardId: string; prev: number; now: number; pct: number };
+    const stats: Stat[] = [];
+    for (const [cardId, pts] of series) {
+      if (pts.length < 2) continue;
+      const last = pts[pts.length - 1];
+      // Only cards actually touched in the LATEST snapshot qualify — a card whose
+      // newest point is from 3 days ago didn't "just move".
+      if (last.day !== latestDay) continue;
+      const prev = pts[pts.length - 2];
+      if (prev.v === last.v) continue; // present in both snapshots but unchanged
+      const pct = prev.v > 0 ? ((last.v - prev.v) / prev.v) * 100 : 0;
+      if (pct >= OUTLIER_SPIKE || pct <= -OUTLIER_DROP) continue;
+      stats.push({ cardId, prev: prev.v, now: last.v, pct });
+    }
+    if (!stats.length) return [];
+
+    // Biggest genuine moves first, capped to the requested/RECENT_MAX limit —
+    // "no silent truncation": this is a deliberate cap on an already-bounded
+    // real dataset, not a partial view presented as complete.
+    stats.sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct));
+    const top = stats.slice(0, Math.min(limit, RECENT_MAX));
+
+    const cards = await prisma.card.findMany({
+      where: { id: { in: top.map((s) => s.cardId) } },
+      select: cardTileSelect(country),
+    });
+    const byId = new Map(cards.map((c) => [c.id, c as unknown as CardTileData]));
+
+    const out: RecentUpdate[] = [];
+    for (const s of top) {
+      const card = byId.get(s.cardId);
+      if (!card) continue;
+      out.push({ card, prevCents: s.prev, nowCents: s.now, pct: Math.round(s.pct * 10) / 10 });
+    }
+    return out;
+  } catch {
+    return [];
+  }
+}
+
+// Day-scoped cache: ONE whole-market history read per market per day, shared
+// across the homepage and anything else that asks. Keyed on market+day only
+// (not limit), so a bigger caller can't trigger a second read.
+export async function getRecentlyUpdated(country: Country = "AU", limit = 60): Promise<RecentUpdate[]> {
+  const full = await cachedOrDirect(
+    () => computeRecentlyUpdated(country, RECENT_MAX),
+    ["rc-recently-updated", country, sydneyDayKey()],
+    { revalidate: 172800, tags: [CONTENT_TAG] },
+  );
+  return full.slice(0, limit);
 }
 
 // Day-scoped cache: ONE whole-market history read per market per day, shared across
