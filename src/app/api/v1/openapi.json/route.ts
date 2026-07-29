@@ -25,7 +25,7 @@ export function GET() {
               name: "market",
               in: "query",
               required: false,
-              schema: { type: "string", enum: ["GLOBAL", "AU", "NZ", "US", "UK", "SG"], default: "GLOBAL" },
+              schema: { type: "string", enum: ["GLOBAL", "AU", "NZ", "US", "UK", "SG", "CA"], default: "GLOBAL" },
               description: "Market scope; GLOBAL is a currency-agnostic composite.",
             },
           ],
@@ -35,7 +35,7 @@ export function GET() {
       "/card/{id}/prices.json": {
         get: {
           operationId: "getCardPrices",
-          summary: "Lowest live in-stock price per market (AU/NZ/US/UK) for one card.",
+          summary: "Lowest live in-stock price per market (AU/NZ/US/UK/SG/CA) for one card.",
           parameters: [
             {
               name: "id",

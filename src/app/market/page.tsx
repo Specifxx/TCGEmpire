@@ -44,7 +44,10 @@ export const metadata: Metadata = {
 
 function parseMarket(v?: string): MarketScope {
   const up = (v ?? "").toUpperCase();
-  return up === "AU" || up === "NZ" || up === "US" || up === "UK" ? (up as Country) : "GLOBAL";
+  // Validated against the market registry rather than a hand-written || chain —
+  // that chain had silently gone stale: it never listed SG, so ?market=SG rendered
+  // the GLOBAL index instead of Singapore's, and CA would have done the same.
+  return up in COUNTRIES ? (up as Country) : "GLOBAL";
 }
 
 // A compact gainers/fallers column derived from the Index constituents' own 7-day moves.

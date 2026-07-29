@@ -19,6 +19,10 @@ const TRANSIT_BUSINESS_DAYS: Record<string, { min: number; max: number }> = {
   US: { min: 3, max: 7 },
   NZ: { min: 3, max: 8 },
   SG: { min: 2, max: 5 },
+  // Canada Post ground is slower and more variable than the US equivalent,
+  // especially outside the Toronto–Montreal–Vancouver corridor. Kept deliberately
+  // wide (the file's own rule: "a pleasant surprise beats a missed promise").
+  CA: { min: 3, max: 9 },
 };
 const DEFAULT_TRANSIT = { min: 3, max: 10 };
 

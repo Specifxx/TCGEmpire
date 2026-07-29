@@ -20,7 +20,7 @@ export async function GET() {
         select: {
           id: true, name: true, slug: true, setCode: true, collectorNumber: true,
           imageThumbUrl: true, variant: true, isPromo: true, rarity: true,
-          lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true,
+          lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true,
         },
       },
     },

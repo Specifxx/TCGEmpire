@@ -14,7 +14,7 @@ import { refreshTcgplayerPrices } from "./tcgplayer";
 import { importMarketplaceListings } from "./marketplace";
 import { refreshCardmarketPrices } from "./cardmarket";
 import { AU_FALLBACK_RETAILERS, SG_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS } from "./constants";
-import { isoCountry, type Country } from "./country";
+import { currencyOf, isoCountry, type Country } from "./country";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows } from "./scrape-http";
 
 export interface ShopifyVariant { title: string; price: string; available: boolean }
@@ -281,6 +281,16 @@ export async function refreshEbayMarkets(
     // eBay Singapore (SGD). 4 markets ≈ 4×~1k calls — the live-quota budget in
     // primeEbayBudget() still bounds total spend below the 5,000/day Browse limit.
     { country: "SG", marketplace: "EBAY_SG", currency: "SGD", retailer: "ebay_sg" },
+    // eBay Canada (CAD) — added with the CA market. DELIBERATELY LAST: markets are
+    // walked in array order and primeEbayBudget() hard-stops the pass when the
+    // budget runs out (it can never exhaust eBay's daily quota — it reserves
+    // QUOTA_RESERVE — but it CAN run out mid-pass, and whichever markets come
+    // last are the ones that get skipped). Putting CA last means a tight-quota
+    // run degrades the newest market first and leaves the four established ones
+    // fully refreshed, instead of the other way round. A skipped market keeps its
+    // existing rows (see the `rows.length > 0` guard below), so this degrades to
+    // slightly-stale CA eBay prices, never to wiped or fabricated ones.
+    { country: "CA", marketplace: "EBAY_CA", currency: "CAD", retailer: "ebay_ca" },
   ];
   // EBAY_ONLY_MARKET=SG restricts the pass to one marketplace (~1k calls) — used
   // for new-market rollouts on top of the daily full run without doubling quota.
@@ -360,10 +370,26 @@ export async function refreshEbayMarkets(
         inStock: true,
       });
     }
-    if (rows.length > 0) {
+    // A market is only safe to REPLACE wholesale if the pass actually covered every
+    // card. If the Browse budget ran out partway through (isEbayRateLimited), `rows`
+    // holds a PARTIAL result — and the old code's `rows.length > 0` check happily
+    // deleted every existing row for this retailer and wrote the partial set back,
+    // silently shrinking that market's eBay coverage with no error and no warning.
+    // (This became reachable once the pass grew past 4 markets: 5 markets × ~1.1k
+    // cards ≈ 5.5k calls against a real budget of 5000 − QUOTA_RESERVE.) A partial
+    // refresh is worth less than a complete stale one, so treat truncation exactly
+    // like the 0-results case: keep what's there and say so loudly.
+    const truncated = isEbayRateLimited();
+    if (rows.length > 0 && !truncated) {
       await prisma.retailerPrice.deleteMany({ where: { retailer: mkt.retailer } });
       await prisma.retailerPrice.createMany({ data: rows });
       written += rows.length;
+    } else if (truncated) {
+      console.warn(
+        `eBay ${mkt.country}: budget ran out after ${rows.length} of ${cards.length} cards — ` +
+          `NOT replacing rows (a partial set would shrink coverage). Keeping existing rows. ` +
+          `Run this market on its own with EBAY_ONLY_MARKET=${mkt.country} to refresh it fully.`
+      );
     } else {
       console.warn(`eBay ${mkt.country}: 0 results (rate-limited?) — keeping existing rows.`);
     }
@@ -667,7 +693,10 @@ export async function importPrices(): Promise<ImportSummary> {
         condition: best.title && best.title !== "Default Title" ? best.title : null,
         isFoil: /foil/i.test(p.title),
         priceCents,
-        currency: cc === "NZ" ? "NZD" : cc === "US" ? "USD" : cc === "UK" ? "GBP" : cc === "SG" ? "SGD" : "AUD",
+        // Derived from the market registry, not a hand-maintained ternary chain —
+        // the old chain's `else` was "AUD", so any market added without editing it
+        // would have silently stamped Australian-dollar rows in the DB.
+        currency: currencyOf(cc),
         country: cc,
         inStock,
       });
@@ -686,9 +715,12 @@ export async function importPrices(): Promise<ImportSummary> {
 
   // ---- eBay AU + US (optional; only when EBAY_CLIENT_ID/SECRET are set) ---------
   // eBay covers EVERY card per market, but only ONCE a day, and NEVER on a deploy
-  // (push). AU (AUD) + US (USD) ≈ 2×~1k calls, under eBay's ~5,000/day Browse limit.
-  // NZ is store-only (no eBay). Cards are ordered by search demand so the most-wanted
-  // are covered first if the quota is ever hit.
+  // (push). AU/US/UK/SG/CA ≈ 5×~1k calls; primeEbayBudget() reads the LIVE remaining
+  // quota and reserves QUOTA_RESERVE, so this can never exhaust eBay's ~5,000/day
+  // Browse limit — it just stops early, dropping the last market(s) in the array
+  // (CA first, by design — see refreshEbayMarkets). NZ is store-only (no eBay).
+  // Cards are ordered by search demand so the most-wanted are covered first if the
+  // quota is ever hit.
   //  - ebayDue:     last eBay refresh was > 20h ago (so it runs ~once a day).
   //  - ebayAllowed: the workflow sets EBAY_REFRESH=false for push/deploy runs.
   const lastEbay = await prisma.retailerPrice.findFirst({
@@ -711,7 +743,7 @@ export async function importPrices(): Promise<ImportSummary> {
       select: { id: true, name: true, setCode: true, collectorNumber: true, isPromo: true },
     });
     const n = await refreshEbayMarkets(ebayCards);
-    summary.stores.push({ name: "eBay (AU+US)", products: ebayCards.length, priced: n, matched: n, unmatched: 0 });
+    summary.stores.push({ name: "eBay (AU/US/UK/SG/CA)", products: ebayCards.length, priced: n, matched: n, unmatched: 0 });
   }
 
   // ---- TCGplayer (US market price) ---------------------------------------------
@@ -764,25 +796,38 @@ export async function importPrices(): Promise<ImportSummary> {
   // then refuses to show as a store (computeMarket in lib/market-rows.ts excludes
   // them from the comparison too). A card with no real local listing gets null here
   // — "no price yet" — rather than a misleading converted figure.
-  const [pricedAuReal, pricedNz, pricedUs, pricedSgReal, pricedUkReal] = await Promise.all([
+  // CA has no converted-reference source of its own (no tcgplayer_ca — see the
+  // note in constants.ts), so like NZ it takes every in-stock row for the market
+  // with no fallback-retailer exclusion.
+  const [pricedAuReal, pricedNz, pricedUs, pricedSgReal, pricedUkReal, pricedCa] = await Promise.all([
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "AU", retailer: { notIn: [...AU_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "NZ" }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "US" }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "SG", retailer: { notIn: [...SG_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "UK", retailer: { notIn: [...UK_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
+    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "CA" }, _min: { priceCents: true } }),
   ]);
   const lowAuReal = new Map(pricedAuReal.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowNz = new Map(pricedNz.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowUs = new Map(pricedUs.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowSgReal = new Map(pricedSgReal.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowUkReal = new Map(pricedUkReal.map((r) => [r.cardId, r._min.priceCents ?? null]));
+  const lowCa = new Map(pricedCa.map((r) => [r.cardId, r._min.priceCents ?? null]));
   // Diff-based update: write each card STRAIGHT to its new lowest only when it
   // changed. We must NOT reset every card to null first (the old approach) — that
   // briefly showed "No price yet" for the whole catalogue on every import/deploy
   // while the per-card repopulation loop caught up. Now each card transitions
   // old → new atomically and is never transiently null.
   const existing = await prisma.card.findMany({
-    select: { id: true, lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, lowestPriceCentsSg: true },
+    select: {
+      id: true,
+      lowestPriceCents: true,
+      lowestPriceCentsNz: true,
+      lowestPriceCentsUs: true,
+      lowestPriceCentsUk: true,
+      lowestPriceCentsSg: true,
+      lowestPriceCentsCa: true,
+    },
   });
   let changed = 0;
   for (const c of existing) {
@@ -797,16 +842,25 @@ export async function importPrices(): Promise<ImportSummary> {
     const nUs = lowUs.get(c.id) ?? null;
     const nUk = lowUkReal.get(c.id) ?? null;
     const nSg = lowSgReal.get(c.id) ?? null;
+    const nCa = lowCa.get(c.id) ?? null;
     if (
       nAu !== c.lowestPriceCents ||
       nNz !== c.lowestPriceCentsNz ||
       nUs !== c.lowestPriceCentsUs ||
       nUk !== c.lowestPriceCentsUk ||
-      nSg !== c.lowestPriceCentsSg
+      nSg !== c.lowestPriceCentsSg ||
+      nCa !== c.lowestPriceCentsCa
     ) {
       await prisma.card.update({
         where: { id: c.id },
-        data: { lowestPriceCents: nAu, lowestPriceCentsNz: nNz, lowestPriceCentsUs: nUs, lowestPriceCentsUk: nUk, lowestPriceCentsSg: nSg },
+        data: {
+          lowestPriceCents: nAu,
+          lowestPriceCentsNz: nNz,
+          lowestPriceCentsUs: nUs,
+          lowestPriceCentsUk: nUk,
+          lowestPriceCentsSg: nSg,
+          lowestPriceCentsCa: nCa,
+        },
       });
       changed++;
     }
@@ -829,15 +883,17 @@ export async function importPrices(): Promise<ImportSummary> {
       const us = lowUs.get(c.id) ?? null;
       const uk = lowUkReal.get(c.id) ?? null;
       const sg = lowSgReal.get(c.id) ?? null;
+      const ca = lowCa.get(c.id) ?? null;
       if (au != null) rows.push({ cardId: c.id, country: "AU", day, lowestPriceCents: au });
       if (nz != null) rows.push({ cardId: c.id, country: "NZ", day, lowestPriceCents: nz });
       if (us != null) rows.push({ cardId: c.id, country: "US", day, lowestPriceCents: us });
       if (uk != null) rows.push({ cardId: c.id, country: "UK", day, lowestPriceCents: uk });
       if (sg != null) rows.push({ cardId: c.id, country: "SG", day, lowestPriceCents: sg });
+      if (ca != null) rows.push({ cardId: c.id, country: "CA", day, lowestPriceCents: ca });
     }
     await dbHistory.priceHistory.deleteMany({ where: { day } });
     if (rows.length > 0) await dbHistory.priceHistory.createMany({ data: rows });
-    console.log(`Price history: recorded ${rows.length} points (AU/NZ/US/UK/SG) for ${day.toISOString().slice(0, 10)}.`);
+    console.log(`Price history: recorded ${rows.length} points (AU/NZ/US/UK/SG/CA) for ${day.toISOString().slice(0, 10)}.`);
   } catch (e) {
     console.warn("Price-history snapshot failed:", e);
   }

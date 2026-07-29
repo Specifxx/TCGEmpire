@@ -40,7 +40,7 @@ export default function SuggestStorePage() {
           <p className="mt-2 text-sm leading-relaxed text-slate-300">
             Know a shop that sells Riftbound singles we&apos;re missing? Run one yourself? Tell us and we&apos;ll add it
             to the comparison. We already track <strong className="text-white">{storeCount}+ stores</strong> across
-            Australia, New Zealand, the US, the UK and Singapore — the more we list, the better the deals for everyone.
+            Australia, New Zealand, the US, the UK, Singapore and Canada — the more we list, the better the deals for everyone.
           </p>
         </div>
 

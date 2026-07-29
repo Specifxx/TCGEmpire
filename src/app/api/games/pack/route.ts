@@ -32,7 +32,7 @@ const poolForSet = unstable_cache(
       select: {
         id: true, slug: true, name: true, setCode: true, collectorNumber: true, rarity: true,
         imageThumbUrl: true,
-        lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true,
+        lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true,
       },
       take: 2000,
     });

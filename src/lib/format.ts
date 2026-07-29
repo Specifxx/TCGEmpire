@@ -1,9 +1,13 @@
 // Currency + small formatting helpers. All money is stored as integer cents.
 
 // Distinct symbols so every price is unambiguous about its market (a plain "$"
-// could be AUD, NZD or USD). A$ = Australia, NZ$ = New Zealand, US$ = United States,
-// £ = United Kingdom, € = the Euro reference figure shown to UK-market visitors.
-const SYMBOL: Record<string, string> = { AUD: "A$", NZD: "NZ$", USD: "US$", GBP: "£", EUR: "€" };
+// could be AUD, NZD, USD, SGD or CAD). A$ = Australia, NZ$ = New Zealand,
+// US$ = United States, £ = United Kingdom, S$ = Singapore, C$ = Canada,
+// € = the Euro reference figure shown to UK-market visitors.
+// SGD was MISSING here until the CA rollout — Singapore prices were rendering as a
+// bare "$" via the `?? "$"` fallback below, i.e. exactly the ambiguity this table
+// exists to prevent. Added alongside CAD rather than left broken.
+const SYMBOL: Record<string, string> = { AUD: "A$", NZD: "NZ$", USD: "US$", GBP: "£", SGD: "S$", CAD: "C$", EUR: "€" };
 
 // Format integer cents in the given currency (default AUD), e.g. "A$12.50".
 export function formatMoney(cents: number, currency: string = "AUD"): string {

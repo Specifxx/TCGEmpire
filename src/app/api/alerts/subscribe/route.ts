@@ -13,7 +13,7 @@ const schema = z.object({
   email: z.string().trim().toLowerCase().email().max(200),
   // The card ids to watch (the user's wishlist). Capped to keep one request cheap.
   cardIds: z.array(z.string().min(1)).min(1).max(500),
-  market: z.enum(["AU", "NZ", "US", "UK", "SG"]).default("AU"),
+  market: z.enum(["AU", "NZ", "US", "UK", "SG", "CA"]).default("AU"),
 });
 
 // Subscribe an email to price-drop alerts for a set of wishlisted cards. No account
@@ -40,6 +40,8 @@ export async function POST(req: Request) {
       lowestPriceCentsNz: true,
       lowestPriceCentsUs: true,
       lowestPriceCentsUk: true,
+      lowestPriceCentsSg: true,
+      lowestPriceCentsCa: true,
     },
   });
   if (cards.length === 0) {

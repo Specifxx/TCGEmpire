@@ -18,6 +18,7 @@ import { prisma } from "../src/lib/db";
 import { cardSlug } from "../src/lib/card-url";
 import { normalizeSearch } from "../src/lib/format";
 import { DOMAIN_KEYS, RARITY_KEYS, CARD_TYPES, SETS } from "../src/lib/constants";
+import type { PriceField } from "../src/lib/country";
 
 const FIX = process.argv.includes("--fix");
 const MAX_SAMPLES = 10;
@@ -60,7 +61,8 @@ async function main() {
       setCode: true, setName: true, collectorNumber: true, variant: true,
       isPromo: true, domain: true, type: true, rarity: true, imageUrl: true, imageThumbUrl: true,
       lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true,
-      lowestPriceCentsUk: true, ebayCheckedAt: true,
+      lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true,
+      ebayCheckedAt: true,
     },
   });
   const label = (c: (typeof cards)[number]) =>
@@ -128,11 +130,15 @@ async function main() {
   });
   const stock = new Map<string, number>();
   for (const r of stockRows) stock.set(`${r.cardId}|${r.country}`, r._count._all);
-  const MARKETS: { code: string; field: "lowestPriceCents" | "lowestPriceCentsNz" | "lowestPriceCentsUs" | "lowestPriceCentsUk" }[] = [
+  // Every market, or the audit can't detect a broken one — SG was missing here
+  // (so an SG-only phantom-price bug was undetectable) and CA would have been too.
+  const MARKETS: { code: string; field: PriceField }[] = [
     { code: "AU", field: "lowestPriceCents" },
     { code: "NZ", field: "lowestPriceCentsNz" },
     { code: "US", field: "lowestPriceCentsUs" },
     { code: "UK", field: "lowestPriceCentsUk" },
+    { code: "SG", field: "lowestPriceCentsSg" },
+    { code: "CA", field: "lowestPriceCentsCa" },
   ];
   for (const m of MARKETS) {
     const phantom = cards.filter((c) => c[m.field] != null && !stock.get(`${c.id}|${m.code}`));

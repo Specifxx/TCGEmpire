@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getPriceHistory } from "@/lib/price-history";
 import { getInsight } from "@/lib/ai-insight";
-import { currencyOf, type Country } from "@/lib/country";
-import { MARKETPLACE_COUNTRIES } from "@/lib/marketplace";
+import { COUNTRIES, currencyOf, type Country } from "@/lib/country";
 
 // AI market insight for a card (the "AI Tips" panel), in a given market. Country
 // comes from the URL (?country=US) so the CDN caches per (card, market). Verdict is
@@ -11,7 +10,9 @@ import { MARKETPLACE_COUNTRIES } from "@/lib/marketplace";
 export async function GET(req: Request, { params }: { params: { id: string } }) {
   const url = new URL(req.url);
   const c = (url.searchParams.get("country") ?? "AU").toUpperCase();
-  const country = ((MARKETPLACE_COUNTRIES as readonly string[]).includes(c) ? c : "AU") as Country;
+  // Real market registry, not the P2P marketplace's launch list — see the same
+  // fix in ../history/route.ts for why.
+  const country = (c in COUNTRIES ? c : "AU") as Country;
 
   const card = await prisma.card.findFirst({
     where: { OR: [{ slug: params.id }, { id: params.id }] },

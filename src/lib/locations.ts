@@ -41,13 +41,36 @@ export const MARKET_COUNTRY: Record<string, string> = {
   NZ: "New Zealand",
   US: "United States",
   UK: "United Kingdom",
+  // SG was missing here (added alongside CA) — an absent market falls back to a
+  // free-text country field, so it never errored, it just quietly stopped
+  // prefilling.
+  SG: "Singapore",
+  CA: "Canada",
 };
+
+// Canadian provinces/territories — Canada Post two-letter codes.
+export const CA_PROVINCES: { value: string; label: string }[] = [
+  { value: "AB", label: "Alberta" },
+  { value: "BC", label: "British Columbia" },
+  { value: "MB", label: "Manitoba" },
+  { value: "NB", label: "New Brunswick" },
+  { value: "NL", label: "Newfoundland and Labrador" },
+  { value: "NS", label: "Nova Scotia" },
+  { value: "NT", label: "Northwest Territories" },
+  { value: "NU", label: "Nunavut" },
+  { value: "ON", label: "Ontario" },
+  { value: "PE", label: "Prince Edward Island" },
+  { value: "QC", label: "Quebec" },
+  { value: "SK", label: "Saskatchewan" },
+  { value: "YT", label: "Yukon" },
+];
 
 // The state/region dropdown options for a country name (null = free-text region).
 export function statesFor(country: string): { value: string; label: string }[] | null {
   if (country === "Australia") return AU_STATES;
   if (country === "New Zealand") return NZ_REGIONS;
   if (country === "United States") return US_STATES;
+  if (country === "Canada") return CA_PROVINCES;
   return null;
 }
 

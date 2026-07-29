@@ -25,7 +25,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       select: {
         id: true, slug: true, name: true, setCode: true, setName: true, collectorNumber: true,
         rarity: true, imageThumbUrl: true,
-        lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true,
+        lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true,
         retailerPrices: {
           where: { country: market, inStock: true },
           select: { id: true },
