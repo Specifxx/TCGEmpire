@@ -330,14 +330,44 @@ export default async function CardPage({ params }: { params: { id: string } }) {
       };
     }),
   ];
+  // Product is emitted ONLY when real offers exist. That is deliberate and stays:
+  // Google treats a Product carrying none of offers/review/aggregateRating as a
+  // critical error, so a card with no live listing is better off with no Product
+  // markup than with an invalid one or a zero-filled price.
+  //
+  // (This is also why only a minority of the catalogue currently validates as
+  // Product in Search Console — it tracks how many cards have an in-stock listing
+  // in the BASELINE market, not how many pages carry correct markup. The fix for
+  // that number is price coverage, not more schema.)
+  //
+  // Fields below are the ones Google actually reads for a merchant listing:
+  // sku/productID make the printing uniquely addressable (collector number is
+  // stable per printing), brand identifies the game, and description now carries
+  // the card's REAL printed text rather than a templated sentence — matching the
+  // visible page, which is what validation cross-checks.
   const jsonLd = offersLd.length
     ? {
         "@context": "https://schema.org",
         "@type": "Product",
         name: displayName,
         category: "Trading Card",
-        description: `${displayName} — Riftbound ${card.setName} (${card.setCode}) ${card.collectorNumber}. Compare live store prices.`,
+        sku: `${card.setCode}-${card.collectorNumber}`,
+        productID: `${card.setCode}-${card.collectorNumber}`,
+        brand: { "@type": "Brand", name: "Riftbound" },
+        isPartOf: { "@type": "CreativeWorkSeries", name: `Riftbound ${card.setName}` },
+        description: card.description
+          ? `${clampText(card.description, 300)} — ${displayName}, Riftbound ${card.setName} (${card.setCode}) ${card.collectorNumber}.`
+          : `${displayName} — ${card.domain} ${card.type.toLowerCase()}, ${card.rarity}. Riftbound ${card.setName} (${card.setCode}) ${card.collectorNumber}.`,
         ...(card.imageUrl ? { image: card.imageUrl } : {}),
+        additionalProperty: [
+          { "@type": "PropertyValue", name: "Set", value: card.setName },
+          { "@type": "PropertyValue", name: "Collector number", value: card.collectorNumber },
+          { "@type": "PropertyValue", name: "Rarity", value: card.rarity },
+          { "@type": "PropertyValue", name: "Domain", value: card.domain },
+          { "@type": "PropertyValue", name: "Type", value: card.type },
+          ...(card.energyCost != null ? [{ "@type": "PropertyValue", name: "Energy", value: String(card.energyCost) }] : []),
+          ...(card.might != null ? [{ "@type": "PropertyValue", name: "Might", value: String(card.might) }] : []),
+        ],
         offers: offersLd.length === 1 ? offersLd[0] : offersLd,
       }
     : null;
