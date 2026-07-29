@@ -126,6 +126,39 @@ export const PENDING_US_STORES: PendingPlatformCandidate[] = [
   },
 ];
 
+// ── Permission-blocked, NOT technically-blocked — a categorically different
+// situation from PENDING_US_STORES above. For these, the data is confirmed
+// real and plausibly fetchable; what's missing is confirmed permission to
+// fetch it, not adapter code. Do not scrape these without resolving that
+// first, no matter how good the data looks.
+export interface PermissionBlockedCandidate {
+  name: string;
+  base: string;
+  confirmedPaths: string[];
+  note: string;
+}
+
+export const PENDING_PERMISSION_UNRESOLVED: PermissionBlockedCandidate[] = [
+  {
+    name: "CoolStuffInc",
+    base: "https://www.coolstuffinc.com",
+    confirmedPaths: [
+      "/page/8996", // Riftbound: League of Legends — main category
+      "/page/9253", // Common Singles
+      "/page/9254", // Uncommon Singles
+      "/page/9256", // Epic Singles
+      "/page/9257", // Alternate Art Singles
+    ],
+    note:
+      "Confirmed via web search: a large, genuinely live catalogue (Common Singles alone: 249 results across 10 pages; " +
+      "Uncommon $0.49–$4.99, Alternate Art $2.99–$71.99, Epic from $14.99 — matching the original research's own category " +
+      "8996 exactly). This is real, valuable data. It is NOT added or scraped because permission is still unresolved, not " +
+      "because the data is hard to get: three separate searches found no ToS statement on scraping and no affiliate/data-" +
+      "feed program. Check coolstuffinc.com/robots.txt and their actual Terms of Service directly before writing anything — " +
+      "the value of the data is not a reason to skip that check.",
+  },
+];
+
 // Checked via web search and NOT added anywhere (no Riftbound stock confirmed,
 // or the store itself couldn't be confirmed at all) — recorded so the next pass
 // doesn't re-spend a search on them without new evidence:

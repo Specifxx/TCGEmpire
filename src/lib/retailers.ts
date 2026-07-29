@@ -762,30 +762,36 @@ export const RETAILERS: Record<string, RetailerInfo> = {
   //
   // ---- Non-Shopify custom-adapter candidates — NOT implemented this pass -------
   // CoolStuffInc and Trading Card Planet (bespoke platforms, no Shopify
-  // products.json feed) plus a Crystal-Commerce-pattern long tail (Amazing
-  // Discoveries Tucson, Victory Point, and ~15 others) each need their own adapter
-  // and a robots.txt/ToS check first — genuinely not done, not just deferred:
-  //   - CoolStuffInc: no ToS statement on scraping and no affiliate/data-feed
-  //     program turned up after three separate searches. Genuinely unresolved,
-  //     not "assumed fine" — needs a direct check (visit
-  //     coolstuffinc.com/robots.txt and their ToS page) before writing anything.
-  //   - Trading Card Planet: one search surfaced "checkout is powered by Shopify,"
-  //     which is NOT the same claim as the original research's "non-Shopify
-  //     despite the /collections/ URL shape" (Shopify Payments/checkout can sit
-  //     behind an otherwise-custom storefront) — noted, not acted on; the
-  //     original firsthand research is more trustworthy than this ambiguous
-  //     secondhand signal.
-  //   - Crystal Commerce: confirmed real via web search — genuine platform, real
-  //     URL shape /catalog/[category]-[subcategory]-[product_type]/[id], and it
-  //     does expose a documented JSON API (variant descriptors like "Condition:
-  //     Near Mint", price_cents, msrp_cents — see docs.crystalcommerce.com/
-  //     json_api.html). BUT that API reads as REST-style with full CRUD (GET/
-  //     POST/PUT/DELETE), which is the shape of a merchant-facing management API,
-  //     not necessarily a public anonymous read feed like Shopify's products.json
-  //     — unconfirmed whether it's fetchable without credentials. Needs a live
-  //     check against ONE real store before building a generic adapter on this
-  //     assumption; deliberately not building a generic "platform adapter"
-  //     abstraction with a single unverified implementation behind it.
+  // products.json feed) plus a confirmed Crystal-Commerce long tail (Amazing
+  // Discoveries Tucson, Brute Force Games, The Wasteland Gaming, Nerd Rage
+  // Gaming, The Games Cube, Cardboard Castle Games, Darkhound Game Center, and
+  // one unidentified-platform lead, Grand J Games) each need their own adapter
+  // and a robots.txt/ToS check first — genuinely not done, not just deferred.
+  // Full detail (confirmed URLs, locations, confidence per store) now lives in
+  // src/lib/pending-platforms.ts as structured data instead of prose here —
+  // see that file. Summary:
+  //   - CoolStuffInc: the data is real and rich (confirmed category IDs,
+  //     confirmed live pricing) but permission is what's missing, not
+  //     feasibility — no ToS statement on scraping and no affiliate/data-feed
+  //     program turned up after three separate searches. See
+  //     PENDING_PERMISSION_UNRESOLVED in pending-platforms.ts. Do not scrape
+  //     this on the strength of the data alone.
+  //   - Trading Card Planet: confirmed a real, large live catalogue (830
+  //     products, Foil-NM/LP/MP/HP/DM condition tiers) at the Shopify-shaped
+  //     /collections/riftbound-singles URL — but that's the same URL shape
+  //     the ORIGINAL research already saw and explicitly rejected as
+  //     non-Shopify ("despite the /collections/ URL shape"), i.e. they likely
+  //     already found products.json doesn't actually work here. Their
+  //     firsthand check outranks this session's indirect search evidence —
+  //     not added.
+  //   - Crystal Commerce: confirmed real platform + URL shape + one live price
+  //     (see pending-platforms.ts). Its documented JSON API reads as a
+  //     merchant-facing REST/CRUD API, not confirmed as a public anonymous
+  //     read feed like Shopify's — needs a live check on one store before
+  //     building a generic adapter on that assumption. Deliberately not built
+  //     yet: a "platform adapter" abstraction with zero verified
+  //     implementations behind it would be pure guesswork risking wrong
+  //     prices on a real comparison site, not genuine progress.
   // See the session summary for the full account of what's blocked and why.
 
   // ---- United Kingdom stores (country: "UK"; prices in GBP via ?country=GB; uses eBay UK) ----
