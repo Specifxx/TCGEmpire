@@ -141,10 +141,7 @@ export default async function HomePage() {
     // same as popularCards above: it's a real internal-linking/freshness feed,
     // not a per-market data section like Top Deals, so there's no reason to
     // serialize all five markets for client-side localisation.
-    Promise.resolve(Array.from({length: 12}, (_, i) => ({
-      card: { id: String(i), slug: "test-card-"+i, name: "Test Card "+i, domain: "Fury", type: "Unit", rarity: "Rare", variant: null, isPromo: false, setCode: "VEN", setName: "Vendetta", collectorNumber: String(i)+"/166", energyCost: 3, might: 4, artSeed: 0, orientation: null, imageUrl: null, imageThumbUrl: null, lowestPriceCents: 1000+i*137, lowestPriceCentsNz: null, lowestPriceCentsUs: 1000+i*137, lowestPriceCentsUk: null, _count: { retailerPrices: 3 } },
-      prevCents: 900, nowCents: 1000+i*137, pct: i % 2 === 0 ? 12.4 : -8.1,
-    }))),
+    getRecentlyUpdated(country, 60),
   ]);
   // Assemble per-market stat tiles; the client picks the visitor's market after hydration.
   const inStockByCountry: Record<string, number> = {};
