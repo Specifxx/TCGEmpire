@@ -5,7 +5,6 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
-import { VendettaRibbon } from "@/components/VendettaRibbon";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { QuickViewProvider } from "@/components/QuickView";
 import { SealedQuickViewProvider } from "@/components/SealedQuickView";
@@ -17,7 +16,8 @@ import { PremiumDialogProvider } from "@/components/PremiumDialog";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 import { CONTACT_EMAIL, DISCORD_URL, SITE_NAME, SITE_URL } from "@/lib/site";
 import { IMPACT_SITE_VERIFICATION } from "@/lib/affiliate";
-import { NAV_GROUPS, MARKETPLACE_NAV_VISIBLE } from "@/components/nav-groups";
+import { MARKETPLACE_NAV_VISIBLE } from "@/components/nav-groups";
+import { FooterNav } from "@/components/FooterNav";
 import { NativeShell } from "@/components/NativeShell";
 import { HilltopAdsLoader } from "@/components/HilltopAdsLoader";
 import { ReferralCapture } from "@/components/ReferralCapture";
@@ -205,7 +205,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <CommandLauncherProvider>
               <MegaMenuProvider>
                 <Navbar />
-                <VendettaRibbon />
+                {/* No announcement ribbon here any more — the homepage's Vendetta
+                    block (right under the hero) carries the "it's here" message
+                    with real prices instead of a repeating marquee claim. */}
                 <main id="main-content" className="container-app min-w-0 py-6">{children}</main>
                 <PriceAlertModal />
                 <SignupPromoPopup providers={enabledProviders()} />
@@ -224,25 +226,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <footer className="container-app border-t border-ink-800 py-8 text-center text-xs text-slate-500">
           <NewsletterSignup siteName="RiftCompare" />
           {/* Site-map — surfaced here so every page links to every feature even
-              when the xl SideNav is absent (mobile, homepage, smaller desktops). */}
-          <nav aria-label="Site map" className="mb-6 border-b border-ink-800 pb-6">
-            <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-left sm:grid-cols-3 lg:grid-cols-6">
-              {NAV_GROUPS.map((group) => (
-                <div key={group.title}>
-                  <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">{group.title}</div>
-                  <ul className="space-y-1">
-                    {group.links.map((l) => (
-                      <li key={l.href}>
-                        <Link href={l.href} className="text-xs text-slate-400 hover:text-brand-400">
-                          {l.label}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </nav>
+              when the xl SideNav is absent (mobile, homepage, smaller desktops).
+              4 columns on desktop, collapsible accordions on mobile — see
+              FooterNav / nav-groups.ts's FOOTER_GROUPS for the re-bucketing. */}
+          <FooterNav />
           <div className="mb-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm">
             <Link href="/about" className="text-slate-300 hover:text-brand-400">About</Link>
             <span className="text-ink-700">·</span>

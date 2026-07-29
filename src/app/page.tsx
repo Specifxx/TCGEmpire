@@ -5,15 +5,19 @@ import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { CardTile } from "@/components/CardTile";
 import { Reveal } from "@/components/Reveal";
-import { getPopularCards } from "@/lib/cheapest-cards";
+import { getPopularCards, getValuableCards } from "@/lib/cheapest-cards";
 import { DEFAULT_COUNTRY, priceField, type Country } from "@/lib/country";
 import type { MarketStat } from "@/components/home/HeroStats";
 import { SETS, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
 import { getTopDeals, type TopDeals } from "@/lib/top-deals";
-import { getRecentlyUpdated } from "@/lib/price-history";
+import { getRecentlyUpdated, getPriceMovers } from "@/lib/price-history";
+import { getVendettaPulse, type VendettaPulse } from "@/lib/vendetta";
 import { TodaysTopDeals } from "@/components/TodaysTopDeals";
 import { CinematicHero } from "@/components/home/CinematicHero";
+import { VendettaBlock } from "@/components/home/VendettaBlock";
+import { PopularCardsCarousel } from "@/components/home/PopularCardsCarousel";
+import { PartnersStrip } from "@/components/home/PartnersStrip";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { CardsIcon } from "@/components/icons/HomeIcons";
@@ -97,7 +101,19 @@ export default async function HomePage() {
   // The copy Google indexes (hero, FAQs, about) is market-neutral.
   const country = DEFAULT_COUNTRY;
   const COUNTRY_CODES: Country[] = ["AU", "NZ", "US", "UK", "SG"];
-  const [totalCards, pricedCounts, inStockGroups, storeRows, popularCards, popularVendetta, topDealsArr, recentlyUpdated] = await Promise.all([
+  const [
+    totalCards,
+    pricedCounts,
+    inStockGroups,
+    storeRows,
+    popularCards,
+    popularVendetta,
+    chaseCards,
+    topDealsArr,
+    vendettaPulseArr,
+    recentlyUpdated,
+    movers,
+  ] = await Promise.all([
     prisma.card.count(),
     // Priced-card count PER MARKET (one indexed count per price column) — the hero
     // stat tiles localise to the visitor's market client-side, so we serialize all four.
@@ -122,6 +138,10 @@ export default async function HomePage() {
     // the set everyone's talking about right now. Empty (no section shown) until
     // enough early listings are actually priced.
     getPopularCards(8, country, "VEN"),
+    // Vendetta "chase cards" for the homepage Vendetta block — the highest-value
+    // singles in the set (not "most searched" like popularVendetta above), same
+    // AU-baseline-then-client-reprice pattern as every other card list here.
+    getValuableCards(4, country, "VEN"),
     // Today's Top Deals blends four signals; cache per-market. We serialize ALL four
     // markets so the section localises to the visitor's chosen market client-side —
     // the page is ISR-cached with DEFAULT_COUNTRY baked in, so a single-market render
@@ -136,15 +156,19 @@ export default async function HomePage() {
         unstable_cache(() => getTopDeals(c), ["top-deals", c], { revalidate: 3600, tags: [CONTENT_TAG] })(),
       ),
     ),
+    // Vendetta block's cheapest-box price + price-since-release pulse — plain
+    // numbers (not a CardTileData, which already carries every market's price),
+    // so like Top Deals this needs its own per-market array to localise client-side.
+    Promise.all(COUNTRY_CODES.map((c) => getVendettaPulse(c))),
     // "Recently updated" feed — cards whose price genuinely changed in the most
     // recent snapshot (see lib/price-history.ts). Single-market (the baseline),
     // same as popularCards above: it's a real internal-linking/freshness feed,
     // not a per-market data section like Top Deals, so there's no reason to
     // serialize all five markets for client-side localisation.
-    Promise.resolve(Array.from({length: 12}, (_, i) => ({
-      card: { id: String(i), slug: "test-card-"+i, name: "Test Card "+i, domain: "Fury", type: "Unit", rarity: "Rare", variant: null, isPromo: false, setCode: "VEN", setName: "Vendetta", collectorNumber: String(i)+"/166", energyCost: 3, might: 4, artSeed: 0, orientation: null, imageUrl: null, imageThumbUrl: null, lowestPriceCents: 1000+i*137, lowestPriceCentsNz: null, lowestPriceCentsUs: 1000+i*137, lowestPriceCentsUk: null, _count: { retailerPrices: 3 } },
-      prevCents: 900, nowCents: 1000+i*137, pct: i % 2 === 0 ? 12.4 : -8.1,
-    }))),
+    getRecentlyUpdated(country, 12),
+    // Biggest movers (up + down) for the unified popular-cards carousel's third
+    // tab — same AU-baseline pattern as popularCards/popularVendetta.
+    getPriceMovers(country, 6),
   ]);
   // Assemble per-market stat tiles; the client picks the visitor's market after hydration.
   const inStockByCountry: Record<string, number> = {};
@@ -159,85 +183,45 @@ export default async function HomePage() {
   // Per-market Top Deals, so the section can localise client-side (see above).
   const topDealsByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, topDealsArr[i]])) as Record<Country, TopDeals>;
   const anyDeals = COUNTRY_CODES.some((c) => topDealsByCountry[c].hasAny);
+  // Per-market Vendetta pulse, so the block can localise client-side (see above).
+  const vendettaPulseByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, vendettaPulseArr[i]])) as Record<Country, VendettaPulse>;
+  // Biggest movers tab: both directions, ranked by the size of the move.
+  const biggestMovers = [...movers.spiking, ...movers.plummeting]
+    .sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct))
+    .slice(0, 12);
 
   return (
     <div className={`${archivo.variable} rb-display-sans flex flex-col gap-12`}>
-      {/* Vendetta launch ribbon lives in the layout (attached under the navbar), so
-          it isn't repeated here. */}
-
-      {/* Cinematic full-bleed hero. */}
+      {/* Cinematic full-bleed hero — search-first (see CinematicHero + Task 3). */}
       <CinematicHero
-        country={country}
         totalCards={totalCards}
         statsByCountry={statsByCountry}
       />
 
-      {/* Most-searched Vendetta cards, right under the hero — real demand
-          signal (not a claim), each tile showing the live cheapest price. Hidden
-          entirely until enough early listings are actually priced. */}
-      {popularVendetta.length > 0 && (
-        <section>
-          <div className="mb-4 flex items-end justify-between gap-3">
-            <div>
-              <h2 className="text-xl font-extrabold text-white">Most popular Vendetta cards</h2>
-              <p className="mt-0.5 text-xs text-slate-500">
-                The most-searched Vendetta cards right now — live prices compared across every store we track.
-              </p>
-            </div>
-            <Link href="/sets/vendetta" className="btn-ghost text-xs shrink-0">See all Vendetta prices →</Link>
-          </div>
-          <Reveal stagger className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-2">
-            {popularVendetta.map((c) => (
-              <div key={c.id} className="w-36 shrink-0 sm:w-44">
-                <CardTile card={c} />
-              </div>
-            ))}
-          </Reveal>
-        </section>
+      {/* Vendetta block — replaces the old marquee. Real cheapest-box price,
+          price movement since release, and chase cards; red is reserved for
+          this block sitewide (see VendettaBlock). Hidden entirely until there's
+          real data to show. */}
+      <VendettaBlock pulseByCountry={vendettaPulseByCountry} chaseCards={chaseCards} />
+
+      {/* Today's Top Deals — the strongest differentiator, moved up from five
+          sections deep. Hidden if no market has data. */}
+      {anyDeals && (
+        <Reveal>
+          <TodaysTopDeals dealsByCountry={topDealsByCountry} />
+        </Reveal>
       )}
 
-      {/* How it works — orients first-time visitors to the search → compare → buy
-          mechanic before the deeper data sections. */}
-      <HowItWorks totalCards={totalCards} />
-
-      {/* Daily Riftle teaser — surfaces the site's daily-habit game on the top page. */}
-      <Reveal>
-        <Link
-          href="/riftle"
-          className="card-surface group flex items-center gap-4 p-5 transition-colors hover:border-brand-500/60 hover:bg-ink-800"
-        >
-          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-brand-500/15 text-brand-400">
-            <CardsIcon className="h-6 w-6" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <h2 className="text-lg font-extrabold text-white">Play today&apos;s Riftle</h2>
-            <p className="mt-0.5 text-sm text-slate-400">
-              Guess the daily Riftbound card in 8 tries — a new one every day.
-            </p>
-          </div>
-          <span className="btn-primary shrink-0 text-sm">Play →</span>
-        </Link>
-      </Reveal>
-
-      {/* Most popular cards — the most-searched Riftbound singles right now */}
-      <section>
-        <div className="mb-4 flex items-end justify-between gap-3">
-          <div>
-            <h2 className="text-xl font-extrabold text-white">Most popular Riftbound cards</h2>
-            <p className="mt-0.5 text-xs text-slate-500">
-              The most-searched cards right now — compare {storeCount} local {storeWord} for every one to find the best price.
-            </p>
-          </div>
-          <Link href="/browse" className="btn-ghost text-xs shrink-0">View all →</Link>
-        </div>
-        <Reveal stagger className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-2">
-          {popularCards.map((c) => (
-            <div key={c.id} className="w-36 shrink-0 sm:w-44">
-              <CardTile card={c} />
-            </div>
-          ))}
-        </Reveal>
-      </section>
+      {/* Unified popular-cards carousel — merges what used to be two identical
+          "Most popular…" sections (Vendetta-scoped and all-time) plus adds a
+          "Biggest movers" tab, instead of a third near-duplicate section. */}
+      <PopularCardsCarousel
+        vendetta={popularVendetta}
+        allTime={popularCards}
+        movers={biggestMovers}
+        storeCount={storeCount}
+        storeWord={storeWord}
+      />
 
       {/* Recently updated prices — real cards whose price genuinely changed in the
           latest snapshot (see lib/price-history.ts's outlier-guarded diff, never
@@ -275,13 +259,11 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* Today's Top Deals — the best live opportunities across four signals
-          (premium columns reveal only the top pick). Hidden if no market has data. */}
-      {anyDeals && (
-        <Reveal>
-          <TodaysTopDeals dealsByCountry={topDealsByCountry} />
-        </Reveal>
-      )}
+      {/* How it works — orients first-time visitors to the search → compare → buy
+          mechanic. Moved after the commercial sections (deals, popular cards,
+          movers) per the reordering brief: those are the stronger differentiator
+          and shouldn't sit behind an explainer. */}
+      <HowItWorks totalCards={totalCards} />
 
       {/* Explore — sets + domains consolidated into one entry point */}
       <section>
@@ -339,6 +321,27 @@ export default async function HomePage() {
         </Reveal>
       </section>
 
+      {/* Daily Riftle teaser — moved after the commercial sections (per the
+          reordering brief, games belong after buying content, not interrupting
+          it between two card carousels). */}
+      <Reveal>
+        <Link
+          href="/riftle"
+          className="card-surface group flex items-center gap-4 p-5 transition-colors hover:border-brand-500/60 hover:bg-ink-800"
+        >
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-brand-500/15 text-brand-400">
+            <CardsIcon className="h-6 w-6" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg font-extrabold text-white">Play today&apos;s Riftle</h2>
+            <p className="mt-0.5 text-sm text-slate-400">
+              Guess the daily Riftbound card in 8 tries — a new one every day.
+            </p>
+          </div>
+          <span className="btn-primary shrink-0 text-sm">Play →</span>
+        </Link>
+      </Reveal>
+
       {/* About + FAQ — keyword-relevant content for search */}
       <section className="card-surface p-6">
         <h2 className="text-xl font-extrabold text-white">Riftbound prices in Australia, New Zealand, the US &amp; UK — all in one place</h2>
@@ -369,6 +372,11 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* Approved partners + affiliate disclosure — moved below the fold out of
+          the hero (see PartnersStrip). Still travels together as one unit, still
+          on the page, still adjacent to the actual affiliate links. */}
+      <PartnersStrip country={country} />
 
       <script
         type="application/ld+json"
