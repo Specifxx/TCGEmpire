@@ -3,7 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { COUNTRIES, DEFAULT_COUNTRY, priceField } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
-import { CHAMPIONS, championCardWhere } from "@/lib/champions";
+import { CHAMPIONS, championForCardName } from "@/lib/champions";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { breadcrumb } from "@/lib/jsonld";
 import { SITE_URL } from "@/lib/site";
@@ -27,26 +27,39 @@ export default async function ChampionsIndexPage() {
   const field = priceField(country);
   const currency = COUNTRIES[country].currency;
 
-  // One aggregate per champion. 82 small COUNT/MIN/MAX queries would be wasteful
-  // per-request, but this page is ISR-cached for 24h and revalidated on import,
-  // so it runs roughly twice a day — the same budget /decks and /sets already use.
-  // Each query is scoped to one champion's name prefixes, never a whole-table read
-  // (see the egress rules in lib/db.ts).
-  const rows = await Promise.all(
-    CHAMPIONS.map(async (c) => {
-      try {
-        const where = championCardWhere(c);
-        const [count, agg] = await Promise.all([
-          prisma.card.count({ where }),
-          prisma.card.aggregate({ where, _min: { [field]: true }, _max: { [field]: true } } as never),
-        ]);
-        const a = agg as unknown as Record<string, Record<string, number | null>>;
-        return { champ: c, count, cheapest: a._min[field], dearest: a._max[field] };
-      } catch {
-        return { champ: c, count: 0, cheapest: null, dearest: null };
+  // ONE query for the whole table, aggregated in JS — not 82 COUNT/MIN/MAX pairs.
+  // The first version of this page did exactly that (164 round trips per
+  // revalidation) which is both slow and the sort of access pattern that has
+  // already exhausted this project's Neon transfer allowance three times.
+  //
+  // The read is narrow and bounded: only cards whose name carries a comma (the
+  // "Champion, Epithet" form — ~230 of ~1,360 rows), and only two columns. That's
+  // tens of kilobytes, versus 164 round trips for the same information.
+  let rows: { champ: (typeof CHAMPIONS)[number]; count: number; cheapest: number | null; dearest: number | null }[] = [];
+  try {
+    const named = await prisma.card.findMany({
+      where: { name: { contains: "," } },
+      select: { name: true, [field]: true } as Record<string, boolean>,
+    });
+    const acc = new Map<string, { count: number; cheapest: number | null; dearest: number | null }>();
+    for (const c of named as unknown as ({ name: string } & Record<string, number | null>)[]) {
+      // Resolved through the SAME allowlist the hub pages use, so a champion's
+      // row here can't disagree with what its own page renders.
+      const champ = championForCardName(c.name);
+      if (!champ) continue;
+      const cur = acc.get(champ.slug) ?? { count: 0, cheapest: null, dearest: null };
+      cur.count += 1;
+      const p = c[field];
+      if (p != null) {
+        if (cur.cheapest == null || p < cur.cheapest) cur.cheapest = p;
+        if (cur.dearest == null || p > cur.dearest) cur.dearest = p;
       }
-    })
-  );
+      acc.set(champ.slug, cur);
+    }
+    rows = CHAMPIONS.map((c) => ({ champ: c, ...(acc.get(c.slug) ?? { count: 0, cheapest: null, dearest: null }) }));
+  } catch (e) {
+    console.error("champions index: card query failed, rendering the empty state:", e);
+  }
   // Champions with no cards are omitted entirely rather than rendered as an empty
   // row — a link to a hub that would 404 is worse than no link.
   const live = rows.filter((r) => r.count > 0);
