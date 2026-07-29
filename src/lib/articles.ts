@@ -475,7 +475,7 @@ Set your country, **[open the card database](/browse)**, find your card, and cli
 
 ## Buying in a specific market?
 
-Deeper dives per region — real store counts, presale links and payment tips: **[Australia](/blog/buy-riftbound-cards-australia)** · **[United States](/blog/buy-riftbound-cards-us)** · **[United Kingdom](/blog/buy-riftbound-cards-uk)**. Just want the cheapest single right now? **[See where to buy singles](/blog/where-to-buy-riftbound-singles)**.`,
+Deeper dives per region — real store counts, presale links and payment tips: **[Australia](/blog/buy-riftbound-cards-australia)** · **[New Zealand](/blog/buy-riftbound-cards-nz)** · **[United States](/blog/buy-riftbound-cards-us)** · **[United Kingdom](/blog/buy-riftbound-cards-uk)**. Just want the cheapest single right now? **[See where to buy singles](/blog/where-to-buy-riftbound-singles)**.`,
   },
   {
     slug: "cheapest-riftbound-booster-boxes",
@@ -2438,6 +2438,46 @@ Run an Aussie store selling Riftbound? **[Get listed free](/stores/suggest)** �
 Buying from overseas, or curious about other markets? See **[the US](/blog/buy-riftbound-cards-us)**, **[the UK](/blog/buy-riftbound-cards-uk)**, or the **[full multi-market guide](/guides/where-to-buy-riftbound-cards)**.`,
   },
   {
+    slug: "buy-riftbound-cards-nz",
+    category: "blog",
+    title: "Riftbound Card Prices NZ — Compare 10 NZ Stores",
+    excerpt:
+      "Compare Riftbound card prices across New Zealand stores — live NZD prices at 10 NZ retailers, ranked by total delivered cost. Free, updated daily.",
+    author: "RiftCompare",
+    date: "2026-07-29",
+    updated: "2026-07-29",
+    readMins: 4,
+    tags: ["new zealand", "buying guide", "price comparison", "riftbound singles", "nzd"],
+    shop: [
+      { label: "Riftbound singles on eBay", query: "Riftbound singles" },
+      { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
+    ],
+    body: `Looking to **buy Riftbound cards in New Zealand** without overpaying? NZ has a smaller Riftbound scene than Australia, which makes price comparison matter even more — fewer stockists means less natural price competition, so the gap between the cheapest and most expensive NZ store for the same card is often bigger, not smaller.
+
+## Why New Zealanders use RiftCompare
+
+- **Every NZ store in one search.** We track live NZD prices at Card Masters, TCG Collector NZ, Card Merchant NZ, Iron Knight Gaming, Calico Keep, Card Bot NZ, Gaming DNA, Bea Games, Shuffle n Cut Games and Game Roost ([full list](/stores/tracked)).
+- **eBay Australia ships to NZ.** New Zealand has no eBay marketplace of its own, so wherever a card's NZ store price runs high, we also surface eBay AU listings as a real alternative — converted and ranked alongside the local stores, not hidden in a separate tab.
+- **Ranked by what you actually pay.** Every comparison ranks stores by **total delivered cost** — price plus postage, with free-shipping thresholds factored in automatically.
+- **Prices refresh daily** — [price history charts](/movers) on every card show whether you're buying a spike or a dip.
+- **Whole-deck pricing.** The [deck pricer](/deck) takes a full 40-card list and works out the cheapest way to buy it across every store, consolidating orders to dodge multiple postage charges.
+- **100% free.** No account needed to compare.
+
+## How to find the cheapest Riftbound card prices in NZ
+
+1. **[Search the database](/browse)** — every card shows its lowest live NZD price.
+2. **Open the card** for the full store-by-store table, in-stock and ranked by delivered cost, including eBay AU.
+3. **Click through and buy** — we link straight to the exact listing at the store.
+
+## Vendetta is coming — July 31
+
+**[Riftbound: Vendetta](/sets/vendetta)** releases 31 July 2026, and week-one prices always move fast. Every revealed card is already browsable, the [chase cards are mapped tier by tier](/blog/riftbound-vendetta-chase-cards-so-far), and launch-day prices land here compared across every store above. Set a [price watch](/browse) now and you're ready the moment singles go live.
+
+Run an NZ store selling Riftbound? **[Get listed free](/stores/suggest)** — more visibility, more customers. Everyone else: start at the **[card database](/browse)** and pay less for your next pickup.
+
+Buying from overseas, or curious about other markets? See **[Australia](/blog/buy-riftbound-cards-australia)**, **[the US](/blog/buy-riftbound-cards-us)**, **[the UK](/blog/buy-riftbound-cards-uk)**, or the **[full multi-market guide](/guides/where-to-buy-riftbound-cards)**.`,
+  },
+  {
     slug: "buy-riftbound-cards-us",
     category: "blog",
     title: "Riftbound Card Prices USA — Stores, TCGplayer & eBay",
@@ -2474,7 +2514,7 @@ Buying from overseas, or curious about other markets? See **[the US](/blog/buy-r
 
 Run a US store selling Riftbound? **[Get listed free](/stores/suggest)**. Everyone else: start at the **[card database](/browse)** and stop paying the first price you see.
 
-Shopping from **[Australia](/blog/buy-riftbound-cards-australia)** or **[the UK](/blog/buy-riftbound-cards-uk)**? We've got a dedicated breakdown for your market too — or see the **[full multi-market guide](/guides/where-to-buy-riftbound-cards)**.`,
+Shopping from **[Australia](/blog/buy-riftbound-cards-australia)**, **[New Zealand](/blog/buy-riftbound-cards-nz)** or **[the UK](/blog/buy-riftbound-cards-uk)**? We've got a dedicated breakdown for your market too — or see the **[full multi-market guide](/guides/where-to-buy-riftbound-cards)**.`,
   },
   {
     slug: "buy-riftbound-cards-uk",
@@ -2513,7 +2553,7 @@ Shopping from **[Australia](/blog/buy-riftbound-cards-australia)** or **[the UK]
 
 Run a UK store selling Riftbound? **[Get listed free](/stores/suggest)** — free listing, more customers. Everyone else: start at the **[card database](/browse)** and keep more of your budget for the cards themselves.
 
-Shopping from **[Australia](/blog/buy-riftbound-cards-australia)** or **[the US](/blog/buy-riftbound-cards-us)**? We've got a dedicated breakdown for your market too — or see the **[full multi-market guide](/guides/where-to-buy-riftbound-cards)**.`,
+Shopping from **[Australia](/blog/buy-riftbound-cards-australia)**, **[New Zealand](/blog/buy-riftbound-cards-nz)** or **[the US](/blog/buy-riftbound-cards-us)**? We've got a dedicated breakdown for your market too — or see the **[full multi-market guide](/guides/where-to-buy-riftbound-cards)**.`,
   },
   {
     slug: "every-riftbound-vendetta-card-revealed",
@@ -2603,6 +2643,7 @@ RiftCompare compares live singles prices across a wide range of local stores plu
 
 - **[Buy Riftbound singles in the US](/blog/buy-riftbound-cards-us)** — TCGplayer, eBay and 19 independents compared.
 - **[Buy Riftbound singles in Australia](/blog/buy-riftbound-cards-australia)** — 19 AU stores, ranked by delivered cost.
+- **[Buy Riftbound singles in New Zealand](/blog/buy-riftbound-cards-nz)** — 10 NZ stores plus eBay AU (which ships to NZ).
 - **[Buy Riftbound singles in the UK](/blog/buy-riftbound-cards-uk)** — 14 UK stores plus eBay UK.
 - **[Buy Riftbound singles in Singapore](/blog/riftbound-price-comparison-singapore)** — local SGD prices across Singapore stores.
 
@@ -2617,7 +2658,7 @@ RiftCompare compares live singles prices across a wide range of local stores plu
 
 Browse **[every Riftbound single](/singles)**, jump to a set — **[Origins](/sets/origins)**, **[Spirit Forged](/sets/spiritforged)**, **[Unleashed](/sets/unleashed)** or the new **[Vendetta](/sets/vendetta)** — or go straight to the **[cheapest cards right now](/browse?priced=1&sort=price_asc)**. Every price is compared across every store, updated daily, and completely free.
 
-Want the store-by-store breakdown for your market? See **[Australia](/blog/buy-riftbound-cards-australia)**, **[the US](/blog/buy-riftbound-cards-us)**, **[the UK](/blog/buy-riftbound-cards-uk)**, or the **[general buying guide](/guides/where-to-buy-riftbound-cards)**.`,
+Want the store-by-store breakdown for your market? See **[Australia](/blog/buy-riftbound-cards-australia)**, **[New Zealand](/blog/buy-riftbound-cards-nz)**, **[the US](/blog/buy-riftbound-cards-us)**, **[the UK](/blog/buy-riftbound-cards-uk)**, or the **[general buying guide](/guides/where-to-buy-riftbound-cards)**.`,
   },
   {
     slug: "how-to-buy-on-riftcompare-marketplace",

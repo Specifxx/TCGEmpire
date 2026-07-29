@@ -193,6 +193,7 @@ export default async function SinglesPage() {
           New to buying singles? Read the market guides:{" "}
           <Link href="/blog/buy-riftbound-cards-us" className="text-brand-400 hover:underline">US</Link>,{" "}
           <Link href="/blog/buy-riftbound-cards-australia" className="text-brand-400 hover:underline">Australia</Link>,{" "}
+          <Link href="/blog/buy-riftbound-cards-nz" className="text-brand-400 hover:underline">New Zealand</Link>,{" "}
           <Link href="/blog/buy-riftbound-cards-uk" className="text-brand-400 hover:underline">UK</Link> and{" "}
           <Link href="/blog/riftbound-price-comparison-singapore" className="text-brand-400 hover:underline">Singapore</Link>.
         </p>
