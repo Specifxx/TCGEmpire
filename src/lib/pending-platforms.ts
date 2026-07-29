@@ -1,6 +1,22 @@
 // Research artifact, NOT wired into scraping — nothing in this file is imported
-// by price-import.ts, sealed-import.ts, or retailers.ts. Do not add these to
-// RETAILERS: they are NOT Shopify, so discoverRiftboundCollections()/
+// by price-import.ts, sealed-import.ts, or retailers.ts.
+//
+// DECISION (2026-07-29): CrystalCommerce's own platform Terms of Service
+// restricts "unauthorized data access, scraping, and sharing" for anyone using
+// their Services — ambiguous whether that reaches third parties reading a
+// public storefront rather than the merchant-facing platform itself, but a
+// real caution flag with no clean per-store resolution either way (unlike
+// Shopify's products.json, which has a long-established, widely-practiced
+// norm behind it — the same norm every other store in RETAILERS relies on).
+// Given that ambiguity, explicitly decided to hold the strict line: nothing
+// below gets scraped or added as a live store until someone gets a clean,
+// confirmed answer for that specific store (its own ToS/robots.txt, or
+// explicit permission) — not "not clearly prohibited," but affirmatively
+// confirmed. This was a deliberate choice, not an oversight — don't read the
+// absence of these stores from RETAILERS as unfinished work to pick back up
+// without that confirmation first.
+//
+// Do not add these to RETAILERS: they are NOT Shopify, so discoverRiftboundCollections()/
 // fetchCollection() (which only know how to build /collections/<handle>/
 // products.json URLs) would silently find nothing — not "blocked", just the
 // wrong endpoint shape entirely. That's a materially different situation from
