@@ -51,10 +51,11 @@ export async function getCheapestCards(limit = 12, country: Country = "AU"): Pro
 
 // "Most valuable cards" — the highest-priced Riftbound singles in the visitor's
 // market. Powers the value-checker lander's live proof block ("what's worth the
-// most right now"). Priced-only so every tile shows a real figure.
-export async function getValuableCards(limit = 12, country: Country = "AU"): Promise<CardTileData[]> {
+// most right now"). Priced-only so every tile shows a real figure. Optional
+// setCode scopes it to one set (e.g. Vendetta's "chase cards" on the homepage).
+export async function getValuableCards(limit = 12, country: Country = "AU", setCode?: string): Promise<CardTileData[]> {
   const cards = (await prisma.card.findMany({
-    where: buildCardWhere({ priced: "1" }, country),
+    where: buildCardWhere({ set: setCode, priced: "1" }, country),
     orderBy: buildCardOrderBy("price_desc", country),
     take: limit,
     select: cardTileSelect(country),

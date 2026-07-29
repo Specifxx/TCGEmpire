@@ -21,7 +21,20 @@ type SealedResult = {
 
 // Search with a live preview dropdown (debounced + abortable so typing stays
 // snappy). Submitting still does a real navigation to the results page.
-export function SearchBar() {
+//
+// `variant="hero"` is the same component, just sized up for the homepage hero
+// (wider, larger type/touch target) with the hero's own placeholder copy —
+// there's exactly one search implementation, wired once, reused in both spots.
+// `autoFocusDesktop` focuses the input on mount, but ONLY above the `lg`
+// breakpoint — never on mobile, where a stolen-focus keyboard pop-up on load is
+// just annoying and shifts the layout before the visitor has scrolled to it.
+export function SearchBar({
+  variant = "nav",
+  autoFocusDesktop = false,
+}: {
+  variant?: "nav" | "hero";
+  autoFocusDesktop?: boolean;
+}) {
   const router = useRouter();
   const params = useSearchParams();
   const { open: openQuickView } = useQuickView();
@@ -32,7 +45,17 @@ export function SearchBar() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    if (autoFocusDesktop && window.matchMedia("(min-width: 1024px)").matches) {
+      inputRef.current?.focus();
+    }
+    // Mount-only: re-focusing on every re-render would steal focus back from
+    // whatever the visitor moved to next.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Debounced fetch of preview results.
   useEffect(() => {
@@ -79,12 +102,15 @@ export function SearchBar() {
   }
 
   const showDropdown = open && value.trim().length >= 2;
+  const isHero = variant === "hero";
 
   return (
-    <div ref={boxRef} className="relative max-w-xl">
+    <div ref={boxRef} className={`relative ${isHero ? "mx-auto w-full max-w-2xl" : "max-w-xl"}`}>
       <form onSubmit={submit}>
         <svg
-          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"
+          className={`pointer-events-none absolute top-1/2 -translate-y-1/2 text-slate-500 ${
+            isHero ? "left-4 h-5 w-5" : "left-3 h-4 w-4"
+          }`}
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -94,14 +120,15 @@ export function SearchBar() {
           <path d="m21 21-4.3-4.3" />
         </svg>
         <input
+          ref={inputRef}
           value={value}
           onChange={(e) => {
             setValue(e.target.value);
             setOpen(true);
           }}
           onFocus={() => setOpen(true)}
-          placeholder="Search cards, champions, sets…"
-          className="input pl-9"
+          placeholder={isHero ? "Search any Riftbound card…" : "Search cards, champions, sets…"}
+          className={isHero ? "input py-3.5 pl-11 text-base sm:text-lg" : "input pl-9"}
           aria-label="Search cards"
           autoComplete="off"
           enterKeyHint="search"

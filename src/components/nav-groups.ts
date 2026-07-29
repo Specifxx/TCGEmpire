@@ -93,3 +93,30 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
 ];
+
+// The footer's own grouping — 4 columns instead of NAV_GROUPS' 6-7. Same links,
+// same hrefs (every one still reachable, still counted for internal linking),
+// just re-bucketed by theme so the footer doesn't need a column per nav group.
+// Built FROM NAV_GROUPS (not duplicated) so editing a link once still only
+// means editing it once. NAV_GROUPS itself is untouched — the phone sheet and
+// desktop mega-menu keep their finer-grained grouping.
+const byTitle = Object.fromEntries(NAV_GROUPS.map((g) => [g.title, g.links]));
+
+export const FOOTER_GROUPS: NavGroup[] = [
+  {
+    title: "Shop",
+    links: [...(byTitle["Prices"] ?? []), ...(byTitle["Marketplace"] ?? [])],
+  },
+  {
+    title: "Deals & value",
+    links: byTitle["Deals & value"] ?? [],
+  },
+  {
+    title: "Decks & collection",
+    links: [...(byTitle["Decks"] ?? []), ...(byTitle["Your collection"] ?? [])],
+  },
+  {
+    title: "Learn & play",
+    links: [...(byTitle["Games"] ?? []), ...(byTitle["Community & learn"] ?? [])],
+  },
+];

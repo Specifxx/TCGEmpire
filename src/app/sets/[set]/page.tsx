@@ -59,6 +59,18 @@ export async function generateMetadata({
   // A filtered/searched view (like /browse's ?q=) is a permutation of the same
   // content, not a distinct page — noindex it and point Google at the clean set page.
   const filtered = !isCleanPagination(searchParams);
+
+  // Clean pagination (?page=N and nothing else) self-canonicalises to its own page —
+  // per Google's guidance a paginated page is not a duplicate of page 1, and page 2+
+  // shows an entirely different slice of the set's cards. Mirrors /browse's logic.
+  // `cardCount` already equals the clean-pagination total (isCleanPagination means no
+  // filter param survived, so buildCardWhere contributes nothing beyond setCode).
+  // Out-of-range pages fall back to the clean canonical, same as before.
+  const page = parsePageNum(searchParams.page);
+  const totalPages = Math.max(1, Math.ceil(cardCount / parsePageSize(searchParams.size)));
+  const selfCanonical = page > 1 && !filtered && page <= totalPages;
+  const canonicalPath = selfCanonical ? `/sets/${set.slug}?page=${page}` : `/sets/${set.slug}`;
+
   return {
     title: { absolute: `${title} | RiftCompare` },
     description,
@@ -71,12 +83,12 @@ export async function generateMetadata({
       `Riftbound ${set.name} value`,
     ],
     alternates: {
-      canonical: `/sets/${set.slug}`,
+      canonical: canonicalPath,
       // Single cookie-switched URL is the global default for all four markets.
-      languages: { "x-default": `${SITE_URL}/sets/${set.slug}` },
+      languages: { "x-default": `${SITE_URL}${canonicalPath}` },
     },
     ...(cardCount === 0 || filtered ? { robots: { index: false, follow: true } } : {}),
-    openGraph: { title: `${title} | RiftCompare`, description, url: `${SITE_URL}/sets/${set.slug}` },
+    openGraph: { title: `${title} | RiftCompare`, description, url: `${SITE_URL}${canonicalPath}` },
   };
 }
 
@@ -145,11 +157,14 @@ export default async function SetPage({
       { "@type": "ListItem", position: 3, name: set.name, item: `${SITE_URL}/sets/${set.slug}` },
     ],
   };
+  // Matches the page's canonical: clean paginated views self-canonicalise, so
+  // their structured data must not contradict that with a bare /sets/<slug> url.
+  const cleanPage = isCleanPagination(searchParams) && page > 1 && page <= totalPages;
   const collection = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     name: `Riftbound ${set.name} Card Prices & List`,
-    url: `${SITE_URL}/sets/${set.slug}`,
+    url: cleanPage ? `${SITE_URL}/sets/${set.slug}?page=${page}` : `${SITE_URL}/sets/${set.slug}`,
     description: `Live prices for every Riftbound ${set.name} card.`,
     isPartOf: { "@type": "WebSite", name: "RiftCompare", url: SITE_URL },
     // No mainEntity ItemList: the visible card grid already links every card as a

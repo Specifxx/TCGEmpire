@@ -13,9 +13,10 @@ export interface MarketStat {
   stores: number;
 }
 
-// The hero stat row — reactive to the country switcher. Reads the active market from
-// CountryProvider and shows that market's priced / in-stock / store counts + a
-// market-labelled "US stores" tile. CountUp re-animates when the value changes.
+// The hero stat line — reactive to the country switcher. Reads the active market
+// from CountryProvider and shows that market's priced / in-stock / store counts.
+// Collapsed to a single thin text line (was 4 bordered boxes) so the hero reads
+// as "search, then a fact, then go" rather than a dashboard.
 export function HeroStats({
   totalCards,
   statsByCountry,
@@ -28,22 +29,9 @@ export function HeroStats({
   const storeWord = s.stores === 1 ? "store" : "stores";
 
   return (
-    <div className="animate-fade-in [animation-delay:420ms] mx-auto mt-8 grid max-w-2xl grid-cols-2 gap-3 sm:grid-cols-4">
-      <Stat value={totalCards} label="cards" />
-      <Stat value={s.priced} label="priced" />
-      <Stat value={s.inStock} label="in-stock listings" />
-      <Stat value={s.stores} label={`${country} ${storeWord}`} />
-    </div>
-  );
-}
-
-function Stat({ value, label }: { value: number; label: string }) {
-  return (
-    <div className="rounded-lg border border-ink-800 bg-ink-900 p-3 transition-colors duration-200 hover:border-brand-500/40 hover:bg-ink-800">
-      <div className="num text-xl font-extrabold text-accent sm:text-2xl">
-        <CountUp value={value} />
-      </div>
-      <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
-    </div>
+    <p className="animate-fade-in [animation-delay:420ms] num mt-3 text-center text-xs text-slate-500 sm:text-sm">
+      <CountUp value={totalCards} /> cards · <CountUp value={s.priced} /> priced ·{" "}
+      <CountUp value={s.inStock} /> in-stock listings · <CountUp value={s.stores} /> {country} {storeWord}
+    </p>
   );
 }

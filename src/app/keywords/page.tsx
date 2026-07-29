@@ -15,11 +15,11 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: { absolute: "Riftbound Keywords & Game Actions Glossary | RiftCompare" },
   description:
-    "Every Riftbound keyword and game action, in one place — Empower, Flow, Burn and more, each with a full rules breakdown, worked examples and live card prices.",
+    "Every Riftbound keyword and game action, in one place — Empower, Flow, Burn and more, each with a quick rules reference, live card prices, and a link to the full guide.",
   alternates: { canonical: "/keywords" },
   openGraph: {
     title: "Riftbound Keywords Glossary | RiftCompare",
-    description: "Every Riftbound keyword and game action in one place, with in-depth rules pages for the mechanics people search most.",
+    description: "Every Riftbound keyword and game action in one place, with a quick rules reference for the mechanics people search most.",
     url: `${SITE_URL}/keywords`,
   },
 };
@@ -55,10 +55,10 @@ export default function KeywordsIndexPage() {
         </nav>
         <h1 className="text-2xl font-extrabold text-white sm:text-3xl">Riftbound keywords &amp; game actions glossary</h1>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
-          Every Riftbound keyword and game action in one place. The mechanics below have a full rules
-          breakdown — a direct answer, how it works step by step, edge cases, and every card printed
-          with it, live-priced. The rest are listed here as a reference index while we source verified
-          rules text for them.
+          Every Riftbound keyword and game action in one place. The mechanics below have a quick rules
+          reference — a direct answer plus every card printed with it, live-priced — and link out to a
+          full step-by-step guide for the deckbuilding detail. The rest are listed here as a reference
+          index while we source verified rules text for them.
         </p>
       </div>
 
