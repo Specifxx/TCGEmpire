@@ -12,6 +12,7 @@ import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
 import { affiliateUrl, ebayAffiliateUrl, outboundRel } from "@/lib/affiliate";
 import { OutboundLink } from "./OutboundLink";
 import { EbayAdCarouselLive, type AdListing } from "./EbayAdCarouselLive";
+import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { buyButtonClass, buyButtonLabel } from "./CardMarketSection";
 import { useCountry } from "./CountryProvider";
 import { PriceChart } from "./PriceChart";
@@ -264,14 +265,17 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                   {/* Never a dead end: a zero-stock modal still offers the
                       affiliate eBay search (eBay AU for NZ, which has no eBay). */}
                   {ebaySearchUrl && ebayMkt && (
-                    <a
-                      href={ebaySearchUrl}
-                      target="_blank"
-                      rel={outboundRel(ebaySearchUrl)}
-                      className="btn-primary mt-3 inline-flex text-xs"
-                    >
-                      Search {ebayMkt.label} →
-                    </a>
+                    <>
+                      <a
+                        href={ebaySearchUrl}
+                        target="_blank"
+                        rel={outboundRel(ebaySearchUrl)}
+                        className="btn-primary mt-3 inline-flex text-xs"
+                      >
+                        Search {ebayMkt.label} →
+                      </a>
+                      <AffiliateDisclosure partner="ebay" tight />
+                    </>
                   )}
                 </div>
               ) : (
@@ -322,6 +326,10 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                   See all {inStock.length} stores →
                 </a>
               )}
+              {/* The comparison rows' buy buttons are affiliate-tagged wherever the
+                  retailer is a partner (eBay, TCGplayer) — disclose right here,
+                  under the list, not only in the page footer. */}
+              {prices && inStock.length > 0 && <AffiliateDisclosure partner="both" tight />}
             </div>
 
             {/* eBay quota fallback — only when we couldn't reach this card's eBay
@@ -339,6 +347,7 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                 <span className="shrink-0 text-xs font-semibold text-amber-300">Search {ebayMkt.label} →</span>
               </a>
             )}
+            {ebaySearchUrl && ebayMkt && <AffiliateDisclosure partner="ebay" tight />}
 
             {/* Price history — free for everyone, right in the preview (viewer's
                 market). With <2 points (new markets still accumulating) PriceChart

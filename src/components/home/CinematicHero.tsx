@@ -5,6 +5,7 @@ import { OutboundLink } from "@/components/OutboundLink";
 import { CommandLauncherButton } from "@/components/CommandLauncher";
 import { affiliateUrl, ebayAffiliateUrl } from "@/lib/affiliate";
 import { HeroStats, type MarketStat } from "./HeroStats";
+import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
 import type { Country } from "@/lib/country";
 import { MARKETPLACE_NAV_VISIBLE } from "@/components/nav-groups";
 import { CartIcon } from "@/components/icons/HomeIcons";
@@ -89,6 +90,10 @@ export function CinematicHero({
             TCG<span className="text-sky-400">player</span>
           </OutboundLink>
         </div>
+        {/* Both partner marks above are affiliate-tagged links, so the strip
+            needs its own disclosure — "Approved partners" alone doesn't disclose
+            an economic relationship. */}
+        <AffiliateDisclosure partner="both" tight className="mx-auto max-w-2xl text-center" />
       </div>
     </ParallaxShell>
   );

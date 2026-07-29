@@ -8,6 +8,7 @@ import { TcgplayerAd } from "./TcgplayerAd";
 import { EbayAd } from "./EbayAd";
 import { timeAgo } from "@/lib/format";
 import { computeMarket, type MarketRow } from "@/lib/market-rows";
+import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { outboundRel } from "@/lib/affiliate";
 
 // The market-dependent half of the card page. The page itself is ISR-cached with
@@ -250,10 +251,17 @@ export function CardPriceComparison({
           </div>
         )}
 
-        <p className="border-t border-ink-800 p-3 text-center text-[11px] text-slate-600">
-          Prices are collected from public store listings and may change. RiftCompare
-          may earn a commission on some outbound links.
-        </p>
+        {/* Disclosure sits INSIDE the comparison panel, directly under the buy
+            buttons it describes — not in the page footer. Wording names both
+            partners explicitly and uses slate-400 for legibility (the old
+            slate-600 "may earn a commission on some links" line was both vague
+            and below contrast guidance). */}
+        <div className="border-t border-ink-800 p-3 text-center">
+          <p className="text-[11px] text-slate-500">
+            Prices are collected from public store listings and may change.
+          </p>
+          <AffiliateDisclosure partner="both" tight />
+        </div>
       </div>
 
       {/* TCGplayer market price (reference, currency-converted) — rendered below the

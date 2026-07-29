@@ -5,6 +5,7 @@ import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { OutboundLink } from "@/components/OutboundLink";
+import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
 import { PremiumButton } from "@/components/PremiumButton";
 import { RegionToggle } from "@/components/RegionToggle";
 import { ArbitrageFilters } from "@/components/ArbitrageFilters";
@@ -157,6 +158,9 @@ export default async function ArbitragePage({
           sources, ebayKey: ebay.key, storeKeys, premium, signedIn,
         })
       )}
+      {/* Every buy/sell figure in these tables links out through an affiliate-
+          tagged store, eBay or TCGplayer URL. */}
+      <AffiliateDisclosure partner="both" className="text-center" />
     </div>
   );
 }

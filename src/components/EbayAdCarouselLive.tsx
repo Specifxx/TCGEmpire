@@ -3,6 +3,7 @@
 import { useCountry } from "./CountryProvider";
 import { OutboundLink } from "./OutboundLink";
 import { EbayBuyCta } from "./EbayBuyCta";
+import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { formatMoney } from "@/lib/format";
 
 export interface AdListing {
@@ -89,6 +90,10 @@ export function EbayAdCarouselLive({
           </OutboundLink>
         ))}
       </div>
+      {/* Directly under the listings, in BOTH the full card page and the compact
+          quick-view popup — EPN specifically flagged the popup as carrying eBay
+          affiliate links with no disclosure. */}
+      <AffiliateDisclosure partner="ebay" tight />
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { OutboundLink } from "./OutboundLink";
 import { ebayAffiliateUrl } from "@/lib/affiliate";
 import { usePremium } from "./PremiumProvider";
+import { AffiliateDisclosure } from "./AffiliateDisclosure";
 
 // eBay Partner Network banner. eBay retired its hosted display creatives, so
 // this is a FIRST-PARTY house banner that links to an affiliate-tagged eBay
@@ -83,12 +84,18 @@ export function EbayAd({
   country,
   query,
   className,
+  // Defaults ON: an affiliate banner must never render without a visible
+  // disclosure beside it (EPN Participation Requirements I.G.). Pass false ONLY
+  // where a caller renders its own adjacent disclosure covering this banner —
+  // FooterAds does that to avoid printing the same line twice under a pair.
+  disclosure = true,
 }: {
   size?: "rect" | "leaderboard" | "billboard";
   mobile?: "banner" | "rect";
   country: string;
   query?: string;
   className?: string;
+  disclosure?: boolean;
 }) {
   if (usePremium()) return null; // ad-free for Premium subscribers
   const q = query ? `Riftbound ${query}` : "Riftbound TCG cards";
@@ -98,7 +105,7 @@ export function EbayAd({
   const mid = DIMS.leaderboard;
   const mob = DIMS[mobile === "rect" ? "mobileRect" : "mobile"];
   return (
-    <div className={`flex justify-center ${className ?? ""}`}>
+    <div className={`flex flex-col items-center ${className ?? ""}`}>
       {size === "billboard" ? (
         <>
           <span className="hidden lg:inline-block"><Banner {...desk} country={country} label={label} href={href} /></span>
@@ -108,6 +115,7 @@ export function EbayAd({
         <span className="hidden sm:inline-block"><Banner {...desk} country={country} label={label} href={href} /></span>
       )}
       <span className="sm:hidden"><Banner {...mob} country={country} label={label} href={href} /></span>
+      {disclosure && <AffiliateDisclosure partner="ebay" tight className="max-w-2xl text-center" />}
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import type { SealedGroup } from "@/lib/sealed-import";
 import { OutboundLink } from "./OutboundLink";
+import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { useCountry } from "./CountryProvider";
 import { affiliateUrl, ebayAffiliateUrl } from "@/lib/affiliate";
 import { formatMoney } from "@/lib/format";
@@ -164,6 +165,9 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
                 </OutboundLink>
               </p>
             )}
+            {/* This modal carries affiliate-tagged store + eBay links exactly like
+                the singles quick-view, so it needs its own in-popup disclosure. */}
+            <AffiliateDisclosure partner="both" />
           </div>
         </div>
       </div>

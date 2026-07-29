@@ -5,6 +5,7 @@ import { useState } from "react";
 import type { ResolvedDeck, ResolvedCardData, ResolvedCard } from "@/lib/meta-decks";
 import { DomainBadge } from "./Badge";
 import { TierBadge } from "./TierBadge";
+import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { useCountry } from "./CountryProvider";
 import { COUNTRIES } from "@/lib/country";
 import { cardHref } from "@/lib/card-url";
@@ -206,10 +207,13 @@ export function DeckView({ deck, builderHref }: { deck: ResolvedDeck; builderHre
             </div>
           )}
         </div>
-        <p className="mt-3 text-center text-[11px] text-slate-600">
-          Community reference list — may change with the metagame. Each card links to its full {label}
-          {" "}price comparison. RiftCompare may earn a commission on some outbound links.
-        </p>
+        <div className="mt-3 text-center">
+          <p className="text-[11px] text-slate-500">
+            Community reference list — may change with the metagame. Each card links to its full {label}
+            {" "}price comparison.
+          </p>
+          <AffiliateDisclosure partner="both" tight />
+        </div>
       </div>
     </div>
   );

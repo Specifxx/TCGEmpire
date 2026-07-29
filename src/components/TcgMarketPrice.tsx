@@ -2,6 +2,7 @@
 
 import { useCountry } from "./CountryProvider";
 import { OutboundLink } from "./OutboundLink";
+import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { formatMoney } from "@/lib/format";
 import { convertUsdCents } from "@/lib/fx";
 
@@ -69,6 +70,7 @@ export function TcgMarketPrice({
           TCGplayer&apos;s US market price, converted to {cur} at an approximate rate. A reference value —
           TCGplayer may not ship to your country.
         </p>
+        {href && <AffiliateDisclosure partner="tcgplayer" tight />}
       </div>
       {href && (
         <OutboundLink

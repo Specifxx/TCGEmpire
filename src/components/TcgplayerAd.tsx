@@ -2,6 +2,7 @@
 
 import { OutboundLink } from "./OutboundLink";
 import { usePremium } from "./PremiumProvider";
+import { AffiliateDisclosure } from "./AffiliateDisclosure";
 
 // TCGplayer affiliate banners (approved Impact contract). First-party placements,
 // no ad network. We render our OWN evergreen creative rather than Impact's hosted
@@ -95,11 +96,15 @@ export function TcgplayerAd({
   mobile = "banner",
   country,
   className,
+  // Defaults ON — see the same note on EbayAd. An affiliate banner must never
+  // render without a visible disclosure beside it.
+  disclosure = true,
 }: {
   size?: "rect" | "leaderboard" | "billboard";
   mobile?: "banner" | "rect";
   country: string;
   className?: string;
+  disclosure?: boolean;
 }) {
   if (usePremium()) return null; // ad-free for Premium subscribers
   const dims = (v: Variant) => ({ w: ADS[v].w, h: ADS[v].h });
@@ -107,7 +112,7 @@ export function TcgplayerAd({
   const mid = dims("leaderboard");
   const mob = dims(mobile === "rect" ? "mobileRect" : "mobile");
   return (
-    <div className={`flex justify-center ${className ?? ""}`}>
+    <div className={`flex flex-col items-center ${className ?? ""}`}>
       {size === "billboard" ? (
         <>
           <span className="hidden lg:inline-block">
@@ -125,6 +130,7 @@ export function TcgplayerAd({
       <span className="sm:hidden">
         <Banner {...mob} country={country} />
       </span>
+      {disclosure && <AffiliateDisclosure partner="tcgplayer" tight className="max-w-2xl text-center" />}
     </div>
   );
 }

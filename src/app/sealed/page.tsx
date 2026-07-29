@@ -10,6 +10,7 @@ import { Reveal } from "@/components/Reveal";
 import { SealedFilters } from "@/components/SealedFilters";
 import { SealedSort } from "@/components/SealedSort";
 import { SealedTile } from "@/components/SealedTile";
+import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
 import { SITE_URL } from "@/lib/site";
 
 export const revalidate = 86400;
@@ -310,10 +311,12 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
       </section>
 
 
-      <p className="mt-6 text-center text-[11px] text-slate-600">
-        Sealed prices are collected from public store listings and may change. RiftCompare
-        may earn a commission on some outbound links.
-      </p>
+      <div className="mt-6 text-center">
+        <p className="text-[11px] text-slate-500">
+          Sealed prices are collected from public store listings and may change.
+        </p>
+        <AffiliateDisclosure partner="both" tight />
+      </div>
     </div>
   );
 }

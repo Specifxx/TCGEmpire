@@ -2,6 +2,7 @@
 
 import { useCountry } from "@/components/CountryProvider";
 import { OutboundLink } from "@/components/OutboundLink";
+import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
 import { ebayAffiliateUrl } from "@/lib/affiliate";
 import type { ShopLink } from "@/lib/articles";
 
@@ -47,10 +48,14 @@ export function ArticleShopStrip({ items }: { items: ShopLink[] }) {
           </li>
         ))}
       </ul>
-      <p className="border-t border-ink-800 px-5 py-2.5 text-[11px] leading-snug text-slate-600">
-        Live listings on your local eBay. Affiliate links — buying through them supports RiftCompare at no cost to you.
-        Always check seller ratings, especially on presales.
-      </p>
+      {/* Already carried a disclosure, but at slate-600 and without naming EPN —
+          upgraded to the shared component for consistent wording + contrast. */}
+      <div className="border-t border-ink-800 px-5 py-2.5">
+        <AffiliateDisclosure partner="ebay" tight className="mt-0" />
+        <p className="mt-1 text-[11px] leading-snug text-slate-500">
+          Live listings on your local eBay. Always check seller ratings, especially on presales.
+        </p>
+      </div>
     </section>
   );
 }

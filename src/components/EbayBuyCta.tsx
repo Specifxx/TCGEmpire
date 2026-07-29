@@ -2,6 +2,7 @@
 
 import { OutboundLink } from "./OutboundLink";
 import { ebayAffiliateUrl } from "@/lib/affiliate";
+import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { useCountry } from "./CountryProvider";
 
 // The primary singles buy-path. eBay is the one marketplace that ALWAYS has
@@ -86,6 +87,10 @@ export function EbayBuyCta({
           Shop on eBay →
         </span>
       </OutboundLink>
+      {/* Immediately beneath the CTA. This component is also the fallback the
+          eBay carousel renders when no cached listings exist, so it must carry
+          its own disclosure rather than relying on the carousel's. */}
+      <AffiliateDisclosure partner="ebay" tight />
     </div>
   );
 }

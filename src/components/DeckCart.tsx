@@ -5,6 +5,7 @@ import { type Country } from "@/lib/country";
 import { getDisplayCurrency } from "@/lib/get-country";
 import { gbpCentsToEur } from "@/lib/fx";
 import { OutboundLink } from "@/components/OutboundLink";
+import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
 
 // "Build this deck: cheapest whole cart" — the buy list. Runs the landed-cost
 // optimiser over every in-stock store listing for the deck's cards and shows
@@ -91,6 +92,10 @@ export async function DeckCart({ lines, country }: { lines: DeckCartLine[]; coun
           . <Link href="/browse" className="text-brand-400 hover:underline">Search the database</Link> for other options.
         </div>
       )}
+      {/* Every line above is an affiliate-wrapped store link (see lib/deck-basket). */}
+      <div className="border-t border-ink-800 px-4 pb-3">
+        <AffiliateDisclosure partner="both" tight />
+      </div>
     </section>
   );
 }
