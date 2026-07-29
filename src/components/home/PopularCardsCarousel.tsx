@@ -4,12 +4,16 @@ import { useState } from "react";
 import Link from "next/link";
 import { CardTile, type CardTileData } from "@/components/CardTile";
 import { Reveal } from "@/components/Reveal";
-import type { Mover } from "@/lib/price-history";
+import type { Mover, RecentUpdate } from "@/lib/price-history";
 
 // One tab's worth of content: either a plain card list (Vendetta / All-time) or
-// a list of price movers (card + the % it moved). Rendering both shapes through
-// the same tab strip is what actually merges the two old "Most popular…"
-// carousels instead of just visually pairing them.
+// a list with a per-card % delta (price movers, or the recently-updated feed).
+// Rendering all these shapes through the same tab strip is what actually merges
+// what used to be three separate homepage sections instead of just visually
+// pairing them. `deltas` only ever needs `.pct` — it deliberately isn't typed as
+// the full `Mover` (which also carries a sparkline `points` series this
+// component doesn't render), so any per-card-delta list can feed a tab, not
+// just real movers.
 type Tab = {
   key: string;
   label: string;
@@ -18,27 +22,30 @@ type Tab = {
   allHref: string;
   allLabel: string;
   cards: CardTileData[];
-  movers?: Mover[]; // when set, render the % delta caption under each tile
+  deltas?: { pct: number }[]; // when set, render the % delta caption under each tile
 };
 
-// Unifies what used to be two separate, identically-shaped homepage sections
-// ("Most popular Vendetta cards" and "Most popular Riftbound cards") into one
-// component with tabs, plus a third "Biggest movers" tab so price-movement
-// content lives here too instead of a third near-duplicate section. Every tab's
-// cards stay in the DOM at all times (only visibility toggles) — same
+// Unifies what used to be three separate, near-identically-shaped homepage
+// sections — "Most popular Vendetta cards", "Most popular Riftbound cards",
+// and the always-expanded "Recently updated prices" grid — into one compact,
+// tabbed, one-row horizontal scroll, plus a "Biggest movers" tab so
+// price-movement content lives here too instead of its own section. Every
+// tab's cards stay in the DOM at all times (only visibility toggles) — same
 // crawlability as the old always-rendered sections, and keeps the page's
-// existing "Most popular Riftbound cards" ItemList JSON-LD (built from the
-// all-time list) matching what's actually in the page.
+// existing ItemList JSON-LD blocks (built from the all-time and
+// recently-updated lists) matching what's actually in the page.
 export function PopularCardsCarousel({
   vendetta,
   allTime,
   movers,
+  recentlyUpdated,
   storeCount,
   storeWord,
 }: {
   vendetta: CardTileData[];
   allTime: CardTileData[];
   movers: Mover[];
+  recentlyUpdated: RecentUpdate[];
   storeCount: number;
   storeWord: string;
 }) {
@@ -75,7 +82,21 @@ export function PopularCardsCarousel({
             allHref: "/movers",
             allLabel: "See all movers →",
             cards: movers.map((m) => m.card),
-            movers,
+            deltas: movers,
+          },
+        ]
+      : []),
+    ...(recentlyUpdated.length > 0
+      ? [
+          {
+            key: "recent",
+            label: "Recently updated",
+            heading: "Recently updated prices",
+            description: `${recentlyUpdated.length} Riftbound cards whose price just changed — updated with every price refresh.`,
+            allHref: "/movers",
+            allLabel: "See all movers →",
+            cards: recentlyUpdated.map((u) => u.card),
+            deltas: recentlyUpdated,
           },
         ]
       : []),
@@ -113,7 +134,7 @@ export function PopularCardsCarousel({
           </div>
           <Reveal stagger className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-2">
             {t.cards.map((c, i) => {
-              const pct = t.movers?.[i]?.pct;
+              const pct = t.deltas?.[i]?.pct;
               return (
                 <div key={c.id} className="w-36 shrink-0 sm:w-44">
                   <CardTile card={c} />

@@ -3,7 +3,6 @@ import Link from "next/link";
 import { Archivo } from "next/font/google";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
-import { CardTile } from "@/components/CardTile";
 import { Reveal } from "@/components/Reveal";
 import { getPopularCards, getValuableCards } from "@/lib/cheapest-cards";
 import { DEFAULT_COUNTRY, priceField, type Country } from "@/lib/country";
@@ -164,10 +163,9 @@ export default async function HomePage() {
     // recent snapshot (see lib/price-history.ts). Single-market (the baseline),
     // same as popularCards above: it's a real internal-linking/freshness feed,
     // not a per-market data section like Top Deals, so there's no reason to
-    // serialize all five markets for client-side localisation.
-    // 60 (not the carousels' usual ~12): this section's whole point is dozens
-    // of fresh internal links for crawlers, so it stays a wide, dense grid.
-    getRecentlyUpdated(country, 60),
+    // serialize all five markets for client-side localisation. Rendered as a
+    // tab in PopularCardsCarousel (see below), not its own section.
+    getRecentlyUpdated(country, 24),
     // Biggest movers (up + down) for the unified popular-cards carousel's third
     // tab — same AU-baseline pattern as popularCards/popularVendetta.
     getPriceMovers(country, 6),
@@ -215,51 +213,21 @@ export default async function HomePage() {
       )}
 
       {/* Unified popular-cards carousel — merges what used to be two identical
-          "Most popular…" sections (Vendetta-scoped and all-time) plus adds a
-          "Biggest movers" tab, instead of a third near-duplicate section. */}
+          "Most popular…" sections (Vendetta-scoped and all-time), a "Biggest
+          movers" tab, AND (per your request) "Recently updated prices" — which
+          used to be its own always-expanded section — into one compact, tabbed,
+          one-row horizontal scroll. Real cards whose price genuinely changed in
+          the latest snapshot (see lib/price-history.ts's outlier-guarded diff,
+          never fabricated); the tab simply doesn't appear until there's at least
+          one real change to show. */}
       <PopularCardsCarousel
         vendetta={popularVendetta}
         allTime={popularCards}
         movers={biggestMovers}
+        recentlyUpdated={recentlyUpdated}
         storeCount={storeCount}
         storeWord={storeWord}
       />
-
-      {/* Recently updated prices — real cards whose price genuinely changed in the
-          latest snapshot (see lib/price-history.ts's outlier-guarded diff, never
-          fabricated). Dense, server-rendered grid rather than a horizontal-scroll
-          teaser: this section exists to hand crawlers dozens of fresh internal
-          links every day and give a returning visitor something new to see —
-          TCG Snoop's "Recently Snooped" pattern. Hidden entirely until at least
-          two days of history exist to diff against. */}
-      {recentlyUpdated.length > 0 && (
-        <section>
-          <div className="mb-4 flex items-end justify-between gap-3">
-            <div>
-              <h2 className="text-xl font-extrabold text-white">Recently updated prices</h2>
-              <p className="mt-0.5 text-xs text-slate-500">
-                {recentlyUpdated.length} Riftbound cards whose price just changed — updated with every price refresh.
-              </p>
-            </div>
-            <Link href="/movers" className="btn-ghost text-xs shrink-0">See all movers →</Link>
-          </div>
-          <Reveal stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5 xl:grid-cols-6">
-            {recentlyUpdated.map((u) => (
-              // A caption below the tile rather than an overlay ON it: CardTile's
-              // image height scales with tile width (aspect-[5/7]), which varies
-              // across this grid's breakpoints (2 cols mobile → 6 desktop), so a
-              // fixed-offset absolute badge would drift off the image/info-panel
-              // boundary at some column counts. A caption is breakpoint-proof.
-              <div key={u.card.id}>
-                <CardTile card={u.card} />
-                <p className={`num mt-1 text-center text-xs font-bold ${u.pct > 0 ? "text-up" : "text-down"}`}>
-                  {u.pct > 0 ? "▲" : "▼"} {Math.abs(u.pct)}%
-                </p>
-              </div>
-            ))}
-          </Reveal>
-        </section>
-      )}
 
       {/* How it works — orients first-time visitors to the search → compare → buy
           mechanic. Moved after the commercial sections (deals, popular cards,
