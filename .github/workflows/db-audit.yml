@@ -34,5 +34,5 @@ jobs:
       - run: npx prisma generate
       - name: Run audit
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
         run: npx tsx scripts/db-audit.ts ${{ inputs.fix && '--fix' || '' }}

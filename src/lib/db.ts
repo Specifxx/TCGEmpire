@@ -25,16 +25,23 @@ import { PrismaClient } from "@prisma/client";
 const BIG_RESULT_ROWS = 500; // only size-check results at least this long (CPU)
 const BIG_RESULT_BYTES = 1_000_000;
 
-// DATABASE_URL_2 is the new operational Neon project — the original
-// (DATABASE_URL) exhausted its free-tier monthly network-transfer allowance.
+// RM3 is the CURRENT operational Neon project (cut over 2026-07-29, after
+// DATABASE_URL_2 exhausted its free-tier monthly network-transfer allowance —
+// itself the replacement for the original DATABASE_URL, which did the same).
 // Prefer it the moment it's set (in both Vercel and GitHub Actions), same
-// pattern as db-history.ts's HISTORY_DATABASE_URL fallback chain. Unlike that
-// analytics-only split, this IS the main operational database (users,
-// sessions, orders), so this is a real cutover, not a long-term dual-source
-// setup — once DATABASE_URL itself is repointed at the new project (or the
-// old one's allowance resets), this fallback becomes a no-op and can be
-// simplified away.
-const OPERATIONAL_URL = process.env.DATABASE_URL_2 || process.env.DATABASE_URL;
+// pattern as db-history.ts's fallback chain.
+//
+// The older vars are kept ONLY as fallbacks so a deploy can't hard-fail if RM3
+// is momentarily missing from one environment; treat them as dead/read-only,
+// never the primary target. Once RM3 is confirmed live everywhere and the data
+// is verified across (see the migrate-main-db task in maintenance.yml), they
+// can be deleted and this collapsed back to a single var.
+//
+// NOTE the ordering rule for any future rotation: the NEWEST project goes
+// first. Getting this backwards silently keeps the site on the exhausted
+// database while looking correct.
+const OPERATIONAL_URL =
+  process.env.RM3 || process.env.DATABASE_URL_2 || process.env.DATABASE_URL;
 
 function makeClient() {
   const base = new PrismaClient({
