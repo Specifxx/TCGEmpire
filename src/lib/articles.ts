@@ -2358,9 +2358,9 @@ Track the countdown on the **[live release countdown](/vendetta-countdown)**, se
   {
     slug: "riftbound-price-comparison-singapore",
     category: "blog",
-    title: "Riftbound Price Comparison Is Now Live in Singapore — Compare SGD Prices Across 11 Stores",
+    title: "Riftbound Card Prices Singapore — Compare 11 SG Stores",
     excerpt:
-      "RiftCompare now covers Singapore: compare live Riftbound: League of Legends TCG card prices in SGD across 11 Singapore stores plus eBay Singapore and TCGplayer — singles, sealed and the new Vendetta set, updated daily.",
+      "Compare Riftbound card prices across Singapore stores, eBay SG and TCGplayer — live SGD prices ranked by total delivered cost. Free, updated daily.",
     author: "RiftCompare",
     date: "2026-07-10",
     updated: "2026-07-10",
@@ -2401,9 +2401,9 @@ Happy hunting — and pay less for the cards you want. Start at the **[card data
   {
     slug: "buy-riftbound-cards-australia",
     category: "blog",
-    title: "Where to Buy Riftbound Cards in Australia — Compare AUD Prices Across 19 Stores",
+    title: "Riftbound Card Prices Australia — Compare 19 AU Stores",
     excerpt:
-      "The smartest way to buy Riftbound: League of Legends TCG cards in Australia: compare live AUD prices across 19 Australian stores plus eBay AU, ranked by delivered cost including postage. Free, updated daily.",
+      "Compare Riftbound card prices across Australian stores — live AUD prices at 19 AU retailers plus eBay AU, ranked by total delivered cost. Free, updated daily.",
     author: "RiftCompare",
     date: "2026-07-10",
     updated: "2026-07-10",
@@ -2440,9 +2440,9 @@ Buying from overseas, or curious about other markets? See **[the US](/blog/buy-r
   {
     slug: "buy-riftbound-cards-us",
     category: "blog",
-    title: "Where to Buy Riftbound Cards in the US — Compare Prices Across 19 Stores, TCGplayer & eBay",
+    title: "Riftbound Card Prices USA — Stores, TCGplayer & eBay",
     excerpt:
-      "The fastest way to buy Riftbound: League of Legends TCG cards in the United States: compare live USD prices across 19 US stores, TCGplayer and eBay in one search — singles and sealed, updated daily, free.",
+      "Compare Riftbound card prices across US stores, TCGplayer and eBay — live USD prices ranked by total delivered cost. Free, updated daily.",
     author: "RiftCompare",
     date: "2026-07-10",
     updated: "2026-07-10",
@@ -2479,9 +2479,9 @@ Shopping from **[Australia](/blog/buy-riftbound-cards-australia)** or **[the UK]
   {
     slug: "buy-riftbound-cards-uk",
     category: "blog",
-    title: "Where to Buy Riftbound Cards in the UK — Compare GBP Prices Across 14 Stores & eBay",
+    title: "Riftbound Card Prices UK — Compare 14 Stores & eBay",
     excerpt:
-      "The best way to buy Riftbound: League of Legends TCG cards in the UK: compare live GBP prices across 14 UK stores plus eBay UK, ranked by delivered cost. Singles, sealed and Vendetta presales — free, updated daily.",
+      "Compare Riftbound card prices across UK stores and eBay UK — live GBP prices ranked by total delivered cost. Free, updated daily.",
     author: "RiftCompare",
     date: "2026-07-10",
     updated: "2026-07-10",
