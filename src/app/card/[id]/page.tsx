@@ -31,6 +31,7 @@ import { getActiveListingsForCard } from "@/lib/marketplace";
 import { EbayAdCarousel } from "@/components/EbayAdCarousel";
 import { computeMarket, type MarketRow } from "@/lib/market-rows";
 import { KeywordText } from "@/components/KeywordTooltip";
+import { championForCardName, championCardWhere } from "@/lib/champions";
 
 // REAL ISR: no cookie/header reads anywhere in this route's tree — the page is
 // rendered once on the AU baseline and served from cache to every visitor and
@@ -441,10 +442,17 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // ("Jinx, Loose Cannon" → "Jinx"); only Legend/unit cards are named that way, so
   // spells/runes (no comma) simply skip this module. One extra query, champion cards
   // only. Excludes this card's own other printings (same full name).
-  const champion = card.name.includes(",") ? card.name.split(",")[0].trim() : null;
-  const championCards = champion
+  // Resolved through the curated champion allowlist rather than the raw
+  // split(","), so "Allay, Eager Admirer" (a creature, not a champion) links
+  // nowhere instead of to a fabricated hub, and the Yi / Master Yi / Master
+  // three-way name split collapses to one champion — see lib/champions.ts.
+  const championEntry = championForCardName(card.name);
+  const champion = championEntry?.name ?? null;
+  const championCards = championEntry
     ? await prisma.card.findMany({
-        where: { name: { startsWith: `${champion},`, not: card.name }, id: { not: card.id } },
+        where: {
+          AND: [championCardWhere(championEntry), { name: { not: card.name } }, { id: { not: card.id } }],
+        },
         orderBy: [{ lowestPriceCents: { sort: "desc", nulls: "last" } }, { setCode: "asc" }],
         take: 6,
         select: cardTileSelect(DEFAULT_COUNTRY),
@@ -726,12 +734,15 @@ export default async function CardPage({ params }: { params: { id: string } }) {
 
       {/* Cross-set champion cluster — internal links that build the topical hub this
           vertical ranks on ("Jinx cards", "Ahri cards", …). */}
-      {championCards.length > 0 && champion && (
+      {championCards.length > 0 && championEntry && (
         <section className="mt-10">
           <div className="mb-4 flex items-end justify-between gap-3">
-            <h2 className="text-xl font-extrabold text-white">More {champion} cards</h2>
-            <Link href={`/browse?q=${encodeURIComponent(champion)}`} className="btn-ghost text-xs shrink-0">
-              All {champion} cards →
+            <h2 className="text-xl font-extrabold text-white">More {championEntry.name} cards</h2>
+            {/* Points at the champion HUB, not a /browse?q= search: the hub is
+                server-rendered, self-canonical and indexable, where the search
+                view is noindexed (Google discourages indexing site-search). */}
+            <Link href={`/champions/${championEntry.slug}`} className="btn-ghost text-xs shrink-0">
+              All {championEntry.name} cards →
             </Link>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">

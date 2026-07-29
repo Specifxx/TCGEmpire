@@ -8,6 +8,7 @@ import { SETS } from "@/lib/constants";
 import { DOMAIN_PAGES } from "@/lib/domains";
 import { MARKETPLACE_PUBLIC } from "@/lib/marketplace";
 import { KEYWORDS } from "@/lib/keywords";
+import { CHAMPIONS, championCardWhere } from "@/lib/champions";
 import { TYPE_FACETS, RARITY_FACETS, PRINTING_FACETS } from "@/lib/facets";
 import { buildCardWhere } from "@/lib/cards";
 import { DEFAULT_COUNTRY } from "@/lib/country";
@@ -68,6 +69,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/domains`, changeFrequency: "weekly", priority: 0.7 },
     { url: `${SITE_URL}/keywords`, changeFrequency: "weekly", priority: 0.7 },
     { url: `${SITE_URL}/cards`, changeFrequency: "weekly", priority: 0.7 },
+    { url: `${SITE_URL}/champions`, changeFrequency: "daily", priority: 0.8, lastModified: priceDay },
     { url: `${SITE_URL}/stores`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${SITE_URL}/games/higher-lower`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${SITE_URL}/games/price-check`, changeFrequency: "monthly", priority: 0.6 },
@@ -177,6 +179,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("sitemap: facet count query failed, listing all facet routes:", e);
   }
 
+  // Champion hubs — only those that actually have cards. A champion in the
+  // allowlist with no printings yet would be a 404 (the page calls notFound()),
+  // and submitting a URL that 404s is worse than omitting it.
+  let championRoutes: MetadataRoute.Sitemap = [];
+  try {
+    const counts = await Promise.all(
+      CHAMPIONS.map((c) => prisma.card.count({ where: championCardWhere(c) }))
+    );
+    championRoutes = CHAMPIONS.filter((_, i) => counts[i] > 0).map((c) => ({
+      url: `${SITE_URL}/champions/${c.slug}`,
+      changeFrequency: "daily" as const,
+      priority: 0.8,
+      lastModified: priceDay,
+    }));
+  } catch (e) {
+    console.error("sitemap: champion count query failed, omitting champion routes:", e);
+  }
+
   const deckRoutes: MetadataRoute.Sitemap = META_DECKS.map((d) => ({
     url: `${SITE_URL}/decks/${d.slug}`,
     changeFrequency: "weekly",
@@ -227,5 +247,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // NOTE: deliberately NO blanket "lastModified: now" — evergreen pages
   // (privacy, games, deck guides…) carry no date rather than a fake one.
-  return [...staticRoutes, ...marketplaceRoutes, ...setRoutes, ...domainRoutes, ...keywordRoutes, ...facetRoutes, ...deckRoutes, ...articleRoutes, ...reportRoutes, ...cardRoutes];
+  return [...staticRoutes, ...marketplaceRoutes, ...setRoutes, ...domainRoutes, ...keywordRoutes, ...facetRoutes, ...championRoutes, ...deckRoutes, ...articleRoutes, ...reportRoutes, ...cardRoutes];
 }

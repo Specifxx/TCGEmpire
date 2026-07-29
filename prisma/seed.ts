@@ -41,7 +41,16 @@ function slugify(s: string): string {
 }
 function enrichLegendName(nameSlug: string | undefined, epithet: string): string {
   if (!nameSlug) return epithet;
-  const epiSlug = slugify(epithet);
+  // Strip the " - Starter" suffix BEFORE slugifying. Without this the epithet
+  // slug ("wuju-bladesman-starter") no longer matches the tail of the name slug
+  // ("master-yi-wuju-bladesman"), so the endsWith() branch misses and the
+  // split("-")[0] fallback takes only the FIRST token of a multi-token champion
+  // name — turning "Master Yi" into "Master". That corrupted value is already
+  // baked into prod data and into prisma/meta-decks.json's legend field, and it
+  // would mint a bogus /champions/master page. Single-token champions (Annie,
+  // Lux, Garen) happened to survive the bug by luck; Master Yi was the only
+  // casualty, which is exactly the signature of a first-token-only fallback.
+  const epiSlug = slugify(epithet.replace(/\s*-\s*Starter$/i, ""));
   let champSlug = nameSlug;
   if (nameSlug.endsWith("-" + epiSlug)) champSlug = nameSlug.slice(0, nameSlug.length - epiSlug.length - 1);
   else champSlug = nameSlug.split("-")[0];

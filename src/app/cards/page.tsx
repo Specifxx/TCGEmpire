@@ -103,6 +103,14 @@ export default async function CardsIndexPage() {
       </div>
 
       <section>
+        <h2 className="mb-3 text-lg font-extrabold text-white">By champion</h2>
+        <p className="mb-3 text-sm text-slate-400">
+          Every card featuring a champion, across every set, with live prices —{" "}
+          <Link href="/champions" className="text-brand-400 hover:underline">browse all champions →</Link>
+        </p>
+      </section>
+
+      <section>
         <h2 className="mb-3 text-lg font-extrabold text-white">By domain</h2>
         <div className="flex flex-wrap gap-2">
           {DOMAIN_PAGES.map((d) => (
