@@ -82,6 +82,17 @@ const nextConfig = {
         destination: "/market",
         permanent: true,
       },
+      // The tool is called "Deal Finder" in its own H1, nav entry, metadata and
+      // every internal link — only the URL still said "arbitrage", a word no
+      // buyer searches for. Renamed to /tools/deal-finder; this 301 preserves
+      // the indexed URL's link equity and keeps any bookmarks/inbound links
+      // working. Next.js carries the query string across automatically, so the
+      // ?view=/?buy=/?sort=/?page= deep links survive the redirect.
+      {
+        source: "/tools/arbitrage",
+        destination: "/tools/deal-finder",
+        permanent: true,
+      },
     ];
   },
   async headers() {

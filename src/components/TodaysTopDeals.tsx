@@ -21,7 +21,7 @@ type ColumnDef = {
 };
 
 const COLUMNS: ColumnDef[] = [
-  { key: "savingsVsMarket", label: "Biggest savings", premium: true, allHref: "/tools/arbitrage", allLabel: "All opportunities" },
+  { key: "savingsVsMarket", label: "Biggest savings", premium: true, allHref: "/tools/deal-finder", allLabel: "All opportunities" },
   { key: "priceDrops", label: "Price drops", premium: false, allHref: "/movers", allLabel: "All movers" },
   { key: "cheapestSealed", label: "Cheapest sealed", premium: false, allHref: "/sealed", allLabel: "All sealed" },
   { key: "undervalued", label: "Undervalued", premium: true, allHref: "/tools/value-finder", allLabel: "Value Finder" },
@@ -112,7 +112,7 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
           <h2 className="text-xl font-extrabold text-white">Today&apos;s Top Deals</h2>
           <p className="mt-0.5 text-sm text-slate-400">The best live opportunities in {place} right now — refreshed daily.</p>
         </div>
-        <Link href="/tools/arbitrage" className="btn-ghost hidden text-sm sm:inline-flex">Browse all deals →</Link>
+        <Link href="/tools/deal-finder" className="btn-ghost hidden text-sm sm:inline-flex">Browse all deals →</Link>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

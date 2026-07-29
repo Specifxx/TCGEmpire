@@ -49,7 +49,7 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
   {
     title: "Deal Finder",
     body: "The full list of cards worth more on eBay than in stores (handy if you're selling) and the cards eBay is cheapest to buy — all sources, sortable, updated daily. Free shows only the top pick.",
-    href: "/tools/arbitrage",
+    href: "/tools/deal-finder",
     cta: "Open Deal Finder",
   },
   {
@@ -203,7 +203,7 @@ export default async function PremiumPage() {
           <Link href="/tools/best-basket" className="btn-ghost">Best Basket</Link>
           <Link href="/tools/value-finder" className="btn-ghost">Value Finder</Link>
           <Link href="/tools/rising" className="btn-ghost">Rising Cards</Link>
-          <Link href="/tools/arbitrage" className="btn-ghost">Deal Finder</Link>
+          <Link href="/tools/deal-finder" className="btn-ghost">Deal Finder</Link>
           <Link href="/marketplace/sell" className="btn-ghost">Sell on Marketplace</Link>
           <Link href="/portfolio" className="btn-ghost">Portfolio</Link>
           {checkoutLive && <ManageSubscriptionButton />}

@@ -890,12 +890,12 @@ A raw card listed like a played copy but actually in near-mint condition, or a g
 
 ## How to Use a Price-Comparison Tool to Find Gaps Fast
 
-Manually checking five or six retailers for every card you're curious about doesn't scale, which is the entire reason a comparison tool is useful here rather than optional. [RiftCompare's arbitrage finder](/tools/arbitrage) exists to do the tedious part - pulling current listings across sources into one view - so you can spend your time on judgment instead of tab-switching.
+Manually checking five or six retailers for every card you're curious about doesn't scale, which is the entire reason a comparison tool is useful here rather than optional. [RiftCompare's Deal Finder](/tools/deal-finder) exists to do the tedious part - pulling current listings across sources into one view - so you can spend your time on judgment instead of tab-switching.
 
 ### A Practical Workflow
 
 1. Start broad in [the card database](/browse) to identify cards where you already have some conviction about demand - competitively played staples, chase rares, or cards tied to a deck archetype that's gaining traction.
-2. Run those cards through the [arbitrage finder](/tools/arbitrage) to see the spread between the lowest and highest current listings side by side.
+2. Run those cards through the [Deal Finder](/tools/deal-finder) to see the spread between the lowest and highest current listings side by side.
 3. Before acting, ask why the gap exists. If you can't come up with a plausible reason (stale listing, regional pricing, sealed-vs-singles drift), treat that as a yellow flag rather than free money - sometimes a "cheap" listing is cheap because it's out of stock, misprinted, or a different card variant entirely.
 4. Factor in the cost of doing the trade at all: shipping both directions, marketplace fees if you're reselling, and the time value of capital tied up in inventory. A gap that looks like 20% often shrinks to single digits once real costs are included.
 

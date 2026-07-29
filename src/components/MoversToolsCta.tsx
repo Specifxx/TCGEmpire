@@ -17,7 +17,7 @@ export function MoversToolsCta() {
         <p className="mt-1 text-sm text-slate-400">You&apos;re Premium — the full screeners are unlocked.</p>
         <div className="mt-3 flex flex-wrap gap-2">
           <Link href="/tools/value-finder" className="btn-primary text-sm">Value Finder →</Link>
-          <Link href="/tools/arbitrage" className="btn-ghost text-sm">Deal Finder →</Link>
+          <Link href="/tools/deal-finder" className="btn-ghost text-sm">Deal Finder →</Link>
         </div>
       </section>
     );
@@ -36,7 +36,7 @@ export function MoversToolsCta() {
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <PremiumButton />
         <Link href="/tools/value-finder" className="btn-ghost text-sm">Preview Value Finder →</Link>
-        <Link href="/tools/arbitrage" className="btn-ghost text-sm">Preview Deal Finder →</Link>
+        <Link href="/tools/deal-finder" className="btn-ghost text-sm">Preview Deal Finder →</Link>
       </div>
     </section>
   );

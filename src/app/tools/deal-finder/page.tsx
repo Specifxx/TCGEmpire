@@ -21,8 +21,8 @@ export const metadata: Metadata = {
   title: { absolute: "Riftbound Deal Finder — Cross-Store, eBay & TCGplayer Deals | RiftCompare" },
   description:
     "Find the best Riftbound deals: cards worth more on eBay than in stores (handy if you're selling), cards underpriced vs TCGplayer's US market price, and the cards eBay is cheapest to buy. Sortable, updated daily, with direct links. A Premium tool — the top pick is free to preview.",
-  alternates: { canonical: "/tools/arbitrage" },
-  openGraph: { title: "Riftbound Deal Finder — Cross-Store, eBay & TCGplayer Deals", url: `${SITE_URL}/tools/arbitrage` },
+  alternates: { canonical: "/tools/deal-finder" },
+  openGraph: { title: "Riftbound Deal Finder — Cross-Store, eBay & TCGplayer Deals", url: `${SITE_URL}/tools/deal-finder` },
 };
 
 const PAGE_SIZE = 25;
@@ -81,14 +81,14 @@ export default async function ArbitragePage({
               itemListElement: [
                 { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
                 { "@type": "ListItem", position: 2, name: "Tools", item: `${SITE_URL}/tools` },
-                { "@type": "ListItem", position: 3, name: "Deal Finder", item: `${SITE_URL}/tools/arbitrage` },
+                { "@type": "ListItem", position: 3, name: "Deal Finder", item: `${SITE_URL}/tools/deal-finder` },
               ],
             },
             {
               "@context": "https://schema.org",
               "@type": "WebApplication",
               name: "Riftbound Deal Finder — Cross-Store & eBay Deals",
-              url: `${SITE_URL}/tools/arbitrage`,
+              url: `${SITE_URL}/tools/deal-finder`,
               applicationCategory: "UtilitiesApplication",
               operatingSystem: "Web",
               offers: { "@type": "Offer", price: "0", priceCurrency: info.currency },
@@ -113,21 +113,21 @@ export default async function ArbitragePage({
       {/* Tabs */}
       <div className="mb-4 flex gap-1 rounded-lg border border-ink-700 bg-ink-900 p-1" role="tablist" aria-label="Views">
         <Link
-          href="/tools/arbitrage"
+          href="/tools/deal-finder"
           aria-current={view === "flip" ? "page" : undefined}
           className={`flex-1 rounded-md px-3 py-2 text-center text-sm font-bold ${view === "flip" ? "bg-brand-500/20 text-brand-200" : "text-slate-400 hover:text-white"}`}
         >
           Worth more on eBay
         </Link>
         <Link
-          href="/tools/arbitrage?view=tcg"
+          href="/tools/deal-finder?view=tcg"
           aria-current={view === "tcg" ? "page" : undefined}
           className={`flex-1 rounded-md px-3 py-2 text-center text-sm font-bold ${view === "tcg" ? "bg-gold/20 text-gold" : "text-slate-400 hover:text-white"}`}
         >
           Underpriced vs TCGplayer
         </Link>
         <Link
-          href="/tools/arbitrage?view=deals"
+          href="/tools/deal-finder?view=deals"
           aria-current={view === "deals" ? "page" : undefined}
           className={`flex-1 rounded-md px-3 py-2 text-center text-sm font-bold ${view === "deals" ? "bg-sky-500/20 text-sky-200" : "text-slate-400 hover:text-white"}`}
         >
@@ -199,8 +199,8 @@ async function FlipView({
     page: premium ? page : 1,
     pageSize: premium ? PAGE_SIZE : TEASER_SIZE,
   });
-  const href = (p: number) => `/tools/arbitrage?buy=${buy.join(",")}&sort=${sort}&page=${p}`;
-  const sortHref = (s: ArbSort) => `/tools/arbitrage?buy=${buy.join(",")}&sort=${s}&page=1`;
+  const href = (p: number) => `/tools/deal-finder?buy=${buy.join(",")}&sort=${sort}&page=${p}`;
+  const sortHref = (s: ArbSort) => `/tools/deal-finder?buy=${buy.join(",")}&sort=${s}&page=1`;
 
   return (
     <>
@@ -253,8 +253,8 @@ async function DealsView({
   signedIn: boolean;
 }) {
   const data = await getEbayCheapest(country, sort, premium ? page : 1, premium ? PAGE_SIZE : TEASER_SIZE);
-  const href = (p: number) => `/tools/arbitrage?view=deals&sort=${sort}&page=${p}`;
-  const sortHref = (s: DealSort) => `/tools/arbitrage?view=deals&sort=${s}&page=1`;
+  const href = (p: number) => `/tools/deal-finder?view=deals&sort=${sort}&page=${p}`;
+  const sortHref = (s: DealSort) => `/tools/deal-finder?view=deals&sort=${s}&page=1`;
 
   return (
     <>
@@ -324,8 +324,8 @@ async function TcgFlipView({
     page: premium ? page : 1,
     pageSize: premium ? PAGE_SIZE : TEASER_SIZE,
   });
-  const href = (p: number) => `/tools/arbitrage?view=tcg&buy=${buy.join(",")}&sort=${sort}&page=${p}`;
-  const sortHref = (s: ArbSort) => `/tools/arbitrage?view=tcg&buy=${buy.join(",")}&sort=${s}&page=1`;
+  const href = (p: number) => `/tools/deal-finder?view=tcg&buy=${buy.join(",")}&sort=${sort}&page=${p}`;
+  const sortHref = (s: ArbSort) => `/tools/deal-finder?view=tcg&buy=${buy.join(",")}&sort=${s}&page=1`;
 
   return (
     <>
@@ -477,7 +477,7 @@ function LockedTable({ children, signedIn }: { children: React.ReactNode; signed
             {signedIn ? (
               <PremiumButton />
             ) : (
-              <Link href="/register?next=/tools/arbitrage" className="btn-primary text-sm">Create a free account</Link>
+              <Link href="/register?next=/tools/deal-finder" className="btn-primary text-sm">Create a free account</Link>
             )}
             <Link href="/movers" className="btn-ghost text-sm">Free price movers →</Link>
           </div>

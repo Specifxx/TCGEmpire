@@ -13,7 +13,7 @@ const DESC: Record<string, string> = {
   "/movers": "The biggest Riftbound price rises and falls, updated daily.",
   "/market": "The RiftCompare Index — a daily search-weighted market index for Riftbound singles, with key stats.",
   "/stores/tracked": "The stores whose public prices RiftCompare tracks and compares.",
-  "/tools/arbitrage": "Deal Finder: cards worth more on eBay than in stores, plus the cheapest cards to buy on eBay.",
+  "/tools/deal-finder": "Deal Finder: cards worth more on eBay than in stores, plus the cheapest cards to buy on eBay.",
   "/tools/value-finder": "Finds undervalued cards trading below their fair market value.",
   "/tools/rising": "Ranks cards by demand and price-timing signals to surface ones likely to rise soon.",
   "/tools/best-basket": "Cheapest single-store basket for a list of cards (minimises combined shipping).",

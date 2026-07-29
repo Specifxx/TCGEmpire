@@ -20,7 +20,7 @@ const TOOLS = [
   { title: "Best Basket", desc: "The cheapest multi-store cart for a whole deck list.", href: "/tools/best-basket", icon: "🧺" },
   { title: "Value Finder", desc: "Cards trading below their recent average — undervalued picks.", href: "/tools/value-finder", icon: "🔎" },
   { title: "Rising Cards", desc: "Cards ranked by demand + price-timing signals — likely to go up soon.", href: "/tools/rising", icon: "🚀" },
-  { title: "Deal Finder", desc: "Cards worth more on eBay and the cheapest eBay buys, updated daily.", href: "/tools/arbitrage", icon: "⚖️" },
+  { title: "Deal Finder", desc: "Cards worth more on eBay and the cheapest eBay buys, updated daily.", href: "/tools/deal-finder", icon: "⚖️" },
 ];
 
 export default async function DashboardPage() {

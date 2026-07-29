@@ -56,7 +56,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/tools/best-basket`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${SITE_URL}/tools/value-finder`, changeFrequency: "daily", priority: 0.6 },
     { url: `${SITE_URL}/tools/rising`, changeFrequency: "daily", priority: 0.6 },
-    { url: `${SITE_URL}/tools/arbitrage`, changeFrequency: "daily", priority: 0.7 },
+    { url: `${SITE_URL}/tools/deal-finder`, changeFrequency: "daily", priority: 0.7 },
     { url: `${SITE_URL}/stores/tracked`, changeFrequency: "weekly", priority: 0.6 },
     { url: `${SITE_URL}/stores/suggest`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${SITE_URL}/premium`, changeFrequency: "monthly", priority: 0.6 },

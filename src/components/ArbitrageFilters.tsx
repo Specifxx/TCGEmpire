@@ -37,7 +37,7 @@ export function ArbitrageFilters({
     const next = buy.includes(key) ? buy.filter((k) => k !== key) : [...buy, key];
     if (!next.length) return; // never allow an empty buy side
     const params = new URLSearchParams({ buy: next.join(","), sort, ...(view ? { view } : {}) });
-    router.push(`/tools/arbitrage?${params.toString()}`, { scroll: false });
+    router.push(`/tools/deal-finder?${params.toString()}`, { scroll: false });
   }
 
   return (

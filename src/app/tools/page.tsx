@@ -53,7 +53,7 @@ const GROUPS: ToolGroup[] = [
         badge: "Premium",
       },
       {
-        href: "/tools/arbitrage",
+        href: "/tools/deal-finder",
         emoji: "💱",
         title: "Deal Finder",
         desc: "Spot cards that are cheaper in one place than another — and cards worth more if you resell them.",
