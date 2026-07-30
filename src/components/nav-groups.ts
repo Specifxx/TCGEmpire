@@ -100,23 +100,31 @@ export const NAV_GROUPS: NavGroup[] = [
 // Built FROM NAV_GROUPS (not duplicated) so editing a link once still only
 // means editing it once. NAV_GROUPS itself is untouched — the phone sheet and
 // desktop mega-menu keep their finer-grained grouping.
+//
+// Marketplace's 6 links used to all land in "Shop" (5 + 6 = 11), leaving that
+// column roughly twice as tall as its 5-6-link neighbours — a ragged block of
+// whitespace under three of the four columns. Split across the other three
+// columns instead (2 each) so all four land in the same 5-8 link range
+// whether or not the marketplace nav is live (the spread is a no-op — an
+// empty array — while MARKETPLACE_NAV_VISIBLE is off).
 const byTitle = Object.fromEntries(NAV_GROUPS.map((g) => [g.title, g.links]));
+const marketplaceLinks = byTitle["Marketplace"] ?? [];
 
 export const FOOTER_GROUPS: NavGroup[] = [
   {
     title: "Shop",
-    links: [...(byTitle["Prices"] ?? []), ...(byTitle["Marketplace"] ?? [])],
+    links: byTitle["Prices"] ?? [],
   },
   {
     title: "Deals & value",
-    links: byTitle["Deals & value"] ?? [],
+    links: [...(byTitle["Deals & value"] ?? []), ...marketplaceLinks.slice(0, 2)],
   },
   {
     title: "Decks & collection",
-    links: [...(byTitle["Decks"] ?? []), ...(byTitle["Your collection"] ?? [])],
+    links: [...(byTitle["Decks"] ?? []), ...(byTitle["Your collection"] ?? []), ...marketplaceLinks.slice(2, 4)],
   },
   {
     title: "Learn & play",
-    links: [...(byTitle["Games"] ?? []), ...(byTitle["Community & learn"] ?? [])],
+    links: [...(byTitle["Games"] ?? []), ...(byTitle["Community & learn"] ?? []), ...marketplaceLinks.slice(4, 6)],
   },
 ];

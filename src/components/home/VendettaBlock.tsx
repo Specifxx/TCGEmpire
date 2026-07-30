@@ -46,7 +46,13 @@ export function VendettaBlock({
           </Link>
         </div>
 
-        <div className="mb-4 grid gap-3 sm:grid-cols-2">
+        {/* Only 2-column when there's genuinely a second tile to show — a
+            "price history isn't ready yet" placeholder used to fill that slot
+            unconditionally, which both stated the obvious (new set, no
+            history yet) and forced a dead second column once removed. The
+            cheapest-box tile (real data or its own "will appear here" note)
+            simply spans the full row alone until price-history exists. */}
+        <div className={`mb-4 grid gap-3 ${pulse.pricePct != null ? "sm:grid-cols-2" : ""}`}>
           {pulse.cheapestBox ? (
             <div className="rounded-lg border border-ink-800 bg-ink-900 p-3">
               <div className="text-[11px] uppercase tracking-wide text-slate-500">Cheapest booster box</div>
@@ -60,7 +66,7 @@ export function VendettaBlock({
               Sealed booster box prices will appear here the moment a store lists one in your market.
             </div>
           )}
-          {pulse.pricePct != null ? (
+          {pulse.pricePct != null && (
             <div className="rounded-lg border border-ink-800 bg-ink-900 p-3">
               <div className="text-[11px] uppercase tracking-wide text-slate-500">Prices since {pulse.sinceLabel}</div>
               <div className={`num mt-1 flex items-center gap-1.5 text-xl font-extrabold ${pulse.pricePct >= 0 ? "text-up" : "text-down"}`}>
@@ -69,24 +75,23 @@ export function VendettaBlock({
                 <span className="text-xs font-medium text-slate-500">{pulse.pricePct >= 0 ? "up" : "down"} since release</span>
               </div>
             </div>
-          ) : (
-            <div className="rounded-lg border border-ink-800 bg-ink-900 p-3 text-sm text-slate-500">
-              Price-history tracking starts as soon as we have two days of data to compare.
-            </div>
           )}
         </div>
 
         {chaseCards.length > 0 && (
           <>
             <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Chase cards</div>
-            {/* Fixed-width compact tiles (not a full-bleed grid) — the same idea as
-                the carousel just below this block, so four cards don't stretch this
-                section into the tallest thing on the homepage. */}
-            <Reveal stagger className="flex flex-wrap justify-center gap-3 sm:justify-start">
+            {/* Shared CardTile ("compact" size) — the same component the "Most
+                popular Vendetta cards" row below uses, instead of bespoke
+                markup with its own overlap/wrap bugs. The grid is capped at a
+                sensible width and left-aligned rather than stretched to the
+                full section width: at four cards, filling the whole ~1200px
+                row would blow each tile back up to full-card size; capping
+                keeps them compact while still fully packing every column (no
+                half-empty row either way). */}
+            <Reveal stagger className="grid max-w-2xl grid-cols-2 items-stretch gap-3 sm:grid-cols-4">
               {chaseCards.map((c) => (
-                <div key={c.id} className="w-[calc(50%-0.375rem)] sm:w-32">
-                  <CardTile card={c} />
-                </div>
+                <CardTile key={c.id} card={c} size="compact" />
               ))}
             </Reveal>
           </>

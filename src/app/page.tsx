@@ -205,7 +205,7 @@ export default async function HomePage() {
     .slice(0, 12);
 
   return (
-    <div className={`${archivo.variable} rb-display-sans flex flex-col gap-12`}>
+    <div className={`${archivo.variable} rb-display-sans flex flex-col gap-10`}>
       {/* Cinematic full-bleed hero — search-first (see CinematicHero + Task 3). */}
       <CinematicHero
         totalCards={totalCards}
@@ -329,14 +329,20 @@ export default async function HomePage() {
       {/* About + FAQ — keyword-relevant content for search */}
       <section className="card-surface p-6">
         <h2 className="text-xl font-extrabold text-white">Riftbound prices in Australia, New Zealand, the US &amp; UK — all in one place</h2>
-        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+        {/* Centred (not just left-anchored with max-w) so the leftover space on
+            a wide card reads as an intentional, symmetrical text measure
+            rather than a stray empty column down one side. */}
+        <p className="mx-auto mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
           RiftCompare is a free, independent price-comparison tool for Riftbound: League of Legends
           TCG. We track live prices for every Riftbound card across local stores in Australia, New
           Zealand, the US and the UK, plus eBay (AU, US and UK), so you can buy Riftbound cards for
           less — whether you&apos;re chasing singles for a deck or sealed booster boxes.
         </p>
-        {/* Collapsible FAQ — tidy on mobile; answers still in the DOM for SEO. */}
-        <div className="mt-5 divide-y divide-ink-800 border-t border-ink-800">
+        {/* Collapsible FAQ — tidy on mobile; answers still in the DOM for SEO.
+            Same max-width + centring as the paragraph above so the whole card
+            reads as one consistent text column instead of the FAQ suddenly
+            stretching back out to the card's full width. */}
+        <div className="mx-auto mt-5 max-w-3xl divide-y divide-ink-800 border-t border-ink-800">
           {FAQS.map((f) => (
             <details key={f.q} className="group py-1">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-3 font-semibold text-white [&::-webkit-details-marker]:hidden">
