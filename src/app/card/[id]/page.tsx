@@ -404,6 +404,18 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     select: cardTileSelect(DEFAULT_COUNTRY),
   });
 
+  // This printing's own special-print flags, and (if this IS a special printing)
+  // the real tracked price of its plain base sibling — used ONLY for the
+  // "is the premium printing worth it?" FAQ below. Never asserted without both a
+  // real base sibling AND a real price on both sides to compare.
+  const thisIsSignature = isSignature(card.collectorNumber);
+  const thisIsOvernumbered = isOvernumbered(card.collectorNumber);
+  const thisIsCrystalRose = isCrystalRose(card.setCode, card.collectorNumber);
+  const basePrinting = printings.find(
+    (p) => p.variant == null && !p.isPromo && p.rarity !== "Showcase" && !isOvernumbered(p.collectorNumber) && !isSignature(p.collectorNumber)
+  );
+  const basePriceCents = basePrinting ? (basePrinting[priceField(DEFAULT_COUNTRY)] as number | null) : null;
+
   // Similar cards — more from the same set, same domain first. This is the single
   // biggest internal-linking lever: every long-tail card page links out to ~12
   // sibling card pages, which is what gets them crawled and indexed. Priced cards
@@ -490,6 +502,9 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     deckNames: allRelatedDecks.slice(0, 2).map((d) => d.name),
     place: baselinePlace,
     currency: baseline.currency,
+    isSpecialPrinting: thisIsSignature || thisIsOvernumbered || thisIsCrystalRose,
+    specialPrintingLabel: thisIsCrystalRose ? "Crystal Rose" : thisIsSignature ? "Signature" : "Overnumbered",
+    basePriceCents,
   });
   const faqLd = {
     "@context": "https://schema.org",
@@ -574,17 +589,23 @@ export default async function CardPage({ params }: { params: { id: string } }) {
 
           {/* Price comparison + eBay fallback + contextual affiliate banners —
               everything that varies with the visitor's market lives in the client
-              section so the route itself stays cookie-free and ISR-cacheable. */}
-          <CardPriceComparison
-            rows={rows}
-            displayName={displayName}
-            ebaySearch={ebaySearch}
-            ebayQuery={`${cardSearchName(card.name, card)} ${card.collectorNumber}`}
-          />
+              section so the route itself stays cookie-free and ISR-cacheable. An
+              explicit H2 here (rather than just the component's own internal
+              heading) gives this block a crawlable section signal distinct from
+              "About" above it. */}
+          <section className="mt-6">
+            <h2 className="sr-only">Price history &amp; where to buy {card.name}</h2>
+            <CardPriceComparison
+              rows={rows}
+              displayName={displayName}
+              ebaySearch={ebaySearch}
+              ebayQuery={`${cardSearchName(card.name, card)} ${card.collectorNumber}`}
+            />
 
-          {/* Price-history chart — free for everyone (AU history; the series is
-              collected on the AU baseline market). */}
-          <PriceHistoryChart cardId={card.id} />
+            {/* Price-history chart — free for everyone (AU history; the series is
+                collected on the AU baseline market). */}
+            <PriceHistoryChart cardId={card.id} />
+          </section>
 
           {/* Conversion island (client → route stays ISR): watch-this-price email
               capture + a Value Finder teaser for non-members. */}
@@ -645,6 +666,34 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                 More {card.domain} cards →
               </Link>
             </div>
+          </section>
+
+          {/* Rarity/variant summary as its own labelled section — the facts (Showcase,
+              Signature, Overnumbered, Crystal Rose, Promo) already exist in the badge
+              row and the About prose above; this just gives them one crawlable,
+              explicitly-headed answer for "is this printing rare/special" queries. */}
+          <section className="card-surface mt-6 p-5">
+            <h2 className="font-bold text-white">Rarity, prints &amp; variants</h2>
+            <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-4">
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-slate-500">Rarity</dt>
+                <dd className="text-slate-200">{card.rarity}</dd>
+              </div>
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-slate-500">Printing</dt>
+                <dd className="text-slate-200">
+                  {thisIsCrystalRose ? "Crystal Rose alt-art" : thisIsSignature ? "Signature" : thisIsOvernumbered ? "Overnumbered" : card.isPromo ? "Promo" : card.variant ? "Alternate art" : "Base"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-slate-500">Set</dt>
+                <dd className="text-slate-200">{card.setName} ({card.setCode})</dd>
+              </div>
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-slate-500">Other tracked printings</dt>
+                <dd className="text-slate-200">{printings.length}</dd>
+              </div>
+            </dl>
           </section>
 
           <section className="card-surface mt-6 p-5">
@@ -862,10 +911,15 @@ type FaqContext = {
   deckNames: string[];
   place: string;
   currency: string;
+  // Only used for the "is the premium printing worth it?" FAQ, and only when
+  // this printing genuinely IS a special one — never asserted for a base card.
+  isSpecialPrinting: boolean;
+  specialPrintingLabel: string;
+  basePriceCents: number | null;
 };
 
 function buildFaqs(card: CardForCopy, ctx: FaqContext): { q: string; a: string }[] {
-  const { lowest, stores, printingCount, deckCount, deckNames, place, currency } = ctx;
+  const { lowest, stores, printingCount, deckCount, deckNames, place, currency, isSpecialPrinting, specialPrintingLabel, basePriceCents } = ctx;
   const faqs = [
     {
       q: `How much does ${card.name} cost?`,
@@ -895,6 +949,25 @@ function buildFaqs(card: CardForCopy, ctx: FaqContext): { q: string; a: string }
       q: `What decks use ${card.name}?`,
       a: `${card.name} is played in ${deckCount} meta deck${deckCount === 1 ? "" : "s"} tracked on RiftCompare${named}. See the full list and each deck's live build cost further down this page.`,
     });
+  }
+
+  // "Is the premium printing worth it?" — only asked when this page genuinely IS
+  // a special printing, and only answered with a real number when a real,
+  // currently-priced base sibling exists to compare against. Never a made-up
+  // "yes it's worth it" — the answer is the honest price gap, or an admission
+  // that there isn't enough data yet.
+  if (isSpecialPrinting) {
+    const a =
+      lowest != null && basePriceCents != null
+        ? `The ${specialPrintingLabel} printing of ${card.name} is currently ${formatMoney(lowest, currency)} in ${place}, versus ${formatMoney(basePriceCents, currency)} for the base printing — a ${
+            lowest > basePriceCents
+              ? `${formatMoney(lowest - basePriceCents, currency)} premium`
+              : lowest < basePriceCents
+              ? `${formatMoney(basePriceCents - lowest, currency)} discount`
+              : "no premium right now"
+          }. Whether that gap is "worth it" comes down to whether you want the base card to play with or the ${specialPrintingLabel.toLowerCase()} print to collect — both are tracked separately on RiftCompare.`
+        : `We don't have live prices for both the ${specialPrintingLabel} printing and the base printing of ${card.name} right now, so there's no honest price gap to compare yet — check back once both are tracked.`;
+    faqs.push({ q: `Is the ${specialPrintingLabel} printing of ${card.name} worth it?`, a });
   }
 
   return faqs;

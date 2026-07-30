@@ -2579,6 +2579,52 @@ Run a UK store selling Riftbound? **[Get listed free](/stores/suggest)** — fre
 Shopping from **[Australia](/blog/buy-riftbound-cards-australia)**, **[New Zealand](/blog/buy-riftbound-cards-nz)** or **[the US](/blog/buy-riftbound-cards-us)**? We've got a dedicated breakdown for your market too — or see the **[full multi-market guide](/guides/where-to-buy-riftbound-cards)**.`,
   },
   {
+    slug: "buy-riftbound-cards-canada",
+    category: "blog",
+    title: "Buying Riftbound Cards in Canada — Prices, Shipping & What to Know",
+    excerpt:
+      "RiftCompare doesn't track dedicated Canadian stores or CAD pricing yet — here's the honest, practical way Canadian collectors can still find the cheapest Riftbound singles today, using our US price comparison and eBay.",
+    author: "RiftCompare",
+    date: "2026-07-30",
+    updated: "2026-07-30",
+    readMins: 4,
+    tags: ["canada", "buying guide", "price comparison", "riftbound singles"],
+    shop: [
+      { label: "Riftbound singles on eBay", query: "Riftbound singles" },
+      { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
+    ],
+    // Honest by design: RiftCompare has no Canadian retailers and no CAD price
+    // column today (see lib/country.ts), so this deliberately does NOT claim
+    // "N Canadian stores" or list CAD prices the way the AU/NZ/US/UK/SG guides
+    // do. It tells Canadian readers exactly what RiftCompare can and can't do
+    // for them right now, and points at the real US/eBay comparison that does
+    // work today rather than inventing coverage that doesn't exist.
+    body: `Looking to buy Riftbound cards in Canada? We'll be straight with you: RiftCompare doesn't yet track dedicated Canadian retailers or list prices in CAD. That's worth knowing up front — but it doesn't mean there's no good way to find a fair price today.
+
+## What RiftCompare can do for Canadian buyers right now
+
+- **Compare US store prices.** We track live USD prices across [dozens of US retailers](/stores/tracked), many of which ship to Canada. Comparing in USD first — then checking each store's actual international shipping cost and delivery time — is the most reliable way to spot a genuinely good price before you commit to an international order.
+- **eBay, both directions.** eBay listings from US and international sellers regularly ship to Canada, and eBay.ca carries Riftbound too. Search eBay for the card you want and compare its total cost (including shipping) against the US-store comparison on any [card page](/browse).
+- **Real price history.** Every card's [price trend](/movers) is tracked daily, so even without CAD pricing you can tell whether a listed USD price is a genuine deal or a temporary spike before you buy.
+- **What we don't have yet:** no Canadian store list, no CAD price column, no local shipping-cost math for Canadian addresses. The prices you see on RiftCompare are US-dollar prices from US-based stores — budget for the exchange rate, and check each store's own site for whether (and how much) they charge to ship to Canada.
+
+## How to buy Riftbound cards from Canada today
+
+1. **[Search the card database](/browse)** for the card you want — prices shown are live USD from US stores.
+2. **Open the card**, check the store-by-store US comparison, then confirm on the store's own site whether it ships to Canada and what that actually costs — RiftCompare's delivered-cost ranking is calculated for each store's home market, not cross-border.
+3. **Cross-check against eBay** for the same card — factoring in international shipping, an eBay listing sometimes beats a US store's price once cross-border postage is added.
+
+## Run a Canadian store selling Riftbound?
+
+Dedicated Canadian coverage only happens once real Canadian stores exist to track. If that's you, [get listed free](/stores/suggest) — pick "Other" as the market and mention Canada in the notes, and we'll follow up.
+
+## Vendetta releases July 31
+
+[Riftbound: Vendetta](/sets/vendetta) launches 31 July 2026. Every revealed card is already browsable with live US pricing, and the [chase cards are mapped tier by tier](/blog/riftbound-vendetta-chase-cards-so-far) if you're planning an international pre-order.
+
+Shopping from [Australia](/blog/buy-riftbound-cards-australia), [the UK](/blog/buy-riftbound-cards-uk), [New Zealand](/blog/buy-riftbound-cards-nz), [Singapore](/blog/riftbound-price-comparison-singapore) or [the US](/blog/buy-riftbound-cards-us)? We've got a dedicated breakdown for those markets too.`,
+  },
+  {
     slug: "every-riftbound-vendetta-card-revealed",
     category: "blog",
     title: "Riftbound Vendetta Card List & Gallery — All 166 Cards Revealed",
