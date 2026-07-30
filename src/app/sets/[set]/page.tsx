@@ -24,6 +24,7 @@ import { getCountry } from "@/lib/get-country";
 import { priceField } from "@/lib/country";
 import { SETS, setBySlug } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
+import { buildTitle, buildDescription } from "@/lib/seo-meta";
 
 // searchParams-driven (filters/pagination), so the route stays dynamic — same
 // tradeoff as /browse.
@@ -48,8 +49,17 @@ export async function generateMetadata({
   // tailored to the visitor's market.
   // Front-loads the "cheapest" buyer hook (GSC: these pages ranked but had very
   // low CTR — "Prices & Full Card List" read as generic next to competitors).
-  const title = `Riftbound ${set.name} Prices — Cheapest Sellers`;
-  const description = `Find the cheapest Riftbound ${set.name} singles — every card, live prices compared across stores, updated daily.`;
+  // Stepped down so even the longest set name ("Origins: Proving Grounds")
+  // still fits the ~60-char SERP budget alongside the " | RiftCompare" suffix.
+  const titleCandidates = [
+    `Riftbound ${set.name} Prices — Cheapest Sellers`,
+    `Riftbound ${set.name} Prices`,
+    `Riftbound ${set.name}`,
+  ];
+  const description = buildDescription([
+    `Find the cheapest Riftbound ${set.name} singles — every card, live prices compared across stores, updated daily.`,
+    `Compare live Riftbound ${set.name} prices across every store, updated daily.`,
+  ]);
   // A set with no imported cards yet (pre-release, or a data gap where a released
   // set was registered before its cards were imported) renders only a placeholder —
   // thin content. Noindex it so Google doesn't sink crawl budget into a soft-thin
@@ -72,7 +82,7 @@ export async function generateMetadata({
   const canonicalPath = selfCanonical ? `/sets/${set.slug}?page=${page}` : `/sets/${set.slug}`;
 
   return {
-    title: { absolute: `${title} | RiftCompare` },
+    title: buildTitle(titleCandidates, " | RiftCompare"),
     description,
     keywords: [
       `Riftbound ${set.name}`,
@@ -88,7 +98,10 @@ export async function generateMetadata({
       languages: { "x-default": `${SITE_URL}${canonicalPath}` },
     },
     ...(cardCount === 0 || filtered ? { robots: { index: false, follow: true } } : {}),
-    openGraph: { title: `${title} | RiftCompare`, description, url: `${SITE_URL}${canonicalPath}` },
+    // OG previews get the richest candidate untruncated — social platforms'
+    // own truncation points are looser than Google's SERP, and unlike the
+    // <title> tag this never goes through the root layout's title.template.
+    openGraph: { title: titleCandidates[0], description, url: `${SITE_URL}${canonicalPath}` },
   };
 }
 

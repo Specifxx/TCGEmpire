@@ -157,7 +157,15 @@ async function sets(): Promise<SitemapEntry[]> {
   // the blog, and it self-upgrades the day singles land. All sets share the same
   // priceDay signal — a comingSoon set with zero cards yet still gets an honest,
   // non-fabricated date rather than none at all.
-  return SETS.map((s) => ({
+  //
+  // BUT the page itself (sets/[set]/page.tsx) noindexes whenever cardCount===0
+  // regardless of comingSoon/sealedAvailable — so a set registered ahead of its
+  // cards being imported would be submitted here while noindexed there. Filter
+  // to sets with at least one card so a noindexed page is never in the sitemap
+  // (none currently hit this — SETS has no zero-card entries right now — but
+  // nothing here structurally prevented it).
+  const counts = await Promise.all(SETS.map((s) => prisma.card.count({ where: { setCode: s.code } })));
+  return SETS.filter((_, i) => counts[i] > 0).map((s) => ({
     url: `${SITE_URL}/sets/${s.slug}`,
     changeFrequency: "daily" as const,
     priority: s.comingSoon ? 0.6 : 0.85,

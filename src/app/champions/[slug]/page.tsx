@@ -11,6 +11,7 @@ import { META_DECKS } from "@/lib/meta-decks";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { breadcrumb } from "@/lib/jsonld";
 import { SITE_URL } from "@/lib/site";
+import { buildTitle, buildDescription } from "@/lib/seo-meta";
 
 // riftdecks.com's /legends/<champion> pages rank #1 for champion queries with
 // build price and win rate in the snippet; ours 404'd entirely. This is the
@@ -27,12 +28,23 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const champ = championBySlug(params.slug);
   if (!champ) return {};
-  const title = `${champ.name} Riftbound Cards — All Printings & Live Prices`;
-  return {
-    title: { absolute: `${title} | RiftCompare` },
-    description:
-      `Every Riftbound ${champ.name} card across all sets — Legends, units and alternate-art printings — ` +
+  // Stepped down so a long champion name (e.g. "Miss Fortune") still fits the
+  // ~60-char SERP budget alongside the " | RiftCompare" suffix — the original
+  // single fixed title ran to 74+ chars with the suffix for most names.
+  const titleCandidates = [
+    `${champ.name} Riftbound Cards — All Printings & Live Prices`,
+    `${champ.name} Riftbound Cards — Live Prices`,
+    `${champ.name} Riftbound Cards`,
+    `${champ.name} — Riftbound`,
+  ];
+  const description = buildDescription([
+    `Every Riftbound ${champ.name} card across all sets — Legends, units and alternate-art printings — ` +
       `with live prices compared across stores so you can find the cheapest way to build ${champ.name}.`,
+    `Every Riftbound ${champ.name} card, live prices compared across stores.`,
+  ]);
+  return {
+    title: buildTitle(titleCandidates, " | RiftCompare"),
+    description,
     alternates: { canonical: `/champions/${champ.slug}` },
     keywords: [
       `${champ.name} riftbound`,
@@ -40,7 +52,11 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       `${champ.name} riftbound deck`,
       `${champ.name} riftbound price`,
     ],
-    openGraph: { title, description: `Every Riftbound ${champ.name} card with live prices.`, url: `${SITE_URL}/champions/${champ.slug}` },
+    openGraph: {
+      title: titleCandidates[0],
+      description: `Every Riftbound ${champ.name} card with live prices.`,
+      url: `${SITE_URL}/champions/${champ.slug}`,
+    },
   };
 }
 

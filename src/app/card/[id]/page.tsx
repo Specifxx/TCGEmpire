@@ -20,7 +20,8 @@ import { COUNTRIES, DEFAULT_COUNTRY, isoCountry, priceField, type Country } from
 import { setByCode } from "@/lib/constants";
 import { domainSlug } from "@/lib/domains";
 import { decksUsingCard } from "@/lib/meta-decks";
-import { SITE_URL } from "@/lib/site";
+import { SITE_URL, PRODUCT_PRICE_VALID_DAYS } from "@/lib/site";
+import { buildTemplatedTitle, buildDescription, clampText } from "@/lib/seo-meta";
 import { PriceHistoryChart } from "@/components/PriceHistoryChart";
 import { getPriceHistory, type PricePoint } from "@/lib/price-history";
 import { CardConversionCta } from "@/components/CardConversionCta";
@@ -68,16 +69,6 @@ const whereParam = (p: string) => ({ OR: [{ slug: p }, { id: p }] });
 const BASELINE_CURRENCY = COUNTRIES[DEFAULT_COUNTRY].currency;
 const fmtBaselineMoney = (cents: number) => formatMoney(cents, BASELINE_CURRENCY);
 
-// Trim printed card text down to something that survives a ~160-char meta
-// description without cutting mid-word.
-function clampText(s: string, max: number): string {
-  const flat = s.replace(/\s+/g, " ").trim();
-  if (flat.length <= max) return flat;
-  const cut = flat.slice(0, max);
-  const lastSpace = cut.lastIndexOf(" ");
-  return `${(lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).replace(/[,;:.\s]+$/, "")}…`;
-}
-
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const card = await prisma.card.findFirst({
     where: whereParam(params.id),
@@ -116,7 +107,12 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   // to the SERP and suppresses the whole cluster's CTR.
   //
   // Built longest-first and stepped down so the card name + "Riftbound" + set id
-  // always survive Google's ~60-char truncation on even the longest legend names.
+  // always survive Google's ~60-char SERP truncation on even the longest legend
+  // names — buildTemplatedTitle also drops the root layout's automatic
+  // " — RiftCompare" suffix on any candidate it would otherwise push over budget
+  // (that double-length-budget miss — 62-char content + a 14-char suffix nobody
+  // accounted for — is exactly why titles were running 65-80 chars in Search
+  // Console; the suffix was never in the length check at all).
   const ident = `Riftbound ${card.setCode} ${card.collectorNumber}`;
   const tail = hasPrice ? "Card Text & Live Prices" : "Card Text, Stats & Printings";
   const titleCandidates = [
@@ -125,19 +121,30 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     `${displayName} — ${ident}`,
     `${displayName} — Riftbound ${card.setCode}`,
   ];
-  const title = titleCandidates.find((t) => t.length <= 62) ?? titleCandidates[titleCandidates.length - 1];
+  const title = buildTemplatedTitle(titleCandidates, " — RiftCompare");
+  // openGraph/twitter titles aren't subject to the root layout's title.template,
+  // so they always want the bare content — never the `{ absolute }` wrapper.
+  const contentTitle = typeof title === "string" ? title : title.absolute;
 
   // DESCRIPTION — lead with what the card DOES (the informational half of the
-  // intent), then the commercial half. Degrades in three steps so a card with no
-  // printed text and no price still gets a unique, non-boilerplate sentence.
+  // intent), then the commercial half. A card with no printed text still gets a
+  // unique, non-boilerplate sentence; a card with no live price gets an HONEST
+  // fallback rather than a claim the page doesn't back up — this exact mismatch
+  // ("Compare live prices... updated daily" on a page showing "0 stores") was a
+  // named Search Console finding.
   const textBit = card.description ? clampText(card.description, 90) : null;
   const statBit = `${card.domain} ${card.type.toLowerCase()} · ${card.rarity}`;
   const priceBit = hasPrice
     ? `Live prices from ${fmtBaselineMoney(lowestCents!)} across ${stores} ${stores === 1 ? "store" : "stores"}, updated daily.`
-    : `Compare live prices across AU, NZ, US, UK & SG stores, updated daily.`;
-  const description = textBit
-    ? `${displayName} (${ident}) — ${textBit} ${priceBit}`
-    : `${displayName} — ${statBit} from Riftbound ${card.setName} (${card.collectorNumber}). ${priceBit}`;
+    : `Card text, stats and every printing — no live store listings yet.`;
+  const description = buildDescription(
+    textBit
+      ? [`${displayName} (${ident}) — ${textBit} ${priceBit}`, `${displayName} — ${textBit} ${priceBit}`]
+      : [
+          `${displayName} — ${statBit} from Riftbound ${card.setName} (${card.collectorNumber}). ${priceBit}`,
+          `${displayName} — ${statBit}, Riftbound ${card.setCode} ${card.collectorNumber}. ${priceBit}`,
+        ],
+  );
 
   return {
     title,
@@ -150,15 +157,17 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       types: { "text/markdown": `${SITE_URL}/llm/card/${card.slug ?? params.id}` },
     },
     // og:image + twitter:image are provided by the co-located opengraph-image.tsx
-    // (a branded price card: art + name + lowest live price).
+    // (a branded price card: art + name + lowest live price). Always the bare
+    // content title (never `{ absolute }`) — OG/Twitter don't go through the
+    // root layout's title.template in the first place.
     openGraph: {
-      title,
+      title: contentTitle,
       description,
       type: "website",
     },
     twitter: {
       card: "summary_large_image",
-      title,
+      title: contentTitle,
       description,
     },
   };
@@ -262,15 +271,21 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // it — unpriced cards simply omit it rather than emit an invalid empty Product.
   //
   // Marketplace listings (once MARKETPLACE_PUBLIC) join as individual Offer
-  // entries alongside the store AggregateOffer — the card page IS the product
-  // page Google sees for each listing; there are deliberately no per-listing
-  // pages (thin/duplicate content that 404s when sold). Freshness is handled by
-  // revalidateCardPage() firing on every listing mutation.
+  // entries alongside the store offer (a plain Offer or an AggregateOffer,
+  // depending on how many store prices exist — see storeOfferLd below) — the
+  // card page IS the product page Google sees for each listing; there are
+  // deliberately no per-listing pages (thin/duplicate content that 404s when
+  // sold). Freshness is handled by revalidateCardPage() firing on every listing
+  // mutation.
   const mpListings = await getActiveListingsForCard(card.id).catch(() => []);
-  // priceValidUntil = now + 1 day: store prices refresh on the daily import and
-  // listing churn re-renders the page on-demand, so each snapshot is honest
-  // until the next pass overwrites it.
-  const priceValidUntil = new Date(Date.now() + 86400e3).toISOString().slice(0, 10);
+  // priceValidUntil = now + PRODUCT_PRICE_VALID_DAYS (default 14, see lib/site.ts).
+  // Was +1 day, which is shorter than Google's real re-crawl cadence for most of
+  // the long-tail card pages — the date had already passed by the next crawl,
+  // reading as an expired offer. This is computed fresh on every render (ISR
+  // revalidate + on-demand revalidateCardPage() both recompute it), so widening
+  // the window doesn't risk showing a stale price, only a more realistic
+  // "how long is this good for" claim.
+  const priceValidUntil = new Date(Date.now() + PRODUCT_PRICE_VALID_DAYS * 86400e3).toISOString().slice(0, 10);
   const hasStoreOffers = baseline.prices.length > 0 && baseline.lowest != null;
   // Google's "merchant listing" price/shipping/returns snippet requires every
   // Offer to declare shippingDetails + hasMerchantReturnPolicy (missing either
@@ -291,21 +306,37 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     returnPolicyCategory: "https://schema.org/MerchantReturnUnspecified",
     applicableCountry: isoCountry(listingCountry as Country),
   });
+  // A single live store price is a plain Offer, not an AggregateOffer — Google's
+  // product-snippet docs treat AggregateOffer as aggregating MULTIPLE offers;
+  // wrapping a lone price in one is needless (and some validators flag a
+  // single-item AggregateOffer as suspect). Only 2+ distinct in-stock store
+  // prices get the AggregateOffer treatment.
+  const storeOfferLd = !hasStoreOffers
+    ? null
+    : baseline.prices.length === 1
+    ? {
+        "@type": "Offer",
+        priceCurrency: baseline.currency,
+        price: (baseline.lowest! / 100).toFixed(2),
+        availability: "https://schema.org/InStock",
+        seller: { "@type": "Organization", name: baseline.prices[0].retailerName },
+        url: baseline.prices[0].buyHref,
+        priceValidUntil,
+      }
+    : {
+        "@type": "AggregateOffer",
+        // From the view itself — NEVER hardcoded. This line said "AUD" while
+        // the figures below were DEFAULT_COUNTRY's (US/USD), publishing a
+        // currency that contradicted the visible page on every card.
+        priceCurrency: baseline.currency,
+        lowPrice: (baseline.lowest! / 100).toFixed(2),
+        highPrice: (baseline.prices[baseline.prices.length - 1].priceCents / 100).toFixed(2),
+        offerCount: baseline.prices.length,
+        availability: "https://schema.org/InStock",
+        priceValidUntil,
+      };
   const offersLd = [
-    ...(hasStoreOffers
-      ? [{
-          "@type": "AggregateOffer",
-          // From the view itself — NEVER hardcoded. This line said "AUD" while
-          // the figures below were DEFAULT_COUNTRY's (US/USD), publishing a
-          // currency that contradicted the visible page on every card.
-          priceCurrency: baseline.currency,
-          lowPrice: (baseline.lowest! / 100).toFixed(2),
-          highPrice: (baseline.prices[baseline.prices.length - 1].priceCents / 100).toFixed(2),
-          offerCount: baseline.prices.length,
-          availability: "https://schema.org/InStock",
-          priceValidUntil,
-        }]
-      : []),
+    ...(storeOfferLd ? [storeOfferLd] : []),
     ...mpListings.map((l) => {
       const shipCents = l.seller.sellerProfile?.shippingFlatCents;
       return {

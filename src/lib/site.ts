@@ -33,6 +33,17 @@ export const PREMIUM_PRICE_LABEL = process.env.NEXT_PUBLIC_PREMIUM_PRICE || `${P
 export const PREMIUM_ANNUAL_AMOUNT = process.env.NEXT_PUBLIC_PREMIUM_ANNUAL_AMOUNT || "$39";
 export const PREMIUM_ANNUAL_PERIOD = process.env.NEXT_PUBLIC_PREMIUM_ANNUAL_PERIOD || "year";
 
+// How far out a card page's Product `priceValidUntil` claims prices are good for.
+// Was hardcoded to 1 day, which is shorter than Google's actual re-crawl interval
+// for most of the long-tail card pages — by the time a page is re-crawled, the
+// date had already passed, which reads as a stale/expired offer even though the
+// PAGE regenerates the value fresh on every render (ISR revalidate + on-demand
+// revalidateCardPage() both recompute it, so raising this number doesn't risk
+// showing a genuinely-stale price — it only widens the claimed validity window).
+// Override via env if 14 days turns out too long/short for how honest the prices
+// stay in practice.
+export const PRODUCT_PRICE_VALID_DAYS = Number(process.env.PRODUCT_PRICE_VALID_DAYS ?? 14);
+
 // Percent saved on annual vs paying monthly for a year (rounded). Parses the numeric
 // part of each amount; falls back to 0 if either can't be read.
 export function annualSavingPct(): number {

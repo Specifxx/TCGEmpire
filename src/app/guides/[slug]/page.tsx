@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getArticle, getArticles } from "@/lib/articles";
 import { ArticleView } from "@/components/ArticleView";
+import { buildTitle, buildDescription } from "@/lib/seo-meta";
 
 export function generateStaticParams() {
   return getArticles("guide").map((a) => ({ slug: a.slug }));
@@ -10,14 +11,19 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const a = getArticle(params.slug);
   if (!a || a.category !== "guide") notFound(); // real 404 — metadata resolves before streaming
+  // Hand-authored titles/excerpts have no shorter fallback phrasing to step
+  // down to, so a single-candidate ladder — buildTitle/buildDescription still
+  // cap them (dropping the suffix, then clamping) rather than let a long one
+  // through untouched.
+  const description = buildDescription([a.excerpt]);
   return {
-    title: { absolute: `${a.title} — RiftCompare Guides` },
-    description: a.excerpt,
+    title: buildTitle([a.title], " — RiftCompare Guides"),
+    description,
     alternates: { canonical: `/guides/${a.slug}` },
     openGraph: {
       type: "article",
       title: a.title,
-      description: a.excerpt,
+      description,
       publishedTime: a.date,
       authors: [a.author],
     },

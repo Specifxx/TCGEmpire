@@ -11,7 +11,7 @@ import { SealedFilters } from "@/components/SealedFilters";
 import { SealedSort } from "@/components/SealedSort";
 import { SealedTile } from "@/components/SealedTile";
 import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
-import { SITE_URL } from "@/lib/site";
+import { SITE_URL, PRODUCT_PRICE_VALID_DAYS } from "@/lib/site";
 
 export const revalidate = 86400;
 
@@ -155,6 +155,9 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
       { "@type": "ListItem", position: 2, name: "Sealed", item: `${SITE_URL}/sealed` },
     ],
   };
+  // Same horizon + AggregateOffer-vs-Offer split as /card/[id] — see lib/site.ts
+  // and that page's storeOfferLd for the full rationale.
+  const sealedPriceValidUntil = new Date(Date.now() + PRODUCT_PRICE_VALID_DAYS * 86400e3).toISOString().slice(0, 10);
   const itemListLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
@@ -163,7 +166,27 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
     itemListElement: groups
       .filter((g) => g.lowestPriceCents != null && g.listings.some((l) => l.inStock))
       .map((g, i) => {
-        const inStockCount = g.listings.filter((l) => l.inStock).length;
+        const inStock = g.listings.filter((l) => l.inStock);
+        const offers =
+          inStock.length === 1
+            ? {
+                "@type": "Offer",
+                priceCurrency: currency,
+                price: (inStock[0].priceCents / 100).toFixed(2),
+                availability: "https://schema.org/InStock",
+                seller: { "@type": "Organization", name: inStock[0].retailerName },
+                url: inStock[0].url,
+                priceValidUntil: sealedPriceValidUntil,
+              }
+            : {
+                "@type": "AggregateOffer",
+                priceCurrency: currency,
+                lowPrice: (g.lowestPriceCents! / 100).toFixed(2),
+                highPrice: (Math.max(...inStock.map((l) => l.priceCents)) / 100).toFixed(2),
+                offerCount: inStock.length,
+                availability: "https://schema.org/InStock",
+                priceValidUntil: sealedPriceValidUntil,
+              };
         return {
           "@type": "ListItem",
           position: i + 1,
@@ -172,13 +195,7 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
             name: g.name,
             category: "Trading Card Game Sealed Product",
             ...(g.imageUrl ? { image: g.imageUrl.startsWith("http") ? g.imageUrl : `${SITE_URL}${g.imageUrl}` } : {}),
-            offers: {
-              "@type": "AggregateOffer",
-              priceCurrency: currency,
-              lowPrice: (g.lowestPriceCents! / 100).toFixed(2),
-              offerCount: inStockCount,
-              availability: "https://schema.org/InStock",
-            },
+            offers,
           },
         };
       }),
