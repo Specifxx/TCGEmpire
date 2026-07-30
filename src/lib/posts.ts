@@ -61,13 +61,10 @@ export async function getMarketReportPost(slug: string): Promise<MarketReportPos
   return r ? { article: reportToArticle(r), day: r.day, data: parseReportData(r.data) } : null;
 }
 
-// The newest report row, if one exists. Generation is stopped (see
-// lib/market-report.ts) and nothing on the public site surfaces this anymore —
-// only internal tooling (admin/social, the Discord poster) still reads it, and
-// only when it's actually fresh (see each caller's freshness check).
-export async function getLatestMarketReport(): Promise<MarketReportPost | null> {
-  const r = await prisma.marketReport
-    .findFirst({ orderBy: { day: "desc" }, select: REPORT_SELECT })
-    .catch(() => null);
-  return r ? { article: reportToArticle(r), day: r.day, data: parseReportData(r.data) } : null;
-}
+// getLatestMarketReport() is GONE. Report generation is deleted (see
+// lib/market-report.ts), so "the newest report row" is a permanently-ageing
+// legacy row — every caller had to wrap it in its own freshness check to stop
+// surfacing months-old numbers as today's, and each of those checks was already
+// permanently false. The Discord poster and admin/social now just don't feature a
+// wrap, and the weekly newsletter no longer links one. Individual legacy reports
+// stay reachable by direct URL via getMarketReportPost above.

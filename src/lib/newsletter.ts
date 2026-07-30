@@ -80,7 +80,12 @@ interface Digest {
 
 // Build one market's digest, or null on a quiet week (house rule: skip rather
 // than send noise).
-function buildDigest(movers: PriceMovers, market: Country, latestReport: { slug: string; title: string } | null): Digest | null {
+// No `latestReport` parameter anymore: market-report generation is deleted (see
+// lib/market-report.ts), so the "read the latest Index report" row was linking a
+// permanently-ageing legacy row — i.e. mailing subscribers a months-old,
+// noindexed page as though it were this week's. The digest now points at /movers
+// (live, always current) instead.
+function buildDigest(movers: PriceMovers, market: Country): Digest | null {
   if (!movers.spiking.length && !movers.plummeting.length && !movers.value.length) return null;
 
   const info = COUNTRIES[market];
@@ -94,13 +99,6 @@ function buildDigest(movers: PriceMovers, market: Country, latestReport: { slug:
     ? `📊 Riftbound this week: ${bits.join(", ")}`
     : "📊 Your weekly Riftbound Index summary";
 
-  const reportRow = latestReport
-    ? `<tr><td style="padding:14px 32px 0;font-size:13px;line-height:1.6;color:#8b95a5">
-         Want the full picture? Read the latest Index report:
-         <a href="${utm(`/blog/${latestReport.slug}`)}" style="color:#9aa4b2">${latestReport.title}</a>
-       </td></tr>`
-    : "";
-
   const inner = `
     <tr><td style="padding:8px 32px 0;font-size:14px;line-height:1.6;color:#b8c0cc">
       The week's biggest Riftbound price moves, from live lowest in-stock prices compared across ${info.adjective} stores.
@@ -108,7 +106,6 @@ function buildDigest(movers: PriceMovers, market: Country, latestReport: { slug:
     ${section("📈 Spiking this week", movers.spiking, currency, 5, market)}
     ${section("📉 Biggest drops", movers.plummeting, currency, 5, market)}
     ${section("💎 Best value vs recent high", movers.value, currency, 3, market)}
-    ${reportRow}
     <tr><td style="padding:18px 32px 24px"><a href="${utm("/movers")}" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">See all movers + price charts</a></td></tr>`;
 
   return { subject, heading: "This week on the Riftbound market", inner };
@@ -133,18 +130,13 @@ export async function runNewsletterDigest(): Promise<NewsletterRunSummary> {
   };
   if (!due.length || !isEmailEnabled()) return summary;
 
-  const latestReport = await prisma.marketReport.findFirst({
-    orderBy: { day: "desc" },
-    select: { slug: true, title: true },
-  });
-
   // One digest per market, computed once and reused for every subscriber in it.
   const digests = new Map<Country, Digest | null>();
   for (const sub of due) {
     const market = normalizeCountry(sub.market);
     if (!digests.has(market)) {
       const movers = await getPriceMovers(market, 8);
-      digests.set(market, buildDigest(movers, market, latestReport));
+      digests.set(market, buildDigest(movers, market));
       if (!digests.get(market)) summary.quietMarkets.push(market);
     }
     const digest = digests.get(market);

@@ -29,6 +29,15 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
   const pathname = usePathname();
   // Carry the current page as ?next= so signing in returns the user here (not always
   // /profile). Skip auth pages to avoid a redirect loop.
+  //
+  // SEO: this link is rendered on EVERY page (the navbar), so it mints one
+  // /login?next=<path> URL per public URL on the site — ~1,600 of them. /login is
+  // noindex, but it is deliberately NOT robots-disallowed (see app/robots.ts: a
+  // Disallow would stop Google ever SEEING the noindex), so every variant is a
+  // real crawlable URL. Googlebot renders JS, so it finds these even though the
+  // link is client-only. rel="nofollow" keeps the return-to-page UX while taking
+  // the whole ?next= family out of the crawl graph; /login and /register also
+  // self-canonicalise so any variant already crawled collapses to one URL.
   const loginHref =
     pathname && pathname !== "/" && !AUTH_PATHS.some((p) => pathname.startsWith(p))
       ? `/login?next=${encodeURIComponent(pathname)}`
@@ -46,6 +55,7 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
     return (
       <Link
         href={loginHref}
+        rel="nofollow"
         aria-label="Sign in"
         title="Sign in"
         className="grid h-9 w-9 place-items-center rounded-lg text-slate-200 hover:bg-ink-800 hover:text-white"
