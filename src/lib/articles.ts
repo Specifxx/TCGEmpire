@@ -2579,6 +2579,45 @@ Run a UK store selling Riftbound? **[Get listed free](/stores/suggest)** — fre
 Shopping from **[Australia](/blog/buy-riftbound-cards-australia)**, **[New Zealand](/blog/buy-riftbound-cards-nz)** or **[the US](/blog/buy-riftbound-cards-us)**? We've got a dedicated breakdown for your market too — or see the **[full multi-market guide](/guides/where-to-buy-riftbound-cards)**.`,
   },
   {
+    slug: "buy-riftbound-cards-canada",
+    category: "blog",
+    title: "Riftbound Card Prices Canada — Compare 20 Canadian Stores",
+    excerpt:
+      "Compare Riftbound card prices across Canadian stores — live CAD prices at 20 Canadian retailers, ranked by total delivered cost. Free, updated daily.",
+    author: "RiftCompare",
+    date: "2026-07-30",
+    updated: "2026-07-30",
+    readMins: 4,
+    tags: ["canada", "buying guide", "price comparison", "riftbound singles", "cad"],
+    shop: [
+      { label: "Riftbound singles on eBay", query: "Riftbound singles" },
+      { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
+    ],
+    body: `Looking to buy Riftbound cards in Canada? With 20 Canadian stores now selling Riftbound singles — and prices that can swing 30-50% between them once shipping is counted — checking them all by hand isn't realistic. That's what RiftCompare does for you.
+
+## Why Canadians use RiftCompare
+
+- **20 Canadian stores in one search.** We track live CAD prices at The Trading Card Shop, Face to Face Games, 401 Games, GT Games, Invasion Inc, Obsidian Games, Enter the Battlefield, Black Knight Games, Bento Gaming, Jack's On Queen, Banana Games & Hobby, Always Games, Derpy Cards, Empire Trading, Toy Snowman, Esper Cards & Games, Red Riot Games, Level Up Games, Danireon Cards & Games and Hobbiesville ([full list](/stores/tracked)).
+- **Ranked by what you actually pay.** Every comparison ranks stores by total delivered cost, with each store's free-shipping threshold factored in automatically.
+- **Prices refresh daily** — and [price history charts](/movers) on every card show whether you're buying a spike or a dip.
+- **Whole-deck pricing.** The [deck pricer](/deck) takes a full 40-card list and works out the cheapest way to buy it across every store, consolidating orders to dodge multiple shipping charges.
+- **100% free.** No account needed to compare.
+
+## How to find the cheapest Riftbound card prices in Canada
+
+1. **[Search the database](/browse)** — every card shows its lowest live CAD price.
+2. **Open the card** for the full store-by-store table, in stock and ranked by delivered cost.
+3. **Click through and buy** — we link straight to the exact listing at the store.
+
+## Vendetta is coming — July 31
+
+[Riftbound: Vendetta](/sets/vendetta) releases 31 July 2026, and week-one prices always move fast. Every revealed card is already browsable, the [chase cards are mapped tier by tier](/blog/riftbound-vendetta-chase-cards-so-far), and launch-day prices land here compared across every Canadian store above. Set a price watch now and you're ready the moment singles go live.
+
+Run a Canadian store selling Riftbound? [Get listed free](/stores/suggest) — more visibility, more customers. Everyone else: start at the [card database](/browse) and pay less for your next pickup.
+
+Shopping from [Australia](/blog/buy-riftbound-cards-australia), [the US](/blog/buy-riftbound-cards-us), [New Zealand](/blog/buy-riftbound-cards-nz), [the UK](/blog/buy-riftbound-cards-uk) or [Singapore](/blog/riftbound-price-comparison-singapore)? We've got a dedicated breakdown for those markets too — or see the [full multi-market guide](/guides/where-to-buy-riftbound-cards).`,
+  },
+  {
     slug: "every-riftbound-vendetta-card-revealed",
     category: "blog",
     title: "Riftbound Vendetta Card List & Gallery — All 166 Cards Revealed",

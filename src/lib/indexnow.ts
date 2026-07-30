@@ -60,7 +60,29 @@ export async function pingAfterPriceRefresh(): Promise<number> {
   return pingIndexNow([...hubs, ...sets, ...cards]);
 }
 
-// After the daily market report exists: the new post + the pages that list it.
-export function pingAfterMarketReport(slug: string): Promise<number> {
-  return pingIndexNow([`/blog/${slug}`, "/blog", "/feed.xml", "/feed.json"]);
+// After a CARD IMPORT (new set reveals, promo printings, a catalogue sync).
+//
+// This is the launch-week lever. New cards do NOT arrive via the price importer —
+// they arrive via maintenance.yml's cards-sync / vendetta-pipeline tasks, which
+// previously pinged nothing and revalidated nothing, so a freshly imported card
+// sat out of /sitemaps/cards.xml until the next price refresh happened to purge
+// it (up to ~9h, or the full 24h ISR TTL if that revalidate call failed). During
+// a set launch that lag is the whole opportunity.
+//
+// Deliberately scoped to the cards that actually changed plus the hubs that list
+// them, rather than resubmitting the entire ~1,400-card catalogue: a targeted
+// batch is a stronger freshness signal and doesn't spend the daily quota
+// re-asserting pages that didn't change. `slugs` accepts slug-or-id (whatever
+// the importer has); duplicates are collapsed by pingIndexNow.
+//
+// NOTE: IndexNow reaches Bing/Yandex/Seznam/Naver — NOT Google (see the header).
+// Google's half of this fix is the sitemap revalidation that runs alongside it.
+export function pingAfterCardImport(slugs: string[], setSlugs: string[] = []): Promise<number> {
+  if (!slugs.length) return Promise.resolve(0);
+  const hubs = ["/", "/browse", "/cards", "/sitemap.xml"];
+  return pingIndexNow([
+    ...slugs.map((s) => `/card/${s}`),
+    ...setSlugs.map((s) => `/sets/${s}`),
+    ...hubs,
+  ]);
 }

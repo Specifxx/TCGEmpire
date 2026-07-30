@@ -7,7 +7,8 @@ import { cardTileSelect } from "@/lib/cards";
 import { COUNTRIES, DEFAULT_COUNTRY, priceField } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { CHAMPIONS, championBySlug, championCardWhere } from "@/lib/champions";
-import { META_DECKS } from "@/lib/meta-decks";
+import { META_DECKS, resolveDeck, type ResolvedDeck } from "@/lib/meta-decks";
+import { DomainBadge } from "@/components/Badge";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { breadcrumb } from "@/lib/jsonld";
 import { SITE_URL } from "@/lib/site";
@@ -93,11 +94,34 @@ export default async function ChampionPage({ params }: { params: { slug: string 
   const sets = Array.from(new Set(cards.map((c) => c.setName)));
   const legends = cards.filter((c) => c.type === "Legend");
 
+  // Real per-champion domain distribution, straight from the rendered card set —
+  // not a synergy claim we can't back, just an honest tally of which domain(s)
+  // this champion's printings actually belong to. Gives every champion page
+  // genuinely different prose instead of the same template with a name swapped.
+  const domainCounts = new Map<string, number>();
+  for (const c of cards) domainCounts.set(c.domain, (domainCounts.get(c.domain) ?? 0) + 1);
+  const domainsByCount = Array.from(domainCounts.entries()).sort((a, b) => b[1] - a[1]);
+
   // Meta decks whose legend is this champion. Matched through the same alias
   // list as everything else, so the "Master Yi"/"Yi"/"Master" split resolves.
-  const decks = META_DECKS.filter((d) =>
+  // Resolved (not just filtered) so the page can show the SAME real build cost
+  // and tournament attribution as /decks, rather than a bare name + archetype.
+  // Same DB-outage fence as the card query above: a failure here degrades to
+  // the un-costed seed data (still real name/tier/domains/source) rather than
+  // crashing an otherwise-fine page.
+  const unpriced = (d: (typeof META_DECKS)[number]): ResolvedDeck => ({
+    ...d, legendCard: null, legendPriceCents: null, items: [],
+    totalCards: 0, totalCents: 0, pricedCards: 0, sideboardCards: 0, sideboardCents: 0, imageUrl: null,
+  });
+  const deckSeeds = META_DECKS.filter((d) =>
     champ.prefixes.some((p) => d.legend.toLowerCase().startsWith(p.toLowerCase() + ","))
   );
+  const decks: ResolvedDeck[] = dbReachable
+    ? await Promise.all(deckSeeds.map((d) => resolveDeck(d, country))).catch((e) => {
+        console.error(`champions/${champ.slug}: deck resolve failed:`, e);
+        return deckSeeds.map(unpriced);
+      })
+    : deckSeeds.map(unpriced);
 
   const trail = [
     { name: "Champions", href: "/champions" },
@@ -137,6 +161,24 @@ export default async function ChampionPage({ params }: { params: { slug: string 
           Prices update daily and are compared across every store we track, so you can see the cheapest way to
           pick each one up.
         </p>
+        {domainsByCount.length > 0 && (
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+            {domainsByCount.length === 1 ? (
+              <>Every tracked {champ.name} printing is a <strong className="text-slate-200">{domainsByCount[0][0]}</strong> card.</>
+            ) : (
+              <>
+                {champ.name}&apos;s printings span {domainsByCount.length} domains —{" "}
+                {domainsByCount.map(([d, n], i) => (
+                  <span key={d}>
+                    {i > 0 && (i === domainsByCount.length - 1 ? " and " : ", ")}
+                    <strong className="text-slate-200">{d}</strong> ({n})
+                  </span>
+                ))}
+                {" "}— so a deck built around {champ.name} can pull from any of them.
+              </>
+            )}
+          </p>
+        )}
       </div>
 
       {/* Price stats — the commercial angle riftdecks shows in its snippet, but
@@ -169,6 +211,10 @@ export default async function ChampionPage({ params }: { params: { slug: string 
       {decks.length > 0 && (
         <section>
           <h2 className="mb-3 text-xl font-extrabold text-white">Decks built around {champ.name}</h2>
+          <p className="mb-4 max-w-3xl text-xs text-slate-500">
+            Real tournament results, not house-made lists — each links to its source event and its live, priced
+            buy list.
+          </p>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {decks.map((d) => (
               <Link
@@ -176,8 +222,22 @@ export default async function ChampionPage({ params }: { params: { slug: string 
                 href={`/decks/${d.slug}`}
                 className="card-surface group flex flex-col gap-1 p-4 transition-colors hover:border-brand-500"
               >
-                <span className="font-semibold text-white group-hover:text-brand-300">{d.name}</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-white group-hover:text-brand-300">{d.name}</span>
+                  {d.tier && <span className="chip ml-auto bg-ink-800 text-[10px] text-slate-400">Tier {d.tier}</span>}
+                </div>
                 <span className="text-xs text-slate-500">{d.archetype}</span>
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  {d.domains.map((dm) => (
+                    <DomainBadge key={dm} domain={dm} />
+                  ))}
+                </div>
+                {d.pricedCards > 0 && (
+                  <span className="num mt-1 text-sm font-bold text-accent">
+                    from {formatMoney(d.totalCents, currency)} <span className="text-xs font-normal text-slate-500">({d.pricedCards}/{d.totalCards} priced)</span>
+                  </span>
+                )}
+                {d.source && <span className="mt-1 text-[11px] text-slate-600">{d.source}</span>}
               </Link>
             ))}
           </div>
