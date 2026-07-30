@@ -16,6 +16,21 @@ codebase today. Those are marked 🚫 and are *not* implemented — see the note
 Items marked ✅ are implemented in this pass. Items marked 🟡 are partially
 implemented or scoped down to what real data supports.
 
+**Mid-pass correction, same day:** the initial survey (which this table was
+built from) found Canada had zero pricing/store infrastructure and that 9 of
+the 15 trending champions had zero card data. Concurrent work on `main` during
+this same pass added Canada as a full sixth market (20 real CA stores, CAD
+pricing, end-to-end) and imported real cards for Akali, Zed, Renekton, Mel and
+Kennen. Both findings below have been corrected in place rather than left
+stale — the `/blog/buy-riftbound-cards-canada` guide was rewritten to a real
+regional guide (matching the AU/NZ/US/UK/SG template) instead of the honest
+"we don't have this yet" interim version originally published, and those 5
+champions were added to the `CHAMPIONS` allowlist in `lib/champions.ts` so
+their hub pages go live with real data. This is exactly the kind of drift a
+concurrent-development environment produces — re-verify anything in this
+backlog against the live `Country`/`CHAMPIONS`/retailer data before acting on
+it if more time has passed since this was written.
+
 ## Scoring table
 
 | # | Item | Demand | Effort | Gap | Status | Notes |
@@ -23,8 +38,8 @@ implemented or scoped down to what real data supports.
 | 1 | Card page template upgrade (H2s, extra FAQ, JSON-LD) | 5 | 2 | 2 | ✅ done | Template was already strong (Product/Offer/AggregateOffer/FAQPage/BreadcrumbList, ~150–500 words/card, similar-cards/decks/printings rails). Added: explicit H2 over price-comparison+history block, a "Rarity, prints & variants" H2 section, and one new FAQ ("Is the {Signature/Overnumbered/Crystal Rose} printing worth it?") that only renders when a real comparable base-printing price exists. |
 | 2 | Seed/verify the 27 named spiking cards exist | 5 | 3 | — | 🚫 not verifiable here | No live `DATABASE_URL` in this sandbox — cannot query the production DB. **Action needed from you**: run `SELECT name, slug FROM "Card" WHERE name ILIKE ANY (ARRAY['Crystal Rose Sona','Lacerate','Seat of Power', ...])` against production and report back which of the 27 are missing before any content references them by name. |
 | 3 | Champion hub template upgrade (real prose, deck cost, attribution) | 5 | 3 | 4 | 🟡 partial | Added real per-champion domain-distribution prose and, where a real `META_DECKS` entry exists, resolved build cost + tier + domains + tournament source attribution (previously the page showed a bare deck name/archetype with none of that). **Cannot** honestly add "2–3 decklists" for 9 of the 15 named champions — see item 4. |
-| 4 | 9 of 15 trending champions have zero real data | 5 | 5 | 5 | 🚫 blocked on data | Ambessa, Akali, Zed, Illaoi, Renekton, Kayle, Mel, Nasus, Gangplank are Vendetta-debut Legends with **zero rows in the static card seed** and are not in the `CHAMPIONS` allowlist. Vendetta street-dates tomorrow (31 Jul 2026); once real Vendetta cards are imported into production, add these 9 to `lib/champions.ts` and their hub pages activate automatically with real card data. Building "2–3 decklists" for them before then would be fabricating tournament results — explicitly forbidden by your constraints. Jayce/Sona/Shen (already allowlisted) have only 1 tracked printing each — thin pages regardless of prose. |
-| 5 | Canada buying guide | 4 | 2 (content) / 5 (real market) | 4 | 🟡 partial | Published `/blog/buy-riftbound-cards-canada` — but **honestly**, not as a 6th "N Canadian stores, CAD prices" guide like AU/NZ/US/UK/SG. Canada has **zero** infrastructure today: no `CA` in the `Country` type, no `lowestPriceCentsCa` column, zero Canadian retailers in `retailers.ts`, no CA branch in the price-import pipeline, no CA in `stores/tracked`'s `MARKETS`, no CA in the sitewide `Organization` JSON-LD `areaServed`. The published guide is honest about this and routes Canadian readers to the real US/eBay comparison instead. **A full Canadian market needs a product decision from you** — see "Needs your decision" below; it's a multi-day infra project (schema migration + retailer sourcing + import-pipeline branch), not a content task. |
+| 4 | 9 of 15 trending champions have zero real data | 5 | 3 (updated) | 3 (updated) | 🟡 improved mid-pass | **Updated**: real cards for Akali, Zed, Renekton and Mel landed on `main` during this pass (plus Kennen, not in the original 15) and have been added to the `CHAMPIONS` allowlist — their hub pages now render with real card grids. Still genuinely zero data for **Ambessa, Illaoi, Kayle, Nasus, Gangplank** (5 of the original 15) — check the live corpus again before adding them. Jayce/Sona/Shen (already allowlisted) still have only 1 tracked printing each — thin pages regardless of prose. Building "2–3 decklists" for any of these remains fabrication unless a real `META_DECKS` entry exists — only Irelia and Diana have one among the 15. |
+| 5 | Canada buying guide | 4 | 1 (updated) | 1 (updated) | ✅ done | **Updated**: Canada landed as a full sixth market on `main` during this pass — real `CA` in the `Country` type, `lowestPriceCentsCa` column, 20 real Canadian retailers, full price-import pipeline support, `CA` in `stores/tracked`'s `MARKETS` and the marketplace launch-country list. `/blog/buy-riftbound-cards-canada` was rewritten to a real regional guide matching the AU/NZ/US/UK/SG template (20 named CA stores, CAD pricing framing) — the originally-published "honest interim" version (written before this landed) would now be actively wrong if left in place. |
 | 6 | Singapore/Brunei/Malaysia guide | 3 | 2 | 2 | 🚫 skipped this pass | Existing `riftbound-price-comparison-singapore` post already covers SG (11 real stores). Brunei/Malaysia have the same "zero infrastructure" problem as Canada (no `BN`/`MY` in `Country`, no local stores tracked) — same "needs your decision" flag, lower demand (Brunei/SG rank high on RELATIVE search interest per capita, which Trends reports as an index, not raw volume — worth noting since it can overstate absolute opportunity vs. a market like Canada). Deferred to keep this pass scoped; same infra prerequisite as Canada. |
 | 7 | `/guides/riftbound-sealed-rules-explained` | 4 | 3 | 4 | 🚫 needs a verified source | `lib/keywords.ts`'s own DATA-ACCURACY RULE (quoted in full below) forbids drafting rules content without verified official source text or explicit sign-off. Riftbound's Pre-Rift sealed guide already exists (`riftbound-pre-rift-rules-explained`), but a **general** sealed-format guide covering pack count/deck construction/legal pool differs from Pre-Rift specifically and needs the same sourcing discipline. **Needs your decision**: supply Riot's Comprehensive Rules PDF/URL (or confirm an existing verified source) and this becomes a same-day write. |
 | 8 | `/guides/riftbound-rules-explained` hub | 3 | 1 | 3 | ✅ doable, deferred | Pure internal-linking hub (links to already-published Pre-Rift/Empower/Flow/Burn/banlist guides) — no new rules claims needed. Not built this pass purely on scope/time; flagged as low-effort, do-next. |
@@ -62,14 +77,15 @@ content to fill it.
 
 ## Needs your decision (collected)
 
-1. **Vendetta champion cards** — confirm whether the *live production DB* already
-   has Ambessa/Akali/Zed/Illaoi/Renekton/Kayle/Mel/Nasus/Gangplank cards imported
-   (the static repo snapshot has none). If yes, add them to `CHAMPIONS` in
-   `lib/champions.ts` and their hub pages activate with real data immediately.
-2. **Canada / Brunei / Malaysia as real markets** — full buildout is a schema
-   migration + retailer sourcing + price-import-pipeline change (multi-day). Do
-   you want this scoped as a real project, or is the honest interim content
-   (published this pass for Canada) sufficient for now?
+1. **Remaining Vendetta champion cards** — Akali/Zed/Renekton/Mel/Kennen landed
+   and are now allowlisted (done this pass). Still need confirmation on
+   Ambessa/Illaoi/Kayle/Nasus/Gangplank — check the live corpus again
+   (`SELECT DISTINCT split_part(name, ',', 1) FROM "Card" WHERE name LIKE '%,%'`)
+   and add any that now have real cards to `lib/champions.ts`.
+2. **Brunei / Malaysia as real markets** — Canada is now done (landed mid-pass,
+   see above). Brunei/Malaysia have the same infra prerequisite Canada used to
+   have (schema migration + retailer sourcing + price-import-pipeline change).
+   Do you want this scoped as a real project?
 3. **Rules-content sourcing** — sealed rules, a general rules hub, and 27
    unverified keywords all need either a citable official source or your
    explicit sign-off before I draft rules-claim copy.

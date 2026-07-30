@@ -56,7 +56,7 @@ explicit link up/down to the primary).
 | `buy riftbound cards us` | `/blog/buy-riftbound-cards-us` | Real: ~19 US stores + TCGplayer + eBay |
 | `buy riftbound cards uk` | `/blog/buy-riftbound-cards-uk` | Real: 14 UK stores + eBay |
 | `riftbound singapore` | `/blog/riftbound-price-comparison-singapore` | Real: 11 SG stores |
-| `buy riftbound cards canada` | `/blog/buy-riftbound-cards-canada` (published this pass) | **Honest interim page** — no CA stores/CAD pricing exist; routes to the real US/eBay comparison. Do not upgrade this to claim CAD pricing until the market actually exists (schema + retailers + import pipeline — see backlog item 5). |
+| `buy riftbound cards canada` | `/blog/buy-riftbound-cards-canada` | Real: Canada landed as a full sixth market mid-pass (20 CA stores, CAD pricing, end-to-end) — this guide was rewritten to match the AU/NZ/US/UK/SG template with real data, replacing an earlier "honest interim" draft written before CA support existed. |
 | `riftbound singapore/brunei/malaysia` | Existing SG post covers SG. Brunei/Malaysia — **not built**, same zero-infrastructure blocker as Canada (backlog item 6). | |
 | `where to buy riftbound` (no market named) | `/guides/where-to-buy-riftbound-cards` (multi-market umbrella, exists) | Every regional post links back to this |
 
