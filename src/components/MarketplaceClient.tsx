@@ -91,10 +91,22 @@ function deltaPct(offerCents: number, marketCents: number | null): number | null
   return Math.round(((offerCents - marketCents) / marketCents) * 100);
 }
 
+// Deals are the whole point of browsing offers on one card instead of just
+// buying the cheapest — make them impossible to miss instead of just another
+// muted chip among the rest of the row's metadata. A second, hotter tier at
+// -10%+ (matching the first real rung of the MIN_DISCOUNTS filter above) gives
+// genuinely steep listings an extra pop instead of flattening every discount
+// into one look.
 function DeltaBadge({ pct }: { pct: number | null }) {
   if (pct == null) return null;
+  if (pct <= -10)
+    return (
+      <span className="chip bg-brand-400 text-[11px] font-extrabold text-ink-950 shadow-sm shadow-brand-500/40">
+        🔥 <span className="num">{Math.abs(pct)}%</span> under market
+      </span>
+    );
   if (pct <= -3)
-    return <span className="chip bg-brand-500/15 text-[10px] font-bold text-brand-300"><span className="num">{Math.abs(pct)}%</span> under market</span>;
+    return <span className="chip bg-brand-500 text-[11px] font-extrabold text-ink-950"><span className="num">{Math.abs(pct)}%</span> under market</span>;
   if (pct >= 5)
     return <span className="chip bg-down/10 text-[10px] font-semibold text-down"><span className="num">{pct}%</span> over market</span>;
   return <span className="chip bg-ink-800 text-[10px] font-semibold text-slate-400">≈ market price</span>;
@@ -422,7 +434,12 @@ export function MarketplaceClient({
             const pct = deltaPct(best.priceCents, c.marketCents);
             return (
               <li key={c.card.id}>
-                <button onClick={() => setOpenCard(c)} className="card-surface flex w-full flex-col overflow-hidden text-left transition-colors hover:border-brand-500/50">
+                <button
+                  onClick={() => setOpenCard(c)}
+                  className={`card-surface flex w-full flex-col overflow-hidden text-left transition-colors hover:border-brand-500/50 ${
+                    !best.isOfficial && pct != null && pct <= -10 ? "ring-2 ring-brand-400 shadow-lg shadow-brand-500/20" : ""
+                  }`}
+                >
                   <div className="relative aspect-[5/7] w-full bg-ink-900">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     {c.card.imageThumbUrl ? <img src={c.card.imageThumbUrl} alt="" aria-hidden="true" width={300} height={420} loading="lazy" decoding="async" className="h-full w-full object-cover" /> : null}
@@ -431,7 +448,16 @@ export function MarketplaceClient({
                         ★ Official
                       </span>
                     )}
-                    {!best.isOfficial && pct != null && pct <= -3 && (
+                    {/* Deal badge — a hotter, larger, "🔥" treatment for 10%+ under
+                        market (matches the MIN_DISCOUNTS filter's first rung) so a
+                        genuinely steep listing stands out from an everyday 3-9%
+                        discount instead of both looking identical at a glance. */}
+                    {!best.isOfficial && pct != null && pct <= -10 && (
+                      <span className="absolute left-1.5 top-1.5 rounded-full bg-brand-400 px-2 py-1 text-xs font-extrabold text-ink-950 shadow-md shadow-brand-500/40">
+                        🔥 <span className="num">{Math.abs(pct)}%</span> under market
+                      </span>
+                    )}
+                    {!best.isOfficial && pct != null && pct <= -3 && pct > -10 && (
                       <span className="absolute left-1.5 top-1.5 rounded-full bg-brand-500 px-2 py-0.5 text-[10px] font-extrabold text-ink-950 shadow">
                         <span className="num">{Math.abs(pct)}%</span> under market
                       </span>
