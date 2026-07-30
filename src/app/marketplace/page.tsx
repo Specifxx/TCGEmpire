@@ -202,6 +202,7 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
         country={country}
         stripeEnabled={stripeEnabled()}
         signedIn={!!user}
+        currentUserId={user?.id ?? null}
         offersEnabled={MARKETPLACE_OFFERS}
         openCardId={cardId}
       />

@@ -473,7 +473,9 @@ function MyListings({ listings, isPremiumSeller, onChange }: { listings: Listing
         <p className="text-sm text-slate-500">No listings yet — list a card above.</p>
       ) : (
         <ul className="divide-y divide-ink-800">
-          {listings.map((l) => <ListingRow key={l.id} l={l} isPremiumSeller={isPremiumSeller} onChange={onChange} />)}
+          {[...listings]
+            .sort((a, b) => a.card.name.localeCompare(b.card.name))
+            .map((l) => <ListingRow key={l.id} l={l} isPremiumSeller={isPremiumSeller} onChange={onChange} />)}
         </ul>
       )}
     </div>
