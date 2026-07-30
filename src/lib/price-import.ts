@@ -679,9 +679,21 @@ export async function importPrices(): Promise<ImportSummary> {
     const rows = new Map<string, any>();
     let matched = 0;
     let unmatched = 0;
+    // Sample a few unmatched titles per store. WHY: the per-store summary only ever
+    // printed COUNTS, so a store that returns a big healthy-looking catalogue but
+    // matches none of it is indistinguishable from a store with no stock — both just
+    // read "0 cards priced". That's how Bento Gaming sat at "964 products → 0 priced,
+    // 964 unmatched" on the CA launch with nothing in the log to explain why. The
+    // TCGplayer importer already samples its unmatched titles for exactly this
+    // reason; this gives the Shopify path the same diagnostic.
+    const unmatchedSample: string[] = [];
     for (const p of products) {
       const cardId = resolveCardId(p, idx);
-      if (!cardId) { unmatched++; continue; }
+      if (!cardId) {
+        unmatched++;
+        if (unmatchedSample.length < 5) unmatchedSample.push(p.title.slice(0, 70));
+        continue;
+      }
       matched++;
       // Prefer in-stock variants. If none are available but the store still LISTS
       // the card with a price, record it as out-of-stock so the card page can show
@@ -726,6 +738,15 @@ export async function importPrices(): Promise<ImportSummary> {
     }
     await prisma.retailerPrice.createMany({ data: Array.from(rows.values()) });
     summary.stores.push({ name: store.name, products: products.length, priced: rows.size, matched, unmatched });
+    // Only shout when the ratio says something is actually wrong: a real catalogue
+    // came back but little/none of it resolved. A handful of unmatched titles is
+    // normal everywhere (sealed and accessories slip into singles collections).
+    if (unmatchedSample.length && unmatched > 20 && unmatched > matched) {
+      console.warn(
+        `  ⚠ ${store.name}: ${unmatched} of ${products.length} products unmatched (only ${matched} matched) — ` +
+          `sample: ${unmatchedSample.join(" | ")}`
+      );
+    }
     summary.totalMatched += matched;
     summary.totalUnmatched += unmatched;
   }
