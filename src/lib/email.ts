@@ -239,7 +239,11 @@ export async function sendReleaseDayEmail(
   // shrinks the row rather than printing "—" or a guess.
   const tiles: { value: string; label: string }[] = [];
   if (stats.cardCount != null && stats.cardCount > 0)
-    tiles.push({ value: stats.cardCount.toLocaleString(), label: "cards live" });
+    // "printings", not "cards": the live count includes alt-arts, Signatures,
+    // Overnumbers and promos, so it is legitimately HIGHER than the set's headline
+    // card count (Vendetta: 235 printings vs a 166-card set). Labelling it "cards"
+    // would misstate the set's size to anyone who knows the number.
+    tiles.push({ value: stats.cardCount.toLocaleString(), label: "printings live" });
   if (stats.storeCount != null && stats.storeCount > 0)
     tiles.push({ value: String(stats.storeCount), label: "stores compared" });
   if (stats.marketCount != null && stats.marketCount > 0)
@@ -311,7 +315,7 @@ export async function sendReleaseDayEmail(
     ${card(
       "#34d17e",
       "The full card database, ready",
-      `Every ${setName} card has its own page with the complete store-by-store comparison, price history and printing variants.${pricedLine}`,
+      `Every ${setName} card has its own page with the complete store-by-store comparison, price history and printing variants — alt-arts, Signatures, Overnumbers and promos all tracked separately.${pricedLine}`,
       { href: setUrl, label: `Browse ${setName}` }
     )}
     ${card(
