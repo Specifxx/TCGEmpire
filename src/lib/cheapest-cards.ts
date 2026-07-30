@@ -78,27 +78,29 @@ function chaseSortTier(name: string): number {
 // deliberately NOT just "highest priced" (that's getValuableCards above): the
 // actual chase print for a Signature-eligible character is its Signature
 // Legend (collector number carries a "*", e.g. "189*/166"), not the plain
-// Overnumbered variant of the same character, which can easily out-rank an
-// unpriced or thinly-listed Signature on raw price alone. Signatures come
-// first here (most/all of them — the set only has a handful), reordered by
-// CHASE_PRIORITY_NAMES; only falls back to the next most valuable
-// (non-signature) cards to top up the list while a new set's Signatures are
-// still getting their first listings — never leaves the section looking
-// empty, but never invents a price either.
+// Overnumbered variant of the same character. Every Signature Legend in the
+// set is shown here — priced or not (CardTile already renders an honest "No
+// price yet" for the unpriced ones; a Signature is still the card, and
+// standing it in for a differently-numbered Overnumbered dupe just because
+// THAT one happens to have a price is the wrong tradeoff for a "chase cards"
+// feature). Only tops up with the next most valuable (PRICED) non-signature
+// cards if the set has fewer Signatures than `limit` — never invents a price,
+// never hides a real Signature to make room for something else.
 export async function getChaseCards(limit = 8, country: Country = "AU", setCode?: string): Promise<CardTileData[]> {
-  const where = buildCardWhere({ set: setCode, priced: "1" }, country);
+  const baseWhere = buildCardWhere({ set: setCode }, country);
   const signatures = (await prisma.card.findMany({
-    where: { ...where, collectorNumber: { contains: "*" } },
+    where: { ...baseWhere, collectorNumber: { contains: "*" } },
     orderBy: buildCardOrderBy("price_desc", country),
     take: limit,
     select: cardTileSelect(country),
   })) as CardTileData[];
   // Array#sort is stable — this reorders by tier while preserving the
-  // price-desc order the query already gave within each tier.
+  // price-desc (nulls-last) order the query already gave within each tier.
   signatures.sort((a, b) => chaseSortTier(a.name) - chaseSortTier(b.name));
   if (signatures.length >= limit) return signatures;
+  const pricedWhere = buildCardWhere({ set: setCode, priced: "1" }, country);
   const rest = (await prisma.card.findMany({
-    where: { ...where, id: { notIn: signatures.map((c) => c.id) } },
+    where: { ...pricedWhere, id: { notIn: signatures.map((c) => c.id) } },
     orderBy: buildCardOrderBy("price_desc", country),
     take: limit - signatures.length,
     select: cardTileSelect(country),
