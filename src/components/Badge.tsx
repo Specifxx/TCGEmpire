@@ -65,19 +65,11 @@ export function ConditionBadge({ condition }: { condition: string }) {
 // gradient was pure decorative noise. Solid colour keeps the same identity
 // with none of that cost (see the site's one kept gradient accent in
 // BrandLogo.tsx).
-// Shared by every badge below: at very small card widths (e.g. a compact
-// CardTile ~130px wide) the normal `.chip` sizing (px-2.5 py-0.5 text-xs) is
-// wider than the card art itself and wraps onto two lines. `compact` swaps in
-// a smaller, single-line, width-capped treatment instead — the full label
-// still lives in `title` (tooltip). Additive only: every existing caller that
-// doesn't pass `compact` renders exactly as before.
-const COMPACT_CHIP = "inline-flex max-w-[calc(100%-0.5rem)] items-center gap-0.5 truncate rounded px-1 py-0.5 text-[9px] font-bold uppercase leading-none";
-
-export function VariantBadge({ variant, compact }: { variant?: string | null; compact?: boolean }) {
+export function VariantBadge({ variant }: { variant?: string | null }) {
   if (!variant) return null;
   return (
     <span
-      className={compact ? COMPACT_CHIP : "chip font-semibold uppercase"}
+      className="chip font-semibold uppercase"
       style={{ backgroundColor: "#f5a524", color: "#1a1206" }}
       title={`Alternate art (${variant})`}
     >
@@ -86,11 +78,11 @@ export function VariantBadge({ variant, compact }: { variant?: string | null; co
   );
 }
 
-export function SignatureBadge({ show, compact }: { show?: boolean; compact?: boolean }) {
+export function SignatureBadge({ show }: { show?: boolean }) {
   if (!show) return null;
   return (
     <span
-      className={compact ? COMPACT_CHIP : "chip font-semibold uppercase"}
+      className="chip font-semibold uppercase"
       style={{ backgroundColor: "#b45309", color: "#fff" }}
       title="Signature (artist-autographed overnumbered print)"
     >
@@ -99,11 +91,11 @@ export function SignatureBadge({ show, compact }: { show?: boolean; compact?: bo
   );
 }
 
-export function OvernumberedBadge({ show, compact }: { show?: boolean; compact?: boolean }) {
+export function OvernumberedBadge({ show }: { show?: boolean }) {
   if (!show) return null;
   return (
     <span
-      className={compact ? COMPACT_CHIP : "chip font-semibold uppercase"}
+      className="chip font-semibold uppercase"
       style={{ backgroundColor: "#7c3aed", color: "#fff" }}
       title="Overnumbered (secret/signature print beyond the set count)"
     >
@@ -112,11 +104,11 @@ export function OvernumberedBadge({ show, compact }: { show?: boolean; compact?:
   );
 }
 
-export function CrystalRoseBadge({ show, compact }: { show?: boolean; compact?: boolean }) {
+export function CrystalRoseBadge({ show }: { show?: boolean }) {
   if (!show) return null;
   return (
     <span
-      className={compact ? COMPACT_CHIP : "chip font-semibold uppercase"}
+      className="chip font-semibold uppercase"
       style={{ backgroundColor: "#c026d3", color: "#fff" }}
       title="Crystal Rose — Wild Rift crossover alt art"
     >

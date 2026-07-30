@@ -81,18 +81,26 @@ export function VendettaBlock({
         {chaseCards.length > 0 && (
           <>
             <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Chase cards</div>
-            {/* Shared CardTile ("compact" size) — the same component the "Most
-                popular Vendetta cards" row below uses, instead of bespoke
-                markup with its own overlap/wrap bugs. The grid is capped at a
-                sensible width (four full-width tiles across this section
-                would blow each one back up to full-card size) and CENTRED —
-                left-aligning a narrower grid inside a much wider panel just
-                relocates the dead space instead of removing it. */}
-            <Reveal stagger className="mx-auto grid max-w-2xl grid-cols-2 items-stretch gap-3 sm:grid-cols-4">
-              {chaseCards.map((c) => (
-                <CardTile key={c.id} card={c} size="compact" />
-              ))}
-            </Reveal>
+            {/* Same size/format as the "Most popular Vendetta cards" row below
+                (default-size CardTile, same w-36/sm:w-44 tile width, same
+                horizontal-scroll row + edge fade) — neither a capped-and-
+                centred grid nor a "compact" tile actually filled the row;
+                matching the carousel's own proven layout does, since there
+                are now up to 8 real chase cards to fill it with instead of a
+                fixed 4. */}
+            <div className="relative">
+              <Reveal stagger className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-2">
+                {chaseCards.map((c) => (
+                  <div key={c.id} className="w-36 shrink-0 sm:w-44">
+                    <CardTile card={c} />
+                  </div>
+                ))}
+              </Reveal>
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-ink-950 to-transparent sm:w-16"
+              />
+            </div>
           </>
         )}
       </section>

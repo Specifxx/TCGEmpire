@@ -141,7 +141,7 @@ export default async function HomePage() {
     // Vendetta "chase cards" for the homepage Vendetta block — the highest-value
     // singles in the set (not "most searched" like popularVendetta above), same
     // AU-baseline-then-client-reprice pattern as every other card list here.
-    getChaseCards(4, country, "VEN"),
+    getChaseCards(8, country, "VEN"),
     // Today's Top Deals blends four signals; cache per-market. We serialize ALL four
     // markets so the section localises to the visitor's chosen market client-side —
     // the page is ISR-cached with DEFAULT_COUNTRY baked in, so a single-market render

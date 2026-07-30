@@ -63,17 +63,29 @@ export async function getValuableCards(limit = 12, country: Country = "AU", setC
   return cards;
 }
 
+// Editorial display-order tiebreak among priced Signature Legends — these
+// characters' Signatures are the bigger collector draw, so they lead the row
+// when multiple Signatures are available. Never used to exclude anyone, only
+// to order the same full list differently. Extend by hand as new sets add
+// Signature Legends (checked against the FIRST name only, e.g. "Akali" out of
+// "Akali, Rogue Assassin", so it survives subtitle/epithet changes).
+const CHASE_PRIORITY_NAMES = new Set(["Akali", "Mel"]);
+function chaseSortTier(name: string): number {
+  return CHASE_PRIORITY_NAMES.has(name.split(",")[0].trim()) ? 0 : 1;
+}
+
 // "Chase cards" — the homepage Vendetta block's marquee cards. This is
 // deliberately NOT just "highest priced" (that's getValuableCards above): the
 // actual chase print for a Signature-eligible character is its Signature
 // Legend (collector number carries a "*", e.g. "189*/166"), not the plain
 // Overnumbered variant of the same character, which can easily out-rank an
 // unpriced or thinly-listed Signature on raw price alone. Signatures come
-// first here; only falls back to the next most valuable (non-signature)
-// cards to top up the list while a new set's Signatures are still getting
-// their first listings — never leaves the section looking empty, but never
-// invents a price either.
-export async function getChaseCards(limit = 4, country: Country = "AU", setCode?: string): Promise<CardTileData[]> {
+// first here (most/all of them — the set only has a handful), reordered by
+// CHASE_PRIORITY_NAMES; only falls back to the next most valuable
+// (non-signature) cards to top up the list while a new set's Signatures are
+// still getting their first listings — never leaves the section looking
+// empty, but never invents a price either.
+export async function getChaseCards(limit = 8, country: Country = "AU", setCode?: string): Promise<CardTileData[]> {
   const where = buildCardWhere({ set: setCode, priced: "1" }, country);
   const signatures = (await prisma.card.findMany({
     where: { ...where, collectorNumber: { contains: "*" } },
@@ -81,6 +93,9 @@ export async function getChaseCards(limit = 4, country: Country = "AU", setCode?
     take: limit,
     select: cardTileSelect(country),
   })) as CardTileData[];
+  // Array#sort is stable — this reorders by tier while preserving the
+  // price-desc order the query already gave within each tier.
+  signatures.sort((a, b) => chaseSortTier(a.name) - chaseSortTier(b.name));
   if (signatures.length >= limit) return signatures;
   const rest = (await prisma.card.findMany({
     where: { ...where, id: { notIn: signatures.map((c) => c.id) } },
