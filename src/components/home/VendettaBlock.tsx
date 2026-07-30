@@ -84,12 +84,11 @@ export function VendettaBlock({
             {/* Shared CardTile ("compact" size) — the same component the "Most
                 popular Vendetta cards" row below uses, instead of bespoke
                 markup with its own overlap/wrap bugs. The grid is capped at a
-                sensible width and left-aligned rather than stretched to the
-                full section width: at four cards, filling the whole ~1200px
-                row would blow each tile back up to full-card size; capping
-                keeps them compact while still fully packing every column (no
-                half-empty row either way). */}
-            <Reveal stagger className="grid max-w-2xl grid-cols-2 items-stretch gap-3 sm:grid-cols-4">
+                sensible width (four full-width tiles across this section
+                would blow each one back up to full-card size) and CENTRED —
+                left-aligning a narrower grid inside a much wider panel just
+                relocates the dead space instead of removing it. */}
+            <Reveal stagger className="mx-auto grid max-w-2xl grid-cols-2 items-stretch gap-3 sm:grid-cols-4">
               {chaseCards.map((c) => (
                 <CardTile key={c.id} card={c} size="compact" />
               ))}

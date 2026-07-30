@@ -94,7 +94,7 @@ export function SignatureBadge({ show, compact }: { show?: boolean; compact?: bo
       style={{ backgroundColor: "#b45309", color: "#fff" }}
       title="Signature (artist-autographed overnumbered print)"
     >
-      {compact ? "✍ SIG" : "✍ Signature"}
+      ✍ Signature
     </span>
   );
 }
@@ -107,7 +107,7 @@ export function OvernumberedBadge({ show, compact }: { show?: boolean; compact?:
       style={{ backgroundColor: "#7c3aed", color: "#fff" }}
       title="Overnumbered (secret/signature print beyond the set count)"
     >
-      {compact ? "★ OVN" : "★ Overnumbered"}
+      ★ Overnumbered
     </span>
   );
 }
@@ -120,7 +120,7 @@ export function CrystalRoseBadge({ show, compact }: { show?: boolean; compact?: 
       style={{ backgroundColor: "#c026d3", color: "#fff" }}
       title="Crystal Rose — Wild Rift crossover alt art"
     >
-      {compact ? "✿ CR" : "✿ Crystal Rose"}
+      ✿ Crystal Rose
     </span>
   );
 }

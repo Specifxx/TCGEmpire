@@ -62,3 +62,31 @@ export async function getValuableCards(limit = 12, country: Country = "AU", setC
   })) as CardTileData[];
   return cards;
 }
+
+// "Chase cards" — the homepage Vendetta block's marquee cards. This is
+// deliberately NOT just "highest priced" (that's getValuableCards above): the
+// actual chase print for a Signature-eligible character is its Signature
+// Legend (collector number carries a "*", e.g. "189*/166"), not the plain
+// Overnumbered variant of the same character, which can easily out-rank an
+// unpriced or thinly-listed Signature on raw price alone. Signatures come
+// first here; only falls back to the next most valuable (non-signature)
+// cards to top up the list while a new set's Signatures are still getting
+// their first listings — never leaves the section looking empty, but never
+// invents a price either.
+export async function getChaseCards(limit = 4, country: Country = "AU", setCode?: string): Promise<CardTileData[]> {
+  const where = buildCardWhere({ set: setCode, priced: "1" }, country);
+  const signatures = (await prisma.card.findMany({
+    where: { ...where, collectorNumber: { contains: "*" } },
+    orderBy: buildCardOrderBy("price_desc", country),
+    take: limit,
+    select: cardTileSelect(country),
+  })) as CardTileData[];
+  if (signatures.length >= limit) return signatures;
+  const rest = (await prisma.card.findMany({
+    where: { ...where, id: { notIn: signatures.map((c) => c.id) } },
+    orderBy: buildCardOrderBy("price_desc", country),
+    take: limit - signatures.length,
+    select: cardTileSelect(country),
+  })) as CardTileData[];
+  return [...signatures, ...rest];
+}
