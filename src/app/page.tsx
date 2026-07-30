@@ -4,7 +4,7 @@ import { Archivo } from "next/font/google";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { Reveal } from "@/components/Reveal";
-import { getPopularCards, getValuableCards } from "@/lib/cheapest-cards";
+import { getPopularCards, getChaseCards } from "@/lib/cheapest-cards";
 import { DEFAULT_COUNTRY, priceField, type Country } from "@/lib/country";
 import type { MarketStat } from "@/components/home/HeroStats";
 import { SETS, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
@@ -141,7 +141,7 @@ export default async function HomePage() {
     // Vendetta "chase cards" for the homepage Vendetta block — the highest-value
     // singles in the set (not "most searched" like popularVendetta above), same
     // AU-baseline-then-client-reprice pattern as every other card list here.
-    getValuableCards(4, country, "VEN"),
+    getChaseCards(8, country, "VEN"),
     // Today's Top Deals blends four signals; cache per-market. We serialize ALL four
     // markets so the section localises to the visitor's chosen market client-side —
     // the page is ISR-cached with DEFAULT_COUNTRY baked in, so a single-market render
@@ -205,7 +205,7 @@ export default async function HomePage() {
     .slice(0, 12);
 
   return (
-    <div className={`${archivo.variable} rb-display-sans flex flex-col gap-12`}>
+    <div className={`${archivo.variable} rb-display-sans flex flex-col gap-10`}>
       {/* Cinematic full-bleed hero — search-first (see CinematicHero + Task 3). */}
       <CinematicHero
         totalCards={totalCards}
@@ -329,7 +329,11 @@ export default async function HomePage() {
       {/* About + FAQ — keyword-relevant content for search */}
       <section className="card-surface p-6">
         <h2 className="text-xl font-extrabold text-white">Riftbound prices in Australia, New Zealand, the US &amp; UK — all in one place</h2>
-        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+        {/* Full width, matching the heading above — a capped/centred measure
+            here just shifted the paragraph out of alignment with the heading
+            (text starting a third of the way across the card reads as broken,
+            not "intentional whitespace"). This card is meant to fill its row. */}
+        <p className="mt-2 text-sm leading-relaxed text-slate-400">
           RiftCompare is a free, independent price-comparison tool for Riftbound: League of Legends
           TCG. We track live prices for every Riftbound card across local stores in Australia, New
           Zealand, the US and the UK, plus eBay (AU, US and UK), so you can buy Riftbound cards for

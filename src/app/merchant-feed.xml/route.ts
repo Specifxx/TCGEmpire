@@ -12,7 +12,17 @@ import { setByCode } from "@/lib/constants";
 // Pre-launch (MARKETPLACE_PUBLIC unset) this serves an EMPTY but valid channel
 // rather than a 404, so the feed URL can be registered ahead of launch and
 // simply starts carrying items the moment the flag flips.
-export const revalidate = 3600;
+//
+// Always computed fresh (no ISR): Merchant Center only pulls this on its own
+// daily schedule, so the cost of a live query is negligible, and it removes a
+// real feed/site mismatch window — a listing that sells out or gets
+// price-edited between ISR refreshes used to still show as in_stock at the
+// old price here for up to an hour after the live /card page had already
+// updated (revalidateCardPage() busts that page instantly on every listing
+// mutation; this route had no equivalent). Matches the same
+// force-dynamic + always-query-live-data pattern /marketplace/page.tsx
+// already uses for the same "never show a stale price" reason.
+export const dynamic = "force-dynamic";
 
 const FEED_COUNTRIES = new Set(["AU", "NZ", "US", "UK", "SG", "CA"]);
 
