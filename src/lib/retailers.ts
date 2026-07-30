@@ -14,9 +14,9 @@ export interface RetailerInfo {
   freeOverCents: number; // order total at/above which shipping is free
   shippingNote: string;
   // Market the store serves. Omitted = "AU" (the original Australian stores).
-  // NZ/US/UK/SG stores are scraped with ?country=NZ/US/GB/SG and priced in
-  // NZD/USD/GBP/SGD. eBay runs for AU + US + UK + SG.
-  country?: "AU" | "NZ" | "US" | "UK" | "SG";
+  // NZ/US/UK/SG/CA stores are scraped with ?country=NZ/US/GB/SG/CA and priced in
+  // NZD/USD/GBP/SGD/CAD. eBay runs for AU + US + UK + SG + CA.
+  country?: "AU" | "NZ" | "US" | "UK" | "SG" | "CA";
 }
 
 export const RETAILERS: Record<string, RetailerInfo> = {
@@ -384,11 +384,16 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. US$2.00 · free over US$50",
     country: "US",
   },
+  // Also trades as "Game Grid Lehi" (Lehi, UT) — same store.gglehi.com storefront,
+  // reconfirmed during the 2026-07 US batch research (which independently proposed
+  // it as a "new" store under that name — same domain, so kept as one entry rather
+  // than duplicated). Display name left as the original since it's already live;
+  // the second singles handle found in that pass was added as an extra fallback.
   gglegends: {
     key: "gglegends",
     name: "GG Legends",
     base: "https://store.gglehi.com",
-    collections: ["riftbound-singles"],
+    collections: ["riftbound-singles", "riftbound-singles-2-4"],
     shippingFlatCents: 250,
     freeOverCents: 5000,
     shippingNote: "est. US$2.50 · free over US$50",
@@ -516,6 +521,278 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. US$3.00 · free over US$150",
     country: "US",
   },
+  // ---- Third verified batch (2026-07 US research pass, 12 stores) --------------
+  // Confirmed real + US-based (physical address confirmed on the merchant's own
+  // /policies/contact-information or equivalent — deliberately NOT Shopify's
+  // window.Shopify.currency/country, which geolocates to the VISITOR and is
+  // unreliable for market assignment) with live Riftbound listings in USD.
+  // Collection handles are fallback hints only — discoverRiftboundCollections()
+  // auto-discovers the real set from each store's sitemap at import time; these
+  // just seed it in case discovery misses a handle (see price-import.ts).
+  //
+  // Shipping figures are UNVERIFIED PLACEHOLDER estimates (matching the file's
+  // common US default of US$2.50 · free over US$50) — pulling each store's real
+  // shipping-policy page requires live network access this pass didn't have.
+  // None of these 12 are in STORES_WITH_POLICY below; add them there (with a real
+  // number here) once someone confirms a policy page. Verify collections/stock via
+  // `npx tsx scripts/probe-us-stores.ts` before trusting these figures further.
+  knightandday: {
+    key: "knightandday",
+    name: "Knight and Day Games",
+    base: "https://knightanddaygames.com",
+    // UNRESOLVED location: the storefront's Shopify backend is
+    // the-gaming-goat-schaumburg-il.myshopify.com and its in-store locator says
+    // "Town Square" — real US business, but the exact current city/state couldn't
+    // be confirmed without live network access. Flagging per the research brief
+    // rather than guessing; re-verify before treating the name/location as final.
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  },
+  grognardgames: {
+    key: "grognardgames",
+    name: "Grognard Games",
+    base: "https://grognardgames.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  },
+  vegassingles: {
+    key: "vegassingles",
+    name: "Vegas Singles",
+    base: "https://vegas.singles",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  },
+  shippintexas: {
+    key: "shippintexas",
+    name: "Shippin Texas",
+    base: "https://shippintexas.com",
+    collections: ["riftbound-singles", "league-of-legends-riftbound"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  },
+  nerdmerchant: {
+    key: "nerdmerchant",
+    name: "The Nerd Merchant",
+    base: "https://thenerdmerchant.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  },
+  e4cards: {
+    key: "e4cards",
+    name: "E4 Cards & More",
+    base: "https://e4cards.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  },
+  foxandfable: {
+    key: "foxandfable",
+    name: "Fox and Fable Games",
+    base: "https://foxandfablegames.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  },
+  // Also carries several set-specific/sealed/accessory collections (boxes, champion
+  // decks, packs, playmats, sleeves, a Vendetta-specific collection) — omitted below
+  // since this field is singles-only fallback; sealed-import.ts discovers those
+  // independently via its own sitemap scan.
+  manyrealms: {
+    key: "manyrealms",
+    name: "Many Realms",
+    base: "https://manyrealms.com",
+    collections: ["riftbound-singles", "riftbound-league-of-legends"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  },
+  phantasma: {
+    key: "phantasma",
+    name: "Phantasma",
+    base: "https://phantasmalv.com",
+    collections: ["riftbound-singles", "riftbound"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  },
+  // Only a sealed collection (riftbound-tcg, 11 items) was located this pass — the
+  // singles handle wasn't found. Left for auto-discovery to pick up, or verify with
+  // scripts/probe-us-stores.ts and add it explicitly once confirmed.
+  millenniumgames: {
+    key: "millenniumgames",
+    name: "Millennium Games",
+    base: "https://shop.millenniumgames.com",
+    collections: ["riftbound-tcg"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  },
+  // Very thin Riftbound stock (promos only at last check) — added rather than held
+  // in a TODO: STORE_THIN_THRESHOLD (lib/store-pages.ts) already noindexes a store
+  // page with fewer than 5 live listings automatically, so no separate "low
+  // inventory" flag exists or is needed for this to be safe to list.
+  "151collectables": {
+    key: "151collectables",
+    name: "151Collectables",
+    base: "https://151collectables.com",
+    collections: ["riftbound", "riftbound-1", "riftbound-2"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  },
+  // Thin (3 sealed items at last check) — see 151Collectables note above; relies on
+  // the same automatic thin-store noindex rather than a bespoke flag.
+  totalescape: {
+    key: "totalescape",
+    name: "Total Escape Games",
+    base: "https://totalescapegames.com",
+    collections: ["riftbound"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  },
+
+  // ---- Cloudflare-rate-limited candidates — pending, do NOT brute-force --------
+  // Returned Cloudflare error 1015 (rate limited) on products.json during research.
+  // Added as real registry entries anyway (there's no separate disabled/pending
+  // boolean anywhere on RetailerInfo — see the duellerspoint/ttcs/onemtg precedent
+  // in the SG section below) with the best-known collection handle as a fallback.
+  // Expect 0 products scraped until Cloudflare stops blocking the importer's
+  // requests — that's this importer's normal graceful-degradation path (0 products
+  // → 0 priced, logged, never a fabricated price), NOT a bug to chase. Do not add
+  // retries or shorten the inter-request delay to try to force these through — see
+  // the robots.txt/backoff handling in lib/scrape-http.ts, which applies here too.
+  cardboardhorde: {
+    key: "cardboardhorde",
+    name: "Cardboard Horde",
+    base: "https://cardboardhorde.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  },
+  dragonsvaultnj: {
+    key: "dragonsvaultnj",
+    name: "The Dragon's Vault of NJ",
+    base: "https://thedragonsvaultofnj.com",
+    collections: ["riftbound-singles-in-stock"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  },
+  cardquestlgs: {
+    key: "cardquestlgs",
+    name: "Card Quest LGS",
+    base: "https://cardquestlgs.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  },
+  // Reclassified out of the original "Step 3 — needs a custom adapter" bucket:
+  // cardshq.com is actually a regular Shopify store (its own /collections/ and
+  // /products/ URLs are Shopify's exact default route shapes, and its policy page
+  // is at /policies/terms-of-service — Shopify's auto-generated path), not the
+  // Next.js custom build originally assumed. Sealed-focused per the original
+  // research (riftbound-boxes), so lower priority, but the existing Shopify
+  // adapter already covers it — no bespoke code needed. Re-verify with
+  // scripts/probe-us-stores.ts before fully trusting this (found via web search in
+  // this sandbox, not a direct fetch — this sandbox can't reach the site itself).
+  cardshq: {
+    key: "cardshq",
+    name: "CardsHQ",
+    base: "https://www.cardshq.com",
+    collections: ["riftbound-boxes"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  },
+  // ---- Researched and rejected (US) — do NOT re-add without new evidence -------
+  // Consolidated here (instead of scattered per-batch) so this is one place to
+  // check before re-researching any of these. From the 2026-07 US batch:
+  //   - empiretradings.com          — Ottawa, Canada (not US).
+  //   - toysnowman.com              — Montreal, Canada (not US).
+  //   - screenfreegames.com         — BC/Alberta, Canada (not US).
+  //   - shop.espercardsandgames.com — Toronto, Canada (not US).
+  //   - cardboyz.com                — Shopify collection exists but zero products.
+  //   - redsuncollectables.com      — UK company (VAT-registered) with a live
+  //     Riftbound singles catalogue — a UK candidate, not US. Logged here as a UK
+  //     lead for whoever next does a UK batch; not added to this file.
+  //   - Card Kingdom (cardkingdom.com) — checked, MTG-only, no Riftbound. Listed so
+  //     nobody re-checks it.
+  //   - Star City Games (starcitygames.com) — checked via web search (this sandbox
+  //     can't fetch the site directly): their Terms & Conditions explicitly
+  //     prohibit "any computerized or automated program... to access, extract,
+  //     download, scrape, data mine... materials, data, or information on any Star
+  //     City website" without prior written consent. NOT permitted — do not build
+  //     an adapter for this without written consent from Star City Games first,
+  //     regardless of how valuable the catalogue is. Re-check
+  //     help.starcitygames.com/terms-and-conditions directly if this needs
+  //     revisiting.
+  //   - Troll and Toad (trollandtoad.com) — confirmed via web search still down for
+  //     a warehouse move/relaunch ("orders paused... soft-reopening phase") as of
+  //     this pass; revisit later, not a rejection.
+  //
+  // ---- Non-Shopify custom-adapter candidates — NOT implemented this pass -------
+  // CoolStuffInc and Trading Card Planet (bespoke platforms, no Shopify
+  // products.json feed) plus a confirmed Crystal-Commerce long tail (Amazing
+  // Discoveries Tucson, Brute Force Games, The Wasteland Gaming, Nerd Rage
+  // Gaming, The Games Cube, Cardboard Castle Games, Darkhound Game Center, and
+  // one unidentified-platform lead, Grand J Games) each need their own adapter
+  // and a robots.txt/ToS check first — genuinely not done, not just deferred.
+  // Full detail (confirmed URLs, locations, confidence per store) now lives in
+  // src/lib/pending-platforms.ts as structured data instead of prose here —
+  // see that file. Summary:
+  //   - CoolStuffInc: the data is real and rich (confirmed category IDs,
+  //     confirmed live pricing) but permission is what's missing, not
+  //     feasibility — no ToS statement on scraping and no affiliate/data-feed
+  //     program turned up after three separate searches. See
+  //     PENDING_PERMISSION_UNRESOLVED in pending-platforms.ts. Do not scrape
+  //     this on the strength of the data alone.
+  //   - Trading Card Planet: confirmed a real, large live catalogue (830
+  //     products, Foil-NM/LP/MP/HP/DM condition tiers) at the Shopify-shaped
+  //     /collections/riftbound-singles URL — but that's the same URL shape
+  //     the ORIGINAL research already saw and explicitly rejected as
+  //     non-Shopify ("despite the /collections/ URL shape"), i.e. they likely
+  //     already found products.json doesn't actually work here. Their
+  //     firsthand check outranks this session's indirect search evidence —
+  //     not added.
+  //   - Crystal Commerce: confirmed real platform + URL shape + one live price
+  //     (see pending-platforms.ts). Its documented JSON API reads as a
+  //     merchant-facing REST/CRUD API, not confirmed as a public anonymous
+  //     read feed like Shopify's — needs a live check on one store before
+  //     building a generic adapter on that assumption. Deliberately not built
+  //     yet: a "platform adapter" abstraction with zero verified
+  //     implementations behind it would be pure guesswork risking wrong
+  //     prices on a real comparison site, not genuine progress.
+  // See the session summary for the full account of what's blocked and why.
 
   // ---- United Kingdom stores (country: "UK"; prices in GBP via ?country=GB; uses eBay UK) ----
   // Riftbound singles are still thin on UK Shopify shops — the biggest UK chains (Magic
@@ -914,12 +1191,259 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "in-store (Woodlands) · webstore not auto-priced",
     country: "SG",
   },
+
+  // ---- Canada stores (country: "CA"; prices in CAD via ?country=CA) ------------
+  // New market, added 2026-07-29. Canada is a genuinely deep Riftbound market —
+  // every store below is a confirmed Canadian business (physical address or an
+  // explicit "Canadian owned and operated"/.ca identity) with a confirmed live
+  // Riftbound collection, verified via web search. NOTE this session could not
+  // fetch these sites directly (sandbox egress policy blocks third-party
+  // domains), so the handles below are best-known values, not directly-observed
+  // ones — re-verify with `npx tsx scripts/probe-ca-stores.ts` before trusting
+  // them. As everywhere else, the handle is only a FALLBACK: the importer's
+  // sitemap auto-discovery finds the real live collections at scrape time.
+  //
+  // Shipping figures are UNVERIFIED PLACEHOLDER estimates (C$2.99 · free over
+  // C$75) EXCEPT where a real published threshold was confirmed — Face to Face
+  // (free over C$200) and Hobbiesville (free over C$175). None of these are in
+  // STORES_WITH_POLICY below; add them there once someone confirms a real
+  // /policies/shipping-policy page. Never present these as published rates.
+  facetoface: {
+    key: "facetoface",
+    name: "Face to Face Games",
+    base: "https://facetofacegames.com",
+    collections: ["riftbound-singles", "riftbound"],
+    shippingFlatCents: 299,
+    freeOverCents: 20000, // confirmed: free shipping over C$200
+    shippingNote: "est. C$2.99 · free over C$200",
+    country: "CA",
+  },
+  games401: {
+    key: "games401",
+    name: "401 Games",
+    base: "https://store.401games.ca",
+    collections: ["riftbound-league-of-legends-singles", "all-riftbound-league-of-legends-tcg"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  },
+  gtgames: {
+    key: "gtgames",
+    name: "GT Games",
+    base: "https://gtgames.ca",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  },
+  invasioninc: {
+    key: "invasioninc",
+    name: "Invasion Inc",
+    base: "https://invasioncnc.ca",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  },
+  obsidiangames: {
+    key: "obsidiangames",
+    name: "Obsidian Games",
+    base: "https://obsidiangames.ca",
+    // Handle really is "-1"-suffixed (a duplicated collection on their store) —
+    // not a typo. Auto-discovery finds it either way.
+    collections: ["riftbound-singles-1", "riftbound-singles"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  },
+  enterthebattlefield: {
+    key: "enterthebattlefield",
+    name: "Enter the Battlefield",
+    base: "https://enterthebattlefield.ca",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  },
+  blackknight: {
+    key: "blackknight",
+    name: "Black Knight Games",
+    base: "https://blackknightgames.ca",
+    // Files Riftbound under a "ccg-" prefix rather than a riftbound-singles handle.
+    collections: ["ccg-riftbound"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  },
+  bentogaming: {
+    key: "bentogaming",
+    name: "Bento Gaming",
+    base: "https://bentogaming.com",
+    collections: ["riftbound-league-of-legends-singles"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  },
+  jacksonqueen: {
+    key: "jacksonqueen",
+    name: "Jack's On Queen",
+    base: "https://jacksonqueen.ca",
+    collections: ["riftbound"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  },
+  bananagames: {
+    key: "bananagames",
+    name: "Banana Games & Hobby",
+    base: "https://bananagames.ca",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  },
+  alwaysgames: {
+    key: "alwaysgames",
+    name: "Always Games",
+    base: "https://alwaysgames.ca",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  },
+  derpycards: {
+    key: "derpycards",
+    name: "Derpy Cards",
+    base: "https://derpycards.ca",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  },
+  // The four stores below were REJECTED from the 2026-07 US batch specifically
+  // because they're Canadian (see the researched-and-rejected list in the US
+  // section above) — they were never bad leads, just filed under the wrong
+  // market. This is exactly what that list was for.
+  empiretradings: {
+    key: "empiretradings",
+    name: "Empire Trading",
+    base: "https://www.empiretradings.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  },
+  // Montreal, QC. CRITICAL: their Riftbound singles collection handle is
+  // "magic-the-gathering-singles-copy" — a merchant copy-paste artifact, with the
+  // page TITLED "Riftbound - League of Legends - TCG Singles". The handle contains
+  // no "riftbound" string, so discoverRiftboundCollections() (which requires
+  // /riftbound/i on the handle) will NEVER find it. The explicit handle below is
+  // load-bearing, not a fallback — without it this store silently yields zero.
+  toysnowman: {
+    key: "toysnowman",
+    name: "Toy Snowman",
+    base: "https://toysnowman.com",
+    collections: ["magic-the-gathering-singles-copy"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  },
+  espercards: {
+    key: "espercards",
+    name: "Esper Cards & Games",
+    base: "https://shop.espercardsandgames.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  },
+  // Riftbound surfaced only at /pages/riftbound-singles — a Shopify PAGE, not a
+  // collection, so there's nothing for products.json to read at that URL. Left
+  // for sitemap auto-discovery to pick up a real collection if one exists;
+  // contributes zero listings until then rather than a fabricated price.
+  redriotgames: {
+    key: "redriotgames",
+    name: "Red Riot Games",
+    base: "https://redriotgames.ca",
+    collections: [],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  },
+  // Same /pages/riftbound situation as Red Riot above.
+  levelupgames: {
+    key: "levelupgames",
+    name: "Level Up Games",
+    base: "https://levelupgames.ca",
+    collections: [],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  },
+  // ---- Canadian stores that ALSO serve the US market --------------------------
+  // Danireon (Ottawa, ON) and Hobbiesville (Toronto + Ottawa, ON) are Canadian
+  // businesses that were already tracked as US stores — they run Shopify Markets
+  // and genuinely ship to and price in USD for US buyers, so those US entries are
+  // real and are deliberately KEPT (removing them would drop live US price data
+  // for stores that do serve US shoppers). These CA-market twins scrape the SAME
+  // domain with ?country=CA to get the real CAD price for Canadian shoppers.
+  //
+  // Two entries for one brand is an established pattern here — cf. cardbot/
+  // cardbotnz and pokebox/pokeboxusa — the difference is those are separate
+  // per-country domains while these are one domain served by Shopify Markets.
+  // Distinct retailer keys keep their RetailerPrice rows from colliding on
+  // @@unique([cardId, retailer, condition, isFoil]).
+  danireonca: {
+    key: "danireonca",
+    name: "Danireon Cards & Games",
+    base: "https://www.danireon.com",
+    collections: ["riftbound-tcg-singles"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  },
+  hobbiesvilleca: {
+    key: "hobbiesvilleca",
+    name: "Hobbiesville",
+    base: "https://hobbiesville.com",
+    collections: ["riftbound-singles-league-of-legends-tcg"],
+    shippingFlatCents: 299,
+    freeOverCents: 17500, // confirmed: free over $175 (stated as CAD/USD)
+    shippingNote: "est. C$2.99 · free over C$175",
+    country: "CA",
+  },
+  // ---- Canadian leads checked and NOT added ----------------------------------
+  //   - screenfreegames.com (BC/Alberta) — confirmed Canadian in the US batch, but
+  //     no live Riftbound collection could be confirmed this pass. Not added
+  //     rather than added-on-a-guess; re-check and add if they stock it.
+  //   - untouchables.ca, wizardstower.com, coretcg.com, threekingsloot.com,
+  //     cartamagica.com, fusiongamingonline.com, vortexgames.ca, gauntletgames.ca
+  //     — real Canadian TCG stores, but no Riftbound collection surfaced in
+  //     search this pass. Worth a direct re-check when someone has live network
+  //     access; absence of a search hit is not proof of absence of stock.
 };
 
 export const RETAILER_LIST = Object.values(RETAILERS);
 
 // The market a store serves (defaults to AU for the original stores).
-export function retailerCountry(retailerKey: string): "AU" | "NZ" | "US" | "UK" | "SG" {
+export function retailerCountry(retailerKey: string): "AU" | "NZ" | "US" | "UK" | "SG" | "CA" {
   return RETAILERS[retailerKey]?.country ?? "AU";
 }
 
@@ -958,8 +1482,14 @@ const STORES_WITH_POLICY = new Set([
   "cardmasters", "tcgcollectornz", "cardmerchant", "ironknight", "calicokeep", "cardbotnz",
   "gamingdna", "beagames", "shuffleandcut", "gameroost", "bardsandcards", "mythicstore",
   "cgrealm", "danireon", "punkouter", "gglegends", "stompinggrounds", "cardboardanddie",
-  "mistymountain", "theboosterbox", "npcollectibles", "capefear", "hobbiesville",
-  "gamersguildaz", "kanzengames", "mysterymtg", "hauntedgamecafe", "hobbyaddicts",
+  "mistymountain", "theboosterbox", "npcollectibles", "capefear", "hobbiesville", "mysterymtg",
+  // Note: "gamersguildaz", "kanzengames", "hauntedgamecafe", "hobbyaddicts" were
+  // removed from here — they'd been added, verified, then later dropped from
+  // RETAILERS (like the Common Ground Games/Riftgate/etc. batch documented near
+  // onboardgaming above), but this Set was never cleaned up to match. Harmless at
+  // runtime (shippingPolicyUrl() guards on RETAILERS[key] existing) but stale, and
+  // it's exactly the kind of drift that made the homepage/tracked-page store counts
+  // disagree — see the count-consistency fix in src/app/page.tsx.
   // UK
   "thistletavern", "cardgoblin", "axionnow", "spellboundgames", "totalcards",
   "boardsandswords", "forbiddenplanet", "zatugames", "cardvault", "goblingaming",

@@ -35,6 +35,7 @@ export const MARKETPLACE_RETAILER: Record<string, string> = {
   US: "marketplace_us",
   UK: "marketplace_uk",
   SG: "marketplace_sg",
+  CA: "marketplace_ca",
 };
 export const MARKETPLACE_RETAILER_KEYS = Object.values(MARKETPLACE_RETAILER);
 export const MARKETPLACE_RETAILER_NAME = "RiftCompare Marketplace";
@@ -79,7 +80,7 @@ export function canViewMarketplaceListings(email?: string | null, isAdmin?: bool
   return !!email && MARKETPLACE_BETA_EMAILS.includes(email.toLowerCase());
 }
 
-export const MARKETPLACE_COUNTRIES = ["AU", "NZ", "US", "UK", "SG"] as const;
+export const MARKETPLACE_COUNTRIES = ["AU", "NZ", "US", "UK", "SG", "CA"] as const;
 
 // ── Offers ─────────────────────────────────────────────────────────────────────
 // "Make an offer" guardrails: offers live 72h, and a lowball below 30% of asking

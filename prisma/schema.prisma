@@ -227,11 +227,18 @@ model Card {
   //   lowestPriceCentsUs = United States (USD cents), from US stores + eBay US
   //   lowestPriceCentsUk = United Kingdom (GBP cents), from UK stores + eBay UK + TCGplayer
   //   lowestPriceCentsSg = Singapore (SGD cents), from SG stores + eBay SG
+  //   lowestPriceCentsCa = Canada (CAD cents), from CA stores + eBay CA
   lowestPriceCents   Int?
   lowestPriceCentsNz Int?
   lowestPriceCentsUs Int?
   lowestPriceCentsUk Int?
   lowestPriceCentsSg Int?
+  // Nullable with no default, like every other market column above, so
+  // `prisma db push` adds it additively to the live table with no backfill and
+  // no data loss (see the build script — it db-pushes on deploy). Populated on
+  // the next price import; null everywhere until then, which every read path
+  // already handles as "no price yet".
+  lowestPriceCentsCa Int?
   artSeed            Int       @default(0)
   // Popularity signals. searchCount (clicks from the search box) is the purer demand
   // metric and drives eBay prioritisation; viewCount (any open, incl. featured
@@ -261,6 +268,11 @@ model Card {
   @@index([lowestPriceCentsNz])
   @@index([lowestPriceCentsUs])
   @@index([lowestPriceCentsUk])
+  // Sg had no index (every other market did) — added with Ca, since the homepage
+  // runs one `count({ where: { <priceField>: { not: null } } })` per market and the
+  // browse grid sorts on it, so SG was doing sequential scans for both.
+  @@index([lowestPriceCentsSg])
+  @@index([lowestPriceCentsCa])
   @@index([domain])
   @@index([rarity])
   @@index([type])

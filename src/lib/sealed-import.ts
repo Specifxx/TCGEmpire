@@ -5,12 +5,8 @@ import { prisma } from "./db";
 import { RETAILER_LIST } from "./retailers";
 import { isEbayEnabled, isEbayRateLimited, searchEbaySealed, primeEbayBudget, sealedFloorCents } from "./ebay";
 import { fetchTcgplayerSealed, tcgProductUrl, tcgImageUrl, setCodeFromSetName } from "./tcgplayer";
-
-const UA = {
-  "User-Agent":
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
-  Accept: "application/json, text/plain, */*",
-};
+import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows } from "./scrape-http";
+import type { Country } from "./country";
 
 interface ShopifyImg { src?: string }
 interface ShopifyVar { price: string; available: boolean }
@@ -57,14 +53,6 @@ const SEALED_TITLE =
 const SEALED_EXCLUDE =
   /\bsingle\b|playmat|deck\s*box|binder|toploader|top\s*loader|dice|counter|\btoken\b|card\s*\d|\/\d{2,3}\b|chinese|japanese|korean|simplified|traditional|\bbulk\s+(?:lot|cards|commons?|singles?)\b|\bopened\b|live\s*break|\bticket\b|protector|acrylic|magnetic|\bempty\b|box\s*only|storage|\bstand\b|\bholder\b|divider|topper|\binsert\b|\b(?:nm|lp|mp|hp|dmg)\b|near\s*mint|lightly\s*played|moderately\s*played|heavily\s*played|\([^)]*\b(?:origins|spirit\s*forged|spiritforged|unleashed|vendetta|proving\s*grounds)\b[^)]*\)/i;
 
-async function fetchJson(url: string): Promise<any | null> {
-  try {
-    const r = await fetch(url, { headers: { ...UA, "Cache-Control": "no-cache" }, cache: "no-store" });
-    return r.ok ? await r.json() : null;
-  } catch {
-    return null;
-  }
-}
 async function fetchText(url: string): Promise<string | null> {
   try {
     const r = await fetch(url, { headers: UA });
@@ -77,13 +65,16 @@ async function fetchText(url: string): Promise<string | null> {
 // Discover ALL riftbound collections (including sealed-only ones, which the singles
 // importer skips) so we can find boxes/packs wherever the store files them.
 async function discoverCollections(base: string): Promise<string[]> {
+  const allowed = await robotsAllows(base);
+  if (!allowed("/sitemap.xml")) return [];
   const handles = new Set<string>();
   const index = await fetchText(`${base}/sitemap.xml`);
   let sitemaps = index
     ? Array.from(index.matchAll(/<loc>([^<]+)<\/loc>/g)).map((m) => m[1]).filter((u) => /sitemap_collections/i.test(u))
     : [];
   if (!sitemaps.length) sitemaps = [`${base}/sitemap_collections_1.xml`];
-  for (const sm of sitemaps.slice(0, 8)) {
+  for (const [i, sm] of sitemaps.slice(0, 8).entries()) {
+    if (i > 0) await sleep(REQUEST_DELAY_MS);
     const xml = await fetchText(sm);
     if (!xml) continue;
     for (const m of xml.matchAll(/\/collections\/([^<\/?#"]+)/g)) {
@@ -95,11 +86,24 @@ async function discoverCollections(base: string): Promise<string[]> {
 }
 
 async function fetchProducts(base: string, handle: string, country: string): Promise<ShopifyProd[]> {
+  const path = `/collections/${handle}/products.json`;
+  const allowed = await robotsAllows(base);
+  if (!allowed(path)) return [];
   const all: ShopifyProd[] = [];
   for (let page = 1; page <= 10; page++) {
+    if (page > 1) await sleep(REQUEST_DELAY_MS);
     // country=XX forces the store's market price (Shopify Markets serves a different
     // price per country): AUD for AU stores, NZD for NZ stores.
-    const data = await fetchJson(`${base}/collections/${handle}/products.json?limit=250&page=${page}&country=${country}&_=${Date.now()}`);
+    const url = `${base}${path}?limit=250&page=${page}&country=${country}&_=${Date.now()}`;
+    let res: Response;
+    try {
+      res = await fetch(url, { headers: { ...UA, "Cache-Control": "no-cache" }, cache: "no-store" });
+    } catch {
+      break;
+    }
+    if (isRateLimited(res)) break;
+    if (!res.ok) break;
+    const data = await res.json().catch(() => null);
     const products: ShopifyProd[] = data?.products ?? [];
     if (!products.length) break;
     all.push(...products);
@@ -450,7 +454,7 @@ const DISTRUST_STORE_IMAGE = new Set([
   "Booster Pack", "Nexus Night Pack", "Promo Pack", "Sleeved Booster", "Sleeved Booster (Art Set)",
 ]);
 
-export async function getSealedGroups(country: "AU" | "NZ" | "US" | "UK" | "SG" = "AU"): Promise<SealedGroup[]> {
+export async function getSealedGroups(country: Country = "AU"): Promise<SealedGroup[]> {
   const hit = sealedMemo.get(country);
   if (hit && Date.now() - hit.at < SEALED_MEMO_TTL_MS) return hit.data;
   // Only the fields the grouping uses — no point hauling unused columns.

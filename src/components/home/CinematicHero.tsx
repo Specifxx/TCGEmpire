@@ -1,41 +1,31 @@
 import Link from "next/link";
 import { ParallaxRoot } from "./ParallaxRoot";
 import { CountryHeroToggle } from "@/components/CountryHeroToggle";
-import { OutboundLink } from "@/components/OutboundLink";
-import { CommandLauncherButton } from "@/components/CommandLauncher";
-import { affiliateUrl, ebayAffiliateUrl } from "@/lib/affiliate";
+import { SearchBar } from "@/components/SearchBar";
 import { HeroStats, type MarketStat } from "./HeroStats";
-import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
 import type { Country } from "@/lib/country";
-import { MARKETPLACE_NAV_VISIBLE } from "@/components/nav-groups";
-import { CartIcon } from "@/components/icons/HomeIcons";
-
-// eBay marketplace domain per market (NZ has no eBay of its own → AU).
-const EBAY_DOMAIN: Record<string, string> = {
-  AU: "ebay.com.au", NZ: "ebay.com.au", US: "ebay.com", UK: "ebay.co.uk", SG: "ebay.com.sg",
-};
 
 // The cinematic, full-bleed homepage hero. Breaks out of the centered content
 // column to fill the viewport (left-1/2 + w-screen + -translate-x-1/2). All
 // decorative layers are aria-hidden; the foreground re-aligns to the normal grid via
 // container-app. Parallax is layered on by ParallaxRoot (client) and degrades to a
 // clean static composition with no JS / reduced motion.
+//
+// Search-first: the old hero packed in 4 CTAs, 4 stat boxes, a partner-logo row
+// and the affiliate disclosure — nothing above the fold was an actual price. Now
+// the hero is H1 → subhead → search → one stat line → one button + one link +
+// the (quiet) region toggle. The partner row and disclosure moved to
+// PartnersStrip, rendered below the fold in page.tsx (disclosure still travels
+// with the links it discloses — see AffiliateDisclosure's rules — just further
+// down the page instead of inside the first viewport).
 export function CinematicHero({
-  country,
   totalCards,
   statsByCountry,
 }: {
-  country: Country;
   totalCards: number;
   // Per-market stat tiles — localised to the visitor's market client-side (HeroStats).
   statsByCountry: Record<Country, MarketStat>;
 }) {
-  const ebayHref = ebayAffiliateUrl(
-    `https://www.${EBAY_DOMAIN[country] ?? "ebay.com"}/sch/i.html?_nkw=${encodeURIComponent("Riftbound TCG")}`
-  );
-  const tcgHref = affiliateUrl(
-    "https://www.tcgplayer.com/search/riftbound-league-of-legends-trading-card-game/product"
-  );
   return (
     <ParallaxShell>
       {/* ── Background (flat terminal panel) ─────────────────────────────────── */}
@@ -55,45 +45,35 @@ export function CinematicHero({
         </h1>
         <p className="animate-fade-in [animation-delay:240ms] mx-auto mt-4 max-w-2xl text-base text-slate-300">
           Find the cheapest place to buy Riftbound TCG cards — live local prices in AUD, NZD, USD &amp; GBP
-          compared across stores in Australia, New Zealand, the US, the UK and Singapore, updated daily.
+          compared across stores in Australia, New Zealand, the US, the UK, Singapore and Canada, updated daily.
         </p>
 
-        {/* CTAs — one color-coded pair (Browse = neutral secondary, Marketplace =
-            the site's one brand green) instead of a third off-palette hue, so
-            every button on the page draws from the same two-color system. */}
-        <div className="animate-fade-in [animation-delay:300ms] mt-7 flex flex-wrap items-center justify-center gap-3">
-          <Link href="/browse" className="btn-accent px-5 py-2.5 text-base">Browse the database</Link>
-          {MARKETPLACE_NAV_VISIBLE && (
-            <Link href="/marketplace" className="btn-primary px-5 py-2.5 text-base">
-              <CartIcon className="h-[18px] w-[18px]" /> Marketplace
-            </Link>
-          )}
-          <Link href="/decks" className="btn-ghost px-5 py-2.5 text-base">Top meta decks</Link>
-          <CommandLauncherButton variant="hero" />
+        {/* The primary action: search, not a row of buttons. Wired to the exact
+            same search as the nav box (same component, `variant="hero"`).
+            Autofocus is desktop-only — SearchBar itself gates on viewport
+            width, never on mobile. */}
+        <div className="animate-fade-in [animation-delay:300ms] mt-6">
+          <SearchBar variant="hero" autoFocusDesktop />
         </div>
 
-        {/* Market toggle */}
-        <div className="animate-fade-in [animation-delay:360ms] mt-5">
-          <CountryHeroToggle />
-        </div>
-
-        {/* Stats — reactive to the market switcher (localised client-side). */}
+        {/* One thin stat line, directly under the search field — was 4 bordered
+            boxes. */}
         <HeroStats totalCards={totalCards} statsByCountry={statsByCountry} />
 
-        {/* Trust line — approved affiliate partners (absorbs the old Partners strip) */}
-        <div className="animate-fade-in [animation-delay:480ms] mt-7 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-slate-500">
-          <span className="uppercase tracking-wide">Approved partners</span>
-          <OutboundLink href={ebayHref} retailer="ebay_search" country={country} className="text-lg font-extrabold lowercase leading-none transition-opacity hover:opacity-80" aria-label="eBay Partner Network">
-            <span style={{ color: "#e53238" }}>e</span><span style={{ color: "#0064d2" }}>b</span><span style={{ color: "#f5af02" }}>a</span><span style={{ color: "#86b817" }}>y</span>
-          </OutboundLink>
-          <OutboundLink href={tcgHref} retailer="tcgplayer" country={country} className="text-base font-extrabold leading-none text-white transition-opacity hover:opacity-80" aria-label="TCGplayer">
-            TCG<span className="text-sky-400">player</span>
-          </OutboundLink>
+        {/* One primary button + one secondary text link — was 4 competing CTAs
+            (Browse / Marketplace / Decks / ⌘K launcher). Marketplace and the
+            command launcher stay reachable from the nav; nothing here is a
+            dead end. The region switcher rides along in the same row, kept
+            visually quiet (see CountryHeroToggle) so it doesn't compete. */}
+        <div className="animate-fade-in [animation-delay:360ms] mt-6 flex flex-col items-center gap-2">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+            <Link href="/browse" className="btn-primary px-5 py-2.5 text-base">Browse the database</Link>
+            <Link href="/decks" className="text-sm font-semibold text-slate-300 underline-offset-4 hover:text-brand-400 hover:underline">
+              Top meta decks →
+            </Link>
+          </div>
+          <CountryHeroToggle />
         </div>
-        {/* Both partner marks above are affiliate-tagged links, so the strip
-            needs its own disclosure — "Approved partners" alone doesn't disclose
-            an economic relationship. */}
-        <AffiliateDisclosure partner="both" tight className="mx-auto max-w-2xl text-center" />
       </div>
     </ParallaxShell>
   );
@@ -105,10 +85,11 @@ export function CinematicHero({
 // viewport on every breakpoint, so the breakout is symmetric. min-height is kept
 // modest so the vertically-centred content doesn't leave a large void up top —
 // content-driven height (via the section's own py-10/14) does most of the work;
-// this floor just stops a short-content flash on the very first paint.
+// this floor just stops a short-content flash on the very first paint. Trimmed
+// from 46vh now that the hero itself is shorter (search-first, no partner row).
 function ParallaxShell({ children }: { children: React.ReactNode }) {
   return (
-    <ParallaxRoot className="relative left-1/2 -mt-6 flex min-h-[46vh] w-screen -translate-x-1/2 items-center overflow-hidden">
+    <ParallaxRoot className="relative left-1/2 -mt-6 flex min-h-[36vh] w-screen -translate-x-1/2 items-center overflow-hidden">
       {children}
     </ParallaxRoot>
   );

@@ -6,7 +6,7 @@ import { COUNTRIES, COUNTRY_COOKIE, EUR_DISPLAY_COOKIE, INTL_ENABLED, normalizeC
 import { formatMoney } from "@/lib/format";
 import { gbpCentsToEur } from "@/lib/fx";
 
-type PricedCard = { lowestPriceCents: number | null; lowestPriceCentsNz?: number | null; lowestPriceCentsUs?: number | null; lowestPriceCentsUk?: number | null; lowestPriceCentsSg?: number | null };
+type PricedCard = { lowestPriceCents: number | null; lowestPriceCentsNz?: number | null; lowestPriceCentsUs?: number | null; lowestPriceCentsUk?: number | null; lowestPriceCentsCa?: number | null; lowestPriceCentsSg?: number | null };
 
 interface CountryCtx {
   country: Country;

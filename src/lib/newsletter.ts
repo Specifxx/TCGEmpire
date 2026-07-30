@@ -16,6 +16,7 @@ const EBAY_DOMAIN: Record<Country, string> = {
   US: "ebay.com",
   UK: "ebay.co.uk",
   SG: "ebay.com.sg",
+  CA: "ebay.ca",
 };
 
 export interface NewsletterRunSummary {

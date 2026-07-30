@@ -933,7 +933,7 @@ function buildFaqs(card: CardForCopy, ctx: FaqContext): { q: string; a: string }
     },
     {
       q: `Where can I buy ${card.name}?`,
-      a: `Compare every store selling ${card.name} across Australia, New Zealand, the US, the UK and Singapore on this page, then buy from whichever retailer offers the lowest total price including postage. RiftCompare links straight through to each store.`,
+      a: `Compare every store selling ${card.name} across Australia, New Zealand, the US, the UK, Singapore and Canada on this page, then buy from whichever retailer offers the lowest total price including postage. RiftCompare links straight through to each store.`,
     },
   ];
 

@@ -58,6 +58,8 @@ interface BulkPricerCard {
   lowestPriceCentsNz?: number | null;
   lowestPriceCentsUs?: number | null;
   lowestPriceCentsUk?: number | null;
+  lowestPriceCentsSg?: number | null;
+  lowestPriceCentsCa?: number | null;
 }
 
 interface Result {

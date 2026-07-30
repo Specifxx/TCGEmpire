@@ -1,4 +1,5 @@
 import { getMarketIndex, type MarketScope } from "@/lib/market-index";
+import { COUNTRIES } from "@/lib/country";
 import { prisma } from "@/lib/db";
 import { cardHref } from "@/lib/card-url";
 import { SITE_URL } from "@/lib/site";
@@ -15,16 +16,16 @@ const TOOLS = [
   {
     name: "get_index",
     description:
-      "Get the RiftCompare Index (a daily market index for Riftbound: League of Legends TCG singles): level (base 100), deltas, key stats and constituents. Optional market GLOBAL|AU|NZ|US|UK.",
+      "Get the RiftCompare Index (a daily market index for Riftbound: League of Legends TCG singles): level (base 100), deltas, key stats and constituents. Optional market GLOBAL|AU|NZ|US|UK|SG|CA.",
     inputSchema: {
       type: "object",
-      properties: { market: { type: "string", enum: ["GLOBAL", "AU", "NZ", "US", "UK", "SG"] } },
+      properties: { market: { type: "string", enum: ["GLOBAL", "AU", "NZ", "US", "UK", "SG", "CA"] } },
       additionalProperties: false,
     },
   },
   {
     name: "get_card_prices",
-    description: "Get the lowest live in-stock price per market (AU/NZ/US/UK) for a Riftbound card, by slug or id.",
+    description: "Get the lowest live in-stock price per market (AU/NZ/US/UK/SG/CA) for a Riftbound card, by slug or id.",
     inputSchema: {
       type: "object",
       properties: { id: { type: "string", description: "Card slug or id" } },
@@ -36,7 +37,8 @@ const TOOLS = [
 
 function parseMarket(v: unknown): MarketScope {
   const up = String(v ?? "").toUpperCase();
-  return up === "AU" || up === "NZ" || up === "US" || up === "UK" || up === "SG" ? (up as MarketScope) : "GLOBAL";
+  // Registry-driven so a new market can't silently fall through to GLOBAL.
+  return up in COUNTRIES ? (up as MarketScope) : "GLOBAL";
 }
 
 async function callTool(name: string, args: Record<string, unknown> | undefined): Promise<unknown> {
@@ -61,7 +63,7 @@ async function callTool(name: string, args: Record<string, unknown> | undefined)
         where: { OR: [{ slug: id }, { id }] },
         select: {
           id: true, slug: true, name: true, setName: true, setCode: true, collectorNumber: true,
-          lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true,
+          lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true,
         },
       })
       .catch(() => null);
@@ -73,6 +75,8 @@ async function callTool(name: string, args: Record<string, unknown> | undefined)
         NZ: { lowestCents: card.lowestPriceCentsNz, currency: "NZD" },
         US: { lowestCents: card.lowestPriceCentsUs, currency: "USD" },
         UK: { lowestCents: card.lowestPriceCentsUk, currency: "GBP" },
+        SG: { lowestCents: card.lowestPriceCentsSg, currency: "SGD" },
+        CA: { lowestCents: card.lowestPriceCentsCa, currency: "CAD" },
       },
     };
   }

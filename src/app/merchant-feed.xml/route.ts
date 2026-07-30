@@ -14,7 +14,7 @@ import { setByCode } from "@/lib/constants";
 // simply starts carrying items the moment the flag flips.
 export const revalidate = 3600;
 
-const FEED_COUNTRIES = new Set(["AU", "NZ", "US", "UK", "SG"]);
+const FEED_COUNTRIES = new Set(["AU", "NZ", "US", "UK", "SG", "CA"]);
 
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");

@@ -672,7 +672,7 @@ Build smart, compare prices, and you'll have a competitive Riftbound deck withou
     date: "2026-07-15",
     readMins: 5,
     tags: ["news", "about"],
-    body: `RiftCompare is a free price-comparison tool for **Riftbound: League of Legends TCG**. We started as an Australia-only project; today RiftCompare tracks live prices across **Australia, New Zealand, the US, the UK and Singapore**, and has grown well past a simple price table.
+    body: `RiftCompare is a free price-comparison tool for **Riftbound: League of Legends TCG**. We started as an Australia-only project; today RiftCompare tracks live prices across **Australia, New Zealand, the US, the UK, Singapore and Canada**, and has grown well past a simple price table.
 
 ## The problem we built this to solve
 
@@ -2519,7 +2519,7 @@ Buying from overseas, or curious about other markets? See **[Australia](/blog/bu
 
 ## Why US players use RiftCompare
 
-- **TCGplayer, eBay AND independent stores in one comparison.** We track live USD prices at 19 US stores — The Mythic Store, Danireon Cards & Games, Gear Gaming, Misty Mountain Games, Hobbiesville, NP Collectibles, The CG Realm, Bards & Cards, PunkOuter Games, GG Legends, The Booster Box, Cardboard and Die, Cape Fear Collectibles, Mystery MTG, Gamers Guild AZ and more ([full list](/stores/tracked)) — alongside **TCGplayer's market price** and **eBay** listings, side by side.
+- **TCGplayer, eBay AND independent stores in one comparison.** We track live USD prices at 33 US stores — The Mythic Store, Danireon Cards & Games, Gear Gaming, Misty Mountain Games, Hobbiesville, NP Collectibles, The CG Realm, Bards & Cards, PunkOuter Games, GG Legends, The Booster Box, Cardboard and Die, Cape Fear Collectibles, Mystery MTG, OneStopTCG and more ([full list](/stores/tracked)) — alongside **TCGplayer's market price** and **eBay** listings, side by side.
 - **The independents frequently beat TCGplayer.** Market price is an average, not a floor — our comparison regularly surfaces indie-store listings well under it on the exact same card.
 - **Prices refresh daily**, with [price history](/movers) on every card so you can tell a real dip from a spike, plus [price movers](/movers) to catch cards climbing early.
 - **Whole-deck pricing.** The [deck pricer](/deck) prices a complete list across every store at once and finds the cheapest combination of orders.
@@ -2654,7 +2654,7 @@ Shopping from [Australia](/blog/buy-riftbound-cards-australia), [the UK](/blog/b
 
 **Vendetta releases 31 July 2026.** The set runs **166 main-set cards** plus alternate-art Showcase printings, Overnumbered chase cards (numbered beyond 166), SP-numbered specials, runes and tokens. The mechanics are new too — read up on **[Empower](/guides/riftbound-empower-explained)**, **[Flow](/guides/riftbound-flow-explained)** and **[Burn](/guides/riftbound-burn-explained)** while you browse.
 
-Tap any card below to open its full page: rules text, printings, price history, and live store prices the moment Vendetta singles go on sale — compared across every store we track in Australia, New Zealand, the US, the UK and Singapore.
+Tap any card below to open its full page: rules text, printings, price history, and live store prices the moment Vendetta singles go on sale — compared across every store we track in Australia, New Zealand, the US, the UK, Singapore and Canada.
 
 [[embed:0]]
 
@@ -2670,7 +2670,7 @@ Tap any card below to open its full page: rules text, printings, price history, 
     category: "blog",
     title: "Where to Buy Riftbound Singles — The Cheapest Place to Buy Single Cards",
     excerpt:
-      "The complete guide to buying Riftbound: League of Legends TCG singles: what singles are, singles vs packs, how to find the cheapest price for any card across stores in AU, NZ, US, UK & Singapore, and how to buy safely. Free, updated daily.",
+      "The complete guide to buying Riftbound: League of Legends TCG singles: what singles are, singles vs packs, how to find the cheapest price for any card across stores in AU, NZ, US, UK, Singapore & Canada, and how to buy safely. Free, updated daily.",
     author: "RiftCompare",
     date: "2026-07-14",
     updated: "2026-07-14",
@@ -2682,7 +2682,7 @@ Tap any card below to open its full page: rules text, printings, price history, 
     ],
     body: `Want to **buy Riftbound singles** — the exact cards your deck needs, without opening pack after pack? This is the complete guide: what singles are, why they beat packs for deckbuilding, and — most importantly — **how to find the cheapest price for any Riftbound single**, compared across every store at once.
 
-> **The short version:** search any card on the **[RiftCompare singles hub](/singles)**, see every store's live price ranked by what you'd actually pay delivered, and buy from the cheapest. It's free, covers Australia, New Zealand, the US, the UK and Singapore, and updates daily.
+> **The short version:** search any card on the **[RiftCompare singles hub](/singles)**, see every store's live price ranked by what you'd actually pay delivered, and buy from the cheapest. It's free, covers Australia, New Zealand, the US, the UK, Singapore and Canada, and updates daily.
 
 ## What are Riftbound singles?
 
@@ -3129,7 +3129,7 @@ Once you've picked a direction, drop your planned list into the **[deck pricer](
     category: "blog",
     title: "Riftbound Vendetta Card Prices: Where to Buy for the Lowest Price",
     excerpt:
-      "RiftCompare tracks every Riftbound Vendetta card's price live across 70+ stores in Australia, New Zealand, the US, the UK and Singapore, plus eBay — so you always find the cheapest place to buy Vendetta singles and sealed.",
+      "RiftCompare tracks every Riftbound Vendetta card's price live across 70+ stores in Australia, New Zealand, the US, the UK, Singapore and Canada, plus eBay — so you always find the cheapest place to buy Vendetta singles and sealed.",
     author: "RiftCompare",
     date: "2026-07-24",
     updated: "2026-07-24",
@@ -3157,7 +3157,7 @@ Riftbound: Vendetta singles are trading early, and RiftCompare is tracking every
 
 ## How RiftCompare prices Vendetta
 
-- **70+ stores, five markets.** We compare live prices across local stores in Australia, New Zealand, the US, the UK and Singapore, plus eBay in each of those markets — the same coverage as every other Riftbound set.
+- **70+ stores, five markets.** We compare live prices across local stores in Australia, New Zealand, the US, the UK, Singapore and Canada, plus eBay in each of those markets — the same coverage as every other Riftbound set.
 - **Ranked by delivered cost, not just sticker price.** A card's "cheapest" price accounts for shipping where we track it, not just the item price — so the store at the top of the list is genuinely the least you'll pay to get the card in hand, not just the lowest-looking number.
 - **All 166 cards, priced as they list.** Every confirmed Vendetta card already has a page tracking its price — most were unpriced through spoiler season (nothing to compare before a card is buyable), and they're filling in live now that early singles and stores are listing them.
 - **Updated continuously, not once a day.** As new listings land during this early trading window, the comparison updates — you're never looking at a stale price from before a store restocked or a new listing undercut it.

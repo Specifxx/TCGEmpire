@@ -24,6 +24,8 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
         lowestPriceCentsNz: true,
         lowestPriceCentsUs: true,
         lowestPriceCentsUk: true,
+        lowestPriceCentsSg: true,
+        lowestPriceCentsCa: true,
       },
     })
     .catch(() => null);
@@ -46,6 +48,8 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
       NZ: { lowestCents: card.lowestPriceCentsNz, currency: "NZD" },
       US: { lowestCents: card.lowestPriceCentsUs, currency: "USD" },
       UK: { lowestCents: card.lowestPriceCentsUk, currency: "GBP" },
+      SG: { lowestCents: card.lowestPriceCentsSg, currency: "SGD" },
+      CA: { lowestCents: card.lowestPriceCentsCa, currency: "CAD" },
     },
     note: "Prices are the lowest live in-stock listing per market, in integer cents. null = no tracked in-stock listing.",
     source: `${SITE_URL}${cardHref(card)}`,

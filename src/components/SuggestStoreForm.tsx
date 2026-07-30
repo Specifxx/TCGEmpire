@@ -10,6 +10,7 @@ const MARKETS: { value: string; label: string }[] = [
   { value: "US", label: "🇺🇸 United States" },
   { value: "UK", label: "🇬🇧 United Kingdom" },
   { value: "SG", label: "🇸🇬 Singapore" },
+  { value: "CA", label: "🇨🇦 Canada" },
   { value: "OTHER", label: "🌐 Other" },
 ];
 

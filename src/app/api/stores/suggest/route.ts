@@ -5,7 +5,7 @@ import { RETAILER_LIST } from "@/lib/retailers";
 
 export const dynamic = "force-dynamic";
 
-const COUNTRIES = new Set(["AU", "NZ", "US", "UK", "SG", "OTHER"]);
+const COUNTRIES = new Set(["AU", "NZ", "US", "UK", "SG", "CA", "OTHER"]);
 
 // Normalise a submitted URL to a bare hostname (lowercase, no www) so we can
 // dedupe against stores we already track and against earlier submissions.

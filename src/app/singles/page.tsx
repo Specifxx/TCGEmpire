@@ -16,7 +16,7 @@ export const revalidate = 3600;
 export const metadata: Metadata = {
   title: { absolute: "Buy Riftbound Singles — Compare Prices Across Every Store | RiftCompare" },
   description:
-    "The cheapest place to buy Riftbound: League of Legends TCG singles. Compare live prices for every single card across stores in AU, NZ, US, UK & Singapore — ranked by delivered cost, updated daily. Free.",
+    "The cheapest place to buy Riftbound: League of Legends TCG singles. Compare live prices for every single card across stores in AU, NZ, US, UK, Singapore & Canada — ranked by delivered cost, updated daily. Free.",
   keywords: [
     "Riftbound singles",
     "buy Riftbound singles",
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Buy Riftbound Singles — Compare Prices Across Every Store",
     description:
-      "Compare live prices for every Riftbound single across stores in AU, NZ, US, UK & Singapore — ranked by delivered cost, updated daily. Free.",
+      "Compare live prices for every Riftbound single across stores in AU, NZ, US, UK, Singapore & Canada — ranked by delivered cost, updated daily. Free.",
     url: `${SITE_URL}/singles`,
   },
 };
@@ -42,7 +42,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "Where can I buy Riftbound singles?",
-    a: "RiftCompare compares live singles prices across a wide range of local stores in Australia, New Zealand, the US, the UK and Singapore, plus eBay. Search any card to see every store's price for that single, ranked by total delivered cost, and click straight through to buy from whichever store is cheapest.",
+    a: "RiftCompare compares live singles prices across a wide range of local stores in Australia, New Zealand, the US, the UK, Singapore and Canada, plus eBay. Search any card to see every store's price for that single, ranked by total delivered cost, and click straight through to buy from whichever store is cheapest.",
   },
   {
     q: "How do I find the cheapest Riftbound singles?",
@@ -103,7 +103,7 @@ export default async function SinglesPage() {
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400 sm:text-base">
             RiftCompare is the price comparison for <strong className="text-slate-200">Riftbound: League of Legends TCG
             singles</strong>. Search any card and see every store&apos;s live price side by side — ranked by total
-            delivered cost across Australia, New Zealand, the US, the UK and Singapore, updated daily. Find the cheapest
+            delivered cost across Australia, New Zealand, the US, the UK, Singapore and Canada, updated daily. Find the cheapest
             place to buy the exact cards your deck needs.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">

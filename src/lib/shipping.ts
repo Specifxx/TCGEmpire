@@ -18,6 +18,11 @@ const POSTCODE_PATTERN: Record<string, RegExp> = {
   AU: /^\d{4}$/,
   US: /^\d{5}(-\d{4})?$/,
   UK: /^[A-Za-z]{1,2}\d[A-Za-z\d]?\s?\d[A-Za-z]{2}$/,
+  // Canadian FSA/LDU, e.g. "K1E 3J1" / "k1e3j1". Without this, validatePostcode's
+  // `pattern ? … : p.length > 0` fallback accepts ANY non-empty string.
+  CA: /^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/,
+  NZ: /^\d{4}$/,
+  SG: /^\d{6}$/,
 };
 
 export function validatePostcode(country: string, postcode: string): boolean {

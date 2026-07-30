@@ -32,6 +32,8 @@ export interface CardTileData {
   lowestPriceCentsNz?: number | null;
   lowestPriceCentsUs?: number | null;
   lowestPriceCentsUk?: number | null;
+  lowestPriceCentsSg?: number | null;
+  lowestPriceCentsCa?: number | null;
   _count: { retailerPrices: number };
 }
 

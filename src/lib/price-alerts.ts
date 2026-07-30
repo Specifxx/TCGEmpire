@@ -38,6 +38,12 @@ export async function runPriceAlerts(): Promise<AlertRunSummary> {
           lowestPriceCentsNz: true,
           lowestPriceCentsUs: true,
           lowestPriceCentsUk: true,
+          // Sg was missing here (added with Ca): pickPrice() below reads the column
+          // for the alert's own market, so an unselected column came back
+          // `undefined` → treated as "no price yet" → SG price alerts could never
+          // fire at all. Same trap for CA without this.
+          lowestPriceCentsSg: true,
+          lowestPriceCentsCa: true,
         },
       },
     },

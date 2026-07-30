@@ -14,13 +14,18 @@ import { EarningsChart, type EarningsPoint } from "./EarningsChart";
 // Launch markets — see lib/marketplace.ts's MARKETPLACE_LAUNCH_COUNTRIES. The
 // server rejects any other market anyway; keeping the picker in sync avoids a
 // seller picking an unsupported market and then hitting a confusing 400 on save.
-type Country = "AU" | "US" | "UK" | "NZ" | "SG";
+// NOTE: a LOCAL Country type, deliberately separate from lib/country.ts's (this is
+// the marketplace's seller-market picker, which tracks MARKETPLACE_COUNTRIES, not
+// the price-comparison market list). Being local means a new market added globally
+// does NOT surface a type error here — keep it in sync by hand.
+type Country = "AU" | "US" | "UK" | "NZ" | "SG" | "CA";
 const COUNTRY_LABEL: Record<Country, string> = {
   AU: "Australia",
   US: "United States",
   UK: "United Kingdom",
   NZ: "New Zealand",
   SG: "Singapore",
+  CA: "Canada",
 };
 
 interface Profile {
@@ -50,6 +55,8 @@ interface SearchCard {
   lowestPriceCentsNz?: number | null;
   lowestPriceCentsUs?: number | null;
   lowestPriceCentsUk?: number | null;
+  lowestPriceCentsSg?: number | null;
+  lowestPriceCentsCa?: number | null;
 }
 
 interface Listing {

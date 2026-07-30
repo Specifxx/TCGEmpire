@@ -8,7 +8,7 @@ export const revalidate = 86400;
 
 // One-line descriptions for the hub pages (falls back to the nav label otherwise).
 const DESC: Record<string, string> = {
-  "/browse": "Every Riftbound card with live lowest prices compared across stores (AU/NZ/US/UK).",
+  "/browse": "Every Riftbound card with live lowest prices compared across stores (AU/NZ/US/UK/SG/CA).",
   "/sealed": "Sealed products — booster boxes, packs and bundles — with the cheapest live price.",
   "/movers": "The biggest Riftbound price rises and falls, updated daily.",
   "/market": "The RiftCompare Index — a daily search-weighted market index for Riftbound singles, with key stats.",
