@@ -32,6 +32,7 @@ type ManualCard = {
   isPromo?: boolean;
   energyCost?: number | null;
   might?: number | null;
+  description?: string | null;
   imageUrl?: string | null;
   imageThumbUrl?: string | null;
 };
@@ -83,6 +84,7 @@ async function main() {
       isPromo,
       energyCost: c.energyCost ?? null,
       might: c.might ?? null,
+      description: c.description ?? null,
       imageUrl: c.imageUrl ?? null,
       imageThumbUrl: c.imageThumbUrl ?? c.imageUrl ?? null,
     };
