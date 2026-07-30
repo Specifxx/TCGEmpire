@@ -117,9 +117,14 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {columns.map(({ def, items }) => {
-          // Premium columns reveal only the single best deal; the rest is locked.
+          // Premium columns reveal only the single best deal; the rest is locked —
+          // but only show as many "locked" rows as there are ACTUAL hidden deals.
+          // This used to force a minimum of 2 skeleton rows even when there was
+          // only 1 real deal today (nothing hidden behind them at all), which both
+          // misrepresented how much data exists and threw off the column's height
+          // next to its neighbours.
           const shown = def.premium ? items.slice(0, 1) : items;
-          const skeletons = def.premium ? Math.min(3, Math.max(2, items.length - 1)) : 0;
+          const skeletons = def.premium ? Math.min(3, Math.max(0, items.length - 1)) : 0;
           return (
             <div key={def.key} className="card-surface flex flex-col p-3 transition-colors duration-200 hover:border-brand-500/60 hover:bg-ink-800">
               <div className="mb-1 flex items-center justify-between gap-2 px-1">

@@ -31,10 +31,10 @@ export function VendettaBlock({
     <Reveal>
       <section
         aria-labelledby="vendetta-heading"
-        className="card-surface relative overflow-hidden p-5 sm:p-6"
+        className="card-surface relative overflow-hidden p-4 sm:p-5"
         style={{ borderColor: "#e5484d4d" }}
       >
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <span className="chip text-[11px] font-bold uppercase tracking-wide" style={{ backgroundColor: "#e5484d26", color: "#e5484d" }}>
               Vendetta
@@ -46,7 +46,7 @@ export function VendettaBlock({
           </Link>
         </div>
 
-        <div className="mb-5 grid gap-3 sm:grid-cols-2">
+        <div className="mb-4 grid gap-3 sm:grid-cols-2">
           {pulse.cheapestBox ? (
             <div className="rounded-lg border border-ink-800 bg-ink-900 p-3">
               <div className="text-[11px] uppercase tracking-wide text-slate-500">Cheapest booster box</div>
@@ -79,9 +79,14 @@ export function VendettaBlock({
         {chaseCards.length > 0 && (
           <>
             <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Chase cards</div>
-            <Reveal stagger className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {/* Fixed-width compact tiles (not a full-bleed grid) — the same idea as
+                the carousel just below this block, so four cards don't stretch this
+                section into the tallest thing on the homepage. */}
+            <Reveal stagger className="flex flex-wrap justify-center gap-3 sm:justify-start">
               {chaseCards.map((c) => (
-                <CardTile key={c.id} card={c} />
+                <div key={c.id} className="w-[calc(50%-0.375rem)] sm:w-32">
+                  <CardTile card={c} />
+                </div>
               ))}
             </Reveal>
           </>
