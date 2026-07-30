@@ -37,22 +37,23 @@ export interface Champion {
 // Observed prefixes from the live card corpus, minus the two defects above.
 // Order is alphabetical by canonical name for the index page.
 const RAW: [name: string, extraPrefixes?: string[]][] = [
-  ["Ahri"], ["Akshan"], ["Anivia"], ["Annie"], ["Aphelios"], ["Ashe"], ["Azir"],
+  ["Ahri"], ["Akali"], ["Akshan"], ["Anivia"], ["Annie"], ["Aphelios"], ["Ashe"], ["Azir"],
   ["Bard"], ["Blitzcrank"], ["Caitlyn"], ["Darius"], ["Diana"], ["Dr. Mundo"],
   ["Draven"], ["Ekko"], ["Evelynn"], ["Ezreal"], ["Fiora"], ["Fizz"], ["Galio"],
   ["Garen"], ["Heimerdinger"], ["Hwei"], ["Irelia"], ["Ivern"], ["Janna"], ["Jax"],
   ["Jayce"], ["Jhin"], ["Jinx"], ["Kai'Sa"], ["Karma"], ["Karthus"], ["Katarina"],
-  ["Kayn"], ["Kha'Zix"], ["Kog'Maw"], ["LeBlanc"], ["Lee Sin"], ["Leona"],
+  ["Kayn"], ["Kennen"], ["Kha'Zix"], ["Kog'Maw"], ["LeBlanc"], ["Lee Sin"], ["Leona"],
   ["Lillia"], ["Lucian"], ["Lux"], ["Malzahar"],
   // The three-way split documented above. "Master Yi" is canonical; "Yi" is how
   // the Unit printings are named; "Master" is the seed.ts bug's output.
   ["Master Yi", ["Yi", "Master"]],
+  ["Mel"],
   ["Miss Fortune"], ["Nami"], ["Nidalee"], ["Nilah"], ["Nocturne"], ["Ornn"],
   ["Poppy"], ["Pyke"], ["Qiyana"], ["Rek'Sai"], ["Rell"], ["Renata Glasc"],
-  ["Rengar"], ["Rumble"], ["Sett"], ["Shen"], ["Sivir"], ["Sona"], ["Soraka"],
+  ["Renekton"], ["Rengar"], ["Rumble"], ["Sett"], ["Shen"], ["Sivir"], ["Sona"], ["Soraka"],
   ["Syndra"], ["Taric"], ["Teemo"], ["Tryndamere"], ["Twisted Fate"], ["Udyr"],
   ["Vayne"], ["Vex"], ["Vi"], ["Viktor"], ["Volibear"], ["Warwick"], ["Xerath"],
-  ["Xin Zhao"], ["Yasuo"], ["Yone"], ["Yuumi"], ["Zilean"],
+  ["Xin Zhao"], ["Yasuo"], ["Yone"], ["Yuumi"], ["Zed"], ["Zilean"],
 ];
 
 // Slug: lowercase, non-alphanumerics collapsed to "-". Chosen so the apostrophe

@@ -3,9 +3,8 @@ import Link from "next/link";
 import { Archivo } from "next/font/google";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
-import { CardTile } from "@/components/CardTile";
 import { Reveal } from "@/components/Reveal";
-import { getPopularCards, getValuableCards } from "@/lib/cheapest-cards";
+import { getPopularCards, getChaseCards } from "@/lib/cheapest-cards";
 import { DEFAULT_COUNTRY, priceField, type Country } from "@/lib/country";
 import type { MarketStat } from "@/components/home/HeroStats";
 import { SETS, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
@@ -21,6 +20,7 @@ import { PartnersStrip } from "@/components/home/PartnersStrip";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { CardsIcon } from "@/components/icons/HomeIcons";
+import { RETAILER_LIST } from "@/lib/retailers";
 
 // Homepage titling face — a heavy neutral grotesque matching the official
 // Riftbound wordmark lockup ("RIFTBOUND / LEAGUE OF LEGENDS TRADING CARD GAME"),
@@ -58,7 +58,7 @@ export const metadata: Metadata = {
   title: { absolute: "Buy & Compare Riftbound Card Prices | RiftCompare" },
   // Kept to 25–160 chars (Bing/Google snippet limit) while staying market-neutral.
   description:
-    "Compare live Riftbound TCG card prices across AU, NZ, US, UK & Singapore stores to find the cheapest place to buy singles and sealed. Updated daily.",
+    "Compare live Riftbound TCG card prices across AU, NZ, US, UK, Singapore & Canada stores to find the cheapest place to buy singles and sealed. Updated daily.",
   keywords: [
     "buy Riftbound cards",
     "Riftbound prices",
@@ -79,7 +79,7 @@ export const metadata: Metadata = {
 const FAQS: { q: string; a: string }[] = [
   {
     q: "Where can I buy Riftbound cards?",
-    a: "RiftCompare compares live Riftbound prices across a wide range of local stores in Australia, New Zealand, the US, the UK and Singapore, plus eBay (AU, US, UK and SG), so you can buy Riftbound cards from whichever shop is cheapest. Search any card to see every store's price and click straight through to buy.",
+    a: "RiftCompare compares live Riftbound prices across a wide range of local stores in Australia, New Zealand, the US, the UK, Singapore and Canada, plus eBay (AU, US, UK, SG and CA), so you can buy Riftbound cards from whichever shop is cheapest. Search any card to see every store's price and click straight through to buy.",
   },
   {
     q: "How do I find the cheapest Riftbound prices?",
@@ -91,7 +91,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "Are the Riftbound prices shown in my local currency?",
-    a: "Yes. Prices are shown in the local currency of your selected market — AUD in Australia, NZD in New Zealand, USD in the US, GBP in the UK and SGD in Singapore — so there are no surprise currency conversions.",
+    a: "Yes. Prices are shown in the local currency of your selected market — AUD in Australia, NZD in New Zealand, USD in the US, GBP in the UK, SGD in Singapore and CAD in Canada — so there are no surprise currency conversions.",
   },
 ];
 
@@ -100,7 +100,7 @@ export default async function HomePage() {
   // "Australia"); CardTile re-prices to the visitor's market after hydration.
   // The copy Google indexes (hero, FAQs, about) is market-neutral.
   const country = DEFAULT_COUNTRY;
-  const COUNTRY_CODES: Country[] = ["AU", "NZ", "US", "UK", "SG"];
+  const COUNTRY_CODES: Country[] = ["AU", "NZ", "US", "UK", "SG", "CA"];
   const [
     totalCards,
     pricedCounts,
@@ -141,7 +141,7 @@ export default async function HomePage() {
     // Vendetta "chase cards" for the homepage Vendetta block — the highest-value
     // singles in the set (not "most searched" like popularVendetta above), same
     // AU-baseline-then-client-reprice pattern as every other card list here.
-    getValuableCards(4, country, "VEN"),
+    getChaseCards(8, country, "VEN"),
     // Today's Top Deals blends four signals; cache per-market. We serialize ALL four
     // markets so the section localises to the visitor's chosen market client-side —
     // the page is ISR-cached with DEFAULT_COUNTRY baked in, so a single-market render
@@ -164,10 +164,9 @@ export default async function HomePage() {
     // recent snapshot (see lib/price-history.ts). Single-market (the baseline),
     // same as popularCards above: it's a real internal-linking/freshness feed,
     // not a per-market data section like Top Deals, so there's no reason to
-    // serialize all five markets for client-side localisation.
-    // 60 (not the carousels' usual ~12): this section's whole point is dozens
-    // of fresh internal links for crawlers, so it stays a wide, dense grid.
-    getRecentlyUpdated(country, 60),
+    // serialize all five markets for client-side localisation. Rendered as a
+    // tab in PopularCardsCarousel (see below), not its own section.
+    getRecentlyUpdated(country, 24),
     // Biggest movers (up + down) for the unified popular-cards carousel's third
     // tab — same AU-baseline pattern as popularCards/popularVendetta.
     getPriceMovers(country, 6),
@@ -175,8 +174,21 @@ export default async function HomePage() {
   // Assemble per-market stat tiles; the client picks the visitor's market after hydration.
   const inStockByCountry: Record<string, number> = {};
   for (const g of inStockGroups) inStockByCountry[g.country] = g._count._all;
+  // "Stores" means real, currently-tracked retailers — intersect the DB rows with
+  // RETAILER_LIST (the single source of truth also used by /stores/tracked) rather
+  // than trusting raw distinct `retailer` values. Without this a store REMOVED from
+  // retailers.ts still counts forever (its old RetailerPrice/SealedListing rows are
+  // never deleted once nothing targets that key again — see the STORES_WITH_POLICY
+  // cleanup note in retailers.ts for the same drift), and TCGplayer/Cardmarket/
+  // Marketplace pseudo-retailers (never in RETAILER_LIST, only excluded here by
+  // name for eBay) get counted as if they were independent "stores" too. This is
+  // the actual reason the homepage stat and /stores/tracked's count could disagree.
+  const validRetailerKeys = new Set(RETAILER_LIST.map((r) => r.key));
   const storesByCountry: Record<string, Set<string>> = {};
-  for (const r of storeRows) (storesByCountry[r.country] ??= new Set()).add(r.retailer);
+  for (const r of storeRows) {
+    if (!validRetailerKeys.has(r.retailer)) continue;
+    (storesByCountry[r.country] ??= new Set()).add(r.retailer);
+  }
   const statsByCountry = Object.fromEntries(
     COUNTRY_CODES.map((c, i) => [c, { priced: pricedCounts[i], inStock: inStockByCountry[c] ?? 0, stores: storesByCountry[c]?.size ?? 0 }]),
   ) as Record<Country, MarketStat>;
@@ -193,7 +205,7 @@ export default async function HomePage() {
     .slice(0, 12);
 
   return (
-    <div className={`${archivo.variable} rb-display-sans flex flex-col gap-12`}>
+    <div className={`${archivo.variable} rb-display-sans flex flex-col gap-10`}>
       {/* Cinematic full-bleed hero — search-first (see CinematicHero + Task 3). */}
       <CinematicHero
         totalCards={totalCards}
@@ -215,51 +227,21 @@ export default async function HomePage() {
       )}
 
       {/* Unified popular-cards carousel — merges what used to be two identical
-          "Most popular…" sections (Vendetta-scoped and all-time) plus adds a
-          "Biggest movers" tab, instead of a third near-duplicate section. */}
+          "Most popular…" sections (Vendetta-scoped and all-time), a "Biggest
+          movers" tab, AND (per your request) "Recently updated prices" — which
+          used to be its own always-expanded section — into one compact, tabbed,
+          one-row horizontal scroll. Real cards whose price genuinely changed in
+          the latest snapshot (see lib/price-history.ts's outlier-guarded diff,
+          never fabricated); the tab simply doesn't appear until there's at least
+          one real change to show. */}
       <PopularCardsCarousel
         vendetta={popularVendetta}
         allTime={popularCards}
         movers={biggestMovers}
+        recentlyUpdated={recentlyUpdated}
         storeCount={storeCount}
         storeWord={storeWord}
       />
-
-      {/* Recently updated prices — real cards whose price genuinely changed in the
-          latest snapshot (see lib/price-history.ts's outlier-guarded diff, never
-          fabricated). Dense, server-rendered grid rather than a horizontal-scroll
-          teaser: this section exists to hand crawlers dozens of fresh internal
-          links every day and give a returning visitor something new to see —
-          TCG Snoop's "Recently Snooped" pattern. Hidden entirely until at least
-          two days of history exist to diff against. */}
-      {recentlyUpdated.length > 0 && (
-        <section>
-          <div className="mb-4 flex items-end justify-between gap-3">
-            <div>
-              <h2 className="text-xl font-extrabold text-white">Recently updated prices</h2>
-              <p className="mt-0.5 text-xs text-slate-500">
-                {recentlyUpdated.length} Riftbound cards whose price just changed — updated with every price refresh.
-              </p>
-            </div>
-            <Link href="/movers" className="btn-ghost text-xs shrink-0">See all movers →</Link>
-          </div>
-          <Reveal stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5 xl:grid-cols-6">
-            {recentlyUpdated.map((u) => (
-              // A caption below the tile rather than an overlay ON it: CardTile's
-              // image height scales with tile width (aspect-[5/7]), which varies
-              // across this grid's breakpoints (2 cols mobile → 6 desktop), so a
-              // fixed-offset absolute badge would drift off the image/info-panel
-              // boundary at some column counts. A caption is breakpoint-proof.
-              <div key={u.card.id}>
-                <CardTile card={u.card} />
-                <p className={`num mt-1 text-center text-xs font-bold ${u.pct > 0 ? "text-up" : "text-down"}`}>
-                  {u.pct > 0 ? "▲" : "▼"} {Math.abs(u.pct)}%
-                </p>
-              </div>
-            ))}
-          </Reveal>
-        </section>
-      )}
 
       {/* How it works — orients first-time visitors to the search → compare → buy
           mechanic. Moved after the commercial sections (deals, popular cards,
@@ -347,7 +329,11 @@ export default async function HomePage() {
       {/* About + FAQ — keyword-relevant content for search */}
       <section className="card-surface p-6">
         <h2 className="text-xl font-extrabold text-white">Riftbound prices in Australia, New Zealand, the US &amp; UK — all in one place</h2>
-        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+        {/* Full width, matching the heading above — a capped/centred measure
+            here just shifted the paragraph out of alignment with the heading
+            (text starting a third of the way across the card reads as broken,
+            not "intentional whitespace"). This card is meant to fill its row. */}
+        <p className="mt-2 text-sm leading-relaxed text-slate-400">
           RiftCompare is a free, independent price-comparison tool for Riftbound: League of Legends
           TCG. We track live prices for every Riftbound card across local stores in Australia, New
           Zealand, the US and the UK, plus eBay (AU, US and UK), so you can buy Riftbound cards for

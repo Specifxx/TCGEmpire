@@ -35,7 +35,7 @@ export function HowItWorks({ totalCards }: { totalCards: number }) {
         <h2 id="how-it-works-heading" className="text-xl font-extrabold text-white">
           How RiftCompare works
         </h2>
-        <p className="mt-0.5 text-xs text-slate-500">
+        <p className="mt-0.5 text-sm text-slate-400">
           Find the cheapest place to buy any of {totalCards.toLocaleString()} Riftbound cards in three steps — always free.
         </p>
       </div>

@@ -3,9 +3,16 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { getCountry } from "@/lib/get-country";
-import { COUNTRIES, pickPrice } from "@/lib/country";
-import { canViewMarketplaceListings, getSellerRatings, MARKETPLACE_OFFERS, MARKETPLACE_PUBLIC } from "@/lib/marketplace";
+import { COUNTRIES } from "@/lib/country";
+import {
+  canViewMarketplaceListings,
+  getSellerRatings,
+  MARKETPLACE_OFFERS,
+  MARKETPLACE_PUBLIC,
+  MARKETPLACE_RETAILER_KEYS,
+} from "@/lib/marketplace";
 import { MARKETPLACE_SHIP_DEADLINE_DAYS } from "@/lib/marketplace-policy";
+import { AU_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS, SG_FALLBACK_RETAILERS } from "@/lib/constants";
 import { stripeEnabled } from "@/lib/stripe";
 import { MarketplaceClient, type MktCard } from "@/components/MarketplaceClient";
 
@@ -94,7 +101,6 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
         select: {
           id: true, name: true, slug: true, setCode: true, collectorNumber: true,
           imageThumbUrl: true, variant: true, isPromo: true, rarity: true,
-          lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true,
         },
       },
       seller: { select: { id: true, displayName: true, sellerProfile: { select: { shopName: true, isOfficial: true, shippingNote: true, handlingDays: true } } } },
@@ -103,6 +109,36 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
 
   // Seller ratings in one query for every seller on the page.
   const ratings = await getSellerRatings([...new Set(listings.map((l) => l.sellerId))]);
+
+  // "Under market" benchmark — the cheapest REAL, independent store price for
+  // each card, in this market. Bug fixed here: this used to read
+  // Card.lowestPriceCents* (pickPrice), the denormalised "cheapest price from
+  // ANY source" column. That column is intentionally fed by
+  // importMarketplaceListings() too (see price-import.ts) — the marketplace IS
+  // meant to count as a source for the site's general "cheapest anywhere"
+  // figure. But that makes it the WRONG source for THIS specific benchmark:
+  // when a marketplace listing was itself the cheapest source, every listing
+  // compared its price to a figure derived from marketplace listings (often its
+  // own), landing on "at market" for nearly everything and backwards "more
+  // expensive" results whenever a coincidentally-pricier listing set the floor.
+  // A live, scoped query here instead: cheapest in-stock price excluding
+  // MARKETPLACE_RETAILER_KEYS (obviously) and the AU/UK/SG converted-reference
+  // retailers (TCGplayer-AU/UK/SG, Cardmarket — not real local stores, excluded
+  // from every other "real store" comparison on the site; see market-rows.ts).
+  const cardIds = [...new Set(listings.map((l) => l.cardId))];
+  const realStoreLows = cardIds.length
+    ? await prisma.retailerPrice.groupBy({
+        by: ["cardId"],
+        where: {
+          cardId: { in: cardIds },
+          country,
+          inStock: true,
+          retailer: { notIn: [...MARKETPLACE_RETAILER_KEYS, ...AU_FALLBACK_RETAILERS, ...UK_FALLBACK_RETAILERS, ...SG_FALLBACK_RETAILERS] },
+        },
+        _min: { priceCents: true },
+      })
+    : [];
+  const realMarketByCard = new Map(realStoreLows.map((r) => [r.cardId, r._min.priceCents ?? null]));
 
   // Group by card; sort each card's offers official-store-first, then cheapest.
   const byCard = new Map<string, MktCard>();
@@ -129,11 +165,12 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
     const existing = byCard.get(l.cardId);
     if (existing) existing.offers.push(offer);
     else {
-      // The site's own lowest store price for this market — the delta benchmark
-      // ("12% under market") shown against every offer.
-      const marketCents = pickPrice(l.card, country);
-      const { lowestPriceCents, lowestPriceCentsNz, lowestPriceCentsUs, lowestPriceCentsUk, ...cardLite } = l.card;
-      byCard.set(l.cardId, { card: cardLite, marketCents, offers: [offer] });
+      // The cheapest REAL independent-store price for this card in this market
+      // (see realMarketByCard above) — the delta benchmark ("12% under market")
+      // shown against every offer. null when no real store carries it yet: never
+      // fabricate a comparison against nothing.
+      const marketCents = realMarketByCard.get(l.cardId) ?? null;
+      byCard.set(l.cardId, { card: l.card, marketCents, offers: [offer] });
     }
   }
   // Buyable (in-region) offers first, then cross-region reference-only ones;
@@ -165,6 +202,7 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
         country={country}
         stripeEnabled={stripeEnabled()}
         signedIn={!!user}
+        currentUserId={user?.id ?? null}
         offersEnabled={MARKETPLACE_OFFERS}
         openCardId={cardId}
       />

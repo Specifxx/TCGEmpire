@@ -25,6 +25,7 @@ export const USD_TO: Record<string, number> = {
   NZD: rate(process.env.NEXT_PUBLIC_USD_TO_NZD, 1.65),
   GBP: rate(process.env.NEXT_PUBLIC_USD_TO_GBP, 0.79),
   SGD: rate(process.env.NEXT_PUBLIC_USD_TO_SGD, 1.35),
+  CAD: rate(process.env.NEXT_PUBLIC_USD_TO_CAD, 1.37),
   // Not a market currency (no EUR store/eBay market) — just a reference display
   // conversion offered to UK-market visitors who think in Euro. See gbpCentsToEur.
   EUR: rate(process.env.NEXT_PUBLIC_USD_TO_EUR, 0.92),

@@ -14,10 +14,11 @@ import { refreshTcgplayerPrices } from "./tcgplayer";
 import { importMarketplaceListings } from "./marketplace";
 import { refreshCardmarketPrices } from "./cardmarket";
 import { AU_FALLBACK_RETAILERS, SG_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS } from "./constants";
-import { isoCountry, type Country } from "./country";
+import { currencyOf, isoCountry, type Country } from "./country";
+import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows } from "./scrape-http";
 
-interface ShopifyVariant { title: string; price: string; available: boolean }
-interface ShopifyProduct { title: string; handle: string; variants: ShopifyVariant[] }
+export interface ShopifyVariant { title: string; price: string; available: boolean }
+export interface ShopifyProduct { title: string; handle: string; variants: ShopifyVariant[] }
 
 // Calendar day (date-only) in Australia/Sydney, used as the price-history x-axis
 // bucket so there's exactly one snapshot per card per local day.
@@ -102,14 +103,9 @@ function conditionRank(variantTitle: string): number {
   return 0; // no condition in the title (e.g. "Default Title") → treat as standard/NM
 }
 
-// Use a realistic browser User-Agent. Some stores (e.g. Mint Collectables) serve a
-// stale/cached price to obvious bot UAs but the fresh price to browsers, which was a
-// source of wrong prices.
-const UA = {
-  "User-Agent":
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
-  Accept: "application/json, text/plain, */*",
-};
+// Realistic browser User-Agent + a From: contact header — see scrape-http.ts for
+// why this isn't an identifying bot UA (some stores, e.g. Mint Collectables, serve
+// a stale/cached price to obvious bot UAs but the fresh price to browsers).
 
 async function fetchText(url: string): Promise<string | null> {
   try {
@@ -127,6 +123,8 @@ const NON_SINGLE = /sealed|booster|box|bundle|preorder|pre-order|accessor|playma
 // so we only need the store's domain (handles vary wildly between stores). This is
 // how an aggregator like Google captures every store without hard-coding URLs.
 async function discoverRiftboundCollections(base: string): Promise<string[]> {
+  const allowed = await robotsAllows(base);
+  if (!allowed("/sitemap.xml")) return [];
   const handles = new Set<string>();
   const index = await fetchText(`${base}/sitemap.xml`);
   let sitemaps = index
@@ -134,7 +132,8 @@ async function discoverRiftboundCollections(base: string): Promise<string[]> {
     : [];
   if (!sitemaps.length) sitemaps = [`${base}/sitemap_collections_1.xml`];
 
-  for (const sm of sitemaps.slice(0, 8)) {
+  for (const [i, sm] of sitemaps.slice(0, 8).entries()) {
+    if (i > 0) await sleep(REQUEST_DELAY_MS);
     const xml = await fetchText(sm);
     if (!xml) continue;
     for (const m of xml.matchAll(/\/collections\/([^<\/?#"]+)/g)) {
@@ -151,8 +150,15 @@ async function discoverRiftboundCollections(base: string): Promise<string[]> {
 
 async function fetchCollection(store: RetailerInfo, handle: string): Promise<ShopifyProduct[]> {
   const cc = store.country ?? "AU";
+  const path = `/collections/${handle}/products.json`;
+  const allowed = await robotsAllows(store.base);
+  if (!allowed(path)) {
+    console.warn(`${store.name}: robots.txt disallows ${path} — skipping.`);
+    return [];
+  }
   const all: ShopifyProduct[] = [];
   for (let page = 1; page <= 20; page++) {
+    if (page > 1) await sleep(REQUEST_DELAY_MS);
     // country=XX is CRITICAL: Shopify Markets serves a different price per visitor
     // country, and our (US) server was getting US/default prices — e.g. $33 when the
     // real AU price is $45. Forcing the store's market gives the local shopper price
@@ -162,6 +168,10 @@ async function fetchCollection(store: RetailerInfo, handle: string): Promise<Sho
     try {
       res = await fetch(url, { headers: { ...UA, "Cache-Control": "no-cache", Pragma: "no-cache" }, cache: "no-store" });
     } catch {
+      break;
+    }
+    if (isRateLimited(res)) {
+      console.warn(`${store.name}: rate-limited (429, e.g. Cloudflare 1015) on page ${page} — backing off, not retrying this run.`);
       break;
     }
     if (!res.ok) break;
@@ -264,19 +274,52 @@ export async function refreshEbayMarkets(
 ): Promise<number> {
   // Each market has its own retailer key so eBay AU + US rows for the same card never
   // collide on the unique [cardId, retailer, condition, isFoil] key.
-  const MARKETS = [
+  //
+  // ── QUOTA BUDGET: WHY SG AND CA ALTERNATE BY DAY ────────────────────────────
+  // Every market costs ~1 Browse call per card (~1.1k cards), and the real spendable
+  // budget is `liveRemaining − QUOTA_RESERVE` ≈ 4,400 on a clean day. Six markets
+  // would need ~6.6k and five ~5.5k, so a single pass covering every market EVERY
+  // day is arithmetically impossible — it would always run out partway and leave the
+  // trailing market(s) unrefreshed. Rather than let that happen implicitly (which
+  // silently starves whichever market sorts last), the two newest/smallest markets
+  // take turns: AU/US/UK refresh daily, and SG and CA get every other day. That
+  // fits ~4×1.1k ≈ 4.4k inside the budget, and each rotating market is at most ~24h
+  // staler than the others — far better than one of them being permanently skipped.
+  const ALWAYS = [
     { country: "AU", marketplace: "EBAY_AU", currency: "AUD", retailer: "ebay" },
     { country: "US", marketplace: "EBAY_US", currency: "USD", retailer: "ebay_us" },
     { country: "UK", marketplace: "EBAY_GB", currency: "GBP", retailer: "ebay_uk" },
-    // eBay Singapore (SGD). 4 markets ≈ 4×~1k calls — the live-quota budget in
-    // primeEbayBudget() still bounds total spend below the 5,000/day Browse limit.
-    { country: "SG", marketplace: "EBAY_SG", currency: "SGD", retailer: "ebay_sg" },
   ];
+  // Rotated one-per-day, in this order. Add a third market here and the rotation
+  // just becomes every-third-day — no other change needed.
+  const ROTATING = [
+    { country: "SG", marketplace: "EBAY_SG", currency: "SGD", retailer: "ebay_sg" },
+    { country: "CA", marketplace: "EBAY_CA", currency: "CAD", retailer: "ebay_ca" },
+  ];
+  const ALL = [...ALWAYS, ...ROTATING];
+
   // EBAY_ONLY_MARKET=SG restricts the pass to one marketplace (~1k calls) — used
-  // for new-market rollouts on top of the daily full run without doubling quota.
+  // for new-market rollouts, or to refresh a rotating market off-cycle. It bypasses
+  // the rotation entirely, so `EBAY_ONLY_MARKET=CA` works on an SG day.
   const onlyMarket = (process.env.EBAY_ONLY_MARKET || "").toUpperCase();
-  const markets = onlyMarket ? MARKETS.filter((m) => m.country === onlyMarket) : MARKETS;
-  if (onlyMarket) console.log(`EBAY_ONLY_MARKET=${onlyMarket} — restricting the eBay pass to ${markets.length} market(s).`);
+  let markets: typeof ALL;
+  if (onlyMarket) {
+    markets = ALL.filter((m) => m.country === onlyMarket);
+    console.log(`EBAY_ONLY_MARKET=${onlyMarket} — restricting the eBay pass to ${markets.length} market(s).`);
+  } else {
+    // Keyed off the Australia/Sydney calendar day (the same day boundary the price
+    // history uses), so which market is "today's" is STABLE for the whole day: the
+    // 07:00 and 19:00 UTC runs, a deploy-triggered run and a manual re-run all pick
+    // the same one instead of ping-ponging and double-spending quota.
+    const dayIndex = Math.floor(sydneyDay().getTime() / 86_400_000);
+    const todays = ROTATING[dayIndex % ROTATING.length];
+    markets = [...ALWAYS, todays];
+    console.log(
+      `eBay market rotation: ${ALWAYS.map((m) => m.country).join("/")} daily + ${todays.country} today ` +
+        `(${ROTATING.map((m) => m.country).join("/")} alternate by Sydney day; ` +
+        `use EBAY_ONLY_MARKET=<code> to refresh the other one off-cycle).`
+    );
+  }
   // Check the live quota and set a spend budget (leaves a reserve) so this can never
   // exhaust eBay's 5,000/day limit, however many times the importer runs.
   await primeEbayBudget();
@@ -350,10 +393,26 @@ export async function refreshEbayMarkets(
         inStock: true,
       });
     }
-    if (rows.length > 0) {
+    // A market is only safe to REPLACE wholesale if the pass actually covered every
+    // card. If the Browse budget ran out partway through (isEbayRateLimited), `rows`
+    // holds a PARTIAL result — and the old code's `rows.length > 0` check happily
+    // deleted every existing row for this retailer and wrote the partial set back,
+    // silently shrinking that market's eBay coverage with no error and no warning.
+    // (This became reachable once the pass grew past 4 markets: 5 markets × ~1.1k
+    // cards ≈ 5.5k calls against a real budget of 5000 − QUOTA_RESERVE.) A partial
+    // refresh is worth less than a complete stale one, so treat truncation exactly
+    // like the 0-results case: keep what's there and say so loudly.
+    const truncated = isEbayRateLimited();
+    if (rows.length > 0 && !truncated) {
       await prisma.retailerPrice.deleteMany({ where: { retailer: mkt.retailer } });
       await prisma.retailerPrice.createMany({ data: rows });
       written += rows.length;
+    } else if (truncated) {
+      console.warn(
+        `eBay ${mkt.country}: budget ran out after ${rows.length} of ${cards.length} cards — ` +
+          `NOT replacing rows (a partial set would shrink coverage). Keeping existing rows. ` +
+          `Run this market on its own with EBAY_ONLY_MARKET=${mkt.country} to refresh it fully.`
+      );
     } else {
       console.warn(`eBay ${mkt.country}: 0 results (rate-limited?) — keeping existing rows.`);
     }
@@ -380,10 +439,33 @@ export async function refreshEbayMarkets(
   return written;
 }
 
-export async function importPrices(): Promise<ImportSummary> {
-  const allCardRows = await prisma.card.findMany({
-    select: { id: true, name: true, setCode: true, collectorNumber: true, rarity: true, variant: true, isPromo: true },
-  });
+// ── Title → card resolution (extracted to module scope so it's independently
+// testable — see scripts/test-parsing.ts — without needing a live DB) ──────────
+export type CardLite = {
+  id: string;
+  name: string;
+  setCode: string;
+  collectorNumber: string;
+  rarity: string;
+  variant: string | null;
+  isPromo: boolean;
+};
+
+export interface CardIndex {
+  byNum: Map<string, string[]>;
+  byNumAny: Map<string, string[]>;
+  byName: Map<string, CardLite[]>;
+  starIds: Set<string>;
+  overIds: Set<string>;
+  promoByName: Map<string, string>;
+  promoByNum: Map<string, string>;
+  promoByNumAny: Map<string, string>;
+}
+
+// Build the lookup structures resolveCardId() needs from a flat card list (base +
+// promo rows together, same shape as `prisma.card.findMany`). Pure function, no DB
+// access — same logic previously inlined at the top of importPrices().
+export function buildCardIndex(allCardRows: CardLite[]): CardIndex {
   // Base (non-promo) pool drives the normal matching, unchanged.
   const cards = allCardRows.filter((c) => !c.isPromo);
   // Promo pool: a promo shares the base card's number, so it's matched ONLY when a
@@ -402,7 +484,7 @@ export async function importPrices(): Promise<ImportSummary> {
 
   const byNum = new Map<string, string[]>();
   const byNumAny = new Map<string, string[]>();
-  const byName = new Map<string, typeof cards>();
+  const byName = new Map<string, CardLite[]>();
   const push = <T>(m: Map<string, T[]>, k: string, v: T) => {
     const arr = m.get(k);
     if (arr) arr.push(v);
@@ -422,131 +504,141 @@ export async function importPrices(): Promise<ImportSummary> {
     else if (parseInt(d, 10) > parseInt(tt ?? "0", 10)) overIds.add(c.id);
   }
 
-  // The collector-number TOTAL uniquely identifies the set, so a title like
-  // "Existential Dread - 134/219" (no set code) is unambiguously UNL — never the
-  // OGN card numbered 134/298. This is authoritative and prevents cross-set bleed.
-  const setFromTotal = (total?: string): string | null => {
-    switch (parseInt(total ?? "", 10)) {
-      case 298: return "OGN";
-      case 221: return "SFD";
-      case 219: return "UNL";
-      case 24: return "OGS";
-      case 166: return "VEN";
-      default: return null;
-    }
-  };
+  return { byNum, byNumAny, byName, starIds, overIds, promoByName, promoByNum, promoByNumAny };
+}
 
-  function resolveCardId(p: ShopifyProduct): string | null {
-    const t = p.title;
-    // Never match a multi-card listing (playset/lot/bundle) to a single card — its
-    // price is for the whole group, not one card.
-    if (MULTI_CARD.test(t)) return null;
-    const num = parseNumber(t);
-    // Only a real signal in the title (an explicit number/total, or a set-name
-    // hint) counts as "confident" — the "OGN" tail is a fallback default for the
-    // number-only path below, NOT evidence the listing is actually OGN, so it must
-    // never be used to pick between same-named cards from different sets.
-    const confidentSetCode =
-      num?.setCode ?? setFromTotal(num?.total) ?? SET_FROM_TITLE.find(([re]) => re.test(t))?.[1] ?? null;
-    const setCode = confidentSetCode ?? "OGN";
+// The collector-number TOTAL uniquely identifies the set, so a title like
+// "Existential Dread - 134/219" (no set code) is unambiguously UNL — never the
+// OGN card numbered 134/298. This is authoritative and prevents cross-set bleed.
+function setFromTotal(total?: string): string | null {
+  switch (parseInt(total ?? "", 10)) {
+    case 298: return "OGN";
+    case 221: return "SFD";
+    case 219: return "UNL";
+    case 24: return "OGS";
+    case 166: return "VEN";
+    default: return null;
+  }
+}
 
-    // Promo listing → resolve against the PROMO pool only (a promo shares the base
-    // card's number, so a promo-marked listing must never price the base card).
-    if (PROMO_HINT.test(t)) {
-      const promoName = nameKey(cleanProductName(t).replace(PROMO_WORDS, " "));
-      const byNameHit = promoByName.get(promoName);
-      if (byNameHit) return byNameHit;
-      if (num) return promoByNum.get(`${setCode}|${num.key}`) ?? promoByNumAny.get(num.key) ?? null;
-      return null;
-    }
-    // NOTE: "Foil" is NOT an alt-art signal — nearly every listing (incl. base
-    // cards) says Foil. Only these markers (or a lettered number like 039a) mean
-    // an alt-art/special printing.
-    const isAlt =
-      /showcase|signature|overnumbered|alternate\s*art|alt\s*art/i.test(t) ||
-      /\d+[a-z]/.test(num?.key ?? "");
+export function resolveCardId(p: ShopifyProduct, idx: CardIndex): string | null {
+  const { byNum, byNumAny, byName, starIds, overIds, promoByName, promoByNum, promoByNumAny } = idx;
+  const t = p.title;
+  // Never match a multi-card listing (playset/lot/bundle) to a single card — its
+  // price is for the whole group, not one card.
+  if (MULTI_CARD.test(t)) return null;
+  const num = parseNumber(t);
+  // Only a real signal in the title (an explicit number/total, or a set-name
+  // hint) counts as "confident" — the "OGN" tail is a fallback default for the
+  // number-only path below, NOT evidence the listing is actually OGN, so it must
+  // never be used to pick between same-named cards from different sets.
+  const confidentSetCode =
+    num?.setCode ?? setFromTotal(num?.total) ?? SET_FROM_TITLE.find(([re]) => re.test(t))?.[1] ?? null;
+  const setCode = confidentSetCode ?? "OGN";
 
-    // Special-print signals in the title. Signature ("*"/signed) and Overnumbered
-    // (number beyond the set count) are SEPARATE cards from the base/alt printings
-    // and must never be mixed with them — nor with each other.
-    const titleSig = /\bsignature\b|\bsigned\b/i.test(t) || /\d\s*\*/.test(t);
-    const titleOver = !titleSig && /\bovernumber\w*/i.test(t);
-    const isStar = (c: (typeof cards)[number]) => c.collectorNumber.includes("*");
-    const isOverCard = (c: (typeof cards)[number]) => {
-      if (isStar(c)) return false;
-      const [d, tt] = c.collectorNumber.split("/");
-      return parseInt(d, 10) > parseInt(tt ?? "0", 10);
-    };
-    const pickByNum = <T extends { collectorNumber: string }>(arr: T[]): T | undefined =>
-      num ? arr.find((c) => numKey(c.collectorNumber.split("/")[0]) === num.key) : undefined;
-
-    // 1) name match, disambiguated by special-print → number → variant.
-    let cand = byName.get(nameKey(cleanProductName(t)));
-    if (cand && cand.length) {
-      // A name can legitimately repeat across sets — e.g. a VEN pre-release reveal
-      // (no collector number yet) sharing a name with its later-catalogued printing
-      // in another set. Never let a same-named card from the WRONG set win just
-      // because it happened to come first in DB order: narrow to the set we have
-      // real evidence for, or leave the listing unmatched rather than mis-attach a
-      // real price to the wrong printing.
-      const distinctSets = new Set(cand.map((c) => c.setCode));
-      if (distinctSets.size > 1) {
-        if (!confidentSetCode) return null;
-        const bySet = cand.filter((c) => c.setCode === confidentSetCode);
-        if (!bySet.length) return null;
-        cand = bySet;
-      }
-      // A Signature listing belongs ONLY to a "*" card of that name. If we don't
-      // have one, leave it unmatched rather than mis-attaching to a sibling.
-      if (titleSig) {
-        const sigs = cand.filter(isStar);
-        if (!sigs.length) return null;
-        return (pickByNum(sigs) ?? sigs[0]).id;
-      }
-      // Likewise an Overnumbered listing belongs only to an overnumbered card.
-      if (titleOver) {
-        const overs = cand.filter(isOverCard);
-        if (!overs.length) return null;
-        return (pickByNum(overs) ?? overs[0]).id;
-      }
-      if (cand.length === 1) return cand[0].id;
-      const exact = pickByNum(cand);
-      if (exact) return exact.id;
-      // A plain (non-special) listing must never resolve to a "*" Signature or an
-      // overnumbered chase card — those only match explicit special-print titles.
-      const pool = cand.filter((c) => !isStar(c) && !isOverCard(c));
-      const search = pool.length ? pool : cand;
-      const v = search.find((c) => (isAlt ? c.variant || c.rarity === "Showcase" : !c.variant && c.rarity !== "Showcase"));
-      if (v) return v.id;
-      return search[0].id;
-    }
-
-    // 2) number-only match (name didn't resolve — e.g. store titles like
-    // "Vayne - Hunter — Signature - 223*/221" where the number/keywords pollute the
-    // name). The number key is print-aware: numKey("223*") = "223s" maps only to the
-    // signature card, so a starred number routes correctly. For special prints we
-    // CONSTRAIN the hit to the matching print type, so a signature title whose number
-    // is written WITHOUT the star (e.g. "225/221 (Signature)") won't wrongly grab the
-    // plain overnumbered sibling — it stays unmatched instead.
-    if (num) {
-      const setHit = byNum.get(`${setCode}|${num.key}`) ?? [];
-      const anyHit = byNumAny.get(num.key) ?? [];
-      const hits = setHit.length ? setHit : anyHit;
-      if (titleSig) {
-        return hits.find((id) => starIds.has(id)) ?? null;
-      }
-      if (titleOver) {
-        return hits.find((id) => overIds.has(id)) ?? null;
-      }
-      // Plain listing: prefer a plain (non-special) card of that number.
-      const plainSet = setHit.filter((id) => !starIds.has(id) && !overIds.has(id));
-      if (plainSet.length) return plainSet[0];
-      const plainAny = anyHit.filter((id) => !starIds.has(id) && !overIds.has(id));
-      if (plainAny.length === 1) return plainAny[0];
-      if (setHit.length) return setHit[0];
-    }
+  // Promo listing → resolve against the PROMO pool only (a promo shares the base
+  // card's number, so a promo-marked listing must never price the base card).
+  if (PROMO_HINT.test(t)) {
+    const promoName = nameKey(cleanProductName(t).replace(PROMO_WORDS, " "));
+    const byNameHit = promoByName.get(promoName);
+    if (byNameHit) return byNameHit;
+    if (num) return promoByNum.get(`${setCode}|${num.key}`) ?? promoByNumAny.get(num.key) ?? null;
     return null;
   }
+  // NOTE: "Foil" is NOT an alt-art signal — nearly every listing (incl. base
+  // cards) says Foil. Only these markers (or a lettered number like 039a) mean
+  // an alt-art/special printing.
+  const isAlt =
+    /showcase|signature|overnumbered|alternate\s*art|alt\s*art/i.test(t) ||
+    /\d+[a-z]/.test(num?.key ?? "");
+
+  // Special-print signals in the title. Signature ("*"/signed) and Overnumbered
+  // (number beyond the set count) are SEPARATE cards from the base/alt printings
+  // and must never be mixed with them — nor with each other.
+  const titleSig = /\bsignature\b|\bsigned\b/i.test(t) || /\d\s*\*/.test(t);
+  const titleOver = !titleSig && /\bovernumber\w*/i.test(t);
+  const isStar = (c: CardLite) => c.collectorNumber.includes("*");
+  const isOverCard = (c: CardLite) => {
+    if (isStar(c)) return false;
+    const [d, tt] = c.collectorNumber.split("/");
+    return parseInt(d, 10) > parseInt(tt ?? "0", 10);
+  };
+  const pickByNum = <T extends { collectorNumber: string }>(arr: T[]): T | undefined =>
+    num ? arr.find((c) => numKey(c.collectorNumber.split("/")[0]) === num.key) : undefined;
+
+  // 1) name match, disambiguated by special-print → number → variant.
+  let cand = byName.get(nameKey(cleanProductName(t)));
+  if (cand && cand.length) {
+    // A name can legitimately repeat across sets — e.g. a VEN pre-release reveal
+    // (no collector number yet) sharing a name with its later-catalogued printing
+    // in another set. Never let a same-named card from the WRONG set win just
+    // because it happened to come first in DB order: narrow to the set we have
+    // real evidence for, or leave the listing unmatched rather than mis-attach a
+    // real price to the wrong printing.
+    const distinctSets = new Set(cand.map((c) => c.setCode));
+    if (distinctSets.size > 1) {
+      if (!confidentSetCode) return null;
+      const bySet = cand.filter((c) => c.setCode === confidentSetCode);
+      if (!bySet.length) return null;
+      cand = bySet;
+    }
+    // A Signature listing belongs ONLY to a "*" card of that name. If we don't
+    // have one, leave it unmatched rather than mis-attaching to a sibling.
+    if (titleSig) {
+      const sigs = cand.filter(isStar);
+      if (!sigs.length) return null;
+      return (pickByNum(sigs) ?? sigs[0]).id;
+    }
+    // Likewise an Overnumbered listing belongs only to an overnumbered card.
+    if (titleOver) {
+      const overs = cand.filter(isOverCard);
+      if (!overs.length) return null;
+      return (pickByNum(overs) ?? overs[0]).id;
+    }
+    if (cand.length === 1) return cand[0].id;
+    const exact = pickByNum(cand);
+    if (exact) return exact.id;
+    // A plain (non-special) listing must never resolve to a "*" Signature or an
+    // overnumbered chase card — those only match explicit special-print titles.
+    const pool = cand.filter((c) => !isStar(c) && !isOverCard(c));
+    const search = pool.length ? pool : cand;
+    const v = search.find((c) => (isAlt ? c.variant || c.rarity === "Showcase" : !c.variant && c.rarity !== "Showcase"));
+    if (v) return v.id;
+    return search[0].id;
+  }
+
+  // 2) number-only match (name didn't resolve — e.g. store titles like
+  // "Vayne - Hunter — Signature - 223*/221" where the number/keywords pollute the
+  // name). The number key is print-aware: numKey("223*") = "223s" maps only to the
+  // signature card, so a starred number routes correctly. For special prints we
+  // CONSTRAIN the hit to the matching print type, so a signature title whose number
+  // is written WITHOUT the star (e.g. "225/221 (Signature)") won't wrongly grab the
+  // plain overnumbered sibling — it stays unmatched instead.
+  if (num) {
+    const setHit = byNum.get(`${setCode}|${num.key}`) ?? [];
+    const anyHit = byNumAny.get(num.key) ?? [];
+    const hits = setHit.length ? setHit : anyHit;
+    if (titleSig) {
+      return hits.find((id) => starIds.has(id)) ?? null;
+    }
+    if (titleOver) {
+      return hits.find((id) => overIds.has(id)) ?? null;
+    }
+    // Plain listing: prefer a plain (non-special) card of that number.
+    const plainSet = setHit.filter((id) => !starIds.has(id) && !overIds.has(id));
+    if (plainSet.length) return plainSet[0];
+    const plainAny = anyHit.filter((id) => !starIds.has(id) && !overIds.has(id));
+    if (plainAny.length === 1) return plainAny[0];
+    if (setHit.length) return setHit[0];
+  }
+  return null;
+}
+
+export async function importPrices(): Promise<ImportSummary> {
+  const allCardRows = await prisma.card.findMany({
+    select: { id: true, name: true, setCode: true, collectorNumber: true, rarity: true, variant: true, isPromo: true },
+  });
+  const idx = buildCardIndex(allCardRows);
 
   const summary: ImportSummary = { stores: [], totalMatched: 0, totalUnmatched: 0, cardsPriced: 0 };
 
@@ -587,9 +679,21 @@ export async function importPrices(): Promise<ImportSummary> {
     const rows = new Map<string, any>();
     let matched = 0;
     let unmatched = 0;
+    // Sample a few unmatched titles per store. WHY: the per-store summary only ever
+    // printed COUNTS, so a store that returns a big healthy-looking catalogue but
+    // matches none of it is indistinguishable from a store with no stock — both just
+    // read "0 cards priced". That's how Bento Gaming sat at "964 products → 0 priced,
+    // 964 unmatched" on the CA launch with nothing in the log to explain why. The
+    // TCGplayer importer already samples its unmatched titles for exactly this
+    // reason; this gives the Shopify path the same diagnostic.
+    const unmatchedSample: string[] = [];
     for (const p of products) {
-      const cardId = resolveCardId(p);
-      if (!cardId) { unmatched++; continue; }
+      const cardId = resolveCardId(p, idx);
+      if (!cardId) {
+        unmatched++;
+        if (unmatchedSample.length < 5) unmatchedSample.push(p.title.slice(0, 70));
+        continue;
+      }
       matched++;
       // Prefer in-stock variants. If none are available but the store still LISTS
       // the card with a price, record it as out-of-stock so the card page can show
@@ -624,13 +728,25 @@ export async function importPrices(): Promise<ImportSummary> {
         condition: best.title && best.title !== "Default Title" ? best.title : null,
         isFoil: /foil/i.test(p.title),
         priceCents,
-        currency: cc === "NZ" ? "NZD" : cc === "US" ? "USD" : cc === "UK" ? "GBP" : cc === "SG" ? "SGD" : "AUD",
+        // Derived from the market registry, not a hand-maintained ternary chain —
+        // the old chain's `else` was "AUD", so any market added without editing it
+        // would have silently stamped Australian-dollar rows in the DB.
+        currency: currencyOf(cc),
         country: cc,
         inStock,
       });
     }
     await prisma.retailerPrice.createMany({ data: Array.from(rows.values()) });
     summary.stores.push({ name: store.name, products: products.length, priced: rows.size, matched, unmatched });
+    // Only shout when the ratio says something is actually wrong: a real catalogue
+    // came back but little/none of it resolved. A handful of unmatched titles is
+    // normal everywhere (sealed and accessories slip into singles collections).
+    if (unmatchedSample.length && unmatched > 20 && unmatched > matched) {
+      console.warn(
+        `  ⚠ ${store.name}: ${unmatched} of ${products.length} products unmatched (only ${matched} matched) — ` +
+          `sample: ${unmatchedSample.join(" | ")}`
+      );
+    }
     summary.totalMatched += matched;
     summary.totalUnmatched += unmatched;
   }
@@ -643,9 +759,12 @@ export async function importPrices(): Promise<ImportSummary> {
 
   // ---- eBay AU + US (optional; only when EBAY_CLIENT_ID/SECRET are set) ---------
   // eBay covers EVERY card per market, but only ONCE a day, and NEVER on a deploy
-  // (push). AU (AUD) + US (USD) ≈ 2×~1k calls, under eBay's ~5,000/day Browse limit.
-  // NZ is store-only (no eBay). Cards are ordered by search demand so the most-wanted
-  // are covered first if the quota is ever hit.
+  // (push). AU/US/UK/SG/CA ≈ 5×~1k calls; primeEbayBudget() reads the LIVE remaining
+  // quota and reserves QUOTA_RESERVE, so this can never exhaust eBay's ~5,000/day
+  // Browse limit — it just stops early, dropping the last market(s) in the array
+  // (CA first, by design — see refreshEbayMarkets). NZ is store-only (no eBay).
+  // Cards are ordered by search demand so the most-wanted are covered first if the
+  // quota is ever hit.
   //  - ebayDue:     last eBay refresh was > 20h ago (so it runs ~once a day).
   //  - ebayAllowed: the workflow sets EBAY_REFRESH=false for push/deploy runs.
   const lastEbay = await prisma.retailerPrice.findFirst({
@@ -668,7 +787,7 @@ export async function importPrices(): Promise<ImportSummary> {
       select: { id: true, name: true, setCode: true, collectorNumber: true, isPromo: true },
     });
     const n = await refreshEbayMarkets(ebayCards);
-    summary.stores.push({ name: "eBay (AU+US)", products: ebayCards.length, priced: n, matched: n, unmatched: 0 });
+    summary.stores.push({ name: "eBay (AU/US/UK/SG/CA)", products: ebayCards.length, priced: n, matched: n, unmatched: 0 });
   }
 
   // ---- TCGplayer (US market price) ---------------------------------------------
@@ -721,25 +840,38 @@ export async function importPrices(): Promise<ImportSummary> {
   // then refuses to show as a store (computeMarket in lib/market-rows.ts excludes
   // them from the comparison too). A card with no real local listing gets null here
   // — "no price yet" — rather than a misleading converted figure.
-  const [pricedAuReal, pricedNz, pricedUs, pricedSgReal, pricedUkReal] = await Promise.all([
+  // CA has no converted-reference source of its own (no tcgplayer_ca — see the
+  // note in constants.ts), so like NZ it takes every in-stock row for the market
+  // with no fallback-retailer exclusion.
+  const [pricedAuReal, pricedNz, pricedUs, pricedSgReal, pricedUkReal, pricedCa] = await Promise.all([
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "AU", retailer: { notIn: [...AU_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "NZ" }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "US" }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "SG", retailer: { notIn: [...SG_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "UK", retailer: { notIn: [...UK_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
+    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "CA" }, _min: { priceCents: true } }),
   ]);
   const lowAuReal = new Map(pricedAuReal.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowNz = new Map(pricedNz.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowUs = new Map(pricedUs.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowSgReal = new Map(pricedSgReal.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowUkReal = new Map(pricedUkReal.map((r) => [r.cardId, r._min.priceCents ?? null]));
+  const lowCa = new Map(pricedCa.map((r) => [r.cardId, r._min.priceCents ?? null]));
   // Diff-based update: write each card STRAIGHT to its new lowest only when it
   // changed. We must NOT reset every card to null first (the old approach) — that
   // briefly showed "No price yet" for the whole catalogue on every import/deploy
   // while the per-card repopulation loop caught up. Now each card transitions
   // old → new atomically and is never transiently null.
   const existing = await prisma.card.findMany({
-    select: { id: true, lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, lowestPriceCentsSg: true },
+    select: {
+      id: true,
+      lowestPriceCents: true,
+      lowestPriceCentsNz: true,
+      lowestPriceCentsUs: true,
+      lowestPriceCentsUk: true,
+      lowestPriceCentsSg: true,
+      lowestPriceCentsCa: true,
+    },
   });
   let changed = 0;
   for (const c of existing) {
@@ -754,16 +886,25 @@ export async function importPrices(): Promise<ImportSummary> {
     const nUs = lowUs.get(c.id) ?? null;
     const nUk = lowUkReal.get(c.id) ?? null;
     const nSg = lowSgReal.get(c.id) ?? null;
+    const nCa = lowCa.get(c.id) ?? null;
     if (
       nAu !== c.lowestPriceCents ||
       nNz !== c.lowestPriceCentsNz ||
       nUs !== c.lowestPriceCentsUs ||
       nUk !== c.lowestPriceCentsUk ||
-      nSg !== c.lowestPriceCentsSg
+      nSg !== c.lowestPriceCentsSg ||
+      nCa !== c.lowestPriceCentsCa
     ) {
       await prisma.card.update({
         where: { id: c.id },
-        data: { lowestPriceCents: nAu, lowestPriceCentsNz: nNz, lowestPriceCentsUs: nUs, lowestPriceCentsUk: nUk, lowestPriceCentsSg: nSg },
+        data: {
+          lowestPriceCents: nAu,
+          lowestPriceCentsNz: nNz,
+          lowestPriceCentsUs: nUs,
+          lowestPriceCentsUk: nUk,
+          lowestPriceCentsSg: nSg,
+          lowestPriceCentsCa: nCa,
+        },
       });
       changed++;
     }
@@ -786,15 +927,17 @@ export async function importPrices(): Promise<ImportSummary> {
       const us = lowUs.get(c.id) ?? null;
       const uk = lowUkReal.get(c.id) ?? null;
       const sg = lowSgReal.get(c.id) ?? null;
+      const ca = lowCa.get(c.id) ?? null;
       if (au != null) rows.push({ cardId: c.id, country: "AU", day, lowestPriceCents: au });
       if (nz != null) rows.push({ cardId: c.id, country: "NZ", day, lowestPriceCents: nz });
       if (us != null) rows.push({ cardId: c.id, country: "US", day, lowestPriceCents: us });
       if (uk != null) rows.push({ cardId: c.id, country: "UK", day, lowestPriceCents: uk });
       if (sg != null) rows.push({ cardId: c.id, country: "SG", day, lowestPriceCents: sg });
+      if (ca != null) rows.push({ cardId: c.id, country: "CA", day, lowestPriceCents: ca });
     }
     await dbHistory.priceHistory.deleteMany({ where: { day } });
     if (rows.length > 0) await dbHistory.priceHistory.createMany({ data: rows });
-    console.log(`Price history: recorded ${rows.length} points (AU/NZ/US/UK/SG) for ${day.toISOString().slice(0, 10)}.`);
+    console.log(`Price history: recorded ${rows.length} points (AU/NZ/US/UK/SG/CA) for ${day.toISOString().slice(0, 10)}.`);
   } catch (e) {
     console.warn("Price-history snapshot failed:", e);
   }

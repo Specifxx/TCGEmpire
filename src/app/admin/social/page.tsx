@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { getLatestMarketReport } from "@/lib/posts";
 import { CopyButton } from "@/components/admin/CopyButton";
 
 export const dynamic = "force-dynamic";
@@ -14,9 +13,6 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-const SYMBOL: Record<string, string> = { AUD: "A$", NZD: "NZ$", USD: "$", GBP: "£", SGD: "S$" };
-const money = (cents: number, currency: string) => `${SYMBOL[currency] ?? ""}${(cents / 100).toFixed(2)}`;
-const signed = (n: number) => `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
 
 // Evergreen bank — three rotate in per day so the account never runs dry even on
 // quiet market days. Site-fact based, no hype claims.
@@ -42,44 +38,6 @@ export default async function SocialAdminPage({ searchParams }: { searchParams: 
   const user = await getCurrentUser();
   if (!(keyOk || user?.isAdmin)) notFound();
 
-  // ---- Daily market post (from the latest wrap's data) -------------------------
-  // Report generation is stopped entirely (see lib/market-report.ts) — this only
-  // shows real data when a report still happens to be fresh (within 3 days);
-  // otherwise it's an increasingly stale row forever, so gate on age rather than
-  // just existence.
-  const rawWrap = await getLatestMarketReport().catch(() => null);
-  const wrapAgeMs = rawWrap ? Date.now() - new Date(`${rawWrap.day}T00:00:00+10:00`).getTime() : Infinity;
-  const wrap = wrapAgeMs <= 3 * 86400_000 ? rawWrap : null;
-  const d = wrap?.data ?? null;
-  let marketPost: string | null = null;
-  let marketThread: string[] = [];
-  if (d?.global) {
-    const level = d.global.level != null ? d.global.level.toFixed(1) : null;
-    const d1 = d.global.d1;
-    const dir = d1 == null ? "" : d1 > 0.05 ? "📈" : d1 < -0.05 ? "📉" : "➖";
-    const head =
-      `${dir} Riftbound market today\n\n` +
-      `RiftCompare Index: ${level ?? "—"}${d1 != null ? ` (${signed(d1)})` : ""}\n` +
-      `Breadth: ${d.breadth.rose} up · ${d.breadth.fell} down · ${d.breadth.flat} flat`;
-    const r = d.movers.risers[0];
-    const f = d.movers.fallers[0];
-    const moverLines = [
-      r ? `Top riser: ${r.name} ${signed(r.pct)} (${money(r.priceCents, r.currency)})` : null,
-      f ? `Top faller: ${f.name} ${signed(f.pct)} (${money(f.priceCents, f.currency)})` : null,
-    ].filter(Boolean);
-    marketPost = `${head}${moverLines.length ? `\n\n${moverLines.join("\n")}` : ""}`;
-    marketThread = [
-      marketPost,
-      d.movers.risers.length
-        ? `Today's movers:\n\n${d.movers.risers
-            .slice(0, 4)
-            .map((m) => `▲ ${m.name} ${signed(m.pct)}`)
-            .join("\n")}${d.movers.fallers.length ? `\n${d.movers.fallers.slice(0, 3).map((m) => `▼ ${m.name} ${signed(m.pct)}`).join("\n")}` : ""}`
-        : "",
-      `Full breakdown — every region, every mover, the charts:\n\nriftcompare.com/market`,
-    ].filter(Boolean);
-  }
-
   // ---- Vendetta spoiler replies (newest VEN cards in the DB) -------------------
   const newest = await prisma.card
     .findMany({
@@ -102,30 +60,17 @@ export default async function SocialAdminPage({ searchParams }: { searchParams: 
     <div className="mx-auto max-w-3xl px-4 py-10">
       <h1 className="text-2xl font-bold text-white">Social posts</h1>
       <p className="mt-1 max-w-2xl text-sm text-slate-400">
-        Paste-ready X posts, regenerated from live data every time this page loads. Daily routine: copy the market
-        post, paste on X, then post the link as the FIRST REPLY (links in the main post get down-ranked).
+        Paste-ready X posts, regenerated from live data every time this page loads. Post the link as the FIRST REPLY
+        rather than in the main post (links in the main post get down-ranked).
       </p>
 
-      {marketPost ? (
-        <Section title="1 · Today's market post" hint="Post this, then reply with: riftcompare.com/market">
-          <Post text={marketPost} />
-        </Section>
-      ) : (
-        <Section title="1 · Today's market post">
-          <p className="text-sm text-slate-500">No fresh market wrap available — report generation is stopped (see lib/market-report.ts), so this only shows when a recent row happens to exist.</p>
-        </Section>
-      )}
-
-      {marketThread.length > 1 && (
-        <Section title="2 · Thread version (optional)" hint="Post in order — each box is one tweet.">
-          {marketThread.map((t, i) => (
-            <Post key={i} text={t} label={`Tweet ${i + 1}`} />
-          ))}
-        </Section>
-      )}
+      {/* The "today's market post" + thread sections are gone: they were built from
+          the latest MarketReport row, and report generation is deleted (see
+          lib/market-report.ts). Both were already permanently empty behind a
+          freshness gate. /market is still live if a market post is wanted by hand. */}
 
       <Section
-        title="3 · Vendetta spoiler replies"
+        title="1 · Vendetta spoiler replies"
         hint="When an official spoiler tweet drops, reply fast with the matching card's line — fast replies on official posts are a zero-follower account's best reach."
       >
         {spoilerReplies.map((t, i) => (
@@ -133,7 +78,7 @@ export default async function SocialAdminPage({ searchParams }: { searchParams: 
         ))}
       </Section>
 
-      <Section title="4 · Evergreen (rotates daily)" hint="Use one on days you want a second post.">
+      <Section title="2 · Evergreen (rotates daily)" hint="Use one on days you want a second post.">
         {evergreen.map((t, i) => (
           <Post key={i} text={t} />
         ))}

@@ -82,7 +82,7 @@ export interface ArbSource {
 }
 
 // eBay retailer key per market (NZ has no eBay coverage).
-const EBAY_KEY: Record<Country, string | null> = { AU: "ebay", NZ: null, US: "ebay_us", UK: "ebay_uk", SG: "ebay_sg" };
+const EBAY_KEY: Record<Country, string | null> = { AU: "ebay", NZ: null, US: "ebay_us", UK: "ebay_uk", SG: "ebay_sg", CA: "ebay_ca" };
 // TCGplayer retailer key per market — the same converted-reference rows used as a
 // fallback in the main price comparison (see UK_FALLBACK_RETAILERS / SG_FALLBACK_RETAILERS)
 // double as a real, always-available BUY source here. Excluded for AU on purpose:
@@ -95,6 +95,10 @@ export const TCGPLAYER_KEY: Record<Country, string | null> = {
   US: TCG_US.retailer,
   UK: TCGPLAYER_UK_RETAILER,
   SG: TCGPLAYER_SG_RETAILER,
+  // CA has no TCGplayer reference row: there's no tcgplayer_ca retailer (adding one
+  // would need a USD→CAD conversion source this repo doesn't have — see the note in
+  // constants.ts). Like NZ, CA's arbitrage uses real CA store rows + eBay CA only.
+  CA: null,
 };
 const MARKETPLACE_FEE_PCT = MARKETPLACE_FEE_BPS / 10000;
 

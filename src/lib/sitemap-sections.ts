@@ -269,11 +269,13 @@ async function content(): Promise<SitemapEntry[]> {
   // reading it means a genuinely-refreshed guide no longer looks as stale as one
   // untouched since launch.
   //
-  // Auto-generated market reports are DELIBERATELY absent and noindexed at the
-  // page level: one templated post per calendar day is the textbook shape of
-  // Google's "scaled content abuse" policy and an AdSense Publisher-Policy risk.
-  // Generation is stopped entirely (lib/market-report.ts); across a full Search
-  // Console export not one report URL had earned any traffic to lose.
+  // Legacy auto-generated market reports are DELIBERATELY absent here and
+  // noindexed at the page level: one templated post per calendar day is the
+  // textbook shape of Google's "scaled content abuse" policy and an AdSense
+  // Publisher-Policy risk. Across a full Search Console export not one report URL
+  // had earned any traffic to lose. Generation is now DELETED outright
+  // (lib/market-report.ts), so this list can never regrow — the ~130 existing rows
+  // stay reachable by direct URL only.
   return getArticles().map((a) => ({
     url: `${SITE_URL}/${a.category === "guide" ? "guides" : "blog"}/${a.slug}`,
     changeFrequency: "monthly" as const,

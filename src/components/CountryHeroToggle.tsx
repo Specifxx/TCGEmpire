@@ -15,9 +15,13 @@ export function CountryHeroToggle() {
   return (
     <div className="mt-4 flex flex-col items-center gap-1">
       <span className="text-[9px] font-medium uppercase tracking-wide text-slate-500">Shopping from</span>
-      {/* Compact segmented control: flag + country code, currency only on the active
-          one. Stays a single tight row even with 4+ markets on a phone. */}
-      <div className="inline-flex items-center gap-0.5 rounded-full border border-ink-800 p-0.5">
+      {/* Compact segmented control: one label per chip (country code only — no
+          flag glyph, since regional-indicator flag emoji render as literal
+          "AU"/"NZ" text on several platforms, which duplicated the code right
+          next to it), currency shown only on the active chip. Stays a single
+          tight row even with 4+ markets on a phone; min-h-11 keeps each chip's
+          tap target accessible despite the small type. */}
+      <div className="inline-flex items-center gap-1 rounded-full border border-ink-800 p-0.5">
         {COUNTRY_LIST.map((c) => {
           const active = c.code === country;
           return (
@@ -26,13 +30,12 @@ export function CountryHeroToggle() {
               onClick={() => setCountry(c.code)}
               aria-pressed={active}
               aria-label={`${c.label} (${active ? currency : c.currency})`}
-              className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium transition-colors ${
+              className={`flex min-h-11 items-center gap-1 rounded-full px-2.5 text-xs font-medium transition-colors ${
                 active
                   ? "bg-ink-800 text-slate-200"
                   : "text-slate-500 hover:bg-ink-900 hover:text-slate-300"
               }`}
             >
-              <span className="text-sm leading-none">{c.flag}</span>
               <span>{c.code}</span>
               {active && <span className="text-[9px] font-medium text-slate-400">{currency}</span>}
             </button>

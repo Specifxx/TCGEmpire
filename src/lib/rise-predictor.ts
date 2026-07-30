@@ -112,6 +112,8 @@ type UniverseCard = {
   lowestPriceCentsNz: number | null;
   lowestPriceCentsUs: number | null;
   lowestPriceCentsUk: number | null;
+  lowestPriceCentsSg: number | null;
+  lowestPriceCentsCa: number | null;
 };
 
 // Lookahead-free backtest of the reconstructable price-timing signal ("room to run"

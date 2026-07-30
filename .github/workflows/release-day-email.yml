@@ -1,0 +1,59 @@
+name: Release-day email blast
+
+# ONE-OFF marketing blast: tells the newsletter list a set is out, the card
+# database + live prices are up, and sealed is priced too. Runs scripts/send-release-day.ts.
+#
+# THIS EMAILS REAL SUBSCRIBERS. It is manual-dispatch only — deliberately no
+# schedule — and defaults to a DRY RUN, so the "Run workflow" button cannot blast
+# by accident. To actually send you must untick `dry_run`.
+#
+# The script itself is idempotent per campaign (it stamps each subscriber's
+# lastEditionKey with "release-<set_slug>" on success), so a timeout or partial
+# failure is safe to re-run: it resumes and skips anyone already emailed.
+#
+# SETUP (Settings → Secrets and variables → Actions) — all should already exist:
+#   DATABASE_URL / RM3   Neon Postgres (same resolution order as the other workflows)
+#   RESEND_API_KEY       required to actually deliver; without it the script aborts
+#   EMAIL_FROM           (optional) verified sender on the riftcompare.com domain
+
+on:
+  workflow_dispatch:
+    inputs:
+      set_slug:
+        description: "Set slug (must exist in lib/constants.ts and NOT be comingSoon)"
+        type: string
+        required: true
+        default: "vendetta"
+      dry_run:
+        description: "Dry run — resolve audience + live stats, send NOTHING (leave ticked to preview)"
+        type: boolean
+        default: true
+
+concurrency:
+  # Never let two blasts overlap — that is how people get double-emailed.
+  group: release-day-email
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+
+      - name: Send release-day email
+        env:
+          # Same newest-first DB resolution as maintenance.yml / refresh-prices.yml.
+          DATABASE_URL: ${{ secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          RELEASE_DAY_SEND: "1"
+          DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
+          SET_SLUG: ${{ inputs.set_slug }}
+        run: npx tsx scripts/send-release-day.ts

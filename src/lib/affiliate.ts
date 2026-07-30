@@ -35,6 +35,13 @@ const EBAY_MARKETS: Record<string, { mkrid: string; siteid: string; customid: st
   "ebay.com.au": { mkrid: "705-53470-19255-0", siteid: "15", customid: "rc-au" },
   "ebay.com": { mkrid: "711-53200-19255-0", siteid: "0", customid: "rc-us" },
   "ebay.co.uk": { mkrid: "710-53481-19255-0", siteid: "3", customid: "rc-uk" },
+  // customid only (no verified mkrid/siteid for these rotations yet) would break
+  // tracking, so these deliberately reuse eBay's documented per-site ids:
+  // Canada (English) siteid 2, Singapore siteid 216. If EPN reports these as
+  // uncredited, replace the mkrid values with the real rotation ids from the EPN
+  // dashboard — the customid is what distinguishes them in reporting either way.
+  "ebay.ca": { mkrid: "706-53473-19255-0", siteid: "2", customid: "rc-ca" },
+  "ebay.com.sg": { mkrid: "711-53200-19255-0", siteid: "216", customid: "rc-sg" },
 };
 
 function ebayMarket(hostname: string) {

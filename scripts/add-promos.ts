@@ -89,6 +89,8 @@ async function main() {
           lowestPriceCentsNz: null,
           lowestPriceCentsUs: null,
           lowestPriceCentsUk: null,
+          lowestPriceCentsSg: null,
+          lowestPriceCentsCa: null,
           viewCount: 0,
           searchCount: 0,
           lastViewedAt: null,

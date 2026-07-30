@@ -508,3 +508,39 @@ jobs:
             prisma/vendetta-cards.json
             scratch/vendetta-dump.json
           if-no-files-found: ignore
+
+      # ── Make new cards DISCOVERABLE immediately ────────────────────────────────
+      # Every task above that can ADD or CHANGE a card used to end here, having
+      # written to the DB and told nobody. The sitemap children are ISR'd with a 24h
+      # TTL, so a card imported now would not appear in /sitemaps/cards.xml until the
+      # next price refresh happened to purge it (up to ~9h, or the full 24h if that
+      # refresh's own revalidate ping failed) — and indexnow-submit.yml reads the
+      # LIVE sitemap at 06:10 UTC, so it would resubmit a list that still omitted
+      # them. During a set launch that lag is the whole traffic opportunity.
+      #
+      # This purges the sitemap (what Google needs) and pings IndexNow with just the
+      # newly-created cards + their set hubs (what Bing/Yandex need). The endpoint
+      # derives its own URL list from Card.createdAt, so it cannot drift from what
+      # the importer actually did — see app/api/cron/ping-new-cards/route.ts.
+      #
+      # DRY_RUN is excluded: a dry run wrote nothing, so there is nothing to submit.
+      - name: Revalidate sitemap + ping IndexNow for new cards
+        if: >-
+          always() &&
+          !inputs.dry_run &&
+          contains(fromJSON('["cards-sync","cards-manual","fetch-promos","tcg-printings","vendetta-pipeline","fix-cloned-art","fix-op-promo-flag","import-prices","import-sealed"]'), inputs.task)
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: "https://riftcompare.com"
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "No CRON_SECRET secret — skipping (new cards appear on the sitemap's 24h TTL instead)."
+            exit 0
+          fi
+          # `|| true` so a connection error can't red an otherwise-successful import
+          # under `set -eo pipefail` — same convention as refresh-prices.yml. A
+          # failed ping only costs freshness, never data.
+          body=$(curl -s --max-time 90 -X POST \
+            "$SITE_URL/api/cron/ping-new-cards" \
+            -H "Authorization: Bearer $CRON_SECRET" || true)
+          echo "ping-new-cards -> ${body:-<no response>}"
