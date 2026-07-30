@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { formatMoney, timeAgo } from "@/lib/format";
 import { cardDisplayName } from "@/lib/card-name";
 import { cardHref } from "@/lib/card-url";
@@ -123,6 +124,7 @@ export function MarketplaceClient({
   country,
   stripeEnabled = false,
   signedIn = false,
+  currentUserId = null,
   offersEnabled = false,
   openCardId,
 }: {
@@ -131,6 +133,10 @@ export function MarketplaceClient({
   country: string;
   stripeEnabled?: boolean;
   signedIn?: boolean;
+  // The signed-in seller's own user id, so their own listings can show an
+  // inline Edit/Remove affordance right here instead of only in the seller
+  // dashboard — nothing changes for anyone browsing offers that aren't theirs.
+  currentUserId?: string | null;
   offersEnabled?: boolean;
   // Deep-linked from a card page's marketplace hero — auto-opens that card's
   // offers modal on load instead of making the visitor find it in the grid.
@@ -461,6 +467,7 @@ export function MarketplaceClient({
           card={openCard}
           busy={busy}
           signedIn={signedIn}
+          currentUserId={currentUserId}
           offersEnabled={offersEnabled}
           onClose={() => setOpenCard(null)}
           onAdd={addToCart}
@@ -520,6 +527,7 @@ function OffersModal({
   card,
   busy,
   signedIn,
+  currentUserId,
   offersEnabled,
   onClose,
   onAdd,
@@ -529,6 +537,7 @@ function OffersModal({
   card: MktCard;
   busy: boolean;
   signedIn: boolean;
+  currentUserId?: string | null;
   offersEnabled: boolean;
   onClose: () => void;
   onAdd: (card: MktCardInner, o: MktOffer, qty: number) => void;
@@ -538,7 +547,58 @@ function OffersModal({
   const [qty, setQty] = useState<Record<string, number>>({});
   const getQty = (o: MktOffer) => qty[o.id] ?? 1;
   const { setCountry } = useCountry();
-  const firstOtherIndex = card.offers.findIndex((o) => !o.inRegion);
+  const router = useRouter();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editPrice, setEditPrice] = useState("");
+  const [editQty, setEditQty] = useState("");
+  const [savingId, setSavingId] = useState<string | null>(null);
+  // Local, editable copy of this card's offers — lets a seller's own Edit/Save
+  // update what's on screen immediately without waiting on a full server
+  // round-trip. Reset whenever a different card's modal opens.
+  const [offers, setOffers] = useState(card.offers);
+  useEffect(() => setOffers(card.offers), [card]);
+  const firstOtherIndex = offers.findIndex((o) => !o.inRegion);
+
+  async function saveListing(id: string, priceCents: number, quantity: number) {
+    const res = await fetch(`/api/marketplace/listings/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ priceCents, quantity }),
+    });
+    if (res.ok) {
+      setOffers((os) => os.map((o) => (o.id === id ? { ...o, priceCents, quantity } : o)));
+      router.refresh();
+    }
+    return res.ok;
+  }
+
+  async function removeListing(id: string) {
+    const res = await fetch(`/api/marketplace/listings/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      setOffers((os) => os.filter((o) => o.id !== id));
+      router.refresh();
+    }
+    return res.ok;
+  }
+
+  function startEdit(o: MktOffer) {
+    setEditingId(o.id);
+    setEditPrice((o.priceCents / 100).toFixed(2));
+    setEditQty(String(o.quantity));
+  }
+
+  async function confirmEdit(id: string) {
+    setSavingId(id);
+    await saveListing(id, Math.round(parseFloat(editPrice || "0") * 100), parseInt(editQty || "0", 10));
+    setSavingId(null);
+    setEditingId(null);
+  }
+
+  async function confirmRemove(id: string) {
+    if (typeof window !== "undefined" && !window.confirm("Remove this listing?")) return;
+    await removeListing(id);
+  }
+
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center p-4" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-black/70" onClick={onClose} />
@@ -550,7 +610,7 @@ function OffersModal({
             <h2 className="truncate text-lg font-bold text-white">{cardDisplayName(card.card.name, card.card)}</h2>
             <p className="text-xs text-slate-500">
               {card.card.setCode} {card.card.collectorNumber}
-              {card.marketCents != null && <> · market {formatMoney(card.marketCents, card.offers[0]?.currency ?? "AUD")}</>}
+              {card.marketCents != null && <> · market {formatMoney(card.marketCents, offers[0]?.currency ?? "AUD")}</>}
               {" · "}
               <Link href={cardHref(card.card)} className="text-brand-400 hover:underline">compare all stores</Link>
             </p>
@@ -558,7 +618,7 @@ function OffersModal({
           <button onClick={onClose} aria-label="Close" className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full text-slate-400 hover:bg-ink-800 hover:text-white">✕</button>
         </div>
         <ul className="divide-y divide-ink-800 overflow-y-auto">
-          {card.offers.map((o, i) => (
+          {offers.map((o, i) => (
             <Fragment key={o.id}>
               {i === firstOtherIndex && firstOtherIndex > 0 && (
                 <li key="divider" className="bg-ink-950/60 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
@@ -581,8 +641,44 @@ function OffersModal({
                     )}
                   </div>
                 </div>
-                <span className="num text-base font-extrabold text-accent">{formatMoney(o.priceCents, o.currency)}</span>
-                {o.inRegion ? (
+                {o.sellerId === currentUserId ? (
+                  editingId === o.id ? (
+                    <>
+                      <input
+                        type="number" min={0} step="0.01"
+                        value={editPrice}
+                        onChange={(e) => setEditPrice(e.target.value)}
+                        className="input w-20 py-1 text-sm"
+                        aria-label="Price"
+                      />
+                      <input
+                        type="number" min={0} max={999}
+                        value={editQty}
+                        onChange={(e) => setEditQty(e.target.value)}
+                        className="input w-14 py-1 text-sm"
+                        aria-label="Quantity"
+                      />
+                      <div className="flex gap-1.5">
+                        <button onClick={() => confirmEdit(o.id)} disabled={savingId === o.id} className="rounded bg-brand-500/20 px-2 py-1 text-[11px] font-semibold text-brand-300 hover:bg-brand-500/30 disabled:opacity-50">
+                          {savingId === o.id ? "…" : "Save"}
+                        </button>
+                        <button onClick={() => setEditingId(null)} className="rounded bg-ink-800 px-2 py-1 text-[11px] text-slate-400 hover:bg-ink-700">Cancel</button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <span className="num text-base font-extrabold text-accent">{formatMoney(o.priceCents, o.currency)}</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="chip bg-ink-800 text-[10px] font-semibold text-slate-400">Your listing</span>
+                        <button onClick={() => startEdit(o)} className="rounded bg-ink-800 px-2 py-1 text-[11px] text-slate-200 hover:bg-ink-700">Edit</button>
+                        <button onClick={() => confirmRemove(o.id)} className="rounded bg-ink-800 px-2 py-1 text-[11px] text-rose-300 hover:bg-ink-700">Remove</button>
+                      </div>
+                    </>
+                  )
+                ) : (
+                  <span className="num text-base font-extrabold text-accent">{formatMoney(o.priceCents, o.currency)}</span>
+                )}
+                {o.sellerId === currentUserId ? null : o.inRegion ? (
                   <>
                     <input
                       type="number"
