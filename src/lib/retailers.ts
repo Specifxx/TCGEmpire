@@ -1281,6 +1281,13 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. C$2.99 · free over C$75",
     country: "CA",
   },
+  // KNOWN ISSUE (first live import, 2026-07-30): returns a real, large catalogue —
+  // 964 products — but matched ZERO of them. So the collection handle is right and
+  // the feed reads fine; something about their product TITLES doesn't resolve
+  // through resolveCardId. Left enabled (it costs one store's scrape and yields no
+  // wrong prices — unmatched listings are simply dropped, never guessed), and the
+  // new per-store unmatched-sample warning in price-import.ts will print example
+  // titles on the next run so the parsing gap can be identified and fixed.
   bentogaming: {
     key: "bentogaming",
     name: "Bento Gaming",
@@ -1371,10 +1378,10 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. C$2.99 · free over C$75",
     country: "CA",
   },
-  // Riftbound surfaced only at /pages/riftbound-singles — a Shopify PAGE, not a
-  // collection, so there's nothing for products.json to read at that URL. Left
-  // for sitemap auto-discovery to pick up a real collection if one exists;
-  // contributes zero listings until then rather than a fabricated price.
+  // Riftbound was only found at /pages/riftbound-singles (a Shopify PAGE, not a
+  // collection, so products.json can't read that URL) — but sitemap auto-discovery
+  // DOES find a real collection behind it: the first live import priced 143 of 143
+  // products, zero unmatched. `collections: []` is correct and needs no handle.
   redriotgames: {
     key: "redriotgames",
     name: "Red Riot Games",
@@ -1385,7 +1392,8 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. C$2.99 · free over C$75",
     country: "CA",
   },
-  // Same /pages/riftbound situation as Red Riot above.
+  // Same /pages/riftbound situation as Red Riot, and likewise fine via
+  // auto-discovery — first live import priced 315 of 322 products.
   levelupgames: {
     key: "levelupgames",
     name: "Level Up Games",
