@@ -480,7 +480,26 @@ Set your country, **[open the card database](/browse)**, find your card, and cli
 
 ## Buying in a specific market?
 
-Deeper dives per region — real store counts, presale links and payment tips: **[Australia](/blog/buy-riftbound-cards-australia)** · **[New Zealand](/blog/buy-riftbound-cards-nz)** · **[United States](/blog/buy-riftbound-cards-us)** · **[United Kingdom](/blog/buy-riftbound-cards-uk)**. Just want the cheapest single right now? **[See where to buy singles](/blog/where-to-buy-riftbound-singles)**.`,
+Deeper dives per region — real store counts, presale links and payment tips: **[Australia](/blog/buy-riftbound-cards-australia)** · **[New Zealand](/blog/buy-riftbound-cards-nz)** · **[United States](/blog/buy-riftbound-cards-us)** · **[United Kingdom](/blog/buy-riftbound-cards-uk)**. Just want the cheapest single right now? **[See where to buy singles](/blog/where-to-buy-riftbound-singles)**.
+
+## Where to buy Riftbound FAQ
+
+**Where is the cheapest place to buy Riftbound cards?** There isn't one shop that's always cheapest — it changes per card and per market, which is why RiftCompare compares every store we track at once and ranks them by total delivered cost rather than sticker price.
+
+**Can I buy Riftbound cards near me?** Local game stores stock sealed product and often singles, and many also sell online. The [stores we track](/stores/tracked) page lists every retailer in the comparison by market, so you can see which of them are local to you.
+
+**Is it cheaper to buy Riftbound singles or sealed product?** For a specific card you've already chosen, singles are almost always cheaper — sealed means paying for many cards you didn't need. Sealed makes sense when you want the experience of opening packs.
+
+**Do Riftbound prices differ between countries?** Yes, and not just by exchange rate. Regional allocation, local stock levels and import costs all matter — see [why Riftbound prices change](/guides/why-riftbound-card-prices-change). RiftCompare prices each market in its own currency from stores that actually ship there.
+
+**Does RiftCompare sell cards directly?** RiftCompare is primarily a price-comparison tool that links you to the retailer, and it also runs its own peer-to-peer [Marketplace](/marketplace) where verified sellers list cards, with payment held until delivery is confirmed.`,
+    faq: [
+      { q: "Where is the cheapest place to buy Riftbound cards?", a: "There isn't one shop that's always cheapest — it changes per card and per market. RiftCompare compares every store it tracks at once and ranks them by total delivered cost (price plus postage) rather than sticker price." },
+      { q: "Can I buy Riftbound cards near me?", a: "Local game stores stock sealed product and often singles, and many also sell online. RiftCompare's \"stores we track\" page lists every retailer in the comparison grouped by market, so you can see which are local to you." },
+      { q: "Is it cheaper to buy Riftbound singles or sealed product?", a: "For a specific card you've already chosen, singles are almost always cheaper — sealed means paying for many cards you didn't need. Sealed makes sense when you want the experience of opening packs." },
+      { q: "Do Riftbound prices differ between countries?", a: "Yes, and not just by exchange rate. Regional allocation, local stock levels and import costs all affect price. RiftCompare prices each market in its own currency from stores that actually ship there." },
+      { q: "Does RiftCompare sell cards directly?", a: "RiftCompare is primarily a price-comparison tool that links you through to the retailer. It also runs its own peer-to-peer Marketplace where verified sellers list cards, with payment held until delivery is confirmed." },
+    ],
   },
   {
     slug: "cheapest-riftbound-booster-boxes",
@@ -552,7 +571,26 @@ On RiftCompare, each of these printings is labelled in the card's name (e.g. *(A
 - **Buy the English print** unless you specifically want another language — foreign copies are cheaper but aren't the same card.
 - **Check the exact printing** — make sure you're buying the alt-art / signature / promo you actually want, not the base card (or vice versa).
 
-Want to find your grail? **[Browse every Riftbound card](/browse)** and sort by price, or read our **[guide to where to buy Riftbound cards](/guides/where-to-buy-riftbound-cards)** for the best place to buy in your region.`,
+Want to find your grail? **[Browse every Riftbound card](/browse)** and sort by price, or read our **[guide to where to buy Riftbound cards](/guides/where-to-buy-riftbound-cards)** for the best place to buy in your region.
+
+## Most valuable Riftbound cards FAQ
+
+**Which Riftbound cards are worth the most?** The top of the market is dominated by chase printings — Showcase alt-arts, Overnumbered prints and signed cards — rather than by the strongest gameplay cards. The list above is generated from live prices across every store we track and changes as the market moves.
+
+**Are Riftbound cards worth anything?** Most individual cards are worth very little; value is concentrated in a small number of scarce printings. That's normal for a trading card game and is why a whole-collection figure usually comes down to a handful of cards.
+
+**What makes a Riftbound card valuable?** Scarcity first, then desirability — how rarely the printing appears per box, how sought-after the champion or art is, and condition. Playability matters for ordinary singles but much less for chase prints. See [why Riftbound prices change](/guides/why-riftbound-card-prices-change).
+
+**Should I get my Riftbound cards graded?** Grading mainly matters for high-value chase cards in excellent condition, since the fee is fixed regardless of what the card is worth. For ordinary singles it rarely makes sense.
+
+**Do Riftbound cards go up in value over time?** Some have and some haven't. Riftbound is a young game without a long price record, so treat any confident claim about future value sceptically — RiftCompare reports live prices and history rather than predictions.`,
+    faq: [
+      { q: "Which Riftbound cards are worth the most?", a: "The top of the market is dominated by chase printings — Showcase alt-arts, Overnumbered prints and signed cards — rather than by the strongest gameplay cards. RiftCompare's list is generated from live prices across every store it tracks and changes as the market moves." },
+      { q: "Are Riftbound cards worth anything?", a: "Most individual cards are worth very little; value is concentrated in a small number of scarce printings. That's normal for a trading card game, and it's why a whole-collection figure usually comes down to a handful of cards." },
+      { q: "What makes a Riftbound card valuable?", a: "Scarcity first, then desirability — how rarely the printing appears per box, how sought-after the champion or art is, and the card's condition. Playability matters for ordinary singles but much less for chase prints." },
+      { q: "Should I get my Riftbound cards graded?", a: "Grading mainly matters for high-value chase cards in excellent condition, since the grading fee is fixed regardless of what the card is worth. For ordinary singles it rarely makes financial sense." },
+      { q: "Do Riftbound cards go up in value over time?", a: "Some have and some haven't. Riftbound is a young game without a long price record, so treat confident claims about future value sceptically. RiftCompare reports live prices and price history rather than predictions." },
+    ],
   },
   {
     slug: "riftbound-for-beginners",
@@ -1921,6 +1959,10 @@ For a full archetype breakdown, see the **[best Vendetta decks guide](/guides/be
 
 **What is Disempower?** It's the reverse of Empower — an instruction or cost on some cards that strips the Empowered status from a card, turning off whatever effect its Empowered ability was granting. You can't Disempower something that isn't currently Empowered.
 
+**What is Empower in Riftbound?** Empower gives a card the potential to gain new abilities once it's already in play, usually by paying an extra cost on a later turn — a cheap play now, a bigger payoff later.
+
+**Is Empower permanent?** Yes. Empowered is a status that sticks to a card indefinitely — it lasts until the card leaves the board, or until something Disempowers it.
+
 ## Get ready for Empower cards
 
 Empower cards will list with live prices on the **[Vendetta set page](/sets/vendetta)** the moment they release — and RiftCompare shows the cheapest delivered price across every store, so you can build your Empower deck for the least. Keep an eye on the **[live countdown](/vendetta-countdown)** — it's almost here.`,
@@ -2076,7 +2118,17 @@ Full decklists that use Burn are in the **[best Vendetta decks guide](/guides/be
 
 **Burn** sends cards to the trash; **[Flow](/guides/riftbound-flow-explained)** plays them back out; **[Empower](/guides/riftbound-empower-explained)** grows a card already in play. They're designed to combo — read all three in **[Vendetta's new mechanics explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**.
 
-Burn cards will list with live prices on the **[Vendetta set page](/sets/vendetta)** as they release — RiftCompare compares every store so you pay the cheapest delivered price. Keep the **[live countdown](/vendetta-countdown)** handy.`,
+Burn cards will list with live prices on the **[Vendetta set page](/sets/vendetta)** as they release — RiftCompare compares every store so you pay the cheapest delivered price. Keep the **[live countdown](/vendetta-countdown)** handy.
+
+## Burn FAQ
+
+**What is Burn in Riftbound?** Burn sends cards from a Main Deck to the trash — either your own (self-Burn, to fuel Flow and other trash-payoffs) or your opponent's (a mill-style deck attack).
+
+**Is Burn the same as mill?** Deck-attack Burn (burning an opponent's deck) is Riftbound's version of a mill strategy. Self-Burn is a different use of the same keyword — filling your own trash on purpose.
+
+**Is Burn only in Vendetta?** Yes — Burn is introduced as a new keyword in the Vendetta set.
+
+**How is Burn different from Flow and Empower?** Burn sends cards to the trash; Flow plays them back out of the trash; Empower grows a card that's already in play. The three are designed to combo.`,
   },
   {
     slug: "riftbound-vendetta-card-list",
@@ -2121,7 +2173,26 @@ Read all three together in **[Vendetta's new mechanics explained](/blog/riftboun
 - **[The complete card gallery](/blog/every-riftbound-vendetta-card-revealed)** — every one of the 166 cards, with images, filterable by domain, rarity and type.
 - **The [Vendetta set page](/sets/vendetta)** — the same full list, plus live prices the moment singles release.
 
-Planning a deck already? Our **[best Vendetta decks guide](/guides/best-riftbound-vendetta-decks)** shows which archetypes the confirmed mechanics point toward, and the **[deckbuilding guide](/guides/building-for-riftbound-vendetta)** covers synergies. And keep the **[live countdown](/vendetta-countdown)** handy — it's almost here.`,
+Planning a deck already? Our **[best Vendetta decks guide](/guides/best-riftbound-vendetta-decks)** shows which archetypes the confirmed mechanics point toward, and the **[deckbuilding guide](/guides/building-for-riftbound-vendetta)** covers synergies. And keep the **[live countdown](/vendetta-countdown)** handy — it's almost here.
+
+## Vendetta card list FAQ
+
+**How many cards are in Riftbound: Vendetta?** The main set is 166 cards, plus Showcase alternate-art printings, Overnumbered chase cards, runes and promos on top of that base numbering.
+
+**When was Riftbound: Vendetta released?** 31 July 2026 worldwide, with in-store Pre-Rift launch events running from 24 July 2026.
+
+**How many Legends are in Vendetta?** Nine, including Nasus, Renekton, Akali, Mel, Ambessa, Zed and Shen.
+
+**What new mechanics does Vendetta add?** Three: [Flow](/guides/riftbound-flow-explained) (play cards from your trash), [Burn](/guides/riftbound-burn-explained) (send cards to the trash) and [Empower](/guides/riftbound-empower-explained) (upgrade a card already in play).
+
+**Where can I see every Vendetta card with prices?** The [Vendetta set page](/sets/vendetta) shows the full list with live prices from every store we track, in your own market's currency.`,
+    faq: [
+      { q: "How many cards are in Riftbound: Vendetta?", a: "The main set is 166 cards, plus Showcase alternate-art printings, Overnumbered chase cards, runes and promos on top of that base numbering." },
+      { q: "When was Riftbound: Vendetta released?", a: "31 July 2026 worldwide, with in-store Pre-Rift launch events running from 24 July 2026." },
+      { q: "How many Legends are in Vendetta?", a: "Nine, including Nasus, Renekton, Akali, Mel, Ambessa, Zed and Shen." },
+      { q: "What new mechanics does Vendetta add?", a: "Three: Flow (play cards from your trash), Burn (send cards to the trash, your own or an opponent's) and Empower (upgrade a card that's already in play by paying an extra cost later)." },
+      { q: "Where can I see every Vendetta card with prices?", a: "The Vendetta set page on RiftCompare shows the full card list with live prices from every store it tracks, in your own market's currency." },
+    ],
   },
   {
     slug: "riftbound-vendetta-overnumbers-explained",
@@ -3330,6 +3401,332 @@ Every Crystal Rose card's cheapest current price, ranked across every store Rift
 **Is this Riftbound's first Wild Rift crossover?** It's the first time these specific Wild Rift Crystal Rose looks have been brought to physical Riftbound cards.
 
 *Card names, numbering and distribution details are from Riot's own Vendetta reveal coverage — see [Riftbound's official site](https://riftbound.gg/riftbound-vendetta-wild-rift-crystal-rose-alt-art-cards/) for the original announcement.*`,
+  },
+  {
+    slug: "why-riftbound-card-prices-change",
+    category: "guide",
+    title: "Why Riftbound Card Prices Change — And When They Usually Drop",
+    excerpt:
+      "Why one Riftbound set costs more than another, why prices tend to fall after a launch, why a card costs a different amount in Australia than the US, and which events actually move the market. A plain explanation of the forces behind the numbers.",
+    author: "RiftCompare",
+    date: "2026-07-31",
+    updated: "2026-07-31",
+    readMins: 8,
+    tags: ["prices", "market", "price history", "buying guide", "riftbound"],
+    browseCta: {
+      href: "/movers",
+      label: "See what's moving right now →",
+      blurb: "Price movers tracks which Riftbound cards are climbing and cooling across every store we compare.",
+    },
+    body: `"Why is Riftbound so expensive?" "When will prices drop?" "Why is one set cheaper than a newer one?" These are some of the most-asked questions about the game, and most answers you'll find are guesses.
+
+This guide explains the **mechanisms** — the things that actually push a Riftbound card's price up or down — so you can read the market yourself instead of taking anyone's word for it. Where a number matters, we point you at the **live** figure on RiftCompare rather than printing one here that would be stale within days.
+
+> **Important framing:** this is a description of how a collectible market behaves. It is not investment advice, and nothing here is a prediction about what any specific card will do next.
+
+## Why one set costs more than another
+
+The single biggest driver is **supply against demand**, and supply is mostly a function of two things:
+
+- **How much was printed.** A set that shipped in larger quantities has more copies chasing the same number of players.
+- **How long it stayed in print.** A set that has been available for many months keeps accumulating opened product. A set that stopped being restocked stops accumulating.
+
+Demand pulls the other way. A set holding cards that are central to strong decks keeps a floor under its prices, because players actually need those cards to play. A set whose cards have been superseded loses that floor even if very little of it was printed.
+
+This is why a **newer set can genuinely be cheaper than an older one**. Newness isn't the driver — availability is. At launch, a huge amount of product is opened in a short window, which is usually the moment a set's singles are at their most available.
+
+You can check this yourself right now rather than trusting the explanation: open **[Origins](/sets/origins)**, **[Spirit Forged](/sets/spiritforged)**, **[Unleashed](/sets/unleashed)** and **[Vendetta](/sets/vendetta)** side by side and compare what the same rarity tier actually costs in each.
+
+## What usually happens to prices after a set launches
+
+Launch weeks are unusual, and it helps to know why. Three things happen at once:
+
+1. **Supply spikes.** Pre-release events, launch-day boxes and the first wave of online orders all get opened within days. More copies hit the market in that window than at any later point.
+2. **Demand also spikes**, but unevenly — concentrated on a small number of chase cards and whatever the early decks want.
+3. **Nobody knows the format yet.** Prices in week one reflect speculation about what will be good, not results.
+
+The practical consequence is that **the widest, most volatile pricing you'll ever see for a set is in its first few weeks**. Cards that look essential on reveal day sometimes settle far lower once the meta is actually played; cards nobody rated can climb sharply once a deck built around them wins something.
+
+If you are buying to *play* rather than to speculate, waiting past the first rush of a launch usually means better information and calmer prices. If you are buying a specific chase card you want to own regardless, the launch window is when the most copies are being opened and listed at once.
+
+## Why chase cards move differently from the rest of a set
+
+A set's ordinary cards and its chase cards are effectively two different markets.
+
+Ordinary singles are priced by **playability**. If a card is in good decks, people need copies; if it rotates out of favour, demand falls away and the price follows.
+
+Chase cards — Showcase alt-arts, Overnumbered prints, signed cards — are priced by **scarcity and desirability**, largely independent of whether the card is good. That means they:
+
+- Fall much more slowly when a set floods the market, because far fewer exist per box opened.
+- Are far more sensitive to condition and to grading.
+- Can move on things that have nothing to do with gameplay — a popular champion, a striking piece of art, a crossover.
+
+Riftbound's own chase tiers are explained in **[Overnumbers explained](/guides/riftbound-vendetta-overnumbers-explained)** and **[understanding card rarity](/guides/understanding-riftbound-card-rarity)**. The **[most valuable Riftbound cards](/guides/most-valuable-riftbound-cards)** page tracks where the top of that market currently sits.
+
+## Why the same card costs a different amount in different countries
+
+This one surprises people, and it isn't just currency conversion. A card's price in a given market is shaped by:
+
+- **How much product was allocated there.** Distribution isn't even across regions.
+- **How many local stores stock it.** Fewer local sellers means less price competition.
+- **Import and freight costs**, which get passed through to shelf prices.
+- **Whether buying from overseas is realistic**, once postage and any duties are counted.
+
+This is exactly why RiftCompare prices each market in its own currency from stores that actually ship there, rather than converting one market's price and calling it your price. Switch markets with the country selector and the whole site re-prices: **[Australia](/blog/buy-riftbound-cards-australia)**, **[New Zealand](/blog/buy-riftbound-cards-nz)**, the **[US](/blog/buy-riftbound-cards-us)**, the **[UK](/blog/buy-riftbound-cards-uk)**, **[Singapore](/blog/riftbound-price-comparison-singapore)** and **[Canada](/blog/buy-riftbound-cards-canada)** each have their own guide.
+
+## The events that actually move prices
+
+Most days, nothing much happens. Prices move on identifiable events:
+
+- **A restock or reprint.** New supply into a market that had run dry is the fastest way for a price to fall.
+- **Selling out.** The reverse — when stores stop being able to restock, the remaining listings set the price.
+- **A ban or errata.** A card that stops being legal, or whose text changes, reprices almost immediately. See **[the banlist explained](/guides/riftbound-banlist-explained)**.
+- **Tournament results.** A deck winning a visible event moves the cards that deck needs, often within a day.
+- **A new set landing.** Cards from older sets that combo with new ones can climb; cards that get a strictly better replacement fall.
+
+Note what is *not* on that list: reveal-day hype on its own, and social-media speculation. Both move prices briefly, and both frequently unwind.
+
+## How to watch the market yourself
+
+You don't have to take any of this on trust — the whole point of RiftCompare is that you can check.
+
+- **[Price movers](/movers)** — which cards are climbing or cooling right now, per market.
+- **[The RiftCompare Index](/market)** — the market as a whole rather than one card. Methodology is documented in **[how the Index works](/guides/understanding-the-riftcompare-index-methodology)**.
+- **Any card page** — the full store-by-store table ranked by delivered cost, plus that card's price history chart as it accumulates.
+- **[Price watch](/browse)** — save a card and get told when it moves, instead of checking manually.
+
+## "Should I buy now or wait?"
+
+We deliberately won't answer that for you, and you should be sceptical of anyone who does confidently. What we can tell you is what to look at:
+
+- **If you need the card to play a deck**, the cost of waiting is not playing. Buy the cheapest delivered listing and move on.
+- **If you're buying a chase card you want to own**, availability matters more than timing — check how many stores actually have it in stock, not just the headline price.
+- **If you're buying because you think it will be worth more later**, understand you're taking a position in a young market with no guarantees, and size it accordingly.
+
+On that last point, our position is straightforward: we report what the market is doing, including when it's falling. We don't publish price predictions or tell people what to speculate on. If you want the market data behind a decision, it's all on the site for free.
+
+## Riftbound price FAQ
+
+**Why are Riftbound cards so expensive?** Usually it's limited supply meeting concentrated demand — a card that's needed in strong decks, or a chase print that appears rarely per box. Price also varies by market depending on local stock and import costs, so "expensive" can mean something different depending where you're buying.
+
+**When do Riftbound prices usually drop?** The most reliable driver of a price fall is new supply — a restock or reprint reaching a market that had run short. Beyond that, the heavy opening that happens around a set's launch is when the most copies enter circulation at once.
+
+**Why is a newer Riftbound set cheaper than an older one?** Newness isn't what sets price — availability is. A newly launched set has a large amount of product being opened in a short window, while an older set may have stopped being restocked. Compare any two sets directly on their set pages to see the current picture.
+
+**Do Riftbound cards go up in value?** Some have and some haven't, and past movement doesn't establish what any card will do next. Riftbound is a young game with no long price record yet, which is precisely why we publish live data and price history rather than forecasts.
+
+**Why is the same card a different price in Australia than in the US?** Regional allocation, how many local stores carry it, import and freight costs, and how much local price competition exists. RiftCompare prices each market separately from stores that genuinely ship there rather than converting a single global price.
+
+**What makes a Riftbound chase card expensive?** Scarcity and desirability rather than playability. Showcase alt-arts, Overnumbered prints and signed cards appear far less often per box, so they hold value better when a set floods the market — and they're much more sensitive to condition.
+
+**Does a ban or errata change card prices?** Yes, usually fast. A card that loses legality in a format loses the demand attached to that format, and cards that replace it in decks tend to rise at the same time.
+
+**Does RiftCompare give investment advice?** No. We report live prices, price history and market movement across every store we track. We don't publish predictions or recommend cards to buy as investments.`,
+    faq: [
+      { q: "Why are Riftbound cards so expensive?", a: "Usually it's limited supply meeting concentrated demand — a card that's needed in strong decks, or a chase print that appears rarely per box. Price also varies by market depending on local stock and import costs, so \"expensive\" can mean something different depending where you're buying." },
+      { q: "When do Riftbound prices usually drop?", a: "The most reliable driver of a price fall is new supply — a restock or reprint reaching a market that had run short. Beyond that, the heavy opening that happens around a set's launch is when the most copies enter circulation at once." },
+      { q: "Why is a newer Riftbound set cheaper than an older one?", a: "Newness isn't what sets price — availability is. A newly launched set has a large amount of product being opened in a short window, while an older set may have stopped being restocked. Compare any two sets directly on their set pages to see the current picture." },
+      { q: "Do Riftbound cards go up in value?", a: "Some have and some haven't, and past movement doesn't establish what any card will do next. Riftbound is a young game with no long price record yet, which is why RiftCompare publishes live data and price history rather than forecasts." },
+      { q: "Why is the same card a different price in Australia than in the US?", a: "Regional allocation, how many local stores carry it, import and freight costs, and how much local price competition exists. RiftCompare prices each market separately from stores that genuinely ship there rather than converting a single global price." },
+      { q: "What makes a Riftbound chase card expensive?", a: "Scarcity and desirability rather than playability. Showcase alt-arts, Overnumbered prints and signed cards appear far less often per box, so they hold value better when a set floods the market — and they're much more sensitive to condition." },
+      { q: "Does a ban or errata change card prices?", a: "Yes, usually fast. A card that loses legality in a format loses the demand attached to that format, and the cards that replace it in decks tend to rise at the same time." },
+    ],
+  },
+  {
+    slug: "cheapest-way-to-start-riftbound",
+    category: "guide",
+    title: "The Cheapest Way to Start Riftbound (Without Wasting Money)",
+    excerpt:
+      "Every realistic way into Riftbound compared on cost: a ready-to-play deck, a starter product, singles for one deck, or a booster box. What each actually gets you, what to skip first, and how to check live prices in your own market.",
+    author: "RiftCompare",
+    date: "2026-07-31",
+    updated: "2026-07-31",
+    readMins: 7,
+    tags: ["beginner", "buying guide", "budget", "riftbound", "how to start"],
+    shop: [
+      { label: "Riftbound decks on eBay", query: "Riftbound deck" },
+      { label: "Riftbound singles", query: "Riftbound singles" },
+    ],
+    browseCta: {
+      href: "/deck",
+      label: "Price a full deck →",
+      blurb: "Paste a decklist and the deck pricer finds the cheapest way to buy all of it across every store at once.",
+    },
+    body: `The most common question from people looking at Riftbound isn't "is it good?" — it's some version of **"how do I get in without wasting money?"** That's a fair question for any trading card game, and it deserves a straight answer rather than a sales pitch.
+
+This guide compares every realistic route in, what each one actually gets you, and how to check the current cost **in your own market** rather than trusting a number typed into an article months ago.
+
+> **The short version:** if you want to play against a friend, a ready-to-play two-player product is the cheapest single purchase that gets two functioning decks on the table. If you want to build one specific deck, buying **singles** is almost always cheaper than opening packs to find them. Booster boxes are for people who want to open packs — they are not the cheap way to get cards you've already chosen.
+
+## The four ways in
+
+### 1. A ready-to-play deck product
+
+The lowest-friction start. You get a playable deck out of the box with no deckbuilding decisions and no missing pieces. Riftbound's **Showdown Decks** are built specifically for this — they're the game's first ready-to-play *two-player* product, so a single purchase covers both sides of a game. The debut pairing is **Shen vs Zed**.
+
+**Best for:** learning the game, playing with a partner or housemate, deciding whether you like it before spending more.
+**Watch out for:** a precon is a starting point, not a competitive list. You'll want to upgrade it if you keep playing.
+
+### 2. Singles for one deck you've chosen
+
+Pick a deck, buy exactly the cards it needs, play it. This is how most established players actually acquire cards, and for a *specific* list it's nearly always the cheapest route — you're paying for the cards you want instead of gambling on finding them.
+
+Use the **[deck pricer](/deck)**: paste a full list and it works out the cheapest way to buy all of it across every store at once, consolidating orders so you aren't paying postage five separate times. Start from **[budget Riftbound decks](/guides/budget-riftbound-decks)** if you don't have a list yet.
+
+**Best for:** anyone who knows roughly what they want to play.
+**Watch out for:** postage. Five cheap cards from five different shops can cost more than one slightly dearer order. The deck pricer accounts for this; buying by hand often doesn't.
+
+### 3. A starter / entry sealed product
+
+Products like **Proving Grounds** sit between a precon and a booster box — some ready-to-play content plus some opening. Current contents and live pricing for entry products are on the **[sealed page](/sealed)**.
+
+**Best for:** people who want *some* of the opening experience without committing to a box.
+
+### 4. A booster box
+
+The most product, the most opening, and the highest single outlay. A box is the right purchase if the **opening itself** is what you want, or if you're deliberately chasing a set's chase cards at launch.
+
+It is **not** the cheap way to assemble a specific deck. Opening packs to find three copies of one card means buying — and paying for — a large number of cards you didn't need. We wrote the maths out in **[booster box EV: worth ripping, or buy singles?](/guides/riftbound-booster-box-ev-worth-ripping-or-buying-singles)**.
+
+**Best for:** the experience of opening; launch-window chase hunting.
+**Watch out for:** treating it as a shortcut to a deck. It usually isn't.
+
+## The cheapest route, by what you actually want
+
+- **"I want to try the game with a friend."** One ready-to-play two-player product. Cheapest possible path to two real decks.
+- **"I want to play one deck properly."** Singles for that list, bought through the **[deck pricer](/deck)**.
+- **"I want to open packs."** A box — but buy it because you want to open it, not because you expect it to be cheaper than singles.
+- **"I want to collect the art."** Singles, targeting the specific alt-arts you like. See **[understanding card rarity](/guides/understanding-riftbound-card-rarity)**.
+
+## What to skip at first
+
+- **Don't buy multiple boxes before you've played.** The most common expensive mistake, and the one most posted about by people regretting it.
+- **Don't buy chase cards on reveal-day hype.** Launch-week prices are the most speculative you'll ever see — see **[why prices change](/guides/why-riftbound-card-prices-change)**.
+- **Don't buy sleeves and accessories before you own a deck.** They'll still be there later.
+- **Don't buy an older set's product without checking it's actually cheaper.** Sometimes it is; sometimes it isn't. Compare **[Origins](/sets/origins)**, **[Spirit Forged](/sets/spiritforged)**, **[Unleashed](/sets/unleashed)** and **[Vendetta](/sets/vendetta)** directly.
+
+## Postage is the part people forget
+
+The sticker price is not the price. A card listed at $2 with $4 tracked shipping costs more than the same card at $4 with free post — and if you're assembling a deck across several shops, postage can quietly become the largest line on the bill.
+
+Every price comparison on RiftCompare ranks stores by **total delivered cost**, with free-shipping thresholds factored in automatically. That's the number that matters, and it frequently reorders the list.
+
+## Starting in your market
+
+Riftbound's availability and pricing genuinely differ by country. Each of these guides lists the stores we actually track locally, priced in local currency:
+
+- **[Australia](/blog/buy-riftbound-cards-australia)**
+- **[New Zealand](/blog/buy-riftbound-cards-nz)**
+- **[United States](/blog/buy-riftbound-cards-us)**
+- **[United Kingdom](/blog/buy-riftbound-cards-uk)**
+- **[Singapore](/blog/riftbound-price-comparison-singapore)**
+- **[Canada](/blog/buy-riftbound-cards-canada)**
+
+## Then what?
+
+Once you've played a few games, **[Riftbound for beginners](/guides/riftbound-for-beginners)** covers the rules side, and **[how a Riftbound deck is built](/guides/how-a-riftbound-deck-is-built)** explains deck construction so you can upgrade what you started with rather than replacing it.
+
+## Starting Riftbound FAQ
+
+**What is the cheapest way to start playing Riftbound?** A ready-to-play deck product is the cheapest single purchase that gets you playing, and a two-player product like a Showdown Deck covers both sides of a game in one buy. If you already know which deck you want to play, buying singles for that specific list is usually cheaper than opening packs to find the same cards.
+
+**Are Riftbound starter and precon decks worth it?** As a way to start, yes — they get you a functioning deck with no missing pieces and no deckbuilding required. They aren't competitive lists out of the box, so treat one as a base to upgrade rather than a finished deck.
+
+**Is it cheaper to buy singles or booster packs?** For a specific card you've already decided you want, singles are cheaper nearly every time — packs mean paying for a lot of cards you didn't need on top of the one you did. Packs make sense when the opening itself is what you want.
+
+**How much does it cost to start Riftbound?** It depends entirely on the route and your market, which is why we don't print a figure here that would be wrong next week. Check live prices for entry products on the sealed page and for singles through the deck pricer, both in your own currency.
+
+**Do I need a booster box to start?** No. A box is the largest single outlay of any route in and is aimed at people who want to open packs. You can play the game properly without ever buying one.
+
+**Should I buy the newest set or an older one to start?** Either works. Newer isn't automatically more expensive and older isn't automatically cheaper — availability drives price more than age does. Compare the set pages directly before assuming.`,
+    faq: [
+      { q: "What is the cheapest way to start playing Riftbound?", a: "A ready-to-play deck product is the cheapest single purchase that gets you playing, and a two-player product like a Showdown Deck covers both sides of a game in one buy. If you already know which deck you want to play, buying singles for that specific list is usually cheaper than opening packs to find the same cards." },
+      { q: "Are Riftbound starter and precon decks worth it?", a: "As a way to start, yes — they get you a functioning deck with no missing pieces and no deckbuilding required. They aren't competitive lists out of the box, so treat one as a base to upgrade rather than a finished deck." },
+      { q: "Is it cheaper to buy singles or booster packs?", a: "For a specific card you've already decided you want, singles are cheaper nearly every time — packs mean paying for a lot of cards you didn't need on top of the one you did. Packs make sense when the opening itself is what you want." },
+      { q: "How much does it cost to start Riftbound?", a: "It depends on the route in and on your market. Entry sealed products, precons, singles and booster boxes all sit at different price points, and each market has its own local pricing — check live prices on RiftCompare in your own currency rather than relying on a fixed figure." },
+      { q: "Do I need a booster box to start?", a: "No. A booster box is the largest single outlay of any route in and is aimed at people who want to open packs. You can play the game properly without ever buying one." },
+      { q: "Should I buy the newest set or an older one to start?", a: "Either works. Newer isn't automatically more expensive and older isn't automatically cheaper — availability drives price more than age does, so compare the set pages directly before assuming." },
+    ],
+  },
+  {
+    slug: "riftbound-rules-explained",
+    category: "guide",
+    title: "Riftbound Rules Explained — Every Mechanic, In One Place",
+    excerpt:
+      "A hub for how Riftbound actually works: the keywords introduced in Vendetta, the chase-print numbering, deck construction, the banlist, and the event formats — each linked to a full guide.",
+    author: "RiftCompare",
+    date: "2026-07-31",
+    updated: "2026-07-31",
+    readMins: 4,
+    tags: ["rules", "keywords", "how to play", "riftbound", "guide"],
+    browseCta: {
+      href: "/keywords",
+      label: "Browse keywords →",
+      blurb: "Every Riftbound keyword we've documented, with the cards that use it.",
+    },
+    body: `Riftbound's rules questions cluster around a handful of things: the newer keywords, what the odd collector numbers mean, how decks are legally built, and what's currently banned. This page is the index — each section links to the full guide rather than repeating it here.
+
+> **On sourcing:** we only publish rules explanations where we can point at Riot's own rules text or official reveal coverage. Where a keyword is printed on cards but hasn't been documented officially in a form we can cite, we list the name without inventing what it does. That's why this hub covers some keywords in depth and simply names others.
+
+## The Vendetta keywords
+
+Vendetta introduced three mechanics, and they generate the bulk of current rules searches:
+
+- **[Empower explained](/guides/riftbound-empower-explained)** — upgrading a card that's already in play by paying an extra cost later. Also see the worked example in **[Jayce & Mel: Empower in practice](/guides/jayce-mel-riftbound-empower-explained)**.
+- **[Flow explained](/guides/riftbound-flow-explained)** — playing cards straight from your trash, turning discarded cards into a second pool of plays.
+- **[Burn explained](/guides/riftbound-burn-explained)** — sending cards to the trash, either your own to fuel Flow-style payoffs, or an opponent's as a deck attack.
+
+All three together, with how they interact: **[Vendetta's new mechanics](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**.
+
+## New card concepts
+
+- **[Unit-Gear and Decrees](/blog/riftbound-vendetta-unit-gear-decrees)** — two card concepts Vendetta introduced.
+- **[Overnumbers explained](/guides/riftbound-vendetta-overnumbers-explained)** — what a collector number beyond the set total means, and how signed and Overnumbered prints differ.
+- **[Understanding card rarity](/guides/understanding-riftbound-card-rarity)** — the rarity tiers, and where Showcase and alt-art printings sit.
+
+## Deckbuilding rules
+
+- **[How a Riftbound deck is built](/guides/how-a-riftbound-deck-is-built)** — deck construction, Legends, and how the pieces fit together.
+- **[Building for Vendetta](/guides/building-for-riftbound-vendetta)** — deckbuilding with the new set's cards and domain pairings.
+- **[Vendetta synergies with existing cards](/blog/riftbound-vendetta-synergies-with-existing-cards)** — how new cards interact with earlier sets.
+
+## What's currently legal
+
+- **[The banlist explained](/guides/riftbound-banlist-explained)** — how bans work and what they mean for your decks.
+- **[The July 2026 ban list update](/blog/riftbound-july-2026-ban-list-update)** — the most recent changes.
+
+Bans and errata move prices as well as decks — **[why Riftbound prices change](/guides/why-riftbound-card-prices-change)** covers that side.
+
+## Event formats
+
+- **[Pre-Rift rules explained](/guides/riftbound-pre-rift-rules-explained)** — how Riftbound's launch-event format works.
+
+## Keyword reference
+
+Individual keyword pages, each with the real cards that use it, live under **[/keywords](/keywords)**. Cards themselves are searchable in the **[card database](/browse)**, and every card page shows its full rules text alongside live prices.
+
+## New to the game entirely?
+
+Start with **[Riftbound for beginners](/guides/riftbound-for-beginners)** for the basics, then **[the cheapest way to start](/guides/cheapest-way-to-start-riftbound)** for what to actually buy first.
+
+## Riftbound rules FAQ
+
+**What is Empower in Riftbound?** Empower gives a card the potential to gain new abilities once it's already in play, usually by paying an extra cost on a later turn — a cheap play now, a bigger payoff later. Full detail in the Empower guide.
+
+**What is Flow in Riftbound?** Flow is a Vendetta keyword that lets you play a card straight from your trash instead of your hand, so discarded and used cards become a second pool of plays rather than being gone for good.
+
+**What is Burn in Riftbound?** Burn sends cards from a Main Deck to the trash — either your own, to fuel Flow and other trash payoffs, or your opponent's as a deck attack.
+
+**What does Overnumbered mean on a Riftbound card?** It's a collector number that runs past the set's stated total — for example a number higher than the set size — marking a chase printing that sits outside the main numbered run. The Overnumbers guide covers how these differ from signed prints.
+
+**Where can I find Riftbound's current banned cards?** The banlist guide explains how bans work, and the July 2026 update covers the most recent changes.`,
+    faq: [
+      { q: "What is Empower in Riftbound?", a: "Empower gives a card the potential to gain new abilities once it's already in play, usually by paying an extra cost on a later turn — a cheap play now, a bigger payoff later." },
+      { q: "What is Flow in Riftbound?", a: "Flow is a Vendetta keyword that lets you play a card straight from your trash instead of your hand, so your discarded and used cards become a second pool of plays rather than being gone for good." },
+      { q: "What is Burn in Riftbound?", a: "Burn sends cards from a Main Deck to the trash — either your own (to fuel Flow and other trash payoffs) or your opponent's (a deck attack)." },
+      { q: "What does Overnumbered mean on a Riftbound card?", a: "It's a collector number that runs past the set's stated total, marking a chase printing that sits outside the main numbered run. Overnumbered prints and signed prints are distinct — the Overnumbers guide covers the difference." },
+      { q: "Where can I find Riftbound's current banned cards?", a: "RiftCompare's banlist guide explains how bans work in Riftbound, and the July 2026 ban list update covers the most recent changes." },
+    ],
   },
 ];
 
