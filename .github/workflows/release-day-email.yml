@@ -30,6 +30,15 @@ on:
         description: "Dry run — report audience + live stats, send NOTHING (untick to actually send)"
         type: boolean
         default: true
+      audience:
+        description: "Who to email"
+        type: choice
+        required: true
+        default: "subscribers"
+        options:
+          - subscribers   # opt-in newsletter list only
+          - users         # registered accounts (one-click announcement opt-out)
+          - all           # both, de-duplicated by email
       limit:
         description: "Max emails this run (blank = default batch; re-run to continue)"
         type: string
@@ -53,13 +62,14 @@ jobs:
           SET_SLUG: ${{ inputs.set_slug }}
           # dry=1 unless the box was explicitly unticked.
           DRY: ${{ inputs.dry_run && '1' || '0' }}
+          AUDIENCE: ${{ inputs.audience }}
           LIMIT: ${{ inputs.limit }}
         run: |
           if [ -z "$CRON_SECRET" ]; then
             echo "::error::CRON_SECRET is not set as an Actions secret — cannot authenticate the trigger."
             exit 1
           fi
-          url="$SITE_URL/api/cron/release-day-email?set=$SET_SLUG&dry=$DRY"
+          url="$SITE_URL/api/cron/release-day-email?set=$SET_SLUG&dry=$DRY&audience=$AUDIENCE"
           [ -n "$LIMIT" ] && url="$url&limit=$LIMIT"
           echo "POST ${url//$CRON_SECRET/***}"
           code=$(curl -sS --max-time 290 -o response.json -w "%{http_code}" -X POST \

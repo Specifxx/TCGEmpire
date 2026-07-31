@@ -884,6 +884,33 @@ model CollectionCard {
 // Footer newsletter capture — "weekly Index summary in your inbox". The weekly
 // digest itself is sent by /api/cron/newsletter (lib/newsletter.ts); this table
 // is the direct-audience list.
+// Opt-out list for PRODUCT ANNOUNCEMENTS sent to registered accounts (e.g. a
+// set-release blast). Deliberately SEPARATE from NewsletterSubscriber:
+//
+// A registered user never opted into marketing — they made an account. So an
+// announcement to them needs a working one-click opt-out, but enrolling them in
+// NewsletterSubscriber to get one would ALSO sign them up to the weekly Friday
+// digest they never asked for. This table is suppression-only: a row here means
+// "never send this address another announcement". Absence means nothing (it is
+// not a consent record), so it can never be mistaken for a subscription list.
+//
+// Keyed by email rather than userId so an opt-out survives account deletion and
+// covers the same person if they re-register.
+model AnnouncementOptOut {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  // Single-use-ish token embedded in the email's unsubscribe link. Generated per
+  // recipient at send time and stored so the link keeps working afterwards.
+  token     String   @unique
+  createdAt DateTime @default(now())
+  // Null until they actually click unsubscribe — the row is created at SEND time
+  // (to mint the token), so this is what distinguishes "was emailed" from
+  // "opted out". Only rows with a non-null optedOutAt suppress future sends.
+  optedOutAt DateTime?
+
+  @@index([optedOutAt])
+}
+
 model NewsletterSubscriber {
   id        String   @id @default(cuid())
   email     String   @unique

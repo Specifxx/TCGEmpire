@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { runReleaseDayBlast } from "@/lib/release-day";
+import { runReleaseDayBlast, type ReleaseDayAudience } from "@/lib/release-day";
 
 // Release-day email blast, run ON VERCEL so it has RESEND_API_KEY — the same
 // environment the weekly digest (/api/cron/newsletter), verification and
@@ -33,8 +33,13 @@ async function handle(req: Request) {
   const dryRun = p.get("dry") !== "0";
   const limitRaw = Number(p.get("limit"));
   const limit = Number.isFinite(limitRaw) && limitRaw > 0 ? limitRaw : undefined;
+  // Audience defaults to the OPT-IN list. Reaching registered accounts is an
+  // explicit choice the caller has to make, never the default.
+  const a = p.get("audience");
+  const audience: ReleaseDayAudience =
+    a === "users" || a === "all" ? a : "subscribers";
 
-  const result = await runReleaseDayBlast({ setSlug, dryRun, limit });
+  const result = await runReleaseDayBlast({ setSlug, dryRun, limit, audience });
   return NextResponse.json(result, { status: result.ok ? 200 : 400 });
 }
 
