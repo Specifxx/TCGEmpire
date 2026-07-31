@@ -34,7 +34,15 @@
  */
 import { PrismaClient } from "@prisma/client";
 
-const MAIN_URL = process.env.DATABASE_URL;
+// RM3-first, matching src/lib/db.ts. This was bare DATABASE_URL, which only
+// happened to work because maintenance.yml sets a job-level DATABASE_URL from
+// the RM3 chain. MAIN_URL feeds copyCards() — the Card rows that satisfy
+// PriceHistory's foreign key in the target — so if it ever resolved to the OLD
+// exhausted operational project, the target's Card table would be seeded from
+// stale data and copyTable()'s FK filter would then silently DROP every
+// PriceHistory row for any card created since the RM3 cutover, reported only as
+// "skipped N rows for cards not in the target".
+const MAIN_URL = process.env.RM3 || process.env.DATABASE_URL_2 || process.env.DATABASE_URL;
 const TARGET_URL =
   process.env.RH6 || process.env.RH5 || process.env.HISTORY_DATABASE_URL_4 || process.env.HISTORY_DATABASE_URL;
 const TARGET_LABEL =
@@ -43,7 +51,7 @@ const TARGET_LABEL =
   : process.env.HISTORY_DATABASE_URL_4 ? "HISTORY_DATABASE_URL_4"
   : "HISTORY_DATABASE_URL";
 
-if (!MAIN_URL) { console.error("DATABASE_URL is not set."); process.exit(1); }
+if (!MAIN_URL) { console.error("No operational database is set (RM3 / DATABASE_URL_2 / DATABASE_URL)."); process.exit(1); }
 if (!TARGET_URL) { console.error("None of RH6 / RH5 / HISTORY_DATABASE_URL_4 / HISTORY_DATABASE_URL is set — point one at the current history project first."); process.exit(1); }
 if (TARGET_LABEL !== "RH6") {
   console.warn(`⚠  Target resolved to ${TARGET_LABEL}, not RH6 — RH6 is not visible in this environment. Every older project is exhausted/dead; this is almost certainly not what you want.`);
@@ -120,10 +128,11 @@ async function run() {
   const cardIds = new Set<string>();
   await copyCards(cardIds);
 
-  let ph = 0, ce = 0;
+  let ph = 0, ce = 0, unreadable = 0;
   for (const src of sources) {
     const client = src.url === MAIN_URL ? main : new PrismaClient({ datasourceUrl: src.url });
     const c = await counts(src.label, client);
+    if (c === null) unreadable++;
     if (c && (c.ph > 0 || c.ce > 0)) {
       try {
         if (c.ph > 0) ph += await copyTable(client, src.label, "priceHistory", cardIds);
@@ -139,6 +148,22 @@ async function run() {
   console.log("— Counts after —");
   await counts("target", target);
   console.log(`Done. ${ph.toLocaleString()} PriceHistory + ${ce.toLocaleString()} ClickEvent rows copied (deduped).`);
+
+  // "Copied nothing" is NOT success. counts() returns null on a read error and
+  // only console.warn()s, and the per-source loop skips a source whose count
+  // failed — so a run where the source holding 100% of the data was unreachable
+  // used to print "Done. 0 + 0 rows copied" and exit 0, which reads as a
+  // completed migration. Every source being unreadable AND nothing copied is
+  // the one combination that must fail loudly. (Zero copied with readable
+  // sources is legitimately fine — it means the target is already up to date,
+  // since createMany runs with skipDuplicates.)
+  if (ph === 0 && ce === 0 && unreadable === sources.length && sources.length > 0) {
+    console.error(
+      `✗ Every source (${sources.map((s) => s.label).join(", ")}) was unreadable and nothing was copied. ` +
+        `An exhausted Neon project refuses connections outright — this is a FAILED migration, not an empty one.`
+    );
+    process.exit(1);
+  }
 }
 
 run()

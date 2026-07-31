@@ -14,10 +14,12 @@ import { PrismaClient } from "@prisma/client";
 // charts, the Index) — the core site (browsing, pricing, accounts) is unaffected,
 // a far better failure mode than the whole site going down.
 //
-// SAFE BY DEFAULT: falls back to the same DATABASE_URL as db.ts when
-// HISTORY_DATABASE_URL isn't set, so this ships as a NO-OP (same physical
-// database, identical behaviour) until a second Neon project is provisioned and
-// HISTORY_DATABASE_URL is added to Vercel + GitHub secrets. The schema
+// SAFE BY DEFAULT: falls back to the same database as db.ts when NO history
+// variable is set at all, so this ships as a NO-OP (same physical database,
+// identical behaviour) until a second Neon project is provisioned and the
+// current history variable — RH6, see the chain below — is added to Vercel +
+// GitHub secrets. (Adding HISTORY_DATABASE_URL today would do nothing useful:
+// it sits FOURTH in the chain, behind RH6/RH5/_4.) The schema
 // (prisma/schema.prisma) is unchanged and shared — run `prisma db push` against
 // the new URL once to create the tables there too (the unused Card/RetailerPrice/
 // etc. tables it also creates cost negligible storage empty; only PriceHistory /
@@ -67,7 +69,20 @@ if (HISTORY_URL_SOURCE !== "RH6") {
 
 // True when the history tables live in their OWN database. When split, PriceHistory's
 // Card foreign key means card rows must exist there too — see ensureHistoryCards().
-export const historyIsSplit = HISTORY_URL !== process.env.DATABASE_URL;
+// Compared against the RESOLVED operational URL, not bare DATABASE_URL. db.ts
+// resolves the operational database as RM3 || DATABASE_URL_2 || DATABASE_URL,
+// so comparing to DATABASE_URL alone got this wrong in a specific, quiet way:
+// with RM3 set and no history variable at all, HISTORY_URL falls through to
+// DATABASE_URL, which is NOT the operational database — yet this returned
+// false ("not split"). ensureHistoryCards() then no-ops, and the next
+// price-import's createMany fails PriceHistory's Card foreign key, swallowed by
+// its try/catch as a single warning line.
+//
+// Resolved inline rather than imported from db.ts on purpose: db.ts constructs
+// the operational PrismaClient at module scope, so importing it here eagerly
+// would spin up a second client in every context that only wants history.
+const OPERATIONAL_URL = process.env.RM3 || process.env.DATABASE_URL_2 || process.env.DATABASE_URL;
+export const historyIsSplit = HISTORY_URL !== OPERATIONAL_URL;
 
 // Ensure a generous connect_timeout (Postgres/libpq connection param, in
 // seconds). Neon's pooled compute suspends when idle and can take a moment to

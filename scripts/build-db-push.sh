@@ -19,11 +19,20 @@
 set -uo pipefail
 
 # Only push schema for a real Vercel production/preview build with a database
-# configured. A local `next build` (no DATABASE_URL) must not try to reach anything.
-# Equivalent to the original inline check
-# (`['production','preview'].includes(VERCEL_ENV) && DATABASE_URL`), just native bash.
-if ! { [ "${VERCEL_ENV:-}" = "production" ] || [ "${VERCEL_ENV:-}" = "preview" ]; } || [ -z "${DATABASE_URL:-}" ]; then
-  echo "[build-db-push] not a Vercel production/preview build with DATABASE_URL set — skipping schema push."
+# configured. A local `next build` (no database vars) must not try to reach anything.
+#
+# GATES ON THE WHOLE OPERATIONAL CHAIN, not bare DATABASE_URL. The original check
+# was `['production','preview'].includes(VERCEL_ENV) && DATABASE_URL`, written when
+# DATABASE_URL was the only operational variable. It has since become
+# RM3 || DATABASE_URL_2 || DATABASE_URL (lib/db.ts), and lib/db.ts explicitly tells
+# the owner the older vars can eventually be deleted — at which point this line
+# would exit 0 on every deploy and silently stop pushing schema to BOTH the
+# operational AND the history database, while logging a benign-looking "skipping".
+# A green deploy against an un-migrated database is exactly the failure this
+# script exists to prevent.
+if ! { [ "${VERCEL_ENV:-}" = "production" ] || [ "${VERCEL_ENV:-}" = "preview" ]; } \
+   || [ -z "${RM3:-}${DATABASE_URL_2:-}${DATABASE_URL:-}" ]; then
+  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM3 / DATABASE_URL_2 / DATABASE_URL) — skipping schema push."
   exit 0
 fi
 
