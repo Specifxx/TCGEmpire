@@ -23,19 +23,47 @@ import { PrismaClient } from "@prisma/client";
 // etc. tables it also creates cost negligible storage empty; only PriceHistory /
 // ClickEvent get real traffic).
 
-// RH5 (secrets.RH5 / HISTORY_DATABASE_URL_5) is the CURRENT history project
-// (swapped in 2026-07-26 after HISTORY_DATABASE_URL_4 went unreachable —
-// P1001, connection refused). _4/base/_2/_3 are kept ONLY as fallbacks for
-// anything not yet migrated; treat them as dead/read-only, never the primary
-// target. Once everything's copied across (see scripts/migrate-history.ts)
+// RH6 (secrets.RH6) is the CURRENT history project — cut over 2026-07-31 after
+// RH5 exhausted its monthly Neon network-transfer allowance (the same way _4
+// went unreachable with P1001 before it, and _3/_2/base before that). RH5 and
+// every older var are kept ONLY as read-only fallbacks/migration sources;
+// treat them as dead, never the primary target. Once everything's copied
+// across (see the `migrate-history-db` task in .github/workflows/maintenance.yml)
 // and nothing references the older vars anymore, they can be removed entirely.
+//
+// ORDER MATTERS AND IS LOAD-BEARING: this list is duplicated, by necessity, in
+// several places that cannot import this module (GitHub Actions `env:` blocks,
+// scripts/build-db-push.sh). When you add a new project here, grep for the
+// PREVIOUS variable name across the whole repo and update every hit — a chain
+// that silently stops at an exhausted project is exactly how this repo has lost
+// a day to an "unexplained" P1001 more than once.
 const HISTORY_URL =
+  process.env.RH6 ||
   process.env.RH5 ||
   process.env.HISTORY_DATABASE_URL_4 ||
   process.env.HISTORY_DATABASE_URL ||
   process.env.HISTORY_DATABASE_URL_2 ||
   process.env.HISTORY_DATABASE_URL_3 ||
   process.env.DATABASE_URL;
+
+// Names the winning variable (never its value — it's a credential) so a P1001
+// in the logs immediately answers "which database did it actually try?".
+// Mirrors the same diagnostic in scripts/build-db-push.sh and lib/db.ts.
+export const HISTORY_URL_SOURCE =
+  process.env.RH6 ? "RH6"
+  : process.env.RH5 ? "RH5"
+  : process.env.HISTORY_DATABASE_URL_4 ? "HISTORY_DATABASE_URL_4"
+  : process.env.HISTORY_DATABASE_URL ? "HISTORY_DATABASE_URL"
+  : process.env.HISTORY_DATABASE_URL_2 ? "HISTORY_DATABASE_URL_2"
+  : process.env.HISTORY_DATABASE_URL_3 ? "HISTORY_DATABASE_URL_3"
+  : "DATABASE_URL (no history project set — history shares the operational DB)";
+
+if (HISTORY_URL_SOURCE !== "RH6") {
+  console.warn(
+    `[db-history] history DB resolved to ${HISTORY_URL_SOURCE}, not RH6 — RH6 is missing from this ` +
+      `environment. Every older project is exhausted/dead; expect P1001 or writes landing in the wrong place.`
+  );
+}
 
 // True when the history tables live in their OWN database. When split, PriceHistory's
 // Card foreign key means card rows must exist there too — see ensureHistoryCards().

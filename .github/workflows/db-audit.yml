@@ -35,4 +35,15 @@ jobs:
       - name: Run audit
         env:
           DATABASE_URL: ${{ secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+          # The audit's Freshness section reads PriceHistory, which lives in the
+          # separate history project (src/lib/db-history.ts). Without these, that
+          # client falls all the way through its chain to DATABASE_URL — the
+          # OPERATIONAL database, whose PriceHistory is deliberately empty — and
+          # the audit reports a false "PriceHistory is EMPTY".
+          RH6: ${{ secrets.RH6 || vars.RH6 }}
+          RH5: ${{ secrets.RH5 || vars.RH5 }}
+          HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
+          HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
+          HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
+          HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
         run: npx tsx scripts/db-audit.ts ${{ inputs.fix && '--fix' || '' }}
