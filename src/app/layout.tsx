@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { Inter, JetBrains_Mono, Fraunces } from "next/font/google";
-import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
@@ -25,6 +23,11 @@ import { PriceAlertModal } from "@/components/PriceAlertModal";
 import { SignupPromoPopup } from "@/components/SignupPromoPopup";
 import { enabledProviders } from "@/lib/oauth";
 import { MetaPixel } from "@/components/MetaPixel";
+import { AdSenseLoader } from "@/components/AdSenseLoader";
+import { ConsentDefaults } from "@/components/ConsentDefaults";
+import { ConsentGatedAnalytics } from "@/components/ConsentGatedAnalytics";
+import { PrivacySettingsLink } from "@/components/PrivacySettingsLink";
+import { ADSENSE_CLIENT_ID, ADSENSE_CONFIGURED } from "@/lib/adsense";
 
 // PREVIEW BRANCH — emulates the official Riftbound/League of Legends site's
 // typographic DNA (a sharp, flared serif for titling over a clean humanist sans
@@ -176,11 +179,25 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable} ${fraunces.variable}`}>
       <head>
+        {/* Google Consent Mode v2 defaults — MUST be the first thing that runs, so
+            the ad/measurement tags below never fire against an unset state. */}
+        <ConsentDefaults />
         {/* Impact / TCGplayer affiliate site-ownership verification. Impact looks for
             the non-standard `value` attribute, so spread it past the meta typing. */}
         <meta {...({ name: "impact-site-verification", value: IMPACT_SITE_VERIFICATION } as any)} />
-        {/* Google AdSense site-ownership verification. */}
-        <meta name="google-adsense-account" content="ca-pub-6262011577596407" />
+        {/* Google AdSense site-ownership verification. The id comes from
+            NEXT_PUBLIC_ADSENSE_CLIENT_ID (see lib/adsense.ts) — it is NEVER a
+            literal here again. A hardcoded, out-of-date id on this exact line,
+            belonging to no account under review, is the fault that most likely
+            voided the last two applications. See docs/adsense-remediation.md. */}
+        {ADSENSE_CONFIGURED && <meta name="google-adsense-account" content={ADSENSE_CLIENT_ID} />}
+        {/* The AdSense loader: ownership verification + Auto ads + the EEA/UK/CH
+            consent message, on every page, ungated. See the component header. */}
+        <AdSenseLoader />
+        {/* Ad/consent origins — shaving a round-trip off the loader and the
+            consent message, which is what the 0-impression message needed. */}
+        <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossOrigin="" />
+        <link rel="preconnect" href="https://fundingchoicesmessages.google.com" crossOrigin="" />
         {/* Warm up the image CDN connection so card thumbnails start loading sooner. */}
         <link rel="preconnect" href="https://cdn.riftscribe.gg" crossOrigin="" />
         <link rel="dns-prefetch" href="https://cdn.riftscribe.gg" />
@@ -257,6 +274,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             )}
             <Link href="/widgets" className="text-slate-300 hover:text-brand-400">Price widget</Link>
             <span className="text-ink-700">·</span>
+            {/* Re-opens Google's consent message (EEA/UK/CH only — renders
+                nothing where no message applies). Required for a published
+                GDPR message: consent has to be revocable. */}
+            <PrivacySettingsLink />
             <a href={`mailto:${CONTACT_EMAIL}`} className="text-gold hover:underline">{CONTACT_EMAIL}</a>
           </div>
           {/* Cross-promotion: our sister site for the Pokémon TCG. */}
@@ -294,8 +315,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <NativeShell />
         {/* Stashes an inbound ?ref=<userId> into a cookie for referral credit. */}
         <ReferralCapture />
-        <Analytics />
-        <SpeedInsights />
+        {/* Vercel Analytics + Speed Insights, held until the same consent signal
+            the ad tags use resolves (Consent Mode v2 defaults everything denied).
+            Outside the consent message's scope this mounts after a short grace
+            period, so non-EEA measurement is unaffected. */}
+        <ConsentGatedAnalytics />
         {/* Meta Pixel — ad measurement + retargeting for Meta (Facebook/Instagram)
             ads. Production + web only; see the component for the guards. */}
         <MetaPixel />
