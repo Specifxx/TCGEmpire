@@ -278,7 +278,7 @@ Head to the **[Price Movers page](/movers)** to see, for your region, this week'
 - **📉 Biggest drops** — the singles that have fallen the most, often the best time to buy.
 - **💎 Best value right now** — cards trading furthest below their recent high.
 
-Every figure is the live local price in your currency (AUD, NZD, USD or GBP), compared across the stores we track and updated daily. Switch your country at the top of the page to see your market's movers.
+Every figure is the live local price in your currency (AUD, NZD, USD, GBP, SGD or CAD), compared across the stores we track and updated daily. Switch your country at the top of the page to see your market's movers.
 
 ## Why prices move
 
@@ -411,14 +411,15 @@ New to the game entirely? Start with **[Riftbound for beginners](/guides/riftbou
   {
     slug: "where-to-buy-riftbound-cards",
     category: "guide",
-    title: "Where to Buy Riftbound Cards (Australia, NZ, US & UK)",
+    title: "Where to Buy Riftbound Cards (AU, NZ, US, UK, SG & CA)",
     excerpt:
-      "The complete guide to buying Riftbound: League of Legends TCG cards — singles and sealed — in Australia, New Zealand, the United States and the United Kingdom, and how to always find the cheapest price.",
+      "The complete guide to buying Riftbound: League of Legends TCG cards — singles and sealed — in Australia, New Zealand, the United States, the United Kingdom, Singapore and Canada, and how to always find the cheapest price.",
     author: "RiftCompare",
     date: "2026-06-08",
+    updated: "2026-07-30",
     readMins: 6,
     tags: ["buying", "guide", "stores", "singles", "sealed"],
-    body: `Want to buy **Riftbound: League of Legends TCG** cards but not sure where to start? Whether you're chasing a single chase card, completing a deck, or grabbing a sealed booster box, this guide covers exactly **where to buy Riftbound cards** in **Australia, New Zealand, the United States and the United Kingdom** — and how to make sure you never overpay.
+    body: `Want to buy **Riftbound: League of Legends TCG** cards but not sure where to start? Whether you're chasing a single chase card, completing a deck, or grabbing a sealed booster box, this guide covers exactly **where to buy Riftbound cards** in **Australia, New Zealand, the United States, the United Kingdom, Singapore and Canada** — and how to make sure you never overpay.
 
 The short version: prices for the same card vary a lot between shops and change daily, so the smartest move is to **[compare every store at once on RiftCompare](/browse)** and buy from whichever is cheapest in your country. Here's how to do it region by region.
 
@@ -426,7 +427,7 @@ The short version: prices for the same card vary a lot between shops and change 
 
 1. **[Search the card database](/browse)** and open the card you want.
 2. Each card shows the **lowest live price across every store we track**, sorted cheapest-first, with a one-click link straight to the shop.
-3. Use the **country switcher** (top of the page) to set your region — prices then show in your local currency (AUD, NZD, USD or GBP), sourced from local stores, so what you see is what you'll actually pay.
+3. Use the **country switcher** (top of the page) to set your region — prices then show in your local currency (AUD, NZD, USD, GBP, SGD or CAD), sourced from local stores, so what you see is what you'll actually pay.
 
 You can also **[price a whole deck at once](/deck)** or **[compare sealed products](/sealed)** like booster boxes and Proving Grounds.
 
@@ -462,6 +463,22 @@ UK players can buy Riftbound singles in GBP from a growing list of British TCG r
 - **[Sealed products](/sealed)** are listed too.
 - **Tip:** the UK singles market is still maturing, so for some cards a converted reference price is shown until a genuine in-stock GBP listing appears — always confirm on the retailer's page before buying.
 
+## 🇸🇬 Buying Riftbound cards in Singapore
+
+Riftbound reached Southeast Asia's card shops fast, with 11 Singapore stores now tracked alongside eBay SG and TCGplayer reference pricing for anything not yet in local stock.
+
+- Set the country to **Singapore** and **[browse singles](/browse)** for live SGD prices across SG stores and eBay SG.
+- **Full regional breakdown:** **[Riftbound card prices in Singapore](/blog/riftbound-price-comparison-singapore)** covers every store by name.
+- **Tip:** for cards no SG store has listed yet, the price shown is a clearly-marked TCGplayer reference conversion, not a local listing — always confirm stock before buying.
+
+## 🇨🇦 Buying Riftbound cards in Canada
+
+Canada's Riftbound scene spans 20 tracked stores from coast to coast, with prices in CAD that can swing 30-50% between shops once shipping is counted.
+
+- Set the country to **Canada** and **[browse singles](/browse)** for live CAD prices across Canadian stores.
+- **Full regional breakdown:** **[Riftbound card prices in Canada](/blog/buy-riftbound-cards-canada)** lists all 20 stores by name.
+- **Tip:** with 20 stores to compare, delivered cost (not sticker price) is what actually decides the cheapest — RiftCompare ranks by that automatically.
+
 ## Singles vs sealed: which should you buy?
 
 - **Buying specific cards** (to finish a deck or grab a chase card)? Buy **singles** — it's almost always cheaper than ripping packs and chasing the card you need. Start on the **[card database](/browse)**.
@@ -480,23 +497,24 @@ Set your country, **[open the card database](/browse)**, find your card, and cli
 
 ## Buying in a specific market?
 
-Deeper dives per region — real store counts, presale links and payment tips: **[Australia](/blog/buy-riftbound-cards-australia)** · **[New Zealand](/blog/buy-riftbound-cards-nz)** · **[United States](/blog/buy-riftbound-cards-us)** · **[United Kingdom](/blog/buy-riftbound-cards-uk)**. Just want the cheapest single right now? **[See where to buy singles](/blog/where-to-buy-riftbound-singles)**.`,
+Deeper dives per region — real store counts, presale links and payment tips: **[Australia](/blog/buy-riftbound-cards-australia)** · **[New Zealand](/blog/buy-riftbound-cards-nz)** · **[United States](/blog/buy-riftbound-cards-us)** · **[United Kingdom](/blog/buy-riftbound-cards-uk)** · **[Singapore](/blog/riftbound-price-comparison-singapore)** · **[Canada](/blog/buy-riftbound-cards-canada)**. Just want the cheapest single right now? **[See where to buy singles](/blog/where-to-buy-riftbound-singles)**.`,
   },
   {
     slug: "cheapest-riftbound-booster-boxes",
     category: "guide",
-    title: "Cheapest Riftbound Booster Boxes & Sealed (AU, NZ, US & UK)",
+    title: "Cheapest Riftbound Booster Boxes & Sealed (AU, NZ, US, UK, SG & CA)",
     excerpt:
-      "How to find the cheapest Riftbound: League of Legends TCG booster boxes and sealed product across Australia, New Zealand, the US and the UK — and whether boxes or singles are better value.",
+      "How to find the cheapest Riftbound: League of Legends TCG booster boxes and sealed product across Australia, New Zealand, the US, the UK, Singapore and Canada — and whether boxes or singles are better value.",
     author: "RiftCompare",
     date: "2026-06-08",
+    updated: "2026-07-30",
     readMins: 5,
     tags: ["buying", "guide", "sealed", "booster box"],
-    body: `Booster boxes are the most exciting — and most expensive — way to buy into **Riftbound: League of Legends TCG**. But box prices swing a lot between shops and over time, so before you buy, it pays to compare. This guide covers **where to find the cheapest Riftbound booster boxes** and sealed product in **Australia, New Zealand, the United States and the United Kingdom**.
+    body: `Booster boxes are the most exciting — and most expensive — way to buy into **Riftbound: League of Legends TCG**. But box prices swing a lot between shops and over time, so before you buy, it pays to compare. This guide covers **where to find the cheapest Riftbound booster boxes** and sealed product in **Australia, New Zealand, the United States, the United Kingdom, Singapore and Canada**.
 
 ## Compare every sealed price in one place
 
-Head to the **[sealed products page](/sealed)** to see live prices for booster boxes, booster packs, Proving Grounds kits and other sealed Riftbound product across the stores we track — sorted so the cheapest is easy to spot. Set the **country switcher** to your region first so prices show in your local currency (AUD, NZD, USD or GBP).
+Head to the **[sealed products page](/sealed)** to see live prices for booster boxes, booster packs, Proving Grounds kits and other sealed Riftbound product across the stores we track — sorted so the cheapest is easy to spot. Set the **country switcher** to your region first so prices show in your local currency (AUD, NZD, USD, GBP, SGD or CAD).
 
 ## By region
 
@@ -1528,7 +1546,7 @@ Planning a Vendetta deck that mixes old and new cards? Our **[best Vendetta deck
 - **Don't buy the first price you see.** Launch-day listings are the highest they'll be. Always **[compare delivered prices across stores](/browse)** first — shipping included.
 - **Watch the movers.** The **[price movers](/movers)** page shows what's spiking in real time; the hottest chase cards climb fastest, so decide whether to grab early or wait them out.
 - **Price your whole deck at once.** Drop your list into the **[deck pricer](/deck)** — it totals every card at the cheapest live price in your currency, so you buy the whole thing for the least.
-- **Switch to your region.** Prices show in AUD, NZD, USD or GBP — make sure you're seeing *your* market's real cost, delivered.
+- **Switch to your region.** Prices show in AUD, NZD, USD, GBP, SGD or CAD — make sure you're seeing *your* market's real cost, delivered.
 
 ## After the dust settles
 
@@ -2190,7 +2208,7 @@ Vendetta's rivalries theme gets its own chase cycle: **22 Rival Overnumbers** �
 
 ## Buying them without overpaying
 
-Premium chase cards spike hardest in the launch rush and vary a lot store to store. The moment Vendetta releases, RiftCompare compares every Overnumber's live price across 60+ stores in AU, NZ, the US and the UK — cheapest delivered first — on the **[Vendetta set page](/sets/vendetta)**. Watch the **[price movers](/movers)** too; the chase cards climb fastest at launch.
+Premium chase cards spike hardest in the launch rush and vary a lot store to store. The moment Vendetta releases, RiftCompare compares every Overnumber's live price across 70+ stores in AU, NZ, US, UK, SG and CA — cheapest delivered first — on the **[Vendetta set page](/sets/vendetta)**. Watch the **[price movers](/movers)** too; the chase cards climb fastest at launch.
 
 For the full picture of the set, read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** and the **[Vendetta card list tracker](/guides/riftbound-vendetta-card-list)**. Keep the **[live countdown](/vendetta-countdown)** handy — Vendetta drops 31 July 2026.`,
   },
@@ -2258,7 +2276,7 @@ Vendetta's whole identity is **rivalries**, and the confirmed champion pairings 
 2. **Draft your list now** with the **[Vendetta deckbuilding guide](/guides/building-for-riftbound-vendetta)** and **[best Vendetta decks](/guides/best-riftbound-vendetta-decks)**.
 3. **Price the whole deck in one click** with the **[deck pricer](/deck)** on release day, so you buy the new pieces for the least across every store.
 
-Read the mechanics in full — **[Flow](/guides/riftbound-flow-explained)**, **[Burn](/guides/riftbound-burn-explained)**, **[Empower](/guides/riftbound-empower-explained)** — and keep the **[live countdown](/vendetta-countdown)** handy. Vendetta drops **31 July 2026**, and the moment it does we'll compare every card's price across AU, NZ, US &amp; UK on the **[Vendetta set page](/sets/vendetta)**.`,
+Read the mechanics in full — **[Flow](/guides/riftbound-flow-explained)**, **[Burn](/guides/riftbound-burn-explained)**, **[Empower](/guides/riftbound-empower-explained)** — and keep the **[live countdown](/vendetta-countdown)** handy. Vendetta drops **31 July 2026**, and the moment it does we'll compare every card's price across AU, NZ, US, UK, SG &amp; CA on the **[Vendetta set page](/sets/vendetta)**.`,
   },
   {
     slug: "riftbound-vendetta-chase-cards-so-far",
@@ -3150,7 +3168,7 @@ Riftbound: Vendetta singles are trading early, and RiftCompare is tracking every
 
 ## How RiftCompare prices Vendetta
 
-- **70+ stores, five markets.** We compare live prices across local stores in Australia, New Zealand, the US, the UK, Singapore and Canada, plus eBay in each of those markets — the same coverage as every other Riftbound set.
+- **70+ stores, six markets.** We compare live prices across local stores in Australia, New Zealand, the US, the UK, Singapore and Canada, plus eBay in each of those markets — the same coverage as every other Riftbound set.
 - **Ranked by delivered cost, not just sticker price.** A card's "cheapest" price accounts for shipping where we track it, not just the item price — so the store at the top of the list is genuinely the least you'll pay to get the card in hand, not just the lowest-looking number.
 - **All 166 cards, priced as they list.** Every confirmed Vendetta card already has a page tracking its price — most were unpriced through spoiler season (nothing to compare before a card is buyable), and they're filling in live now that early singles and stores are listing them.
 - **Updated continuously, not once a day.** As new listings land during this early trading window, the comparison updates — you're never looking at a stale price from before a store restocked or a new listing undercut it.

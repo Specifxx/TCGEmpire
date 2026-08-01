@@ -139,7 +139,7 @@ export default function VendettaCountdownPage() {
         Riftbound: Vendetta — the next set for Riftbound: League of Legends TCG — has its official worldwide street date on{" "}
         <strong className="text-white">{RELEASE.label}</strong>, with new champions, three new mechanics (Flow, Burn &amp;
         Empower), new card types and two-player Showdown Decks. In-store Pre-Rift events started 24 July, and early singles
-        are already trading — we&apos;re comparing every card&apos;s price across AU, NZ, US, UK &amp; Singapore stores as they land,
+        are already trading — we&apos;re comparing every card&apos;s price across AU, NZ, US, UK, Singapore &amp; Canada stores as they land,
         so you never overpay.
       </p>
 

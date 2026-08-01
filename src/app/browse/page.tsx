@@ -46,7 +46,7 @@ export async function generateMetadata({ searchParams }: { searchParams: CardQue
   const base = {
     title: q ? `${q} — Riftbound cards & prices` : "Riftbound Card Database — All Cards & Prices",
     description:
-      "Browse every Riftbound TCG card and compare live prices across local stores in AU, NZ, US, UK & SG to find the cheapest place to buy singles. Updated daily.",
+      "Browse every Riftbound TCG card and compare live prices across local stores in AU, NZ, US, UK, SG & CA to find the cheapest place to buy singles. Updated daily.",
   };
   if (q) return { ...base, alternates: { canonical: "/browse" }, robots: { index: false, follow: true } };
   if (page > 1 && isCleanPagination(searchParams)) {
@@ -160,7 +160,7 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
             <h1 className="font-display text-2xl font-extrabold text-white">Buy Riftbound Cards</h1>
             <p className="mt-1 max-w-2xl text-sm text-slate-400">
               Browse every Riftbound TCG single and compare live prices across local stores in AU, NZ,
-              US &amp; UK to find the cheapest place to buy.
+              US, UK, SG &amp; CA to find the cheapest place to buy.
             </p>
           </div>
         )}

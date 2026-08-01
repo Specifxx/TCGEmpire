@@ -4,9 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { COUNTRY_LIST, INTL_ENABLED } from "@/lib/country";
 import { useCountry } from "./CountryProvider";
 
-// Market chooser: 🇦🇺 Australia (default) / 🇳🇿 New Zealand. Switching reloads
-// prices + store lists for the chosen country and persists via cookie. Hidden while
-// NZ mode is in development (the site is AU-only then).
+// Market chooser: AU/NZ/US/UK/SG/CA (see lib/country.ts's COUNTRY_LIST, the single
+// source of truth this renders from). Switching reloads prices + store lists for
+// the chosen country and persists via cookie.
 export function CountrySwitcher({ className = "" }: { className?: string }) {
   const { country, setCountry, isEurDisplay, setEurDisplay } = useCountry();
   const [open, setOpen] = useState(false);

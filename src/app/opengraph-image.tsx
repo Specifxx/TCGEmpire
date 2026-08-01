@@ -66,7 +66,7 @@ export default function OgImage() {
           {/* No emoji here on purpose: ImageResponse has no emoji font unless one
               is fetched, so flags would render as blank gaps. */}
           <div style={{ display: "flex", marginTop: 30, fontSize: 26, color: "#7c8696" }}>
-            Australia · New Zealand · United States · United Kingdom
+            Australia · New Zealand · United States · United Kingdom · Singapore · Canada
           </div>
         </div>
 

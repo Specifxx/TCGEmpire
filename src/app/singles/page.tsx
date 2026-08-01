@@ -83,7 +83,7 @@ export default async function SinglesPage() {
     "@type": "CollectionPage",
     name: "Buy Riftbound Singles — Compare Prices",
     url: `${SITE_URL}/singles`,
-    description: "Compare live prices for every Riftbound single across stores in AU, NZ, US, UK and Singapore.",
+    description: "Compare live prices for every Riftbound single across stores in AU, NZ, US, UK, Singapore and Canada.",
     isPartOf: { "@type": "WebSite", name: "RiftCompare", url: SITE_URL },
   };
 

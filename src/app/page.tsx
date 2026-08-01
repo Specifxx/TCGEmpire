@@ -328,7 +328,7 @@ export default async function HomePage() {
 
       {/* About + FAQ — keyword-relevant content for search */}
       <section className="card-surface p-6">
-        <h2 className="text-xl font-extrabold text-white">Riftbound prices in Australia, New Zealand, the US &amp; UK — all in one place</h2>
+        <h2 className="text-xl font-extrabold text-white">Riftbound prices in Australia, New Zealand, the US, the UK, Singapore &amp; Canada — all in one place</h2>
         {/* Full width, matching the heading above — a capped/centred measure
             here just shifted the paragraph out of alignment with the heading
             (text starting a third of the way across the card reads as broken,
@@ -336,8 +336,9 @@ export default async function HomePage() {
         <p className="mt-2 text-sm leading-relaxed text-slate-400">
           RiftCompare is a free, independent price-comparison tool for Riftbound: League of Legends
           TCG. We track live prices for every Riftbound card across local stores in Australia, New
-          Zealand, the US and the UK, plus eBay (AU, US and UK), so you can buy Riftbound cards for
-          less — whether you&apos;re chasing singles for a deck or sealed booster boxes.
+          Zealand, the US, the UK, Singapore and Canada, plus eBay (AU, US, UK, SG and CA), so you can
+          buy Riftbound cards for less — whether you&apos;re chasing singles for a deck or sealed
+          booster boxes.
         </p>
         {/* Collapsible FAQ — tidy on mobile; answers still in the DOM for SEO. */}
         <div className="mt-5 divide-y divide-ink-800 border-t border-ink-800">

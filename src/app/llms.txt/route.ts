@@ -38,8 +38,8 @@ export function GET() {
   lines.push("");
   lines.push(
     "> Free Riftbound: League of Legends TCG card database and live price comparison across " +
-      "Australia, New Zealand, the United States and the United Kingdom. Home of the RiftCompare " +
-      "Index (a daily market index for Riftbound singles), price movers, sealed products and buyer tools."
+      "Australia, New Zealand, the United States, the United Kingdom, Singapore and Canada. Home of the " +
+      "RiftCompare Index (a daily market index for Riftbound singles), price movers, sealed products and buyer tools."
   );
   lines.push("");
   lines.push(
