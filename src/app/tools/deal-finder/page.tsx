@@ -14,6 +14,7 @@ import type { CardTileData } from "@/components/CardTile";
 import { SITE_URL } from "@/lib/site";
 import { getCurrentUser } from "@/lib/auth";
 import { isPremium } from "@/lib/premium";
+import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
 
 export const dynamic = "force-dynamic";
 
@@ -45,7 +46,13 @@ export default async function ArbitragePage({
   searchParams: { sort?: string; page?: string; buy?: string; view?: string };
 }) {
   const user = await getCurrentUser();
-  const premium = isPremium(user);
+  // ADSENSE REVIEW MODE: treat everyone as Premium for gating purposes while the
+  // review is open, so this indexable page carries no blurred or locked rows.
+  // "Content behind a paywall or login" is its own AdSense rejection reason. The
+  // Premium CTA is unaffected — an ordinary upsell link is fine; a blur overlay
+  // standing in place of the content is not. Restored by setting
+  // NEXT_PUBLIC_ADSENSE_REVIEW_MODE=false. See docs/adsense-remediation.md § 9.
+  const premium = isPremium(user) || ADSENSE_REVIEW_MODE;
   const signedIn = !!user;
   const country = getCountry();
   const info = COUNTRIES[country];

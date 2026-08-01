@@ -272,6 +272,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <span className="text-ink-700">·</span>
               </>
             )}
+            <Link href="/editorial-policy" className="text-slate-300 hover:text-brand-400">Editorial policy</Link>
+            <span className="text-ink-700">·</span>
+            <Link href="/authors" className="text-slate-300 hover:text-brand-400">Who writes this</Link>
+            <span className="text-ink-700">·</span>
             <Link href="/widgets" className="text-slate-300 hover:text-brand-400">Price widget</Link>
             <span className="text-ink-700">·</span>
             {/* Re-opens Google's consent message (EEA/UK/CH only — renders

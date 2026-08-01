@@ -1,0 +1,501 @@
+{
+  "generatedFrom": "http://localhost:3111",
+  "sampleSize": 25,
+  "thresholds": {
+    "thinWords": 150,
+    "boilerplateThreshold": 0.35,
+    "shingle": 8,
+    "dupSimilarity": 0.9,
+    "dupClusterShare": 0.8
+  },
+  "totals": {
+    "urlsInSitemaps": 1410,
+    "sampled": 204,
+    "indexableSampled": 203,
+    "indexableThin": 19,
+    "duplicateClusters": 0,
+    "softFourOhFours": 0,
+    "paywalledIndexable": 2,
+    "authWalled": 0,
+    "affiliateWithoutEditorial": 19,
+    "unsponsoredOutboundPages": 16,
+    "duplicateTitles": 0,
+    "duplicateDescriptions": 0,
+    "wrongH1Count": 1,
+    "missingCanonical": 0
+  },
+  "groups": [
+    {
+      "template": "blog",
+      "totalUrls": 35,
+      "sampled": 25,
+      "medianEditorialWords": 577,
+      "minEditorialWords": 409,
+      "maxEditorialWords": 1211,
+      "thin": [],
+      "medianSimilarity": 0.008,
+      "medianTemplateSimilarity": 0.005,
+      "duplicateCluster": null
+    },
+    {
+      "template": "card",
+      "totalUrls": 1064,
+      "sampled": 25,
+      "medianEditorialWords": 818,
+      "minEditorialWords": 706,
+      "maxEditorialWords": 1005,
+      "thin": [],
+      "medianSimilarity": 0.205,
+      "medianTemplateSimilarity": 0.364,
+      "duplicateCluster": null
+    },
+    {
+      "template": "champion",
+      "totalUrls": 82,
+      "sampled": 25,
+      "medianEditorialWords": 164,
+      "minEditorialWords": 71,
+      "maxEditorialWords": 359,
+      "thin": [
+        "/champions/jax",
+        "/champions/karthus",
+        "/champions/kog-maw",
+        "/champions/lux",
+        "/champions/nocturne",
+        "/champions/rell",
+        "/champions/sona",
+        "/champions/taric",
+        "/champions/twisted-fate",
+        "/champions/warwick"
+      ],
+      "medianSimilarity": 0.013,
+      "medianTemplateSimilarity": 0.186,
+      "duplicateCluster": null
+    },
+    {
+      "template": "deck",
+      "totalUrls": 6,
+      "sampled": 6,
+      "medianEditorialWords": 577,
+      "minEditorialWords": 503,
+      "maxEditorialWords": 600,
+      "thin": [],
+      "medianSimilarity": 0.029,
+      "medianTemplateSimilarity": 0.245,
+      "duplicateCluster": null
+    },
+    {
+      "template": "domain",
+      "totalUrls": 7,
+      "sampled": 7,
+      "medianEditorialWords": 1590,
+      "minEditorialWords": 783,
+      "maxEditorialWords": 1877,
+      "thin": [],
+      "medianSimilarity": 0.01,
+      "medianTemplateSimilarity": 0.158,
+      "duplicateCluster": null
+    },
+    {
+      "template": "facet",
+      "totalUrls": 14,
+      "sampled": 14,
+      "medianEditorialWords": 727,
+      "minEditorialWords": 303,
+      "maxEditorialWords": 937,
+      "thin": [],
+      "medianSimilarity": 0.098,
+      "medianTemplateSimilarity": 0.261,
+      "duplicateCluster": null
+    },
+    {
+      "template": "guide",
+      "totalUrls": 29,
+      "sampled": 25,
+      "medianEditorialWords": 716,
+      "minEditorialWords": 392,
+      "maxEditorialWords": 1935,
+      "thin": [],
+      "medianSimilarity": 0.007,
+      "medianTemplateSimilarity": 0.004,
+      "duplicateCluster": null
+    },
+    {
+      "template": "index",
+      "totalUrls": 10,
+      "sampled": 10,
+      "medianEditorialWords": 336,
+      "minEditorialWords": 77,
+      "maxEditorialWords": 1761,
+      "thin": [
+        "/cards",
+        "/champions",
+        "/sets"
+      ],
+      "medianSimilarity": 0,
+      "medianTemplateSimilarity": 0,
+      "duplicateCluster": null
+    },
+    {
+      "template": "keyword",
+      "totalUrls": 3,
+      "sampled": 3,
+      "medianEditorialWords": 251,
+      "minEditorialWords": 249,
+      "maxEditorialWords": 265,
+      "thin": [],
+      "medianSimilarity": 0.358,
+      "medianTemplateSimilarity": 0.424,
+      "duplicateCluster": null
+    },
+    {
+      "template": "set",
+      "totalUrls": 5,
+      "sampled": 5,
+      "medianEditorialWords": 980,
+      "minEditorialWords": 165,
+      "maxEditorialWords": 1035,
+      "thin": [],
+      "medianSimilarity": 0.034,
+      "medianTemplateSimilarity": 0.263,
+      "duplicateCluster": null
+    },
+    {
+      "template": "static",
+      "totalUrls": 10,
+      "sampled": 10,
+      "medianEditorialWords": 443,
+      "minEditorialWords": 49,
+      "maxEditorialWords": 714,
+      "thin": [
+        "/",
+        "/feedback"
+      ],
+      "medianSimilarity": 0,
+      "medianTemplateSimilarity": 0,
+      "duplicateCluster": null
+    },
+    {
+      "template": "store",
+      "totalUrls": 121,
+      "sampled": 25,
+      "medianEditorialWords": 300,
+      "minEditorialWords": 280,
+      "maxEditorialWords": 314,
+      "thin": [],
+      "medianSimilarity": 0.36,
+      "medianTemplateSimilarity": 0.673,
+      "duplicateCluster": null
+    },
+    {
+      "template": "tool",
+      "totalUrls": 24,
+      "sampled": 24,
+      "medianEditorialWords": 183,
+      "minEditorialWords": 79,
+      "maxEditorialWords": 747,
+      "thin": [
+        "/bulk-pricer",
+        "/deck",
+        "/tools/best-basket",
+        "/trade"
+      ],
+      "medianSimilarity": 0,
+      "medianTemplateSimilarity": 0,
+      "duplicateCluster": null
+    }
+  ],
+  "detail": {
+    "thin": [
+      {
+        "path": "/feedback",
+        "words": 49
+      },
+      {
+        "path": "/champions/karthus",
+        "words": 71
+      },
+      {
+        "path": "/champions/nocturne",
+        "words": 71
+      },
+      {
+        "path": "/champions/sona",
+        "words": 71
+      },
+      {
+        "path": "/champions/taric",
+        "words": 71
+      },
+      {
+        "path": "/champions/warwick",
+        "words": 71
+      },
+      {
+        "path": "/champions/rell",
+        "words": 72
+      },
+      {
+        "path": "/champions",
+        "words": 77
+      },
+      {
+        "path": "/champions/kog-maw",
+        "words": 78
+      },
+      {
+        "path": "/champions/twisted-fate",
+        "words": 78
+      },
+      {
+        "path": "/deck",
+        "words": 79
+      },
+      {
+        "path": "/trade",
+        "words": 91
+      },
+      {
+        "path": "/bulk-pricer",
+        "words": 110
+      },
+      {
+        "path": "/tools/best-basket",
+        "words": 120
+      },
+      {
+        "path": "/sets",
+        "words": 124
+      },
+      {
+        "path": "/cards",
+        "words": 129
+      },
+      {
+        "path": "/",
+        "words": 138
+      },
+      {
+        "path": "/champions/lux",
+        "words": 143
+      },
+      {
+        "path": "/champions/jax",
+        "words": 145
+      }
+    ],
+    "softFourOhFours": [],
+    "paywalledIndexable": [
+      "/tools/rising",
+      "/tools/value-finder"
+    ],
+    "authWalled": [],
+    "affiliateWithoutEditorial": [
+      {
+        "path": "/",
+        "words": 138,
+        "affiliateLinks": 4
+      },
+      {
+        "path": "/feedback",
+        "words": 49,
+        "affiliateLinks": 4
+      },
+      {
+        "path": "/cards",
+        "words": 129,
+        "affiliateLinks": 4
+      },
+      {
+        "path": "/champions",
+        "words": 77,
+        "affiliateLinks": 4
+      },
+      {
+        "path": "/sets",
+        "words": 124,
+        "affiliateLinks": 4
+      },
+      {
+        "path": "/bulk-pricer",
+        "words": 110,
+        "affiliateLinks": 4
+      },
+      {
+        "path": "/deck",
+        "words": 79,
+        "affiliateLinks": 4
+      },
+      {
+        "path": "/tools/best-basket",
+        "words": 120,
+        "affiliateLinks": 4
+      },
+      {
+        "path": "/trade",
+        "words": 91,
+        "affiliateLinks": 4
+      },
+      {
+        "path": "/champions/jax",
+        "words": 145,
+        "affiliateLinks": 4
+      },
+      {
+        "path": "/champions/karthus",
+        "words": 71,
+        "affiliateLinks": 4
+      },
+      {
+        "path": "/champions/kog-maw",
+        "words": 78,
+        "affiliateLinks": 4
+      },
+      {
+        "path": "/champions/lux",
+        "words": 143,
+        "affiliateLinks": 4
+      },
+      {
+        "path": "/champions/nocturne",
+        "words": 71,
+        "affiliateLinks": 4
+      },
+      {
+        "path": "/champions/rell",
+        "words": 72,
+        "affiliateLinks": 4
+      },
+      {
+        "path": "/champions/sona",
+        "words": 71,
+        "affiliateLinks": 4
+      },
+      {
+        "path": "/champions/taric",
+        "words": 71,
+        "affiliateLinks": 4
+      },
+      {
+        "path": "/champions/twisted-fate",
+        "words": 78,
+        "affiliateLinks": 4
+      },
+      {
+        "path": "/champions/warwick",
+        "words": 71,
+        "affiliateLinks": 4
+      }
+    ],
+    "unsponsoredOutbound": [
+      {
+        "path": "/stores/151collectables",
+        "hrefs": [
+          "https://151collectables.com"
+        ]
+      },
+      {
+        "path": "/stores/alwaysgames",
+        "hrefs": [
+          "https://alwaysgames.ca"
+        ]
+      },
+      {
+        "path": "/stores/derpycards",
+        "hrefs": [
+          "https://derpycards.ca"
+        ]
+      },
+      {
+        "path": "/stores/e4cards",
+        "hrefs": [
+          "https://e4cards.com"
+        ]
+      },
+      {
+        "path": "/stores/facetoface",
+        "hrefs": [
+          "https://facetofacegames.com"
+        ]
+      },
+      {
+        "path": "/stores/gamesarena88",
+        "hrefs": [
+          "https://www.88gamesarena.com.au/policies/shipping-policy",
+          "https://www.88gamesarena.com.au"
+        ]
+      },
+      {
+        "path": "/stores/greyogre",
+        "hrefs": [
+          "https://www.greyogregames.com"
+        ]
+      },
+      {
+        "path": "/stores/knightandday",
+        "hrefs": [
+          "https://knightanddaygames.com"
+        ]
+      },
+      {
+        "path": "/stores/millenniumgames",
+        "hrefs": [
+          "https://shop.millenniumgames.com"
+        ]
+      },
+      {
+        "path": "/stores/ozzie",
+        "hrefs": [
+          "https://www.ozziecollectables.com"
+        ]
+      },
+      {
+        "path": "/stores/stompinggrounds",
+        "hrefs": [
+          "https://singles.stompinggroundstcg.com/policies/shipping-policy",
+          "https://singles.stompinggroundstcg.com"
+        ]
+      },
+      {
+        "path": "/stores/totalcards",
+        "hrefs": [
+          "https://totalcards.net/policies/shipping-policy",
+          "https://totalcards.net"
+        ]
+      },
+      {
+        "path": "/stores/ttcs",
+        "hrefs": [
+          "https://www.thetradingcardshop.com"
+        ]
+      },
+      {
+        "path": "/card/en-garde-ogn-046-298",
+        "hrefs": [
+          "https://singles.stompinggroundstcg.com/policies/shipping-policy"
+        ]
+      },
+      {
+        "path": "/blog/riftbound-vendetta-nexus-night-promo-cards",
+        "hrefs": [
+          "https://riftbound.gg/riftbound-vendetta-nexus-night-promo-cards/"
+        ]
+      },
+      {
+        "path": "/guides/riftbound-vendetta-crystal-rose-cards",
+        "hrefs": [
+          "https://riftbound.gg/riftbound-vendetta-wild-rift-crystal-rose-alt-art-cards/"
+        ]
+      }
+    ],
+    "duplicateTitles": [],
+    "duplicateDescriptions": [],
+    "wrongH1Count": [
+      {
+        "path": "/",
+        "h1s": 0
+      }
+    ],
+    "missingCanonical": []
+  }
+}

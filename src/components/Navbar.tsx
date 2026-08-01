@@ -63,8 +63,17 @@ export function Navbar() {
             Sealed
           </Link>
           {/* Trade Calculator — front-and-centre so players can reach it fast at locals. */}
-          <Link href="/trade" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:block sm:px-2.5">
+          <Link href="/trade" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white md:block md:px-2.5">
             Trade
+          </Link>
+          {/* Guides & News — our ~64 original guides and posts, promoted out of
+              the footer into the primary header nav. They were previously
+              reachable only from the footer and the mega-menu, which meant the
+              only genuinely hand-written content on the site was invisible to
+              anyone arriving on a price page. An AdSense reviewer sampling from
+              the homepage has to be able to find the editorial in one click. */}
+          <Link href="/guides" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:block sm:px-2.5">
+            Guides &amp; News
           </Link>
           {/* Marketplace — filled brand chip (not a plain text link) so the P2P
               marketplace is the most visually loud thing in the bar besides the

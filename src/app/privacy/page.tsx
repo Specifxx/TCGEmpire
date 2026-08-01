@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 // Plain "last updated" date for the policy. Bump when the policy changes.
-const UPDATED = "7 June 2026";
+const UPDATED = "1 August 2026";
 
 export default function PrivacyPage() {
   return (
@@ -46,36 +46,62 @@ export default function PrivacyPage() {
         <section className="space-y-2">
           <h2 className="text-lg font-bold text-white">Cookies</h2>
           <p>
-            We use cookies and similar technologies to keep you signed in, remember preferences
-            (such as your selected country) and measure traffic. You can disable
-            cookies in your browser settings, though parts of the Site may stop working as expected.
+            We use cookies and similar technologies for three distinct purposes:
+          </p>
+          <ul className="list-disc space-y-1 pl-5">
+            <li>
+              <strong className="text-white">Strictly necessary</strong> — keeping you signed in and
+              remembering preferences such as your selected country. These are set without consent
+              because the Site cannot function without them.
+            </li>
+            <li>
+              <strong className="text-white">Analytics</strong> — measuring aggregate traffic and
+              page performance (see Analytics below).
+            </li>
+            <li>
+              <strong className="text-white">Advertising</strong> — set by Google and its
+              advertising partners to serve and measure ads, including personalised ads where you
+              have consented.
+            </li>
+          </ul>
+          <p>
+            Analytics and advertising cookies are only set after consent where consent is required.
+            You can disable cookies entirely in your browser settings, though parts of the Site may
+            stop working as expected.
           </p>
         </section>
 
+        {/* PRESENT TENSE, DELIBERATELY. This section previously said, as a fact,
+            that the Site served no third-party advertising and set no advertising
+            cookies — while an AdSense application was live. A privacy policy that
+            contradicts the ad code on the page is a direct AdSense Publisher
+            Policy problem ("Privacy policy disclosures") and a bad look for any
+            reviewer who reads both. It now describes what the Site actually does.
+            See docs/adsense-remediation.md § Phase 10. */}
         <section className="space-y-2">
           <h2 className="text-lg font-bold text-white">Advertising &amp; third-party vendors</h2>
           <p>
             <strong className="text-white">
-              We do not currently serve third-party advertising, and no third-party advertising
-              cookies are set by this Site.
+              We use third-party advertising on this Site, including Google AdSense.
             </strong>{" "}
-            RiftCompare is funded by affiliate commissions (see below), Premium subscriptions and
-            marketplace fees. The only promotional units on the Site today are our own — links to
-            other RiftCompare pages, served without any third-party ad network.
-          </p>
-          <p>
-            If we introduce a third-party ad network in future (for example{" "}
-            <strong className="text-white">Google AdSense</strong>), the following will apply, and we
-            will update this policy&rsquo;s effective date when it does:
+            RiftCompare is funded by advertising, affiliate commissions (see below), Premium
+            subscriptions and marketplace fees.
           </p>
           <ul className="list-disc space-y-1 pl-5">
             <li>
               Third-party vendors, including Google, use cookies to serve ads based on your prior
-              visits to this and other websites.
+              visits to this Site and other websites.
             </li>
             <li>
               Google&rsquo;s use of advertising cookies enables it and its partners to serve ads to
               you based on your visit to this Site and/or other sites on the Internet.
+            </li>
+            <li>
+              Where required, we ask for your consent before any advertising or analytics cookies
+              are set. Until you consent, advertising storage, ad personalisation, ad user data and
+              analytics storage are all set to <em>denied</em> (Google Consent Mode v2), and you
+              will see non-personalised advertising. You can change your answer at any time using
+              the <strong className="text-white">Privacy settings</strong> link in the footer.
             </li>
             <li>
               You may opt out of personalised advertising by visiting{" "}
@@ -99,7 +125,7 @@ export default function PrivacyPage() {
               .
             </li>
             <li>
-              For more on how Google uses data, see{" "}
+              For more on how Google uses data from sites that use its services, see{" "}
               <a
                 href="https://policies.google.com/technologies/partner-sites"
                 className="text-brand-400 hover:underline"
@@ -110,7 +136,15 @@ export default function PrivacyPage() {
               </a>
               .
             </li>
+            <li>
+              We also show our own first-party promotional units — plain links to other RiftCompare
+              pages. These set no cookies and involve no third party.
+            </li>
           </ul>
+          <p>
+            The native RiftCompare mobile apps use Google AdMob, which is subject to the same Google
+            advertising policies and the same opt-out controls linked above.
+          </p>
         </section>
 
         <section className="space-y-2">
@@ -126,7 +160,26 @@ export default function PrivacyPage() {
           <h2 className="text-lg font-bold text-white">Analytics</h2>
           <p>
             We use privacy-respecting analytics (Vercel Analytics and Speed Insights) to understand
-            aggregate traffic and performance. These do not identify you personally.
+            aggregate traffic and performance. These do not identify you personally. Where a consent
+            regime applies to you, they are held back until you consent — the same signal that
+            governs advertising.
+          </p>
+        </section>
+
+        <section className="space-y-2">
+          <h2 className="text-lg font-bold text-white">Payments</h2>
+          <p>
+            Premium subscriptions and Marketplace purchases are processed by{" "}
+            <a
+              href="https://stripe.com/privacy"
+              className="text-brand-400 hover:underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Stripe
+            </a>
+            . Card details are entered on Stripe&rsquo;s systems and are never seen or stored by us —
+            we receive only a payment reference, the amount, and whether it succeeded.
           </p>
         </section>
 

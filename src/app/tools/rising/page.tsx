@@ -3,6 +3,7 @@ import Link from "next/link";
 import { unstable_cache } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { isPremium } from "@/lib/premium";
+import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
 import { getRisingCards, type RisePick, type RiseComponents, type RiseScope } from "@/lib/rise-predictor";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { formatMoney } from "@/lib/format";
@@ -207,7 +208,14 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
         </p>
       </div>
 
-      {!premium ? (
+      {/* ADSENSE REVIEW MODE: while the review is open the Premium gate is
+          lifted, so no crawler-reachable page carries blurred or locked
+          content — "content behind a paywall or login" is its own AdSense
+          rejection reason, and this page is in the sitemap. The Premium CTA
+          stays; an ordinary upsell link is fine, a blur overlay standing in
+          place of the content is not. Restored by setting
+          NEXT_PUBLIC_ADSENSE_REVIEW_MODE=false. See docs/adsense-remediation.md § 9. */}
+      {!premium && !ADSENSE_REVIEW_MODE ? (
         <div className="card-surface overflow-hidden">
           <table className="w-full min-w-[560px] text-sm">
             <TableHead />
