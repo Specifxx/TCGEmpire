@@ -3740,6 +3740,87 @@ Start with **[Riftbound for beginners](/guides/riftbound-for-beginners)** for th
       { q: "Where can I find Riftbound's current banned cards?", a: "RiftCompare's banlist guide explains how bans work in Riftbound, and the July 2026 ban list update covers the most recent changes." },
     ],
   },
+  {
+    slug: "riftbound-vendetta-nexus-night-promo-cards",
+    category: "blog",
+    title: "Riftbound Vendetta Nexus Night Promo Cards: Every One Revealed So Far",
+    excerpt:
+      "Vendetta's weekly Nexus Night events hand out a 25-card promo cycle at local stores — and the chase card is Mel, Newly Awakened. Here's every promo confirmed so far: Mel plus the full 6-card promo rune cycle, with live prices and pop-up card views.",
+    author: "RiftCompare",
+    date: "2026-08-01",
+    updated: "2026-08-01",
+    readMins: 4,
+    tags: ["vendetta", "nexus night", "promo", "chase cards", "collecting"],
+    shop: [
+      { label: "Vendetta Nexus Night promos on eBay", query: "Riftbound Vendetta Nexus Night promo" },
+      { label: "Mel Newly Awakened promo", query: "Riftbound Mel Newly Awakened promo" },
+    ],
+    browseCta: {
+      href: "/sets/vendetta",
+      label: "See every Vendetta printing's price →",
+      blurb: "All 166 confirmed cards plus every alt-art, Signature and promo, ranked by cheapest live price.",
+    },
+    embeds: [
+      {
+        title: "The chase card: Mel, Newly Awakened",
+        note: "The confirmed chase card for Vendetta's Nexus Night season — tap through for the live price comparison.",
+        slugs: ["mel-newly-awakened-ven-069b-166-promo"],
+      },
+      {
+        title: "The 6 promo runes",
+        note: "Fury, Calm, Mind, Body, Chaos and Order — the promo printing of Vendetta's rune cycle, straight from our live database.",
+        slugs: [
+          "fury-rune-ven-r01b-promo",
+          "calm-rune-ven-r02b-promo",
+          "mind-rune-ven-r03b-promo",
+          "body-rune-ven-r04b-promo",
+          "chaos-rune-ven-r05b-promo",
+          "order-rune-ven-r06b-promo",
+        ],
+      },
+    ],
+    body: `![Riftbound: Vendetta — out now](/vendetta-hero.png)
+
+**Nexus Nights** are Riftbound's weekly casual events, run at local game stores on whatever day works best for each store — a demo or a casual event, not a competitive tournament. Vendetta's Nexus Night season brings its own **25-card promo cycle** to chase, headlined by a genuine chase card. Riot confirms the cards in waves rather than all at once, so this post tracks exactly what's real right now — no guessing at cards that haven't actually been shown yet.
+
+## The chase card: Mel, Newly Awakened
+
+The confirmed chase card for Vendetta's Nexus Night season is **Mel, Newly Awakened** — a promo printing (**069b/166**) of the existing Champion Unit, alongside her regular base print and alt-art. It carries the same **"When you play me, draw 1"** ability and Empower payoff as the original, just in the Nexus Night promo treatment.
+
+[[embed:0]]
+
+## The 6 promo runes
+
+Alongside Mel, the full **rune cycle** — Fury, Calm, Mind, Body, Chaos and Order — gets its own Nexus Night promo printing (**R01b** through **R06b**), matching the same treatment Vendetta's base runes already have. These are common pulls in the pack, but a full set completes the cycle.
+
+[[embed:1]]
+
+## What's still unconfirmed
+
+Riot's own Nexus Night promo page states there are **25 total promo cards** across the season, but as of this post only Mel and the 6 runes have actual confirmed art — **7 of the 25**. The rest of the page currently shows placeholder cards standing in for reveals that haven't landed yet ("*these cards are used as placeholders… we will update this section soon with the promo tagged cards*"), so we're deliberately not listing or imagining names for them here. We'll add each one the moment it's genuinely confirmed, the same way we did for these seven.
+
+## How to get Nexus Night promos
+
+Find your nearest Riftbound local game store and show up for their weekly Nexus Night — completing a demo or event earns a **3-card promo pack**. The specific day and format varies by store, so check with your local shop directly. Promo availability is while supplies last, so earlier weeks of the season are your best shot at any specific card.
+
+## Nexus Night promo FAQ
+
+**What is the Vendetta Nexus Night chase card?** Mel, Newly Awakened (069b/166) — a promo printing of the existing Mel, Newly Awakened Champion Unit.
+
+**How many Nexus Night promo cards are there for Vendetta?** Riot says 25 total across the season. Only 7 (Mel plus the 6 promo runes) have confirmed art as of this post.
+
+**How do I get Nexus Night promo cards?** Attend your local game store's weekly Nexus Night event — completing a demo or casual event earns a 3-card promo pack. Day and format vary by store.
+
+**Are Nexus Night promos worth anything?** Promo prints are historically one of Riftbound's more volatile chase tiers — small, event-bound print runs can outprice regular chase cards once a season's supply dries up. Check each card's live page for the current picture rather than trusting a fixed number.
+
+*Card reveals and event details are from Riot's own Nexus Night coverage — see [riftbound.gg's promo card page](https://riftbound.gg/riftbound-vendetta-nexus-night-promo-cards/) for the original.*`,
+    faq: [
+      { q: "What is the Vendetta Nexus Night chase card?", a: "Mel, Newly Awakened (069b/166) — a promo printing of the existing Mel, Newly Awakened Champion Unit." },
+      { q: "How many Nexus Night promo cards are there for Vendetta?", a: "Riot says 25 total across the season. Only 7 (Mel plus the 6 promo runes) have confirmed art as of this post." },
+      { q: "How do I get Nexus Night promo cards?", a: "Attend your local game store's weekly Nexus Night event — completing a demo or casual event earns a 3-card promo pack. Day and format vary by store." },
+      { q: "Are Nexus Night promos worth anything?", a: "Promo prints are historically one of Riftbound's more volatile chase tiers — small, event-bound print runs can outprice regular chase cards once a season's supply dries up. Check each card's live page for the current picture." },
+    ],
+  },
 ];
 
 export function getArticles(category?: ArticleCategory): Article[] {
