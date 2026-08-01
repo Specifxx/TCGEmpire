@@ -292,5 +292,20 @@
     "description": "Empower 3, exhaust. Action: Exhaust — If it's your turn, move a friendly unit in a showdown to base and if I'm Empowered, ready it.",
     "imageUrl": "https://riftcompare.com/signature-cards/akali-rogue-assassin-ven189.jpg",
     "imageThumbUrl": "https://riftcompare.com/signature-cards/akali-rogue-assassin-ven189.jpg"
+  },
+  {
+    "externalId": "manual-ven-192166",
+    "name": "Nasus, Curator of the Sands",
+    "setCode": "VEN",
+    "setName": "Vendetta",
+    "collectorNumber": "192*/166",
+    "domain": "Calm",
+    "type": "Legend",
+    "rarity": "Showcase",
+    "energyCost": null,
+    "might": null,
+    "description": "When you play a unit, gear, or activated ability with Energy cost 7 or more, you may exhaust me to ready up to 2 runes.",
+    "imageUrl": "https://riftcompare.com/signature-cards/nasus-curator-of-the-sands-ven192.jpg",
+    "imageThumbUrl": "https://riftcompare.com/signature-cards/nasus-curator-of-the-sands-ven192.jpg"
   }
 ]
