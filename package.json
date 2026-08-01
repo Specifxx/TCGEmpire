@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "tsx scripts/adsense-guard.ts && prisma generate && bash scripts/build-db-push.sh && (node -e \"process.exit(process.env.VERCEL_ENV==='preview'&&(process.env.RM3||process.env.DATABASE_URL_2||process.env.DATABASE_URL)?0:1)\" && IMPORT_ONLY_COUNTRY=SG EBAY_REFRESH=false tsx scripts/import-prices.ts || true) && next build",
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test tests/*.test.ts",
+    "test": "node --env-file-if-exists=.env.production --import tsx --test tests/*.test.ts",
     "adsense:guard": "tsx scripts/adsense-guard.ts",
     "adsense:audit": "tsx scripts/adsense-audit.ts",
     "crawl:check": "tsx scripts/crawl-check.ts",
