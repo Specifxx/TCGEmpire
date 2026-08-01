@@ -544,22 +544,7 @@ jobs:
           fi
           echo "== FULL raw HTML between PROBE_CONTEXT_MARKER and PROBE_CONTEXT_MARKER_END, no length cap (if both set):"
           if [ -n "$PROBE_CONTEXT_MARKER" ] && [ -n "$PROBE_CONTEXT_MARKER_END" ]; then
-            python3 -c "
-import os
-html = open('page.html', encoding='utf-8', errors='replace').read()
-start_marker = os.environ['PROBE_CONTEXT_MARKER']
-end_marker = os.environ['PROBE_CONTEXT_MARKER_END']
-i = html.find(start_marker)
-if i == -1:
-    print('START MARKER NOT FOUND')
-else:
-    j = html.find(end_marker, i + len(start_marker))
-    if j == -1:
-        print('END MARKER NOT FOUND AFTER START')
-    else:
-        print(f'SECTION LENGTH: {j - i} chars')
-        print(html[i:j])
-"
+            python3 -c "import os; html = open('page.html', encoding='utf-8', errors='replace').read(); s = os.environ['PROBE_CONTEXT_MARKER']; e = os.environ['PROBE_CONTEXT_MARKER_END']; i = html.find(s); j = html.find(e, i + len(s)) if i != -1 else -1; print('START MARKER NOT FOUND') if i == -1 else print('END MARKER NOT FOUND AFTER START') if j == -1 else (print(f'SECTION LENGTH: {j - i} chars'), print(html[i:j]))"
           fi
           for css in $(grep -oiE "/_next/static/css/[^\"']+" page.html | sort -u | head -4); do
             echo "== css $css:"
