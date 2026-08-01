@@ -19,7 +19,6 @@ import { IMPACT_SITE_VERIFICATION } from "@/lib/affiliate";
 import { MARKETPLACE_NAV_VISIBLE } from "@/components/nav-groups";
 import { FooterNav } from "@/components/FooterNav";
 import { NativeShell } from "@/components/NativeShell";
-import { HilltopAdsLoader } from "@/components/HilltopAdsLoader";
 import { ReferralCapture } from "@/components/ReferralCapture";
 import { FooterAds } from "@/components/FooterAds";
 import { PriceAlertModal } from "@/components/PriceAlertModal";
@@ -180,8 +179,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Impact / TCGplayer affiliate site-ownership verification. Impact looks for
             the non-standard `value` attribute, so spread it past the meta typing. */}
         <meta {...({ name: "impact-site-verification", value: IMPACT_SITE_VERIFICATION } as any)} />
-        {/* HilltopAds site-ownership verification (homepage). */}
-        <meta name="f56d4c757e10b95b149b998706568143dfa0d0e9" content="f56d4c757e10b95b149b998706568143dfa0d0e9" />
         {/* Google AdSense site-ownership verification. */}
         <meta name="google-adsense-account" content="ca-pub-6262011577596407" />
         {/* Warm up the image CDN connection so card thumbnails start loading sooner. */}
@@ -292,9 +289,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             sponsor this project.
           </p>
         </footer>
-        {/* HilltopAds zone loader — the primary ad network (web only, non-premium).
-            Skipped inside the native app, which shows AdMob banners via NativeShell. */}
-        <HilltopAdsLoader />
         {/* Detects the Capacitor native runtime and shows native AdMob ads, styles
             the status bar and wires the Android back button. No-op on the web. */}
         <NativeShell />

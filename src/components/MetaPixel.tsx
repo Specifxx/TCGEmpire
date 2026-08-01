@@ -23,7 +23,7 @@ export function MetaPixel() {
 
   useEffect(() => {
     if (!META_PIXEL_ID || process.env.NODE_ENV !== "production") return;
-    // Skip inside the native app (web-ad attribution only) — matches HilltopAdsLoader.
+    // Skip inside the native app — web-ad attribution only.
     if ((window as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.()) return;
     setEnabled(true);
   }, []);

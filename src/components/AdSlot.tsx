@@ -4,11 +4,13 @@ import Link from "next/link";
 import { usePremium } from "./PremiumProvider";
 
 // ── House promos ─────────────────────────────────────────────────────────────────
-// First-party promo units. Google AdSense has been removed — the site now monetises
-// via HilltopAds, whose MultiTag zone is loaded site-wide from the root layout (see
-// HilltopAdsLoader). HilltopAds serves at the page level (popunder/banner), not as a
-// per-slot fill, so these in-content placements show a first-party promo instead of
-// dead space. Premium members get an ad-free site (renders nothing).
+// First-party promo units — these slots only ever render RiftCompare's own
+// content (links to the movers list, the Box EV tool, the Index, price alerts).
+// No third-party ad network is loaded anywhere on the site: the previous
+// HilltopAds integration was removed entirely in favour of affiliate revenue
+// (eBay / TCGplayer, see EbayAd + FooterAds) and Premium subscriptions, because
+// a popunder/push network sits badly next to the marketplace's buyer-protection
+// promises. Premium members get an ad-free site (renders nothing).
 const HOUSE_ADS = [
   { emoji: "📈", title: "Today's biggest price moves", sub: "Risers, drops and best-value buys — updated daily", cta: "See the movers", href: "/movers" },
   { emoji: "🎲", title: "Is that booster box worth opening?", sub: "Run the numbers against live singles prices", cta: "Box EV calculator", href: "/tools/box-ev" },
