@@ -39,10 +39,44 @@ const MIN_TAP = 44;
 // Interactive elements only — a 20px-tall <span> is not a tap target.
 const TAP_SELECTOR = 'a[href], button, [role="button"], input:not([type="hidden"]), select, textarea, summary';
 
+// Structural types for the slice of playwright-core this script uses.
+//
+// WHY NOT `import type { chromium } from "playwright-core"`: playwright-core is
+// an OPTIONAL, developer-machine dependency — this script is run by hand against
+// a running server, never in CI and never during a deploy. But `next build`
+// typechecks the whole project (tsconfig includes **/*.ts), so a type-level
+// reference to a package that isn't installed fails the PRODUCTION BUILD:
+//
+//   Type error: Cannot find module 'playwright-core' or its corresponding type
+//   declarations.  scripts/mobile-check.ts:43
+//
+// That is exactly what happened on the first Vercel deploy of this branch.
+// Typing the handful of methods used here structurally, and importing through a
+// non-literal specifier so TypeScript cannot try to resolve it, keeps the script
+// fully working where playwright-core IS installed and keeps it inert — and
+// type-clean — everywhere else.
+type PageLike = {
+  goto(url: string, opts?: { waitUntil?: string; timeout?: number }): Promise<unknown>;
+  waitForTimeout(ms: number): Promise<void>;
+  evaluate(script: string): Promise<unknown>;
+  close(): Promise<void>;
+};
+type ContextLike = { newPage(): Promise<PageLike> };
+type BrowserLike = {
+  newContext(opts: Record<string, unknown>): Promise<ContextLike>;
+  close(): Promise<void>;
+};
+type ChromiumLike = {
+  launch(opts: { executablePath: string; args?: string[] }): Promise<BrowserLike>;
+};
+
+const PLAYWRIGHT = "playwright-core";
+
 async function main() {
-  let chromium: typeof import("playwright-core").chromium;
+  let chromium: ChromiumLike;
   try {
-    ({ chromium } = await import("playwright-core"));
+    // Non-literal specifier on purpose — see the note above.
+    ({ chromium } = (await import(PLAYWRIGHT)) as { chromium: ChromiumLike });
   } catch {
     console.log("playwright-core is not installed — skipping the mobile check.");
     console.log("  npm i -D playwright-core   (Chromium is already at /opt/pw-browsers)");

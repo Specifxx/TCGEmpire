@@ -1,6 +1,6 @@
 {
   "generatedFrom": "http://localhost:3111",
-  "sampleSize": 25,
+  "sampleSize": 30,
   "thresholds": {
     "thinWords": 150,
     "boilerplateThreshold": 0.35,
@@ -10,8 +10,8 @@
   },
   "totals": {
     "urlsInSitemaps": 1249,
-    "sampled": 202,
-    "indexableSampled": 200,
+    "sampled": 220,
+    "indexableSampled": 218,
     "indexableThin": 0,
     "duplicateClusters": 0,
     "softFourOhFours": 0,
@@ -30,25 +30,25 @@
     {
       "template": "blog",
       "totalUrls": 35,
-      "sampled": 25,
+      "sampled": 30,
       "medianEditorialWords": 638,
       "minEditorialWords": 413,
       "maxEditorialWords": 1215,
       "thin": [],
-      "medianSimilarity": 0.01,
+      "medianSimilarity": 0.011,
       "medianTemplateSimilarity": 0.007,
       "duplicateCluster": null
     },
     {
       "template": "card",
       "totalUrls": 963,
-      "sampled": 25,
-      "medianEditorialWords": 1021,
-      "minEditorialWords": 903,
-      "maxEditorialWords": 1237,
+      "sampled": 30,
+      "medianEditorialWords": 1095,
+      "minEditorialWords": 867,
+      "maxEditorialWords": 1306,
       "thin": [],
-      "medianSimilarity": 0.223,
-      "medianTemplateSimilarity": 0.351,
+      "medianSimilarity": 0.212,
+      "medianTemplateSimilarity": 0.331,
       "duplicateCluster": null
     },
     {
@@ -80,11 +80,11 @@
       "totalUrls": 7,
       "sampled": 7,
       "medianEditorialWords": 1590,
-      "minEditorialWords": 649,
-      "maxEditorialWords": 2022,
+      "minEditorialWords": 645,
+      "maxEditorialWords": 1873,
       "thin": [],
       "medianSimilarity": 0.011,
-      "medianTemplateSimilarity": 0.15,
+      "medianTemplateSimilarity": 0.154,
       "duplicateCluster": null
     },
     {
@@ -102,8 +102,8 @@
     {
       "template": "guide",
       "totalUrls": 28,
-      "sampled": 25,
-      "medianEditorialWords": 732,
+      "sampled": 28,
+      "medianEditorialWords": 751,
       "minEditorialWords": 393,
       "maxEditorialWords": 1939,
       "thin": [],
@@ -162,12 +162,12 @@
     {
       "template": "store",
       "totalUrls": 121,
-      "sampled": 25,
-      "medianEditorialWords": 311,
+      "sampled": 30,
+      "medianEditorialWords": 306,
       "minEditorialWords": 291,
       "maxEditorialWords": 325,
       "thin": [],
-      "medianSimilarity": 0.377,
+      "medianSimilarity": 0.381,
       "medianTemplateSimilarity": 0.682,
       "duplicateCluster": null
     },
@@ -175,12 +175,12 @@
       "template": "tool",
       "totalUrls": 24,
       "sampled": 24,
-      "medianEditorialWords": 256,
+      "medianEditorialWords": 265,
       "minEditorialWords": 154,
-      "maxEditorialWords": 747,
+      "maxEditorialWords": 802,
       "thin": [],
-      "medianSimilarity": 0,
-      "medianTemplateSimilarity": 0,
+      "medianSimilarity": 0.005,
+      "medianTemplateSimilarity": 0.006,
       "duplicateCluster": null
     }
   ],

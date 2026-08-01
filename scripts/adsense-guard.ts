@@ -158,6 +158,74 @@ if (declared) ok(`.env.example declares NEXT_PUBLIC_ADSENSE_CLIENT_ID=${declared
 else fail(".env.example does not declare a well-formed NEXT_PUBLIC_ADSENSE_CLIENT_ID");
 
 // ─────────────────────────────────────────────────────────────────────────────
+// 1b. DEPENDENCY RESOLVABILITY
+// ─────────────────────────────────────────────────────────────────────────────
+// A type-level import of a package that isn't in package.json fails the
+// PRODUCTION BUILD, not just the local run: `next build` typechecks the whole
+// project (tsconfig includes **/*.ts), so one script referencing a
+// developer-machine-only package takes the whole deploy down with
+// "Cannot find module 'x' or its corresponding type declarations".
+//
+// That happened once, on scripts/mobile-check.ts and playwright-core, and cost a
+// deploy. Optional tooling must be imported through a non-literal specifier (see
+// that file's header); anything imported by name has to be declared.
+section("1b. Dependency resolvability");
+
+const pkg = JSON.parse(read(join(ROOT, "package.json")) || "{}") as {
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+};
+const declaredDeps = new Set([
+  ...Object.keys(pkg.dependencies ?? {}),
+  ...Object.keys(pkg.devDependencies ?? {}),
+]);
+
+// Bare specifiers only: skip node: builtins, the @/ path alias, and relative paths.
+const IMPORT_RE = /(?:^|\n)\s*import\s+(?:type\s+)?[^;'"]*?from\s*["']([^"']+)["']|import\(\s*["']([^"']+)["']\s*\)|import\(["']([^"']+)["']\)\.[A-Za-z]/g;
+const NODE_BUILTINS = new Set([
+  "fs", "path", "url", "crypto", "http", "https", "os", "util", "stream", "zlib",
+  "child_process", "assert", "events", "buffer", "querystring", "readline", "timers",
+]);
+const packageOf = (spec: string) =>
+  spec.startsWith("@") ? spec.split("/").slice(0, 2).join("/") : spec.split("/")[0];
+
+const undeclared = new Set<string>();
+const undeclaredWhere: string[] = [];
+for (const file of ALL_FILES) {
+  const r = rel(file);
+  if (!/^(src|scripts|prisma|tests)\//.test(r) || !/\.(ts|tsx)$/.test(r)) continue;
+  const body = read(file);
+  for (const m of body.matchAll(IMPORT_RE)) {
+    const spec = m[1] ?? m[2] ?? m[3];
+    if (!spec) continue;
+    if (spec.startsWith(".") || spec.startsWith("@/") || spec.startsWith("node:")) continue;
+    const name = packageOf(spec);
+    if (NODE_BUILTINS.has(name) || declaredDeps.has(name)) continue;
+    // An optional import suppressed with @ts-expect-error / @ts-ignore is the
+    // OTHER legitimate way to do this — the compiler is told not to resolve it,
+    // so it can't break the build. scripts/fetch-official-images.ts does this
+    // with playwright. Only an UNSUPPRESSED bare import is a deploy risk.
+    const preceding = body.slice(Math.max(0, m.index - 200), m.index);
+    if (/@ts-(expect-error|ignore)/.test(preceding)) continue;
+    if (!undeclared.has(name)) {
+      undeclared.add(name);
+      undeclaredWhere.push(`${name}  (${r})`);
+    }
+  }
+}
+if (undeclared.size) {
+  fail(
+    `${undeclared.size} package(s) imported by name but not in package.json`,
+    undeclaredWhere.join("\n") +
+      "\n\nEither add it to dependencies/devDependencies, or — for optional\n" +
+      "developer-machine tooling — import it through a non-literal specifier and\n" +
+      "type it structurally, as scripts/mobile-check.ts does with playwright-core.",
+  );
+} else {
+  ok("every named import resolves to a declared dependency (a deploy-breaking class of error)");
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // 2. LOADER INTEGRITY
 // ─────────────────────────────────────────────────────────────────────────────
 section("2. Loader integrity");
