@@ -4,6 +4,7 @@ import { ConditionBadge, FoilBadge } from "./Badge";
 import { formatAUD } from "@/lib/format";
 import { rarityInfo } from "@/lib/constants";
 import { cardHref } from "@/lib/card-url";
+import { ReportListing } from "./ReportListing";
 
 export interface ListingTile {
   id: string;
@@ -38,11 +39,11 @@ export function ListingCard({ listing }: { listing: ListingTile }) {
     ? Math.round((diff / card.marketPriceCents) * 100)
     : 0;
 
+  // The report control has to sit OUTSIDE the card's <Link>, not inside it —
+  // nested anchors are invalid HTML and the browser would swallow the inner one.
   return (
-    <Link
-      href={cardHref(card)}
-      className="group card-surface flex flex-col overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-glow"
-    >
+    <div className="group card-surface relative flex flex-col overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-glow">
+    <Link href={cardHref(card)} className="flex flex-1 flex-col">
       {/* Art */}
       <div
         className="relative aspect-[5/7] w-full overflow-hidden bg-ink-900 p-3"
@@ -102,5 +103,11 @@ export function ListingCard({ listing }: { listing: ListingTile }) {
         </div>
       </div>
     </Link>
+      {/* Visible on every listing, to anyone, signed in or not. See
+          /marketplace/listing-policy and docs/adsense-remediation.md § Phase 10e. */}
+      <div className="border-t border-ink-800 px-3 py-1.5 text-right">
+        <ReportListing listingId={listing.id} cardName={card.name} />
+      </div>
+    </div>
   );
 }

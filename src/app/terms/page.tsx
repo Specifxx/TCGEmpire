@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import Link from "next/link";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
 
@@ -13,6 +14,9 @@ const UPDATED = "12 June 2026";
 export default function TermsPage() {
   return (
     <article className="mx-auto max-w-3xl">
+      {/* Visible trail + BreadcrumbList JSON-LD. Every indexable page needs
+          both — the crawl check asserts it. */}
+      <Breadcrumbs trail={[{ name: "Terms", href: "/terms" }]} />
       <h1 className="text-3xl font-extrabold leading-tight text-white">Terms of Service</h1>
       <p className="mt-2 text-sm text-slate-500">Last updated: {UPDATED}</p>
 
@@ -44,15 +48,30 @@ export default function TermsPage() {
             store, its prices, stock, or fulfilment. <strong className="text-white">Always confirm the
             price and availability on the retailer&rsquo;s own website before purchasing.</strong>
           </p>
+          <p>
+            <strong className="text-white">We are not a party to any transaction between you and a
+            third-party retailer.</strong> When you follow a link from {SITE_NAME} and buy from a
+            store, the contract is between you and that store alone. Payment, delivery, warranties,
+            returns, refunds and disputes are governed by that store&rsquo;s own terms, not ours, and
+            we have no authority to intervene in them. (Our own Marketplace, described in 3a below,
+            is the one exception and is covered by its own terms.)
+          </p>
+          <p>
+            Prices are recorded snapshots, not live lookups — see our{" "}
+            <Link href="/editorial-policy" className="text-brand-400 hover:underline">editorial &amp; pricing policy</Link>{" "}
+            for exactly how often each surface refreshes, how listings are verified, and how to
+            report a price that is wrong.
+          </p>
         </section>
 
         <section className="space-y-2">
           <h2 className="text-lg font-bold text-white">3. Affiliate links &amp; advertising</h2>
           <p>
-            The Site is supported by affiliate commissions, Premium subscriptions and marketplace
-            fees. Some outbound links are affiliate links through which we may earn a commission at
-            no extra cost to you. We do not currently serve third-party advertising; any promotional
-            units you see are our own links to other RiftCompare pages. See our{" "}
+            The Site is supported by third-party advertising (including Google AdSense), affiliate
+            commissions, Premium subscriptions and marketplace fees. Some outbound links are
+            affiliate links through which we may earn a commission at no extra cost to you; these
+            are marked and disclosed next to the link. Advertising never affects the prices we show
+            or the order in which results are ranked. See our{" "}
             <Link href="/privacy" className="text-brand-400 hover:underline">Privacy Policy</Link> for how
             advertising and cookies are handled.
           </p>
@@ -93,11 +112,26 @@ export default function TermsPage() {
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-lg font-bold text-white">6. User content</h2>
+          <h2 className="text-lg font-bold text-white">6. User content &amp; moderation</h2>
           <p>
-            If you post content on the Site, you remain responsible for it and grant us a non-exclusive
-            licence to display it on the Site. We may remove content that breaches these Terms or that we
-            consider inappropriate.
+            If you post content on the Site — including Marketplace listings, listing descriptions,
+            seller profiles, reviews and messages — you remain responsible for it and grant us a
+            non-exclusive licence to display it on the Site.
+          </p>
+          <p>
+            <strong className="text-white">Marketplace listings are moderated.</strong> Listings are
+            subject to our{" "}
+            <Link href="/marketplace/listing-policy" className="text-brand-400 hover:underline">listing content policy</Link>,
+            reviewed against it, and removed when they breach it. Only verified sellers may list.
+            Submitted text is stored and rendered as plain text — it is never interpreted as HTML or
+            script — so a listing cannot inject markup, styling or code into any page.
+          </p>
+          <p>
+            Anyone can report a listing using the <strong className="text-white">Report listing</strong>{" "}
+            control on the listing itself, or by emailing{" "}
+            <a href={`mailto:${CONTACT_EMAIL}`} className="text-gold hover:underline">{CONTACT_EMAIL}</a>.
+            Reported listings are reviewed and, where they breach the policy, removed; repeat
+            breaches cost the seller their selling privileges.
           </p>
         </section>
 

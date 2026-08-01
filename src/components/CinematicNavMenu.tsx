@@ -91,7 +91,7 @@ export function CinematicNavMenu() {
                 data-autofocus
                 onClick={close}
                 aria-label="Close menu"
-                className="rounded-md border border-ink-800 bg-ink-850 px-3 py-2 text-sm font-bold text-white outline-none transition-colors hover:border-ink-600 hover:bg-ink-800 focus-visible:ring-2 focus-visible:ring-brand-400"
+                className="rounded-md border border-ink-800 bg-ink-850 px-3 py-2 text-sm font-bold text-white outline-none transition-colors hover:border-ink-600 hover:bg-ink-800 focus-visible:ring-2 focus-visible:ring-brand-400 min-h-11"
               >
                 Close ✕
               </button>

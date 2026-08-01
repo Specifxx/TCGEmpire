@@ -6,6 +6,7 @@ import type { Deal, TopDeals } from "@/lib/top-deals";
 import { formatMoney } from "@/lib/format";
 import { OutboundLink } from "@/components/OutboundLink";
 import { useCountry } from "@/components/CountryProvider";
+import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
 
 // Homepage "Today's Top Deals". Up to four columns, one per signal (the grid
 // itself only declares as many columns as actually have data — see GRID_COLS
@@ -131,19 +132,29 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
 
       <div className={`grid items-stretch gap-4 ${GRID_COLS[columns.length] ?? GRID_COLS[4]}`}>
         {columns.map(({ def, items }) => {
-          // Premium columns reveal only the single best deal; the rest is locked —
-          // "locked" means how many REAL deals exist behind it, not a fixed filler
-          // count (a day with only 1 real deal shows no locked teaser at all,
+          // Premium columns normally reveal only the single best deal; the rest is
+          // locked — "locked" means how many REAL deals exist behind it, not a fixed
+          // filler count (a day with only 1 real deal shows no locked teaser at all,
           // since there's nothing behind it to unlock).
-          const shown = def.premium ? items.slice(0, 1) : items;
-          const locked = def.premium ? Math.max(0, items.length - 1) : 0;
+          //
+          // WHILE ADSENSE_REVIEW_MODE IS ON, every column is shown in full and the
+          // "Unlock N more with Premium" teaser is not rendered at all. A reviewer
+          // landing on the homepage — the first page they see — must not find gated
+          // content there; "content behind a paywall or login" is its own rejection
+          // reason, and this was the only such teaser above the fold. The Premium
+          // link stays as an ordinary CTA below the column; it just no longer stands
+          // in place of content. Restored by setting
+          // NEXT_PUBLIC_ADSENSE_REVIEW_MODE=false. See docs/adsense-remediation.md.
+          const gated = def.premium && !ADSENSE_REVIEW_MODE;
+          const shown = gated ? items.slice(0, 1) : items;
+          const locked = gated ? Math.max(0, items.length - 1) : 0;
           return (
             <div key={def.key} className="card-surface flex h-full flex-col p-3 transition-colors duration-200 hover:border-brand-500/60 hover:bg-ink-800">
               <div className="mb-1 flex items-center justify-between gap-2 px-1">
                 <span className="flex items-center gap-1.5 text-sm font-extrabold text-white">
                   {def.label}
                 </span>
-                {def.premium && <span className="chip bg-gold/20 text-gold">Premium</span>}
+                {def.premium && !ADSENSE_REVIEW_MODE && <span className="chip bg-gold/20 text-gold">Premium</span>}
               </div>
 
               <ul className="flex flex-1 flex-col divide-y divide-ink-800">

@@ -19,12 +19,14 @@ import { SETS } from "./constants";
 import { DOMAIN_PAGES } from "./domains";
 import { MARKETPLACE_PUBLIC } from "./marketplace";
 import { KEYWORDS } from "./keywords";
-import { CHAMPIONS, championCardWhere } from "./champions";
+import { CHAMPIONS, championCardWhere, CHAMPION_THIN_THRESHOLD } from "./champions";
 import { TYPE_FACETS, RARITY_FACETS, PRINTING_FACETS, FACET_THIN_THRESHOLD } from "./facets";
 import { STORE_PAGES, STORE_THIN_THRESHOLD } from "./store-pages";
 import { buildCardWhere } from "./cards";
+import { getEmptyCardIds } from "./card-price-state";
 import { DEFAULT_COUNTRY } from "./country";
 import { staticPageDate } from "./static-page-dates";
+import { AUTHORS } from "./content/authors";
 
 export interface SitemapEntry {
   url: string;
@@ -118,6 +120,17 @@ async function core(): Promise<SitemapEntry[]> {
     { url: `${SITE_URL}/vendetta-countdown`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/vendetta-countdown") },
     { url: `${SITE_URL}/feedback`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/feedback") },
     { url: `${SITE_URL}/about`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/about") },
+    // Trust pages. /editorial-policy and /authors carry the "who writes this and
+    // how are the prices collected" disclosures a reviewer looks for, so they are
+    // submitted rather than left to be discovered from the footer.
+    { url: `${SITE_URL}/editorial-policy`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/editorial-policy") },
+    { url: `${SITE_URL}/authors`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/authors") },
+    ...AUTHORS.map((a) => ({
+      url: `${SITE_URL}/authors/${a.slug}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.4,
+      lastModified: latestBlog,
+    })),
     { url: `${SITE_URL}/contact`, changeFrequency: "yearly", priority: 0.4, lastModified: staticPageDate("/contact") },
     // Returns policy — deliberately higher priority than the other legal pages:
     // Merchant Center / Shopping surfaces look for a conventional return policy,
@@ -131,11 +144,23 @@ async function core(): Promise<SitemapEntry[]> {
 
 async function cards(): Promise<SitemapEntry[]> {
   const day = await priceDay();
-  const rows = await prisma.card.findMany({
-    select: { id: true, slug: true, lowestPriceCents: true, imageUrl: true, createdAt: true },
-    orderBy: { lowestPriceCents: { sort: "desc", nulls: "last" } },
-  });
-  return rows.map((c) => ({
+  const [rows, empty] = await Promise.all([
+    prisma.card.findMany({
+      select: { id: true, slug: true, lowestPriceCents: true, imageUrl: true, createdAt: true },
+      orderBy: { lowestPriceCents: { sort: "desc", nulls: "last" } },
+    }),
+    // Cards with no in-stock listing anywhere AND under a week of price history
+    // carry `robots: noindex` (see app/card/[id]/page.tsx), so listing them here
+    // would submit URLs we're simultaneously telling Google not to index — the
+    // exact contradiction that fills Search Console's "Excluded by noindex tag"
+    // bucket and devalues the sitemap's other 950-odd entries.
+    //
+    // Not a hand-maintained list: the same query drives the page's own robots
+    // tag, so a card re-enters this sitemap automatically on the next
+    // regeneration once it gains a listing or a week of history.
+    getEmptyCardIds(),
+  ]);
+  return rows.filter((c) => !empty.has(c.id)).map((c) => ({
     url: `${SITE_URL}/card/${c.slug ?? c.id}`,
     changeFrequency: "daily" as const,
     // Priced cards (the ones people search for) rank slightly higher; their
@@ -219,7 +244,10 @@ async function champions(): Promise<SitemapEntry[]> {
   // Only champions that actually have cards — the hub page calls notFound() for
   // an empty one, and submitting a URL that 404s is worse than omitting it.
   const counts = await Promise.all(CHAMPIONS.map((c) => prisma.card.count({ where: championCardWhere(c) })));
-  return CHAMPIONS.filter((_, i) => counts[i] > 0).map((c) => ({
+  // Hubs under the threshold carry robots: noindex (see app/champions/[slug]),
+  // so submitting them here would ask Google to index URLs we're telling it not
+  // to — the contradiction that fills the "Excluded by noindex tag" bucket.
+  return CHAMPIONS.filter((_, i) => counts[i] >= CHAMPION_THIN_THRESHOLD).map((c) => ({
     url: `${SITE_URL}/champions/${c.slug}`,
     changeFrequency: "daily" as const,
     priority: 0.8,

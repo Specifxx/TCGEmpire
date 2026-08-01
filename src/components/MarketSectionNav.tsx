@@ -49,7 +49,7 @@ export function MarketSectionNav({ sections }: { sections: Section[] }) {
               <a
                 href={`#${s.id}`}
                 aria-current={isActive ? "true" : undefined}
-                className={`block rounded-md px-3 py-1.5 text-sm font-semibold transition-colors ${
+                className={`inline-flex min-h-11 items-center rounded-md px-3 text-sm font-semibold transition-colors sm:min-h-0 sm:py-1.5 ${
                   isActive
                     ? "bg-brand-500/15 text-brand-300"
                     : "text-slate-400 hover:bg-ink-800 hover:text-white"

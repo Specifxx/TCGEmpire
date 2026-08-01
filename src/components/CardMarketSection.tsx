@@ -183,7 +183,7 @@ export function CardPriceComparison({
                       <a
                         href={p.policyUrl}
                         target="_blank"
-                        rel="nofollow noopener noreferrer"
+                        rel="sponsored nofollow noopener noreferrer"
                         className="text-slate-400 underline decoration-dotted underline-offset-2 hover:text-slate-200"
                       >
                         shipping policy ↗

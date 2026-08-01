@@ -68,7 +68,7 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
         <button
           onClick={onClose}
           aria-label="Close"
-          className="absolute right-3 top-3 z-20 grid h-8 w-8 place-items-center rounded-full bg-ink-950/80 text-slate-300 hover:text-white"
+          className="absolute right-3 top-3 z-20 tap-icon  rounded-full bg-ink-950/80 text-slate-300 hover:text-white"
         >
           ✕
         </button>

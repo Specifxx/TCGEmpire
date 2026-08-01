@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { SupportForm, type SupportOrderOption } from "@/components/SupportForm";
@@ -35,6 +36,9 @@ export default async function SupportPage({ searchParams }: { searchParams: { ca
 
   return (
     <div className="mx-auto max-w-xl">
+      {/* Visible trail + BreadcrumbList JSON-LD. Every indexable page needs
+          both — the crawl check asserts it. */}
+      <Breadcrumbs trail={[{ name: "Support", href: "/support" }]} />
       <h1 className="mb-2 font-display text-2xl font-extrabold text-white">🆘 Support</h1>
       <p className="mb-4 text-sm text-slate-400">
         Problem with a marketplace order, payment, or your account? Send us a message and we'll reply by email —

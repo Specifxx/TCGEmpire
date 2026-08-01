@@ -6,6 +6,11 @@ import { SITE_URL } from "@/lib/site";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
+  // A bare submission form: nothing on it is worth a search result, and /contact
+  // already covers the same intent with real content. Kept crawlable (follow) so
+  // the link graph is intact — never a robots.txt Disallow, which would stop
+  // Google reading this tag at all. AdSense remediation § Phase 7.
+  robots: { index: false, follow: true },
   title: "Feedback — Shape RiftCompare (and get Premium)",
   description:
     "Tell us what would make RiftCompare better. Your first feedback earns free RiftCompare Premium — help us build the best Riftbound price tool.",

@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { getPortfolio, isPremium, PORTFOLIO_FREE, type Portfolio } from "@/lib/premium";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
+import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
 import { formatMoney } from "@/lib/format";
 import { IndexChart } from "@/components/IndexChart";
 import { PriceChart } from "@/components/PriceChart";
@@ -110,7 +111,12 @@ export default async function PortfolioPage() {
   const premium = isPremium(user); // session user carries premiumUntil + isAdmin
   // Portfolio analytics are free for now (PORTFOLIO_FREE); `pro` gates the
   // value-history chart, P&L panel and CSV export so re-gating is one flag.
-  const pro = premium || PORTFOLIO_FREE;
+  // ADSENSE REVIEW MODE also lifts the gate here. This page is noindex (it is a
+  // personal account view), but "noindex" is not "unreachable" — an AdSense
+  // reviewer following links from the header lands on it, and blurred panels
+  // read as a paywall wherever they appear. The two blurred Premium previews
+  // below render as real content while the flag is on.
+  const pro = premium || PORTFOLIO_FREE || ADSENSE_REVIEW_MODE;
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6">

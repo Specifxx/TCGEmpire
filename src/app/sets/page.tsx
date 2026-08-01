@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { HubIntro } from "@/components/HubIntro";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { SETS } from "@/lib/constants";
@@ -64,6 +65,7 @@ export default async function SetsIndexPage() {
             <span className="text-slate-300">Sets</span>
           </nav>
           <h1 className="text-2xl font-extrabold text-white sm:text-3xl">Riftbound sets — card lists &amp; prices</h1>
+      <HubIntro path="/sets" />
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
             Every set in Riftbound: League of Legends TCG. Open a set for its full card list with live
             prices compared across stores, so you can find the cheapest singles — or complete the set.

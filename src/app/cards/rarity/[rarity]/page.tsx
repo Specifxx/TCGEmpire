@@ -35,5 +35,5 @@ export async function generateMetadata({ params }: { params: { rarity: string } 
 export default async function CardRarityFacetPage({ params }: { params: { rarity: string } }) {
   const facet = rarityFacetBySlug(params.rarity);
   if (!facet) notFound();
-  return <FacetPageBody facet={facet} dimensionLabel="rarity" crumbLabel="Rarity" crumbHref="/cards/rarity" siblings={RARITY_FACETS} />;
+  return <FacetPageBody facet={facet} dimensionLabel="rarity" crumbLabel="Rarity" crumbHref="/cards/rarity" siblings={RARITY_FACETS} collectionKind="rarity" />;
 }

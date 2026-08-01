@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { CONTACT_EMAIL } from "@/lib/site";
 import { MARKETPLACE_NAV_VISIBLE } from "@/components/nav-groups";
 
@@ -13,6 +14,9 @@ export default function ContactPage() {
     <div className="mx-auto max-w-xl">
       <div className="card-surface overflow-hidden">
         <div className="relative border-l-2 border-brand-500 bg-ink-900 px-6 py-10 text-center">
+          {/* Visible trail + BreadcrumbList JSON-LD. Every indexable page needs
+              both — the crawl check asserts it. */}
+          <Breadcrumbs trail={[{ name: "Contact", href: "/contact" }]} />
           <h1 className="text-2xl font-extrabold text-white">Contact &amp; Feedback</h1>
           <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-slate-300">
             Spotted a wrong price, a missing store, or have an idea to make RiftCompare better?

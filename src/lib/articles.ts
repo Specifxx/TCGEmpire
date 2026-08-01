@@ -1,6 +1,8 @@
 // File-based content for the Blog and Guides sections. Authored by us (not user
 // input), rendered with the lightweight <Markdown> component. To publish a new
 // article, add an entry here.
+import type { Country } from "./country";
+
 
 export type ArticleCategory = "blog" | "guide";
 
@@ -83,6 +85,13 @@ export interface Article {
   // view pre-filtered to the mechanic it just explained, or the Index). Omit for
   // the default /browse CTA.
   browseCta?: { href: string; label: string; blurb: string };
+  // Attach a LIVE, market-specific data section (stores stocking Riftbound in
+  // that market right now, cheapest/priciest cards, listing counts) rendered
+  // after the body by ArticleMarketData. Used on the per-country buying guides,
+  // which were thin and shaped alike; this gives each one real, current,
+  // genuinely different information instead of more prose.
+  // See docs/adsense-remediation.md § Phase 12.
+  marketData?: Country;
   // Structured Q&A for FAQPage schema. Most guides already hand-write a "## X FAQ"
   // section in `body` (visible, human-facing markdown) — this is the SAME content
   // duplicated in structured form so ArticleView can emit real FAQPage JSON-LD
@@ -410,6 +419,7 @@ New to the game entirely? Start with **[Riftbound for beginners](/guides/riftbou
   },
   {
     slug: "where-to-buy-riftbound-cards",
+    marketData: "AU",
     category: "guide",
     title: "Where to Buy Riftbound Cards (Australia, NZ, US & UK)",
     excerpt:
@@ -492,7 +502,17 @@ Deeper dives per region — real store counts, presale links and payment tips: *
 
 **Do Riftbound prices differ between countries?** Yes, and not just by exchange rate. Regional allocation, local stock levels and import costs all matter — see [why Riftbound prices change](/guides/why-riftbound-card-prices-change). RiftCompare prices each market in its own currency from stores that actually ship there.
 
-**Does RiftCompare sell cards directly?** RiftCompare is primarily a price-comparison tool that links you to the retailer, and it also runs its own peer-to-peer [Marketplace](/marketplace) where verified sellers list cards, with payment held until delivery is confirmed.`,
+**Does RiftCompare sell cards directly?** RiftCompare is primarily a price-comparison tool that links you to the retailer, and it also runs its own peer-to-peer [Marketplace](/marketplace) where verified sellers list cards, with payment held until delivery is confirmed.
+
+## Why our prices are accurate for each market
+
+Many overseas-hosted stores quietly show prices in whichever currency their server thinks you are
+browsing from. We always request each store's price **for the market it serves**, so the number you
+see is what you would actually pay locally — no surprise conversion at checkout, and no comparing an
+Australian store's AUD price against a US store's USD one as if they were the same figure. That is
+also why the comparison never converts between currencies to declare a winner: we rank within a
+market, on delivered cost.
+`,
     faq: [
       { q: "Where is the cheapest place to buy Riftbound cards?", a: "There isn't one shop that's always cheapest — it changes per card and per market. RiftCompare compares every store it tracks at once and ranks them by total delivered cost (price plus postage) rather than sticker price." },
       { q: "Can I buy Riftbound cards near me?", a: "Local game stores stock sealed product and often singles, and many also sell online. RiftCompare's \"stores we track\" page lists every retailer in the comparison grouped by market, so you can see which are local to you." },
@@ -503,6 +523,7 @@ Deeper dives per region — real store counts, presale links and payment tips: *
   },
   {
     slug: "cheapest-riftbound-booster-boxes",
+    marketData: "US",
     category: "guide",
     title: "Cheapest Riftbound Booster Boxes & Sealed (AU, NZ, US & UK)",
     excerpt:
@@ -817,37 +838,6 @@ Against aggressive decks, keep cheap blockers and removal; against slower decks,
 At tournaments you play best-of-three, and between games you can swap up to your full sideboard (8 cards) in and out. The idea is to tune your deck to the matchup: bring in extra removal against go-wide decks, more resilient threats against control, or anti-aggro tools when you're on the back foot. Plan your swaps **before** the event — for each common matchup, decide which cards come out and which come in, so you're not guessing at the table.
 
 Want to try these ideas out before committing? **[Price the final deck](/deck)** across every store first, so you know exactly what the build costs before you buy.`,
-  },
-  {
-    slug: "where-to-buy-riftbound-australia",
-    category: "guide",
-    title: "Where to Buy Riftbound Cards in Australia",
-    excerpt:
-      "How to find the cheapest Riftbound singles and sealed product in Australia — and how RiftCompare does the comparison for you.",
-    author: "RiftCompare",
-    date: "2026-06-06",
-    readMins: 3,
-    tags: ["buying", "australia"],
-    body: `Riftbound is sold by a growing number of Australian game stores, and prices for the same card can vary a lot from shop to shop. Here's how to buy smart.
-
-## Singles vs sealed
-
-- **Singles** are individual cards — the cheapest way to get exactly what your deck needs. Browse them in our **[card database](/browse)**, where each card shows the lowest live AU price and links straight to the store.
-- **Sealed** product (booster boxes, packs, Proving Grounds, Nexus Night packs) is better for opening and collecting. Compare it on the **[Sealed Products page](/sealed)**.
-
-## Why our prices are accurate for Australia
-
-Many overseas-hosted stores quietly show prices in the wrong currency depending on where their server thinks you are. We always request the **Australian** price from each store, so the numbers you see are what you'd actually pay locally — no surprise currency conversion at checkout.
-
-## Tips for the cheapest basket
-
-1. **Check the build cost on a deck page.** It already finds the cheapest copy of each card across every store we track.
-2. **Watch shipping.** A card that's 20c cheaper isn't a win if it adds postage from a separate store — we show an estimated shipping figure per shop.
-3. **Use the [marketplace](/marketplace).** Verified sellers list cards for sale (often below retail).
-
-We currently compare a wide range of Australian stores plus eBay AU, and we add more regularly. If your favourite shop is missing, let us know via [contact](/contact) — this guide will grow as coverage does.
-
-For the full, regularly-updated list of AU stores we track (with real store counts), see **[Where to Buy Riftbound Cards in Australia](/blog/buy-riftbound-cards-australia)** — or compare **[every market we cover](/guides/where-to-buy-riftbound-cards)**.`,
   },
   {
     slug: "riftbound-booster-box-ev-worth-ripping-or-buying-singles",
@@ -2463,6 +2453,7 @@ See the full **[Vendetta card list](/guides/riftbound-vendetta-card-list)**, bro
   },
   {
     slug: "riftbound-price-comparison-singapore",
+    marketData: "SG",
     category: "blog",
     title: "Riftbound Card Prices Singapore — Compare 11 SG Stores",
     excerpt:
@@ -2506,6 +2497,7 @@ Happy hunting — and pay less for the cards you want. Start at the **[card data
   },
   {
     slug: "buy-riftbound-cards-australia",
+    marketData: "AU",
     category: "blog",
     title: "Riftbound Card Prices Australia — Compare 19 AU Stores",
     excerpt:
@@ -2545,6 +2537,7 @@ Buying from overseas, or curious about other markets? See **[the US](/blog/buy-r
   },
   {
     slug: "buy-riftbound-cards-nz",
+    marketData: "NZ",
     category: "blog",
     title: "Riftbound Card Prices NZ — Compare 10 NZ Stores",
     excerpt:
@@ -2585,6 +2578,7 @@ Buying from overseas, or curious about other markets? See **[Australia](/blog/bu
   },
   {
     slug: "buy-riftbound-cards-us",
+    marketData: "US",
     category: "blog",
     title: "Riftbound Card Prices USA — Stores, TCGplayer & eBay",
     excerpt:
@@ -2624,6 +2618,7 @@ Shopping from **[Australia](/blog/buy-riftbound-cards-australia)**, **[New Zeala
   },
   {
     slug: "buy-riftbound-cards-uk",
+    marketData: "UK",
     category: "blog",
     title: "Riftbound Card Prices UK — Compare 14 Stores & eBay",
     excerpt:
@@ -2663,6 +2658,7 @@ Shopping from **[Australia](/blog/buy-riftbound-cards-australia)**, **[New Zeala
   },
   {
     slug: "buy-riftbound-cards-canada",
+    marketData: "CA",
     category: "blog",
     title: "Riftbound Card Prices Canada — Compare 20 Canadian Stores",
     excerpt:

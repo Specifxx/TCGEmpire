@@ -12,6 +12,9 @@ import { DomainBadge } from "@/components/Badge";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { breadcrumb } from "@/lib/jsonld";
 import { SITE_URL } from "@/lib/site";
+import { buildCollectionNarrative } from "@/lib/content/collection-narrative";
+import { getSiteMedianCents } from "@/lib/content/site-median";
+import { CHAMPION_THIN_THRESHOLD } from "@/lib/champions";
 
 // riftdecks.com's /legends/<champion> pages rank #1 for champion queries with
 // build price and win rate in the snippet; ours 404'd entirely. This is the
@@ -28,6 +31,11 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const champ = championBySlug(params.slug);
   if (!champ) return {};
+  // A hub with a handful of printings is a directory entry, not a page. Below
+  // the threshold it stays crawlable and linked but is kept out of the index,
+  // matching how the type/rarity/printing facets already behave. Fails OPEN: a
+  // count query that throws returns -1 and leaves the page indexable.
+  const cardCount = await prisma.card.count({ where: championCardWhere(champ) }).catch(() => -1);
   const title = `${champ.name} Riftbound Cards — All Printings & Live Prices`;
   return {
     title: { absolute: `${title} | RiftCompare` },
@@ -35,6 +43,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       `Every Riftbound ${champ.name} card across all sets — Legends, units and alternate-art printings — ` +
       `with live prices compared across stores so you can find the cheapest way to build ${champ.name}.`,
     alternates: { canonical: `/champions/${champ.slug}` },
+    ...(cardCount >= 0 && cardCount < CHAMPION_THIN_THRESHOLD ? { robots: { index: false, follow: true } } : {}),
     keywords: [
       `${champ.name} riftbound`,
       `riftbound ${champ.name} cards`,
@@ -123,6 +132,29 @@ export default async function ChampionPage({ params }: { params: { slug: string 
       })
     : deckSeeds.map(unpriced);
 
+  // Editorial intro built from this champion's OWN live pool — count, price
+  // range, where the value sits, which cards matter, and what that means for
+  // someone buying. The audit sampled champion hubs at a median of 164 unique
+  // editorial words with a floor of 71, which across 82 URLs is a thin-content
+  // pattern rather than a handful of stragglers. See lib/content/
+  // collection-narrative.ts and docs/adsense-remediation.md § Phase 7c.
+  const siteMedianCents = await getSiteMedianCents(country);
+  const intro = buildCollectionNarrative({
+    kind: "champion",
+    label: champ.name,
+    currency,
+    place: COUNTRIES[country].place,
+    members: cards.map((c) => ({
+      name: c.name,
+      priceCents: (c as unknown as Record<string, number | null>)[field] ?? null,
+      setCode: c.setCode,
+      rarity: c.rarity,
+      collectorNumber: c.collectorNumber,
+    })),
+    setCodes: Array.from(new Set(cards.map((c) => c.setCode))),
+    siteMedianCents,
+  });
+
   const trail = [
     { name: "Champions", href: "/champions" },
     { name: champ.name, href: `/champions/${champ.slug}` },
@@ -153,14 +185,17 @@ export default async function ChampionPage({ params }: { params: { slug: string 
         <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
           {champ.name} Riftbound cards — all printings &amp; live prices
         </h1>
-        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
-          Every Riftbound card featuring <strong className="text-slate-200">{champ.name}</strong> —{" "}
-          {cards.length} printing{cards.length === 1 ? "" : "s"} across {sets.length}{" "}
-          {sets.length === 1 ? "set" : "sets"} ({sets.join(", ")})
-          {legends.length > 0 && `, including ${legends.length} Legend printing${legends.length === 1 ? "" : "s"}`}.
-          Prices update daily and are compared across every store we track, so you can see the cheapest way to
-          pick each one up.
-        </p>
+        <div className="mt-3 max-w-3xl space-y-2.5 text-sm leading-relaxed text-slate-400">
+          <p>
+            Every Riftbound card featuring <strong className="text-slate-200">{champ.name}</strong> —{" "}
+            {cards.length} printing{cards.length === 1 ? "" : "s"} across {sets.length}{" "}
+            {sets.length === 1 ? "set" : "sets"} ({sets.join(", ")})
+            {legends.length > 0 && `, including ${legends.length} Legend printing${legends.length === 1 ? "" : "s"}`}.
+          </p>
+          {intro.map((p, i) => (
+            <p key={i}>{p}</p>
+          ))}
+        </div>
         {domainsByCount.length > 0 && (
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
             {domainsByCount.length === 1 ? (

@@ -173,7 +173,7 @@ export function MarketplaceCheckout({ items, onClose }: { items: CheckoutItem[];
       <div className="relative z-10 grid max-h-[90vh] w-full max-w-lg grid-rows-[auto_1fr_auto] overflow-hidden rounded-2xl border border-ink-700 bg-ink-900 shadow-2xl">
         <div className="flex items-center justify-between border-b border-ink-800 p-4">
           <h2 className="text-lg font-extrabold text-white">Shipping details</h2>
-          <button onClick={onClose} aria-label="Close" className="grid h-8 w-8 place-items-center rounded-full text-slate-400 hover:bg-ink-800 hover:text-white">✕</button>
+          <button onClick={onClose} aria-label="Close" className="tap-icon  rounded-full text-slate-400 hover:bg-ink-800 hover:text-white">✕</button>
         </div>
 
         <form id="checkout-form" onSubmit={submit} className="overflow-y-auto p-4">

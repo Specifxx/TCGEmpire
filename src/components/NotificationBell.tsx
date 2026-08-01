@@ -103,7 +103,7 @@ export function NotificationBell() {
         onClick={toggle}
         aria-label="Notifications"
         aria-expanded={open}
-        className="relative grid h-9 w-9 place-items-center rounded-lg text-slate-300 hover:bg-ink-800 hover:text-white"
+        className="tap-icon relative rounded-lg text-slate-300 hover:bg-ink-800 hover:text-white"
       >
         <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" strokeLinecap="round" strokeLinejoin="round" />

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { ParallaxRoot } from "./ParallaxRoot";
 import { CountryHeroToggle } from "@/components/CountryHeroToggle";
@@ -52,9 +53,31 @@ export function CinematicHero({
         {/* The primary action: search, not a row of buttons. Wired to the exact
             same search as the nav box (same component, `variant="hero"`).
             Autofocus is desktop-only — SearchBar itself gates on viewport
-            width, never on mobile. */}
+            width, never on mobile.
+
+            THE <Suspense> IS LOAD-BEARING, not a nicety. SearchBar calls
+            useSearchParams(), and in the App Router an unwrapped
+            useSearchParams() deopts its whole subtree to client-side rendering.
+            Without this boundary the deopt escalated to the nearest Suspense
+            above it — app/loading.tsx — so the ENTIRE homepage was replaced in
+            the server-rendered HTML by the loading spinner:
+
+              <main id="main-content">
+                <template data-dgst="BAILOUT_TO_CLIENT_SIDE_RENDERING"></template>
+                <div …>Loading…</div>
+              </main>
+
+            Every other page on the site server-renders its content; the homepage
+            alone shipped a spinner, no <h1>, and not one internal link, to any
+            client that doesn't execute JavaScript — including an AdSense
+            reviewer fetching the page and every "does this site have content?"
+            check that runs on raw HTML. The Navbar wraps its two SearchBar
+            instances in exactly this boundary; the hero was the one that
+            didn't. See docs/adsense-remediation.md § Phase 11. */}
         <div className="animate-fade-in [animation-delay:300ms] mt-6">
-          <SearchBar variant="hero" autoFocusDesktop />
+          <Suspense fallback={<div className="input mx-auto h-12 max-w-2xl" />}>
+            <SearchBar variant="hero" autoFocusDesktop />
+          </Suspense>
         </div>
 
         {/* One thin stat line, directly under the search field — was 4 bordered

@@ -10,6 +10,8 @@ import { Markdown } from "./Markdown";
 import { fmtDate } from "./ArticleList";
 import { AdSlot } from "./AdSlot";
 import { ArticleShopStrip } from "./ArticleShopStrip";
+import { ArticleMarketData } from "./ArticleMarketData";
+import { authorByName, authorJsonLd } from "@/lib/content/authors";
 import { SITE_URL } from "@/lib/site";
 
 // A card printed beyond the set's total (e.g. 167/166) or carrying an SP special
@@ -223,6 +225,7 @@ export async function ArticleView({ article }: { article: Article }) {
   const backLabel = isGuide ? "All guides" : "All posts";
 
   const articleUrl = `${SITE_URL}/${isGuide ? "guides" : "blog"}/${article.slug}`;
+  const authorSlug = authorByName(article.author)?.slug ?? null;
   const articleLd = {
     "@context": "https://schema.org",
     "@type": isGuide ? "TechArticle" : "BlogPosting",
@@ -232,7 +235,10 @@ export async function ArticleView({ article }: { article: Article }) {
     // dateModified defaults to the publish date until an article carries an
     // explicit `updated` — never older than datePublished.
     dateModified: article.updated ?? article.date,
-    author: { "@type": "Organization", name: article.author },
+    // Typed from lib/content/authors.ts — an Organization byline, because that
+    // is what it truthfully is. See that file's header on why no Person is
+    // fabricated here.
+    author: authorJsonLd(article.author),
     publisher: { "@type": "Organization", name: "RiftCompare" },
     mainEntityOfPage: articleUrl,
   };
@@ -282,13 +288,29 @@ export async function ArticleView({ article }: { article: Article }) {
 
       <h1 className="text-3xl font-extrabold leading-tight text-white">{article.title}</h1>
       <div className="mt-2 text-sm text-slate-500">
-        {article.author} · {fmtDate(article.date)} · {article.readMins} min read
+        {/* The byline links to a real author page with a real bio, and to the
+            editorial policy. Anonymous long-form content at scale is one of the
+            strongest "machine-generated" signals a reviewer looks for. */}
+        {authorSlug ? (
+          <Link href={`/authors/${authorSlug}`} className="text-slate-400 hover:text-brand-400">
+            {article.author}
+          </Link>
+        ) : (
+          article.author
+        )}{" "}
+        · <time dateTime={article.date}>{fmtDate(article.date)}</time> · {article.readMins} min read
         {/* Real freshness signal — Article.updated already exists on ~30 articles
             but was never rendered anywhere, so a genuinely-refreshed guide looked
             exactly as stale as one that hadn't been touched since launch. */}
         {article.updated && article.updated !== article.date && (
-          <> · <span className="text-slate-400">Updated {fmtDate(article.updated)}</span></>
+          <>
+            {" "}· <time dateTime={article.updated} className="text-slate-400">Updated {fmtDate(article.updated)}</time>
+          </>
         )}
+        {" "}·{" "}
+        <Link href="/editorial-policy" className="text-slate-400 hover:text-brand-400">
+          How we research this
+        </Link>
       </div>
 
       <AdSlot className="mt-6" height={120} />
@@ -317,6 +339,11 @@ export async function ArticleView({ article }: { article: Article }) {
 
       {/* Per-article eBay affiliate searches — the reader is at peak intent right
           after finishing the guide; this is where a well-ranking page converts. */}
+      {/* Live market data BEFORE the affiliate strip — our own current figures
+          lead, the commercial block follows. Same ordering principle as the card
+          page (see docs/adsense-remediation.md § Phase 8). */}
+      {article.marketData && <ArticleMarketData country={article.marketData} />}
+
       {article.shop && article.shop.length > 0 && <ArticleShopStrip items={article.shop} />}
 
       {/* "Ready to buy?" — every article is fundamentally about Riftbound cards, so
