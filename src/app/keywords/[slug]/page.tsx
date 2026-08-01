@@ -163,7 +163,7 @@ export default async function KeywordPage({ params }: { params: { slug: string }
       {cards.length > 0 && (
         <section>
           <div className="mb-4 flex items-end justify-between gap-3">
-            <h2 className="text-xl font-extrabold text-white">Every {kw.name} card revealed so far</h2>
+            <h2 className="text-xl font-extrabold text-white">Every {kw.name} card</h2>
             <Link
               href={`/browse?rules=${encodeURIComponent(kw.rulesContain)}&rulesSet=${kw.set}`}
               className="btn-ghost text-xs shrink-0"
