@@ -90,9 +90,15 @@ jobs:
           EBAY_REFRESH: ${{ github.event_name != 'push' }}
           # Manual run with "ebay_force" ticked bypasses the once-a-day eBay gate.
           EBAY_FORCE: ${{ inputs.ebay_force && '1' || '' }}
-          # RH5 is the current history project (see src/lib/db-history.ts) — _4 went
-          # unreachable (P1001) and is kept only as a dead fallback.
+          # RH6 is the current history project (see src/lib/db-history.ts) — RH5
+          # exhausted its Neon transfer allowance on 2026-07-31 and _4 went
+          # unreachable (P1001) before that; both are kept only as dead fallbacks.
+          # THIS STEP WRITES PriceHistory — if RH6 is missing here, db-history.ts
+          # falls through to a dead project (or, at the end of the chain, to the
+          # OPERATIONAL database), so keep this list in sync with db-history.ts.
+          RH6: ${{ secrets.RH6 || vars.RH6 }}
           RH5: ${{ secrets.RH5 || vars.RH5 }}
+          HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
           HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
@@ -114,7 +120,10 @@ jobs:
           EBAY_AFFILIATE_CAMPAIGN: ${{ secrets.EBAY_AFFILIATE_CAMPAIGN }}
           EBAY_REFRESH: ${{ github.event_name != 'push' }}
           EBAY_FORCE: ${{ inputs.ebay_force && '1' || '' }}
+          # Same chain as the Import prices step above — see its comment.
+          RH6: ${{ secrets.RH6 || vars.RH6 }}
           RH5: ${{ secrets.RH5 || vars.RH5 }}
+          HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
           HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}

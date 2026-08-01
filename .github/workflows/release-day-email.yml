@@ -1,20 +1,22 @@
 name: Release-day email blast
 
-# ONE-OFF marketing blast: tells the newsletter list a set is out, the card
-# database + live prices are up, and sealed is priced too. Runs scripts/send-release-day.ts.
+# Triggers the release-day blast — "the set is out, the card database + live prices
+# are up, sealed is priced too" — to the newsletter list.
 #
-# THIS EMAILS REAL SUBSCRIBERS. It is manual-dispatch only — deliberately no
-# schedule — and defaults to a DRY RUN, so the "Run workflow" button cannot blast
-# by accident. To actually send you must untick `dry_run`.
+# THE SEND HAPPENS ON VERCEL, NOT HERE. RESEND_API_KEY is a Vercel environment
+# variable (that's how the weekly digest, verification and price-alert emails all
+# send). A GitHub runner has the database but not the mail key, so a blast run
+# directly in CI would deliver nothing. This job therefore just authenticates a
+# call to /api/cron/release-day-email with CRON_SECRET — the same split
+# refresh-prices.yml already uses for /api/revalidate.
 #
-# The script itself is idempotent per campaign (it stamps each subscriber's
-# lastEditionKey with "release-<set_slug>" on success), so a timeout or partial
-# failure is safe to re-run: it resumes and skips anyone already emailed.
+# SAFETY: manual dispatch only (no schedule), and dry_run defaults to TRUE, so the
+# Run-workflow button cannot blast by accident. The endpoint is idempotent per
+# campaign (each subscriber stamped on success), so re-running resumes rather than
+# double-sending — which also makes the batch cap safe.
 #
-# SETUP (Settings → Secrets and variables → Actions) — all should already exist:
-#   DATABASE_URL / RM3   Neon Postgres (same resolution order as the other workflows)
-#   RESEND_API_KEY       required to actually deliver; without it the script aborts
-#   EMAIL_FROM           (optional) verified sender on the riftcompare.com domain
+# SETUP: CRON_SECRET as an Actions secret (already used by refresh-prices.yml).
+# RESEND_API_KEY is NOT needed here — it must be set in Vercel.
 
 on:
   workflow_dispatch:
@@ -25,9 +27,23 @@ on:
         required: true
         default: "vendetta"
       dry_run:
-        description: "Dry run — resolve audience + live stats, send NOTHING (leave ticked to preview)"
+        description: "Dry run — report audience + live stats, send NOTHING (untick to actually send)"
         type: boolean
         default: true
+      audience:
+        description: "Who to email"
+        type: choice
+        required: true
+        default: "subscribers"
+        options:
+          - subscribers   # opt-in newsletter list only
+          - users         # registered accounts (one-click announcement opt-out)
+          - all           # both, de-duplicated by email
+      limit:
+        description: "Max emails this run (blank = default batch; re-run to continue)"
+        type: string
+        required: false
+        default: ""
 
 concurrency:
   # Never let two blasts overlap — that is how people get double-emailed.
@@ -37,23 +53,29 @@ concurrency:
 jobs:
   send:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-      - run: npm ci
-      - run: npx prisma generate
-
-      - name: Send release-day email
+      - name: Trigger release-day blast on Vercel
         env:
-          # Same newest-first DB resolution as maintenance.yml / refresh-prices.yml.
-          DATABASE_URL: ${{ secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
-          RELEASE_DAY_SEND: "1"
-          DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: "https://riftcompare.com"
           SET_SLUG: ${{ inputs.set_slug }}
-        run: npx tsx scripts/send-release-day.ts
+          # dry=1 unless the box was explicitly unticked.
+          DRY: ${{ inputs.dry_run && '1' || '0' }}
+          AUDIENCE: ${{ inputs.audience }}
+          LIMIT: ${{ inputs.limit }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::CRON_SECRET is not set as an Actions secret — cannot authenticate the trigger."
+            exit 1
+          fi
+          url="$SITE_URL/api/cron/release-day-email?set=$SET_SLUG&dry=$DRY&audience=$AUDIENCE"
+          [ -n "$LIMIT" ] && url="$url&limit=$LIMIT"
+          echo "POST ${url//$CRON_SECRET/***}"
+          code=$(curl -sS --max-time 290 -o response.json -w "%{http_code}" -X POST \
+            "$url" -H "Authorization: Bearer $CRON_SECRET")
+          echo "HTTP $code"
+          cat response.json
+          echo
+          # Fail the job on a non-200 so a silent no-send is visible in the UI.
+          [ "$code" = "200" ] || { echo "::error::Blast endpoint returned $code"; exit 1; }

@@ -46,6 +46,18 @@ jobs:
       - name: Generate and send promo pack
         env:
           DATABASE_URL: ${{ secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+          # The whole promo is built from price MOVERS, which come from
+          # PriceHistory in the separate history project (src/lib/db-history.ts).
+          # These were never set here, so that client fell through its entire
+          # chain to DATABASE_URL — the OPERATIONAL database, whose PriceHistory
+          # is deliberately empty since the RM3 cutover. The result was a promo
+          # that skipped every Friday with "no price history yet".
+          RH6: ${{ secrets.RH6 || vars.RH6 }}
+          RH5: ${{ secrets.RH5 || vars.RH5 }}
+          HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
+          HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
+          HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
+          HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}

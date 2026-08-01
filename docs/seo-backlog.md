@@ -100,3 +100,39 @@ content to fill it.
 7. **Card-name verification** — run the `SELECT` above against production and
    report which of the 27 named spiking cards are missing/misspelled before any
    copy references them by name.
+
+## Update — 31 Jul 2026 (search-demand report pass)
+
+Driven by the Riftbound/Vendetta search-demand report (Google Autocomplete +
+r/riftboundtcg, 31 Jul 2026). Three of that report's seven recommended assets
+were buildable from real data and are now live; the rest stay blocked for the
+reasons already listed above.
+
+| Report priority | Status | Notes |
+|---|---|---|
+| #5 Price-movement explainer | ✅ `/guides/why-riftbound-card-prices-change` | The report's "biggest untapped seam" — people ask *why* prices move, not just what they are. Written as mechanism + live-data pointers, deliberately with **no** hardcoded prices or invented historical percentages (the RH5→RH6 migration on the same day means our own price history restarts from today). Descriptive, not advisory, per the report's own editorial rule. |
+| #4 "Cheapest way to start" | ✅ `/guides/cheapest-way-to-start-riftbound` | Onboarding intent is risk-averse and price-led. Compares the four real routes in. Asserts **no** MSRPs — points at live per-market pricing instead. |
+| #3 Rules hub | ✅ `/guides/riftbound-rules-explained` | Backlog item #8 ("doable, deferred"). Pure internal-linking hub over already-verified guides; adds **zero** new rules claims, and says so on the page. The `lib/keywords.ts` DATA-ACCURACY RULE still blocks the deeper per-mechanic FAQ the report asks for. |
+| #1 Vendetta card list w/ live prices | already existed | `/guides/riftbound-vendetta-card-list` + `/sets/vendetta`. Retrofitted with FAQ schema this pass. |
+| #2 Chase/pull-rate hub | 🚫 still blocked | Chase side exists. **Pull rates do not** — publishing rates needs either Riot's official odds or a real aggregated dataset. Community box-opening numbers are not a citable source. |
+| #6 Radiance (Set 5) hub | 🚫 still blocked | Same as backlog #11: no confirmed set facts. "riftbound radiance" being the #2 autocomplete does not authorise inventing a release date or card list. |
+| #7 Regional buying guides | already existed | AU/NZ/US/UK/SG/CA all live. |
+
+### Two SEO defects found and fixed while doing this
+
+1. **12 broken internal links across the article corpus.** Links pointing at
+   `/blog/<slug>` for articles whose category is `guide` (and vice versa). Both
+   route handlers `notFound()` on category mismatch, so every one was a hard
+   404 — wasted crawl budget and dead ends for readers. All 12 rewritten; a
+   both-directions validator now confirms zero remain.
+2. **FAQPage schema was on only 3 of 60 articles**, despite the report's
+   finding that Google serves *no* "People also ask" box for Vendetta queries
+   yet — i.e. the slots are unclaimed. Now on 9 articles / 45 Q&As. Two
+   pre-existing articles (`riftbound-burn-explained`, `riftbound-empower-explained`)
+   had structured FAQ with **no visible on-page counterpart**, which violates
+   Google's FAQPage policy; both fixed. Every structured question is now
+   verified to have visible `**Question**` text on the page.
+
+**Do next (cheap, unblocked):** retrofit visible-FAQ + schema onto the
+remaining ~54 articles, highest-commercial-value first. The validator to check
+it is in this pass's commit message.

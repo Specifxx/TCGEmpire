@@ -29,6 +29,7 @@
  * Friday-evening price refresh, so the numbers are fresh).
  */
 import { prisma } from "../src/lib/db";
+import { dbHistory } from "../src/lib/db-history";
 import { getPriceMovers, type Mover, type PriceMovers } from "../src/lib/price-history";
 import { sendEmail, isEmailEnabled } from "../src/lib/email";
 import { formatMoney } from "../src/lib/format";
@@ -242,7 +243,16 @@ async function main() {
   } else {
     // Cheap explicit query first so a DB misconfiguration fails the workflow
     // loudly, instead of getPriceMovers' catch-all making it look like a quiet week.
-    const historyRows = await prisma.priceHistory.count({ where: { country: market } });
+    //
+    // dbHistory, NOT prisma — and this guard is the reason the bug it was written
+    // to catch went unnoticed for so long. PriceHistory lives in the separate
+    // history project (RH6, see src/lib/db-history.ts); getPriceMovers() below
+    // correctly reads it via dbHistory, but this pre-check queried the
+    // OPERATIONAL database, whose PriceHistory is deliberately empty since the
+    // RM3 cutover. So it returned 0 every Friday and the promo silently skipped
+    // with "no price history yet" — the exact quiet failure the comment above
+    // promises to prevent.
+    const historyRows = await dbHistory.priceHistory.count({ where: { country: market } });
     if (historyRows === 0) {
       console.log(`[promo] no price history for ${market} yet — nothing to report, skipping.`);
       return;

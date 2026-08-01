@@ -157,6 +157,20 @@ function newsletterFooter(unsubUrl: string): string {
   </td></tr>`;
 }
 
+// Footer for PRODUCT ANNOUNCEMENTS sent to registered accounts. A separate footer
+// from newsletterFooter because that one states "you signed up for the weekly Index
+// summary" — which is simply untrue for someone who made an account and never
+// subscribed to anything. Saying so on a commercial email is both inaccurate and
+// the fastest way to get marked as spam, so this one states the real reason and
+// points at the announcement-specific opt-out (which does NOT touch their account
+// emails, price alerts or the weekly digest — see app/announcements/unsubscribe).
+function announcementFooter(unsubUrl: string): string {
+  return `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">
+    You're getting this because you have a ${SITE_NAME} account. This is a one-off product announcement, not a subscription.<br/>
+    <a href="${unsubUrl}" style="color:#9aa4b2;text-decoration:underline">Don't email me announcements</a> · RiftCompare · Riftbound card price comparison.
+  </td></tr>`;
+}
+
 // The weekly digest itself; `inner` is built by lib/newsletter.ts so the content
 // (movers tables, Index summary) lives next to the data that produces it.
 export async function sendNewsletterDigestEmail(to: string, subject: string, heading: string, inner: string, unsubUrl: string): Promise<boolean> {
@@ -225,7 +239,11 @@ export async function sendReleaseDayEmail(
   setName: string,
   setSlug: string,
   unsubUrl: string,
-  stats: ReleaseDayStats
+  stats: ReleaseDayStats,
+  // Which footer to use. "subscriber" = they opted into the newsletter, so the
+  // newsletter footer/unsub is correct. "account" = a registered user receiving a
+  // one-off announcement; claiming they subscribed would be false.
+  recipient: "subscriber" | "account" = "subscriber"
 ): Promise<boolean> {
   const utmq = "utm_source=newsletter&utm_medium=email&utm_campaign=release-day";
   const setUrl = `${SITE_URL}/sets/${setSlug}?${utmq}`;
@@ -239,7 +257,11 @@ export async function sendReleaseDayEmail(
   // shrinks the row rather than printing "—" or a guess.
   const tiles: { value: string; label: string }[] = [];
   if (stats.cardCount != null && stats.cardCount > 0)
-    tiles.push({ value: stats.cardCount.toLocaleString(), label: "cards live" });
+    // "printings", not "cards": the live count includes alt-arts, Signatures,
+    // Overnumbers and promos, so it is legitimately HIGHER than the set's headline
+    // card count (Vendetta: 235 printings vs a 166-card set). Labelling it "cards"
+    // would misstate the set's size to anyone who knows the number.
+    tiles.push({ value: stats.cardCount.toLocaleString(), label: "printings live" });
   if (stats.storeCount != null && stats.storeCount > 0)
     tiles.push({ value: String(stats.storeCount), label: "stores compared" });
   if (stats.marketCount != null && stats.marketCount > 0)
@@ -311,7 +333,7 @@ export async function sendReleaseDayEmail(
     ${card(
       "#34d17e",
       "The full card database, ready",
-      `Every ${setName} card has its own page with the complete store-by-store comparison, price history and printing variants.${pricedLine}`,
+      `Every ${setName} card has its own page with the complete store-by-store comparison, price history and printing variants — alt-arts, Signatures, Overnumbers and promos all tracked separately.${pricedLine}`,
       { href: setUrl, label: `Browse ${setName}` }
     )}
     ${card(
@@ -341,7 +363,8 @@ export async function sendReleaseDayEmail(
       ? `${setName} is out — every card priced across ${stats.storeCount} stores`
       : `${setName} is out — see every card's cheapest price`;
 
-  return sendEmail(to, subject, emailShell(`${setName} is here`, inner, newsletterFooter(unsubUrl)));
+  const footer = recipient === "account" ? announcementFooter(unsubUrl) : newsletterFooter(unsubUrl);
+  return sendEmail(to, subject, emailShell(`${setName} is here`, inner, footer));
 }
 
 // Sent once on first signup so subscribers hear from us immediately (and get the

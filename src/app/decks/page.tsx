@@ -59,8 +59,7 @@ export default async function DecksPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }} />
     <div className="flex flex-col gap-10">
-      {/* Vendetta spotlight — early singles are trading (Pre-Rift launch events),
-          a week ahead of the 31 July official street date, but there's still no
+      {/* Vendetta spotlight — the set released 31 July 2026, but there's still no
           real tournament scene for Vendetta specifically. There IS a well-researched
           archetype guide grounded in its confirmed mechanics/domains, framed
           honestly as "blueprints, not netdecks" (matching the guide's own copy)
@@ -70,9 +69,8 @@ export default async function DecksPage() {
         <span className="chip bg-brand-500 text-[10px] font-extrabold uppercase tracking-wide text-ink-950">New · Vendetta is here</span>
         <h2 className="mt-2 text-xl font-extrabold text-white sm:text-2xl">Three deck archetypes to build right now</h2>
         <p className="mt-1 max-w-2xl text-sm text-slate-300">
-          Vendetta singles are already trading early, ahead of the 31 July official street date — here&apos;s the
-          shell for three strong archetypes grounded in its confirmed mechanics and domain pairings, with real card
-          visuals. Blueprints, not netdecks: concrete lists fill in once a real tournament scene forms.
+          Vendetta is out now — here&apos;s the shell for three strong archetypes grounded in its mechanics and
+          domain pairings, with real card visuals. Blueprints, not netdecks: concrete lists fill in once a real tournament scene forms.
         </p>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           {[

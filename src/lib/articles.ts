@@ -497,7 +497,26 @@ Set your country, **[open the card database](/browse)**, find your card, and cli
 
 ## Buying in a specific market?
 
-Deeper dives per region — real store counts, presale links and payment tips: **[Australia](/blog/buy-riftbound-cards-australia)** · **[New Zealand](/blog/buy-riftbound-cards-nz)** · **[United States](/blog/buy-riftbound-cards-us)** · **[United Kingdom](/blog/buy-riftbound-cards-uk)** · **[Singapore](/blog/riftbound-price-comparison-singapore)** · **[Canada](/blog/buy-riftbound-cards-canada)**. Just want the cheapest single right now? **[See where to buy singles](/blog/where-to-buy-riftbound-singles)**.`,
+Deeper dives per region — real store counts, presale links and payment tips: **[Australia](/blog/buy-riftbound-cards-australia)** · **[New Zealand](/blog/buy-riftbound-cards-nz)** · **[United States](/blog/buy-riftbound-cards-us)** · **[United Kingdom](/blog/buy-riftbound-cards-uk)** · **[Singapore](/blog/riftbound-price-comparison-singapore)** · **[Canada](/blog/buy-riftbound-cards-canada)**. Just want the cheapest single right now? **[See where to buy singles](/blog/where-to-buy-riftbound-singles)**.
+
+## Where to buy Riftbound FAQ
+
+**Where is the cheapest place to buy Riftbound cards?** There isn't one shop that's always cheapest — it changes per card and per market, which is why RiftCompare compares every store we track at once and ranks them by total delivered cost rather than sticker price.
+
+**Can I buy Riftbound cards near me?** Local game stores stock sealed product and often singles, and many also sell online. The [stores we track](/stores/tracked) page lists every retailer in the comparison by market, so you can see which of them are local to you.
+
+**Is it cheaper to buy Riftbound singles or sealed product?** For a specific card you've already chosen, singles are almost always cheaper — sealed means paying for many cards you didn't need. Sealed makes sense when you want the experience of opening packs.
+
+**Do Riftbound prices differ between countries?** Yes, and not just by exchange rate. Regional allocation, local stock levels and import costs all matter — see [why Riftbound prices change](/guides/why-riftbound-card-prices-change). RiftCompare prices each market in its own currency from stores that actually ship there.
+
+**Does RiftCompare sell cards directly?** RiftCompare is primarily a price-comparison tool that links you to the retailer, and it also runs its own peer-to-peer [Marketplace](/marketplace) where verified sellers list cards, with payment held until delivery is confirmed.`,
+    faq: [
+      { q: "Where is the cheapest place to buy Riftbound cards?", a: "There isn't one shop that's always cheapest — it changes per card and per market. RiftCompare compares every store it tracks at once and ranks them by total delivered cost (price plus postage) rather than sticker price." },
+      { q: "Can I buy Riftbound cards near me?", a: "Local game stores stock sealed product and often singles, and many also sell online. RiftCompare's \"stores we track\" page lists every retailer in the comparison grouped by market, so you can see which are local to you." },
+      { q: "Is it cheaper to buy Riftbound singles or sealed product?", a: "For a specific card you've already chosen, singles are almost always cheaper — sealed means paying for many cards you didn't need. Sealed makes sense when you want the experience of opening packs." },
+      { q: "Do Riftbound prices differ between countries?", a: "Yes, and not just by exchange rate. Regional allocation, local stock levels and import costs all affect price. RiftCompare prices each market in its own currency from stores that actually ship there." },
+      { q: "Does RiftCompare sell cards directly?", a: "RiftCompare is primarily a price-comparison tool that links you through to the retailer. It also runs its own peer-to-peer Marketplace where verified sellers list cards, with payment held until delivery is confirmed." },
+    ],
   },
   {
     slug: "cheapest-riftbound-booster-boxes",
@@ -570,7 +589,26 @@ On RiftCompare, each of these printings is labelled in the card's name (e.g. *(A
 - **Buy the English print** unless you specifically want another language — foreign copies are cheaper but aren't the same card.
 - **Check the exact printing** — make sure you're buying the alt-art / signature / promo you actually want, not the base card (or vice versa).
 
-Want to find your grail? **[Browse every Riftbound card](/browse)** and sort by price, or read our **[guide to where to buy Riftbound cards](/guides/where-to-buy-riftbound-cards)** for the best place to buy in your region.`,
+Want to find your grail? **[Browse every Riftbound card](/browse)** and sort by price, or read our **[guide to where to buy Riftbound cards](/guides/where-to-buy-riftbound-cards)** for the best place to buy in your region.
+
+## Most valuable Riftbound cards FAQ
+
+**Which Riftbound cards are worth the most?** The top of the market is dominated by chase printings — Showcase alt-arts, Overnumbered prints and signed cards — rather than by the strongest gameplay cards. The list above is generated from live prices across every store we track and changes as the market moves.
+
+**Are Riftbound cards worth anything?** Most individual cards are worth very little; value is concentrated in a small number of scarce printings. That's normal for a trading card game and is why a whole-collection figure usually comes down to a handful of cards.
+
+**What makes a Riftbound card valuable?** Scarcity first, then desirability — how rarely the printing appears per box, how sought-after the champion or art is, and condition. Playability matters for ordinary singles but much less for chase prints. See [why Riftbound prices change](/guides/why-riftbound-card-prices-change).
+
+**Should I get my Riftbound cards graded?** Grading mainly matters for high-value chase cards in excellent condition, since the fee is fixed regardless of what the card is worth. For ordinary singles it rarely makes sense.
+
+**Do Riftbound cards go up in value over time?** Some have and some haven't. Riftbound is a young game without a long price record, so treat any confident claim about future value sceptically — RiftCompare reports live prices and history rather than predictions.`,
+    faq: [
+      { q: "Which Riftbound cards are worth the most?", a: "The top of the market is dominated by chase printings — Showcase alt-arts, Overnumbered prints and signed cards — rather than by the strongest gameplay cards. RiftCompare's list is generated from live prices across every store it tracks and changes as the market moves." },
+      { q: "Are Riftbound cards worth anything?", a: "Most individual cards are worth very little; value is concentrated in a small number of scarce printings. That's normal for a trading card game, and it's why a whole-collection figure usually comes down to a handful of cards." },
+      { q: "What makes a Riftbound card valuable?", a: "Scarcity first, then desirability — how rarely the printing appears per box, how sought-after the champion or art is, and the card's condition. Playability matters for ordinary singles but much less for chase prints." },
+      { q: "Should I get my Riftbound cards graded?", a: "Grading mainly matters for high-value chase cards in excellent condition, since the grading fee is fixed regardless of what the card is worth. For ordinary singles it rarely makes financial sense." },
+      { q: "Do Riftbound cards go up in value over time?", a: "Some have and some haven't. Riftbound is a young game without a long price record, so treat confident claims about future value sceptically. RiftCompare reports live prices and price history rather than predictions." },
+    ],
   },
   {
     slug: "riftbound-for-beginners",
@@ -1052,16 +1090,16 @@ Honestly, weigh this against your actual goal. If you want a complete set for th
       "Riftbound: Vendetta lands 31 July 2026 with nine new Legends, three new mechanics, new card types and two-player Showdown Decks. Every card is now confirmed — here's the complete rundown.",
     author: "RiftCompare",
     date: "2026-07-07",
-    updated: "2026-07-23",
+    updated: "2026-07-31",
     readMins: 6,
     tags: ["news", "vendetta", "set", "release", "guide"],
-    body: `![Riftbound: Vendetta — releases 31 July 2026](/vendetta-hero.png)
+    body: `![Riftbound: Vendetta — out now](/vendetta-hero.png)
 
 Vendetta is the next Riftbound: League of Legends TCG set, and it's a big one — a rivalries-themed expansion built around clashing champions like **Nasus vs Renekton** and **Shen vs Zed**. Here's everything that's been confirmed, in one place.
 
 ## Release date
 
-**Riftbound: Vendetta releases on 31 July 2026**, with in-store **Pre-Rift** launch events kicking off from **24 July**. It's the first Riftbound set to launch simultaneously worldwide in English and Simplified Chinese.
+**Riftbound: Vendetta released on 31 July 2026** and is out now. In-store **Pre-Rift** launch events ran from **24 July**. It's the first Riftbound set to launch simultaneously worldwide in English and Simplified Chinese.
 
 Sealed product — booster boxes and packs — is already listing, and you can compare it cheapest-first on our **[sealed page](/sealed)** right now. The singles will populate the **[Vendetta set page](/sets/vendetta)** with live prices the moment cards release.
 
@@ -1100,7 +1138,7 @@ Vendetta leans into new two-domain colour pairings for deckbuilding: **Fury + Ca
 3. **Have your deck ready to price.** Drop a list into the **[deck pricer](/deck)** so you can total it the moment cards go live.
 4. **Don't overpay in the rush.** Launch hype pushes prices up — RiftCompare always shows the cheapest delivered price so you never pay the first number you see.
 
-**All 166 main-set cards are now officially revealed** — spoiler season wrapped up ahead of the 31 July launch. Browse every one of them, live, on the **[Vendetta set page](/sets/vendetta)**, or see the **[complete card gallery](/blog/every-riftbound-vendetta-card-revealed)**.`,
+**All 166 main-set cards are out.** Vendetta released worldwide on 31 July 2026. Browse every one of them, live, on the **[Vendetta set page](/sets/vendetta)**, or see the **[complete card gallery](/blog/every-riftbound-vendetta-card-revealed)**.`,
   },
   {
     slug: "riftbound-vendetta-new-mechanics-flow-burn-empower",
@@ -1157,7 +1195,7 @@ Want to know what to build with them? Read our **[Vendetta deckbuilding guide](/
     updated: "2026-07-07",
     readMins: 4,
     tags: ["vendetta", "card types", "gameplay", "unit-gear", "decrees"],
-    body: `![Riftbound: Vendetta — releases 31 July 2026](/vendetta-hero.png)
+    body: `![Riftbound: Vendetta — out now](/vendetta-hero.png)
 
 Alongside its new mechanics, Riftbound: Vendetta (out **31 July 2026**) introduces two new card concepts: **Unit-Gear** and **Decrees**. Both are built around the set's rivalry theme, and both change how you think about deck slots.
 
@@ -1185,7 +1223,7 @@ Both card types feed Vendetta's rivalry identity — Domains pitted against thei
       "How Vendetta's new mechanics and domain pairings point toward fresh Riftbound archetypes — plus the champions, chase cards and value to watch as early singles start trading.",
     author: "RiftCompare",
     date: "2026-07-07",
-    updated: "2026-07-24",
+    updated: "2026-07-31",
     readMins: 6,
     tags: ["vendetta", "deckbuilding", "strategy", "synergies", "meta", "guide"],
     shop: [
@@ -1203,9 +1241,9 @@ Both card types feed Vendetta's rivalry identity — Domains pitted against thei
       note: "Ambessa, Jayce and Mel — straight from our live database. Tap a card for its page and live prices.",
       slugs: ["ambessa-the-wolf-ven-084", "jayce-brilliant-inventor-ven-068", "mel-newly-awakened-ven-069"],
     },
-    body: `![Riftbound: Vendetta — official street date 31 July 2026](/vendetta-hero.png)
+    body: `![Riftbound: Vendetta — out now](/vendetta-hero.png)
 
-All 166 Riftbound: Vendetta cards are officially confirmed, and early singles are already trading via Pre-Rift launch events — a week ahead of the **31 July 2026** official street date. There's still no solved metagame (that only comes from a real, settled tournament scene), but the confirmed mechanics, champions and domain pairings already point clearly toward the decks that will define the early set — and you can start acquiring the pieces today instead of waiting for launch day. Here's how to think about building for Vendetta right now.
+All 166 Riftbound: Vendetta cards are out — the set released worldwide on **31 July 2026**. There's still no solved metagame (that only comes from a real, settled tournament scene), but the confirmed mechanics, champions and domain pairings already point clearly toward the decks that will define the early set — and you can start acquiring the pieces today instead of waiting for launch day. Here's how to think about building for Vendetta right now.
 
 ## Start with the new domain pairings
 
@@ -1242,7 +1280,7 @@ Nine new Legends arrive, including **Nasus, Renekton, Akali, Mel, Ambessa, Zed a
 
 ## We'll keep this updated
 
-Every card is confirmed and early singles are already trading — so this is genuinely the moment to start assembling a shell instead of waiting. We'll add concrete decklists as real pilots settle in once the full 31 July release lands and a real tournament scene forms. For three ready-to-build archetype blueprints with the shell for each, see **[Best Riftbound Vendetta Decks](/guides/best-riftbound-vendetta-decks)**. For the full set overview, read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)**, and track live prices on the **[Vendetta set page](/sets/vendetta)** as they land.`,
+The whole set is out and trading, so this is genuinely the moment to start assembling a shell. We'll add concrete decklists as real pilots settle in once the full 31 July release lands and a real tournament scene forms. For three ready-to-build archetype blueprints with the shell for each, see **[Best Riftbound Vendetta Decks](/guides/best-riftbound-vendetta-decks)**. For the full set overview, read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)**, and track live prices on the **[Vendetta set page](/sets/vendetta)** as they land.`,
   },
   {
     slug: "best-riftbound-vendetta-decks",
@@ -1252,14 +1290,14 @@ Every card is confirmed and early singles are already trading — so this is gen
       "Three full 40-card Riftbound Vendetta decks — Flow Value, Burn and Empower Midrange — with example decklists, sideboards, real card visuals, and how to start buying into each one now that early singles are trading.",
     author: "RiftCompare",
     date: "2026-07-07",
-    updated: "2026-07-24",
+    updated: "2026-07-31",
     readMins: 11,
     tags: ["vendetta", "decks", "deckbuilding", "strategy", "synergies", "meta", "guide"],
     shop: [
       { label: "Jayce singles — the Empower champion", query: "Riftbound Jayce" },
       { label: "Mel singles", query: "Riftbound Mel" },
       { label: "Vendetta singles on eBay", query: "Riftbound Vendetta" },
-      { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
+      { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
     ],
     // Early singles are trading (Pre-Rift + early marketplace listings) but there's
     // still no real tournament data for Vendetta specifically — so the honest CTA
@@ -1271,14 +1309,14 @@ Every card is confirmed and early singles are already trading — so this is gen
     },
     embeds: [
       {
-        title: "Flow cards revealed so far",
+        title: "Every Flow card in Vendetta",
         note: "Every officially revealed Vendetta card with the Flow keyword — the Flow Value shell above is built from these. Tap a card for its page and live prices.",
         rulesContain: "[Flow]",
         rulesSet: "VEN",
         take: 12,
       },
       {
-        title: "Burn cards revealed so far",
+        title: "Every Burn card in Vendetta",
         note: "Every officially revealed Vendetta card with the Burn keyword — the enablers and payoffs for the Burn / Disruption shell.",
         rulesContain: "[Burn]",
         rulesSet: "VEN",
@@ -1290,8 +1328,8 @@ Every card is confirmed and early singles are already trading — so this is gen
         slugs: ["jayce-brilliant-inventor-ven-068", "mel-newly-awakened-ven-069"],
       },
       {
-        title: "Empower cards revealed so far",
-        note: "Every officially revealed Vendetta card with the Empower keyword — build the Empower Midrange shell around these.",
+        title: "Every Empower card in Vendetta",
+        note: "Every Vendetta card with the Empower keyword — build the Empower Midrange shell around these.",
         rulesContain: "[Empower]",
         rulesSet: "VEN",
         take: 12,
@@ -1299,7 +1337,7 @@ Every card is confirmed and early singles are already trading — so this is gen
     ],
     body: `![Three Riftbound Vendetta archetypes to build — Flow Value, Burn, and Empower Midrange](/vendetta-archetypes.png)
 
-Riftbound: Vendetta's official street date is **31 July 2026**, but early singles are already trading via Pre-Rift launch events — a week ahead of schedule. Every one of the set's 166 cards is officially confirmed, so this is the moment to actually start acquiring the pieces for the decks you want to build. Below are three strong archetype blueprints, each grounded in Vendetta's confirmed mechanics and domain pairings, with the synergies that make them tick, real card visuals for each, and how to pilot them.
+Riftbound: Vendetta released worldwide on **31 July 2026** and is out now. Every one of the set's 166 cards is officially confirmed, so this is the moment to actually start acquiring the pieces for the decks you want to build. Below are three strong archetype blueprints, each grounded in Vendetta's confirmed mechanics and domain pairings, with the synergies that make them tick, real card visuals for each, and how to pilot them.
 
 An honest note up front: there's no settled tournament metagame for Vendetta yet — that only comes from a real, mature competitive scene, and the full worldwide release is still a week out — so these are **blueprints, not netdecks**. We give you the shell — the roles each deck needs, built from confirmed cards — and we'll drop pilot notes and results in as a real meta forms after the 31 July launch.
 
@@ -1443,15 +1481,15 @@ For the full picture, read **[everything you need to know about Vendetta](/blog/
   {
     slug: "riftbound-vendetta-countdown-how-long-until-release",
     category: "blog",
-    title: "Riftbound Vendetta Countdown: How Long Until Release?",
+    title: "Riftbound Vendetta Release Date — Out Now (31 July 2026)",
     excerpt:
-      "Riftbound: Vendetta drops 31 July 2026, with Pre-Rift launch events from 24 July. Here's the live countdown, the key dates, and exactly how to be ready on day one.",
+      "Riftbound: Vendetta drops 31 July 2026, with Pre-Rift launch events from 24 July. Here are the key dates, what's in the set, and where to buy it now that it's out.",
     author: "RiftCompare",
     date: "2026-07-08",
-    updated: "2026-07-08",
+    updated: "2026-07-31",
     readMins: 3,
-    tags: ["news", "vendetta", "release", "countdown"],
-    body: `![Riftbound: Vendetta — releases 31 July 2026](/vendetta-hero.png)
+    tags: ["news", "vendetta", "release", "release date"],
+    body: `![Riftbound: Vendetta — out now](/vendetta-hero.png)
 
 The wait for **Riftbound: Vendetta** is nearly over. The set releases on **31 July 2026**, and in-store **Pre-Rift** launch events begin on **24 July** — so the real buying window opens in days, not weeks.
 
@@ -1478,7 +1516,7 @@ Either way, RiftCompare shows the **cheapest delivered price across every store*
 2. **Compare sealed early.** VEN boxes sell fast at launch; the **[sealed page](/sealed)** ranks them cheapest-first right now.
 3. **Have your deck list ready.** Draft it with our **[Vendetta deckbuilding guide](/guides/building-for-riftbound-vendetta)** and **[best Vendetta decks](/guides/best-riftbound-vendetta-decks)**, then price it in one click with the **[deck pricer](/deck)** on release day.
 
-For the complete rundown of what's in the set, read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)**. Then **[watch the countdown](/vendetta-countdown)** — it's almost here.`,
+For the complete rundown of what's in the set, read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)**. Then browse **[every Vendetta card with live prices](/sets/vendetta)**.`,
   },
   {
     slug: "should-you-buy-riftbound-origins-before-vendetta",
@@ -1529,7 +1567,7 @@ Planning a Vendetta deck that mixes old and new cards? Our **[best Vendetta deck
       "Pre-Rift events start 24 July and Vendetta releases 31 July. Use this launch-week checklist so you buy smart, avoid the hype tax, and never overpay in the rush.",
     author: "RiftCompare",
     date: "2026-07-04",
-    updated: "2026-07-04",
+    updated: "2026-07-31",
     readMins: 4,
     tags: ["buying", "vendetta", "release", "guide"],
     body: `Launch week is the most expensive time to buy a new set on impulse — and the best time to buy it *well* if you have a plan. Here's a simple checklist to get through Vendetta's launch (Pre-Rift from **24 July**, release **31 July**) without overpaying.
@@ -1557,7 +1595,7 @@ Planning a Vendetta deck that mixes old and new cards? Our **[best Vendetta deck
 
 Wherever you are in that timeline, the biggest lever is *where* you buy, not *when*. The same card can vary a lot between stores once shipping is included — RiftCompare exists to surface the cheapest delivered option every time.
 
-Keep the **[live countdown](/vendetta-countdown)** handy, and read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** so nothing about the set catches you off guard.`,
+Vendetta is out now — browse **[every card with live prices](/sets/vendetta)**, and read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** so nothing about the set catches you off guard.`,
   },
   {
     slug: "riftbound-banlist-explained",
@@ -1658,6 +1696,7 @@ We'll update this guide the moment any further changes to either ban list are an
       "Riot just announced Riftbound's second ban wave: Stealthy Pursuer (over an infinite Recruit combo), The Arena's Greatest and Aspirant's Climb, effective 24 July — and a brand-new Constructed 2v2 ban list starting with Master Yi, Wuju Bladesman.",
     author: "RiftCompare",
     date: "2026-07-17",
+    updated: "2026-07-31",
     readMins: 4,
     tags: ["banlist", "news", "competitive", "rules", "vendetta"],
     shop: [
@@ -1693,7 +1732,7 @@ Riot says any future ban that's meant to apply to both formats will say so expli
 
 ## When it takes effect
 
-All of the above is **effective 24 July 2026** — a week's notice before it actually kicks in, and just before Vendetta itself releases on 31 July.
+All of the above took **effect on 24 July 2026**, a week before Vendetta released on 31 July.
 
 [[embed:0]]
 
@@ -1772,11 +1811,12 @@ Not directly — the Signature Edition and Player Bundle art are exclusive to th
       "Every confirmed Jayce and Mel printing in Riftbound, including two brand-new Vendetta cards — real stats, domains and rarities, not speculation.",
     author: "RiftCompare",
     date: "2026-07-16",
+    updated: "2026-07-31",
     readMins: 5,
     tags: ["vendetta", "jayce", "mel", "empower", "guide"],
     shop: [
       { label: "Jayce singles", query: "Riftbound Jayce" },
-      { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
+      { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
     ],
     // Positioned inline via [[embed:0]] (plural `embeds` array), right under the
     // paragraph confirming the printings — explicit slugs (curated, verified list),
@@ -1785,7 +1825,7 @@ Not directly — the Signature Edition and Player Bundle art are exclusive to th
     embeds: [
       {
         title: "Every confirmed Jayce and Mel printing",
-        note: "Live prices will appear here the moment stores list these — Vendetta releases 31 July 2026.",
+        note: "Live prices across every store we track — tap a card for its full comparison.",
         slugs: [
           "jayce-man-of-progress-sfd-084-221",
           "jayce-man-of-progress-sfd-084-221-promo",
@@ -1826,11 +1866,11 @@ Mel's first confirmed printing is real: **Mel, Newly Awakened** (Vendetta, VEN 0
 
 ## When will these have prices?
 
-None of the printings above have a live price yet — Vendetta releases **31 July 2026**, and stores haven't listed pre-release singles for it. The gallery above will show real prices the moment they do, the same as every card on RiftCompare.
+Vendetta released on **31 July 2026**, so these printings now carry live prices — tap any card above for its full store-by-store comparison. The gallery above will show real prices the moment they do, the same as every card on RiftCompare.
 
 ## Keep track of both
 
-Bookmark this page — it updates as new Jayce or Mel printings land in the database, with live prices the moment stores list them. For the full picture of Vendetta's new mechanics, see **[Flow, Burn and Empower explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**, and track the set's release with the **[live countdown](/vendetta-countdown)**.`,
+Bookmark this page — it updates as new Jayce or Mel printings land in the database, with live prices across every store we track. For the full picture of Vendetta's new mechanics, see **[Flow, Burn and Empower explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**, and see **[every Vendetta card with live prices](/sets/vendetta)**.`,
   },
   {
     slug: "riftbound-empower-explained",
@@ -1840,7 +1880,7 @@ Bookmark this page — it updates as new Jayce or Mel printings land in the data
       "A complete guide to Empower — the Riftbound: Vendetta mechanic that lets a card gain new abilities after it's in play. How it works, why it's strong, and how to build around it.",
     author: "RiftCompare",
     date: "2026-07-08",
-    updated: "2026-07-17",
+    updated: "2026-07-31",
     readMins: 5,
     tags: ["vendetta", "mechanics", "empower", "disempower", "gameplay", "guide"],
     faq: [
@@ -1852,20 +1892,20 @@ Bookmark this page — it updates as new Jayce or Mel printings land in the data
     shop: [
       { label: "Jayce singles — the Empower champion", query: "Riftbound Jayce" },
       { label: "Mel singles", query: "Riftbound Mel" },
-      { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
+      { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
     ],
     // Same filter the embed below uses (rules text contains "[Empower]", scoped to
     // VEN) — so the CTA and the embed always show the identical set of cards.
     browseCta: {
       href: "/browse?rules=%5BEmpower%5D&rulesSet=VEN",
       label: "Browse every Empower card →",
-      blurb: "Every Vendetta card with the Empower keyword, filterable and sortable, with live prices the moment stores list them.",
+      blurb: "Every Vendetta card with the Empower keyword, filterable and sortable, with live prices across every store we track.",
     },
     // Auto-collects every officially revealed VEN card whose rules text carries
     // [Empower] — real cards, real images, tap → card page. Grows through spoilers.
     embed: {
-      title: "Empower cards revealed so far",
-      note: "Every officially revealed Vendetta card with the Empower keyword — tap a card for its page and live prices the moment stores list it.",
+      title: "Every Empower card in Vendetta",
+      note: "Every Vendetta card with the Empower keyword — tap a card for its page and live prices across every store we track.",
       rulesContain: "[Empower]",
       rulesSet: "VEN",
       take: 12,
@@ -1884,7 +1924,7 @@ Bookmark this page — it updates as new Jayce or Mel printings land in the data
     ],
     body: `![Vendetta's new mechanics — Flow, Burn and Empower](/vendetta-mechanics.png)
 
-**Empower** is one of three new mechanics arriving with **[Riftbound: Vendetta](/sets/vendetta)** on **31 July 2026**. It's quickly become one of the most searched-for parts of the set — so here's a complete, plain-English guide to what the Empower mechanic does and how to play around it. For the quick rules reference and every Empower card revealed so far, see the **[Empower keyword page](/keywords/empower)**.
+**Empower** is one of three new mechanics arriving with **[Riftbound: Vendetta](/sets/vendetta)** on **31 July 2026**. It's quickly become one of the most searched-for parts of the set — so here's a complete, plain-English guide to what the Empower mechanic does and how to play around it. For the quick rules reference and every Empower card in the set, see the **[Empower keyword page](/keywords/empower)**.
 
 ## What is Empower in Riftbound?
 
@@ -1939,9 +1979,13 @@ For a full archetype breakdown, see the **[best Vendetta decks guide](/guides/be
 
 **What is Disempower?** It's the reverse of Empower — an instruction or cost on some cards that strips the Empowered status from a card, turning off whatever effect its Empowered ability was granting. You can't Disempower something that isn't currently Empowered.
 
+**What is Empower in Riftbound?** Empower gives a card the potential to gain new abilities once it's already in play, usually by paying an extra cost on a later turn — a cheap play now, a bigger payoff later.
+
+**Is Empower permanent?** Yes. Empowered is a status that sticks to a card indefinitely — it lasts until the card leaves the board, or until something Disempowers it.
+
 ## Get ready for Empower cards
 
-Empower cards will list with live prices on the **[Vendetta set page](/sets/vendetta)** the moment they release — and RiftCompare shows the cheapest delivered price across every store, so you can build your Empower deck for the least. Keep an eye on the **[live countdown](/vendetta-countdown)** — it's almost here.`,
+Empower cards will list with live prices on the **[Vendetta set page](/sets/vendetta)** the moment they release — and RiftCompare shows the cheapest delivered price across every store, so you can build your Empower deck for the least. Vendetta is out now — see **[every card with live prices](/sets/vendetta)**.`,
   },
   {
     slug: "riftbound-flow-explained",
@@ -1951,7 +1995,7 @@ Empower cards will list with live prices on the **[Vendetta set page](/sets/vend
       "A complete guide to Flow — the Riftbound: Vendetta mechanic that lets you play cards from your trash instead of your hand. How it works and how to build around it.",
     author: "RiftCompare",
     date: "2026-07-08",
-    updated: "2026-07-08",
+    updated: "2026-07-31",
     readMins: 4,
     tags: ["vendetta", "mechanics", "flow", "gameplay", "guide"],
     faq: [
@@ -1962,10 +2006,10 @@ Empower cards will list with live prices on the **[Vendetta set page](/sets/vend
     ],
     shop: [
       { label: "Chaos singles — the recursion domain", query: "Riftbound Chaos" },
-      { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
+      { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
     ],
     embed: {
-      title: "Flow cards revealed so far",
+      title: "Every Flow card in Vendetta",
       note: "Every officially revealed Vendetta card with the Flow keyword — tap a card for its page.",
       rulesContain: "[Flow]",
       rulesSet: "VEN",
@@ -1984,7 +2028,7 @@ Empower cards will list with live prices on the **[Vendetta set page](/sets/vend
     ],
     body: `![Vendetta's new mechanics — Flow, Burn and Empower](/vendetta-mechanics.png)
 
-**Flow** is one of three new mechanics in **[Riftbound: Vendetta](/sets/vendetta)** (out **31 July 2026**). It turns your trash from a graveyard into a resource — here's exactly how the Flow mechanic works and how to build around it. For the quick rules reference and every Flow card revealed so far, see the **[Flow keyword page](/keywords/flow)**.
+**Flow** is one of three new mechanics in **[Riftbound: Vendetta](/sets/vendetta)** (out **31 July 2026**). It turns your trash from a graveyard into a resource — here's exactly how the Flow mechanic works and how to build around it. For the quick rules reference and every Flow card in the set, see the **[Flow keyword page](/keywords/flow)**.
 
 ## What is Flow in Riftbound?
 
@@ -2022,7 +2066,7 @@ See how Flow fits full decklists in the **[best Vendetta decks guide](/guides/be
 
 **How is Flow different from Empower and Burn?** **Flow** plays cards *from* your trash; **[Burn](/guides/riftbound-burn-explained)** sends cards *to* your trash; **[Empower](/guides/riftbound-empower-explained)** upgrades a card that's already *in play*. Read all three together in **[Vendetta's new mechanics explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**.
 
-Flow cards will show live prices on the **[Vendetta set page](/sets/vendetta)** as they release — compare every store on RiftCompare so you build your Flow deck for the cheapest total. Track the **[live countdown](/vendetta-countdown)** to release day.`,
+Flow cards will show live prices on the **[Vendetta set page](/sets/vendetta)** as they release — compare every store on RiftCompare so you build your Flow deck for the cheapest total. Vendetta is out now — see **[every card with live prices](/sets/vendetta)**.`,
   },
   {
     slug: "riftbound-burn-explained",
@@ -2032,7 +2076,7 @@ Flow cards will show live prices on the **[Vendetta set page](/sets/vendetta)** 
       "A complete guide to Burn — the Riftbound: Vendetta mechanic that sends cards to the trash, both to fuel your own synergies and to attack your opponent's deck.",
     author: "RiftCompare",
     date: "2026-07-08",
-    updated: "2026-07-08",
+    updated: "2026-07-31",
     readMins: 4,
     tags: ["vendetta", "mechanics", "burn", "gameplay", "guide"],
     faq: [
@@ -2042,11 +2086,11 @@ Flow cards will show live prices on the **[Vendetta set page](/sets/vendetta)** 
       { q: "How is Burn different from Flow and Empower?", a: "Burn sends cards to the trash; Flow plays them back out of the trash; Empower grows a card that's already in play. The three are designed to combo." },
     ],
     shop: [
-      { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
+      { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
       { label: "Riftbound singles on eBay", query: "Riftbound TCG singles" },
     ],
     embed: {
-      title: "Burn cards revealed so far",
+      title: "Every Burn card in Vendetta",
       note: "Every officially revealed Vendetta card with the Burn keyword — tap a card for its page.",
       rulesContain: "[Burn]",
       rulesSet: "VEN",
@@ -2065,7 +2109,7 @@ Flow cards will show live prices on the **[Vendetta set page](/sets/vendetta)** 
     ],
     body: `![Vendetta's new mechanics — Flow, Burn and Empower](/vendetta-mechanics.png)
 
-**Burn** is one of three new mechanics in **[Riftbound: Vendetta](/sets/vendetta)** (out **31 July 2026**). It has two very different uses — here's how the Burn mechanic works and how to build around it. For the quick rules reference and every Burn card revealed so far, see the **[Burn keyword page](/keywords/burn)**.
+**Burn** is one of three new mechanics in **[Riftbound: Vendetta](/sets/vendetta)** (out **31 July 2026**). It has two very different uses — here's how the Burn mechanic works and how to build around it. For the quick rules reference and every Burn card in the set, see the **[Burn keyword page](/keywords/burn)**.
 
 ## What is Burn in Riftbound?
 
@@ -2094,7 +2138,17 @@ Full decklists that use Burn are in the **[best Vendetta decks guide](/guides/be
 
 **Burn** sends cards to the trash; **[Flow](/guides/riftbound-flow-explained)** plays them back out; **[Empower](/guides/riftbound-empower-explained)** grows a card already in play. They're designed to combo — read all three in **[Vendetta's new mechanics explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**.
 
-Burn cards will list with live prices on the **[Vendetta set page](/sets/vendetta)** as they release — RiftCompare compares every store so you pay the cheapest delivered price. Keep the **[live countdown](/vendetta-countdown)** handy.`,
+Burn cards will list with live prices on the **[Vendetta set page](/sets/vendetta)** as they release — RiftCompare compares every store so you pay the cheapest delivered price. Vendetta is out now — see **[every card with live prices](/sets/vendetta)**.
+
+## Burn FAQ
+
+**What is Burn in Riftbound?** Burn sends cards from a Main Deck to the trash — either your own (self-Burn, to fuel Flow and other trash-payoffs) or your opponent's (a mill-style deck attack).
+
+**Is Burn the same as mill?** Deck-attack Burn (burning an opponent's deck) is Riftbound's version of a mill strategy. Self-Burn is a different use of the same keyword — filling your own trash on purpose.
+
+**Is Burn only in Vendetta?** Yes — Burn is introduced as a new keyword in the Vendetta set.
+
+**How is Burn different from Flow and Empower?** Burn sends cards to the trash; Flow plays them back out of the trash; Empower grows a card that's already in play. The three are designed to combo.`,
   },
   {
     slug: "riftbound-vendetta-card-list",
@@ -2104,12 +2158,12 @@ Burn cards will list with live prices on the **[Vendetta set page](/sets/vendett
       "The complete, confirmed Riftbound: Vendetta card list — every one of the 166 main-set cards, the new champions, mechanics and product line-up, ahead of the 31 July 2026 release.",
     author: "RiftCompare",
     date: "2026-07-09",
-    updated: "2026-07-23",
+    updated: "2026-07-31",
     readMins: 4,
     tags: ["vendetta", "card list", "set", "news", "guide"],
-    body: `![Riftbound: Vendetta — releases 31 July 2026](/vendetta-hero.png)
+    body: `![Riftbound: Vendetta — out now](/vendetta-hero.png)
 
-Chasing the full **Riftbound: Vendetta** card list? Spoiler season is over — **all 166 main-set cards are officially confirmed** ahead of the **31 July 2026** launch. This page rounds up everything confirmed about the set; for the actual card-by-card list with images, see the **[complete card gallery](/blog/every-riftbound-vendetta-card-revealed)**, and the **[Vendetta set page](/sets/vendetta)** fills in live prices the moment singles go on sale.
+Chasing the full **Riftbound: Vendetta** card list? **Riftbound: Vendetta is out.** It released worldwide on **31 July 2026**, and all 166 main-set cards are live with real prices. This page rounds up everything confirmed about the set; for the actual card-by-card list with images, see the **[complete card gallery](/blog/every-riftbound-vendetta-card-revealed)**, and the **[Vendetta set page](/sets/vendetta)** fills in live prices the moment singles go on sale.
 
 ## The set at a glance
 
@@ -2137,9 +2191,28 @@ Read all three together in **[Vendetta's new mechanics explained](/blog/riftboun
 ## Where to see the full list
 
 - **[The complete card gallery](/blog/every-riftbound-vendetta-card-revealed)** — every one of the 166 cards, with images, filterable by domain, rarity and type.
-- **The [Vendetta set page](/sets/vendetta)** — the same full list, plus live prices the moment singles release.
+- **The [Vendetta set page](/sets/vendetta)** — the same full list, plus live prices from every store we track.
 
-Planning a deck already? Our **[best Vendetta decks guide](/guides/best-riftbound-vendetta-decks)** shows which archetypes the confirmed mechanics point toward, and the **[deckbuilding guide](/guides/building-for-riftbound-vendetta)** covers synergies. And keep the **[live countdown](/vendetta-countdown)** handy — it's almost here.`,
+Planning a deck already? Our **[best Vendetta decks guide](/guides/best-riftbound-vendetta-decks)** shows which archetypes the confirmed mechanics point toward, and the **[deckbuilding guide](/guides/building-for-riftbound-vendetta)** covers synergies. And browse **[every Vendetta card with live prices](/sets/vendetta)**.
+
+## Vendetta card list FAQ
+
+**How many cards are in Riftbound: Vendetta?** The main set is 166 cards, plus Showcase alternate-art printings, Overnumbered chase cards, runes and promos on top of that base numbering.
+
+**When was Riftbound: Vendetta released?** 31 July 2026 worldwide, with in-store Pre-Rift launch events running from 24 July 2026.
+
+**How many Legends are in Vendetta?** Nine, including Nasus, Renekton, Akali, Mel, Ambessa, Zed and Shen.
+
+**What new mechanics does Vendetta add?** Three: [Flow](/guides/riftbound-flow-explained) (play cards from your trash), [Burn](/guides/riftbound-burn-explained) (send cards to the trash) and [Empower](/guides/riftbound-empower-explained) (upgrade a card already in play).
+
+**Where can I see every Vendetta card with prices?** The [Vendetta set page](/sets/vendetta) shows the full list with live prices from every store we track, in your own market's currency.`,
+    faq: [
+      { q: "How many cards are in Riftbound: Vendetta?", a: "The main set is 166 cards, plus Showcase alternate-art printings, Overnumbered chase cards, runes and promos on top of that base numbering." },
+      { q: "When was Riftbound: Vendetta released?", a: "31 July 2026 worldwide, with in-store Pre-Rift launch events running from 24 July 2026." },
+      { q: "How many Legends are in Vendetta?", a: "Nine, including Nasus, Renekton, Akali, Mel, Ambessa, Zed and Shen." },
+      { q: "What new mechanics does Vendetta add?", a: "Three: Flow (play cards from your trash), Burn (send cards to the trash, your own or an opponent's) and Empower (upgrade a card that's already in play by paying an extra cost later)." },
+      { q: "Where can I see every Vendetta card with prices?", a: "The Vendetta set page on RiftCompare shows the full card list with live prices from every store it tracks, in your own market's currency." },
+    ],
   },
   {
     slug: "riftbound-vendetta-overnumbers-explained",
@@ -2149,13 +2222,13 @@ Planning a deck already? Our **[best Vendetta decks guide](/guides/best-riftboun
       "What are Overnumbered and Rival Overnumber cards in Riftbound: Vendetta? A guide to the set's premium chase cards — the signed Legend variants and the 22 rivalry diptychs — and why collectors want them.",
     author: "RiftCompare",
     date: "2026-07-09",
-    updated: "2026-07-09",
+    updated: "2026-07-31",
     readMins: 3,
     tags: ["vendetta", "overnumber", "collecting", "chase cards", "guide"],
     shop: [
-      { label: "Vendetta presale listings", query: "Riftbound Vendetta presale" },
+      { label: "Vendetta singles on eBay", query: "Riftbound Vendetta" },
       { label: "Origins Overnumbered chase cards", query: "Riftbound Overnumbered" },
-      { label: "Vendetta booster case presales", query: "Riftbound Vendetta booster case" },
+      { label: "Vendetta booster cases", query: "Riftbound Vendetta booster case" },
     ],
     // Every Overnumbered VEN printing (both the 9 signed Legends and the 22 Rival
     // reprints), straight from the DB — CardTile renders each one's full credentialed
@@ -2172,7 +2245,7 @@ Planning a deck already? Our **[best Vendetta decks guide](/guides/best-riftboun
         take: 40,
       },
     ],
-    body: `![Riftbound: Vendetta — releases 31 July 2026](/vendetta-hero.png)
+    body: `![Riftbound: Vendetta — out now](/vendetta-hero.png)
 
 The most-searched collectibles in **[Riftbound: Vendetta](/sets/vendetta)** are its **Overnumbers** — the set's premium chase cards. Here's what they are, who has one, and why collectors want them.
 
@@ -2210,7 +2283,7 @@ Vendetta's rivalries theme gets its own chase cycle: **22 Rival Overnumbers** �
 
 Premium chase cards spike hardest in the launch rush and vary a lot store to store. The moment Vendetta releases, RiftCompare compares every Overnumber's live price across 70+ stores in AU, NZ, US, UK, SG and CA — cheapest delivered first — on the **[Vendetta set page](/sets/vendetta)**. Watch the **[price movers](/movers)** too; the chase cards climb fastest at launch.
 
-For the full picture of the set, read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** and the **[Vendetta card list tracker](/guides/riftbound-vendetta-card-list)**. Keep the **[live countdown](/vendetta-countdown)** handy — Vendetta drops 31 July 2026.`,
+For the full picture of the set, read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** and the **[Vendetta card list tracker](/guides/riftbound-vendetta-card-list)**. Vendetta released on 31 July 2026 — browse **[every card with live prices](/sets/vendetta)**.`,
   },
   {
     slug: "riftbound-vendetta-synergies-with-existing-cards",
@@ -2220,12 +2293,12 @@ For the full picture of the set, read **[everything you need to know about Vende
       "Flow, Burn and Empower don't arrive in a vacuum — they slot into shells that already exist. A detailed look at how Vendetta's new mechanics combo with current Origins, Unleashed and Spiritforged cards, domain by domain.",
     author: "RiftCompare",
     date: "2026-07-09",
-    updated: "2026-07-09",
+    updated: "2026-07-31",
     readMins: 7,
     tags: ["vendetta", "synergies", "combos", "deckbuilding", "gameplay"],
     shop: [
       { label: "Zhonya's Hourglass & Calm gear", query: "Riftbound Zhonya's Hourglass" },
-      { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
+      { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
     ],
     body: `![Vendetta's synergy loop — Burn fills the trash, Flow cashes it in](/vendetta-synergy-loop.png)
 
@@ -2276,74 +2349,77 @@ Vendetta's whole identity is **rivalries**, and the confirmed champion pairings 
 2. **Draft your list now** with the **[Vendetta deckbuilding guide](/guides/building-for-riftbound-vendetta)** and **[best Vendetta decks](/guides/best-riftbound-vendetta-decks)**.
 3. **Price the whole deck in one click** with the **[deck pricer](/deck)** on release day, so you buy the new pieces for the least across every store.
 
-Read the mechanics in full — **[Flow](/guides/riftbound-flow-explained)**, **[Burn](/guides/riftbound-burn-explained)**, **[Empower](/guides/riftbound-empower-explained)** — and keep the **[live countdown](/vendetta-countdown)** handy. Vendetta drops **31 July 2026**, and the moment it does we'll compare every card's price across AU, NZ, US, UK, SG &amp; CA on the **[Vendetta set page](/sets/vendetta)**.`,
+Read the mechanics in full — **[Flow](/guides/riftbound-flow-explained)**, **[Burn](/guides/riftbound-burn-explained)**, **[Empower](/guides/riftbound-empower-explained)** — and browse **[every Vendetta card with live prices](/sets/vendetta)**. Vendetta drops **31 July 2026**, and the moment it does we'll compare every card's price across AU, NZ, US, UK, SG &amp; CA on the **[Vendetta set page](/sets/vendetta)**.`,
   },
   {
     slug: "riftbound-vendetta-chase-cards-so-far",
     category: "blog",
-    title: "Riftbound Vendetta Chase Cards: The Complete Tier-by-Tier Guide",
+    title: "Riftbound Vendetta Chase Cards — Every Tier, With Live Prices",
     excerpt:
-      "Spoiler season is over and the base set is fully confirmed — here's every Vendetta chase-card tier (signed Overnumbered Legends, connecting-art Rival Overnumbers, 50+ Showcases), and how to buy them without paying the hype tax.",
+      "Vendetta is out. Here's every chase-card tier in the set — signed Signature Legends, connecting-art Rival Overnumbers, Showcases, alt-arts and the Epic sleepers — each with a live gallery and real prices compared across every store.",
     author: "RiftCompare",
     date: "2026-07-10",
-    updated: "2026-07-23",
-    readMins: 5,
-    tags: ["vendetta", "chase cards", "overnumber", "collecting", "news"],
+    updated: "2026-07-31",
+    readMins: 6,
+    tags: ["vendetta", "chase cards", "overnumber", "collecting", "prices"],
     shop: [
-      { label: "Vendetta presale listings", query: "Riftbound Vendetta presale" },
-      { label: "Overnumbered chase cards (current sets)", query: "Riftbound Overnumbered" },
-      { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
+      { label: "Vendetta chase cards on eBay", query: "Riftbound Vendetta Overnumbered" },
+      { label: "Vendetta signature cards", query: "Riftbound Vendetta signature" },
+      { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
     ],
     // Self-populating tier galleries: each [[embed:N]] marker in the body renders
     // the matching gallery of real, imported VEN printings — no card is ever named
-    // or shown before it's really in the database, and each tier fills as the
-    // official-gallery importer adds reveals.
+    // or shown before it's really in the database.
     embeds: [
       {
-        title: "Signature cards revealed so far",
-        note: "Every '*'-numbered signature printing currently in our database — none officially revealed yet; this gallery fills the moment they are.",
+        title: "Signature Legends",
+        note: "Every '*'-numbered Signature printing in our database — tap any card for its page and live prices across every store we track.",
         chaseSet: "VEN",
         chaseTier: "signature",
         take: 24,
       },
       {
-        title: "Overnumbered & special chases revealed so far",
-        note: "Every card numbered beyond the set (or SP-numbered) currently in our database — tap a card for its page and live prices the moment stores list it.",
+        title: "Overnumbered & special chases",
+        note: "Every card numbered beyond the set total (or SP-numbered) that we've imported — tap a card for its live price comparison.",
         chaseSet: "VEN",
         chaseTier: "overnumbered",
         take: 24,
       },
       {
-        title: "Vendetta promo cards revealed so far",
-        note: "Promo printings (prerelease, Nexus Night, organized play) — this gallery fills as promos are confirmed and imported.",
+        title: "Vendetta promo cards",
+        note: "Promo printings (prerelease, Nexus Night, organized play). This gallery grows as each promo is confirmed and imported.",
         chaseSet: "VEN",
         chaseTier: "promo",
         take: 24,
       },
       {
-        title: "Alternate-art chases revealed so far",
-        note: "Every alt-art printing currently in our database — the gallery grows as reveals land.",
+        title: "Alternate-art chases",
+        note: "Every alt-art printing in our database, with live prices.",
         chaseSet: "VEN",
         chaseTier: "altart",
         take: 24,
       },
       {
-        title: "Epic-rarity picks revealed so far",
-        note: "The in-set Epics — history says one or two of these become the sleeper chases of the set.",
+        title: "Epic-rarity picks",
+        note: "The in-set Epics — historically one or two of these become the sleeper chases of a set.",
         chaseSet: "VEN",
         chaseTier: "epic",
         take: 24,
       },
     ],
-    body: `![Riftbound: Vendetta — releases 31 July 2026](/vendetta-hero.png)
+    body: `![Riftbound: Vendetta — out now](/vendetta-hero.png)
 
-Vendetta's spoiler season wrapped up ahead of the **31 July 2026** launch, and the picture of the set's **chase cards** — the premium pulls that drive box prices — is set. This post breaks the chase down **tier by tier**, from the rarest pull down, with a live gallery of every confirmed card under each tier: tap any card to open its page and see live prices the moment stores list it.
+**Riftbound: Vendetta is out.** Singles are trading, stores are listing, and the set's **chase cards** — the premium pulls that drive box prices — now have real prices instead of predictions.
 
-## Tier 1: Signature cards
+This post breaks the chase down **tier by tier**, from the rarest pull down. Every tier has a live gallery of the real printings we've imported: tap any card to open its page and see its price compared across every store we track, in your own market's currency.
 
-The absolute top of the pyramid. A **Signature** card carries a **"\\*" in its collector number** (like Spiritforged's 223\\*/221) and the **artist's stamped signature** on the art — the rarest, most contested pulls in any Riftbound set, and the cards that headline box openings. Vendetta continues the Signature series, but **no individual Vendetta signature has been officially revealed yet** — the gallery below is reserved and fills automatically the moment the first one is confirmed and imported.
+> **Prices move fastest in the weeks right after a launch.** Before paying the first number you see, check the card's full comparison — and read **[why Riftbound prices change](/guides/why-riftbound-card-prices-change)** for what actually drives those moves.
 
-History says: expect the signed treatments on the set's marquee champions, and expect them to be the most expensive singles in Vendetta by a wide margin.
+## Tier 1: Signature Legends
+
+The top of the pyramid. A **Signature** card carries a **"\\*" in its collector number** (like Spiritforged's 223\\*/221) and the **artist's stamped signature** on the art — the rarest, most contested pulls in any Riftbound set, and the cards that headline box openings.
+
+Vendetta's Signature Legends cover the set's marquee champions, including **Akali, Zed, Shen, Mel, Jayce, Kennen and Renekton**. These are consistently the most expensive singles in the set by a wide margin.
 
 [[embed:0]]
 
@@ -2351,21 +2427,21 @@ History says: expect the signed treatments on the set's marquee champions, and e
 
 An **Overnumbered** card carries a collector number *beyond* the set's total — Vendetta is a 166-card set, so anything numbered **167/166 or higher** is printed at a much lower rate than the set proper. (New to Overnumbers? Read **[our full explainer](/guides/riftbound-vendetta-overnumbers-explained)**.)
 
-What's confirmed so far from the official gallery: champion Overnumbers for **Vi, Jinx, Jayce, Viktor, Rengar, Kha'Zix, Gangplank and Illaoi**, a run of Overnumbered spell and gear reprints (Death Mark-style staples with premium treatments), and **SP-numbered specials** like **Ahri, Inquisitive** that sit outside the main numbering entirely. Riot has also teased the treatment for **Swain, Irelia, Ambessa, Mel, Kennen, Akali and Nasus** via card backs — the gallery below updates automatically as each one is officially revealed and imported.
+The set includes champion Overnumbers for **Vi, Jinx, Jayce, Viktor, Rengar, Kha'Zix, Gangplank and Illaoi**, a run of Overnumbered spell and gear reprints with premium treatments, and **SP-numbered specials** like **Ahri, Inquisitive** that sit outside the main numbering entirely — plus the Overnumbered treatments for **Swain, Irelia, Ambessa, Mel, Kennen, Akali and Nasus**.
 
-One demand note: **rival pairs with connecting artwork** get priced as a *pair* — the scarcer half sets the cost of completing the display piece.
+One demand note that still holds: **rival pairs with connecting artwork** get priced as a *pair* — the scarcer half sets the cost of completing the display piece.
 
 [[embed:1]]
 
 ## Tier 3: Promo cards
 
-**Promos** — prerelease stamps, Nexus Night packs and organized-play printings — are the wildcard tier: print runs are small, distribution is event-bound, and the best ones routinely outprice regular chase cards (Origins' OP promos are the precedent). **No Vendetta promos are confirmed yet**; prerelease events land around the July 31 release, and the gallery below fills as each promo is confirmed and imported.
+**Promos** — prerelease stamps, Nexus Night packs and organized-play printings — are the wildcard tier: print runs are small, distribution is event-bound, and the best ones routinely outprice regular chase cards (Origins' OP promos are the precedent). The gallery below holds every Vendetta promo we've confirmed and imported, and grows as more are distributed through events.
 
 [[embed:2]]
 
 ## Tier 4: Alternate-art chases
 
-The broadest premium pool: **alt-art printings** of the set's champions and key spells, marked with a letter after the collector number (021a, 138a, …). Fourteen are confirmed already — both faces of the Showdown Deck rivalry get one (**Zed, From the Shadows** and **Shen, Leader of the Kinkou Order**), alongside **Akali, Renekton, Nasus, Jayce, Mel, Kennen and Ambessa**.
+The broadest premium pool: **alt-art printings** of the set's champions and key spells, marked with a letter after the collector number (021a, 138a, …). Both faces of the Showdown Deck rivalry get one — **Zed, From the Shadows** and **Shen, Leader of the Kinkou Order** — alongside **Akali, Renekton, Nasus, Jayce, Mel, Kennen and Ambessa**.
 
 Alt-arts are where art taste drives price more than playability: historically the champions with the biggest fanbases (and the cleanest full-art treatments) hold value even when the base card sees no play.
 
@@ -2375,26 +2451,33 @@ Alt-arts are where art taste drives price more than playability: historically th
 
 The tier collectors overlook — and shouldn't. In **Origins** the pattern was set by **Kai'Sa**: an Epic that was both *strong in play* and *genuinely beautiful*, and it out-priced plenty of flashier pulls. The way to spot the Vendetta equivalent: an Epic champion that headlines a real deck **and** looks good enough that players want the exact copy they play with.
 
-The candidates so far: **Akali, Deadly Weapon** and **Zed, From the Shadows** (the aggro headliners), **Shen, Leader of the Kinkou Order** (the Showdown Deck's other face), and **Nasus, Ascended**, **Jayce, Brilliant Inventor**, **Mel, Newly Awakened** and **Ambessa, Respected and Feared** rounding out the champion Epics. If one of these ends up defining the early meta, its base Epic print is the value pick against its alt-art.
+The champion Epics include **Akali, Deadly Weapon** and **Zed, From the Shadows** (the aggro headliners), **Shen, Leader of the Kinkou Order** (the Showdown Deck's other face), **Nasus, Ascended**, **Jayce, Brilliant Inventor**, **Mel, Newly Awakened** and **Ambessa, Respected and Feared**. If one of these defines the early meta, its base Epic print is the value pick against its alt-art.
 
 [[embed:4]]
 
-## Which chases will be most contested
+## Which chases are actually most expensive
 
-No prices exist yet (presales aside), so the honest guide is demand structure, not numbers:
+Now that the set is out, you don't need anyone's prediction — you can just look:
 
-1. **Marquee-champion Overnumbers** — Jinx, Vi and Akali have the broadest collector bases from League and Arcane; their signed Overnumbers are the likeliest top of the set.
+- **[Vendetta set page](/sets/vendetta)** — every card in the set with live prices, sortable by value.
+- **[Most valuable Riftbound cards](/guides/most-valuable-riftbound-cards)** — the top of the whole market, generated from live prices.
+- **[Price movers](/movers)** — which chases are climbing or cooling right now.
+
+What demand structure tells you, and what the data can confirm as it accumulates:
+
+1. **Marquee-champion Signatures and Overnumbers** — Jinx, Vi and Akali have the broadest collector bases from League and Arcane.
 2. **Completed Rival pairs** — connecting art means the market prices the *pair*, and the scarcer half sets the cost of completion.
-3. **Showdown-deck rivals (Zed/Shen)** — the faces of the set's headline product tend to see outsized early demand, in every tier they appear in.
-4. **The Kai'Sa-pattern Epic** — whichever Epic champion ends up both meta-defining and pretty. Watch week-one play data, not just pull rates.
+3. **Showdown-deck rivals (Zed/Shen)** — the faces of the set's headline product tend to see outsized demand in every tier they appear in.
+4. **The Kai'Sa-pattern Epic** — whichever Epic champion ends up both meta-defining and pretty.
 
-## How to buy them without the hype tax
+## How to buy chase cards without overpaying
 
-- **Presales**: listings are already up on eBay. Presales can lock a price before launch spikes — but only buy from high-rating sellers and treat quoted prices as speculative until product ships.
-- **Day one**: chase singles spike hardest in week one. The moment Vendetta releases, every card's price lands on the **[Vendetta set page](/sets/vendetta)** compared across every store — check it before paying the first number you see.
-- **Watch the movers**: the **[price movers](/movers)** page shows which chases are climbing or cooling in real time once data starts flowing.
+- **Compare before you buy.** The same chase card is often priced very differently between stores once postage is counted. Every card page ranks stores by **total delivered cost**, not sticker price.
+- **Expect launch-window volatility.** The first weeks after release see the widest, fastest-moving prices a set will ever have — lots of product is being opened at once while the meta is still unsettled.
+- **Check stock depth, not just price.** A low headline price at one shop with no stock elsewhere is a thinner market than it looks.
+- **Watch instead of guessing.** Save a card to **[price watch](/browse)** and get told when it moves rather than refreshing manually.
 
-Track the countdown on the **[live release countdown](/vendetta-countdown)**, see the full **[Vendetta card list tracker](/guides/riftbound-vendetta-card-list)**, and read **[everything you need to know](/blog/riftbound-vendetta-everything-you-need-to-know)** for the rest of the set.`,
+See the full **[Vendetta card list](/guides/riftbound-vendetta-card-list)**, browse **[every card with live prices](/sets/vendetta)**, or read **[everything you need to know about the set](/blog/riftbound-vendetta-everything-you-need-to-know)**.`,
   },
   {
     slug: "riftbound-price-comparison-singapore",
@@ -2409,7 +2492,7 @@ Track the countdown on the **[live release countdown](/vendetta-countdown)**, se
     tags: ["singapore", "announcement", "price comparison", "riftbound singles", "sgd"],
     shop: [
       { label: "Riftbound singles on eBay", query: "Riftbound singles" },
-      { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
+      { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
     ],
     body: `Singapore, welcome to the Rift. **RiftCompare — the Riftbound: League of Legends TCG price comparison — is now live in Singapore**, with every price in **Singapore dollars (SGD)** and updated daily.
 
@@ -2452,7 +2535,7 @@ Happy hunting — and pay less for the cards you want. Start at the **[card data
     tags: ["australia", "buying guide", "price comparison", "riftbound singles", "aud"],
     shop: [
       { label: "Riftbound singles on eBay", query: "Riftbound singles" },
-      { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
+      { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
     ],
     body: `Looking to **buy Riftbound cards in Australia** without overpaying? The same single can differ by 30–50% between Australian stores once postage is counted — and with 19 local stores selling Riftbound singles, nobody has time to check them all. That's the whole point of RiftCompare.
 
@@ -2472,7 +2555,7 @@ Happy hunting — and pay less for the cards you want. Start at the **[card data
 
 ## Vendetta is coming — July 31
 
-**[Riftbound: Vendetta](/sets/vendetta)** releases 31 July 2026, and week-one prices always move fast. Every revealed card is already browsable, the [chase cards are mapped tier by tier](/blog/riftbound-vendetta-chase-cards-so-far), and launch-day prices land here compared across every store above. Set a [price watch](/browse) now and you're ready the moment singles go live.
+**[Riftbound: Vendetta](/sets/vendetta)** releases 31 July 2026, and week-one prices always move fast. Every revealed card is already browsable, the [chase cards are mapped tier by tier](/blog/riftbound-vendetta-chase-cards-so-far), and launch-day prices land here compared across every store above. Set a [price watch](/browse) and we'll tell you when a card's price moves.
 
 Run an Aussie store selling Riftbound? **[Get listed free](/stores/suggest)** — more visibility, more customers. Everyone else: start at the **[card database](/browse)** and pay less for your next pickup.
 
@@ -2491,7 +2574,7 @@ Buying from overseas, or curious about other markets? See **[the US](/blog/buy-r
     tags: ["new zealand", "buying guide", "price comparison", "riftbound singles", "nzd"],
     shop: [
       { label: "Riftbound singles on eBay", query: "Riftbound singles" },
-      { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
+      { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
     ],
     body: `Looking to **buy Riftbound cards in New Zealand** without overpaying? NZ has a smaller Riftbound scene than Australia, which makes price comparison matter even more — fewer stockists means less natural price competition, so the gap between the cheapest and most expensive NZ store for the same card is often bigger, not smaller.
 
@@ -2512,7 +2595,7 @@ Buying from overseas, or curious about other markets? See **[the US](/blog/buy-r
 
 ## Vendetta is coming — July 31
 
-**[Riftbound: Vendetta](/sets/vendetta)** releases 31 July 2026, and week-one prices always move fast. Every revealed card is already browsable, the [chase cards are mapped tier by tier](/blog/riftbound-vendetta-chase-cards-so-far), and launch-day prices land here compared across every store above. Set a [price watch](/browse) now and you're ready the moment singles go live.
+**[Riftbound: Vendetta](/sets/vendetta)** releases 31 July 2026, and week-one prices always move fast. Every revealed card is already browsable, the [chase cards are mapped tier by tier](/blog/riftbound-vendetta-chase-cards-so-far), and launch-day prices land here compared across every store above. Set a [price watch](/browse) and we'll tell you when a card's price moves.
 
 Run an NZ store selling Riftbound? **[Get listed free](/stores/suggest)** — more visibility, more customers. Everyone else: start at the **[card database](/browse)** and pay less for your next pickup.
 
@@ -2531,7 +2614,7 @@ Buying from overseas, or curious about other markets? See **[Australia](/blog/bu
     tags: ["united states", "buying guide", "price comparison", "riftbound singles", "tcgplayer"],
     shop: [
       { label: "Riftbound singles on eBay", query: "Riftbound singles" },
-      { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
+      { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
     ],
     body: `If you **buy Riftbound cards in the US**, you already know the problem: TCGplayer says one price, eBay says another, and the local game store's webstore says a third. The US has the deepest Riftbound market in the world — which means the biggest spreads between sellers, and the most money left on the table if you only check one site.
 
@@ -2551,7 +2634,7 @@ Buying from overseas, or curious about other markets? See **[Australia](/blog/bu
 
 ## Vendetta launches July 31 — don't pay the week-one tax
 
-**[Riftbound: Vendetta](/sets/vendetta)** drops 31 July 2026. Chase-card prices spike hardest in week one — the [chase-card tier breakdown](/blog/riftbound-vendetta-chase-cards-so-far) shows what to hunt, and every card's launch price lands here compared across all of the above the moment singles list.
+**[Riftbound: Vendetta](/sets/vendetta)** drops 31 July 2026. Chase-card prices move fastest in the weeks after release — the [chase-card tier breakdown](/blog/riftbound-vendetta-chase-cards-so-far) shows what to hunt, and every card's price is compared here across all of the above the moment singles list.
 
 Run a US store selling Riftbound? **[Get listed free](/stores/suggest)**. Everyone else: start at the **[card database](/browse)** and stop paying the first price you see.
 
@@ -2565,12 +2648,12 @@ Shopping from **[Australia](/blog/buy-riftbound-cards-australia)**, **[New Zeala
       "Compare Riftbound card prices across UK stores and eBay UK — live GBP prices ranked by total delivered cost. Free, updated daily.",
     author: "RiftCompare",
     date: "2026-07-10",
-    updated: "2026-07-10",
+    updated: "2026-07-31",
     readMins: 4,
     tags: ["united kingdom", "buying guide", "price comparison", "riftbound singles", "gbp"],
     shop: [
       { label: "Riftbound singles on eBay", query: "Riftbound singles" },
-      { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
+      { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
     ],
     body: `Want to **buy Riftbound cards in the UK** without importing at painful exchange rates — or overpaying locally? The UK Riftbound scene is growing fast, stock is patchier than in the US, and that's exactly when price comparison matters most: the store that has your card in stock isn't always the one charging a fair price for it.
 
@@ -2590,7 +2673,7 @@ Shopping from **[Australia](/blog/buy-riftbound-cards-australia)**, **[New Zeala
 
 ## Vendetta releases July 31 — UK presales are live
 
-**[Riftbound: Vendetta](/sets/vendetta)** launches 31 July 2026 and UK presale listings are already up. Every revealed card is browsable now, the [chase cards are mapped tier by tier](/blog/riftbound-vendetta-chase-cards-so-far), and the moment Vendetta singles hit UK shelves their prices land here, compared across every store above.
+**[Riftbound: Vendetta](/sets/vendetta)** released on 31 July 2026 and UK stores are listing it now. Every revealed card is browsable now, the [chase cards are mapped tier by tier](/blog/riftbound-vendetta-chase-cards-so-far), and the moment Vendetta singles hit UK shelves their prices land here, compared across every store above.
 
 Run a UK store selling Riftbound? **[Get listed free](/stores/suggest)** — free listing, more customers. Everyone else: start at the **[card database](/browse)** and keep more of your budget for the cards themselves.
 
@@ -2609,7 +2692,7 @@ Shopping from **[Australia](/blog/buy-riftbound-cards-australia)**, **[New Zeala
     tags: ["canada", "buying guide", "price comparison", "riftbound singles", "cad"],
     shop: [
       { label: "Riftbound singles on eBay", query: "Riftbound singles" },
-      { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
+      { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
     ],
     body: `Looking to buy Riftbound cards in Canada? With 20 Canadian stores now selling Riftbound singles — and prices that can swing 30-50% between them once shipping is counted — checking them all by hand isn't realistic. That's what RiftCompare does for you.
 
@@ -2629,7 +2712,7 @@ Shopping from **[Australia](/blog/buy-riftbound-cards-australia)**, **[New Zeala
 
 ## Vendetta is coming — July 31
 
-[Riftbound: Vendetta](/sets/vendetta) releases 31 July 2026, and week-one prices always move fast. Every revealed card is already browsable, the [chase cards are mapped tier by tier](/blog/riftbound-vendetta-chase-cards-so-far), and launch-day prices land here compared across every Canadian store above. Set a price watch now and you're ready the moment singles go live.
+[Riftbound: Vendetta](/sets/vendetta) releases 31 July 2026, and week-one prices always move fast. Every revealed card is already browsable, the [chase cards are mapped tier by tier](/blog/riftbound-vendetta-chase-cards-so-far), and launch-day prices land here compared across every Canadian store above. Set a price watch and we'll tell you when a card's price moves.
 
 Run a Canadian store selling Riftbound? [Get listed free](/stores/suggest) — more visibility, more customers. Everyone else: start at the [card database](/browse) and pay less for your next pickup.
 
@@ -2643,25 +2726,25 @@ Shopping from [Australia](/blog/buy-riftbound-cards-australia), [the US](/blog/b
       "The complete Riftbound Vendetta card list and gallery — all 166 main-set cards officially confirmed, plus Showcase alt-arts, Overnumbers, runes and promos, embedded live from our database. Tap any card for its page and launch-day prices.",
     author: "RiftCompare",
     date: "2026-07-10",
-    updated: "2026-07-23",
+    updated: "2026-07-31",
     readMins: 3,
     tags: ["vendetta", "spoilers", "card gallery", "card list", "news"],
     shop: [
-      { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
-      { label: "Vendetta presale singles", query: "Riftbound Vendetta" },
+      { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
+      { label: "Vendetta singles on eBay", query: "Riftbound Vendetta" },
     ],
     // The full set gallery — every non-promo VEN card in the database, in collector
     // order. Self-populating: new official reveals appear here automatically.
     embeds: [
       {
         title: "All 166 Vendetta cards — complete",
-        note: "Every officially confirmed card, straight from our live database — filter by domain, rarity or type. Tap any card for its page, rules text and prices the moment stores list it.",
+        note: "Every officially confirmed card, straight from our live database — filter by domain, rarity or type. Tap any card for its page, rules text and live prices across every store we track.",
         setAll: "VEN",
         filterable: true,
         take: 400,
       },
     ],
-    body: `This is the **complete Riftbound Vendetta card list and gallery** — all 166 main-set cards, officially confirmed, embedded live from our database in collector-number order. Spoiler season is over, so this is the final list — no more base-set reveals are coming before the 31 July launch.
+    body: `This is the **complete Riftbound Vendetta card list and gallery** — all 166 main-set cards, officially confirmed, embedded live from our database in collector-number order. Vendetta is out — this is the complete base set, released 31 July 2026.
 
 **Vendetta releases 31 July 2026.** The set runs **166 main-set cards** plus alternate-art Showcase printings, Overnumbered chase cards (numbered beyond 166), SP-numbered specials, runes and tokens. The mechanics are new too — read up on **[Empower](/guides/riftbound-empower-explained)**, **[Flow](/guides/riftbound-flow-explained)** and **[Burn](/guides/riftbound-burn-explained)** while you browse.
 
@@ -2673,7 +2756,7 @@ Tap any card below to open its full page: rules text, printings, price history, 
 
 - **[Chase cards, tier by tier](/blog/riftbound-vendetta-chase-cards-so-far)** — Overnumbers, alt-arts and the sleeper Epics worth hunting.
 - **[Vendetta set page](/sets/vendetta)** — the full sortable card list with live prices at release.
-- **[Release countdown](/vendetta-countdown)** — how long until boosters crack.
+- **[Vendetta release date](/vendetta-countdown)** — released 31 July 2026.
 - **[Everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** — products, mechanics, rivalries and release details in one read.`,
   },
   {
@@ -2731,7 +2814,7 @@ RiftCompare compares live singles prices across a wide range of local stores plu
 
 - **Check the total, not the sticker.** Always compare delivered cost — RiftCompare does this for you, but confirm postage at checkout.
 - **Buy near-mint unless you're playing casually.** Store listings note condition; the comparison ranks by the condition shown.
-- **On eBay, prefer high-rating sellers** and treat pre-release/presale prices as speculative until product ships.
+- **On eBay, prefer high-rating sellers** and check whether a listing is for a card in hand rather than a pre-order.
 - **Prices move.** Our **[price movers](/movers)** page shows which singles are climbing or cooling, so you can buy before a spike.
 
 ## Start here
@@ -2956,12 +3039,12 @@ Already selling? The new rate applies automatically — nothing to change, nothi
   {
     slug: "riftbound-vendetta-spoiler-season-complete-166-cards",
     category: "blog",
-    title: "Riftbound Vendetta Spoiler Season Is Complete: All 166 Cards Confirmed",
+    title: "Every Riftbound Vendetta Card — All 166, Out Now",
     excerpt:
-      "Riftbound: Vendetta's spoiler season is officially over — every one of the set's 166 main-set cards is confirmed ahead of the 31 July 2026 launch. Here's the full recap: what's in the set, what we learned, and how to be ready.",
+      "Riftbound: Vendetta released on 31 July 2026. Every one of the set's 166 main-set cards is out, with live prices compared across every store we track. Here's the full recap: what's in the set, what we learned, and how to be ready.",
     author: "RiftCompare",
     date: "2026-07-23",
-    updated: "2026-07-23",
+    updated: "2026-07-31",
     readMins: 5,
     tags: ["vendetta", "spoilers", "news", "set", "card list"],
     browseCta: {
@@ -2969,9 +3052,9 @@ Already selling? The new rate applies automatically — nothing to change, nothi
       label: "Browse the full gallery →",
       blurb: "See all 166 confirmed Vendetta cards, filterable by domain, rarity and type.",
     },
-    body: `![Riftbound: Vendetta — releases 31 July 2026](/vendetta-hero.png)
+    body: `![Riftbound: Vendetta — out now](/vendetta-hero.png)
 
-Riftbound: Vendetta's spoiler season is done. Every one of the set's **166 main-set cards** is now officially confirmed via Riot's card gallery, a week and a half ahead of the set's **31 July 2026** worldwide release. If you've been tracking the reveals piecemeal, this is the wrap-up: what's in the set, what stood out, and what's left to actually happen before boosters crack.
+Riftbound: Vendetta is out — it released worldwide on 31 July 2026. Every one of the set's **166 main-set cards** is now officially confirmed via Riot's card gallery, a week and a half ahead of the set's **31 July 2026** worldwide release. If you've been tracking the reveals piecemeal, this is the wrap-up: what's in the set, what stood out, and what's left to actually happen before boosters crack.
 
 ## The headline numbers
 
@@ -2998,7 +3081,7 @@ That's an important distinction if you're chasing a specific card: the **[Vendet
 - **[Browse every confirmed card](/blog/every-riftbound-vendetta-card-revealed)** — the full, filterable gallery.
 - **[Chase cards, tier by tier](/blog/riftbound-vendetta-chase-cards-so-far)** — which Overnumbers, alt-arts and Epics to actually hunt.
 - **[Best Vendetta decks](/guides/best-riftbound-vendetta-decks)** and the **[deckbuilding guide](/guides/building-for-riftbound-vendetta)** — archetype blueprints built from the confirmed card pool.
-- **[Live release countdown](/vendetta-countdown)** — exactly how long until launch.
+- **[Vendetta release date](/vendetta-countdown)** — released 31 July 2026.
 - **[Everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** — the full set rundown in one read.
 
 ## Common questions
@@ -3009,17 +3092,17 @@ That's an important distinction if you're chasing a specific card: the **[Vendet
 
 **When does Riftbound Vendetta release?** 31 July 2026 worldwide, with in-store Pre-Rift launch events from 24 July.
 
-**Can I buy Vendetta singles yet?** Yes, as of the 24 July Pre-Rift launch events — some singles are already trading early, days ahead of the 31 July street date. See **[Riftbound Vendetta Is Here](/blog/riftbound-vendetta-is-here-early-release)** for the details.`,
+**Can I buy Vendetta singles yet?** Yes — Vendetta released worldwide on 31 July 2026 and singles are trading now. See **[Riftbound Vendetta Is Here](/blog/riftbound-vendetta-is-here-early-release)** for the details.`,
   },
   {
     slug: "riftbound-vendetta-is-here-early-release",
     category: "blog",
-    title: "Riftbound: Vendetta Is Here — Singles Are Already Trading Early",
+    title: "Riftbound: Vendetta Is Out — Where to Buy Every Card",
     excerpt:
-      "Riftbound: Vendetta has arrived early. Pre-Rift launch events kicked off 24 July and singles are already trading days ahead of the 31 July official street date — here's what's live now, where to buy, and what to watch for through launch week.",
+      "Riftbound: Vendetta has arrived early. Vendetta released worldwide on 31 July 2026 after a week of Pre-Rift launch events — here's what's live, where to buy it, and what to watch for through the launch window.",
     author: "RiftCompare",
     date: "2026-07-24",
-    updated: "2026-07-24",
+    updated: "2026-07-31",
     readMins: 4,
     tags: ["vendetta", "news", "release", "buying guide", "price comparison"],
     browseCta: {
@@ -3027,13 +3110,13 @@ That's an important distinction if you're chasing a specific card: the **[Vendet
       label: "Shop the Vendetta set page →",
       blurb: "Every card, live prices as they land, and sealed product ready to buy now.",
     },
-    body: `![Riftbound: Vendetta — official street date 31 July 2026](/vendetta-hero.png)
+    body: `![Riftbound: Vendetta — out now](/vendetta-hero.png)
 
-Riftbound: Vendetta is here — a little early. In-store **Pre-Rift launch events** kicked off today, **24 July 2026**, a full week ahead of the set's official **31 July** worldwide street date, and the first Vendetta singles are already changing hands. We're seeing early listings land on eBay and a handful of local stores well before the date everyone had circled — so if you've been waiting to chase a specific card, the wait is already partly over.
+Riftbound: Vendetta is here — a little early. In-store **Pre-Rift launch events** ran from **24 July 2026**, and the set reached its full worldwide release on **31 July 2026**. Vendetta is out everywhere now. We're seeing early listings land on eBay and a handful of local stores well before the date everyone had circled — so if you've been waiting to chase a specific card, the wait is already partly over.
 
 ## What's actually happening
 
-Pre-Rift events are early, in-store play sessions Riot runs the week before a set's full release — stores get product and run games, and inevitably some of those cards end up listed for sale before the "real" launch day. That's exactly what's playing out now: singles from Pre-Rift copies are surfacing on the secondary market days ahead of schedule, while the coordinated worldwide release is still locked in for **31 July**.
+Pre-Rift events are early, in-store play sessions Riot runs the week before a set's full release — stores get product and run games, and inevitably some of those cards end up listed for sale before the "real" launch day. That's exactly how it played out: Pre-Rift singles reached the secondary market first, and the coordinated worldwide release followed on **31 July**.
 
 ## Is this the full release?
 
@@ -3057,8 +3140,8 @@ Early-window prices on a brand-new set are volatile — a handful of listings ca
 ## Where to go next
 
 - **[Riftbound Vendetta launch-week buying checklist](/blog/riftbound-vendetta-launch-week-buying-checklist)** — how to buy smart through the rush.
-- **[Live release countdown](/vendetta-countdown)** — counting down to the full 31 July street date.
-- **[Vendetta spoiler season recap](/blog/riftbound-vendetta-spoiler-season-complete-166-cards)** — every card in the set, confirmed.
+- **[Vendetta release date](/vendetta-countdown)** — released 31 July 2026.
+- **[Every Vendetta card](/blog/riftbound-vendetta-spoiler-season-complete-166-cards)** — all 166 in the set.
 - **[Chase cards, tier by tier](/blog/riftbound-vendetta-chase-cards-so-far)** — what to actually hunt for.
 - **[Everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** — the full set rundown.
 
@@ -3077,10 +3160,10 @@ Early-window prices on a brand-new set are volatile — a handful of listings ca
     category: "blog",
     title: "How to Start Buying Into Riftbound Vendetta's First Decks",
     excerpt:
-      "Vendetta singles are already trading early, days ahead of the 31 July street date. Here's how to actually start buying into Flow Value, Burn/Disruption or Empower Midrange today — without overpaying in the early rush.",
+      "Vendetta is out — it released on 31 July 2026. Here's how to actually start buying into Flow Value, Burn/Disruption or Empower Midrange today — without overpaying in the early rush.",
     author: "RiftCompare",
     date: "2026-07-24",
-    updated: "2026-07-24",
+    updated: "2026-07-31",
     readMins: 5,
     tags: ["vendetta", "decks", "buying guide", "news", "price comparison"],
     shop: [
@@ -3095,15 +3178,15 @@ Early-window prices on a brand-new set are volatile — a handful of listings ca
       blurb: "Every confirmed card, priced live as early singles and stores list them.",
     },
     embed: {
-      title: "Epic-rarity picks revealed so far",
+      title: "Epic-rarity picks",
       note: "Vendetta's in-set Epics — history says one or two of these become the sleeper chases of the set, so they're worth grabbing early if a shell needs one.",
       chaseSet: "VEN",
       chaseTier: "epic",
       take: 12,
     },
-    body: `![Riftbound: Vendetta — official street date 31 July 2026](/vendetta-hero.png)
+    body: `![Riftbound: Vendetta — out now](/vendetta-hero.png)
 
-Riftbound: Vendetta singles are already trading — **[a few days early](/blog/riftbound-vendetta-is-here-early-release)**, via Pre-Rift launch events, a week ahead of the official **31 July** street date. If you already know which archetype you want to play, that means you don't have to wait for launch day to start buying — you just have to be smart about it while supply is thin and prices are still settling.
+Riftbound: Vendetta is out — it **[released worldwide](/blog/riftbound-vendetta-is-here-early-release)** on **31 July 2026**, after a week of Pre-Rift launch events. If you already know which archetype you want to play, that means you don't have to wait for launch day to start buying — you just have to be smart about it while supply is thin and prices are still settling.
 
 ## The three shells, in one line each
 
@@ -3127,7 +3210,7 @@ Once you've picked a direction, drop your planned list into the **[deck pricer](
 
 ## Common questions
 
-**Can I actually buy Vendetta singles right now?** Some — early Pre-Rift copies are trading on eBay and a handful of stores, days ahead of the 31 July street date. Supply is thin, so prices are still settling.
+**Can I actually buy Vendetta singles right now?** Yes — the set released on 31 July 2026 and singles are listed across eBay and the stores we track. Supply is thin, so prices are still settling.
 
 **Which Vendetta deck should I build first?** Empower Midrange (Jayce or Mel) is the most beginner-friendly of the three confirmed shells; Flow Value is the most resilient long-game grinder. See the **[full archetype guide](/guides/best-riftbound-vendetta-decks)** for the complete breakdown.
 
@@ -3143,12 +3226,12 @@ Once you've picked a direction, drop your planned list into the **[deck pricer](
       "RiftCompare tracks every Riftbound Vendetta card's price live across 70+ stores in Australia, New Zealand, the US, the UK, Singapore and Canada, plus eBay — so you always find the cheapest place to buy Vendetta singles and sealed.",
     author: "RiftCompare",
     date: "2026-07-24",
-    updated: "2026-07-24",
+    updated: "2026-07-31",
     readMins: 4,
     tags: ["vendetta", "price comparison", "buying guide", "news"],
     shop: [
       { label: "Vendetta singles on eBay", query: "Riftbound Vendetta" },
-      { label: "Vendetta booster box presales", query: "Riftbound Vendetta booster box" },
+      { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
     ],
     browseCta: {
       href: "/sets/vendetta",
@@ -3162,7 +3245,7 @@ Once you've picked a direction, drop your planned list into the **[deck pricer](
       filterable: true,
       take: 400,
     },
-    body: `![Riftbound: Vendetta — official street date 31 July 2026](/vendetta-hero.png)
+    body: `![Riftbound: Vendetta — out now](/vendetta-hero.png)
 
 Riftbound: Vendetta singles are trading early, and RiftCompare is tracking every single card's price the moment it appears — live, automatically, across every store we cover. If you're wondering where to buy Vendetta cards for the least money, this is the short answer: search or browse any card on RiftCompare and we've already done the comparison for you.
 
@@ -3170,7 +3253,7 @@ Riftbound: Vendetta singles are trading early, and RiftCompare is tracking every
 
 - **70+ stores, six markets.** We compare live prices across local stores in Australia, New Zealand, the US, the UK, Singapore and Canada, plus eBay in each of those markets — the same coverage as every other Riftbound set.
 - **Ranked by delivered cost, not just sticker price.** A card's "cheapest" price accounts for shipping where we track it, not just the item price — so the store at the top of the list is genuinely the least you'll pay to get the card in hand, not just the lowest-looking number.
-- **All 166 cards, priced as they list.** Every confirmed Vendetta card already has a page tracking its price — most were unpriced through spoiler season (nothing to compare before a card is buyable), and they're filling in live now that early singles and stores are listing them.
+- **All 166 cards, priced as they list.** Every Vendetta card has a page tracking its price, and they filled in as stores listed the set. Coverage keeps improving as more singles and stores are listing them.
 - **Updated continuously, not once a day.** As new listings land during this early trading window, the comparison updates — you're never looking at a stale price from before a store restocked or a new listing undercut it.
 
 ## How to actually find the cheapest price
@@ -3182,13 +3265,13 @@ Riftbound: Vendetta singles are trading early, and RiftCompare is tracking every
 
 ## Why prices are moving fast right now
 
-Vendetta is in its earliest trading window — Pre-Rift launch events started 24 July, a week ahead of the 31 July official street date — so supply is thin and prices can swing quickly on just a handful of trades. That's exactly when comparing pays off most: the gap between the cheapest and most expensive listing for the same card is usually widest right after a set drops, before supply catches up. Track the **[price movers](/movers)** if you want to watch which cards are climbing or falling fastest.
+Vendetta is in its launch window — it released on 31 July 2026 — so supply is still settling and prices can swing quickly on just a handful of trades. That's exactly when comparing pays off most: the gap between the cheapest and most expensive listing for the same card is usually widest right after a set drops, before supply catches up. Track the **[price movers](/movers)** if you want to watch which cards are climbing or falling fastest.
 
 ## Common questions
 
 **Where can I find the cheapest Riftbound Vendetta cards?** On RiftCompare — every confirmed Vendetta card is priced live across 70+ stores and eBay in five markets, ranked cheapest first. Search or browse the **[Vendetta set page](/sets/vendetta)** to see them all.
 
-**Are Vendetta prices live yet?** Yes — as early singles and stores list cards, we track and compare them automatically. Coverage will keep filling in through launch week and the 31 July street date.
+**Are Vendetta prices live yet?** Yes — as early singles and stores list cards, we track and compare them automatically. Coverage keeps filling in as more stores list the set.
 
 **Does RiftCompare account for shipping?** Yes, where we track it — a card's ranked price reflects delivered cost, not just the item price, so the top listing is the genuinely cheapest way to get it in hand.
 
@@ -3202,7 +3285,7 @@ Vendetta is in its earliest trading window — Pre-Rift launch events started 24
       "Pre-Rift events let you crack open a new Riftbound set and build a deck before street date — but the deck-building rules are different from Constructed. Here's exactly how Sealed works: deck size, copy limits and domain rules.",
     author: "RiftCompare",
     date: "2026-07-26",
-    updated: "2026-07-26",
+    updated: "2026-07-31",
     readMins: 4,
     tags: ["rules", "pre-rift", "sealed", "vendetta", "guide"],
     browseCta: {
@@ -3210,7 +3293,7 @@ Vendetta is in its earliest trading window — Pre-Rift launch events started 24
       label: "See every Vendetta card's price →",
       blurb: "All 166 confirmed cards, ranked by the cheapest live price across every store we track.",
     },
-    body: `Pre-Rift events are your first chance to crack open a brand-new Riftbound set and build a deck with it — before the set is even on shelves. Riftbound: Vendetta's Pre-Rift window ran 24–31 July 2026, a full week ahead of the set's official 31 July street date, and stores are running theirs right now. But the deck you build at a Pre-Rift plays by different rules than a normal Constructed deck — here's exactly how.
+    body: `Pre-Rift events are your first chance to crack open a brand-new Riftbound set and build a deck with it — before the set is even on shelves. Riftbound: Vendetta's Pre-Rift window ran 24–31 July 2026, the week before the set's 31 July street date. But the deck you build at a Pre-Rift plays by different rules than a normal Constructed deck — here's exactly how.
 
 ## Pre-Rift is a Sealed event, not Constructed
 
@@ -3348,6 +3431,413 @@ Every Crystal Rose card's cheapest current price, ranked across every store Rift
 **Is this Riftbound's first Wild Rift crossover?** It's the first time these specific Wild Rift Crystal Rose looks have been brought to physical Riftbound cards.
 
 *Card names, numbering and distribution details are from Riot's own Vendetta reveal coverage — see [Riftbound's official site](https://riftbound.gg/riftbound-vendetta-wild-rift-crystal-rose-alt-art-cards/) for the original announcement.*`,
+  },
+  {
+    slug: "why-riftbound-card-prices-change",
+    category: "guide",
+    title: "Why Riftbound Card Prices Change — And When They Usually Drop",
+    excerpt:
+      "Why one Riftbound set costs more than another, why prices tend to fall after a launch, why a card costs a different amount in Australia than the US, and which events actually move the market. A plain explanation of the forces behind the numbers.",
+    author: "RiftCompare",
+    date: "2026-07-31",
+    updated: "2026-07-31",
+    readMins: 8,
+    tags: ["prices", "market", "price history", "buying guide", "riftbound"],
+    browseCta: {
+      href: "/movers",
+      label: "See what's moving right now →",
+      blurb: "Price movers tracks which Riftbound cards are climbing and cooling across every store we compare.",
+    },
+    body: `"Why is Riftbound so expensive?" "When will prices drop?" "Why is one set cheaper than a newer one?" These are some of the most-asked questions about the game, and most answers you'll find are guesses.
+
+This guide explains the **mechanisms** — the things that actually push a Riftbound card's price up or down — so you can read the market yourself instead of taking anyone's word for it. Where a number matters, we point you at the **live** figure on RiftCompare rather than printing one here that would be stale within days.
+
+> **Important framing:** this is a description of how a collectible market behaves. It is not investment advice, and nothing here is a prediction about what any specific card will do next.
+
+## Why one set costs more than another
+
+The single biggest driver is **supply against demand**, and supply is mostly a function of two things:
+
+- **How much was printed.** A set that shipped in larger quantities has more copies chasing the same number of players.
+- **How long it stayed in print.** A set that has been available for many months keeps accumulating opened product. A set that stopped being restocked stops accumulating.
+
+Demand pulls the other way. A set holding cards that are central to strong decks keeps a floor under its prices, because players actually need those cards to play. A set whose cards have been superseded loses that floor even if very little of it was printed.
+
+This is why a **newer set can genuinely be cheaper than an older one**. Newness isn't the driver — availability is. At launch, a huge amount of product is opened in a short window, which is usually the moment a set's singles are at their most available.
+
+You can check this yourself right now rather than trusting the explanation: open **[Origins](/sets/origins)**, **[Spirit Forged](/sets/spiritforged)**, **[Unleashed](/sets/unleashed)** and **[Vendetta](/sets/vendetta)** side by side and compare what the same rarity tier actually costs in each.
+
+## What usually happens to prices after a set launches
+
+Launch weeks are unusual, and it helps to know why. Three things happen at once:
+
+1. **Supply spikes.** Pre-release events, launch-day boxes and the first wave of online orders all get opened within days. More copies hit the market in that window than at any later point.
+2. **Demand also spikes**, but unevenly — concentrated on a small number of chase cards and whatever the early decks want.
+3. **Nobody knows the format yet.** Prices in week one reflect speculation about what will be good, not results.
+
+The practical consequence is that **the widest, most volatile pricing you'll ever see for a set is in its first few weeks**. Cards that look essential on reveal day sometimes settle far lower once the meta is actually played; cards nobody rated can climb sharply once a deck built around them wins something.
+
+If you are buying to *play* rather than to speculate, waiting past the first rush of a launch usually means better information and calmer prices. If you are buying a specific chase card you want to own regardless, the launch window is when the most copies are being opened and listed at once.
+
+## Why chase cards move differently from the rest of a set
+
+A set's ordinary cards and its chase cards are effectively two different markets.
+
+Ordinary singles are priced by **playability**. If a card is in good decks, people need copies; if it rotates out of favour, demand falls away and the price follows.
+
+Chase cards — Showcase alt-arts, Overnumbered prints, signed cards — are priced by **scarcity and desirability**, largely independent of whether the card is good. That means they:
+
+- Fall much more slowly when a set floods the market, because far fewer exist per box opened.
+- Are far more sensitive to condition and to grading.
+- Can move on things that have nothing to do with gameplay — a popular champion, a striking piece of art, a crossover.
+
+Riftbound's own chase tiers are explained in **[Overnumbers explained](/guides/riftbound-vendetta-overnumbers-explained)** and **[understanding card rarity](/guides/understanding-riftbound-card-rarity)**. The **[most valuable Riftbound cards](/guides/most-valuable-riftbound-cards)** page tracks where the top of that market currently sits.
+
+## Why the same card costs a different amount in different countries
+
+This one surprises people, and it isn't just currency conversion. A card's price in a given market is shaped by:
+
+- **How much product was allocated there.** Distribution isn't even across regions.
+- **How many local stores stock it.** Fewer local sellers means less price competition.
+- **Import and freight costs**, which get passed through to shelf prices.
+- **Whether buying from overseas is realistic**, once postage and any duties are counted.
+
+This is exactly why RiftCompare prices each market in its own currency from stores that actually ship there, rather than converting one market's price and calling it your price. Switch markets with the country selector and the whole site re-prices: **[Australia](/blog/buy-riftbound-cards-australia)**, **[New Zealand](/blog/buy-riftbound-cards-nz)**, the **[US](/blog/buy-riftbound-cards-us)**, the **[UK](/blog/buy-riftbound-cards-uk)**, **[Singapore](/blog/riftbound-price-comparison-singapore)** and **[Canada](/blog/buy-riftbound-cards-canada)** each have their own guide.
+
+## The events that actually move prices
+
+Most days, nothing much happens. Prices move on identifiable events:
+
+- **A restock or reprint.** New supply into a market that had run dry is the fastest way for a price to fall.
+- **Selling out.** The reverse — when stores stop being able to restock, the remaining listings set the price.
+- **A ban or errata.** A card that stops being legal, or whose text changes, reprices almost immediately. See **[the banlist explained](/guides/riftbound-banlist-explained)**.
+- **Tournament results.** A deck winning a visible event moves the cards that deck needs, often within a day.
+- **A new set landing.** Cards from older sets that combo with new ones can climb; cards that get a strictly better replacement fall.
+
+Note what is *not* on that list: reveal-day hype on its own, and social-media speculation. Both move prices briefly, and both frequently unwind.
+
+## How to watch the market yourself
+
+You don't have to take any of this on trust — the whole point of RiftCompare is that you can check.
+
+- **[Price movers](/movers)** — which cards are climbing or cooling right now, per market.
+- **[The RiftCompare Index](/market)** — the market as a whole rather than one card. Methodology is documented in **[how the Index works](/guides/understanding-the-riftcompare-index-methodology)**.
+- **Any card page** — the full store-by-store table ranked by delivered cost, plus that card's price history chart as it accumulates.
+- **[Price watch](/browse)** — save a card and get told when it moves, instead of checking manually.
+
+## "Should I buy now or wait?"
+
+We deliberately won't answer that for you, and you should be sceptical of anyone who does confidently. What we can tell you is what to look at:
+
+- **If you need the card to play a deck**, the cost of waiting is not playing. Buy the cheapest delivered listing and move on.
+- **If you're buying a chase card you want to own**, availability matters more than timing — check how many stores actually have it in stock, not just the headline price.
+- **If you're buying because you think it will be worth more later**, understand you're taking a position in a young market with no guarantees, and size it accordingly.
+
+On that last point, our position is straightforward: we report what the market is doing, including when it's falling. We don't publish price predictions or tell people what to speculate on. If you want the market data behind a decision, it's all on the site for free.
+
+## Riftbound price FAQ
+
+**Why are Riftbound cards so expensive?** Usually it's limited supply meeting concentrated demand — a card that's needed in strong decks, or a chase print that appears rarely per box. Price also varies by market depending on local stock and import costs, so "expensive" can mean something different depending where you're buying.
+
+**When do Riftbound prices usually drop?** The most reliable driver of a price fall is new supply — a restock or reprint reaching a market that had run short. Beyond that, the heavy opening that happens around a set's launch is when the most copies enter circulation at once.
+
+**Why is a newer Riftbound set cheaper than an older one?** Newness isn't what sets price — availability is. A newly launched set has a large amount of product being opened in a short window, while an older set may have stopped being restocked. Compare any two sets directly on their set pages to see the current picture.
+
+**Do Riftbound cards go up in value?** Some have and some haven't, and past movement doesn't establish what any card will do next. Riftbound is a young game with no long price record yet, which is precisely why we publish live data and price history rather than forecasts.
+
+**Why is the same card a different price in Australia than in the US?** Regional allocation, how many local stores carry it, import and freight costs, and how much local price competition exists. RiftCompare prices each market separately from stores that genuinely ship there rather than converting a single global price.
+
+**What makes a Riftbound chase card expensive?** Scarcity and desirability rather than playability. Showcase alt-arts, Overnumbered prints and signed cards appear far less often per box, so they hold value better when a set floods the market — and they're much more sensitive to condition.
+
+**Does a ban or errata change card prices?** Yes, usually fast. A card that loses legality in a format loses the demand attached to that format, and cards that replace it in decks tend to rise at the same time.
+
+**Does RiftCompare give investment advice?** No. We report live prices, price history and market movement across every store we track. We don't publish predictions or recommend cards to buy as investments.`,
+    faq: [
+      { q: "Why are Riftbound cards so expensive?", a: "Usually it's limited supply meeting concentrated demand — a card that's needed in strong decks, or a chase print that appears rarely per box. Price also varies by market depending on local stock and import costs, so \"expensive\" can mean something different depending where you're buying." },
+      { q: "When do Riftbound prices usually drop?", a: "The most reliable driver of a price fall is new supply — a restock or reprint reaching a market that had run short. Beyond that, the heavy opening that happens around a set's launch is when the most copies enter circulation at once." },
+      { q: "Why is a newer Riftbound set cheaper than an older one?", a: "Newness isn't what sets price — availability is. A newly launched set has a large amount of product being opened in a short window, while an older set may have stopped being restocked. Compare any two sets directly on their set pages to see the current picture." },
+      { q: "Do Riftbound cards go up in value?", a: "Some have and some haven't, and past movement doesn't establish what any card will do next. Riftbound is a young game with no long price record yet, which is why RiftCompare publishes live data and price history rather than forecasts." },
+      { q: "Why is the same card a different price in Australia than in the US?", a: "Regional allocation, how many local stores carry it, import and freight costs, and how much local price competition exists. RiftCompare prices each market separately from stores that genuinely ship there rather than converting a single global price." },
+      { q: "What makes a Riftbound chase card expensive?", a: "Scarcity and desirability rather than playability. Showcase alt-arts, Overnumbered prints and signed cards appear far less often per box, so they hold value better when a set floods the market — and they're much more sensitive to condition." },
+      { q: "Does a ban or errata change card prices?", a: "Yes, usually fast. A card that loses legality in a format loses the demand attached to that format, and the cards that replace it in decks tend to rise at the same time." },
+    ],
+  },
+  {
+    slug: "cheapest-way-to-start-riftbound",
+    category: "guide",
+    title: "The Cheapest Way to Start Riftbound (Without Wasting Money)",
+    excerpt:
+      "Every realistic way into Riftbound compared on cost: a ready-to-play deck, a starter product, singles for one deck, or a booster box. What each actually gets you, what to skip first, and how to check live prices in your own market.",
+    author: "RiftCompare",
+    date: "2026-07-31",
+    updated: "2026-07-31",
+    readMins: 7,
+    tags: ["beginner", "buying guide", "budget", "riftbound", "how to start"],
+    shop: [
+      { label: "Riftbound decks on eBay", query: "Riftbound deck" },
+      { label: "Riftbound singles", query: "Riftbound singles" },
+    ],
+    browseCta: {
+      href: "/deck",
+      label: "Price a full deck →",
+      blurb: "Paste a decklist and the deck pricer finds the cheapest way to buy all of it across every store at once.",
+    },
+    body: `The most common question from people looking at Riftbound isn't "is it good?" — it's some version of **"how do I get in without wasting money?"** That's a fair question for any trading card game, and it deserves a straight answer rather than a sales pitch.
+
+This guide compares every realistic route in, what each one actually gets you, and how to check the current cost **in your own market** rather than trusting a number typed into an article months ago.
+
+> **The short version:** if you want to play against a friend, a ready-to-play two-player product is the cheapest single purchase that gets two functioning decks on the table. If you want to build one specific deck, buying **singles** is almost always cheaper than opening packs to find them. Booster boxes are for people who want to open packs — they are not the cheap way to get cards you've already chosen.
+
+## The four ways in
+
+### 1. A ready-to-play deck product
+
+The lowest-friction start. You get a playable deck out of the box with no deckbuilding decisions and no missing pieces. Riftbound's **Showdown Decks** are built specifically for this — they're the game's first ready-to-play *two-player* product, so a single purchase covers both sides of a game. The debut pairing is **Shen vs Zed**.
+
+**Best for:** learning the game, playing with a partner or housemate, deciding whether you like it before spending more.
+**Watch out for:** a precon is a starting point, not a competitive list. You'll want to upgrade it if you keep playing.
+
+### 2. Singles for one deck you've chosen
+
+Pick a deck, buy exactly the cards it needs, play it. This is how most established players actually acquire cards, and for a *specific* list it's nearly always the cheapest route — you're paying for the cards you want instead of gambling on finding them.
+
+Use the **[deck pricer](/deck)**: paste a full list and it works out the cheapest way to buy all of it across every store at once, consolidating orders so you aren't paying postage five separate times. Start from **[budget Riftbound decks](/guides/budget-riftbound-decks)** if you don't have a list yet.
+
+**Best for:** anyone who knows roughly what they want to play.
+**Watch out for:** postage. Five cheap cards from five different shops can cost more than one slightly dearer order. The deck pricer accounts for this; buying by hand often doesn't.
+
+### 3. A starter / entry sealed product
+
+Products like **Proving Grounds** sit between a precon and a booster box — some ready-to-play content plus some opening. Current contents and live pricing for entry products are on the **[sealed page](/sealed)**.
+
+**Best for:** people who want *some* of the opening experience without committing to a box.
+
+### 4. A booster box
+
+The most product, the most opening, and the highest single outlay. A box is the right purchase if the **opening itself** is what you want, or if you're deliberately chasing a set's chase cards at launch.
+
+It is **not** the cheap way to assemble a specific deck. Opening packs to find three copies of one card means buying — and paying for — a large number of cards you didn't need. We wrote the maths out in **[booster box EV: worth ripping, or buy singles?](/guides/riftbound-booster-box-ev-worth-ripping-or-buying-singles)**.
+
+**Best for:** the experience of opening; launch-window chase hunting.
+**Watch out for:** treating it as a shortcut to a deck. It usually isn't.
+
+## The cheapest route, by what you actually want
+
+- **"I want to try the game with a friend."** One ready-to-play two-player product. Cheapest possible path to two real decks.
+- **"I want to play one deck properly."** Singles for that list, bought through the **[deck pricer](/deck)**.
+- **"I want to open packs."** A box — but buy it because you want to open it, not because you expect it to be cheaper than singles.
+- **"I want to collect the art."** Singles, targeting the specific alt-arts you like. See **[understanding card rarity](/guides/understanding-riftbound-card-rarity)**.
+
+## What to skip at first
+
+- **Don't buy multiple boxes before you've played.** The most common expensive mistake, and the one most posted about by people regretting it.
+- **Don't buy chase cards on reveal-day hype.** Launch-week prices are the most speculative you'll ever see — see **[why prices change](/guides/why-riftbound-card-prices-change)**.
+- **Don't buy sleeves and accessories before you own a deck.** They'll still be there later.
+- **Don't buy an older set's product without checking it's actually cheaper.** Sometimes it is; sometimes it isn't. Compare **[Origins](/sets/origins)**, **[Spirit Forged](/sets/spiritforged)**, **[Unleashed](/sets/unleashed)** and **[Vendetta](/sets/vendetta)** directly.
+
+## Postage is the part people forget
+
+The sticker price is not the price. A card listed at $2 with $4 tracked shipping costs more than the same card at $4 with free post — and if you're assembling a deck across several shops, postage can quietly become the largest line on the bill.
+
+Every price comparison on RiftCompare ranks stores by **total delivered cost**, with free-shipping thresholds factored in automatically. That's the number that matters, and it frequently reorders the list.
+
+## Starting in your market
+
+Riftbound's availability and pricing genuinely differ by country. Each of these guides lists the stores we actually track locally, priced in local currency:
+
+- **[Australia](/blog/buy-riftbound-cards-australia)**
+- **[New Zealand](/blog/buy-riftbound-cards-nz)**
+- **[United States](/blog/buy-riftbound-cards-us)**
+- **[United Kingdom](/blog/buy-riftbound-cards-uk)**
+- **[Singapore](/blog/riftbound-price-comparison-singapore)**
+- **[Canada](/blog/buy-riftbound-cards-canada)**
+
+## Then what?
+
+Once you've played a few games, **[Riftbound for beginners](/guides/riftbound-for-beginners)** covers the rules side, and **[how a Riftbound deck is built](/guides/how-a-riftbound-deck-is-built)** explains deck construction so you can upgrade what you started with rather than replacing it.
+
+## Starting Riftbound FAQ
+
+**What is the cheapest way to start playing Riftbound?** A ready-to-play deck product is the cheapest single purchase that gets you playing, and a two-player product like a Showdown Deck covers both sides of a game in one buy. If you already know which deck you want to play, buying singles for that specific list is usually cheaper than opening packs to find the same cards.
+
+**Are Riftbound starter and precon decks worth it?** As a way to start, yes — they get you a functioning deck with no missing pieces and no deckbuilding required. They aren't competitive lists out of the box, so treat one as a base to upgrade rather than a finished deck.
+
+**Is it cheaper to buy singles or booster packs?** For a specific card you've already decided you want, singles are cheaper nearly every time — packs mean paying for a lot of cards you didn't need on top of the one you did. Packs make sense when the opening itself is what you want.
+
+**How much does it cost to start Riftbound?** It depends entirely on the route and your market, which is why we don't print a figure here that would be wrong next week. Check live prices for entry products on the sealed page and for singles through the deck pricer, both in your own currency.
+
+**Do I need a booster box to start?** No. A box is the largest single outlay of any route in and is aimed at people who want to open packs. You can play the game properly without ever buying one.
+
+**Should I buy the newest set or an older one to start?** Either works. Newer isn't automatically more expensive and older isn't automatically cheaper — availability drives price more than age does. Compare the set pages directly before assuming.`,
+    faq: [
+      { q: "What is the cheapest way to start playing Riftbound?", a: "A ready-to-play deck product is the cheapest single purchase that gets you playing, and a two-player product like a Showdown Deck covers both sides of a game in one buy. If you already know which deck you want to play, buying singles for that specific list is usually cheaper than opening packs to find the same cards." },
+      { q: "Are Riftbound starter and precon decks worth it?", a: "As a way to start, yes — they get you a functioning deck with no missing pieces and no deckbuilding required. They aren't competitive lists out of the box, so treat one as a base to upgrade rather than a finished deck." },
+      { q: "Is it cheaper to buy singles or booster packs?", a: "For a specific card you've already decided you want, singles are cheaper nearly every time — packs mean paying for a lot of cards you didn't need on top of the one you did. Packs make sense when the opening itself is what you want." },
+      { q: "How much does it cost to start Riftbound?", a: "It depends on the route in and on your market. Entry sealed products, precons, singles and booster boxes all sit at different price points, and each market has its own local pricing — check live prices on RiftCompare in your own currency rather than relying on a fixed figure." },
+      { q: "Do I need a booster box to start?", a: "No. A booster box is the largest single outlay of any route in and is aimed at people who want to open packs. You can play the game properly without ever buying one." },
+      { q: "Should I buy the newest set or an older one to start?", a: "Either works. Newer isn't automatically more expensive and older isn't automatically cheaper — availability drives price more than age does, so compare the set pages directly before assuming." },
+    ],
+  },
+  {
+    slug: "riftbound-rules-explained",
+    category: "guide",
+    title: "Riftbound Rules Explained — Every Mechanic, In One Place",
+    excerpt:
+      "A hub for how Riftbound actually works: the keywords introduced in Vendetta, the chase-print numbering, deck construction, the banlist, and the event formats — each linked to a full guide.",
+    author: "RiftCompare",
+    date: "2026-07-31",
+    updated: "2026-07-31",
+    readMins: 4,
+    tags: ["rules", "keywords", "how to play", "riftbound", "guide"],
+    browseCta: {
+      href: "/keywords",
+      label: "Browse keywords →",
+      blurb: "Every Riftbound keyword we've documented, with the cards that use it.",
+    },
+    body: `Riftbound's rules questions cluster around a handful of things: the newer keywords, what the odd collector numbers mean, how decks are legally built, and what's currently banned. This page is the index — each section links to the full guide rather than repeating it here.
+
+> **On sourcing:** we only publish rules explanations where we can point at Riot's own rules text or official reveal coverage. Where a keyword is printed on cards but hasn't been documented officially in a form we can cite, we list the name without inventing what it does. That's why this hub covers some keywords in depth and simply names others.
+
+## The Vendetta keywords
+
+Vendetta introduced three mechanics, and they generate the bulk of current rules searches:
+
+- **[Empower explained](/guides/riftbound-empower-explained)** — upgrading a card that's already in play by paying an extra cost later. Also see the worked example in **[Jayce & Mel: Empower in practice](/guides/jayce-mel-riftbound-empower-explained)**.
+- **[Flow explained](/guides/riftbound-flow-explained)** — playing cards straight from your trash, turning discarded cards into a second pool of plays.
+- **[Burn explained](/guides/riftbound-burn-explained)** — sending cards to the trash, either your own to fuel Flow-style payoffs, or an opponent's as a deck attack.
+
+All three together, with how they interact: **[Vendetta's new mechanics](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**.
+
+## New card concepts
+
+- **[Unit-Gear and Decrees](/blog/riftbound-vendetta-unit-gear-decrees)** — two card concepts Vendetta introduced.
+- **[Overnumbers explained](/guides/riftbound-vendetta-overnumbers-explained)** — what a collector number beyond the set total means, and how signed and Overnumbered prints differ.
+- **[Understanding card rarity](/guides/understanding-riftbound-card-rarity)** — the rarity tiers, and where Showcase and alt-art printings sit.
+
+## Deckbuilding rules
+
+- **[How a Riftbound deck is built](/guides/how-a-riftbound-deck-is-built)** — deck construction, Legends, and how the pieces fit together.
+- **[Building for Vendetta](/guides/building-for-riftbound-vendetta)** — deckbuilding with the new set's cards and domain pairings.
+- **[Vendetta synergies with existing cards](/blog/riftbound-vendetta-synergies-with-existing-cards)** — how new cards interact with earlier sets.
+
+## What's currently legal
+
+- **[The banlist explained](/guides/riftbound-banlist-explained)** — how bans work and what they mean for your decks.
+- **[The July 2026 ban list update](/blog/riftbound-july-2026-ban-list-update)** — the most recent changes.
+
+Bans and errata move prices as well as decks — **[why Riftbound prices change](/guides/why-riftbound-card-prices-change)** covers that side.
+
+## Event formats
+
+- **[Pre-Rift rules explained](/guides/riftbound-pre-rift-rules-explained)** — how Riftbound's launch-event format works.
+
+## Keyword reference
+
+Individual keyword pages, each with the real cards that use it, live under **[/keywords](/keywords)**. Cards themselves are searchable in the **[card database](/browse)**, and every card page shows its full rules text alongside live prices.
+
+## New to the game entirely?
+
+Start with **[Riftbound for beginners](/guides/riftbound-for-beginners)** for the basics, then **[the cheapest way to start](/guides/cheapest-way-to-start-riftbound)** for what to actually buy first.
+
+## Riftbound rules FAQ
+
+**What is Empower in Riftbound?** Empower gives a card the potential to gain new abilities once it's already in play, usually by paying an extra cost on a later turn — a cheap play now, a bigger payoff later. Full detail in the Empower guide.
+
+**What is Flow in Riftbound?** Flow is a Vendetta keyword that lets you play a card straight from your trash instead of your hand, so discarded and used cards become a second pool of plays rather than being gone for good.
+
+**What is Burn in Riftbound?** Burn sends cards from a Main Deck to the trash — either your own, to fuel Flow and other trash payoffs, or your opponent's as a deck attack.
+
+**What does Overnumbered mean on a Riftbound card?** It's a collector number that runs past the set's stated total — for example a number higher than the set size — marking a chase printing that sits outside the main numbered run. The Overnumbers guide covers how these differ from signed prints.
+
+**Where can I find Riftbound's current banned cards?** The banlist guide explains how bans work, and the July 2026 update covers the most recent changes.`,
+    faq: [
+      { q: "What is Empower in Riftbound?", a: "Empower gives a card the potential to gain new abilities once it's already in play, usually by paying an extra cost on a later turn — a cheap play now, a bigger payoff later." },
+      { q: "What is Flow in Riftbound?", a: "Flow is a Vendetta keyword that lets you play a card straight from your trash instead of your hand, so your discarded and used cards become a second pool of plays rather than being gone for good." },
+      { q: "What is Burn in Riftbound?", a: "Burn sends cards from a Main Deck to the trash — either your own (to fuel Flow and other trash payoffs) or your opponent's (a deck attack)." },
+      { q: "What does Overnumbered mean on a Riftbound card?", a: "It's a collector number that runs past the set's stated total, marking a chase printing that sits outside the main numbered run. Overnumbered prints and signed prints are distinct — the Overnumbers guide covers the difference." },
+      { q: "Where can I find Riftbound's current banned cards?", a: "RiftCompare's banlist guide explains how bans work in Riftbound, and the July 2026 ban list update covers the most recent changes." },
+    ],
+  },
+  {
+    slug: "riftbound-vendetta-nexus-night-promo-cards",
+    category: "blog",
+    title: "Riftbound Vendetta Nexus Night Promo Cards: Every One Revealed So Far",
+    excerpt:
+      "Vendetta's weekly Nexus Night events hand out a 25-card promo cycle at local stores — and the chase card is Mel, Newly Awakened. Here's every promo confirmed so far: Mel plus the full 6-card promo rune cycle, with live prices and pop-up card views.",
+    author: "RiftCompare",
+    date: "2026-08-01",
+    updated: "2026-08-01",
+    readMins: 4,
+    tags: ["vendetta", "nexus night", "promo", "chase cards", "collecting"],
+    shop: [
+      { label: "Vendetta Nexus Night promos on eBay", query: "Riftbound Vendetta Nexus Night promo" },
+      { label: "Mel Newly Awakened promo", query: "Riftbound Mel Newly Awakened promo" },
+    ],
+    browseCta: {
+      href: "/sets/vendetta",
+      label: "See every Vendetta printing's price →",
+      blurb: "All 166 confirmed cards plus every alt-art, Signature and promo, ranked by cheapest live price.",
+    },
+    embeds: [
+      {
+        title: "The chase card: Mel, Newly Awakened",
+        note: "The confirmed chase card for Vendetta's Nexus Night season — tap through for the live price comparison.",
+        slugs: ["mel-newly-awakened-ven-069b-166-promo"],
+      },
+      {
+        title: "The 6 promo runes",
+        note: "Fury, Calm, Mind, Body, Chaos and Order — the promo printing of Vendetta's rune cycle, straight from our live database.",
+        slugs: [
+          "fury-rune-ven-r01b-promo",
+          "calm-rune-ven-r02b-promo",
+          "mind-rune-ven-r03b-promo",
+          "body-rune-ven-r04b-promo",
+          "chaos-rune-ven-r05b-promo",
+          "order-rune-ven-r06b-promo",
+        ],
+      },
+    ],
+    body: `![Riftbound: Vendetta — out now](/vendetta-hero.png)
+
+**Nexus Nights** are Riftbound's weekly casual events, run at local game stores on whatever day works best for each store — a demo or a casual event, not a competitive tournament. Vendetta's Nexus Night season brings its own **25-card promo cycle** to chase, headlined by a genuine chase card. Riot confirms the cards in waves rather than all at once, so this post tracks exactly what's real right now — no guessing at cards that haven't actually been shown yet.
+
+## The chase card: Mel, Newly Awakened
+
+The confirmed chase card for Vendetta's Nexus Night season is **Mel, Newly Awakened** — a promo printing (**069b/166**) of the existing Champion Unit, alongside her regular base print and alt-art. It carries the same **"When you play me, draw 1"** ability and Empower payoff as the original, just in the Nexus Night promo treatment.
+
+[[embed:0]]
+
+## The 6 promo runes
+
+Alongside Mel, the full **rune cycle** — Fury, Calm, Mind, Body, Chaos and Order — gets its own Nexus Night promo printing (**R01b** through **R06b**), matching the same treatment Vendetta's base runes already have. These are common pulls in the pack, but a full set completes the cycle.
+
+[[embed:1]]
+
+## What's still unconfirmed
+
+Riot's own Nexus Night promo page states there are **25 total promo cards** across the season, but as of this post only Mel and the 6 runes have actual confirmed art — **7 of the 25**. The rest of the page currently shows placeholder cards standing in for reveals that haven't landed yet ("*these cards are used as placeholders… we will update this section soon with the promo tagged cards*"), so we're deliberately not listing or imagining names for them here. We'll add each one the moment it's genuinely confirmed, the same way we did for these seven.
+
+## How to get Nexus Night promos
+
+Find your nearest Riftbound local game store and show up for their weekly Nexus Night — completing a demo or event earns a **3-card promo pack**. The specific day and format varies by store, so check with your local shop directly. Promo availability is while supplies last, so earlier weeks of the season are your best shot at any specific card.
+
+## Nexus Night promo FAQ
+
+**What is the Vendetta Nexus Night chase card?** Mel, Newly Awakened (069b/166) — a promo printing of the existing Mel, Newly Awakened Champion Unit.
+
+**How many Nexus Night promo cards are there for Vendetta?** Riot says 25 total across the season. Only 7 (Mel plus the 6 promo runes) have confirmed art as of this post.
+
+**How do I get Nexus Night promo cards?** Attend your local game store's weekly Nexus Night event — completing a demo or casual event earns a 3-card promo pack. Day and format vary by store.
+
+**Are Nexus Night promos worth anything?** Promo prints are historically one of Riftbound's more volatile chase tiers — small, event-bound print runs can outprice regular chase cards once a season's supply dries up. Check each card's live page for the current picture rather than trusting a fixed number.
+
+*Card reveals and event details are from Riot's own Nexus Night coverage — see [riftbound.gg's promo card page](https://riftbound.gg/riftbound-vendetta-nexus-night-promo-cards/) for the original.*`,
+    faq: [
+      { q: "What is the Vendetta Nexus Night chase card?", a: "Mel, Newly Awakened (069b/166) — a promo printing of the existing Mel, Newly Awakened Champion Unit." },
+      { q: "How many Nexus Night promo cards are there for Vendetta?", a: "Riot says 25 total across the season. Only 7 (Mel plus the 6 promo runes) have confirmed art as of this post." },
+      { q: "How do I get Nexus Night promo cards?", a: "Attend your local game store's weekly Nexus Night event — completing a demo or casual event earns a 3-card promo pack. Day and format vary by store." },
+      { q: "Are Nexus Night promos worth anything?", a: "Promo prints are historically one of Riftbound's more volatile chase tiers — small, event-bound print runs can outprice regular chase cards once a season's supply dries up. Check each card's live page for the current picture." },
+    ],
   },
 ];
 

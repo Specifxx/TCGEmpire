@@ -49,7 +49,7 @@ export default async function SocialAdminPage({ searchParams }: { searchParams: 
     .catch(() => []);
   const spoilerReplies = newest.map(
     (c) =>
-      `${c.name} (${c.collectorNumber}) is already in the RiftCompare database — ${c.rarity} ${c.type}, page live, prices land the moment stores list it.\n\nriftcompare.com/card/${c.slug}`
+      `${c.name} (${c.collectorNumber}) is already in the RiftCompare database — ${c.rarity} ${c.type}, page live with prices compared across every store we track.\n\nriftcompare.com/card/${c.slug}`
   );
 
   // ---- Evergreen rotation (3 per day, deterministic) ----------------------------

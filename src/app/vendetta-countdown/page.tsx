@@ -1,45 +1,58 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SITE_URL, SITE_NAME } from "@/lib/site";
-import { CountdownTimer } from "@/components/CountdownTimer";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 
-// Timely + indexable. Revalidate hourly so any server-rendered date wording stays
-// fresh; the live ticking numbers are client-side.
+// Timely + indexable. Revalidate hourly so the wording stays fresh.
 export const revalidate = 3600;
 
-const RELEASE = { y: 2026, m: 7, d: 31, label: "31 July 2026", iso: "2026-07-31" };
+// POST-LAUNCH (31 Jul 2026). This page used to be a live countdown to the street
+// date. That date has passed, so the countdown, the "releases in" heading and the
+// "singles are already trading early" framing were all stale — and worse, the
+// server-rendered HTML (what Google indexes) still read as pre-launch even though
+// the client-side timer swapped itself to an "it's here" state on mount.
+//
+// The URL is deliberately KEPT rather than redirected: "riftbound vendetta release
+// date" is one of the highest-volume queries in this niche, and "is Vendetta out
+// yet" is still a real question people ask. The page now answers it in the past
+// tense and sends them to live prices. ~35 internal links point here.
+const RELEASE = { label: "31 July 2026", iso: "2026-07-31" };
 
 export const metadata: Metadata = {
-  title: { absolute: "Riftbound Vendetta Release Countdown — 31 July 2026 | RiftCompare" },
+  title: { absolute: "Riftbound Vendetta Release Date — Out Now (31 July 2026) | RiftCompare" },
   description:
-    "Riftbound: Vendetta singles are already trading early via Pre-Rift launch events, ahead of the 31 July 2026 official street date. Live countdown to full release, plus prices, mechanics and everything you need to know.",
+    "Riftbound: Vendetta released worldwide on 31 July 2026 and is out now. Every card in the set with live prices compared across stores in Australia, New Zealand, the US, the UK, Singapore and Canada.",
   alternates: { canonical: "/vendetta-countdown" },
   openGraph: {
-    title: "Riftbound Vendetta Release Countdown — 31 July 2026",
-    description: "How long until Riftbound: Vendetta drops? Live countdown to the 31 July 2026 release.",
+    title: "Riftbound Vendetta Is Out Now — Released 31 July 2026",
+    description: "Vendetta released 31 July 2026. See every card in the set with live prices compared across every store.",
     url: `${SITE_URL}/vendetta-countdown`,
     images: [{ url: `${SITE_URL}/vendetta-hero.png`, width: 1200, height: 480 }],
   },
 };
 
 const LINKS = [
-  { href: "/guides/riftbound-vendetta-card-list", label: "Full card list (confirmed so far)" },
+  { href: "/sets/vendetta", label: "Every Vendetta card, with live prices" },
+  { href: "/guides/riftbound-vendetta-card-list", label: "Full card list" },
+  { href: "/blog/riftbound-vendetta-chase-cards-so-far", label: "Chase cards, tier by tier" },
   { href: "/blog/riftbound-vendetta-everything-you-need-to-know", label: "Everything you need to know" },
   { href: "/blog/riftbound-vendetta-new-mechanics-flow-burn-empower", label: "New mechanics: Flow, Burn & Empower" },
   { href: "/guides/best-riftbound-vendetta-decks", label: "Best decks & archetypes" },
   { href: "/guides/riftbound-vendetta-overnumbers-explained", label: "Overnumbers & chase cards" },
-  { href: "/guides/riftbound-pre-rift-rules-explained", label: "Pre-Rift rules: how Sealed deck-building works" },
   { href: "/guides/riftbound-vendetta-crystal-rose-cards", label: "Crystal Rose alt-arts: all 6 cards, priced" },
-  { href: "/sets/vendetta", label: "Vendetta set page" },
 ];
 
-// Owns the release-intent long-tail ("what time does Vendetta release", "what's in
-// Vendetta") and earns an FAQ rich result. Answers are grounded in confirmed facts.
+// Owns the release-intent long-tail ("is Vendetta out yet", "when did Vendetta
+// release", "what's in Vendetta") and earns an FAQ rich result. Answers are
+// grounded in confirmed facts and written in the past tense now that it's shipped.
 const FAQS = [
   {
-    q: "When does Riftbound: Vendetta release?",
-    a: "Riftbound: Vendetta's official worldwide street date is 31 July 2026. In-store Pre-Rift launch events run from 24 July 2026, and singles from those early events are already starting to surface on stores and marketplaces days ahead of the full retail release.",
+    q: "Is Riftbound: Vendetta out yet?",
+    a: "Yes. Riftbound: Vendetta released worldwide on 31 July 2026 and is available now. In-store Pre-Rift launch events ran from 24 July 2026 ahead of the full retail release.",
+  },
+  {
+    q: "When did Riftbound: Vendetta release?",
+    a: "31 July 2026, worldwide. In-store Pre-Rift launch events ran from 24 July 2026, so some singles were trading days ahead of the official street date.",
   },
   {
     q: "What's new in Vendetta?",
@@ -47,11 +60,11 @@ const FAQS = [
   },
   {
     q: "Where can I buy Vendetta cards cheapest?",
-    a: "RiftCompare compares live Vendetta prices across 70+ stores in Australia, New Zealand, the US, the UK, Singapore and Canada, delivered cost included. The moment singles go on sale we surface the cheapest store for every card — check the Vendetta set page on release day.",
+    a: "RiftCompare compares live Vendetta prices across stores in Australia, New Zealand, the US, the UK, Singapore and Canada, ranked by total delivered cost including postage. Open any card on the Vendetta set page to see every store's current price side by side.",
   },
   {
-    q: "How many days until Vendetta?",
-    a: "The live countdown at the top of this page ticks down to release day (31 July 2026) in your own timezone — bookmark it and check back.",
+    q: "How many cards are in Riftbound: Vendetta?",
+    a: "The main set is 166 cards, plus Showcase alternate-art printings, Overnumbered chase cards, runes and promos on top of that base numbering.",
   },
   {
     q: "What are the Pre-Rift deck-building rules?",
@@ -62,117 +75,117 @@ const FAQS = [
 export default function VendettaCountdownPage() {
   return (
     <div className="mx-auto max-w-3xl">
+      {/* FAQPage only. The Event schema that used to sit here described a release
+          that has now happened — Google's Event rich results are for upcoming
+          events, so a permanently-past one is noise rather than a signal. */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify([
-            {
-              "@context": "https://schema.org",
-              "@type": "Event",
-              name: "Riftbound: Vendetta Release",
-              startDate: `${RELEASE.iso}T00:00:00+00:00`,
-              endDate: `${RELEASE.iso}T23:59:59+00:00`,
-              eventStatus: "https://schema.org/EventScheduled",
-              eventAttendanceMode: "https://schema.org/OnlineEventAttendanceMode",
-              location: { "@type": "VirtualLocation", url: `${SITE_URL}/vendetta-countdown` },
-              description: "Global release of Riftbound: Vendetta, the new set for Riftbound: League of Legends TCG.",
-              organizer: { "@type": "Organization", name: "Riot Games" },
-              image: `${SITE_URL}/vendetta-hero.png`,
-              url: `${SITE_URL}/vendetta-countdown`,
-            },
-            {
-              "@context": "https://schema.org",
-              "@type": "FAQPage",
-              mainEntity: FAQS.map((f) => ({
-                "@type": "Question",
-                name: f.q,
-                acceptedAnswer: { "@type": "Answer", text: f.a },
-              })),
-            },
-          ]),
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: FAQS.map((f) => ({
+              "@type": "Question",
+              name: f.q,
+              acceptedAnswer: { "@type": "Answer", text: f.a },
+            })),
+          }),
         }}
       />
 
       {/* Banner */}
       <div className="overflow-hidden rounded-2xl border border-ink-700">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/vendetta-hero.png" alt="Riftbound: Vendetta releases 31 July 2026" className="w-full" />
+        <img src="/vendetta-hero.png" alt="Riftbound: Vendetta — out now" className="w-full" />
       </div>
 
       <div className="mt-6 text-center">
-        <span className="chip inline-flex bg-emerald-500/15 text-[11px] font-bold uppercase tracking-wider text-emerald-300">
-          Releases {RELEASE.label}
+        <span className="chip inline-flex bg-brand-500/15 text-[11px] font-bold uppercase tracking-wider text-brand-300">
+          Out now — released {RELEASE.label}
         </span>
-        <h1 className="mt-3 font-display text-3xl font-extrabold text-white sm:text-4xl">Riftbound: Vendetta releases in</h1>
+        <h1 className="mt-3 font-display text-3xl font-extrabold text-white sm:text-4xl">
+          Riftbound: Vendetta is out now
+        </h1>
+        <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-400">
+          Vendetta released worldwide on <strong className="text-white">{RELEASE.label}</strong>. Every card in the set is
+          live on RiftCompare with prices compared across every store we track — in your own market&apos;s currency, ranked
+          by what you&apos;d actually pay delivered.
+        </p>
       </div>
 
-      {/* Early-access note: Pre-Rift launch events kicked off 24 July, and singles from
-          those early events are already trading days ahead of the official street date
-          below — honest both ways: available now, but not yet the full worldwide release. */}
       <Link
         href="/sets/vendetta"
-        className="mx-auto mt-5 flex max-w-xl items-center justify-center gap-2 rounded-xl border border-brand-500/30 bg-brand-500/10 px-4 py-3 text-center text-sm font-semibold text-brand-300 transition-colors hover:bg-brand-500/15"
+        className="mx-auto mt-5 flex max-w-xl items-center justify-center gap-2 rounded-xl border border-brand-500/40 bg-brand-500/10 px-4 py-3 text-center text-sm font-semibold text-brand-300 transition-colors hover:bg-brand-500/15"
       >
-        🔥 Vendetta is here early — Pre-Rift singles are already trading. Shop now →
+        🔥 See every Vendetta card and its live price →
       </Link>
 
-      <div className="mt-6">
-        <CountdownTimer y={RELEASE.y} m={RELEASE.m} d={RELEASE.d} href="/sets/vendetta" />
+      <div className="mx-auto mt-6 grid max-w-xl gap-2 sm:grid-cols-3">
+        <Link href="/sets/vendetta" className="card-surface p-3 text-center text-sm font-semibold text-white transition-colors hover:border-brand-500">
+          166-card set
+          <span className="mt-0.5 block text-xs font-normal text-slate-500">browse them all</span>
+        </Link>
+        <Link href="/blog/riftbound-vendetta-chase-cards-so-far" className="card-surface p-3 text-center text-sm font-semibold text-white transition-colors hover:border-brand-500">
+          Chase cards
+          <span className="mt-0.5 block text-xs font-normal text-slate-500">tier by tier</span>
+        </Link>
+        <Link href="/movers" className="card-surface p-3 text-center text-sm font-semibold text-white transition-colors hover:border-brand-500">
+          Price movers
+          <span className="mt-0.5 block text-xs font-normal text-slate-500">what&apos;s climbing</span>
+        </Link>
       </div>
-      <p className="mx-auto mt-2 max-w-xl text-center text-xs text-slate-500">
-        Countdown to the full worldwide street date — 31 July 2026.
-      </p>
 
-      {/* Capture the highest-intent timed traffic on the site: release-day reminder. */}
-      <div className="mx-auto mt-6 max-w-md">
+      {/* Still the highest-intent capture on the page — just no longer a
+          "launch day" reminder, since launch day has been and gone. */}
+      <div className="mx-auto mt-8 max-w-md">
         <NewsletterSignup
           siteName={SITE_NAME}
           source="countdown"
           variant="card"
-          heading="🔔 Get the release-day alert"
-          cta="Remind me on launch day"
-          done="✓ You're set — we'll email you the moment Vendetta prices go live."
+          heading="🔔 Get price drops in your inbox"
+          cta="Send me Vendetta price alerts"
+          done="✓ You're set — we'll email you when Vendetta prices move."
         />
       </div>
 
       <p className="mx-auto mt-6 max-w-xl text-center text-sm leading-relaxed text-slate-400">
-        Riftbound: Vendetta — the next set for Riftbound: League of Legends TCG — has its official worldwide street date on{" "}
-        <strong className="text-white">{RELEASE.label}</strong>, with new champions, three new mechanics (Flow, Burn &amp;
-        Empower), new card types and two-player Showdown Decks. In-store Pre-Rift events started 24 July, and early singles
-        are already trading — we&apos;re comparing every card&apos;s price across AU, NZ, US, UK, Singapore &amp; Canada stores as they land,
-        so you never overpay.
+        Riftbound: Vendetta — Set 4 for Riftbound: League of Legends TCG — launched on{" "}
+        <strong className="text-white">{RELEASE.label}</strong> with new champion Legends, three new mechanics (Flow, Burn
+        &amp; Empower), new card types and two-player Showdown Decks. We compare every card&apos;s price across stores in
+        Australia, New Zealand, the US, the UK, Singapore and Canada, so you never overpay.
       </p>
 
-      {/* Read up while you wait */}
+      {/* Everything else about the set */}
       <div className="mt-8">
-        <h2 className="mb-3 text-center text-sm font-semibold uppercase tracking-wide text-slate-500">Get ready while you wait</h2>
+        <h2 className="mb-3 text-center text-sm font-semibold uppercase tracking-wide text-slate-500">More on Vendetta</h2>
         <div className="grid gap-2 sm:grid-cols-2">
           {LINKS.map((l) => (
             <Link
               key={l.href}
               href={l.href}
-              className="card-surface flex items-center justify-between gap-2 p-4 transition-colors hover:border-brand-500 hover:bg-ink-800"
+              className="card-surface px-4 py-3 text-sm font-medium text-slate-200 transition-colors hover:border-brand-500 hover:text-white"
             >
-              <span className="text-sm font-semibold text-white">{l.label}</span>
-              <span className="text-brand-400" aria-hidden>→</span>
+              {l.label}
             </Link>
           ))}
         </div>
       </div>
 
-      {/* FAQ — owns the release-intent long-tail + FAQ rich result (schema above). */}
-      <section className="card-surface mt-8 divide-y divide-ink-800 overflow-hidden">
-        <h2 className="px-6 py-4 text-lg font-extrabold text-white">Riftbound Vendetta FAQ</h2>
-        {FAQS.map((f) => (
-          <details key={f.q} className="group px-6 py-4">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold text-slate-200 hover:text-white">
-              {f.q}
-              <span className="shrink-0 text-slate-500 transition-transform group-open:rotate-180" aria-hidden>▾</span>
-            </summary>
-            <p className="mt-3 text-sm leading-relaxed text-slate-400">{f.a}</p>
-          </details>
-        ))}
-      </section>
+      {/* Visible FAQ — mirrors the FAQPage schema above, as Google requires. */}
+      <div className="mt-10">
+        <h2 className="mb-3 text-lg font-extrabold text-white">Vendetta release FAQ</h2>
+        <div className="card-surface divide-y divide-ink-800 overflow-hidden">
+          {FAQS.map((f) => (
+            <details key={f.q} className="group px-5 py-4">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold text-slate-200 hover:text-white">
+                {f.q}
+                <span className="shrink-0 text-slate-500 transition-transform group-open:rotate-180" aria-hidden>▾</span>
+              </summary>
+              <p className="mt-3 text-sm leading-relaxed text-slate-400">{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
