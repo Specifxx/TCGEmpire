@@ -182,7 +182,7 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
         <button
           onClick={onClose}
           aria-label="Close"
-          className="absolute right-3 top-3 z-20 grid h-8 w-8 place-items-center rounded-full bg-ink-950/80 text-slate-300 hover:text-white"
+          className="absolute right-3 top-3 z-20 tap-icon  rounded-full bg-ink-950/80 text-slate-300 hover:text-white"
         >
           ✕
         </button>
@@ -307,7 +307,7 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                         <div className="text-[10px] text-slate-500">
                           {p.ship == null ? (
                             shippingPolicyUrl(p.retailer) ? (
-                              <a href={shippingPolicyUrl(p.retailer)!} target="_blank" rel="nofollow noopener noreferrer" className="underline decoration-dotted hover:text-slate-300">
+                              <a href={shippingPolicyUrl(p.retailer)!} target="_blank" rel="sponsored nofollow noopener noreferrer" className="underline decoration-dotted hover:text-slate-300">
                                 + postage ↗
                               </a>
                             ) : (

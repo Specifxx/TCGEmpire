@@ -38,7 +38,7 @@ export function PriceWatchButton({
       onClick={click}
       aria-label="Watch this card's price"
       title="Get an email when the price drops"
-      className="grid h-8 w-8 place-items-center rounded-full border border-ink-600 bg-ink-950/80 text-slate-300 transition-colors hover:border-gold/50 hover:text-gold"
+      className="tap-icon  rounded-full border border-ink-600 bg-ink-950/80 text-slate-300 transition-colors hover:border-gold/50 hover:text-gold"
     >
       {bell}
     </button>

@@ -141,7 +141,7 @@ export function PriceAlertModal() {
             <button
               onClick={() => setOpen(false)}
               aria-label="Close"
-              className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full text-slate-400 hover:bg-ink-800 hover:text-slate-200"
+              className="absolute right-3 top-3 tap-icon  rounded-full text-slate-400 hover:bg-ink-800 hover:text-slate-200"
             >
               ✕
             </button>

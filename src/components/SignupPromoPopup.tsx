@@ -77,7 +77,7 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
         <button
           onClick={dismiss}
           aria-label="Close"
-          className="absolute right-3 top-3 z-20 grid h-8 w-8 place-items-center rounded-full bg-ink-950/60 text-slate-400 hover:bg-ink-800 hover:text-slate-200"
+          className="absolute right-3 top-3 z-20 tap-icon  rounded-full bg-ink-950/60 text-slate-400 hover:bg-ink-800 hover:text-slate-200"
         >
           ✕
         </button>

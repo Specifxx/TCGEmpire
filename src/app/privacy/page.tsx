@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import Link from "next/link";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
 
@@ -14,6 +15,9 @@ const UPDATED = "1 August 2026";
 export default function PrivacyPage() {
   return (
     <article className="mx-auto max-w-3xl">
+      {/* Visible trail + BreadcrumbList JSON-LD. Every indexable page needs
+          both — the crawl check asserts it. */}
+      <Breadcrumbs trail={[{ name: "Privacy policy", href: "/privacy" }]} />
       <h1 className="text-3xl font-extrabold leading-tight text-white">Privacy Policy</h1>
       <p className="mt-2 text-sm text-slate-500">Last updated: {UPDATED}</p>
 

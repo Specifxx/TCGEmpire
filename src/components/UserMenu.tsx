@@ -58,7 +58,7 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
         rel="nofollow"
         aria-label="Sign in"
         title="Sign in"
-        className="grid h-9 w-9 place-items-center rounded-lg text-slate-200 hover:bg-ink-800 hover:text-white"
+        className="tap-icon rounded-lg text-slate-200 hover:bg-ink-800 hover:text-white"
       >
         <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="12" cy="8" r="4" />
@@ -88,7 +88,7 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
         onClick={() => setOpen((o) => !o)}
         aria-label="Account menu"
         aria-expanded={open}
-        className="relative grid h-9 w-9 place-items-center overflow-hidden rounded-full border border-ink-600 bg-ink-800 text-xs font-bold text-white hover:border-brand-500"
+        className="tap-icon relative overflow-hidden rounded-full border border-ink-600 bg-ink-800 text-xs font-bold text-white hover:border-brand-500"
       >
         {user.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element

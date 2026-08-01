@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { HubIntro } from "@/components/HubIntro";
 import Link from "next/link";
 import { getArbitrage, getArbitrageVsTcgplayer, getEbayCheapest, getArbSources, TCGPLAYER_KEY, EBAY_FEE, type ArbSort, type DealSort } from "@/lib/arbitrage";
 import { getCountry } from "@/lib/get-country";
@@ -113,6 +114,7 @@ export default async function ArbitragePage({
         </nav>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">Deal Finder</h1>
+      <HubIntro path="/tools/deal-finder" />
           <RegionToggle />
         </div>
       </div>

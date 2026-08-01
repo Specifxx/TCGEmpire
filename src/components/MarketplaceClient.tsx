@@ -641,7 +641,7 @@ function OffersModal({
               <Link href={cardHref(card.card)} className="text-brand-400 hover:underline">compare all stores</Link>
             </p>
           </div>
-          <button onClick={onClose} aria-label="Close" className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full text-slate-400 hover:bg-ink-800 hover:text-white">✕</button>
+          <button onClick={onClose} aria-label="Close" className="absolute right-3 top-3 tap-icon  rounded-full text-slate-400 hover:bg-ink-800 hover:text-white">✕</button>
         </div>
         <ul className="divide-y divide-ink-800 overflow-y-auto">
           {offers.map((o, i) => (
@@ -834,7 +834,7 @@ function CartDrawer({
       <aside className="absolute right-0 top-0 flex h-full w-full max-w-md flex-col border-l border-ink-700 bg-ink-900 shadow-2xl">
         <div className="flex items-center justify-between border-b border-ink-700 p-4">
           <h2 className="text-lg font-extrabold text-white">Your cart</h2>
-          <button onClick={onClose} aria-label="Close" className="grid h-8 w-8 place-items-center rounded-full text-slate-400 hover:text-white">✕</button>
+          <button onClick={onClose} aria-label="Close" className="tap-icon  rounded-full text-slate-400 hover:text-white">✕</button>
         </div>
         {cart.length === 0 ? (
           <div className="grid flex-1 place-items-center text-sm text-slate-500">Your cart is empty</div>

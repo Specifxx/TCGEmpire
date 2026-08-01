@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { HubIntro } from "@/components/HubIntro";
 import { TradeCalculator } from "@/components/TradeCalculator";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 
@@ -22,6 +23,7 @@ export default function TradePage() {
           RiftCompare&apos;s live lowest prices — and trade with confidence.
         </p>
       </header>
+      <HubIntro path="/trade" />
       <TradeCalculator />
     </div>
   );

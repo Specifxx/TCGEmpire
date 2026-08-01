@@ -5,6 +5,8 @@ import { DEFAULT_COUNTRY, priceField, COUNTRIES } from "@/lib/country";
 import { CardTile } from "./CardTile";
 import { formatMoney } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
+import { buildCollectionNarrative, type CollectionKind } from "@/lib/content/collection-narrative";
+import { getSiteMedianCents } from "@/lib/content/site-median";
 import type { Facet } from "@/lib/facets";
 
 // Bounded render — a "Unit" or "Common" facet can run into the hundreds of cards,
@@ -25,12 +27,15 @@ export async function FacetPageBody({
   crumbLabel,
   crumbHref,
   siblings,
+  collectionKind = "type",
 }: {
   facet: Facet;
   dimensionLabel: string; // "card type" | "rarity" | "printing" — used in copy
   crumbLabel: string; // "Type" | "Rarity" | "Printing" — breadcrumb segment
   crumbHref: string; // "/cards/type" etc — breadcrumb + sibling link base
   siblings: Facet[]; // other values in the same dimension, for cross-links
+  /** Which kind of collection this is, for the generated intro's buyer advice. */
+  collectionKind?: CollectionKind;
 }) {
   const country = DEFAULT_COUNTRY;
   const field = priceField(country);
@@ -49,6 +54,28 @@ export async function FacetPageBody({
   ]);
   const min = (agg as unknown as Record<string, Record<string, number | null>>)._min[field];
   const max = (agg as unknown as Record<string, Record<string, number | null>>)._max[field];
+
+  // A generated, page-specific editorial intro from this facet's own live data:
+  // scale and price coverage, the range, where the value is concentrated,
+  // which cards matter, and what a buyer should do with that. `facet.intro` (a
+  // hand-written line per value) stays as the lead sentence — this is what turns
+  // the rest of the page from a grid with a caption into something worth
+  // indexing. See docs/adsense-remediation.md § Phase 7c.
+  const siteMedianCents = await getSiteMedianCents(country);
+  const intro = buildCollectionNarrative({
+    kind: collectionKind,
+    label: facet.label,
+    currency: COUNTRIES[country].currency,
+    place: COUNTRIES[country].place,
+    members: cards.map((c) => ({
+      name: c.name,
+      priceCents: (c as unknown as Record<string, number | null>)[field] ?? null,
+      setCode: c.setCode,
+      rarity: c.rarity,
+      collectorNumber: c.collectorNumber,
+    })),
+    siteMedianCents,
+  });
 
   const browseHref = `/browse?${Object.entries(facet.query)
     .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`)
@@ -100,12 +127,17 @@ export async function FacetPageBody({
         <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
           Riftbound {facet.label} cards — prices &amp; full list
         </h1>
-        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
-          {facet.intro}{" "}
-          {total > 0
-            ? `Tracking ${total.toLocaleString()} card${total === 1 ? "" : "s"}, ${priced.toLocaleString()} priced right now.`
-            : `We're tracking this ${dimensionLabel} — cards will appear here as they're priced.`}
-        </p>
+        <div className="mt-3 max-w-3xl space-y-2.5 text-sm leading-relaxed text-slate-400">
+          <p>
+            {facet.intro}{" "}
+            {total > 0
+              ? `Tracking ${total.toLocaleString()} card${total === 1 ? "" : "s"}, ${priced.toLocaleString()} priced right now.`
+              : `We're tracking this ${dimensionLabel} — cards will appear here as they're priced.`}
+          </p>
+          {intro.map((p, i) => (
+            <p key={i}>{p}</p>
+          ))}
+        </div>
         {min != null && max != null && (
           <p className="mt-1 text-xs text-slate-500">
             Prices from {formatMoney(min, COUNTRIES[country].currency)} to {formatMoney(max, COUNTRIES[country].currency)} across every store we track

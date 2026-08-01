@@ -123,6 +123,19 @@ const nextConfig = {
         destination: "/market",
         permanent: true,
       },
+      // CONSOLIDATION (AdSense remediation § Phase 12b). "Where to Buy Riftbound
+      // Cards in Australia" was a 294-word guide whose entire topic is covered —
+      // and covered far better — by the 1,100-word multi-market guide it linked
+      // to twice in its own body. Its one genuinely unique section (why we always
+      // request each store's local-currency price) has been merged into the
+      // target, so nothing is lost; a 301 keeps its link equity and any bookmark
+      // working. The AU-specific /blog/buy-riftbound-cards-australia post stays —
+      // it is a different, live-data-backed piece, not a duplicate.
+      {
+        source: "/guides/where-to-buy-riftbound-australia",
+        destination: "/guides/where-to-buy-riftbound-cards",
+        permanent: true,
+      },
       // The tool is called "Deal Finder" in its own H1, nav entry, metadata and
       // every internal link — only the URL still said "arbitrage", a word no
       // buyer searches for. Renamed to /tools/deal-finder; this 301 preserves

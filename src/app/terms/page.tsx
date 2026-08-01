@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import Link from "next/link";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
 
@@ -13,6 +14,9 @@ const UPDATED = "12 June 2026";
 export default function TermsPage() {
   return (
     <article className="mx-auto max-w-3xl">
+      {/* Visible trail + BreadcrumbList JSON-LD. Every indexable page needs
+          both — the crawl check asserts it. */}
+      <Breadcrumbs trail={[{ name: "Terms", href: "/terms" }]} />
       <h1 className="text-3xl font-extrabold leading-tight text-white">Terms of Service</h1>
       <p className="mt-2 text-sm text-slate-500">Last updated: {UPDATED}</p>
 

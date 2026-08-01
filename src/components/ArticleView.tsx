@@ -10,6 +10,7 @@ import { Markdown } from "./Markdown";
 import { fmtDate } from "./ArticleList";
 import { AdSlot } from "./AdSlot";
 import { ArticleShopStrip } from "./ArticleShopStrip";
+import { ArticleMarketData } from "./ArticleMarketData";
 import { authorByName, authorJsonLd } from "@/lib/content/authors";
 import { SITE_URL } from "@/lib/site";
 
@@ -338,6 +339,11 @@ export async function ArticleView({ article }: { article: Article }) {
 
       {/* Per-article eBay affiliate searches — the reader is at peak intent right
           after finishing the guide; this is where a well-ranking page converts. */}
+      {/* Live market data BEFORE the affiliate strip — our own current figures
+          lead, the commercial block follows. Same ordering principle as the card
+          page (see docs/adsense-remediation.md § Phase 8). */}
+      {article.marketData && <ArticleMarketData country={article.marketData} />}
+
       {article.shop && article.shop.length > 0 && <ArticleShopStrip items={article.shop} />}
 
       {/* "Ready to buy?" — every article is fundamentally about Riftbound cards, so

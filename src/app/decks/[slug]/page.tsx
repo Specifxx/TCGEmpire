@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { unstable_cache } from "next/cache";
 import { getDeckSeed, resolveDeck } from "@/lib/meta-decks";
 import { DeckView } from "@/components/DeckView";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { DeckCart } from "@/components/DeckCart";
 import type { DeckCartLine } from "@/lib/deck-basket";
 import { getCountry } from "@/lib/get-country";
@@ -65,6 +66,15 @@ export default async function DeckDetailPage({ params }: { params: { slug: strin
 
   return (
     <div>
+      {/* Visible trail + BreadcrumbList JSON-LD. The "← All meta decks" link
+          below is a back-link, not a hierarchy — Google reads the structured
+          trail, and the crawl check asserts every indexable page has one. */}
+      <Breadcrumbs
+        trail={[
+          { name: "Meta decks", href: "/decks" },
+          { name: deck.name, href: `/decks/${deck.slug}` },
+        ]}
+      />
       <Link href="/decks" className="mb-4 inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white">
         ← All meta decks
       </Link>

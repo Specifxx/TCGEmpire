@@ -100,7 +100,10 @@ const ID_LITERAL_ALLOWED = (p: string) => {
   return (
     r.startsWith(".env") ||
     r.startsWith("docs/") ||
+    // The verification and audit tools compare the SERVED id against an
+    // expected one, so they necessarily name it. Same category as this file.
     r === "scripts/adsense-guard.ts" ||
+    r === "scripts/adsense-verify.ts" ||
     r === "README.md"
   );
 };
@@ -137,7 +140,9 @@ if (offenders.length) {
 // The wrong id must never come back, in ANY form — including in docs prose,
 // where it is quoted deliberately, so this check is scoped to code + env.
 const WRONG_ID = "6262011577596407";
-const wrongIdHits = ALL_FILES.filter((p) => !rel(p).startsWith("docs/") && rel(p) !== "scripts/adsense-guard.ts")
+const wrongIdHits = ALL_FILES.filter(
+  (p) => !rel(p).startsWith("docs/") && !["scripts/adsense-guard.ts", "scripts/adsense-verify.ts"].includes(rel(p)),
+)
   .filter((p) => read(p).includes(WRONG_ID))
   .map(rel);
 if (wrongIdHits.length) {
@@ -290,6 +295,7 @@ if (!existsSync(auditPath)) {
       indexableEmptyCards?: number;
       duplicateClusters?: number;
       softFourOhFours?: number;
+      emptyServerRender?: number;
       brokenInternalLinks?: number;
       paywalledIndexable?: number;
       affiliateWithoutEditorial?: number;
@@ -306,11 +312,43 @@ if (!existsSync(auditPath)) {
     ["indexable pages under 150 unique editorial words", t.indexableThin, "Thin content"],
     ["indexable card pages with no price data", t.indexableEmptyCards, "Low-value content"],
     ["near-duplicate clusters above 90% similarity", t.duplicateClusters, "Scaled content abuse"],
+    ["pages whose server HTML contains no content at all", t.emptyServerRender, "No content / low value content"],
     ["soft-404s", t.softFourOhFours, "Site navigation / broken pages"],
     ["broken internal links", t.brokenInternalLinks, "Site navigation"],
     ["indexable pages behind a paywall or blur", t.paywalledIndexable, "Behind a login / no content"],
     ["templates with affiliate links but <150 editorial words", t.affiliateWithoutEditorial, "Thin affiliate"],
   ];
+  // Navigation health comes from the crawl report (scripts/crawl-check.ts).
+  const crawlPath = join(ROOT, "docs/crawl-report.json");
+  if (existsSync(crawlPath)) {
+    try {
+      const crawl = JSON.parse(read(crawlPath)) as { totals?: Record<string, number> };
+      const ct = crawl.totals ?? {};
+      const merged: Record<string, number | undefined> = t as Record<string, number | undefined>;
+      merged.brokenInternalLinks ??= ct.broken;
+      merged.softFourOhFours ??= ct.softFourOhFours;
+      for (const [label, key, policy] of [
+        ["redirect chains longer than one hop", "redirectChains", "Site navigation"],
+        ["pages more than 4 clicks from the homepage", "tooDeep", "Site navigation"],
+        ["sitemap URLs with no inbound internal link", "sitemapOrphans", "Site navigation"],
+        ["indexable pages with a duplicate title", "duplicateTitles", "Duplicate content"],
+        ["indexable pages with a duplicate description", "duplicateDescriptions", "Duplicate content"],
+        ["indexable pages without exactly one h1", "wrongH1Count", "Site quality"],
+        ["indexable pages without a self-referencing canonical", "missingCanonical", "Duplicate content"],
+        ["indexable pages without BreadcrumbList markup", "missingBreadcrumbs", "Site navigation"],
+      ] as const) {
+        const v = ct[key];
+        if (v == null) continue;
+        if (v === 0) ok(`0 ${label}`);
+        else fail(`${v} ${label}  [${policy}]`);
+      }
+    } catch {
+      fail("docs/crawl-report.json is not valid JSON");
+    }
+  } else {
+    console.log("    \x1b[33m·\x1b[0m docs/crawl-report.json not present — run `npm run crawl:check`. Skipping.");
+  }
+
   for (const [label, value, policy] of budgets) {
     if (value == null) {
       console.log(`    \x1b[33m·\x1b[0m ${label}: not measured in this audit run`);

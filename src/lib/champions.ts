@@ -89,3 +89,10 @@ export function championForCardName(cardName: string): Champion | undefined {
 export function championCardWhere(c: Champion) {
   return { OR: c.prefixes.map((p) => ({ name: { startsWith: `${p},` } })) };
 }
+
+// Minimum tracked printings for a champion hub to be worth indexing. Mirrors
+// FACET_THIN_THRESHOLD in lib/facets.ts — the two are the same judgement about
+// the same kind of page, so they are kept at the same number deliberately.
+// Below this the page still renders, is still linked and is still crawlable;
+// it just carries robots: noindex and is left out of sitemaps/champions.xml.
+export const CHAMPION_THIN_THRESHOLD = 8;

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { HubIntro } from "@/components/HubIntro";
 import type { Prisma } from "@prisma/client";
 import { BulkPricer } from "@/components/BulkPricer";
 import { prisma } from "@/lib/db";
@@ -93,6 +94,7 @@ export default function BulkPricerPage({ searchParams }: { searchParams: { list?
       <Breadcrumbs trail={[{ name: "Bulk Price Checker", href: "/bulk-pricer" }]} />
       <div className="mb-5">
         <h1 className="text-2xl font-extrabold text-white">Bulk Card Price Checker</h1>
+      <HubIntro path="/bulk-pricer" />
         <p className="mt-1 text-sm text-slate-400">
           Paste a list of card names — a want-list, a trade, a stack you&apos;re selling — and get every card
           matched with the cheapest {info.adjective} price and a running total. No account needed.

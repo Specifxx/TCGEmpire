@@ -33,7 +33,7 @@ export function Navbar() {
               Rift<span className="text-brand-400">Compare</span>
             </span>
           </Link>
-          <Link href="/browse" className="rounded-lg px-2.5 py-1.5 text-sm font-semibold text-slate-200 hover:bg-ink-800 hover:text-white lg:hidden">
+          <Link href="/browse" className="inline-flex min-h-11 items-center rounded-lg px-2.5 text-sm font-semibold text-slate-200 hover:bg-ink-800 hover:text-white lg:hidden">
             Database
           </Link>
         </div>

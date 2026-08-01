@@ -35,5 +35,5 @@ export async function generateMetadata({ params }: { params: { printing: string 
 export default async function CardPrintingFacetPage({ params }: { params: { printing: string } }) {
   const facet = printingFacetBySlug(params.printing);
   if (!facet) notFound();
-  return <FacetPageBody facet={facet} dimensionLabel="printing" crumbLabel="Printing" crumbHref="/cards/printing" siblings={PRINTING_FACETS} />;
+  return <FacetPageBody facet={facet} dimensionLabel="printing" crumbLabel="Printing" crumbHref="/cards/printing" siblings={PRINTING_FACETS} collectionKind="printing" />;
 }

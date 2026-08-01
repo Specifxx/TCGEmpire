@@ -251,6 +251,39 @@ test("a card with no listings says so honestly and offers a real alternative", (
   assert.doesNotMatch(t, /stores? in the US/);
 });
 
+// Regression: the audit caught this. A card unpriced in the BASELINE market but
+// stocked elsewhere was being told it had no listings in any of the six markets,
+// which is simply false — the page is cached on one market, not sold in one.
+test("a card unpriced in the baseline market but stocked elsewhere says so accurately", () => {
+  const t = text(
+    card({
+      baseline: market({ lowestCents: null, lowestDeliveredCents: null, secondCents: null, storeCount: 0, listingCount: 0 }),
+      markets: [
+        market({ country: "AU", place: "Australia", currency: "AUD", lowestCents: 1800, lowestDeliveredCents: 2200, storeCount: 4 }),
+        market({ country: "UK", place: "the United Kingdom", currency: "GBP", lowestCents: 900, lowestDeliveredCents: 1300, storeCount: 2 }),
+      ],
+      history: { points: [] },
+    }),
+  );
+  assert.doesNotMatch(t, /no live listing for .* in any of the six markets/i);
+  assert.match(t, /available\s+elsewhere/);
+  assert.match(t, /Australia/);
+  assert.match(t, /the United Kingdom/);
+  // The cheapest of the stocked markets is the one quoted.
+  assert.match(t, /£9\.00 in the United Kingdom/);
+});
+
+test("only a card with NO stock in any market claims none anywhere", () => {
+  const t = text(
+    card({
+      baseline: market({ lowestCents: null, lowestDeliveredCents: null, secondCents: null, storeCount: 0, listingCount: 0 }),
+      markets: [],
+      history: { points: [] },
+    }),
+  );
+  assert.match(t, /no live listing for .* in any of the six markets/i);
+});
+
 test("an empty card never claims a trend or a spread", () => {
   const t = text(
     card({

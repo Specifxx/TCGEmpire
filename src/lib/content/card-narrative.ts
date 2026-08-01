@@ -484,19 +484,39 @@ function playability(c: NarrativeInput): string | null {
 // served to real people arriving from search, a bookmark or an internal link,
 // and they must say something true and useful rather than nothing.
 function noMarketYet(c: NarrativeInput): string {
+  // A card can be unpriced in the BASELINE market and perfectly well stocked
+  // somewhere else — the page is cached on one market, not sold in one. Saying
+  // "no live listing in any of the six markets" to a reader looking at a card
+  // that four Australian shops have in stock is simply false, and this function
+  // is reached on the baseline check alone, so it has to distinguish the two.
+  const elsewhere = c.markets.filter((m) => m.storeCount > 0 && m.lowestCents != null);
+
+  if (elsewhere.length) {
+    const cheapest = elsewhere.reduce((a, b) => (a.lowestCents! <= b.lowestCents! ? a : b));
+    const names = elsewhere.map((m) => m.place);
+    return (
+      `No store we track in ${c.baseline.place} has ${c.displayName} in stock today, but it is available ` +
+      `elsewhere: ${elsewhere.length === 1 ? names[0] : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`}` +
+      `${elsewhere.length === 1 ? " has" : " have"} it, from ${formatMoney(cheapest.lowestCents!, cheapest.currency)} in ` +
+      `${cheapest.place}. Switch market on the comparison above to see those listings and what they cost delivered — ` +
+      `importing a single card is often dearer than it looks once postage is counted, so check the delivered figure ` +
+      `rather than the sticker price.`
+    );
+  }
+
   const otherPriced = c.printings.filter((p) => p.priceCents != null);
-  let s =
+  let s2 =
     `We have no live listing for ${c.displayName} in any of the six markets we track right now. That is a real ` +
     `signal rather than a gap in the data: it means no store we monitor in Australia, New Zealand, the US, the UK, ` +
     `Singapore or Canada currently has it on the shelf.`;
   if (otherPriced.length) {
     const cheapest = otherPriced.reduce((a, b) => ((b.priceCents ?? 0) < (a.priceCents ?? 0) ? b : a));
-    s +=
+    s2 +=
       ` Its ${cheapest.label} printing is stocked, at ${formatMoney(cheapest.priceCents!, c.baseline.currency)} — ` +
       `a different product, but the closest live price for this card.`;
   }
-  s += ` Prices refresh daily; a price watch will email you the moment one appears.`;
-  return s;
+  s2 += ` Prices refresh daily; a price watch will email you the moment one appears.`;
+  return s2;
 }
 
 /**

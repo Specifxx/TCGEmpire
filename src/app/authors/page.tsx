@@ -37,13 +37,32 @@ export default function AuthorsPage() {
       </nav>
 
       <h1 className="text-3xl font-extrabold leading-tight text-white">Who writes RiftCompare</h1>
-      <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400">
-        Two bylines, kept separate on purpose: writing composed by the people who run the site, and
-        writing generated directly from our price database. Which one a piece carries tells you how
-        it was produced. Our{" "}
-        <Link href="/editorial-policy" className="text-brand-400 hover:underline">editorial policy</Link>{" "}
-        covers how prices are collected and verified, how often they refresh, and how to report an error.
-      </p>
+      <div className="mt-3 max-w-2xl space-y-3 text-sm leading-relaxed text-slate-400">
+        <p>
+          Two bylines, kept separate on purpose: writing composed by the people who run the site, and
+          writing generated directly from our price database. Which one a piece carries tells you how
+          it was produced.
+        </p>
+        <p>
+          We think that distinction is worth making explicit rather than blurring. A guide to storing
+          cards, or to whether a set is worth opening, is a judgement someone made — it should carry a
+          human byline and be arguable. A price snapshot is not a judgement; it is a query result with
+          a fixed methodology, and dressing it up as analysis would be misleading about how much
+          thought went into it. So the two never share a byline.
+        </p>
+        <p>
+          What neither byline is: an invented person. There is no stock photo and no fabricated
+          biography here, because a name we made up would be worth less than no name at all — and
+          would be a straightforward lie to anyone who checked. If that changes and a named person
+          starts writing for the site, they will appear here under their own name.
+        </p>
+        <p>
+          Our{" "}
+          <Link href="/editorial-policy" className="text-brand-400 hover:underline">editorial &amp; pricing policy</Link>{" "}
+          sets out how prices are collected and verified, how often each surface refreshes, how
+          corrections are handled, how the site makes money, and how to report something that is wrong.
+        </p>
+      </div>
 
       <div className="mt-8 space-y-4">
         {AUTHORS.map((a) => {

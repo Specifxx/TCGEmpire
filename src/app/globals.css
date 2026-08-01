@@ -94,7 +94,10 @@ h1 {
    (the browser only lays out / paints tiles near the viewport). */
 .cv-auto {
   content-visibility: auto;
-  contain-intrinsic-size: auto 340px;
+  /* 360, not 340: the 375px audit measured real tile content at 348px, and an
+     intrinsic size shorter than the real one is a layout shift the moment the
+     tile scrolls into view — on a grid of 60, repeatedly. */
+  contain-intrinsic-size: auto 360px;
 }
 
 /* Proxy print sheets: real 63x88mm cards, 3x3 per A4 page for cutting out. */
@@ -138,8 +141,12 @@ h1 {
   .container-app {
     @apply mx-auto w-full max-w-[1400px] px-4 sm:px-6;
   }
+  /* min-h-11 = 44px, the Apple HIG / Google mobile-usability tap-target floor.
+     px-4 py-2 at 14px text laid out at 37px tall, which the 375px audit flagged
+     on every page that renders a .btn (scripts/mobile-check.ts). Setting the
+     floor on the base class fixes every variant at once and can't drift. */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-colors duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-colors duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
   }
   /* Primary action: flat, solid RiftCompare green — the one accent. No gradient/glow. */
   .btn-primary {
@@ -152,8 +159,16 @@ h1 {
   .btn-accent {
     @apply btn bg-accent text-ink-950 hover:bg-white;
   }
+  /* min-h-11: same 44px tap-target floor as .btn. A text input is a tap target
+     too, and the 375px audit measured this one at 42px. */
   .input {
-    @apply w-full rounded-md border border-ink-700 bg-ink-950 px-3 py-2 text-base text-slate-100 placeholder:text-slate-500 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/50 sm:text-sm;
+    @apply w-full min-h-11 rounded-md border border-ink-700 bg-ink-950 px-3 py-2 text-base text-slate-100 placeholder:text-slate-500 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/50 sm:text-sm;
+  }
+  /* Square icon-only controls (nav icons, close buttons). Below `sm` they take
+     the full 44px tap target; from `sm` up — where a pointer is likely — they
+     keep the tighter 36px so the navbar doesn't grow on desktop. */
+  .tap-icon {
+    @apply grid h-11 w-11 place-items-center sm:h-9 sm:w-9;
   }
   /* Flat terminal panel: hairline border, square-ish corners, quiet elevation. */
   .card-surface {

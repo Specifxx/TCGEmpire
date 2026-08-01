@@ -19,7 +19,7 @@ import { SETS } from "./constants";
 import { DOMAIN_PAGES } from "./domains";
 import { MARKETPLACE_PUBLIC } from "./marketplace";
 import { KEYWORDS } from "./keywords";
-import { CHAMPIONS, championCardWhere } from "./champions";
+import { CHAMPIONS, championCardWhere, CHAMPION_THIN_THRESHOLD } from "./champions";
 import { TYPE_FACETS, RARITY_FACETS, PRINTING_FACETS, FACET_THIN_THRESHOLD } from "./facets";
 import { STORE_PAGES, STORE_THIN_THRESHOLD } from "./store-pages";
 import { buildCardWhere } from "./cards";
@@ -244,7 +244,10 @@ async function champions(): Promise<SitemapEntry[]> {
   // Only champions that actually have cards — the hub page calls notFound() for
   // an empty one, and submitting a URL that 404s is worse than omitting it.
   const counts = await Promise.all(CHAMPIONS.map((c) => prisma.card.count({ where: championCardWhere(c) })));
-  return CHAMPIONS.filter((_, i) => counts[i] > 0).map((c) => ({
+  // Hubs under the threshold carry robots: noindex (see app/champions/[slug]),
+  // so submitting them here would ask Google to index URLs we're telling it not
+  // to — the contradiction that fills the "Excluded by noindex tag" bucket.
+  return CHAMPIONS.filter((_, i) => counts[i] >= CHAMPION_THIN_THRESHOLD).map((c) => ({
     url: `${SITE_URL}/champions/${c.slug}`,
     changeFrequency: "daily" as const,
     priority: 0.8,

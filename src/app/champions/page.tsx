@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { HubIntro } from "@/components/HubIntro";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { COUNTRIES, DEFAULT_COUNTRY, priceField } from "@/lib/country";
@@ -88,6 +89,7 @@ export default async function ChampionsIndexPage() {
       <div>
         <Breadcrumbs trail={trail} />
         <h1 className="text-2xl font-extrabold text-white sm:text-3xl">Riftbound champions</h1>
+      <HubIntro path="/champions" />
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
           {live.length > 0 ? (
             <>

@@ -110,7 +110,7 @@ export function PriceChart({
               <button
                 key={r.key}
                 onClick={() => { setRange(r.key); setHover(null); }}
-                className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${range === r.key ? "bg-brand-500/20 text-brand-300" : "text-slate-500 hover:text-slate-300"}`}
+                className={`inline-flex min-h-11 items-center rounded-md px-3 text-[11px] font-semibold sm:min-h-0 sm:px-2 sm:py-0.5 ${range === r.key ? "bg-brand-500/20 text-brand-300" : "text-slate-500 hover:text-slate-300"}`}
               >
                 {r.key === "ALL" ? "All" : r.key}
               </button>

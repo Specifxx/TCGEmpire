@@ -455,3 +455,620 @@ Caveat, stated plainly: this ran against a local production build seeded with th
 environment has no deployment credentials. Every check is transport-level (HTML bytes,
 status codes, headers) and none depends on the hosting platform, but re-run the same
 command against the preview URL after deploying to confirm on real infrastructure.
+
+---
+
+# PART TWO — CONTENT, POLICY AND UX
+
+## Phase 6 — Audit methodology and baseline
+
+`scripts/adsense-audit.ts` (`npm run adsense:audit -- --url <origin>`). Writes
+`docs/adsense-audit.json`, which `scripts/adsense-guard.ts` then enforces in CI.
+
+**The metric is UNIQUE EDITORIAL WORDS, not words.** A raw count on a templated page
+is meaningless — nav, footer, badges, price tables and disclosures are identical on a
+thousand pages and Google discounts every one. So the audit takes the page body,
+subtracts the chrome landmarks and every `<table>` (price data is data, not prose),
+splits into sentences, then subtracts two kinds of boilerplate detected empirically
+rather than from a hand-written list:
+
+- **sitewide** — any sentence appearing on >35% of sampled pages (the disclosures);
+- **per template** — any sentence appearing on >35% of pages *within* one template.
+  On a 963-page card catalogue that second pass is the one that matters: text existing
+  963 times is not this page's content, however many words it is.
+
+**Two similarity scores are reported.** `SIM` is the brief's measure — Jaccard on 8-word
+shingles. `TPL-SIM` is the same after masking card/set/champion names, numbers and
+money. The second is the honest one: *"Jinx is a rare unit card from Origins (OGN)"* and
+*"Vayne is a common unit card from Origins (OGN)"* share almost no 8-word shingle while
+being the same page with two nouns swapped. The duplicate-cluster flag uses TPL-SIM.
+
+### Baseline (before) vs final (after)
+
+Both runs: a production build against the full catalogue, 202 URLs sampled across 13
+templates.
+
+| Metric | Before | After |
+| --- | --- | --- |
+| Indexable pages under 150 unique editorial words | **19** | **0** |
+| Indexable card pages with no price data | **101** | **0** |
+| Near-duplicate clusters (>90% TPL-SIM) | 0 | 0 |
+| Soft-404s | 0 | 0 |
+| **Pages whose server HTML contains no content at all** | **1 (the homepage)** | **0** |
+| Indexable pages behind a paywall/blur | **2** | **0** |
+| Templates with affiliate links but <150 editorial words | **19** | **0** |
+| Pages with unmarked commercial outbound links | **16** | **0** |
+| Indexable pages without exactly one `<h1>` | **1 (the homepage)** | **0** |
+| Duplicate titles / descriptions / missing canonicals | 0 | 0 |
+
+| Template | URLs before → after | Median editorial words before → after |
+| --- | --- | --- |
+| card | 1,064 → **963 indexable** | 818 → **1,021** |
+| champion | 82 → **19 indexable** | 164 → **374** |
+| facet | 14 | 727 → **863** |
+| tool | 24 | 183 → **256** (min 79 → **154**) |
+| index | 10 | 336 (min 77 → **176**) |
+| store | 121 | 300 → 311 |
+| guide / blog | 28 / 35 | 732 / 638 |
+
+---
+
+## ⚠️ The single largest finding: the homepage server-rendered nothing
+
+Not in the brief, found by the audit, and very plausibly the main cause of the
+rejections.
+
+`src/components/home/CinematicHero.tsx` rendered `<SearchBar>` — which calls
+`useSearchParams()` — without a `<Suspense>` boundary. In the App Router an unwrapped
+`useSearchParams()` deopts its entire subtree to client-side rendering, and the deopt
+escalates to the nearest Suspense boundary above it. Here that was `app/loading.tsx`, so
+the **whole homepage** was replaced in the server-rendered HTML by the loading spinner:
+
+```html
+<main id="main-content">
+  <template data-dgst="BAILOUT_TO_CLIENT_SIDE_RENDERING"></template>
+  <div …>Loading…</div>
+</main>
+```
+
+Every other page on the site rendered its content. The homepage alone shipped a spinner,
+no `<h1>`, and **not one internal link** to any client that does not execute JavaScript —
+which includes an AdSense reviewer fetching the page, and every automated "does this site
+have content?" check that runs on raw HTML.
+
+Measured on the built output, before and after adding the boundary:
+
+| | Before | After |
+| --- | --- | --- |
+| Visible text in `<body>` | 0 characters | **9,797 characters** |
+| `<h1>` elements | 0 | **1** |
+| Internal links in the HTML | 0 | **106** |
+
+The Navbar wraps both of its own `SearchBar` instances in exactly this boundary; the hero
+was the one that did not. `scripts/adsense-audit.ts`, `scripts/crawl-check.ts` and the
+CI guard now all assert `emptyServerRender === 0`, checked on the `<main>` element
+specifically — the same marker legitimately appears elsewhere on every page inside the
+navbar search's own boundaries, where it costs a search input and nothing else.
+
+**Google policy addressed:** *Low value content* / *Site does not have enough content* —
+a page with no content in its HTML cannot be assessed as having any.
+
+---
+
+## Phase 7 — Eliminating the thin surface
+
+### 7a. Empty card pages
+
+`src/lib/card-price-state.ts` defines ONE rule — no in-stock listing in any market **and**
+fewer than 7 distinct days of recorded price history — consumed by three places that must
+never disagree: the page's `robots` tag, `sitemaps/cards.xml`, and the audit.
+
+- `robots: { index: false, follow: true }` via `generateMetadata`. Never a robots.txt
+  Disallow: Google has to be able to READ the noindex, and the AdSense crawler has to be
+  able to fetch every page.
+- Removed from `sitemaps/cards.xml` — 1,064 → **963** URLs, exactly the 101 empty ones.
+  Submitting a URL you are simultaneously telling Google not to index is the
+  contradiction that fills the "Excluded by noindex tag" bucket.
+- **The re-index path is automatic.** No manual list, nothing to remember: the same query
+  drives both surfaces, so one in-stock listing — or a seventh day of history — puts the
+  page back in the index on the next regeneration.
+- Both queries **fail OPEN**. A database blip must never noindex the catalogue; losing
+  1,000 indexed pages to a timeout is far worse than briefly indexing a few empty ones.
+- The pages themselves now explain their own state and link to the printings that *are*
+  priced, the set, the domain, and a price watch — rather than rendering an empty table.
+
+### 7b. De-templatising the card narrative
+
+`src/lib/content/card-narrative.ts` replaces the fixed sentence skeleton with a
+compositional generator. Seven observation families, each emitted only where the data
+supports it:
+
+1. **Cross-market spread** — which of the six markets stock it, delivered vs sticker
+   cost, and postage as a share of what you actually pay.
+2. **Price trajectory** — 7/30/90-day direction and magnitude (only for windows the
+   history actually covers), position within the tracked range, distance from median.
+3. **Stock depth** — store count, and the gap to the *second*-cheapest listing, which is
+   what distinguishes "one seller at $4" from "eight sellers at $4".
+4. **Condition and foil economics** — the played-copy discount, the foil multiple.
+5. **Variant economics** — the premium printing's price as a multiple of the base.
+6. **Set context** — percentile within the set's price distribution.
+7. **Playability** — tracked meta decks, and the playset cost at today's cheapest price.
+
+Sentence FORMS branch on data conditions, not synonyms: a single-seller card gets a
+"supply is thin" paragraph, a nine-seller card gets a "settled price" one, a
+postage-dominated card gets buying advice about combining orders. Nothing is asserted
+without the data on that render — a sparse card gets fewer paragraphs, never padded ones.
+
+**Tests:** `tests/card-narrative.test.ts`, 30 assertions, including that two different
+cards share <30% of their 8-word shingles, that no branch leaks `NaN`/`undefined`, and
+that every claim has a matching "does not assert this without data" case.
+
+Result: card-page median 818 → **1,021** unique editorial words; TPL-SIM 0.351, far below
+the 0.9 duplicate threshold.
+
+### 7c. Facet, keyword, domain, set and champion hubs
+
+`src/lib/content/collection-narrative.ts` — 150+ words per hub generated from that
+collection's own live data: scale and price coverage, range and median, how concentrated
+the value is (the top decile's share of the total), the named cards at each end, and
+buyer advice specific to that KIND of collection (a champion pool, a rarity tier and a
+printing tier get genuinely different closing paragraphs, asserted by test).
+
+Champion hubs gained `CHAMPION_THIN_THRESHOLD = 8`, mirroring the existing
+`FACET_THIN_THRESHOLD`: below it a hub is noindex/follow and out of
+`sitemaps/champions.xml`, still linked and crawlable. 82 → **19 indexable**; median 164 →
+**374** words. `tests/collection-narrative.test.ts`, 10 assertions.
+
+### 7d. Marketplace listing pages
+
+Already correct and left alone: there are **no** per-listing pages by design (the card
+page is the product page; per-listing URLs would be thin and would 404 on sale). Seller
+profiles and `/marketplace` already carry `robots: index:false` until the marketplace is
+publicly launched.
+
+### Hub and tool pages
+
+`src/lib/content/hub-intros.ts` — hand-written intros for the eight index/tool pages the
+audit still flagged (`/deck` at 79 words, `/trade` at 91, `/bulk-pricer` at 110, …). Each
+says what the tool does, what data it runs on, when to use it and what it will not do.
+Deliberately NOT generated: there is no data to derive "what is this tool for" from, and
+a templated answer to that question would be exactly the filler this exercise removes.
+
+`/feedback` (a bare submission form, 49 words) is now `noindex, follow` — `/contact`
+covers the same intent with real content.
+
+**Google policy addressed:** *Low value content*, *Scaled content abuse*.
+
+---
+
+## Phase 8 — The affiliate-first impression
+
+### 8a. Card page reordered
+
+The eBay affiliate carousel was the **first substantive element** on every card page,
+above everything we wrote. To a reviewer opening a random `/card/*` URL that reads as an
+affiliate lander with data attached — "little or no original content", an objection no
+amount of writing further down answers, because nobody scrolls that far to find it.
+
+New order: card identity and game data → **our narrative analysis** → multi-store price
+comparison → price history chart → rarity/printings → FAQ → related guides → **eBay
+listings** → other printings → decks → similar cards.
+
+### 8b. Disclosures
+
+Every disclosure kept — they are compliant and required. The card page's moved with the
+affiliate block rather than being repeated in prime position; the sitewide footer pair
+still carries its combined line directly beneath it.
+
+### 8c. Build-time check
+
+`affiliateWithoutEditorial` in the audit, enforced by the guard: a template that renders
+affiliate links but under 150 unique editorial words fails the build. **19 → 0.**
+
+### 8d. `rel="sponsored nofollow"` audit
+
+`outboundRel()` already emitted `nofollow sponsored noopener noreferrer` for eBay, Amazon
+and TCGplayer. Sixteen pages carried commercial links that did not use it — the 121 store
+pages' "Visit {store} →" and shipping-policy links, plus the card-page and QuickView
+policy links. All now `sponsored nofollow noopener noreferrer`. **16 → 0.**
+
+Deliberately NOT marked: editorial citations to non-commercial sites (riftbound.gg, Riot
+pages). Marking a normal reference as sponsored misdeclares it. The audit's heuristic was
+tightened to only flag known retailer/affiliate hosts, for the same reason.
+
+---
+
+## Phase 9 — Paywall and AI flags, behind one env flag
+
+`NEXT_PUBLIC_ADSENSE_REVIEW_MODE` (default **true**). While on:
+
+| Surface | Normally | Under review mode |
+| --- | --- | --- |
+| Homepage "Today's Top Deals" | Premium columns show 1 deal + "Unlock N more with Premium" | **All deals shown**, no teaser, no lock |
+| `/tools/rising`, `/tools/value-finder` | 1 pick + 4 blurred placeholder rows + upsell overlay | **Full list** |
+| `/tools/deal-finder` | First row sharp, the rest blurred behind an overlay | **Full table** |
+| `/portfolio` | Two blurred Premium preview panels | **Rendered** |
+| **AI Tips module** on every card page | Rendered | **Hidden entirely** |
+
+The AI Tips module is hidden rather than reworded: it is explicitly AI-labelled, it
+comments on price direction, and it reads as quasi-financial advice — three separate
+things a reviewer marks down, on the site's highest-volume template.
+
+`/portfolio` is `noindex` already, but noindex is not unreachable: a reviewer following
+links from the header lands on it, and a blur reads as a paywall wherever it appears.
+
+**9b.** Full grep for blurred / locked / "sign in to view" / interstitial states — the
+five surfaces above were all of them. **9c.** No page requires an account to view; no
+login walls, no blocking modals. **9d.** The flag does **not** gate the loader script;
+the guard fails the build if that ever changes.
+
+**Google policy addressed:** *Content behind a paywall or login*, *Publisher content
+policies* (AI-generated content presented as advice).
+
+---
+
+## Phase 10 — Policy, legal and trust
+
+### 10a. `/privacy` — rewritten
+
+It said, in the present tense, as a bold statement of fact: *"We do not currently serve
+third-party advertising, and no third-party advertising cookies are set by this Site."*
+While an AdSense application was live. Now describes what the site actually does:
+third-party advertising including Google AdSense, vendor cookies, the Consent Mode v2
+default state, the footer Privacy settings control, opt-outs at Google Ads Settings and
+aboutads.info/choices, and Google's "How Google uses information from sites or apps that
+use its services". Cookies split into strictly-necessary / analytics / advertising. New
+Payments (Stripe) section. Affiliate, analytics and account sections kept. Last updated
+bumped to 1 August 2026.
+
+### 10b. `/terms`
+
+Added: **"We are not a party to any transaction between you and a third-party retailer"**
+in full, with what that means for payment, delivery, warranties, returns and disputes;
+prices as recorded snapshots rather than live lookups, linking the editorial policy; and
+an advertising clause that matches reality.
+
+### 10c. `/editorial-policy` — new
+
+Who writes the content, what is automated and what is not (three categories, stated
+plainly), how prices are collected, how often each surface refreshes, how they are
+verified, the corrections policy, how to report an error, how the site makes money and
+what that does *not* buy, and independence. Every claim is checkable against the code —
+the store count comes from `RETAILER_LIST`, the refresh cadence from the cron schedule
+and each route's `revalidate`. Linked from the footer, both author pages, every article
+byline, and the Terms.
+
+### 10d. Author identity
+
+`/authors` and `/authors/[slug]`, linked from every blog and guide byline, with `Article`
++ author structured data.
+
+**Deliberate deviation, stated plainly: no fabricated people.** The brief asked for
+Person structured data. There is no named human on record as the author of these 64
+pieces, and inventing one — a name, a bio, a claimed decade of industry experience —
+would be publishing a fabricated human identity as fact. It is also *worse* than
+anonymity if a reviewer looks the person up and finds nothing. The two bylines are typed
+as `Organization`, which is what they truthfully are and which schema.org permits as
+`author`. `lib/content/authors.ts` carries a clearly-marked block explaining exactly how
+the owner adds themselves as a real `Person` if they want the stronger signal.
+
+The two bylines are kept separate on purpose: hand-written work under **RiftCompare**,
+data-derived work under **RiftCompare Markets Desk**. Which byline a piece carries tells
+you how it was produced.
+
+### 10e. Marketplace UGC
+
+New `/marketplace/listing-policy`: what may be listed, twelve categories of what may not,
+how listings are moderated (verified sellers only, matched to a real card record, escrow),
+how to report one, and what happens when a listing breaches it. A **Report listing**
+control now renders on every listing card, visible to signed-out visitors. Terms § 6
+rewritten to state that listings are moderated and to link the policy.
+
+**Unsanitised HTML: verified impossible.** Listing text is rendered through React's
+default escaping — the only `dangerouslySetInnerHTML` in the marketplace tree is a
+JSON-LD block built from our own data. No user-supplied string reaches it.
+
+---
+
+## Phase 11 — Navigation, crawlability and errors
+
+### 11a. `scripts/crawl-check.ts`
+
+Crawls from the homepage, breadth-first, following internal links like a bot. Final run —
+401 URLs, 396 content pages, 374 indexable:
+
+| Check | Result |
+| --- | --- |
+| 404s / 5xxs reachable from the homepage | **0** |
+| Soft-404s | **0** |
+| Pages with no server-rendered content | **0** |
+| Redirect chains longer than one hop | **0** |
+| Pages more than 4 clicks from the homepage | **0** |
+| Sitemap URLs with no inbound internal link | **0** |
+| Duplicate titles / descriptions | **0 / 0** |
+| Missing title / description | **0 / 0** |
+| Pages without exactly one `<h1>` | **0** |
+| Missing / wrong self-referencing canonical | **0 / 0** |
+| Missing BreadcrumbList markup | **0** |
+
+Fixed along the way: the homepage `<h1>` (see the SSR finding above), and missing
+breadcrumbs on `/privacy`, `/terms`, `/support`, `/contact` and all six `/decks/*` pages.
+
+### 11c. Custom 404
+
+Rewritten with a **working search field** (not a link to one), the cards people actually
+look at, every live set, and four guides. Real 404 status via Next's `not-found`
+convention. Its SearchBar is wrapped in Suspense for the same reason the hero's now is.
+
+### 11d. Guides promoted into the header
+
+"Guides & News" is now a primary header item and its own nav group. The ~64 hand-written
+guides and posts were previously reachable only from the footer and the mega-menu —
+original content a reviewer cannot find might as well not exist.
+
+### 11e. Site search
+
+Verified present and working on every page at every width: inline in the navbar from
+`lg` up, as a full-width row below it, plus the ⌘K command launcher and the hero field.
+
+### 11f. Mobile at 375px
+
+`scripts/mobile-check.ts` drives real Chromium at 375×667 and measures four faults.
+
+| | Result |
+| --- | --- |
+| Horizontal scroll | **0 pages** |
+| Elements overflowing the right edge | **0** |
+| Clipped text | **0** |
+| Tap targets under 44px | fixed on the shared `.btn`, `.input`, icon buttons, nav items, market controls, filter inputs, footer accordions |
+
+Also fixed: `.cv-auto`'s `contain-intrinsic-size` was 340px against real 348px content —
+a layout shift on every tile scrolled into view, on a grid of 60.
+
+**Left as-is, deliberately:** the inline `·`-separated footer policy links (~20px tall)
+and the 36px logo. Making eight inline text links 44px each would make the footer
+dominate a phone screen, and they are horizontally separated prose links, not controls —
+the pattern Google's own guidance treats differently from buttons.
+
+---
+
+## Phase 12 — Content depth
+
+### 12b. Article audit — 64 pieces, 34,439 words
+
+| | |
+| --- | --- |
+| Guides / posts | 28 / 35 (after consolidation) |
+| Median length | 445 words |
+| Under 400 words | 24 |
+| Title pairs >45% similar | 19 |
+
+**Body similarity, measured before acting.** The six per-country buying posts looked like
+a doorway cluster on titles alone; their bodies score **0.01–0.32** shingle similarity —
+genuinely different articles, not one article with the country swapped. They were thin,
+not duplicative, so they were *strengthened* rather than merged.
+
+**One true duplicate, consolidated with a 301.** `where-to-buy-riftbound-australia` (294
+words) covered a topic fully covered by `where-to-buy-riftbound-cards` (1,106 words,
+which it linked to twice in its own body). Its one unique section — why we request each
+store's local-currency price — was **merged into the target** so nothing is lost, then
+301'd in `next.config.js`.
+
+**Live market data added to eight buying guides.** `ArticleMarketData` appends a real,
+current, market-specific section to each: every store stocking Riftbound in that market
+right now with its in-stock listing count and cheapest card, the five cheapest and five
+most expensive cards today, and a link to the editorial policy. Generated from the price
+database, so it is current rather than as-of-publication, and genuinely different per
+market. This is the honest way to deepen a thin geo post — real information, not more
+prose. It renders *before* the affiliate shop strip, same ordering principle as Phase 8.
+
+### 12c. Dates and structured data
+
+Every guide and post shows author (linked), publish date in a `<time>` element,
+last-updated date where one exists, and a "How we research this" link. `Article`/
+`TechArticle` structured data with `datePublished`, `dateModified` and a typed author
+node keyed to the author page.
+
+### 12d. Card → guide links
+
+`src/lib/content/related-guides.ts` picks up to three relevant guides per card from the
+card's own attributes, matched against the articles' declared tags and titles — no
+hand-curated per-card mapping to rot, and a new guide starts appearing on relevant card
+pages the moment its tags say it should. Rendered as a "Read next" section above the
+affiliate block. This is the shortest path from a programmatic page to something a person
+wrote, which is exactly what an anonymous 963-page catalogue needs.
+
+---
+
+## Phase 13 — Ad slot architecture (built, units disabled)
+
+`src/components/AdSlot.tsx` renders exactly one of: a real AdSense `<ins>` unit, a
+first-party house promo, or nothing.
+
+- **Zero CLS by construction** — a fixed-height, overflow-hidden frame, so a house promo,
+  a filled ad and an unfilled collapsing unit all leave the layout unmoved.
+- **No unit on a thin or noindex page** (`pageIsThin` / `pageIsNoindex`) — monetising a
+  page you are telling Google not to index is the definition of a made-for-advertising
+  page. Error pages, empty search results, auth pages and marketplace checkout pass the
+  same flags. **The Phase 2 loader still renders on all of them.**
+- **One in-content unit per page**, below the content the visitor came for. Never
+  adjacent to navigation.
+- **`AD_STRATEGY` is `"auto" | "manual"`, mutually exclusive by construction:**
+  `AD_UNITS_ENABLED` is only ever true under `"manual"`, so Auto ads and our own units
+  can never both run. Running both stacks Google's placements on ours and produces the ad
+  density that trips the Better Ads Standards half of the Publisher Policies. Default
+  `"auto"`. The guard fails the build if that exclusivity is removed.
+- StrictMode-safe `adsbygoogle.push()` (a double push throws and kills every later slot
+  on the page, not just its own).
+
+---
+
+## Phase 14 — Performance
+
+**Not measured with Lighthouse, and here is why.** Lighthouse's LCP and CLS numbers are
+only meaningful against real network conditions and real asset delivery. This environment
+has no outbound access to Google's or Meta's origins, so `adsbygoogle.js` and the Meta
+Pixel both fail to load — which *flatters* every metric and would produce a "before/after"
+table that says nothing about production. Publishing invented numbers would be worse than
+publishing none.
+
+What *was* measured and fixed, from the 375px Chromium run:
+
+- **`contain-intrinsic-size` corrected** (340px → 360px against 348px real content) —
+  a genuine layout shift on every card tile scrolled into view, across a 60-tile grid.
+  This is a direct CLS improvement.
+- **Every ad slot reserves fixed height**, so no ad can shift layout on arrival.
+- **`preconnect` added** for `pagead2.googlesyndication.com` and
+  `fundingchoicesmessages.google.com`, shaving a round-trip off both the loader and the
+  consent message.
+- Fonts already use `next/font` with `display: swap` and `adjustFontFallback`;
+  `content-visibility: auto` already keeps long grids off the layout path.
+
+**Owner action:** run PageSpeed Insights against the deployed URL. It uses real Chrome
+User Experience data and will measure the ad scripts actually loading, which is the only
+number worth acting on.
+
+---
+
+## Phase 15 — Sibling site assessment (investigated, not modified)
+
+**15a. They share a codebase lineage.** Evidence from this repo alone — nothing on
+dexcompare was fetched, inspected or changed:
+
+| Where | What it says |
+| --- | --- |
+| `components/CinematicNavMenu.tsx` | "Full-screen, 'movie-like' navigation overlay (**ported from DexCompare**)" |
+| `components/MobileNav.tsx` | "…the full-screen cinematic nav overlay, **matching DexCompare's**" |
+| `components/Navbar.tsx` | "…**matches DexCompare's** one-tab model" |
+| `components/SealedTile.tsx` | "…of **DexCompare's** SealedTile" |
+| `lib/db.ts` | "Neon's free tier has a 5 GB/month allowance. **DexCompare has**…" — shared infrastructure planning |
+| `lib/sealed-import.ts` | "…the pattern that **burned through dexcompare's** free-tier allowance" |
+| `.github/workflows/indexnow-submit.yml` | "**DexCompare's sibling workflow** silently 404'd once" |
+| `app/layout.tsx`, `app/about/page.tsx` | Sitewide footer + About cross-links to dexcompare.app |
+
+They are separate repositories — no dexcompare source is present here — but the component
+library, navigation model, page templates and operational tooling are shared, and the two
+sites cross-link on every page.
+
+**15b. The risk, stated plainly.** Two price-comparison sites, same design system, same
+page templates, same "generate prose per entity from a price database" approach,
+cross-linked sitewide, applying under one AdSense account, is close to the shape Google
+describes as a network of cookie-cutter affiliate sites. Two further facts sharpen it:
+**dexcompare.app and dexcompare.com both have published consent messages** — two domains
+for one brand, which raises a duplicate-site question of its own — and this account has
+already been rejected twice without a specific content complaint.
+
+**Concrete differentiation, in priority order:**
+
+1. **Do not port `card-narrative.ts` verbatim.** Its observation families are
+   Riftbound-specific, but the *sentence forms* are the transferable part, and identical
+   forms across two sites is precisely what a similarity check would surface. If a
+   Pokémon equivalent is wanted, write its own — the observations that matter for Pokémon
+   (graded population, sealed era, reprint risk, Japanese vs English) barely overlap with
+   domains, Signature prints and meta decks anyway.
+2. **Resolve dexcompare.app vs dexcompare.com first.** If both serve the same content, 301
+   one to the other. Two live domains for one site is a duplicate-content problem before
+   it is an AdSense problem.
+3. **Apply for one site at a time.** Get riftcompare.com approved, let it run clean, then
+   add the sibling as an additional site on the same account. Adding a second near-shaped
+   domain mid-review invites the comparison.
+4. **Give each site its own editorial voice and its own author page.** The guides are the
+   least template-able thing either site has, and the clearest evidence that a person is
+   behind both rather than a generator.
+5. **Keep the cross-links** — they are honest and useful — but keep them to the footer and
+   About, where they read as "same people" rather than as a link network.
+
+**Nothing on any sibling site was modified, fetched or looked up.**
+
+---
+
+## Phase 16 — Final verification
+
+Every assertion below runs in `scripts/adsense-guard.ts`, which is the **first step of
+`npm run build`** and therefore gates every Vercel deploy.
+
+```
+npm run adsense:guard                        # static + content budgets
+npm run adsense:guard -- --url <origin>      # + live HTTP
+npm run adsense:audit -- --url <origin>      # regenerates the content budgets
+npm run crawl:check  -- --url <origin>       # regenerates the navigation budgets
+npm run adsense:verify <origin>              # the Phase 5 integration table
+npm run mobile:check -- --url <origin>       # 375px audit
+npm test                                     # 47 unit tests
+```
+
+**Final run — 32/32 guard checks passed.**
+
+| Assertion | Result |
+| --- | --- |
+| Zero indexable pages under 150 unique editorial words | ✅ 0 |
+| Zero indexable card pages with no price data | ✅ 0 |
+| Zero near-duplicate clusters above 90% similarity | ✅ 0 |
+| Zero pages whose server HTML contains no content | ✅ 0 |
+| Zero soft-404s, zero broken internal links | ✅ 0 / 0 |
+| Zero redirect chains, orphans, or pages >4 clicks deep | ✅ 0 / 0 / 0 |
+| Every indexable page: unique title, unique description, one h1, self-canonical, breadcrumbs | ✅ 0 violations |
+| Zero paywalled or blurred content reachable by a crawler | ✅ 0 |
+| Zero templates with affiliate links but no editorial content | ✅ 0 |
+| Zero unmarked commercial outbound links | ✅ 0 |
+| `/ads.txt`, `/robots.txt`, all sitemaps: 200 + correct content type | ✅ |
+| Phase 5 integration checks (14 URLs) | ✅ all pass |
+| Unit tests | ✅ 47/47 |
+
+---
+
+# ⚠️ THINGS I JUDGED RISKY AND DELIBERATELY LEFT ALONE
+
+1. **`ca-pub-6262011577596407` — not investigated.** As instructed. It is the first manual
+   action at the top of this document and the most likely single cause of two rejections.
+2. **No fabricated author identities.** Explained in Phase 10d. A named human with an
+   invented bio would be a lie, and a worse one if checked.
+3. **Consent Mode defaults are globally `denied`, not region-scoped.** Google permits
+   region-scoping, which earns materially more from non-EEA traffic. The blanket deny is
+   the conservative reading during review. The region-scoped variant is written out in
+   full in `ConsentDefaults.tsx`, ready to swap in after approval. **This costs revenue
+   while it is in place.**
+4. **The CSP stays Report-Only.** Promoting it to enforcing is exactly the change that
+   silently kills ad delivery, and doing it in the same pass as installing the ad code
+   would make a failure impossible to attribute. The allow-list is complete and the guard
+   asserts it, so promoting it later is a one-line change that has already been verified.
+5. **The 24 articles under 400 words were not rewritten.** Expanding them properly means
+   researching and writing 24 pieces; expanding them improperly means padding, which is
+   the exact failure this remediation exists to remove. Instead: the one true duplicate
+   was consolidated, and the eight buying guides gained live, market-specific data that is
+   real information. **Owner: the remaining short posts are a genuine, if secondary,
+   weakness — the highest-value ones to expand by hand are listed in Phase 12b.**
+6. **`/tools/deal-finder`, `/tools/rising`, `/tools/value-finder` and `/portfolio` are
+   fully open while review mode is on.** That gives away Premium content to everyone,
+   including subscribers' peers, for as long as the flag is set. It is temporary and
+   reversible with one env var, and "content behind a paywall" is its own rejection
+   reason. **Turn the flag off promptly after approval.**
+7. **Inline footer policy links and the logo stay under 44px.** Explained in Phase 11f.
+8. **AdMob (`ca-app-pub-…`) in `mobile/` untouched.** Different product, different id
+   namespace, native app only. The guard's literal check excludes it explicitly.
+9. **`.env.production` is committed** with the (public) publisher id. Explained in Phase
+   1c. Nothing secret may ever be added to it.
+10. **`react/no-unescaped-entities` downgraded to a warning.** Adding an ESLint config so
+    `npm run lint` would run at all surfaced 38 pre-existing violations of this purely
+    cosmetic rule across the codebase. Since `next build` fails on ESLint *errors*,
+    leaving it at error would have broken the build for reasons unrelated to this work.
+    Downgraded rather than mass-rewriting 38 files in an AdSense remediation branch.
+
+---
+
+# A NOTE ON WHERE THESE NUMBERS COME FROM
+
+Everything measured here ran against a **local production build** (`next build` +
+`next start`) with the real 1,064-card catalogue and synthetic price data shaped to match
+production (~91% priced, ~9% with no listings, multi-market, 90 days of history). This
+environment has no deployment credentials and no outbound access to Google's origins.
+
+That means:
+
+- **Transport-level results are trustworthy** — HTML bytes, status codes, headers,
+  structured data, link graphs, viewport layout. None of it depends on the host.
+- **Live ad and consent behaviour could not be observed.** `adsbygoogle.js` cannot load
+  here, so nobody has seen an ad render or the consent message appear. Manual actions 3
+  and 4 exist for exactly that reason.
+- **Re-run the suite against the Vercel preview after deploying.** Every command is in
+  Phase 16 and takes a URL argument.

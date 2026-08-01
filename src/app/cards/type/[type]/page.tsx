@@ -37,5 +37,5 @@ export async function generateMetadata({ params }: { params: { type: string } })
 export default async function CardTypeFacetPage({ params }: { params: { type: string } }) {
   const facet = typeFacetBySlug(params.type);
   if (!facet) notFound();
-  return <FacetPageBody facet={facet} dimensionLabel="card type" crumbLabel="Type" crumbHref="/cards/type" siblings={TYPE_FACETS} />;
+  return <FacetPageBody facet={facet} dimensionLabel="card type" crumbLabel="Type" crumbHref="/cards/type" siblings={TYPE_FACETS} collectionKind="type" />;
 }

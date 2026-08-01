@@ -92,9 +92,14 @@ function mainContent(html: string): string {
 }
 
 function toText(fragment: string): string {
-  return fragment
+  // Strip the SITE header only — the one that precedes <main>. A page-level
+  // <header> INSIDE main holds the page's own h1 and intro copy, and stripping
+  // it scored /trade's 190-word editorial intro as zero.
+  const mainAt = fragment.search(/<main[^>]*id="main-content"/i);
+  const chrome = mainAt > 0 ? fragment.slice(0, mainAt) : "";
+  const rest = mainAt > 0 ? fragment.slice(mainAt) : fragment;
+  return (chrome.replace(/<header[\s\S]*?<\/header>/gi, " ") + rest)
     .replace(/<(script|style|svg|noscript|template)[\s\S]*?<\/\1>/gi, " ")
-    .replace(/<header[\s\S]*?<\/header>/gi, " ")
     .replace(/<footer[\s\S]*?<\/footer>/gi, " ")
     .replace(/<nav[\s\S]*?<\/nav>/gi, " ")
     // Price tables are data, not prose — counting them is how a bare price table
@@ -167,6 +172,8 @@ type Page = {
   paywalled: boolean;
   authWall: boolean;
   softFourOhFour: boolean;
+  /** <main> contains only a client-side-rendering bailout: NO content in the HTML. */
+  emptyServerRender: boolean;
   rawText: string;
   sentences: string[];
   editorialWords: number;
@@ -200,6 +207,19 @@ async function fetchPage(path: string): Promise<Page | null> {
     return null;
   }
   const html = await res.text();
+
+  // A page whose <main> holds only React's client-side-rendering bailout marker
+  // ships NO content to anything that doesn't execute JavaScript. This is not a
+  // subtle SEO nicety: the homepage was in exactly this state, serving a
+  // "Loading…" spinner, no <h1> and not one internal link, to every raw fetch —
+  // including an AdSense reviewer's. In the App Router it is caused by an
+  // unwrapped useSearchParams() deopting its subtree up to the nearest Suspense
+  // boundary (here, app/loading.tsx). Checked on the ELEMENT, not the document:
+  // the marker legitimately appears elsewhere on every page, inside the navbar
+  // search's own Suspense boundaries, where it costs a search input and nothing else.
+  const mainEl = /<main[^>]*id="main-content"[^>]*>([\s\S]{0,400})/.exec(html);
+  const emptyServerRender = Boolean(mainEl && mainEl[1].includes("BAILOUT_TO_CLIENT_SIDE_RENDERING"));
+
   const main = mainContent(html);
   const text = toText(main);
   const sentences = sentencesOf(text);
@@ -209,7 +229,10 @@ async function fetchPage(path: string): Promise<Page | null> {
   const unsponsored = external
     .filter(([, pre, , post]) => !/rel="[^"]*sponsored/i.test(pre + post))
     .map(([, , href]) => href.split("?")[0])
-    .filter((h) => /ebay|tcgplayer|amazon|cherry|ozzie|shopify|collectables|cards|games|tcg/i.test(h));
+    // Only genuinely COMMERCIAL destinations. An editorial citation to another
+    // site (riftbound.gg, a Riot page) must NOT carry rel="sponsored" — that
+    // would misdeclare a normal reference as a paid placement.
+    .filter((h) => /(^|\.)(ebay|tcgplayer|amazon|cardmarket|tcgrepublic)\.|shopify|myshopify|collectables|cardmerchant/i.test(h));
 
   const internalLinks = [...html.matchAll(/href="(\/[^"#?]*)/g)]
     .map((m) => m[1].replace(/\/$/, "") || "/")
@@ -230,6 +253,7 @@ async function fetchPage(path: string): Promise<Page | null> {
     paywalled: PAYWALL_MARKERS.some((re) => re.test(html)),
     authWall: AUTH_MARKERS.some((re) => re.test(html)),
     softFourOhFour: res.status === 200 && (text.length < 200 || SOFT_404_MARKERS.some((re) => re.test(text))),
+    emptyServerRender,
     rawText: text,
     sentences,
     editorialWords: 0, // filled in after boilerplate is known
@@ -424,6 +448,15 @@ async function main() {
   const badH1 = indexable.filter((p) => p.h1Count !== 1);
   const noCanonical = indexable.filter((p) => !p.canonical);
 
+  const emptySsr = fetched.filter((p) => p.emptyServerRender);
+  // Card pages with no price data at all that are STILL indexable — the
+  // population Phase 7a de-indexes. Detected from the page's own honest
+  // "no live listings" copy rather than a second database query, so the check
+  // measures what a visitor actually sees.
+  const emptyCards = fetched.filter(
+    (p) => p.template === "card" && !p.noindex && /No live listings for .+ yet/i.test(p.rawText),
+  );
+
   const totals = {
     urlsInSitemaps: urls.length,
     sampled: fetched.length,
@@ -431,6 +464,8 @@ async function main() {
     indexableThin: thin.length,
     duplicateClusters: reports.filter((r) => r.duplicateCluster).length,
     softFourOhFours: softFourOhFours.length,
+    emptyServerRender: emptySsr.length,
+    indexableEmptyCards: emptyCards.length,
     paywalledIndexable: paywalled.length,
     authWalled: authWalled.length,
     affiliateWithoutEditorial: affiliateThin.length,
@@ -450,6 +485,8 @@ async function main() {
     detail: {
       thin: thin.map((p) => ({ path: p.path, words: p.editorialWords })).sort((a, b) => a.words - b.words),
       softFourOhFours: softFourOhFours.map((p) => p.path),
+      emptyServerRender: emptySsr.map((p) => p.path),
+      indexableEmptyCards: emptyCards.map((p) => p.path),
       paywalledIndexable: paywalled.map((p) => p.path),
       authWalled: authWalled.map((p) => p.path),
       affiliateWithoutEditorial: affiliateThin.map((p) => ({ path: p.path, words: p.editorialWords, affiliateLinks: p.affiliateLinks })),
