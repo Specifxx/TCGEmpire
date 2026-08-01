@@ -14,7 +14,7 @@ import { AffiliateDisclosure } from "./AffiliateDisclosure";
 const ACCOUNT = "7385758";
 const PROGRAM = "21018";
 
-type Variant = "rect" | "leaderboard" | "billboard" | "mobile" | "mobileRect";
+type Variant = "rect" | "leaderboard" | "billboard" | "mobile" | "mobileRect" | "skyscraper";
 
 // Evergreen tracking ids (the non-seasonal "international" creatives from the
 // Impact ads export). Used ONLY for the click/commission link — never expire, so
@@ -25,6 +25,12 @@ const ADS: Record<Variant, { id: string; w: number; h: number }> = {
   billboard: { id: "3841226", w: 970, h: 90 }, // large leaderboard
   mobile: { id: "3841227", w: 320, h: 100 }, // large mobile banner
   mobileRect: { id: "3841225", w: 300, h: 250 }, // medium rectangle
+  // No skyscraper creative in the Impact export — this shape is our own house
+  // layout (Banner already renders a stacked/vertical treatment once w < 2.5h),
+  // so it deliberately reuses the leaderboard's real evergreen id rather than
+  // inventing one; commission attribution is unaffected, only which placement
+  // label Impact's dashboard groups the click under.
+  skyscraper: { id: "3841229", w: 160, h: 600 },
 };
 
 const click = (id: string) => `https://partner.tcgplayer.com/c/${ACCOUNT}/${id}/${PROGRAM}`;
@@ -100,7 +106,7 @@ export function TcgplayerAd({
   // render without a visible disclosure beside it.
   disclosure = true,
 }: {
-  size?: "rect" | "leaderboard" | "billboard";
+  size?: "rect" | "leaderboard" | "billboard" | "skyscraper";
   mobile?: "banner" | "rect";
   country: string;
   className?: string;

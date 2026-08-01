@@ -13,13 +13,18 @@ import { AffiliateDisclosure } from "./AffiliateDisclosure";
 // banner. Click-tracked via OutboundLink (retailer "ebay_banner"). House
 // creative = zero hosted-image dependency, zero CLS (fixed dimensions).
 
-type Variant = "rect" | "leaderboard" | "billboard" | "mobile" | "mobileRect";
+type Variant = "rect" | "leaderboard" | "billboard" | "mobile" | "mobileRect" | "skyscraper";
 const DIMS: Record<Variant, { w: number; h: number }> = {
   rect: { w: 336, h: 280 },
   leaderboard: { w: 728, h: 90 },
   billboard: { w: 970, h: 90 },
   mobile: { w: 320, h: 100 },
   mobileRect: { w: 300, h: 250 },
+  // Classic IAB skyscraper — for SidebarAds, flanking the content column on
+  // very wide viewports. eBay's affiliate link is a dynamic tagged URL (see
+  // ebayAffiliateUrl), not tied to a fixed per-dimension creative id, so a new
+  // shape here needs nothing else to stay valid.
+  skyscraper: { w: 160, h: 600 },
 };
 
 // riftcompare market codes → eBay domain (NZ has no eBay; eBay AU ships there).
@@ -90,7 +95,7 @@ export function EbayAd({
   // FooterAds does that to avoid printing the same line twice under a pair.
   disclosure = true,
 }: {
-  size?: "rect" | "leaderboard" | "billboard";
+  size?: "rect" | "leaderboard" | "billboard" | "skyscraper";
   mobile?: "banner" | "rect";
   country: string;
   query?: string;

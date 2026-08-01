@@ -22,6 +22,7 @@ import { NativeShell } from "@/components/NativeShell";
 import { HilltopAdsLoader } from "@/components/HilltopAdsLoader";
 import { ReferralCapture } from "@/components/ReferralCapture";
 import { FooterAds } from "@/components/FooterAds";
+import { SidebarAds } from "@/components/SidebarAds";
 import { PriceAlertModal } from "@/components/PriceAlertModal";
 import { SignupPromoPopup } from "@/components/SignupPromoPopup";
 import { enabledProviders } from "@/lib/oauth";
@@ -206,6 +207,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <CommandLauncherProvider>
               <MegaMenuProvider>
                 <Navbar />
+                {/* Fixed-position skyscrapers in the gutters either side of the
+                    content column — a bonus placement for very wide viewports
+                    only (see SidebarAds), so it's outside `main` deliberately:
+                    it never participates in the page's normal layout flow. */}
+                <SidebarAds />
                 {/* No announcement ribbon here any more — the homepage's Vendetta
                     block (right under the hero) carries the "it's here" message
                     with real prices instead of a repeating marquee claim. */}

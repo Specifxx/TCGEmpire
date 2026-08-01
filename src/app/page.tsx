@@ -17,6 +17,7 @@ import { CinematicHero } from "@/components/home/CinematicHero";
 import { VendettaBlock } from "@/components/home/VendettaBlock";
 import { PopularCardsCarousel } from "@/components/home/PopularCardsCarousel";
 import { PartnersStrip } from "@/components/home/PartnersStrip";
+import { HomeAdBreak } from "@/components/home/HomeAdBreak";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { CardsIcon } from "@/components/icons/HomeIcons";
@@ -242,6 +243,11 @@ export default async function HomePage() {
         storeCount={storeCount}
         storeWord={storeWord}
       />
+
+      {/* One in-content affiliate banner, roughly mid-page — see HomeAdBreak.
+          The sidebar skyscrapers only show on very wide monitors, so this is
+          the placement that actually reaches phone/laptop visitors. */}
+      <HomeAdBreak />
 
       {/* How it works — orients first-time visitors to the search → compare → buy
           mechanic. Moved after the commercial sections (deals, popular cards,
