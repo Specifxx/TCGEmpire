@@ -997,7 +997,7 @@ npm run mobile:check -- --url <origin>       # 375px audit
 npm test                                     # 47 unit tests
 ```
 
-**Final run — 32/32 guard checks passed.**
+**Final run — 33/33 guard checks passed.**
 
 | Assertion | Result |
 | --- | --- |
@@ -1014,6 +1014,7 @@ npm test                                     # 47 unit tests
 | `/ads.txt`, `/robots.txt`, all sitemaps: 200 + correct content type | ✅ |
 | Phase 5 integration checks (14 URLs) | ✅ all pass |
 | Unit tests | ✅ 47/47 |
+| Every named import resolves to a declared dependency | ✅ 0 violations |
 
 ---
 
@@ -1048,7 +1049,16 @@ npm test                                     # 47 unit tests
    namespace, native app only. The guard's literal check excludes it explicitly.
 9. **`.env.production` is committed** with the (public) publisher id. Explained in Phase
    1c. Nothing secret may ever be added to it.
-10. **`react/no-unescaped-entities` downgraded to a warning.** Adding an ESLint config so
+10. **One deploy was broken and fixed.** The first Vercel build of this branch failed:
+    `scripts/mobile-check.ts` type-imported `playwright-core`, which is optional
+    developer-machine tooling and not a dependency — and `next build` typechecks the
+    whole project, so one script reference took the deploy down. Fixed by typing
+    Playwright structurally and importing through a non-literal specifier, verified by
+    deleting `node_modules/playwright-core` and running a full clean build. **Guard check
+    1b now fails the build locally for any bare package import that isn't declared**, so
+    this cannot recur; `@ts-expect-error`-suppressed optional imports are exempt, which is
+    the pattern `scripts/fetch-official-images.ts` already used for `playwright`.
+11. **`react/no-unescaped-entities` downgraded to a warning.** Adding an ESLint config so
     `npm run lint` would run at all surfaced 38 pre-existing violations of this purely
     cosmetic rule across the codebase. Since `next build` fails on ESLint *errors*,
     leaving it at error would have broken the build for reasons unrelated to this work.

@@ -79,12 +79,12 @@
       "template": "domain",
       "totalUrls": 7,
       "sampled": 7,
-      "medianEditorialWords": 1590,
+      "medianEditorialWords": 1616,
       "minEditorialWords": 645,
       "maxEditorialWords": 1873,
       "thin": [],
-      "medianSimilarity": 0.011,
-      "medianTemplateSimilarity": 0.154,
+      "medianSimilarity": 0.01,
+      "medianTemplateSimilarity": 0.145,
       "duplicateCluster": null
     },
     {
@@ -177,10 +177,10 @@
       "sampled": 24,
       "medianEditorialWords": 265,
       "minEditorialWords": 154,
-      "maxEditorialWords": 802,
+      "maxEditorialWords": 801,
       "thin": [],
-      "medianSimilarity": 0.005,
-      "medianTemplateSimilarity": 0.006,
+      "medianSimilarity": 0,
+      "medianTemplateSimilarity": 0,
       "duplicateCluster": null
     }
   ],
