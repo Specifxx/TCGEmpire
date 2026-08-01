@@ -543,6 +543,18 @@ jobs:
             curl -sSL --max-time 20 "${base%/}$css" | grep -oiE "font-family:[^;}]{1,120}" | sort -u | head -20 || true
           done
 
+      # The chunked marker dump above is fine for a quick font/style check, but a
+      # page with a big content section (e.g. a card gallery) needs the whole file —
+      # upload it so it can be pulled down directly instead of stitching together
+      # dozens of ~2700-char marker windows.
+      - name: Upload fetched page (probe-url)
+        if: inputs.task == 'probe-url'
+        uses: actions/upload-artifact@v4
+        with:
+          name: probe-url-page
+          path: page.html
+          if-no-files-found: ignore
+
       - name: Import store prices (this ref's retailer list)
         if: inputs.task == 'import-prices'
         env:
