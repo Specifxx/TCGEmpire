@@ -175,7 +175,20 @@ async function fetchCollection(store: RetailerInfo, handle: string): Promise<Sho
       break;
     }
     if (!res.ok) break;
-    const data = (await res.json()) as { products: ShopifyProduct[] };
+    // A store can return HTTP 200 with an HTML body — a moved/renamed collection,
+    // a WAF/challenge page, a maintenance page — none of which raise on `res.ok`.
+    // res.json() throws SyntaxError in that case ("Unexpected token '<'"), and left
+    // uncaught that crashed the ENTIRE import run (every store queued after this one
+    // silently never ran), not just this one store's page. Treat a parse failure the
+    // same as a non-ok response: stop paginating this store, keep whatever was
+    // already collected, and let every other store still run.
+    let data: { products: ShopifyProduct[] };
+    try {
+      data = (await res.json()) as { products: ShopifyProduct[] };
+    } catch {
+      console.warn(`${store.name}: non-JSON response on page ${page} (likely an HTML error/challenge page) — skipping rest of this store.`);
+      break;
+    }
     if (!data.products?.length) break;
     all.push(...data.products);
     if (data.products.length < 250) break;
