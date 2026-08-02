@@ -1285,9 +1285,30 @@ on a page whose own "Changes to this policy" clause promises otherwise.
 - One entry per route in `lib/static-page-dates.ts` now feeds **both** the visible line
   (`staticPageDateLabel()`) and the sitemap `<lastmod>`. The per-page `const UPDATED` strings
   are gone.
-- Guard check **1d** fails the build if a policy page hardcodes its own date, or if git says
-  the file changed after the date it claims. Safe on a shallow clone: HEAD's own commit is
-  ignored there, because a `--depth=1` graft makes every file look like it changed today.
+- Guard check **1d** fails the build if a policy page hardcodes its own date, and — where full
+  git history is available — if a page changed materially after the date it claims.
+
+  > **This check broke a deploy before it worked.** Two bugs, both worth recording:
+  >
+  > 1. **Shallow clones lie.** The first version tried to stay safe by ignoring HEAD's own
+  >    commit, on the theory that `--depth=1` was the only ambiguous case. Vercel clones
+  >    deeper than that, and in *any* shallow clone the oldest fetched commit is a graft that
+  >    appears to introduce the entire tree — so `git log -1 -- <file>` returns the graft for
+  >    any file untouched within the fetched depth, with the whole file as its diff. `/returns`
+  >    has exactly one commit in real history (2026-07-29) and correctly declares 2026-07-29;
+  >    on Vercel it was reported as *"changed 272 lines since (last 2026-08-01)"* and failed
+  >    the build. The graft is not necessarily HEAD, so excluding HEAD missed it. The check now
+  >    skips shallow clones entirely and says so: full history or nothing.
+  > 2. **`--since=<day>` includes that day.** The churn window counted the very commit that
+  >    SET the date, so a correctly-dated page looked stale — `/editorial-policy` read as
+  >    "210 lines changed since 2026-08-01" when those 210 lines *were* the 2026-08-01 edit.
+  >    The window now starts at the end of the declared day.
+  >
+  > Materiality is a size heuristic (>25 lines of diff): moving where a string is imported
+  > from is ~4 lines, while the change that caused all this was +195/-8. A small edit is
+  > reported and not failed, because the tool cannot judge whether three lines changed a
+  > reader's rights. Verified both ways — reinstating `/terms: 2026-06-12` fails the guard;
+  > a 26-commit shallow clone (the shape Vercel had) passes it.
 - **Not derived from file mtime**, which was the other suggestion: a fresh `git clone` — every
   Vercel and CI build — stamps every file with the checkout time, so mtime would report
   "updated today" for every policy on every deploy. That is the fabricated-`lastmod` behaviour

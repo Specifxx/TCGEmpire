@@ -315,18 +315,24 @@ if (hardcoded.length) {
 
 // Now the real check: was the page committed after the date it claims?
 //
-// ── Why this is safe on a shallow clone ─────────────────────────────────────
-// Vercel and most CI runners clone shallow. `git log -1 -- <file>` normally
-// returns the true last-touching commit, or nothing when that commit lies
-// outside the fetched depth — both fine. The one ambiguous case is a --depth=1
-// clone, where the single grafted commit looks like it introduced every file, so
-// EVERY page would appear "changed today". So in a shallow repo, HEAD's own
-// commit is not evidence and is ignored.
+// ── Why this is SKIPPED on a shallow clone ──────────────────────────────────
+// It is not safe there, and finding that out cost a deploy. In a shallow clone
+// the oldest fetched commit is a graft that appears to introduce the entire
+// tree, so `git log -1 -- <file>` returns THAT commit for any file not touched
+// within the fetched depth — with the whole file counted as its diff.
 //
-// That costs nothing real: a page edited and date-bumped in the same commit is
-// correct by construction anyway. What this catches is the case that actually
-// happened — a policy edited in one commit and evaluated in a later build with
-// its date left behind.
+// Concretely: /returns has exactly one commit in real history (2026-07-29) and
+// declares 2026-07-29, which is correct. On Vercel it was reported as "changed
+// 272 lines since (last 2026-08-01)" — the graft's date and the file's entire
+// length — and failed the build.
+//
+// A first attempt excluded HEAD, on the theory that --depth=1 was the only
+// ambiguous case. The graft is not necessarily HEAD, so that missed it.
+// Excluding the boundary commits instead would work, but the check would then
+// be silently partial on exactly the runs that matter least (a deploy does not
+// need to police a date; a human's commit does). So: full history or nothing.
+// Locally and in any CI with real history this is strict; on Vercel it says so
+// and moves on. It can never break a deploy again.
 function git(args: string): string | null {
   try {
     return execSync(`git ${args}`, { cwd: ROOT, stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
@@ -335,11 +341,14 @@ function git(args: string): string | null {
   }
 }
 
-if (git("rev-parse --git-dir") == null) {
-  note("policy dates vs git history: skipped (not a git checkout)");
+const shallowRepo = git("rev-parse --is-shallow-repository") === "true";
+if (git("rev-parse --git-dir") == null || shallowRepo) {
+  note(
+    shallowRepo
+      ? "policy dates vs git history: skipped (shallow clone — a graft commit would look like it rewrote every file). Enforced locally and in CI, where history is complete."
+      : "policy dates vs git history: skipped (not a git checkout)",
+  );
 } else {
-  const shallow = git("rev-parse --is-shallow-repository") === "true";
-  const head = git("rev-parse HEAD");
   const stale: string[] = [];
   let compared = 0;
 
@@ -349,9 +358,6 @@ if (git("rev-parse --git-dir") == null) {
       stale.push(`${route} has no entry in static-page-dates.ts`);
       continue;
     }
-    const sha = git(`log -1 --format=%H -- ${file}`);
-    if (!sha) continue; // outside the fetched depth, or never committed
-    if (shallow && sha === head) continue; // grafted boundary — not evidence
     const committed = git(`log -1 --format=%as -- ${file}`);
     if (!committed) continue;
     compared++;
@@ -367,7 +373,12 @@ if (git("rev-parse --git-dir") == null) {
     // A heuristic, deliberately. It cannot judge whether a 3-line edit changed a
     // reader's rights, so a small edit is reported and not failed; a large one
     // is a hard stop that someone has to look at.
-    const numstat = git(`log --format= --numstat --since=${declared} -- ${file}`) ?? "";
+    // `--since=<day>` is inclusive of that whole day, which would count the very
+    // commit that SET the date and make every correctly-dated page look stale
+    // (/editorial-policy read as "210 lines changed since 2026-08-01" when those
+    // 210 lines WERE the 2026-08-01 edit). Start the window at the end of the
+    // declared day so only genuinely later commits count.
+    const numstat = git(`log --format= --numstat --since=${declared}T23:59:59 -- ${file}`) ?? "";
     const churn = numstat
       .split("\n")
       .filter(Boolean)
