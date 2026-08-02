@@ -93,6 +93,93 @@ export type NarrativeInput = {
 const pct = (a: number, b: number) => Math.round(((a - b) / b) * 100);
 const plural = (n: number, one: string, many = `${one}s`) => (n === 1 ? one : many);
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Printing labels — NEVER interpolate `card.variant` raw.
+// ─────────────────────────────────────────────────────────────────────────────
+// `variant` is a printing CODE from the card database, not prose: the alternate
+// arts carry the literal string "a" (from collector numbers like "036a"). Slotted
+// straight into a sentence that produced, live on the site:
+//
+//   "This page covers the a printing of Vi, Destructive"
+//   "The a print carries a 252.9× premium over the plain version"
+//
+// lib/card-name.ts already owns the canonical code→label mapping for badges and
+// titles ("Alt Art", "Showcase", "Signature", …); these are the same names in
+// running-prose casing, so a card page can't call the same printing two things.
+const VARIANT_LABELS: Record<string, string> = {
+  a: "alternate-art",
+  b: "alternate-art",
+  s: "Signature",
+  p: "promo",
+};
+
+/** Human label for a raw `variant` code. Unknown codes fall back to a safe generic. */
+export function variantLabel(variant: string | null | undefined): string {
+  if (!variant) return "alternate-art";
+  return VARIANT_LABELS[variant.toLowerCase()] ?? "alternate-art";
+}
+
+/** The label for THIS printing, in prose casing. Never a raw code. */
+export function printingLabel(c: {
+  isSignature?: boolean;
+  isCrystalRose?: boolean;
+  isOvernumbered?: boolean;
+  isPromo?: boolean;
+  rarity?: string;
+  variant?: string | null;
+}): string {
+  if (c.isSignature) return "Signature";
+  if (c.isCrystalRose) return "Crystal Rose";
+  if (c.isOvernumbered) return "overnumbered";
+  if (c.rarity === "Showcase") return "Showcase";
+  if (c.isPromo) return "promo";
+  if (c.variant) return variantLabel(c.variant);
+  return "base";
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sentence assembly
+// ─────────────────────────────────────────────────────────────────────────────
+// Several paragraphs are built by joining independently-written fragments. Each
+// fragment reads naturally mid-sentence and therefore starts lowercase — joining
+// them with ". " produced, live on the site:
+//
+//   "…a price watch will tell you if it moves before you check back. the United
+//    States is currently the only one of our six markets with a copy in stock…"
+//
+// `sentences()` is the only sanctioned way to join fragments into sentences: it
+// capitalises each one, terminates it, and collapses the whitespace and doubled
+// punctuation that fragment concatenation leaves behind.
+
+/** Capitalise the first letter without touching the rest (so "eBay" survives). */
+function capitalise(s: string): string {
+  const t = s.trimStart();
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
+/** Join fragments into properly-cased, properly-terminated sentences. */
+function sentences(...fragments: (string | null | undefined)[]): string {
+  return tidy(
+    fragments
+      .filter((f): f is string => Boolean(f && f.trim()))
+      .map((f) => {
+        const t = capitalise(f.trim());
+        return /[.!?]$/.test(t) ? t : `${t}.`;
+      })
+      .join(" "),
+  );
+}
+
+/** Final hygiene pass: no doubled spaces, no doubled/space-preceded punctuation. */
+export function tidy(s: string): string {
+  return s
+    .replace(/\s+/g, " ")
+    .replace(/\s+([.,;:!?])/g, "$1")
+    .replace(/([.,;:!?])\1+/g, "$1")
+    .replace(/\.\s*\./g, ".")
+    .trim();
+}
+
 // ── 0. Identity ──────────────────────────────────────────────────────────────
 // Still needed — a reader has to be told what the card IS — but the SHAPE is
 // chosen from the card's own facts rather than being one fixed skeleton, and
@@ -136,7 +223,7 @@ function identity(c: NarrativeInput): string {
   }
   if (c.variant || c.rarity === "Showcase") {
     return (
-      `This page covers the ${c.variant ?? "Showcase"} printing of ${c.name}, card ${c.collectorNumber} of ` +
+      `This page covers the ${printingLabel(c)} printing of ${c.name}, card ${c.collectorNumber} of ` +
       `${c.setName} (${c.setCode}) — the same card as the base version but a distinct product with its own market. ` +
       `${domainClause}${stats.length ? `, at ${stats.join(" and ")}` : ""}.`
     );
@@ -346,7 +433,7 @@ function conditionEconomics(c: NarrativeInput): string | null {
   }
 
   if (!bits.length) return null;
-  return `${bits.join(", and ")}.`;
+  return sentences(bits.join(", and "));
 }
 
 // ── 3c. Coverage notes ───────────────────────────────────────────────────────
@@ -374,7 +461,7 @@ function coverageNotes(c: NarrativeInput): string | null {
   }
 
   if (!bits.length) return null;
-  return `${bits.join(". ")}.`;
+  return sentences(...bits);
 }
 
 // ── 4. Variant economics ─────────────────────────────────────────────────────
@@ -388,7 +475,7 @@ function variantEconomics(c: NarrativeInput): string | null {
 
   if (isSpecial && base?.priceCents != null && mine != null) {
     const multiple = mine / base.priceCents;
-    const label = c.isSignature ? "Signature" : c.isCrystalRose ? "Crystal Rose" : c.isOvernumbered ? "overnumbered" : (c.variant ?? "Showcase");
+    const label = printingLabel(c);
     if (multiple >= 1.15) {
       return (
         `The ${label} print carries a ${multiple.toFixed(1)}× premium over the plain version — ` +
@@ -535,7 +622,7 @@ export function buildCardNarrative(c: NarrativeInput): string[] {
     if (t) paragraphs.push(t);
     const p = playability(c);
     if (p) paragraphs.push(p);
-    return paragraphs;
+    return paragraphs.map(tidy);
   }
 
   // Order the middle by which observation this card's data actually makes
@@ -556,7 +643,11 @@ export function buildCardNarrative(c: NarrativeInput): string[] {
     : [depth, traj, cond, spread, variant, set, play, coverage];
 
   for (const p of ordered) if (p) paragraphs.push(p);
-  return paragraphs;
+  // Every paragraph leaves through tidy(), not just the two that were reported.
+  // Fragment concatenation is spread across seven builders here; a hygiene pass
+  // at the single exit point is the only version that can't be forgotten when an
+  // eighth is added. tests/card-narrative.test.ts asserts the invariants.
+  return paragraphs.map(tidy);
 }
 
 /** Word count of the generated narrative — used by tests and the audit. */

@@ -1,26 +1,34 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// "Privacy settings" — re-opens Google's Privacy & Messaging consent message.
+// "Privacy settings" — the persistent, EVERY-REGION entry point.
 // ─────────────────────────────────────────────────────────────────────────────
-// A published GDPR message is only compliant if the visitor can CHANGE their
-// mind later, so a persistent control has to live somewhere permanent — here,
-// the site footer. This uses Google's documented Funding Choices API rather than
-// a hand-rolled dialog:
+// This used to render nothing until Google's Funding Choices object (googlefc)
+// appeared, which only happens for EEA/UK/CH visitors. Everywhere else the
+// footer had no such control — while /privacy told every reader, in every
+// region, that they "can change your answer at any time using the Privacy
+// settings link in the footer". A policy that describes a control the visitor
+// cannot find is a policy-accuracy problem in its own right, and it is exactly
+// the kind of thing an ad-network reviewer checks by simply looking.
 //
-//   googlefc.callbackQueue.push({ CONSENT_DATA_READY: cb })  — the ready hook
-//   googlefc.showRevocationMessage()                          — re-opens it
+// So the control is now unconditional, and it does the right thing per region:
 //
-// The button renders NOTHING until googlefc confirms the message applies to this
-// visitor. Outside the EEA/UK/CH there is no message to re-open, so a dead
-// "Privacy settings" link would be worse than none. Rendering nothing also means
-// no server/client markup divergence to reason about — it starts hidden on both.
+//   • Consent message applies (googlefc present) → re-opens it via Google's
+//     documented API, googlefc.showRevocationMessage(), so the visitor can
+//     actually change their answer.
+//   • No consent message applies (outside the EEA/UK/CH) → there is no stored
+//     consent to revoke, so it goes to the privacy policy's advertising section,
+//     which carries the Google Ads Settings and aboutads.info opt-outs that DO
+//     apply to them.
+//
+// Either way the footer link exists and leads somewhere useful, which is what
+// the policy claims.
 type GoogleFc = {
   callbackQueue?: { push: (cb: Record<string, () => void>) => void };
   showRevocationMessage?: () => void;
-  getConsentStatus?: () => unknown;
 };
 
 declare global {
@@ -33,7 +41,8 @@ const POLL_MS = 500;
 const GIVE_UP_MS = 15000;
 
 export function PrivacySettingsLink({ className }: { className?: string }) {
-  const [available, setAvailable] = useState(false);
+  // Whether Google's consent message is available to re-open for this visitor.
+  const [canReopen, setCanReopen] = useState(false);
 
   useEffect(() => {
     let done = false;
@@ -42,13 +51,12 @@ export function PrivacySettingsLink({ className }: { className?: string }) {
     const register = () => {
       const fc = window.googlefc;
       if (!fc) return false;
-      // Documented shape: the queue is drained once consent data is available.
-      fc.callbackQueue = fc.callbackQueue ?? [] as unknown as GoogleFc["callbackQueue"];
+      fc.callbackQueue = fc.callbackQueue ?? ([] as unknown as GoogleFc["callbackQueue"]);
       fc.callbackQueue?.push({
         CONSENT_DATA_READY: () => {
           if (!done && typeof window.googlefc?.showRevocationMessage === "function") {
             done = true;
-            setAvailable(true);
+            setCanReopen(true);
           }
         },
       });
@@ -66,19 +74,21 @@ export function PrivacySettingsLink({ className }: { className?: string }) {
     return () => window.clearInterval(poll);
   }, []);
 
-  if (!available) return null;
+  const cls = className ?? "text-slate-300 hover:text-brand-400";
 
-  // The trailing separator lives INSIDE the component so the footer's "·"
-  // chain doesn't strand an orphan dot for the visitors this doesn't render for.
+  // The trailing separator lives INSIDE the component so the footer's "·" chain
+  // stays correct whichever variant renders.
   return (
     <>
-      <button
-        type="button"
-        onClick={() => window.googlefc?.showRevocationMessage?.()}
-        className={className ?? "text-slate-300 hover:text-brand-400"}
-      >
-        Privacy settings
-      </button>
+      {canReopen ? (
+        <button type="button" onClick={() => window.googlefc?.showRevocationMessage?.()} className={cls}>
+          Privacy settings
+        </button>
+      ) : (
+        <Link href="/privacy#advertising" className={cls}>
+          Privacy settings
+        </Link>
+      )}
       <span className="text-ink-700">·</span>
     </>
   );

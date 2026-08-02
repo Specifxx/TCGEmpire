@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFoundMetadata } from "@/lib/not-found-metadata";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { prisma } from "@/lib/db";
@@ -11,7 +12,7 @@ import { CardViewBeacon } from "@/components/CardViewBeacon";
 import { formatMoney } from "@/lib/format";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
 import { affiliateUrl, ebayAffiliateUrl } from "@/lib/affiliate";
-import { cardDisplayName, cardSearchName } from "@/lib/card-name";
+import { cardCredentials, cardDisplayName, cardSearchName } from "@/lib/card-name";
 import { CardTile } from "@/components/CardTile";
 import { cardTileSelect } from "@/lib/cards";
 import { AdSlot } from "@/components/AdSlot";
@@ -33,7 +34,8 @@ import { computeMarket, type MarketRow } from "@/lib/market-rows";
 import { KeywordText } from "@/components/KeywordTooltip";
 import { championForCardName, championCardWhere } from "@/lib/champions";
 import { getCardPriceState } from "@/lib/card-price-state";
-import { buildCardNarrative, type NarrativeMarket } from "@/lib/content/card-narrative";
+import { getCanonicalTwin } from "@/lib/card-duplicates";
+import { buildCardNarrative, printingLabel, tidy, type NarrativeMarket } from "@/lib/content/card-narrative";
 import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
 import { guidesForCard } from "@/lib/content/related-guides";
 
@@ -104,7 +106,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     description: string | null;
     retailerPrices: { retailer: string }[];
   }) | null;
-  if (!card) notFound(); // real 404 — metadata resolves before streaming
+  if (!card) return notFoundMetadata("Card");
 
   const lowestCents = card[priceField(DEFAULT_COUNTRY)] as number | null;
 
@@ -158,18 +160,29 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   // Reversible without human intervention: the same query drives the sitemap,
   // so gaining one listing — or a seventh day of history — puts the page back
   // in the index on the next regeneration. See lib/card-price-state.ts.
-  const priceState = await getCardPriceState(card.id);
+  // ── …and index only ONE URL per printing ─────────────────────────────────
+  // A past import left duplicate rows for three promo printings, each with a
+  // numeric slug suffix. They are the same card in every field the title is
+  // built from, so they emit byte-identical titles. The extras keep working and
+  // stay crawlable; they just point their canonical at the original and drop out
+  // of the index. Nothing is deleted or renamed. See lib/card-duplicates.ts.
+  const [priceState, twin] = await Promise.all([
+    getCardPriceState(card.id),
+    getCanonicalTwin(card),
+  ]);
+  const canonicalPath = `/card/${twin ? twin.slug ?? twin.id : card.slug ?? params.id}`;
+  const noindex = priceState.isEmpty || twin != null;
 
   return {
     title,
     description,
-    ...(priceState.isEmpty ? { robots: { index: false, follow: true } } : {}),
+    ...(noindex ? { robots: { index: false, follow: true } } : {}),
     alternates: {
-      canonical: `/card/${card.slug ?? params.id}`,
+      canonical: canonicalPath,
       // Single cookie-switched URL is the global default for all four markets.
-      languages: { "x-default": `${SITE_URL}/card/${card.slug ?? params.id}` },
+      languages: { "x-default": `${SITE_URL}${canonicalPath}` },
       // Machine-readable markdown for AI agents (rel=alternate type=text/markdown).
-      types: { "text/markdown": `${SITE_URL}/llm/card/${card.slug ?? params.id}` },
+      types: { "text/markdown": `${SITE_URL}/llm${canonicalPath}` },
     },
     // og:image + twitter:image are provided by the co-located opengraph-image.tsx
     // (a branded price card: art + name + lowest live price).
@@ -578,7 +591,10 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     markets: COUNTRY_LIST.map((c) => marketFor(c.code)).filter((m) => m.storeCount > 0),
     history: { points: history.map((p) => ({ t: p.t, v: p.v })) },
     printings: printings.map((p) => ({
-      label: cardDisplayName(p.name, p).replace(`${p.name} `, "") || "other",
+      // cardCredentials() is the canonical code→label mapping (lib/card-name.ts).
+      // Deriving this by subtracting the name out of cardDisplayName() left the
+      // parentheses behind, so the narrative read "The (Alt Art) print carries…".
+      label: cardCredentials(p).join(" ").toLowerCase() || "base",
       priceCents: (p[priceField(DEFAULT_COUNTRY)] as number | null) ?? null,
       isBase:
         p.variant == null && !p.isPromo && p.rarity !== "Showcase" &&
@@ -612,8 +628,17 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     deckNames: allRelatedDecks.slice(0, 2).map((d) => d.name),
     place: baselinePlace,
     currency: baseline.currency,
-    isSpecialPrinting: thisIsSignature || thisIsOvernumbered || thisIsCrystalRose,
-    specialPrintingLabel: thisIsCrystalRose ? "Crystal Rose" : thisIsSignature ? "Signature" : "Overnumbered",
+    isSpecialPrinting:
+      thisIsSignature || thisIsOvernumbered || thisIsCrystalRose || card.variant != null || card.rarity === "Showcase",
+    // Same helper the About narrative uses, so the two can't disagree.
+    specialPrintingLabel: printingLabel({
+      isSignature: thisIsSignature,
+      isCrystalRose: thisIsCrystalRose,
+      isOvernumbered: thisIsOvernumbered,
+      isPromo: card.isPromo,
+      rarity: card.rarity,
+      variant: card.variant,
+    }),
     basePriceCents,
   });
   const faqLd = {
@@ -1029,6 +1054,8 @@ type FaqContext = {
 };
 
 function buildFaqs(card: CardForCopy, ctx: FaqContext): { q: string; a: string }[] {
+  // Every question and answer leaves through tidy() at the end of this function
+  // — same reasoning as the narrative's exit point.
   const { lowest, stores, printingCount, deckCount, deckNames, place, currency, isSpecialPrinting, specialPrintingLabel, basePriceCents } = ctx;
   const faqs = [
     {
@@ -1080,5 +1107,5 @@ function buildFaqs(card: CardForCopy, ctx: FaqContext): { q: string; a: string }
     faqs.push({ q: `Is the ${specialPrintingLabel} printing of ${card.name} worth it?`, a });
   }
 
-  return faqs;
+  return faqs.map((f) => ({ q: tidy(f.q), a: tidy(f.a) }));
 }

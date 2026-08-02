@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFoundMetadata } from "@/lib/not-found-metadata";
 import { notFound } from "next/navigation";
 import { getArticle, getArticles } from "@/lib/articles";
 import { ArticleView } from "@/components/ArticleView";
@@ -9,7 +10,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const a = getArticle(params.slug);
-  if (!a || a.category !== "guide") notFound(); // real 404 — metadata resolves before streaming
+  if (!a || a.category !== "guide") return notFoundMetadata("Guide");
   return {
     title: { absolute: `${a.title} — RiftCompare Guides` },
     description: a.excerpt,

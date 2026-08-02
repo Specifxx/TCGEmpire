@@ -1018,6 +1018,214 @@ npm test                                     # 47 unit tests
 
 ---
 
+# PART THREE — POST-DEPLOY LIVE-SITE PASS
+
+Four issues found by the owner against the deployed site after Part Two shipped. Each was
+supplied as a hypothesis, not a conclusion; each was re-derived from the code before being
+fixed, and two of them turned out to have a different cause than the one reported. Those
+differences are recorded here because they change what the fix has to be.
+
+## Phase 17 — Soft 404s (the whole class, not one route)
+
+**Reported:** unresolvable dynamic params render the 404 page but return `200 OK`.
+
+**Confirmed, and it was every dynamic route at once.** The cause was a single file:
+`src/app/loading.tsx`, at the app root.
+
+A `loading.tsx` is sugar for wrapping that segment in `<Suspense>`. A Suspense boundary
+makes Next **stream**: it flushes the shell — headers and all — before the page component
+has finished. The HTTP status is committed with that first flush. A `notFound()` thrown
+afterwards can therefore only swap the UI; the status line has already gone out as 200.
+Because the boundary was at the **root**, every route below it inherited the behaviour.
+
+Bisected in `next dev` (no build needed, so no stale-`.next` ambiguity):
+
+| Configuration | `/card/does-not-exist` |
+|---|---|
+| root `loading.tsx` present | **200** with the 404 page rendered inside it |
+| root `loading.tsx` removed | **404** |
+| `notFound()` moved into `generateMetadata`, boundary still present | **200** — no help |
+
+That third row is the important one: this cannot be fixed at the route level. The only fix
+is to not have a Suspense boundary above the `notFound()` call.
+
+**What changed**
+
+- Deleted `src/app/loading.tsx`. Its spinner moved to `src/components/RouteLoading.tsx`
+  and was re-added as a **scoped** `loading.tsx` on six routes that cannot 404 —
+  `browse`, `market`, `movers`, `portfolio`, `sealed`, `singles`. The slow-page UX is
+  kept exactly where it was earning its keep.
+- Deleted `src/app/blog/[slug]/loading.tsx`. Pre-existing, and it kept `/blog/<unknown>`
+  at 200 on its own. This one was a real trade: the chart-heavy market-report view loses
+  its skeleton. Acceptable because file-based posts are pre-rendered by
+  `generateStaticParams` and the only routes that hit the DB cold are the ~130 legacy
+  market reports, which are already `noindex` and unlinked. A real 404 on an indexable
+  route family is worth more than a skeleton on an unindexed one.
+- **The 404's own `<title>`.** Every dead URL was serving the homepage's title,
+  inherited from the root layout, so an index of dead URLs read as a wall of duplicate
+  homepages. The first attempt at this was wrong and is worth recording: returning a
+  "not found" title from each route's `generateMetadata` does nothing, because
+  `notFound()` **discards that route's metadata result**. It only works from
+  `src/app/not-found.tsx`, which now exports `metadata = notFoundMetadata()` →
+  *"Page not found — RiftCompare"* plus `robots: { index: false, follow: false }`.
+  Verified against a running production server, both ways.
+
+  The per-route `notFoundMetadata(...)` calls are kept as a fence — if a page ever
+  renders a "nothing here" state without calling `notFound()`, its metadata still says
+  noindex — but they are defence in depth, not the mechanism.
+
+  > Note: `notFoundMetadata` is the one place in this project that uses `index: false`
+  > **with `follow: false`**, against the standing rule. The rule exists to keep link
+  > equity flowing on real pages that are merely de-indexed. A 404 has no equity to pass
+  > and no links worth following. Every genuinely de-indexed *page* still uses
+  > `{ index: false, follow: true }`. `robots.txt` is untouched, and `Mediapartners-Google`
+  > / `AdsBot-Google` remain unrestricted.
+  >
+  > Next already emitted its own `noindex` for the not-found route, but the root
+  > layout's `index, follow` was emitted alongside it. Conflicting robots tags resolve
+  > to the most restrictive, so this was never harmful — just a page telling Google two
+  > different things. Both tags now agree.
+- `/embed/card/[id]` — found during the sweep, not reported. The embeddable price widget
+  answered `200 OK` with a "Card not found" card inside it for any unknown id, on a route
+  where the id is whatever a third-party embedder typed. Now returns a real `404` with the
+  same friendly body (an `<iframe>` renders a 404 body identically), a 60-second cache
+  instead of 300, and an `X-Robots-Tag: noindex` header.
+- `/llm/card/[id]`, `/llm/blog/[slug]` and `/sitemaps/[section]` were checked and already
+  returned real 404s. No change.
+
+**Regression fences**
+
+- `scripts/status-check.ts` (`npm run status:check`) asserts **status codes**, not rendered
+  text: 18 invented URLs must be 404 with the real not-found body, 4 dynamic route handlers
+  must be 404, the first 8 must carry a non-homepage `<title>` and a `noindex` on every
+  robots tag, and 10 known-good URLs must still be 200 — so a fix that 404s everything
+  fails too.
+
+  > The title assertion originally compared a raw string against entity-escaped markup
+  > (`&amp;` vs `&`), so it reported a tick while every 404 was still serving the
+  > homepage title. It decodes entities before comparing now. A check that cannot fail
+  > is worse than no check.
+- `scripts/adsense-guard.ts` check **1c** fails the *build* if `src/app/loading.tsx` ever
+  reappears, or if any `loading.tsx` is added above a `notFound()`-calling descendant.
+
+## Phase 18 — One card, three different store counts
+
+**Reported:** on `/card/vi-destructive-ogn-036a-298` the header said *"CHEAPEST PRICE —"*
+and *"IN STOCK AT 0 stores"*, the About section said *"exactly one tracked store in the
+United States… US$91.06"*, and `/browse` said *"No price yet"* beside *"1 store"* — with
+the suggestion that one of them was counting across all markets.
+
+**Contradicted.** None of the three was counting across all markets, and none of the three
+numbers was wrong. They were three different **markets** wearing the same words:
+
+| Surface | Market it was actually describing | Did it say so? |
+|---|---|---|
+| Header metrics | the **visitor's** (client, post-hydration) | **no** |
+| About prose | the **US baseline** (ISR-baked, one copy for everyone) | yes, explicitly |
+| `/browse` tile — price | the **visitor's** (client) | no |
+| `/browse` tile — store count | the **server's guess** (baked into `cardTileSelect`) | no |
+
+The tile was the worst of them, because its two halves disagreed *with each other*: a
+first-time visitor with no country cookie is served the US default and then geo-switched to
+AU by `CountryProvider`, leaving a US-derived count sitting next to an AU-derived price.
+
+The fix is therefore **not** to make the numbers equal — they legitimately differ per
+market, and the prose physically cannot follow the visitor's selection because the page is
+ISR-cached once for everyone. The fix is to make every surface name its market, and to say
+when stock exists somewhere else.
+
+- Header metrics are now labelled `Cheapest price · Australia` / `In stock at · Australia`,
+  and a `0 stores` reading carries a sub-line: *"1 store in the United States"*.
+- The `/browse` tile shows its store count **only** alongside a price from the same render.
+  A card with no local price now reads *"stocked elsewhere"* instead of a number the
+  visitor can't act on. A per-market count was rejected: it would mean shipping one row per
+  in-stock listing on every tile — roughly 1,400 extra rows per `/browse` page, on a
+  project that has exhausted its database transfer allowance three times.
+- The shared rule lives in `src/lib/market-rows.ts` (`tileStock`, `stockElsewhere`,
+  `hasAnyMarketPrice`) so the two surfaces cannot drift apart again.
+- `tests/market-view.test.ts` — 15 tests built on the exact reported card (one US store,
+  nothing anywhere else), including the "stocked in some markets but not the visitor's"
+  case, the tile's price/count mismatch, out-of-stock rows, one store with several
+  listings, and reference-only retailers never counting as buyable stores.
+
+## Phase 18b — Duplicate card rows (found by the deeper crawl, not reported)
+
+Re-running `crawl-check` after the 404 fixes walked **601 URLs instead of 451** — the
+earlier audit had simply never reached these pages — and surfaced one duplicate-title
+cluster. The database holds extra rows for three promo printings, each given a numeric
+slug suffix by whatever import created the collision:
+
+```
+/card/poppy-defender-of-the-meek-unl-178-219-promo
+/card/poppy-defender-of-the-meek-unl-178-219-promo-112
+/card/poppy-defender-of-the-meek-unl-178-219-promo-113
+```
+
+Identical name, set, collector number, rarity, variant and promo flag — so the
+identity-driven title generator emits byte-identical titles. 3 groups, 4 excess rows out
+of ~1,000 cards. Pre-existing; not caused by anything in this pass, and it would have
+started failing the build guard the moment any audit crawled deep enough to see it.
+
+Consolidated rather than deleted, per the standing rule: `src/lib/card-duplicates.ts`
+picks the original (shortest slug — the suffix is exactly what the collision added), and
+the extras get `robots: { index: false, follow: true }`, a canonical pointing at the
+original, and no sitemap entry. Every URL stays live and crawlable. Self-healing in the
+same way as `card-price-state.ts`: merge the rows in the database and the query stops
+matching, with no code change.
+
+## Phase 19 — About/FAQ generator grammar
+
+**Reported:** *"the a printing"*, *"The a print carries a 252.9× premium"*, and a lowercase
+sentence start after `". "`.
+
+**Confirmed, and swept rather than patched.** Two distinct bugs:
+
+1. **Raw printing codes leaking into prose.** The generator interpolated the database's
+   `variant` column (`a`, `b`, `s`, `p`) straight into a sentence. `VARIANT_LABELS` +
+   `printingLabel()` now map them to real words (`alternate-art`, `Signature`, `promo`)
+   with a documented precedence — Signature > Crystal Rose > overnumbered > Showcase >
+   promo > variant > base — and every call site goes through it.
+2. **Fragment concatenation.** Paragraphs were assembled by joining independently-written
+   fragments, so whichever fragment happened to land second kept its lowercase opening. A
+   `sentences(...)` helper now capitalises and terminates each fragment, and both exit
+   points of the generator run every paragraph through an exported `tidy()`.
+
+`tests/card-narrative.test.ts` grew to 37 tests, including 6 hygiene assertions run over
+**26 card shapes** rather than the two reported sentences: no raw printing code appears in
+prose, no sentence starts lowercase, no doubled spaces or punctuation, every paragraph is
+terminated, printing codes map to their labels, and `tidy()` behaves. Each was verified by
+reintroducing the original bug and watching the suite fail.
+
+## Phase 20 — Consent and privacy accuracy
+
+**Reported:** `/privacy` promises a footer "Privacy settings" link that doesn't exist;
+the CMP may be geo-gated; Meta Pixel loads undisclosed and ungated.
+
+**Confirmed on all three, and the CMP question has a specific answer:** Google's consent
+message is served only to EEA/UK/CH visitors — that is the product's design, not a
+misconfiguration. `PrivacySettingsLink` was gated on `window.googlefc`, which only exists
+for those visitors, so everyone else read a policy describing a control they could not find.
+
+- **The footer link is now unconditional.** Where a consent message applies it calls
+  `googlefc.showRevocationMessage()` so the visitor can actually change their answer; where
+  none applies there is no stored consent to revoke, so it goes to `/privacy#advertising`,
+  which carries the Google Ads Settings and aboutads.info opt-outs that *do* apply to them.
+- **`/privacy` now describes both regimes accurately** instead of implying one worldwide
+  consent flow, and discloses the Meta Pixel by name — what it does, that it reports the
+  visit to Meta, and links to Meta's ad preferences and privacy policy.
+- **The Meta Pixel is gated** on the same consent signal as everything else.
+  `src/lib/use-consent.ts` is the single implementation: TCF v2.2 purpose 1 for
+  measurement, purposes 1+3+4 for advertising, a 2.5s grace period before concluding no CMP
+  applies. It fails **open** outside a CMP's scope and **closed** inside it — the same
+  shape as Google's own region-scoped defaults. `ConsentGatedAnalytics` was rewritten onto
+  it so the pixel and the analytics tags cannot end up on two subtly different rules.
+- **The pixel's `<noscript>` 1×1 fallback was removed.** It fires from markup on parse,
+  before any JavaScript runs, so it is structurally impossible to consent-gate. Keeping it
+  would have meant the policy's *"does not load unless you have consented"* was false for
+  every no-JS visitor.
+
+---
+
 # ⚠️ THINGS I JUDGED RISKY AND DELIBERATELY LEFT ALONE
 
 1. **`ca-pub-6262011577596407` — not investigated.** As instructed. It is the first manual

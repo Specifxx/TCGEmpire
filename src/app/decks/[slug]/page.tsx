@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFoundMetadata } from "@/lib/not-found-metadata";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { unstable_cache } from "next/cache";
@@ -14,7 +15,7 @@ export const revalidate = 86400;
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const seed = getDeckSeed(params.slug);
-  if (!seed) notFound(); // real 404 — metadata resolves before streaming
+  if (!seed) return notFoundMetadata("Deck");
   const legendName = seed.legend.replace(/\s*-\s*Starter$/i, "");
   return {
     title: `${seed.name} — Riftbound meta deck & build cost`,

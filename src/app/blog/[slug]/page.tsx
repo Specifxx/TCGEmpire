@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFoundMetadata } from "@/lib/not-found-metadata";
 import { notFound } from "next/navigation";
 import { getArticle, getArticles } from "@/lib/articles";
 import { getBlogPost, getMarketReportPost } from "@/lib/posts";
@@ -16,7 +17,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const a = await getBlogPost(params.slug);
-  if (!a) notFound(); // real 404 — metadata resolves before streaming
+  if (!a) return notFoundMetadata("Post");
   // A post with no file-based counterpart is a LEGACY auto-generated market
   // report. Generation is DELETED (see lib/market-report.ts), so this branch only
   // ever matches the ~130 rows already in the DB — there will never be a new one.

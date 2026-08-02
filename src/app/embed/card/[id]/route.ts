@@ -34,11 +34,24 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     })
     .catch(() => null);
 
+  // An unknown card id must answer 404, not 200. The widget previously returned
+  // "200 OK" with a "Card not found" card inside it — the textbook soft-404
+  // shape, on a route where anyone embedding the widget can invent the id. An
+  // iframe renders the body of a 404 response exactly the same as a 200, so the
+  // friendly fallback is kept; only the status line changes. Misses also get a
+  // much shorter cache so a card that gets imported later goes live promptly.
   const body = card ? renderCard(card, market) : renderMissing();
   return new Response(body, {
+    status: card ? 200 : 404,
     headers: {
       "Content-Type": "text/html; charset=utf-8",
-      "Cache-Control": "public, s-maxage=300, stale-while-revalidate=900",
+      "Cache-Control": card
+        ? "public, s-maxage=300, stale-while-revalidate=900"
+        : "public, s-maxage=60",
+      // The shell already carries <meta name="robots" content="noindex">; the
+      // header covers the case where the widget is fetched as a subresource and
+      // the meta tag is never parsed.
+      "X-Robots-Tag": "noindex",
     },
   });
 }

@@ -10,6 +10,7 @@ import { useCountry } from "./CountryProvider";
 import { cardHref } from "@/lib/card-url";
 import { rarityInfo, isOvernumbered, isSignature, isCrystalRose } from "@/lib/constants";
 import { cardDisplayName } from "@/lib/card-name";
+import { tileStock } from "@/lib/market-rows";
 
 export interface CardTileData {
   id: string;
@@ -40,10 +41,23 @@ export interface CardTileData {
 
 export function CardTile({ card }: { card: CardTileData }) {
   const r = rarityInfo(card.rarity);
-  const stores = card._count.retailerPrices;
   const { open } = useQuickView();
   const { fmt, price } = useCountry();
   const lowest = price(card);
+
+  // ── Why the store count is gated on `lowest` ────────────────────────────────
+  // The rule (and the bug it fixes — a tile reading "No price yet" and "1 store"
+  // at once) lives in lib/market-rows.ts tileStock(), shared with the card page
+  // so the two surfaces cannot drift apart again. Short version:
+  // `_count.retailerPrices` is baked SERVER-side for one country while `lowest`
+  // is localised on the CLIENT to the visitor's, so the count is only shown next
+  // to a price from the same market.
+  //
+  // A per-market count would mean shipping one row per in-stock listing on every
+  // tile — on /browse that is ~1,400 extra rows a page, on a project that has
+  // exhausted its database transfer allowance three times (see lib/db.ts). Not
+  // worth it for a secondary signal.
+  const stock = tileStock(lowest, card._count.retailerPrices, card);
   const downRef = useRef<{ x: number; y: number; t: number } | null>(null);
 
   // Left-click opens an instant in-page quick view (no navigation = no lag). The
@@ -113,11 +127,15 @@ export function CardTile({ card }: { card: CardTileData }) {
               <div className="text-sm font-medium text-slate-500">No price yet</div>
             )}
           </div>
-          {stores > 0 && (
+          {stock.kind === "stores" ? (
             <div className="shrink-0 whitespace-nowrap pb-0.5 text-right text-[11px] font-semibold text-brand-400">
-              {stores} {stores === 1 ? "store" : "stores"}
+              {stock.count} {stock.count === 1 ? "store" : "stores"}
             </div>
-          )}
+          ) : stock.kind === "elsewhere" ? (
+            <div className="shrink-0 whitespace-nowrap pb-0.5 text-right text-[11px] font-medium text-slate-500">
+              stocked elsewhere
+            </div>
+          ) : null}
         </div>
         </div>
       </Link>

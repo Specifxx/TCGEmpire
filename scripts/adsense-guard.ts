@@ -226,6 +226,56 @@ if (undeclared.size) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// 1c. SOFT-404 FENCE
+// ─────────────────────────────────────────────────────────────────────────────
+// A loading.tsx wraps its whole segment subtree in a Suspense boundary, which
+// makes Next STREAM the response: the shell flushes with a committed HTTP 200
+// before the page component runs. A notFound() thrown after that can only swap
+// the UI, never the status.
+//
+// With one at the app root, EVERY unknown /card/…, /sets/…, /decks/… URL
+// returned "200 OK" with the 404 page rendered inside it — an unlimited supply
+// of crawlable soft-404s, which Google treats as a site-quality problem.
+// Measured, not assumed: moving notFound() into generateMetadata does NOT help
+// while such a boundary exists above it.
+//
+// So: no loading.tsx at the app root, and none in a segment that has a
+// notFound()-calling descendant. Scoped boundaries on leaf routes are fine and
+// are what the site uses.
+section("1c. Soft-404 fence");
+
+const APP_DIR = join(ROOT, "src/app");
+const loadingFiles = ALL_FILES.filter((p) => /src\/app\/(.*\/)?loading\.tsx$/.test(rel(p)));
+
+if (loadingFiles.some((p) => rel(p) === "src/app/loading.tsx")) {
+  fail(
+    "src/app/loading.tsx exists — it turns every notFound() into a soft 404",
+    "Move it into the leaf segments that need it (see src/app/browse/loading.tsx).",
+  );
+} else {
+  ok("no root loading.tsx (notFound() can set a real 404 status)");
+}
+
+// A loading.tsx in a segment with a notFound()-calling descendant is the same
+// bug, one level down.
+const notFoundPages = ALL_FILES.filter(
+  (p) => /src\/app\/.*\/page\.tsx$/.test(rel(p)) && read(p).includes("notFound()"),
+).map((p) => rel(p).replace(/^src\/app\//, "").replace(/\/page\.tsx$/, ""));
+
+const unsafeBoundaries: string[] = [];
+for (const lf of loadingFiles) {
+  const seg = rel(lf).replace(/^src\/app\//, "").replace(/\/?loading\.tsx$/, "");
+  const covered = notFoundPages.filter((np) => seg === "" || np === seg || np.startsWith(`${seg}/`));
+  if (covered.length) unsafeBoundaries.push(`${rel(lf)} covers ${covered.slice(0, 3).join(", ")}`);
+}
+if (unsafeBoundaries.length) {
+  fail("a loading.tsx sits above a notFound()-calling route", unsafeBoundaries.join("\n"));
+} else {
+  ok(`${loadingFiles.length} scoped loading.tsx boundaries, none above a notFound() route`);
+}
+void APP_DIR;
+
+// ─────────────────────────────────────────────────────────────────────────────
 // 2. LOADER INTEGRITY
 // ─────────────────────────────────────────────────────────────────────────────
 section("2. Loader integrity");

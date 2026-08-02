@@ -7,6 +7,7 @@ import { CardTile } from "@/components/CardTile";
 import { cardTileSelect } from "@/lib/cards";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 import { getArticles } from "@/lib/articles";
+import { notFoundMetadata } from "@/lib/not-found-metadata";
 
 // Branded 404, served with a REAL 404 status (Next's not-found convention) so
 // search engines drop dead URLs instead of accumulating soft-404s.
@@ -20,6 +21,35 @@ import { getArticles } from "@/lib/articles";
 // Cached: the popular-card query is identical for everyone and a 404 must never
 // be slow. Degrades to the static half if the database is unreachable — a 404
 // page that itself errors is the one thing worse than a 404.
+
+// ── THE 404's OWN TITLE AND ROBOTS DIRECTIVE ────────────────────────────────
+//
+// Without this, every dead URL on the site served
+// "<title>RiftCompare — Riftbound Card Database & Price Comparison</title>" —
+// the homepage's title, inherited from the root layout — so a crawler's index of
+// dead URLs read as a wall of duplicate homepages, and anyone landing on one saw
+// the wrong thing in their tab and their history.
+//
+// It cannot be fixed from the routes. A `notFound()` thrown by a page discards
+// that route's own generateMetadata result, so returning a "not found" title
+// from /card/[id] etc. has no effect on the response (measured). Metadata
+// exported from THIS file is what the not-found boundary actually renders —
+// verified against a running server, not assumed, because `not-found.tsx` is
+// documented as not supporting every route-segment export.
+//
+// robots is belt-and-braces: Next already emits its own `noindex` for the
+// not-found route, but the root layout's `index, follow` was still being emitted
+// alongside it. Two conflicting robots tags resolve to the most restrictive, so
+// it was never harmful — it was just a page telling Google two different things.
+//
+// NOT affected by this: the two JSX-rendered verification <meta> tags in the root
+// layout (impact-site-verification, google-adsense-account) are absent from 404
+// responses. Measured with and without this export — it is Next's own behaviour
+// for the not-found boundary, not something this causes, and it is harmless: the
+// AdSense loader <script> (the tag that matters for ownership verification and
+// serving) IS present on 404s, and a 404 is noindex regardless.
+export const metadata = notFoundMetadata();
+
 export const revalidate = 3600;
 
 export default async function NotFound() {

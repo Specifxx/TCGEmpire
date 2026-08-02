@@ -24,6 +24,7 @@ import { TYPE_FACETS, RARITY_FACETS, PRINTING_FACETS, FACET_THIN_THRESHOLD } fro
 import { STORE_PAGES, STORE_THIN_THRESHOLD } from "./store-pages";
 import { buildCardWhere } from "./cards";
 import { getEmptyCardIds } from "./card-price-state";
+import { getDuplicateCardIds } from "./card-duplicates";
 import { DEFAULT_COUNTRY } from "./country";
 import { staticPageDate } from "./static-page-dates";
 import { AUTHORS } from "./content/authors";
@@ -144,7 +145,7 @@ async function core(): Promise<SitemapEntry[]> {
 
 async function cards(): Promise<SitemapEntry[]> {
   const day = await priceDay();
-  const [rows, empty] = await Promise.all([
+  const [rows, empty, dupes] = await Promise.all([
     prisma.card.findMany({
       select: { id: true, slug: true, lowestPriceCents: true, imageUrl: true, createdAt: true },
       orderBy: { lowestPriceCents: { sort: "desc", nulls: "last" } },
@@ -159,8 +160,12 @@ async function cards(): Promise<SitemapEntry[]> {
     // tag, so a card re-enters this sitemap automatically on the next
     // regeneration once it gains a listing or a week of history.
     getEmptyCardIds(),
+    // Same contradiction, different cause: duplicate rows for one printing point
+    // their canonical at the original and carry noindex, so only the canonical
+    // URL belongs here. Also self-healing — merge the rows and they come back.
+    getDuplicateCardIds(),
   ]);
-  return rows.filter((c) => !empty.has(c.id)).map((c) => ({
+  return rows.filter((c) => !empty.has(c.id) && !dupes.has(c.id)).map((c) => ({
     url: `${SITE_URL}/card/${c.slug ?? c.id}`,
     changeFrequency: "daily" as const,
     // Priced cards (the ones people search for) rank slightly higher; their

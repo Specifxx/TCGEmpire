@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFoundMetadata } from "@/lib/not-found-metadata";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
@@ -33,7 +34,7 @@ const ARCHETYPE_BY_KEYWORD: Record<string, { name: string; domains: string }> = 
 // list, so it isn't a near-duplicate of the guide it links to.
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const kw = keywordBySlug(params.slug);
-  if (!kw) return {};
+  if (!kw) return notFoundMetadata("Keyword");
   const title = `${kw.name} — Riftbound Keyword Reference | RiftCompare`;
   const description = `Quick rules reference for ${kw.name} in Riftbound, plus every card printed with it so far, live-priced. Want the full breakdown? See the complete ${kw.name} guide.`;
   return {

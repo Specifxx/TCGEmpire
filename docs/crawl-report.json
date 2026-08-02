@@ -1,8 +1,8 @@
 {
   "base": "http://localhost:3111",
-  "crawled": 451,
-  "contentPages": 446,
-  "indexable": 420,
+  "crawled": 601,
+  "contentPages": 596,
+  "indexable": 565,
   "maxDepth": 4,
   "totals": {
     "broken": 0,

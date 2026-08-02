@@ -7,9 +7,10 @@ import { TcgMarketPrice } from "./TcgMarketPrice";
 import { TcgplayerAd } from "./TcgplayerAd";
 import { EbayAd } from "./EbayAd";
 import { timeAgo } from "@/lib/format";
-import { computeMarket, type MarketRow } from "@/lib/market-rows";
+import { computeMarket, stockElsewhere, type MarketRow } from "@/lib/market-rows";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { outboundRel } from "@/lib/affiliate";
+import { COUNTRIES, COUNTRY_LIST } from "@/lib/country";
 
 // The market-dependent half of the card page. The page itself is ISR-cached with
 // the AU baseline (no cookie reads server-side — that's what makes the route
@@ -68,16 +69,44 @@ export function CardPriceMetrics({
   // that's actually charged) as a small reference note. null for everyone else.
   const sub = (gbpCents: number | null) => (gbpCents != null ? secondaryFmt(gbpCents) ?? undefined : undefined);
 
+  // WHICH MARKET THESE NUMBERS ARE FOR. Without saying so, this block read
+  // "CHEAPEST PRICE —" / "IN STOCK AT 0 stores" for an AU visitor while the
+  // generated About paragraph directly below said "one tracked store in the
+  // United States has it, at US$91.06" — two true statements about two
+  // different markets, presented as if they contradicted each other.
+  //
+  // The page is ISR-cached once for every market, so the prose CANNOT follow
+  // the visitor's selection (see the note on `baseline` in card/[id]/page.tsx);
+  // the prose therefore names its market, and so does this. Both are now
+  // explicit rather than one of them being implicitly local.
+  const place = COUNTRIES[country].place;
+
+  // Stocked somewhere else but not here: the single most useful thing to say to
+  // a visitor staring at "0 stores", and computable for free — `rows` already
+  // carries every market's listings.
+  const elsewhere = useMemo(
+    () => (m.storeCount > 0 ? null : stockElsewhere(rows, country, COUNTRY_LIST)),
+    [rows, country, m.storeCount],
+  );
+
   return (
     <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
       <Metric
-        label={m.cheapestFoil != null ? "Standard from" : "Cheapest price"}
+        label={`${m.cheapestFoil != null ? "Standard from" : "Cheapest price"} · ${place}`}
         value={(m.cheapestStandard ?? m.lowest) != null ? fmt((m.cheapestStandard ?? m.lowest)!) : "—"}
         sub={sub(m.cheapestStandard ?? m.lowest)}
         highlight
       />
       {m.cheapestFoil != null && <Metric label="✦ Foil from" value={fmt(m.cheapestFoil)} sub={sub(m.cheapestFoil)} highlight />}
-      <Metric label="In stock at" value={`${m.storeCount} ${m.storeCount === 1 ? "store" : "stores"}`} />
+      <Metric
+        label={`In stock at · ${place}`}
+        value={`${m.storeCount} ${m.storeCount === 1 ? "store" : "stores"}`}
+        sub={
+          elsewhere
+            ? `${elsewhere.stores} ${elsewhere.stores === 1 ? "store" : "stores"} in ${elsewhere.markets === 1 ? elsewhere.first : "other markets"}`
+            : undefined
+        }
+      />
       {energyCost != null && <Metric label="Energy" value={String(energyCost)} />}
       {might != null && m.cheapestFoil == null && <Metric label="Might" value={String(might)} />}
       {might == null && power != null && m.cheapestFoil == null && <Metric label="Power" value={String(power)} />}

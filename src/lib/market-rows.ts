@@ -83,3 +83,98 @@ export function computeMarket(rows: MarketRow[], country: Country): MarketView {
     storeCount: new Set(prices.map((p) => p.retailer)).size,
   };
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// "Is it stocked anywhere else?" — the one rule three surfaces must agree on.
+// ─────────────────────────────────────────────────────────────────────────────
+// A card can be in stock in the US and nowhere else. Three places on the site
+// described that situation, and all three said something different:
+//
+//   • the card-page header — "CHEAPEST PRICE —" / "IN STOCK AT 0 stores",
+//     computed for the VISITOR's market but never saying which market that was
+//   • the card-page About prose — "exactly one tracked store … US$91.06",
+//     baked at the US baseline and (correctly) saying so
+//   • the /browse tile — "No price yet" beside "1 store", mixing a
+//     server-baked count for one country with a client-localised price for
+//     another
+//
+// None of them were counting "across all tracked markets"; they were three
+// different markets wearing the same words. The fix is not to make the numbers
+// equal — they legitimately differ per market — but to make every surface name
+// its market and say when stock exists somewhere else. These helpers are the
+// shared implementation of that second half, so the rule cannot drift again.
+
+/** Per-country cheapest-price columns as baked into a card list payload. */
+export interface LocalisedLowest {
+  lowestPriceCents: number | null;
+  lowestPriceCentsNz?: number | null;
+  lowestPriceCentsUs?: number | null;
+  lowestPriceCentsUk?: number | null;
+  lowestPriceCentsSg?: number | null;
+  lowestPriceCentsCa?: number | null;
+}
+
+/** True when the card has a price in SOME tracked market. */
+export function hasAnyMarketPrice(c: LocalisedLowest): boolean {
+  return [
+    c.lowestPriceCents,
+    c.lowestPriceCentsNz,
+    c.lowestPriceCentsUs,
+    c.lowestPriceCentsUk,
+    c.lowestPriceCentsSg,
+    c.lowestPriceCentsCa,
+  ].some((v) => v != null);
+}
+
+export type TileStock =
+  | { kind: "stores"; count: number } // price and count are the same market
+  | { kind: "elsewhere" } // no price here, but stocked in another market
+  | { kind: "none" }; // not stocked anywhere we track
+
+/**
+ * What a card tile may claim about availability.
+ *
+ * `storeCount` is filtered SERVER-side to whichever country the query was built
+ * for and baked into the payload; `lowest` is localised on the CLIENT to the
+ * visitor's market. They describe the same market only when the server guessed
+ * right — and a first-time visitor with no country cookie gets the server's
+ * default while CountryProvider then geo-switches away from it. So the count is
+ * only ever shown next to a price that came from the same render, and the
+ * mismatch case is stated in words instead of as a number the visitor can't act
+ * on.
+ */
+export function tileStock(lowest: number | null, storeCount: number, c: LocalisedLowest): TileStock {
+  if (lowest != null) return storeCount > 0 ? { kind: "stores", count: storeCount } : { kind: "none" };
+  return hasAnyMarketPrice(c) ? { kind: "elsewhere" } : { kind: "none" };
+}
+
+export interface ElsewhereStock {
+  /** Distinct in-stock stores summed across the other markets. */
+  stores: number;
+  /** How many other markets have stock. */
+  markets: number;
+  /** Place name of the first such market, for the one-market phrasing. */
+  first: string;
+}
+
+/**
+ * Stock in markets OTHER than `country`, for the card page's header metrics.
+ * Returns null when the visitor's own market has stock (nothing to disclaim) or
+ * when nowhere else does.
+ */
+export function stockElsewhere(
+  rows: MarketRow[],
+  country: Country,
+  others: readonly { code: Country; place: string }[],
+): ElsewhereStock | null {
+  const found = others
+    .filter((c) => c.code !== country)
+    .map((c) => ({ place: c.place, view: computeMarket(rows, c.code) }))
+    .filter((x) => x.view.storeCount > 0);
+  if (!found.length) return null;
+  return {
+    stores: found.reduce((n, x) => n + x.view.storeCount, 0),
+    markets: found.length,
+    first: found[0].place,
+  };
+}

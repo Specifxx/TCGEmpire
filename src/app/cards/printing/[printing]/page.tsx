@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFoundMetadata } from "@/lib/not-found-metadata";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { buildCardWhere } from "@/lib/cards";
@@ -15,7 +16,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: { printing: string } }): Promise<Metadata> {
   const facet = printingFacetBySlug(params.printing);
-  if (!facet) return {};
+  if (!facet) return notFoundMetadata("Printing");
   // -1 = "couldn't count" (DB unreachable), which is NOT the same as "few cards".
   // Falling back to 0 would noindex a perfectly good facet page on any transient
   // DB blip; only a CONFIRMED low count should trigger the thin-page guard.

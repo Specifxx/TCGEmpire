@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFoundMetadata } from "@/lib/not-found-metadata";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AUTHORS, authorBySlug } from "@/lib/content/authors";
@@ -13,7 +14,7 @@ export function generateStaticParams() {
 
 export function generateMetadata({ params }: { params: { slug: string } }): Metadata {
   const author = authorBySlug(params.slug);
-  if (!author) return {};
+  if (!author) return notFoundMetadata("Author");
   return {
     title: `${author.name} — ${author.role}`,
     description: author.bio[0].slice(0, 160),

@@ -82,7 +82,7 @@ export default function PrivacyPage() {
             Policy problem ("Privacy policy disclosures") and a bad look for any
             reviewer who reads both. It now describes what the Site actually does.
             See docs/adsense-remediation.md § Phase 10. */}
-        <section className="space-y-2">
+        <section id="advertising" className="scroll-mt-24 space-y-2">
           <h2 className="text-lg font-bold text-white">Advertising &amp; third-party vendors</h2>
           <p>
             <strong className="text-white">
@@ -101,11 +101,19 @@ export default function PrivacyPage() {
               you based on your visit to this Site and/or other sites on the Internet.
             </li>
             <li>
-              Where required, we ask for your consent before any advertising or analytics cookies
-              are set. Until you consent, advertising storage, ad personalisation, ad user data and
-              analytics storage are all set to <em>denied</em> (Google Consent Mode v2), and you
-              will see non-personalised advertising. You can change your answer at any time using
-              the <strong className="text-white">Privacy settings</strong> link in the footer.
+              Where a consent regime applies to you — the EEA, the UK and Switzerland — we ask for
+              your consent before any advertising or analytics cookies are set, using Google&rsquo;s
+              certified consent message. Until you answer it, advertising storage, ad
+              personalisation, ad user data and analytics storage are all set to <em>denied</em>{" "}
+              (Google Consent Mode v2), and any advertising you see is non-personalised. The{" "}
+              <strong className="text-white">Privacy settings</strong> link in our footer re-opens
+              that message so you can change your answer at any time.
+            </li>
+            <li>
+              If no such regime applies where you are, no consent message is shown and the{" "}
+              <strong className="text-white">Privacy settings</strong> footer link brings you to this
+              section instead. The opt-out controls below still apply to you, and blocking
+              third-party cookies in your browser prevents advertising cookies entirely.
             </li>
             <li>
               You may opt out of personalised advertising by visiting{" "}
@@ -141,6 +149,35 @@ export default function PrivacyPage() {
               .
             </li>
             <li>
+              <strong className="text-white">Meta (Facebook) Pixel.</strong> We use the Meta Pixel to
+              measure visits that arrive from our advertising on Facebook and Instagram, and to build
+              audiences for that advertising. It sets Meta&rsquo;s own cookies and reports your visit
+              to Meta.{" "}
+              <strong className="text-white">
+                It does not load unless you have consented to advertising cookies.
+              </strong>{" "}
+              Where no consent regime applies to you it loads by default; you can prevent it entirely
+              by blocking third-party cookies, and you can control how Meta uses the data in your{" "}
+              <a
+                href="https://www.facebook.com/adpreferences"
+                className="text-brand-400 hover:underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Meta ad preferences
+              </a>
+              . See also Meta&rsquo;s{" "}
+              <a
+                href="https://www.facebook.com/privacy/policy/"
+                className="text-brand-400 hover:underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                privacy policy
+              </a>
+              .
+            </li>
+            <li>
               We also show our own first-party promotional units — plain links to other RiftCompare
               pages. These set no cookies and involve no third party.
             </li>
@@ -164,9 +201,9 @@ export default function PrivacyPage() {
           <h2 className="text-lg font-bold text-white">Analytics</h2>
           <p>
             We use privacy-respecting analytics (Vercel Analytics and Speed Insights) to understand
-            aggregate traffic and performance. These do not identify you personally. Where a consent
-            regime applies to you, they are held back until you consent — the same signal that
-            governs advertising.
+            aggregate traffic and performance. These are cookieless and do not identify you
+            personally. Where a consent regime applies to you, they are held back until you consent
+            — the same signal that governs advertising, so one answer covers both.
           </p>
         </section>
 

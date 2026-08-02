@@ -10,6 +10,12 @@ import { ADSENSE_CLIENT_ID, ADSENSE_PUB_ID, ADSENSE_CLIENT_ID_PATTERN } from "..
 // These assertions pin all three properties that made it invalid — status,
 // content type and exact body — plus the derivation that keeps the seller id
 // locked to the loader script's client id.
+//
+// `npm test` runs node with `--env-file=.env.production` because lib/adsense.ts
+// reads NEXT_PUBLIC_ADSENSE_CLIENT_ID at import time. `next build` loads that
+// file itself; the bare node test runner does not, so without the flag these
+// assertions fail on a clean checkout with a misleading "client id must match
+// the AdSense id format" rather than "the variable isn't set".
 
 test("ads.txt returns 200", () => {
   assert.equal(GET().status, 200);

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFoundMetadata } from "@/lib/not-found-metadata";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
@@ -14,7 +15,7 @@ export const revalidate = 86400;
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const domain = domainBySlug(params.slug);
-  if (!domain) notFound();
+  if (!domain) return notFoundMetadata("Domain");
   const title = `Riftbound ${domain.label} Cards — Prices, Values & Full List`;
   const description = `Every Riftbound ${domain.label} card with live prices compared across stores — find the cheapest ${domain.label} singles. Full ${domain.label} domain card list and values, updated daily.`;
   return {

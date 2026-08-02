@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFoundMetadata } from "@/lib/not-found-metadata";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { unstable_cache } from "next/cache";
@@ -40,10 +41,11 @@ export async function generateMetadata({
   searchParams: CardQuery;
 }): Promise<Metadata> {
   const set = setBySlug(params.set);
-  // The whole site renders dynamically (the layout reads the country cookie), so
-  // notFound() can't return a hard 404 here; mark unknown slugs noindex so Google
-  // never indexes the soft-404 (nothing links to them anyway).
-  if (!set) notFound(); // real 404 — metadata resolves before streaming
+  // Unknown slug: a distinct title + noindex here, and notFound() in the page
+  // body below for the status. (The stale comment this replaces claimed a hard
+  // 404 was impossible on this route — it is not; what actually swallowed the
+  // status was the root loading.tsx Suspense boundary, now removed.)
+  if (!set) return notFoundMetadata("Set");
   // Market-neutral title (no country) so it ranks globally; the page itself is
   // tailored to the visitor's market.
   // Front-loads the "cheapest" buyer hook (GSC: these pages ranked but had very

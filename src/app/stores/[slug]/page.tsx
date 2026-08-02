@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFoundMetadata } from "@/lib/not-found-metadata";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
@@ -53,7 +54,7 @@ async function storeStats(key: string) {
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const store = storeBySlug(params.slug);
-  if (!store) return {};
+  if (!store) return notFoundMetadata("Store");
   const { count } = await storeStats(store.key);
   const place = COUNTRIES[(store.country ?? "AU") as Country];
   const title = `${store.name} Riftbound Singles — Live Prices & Stock | RiftCompare`;

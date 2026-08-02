@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFoundMetadata } from "@/lib/not-found-metadata";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
@@ -30,7 +31,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const champ = championBySlug(params.slug);
-  if (!champ) return {};
+  if (!champ) return notFoundMetadata("Champion");
   // A hub with a handful of printings is a directory entry, not a page. Below
   // the threshold it stays crawlable and linked but is kept out of the index,
   // matching how the type/rarity/printing facets already behave. Fails OPEN: a

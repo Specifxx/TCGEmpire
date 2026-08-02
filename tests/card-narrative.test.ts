@@ -334,3 +334,143 @@ test("every paragraph is a complete sentence", () => {
     assert.doesNotMatch(p, /\s{2,}/, `paragraph has doubled whitespace: ${p}`);
   }
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Prose hygiene. All three of these shipped live and were reported from the
+// production page for Vi, Destructive (OGN 036a):
+//   "This page covers the a printing of Vi, Destructive"
+//   "The a print carries a 252.9× premium over the plain version"
+//   "…before you check back. the United States is currently the only one…"
+// They are asserted over EVERY branch rather than the two reported sentences,
+// because the generator concatenates fragments in seven places.
+// ─────────────────────────────────────────────────────────────────────────────
+
+import { printingLabel, tidy, variantLabel } from "../src/lib/content/card-narrative";
+
+// Every meaningfully-different shape the generator can be handed.
+const ALL_SHAPES: Partial<NarrativeInput>[] = [
+  {},
+  { variant: "a" },
+  { variant: "A" },
+  { variant: "b" },
+  { variant: "zzz" },
+  { variant: null },
+  { rarity: "Showcase" },
+  { isPromo: true },
+  { isSignature: true },
+  { isOvernumbered: true },
+  { isCrystalRose: true },
+  { variant: "a", printings: [{ label: "base", priceCents: 36, isBase: true }] },
+  { isSignature: true, printings: [{ label: "base", priceCents: 400, isBase: true }] },
+  { printings: [{ label: "showcase", priceCents: 9000, isBase: false }] },
+  { history: { points: [] } },
+  { history: { points: days(3) } },
+  { markets: [] },
+  { setContext: null },
+  { decks: [{ name: "A", copies: 3 }] },
+  { domain: "Colorless" },
+  { energyCost: null, might: null, power: null },
+  { baseline: market({ storeCount: 1, secondCents: null }) },
+  { baseline: market({ lowestCents: 80, lowestDeliveredCents: 480 }) },
+  {
+    baseline: market({ lowestCents: null, lowestDeliveredCents: null, secondCents: null, storeCount: 0, listingCount: 0 }),
+    markets: [],
+    history: { points: [] },
+  },
+  {
+    // Triggers coverageNotes() with BOTH of its fragments: a priced baseline,
+    // no history yet, and exactly one stocked market. That is the combination
+    // that produced the reported "…before you check back. the United States is
+    // currently the only one of our six markets…" — a lowercase sentence start
+    // from joining two mid-sentence fragments with ". ".
+    markets: [market()],
+    history: { points: [] },
+  },
+  {
+    // The exact reported shape: unpriced in the baseline market, one listing
+    // elsewhere, alternate-art printing, no history.
+    variant: "a",
+    baseline: market({ lowestCents: null, lowestDeliveredCents: null, secondCents: null, storeCount: 0, listingCount: 0 }),
+    markets: [market({ storeCount: 1, lowestCents: 9106, lowestDeliveredCents: 9500, secondCents: null })],
+    history: { points: [] },
+    printings: [{ label: "base", priceCents: 36, isBase: true }],
+  },
+];
+
+const everyParagraph = (fn: (p: string, shape: string) => void) => {
+  for (const over of ALL_SHAPES) {
+    const label = JSON.stringify(over).slice(0, 70);
+    for (const p of buildCardNarrative(card(over))) fn(p, label);
+  }
+};
+
+test("no paragraph contains a raw printing code", () => {
+  everyParagraph((p, shape) => {
+    // "the a printing", "The a print", "the b print" — a bare single letter
+    // where a label belongs.
+    assert.doesNotMatch(p, /\bthe [a-z] (print|printing)\b/i, `raw printing code in ${shape}: ${p.slice(0, 120)}`);
+    assert.doesNotMatch(p, /\b(printing|print) of the [a-z]\b/i, `raw printing code in ${shape}: ${p.slice(0, 120)}`);
+  });
+});
+
+test("no sentence starts lowercase", () => {
+  everyParagraph((p, shape) => {
+    // Split on a terminator followed by a space; every following sentence must
+    // start with a capital, a digit or an opening quote.
+    for (const sentence of p.split(/(?<=[.!?])\s+/)) {
+      if (!sentence.trim()) continue;
+      assert.match(
+        sentence.trim(),
+        /^[A-Z0-9£$€"“'(]/,
+        `lowercase sentence start in ${shape}: "${sentence.slice(0, 90)}"`,
+      );
+    }
+  });
+});
+
+test("no doubled spaces or doubled/floating punctuation", () => {
+  everyParagraph((p, shape) => {
+    assert.doesNotMatch(p, /\s{2,}/, `doubled space in ${shape}: ${p.slice(0, 120)}`);
+    assert.doesNotMatch(p, /[.,;:!?]{2,}/, `doubled punctuation in ${shape}: ${p.slice(0, 120)}`);
+    assert.doesNotMatch(p, /\s+[.,;:!?]/, `space before punctuation in ${shape}: ${p.slice(0, 120)}`);
+    assert.doesNotMatch(p, /\.\s*\./, `doubled full stop in ${shape}: ${p.slice(0, 120)}`);
+  });
+});
+
+test("every paragraph is terminated", () => {
+  everyParagraph((p, shape) => {
+    assert.match(p, /[.!?]$/, `unterminated paragraph in ${shape}: ${p.slice(-60)}`);
+  });
+});
+
+test("printing codes map to human labels", () => {
+  assert.equal(variantLabel("a"), "alternate-art");
+  assert.equal(variantLabel("A"), "alternate-art");
+  assert.equal(variantLabel(null), "alternate-art");
+  assert.equal(variantLabel("unknown-code"), "alternate-art");
+  assert.equal(printingLabel({ variant: "a" }), "alternate-art");
+  assert.equal(printingLabel({ isSignature: true }), "Signature");
+  assert.equal(printingLabel({ isCrystalRose: true }), "Crystal Rose");
+  assert.equal(printingLabel({ isOvernumbered: true }), "overnumbered");
+  assert.equal(printingLabel({ rarity: "Showcase" }), "Showcase");
+  assert.equal(printingLabel({ isPromo: true }), "promo");
+  assert.equal(printingLabel({}), "base");
+  // Precedence: a Signature that is also overnumbered reads as Signature.
+  assert.equal(printingLabel({ isSignature: true, isOvernumbered: true, variant: "a" }), "Signature");
+});
+
+test("the reported alternate-art sentences read correctly", () => {
+  const t = text(card({ variant: "a", printings: [{ label: "base", priceCents: 36, isBase: true }] }));
+  assert.match(t, /the alternate-art printing of/);
+  assert.doesNotMatch(t, /the a printing/);
+  assert.match(t, /The alternate-art print carries/);
+  assert.doesNotMatch(t, /The a print carries/);
+});
+
+test("tidy collapses the artefacts fragment concatenation leaves behind", () => {
+  assert.equal(tidy("one  two"), "one two");
+  assert.equal(tidy("end ."), "end.");
+  assert.equal(tidy("end.."), "end.");
+  assert.equal(tidy("end. ."), "end.");
+  assert.equal(tidy("  padded  "), "padded");
+});
