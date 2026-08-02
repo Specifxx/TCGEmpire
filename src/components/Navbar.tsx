@@ -91,9 +91,16 @@ export function Navbar() {
               <span className="hidden sm:inline">Marketplace</span>
             </Link>
           )}
-          {/* Premium — one-click into the upsell dialog from anywhere. */}
-          <PremiumButton className="hidden rounded-lg px-2 py-2 text-sm font-semibold text-gold hover:bg-ink-800 sm:block sm:px-2.5">
-            ✦ Premium
+          {/* Premium — one-click into the upsell dialog from anywhere. Visible on
+              phones too (not just sm+): the star alone below sm, matching the
+              Marketplace chip's icon-only/full-label pattern above, so the upsell
+              isn't hidden from the majority-mobile audience. */}
+          <PremiumButton
+            className="flex items-center gap-1 rounded-lg px-1.5 py-1.5 text-sm font-semibold text-gold hover:bg-ink-800 sm:gap-1.5 sm:px-2.5 sm:py-2"
+            aria-label="Get Premium"
+          >
+            <span aria-hidden>✦</span>
+            <span className="hidden sm:inline">Premium</span>
           </PremiumButton>
           {/* Single nav entry point: the ⌘K "Explore" command launcher (above) is the
               full-nav surface on desktop — it lists the same NAV_GROUPS searchably — so

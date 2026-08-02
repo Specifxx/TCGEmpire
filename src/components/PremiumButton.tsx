@@ -10,10 +10,18 @@ import { PREMIUM_PRICE_LABEL } from "@/lib/site";
 const GOLD =
   "inline-flex items-center justify-center gap-1.5 rounded-lg bg-gold px-4 py-2 text-sm font-bold text-ink-950 transition hover:brightness-110";
 
-export function PremiumButton({ children, className }: { children?: React.ReactNode; className?: string }) {
+export function PremiumButton({
+  children,
+  className,
+  "aria-label": ariaLabel,
+}: {
+  children?: React.ReactNode;
+  className?: string;
+  "aria-label"?: string;
+}) {
   const { open } = usePremiumDialog();
   return (
-    <button type="button" onClick={open} className={className ?? GOLD}>
+    <button type="button" onClick={open} className={className ?? GOLD} aria-label={ariaLabel}>
       {children ?? (
         <>
           Upgrade now{PREMIUM_PRICE_LABEL ? <span className="font-semibold opacity-80"> · {PREMIUM_PRICE_LABEL}</span> : null}
