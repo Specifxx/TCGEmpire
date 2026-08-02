@@ -42,6 +42,11 @@ const CARDS: CardLite[] = [
   // Promo — illustrative name, shares a base-card-shaped number as the schema's
   // isPromo/promo-pool matching expects.
   { id: "c-ashe-promo", name: "Ashe, the Frost Archer", setCode: "OGN", collectorNumber: "128/298", rarity: "Rare", variant: null, isPromo: true },
+  // A Legend whose ONLY row in our DB is its Signature print — mirrors the real
+  // "Kennen, Heart of the Tempest" bug: 88gamesarena.com.au sells the ordinary Rare
+  // 155/166 print, which we hadn't catalogued, and the store's title shares the
+  // Signature's exact name. No base sibling exists here on purpose.
+  { id: "c-kennen-signature-only", name: "Kennen, Heart of the Tempest", setCode: "VEN", collectorNumber: "197*/166", rarity: "Showcase", variant: null, isPromo: false },
 ];
 
 function product(title: string): ShopifyProduct {
@@ -74,6 +79,11 @@ const CASES: Case[] = [
   {
     label: "multi-card/playset guard — never price a lot against a single card (the exact example from price-import.ts's own MULTI_CARD comment)",
     title: "PLAYSET (3) 3x Watchful Sentry - 096/298",
+    expected: null,
+  },
+  {
+    label: "real bug (88gamesarena.com.au): a same-named base print we haven't catalogued must not be mis-attached to our only (Signature) row for that name — the title's own number (155/166) disagrees with the sole candidate's (197*/166), so it must stay unmatched, not silently price the Signature card at the base print's price",
+    title: "Kennen - Heart of the Tempest [VEN - 155/166]",
     expected: null,
   },
 ];

@@ -608,6 +608,21 @@ export function resolveCardId(p: ShopifyProduct, idx: CardIndex): string | null 
       if (!overs.length) return null;
       return (pickByNum(overs) ?? overs[0]).id;
     }
+    // A PLAIN listing (no special-print signal) that carries an explicit collector
+    // number must not be forced onto a same-named candidate whose number disagrees.
+    // That candidate is a DIFFERENT, not-yet-catalogued printing sharing this name —
+    // e.g. a store's ordinary Rare print of a Legend whose only row in our DB today
+    // is its Signature/chase entry ("Kennen, Heart of the Tempest" 155/166 Rare vs.
+    // our sole 197*/166 Signature row). Without this guard the very next line
+    // (cand.length === 1 → return cand[0].id) mis-attached the Rare print's $1.10
+    // price to the Signature card's page. Trust the number over the name here: keep
+    // only candidates it actually matches, or leave the listing unmatched rather
+    // than mis-attach its price.
+    if (num) {
+      const byNumMatch = cand.filter((c) => numKey(c.collectorNumber.split("/")[0]) === num.key);
+      if (byNumMatch.length) cand = byNumMatch;
+      else return null;
+    }
     if (cand.length === 1) return cand[0].id;
     const exact = pickByNum(cand);
     if (exact) return exact.id;
