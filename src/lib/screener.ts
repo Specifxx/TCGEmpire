@@ -5,8 +5,8 @@
 //
 // Egress-bounded: we scan the most-searched (i.e. liquid) priced cards only, then
 // pull just those cards' recent history — never the whole PriceHistory table.
-import { unstable_cache } from "next/cache";
 import type { Prisma } from "@prisma/client";
+import { cachedOrDirect } from "./cached-or-direct";
 import { prisma } from "./db";
 import { dbHistory } from "./db-history";
 import { pickPrice, priceField, type Country } from "./country";
@@ -16,8 +16,11 @@ import { CONTENT_TAG } from "./revalidate-content";
 import { sydneyDayKey } from "./market-index";
 
 const SCAN_CARDS = 400; // most-searched priced cards to consider
-const WINDOW_DAYS = 30;
-const MIN_POINTS = 5; // need enough history for an average to mean anything
+export const WINDOW_DAYS = 30;
+// Need enough history for an average to mean anything. Exported so the page's
+// empty state can quote the real threshold against the real history depth
+// (see getHistoryDepth) rather than hardcoding a number that could drift.
+export const MIN_POINTS = 5;
 const MIN_PRICE_CENTS = 300; // ignore sub-$3 noise
 const MIN_DISCOUNT = 0.08; // at least 8% below the average to list
 
@@ -86,10 +89,10 @@ async function computeUndervalued(country: Country, limit: number): Promise<Valu
 export async function getUndervalued(country: Country, limit = 24): Promise<ValuePick[]> {
   // Compute at a generous cap keyed by (market, day) only, then slice — so a deeper
   // list can't trigger a second whole-market history read.
-  const full = await unstable_cache(
+  const full = await cachedOrDirect(
     () => computeUndervalued(country, 100),
     ["rc-undervalued", country, sydneyDayKey()],
     { revalidate: 172800, tags: [CONTENT_TAG] },
-  )();
+  );
   return full.slice(0, limit);
 }

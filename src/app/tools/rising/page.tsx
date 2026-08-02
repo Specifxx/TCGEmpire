@@ -3,7 +3,9 @@ import Link from "next/link";
 import { unstable_cache } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { isPremium } from "@/lib/premium";
-import { getRisingCards, type RisePick, type RiseComponents, type RiseScope } from "@/lib/rise-predictor";
+import { getRisingCards, ALL_MARKETS, HISTORY_DAYS, MIN_POINTS, type RisePick, type RiseComponents, type RiseScope } from "@/lib/rise-predictor";
+import { getHistoryDepth } from "@/lib/price-history";
+import { HistoryGapNotice } from "@/components/HistoryGapNotice";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { formatMoney } from "@/lib/format";
 import { currencyOf, COUNTRY_LIST } from "@/lib/country";
@@ -157,8 +159,12 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
   const premium = isPremium(user);
   const country = getCountry();
 
+  // Accept any market the screen actually supports. This was a hardcoded
+  // AU/NZ/US/UK check while the toggle below renders a button per COUNTRY_LIST
+  // entry — so once SG and CA were added, those two buttons silently served
+  // GLOBAL data under a Singapore/Canada flag, priced in AUD.
   const raw = (searchParams.scope ?? "").toUpperCase();
-  const scope: RiseScope = raw === "AU" || raw === "NZ" || raw === "US" || raw === "UK" ? (raw as RiseScope) : "GLOBAL";
+  const scope: RiseScope = (ALL_MARKETS as string[]).includes(raw) ? (raw as RiseScope) : "GLOBAL";
   const isGlobal = scope === "GLOBAL";
   const currency = isGlobal ? "AUD" : currencyOf(scope);
 
@@ -171,6 +177,12 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
     tags: [CONTENT_TAG],
   })();
   const top = analysis.picks[0];
+  // Only when there's nothing to show — the populated path pays nothing for it.
+  // GLOBAL pools every market's history, so measure depth against the market
+  // that actually backs the scope rather than the visitor's own country.
+  const depth = analysis.picks.length === 0 ? await getHistoryDepth(isGlobal ? null : scope, HISTORY_DAYS) : null;
+  const marketLabel = isGlobal ? "any market" : COUNTRY_LIST.find((c) => c.code === scope)?.place ?? scope;
+  const historyShort = depth != null && depth.days < MIN_POINTS;
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -215,7 +227,13 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
               {top ? (
                 <RisingRow p={top} rank={1} currency={currency} />
               ) : (
-                <tr><td colSpan={8} className="px-4 py-6 text-center text-sm text-slate-500">Not enough data yet — check back once a few days of price history have built up.</td></tr>
+                <tr>
+                  <td colSpan={8} className="px-4 py-6 text-center text-sm text-slate-500">
+                    {historyShort
+                      ? `Not enough price history yet — signals need ${MIN_POINTS} days of daily snapshots and ${depth!.days === 0 ? "none are" : `only ${depth!.days} ${depth!.days === 1 ? "is" : "are"}`} recorded for ${marketLabel} so far. It fills in automatically with the daily price import.`
+                      : "No cards are showing a clear rise signal right now — check back as prices and demand move."}
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -245,10 +263,12 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
           </div>
         </div>
       ) : analysis.picks.length === 0 ? (
-        <div className="card-surface grid place-items-center p-12 text-center text-sm text-slate-400">
-          Not enough price/demand history yet{isGlobal ? "" : ` in ${scope}`} — signals appear once a few days of daily
-          snapshots have built up.
-        </div>
+        <HistoryGapNotice
+          depth={depth!}
+          needed={MIN_POINTS}
+          marketLabel={marketLabel}
+          emptyVerdict={`No cards are showing a clear rise signal${isGlobal ? "" : ` in ${scope}`} right now — check back as prices and demand move.`}
+        />
       ) : (
         <div className="card-surface overflow-x-auto">
           <table className="w-full min-w-[700px] text-sm">

@@ -4,7 +4,7 @@
 // MARKET per Sydney day (AU/NZ/US/UK/SG — see price-import.ts's snapshot
 // write), so every function here takes a `country` and is priced in that
 // market's own currency; nothing below is AU-only despite this file's history.
-import { unstable_cache } from "next/cache";
+import { cachedOrDirect } from "./cached-or-direct";
 import { prisma } from "./db";
 import { dbHistory } from "./db-history";
 import { cardTileSelect } from "./cards";
@@ -12,20 +12,8 @@ import type { Country } from "./country";
 import type { CardTileData } from "@/components/CardTile";
 import { CONTENT_TAG } from "./revalidate-content";
 
-// unstable_cache requires Next.js's request-scoped incremental cache, which doesn't
-// exist when this module is imported by a plain tsx script (e.g. scripts/weekly-promo.ts)
-// run outside the Next.js runtime — it throws "Invariant: incrementalCache missing"
-// rather than caching. There, caching buys nothing anyway (a one-shot process never
-// reuses it), so fall back to calling the function directly instead of failing the
-// whole script. Any OTHER unstable_cache error still throws as normal.
-async function cachedOrDirect<T>(fn: () => Promise<T>, keys: string[], opts: { revalidate: number; tags: string[] }): Promise<T> {
-  try {
-    return await unstable_cache(fn, keys, opts)();
-  } catch (e) {
-    if (e instanceof Error && e.message.includes("incrementalCache missing")) return fn();
-    throw e;
-  }
-}
+// See lib/cached-or-direct.ts — shared with screener.ts so both screeners
+// behave identically when imported outside the Next.js runtime.
 
 // Calendar day in Australia/Sydney — see market-index. PriceHistory changes once a
 // day, so history-derived reads are cached with this in the key (recompute daily,
@@ -35,6 +23,58 @@ function sydneyDayKey(): string {
 }
 
 export type PricePoint = { t: number; v: number };
+
+// How many distinct days of PriceHistory actually exist for a market, and when
+// the series starts. Exists so a tool that needs N days of history can say WHY
+// it's empty ("3 days recorded, needs 5") instead of implying a market verdict
+// it can't support — /tools/value-finder used to render "the market's near its
+// averages right now" whether the averages were genuinely flat or the table was
+// simply empty, which is the failure mode this answers.
+//
+// This matters operationally, not just cosmetically: PriceHistory lives in its
+// own Neon project (see lib/db-history.ts) that has now been re-pointed several
+// times as each free-tier allowance was exhausted (…→_4→RH5→RH6). Every cutover
+// starts the new project at ZERO rows until the bulk copy runs, which silently
+// blanks every consumer with a multi-day minimum while leaving the 2-day ones
+// (movers, the homepage tabs) working — indistinguishable, without this, from
+// "no cards qualified".
+export interface HistoryDepth {
+  days: number; // distinct days recorded in the window
+  firstDay: string | null; // ISO yyyy-mm-dd of the earliest day present
+  latestDay: string | null;
+}
+
+async function computeHistoryDepth(country: Country | null, windowDays: number): Promise<HistoryDepth> {
+  try {
+    const cutoff = new Date(Date.now() - windowDays * 86400_000);
+    // groupBy (not findMany+distinct) so the DISTINCT runs server-side and only
+    // one row per day crosses the wire — at most `windowDays` rows.
+    const rows = await dbHistory.priceHistory.groupBy({
+      by: ["day"],
+      // null = pool every market. Correct for a cross-market screen: a card
+      // qualifies there via whichever market covers it best, so the days
+      // available in ANY market are the days that screen can draw on.
+      where: { day: { gte: cutoff }, ...(country ? { country } : {}) },
+      _count: { _all: true },
+    });
+    if (!rows.length) return { days: 0, firstDay: null, latestDay: null };
+    const days = rows.map((r) => r.day.getTime()).sort((a, b) => a - b);
+    const iso = (t: number) => new Date(t).toISOString().slice(0, 10);
+    return { days: rows.length, firstDay: iso(days[0]), latestDay: iso(days[days.length - 1]) };
+  } catch {
+    // A DB outage must not read as "no history" — null days signals "unknown".
+    return { days: 0, firstDay: null, latestDay: null };
+  }
+}
+
+// `country: null` pools every market — use it for cross-market screens.
+export function getHistoryDepth(country: Country | null, windowDays = 30): Promise<HistoryDepth> {
+  return cachedOrDirect(
+    () => computeHistoryDepth(country, windowDays),
+    ["rc-history-depth", country ?? "ALL", String(windowDays), sydneyDayKey()],
+    { revalidate: 3600, tags: [CONTENT_TAG] },
+  );
+}
 
 // Daily lowest-price points for one card in one market (oldest → newest), in that
 // market's OWN currency. The importer records a real point per card per market per

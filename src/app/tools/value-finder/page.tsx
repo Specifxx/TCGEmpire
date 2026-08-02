@@ -5,7 +5,9 @@ import { CardQuickLink } from "@/components/CardQuickLink";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { getCurrentUser } from "@/lib/auth";
 import { isPremium } from "@/lib/premium";
-import { getUndervalued } from "@/lib/screener";
+import { getUndervalued, MIN_POINTS, WINDOW_DAYS } from "@/lib/screener";
+import { getHistoryDepth } from "@/lib/price-history";
+import { HistoryGapNotice } from "@/components/HistoryGapNotice";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
@@ -69,6 +71,12 @@ export default async function ValueFinderPage() {
         revalidate: 3600,
         tags: [CONTENT_TAG],
       })())[0];
+  // Only fetched when there's nothing to show, so the normal path pays nothing
+  // for it: tells the empty state whether the market is genuinely near its
+  // averages or simply has no history recorded yet (see HistoryGapNotice).
+  const showingNothing = premium ? picks.length === 0 : !teaser;
+  const depth = showingNothing ? await getHistoryDepth(country, WINDOW_DAYS) : null;
+  const historyShort = depth != null && depth.days < MIN_POINTS;
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -123,7 +131,13 @@ export default async function ValueFinderPage() {
                   <td className="num px-4 py-2 text-right text-slate-300">{teaser.offHighPct}%</td>
                 </tr>
               ) : (
-                <tr><td colSpan={5} className="px-4 py-6 text-center text-sm text-slate-500">The market&apos;s near its averages right now — check back as prices move.</td></tr>
+                <tr>
+                  <td colSpan={5} className="px-4 py-6 text-center text-sm text-slate-500">
+                    {historyShort
+                      ? `Not enough price history yet — this screen needs ${MIN_POINTS} days of daily snapshots and ${depth!.days === 0 ? "none are" : `only ${depth!.days} ${depth!.days === 1 ? "is" : "are"}`} recorded for ${info.place} so far. It fills in automatically with the daily price import.`
+                      : "The market's near its averages right now — check back as prices move."}
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -157,9 +171,12 @@ export default async function ValueFinderPage() {
           </div>
         </div>
       ) : picks.length === 0 ? (
-        <div className="card-surface grid place-items-center p-12 text-center text-sm text-slate-400">
-          No clearly-undervalued cards right now — the market&apos;s near its averages. Check back as prices move.
-        </div>
+        <HistoryGapNotice
+          depth={depth!}
+          needed={MIN_POINTS}
+          marketLabel={info.place}
+          emptyVerdict="No clearly-undervalued cards right now — the market's near its averages. Check back as prices move."
+        />
       ) : (
         <div className="card-surface overflow-x-auto">
           <table className="w-full min-w-[620px] text-sm">

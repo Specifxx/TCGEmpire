@@ -25,11 +25,21 @@ import { zScores, percentileRanks, spearman, mean, median, clamp } from "./stats
 // neutral — so GLOBAL uses each card's best-covered market series for timing and its
 // total cross-market supply. The DISPLAYED price uses that card's basis market.
 export type RiseScope = Country | "GLOBAL";
-const MARKET_PREF: Country[] = ["AU", "US", "NZ", "UK"]; // reference order for a GLOBAL card's displayed price
+// Every market this screen understands. Both lists previously stopped at UK and
+// were never extended when SG and then CA went live, so those markets were
+// half-supported: offered in the UI, absent from the data path.
+export const ALL_MARKETS: Country[] = ["AU", "NZ", "US", "UK", "SG", "CA"];
+// Reference order for a GLOBAL card's displayed price — first market with a real
+// price wins. Ordered by catalogue depth, so the fallback lands on the market
+// most likely to actually have one.
+const MARKET_PREF: Country[] = ["AU", "US", "NZ", "UK", "SG", "CA"];
 
 const SCAN = 400; // universe: most-searched priced cards
-const HISTORY_DAYS = 120;
-const MIN_POINTS = 5; // price points needed to trust the signals
+export const HISTORY_DAYS = 120;
+// Price points needed to trust the signals. Exported so the page's empty state
+// can quote the real threshold against the real history depth (see
+// getHistoryDepth) instead of a hardcoded number that could drift out of sync.
+export const MIN_POINTS = 5;
 const BACKTEST_LAG_DAYS = 14;
 const OVERHEAT_PCT = 35; // 7-day gain above this = likely already spiked
 const MIN_BACKTEST_N = 20;
@@ -157,15 +167,12 @@ function backtest(seriesById: Map<string, PricePoint[]>): RiseBacktest | null {
 export async function getRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
   const isGlobal = scope === "GLOBAL";
   // Universe: most-searched cards priced in the scope market (any market for GLOBAL).
+  // Every market, derived from priceField rather than a hand-written OR list —
+  // the previous literal list still stopped at UK, so once SG and CA were added
+  // as real markets a card priced ONLY in Singapore or Canada was invisible to
+  // the GLOBAL screen entirely.
   const priced = isGlobal
-    ? {
-        OR: [
-          { lowestPriceCents: { not: null } },
-          { lowestPriceCentsNz: { not: null } },
-          { lowestPriceCentsUs: { not: null } },
-          { lowestPriceCentsUk: { not: null } },
-        ],
-      }
+    ? { OR: ALL_MARKETS.map((c) => ({ [priceField(c)]: { not: null } })) }
     : { [priceField(scope)]: { not: null } };
 
   const universe = (await prisma.card.findMany({
@@ -176,7 +183,11 @@ export async function getRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
       id: true, slug: true, name: true, setCode: true, collectorNumber: true,
       variant: true, isPromo: true, rarity: true, imageThumbUrl: true,
       searchCount: true, viewCount: true,
-      lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true,
+      // ALL six price columns. SG/CA were missing here while UniverseCard's type
+      // claimed them (the result is cast, so TypeScript never caught it) —
+      // pickPrice(card, "SG"|"CA") silently read undefined and reported no price.
+      lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true,
+      lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true,
     },
   })) as UniverseCard[];
 
