@@ -23,6 +23,8 @@
  */
 import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { join, relative, extname } from "node:path";
+import { execSync } from "node:child_process";
+import { STATIC_PAGE_DATES } from "../src/lib/static-page-dates";
 
 const ROOT = process.cwd();
 const args = process.argv.slice(2);
@@ -44,6 +46,10 @@ function fail(msg: string, detail?: string) {
 }
 function section(title: string) {
   console.log(`\n\x1b[1m${title}\x1b[0m`);
+}
+/** Informational only — never counts as a check and never fails the build. */
+function note(msg: string) {
+  console.log(`    \x1b[33m·\x1b[0m ${msg}`);
 }
 
 // ── file walking ─────────────────────────────────────────────────────────────
@@ -272,6 +278,119 @@ if (unsafeBoundaries.length) {
   fail("a loading.tsx sits above a notFound()-calling route", unsafeBoundaries.join("\n"));
 } else {
   ok(`${loadingFiles.length} scoped loading.tsx boundaries, none above a notFound() route`);
+}
+
+// ── 1d. Policy "last updated" drift ─────────────────────────────────────────
+// /terms gained a whole moderation section while still telling readers it had
+// not changed since 12 June — seven weeks stale, on a page whose own "Changes to
+// this policy" clause promises that date reflects material changes. /privacy did
+// the same after the Meta Pixel disclosure landed. Nothing catches that by
+// reading the diff, so the build checks it: edit a policy page, bump its date in
+// lib/static-page-dates.ts, or the build tells you which one you forgot.
+section("1d. Policy date drift");
+
+// Diff size, since the declared date, above which a policy edit is treated as
+// material. The real case was +195/-8; plumbing a date through an import is ~4.
+const MATERIAL_CHURN_LINES = 25;
+
+const POLICY_PAGES: [route: string, file: string][] = [
+  ["/privacy", "src/app/privacy/page.tsx"],
+  ["/terms", "src/app/terms/page.tsx"],
+  ["/marketplace/terms", "src/app/marketplace/terms/page.tsx"],
+  ["/editorial-policy", "src/app/editorial-policy/page.tsx"],
+  ["/returns", "src/app/returns/page.tsx"],
+];
+
+// Every page must read its date from the shared table — a reintroduced
+// `const UPDATED = "…"` is the drift, not just a symptom of it.
+const hardcoded = POLICY_PAGES.filter(([, f]) => /const UPDATED\s*=\s*"/.test(read(join(ROOT, f))));
+if (hardcoded.length) {
+  fail(
+    "a policy page hardcodes its own 'last updated' date",
+    `${hardcoded.map(([, f]) => f).join(", ")}\nUse staticPageDateLabel("<route>") so the visible line and the sitemap lastmod stay one value.`,
+  );
+} else {
+  ok(`${POLICY_PAGES.length} policy pages read their date from lib/static-page-dates.ts`);
+}
+
+// Now the real check: was the page committed after the date it claims?
+//
+// ── Why this is safe on a shallow clone ─────────────────────────────────────
+// Vercel and most CI runners clone shallow. `git log -1 -- <file>` normally
+// returns the true last-touching commit, or nothing when that commit lies
+// outside the fetched depth — both fine. The one ambiguous case is a --depth=1
+// clone, where the single grafted commit looks like it introduced every file, so
+// EVERY page would appear "changed today". So in a shallow repo, HEAD's own
+// commit is not evidence and is ignored.
+//
+// That costs nothing real: a page edited and date-bumped in the same commit is
+// correct by construction anyway. What this catches is the case that actually
+// happened — a policy edited in one commit and evaluated in a later build with
+// its date left behind.
+function git(args: string): string | null {
+  try {
+    return execSync(`git ${args}`, { cwd: ROOT, stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
+  } catch {
+    return null;
+  }
+}
+
+if (git("rev-parse --git-dir") == null) {
+  note("policy dates vs git history: skipped (not a git checkout)");
+} else {
+  const shallow = git("rev-parse --is-shallow-repository") === "true";
+  const head = git("rev-parse HEAD");
+  const stale: string[] = [];
+  let compared = 0;
+
+  for (const [route, file] of POLICY_PAGES) {
+    const declared = STATIC_PAGE_DATES[route];
+    if (!declared) {
+      stale.push(`${route} has no entry in static-page-dates.ts`);
+      continue;
+    }
+    const sha = git(`log -1 --format=%H -- ${file}`);
+    if (!sha) continue; // outside the fetched depth, or never committed
+    if (shallow && sha === head) continue; // grafted boundary — not evidence
+    const committed = git(`log -1 --format=%as -- ${file}`);
+    if (!committed) continue;
+    compared++;
+    if (committed <= declared) continue;
+
+    // The page changed after the date it claims — but "changed" is not the same
+    // as "materially changed", and this check has to tell them apart or it fires
+    // on every refactor and gets switched off. The proxy is size: summing the
+    // diff since the declared date, moving where a string is imported from is a
+    // handful of lines, while the change that caused this (a whole "User content
+    // & moderation" section appearing on /terms) was +195/-8.
+    //
+    // A heuristic, deliberately. It cannot judge whether a 3-line edit changed a
+    // reader's rights, so a small edit is reported and not failed; a large one
+    // is a hard stop that someone has to look at.
+    const numstat = git(`log --format= --numstat --since=${declared} -- ${file}`) ?? "";
+    const churn = numstat
+      .split("\n")
+      .filter(Boolean)
+      .reduce((n, line) => {
+        const [add, del] = line.split(/\s+/);
+        return n + (Number(add) || 0) + (Number(del) || 0);
+      }, 0);
+
+    if (churn > MATERIAL_CHURN_LINES) {
+      stale.push(`${route} says ${declared} but ${file} changed ${churn} lines since (last ${committed})`);
+    } else {
+      note(`${route}: ${churn} lines changed since ${declared} — bump it if that was material`);
+    }
+  }
+
+  if (stale.length) {
+    fail(
+      "a policy page changed after the date it tells readers it last changed",
+      `${stale.join("\n")}\nBump the route in lib/static-page-dates.ts in the same commit as the edit.`,
+    );
+  } else {
+    ok(`${compared}/${POLICY_PAGES.length} policy dates verified at or after their last commit`);
+  }
 }
 void APP_DIR;
 

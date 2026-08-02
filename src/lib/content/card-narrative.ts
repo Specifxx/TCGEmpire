@@ -119,22 +119,96 @@ export function variantLabel(variant: string | null | undefined): string {
   return VARIANT_LABELS[variant.toLowerCase()] ?? "alternate-art";
 }
 
-/** The label for THIS printing, in prose casing. Never a raw code. */
-export function printingLabel(c: {
+// ── PRINTING IS NOT RARITY ───────────────────────────────────────────────────
+// The first version of printingLabel() tested `rarity === "Showcase"` ABOVE
+// `variant`, so on any card that is both — and Vi, Destructive (OGN 036a) and
+// Elder Dragon (UNL 118a) are exactly that — the rarity won and the prose said:
+//
+//   "This page covers the Showcase printing of Vi, Destructive"
+//   "The Showcase print carries a 252.9× premium over the plain version"
+//
+// while the variants panel on the same page said "Printing: Alternate art" and
+// the badge said "ALT A". Signature cards read correctly only because
+// `isSignature` happened to be tested first.
+//
+// They are independent fields. 84 cards in the catalogue are Showcase rarity AND
+// carry a variant code; 97 are Showcase rarity with no variant at all. So the
+// label has to come from the printing alone, and the page's "Printing" cell and
+// the generated prose have to be the SAME decision — hence printingKind() below,
+// which both now call. Two casings of one answer, not two answers.
+export type PrintingKind = "crystal-rose" | "signature" | "overnumbered" | "promo" | "alternate-art" | "base";
+
+export interface PrintingFields {
   isSignature?: boolean;
   isCrystalRose?: boolean;
   isOvernumbered?: boolean;
   isPromo?: boolean;
-  rarity?: string;
   variant?: string | null;
-}): string {
-  if (c.isSignature) return "Signature";
-  if (c.isCrystalRose) return "Crystal Rose";
+}
+
+/**
+ * Which printing this is. Rarity is deliberately NOT a parameter — passing it
+ * is what caused the bug, and leaving it out of the type makes the mistake
+ * impossible to repeat.
+ *
+ * Precedence matches the card page's "Printing" cell exactly. In practice the
+ * first three are mutually exclusive (a Crystal Rose number is `SP1`, a
+ * Signature contains `*`, an overnumbered one is a plain number past the set
+ * size), so the order only decides ties that cannot occur — but it is fixed
+ * here rather than left to two call sites to agree on by accident.
+ */
+export function printingKind(c: PrintingFields): PrintingKind {
+  if (c.isCrystalRose) return "crystal-rose";
+  if (c.isSignature) return "signature";
   if (c.isOvernumbered) return "overnumbered";
-  if (c.rarity === "Showcase") return "Showcase";
   if (c.isPromo) return "promo";
-  if (c.variant) return variantLabel(c.variant);
+  if (c.variant) return "alternate-art";
   return "base";
+}
+
+/** Running-prose casing: "…covers the alternate-art printing of Vi, Destructive". */
+export const PRINTING_PROSE: Record<PrintingKind, string> = {
+  "crystal-rose": "Crystal Rose alt-art",
+  signature: "Signature",
+  overnumbered: "overnumbered",
+  promo: "promo",
+  "alternate-art": "alternate-art",
+  base: "base",
+};
+
+/** Standalone-value casing, for the card page's "Printing" data cell. */
+export const PRINTING_DISPLAY: Record<PrintingKind, string> = {
+  "crystal-rose": "Crystal Rose alt-art",
+  signature: "Signature",
+  overnumbered: "Overnumbered",
+  promo: "Promo",
+  "alternate-art": "Alternate art",
+  base: "Base",
+};
+
+/** The label for THIS printing, in prose casing. Never a raw code, never rarity. */
+export function printingLabel(c: PrintingFields): string {
+  return PRINTING_PROSE[printingKind(c)];
+}
+
+/**
+ * What distinguishes this card from the plain version — for the premium /
+ * "is it worth it?" copy, which compares this card against a base sibling.
+ *
+ * Prefers the PRINTING; falls back to the rarity only when there is no distinct
+ * printing to name. That fallback is not the bug coming back: it fires only for
+ * the 97 Showcase-rarity cards at base collector numbers, where "the base print
+ * carries a premium over the base printing" would be nonsense and "the Showcase
+ * print" is the single true distinguishing fact. Where a real printing exists it
+ * always wins, which is precisely what was broken.
+ *
+ * Returns null when the card is the plain version — callers must not invent a
+ * comparison for a card that has nothing to compare itself to.
+ */
+export function editionLabel(c: PrintingFields & { rarity?: string }): string | null {
+  const kind = printingKind(c);
+  if (kind !== "base") return PRINTING_PROSE[kind];
+  return c.rarity === "Showcase" ? "Showcase" : null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -221,7 +295,11 @@ function identity(c: NarrativeInput): string {
       `${domainClause}${stats.length ? ` and costs ${stats.join(", with ")}` : ""}.`
     );
   }
-  if (c.variant || c.rarity === "Showcase") {
+  // Gated on the PRINTING, not the rarity. A Showcase-rarity card at a base
+  // collector number has no distinct printing to cover, so it must not claim
+  // one — it falls through to the ordinary opening below, which names its
+  // rarity ("a showcase unit from …") where a rarity belongs.
+  if (printingKind(c) !== "base") {
     return (
       `This page covers the ${printingLabel(c)} printing of ${c.name}, card ${c.collectorNumber} of ` +
       `${c.setName} (${c.setCode}) — the same card as the base version but a distinct product with its own market. ` +
@@ -471,11 +549,14 @@ function variantEconomics(c: NarrativeInput): string | null {
   const base = c.printings.find((p) => p.isBase && p.priceCents != null);
   const mine = c.baseline.lowestCents;
   const cy = c.baseline.currency;
-  const isSpecial = c.isSignature || c.isOvernumbered || c.isCrystalRose || c.variant != null || c.rarity === "Showcase";
+  // editionLabel() is null exactly when this IS the plain version, so it doubles
+  // as the "is there anything to compare?" test — one decision instead of a
+  // condition and a label that could disagree about which card this is.
+  const label = editionLabel(c);
+  const isSpecial = label != null;
 
-  if (isSpecial && base?.priceCents != null && mine != null) {
+  if (label != null && base?.priceCents != null && mine != null) {
     const multiple = mine / base.priceCents;
-    const label = printingLabel(c);
     if (multiple >= 1.15) {
       return (
         `The ${label} print carries a ${multiple.toFixed(1)}× premium over the plain version — ` +

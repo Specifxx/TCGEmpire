@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
+import { staticPageDateLabel } from "@/lib/static-page-dates";
 import { RETAILER_LIST } from "@/lib/retailers";
 
 export const revalidate = 86400;
 
-const UPDATED = "1 August 2026";
 
 export const metadata: Metadata = {
   title: "Editorial & pricing policy",
@@ -54,7 +54,7 @@ export default function EditorialPolicyPage() {
       </nav>
 
       <h1 className="text-3xl font-extrabold leading-tight text-white">Editorial &amp; pricing policy</h1>
-      <p className="mt-2 text-sm text-slate-500">Last updated: {UPDATED}</p>
+      <p className="mt-2 text-sm text-slate-500">Last updated: {staticPageDateLabel("/editorial-policy")}</p>
       <p className="mt-4 max-w-2xl text-sm leading-relaxed text-slate-400">
         {SITE_NAME} publishes two things: prices we collect ourselves, and writing about the
         Riftbound market. This page explains how both are produced, who is responsible for them,

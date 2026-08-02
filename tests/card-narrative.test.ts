@@ -345,7 +345,15 @@ test("every paragraph is a complete sentence", () => {
 // because the generator concatenates fragments in seven places.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { printingLabel, tidy, variantLabel } from "../src/lib/content/card-narrative";
+import {
+  editionLabel,
+  printingKind,
+  printingLabel,
+  tidy,
+  variantLabel,
+  PRINTING_DISPLAY,
+  PRINTING_PROSE,
+} from "../src/lib/content/card-narrative";
 
 // Every meaningfully-different shape the generator can be handed.
 const ALL_SHAPES: Partial<NarrativeInput>[] = [
@@ -450,9 +458,8 @@ test("printing codes map to human labels", () => {
   assert.equal(variantLabel("unknown-code"), "alternate-art");
   assert.equal(printingLabel({ variant: "a" }), "alternate-art");
   assert.equal(printingLabel({ isSignature: true }), "Signature");
-  assert.equal(printingLabel({ isCrystalRose: true }), "Crystal Rose");
+  assert.equal(printingLabel({ isCrystalRose: true }), "Crystal Rose alt-art");
   assert.equal(printingLabel({ isOvernumbered: true }), "overnumbered");
-  assert.equal(printingLabel({ rarity: "Showcase" }), "Showcase");
   assert.equal(printingLabel({ isPromo: true }), "promo");
   assert.equal(printingLabel({}), "base");
   // Precedence: a Signature that is also overnumbered reads as Signature.
@@ -473,4 +480,135 @@ test("tidy collapses the artefacts fragment concatenation leaves behind", () => 
   assert.equal(tidy("end.."), "end.");
   assert.equal(tidy("end. ."), "end.");
   assert.equal(tidy("  padded  "), "padded");
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PRINTING IS NOT RARITY — the About prose and the card page's "Printing" cell
+// must name the same printing.
+// ─────────────────────────────────────────────────────────────────────────────
+// Reported live: /card/vi-destructive-ogn-036a-298 and
+// /card/elder-dragon-unl-118a-219 both said "This page covers the Showcase
+// printing" / "The Showcase print carries a 252.9× premium" while the variants
+// panel on the same page said "Printing: Alternate art" and the badge said
+// "ALT A". Cause: printingLabel() tested `rarity === "Showcase"` above
+// `variant`, so on a card that is both, the rarity won.
+//
+// The panel now renders PRINTING_DISPLAY[printingKind(card)] verbatim, so
+// asserting against that IS asserting against what the page shows.
+
+// Every printing shape, with the rarity varied independently — because that
+// independence is the whole point. Showcase is paired with each printing so a
+// rarity can never quietly win again.
+const PRINTING_FIXTURES: { name: string; input: Partial<NarrativeInput>; panel: string }[] = [
+  { name: "base", input: {}, panel: "Base" },
+  { name: "base, Showcase rarity", input: { rarity: "Showcase" }, panel: "Base" },
+  { name: "alternate art", input: { variant: "a" }, panel: "Alternate art" },
+  // THE REPORTED CARDS: Showcase rarity AND an alternate-art printing.
+  { name: "alternate art, Showcase rarity (Vi / Elder Dragon)", input: { variant: "a", rarity: "Showcase" }, panel: "Alternate art" },
+  { name: "alternate art 'b'", input: { variant: "b", rarity: "Showcase" }, panel: "Alternate art" },
+  { name: "Signature", input: { isSignature: true }, panel: "Signature" },
+  { name: "Signature, Showcase rarity", input: { isSignature: true, rarity: "Showcase" }, panel: "Signature" },
+  { name: "promo", input: { isPromo: true }, panel: "Promo" },
+  { name: "promo, Showcase rarity", input: { isPromo: true, rarity: "Showcase" }, panel: "Promo" },
+  { name: "overnumbered", input: { isOvernumbered: true }, panel: "Overnumbered" },
+  { name: "overnumbered, Showcase rarity", input: { isOvernumbered: true, rarity: "Showcase" }, panel: "Overnumbered" },
+  { name: "Crystal Rose", input: { isCrystalRose: true }, panel: "Crystal Rose alt-art" },
+];
+
+const panelValue = (c: NarrativeInput) => PRINTING_DISPLAY[printingKind(c)];
+
+// The two casings differ deliberately in more than case: prose hyphenates
+// ("the alternate-art printing" reads as one adjective mid-sentence) while the
+// panel spaces ("Alternate art" reads as a standalone value). That is
+// typography, not a different answer, so compare on the words alone — a real
+// divergence ("Showcase" vs "Alternate art") still fails.
+const norm = (s: string) => s.toLowerCase().replace(/[-\s]+/g, " ").trim();
+
+test("the panel value is derived from the printing, never the rarity", () => {
+  for (const f of PRINTING_FIXTURES) {
+    assert.equal(panelValue(card(f.input)), f.panel, f.name);
+  }
+});
+
+test("every printing label the About text prints matches the panel for the same card", () => {
+  // Both sentences that name a printing: identity()'s opening and
+  // variantEconomics()'s premium comparison.
+  const CLAIMS = [/covers the (.+?) printing of/g, /\bThe (.+?) print (?:carries|and|is currently)/g];
+
+  for (const f of PRINTING_FIXTURES) {
+    // A priced base sibling, so the premium sentence fires too.
+    const c = card({ ...f.input, printings: [{ label: "base", priceCents: 36, isBase: true }] });
+    const prose = text(c);
+    const expected = norm(panelValue(c));
+
+    let found = 0;
+    for (const re of CLAIMS) {
+      for (const m of prose.matchAll(re)) {
+        found++;
+        const claimed = norm(m[1]);
+        // The one sanctioned divergence: a Showcase-rarity card at a base
+        // collector number has no distinct printing, so the premium sentence
+        // names the rarity rather than claiming "the base print". It must never
+        // do that when a real printing exists.
+        const allowed =
+          claimed === expected ||
+          (expected === "base" && c.rarity === "Showcase" && claimed === "showcase");
+        assert.ok(
+          allowed,
+          `${f.name}: prose says "${m[1]}" but the panel says "${panelValue(c)}" — ${m[0]}`,
+        );
+      }
+    }
+    // A card with a real printing must actually make the claim, or this test
+    // would pass by finding nothing to check.
+    if (f.panel !== "Base") {
+      assert.ok(found > 0, `${f.name}: expected the About text to name its printing at least once`);
+    }
+  }
+});
+
+test("a card with no distinct printing never claims to cover one", () => {
+  for (const rarity of ["Epic", "Showcase", "Rare"]) {
+    const prose = text(card({ rarity, printings: [{ label: "base", priceCents: 36, isBase: true }] }));
+    assert.doesNotMatch(prose, /covers the base printing/i, `${rarity}: "covers the base printing" is nonsense`);
+    // …and it must not describe itself as "the same card as the base version
+    // but a distinct product" when it IS the base version.
+    assert.doesNotMatch(prose, /covers the .*printing of .*same card as the base version/i, rarity);
+  }
+});
+
+test("THE REGRESSION: an alternate-art Showcase card never says 'Showcase printing'", () => {
+  for (const shape of [
+    { variant: "a", rarity: "Showcase", name: "Vi, Destructive", collectorNumber: "036a/298" },
+    { variant: "a", rarity: "Showcase", name: "Elder Dragon", collectorNumber: "118a/219" },
+  ]) {
+    const prose = text(card({ ...shape, printings: [{ label: "base", priceCents: 36, isBase: true }] }));
+    assert.doesNotMatch(prose, /Showcase printing/, shape.name);
+    assert.doesNotMatch(prose, /Showcase print carries/, shape.name);
+    assert.match(prose, /the alternate-art printing of/, shape.name);
+    assert.match(prose, /The alternate-art print carries/, shape.name);
+  }
+});
+
+test("editionLabel prefers the printing and only falls back to the rarity", () => {
+  assert.equal(editionLabel({ variant: "a", rarity: "Showcase" }), "alternate-art");
+  assert.equal(editionLabel({ isSignature: true, rarity: "Showcase" }), "Signature");
+  assert.equal(editionLabel({ isPromo: true, rarity: "Showcase" }), "promo");
+  // No distinct printing → the rarity is the only distinguishing fact.
+  assert.equal(editionLabel({ rarity: "Showcase" }), "Showcase");
+  // Genuinely the plain version → nothing to compare, so no label at all.
+  assert.equal(editionLabel({ rarity: "Epic" }), null);
+  assert.equal(editionLabel({}), null);
+});
+
+test("the prose and display casings describe the same set of printings", () => {
+  const kinds = Object.keys(PRINTING_PROSE) as (keyof typeof PRINTING_PROSE)[];
+  assert.deepEqual(kinds.sort(), (Object.keys(PRINTING_DISPLAY) as typeof kinds).sort());
+  for (const k of kinds) {
+    assert.equal(
+      norm(PRINTING_PROSE[k]),
+      norm(PRINTING_DISPLAY[k]),
+      `"${k}" says "${PRINTING_PROSE[k]}" in prose but "${PRINTING_DISPLAY[k]}" in the panel — they must differ only in casing/hyphenation`,
+    );
+  }
 });

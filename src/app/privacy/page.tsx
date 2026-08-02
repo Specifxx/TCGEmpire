@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import Link from "next/link";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
+import { staticPageDateLabel } from "@/lib/static-page-dates";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
@@ -9,8 +10,6 @@ export const metadata: Metadata = {
   alternates: { canonical: "/privacy" },
 };
 
-// Plain "last updated" date for the policy. Bump when the policy changes.
-const UPDATED = "1 August 2026";
 
 export default function PrivacyPage() {
   return (
@@ -19,7 +18,7 @@ export default function PrivacyPage() {
           both — the crawl check asserts it. */}
       <Breadcrumbs trail={[{ name: "Privacy policy", href: "/privacy" }]} />
       <h1 className="text-3xl font-extrabold leading-tight text-white">Privacy Policy</h1>
-      <p className="mt-2 text-sm text-slate-500">Last updated: {UPDATED}</p>
+      <p className="mt-2 text-sm text-slate-500">Last updated: {staticPageDateLabel("/privacy")}</p>
 
       <div className="mt-6 space-y-6 border-t border-ink-800 pt-6 text-sm leading-relaxed text-slate-300">
         <p>

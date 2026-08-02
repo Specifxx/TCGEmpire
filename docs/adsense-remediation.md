@@ -1226,6 +1226,122 @@ for those visitors, so everyone else read a policy describing a control they cou
 
 ---
 
+# PART FOUR — SECOND POST-DEPLOY PASS
+
+## Phase 21 — The printing label was reading the rarity (regression from Phase 19)
+
+**Reported:** `/card/vi-destructive-ogn-036a-298` and `/card/elder-dragon-unl-118a-219` said
+*"This page covers the **Showcase** printing"* and *"The **Showcase** print carries a 252.9×
+premium"*, while the variants panel on the same page said *"Printing: Alternate art"* and the
+badge said *"ALT A"*. Signature cards read correctly.
+
+**Confirmed, and the reported diagnosis was exactly right.** Phase 19's `printingLabel()`
+tested `rarity === "Showcase"` **above** `variant`, so on a card that is both, the rarity won.
+Signature only escaped because `isSignature` happened to be tested first.
+
+Printing and rarity are independent fields, and the catalogue proves it: **84 cards are
+Showcase rarity *and* carry a variant code; 97 are Showcase rarity with no variant at all.**
+
+**What changed**
+
+- `printingKind()` is the one decision, and **`rarity` is not a parameter of it** — the type
+  now rejects passing one, so the mistake cannot be repeated silently. Two casings of that one
+  answer: `PRINTING_PROSE` for running prose, `PRINTING_DISPLAY` for the panel's data cell.
+- The card page's "Printing" cell was an independent ladder of ternaries. It now renders
+  `PRINTING_DISPLAY[printingKind(card)]`, so the prose and the panel are the same expression.
+- `editionLabel()` covers the premium / "is it worth it?" copy, which compares this card
+  against a base sibling. It **prefers the printing** and falls back to the rarity only when
+  there is no distinct printing — the 97 Showcase cards at base collector numbers, where "the
+  base print carries a premium over the base printing" would be nonsense. It returns `null`
+  when the card genuinely is the plain version, so it doubles as the "is there anything to
+  compare?" test; one decision instead of a condition and a label that could disagree.
+- `identity()`'s opening is now gated on the printing (`printingKind(c) !== "base"`) rather
+  than `variant || rarity === "Showcase"`, so a Showcase card at a base number no longer
+  claims to "cover a printing" — it falls through to the ordinary opening, which names its
+  rarity where a rarity belongs.
+
+**Tests** — 12 fixtures covering base, `a`, `b`, Signature, promo, overnumbered and Crystal
+Rose, each **paired with Showcase rarity** so a rarity can never quietly win again. Every
+printing label the About text emits is extracted by regex and asserted equal to the panel's
+value for the same card. Verified by reintroducing the bug: 3 tests fail.
+
+## Phase 22 — Policy "last updated" dates
+
+**Reported:** /privacy still said 1 August 2026 after the Meta Pixel disclosure landed.
+
+**Confirmed, and /terms was worse.** Three sources of truth existed and all three disagreed:
+
+| Page | Visible line | `static-page-dates.ts` | Last commit |
+|---|---|---|---|
+| /privacy | 1 August 2026 | 2026-08-01 | **2026-08-02** |
+| /terms | **12 June 2026** | 2026-08-01 | **2026-08-01** |
+| /marketplace/terms | 18 July 2026 | 2026-07-26 | 2026-07-28 |
+| /editorial-policy | 1 August 2026 | 2026-08-01 | 2026-08-01 ✓ |
+
+/terms gained a whole moderation section (+195 lines, "User content" → "User content &
+moderation") while still telling readers it had not changed since 12 June — seven weeks stale
+on a page whose own "Changes to this policy" clause promises otherwise.
+
+- One entry per route in `lib/static-page-dates.ts` now feeds **both** the visible line
+  (`staticPageDateLabel()`) and the sitemap `<lastmod>`. The per-page `const UPDATED` strings
+  are gone.
+- Guard check **1d** fails the build if a policy page hardcodes its own date, or if git says
+  the file changed after the date it claims. Safe on a shallow clone: HEAD's own commit is
+  ignored there, because a `--depth=1` graft makes every file look like it changed today.
+- **Not derived from file mtime**, which was the other suggestion: a fresh `git clone` — every
+  Vercel and CI build — stamps every file with the checkout time, so mtime would report
+  "updated today" for every policy on every deploy. That is the fabricated-`lastmod` behaviour
+  `static-page-dates.ts` exists to prevent, and on a legal page it is also a false claim.
+
+## Phase 23 — Tap targets, at the design-system level
+
+The codebase already declared its tap targets — `.btn`, `.input`, `.tap-icon` and direct
+`min-h-11` usages all set the 44px Apple-HIG floor. Two gaps: plain **text links** had no
+primitive at all (a 12px footer link is a 15px hit area), and 44px clears Google's
+mobile-usability report but not Lighthouse, which fails anything under 48.
+
+- **`.tap-link` / `.tap-link-block`** — the missing primitive, applied to the footer site-map
+  columns, the footer bottom row, the "Privacy settings" control and the brand mark.
+- **The existing declaration is the hook.** Rather than hunt 537 controls one by one,
+  everything the site had already called a tap target (`.btn`, `.input`, `.min-h-11`,
+  `.tap-icon`) gets 48px when the pointer is coarse.
+- **Every size rule is behind `(pointer: coarse)`**, so desktop is a guaranteed no-op rather
+  than something to eyeball. A first attempt applied padding at all widths on the theory that
+  it matched the `space-y-2` it replaced — it did for the mobile list, and added 4px per row
+  to the desktop grid, which used `space-y-1`. Screenshots caught it.
+- **Real box height, not a pseudo-element overlay.** An `::after` does not change what a
+  browser, Lighthouse or the 375px audit measures, and overlays on a tight list would silently
+  overlap each other — worse than a small target.
+- Type size is untouched throughout: the hit area grows, the footer's density does not.
+- Individually: mega-menu rows were 43px (one pixel short, 26 per homepage) → `min-h-11`; the
+  `/market` constituents table was 200 × 40px rows → `min-h-11`; the 36×36 brand mark and
+  Discord icon → the shared `.tap-icon`.
+
+Measured at 375×667 with `hasTouch`, across the same 11 pages:
+
+| | under 44px | under 48px |
+|---|---|---|
+| before | 660 / 1417 (47%) | 1231 / 1417 (87%) |
+| after | **90 / 1417 (6%)** | **105 / 1417 (7%)** |
+
+Desktop footer verified pixel-identical (2560×1096 before and after); measured at 1280px the
+links are 16px tall on a 20px pitch, unchanged.
+
+## Phase 24 — The Meta Pixel 503s
+
+**Investigated; the diagnosis does not hold.** There is no retry loop. The snippet is Meta's
+standard one: `if(f.fbq)return` makes it idempotent, it inserts exactly one `<script>`, and
+`MetaPixel` is mounted once from the root layout behind a `useState` that flips false→true
+once. Nine requests to `connect.facebook.net` come from outside this code.
+
+One real problem was found underneath it, though: when the loader fails, the stub `fbq` still
+exists, so every client-side navigation pushes another `PageView` onto `n.queue` — an array
+nothing will ever drain. `t.onerror` now records the failure once, clears the queue, and the
+pathname effect stops calling `fbq`, so a blocked pixel costs one failed request and then
+nothing at all.
+
+---
+
 # ⚠️ THINGS I JUDGED RISKY AND DELIBERATELY LEFT ALONE
 
 1. **`ca-pub-6262011577596407` — not investigated.** As instructed. It is the first manual

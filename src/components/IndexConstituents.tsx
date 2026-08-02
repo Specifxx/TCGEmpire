@@ -117,7 +117,7 @@ export function IndexConstituents({ constituents, currency }: { constituents: In
                     {rank <= 3 ? <span className="chip bg-gold/20 text-gold">{rank}</span> : rank}
                   </td>
                   <td className="px-2 py-2">
-                    <Link href={cardHref(c)} className="flex items-center gap-2.5">
+                    <Link href={cardHref(c)} className="flex min-h-11 items-center gap-2.5">
                       {c.imageThumbUrl && (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={c.imageThumbUrl} alt="" aria-hidden="true" width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />

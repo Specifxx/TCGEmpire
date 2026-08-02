@@ -23,10 +23,10 @@ export function FooterNav() {
                 <path d="m6 9 6 6 6-6" />
               </svg>
             </summary>
-            <ul className="mt-3 space-y-2">
+            <ul className="tap-list mt-3 space-y-2">
               {group.links.map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} className="text-xs text-slate-400 hover:text-brand-400">
+                  <Link href={l.href} className="tap-link text-xs text-slate-400 hover:text-brand-400">
                     {l.label}
                   </Link>
                 </li>
@@ -40,10 +40,10 @@ export function FooterNav() {
         {FOOTER_GROUPS.map((group) => (
           <div key={group.title}>
             <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">{group.title}</div>
-            <ul className="space-y-1">
+            <ul className="tap-list space-y-1">
               {group.links.map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} className="text-xs text-slate-400 hover:text-brand-400">
+                  <Link href={l.href} className="tap-link text-xs text-slate-400 hover:text-brand-400">
                     {l.label}
                   </Link>
                 </li>

@@ -35,7 +35,14 @@ import { KeywordText } from "@/components/KeywordTooltip";
 import { championForCardName, championCardWhere } from "@/lib/champions";
 import { getCardPriceState } from "@/lib/card-price-state";
 import { getCanonicalTwin } from "@/lib/card-duplicates";
-import { buildCardNarrative, printingLabel, tidy, type NarrativeMarket } from "@/lib/content/card-narrative";
+import {
+  buildCardNarrative,
+  editionLabel,
+  printingKind,
+  tidy,
+  PRINTING_DISPLAY,
+  type NarrativeMarket,
+} from "@/lib/content/card-narrative";
 import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
 import { guidesForCard } from "@/lib/content/related-guides";
 
@@ -449,6 +456,17 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   const basePrinting = printings.find(
     (p) => p.variant == null && !p.isPromo && p.rarity !== "Showcase" && !isOvernumbered(p.collectorNumber) && !isSignature(p.collectorNumber)
   );
+  // THE printing this page is, resolved once and shared by the "Printing" cell,
+  // the About narrative and the FAQ so all three name it identically.
+  const thisPrinting = {
+    isSignature: thisIsSignature,
+    isCrystalRose: thisIsCrystalRose,
+    isOvernumbered: thisIsOvernumbered,
+    isPromo: card.isPromo,
+    variant: card.variant,
+  };
+  const thisPrintingKind = printingKind(thisPrinting);
+  const thisEdition = editionLabel({ ...thisPrinting, rarity: card.rarity });
   const basePriceCents = basePrinting ? (basePrinting[priceField(DEFAULT_COUNTRY)] as number | null) : null;
 
   // Similar cards — more from the same set, same domain first. This is the single
@@ -628,17 +646,13 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     deckNames: allRelatedDecks.slice(0, 2).map((d) => d.name),
     place: baselinePlace,
     currency: baseline.currency,
-    isSpecialPrinting:
-      thisIsSignature || thisIsOvernumbered || thisIsCrystalRose || card.variant != null || card.rarity === "Showcase",
-    // Same helper the About narrative uses, so the two can't disagree.
-    specialPrintingLabel: printingLabel({
-      isSignature: thisIsSignature,
-      isCrystalRose: thisIsCrystalRose,
-      isOvernumbered: thisIsOvernumbered,
-      isPromo: card.isPromo,
-      rarity: card.rarity,
-      variant: card.variant,
-    }),
+    // editionLabel() is null exactly when this is the plain version, so it
+    // answers "is this a special printing?" and "what do we call it?" with one
+    // decision. Same helper the About narrative uses, so the two can't disagree
+    // — and it prefers the PRINTING over the rarity, which is what previously
+    // made an alternate-art card call itself "the Showcase printing".
+    isSpecialPrinting: thisEdition != null,
+    specialPrintingLabel: thisEdition ?? "",
     basePriceCents,
   });
   const faqLd = {
@@ -856,9 +870,12 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               </div>
               <div>
                 <dt className="text-xs uppercase tracking-wide text-slate-500">Printing</dt>
-                <dd className="text-slate-200">
-                  {thisIsCrystalRose ? "Crystal Rose alt-art" : thisIsSignature ? "Signature" : thisIsOvernumbered ? "Overnumbered" : card.isPromo ? "Promo" : card.variant ? "Alternate art" : "Base"}
-                </dd>
+                {/* Same decision as the About prose above — see printingKind().
+                    This cell used to be an independent ladder of ternaries, and
+                    when the generator's ladder drifted (it consulted rarity),
+                    the two disagreed in public: "Printing: Alternate art" here,
+                    "the Showcase printing" three paragraphs up. */}
+                <dd className="text-slate-200">{PRINTING_DISPLAY[thisPrintingKind]}</dd>
               </div>
               <div>
                 <dt className="text-xs uppercase tracking-wide text-slate-500">Set</dt>

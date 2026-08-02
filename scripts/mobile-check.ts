@@ -34,6 +34,7 @@ const PATHS = (
   .filter(Boolean);
 
 const VIEWPORT = { width: 375, height: 667 };
+const VERBOSE = args.includes("--verbose");
 const MIN_TAP = 44;
 
 // Interactive elements only — a 20px-tall <span> is not a tap target.
@@ -108,6 +109,7 @@ async function main() {
   });
 
   let failures = 0;
+  let totalVisible = 0, totalUnder44 = 0, totalUnder48 = 0;
   console.log(`\nMobile audit at ${VIEWPORT.width}×${VIEWPORT.height} — ${BASE}\n`);
 
   for (const path of PATHS) {
@@ -156,9 +158,33 @@ async function main() {
           overflowing.push(describe(el) + " -> right " + Math.round(r.right) + "px");
         }
 
-        // Tap targets. An inline link inside body copy is exempt: Google's
-        // mobile-usability guidance treats prose links differently from controls.
+        // Tap targets. Two numbers are produced on purpose:
+        //
+        //   small     — reportable failures, after the exemptions below.
+        //   tapUnder* — EVERY visible interactive element, unexempted, which is
+        //               what a reviewer measuring the live DOM sees and the only
+        //               number that makes a before/after comparable.
+        //
+        // The exemptions are defensible (prose links, breadcrumbs, sr-only skip
+        // links) but they hid the footer's 15px link rows for a long time: those
+        // links sit in <li>, and an <a> is display:inline, so both halves of the
+        // prose-link exemption matched a list of pure navigation.
         const small = [];
+        let tapVisible = 0, tapUnder44 = 0, tapUnder48 = 0;
+        const worst = [];
+        for (const el of Array.prototype.slice.call(document.querySelectorAll(TAP_SELECTOR))) {
+          const r0 = el.getBoundingClientRect();
+          if (r0.width === 0 || r0.height === 0) continue;
+          const cs0 = getComputedStyle(el);
+          if (cs0.visibility === "hidden" || cs0.display === "none") continue;
+          if (el.className && String(el.className).indexOf("sr-only") >= 0) continue;
+          tapVisible++;
+          if (r0.height < 43 || r0.width < 43) tapUnder44++;
+          if (r0.height < 47 || r0.width < 47) {
+            tapUnder48++;
+            if (worst.length < 6) worst.push(describe(el) + " -> " + Math.round(r0.width) + "x" + Math.round(r0.height));
+          }
+        }
         for (const el of Array.prototype.slice.call(document.querySelectorAll(TAP_SELECTOR))) {
           const r = el.getBoundingClientRect();
           if (r.width === 0 || r.height === 0) continue;
@@ -197,14 +223,34 @@ async function main() {
           overflowing: overflowing.slice(0, 6),
           small: small.slice(0, 8),
           clipped: clipped.slice(0, 5),
+          tapVisible: tapVisible,
+          tapUnder44: tapUnder44,
+          tapUnder48: tapUnder48,
+          worst: worst,
         };
-      })()`)) as { scrollWidth: number; overflowing: string[]; small: string[]; clipped: string[] };
+      })()`)) as {
+        scrollWidth: number;
+        overflowing: string[];
+        small: string[];
+        clipped: string[];
+        tapVisible: number;
+        tapUnder44: number;
+        tapUnder48: number;
+        worst: string[];
+      };
 
       const hScroll = report.scrollWidth > VIEWPORT.width + 1;
       const bad = hScroll || report.overflowing.length || report.small.length || report.clipped.length;
       if (bad) failures++;
+      totalVisible += report.tapVisible;
+      totalUnder44 += report.tapUnder44;
+      totalUnder48 += report.tapUnder48;
 
-      console.log(`${bad ? "\x1b[31m✗\x1b[0m" : "\x1b[32m✓\x1b[0m"} ${path}`);
+      console.log(
+        `${bad ? "\x1b[31m✗\x1b[0m" : "\x1b[32m✓\x1b[0m"} ${path}` +
+          `   \x1b[90m${report.tapUnder44}/${report.tapVisible} under 44px · ${report.tapUnder48}/${report.tapVisible} under 48px\x1b[0m`,
+      );
+      if (VERBOSE) for (const w of report.worst) console.log(`    \x1b[90msub-48: ${w}\x1b[0m`);
       if (hScroll) console.log(`    horizontal scroll: document is ${report.scrollWidth}px wide`);
       for (const o of report.overflowing) console.log(`    overflows right edge: ${o}`);
       for (const s of report.small) console.log(`    tap target < ${MIN_TAP}px: ${s}`);
@@ -218,7 +264,12 @@ async function main() {
   }
 
   await browser.close();
-  console.log(`\n${failures === 0 ? "All pages clean at 375px." : `${failures} of ${PATHS.length} pages have mobile issues.`}\n`);
+  const pct = (n: number) => (totalVisible ? ((n / totalVisible) * 100).toFixed(0) : "0");
+  console.log(
+    `\nTap targets across ${PATHS.length} pages: ${totalUnder44}/${totalVisible} under 44px (${pct(totalUnder44)}%), ` +
+      `${totalUnder48}/${totalVisible} under 48px (${pct(totalUnder48)}%).`,
+  );
+  console.log(`${failures === 0 ? "All pages clean at 375px." : `${failures} of ${PATHS.length} pages have mobile issues.`}\n`);
 }
 
 void main();

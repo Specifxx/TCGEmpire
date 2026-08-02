@@ -246,43 +246,43 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               FooterNav / nav-groups.ts's FOOTER_GROUPS for the re-bucketing. */}
           <FooterNav />
           <div className="mb-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm">
-            <Link href="/about" className="text-slate-300 hover:text-brand-400">About</Link>
+            <Link href="/about" className="tap-link text-slate-300 hover:text-brand-400">About</Link>
             <span className="text-ink-700">·</span>
-            <Link href="/contact" className="text-slate-300 hover:text-brand-400">Contact &amp; feedback</Link>
+            <Link href="/contact" className="tap-link text-slate-300 hover:text-brand-400">Contact &amp; feedback</Link>
             <span className="text-ink-700">·</span>
-            <Link href="/privacy" className="text-slate-300 hover:text-brand-400">Privacy policy</Link>
+            <Link href="/privacy" className="tap-link text-slate-300 hover:text-brand-400">Privacy policy</Link>
             <span className="text-ink-700">·</span>
-            <Link href="/terms" className="text-slate-300 hover:text-brand-400">Terms</Link>
+            <Link href="/terms" className="tap-link text-slate-300 hover:text-brand-400">Terms</Link>
             <span className="text-ink-700">·</span>
             {/* Returns sits OUTSIDE the MARKETPLACE_NAV_VISIBLE gate on purpose:
                 Google Merchant Center and Shopping ads need a conventional return
                 policy reachable from every page regardless of whether marketplace
                 navigation is currently surfaced. */}
-            <Link href="/returns" className="text-slate-300 hover:text-brand-400">Returns &amp; shipping</Link>
+            <Link href="/returns" className="tap-link text-slate-300 hover:text-brand-400">Returns &amp; shipping</Link>
             <span className="text-ink-700">·</span>
             {MARKETPLACE_NAV_VISIBLE && (
               <>
-                <Link href="/marketplace/terms" className="text-slate-300 hover:text-brand-400">Marketplace terms</Link>
+                <Link href="/marketplace/terms" className="tap-link text-slate-300 hover:text-brand-400">Marketplace terms</Link>
                 <span className="text-ink-700">·</span>
-                <Link href="/marketplace/buyer-protection" className="text-slate-300 hover:text-brand-400">Buyer protection</Link>
+                <Link href="/marketplace/buyer-protection" className="tap-link text-slate-300 hover:text-brand-400">Buyer protection</Link>
                 <span className="text-ink-700">·</span>
-                <Link href="/marketplace/shipping" className="text-slate-300 hover:text-brand-400">Shipping &amp; tracking</Link>
+                <Link href="/marketplace/shipping" className="tap-link text-slate-300 hover:text-brand-400">Shipping &amp; tracking</Link>
                 <span className="text-ink-700">·</span>
-                <Link href="/marketplace/faq" className="text-slate-300 hover:text-brand-400">Marketplace FAQ</Link>
+                <Link href="/marketplace/faq" className="tap-link text-slate-300 hover:text-brand-400">Marketplace FAQ</Link>
                 <span className="text-ink-700">·</span>
               </>
             )}
-            <Link href="/editorial-policy" className="text-slate-300 hover:text-brand-400">Editorial policy</Link>
+            <Link href="/editorial-policy" className="tap-link text-slate-300 hover:text-brand-400">Editorial policy</Link>
             <span className="text-ink-700">·</span>
-            <Link href="/authors" className="text-slate-300 hover:text-brand-400">Who writes this</Link>
+            <Link href="/authors" className="tap-link text-slate-300 hover:text-brand-400">Who writes this</Link>
             <span className="text-ink-700">·</span>
-            <Link href="/widgets" className="text-slate-300 hover:text-brand-400">Price widget</Link>
+            <Link href="/widgets" className="tap-link text-slate-300 hover:text-brand-400">Price widget</Link>
             <span className="text-ink-700">·</span>
             {/* Re-opens Google's consent message (EEA/UK/CH only — renders
                 nothing where no message applies). Required for a published
                 GDPR message: consent has to be revocable. */}
             <PrivacySettingsLink />
-            <a href={`mailto:${CONTACT_EMAIL}`} className="text-gold hover:underline">{CONTACT_EMAIL}</a>
+            <a href={`mailto:${CONTACT_EMAIL}`} className="tap-link text-gold hover:underline">{CONTACT_EMAIL}</a>
           </div>
           {/* Cross-promotion: our sister site for the Pokémon TCG. */}
           <p className="mb-2">

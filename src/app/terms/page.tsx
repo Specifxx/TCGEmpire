@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import Link from "next/link";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
+import { staticPageDateLabel } from "@/lib/static-page-dates";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
@@ -9,7 +10,6 @@ export const metadata: Metadata = {
   alternates: { canonical: "/terms" },
 };
 
-const UPDATED = "12 June 2026";
 
 export default function TermsPage() {
   return (
@@ -18,7 +18,7 @@ export default function TermsPage() {
           both — the crawl check asserts it. */}
       <Breadcrumbs trail={[{ name: "Terms", href: "/terms" }]} />
       <h1 className="text-3xl font-extrabold leading-tight text-white">Terms of Service</h1>
-      <p className="mt-2 text-sm text-slate-500">Last updated: {UPDATED}</p>
+      <p className="mt-2 text-sm text-slate-500">Last updated: {staticPageDateLabel("/terms")}</p>
 
       <div className="mt-6 space-y-6 border-t border-ink-800 pt-6 text-sm leading-relaxed text-slate-300">
         <p>

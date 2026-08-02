@@ -46,7 +46,10 @@ export function MetaPixel() {
       firstLoad.current = false; // the inline snippet already tracked this first view
       return;
     }
-    (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq?.("track", "PageView");
+    // Nothing to send if the loader never arrived — see the note on the snippet.
+    const w = window as unknown as { fbq?: (...args: unknown[]) => void; __rcFbqFailed?: boolean };
+    if (w.__rcFbqFailed) return;
+    w.fbq?.("track", "PageView");
   }, [pathname, enabled]);
 
   if (!META_PIXEL_ID) return null;
@@ -57,12 +60,27 @@ export function MetaPixel() {
           id="meta-pixel"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
+            // Meta's standard snippet, plus an onerror handler.
+            //
+            // The snippet itself never retries — `if(f.fbq)return` makes it
+            // idempotent and it inserts exactly one <script> — so a run of
+            // repeated requests to connect.facebook.net comes from outside this
+            // code (a blocker, a proxy, or Meta's own loader), not from a loop
+            // here. What DOES go wrong when the load fails is quieter: the stub
+            // `fbq` still exists, so every client-side navigation pushes another
+            // PageView onto `n.queue`, an array nothing will ever drain. On a
+            // long SPA session that grows without bound for no benefit.
+            //
+            // onerror records the failure once and the pathname effect above
+            // stops calling fbq, so a blocked pixel costs one failed request and
+            // then nothing at all.
             __html: `!function(f,b,e,v,n,t,s)
 {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
 n.callMethod.apply(n,arguments):n.queue.push(arguments)};
 if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
 n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
+t.src=v;t.onerror=function(){f.__rcFbqFailed=true;n.queue.length=0};
+s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window,document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
 fbq('init','${META_PIXEL_ID}');fbq('track','PageView');`,

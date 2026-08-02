@@ -170,6 +170,89 @@ h1 {
   .tap-icon {
     @apply grid h-11 w-11 place-items-center sm:h-9 sm:w-9;
   }
+  /* ── Navigation text links ────────────────────────────────────────────────
+     The gap .btn / .input / .tap-icon left behind: a plain text link. A 12px
+     link in a footer column is a 15px hit area, and 47 of the footer's 48 links
+     measured exactly that. Google asks for 48×48 with 8px between targets;
+     Lighthouse flags anything under 48.
+
+     EVERY size rule here is behind `(pointer: coarse)`, and that is the design:
+     a mouse does not need a 48px target, and scoping it to touch makes the
+     desktop footer a guaranteed pixel-for-pixel no-op rather than something to
+     eyeball. (A first attempt applied padding at all widths on the theory that
+     it matched the `space-y-2` it replaced. It did for the mobile list — and
+     added 4px per row to the desktop grid, which used `space-y-1`. Screenshots
+     caught it; the rule is now simply not present on a fine pointer.)
+
+     Real box height, not a pseudo-element overlay: an ::after does not change
+     what a browser — or Lighthouse, or the 375px audit — measures, and overlays
+     on a tight list would silently overlap each other, which is worse than a
+     small target.
+
+     Type size is deliberately untouched: the whole point is to expand the hit
+     area, not to make the footer shout. */
+  .tap-link {
+    @apply inline-flex items-center;
+  }
+  /* Same floor for a control that is a text link in a chrome row (country
+     switcher, "Privacy settings") rather than a .btn. */
+  .tap-link-block {
+    @apply tap-link w-full;
+  }
+}
+
+/* ── The 48px floor, on touch only ──────────────────────────────────────────
+   The codebase already declared its tap targets: .btn, .input, .tap-icon and a
+   scattering of direct `min-h-11` usages all set the 44px Apple-HIG floor. That
+   clears Google's mobile-usability report but not Lighthouse, which fails
+   anything under 48 — and 537 of the 606 controls still flagged after the link
+   work were sitting at exactly 44.
+
+   So rather than hunt them one by one, the existing declaration IS the hook:
+   anything the site has already called a tap target gets 48px when the pointer
+   is coarse. A phone gains 4px of hit area per control; a mouse sees no change
+   at all, so desktop density is untouched.
+
+   In `utilities` on purpose — Tailwind's own `.min-h-11` lives in that layer, so
+   a rule in `components` would lose to it regardless of specificity. */
+@layer utilities {
+  @media (pointer: coarse) {
+    .tap-link,
+    .tap-link-block,
+    .btn,
+    .input,
+    .min-h-11 {
+      min-height: 48px;
+    }
+    /* Short labels ("Sets", "Terms") were clearing 48px tall but measuring
+       39–41px wide, which fails the same audit on the other axis.
+       Deliberately NOT centred: the text stays left-aligned and the extra width
+       extends right into empty column space, so a short link in a left-aligned
+       footer column grows its hit area without shifting off the column's edge.
+       For any link already wider than 48px the box hugs its text — a no-op. */
+    .tap-link,
+    .tap-link-block {
+      min-width: 48px;
+    }
+    /* A list of 48px rows carries its own rhythm. Leaving the list's `space-y-*`
+       on top of it would stack 48 + 8 and double the column height for nothing,
+       so the gap is dropped exactly where the rows grow — and kept everywhere
+       else, which is why the desktop grid is untouched.
+       `!important` because Tailwind's `.space-y-2 > :not([hidden]) ~
+       :not([hidden])` outranks any sane selector written here. */
+    .tap-list > * + * {
+      margin-top: 0 !important;
+    }
+    /* Square icon controls need the width too, or a 48px-tall 44px-wide button
+       is still a Lighthouse failure — and looks wrong. */
+    .tap-icon {
+      height: 48px;
+      width: 48px;
+    }
+  }
+}
+
+@layer components {
   /* Flat terminal panel: hairline border, square-ish corners, quiet elevation. */
   .card-surface {
     @apply rounded-lg border border-ink-800 bg-ink-900 shadow-card transition-colors duration-150;

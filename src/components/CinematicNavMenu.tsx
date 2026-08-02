@@ -125,7 +125,7 @@ export function CinematicNavMenu() {
                             href={l.href}
                             onClick={close}
                             aria-current={active ? "page" : undefined}
-                            className={`group flex items-center gap-3 rounded-md px-2 py-2 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand-400 ${
+                            className={`group flex min-h-11 items-center gap-3 rounded-md px-2 py-2 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand-400 ${
                               active ? "bg-brand-500 font-semibold text-white" : "text-slate-200 hover:bg-ink-800 hover:text-white"
                             }`}
                           >

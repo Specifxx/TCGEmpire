@@ -74,7 +74,7 @@ export function PrivacySettingsLink({ className }: { className?: string }) {
     return () => window.clearInterval(poll);
   }, []);
 
-  const cls = className ?? "text-slate-300 hover:text-brand-400";
+  const cls = className ?? "tap-link text-slate-300 hover:text-brand-400";
 
   // The trailing separator lives INSIDE the component so the footer's "·" chain
   // stays correct whichever variant renders.

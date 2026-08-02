@@ -12,7 +12,7 @@ import { useMe } from "@/lib/use-me";
 // The bell only renders once signed in — notifications are account-bound.
 export function NavUser() {
   const { user, loaded } = useMe();
-  if (!loaded) return <div aria-hidden className="h-9 w-9" />;
+  if (!loaded) return <div aria-hidden className="h-11 w-11 sm:h-9 sm:w-9" />;
   return (
     <>
       {user && <NotificationBell />}
