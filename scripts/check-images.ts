@@ -22,13 +22,11 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { MAX_BYTES } from "./image-budget";
 
 const ROOT = process.cwd();
 const PUBLIC_DIR = path.join(ROOT, "public");
 const SRC_DIR = path.join(ROOT, "src");
-
-/** The audit's threshold. Keep in sync with MAX_BYTES in optimize-images.ts. */
-const MAX_BYTES = 150 * 1024;
 
 const SERVED_IMAGE = /\.(png|jpe?g|webp|avif|gif)$/i;
 

@@ -35,17 +35,13 @@
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { MAX_BYTES, TARGET_BYTES } from "./image-budget";
 
 /** sharp's callable default export (the module namespace itself isn't callable). */
 type SharpFn = typeof import("sharp").default;
 
 const PUBLIC_DIR = path.join(process.cwd(), "public");
 const MANIFEST_PATH = path.join(PUBLIC_DIR, "image-manifest.json");
-
-/** Hard ceiling from the audit. Nothing under public/ may be served above this. */
-export const MAX_BYTES = 150 * 1024;
-/** Aim comfortably below the ceiling so a later re-encode can't tip over it. */
-const TARGET_BYTES = 120 * 1024;
 
 /**
  * Maximum width each family of images is ever rendered at, doubled for 2x

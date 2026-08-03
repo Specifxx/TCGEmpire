@@ -1,0 +1,62 @@
+name: CI
+
+# Nothing gated a pull request before this. The repo has 12 workflows and not one
+# of them has a `pull_request` trigger, so `npm test`, `npm run typecheck` and the
+# guard scripts only ever ran when someone remembered to run them — including the
+# two SEO suites whose own header says they exist "so it can gate a PR". The only
+# automated signal was the Vercel preview build, which reports nothing back as a
+# required check.
+#
+# Deliberately DB-free and network-free: every job below runs against source
+# files only, so this needs no secrets and can't be flaky because Neon is asleep.
+# `next build` is NOT run here — it prerenders pages that query the database, so
+# it genuinely cannot succeed without one. Vercel's preview deploy covers that.
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Prisma's generated client is a compile-time dependency of most of src/,
+      # so typecheck can't run without it. No database connection is needed.
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      # Fails on any image over the 150 KB budget and on any <img>/<Image> or
+      # markdown image without alt text. See scripts/check-images.ts.
+      - name: Image + alt-text guard
+        run: npx tsx scripts/check-images.ts
+
+      # Asserts the AdSense publisher id and the CSP allow-lists haven't drifted.
+      - name: AdSense guard
+        run: npx tsx scripts/adsense-guard.ts
+
+      # Includes the SEO landing-page invariants and the editorial content-link
+      # integrity suite (tests/content-links.test.ts), which fails if an article
+      # links to a route that doesn't exist.
+      - name: Tests
+        run: npm test
