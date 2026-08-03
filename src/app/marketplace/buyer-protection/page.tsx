@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CONTACT_EMAIL, SITE_NAME } from "@/lib/site";
 import { MARKETPLACE_AUTO_RELEASE_DAYS, MARKETPLACE_SHIP_DEADLINE_DAYS } from "@/lib/marketplace";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Buyer Protection",
@@ -12,6 +13,12 @@ export const metadata: Metadata = {
 export default function BuyerProtectionPage() {
   return (
     <article className="mx-auto max-w-3xl">
+      <Breadcrumbs
+        trail={[
+          { name: "Marketplace", href: "/marketplace" },
+          { name: "Buyer protection", href: "/marketplace/buyer-protection" },
+        ]}
+      />
       <h1 className="text-3xl font-extrabold leading-tight text-white">🛡️ Buyer Protection</h1>
       <p className="mt-2 text-sm text-slate-500">How your payment is protected on {SITE_NAME} Marketplace.</p>
 

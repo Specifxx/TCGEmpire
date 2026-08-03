@@ -21,6 +21,8 @@ import { HowItWorks } from "@/components/home/HowItWorks";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { CardsIcon } from "@/components/icons/HomeIcons";
 import { RETAILER_LIST } from "@/lib/retailers";
+import { pageAlternates } from "@/lib/seo";
+import { webPage } from "@/lib/jsonld";
 
 // Homepage titling face — a heavy neutral grotesque matching the official
 // Riftbound wordmark lockup ("RIFTBOUND / LEAGUE OF LEGENDS TRADING CARD GAME"),
@@ -70,7 +72,7 @@ export const metadata: Metadata = {
     "Riftbound Vendetta",
     "Riftbound Vendetta prices",
   ],
-  alternates: { canonical: "/" },
+  alternates: pageAlternates("/"),
 };
 
 // MARKET-NEUTRAL FAQs: this page is cached (real ISR) and Googlebot crawls
@@ -370,6 +372,15 @@ export default async function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify([
+            // The homepage is the site's canonical entity landing page and carried
+            // no node describing itself — only an FAQPage and two ItemLists, all
+            // unlinked to the Organization/WebSite graph in app/layout.tsx.
+            webPage({
+              name: "RiftCompare — Riftbound Card Database & Price Comparison",
+              href: "/",
+              description:
+                "Compare live Riftbound TCG card prices across stores in the US, UK, Australia, New Zealand, Canada and Singapore — total cost including shipping, no hidden fees.",
+            }),
             {
               "@context": "https://schema.org",
               "@type": "FAQPage",

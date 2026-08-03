@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SITE_URL, SITE_NAME } from "@/lib/site";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 // Timely + indexable. Revalidate hourly so the wording stays fresh.
 export const revalidate = 3600;
@@ -75,6 +76,7 @@ const FAQS = [
 export default function VendettaCountdownPage() {
   return (
     <div className="mx-auto max-w-3xl">
+      <Breadcrumbs trail={[{ name: "Vendetta countdown", href: "/vendetta-countdown" }]} />
       {/* FAQPage only. The Event schema that used to sit here described a release
           that has now happened — Google's Event rich results are for upcoming
           events, so a permanently-past one is noise rather than a signal. */}

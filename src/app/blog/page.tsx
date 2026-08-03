@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getBlogPosts } from "@/lib/posts";
 import { FilterableArticles, type ArticleSection } from "@/components/FilterableArticles";
 import { SITE_URL } from "@/lib/site";
+import { pageAlternates } from "@/lib/seo";
 
 // Curated from real traffic (30-day Top Pages), not a live/self-updating ranking —
 // the Vendetta card-gallery post alone outdrew every other blog post combined.
@@ -31,7 +32,7 @@ export const metadata: Metadata = {
   title: "Riftbound Blog — News, Guides & Market Updates",
   description:
     "News, metagame snapshots and buying guides for Riftbound: League of Legends TCG from RiftCompare.",
-  alternates: { canonical: "/blog" },
+  alternates: pageAlternates("/blog"),
 };
 
 export default async function BlogPage() {

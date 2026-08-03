@@ -131,6 +131,11 @@ export default async function GamesPage() {
     description:
       "Free Riftbound mini-games built on live card data — Riftle, Higher or Lower, Price Check, Zoomed In, Pairs, Pack Opening Simulator, Riftbound 2048 and Card Smash.",
     url: `${SITE_URL}/games`,
+      // Edges back to the site-level graph in app/layout.tsx. Without them this
+      // node is an island and the Organization/WebSite entity signals — sameAs,
+      // areaServed, knowsAbout — don't propagate to the page.
+      isPartOf: { "@id": `${SITE_URL}/#website` },
+      publisher: { "@id": `${SITE_URL}/#org` },
     numberOfItems: GAMES.length,
     itemListElement: GAMES.map((g, i) => ({
       "@type": "ListItem",

@@ -46,6 +46,11 @@ export default async function DecksPage() {
     "@type": "ItemList",
     name: "Riftbound Top Meta Decks",
     url: `${SITE_URL}/decks`,
+      // Edges back to the site-level graph in app/layout.tsx. Without them this
+      // node is an island and the Organization/WebSite entity signals — sameAs,
+      // areaServed, knowsAbout — don't propagate to the page.
+      isPartOf: { "@id": `${SITE_URL}/#website` },
+      publisher: { "@id": `${SITE_URL}/#org` },
     itemListElement: META_DECKS.map((d, i) => ({
       "@type": "ListItem",
       position: i + 1,

@@ -129,7 +129,7 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
         : `${SITE_URL}/browse`,
     description:
       "Browse every Riftbound TCG card and compare live prices across stores to find the cheapest place to buy Riftbound singles. Updated daily.",
-    isPartOf: { "@type": "WebSite", name: "RiftCompare", url: SITE_URL },
+    isPartOf: { "@id": `${SITE_URL}/#website` },
     // ItemList of the cards actually rendered on this page (ranked positionally).
     ...(cards.length > 0
       ? {

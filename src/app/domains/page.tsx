@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { DOMAIN_PAGES } from "@/lib/domains";
 import { SITE_URL } from "@/lib/site";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const revalidate = 86400;
 
@@ -26,11 +27,9 @@ export default async function DomainsIndexPage() {
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <nav className="mb-3 flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
-          <Link href="/" className="hover:text-slate-300">Home</Link>
-          <span>/</span>
-          <span className="text-slate-300">Domains</span>
-        </nav>
+        {/* <Breadcrumbs> emits the visible trail AND the BreadcrumbList JSON-LD
+            together — this page showed the trail with no markup behind it. */}
+        <Breadcrumbs trail={[{ name: "Domains", href: "/domains" }]} />
         <h1 className="text-2xl font-extrabold text-white sm:text-3xl">Riftbound domains</h1>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
           Every card in Riftbound: League of Legends TCG belongs to a domain. Pick one to browse all

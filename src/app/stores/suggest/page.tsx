@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SuggestStoreForm } from "@/components/SuggestStoreForm";
 import { RETAILER_LIST } from "@/lib/retailers";
 import { SITE_URL } from "@/lib/site";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Suggest a Store — Get Listed on RiftCompare",
@@ -21,15 +22,13 @@ export default function SuggestStorePage() {
 
   return (
     <div className="mx-auto max-w-xl">
-      <div className="mb-4">
-        <nav className="flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
-          <Link href="/" className="hover:text-slate-300">Home</Link>
-          <span>/</span>
-          <Link href="/stores/tracked" className="hover:text-slate-300">Stores</Link>
-          <span>/</span>
-          <span className="text-slate-300">Suggest a store</span>
-        </nav>
-      </div>
+      <Breadcrumbs
+        className="mb-4"
+        trail={[
+          { name: "Stores", href: "/stores/tracked" },
+          { name: "Suggest a store", href: "/stores/suggest" },
+        ]}
+      />
 
       <div className="card-surface overflow-hidden">
         <div className="border-l-2 border-brand-500 bg-ink-900 px-6 py-7">

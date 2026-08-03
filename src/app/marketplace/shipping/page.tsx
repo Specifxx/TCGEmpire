@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SITE_NAME } from "@/lib/site";
 import { MARKETPLACE_SHIP_DEADLINE_DAYS, MARKETPLACE_LAUNCH_COUNTRIES } from "@/lib/marketplace";
 import { CARRIER_LABEL } from "@/lib/tracking";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Shipping & Tracking",
@@ -13,6 +14,12 @@ export const metadata: Metadata = {
 export default function MarketplaceShippingPage() {
   return (
     <article className="mx-auto max-w-3xl">
+      <Breadcrumbs
+        trail={[
+          { name: "Marketplace", href: "/marketplace" },
+          { name: "Shipping", href: "/marketplace/shipping" },
+        ]}
+      />
       <h1 className="text-3xl font-extrabold leading-tight text-white">📦 Shipping &amp; Tracking</h1>
       <p className="mt-2 text-sm text-slate-500">How postage and tracking work on {SITE_NAME} Marketplace.</p>
 

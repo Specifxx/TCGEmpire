@@ -28,6 +28,34 @@ const DESC: Record<string, string> = {
   "/blog": "News, metagame snapshots and buying guides for Riftbound.",
   "/portfolio": "Track a collection's value over time.",
   "/premium": "RiftCompare Premium — the Deal Finder / value tools and ad-free browsing.",
+  "/sets": "Every Riftbound set with its full card list and live prices.",
+  "/champions": "Browse Riftbound cards by League of Legends champion.",
+  "/cards": "Card facets — browse by type, rarity and printing (Signature, Overnumbered, Alternate Art, Promo).",
+  "/domains": "The Riftbound domains (Fury, Calm, Mind, Body, Chaos, Order, Colorless) and their cards.",
+  "/keywords": "Riftbound keywords and game actions, defined, with every card that uses them.",
+  "/singles": "Riftbound singles — the cheapest live price for individual cards.",
+  "/alerts": "Watchlists and price alerts — be told when a Riftbound card hits your price.",
+  "/tools": "Every RiftCompare tool and calculator in one place.",
+};
+
+// Hubs that are NOT in NAV_GROUPS (the nav is a shortlist, not an index) but are
+// in the sitemap and are exactly what an agent answering "browse Riftbound cards
+// by X" needs. Without this list llms.txt was strictly NARROWER than the
+// crawler-facing sitemap — /movers even had a DESC entry above that the
+// NAV_GROUPS loop could never emit.
+const EXTRA_SECTION: { title: string; links: { href: string; label: string }[] } = {
+  title: "Browse the database",
+  links: [
+    { href: "/sets", label: "Sets" },
+    { href: "/champions", label: "Champions" },
+    { href: "/cards", label: "Card facets" },
+    { href: "/domains", label: "Domains" },
+    { href: "/keywords", label: "Keywords" },
+    { href: "/singles", label: "Singles" },
+    { href: "/movers", label: "Daily price movers" },
+    { href: "/alerts", label: "Price alerts & watchlists" },
+    { href: "/tools", label: "All tools" },
+  ],
 };
 
 const abs = (p: string) => `${SITE_URL}${p}`;
@@ -38,13 +66,14 @@ export function GET() {
   lines.push("");
   lines.push(
     "> Free Riftbound: League of Legends TCG card database and live price comparison across " +
-      "Australia, New Zealand, the United States and the United Kingdom. Home of the RiftCompare " +
+      "the United States, the United Kingdom, Australia, New Zealand, Canada and Singapore — with the " +
+      "transparent total cost including shipping, and no hidden fees. Home of the RiftCompare " +
       "Index (a daily market index for Riftbound singles), price movers, sealed products and buyer tools."
   );
   lines.push("");
   lines.push(
     "For AI agents: clean markdown versions of key pages live under `/llm/` — e.g. " +
-      "`/llm/market`, `/llm/card/<id>` and `/llm/blog/<slug>` (also linked from each page as " +
+      "`/llm/market`, `/llm/card/<id>`, `/llm/blog/<slug>` and `/llm/guides/<slug>` (also linked from each page as " +
       "`rel=alternate type=text/markdown`). Every page carries JSON-LD structured data, and the " +
       "RiftCompare Index is available as JSON (see Data)."
   );
@@ -53,6 +82,8 @@ export function GET() {
   // Machine-readable data endpoints first — the highest-value surface for agents.
   lines.push("## Data (machine-readable)");
   lines.push(`- [RiftCompare Index (JSON)](${abs("/api/v1/index.json")}): the live index level, deltas, key stats and constituents.`);
+  lines.push(`- [Per-card prices (JSON)](${abs("/api/v1/card/<id>/prices.json")}): every tracked store's live price for one card, all six markets.`);
+  lines.push(`- [OpenAPI description](${abs("/api/v1/openapi.json")}): the public data API, described.`);
   lines.push(`- [RSS feed](${abs("/feed.xml")}) · [JSON feed](${abs("/feed.json")}): new articles.`);
   lines.push("");
 
@@ -69,6 +100,12 @@ export function GET() {
     }
     lines.push("");
   }
+
+  lines.push(`## ${EXTRA_SECTION.title}`);
+  for (const l of EXTRA_SECTION.links) {
+    lines.push(`- [${l.label}](${abs(l.href)})${DESC[l.href] ? `: ${DESC[l.href]}` : ""}`);
+  }
+  lines.push("");
 
   lines.push("## Optional");
   for (const g of optional) {

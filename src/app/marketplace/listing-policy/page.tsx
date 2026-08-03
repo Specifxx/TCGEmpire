@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
 import { MARKETPLACE_PUBLIC } from "@/lib/marketplace";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const revalidate = 86400;
 
@@ -32,6 +33,12 @@ export default function ListingPolicyPage() {
 
   return (
     <article className="mx-auto max-w-3xl">
+      <Breadcrumbs
+        trail={[
+          { name: "Marketplace", href: "/marketplace" },
+          { name: "Listing policy", href: "/marketplace/listing-policy" },
+        ]}
+      />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       <nav aria-label="Breadcrumb" className="mb-4 text-sm text-slate-400">

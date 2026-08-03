@@ -67,8 +67,12 @@ export default async function DomainPage({ params }: { params: { slug: string } 
     "@type": "CollectionPage",
     name: `Riftbound ${domain.label} Card Prices & List`,
     url: `${SITE_URL}/domains/${domain.slug}`,
+      // Edges back to the site-level graph in app/layout.tsx. Without them this
+      // node is an island and the Organization/WebSite entity signals — sameAs,
+      // areaServed, knowsAbout — don't propagate to the page.
+      isPartOf: { "@id": `${SITE_URL}/#website` },
+      publisher: { "@id": `${SITE_URL}/#org` },
     description: `Live prices for every Riftbound ${domain.label} card.`,
-    isPartOf: { "@type": "WebSite", name: "RiftCompare", url: SITE_URL },
   };
 
   return (
