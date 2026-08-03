@@ -6,7 +6,7 @@ import { CardTileData } from "./CardTile";
 import { CardImage } from "./CardImage";
 import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge, CrystalRoseBadge } from "./Badge";
 import { PriceWatchButton } from "./PriceWatchButton";
-import { AU_FALLBACK_RETAILERS, isOvernumbered, isSignature, isCrystalRose, SG_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS } from "@/lib/constants";
+import { isFallbackRetailer, isOvernumbered, isSignature, isCrystalRose } from "@/lib/constants";
 import { cardHref } from "@/lib/card-url";
 import { cardDisplayName, cardSearchName } from "@/lib/card-name";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
@@ -155,9 +155,8 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
   // buyable "store" here, even when they're the only source for this market — they
   // aren't real local retailers, so presenting them as one is misleading (mirrors
   // lib/market-rows.ts's computeMarket, which the full card page uses).
-  const FALLBACK_RETAILERS = [...UK_FALLBACK_RETAILERS, ...SG_FALLBACK_RETAILERS, ...AU_FALLBACK_RETAILERS];
   const inStock = countryRows
-    .filter((p) => !FALLBACK_RETAILERS.includes(p.retailer))
+    .filter((p) => !isFallbackRetailer(p.retailer))
     .map((p) => {
       const ship = effectiveShippingCents(p.shippingCents); // number | null (null = unknown)
       return { ...p, ship, delivered: p.priceCents + (ship ?? 0) };

@@ -11,6 +11,7 @@ import { computeMarket, stockElsewhere, type MarketRow } from "@/lib/market-rows
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { outboundRel } from "@/lib/affiliate";
 import { COUNTRIES, COUNTRY_LIST } from "@/lib/country";
+import { isFallbackRetailer } from "@/lib/constants";
 
 // The market-dependent half of the card page. The page itself is ISR-cached with
 // the AU baseline (no cookie reads server-side — that's what makes the route
@@ -139,11 +140,19 @@ export function CardPriceComparison({
   // existing row. It's a reference figure regardless: it never feeds `prices`/
   // `storeCount`/the cheapest metrics (those come only from computeMarket).
   const tcg = useMemo(() => {
-    // Every TCGplayer variant, not a hand-listed subset: this named US/UK/SG and
-    // silently omitted AU (and later CA), so a visitor in those markets could be
-    // shown the USD reference block on top of their own converted row — the same
-    // price twice, in two currencies.
-    const shownNatively = rows.some((r) => r.retailer.startsWith("tcgplayer") && r.country === country);
+    // Suppress this block only where TCGplayer is ALREADY a buyable row in the
+    // table above — in practice the US alone, since every converted variant is a
+    // fallback retailer and computeMarket strips those from the comparison
+    // entirely (see ALL_FALLBACK_RETAILERS).
+    //
+    // The test used to be a hand-listed "tcgplayer | tcgplayer_uk | tcgplayer_sg",
+    // which hid the block from UK/SG visitors even though their converted row is
+    // never rendered — so those markets saw no TCGplayer figure at all. Matching
+    // every tcgplayer* retailer instead would have extended that to AU and CA.
+    // Asking the real question — "is it in the table?" — fixes all four.
+    const shownNatively = rows.some(
+      (r) => r.retailer.startsWith("tcgplayer") && r.country === country && !isFallbackRetailer(r.retailer),
+    );
     if (shownNatively) return null;
     const std = rows.find((r) => r.retailer === "tcgplayer" && !r.isFoil);
     const foil = rows.find((r) => r.retailer === "tcgplayer" && r.isFoil);

@@ -12,7 +12,7 @@ import {
   MARKETPLACE_RETAILER_KEYS,
 } from "@/lib/marketplace";
 import { MARKETPLACE_SHIP_DEADLINE_DAYS } from "@/lib/marketplace-policy";
-import { AU_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS, SG_FALLBACK_RETAILERS } from "@/lib/constants";
+import { ALL_FALLBACK_RETAILERS } from "@/lib/constants";
 import { stripeEnabled } from "@/lib/stripe";
 import { MarketplaceClient, type MktCard } from "@/components/MarketplaceClient";
 
@@ -133,7 +133,7 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
           cardId: { in: cardIds },
           country,
           inStock: true,
-          retailer: { notIn: [...MARKETPLACE_RETAILER_KEYS, ...AU_FALLBACK_RETAILERS, ...UK_FALLBACK_RETAILERS, ...SG_FALLBACK_RETAILERS] },
+          retailer: { notIn: [...MARKETPLACE_RETAILER_KEYS, ...ALL_FALLBACK_RETAILERS] },
         },
         _min: { priceCents: true },
       })
