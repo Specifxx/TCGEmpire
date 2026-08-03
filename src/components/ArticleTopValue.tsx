@@ -122,7 +122,7 @@ export async function ArticleTopValue({
       </div>
       <p className="mt-2 text-xs text-slate-500">
         Prices are the lowest live in-stock listing we can see, including the stores and marketplaces tracked for{" "}
-        {meta.place}. <Link href="/movers" className="text-brand-400 hover:underline">Check the daily movers</Link> before
+        {meta.place}. <Link href="/movers" className="text-brand-400 underline">Check the daily movers</Link> before
         you buy — a card at the top of this table may be mid-spike.
       </p>
     </section>

@@ -339,7 +339,7 @@ export async function ArticleView({ article }: { article: Article }) {
             editorial policy. Anonymous long-form content at scale is one of the
             strongest "machine-generated" signals a reviewer looks for. */}
         {authorSlug ? (
-          <Link href={`/authors/${authorSlug}`} className="text-slate-400 hover:text-brand-400">
+          <Link href={`/authors/${authorSlug}`} className="text-slate-400 underline hover:text-brand-400">
             {article.author}
           </Link>
         ) : (
@@ -355,7 +355,7 @@ export async function ArticleView({ article }: { article: Article }) {
           </>
         )}
         {" "}·{" "}
-        <Link href="/editorial-policy" className="text-slate-400 hover:text-brand-400">
+        <Link href="/editorial-policy" className="text-slate-400 underline hover:text-brand-400">
           How we research this
         </Link>
       </div>

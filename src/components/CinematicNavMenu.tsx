@@ -56,7 +56,17 @@ export function CinematicNavMenu() {
   const close = () => setOpen(false);
 
   return (
-    <div aria-hidden={!open} className={`fixed inset-0 z-[95] ${open ? "" : "pointer-events-none"}`}>
+    // `inert` alongside aria-hidden: the panel stays mounted when closed (so the
+    // open/close transition can animate), which left a close button and a search
+    // input focusable inside an aria-hidden subtree — a screen-reader user could
+    // tab into controls that, as far as the accessibility tree is concerned, do
+    // not exist. `inert` removes them from the tab order and from hit-testing
+    // for exactly as long as aria-hidden is set, so the two can't disagree.
+    <div
+      aria-hidden={!open}
+      {...(open ? {} : { inert: true })}
+      className={`fixed inset-0 z-[95] ${open ? "" : "pointer-events-none"}`}
+    >
       {/* Solid backdrop — no transparency, no blur. */}
       <div
         onClick={close}
@@ -126,7 +136,7 @@ export function CinematicNavMenu() {
                             onClick={close}
                             aria-current={active ? "page" : undefined}
                             className={`group flex min-h-11 items-center gap-3 rounded-md px-2 py-2 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand-400 ${
-                              active ? "bg-brand-500 font-semibold text-white" : "text-slate-200 hover:bg-ink-800 hover:text-white"
+                              active ? "bg-brand-500 font-semibold text-ink-950" : "text-slate-200 hover:bg-ink-800 hover:text-white"
                             }`}
                           >
                             <span className="text-lg" aria-hidden>{l.emoji}</span>

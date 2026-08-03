@@ -64,10 +64,10 @@ const STEPS: { title: string; body: React.ReactNode }[] = [
     title: "Find the exact printing",
     body: (
       <>
-        Search <Link href="/browse" className="text-brand-400 hover:underline">the card database</Link> by collector
+        Search <Link href="/browse" className="text-brand-400 underline">the card database</Link> by collector
         number, not just name — a Signature and a standard print of the same champion are different cards at very
         different prices. The{" "}
-        <Link href="/guides/riftbound-variant-glossary" className="text-brand-400 hover:underline">
+        <Link href="/guides/riftbound-variant-glossary" className="text-brand-400 underline">
           variant glossary
         </Link>{" "}
         explains how to tell them apart.
@@ -83,7 +83,7 @@ const STEPS: { title: string; body: React.ReactNode }[] = [
     body: (
       <>
         Not the number you wish it were. Check{" "}
-        <Link href="/movers" className="text-brand-400 hover:underline">
+        <Link href="/movers" className="text-brand-400 underline">
           the daily movers
         </Link>{" "}
         first — if the card just spiked, the sensible target is where it was last week, not today.
@@ -158,7 +158,7 @@ export default function AlertsPage() {
               <td className="border-b border-ink-800 px-3 py-2 font-semibold text-white">Watchlist</td>
               <td className="border-b border-ink-800 px-3 py-2 text-slate-300">Cards you want to buy</td>
               <td className="border-b border-ink-800 px-3 py-2">
-                <Link href="/browse" className="text-brand-400 hover:underline">Any card tile</Link>
+                <Link href="/browse" className="text-brand-400 underline">Any card tile</Link>
               </td>
             </tr>
             <tr className="odd:bg-ink-900/40">
@@ -170,7 +170,7 @@ export default function AlertsPage() {
               <td className="border-b border-ink-800 px-3 py-2 font-semibold text-white">Portfolio</td>
               <td className="border-b border-ink-800 px-3 py-2 text-slate-300">Valuing the cards you already own</td>
               <td className="border-b border-ink-800 px-3 py-2">
-                <Link href="/portfolio" className="text-brand-400 hover:underline">/portfolio</Link>
+                <Link href="/portfolio" className="text-brand-400 underline">/portfolio</Link>
               </td>
             </tr>
           </tbody>
@@ -197,7 +197,7 @@ export default function AlertsPage() {
           <h2 className="font-bold text-white">Start watching a card</h2>
           <p className="mt-1 text-sm text-slate-400">
             Search the database, tap watch, set your price. Or see{" "}
-            <Link href="/movers" className="text-brand-400 hover:underline">what&apos;s moving today</Link> first.
+            <Link href="/movers" className="text-brand-400 underline">what&apos;s moving today</Link> first.
           </p>
         </div>
         <Link href="/browse" className="btn-primary shrink-0">Browse cards →</Link>

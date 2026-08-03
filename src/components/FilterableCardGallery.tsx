@@ -98,7 +98,7 @@ export function FilterableCardGallery({ cards }: { cards: GalleryCard[] }) {
           }`}
         >
           Filters
-          {activeCount > 0 && <span className="rounded-full bg-brand-500 px-1.5 py-0.5 text-[10px] text-white">{activeCount}</span>}
+          {activeCount > 0 && <span className="rounded-full bg-brand-500 px-1.5 py-0.5 text-[10px] font-bold text-ink-950">{activeCount}</span>}
           <svg className={`h-3 w-3 transition-transform ${open ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m6 9 6 6 6-6" /></svg>
         </button>
         {hasDates && (
