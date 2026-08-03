@@ -17,7 +17,8 @@
 // never collapsed onto its base card.
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
-import { TCGPLAYER_AU_RETAILER, TCGPLAYER_SG_RETAILER, TCGPLAYER_UK_RETAILER } from "@/lib/constants";
+import { TCGPLAYER_AU_RETAILER,
+  TCGPLAYER_CA_RETAILER, TCGPLAYER_SG_RETAILER, TCGPLAYER_UK_RETAILER } from "@/lib/constants";
 import { USD_TO } from "@/lib/fx";
 
 const SEARCH_URL = "https://mp-search-api.tcgplayer.com/v1/search/request?q=&isList=false";
@@ -246,6 +247,9 @@ export const TCG_SG: TcgMarket = { retailer: TCGPLAYER_SG_RETAILER, country: "SG
 // AU reference price (AUD-converted) — a fallback-only source for the main price
 // comparison (see AU_FALLBACK_RETAILERS), but a real buy source for the Deal Finder.
 export const TCG_AU: TcgMarket = { retailer: TCGPLAYER_AU_RETAILER, country: "AU", currency: "AUD", fx: USD_TO.AUD };
+// Canada reference price (CAD-converted). CA was the only tracked market with no
+// TCGplayer row — see the note on CA_FALLBACK_RETAILERS in constants.ts.
+export const TCG_CA: TcgMarket = { retailer: TCGPLAYER_CA_RETAILER, country: "CA", currency: "CAD", fx: USD_TO.CAD };
 
 // Match products to cards and build RetailerPrice rows (no DB writes — caller
 // decides). Exported separately so a dry-run can inspect the match quality.
@@ -343,7 +347,7 @@ export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: Tcg
 export async function refreshTcgplayerPrices(): Promise<number> {
   const products = await fetchTcgplayerProducts();
   let written = 0;
-  for (const mkt of [TCG_US, TCG_UK, TCG_SG, TCG_AU]) {
+  for (const mkt of [TCG_US, TCG_UK, TCG_SG, TCG_AU, TCG_CA]) {
     const { total, matched, rows, unmatchedSamples } = await buildTcgplayerRows(mkt, products);
     console.log(`TCGplayer ${mkt.country}: ${total} products, ${matched} matched, ${rows.length} rows.`);
     if (unmatchedSamples.length && mkt === TCG_US) {

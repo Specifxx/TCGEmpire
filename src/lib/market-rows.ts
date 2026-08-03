@@ -4,7 +4,7 @@
 // only import is the UK fallback list; affiliate/shipping enrichment happens on the
 // server before rows are serialized, so this file never drags server libs into the
 // client bundle.
-import { AU_FALLBACK_RETAILERS, SG_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS } from "./constants";
+import { AU_FALLBACK_RETAILERS, CA_FALLBACK_RETAILERS, SG_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS } from "./constants";
 import { COUNTRIES, type Country } from "./country";
 
 // A serialized retailerPrice row, enriched server-side with everything the client
@@ -64,7 +64,7 @@ const minPrice = (rows: ComputedRow[]): number | null =>
 // price is shown separately, clearly labeled as a reference (see CardMarketSection's
 // TcgMarketPrice block) — just never blended into "N stores in your market".
 export function computeMarket(rows: MarketRow[], country: Country): MarketView {
-  const FALLBACK = [...AU_FALLBACK_RETAILERS, ...UK_FALLBACK_RETAILERS, ...SG_FALLBACK_RETAILERS];
+  const FALLBACK = [...AU_FALLBACK_RETAILERS, ...UK_FALLBACK_RETAILERS, ...SG_FALLBACK_RETAILERS, ...CA_FALLBACK_RETAILERS];
   const source = rows.filter((r) => r.country === country && !FALLBACK.includes(r.retailer));
   const all: ComputedRow[] = source
     .map((p) => ({ ...p, delivered: p.priceCents + (p.ship ?? 0) }))

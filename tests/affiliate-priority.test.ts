@@ -3,6 +3,11 @@ import assert from "node:assert/strict";
 import { orderCardsForEbay } from "../src/lib/price-import";
 import { pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, SETS } from "../src/lib/constants";
 import { affiliateUrl, affiliateSubId, ebayAffiliateUrl, EBAY_CAMPAIGN_ID } from "../src/lib/affiliate";
+import { TCG_US, TCG_UK, TCG_SG, TCG_AU, TCG_CA } from "../src/lib/tcgplayer";
+import { computeMarket } from "../src/lib/market-rows";
+import { COUNTRY_LIST } from "../src/lib/country";
+
+const TCG_MARKETS = [TCG_US, TCG_UK, TCG_SG, TCG_AU, TCG_CA];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // eBay quota priority: a launch set first, and only for its launch window.
@@ -158,4 +163,73 @@ test("ebayAffiliateUrl still works without a source (existing call sites)", () =
   const u = new URL(ebayAffiliateUrl("https://www.ebay.co.uk/itm/9"));
   assert.equal(u.searchParams.get("mkevt"), "1");
   assert.equal(u.searchParams.get("customid"), "rc-uk");
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TCGplayer coverage: every tracked market, none of them counted as a store.
+// ─────────────────────────────────────────────────────────────────────────────
+// refreshTcgplayerPrices() looped US/UK/SG/AU and omitted CA, so Canada — a full
+// market everywhere else (its own eBay rotation, its own lowestPriceCentsCa
+// column, its own FX rate) — had no TCGplayer reference price at all.
+
+test("every tracked market has a TCGplayer reference price", () => {
+  const covered = new Set(TCG_MARKETS.map((m) => m.country));
+  for (const c of COUNTRY_LIST) {
+    // NZ is the one deliberate exclusion — no eBay market and no TCGplayer
+    // reference; it is served by local stores only.
+    if (c.code === "NZ") continue;
+    assert.ok(covered.has(c.code), `${c.code} has no TCGplayer market configured`);
+  }
+});
+
+test("each TCGplayer market converts into that market's own currency", () => {
+  for (const m of TCG_MARKETS) {
+    const info = COUNTRY_LIST.find((c) => c.code === m.country)!;
+    assert.equal(m.currency, info.currency, `${m.country} converts to ${m.currency}, not ${info.currency}`);
+    assert.ok(m.fx > 0, `${m.country} has no FX rate`);
+  }
+});
+
+test("a converted TCGplayer price is NEVER counted as a local store", () => {
+  // It is a reference, not a retailer — counting it would put an unbuyable
+  // "1 store" and a foreign price on a card with no local listings at all.
+  const rows = TCG_MARKETS.filter((m) => m.country !== "US").map((m, i) => ({
+    id: `r${i}`,
+    country: m.country,
+    retailer: m.retailer,
+    retailerName: "TCGplayer",
+    priceCents: 1000,
+    ship: null,
+    condition: "NM",
+    isFoil: false,
+    inStock: true,
+    lastSeen: "2026-08-03T00:00:00.000Z",
+    buyHref: "https://www.tcgplayer.com/product/1",
+    policyUrl: null,
+  }));
+  for (const m of TCG_MARKETS) {
+    if (m.country === "US") continue;
+    const view = computeMarket(rows, m.country as (typeof COUNTRY_LIST)[number]["code"]);
+    assert.equal(view.storeCount, 0, `${m.country}: reference price counted as a store`);
+    assert.equal(view.lowest, null, `${m.country}: reference price set the "from" price`);
+  }
+});
+
+test("the US row IS a real buyable store", () => {
+  const rows = [{
+    id: "us", country: "US", retailer: "tcgplayer", retailerName: "TCGplayer",
+    priceCents: 1000, ship: null, condition: "NM", isFoil: false, inStock: true,
+    lastSeen: "2026-08-03T00:00:00.000Z", buyHref: "https://www.tcgplayer.com/product/1", policyUrl: null,
+  }];
+  const view = computeMarket(rows, "US");
+  assert.equal(view.storeCount, 1);
+  assert.equal(view.lowest, 1000);
+});
+
+test("every market's TCGplayer link is affiliate-tagged", () => {
+  for (const m of TCG_MARKETS) {
+    const out = affiliateUrl("https://www.tcgplayer.com/product/123", m.retailer, "https://riftcompare.com/card/x");
+    assert.ok(out.startsWith("https://partner.tcgplayer.com/"), `${m.country}: not routed through Impact`);
+    assert.match(out, /[?&]sharedid=/, `${m.country}: no sub-id`);
+  }
 });

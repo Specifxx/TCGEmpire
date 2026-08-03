@@ -139,9 +139,11 @@ export function CardPriceComparison({
   // existing row. It's a reference figure regardless: it never feeds `prices`/
   // `storeCount`/the cheapest metrics (those come only from computeMarket).
   const tcg = useMemo(() => {
-    const shownNatively = rows.some(
-      (r) => (r.retailer === "tcgplayer" || r.retailer === "tcgplayer_uk" || r.retailer === "tcgplayer_sg") && r.country === country,
-    );
+    // Every TCGplayer variant, not a hand-listed subset: this named US/UK/SG and
+    // silently omitted AU (and later CA), so a visitor in those markets could be
+    // shown the USD reference block on top of their own converted row — the same
+    // price twice, in two currencies.
+    const shownNatively = rows.some((r) => r.retailer.startsWith("tcgplayer") && r.country === country);
     if (shownNatively) return null;
     const std = rows.find((r) => r.retailer === "tcgplayer" && !r.isFoil);
     const foil = rows.find((r) => r.retailer === "tcgplayer" && r.isFoil);

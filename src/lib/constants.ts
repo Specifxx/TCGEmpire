@@ -37,6 +37,19 @@ export const SG_FALLBACK_RETAILERS: readonly string[] = [TCGPLAYER_SG_RETAILER];
 export const TCGPLAYER_AU_RETAILER = "tcgplayer_au";
 export const AU_FALLBACK_RETAILERS: readonly string[] = [TCGPLAYER_AU_RETAILER];
 
+// Canada, same pattern as UK/SG/AU. It was the ONE tracked market with no
+// TCGplayer row at all: refreshTcgplayerPrices() looped US/UK/SG/AU and simply
+// omitted CA, so a Canadian visitor's card page had no CAD reference price and
+// the Deal Finder could not use TCGplayer as a buy/sell source for Canada — even
+// though CA is a full market everywhere else (its own eBay rotation, its own
+// lowestPriceCentsCa column, its own FX rate).
+//
+// Fallback-only, like the others: a converted USD market price is a REFERENCE,
+// not a Canadian retailer, so it must never be counted as a buyable store or
+// undercut a real CAD listing. See computeMarket()'s FALLBACK filter.
+export const TCGPLAYER_CA_RETAILER = "tcgplayer_ca";
+export const CA_FALLBACK_RETAILERS: readonly string[] = [TCGPLAYER_CA_RETAILER];
+
 export type DomainKey =
   | "Fury"
   | "Calm"
