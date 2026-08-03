@@ -9,6 +9,7 @@ import { DomainExplorer, type DomainInfoProp } from "@/components/learn/DomainEx
 import { DeckAnatomy } from "@/components/learn/DeckAnatomy";
 import { GameFlow } from "@/components/learn/GameFlow";
 import { LegendQuiz, type QuizLegend } from "@/components/learn/LegendQuiz";
+import { cardImageAlt } from "@/lib/image-alt";
 
 export const metadata: Metadata = {
   title: "Learn Riftbound — Interactive New-Player Guide",
@@ -234,7 +235,7 @@ export default async function LearnPage() {
                 {ex?.img ? (
                   <Link href={ex.href} className="shrink-0" title={ex.name}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={ex.img} alt={ex.name} width={100} height={140} className="h-14 w-10 rounded object-cover ring-1 ring-white/10 transition-opacity hover:opacity-80" loading="lazy" decoding="async" />
+                    <img src={ex.img} alt={cardImageAlt(ex)} width={100} height={140} className="h-14 w-10 rounded object-cover ring-1 ring-white/10 transition-opacity hover:opacity-80" loading="lazy" decoding="async" />
                   </Link>
                 ) : (
                   <div className="h-14 w-10 shrink-0 rounded bg-ink-800" />

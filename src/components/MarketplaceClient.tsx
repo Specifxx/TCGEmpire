@@ -12,6 +12,7 @@ import { MARKETPLACE_LAUNCH_COUNTRIES } from "@/lib/marketplace-countries";
 import { useCountry } from "./CountryProvider";
 import { MarketplaceCheckout, type CheckoutItem } from "./MarketplaceCheckout";
 import { MarketplaceReportBug } from "./MarketplaceReportBug";
+import { cardImageAlt } from "@/lib/image-alt";
 
 export interface MktOffer {
   id: string;
@@ -442,7 +443,7 @@ export function MarketplaceClient({
                 >
                   <div className="relative aspect-[5/7] w-full bg-ink-900">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    {c.card.imageThumbUrl ? <img src={c.card.imageThumbUrl} alt="" aria-hidden="true" width={300} height={420} loading="lazy" decoding="async" className="h-full w-full object-cover" /> : null}
+                    {c.card.imageThumbUrl ? <img src={c.card.imageThumbUrl} alt={cardImageAlt(c.card)} width={300} height={420} loading="lazy" decoding="async" className="h-full w-full object-cover" /> : null}
                     {best.isOfficial && (
                       <span className="absolute left-1.5 top-1.5 rounded-full bg-gold px-2 py-0.5 text-[10px] font-extrabold text-ink-950 shadow">
                         ★ Official
@@ -631,7 +632,7 @@ function OffersModal({
       <div className="relative z-10 grid max-h-[88vh] w-full max-w-2xl grid-rows-[auto_1fr] overflow-hidden rounded-lg border border-ink-700 bg-ink-900 shadow-2xl">
         <div className="flex items-center gap-3 border-b border-ink-800 p-4 pr-12">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          {card.card.imageThumbUrl ? <img src={card.card.imageThumbUrl} alt="" aria-hidden="true" className="h-16 w-12 rounded object-cover" /> : <div className="h-16 w-12 rounded bg-ink-800" />}
+          {card.card.imageThumbUrl ? <img src={card.card.imageThumbUrl} alt={cardImageAlt(card.card)} width={48} height={64} className="h-16 w-12 rounded object-cover" /> : <div className="h-16 w-12 rounded bg-ink-800" />}
           <div className="min-w-0">
             <h2 className="truncate text-lg font-bold text-white">{cardDisplayName(card.card.name, card.card)}</h2>
             <p className="text-xs text-slate-500">

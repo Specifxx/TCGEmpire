@@ -1,9 +1,18 @@
 import React from "react";
+import { Picture } from "./Picture";
+import { headingId } from "@/lib/toc";
 
 // Minimal, dependency-free markdown renderer for our own article content.
-// Supports: ## / ### headings, paragraphs, - and 1. lists, --- rules, a block-level
-// image on its own line (![alt](/src.png)), and inline **bold**, [links](url) and
-// `code`. (We author the content, so no sanitising of arbitrary HTML is needed.)
+// Supports: ## / ### headings (with stable anchor ids, so the article TOC and
+// deep links work), paragraphs, - and 1. lists, > blockquotes, GFM pipe tables,
+// --- rules, a block-level image on its own line (![alt](/src.png)), and inline
+// **bold**, [links](url) and `code`. (We author the content, so no sanitising of
+// arbitrary HTML is needed.)
+//
+// TABLES were added for the marketplace-comparison and fee-breakdown articles:
+// answer engines quote a well-formed <table> far more readily than the same facts
+// in prose, and every one of the AI-visibility target queries ("top 10 Riftbound
+// TCG marketplaces", "Riftbound card price comparison") is answered by a table.
 
 function inline(text: string, kp: string): React.ReactNode[] {
   const nodes: React.ReactNode[] = [];
@@ -52,7 +61,17 @@ export function Markdown({ content }: { content: string }) {
   const blocks: React.ReactNode[] = [];
   let i = 0;
   let key = 0;
-  const isBreak = (l: string) => /^(#{2,3}\s|[-*]\s|\d+\.\s|---\s*$|!\[)/.test(l.trim());
+  const isBreak = (l: string) => /^(#{2,3}\s|[-*]\s|\d+\.\s|---\s*$|!\[|\||>\s)/.test(l.trim());
+
+  // Mirrors extractToc()'s duplicate-suffix rule so heading ids and TOC hrefs
+  // agree even when two sections share a title.
+  const headingSeen = new Map<string, number>();
+  const nextHeadingId = (text: string) => {
+    const base = headingId(text);
+    const n = (headingSeen.get(base) ?? 0) + 1;
+    headingSeen.set(base, n);
+    return n === 1 ? base : `${base}-${n}`;
+  };
 
   while (i < lines.length) {
     const trimmed = lines[i].trim();
@@ -66,16 +85,92 @@ export function Markdown({ content }: { content: string }) {
       const [, alt, src] = img;
       blocks.push(
         <figure key={key++} className="my-6">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={src} alt={alt} loading="lazy" decoding="async" className="w-full rounded-xl border border-ink-700" />
+          {/* <Picture> serves the WebP rendition with the original as fallback and
+              stamps the intrinsic width/height from public/image-manifest.json, so
+              an article illustration can't shift the layout as it loads. */}
+          <Picture
+            src={src}
+            alt={alt}
+            sizes="(max-width: 768px) 100vw, 768px"
+            className="h-auto w-full rounded-xl border border-ink-700"
+          />
           {alt && <figcaption className="mt-2 text-center text-xs text-slate-500">{alt}</figcaption>}
         </figure>
       );
       i++;
       continue;
     }
-    if (trimmed.startsWith("### ")) { blocks.push(<h3 key={key} className="mb-2 mt-6 text-base font-bold text-white">{inline(trimmed.slice(4), `h${key++}`)}</h3>); i++; continue; }
-    if (trimmed.startsWith("## ")) { blocks.push(<h2 key={key} className="mb-3 mt-8 text-xl font-extrabold text-white">{inline(trimmed.slice(3), `h${key++}`)}</h2>); i++; continue; }
+    // Headings carry the same anchor id the TOC links to (lib/toc.ts), with the
+    // -2/-3 suffix applied identically so a repeated heading text can't collide.
+    if (trimmed.startsWith("### ")) {
+      const text = trimmed.slice(4);
+      blocks.push(<h3 key={key} id={nextHeadingId(text)} className="mb-2 mt-6 scroll-mt-24 text-base font-bold text-white">{inline(text, `h${key++}`)}</h3>);
+      i++;
+      continue;
+    }
+    if (trimmed.startsWith("## ")) {
+      const text = trimmed.slice(3);
+      blocks.push(<h2 key={key} id={nextHeadingId(text)} className="mb-3 mt-8 scroll-mt-24 text-xl font-extrabold text-white">{inline(text, `h${key++}`)}</h2>);
+      i++;
+      continue;
+    }
+
+    // GFM pipe table: a header row, a |---|---| separator, then body rows.
+    if (trimmed.startsWith("|") && /^\|?[\s:-]*\|[\s|:-]*$/.test((lines[i + 1] ?? "").trim()) && (lines[i + 1] ?? "").includes("-")) {
+      const cells = (row: string) =>
+        row.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((c) => c.trim());
+      const head = cells(lines[i]);
+      i += 2;
+      const rows: string[][] = [];
+      while (i < lines.length && lines[i].trim().startsWith("|")) {
+        rows.push(cells(lines[i]));
+        i++;
+      }
+      blocks.push(
+        // Wide tables scroll inside their own container rather than making the
+        // whole article scroll sideways on a phone.
+        <div key={key} className="my-5 overflow-x-auto rounded-xl border border-ink-700">
+          <table className="w-full min-w-[32rem] border-collapse text-left text-sm">
+            <thead>
+              <tr className="bg-ink-850">
+                {head.map((c, j) => (
+                  <th key={j} scope="col" className="border-b border-ink-700 px-3 py-2 font-semibold text-white">
+                    {inline(c, `th${key}-${j}`)}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r, ri) => (
+                <tr key={ri} className="odd:bg-ink-900/40">
+                  {r.map((c, ci) => (
+                    <td key={ci} className="border-b border-ink-800 px-3 py-2 align-top text-slate-300">
+                      {inline(c, `td${key}-${ri}-${ci}`)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+      key++;
+      continue;
+    }
+
+    if (trimmed.startsWith("> ")) {
+      const quoted: string[] = [];
+      while (i < lines.length && lines[i].trim().startsWith("> ")) {
+        quoted.push(lines[i].trim().slice(2));
+        i++;
+      }
+      blocks.push(
+        <blockquote key={key} className="my-5 border-l-2 border-brand-500 bg-ink-900/60 px-4 py-3 text-slate-300">
+          {inline(quoted.join(" "), `q${key++}`)}
+        </blockquote>
+      );
+      continue;
+    }
 
     if (/^[-*]\s+/.test(trimmed)) {
       const items: string[] = [];

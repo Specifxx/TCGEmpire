@@ -3,6 +3,7 @@
 import { formatMoney } from "@/lib/format";
 import type { SealedGroup } from "@/lib/sealed-import";
 import { useSealedQuickView } from "./SealedQuickView";
+import { sealedImageAlt } from "@/lib/image-alt";
 
 // A single compact sealed-product tile for the /sealed grid — the RiftCompare twin
 // of DexCompare's SealedTile. RiftCompare has no /sealed/<slug> detail page, so the
@@ -26,7 +27,7 @@ export function SealedTile({ group, currency }: { group: SealedGroup; currency: 
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={g.imageUrl}
-            alt={g.name}
+            alt={sealedImageAlt(g.name)}
             loading="lazy"
             decoding="async"
             className="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-[1.04]"

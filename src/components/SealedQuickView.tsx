@@ -7,6 +7,7 @@ import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { useCountry } from "./CountryProvider";
 import { affiliateUrl, ebayAffiliateUrl } from "@/lib/affiliate";
 import { formatMoney } from "@/lib/format";
+import { sealedImageAlt } from "@/lib/image-alt";
 
 // Quick-view popup for sealed products — the sealed twin of QuickView.tsx (cards).
 // Clicking a SealedTile opens this instead of expanding the whole /sealed page, so
@@ -79,7 +80,7 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
             <div className="grid aspect-square w-28 shrink-0 place-items-center overflow-hidden rounded-lg border border-ink-800 bg-ink-950 p-2 sm:w-32">
               {group.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={group.imageUrl} alt={group.name} className="max-h-full max-w-full object-contain" />
+                <img src={group.imageUrl} alt={sealedImageAlt(group.name)} className="max-h-full max-w-full object-contain" />
               ) : (
                 <span className="px-1 text-center text-xs font-bold text-slate-600">{group.productType}</span>
               )}

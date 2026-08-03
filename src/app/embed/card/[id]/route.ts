@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { normalizeCountry, pickPrice, currencyOf, COUNTRIES, type Country } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
+import { cardImageAlt } from "@/lib/image-alt";
 
 // Embeddable price widget. A chrome-free HTML document (no app layout, no React
 // hydration) that creators, store sites and Discord-linked blogs can drop into an
@@ -77,7 +78,7 @@ function renderCard(card: EmbedCard, market: Country): string {
 
   return shell(`
   <a class="rc-card" href="${esc(href)}" target="_blank" rel="noopener">
-    ${img ? `<img class="rc-img" src="${img}" alt="" loading="lazy" />` : `<div class="rc-img rc-noimg">🃏</div>`}
+    ${img ? `<img class="rc-img" src="${img}" alt="${esc(cardImageAlt(card))}" width="56" height="78" loading="lazy" decoding="async" />` : `<div class="rc-img rc-noimg">🃏</div>`}
     <div class="rc-body">
       <div class="rc-name" title="${esc(card.name)}">${esc(card.name)}</div>
       <div class="rc-meta">${esc(card.setCode)} · ${esc(card.collectorNumber)} · ${esc(card.rarity)}</div>

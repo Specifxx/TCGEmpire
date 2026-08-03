@@ -1,6 +1,7 @@
 import { formatMoney } from "@/lib/format";
 import type { Holding } from "@/lib/premium";
 import { CardQuickLink } from "./CardQuickLink";
+import { cardImageAlt } from "@/lib/image-alt";
 
 // Visual showcase of a collection: the actual card art, big, in a responsive grid,
 // with quantity, live value and profit/loss read straight off each card. Dearest
@@ -19,7 +20,7 @@ export function HoldingsGrid({ holdings, currency }: { holdings: Holding[]; curr
             <div className="relative aspect-[5/7]">
               {h.imageThumbUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={h.imageThumbUrl} alt={h.name} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                <img src={h.imageThumbUrl} alt={cardImageAlt(h)} loading="lazy" decoding="async" className="h-full w-full object-cover" />
               ) : (
                 <div className="grid h-full w-full place-items-center bg-ink-850 text-xs text-slate-600">No image</div>
               )}

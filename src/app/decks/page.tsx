@@ -9,6 +9,7 @@ import { formatMoney } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { SITE_URL } from "@/lib/site";
+import { cardImageAlt } from "@/lib/image-alt";
 
 export const revalidate = 86400;
 
@@ -162,7 +163,7 @@ function DeckGrid({ decks, currency }: { decks: Awaited<ReturnType<typeof resolv
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={d.imageUrl}
-                  alt={d.legend}
+                  alt={cardImageAlt({ name: d.legend })}
                   width={640}
                   height={360}
                   className="h-full w-full object-cover object-top"

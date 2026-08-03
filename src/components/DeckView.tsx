@@ -9,6 +9,7 @@ import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { useCountry } from "./CountryProvider";
 import { COUNTRIES } from "@/lib/country";
 import { cardHref } from "@/lib/card-url";
+import { cardImageAlt } from "@/lib/image-alt";
 
 // Tidy display for cards our data labels with a precon suffix (e.g. OGS starter
 // legends imported as "Master, Wuju Bladesman - Starter").
@@ -53,7 +54,7 @@ export function DeckView({ deck, builderHref }: { deck: ResolvedDeck; builderHre
         <div className="num w-8 text-center font-bold text-slate-400">{item.qty}×</div>
         {item.card?.imageThumbUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.card.imageThumbUrl} alt="" aria-hidden="true" className="h-12 w-9 shrink-0 rounded object-cover ring-1 ring-ink-700" />
+          <img src={item.card.imageThumbUrl} alt={cardImageAlt(item.card)} width={36} height={48} className="h-12 w-9 shrink-0 rounded object-cover ring-1 ring-ink-700" />
         ) : (
           <div className="h-12 w-9 shrink-0 rounded bg-ink-800" />
         )}

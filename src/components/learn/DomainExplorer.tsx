@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { cardImageAlt } from "@/lib/image-alt";
 
 // Interactive explorer for the six domains (plus Colorless): tap a domain to see
 // its identity, a real example Legend from the database, and a jump into the
@@ -55,7 +56,7 @@ export function DomainExplorer({ domains }: { domains: DomainInfoProp[] }) {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={d.example.img}
-                alt={d.example.name}
+                alt={cardImageAlt(d.example)}
                 className="h-40 w-[114px] rounded-lg object-cover shadow-xl ring-1 ring-white/10 transition-transform group-hover:scale-105"
                 loading="lazy"
                 decoding="async"
