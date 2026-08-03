@@ -187,12 +187,25 @@ async function sets(): Promise<SitemapEntry[]> {
   // the blog, and it self-upgrades the day singles land. All sets share the same
   // priceDay signal — a comingSoon set with zero cards yet still gets an honest,
   // non-fabricated date rather than none at all.
-  return SETS.map((s) => ({
-    url: `${SITE_URL}/sets/${s.slug}`,
-    changeFrequency: "daily" as const,
-    priority: s.comingSoon ? 0.6 : 0.85,
-    lastModified: day,
-  }));
+  // Each set contributes TWO URLs: the price-first set page and its visual card
+  // gallery (/sets/<slug>/gallery). They target different intents — "vendetta
+  // prices" vs "vendetta card gallery" — so both belong in the index. The gallery
+  // sits just under its set page: it is a genuine landing page for the browse
+  // queries, but the set page is still the commercial destination.
+  return SETS.flatMap((s) => [
+    {
+      url: `${SITE_URL}/sets/${s.slug}`,
+      changeFrequency: "daily" as const,
+      priority: s.comingSoon ? 0.6 : 0.85,
+      lastModified: day,
+    },
+    {
+      url: `${SITE_URL}/sets/${s.slug}/gallery`,
+      changeFrequency: "daily" as const,
+      priority: s.comingSoon ? 0.5 : 0.8,
+      lastModified: day,
+    },
+  ]);
 }
 
 async function domains(): Promise<SitemapEntry[]> {

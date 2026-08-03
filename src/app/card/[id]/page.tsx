@@ -997,7 +997,20 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             <div>
               <h2 className="text-xl font-extrabold text-white">{similarHeading}</h2>
               <p className="mt-0.5 text-xs text-slate-500">
-                Compare prices on similar Riftbound {card.setName} singles.
+                Compare prices on similar Riftbound {card.setName} singles, or{" "}
+                {/* Also the card catalogue's main internal link INTO the gallery:
+                    ~1,000 card pages each pointing at it is the strongest crawl
+                    signal available to a brand-new landing page. */}
+                {setInfo && !setInfo.comingSoon ? (
+                  <Link href={`/sets/${setInfo.slug}/gallery`} className="text-brand-300 underline-offset-2 hover:underline">
+                    browse the full {card.setName} card gallery
+                  </Link>
+                ) : (
+                  <Link href="/browse" className="text-brand-300 underline-offset-2 hover:underline">
+                    browse the card database
+                  </Link>
+                )}
+                .
               </p>
             </div>
             <Link href={setUrl} className="btn-ghost text-xs shrink-0">

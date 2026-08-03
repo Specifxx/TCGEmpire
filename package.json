@@ -13,6 +13,7 @@
     "status:check": "tsx scripts/status-check.ts",
     "adsense:verify": "tsx scripts/adsense-verify.ts",
     "mobile:check": "tsx scripts/mobile-check.ts",
+    "smoke": "tsx scripts/smoke-pages.ts",
     "start": "next start",
     "grant:early": "tsx scripts/grant-early-premium.ts",
     "cards:sync": "tsx scripts/sync-cards.ts",

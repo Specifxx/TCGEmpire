@@ -214,6 +214,19 @@ export default async function SetPage({
             )}
           </p>
 
+          {/* Straight into the visual gallery. This page is the price-first view
+              (paginated, filter-driven); a chunk of arriving traffic actually wants
+              to LOOK at the set — "<set> card gallery" is its own query cluster —
+              so give that intent a first-class exit rather than burying it. */}
+          {totalInSet > 0 && (
+            <p className="mt-3 text-sm">
+              <Link href={`/sets/${set.slug}/gallery`} className="font-semibold text-brand-300 underline-offset-2 hover:underline">
+                Browse the {set.name} card gallery →
+              </Link>
+              <span className="text-slate-500"> every card on one page, with images</span>
+            </p>
+          )}
+
           {/* Count pills. Released sets show cards + priced; an unreleased set with
               revealed cards gets a green NEW pill + the revealed count instead. */}
           {!set.comingSoon ? (
@@ -342,6 +355,7 @@ export default async function SetPage({
               {s.name}
             </Link>
           ))}
+          <Link href={`/sets/${set.slug}/gallery`} className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">{set.name} gallery →</Link>
           <Link href="/browse" className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">All cards →</Link>
           <Link href="/sealed" className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">Sealed products →</Link>
         </div>

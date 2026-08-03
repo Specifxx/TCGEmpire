@@ -103,6 +103,16 @@ export function VendettaBlock({
             </div>
           </>
         )}
+
+        {/* The homepage's link into the visual gallery. "Shop Vendetta" above
+            serves buying intent; this serves the browse intent that arrives on
+            "vendetta card gallery" — and gives that page a homepage-level
+            internal link, which is the strongest one we can hand it. */}
+        <p className="mt-3 text-sm">
+          <Link href="/sets/vendetta/gallery" className="font-semibold text-brand-300 underline-offset-2 hover:underline">
+            See all 166 Vendetta cards in the gallery →
+          </Link>
+        </p>
       </section>
     </Reveal>
   );

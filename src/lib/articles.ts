@@ -1957,7 +1957,7 @@ For a full archetype breakdown, see the **[best Vendetta decks guide](/guides/be
 
 ## Get ready for Empower cards
 
-Empower cards will list with live prices on the **[Vendetta set page](/sets/vendetta)** the moment they release — and RiftCompare shows the cheapest delivered price across every store, so you can build your Empower deck for the least. Vendetta is out now — see **[every card with live prices](/sets/vendetta)**.`,
+Empower cards are live with real prices on the **[Vendetta set page](/sets/vendetta)** — and RiftCompare shows the cheapest delivered price across every store, so you can build your Empower deck for the least. Want to see the whole set at a glance? Browse the **[Vendetta card gallery](/sets/vendetta/gallery)** — all 166 cards on one page with images and prices.`,
   },
   {
     slug: "riftbound-flow-explained",
@@ -1980,6 +1980,14 @@ Empower cards will list with live prices on the **[Vendetta set page](/sets/vend
       { label: "Chaos singles — the recursion domain", query: "Riftbound Chaos" },
       { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
     ],
+    // Same filter the embed below uses, so the CTA and the embed can never show a
+    // different set of cards. Mirrors the Empower guide, whose CTA into live prices
+    // is part of why it converts.
+    browseCta: {
+      href: "/browse?rules=%5BFlow%5D&rulesSet=VEN",
+      label: "Browse every Flow card →",
+      blurb: "Every Vendetta card with the Flow keyword, filterable and sortable, with live prices across every store we track.",
+    },
     embed: {
       title: "Every Flow card in Vendetta",
       note: "Every officially revealed Vendetta card with the Flow keyword — tap a card for its page.",
@@ -2012,11 +2020,18 @@ Here's the actual printed text on a revealed Vendetta card — the **[Flow]** ke
 
 [[closeup:0]]
 
-## How the Flow mechanic works
+## How the Flow mechanic works, step by step
 
-- **Your trash is a second hand.** A card with Flow can be cast straight out of the trash, often for its normal or a modified cost.
-- **Fill the trash on purpose.** The more cards in your trash, the more Flow options you have — so effects that discard, cycle or **[Burn](/guides/riftbound-burn-explained)** your own deck actively *help* a Flow deck.
-- **Know what's waiting.** Flow rewards players who track what's in the trash and sequence replays for maximum value.
+1. **Get the card into your trash.** Flow only works from the trash, so the card has to get there first — by being played and used, discarded, destroyed, or deliberately sent there with **[Burn](/guides/riftbound-burn-explained)**.
+2. **Read the Flow cost.** The **[Flow]** line in the rules box tells you what it costs to replay the card from the trash. Often it is the card's normal cost; some printings modify it.
+3. **Play it straight from the trash.** On a later turn, pay that cost and cast the card out of the trash exactly as you would from hand — no extra permission needed.
+4. **Line up the next one.** A good Flow turn usually sets up the following one, so track what is still sitting in the trash and in what order you want it back.
+
+### Why Flow is strong
+
+- **Your trash is a second hand.** Cards you have already spent are still live resources, so you effectively draw from two places at once.
+- **It punishes removal.** Killing your unit does not really answer it if you can replay it — Flow decks are miserable to grind down.
+- **It rewards knowledge.** Flow favours players who track what is in the trash and sequence replays for maximum value.
 
 ## Building a Flow deck
 
@@ -2038,12 +2053,12 @@ See how Flow fits full decklists in the **[best Vendetta decks guide](/guides/be
 
 **How is Flow different from Empower and Burn?** **Flow** plays cards *from* your trash; **[Burn](/guides/riftbound-burn-explained)** sends cards *to* your trash; **[Empower](/guides/riftbound-empower-explained)** upgrades a card that's already *in play*. Read all three together in **[Vendetta's new mechanics explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**.
 
-Flow cards will show live prices on the **[Vendetta set page](/sets/vendetta)** as they release — compare every store on RiftCompare so you build your Flow deck for the cheapest total. Vendetta is out now — see **[every card with live prices](/sets/vendetta)**.`,
+Flow cards are live with real prices on the **[Vendetta set page](/sets/vendetta)** — compare every store on RiftCompare so you build your Flow deck for the cheapest total. Want to see the whole set at a glance? Browse the **[Vendetta card gallery](/sets/vendetta/gallery)** — all 166 cards on one page with images and prices.`,
   },
   {
     slug: "riftbound-burn-explained",
     category: "guide",
-    title: "Riftbound Burn Explained: Mill and Self-Fuel in Vendetta",
+    title: "Riftbound Burn Explained: How the Burn Mechanic Works",
     excerpt:
       "A complete guide to Burn — the Riftbound: Vendetta mechanic that sends cards to the trash, both to fuel your own synergies and to attack your opponent's deck.",
     author: "RiftCompare",
@@ -2061,6 +2076,12 @@ Flow cards will show live prices on the **[Vendetta set page](/sets/vendetta)** 
       { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
       { label: "Riftbound singles on eBay", query: "Riftbound TCG singles" },
     ],
+    // Same filter the embed below uses — see the Flow guide's note.
+    browseCta: {
+      href: "/browse?rules=%5BBurn%5D&rulesSet=VEN",
+      label: "Browse every Burn card →",
+      blurb: "Every Vendetta card with the Burn keyword, filterable and sortable, with live prices across every store we track.",
+    },
     embed: {
       title: "Every Burn card in Vendetta",
       note: "Every officially revealed Vendetta card with the Burn keyword — tap a card for its page.",
@@ -2096,6 +2117,13 @@ Here's the actual printed text on a revealed Vendetta card — the **[Burn]** ke
 
 [[closeup:0]]
 
+## How the Burn mechanic works, step by step
+
+1. **Check which deck it burns.** Read the **[Burn]** line carefully — self-Burn hits your own Main Deck, deck-attack Burn hits your opponent's. This single word changes the whole plan.
+2. **Note the number.** The value printed with the keyword is how many cards go from the top of that deck to the trash.
+3. **Send them to the trash.** Burned cards are not exiled — they land in the trash, where **[Flow](/guides/riftbound-flow-explained)** and other trash-payoffs can still reach them.
+4. **Cash it in.** If you burned your own deck, that trash is now fuel. If you burned theirs, you are that many cards closer to decking them out.
+
 ## How to build with Burn
 
 Burn is a toolbox mechanic — how you use it depends on your plan:
@@ -2110,8 +2138,6 @@ Full decklists that use Burn are in the **[best Vendetta decks guide](/guides/be
 
 **Burn** sends cards to the trash; **[Flow](/guides/riftbound-flow-explained)** plays them back out; **[Empower](/guides/riftbound-empower-explained)** grows a card already in play. They're designed to combo — read all three in **[Vendetta's new mechanics explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**.
 
-Burn cards will list with live prices on the **[Vendetta set page](/sets/vendetta)** as they release — RiftCompare compares every store so you pay the cheapest delivered price. Vendetta is out now — see **[every card with live prices](/sets/vendetta)**.
-
 ## Burn FAQ
 
 **What is Burn in Riftbound?** Burn sends cards from a Main Deck to the trash — either your own (self-Burn, to fuel Flow and other trash-payoffs) or your opponent's (a mill-style deck attack).
@@ -2120,7 +2146,9 @@ Burn cards will list with live prices on the **[Vendetta set page](/sets/vendett
 
 **Is Burn only in Vendetta?** Yes — Burn is introduced as a new keyword in the Vendetta set.
 
-**How is Burn different from Flow and Empower?** Burn sends cards to the trash; Flow plays them back out of the trash; Empower grows a card that's already in play. The three are designed to combo.`,
+**How is Burn different from Flow and Empower?** Burn sends cards to the trash; **[Flow](/guides/riftbound-flow-explained)** plays them back out of the trash; **[Empower](/guides/riftbound-empower-explained)** grows a card that's already in play. The three are designed to combo.
+
+Burn cards are live with real prices on the **[Vendetta set page](/sets/vendetta)** — RiftCompare compares every store so you pay the cheapest delivered price. Browse the whole set visually in the **[Vendetta card gallery](/sets/vendetta/gallery)**.`,
   },
   {
     slug: "riftbound-vendetta-card-list",
@@ -2162,7 +2190,7 @@ Read all three together in **[Vendetta's new mechanics explained](/blog/riftboun
 
 ## Where to see the full list
 
-- **[The complete card gallery](/blog/every-riftbound-vendetta-card-revealed)** — every one of the 166 cards, with images, filterable by domain, rarity and type.
+- **[The complete card gallery](/sets/vendetta/gallery)** — every one of the 166 cards, with images and live prices, filterable by domain, rarity and type.
 - **The [Vendetta set page](/sets/vendetta)** — the same full list, plus live prices from every store we track.
 
 Planning a deck already? Our **[best Vendetta decks guide](/guides/best-riftbound-vendetta-decks)** shows which archetypes the confirmed mechanics point toward, and the **[deckbuilding guide](/guides/building-for-riftbound-vendetta)** covers synergies. And browse **[every Vendetta card with live prices](/sets/vendetta)**.
@@ -2699,7 +2727,7 @@ Shopping from [Australia](/blog/buy-riftbound-cards-australia), [the US](/blog/b
   {
     slug: "every-riftbound-vendetta-card-revealed",
     category: "blog",
-    title: "Riftbound Vendetta Card List & Gallery — All 166 Cards Revealed",
+    title: "Every Riftbound Vendetta Card Revealed — All 166 Confirmed",
     excerpt:
       "The complete Riftbound Vendetta card list and gallery — all 166 main-set cards officially confirmed, plus Showcase alt-arts, Overnumbers, runes and promos, embedded live from our database. Tap any card for its page and launch-day prices.",
     author: "RiftCompare",
@@ -2733,6 +2761,7 @@ Tap any card below to open its full page: rules text, printings, price history, 
 ## Keep going
 
 - **[Chase cards, tier by tier](/blog/riftbound-vendetta-chase-cards-so-far)** — Overnumbers, alt-arts and the sleeper Epics worth hunting.
+- **[Vendetta card gallery](/sets/vendetta/gallery)** — every card on one page, filterable, with live prices.
 - **[Vendetta set page](/sets/vendetta)** — the full sortable card list with live prices at release.
 - **[Vendetta release date](/vendetta-countdown)** — released 31 July 2026.
 - **[Everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** — products, mechanics, rivalries and release details in one read.`,

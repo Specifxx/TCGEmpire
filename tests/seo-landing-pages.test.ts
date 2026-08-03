@@ -1,0 +1,171 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
+import { SETS } from "../src/lib/constants";
+import { getArticles } from "../src/lib/articles";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Guards for the search-demand work (GSC: high-impression, near-zero-click
+// queries we were losing at position ~8).
+//
+// These are SOURCE-LEVEL invariants deliberately, not rendered-HTML assertions:
+// the rendered checks already exist and need a running server plus a database
+// (scripts/smoke-pages.ts, scripts/crawl-check.ts). This file runs in `npm test`
+// with neither, so it can gate a PR — it catches the edits that silently undo the
+// SEO work (a route flipped to force-dynamic, a canonical dropped, an FAQ whose
+// visible copy no longer matches its schema).
+// ─────────────────────────────────────────────────────────────────────────────
+
+const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
+
+const GALLERY = "src/app/sets/[set]/gallery/page.tsx";
+const RIFTLE = "src/app/riftle/page.tsx";
+
+// ── Vendetta card gallery ("vendetta card gallery", "riftbound vendetta gallery")
+test("gallery route stays statically renderable (no cookies/searchParams)", () => {
+  const src = read(GALLERY);
+  assert.ok(src.includes("export const revalidate"), "gallery must export a revalidate window");
+  assert.ok(
+    !src.includes('dynamic = "force-dynamic"'),
+    "gallery must NOT be force-dynamic — it is a 200+ tile page and localises prices client-side",
+  );
+  // getCountry() reads cookies, which would opt the whole route into per-request
+  // rendering and undo the point of the page.
+  assert.ok(!src.includes("getCountry("), "gallery must not read cookies via getCountry()");
+});
+
+test("gallery emits ItemList structured data and a canonical", () => {
+  const src = read(GALLERY);
+  assert.ok(src.includes('"@type": "ItemList"'), "gallery must emit ItemList JSON-LD");
+  assert.ok(src.includes("itemListElement"), "ItemList must carry its items");
+  assert.ok(src.includes("canonical:"), "gallery must declare a canonical");
+});
+
+test("gallery caps its payload so a big set can't wreck LCP", () => {
+  const src = read(GALLERY);
+  const cap = /const MAX_TILES = (\d+)/.exec(src);
+  assert.ok(cap, "gallery must define MAX_TILES");
+  assert.ok(Number(cap![1]) <= 500, `MAX_TILES ${cap![1]} is too high for one page`);
+  assert.ok(src.includes("take: MAX_TILES"), "the query must actually apply MAX_TILES");
+});
+
+test("gallery fails open on a database error", () => {
+  const src = read(GALLERY);
+  // A DB blip must render an empty gallery, never a 500 on an indexed URL. This
+  // is also what let the route build in CI with no database at all.
+  assert.match(src, /catch\s*{[\s\S]*?return \[\];/, "gallery query must catch and return []");
+});
+
+test("every set's gallery is in the sitemap", () => {
+  const src = read("src/lib/sitemap-sections.ts");
+  assert.ok(
+    src.includes("/gallery`"),
+    "sitemap sets() must emit a /sets/<slug>/gallery URL per set",
+  );
+});
+
+test("the Vendetta gallery is internally linked from the key surfaces", () => {
+  // An indexable page nothing links to is a page Google discovers late and trusts
+  // little. These are the three strongest internal links available to it.
+  const surfaces: [string, string][] = [
+    ["src/components/home/VendettaBlock.tsx", "homepage"],
+    ["src/app/sets/[set]/page.tsx", "set page"],
+    ["src/lib/articles.ts", "guides/blog"],
+  ];
+  for (const [path, label] of surfaces) {
+    assert.ok(
+      read(path).includes("/sets/vendetta/gallery") || read(path).includes("/gallery`"),
+      `${label} (${path}) must link to the Vendetta card gallery`,
+    );
+  }
+});
+
+// ── Riftle ("riftle": 213 impressions, 0.5% CTR, position ~7.2) ──────────────
+test("riftle page claims its own name as an entity", () => {
+  const src = read(RIFTLE);
+  assert.ok(src.includes('"@type": "VideoGame"'), "riftle must emit VideoGame JSON-LD");
+  assert.ok(src.includes('name: "Riftle"'), "the VideoGame node must be named Riftle");
+  assert.ok(src.includes("faqPage(FAQ)"), "riftle must emit FAQPage JSON-LD from its FAQ");
+});
+
+test("riftle's FAQ schema has a visible counterpart", () => {
+  const src = read(RIFTLE);
+  // Google honours FAQPage only when the same Q&A is on the page. Both the schema
+  // and the rendered list read the single FAQ const, so they cannot drift — this
+  // asserts that wiring specifically, because splitting them is the easy mistake.
+  assert.ok(src.includes("FAQ.map("), "the FAQ array must also be rendered visibly");
+  const count = (src.match(/\bq: "/g) ?? []).length;
+  assert.ok(count >= 4, `expected >=4 FAQ entries, found ${count}`);
+});
+
+test("riftle title leads with the query term", () => {
+  const src = read(RIFTLE);
+  const title = /title: "(.*?)"/.exec(src)?.[1] ?? "";
+  assert.ok(title.startsWith("Riftle"), `title should lead with "Riftle", got ${JSON.stringify(title)}`);
+});
+
+// ── Mechanics cluster: Flow/Burn must mirror the Empower page that wins ──────
+test("empower, flow and burn guides share the winning structure", () => {
+  const bySlug = new Map(getArticles().map((a) => [a.slug, a]));
+  for (const slug of ["riftbound-empower-explained", "riftbound-flow-explained", "riftbound-burn-explained"]) {
+    const a = bySlug.get(slug);
+    assert.ok(a, `${slug} must exist`);
+
+    // Question-shaped title — the single biggest difference between the Empower
+    // page and its two siblings when this work started.
+    assert.match(a!.title, /Explained: How the .+ Mechanic Works/, `${slug} title shape`);
+
+    // FAQ block backing FAQPage schema.
+    assert.ok((a!.faq?.length ?? 0) >= 4, `${slug} needs >=4 FAQ entries`);
+
+    // Step-by-step section — the part that actually answers "how does X work".
+    assert.match(a!.body, /step by step/i, `${slug} needs a step-by-step section`);
+    assert.match(a!.body, /^1\. /m, `${slug} needs numbered steps`);
+
+    // A CTA into live prices, which is how these guides earn their keep.
+    assert.ok(a!.browseCta, `${slug} needs a browseCta into live prices`);
+
+    // Cross-links to the other two mechanics.
+    for (const other of ["empower", "flow", "burn"].filter((k) => !slug.includes(k))) {
+      assert.ok(
+        a!.body.includes(`/guides/riftbound-${other}-explained`),
+        `${slug} must cross-link the ${other} guide`,
+      );
+    }
+  }
+});
+
+test("every guide FAQ entry is answered in the visible body", () => {
+  // FAQPage schema describing answers a reader cannot see is exactly the mismatch
+  // Google drops rich results for. Checked across the three mechanics guides.
+  const bySlug = new Map(getArticles().map((a) => [a.slug, a]));
+  for (const slug of ["riftbound-empower-explained", "riftbound-flow-explained", "riftbound-burn-explained"]) {
+    const a = bySlug.get(slug)!;
+    assert.match(a.body, /##\s+.*FAQ/i, `${slug} needs a visible "## ... FAQ" section`);
+    for (const { q } of a.faq ?? []) {
+      assert.ok(a.body.includes(q), `${slug}: FAQ question not visible in body — ${JSON.stringify(q)}`);
+    }
+  }
+});
+
+// ── No two pages may chase the same query ───────────────────────────────────
+test("only one page targets the vendetta gallery query", () => {
+  // The old blog post and the new gallery page both used to say "Card List &
+  // Gallery". Two of our own URLs competing for one query helps neither.
+  const galleryTitled = getArticles().filter((a) => /card\s*(list\s*&\s*)?gallery/i.test(a.title));
+  assert.equal(
+    galleryTitled.length,
+    0,
+    `articles still titled as the gallery (competes with /sets/*/gallery): ${galleryTitled.map((a) => a.slug).join(", ")}`,
+  );
+});
+
+test("SETS all resolve to a gallery path", () => {
+  // generateStaticParams builds one gallery per set; a set without a slug would
+  // silently produce a broken route.
+  for (const s of SETS) {
+    assert.ok(s.slug && /^[a-z0-9-]+$/.test(s.slug), `set ${s.code} needs a url-safe slug`);
+  }
+});
