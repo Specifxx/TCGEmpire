@@ -22,6 +22,7 @@ on:
           - vendetta-pipeline # scrape official gallery + import VEN reveals
           - probe-sg         # read-only Singapore store scan (no DB writes)
           - probe-url        # read-only page fetch + font/style diagnostics (url input)
+          - smoke-pages     # read-only: assert the key pages return real server-rendered content (post-deploy gate; url input overrides the default production origin)
           - import-prices    # run the store price importer for this ref's store list
           - import-sealed     # refresh sealed products (stores + eBay AU + TCGplayer US) + self-heal stale rows
           - migrate-history  # Prisma-based top-up: copy PriceHistory/ClickEvent from EVERY older source into the newest history DB (tolerates unreadable sources, dedupes). Slower/more transfer than migrate-history-db — prefer that for the bulk copy.
@@ -511,6 +512,14 @@ jobs:
       - name: Probe Singapore stores (read-only market scan)
         if: inputs.task == 'probe-sg'
         run: npx tsx scripts/probe-sg-stores.ts
+
+      # Post-deploy gate. The sandbox these branches are written in cannot reach
+      # riftcompare.com, so this is how the smoke test gets run against the REAL
+      # deployment — the one check that would have caught the homepage shipping a
+      # loading spinner and no content. Read-only: it only issues GETs.
+      - name: Smoke-test key pages (real rendered content)
+        if: inputs.task == 'smoke-pages'
+        run: npx tsx scripts/smoke-pages.ts "${{ inputs.url || 'https://riftcompare.com' }}"
 
       - name: Probe URL (font/style diagnostics)
         # The dev sandbox's egress proxy blocks most external sites; runners don't.
