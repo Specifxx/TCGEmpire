@@ -56,6 +56,16 @@ function inline(text: string, kp: string): React.ReactNode[] {
   return nodes;
 }
 
+/**
+ * Just the inline pass — **bold**, *italic*, [links](url), `code` — with no
+ * block wrapper. For places that need marked-up text inside markup they already
+ * control (a list item, a table cell, a summary bullet), where the full
+ * <Markdown> would nest a <div><p> inside an <li>.
+ */
+export function InlineMarkdown({ content }: { content: string }) {
+  return <>{inline(content, "il")}</>;
+}
+
 export function Markdown({ content }: { content: string }) {
   const lines = content.replace(/\r\n/g, "\n").trim().split("\n");
   const blocks: React.ReactNode[] = [];

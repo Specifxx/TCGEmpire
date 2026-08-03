@@ -13,6 +13,13 @@ import { ArticleShopStrip } from "./ArticleShopStrip";
 import { ArticleMarketData } from "./ArticleMarketData";
 import { authorByName, authorJsonLd } from "@/lib/content/authors";
 import { SITE_URL } from "@/lib/site";
+import { extractToc } from "@/lib/toc";
+import { AnswerBox } from "./AnswerBox";
+import { ArticleToc } from "./ArticleToc";
+import { ArticleFaq } from "./ArticleFaq";
+import { ArticleShare } from "./ArticleShare";
+import { ArticleTopValue } from "./ArticleTopValue";
+import { Picture } from "./Picture";
 
 // A card printed beyond the set's total (e.g. 167/166) or carrying an SP special
 // number — the "overnumbered" chase class. Signature "*" prints are their own thing
@@ -181,16 +188,26 @@ function EmbedGallery({ embed, cards }: { embed: ArticleEmbed; cards: CardTileDa
   return null;
 }
 
-// Other articles sharing at least one tag, most-overlapping (then most-recent)
-// first — a plain data computation, no DB call, so this costs nothing extra.
+// "Recommended reads" — other articles sharing at least one tag, most-overlapping
+// (then most-recent) first. A plain data computation, no DB call.
+//
+// TOPPED UP TO `take` with the newest articles in the same category when the tag
+// overlap doesn't produce enough. A post with unusual tags used to render NO
+// related module at all, which is the exact page where a reader has nowhere to go
+// next — the opposite of what the module is for.
 function relatedArticles(article: Article, take = 3): Article[] {
   const tags = new Set(article.tags);
-  return ARTICLES
+  const scored = ARTICLES
     .filter((a) => a.slug !== article.slug && a.tags.some((t) => tags.has(t)))
     .map((a) => ({ a, overlap: a.tags.filter((t) => tags.has(t)).length }))
     .sort((x, y) => y.overlap - x.overlap || (y.a.date < x.a.date ? -1 : 1))
-    .slice(0, take)
     .map((x) => x.a);
+  if (scored.length >= take) return scored.slice(0, take);
+  const seen = new Set([article.slug, ...scored.map((a) => a.slug)]);
+  const filler = ARTICLES
+    .filter((a) => !seen.has(a.slug) && a.category === article.category)
+    .sort((x, y) => (x.date < y.date ? 1 : -1));
+  return [...scored, ...filler].slice(0, take);
 }
 
 const DEFAULT_BROWSE_CTA = {
@@ -220,6 +237,8 @@ export async function ArticleView({ article }: { article: Article }) {
   for (let i = 1; i < bodyParts.length; i += 3) {
     if (bodyParts[i] === "embed") placed.add(parseInt(bodyParts[i + 1], 10));
   }
+  const toc = extractToc(article.body);
+  const bodyHasFaqSection = /^##+ .*\bFAQ\b/m.test(article.body);
   const isGuide = article.category === "guide";
   const backHref = isGuide ? "/guides" : "/blog";
   const backLabel = isGuide ? "All guides" : "All posts";
@@ -239,8 +258,15 @@ export async function ArticleView({ article }: { article: Article }) {
     // is what it truthfully is. See that file's header on why no Person is
     // fabricated here.
     author: authorJsonLd(article.author),
-    publisher: { "@type": "Organization", name: "RiftCompare" },
+    publisher: { "@type": "Organization", "@id": `${SITE_URL}/#org`, name: "RiftCompare" },
     mainEntityOfPage: articleUrl,
+    // Ties the article into the site-level graph declared once in app/layout.tsx,
+    // so the Organization's entity signals propagate rather than each post being
+    // an island.
+    isPartOf: { "@id": `${SITE_URL}/#website` },
+    ...(article.hero ? { image: [`${SITE_URL}${article.hero.src}`] } : {}),
+    articleSection: article.tags[0],
+    wordCount: article.body.split(/\s+/).filter(Boolean).length,
   };
   // Breadcrumb mirrors the visible "← back" link: Home → Blog|Guides → {title}.
   const breadcrumbLd = {
@@ -256,6 +282,25 @@ export async function ArticleView({ article }: { article: Article }) {
   // the visible "## X FAQ" markdown section by whoever edits the guide — see the
   // field's doc comment in lib/articles.ts). Omitted entirely when a guide
   // carries no structured FAQ, rather than parsed out of the markdown body.
+  // ItemList for listicles — the ranked entities, in the order the page shows them.
+  const itemListLd = article.itemList
+    ? {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        name: article.itemList.name,
+        url: articleUrl,
+        numberOfItems: article.itemList.items.length,
+        itemListOrder: "https://schema.org/ItemListOrderDescending",
+        itemListElement: article.itemList.items.map((it, i) => ({
+          "@type": "ListItem",
+          position: i + 1,
+          name: it.name,
+          ...(it.description ? { description: it.description } : {}),
+          ...(it.url ? { url: it.url } : {}),
+        })),
+      }
+    : null;
+
   const faqLd =
     article.faq && article.faq.length > 0
       ? {
@@ -273,7 +318,9 @@ export async function ArticleView({ article }: { article: Article }) {
     <article className="mx-auto max-w-3xl">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify([articleLd, breadcrumbLd, ...(faqLd ? [faqLd] : [])]) }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify([articleLd, breadcrumbLd, ...(itemListLd ? [itemListLd] : []), ...(faqLd ? [faqLd] : [])]),
+        }}
       />
 
       <Link href={backHref} className="mb-4 inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white">
@@ -313,6 +360,31 @@ export async function ArticleView({ article }: { article: Article }) {
         </Link>
       </div>
 
+      <div className="mt-3">
+        <ArticleShare url={articleUrl} title={article.title} />
+      </div>
+
+      {/* Featured image. `priority` because on an article this IS the LCP element,
+          and <Picture> serves it as AVIF/WebP with explicit intrinsic dimensions
+          from the build-time manifest, so it can't shift the layout. */}
+      {article.hero && (
+        <Picture
+          src={article.hero.src}
+          alt={article.hero.alt}
+          priority
+          sizes="(max-width: 768px) 100vw, 768px"
+          className="mt-5 h-auto w-full rounded-xl border border-ink-700"
+        />
+      )}
+
+      {/* Answer-first TL;DR — the block a featured snippet or an AI answer engine
+          lifts. Above the fold, above the first ad. */}
+      {article.summary && article.summary.length > 0 && (
+        <AnswerBox heading="The short version" points={article.summary} className="mt-5" />
+      )}
+
+      <ArticleToc entries={toc} />
+
       <AdSlot className="mt-6" height={120} />
 
       <div className="mt-6 border-t border-ink-800 pt-4">
@@ -344,6 +416,28 @@ export async function ArticleView({ article }: { article: Article }) {
           page (see docs/adsense-remediation.md § Phase 8). */}
       {article.marketData && <ArticleMarketData country={article.marketData} />}
 
+      {/* Live "most expensive right now" table — real figures from the card
+          database instead of a hand-typed top-10 that goes stale in a week. */}
+      {article.topValue && (
+        <ArticleTopValue
+          country={article.topValue.country}
+          take={article.topValue.take}
+          heading={article.topValue.heading}
+        />
+      )}
+
+      {/* The FAQ, rendered from the SAME array that feeds the FAQPage JSON-LD
+          above — one source of truth, so the markup can never describe questions
+          the page doesn't show.
+
+          SKIPPED when the body already hand-writes its own "## … FAQ" section.
+          Ten older articles carry both (see the `faq` field's doc comment in
+          lib/articles.ts); rendering this as well would show those readers the
+          same questions twice. Those articles are migrating to the structured
+          field; until then the body's copy wins, because it is the one the
+          author is actually maintaining. */}
+      {article.faq && article.faq.length > 0 && !bodyHasFaqSection && <ArticleFaq faq={article.faq} />}
+
       {article.shop && article.shop.length > 0 && <ArticleShopStrip items={article.shop} />}
 
       {/* "Ready to buy?" — every article is fundamentally about Riftbound cards, so
@@ -363,7 +457,7 @@ export async function ArticleView({ article }: { article: Article }) {
           somewhere obvious to go next instead of bouncing. */}
       {related.length > 0 && (
         <section className="mt-8">
-          <h2 className="mb-3 text-lg font-extrabold text-white">Related guides</h2>
+          <h2 className="mb-3 text-lg font-extrabold text-white">Recommended reads</h2>
           <div className="grid gap-3 sm:grid-cols-3">
             {related.map((r) => (
               <Link
@@ -378,6 +472,13 @@ export async function ArticleView({ article }: { article: Article }) {
           </div>
         </section>
       )}
+
+      <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-ink-800 pt-4">
+        <ArticleShare url={articleUrl} title={article.title} />
+        <Link href={backHref} className="text-sm text-slate-400 hover:text-white">
+          ← {backLabel}
+        </Link>
+      </div>
 
       <AdSlot className="mt-8" height={120} />
     </article>
