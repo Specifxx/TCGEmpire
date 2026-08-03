@@ -517,9 +517,16 @@ jobs:
       # riftcompare.com, so this is how the smoke test gets run against the REAL
       # deployment — the one check that would have caught the homepage shipping a
       # loading spinner and no content. Read-only: it only issues GETs.
+      #
+      # --allow-404 affects ONLY routes the check list explicitly marks
+      # `optional`, and those exist for exactly the case that failed this gate on
+      # 2026-08-03: a branch adds /sets/vendetta/gallery, the gate runs against
+      # production before that branch deploys, and the route 404s through no
+      # fault of the deployment. Those report `~ SKIP`, visibly. A 404 on any
+      # established page still fails the run.
       - name: Smoke-test key pages (real rendered content)
         if: inputs.task == 'smoke-pages'
-        run: npx tsx scripts/smoke-pages.ts "${{ inputs.url || 'https://riftcompare.com' }}"
+        run: npx tsx scripts/smoke-pages.ts "${{ inputs.url || 'https://riftcompare.com' }}" --allow-404
 
       - name: Probe URL (font/style diagnostics)
         # The dev sandbox's egress proxy blocks most external sites; runners don't.
