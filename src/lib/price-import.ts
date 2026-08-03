@@ -13,7 +13,7 @@ import { snapshotDemand } from "./demand-snapshot";
 import { refreshTcgplayerPrices } from "./tcgplayer";
 import { importMarketplaceListings } from "./marketplace";
 import { refreshCardmarketPrices } from "./cardmarket";
-import { AU_FALLBACK_RETAILERS, SG_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS } from "./constants";
+import { AU_FALLBACK_RETAILERS, SG_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS, pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS } from "./constants";
 import { currencyOf, isoCountry, type Country } from "./country";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows } from "./scrape-http";
 
@@ -282,9 +282,53 @@ async function verifyCheapestListings(onlyCountry?: string): Promise<number> {
 // written. Each market is buffered then atomically replaced, scoped by country, so a
 // rate-limited (0-result) market keeps its existing rows and never wipes the other.
 // Promos are matched by promo-wording in the listing title (they share base numbers).
+/**
+ * Put the priority sets at the front of the eBay queue, popularity order intact.
+ *
+ * The quota cannot cover every market × every card every day, so whatever sits at
+ * the tail of this list is what silently goes unpriced. Callers hand cards over
+ * already sorted by search demand — but a set that launched last week has no
+ * demand recorded yet (zero searches, zero views, no price), so its cards sort
+ * dead last precisely while their prices are the ones people are looking for.
+ *
+ * A STABLE partition, not a re-sort: within each group the caller's popularity
+ * order is preserved exactly, so this promotes the new set without flattening
+ * "most-wanted first" inside it. Everything still gets queried on a day with
+ * budget to spare; this only decides who gets cut when there isn't.
+ *
+ * Exported for tests — the ordering is the whole behaviour, and it is invisible
+ * in a passing import run.
+ */
+export function orderCardsForEbay<T extends { setCode: string }>(
+  cards: T[],
+  prioritySetCodes: readonly string[] = pricePrioritySetCodes(),
+): T[] {
+  if (!prioritySetCodes.length) return cards;
+  const priority = new Set(prioritySetCodes.map((c) => c.toUpperCase()));
+  const first: T[] = [];
+  const rest: T[] = [];
+  for (const c of cards) (priority.has((c.setCode ?? "").toUpperCase()) ? first : rest).push(c);
+  return [...first, ...rest];
+}
+
 export async function refreshEbayMarkets(
   cards: { id: string; name: string; setCode: string; collectorNumber: string; isPromo: boolean }[]
 ): Promise<number> {
+  // Applied HERE rather than in the callers' `orderBy` so no caller can forget
+  // it: both the scheduled importer and scripts/refresh-ebay.ts go through this
+  // function, and a third one would too.
+  const priorityCodes = pricePrioritySetCodes();
+  cards = orderCardsForEbay(cards, priorityCodes);
+  if (priorityCodes.length) {
+    const n = cards.filter((c) => priorityCodes.includes(c.setCode)).length;
+    console.log(
+      `eBay queue: ${n} ${priorityCodes.join("/")} card(s) at the front of ${cards.length} ` +
+        `(launch-window priority, expires ${PRICE_PRIORITY_WINDOW_DAYS}d after release); ` +
+        `popularity order preserved within each group.`,
+    );
+  } else {
+    console.log(`eBay queue: ${cards.length} cards in popularity order (no set in its launch window).`);
+  }
   // Each market has its own retailer key so eBay AU + US rows for the same card never
   // collide on the unique [cardId, retailer, condition, isFoil] key.
   //
@@ -810,7 +854,15 @@ export async function importPrices(): Promise<ImportSummary> {
       orderBy: [
         { searchCount: "desc" },
         { viewCount: "desc" },
+        // Value, as the tiebreak among cards with no recorded demand yet — which
+        // is every card of a set that launched this week, so for a launch set
+        // this is effectively THE sort. AU first (the baseline market), then US:
+        // stores in one market list a new set before the other, and a chase card
+        // priced in only one of them would otherwise tie at null with the bulk
+        // and land in the tail. Prisma has no COALESCE in orderBy, so this is
+        // expressed as successive keys, which gives the same ordering.
         { lowestPriceCents: { sort: "desc", nulls: "last" } },
+        { lowestPriceCentsUs: { sort: "desc", nulls: "last" } },
       ],
       select: { id: true, name: true, setCode: true, collectorNumber: true, isPromo: true },
     });

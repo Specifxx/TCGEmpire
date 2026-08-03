@@ -91,7 +91,30 @@ export type CardType = (typeof CARD_TYPES)[number];
 // from a bare "NNN/total" collector number. `slug` is the SEO landing-page path
 // (/sets/<slug>). `recentlyReleased` = purely cosmetic "New" badge for a set that
 // just went on sale (short-lived; drop it once the badge has run its course).
-export interface SetInfo { code: string; name: string; slug: string; comingSoon?: boolean; sealedAvailable?: boolean; totalCards?: number; recentlyReleased?: boolean }
+// `releasedOn` = the day the set's singles started trading (ISO yyyy-mm-dd).
+//
+// Its ONE job is to give a launch set first claim on the scarce eBay Browse
+// quota, for PRICE_PRIORITY_WINDOW_DAYS and then never again. Deliberately a
+// DATE rather than a boolean:
+//
+//   • It expires by itself. A boolean would sit there earning a permanent head
+//     start long after the set stopped being new, because clearing it is exactly
+//     the kind of chore nobody remembers — and the cost of forgetting is silent
+//     (some other set's cards quietly go unpriced).
+//   • It is a fact about the set, not a preference, so the next launch just
+//     records its date and inherits the behaviour with no code change.
+//
+// Deliberately NOT a reuse of `recentlyReleased`, which is documented above as
+// purely cosmetic (a "New" badge). Removing that badge must not silently
+// reorder the price importer, and prioritising a set for pricing must not force
+// a badge onto it. Two decisions, two fields.
+//
+// Why any of this is needed: refreshEbayMarkets orders cards by search demand,
+// and a just-imported card has no demand recorded yet — zero searches, zero
+// views, no price — so it sorts LAST, exactly when its price is most wanted. The
+// quota cannot cover every market × every card daily, so the tail is what gets
+// dropped.
+export interface SetInfo { code: string; name: string; slug: string; comingSoon?: boolean; sealedAvailable?: boolean; totalCards?: number; recentlyReleased?: boolean; releasedOn?: string }
 export const SETS: SetInfo[] = [
   { code: "OGN", name: "Origins", slug: "origins" },
   { code: "OGS", name: "Origins: Proving Grounds", slug: "proving-grounds" },
@@ -99,8 +122,36 @@ export const SETS: SetInfo[] = [
   { code: "UNL", name: "Unleashed", slug: "unleashed" },
   // Singles started trading (Pre-Rift launch events + early marketplace listings)
   // a few days ahead of the 31 Jul 2026 official street date — treated as released.
-  { code: "VEN", name: "Vendetta", slug: "vendetta", totalCards: 166, recentlyReleased: true },
+  { code: "VEN", name: "Vendetta", slug: "vendetta", totalCards: 166, recentlyReleased: true, releasedOn: "2026-07-31" },
 ];
+
+// How long after release a set keeps first claim on the eBay quota. Two months:
+// long enough to cover the window where a new set's prices move daily and the
+// searches arrive before our own demand data does, short enough that it is over
+// well before the next set lands.
+export const PRICE_PRIORITY_WINDOW_DAYS = 60;
+
+/**
+ * Set codes that currently get first claim on the eBay refresh quota.
+ *
+ * A FUNCTION, not a constant, on purpose: a module-level constant is evaluated
+ * once at import and would freeze the answer for the lifetime of a process, so a
+ * long-running server would keep prioritising a set for as long as it stayed up.
+ * Taking `now` also makes the expiry testable without waiting two months.
+ *
+ * Returns [] once every set's window has passed — which is the steady state, and
+ * restores plain popularity-then-value ordering with no code change.
+ */
+export function pricePrioritySetCodes(now: Date = new Date()): string[] {
+  const cutoff = now.getTime() - PRICE_PRIORITY_WINDOW_DAYS * 86_400_000;
+  return SETS.filter((s) => {
+    if (!s.releasedOn) return false;
+    const released = Date.parse(`${s.releasedOn}T00:00:00Z`);
+    // An unparseable date must not silently grant a permanent head start.
+    if (Number.isNaN(released)) return false;
+    return released >= cutoff;
+  }).map((s) => s.code);
+}
 export const setBySlug = (slug: string): SetInfo | undefined => SETS.find((s) => s.slug === slug);
 export const setByCode = (code: string): SetInfo | undefined => SETS.find((s) => s.code === code);
 

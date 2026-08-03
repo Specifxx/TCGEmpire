@@ -52,8 +52,39 @@ function ebayMarket(hostname: string) {
   return null;
 }
 
+// ── ATTRIBUTION: what earns, not just how much ───────────────────────────────
+// Both networks give us exactly one free-text field per click — EPN's `customid`
+// and Impact's `sharedid` — and it is the only way to learn WHERE revenue comes
+// from. Without it every click reports the same id and the reports can answer
+// "did eBay earn?" but never "did the card page's price table earn, or the ad
+// carousel, or the deal finder?" — which is the question that decides where the
+// next placement goes.
+//
+// Format: rc-<market>-<source>, e.g. `rc-au-ebay`, `rc-us-tcgplayer`,
+// `rc-au-amazon_sealed`. Stable, greppable, and sorts sensibly in a report.
+//
+// Sanitised hard: EPN silently drops a click whose customid contains anything
+// outside a conservative set, and a dropped click is unattributed revenue that
+// looks exactly like no revenue. 60 chars is well inside EPN's 256 limit and
+// Impact's sharedid limit.
+const SUBID_MAX = 60;
+export function affiliateSubId(...parts: (string | null | undefined)[]): string {
+  const s = parts
+    .filter(Boolean)
+    .join("-")
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, "-")
+    .replace(/-{2,}/g, "-")
+    .replace(/^-|-$/g, "");
+  return s.slice(0, SUBID_MAX) || "rc";
+}
+
 // Turn a plain eBay item/search URL into an affiliate-tracked one.
-export function ebayAffiliateUrl(url: string): string {
+//
+// `source` segments EPN reporting by placement. Optional so the many existing
+// call sites keep working unchanged — they just report the market-level id they
+// always did, rather than breaking or silently losing their tag.
+export function ebayAffiliateUrl(url: string, source?: string): string {
   try {
     const u = new URL(url);
     const m = ebayMarket(u.hostname);
@@ -64,7 +95,9 @@ export function ebayAffiliateUrl(url: string): string {
     u.searchParams.set("siteid", m.siteid);
     u.searchParams.set("campid", EBAY_CAMPAIGN_ID);
     u.searchParams.set("toolid", "10001");
-    u.searchParams.set("customid", m.customid); // sub-id so EPN reports are segmentable
+    // sub-id so EPN reports are segmentable — by market always, by placement too
+    // when the caller knows it.
+    u.searchParams.set("customid", affiliateSubId(m.customid, source));
     return u.toString();
   } catch {
     return url;
@@ -100,21 +133,40 @@ export function affiliateUrl(
   subId = "riftcompare",
   loc: string = SITE_URL,
 ): string {
-  void subId;
-  void loc;
   if (!url) return "#";
+  // `subId` is the retailer key the caller already had ("ebay_us", "tcgplayer",
+  // "amazon_sealed"); `loc` is the page it was rendered on. Both were previously
+  // accepted and thrown away (`void subId; void loc;`), which is why every click
+  // reported one undifferentiated id. They now reach the networks.
+  //
+  // Only the PATH of `loc` is used: a full URL would blow the sub-id length and
+  // leak query strings into a third party's reports.
+  const page = (() => {
+    try {
+      return new URL(loc, SITE_URL).pathname.split("/").filter(Boolean)[0] ?? "home";
+    } catch {
+      return undefined;
+    }
+  })();
   try {
     const u = new URL(url);
     if (/(?:^|\.)ebay\./i.test(u.hostname)) {
-      return ebayAffiliateUrl(url);
+      return ebayAffiliateUrl(url, affiliateSubId(subId, page));
     }
     if (/(?:^|\.)amazon\./i.test(u.hostname)) {
       u.searchParams.set("tag", AMAZON_ASSOCIATE_TAG);
+      // Amazon's own sub-tag field. Associates reports break it out per ascsubtag.
+      u.searchParams.set("ascsubtag", affiliateSubId(subId, page));
       return u.toString();
     }
     // TCGplayer via Impact — only once an approved deep-link base is configured.
+    // `sharedid` is Impact's sub-id field; it shows up as "SubId1"/"Shared ID" in
+    // the TCGplayer partner reports, so placements are comparable to eBay's.
     if (TCGPLAYER_IMPACT_LINK && /(?:^|\.)tcgplayer\.com$/i.test(u.hostname)) {
-      return `${TCGPLAYER_IMPACT_LINK}?u=${encodeURIComponent(url)}`;
+      return (
+        `${TCGPLAYER_IMPACT_LINK}?u=${encodeURIComponent(url)}` +
+        `&sharedid=${encodeURIComponent(affiliateSubId(subId, page))}`
+      );
     }
     // A signed per-store direct program (none yet) rewrites the URL here.
     const direct = directProgramUrl(u);
