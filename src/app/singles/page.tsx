@@ -83,8 +83,12 @@ export default async function SinglesPage() {
     "@type": "CollectionPage",
     name: "Buy Riftbound Singles — Compare Prices",
     url: `${SITE_URL}/singles`,
+      // Edges back to the site-level graph in app/layout.tsx. Without them this
+      // node is an island and the Organization/WebSite entity signals — sameAs,
+      // areaServed, knowsAbout — don't propagate to the page.
+      isPartOf: { "@id": `${SITE_URL}/#website` },
+      publisher: { "@id": `${SITE_URL}/#org` },
     description: "Compare live prices for every Riftbound single across stores in AU, NZ, US, UK and Singapore.",
-    isPartOf: { "@type": "WebSite", name: "RiftCompare", url: SITE_URL },
   };
 
   return (

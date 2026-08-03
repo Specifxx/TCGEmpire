@@ -98,6 +98,11 @@ export async function FacetPageBody({
           "@type": "ItemList",
           name: `Riftbound ${facet.label} cards`,
           url: `${SITE_URL}${crumbHref}/${facet.slug}`,
+      // Edges back to the site-level graph in app/layout.tsx. Without them this
+      // node is an island and the Organization/WebSite entity signals — sameAs,
+      // areaServed, knowsAbout — don't propagate to the page.
+      isPartOf: { "@id": `${SITE_URL}/#website` },
+      publisher: { "@id": `${SITE_URL}/#org` },
           itemListElement: cards.map((c, i) => ({
             "@type": "ListItem",
             position: i + 1,

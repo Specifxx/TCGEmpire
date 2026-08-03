@@ -23,7 +23,7 @@ export function RegionToggle({ label = "Market", className = "" }: { label?: str
               aria-pressed={active}
               aria-label={`${c.label} (${active ? currency : c.currency})`}
               className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-sm font-semibold transition-colors ${
-                active ? "bg-brand-500 text-white" : "text-slate-300 hover:bg-ink-800 hover:text-white"
+                active ? "bg-brand-500 text-ink-950" : "text-slate-300 hover:bg-ink-800 hover:text-white"
               }`}
             >
               <span className="text-base leading-none">{c.flag}</span>

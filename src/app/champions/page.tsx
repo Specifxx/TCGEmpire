@@ -6,7 +6,10 @@ import { COUNTRIES, DEFAULT_COUNTRY, priceField } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { CHAMPIONS, championForCardName } from "@/lib/champions";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
-import { breadcrumb } from "@/lib/jsonld";
+import { breadcrumb, faqPage } from "@/lib/jsonld";
+import { AnswerBox } from "@/components/AnswerBox";
+import { HubFaq } from "@/components/HubFaq";
+import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { SITE_URL } from "@/lib/site";
 
 export const revalidate = 86400;
@@ -15,12 +18,12 @@ export const metadata: Metadata = {
   title: { absolute: "Riftbound Champions — Every Card by Champion & Live Prices | RiftCompare" },
   description:
     "Browse every Riftbound champion and see all their cards across every set, with live prices compared across stores — cheapest printing, most valuable printing and what a full set costs.",
-  alternates: { canonical: "/champions" },
-  openGraph: {
+  alternates: pageAlternates("/champions"),
+  openGraph: pageOpenGraph({
     title: "Riftbound Champions | RiftCompare",
     description: "Every Riftbound champion's cards, with live multi-store prices.",
-    url: `${SITE_URL}/champions`,
-  },
+    url: "/champions",
+  }),
 };
 
 export default async function ChampionsIndexPage() {
@@ -68,6 +71,35 @@ export default async function ChampionsIndexPage() {
 
   const trail = [{ name: "Champions", href: "/champions" }];
 
+  // Derived from the same rows the table renders, so an answer can never state a
+  // number the page contradicts.
+  const dearestRow = live.reduce<(typeof live)[number] | null>(
+    (best, r) => (r.dearest != null && (best?.dearest == null || r.dearest > best.dearest) ? r : best),
+    null
+  );
+  const FAQS = [
+    {
+      q: "Which Riftbound champions have cards?",
+      a: live.length
+        ? `${live.length} League of Legends champions currently have Riftbound cards, across ${totalCards.toLocaleString()} printings. Every one is listed above with its cheapest and most valuable printing.`
+        : "Champion pages appear here as cards are imported into the database.",
+    },
+    {
+      q: "How many cards does each Riftbound champion have?",
+      a: "It varies by champion and by how many sets they've appeared in — the Cards column above shows the exact count for each, including alternate-art, Signature and promo printings.",
+    },
+    {
+      q: "What is the most expensive Riftbound champion card?",
+      a: dearestRow?.dearest != null
+        ? `Right now the highest-priced printing on this page belongs to ${dearestRow.champ.name}, at ${formatMoney(dearestRow.dearest, currency)}. Prices move daily, so the table above is the live answer.`
+        : "The Most valuable column above shows the highest live price for each champion; prices move daily, so treat the table as the current answer.",
+    },
+    {
+      q: "How do I find the cheapest printing of a champion's card?",
+      a: "Open the champion's page. Every printing is listed with its lowest live price across the stores we track, so the cheapest way to get that champion is the top of the list.",
+    },
+  ];
+
   return (
     <div className="flex flex-col gap-8">
       <script
@@ -81,8 +113,10 @@ export default async function ChampionsIndexPage() {
               name: "Riftbound Champions",
               url: `${SITE_URL}/champions`,
               isPartOf: { "@id": `${SITE_URL}/#website` },
+              publisher: { "@id": `${SITE_URL}/#org` },
             },
-          ]),
+            faqPage(FAQS),
+          ].filter(Boolean)),
         }}
       />
 
@@ -100,6 +134,13 @@ export default async function ChampionsIndexPage() {
             <>Champion pages appear here as cards are imported.</>
           )}
         </p>
+        <AnswerBox className="mt-4">
+          <p>
+            Every League of Legends champion with a Riftbound card, in one table — with how many printings each has,
+            the cheapest one to buy right now, and the most valuable. Open a champion to see every printing priced
+            live across the stores we track.
+          </p>
+        </AnswerBox>
       </div>
 
       <div className="card-surface overflow-x-auto">
@@ -142,6 +183,8 @@ export default async function ChampionsIndexPage() {
           <Link href="/cards" className="text-brand-400 hover:underline">by type, rarity and printing</Link>.
         </p>
       </section>
+
+      <HubFaq faqs={FAQS} className="" />
     </div>
   );
 }

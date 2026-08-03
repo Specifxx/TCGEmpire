@@ -149,8 +149,12 @@ h1 {
     @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-colors duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
   }
   /* Primary action: flat, solid RiftCompare green — the one accent. No gradient/glow. */
+  /* Dark ink on the green, not white. White on #1ea65c measures 3.15:1 — the
+     brand green is a BRIGHT accent, and bright accents take dark text. Near-black
+     on it measures 6.2:1, and the hover lightens to brand-400 (9.9:1) rather than
+     darkening, which reads better on a dark UI anyway. */
   .btn-primary {
-    @apply btn bg-brand-500 text-white hover:bg-brand-600;
+    @apply btn bg-brand-500 text-ink-950 hover:bg-brand-400;
   }
   .btn-ghost {
     @apply btn border border-ink-700 bg-ink-850 text-slate-200 hover:border-ink-600 hover:bg-ink-800;
@@ -191,8 +195,11 @@ h1 {
 
      Type size is deliberately untouched: the whole point is to expand the hit
      area, not to make the footer shout. */
+  /* 24px is WCAG 2.2 AA's target-size minimum and applies at EVERY pointer type —
+     the 48px floor below is touch-only, so on a desktop audit these 12px footer
+     links measured ~16px tall and failed. */
   .tap-link {
-    @apply inline-flex items-center;
+    @apply inline-flex min-h-6 min-w-6 items-center;
   }
   /* Same floor for a control that is a text link in a chrome row (country
      switcher, "Privacy settings") rather than a .btn. */

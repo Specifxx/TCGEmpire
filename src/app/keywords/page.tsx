@@ -40,7 +40,11 @@ export default function KeywordsIndexPage() {
     "@type": "CollectionPage",
     name: "Riftbound Keywords & Game Actions Glossary",
     url: `${SITE_URL}/keywords`,
-    isPartOf: { "@type": "WebSite", name: "RiftCompare", url: SITE_URL },
+      // Edges back to the site-level graph in app/layout.tsx. Without them this
+      // node is an island and the Organization/WebSite entity signals — sameAs,
+      // areaServed, knowsAbout — don't propagate to the page.
+      isPartOf: { "@id": `${SITE_URL}/#website` },
+      publisher: { "@id": `${SITE_URL}/#org` },
   };
 
   return (

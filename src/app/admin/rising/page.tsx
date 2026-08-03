@@ -7,6 +7,7 @@ import { formatMoney } from "@/lib/format";
 import { currencyOf, COUNTRY_LIST } from "@/lib/country";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { getRisingCards, type RisePick, type RiseComponents, type RiseScope } from "@/lib/rise-predictor";
+import { cardImageAlt } from "@/lib/image-alt";
 
 export const dynamic = "force-dynamic";
 
@@ -225,7 +226,7 @@ export default async function AdminRisingPage({
                     <Link href={`/card/${p.slug ?? p.id}`} className="flex items-center gap-2.5">
                       {p.imageThumbUrl && (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={p.imageThumbUrl} alt="" aria-hidden="true" width={26} height={36} loading="lazy" decoding="async" className="h-9 w-[26px] shrink-0 rounded-sm object-cover" />
+                        <img src={p.imageThumbUrl} alt={cardImageAlt({ name: p.displayName, setCode: p.setCode, collectorNumber: p.collectorNumber })} width={26} height={36} loading="lazy" decoding="async" className="h-9 w-[26px] shrink-0 rounded-sm object-cover" />
                       )}
                       <span className="min-w-0">
                         <span className="block truncate font-medium text-white hover:text-brand-400">{p.displayName}</span>

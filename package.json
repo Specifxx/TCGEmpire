@@ -4,10 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "tsx scripts/adsense-guard.ts && prisma generate && bash scripts/build-db-push.sh && (node -e \"process.exit(process.env.VERCEL_ENV==='preview'&&(process.env.RM3||process.env.DATABASE_URL_2||process.env.DATABASE_URL)?0:1)\" && IMPORT_ONLY_COUNTRY=SG EBAY_REFRESH=false tsx scripts/import-prices.ts || true) && next build",
+    "build": "tsx scripts/adsense-guard.ts && tsx scripts/optimize-images.ts && tsx scripts/check-images.ts && prisma generate && bash scripts/build-db-push.sh && (node -e \"process.exit(process.env.VERCEL_ENV==='preview'&&(process.env.RM3||process.env.DATABASE_URL_2||process.env.DATABASE_URL)?0:1)\" && IMPORT_ONLY_COUNTRY=SG EBAY_REFRESH=false tsx scripts/import-prices.ts || true) && next build",
     "typecheck": "tsc --noEmit",
     "test": "node --env-file=.env.production --import tsx --test tests/*.test.ts",
     "adsense:guard": "tsx scripts/adsense-guard.ts",
+    "images:optimize": "tsx scripts/optimize-images.ts",
+    "images:check": "tsx scripts/check-images.ts",
+    "blog:heroes": "tsx scripts/gen-blog-heroes.ts",
     "adsense:audit": "tsx scripts/adsense-audit.ts",
     "crawl:check": "tsx scripts/crawl-check.ts",
     "status:check": "tsx scripts/status-check.ts",
@@ -63,6 +66,7 @@
     "jimp": "^1.6.1",
     "postcss": "^8.5.15",
     "prisma": "^5.22.0",
+    "sharp": "^0.35.3",
     "tailwindcss": "^3.4.6",
     "tsx": "^4.16.2",
     "typescript": "^5.5.3"

@@ -9,6 +9,7 @@ import { formatMoney } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { SITE_URL } from "@/lib/site";
+import { cardImageAlt } from "@/lib/image-alt";
 
 export const revalidate = 86400;
 
@@ -45,6 +46,11 @@ export default async function DecksPage() {
     "@type": "ItemList",
     name: "Riftbound Top Meta Decks",
     url: `${SITE_URL}/decks`,
+      // Edges back to the site-level graph in app/layout.tsx. Without them this
+      // node is an island and the Organization/WebSite entity signals — sameAs,
+      // areaServed, knowsAbout — don't propagate to the page.
+      isPartOf: { "@id": `${SITE_URL}/#website` },
+      publisher: { "@id": `${SITE_URL}/#org` },
     itemListElement: META_DECKS.map((d, i) => ({
       "@type": "ListItem",
       position: i + 1,
@@ -162,7 +168,7 @@ function DeckGrid({ decks, currency }: { decks: Awaited<ReturnType<typeof resolv
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={d.imageUrl}
-                  alt={d.legend}
+                  alt={cardImageAlt({ name: d.legend })}
                   width={640}
                   height={360}
                   className="h-full w-full object-cover object-top"

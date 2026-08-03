@@ -62,6 +62,11 @@ export default function GuidesPage() {
     name: "Riftbound Guides",
     description: "Beginner-friendly guides for Riftbound: League of Legends TCG — deckbuilding, where to buy, and more.",
     url: `${SITE_URL}/guides`,
+      // Edges back to the site-level graph in app/layout.tsx. Without them this
+      // node is an island and the Organization/WebSite entity signals — sameAs,
+      // areaServed, knowsAbout — don't propagate to the page.
+      isPartOf: { "@id": `${SITE_URL}/#website` },
+      publisher: { "@id": `${SITE_URL}/#org` },
     numberOfItems: articles.length,
     itemListElement: articles.map((a, i) => ({
       "@type": "ListItem",

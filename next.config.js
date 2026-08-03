@@ -147,6 +147,25 @@ const nextConfig = {
         destination: "/tools/deal-finder",
         permanent: true,
       },
+      // SHORT URLs the editorial content asks for. The 2026 content pack's
+      // articles were briefed to link to "/deals (deal finder)" and to
+      // "/guides/us", "/guides/uk" … — neither shape exists as a route, and
+      // both name a page that DOES exist under a different URL. Minting real
+      // pages at these paths would create duplicate content competing with the
+      // originals, so each is a 301 to the canonical page instead. The article
+      // bodies link straight to the canonical URL (no redirect hop); these
+      // exist so the short URL a reader types, or an inbound link uses, still
+      // lands somewhere correct.
+      { source: "/deals", destination: "/tools/deal-finder", permanent: true },
+      { source: "/guides/us", destination: "/blog/buy-riftbound-cards-us", permanent: true },
+      { source: "/guides/uk", destination: "/blog/buy-riftbound-cards-uk", permanent: true },
+      { source: "/guides/au", destination: "/blog/buy-riftbound-cards-australia", permanent: true },
+      { source: "/guides/nz", destination: "/blog/buy-riftbound-cards-nz", permanent: true },
+      { source: "/guides/ca", destination: "/blog/buy-riftbound-cards-canada", permanent: true },
+      { source: "/guides/sg", destination: "/blog/riftbound-price-comparison-singapore", permanent: true },
+      // The watchlist/alerts explainer lives at /alerts; /watchlist is the other
+      // word people type for it.
+      { source: "/watchlist", destination: "/alerts", permanent: true },
     ];
   },
   async headers() {

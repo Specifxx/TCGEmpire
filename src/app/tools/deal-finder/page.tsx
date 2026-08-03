@@ -16,6 +16,7 @@ import { SITE_URL } from "@/lib/site";
 import { getCurrentUser } from "@/lib/auth";
 import { isPremium } from "@/lib/premium";
 import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
+import { cardImageAlt } from "@/lib/image-alt";
 
 export const dynamic = "force-dynamic";
 
@@ -502,7 +503,7 @@ function CardCell({ card }: { card: CardTileData }) {
       <CardQuickLink card={card} className="flex items-center gap-2.5">
         {card.imageThumbUrl && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={card.imageThumbUrl} alt="" aria-hidden="true" width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
+          <img src={card.imageThumbUrl} alt={cardImageAlt(card)} width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
         )}
         <span className="min-w-0">
           <span className="block truncate font-semibold text-white">{card.name}</span>

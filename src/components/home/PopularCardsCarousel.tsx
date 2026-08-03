@@ -115,7 +115,7 @@ export function PopularCardsCarousel({
             onClick={() => setActive(t.key)}
             aria-pressed={active === t.key}
             className={`inline-flex min-h-11 items-center justify-center rounded-full px-4 text-xs font-bold uppercase tracking-wide transition-colors ${
-              active === t.key ? "bg-brand-500 text-white" : "bg-ink-900 text-slate-400 hover:bg-ink-800 hover:text-white"
+              active === t.key ? "bg-brand-500 text-ink-950" : "bg-ink-900 text-slate-400 hover:bg-ink-800 hover:text-white"
             }`}
           >
             {t.label}

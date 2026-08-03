@@ -152,6 +152,11 @@ export default async function SetGalleryPage({ params }: { params: { set: string
     name: `Riftbound ${set.name} card gallery`,
     description: `Every Riftbound ${set.name} card with images and live prices.`,
     url: `${SITE_URL}/sets/${set.slug}/gallery`,
+      // Edges back to the site-level graph in app/layout.tsx. Without them this
+      // node is an island and the Organization/WebSite entity signals — sameAs,
+      // areaServed, knowsAbout — don't propagate to the page.
+      isPartOf: { "@id": `${SITE_URL}/#website` },
+      publisher: { "@id": `${SITE_URL}/#org` },
     numberOfItems: total,
     itemListOrder: "https://schema.org/ItemListOrderAscending",
     itemListElement: cards.slice(0, MAX_ITEMLIST).map((c, i) => ({

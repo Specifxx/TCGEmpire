@@ -27,7 +27,11 @@ export function CountrySwitcher({ className = "" }: { className?: string }) {
     <div ref={ref} className={`relative ${className}`}>
       <button
         onClick={() => setOpen((o) => !o)}
-        aria-label={`Country: ${current.label}. Change market`}
+        // The accessible name must CONTAIN the visible text ("US"), or a
+        // voice-control user saying what they can see doesn't activate it —
+        // axe's label-content-name-mismatch. Leading with the action keeps the
+        // label useful when read aloud on its own.
+        aria-label={`Change market — currently ${current.code}, ${current.label}`}
         aria-expanded={open}
         className="flex min-h-11 items-center gap-1 rounded-lg border border-ink-700 px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:min-h-0 sm:gap-1.5 sm:px-2.5"
       >

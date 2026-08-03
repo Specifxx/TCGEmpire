@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db";
 import { formatMoney } from "@/lib/format";
 import { cardHref } from "@/lib/card-url";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { getArticles } from "@/lib/articles";
+import { SETS } from "@/lib/constants";
 
 // llms-full.txt — a single-file markdown snapshot an agent can ingest in one fetch:
 // the live RiftCompare Index plus the most-searched cards with their lowest AU price.
@@ -63,6 +65,49 @@ export async function GET() {
   } catch {
     /* omit the cards block on error */
   }
+
+  // EDITORIAL CONTENT. Until now this file carried prices and nothing else, so an
+  // agent pointed at "the single-file snapshot" learned the market and nothing
+  // about who explains it — which is the half that decides whether a source gets
+  // CITED rather than merely scraped. Both blocks below are in-process constants,
+  // so neither costs a database round trip.
+  const articles = getArticles();
+  if (articles.length) {
+    lines.push("## Guides and analysis");
+    lines.push("");
+    for (const a of articles) {
+      const href = `${SITE_URL}/${a.category === "guide" ? "guides" : "blog"}/${a.slug}`;
+      lines.push(`- [${a.title}](${href}) — ${a.date}${a.updated && a.updated !== a.date ? ` (updated ${a.updated})` : ""}: ${a.excerpt}`);
+    }
+    lines.push("");
+  }
+
+  // The answer-first summaries, lifted verbatim from the articles that carry
+  // them. This is the block an answer engine can quote directly.
+  const withSummary = articles.filter((a) => a.summary?.length);
+  if (withSummary.length) {
+    lines.push("## Key answers");
+    lines.push("");
+    for (const a of withSummary) {
+      const href = `${SITE_URL}/${a.category === "guide" ? "guides" : "blog"}/${a.slug}`;
+      lines.push(`### ${a.title}`);
+      lines.push("");
+      // Strip markdown link syntax so the plain-text answer reads cleanly.
+      for (const s of a.summary!) lines.push(`- ${s.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/\*\*/g, "")}`);
+      lines.push("");
+      lines.push(`Source: ${href}`);
+      lines.push("");
+    }
+  }
+
+  lines.push("## Sets");
+  lines.push("");
+  for (const set of SETS) {
+    lines.push(
+      `- ${set.name} (${set.code})${set.totalCards ? ` — ${set.totalCards} cards` : ""}${set.comingSoon ? " — upcoming" : ""}: ${SITE_URL}/sets/${set.slug}`
+    );
+  }
+  lines.push("");
 
   return new Response(lines.join("\n"), {
     headers: { "Content-Type": "text/markdown; charset=utf-8" },

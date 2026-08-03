@@ -5,6 +5,7 @@ import Link from "next/link";
 import { formatMoney } from "@/lib/format";
 import { cardHref } from "@/lib/card-url";
 import type { IndexConstituent } from "@/lib/market-index";
+import { cardImageAlt } from "@/lib/image-alt";
 
 type SortKey = "rank" | "name" | "weight" | "price" | "d1" | "d7";
 type Dir = "asc" | "desc";
@@ -120,7 +121,7 @@ export function IndexConstituents({ constituents, currency }: { constituents: In
                     <Link href={cardHref(c)} className="flex min-h-11 items-center gap-2.5">
                       {c.imageThumbUrl && (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={c.imageThumbUrl} alt="" aria-hidden="true" width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
+                        <img src={c.imageThumbUrl} alt={cardImageAlt(c)} width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
                       )}
                       <span className="min-w-0">
                         <span className="block truncate font-semibold text-white">{c.name}</span>

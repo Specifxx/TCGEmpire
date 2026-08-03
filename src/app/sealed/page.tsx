@@ -160,6 +160,11 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
     "@type": "ItemList",
     name: "Riftbound Sealed Products",
     url: `${SITE_URL}/sealed`,
+      // Edges back to the site-level graph in app/layout.tsx. Without them this
+      // node is an island and the Organization/WebSite entity signals — sameAs,
+      // areaServed, knowsAbout — don't propagate to the page.
+      isPartOf: { "@id": `${SITE_URL}/#website` },
+      publisher: { "@id": `${SITE_URL}/#org` },
     itemListElement: groups
       .filter((g) => g.lowestPriceCents != null && g.listings.some((l) => l.inStock))
       .map((g, i) => {

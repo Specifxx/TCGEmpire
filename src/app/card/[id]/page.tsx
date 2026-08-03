@@ -333,6 +333,14 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     returnPolicyCategory: "https://schema.org/MerchantReturnUnspecified",
     applicableCountry: isoCountry(listingCountry as Country),
   });
+  // Hoisted above the JSON-LD: the AggregateOffer needs a landing URL, and
+  // Google's merchant-listing guidance lists offers.url as recommended — the
+  // per-listing Offer nodes below already set one, so the aggregate was the odd
+  // one out.
+  const setInfoForLd = setByCode(card.setCode);
+  const cardUrl = `/card/${card.slug ?? params.id}`;
+  const cardAbsUrl = `${SITE_URL}${cardUrl}`;
+
   const offersLd = [
     ...(hasStoreOffers
       ? [{
@@ -345,6 +353,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           highPrice: (baseline.prices[baseline.prices.length - 1].priceCents / 100).toFixed(2),
           offerCount: baseline.prices.length,
           availability: "https://schema.org/InStock",
+          url: cardAbsUrl,
           priceValidUntil,
         }]
       : []),
@@ -393,12 +402,23 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     ? {
         "@context": "https://schema.org",
         "@type": "Product",
+        // Addressable node + edges back to the site-level graph declared once in
+        // app/layout.tsx. Without them the site's highest-value page type is an
+        // island and the Organization/WebSite entity signals don't reach it.
+        "@id": `${cardAbsUrl}#product`,
+        mainEntityOfPage: cardAbsUrl,
         name: displayName,
         category: "Trading Card",
         sku: `${card.setCode}-${card.collectorNumber}`,
         productID: `${card.setCode}-${card.collectorNumber}`,
         brand: { "@type": "Brand", name: "Riftbound" },
-        isPartOf: { "@type": "CreativeWorkSeries", name: `Riftbound ${card.setName}` },
+        // TWO memberships, both true: the printing belongs to its set, and the
+        // page belongs to the site graph declared in app/layout.tsx. schema.org
+        // allows isPartOf to take a list, so neither edge has to be dropped.
+        isPartOf: [
+          { "@type": "CreativeWorkSeries", name: `Riftbound ${card.setName}` },
+          { "@id": `${SITE_URL}/#website` },
+        ],
         description: card.description
           ? `${clampText(card.description, 300)} — ${displayName}, Riftbound ${card.setName} (${card.setCode}) ${card.collectorNumber}.`
           : `${displayName} — ${card.domain} ${card.type.toLowerCase()}, ${card.rarity}. Riftbound ${card.setName} (${card.setCode}) ${card.collectorNumber}.`,
@@ -422,9 +442,8 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // structured data. This deepens internal linking — the single biggest lever for
   // getting the long-tail card pages crawled and indexed — and earns breadcrumb
   // rich results in Google.
-  const setInfo = setByCode(card.setCode);
+  const setInfo = setInfoForLd;
   const setUrl = setInfo && !setInfo.comingSoon ? `/sets/${setInfo.slug}` : "/browse";
-  const cardUrl = `/card/${card.slug ?? params.id}`;
   const breadcrumbLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",

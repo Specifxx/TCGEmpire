@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SITE_URL } from "@/lib/site";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { HubFaq } from "@/components/HubFaq";
+import { faqPage, ldJson, webPage } from "@/lib/jsonld";
+import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 
 export const revalidate = 86400;
 
@@ -9,19 +12,44 @@ export const metadata: Metadata = {
   title: { absolute: "Free Riftbound TCG Tools & Calculators | RiftCompare" },
   description:
     "Every RiftCompare tool in one place: box EV, best basket, deck and trade calculators, plus the Premium Deal Finder and value screeners.",
-  alternates: { canonical: "/tools" },
+  alternates: pageAlternates("/tools"),
   keywords: [
     "riftbound tools",
     "riftbound tcg calculator",
     "riftbound card value calculator",
     "riftbound box ev",
   ],
-  openGraph: {
+  openGraph: pageOpenGraph({
     title: "Free Riftbound TCG Tools & Calculators",
     description: "Box EV, best basket, deck and trade calculators — plus the Premium Deal Finder & value screeners.",
-    url: `${SITE_URL}/tools`,
-  },
+    url: "/tools",
+  }),
 };
+
+// The questions this hub should own in an answer engine. Kept next to the tool
+// list so a new tool and its answer move together.
+const FAQS = [
+  {
+    q: "Are the RiftCompare tools free?",
+    a: "Most are. The box EV calculator, best basket, deck builder, trade calculator and bulk pricer are free and need no account. The Deal Finder, value finder and rising-cards screeners show their single best result free and unlock the full list with Premium.",
+  },
+  {
+    q: "What does the Deal Finder do?",
+    a: "It compares the same Riftbound card's live price across every tracked store and marketplace and surfaces where the gap is large enough to matter — including cards worth more on eBay than in stores, and the cheapest place to buy a given card all-in.",
+  },
+  {
+    q: "Do I need an account to use RiftCompare tools?",
+    a: "No. Browsing, comparing prices and running the calculators need no account. An account only adds watchlists, price alerts and portfolio tracking.",
+  },
+  {
+    q: "Which Riftbound tool should I use to buy a whole decklist?",
+    a: "Best Basket. It solves for the cheapest combination of stores for one wantlist including shipping, which is almost always cheaper than buying each card from whoever is individually cheapest.",
+  },
+  {
+    q: "Is a Riftbound booster box worth opening?",
+    a: "Use the box EV calculator: it compares a sealed box's live price against the expected value of its pulls at current singles prices. As a rule, buying the singles you actually want is cheaper than opening product for them.",
+  },
+];
 
 interface Tool {
   href: string;
@@ -125,9 +153,23 @@ export default function ToolsHubPage() {
     })),
   };
 
+  const ld = ldJson(
+    // Ties this hub to the site-level Organization/WebSite graph in app/layout.tsx
+    // — without it the ItemList is an island and none of the entity signals on
+    // that graph propagate here.
+    webPage({
+      name: "Riftbound TCG Tools & Calculators",
+      href: "/tools",
+      description: "Every RiftCompare tool and calculator for Riftbound TCG buyers, sellers and collectors.",
+      type: "CollectionPage",
+    }),
+    itemListLd,
+    faqPage(FAQS)
+  );
+
   return (
     <div className="mx-auto max-w-4xl">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ld }} />
       {/* Was a visible-only breadcrumb with no BreadcrumbList markup behind it —
           the exact split <Breadcrumbs> exists to close. */}
       <Breadcrumbs trail={[{ name: "Tools", href: "/tools" }]} />
@@ -172,6 +214,8 @@ export default function ToolsHubPage() {
           </div>
         </section>
       ))}
+
+      <HubFaq faqs={FAQS} />
     </div>
   );
 }

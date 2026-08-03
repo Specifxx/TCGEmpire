@@ -192,7 +192,7 @@ export default async function SetPage({
     name: `Riftbound ${set.name} Card Prices & List`,
     url: cleanPage ? `${SITE_URL}/sets/${set.slug}?page=${page}` : `${SITE_URL}/sets/${set.slug}`,
     description: `Live prices for every Riftbound ${set.name} card.`,
-    isPartOf: { "@type": "WebSite", name: "RiftCompare", url: SITE_URL },
+    isPartOf: { "@id": `${SITE_URL}/#website` },
     // No mainEntity ItemList: the visible card grid already links every card as a
     // crawlable <a href>, so serializing the entire list again just doubled a big
     // set's HTML weight (≈1 MB / 1.8k links on Origins) for zero extra crawl value.

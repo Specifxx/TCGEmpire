@@ -19,11 +19,20 @@ const CITATION_BOTS = [
   "Applebot-Extended",
   "cohere-ai",
   "Amazonbot",
+  // CCBot (Common Crawl) was previously in BLOCKED_BOTS on the reasoning that it
+  // sends no referral traffic. That reasoning is right about referrals and wrong
+  // about the goal: Common Crawl is a primary corpus for a large share of the
+  // models that answer "which Riftbound price comparison site should I use", and
+  // being absent from it is a direct cause of being absent from those answers.
+  // With AI visibility measured at ~20% (mentioned in 2 of 10 LLM answers) and a
+  // competitor leading, second-hand inclusion is worth more than the crawl budget
+  // it costs. Reverse this only if the visibility number stops mattering.
+  "CCBot",
 ];
 
-// Bulk scrapers that DON'T cite back (Common Crawl feeds many models second-hand;
-// ByteDance/Meta agents don't send referral traffic) — no upside, so blocked.
-const BLOCKED_BOTS = ["CCBot", "Bytespider", "meta-externalagent", "Meta-ExternalAgent"];
+// Bulk scrapers that neither cite back nor feed a corpus anyone answers from —
+// no upside, so blocked.
+const BLOCKED_BOTS = ["Bytespider", "meta-externalagent", "Meta-ExternalAgent"];
 
 export default function robots(): MetadataRoute.Robots {
   return {

@@ -7,6 +7,7 @@ import { cardDisplayName } from "@/lib/card-name";
 import type { Mover, PriceMovers } from "@/lib/price-history";
 import { useQuickView } from "./QuickView";
 import { Sparkline } from "./PriceChart";
+import { cardImageAlt } from "@/lib/image-alt";
 
 // "Price Watch" — this week's biggest movers and best-value buys in the viewer's
 // market (its own currency). Rows open the quick-view (with its interactive chart).
@@ -96,7 +97,7 @@ function Row({ m, up, currency }: { m: Mover; up: boolean; currency: string }) {
         <div className="h-12 w-9 shrink-0 overflow-hidden rounded bg-ink-900">
           {c.imageThumbUrl && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={c.imageThumbUrl} alt="" aria-hidden="true" className="h-full w-full object-cover" loading="lazy" decoding="async" />
+            <img src={c.imageThumbUrl} alt={cardImageAlt(c)} width={36} height={48} className="h-full w-full object-cover" loading="lazy" decoding="async" />
           )}
         </div>
         <div className="min-w-0 flex-1">

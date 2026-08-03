@@ -29,7 +29,9 @@ export function CountryHeroToggle() {
               key={c.code}
               onClick={() => setCountry(c.code)}
               aria-pressed={active}
-              aria-label={`${c.label} (${active ? currency : c.currency})`}
+              // Includes the visible "US"/"UK" code, so the accessible name
+              // contains the visible label (label-content-name-mismatch).
+              aria-label={`${c.code} — ${c.label} (${active ? currency : c.currency})`}
               className={`flex min-h-11 items-center gap-1 rounded-full px-2.5 text-xs font-medium transition-colors ${
                 active
                   ? "bg-ink-800 text-slate-200"

@@ -6,6 +6,7 @@ import type { Deal, TopDeals } from "@/lib/top-deals";
 import { formatMoney } from "@/lib/format";
 import { OutboundLink } from "@/components/OutboundLink";
 import { useCountry } from "@/components/CountryProvider";
+import { cardImageAlt } from "@/lib/image-alt";
 import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
 
 // Homepage "Today's Top Deals". Up to four columns, one per signal (the grid
@@ -43,7 +44,7 @@ function DealRow({ deal, currency, country }: { deal: Deal; currency: string; co
       <div className="h-11 w-8 shrink-0 overflow-hidden rounded bg-ink-900">
         {deal.imageUrl && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={deal.imageUrl} alt="" aria-hidden="true" width={32} height={44} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+          <img src={deal.imageUrl} alt={cardImageAlt({ name: deal.title })} width={32} height={44} loading="lazy" decoding="async" className="h-full w-full object-cover" />
         )}
       </div>
       <div className="min-w-0 flex-1">
