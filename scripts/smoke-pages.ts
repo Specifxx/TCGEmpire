@@ -154,13 +154,25 @@ async function run() {
       }
       if (status !== 200) problems.push(`HTTP ${status}, expected 200`);
 
-      // The exact marker the homepage shipped that day. Scoped to <main>: it also
-      // appears legitimately inside the navbar's own Suspense boundaries, where it
-      // costs a search input and nothing else.
+      // ── On the CSR-bailout marker ──────────────────────────────────────────
+      // Its mere presence inside <main> is NOT a failure, and treating it as one
+      // was a bug in this script that failed a perfectly healthy production deploy
+      // (and would have triggered a needless revert). React emits
+      //   <!--$!--><template data-dgst="BAILOUT_TO_CLIENT_SIDE_RENDERING"></template>
+      //   <fallback/><!--/$-->
+      // for EVERY Suspense boundary that deopts — including the hero's SearchBar,
+      // which is wrapped in its own boundary precisely so the deopt stays contained
+      // to one input. A contained bailout is the fix working, not the bug.
+      //
+      // What actually went wrong that day was an UNCONTAINED bailout: with no
+      // boundary around SearchBar it escalated to app/loading.tsx and swallowed the
+      // entire page, leaving a spinner with no <h1> and zero links. That condition
+      // is measured directly by the three floors below. So the marker is kept only
+      // as an EXPLANATION attached to a real content failure, never as its own.
       const main = /<main[^>]*>([\s\S]*?)<\/main>/i.exec(html);
-      if (main && main[1].includes("BAILOUT_TO_CLIENT_SIDE_RENDERING")) {
-        problems.push("<main> bailed out to client-side rendering — page ships NO content");
-      }
+      const bailedOut = Boolean(main && main[1].includes("BAILOUT_TO_CLIENT_SIDE_RENDERING"));
+
+      const before = problems.length;
 
       const h1s = (html.match(/<h1[\s>]/gi) ?? []).length;
       if (h1s !== 1) problems.push(`${h1s} <h1> elements, expected exactly 1`);
@@ -174,6 +186,14 @@ async function run() {
       ).size;
       const minLinks = c.minLinks ?? 10;
       if (links < minLinks) problems.push(`only ${links} internal links (min ${minLinks})`);
+
+      // Content floors failed AND the page deopted → this is the real incident.
+      if (problems.length > before && bailedOut) {
+        problems.push(
+          "^ an UNCONTAINED client-side-rendering bailout swallowed <main> — check for a " +
+            "useSearchParams() (or other client hook) rendered without its own <Suspense> boundary",
+        );
+      }
 
       for (const s of c.must ?? []) {
         // Compare against whitespace-normalised HTML so a JSON-LD assertion isn't
