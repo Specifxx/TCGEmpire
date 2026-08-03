@@ -278,6 +278,46 @@ export function rarityInfo(key: string): RarityInfo {
   return RARITIES[key] ?? RARITIES.Common;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// A CHASE PRINT DOES NOT SIT IN A BASE RARITY TIER.
+// ─────────────────────────────────────────────────────────────────────────────
+// Reported live: filtering /browse by "Rare" returned a wall of A$165–172
+// Vendetta chase cards — Ambessa 196/166, Swain 173/166, Draven 172/166, Leona
+// 184/166. The filter was correct; the DATA said those cards were Rare. The
+// official Vendetta gallery labels an overnumbered print by the rarity of the
+// card it re-prints, so `import-vendetta.ts` faithfully stored "Rare", and they
+// sorted to the top of the Rare filter because they are the most expensive
+// things in it.
+//
+// This is the same bug alt-arts had. scripts/fix-altart-rarity.ts already
+// reclassifies those to Showcase precisely so they stop "cluttering that rarity
+// filter with the base art" — overnumbered and Signature prints were simply
+// never included in it.
+//
+// The rule: a print that is a SPECIAL TREATMENT of another card belongs in
+// Showcase, not in the tier of the card it re-prints. Someone filtering "Rare"
+// wants the rare cards of the base set.
+//
+// PROMOS ARE DELIBERATELY EXCLUDED and keep their base rarity — that is the
+// existing convention (they carry their own PROMO badge and their own filter),
+// and it is not this change's business to alter it.
+//
+// Crystal Rose (VEN SP1–SP6) is also untouched: its collector numbers are not
+// numeric-over-total, so isOvernumbered() is false for them by construction and
+// they keep their genuine Epic tier alongside their own Crystal Rose badge.
+export function chasePrintRarity(c: {
+  collectorNumber: string;
+  variant?: string | null;
+  isPromo?: boolean;
+  rarity: string;
+}): string {
+  if (c.isPromo) return c.rarity;
+  if (c.variant != null) return "Showcase"; // alt-art (already enforced elsewhere)
+  if (isSignature(c.collectorNumber)) return "Showcase";
+  if (isOvernumbered(c.collectorNumber)) return "Showcase";
+  return c.rarity;
+}
+
 // Signature = a "*" in the collector number (e.g. 223*/221). Takes precedence
 // over the plain overnumbered badge.
 export function isSignature(collectorNumber: string): boolean {

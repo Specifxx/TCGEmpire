@@ -28,6 +28,7 @@ on:
           - migrate-history  # Prisma-based top-up: copy PriceHistory/ClickEvent from EVERY older source into the newest history DB (tolerates unreadable sources, dedupes). Slower/more transfer than migrate-history-db — prefer that for the bulk copy.
           - migrate-history-db # full pg_dump/restore of the HISTORY database (RH5) into RH6 + row-count verification. Compressed on the wire, so it's the cheapest way to drain a project that has exhausted its transfer allowance. RUN THIS BEFORE any other history task once RH6 is set.
           - audit-ven        # read-only census of VEN cards (chase-tier fields)
+          - audit-rarity     # read-only: rarity distribution per set, base prints vs chase prints, + anomalies
           - fix-op-promo-flag # flip isPromo=true for organized-play promos add-tcg-printings.ts mis-tagged (Nexus Night rune cycle)
           - fix-kennen-name  # one-off: rename VEN 155/166 + 197/166 from RiftScribe's "Yordle, Heart of the Tempest" placeholder to "Kennen, Heart of the Tempest" (matches the manually-corrected 197*/166 Signature)
           - audit-history    # read-only per-day price-history diagnostic
@@ -625,6 +626,16 @@ jobs:
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
           EBAY_AFFILIATE_CAMPAIGN: ${{ secrets.EBAY_AFFILIATE_CAMPAIGN }}
         run: npx tsx scripts/import-sealed.ts
+
+      # Read-only. Compares every set's rarity distribution, splitting base prints
+      # from chase prints so the comparison is apples-to-apples — a chase print
+      # carries the rarity of the card it re-prints, which is how ~30 Vendetta
+      # cards ended up under the "Rare" filter.
+      - name: Audit rarity across sets (read-only census)
+        if: inputs.task == 'audit-rarity'
+        env:
+          DATABASE_URL: ${{ secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+        run: npx tsx scripts/audit-rarity.ts
 
       - name: Audit VEN cards (read-only census)
         if: inputs.task == 'audit-ven'
