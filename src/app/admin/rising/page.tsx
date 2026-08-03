@@ -133,7 +133,19 @@ export default async function AdminRisingPage({
 
       {/* Validation + status tiles */}
       <div className="mb-6 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
-        <Stat label="Universe" value={String(analysis.universeSize)} sub={`${analysis.qualifying} with price history`} />
+        {/* `qualifying` is cards with ENOUGH points to score, not cards with any
+            history — labelling it "with price history" read as "the importer has
+            recorded nothing" when in fact every card had a series, just a short
+            one. Report both, and name the threshold. */}
+        <Stat
+          label="Universe"
+          value={String(analysis.universeSize)}
+          sub={
+            analysis.withAnyHistory === 0
+              ? "no price history recorded"
+              : `${analysis.withAnyHistory} with history · ${analysis.qualifying} deep enough (≥${analysis.minPointsRequired} pts)`
+          }
+        />
         <Stat
           label="Demand velocity"
           value={analysis.velocityActive ? "Active" : "Warming up"}
@@ -142,7 +154,7 @@ export default async function AdminRisingPage({
         <Stat
           label="Backtest signal"
           value={bt ? bt.spearman.toFixed(2) : "—"}
-          sub={bt ? `ρ, room→${bt.lagDays}d return (n=${bt.n})` : "needs more history"}
+          sub={bt ? `ρ, room→${bt.lagDays}d return (n=${bt.n})` : `needs ${analysis.minPointsRequired}+ pts/card`}
         />
         <Stat
           label="Top‑third return"
@@ -158,9 +170,33 @@ export default async function AdminRisingPage({
       </div>
 
       {analysis.picks.length === 0 ? (
-        <div className="rounded-xl border border-ink-700 bg-ink-850 px-4 py-12 text-center text-slate-400">
-          Not enough price history yet in {isGlobal ? "any market" : scope}. Signals appear once the daily importer has
-          recorded a few days of price + demand snapshots.
+        <div className="rounded-xl border border-ink-700 bg-ink-850 px-4 py-10 text-center text-sm text-slate-400">
+          {analysis.withAnyHistory === 0 ? (
+            <>
+              <p className="font-semibold text-white">No price history in {isGlobal ? "any market" : scope} yet</p>
+              <p className="mt-1">
+                Nothing has been recorded for these cards. Check that the daily price import is running and writing to
+                the history database.
+              </p>
+            </>
+          ) : (
+            <>
+              {/* The state this page was previously mis-describing: the importer IS
+                  working, there just aren't enough DAYS yet. Say exactly how far
+                  off it is instead of implying a broken pipeline. */}
+              <p className="font-semibold text-white">
+                Price history is building — {analysis.deepestSeries} of {analysis.minPointsRequired} days
+              </p>
+              <p className="mx-auto mt-1 max-w-xl">
+                {analysis.withAnyHistory.toLocaleString()} cards already have price history in{" "}
+                {isGlobal ? "at least one market" : scope}, but scoring needs {analysis.minPointsRequired} daily points
+                per card and the deepest series so far is {analysis.deepestSeries}. The importer is recording normally;
+                signals switch on by themselves in about{" "}
+                {Math.max(1, analysis.minPointsRequired - analysis.deepestSeries)}{" "}
+                {Math.max(1, analysis.minPointsRequired - analysis.deepestSeries) === 1 ? "day" : "days"}.
+              </p>
+            </>
+          )}
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-ink-700 bg-ink-850">

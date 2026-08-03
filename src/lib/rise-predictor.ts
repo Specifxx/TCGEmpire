@@ -87,7 +87,23 @@ export interface RiseBacktest {
 export interface RiseAnalysis {
   picks: RisePick[];
   universeSize: number;
+  /** Cards with at least MIN_POINTS price points — i.e. enough to score. */
   qualifying: number;
+  // ── Why the tool is dark, when it is ─────────────────────────────────────
+  // `qualifying` alone cannot distinguish the two very different states
+  // "the importer isn't recording anything" and "it is recording fine, there
+  // just aren't enough days yet". The admin page was reporting the first while
+  // the truth was the second: 400 cards each had price history, but only 3
+  // points apiece against a MIN_POINTS of 5, so every card was filtered out and
+  // the UI rendered "0 with price history" — which was simply false, and sent
+  // the reader looking for a broken importer that was working perfectly.
+  //
+  // These two make the real state legible: how many cards have ANY history at
+  // all, and how deep the best series actually is.
+  withAnyHistory: number;
+  deepestSeries: number;
+  /** Points a card needs before it can be scored (MIN_POINTS). */
+  minPointsRequired: number;
   demandPriceSpearman: number; // rank-corr of demand vs price (context for divergence)
   velocityActive: boolean;
   snapshotDays: number;
@@ -182,7 +198,12 @@ export async function getRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
 
   const ids = universe.map((c) => c.id);
   if (!ids.length) {
-    return { picks: [], universeSize: 0, qualifying: 0, demandPriceSpearman: 0, velocityActive: false, snapshotDays: 0, backtest: null, generatedAt: new Date().toISOString(), scope };
+    return {
+      picks: [], universeSize: 0, qualifying: 0,
+      withAnyHistory: 0, deepestSeries: 0, minPointsRequired: MIN_POINTS,
+      demandPriceSpearman: 0, velocityActive: false, snapshotDays: 0,
+      backtest: null, generatedAt: new Date().toISOString(), scope,
+    };
   }
 
   // Bulk fetch — never per-card. For GLOBAL, pull every market's history/supply (no
@@ -251,8 +272,20 @@ export async function getRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
     rows.push({ card, s: computeSignals(points), points, listings: supplyById.get(card.id) ?? 0 });
   }
   const qualifying = rows.length;
+  // Diagnostics (see RiseAnalysis): distinguishes "no data arriving" from
+  // "data arriving, not deep enough yet". seriesById only contains cards that
+  // returned at least one PriceHistory row.
+  const withAnyHistory = seriesById.size;
+  let deepestSeries = 0;
+  for (const pts of seriesById.values()) if (pts.length > deepestSeries) deepestSeries = pts.length;
+
   if (!qualifying) {
-    return { picks: [], universeSize: universe.length, qualifying: 0, demandPriceSpearman: 0, velocityActive, snapshotDays, backtest: backtest(seriesById), generatedAt: new Date().toISOString(), scope };
+    return {
+      picks: [], universeSize: universe.length, qualifying: 0,
+      withAnyHistory, deepestSeries, minPointsRequired: MIN_POINTS,
+      demandPriceSpearman: 0, velocityActive, snapshotDays,
+      backtest: backtest(seriesById), generatedAt: new Date().toISOString(), scope,
+    };
   }
 
   // Feature vectors → cross-sectional z-scores (fair comparison across cards).
@@ -335,6 +368,9 @@ export async function getRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
     picks,
     universeSize: universe.length,
     qualifying,
+    withAnyHistory,
+    deepestSeries,
+    minPointsRequired: MIN_POINTS,
     demandPriceSpearman,
     velocityActive,
     snapshotDays,
