@@ -15,6 +15,7 @@ import { importMarketplaceListings } from "./marketplace";
 import { refreshCardmarketPrices } from "./cardmarket";
 import { AU_FALLBACK_RETAILERS, SG_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS, pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS } from "./constants";
 import { currencyOf, isoCountry, type Country } from "./country";
+import { USD_TO } from "./fx";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows } from "./scrape-http";
 
 export interface ShopifyVariant { title: string; price: string; available: boolean }
@@ -311,6 +312,44 @@ export function orderCardsForEbay<T extends { setCode: string }>(
   return [...first, ...rest];
 }
 
+export interface EbayMarketCfg { country: string; marketplace: string; currency: string; retailer: string }
+
+/** Searched on EVERY run. */
+export const EBAY_ALWAYS_MARKETS: EbayMarketCfg[] = [
+  { country: "AU", marketplace: "EBAY_AU", currency: "AUD", retailer: "ebay" },
+  { country: "US", marketplace: "EBAY_US", currency: "USD", retailer: "ebay_us" },
+];
+
+/**
+ * Rotated one per day, in this order. Add a market and the rotation just gets
+ * one day longer — no other change needed.
+ *
+ * ── WHY UK MOVED OUT OF `ALWAYS` (2026-08-03) ───────────────────────────────
+ * The original split was sized for ~1.1k cards. Vendetta took the catalogue to
+ * 1,400, and 4 markets × 1,400 = 5,600 Browse calls against a 4,280 budget no
+ * longer fits — nor does it fit the 55-minute job timeout at the measured
+ * ~0.75s/card. A forced run on 2026-08-03 completed AU (17.6 min) and US
+ * (10.1 min), then was KILLED 9 minutes into UK. UK wrote nothing (a truncated
+ * market is discarded, never half-saved) and the rotating market never started.
+ *
+ * So SG/CA had silently stopped refreshing altogether: every run died during UK
+ * before reaching them. Two daily markets + one rotating is 3 × 1,400 = 4,200,
+ * inside the budget, and each rotating market is at most ~48h stale — far better
+ * than one that never runs at all.
+ */
+export const EBAY_ROTATING_MARKETS: EbayMarketCfg[] = [
+  { country: "UK", marketplace: "EBAY_GB", currency: "GBP", retailer: "ebay_uk" },
+  { country: "SG", marketplace: "EBAY_SG", currency: "SGD", retailer: "ebay_sg" },
+];
+
+/** The markets a run on `dayIndex` will search. Pure, so the budget is testable. */
+export function ebayMarketsForDay(dayIndex: number): EbayMarketCfg[] {
+  return [...EBAY_ALWAYS_MARKETS, EBAY_ROTATING_MARKETS[dayIndex % EBAY_ROTATING_MARKETS.length]];
+}
+
+/** eBay CA rows are derived from the US pass — see the note at the write site. */
+export const EBAY_CA_RETAILER = "ebay_ca";
+
 export async function refreshEbayMarkets(
   cards: { id: string; name: string; setCode: string; collectorNumber: string; isPromo: boolean }[]
 ): Promise<number> {
@@ -342,17 +381,23 @@ export async function refreshEbayMarkets(
   // take turns: AU/US/UK refresh daily, and SG and CA get every other day. That
   // fits ~4×1.1k ≈ 4.4k inside the budget, and each rotating market is at most ~24h
   // staler than the others — far better than one of them being permanently skipped.
-  const ALWAYS = [
-    { country: "AU", marketplace: "EBAY_AU", currency: "AUD", retailer: "ebay" },
-    { country: "US", marketplace: "EBAY_US", currency: "USD", retailer: "ebay_us" },
-    { country: "UK", marketplace: "EBAY_GB", currency: "GBP", retailer: "ebay_uk" },
-  ];
-  // Rotated one-per-day, in this order. Add a third market here and the rotation
-  // just becomes every-third-day — no other change needed.
-  const ROTATING = [
-    { country: "SG", marketplace: "EBAY_SG", currency: "SGD", retailer: "ebay_sg" },
-    { country: "CA", marketplace: "EBAY_CA", currency: "CAD", retailer: "ebay_ca" },
-  ];
+  const ALWAYS = EBAY_ALWAYS_MARKETS;
+  // Rotated one-per-day, in this order. Add a market here and the rotation just
+  // gets one day longer — no other change needed.
+  //
+  // ── WHY UK MOVED OUT OF `ALWAYS` (2026-08-03) ───────────────────────────────
+  // The arithmetic above was written for ~1.1k cards. Vendetta took the catalogue
+  // to 1,400, and 4 markets × 1,400 = 5,600 calls against a 4,280 budget no
+  // longer fits — nor does it fit the 55-minute job timeout at the measured
+  // ~0.75s/card. A forced run on 2026-08-03 did AU (17.6 min) and US (10.1 min),
+  // then was KILLED 9 minutes into UK; UK wrote nothing (a truncated market is
+  // discarded, not half-saved) and the rotating market never started at all.
+  //
+  // So SG/CA had silently stopped refreshing entirely: every run died during UK
+  // before reaching them. Two daily markets + one rotating is 3 × 1,400 = 4,200,
+  // which fits the budget, and each rotating market is at most ~48h stale —
+  // far better than one that never runs.
+  const ROTATING = EBAY_ROTATING_MARKETS;
   const ALL = [...ALWAYS, ...ROTATING];
 
   // EBAY_ONLY_MARKET=SG restricts the pass to one marketplace (~1k calls) — used
@@ -481,6 +526,43 @@ export async function refreshEbayMarkets(
         await prisma.ebayAdListing.deleteMany({ where: { country: mkt.country, cardId: { in: queriedIds.slice(i, i + 1000) } } });
       }
       await prisma.ebayAdListing.createMany({ data: adRows });
+    }
+
+    // ── CANADA IS DERIVED FROM THE US PASS, NOT SEARCHED ────────────────────
+    // eBay CA used to be its own marketplace query — a full ~1,400 extra Browse
+    // calls for the smallest market, on a budget that no longer covers even the
+    // markets we search. It is also the most redundant: eBay US ships to Canada
+    // as a matter of course (eBay International Shipping), so the listings a
+    // Canadian buyer sees substantially ARE the US ones.
+    //
+    // So CA now reuses the US result set, converted to CAD, at zero quota cost.
+    //
+    // Two honesty constraints, both load-bearing:
+    //   • shippingCents is NULLED. The figure eBay returned is US DOMESTIC
+    //     postage; a Canadian buyer pays international postage instead. null
+    //     means "unknown / at checkout" in the UI, which is true — carrying the
+    //     US number over would understate the delivered cost and make these rows
+    //     beat genuine Canadian listings they might well lose to.
+    //   • retailerName says "eBay US", so the row is visibly a cross-border buy
+    //     rather than a local one.
+    // Unlike the converted TCGplayer references (see ALL_FALLBACK_RETAILERS),
+    // this stays a REAL comparison row, because it is a real purchasable listing
+    // — the price is genuine and the item genuinely ships to Canada. What is
+    // unknown is the postage, and the UI already has a way to say that.
+    if (mkt.country === "US" && rows.length > 0 && !truncated) {
+      const caRows: Prisma.RetailerPriceCreateManyInput[] = rows.map((r) => ({
+        ...r,
+        retailer: EBAY_CA_RETAILER,
+        retailerName: "eBay US",
+        priceCents: Math.round((r.priceCents as number) * USD_TO.CAD),
+        shippingCents: null,
+        currency: "CAD",
+        country: "CA",
+      }));
+      await prisma.retailerPrice.deleteMany({ where: { retailer: EBAY_CA_RETAILER } });
+      await prisma.retailerPrice.createMany({ data: caRows });
+      written += caRows.length;
+      console.log(`eBay CA: ${caRows.length} rows derived from the US pass (0 extra Browse calls).`);
     }
   }
   // Stamp every card the pass reached so the card page can distinguish a genuine

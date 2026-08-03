@@ -1,6 +1,9 @@
 import { test } from "node:test";
+import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
-import { orderCardsForEbay } from "../src/lib/price-import";
+import {
+  orderCardsForEbay, ebayMarketsForDay, EBAY_ROTATING_MARKETS, EBAY_CA_RETAILER,
+} from "../src/lib/price-import";
 import {
   pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, SETS, isFallbackRetailer,
   ALL_FALLBACK_RETAILERS, AU_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS,
@@ -294,4 +297,84 @@ test("the union covers every per-market list — a new market cannot be forgotte
   for (const list of [AU_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS, SG_FALLBACK_RETAILERS, CA_FALLBACK_RETAILERS, NZ_FALLBACK_RETAILERS]) {
     for (const r of list) assert.ok(ALL_FALLBACK_RETAILERS.includes(r), `${r} missing from the union`);
   }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// eBay market budget: what a single run can actually cover.
+// ─────────────────────────────────────────────────────────────────────────────
+// Measured on the forced run of 2026-08-03: 1,400 cards, ~0.75s per card per
+// market, 4,880/5,000 quota remaining → 4,280 spendable. Four markets needed
+// 5,600 calls and ~70 minutes against a 55-minute job timeout, so the run was
+// killed 9 minutes into UK — UK wrote nothing and the rotating market (SG) never
+// started. These pin the arithmetic so catalogue growth trips a test, not a
+// silent gap in coverage.
+
+const CATALOGUE = 1400;      // cards queried per market, as of the VEN launch
+const SPENDABLE = 4280;      // 5000 daily limit − 600 reserve − ~120 already spent
+const SECONDS_PER_CARD = 0.75;
+// Read from the workflow rather than copied, so raising one without the other
+// cannot silently reintroduce the mid-market kill.
+const JOB_TIMEOUT_MIN = Number(
+  /timeout-minutes:\s*(\d+)/.exec(readFileSync(".github/workflows/refresh-prices.yml", "utf8"))![1],
+);
+const STORE_IMPORT_MIN = 18; // the store pass that runs before eBay in the same job
+
+test("a day's markets fit inside the eBay Browse budget", () => {
+  for (let day = 0; day < EBAY_ROTATING_MARKETS.length; day++) {
+    const calls = ebayMarketsForDay(day).length * CATALOGUE;
+    assert.ok(calls <= SPENDABLE, `day ${day}: ${calls} calls exceeds the ${SPENDABLE} budget`);
+  }
+});
+
+test("a day's markets fit inside the job timeout", () => {
+  for (let day = 0; day < EBAY_ROTATING_MARKETS.length; day++) {
+    const mins = STORE_IMPORT_MIN + (ebayMarketsForDay(day).length * CATALOGUE * SECONDS_PER_CARD) / 60;
+    assert.ok(mins <= JOB_TIMEOUT_MIN, `day ${day}: ~${mins.toFixed(0)} min exceeds the ${JOB_TIMEOUT_MIN} min timeout`);
+  }
+});
+
+test("the old 4-market layout would NOT have fit — this is what broke", () => {
+  // Guards against someone "just adding UK back to ALWAYS".
+  assert.ok(4 * CATALOGUE > SPENDABLE, "4 markets should not fit the budget");
+});
+
+test("AU and US refresh every day", () => {
+  for (let day = 0; day < EBAY_ROTATING_MARKETS.length; day++) {
+    const codes = ebayMarketsForDay(day).map((m) => m.country);
+    assert.ok(codes.includes("AU"), `day ${day} missing AU`);
+    assert.ok(codes.includes("US"), `day ${day} missing US`);
+  }
+});
+
+test("every rotating market comes round, and none is ever skipped forever", () => {
+  const seen = new Set<string>();
+  for (let day = 0; day < EBAY_ROTATING_MARKETS.length * 3; day++) {
+    for (const m of ebayMarketsForDay(day)) seen.add(m.country);
+  }
+  for (const m of EBAY_ROTATING_MARKETS) assert.ok(seen.has(m.country), `${m.country} never scheduled`);
+});
+
+test("CANADA costs no quota — it is not a searched market", () => {
+  // CA reuses the US result set converted to CAD: eBay US ships to Canada, so
+  // the listings are substantially the same and a separate ~1,400-call pass for
+  // the smallest market is not worth the budget.
+  for (let day = 0; day < EBAY_ROTATING_MARKETS.length; day++) {
+    assert.ok(
+      !ebayMarketsForDay(day).some((m) => m.country === "CA"),
+      `day ${day} still searches eBay CA`,
+    );
+  }
+  assert.equal(EBAY_CA_RETAILER, "ebay_ca", "the derived rows must keep the existing retailer key");
+});
+
+test("the derived CA rows are still real eBay rows for the comparison", () => {
+  // Unlike a converted TCGplayer reference, an eBay US listing genuinely ships
+  // to Canada, so it stays a buyable comparison row.
+  assert.equal(isFallbackRetailer(EBAY_CA_RETAILER), false);
+  const v = computeMarket(
+    [{ ...tcgRow("CA", EBAY_CA_RETAILER), retailerName: "eBay US", ship: null }],
+    "CA",
+  );
+  assert.equal(v.storeCount, 1);
+  assert.equal(v.hasEbay, true, "hasEbay must still fire so the CA fallback search is suppressed");
 });
