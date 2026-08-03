@@ -1,4 +1,214 @@
 {
+  "/blog/best-riftbound-marketplaces.png": {
+    "src": "/blog/best-riftbound-marketplaces.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 42401,
+    "webp": "/blog/best-riftbound-marketplaces.webp",
+    "webpBytes": 21424,
+    "avif": "/blog/best-riftbound-marketplaces.avif",
+    "avifBytes": 15522,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/best-riftbound-marketplaces-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/best-riftbound-marketplaces-768w.webp"
+      }
+    ],
+    "fingerprint": "c4a61ca6b8009622"
+  },
+  "/blog/currency-conversion-fees.png": {
+    "src": "/blog/currency-conversion-fees.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 50805,
+    "webp": "/blog/currency-conversion-fees.webp",
+    "webpBytes": 20526,
+    "avif": "/blog/currency-conversion-fees.avif",
+    "avifBytes": 11689,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/currency-conversion-fees-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/currency-conversion-fees-768w.webp"
+      }
+    ],
+    "fingerprint": "d5ec4b8772e97d35"
+  },
+  "/blog/ebay-bidding-strategies.png": {
+    "src": "/blog/ebay-bidding-strategies.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 49890,
+    "webp": "/blog/ebay-bidding-strategies.webp",
+    "webpBytes": 18938,
+    "avif": "/blog/ebay-bidding-strategies.avif",
+    "avifBytes": 10990,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/ebay-bidding-strategies-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/ebay-bidding-strategies-768w.webp"
+      }
+    ],
+    "fingerprint": "904b958f5042f96f"
+  },
+  "/blog/how-to-choose-a-riftbound-marketplace.png": {
+    "src": "/blog/how-to-choose-a-riftbound-marketplace.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 48832,
+    "webp": "/blog/how-to-choose-a-riftbound-marketplace.webp",
+    "webpBytes": 21050,
+    "avif": "/blog/how-to-choose-a-riftbound-marketplace.avif",
+    "avifBytes": 12008,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/how-to-choose-a-riftbound-marketplace-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/how-to-choose-a-riftbound-marketplace-768w.webp"
+      }
+    ],
+    "fingerprint": "aa8de7f8db58d461"
+  },
+  "/blog/most-expensive-riftbound-cards.png": {
+    "src": "/blog/most-expensive-riftbound-cards.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 48827,
+    "webp": "/blog/most-expensive-riftbound-cards.webp",
+    "webpBytes": 21348,
+    "avif": "/blog/most-expensive-riftbound-cards.avif",
+    "avifBytes": 17056,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/most-expensive-riftbound-cards-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/most-expensive-riftbound-cards-768w.webp"
+      }
+    ],
+    "fingerprint": "d016e1ece2e9aa86"
+  },
+  "/blog/riftbound-card-price-comparison.png": {
+    "src": "/blog/riftbound-card-price-comparison.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 46702,
+    "webp": "/blog/riftbound-card-price-comparison.webp",
+    "webpBytes": 21552,
+    "avif": "/blog/riftbound-card-price-comparison.avif",
+    "avifBytes": 15461,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-card-price-comparison-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-card-price-comparison-768w.webp"
+      }
+    ],
+    "fingerprint": "e270c3bb8f676c30"
+  },
+  "/blog/riftbound-card-values.png": {
+    "src": "/blog/riftbound-card-values.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 43248,
+    "webp": "/blog/riftbound-card-values.webp",
+    "webpBytes": 19628,
+    "avif": "/blog/riftbound-card-values.avif",
+    "avifBytes": 10135,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-card-values-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-card-values-768w.webp"
+      }
+    ],
+    "fingerprint": "69da8aa819e875f1"
+  },
+  "/blog/riftbound-variant-glossary.png": {
+    "src": "/blog/riftbound-variant-glossary.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 42632,
+    "webp": "/blog/riftbound-variant-glossary.webp",
+    "webpBytes": 20918,
+    "avif": "/blog/riftbound-variant-glossary.avif",
+    "avifBytes": 13446,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-variant-glossary-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-variant-glossary-768w.webp"
+      }
+    ],
+    "fingerprint": "1367a8b7adca33e4"
+  },
+  "/blog/riftcompare-review.png": {
+    "src": "/blog/riftcompare-review.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 50582,
+    "webp": "/blog/riftcompare-review.webp",
+    "webpBytes": 19166,
+    "avif": "/blog/riftcompare-review.avif",
+    "avifBytes": 11260,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftcompare-review-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftcompare-review-768w.webp"
+      }
+    ],
+    "fingerprint": "d155c00ef6b1a784"
+  },
+  "/blog/tcgplayer-fees.png": {
+    "src": "/blog/tcgplayer-fees.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 60210,
+    "webp": "/blog/tcgplayer-fees.webp",
+    "webpBytes": 20134,
+    "avif": "/blog/tcgplayer-fees.avif",
+    "avifBytes": 12299,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/tcgplayer-fees-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/tcgplayer-fees-768w.webp"
+      }
+    ],
+    "fingerprint": "c076dea240cd7a64"
+  },
   "/icon-512.png": {
     "src": "/icon-512.png",
     "width": 512,

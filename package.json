@@ -10,6 +10,7 @@
     "adsense:guard": "tsx scripts/adsense-guard.ts",
     "images:optimize": "tsx scripts/optimize-images.ts",
     "images:check": "tsx scripts/check-images.ts",
+    "blog:heroes": "tsx scripts/gen-blog-heroes.ts",
     "adsense:audit": "tsx scripts/adsense-audit.ts",
     "crawl:check": "tsx scripts/crawl-check.ts",
     "status:check": "tsx scripts/status-check.ts",

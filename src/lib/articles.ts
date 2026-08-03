@@ -2,6 +2,7 @@
 // input), rendered with the lightweight <Markdown> component. To publish a new
 // article, add an entry here.
 import type { Country } from "./country";
+import { SEO_PACK_ARTICLES } from "./content/seo-pack-articles";
 
 
 export type ArticleCategory = "blog" | "guide";
@@ -92,11 +93,32 @@ export interface Article {
   // genuinely different information instead of more prose.
   // See docs/adsense-remediation.md § Phase 12.
   marketData?: Country;
-  // Structured Q&A for FAQPage schema. Most guides already hand-write a "## X FAQ"
-  // section in `body` (visible, human-facing markdown) — this is the SAME content
-  // duplicated in structured form so ArticleView can emit real FAQPage JSON-LD
-  // without parsing markdown. Keep the two in sync when editing either.
+  // Structured Q&A. This is now the SINGLE source for both the FAQPage JSON-LD
+  // and the VISIBLE FAQ section (components/ArticleFaq.tsx) — an article carrying
+  // `faq` must NOT also hand-write a "## … FAQ" markdown section in `body`, or the
+  // page shows the same questions twice. Older articles still have the markdown
+  // copy; those are being migrated, and the duplicate is why this field exists.
   faq?: { q: string; a: string }[];
+  // Answer-first summary rendered above the body (components/AnswerBox.tsx) and
+  // reused as the article's TL;DR. 2-5 short bullets, inline markdown allowed —
+  // this is the block a featured snippet or an AI answer engine lifts, so lead
+  // with the answer rather than context.
+  summary?: string[];
+  // Featured image, shown at the top of the article and used as the OG image
+  // fallback. Site-relative path into public/ (so the build-time optimiser has a
+  // manifest entry for it) plus REQUIRED descriptive alt text.
+  hero?: { src: string; alt: string };
+  // Attach the LIVE "most expensive cards right now" table (ArticleTopValue) for
+  // one market. Used by the most-expensive-cards listicle instead of typing a
+  // top-10 into the body, which would be stale within a week — see that
+  // component's header for the full reasoning.
+  topValue?: { country: Country; take?: number; heading?: string };
+  // ItemList JSON-LD for a LISTICLE — the ranked entities the article is about.
+  // Only set this where the page genuinely IS a list (a ranked comparison, a
+  // top-N); an ItemList on an explainer is markup that describes something the
+  // page doesn't have. Keep the entries and their order identical to the visible
+  // table, because that is what validation cross-checks.
+  itemList?: { name: string; items: { name: string; description?: string; url?: string }[] };
 }
 
 export const ARTICLES: Article[] = [
@@ -3846,6 +3868,12 @@ Find your nearest Riftbound local game store and show up for their weekly Nexus 
       { q: "Are Nexus Night promos worth anything?", a: "Promo prints are historically one of Riftbound's more volatile chase tiers — small, event-bound print runs can outprice regular chase cards once a season's supply dries up. Check each card's live page for the current picture." },
     ],
   },
+  // The 2026 SEO content pack — the five briefed articles plus the four
+  // AI-visibility target pages and the variant glossary. Kept in their own file
+  // so the batch stays reviewable; spread here so every existing surface (the
+  // /blog and /guides indexes, the sitemap's `content` section, the feeds, the
+  // related-posts module, the /llm markdown mirrors) picks them up unchanged.
+  ...SEO_PACK_ARTICLES,
 ];
 
 export function getArticles(category?: ArticleCategory): Article[] {
