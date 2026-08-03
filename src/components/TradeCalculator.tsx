@@ -347,8 +347,8 @@ function TradeColumn({
             const unit = ov ?? base; // override beats market price
             return (
               <li key={c.id} className="flex items-start gap-3 py-2.5">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 {c.imageThumbUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img src={c.imageThumbUrl} alt="" aria-hidden="true" className="mt-0.5 h-12 w-9 shrink-0 rounded object-cover" />
                 ) : (
                   <div className="mt-0.5 h-12 w-9 shrink-0 rounded bg-ink-800" />
@@ -573,8 +573,8 @@ function CardPicker({ onAdd }: { onAdd: (r: SearchResult) => void }) {
                 }}
                 className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-ink-800"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 {r.imageThumbUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img src={r.imageThumbUrl} alt="" aria-hidden="true" className="h-9 w-7 shrink-0 rounded object-cover" />
                 ) : (
                   <div className="h-9 w-7 shrink-0 rounded bg-ink-800" />

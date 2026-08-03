@@ -82,6 +82,49 @@ test("the Vendetta gallery is internally linked from the key surfaces", () => {
   }
 });
 
+// ── Set page: list intent, not buyer intent ─────────────────────────────────
+test("set page title leads with card-list intent, price second", () => {
+  const src = read("src/app/sets/[set]/page.tsx");
+  // It used to be "Riftbound <set> Prices — Cheapest Sellers", which is a buyer
+  // hook aimed at a list-shaped query ("vendetta card list", position 10.5). The
+  // mismatch is what produced impressions without clicks.
+  assert.ok(
+    src.includes("Card List & Prices"),
+    "set page title must lead with 'Card List' and keep price secondary",
+  );
+  assert.ok(
+    !src.includes("Prices — Cheapest Sellers"),
+    "the old buyer-hook title must not come back",
+  );
+  // Title and H1 disagreeing is its own intent mismatch.
+  assert.ok(src.includes("card list &amp; prices"), "H1 must mirror the list-first title");
+});
+
+test("set page and gallery do not chase the same query", () => {
+  // The whole point of the split: /sets/<slug> owns "card list", the gallery owns
+  // "card gallery". If the set page ever says "Card Gallery" in its title they are
+  // competing with each other again.
+  const setSrc = read("src/app/sets/[set]/page.tsx");
+  const titleBlock = setSrc.slice(setSrc.indexOf("titleCandidates"), setSrc.indexOf("descCandidates"));
+  assert.ok(!/Card Gallery/i.test(titleBlock), "set page title must not claim 'Card Gallery'");
+  assert.ok(read(GALLERY).includes("Card Gallery"), "gallery page must claim 'Card Gallery'");
+});
+
+test("set and gallery titles stay inside Google's truncation for every set", () => {
+  // Both pages step their title down through candidates; this asserts the longest
+  // real set name still fits with the " | RiftCompare" suffix attached.
+  const longest = SETS.reduce((a, b) => (a.name.length >= b.name.length ? a : b)).name;
+  const fits = (c: string[]) => c.some((t) => `${t} | RiftCompare`.length <= 60);
+  assert.ok(
+    fits([`Riftbound ${longest} Card List & Prices`, `Riftbound ${longest} Card List`, `${longest} Card List & Prices`]),
+    `no set-page title candidate fits for "${longest}"`,
+  );
+  assert.ok(
+    fits([`Riftbound ${longest} Card Gallery`, `${longest} Card Gallery`]),
+    `no gallery title candidate fits for "${longest}"`,
+  );
+});
+
 // ── Riftle ("riftle": 213 impressions, 0.5% CTR, position ~7.2) ──────────────
 test("riftle page claims its own name as an entity", () => {
   const src = read(RIFTLE);

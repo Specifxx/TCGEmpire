@@ -87,8 +87,16 @@ export async function generateMetadata({ params }: { params: { set: string } }):
 
   // Title leads with the exact query shape ("<set> card gallery"), then the count —
   // a concrete number is the CTR lever on a list page, and it is the thing the
-  // competing wiki-style results do not put in their title.
-  const title = `Riftbound ${set.name} Card Gallery — All ${set.totalCards ?? total} Cards`;
+  // competing wiki-style results do not put in their title. Stepped down so the
+  // longest set names keep "<set> Card Gallery" intact inside Google's ~60-char
+  // truncation, losing only the count.
+  const titleCandidates = [
+    `Riftbound ${set.name} Card Gallery — All ${set.totalCards ?? total} Cards`,
+    `Riftbound ${set.name} Card Gallery — ${set.totalCards ?? total} Cards`,
+    `Riftbound ${set.name} Card Gallery`,
+    `${set.name} Card Gallery`,
+  ];
+  const title = titleCandidates.find((t) => `${t} | RiftCompare`.length <= 60) ?? titleCandidates[titleCandidates.length - 1];
   const description =
     `Browse every Riftbound ${set.name} card in one visual gallery — full card images, filterable by domain, ` +
     `rarity and type, with live prices from every store we track. Tap any card for its rules text and price comparison.`;

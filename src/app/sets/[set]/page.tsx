@@ -48,10 +48,34 @@ export async function generateMetadata({
   if (!set) return notFoundMetadata("Set");
   // Market-neutral title (no country) so it ranks globally; the page itself is
   // tailored to the visitor's market.
-  // Front-loads the "cheapest" buyer hook (GSC: these pages ranked but had very
-  // low CTR — "Prices & Full Card List" read as generic next to competitors).
-  const title = `Riftbound ${set.name} Prices — Cheapest Sellers`;
-  const description = `Find the cheapest Riftbound ${set.name} singles — every card, live prices compared across stores, updated daily.`;
+  //
+  // LIST INTENT FIRST, PRICE SECOND. This page previously led with "Prices —
+  // Cheapest Sellers", but the queries it actually surfaces for are list-shaped:
+  // "vendetta card list" (146 impressions, 2.1% CTR, position 10.5). A buyer-hook
+  // title against a list-intent query is an intent mismatch, and mismatch is what
+  // produces exactly that pattern — ranking, but ignored.
+  //
+  // Deliberately "Card List", NOT "Card Gallery": /sets/<slug>/gallery owns the
+  // gallery queries with a genuinely different page (every card on one screen,
+  // visual browse). Two of our own URLs chasing one query helps neither, so the
+  // split is list-here / gallery-there, and a test enforces it.
+  //
+  // Built longest-first and stepped down (the same technique the card page uses)
+  // so even the longest set name — "Origins: Proving Grounds" — still fits inside
+  // Google's ~60-char truncation with the site suffix attached, instead of getting
+  // the important half cut off.
+  const titleCandidates = [
+    `Riftbound ${set.name} Card List & Prices`,
+    `Riftbound ${set.name} Card List`,
+    `${set.name} Card List & Prices`,
+  ];
+  const title = titleCandidates.find((t) => `${t} | RiftCompare`.length <= 60) ?? titleCandidates[titleCandidates.length - 1];
+  const descCandidates = [
+    `The complete Riftbound ${set.name} card list — every card with images, plus live prices compared across stores to find the cheapest singles. Updated daily.`,
+    `The complete Riftbound ${set.name} card list — every card, with live prices compared across stores to find the cheapest singles. Updated daily.`,
+    `The complete Riftbound ${set.name} card list, with live prices compared across stores to find the cheapest singles. Updated daily.`,
+  ];
+  const description = descCandidates.find((d) => d.length <= 155) ?? descCandidates[descCandidates.length - 1];
   // A set with no imported cards yet (pre-release, or a data gap where a released
   // set was registered before its cards were imported) renders only a placeholder —
   // thin content. Noindex it so Google doesn't sink crawl budget into a soft-thin
@@ -193,8 +217,10 @@ export default async function SetPage({
             {set.code}
           </div>
 
+          {/* Mirrors the title's list-first framing (see generateMetadata) — an
+              H1 that disagrees with the title is its own intent mismatch. */}
           <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
-            Riftbound {set.name} — card prices &amp; full list
+            Riftbound {set.name} card list &amp; prices
           </h1>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
             {set.comingSoon ? (
@@ -210,7 +236,7 @@ export default async function SetPage({
                 )}
               </>
             ) : (
-              <>Browse all {totalInSet} Riftbound <strong className="text-slate-200">{set.name}</strong> cards and compare live prices across stores to find the cheapest singles. {priced.toLocaleString()} cards are priced right now, updated daily — switch your country at the top to see local prices.</>
+              <>The complete Riftbound <strong className="text-slate-200">{set.name}</strong> card list — all {totalInSet.toLocaleString()} cards, sortable and filterable, with live prices compared across stores so you can find the cheapest singles. {priced.toLocaleString()} cards are priced right now, updated daily — switch your country at the top to see local prices.</>
             )}
           </p>
 
