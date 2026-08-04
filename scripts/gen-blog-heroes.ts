@@ -101,6 +101,24 @@ const HEROES: Hero[] = [
     title: "Riftbound Variant & Finish Glossary",
     chips: ["Standard → Signature", "Overnumbered", "Alternate art"],
   },
+  {
+    slug: "riftbound-2027-set-roadmap",
+    kicker: "News · Roadmap",
+    title: "Riftbound's 2027 Set Roadmap",
+    chips: ["Radiance · Oct 2026", "Legacy · Jan 2027", "The Reckoning · Apr 2027"],
+  },
+  {
+    slug: "riftbound-legacy-pack-changes-and-card-templating",
+    kicker: "News · Rules",
+    title: "Legacy: Pack & Templating Changes",
+    chips: ["6 commons, not 7", "Legend/Battlefield slot", "Built for draft"],
+  },
+  {
+    slug: "riftbound-august-2026-state-of-the-game-takeaways",
+    kicker: "News · Analysis",
+    title: "August 2026 State of the Game",
+    chips: ["Ban philosophy", "2v2 by 2028", "Collectors vs players"],
+  },
 ];
 
 const esc = (s: string) =>

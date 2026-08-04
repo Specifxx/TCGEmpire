@@ -3868,6 +3868,358 @@ Find your nearest Riftbound local game store and show up for their weekly Nexus 
       { q: "Are Nexus Night promos worth anything?", a: "Promo prints are historically one of Riftbound's more volatile chase tiers — small, event-bound print runs can outprice regular chase cards once a season's supply dries up. Check each card's live page for the current picture." },
     ],
   },
+  // ── August 2026 announcement coverage ──────────────────────────────────────
+  // Three posts covering Riot's 4 Aug 2026 "Products and Sets into 2027" and
+  // "August 2026 State of the Game" announcements. Written from the
+  // announcements plus press coverage and summarised in our own words — no copy
+  // is reproduced from Riot's articles, and each post attributes and links back
+  // to the original.
+  //
+  // IMAGE SLOTS (author to fill): each post ships the generated branded hero
+  // (scripts/gen-blog-heroes.ts). Riot's own diagrams and card art are NOT
+  // hotlinked. Where a screenshot would genuinely help, the spot is marked with
+  // an IMAGE SLOT comment above the article — drop the file into public/blog/
+  // and add a markdown image line at the noted heading.
+  {
+    slug: "riftbound-2027-set-roadmap",
+    category: "blog",
+    title: "Riftbound's 2027 Set Roadmap: Radiance, Legacy, The Reckoning and Two Unnamed Sets",
+    excerpt:
+      "Riot has mapped Riftbound's releases through 2027 — Radiance in October, Legacy in January, The Reckoning in April, and two unnamed sets after. What each means if you're buying.",
+    author: "RiftCompare",
+    date: "2026-08-04",
+    readMins: 7,
+    tags: ["news", "set", "release", "prices"],
+    hero: {
+      src: "/blog/riftbound-2027-set-roadmap.png",
+      alt: "Riftbound 2027 set roadmap — Radiance, Legacy and The Reckoning release windows on RiftCompare",
+    },
+    summary: [
+      "**Four dated releases** are now on the calendar: Radiance (23 Oct 2026), Legacy (29 Jan 2027), a boxed deck product in Feb 2027, and The Reckoning (30 Apr 2027).",
+      "**Sets 8 and 9** are placeholder slots for Q3 and Q4 2027 — no names, champions or themes announced.",
+      "**Legacy is the one to plan around.** At 346 cards it is far larger than anything so far, it is the first set designed for draft, and it changes what is inside a booster pack.",
+      "Set size is the number buyers should watch: a bigger set spreads the same demand across more slots, which usually means cheaper commons and pricier chase cards.",
+      "Nothing here is on sale yet. [Set a price alert](/alerts) rather than pre-ordering blind.",
+    ],
+    faq: [
+      {
+        q: "When does Riftbound Radiance release?",
+        a: "Radiance, the fifth Riftbound set, is scheduled for 23 October 2026 with around 180 cards. Preview season and Pre-Rift launch events run in the weeks before it.",
+      },
+      {
+        q: "What is the next Riftbound set after Radiance?",
+        a: "Legacy, Set 6, scheduled for 29 January 2027. It is the largest set announced so far at roughly 346 cards and is the first one built specifically with drafting in mind.",
+      },
+      {
+        q: "How many Riftbound sets are planned for 2027?",
+        a: "Four release slots. Legacy in January and The Reckoning in April are named and dated; two further sets are pencilled in for Q3 and Q4 2027 with no names, champions or themes revealed yet.",
+      },
+      {
+        q: "Should I pre-order 2027 Riftbound sealed product now?",
+        a: "There is nothing to pre-order for the 2027 sets yet, and launch-window sealed has historically been at its most expensive in the first days after release. Track the price rather than committing early.",
+      },
+    ],
+    browseCta: {
+      href: "/sealed",
+      label: "Compare sealed prices →",
+      blurb: "Booster boxes, packs and bundles ranked cheapest-first across every store we track.",
+    },
+    body: `Riot published two announcements on 4 August 2026 — a product and set rundown through 2027, and an August State of the Game. Between them, the Riftbound release calendar is now visible about fifteen months ahead, which is the longest runway the game has had.
+
+This post is the buyer's-eye view: what is coming, when, and which of it should change what you do with your money. If you want the mechanical detail on Legacy specifically, that has [its own post](/blog/riftbound-legacy-pack-changes-and-card-templating).
+
+## The calendar at a glance
+
+| Set | # | Release | Cards | The short version |
+| --- | --- | --- | --- | --- |
+| **Radiance** | 5 | 23 Oct 2026 | ~180 | Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV; a step up in size from Vendetta |
+| **Legacy** | 6 | 29 Jan 2027 | ~346 | Region-driven themes across six factions; built for draft; new pack composition |
+| *(boxed decks)* | — | Feb 2027 | — | Four new decks built around Legacy champions |
+| **The Reckoning** | 7 | 30 Apr 2027 | ~264 | Centred on League's biggest champions |
+| **Set 8** | 8 | Q3 2027 | — | Placeholder — nothing announced |
+| **Set 9** | 9 | Q4 2027 | — | Placeholder — nothing announced |
+
+Two things stand out before any of the detail. First, the cadence is roughly quarterly and now stated in advance, which is a meaningful change from finding out a set's date a few weeks ahead. Second, set sizes are moving around a lot — 180, then 346, then 264 — and set size is the single most underrated variable in what a card ends up costing.
+
+## Radiance (Set 5) — 23 October 2026
+
+Radiance is the near-term one, and the only set on this list you will be buying this year. It brings Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV, with a card pool around 180 — a step up from [Vendetta's](/sets/vendetta) 166.
+
+The pattern we have watched through four launches now is consistent enough to plan around: sealed is at its most expensive in the launch window, chase singles spike hardest in the first fortnight, and the mid-value playables drift down for about a month as supply catches up. [Why Riftbound prices change](/guides/why-riftbound-card-prices-change) sets out the mechanics behind that.
+
+If you intend to open Radiance rather than buy singles, the honest comparison is [box EV against the singles market](/tools/box-ev) once prices exist — not vibes about how good the set looks.
+
+## Legacy (Set 6) — 29 January 2027
+
+Legacy is the set to actually plan around, for three separate reasons.
+
+**It is enormous.** Around 346 cards is roughly double Radiance and more than double Vendetta. A bigger set means each individual card is a smaller slice of the print run, which historically pushes commons and uncommons cheaper while concentrating value at the top of the rarity ladder.
+
+**It is built for draft.** Riot has described Legacy as the first set designed specifically with drafting in mind. Draft-first design tends to mean more playable commons and a flatter power curve — good for players, and usually bad for the price of any single common.
+
+**The packs themselves change.** A common slot is being replaced with a slot that is either a Legend or a Battlefield, at roughly even odds. That takes Legacy boosters from seven commons to six, and it applies to Legacy and every set after it.
+
+That last one has real consequences for pull rates and therefore for prices, and it gets [a full write-up here](/blog/riftbound-legacy-pack-changes-and-card-templating).
+
+A boxed product with four new decks built around Legacy champions follows in February 2027. On past form, precon decks are the cheapest legitimate route to a specific champion's core cards, and worth pricing against [buying those singles individually](/guides/riftbound-singles-vs-sealed).
+
+## The Reckoning (Set 7) — 30 April 2027
+
+The Reckoning lands three months after Legacy at around 264 cards, built around League's biggest champions. "Biggest champions" is the phrase collectors should note — the most expensive cards in this game have consistently been premium treatments of the most popular characters, not the mechanically strongest cards. [The most expensive Riftbound cards](/blog/most-expensive-riftbound-cards) shows what that looks like in the current market.
+
+## Sets 8 and 9 — Q3 and Q4 2027
+
+These are placeholders. No names, no champions, no themes — just two slots on a calendar, confirming the quarterly cadence continues to the end of 2027.
+
+That is genuinely useful information even without detail, because it tells you rotation and reprint pressure will keep arriving on a predictable schedule. It is not information you can trade on.
+
+## What this actually means if you're buying
+
+**Set size is your best early signal.** Legacy at ~346 cards will dilute individual pull rates more than any set so far. If you are buying commons and uncommons to build decks, Legacy should be the cheapest set per card the game has had. If you are chasing premium prints, the opposite applies.
+
+**Dates announced this far out move.** Fifteen months of runway is a plan, not a promise. Treat the 2027 dates as directional and the October 2026 date as firm.
+
+**Nothing here is a reason to buy today.** There is no 2027 product to buy yet, and the announcement itself does not change the value of anything already in your collection. The one thing worth doing now is deciding which champions you care about, so you can [watchlist their cards](/alerts) before the next preview season rather than during it.
+
+**Watch the run-up, not the launch.** Prices on existing cards move when a new set is previewed, because a champion returning in a new set drives demand for their older printings. [The daily movers](/movers) is where that shows up first.
+
+## How we'll track it
+
+Every set gets a page on RiftCompare the moment its cards are catalogued, with live prices across every store we track. You can [browse the sets we already cover](/sets), watch [the daily movers](/movers) for the run-up, and use [the deal finder](/tools/deal-finder) when launch-window pricing is at its most scattered — the gap between the cheapest and dearest store is widest in the first week of a set, which is exactly when most people buy without checking.
+
+---
+
+*Source: Riot Games' official announcements of 4 August 2026 — [Products and Sets into 2027](https://playriftbound.com/en-us/news/announcements/products-and-sets-into-2027/) and the [August 2026 State of the Game](https://playriftbound.com/en-us/news/announcements/august-2026-state-of-the-game/). Set names, dates and card counts are Riot's; the analysis and price commentary are ours. Release dates announced this far ahead are subject to change — check the official post for the current schedule.*`,
+  },
+
+  // IMAGE SLOT (author): under "## What's actually changing in a Legacy pack",
+  // a photo of a current Vendetta pack's contents laid out — ours, not Riot's —
+  // would make the seven-to-six change concrete. Save to
+  // public/blog/legacy-pack-contents.png and add:
+  //   ![A Riftbound Vendetta booster pack's contents laid out, showing the seven common slots that Legacy reduces to six](/blog/legacy-pack-contents.png)
+  {
+    slug: "riftbound-legacy-pack-changes-and-card-templating",
+    category: "blog",
+    title: "Riftbound Legacy: The Pack Change and Card Templating Updates, Explained",
+    excerpt:
+      "Legacy trades a common for a dedicated Legend or Battlefield slot, is the first set built for draft, and changes how card text is written. Here's what each change does in plain language.",
+    author: "RiftCompare",
+    date: "2026-08-04",
+    readMins: 8,
+    tags: ["news", "rules", "mechanics", "gameplay", "set"],
+    hero: {
+      src: "/blog/riftbound-legacy-pack-changes-and-card-templating.png",
+      alt: "Riftbound Legacy pack composition and card templating changes explained on RiftCompare",
+    },
+    summary: [
+      "**Packs change from Legacy onward:** one common slot becomes a slot that is either a Legend or a Battlefield, at roughly even odds. Six commons per pack instead of seven.",
+      "Showcase Legends and Battlefields keep using an Overnumber slot — they do **not** appear in the new slot.",
+      "**Legacy is the first set designed for draft**, which usually means more playable commons and a flatter power curve.",
+      "**Card text is being retemplated:** targets get a distinct background, triggered abilities get an arrow, and the wording around playing cards is being tidied up.",
+      "None of this errata's your existing cards. Old printings stay legal and stay readable.",
+    ],
+    faq: [
+      {
+        q: "How many commons are in a Riftbound Legacy booster pack?",
+        a: "Six. From Legacy onward, one of the seven common slots becomes a dedicated slot that contains either a Legend or a Battlefield, at roughly a 50/50 split.",
+      },
+      {
+        q: "Do Showcase Legends appear in the new Legend/Battlefield slot?",
+        a: "No. Showcase Legends and Battlefields continue to occupy one of the Overnumber slots rather than the new dedicated slot, so the new slot does not change your odds of pulling a Showcase print.",
+      },
+      {
+        q: "Do the templating changes errata my existing Riftbound cards?",
+        a: "No. The changes are to how new cards are printed and worded, not to what old cards do. Existing printings remain legal and play exactly as they did.",
+      },
+      {
+        q: "What does it mean that Legacy is 'built for draft'?",
+        a: "The set is designed so that opening packs and building a deck from them is a first-class way to play, rather than a side mode. In practice that usually means more commons that are genuinely playable and fewer cards that only make sense in a constructed deck.",
+      },
+    ],
+    browseCta: {
+      href: "/guides/riftbound-variant-glossary",
+      label: "Read the variant glossary →",
+      blurb: "Legends, Battlefields, Overnumbers, Showcase prints — what each one is and how to tell them apart.",
+    },
+    body: `Riot's 4 August announcements covered a lot of ground, and the part with the most direct consequence for anyone opening packs got the least airtime: from Legacy onward, what is inside a Riftbound booster changes.
+
+Here is what is actually changing, and what each change does for you at the table and at the till.
+
+## What's actually changing in a Legacy pack
+
+One common slot is being replaced by a slot that contains either a Legend or a Battlefield, at roughly even odds between the two. Legacy packs therefore contain **six commons instead of seven**, and this composition carries forward to every set after Legacy.
+
+| | Today (through Radiance) | Legacy onward |
+| --- | --- | --- |
+| Common slots | 7 | 6 |
+| Dedicated Legend/Battlefield slot | — | 1 (~50/50 split) |
+| Where Showcase Legends/Battlefields appear | Overnumber slot | Overnumber slot (unchanged) |
+
+That last row is the one people miss, so it is worth stating plainly: **the new slot does not improve your odds of pulling a Showcase Legend or Battlefield.** Those premium prints still come out of an Overnumber slot exactly as they do now. The new slot is about supply of the ordinary printings.
+
+## Why a dedicated Legend/Battlefield slot matters
+
+Legends and Battlefields are structural cards. You cannot build a deck without a Legend, and Battlefields shape how a game is actually contested. Under the current composition, whether a pack gives you one is luck.
+
+Guaranteeing one per pack does three things:
+
+**It makes a pack a more complete unit.** Open six packs and you have six Legends or Battlefields — enough raw material to build something. Under the old composition you might open six packs and be unable to field a deck at all.
+
+**It raises the floor on sealed play.** This is the change that makes draft viable, which is presumably the point.
+
+**It changes relative scarcity.** More Legends and Battlefields per box means the base printings of those card types should be cheaper, all else equal. Commons become slightly scarcer per pack, though with roughly 346 cards in Legacy there will be far more distinct commons chasing those six slots — so we would still expect Legacy commons to be cheap in absolute terms. [How rarity and printings work](/guides/understanding-riftbound-card-rarity) covers the tiers this sits on top of.
+
+## Legacy is built for draft
+
+Riot describes Legacy as the first Riftbound set designed specifically for drafting. That is a design statement rather than a rules change, but it has knock-on effects worth naming.
+
+Draft-first sets generally carry **more playable commons**, because a format where you build from what you open falls apart if most commons are filler. They tend to have a **flatter power curve**, because a single overwhelming card ruins a draft pod. And they usually include more **self-contained mechanics** that work without a specific partner card.
+
+For constructed players, a draft-focused set is a mixed bag: deeper playable card pool, fewer format-warping bombs. For anyone buying singles, it usually means the interesting money sits in premium treatments rather than in raw playables.
+
+## The templating changes
+
+Separately from the pack change, Riot is updating how card text is presented. Three changes were called out.
+
+### Targets get their own background
+
+Rules text that refers to a target will carry a distinct backing behind it, so you can see at a glance what a card is pointing at.
+
+This is the kind of change that sounds cosmetic and is not. Most misplays in a chain-based game come from misreading *what* an effect applies to, not *what* it does. Making the target visually distinct from the effect is a readability fix aimed squarely at the most common category of mistake.
+
+### An arrow for triggered abilities
+
+Triggered abilities get an arrow marking which ability the trigger belongs to.
+
+Riftbound has accumulated a lot of keywords that modify a following ability — the timing and permission words that sit at the start of a line. Once a card has two abilities and one of them is conditional, working out which keyword governs which ability is genuinely ambiguous from text alone. An arrow that draws the association explicitly removes that guesswork.
+
+### Cleaning up "play"
+
+The wording around playing cards is being tidied up for consistency.
+
+"Play" is one of those words that accretes meanings in a card game — playing from hand, putting into play, an effect that plays something for you — and once different cards use it slightly differently, rules questions multiply. A consistency pass here is unglamorous maintenance that prevents a category of future confusion.
+
+## What this means for cards you already own
+
+Nothing changes about them. These are changes to how future cards are printed and worded, not errata to existing ones. Your Origins and Vendetta cards stay legal, stay readable, and do exactly what they did yesterday.
+
+You will end up with a collection where older cards use the old templating and newer ones use the new — normal for any long-running card game, and the reason the [full rules explainer](/guides/riftbound-rules-explained) is worth a bookmark.
+
+## What this means for prices
+
+Honestly: less than the headline suggests, and not immediately.
+
+**Templating changes are price-neutral.** They do not alter what a card does, so they do not alter what it is worth.
+
+**The pack change is mildly deflationary for Legend and Battlefield base printings** and mildly the opposite for commons per-pack — but Legacy's size cuts the other way hard enough that we would not bet on Legacy commons being expensive.
+
+**The draft focus is the real variable.** If Legacy drafting takes off, demand for sealed Legacy product stays high for far longer than the usual launch spike, because stores keep buying boxes to run events. That is the pattern worth watching, and it will show up in [sealed pricing](/sealed) well before it shows up anywhere else.
+
+None of it is actionable in August 2026. It is actionable in January 2027, and the useful thing to do between now and then is decide which Legacy champions you care about so you are not competing with everyone else on preview day. Set up [a price alert](/alerts) and let it come to you.
+
+---
+
+*Source: Riot Games' [Products and Sets into 2027](https://playriftbound.com/en-us/news/announcements/products-and-sets-into-2027/), published 4 August 2026. The pack composition, draft focus and templating updates are Riot's announcements; the explanations and the price commentary are ours. Card images and diagrams from the original post are not reproduced here — see Riot's article for those.*`,
+  },
+
+  // IMAGE SLOT (author): under "## 2. 2v2 is a roadmap item now, not a side mode",
+  // a photo from a local 2v2 event would ground the section. Save to
+  // public/blog/riftbound-2v2-event.png and add:
+  //   ![Four players mid-game at a Riftbound 2v2 table at a local game store](/blog/riftbound-2v2-event.png)
+  {
+    slug: "riftbound-august-2026-state-of-the-game-takeaways",
+    category: "blog",
+    title: "Riftbound's August 2026 State of the Game: Five Takeaways",
+    excerpt:
+      "Riot's August State of the Game covered ban philosophy, 2v2, collector products and language rollout. Here are the takeaways that actually change what you should buy and track.",
+    author: "RiftCompare",
+    date: "2026-08-04",
+    readMins: 7,
+    tags: ["news", "competitive", "banlist", "collecting", "meta"],
+    hero: {
+      src: "/blog/riftbound-august-2026-state-of-the-game-takeaways.png",
+      alt: "Riftbound August 2026 State of the Game takeaways — bans, 2v2, collector products and languages",
+    },
+    summary: [
+      "**Bans stay rare by design.** The stated philosophy is minimal intervention, and minimal often means none — the team would rather let a format evolve than act early.",
+      "**2v2 is a real roadmap item** with a target of being fun, fair and balanced by 2028, plus its own constructed ban list. Set 6's champion decks are meant to work in 2v2 out of the box.",
+      "**Collector products yes, serialised boosters no.** Riot wants dedicated collector releases, but says it has no plans to put serialisation into booster packs.",
+      "**New languages are paused** in the short term while the most recent additions bed in.",
+      "The buying takeaway: a rare-bans policy makes competitive staples hold value longer than in games that ban aggressively.",
+    ],
+    faq: [
+      {
+        q: "Does Riftbound ban cards often?",
+        a: "No, and that appears to be deliberate. The team's stated approach is minimal intervention — acting only to correct what it considers an emergency, and frequently choosing not to act on the view that the format will sort itself out.",
+      },
+      {
+        q: "Is Riftbound getting official 2v2 support?",
+        a: "Yes. The team has said it wants 2v2 to be fun, fair and balanced by 2028, has created a constructed 2v2 ban list, and has designed Set 6's champion decks to work well in 2v2 straight out of the box.",
+      },
+      {
+        q: "Will Riftbound booster packs contain serial-numbered cards?",
+        a: "Riot has said it has no plans to put serialisation on cards in booster packs. It does intend to make dedicated collector-focused products separately.",
+      },
+      {
+        q: "Is Riftbound adding more languages?",
+        a: "Not in the short term. The team has said each new language adds logistical complexity and it is pausing further additions while establishing the languages most recently added.",
+      },
+    ],
+    browseCta: {
+      href: "/guides/riftbound-banlist-explained",
+      label: "See the current ban list →",
+      blurb: "Every currently banned Riftbound card, why it went, and what it means for deckbuilding.",
+    },
+    body: `Alongside the 2027 product rundown, Riot published an August State of the Game on 4 August 2026 — largely a developer Q&A. Most of it is philosophy rather than announcement, which makes it easy to skim past and, for anyone spending money on this game, more useful than the product news.
+
+Here are the five things worth extracting.
+
+## 1. Bans stay rare, on purpose
+
+The stated approach is minimal intervention: act only to correct what the team considers an emergency, and accept that "minimal" will frequently mean doing nothing at all, on the view that a format will keep evolving on its own.
+
+That is a real position, and it is not the industry norm. Plenty of card games ban aggressively to keep a format churning. Riftbound is saying it would rather be slow.
+
+**Why this matters for your wallet:** in a game that bans aggressively, competitive staples carry permanent policy risk — a card can lose most of its value overnight. A stated preference for rare intervention means Riftbound staples should hold value more reliably than in games with a heavier hand. It does not mean bans stop; [July's ban list update](/blog/riftbound-july-2026-ban-list-update) was real and did move prices. It means they should stay uncommon enough that "will this get banned" is not the first question you ask about a $60 card.
+
+## 2. 2v2 is a roadmap item now, not a side mode
+
+The team has put a date on it: the goal is for 2v2 to be fun, fair and balanced **by 2028**. Two concrete steps are already visible — a constructed 2v2 ban list exists, and Set 6's champion decks are designed to work well in 2v2 without modification.
+
+A separate ban list is the tell. You do not maintain a second banned-cards list for a format you consider a curiosity; you maintain it for a format you intend to support competitively.
+
+**Why this matters:** formats create demand. If 2v2 becomes a supported competitive format, cards that are mediocre in 1v1 and strong in 2v2 get a second demand curve — and those cards are, right now, cheap. That is a slow, speculative thesis rather than a trade, but it is the kind of thing worth noticing eighteen months early rather than eighteen months late. [The movers dashboard](/movers) is where it would first become visible.
+
+## 3. Collector products yes, serialised boosters no
+
+Two statements that sit together. Riot describes Riftbound as a game first — meant to be accessible to players — while also wanting to make special collector products, for both Riftbound and League more broadly. And it says it has **no plans to put serialisation on cards in booster packs**.
+
+This is a clearer product philosophy than most publishers state out loud. Serial-numbered chase cards in boosters are the standard lever for driving sealed sales to collectors, and it is being explicitly declined; collector demand is instead meant to be served by dedicated products.
+
+**Why this matters:** it changes what sealed product is *for*. If boosters are not the vehicle for the rarest collectibles, then buying boxes is a proposition about playables and ordinary chase prints — which is a proposition you can actually evaluate with [a box EV calculation](/tools/box-ev) rather than a lottery ticket you cannot price. It also suggests the top of the market stays where it is today: premium treatments of popular champions, which is exactly what [the most expensive cards list](/blog/most-expensive-riftbound-cards) currently shows.
+
+## 4. New languages are on pause
+
+Each additional language adds real logistical complexity — printing, distribution, rules translation, organised play support — and the team is holding off on new ones in the short term while the most recent additions establish themselves.
+
+**Why this matters:** language availability drives which regional markets get proper distribution, and regional distribution drives price. If you buy across borders, the practical read is that the current market map is stable for a while — the six markets we track are not about to be joined by a wave of new ones, and cross-border buying will keep being a question of [shipping and currency conversion](/blog/currency-conversion-fees) rather than of new regional supply.
+
+## 5. What we'd actually do with any of this
+
+Not much this week, which is the honest answer to most announcement posts.
+
+The two things that are genuinely actionable:
+
+**Stop treating competitive staples as ban-risk assets.** If you have been avoiding expensive meta cards because of policy risk, that risk is being explicitly managed downward. It is not zero.
+
+**Note which cards are quietly good in 2v2.** Nothing to buy yet. But 2028 targets get built toward in 2027, and the cards that benefit are currently priced as if the format does not exist.
+
+Everything else — the collector product philosophy, the language pause — is context for reading future announcements rather than a reason to move money now. Which is fine. Most State of the Game posts are.
+
+---
+
+*Source: Riot Games' [August 2026 State of the Game](https://playriftbound.com/en-us/news/announcements/august-2026-state-of-the-game/), published 4 August 2026, and the accompanying [Products and Sets into 2027](https://playriftbound.com/en-us/news/announcements/products-and-sets-into-2027/). The developer positions summarised above are Riot's; the interpretation and price commentary are ours. Where we have paraphrased a stated position, read the original for the full wording.*`,
+  },
   // The 2026 SEO content pack — the five briefed articles plus the four
   // AI-visibility target pages and the variant glossary. Kept in their own file
   // so the batch stays reviewable; spread here so every existing surface (the
