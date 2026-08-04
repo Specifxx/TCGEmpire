@@ -38,6 +38,9 @@ export interface PullCard {
   foil: boolean;
   imageThumbUrl: string | null;
   orientation: string | null;
+  /** Real domain/type so the generated fallback art matches the card. */
+  domain: string;
+  type: string;
 }
 
 export interface BoxEvPool {
@@ -356,8 +359,8 @@ export function BoxEvCalculator({ sets }: { sets: BoxEvSet[] }) {
                     <CardImage
                       card={{
                         name: c.name,
-                        domain: "",
-                        type: "",
+                        domain: c.domain,
+                        type: c.type,
                         rarity: c.rarity,
                         collectorNumber: c.collectorNumber,
                         setCode: set.setCode,

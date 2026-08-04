@@ -71,7 +71,7 @@ const getBoxEvData = unstable_cache(
         select: {
           id: true, slug: true, name: true, setCode: true, rarity: true,
           collectorNumber: true, variant: true, isOvernumbered: true,
-          imageThumbUrl: true, orientation: true,
+          imageThumbUrl: true, orientation: true, domain: true, type: true,
         },
       })
       .catch(() => [] as CardRow[]);
@@ -86,6 +86,7 @@ type CardRow = {
   id: string; slug: string | null; name: string; setCode: string; rarity: string;
   collectorNumber: string; variant: string | null; isOvernumbered: boolean;
   imageThumbUrl: string | null; orientation: string | null;
+  domain: string; type: string;
 };
 
 export default async function BoxEvPage() {
@@ -136,6 +137,8 @@ export default async function BoxEvPage() {
       foil: foilOnly.has(c.id),
       imageThumbUrl: c.imageThumbUrl,
       orientation: c.orientation,
+      domain: c.domain,
+      type: c.type,
     });
     pools.set(pool, cell);
   }
