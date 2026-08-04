@@ -219,6 +219,21 @@ function numberMatches(title: string, number: string, total: string, setCode: st
   return false;
 }
 
+// Does the title actually name this card? Every meaningful token of the card
+// name must appear. This is the identity check that lets the number requirement
+// be relaxed for signatures below — WITHOUT it, "any Riftbound signature" would
+// match any signature card, which is far worse than no price at all.
+function nameMatches(title: string, name: string): boolean {
+  const t = ` ${title.toLowerCase().replace(/[^a-z0-9]+/g, " ")} `;
+  const tokens = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length > 2);
+  if (!tokens.length) return false;
+  return tokens.every((w) => t.includes(` ${w} `));
+}
+
 // Is this listing a Signature print? ("223*" or signature/signed keywords)
 function titleIsSignature(title: string, n: number): boolean {
   return (
@@ -284,7 +299,17 @@ export async function searchEbayLowest(
     // otherwise expensive chase cards (e.g. overnumbered) get pushed past the limit
     // by cheap noise (keychains, bundles). For Signature prints, also add the word
     // "signature"; for promos add "promo" so the promo printing surfaces.
-    q: `${card.name} ${card.number.replace(/[^0-9]/g, "")}${card.isSignature ? " signature" : ""}${card.isPromo ? " promo" : ""} Riftbound`,
+    // THE NUMBER IS OMITTED FOR SIGNATURE PRINTS, on purpose. Browse `q` ANDs its
+    // keywords, so every token is a chance to miss a real listing. Including the
+    // collector number is right for base cards (it ranks the exact printing into
+    // the window ahead of cheap noise) but wrong for signatures: sellers of a
+    // $3,000 chase card routinely title it "Riftbound Akali Rogue Assassin
+    // Signature" with no number at all. Requiring "189" then returns literally
+    // nothing — measured: eBay AU returned 0 items for this card while two real
+    // listings were live on the site. A signature is unique per card per set, so
+    // name + "signature" is enough to find it; identity is still enforced by the
+    // filters below.
+    q: `${card.name}${card.isSignature ? "" : ` ${card.number.replace(/[^0-9]/g, "")}`}${card.isSignature ? " signature" : ""}${card.isPromo ? " promo" : ""} Riftbound`,
     filter: "buyingOptions:{FIXED_PRICE}",
     sort: "price",
     limit: "100",
@@ -343,9 +368,24 @@ export async function searchEbayLowest(
   // Drop non-English (Chinese etc.) printings — they share collector numbers with
   // our English cards but trade much cheaper, so they leak in as the "cheapest".
   cur = drop("not foreign printing", cur.filter((it) => !isForeignListing(it)), cur);
+  // The collector number is the identity check for a base card. For a SIGNATURE
+  // print it is too strict on its own: there is exactly one signature printing
+  // per card per set, and sellers frequently omit the number entirely. So a
+  // signature listing also qualifies when it names the card, names the set and
+  // says "signature" — three independent signals, which is a stronger identity
+  // than a bare number would be anyway. Base cards are untouched.
   cur = drop(
-    `collector number matches ${card.number}/${card.total}`,
-    cur.filter((it) => numberMatches(it.title ?? "", card.number, card.total, card.setCode)),
+    `collector number matches ${card.number}/${card.total}${card.isSignature ? " (or named signature print)" : ""}`,
+    cur.filter((it) => {
+      const title = it.title ?? "";
+      if (numberMatches(title, card.number, card.total, card.setCode)) return true;
+      return (
+        card.isSignature &&
+        titleIsSignature(title, n) &&
+        setMentioned(title, card.setCode) &&
+        nameMatches(title, card.name)
+      );
+    }),
     cur,
   );
   // Signature ("*") and plain overnumbered share a number — keep them apart.
