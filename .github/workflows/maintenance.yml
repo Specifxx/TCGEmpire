@@ -23,6 +23,7 @@ on:
           - probe-sg         # read-only Singapore store scan (no DB writes)
           - probe-url        # read-only page fetch + font/style diagnostics (url input)
           - probe-imgur      # read-only: render an Imgur album (JS SPA — curl gets an empty shell) and dump every full-res image URL (url input)
+          - probe-render     # read-only: render ANY page with a real browser and dump its heading outline, repeated item components, tables, images, palette + full-page screenshot (url input). For researching client-rendered sites that probe-url only sees as an empty shell.
           - smoke-pages     # read-only: assert the key pages return real server-rendered content (post-deploy gate; url input overrides the default production origin)
           - import-prices    # run the store price importer for this ref's store list
           - import-sealed     # refresh sealed products (stores + eBay AU + TCGplayer US) + self-heal stale rows
@@ -597,6 +598,29 @@ jobs:
           npm i --no-save playwright
           npx playwright install --with-deps chromium
           npx tsx scripts/probe-imgur.ts
+
+      # Generic SPA renderer. probe-url is a plain fetch, which is correct for our
+      # own pages (it shows what a crawler gets) but returns an empty shell for any
+      # client-rendered site — csroi.com gave 2.4KB of React skeleton with zero
+      # content. This renders properly and dumps the STRUCTURE (heading outline,
+      # the repeated item component, tables, palette) rather than raw DOM, so a
+      # design reference is legible in a CI log.
+      - name: Render any page (generic SPA probe)
+        if: inputs.task == 'probe-render'
+        env:
+          PROBE_URL: ${{ inputs.url }}
+        run: |
+          npm i --no-save playwright
+          npx playwright install --with-deps chromium
+          npx tsx scripts/probe-render.ts
+
+      - name: Upload rendered screenshot (probe-render)
+        if: inputs.task == 'probe-render'
+        uses: actions/upload-artifact@v4
+        with:
+          name: probe-render-screenshot
+          path: render.png
+          if-no-files-found: ignore
 
       # The chunked marker dump above is fine for a quick font/style check, but a
       # page with a big content section (e.g. a card gallery) needs the whole file —
