@@ -38,6 +38,7 @@ on:
           - audit-history    # read-only per-day price-history diagnostic
           - audit-users      # read-only user/Premium census (no PII printed)
           - audit-clicks     # read-only outbound-click leaderboard per retailer (affiliate-outreach priority)
+          - fix-orphan-users # repair FK orphans: delete rows in GameScore/AuthToken/Notification/SellerProfile/CollectionCard whose userId no longer exists in User (they block `prisma db push` from adding the FK, which fails the Vercel build)
           - diagnose-card    # read-only: why does ONE card have no price? dumps its RetailerPrice + eBay carousel rows and re-runs the LIVE eBay search (card input)
           - remove-seed-accounts # one-off: delete @riftcompare.seed bot personas (dead since the forum autoseeder was removed)
           - test-marketplace-stripe # smoke-test CRON_SECRET + both Stripe webhook secrets + a Connect account create/delete round-trip (test or live)
@@ -576,6 +577,62 @@ jobs:
           echo "     environments) and redeployed, traffic moves."
           echo "  3. Leave RM3 in place as a rollback window; remove it only once"
           echo "     RM4 has been serving cleanly."
+
+      - name: Repair userId FK orphans
+        # WHY THIS EXISTS: a Vercel build died with
+        #   insert or update on table "GameScore" violates foreign key constraint
+        #   "GameScore_userId_fkey"   ... step=AddForeignKey
+        # `prisma db push` cannot add a foreign key while existing data violates
+        # it, so the build fails and NOTHING deploys. The offending rows are
+        # ORPHANS: a child row whose userId is not in User. Every one of these
+        # relations is declared onDelete: Cascade, so had the parent been removed
+        # normally these rows would already be gone — they are unreachable by
+        # definition, not data anyone can still use.
+        #
+        # Counts before AND after, and prints both, because a repair that quietly
+        # deleted more than expected is precisely what you want to see.
+        #
+        # Raw SQL rather than Prisma: the schema being out of sync IS the failure,
+        # so the generated client may not even load.
+        if: inputs.task == 'fix-orphan-users'
+        env:
+          TARGET_DATABASE_URL: ${{ secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+        run: |
+          set -uo pipefail
+          if [ -z "$TARGET_DATABASE_URL" ]; then
+            echo "::error::No operational database visible to Actions."
+            exit 1
+          fi
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-18
+          export PATH="/usr/lib/postgresql/18/bin:$PATH"
+
+          echo "== User rows (the parent every table below hangs off) =="
+          psql "$TARGET_DATABASE_URL" -tAc 'SELECT COUNT(*) FROM public."User"'
+          echo ""
+
+          set +e
+          for T in GameScore AuthToken Notification SellerProfile CollectionCard; do
+            echo "== $T =="
+            TOTAL=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM public.\"$T\"" 2>&1)
+            ORPH=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM public.\"$T\" c LEFT JOIN public.\"User\" u ON u.id = c.\"userId\" WHERE u.id IS NULL" 2>&1)
+            echo "  rows=$TOTAL orphans=$ORPH"
+            case "$ORPH" in ''|*[!0-9]*) echo "  (orphan count failed: $ORPH — skipping this table)"; continue;; esac
+            [ "$ORPH" -eq 0 ] && continue
+            if [ -n "${DRY_RUN:-}" ]; then
+              echo "  DRY_RUN — would delete $ORPH orphaned row(s)"
+              continue
+            fi
+            psql "$TARGET_DATABASE_URL" -c "DELETE FROM public.\"$T\" c WHERE NOT EXISTS (SELECT 1 FROM public.\"User\" u WHERE u.id = c.\"userId\")" 2>&1
+            AFTER=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM public.\"$T\" c LEFT JOIN public.\"User\" u ON u.id = c.\"userId\" WHERE u.id IS NULL" 2>&1)
+            echo "  orphans remaining: $AFTER"
+          done
+          set -e
+          echo ""
+          echo "Done — prisma db push can now add the foreign keys. Redeploy."
 
       - name: Check card-page price consistency (read-only)
         # Guards the exact class of bug this was written for: /card/[id] derived
