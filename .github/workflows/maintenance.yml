@@ -29,6 +29,7 @@ on:
           - migrate-history  # Prisma-based top-up: copy PriceHistory/ClickEvent from EVERY older source into the newest history DB (tolerates unreadable sources, dedupes). Slower/more transfer than migrate-history-db — prefer that for the bulk copy.
           - migrate-history-db # full pg_dump/restore of the HISTORY database (RH5) into RH6 + row-count verification. Compressed on the wire, so it's the cheapest way to drain a project that has exhausted its transfer allowance. RUN THIS BEFORE any other history task once RH6 is set.
           - audit-ven        # read-only census of VEN cards (chase-tier fields)
+          - audit-runes      # read-only census of every set's Rune printings + which lack real art
           - audit-rarity     # read-only: rarity distribution per set, base prints vs chase prints, + anomalies
           - fix-op-promo-flag # flip isPromo=true for organized-play promos add-tcg-printings.ts mis-tagged (Nexus Night rune cycle)
           - fix-kennen-name  # one-off: rename VEN 155/166 + 197/166 from RiftScribe's "Yordle, Heart of the Tempest" placeholder to "Kennen, Heart of the Tempest" (matches the manually-corrected 197*/166 Signature)
@@ -653,6 +654,10 @@ jobs:
       - name: Audit VEN cards (read-only census)
         if: inputs.task == 'audit-ven'
         run: npx tsx scripts/audit-ven.ts
+
+      - name: Audit rune printings across all sets (read-only census)
+        if: inputs.task == 'audit-runes'
+        run: npx tsx scripts/audit-runes.ts
 
       - name: Fix organized-play promo flag (Nexus Night rune cycle)
         if: inputs.task == 'fix-op-promo-flag'
