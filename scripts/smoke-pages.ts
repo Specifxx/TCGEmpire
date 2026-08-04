@@ -52,6 +52,18 @@ interface Check {
   minLinks?: number;
   /** Route added on a feature branch — a 404 is tolerated with --allow-404. */
   optional?: boolean;
+  /**
+   * A RETIRED url. Asserts the redirect/404 itself instead of page content: no
+   * redirect is followed, and none of the content floors apply.
+   *
+   * `to` set   → expect a 301/308 whose Location ends with this path.
+   * `to` unset → expect a 404 (the page is simply gone).
+   *
+   * Retiring a page is the change most likely to be half-done — the route gets
+   * deleted, the next.config.js entry doesn't, and nobody notices the 404 until
+   * Search Console reports it. Asserting it here means every deploy re-checks it.
+   */
+  retired?: { to?: string };
 }
 
 const CHECKS: Check[] = [
@@ -105,6 +117,28 @@ const CHECKS: Check[] = [
     minText: 800,
   },
 
+  // ── The release countdown: always the NEXT set ───────────────────────────
+  {
+    path: "/radiance-countdown",
+    label: "Radiance countdown (new)",
+    optional: true,
+    // Event schema is emitted only while the date is still ahead — this asserting
+    // is the point: if it survives past 23 Oct 2026 the page is claiming an
+    // upcoming event that already happened, and this check will say so.
+    must: ['"@type":"FAQPage"', "23 October 2026", "Radiance"],
+    minText: 900,
+  },
+
+  // ── Retired URLs ─────────────────────────────────────────────────────────
+  // /vendetta-countdown carried the "riftbound vendetta release date" query and
+  // ~35 internal links, so it must 301 rather than 404 — a silent drop to 404
+  // would throw that away and look identical to a working deploy.
+  { path: "/vendetta-countdown", label: "retired Vendetta countdown → set page", retired: { to: "/sets/vendetta" } },
+  // The widget feature is gone outright; nothing links here and it has no
+  // equivalent page, so 404 is the correct answer, not a redirect to something
+  // unrelated.
+  { path: "/widgets", label: "retired price-widget page", retired: {} },
+
   // ── Core browse surfaces ─────────────────────────────────────────────────
   { path: "/browse", label: "card database", minLinks: 20 },
   { path: "/guides", label: "guides index", minLinks: 20 },
@@ -135,18 +169,35 @@ async function run() {
     let status = 0;
     let html = "";
 
+    let location: string | null = null;
+
     try {
       const res = await fetch(url, {
         headers: { "User-Agent": "RiftCompare-smoke/1.0" },
-        redirect: "follow",
+        // A retired URL is checked with redirect:"manual" — following the 301
+        // would test the destination page and say nothing about the redirect,
+        // which is the entire thing being asserted.
+        redirect: c.retired ? "manual" : "follow",
       });
       status = res.status;
-      html = await res.text();
+      location = res.headers.get("location");
+      if (!c.retired) html = await res.text();
     } catch (e) {
       problems.push(`fetch failed: ${(e as Error).message}`);
     }
 
-    if (!problems.length) {
+    if (!problems.length && c.retired) {
+      const want = c.retired.to;
+      if (want) {
+        if (status !== 301 && status !== 308) {
+          problems.push(`HTTP ${status}, expected a permanent redirect to ${want}`);
+        } else if (!location || !location.replace(/\?.*$/, "").endsWith(want)) {
+          problems.push(`redirects to ${location ?? "(no Location header)"}, expected ${want}`);
+        }
+      } else if (status !== 404 && status !== 410) {
+        problems.push(`HTTP ${status}, expected the page to be gone (404)`);
+      }
+    } else if (!problems.length) {
       if (status === 404 && c.optional && allow404) {
         console.log(`~ SKIP ${c.label} (${c.path}) — 404, route not deployed yet`);
         skipped++;
