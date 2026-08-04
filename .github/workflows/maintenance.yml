@@ -607,11 +607,17 @@ jobs:
       # design reference is legible in a CI log.
       - name: Render any page (generic SPA probe)
         if: inputs.task == 'probe-render'
+        # Bounded. The first run of this hung for 25+ minutes on the browser
+        # install and had to be cancelled by hand, which is the worst failure
+        # mode for a research task — it looks identical to "still working".
+        # ubuntu-latest already ships Chromium's system libs, so --with-deps
+        # (the apt half, and the part that hung) is dropped.
+        timeout-minutes: 10
         env:
           PROBE_URL: ${{ inputs.url }}
         run: |
           npm i --no-save playwright
-          npx playwright install --with-deps chromium
+          npx playwright install chromium
           npx tsx scripts/probe-render.ts
 
       - name: Upload rendered screenshot (probe-render)
