@@ -305,6 +305,16 @@ function mapEbayItem(it: any): EbayResult {
   };
 }
 
+/** The Browse `q` for a card. `withGame` appends "Riftbound" (see the note in
+ *  searchEbayLowest about why that word is a fallback boundary, not a constant). */
+function buildQuery(
+  card: { name: string; number: string; isSignature: boolean; isPromo?: boolean },
+  withGame: boolean,
+): string {
+  const num = card.isSignature ? "" : ` ${card.number.replace(/[^0-9]/g, "")}`;
+  return `${card.name}${num}${card.isSignature ? " signature" : ""}${card.isPromo ? " promo" : ""}${withGame ? " Riftbound" : ""}`;
+}
+
 // Lowest legitimate single-card AU listing for a specific card. Requires the
 // listing title to actually contain the card's name (rejects bundles/lots/wrong
 // cards) and excludes obvious multi-card/non-English listings.
@@ -338,6 +348,24 @@ export async function searchEbayLowest(
   const token = await getToken();
   if (!token) return null;
 
+  // ── WHY THERE ARE TWO QUERIES ────────────────────────────────────────────
+  // Browse ANDs every keyword, so each token is another chance to miss a real
+  // listing. "Riftbound" looks like a harmless guard against noise; measured, it
+  // is the single biggest false negative in this search. The two live eBay AU
+  // listings for Akali, Rogue Assassin (Signature) are titled:
+  //   "VEN Akali Rogue Assassin Signature Overnumbered 189/166 Foil - NM -"
+  //   "Akali Rogue Assassin VEN 189*/166 Signature Overnumbered Rare Foil ..."
+  // Both name the card, the set and the printing. Neither says "Riftbound" — so
+  // the search returned zero, the card showed no AU price for days, and it read
+  // as "no listings exist" rather than as a bug.
+  //
+  // Dropping the word outright is not safe either: for a card whose name is
+  // ordinary English it is what keeps the result window full of Riftbound cards
+  // instead of unrelated tat, and `limit` is finite. So it is a FALLBACK — the
+  // broad query runs only when the strict one found nothing, which costs one
+  // extra Browse call on exactly the cards that would otherwise be unpriced, and
+  // nothing at all on the ones already working.
+  const queries = [buildQuery(card, true), buildQuery(card, false)];
   const params = new URLSearchParams({
     // Include the collector number so the exact card ranks into the result window —
     // otherwise expensive chase cards (e.g. overnumbered) get pushed past the limit
@@ -353,7 +381,7 @@ export async function searchEbayLowest(
     // listings were live on the site. A signature is unique per card per set, so
     // name + "signature" is enough to find it; identity is still enforced by the
     // filters below.
-    q: `${card.name}${card.isSignature ? "" : ` ${card.number.replace(/[^0-9]/g, "")}`}${card.isSignature ? " signature" : ""}${card.isPromo ? " promo" : ""} Riftbound`,
+    q: queries[0],
     filter: "buyingOptions:{FIXED_PRICE}",
     sort: "price",
     limit: "100",
@@ -380,7 +408,21 @@ export async function searchEbayLowest(
   }
   if (!res.ok) return null;
   const data = await res.json();
-  const items: any[] = data.itemSummaries ?? [];
+  let items: any[] = data.itemSummaries ?? [];
+
+  // Strict query found nothing — retry once without the game name. See the note
+  // above: sellers routinely omit "Riftbound" from a chase-card title.
+  if (items.length === 0 && queries[1] !== queries[0] && spend()) {
+    const retry = new URLSearchParams(params);
+    retry.set("q", queries[1]);
+    try {
+      const res2 = await fetch(`${SEARCH_URL}?${retry}`, { headers });
+      if (res2.status === 429) rateLimited = true;
+      else if (res2.ok) items = (await res2.json())?.itemSummaries ?? [];
+    } catch {
+      /* keep the empty result */
+    }
+  }
 
   // Accept only listings whose collector number matches THIS exact card+printing.
   // No name-only fallback — that mislabelled overnumbered/alt cards with the base
