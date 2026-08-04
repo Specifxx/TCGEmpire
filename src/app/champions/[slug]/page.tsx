@@ -121,7 +121,7 @@ export default async function ChampionPage({ params }: { params: { slug: string 
   // crashing an otherwise-fine page.
   const unpriced = (d: (typeof META_DECKS)[number]): ResolvedDeck => ({
     ...d, legendCard: null, legendPriceCents: null, items: [],
-    totalCards: 0, totalCents: 0, pricedCards: 0, sideboardCards: 0, sideboardCents: 0, imageUrl: null,
+    totalCards: 0, totalCents: 0, priceableCards: 0, pricedCards: 0, sideboardCards: 0, sideboardCents: 0, imageUrl: null,
   });
   const deckSeeds = META_DECKS.filter((d) =>
     champ.prefixes.some((p) => d.legend.toLowerCase().startsWith(p.toLowerCase() + ","))

@@ -161,8 +161,9 @@ export function DeckView({ deck, builderHref }: { deck: ResolvedDeck; builderHre
               <div className="text-[11px] uppercase tracking-wide text-slate-500">Build cost (cheapest {country})</div>
               <div className="num text-2xl font-extrabold text-accent">{fmt(deck.totalCents)}</div>
               <div className="num text-[11px] text-slate-500">
-                {deck.totalCards - 1}-card main deck + legend · {deck.pricedCards}/{deck.totalCards} priced
+                {deck.totalCards - 1}-card main deck + legend · {deck.pricedCards}/{deck.priceableCards} priced
               </div>
+              <div className="mt-1 text-[11px] text-slate-600">Runes excluded — every deck runs 12 cheap commons.</div>
               {deck.sideboardCards > 0 && (
                 <div className="num mt-1 text-[11px] text-slate-500">
                   + {fmt(deck.sideboardCents)} side deck ({deck.sideboardCards} cards)

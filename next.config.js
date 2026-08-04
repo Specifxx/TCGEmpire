@@ -178,6 +178,14 @@ const nextConfig = {
       // Sending it to the set page keeps that equity on a page that still
       // answers the query, instead of dropping it on the floor.
       { source: "/vendetta-countdown", destination: "/sets/vendetta", permanent: true },
+      // ROTATED-OUT META DECKS. /decks tracks the live metagame, so a legend that
+      // drops out of the tier list loses its deck page. These three were Tier 1-2
+      // in the Unleashed era and fell out of the Vendetta tier list; their URLs
+      // were indexed and internally linked, so they 301 to the deck index rather
+      // than 404. Add a line here whenever a slug leaves prisma/meta-decks.json.
+      { source: "/decks/leblanc-deceiver", destination: "/decks", permanent: true },
+      { source: "/decks/fiora-grand-duelist", destination: "/decks", permanent: true },
+      { source: "/decks/vex-gloomist", destination: "/decks", permanent: true },
     ];
   },
   async headers() {

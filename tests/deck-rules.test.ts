@@ -108,3 +108,56 @@ test("the /decks page states the side-deck rules change", () => {
   assert.ok(src.includes("66 cards"), "/decks must state the 66-card total");
   assert.ok(src.includes("24 July 2026"), "/decks must date the rules change");
 });
+
+// ── Vendetta meta data ───────────────────────────────────────────────────────
+
+test("every published list is a post-rules-change 66 (full 10-card side deck)", () => {
+  for (const d of decks) {
+    const side = d.cards.filter((c) => c.section === "sideboard").reduce((n, c) => n + c.qty, 0);
+    assert.equal(side, SIDE_MAX, `${d.slug}: side deck is ${side}, expected a full ${SIDE_MAX}`);
+  }
+});
+
+test("every deck carries its tier, meta stats and a source link", () => {
+  const withStats = metaDecks.decks as unknown as Record<string, unknown>[];
+  for (const d of withStats) {
+    assert.ok(["1", "2", "3"].includes(d.tier as string), `${d.slug}: tier must be 1, 2 or 3`);
+    for (const k of ["metaSharePct", "winRatePct", "top8s"]) {
+      assert.equal(typeof d[k], "number", `${d.slug}: missing ${k}`);
+    }
+    assert.match(String(d.sourceUrl), /^https:\/\//, `${d.slug}: needs a source URL`);
+    assert.ok(String(d.source).length > 0, `${d.slug}: needs a source attribution`);
+  }
+});
+
+test("the data file records when the meta was last reconciled", () => {
+  const stamp = (metaDecks as unknown as { _metaUpdated?: string })._metaUpdated;
+  assert.match(String(stamp), /^\d{4}-\d{2}-\d{2}$/, "_metaUpdated must be an ISO date");
+});
+
+test("build cost excludes the rune base", () => {
+  const src = read("src/lib/meta-decks.ts");
+  // totalCents must be summed from the rune-filtered list, not the whole main deck.
+  assert.match(
+    src,
+    /const priceable = main\.filter\(\(i\) => i\.section !== "rune"\)/,
+    "meta-decks must derive a rune-free priceable set",
+  );
+  assert.match(
+    src,
+    /const totalCents = priceable\.reduce/,
+    "build cost must be summed over the rune-free set",
+  );
+});
+
+test("deck slugs dropped from the meta keep a redirect", () => {
+  const cfg = read("next.config.js");
+  const live = new Set(decks.map((d) => d.slug));
+  for (const retired of ["leblanc-deceiver", "fiora-grand-duelist", "vex-gloomist"]) {
+    if (live.has(retired)) continue; // back in the meta — redirect no longer needed
+    assert.ok(
+      cfg.includes(`"/decks/${retired}"`),
+      `/decks/${retired} left the meta and needs a redirect in next.config.js`,
+    );
+  }
+});
