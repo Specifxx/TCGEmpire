@@ -163,7 +163,13 @@ export default async function SetsIndexPage() {
                 className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500"
               >
                 {s.name}
-                {s.sealedAvailable ? " · sealed live" : " · new"}
+                {/* Say which kind of "upcoming" this is. A set can be here because
+                    it is announced but unshipped (Radiance — coming soon), because
+                    its sealed product is already buyable, or merely because no cards
+                    have imported yet; "· new" told the visitor none of that. */}
+                <span className="text-slate-500">
+                  {s.sealedAvailable ? " · sealed live" : s.comingSoon ? " · coming soon" : " · new"}
+                </span>
               </Link>
             ))}
           </div>

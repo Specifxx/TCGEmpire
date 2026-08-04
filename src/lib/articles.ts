@@ -1485,13 +1485,11 @@ For the full picture, read **[everything you need to know about Vendetta](/blog/
     tags: ["news", "vendetta", "release", "release date"],
     body: `![Riftbound: Vendetta — out now](/vendetta-hero.png)
 
-The wait for **Riftbound: Vendetta** is nearly over. The set releases on **31 July 2026**, and in-store **Pre-Rift** launch events begin on **24 July** — so the real buying window opens in days, not weeks.
+**Riftbound: Vendetta is out.** The set released worldwide on **31 July 2026**, with in-store **Pre-Rift** launch events from **24 July** — so singles were already changing hands a week before the official street date.
 
-We built a live, ticking countdown so you always know exactly how long is left:
+> **🔥 [See every Vendetta card with live prices →](/sets/vendetta)**
 
-> **⏳ [See the live Vendetta release countdown →](/vendetta-countdown)**
-
-It counts down to release day in your own timezone, second by second — bookmark it and check back.
+Every card in the set is priced across every store we track, ranked by what you'd actually pay delivered. And if you're already looking past this set: **[Radiance (Set 5) lands 23 October 2026](/radiance-countdown)**.
 
 ## The key dates
 
@@ -2785,7 +2783,7 @@ Tap any card below to open its full page: rules text, printings, price history, 
 - **[Chase cards, tier by tier](/blog/riftbound-vendetta-chase-cards-so-far)** — Overnumbers, alt-arts and the sleeper Epics worth hunting.
 - **[Vendetta card gallery](/sets/vendetta/gallery)** — every card on one page, filterable, with live prices.
 - **[Vendetta set page](/sets/vendetta)** — the full sortable card list with live prices at release.
-- **[Vendetta release date](/vendetta-countdown)** — released 31 July 2026.
+- **[Radiance release date](/radiance-countdown)** — Set 5 lands 23 October 2026.
 - **[Everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** — products, mechanics, rivalries and release details in one read.`,
   },
   {
@@ -3110,7 +3108,7 @@ That's an important distinction if you're chasing a specific card: the **[Vendet
 - **[Browse every confirmed card](/blog/every-riftbound-vendetta-card-revealed)** — the full, filterable gallery.
 - **[Chase cards, tier by tier](/blog/riftbound-vendetta-chase-cards-so-far)** — which Overnumbers, alt-arts and Epics to actually hunt.
 - **[Best Vendetta decks](/guides/best-riftbound-vendetta-decks)** and the **[deckbuilding guide](/guides/building-for-riftbound-vendetta)** — archetype blueprints built from the confirmed card pool.
-- **[Vendetta release date](/vendetta-countdown)** — released 31 July 2026.
+- **[Radiance release date](/radiance-countdown)** — Set 5 lands 23 October 2026.
 - **[Everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** — the full set rundown in one read.
 
 ## Common questions
@@ -3169,7 +3167,7 @@ Early-window prices on a brand-new set are volatile — a handful of listings ca
 ## Where to go next
 
 - **[Riftbound Vendetta launch-week buying checklist](/blog/riftbound-vendetta-launch-week-buying-checklist)** — how to buy smart through the rush.
-- **[Vendetta release date](/vendetta-countdown)** — released 31 July 2026.
+- **[Radiance release date](/radiance-countdown)** — Set 5 lands 23 October 2026.
 - **[Every Vendetta card](/blog/riftbound-vendetta-spoiler-season-complete-166-cards)** — all 166 in the set.
 - **[Chase cards, tier by tier](/blog/riftbound-vendetta-chase-cards-so-far)** — what to actually hunt for.
 - **[Everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** — the full set rundown.

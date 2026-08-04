@@ -189,6 +189,17 @@ export const SETS: SetInfo[] = [
   // Singles started trading (Pre-Rift launch events + early marketplace listings)
   // a few days ahead of the 31 Jul 2026 official street date — treated as released.
   { code: "VEN", name: "Vendetta", slug: "vendetta", totalCards: 166, recentlyReleased: true, releasedOn: "2026-07-31" },
+  // Set 5, announced in Riot's 4 Aug 2026 product rundown (written up in
+  // /blog/riftbound-2027-set-roadmap): 23 Oct 2026, ~180 cards. comingSoon with no
+  // sealedAvailable, so it renders as a disabled "Coming soon" tile on the homepage
+  // and under "Upcoming & unreleased" on /sets, and is excluded from the eBay quota,
+  // the box-EV calculator, movers and the pack game until cards actually import.
+  //
+  // "RAD" IS A PLACEHOLDER. Riot has published the name and date but not the
+  // three-letter set code; this is our guess. Changing it later is a one-line edit
+  // here PLUS a Card.setCode backfill if any cards have been imported under it —
+  // check before importing the official gallery.
+  { code: "RAD", name: "Radiance", slug: "radiance", totalCards: 180, comingSoon: true, releasedOn: "2026-10-23" },
 ];
 
 // How long after release a set keeps first claim on the eBay quota. Two months:
@@ -207,15 +218,23 @@ export const PRICE_PRIORITY_WINDOW_DAYS = 60;
  *
  * Returns [] once every set's window has passed — which is the steady state, and
  * restores plain popularity-then-value ordering with no code change.
+ *
+ * The window is CLOSED AT BOTH ENDS. A set whose release date is still in the
+ * future has not released, so it gets nothing: announced-but-unshipped sets now
+ * carry a real `releasedOn` (Radiance, 23 Oct 2026), and a one-sided "released >=
+ * cutoff" test would have handed the quota to a set with zero cards in the
+ * database for months before its street date. Both ends being dated means the
+ * window opens and closes entirely on its own.
  */
 export function pricePrioritySetCodes(now: Date = new Date()): string[] {
-  const cutoff = now.getTime() - PRICE_PRIORITY_WINDOW_DAYS * 86_400_000;
+  const at = now.getTime();
+  const cutoff = at - PRICE_PRIORITY_WINDOW_DAYS * 86_400_000;
   return SETS.filter((s) => {
     if (!s.releasedOn) return false;
     const released = Date.parse(`${s.releasedOn}T00:00:00Z`);
     // An unparseable date must not silently grant a permanent head start.
     if (Number.isNaN(released)) return false;
-    return released >= cutoff;
+    return released >= cutoff && released <= at;
   }).map((s) => s.code);
 }
 export const setBySlug = (slug: string): SetInfo | undefined => SETS.find((s) => s.slug === slug);

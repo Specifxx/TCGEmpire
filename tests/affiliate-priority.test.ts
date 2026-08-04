@@ -96,11 +96,34 @@ test("THE POINT: the priority expires on its own, with no code change", () => {
   assert.deepEqual(pricePrioritySetCodes(plusDays("2026-07-31", 365)), []);
 });
 
-test("older sets carry no release date and are never prioritised", () => {
-  for (const s of SETS.filter((x) => x.code !== "VEN")) {
+test("sets released before we started dating them are never prioritised", () => {
+  // OGN/OGS/SFD/UNL predate the priority mechanic and carry no date at all.
+  for (const s of SETS.filter((x) => !["VEN", "RAD"].includes(x.code))) {
     assert.equal(s.releasedOn, undefined, `${s.code} unexpectedly has a release date`);
   }
   assert.deepEqual(pricePrioritySetCodes(day("2026-08-03")), ["VEN"]);
+});
+
+// ── An ANNOUNCED set must not claim the quota before it ships ────────────────
+// Radiance has a real, published street date sitting in the future. The window
+// test is closed at both ends precisely so that date grants nothing until it
+// arrives — otherwise a set with zero rows in the database would have outranked
+// the set people are actually buying, for months.
+test("Radiance gets no priority before its release date, and gets it after", () => {
+  const RAD = SETS.find((s) => s.code === "RAD")!;
+  assert.equal(RAD.releasedOn, "2026-10-23");
+  assert.equal(RAD.comingSoon, true);
+
+  // Announced but unreleased — Vendetta still owns the window here.
+  assert.deepEqual(pricePrioritySetCodes(day("2026-08-04")), ["VEN"]);
+  assert.deepEqual(pricePrioritySetCodes(plusDays("2026-10-23", -1)), []);
+
+  // Release day and through the window.
+  assert.deepEqual(pricePrioritySetCodes(day("2026-10-23")), ["RAD"]);
+  assert.deepEqual(pricePrioritySetCodes(plusDays("2026-10-23", PRICE_PRIORITY_WINDOW_DAYS - 1)), ["RAD"]);
+
+  // …and it expires on its own, exactly like Vendetta's did.
+  assert.deepEqual(pricePrioritySetCodes(plusDays("2026-10-23", PRICE_PRIORITY_WINDOW_DAYS + 1)), []);
 });
 
 test("a malformed release date grants no priority rather than a permanent one", () => {

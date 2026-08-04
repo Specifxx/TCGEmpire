@@ -16,7 +16,6 @@ import { cardCredentials, cardDisplayName, cardSearchName } from "@/lib/card-nam
 import { CardTile } from "@/components/CardTile";
 import { cardTileSelect } from "@/lib/cards";
 import { AdSlot } from "@/components/AdSlot";
-import { EmbedCardButton } from "@/components/EmbedCardButton";
 import { COUNTRIES, COUNTRY_LIST, DEFAULT_COUNTRY, isoCountry, priceField, type Country } from "@/lib/country";
 import { setByCode } from "@/lib/constants";
 import { domainSlug } from "@/lib/domains";
@@ -1065,9 +1064,9 @@ export default async function CardPage({ params }: { params: { id: string } }) {
         </section>
       )}
 
-      {/* Embeddable live-price widget — a free backlink/brand engine. (AU default
-          market in the snippet; the widget itself accepts a ?market= override.) */}
-      <EmbedCardButton slug={card.slug ?? card.id} market={DEFAULT_COUNTRY} />
+      {/* The "Embed this live price" widget button was here — removed with the rest
+          of the widget feature. /embed/card/[id] still serves so existing third-party
+          embeds don't break; we simply no longer offer new ones. */}
     </div>
   );
 }

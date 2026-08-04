@@ -42,6 +42,12 @@ export const NAV_GROUPS: NavGroup[] = [
     links: [
       { href: "/browse", label: "Card Database", emoji: "🗃️" },
       { href: "/sealed", label: "Sealed Products", emoji: "📦" },
+      // The countdown for whichever set is NEXT. Its predecessor
+      // (/vendetta-countdown) was never in the nav and depended entirely on
+      // article links for discovery; putting the slot here means the release-date
+      // page is one ⌘K away all through the pre-launch window, when it is the
+      // single highest-intent page on the site.
+      { href: "/radiance-countdown", label: "Radiance release date", emoji: "✨" },
       { href: "/market", label: "Market Index", emoji: "📊" },
       { href: "/stores/tracked", label: "Stores we track", emoji: "🏪" },
       { href: "/bulk-pricer", label: "Bulk Pricer", emoji: "📋" },

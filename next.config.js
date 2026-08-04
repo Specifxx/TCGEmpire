@@ -166,6 +166,18 @@ const nextConfig = {
       // The watchlist/alerts explainer lives at /alerts; /watchlist is the other
       // word people type for it.
       { source: "/watchlist", destination: "/alerts", permanent: true },
+      // RETIRED COUNTDOWN. /vendetta-countdown existed to answer "when does
+      // Vendetta release"; it released on 31 Jul 2026, so the page had already
+      // been rewritten into the past tense and was, by then, a worse version of
+      // /sets/vendetta — which answers the same question and also shows prices.
+      // Replaced by /radiance-countdown, the countdown for the set that is
+      // actually upcoming.
+      //
+      // 301, NOT 404: "riftbound vendetta release date" is one of the highest-
+      // volume queries in this niche and the URL carried ~35 internal links.
+      // Sending it to the set page keeps that equity on a page that still
+      // answers the query, instead of dropping it on the floor.
+      { source: "/vendetta-countdown", destination: "/sets/vendetta", permanent: true },
     ];
   },
   async headers() {

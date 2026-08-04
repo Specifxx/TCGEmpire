@@ -68,7 +68,7 @@ const TEMPLATES: [string, RegExp][] = [
   ["marketplace", /^\/marketplace/],
   ["blog", /^\/blog\//],
   ["guide", /^\/guides\//],
-  ["tool", /^\/(tools|market|movers|bulk-pricer|trade|deck|sealed|singles|riftle|games|portfolio|widgets|embed)/],
+  ["tool", /^\/(tools|market|movers|bulk-pricer|trade|deck|sealed|singles|riftle|games|portfolio|embed)/],
   ["index", /^\/(browse|cards|sets|domains|keywords|champions|decks|stores|blog|guides|learn)\/?$/],
   ["static", /.*/],
 ];

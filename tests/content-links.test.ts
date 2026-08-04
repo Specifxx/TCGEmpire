@@ -83,6 +83,40 @@ test("every internal link in an article resolves to a real route or a declared r
   assert.deepEqual(broken, [], `articles link to routes that do not exist:\n  ${broken.join("\n  ")}`);
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// The sitemap must never submit a URL we deleted or redirected.
+// ─────────────────────────────────────────────────────────────────────────────
+// Retiring a page means touching several files, and sitemap-sections.ts is the
+// one that gets forgotten: nothing links to the entry, no typecheck catches it,
+// and the page still "works" in dev. It only shows up as a soft 404 (or, worse,
+// a "Page with redirect" exclusion) in Search Console weeks later, quietly
+// eroding trust in every <lastmod> in the file.
+//
+// Both directions are checked, because both have bitten:
+//   • deleted route still submitted  → 404 in the sitemap
+//   • redirected route still submitted → Google is told the canonical URL is one
+//     that immediately 301s somewhere else
+//
+// Source-level: the literal `${SITE_URL}/…` entries are parsed straight out of
+// the file, so this needs no database and can gate a PR. Template-interpolated
+// URLs (`/sets/${s.slug}`) are skipped — those are covered by their own tests.
+test("every hard-coded sitemap URL resolves to a real, non-redirecting route", () => {
+  const src = readFileSync(join(ROOT, "src/lib/sitemap-sections.ts"), "utf8");
+  const redirects = redirectSources();
+
+  const paths = [...src.matchAll(/\$\{SITE_URL\}(\/[A-Za-z0-9\-/._]*)`/g)]
+    .map((m) => m[1].replace(/\/$/, ""))
+    .filter((p) => p && !p.startsWith("/sitemaps/"));
+
+  assert.ok(paths.length > 20, `expected to parse many sitemap URLs, found ${paths.length} — did the file's shape change?`);
+
+  const dead = paths.filter((p) => !routeExists(p));
+  assert.deepEqual(dead, [], `sitemap submits URLs with no route:\n  ${dead.join("\n  ")}`);
+
+  const redirected = paths.filter((p) => redirects.has(p));
+  assert.deepEqual(redirected, [], `sitemap submits URLs that 301 elsewhere:\n  ${redirected.join("\n  ")}`);
+});
+
 test("article slugs are unique", () => {
   const seen = new Map<string, number>();
   for (const a of ARTICLES) seen.set(a.slug, (seen.get(a.slug) ?? 0) + 1);

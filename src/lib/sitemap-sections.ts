@@ -103,7 +103,6 @@ async function core(): Promise<SitemapEntry[]> {
     { url: `${SITE_URL}/stores/tracked`, changeFrequency: "weekly", priority: 0.6, lastModified: staticPageDate("/stores/tracked") },
     { url: `${SITE_URL}/stores/suggest`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/stores/suggest") },
     { url: `${SITE_URL}/premium`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/premium") },
-    { url: `${SITE_URL}/widgets`, changeFrequency: "monthly", priority: 0.6, lastModified: day },
     { url: `${SITE_URL}/domains`, changeFrequency: "weekly", priority: 0.7, lastModified: day },
     { url: `${SITE_URL}/keywords`, changeFrequency: "weekly", priority: 0.7, lastModified: staticPageDate("/keywords") },
     { url: `${SITE_URL}/cards`, changeFrequency: "weekly", priority: 0.7, lastModified: day },
@@ -118,7 +117,11 @@ async function core(): Promise<SitemapEntry[]> {
     { url: `${SITE_URL}/games/card-smash`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/card-smash") },
     { url: `${SITE_URL}/guides`, changeFrequency: "weekly", priority: 0.7, lastModified: latestGuide },
     { url: `${SITE_URL}/blog`, changeFrequency: "weekly", priority: 0.7, lastModified: latestBlog },
-    { url: `${SITE_URL}/vendetta-countdown`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/vendetta-countdown") },
+    // The countdown slot always points at the NEXT unreleased set. /vendetta-countdown
+    // was retired here when Vendetta shipped (it now 301s to /sets/vendetta — see
+    // next.config.js); a redirecting URL in a sitemap is a soft error in Search
+    // Console, so it is removed rather than left behind.
+    { url: `${SITE_URL}/radiance-countdown`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/radiance-countdown") },
     { url: `${SITE_URL}/feedback`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/feedback") },
     { url: `${SITE_URL}/about`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/about") },
     // Trust pages. /editorial-policy and /authors carry the "who writes this and
