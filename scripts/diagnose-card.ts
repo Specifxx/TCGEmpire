@@ -19,7 +19,7 @@
  *   DIAG_COUNTRY  market for the live eBay re-search (default AU)
  */
 import { prisma } from "../src/lib/db";
-import { searchEbayLowest, type EbayResult } from "../src/lib/ebay";
+import { searchEbayLowest, type EbayResult, type EbayFunnelStage } from "../src/lib/ebay";
 import { EBAY_ALWAYS_MARKETS, EBAY_ROTATING_MARKETS } from "../src/lib/price-import";
 
 const fmt = (cents: number | null | undefined, cur = "AUD") =>
@@ -120,6 +120,7 @@ async function main() {
       [...EBAY_ALWAYS_MARKETS, ...EBAY_ROTATING_MARKETS].find((m) => m.country === country) ?? EBAY_ALWAYS_MARKETS[0];
     const [rawNum, total] = c.collectorNumber.split("/");
     const captured: EbayResult[] = [];
+    const funnel: EbayFunnelStage[] = [];
     console.log(`\n  LIVE eBay ${mkt.country} re-search…`);
     const hit = await searchEbayLowest(
       {
@@ -132,10 +133,18 @@ async function main() {
         marketplace: mkt.marketplace,
       },
       captured,
+      funnel,
     ).catch((e) => {
       console.log(`    search threw: ${(e as Error).message}`);
       return null;
     });
+    // The funnel is the whole point: it says WHICH stage ate the listings,
+    // instead of leaving "0 results" ambiguous between "eBay had none" and "we
+    // rejected them all".
+    for (const f of funnel) {
+      console.log(`      ${String(f.kept).padStart(4)} kept  ${String(f.dropped).padStart(4)} dropped  ${f.stage}`);
+      for (const sm of f.samples) console.log(`             dropped: ${sm}`);
+    }
     console.log(`    listings passing every filter: ${captured.length}`);
     for (const l of captured) console.log(`      ${fmt(l.priceCents, mkt.currency).padStart(14)}  ${l.title.slice(0, 60)}`);
     console.log(

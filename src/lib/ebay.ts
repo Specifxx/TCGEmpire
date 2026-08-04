@@ -227,6 +227,14 @@ function titleIsSignature(title: string, n: number): boolean {
   );
 }
 
+/** One filter stage in searchEbayLowest's funnel — see the `funnel` param. */
+export interface EbayFunnelStage {
+  stage: string;
+  kept: number;
+  dropped: number;
+  samples: string[];
+}
+
 function mapEbayItem(it: any): EbayResult {
   return {
     priceCents: Math.round(parseFloat(it.price.value) * 100),
@@ -261,7 +269,12 @@ export async function searchEbayLowest(
   // legit-filtered) listings for the card page's "eBay Ad" carousel — a side
   // effect of this SAME search, so the carousel costs zero extra Browse API
   // calls/quota beyond what this pass already spends for the price comparison.
-  captureAdListings?: EbayResult[]
+  captureAdListings?: EbayResult[],
+  // Diagnostic sink. When supplied, records how many listings survived each
+  // filter stage (and a sample of what was dropped) so "0 results" can be
+  // attributed to a specific stage instead of guessed at. See
+  // scripts/diagnose-card.ts.
+  funnel?: EbayFunnelStage[]
 ): Promise<EbayResult | null> {
   const token = await getToken();
   if (!token) return null;
@@ -304,29 +317,65 @@ export async function searchEbayLowest(
   // No name-only fallback — that mislabelled overnumbered/alt cards with the base
   // card's listing. The number is the reliable identity.
   const n = parseInt(card.number.replace(/[^0-9]/g, ""), 10);
-  const valid = items
-    .filter((it) => it?.price?.value)
-    .filter((it) => !EXCLUDE.test(it.title ?? ""))
-    // Drop non-English (Chinese etc.) printings — they share collector numbers with
-    // our English cards but trade much cheaper, so they leak in as the "cheapest".
-    .filter((it) => !isForeignListing(it))
-    .filter((it) => numberMatches(it.title ?? "", card.number, card.total, card.setCode))
-    // Signature ("*") and plain overnumbered share a number — keep them apart.
-    .filter((it) => titleIsSignature(it.title ?? "", n) === card.isSignature)
-    // Promo and base share a number too. A promo card matches ONLY promo-marked
-    // listings; a base card matches ONLY non-promo listings (so promos don't
-    // pollute the base price and vice versa).
-    .filter((it) => PROMO_HINT.test(it.title ?? "") === !!card.isPromo)
-    // Sanity guard: a single can legitimately cost a bit more on eBay than in a
-    // store, but not 8×+. A listing that far above the card's store value (and over
-    // an absolute floor so cheap-card noise isn't over-filtered) is a mismatch.
-    .filter((it) => {
+
+  // FUNNEL INSTRUMENTATION. Every filter below is a place a real listing can
+  // silently disappear, and "0 results" looks identical whether eBay returned
+  // nothing or we rejected everything it returned. Without per-stage counts the
+  // only way to tell them apart is to guess — which is exactly how a user ended
+  // up reporting live eBay listings we swore did not exist. `funnel` records the
+  // survivor count after each stage plus a sample of what each stage dropped.
+  const drop = (stage: string, kept: any[], before: any[]) => {
+    if (!funnel) return kept;
+    const lost = before.filter((b) => !kept.includes(b));
+    funnel.push({
+      stage,
+      kept: kept.length,
+      dropped: lost.length,
+      samples: lost.slice(0, 3).map((it) => String(it.title ?? "").slice(0, 90)),
+    });
+    return kept;
+  };
+
+  let cur: any[] = items;
+  if (funnel) funnel.push({ stage: "eBay returned", kept: items.length, dropped: 0, samples: [] });
+  cur = drop("has price", cur.filter((it) => it?.price?.value), cur);
+  cur = drop("not excluded (lots/bundles/etc)", cur.filter((it) => !EXCLUDE.test(it.title ?? "")), cur);
+  // Drop non-English (Chinese etc.) printings — they share collector numbers with
+  // our English cards but trade much cheaper, so they leak in as the "cheapest".
+  cur = drop("not foreign printing", cur.filter((it) => !isForeignListing(it)), cur);
+  cur = drop(
+    `collector number matches ${card.number}/${card.total}`,
+    cur.filter((it) => numberMatches(it.title ?? "", card.number, card.total, card.setCode)),
+    cur,
+  );
+  // Signature ("*") and plain overnumbered share a number — keep them apart.
+  cur = drop(
+    `signature flag === ${card.isSignature}`,
+    cur.filter((it) => titleIsSignature(it.title ?? "", n) === card.isSignature),
+    cur,
+  );
+  // Promo and base share a number too. A promo card matches ONLY promo-marked
+  // listings; a base card matches ONLY non-promo listings (so promos don't
+  // pollute the base price and vice versa).
+  cur = drop(
+    `promo flag === ${!!card.isPromo}`,
+    cur.filter((it) => PROMO_HINT.test(it.title ?? "") === !!card.isPromo),
+    cur,
+  );
+  // Sanity guard: a single can legitimately cost a bit more on eBay than in a
+  // store, but not 8×+. A listing that far above the card's store value (and over
+  // an absolute floor so cheap-card noise isn't over-filtered) is a mismatch.
+  cur = drop(
+    "not absurdly above store value",
+    cur.filter((it) => {
       const ref = card.referenceCents;
       if (!ref || ref <= 0) return true; // no reference — can't judge
       const price = delivered(it);
       return !(price > ref * 8 && price > 4000);
-    })
-    .sort((a, b) => delivered(a) - delivered(b));
+    }),
+    cur,
+  );
+  const valid = cur.sort((a, b) => delivered(a) - delivered(b));
 
   // Final safety net for a foreign printing that slipped past the title/location
   // filters (e.g. a Chinese card with an all-English title from a non-CN seller).
