@@ -92,6 +92,12 @@ async function main() {
       console.log(`  hashes: ${hashes.length}`);
       for (const h of hashes) console.log(`  HASH ${h} -> https://i.imgur.com/${h}.jpg`);
     }
+    // The album's OWN data endpoint (api.imgur.com/post/v1/albums/<id>) is small
+    // enough to dump in full — print its raw body verbatim rather than relying on
+    // a "hash" field regex, since the v1 API's field names differ from the legacy API.
+    if (/\/post\/v1\/albums\//.test(b.url)) {
+      console.log(`  === FULL ALBUM BODY ===\n${s}\n  === END ALBUM BODY ===`);
+    }
   }
 
   await browser.close();
