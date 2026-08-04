@@ -99,7 +99,10 @@ export default function OgImage() {
               }}
             >
               <div style={{ color: "#ffffff", fontSize: 22, fontWeight: 800 }}>{d.name.split(",")[0]}</div>
-              <div style={{ color: "#8b93a7", fontSize: 18 }}>Tier {d.tier} · {d.archetype}</div>
+              {/* ONE child, not `Tier {d.tier} · {d.archetype}` — that compiles to four
+                  children, and Satori throws on any div with >1 child that isn't
+                  explicitly display:flex. It fails the production build, not the tests. */}
+              <div style={{ color: "#8b93a7", fontSize: 18 }}>{`Tier ${d.tier} · ${d.archetype}`}</div>
             </div>
           ))}
         </div>
