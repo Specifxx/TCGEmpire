@@ -147,11 +147,27 @@ async function main() {
     }
     console.log(`    listings passing every filter: ${captured.length}`);
     for (const l of captured) console.log(`      ${fmt(l.priceCents, mkt.currency).padStart(14)}  ${l.title.slice(0, 60)}`);
-    console.log(
-      hit
-        ? `    → would price at ${fmt(hit.priceCents, mkt.currency)} — so the importer simply has not re-run for this card.`
-        : `    → NO match from the production search.`,
-    );
+    // Distinguish "the matcher works" from "the price is live". These are NOT
+    // the same thing and conflating them is how a fix gets reported as shipped
+    // while the market column is still empty: an eBay code fix does not take
+    // effect until an eBay PASS actually runs, and refresh-prices declines to
+    // run one if eBay refreshed in the last 20h. The row's presence is the only
+    // proof that happened.
+    const liveRow = prices.find((p) => p.country === mkt.country && p.retailer === mkt.retailer);
+    if (!hit) {
+      console.log(`    → NO match from the production search.`);
+    } else if (liveRow) {
+      console.log(
+        `    → matches, and the row IS written: ${fmt(liveRow.priceCents, liveRow.currency)}` +
+          ` (seen ${liveRow.lastSeen.toISOString().slice(0, 16)}). Nothing to do.`,
+      );
+    } else {
+      console.log(
+        `    → WOULD price at ${fmt(hit.priceCents, mkt.currency)}, but there is NO ${mkt.retailer} row yet.` +
+          ` The matcher is fine; an eBay pass has not run since the fix.` +
+          ` Dispatch refresh-prices with ebay_force=true.`,
+      );
+    }
 
     // When the funnel shows nothing even REACHED the filters, the query is at
     // fault — and Browse ANDs every keyword, so any one token can zero the
