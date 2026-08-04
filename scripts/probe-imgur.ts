@@ -7,6 +7,8 @@
  *
  * Usage (CI): PROBE_URL=https://imgur.com/a/<id> npx tsx scripts/probe-imgur.ts
  */
+export {};
+
 async function main() {
   const url = process.env.PROBE_URL;
   if (!url) {
