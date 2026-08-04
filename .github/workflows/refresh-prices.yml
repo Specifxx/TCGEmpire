@@ -97,12 +97,13 @@ jobs:
           EBAY_REFRESH: ${{ github.event_name != 'push' }}
           # Manual run with "ebay_force" ticked bypasses the once-a-day eBay gate.
           EBAY_FORCE: ${{ inputs.ebay_force && '1' || '' }}
-          # RH6 is the current history project (see src/lib/db-history.ts) — RH5
+          # RH7 is the current history project (see src/lib/db-history.ts) — RH6/RH5
           # exhausted its Neon transfer allowance on 2026-07-31 and _4 went
           # unreachable (P1001) before that; both are kept only as dead fallbacks.
-          # THIS STEP WRITES PriceHistory — if RH6 is missing here, db-history.ts
+          # THIS STEP WRITES PriceHistory — if RH7 is missing here, db-history.ts
           # falls through to a dead project (or, at the end of the chain, to the
           # OPERATIONAL database), so keep this list in sync with db-history.ts.
+          RH7: ${{ secrets.RH7 || vars.RH7 }}
           RH6: ${{ secrets.RH6 || vars.RH6 }}
           RH5: ${{ secrets.RH5 || vars.RH5 }}
           HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
@@ -128,6 +129,7 @@ jobs:
           EBAY_REFRESH: ${{ github.event_name != 'push' }}
           EBAY_FORCE: ${{ inputs.ebay_force && '1' || '' }}
           # Same chain as the Import prices step above — see its comment.
+          RH7: ${{ secrets.RH7 || vars.RH7 }}
           RH6: ${{ secrets.RH6 || vars.RH6 }}
           RH5: ${{ secrets.RH5 || vars.RH5 }}
           HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}

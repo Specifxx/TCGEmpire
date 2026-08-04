@@ -17,18 +17,33 @@ import { PrismaClient } from "@prisma/client";
 // SAFE BY DEFAULT: falls back to the same database as db.ts when NO history
 // variable is set at all, so this ships as a NO-OP (same physical database,
 // identical behaviour) until a second Neon project is provisioned and the
-// current history variable — RH6, see the chain below — is added to Vercel +
+// current history variable — RH7, see the chain below — is added to Vercel +
 // GitHub secrets. (Adding HISTORY_DATABASE_URL today would do nothing useful:
-// it sits FOURTH in the chain, behind RH6/RH5/_4.) The schema
+// it is the OLDEST project in the chain and sits fifth, behind RH7/RH6/RH5/_4.
+// If you provision a new project, give it a NEW name and put it FIRST here —
+// never re-use an older name, which is also listed as a migration SOURCE in
+// .github/workflows/maintenance.yml and would make source and target the same
+// database.) The schema
 // (prisma/schema.prisma) is unchanged and shared — run `prisma db push` against
 // the new URL once to create the tables there too (the unused Card/RetailerPrice/
 // etc. tables it also creates cost negligible storage empty; only PriceHistory /
 // ClickEvent get real traffic).
 
-// RH6 (secrets.RH6) is the CURRENT history project — cut over 2026-07-31 after
-// RH5 exhausted its monthly Neon network-transfer allowance (the same way _4
-// went unreachable with P1001 before it, and _3/_2/base before that). RH5 and
-// every older var are kept ONLY as read-only fallbacks/migration sources;
+// RH7 (secrets.RH7) is the CURRENT history project — cut over 2026-08-04 after
+// RH6 came within reach of its monthly Neon network-transfer allowance in FOUR
+// DAYS (RH6 itself replaced RH5 on 2026-07-31 for the same reason; _4 went
+// unreachable with P1001 before that, and _3/_2/base before it).
+//
+// SIX PROJECTS IN ~TWO WEEKS IS A READ-PATTERN PROBLEM, NOT A CAPACITY ONE. A
+// fresh project buys roughly four days at the current burn rate, so treat the
+// next exhaustion as a signal to find the query, not to provision RH8. The
+// egress guard below already logs any single history query returning ≥1 MB —
+// grep the Vercel logs for "[egress-guard:history]" and it will name the
+// model/operation. One known offender to check first: getEmptyCardIds() in
+// lib/card-price-state.ts groups the ENTIRE PriceHistory table with no `where`,
+// no `take` and no cache, so its payload grows every day forever.
+//
+// RH6 and every older var are kept ONLY as read-only fallbacks/migration sources;
 // treat them as dead, never the primary target. Once everything's copied
 // across (see the `migrate-history-db` task in .github/workflows/maintenance.yml)
 // and nothing references the older vars anymore, they can be removed entirely.
@@ -40,6 +55,7 @@ import { PrismaClient } from "@prisma/client";
 // that silently stops at an exhausted project is exactly how this repo has lost
 // a day to an "unexplained" P1001 more than once.
 const HISTORY_URL =
+  process.env.RH7 ||
   process.env.RH6 ||
   process.env.RH5 ||
   process.env.HISTORY_DATABASE_URL_4 ||
@@ -52,7 +68,8 @@ const HISTORY_URL =
 // in the logs immediately answers "which database did it actually try?".
 // Mirrors the same diagnostic in scripts/build-db-push.sh and lib/db.ts.
 export const HISTORY_URL_SOURCE =
-  process.env.RH6 ? "RH6"
+  process.env.RH7 ? "RH7"
+  : process.env.RH6 ? "RH6"
   : process.env.RH5 ? "RH5"
   : process.env.HISTORY_DATABASE_URL_4 ? "HISTORY_DATABASE_URL_4"
   : process.env.HISTORY_DATABASE_URL ? "HISTORY_DATABASE_URL"
@@ -60,9 +77,9 @@ export const HISTORY_URL_SOURCE =
   : process.env.HISTORY_DATABASE_URL_3 ? "HISTORY_DATABASE_URL_3"
   : "DATABASE_URL (no history project set — history shares the operational DB)";
 
-if (HISTORY_URL_SOURCE !== "RH6") {
+if (HISTORY_URL_SOURCE !== "RH7") {
   console.warn(
-    `[db-history] history DB resolved to ${HISTORY_URL_SOURCE}, not RH6 — RH6 is missing from this ` +
+    `[db-history] history DB resolved to ${HISTORY_URL_SOURCE}, not RH7 — RH7 is missing from this ` +
       `environment. Every older project is exhausted/dead; expect P1001 or writes landing in the wrong place.`
   );
 }

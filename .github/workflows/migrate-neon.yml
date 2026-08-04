@@ -5,12 +5,12 @@ name: "[SUPERSEDED] Migrate RiftCompare to split Neon DBs (one-off, manual)"
 # NEW_MAIN_DATABASE_URL / NEW_HISTORY_DATABASE_URL, none of which are in any
 # resolution chain any more: the operational DB has since moved
 # DATABASE_URL → DATABASE_URL_2 → RM3, and the history DB
-# HISTORY_DATABASE_URL → _2 → _3 → _4 → RH5 → RH6. Running it today would either
+# HISTORY_DATABASE_URL → _2 → _3 → _4 → RH5 → RH6 → RH7. Running it today would either
 # fail on missing secrets or restore into a database nothing reads.
 #
 # USE INSTEAD — .github/workflows/maintenance.yml:
 #   • task `migrate-main-db`     — operational database → RM3
-#   • task `migrate-history-db`  — history database → RH6  (pg_dump/pg_restore)
+#   • task `migrate-history-db`  — history database → RH7  (pg_dump/pg_restore)
 #   • task `migrate-history`     — Prisma multi-source top-up into the newest history DB
 # Those have same-database guards, a refuses-to-truncate-the-operational-DB
 # check, and row-count verification. This one has none of that.

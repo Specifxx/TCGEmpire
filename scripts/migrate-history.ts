@@ -3,21 +3,27 @@
  * into the CURRENT history database — used when a Neon history project exhausts its
  * monthly network-transfer allowance or goes unreachable, and is replaced.
  *
- *   target  = RH6 if set, else RH5, else HISTORY_DATABASE_URL_4, else
+ *   target  = RH7 if set, else RH6, else RH5, else HISTORY_DATABASE_URL_4, else
  *             HISTORY_DATABASE_URL — mirrors src/lib/db-history.ts's own priority,
  *             so this script always fills whatever the app itself reads.
- *   sources = main DATABASE_URL + every OLDER history project (RH5, _4, base, _2,
- *             _3), in order
+ *   sources = main DATABASE_URL + every OLDER history project (RH6, RH5, _4, base,
+ *             _2, _3), in order
  *
- * NOTE (2026-07-31): RH5 (in use since 2026-07-26) exhausted its monthly Neon
- * network-transfer allowance — RH6 is its replacement. RH5 is now a source only.
+ * NOTE (2026-08-04): RH6 (in use since 2026-07-31) came within reach of its
+ * monthly Neon network-transfer allowance after only FOUR DAYS — RH7 is its
+ * replacement. RH6 is now a source only.
+ *
+ * Six projects in ~two weeks means the burn rate, not the capacity, is the
+ * problem: RH7 buys about another four days on its own. Before provisioning an
+ * RH8, grep the Vercel logs for "[egress-guard:history]" — db-history.ts already
+ * logs any single history query returning >=1 MB, which names the offender.
  *
  * PREFER THE pg_dump PATH FOR A BULK COPY. This Prisma-based copier reads every
  * row over the uncompressed Postgres wire protocol, which is the most expensive
  * possible way to drain a project that is ALREADY out of transfer allowance. The
  * `migrate-history-db` task in .github/workflows/maintenance.yml does the same job
  * with `pg_dump --format=custom` (compressed on the wire) and should be used for
- * the initial RH5 -> RH6 bulk copy. Keep this script for what it is genuinely
+ * the initial RH6 -> RH7 bulk copy. Keep this script for what it is genuinely
  * better at: topping up the target from SEVERAL sources at once, tolerating a
  * source that refuses reads, and de-duplicating on the way in.
  *
@@ -44,23 +50,28 @@ import { PrismaClient } from "@prisma/client";
 // "skipped N rows for cards not in the target".
 const MAIN_URL = process.env.RM3 || process.env.DATABASE_URL_2 || process.env.DATABASE_URL;
 const TARGET_URL =
-  process.env.RH6 || process.env.RH5 || process.env.HISTORY_DATABASE_URL_4 || process.env.HISTORY_DATABASE_URL;
+  process.env.RH7 || process.env.RH6 || process.env.RH5 || process.env.HISTORY_DATABASE_URL_4 || process.env.HISTORY_DATABASE_URL;
 const TARGET_LABEL =
-  process.env.RH6 ? "RH6"
+  process.env.RH7 ? "RH7"
+  : process.env.RH6 ? "RH6"
   : process.env.RH5 ? "RH5"
   : process.env.HISTORY_DATABASE_URL_4 ? "HISTORY_DATABASE_URL_4"
   : "HISTORY_DATABASE_URL";
 
 if (!MAIN_URL) { console.error("No operational database is set (RM3 / DATABASE_URL_2 / DATABASE_URL)."); process.exit(1); }
-if (!TARGET_URL) { console.error("None of RH6 / RH5 / HISTORY_DATABASE_URL_4 / HISTORY_DATABASE_URL is set — point one at the current history project first."); process.exit(1); }
-if (TARGET_LABEL !== "RH6") {
-  console.warn(`⚠  Target resolved to ${TARGET_LABEL}, not RH6 — RH6 is not visible in this environment. Every older project is exhausted/dead; this is almost certainly not what you want.`);
+if (!TARGET_URL) { console.error("None of RH7 / RH6 / RH5 / HISTORY_DATABASE_URL_4 / HISTORY_DATABASE_URL is set — point one at the current history project first."); process.exit(1); }
+if (TARGET_LABEL !== "RH7") {
+  console.warn(`⚠  Target resolved to ${TARGET_LABEL}, not RH7 — RH7 is not visible in this environment. Every older project is exhausted/dead; this is almost certainly not what you want.`);
 }
 
 // Every distinct source to pull from (main + older history projects), excluding the
 // target itself. De-duplicated by URL so we never read the same DB twice.
 const sourceUrls = [
   { label: "main (DATABASE_URL)", url: MAIN_URL },
+  // RH6 first among the history sources: it served 2026-07-31 → 2026-08-04, so
+  // it holds the newest rows. The TARGET_URL filter below keeps it out when it
+  // is itself the target (i.e. RH7 not visible in this environment).
+  { label: "RH6", url: process.env.RH6 },
   { label: "RH5", url: process.env.RH5 },
   { label: "HISTORY_DATABASE_URL_4", url: process.env.HISTORY_DATABASE_URL_4 },
   { label: "HISTORY_DATABASE_URL", url: process.env.HISTORY_DATABASE_URL },

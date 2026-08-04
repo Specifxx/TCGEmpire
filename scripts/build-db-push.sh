@@ -71,14 +71,16 @@ fi
 #   HISTORY_DATABASE_URL_3 / HISTORY_DATABASE_URL_2
 # — the two OLDEST, long-dead projects, in the reverse of the app's own
 # precedence. It had never been updated when the history DB moved _2 -> _3 -> _4
-# -> RH5, so on every Vercel deploy it either pushed the schema into an exhausted
+# -> RH5 -> RH6 -> RH7, so on every Vercel deploy it either pushed the schema into an exhausted
 # project the app never reads, or (when only the current var was set) silently
 # pushed nothing at all while reporting success. That is precisely how a new
 # column can 500 the admin clicks page in production despite a green deploy.
 #
 # This chain now MIRRORS src/lib/db-history.ts exactly, newest-first. Keep the two
 # in sync — if you add a project there, add it here in the same position.
-if [ -n "${RH6:-}" ]; then
+if [ -n "${RH7:-}" ]; then
+  HIST="$RH7"; HIST_SOURCE="RH7"
+elif [ -n "${RH6:-}" ]; then
   HIST="$RH6"; HIST_SOURCE="RH6"
 elif [ -n "${RH5:-}" ]; then
   HIST="$RH5"; HIST_SOURCE="RH5"
@@ -96,8 +98,9 @@ fi
 
 if [ -n "$HIST" ]; then
   # Same rule as the operational push above: name the winning variable, never its
-  # value. If this says anything other than RH6, RH6 is missing from THIS Vercel
-  # environment/scope.
+  # value. If this says anything other than RH7, RH7 is missing from THIS Vercel
+  # environment/scope — which means the schema is being pushed to an exhausted
+  # project while the app reads a brand-new, TABLE-LESS one.
   echo "[build-db-push] history DB source for this build: $HIST_SOURCE"
   if [ "$HIST_SOURCE" != "RH6" ]; then
     echo "::warning::[build-db-push] RH6 is not visible in this build (VERCEL_ENV=${VERCEL_ENV:-unset}) — falling back to ${HIST_SOURCE}, which db-history.ts documents as an exhausted/dead fallback."
