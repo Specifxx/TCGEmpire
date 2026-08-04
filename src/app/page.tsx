@@ -18,6 +18,7 @@ import { VendettaBlock } from "@/components/home/VendettaBlock";
 import { PopularCardsCarousel } from "@/components/home/PopularCardsCarousel";
 import { PartnersStrip } from "@/components/home/PartnersStrip";
 import { HowItWorks } from "@/components/home/HowItWorks";
+import { EbayPicks } from "@/components/EbayPicks";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { CardsIcon } from "@/components/icons/HomeIcons";
 import { RETAILER_LIST } from "@/lib/retailers";
@@ -227,6 +228,11 @@ export default async function HomePage() {
           <TodaysTopDeals dealsByCountry={topDealsByCountry} />
         </Reveal>
       )}
+
+      {/* Tailored eBay unit — the set's chase cards with their cheapest live
+          listing, rather than a generic banner. Sits after Top Deals so the
+          commercial run reads own-inventory first, affiliate second. */}
+      <EbayPicks />
 
       {/* Unified popular-cards carousel — merges what used to be two identical
           "Most popular…" sections (Vendetta-scoped and all-time), a "Biggest

@@ -10,6 +10,7 @@ import { Markdown } from "./Markdown";
 import { fmtDate } from "./ArticleList";
 import { AdSlot } from "./AdSlot";
 import { ArticleShopStrip } from "./ArticleShopStrip";
+import { EbayPicks } from "./EbayPicks";
 import { ArticleMarketData } from "./ArticleMarketData";
 import { authorByName, authorJsonLd } from "@/lib/content/authors";
 import { SITE_URL } from "@/lib/site";
@@ -439,6 +440,21 @@ export async function ArticleView({ article }: { article: Article }) {
       {article.faq && article.faq.length > 0 && !bodyHasFaqSection && <ArticleFaq faq={article.faq} />}
 
       {article.shop && article.shop.length > 0 && <ArticleShopStrip items={article.shop} />}
+
+      {/* Tailored eBay unit, opt-in per article (lib/articles.ts's ebayPicks).
+          Sits under the body where a finished reader is deciding what to buy —
+          not mid-article, which would interrupt the read for the same click. */}
+      {article.ebayPicks && (
+        <EbayPicks
+          className="mt-8"
+          {...(typeof article.ebayPicks === "object"
+            ? {
+                ...(article.ebayPicks.setCode ? { setCode: article.ebayPicks.setCode } : {}),
+                ...(article.ebayPicks.heading ? { heading: article.ebayPicks.heading } : {}),
+              }
+            : {})}
+        />
+      )}
 
       {/* "Ready to buy?" — every article is fundamentally about Riftbound cards, so
           always offer the direct path into the live database. Guides can override

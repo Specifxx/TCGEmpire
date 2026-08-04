@@ -74,6 +74,11 @@ export interface Article {
   // Optional monetisation: eBay searches relevant to THIS article (rendered as a
   // "Shop this guide" strip under the body). Omit = no strip.
   shop?: ShopLink[];
+  // Opt in to the tailored eBay unit (chase cards + their cheapest live listing,
+  // with thumbnails) under the body. Deliberately per-article rather than
+  // site-wide: it only belongs on pages whose readers are already shopping.
+  // Optionally scope it to a set code; defaults to the current set.
+  ebayPicks?: boolean | { setCode?: string; heading?: string };
   // Optional embedded card gallery (real CardTiles → QuickView popup on click).
   embed?: ArticleEmbed;
   // Multiple galleries. Position each inside `body` with a `[[embed:N]]` marker on
@@ -1876,6 +1881,7 @@ Bookmark this page — it updates as new Jayce or Mel printings land in the data
   },
   {
     slug: "riftbound-empower-explained",
+    ebayPicks: { heading: "Vendetta singles on eBay right now" },
     category: "guide",
     title: "Riftbound Empower Explained: How the Empower Mechanic Works",
     excerpt:
@@ -2383,6 +2389,7 @@ Read the mechanics in full — **[Flow](/guides/riftbound-flow-explained)**, **[
   },
   {
     slug: "riftbound-vendetta-chase-cards-so-far",
+    ebayPicks: { heading: "These chase cards on eBay right now" },
     category: "blog",
     title: "Riftbound Vendetta Chase Cards — Every Tier, With Live Prices",
     excerpt:
@@ -2756,6 +2763,7 @@ Shopping from [Australia](/blog/buy-riftbound-cards-australia), [the US](/blog/b
   },
   {
     slug: "every-riftbound-vendetta-card-revealed",
+    ebayPicks: { heading: "Vendetta chase cards on eBay right now" },
     category: "blog",
     title: "Every Riftbound Vendetta Card Revealed — All 166 Confirmed",
     excerpt:

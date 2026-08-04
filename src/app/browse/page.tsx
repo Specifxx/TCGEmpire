@@ -6,6 +6,7 @@ import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { getCountry } from "@/lib/get-country";
 import { Filters } from "@/components/Filters";
 import { ActiveFilters } from "@/components/ActiveFilters";
+import { EbayPicks } from "@/components/EbayPicks";
 import { SortSelect } from "@/components/SortSelect";
 import { CardTile } from "@/components/CardTile";
 import { Pagination } from "@/components/Pagination";
@@ -182,6 +183,11 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
         <ActiveFilters />
 
         <AdSlot format="horizontal" height={90} className="mb-4" />
+
+        {/* Tailored eBay unit. Above the results grid: browse is where buying
+            intent is highest, and the tiles are chase cards rather than a
+            generic banner. */}
+        <EbayPicks className="mb-6" />
 
         {cards.length === 0 ? (
           <div className="card-surface grid place-items-center p-16 text-center">
