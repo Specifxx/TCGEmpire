@@ -242,6 +242,42 @@ function titleIsSignature(title: string, n: number): boolean {
   );
 }
 
+/**
+ * DIAGNOSTIC ONLY: run a raw Browse search and report how many items came back.
+ *
+ * searchEbayLowest bakes in one query shape and one buyingOptions filter. When
+ * it returns nothing, the funnel can prove the FILTERS are innocent but cannot
+ * say which part of the QUERY is at fault — and Browse ANDs every keyword, so
+ * any single token can silently zero the result set. This runs a candidate query
+ * verbatim so the difference between variants localises the culprit.
+ *
+ * Not used by the importer. Costs one Browse call per invocation.
+ */
+export async function probeEbayQuery(opts: {
+  q: string;
+  marketplace: string;
+  fixedPriceOnly?: boolean;
+}): Promise<{ ok: boolean; count: number; titles: string[] }> {
+  const token = await getToken();
+  if (!token) return { ok: false, count: 0, titles: [] };
+  const params = new URLSearchParams({ q: opts.q, sort: "price", limit: "20" });
+  if (opts.fixedPriceOnly !== false) params.set("filter", "buyingOptions:{FIXED_PRICE}");
+  try {
+    const res = await fetch(`${SEARCH_URL}?${params}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "X-EBAY-C-MARKETPLACE-ID": opts.marketplace,
+      },
+    });
+    if (!res.ok) return { ok: false, count: 0, titles: [] };
+    const data: any = await res.json();
+    const items: any[] = data.itemSummaries ?? [];
+    return { ok: true, count: items.length, titles: items.slice(0, 5).map((i) => String(i.title ?? "")) };
+  } catch {
+    return { ok: false, count: 0, titles: [] };
+  }
+}
+
 /** One filter stage in searchEbayLowest's funnel — see the `funnel` param. */
 export interface EbayFunnelStage {
   stage: string;

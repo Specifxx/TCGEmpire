@@ -19,7 +19,7 @@
  *   DIAG_COUNTRY  market for the live eBay re-search (default AU)
  */
 import { prisma } from "../src/lib/db";
-import { searchEbayLowest, type EbayResult, type EbayFunnelStage } from "../src/lib/ebay";
+import { searchEbayLowest, probeEbayQuery, type EbayResult, type EbayFunnelStage } from "../src/lib/ebay";
 import { EBAY_ALWAYS_MARKETS, EBAY_ROTATING_MARKETS } from "../src/lib/price-import";
 
 const fmt = (cents: number | null | undefined, cur = "AUD") =>
@@ -150,8 +150,30 @@ async function main() {
     console.log(
       hit
         ? `    → would price at ${fmt(hit.priceCents, mkt.currency)} — so the importer simply has not re-run for this card.`
-        : `    → NO match. Either eBay genuinely has no listing for this exact printing, or the title filters reject them all.`,
+        : `    → NO match from the production search.`,
     );
+
+    // When the funnel shows nothing even REACHED the filters, the query is at
+    // fault — and Browse ANDs every keyword, so any one token can zero the
+    // result set. Bisect it: each variant drops one constraint, so the first
+    // one that returns items names the culprit.
+    const reachedFilters = funnel[0]?.kept ?? 0;
+    if (!hit && reachedFilters === 0) {
+      const first = c.name.split(/[ ,]/)[0];
+      const variants: { label: string; q: string; fixedPriceOnly?: boolean }[] = [
+        { label: "as production searches it", q: `${c.name} signature Riftbound` },
+        { label: "…without the FIXED_PRICE filter (auctions included)", q: `${c.name} signature Riftbound`, fixedPriceOnly: false },
+        { label: "…first name word only", q: `${first} signature Riftbound` },
+        { label: "…first name word, no \"Riftbound\"", q: `${first} signature` },
+        { label: "…first name word, no \"Riftbound\", auctions included", q: `${first} signature`, fixedPriceOnly: false },
+      ];
+      console.log(`\n    QUERY BISECTION (eBay ${mkt.country}) — which token empties the result set?`);
+      for (const v of variants) {
+        const r = await probeEbayQuery({ q: v.q, marketplace: mkt.marketplace, fixedPriceOnly: v.fixedPriceOnly });
+        console.log(`      ${String(r.count).padStart(3)} items  q=${JSON.stringify(v.q)}${v.fixedPriceOnly === false ? " [+auctions]" : ""}  — ${v.label}`);
+        for (const t of r.titles.slice(0, 3)) console.log(`               ${t.slice(0, 84)}`);
+      }
+    }
     console.log();
   }
 }
