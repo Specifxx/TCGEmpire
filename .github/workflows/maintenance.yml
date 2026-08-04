@@ -22,6 +22,7 @@ on:
           - vendetta-pipeline # scrape official gallery + import VEN reveals
           - probe-sg         # read-only Singapore store scan (no DB writes)
           - probe-url        # read-only page fetch + font/style diagnostics (url input)
+          - probe-imgur      # read-only: render an Imgur album (JS SPA — curl gets an empty shell) and dump every full-res image URL (url input)
           - smoke-pages     # read-only: assert the key pages return real server-rendered content (post-deploy gate; url input overrides the default production origin)
           - import-prices    # run the store price importer for this ref's store list
           - import-sealed     # refresh sealed products (stores + eBay AU + TCGplayer US) + self-heal stale rows
@@ -582,6 +583,18 @@ jobs:
             base="${{ inputs.url }}"
             curl -sSL --max-time 20 "${base%/}$css" | grep -oiE "font-family:[^;}]{1,120}" | sort -u | head -20 || true
           done
+
+      - name: Probe Imgur album (rendered image URLs)
+        # Imgur album pages are a client-rendered React SPA — plain curl gets an
+        # empty shell with zero image URLs (confirmed: 7.5KB of head tags, no
+        # gallery content, 0 card links). Render it with a real browser instead.
+        if: inputs.task == 'probe-imgur'
+        env:
+          PROBE_URL: ${{ inputs.url }}
+        run: |
+          npm i --no-save playwright
+          npx playwright install --with-deps chromium
+          npx tsx scripts/probe-imgur.ts
 
       # The chunked marker dump above is fine for a quick font/style check, but a
       # page with a big content section (e.g. a card gallery) needs the whole file —
