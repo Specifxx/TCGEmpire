@@ -418,7 +418,7 @@
     "imageThumbUrl": "https://riftcompare.com/nexus-night-promos/order-rune-ven-r06b.jpg"
   },
   {
-    "_note": "Vendetta Showcase alt-art rune cycle (R01A-R06A) — no automated source (RiftScribe/TCGplayer) lists these at all; add-tcg-printings.ts's cloned-donor-art fallback never ran for them. Sourced from a community-compiled 'every Riftbound rune variation' reference chart (single composite image, one file per the album's own metadata) that the user pointed to. Each individual card crop shows its own official collector code (VEN R0Na/SC) and artist credit (Greg Ghielmetti (c)2026RGI) printed directly on the card face, confirming these are real official Riot art, not fan-made or fabricated. Domain assignment cross-checked against the same chart's clearly English-labelled Origins-set rune cycle, which uses the identical symbol-per-domain art language (Fury=spiked trigon, Calm=leaf teardrop, Mind=crescent+orbit, Body=diamond 'N', Chaos=pinwheel spiral, Order=winged S)."
+    "_note": "Vendetta Showcase alt-art rune cycle (R01A-R06A) — no automated source (RiftScribe/TCGplayer) lists these at all; add-tcg-printings.ts's cloned-donor-art fallback never ran for them. The cards themselves are confirmed real: a community-compiled 'every Riftbound rune variation' reference chart shows each one with its official collector code (VEN R0Na/SC) and artist credit (Greg Ghielmetti (c)2026RGI) printed on the card face. DELIBERATELY IMAGELESS: the only printing on that chart is the SIMPLIFIED-CHINESE release, whose card name and type line are Chinese (e.g. Fury Rune reads 炽烈符文), so it is the wrong thumbnail for an English-language price site — cleared to null so the generated placeholder renders instead, the same call fix-cloned-art.ts makes for a variant with no correct art. Drop the English scans in and set imageUrl once they surface. Domain assignment is from the chart's clearly English-labelled Origins rune cycle, which shares the symbol-per-domain art language (Fury=spiked trigon, Calm=leaf teardrop, Mind=crescent+orbit, Body=diamond 'N', Chaos=pinwheel spiral, Order=winged S)."
   },
   {
     "externalId": "manual-ven-r01a-altart",
@@ -431,9 +431,7 @@
     "rarity": "Showcase",
     "variant": "a",
     "energyCost": null,
-    "might": null,
-    "imageUrl": "https://riftcompare.com/vendetta-alt-art-runes/fury-rune-ven-r01a.jpg",
-    "imageThumbUrl": "https://riftcompare.com/vendetta-alt-art-runes/fury-rune-ven-r01a.jpg"
+    "might": null
   },
   {
     "externalId": "manual-ven-r02a-altart",
@@ -446,9 +444,7 @@
     "rarity": "Showcase",
     "variant": "a",
     "energyCost": null,
-    "might": null,
-    "imageUrl": "https://riftcompare.com/vendetta-alt-art-runes/calm-rune-ven-r02a.jpg",
-    "imageThumbUrl": "https://riftcompare.com/vendetta-alt-art-runes/calm-rune-ven-r02a.jpg"
+    "might": null
   },
   {
     "externalId": "manual-ven-r03a-altart",
@@ -461,9 +457,7 @@
     "rarity": "Showcase",
     "variant": "a",
     "energyCost": null,
-    "might": null,
-    "imageUrl": "https://riftcompare.com/vendetta-alt-art-runes/mind-rune-ven-r03a.jpg",
-    "imageThumbUrl": "https://riftcompare.com/vendetta-alt-art-runes/mind-rune-ven-r03a.jpg"
+    "might": null
   },
   {
     "externalId": "manual-ven-r04a-altart",
@@ -476,9 +470,7 @@
     "rarity": "Showcase",
     "variant": "a",
     "energyCost": null,
-    "might": null,
-    "imageUrl": "https://riftcompare.com/vendetta-alt-art-runes/body-rune-ven-r04a.jpg",
-    "imageThumbUrl": "https://riftcompare.com/vendetta-alt-art-runes/body-rune-ven-r04a.jpg"
+    "might": null
   },
   {
     "externalId": "manual-ven-r05a-altart",
@@ -491,9 +483,7 @@
     "rarity": "Showcase",
     "variant": "a",
     "energyCost": null,
-    "might": null,
-    "imageUrl": "https://riftcompare.com/vendetta-alt-art-runes/chaos-rune-ven-r05a.jpg",
-    "imageThumbUrl": "https://riftcompare.com/vendetta-alt-art-runes/chaos-rune-ven-r05a.jpg"
+    "might": null
   },
   {
     "externalId": "manual-ven-r06a-altart",
@@ -506,8 +496,6 @@
     "rarity": "Showcase",
     "variant": "a",
     "energyCost": null,
-    "might": null,
-    "imageUrl": "https://riftcompare.com/vendetta-alt-art-runes/order-rune-ven-r06a.jpg",
-    "imageThumbUrl": "https://riftcompare.com/vendetta-alt-art-runes/order-rune-ven-r06a.jpg"
+    "might": null
   }
 ]
