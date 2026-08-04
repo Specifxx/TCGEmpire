@@ -38,17 +38,21 @@ import { PrismaClient } from "@prisma/client";
 const BIG_RESULT_ROWS = 500; // only size-check results at least this long (CPU)
 const BIG_RESULT_BYTES = 1_000_000;
 
-// RM3 is the CURRENT operational Neon project (cut over 2026-07-29, after
-// DATABASE_URL_2 exhausted its free-tier monthly network-transfer allowance —
-// itself the replacement for the original DATABASE_URL, which did the same).
-// Prefer it the moment it's set (in both Vercel and GitHub Actions), same
-// pattern as db-history.ts's fallback chain.
+// RM4 is the CURRENT operational Neon project (cut over 2026-08-04, after RM3
+// exhausted its monthly network-transfer allowance — RM3 itself replaced
+// DATABASE_URL_2, which replaced the original DATABASE_URL, each for the same
+// reason). Prefer it the moment it's set (in both Vercel and GitHub Actions),
+// same pattern as db-history.ts's fallback chain.
 //
-// The older vars are kept ONLY as fallbacks so a deploy can't hard-fail if RM3
+// THIS HAS NOW HAPPENED FOUR TIMES, so treat the chain as a rotation rather than
+// an accident: each project runs out, a new one is created, it goes on the FRONT
+// of this list, and the old one stays exactly one release as a rollback.
+//
+// The older vars are kept ONLY as fallbacks so a deploy can't hard-fail if RM4
 // is momentarily missing from one environment; treat them as dead/read-only,
-// never the primary target. Once RM3 is confirmed live everywhere and the data
-// is verified across (see the migrate-main-db task in maintenance.yml), they
-// can be deleted and this collapsed back to a single var.
+// never the primary target. Once RM4 is confirmed live everywhere and the data
+// is verified across (see migrate-main-db-rm4 in maintenance.yml), they can be
+// deleted and this collapsed back to a single var.
 //
 // NOTE the ordering rule for any future rotation: the NEWEST project goes
 // first. Getting this backwards silently keeps the site on the exhausted
