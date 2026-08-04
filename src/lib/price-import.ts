@@ -445,9 +445,14 @@ export async function refreshEbayMarkets(
     // "eBay Ad" carousel rows for the card page — captured for free from the same
     // Browse API call above (see searchEbayLowest's captureAdListings param).
     const adRows: Prisma.EbayAdListingCreateManyInput[] = [];
+    // Cards THIS market queried. Deliberately separate from the run-wide
+    // `checkedIds`, which accumulates across markets — clearing this market's
+    // carousel must only ever touch cards this market actually reached.
+    const queriedThisMarket = new Set<string>();
     for (const c of cards) {
       if (isEbayRateLimited()) break;
       checkedIds.add(c.id); // we have budget and are about to query this card
+      queriedThisMarket.add(c.id);
       const [rawNum, total] = c.collectorNumber.split("/");
       const captured: EbayResult[] = [];
       const r = await searchEbayLowest(
@@ -478,7 +483,7 @@ export async function refreshEbayMarkets(
       });
       // The budget can run out INSIDE the call (its own spend() check), meaning this
       // card was never actually queried — don't leave it stamped as checked.
-      if (!r && isEbayRateLimited()) { checkedIds.delete(c.id); break; }
+      if (!r && isEbayRateLimited()) { checkedIds.delete(c.id); queriedThisMarket.delete(c.id); break; }
       if (!r) continue;
       rows.push({
         cardId: c.id,
@@ -518,15 +523,31 @@ export async function refreshEbayMarkets(
     } else {
       console.warn(`eBay ${mkt.country}: 0 results (rate-limited?) — keeping existing rows.`);
     }
-    if (adRows.length > 0) {
-      // Only replace the cards we actually re-queried this pass — a rate-limited
-      // run that skips most cards must not wipe out yesterday's carousel for them.
-      const queriedIds = [...new Set(adRows.map((r) => r.cardId))];
-      for (let i = 0; i < queriedIds.length; i += 1000) {
-        await prisma.ebayAdListing.deleteMany({ where: { country: mkt.country, cardId: { in: queriedIds.slice(i, i + 1000) } } });
-      }
-      await prisma.ebayAdListing.createMany({ data: adRows });
+    // Replace the carousel for every card this market actually QUERIED — not
+    // just the ones that came back with listings.
+    //
+    // THE BUG THIS FIXES: the delete list used to be derived from `adRows`, i.e.
+    // only cards that produced listings on this run. A card we queried and got
+    // NOTHING for was therefore never cleared, so its carousel kept yesterday's
+    // listings — forever, since every later run also produced no adRows for it
+    // and so never cleared it either. Meanwhile the PRICE rows for that card
+    // were correctly dropped (they are replaced wholesale per retailer). The
+    // result is the state a user reported: a card page showing "no in-stock
+    // listings" and "no live eBay price" directly above an eBay carousel headed
+    // "LIVE LISTINGS ON EBAY" — with affiliate links to listings that may have
+    // sold weeks ago. Stale is worse than empty here, because the carousel
+    // claims to be live.
+    //
+    // Scoped to cards queried IN THIS MARKET (not the run-wide `checkedIds`), so
+    // a budget that runs out partway through still cannot wipe the carousel for
+    // cards this market never reached.
+    const queriedIds = [...queriedThisMarket];
+    for (let i = 0; i < queriedIds.length; i += 1000) {
+      await prisma.ebayAdListing.deleteMany({
+        where: { country: mkt.country, cardId: { in: queriedIds.slice(i, i + 1000) } },
+      });
     }
+    if (adRows.length > 0) await prisma.ebayAdListing.createMany({ data: adRows });
 
     // ── CANADA IS DERIVED FROM THE US PASS, NOT SEARCHED ────────────────────
     // eBay CA used to be its own marketplace query — a full ~1,400 extra Browse
