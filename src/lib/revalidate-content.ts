@@ -18,6 +18,11 @@ export function revalidateContent(): string[] {
   const staticPaths: [string, "page"][] = [
     ["/", "page"],
     ["/movers", "page"],
+    // Box EV became genuinely static once it stopped reading cookies() for the
+    // country (it now values everything in USD and converts client-side), so it
+    // needs purging here or it would serve prices up to 24h stale after an
+    // import instead of refreshing with everything else.
+    ["/tools/box-ev", "page"],
     ["/domains", "page"],
     ["/card/[id]", "page"],
     ["/sets/[set]", "page"],

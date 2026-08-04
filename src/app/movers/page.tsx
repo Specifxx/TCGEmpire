@@ -5,6 +5,10 @@ import { getPriceMovers } from "@/lib/price-history";
 import { PriceWatch } from "@/components/PriceWatch";
 import { COUNTRIES, DEFAULT_COUNTRY } from "@/lib/country";
 import { SETS } from "@/lib/constants";
+import { AnswerBox } from "@/components/AnswerBox";
+import { HubFaq } from "@/components/HubFaq";
+import { faqPage } from "@/lib/jsonld";
+import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { SITE_URL, SITE_NAME } from "@/lib/site";
 import { AdSlot } from "@/components/AdSlot";
 import { MoversToolsCta } from "@/components/MoversToolsCta";
@@ -68,13 +72,36 @@ export default async function MoversPage() {
   const renderedCards = [...movers.spiking, ...movers.plummeting, ...movers.value].map((m) => m.card);
   const seenIds = new Set<string>();
   const uniqueCards = renderedCards.filter((c) => (seenIds.has(c.id) ? false : (seenIds.add(c.id), true)));
+  const FAQS = [
+    {
+      q: "Which Riftbound cards are going up in price right now?",
+      a: `The risers list above is the answer, refreshed daily: it ranks Riftbound singles by how much their lowest live price in ${info.place} has moved over roughly the last seven days.`,
+    },
+    {
+      q: "How often are Riftbound price movers updated?",
+      a: "Daily. RiftCompare records the lowest live price of every tracked card each day, so a move shows up on the next import rather than the next week.",
+    },
+    {
+      q: "How does RiftCompare calculate a price move?",
+      a: "Each card's current lowest live price is compared against its price about seven days ago. Cards below a minimum value are excluded so a few cents on a bulk common can't top the list, and extreme outliers are filtered out.",
+    },
+    {
+      q: "What does 'best value' mean on this page?",
+      a: "The best-value list compares a card's current price against its recent high rather than against last week — so it surfaces cards that are cheap relative to where they have actually traded, not just cards that fell today.",
+    },
+    {
+      q: "Should I buy a card that is spiking?",
+      a: "Usually not immediately. A spike often reflects a single tournament result and settles once the meta adjusts. Check whether the demand looks durable, and set a price alert at the number you would actually pay rather than chasing.",
+    },
+  ];
+
   const collection = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     name: "Riftbound Price Movers",
     url: `${SITE_URL}/movers`,
     description: "This week's biggest Riftbound card price movers — risers, drops and best-value buys.",
-    isPartOf: { "@type": "WebSite", name: "RiftCompare", url: SITE_URL },
+    isPartOf: { "@id": `${SITE_URL}/#website` },
     ...(uniqueCards.length > 0
       ? {
           mainEntity: {
@@ -96,7 +123,7 @@ export default async function MoversPage() {
     <div className="flex flex-col gap-8">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumb, collection]) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumb, collection, faqPage(FAQS)].filter(Boolean)) }}
       />
 
       {/* Breadcrumb + hero */}
@@ -117,6 +144,13 @@ export default async function MoversPage() {
           figure is the latest {info.adjective} lowest price in {info.currency}, compared across stores
           and updated daily. Tap any card for its full price-history chart.
         </p>
+        <AnswerBox className="mt-4">
+          <p>
+            Riftbound price movers are the cards whose lowest live price has changed most in the past week. This page
+            ranks them daily in three lists — biggest risers, biggest drops, and best value against a card&apos;s recent
+            high — using the lowest in-stock price across every store tracked for {info.place}, in {info.currency}.
+          </p>
+        </AnswerBox>
       </div>
 
       {hasAny ? (
@@ -177,6 +211,8 @@ export default async function MoversPage() {
       </section>
 
       <AdSlot height={100} />
+
+      <HubFaq faqs={FAQS} className="" />
 
       {/* Keyword-relevant copy for search */}
       <section className="card-surface p-6">

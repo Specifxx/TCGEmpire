@@ -81,7 +81,7 @@ export function EbayAdCarouselLive({
             <div className="aspect-[3/4] w-full overflow-hidden rounded bg-ink-950">
               {l.imageUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={l.imageUrl} alt="" aria-hidden="true" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                <img src={l.imageUrl} alt={`${l.title} — live eBay listing`} loading="lazy" decoding="async" className="h-full w-full object-cover" />
               )}
             </div>
             {!compact && <div className="mt-1.5 line-clamp-2 text-[11px] leading-tight text-slate-300">{truncate(l.title, 60)}</div>}

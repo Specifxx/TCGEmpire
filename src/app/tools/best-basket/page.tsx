@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { HubIntro } from "@/components/HubIntro";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { isPremium } from "@/lib/premium";
@@ -60,6 +61,7 @@ export default async function BestBasketPage() {
           <span className="text-slate-300">Best Basket</span>
         </nav>
         <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">Best Basket Optimiser</h1>
+      <HubIntro path="/tools/best-basket" />
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
           The cheapest way to actually <strong className="text-slate-200">buy</strong> a whole deck or wishlist — not just the
           lowest price per card, but the lowest <strong className="text-slate-200">landed total</strong> across {info.adjective}{" "}

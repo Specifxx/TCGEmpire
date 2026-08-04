@@ -1,43 +1,36 @@
 /**
- * One-off release-day email blast (e.g. Vendetta, 31 Jul 2026). Emails every
- * newsletter subscriber the "the set is out — see every price" message.
+ * Release-day email blast — LOCAL/CI entry point.
  *
- * SAFETY: does nothing unless RELEASE_DAY_SEND=1 is set, so it can never fire by
- * accident. Backfills a per-subscriber unsub token if missing. Throttled to Resend's
- * rate limit. Re-running re-sends (no idempotency marker) — run it ONCE.
+ * The real send normally runs on Vercel via /api/cron/release-day-email, because
+ * RESEND_API_KEY is a Vercel env var (a GitHub Actions runner has the database but
+ * not the mail key, so a blast from CI delivers nothing). This script exists for
+ * running the same logic by hand from an environment that DOES have both.
  *
- * Usage (on release day):
- *   RELEASE_DAY_SEND=1 SET_NAME="Vendetta" SET_SLUG="vendetta" npx tsx scripts/send-release-day.ts
+ * Both paths share lib/release-day.ts, so behaviour can't drift between them.
+ *
+ * SAFETY: refuses to run without RELEASE_DAY_SEND=1; DRY_RUN=1 reports and sends
+ * nothing; idempotent per campaign (each subscriber stamped on success), so a
+ * partial run is safe to repeat.
+ *
+ * Usage:
+ *   RELEASE_DAY_SEND=1 DRY_RUN=1 SET_SLUG=vendetta npx tsx scripts/send-release-day.ts
+ *   RELEASE_DAY_SEND=1 SET_SLUG=vendetta npx tsx scripts/send-release-day.ts
  */
-import { randomUUID } from "node:crypto";
 import { prisma } from "../src/lib/db";
-import { sendReleaseDayEmail } from "../src/lib/email";
-import { SITE_URL } from "../src/lib/site";
+import { runReleaseDayBlast } from "../src/lib/release-day";
 
 async function main() {
   if (process.env.RELEASE_DAY_SEND !== "1") {
     console.log("release-day: RELEASE_DAY_SEND!=1 — refusing to send. Set it to actually blast.");
     return;
   }
-  const setName = process.env.SET_NAME ?? "Vendetta";
-  const setSlug = process.env.SET_SLUG ?? "vendetta";
-
-  const subs = await prisma.newsletterSubscriber.findMany({ select: { email: true, unsubToken: true, id: true } });
-  console.log(`release-day: sending "${setName}" to ${subs.length} subscribers…`);
-
-  let sent = 0;
-  for (const s of subs) {
-    let token = s.unsubToken;
-    if (!token) {
-      token = randomUUID();
-      await prisma.newsletterSubscriber.update({ where: { id: s.id }, data: { unsubToken: token } }).catch(() => {});
-    }
-    const unsubUrl = `${SITE_URL}/newsletter/unsubscribe?token=${encodeURIComponent(token)}`;
-    const ok = await sendReleaseDayEmail(s.email, setName, setSlug, unsubUrl);
-    if (ok) sent++;
-    await new Promise((r) => setTimeout(r, 600)); // Resend ~2 req/s
-  }
-  console.log(`release-day: done — ${sent}/${subs.length} sent.`);
+  const res = await runReleaseDayBlast({
+    setSlug: process.env.SET_SLUG ?? "vendetta",
+    dryRun: process.env.DRY_RUN === "1",
+    limit: Number(process.env.LIMIT) || undefined,
+  });
+  console.log("release-day:", JSON.stringify(res, null, 2));
+  if (!res.ok) process.exitCode = 1;
 }
 
 main()

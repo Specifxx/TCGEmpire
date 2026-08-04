@@ -5,21 +5,62 @@
 // The Report-Only policy reports violations without blocking anything, so we can
 // watch the report stream and promote a verified policy to enforcing later.
 //
+// NOTHING HERE MAY EVER BLOCK GOOGLE'S AD OR CONSENT ORIGINS. Even in
+// Report-Only — which by definition blocks nothing — the allow-list is kept
+// correct and complete, so that promoting this policy to enforcing later cannot
+// silently kill ad delivery or the EEA/UK/CH consent message. The origin lists
+// below mirror ADSENSE_SCRIPT_ORIGINS / _FRAME_ / _CONNECT_ in
+// src/lib/adsense.ts; scripts/adsense-guard.ts asserts every one of them still
+// appears in this file, so the two can't drift.
+//
 // Allow-list rationale (third parties that actually load on the site):
+//  • Google AdSense delivery + Privacy & Messaging (see the ADS_* lists below)
 //  • Vercel Analytics + Speed Insights (va.vercel-scripts.com, *.vercel-insights.com)
-//  • HilltopAds delivery (deliciouslip.com) — the primary ad network
 //  • Card art CDN (cdn.riftscribe.gg) + sealed/marketplace product images
 //  • TCGplayer + eBay affiliate banners (partner.tcgplayer.com, *.ebay.com)
 // 'unsafe-inline' is permitted for script/style because Next streams inline
 // hydration scripts and the JSON-LD blocks; a nonce-based policy is a later step.
+// (Google's ad tags also inject inline script, so 'unsafe-inline' is a hard
+// requirement for AdSense specifically, not just a Next convenience.)
+const ADS_SCRIPT_SRC = [
+  "https://pagead2.googlesyndication.com",
+  "https://partner.googleadservices.com",
+  "https://tpc.googlesyndication.com",
+  "https://googleads.g.doubleclick.net",
+  "https://fundingchoicesmessages.google.com",
+  "https://www.googletagservices.com",
+  "https://adservice.google.com",
+];
+const ADS_FRAME_SRC = [
+  "https://googleads.g.doubleclick.net",
+  "https://tpc.googlesyndication.com",
+  "https://www.google.com",
+  "https://fundingchoicesmessages.google.com",
+];
+const ADS_CONNECT_SRC = [
+  "https://pagead2.googlesyndication.com",
+  "https://googleads.g.doubleclick.net",
+  "https://tpc.googlesyndication.com",
+  // Google's ad-traffic-quality beacons. Blocking these degrades invalid-traffic
+  // detection, which shows up as an account-health problem rather than a visible
+  // breakage — the worst kind to miss.
+  "https://ep1.adtrafficquality.google",
+  "https://ep2.adtrafficquality.google",
+  "https://fundingchoicesmessages.google.com",
+  "https://csi.gstatic.com",
+];
+
 const cspReportOnly = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://*.vercel-insights.com https://deliciouslip.com",
+  `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://*.vercel-insights.com ${ADS_SCRIPT_SRC.join(" ")}`,
   "style-src 'self' 'unsafe-inline'",
+  // Ad creatives and tracking pixels come from arbitrary advertiser domains, so
+  // img-src must stay open to https: — narrowing it would blank creatives.
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  "connect-src 'self' https://*.vercel-insights.com https://vitals.vercel-insights.com https://deliciouslip.com https://cdn.riftscribe.gg",
-  "frame-src 'self' https:",
+  `connect-src 'self' https://*.vercel-insights.com https://vitals.vercel-insights.com https://cdn.riftscribe.gg ${ADS_CONNECT_SRC.join(" ")}`,
+  // Ads render inside cross-origin iframes; the consent message does too.
+  `frame-src 'self' https: ${ADS_FRAME_SRC.join(" ")}`,
   "frame-ancestors 'self'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -82,6 +123,19 @@ const nextConfig = {
         destination: "/market",
         permanent: true,
       },
+      // CONSOLIDATION (AdSense remediation § Phase 12b). "Where to Buy Riftbound
+      // Cards in Australia" was a 294-word guide whose entire topic is covered —
+      // and covered far better — by the 1,100-word multi-market guide it linked
+      // to twice in its own body. Its one genuinely unique section (why we always
+      // request each store's local-currency price) has been merged into the
+      // target, so nothing is lost; a 301 keeps its link equity and any bookmark
+      // working. The AU-specific /blog/buy-riftbound-cards-australia post stays —
+      // it is a different, live-data-backed piece, not a duplicate.
+      {
+        source: "/guides/where-to-buy-riftbound-australia",
+        destination: "/guides/where-to-buy-riftbound-cards",
+        permanent: true,
+      },
       // The tool is called "Deal Finder" in its own H1, nav entry, metadata and
       // every internal link — only the URL still said "arbitrage", a word no
       // buyer searches for. Renamed to /tools/deal-finder; this 301 preserves
@@ -93,6 +147,45 @@ const nextConfig = {
         destination: "/tools/deal-finder",
         permanent: true,
       },
+      // SHORT URLs the editorial content asks for. The 2026 content pack's
+      // articles were briefed to link to "/deals (deal finder)" and to
+      // "/guides/us", "/guides/uk" … — neither shape exists as a route, and
+      // both name a page that DOES exist under a different URL. Minting real
+      // pages at these paths would create duplicate content competing with the
+      // originals, so each is a 301 to the canonical page instead. The article
+      // bodies link straight to the canonical URL (no redirect hop); these
+      // exist so the short URL a reader types, or an inbound link uses, still
+      // lands somewhere correct.
+      { source: "/deals", destination: "/tools/deal-finder", permanent: true },
+      { source: "/guides/us", destination: "/blog/buy-riftbound-cards-us", permanent: true },
+      { source: "/guides/uk", destination: "/blog/buy-riftbound-cards-uk", permanent: true },
+      { source: "/guides/au", destination: "/blog/buy-riftbound-cards-australia", permanent: true },
+      { source: "/guides/nz", destination: "/blog/buy-riftbound-cards-nz", permanent: true },
+      { source: "/guides/ca", destination: "/blog/buy-riftbound-cards-canada", permanent: true },
+      { source: "/guides/sg", destination: "/blog/riftbound-price-comparison-singapore", permanent: true },
+      // The watchlist/alerts explainer lives at /alerts; /watchlist is the other
+      // word people type for it.
+      { source: "/watchlist", destination: "/alerts", permanent: true },
+      // RETIRED COUNTDOWN. /vendetta-countdown existed to answer "when does
+      // Vendetta release"; it released on 31 Jul 2026, so the page had already
+      // been rewritten into the past tense and was, by then, a worse version of
+      // /sets/vendetta — which answers the same question and also shows prices.
+      // Replaced by /radiance-countdown, the countdown for the set that is
+      // actually upcoming.
+      //
+      // 301, NOT 404: "riftbound vendetta release date" is one of the highest-
+      // volume queries in this niche and the URL carried ~35 internal links.
+      // Sending it to the set page keeps that equity on a page that still
+      // answers the query, instead of dropping it on the floor.
+      { source: "/vendetta-countdown", destination: "/sets/vendetta", permanent: true },
+      // ROTATED-OUT META DECKS. /decks tracks the live metagame, so a legend that
+      // drops out of the tier list loses its deck page. These three were Tier 1-2
+      // in the Unleashed era and fell out of the Vendetta tier list; their URLs
+      // were indexed and internally linked, so they 301 to the deck index rather
+      // than 404. Add a line here whenever a slug leaves prisma/meta-decks.json.
+      { source: "/decks/leblanc-deceiver", destination: "/decks", permanent: true },
+      { source: "/decks/fiora-grand-duelist", destination: "/decks", permanent: true },
+      { source: "/decks/vex-gloomist", destination: "/decks", permanent: true },
     ];
   },
   async headers() {

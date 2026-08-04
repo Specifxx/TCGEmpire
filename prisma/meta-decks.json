@@ -1,130 +1,532 @@
 {
-  "_comment": "Real top-meta Riftbound decklists copied verbatim from riftDecks.com tournament results (Unleashed metagame, June 2026). Each is a legal 64-card list. 'legend' resolves separately; every other card carries a 'section': champion | unit | gear | spell | battlefield | rune | sideboard. The deck page groups these into Legend / Champion / Main Deck (unit+gear+spell) / Battlefields / Runes / Sideboard. Build cost = main deck (everything except sideboard) + legend; sideboard is priced separately. Names resolve against the DB by normalized name.",
+  "_comment": "Real top-finishing Riftbound decklists from the VENDETTA metagame (set 4). PROVENANCE: the card-by-card lists are parsed tournament results taken from riftools.app public decklist snapshots (which aggregate operator feeds, piltoverarchive.com and the UVS event locator); sourceUrl on each deck links the specific list. The tier placement and the metaSharePct / winRatePct / top8s / avgPriceUsd figures come from the riftDecks.com Vendetta metagame breakdown (https://riftdecks.com/legends). BOTH MOVE DAILY — re-check before trusting the numbers, and refresh _metaUpdated when you do. avgPriceUsd is riftDecks reference only; the site prices every deck live in the reader market and ignores this field.",
+  "_rules": "Main deck incl. legend is always 56 (40 + 12 runes + 3 battlefields + 1 legend). The side deck cap rose from 8 to 10 in the July 2026 tournament rules update, effective 2026-07-24, so a full list is 66 cards; every list below is a post-change 66. Side decks may never contain runes, legends or battlefields, and the 3-copy limit applies across main deck + side deck combined. Runes are exempt from the copy limit and are EXCLUDED from build cost. scripts/validate-decks.ts enforces all of this.",
+  "_sections": "legend resolves separately; every other card carries a section: champion | unit | gear | spell | battlefield | rune | sideboard. Names resolve against the DB by normalized name.",
+  "_metaUpdated": "2026-08-04",
   "decks": [
-    {
-      "slug": "master-yi-wuju-bladesman",
-      "name": "Master Yi, Wuju Bladesman",
-      "legend": "Master, Wuju Bladesman - Starter",
-      "tier": "1",
-      "archetype": "Aggro / Tempo",
-      "domains": ["Body", "Calm"],
-      "description": "The defining Tier 1 deck of the Unleashed meta. A Body/Calm tempo build that floods cheap units and leans on combat tricks (Discipline, Defy, Punch First) plus Zhonya's Hourglass to push damage and close games fast.",
-      "sourceUrl": "https://riftdecks.com/riftbound-metagame/deck-master-yi-wuju-bladesman-178252",
-      "source": "RadioactiveBonobo · 1st at Runes & Rift Open 16 (Jun 2026)",
-      "cards": [
-        { "name": "Master Yi, Tempered", "qty": 1, "section": "champion" },
-        { "name": "Clockwork Keeper", "qty": 2, "section": "unit" },
-        { "name": "Lonely Poro", "qty": 3, "section": "unit" },
-        { "name": "Scuttle Crab", "qty": 3, "section": "unit" },
-        { "name": "First Mate", "qty": 3, "section": "unit" },
-        { "name": "Akshan, Mischievous", "qty": 1, "section": "unit" },
-        { "name": "Rengar, Trophy Hunter", "qty": 3, "section": "unit" },
-        { "name": "Ruin Runner", "qty": 2, "section": "unit" },
-        { "name": "Vilemaw", "qty": 1, "section": "unit" },
-        { "name": "Zhonya's Hourglass", "qty": 3, "section": "gear" },
-        { "name": "Trinity Force", "qty": 2, "section": "gear" },
-        { "name": "Charm", "qty": 3, "section": "spell" },
-        { "name": "Defy", "qty": 3, "section": "spell" },
-        { "name": "En Garde", "qty": 1, "section": "spell" },
-        { "name": "Punch First", "qty": 3, "section": "spell" },
-        { "name": "Challenge", "qty": 1, "section": "spell" },
-        { "name": "Discipline", "qty": 3, "section": "spell" },
-        { "name": "Not So Fast", "qty": 1, "section": "spell" },
-        { "name": "Back Off", "qty": 1, "section": "spell" },
-        { "name": "Grove of the God-Willow", "qty": 1, "section": "battlefield" },
-        { "name": "Seat of Power", "qty": 1, "section": "battlefield" },
-        { "name": "Star Spring", "qty": 1, "section": "battlefield" },
-        { "name": "Body Rune", "qty": 7, "section": "rune" },
-        { "name": "Calm Rune", "qty": 5, "section": "rune" },
-        { "name": "Sabotage", "qty": 3, "section": "sideboard" },
-        { "name": "Unyielding Spirit", "qty": 1, "section": "sideboard" },
-        { "name": "Stare Down", "qty": 1, "section": "sideboard" },
-        { "name": "Disarming Rake", "qty": 2, "section": "sideboard" },
-        { "name": "Whiteflame Protector", "qty": 1, "section": "sideboard" }
-      ]
-    },
     {
       "slug": "irelia-blade-dancer",
       "name": "Irelia, Blade Dancer",
       "legend": "Irelia, Blade Dancer",
       "tier": "1",
       "archetype": "Tempo",
-      "domains": ["Calm", "Chaos"],
-      "description": "Tier 1 Calm/Chaos tempo. Cheap, evasive units backed by a dense spell package (Defiant Dance, Stacked Deck, Ride the Wind) that snowballs board control around Irelia, Fervent.",
-      "sourceUrl": "https://riftdecks.com/riftbound-metagame/deck-goo-goo-dolls-irelia-mp3-178173",
-      "source": "One2CutOne2Pee · 1st at BBS Nexus Night #5 (Jun 2026)",
+      "domains": [
+        "Calm",
+        "Chaos"
+      ],
+      "description": "The most-played legend of the Vendetta metagame and still the field's benchmark. Calm/Chaos tempo that snowballs the board around Irelia, Fervent, now splashing Akali's Vendetta package for a faster, more evasive clock.",
+      "metaSharePct": 10,
+      "winRatePct": 52,
+      "top8s": 15,
+      "avgPriceUsd": 187,
+      "sourceUrl": "https://www.riftools.app/decklists/riftbound-online-series-season-4-week-1/2-cc-hope-irelia",
+      "source": "CC Hope · 2nd at Riftbound Online Series S4 Week 1",
       "cards": [
-        { "name": "Irelia, Fervent", "qty": 1, "section": "champion" },
-        { "name": "Scuttle Crab", "qty": 3, "section": "unit" },
-        { "name": "Tideturner", "qty": 3, "section": "unit" },
-        { "name": "Fizz, Trickster", "qty": 1, "section": "unit" },
-        { "name": "Adaptatron", "qty": 1, "section": "unit" },
-        { "name": "Stellacorn Herder", "qty": 3, "section": "unit" },
-        { "name": "Guardian Angel", "qty": 2, "section": "gear" },
-        { "name": "Boots of Swiftness", "qty": 3, "section": "gear" },
-        { "name": "Charm", "qty": 2, "section": "spell" },
-        { "name": "Defiant Dance", "qty": 3, "section": "spell" },
-        { "name": "Defy", "qty": 3, "section": "spell" },
-        { "name": "En Garde", "qty": 2, "section": "spell" },
-        { "name": "Gust", "qty": 1, "section": "spell" },
-        { "name": "Stacked Deck", "qty": 2, "section": "spell" },
-        { "name": "Discipline", "qty": 3, "section": "spell" },
-        { "name": "Not So Fast", "qty": 2, "section": "spell" },
-        { "name": "Ride the Wind", "qty": 2, "section": "spell" },
-        { "name": "Back Off", "qty": 1, "section": "spell" },
-        { "name": "Star-Crossed", "qty": 2, "section": "spell" },
-        { "name": "Abandoned Hall", "qty": 1, "section": "battlefield" },
-        { "name": "Targon's Peak", "qty": 1, "section": "battlefield" },
-        { "name": "Zaun Warrens", "qty": 1, "section": "battlefield" },
-        { "name": "Calm Rune", "qty": 6, "section": "rune" },
-        { "name": "Chaos Rune", "qty": 6, "section": "rune" },
-        { "name": "Gust", "qty": 2, "section": "sideboard" },
-        { "name": "Hard Bargain", "qty": 1, "section": "sideboard" },
-        { "name": "Disarming Rake", "qty": 1, "section": "sideboard" },
-        { "name": "Star-Crossed", "qty": 1, "section": "sideboard" },
-        { "name": "Adaptatron", "qty": 1, "section": "sideboard" },
-        { "name": "Kha'Zix, Mutating Horror", "qty": 1, "section": "sideboard" },
-        { "name": "Vex, Apathetic", "qty": 1, "section": "sideboard" }
+        {
+          "name": "Irelia, Fervent",
+          "qty": 1,
+          "section": "champion"
+        },
+        {
+          "name": "Abandon",
+          "qty": 1,
+          "section": "spell"
+        },
+        {
+          "name": "Adaptatron",
+          "qty": 1,
+          "section": "unit"
+        },
+        {
+          "name": "Akali, Silent",
+          "qty": 1,
+          "section": "unit"
+        },
+        {
+          "name": "Boots of Swiftness",
+          "qty": 2,
+          "section": "gear"
+        },
+        {
+          "name": "Charm",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Defiant Dance",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "Defy",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "Discipline",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "En Garde",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Fizz, Trickster",
+          "qty": 1,
+          "section": "unit"
+        },
+        {
+          "name": "Guardian Angel",
+          "qty": 2,
+          "section": "gear"
+        },
+        {
+          "name": "Hard Bargain",
+          "qty": 1,
+          "section": "spell"
+        },
+        {
+          "name": "Pyke, Returned",
+          "qty": 1,
+          "section": "unit"
+        },
+        {
+          "name": "Ride the Wind",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Scuttle Crab",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Stacked Deck",
+          "qty": 1,
+          "section": "spell"
+        },
+        {
+          "name": "Star-Crossed",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Stellacorn Herder",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Tideturner",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Twilight Shroud",
+          "qty": 1,
+          "section": "spell"
+        },
+        {
+          "name": "Zhonya's Hourglass",
+          "qty": 1,
+          "section": "gear"
+        },
+        {
+          "name": "Abandoned Hall",
+          "qty": 1,
+          "section": "battlefield"
+        },
+        {
+          "name": "Sunken Temple",
+          "qty": 1,
+          "section": "battlefield"
+        },
+        {
+          "name": "Targon's Peak",
+          "qty": 1,
+          "section": "battlefield"
+        },
+        {
+          "name": "Calm Rune",
+          "qty": 6,
+          "section": "rune"
+        },
+        {
+          "name": "Chaos Rune",
+          "qty": 6,
+          "section": "rune"
+        },
+        {
+          "name": "Adaptatron",
+          "qty": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Akali, Silent",
+          "qty": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Baron Nashor",
+          "qty": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Crumbling Sands",
+          "qty": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Gust",
+          "qty": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Sneaky Deckhand",
+          "qty": 2,
+          "section": "sideboard"
+        },
+        {
+          "name": "Switcheroo",
+          "qty": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Vex, Apathetic",
+          "qty": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Vex, Cheerless",
+          "qty": 1,
+          "section": "sideboard"
+        }
       ]
     },
     {
-      "slug": "leblanc-deceiver",
-      "name": "LeBlanc, Deceiver",
-      "legend": "Leblanc, Deceiver",
-      "tier": "1",
-      "archetype": "Midrange / Go-Wide",
-      "domains": ["Mind", "Order"],
-      "description": "Tier 1 Mind/Order go-wide midrange. Floods the board with cheap Order units and Black Rose value, then converts the board with Baited Hook and Mirror Image.",
-      "sourceUrl": "https://riftdecks.com/riftbound-metagame/deck-leblanc-deceiver-177960",
-      "source": "DRX LotharHS · 1st at Wargamer Summoner Skirmish (Jun 2026)",
+      "slug": "kennen-heart-of-the-tempest",
+      "name": "Kennen, Heart of the Tempest",
+      "legend": "Kennen, Heart of the Tempest",
+      "tier": "2",
+      "archetype": "Aggro / Disruption",
+      "domains": [
+        "Order",
+        "Chaos"
+      ],
+      "description": "The highest win rate in the top tier. An Order/Chaos disruption-aggro build that chains cheap threats into Kennen's storm payoffs — the most expensive list in the meta to assemble, and the one converting best.",
+      "metaSharePct": 9,
+      "winRatePct": 58,
+      "top8s": 15,
+      "avgPriceUsd": 443,
+      "sourceUrl": "https://www.riftools.app/decklists/runes-league-invitational-qualifier/1-n-fortini-kennen",
+      "source": "N Fortini · 1st at Runes League Invitational Qualifier",
       "cards": [
-        { "name": "LeBlanc, Fragmented", "qty": 1, "section": "champion" },
-        { "name": "Soaring Scout", "qty": 3, "section": "unit" },
-        { "name": "Watchful Sentry", "qty": 3, "section": "unit" },
-        { "name": "Black Rose Dignitary", "qty": 3, "section": "unit" },
-        { "name": "Karthus, Eternal", "qty": 3, "section": "unit" },
-        { "name": "Glasc Mixologist", "qty": 3, "section": "unit" },
-        { "name": "Vi, Peacekeeper", "qty": 3, "section": "unit" },
-        { "name": "Ruined Rex", "qty": 3, "section": "unit" },
-        { "name": "Thousand-Tailed Watcher", "qty": 2, "section": "unit" },
-        { "name": "Harnessed Dragon", "qty": 3, "section": "unit" },
-        { "name": "Rift Herald", "qty": 1, "section": "unit" },
-        { "name": "Atakhan", "qty": 1, "section": "unit" },
-        { "name": "Baited Hook", "qty": 3, "section": "gear" },
-        { "name": "Sacrifice", "qty": 3, "section": "spell" },
-        { "name": "Hidden Blade", "qty": 2, "section": "spell" },
-        { "name": "Mirror Image", "qty": 3, "section": "spell" },
-        { "name": "Aspirant's Climb", "qty": 1, "section": "battlefield" },
-        { "name": "Star Spring", "qty": 1, "section": "battlefield" },
-        { "name": "Windswept Hillock", "qty": 1, "section": "battlefield" },
-        { "name": "Mind Rune", "qty": 4, "section": "rune" },
-        { "name": "Order Rune", "qty": 8, "section": "rune" },
-        { "name": "Deathgrip", "qty": 2, "section": "sideboard" },
-        { "name": "LeBlanc, Everywhere at Once", "qty": 1, "section": "sideboard" },
-        { "name": "Safety Inspector", "qty": 2, "section": "sideboard" },
-        { "name": "Thousand-Tailed Watcher", "qty": 1, "section": "sideboard" },
-        { "name": "Rift Herald", "qty": 1, "section": "sideboard" },
-        { "name": "Atakhan", "qty": 1, "section": "sideboard" }
+        {
+          "name": "Kennen, Storm of Shuriken",
+          "qty": 1,
+          "section": "champion"
+        },
+        {
+          "name": "Baited Hook",
+          "qty": 3,
+          "section": "gear"
+        },
+        {
+          "name": "Dragon Form",
+          "qty": 1,
+          "section": "spell"
+        },
+        {
+          "name": "Grand Strategem",
+          "qty": 1,
+          "section": "spell"
+        },
+        {
+          "name": "Gust Monk",
+          "qty": 2,
+          "section": "unit"
+        },
+        {
+          "name": "Hidden Blade",
+          "qty": 1,
+          "section": "spell"
+        },
+        {
+          "name": "Illaoi, Prophet of the Great Kraken",
+          "qty": 1,
+          "section": "unit"
+        },
+        {
+          "name": "Lightning Rush",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "Nocturne, Horrifying",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Seal of Unity",
+          "qty": 3,
+          "section": "gear"
+        },
+        {
+          "name": "Shadow Order Disciple",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Spectral Matron",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Stacked Deck",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "Traveling Merchant",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Up from the Deep",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "Vanguard Captain",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Xin Zhao, Vigilant",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Forbidding Waste",
+          "qty": 1,
+          "section": "battlefield"
+        },
+        {
+          "name": "The Candlelit Sanctum",
+          "qty": 1,
+          "section": "battlefield"
+        },
+        {
+          "name": "Trifarian War Camp",
+          "qty": 1,
+          "section": "battlefield"
+        },
+        {
+          "name": "Chaos Rune",
+          "qty": 2,
+          "section": "rune"
+        },
+        {
+          "name": "Order Rune",
+          "qty": 10,
+          "section": "rune"
+        },
+        {
+          "name": "Abandon",
+          "qty": 2,
+          "section": "sideboard"
+        },
+        {
+          "name": "Forge of the Future",
+          "qty": 2,
+          "section": "sideboard"
+        },
+        {
+          "name": "Imperial Decree",
+          "qty": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Ravenbloom Prefect",
+          "qty": 2,
+          "section": "sideboard"
+        },
+        {
+          "name": "Safety Inspector",
+          "qty": 2,
+          "section": "sideboard"
+        },
+        {
+          "name": "Switcheroo",
+          "qty": 1,
+          "section": "sideboard"
+        }
+      ]
+    },
+    {
+      "slug": "master-yi-wuju-bladesman",
+      "name": "Master Yi, Wuju Bladesman",
+      "legend": "Master, Wuju Bladesman - Starter",
+      "tier": "2",
+      "archetype": "Aggro / Tempo",
+      "domains": [
+        "Body",
+        "Calm"
+      ],
+      "description": "The Unleashed aggro-tempo deck, still putting up numbers post-Vendetta. Floods cheap Body/Calm units and closes with combat tricks — the cheapest way into a genuine tier-2 shell.",
+      "metaSharePct": 9,
+      "winRatePct": 47,
+      "top8s": 9,
+      "avgPriceUsd": 180,
+      "sourceUrl": "https://www.riftools.app/decklists/mardi-championship-1/2-aa-mugis-master-yi",
+      "source": "AA Mugis · 2nd at Mardi Championship #1",
+      "cards": [
+        {
+          "name": "Master Yi, Tempered",
+          "qty": 1,
+          "section": "champion"
+        },
+        {
+          "name": "Charm",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "Defy",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "Discipline",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "En Garde",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "First Mate",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Irelia, Fervent",
+          "qty": 1,
+          "section": "unit"
+        },
+        {
+          "name": "Lonely Poro",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Pit Rookie",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Punch First",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "Rampage",
+          "qty": 1,
+          "section": "spell"
+        },
+        {
+          "name": "Rengar, Trophy Hunter",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Ruin Runner",
+          "qty": 1,
+          "section": "unit"
+        },
+        {
+          "name": "Sabotage",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Scuttle Crab",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Twilight Shroud",
+          "qty": 1,
+          "section": "spell"
+        },
+        {
+          "name": "Vilemaw",
+          "qty": 1,
+          "section": "unit"
+        },
+        {
+          "name": "Zhonya's Hourglass",
+          "qty": 2,
+          "section": "gear"
+        },
+        {
+          "name": "Emperor's Dais",
+          "qty": 1,
+          "section": "battlefield"
+        },
+        {
+          "name": "Seat of Power",
+          "qty": 1,
+          "section": "battlefield"
+        },
+        {
+          "name": "Star Spring",
+          "qty": 1,
+          "section": "battlefield"
+        },
+        {
+          "name": "Body Rune",
+          "qty": 6,
+          "section": "rune"
+        },
+        {
+          "name": "Calm Rune",
+          "qty": 6,
+          "section": "rune"
+        },
+        {
+          "name": "Cataclysmic Duel",
+          "qty": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Decree of Strength",
+          "qty": 3,
+          "section": "sideboard"
+        },
+        {
+          "name": "Disarming Rake",
+          "qty": 3,
+          "section": "sideboard"
+        },
+        {
+          "name": "Ruin Runner",
+          "qty": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Vilemaw",
+          "qty": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Wind Wall",
+          "qty": 1,
+          "section": "sideboard"
+        }
       ]
     },
     {
@@ -133,124 +535,1193 @@
       "legend": "Diana, Scorn of the Moon",
       "tier": "2",
       "archetype": "Spell Tempo",
-      "domains": ["Chaos", "Mind"],
-      "description": "Tier 2 Chaos/Mind spell tempo. Cycles cheap interaction (Gust, Stupefy, Ride the Wind) into burst finishers like Moonfall, with Vex and Hwei providing reach and value.",
-      "sourceUrl": "https://riftdecks.com/riftbound-metagame/deck-diana-scorn-of-the-moon-178256",
-      "source": "Zcai · Top 8 at Runes & Rift Open 16 (Jun 2026)",
+      "domains": [
+        "Chaos",
+        "Mind"
+      ],
+      "description": "Chaos/Mind spell tempo, and the deck that won the first real Vendetta event. Leans on an innovative points engine rather than raw board presence, which makes it the sharpest pilot-skill test in the tier.",
+      "metaSharePct": 5,
+      "winRatePct": 42,
+      "top8s": 6,
+      "avgPriceUsd": 176,
+      "sourceUrl": "https://www.riftools.app/decklists/sideways-showdown-cn-vs-world/1-jhm-aipotu-diana",
+      "source": "JHM Aipotu · 1st at Sideways Showdown: CN vs World",
       "cards": [
-        { "name": "Diana, Lunari", "qty": 1, "section": "champion" },
-        { "name": "Ravenbloom Student", "qty": 3, "section": "unit" },
-        { "name": "Tideturner", "qty": 3, "section": "unit" },
-        { "name": "Traveling Merchant", "qty": 2, "section": "unit" },
-        { "name": "Fizz, Trickster", "qty": 2, "section": "unit" },
-        { "name": "Vex, Apathetic", "qty": 2, "section": "unit" },
-        { "name": "Hwei, Brooding Painter", "qty": 3, "section": "unit" },
-        { "name": "Vex, Cheerless", "qty": 1, "section": "unit" },
-        { "name": "Acceptable Losses", "qty": 2, "section": "spell" },
-        { "name": "Gust", "qty": 3, "section": "spell" },
-        { "name": "Stacked Deck", "qty": 3, "section": "spell" },
-        { "name": "Stupefy", "qty": 3, "section": "spell" },
-        { "name": "Flash", "qty": 1, "section": "spell" },
-        { "name": "Hard Bargain", "qty": 2, "section": "spell" },
-        { "name": "Ride the Wind", "qty": 3, "section": "spell" },
-        { "name": "Smoke Screen", "qty": 1, "section": "spell" },
-        { "name": "Turn to Dust", "qty": 1, "section": "spell" },
-        { "name": "Moonfall", "qty": 2, "section": "spell" },
-        { "name": "Star-Crossed", "qty": 2, "section": "spell" },
-        { "name": "Abandoned Hall", "qty": 1, "section": "battlefield" },
-        { "name": "Ravenbloom Conservatory", "qty": 1, "section": "battlefield" },
-        { "name": "Targon's Peak", "qty": 1, "section": "battlefield" },
-        { "name": "Chaos Rune", "qty": 6, "section": "rune" },
-        { "name": "Mind Rune", "qty": 6, "section": "rune" },
-        { "name": "Turn to Dust", "qty": 1, "section": "sideboard" },
-        { "name": "Moonfall", "qty": 1, "section": "sideboard" },
-        { "name": "Star-Crossed", "qty": 1, "section": "sideboard" },
-        { "name": "Vex, Cheerless", "qty": 1, "section": "sideboard" },
-        { "name": "Singularity", "qty": 2, "section": "sideboard" },
-        { "name": "Baron Nashor", "qty": 2, "section": "sideboard" }
+        {
+          "name": "Diana, Lunari",
+          "qty": 1,
+          "section": "champion"
+        },
+        {
+          "name": "Eclipse",
+          "qty": 1,
+          "section": "spell"
+        },
+        {
+          "name": "Fizz, Trickster",
+          "qty": 2,
+          "section": "unit"
+        },
+        {
+          "name": "Gust",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Hwei, Brooding Painter",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Moonfall",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "Morbid Return",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Patched Porobot",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Ravenbloom Student",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Ride the Wind",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "Stacked Deck",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "Star-Crossed",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Stupefy",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "Swain, Visionary",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Temporal Breach",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "Tideturner",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Abandoned Hall",
+          "qty": 1,
+          "section": "battlefield"
+        },
+        {
+          "name": "Rockfall Path",
+          "qty": 1,
+          "section": "battlefield"
+        },
+        {
+          "name": "Veiled Temple",
+          "qty": 1,
+          "section": "battlefield"
+        },
+        {
+          "name": "Chaos Rune",
+          "qty": 7,
+          "section": "rune"
+        },
+        {
+          "name": "Mind Rune",
+          "qty": 5,
+          "section": "rune"
+        },
+        {
+          "name": "Abandon",
+          "qty": 2,
+          "section": "sideboard"
+        },
+        {
+          "name": "Decree of Insight",
+          "qty": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Kha'Zix, Mutating Horror",
+          "qty": 2,
+          "section": "sideboard"
+        },
+        {
+          "name": "Ravenbloom Prefect",
+          "qty": 2,
+          "section": "sideboard"
+        },
+        {
+          "name": "Switcheroo",
+          "qty": 2,
+          "section": "sideboard"
+        },
+        {
+          "name": "Vex, Cheerless",
+          "qty": 1,
+          "section": "sideboard"
+        }
       ]
     },
     {
-      "slug": "fiora-grand-duelist",
-      "name": "Fiora, Grand Duelist",
-      "legend": "Fiora, Grand Duelist",
-      "tier": "2",
-      "archetype": "Aggro / Go-Wide",
-      "domains": ["Body", "Order"],
-      "description": "Tier 2 Body/Order aggro. Wide, cheap units (Pit Rookie, First Mate, Spectral Matron) pushed with Riposte and B.F. Sword to duel down blockers and race.",
-      "sourceUrl": "https://riftdecks.com/riftbound-metagame/deck-jjk-177843",
-      "source": "咬死过人 · 2nd at City League: Beijing (Jun 2026)",
+      "slug": "viktor-herald-of-the-arcane",
+      "name": "Viktor, Herald of the Arcane",
+      "legend": "Viktor, Herald of the Arcane",
+      "tier": "3",
+      "archetype": "Value Midrange",
+      "domains": [
+        "Order",
+        "Mind"
+      ],
+      "description": "The budget standout of the whole metagame: the best win rate on this page at roughly a third of the top tier's price. Order/Mind value midrange that grinds opponents out of resources.",
+      "metaSharePct": 4,
+      "winRatePct": 63,
+      "top8s": 9,
+      "avgPriceUsd": 83,
+      "sourceUrl": "https://www.riftools.app/decklists/haven-online-challenger-series-august-2nd-2026/2-peter-nguyen-viktor",
+      "source": "Peter Nguyen · 2nd at Haven Online Challenger Series",
       "cards": [
-        { "name": "Fiora, Victorious", "qty": 1, "section": "champion" },
-        { "name": "Demacian Diplomat", "qty": 2, "section": "unit" },
-        { "name": "Pit Rookie", "qty": 3, "section": "unit" },
-        { "name": "Unsung Hero", "qty": 2, "section": "unit" },
-        { "name": "First Mate", "qty": 3, "section": "unit" },
-        { "name": "Kinkou Initiate", "qty": 2, "section": "unit" },
-        { "name": "Nilah, Joyful Ascetic", "qty": 1, "section": "unit" },
-        { "name": "Akshan, Mischievous", "qty": 1, "section": "unit" },
-        { "name": "Spectral Matron", "qty": 3, "section": "unit" },
-        { "name": "Ashe, Focused", "qty": 1, "section": "unit" },
-        { "name": "Sett, Brawler", "qty": 3, "section": "unit" },
-        { "name": "Shepherd's Heirloom", "qty": 2, "section": "gear" },
-        { "name": "Baited Hook", "qty": 2, "section": "gear" },
-        { "name": "B.F. Sword", "qty": 3, "section": "gear" },
-        { "name": "Punch First", "qty": 2, "section": "spell" },
-        { "name": "Challenge", "qty": 2, "section": "spell" },
-        { "name": "Grim Resolve", "qty": 2, "section": "spell" },
-        { "name": "Hidden Blade", "qty": 2, "section": "spell" },
-        { "name": "Riposte", "qty": 3, "section": "spell" },
-        { "name": "Monastery of Hirana", "qty": 1, "section": "battlefield" },
-        { "name": "Sunken Temple", "qty": 1, "section": "battlefield" },
-        { "name": "Trifarian War Camp", "qty": 1, "section": "battlefield" },
-        { "name": "Body Rune", "qty": 6, "section": "rune" },
-        { "name": "Order Rune", "qty": 6, "section": "rune" },
-        { "name": "Unyielding Spirit", "qty": 2, "section": "sideboard" },
-        { "name": "Salvage", "qty": 2, "section": "sideboard" },
-        { "name": "Fiora, Peerless", "qty": 1, "section": "sideboard" },
-        { "name": "Fiora, Worthy", "qty": 1, "section": "sideboard" },
-        { "name": "Akshan, Mischievous", "qty": 1, "section": "sideboard" },
-        { "name": "Ashe, Focused", "qty": 1, "section": "sideboard" }
+        {
+          "name": "Viktor, Leader",
+          "qty": 1,
+          "section": "champion"
+        },
+        {
+          "name": "Bellows Breath",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Card Sharp",
+          "qty": 1,
+          "section": "unit"
+        },
+        {
+          "name": "Carrion Dredger",
+          "qty": 2,
+          "section": "unit"
+        },
+        {
+          "name": "Chakram Dancer",
+          "qty": 2,
+          "section": "unit"
+        },
+        {
+          "name": "Cull the Weak",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Deadly Flourish",
+          "qty": 1,
+          "section": "spell"
+        },
+        {
+          "name": "Eclipse",
+          "qty": 1,
+          "section": "spell"
+        },
+        {
+          "name": "Hidden Blade",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Honest Broker",
+          "qty": 2,
+          "section": "unit"
+        },
+        {
+          "name": "Imperial Decree",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "Noxian Emissary",
+          "qty": 2,
+          "section": "unit"
+        },
+        {
+          "name": "Safety Inspector",
+          "qty": 2,
+          "section": "unit"
+        },
+        {
+          "name": "Salvage",
+          "qty": 1,
+          "section": "spell"
+        },
+        {
+          "name": "Shadow's Call",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Sprite Fountain",
+          "qty": 1,
+          "section": "gear"
+        },
+        {
+          "name": "Stupefy",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "Temporal Breach",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Thousand-Tailed Watcher",
+          "qty": 1,
+          "section": "unit"
+        },
+        {
+          "name": "Vanguard Captain",
+          "qty": 1,
+          "section": "unit"
+        },
+        {
+          "name": "Vi, Peacekeeper",
+          "qty": 2,
+          "section": "unit"
+        },
+        {
+          "name": "Wages of Pain",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Xin Zhao, Vigilant",
+          "qty": 2,
+          "section": "unit"
+        },
+        {
+          "name": "Forbidding Waste",
+          "qty": 1,
+          "section": "battlefield"
+        },
+        {
+          "name": "Rockfall Path",
+          "qty": 1,
+          "section": "battlefield"
+        },
+        {
+          "name": "Trifarian War Camp",
+          "qty": 1,
+          "section": "battlefield"
+        },
+        {
+          "name": "Mind Rune",
+          "qty": 5,
+          "section": "rune"
+        },
+        {
+          "name": "Order Rune",
+          "qty": 7,
+          "section": "rune"
+        },
+        {
+          "name": "Decree of Insight",
+          "qty": 2,
+          "section": "sideboard"
+        },
+        {
+          "name": "Decree of Unity",
+          "qty": 2,
+          "section": "sideboard"
+        },
+        {
+          "name": "Forge of the Future",
+          "qty": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Lacerate",
+          "qty": 2,
+          "section": "sideboard"
+        },
+        {
+          "name": "Pickpocket",
+          "qty": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Salvage",
+          "qty": 2,
+          "section": "sideboard"
+        }
       ]
     },
     {
-      "slug": "vex-gloomist",
-      "name": "Vex, Gloomist",
-      "legend": "Vex, Gloomist",
-      "tier": "2",
-      "archetype": "Tempo / Control",
-      "domains": ["Calm", "Chaos"],
-      "description": "Tier 2 Calm/Chaos tempo. Evasive threats (Tideturner, Irelia, Fervent) and a deep trick suite (Charm, Switcheroo, Star-Crossed) to dominate combat and chip the opponent down.",
-      "sourceUrl": "https://riftdecks.com/riftbound-metagame/deck-yan-pin-qu-dai-zhen-huo-177845",
-      "source": "老油条.白银山.KaLioS · Top 4 at City League: Beijing (Jun 2026)",
+      "slug": "jayce-defender-of-tomorrow",
+      "name": "Jayce, Defender of Tomorrow",
+      "legend": "Jayce, Defender of Tomorrow",
+      "tier": "3",
+      "archetype": "Gear Midrange",
+      "domains": [
+        "Body",
+        "Mind"
+      ],
+      "description": "Riftbound's first Mind/Body legend, built around gear that stays on the board. High skill ceiling and a shaky win rate so far — the archetype is still finding its best configuration.",
+      "metaSharePct": 4,
+      "winRatePct": 39,
+      "top8s": 7,
+      "avgPriceUsd": 235,
+      "sourceUrl": "https://www.riftools.app/decklists/nightcup-league-cup-1-cycle-1/3-gct-amendil-jayce",
+      "source": "GCT Amendil · 3rd at Nightcup League Cup #1",
       "cards": [
-        { "name": "Vex, Apathetic", "qty": 1, "section": "champion" },
-        { "name": "Evelynn, Entrancing", "qty": 2, "section": "unit" },
-        { "name": "Scuttle Crab", "qty": 3, "section": "unit" },
-        { "name": "Tideturner", "qty": 3, "section": "unit" },
-        { "name": "Disarming Rake", "qty": 1, "section": "unit" },
-        { "name": "Trevor Snoozebottom", "qty": 3, "section": "unit" },
-        { "name": "Irelia, Fervent", "qty": 3, "section": "unit" },
-        { "name": "Vex, Cheerless", "qty": 1, "section": "unit" },
-        { "name": "Boots of Swiftness", "qty": 3, "section": "gear" },
-        { "name": "Charm", "qty": 3, "section": "spell" },
-        { "name": "Defy", "qty": 3, "section": "spell" },
-        { "name": "En Garde", "qty": 3, "section": "spell" },
-        { "name": "Discipline", "qty": 3, "section": "spell" },
-        { "name": "Switcheroo", "qty": 3, "section": "spell" },
-        { "name": "Back Off", "qty": 3, "section": "spell" },
-        { "name": "Star-Crossed", "qty": 2, "section": "spell" },
-        { "name": "Abandoned Hall", "qty": 1, "section": "battlefield" },
-        { "name": "Startipped Peak", "qty": 1, "section": "battlefield" },
-        { "name": "Targon's Peak", "qty": 1, "section": "battlefield" },
-        { "name": "Calm Rune", "qty": 6, "section": "rune" },
-        { "name": "Chaos Rune", "qty": 6, "section": "rune" },
-        { "name": "Feral Strength", "qty": 1, "section": "sideboard" },
-        { "name": "Not So Fast", "qty": 2, "section": "sideboard" },
-        { "name": "Disarming Rake", "qty": 2, "section": "sideboard" },
-        { "name": "Last Rites", "qty": 1, "section": "sideboard" },
-        { "name": "Star-Crossed", "qty": 1, "section": "sideboard" },
-        { "name": "Vex, Cheerless", "qty": 1, "section": "sideboard" }
+        {
+          "name": "Jayce, Hammer in Hand",
+          "qty": 1,
+          "section": "champion"
+        },
+        {
+          "name": "Acceleration Gate",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Bellows Breath",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Catalyst of Aeons",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "Clairvoyance",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "Dazzling Aurora",
+          "qty": 3,
+          "section": "gear"
+        },
+        {
+          "name": "Disposal Order",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Dredge Up",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Elder Dragon",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Flurry of Blades",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "Garbage Grabber",
+          "qty": 2,
+          "section": "gear"
+        },
+        {
+          "name": "Mobilize",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "Platewyrm Egg",
+          "qty": 2,
+          "section": "gear"
+        },
+        {
+          "name": "Portal Rescue",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Promising Future",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "Sabotage",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Temporal Breach",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Forgotten Monument",
+          "qty": 1,
+          "section": "battlefield"
+        },
+        {
+          "name": "Sigil of the Storm",
+          "qty": 1,
+          "section": "battlefield"
+        },
+        {
+          "name": "The Papertree",
+          "qty": 1,
+          "section": "battlefield"
+        },
+        {
+          "name": "Body Rune",
+          "qty": 7,
+          "section": "rune"
+        },
+        {
+          "name": "Mind Rune",
+          "qty": 5,
+          "section": "rune"
+        },
+        {
+          "name": "Akshan, Mischievous",
+          "qty": 2,
+          "section": "sideboard"
+        },
+        {
+          "name": "Sprite Burst",
+          "qty": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Temporal Breach",
+          "qty": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Turn to Dust",
+          "qty": 2,
+          "section": "sideboard"
+        },
+        {
+          "name": "Unchecked Power",
+          "qty": 2,
+          "section": "sideboard"
+        },
+        {
+          "name": "Volibear, Imposing",
+          "qty": 2,
+          "section": "sideboard"
+        }
+      ]
+    },
+    {
+      "slug": "akali-rogue-assassin",
+      "name": "Akali, Rogue Assassin",
+      "legend": "Akali, Rogue Assassin",
+      "tier": "3",
+      "archetype": "Aggro / Combo",
+      "domains": [
+        "Calm",
+        "Fury"
+      ],
+      "description": "Vendetta's Calm/Fury assassin. Leans into Ambush and bigger bodies to do what Irelia can't, at the cost of Irelia's consistency — the most experimental deck in the tier.",
+      "metaSharePct": 4,
+      "winRatePct": 37,
+      "top8s": 1,
+      "avgPriceUsd": 224,
+      "sourceUrl": "https://www.riftools.app/decklists/novariftbound-s-tcgarena-online-2k-showdown-3/15-luis-miguel-collado-akali",
+      "source": "Luis Miguel Collado · 15th at NovaRiftbound TCGArena Online $2K Showdown #3",
+      "cards": [
+        {
+          "name": "Akali, Silent",
+          "qty": 1,
+          "section": "champion"
+        },
+        {
+          "name": "Back Off",
+          "qty": 1,
+          "section": "spell"
+        },
+        {
+          "name": "Charm",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Cleave",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Defy",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "Discipline",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "En Garde",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "Inferna",
+          "qty": 2,
+          "section": "unit"
+        },
+        {
+          "name": "Irelia, Fervent",
+          "qty": 2,
+          "section": "unit"
+        },
+        {
+          "name": "Kai'Sa, Survivor",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Lonely Poro",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Mask of Foresight",
+          "qty": 2,
+          "section": "gear"
+        },
+        {
+          "name": "Mournful Witness",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Shuriken Flip",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "Stellacorn Herder",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Twilight Shroud",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Zhonya's Hourglass",
+          "qty": 2,
+          "section": "gear"
+        },
+        {
+          "name": "Back-Alley Bar",
+          "qty": 1,
+          "section": "battlefield"
+        },
+        {
+          "name": "Targon's Peak",
+          "qty": 1,
+          "section": "battlefield"
+        },
+        {
+          "name": "Zaun Warrens",
+          "qty": 1,
+          "section": "battlefield"
+        },
+        {
+          "name": "Calm Rune",
+          "qty": 6,
+          "section": "rune"
+        },
+        {
+          "name": "Fury Rune",
+          "qty": 6,
+          "section": "rune"
+        },
+        {
+          "name": "Akali, Deadly Weapon",
+          "qty": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Brittle Steel",
+          "qty": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Emperor's Divide",
+          "qty": 2,
+          "section": "sideboard"
+        },
+        {
+          "name": "Falling Star",
+          "qty": 2,
+          "section": "sideboard"
+        },
+        {
+          "name": "Ferrous Forerunner",
+          "qty": 2,
+          "section": "sideboard"
+        },
+        {
+          "name": "Not So Fast",
+          "qty": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Thermo Beam",
+          "qty": 1,
+          "section": "sideboard"
+        }
+      ]
+    },
+    {
+      "slug": "ezreal-prodigal-explorer",
+      "name": "Ezreal, Prodigal Explorer",
+      "legend": "Ezreal, Prodigal Explorer",
+      "tier": "3",
+      "archetype": "Tempo / Reach",
+      "domains": [
+        "Chaos",
+        "Mind"
+      ],
+      "description": "Chaos/Mind tempo with reach, and a 62% win rate off a small but real sample. Cheap interaction into a burst finish that closes games the board can't.",
+      "metaSharePct": 3,
+      "winRatePct": 62,
+      "top8s": 6,
+      "avgPriceUsd": 190,
+      "sourceUrl": "https://www.riftools.app/decklists/haven-online-challenger-series-august-2nd-2026/1-joshua-chan-ezreal",
+      "source": "Joshua Chan · 1st at Haven Online Challenger Series",
+      "cards": [
+        {
+          "name": "Ezreal, Prodigy",
+          "qty": 1,
+          "section": "champion"
+        },
+        {
+          "name": "Bellows Breath",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "Bewitching Spirit",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Deadly Flourish",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "Fizz, Trickster",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Gust",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Hard Bargain",
+          "qty": 1,
+          "section": "spell"
+        },
+        {
+          "name": "Pack of Wonders",
+          "qty": 3,
+          "section": "gear"
+        },
+        {
+          "name": "Pickpocket",
+          "qty": 1,
+          "section": "unit"
+        },
+        {
+          "name": "Singularity",
+          "qty": 1,
+          "section": "spell"
+        },
+        {
+          "name": "Sprite Fountain",
+          "qty": 1,
+          "section": "gear"
+        },
+        {
+          "name": "Stacked Deck",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "Star-Crossed",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Stupefy",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "The List",
+          "qty": 2,
+          "section": "gear"
+        },
+        {
+          "name": "Thousand-Tailed Watcher",
+          "qty": 2,
+          "section": "unit"
+        },
+        {
+          "name": "Treasure Trove",
+          "qty": 2,
+          "section": "gear"
+        },
+        {
+          "name": "Turn to Dust",
+          "qty": 1,
+          "section": "spell"
+        },
+        {
+          "name": "Vex, Apathetic",
+          "qty": 1,
+          "section": "unit"
+        },
+        {
+          "name": "Wages of Pain",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Frozen Fortress",
+          "qty": 1,
+          "section": "battlefield"
+        },
+        {
+          "name": "Heisho, Shell of the World",
+          "qty": 1,
+          "section": "battlefield"
+        },
+        {
+          "name": "Sigil of the Storm",
+          "qty": 1,
+          "section": "battlefield"
+        },
+        {
+          "name": "Chaos Rune",
+          "qty": 7,
+          "section": "rune"
+        },
+        {
+          "name": "Mind Rune",
+          "qty": 5,
+          "section": "rune"
+        },
+        {
+          "name": "Abandon",
+          "qty": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Acceptable Losses",
+          "qty": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Angler Beast",
+          "qty": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Aspiring Engineer",
+          "qty": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Kha'Zix, Mutating Horror",
+          "qty": 2,
+          "section": "sideboard"
+        },
+        {
+          "name": "Mindsplitter",
+          "qty": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Pickpocket",
+          "qty": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Turn to Dust",
+          "qty": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Vex, Apathetic",
+          "qty": 1,
+          "section": "sideboard"
+        }
+      ]
+    },
+    {
+      "slug": "reksai-void-burrower",
+      "name": "Reksai, Void Burrower",
+      "legend": "Void Burrower",
+      "tier": "3",
+      "archetype": "Midrange",
+      "domains": [
+        "Fury",
+        "Order"
+      ],
+      "description": "Fury/Order midrange built on efficient bodies and clean trades. One of the cheapest lists here and a positive win rate — a strong first competitive deck.",
+      "metaSharePct": 3,
+      "winRatePct": 53,
+      "top8s": 3,
+      "avgPriceUsd": 107,
+      "sourceUrl": "https://www.riftools.app/decklists/novariftbound-s-tcgarena-online-2k-showdown-3/7-r650-kuako-rek-sai",
+      "source": "R650 Kuako · 7th at NovaRiftbound TCGArena Online $2K Showdown #3",
+      "cards": [
+        {
+          "name": "Rek'Sai, Breacher",
+          "qty": 1,
+          "section": "champion"
+        },
+        {
+          "name": "Blood Rush",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "Brynhir Thundersong",
+          "qty": 1,
+          "section": "unit"
+        },
+        {
+          "name": "Carrion Dredger",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Cleave",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Cull the Weak",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "Daring Poro",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Faithful Manufactor",
+          "qty": 2,
+          "section": "unit"
+        },
+        {
+          "name": "Falling Star",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "Hidden Blade",
+          "qty": 1,
+          "section": "spell"
+        },
+        {
+          "name": "Inferna",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Legion Rearguard",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Noxus Hopeful",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Pouty Poro",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Shadow Fiend",
+          "qty": 1,
+          "section": "unit"
+        },
+        {
+          "name": "Undertitan",
+          "qty": 2,
+          "section": "unit"
+        },
+        {
+          "name": "Void Rush",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Void Seeker",
+          "qty": 1,
+          "section": "spell"
+        },
+        {
+          "name": "Forbidding Waste",
+          "qty": 1,
+          "section": "battlefield"
+        },
+        {
+          "name": "Hall of Legends",
+          "qty": 1,
+          "section": "battlefield"
+        },
+        {
+          "name": "Seat of Power",
+          "qty": 1,
+          "section": "battlefield"
+        },
+        {
+          "name": "Fury Rune",
+          "qty": 8,
+          "section": "rune"
+        },
+        {
+          "name": "Order Rune",
+          "qty": 4,
+          "section": "rune"
+        },
+        {
+          "name": "Brynhir Thundersong",
+          "qty": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Divine Judgment",
+          "qty": 3,
+          "section": "sideboard"
+        },
+        {
+          "name": "Long Sword",
+          "qty": 2,
+          "section": "sideboard"
+        },
+        {
+          "name": "Salvage",
+          "qty": 2,
+          "section": "sideboard"
+        },
+        {
+          "name": "Shadow Fiend",
+          "qty": 2,
+          "section": "sideboard"
+        }
+      ]
+    },
+    {
+      "slug": "draven-glorious-executioner",
+      "name": "Draven, Glorious Executioner",
+      "legend": "Draven, Glorious Executioner",
+      "tier": "3",
+      "archetype": "Aggro",
+      "domains": [
+        "Chaos",
+        "Fury"
+      ],
+      "description": "Chaos/Fury aggro that converts damage into value. Small sample, strong win rate, and the priciest entry point outside Kennen.",
+      "metaSharePct": 2,
+      "winRatePct": 55,
+      "top8s": 3,
+      "avgPriceUsd": 340,
+      "sourceUrl": "https://www.riftools.app/decklists/haven-online-challenger-series-august-2nd-2026/6-rellik-draven",
+      "source": "Rellik · 6th at Haven Online Challenger Series",
+      "cards": [
+        {
+          "name": "Draven, Showboat",
+          "qty": 1,
+          "section": "champion"
+        },
+        {
+          "name": "Cleave",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Darius, Trifarian",
+          "qty": 2,
+          "section": "unit"
+        },
+        {
+          "name": "Falling Star",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Ferrous Forerunner",
+          "qty": 2,
+          "section": "unit"
+        },
+        {
+          "name": "Hard Bargain",
+          "qty": 1,
+          "section": "spell"
+        },
+        {
+          "name": "Kai'Sa, Survivor",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Noxus Hopeful",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Overzealous Fan",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Perfect Execution",
+          "qty": 1,
+          "section": "spell"
+        },
+        {
+          "name": "Pouty Poro",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Rebuke",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Rek'Sai, Breacher",
+          "qty": 2,
+          "section": "unit"
+        },
+        {
+          "name": "Spinning Axe",
+          "qty": 3,
+          "section": "gear"
+        },
+        {
+          "name": "Stacked Deck",
+          "qty": 3,
+          "section": "spell"
+        },
+        {
+          "name": "Switcheroo",
+          "qty": 1,
+          "section": "spell"
+        },
+        {
+          "name": "Tideturner",
+          "qty": 3,
+          "section": "unit"
+        },
+        {
+          "name": "Up from the Deep",
+          "qty": 2,
+          "section": "spell"
+        },
+        {
+          "name": "Vex, Apathetic",
+          "qty": 1,
+          "section": "unit"
+        },
+        {
+          "name": "Seat of Power",
+          "qty": 1,
+          "section": "battlefield"
+        },
+        {
+          "name": "Targon's Peak",
+          "qty": 1,
+          "section": "battlefield"
+        },
+        {
+          "name": "Threshold of the Gray",
+          "qty": 1,
+          "section": "battlefield"
+        },
+        {
+          "name": "Chaos Rune",
+          "qty": 6,
+          "section": "rune"
+        },
+        {
+          "name": "Fury Rune",
+          "qty": 6,
+          "section": "rune"
+        },
+        {
+          "name": "Brittle Steel",
+          "qty": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Brynhir Thundersong",
+          "qty": 2,
+          "section": "sideboard"
+        },
+        {
+          "name": "Darius, Trifarian",
+          "qty": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Falling Star",
+          "qty": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Hard Bargain",
+          "qty": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Ravenbloom Prefect",
+          "qty": 3,
+          "section": "sideboard"
+        },
+        {
+          "name": "Up from the Deep",
+          "qty": 1,
+          "section": "sideboard"
+        }
       ]
     }
   ]

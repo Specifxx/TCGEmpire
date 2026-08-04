@@ -14,6 +14,25 @@ type GalleryCard = CardTileData & { createdAt?: string | null };
 
 type Sort = "number" | "recent";
 
+// Facet list for one attribute, ordered by frequency, covering only values that
+// actually occur in the given cards (so empty facets never render).
+//
+// MODULE SCOPE ON PURPOSE: this used to live inside the component, which meant the
+// three useMemo(…, [cards]) calls below closed over a function recreated on every
+// render but never listed it as a dependency (react-hooks/exhaustive-deps ×3). It
+// was correct only by accident — the function read nothing but `cards`. The moment
+// anyone made it depend on other state (say, narrowing facets by the active search)
+// the memos would have silently served stale facets. Taking `cards` as a parameter
+// makes the dependency list honest and the staleness impossible.
+function facetOf(cards: GalleryCard[], key: "domain" | "rarity" | "type") {
+  const counts = new Map<string, number>();
+  for (const c of cards) {
+    const v = c[key];
+    if (v) counts.set(v, (counts.get(v) ?? 0) + 1);
+  }
+  return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+}
+
 export function FilterableCardGallery({ cards }: { cards: GalleryCard[] }) {
   const [q, setQ] = useState("");
   const [domain, setDomain] = useState<string | null>(null);
@@ -24,18 +43,9 @@ export function FilterableCardGallery({ cards }: { cards: GalleryCard[] }) {
 
   const hasDates = cards.some((c) => c.createdAt);
 
-  // Facet lists, ordered by frequency, only for values present in the set.
-  const facet = (key: "domain" | "rarity" | "type") => {
-    const counts = new Map<string, number>();
-    for (const c of cards) {
-      const v = c[key];
-      if (v) counts.set(v, (counts.get(v) ?? 0) + 1);
-    }
-    return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-  };
-  const domains = useMemo(() => facet("domain"), [cards]);
-  const rarities = useMemo(() => facet("rarity"), [cards]);
-  const types = useMemo(() => facet("type"), [cards]);
+  const domains = useMemo(() => facetOf(cards, "domain"), [cards]);
+  const rarities = useMemo(() => facetOf(cards, "rarity"), [cards]);
+  const types = useMemo(() => facetOf(cards, "type"), [cards]);
 
   const numOf = (cn: string) => parseInt(cn.match(/\d+/)?.[0] ?? "9999", 10);
 
@@ -76,7 +86,7 @@ export function FilterableCardGallery({ cards }: { cards: GalleryCard[] }) {
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search name or number…"
             aria-label="Search cards"
-            className="w-full rounded-lg border border-ink-700 bg-ink-900 py-1.5 pl-7 pr-2.5 text-xs text-white placeholder:text-slate-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/40"
+            className="min-h-11 w-full rounded-lg border border-ink-700 bg-ink-900 py-1.5 pl-7 pr-2.5 text-xs text-white placeholder:text-slate-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/40 sm:min-h-0"
           />
         </div>
         <button
@@ -88,7 +98,7 @@ export function FilterableCardGallery({ cards }: { cards: GalleryCard[] }) {
           }`}
         >
           Filters
-          {activeCount > 0 && <span className="rounded-full bg-brand-500 px-1.5 py-0.5 text-[10px] text-white">{activeCount}</span>}
+          {activeCount > 0 && <span className="rounded-full bg-brand-500 px-1.5 py-0.5 text-[10px] font-bold text-ink-950">{activeCount}</span>}
           <svg className={`h-3 w-3 transition-transform ${open ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m6 9 6 6 6-6" /></svg>
         </button>
         {hasDates && (

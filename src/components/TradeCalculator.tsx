@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useCountry } from "./CountryProvider";
 import { cardDisplayName } from "@/lib/card-name";
 import { tradeGremlin, type TradeTone } from "@/lib/trade-gremlin";
+import { cardImageAlt } from "@/lib/image-alt";
 
 // A card added to one side of a trade. We store the full set of market prices so
 // the totals re-compute live when the visitor switches country/currency.
@@ -347,9 +348,9 @@ function TradeColumn({
             const unit = ov ?? base; // override beats market price
             return (
               <li key={c.id} className="flex items-start gap-3 py-2.5">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 {c.imageThumbUrl ? (
-                  <img src={c.imageThumbUrl} alt="" aria-hidden="true" className="mt-0.5 h-12 w-9 shrink-0 rounded object-cover" />
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={c.imageThumbUrl} alt={cardImageAlt(c)} width={36} height={48} className="mt-0.5 h-12 w-9 shrink-0 rounded object-cover" />
                 ) : (
                   <div className="mt-0.5 h-12 w-9 shrink-0 rounded bg-ink-800" />
                 )}
@@ -573,9 +574,9 @@ function CardPicker({ onAdd }: { onAdd: (r: SearchResult) => void }) {
                 }}
                 className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-ink-800"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 {r.imageThumbUrl ? (
-                  <img src={r.imageThumbUrl} alt="" aria-hidden="true" className="h-9 w-7 shrink-0 rounded object-cover" />
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={r.imageThumbUrl} alt={cardImageAlt(r)} width={28} height={36} className="h-9 w-7 shrink-0 rounded object-cover" />
                 ) : (
                   <div className="h-9 w-7 shrink-0 rounded bg-ink-800" />
                 )}

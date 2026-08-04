@@ -6,12 +6,16 @@ import type { Deal, TopDeals } from "@/lib/top-deals";
 import { formatMoney } from "@/lib/format";
 import { OutboundLink } from "@/components/OutboundLink";
 import { useCountry } from "@/components/CountryProvider";
+import { cardImageAlt } from "@/lib/image-alt";
+import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
 
-// Homepage "Today's Top Deals". Four columns, one per signal. The two PREMIUM
-// columns (arbitrage savings, undervalued) reveal only their single best deal —
-// matching the /tools gate — then show blurred placeholder rows and a funnel to the
-// full Premium tool. Free columns (price drops, cheapest sealed) show in full. Empty
-// columns (a signal with no data in this market) are dropped entirely.
+// Homepage "Today's Top Deals". Up to four columns, one per signal (the grid
+// itself only declares as many columns as actually have data — see GRID_COLS
+// below). The two PREMIUM columns (arbitrage savings, undervalued) reveal only
+// their single best deal — matching the /tools gate — then a clearly-locked
+// teaser funnelling to the full Premium tool, when there's really more behind
+// it. Free columns (price drops, cheapest sealed) show in full. Empty columns
+// (a signal with no data in this market) are dropped entirely.
 type ColumnDef = {
   key: keyof Omit<TopDeals, "hasAny">;
   label: string;
@@ -40,7 +44,7 @@ function DealRow({ deal, currency, country }: { deal: Deal; currency: string; co
       <div className="h-11 w-8 shrink-0 overflow-hidden rounded bg-ink-900">
         {deal.imageUrl && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={deal.imageUrl} alt="" aria-hidden="true" width={32} height={44} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+          <img src={deal.imageUrl} alt={cardImageAlt({ name: deal.title })} width={32} height={44} loading="lazy" decoding="async" className="h-full w-full object-cover" />
         )}
       </div>
       <div className="min-w-0 flex-1">
@@ -76,20 +80,32 @@ function DealRow({ deal, currency, country }: { deal: Deal; currency: string; co
   );
 }
 
-// Decorative, data-free blurred rows that hint at the locked Premium deals without
-// shipping any real values to non-subscribers.
-function SkeletonRow() {
+// A deliberate "locked" state for the rest of a Premium column's deals — NOT a
+// loading skeleton (there's nothing pending; the data exists, it's just gated).
+// One clear panel with a lock icon and an unlock CTA, sized to fill the same
+// vertical space the blurred placeholder rows used to, so this column still
+// matches its free-column neighbours' height without faking extra "rows".
+function LockedTeaser({ count, href }: { count: number; href: string }) {
   return (
-    <li className="flex items-center gap-2.5 px-3 py-2.5 opacity-50 blur-[2px]" aria-hidden>
-      <div className="h-11 w-8 shrink-0 rounded bg-ink-800" />
-      <div className="flex-1 space-y-1.5">
-        <div className="h-2.5 w-3/4 rounded bg-ink-800" />
-        <div className="h-2 w-1/2 rounded bg-ink-800" />
-      </div>
-      <div className="h-3 w-9 shrink-0 rounded bg-ink-800" />
+    <li className="flex flex-1 flex-col items-center justify-center gap-1.5 px-3 py-6 text-center">
+      <span aria-hidden className="text-xl">🔒</span>
+      <Link href={href} className="text-xs font-bold text-gold hover:underline">
+        Unlock {count} more with Premium →
+      </Link>
     </li>
   );
 }
+
+// Column-count classes are looked up (not string-built) so Tailwind's build-time
+// class scan can see every literal — the grid always matches how many columns
+// actually have data today instead of a fixed 4, which used to leave the right
+// half of the row empty on days a signal or two had nothing to show.
+const GRID_COLS: Record<number, string> = {
+  1: "",
+  2: "sm:grid-cols-2",
+  3: "sm:grid-cols-2 lg:grid-cols-3",
+  4: "sm:grid-cols-2 lg:grid-cols-4",
+};
 
 // Reactive to the country switcher: the page serializes all four markets' deals and
 // this picks the visitor's market client-side (currency, prices and the "in {place}"
@@ -115,27 +131,38 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
         <Link href="/tools/deal-finder" className="btn-ghost hidden text-sm sm:inline-flex">Browse all deals →</Link>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className={`grid items-stretch gap-4 ${GRID_COLS[columns.length] ?? GRID_COLS[4]}`}>
         {columns.map(({ def, items }) => {
-          // Premium columns reveal only the single best deal; the rest is locked.
-          const shown = def.premium ? items.slice(0, 1) : items;
-          const skeletons = def.premium ? Math.min(3, Math.max(2, items.length - 1)) : 0;
+          // Premium columns normally reveal only the single best deal; the rest is
+          // locked — "locked" means how many REAL deals exist behind it, not a fixed
+          // filler count (a day with only 1 real deal shows no locked teaser at all,
+          // since there's nothing behind it to unlock).
+          //
+          // WHILE ADSENSE_REVIEW_MODE IS ON, every column is shown in full and the
+          // "Unlock N more with Premium" teaser is not rendered at all. A reviewer
+          // landing on the homepage — the first page they see — must not find gated
+          // content there; "content behind a paywall or login" is its own rejection
+          // reason, and this was the only such teaser above the fold. The Premium
+          // link stays as an ordinary CTA below the column; it just no longer stands
+          // in place of content. Restored by setting
+          // NEXT_PUBLIC_ADSENSE_REVIEW_MODE=false. See docs/adsense-remediation.md.
+          const gated = def.premium && !ADSENSE_REVIEW_MODE;
+          const shown = gated ? items.slice(0, 1) : items;
+          const locked = gated ? Math.max(0, items.length - 1) : 0;
           return (
-            <div key={def.key} className="card-surface flex flex-col p-3 transition-colors duration-200 hover:border-brand-500/60 hover:bg-ink-800">
+            <div key={def.key} className="card-surface flex h-full flex-col p-3 transition-colors duration-200 hover:border-brand-500/60 hover:bg-ink-800">
               <div className="mb-1 flex items-center justify-between gap-2 px-1">
                 <span className="flex items-center gap-1.5 text-sm font-extrabold text-white">
                   {def.label}
                 </span>
-                {def.premium && <span className="chip bg-gold/20 text-gold">Premium</span>}
+                {def.premium && !ADSENSE_REVIEW_MODE && <span className="chip bg-gold/20 text-gold">Premium</span>}
               </div>
 
-              <ul className="flex-1 divide-y divide-ink-800">
+              <ul className="flex flex-1 flex-col divide-y divide-ink-800">
                 {shown.map((deal, i) => (
                   <DealRow key={i} deal={deal} currency={currency} country={country} />
                 ))}
-                {Array.from({ length: skeletons }).map((_, i) => (
-                  <SkeletonRow key={`s${i}`} />
-                ))}
+                {locked > 0 && <LockedTeaser count={locked} href={def.allHref} />}
               </ul>
 
               <Link

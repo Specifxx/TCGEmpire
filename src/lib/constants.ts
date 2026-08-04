@@ -37,6 +37,72 @@ export const SG_FALLBACK_RETAILERS: readonly string[] = [TCGPLAYER_SG_RETAILER];
 export const TCGPLAYER_AU_RETAILER = "tcgplayer_au";
 export const AU_FALLBACK_RETAILERS: readonly string[] = [TCGPLAYER_AU_RETAILER];
 
+// Canada, same pattern as UK/SG/AU. It was the ONE tracked market with no
+// TCGplayer row at all: refreshTcgplayerPrices() looped US/UK/SG/AU and simply
+// omitted CA, so a Canadian visitor's card page had no CAD reference price and
+// the Deal Finder could not use TCGplayer as a buy/sell source for Canada — even
+// though CA is a full market everywhere else (its own eBay rotation, its own
+// lowestPriceCentsCa column, its own FX rate).
+//
+// Fallback-only, like the others: a converted USD market price is a REFERENCE,
+// not a Canadian retailer, so it must never be counted as a buyable store or
+// undercut a real CAD listing. See computeMarket()'s FALLBACK filter.
+export const TCGPLAYER_CA_RETAILER = "tcgplayer_ca";
+export const CA_FALLBACK_RETAILERS: readonly string[] = [TCGPLAYER_CA_RETAILER];
+
+// Registered but NOT produced — see the AU/NZ note below. No TCG_NZ market
+// exists in tcgplayer.ts, and this exists so that if one is ever added it lands
+// as a reference price rather than as a New Zealand "store".
+export const TCGPLAYER_NZ_RETAILER = "tcgplayer_nz";
+export const NZ_FALLBACK_RETAILERS: readonly string[] = [TCGPLAYER_NZ_RETAILER];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// THE RULE: a converted reference price is never a row in the price comparison.
+// ─────────────────────────────────────────────────────────────────────────────
+// TCGplayer is a US marketplace. Its AU/NZ/UK/SG/CA figures are its USD market
+// price run through an FX rate — useful as a "what is this worth?" reference,
+// but NOT a local listing: nobody can buy from "TCGplayer Australia", the price
+// excludes international postage and duty, and showing it as a store would let
+// it undercut the real AU/NZ stores we exist to compare. Cardmarket is the same
+// shape for the UK.
+//
+// So they are excluded ENTIRELY — not deprioritised — from:
+//   • the comparison rows and store count      (computeMarket, market-rows.ts)
+//   • the QuickView price list                 (components/QuickView.tsx)
+//   • the marketplace "beat this price" query  (app/marketplace/page.tsx)
+//   • the lowestPriceCents* columns            (price-import.ts)
+// They survive only in the Deal Finder (arbitrage needs a sell-side reference)
+// and in the card page's clearly-labelled TcgMarketPrice block.
+//
+// AUSTRALIA AND NEW ZEALAND, EXPLICITLY — a standing product rule, not an
+// implementation detail: TCGplayer must never appear as a price-comparison row
+// in either market.
+//
+// AU is covered by AU_FALLBACK_RETAILERS above. NZ has no TCGplayer row at all
+// today (it is absent from TCG_MARKETS in tcgplayer.ts), which means the rule
+// held only because nothing wrote the row — add a `TCG_NZ` and NZ would start
+// showing TCGplayer as a buyable local store immediately, with no filter
+// standing in the way. NZ_FALLBACK_RETAILERS closes that: the key is registered
+// as a reference source in advance, so the guard is structural rather than
+// incidental. It costs one array entry and removes a live footgun.
+//
+// Use this union rather than hand-listing the per-market arrays. Three call
+// sites did the latter and every one of them was missing a market by the time CA
+// was added — a hand-listed subset silently readmits a reference price as a
+// buyable store the moment a new market appears.
+export const ALL_FALLBACK_RETAILERS: readonly string[] = [
+  ...AU_FALLBACK_RETAILERS,
+  ...UK_FALLBACK_RETAILERS,
+  ...SG_FALLBACK_RETAILERS,
+  ...CA_FALLBACK_RETAILERS,
+  ...NZ_FALLBACK_RETAILERS,
+];
+
+/** True when `retailer` is a converted reference price, not a buyable store. */
+export function isFallbackRetailer(retailer: string): boolean {
+  return ALL_FALLBACK_RETAILERS.includes(retailer);
+}
+
 export type DomainKey =
   | "Fury"
   | "Calm"
@@ -91,7 +157,30 @@ export type CardType = (typeof CARD_TYPES)[number];
 // from a bare "NNN/total" collector number. `slug` is the SEO landing-page path
 // (/sets/<slug>). `recentlyReleased` = purely cosmetic "New" badge for a set that
 // just went on sale (short-lived; drop it once the badge has run its course).
-export interface SetInfo { code: string; name: string; slug: string; comingSoon?: boolean; sealedAvailable?: boolean; totalCards?: number; recentlyReleased?: boolean }
+// `releasedOn` = the day the set's singles started trading (ISO yyyy-mm-dd).
+//
+// Its ONE job is to give a launch set first claim on the scarce eBay Browse
+// quota, for PRICE_PRIORITY_WINDOW_DAYS and then never again. Deliberately a
+// DATE rather than a boolean:
+//
+//   • It expires by itself. A boolean would sit there earning a permanent head
+//     start long after the set stopped being new, because clearing it is exactly
+//     the kind of chore nobody remembers — and the cost of forgetting is silent
+//     (some other set's cards quietly go unpriced).
+//   • It is a fact about the set, not a preference, so the next launch just
+//     records its date and inherits the behaviour with no code change.
+//
+// Deliberately NOT a reuse of `recentlyReleased`, which is documented above as
+// purely cosmetic (a "New" badge). Removing that badge must not silently
+// reorder the price importer, and prioritising a set for pricing must not force
+// a badge onto it. Two decisions, two fields.
+//
+// Why any of this is needed: refreshEbayMarkets orders cards by search demand,
+// and a just-imported card has no demand recorded yet — zero searches, zero
+// views, no price — so it sorts LAST, exactly when its price is most wanted. The
+// quota cannot cover every market × every card daily, so the tail is what gets
+// dropped.
+export interface SetInfo { code: string; name: string; slug: string; comingSoon?: boolean; sealedAvailable?: boolean; totalCards?: number; recentlyReleased?: boolean; releasedOn?: string }
 export const SETS: SetInfo[] = [
   { code: "OGN", name: "Origins", slug: "origins" },
   { code: "OGS", name: "Origins: Proving Grounds", slug: "proving-grounds" },
@@ -99,8 +188,55 @@ export const SETS: SetInfo[] = [
   { code: "UNL", name: "Unleashed", slug: "unleashed" },
   // Singles started trading (Pre-Rift launch events + early marketplace listings)
   // a few days ahead of the 31 Jul 2026 official street date — treated as released.
-  { code: "VEN", name: "Vendetta", slug: "vendetta", totalCards: 166, recentlyReleased: true },
+  { code: "VEN", name: "Vendetta", slug: "vendetta", totalCards: 166, recentlyReleased: true, releasedOn: "2026-07-31" },
+  // Set 5, announced in Riot's 4 Aug 2026 product rundown (written up in
+  // /blog/riftbound-2027-set-roadmap): 23 Oct 2026, ~180 cards. comingSoon with no
+  // sealedAvailable, so it renders as a disabled "Coming soon" tile on the homepage
+  // and under "Upcoming & unreleased" on /sets, and is excluded from the eBay quota,
+  // the box-EV calculator, movers and the pack game until cards actually import.
+  //
+  // "RAD" IS A PLACEHOLDER. Riot has published the name and date but not the
+  // three-letter set code; this is our guess. Changing it later is a one-line edit
+  // here PLUS a Card.setCode backfill if any cards have been imported under it —
+  // check before importing the official gallery.
+  { code: "RAD", name: "Radiance", slug: "radiance", totalCards: 180, comingSoon: true, releasedOn: "2026-10-23" },
 ];
+
+// How long after release a set keeps first claim on the eBay quota. Two months:
+// long enough to cover the window where a new set's prices move daily and the
+// searches arrive before our own demand data does, short enough that it is over
+// well before the next set lands.
+export const PRICE_PRIORITY_WINDOW_DAYS = 60;
+
+/**
+ * Set codes that currently get first claim on the eBay refresh quota.
+ *
+ * A FUNCTION, not a constant, on purpose: a module-level constant is evaluated
+ * once at import and would freeze the answer for the lifetime of a process, so a
+ * long-running server would keep prioritising a set for as long as it stayed up.
+ * Taking `now` also makes the expiry testable without waiting two months.
+ *
+ * Returns [] once every set's window has passed — which is the steady state, and
+ * restores plain popularity-then-value ordering with no code change.
+ *
+ * The window is CLOSED AT BOTH ENDS. A set whose release date is still in the
+ * future has not released, so it gets nothing: announced-but-unshipped sets now
+ * carry a real `releasedOn` (Radiance, 23 Oct 2026), and a one-sided "released >=
+ * cutoff" test would have handed the quota to a set with zero cards in the
+ * database for months before its street date. Both ends being dated means the
+ * window opens and closes entirely on its own.
+ */
+export function pricePrioritySetCodes(now: Date = new Date()): string[] {
+  const at = now.getTime();
+  const cutoff = at - PRICE_PRIORITY_WINDOW_DAYS * 86_400_000;
+  return SETS.filter((s) => {
+    if (!s.releasedOn) return false;
+    const released = Date.parse(`${s.releasedOn}T00:00:00Z`);
+    // An unparseable date must not silently grant a permanent head start.
+    if (Number.isNaN(released)) return false;
+    return released >= cutoff && released <= at;
+  }).map((s) => s.code);
+}
 export const setBySlug = (slug: string): SetInfo | undefined => SETS.find((s) => s.slug === slug);
 export const setByCode = (code: string): SetInfo | undefined => SETS.find((s) => s.code === code);
 
@@ -159,6 +295,46 @@ export function titleCase(s: string): string {
 
 export function rarityInfo(key: string): RarityInfo {
   return RARITIES[key] ?? RARITIES.Common;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// A CHASE PRINT DOES NOT SIT IN A BASE RARITY TIER.
+// ─────────────────────────────────────────────────────────────────────────────
+// Reported live: filtering /browse by "Rare" returned a wall of A$165–172
+// Vendetta chase cards — Ambessa 196/166, Swain 173/166, Draven 172/166, Leona
+// 184/166. The filter was correct; the DATA said those cards were Rare. The
+// official Vendetta gallery labels an overnumbered print by the rarity of the
+// card it re-prints, so `import-vendetta.ts` faithfully stored "Rare", and they
+// sorted to the top of the Rare filter because they are the most expensive
+// things in it.
+//
+// This is the same bug alt-arts had. scripts/fix-altart-rarity.ts already
+// reclassifies those to Showcase precisely so they stop "cluttering that rarity
+// filter with the base art" — overnumbered and Signature prints were simply
+// never included in it.
+//
+// The rule: a print that is a SPECIAL TREATMENT of another card belongs in
+// Showcase, not in the tier of the card it re-prints. Someone filtering "Rare"
+// wants the rare cards of the base set.
+//
+// PROMOS ARE DELIBERATELY EXCLUDED and keep their base rarity — that is the
+// existing convention (they carry their own PROMO badge and their own filter),
+// and it is not this change's business to alter it.
+//
+// Crystal Rose (VEN SP1–SP6) is also untouched: its collector numbers are not
+// numeric-over-total, so isOvernumbered() is false for them by construction and
+// they keep their genuine Epic tier alongside their own Crystal Rose badge.
+export function chasePrintRarity(c: {
+  collectorNumber: string;
+  variant?: string | null;
+  isPromo?: boolean;
+  rarity: string;
+}): string {
+  if (c.isPromo) return c.rarity;
+  if (c.variant != null) return "Showcase"; // alt-art (already enforced elsewhere)
+  if (isSignature(c.collectorNumber)) return "Showcase";
+  if (isOvernumbered(c.collectorNumber)) return "Showcase";
+  return c.rarity;
 }
 
 // Signature = a "*" in the collector number (e.g. 223*/221). Takes precedence

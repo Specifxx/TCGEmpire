@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { HubIntro } from "@/components/HubIntro";
 import type { Prisma } from "@prisma/client";
 import { DeckBuilder } from "@/components/DeckBuilder";
 import { prisma } from "@/lib/db";
@@ -80,6 +81,7 @@ export default function DeckPage({ searchParams }: { searchParams: { list?: stri
       <Breadcrumbs trail={[{ name: "Deck Builder", href: "/deck" }]} />
       <div className="mb-5">
         <h1 className="text-2xl font-extrabold text-white">Deck Builder &amp; Pricing</h1>
+      <HubIntro path="/deck" />
         <p className="mt-1 text-sm text-slate-400">
           Paste a Riftbound decklist and get every card matched with the cheapest
           {" "}{info.adjective} price and a full deck total.

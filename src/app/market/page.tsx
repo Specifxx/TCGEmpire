@@ -12,7 +12,7 @@ import { Reveal } from "@/components/Reveal";
 import { MarketSectionNav } from "@/components/MarketSectionNav";
 import { IndexStats } from "@/components/IndexStats";
 import { IndexConstituents } from "@/components/IndexConstituents";
-import { EmbedSnippet } from "@/components/EmbedSnippet";
+import { cardImageAlt } from "@/lib/image-alt";
 
 // Recompute hourly — the underlying PriceHistory only changes on the daily import,
 // so a longer cache window keeps DB egress down without losing meaningful freshness.
@@ -64,7 +64,7 @@ function MoverCol({ title, cards, positive, currency }: { title: string; cards: 
               <Link href={cardHref(c)} className="flex items-center gap-2.5 rounded-md px-1 py-2 transition-colors hover:bg-ink-800">
                 {c.imageThumbUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={c.imageThumbUrl} alt="" aria-hidden="true" width={28} height={39} loading="lazy" decoding="async" className="h-9 w-7 shrink-0 rounded-sm object-cover" />
+                  <img src={c.imageThumbUrl} alt={cardImageAlt(c)} width={28} height={39} loading="lazy" decoding="async" className="h-9 w-7 shrink-0 rounded-sm object-cover" />
                 )}
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-semibold text-white">{c.name}</span>
@@ -336,19 +336,9 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
         </div>
       </section>
 
-      {/* Embed the Index — a free, self-updating widget creators can drop on their
-          own sites; every embed is a compounding backlink + brand mention. */}
-      <section>
-        <h2 className="mb-1 text-xl font-extrabold text-white">Embed the Index</h2>
-        <p className="mb-3 text-sm text-slate-400">
-          Put the live RiftCompare Index on your site, blog or newsletter — it updates itself and
-          links back here.
-        </p>
-        <div className="max-w-md">
-          <EmbedSnippet src={`${SITE_URL}/embed/index`} title="The RiftCompare Index" width={340} height={230} />
-        </div>
-      </section>
-
+      {/* The "Embed the Index" snippet block was here. Removed with the rest of the
+          widget feature — the /embed/index route still serves, so anyone who already
+          placed the iframe keeps working, but we no longer hand out new ones. */}
     </div>
   );
 }

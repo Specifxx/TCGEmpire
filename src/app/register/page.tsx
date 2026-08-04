@@ -4,7 +4,13 @@ import { AuthForm } from "@/components/AuthForm";
 import { getCurrentUser } from "@/lib/auth";
 import { enabledProviders } from "@/lib/oauth";
 
-export const metadata: Metadata = { robots: { index: false } }; // auth/utility — never indexed
+// auth/utility — never indexed. Self-canonical for the same reason as /login:
+// several CTAs across the site link here with ?next=<path>, and without a
+// canonical every variant is its own crawlable URL. See app/login/page.tsx.
+export const metadata: Metadata = {
+  robots: { index: false },
+  alternates: { canonical: "/register" },
+};
 
 function safe(next?: string): string {
   return next && next.startsWith("/") && !next.startsWith("//") ? next : "/profile";

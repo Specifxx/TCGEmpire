@@ -94,7 +94,10 @@ h1 {
    (the browser only lays out / paints tiles near the viewport). */
 .cv-auto {
   content-visibility: auto;
-  contain-intrinsic-size: auto 340px;
+  /* 360, not 340: the 375px audit measured real tile content at 348px, and an
+     intrinsic size shorter than the real one is a layout shift the moment the
+     tile scrolls into view — on a grid of 60, repeatedly. */
+  contain-intrinsic-size: auto 360px;
 }
 
 /* Proxy print sheets: real 63x88mm cards, 3x3 per A4 page for cutting out. */
@@ -138,12 +141,20 @@ h1 {
   .container-app {
     @apply mx-auto w-full max-w-[1400px] px-4 sm:px-6;
   }
+  /* min-h-11 = 44px, the Apple HIG / Google mobile-usability tap-target floor.
+     px-4 py-2 at 14px text laid out at 37px tall, which the 375px audit flagged
+     on every page that renders a .btn (scripts/mobile-check.ts). Setting the
+     floor on the base class fixes every variant at once and can't drift. */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-colors duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-colors duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
   }
   /* Primary action: flat, solid RiftCompare green — the one accent. No gradient/glow. */
+  /* Dark ink on the green, not white. White on #1ea65c measures 3.15:1 — the
+     brand green is a BRIGHT accent, and bright accents take dark text. Near-black
+     on it measures 6.2:1, and the hover lightens to brand-400 (9.9:1) rather than
+     darkening, which reads better on a dark UI anyway. */
   .btn-primary {
-    @apply btn bg-brand-500 text-white hover:bg-brand-600;
+    @apply btn bg-brand-500 text-ink-950 hover:bg-brand-400;
   }
   .btn-ghost {
     @apply btn border border-ink-700 bg-ink-850 text-slate-200 hover:border-ink-600 hover:bg-ink-800;
@@ -152,9 +163,103 @@ h1 {
   .btn-accent {
     @apply btn bg-accent text-ink-950 hover:bg-white;
   }
+  /* min-h-11: same 44px tap-target floor as .btn. A text input is a tap target
+     too, and the 375px audit measured this one at 42px. */
   .input {
-    @apply w-full rounded-md border border-ink-700 bg-ink-950 px-3 py-2 text-base text-slate-100 placeholder:text-slate-500 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/50 sm:text-sm;
+    @apply w-full min-h-11 rounded-md border border-ink-700 bg-ink-950 px-3 py-2 text-base text-slate-100 placeholder:text-slate-500 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/50 sm:text-sm;
   }
+  /* Square icon-only controls (nav icons, close buttons). Below `sm` they take
+     the full 44px tap target; from `sm` up — where a pointer is likely — they
+     keep the tighter 36px so the navbar doesn't grow on desktop. */
+  .tap-icon {
+    @apply grid h-11 w-11 place-items-center sm:h-9 sm:w-9;
+  }
+  /* ── Navigation text links ────────────────────────────────────────────────
+     The gap .btn / .input / .tap-icon left behind: a plain text link. A 12px
+     link in a footer column is a 15px hit area, and 47 of the footer's 48 links
+     measured exactly that. Google asks for 48×48 with 8px between targets;
+     Lighthouse flags anything under 48.
+
+     EVERY size rule here is behind `(pointer: coarse)`, and that is the design:
+     a mouse does not need a 48px target, and scoping it to touch makes the
+     desktop footer a guaranteed pixel-for-pixel no-op rather than something to
+     eyeball. (A first attempt applied padding at all widths on the theory that
+     it matched the `space-y-2` it replaced. It did for the mobile list — and
+     added 4px per row to the desktop grid, which used `space-y-1`. Screenshots
+     caught it; the rule is now simply not present on a fine pointer.)
+
+     Real box height, not a pseudo-element overlay: an ::after does not change
+     what a browser — or Lighthouse, or the 375px audit — measures, and overlays
+     on a tight list would silently overlap each other, which is worse than a
+     small target.
+
+     Type size is deliberately untouched: the whole point is to expand the hit
+     area, not to make the footer shout. */
+  /* 24px is WCAG 2.2 AA's target-size minimum and applies at EVERY pointer type —
+     the 48px floor below is touch-only, so on a desktop audit these 12px footer
+     links measured ~16px tall and failed. */
+  .tap-link {
+    @apply inline-flex min-h-6 min-w-6 items-center;
+  }
+  /* Same floor for a control that is a text link in a chrome row (country
+     switcher, "Privacy settings") rather than a .btn. */
+  .tap-link-block {
+    @apply tap-link w-full;
+  }
+}
+
+/* ── The 48px floor, on touch only ──────────────────────────────────────────
+   The codebase already declared its tap targets: .btn, .input, .tap-icon and a
+   scattering of direct `min-h-11` usages all set the 44px Apple-HIG floor. That
+   clears Google's mobile-usability report but not Lighthouse, which fails
+   anything under 48 — and 537 of the 606 controls still flagged after the link
+   work were sitting at exactly 44.
+
+   So rather than hunt them one by one, the existing declaration IS the hook:
+   anything the site has already called a tap target gets 48px when the pointer
+   is coarse. A phone gains 4px of hit area per control; a mouse sees no change
+   at all, so desktop density is untouched.
+
+   In `utilities` on purpose — Tailwind's own `.min-h-11` lives in that layer, so
+   a rule in `components` would lose to it regardless of specificity. */
+@layer utilities {
+  @media (pointer: coarse) {
+    .tap-link,
+    .tap-link-block,
+    .btn,
+    .input,
+    .min-h-11 {
+      min-height: 48px;
+    }
+    /* Short labels ("Sets", "Terms") were clearing 48px tall but measuring
+       39–41px wide, which fails the same audit on the other axis.
+       Deliberately NOT centred: the text stays left-aligned and the extra width
+       extends right into empty column space, so a short link in a left-aligned
+       footer column grows its hit area without shifting off the column's edge.
+       For any link already wider than 48px the box hugs its text — a no-op. */
+    .tap-link,
+    .tap-link-block {
+      min-width: 48px;
+    }
+    /* A list of 48px rows carries its own rhythm. Leaving the list's `space-y-*`
+       on top of it would stack 48 + 8 and double the column height for nothing,
+       so the gap is dropped exactly where the rows grow — and kept everywhere
+       else, which is why the desktop grid is untouched.
+       `!important` because Tailwind's `.space-y-2 > :not([hidden]) ~
+       :not([hidden])` outranks any sane selector written here. */
+    .tap-list > * + * {
+      margin-top: 0 !important;
+    }
+    /* Square icon controls need the width too, or a 48px-tall 44px-wide button
+       is still a Lighthouse failure — and looks wrong. */
+    .tap-icon {
+      height: 48px;
+      width: 48px;
+    }
+  }
+}
+
+@layer components {
   /* Flat terminal panel: hairline border, square-ish corners, quiet elevation. */
   .card-surface {
     @apply rounded-lg border border-ink-800 bg-ink-900 shadow-card transition-colors duration-150;

@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useCountry } from "./CountryProvider";
 import { COUNTRIES } from "@/lib/country";
 import { cardHref } from "@/lib/card-url";
+import { cardImageAlt } from "@/lib/image-alt";
 
 // UTF-8-safe base64 so a decklist (incl. accented names) survives a URL round-trip.
 function encodeList(text: string): string {
@@ -233,7 +234,7 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
                     <div className="w-8 text-center font-bold text-slate-400">{it.qty}×</div>
                     {it.card?.imageThumbUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={it.card.imageThumbUrl} alt="" aria-hidden="true" className="h-12 w-9 shrink-0 rounded object-cover ring-1 ring-ink-700" />
+                      <img src={it.card.imageThumbUrl} alt={cardImageAlt(it.card)} width={36} height={48} className="h-12 w-9 shrink-0 rounded object-cover ring-1 ring-ink-700" />
                     ) : (
                       <div className="h-12 w-9 shrink-0 rounded bg-ink-800" />
                     )}

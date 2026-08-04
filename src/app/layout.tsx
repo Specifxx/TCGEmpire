@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { Inter, JetBrains_Mono, Fraunces } from "next/font/google";
-import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
@@ -19,13 +17,17 @@ import { IMPACT_SITE_VERIFICATION } from "@/lib/affiliate";
 import { MARKETPLACE_NAV_VISIBLE } from "@/components/nav-groups";
 import { FooterNav } from "@/components/FooterNav";
 import { NativeShell } from "@/components/NativeShell";
-import { HilltopAdsLoader } from "@/components/HilltopAdsLoader";
 import { ReferralCapture } from "@/components/ReferralCapture";
 import { FooterAds } from "@/components/FooterAds";
 import { PriceAlertModal } from "@/components/PriceAlertModal";
 import { SignupPromoPopup } from "@/components/SignupPromoPopup";
 import { enabledProviders } from "@/lib/oauth";
 import { MetaPixel } from "@/components/MetaPixel";
+import { AdSenseLoader } from "@/components/AdSenseLoader";
+import { ConsentDefaults } from "@/components/ConsentDefaults";
+import { ConsentGatedAnalytics } from "@/components/ConsentGatedAnalytics";
+import { PrivacySettingsLink } from "@/components/PrivacySettingsLink";
+import { ADSENSE_CLIENT_ID, ADSENSE_CONFIGURED } from "@/lib/adsense";
 
 // PREVIEW BRANCH — emulates the official Riftbound/League of Legends site's
 // typographic DNA (a sharp, flared serif for titling over a clean humanist sans
@@ -63,7 +65,10 @@ export const metadata: Metadata = {
   description:
     "The Riftbound TCG card database and price comparison. Browse every card and compare live prices across stores in Australia, New Zealand, the US, the UK, Singapore and Canada to find the cheapest place to buy.",
   applicationName: SITE_NAME,
-  keywords: ["Riftbound", "Riftbound TCG", "Riftbound prices", "Riftbound singles", "League of Legends TCG", "card prices"],
+  // NO `keywords` meta. Google has ignored it since 2009 and Bing treats stuffing
+  // it as a negative signal; it only ever advertised our target terms to
+  // competitors. Removed site-wide rather than per-page because it was declared
+  // here and inherited everywhere.
   alternates: {
     // NO site-wide canonical here: it propagates to every page that doesn't set
     // its own, telling Google those pages are duplicates of the homepage (GSC:
@@ -138,6 +143,7 @@ const orgJsonLd = {
         { "@type": "Country", name: "United States" },
         { "@type": "Country", name: "United Kingdom" },
         { "@type": "Country", name: "Singapore" },
+        { "@type": "Country", name: "Canada" },
       ],
       contactPoint: {
         "@type": "ContactPoint",
@@ -176,13 +182,25 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable} ${fraunces.variable}`}>
       <head>
+        {/* Google Consent Mode v2 defaults — MUST be the first thing that runs, so
+            the ad/measurement tags below never fire against an unset state. */}
+        <ConsentDefaults />
         {/* Impact / TCGplayer affiliate site-ownership verification. Impact looks for
             the non-standard `value` attribute, so spread it past the meta typing. */}
         <meta {...({ name: "impact-site-verification", value: IMPACT_SITE_VERIFICATION } as any)} />
-        {/* HilltopAds site-ownership verification (homepage). */}
-        <meta name="f56d4c757e10b95b149b998706568143dfa0d0e9" content="f56d4c757e10b95b149b998706568143dfa0d0e9" />
-        {/* Google AdSense site-ownership verification. */}
-        <meta name="google-adsense-account" content="ca-pub-6262011577596407" />
+        {/* Google AdSense site-ownership verification. The id comes from
+            NEXT_PUBLIC_ADSENSE_CLIENT_ID (see lib/adsense.ts) — it is NEVER a
+            literal here again. A hardcoded, out-of-date id on this exact line,
+            belonging to no account under review, is the fault that most likely
+            voided the last two applications. See docs/adsense-remediation.md. */}
+        {ADSENSE_CONFIGURED && <meta name="google-adsense-account" content={ADSENSE_CLIENT_ID} />}
+        {/* The AdSense loader: ownership verification + Auto ads + the EEA/UK/CH
+            consent message, on every page, ungated. See the component header. */}
+        <AdSenseLoader />
+        {/* Ad/consent origins — shaving a round-trip off the loader and the
+            consent message, which is what the 0-impression message needed. */}
+        <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossOrigin="" />
+        <link rel="preconnect" href="https://fundingchoicesmessages.google.com" crossOrigin="" />
         {/* Warm up the image CDN connection so card thumbnails start loading sooner. */}
         <link rel="preconnect" href="https://cdn.riftscribe.gg" crossOrigin="" />
         <link rel="dns-prefetch" href="https://cdn.riftscribe.gg" />
@@ -231,35 +249,41 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               FooterNav / nav-groups.ts's FOOTER_GROUPS for the re-bucketing. */}
           <FooterNav />
           <div className="mb-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm">
-            <Link href="/about" className="text-slate-300 hover:text-brand-400">About</Link>
+            <Link href="/about" className="tap-link text-slate-300 hover:text-brand-400">About</Link>
             <span className="text-ink-700">·</span>
-            <Link href="/contact" className="text-slate-300 hover:text-brand-400">Contact &amp; feedback</Link>
+            <Link href="/contact" className="tap-link text-slate-300 hover:text-brand-400">Contact &amp; feedback</Link>
             <span className="text-ink-700">·</span>
-            <Link href="/privacy" className="text-slate-300 hover:text-brand-400">Privacy policy</Link>
+            <Link href="/privacy" className="tap-link text-slate-300 hover:text-brand-400">Privacy policy</Link>
             <span className="text-ink-700">·</span>
-            <Link href="/terms" className="text-slate-300 hover:text-brand-400">Terms</Link>
+            <Link href="/terms" className="tap-link text-slate-300 hover:text-brand-400">Terms</Link>
             <span className="text-ink-700">·</span>
             {/* Returns sits OUTSIDE the MARKETPLACE_NAV_VISIBLE gate on purpose:
                 Google Merchant Center and Shopping ads need a conventional return
                 policy reachable from every page regardless of whether marketplace
                 navigation is currently surfaced. */}
-            <Link href="/returns" className="text-slate-300 hover:text-brand-400">Returns &amp; shipping</Link>
+            <Link href="/returns" className="tap-link text-slate-300 hover:text-brand-400">Returns &amp; shipping</Link>
             <span className="text-ink-700">·</span>
             {MARKETPLACE_NAV_VISIBLE && (
               <>
-                <Link href="/marketplace/terms" className="text-slate-300 hover:text-brand-400">Marketplace terms</Link>
+                <Link href="/marketplace/terms" className="tap-link text-slate-300 hover:text-brand-400">Marketplace terms</Link>
                 <span className="text-ink-700">·</span>
-                <Link href="/marketplace/buyer-protection" className="text-slate-300 hover:text-brand-400">Buyer protection</Link>
+                <Link href="/marketplace/buyer-protection" className="tap-link text-slate-300 hover:text-brand-400">Buyer protection</Link>
                 <span className="text-ink-700">·</span>
-                <Link href="/marketplace/shipping" className="text-slate-300 hover:text-brand-400">Shipping &amp; tracking</Link>
+                <Link href="/marketplace/shipping" className="tap-link text-slate-300 hover:text-brand-400">Shipping &amp; tracking</Link>
                 <span className="text-ink-700">·</span>
-                <Link href="/marketplace/faq" className="text-slate-300 hover:text-brand-400">Marketplace FAQ</Link>
+                <Link href="/marketplace/faq" className="tap-link text-slate-300 hover:text-brand-400">Marketplace FAQ</Link>
                 <span className="text-ink-700">·</span>
               </>
             )}
-            <Link href="/widgets" className="text-slate-300 hover:text-brand-400">Price widget</Link>
+            <Link href="/editorial-policy" className="tap-link text-slate-300 hover:text-brand-400">Editorial policy</Link>
             <span className="text-ink-700">·</span>
-            <a href={`mailto:${CONTACT_EMAIL}`} className="text-gold hover:underline">{CONTACT_EMAIL}</a>
+            <Link href="/authors" className="tap-link text-slate-300 hover:text-brand-400">Who writes this</Link>
+            <span className="text-ink-700">·</span>
+            {/* Re-opens Google's consent message (EEA/UK/CH only — renders
+                nothing where no message applies). Required for a published
+                GDPR message: consent has to be revocable. */}
+            <PrivacySettingsLink />
+            <a href={`mailto:${CONTACT_EMAIL}`} className="tap-link text-gold hover:underline">{CONTACT_EMAIL}</a>
           </div>
           {/* Cross-promotion: our sister site for the Pokémon TCG. */}
           <p className="mb-2">
@@ -291,16 +315,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             sponsor this project.
           </p>
         </footer>
-        {/* HilltopAds zone loader — the primary ad network (web only, non-premium).
-            Skipped inside the native app, which shows AdMob banners via NativeShell. */}
-        <HilltopAdsLoader />
         {/* Detects the Capacitor native runtime and shows native AdMob ads, styles
             the status bar and wires the Android back button. No-op on the web. */}
         <NativeShell />
         {/* Stashes an inbound ?ref=<userId> into a cookie for referral credit. */}
         <ReferralCapture />
-        <Analytics />
-        <SpeedInsights />
+        {/* Vercel Analytics + Speed Insights, held until the same consent signal
+            the ad tags use resolves (Consent Mode v2 defaults everything denied).
+            Outside the consent message's scope this mounts after a short grace
+            period, so non-EEA measurement is unaffected. */}
+        <ConsentGatedAnalytics />
         {/* Meta Pixel — ad measurement + retargeting for Meta (Facebook/Instagram)
             ads. Production + web only; see the component for the guards. */}
         <MetaPixel />

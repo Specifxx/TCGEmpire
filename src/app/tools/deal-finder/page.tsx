@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { HubIntro } from "@/components/HubIntro";
 import Link from "next/link";
 import { getArbitrage, getArbitrageVsTcgplayer, getEbayCheapest, getArbSources, TCGPLAYER_KEY, EBAY_FEE, type ArbSort, type DealSort } from "@/lib/arbitrage";
 import { getCountry } from "@/lib/get-country";
@@ -14,6 +15,8 @@ import type { CardTileData } from "@/components/CardTile";
 import { SITE_URL } from "@/lib/site";
 import { getCurrentUser } from "@/lib/auth";
 import { isPremium } from "@/lib/premium";
+import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
+import { cardImageAlt } from "@/lib/image-alt";
 
 export const dynamic = "force-dynamic";
 
@@ -45,7 +48,13 @@ export default async function ArbitragePage({
   searchParams: { sort?: string; page?: string; buy?: string; view?: string };
 }) {
   const user = await getCurrentUser();
-  const premium = isPremium(user);
+  // ADSENSE REVIEW MODE: treat everyone as Premium for gating purposes while the
+  // review is open, so this indexable page carries no blurred or locked rows.
+  // "Content behind a paywall or login" is its own AdSense rejection reason. The
+  // Premium CTA is unaffected — an ordinary upsell link is fine; a blur overlay
+  // standing in place of the content is not. Restored by setting
+  // NEXT_PUBLIC_ADSENSE_REVIEW_MODE=false. See docs/adsense-remediation.md § 9.
+  const premium = isPremium(user) || ADSENSE_REVIEW_MODE;
   const signedIn = !!user;
   const country = getCountry();
   const info = COUNTRIES[country];
@@ -106,6 +115,7 @@ export default async function ArbitragePage({
         </nav>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">Deal Finder</h1>
+      <HubIntro path="/tools/deal-finder" />
           <RegionToggle />
         </div>
       </div>
@@ -493,7 +503,7 @@ function CardCell({ card }: { card: CardTileData }) {
       <CardQuickLink card={card} className="flex items-center gap-2.5">
         {card.imageThumbUrl && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={card.imageThumbUrl} alt="" aria-hidden="true" width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
+          <img src={card.imageThumbUrl} alt={cardImageAlt(card)} width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
         )}
         <span className="min-w-0">
           <span className="block truncate font-semibold text-white">{card.name}</span>

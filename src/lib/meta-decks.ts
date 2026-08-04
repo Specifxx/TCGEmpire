@@ -13,14 +13,25 @@ export interface MetaDeckSeed {
   domains: string[];
   description: string;
   category?: "meta" | "beginner";
+  // Metagame standing, from the riftDecks.com Vendetta breakdown. These move
+  // daily — prisma/meta-decks.json._metaUpdated says when they were last checked.
+  // avgPriceUsd is riftDecks' own reference figure and is NOT used for pricing:
+  // build cost is always computed live in the reader's own market.
+  metaSharePct?: number;
+  winRatePct?: number;
+  top8s?: number;
+  avgPriceUsd?: number;
   // Attribution: the real tournament list this deck is copied from.
   sourceUrl?: string;
-  source?: string; // e.g. "Player · 1st, Event (Jun 2026)"
+  source?: string; // e.g. "Player · 1st at Event"
   // section: champion | unit | gear | spell | battlefield | rune | sideboard
   cards: { name: string; qty: number; section: string }[];
 }
 
 export const META_DECKS: MetaDeckSeed[] = (metaDecksData.decks ?? []) as MetaDeckSeed[];
+
+// When the tier/metashare figures above were last reconciled against riftDecks.
+export const META_UPDATED: string = (metaDecksData as { _metaUpdated?: string })._metaUpdated ?? "";
 
 // Meta decks that play a card with this name (loose match so "Kai'Sa" == "kaisa").
 // Static seed data — no DB call. Powers the "Played in" section on card pages, which
@@ -59,9 +70,15 @@ export interface ResolvedDeck extends MetaDeckSeed {
   legendCard: ResolvedCardData | null;
   legendPriceCents: number | null;
   items: ResolvedCard[];
-  // Main deck = everything except the sideboard, plus the legend.
+  // Main deck = everything except the sideboard, plus the legend. This is the
+  // real deck size (56) and is what the decklist header counts.
   totalCards: number;
+  // Build cost EXCLUDES runes: a rune base is 12 near-worthless commons that
+  // every deck in the domain runs, so pricing them buries the number that
+  // actually differs between decks. priceableCards is the denominator that
+  // matches totalCents (main deck + legend, minus runes).
   totalCents: number;
+  priceableCards: number;
   pricedCards: number;
   // Sideboard, priced separately from the headline build cost.
   sideboardCards: number;
@@ -133,15 +150,18 @@ function resolveDeckFromMap(seed: MetaDeckSeed, map: Map<string, ResolvedCardDat
   });
 
   // The headline build cost is the MAIN deck (everything except the sideboard)
-  // plus the legend; the sideboard is summed separately.
+  // plus the legend; the sideboard is summed separately. Runes are counted in
+  // the deck SIZE but not in the COST — see priceableCards above.
   const main = items.filter((i) => i.section !== "sideboard");
+  const priceable = main.filter((i) => i.section !== "rune");
   const side = items.filter((i) => i.section === "sideboard");
 
   const legendLine = legend?.lowestPriceCents != null ? legend.lowestPriceCents : 0;
   const totalCards = main.reduce((n, i) => n + i.qty, 0) + 1; // +1 legend
-  const totalCents = main.reduce((n, i) => n + i.lineCents, 0) + legendLine;
+  const totalCents = priceable.reduce((n, i) => n + i.lineCents, 0) + legendLine;
+  const priceableCards = priceable.reduce((n, i) => n + i.qty, 0) + 1; // +1 legend
   const pricedCards =
-    main.filter((i) => i.unitPriceCents != null).reduce((n, i) => n + i.qty, 0) +
+    priceable.filter((i) => i.unitPriceCents != null).reduce((n, i) => n + i.qty, 0) +
     (legend?.lowestPriceCents != null ? 1 : 0);
   const sideboardCards = side.reduce((n, i) => n + i.qty, 0);
   const sideboardCents = side.reduce((n, i) => n + i.lineCents, 0);
@@ -153,6 +173,7 @@ function resolveDeckFromMap(seed: MetaDeckSeed, map: Map<string, ResolvedCardDat
     items,
     totalCards,
     totalCents,
+    priceableCards,
     pricedCards,
     sideboardCards,
     sideboardCents,

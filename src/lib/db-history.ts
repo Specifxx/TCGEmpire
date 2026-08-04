@@ -14,22 +14,33 @@ import { PrismaClient } from "@prisma/client";
 // charts, the Index) — the core site (browsing, pricing, accounts) is unaffected,
 // a far better failure mode than the whole site going down.
 //
-// SAFE BY DEFAULT: falls back to the same DATABASE_URL as db.ts when
-// HISTORY_DATABASE_URL isn't set, so this ships as a NO-OP (same physical
-// database, identical behaviour) until a second Neon project is provisioned and
-// HISTORY_DATABASE_URL is added to Vercel + GitHub secrets. The schema
+// SAFE BY DEFAULT: falls back to the same database as db.ts when NO history
+// variable is set at all, so this ships as a NO-OP (same physical database,
+// identical behaviour) until a second Neon project is provisioned and the
+// current history variable — RH6, see the chain below — is added to Vercel +
+// GitHub secrets. (Adding HISTORY_DATABASE_URL today would do nothing useful:
+// it sits FOURTH in the chain, behind RH6/RH5/_4.) The schema
 // (prisma/schema.prisma) is unchanged and shared — run `prisma db push` against
 // the new URL once to create the tables there too (the unused Card/RetailerPrice/
 // etc. tables it also creates cost negligible storage empty; only PriceHistory /
 // ClickEvent get real traffic).
 
-// RH5 (secrets.RH5 / HISTORY_DATABASE_URL_5) is the CURRENT history project
-// (swapped in 2026-07-26 after HISTORY_DATABASE_URL_4 went unreachable —
-// P1001, connection refused). _4/base/_2/_3 are kept ONLY as fallbacks for
-// anything not yet migrated; treat them as dead/read-only, never the primary
-// target. Once everything's copied across (see scripts/migrate-history.ts)
+// RH6 (secrets.RH6) is the CURRENT history project — cut over 2026-07-31 after
+// RH5 exhausted its monthly Neon network-transfer allowance (the same way _4
+// went unreachable with P1001 before it, and _3/_2/base before that). RH5 and
+// every older var are kept ONLY as read-only fallbacks/migration sources;
+// treat them as dead, never the primary target. Once everything's copied
+// across (see the `migrate-history-db` task in .github/workflows/maintenance.yml)
 // and nothing references the older vars anymore, they can be removed entirely.
+//
+// ORDER MATTERS AND IS LOAD-BEARING: this list is duplicated, by necessity, in
+// several places that cannot import this module (GitHub Actions `env:` blocks,
+// scripts/build-db-push.sh). When you add a new project here, grep for the
+// PREVIOUS variable name across the whole repo and update every hit — a chain
+// that silently stops at an exhausted project is exactly how this repo has lost
+// a day to an "unexplained" P1001 more than once.
 const HISTORY_URL =
+  process.env.RH6 ||
   process.env.RH5 ||
   process.env.HISTORY_DATABASE_URL_4 ||
   process.env.HISTORY_DATABASE_URL ||
@@ -37,9 +48,41 @@ const HISTORY_URL =
   process.env.HISTORY_DATABASE_URL_3 ||
   process.env.DATABASE_URL;
 
+// Names the winning variable (never its value — it's a credential) so a P1001
+// in the logs immediately answers "which database did it actually try?".
+// Mirrors the same diagnostic in scripts/build-db-push.sh and lib/db.ts.
+export const HISTORY_URL_SOURCE =
+  process.env.RH6 ? "RH6"
+  : process.env.RH5 ? "RH5"
+  : process.env.HISTORY_DATABASE_URL_4 ? "HISTORY_DATABASE_URL_4"
+  : process.env.HISTORY_DATABASE_URL ? "HISTORY_DATABASE_URL"
+  : process.env.HISTORY_DATABASE_URL_2 ? "HISTORY_DATABASE_URL_2"
+  : process.env.HISTORY_DATABASE_URL_3 ? "HISTORY_DATABASE_URL_3"
+  : "DATABASE_URL (no history project set — history shares the operational DB)";
+
+if (HISTORY_URL_SOURCE !== "RH6") {
+  console.warn(
+    `[db-history] history DB resolved to ${HISTORY_URL_SOURCE}, not RH6 — RH6 is missing from this ` +
+      `environment. Every older project is exhausted/dead; expect P1001 or writes landing in the wrong place.`
+  );
+}
+
 // True when the history tables live in their OWN database. When split, PriceHistory's
 // Card foreign key means card rows must exist there too — see ensureHistoryCards().
-export const historyIsSplit = HISTORY_URL !== process.env.DATABASE_URL;
+// Compared against the RESOLVED operational URL, not bare DATABASE_URL. db.ts
+// resolves the operational database as RM3 || DATABASE_URL_2 || DATABASE_URL,
+// so comparing to DATABASE_URL alone got this wrong in a specific, quiet way:
+// with RM3 set and no history variable at all, HISTORY_URL falls through to
+// DATABASE_URL, which is NOT the operational database — yet this returned
+// false ("not split"). ensureHistoryCards() then no-ops, and the next
+// price-import's createMany fails PriceHistory's Card foreign key, swallowed by
+// its try/catch as a single warning line.
+//
+// Resolved inline rather than imported from db.ts on purpose: db.ts constructs
+// the operational PrismaClient at module scope, so importing it here eagerly
+// would spin up a second client in every context that only wants history.
+const OPERATIONAL_URL = process.env.RM3 || process.env.DATABASE_URL_2 || process.env.DATABASE_URL;
+export const historyIsSplit = HISTORY_URL !== OPERATIONAL_URL;
 
 // Ensure a generous connect_timeout (Postgres/libpq connection param, in
 // seconds). Neon's pooled compute suspends when idle and can take a moment to

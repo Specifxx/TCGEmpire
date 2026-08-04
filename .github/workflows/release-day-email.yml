@@ -1,0 +1,81 @@
+name: Release-day email blast
+
+# Triggers the release-day blast — "the set is out, the card database + live prices
+# are up, sealed is priced too" — to the newsletter list.
+#
+# THE SEND HAPPENS ON VERCEL, NOT HERE. RESEND_API_KEY is a Vercel environment
+# variable (that's how the weekly digest, verification and price-alert emails all
+# send). A GitHub runner has the database but not the mail key, so a blast run
+# directly in CI would deliver nothing. This job therefore just authenticates a
+# call to /api/cron/release-day-email with CRON_SECRET — the same split
+# refresh-prices.yml already uses for /api/revalidate.
+#
+# SAFETY: manual dispatch only (no schedule), and dry_run defaults to TRUE, so the
+# Run-workflow button cannot blast by accident. The endpoint is idempotent per
+# campaign (each subscriber stamped on success), so re-running resumes rather than
+# double-sending — which also makes the batch cap safe.
+#
+# SETUP: CRON_SECRET as an Actions secret (already used by refresh-prices.yml).
+# RESEND_API_KEY is NOT needed here — it must be set in Vercel.
+
+on:
+  workflow_dispatch:
+    inputs:
+      set_slug:
+        description: "Set slug (must exist in lib/constants.ts and NOT be comingSoon)"
+        type: string
+        required: true
+        default: "vendetta"
+      dry_run:
+        description: "Dry run — report audience + live stats, send NOTHING (untick to actually send)"
+        type: boolean
+        default: true
+      audience:
+        description: "Who to email"
+        type: choice
+        required: true
+        default: "subscribers"
+        options:
+          - subscribers   # opt-in newsletter list only
+          - users         # registered accounts (one-click announcement opt-out)
+          - all           # both, de-duplicated by email
+      limit:
+        description: "Max emails this run (blank = default batch; re-run to continue)"
+        type: string
+        required: false
+        default: ""
+
+concurrency:
+  # Never let two blasts overlap — that is how people get double-emailed.
+  group: release-day-email
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Trigger release-day blast on Vercel
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: "https://riftcompare.com"
+          SET_SLUG: ${{ inputs.set_slug }}
+          # dry=1 unless the box was explicitly unticked.
+          DRY: ${{ inputs.dry_run && '1' || '0' }}
+          AUDIENCE: ${{ inputs.audience }}
+          LIMIT: ${{ inputs.limit }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::CRON_SECRET is not set as an Actions secret — cannot authenticate the trigger."
+            exit 1
+          fi
+          url="$SITE_URL/api/cron/release-day-email?set=$SET_SLUG&dry=$DRY&audience=$AUDIENCE"
+          [ -n "$LIMIT" ] && url="$url&limit=$LIMIT"
+          echo "POST ${url//$CRON_SECRET/***}"
+          code=$(curl -sS --max-time 290 -o response.json -w "%{http_code}" -X POST \
+            "$url" -H "Authorization: Bearer $CRON_SECRET")
+          echo "HTTP $code"
+          cat response.json
+          echo
+          # Fail the job on a non-200 so a silent no-send is visible in the UI.
+          [ "$code" = "200" ] || { echo "::error::Blast endpoint returned $code"; exit 1; }

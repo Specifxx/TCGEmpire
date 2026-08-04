@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFoundMetadata } from "@/lib/not-found-metadata";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { buildCardWhere } from "@/lib/cards";
@@ -15,7 +16,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: { rarity: string } }): Promise<Metadata> {
   const facet = rarityFacetBySlug(params.rarity);
-  if (!facet) return {};
+  if (!facet) return notFoundMetadata("Rarity");
   // -1 = "couldn't count" (DB unreachable), which is NOT the same as "few cards".
   // Falling back to 0 would noindex a perfectly good facet page on any transient
   // DB blip; only a CONFIRMED low count should trigger the thin-page guard.
@@ -35,5 +36,5 @@ export async function generateMetadata({ params }: { params: { rarity: string } 
 export default async function CardRarityFacetPage({ params }: { params: { rarity: string } }) {
   const facet = rarityFacetBySlug(params.rarity);
   if (!facet) notFound();
-  return <FacetPageBody facet={facet} dimensionLabel="rarity" crumbLabel="Rarity" crumbHref="/cards/rarity" siblings={RARITY_FACETS} />;
+  return <FacetPageBody facet={facet} dimensionLabel="rarity" crumbLabel="Rarity" crumbHref="/cards/rarity" siblings={RARITY_FACETS} collectionKind="rarity" />;
 }

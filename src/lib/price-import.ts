@@ -13,8 +13,9 @@ import { snapshotDemand } from "./demand-snapshot";
 import { refreshTcgplayerPrices } from "./tcgplayer";
 import { importMarketplaceListings } from "./marketplace";
 import { refreshCardmarketPrices } from "./cardmarket";
-import { AU_FALLBACK_RETAILERS, SG_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS } from "./constants";
+import { AU_FALLBACK_RETAILERS, SG_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS, pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS } from "./constants";
 import { currencyOf, isoCountry, type Country } from "./country";
+import { USD_TO } from "./fx";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows } from "./scrape-http";
 
 export interface ShopifyVariant { title: string; price: string; available: boolean }
@@ -175,7 +176,20 @@ async function fetchCollection(store: RetailerInfo, handle: string): Promise<Sho
       break;
     }
     if (!res.ok) break;
-    const data = (await res.json()) as { products: ShopifyProduct[] };
+    // A store can return HTTP 200 with an HTML body — a moved/renamed collection,
+    // a WAF/challenge page, a maintenance page — none of which raise on `res.ok`.
+    // res.json() throws SyntaxError in that case ("Unexpected token '<'"), and left
+    // uncaught that crashed the ENTIRE import run (every store queued after this one
+    // silently never ran), not just this one store's page. Treat a parse failure the
+    // same as a non-ok response: stop paginating this store, keep whatever was
+    // already collected, and let every other store still run.
+    let data: { products: ShopifyProduct[] };
+    try {
+      data = (await res.json()) as { products: ShopifyProduct[] };
+    } catch {
+      console.warn(`${store.name}: non-JSON response on page ${page} (likely an HTML error/challenge page) — skipping rest of this store.`);
+      break;
+    }
     if (!data.products?.length) break;
     all.push(...data.products);
     if (data.products.length < 250) break;
@@ -269,9 +283,91 @@ async function verifyCheapestListings(onlyCountry?: string): Promise<number> {
 // written. Each market is buffered then atomically replaced, scoped by country, so a
 // rate-limited (0-result) market keeps its existing rows and never wipes the other.
 // Promos are matched by promo-wording in the listing title (they share base numbers).
+/**
+ * Put the priority sets at the front of the eBay queue, popularity order intact.
+ *
+ * The quota cannot cover every market × every card every day, so whatever sits at
+ * the tail of this list is what silently goes unpriced. Callers hand cards over
+ * already sorted by search demand — but a set that launched last week has no
+ * demand recorded yet (zero searches, zero views, no price), so its cards sort
+ * dead last precisely while their prices are the ones people are looking for.
+ *
+ * A STABLE partition, not a re-sort: within each group the caller's popularity
+ * order is preserved exactly, so this promotes the new set without flattening
+ * "most-wanted first" inside it. Everything still gets queried on a day with
+ * budget to spare; this only decides who gets cut when there isn't.
+ *
+ * Exported for tests — the ordering is the whole behaviour, and it is invisible
+ * in a passing import run.
+ */
+export function orderCardsForEbay<T extends { setCode: string }>(
+  cards: T[],
+  prioritySetCodes: readonly string[] = pricePrioritySetCodes(),
+): T[] {
+  if (!prioritySetCodes.length) return cards;
+  const priority = new Set(prioritySetCodes.map((c) => c.toUpperCase()));
+  const first: T[] = [];
+  const rest: T[] = [];
+  for (const c of cards) (priority.has((c.setCode ?? "").toUpperCase()) ? first : rest).push(c);
+  return [...first, ...rest];
+}
+
+export interface EbayMarketCfg { country: string; marketplace: string; currency: string; retailer: string }
+
+/** Searched on EVERY run. */
+export const EBAY_ALWAYS_MARKETS: EbayMarketCfg[] = [
+  { country: "AU", marketplace: "EBAY_AU", currency: "AUD", retailer: "ebay" },
+  { country: "US", marketplace: "EBAY_US", currency: "USD", retailer: "ebay_us" },
+];
+
+/**
+ * Rotated one per day, in this order. Add a market and the rotation just gets
+ * one day longer — no other change needed.
+ *
+ * ── WHY UK MOVED OUT OF `ALWAYS` (2026-08-03) ───────────────────────────────
+ * The original split was sized for ~1.1k cards. Vendetta took the catalogue to
+ * 1,400, and 4 markets × 1,400 = 5,600 Browse calls against a 4,280 budget no
+ * longer fits — nor does it fit the 55-minute job timeout at the measured
+ * ~0.75s/card. A forced run on 2026-08-03 completed AU (17.6 min) and US
+ * (10.1 min), then was KILLED 9 minutes into UK. UK wrote nothing (a truncated
+ * market is discarded, never half-saved) and the rotating market never started.
+ *
+ * So SG/CA had silently stopped refreshing altogether: every run died during UK
+ * before reaching them. Two daily markets + one rotating is 3 × 1,400 = 4,200,
+ * inside the budget, and each rotating market is at most ~48h stale — far better
+ * than one that never runs at all.
+ */
+export const EBAY_ROTATING_MARKETS: EbayMarketCfg[] = [
+  { country: "UK", marketplace: "EBAY_GB", currency: "GBP", retailer: "ebay_uk" },
+  { country: "SG", marketplace: "EBAY_SG", currency: "SGD", retailer: "ebay_sg" },
+];
+
+/** The markets a run on `dayIndex` will search. Pure, so the budget is testable. */
+export function ebayMarketsForDay(dayIndex: number): EbayMarketCfg[] {
+  return [...EBAY_ALWAYS_MARKETS, EBAY_ROTATING_MARKETS[dayIndex % EBAY_ROTATING_MARKETS.length]];
+}
+
+/** eBay CA rows are derived from the US pass — see the note at the write site. */
+export const EBAY_CA_RETAILER = "ebay_ca";
+
 export async function refreshEbayMarkets(
   cards: { id: string; name: string; setCode: string; collectorNumber: string; isPromo: boolean }[]
 ): Promise<number> {
+  // Applied HERE rather than in the callers' `orderBy` so no caller can forget
+  // it: both the scheduled importer and scripts/refresh-ebay.ts go through this
+  // function, and a third one would too.
+  const priorityCodes = pricePrioritySetCodes();
+  cards = orderCardsForEbay(cards, priorityCodes);
+  if (priorityCodes.length) {
+    const n = cards.filter((c) => priorityCodes.includes(c.setCode)).length;
+    console.log(
+      `eBay queue: ${n} ${priorityCodes.join("/")} card(s) at the front of ${cards.length} ` +
+        `(launch-window priority, expires ${PRICE_PRIORITY_WINDOW_DAYS}d after release); ` +
+        `popularity order preserved within each group.`,
+    );
+  } else {
+    console.log(`eBay queue: ${cards.length} cards in popularity order (no set in its launch window).`);
+  }
   // Each market has its own retailer key so eBay AU + US rows for the same card never
   // collide on the unique [cardId, retailer, condition, isFoil] key.
   //
@@ -285,17 +381,23 @@ export async function refreshEbayMarkets(
   // take turns: AU/US/UK refresh daily, and SG and CA get every other day. That
   // fits ~4×1.1k ≈ 4.4k inside the budget, and each rotating market is at most ~24h
   // staler than the others — far better than one of them being permanently skipped.
-  const ALWAYS = [
-    { country: "AU", marketplace: "EBAY_AU", currency: "AUD", retailer: "ebay" },
-    { country: "US", marketplace: "EBAY_US", currency: "USD", retailer: "ebay_us" },
-    { country: "UK", marketplace: "EBAY_GB", currency: "GBP", retailer: "ebay_uk" },
-  ];
-  // Rotated one-per-day, in this order. Add a third market here and the rotation
-  // just becomes every-third-day — no other change needed.
-  const ROTATING = [
-    { country: "SG", marketplace: "EBAY_SG", currency: "SGD", retailer: "ebay_sg" },
-    { country: "CA", marketplace: "EBAY_CA", currency: "CAD", retailer: "ebay_ca" },
-  ];
+  const ALWAYS = EBAY_ALWAYS_MARKETS;
+  // Rotated one-per-day, in this order. Add a market here and the rotation just
+  // gets one day longer — no other change needed.
+  //
+  // ── WHY UK MOVED OUT OF `ALWAYS` (2026-08-03) ───────────────────────────────
+  // The arithmetic above was written for ~1.1k cards. Vendetta took the catalogue
+  // to 1,400, and 4 markets × 1,400 = 5,600 calls against a 4,280 budget no
+  // longer fits — nor does it fit the 55-minute job timeout at the measured
+  // ~0.75s/card. A forced run on 2026-08-03 did AU (17.6 min) and US (10.1 min),
+  // then was KILLED 9 minutes into UK; UK wrote nothing (a truncated market is
+  // discarded, not half-saved) and the rotating market never started at all.
+  //
+  // So SG/CA had silently stopped refreshing entirely: every run died during UK
+  // before reaching them. Two daily markets + one rotating is 3 × 1,400 = 4,200,
+  // which fits the budget, and each rotating market is at most ~48h stale —
+  // far better than one that never runs.
+  const ROTATING = EBAY_ROTATING_MARKETS;
   const ALL = [...ALWAYS, ...ROTATING];
 
   // EBAY_ONLY_MARKET=SG restricts the pass to one marketplace (~1k calls) — used
@@ -343,9 +445,14 @@ export async function refreshEbayMarkets(
     // "eBay Ad" carousel rows for the card page — captured for free from the same
     // Browse API call above (see searchEbayLowest's captureAdListings param).
     const adRows: Prisma.EbayAdListingCreateManyInput[] = [];
+    // Cards THIS market queried. Deliberately separate from the run-wide
+    // `checkedIds`, which accumulates across markets — clearing this market's
+    // carousel must only ever touch cards this market actually reached.
+    const queriedThisMarket = new Set<string>();
     for (const c of cards) {
       if (isEbayRateLimited()) break;
       checkedIds.add(c.id); // we have budget and are about to query this card
+      queriedThisMarket.add(c.id);
       const [rawNum, total] = c.collectorNumber.split("/");
       const captured: EbayResult[] = [];
       const r = await searchEbayLowest(
@@ -376,7 +483,7 @@ export async function refreshEbayMarkets(
       });
       // The budget can run out INSIDE the call (its own spend() check), meaning this
       // card was never actually queried — don't leave it stamped as checked.
-      if (!r && isEbayRateLimited()) { checkedIds.delete(c.id); break; }
+      if (!r && isEbayRateLimited()) { checkedIds.delete(c.id); queriedThisMarket.delete(c.id); break; }
       if (!r) continue;
       rows.push({
         cardId: c.id,
@@ -416,14 +523,67 @@ export async function refreshEbayMarkets(
     } else {
       console.warn(`eBay ${mkt.country}: 0 results (rate-limited?) — keeping existing rows.`);
     }
-    if (adRows.length > 0) {
-      // Only replace the cards we actually re-queried this pass — a rate-limited
-      // run that skips most cards must not wipe out yesterday's carousel for them.
-      const queriedIds = [...new Set(adRows.map((r) => r.cardId))];
-      for (let i = 0; i < queriedIds.length; i += 1000) {
-        await prisma.ebayAdListing.deleteMany({ where: { country: mkt.country, cardId: { in: queriedIds.slice(i, i + 1000) } } });
-      }
-      await prisma.ebayAdListing.createMany({ data: adRows });
+    // Replace the carousel for every card this market actually QUERIED — not
+    // just the ones that came back with listings.
+    //
+    // THE BUG THIS FIXES: the delete list used to be derived from `adRows`, i.e.
+    // only cards that produced listings on this run. A card we queried and got
+    // NOTHING for was therefore never cleared, so its carousel kept yesterday's
+    // listings — forever, since every later run also produced no adRows for it
+    // and so never cleared it either. Meanwhile the PRICE rows for that card
+    // were correctly dropped (they are replaced wholesale per retailer). The
+    // result is the state a user reported: a card page showing "no in-stock
+    // listings" and "no live eBay price" directly above an eBay carousel headed
+    // "LIVE LISTINGS ON EBAY" — with affiliate links to listings that may have
+    // sold weeks ago. Stale is worse than empty here, because the carousel
+    // claims to be live.
+    //
+    // Scoped to cards queried IN THIS MARKET (not the run-wide `checkedIds`), so
+    // a budget that runs out partway through still cannot wipe the carousel for
+    // cards this market never reached.
+    const queriedIds = [...queriedThisMarket];
+    for (let i = 0; i < queriedIds.length; i += 1000) {
+      await prisma.ebayAdListing.deleteMany({
+        where: { country: mkt.country, cardId: { in: queriedIds.slice(i, i + 1000) } },
+      });
+    }
+    if (adRows.length > 0) await prisma.ebayAdListing.createMany({ data: adRows });
+
+    // ── CANADA IS DERIVED FROM THE US PASS, NOT SEARCHED ────────────────────
+    // eBay CA used to be its own marketplace query — a full ~1,400 extra Browse
+    // calls for the smallest market, on a budget that no longer covers even the
+    // markets we search. It is also the most redundant: eBay US ships to Canada
+    // as a matter of course (eBay International Shipping), so the listings a
+    // Canadian buyer sees substantially ARE the US ones.
+    //
+    // So CA now reuses the US result set, converted to CAD, at zero quota cost.
+    //
+    // Two honesty constraints, both load-bearing:
+    //   • shippingCents is NULLED. The figure eBay returned is US DOMESTIC
+    //     postage; a Canadian buyer pays international postage instead. null
+    //     means "unknown / at checkout" in the UI, which is true — carrying the
+    //     US number over would understate the delivered cost and make these rows
+    //     beat genuine Canadian listings they might well lose to.
+    //   • retailerName says "eBay US", so the row is visibly a cross-border buy
+    //     rather than a local one.
+    // Unlike the converted TCGplayer references (see ALL_FALLBACK_RETAILERS),
+    // this stays a REAL comparison row, because it is a real purchasable listing
+    // — the price is genuine and the item genuinely ships to Canada. What is
+    // unknown is the postage, and the UI already has a way to say that.
+    if (mkt.country === "US" && rows.length > 0 && !truncated) {
+      const caRows: Prisma.RetailerPriceCreateManyInput[] = rows.map((r) => ({
+        ...r,
+        retailer: EBAY_CA_RETAILER,
+        retailerName: "eBay US",
+        priceCents: Math.round((r.priceCents as number) * USD_TO.CAD),
+        shippingCents: null,
+        currency: "CAD",
+        country: "CA",
+      }));
+      await prisma.retailerPrice.deleteMany({ where: { retailer: EBAY_CA_RETAILER } });
+      await prisma.retailerPrice.createMany({ data: caRows });
+      written += caRows.length;
+      console.log(`eBay CA: ${caRows.length} rows derived from the US pass (0 extra Browse calls).`);
     }
   }
   // Stamp every card the pass reached so the card page can distinguish a genuine
@@ -594,6 +754,21 @@ export function resolveCardId(p: ShopifyProduct, idx: CardIndex): string | null 
       const overs = cand.filter(isOverCard);
       if (!overs.length) return null;
       return (pickByNum(overs) ?? overs[0]).id;
+    }
+    // A PLAIN listing (no special-print signal) that carries an explicit collector
+    // number must not be forced onto a same-named candidate whose number disagrees.
+    // That candidate is a DIFFERENT, not-yet-catalogued printing sharing this name —
+    // e.g. a store's ordinary Rare print of a Legend whose only row in our DB today
+    // is its Signature/chase entry ("Kennen, Heart of the Tempest" 155/166 Rare vs.
+    // our sole 197*/166 Signature row). Without this guard the very next line
+    // (cand.length === 1 → return cand[0].id) mis-attached the Rare print's $1.10
+    // price to the Signature card's page. Trust the number over the name here: keep
+    // only candidates it actually matches, or leave the listing unmatched rather
+    // than mis-attach its price.
+    if (num) {
+      const byNumMatch = cand.filter((c) => numKey(c.collectorNumber.split("/")[0]) === num.key);
+      if (byNumMatch.length) cand = byNumMatch;
+      else return null;
     }
     if (cand.length === 1) return cand[0].id;
     const exact = pickByNum(cand);
@@ -782,7 +957,15 @@ export async function importPrices(): Promise<ImportSummary> {
       orderBy: [
         { searchCount: "desc" },
         { viewCount: "desc" },
+        // Value, as the tiebreak among cards with no recorded demand yet — which
+        // is every card of a set that launched this week, so for a launch set
+        // this is effectively THE sort. AU first (the baseline market), then US:
+        // stores in one market list a new set before the other, and a chase card
+        // priced in only one of them would otherwise tie at null with the bulk
+        // and land in the tail. Prisma has no COALESCE in orderBy, so this is
+        // expressed as successive keys, which gives the same ordering.
         { lowestPriceCents: { sort: "desc", nulls: "last" } },
+        { lowestPriceCentsUs: { sort: "desc", nulls: "last" } },
       ],
       select: { id: true, name: true, setCode: true, collectorNumber: true, isPromo: true },
     });

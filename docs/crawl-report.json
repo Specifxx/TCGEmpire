@@ -1,0 +1,38 @@
+{
+  "base": "http://localhost:3111",
+  "crawled": 601,
+  "contentPages": 596,
+  "indexable": 565,
+  "maxDepth": 4,
+  "totals": {
+    "broken": 0,
+    "serverErrors": 0,
+    "softFourOhFours": 0,
+    "emptyServerRender": 0,
+    "redirectChains": 0,
+    "tooDeep": 0,
+    "sitemapOrphans": 0,
+    "duplicateTitles": 0,
+    "duplicateDescriptions": 0,
+    "missingTitle": 0,
+    "missingDescription": 0,
+    "wrongH1Count": 0,
+    "missingCanonical": 0,
+    "wrongCanonical": 0,
+    "missingBreadcrumbs": 0
+  },
+  "detail": {
+    "broken": [],
+    "softFourOhFours": [],
+    "emptyServerRender": [],
+    "redirectChains": [],
+    "tooDeep": [],
+    "sitemapOrphans": [],
+    "duplicateTitles": [],
+    "duplicateDescriptions": [],
+    "wrongH1Count": [],
+    "missingCanonical": [],
+    "wrongCanonical": [],
+    "missingBreadcrumbs": []
+  }
+}

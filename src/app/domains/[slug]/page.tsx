@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFoundMetadata } from "@/lib/not-found-metadata";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
@@ -14,7 +15,7 @@ export const revalidate = 86400;
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const domain = domainBySlug(params.slug);
-  if (!domain) notFound();
+  if (!domain) return notFoundMetadata("Domain");
   const title = `Riftbound ${domain.label} Cards — Prices, Values & Full List`;
   const description = `Every Riftbound ${domain.label} card with live prices compared across stores — find the cheapest ${domain.label} singles. Full ${domain.label} domain card list and values, updated daily.`;
   return {
@@ -66,8 +67,12 @@ export default async function DomainPage({ params }: { params: { slug: string } 
     "@type": "CollectionPage",
     name: `Riftbound ${domain.label} Card Prices & List`,
     url: `${SITE_URL}/domains/${domain.slug}`,
+      // Edges back to the site-level graph in app/layout.tsx. Without them this
+      // node is an island and the Organization/WebSite entity signals — sameAs,
+      // areaServed, knowsAbout — don't propagate to the page.
+      isPartOf: { "@id": `${SITE_URL}/#website` },
+      publisher: { "@id": `${SITE_URL}/#org` },
     description: `Live prices for every Riftbound ${domain.label} card.`,
-    isPartOf: { "@type": "WebSite", name: "RiftCompare", url: SITE_URL },
   };
 
   return (

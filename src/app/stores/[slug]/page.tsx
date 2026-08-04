@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFoundMetadata } from "@/lib/not-found-metadata";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
@@ -53,7 +54,7 @@ async function storeStats(key: string) {
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const store = storeBySlug(params.slug);
-  if (!store) return {};
+  if (!store) return notFoundMetadata("Store");
   const { count } = await storeStats(store.key);
   const place = COUNTRIES[(store.country ?? "AU") as Country];
   const title = `${store.name} Riftbound Singles — Live Prices & Stock | RiftCompare`;
@@ -194,7 +195,13 @@ export default async function StorePage({ params }: { params: { slug: string } }
           {policyUrl ? (
             <>
               check{" "}
-              <a href={policyUrl} target="_blank" rel="nofollow noopener noreferrer" className="text-brand-400 hover:underline">
+              {/* rel includes "sponsored": this is a commercial link to a retailer
+                  we may earn from. Google's guidance is to mark ANY link placed
+                  for a commercial relationship, not only ones carrying a tracking
+                  parameter — and an unmarked commercial link on 121 store pages is
+                  exactly the shape a reviewer reads as an undisclosed affiliate
+                  network. */}
+              <a href={policyUrl} target="_blank" rel="sponsored nofollow noopener noreferrer" className="text-brand-400 hover:underline">
                 their shipping policy
               </a>{" "}
               for the current published rate.
@@ -207,7 +214,7 @@ export default async function StorePage({ params }: { params: { slug: string } }
           <a
             href={store.base}
             target="_blank"
-            rel="nofollow noopener noreferrer"
+            rel="sponsored nofollow noopener noreferrer"
             className="btn-primary text-sm"
           >
             Visit {store.name} →

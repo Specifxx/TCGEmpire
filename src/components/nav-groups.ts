@@ -42,6 +42,12 @@ export const NAV_GROUPS: NavGroup[] = [
     links: [
       { href: "/browse", label: "Card Database", emoji: "🗃️" },
       { href: "/sealed", label: "Sealed Products", emoji: "📦" },
+      // The countdown for whichever set is NEXT. Its predecessor
+      // (/vendetta-countdown) was never in the nav and depended entirely on
+      // article links for discovery; putting the slot here means the release-date
+      // page is one ⌘K away all through the pre-launch window, when it is the
+      // single highest-intent page on the site.
+      { href: "/radiance-countdown", label: "Radiance release date", emoji: "✨" },
       { href: "/market", label: "Market Index", emoji: "📊" },
       { href: "/stores/tracked", label: "Stores we track", emoji: "🏪" },
       { href: "/bulk-pricer", label: "Bulk Pricer", emoji: "📋" },
@@ -84,14 +90,42 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    title: "Community & learn",
+    // Our original editorial work. Promoted out of the footer-only position it
+    // used to occupy — see PRIMARY_NAV below and Navbar.tsx. A reviewer (or a
+    // reader) landing on a programmatic price page needs a one-click path to
+    // something a person wrote, or the whole site reads as a data feed.
+    title: "Guides & News",
     links: [
-      { href: "/learn", label: "Learn Riftbound", emoji: "🎓" },
       { href: "/guides", label: "Guides", emoji: "📖" },
-      { href: "/blog", label: "Blog", emoji: "📰" },
-      { href: "/support", label: "Support", emoji: "🆘" },
+      { href: "/blog", label: "News & analysis", emoji: "📰" },
+      { href: "/learn", label: "Learn Riftbound", emoji: "🎓" },
+      { href: "/authors", label: "Who writes this", emoji: "✍️" },
+      { href: "/editorial-policy", label: "Editorial policy", emoji: "📐" },
     ],
   },
+  {
+    title: "Help",
+    links: [
+      { href: "/support", label: "Support", emoji: "🆘" },
+      { href: "/contact", label: "Contact & feedback", emoji: "✉️" },
+      { href: "/about", label: "About RiftCompare", emoji: "ℹ️" },
+    ],
+  },
+];
+
+// TOP-LEVEL header items — the handful of destinations that get their own
+// always-visible link rather than living inside the mega-menu.
+//
+// "Guides & News" is here deliberately. The blog and guides were reachable only
+// from the footer and the mega-menu, which meant the ~64 pieces of genuinely
+// original writing on this site were invisible to anyone who didn't go looking —
+// including an AdSense reviewer sampling pages from the homepage. Original
+// content that a reviewer cannot find might as well not exist.
+export const PRIMARY_NAV: { href: string; label: string }[] = [
+  { href: "/browse", label: "Cards" },
+  { href: "/sealed", label: "Sealed" },
+  { href: "/market", label: "Index" },
+  { href: "/guides", label: "Guides & News" },
 ];
 
 // The footer's own grouping — 4 columns instead of NAV_GROUPS' 6-7. Same links,
@@ -100,23 +134,36 @@ export const NAV_GROUPS: NavGroup[] = [
 // Built FROM NAV_GROUPS (not duplicated) so editing a link once still only
 // means editing it once. NAV_GROUPS itself is untouched — the phone sheet and
 // desktop mega-menu keep their finer-grained grouping.
+//
+// Marketplace's 6 links used to all land in "Shop" (5 + 6 = 11), leaving that
+// column roughly twice as tall as its 5-6-link neighbours — a ragged block of
+// whitespace under three of the four columns. Split across the other three
+// columns instead (2 each) so all four land in the same 5-8 link range
+// whether or not the marketplace nav is live (the spread is a no-op — an
+// empty array — while MARKETPLACE_NAV_VISIBLE is off).
 const byTitle = Object.fromEntries(NAV_GROUPS.map((g) => [g.title, g.links]));
+const marketplaceLinks = byTitle["Marketplace"] ?? [];
 
 export const FOOTER_GROUPS: NavGroup[] = [
   {
     title: "Shop",
-    links: [...(byTitle["Prices"] ?? []), ...(byTitle["Marketplace"] ?? [])],
+    links: byTitle["Prices"] ?? [],
   },
   {
     title: "Deals & value",
-    links: byTitle["Deals & value"] ?? [],
+    links: [...(byTitle["Deals & value"] ?? []), ...marketplaceLinks.slice(0, 2)],
   },
   {
     title: "Decks & collection",
-    links: [...(byTitle["Decks"] ?? []), ...(byTitle["Your collection"] ?? [])],
+    links: [...(byTitle["Decks"] ?? []), ...(byTitle["Your collection"] ?? []), ...marketplaceLinks.slice(2, 4)],
   },
   {
     title: "Learn & play",
-    links: [...(byTitle["Games"] ?? []), ...(byTitle["Community & learn"] ?? [])],
+    links: [
+      ...(byTitle["Games"] ?? []),
+      ...(byTitle["Guides & News"] ?? []),
+      ...(byTitle["Help"] ?? []),
+      ...marketplaceLinks.slice(4, 6),
+    ],
   },
 ];

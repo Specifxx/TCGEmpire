@@ -5,6 +5,7 @@ import Link from "next/link";
 import { formatMoney } from "@/lib/format";
 import { cardHref } from "@/lib/card-url";
 import type { IndexConstituent } from "@/lib/market-index";
+import { cardImageAlt } from "@/lib/image-alt";
 
 type SortKey = "rank" | "name" | "weight" | "price" | "d1" | "d7";
 type Dir = "asc" | "desc";
@@ -74,7 +75,7 @@ export function IndexConstituents({ constituents, currency }: { constituents: In
             onChange={(e) => setQ(e.target.value)}
             placeholder="Filter by card or set…"
             aria-label="Filter constituents"
-            className="w-full rounded-lg border border-ink-700 bg-ink-900 py-2 pl-9 pr-3 text-sm text-white placeholder:text-slate-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/40"
+            className="min-h-11 w-full rounded-lg border border-ink-700 bg-ink-900 py-2 pl-9 pr-3 text-sm text-white placeholder:text-slate-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/40 sm:min-h-0"
           />
         </div>
         <div className="flex items-center gap-1 rounded-lg border border-ink-700 bg-ink-900 p-1">
@@ -83,7 +84,7 @@ export function IndexConstituents({ constituents, currency }: { constituents: In
               key={k}
               onClick={() => setMove(k)}
               aria-pressed={move === k}
-              className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
+              className={`inline-flex min-h-11 items-center rounded-md px-3 text-xs font-semibold transition-colors sm:min-h-0 sm:py-1.5 ${
                 move === k ? "bg-ink-800 text-white" : "text-slate-400 hover:text-white"
               } ${k === "up" && move === k ? "text-up" : ""} ${k === "down" && move === k ? "text-down" : ""}`}
             >
@@ -117,10 +118,10 @@ export function IndexConstituents({ constituents, currency }: { constituents: In
                     {rank <= 3 ? <span className="chip bg-gold/20 text-gold">{rank}</span> : rank}
                   </td>
                   <td className="px-2 py-2">
-                    <Link href={cardHref(c)} className="flex items-center gap-2.5">
+                    <Link href={cardHref(c)} className="flex min-h-11 items-center gap-2.5">
                       {c.imageThumbUrl && (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={c.imageThumbUrl} alt="" aria-hidden="true" width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
+                        <img src={c.imageThumbUrl} alt={cardImageAlt(c)} width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
                       )}
                       <span className="min-w-0">
                         <span className="block truncate font-semibold text-white">{c.name}</span>

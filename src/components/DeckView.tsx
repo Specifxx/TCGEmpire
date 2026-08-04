@@ -9,6 +9,7 @@ import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { useCountry } from "./CountryProvider";
 import { COUNTRIES } from "@/lib/country";
 import { cardHref } from "@/lib/card-url";
+import { cardImageAlt } from "@/lib/image-alt";
 
 // Tidy display for cards our data labels with a precon suffix (e.g. OGS starter
 // legends imported as "Master, Wuju Bladesman - Starter").
@@ -53,7 +54,7 @@ export function DeckView({ deck, builderHref }: { deck: ResolvedDeck; builderHre
         <div className="num w-8 text-center font-bold text-slate-400">{item.qty}×</div>
         {item.card?.imageThumbUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.card.imageThumbUrl} alt="" aria-hidden="true" className="h-12 w-9 shrink-0 rounded object-cover ring-1 ring-ink-700" />
+          <img src={item.card.imageThumbUrl} alt={cardImageAlt(item.card)} width={36} height={48} className="h-12 w-9 shrink-0 rounded object-cover ring-1 ring-ink-700" />
         ) : (
           <div className="h-12 w-9 shrink-0 rounded bg-ink-800" />
         )}
@@ -160,8 +161,9 @@ export function DeckView({ deck, builderHref }: { deck: ResolvedDeck; builderHre
               <div className="text-[11px] uppercase tracking-wide text-slate-500">Build cost (cheapest {country})</div>
               <div className="num text-2xl font-extrabold text-accent">{fmt(deck.totalCents)}</div>
               <div className="num text-[11px] text-slate-500">
-                {deck.totalCards - 1}-card main deck + legend · {deck.pricedCards}/{deck.totalCards} priced
+                {deck.totalCards - 1}-card main deck + legend · {deck.pricedCards}/{deck.priceableCards} priced
               </div>
+              <div className="mt-1 text-[11px] text-slate-600">Runes excluded — every deck runs 12 cheap commons.</div>
               {deck.sideboardCards > 0 && (
                 <div className="num mt-1 text-[11px] text-slate-500">
                   + {fmt(deck.sideboardCents)} side deck ({deck.sideboardCards} cards)

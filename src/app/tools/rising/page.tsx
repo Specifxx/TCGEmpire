@@ -3,6 +3,7 @@ import Link from "next/link";
 import { unstable_cache } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { isPremium } from "@/lib/premium";
+import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
 import { getRisingCards, type RisePick, type RiseComponents, type RiseScope } from "@/lib/rise-predictor";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { formatMoney } from "@/lib/format";
@@ -11,6 +12,7 @@ import { getCountry } from "@/lib/get-country";
 import { cardHref } from "@/lib/card-url";
 import { PremiumButton } from "@/components/PremiumButton";
 import { SITE_URL } from "@/lib/site";
+import { cardImageAlt } from "@/lib/image-alt";
 
 export const dynamic = "force-dynamic";
 
@@ -102,7 +104,7 @@ function CardCell({ p }: { p: RisePick }) {
     <Link href={cardHref({ id: p.id, slug: p.slug })} className="flex items-center gap-2.5">
       {p.imageThumbUrl && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={p.imageThumbUrl} alt="" aria-hidden="true" width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
+        <img src={p.imageThumbUrl} alt={cardImageAlt({ name: p.displayName, setCode: p.setCode, collectorNumber: p.collectorNumber })} width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
       )}
       <span className="min-w-0">
         <span className="block truncate font-semibold text-white">{p.displayName}</span>
@@ -207,7 +209,14 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
         </p>
       </div>
 
-      {!premium ? (
+      {/* ADSENSE REVIEW MODE: while the review is open the Premium gate is
+          lifted, so no crawler-reachable page carries blurred or locked
+          content — "content behind a paywall or login" is its own AdSense
+          rejection reason, and this page is in the sitemap. The Premium CTA
+          stays; an ordinary upsell link is fine, a blur overlay standing in
+          place of the content is not. Restored by setting
+          NEXT_PUBLIC_ADSENSE_REVIEW_MODE=false. See docs/adsense-remediation.md § 9. */}
+      {!premium && !ADSENSE_REVIEW_MODE ? (
         <div className="card-surface overflow-hidden">
           <table className="w-full min-w-[560px] text-sm">
             <TableHead />
@@ -246,8 +255,27 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
         </div>
       ) : analysis.picks.length === 0 ? (
         <div className="card-surface grid place-items-center p-12 text-center text-sm text-slate-400">
-          Not enough price/demand history yet{isGlobal ? "" : ` in ${scope}`} — signals appear once a few days of daily
-          snapshots have built up.
+          {/* Mirrors the admin page: when history exists but is short, say how
+              short and when it unlocks, rather than implying nothing is being
+              recorded. Kept lighter than the admin copy — a visitor doesn't need
+              the internals, just an honest "not yet, and here's when". */}
+          {analysis.withAnyHistory > 0 ? (
+            <div>
+              <p className="font-semibold text-white">Signals are still building</p>
+              <p className="mx-auto mt-1 max-w-lg">
+                We track {analysis.withAnyHistory.toLocaleString()} cards&apos; prices
+                {isGlobal ? "" : ` in ${scope}`}, but ranking them needs {analysis.minPointsRequired} days of price
+                history per card and we have {analysis.deepestSeries} so far. Check back in about{" "}
+                {Math.max(1, analysis.minPointsRequired - analysis.deepestSeries)}{" "}
+                {Math.max(1, analysis.minPointsRequired - analysis.deepestSeries) === 1 ? "day" : "days"}.
+              </p>
+            </div>
+          ) : (
+            <div>
+              <p className="font-semibold text-white">No price history yet{isGlobal ? "" : ` in ${scope}`}</p>
+              <p className="mt-1">Signals appear once daily price snapshots have built up.</p>
+            </div>
+          )}
         </div>
       ) : (
         <div className="card-surface overflow-x-auto">

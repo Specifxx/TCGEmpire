@@ -5,9 +5,8 @@ import Link from "next/link";
 import type { Article } from "@/lib/articles";
 import { fmtDate } from "@/components/ArticleList";
 
-// A named group of articles for the default (unfiltered) view — e.g. "Vendetta
-// Guides" or "Buying & Value". Matched by tag; `accent` is a hex colour for the
-// section's heading dot, purely decorative (no new data).
+// A named group of articles, surfaced as a topic BUTTON under the Latest list.
+// Matched by tag; `accent` is a hex colour for the button's dot, purely decorative.
 export interface ArticleSection {
   title: string;
   tags: string[];
@@ -25,16 +24,26 @@ function isNew(dateIso: string): boolean {
   return days >= 0 && days <= NEW_DAYS;
 }
 
-// Client-side tag + text filter over a list of articles. The full list is rendered
-// server-side (so crawlers still see every article and every link); this just
-// hides/shows cards in the browser — no network, no loss of SEO.
+// How many of the newest posts show before "Show all" — 9 fills three rows on
+// desktop, one screen on mobile.
+const LATEST_VISIBLE = 9;
+
+// Blog/guides index.
 //
-// Default (no search/topic filter) view: an optional "Most read" strip (explicit,
-// curated slugs — picked from real traffic, not a live/self-updating ranking) then
-// the rest of the articles grouped into `sections`. Any article matching no
-// section's tags falls into a "More" bucket so nothing silently disappears.
-// Once the visitor searches or picks a topic, it flattens to one filtered grid —
-// familiar "browse by category, search when you know what you want" pattern.
+// LAYOUT (rebuilt): the page used to open with a curated "Most read" strip and
+// then several tag-bucketed sections, which buried the newest posts — a reader
+// asking "what's new?" had to scan every section, because recency was never the
+// organising axis anywhere on the page.
+//
+// Now: ONE "Latest" list of every post in date order at the top (capped, with a
+// Show-all toggle), and below it nothing but topic BUTTONS. Picking a topic swaps
+// the list for that topic's posts. Recency is the default; topics are one click.
+//
+// SEO NOTE — load-bearing: every article is rendered into the DOM server-side and
+// the cap is applied with a `hidden` CLASS, never by slicing the array. Crawlers
+// therefore still see all links on first paint, exactly as before. Do not
+// "optimise" this into a .slice() — that would silently drop most of the internal
+// links on both index pages.
 export function FilterableArticles({
   articles,
   basePath,
@@ -46,31 +55,23 @@ export function FilterableArticles({
   sections?: ArticleSection[];
   featured?: string[]; // article slugs, most-read first
 }) {
-  const [tag, setTag] = useState<string | null>(null);
+  // Which topic button is active. null = the default Latest view.
+  const [view, setView] = useState<string | null>(null);
   const [q, setQ] = useState("");
-  const [tagsOpen, setTagsOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
-  // Tags ranked by how many articles carry them (most useful filters first).
-  const tags = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const a of articles) for (const t of a.tags) counts.set(t, (counts.get(t) ?? 0) + 1);
-    return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-  }, [articles]);
+  const searching = q.trim().length > 0;
 
-  const filtered = useMemo(() => {
+  const searched = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    return articles.filter((a) => {
-      if (tag && !a.tags.includes(tag)) return false;
-      if (!needle) return true;
-      return (
+    if (!needle) return articles;
+    return articles.filter(
+      (a) =>
         a.title.toLowerCase().includes(needle) ||
         a.excerpt.toLowerCase().includes(needle) ||
         a.tags.some((t) => t.toLowerCase().includes(needle))
-      );
-    });
-  }, [articles, tag, q]);
-
-  const isDefaultView = !tag && !q.trim();
+    );
+  }, [articles, q]);
 
   const featuredArticles = useMemo(() => {
     if (!featured?.length) return [];
@@ -78,166 +79,201 @@ export function FilterableArticles({
     return featured.map((s) => bySlug.get(s)).filter((a): a is Article => !!a);
   }, [articles, featured]);
 
-  // Bucket the rest into `sections` by tag (first matching section wins, so an
-  // article never appears twice); anything matching no section's tags lands in a
-  // trailing "More" group instead of silently vanishing.
-  const grouped = useMemo(() => {
-    if (!sections?.length) return null;
-    const used = new Set(featuredArticles.map((a) => a.slug));
-    const groups = sections.map((sec) => {
-      const items = articles.filter((a) => !used.has(a.slug) && a.tags.some((t) => sec.tags.includes(t)));
-      for (const a of items) used.add(a.slug);
-      return { title: sec.title, accent: sec.accent, items, cap: sec.cap, moreHref: sec.moreHref, moreLabel: sec.moreLabel };
-    });
-    const rest = articles.filter((a) => !used.has(a.slug));
-    return { groups, rest };
+  // Bucket into topics by tag (first matching section wins, so an article never
+  // appears in two buckets); anything matching nothing lands in a trailing
+  // "More" group so no post is unreachable by topic.
+  const groups = useMemo(() => {
+    const out: { title: string; accent: string; items: Article[]; moreHref?: string; moreLabel?: string }[] = [];
+    if (featuredArticles.length) out.push({ title: "Most read", accent: "#eab308", items: featuredArticles });
+    if (sections?.length) {
+      const used = new Set(featuredArticles.map((a) => a.slug));
+      for (const sec of sections) {
+        const items = articles.filter((a) => !used.has(a.slug) && a.tags.some((t) => sec.tags.includes(t)));
+        for (const a of items) used.add(a.slug);
+        if (items.length) out.push({ title: sec.title, accent: sec.accent, items, moreHref: sec.moreHref, moreLabel: sec.moreLabel });
+      }
+      const rest = articles.filter((a) => !used.has(a.slug));
+      if (rest.length) out.push({ title: "More", accent: "#64748b", items: rest });
+    }
+    return out;
   }, [articles, sections, featuredArticles]);
 
-  const showSectioned = isDefaultView && (featuredArticles.length > 0 || (grouped?.groups.some((g) => g.items.length) ?? false) || (grouped?.rest.length ?? 0) > 0);
+  const activeGroup = view ? groups.find((g) => g.title === view) ?? null : null;
+  const hiddenCount = Math.max(0, articles.length - LATEST_VISIBLE);
 
   return (
     <div>
-      {/* Controls: one compact row — search + a collapsed "Topics" toggle (mirrors
-          the database filter's compact pattern), chips only when expanded. */}
-      <div className="mb-5">
-        <div className="flex items-center gap-2">
-          <div className="relative min-w-0 flex-1 sm:max-w-xs">
-            <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-500">⌕</span>
-            <input
-              type="search"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Search articles…"
-              aria-label="Search articles"
-              className="w-full rounded-lg border border-ink-700 bg-ink-900 py-1.5 pl-7 pr-2.5 text-xs text-white placeholder:text-slate-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/40"
-            />
-          </div>
-          <button
-            type="button"
-            aria-expanded={tagsOpen}
-            onClick={() => setTagsOpen((o) => !o)}
-            className={`flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors ${
-              tag ? "border-brand-500 bg-brand-500/15 text-brand-300" : "border-ink-700 bg-ink-850 text-slate-300 hover:border-brand-500/50"
-            }`}
-          >
-            Topics
-            {tag && <span className="rounded-full bg-brand-500 px-1.5 py-0.5 text-[10px] text-white">1</span>}
-            <svg className={`h-3 w-3 transition-transform ${tagsOpen ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m6 9 6 6 6-6" /></svg>
-          </button>
-          {tag && !tagsOpen && (
-            <button
-              type="button"
-              onClick={() => setTag(null)}
-              className="chip shrink-0 border border-brand-500/50 bg-brand-500/10 px-2 py-1 text-[11px] text-brand-300 hover:border-brand-500"
-              aria-label={`Clear topic filter ${tag}`}
-            >
-              {tag} ✕
-            </button>
-          )}
+      {/* Search — kept compact; it overrides both the Latest list and any topic. */}
+      <div className="mb-5 flex items-center gap-2">
+        <div className="relative min-w-0 flex-1 sm:max-w-xs">
+          <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-500">⌕</span>
+          <input
+            type="search"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search articles…"
+            aria-label="Search articles"
+            className="min-h-11 w-full rounded-lg border border-ink-700 bg-ink-900 py-1.5 pl-7 pr-2.5 text-xs text-white placeholder:text-slate-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/40 sm:min-h-0"
+          />
         </div>
-        {tagsOpen && (
-          <div className="mt-2 flex flex-wrap gap-1">
-            <FilterChip active={tag === null} onClick={() => setTag(null)}>
-              All <span className="text-slate-500">· {articles.length}</span>
-            </FilterChip>
-            {tags.map(([t, n]) => (
-              <FilterChip key={t} active={tag === t} onClick={() => setTag(tag === t ? null : t)}>
-                {t} <span className={tag === t ? "text-brand-200/70" : "text-slate-500"}>· {n}</span>
-              </FilterChip>
-            ))}
-          </div>
+        {searching && (
+          <span className="shrink-0 text-xs text-slate-500">
+            {searched.length} {searched.length === 1 ? "match" : "matches"}
+          </span>
         )}
       </div>
 
-      {filtered.length === 0 ? (
-        <div className="card-surface grid place-items-center p-12 text-center text-slate-400">
-          <div>
-            <p className="text-base font-semibold text-white">No matches</p>
-            <p className="mt-1 text-sm">
-              Nothing matched that filter.{" "}
-              <button
-                onClick={() => {
-                  setTag(null);
-                  setQ("");
-                }}
-                className="text-brand-300 hover:underline"
-              >
-                Clear filters
-              </button>
-            </p>
+      {searching ? (
+        searched.length === 0 ? (
+          <div className="card-surface grid place-items-center p-12 text-center text-slate-400">
+            <div>
+              <p className="text-base font-semibold text-white">No matches</p>
+              <p className="mt-1 text-sm">
+                Nothing matched that search.{" "}
+                <button onClick={() => setQ("")} className="text-brand-300 hover:underline">Clear</button>
+              </p>
+            </div>
           </div>
-        </div>
-      ) : showSectioned ? (
-        <div className="flex flex-col gap-8">
-          {featuredArticles.length > 0 && (
-            <div>
-              <SectionHeading title="Most read" accent="#eab308" />
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {featuredArticles.map((a) => (
-                  <ArticleCard key={a.slug} a={a} basePath={basePath} popular />
-                ))}
-              </div>
+        ) : (
+          <Grid>
+            {searched.map((a) => (
+              <ArticleCard key={a.slug} a={a} basePath={basePath} />
+            ))}
+          </Grid>
+        )
+      ) : activeGroup ? (
+        /* ── A topic is selected ─────────────────────────────────────────── */
+        <div>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: activeGroup.accent }} aria-hidden />
+              <h2 className="text-sm font-bold uppercase tracking-wide text-slate-300">{activeGroup.title}</h2>
+              <span className="text-xs text-slate-500">· {activeGroup.items.length}</span>
             </div>
+            <button
+              onClick={() => setView(null)}
+              className="rounded-lg border border-ink-700 bg-ink-850 px-3 py-1.5 text-xs font-semibold text-slate-300 transition-colors hover:border-brand-500 hover:text-white"
+            >
+              ← Back to latest
+            </button>
+          </div>
+          <Grid>
+            {activeGroup.items.map((a) => (
+              <ArticleCard key={a.slug} a={a} basePath={basePath} />
+            ))}
+          </Grid>
+          {activeGroup.moreHref && (
+            <Link href={activeGroup.moreHref} className="mt-3 inline-block text-sm font-semibold text-brand-300 hover:underline">
+              {activeGroup.moreLabel ?? "See all →"}
+            </Link>
           )}
-          {grouped?.groups.map((g) => {
-            if (g.items.length === 0) return null;
-            const shown = g.cap ? g.items.slice(0, g.cap) : g.items;
-            const hiddenCount = g.items.length - shown.length;
-            return (
-              <div key={g.title}>
-                <SectionHeading title={g.title} accent={g.accent} count={g.items.length} />
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {shown.map((a) => (
-                    <ArticleCard key={a.slug} a={a} basePath={basePath} />
-                  ))}
-                </div>
-                {hiddenCount > 0 && g.moreHref && (
-                  <Link href={g.moreHref} className="mt-3 inline-block text-sm font-semibold text-brand-300 hover:underline">
-                    {g.moreLabel ?? `See all ${g.items.length} →`}
-                  </Link>
-                )}
-              </div>
-            );
-          })}
-          {grouped && grouped.rest.length > 0 && (
-            <div>
-              <SectionHeading title="More" accent="#64748b" count={grouped.rest.length} />
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {grouped.rest.map((a) => (
-                  <ArticleCard key={a.slug} a={a} basePath={basePath} />
-                ))}
-              </div>
-            </div>
-          )}
+          <TopicButtons groups={groups} active={view} onPick={setView} className="mt-10" />
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((a) => (
-            <ArticleCard key={a.slug} a={a} basePath={basePath} />
-          ))}
+        /* ── Default: Latest, then topic buttons ─────────────────────────── */
+        <div>
+          <div className="mb-3 flex items-center gap-2">
+            <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-brand-400" aria-hidden />
+            <h2 className="text-sm font-bold uppercase tracking-wide text-slate-300">Latest</h2>
+            <span className="text-xs text-slate-500">· {articles.length}</span>
+          </div>
+
+          {/* Every article is in the DOM; the cap is a `hidden` class, not a slice
+              (see the SEO note on this component). */}
+          <Grid>
+            {articles.map((a, i) => (
+              <ArticleCard
+                key={a.slug}
+                a={a}
+                basePath={basePath}
+                className={!expanded && i >= LATEST_VISIBLE ? "hidden" : undefined}
+              />
+            ))}
+          </Grid>
+
+          {hiddenCount > 0 && (
+            <div className="mt-4 flex justify-center">
+              <button
+                onClick={() => setExpanded((v) => !v)}
+                aria-expanded={expanded}
+                className="rounded-lg border border-ink-700 bg-ink-850 px-4 py-2 text-sm font-semibold text-slate-200 transition-colors hover:border-brand-500 hover:text-white"
+              >
+                {expanded ? "Show fewer" : `Show all ${articles.length} →`}
+              </button>
+            </div>
+          )}
+
+          <TopicButtons groups={groups} active={view} onPick={setView} className="mt-10" />
         </div>
       )}
     </div>
   );
 }
 
-function SectionHeading({ title, accent, count }: { title: string; accent: string; count?: number }) {
+// The only thing below the Latest list: one button per topic.
+function TopicButtons({
+  groups,
+  active,
+  onPick,
+  className = "",
+}: {
+  groups: { title: string; accent: string; items: Article[] }[];
+  active: string | null;
+  onPick: (t: string | null) => void;
+  className?: string;
+}) {
+  if (groups.length === 0) return null;
   return (
-    <div className="mb-3 flex items-center gap-2">
-      <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: accent }} aria-hidden />
-      <h2 className="text-sm font-bold uppercase tracking-wide text-slate-300">{title}</h2>
-      {count != null && <span className="text-xs text-slate-500">· {count}</span>}
+    <div className={className}>
+      <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-300">Browse by topic</h2>
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {groups.map((g) => {
+          const on = active === g.title;
+          return (
+            <button
+              key={g.title}
+              onClick={() => onPick(on ? null : g.title)}
+              aria-pressed={on}
+              className={`flex items-center justify-between gap-3 rounded-lg border px-4 py-3 text-left text-sm font-semibold transition-colors ${
+                on
+                  ? "border-brand-500 bg-brand-500/10 text-white"
+                  : "border-ink-700 bg-ink-850 text-slate-200 hover:border-brand-500/60 hover:bg-ink-800"
+              }`}
+            >
+              <span className="flex min-w-0 items-center gap-2">
+                <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: g.accent }} aria-hidden />
+                <span className="truncate">{g.title}</span>
+              </span>
+              <span className="shrink-0 text-xs font-normal text-slate-500">{g.items.length}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
 
-function ArticleCard({ a, basePath, popular }: { a: Article; basePath: string; popular?: boolean }) {
+function Grid({ children }: { children: React.ReactNode }) {
+  return <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{children}</div>;
+}
+
+function ArticleCard({
+  a,
+  basePath,
+  popular,
+  className = "",
+}: {
+  a: Article;
+  basePath: string;
+  popular?: boolean;
+  className?: string;
+}) {
   return (
     <Link
       href={`${basePath}/${a.slug}`}
       className={`card-surface relative flex flex-col p-5 transition-all hover:-translate-y-0.5 hover:shadow-glow ${
         popular ? "border-gold/40" : ""
-      }`}
+      } ${className}`}
     >
       <div className="flex flex-wrap items-center gap-1.5">
         {popular && <span className="chip bg-gold/15 font-semibold text-gold">Popular</span>}
@@ -252,20 +288,5 @@ function ArticleCard({ a, basePath, popular }: { a: Article; basePath: string; p
         {fmtDate(a.date)} · {a.readMins} min read
       </div>
     </Link>
-  );
-}
-
-function FilterChip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`chip border px-2 py-1 text-[11px] font-semibold transition-colors ${
-        active
-          ? "border-brand-500 bg-brand-500/15 text-brand-300"
-          : "border-ink-700 text-slate-400 hover:border-brand-500/50 hover:text-slate-200"
-      }`}
-    >
-      {children}
-    </button>
   );
 }

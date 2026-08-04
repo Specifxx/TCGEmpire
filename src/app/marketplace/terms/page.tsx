@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
+import { staticPageDateLabel } from "@/lib/static-page-dates";
 import { MARKETPLACE_FEE_BPS, MARKETPLACE_PREMIUM_FEE_BPS, MARKETPLACE_SHIP_DEADLINE_DAYS, MARKETPLACE_AUTO_RELEASE_DAYS, MARKETPLACE_LAUNCH_COUNTRIES } from "@/lib/marketplace";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Marketplace Terms",
@@ -9,15 +11,20 @@ export const metadata: Metadata = {
   alternates: { canonical: "/marketplace/terms" },
 };
 
-const UPDATED = "18 July 2026";
 const FEE_PCT = (MARKETPLACE_FEE_BPS / 100).toFixed(0);
 const PREMIUM_FEE_PCT = (MARKETPLACE_PREMIUM_FEE_BPS / 100).toFixed(0);
 
 export default function MarketplaceTermsPage() {
   return (
     <article className="mx-auto max-w-3xl">
+      <Breadcrumbs
+        trail={[
+          { name: "Marketplace", href: "/marketplace" },
+          { name: "Marketplace terms", href: "/marketplace/terms" },
+        ]}
+      />
       <h1 className="text-3xl font-extrabold leading-tight text-white">Marketplace Terms</h1>
-      <p className="mt-2 text-sm text-slate-500">Last updated: {UPDATED} — supplements the main <Link href="/terms" className="text-brand-400 hover:underline">Terms of Service</Link>.</p>
+      <p className="mt-2 text-sm text-slate-500">Last updated: {staticPageDateLabel("/marketplace/terms")} — supplements the main <Link href="/terms" className="text-brand-400 hover:underline">Terms of Service</Link>.</p>
 
       <div className="mt-6 space-y-6 border-t border-ink-800 pt-6 text-sm leading-relaxed text-slate-300">
         <p>

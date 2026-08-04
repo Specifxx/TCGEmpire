@@ -6,7 +6,7 @@ import { CardTileData } from "./CardTile";
 import { CardImage } from "./CardImage";
 import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge, CrystalRoseBadge } from "./Badge";
 import { PriceWatchButton } from "./PriceWatchButton";
-import { AU_FALLBACK_RETAILERS, isOvernumbered, isSignature, isCrystalRose, SG_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS } from "@/lib/constants";
+import { isFallbackRetailer, isOvernumbered, isSignature, isCrystalRose } from "@/lib/constants";
 import { cardHref } from "@/lib/card-url";
 import { cardDisplayName, cardSearchName } from "@/lib/card-name";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
@@ -155,9 +155,8 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
   // buyable "store" here, even when they're the only source for this market — they
   // aren't real local retailers, so presenting them as one is misleading (mirrors
   // lib/market-rows.ts's computeMarket, which the full card page uses).
-  const FALLBACK_RETAILERS = [...UK_FALLBACK_RETAILERS, ...SG_FALLBACK_RETAILERS, ...AU_FALLBACK_RETAILERS];
   const inStock = countryRows
-    .filter((p) => !FALLBACK_RETAILERS.includes(p.retailer))
+    .filter((p) => !isFallbackRetailer(p.retailer))
     .map((p) => {
       const ship = effectiveShippingCents(p.shippingCents); // number | null (null = unknown)
       return { ...p, ship, delivered: p.priceCents + (ship ?? 0) };
@@ -182,7 +181,7 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
         <button
           onClick={onClose}
           aria-label="Close"
-          className="absolute right-3 top-3 z-20 grid h-8 w-8 place-items-center rounded-full bg-ink-950/80 text-slate-300 hover:text-white"
+          className="absolute right-3 top-3 z-20 tap-icon  rounded-full bg-ink-950/80 text-slate-300 hover:text-white"
         >
           ✕
         </button>
@@ -307,7 +306,7 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                         <div className="text-[10px] text-slate-500">
                           {p.ship == null ? (
                             shippingPolicyUrl(p.retailer) ? (
-                              <a href={shippingPolicyUrl(p.retailer)!} target="_blank" rel="nofollow noopener noreferrer" className="underline decoration-dotted hover:text-slate-300">
+                              <a href={shippingPolicyUrl(p.retailer)!} target="_blank" rel="sponsored nofollow noopener noreferrer" className="underline decoration-dotted hover:text-slate-300">
                                 + postage ↗
                               </a>
                             ) : (

@@ -23,6 +23,24 @@ const config: Config = {
           500: "#1ea65c",
           600: "#188a4c",
         },
+        // Muted greys, LIFTED to clear WCAG AA on this palette's surfaces.
+        //
+        // Tailwind's stock slate-500 (#64748b) measures 4.11:1 on ink-950 and
+        // 3.97:1 on ink-900 — under the 4.5:1 body-text floor — and slate-600 is
+        // far worse. Between them they were 548 + 112 usages, i.e. most of the
+        // site's secondary text, and the single largest accessibility failure in
+        // the audit. These replacements keep the same visual ramp (400 lighter
+        // than 500 lighter than 600) and the same restrained, low-saturation
+        // character, while clearing 4.5:1 on both surfaces with margin:
+        //   500 #8593a6 → 6.05:1 on ink-900
+        //   600 #76828f → 4.82:1 on ink-900
+        // Changing the token rather than 660 class names means it cannot be
+        // half-applied, and a new component that reaches for text-slate-500 is
+        // accessible by default.
+        slate: {
+          500: "#8593a6",
+          600: "#76828f",
+        },
         // "accent" now reads as the high-contrast NUMERAL colour — a near-white ink
         // for prices, so figures stay crisp and neutral like a trading desk.
         accent: "#eef1f5",

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getBlogPosts } from "@/lib/posts";
 import { FilterableArticles, type ArticleSection } from "@/components/FilterableArticles";
 import { SITE_URL } from "@/lib/site";
+import { pageAlternates } from "@/lib/seo";
 
 // Curated from real traffic (30-day Top Pages), not a live/self-updating ranking —
 // the Vendetta card-gallery post alone outdrew every other blog post combined.
@@ -23,6 +24,18 @@ const BLOG_SECTIONS: ArticleSection[] = [
     accent: "#eab308",
     tags: ["buying guide", "price comparison", "movers", "investing", "buying", "singles", "sealed"],
   },
+  // LAST on purpose. Sections claim articles in order and the first match wins,
+  // so a broad "news" bucket placed higher would poach from the three topical
+  // sections above (the Vendetta launch coverage is all tagged news too). Down
+  // here it only picks up what nothing else claimed — which is exactly the
+  // announcement coverage that was previously falling into the unlabelled
+  // "More" pile: the T1 collection, the LA regional, and the 2026/2027 roadmap
+  // and State of the Game posts.
+  {
+    title: "Game News & Announcements",
+    accent: "#a855f7",
+    tags: ["news"],
+  },
 ];
 
 export const revalidate = 600;
@@ -31,7 +44,7 @@ export const metadata: Metadata = {
   title: "Riftbound Blog — News, Guides & Market Updates",
   description:
     "News, metagame snapshots and buying guides for Riftbound: League of Legends TCG from RiftCompare.",
-  alternates: { canonical: "/blog" },
+  alternates: pageAlternates("/blog"),
 };
 
 export default async function BlogPage() {

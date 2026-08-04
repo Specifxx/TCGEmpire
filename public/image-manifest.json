@@ -1,0 +1,926 @@
+{
+  "/blog/best-riftbound-marketplaces.png": {
+    "src": "/blog/best-riftbound-marketplaces.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 42401,
+    "webp": "/blog/best-riftbound-marketplaces.webp",
+    "webpBytes": 21424,
+    "avif": "/blog/best-riftbound-marketplaces.avif",
+    "avifBytes": 15522,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/best-riftbound-marketplaces-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/best-riftbound-marketplaces-768w.webp"
+      }
+    ],
+    "fingerprint": "c4a61ca6b8009622"
+  },
+  "/blog/currency-conversion-fees.png": {
+    "src": "/blog/currency-conversion-fees.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 50805,
+    "webp": "/blog/currency-conversion-fees.webp",
+    "webpBytes": 20526,
+    "avif": "/blog/currency-conversion-fees.avif",
+    "avifBytes": 11689,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/currency-conversion-fees-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/currency-conversion-fees-768w.webp"
+      }
+    ],
+    "fingerprint": "d5ec4b8772e97d35"
+  },
+  "/blog/ebay-bidding-strategies.png": {
+    "src": "/blog/ebay-bidding-strategies.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 49890,
+    "webp": "/blog/ebay-bidding-strategies.webp",
+    "webpBytes": 18938,
+    "avif": "/blog/ebay-bidding-strategies.avif",
+    "avifBytes": 10990,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/ebay-bidding-strategies-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/ebay-bidding-strategies-768w.webp"
+      }
+    ],
+    "fingerprint": "904b958f5042f96f"
+  },
+  "/blog/how-to-choose-a-riftbound-marketplace.png": {
+    "src": "/blog/how-to-choose-a-riftbound-marketplace.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 48832,
+    "webp": "/blog/how-to-choose-a-riftbound-marketplace.webp",
+    "webpBytes": 21050,
+    "avif": "/blog/how-to-choose-a-riftbound-marketplace.avif",
+    "avifBytes": 12008,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/how-to-choose-a-riftbound-marketplace-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/how-to-choose-a-riftbound-marketplace-768w.webp"
+      }
+    ],
+    "fingerprint": "aa8de7f8db58d461"
+  },
+  "/blog/most-expensive-riftbound-cards.png": {
+    "src": "/blog/most-expensive-riftbound-cards.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 48827,
+    "webp": "/blog/most-expensive-riftbound-cards.webp",
+    "webpBytes": 21348,
+    "avif": "/blog/most-expensive-riftbound-cards.avif",
+    "avifBytes": 17056,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/most-expensive-riftbound-cards-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/most-expensive-riftbound-cards-768w.webp"
+      }
+    ],
+    "fingerprint": "d016e1ece2e9aa86"
+  },
+  "/blog/riftbound-2027-set-roadmap.png": {
+    "src": "/blog/riftbound-2027-set-roadmap.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 43845,
+    "webp": "/blog/riftbound-2027-set-roadmap.webp",
+    "webpBytes": 22278,
+    "avif": "/blog/riftbound-2027-set-roadmap.avif",
+    "avifBytes": 13391,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-2027-set-roadmap-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-2027-set-roadmap-768w.webp"
+      }
+    ],
+    "fingerprint": "dc56591bde285357"
+  },
+  "/blog/riftbound-august-2026-state-of-the-game-takeaways.png": {
+    "src": "/blog/riftbound-august-2026-state-of-the-game-takeaways.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 53564,
+    "webp": "/blog/riftbound-august-2026-state-of-the-game-takeaways.webp",
+    "webpBytes": 21106,
+    "avif": "/blog/riftbound-august-2026-state-of-the-game-takeaways.avif",
+    "avifBytes": 12484,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-august-2026-state-of-the-game-takeaways-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-august-2026-state-of-the-game-takeaways-768w.webp"
+      }
+    ],
+    "fingerprint": "93f8fcf66cb2191e"
+  },
+  "/blog/riftbound-card-price-comparison.png": {
+    "src": "/blog/riftbound-card-price-comparison.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 46702,
+    "webp": "/blog/riftbound-card-price-comparison.webp",
+    "webpBytes": 21552,
+    "avif": "/blog/riftbound-card-price-comparison.avif",
+    "avifBytes": 15461,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-card-price-comparison-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-card-price-comparison-768w.webp"
+      }
+    ],
+    "fingerprint": "e270c3bb8f676c30"
+  },
+  "/blog/riftbound-card-values.png": {
+    "src": "/blog/riftbound-card-values.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 43248,
+    "webp": "/blog/riftbound-card-values.webp",
+    "webpBytes": 19628,
+    "avif": "/blog/riftbound-card-values.avif",
+    "avifBytes": 10135,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-card-values-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-card-values-768w.webp"
+      }
+    ],
+    "fingerprint": "69da8aa819e875f1"
+  },
+  "/blog/riftbound-legacy-pack-changes-and-card-templating.png": {
+    "src": "/blog/riftbound-legacy-pack-changes-and-card-templating.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 45410,
+    "webp": "/blog/riftbound-legacy-pack-changes-and-card-templating.webp",
+    "webpBytes": 27386,
+    "avif": "/blog/riftbound-legacy-pack-changes-and-card-templating.avif",
+    "avifBytes": 18315,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-legacy-pack-changes-and-card-templating-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-legacy-pack-changes-and-card-templating-768w.webp"
+      }
+    ],
+    "fingerprint": "f573c4f051b218f8"
+  },
+  "/blog/riftbound-variant-glossary.png": {
+    "src": "/blog/riftbound-variant-glossary.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 42632,
+    "webp": "/blog/riftbound-variant-glossary.webp",
+    "webpBytes": 20918,
+    "avif": "/blog/riftbound-variant-glossary.avif",
+    "avifBytes": 13446,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-variant-glossary-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-variant-glossary-768w.webp"
+      }
+    ],
+    "fingerprint": "1367a8b7adca33e4"
+  },
+  "/blog/riftcompare-review.png": {
+    "src": "/blog/riftcompare-review.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 50582,
+    "webp": "/blog/riftcompare-review.webp",
+    "webpBytes": 19166,
+    "avif": "/blog/riftcompare-review.avif",
+    "avifBytes": 11260,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftcompare-review-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftcompare-review-768w.webp"
+      }
+    ],
+    "fingerprint": "d155c00ef6b1a784"
+  },
+  "/blog/tcgplayer-fees.png": {
+    "src": "/blog/tcgplayer-fees.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 60210,
+    "webp": "/blog/tcgplayer-fees.webp",
+    "webpBytes": 20134,
+    "avif": "/blog/tcgplayer-fees.avif",
+    "avifBytes": 12299,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/tcgplayer-fees-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/tcgplayer-fees-768w.webp"
+      }
+    ],
+    "fingerprint": "c076dea240cd7a64"
+  },
+  "/icon-512.png": {
+    "src": "/icon-512.png",
+    "width": 512,
+    "height": 512,
+    "bytes": 13104,
+    "webp": "/icon-512.webp",
+    "webpBytes": 8534,
+    "fingerprint": "59be25fd82882739",
+    "variants": [],
+    "avif": "/icon-512.avif",
+    "avifBytes": 6457
+  },
+  "/logo-c.png": {
+    "src": "/logo-c.png",
+    "width": 286,
+    "height": 347,
+    "bytes": 2888,
+    "webp": null,
+    "webpBytes": null,
+    "fingerprint": "71a94455e748008b",
+    "variants": [],
+    "avif": null,
+    "avifBytes": null
+  },
+  "/logo-r-green.png": {
+    "src": "/logo-r-green.png",
+    "width": 359,
+    "height": 353,
+    "bytes": 4816,
+    "webp": null,
+    "webpBytes": null,
+    "fingerprint": "2ace31f10432787b",
+    "variants": [],
+    "avif": null,
+    "avifBytes": null
+  },
+  "/logo-r.png": {
+    "src": "/logo-r.png",
+    "width": 372,
+    "height": 369,
+    "bytes": 8759,
+    "webp": null,
+    "webpBytes": null,
+    "fingerprint": "377b0c709af79233",
+    "variants": [],
+    "avif": "/logo-r.avif",
+    "avifBytes": 7468
+  },
+  "/logo-rc.png": {
+    "src": "/logo-rc.png",
+    "width": 572,
+    "height": 369,
+    "bytes": 12064,
+    "webp": null,
+    "webpBytes": null,
+    "fingerprint": "11e79cc03ba9bdd8",
+    "variants": [],
+    "avif": null,
+    "avifBytes": null
+  },
+  "/nexus-night-promos/body-rune-ven-r04b.jpg": {
+    "src": "/nexus-night-promos/body-rune-ven-r04b.jpg",
+    "width": 400,
+    "height": 548,
+    "bytes": 36937,
+    "webp": "/nexus-night-promos/body-rune-ven-r04b.webp",
+    "webpBytes": 21202,
+    "fingerprint": "611ff4e49d8a0554",
+    "variants": [],
+    "avif": "/nexus-night-promos/body-rune-ven-r04b.avif",
+    "avifBytes": 18463
+  },
+  "/nexus-night-promos/calm-rune-ven-r02b.jpg": {
+    "src": "/nexus-night-promos/calm-rune-ven-r02b.jpg",
+    "width": 400,
+    "height": 548,
+    "bytes": 41653,
+    "webp": "/nexus-night-promos/calm-rune-ven-r02b.webp",
+    "webpBytes": 25826,
+    "fingerprint": "d328ad4ce9ed56a8",
+    "variants": [],
+    "avif": "/nexus-night-promos/calm-rune-ven-r02b.avif",
+    "avifBytes": 20486
+  },
+  "/nexus-night-promos/chaos-rune-ven-r05b.jpg": {
+    "src": "/nexus-night-promos/chaos-rune-ven-r05b.jpg",
+    "width": 400,
+    "height": 548,
+    "bytes": 45655,
+    "webp": "/nexus-night-promos/chaos-rune-ven-r05b.webp",
+    "webpBytes": 28392,
+    "fingerprint": "1ea838850fa17358",
+    "variants": [],
+    "avif": "/nexus-night-promos/chaos-rune-ven-r05b.avif",
+    "avifBytes": 21602
+  },
+  "/nexus-night-promos/fury-rune-ven-r01b.jpg": {
+    "src": "/nexus-night-promos/fury-rune-ven-r01b.jpg",
+    "width": 400,
+    "height": 548,
+    "bytes": 37437,
+    "webp": "/nexus-night-promos/fury-rune-ven-r01b.webp",
+    "webpBytes": 22294,
+    "fingerprint": "b3dfef51654b7360",
+    "variants": [],
+    "avif": "/nexus-night-promos/fury-rune-ven-r01b.avif",
+    "avifBytes": 16985
+  },
+  "/nexus-night-promos/mel-newly-awakened-ven069b.jpg": {
+    "src": "/nexus-night-promos/mel-newly-awakened-ven069b.jpg",
+    "width": 900,
+    "height": 506,
+    "bytes": 53464,
+    "webp": "/nexus-night-promos/mel-newly-awakened-ven069b.webp",
+    "webpBytes": 35970,
+    "fingerprint": "2f56e5f92535b0bc",
+    "variants": [
+      {
+        "w": 480,
+        "src": "/nexus-night-promos/mel-newly-awakened-ven069b-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/nexus-night-promos/mel-newly-awakened-ven069b-768w.webp"
+      }
+    ],
+    "avif": "/nexus-night-promos/mel-newly-awakened-ven069b.avif",
+    "avifBytes": 23924
+  },
+  "/nexus-night-promos/mind-rune-ven-r03b.jpg": {
+    "src": "/nexus-night-promos/mind-rune-ven-r03b.jpg",
+    "width": 400,
+    "height": 548,
+    "bytes": 38213,
+    "webp": "/nexus-night-promos/mind-rune-ven-r03b.webp",
+    "webpBytes": 21758,
+    "fingerprint": "74d8f4c072ae6e62",
+    "variants": [],
+    "avif": "/nexus-night-promos/mind-rune-ven-r03b.avif",
+    "avifBytes": 17350
+  },
+  "/nexus-night-promos/order-rune-ven-r06b.jpg": {
+    "src": "/nexus-night-promos/order-rune-ven-r06b.jpg",
+    "width": 400,
+    "height": 548,
+    "bytes": 36773,
+    "webp": "/nexus-night-promos/order-rune-ven-r06b.webp",
+    "webpBytes": 20956,
+    "fingerprint": "61136f896b5ee4be",
+    "variants": [],
+    "avif": "/nexus-night-promos/order-rune-ven-r06b.avif",
+    "avifBytes": 17327
+  },
+  "/r2-source.png": {
+    "src": "/r2-source.png",
+    "width": 391,
+    "height": 376,
+    "bytes": 70816,
+    "webp": "/r2-source.webp",
+    "webpBytes": 17026,
+    "fingerprint": "c19d5207d1aeb6e9",
+    "variants": [],
+    "avif": "/r2-source.avif",
+    "avifBytes": 11241
+  },
+  "/rune-variants/body-rune-ogn-126b.jpg": {
+    "src": "/rune-variants/body-rune-ogn-126b.jpg",
+    "width": 300,
+    "height": 409,
+    "bytes": 25179,
+    "webp": "/rune-variants/body-rune-ogn-126b.webp",
+    "webpBytes": 15272,
+    "avif": "/rune-variants/body-rune-ogn-126b.avif",
+    "avifBytes": 11849,
+    "variants": [],
+    "fingerprint": "16cca2ad44c1900f"
+  },
+  "/rune-variants/body-rune-sfd-r04b.jpg": {
+    "src": "/rune-variants/body-rune-sfd-r04b.jpg",
+    "width": 290,
+    "height": 394,
+    "bytes": 22043,
+    "webp": "/rune-variants/body-rune-sfd-r04b.webp",
+    "webpBytes": 12614,
+    "avif": "/rune-variants/body-rune-sfd-r04b.avif",
+    "avifBytes": 9861,
+    "variants": [],
+    "fingerprint": "4c78538b36cc9414"
+  },
+  "/rune-variants/body-rune-unl-r04a.jpg": {
+    "src": "/rune-variants/body-rune-unl-r04a.jpg",
+    "width": 285,
+    "height": 427,
+    "bytes": 26065,
+    "webp": "/rune-variants/body-rune-unl-r04a.webp",
+    "webpBytes": 16694,
+    "avif": "/rune-variants/body-rune-unl-r04a.avif",
+    "avifBytes": 12579,
+    "variants": [],
+    "fingerprint": "f44dc58ba70d1ed2"
+  },
+  "/rune-variants/calm-rune-ogn-042b.jpg": {
+    "src": "/rune-variants/calm-rune-ogn-042b.jpg",
+    "width": 300,
+    "height": 411,
+    "bytes": 35631,
+    "webp": "/rune-variants/calm-rune-ogn-042b.webp",
+    "webpBytes": 25732,
+    "avif": "/rune-variants/calm-rune-ogn-042b.avif",
+    "avifBytes": 16264,
+    "variants": [],
+    "fingerprint": "87661f2e125718ac"
+  },
+  "/rune-variants/calm-rune-sfd-r02b.jpg": {
+    "src": "/rune-variants/calm-rune-sfd-r02b.jpg",
+    "width": 290,
+    "height": 393,
+    "bytes": 25061,
+    "webp": "/rune-variants/calm-rune-sfd-r02b.webp",
+    "webpBytes": 14976,
+    "avif": "/rune-variants/calm-rune-sfd-r02b.avif",
+    "avifBytes": 10768,
+    "variants": [],
+    "fingerprint": "b4644fe41f689f2c"
+  },
+  "/rune-variants/calm-rune-unl-r02a.jpg": {
+    "src": "/rune-variants/calm-rune-unl-r02a.jpg",
+    "width": 267,
+    "height": 419,
+    "bytes": 24286,
+    "webp": "/rune-variants/calm-rune-unl-r02a.webp",
+    "webpBytes": 16856,
+    "avif": "/rune-variants/calm-rune-unl-r02a.avif",
+    "avifBytes": 12808,
+    "variants": [],
+    "fingerprint": "f693374b05a85842"
+  },
+  "/rune-variants/chaos-rune-ogn-166b.jpg": {
+    "src": "/rune-variants/chaos-rune-ogn-166b.jpg",
+    "width": 300,
+    "height": 411,
+    "bytes": 34824,
+    "webp": "/rune-variants/chaos-rune-ogn-166b.webp",
+    "webpBytes": 28754,
+    "avif": "/rune-variants/chaos-rune-ogn-166b.avif",
+    "avifBytes": 17111,
+    "variants": [],
+    "fingerprint": "31f4cb9150bef4f5"
+  },
+  "/rune-variants/chaos-rune-sfd-r05b.jpg": {
+    "src": "/rune-variants/chaos-rune-sfd-r05b.jpg",
+    "width": 290,
+    "height": 394,
+    "bytes": 25698,
+    "webp": "/rune-variants/chaos-rune-sfd-r05b.webp",
+    "webpBytes": 15150,
+    "avif": "/rune-variants/chaos-rune-sfd-r05b.avif",
+    "avifBytes": 10615,
+    "variants": [],
+    "fingerprint": "026d8821d9840076"
+  },
+  "/rune-variants/chaos-rune-unl-r05a.jpg": {
+    "src": "/rune-variants/chaos-rune-unl-r05a.jpg",
+    "width": 273,
+    "height": 428,
+    "bytes": 20105,
+    "webp": "/rune-variants/chaos-rune-unl-r05a.webp",
+    "webpBytes": 11862,
+    "avif": "/rune-variants/chaos-rune-unl-r05a.avif",
+    "avifBytes": 9947,
+    "variants": [],
+    "fingerprint": "6b728b83e37a395e"
+  },
+  "/rune-variants/fury-rune-ogn-007b.jpg": {
+    "src": "/rune-variants/fury-rune-ogn-007b.jpg",
+    "width": 300,
+    "height": 411,
+    "bytes": 34202,
+    "webp": "/rune-variants/fury-rune-ogn-007b.webp",
+    "webpBytes": 24528,
+    "avif": "/rune-variants/fury-rune-ogn-007b.avif",
+    "avifBytes": 15098,
+    "variants": [],
+    "fingerprint": "2dca1ac1f99e0877"
+  },
+  "/rune-variants/fury-rune-sfd-r01b.jpg": {
+    "src": "/rune-variants/fury-rune-sfd-r01b.jpg",
+    "width": 290,
+    "height": 393,
+    "bytes": 22978,
+    "webp": "/rune-variants/fury-rune-sfd-r01b.webp",
+    "webpBytes": 14110,
+    "avif": "/rune-variants/fury-rune-sfd-r01b.avif",
+    "avifBytes": 10620,
+    "variants": [],
+    "fingerprint": "33f7edd7cc76be04"
+  },
+  "/rune-variants/fury-rune-unl-r01a.jpg": {
+    "src": "/rune-variants/fury-rune-unl-r01a.jpg",
+    "width": 268,
+    "height": 419,
+    "bytes": 18677,
+    "webp": "/rune-variants/fury-rune-unl-r01a.webp",
+    "webpBytes": 11466,
+    "avif": "/rune-variants/fury-rune-unl-r01a.avif",
+    "avifBytes": 10283,
+    "variants": [],
+    "fingerprint": "a3f6831a630f3b01"
+  },
+  "/rune-variants/mind-rune-ogn-089b.jpg": {
+    "src": "/rune-variants/mind-rune-ogn-089b.jpg",
+    "width": 300,
+    "height": 411,
+    "bytes": 28842,
+    "webp": "/rune-variants/mind-rune-ogn-089b.webp",
+    "webpBytes": 21970,
+    "avif": "/rune-variants/mind-rune-ogn-089b.avif",
+    "avifBytes": 14223,
+    "variants": [],
+    "fingerprint": "4f5059753bb0059b"
+  },
+  "/rune-variants/mind-rune-sfd-r03b.jpg": {
+    "src": "/rune-variants/mind-rune-sfd-r03b.jpg",
+    "width": 284,
+    "height": 393,
+    "bytes": 24683,
+    "webp": "/rune-variants/mind-rune-sfd-r03b.webp",
+    "webpBytes": 14956,
+    "avif": "/rune-variants/mind-rune-sfd-r03b.avif",
+    "avifBytes": 11310,
+    "variants": [],
+    "fingerprint": "e5e2ae7c7e169b1e"
+  },
+  "/rune-variants/mind-rune-unl-r03a.jpg": {
+    "src": "/rune-variants/mind-rune-unl-r03a.jpg",
+    "width": 267,
+    "height": 419,
+    "bytes": 20290,
+    "webp": "/rune-variants/mind-rune-unl-r03a.webp",
+    "webpBytes": 12300,
+    "avif": "/rune-variants/mind-rune-unl-r03a.avif",
+    "avifBytes": 9850,
+    "variants": [],
+    "fingerprint": "382b3cf93f45f768"
+  },
+  "/rune-variants/order-rune-ogn-214b.jpg": {
+    "src": "/rune-variants/order-rune-ogn-214b.jpg",
+    "width": 300,
+    "height": 411,
+    "bytes": 29680,
+    "webp": "/rune-variants/order-rune-ogn-214b.webp",
+    "webpBytes": 19876,
+    "avif": "/rune-variants/order-rune-ogn-214b.avif",
+    "avifBytes": 14391,
+    "variants": [],
+    "fingerprint": "51933c01c919030d"
+  },
+  "/rune-variants/order-rune-sfd-r06b.jpg": {
+    "src": "/rune-variants/order-rune-sfd-r06b.jpg",
+    "width": 284,
+    "height": 394,
+    "bytes": 23749,
+    "webp": "/rune-variants/order-rune-sfd-r06b.webp",
+    "webpBytes": 13710,
+    "avif": "/rune-variants/order-rune-sfd-r06b.avif",
+    "avifBytes": 10810,
+    "variants": [],
+    "fingerprint": "cb37de067b5499bc"
+  },
+  "/rune-variants/order-rune-unl-r06a.jpg": {
+    "src": "/rune-variants/order-rune-unl-r06a.jpg",
+    "width": 272,
+    "height": 428,
+    "bytes": 23755,
+    "webp": "/rune-variants/order-rune-unl-r06a.webp",
+    "webpBytes": 15182,
+    "avif": "/rune-variants/order-rune-unl-r06a.avif",
+    "avifBytes": 11156,
+    "variants": [],
+    "fingerprint": "ac5738df7c7f8a18"
+  },
+  "/sealed/sealed-box.png": {
+    "src": "/sealed/sealed-box.png",
+    "width": 800,
+    "height": 800,
+    "bytes": 13865,
+    "webp": "/sealed/sealed-box.webp",
+    "webpBytes": 9470,
+    "fingerprint": "58fbb0f414129fa5",
+    "variants": [],
+    "avif": "/sealed/sealed-box.avif",
+    "avifBytes": 5439
+  },
+  "/sealed/sealed-case.png": {
+    "src": "/sealed/sealed-case.png",
+    "width": 800,
+    "height": 800,
+    "bytes": 13733,
+    "webp": "/sealed/sealed-case.webp",
+    "webpBytes": 10142,
+    "fingerprint": "ece82d417494d456",
+    "variants": [],
+    "avif": "/sealed/sealed-case.avif",
+    "avifBytes": 5049
+  },
+  "/sealed/sealed-deck.png": {
+    "src": "/sealed/sealed-deck.png",
+    "width": 800,
+    "height": 800,
+    "bytes": 15774,
+    "webp": "/sealed/sealed-deck.webp",
+    "webpBytes": 9310,
+    "fingerprint": "dd0765105b21129f",
+    "variants": [],
+    "avif": "/sealed/sealed-deck.avif",
+    "avifBytes": 5152
+  },
+  "/sealed/sealed-generic.png": {
+    "src": "/sealed/sealed-generic.png",
+    "width": 800,
+    "height": 800,
+    "bytes": 12347,
+    "webp": "/sealed/sealed-generic.webp",
+    "webpBytes": 10066,
+    "fingerprint": "1cd4e518fe3e1ebd",
+    "variants": [],
+    "avif": "/sealed/sealed-generic.avif",
+    "avifBytes": 5084
+  },
+  "/sealed/sealed-pack.png": {
+    "src": "/sealed/sealed-pack.png",
+    "width": 800,
+    "height": 800,
+    "bytes": 13404,
+    "webp": "/sealed/sealed-pack.webp",
+    "webpBytes": 9192,
+    "fingerprint": "761c5c6e3c57d3b1",
+    "variants": [],
+    "avif": "/sealed/sealed-pack.avif",
+    "avifBytes": 5373
+  },
+  "/signature-cards/akali-rogue-assassin-ven189.jpg": {
+    "src": "/signature-cards/akali-rogue-assassin-ven189.jpg",
+    "width": 900,
+    "height": 1152,
+    "bytes": 97852,
+    "webp": "/signature-cards/akali-rogue-assassin-ven189.webp",
+    "webpBytes": 67774,
+    "fingerprint": "84e1f80626b2be53",
+    "variants": [
+      {
+        "w": 480,
+        "src": "/signature-cards/akali-rogue-assassin-ven189-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/signature-cards/akali-rogue-assassin-ven189-768w.webp"
+      }
+    ],
+    "avif": "/signature-cards/akali-rogue-assassin-ven189.avif",
+    "avifBytes": 52263
+  },
+  "/signature-cards/jayce-defender-of-tomorrow-ven194.jpg": {
+    "src": "/signature-cards/jayce-defender-of-tomorrow-ven194.jpg",
+    "width": 605,
+    "height": 1014,
+    "bytes": 119045,
+    "webp": "/signature-cards/jayce-defender-of-tomorrow-ven194.webp",
+    "webpBytes": 85794,
+    "fingerprint": "c57a1a11cdc857e2",
+    "variants": [],
+    "avif": "/signature-cards/jayce-defender-of-tomorrow-ven194.avif",
+    "avifBytes": 51764
+  },
+  "/signature-cards/kennen-heart-of-the-tempest-ven197.jpg": {
+    "src": "/signature-cards/kennen-heart-of-the-tempest-ven197.jpg",
+    "width": 749,
+    "height": 995,
+    "bytes": 117156,
+    "webp": "/signature-cards/kennen-heart-of-the-tempest-ven197.webp",
+    "webpBytes": 100258,
+    "fingerprint": "aba380eabc979fd4",
+    "variants": [],
+    "avif": "/signature-cards/kennen-heart-of-the-tempest-ven197.avif",
+    "avifBytes": 83603
+  },
+  "/signature-cards/mel-souls-reflection-ven195.jpg": {
+    "src": "/signature-cards/mel-souls-reflection-ven195.jpg",
+    "width": 649,
+    "height": 970,
+    "bytes": 120950,
+    "webp": "/signature-cards/mel-souls-reflection-ven195.webp",
+    "webpBytes": 87300,
+    "fingerprint": "bd03a69c6bf07db8",
+    "variants": [],
+    "avif": "/signature-cards/mel-souls-reflection-ven195.avif",
+    "avifBytes": 65285
+  },
+  "/signature-cards/nasus-curator-of-the-sands-ven192.jpg": {
+    "src": "/signature-cards/nasus-curator-of-the-sands-ven192.jpg",
+    "width": 900,
+    "height": 1275,
+    "bytes": 112354,
+    "webp": "/signature-cards/nasus-curator-of-the-sands-ven192.webp",
+    "webpBytes": 103502,
+    "fingerprint": "59e0cea244a6db3a",
+    "variants": [
+      {
+        "w": 480,
+        "src": "/signature-cards/nasus-curator-of-the-sands-ven192-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/signature-cards/nasus-curator-of-the-sands-ven192-768w.webp"
+      }
+    ],
+    "avif": "/signature-cards/nasus-curator-of-the-sands-ven192.avif",
+    "avifBytes": 79068
+  },
+  "/signature-cards/renekton-butcher-of-the-sands-ven190.jpg": {
+    "src": "/signature-cards/renekton-butcher-of-the-sands-ven190.jpg",
+    "width": 636,
+    "height": 958,
+    "bytes": 90022,
+    "webp": "/signature-cards/renekton-butcher-of-the-sands-ven190.webp",
+    "webpBytes": 56350,
+    "fingerprint": "943712136b498a8a",
+    "variants": [],
+    "avif": "/signature-cards/renekton-butcher-of-the-sands-ven190.avif",
+    "avifBytes": 44656
+  },
+  "/signature-cards/shen-eye-of-twilight-ven193.jpg": {
+    "src": "/signature-cards/shen-eye-of-twilight-ven193.jpg",
+    "width": 561,
+    "height": 743,
+    "bytes": 84628,
+    "webp": "/signature-cards/shen-eye-of-twilight-ven193.webp",
+    "webpBytes": 66148,
+    "fingerprint": "e4421689ae7e3508",
+    "variants": [],
+    "avif": "/signature-cards/shen-eye-of-twilight-ven193.avif",
+    "avifBytes": 46691
+  },
+  "/signature-cards/zed-master-of-shadows-ven191.jpg": {
+    "src": "/signature-cards/zed-master-of-shadows-ven191.jpg",
+    "width": 643,
+    "height": 1008,
+    "bytes": 108614,
+    "webp": null,
+    "webpBytes": null,
+    "fingerprint": "fbdec041a50c9cab",
+    "variants": [],
+    "avif": "/signature-cards/zed-master-of-shadows-ven191.avif",
+    "avifBytes": 89266
+  },
+  "/vendetta-archetypes.png": {
+    "src": "/vendetta-archetypes.png",
+    "width": 1200,
+    "height": 460,
+    "bytes": 36252,
+    "webp": "/vendetta-archetypes.webp",
+    "webpBytes": 34548,
+    "fingerprint": "1103efd17456e322",
+    "variants": [
+      {
+        "w": 480,
+        "src": "/vendetta-archetypes-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/vendetta-archetypes-768w.webp"
+      }
+    ],
+    "avif": "/vendetta-archetypes.avif",
+    "avifBytes": 30180
+  },
+  "/vendetta-domains.png": {
+    "src": "/vendetta-domains.png",
+    "width": 1200,
+    "height": 440,
+    "bytes": 31977,
+    "webp": "/vendetta-domains.webp",
+    "webpBytes": 21754,
+    "fingerprint": "daa9f4d31350891e",
+    "variants": [
+      {
+        "w": 480,
+        "src": "/vendetta-domains-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/vendetta-domains-768w.webp"
+      }
+    ],
+    "avif": "/vendetta-domains.avif",
+    "avifBytes": 18208
+  },
+  "/vendetta-hero.png": {
+    "src": "/vendetta-hero.png",
+    "width": 1200,
+    "height": 480,
+    "bytes": 23332,
+    "webp": "/vendetta-hero.webp",
+    "webpBytes": 17800,
+    "fingerprint": "6c89aeaa6fc96ef8",
+    "variants": [
+      {
+        "w": 480,
+        "src": "/vendetta-hero-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/vendetta-hero-768w.webp"
+      }
+    ],
+    "avif": "/vendetta-hero.avif",
+    "avifBytes": 13310
+  },
+  "/vendetta-mechanics.png": {
+    "src": "/vendetta-mechanics.png",
+    "width": 1200,
+    "height": 440,
+    "bytes": 26358,
+    "webp": "/vendetta-mechanics.webp",
+    "webpBytes": 25666,
+    "fingerprint": "db700c0ca25ba410",
+    "variants": [
+      {
+        "w": 480,
+        "src": "/vendetta-mechanics-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/vendetta-mechanics-768w.webp"
+      }
+    ],
+    "avif": "/vendetta-mechanics.avif",
+    "avifBytes": 21424
+  },
+  "/vendetta-synergy-loop.png": {
+    "src": "/vendetta-synergy-loop.png",
+    "width": 1200,
+    "height": 460,
+    "bytes": 26801,
+    "webp": null,
+    "webpBytes": null,
+    "fingerprint": "1efb8258f61d7a04",
+    "variants": [],
+    "avif": "/vendetta-synergy-loop.avif",
+    "avifBytes": 23578
+  }
+}

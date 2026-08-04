@@ -8,6 +8,7 @@ import { track } from "@vercel/analytics";
 // at load (uncatchable by error boundaries). See lib/riftle-shared.ts.
 import type { Feedback, RiftleCard } from "@/lib/riftle-shared";
 import { RIFTLE_HINT_GATES } from "@/lib/riftle-shared";
+import { cardImageAlt } from "@/lib/image-alt";
 
 // Riftle — free guess-the-card game with two modes:
 //   • Daily: one card per Sydney day, shared by everyone; progress + streak persist.
@@ -396,7 +397,7 @@ export function Riftle() {
                       <span className="flex items-center gap-2">
                         <span className="font-semibold">Last hint — here&apos;s the card:</span>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={imgSrc} alt="" className="h-16 w-12 rounded-md object-cover ring-1 ring-gold/40" loading="lazy" decoding="async" />
+                        <img src={imgSrc} alt="The answer card's artwork, revealed as the final hint" width={48} height={64} className="h-16 w-12 rounded-md object-cover ring-1 ring-gold/40" loading="lazy" decoding="async" />
                       </span>
                     ) : (
                       <span>{h}</span>
@@ -441,7 +442,7 @@ export function Riftle() {
                   <div className="flex h-11 items-center gap-2 overflow-hidden rounded-md bg-ink-900 px-2">
                     {r.imageThumbUrl && (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={r.imageThumbUrl} alt="" aria-hidden="true" className="h-9 w-7 shrink-0 rounded-sm object-cover" loading="lazy" decoding="async" />
+                      <img src={r.imageThumbUrl} alt={cardImageAlt(r)} width={28} height={39} className="h-9 w-7 shrink-0 rounded-sm object-cover" loading="lazy" decoding="async" />
                     )}
                     <span className="truncate text-xs font-semibold text-white">{r.name}</span>
                   </div>

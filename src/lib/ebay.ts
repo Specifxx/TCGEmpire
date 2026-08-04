@@ -219,12 +219,79 @@ function numberMatches(title: string, number: string, total: string, setCode: st
   return false;
 }
 
+// Does the title actually name this card? Every meaningful token of the card
+// name must appear. This is the identity check that lets the number requirement
+// be relaxed for signatures below — WITHOUT it, "any Riftbound signature" would
+// match any signature card, which is far worse than no price at all.
+function nameMatches(title: string, name: string): boolean {
+  const t = ` ${title.toLowerCase().replace(/[^a-z0-9]+/g, " ")} `;
+  const tokens = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length > 2);
+  if (!tokens.length) return false;
+  return tokens.every((w) => t.includes(` ${w} `));
+}
+
 // Is this listing a Signature print? ("223*" or signature/signed keywords)
 function titleIsSignature(title: string, n: number): boolean {
   return (
     /\bsignature\b|\bsigned\b|\bautograph|\bsig\b/i.test(title) ||
     new RegExp(`\\b0*${n}\\s*\\*`).test(title)
   );
+}
+
+/**
+ * DIAGNOSTIC ONLY: run a raw Browse search and report how many items came back.
+ *
+ * searchEbayLowest bakes in one query shape and one buyingOptions filter. When
+ * it returns nothing, the funnel can prove the FILTERS are innocent but cannot
+ * say which part of the QUERY is at fault — and Browse ANDs every keyword, so
+ * any single token can silently zero the result set. This runs a candidate query
+ * verbatim so the difference between variants localises the culprit.
+ *
+ * Not used by the importer. Costs one Browse call per invocation.
+ */
+export async function probeEbayQuery(opts: {
+  q: string;
+  marketplace: string;
+  fixedPriceOnly?: boolean;
+}): Promise<{ ok: boolean; count: number; titles: string[] }> {
+  const token = await getToken();
+  if (!token) return { ok: false, count: 0, titles: [] };
+  const params = new URLSearchParams({ q: opts.q, limit: "20" });
+  if (opts.fixedPriceOnly !== false) params.set("filter", "buyingOptions:{FIXED_PRICE}");
+  try {
+    const res = await fetch(`${SEARCH_URL}?${params}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "X-EBAY-C-MARKETPLACE-ID": opts.marketplace,
+      },
+    });
+    if (!res.ok) return { ok: false, count: 0, titles: [] };
+    const data: any = await res.json();
+    const items: any[] = data.itemSummaries ?? [];
+    // NO price sort and EVERY title returned. Sorting cheapest-first and sampling
+    // the head is what hid the answer last time: a $3,600 chase card sorts to the
+    // very end, so the sample showed only cheap look-alikes and implied the
+    // expensive listing did not exist.
+    return {
+      ok: true,
+      count: items.length,
+      titles: items.map((i) => `${String(i.title ?? "")}  [${i?.price?.value ?? "?"} ${i?.price?.currency ?? ""}]`),
+    };
+  } catch {
+    return { ok: false, count: 0, titles: [] };
+  }
+}
+
+/** One filter stage in searchEbayLowest's funnel — see the `funnel` param. */
+export interface EbayFunnelStage {
+  stage: string;
+  kept: number;
+  dropped: number;
+  samples: string[];
 }
 
 function mapEbayItem(it: any): EbayResult {
@@ -236,6 +303,16 @@ function mapEbayItem(it: any): EbayResult {
     condition: it.condition,
     imageUrl: it.image?.imageUrl ?? it.thumbnailImages?.[0]?.imageUrl ?? null,
   };
+}
+
+/** The Browse `q` for a card. `withGame` appends "Riftbound" (see the note in
+ *  searchEbayLowest about why that word is a fallback boundary, not a constant). */
+function buildQuery(
+  card: { name: string; number: string; isSignature: boolean; isPromo?: boolean },
+  withGame: boolean,
+): string {
+  const num = card.isSignature ? "" : ` ${card.number.replace(/[^0-9]/g, "")}`;
+  return `${card.name}${num}${card.isSignature ? " signature" : ""}${card.isPromo ? " promo" : ""}${withGame ? " Riftbound" : ""}`;
 }
 
 // Lowest legitimate single-card AU listing for a specific card. Requires the
@@ -261,17 +338,50 @@ export async function searchEbayLowest(
   // legit-filtered) listings for the card page's "eBay Ad" carousel — a side
   // effect of this SAME search, so the carousel costs zero extra Browse API
   // calls/quota beyond what this pass already spends for the price comparison.
-  captureAdListings?: EbayResult[]
+  captureAdListings?: EbayResult[],
+  // Diagnostic sink. When supplied, records how many listings survived each
+  // filter stage (and a sample of what was dropped) so "0 results" can be
+  // attributed to a specific stage instead of guessed at. See
+  // scripts/diagnose-card.ts.
+  funnel?: EbayFunnelStage[]
 ): Promise<EbayResult | null> {
   const token = await getToken();
   if (!token) return null;
 
+  // ── WHY THERE ARE TWO QUERIES ────────────────────────────────────────────
+  // Browse ANDs every keyword, so each token is another chance to miss a real
+  // listing. "Riftbound" looks like a harmless guard against noise; measured, it
+  // is the single biggest false negative in this search. The two live eBay AU
+  // listings for Akali, Rogue Assassin (Signature) are titled:
+  //   "VEN Akali Rogue Assassin Signature Overnumbered 189/166 Foil - NM -"
+  //   "Akali Rogue Assassin VEN 189*/166 Signature Overnumbered Rare Foil ..."
+  // Both name the card, the set and the printing. Neither says "Riftbound" — so
+  // the search returned zero, the card showed no AU price for days, and it read
+  // as "no listings exist" rather than as a bug.
+  //
+  // Dropping the word outright is not safe either: for a card whose name is
+  // ordinary English it is what keeps the result window full of Riftbound cards
+  // instead of unrelated tat, and `limit` is finite. So it is a FALLBACK — the
+  // broad query runs only when the strict one found nothing, which costs one
+  // extra Browse call on exactly the cards that would otherwise be unpriced, and
+  // nothing at all on the ones already working.
+  const queries = [buildQuery(card, true), buildQuery(card, false)];
   const params = new URLSearchParams({
     // Include the collector number so the exact card ranks into the result window —
     // otherwise expensive chase cards (e.g. overnumbered) get pushed past the limit
     // by cheap noise (keychains, bundles). For Signature prints, also add the word
     // "signature"; for promos add "promo" so the promo printing surfaces.
-    q: `${card.name} ${card.number.replace(/[^0-9]/g, "")}${card.isSignature ? " signature" : ""}${card.isPromo ? " promo" : ""} Riftbound`,
+    // THE NUMBER IS OMITTED FOR SIGNATURE PRINTS, on purpose. Browse `q` ANDs its
+    // keywords, so every token is a chance to miss a real listing. Including the
+    // collector number is right for base cards (it ranks the exact printing into
+    // the window ahead of cheap noise) but wrong for signatures: sellers of a
+    // $3,000 chase card routinely title it "Riftbound Akali Rogue Assassin
+    // Signature" with no number at all. Requiring "189" then returns literally
+    // nothing — measured: eBay AU returned 0 items for this card while two real
+    // listings were live on the site. A signature is unique per card per set, so
+    // name + "signature" is enough to find it; identity is still enforced by the
+    // filters below.
+    q: queries[0],
     filter: "buyingOptions:{FIXED_PRICE}",
     sort: "price",
     limit: "100",
@@ -298,35 +408,100 @@ export async function searchEbayLowest(
   }
   if (!res.ok) return null;
   const data = await res.json();
-  const items: any[] = data.itemSummaries ?? [];
+  let items: any[] = data.itemSummaries ?? [];
+
+  // Strict query found nothing — retry once without the game name. See the note
+  // above: sellers routinely omit "Riftbound" from a chase-card title.
+  if (items.length === 0 && queries[1] !== queries[0] && spend()) {
+    const retry = new URLSearchParams(params);
+    retry.set("q", queries[1]);
+    try {
+      const res2 = await fetch(`${SEARCH_URL}?${retry}`, { headers });
+      if (res2.status === 429) rateLimited = true;
+      else if (res2.ok) items = (await res2.json())?.itemSummaries ?? [];
+    } catch {
+      /* keep the empty result */
+    }
+  }
 
   // Accept only listings whose collector number matches THIS exact card+printing.
   // No name-only fallback — that mislabelled overnumbered/alt cards with the base
   // card's listing. The number is the reliable identity.
   const n = parseInt(card.number.replace(/[^0-9]/g, ""), 10);
-  const valid = items
-    .filter((it) => it?.price?.value)
-    .filter((it) => !EXCLUDE.test(it.title ?? ""))
-    // Drop non-English (Chinese etc.) printings — they share collector numbers with
-    // our English cards but trade much cheaper, so they leak in as the "cheapest".
-    .filter((it) => !isForeignListing(it))
-    .filter((it) => numberMatches(it.title ?? "", card.number, card.total, card.setCode))
-    // Signature ("*") and plain overnumbered share a number — keep them apart.
-    .filter((it) => titleIsSignature(it.title ?? "", n) === card.isSignature)
-    // Promo and base share a number too. A promo card matches ONLY promo-marked
-    // listings; a base card matches ONLY non-promo listings (so promos don't
-    // pollute the base price and vice versa).
-    .filter((it) => PROMO_HINT.test(it.title ?? "") === !!card.isPromo)
-    // Sanity guard: a single can legitimately cost a bit more on eBay than in a
-    // store, but not 8×+. A listing that far above the card's store value (and over
-    // an absolute floor so cheap-card noise isn't over-filtered) is a mismatch.
-    .filter((it) => {
+
+  // FUNNEL INSTRUMENTATION. Every filter below is a place a real listing can
+  // silently disappear, and "0 results" looks identical whether eBay returned
+  // nothing or we rejected everything it returned. Without per-stage counts the
+  // only way to tell them apart is to guess — which is exactly how a user ended
+  // up reporting live eBay listings we swore did not exist. `funnel` records the
+  // survivor count after each stage plus a sample of what each stage dropped.
+  const drop = (stage: string, kept: any[], before: any[]) => {
+    if (!funnel) return kept;
+    const lost = before.filter((b) => !kept.includes(b));
+    funnel.push({
+      stage,
+      kept: kept.length,
+      dropped: lost.length,
+      samples: lost.slice(0, 3).map((it) => String(it.title ?? "").slice(0, 90)),
+    });
+    return kept;
+  };
+
+  let cur: any[] = items;
+  if (funnel) funnel.push({ stage: "eBay returned", kept: items.length, dropped: 0, samples: [] });
+  cur = drop("has price", cur.filter((it) => it?.price?.value), cur);
+  cur = drop("not excluded (lots/bundles/etc)", cur.filter((it) => !EXCLUDE.test(it.title ?? "")), cur);
+  // Drop non-English (Chinese etc.) printings — they share collector numbers with
+  // our English cards but trade much cheaper, so they leak in as the "cheapest".
+  cur = drop("not foreign printing", cur.filter((it) => !isForeignListing(it)), cur);
+  // The collector number is the identity check for a base card. For a SIGNATURE
+  // print it is too strict on its own: there is exactly one signature printing
+  // per card per set, and sellers frequently omit the number entirely. So a
+  // signature listing also qualifies when it names the card, names the set and
+  // says "signature" — three independent signals, which is a stronger identity
+  // than a bare number would be anyway. Base cards are untouched.
+  cur = drop(
+    `collector number matches ${card.number}/${card.total}${card.isSignature ? " (or named signature print)" : ""}`,
+    cur.filter((it) => {
+      const title = it.title ?? "";
+      if (numberMatches(title, card.number, card.total, card.setCode)) return true;
+      return (
+        card.isSignature &&
+        titleIsSignature(title, n) &&
+        setMentioned(title, card.setCode) &&
+        nameMatches(title, card.name)
+      );
+    }),
+    cur,
+  );
+  // Signature ("*") and plain overnumbered share a number — keep them apart.
+  cur = drop(
+    `signature flag === ${card.isSignature}`,
+    cur.filter((it) => titleIsSignature(it.title ?? "", n) === card.isSignature),
+    cur,
+  );
+  // Promo and base share a number too. A promo card matches ONLY promo-marked
+  // listings; a base card matches ONLY non-promo listings (so promos don't
+  // pollute the base price and vice versa).
+  cur = drop(
+    `promo flag === ${!!card.isPromo}`,
+    cur.filter((it) => PROMO_HINT.test(it.title ?? "") === !!card.isPromo),
+    cur,
+  );
+  // Sanity guard: a single can legitimately cost a bit more on eBay than in a
+  // store, but not 8×+. A listing that far above the card's store value (and over
+  // an absolute floor so cheap-card noise isn't over-filtered) is a mismatch.
+  cur = drop(
+    "not absurdly above store value",
+    cur.filter((it) => {
       const ref = card.referenceCents;
       if (!ref || ref <= 0) return true; // no reference — can't judge
       const price = delivered(it);
       return !(price > ref * 8 && price > 4000);
-    })
-    .sort((a, b) => delivered(a) - delivered(b));
+    }),
+    cur,
+  );
+  const valid = cur.sort((a, b) => delivered(a) - delivered(b));
 
   // Final safety net for a foreign printing that slipped past the title/location
   // filters (e.g. a Chinese card with an all-English title from a non-CN seller).

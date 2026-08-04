@@ -9,6 +9,7 @@ import { formatMoney } from "@/lib/format";
 import { cardHref } from "@/lib/card-url";
 import { SITE_URL } from "@/lib/site";
 import { AdSlot } from "@/components/AdSlot";
+import { cardImageAlt } from "@/lib/image-alt";
 
 export const metadata: Metadata = {
   title: "Riftbound Games — Free Daily Puzzles & Arcade",
@@ -130,6 +131,11 @@ export default async function GamesPage() {
     description:
       "Free Riftbound mini-games built on live card data — Riftle, Higher or Lower, Price Check, Zoomed In, Pairs, Pack Opening Simulator, Riftbound 2048 and Card Smash.",
     url: `${SITE_URL}/games`,
+      // Edges back to the site-level graph in app/layout.tsx. Without them this
+      // node is an island and the Organization/WebSite entity signals — sameAs,
+      // areaServed, knowsAbout — don't propagate to the page.
+      isPartOf: { "@id": `${SITE_URL}/#website` },
+      publisher: { "@id": `${SITE_URL}/#org` },
     numberOfItems: GAMES.length,
     itemListElement: GAMES.map((g, i) => ({
       "@type": "ListItem",
@@ -217,7 +223,7 @@ export default async function GamesPage() {
               <Link key={m.card.id} href={cardHref(m.card)} className="card-surface group p-2.5 transition-all hover:-translate-y-0.5 hover:shadow-glow">
                 {m.card.imageThumbUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={m.card.imageThumbUrl} alt={m.card.name} width={300} height={420} loading="lazy" decoding="async" className="aspect-[5/7] w-full rounded-md object-cover" />
+                  <img src={m.card.imageThumbUrl} alt={cardImageAlt(m.card)} width={300} height={420} loading="lazy" decoding="async" className="aspect-[5/7] w-full rounded-md object-cover" />
                 )}
                 <div className="mt-2 truncate text-xs font-semibold text-white" title={m.card.name}>{m.card.name}</div>
                 <div className="flex items-baseline justify-between">

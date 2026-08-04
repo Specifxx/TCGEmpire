@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { formatMoney, timeAgo } from "@/lib/format";
 import { cardDisplayName } from "@/lib/card-name";
 import { cardHref } from "@/lib/card-url";
@@ -11,6 +12,7 @@ import { MARKETPLACE_LAUNCH_COUNTRIES } from "@/lib/marketplace-countries";
 import { useCountry } from "./CountryProvider";
 import { MarketplaceCheckout, type CheckoutItem } from "./MarketplaceCheckout";
 import { MarketplaceReportBug } from "./MarketplaceReportBug";
+import { cardImageAlt } from "@/lib/image-alt";
 
 export interface MktOffer {
   id: string;
@@ -90,10 +92,22 @@ function deltaPct(offerCents: number, marketCents: number | null): number | null
   return Math.round(((offerCents - marketCents) / marketCents) * 100);
 }
 
+// Deals are the whole point of browsing offers on one card instead of just
+// buying the cheapest — make them impossible to miss instead of just another
+// muted chip among the rest of the row's metadata. A second, hotter tier at
+// -10%+ (matching the first real rung of the MIN_DISCOUNTS filter above) gives
+// genuinely steep listings an extra pop instead of flattening every discount
+// into one look.
 function DeltaBadge({ pct }: { pct: number | null }) {
   if (pct == null) return null;
+  if (pct <= -10)
+    return (
+      <span className="chip bg-brand-400 text-[11px] font-extrabold text-ink-950 shadow-sm shadow-brand-500/40">
+        🔥 <span className="num">{Math.abs(pct)}%</span> under market
+      </span>
+    );
   if (pct <= -3)
-    return <span className="chip bg-brand-500/15 text-[10px] font-bold text-brand-300"><span className="num">{Math.abs(pct)}%</span> under market</span>;
+    return <span className="chip bg-brand-500 text-[11px] font-extrabold text-ink-950"><span className="num">{Math.abs(pct)}%</span> under market</span>;
   if (pct >= 5)
     return <span className="chip bg-down/10 text-[10px] font-semibold text-down"><span className="num">{pct}%</span> over market</span>;
   return <span className="chip bg-ink-800 text-[10px] font-semibold text-slate-400">≈ market price</span>;
@@ -123,6 +137,7 @@ export function MarketplaceClient({
   country,
   stripeEnabled = false,
   signedIn = false,
+  currentUserId = null,
   offersEnabled = false,
   openCardId,
 }: {
@@ -131,6 +146,10 @@ export function MarketplaceClient({
   country: string;
   stripeEnabled?: boolean;
   signedIn?: boolean;
+  // The signed-in seller's own user id, so their own listings can show an
+  // inline Edit/Remove affordance right here instead of only in the seller
+  // dashboard — nothing changes for anyone browsing offers that aren't theirs.
+  currentUserId?: string | null;
   offersEnabled?: boolean;
   // Deep-linked from a card page's marketplace hero — auto-opens that card's
   // offers modal on load instead of making the visitor find it in the grid.
@@ -416,16 +435,30 @@ export function MarketplaceClient({
             const pct = deltaPct(best.priceCents, c.marketCents);
             return (
               <li key={c.card.id}>
-                <button onClick={() => setOpenCard(c)} className="card-surface flex w-full flex-col overflow-hidden text-left transition-colors hover:border-brand-500/50">
+                <button
+                  onClick={() => setOpenCard(c)}
+                  className={`card-surface flex w-full flex-col overflow-hidden text-left transition-colors hover:border-brand-500/50 ${
+                    !best.isOfficial && pct != null && pct <= -10 ? "ring-2 ring-brand-400 shadow-lg shadow-brand-500/20" : ""
+                  }`}
+                >
                   <div className="relative aspect-[5/7] w-full bg-ink-900">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    {c.card.imageThumbUrl ? <img src={c.card.imageThumbUrl} alt="" aria-hidden="true" width={300} height={420} loading="lazy" decoding="async" className="h-full w-full object-cover" /> : null}
+                    {c.card.imageThumbUrl ? <img src={c.card.imageThumbUrl} alt={cardImageAlt(c.card)} width={300} height={420} loading="lazy" decoding="async" className="h-full w-full object-cover" /> : null}
                     {best.isOfficial && (
                       <span className="absolute left-1.5 top-1.5 rounded-full bg-gold px-2 py-0.5 text-[10px] font-extrabold text-ink-950 shadow">
                         ★ Official
                       </span>
                     )}
-                    {!best.isOfficial && pct != null && pct <= -3 && (
+                    {/* Deal badge — a hotter, larger, "🔥" treatment for 10%+ under
+                        market (matches the MIN_DISCOUNTS filter's first rung) so a
+                        genuinely steep listing stands out from an everyday 3-9%
+                        discount instead of both looking identical at a glance. */}
+                    {!best.isOfficial && pct != null && pct <= -10 && (
+                      <span className="absolute left-1.5 top-1.5 rounded-full bg-brand-400 px-2 py-1 text-xs font-extrabold text-ink-950 shadow-md shadow-brand-500/40">
+                        🔥 <span className="num">{Math.abs(pct)}%</span> under market
+                      </span>
+                    )}
+                    {!best.isOfficial && pct != null && pct <= -3 && pct > -10 && (
                       <span className="absolute left-1.5 top-1.5 rounded-full bg-brand-500 px-2 py-0.5 text-[10px] font-extrabold text-ink-950 shadow">
                         <span className="num">{Math.abs(pct)}%</span> under market
                       </span>
@@ -461,6 +494,7 @@ export function MarketplaceClient({
           card={openCard}
           busy={busy}
           signedIn={signedIn}
+          currentUserId={currentUserId}
           offersEnabled={offersEnabled}
           onClose={() => setOpenCard(null)}
           onAdd={addToCart}
@@ -520,6 +554,7 @@ function OffersModal({
   card,
   busy,
   signedIn,
+  currentUserId,
   offersEnabled,
   onClose,
   onAdd,
@@ -529,6 +564,7 @@ function OffersModal({
   card: MktCard;
   busy: boolean;
   signedIn: boolean;
+  currentUserId?: string | null;
   offersEnabled: boolean;
   onClose: () => void;
   onAdd: (card: MktCardInner, o: MktOffer, qty: number) => void;
@@ -538,27 +574,78 @@ function OffersModal({
   const [qty, setQty] = useState<Record<string, number>>({});
   const getQty = (o: MktOffer) => qty[o.id] ?? 1;
   const { setCountry } = useCountry();
-  const firstOtherIndex = card.offers.findIndex((o) => !o.inRegion);
+  const router = useRouter();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editPrice, setEditPrice] = useState("");
+  const [editQty, setEditQty] = useState("");
+  const [savingId, setSavingId] = useState<string | null>(null);
+  // Local, editable copy of this card's offers — lets a seller's own Edit/Save
+  // update what's on screen immediately without waiting on a full server
+  // round-trip. Reset whenever a different card's modal opens.
+  const [offers, setOffers] = useState(card.offers);
+  useEffect(() => setOffers(card.offers), [card]);
+  const firstOtherIndex = offers.findIndex((o) => !o.inRegion);
+
+  async function saveListing(id: string, priceCents: number, quantity: number) {
+    const res = await fetch(`/api/marketplace/listings/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ priceCents, quantity }),
+    });
+    if (res.ok) {
+      setOffers((os) => os.map((o) => (o.id === id ? { ...o, priceCents, quantity } : o)));
+      router.refresh();
+    }
+    return res.ok;
+  }
+
+  async function removeListing(id: string) {
+    const res = await fetch(`/api/marketplace/listings/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      setOffers((os) => os.filter((o) => o.id !== id));
+      router.refresh();
+    }
+    return res.ok;
+  }
+
+  function startEdit(o: MktOffer) {
+    setEditingId(o.id);
+    setEditPrice((o.priceCents / 100).toFixed(2));
+    setEditQty(String(o.quantity));
+  }
+
+  async function confirmEdit(id: string) {
+    setSavingId(id);
+    await saveListing(id, Math.round(parseFloat(editPrice || "0") * 100), parseInt(editQty || "0", 10));
+    setSavingId(null);
+    setEditingId(null);
+  }
+
+  async function confirmRemove(id: string) {
+    if (typeof window !== "undefined" && !window.confirm("Remove this listing?")) return;
+    await removeListing(id);
+  }
+
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center p-4" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-black/70" onClick={onClose} />
       <div className="relative z-10 grid max-h-[88vh] w-full max-w-2xl grid-rows-[auto_1fr] overflow-hidden rounded-lg border border-ink-700 bg-ink-900 shadow-2xl">
         <div className="flex items-center gap-3 border-b border-ink-800 p-4 pr-12">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          {card.card.imageThumbUrl ? <img src={card.card.imageThumbUrl} alt="" aria-hidden="true" className="h-16 w-12 rounded object-cover" /> : <div className="h-16 w-12 rounded bg-ink-800" />}
+          {card.card.imageThumbUrl ? <img src={card.card.imageThumbUrl} alt={cardImageAlt(card.card)} width={48} height={64} className="h-16 w-12 rounded object-cover" /> : <div className="h-16 w-12 rounded bg-ink-800" />}
           <div className="min-w-0">
             <h2 className="truncate text-lg font-bold text-white">{cardDisplayName(card.card.name, card.card)}</h2>
             <p className="text-xs text-slate-500">
               {card.card.setCode} {card.card.collectorNumber}
-              {card.marketCents != null && <> · market {formatMoney(card.marketCents, card.offers[0]?.currency ?? "AUD")}</>}
+              {card.marketCents != null && <> · market {formatMoney(card.marketCents, offers[0]?.currency ?? "AUD")}</>}
               {" · "}
               <Link href={cardHref(card.card)} className="text-brand-400 hover:underline">compare all stores</Link>
             </p>
           </div>
-          <button onClick={onClose} aria-label="Close" className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full text-slate-400 hover:bg-ink-800 hover:text-white">✕</button>
+          <button onClick={onClose} aria-label="Close" className="absolute right-3 top-3 tap-icon  rounded-full text-slate-400 hover:bg-ink-800 hover:text-white">✕</button>
         </div>
         <ul className="divide-y divide-ink-800 overflow-y-auto">
-          {card.offers.map((o, i) => (
+          {offers.map((o, i) => (
             <Fragment key={o.id}>
               {i === firstOtherIndex && firstOtherIndex > 0 && (
                 <li key="divider" className="bg-ink-950/60 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
@@ -581,8 +668,44 @@ function OffersModal({
                     )}
                   </div>
                 </div>
-                <span className="num text-base font-extrabold text-accent">{formatMoney(o.priceCents, o.currency)}</span>
-                {o.inRegion ? (
+                {o.sellerId === currentUserId ? (
+                  editingId === o.id ? (
+                    <>
+                      <input
+                        type="number" min={0} step="0.01"
+                        value={editPrice}
+                        onChange={(e) => setEditPrice(e.target.value)}
+                        className="input w-20 py-1 text-sm"
+                        aria-label="Price"
+                      />
+                      <input
+                        type="number" min={0} max={999}
+                        value={editQty}
+                        onChange={(e) => setEditQty(e.target.value)}
+                        className="input w-14 py-1 text-sm"
+                        aria-label="Quantity"
+                      />
+                      <div className="flex gap-1.5">
+                        <button onClick={() => confirmEdit(o.id)} disabled={savingId === o.id} className="rounded bg-brand-500/20 px-2 py-1 text-[11px] font-semibold text-brand-300 hover:bg-brand-500/30 disabled:opacity-50">
+                          {savingId === o.id ? "…" : "Save"}
+                        </button>
+                        <button onClick={() => setEditingId(null)} className="rounded bg-ink-800 px-2 py-1 text-[11px] text-slate-400 hover:bg-ink-700">Cancel</button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <span className="num text-base font-extrabold text-accent">{formatMoney(o.priceCents, o.currency)}</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="chip bg-ink-800 text-[10px] font-semibold text-slate-400">Your listing</span>
+                        <button onClick={() => startEdit(o)} className="rounded bg-ink-800 px-2 py-1 text-[11px] text-slate-200 hover:bg-ink-700">Edit</button>
+                        <button onClick={() => confirmRemove(o.id)} className="rounded bg-ink-800 px-2 py-1 text-[11px] text-rose-300 hover:bg-ink-700">Remove</button>
+                      </div>
+                    </>
+                  )
+                ) : (
+                  <span className="num text-base font-extrabold text-accent">{formatMoney(o.priceCents, o.currency)}</span>
+                )}
+                {o.sellerId === currentUserId ? null : o.inRegion ? (
                   <>
                     <input
                       type="number"
@@ -712,7 +835,7 @@ function CartDrawer({
       <aside className="absolute right-0 top-0 flex h-full w-full max-w-md flex-col border-l border-ink-700 bg-ink-900 shadow-2xl">
         <div className="flex items-center justify-between border-b border-ink-700 p-4">
           <h2 className="text-lg font-extrabold text-white">Your cart</h2>
-          <button onClick={onClose} aria-label="Close" className="grid h-8 w-8 place-items-center rounded-full text-slate-400 hover:text-white">✕</button>
+          <button onClick={onClose} aria-label="Close" className="tap-icon  rounded-full text-slate-400 hover:text-white">✕</button>
         </div>
         {cart.length === 0 ? (
           <div className="grid flex-1 place-items-center text-sm text-slate-500">Your cart is empty</div>

@@ -5,6 +5,7 @@ import { CardQuickLink } from "@/components/CardQuickLink";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { getCurrentUser } from "@/lib/auth";
 import { isPremium } from "@/lib/premium";
+import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
 import { getUndervalued } from "@/lib/screener";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
@@ -12,6 +13,7 @@ import { formatMoney } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
 import { PremiumButton } from "@/components/PremiumButton";
 import { RegionToggle } from "@/components/RegionToggle";
+import { cardImageAlt } from "@/lib/image-alt";
 
 export const dynamic = "force-dynamic";
 
@@ -89,7 +91,14 @@ export default async function ValueFinderPage() {
         </p>
       </div>
 
-      {!premium ? (
+      {/* ADSENSE REVIEW MODE: while the review is open the Premium gate is
+          lifted, so no crawler-reachable page carries blurred or locked
+          content — "content behind a paywall or login" is its own AdSense
+          rejection reason, and this page is in the sitemap. The Premium CTA
+          stays; an ordinary upsell link is fine, a blur overlay standing in
+          place of the content is not. Restored by setting
+          NEXT_PUBLIC_ADSENSE_REVIEW_MODE=false. See docs/adsense-remediation.md § 9. */}
+      {!premium && !ADSENSE_REVIEW_MODE ? (
         <div className="card-surface overflow-hidden">
           {/* One real pick free, then a locked preview + upsell (arbitrage pattern). */}
           <table className="w-full min-w-[620px] text-sm">
@@ -109,7 +118,7 @@ export default async function ValueFinderPage() {
                     <CardQuickLink card={teaser.card} className="flex items-center gap-2.5">
                       {teaser.card.imageThumbUrl && (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={teaser.card.imageThumbUrl} alt="" aria-hidden="true" width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
+                        <img src={teaser.card.imageThumbUrl} alt={cardImageAlt(teaser.card)} width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
                       )}
                       <span className="min-w-0">
                         <span className="block truncate font-semibold text-white">{teaser.card.name}</span>
@@ -179,7 +188,7 @@ export default async function ValueFinderPage() {
                     <CardQuickLink card={p.card} className="flex items-center gap-2.5">
                       {p.card.imageThumbUrl && (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={p.card.imageThumbUrl} alt="" aria-hidden="true" width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
+                        <img src={p.card.imageThumbUrl} alt={cardImageAlt(p.card)} width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
                       )}
                       <span className="min-w-0">
                         <span className="block truncate font-semibold text-white">{p.card.name}</span>

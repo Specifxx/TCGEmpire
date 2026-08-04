@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFoundMetadata } from "@/lib/not-found-metadata";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
@@ -7,10 +8,14 @@ import { cardTileSelect } from "@/lib/cards";
 import { COUNTRIES, DEFAULT_COUNTRY, priceField } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { CHAMPIONS, championBySlug, championCardWhere } from "@/lib/champions";
-import { META_DECKS } from "@/lib/meta-decks";
+import { META_DECKS, resolveDeck, type ResolvedDeck } from "@/lib/meta-decks";
+import { DomainBadge } from "@/components/Badge";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { breadcrumb } from "@/lib/jsonld";
 import { SITE_URL } from "@/lib/site";
+import { buildCollectionNarrative } from "@/lib/content/collection-narrative";
+import { getSiteMedianCents } from "@/lib/content/site-median";
+import { CHAMPION_THIN_THRESHOLD } from "@/lib/champions";
 
 // riftdecks.com's /legends/<champion> pages rank #1 for champion queries with
 // build price and win rate in the snippet; ours 404'd entirely. This is the
@@ -26,7 +31,12 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const champ = championBySlug(params.slug);
-  if (!champ) return {};
+  if (!champ) return notFoundMetadata("Champion");
+  // A hub with a handful of printings is a directory entry, not a page. Below
+  // the threshold it stays crawlable and linked but is kept out of the index,
+  // matching how the type/rarity/printing facets already behave. Fails OPEN: a
+  // count query that throws returns -1 and leaves the page indexable.
+  const cardCount = await prisma.card.count({ where: championCardWhere(champ) }).catch(() => -1);
   const title = `${champ.name} Riftbound Cards — All Printings & Live Prices`;
   return {
     title: { absolute: `${title} | RiftCompare` },
@@ -34,6 +44,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       `Every Riftbound ${champ.name} card across all sets — Legends, units and alternate-art printings — ` +
       `with live prices compared across stores so you can find the cheapest way to build ${champ.name}.`,
     alternates: { canonical: `/champions/${champ.slug}` },
+    ...(cardCount >= 0 && cardCount < CHAMPION_THIN_THRESHOLD ? { robots: { index: false, follow: true } } : {}),
     keywords: [
       `${champ.name} riftbound`,
       `riftbound ${champ.name} cards`,
@@ -93,11 +104,57 @@ export default async function ChampionPage({ params }: { params: { slug: string 
   const sets = Array.from(new Set(cards.map((c) => c.setName)));
   const legends = cards.filter((c) => c.type === "Legend");
 
+  // Real per-champion domain distribution, straight from the rendered card set —
+  // not a synergy claim we can't back, just an honest tally of which domain(s)
+  // this champion's printings actually belong to. Gives every champion page
+  // genuinely different prose instead of the same template with a name swapped.
+  const domainCounts = new Map<string, number>();
+  for (const c of cards) domainCounts.set(c.domain, (domainCounts.get(c.domain) ?? 0) + 1);
+  const domainsByCount = Array.from(domainCounts.entries()).sort((a, b) => b[1] - a[1]);
+
   // Meta decks whose legend is this champion. Matched through the same alias
   // list as everything else, so the "Master Yi"/"Yi"/"Master" split resolves.
-  const decks = META_DECKS.filter((d) =>
+  // Resolved (not just filtered) so the page can show the SAME real build cost
+  // and tournament attribution as /decks, rather than a bare name + archetype.
+  // Same DB-outage fence as the card query above: a failure here degrades to
+  // the un-costed seed data (still real name/tier/domains/source) rather than
+  // crashing an otherwise-fine page.
+  const unpriced = (d: (typeof META_DECKS)[number]): ResolvedDeck => ({
+    ...d, legendCard: null, legendPriceCents: null, items: [],
+    totalCards: 0, totalCents: 0, priceableCards: 0, pricedCards: 0, sideboardCards: 0, sideboardCents: 0, imageUrl: null,
+  });
+  const deckSeeds = META_DECKS.filter((d) =>
     champ.prefixes.some((p) => d.legend.toLowerCase().startsWith(p.toLowerCase() + ","))
   );
+  const decks: ResolvedDeck[] = dbReachable
+    ? await Promise.all(deckSeeds.map((d) => resolveDeck(d, country))).catch((e) => {
+        console.error(`champions/${champ.slug}: deck resolve failed:`, e);
+        return deckSeeds.map(unpriced);
+      })
+    : deckSeeds.map(unpriced);
+
+  // Editorial intro built from this champion's OWN live pool — count, price
+  // range, where the value sits, which cards matter, and what that means for
+  // someone buying. The audit sampled champion hubs at a median of 164 unique
+  // editorial words with a floor of 71, which across 82 URLs is a thin-content
+  // pattern rather than a handful of stragglers. See lib/content/
+  // collection-narrative.ts and docs/adsense-remediation.md § Phase 7c.
+  const siteMedianCents = await getSiteMedianCents(country);
+  const intro = buildCollectionNarrative({
+    kind: "champion",
+    label: champ.name,
+    currency,
+    place: COUNTRIES[country].place,
+    members: cards.map((c) => ({
+      name: c.name,
+      priceCents: (c as unknown as Record<string, number | null>)[field] ?? null,
+      setCode: c.setCode,
+      rarity: c.rarity,
+      collectorNumber: c.collectorNumber,
+    })),
+    setCodes: Array.from(new Set(cards.map((c) => c.setCode))),
+    siteMedianCents,
+  });
 
   const trail = [
     { name: "Champions", href: "/champions" },
@@ -129,14 +186,35 @@ export default async function ChampionPage({ params }: { params: { slug: string 
         <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
           {champ.name} Riftbound cards — all printings &amp; live prices
         </h1>
-        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
-          Every Riftbound card featuring <strong className="text-slate-200">{champ.name}</strong> —{" "}
-          {cards.length} printing{cards.length === 1 ? "" : "s"} across {sets.length}{" "}
-          {sets.length === 1 ? "set" : "sets"} ({sets.join(", ")})
-          {legends.length > 0 && `, including ${legends.length} Legend printing${legends.length === 1 ? "" : "s"}`}.
-          Prices update daily and are compared across every store we track, so you can see the cheapest way to
-          pick each one up.
-        </p>
+        <div className="mt-3 max-w-3xl space-y-2.5 text-sm leading-relaxed text-slate-400">
+          <p>
+            Every Riftbound card featuring <strong className="text-slate-200">{champ.name}</strong> —{" "}
+            {cards.length} printing{cards.length === 1 ? "" : "s"} across {sets.length}{" "}
+            {sets.length === 1 ? "set" : "sets"} ({sets.join(", ")})
+            {legends.length > 0 && `, including ${legends.length} Legend printing${legends.length === 1 ? "" : "s"}`}.
+          </p>
+          {intro.map((p, i) => (
+            <p key={i}>{p}</p>
+          ))}
+        </div>
+        {domainsByCount.length > 0 && (
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+            {domainsByCount.length === 1 ? (
+              <>Every tracked {champ.name} printing is a <strong className="text-slate-200">{domainsByCount[0][0]}</strong> card.</>
+            ) : (
+              <>
+                {champ.name}&apos;s printings span {domainsByCount.length} domains —{" "}
+                {domainsByCount.map(([d, n], i) => (
+                  <span key={d}>
+                    {i > 0 && (i === domainsByCount.length - 1 ? " and " : ", ")}
+                    <strong className="text-slate-200">{d}</strong> ({n})
+                  </span>
+                ))}
+                {" "}— so a deck built around {champ.name} can pull from any of them.
+              </>
+            )}
+          </p>
+        )}
       </div>
 
       {/* Price stats — the commercial angle riftdecks shows in its snippet, but
@@ -169,6 +247,10 @@ export default async function ChampionPage({ params }: { params: { slug: string 
       {decks.length > 0 && (
         <section>
           <h2 className="mb-3 text-xl font-extrabold text-white">Decks built around {champ.name}</h2>
+          <p className="mb-4 max-w-3xl text-xs text-slate-500">
+            Real tournament results, not house-made lists — each links to its source event and its live, priced
+            buy list.
+          </p>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {decks.map((d) => (
               <Link
@@ -176,8 +258,22 @@ export default async function ChampionPage({ params }: { params: { slug: string 
                 href={`/decks/${d.slug}`}
                 className="card-surface group flex flex-col gap-1 p-4 transition-colors hover:border-brand-500"
               >
-                <span className="font-semibold text-white group-hover:text-brand-300">{d.name}</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-white group-hover:text-brand-300">{d.name}</span>
+                  {d.tier && <span className="chip ml-auto bg-ink-800 text-[10px] text-slate-400">Tier {d.tier}</span>}
+                </div>
                 <span className="text-xs text-slate-500">{d.archetype}</span>
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  {d.domains.map((dm) => (
+                    <DomainBadge key={dm} domain={dm} />
+                  ))}
+                </div>
+                {d.pricedCards > 0 && (
+                  <span className="num mt-1 text-sm font-bold text-accent">
+                    from {formatMoney(d.totalCents, currency)} <span className="text-xs font-normal text-slate-500">({d.pricedCards}/{d.totalCards} priced)</span>
+                  </span>
+                )}
+                {d.source && <span className="mt-1 text-[11px] text-slate-600">{d.source}</span>}
               </Link>
             ))}
           </div>

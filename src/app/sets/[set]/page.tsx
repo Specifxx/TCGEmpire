@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFoundMetadata } from "@/lib/not-found-metadata";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { unstable_cache } from "next/cache";
@@ -40,16 +41,41 @@ export async function generateMetadata({
   searchParams: CardQuery;
 }): Promise<Metadata> {
   const set = setBySlug(params.set);
-  // The whole site renders dynamically (the layout reads the country cookie), so
-  // notFound() can't return a hard 404 here; mark unknown slugs noindex so Google
-  // never indexes the soft-404 (nothing links to them anyway).
-  if (!set) notFound(); // real 404 — metadata resolves before streaming
+  // Unknown slug: a distinct title + noindex here, and notFound() in the page
+  // body below for the status. (The stale comment this replaces claimed a hard
+  // 404 was impossible on this route — it is not; what actually swallowed the
+  // status was the root loading.tsx Suspense boundary, now removed.)
+  if (!set) return notFoundMetadata("Set");
   // Market-neutral title (no country) so it ranks globally; the page itself is
   // tailored to the visitor's market.
-  // Front-loads the "cheapest" buyer hook (GSC: these pages ranked but had very
-  // low CTR — "Prices & Full Card List" read as generic next to competitors).
-  const title = `Riftbound ${set.name} Prices — Cheapest Sellers`;
-  const description = `Find the cheapest Riftbound ${set.name} singles — every card, live prices compared across stores, updated daily.`;
+  //
+  // LIST INTENT FIRST, PRICE SECOND. This page previously led with "Prices —
+  // Cheapest Sellers", but the queries it actually surfaces for are list-shaped:
+  // "vendetta card list" (146 impressions, 2.1% CTR, position 10.5). A buyer-hook
+  // title against a list-intent query is an intent mismatch, and mismatch is what
+  // produces exactly that pattern — ranking, but ignored.
+  //
+  // Deliberately "Card List", NOT "Card Gallery": /sets/<slug>/gallery owns the
+  // gallery queries with a genuinely different page (every card on one screen,
+  // visual browse). Two of our own URLs chasing one query helps neither, so the
+  // split is list-here / gallery-there, and a test enforces it.
+  //
+  // Built longest-first and stepped down (the same technique the card page uses)
+  // so even the longest set name — "Origins: Proving Grounds" — still fits inside
+  // Google's ~60-char truncation with the site suffix attached, instead of getting
+  // the important half cut off.
+  const titleCandidates = [
+    `Riftbound ${set.name} Card List & Prices`,
+    `Riftbound ${set.name} Card List`,
+    `${set.name} Card List & Prices`,
+  ];
+  const title = titleCandidates.find((t) => `${t} | RiftCompare`.length <= 60) ?? titleCandidates[titleCandidates.length - 1];
+  const descCandidates = [
+    `The complete Riftbound ${set.name} card list — every card with images, plus live prices compared across stores to find the cheapest singles. Updated daily.`,
+    `The complete Riftbound ${set.name} card list — every card, with live prices compared across stores to find the cheapest singles. Updated daily.`,
+    `The complete Riftbound ${set.name} card list, with live prices compared across stores to find the cheapest singles. Updated daily.`,
+  ];
+  const description = descCandidates.find((d) => d.length <= 155) ?? descCandidates[descCandidates.length - 1];
   // A set with no imported cards yet (pre-release, or a data gap where a released
   // set was registered before its cards were imported) renders only a placeholder —
   // thin content. Noindex it so Google doesn't sink crawl budget into a soft-thin
@@ -166,7 +192,7 @@ export default async function SetPage({
     name: `Riftbound ${set.name} Card Prices & List`,
     url: cleanPage ? `${SITE_URL}/sets/${set.slug}?page=${page}` : `${SITE_URL}/sets/${set.slug}`,
     description: `Live prices for every Riftbound ${set.name} card.`,
-    isPartOf: { "@type": "WebSite", name: "RiftCompare", url: SITE_URL },
+    isPartOf: { "@id": `${SITE_URL}/#website` },
     // No mainEntity ItemList: the visible card grid already links every card as a
     // crawlable <a href>, so serializing the entire list again just doubled a big
     // set's HTML weight (≈1 MB / 1.8k links on Origins) for zero extra crawl value.
@@ -191,8 +217,10 @@ export default async function SetPage({
             {set.code}
           </div>
 
+          {/* Mirrors the title's list-first framing (see generateMetadata) — an
+              H1 that disagrees with the title is its own intent mismatch. */}
           <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
-            Riftbound {set.name} — card prices &amp; full list
+            Riftbound {set.name} card list &amp; prices
           </h1>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
             {set.comingSoon ? (
@@ -208,9 +236,22 @@ export default async function SetPage({
                 )}
               </>
             ) : (
-              <>Browse all {totalInSet} Riftbound <strong className="text-slate-200">{set.name}</strong> cards and compare live prices across stores to find the cheapest singles. {priced.toLocaleString()} cards are priced right now, updated daily — switch your country at the top to see local prices.</>
+              <>The complete Riftbound <strong className="text-slate-200">{set.name}</strong> card list — all {totalInSet.toLocaleString()} cards, sortable and filterable, with live prices compared across stores so you can find the cheapest singles. {priced.toLocaleString()} cards are priced right now, updated daily — switch your country at the top to see local prices.</>
             )}
           </p>
+
+          {/* Straight into the visual gallery. This page is the price-first view
+              (paginated, filter-driven); a chunk of arriving traffic actually wants
+              to LOOK at the set — "<set> card gallery" is its own query cluster —
+              so give that intent a first-class exit rather than burying it. */}
+          {totalInSet > 0 && (
+            <p className="mt-3 text-sm">
+              <Link href={`/sets/${set.slug}/gallery`} className="font-semibold text-brand-300 underline-offset-2 hover:underline">
+                Browse the {set.name} card gallery →
+              </Link>
+              <span className="text-slate-500"> every card on one page, with images</span>
+            </p>
+          )}
 
           {/* Count pills. Released sets show cards + priced; an unreleased set with
               revealed cards gets a green NEW pill + the revealed count instead. */}
@@ -263,7 +304,6 @@ export default async function SetPage({
               <div className="mx-auto mt-6 max-w-lg border-t border-ink-800 pt-5 text-left">
                 <p className="mb-2 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">Get ready for Vendetta</p>
                 <ul className="grid gap-1.5 text-sm sm:grid-cols-2">
-                  <li><Link href="/vendetta-countdown" className="font-semibold text-brand-300 hover:underline">⏳ Release countdown →</Link></li>
                   <li><Link href="/blog/riftbound-vendetta-everything-you-need-to-know" className="text-brand-400 hover:underline">Everything you need to know →</Link></li>
                   <li><Link href="/guides/riftbound-empower-explained" className="text-brand-400 hover:underline">Empower mechanic explained →</Link></li>
                   <li><Link href="/blog/riftbound-vendetta-new-mechanics-flow-burn-empower" className="text-brand-400 hover:underline">New mechanics: Flow, Burn &amp; Empower →</Link></li>
@@ -340,6 +380,7 @@ export default async function SetPage({
               {s.name}
             </Link>
           ))}
+          <Link href={`/sets/${set.slug}/gallery`} className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">{set.name} gallery →</Link>
           <Link href="/browse" className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">All cards →</Link>
           <Link href="/sealed" className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">Sealed products →</Link>
         </div>

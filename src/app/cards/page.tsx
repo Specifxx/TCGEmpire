@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { HubIntro } from "@/components/HubIntro";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { TYPE_FACETS, RARITY_FACETS, PRINTING_FACETS, FACET_THIN_THRESHOLD } from "@/lib/facets";
@@ -95,6 +96,7 @@ export default async function CardsIndexPage() {
           <span className="text-slate-300">Cards</span>
         </nav>
         <h1 className="text-2xl font-extrabold text-white sm:text-3xl">Browse Riftbound cards</h1>
+      <HubIntro path="/cards" />
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
           Every way to slice the Riftbound card database — by domain, card type, rarity or printing —
           each a live, server-rendered page with real prices. Want every filter at once?{" "}

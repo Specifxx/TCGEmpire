@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFoundMetadata } from "@/lib/not-found-metadata";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { prisma } from "@/lib/db";
@@ -11,18 +12,17 @@ import { CardViewBeacon } from "@/components/CardViewBeacon";
 import { formatMoney } from "@/lib/format";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
 import { affiliateUrl, ebayAffiliateUrl } from "@/lib/affiliate";
-import { cardDisplayName, cardSearchName } from "@/lib/card-name";
+import { cardCredentials, cardDisplayName, cardSearchName } from "@/lib/card-name";
 import { CardTile } from "@/components/CardTile";
 import { cardTileSelect } from "@/lib/cards";
 import { AdSlot } from "@/components/AdSlot";
-import { EmbedCardButton } from "@/components/EmbedCardButton";
-import { COUNTRIES, DEFAULT_COUNTRY, isoCountry, priceField, type Country } from "@/lib/country";
+import { COUNTRIES, COUNTRY_LIST, DEFAULT_COUNTRY, isoCountry, priceField, type Country } from "@/lib/country";
 import { setByCode } from "@/lib/constants";
 import { domainSlug } from "@/lib/domains";
 import { decksUsingCard } from "@/lib/meta-decks";
 import { SITE_URL } from "@/lib/site";
 import { PriceHistoryChart } from "@/components/PriceHistoryChart";
-import { getPriceHistory, type PricePoint } from "@/lib/price-history";
+import { getPriceHistory } from "@/lib/price-history";
 import { CardConversionCta } from "@/components/CardConversionCta";
 import { AiInsight } from "@/components/AiInsight";
 import { CardPriceMetrics, CardPriceComparison, type EbaySearchMap } from "@/components/CardMarketSection";
@@ -32,6 +32,18 @@ import { EbayAdCarousel } from "@/components/EbayAdCarousel";
 import { computeMarket, type MarketRow } from "@/lib/market-rows";
 import { KeywordText } from "@/components/KeywordTooltip";
 import { championForCardName, championCardWhere } from "@/lib/champions";
+import { getCardPriceState } from "@/lib/card-price-state";
+import { getCanonicalTwin } from "@/lib/card-duplicates";
+import {
+  buildCardNarrative,
+  editionLabel,
+  printingKind,
+  tidy,
+  PRINTING_DISPLAY,
+  type NarrativeMarket,
+} from "@/lib/content/card-narrative";
+import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
+import { guidesForCard } from "@/lib/content/related-guides";
 
 // REAL ISR: no cookie/header reads anywhere in this route's tree — the page is
 // rendered once on the AU baseline and served from cache to every visitor and
@@ -82,6 +94,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   const card = await prisma.card.findFirst({
     where: whereParam(params.id),
     select: {
+      id: true,
       slug: true, name: true, setName: true, setCode: true, collectorNumber: true,
       variant: true, isPromo: true, rarity: true, type: true, domain: true,
       description: true,
@@ -93,12 +106,13 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       retailerPrices: { where: { country: DEFAULT_COUNTRY, inStock: true }, select: { retailer: true } },
     } as Record<string, unknown>,
   }) as (Record<string, unknown> & {
+    id: string;
     slug: string | null; name: string; setName: string; setCode: string; collectorNumber: string;
     variant: string | null; isPromo: boolean; rarity: string; type: string; domain: string;
     description: string | null;
     retailerPrices: { retailer: string }[];
   }) | null;
-  if (!card) notFound(); // real 404 — metadata resolves before streaming
+  if (!card) return notFoundMetadata("Card");
 
   const lowestCents = card[priceField(DEFAULT_COUNTRY)] as number | null;
 
@@ -139,15 +153,42 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     ? `${displayName} (${ident}) — ${textBit} ${priceBit}`
     : `${displayName} — ${statBit} from Riftbound ${card.setName} (${card.collectorNumber}). ${priceBit}`;
 
+  // ── Index only what's worth indexing ─────────────────────────────────────
+  // A card with no in-stock listing in ANY market and under a week of recorded
+  // history has nothing to compare — the page is a name, a badge and an empty
+  // table. About a tenth of the catalogue is in that state at any time, so a
+  // reviewer sampling /card/* URLs lands on one roughly one visit in ten. That
+  // is the "low-value content" finding, and de-indexing is the honest fix:
+  // follow:true keeps the link graph intact, and the page stays fully crawlable
+  // (never a robots.txt Disallow — Google has to be able to READ the noindex,
+  // and the AdSense crawler has to be able to fetch every page regardless).
+  //
+  // Reversible without human intervention: the same query drives the sitemap,
+  // so gaining one listing — or a seventh day of history — puts the page back
+  // in the index on the next regeneration. See lib/card-price-state.ts.
+  // ── …and index only ONE URL per printing ─────────────────────────────────
+  // A past import left duplicate rows for three promo printings, each with a
+  // numeric slug suffix. They are the same card in every field the title is
+  // built from, so they emit byte-identical titles. The extras keep working and
+  // stay crawlable; they just point their canonical at the original and drop out
+  // of the index. Nothing is deleted or renamed. See lib/card-duplicates.ts.
+  const [priceState, twin] = await Promise.all([
+    getCardPriceState(card.id),
+    getCanonicalTwin(card),
+  ]);
+  const canonicalPath = `/card/${twin ? twin.slug ?? twin.id : card.slug ?? params.id}`;
+  const noindex = priceState.isEmpty || twin != null;
+
   return {
     title,
     description,
+    ...(noindex ? { robots: { index: false, follow: true } } : {}),
     alternates: {
-      canonical: `/card/${card.slug ?? params.id}`,
+      canonical: canonicalPath,
       // Single cookie-switched URL is the global default for all four markets.
-      languages: { "x-default": `${SITE_URL}/card/${card.slug ?? params.id}` },
+      languages: { "x-default": `${SITE_URL}${canonicalPath}` },
       // Machine-readable markdown for AI agents (rel=alternate type=text/markdown).
-      types: { "text/markdown": `${SITE_URL}/llm/card/${card.slug ?? params.id}` },
+      types: { "text/markdown": `${SITE_URL}/llm${canonicalPath}` },
     },
     // og:image + twitter:image are provided by the co-located opengraph-image.tsx
     // (a branded price card: art + name + lowest live price).
@@ -291,6 +332,14 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     returnPolicyCategory: "https://schema.org/MerchantReturnUnspecified",
     applicableCountry: isoCountry(listingCountry as Country),
   });
+  // Hoisted above the JSON-LD: the AggregateOffer needs a landing URL, and
+  // Google's merchant-listing guidance lists offers.url as recommended — the
+  // per-listing Offer nodes below already set one, so the aggregate was the odd
+  // one out.
+  const setInfoForLd = setByCode(card.setCode);
+  const cardUrl = `/card/${card.slug ?? params.id}`;
+  const cardAbsUrl = `${SITE_URL}${cardUrl}`;
+
   const offersLd = [
     ...(hasStoreOffers
       ? [{
@@ -303,6 +352,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           highPrice: (baseline.prices[baseline.prices.length - 1].priceCents / 100).toFixed(2),
           offerCount: baseline.prices.length,
           availability: "https://schema.org/InStock",
+          url: cardAbsUrl,
           priceValidUntil,
         }]
       : []),
@@ -351,12 +401,23 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     ? {
         "@context": "https://schema.org",
         "@type": "Product",
+        // Addressable node + edges back to the site-level graph declared once in
+        // app/layout.tsx. Without them the site's highest-value page type is an
+        // island and the Organization/WebSite entity signals don't reach it.
+        "@id": `${cardAbsUrl}#product`,
+        mainEntityOfPage: cardAbsUrl,
         name: displayName,
         category: "Trading Card",
         sku: `${card.setCode}-${card.collectorNumber}`,
         productID: `${card.setCode}-${card.collectorNumber}`,
         brand: { "@type": "Brand", name: "Riftbound" },
-        isPartOf: { "@type": "CreativeWorkSeries", name: `Riftbound ${card.setName}` },
+        // TWO memberships, both true: the printing belongs to its set, and the
+        // page belongs to the site graph declared in app/layout.tsx. schema.org
+        // allows isPartOf to take a list, so neither edge has to be dropped.
+        isPartOf: [
+          { "@type": "CreativeWorkSeries", name: `Riftbound ${card.setName}` },
+          { "@id": `${SITE_URL}/#website` },
+        ],
         description: card.description
           ? `${clampText(card.description, 300)} — ${displayName}, Riftbound ${card.setName} (${card.setCode}) ${card.collectorNumber}.`
           : `${displayName} — ${card.domain} ${card.type.toLowerCase()}, ${card.rarity}. Riftbound ${card.setName} (${card.setCode}) ${card.collectorNumber}.`,
@@ -380,9 +441,8 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // structured data. This deepens internal linking — the single biggest lever for
   // getting the long-tail card pages crawled and indexed — and earns breadcrumb
   // rich results in Google.
-  const setInfo = setByCode(card.setCode);
+  const setInfo = setInfoForLd;
   const setUrl = setInfo && !setInfo.comingSoon ? `/sets/${setInfo.slug}` : "/browse";
-  const cardUrl = `/card/${card.slug ?? params.id}`;
   const breadcrumbLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -403,6 +463,29 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     orderBy: [{ setCode: "asc" }, { collectorNumber: "asc" }],
     select: cardTileSelect(DEFAULT_COUNTRY),
   });
+
+  // This printing's own special-print flags, and (if this IS a special printing)
+  // the real tracked price of its plain base sibling — used ONLY for the
+  // "is the premium printing worth it?" FAQ below. Never asserted without both a
+  // real base sibling AND a real price on both sides to compare.
+  const thisIsSignature = isSignature(card.collectorNumber);
+  const thisIsOvernumbered = isOvernumbered(card.collectorNumber);
+  const thisIsCrystalRose = isCrystalRose(card.setCode, card.collectorNumber);
+  const basePrinting = printings.find(
+    (p) => p.variant == null && !p.isPromo && p.rarity !== "Showcase" && !isOvernumbered(p.collectorNumber) && !isSignature(p.collectorNumber)
+  );
+  // THE printing this page is, resolved once and shared by the "Printing" cell,
+  // the About narrative and the FAQ so all three name it identically.
+  const thisPrinting = {
+    isSignature: thisIsSignature,
+    isCrystalRose: thisIsCrystalRose,
+    isOvernumbered: thisIsOvernumbered,
+    isPromo: card.isPromo,
+    variant: card.variant,
+  };
+  const thisPrintingKind = printingKind(thisPrinting);
+  const thisEdition = editionLabel({ ...thisPrinting, rarity: card.rarity });
+  const basePriceCents = basePrinting ? (basePrinting[priceField(DEFAULT_COUNTRY)] as number | null) : null;
 
   // Similar cards — more from the same set, same domain first. This is the single
   // biggest internal-linking lever: every long-tail card page links out to ~12
@@ -469,18 +552,109 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // (default take=120), so this never doubles the day's history read.
   const history = await getPriceHistory(card.id, DEFAULT_COUNTRY);
 
-  // Unique editorial copy + FAQ so each card page carries substantive, crawlable
-  // text rather than just a price table (thin content ranks poorly). Built from
-  // this card's own attributes AND its real tracked history/deck/printing data —
-  // no two pages match, and nothing here is asserted without the data to back it.
-  const about = buildAbout(card, {
-    lowest: baseline.lowest,
-    stores: baseline.storeCount,
-    history,
-    deckCount: allRelatedDecks.length,
-    printingCount: printings.length,
-    place: baselinePlace,
-    currency: baseline.currency,
+  // ── Editorial narrative ────────────────────────────────────────────────────
+  // Built by lib/content/card-narrative.ts from this card's OWN market data:
+  // cross-market spread, trajectory, stock depth, condition/foil economics,
+  // variant premium, set position, playability. Every observation is emitted
+  // only when the data supports it, and the sentence FORMS branch on data
+  // conditions — so a single-seller card and a nine-seller card get genuinely
+  // different paragraphs, not the same one with numbers swapped.
+  //
+  // This replaces a fixed sentence skeleton ("X is a common unit card from
+  // Origins (OGN)… It belongs to the Fury domain") that produced ~1,400
+  // near-identical pages, which is the scaled-content-abuse shape.
+  const marketFor = (country: Country): NarrativeMarket => {
+    const view = computeMarket(rows, country);
+    const inStock = view.prices;
+    const delivered = inStock.map((p) => p.delivered).sort((a, b) => a - b);
+    const nm = inStock.filter((p) => /near\s*mint|^nm$/i.test(p.condition ?? ""));
+    const played = inStock.filter((p) => p.condition && !/near\s*mint|^nm$/i.test(p.condition));
+    const min = (xs: { priceCents: number }[]) =>
+      xs.length ? Math.min(...xs.map((x) => x.priceCents)) : null;
+    return {
+      country,
+      place: COUNTRIES[country].place,
+      currency: view.currency,
+      lowestCents: view.lowest,
+      lowestDeliveredCents: delivered[0] ?? null,
+      secondCents: inStock[1]?.priceCents ?? null,
+      storeCount: view.storeCount,
+      listingCount: inStock.length,
+      cheapestNonFoilCents: view.cheapestStandard,
+      cheapestFoilCents: view.cheapestFoil,
+      cheapestNearMintCents: min(nm),
+      cheapestPlayedCents: min(played),
+    };
+  };
+
+  // Where this card sits in its set's price distribution — one grouped query,
+  // and the only input the narrative can't derive from data already on the page.
+  const setPrices = await prisma.card
+    .findMany({
+      where: { setCode: card.setCode, [priceField(DEFAULT_COUNTRY)]: { not: null } },
+      select: { [priceField(DEFAULT_COUNTRY)]: true } as Record<string, boolean>,
+    })
+    .then((rowsIn) => (rowsIn as unknown as Record<string, number>[]).map((r) => r[priceField(DEFAULT_COUNTRY)]).filter((n): n is number => n != null))
+    .catch(() => [] as number[]);
+  const sortedSetPrices = [...setPrices].sort((a, b) => a - b);
+  const setContext =
+    sortedSetPrices.length && baseline.lowest != null
+      ? {
+          pricedInSet: sortedSetPrices.length,
+          cheaperThan: sortedSetPrices.filter((p) => p < baseline.lowest!).length,
+          setMedianCents: sortedSetPrices[Math.floor(sortedSetPrices.length / 2)],
+        }
+      : null;
+
+  const about = buildCardNarrative({
+    name: card.name,
+    displayName,
+    setName: card.setName,
+    setCode: card.setCode,
+    collectorNumber: card.collectorNumber,
+    rarity: card.rarity,
+    type: card.type,
+    domain: card.domain,
+    variant: card.variant,
+    isPromo: card.isPromo,
+    energyCost: card.energyCost,
+    might: card.might,
+    power: card.power,
+    isSignature: thisIsSignature,
+    isOvernumbered: thisIsOvernumbered,
+    isCrystalRose: thisIsCrystalRose,
+    baseline: marketFor(DEFAULT_COUNTRY),
+    markets: COUNTRY_LIST.map((c) => marketFor(c.code)).filter((m) => m.storeCount > 0),
+    history: { points: history.map((p) => ({ t: p.t, v: p.v })) },
+    printings: printings.map((p) => ({
+      // cardCredentials() is the canonical code→label mapping (lib/card-name.ts).
+      // Deriving this by subtracting the name out of cardDisplayName() left the
+      // parentheses behind, so the narrative read "The (Alt Art) print carries…".
+      label: cardCredentials(p).join(" ").toLowerCase() || "base",
+      priceCents: (p[priceField(DEFAULT_COUNTRY)] as number | null) ?? null,
+      isBase:
+        p.variant == null && !p.isPromo && p.rarity !== "Showcase" &&
+        !isOvernumbered(p.collectorNumber) && !isSignature(p.collectorNumber),
+    })),
+    decks: allRelatedDecks.map((d) => ({ name: d.name })),
+    setContext,
+  });
+
+  // The same price-data test that drives the sitemap and the robots tag, so the
+  // page can explain its own state honestly when it has nothing to compare.
+  const priceState = await getCardPriceState(card.id);
+
+  // Contextual links from this programmatic page into our real editorial work.
+  const relatedGuides = guidesForCard({
+    setName: card.setName,
+    setCode: card.setCode,
+    rarity: card.rarity,
+    type: card.type,
+    domain: card.domain,
+    isPromo: card.isPromo,
+    variant: card.variant,
+    isSignature: thisIsSignature,
+    priceCents: baseline.lowest,
   });
   const faqs = buildFaqs(card, {
     lowest: baseline.lowest,
@@ -490,6 +664,14 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     deckNames: allRelatedDecks.slice(0, 2).map((d) => d.name),
     place: baselinePlace,
     currency: baseline.currency,
+    // editionLabel() is null exactly when this is the plain version, so it
+    // answers "is this a special printing?" and "what do we call it?" with one
+    // decision. Same helper the About narrative uses, so the two can't disagree
+    // — and it prefers the PRINTING over the rarity, which is what previously
+    // made an alternate-art card call itself "the Showcase printing".
+    isSpecialPrinting: thisEdition != null,
+    specialPrintingLabel: thisEdition ?? "",
+    basePriceCents,
   });
   const faqLd = {
     "@context": "https://schema.org",
@@ -555,54 +737,18 @@ export default async function CardPage({ params }: { params: { id: string } }) {
 
             {/* Market-localised metrics (SSR = AU baseline; client reconciles). */}
             <CardPriceMetrics rows={rows} energyCost={card.energyCost} might={card.might} power={card.power} />
-
-            {/* Primary singles buy-path — always present. eBay carries this card
-                (new/used/graded) in every market and pays us a commission, so it's
-                the first, always-visible buy action; the honest local price
-                comparison sits directly below it. Shows real live listings (a
-                native "eBay Ad" carousel) when the daily import has cached any
-                for this card+market, falling back to the generic search CTA
-                otherwise. */}
-            <EbayAdCarousel cardId={card.id} query={cardSearchName(card.name, card)} className="mt-4" />
           </div>
 
-          {/* RiftCompare Marketplace hero — the main attention-grab, shown only
-              when this card actually has active P2P listings. Sits above the
-              store price comparison so a marketplace deal is the first thing a
-              buyer sees when one exists. */}
-          <MarketplaceHeroBlock cardId={card.id} cardName={displayName} />
-
-          {/* Price comparison + eBay fallback + contextual affiliate banners —
-              everything that varies with the visitor's market lives in the client
-              section so the route itself stays cookie-free and ISR-cacheable. */}
-          <CardPriceComparison
-            rows={rows}
-            displayName={displayName}
-            ebaySearch={ebaySearch}
-            ebayQuery={`${cardSearchName(card.name, card)} ${card.collectorNumber}`}
-          />
-
-          {/* Price-history chart — free for everyone (AU history; the series is
-              collected on the AU baseline market). */}
-          <PriceHistoryChart cardId={card.id} />
-
-          {/* Conversion island (client → route stays ISR): watch-this-price email
-              capture + a Value Finder teaser for non-members. */}
-          <div className="mt-6">
-            <CardConversionCta cardId={card.id} />
-          </div>
-
-          {/* AI Tips — funny, narrative buy/hold/wait take grounded in the price data. */}
-          <section className="card-surface mt-6 p-5">
-            <AiInsight cardId={card.id} />
-          </section>
-
-          {/* In-content ad — below the price table the visitor came for, so it never
-              gets between them and the prices. Activates when a slot id is set. */}
-          <AdSlot className="mt-6" height={120} />
-
-          {/* Unique, crawlable editorial content — keeps each card page from being
-              thin (a bare price table). Generated per-card, so no duplication. */}
+          {/* ── OUR OWN ANALYSIS, FIRST ────────────────────────────────────────
+              This section used to sit near the bottom, below an eBay affiliate
+              carousel that was the first substantive element on the page. To an
+              AdSense reviewer opening a random /card/* URL, that reads as an
+              affiliate lander with some data attached — "little or no original
+              content", the objection that no amount of writing further down
+              answers, because nobody scrolls that far to find it.
+              Our writing now leads, and the affiliate block sits below the
+              comparison table, the chart and the FAQ. See docs/adsense-
+              remediation.md § Phase 8. */}
           <section className="card-surface mt-6 p-5">
             <h2 className="font-bold text-white">About {card.name}</h2>
             <div className="mt-3 space-y-3 text-sm leading-relaxed text-slate-300">
@@ -647,6 +793,119 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             </div>
           </section>
 
+          {/* No live market anywhere: say so plainly, then be genuinely useful —
+              the other printings that ARE priced, the set and domain to browse
+              instead, and a price watch. This page is noindexed while it stays in
+              this state (see generateMetadata), but people still reach it from
+              internal links and bookmarks, and an empty shell serves none of them. */}
+          {priceState.isEmpty && (
+            <section className="mt-6 rounded-xl border border-gold/25 bg-gold/[0.04] p-5">
+              <h2 className="font-bold text-white">No live listings for {displayName} yet</h2>
+              <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                None of the stores we track in Australia, New Zealand, the United States, the United
+                Kingdom, Singapore or Canada has this printing in stock today, and we have fewer than
+                seven days of recorded price history for it — so there is nothing honest to compare
+                yet. We check every store daily; this page fills in on its own the moment one lists it.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {printings.some((p) => (p[priceField(DEFAULT_COUNTRY)] as number | null) != null) && (
+                  <Link href="#other-printings" className="btn-ghost text-xs">
+                    See the printings that are in stock ↓
+                  </Link>
+                )}
+                <Link href={setUrl} className="btn-ghost text-xs">
+                  Browse priced {card.setName} cards →
+                </Link>
+                <Link href={`/domains/${domainSlug(card.domain)}`} className="btn-ghost text-xs">
+                  Priced {card.domain} cards →
+                </Link>
+              </div>
+              <div className="mt-4">
+                <PriceWatchButton cardId={card.id} variant="full" />
+              </div>
+            </section>
+          )}
+
+          {/* RiftCompare Marketplace hero — the main attention-grab, shown only
+              when this card actually has active P2P listings. Sits above the
+              store price comparison so a marketplace deal is the first thing a
+              buyer sees when one exists. */}
+          <MarketplaceHeroBlock cardId={card.id} cardName={displayName} />
+
+          {/* Price comparison + eBay fallback + contextual affiliate banners —
+              everything that varies with the visitor's market lives in the client
+              section so the route itself stays cookie-free and ISR-cacheable. An
+              explicit H2 here (rather than just the component's own internal
+              heading) gives this block a crawlable section signal distinct from
+              "About" above it. */}
+          <section className="mt-6">
+            <h2 className="sr-only">Price history &amp; where to buy {card.name}</h2>
+            <CardPriceComparison
+              rows={rows}
+              displayName={displayName}
+              ebaySearch={ebaySearch}
+              ebayQuery={`${cardSearchName(card.name, card)} ${card.collectorNumber}`}
+            />
+
+            {/* Price-history chart — free for everyone (AU history; the series is
+                collected on the AU baseline market). */}
+            <PriceHistoryChart cardId={card.id} />
+          </section>
+
+          {/* Conversion island (client → route stays ISR): watch-this-price email
+              capture + a Value Finder teaser for non-members. */}
+          <div className="mt-6">
+            <CardConversionCta cardId={card.id} />
+          </div>
+
+          {/* AI Tips — hidden entirely while the AdSense review is open.
+              It is explicitly AI-labelled, it comments on price direction, and it
+              reads as quasi-financial advice: three separate things a reviewer
+              marks down, on the site's highest-volume template. Restored by
+              setting NEXT_PUBLIC_ADSENSE_REVIEW_MODE=false after approval.
+              See docs/adsense-remediation.md § Phase 9. */}
+          {!ADSENSE_REVIEW_MODE && (
+            <section className="card-surface mt-6 p-5">
+              <AiInsight cardId={card.id} />
+            </section>
+          )}
+
+          {/* In-content ad — below the price table the visitor came for, so it never
+              gets between them and the prices. Suppressed entirely on a page with
+              no price data (see AdSlot: no units on noindex/thin pages). */}
+          <AdSlot className="mt-6" height={120} pageIsThin={priceState.isEmpty} />
+
+          {/* Rarity/variant summary as its own labelled section — the facts (Showcase,
+              Signature, Overnumbered, Crystal Rose, Promo) already exist in the badge
+              row and the About prose above; this just gives them one crawlable,
+              explicitly-headed answer for "is this printing rare/special" queries. */}
+          <section className="card-surface mt-6 p-5">
+            <h2 className="font-bold text-white">Rarity, prints &amp; variants</h2>
+            <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-4">
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-slate-500">Rarity</dt>
+                <dd className="text-slate-200">{card.rarity}</dd>
+              </div>
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-slate-500">Printing</dt>
+                {/* Same decision as the About prose above — see printingKind().
+                    This cell used to be an independent ladder of ternaries, and
+                    when the generator's ladder drifted (it consulted rarity),
+                    the two disagreed in public: "Printing: Alternate art" here,
+                    "the Showcase printing" three paragraphs up. */}
+                <dd className="text-slate-200">{PRINTING_DISPLAY[thisPrintingKind]}</dd>
+              </div>
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-slate-500">Set</dt>
+                <dd className="text-slate-200">{card.setName} ({card.setCode})</dd>
+              </div>
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-slate-500">Other tracked printings</dt>
+                <dd className="text-slate-200">{printings.length}</dd>
+              </div>
+            </dl>
+          </section>
+
           <section className="card-surface mt-6 p-5">
             <h2 className="font-bold text-white">Frequently asked questions</h2>
             <dl className="mt-3 space-y-4">
@@ -658,6 +917,45 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               ))}
             </dl>
           </section>
+
+          {/* Into our real editorial work. On a programmatic page this is the
+              shortest path a reader — or a reviewer — has to something a person
+              actually wrote, and it's chosen from this card's own attributes
+              rather than being the same three links on all 1,400 pages. */}
+          {relatedGuides.length > 0 && (
+            <section className="card-surface mt-6 p-5">
+              <h2 className="font-bold text-white">Read next</h2>
+              <ul className="mt-3 space-y-3">
+                {relatedGuides.map((g) => (
+                  <li key={g.slug}>
+                    <Link
+                      href={`/${g.category === "guide" ? "guides" : "blog"}/${g.slug}`}
+                      className="group block"
+                    >
+                      <span className="block text-sm font-semibold text-brand-400 group-hover:underline">
+                        {g.title}
+                      </span>
+                      <span className="block text-xs text-slate-500">{g.reason}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {/* ── AFFILIATE BLOCK — deliberately LAST of the in-column sections ──
+              eBay carries this card in every market and pays a commission, so it
+              stays; it just no longer greets the reader before anything we wrote.
+              The disclosure sits with it rather than being repeated in prime
+              real estate — same compliance, honest placement. */}
+          <section className="card-surface mt-6 p-5">
+            <h2 className="font-bold text-white">Also available on eBay</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Live listings including used, graded and international sellers — a useful cross-check
+              on the store prices above, and often the only source for older printings.
+            </p>
+            <EbayAdCarousel cardId={card.id} query={cardSearchName(card.name, card)} className="mt-3" />
+          </section>
         </div>
       </div>
 
@@ -665,7 +963,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           Cross-links the variant cluster (each printing is its own product with its
           own price) so no printing is an unreferenced near-duplicate. */}
       {printings.length > 0 && (
-        <section className="mt-10">
+        <section id="other-printings" className="mt-10 scroll-mt-24">
           <h2 className="mb-1 text-xl font-extrabold text-white">Other printings of {card.name}</h2>
           <p className="mb-4 text-xs text-slate-500">
             Same card, different printing — promos, alternate arts and premium prints each trade at their own price.
@@ -717,7 +1015,20 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             <div>
               <h2 className="text-xl font-extrabold text-white">{similarHeading}</h2>
               <p className="mt-0.5 text-xs text-slate-500">
-                Compare prices on similar Riftbound {card.setName} singles.
+                Compare prices on similar Riftbound {card.setName} singles, or{" "}
+                {/* Also the card catalogue's main internal link INTO the gallery:
+                    ~1,000 card pages each pointing at it is the strongest crawl
+                    signal available to a brand-new landing page. */}
+                {setInfo && !setInfo.comingSoon ? (
+                  <Link href={`/sets/${setInfo.slug}/gallery`} className="text-brand-300 underline-offset-2 hover:underline">
+                    browse the full {card.setName} card gallery
+                  </Link>
+                ) : (
+                  <Link href="/browse" className="text-brand-300 underline-offset-2 hover:underline">
+                    browse the card database
+                  </Link>
+                )}
+                .
               </p>
             </div>
             <Link href={setUrl} className="btn-ghost text-xs shrink-0">
@@ -753,9 +1064,9 @@ export default async function CardPage({ params }: { params: { id: string } }) {
         </section>
       )}
 
-      {/* Embeddable live-price widget — a free backlink/brand engine. (AU default
-          market in the snippet; the widget itself accepts a ?market= override.) */}
-      <EmbedCardButton slug={card.slug ?? card.id} market={DEFAULT_COUNTRY} />
+      {/* The "Embed this live price" widget button was here — removed with the rest
+          of the widget feature. /embed/card/[id] still serves so existing third-party
+          embeds don't break; we simply no longer offer new ones. */}
     </div>
   );
 }
@@ -775,85 +1086,6 @@ type CardForCopy = {
   power: number | null;
 };
 
-// Real, tracked min/max/direction over the card's own baseline-market history —
-// never asserts a trend without enough data points to back it (a fresh card just
-// skips this paragraph rather than guessing). `place`/`currency` describe the
-// market the history belongs to; they are passed in rather than assumed, because
-// this used to say "Australian price" over DEFAULT_COUNTRY's figures.
-function buildTrend(name: string, history: PricePoint[], place: string, currency: string): string | null {
-  if (history.length < 4) return null;
-  const recent = history.slice(-35); // ~5 tracked weeks, matches the chart's usual window
-  const vals = recent.map((p) => p.v);
-  const lo = Math.min(...vals);
-  const hi = Math.max(...vals);
-  const first = recent[0].v;
-  const last = recent[recent.length - 1].v;
-  const days = Math.max(1, Math.round((recent[recent.length - 1].t - recent[0].t) / 86400_000));
-  if (lo === hi) {
-    return `Over the past ${days} days of tracked history, ${name}'s price in ${place} has held steady at ${formatMoney(lo, currency)}.`;
-  }
-  const trendWord = last > first ? "risen" : last < first ? "fallen" : "held steady";
-  return `Over the past ${days} days, ${name} has traded between ${formatMoney(lo, currency)} and ${formatMoney(hi, currency)} in ${place}, and has ${trendWord} since the start of that window — see the full price history chart below.`;
-}
-
-type AboutContext = {
-  lowest: number | null;
-  stores: number;
-  history: PricePoint[];
-  deckCount: number;
-  printingCount: number;
-  // The baseline market these figures belong to. Passed in rather than assumed:
-  // this prose used to hardcode "Australia"/AUD while the numbers were actually
-  // DEFAULT_COUNTRY's (see the note on `baseline` in CardPage).
-  place: string;
-  currency: string;
-};
-
-// Builds unique prose from the card's own attributes, its REAL tracked price
-// history and its actual deck/printing data — nothing here is asserted without the
-// data on this page render to back it, so a thin/new card simply gets fewer
-// paragraphs rather than a fabricated one. MARKET-NEUTRAL (this page is cached once
-// for all four markets): the price cited is the AU baseline, named explicitly.
-function buildAbout(card: CardForCopy, ctx: AboutContext): string[] {
-  const { lowest, stores, history, deckCount, printingCount, place, currency } = ctx;
-  let p1 = `${card.name} is a ${card.rarity.toLowerCase()} ${card.type.toLowerCase()} card from ${card.setName} (${card.setCode}), a set in the Riftbound trading card game, with collector number ${card.collectorNumber}.`;
-  p1 += card.domain === "Colorless"
-    ? " It is a Colorless card, so it fits into decks of any domain."
-    : ` It belongs to the ${card.domain} domain.`;
-  if (card.energyCost != null) {
-    p1 += ` ${card.name} costs ${card.energyCost} energy to play`;
-    if (card.might != null) p1 += ` and has ${card.might} might`;
-    else if (card.power != null) p1 += ` and has ${card.power} power`;
-    p1 += ".";
-  }
-  // Printing credentials — each printing is a distinct product with its own price,
-  // and spelling that out is what keeps variant pages from reading as duplicates.
-  if (card.rarity === "Showcase") p1 += ` This is the Showcase printing — a special-art version of the base card with its own market price.`;
-  else if (card.variant) p1 += ` This listing covers the alternate-art (${card.variant}) printing, which trades separately from the base version.`;
-  if (isSignature(card.collectorNumber)) p1 += " As a Signature print (numbered beyond the set), it is pulled far less often than base cards and commands a premium.";
-  else if (isOvernumbered(card.collectorNumber)) p1 += " As an overnumbered print (numbered beyond the set's base size), it is rarer than the base printing.";
-  if (isCrystalRose(card.setCode, card.collectorNumber)) p1 += " It's one of the six Crystal Rose alt-arts — Wild Rift's returning skin line brought to physical cards for Vendetta — appearing at the same rate as other alt-art pulls in booster packs.";
-  if (card.isPromo) p1 += " It is a promotional printing — it shares the base card's collector number but is a distinct product with its own price.";
-
-  const p2 = lowest != null && stores > 0
-    ? `The lowest tracked price for ${card.name} today is ${formatMoney(lowest, currency)} in ${place}, across ${stores} ${stores === 1 ? "store" : "stores"} — RiftCompare also compares every other market we cover, ranked by delivered cost and refreshed daily.`
-    : `We're currently tracking down store listings for ${card.name}. Prices refresh daily across Australian, New Zealand, US, UK and Singapore stores — check back soon or add it to your wishlist to be ready the moment it's in stock.`;
-
-  const paragraphs = [p1, p2];
-
-  const trend = buildTrend(card.name, history, place, currency);
-  if (trend) paragraphs.push(trend);
-
-  // Deck usage + sibling-printing context — only the parts that are actually true
-  // for this card, so a card with neither simply doesn't get this paragraph.
-  const bits: string[] = [];
-  if (deckCount > 0) bits.push(`sees play in ${deckCount} meta deck${deckCount === 1 ? "" : "s"} tracked on RiftCompare`);
-  if (printingCount > 0) bits.push(`has ${printingCount} other tracked printing${printingCount === 1 ? "" : "s"} — promo, alternate-art or Signature versions, each trading at its own price`);
-  if (bits.length) paragraphs.push(`${card.name} ${bits.join(", and ")}.`);
-
-  return paragraphs;
-}
-
 type FaqContext = {
   lowest: number | null;
   stores: number;
@@ -862,10 +1094,17 @@ type FaqContext = {
   deckNames: string[];
   place: string;
   currency: string;
+  // Only used for the "is the premium printing worth it?" FAQ, and only when
+  // this printing genuinely IS a special one — never asserted for a base card.
+  isSpecialPrinting: boolean;
+  specialPrintingLabel: string;
+  basePriceCents: number | null;
 };
 
 function buildFaqs(card: CardForCopy, ctx: FaqContext): { q: string; a: string }[] {
-  const { lowest, stores, printingCount, deckCount, deckNames, place, currency } = ctx;
+  // Every question and answer leaves through tidy() at the end of this function
+  // — same reasoning as the narrative's exit point.
+  const { lowest, stores, printingCount, deckCount, deckNames, place, currency, isSpecialPrinting, specialPrintingLabel, basePriceCents } = ctx;
   const faqs = [
     {
       q: `How much does ${card.name} cost?`,
@@ -897,5 +1136,24 @@ function buildFaqs(card: CardForCopy, ctx: FaqContext): { q: string; a: string }
     });
   }
 
-  return faqs;
+  // "Is the premium printing worth it?" — only asked when this page genuinely IS
+  // a special printing, and only answered with a real number when a real,
+  // currently-priced base sibling exists to compare against. Never a made-up
+  // "yes it's worth it" — the answer is the honest price gap, or an admission
+  // that there isn't enough data yet.
+  if (isSpecialPrinting) {
+    const a =
+      lowest != null && basePriceCents != null
+        ? `The ${specialPrintingLabel} printing of ${card.name} is currently ${formatMoney(lowest, currency)} in ${place}, versus ${formatMoney(basePriceCents, currency)} for the base printing — a ${
+            lowest > basePriceCents
+              ? `${formatMoney(lowest - basePriceCents, currency)} premium`
+              : lowest < basePriceCents
+              ? `${formatMoney(basePriceCents - lowest, currency)} discount`
+              : "no premium right now"
+          }. Whether that gap is "worth it" comes down to whether you want the base card to play with or the ${specialPrintingLabel.toLowerCase()} print to collect — both are tracked separately on RiftCompare.`
+        : `We don't have live prices for both the ${specialPrintingLabel} printing and the base printing of ${card.name} right now, so there's no honest price gap to compare yet — check back once both are tracked.`;
+    faqs.push({ q: `Is the ${specialPrintingLabel} printing of ${card.name} worth it?`, a });
+  }
+
+  return faqs.map((f) => ({ q: tidy(f.q), a: tidy(f.a) }));
 }

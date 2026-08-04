@@ -157,6 +157,20 @@ function newsletterFooter(unsubUrl: string): string {
   </td></tr>`;
 }
 
+// Footer for PRODUCT ANNOUNCEMENTS sent to registered accounts. A separate footer
+// from newsletterFooter because that one states "you signed up for the weekly Index
+// summary" — which is simply untrue for someone who made an account and never
+// subscribed to anything. Saying so on a commercial email is both inaccurate and
+// the fastest way to get marked as spam, so this one states the real reason and
+// points at the announcement-specific opt-out (which does NOT touch their account
+// emails, price alerts or the weekly digest — see app/announcements/unsubscribe).
+function announcementFooter(unsubUrl: string): string {
+  return `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">
+    You're getting this because you have a ${SITE_NAME} account. This is a one-off product announcement, not a subscription.<br/>
+    <a href="${unsubUrl}" style="color:#9aa4b2;text-decoration:underline">Don't email me announcements</a> · RiftCompare · Riftbound card price comparison.
+  </td></tr>`;
+}
+
 // The weekly digest itself; `inner` is built by lib/newsletter.ts so the content
 // (movers tables, Index summary) lives next to the data that produces it.
 export async function sendNewsletterDigestEmail(to: string, subject: string, heading: string, inner: string, unsubUrl: string): Promise<boolean> {
@@ -200,27 +214,157 @@ export async function sendEarlyAdopterEmail(to: string, days: number): Promise<b
 }
 
 // One-off release-day blast for a new set (e.g. Vendetta, 31 Jul 2026). Sent to the
-// countdown/newsletter list from a one-off script/cron on release day — the moment of
-// peak buy-intent the countdown page promises. `setName`/`setSlug` keep it reusable for
-// future sets.
+// countdown/newsletter list from scripts/send-release-day.ts on release day — the
+// moment of peak buy-intent the countdown page promises. `setName`/`setSlug` keep it
+// reusable for future sets.
+//
+// EVERY NUMBER IS PASSED IN, NOT HARDCODED. The previous version of this template
+// asserted "60+ stores in AU, NZ, US and the UK" in static copy. That silently went
+// stale: the comparison now covers SIX markets (Singapore and Canada were added
+// after it was written) and well over a hundred stores, so the email was
+// understating coverage and omitting two markets entirely to real subscribers.
+// Counts now come from live queries at send time (see the script), and any stat the
+// caller can't resolve is simply omitted rather than guessed — same rule the site
+// itself follows for prices.
+export interface ReleaseDayStats {
+  cardCount: number | null; // cards tracked for this set
+  pricedCount: number | null; // how many of those have a live price
+  storeCount: number | null; // retailers in the comparison
+  marketCount: number | null; // markets covered
+  sealedAvailable: boolean; // whether sealed products for this set are live
+}
+
 export async function sendReleaseDayEmail(
   to: string,
   setName: string,
   setSlug: string,
-  unsubUrl: string
+  unsubUrl: string,
+  stats: ReleaseDayStats,
+  // Which footer to use. "subscriber" = they opted into the newsletter, so the
+  // newsletter footer/unsub is correct. "account" = a registered user receiving a
+  // one-off announcement; claiming they subscribed would be false.
+  recipient: "subscriber" | "account" = "subscriber"
 ): Promise<boolean> {
-  const base = `${SITE_URL}/sets/${setSlug}?utm_source=newsletter&utm_medium=email&utm_campaign=release-day`;
+  const utmq = "utm_source=newsletter&utm_medium=email&utm_campaign=release-day";
+  const setUrl = `${SITE_URL}/sets/${setSlug}?${utmq}`;
+  const sealedUrl = `${SITE_URL}/sealed?q=${encodeURIComponent(setName.toLowerCase())}&${utmq}`;
+  const browseUrl = `${SITE_URL}/browse?${utmq}`;
+  const deckUrl = `${SITE_URL}/deck?${utmq}`;
+
+  // Stat tiles. Table-based (not flex/grid) because Outlook ignores modern CSS —
+  // this is the one layout that renders identically in Gmail, Apple Mail and
+  // Outlook. Only tiles with a REAL number are emitted, so a failed stat query
+  // shrinks the row rather than printing "—" or a guess.
+  const tiles: { value: string; label: string }[] = [];
+  if (stats.cardCount != null && stats.cardCount > 0)
+    // "printings", not "cards": the live count includes alt-arts, Signatures,
+    // Overnumbers and promos, so it is legitimately HIGHER than the set's headline
+    // card count (Vendetta: 235 printings vs a 166-card set). Labelling it "cards"
+    // would misstate the set's size to anyone who knows the number.
+    tiles.push({ value: stats.cardCount.toLocaleString(), label: "printings live" });
+  if (stats.storeCount != null && stats.storeCount > 0)
+    tiles.push({ value: String(stats.storeCount), label: "stores compared" });
+  if (stats.marketCount != null && stats.marketCount > 0)
+    tiles.push({ value: String(stats.marketCount), label: "markets" });
+
+  const tileRow = tiles.length
+    ? `<tr><td style="padding:4px 32px 20px">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+        ${tiles
+          .map(
+            (t, i) => `<td width="${Math.floor(100 / tiles.length)}%" align="center" style="background:#0f1622;border:1px solid #233047;border-radius:12px;padding:14px 6px;${i < tiles.length - 1 ? "border-right-width:1px" : ""}">
+              <div style="font-size:24px;font-weight:800;color:#34d17e;line-height:1.1">${t.value}</div>
+              <div style="font-size:11px;color:#8b95a5;text-transform:uppercase;letter-spacing:.5px;margin-top:4px">${t.label}</div>
+            </td>${i < tiles.length - 1 ? '<td width="8"></td>' : ""}`
+          )
+          .join("")}
+        </tr></table></td></tr>`
+    : "";
+
+  const pricedLine =
+    stats.pricedCount != null && stats.pricedCount > 0
+      ? ` <strong style="color:#e6ebf2">${stats.pricedCount.toLocaleString()}</strong> already have a live price.`
+      : "";
+
+  // One reusable "feature card" block — a bordered panel with an accent bar, so the
+  // three value props read as distinct sections instead of a wall of paragraphs.
+  const card = (accent: string, title: string, body: string, link: { href: string; label: string } | null) => `
+    <tr><td style="padding:0 32px 12px">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0f1622;border:1px solid #233047;border-radius:12px">
+        <tr>
+          <td width="4" style="background:${accent};border-radius:12px 0 0 12px"></td>
+          <td style="padding:14px 16px">
+            <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:4px">${title}</div>
+            <div style="font-size:13px;line-height:1.6;color:#b8c0cc">${body}</div>
+            ${link ? `<div style="margin-top:8px"><a href="${link.href}" style="color:${accent};font-weight:700;font-size:13px;text-decoration:none">${link.label} →</a></div>` : ""}
+          </td>
+        </tr>
+      </table>
+    </td></tr>`;
+
+  const sealedCard = stats.sealedAvailable
+    ? card(
+        "#f2c94c",
+        "Sealed is priced too",
+        `Booster boxes, packs and Proving Grounds kits — ranked by total delivered cost, with an at-RRP flag so you can see instantly whether a box is a fair price or a scalp.`,
+        { href: sealedUrl, label: `Compare ${setName} sealed` }
+      )
+    : "";
+
   const inner = `
-    <tr><td style="padding:8px 32px 16px;font-size:16px;line-height:1.6;color:#e6ebf2">
-      <strong>${setName} is live.</strong> You asked us to tell you the moment prices went up — they're up now.
+    <!-- Hero band -->
+    <tr><td style="padding:0 32px 4px">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#132a1e;border:1px solid #2f6b4a;border-radius:12px">
+        <tr><td style="padding:16px 18px">
+          <div style="display:inline-block;background:#34d17e;color:#06210f;font-size:11px;font-weight:800;letter-spacing:.6px;padding:3px 8px;border-radius:5px">OUT NOW</div>
+          <div style="font-size:17px;font-weight:700;color:#fff;margin-top:10px;line-height:1.4">
+            ${setName} has landed — and every card is already priced.
+          </div>
+          <div style="font-size:13px;line-height:1.6;color:#a9d9c0;margin-top:6px">
+            You asked us to tell you the moment prices went live. They're live now.
+          </div>
+        </td></tr>
+      </table>
     </td></tr>
-    <tr><td style="padding:0 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
-      We're comparing every ${setName} card across 60+ stores in AU, NZ, US and the UK, cheapest delivered price
-      first — so you never overpay in the launch rush. Prices move fast on day one; grab what you need before the
-      chase cards spike.
+
+    <tr><td style="height:18px"></td></tr>
+    ${tileRow}
+
+    ${card(
+      "#34d17e",
+      "The full card database, ready",
+      `Every ${setName} card has its own page with the complete store-by-store comparison, price history and printing variants — alt-arts, Signatures, Overnumbers and promos all tracked separately.${pricedLine}`,
+      { href: setUrl, label: `Browse ${setName}` }
+    )}
+    ${card(
+      "#4a9eff",
+      "Cheapest delivered, not cheapest listed",
+      `We rank by what you actually pay — item price plus postage, with each store's free-shipping threshold factored in. Launch-week prices move fast, so it's worth checking before you commit.`,
+      null
+    )}
+    ${sealedCard}
+    ${card(
+      "#a855f7",
+      "Building a deck?",
+      `Paste a decklist into the deck pricer and it works out the cheapest way to buy the whole thing — consolidating stores so you don't pay postage five times over.`,
+      { href: deckUrl, label: "Price a deck" }
+    )}
+
+    <!-- Primary CTA -->
+    <tr><td align="center" style="padding:14px 32px 6px">
+      <a href="${setUrl}" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:800;font-size:15px;text-decoration:none;padding:14px 30px;border-radius:10px">See every ${setName} price →</a>
     </td></tr>
-    <tr><td style="padding:4px 32px 24px"><a href="${base}" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">See every ${setName} price →</a></td></tr>`;
-  return sendEmail(to, `${setName} is out — see every card's cheapest price`, emailShell(`${setName} is here`, inner, newsletterFooter(unsubUrl)));
+    <tr><td align="center" style="padding:0 32px 24px;font-size:12px;color:#6b7585">
+      or <a href="${browseUrl}" style="color:#9aa4b2;text-decoration:underline">browse the whole database</a>
+    </td></tr>`;
+
+  const subject =
+    stats.storeCount != null
+      ? `${setName} is out — every card priced across ${stats.storeCount} stores`
+      : `${setName} is out — see every card's cheapest price`;
+
+  const footer = recipient === "account" ? announcementFooter(unsubUrl) : newsletterFooter(unsubUrl);
+  return sendEmail(to, subject, emailShell(`${setName} is here`, inner, footer));
 }
 
 // Sent once on first signup so subscribers hear from us immediately (and get the

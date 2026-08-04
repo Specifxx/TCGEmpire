@@ -15,6 +15,7 @@
  * Run in CI via .github/workflows/db-audit.yml (needs DATABASE_URL).
  */
 import { prisma } from "../src/lib/db";
+import { dbHistory } from "../src/lib/db-history";
 import { cardSlug } from "../src/lib/card-url";
 import { normalizeSearch } from "../src/lib/format";
 import { DOMAIN_KEYS, RARITY_KEYS, CARD_TYPES, SETS } from "../src/lib/constants";
@@ -166,7 +167,12 @@ async function main() {
 
   // ── Freshness ────────────────────────────────────────────────────────────────
   section("Freshness");
-  const hist = await prisma.priceHistory.groupBy({ by: ["country"], _max: { day: true }, _count: { _all: true } });
+  // dbHistory, NOT prisma: PriceHistory lives in the separate history project
+  // (RH6 — see src/lib/db-history.ts). This read used the OPERATIONAL client,
+  // whose PriceHistory table is deliberately empty (migrate-main-db excludes its
+  // data when copying into RM3), so this check reported a false
+  // "PriceHistory is EMPTY" every run.
+  const hist = await dbHistory.priceHistory.groupBy({ by: ["country"], _max: { day: true }, _count: { _all: true } });
   for (const h of hist) console.log(`  PriceHistory ${h.country}: ${h._count._all} rows, latest day ${h._max.day?.toISOString().slice(0, 10)}`);
   if (!hist.length) { issues++; console.log("  ✗ PriceHistory is EMPTY — movers/charts have no data"); }
   const ebayFresh = cards.filter((c) => c.ebayCheckedAt && Date.now() - c.ebayCheckedAt.getTime() < 28 * 3600_000).length;

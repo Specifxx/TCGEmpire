@@ -88,6 +88,85 @@ export async function getDemandVelocity(cardIds: string[], days = 21): Promise<M
   return out;
 }
 
+export interface DemandWindowRow {
+  cardId: string;
+  searches: number; // searches accrued INSIDE the window
+  views: number;
+}
+
+export interface DemandWindowResult {
+  rows: DemandWindowRow[]; // every card with >0 activity in the window, unsorted
+  baselineDay: Date | null; // snapshot day used as the window's start (null = none old enough)
+  coveredDays: number | null; // real days from baseline to now — may be < requested
+  totalDays: number; // distinct snapshot days on record at all
+}
+
+// Demand accrued WITHIN a time window, for the admin demand leaderboard.
+//
+// Card.searchCount/viewCount are cumulative running totals, so "searches in the
+// last 7 days" is not a column we can filter — it's a SUBTRACTION: today's total
+// minus the total as of the snapshot taken 7 days ago. That makes the answer only
+// as good as the snapshot coverage, which is why this returns baselineDay /
+// coveredDays / totalDays alongside the numbers: the caller must be able to say
+// "these are really the last 5 days, not the 7 you asked for" rather than quietly
+// presenting a shorter (or all-time) window under the requested label.
+//
+// Ranking is exact, not a top-N approximation: both sides are id + two integers,
+// so diffing EVERY card costs a few hundred KB and avoids the trap of ranking a
+// window by cumulative totals (a card huge all-time but flat this week would
+// otherwise crowd out a genuinely spiking one).
+export async function getDemandWindow(days: number): Promise<DemandWindowResult> {
+  const empty: DemandWindowResult = { rows: [], baselineDay: null, coveredDays: null, totalDays: 0 };
+  try {
+    const totalDays = await demandSnapshotDays();
+    if (totalDays === 0) return empty;
+
+    // The most recent snapshot at or before the window's start. Snapshots are
+    // daily, so a 24h window resolves to "since yesterday's snapshot" — daily is
+    // the finest resolution this data supports, by construction.
+    const cutoff = sydneyDay(new Date(Date.now() - days * 86400_000));
+    const baseline = await prisma.demandSnapshot.findFirst({
+      where: { day: { lte: cutoff } },
+      orderBy: { day: "desc" },
+      select: { day: true },
+    });
+    // No snapshot that old — the requested window predates our history entirely.
+    if (!baseline) return { ...empty, totalDays };
+
+    const [baseRows, live] = await Promise.all([
+      prisma.demandSnapshot.findMany({
+        where: { day: baseline.day },
+        select: { cardId: true, searchCount: true, viewCount: true },
+      }),
+      prisma.card.findMany({
+        where: { OR: [{ searchCount: { gt: 0 } }, { viewCount: { gt: 0 } }] },
+        select: { id: true, searchCount: true, viewCount: true },
+      }),
+    ]);
+
+    const base = new Map(baseRows.map((r) => [r.cardId, r]));
+    const rows: DemandWindowRow[] = [];
+    for (const c of live) {
+      const b = base.get(c.id);
+      // A card with no baseline row is NEW since the window opened, so all of its
+      // current total accrued inside the window. Math.max guards the theoretical
+      // case of a counter being reset backwards.
+      const searches = Math.max(0, c.searchCount - (b?.searchCount ?? 0));
+      const views = Math.max(0, c.viewCount - (b?.viewCount ?? 0));
+      if (searches > 0 || views > 0) rows.push({ cardId: c.id, searches, views });
+    }
+
+    const coveredDays = Math.max(
+      0,
+      Math.round((Date.now() - baseline.day.getTime()) / 86400_000)
+    );
+    return { rows, baselineDay: baseline.day, coveredDays, totalDays };
+  } catch (e) {
+    console.warn("getDemandWindow skipped:", (e as Error).message);
+    return empty;
+  }
+}
+
 // How many distinct snapshot days exist at all (drives the "velocity active" status
 // in the admin tool). 0 until the table ships / accrues. Guarded.
 export async function demandSnapshotDays(): Promise<number> {

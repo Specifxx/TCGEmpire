@@ -1,6 +1,7 @@
 /**
  * Read-only diagnostic for the price-history DB (the one db-history.ts resolves —
- * RH5 in prod as of 2026-07-26, after HISTORY_DATABASE_URL_4 went unreachable).
+ * RH6 in prod as of 2026-07-31, after RH5 exhausted its monthly Neon
+ * network-transfer allowance).
  * Prints, for the last 14 Sydney days and per country: row count, distinct
  * cards, and min/median/max lowestPriceCents — so a gap (missing recent days)
  * or a scale jump (broken index) is obvious in the log. Also prints which DB
@@ -8,7 +9,7 @@
  *
  * Usage: npx tsx scripts/audit-history.ts
  */
-import { dbHistory } from "../src/lib/db-history";
+import { dbHistory, HISTORY_URL_SOURCE } from "../src/lib/db-history";
 
 const CC = ["AU", "NZ", "US", "UK", "SG", "CA"];
 
@@ -19,15 +20,15 @@ function median(xs: number[]): number {
 }
 
 async function main() {
-  // Mirrors db-history.ts's own resolution order exactly.
-  const which =
-    process.env.RH5 ? "RH5"
-    : process.env.HISTORY_DATABASE_URL_4 ? "HISTORY_DATABASE_URL_4"
-    : process.env.HISTORY_DATABASE_URL ? "HISTORY_DATABASE_URL"
-    : process.env.HISTORY_DATABASE_URL_2 ? "HISTORY_DATABASE_URL_2"
-    : process.env.HISTORY_DATABASE_URL_3 ? "HISTORY_DATABASE_URL_3"
-    : "DATABASE_URL (fallback)";
-  console.log(`History DB in use: ${which}`);
+  // Use db-history.ts's OWN exported constant rather than re-deriving it here.
+  // This block used to be a hand-rolled copy of the chain, commented "mirrors
+  // db-history.ts's resolution order exactly" — and it had silently stopped
+  // doing so: it still led with RH5 after the chain moved to RH6-first. Since
+  // maintenance.yml passes BOTH vars, this script would connect to RH6 (via
+  // dbHistory) and print "RH5" — a wrong answer from the one tool an operator
+  // runs to confirm which history database is live. Never re-derive a chain
+  // that something else already exports.
+  console.log(`History DB in use: ${HISTORY_URL_SOURCE}`);
 
   const total = await dbHistory.priceHistory.count();
   console.log(`PriceHistory total rows: ${total.toLocaleString()}`);

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { ParallaxRoot } from "./ParallaxRoot";
 import { CountryHeroToggle } from "@/components/CountryHeroToggle";
@@ -34,13 +35,14 @@ export function CinematicHero({
       </div>
 
       {/* ── Foreground content (re-aligned to the normal grid) ───────────────── */}
-      <div className="container-app relative z-10 w-full py-10 text-center sm:py-14">
+      <div className="container-app relative z-10 w-full py-8 text-center sm:py-10">
         {/* Kinetic headline — MARKET-NEUTRAL: this page is cached (ISR), so one
             version serves every visitor and crawler; naming all four markets
             ranks in all four. Prices localise client-side after hydration.
-            Sized to lead the page without dominating it — one step down from
-            the old 7xl ceiling, matching the tighter section rhythm below. */}
-        <h1 className="animate-fade-in [animation-delay:160ms] mx-auto mt-4 max-w-3xl text-3xl font-extrabold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-6xl">
+            Sized to lead the page without dominating it. Capped at lg:text-5xl
+            (not 6xl) with a wider max-w-4xl measure so the full sentence
+            settles into ~2 lines at desktop instead of wrapping to 3. */}
+        <h1 className="animate-fade-in [animation-delay:160ms] mx-auto mt-4 max-w-4xl text-3xl font-extrabold leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-5xl">
           Compare <span className="text-brand-400">Riftbound</span> card prices across AU, NZ, US &amp; UK stores
         </h1>
         <p className="animate-fade-in [animation-delay:240ms] mx-auto mt-4 max-w-2xl text-base text-slate-300">
@@ -51,9 +53,31 @@ export function CinematicHero({
         {/* The primary action: search, not a row of buttons. Wired to the exact
             same search as the nav box (same component, `variant="hero"`).
             Autofocus is desktop-only — SearchBar itself gates on viewport
-            width, never on mobile. */}
+            width, never on mobile.
+
+            THE <Suspense> IS LOAD-BEARING, not a nicety. SearchBar calls
+            useSearchParams(), and in the App Router an unwrapped
+            useSearchParams() deopts its whole subtree to client-side rendering.
+            Without this boundary the deopt escalated to the nearest Suspense
+            above it — app/loading.tsx — so the ENTIRE homepage was replaced in
+            the server-rendered HTML by the loading spinner:
+
+              <main id="main-content">
+                <template data-dgst="BAILOUT_TO_CLIENT_SIDE_RENDERING"></template>
+                <div …>Loading…</div>
+              </main>
+
+            Every other page on the site server-renders its content; the homepage
+            alone shipped a spinner, no <h1>, and not one internal link, to any
+            client that doesn't execute JavaScript — including an AdSense
+            reviewer fetching the page and every "does this site have content?"
+            check that runs on raw HTML. The Navbar wraps its two SearchBar
+            instances in exactly this boundary; the hero was the one that
+            didn't. See docs/adsense-remediation.md § Phase 11. */}
         <div className="animate-fade-in [animation-delay:300ms] mt-6">
-          <SearchBar variant="hero" autoFocusDesktop />
+          <Suspense fallback={<div className="input mx-auto h-12 max-w-2xl" />}>
+            <SearchBar variant="hero" autoFocusDesktop />
+          </Suspense>
         </div>
 
         {/* One thin stat line, directly under the search field — was 4 bordered
@@ -84,12 +108,13 @@ export function CinematicHero({
 // (safe because globals.css sets html{overflow-x:clip}). `main` is centred in the
 // viewport on every breakpoint, so the breakout is symmetric. min-height is kept
 // modest so the vertically-centred content doesn't leave a large void up top —
-// content-driven height (via the section's own py-10/14) does most of the work;
+// content-driven height (via the section's own py-8/10) does most of the work;
 // this floor just stops a short-content flash on the very first paint. Trimmed
-// from 46vh now that the hero itself is shorter (search-first, no partner row).
+// again (36vh → 30vh) alongside the tighter padding/H1 above — the section was
+// running ~650px tall with a large dead band before the first content section.
 function ParallaxShell({ children }: { children: React.ReactNode }) {
   return (
-    <ParallaxRoot className="relative left-1/2 -mt-6 flex min-h-[36vh] w-screen -translate-x-1/2 items-center overflow-hidden">
+    <ParallaxRoot className="relative left-1/2 -mt-6 flex min-h-[30vh] w-screen -translate-x-1/2 items-center overflow-hidden">
       {children}
     </ParallaxRoot>
   );

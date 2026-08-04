@@ -48,10 +48,10 @@ export default function AboutPage() {
           <p>
             {SITE_NAME} is a free price-comparison tool and card database for{" "}
             <strong className="text-white">Riftbound: League of Legends TCG</strong>. We track live prices
-            for every Riftbound card across dozens of stores in Australia, New Zealand, the United States
-            and the United Kingdom, and show you the cheapest place to buy — alongside price history, set
-            checklists, sealed-product prices, deck pricing and more. Everything is free to use, with no
-            account required.
+            for every Riftbound card across dozens of stores in Australia, New Zealand, the United States,
+            the United Kingdom, Singapore and Canada, and show you the cheapest place to buy — alongside
+            price history, set checklists, sealed-product prices, deck pricing and more. Everything is free
+            to use, with no account required.
           </p>
         </section>
 
@@ -88,6 +88,23 @@ export default function AboutPage() {
             show or the order results appear in: the cheapest option is always shown first, full stop.
             You can read the details in our{" "}
             <Link href="/privacy" className="text-brand-400 hover:underline">Privacy Policy</Link>.
+          </p>
+        </section>
+
+        <section className="space-y-2">
+          <h2 className="text-lg font-bold text-white">The RiftCompare Marketplace</h2>
+          <p>
+            Alongside price comparison, {SITE_NAME} also runs its own peer-to-peer{" "}
+            <Link href="/marketplace" className="text-brand-400 hover:underline">Marketplace</Link>, where
+            verified sellers list Riftbound singles for sale directly to other players. For most listings
+            {SITE_NAME} is acting purely as the facilitator — payment is processed by Stripe and held in
+            escrow until delivery is confirmed, and the seller (not {SITE_NAME}) is who you&rsquo;re buying
+            from. A small number of listings are marked &ldquo;Official Store&rdquo; and are sold directly
+            by {SITE_NAME} itself. Full details are in the{" "}
+            <Link href="/marketplace/terms" className="text-brand-400 hover:underline">Marketplace Terms</Link>{" "}
+            and{" "}
+            <Link href="/marketplace/buyer-protection" className="text-brand-400 hover:underline">Buyer Protection</Link>{" "}
+            pages.
           </p>
         </section>
 

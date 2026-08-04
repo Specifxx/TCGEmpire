@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { normalizeCountry, pickPrice, currencyOf, COUNTRIES, type Country } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
+import { cardImageAlt } from "@/lib/image-alt";
 
 // Embeddable price widget. A chrome-free HTML document (no app layout, no React
 // hydration) that creators, store sites and Discord-linked blogs can drop into an
@@ -34,11 +35,24 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     })
     .catch(() => null);
 
+  // An unknown card id must answer 404, not 200. The widget previously returned
+  // "200 OK" with a "Card not found" card inside it — the textbook soft-404
+  // shape, on a route where anyone embedding the widget can invent the id. An
+  // iframe renders the body of a 404 response exactly the same as a 200, so the
+  // friendly fallback is kept; only the status line changes. Misses also get a
+  // much shorter cache so a card that gets imported later goes live promptly.
   const body = card ? renderCard(card, market) : renderMissing();
   return new Response(body, {
+    status: card ? 200 : 404,
     headers: {
       "Content-Type": "text/html; charset=utf-8",
-      "Cache-Control": "public, s-maxage=300, stale-while-revalidate=900",
+      "Cache-Control": card
+        ? "public, s-maxage=300, stale-while-revalidate=900"
+        : "public, s-maxage=60",
+      // The shell already carries <meta name="robots" content="noindex">; the
+      // header covers the case where the widget is fetched as a subresource and
+      // the meta tag is never parsed.
+      "X-Robots-Tag": "noindex",
     },
   });
 }
@@ -64,7 +78,7 @@ function renderCard(card: EmbedCard, market: Country): string {
 
   return shell(`
   <a class="rc-card" href="${esc(href)}" target="_blank" rel="noopener">
-    ${img ? `<img class="rc-img" src="${img}" alt="" loading="lazy" />` : `<div class="rc-img rc-noimg">🃏</div>`}
+    ${img ? `<img class="rc-img" src="${img}" alt="${esc(cardImageAlt(card))}" width="56" height="78" loading="lazy" decoding="async" />` : `<div class="rc-img rc-noimg">🃏</div>`}
     <div class="rc-body">
       <div class="rc-name" title="${esc(card.name)}">${esc(card.name)}</div>
       <div class="rc-meta">${esc(card.setCode)} · ${esc(card.collectorNumber)} · ${esc(card.rarity)}</div>

@@ -25,7 +25,7 @@ import { PrismaClient } from "@prisma/client";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { normalizeSearch } from "../src/lib/format";
-import { isOvernumbered } from "../src/lib/constants";
+import { chasePrintRarity, isOvernumbered } from "../src/lib/constants";
 
 const prisma = new PrismaClient();
 const DRY = process.env.DRY_RUN === "1";
@@ -87,7 +87,7 @@ async function main() {
     const imageUrl = (r.imageUrl ?? "").trim();
     const type = r.type && TYPES.has(titleCase(r.type)) ? titleCase(r.type) : "";
     const domain = r.domain && DOMAINS.has(titleCase(r.domain)) ? titleCase(r.domain) : "";
-    const rarity = r.rarity && RARITIES.has(titleCase(r.rarity)) ? titleCase(r.rarity) : "TBC";
+    const rawRarity = r.rarity && RARITIES.has(titleCase(r.rarity)) ? titleCase(r.rarity) : "TBC";
     const rawName = (r.name ?? "").trim();
     const name = type === "Legend" ? enrichLegendName(rawName, r.champion?.trim()) : rawName;
 
@@ -135,6 +135,22 @@ async function main() {
       : `ven-official-${slugify(name)}${variant ? `-${variant}` : ""}`;
     // Prefer the official collector code ("021/166"); fall back to the id segment.
     const collectorNumber = (r.code ?? "").trim() ? (r.code as string).trim().toUpperCase() : numberSeg ? numberSeg.toUpperCase() : "TBA";
+
+    // The official gallery labels a re-print by the rarity of the card it
+    // RE-PRINTS, so an overnumbered or Signature chase card arrives as "Rare"
+    // and lands in the base rarity filter beside ordinary rares — which is
+    // exactly what happened: /browse?rarity=Rare filled up with A$165–172 VEN
+    // chase cards. Every other set keeps its chase prints in Showcase (measured:
+    // scripts/audit-rarity.ts), so apply the same rule at the source and stop
+    // the pipeline reintroducing the gap on its next run.
+    // scripts/fix-altart-rarity.ts repairs the rows already in the database.
+    //
+    // "TBC" is preserved: an unknown rarity must stay honestly unknown rather
+    // than be promoted to Showcase by a chase-print rule.
+    const rarity =
+      rawRarity === "TBC"
+        ? "TBC"
+        : chasePrintRarity({ collectorNumber, variant, isPromo: false, rarity: rawRarity });
 
     const data = {
       name,

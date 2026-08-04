@@ -22,15 +22,15 @@ const PARTS = [
     count: "1",
     n: 1,
     color: "#e5484d",
-    desc: "Your signature unit, tied to your Legend (e.g. Master Yi, Tempered for Master Yi, Wuju Bladesman).",
+    desc: "Your signature unit, tied to your Legend (e.g. Master Yi, Tempered for Master Yi, Wuju Bladesman). It lives inside the 40-card main deck rather than in a zone of its own.",
   },
   {
     key: "main",
     label: "Main deck",
-    count: "~40",
-    n: 40,
+    count: "~39",
+    n: 39,
     color: "#34d17e",
-    desc: "Your Units, Spells and Gear — where most of your strategy lives. This is the pile you draw from all game.",
+    desc: "Your Units, Spells and Gear — where most of your strategy lives. This is the pile you draw from all game. Together with your Champion it makes up the 40-card main deck.",
   },
   {
     key: "runes",
@@ -50,11 +50,11 @@ const PARTS = [
   },
   {
     key: "side",
-    label: "Sideboard",
-    count: "up to 8",
-    n: 8,
+    label: "Side deck",
+    count: "up to 10",
+    n: 10,
     color: "#8b8f9a",
-    desc: "Extra cards you can swap in between games at tournaments to tune your deck to each matchup.",
+    desc: "Extra cards you can swap in between games at tournaments to tune your deck to each matchup. Raised from 8 to 10 on 24 July 2026 — no Runes, Legends or Battlefields, and it shares the 3-copy limit with your main deck.",
   },
 ] as const;
 

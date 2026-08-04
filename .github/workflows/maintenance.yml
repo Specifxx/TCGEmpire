@@ -22,18 +22,27 @@ on:
           - vendetta-pipeline # scrape official gallery + import VEN reveals
           - probe-sg         # read-only Singapore store scan (no DB writes)
           - probe-url        # read-only page fetch + font/style diagnostics (url input)
+          - probe-imgur      # read-only: render an Imgur album (JS SPA — curl gets an empty shell) and dump every full-res image URL (url input)
+          - probe-render     # read-only: render ANY page with a real browser and dump its heading outline, repeated item components, tables, images, palette + full-page screenshot (url input). For researching client-rendered sites that probe-url only sees as an empty shell.
+          - smoke-pages     # read-only: assert the key pages return real server-rendered content (post-deploy gate; url input overrides the default production origin)
           - import-prices    # run the store price importer for this ref's store list
           - import-sealed     # refresh sealed products (stores + eBay AU + TCGplayer US) + self-heal stale rows
-          - migrate-history  # copy PriceHistory/ClickEvent to the newest history DB
+          - migrate-history  # Prisma-based top-up: copy PriceHistory/ClickEvent from EVERY older source into the newest history DB (tolerates unreadable sources, dedupes). Slower/more transfer than migrate-history-db — prefer that for the bulk copy.
+          - migrate-history-db # full pg_dump/restore of the HISTORY database (RH5) into RH6 + row-count verification. Compressed on the wire, so it's the cheapest way to drain a project that has exhausted its transfer allowance. RUN THIS BEFORE any other history task once RH6 is set.
           - audit-ven        # read-only census of VEN cards (chase-tier fields)
+          - audit-runes      # read-only census of every set's Rune printings + which lack real art
+          - set-rune-art     # attach real English art to placeholder rune printings (OGN 'b' promos, UNL alt arts, SFD Nexus Night) + clear the Chinese-only VEN alt-art prints
+          - audit-rarity     # read-only: rarity distribution per set, base prints vs chase prints, + anomalies
           - fix-op-promo-flag # flip isPromo=true for organized-play promos add-tcg-printings.ts mis-tagged (Nexus Night rune cycle)
+          - fix-kennen-name  # one-off: rename VEN 155/166 + 197/166 from RiftScribe's "Yordle, Heart of the Tempest" placeholder to "Kennen, Heart of the Tempest" (matches the manually-corrected 197*/166 Signature)
           - audit-history    # read-only per-day price-history diagnostic
           - audit-users      # read-only user/Premium census (no PII printed)
           - audit-clicks     # read-only outbound-click leaderboard per retailer (affiliate-outreach priority)
+          - diagnose-card    # read-only: why does ONE card have no price? dumps its RetailerPrice + eBay carousel rows and re-runs the LIVE eBay search (card input)
           - remove-seed-accounts # one-off: delete @riftcompare.seed bot personas (dead since the forum autoseeder was removed)
           - test-marketplace-stripe # smoke-test CRON_SECRET + both Stripe webhook secrets + a Connect account create/delete round-trip (test or live)
           - check-cards      # read-only: fail if any card page would render a price in one component and "—" in another (hero vs prose vs JSON-LD)
-          - migrate-main-db  # full pg_dump/restore of the OPERATIONAL database (old DATABASE_URL_2) into RM3 + row-count verification. Read-only against the source; skips PriceHistory/ClickEvent data (served from RH5) to conserve the source's exhausted transfer allowance. RUN THIS BEFORE any other task once RM3 is set.
+          - migrate-main-db  # full pg_dump/restore of the OPERATIONAL database (old DATABASE_URL_2) into RM3 + row-count verification. Read-only against the source; skips PriceHistory/ClickEvent data (served from the history project, RH6) to conserve the source's exhausted transfer allowance. RUN THIS BEFORE any other task once RM3 is set.
       dry_run:
         description: "Dry run (log what would change, write nothing)"
         type: boolean
@@ -50,6 +59,14 @@ on:
         description: "probe-url only: dump ~2700 chars of raw HTML around the first occurrence of this literal string"
         type: string
         required: false
+      context_marker_end:
+        description: "probe-url only: if set, print the FULL raw HTML between the first occurrence of context_marker and the first occurrence of this string after it (no length cap) — for pulling a whole content section (e.g. a card gallery) in one shot"
+        type: string
+        required: false
+      base64_dump:
+        description: "probe-url only: print the fetched file's full content as base64 (chunked, prefixed/suffixed with markers) — for pulling a binary asset (e.g. an image the sandbox can't reach directly) out through the job log"
+        type: boolean
+        default: false
 
 jobs:
   run:
@@ -92,9 +109,10 @@ jobs:
           # The click/price-history tables can live in a SECOND Neon project
           # (src/lib/db-history.ts). Ordinary pushes never reach it, so new columns
           # (e.g. ClickEvent.path) 500 the admin clicks page until pushed here too.
-          # RH5 is the CURRENT project (2026-07-26, after _4 went unreachable —
-          # see db-history.ts); _4/base/_2/_3 are older, dead/exhausted fallbacks only.
-          HISTORY_DB: ${{ secrets.RH5 || vars.RH5 || secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 || secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL || secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 || secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
+          # RH6 is the CURRENT project (2026-07-31, after RH5 exhausted its Neon
+          # network-transfer allowance — see db-history.ts); RH5/_4/base/_2/_3 are
+          # older, dead/exhausted fallbacks only.
+          HISTORY_DB: ${{ secrets.RH6 || vars.RH6 || secrets.RH5 || vars.RH5 || secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 || secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL || secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 || secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
         run: |
           # --accept-data-loss: some schema changes are intentionally destructive
           # (e.g. dropping a removed feature's tables/columns) — prisma db push
@@ -112,16 +130,20 @@ jobs:
       - name: Migrate history to the new history database
         if: inputs.task == 'migrate-history'
         env:
+          RH6: ${{ secrets.RH6 || vars.RH6 }}
           RH5: ${{ secrets.RH5 || vars.RH5 }}
           HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
           HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
         run: |
-          TARGET="${RH5:-${HISTORY_DATABASE_URL_4:-$HISTORY_DATABASE_URL}}"
+          TARGET="${RH6:-${RH5:-${HISTORY_DATABASE_URL_4:-$HISTORY_DATABASE_URL}}}"
           if [ -z "$TARGET" ]; then
-            echo "::error::No target history DB visible to Actions (RH5 / HISTORY_DATABASE_URL_4 / HISTORY_DATABASE_URL)."
+            echo "::error::No target history DB visible to Actions (RH6 / RH5 / HISTORY_DATABASE_URL_4 / HISTORY_DATABASE_URL)."
             exit 1
+          fi
+          if [ -z "${RH6:-}" ]; then
+            echo "::warning::RH6 is not visible to Actions — this is copying into an OLDER (exhausted) history project. Add RH6 under Settings → Secrets and variables → Actions."
           fi
           echo "Pushing schema to the target history database…"
           # Non-fatal: a forked history DB can carry EXTRA columns this ref's schema
@@ -129,6 +151,157 @@ jobs:
           DATABASE_URL="$TARGET" npx prisma db push --skip-generate \
             || echo "::warning::schema push refused (destructive diff); continuing"
           npx tsx scripts/migrate-history.ts
+
+      - name: Migrate the HISTORY database (RH5 → RH6) via pg_dump/pg_restore
+        # The cheapest CORRECT way to drain a Neon project that has already
+        # exhausted its monthly network-transfer allowance — which is exactly why
+        # RH6 exists. Mirrors the migrate-main-db step below, scoped to the three
+        # tables a history project actually holds (Card is only there as the FK
+        # parent for PriceHistory; see ensureHistoryCards() in lib/db-history.ts).
+        #
+        # WHY NOT the `migrate-history` task above? scripts/migrate-history.ts
+        # streams every row over the UNCOMPRESSED Postgres wire protocol and
+        # re-reads the whole Card table on top — the most expensive possible way
+        # to read a database that is already out of allowance. pg_dump
+        # --format=custom compresses on the wire. Keep the Prisma script for what
+        # it's better at (multi-source top-ups, tolerating a dead source, dedupe);
+        # use THIS for the bulk copy.
+        #
+        # RE-RUNNABLE: truncates the target's three tables and re-copies, so every
+        # run is a full re-sync of the source's CURRENT state. Run it once for the
+        # bulk copy, then once more immediately before flipping Vercel to RH6, so
+        # anything written in between is included.
+        if: inputs.task == 'migrate-history-db'
+        env:
+          # SOURCE deliberately EXCLUDES RH6 — that's the NEW project we migrate
+          # TO. Resolving it with the RH6-first chain used everywhere else would
+          # point source and target at the same database, and the migration would
+          # silently no-op while reporting every row count as matching. This is
+          # not hypothetical: the same trap is documented on migrate-main-db.
+          SOURCE_HISTORY_URL: ${{ secrets.RH5 || vars.RH5 || secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 || secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL || secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 || secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
+          TARGET_HISTORY_URL: ${{ secrets.RH6 || vars.RH6 }}
+          # Only ever used for a "did RH6 accidentally get set to the operational
+          # database?" guard before this step truncates anything.
+          OPERATIONAL_URL: ${{ secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+        run: |
+          set -uo pipefail
+
+          if [ -z "$TARGET_HISTORY_URL" ]; then
+            echo "::error::RH6 is not visible to Actions — add it under Settings → Secrets and variables → Actions (Repository secrets or variables, exact name RH6)."
+            exit 1
+          fi
+          if [ -z "$SOURCE_HISTORY_URL" ]; then
+            echo "::error::No SOURCE history database visible (RH5 / HISTORY_DATABASE_URL_4 / HISTORY_DATABASE_URL / _2 / _3) — nothing to migrate FROM."
+            exit 1
+          fi
+          if [ "$SOURCE_HISTORY_URL" = "$TARGET_HISTORY_URL" ]; then
+            echo "::error::SOURCE and TARGET resolve to the SAME database — RH6 must be a different (new) Neon project than RH5. Aborting before doing anything."
+            exit 1
+          fi
+          if [ -n "${OPERATIONAL_URL:-}" ] && [ "$TARGET_HISTORY_URL" = "$OPERATIONAL_URL" ]; then
+            echo "::error::RH6 resolves to the OPERATIONAL database. This step TRUNCATES its target — aborting rather than wiping production data."
+            exit 1
+          fi
+
+          # Neon runs a newer Postgres major than ubuntu-latest's stock pg_dump
+          # (16.x), and pg_dump refuses to dump from a server newer than itself.
+          # Install from PGDG's own apt repo rather than guessing a version.
+          echo "== Installing PostgreSQL client tools from PGDG =="
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-18
+          export PATH="/usr/lib/postgresql/18/bin:$PATH"
+          pg_dump --version; psql --version
+
+          # Catalog statistics only — a few rows of metadata, NOT the tables. Tells
+          # us what this migration is about to cost before spending any allowance.
+          echo "== Source table sizes (from catalog — negligible transfer) =="
+          psql "$SOURCE_HISTORY_URL" -P pager=off -c "
+            SELECT relname AS table,
+                   to_char(n_live_tup, 'FM999,999,999') AS est_rows,
+                   pg_size_pretty(pg_total_relation_size(relid)) AS total_size
+            FROM pg_stat_user_tables
+            ORDER BY pg_total_relation_size(relid) DESC
+            LIMIT 20;" 2>&1 || echo "(size report unavailable — continuing)"
+
+          echo "== Creating the schema on RH6 (brand-new project starts empty) =="
+          DATABASE_URL="$TARGET_HISTORY_URL" npx prisma db push --skip-generate --accept-data-loss
+
+          # LAST-LINE SAFETY GUARD, checked AFTER the schema exists and BEFORE any
+          # destructive statement: a history project holds no accounts. If "User"
+          # has rows, RH6 is pointed at a real operational database and the
+          # TRUNCATE below would destroy production data.
+          USERS=$(psql "$TARGET_HISTORY_URL" -tAc 'SELECT COUNT(*) FROM public."User"' 2>/dev/null || echo "0")
+          case "$USERS" in ''|*[!0-9]*) USERS=0;; esac
+          if [ "$USERS" -gt 0 ]; then
+            echo "::error::Target has $USERS rows in public.\"User\" — that is an OPERATIONAL database, not a history project. Refusing to truncate. Check what the RH6 secret is set to."
+            exit 1
+          fi
+          echo "Target public.\"User\" rows: 0 ✓ (confirmed history-only project)"
+
+          # DUMP BEFORE TRUNCATE, always — if the source refuses reads (fully
+          # exhausted), we must not have already destroyed the target's contents.
+          echo "== Dumping Card + ClickEvent + PriceHistory from the source (compressed) =="
+          if ! pg_dump "$SOURCE_HISTORY_URL" --no-owner --no-acl --format=custom --data-only \
+                 -t 'public."Card"' -t 'public."ClickEvent"' -t 'public."PriceHistory"' \
+                 -f history.dump; then
+            echo "::error::Could not read the SOURCE history database. If RH5 is hard-capped, its history cannot be recovered — the site still works on an empty RH6 (charts and the Index simply rebuild from the next price import onward). Nothing was written to RH6."
+            exit 1
+          fi
+          echo "Dump size: $(du -h history.dump | cut -f1)"
+
+          echo "== Clearing the target's history tables for a clean re-sync =="
+          psql "$TARGET_HISTORY_URL" -c 'TRUNCATE public."PriceHistory", public."ClickEvent", public."Card" CASCADE;'
+
+          # ORDER IS LOAD-BEARING: PriceHistory.cardId REFERENCES Card(id), so Card
+          # rows must land first or every COPY fails the FK. pg_restore replays
+          # archive entries in the order pg_dump wrote them (alphabetical: Card,
+          # ClickEvent, PriceHistory) which is coincidentally correct — but relying
+          # on alphabetical luck is not a design. Restore Card explicitly first.
+          # The dump file is LOCAL, so this second pass costs zero source transfer.
+          echo "== Restoring Card (the FK parent) =="
+          pg_restore --no-owner --no-acl --data-only -t 'Card' -d "$TARGET_HISTORY_URL" history.dump
+          echo "== Restoring ClickEvent + PriceHistory =="
+          pg_restore --no-owner --no-acl --data-only -t 'ClickEvent' -t 'PriceHistory' -d "$TARGET_HISTORY_URL" history.dump
+
+          echo "== Verifying row counts (source vs target) =="
+          # COUNT(*) transfers a single integer per table rather than re-reading
+          # data — do NOT "verify" by re-reading rows; an earlier version of the
+          # migrate-main-db job did that and burned the allowance it was saving.
+          # set +e so every count is attempted and every error is PRINTED rather
+          # than swallowed into a command substitution.
+          set +e
+          MISMATCH=0
+          for T in 'public."Card"' 'public."ClickEvent"' 'public."PriceHistory"'; do
+            SRC=$(psql "$SOURCE_HISTORY_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
+            DST=$(psql "$TARGET_HISTORY_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
+            case "$SRC" in ''|*[!0-9]*) echo "$T source query FAILED: $SRC"; MISMATCH=1; continue;; esac
+            case "$DST" in ''|*[!0-9]*) echo "$T target query FAILED: $DST"; MISMATCH=1; continue;; esac
+            if [ "$SRC" = "$DST" ]; then
+              echo "$T: source=$SRC target=$DST ✓"
+            else
+              echo "$T: source=$SRC target=$DST ✗ MISMATCH"
+              MISMATCH=1
+            fi
+          done
+          set -e
+          if [ "$MISMATCH" = "1" ]; then
+            echo "::error::Row-count mismatch — do NOT point Vercel at RH6 yet. Re-run this task, or inspect the pg_restore output above."
+            exit 1
+          fi
+          echo "All tables match — RH6 now holds a full copy of the history data."
+          echo ""
+          echo "NEXT STEPS (nothing is live on RH6 until you do these):"
+          echo "  1. Re-run this task once more immediately before cutting over, so"
+          echo "     anything the price importer wrote in the meantime is included."
+          echo "  2. RH6 is already FIRST in the chain in src/lib/db-history.ts,"
+          echo "     scripts/build-db-push.sh and every workflow — so once RH6 is set"
+          echo "     in Vercel (ALL environments: Production, Preview, Development)"
+          echo "     and the project is redeployed, history reads/writes move to it."
+          echo "  3. Leave RH5 set for a rollback window; remove it only once RH6 has"
+          echo "     been serving cleanly for a while."
 
       - name: Migrate main (operational) database to RM3
         # Full pg_dump/pg_restore of the ENTIRE operational schema (users, cards,
@@ -145,11 +318,12 @@ jobs:
         # savings applied below:
         #   • PriceHistory + ClickEvent are excluded with --exclude-table-data.
         #     Those are the two biggest tables by far, and the app does NOT read
-        #     them from this database — they live in the history project (RH5,
-        #     see src/lib/db-history.ts, which resolves RH5 before DATABASE_URL).
+        #     them from this database — they live in the history project (RH6,
+        #     see src/lib/db-history.ts, which resolves RH6 before DATABASE_URL).
         #     Their table STRUCTURE is still created, so the schema stays complete
         #     and db-history's DATABASE_URL fallback still has somewhere to write
-        #     if RH5 is ever unset; only the (unused, legacy) rows are skipped.
+        #     if the whole history chain is ever unset; only the (unused, legacy)
+        #     rows are skipped.
         #   • The verification step counts rows via COUNT(*) aggregates, which
         #     transfer a single integer per table rather than re-reading data.
         #     An earlier version of this job re-read whole tables to verify and
@@ -268,7 +442,7 @@ jobs:
           # header), so they WILL be empty in the target and would always report a
           # mismatch. That's expected, not a failure — those tables are served
           # from the history project (RH5).
-          echo "(PriceHistory + ClickEvent intentionally not copied — served from RH5, see step header.)"
+          echo "(PriceHistory + ClickEvent intentionally not copied — served from the history project RH6, see step header.)"
           if [ "$MISMATCH" = "1" ]; then
             echo "::error::Row-count mismatch on at least one table — do NOT cut traffic over to RM3 yet. Re-run this task, or investigate the pg_restore output above."
             exit 1
@@ -345,6 +519,21 @@ jobs:
         if: inputs.task == 'probe-sg'
         run: npx tsx scripts/probe-sg-stores.ts
 
+      # Post-deploy gate. The sandbox these branches are written in cannot reach
+      # riftcompare.com, so this is how the smoke test gets run against the REAL
+      # deployment — the one check that would have caught the homepage shipping a
+      # loading spinner and no content. Read-only: it only issues GETs.
+      #
+      # --allow-404 affects ONLY routes the check list explicitly marks
+      # `optional`, and those exist for exactly the case that failed this gate on
+      # 2026-08-03: a branch adds /sets/vendetta/gallery, the gate runs against
+      # production before that branch deploys, and the route 404s through no
+      # fault of the deployment. Those report `~ SKIP`, visibly. A 404 on any
+      # established page still fails the run.
+      - name: Smoke-test key pages (real rendered content)
+        if: inputs.task == 'smoke-pages'
+        run: npx tsx scripts/smoke-pages.ts "${{ inputs.url || 'https://riftcompare.com' }}" --allow-404
+
       - name: Probe URL (font/style diagnostics)
         # The dev sandbox's egress proxy blocks most external sites; runners don't.
         # Prints the fetched page's font stack (next/font @font-face families,
@@ -352,6 +541,8 @@ jobs:
         if: inputs.task == 'probe-url'
         env:
           PROBE_CONTEXT_MARKER: ${{ inputs.context_marker }}
+          PROBE_CONTEXT_MARKER_END: ${{ inputs.context_marker_end }}
+          PROBE_BASE64_DUMP: ${{ inputs.base64_dump }}
         run: |
           curl -sSL --max-time 30 -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36" "${{ inputs.url }}" -o page.html
           echo "== bytes: $(wc -c < page.html)"
@@ -379,11 +570,76 @@ jobs:
           if [ -n "$PROBE_CONTEXT_MARKER" ]; then
             python3 -c "import os,re; html = open('page.html', encoding='utf-8', errors='replace').read(); marker = os.environ['PROBE_CONTEXT_MARKER']; idxs = [m.start() for m in re.finditer(re.escape(marker), html)][:40]; [print(f'--- match {n+1} @ {i} ---\n' + html[max(0,i-90):i+90].replace(chr(10), ' ')) for n, i in enumerate(idxs)]; print('TOTAL MATCHES:', len(idxs)) if idxs else print('NO MATCHES')"
           fi
+          echo "== FULL raw HTML between PROBE_CONTEXT_MARKER and PROBE_CONTEXT_MARKER_END, no length cap (if both set):"
+          if [ -n "$PROBE_CONTEXT_MARKER" ] && [ -n "$PROBE_CONTEXT_MARKER_END" ]; then
+            python3 -c "import os; html = open('page.html', encoding='utf-8', errors='replace').read(); s = os.environ['PROBE_CONTEXT_MARKER']; e = os.environ['PROBE_CONTEXT_MARKER_END']; i = html.find(s); j = html.find(e, i + len(s)) if i != -1 else -1; print('START MARKER NOT FOUND') if i == -1 else print('END MARKER NOT FOUND AFTER START') if j == -1 else (print(f'SECTION LENGTH: {j - i} chars'), print(html[i:j]))"
+          fi
+          echo "== BASE64 dump of the fetched file (if base64_dump=true) — for pulling a binary asset through the log:"
+          if [ "$PROBE_BASE64_DUMP" = "true" ]; then
+            echo "BASE64_BYTES: $(wc -c < page.html)"
+            echo "===BASE64_START==="
+            base64 -w0 page.html
+            echo
+            echo "===BASE64_END==="
+          fi
           for css in $(grep -oiE "/_next/static/css/[^\"']+" page.html | sort -u | head -4); do
             echo "== css $css:"
             base="${{ inputs.url }}"
             curl -sSL --max-time 20 "${base%/}$css" | grep -oiE "font-family:[^;}]{1,120}" | sort -u | head -20 || true
           done
+
+      - name: Probe Imgur album (rendered image URLs)
+        # Imgur album pages are a client-rendered React SPA — plain curl gets an
+        # empty shell with zero image URLs (confirmed: 7.5KB of head tags, no
+        # gallery content, 0 card links). Render it with a real browser instead.
+        if: inputs.task == 'probe-imgur'
+        env:
+          PROBE_URL: ${{ inputs.url }}
+        run: |
+          npm i --no-save playwright
+          npx playwright install --with-deps chromium
+          npx tsx scripts/probe-imgur.ts
+
+      # Generic SPA renderer. probe-url is a plain fetch, which is correct for our
+      # own pages (it shows what a crawler gets) but returns an empty shell for any
+      # client-rendered site — csroi.com gave 2.4KB of React skeleton with zero
+      # content. This renders properly and dumps the STRUCTURE (heading outline,
+      # the repeated item component, tables, palette) rather than raw DOM, so a
+      # design reference is legible in a CI log.
+      - name: Render any page (generic SPA probe)
+        if: inputs.task == 'probe-render'
+        # Bounded. The first run of this hung for 25+ minutes on the browser
+        # install and had to be cancelled by hand, which is the worst failure
+        # mode for a research task — it looks identical to "still working".
+        # ubuntu-latest already ships Chromium's system libs, so --with-deps
+        # (the apt half, and the part that hung) is dropped.
+        timeout-minutes: 10
+        env:
+          PROBE_URL: ${{ inputs.url }}
+        run: |
+          npm i --no-save playwright
+          npx playwright install chromium
+          npx tsx scripts/probe-render.ts
+
+      - name: Upload rendered screenshot (probe-render)
+        if: inputs.task == 'probe-render'
+        uses: actions/upload-artifact@v4
+        with:
+          name: probe-render-screenshot
+          path: render.png
+          if-no-files-found: ignore
+
+      # The chunked marker dump above is fine for a quick font/style check, but a
+      # page with a big content section (e.g. a card gallery) needs the whole file —
+      # upload it so it can be pulled down directly instead of stitching together
+      # dozens of ~2700-char marker windows.
+      - name: Upload fetched page (probe-url)
+        if: inputs.task == 'probe-url'
+        uses: actions/upload-artifact@v4
+        with:
+          name: probe-url-page
+          path: page.html
+          if-no-files-found: ignore
 
       - name: Import store prices (this ref's retailer list)
         if: inputs.task == 'import-prices'
@@ -398,8 +654,12 @@ jobs:
           EBAY_REFRESH: ${{ inputs.ebay_sg && 'true' || 'false' }}
           EBAY_FORCE: ${{ inputs.ebay_sg && '1' || '' }}
           EBAY_ONLY_MARKET: ${{ inputs.ebay_sg && 'SG' || '' }}
-          # Route history/click writes to the current history project (db-history.ts).
+          # Route history/click WRITES to the current history project (db-history.ts).
+          # RH6 must lead: without it this step's PriceHistory rows land in an
+          # exhausted project, or (chain exhausted) in the OPERATIONAL database.
+          RH6: ${{ secrets.RH6 || vars.RH6 }}
           RH5: ${{ secrets.RH5 || vars.RH5 }}
+          HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
           HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
@@ -413,17 +673,61 @@ jobs:
           EBAY_AFFILIATE_CAMPAIGN: ${{ secrets.EBAY_AFFILIATE_CAMPAIGN }}
         run: npx tsx scripts/import-sealed.ts
 
+      # Read-only. Compares every set's rarity distribution, splitting base prints
+      # from chase prints so the comparison is apples-to-apples — a chase print
+      # carries the rarity of the card it re-prints, which is how ~30 Vendetta
+      # cards ended up under the "Rare" filter.
+      - name: Audit rarity across sets (read-only census)
+        if: inputs.task == 'audit-rarity'
+        env:
+          DATABASE_URL: ${{ secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+        run: npx tsx scripts/audit-rarity.ts
+
       - name: Audit VEN cards (read-only census)
         if: inputs.task == 'audit-ven'
         run: npx tsx scripts/audit-ven.ts
+
+      - name: Audit rune printings across all sets (read-only census)
+        if: inputs.task == 'audit-runes'
+        run: npx tsx scripts/audit-runes.ts
+
+      - name: Set real English rune art (fills placeholders, clears wrong-language art)
+        if: inputs.task == 'set-rune-art'
+        run: npx tsx scripts/set-rune-art.ts ${{ inputs.dry_run && '--dry' || '' }}
+        env:
+          DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
 
       - name: Fix organized-play promo flag (Nexus Night rune cycle)
         if: inputs.task == 'fix-op-promo-flag'
         run: npx tsx scripts/fix-op-promo-flag.ts ${{ inputs.dry_run && '--dry' || '' }}
 
+      - name: Fix "Yordle, Heart of the Tempest" -> "Kennen, Heart of the Tempest"
+        if: inputs.task == 'fix-kennen-name'
+        run: npx tsx scripts/fix-kennen-name.ts ${{ inputs.dry_run && '--dry' || '' }}
+
+      # /api/revalidate purges every /card/* page in one call (see
+      # revalidateContent() — it has no per-path mode), so the corrected pages
+      # show the fixed name immediately instead of waiting out their normal ISR
+      # TTL. Same non-fatal pattern as refresh-prices.yml's revalidate step: a
+      # failed ping only costs freshness, never data.
+      - name: Revalidate site pages (on-demand ISR)
+        if: inputs.task == 'fix-kennen-name' && !inputs.dry_run
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: "https://riftcompare.com"
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "No CRON_SECRET secret — skipping (pages fall back to their normal ISR TTL)."
+            exit 0
+          fi
+          code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 -X POST \
+            "$SITE_URL/api/revalidate" -H "Authorization: Bearer $CRON_SECRET" || true)
+          echo "revalidate -> HTTP ${code:-000}"
+
       - name: Audit price history (read-only)
         if: inputs.task == 'audit-history'
         env:
+          RH6: ${{ secrets.RH6 || vars.RH6 }}
           RH5: ${{ secrets.RH5 || vars.RH5 }}
           HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
           HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
@@ -484,12 +788,25 @@ jobs:
       - name: Audit outbound clicks (read-only leaderboard)
         if: inputs.task == 'audit-clicks'
         env:
+          RH6: ${{ secrets.RH6 || vars.RH6 }}
           RH5: ${{ secrets.RH5 || vars.RH5 }}
           HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
           HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
         run: npx tsx scripts/audit-clicks.ts
+
+      # Answers "why does card X have no price?" with evidence instead of a
+      # guess: its RetailerPrice rows, its eBay carousel rows, whether those two
+      # disagree (the stale-carousel tell), and a LIVE eBay re-search showing
+      # what the matcher does with today's listings. Read-only.
+      - name: Diagnose one card's pricing
+        if: inputs.task == 'diagnose-card'
+        env:
+          DIAG_CARD: ${{ inputs.url }}
+          EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
+          EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
+        run: npx tsx scripts/diagnose-card.ts
 
       - name: Vendetta pipeline (official gallery → import)
         if: inputs.task == 'vendetta-pipeline'
@@ -508,3 +825,39 @@ jobs:
             prisma/vendetta-cards.json
             scratch/vendetta-dump.json
           if-no-files-found: ignore
+
+      # ── Make new cards DISCOVERABLE immediately ────────────────────────────────
+      # Every task above that can ADD or CHANGE a card used to end here, having
+      # written to the DB and told nobody. The sitemap children are ISR'd with a 24h
+      # TTL, so a card imported now would not appear in /sitemaps/cards.xml until the
+      # next price refresh happened to purge it (up to ~9h, or the full 24h if that
+      # refresh's own revalidate ping failed) — and indexnow-submit.yml reads the
+      # LIVE sitemap at 06:10 UTC, so it would resubmit a list that still omitted
+      # them. During a set launch that lag is the whole traffic opportunity.
+      #
+      # This purges the sitemap (what Google needs) and pings IndexNow with just the
+      # newly-created cards + their set hubs (what Bing/Yandex need). The endpoint
+      # derives its own URL list from Card.createdAt, so it cannot drift from what
+      # the importer actually did — see app/api/cron/ping-new-cards/route.ts.
+      #
+      # DRY_RUN is excluded: a dry run wrote nothing, so there is nothing to submit.
+      - name: Revalidate sitemap + ping IndexNow for new cards
+        if: >-
+          always() &&
+          !inputs.dry_run &&
+          contains(fromJSON('["cards-sync","cards-manual","fetch-promos","tcg-printings","vendetta-pipeline","fix-cloned-art","fix-op-promo-flag","set-rune-art","import-prices","import-sealed"]'), inputs.task)
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: "https://riftcompare.com"
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "No CRON_SECRET secret — skipping (new cards appear on the sitemap's 24h TTL instead)."
+            exit 0
+          fi
+          # `|| true` so a connection error can't red an otherwise-successful import
+          # under `set -eo pipefail` — same convention as refresh-prices.yml. A
+          # failed ping only costs freshness, never data.
+          body=$(curl -s --max-time 90 -X POST \
+            "$SITE_URL/api/cron/ping-new-cards" \
+            -H "Authorization: Bearer $CRON_SECRET" || true)
+          echo "ping-new-cards -> ${body:-<no response>}"

@@ -19,11 +19,20 @@
 set -uo pipefail
 
 # Only push schema for a real Vercel production/preview build with a database
-# configured. A local `next build` (no DATABASE_URL) must not try to reach anything.
-# Equivalent to the original inline check
-# (`['production','preview'].includes(VERCEL_ENV) && DATABASE_URL`), just native bash.
-if ! { [ "${VERCEL_ENV:-}" = "production" ] || [ "${VERCEL_ENV:-}" = "preview" ]; } || [ -z "${DATABASE_URL:-}" ]; then
-  echo "[build-db-push] not a Vercel production/preview build with DATABASE_URL set — skipping schema push."
+# configured. A local `next build` (no database vars) must not try to reach anything.
+#
+# GATES ON THE WHOLE OPERATIONAL CHAIN, not bare DATABASE_URL. The original check
+# was `['production','preview'].includes(VERCEL_ENV) && DATABASE_URL`, written when
+# DATABASE_URL was the only operational variable. It has since become
+# RM3 || DATABASE_URL_2 || DATABASE_URL (lib/db.ts), and lib/db.ts explicitly tells
+# the owner the older vars can eventually be deleted — at which point this line
+# would exit 0 on every deploy and silently stop pushing schema to BOTH the
+# operational AND the history database, while logging a benign-looking "skipping".
+# A green deploy against an un-migrated database is exactly the failure this
+# script exists to prevent.
+if ! { [ "${VERCEL_ENV:-}" = "production" ] || [ "${VERCEL_ENV:-}" = "preview" ]; } \
+   || [ -z "${RM3:-}${DATABASE_URL_2:-}${DATABASE_URL:-}" ]; then
+  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM3 / DATABASE_URL_2 / DATABASE_URL) — skipping schema push."
   exit 0
 fi
 
@@ -54,9 +63,45 @@ if ! prisma db push --skip-generate --accept-data-loss; then
 fi
 
 # History database (PriceHistory/ClickEvent) — same optional, best-effort push.
-if [ -n "${HISTORY_DATABASE_URL_3:-}" ] || [ -n "${HISTORY_DATABASE_URL_2:-}" ]; then
-  HIST="${HISTORY_DATABASE_URL_3:-$HISTORY_DATABASE_URL_2}"
+#
+# BUG FIXED HERE (2026-07-31): this block used to read ONLY
+#   HISTORY_DATABASE_URL_3 / HISTORY_DATABASE_URL_2
+# — the two OLDEST, long-dead projects, in the reverse of the app's own
+# precedence. It had never been updated when the history DB moved _2 -> _3 -> _4
+# -> RH5, so on every Vercel deploy it either pushed the schema into an exhausted
+# project the app never reads, or (when only the current var was set) silently
+# pushed nothing at all while reporting success. That is precisely how a new
+# column can 500 the admin clicks page in production despite a green deploy.
+#
+# This chain now MIRRORS src/lib/db-history.ts exactly, newest-first. Keep the two
+# in sync — if you add a project there, add it here in the same position.
+if [ -n "${RH6:-}" ]; then
+  HIST="$RH6"; HIST_SOURCE="RH6"
+elif [ -n "${RH5:-}" ]; then
+  HIST="$RH5"; HIST_SOURCE="RH5"
+elif [ -n "${HISTORY_DATABASE_URL_4:-}" ]; then
+  HIST="$HISTORY_DATABASE_URL_4"; HIST_SOURCE="HISTORY_DATABASE_URL_4"
+elif [ -n "${HISTORY_DATABASE_URL:-}" ]; then
+  HIST="$HISTORY_DATABASE_URL"; HIST_SOURCE="HISTORY_DATABASE_URL"
+elif [ -n "${HISTORY_DATABASE_URL_2:-}" ]; then
+  HIST="$HISTORY_DATABASE_URL_2"; HIST_SOURCE="HISTORY_DATABASE_URL_2"
+elif [ -n "${HISTORY_DATABASE_URL_3:-}" ]; then
+  HIST="$HISTORY_DATABASE_URL_3"; HIST_SOURCE="HISTORY_DATABASE_URL_3"
+else
+  HIST=""; HIST_SOURCE=""
+fi
+
+if [ -n "$HIST" ]; then
+  # Same rule as the operational push above: name the winning variable, never its
+  # value. If this says anything other than RH6, RH6 is missing from THIS Vercel
+  # environment/scope.
+  echo "[build-db-push] history DB source for this build: $HIST_SOURCE"
+  if [ "$HIST_SOURCE" != "RH6" ]; then
+    echo "::warning::[build-db-push] RH6 is not visible in this build (VERCEL_ENV=${VERCEL_ENV:-unset}) — falling back to ${HIST_SOURCE}, which db-history.ts documents as an exhausted/dead fallback."
+  fi
   DATABASE_URL="$HIST" prisma db push --skip-generate --accept-data-loss || true
+else
+  echo "[build-db-push] no history-database variable set — history tables share the operational DB, nothing extra to push."
 fi
 
 # DELIBERATE CHANGE from the original inline script: these three ran chained with
