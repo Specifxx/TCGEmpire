@@ -65,33 +65,56 @@ export default async function DecksPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }} />
     <div className="flex flex-col gap-10">
-      {/* Vendetta spotlight — the set released 31 July 2026, but there's still no
-          real tournament scene for Vendetta specifically. There IS a well-researched
-          archetype guide grounded in its confirmed mechanics/domains, framed
-          honestly as "blueprints, not netdecks" (matching the guide's own copy)
-          rather than faking priced/buildable "meta" decks with no real results
-          behind them. */}
+      {/* Vendetta spotlight — the Vendetta metagame is live as of the 31 July 2026
+          release, so this now reports what has ACTUALLY been winning (real events,
+          real placings) instead of the pre-release "no scene yet" framing. We still
+          don't publish priced Vendetta "meta" lists: card-by-card lists for these
+          finishes aren't in our data yet, and inventing them would fake the one
+          thing this page is for. Archetype blueprints stay clearly labelled as such. */}
       <section className="overflow-hidden rounded-2xl border border-brand-500/50 bg-gradient-to-br from-brand-500/15 via-ink-900 to-ink-900 p-6">
-        <span className="chip bg-brand-500 text-[10px] font-extrabold uppercase tracking-wide text-ink-950">New · Vendetta is here</span>
-        <h2 className="mt-2 text-xl font-extrabold text-white sm:text-2xl">Three deck archetypes to build right now</h2>
+        <span className="chip bg-brand-500 text-[10px] font-extrabold uppercase tracking-wide text-ink-950">Vendetta meta · week one</span>
+        <h2 className="mt-2 text-xl font-extrabold text-white sm:text-2xl">What&apos;s actually winning with Vendetta</h2>
         <p className="mt-1 max-w-2xl text-sm text-slate-300">
-          Vendetta is out now — here&apos;s the shell for three strong archetypes grounded in its mechanics and
-          domain pairings, with real card visuals. Blueprints, not netdecks: concrete lists fill in once a real tournament scene forms.
+          Vendetta released 31 July 2026 and the first events are in. The early field still looks a lot like
+          Unleashed — established legends adapting with a handful of new cards, rather than new Vendetta
+          legends taking over.
         </p>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           {[
-            { name: "Flow Value", domains: "Fury + Calm" },
-            { name: "Burn / Disruption", domains: "Chaos + Order" },
-            { name: "Empower Midrange", domains: "Mind + Body" },
+            {
+              name: "Nasus, Curator of the Sands",
+              note: "First Vendetta legend to win a tournament — a 47-player event, on a list far leaner on late-game bombs than the theorycrafts predicted.",
+            },
+            {
+              name: "Diana, Scorn of the Moon",
+              note: "Won Sideways Showdown: CN vs World (25 July) off an innovative points engine — the standout new-set build so far.",
+            },
+            {
+              name: "Unleashed shells, lightly updated",
+              note: "Azir took the largest event yet on a list running only three Vendetta cards; Annie won on an Unleashed list with a single new sideboard card.",
+            },
           ].map((a) => (
             <div key={a.name} className="rounded-xl border border-ink-700 bg-ink-900/60 p-3">
               <div className="font-bold text-white">{a.name}</div>
-              <div className="text-xs text-slate-500">{a.domains}</div>
+              <div className="mt-1 text-xs leading-relaxed text-slate-400">{a.note}</div>
             </div>
           ))}
         </div>
+        <p className="mt-3 max-w-2xl text-xs text-slate-500">
+          We publish a full priced list only when we have it card-for-card. These Vendetta finishes aren&apos;t in
+          our decklist data yet, so they&apos;re reported here as results — follow them through to{" "}
+          <a
+            href="https://riftdecks.com/legends"
+            target="_blank"
+            rel="noopener noreferrer nofollow"
+            className="text-brand-400 underline hover:text-brand-300"
+          >
+            riftDecks.com
+          </a>{" "}
+          for the lists themselves.
+        </p>
         <div className="mt-4 flex flex-wrap gap-2">
-          <Link href="/guides/best-riftbound-vendetta-decks" className="btn-primary text-sm">See the full archetype guide →</Link>
+          <Link href="/guides/best-riftbound-vendetta-decks" className="btn-primary text-sm">Vendetta archetype blueprints →</Link>
           <Link
             href="/sets/vendetta"
             className="rounded-md border border-brand-500/40 px-3 py-1.5 text-sm font-semibold text-brand-300 transition-colors hover:bg-brand-500/10"
@@ -102,12 +125,28 @@ export default async function DecksPage() {
         </div>
       </section>
 
+      {/* Rules change — constructed side decks went 8 → 10 on 24 July 2026, so a full
+          tournament list is now 66 cards, not 64. Stated once here because every deck
+          page below shows a side-deck count. */}
+      <section className="rounded-xl border border-ink-700 bg-ink-900/60 p-4">
+        <h2 className="text-sm font-extrabold text-white">Rules update — side decks are now 10 cards</h2>
+        <p className="mt-1 text-sm text-slate-400">
+          Riftbound&apos;s July 2026 tournament rules update raised the constructed side deck from 8 cards to{" "}
+          <strong className="text-slate-200">10</strong>, effective 24 July 2026. A full tournament list is now{" "}
+          <strong className="text-slate-200">66 cards</strong> — 40 main deck, 12 runes, 3 battlefields and a
+          legend (56), plus up to 10 in the side deck. Runes, Legends and Battlefields still can&apos;t be
+          sideboarded, and the 3-copy limit counts your main deck and side deck together.{" "}
+          <Link href="/guides/how-a-riftbound-deck-is-built" className="text-brand-400 underline hover:text-brand-300">
+            How a Riftbound deck is built →
+          </Link>
+        </p>
+      </section>
+
       <div>
         <div className="mb-4">
           <h1 className="text-2xl font-extrabold text-white">Top Meta Decks</h1>
           <p className="mt-1 text-sm text-slate-400">
-            Real top-finishing tournament decklists from the current Unleashed metagame, sourced
-            from{" "}
+            Real top-finishing tournament decklists sourced from{" "}
             <a
               href="https://riftdecks.com/legends"
               target="_blank"
@@ -118,6 +157,15 @@ export default async function DecksPage() {
             </a>{" "}
             — each priced live across {info.adjective} stores so you can see what it costs to build and
             where to buy every card.
+          </p>
+          <p className="mt-2 text-xs text-slate-500">
+            These are Unleashed-era lists, and Unleashed cards remain fully legal — Riftbound doesn&apos;t
+            rotate. Post-Vendetta, riftDecks has <strong className="text-slate-400">Irelia, Blade Dancer</strong> still
+            leading the field at roughly a 10% metashare, followed by{" "}
+            <strong className="text-slate-400">Kennen, Heart of the Tempest</strong> and{" "}
+            <strong className="text-slate-400">Master Yi, Wuju Bladesman</strong>; Calm/Chaos is the top domain
+            pairing at about 12%. Side decks below were legal 8-card builds at the time they were played —
+            the 10-card limit only came in on 24 July 2026.
           </p>
         </div>
         <DeckGrid decks={meta} currency={info.currency} />

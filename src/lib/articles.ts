@@ -810,7 +810,7 @@ Store coverage is deepest in Australia and growing fastest in the US, UK and Sin
 
 ## See the full lists (and build cost)
 
-Every deck above is a real, legal tournament list on our **[Meta Decks page](/decks)** — card-by-card, split into Legend, Champion, Main Deck, Battlefields, Runes and Sideboard, with a live **build cost** priced across every store RiftCompare tracks (not just Australia — the build cost adapts to your own market). Click through to any deck above to see the exact 40+ cards and what assembling it would cost you today.
+Every deck above is a real, legal tournament list on our **[Meta Decks page](/decks)** — card-by-card, split into Legend, Champion, Main Deck, Battlefields, Runes and Side Deck, with a live **build cost** priced across every store RiftCompare tracks (not just Australia — the build cost adapts to your own market). Click through to any deck above to see the exact 40+ cards and what assembling it would cost you today.
 
 Decklists are sourced from riftDecks.com and refresh with the metagame — we'll post a new snapshot as the tier list shifts.`,
   },
@@ -819,9 +819,10 @@ Decklists are sourced from riftDecks.com and refresh with the metagame — we'll
     category: "guide",
     title: "How a Riftbound Deck Is Built",
     excerpt:
-      "Legend, Champion, main deck, runes, battlefields and sideboard — the anatomy of a Riftbound deck, explained with real examples.",
+      "Legend, Champion, main deck, runes, battlefields and the 10-card side deck — the anatomy of a Riftbound deck, explained with real examples.",
     author: "RiftCompare",
     date: "2026-06-06",
+    updated: "2026-08-04",
     readMins: 4,
     tags: ["beginner", "deckbuilding"],
     body: `New to Riftbound deckbuilding? A constructed deck is made of a few distinct parts. Here's how the current tournament lists are put together.
@@ -833,9 +834,14 @@ Decklists are sourced from riftDecks.com and refresh with the metagame — we'll
 - **Main deck (~40 cards)** — your **Units**, **Gear** and **Spells**. This is where most of your strategy lives.
 - **Runes (12)** — your resource cards. Their colours must match your deck's **domains**.
 - **Battlefields (3)** — the locations you contest during the game.
-- **Sideboard (up to 8)** — extra cards you can swap in between games at tournaments.
+- **Side deck (up to 10)** — extra cards you can swap in between games at tournaments. This went up from 8 in the [July 2026 tournament rules update](https://playriftbound.com/en-us/news/announcements/july-2026-tournament-rules-update-changelog/), effective **24 July 2026**.
 
-Add it up and a full tournament list is **64 cards** (56 in the main deck plus the sideboard).
+Add it up and a full tournament list is **66 cards** (56 in the main deck plus a full 10-card side deck).
+
+Two rules govern what can go in that side deck:
+
+- **No Runes, Legends or Battlefields.** Those live in their own zones and can't be sideboarded.
+- **The 3-copy limit is shared.** You may run at most 3 copies of a card across your main deck and side deck *combined* — 3 in the main leaves you 0 in the side.
 
 ## Domains and runes
 
@@ -857,7 +863,9 @@ Against aggressive decks, keep cheap blockers and removal; against slower decks,
 
 ## Sideboarding between games
 
-At tournaments you play best-of-three, and between games you can swap up to your full sideboard (8 cards) in and out. The idea is to tune your deck to the matchup: bring in extra removal against go-wide decks, more resilient threats against control, or anti-aggro tools when you're on the back foot. Plan your swaps **before** the event — for each common matchup, decide which cards come out and which come in, so you're not guessing at the table.
+At tournaments you play best-of-three, and between games you can swap up to your full side deck (**10 cards** since 24 July 2026, up from 8) in and out. The idea is to tune your deck to the matchup: bring in extra removal against go-wide decks, more resilient threats against control, or anti-aggro tools when you're on the back foot. Plan your swaps **before** the event — for each common matchup, decide which cards come out and which come in, so you're not guessing at the table.
+
+The two extra slots are worth more than they look. Eight slots usually forced you to cover only the two or three matchups you expected most; ten lets you keep a dedicated answer for a fourth deck without cutting your core plan, which is exactly why the change landed alongside Vendetta and its sideboard-oriented designs.
 
 Want to try these ideas out before committing? **[Price the final deck](/deck)** across every store first, so you know exactly what the build costs before you buy.`,
   },
@@ -1274,14 +1282,14 @@ Nine new Legends arrive, including **Nasus, Renekton, Akali, Mel, Ambessa, Zed a
 
 ## We'll keep this updated
 
-The whole set is out and trading, so this is genuinely the moment to start assembling a shell. We'll add concrete decklists as real pilots settle in once the full 31 July release lands and a real tournament scene forms. For three ready-to-build archetype blueprints with the shell for each, see **[Best Riftbound Vendetta Decks](/guides/best-riftbound-vendetta-decks)**. For the full set overview, read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)**, and track live prices on the **[Vendetta set page](/sets/vendetta)** as they land.`,
+The whole set is out and trading, so this is genuinely the moment to start assembling a shell. The first Vendetta events have now been played and we'll add concrete decklists as the field settles. For three ready-to-build archetype blueprints with the shell for each, see **[Best Riftbound Vendetta Decks](/guides/best-riftbound-vendetta-decks)**. For the full set overview, read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)**, and track live prices on the **[Vendetta set page](/sets/vendetta)** as they land.`,
   },
   {
     slug: "best-riftbound-vendetta-decks",
     category: "guide",
     title: "Best Riftbound Vendetta Decks: Archetypes, Synergies & How to Build Them",
     excerpt:
-      "Three full 40-card Riftbound Vendetta decks — Flow Value, Burn and Empower Midrange — with example decklists, sideboards, real card visuals, and how to start buying into each one now that early singles are trading.",
+      "Three full 40-card Riftbound Vendetta decks — Flow Value, Burn and Empower Midrange — with example decklists, 10-card side decks, real card visuals, and how to start buying into each one now that Vendetta singles are trading.",
     author: "RiftCompare",
     date: "2026-07-07",
     updated: "2026-07-31",
@@ -1333,7 +1341,7 @@ The whole set is out and trading, so this is genuinely the moment to start assem
 
 Riftbound: Vendetta released worldwide on **31 July 2026** and is out now. Every one of the set's 166 cards is officially confirmed, so this is the moment to actually start acquiring the pieces for the decks you want to build. Below are three strong archetype blueprints, each grounded in Vendetta's confirmed mechanics and domain pairings, with the synergies that make them tick, real card visuals for each, and how to pilot them.
 
-An honest note up front: there's no settled tournament metagame for Vendetta yet — that only comes from a real, mature competitive scene, and the full worldwide release is still a week out — so these are **blueprints, not netdecks**. We give you the shell — the roles each deck needs, built from confirmed cards — and we'll drop pilot notes and results in as a real meta forms after the 31 July launch.
+An honest note up front: these are **blueprints, not netdecks**. Vendetta is out and the first events have been played, but the metagame is days old — early results still look a lot like Unleashed, with established legends adapting rather than new Vendetta legends taking over. Nasus was the first Vendetta legend to actually win a tournament, and Diana took Sideways Showdown: CN vs World on 25 July. We give you the shell — the roles each deck needs, built from confirmed cards — and we point you at the real lists on our **[meta decks page](/decks)** as the field settles.
 
 ## First, the deckbuilding rules (the quick version)
 
@@ -1357,7 +1365,7 @@ New to this? Read **[how a Riftbound deck is built](/guides/how-a-riftbound-deck
 
 If your combo only works once, it's a nice card — not a synergy. Every deck below is built around one of these loops.
 
-Each archetype below now includes a full **40-card example build** (plus battlefields, runes and an 8-card sideboard — a real 64-card tournament-legal total once you add the Legend). These are **RiftCompare's own homebrew constructions**, not official spoiled decklists or tournament results — we built them by pairing each Vendetta Legend with proven cards from Riftbound's existing pool (the game doesn't rotate, so Origins/Spirit Forged/Unleashed staples are just as legal as brand-new Vendetta cards). Treat them as a genuine starting point to buy toward today, not a solved list — swap in Vendetta-specific support as more of it gets confirmed.
+Each archetype below now includes a full **40-card example build** (plus battlefields, runes and a **10-card side deck** — a real 66-card total once you add the Legend, using the larger side deck that came in with the [July 2026 tournament rules update](https://playriftbound.com/en-us/news/announcements/july-2026-tournament-rules-update-changelog/) on 24 July 2026). These are **RiftCompare's own homebrew constructions**, not official spoiled decklists or tournament results — we built them by pairing each Vendetta Legend with proven cards from Riftbound's existing pool (the game doesn't rotate, so Origins/Spirit Forged/Unleashed staples are just as legal as brand-new Vendetta cards). Treat them as a genuine starting point to buy toward today, not a solved list — swap in Vendetta-specific support as more of it gets confirmed.
 
 ## Archetype 1 — Flow Value (Fury + Calm)
 
@@ -1382,7 +1390,9 @@ Nasus anchors the shell on Calm's inevitability, splashing a single copy of his 
 - **Spells (19):** 3× Charm · 3× Defy · 3× Discipline · 3× Back Off · 3× En Garde · 2× Not So Fast · 2× Punch First
 - **Battlefields (3):** Abandoned Hall · Targon's Peak · Star Spring
 - **Runes (12):** 9× Calm Rune · 3× Fury Rune
-- **Sideboard (8):** 2× Not So Fast · 2× Disarming Rake · 1× Star-Crossed · 1× Stare Down · 1× Whiteflame Protector · 1× Unyielding Spirit
+- **Side deck (10):** 1× Not So Fast · 1× Disarming Rake · 2× Star-Crossed · 2× Stare Down · 2× Whiteflame Protector · 2× Unyielding Spirit
+
+*(Not So Fast and Disarming Rake are capped at one copy here because the main deck already runs two of each — the 3-copy limit counts main deck and side deck together.)*
 
 **How to play it:** you're the grinder. Trade early, don't over-commit into removal, and treat your trash as a second hand — sequence so the cards you Burn are the ones Flow most wants back.
 
@@ -1411,7 +1421,7 @@ Zed carries the aggression on Chaos, splashing a single copy of his rival Shen �
 - **Spells (19):** 3× Gust · 3× Stacked Deck · 2× Hard Bargain · 2× Moonfall · 3× Sacrifice · 3× Mirror Image · 2× Hidden Blade · 1× Turn to Dust
 - **Battlefields (3):** Zaun Warrens · Ravenbloom Conservatory · Aspirant's Climb
 - **Runes (12):** 7× Chaos Rune · 5× Order Rune
-- **Sideboard (8):** 2× Turn to Dust · 1× Moonfall · 1× Star-Crossed · 2× Deathgrip · 1× Safety Inspector · 1× Singularity
+- **Side deck (10):** 2× Turn to Dust · 1× Moonfall · 2× Star-Crossed · 2× Deathgrip · 2× Safety Inspector · 1× Singularity
 
 **How to play it:** apply pressure on two axes. Don't tunnel on decking them out — the deck-Burn is a clock that forces bad decisions, while your board usually closes the game. Highest skill ceiling of the three, and the easiest to mis-sequence.
 
@@ -1444,7 +1454,7 @@ Jayce is the rare Legend who's dual-domain out of the gate, so this shell runs a
 - **Spells (17):** 3× Punch First · 3× Challenge · 3× Riposte · 3× Sacrifice · 3× Mirror Image · 2× Hidden Blade
 - **Battlefields (3):** Grove of the God-Willow · Seat of Power · Windswept Hillock
 - **Runes (12):** 6× Body Rune · 6× Mind Rune
-- **Sideboard (8):** 2× Deathgrip · 2× Safety Inspector · 2× Salvage · 1× Unyielding Spirit · 1× Fiora, Peerless
+- **Side deck (10):** 2× Deathgrip · 2× Safety Inspector · 2× Salvage · 2× Unyielding Spirit · 2× Fiora, Peerless
 
 **How to play it:** curve out, but don't rush your energy. The trap is spending everything early — hold energy to Empower at the right moment so a cheap unit becomes the biggest threat on the board.
 

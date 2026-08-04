@@ -108,7 +108,7 @@ const GAME_TERMS: { term: string; def: string }[] = [
   { term: "Energy", def: "What cards cost to play. Cheap cards come down early; expensive ones need runes online." },
   { term: "Might", def: "A unit's muscle in combat — the number that decides fights." },
   { term: "Mulligan", def: "Your one chance to shuffle back a bad opening hand and redraw. Keep hands with runes AND early plays." },
-  { term: "Sideboard", def: "Up to 8 extra cards swapped in between tournament games to tune your deck per matchup." },
+  { term: "Side deck", def: "Up to 10 extra cards swapped in between tournament games to tune your deck per matchup (raised from 8 on 24 July 2026). No Runes, Legends or Battlefields, and it shares the 3-copy limit with your main deck." },
 ];
 const COLLECTOR_TERMS: { term: string; def: string }[] = [
   { term: "Base print", def: "The standard version of a card — plays identically to the fancy versions and costs the least." },
@@ -126,7 +126,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "What goes in a Riftbound deck?",
-    a: "A tournament list is built from a Legend and its Champion, a main deck of about 40 Units, Spells and Gear, 12 Runes matching your domains, 3 Battlefields, and a sideboard of up to 8 cards for swapping between games.",
+    a: "A tournament list is built from a Legend and its Champion, a main deck of about 40 Units, Spells and Gear, 12 Runes matching your domains, 3 Battlefields, and a side deck of up to 10 cards for swapping between games — 66 cards in total.",
   },
   {
     q: "What are the Riftbound domains?",
