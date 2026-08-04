@@ -173,6 +173,36 @@ export const PENDING_PERMISSION_UNRESOLVED: PermissionBlockedCandidate[] = [
       "feed program. Check coolstuffinc.com/robots.txt and their actual Terms of Service directly before writing anything — " +
       "the value of the data is not a reason to skip that check.",
   },
+  {
+    name: "Fetch TCG (AU/NZ marketplace)",
+    base: "https://www.fetchtcg.com",
+    confirmedPaths: [
+      "/marketplace/games/rift", // Riftbound category
+      "/marketplace/listings",
+      "/cards/rift_o-026:298_R_standard_normal/riftbound-brynhir-thundersong-origins-foil",
+      "/cards/rift_unl-r-036:219_C_standard_normal/riftbound-mutated-mouser-unleashed-normal",
+    ],
+    note:
+      "Requested as an AU store; it is NOT one, and must not be added to RETAILERS. Three reasons, in order of how " +
+      "badly each would bite. (1) NOT SHOPIFY — the URL shape above is a bespoke app, so the Shopify importer would " +
+      "build /collections/<handle>/products.json against it, get nothing, and leave a store on /stores/tracked with " +
+      "its own store page that never shows a single price. Same trap as the Crystal Commerce entries above. " +
+      "(2) IT'S A MARKETPLACE, NOT A RETAILER — self-described as 'Oceania's dedicated TCG marketplace ... for buyers " +
+      "and sellers across Australia and New Zealand', with seller profiles and auctions. That's the eBay/TCGplayer/" +
+      "Cardmarket shape, and this repo deliberately keeps those OUT of RETAILERS with their own per-market keys (see " +
+      "the warning in lib/store-pages.ts about non-stores rendering store pages). It also spans TWO markets, so it'd " +
+      "need fetchtcg_au + fetchtcg_nz keys, not a single AU entry. (3) DOUBLE-COUNTING — Fetch ships a Shopify plugin " +
+      "that syncs partner stores' inventory INTO Fetch, so its listings can be the SAME physical stock as AU stores " +
+      "already tracked directly (Cherry, Spellroo, …). Surfacing both would show one card twice at two prices; that's " +
+      "exactly why TCGplayer/Cardmarket are treated as excluded reference sources (AU/UK/SG_FALLBACK_RETAILERS) " +
+      "rather than local retailers. " +
+      "PERMISSION: unresolved — no public API, developer docs or affiliate program found, and no ToS statement either " +
+      "way. Same bar as CoolStuffInc above: confirm before writing anything. " +
+      "IF IT GOES AHEAD: it's a src/lib/fetch-tcg.ts marketplace adapter alongside ebay.ts/tcgplayer.ts, NOT a " +
+      "retailers.ts row. Their card URLs encode a parseable id — rift_<set>-<num>:<total>_<rarity>_<finish> " +
+      "(e.g. rift_o-026:298_R, rift_unl-r-036:219_C) — which maps cleanly onto the existing setFromTotal/numKey " +
+      "matching, so the matching half is mostly free. The blocker is access, not parsing.",
+  },
 ];
 
 // Checked via web search and NOT added anywhere (no Riftbound stock confirmed,
