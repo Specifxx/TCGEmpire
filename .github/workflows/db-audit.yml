@@ -34,7 +34,7 @@ jobs:
       - run: npx prisma generate
       - name: Run audit
         env:
-          DATABASE_URL: ${{ secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
           # The audit's Freshness section reads PriceHistory, which lives in the
           # separate history project (src/lib/db-history.ts). Without these, that
           # client falls all the way through its chain to DATABASE_URL — the

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "tsx scripts/adsense-guard.ts && tsx scripts/optimize-images.ts && tsx scripts/check-images.ts && prisma generate && bash scripts/build-db-push.sh && (node -e \"process.exit(process.env.VERCEL_ENV==='preview'&&(process.env.RM3||process.env.DATABASE_URL_2||process.env.DATABASE_URL)?0:1)\" && IMPORT_ONLY_COUNTRY=SG EBAY_REFRESH=false tsx scripts/import-prices.ts || true) && next build",
+    "build": "tsx scripts/adsense-guard.ts && tsx scripts/optimize-images.ts && tsx scripts/check-images.ts && prisma generate && bash scripts/build-db-push.sh && (node -e \"process.exit(process.env.VERCEL_ENV==='preview'&&(process.env.RM4||process.env.RM3||process.env.DATABASE_URL_2||process.env.DATABASE_URL)?0:1)\" && IMPORT_ONLY_COUNTRY=SG EBAY_REFRESH=false tsx scripts/import-prices.ts || true) && next build",
     "typecheck": "tsc --noEmit",
     "test": "node --env-file=.env.production --import tsx --test tests/*.test.ts",
     "adsense:guard": "tsx scripts/adsense-guard.ts",

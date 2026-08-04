@@ -31,15 +31,18 @@ set -uo pipefail
 # A green deploy against an un-migrated database is exactly the failure this
 # script exists to prevent.
 if ! { [ "${VERCEL_ENV:-}" = "production" ] || [ "${VERCEL_ENV:-}" = "preview" ]; } \
-   || [ -z "${RM3:-}${DATABASE_URL_2:-}${DATABASE_URL:-}" ]; then
-  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM3 / DATABASE_URL_2 / DATABASE_URL) — skipping schema push."
+   || [ -z "${RM4:-}${RM3:-}${DATABASE_URL_2:-}${DATABASE_URL:-}" ]; then
+  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM4 / RM3 / DATABASE_URL_2 / DATABASE_URL) — skipping schema push."
   exit 0
 fi
 
 # RM3-first, same order as lib/db.ts and every GitHub Actions workflow. Unlike the
 # app runtime (which can silently keep serving from a stale connection until the next
 # cold start), this ALWAYS reflects the current build's actual environment.
-if [ -n "${RM3:-}" ]; then
+if [ -n "${RM4:-}" ]; then
+  export DATABASE_URL="$RM4"
+  SOURCE="RM4"
+elif [ -n "${RM3:-}" ]; then
   export DATABASE_URL="$RM3"
   SOURCE="RM3"
 elif [ -n "${DATABASE_URL_2:-}" ]; then

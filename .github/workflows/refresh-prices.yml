@@ -72,7 +72,7 @@ jobs:
       # schedule. Do those by hand via maintenance.yml's db-push task.
       - name: Sync database schema (additive)
         env:
-          DATABASE_URL: ${{ secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
         run: |
           if [ -z "${DATABASE_URL:-}" ]; then
             echo "::error::No database URL configured — cannot sync schema."
@@ -86,7 +86,7 @@ jobs:
           fi
       - name: Import prices
         env:
-          DATABASE_URL: ${{ secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
           # eBay is optional — the import skips it if these aren't set.
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
@@ -121,7 +121,7 @@ jobs:
         # Populate the /sealed page (booster boxes/packs across AU/NZ/US). Nothing
         # else scheduled this before, so the table went empty.
         env:
-          DATABASE_URL: ${{ secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
           EBAY_AFFILIATE_CAMPAIGN: ${{ secrets.EBAY_AFFILIATE_CAMPAIGN }}

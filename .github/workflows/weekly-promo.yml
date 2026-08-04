@@ -45,7 +45,7 @@ jobs:
       - run: npx prisma generate
       - name: Generate and send promo pack
         env:
-          DATABASE_URL: ${{ secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
           # The whole promo is built from price MOVERS, which come from
           # PriceHistory in the separate history project (src/lib/db-history.ts).
           # These were never set here, so that client fell through its entire

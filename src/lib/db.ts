@@ -54,7 +54,7 @@ const BIG_RESULT_BYTES = 1_000_000;
 // first. Getting this backwards silently keeps the site on the exhausted
 // database while looking correct.
 const OPERATIONAL_URL =
-  process.env.RM3 || process.env.DATABASE_URL_2 || process.env.DATABASE_URL;
+  process.env.RM4 || process.env.RM3 || process.env.DATABASE_URL_2 || process.env.DATABASE_URL;
 
 // Ensure a generous connect_timeout (the standard libpq/Postgres connection
 // param, in seconds) is set. WHY: Neon's pooled compute suspends when idle and
@@ -84,7 +84,9 @@ function withConnectTimeout(url: string | undefined, seconds: number): string | 
 // winning var name once at module init makes the next P1001 self-diagnosing —
 // in particular it distinguishes "RM3 is down" from "RM3 is unset in this
 // environment, so we silently fell back to the exhausted old database".
-export const OPERATIONAL_URL_SOURCE = process.env.RM3
+export const OPERATIONAL_URL_SOURCE = process.env.RM4
+  ? "RM4"
+  : process.env.RM3
   ? "RM3"
   : process.env.DATABASE_URL_2
   ? "DATABASE_URL_2"
@@ -92,11 +94,11 @@ export const OPERATIONAL_URL_SOURCE = process.env.RM3
   ? "DATABASE_URL"
   : "NONE";
 
-if (OPERATIONAL_URL_SOURCE !== "RM3") {
+if (OPERATIONAL_URL_SOURCE !== "RM4") {
   console.warn(
-    `[db] operational database resolved from ${OPERATIONAL_URL_SOURCE}, not RM3. ` +
-      `RM3 is the current project; the others are exhausted/read-only fallbacks kept only so a ` +
-      `deploy can't hard-fail. If this appears in a Vercel build log, RM3 is missing from that environment.`
+    `[db] operational database resolved from ${OPERATIONAL_URL_SOURCE}, not RM4. ` +
+      `RM4 is the current project; the others are exhausted/read-only fallbacks kept only so a ` +
+      `deploy can't hard-fail. If this appears in a Vercel build log, RM4 is missing from that environment.`
   );
 }
 
