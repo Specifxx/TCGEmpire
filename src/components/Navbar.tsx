@@ -62,10 +62,10 @@ export function Navbar() {
           <Link href="/sealed" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:block sm:px-2.5">
             Sealed
           </Link>
-          {/* Trade Calculator — front-and-centre so players can reach it fast at locals. */}
-          <Link href="/trade" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white md:block md:px-2.5">
-            Trade
-          </Link>
+          {/* Trade Calculator was here. Removed from the top bar deliberately —
+              it is still reachable from the ⌘K launcher, the mega-menu and the
+              footer via the "Decks" group in nav-groups.ts, so /trade keeps its
+              internal links and does not become an orphan page. */}
           {/* Guides & News — our ~64 original guides and posts, promoted out of
               the footer into the primary header nav. They were previously
               reachable only from the footer and the mega-menu, which meant the
@@ -79,7 +79,7 @@ export function Navbar() {
               marketplace is the most visually loud thing in the bar besides the
               logo. Only appears once MARKETPLACE_NAV_VISIBLE (mirrors
               NEXT_PUBLIC_MARKETPLACE_PUBLIC). Always visible (even on phones,
-              unlike Sealed/Trade/Premium/Discord above) — icon-only below sm,
+              unlike Sealed/Guides/Premium/Discord above) — icon-only below sm,
               full label from sm up. */}
           {MARKETPLACE_NAV_VISIBLE && (
             <Link
