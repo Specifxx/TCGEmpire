@@ -65,7 +65,10 @@ export const metadata: Metadata = {
   description:
     "The Riftbound TCG card database and price comparison. Browse every card and compare live prices across stores in Australia, New Zealand, the US, the UK, Singapore and Canada to find the cheapest place to buy.",
   applicationName: SITE_NAME,
-  keywords: ["Riftbound", "Riftbound TCG", "Riftbound prices", "Riftbound singles", "League of Legends TCG", "card prices"],
+  // NO `keywords` meta. Google has ignored it since 2009 and Bing treats stuffing
+  // it as a negative signal; it only ever advertised our target terms to
+  // competitors. Removed site-wide rather than per-page because it was declared
+  // here and inherited everywhere.
   alternates: {
     // NO site-wide canonical here: it propagates to every page that doesn't set
     // its own, telling Google those pages are duplicates of the homepage (GSC:

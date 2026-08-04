@@ -7,9 +7,10 @@ import { DomainBadge } from "@/components/Badge";
 import { TierBadge } from "@/components/TierBadge";
 import { formatMoney } from "@/lib/format";
 import { getCountry } from "@/lib/get-country";
-import { COUNTRIES } from "@/lib/country";
+import { COUNTRIES, COUNTRY_LIST } from "@/lib/country";
 import { SITE_URL } from "@/lib/site";
 import { cardImageAlt } from "@/lib/image-alt";
+import { deckItemListLd, deckFaqLd, deckFaq, cheapestDeck, bestWinRateDeck } from "@/lib/deck-jsonld";
 
 export const revalidate = 86400;
 
@@ -18,6 +19,20 @@ export const metadata: Metadata = {
   description:
     "Real top-finishing Riftbound Vendetta decklists, each priced live across stores. See what it costs to build a deck and where to buy every card.",
   alternates: { canonical: "/decks" },
+  openGraph: {
+    type: "website",
+    url: `${SITE_URL}/decks`,
+    title: "Riftbound Top Meta Decks & Build Cost",
+    description:
+      "Every top-finishing Vendetta decklist, card-for-card, with a live build cost in your own market.",
+    // Every market reads THIS url — the region comes from a cookie, not the path
+    // (see lib/get-country.ts). og:locale:alternate is therefore a statement about
+    // who the one page serves, not a claim that six localised URLs exist. NO
+    // hreflang here for the same reason: alternates would have to point at URLs
+    // that don't exist, which is worse than declaring none.
+    locale: "en_US",
+    alternateLocale: COUNTRY_LIST.map((c) => c.locale.replace("-", "_")).filter((l) => l !== "en_US"),
+  },
 };
 
 // The metagame these lists come from. The lists, tiers and metashare figures all
@@ -60,29 +75,18 @@ export default async function DecksPage() {
       { "@type": "ListItem", position: 2, name: "Meta Decks", item: `${SITE_URL}/decks` },
     ],
   };
-  const itemListLd = {
-    "@context": "https://schema.org",
-    "@type": "ItemList",
-    name: `Riftbound ${SET_LABEL} Top Meta Decks`,
-    url: `${SITE_URL}/decks`,
-      // Edges back to the site-level graph in app/layout.tsx. Without them this
-      // node is an island and the Organization/WebSite entity signals — sameAs,
-      // areaServed, knowsAbout — don't propagate to the page.
-      isPartOf: { "@id": `${SITE_URL}/#website` },
-      publisher: { "@id": `${SITE_URL}/#org` },
-    itemListElement: META_DECKS.map((d, i) => ({
-      "@type": "ListItem",
-      position: i + 1,
-      name: d.name,
-      url: `${SITE_URL}/decks/${d.slug}`,
-      description: d.description,
-    })),
-  };
+  const ldOpts = { siteUrl: SITE_URL, setLabel: SET_LABEL, metaUpdated: META_UPDATED, info };
+  const itemListLd = deckItemListLd(decks, ldOpts);
+  const faqLd = deckFaqLd(decks, ldOpts);
+  const faqs = deckFaq(decks, ldOpts);
+  const cheapest = cheapestDeck(decks);
+  const bestWr = bestWinRateDeck(decks);
 
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
     <div className="flex flex-col gap-10">
       <div>
         <span className="chip bg-brand-500 text-[10px] font-extrabold uppercase tracking-wide text-ink-950">
@@ -95,10 +99,20 @@ export default async function DecksPage() {
           list is card-for-card as its pilot registered it, priced live across {info.adjective} stores so you
           can see what it costs to build and where to buy each card.
         </p>
+        <p className="mt-2 max-w-3xl text-sm text-slate-400">
+          The {SET_LABEL} metagame is the set of decks winning Riftbound events since {SET_LABEL} released on
+          31 July 2026. Because Riftbound doesn&apos;t rotate, it isn&apos;t only new cards: the strongest
+          lists mix {SET_LABEL} printings into proven Origins, Spirit Forged and Unleashed shells, which is
+          why several Unleashed-era legends still sit near the top. A deck&apos;s tier here reflects how it
+          actually converts — metashare, win rate and top-8 finishes — not how it looks on paper.
+        </p>
         {META_UPDATED && (
           <p className="mt-2 text-xs text-slate-500">
-            Meta last updated <strong className="text-slate-400">{longDate(META_UPDATED)}</strong>. Tier
-            placement, metashare and win rates track the{" "}
+            Meta last updated{" "}
+            <time dateTime={META_UPDATED} className="font-bold text-slate-400">
+              {longDate(META_UPDATED)}
+            </time>
+            . Tier placement, metashare and win rates track the{" "}
             <a
               href="https://riftdecks.com/legends"
               target="_blank"
@@ -129,6 +143,41 @@ export default async function DecksPage() {
           </Link>
         </p>
       </section>
+
+      {/* High-intent shortcuts: "cheapest/budget X deck" and "best win rate X deck"
+          are two of the highest-volume long-tail queries in this niche, and both
+          answers are already in the data. Prices render in the resolved market. */}
+      {(cheapest || bestWr) && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {cheapest && (
+            <Link
+              href={`/decks/${cheapest.slug}`}
+              className="card-surface flex flex-col gap-1 p-4 transition-colors hover:border-ink-600"
+            >
+              <div className="text-[11px] font-extrabold uppercase tracking-wide text-slate-500">Budget pick</div>
+              <div className="font-bold text-white">{cheapest.name}</div>
+              <p className="text-xs text-slate-400">
+                The cheapest list here to assemble —{" "}
+                <strong className="text-accent">{formatMoney(cheapest.totalCents, info.currency)}</strong> at
+                today&apos;s {info.adjective} prices, and still a {cheapest.winRatePct}% win rate.
+              </p>
+            </Link>
+          )}
+          {bestWr && (
+            <Link
+              href={`/decks/${bestWr.slug}`}
+              className="card-surface flex flex-col gap-1 p-4 transition-colors hover:border-ink-600"
+            >
+              <div className="text-[11px] font-extrabold uppercase tracking-wide text-slate-500">Highest win rate</div>
+              <div className="font-bold text-white">{bestWr.name}</div>
+              <p className="text-xs text-slate-400">
+                <strong className="text-accent">{bestWr.winRatePct}%</strong> across {bestWr.top8s} top-8
+                finishes — the best conversion rate in the current {SET_LABEL} field.
+              </p>
+            </Link>
+          )}
+        </div>
+      )}
 
       {tiers.map(({ tier, decks: tierDecks }) =>
         tierDecks.length === 0 ? null : (
@@ -195,6 +244,20 @@ export default async function DecksPage() {
           <DeckGrid decks={beginner} currency={info.currency} />
         </div>
       )}
+
+      {/* Visible counterpart of the FAQPage JSON-LD above. These must stay in sync:
+          marking up an answer that isn't on the page breaks Google's guidelines. */}
+      <section>
+        <h2 className="mb-3 text-xl font-extrabold text-white">Common questions</h2>
+        <div className="flex flex-col gap-3">
+          {faqs.map((q) => (
+            <div key={q.name} className="rounded-xl border border-ink-700 bg-ink-900/60 p-4">
+              <h3 className="text-sm font-bold text-white">{q.name}</h3>
+              <p className="mt-1 text-sm text-slate-400">{q.acceptedAnswer.text}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
       <p className="text-center text-[11px] text-slate-600">
         Decklists are real tournament results and change with the metagame — lists via{" "}

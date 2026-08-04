@@ -13,7 +13,7 @@
 import { prisma } from "./db";
 import { dbHistory } from "./db-history";
 import { SITE_URL } from "./site";
-import { META_DECKS } from "./meta-decks";
+import { META_DECKS, META_UPDATED } from "./meta-decks";
 import { getArticles } from "./articles";
 import { SETS } from "./constants";
 import { DOMAIN_PAGES } from "./domains";
@@ -87,7 +87,7 @@ async function core(): Promise<SitemapEntry[]> {
     { url: `${SITE_URL}/market`, changeFrequency: "daily", priority: 0.8, lastModified: day },
     { url: `${SITE_URL}/sealed`, changeFrequency: "daily", priority: 0.8, lastModified: day },
     { url: `${SITE_URL}/sets`, changeFrequency: "weekly", priority: 0.8, lastModified: day },
-    { url: `${SITE_URL}/decks`, changeFrequency: "weekly", priority: 0.8, lastModified: day },
+    { url: `${SITE_URL}/decks`, changeFrequency: "weekly", priority: 0.8, lastModified: decksModified(day) },
     { url: `${SITE_URL}/deck`, changeFrequency: "weekly", priority: 0.6, lastModified: staticPageDate("/deck") },
     { url: `${SITE_URL}/bulk-pricer`, changeFrequency: "weekly", priority: 0.6, lastModified: staticPageDate("/bulk-pricer") },
     { url: `${SITE_URL}/trade`, changeFrequency: "monthly", priority: 0.7, lastModified: staticPageDate("/trade") },
@@ -316,8 +316,21 @@ async function stores(): Promise<SitemapEntry[]> {
   }));
 }
 
+// A deck page changes when EITHER its prices refresh or the metagame list itself
+// is re-cut, so its honest lastmod is whichever happened later. Using priceDay
+// alone under-reported a day the tier list moved but prices didn't; using the meta
+// date alone under-reports the daily repricing. This is the same stamp the page
+// renders as dateModified, so the sitemap and the markup can't drift apart.
+function decksModified(day: Date | undefined): Date | undefined {
+  const meta = META_UPDATED ? new Date(`${META_UPDATED}T00:00:00Z`) : undefined;
+  if (meta && Number.isNaN(meta.getTime())) return day;
+  if (!day) return meta;
+  if (!meta) return day;
+  return meta > day ? meta : day;
+}
+
 async function decks(): Promise<SitemapEntry[]> {
-  const day = await priceDay();
+  const day = decksModified(await priceDay());
   return META_DECKS.map((d) => ({
     url: `${SITE_URL}/decks/${d.slug}`,
     changeFrequency: "weekly" as const,
