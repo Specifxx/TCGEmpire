@@ -171,7 +171,7 @@ async function main() {
       for (const v of variants) {
         const r = await probeEbayQuery({ q: v.q, marketplace: mkt.marketplace, fixedPriceOnly: v.fixedPriceOnly });
         console.log(`      ${String(r.count).padStart(3)} items  q=${JSON.stringify(v.q)}${v.fixedPriceOnly === false ? " [+auctions]" : ""}  — ${v.label}`);
-        for (const t of r.titles.slice(0, 3)) console.log(`               ${t.slice(0, 84)}`);
+        for (const t of r.titles) console.log(`               ${t.slice(0, 100)}`);
       }
     }
     console.log();

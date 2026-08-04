@@ -260,7 +260,7 @@ export async function probeEbayQuery(opts: {
 }): Promise<{ ok: boolean; count: number; titles: string[] }> {
   const token = await getToken();
   if (!token) return { ok: false, count: 0, titles: [] };
-  const params = new URLSearchParams({ q: opts.q, sort: "price", limit: "20" });
+  const params = new URLSearchParams({ q: opts.q, limit: "20" });
   if (opts.fixedPriceOnly !== false) params.set("filter", "buyingOptions:{FIXED_PRICE}");
   try {
     const res = await fetch(`${SEARCH_URL}?${params}`, {
@@ -272,7 +272,15 @@ export async function probeEbayQuery(opts: {
     if (!res.ok) return { ok: false, count: 0, titles: [] };
     const data: any = await res.json();
     const items: any[] = data.itemSummaries ?? [];
-    return { ok: true, count: items.length, titles: items.slice(0, 5).map((i) => String(i.title ?? "")) };
+    // NO price sort and EVERY title returned. Sorting cheapest-first and sampling
+    // the head is what hid the answer last time: a $3,600 chase card sorts to the
+    // very end, so the sample showed only cheap look-alikes and implied the
+    // expensive listing did not exist.
+    return {
+      ok: true,
+      count: items.length,
+      titles: items.map((i) => `${String(i.title ?? "")}  [${i?.price?.value ?? "?"} ${i?.price?.currency ?? ""}]`),
+    };
   } catch {
     return { ok: false, count: 0, titles: [] };
   }
