@@ -139,6 +139,19 @@ const CHECKS: Check[] = [
   // unrelated.
   { path: "/widgets", label: "retired price-widget page", retired: {} },
 
+  // ── Box EV ───────────────────────────────────────────────────────────────
+  // The calculator is a client component, so the numbers themselves are not in
+  // the HTML — but the page's editorial IS, and that is what regressed here
+  // before: a DB failure used to leave "Price data is still warming up" with no
+  // pools, which looks fine and says nothing. `mustNot` catches exactly that.
+  {
+    path: "/tools/box-ev",
+    label: "box EV calculator",
+    must: ['"@type":"WebApplication"', "TCGplayer market price"],
+    mustNot: ["Price data is still warming up"],
+    minText: 1200,
+  },
+
   // ── Core browse surfaces ─────────────────────────────────────────────────
   { path: "/browse", label: "card database", minLinks: 20 },
   { path: "/guides", label: "guides index", minLinks: 20 },
