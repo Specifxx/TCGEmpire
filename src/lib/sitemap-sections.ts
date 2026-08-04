@@ -185,17 +185,38 @@ async function cards(): Promise<SitemapEntry[]> {
 
 async function sets(): Promise<SitemapEntry[]> {
   const day = await priceDay();
-  // comingSoon sets are included at lower priority: pre-release query volume
-  // ("riftbound vendetta") is real, the page is live/indexable and linked from
-  // the blog, and it self-upgrades the day singles land. All sets share the same
-  // priceDay signal — a comingSoon set with zero cards yet still gets an honest,
+
+  // A set with NOTHING imported is excluded entirely. Both the set page
+  // (app/sets/[set]/page.tsx — `cardCount === 0` → robots.index false) and its
+  // gallery noindex themselves while empty, so submitting them here would be
+  // asking Google to index a page that tells it not to: "Submitted URL marked
+  // 'noindex'" in Search Console, twice per announced set.
+  //
+  // This became reachable the moment an announced-but-unshipped set (Radiance)
+  // was added to SETS — Vendetta already had revealed cards by the time it
+  // landed here, so the case never arose. The entries reappear on their own the
+  // day the official gallery imports, which is also the day the pages start
+  // indexing; no code change, and no hand-maintained list to forget.
+  // FAILS OPEN. If the count query errors, `countByCode` is null and every set is
+  // submitted, exactly as before this filter existed — a transient DB blip must
+  // not silently drop every set URL out of the sitemap, which is a far worse
+  // outcome than two noindex warnings.
+  const countByCode = await prisma.card
+    .groupBy({ by: ["setCode"], _count: { _all: true } })
+    .then((rows) => new Map(rows.map((c) => [c.setCode, c._count._all])))
+    .catch(() => null);
+
+  // comingSoon sets that DO have cards are included at lower priority: pre-release
+  // query volume ("riftbound vendetta") is real, the page is live/indexable and
+  // linked from the blog, and it self-upgrades the day singles land. All sets
+  // share the same priceDay signal — a comingSoon set still gets an honest,
   // non-fabricated date rather than none at all.
   // Each set contributes TWO URLs: the price-first set page and its visual card
   // gallery (/sets/<slug>/gallery). They target different intents — "vendetta
   // prices" vs "vendetta card gallery" — so both belong in the index. The gallery
   // sits just under its set page: it is a genuine landing page for the browse
   // queries, but the set page is still the commercial destination.
-  return SETS.flatMap((s) => [
+  return SETS.filter((s) => !countByCode || (countByCode.get(s.code) ?? 0) > 0).flatMap((s) => [
     {
       url: `${SITE_URL}/sets/${s.slug}`,
       changeFrequency: "daily" as const,
