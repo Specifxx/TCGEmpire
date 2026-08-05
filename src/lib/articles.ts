@@ -10,6 +10,12 @@ export type ArticleCategory = "blog" | "guide";
 // An eBay affiliate search rendered in the article's "Shop this guide" strip
 // (ArticleShopStrip). `query` is the eBay search; the strip localises the eBay
 // domain to the visitor's market and affiliate-tags the link.
+//
+// `label` is the visible anchor text and must NOT name a country — the strip
+// swaps the eBay domain per market, so "Booster boxes on eBay UK" would be a lie
+// to five of the six markets. Name the PRODUCT, not the action: "Vendetta booster
+// boxes" beats "Click here to buy". Two to four links is the working range; past
+// that the strip reads as a link farm rather than a recommendation.
 export interface ShopLink {
   label: string;
   query: string;
@@ -72,7 +78,14 @@ export interface Article {
   tags: string[];
   body: string; // markdown
   // Optional monetisation: eBay searches relevant to THIS article (rendered as a
-  // "Shop this guide" strip under the body). Omit = no strip.
+  // "Shop this guide" strip). Omit = no strip.
+  //
+  // PLACEMENT: by default the strip renders after the body and above the FAQ. An
+  // article can position it instead by putting `[[shop]]` on its own line in
+  // `body` — right after the section that creates the buying decision, which is
+  // where intent actually peaks (after a decklist, under a price table, at the
+  // end of a "which should I buy" comparison). A body that places the marker
+  // suppresses the default copy, so the strip renders exactly once either way.
   shop?: ShopLink[];
   // Opt in to the tailored eBay unit (chase cards + their cheapest live listing,
   // with thumbnails) under the body. Deliberately per-article rather than
@@ -447,6 +460,16 @@ New to the game entirely? Start with **[Riftbound for beginners](/guides/riftbou
   {
     slug: "where-to-buy-riftbound-cards",
     marketData: "AU",
+    // Positioned at the guide's own "Ready to buy?" heading via [[shop]] — the
+    // reader has already picked their region and settled singles-vs-sealed by
+    // then, so it is the one point in a six-section guide where every reader is
+    // simultaneously decided and still on the page. Both product types are
+    // offered because the section immediately above splits on exactly that.
+    shop: [
+      { label: "Riftbound singles", query: "Riftbound TCG singles" },
+      { label: "Riftbound booster boxes", query: "Riftbound booster box" },
+      { label: "Vendetta singles & sealed", query: "Riftbound Vendetta" },
+    ],
     category: "guide",
     title: "Where to Buy Riftbound Cards (Australia, NZ, US & UK)",
     excerpt:
@@ -514,6 +537,8 @@ UK players can buy Riftbound singles in GBP from a growing list of British TCG r
 ## Ready to buy?
 
 Set your country, **[open the card database](/browse)**, find your card, and click through to the cheapest store. New to Riftbound? Browse our other **[guides](/guides)** or check the current **[meta decks](/decks)** to see what's worth building.
+
+[[shop]]
 
 ## Buying in a specific market?
 
@@ -583,10 +608,36 @@ Head to the **[sealed products page](/sealed)** to see live prices for booster b
 - **Factor in shipping** — a slightly dearer box with free postage can beat a cheaper one plus delivery.
 - **Buy from reputable stockists** — we link straight to each store so you can check their returns and shipping policy.
 
+[[shop]]
+
 Ready to buy? **[Compare Riftbound booster box prices now](/sealed)**, or if you only need a few cards, **[search the singles database](/browse)** instead.`,
+    // A US-market sealed guide (marketData: "US") that had no buy path at all.
+    // Worth more than most: /sealed carries no eBay rows outside AU (eBay sealed
+    // is pinned to the AU marketplace in sealed-import.ts), so until that is fixed
+    // this strip is the ONLY eBay sealed route a US reader has. Four links because
+    // the product types are genuinely distinct purchases, not four phrasings of one.
+    shop: [
+      { label: "Riftbound booster boxes", query: "Riftbound booster box" },
+      { label: "Booster packs", query: "Riftbound booster pack" },
+      { label: "Proving Grounds kits", query: "Riftbound Proving Grounds" },
+      { label: "Vendetta sealed", query: "Riftbound Vendetta sealed" },
+    ],
   },
   {
     slug: "most-valuable-riftbound-cards",
+    // Graded is deliberately first, and is the reason this strip earns its place:
+    // slabbed cards are the one category our own comparison structurally cannot
+    // cover — no tracked Shopify store lists PSA/BGS copies — so for a reader who
+    // has just finished reading about chase printings, eBay is not a duplicate of
+    // the card database, it's the only place the thing they now want exists.
+    shop: [
+      { label: "Graded Riftbound cards (PSA & BGS)", query: "Riftbound PSA graded" },
+      { label: "Signature & alt-art printings", query: "Riftbound signature alt art" },
+      { label: "Vendetta chase cards", query: "Riftbound Vendetta chase" },
+    ],
+    // Chase-card readers are shopping by sight; the tailored unit shows the set's
+    // actual chase cards with live listings rather than a generic search box.
+    ebayPicks: true,
     category: "guide",
     title: "The Most Valuable Riftbound Cards & Chase Cards",
     excerpt:
@@ -617,6 +668,8 @@ On RiftCompare, each of these printings is labelled in the card's name (e.g. *(A
 - **Compare across stores** — high-value cards have the widest price spread, so comparing saves the most here. Open any card to see **every store's price** sorted cheapest-first.
 - **Mind the condition** — Near Mint (NM) is the benchmark; played copies should cost noticeably less.
 - **Buy the English print** unless you specifically want another language — foreign copies are cheaper but aren't the same card.
+
+[[shop]]
 - **Check the exact printing** — make sure you're buying the alt-art / signature / promo you actually want, not the base card (or vice versa).
 
 Want to find your grail? **[Browse every Riftbound card](/browse)** and sort by price, or read our **[guide to where to buy Riftbound cards](/guides/where-to-buy-riftbound-cards)** for the best place to buy in your region.
@@ -677,6 +730,14 @@ Ready to dive in? **[Browse the Riftbound card database](/browse)** or **[compar
   },
   {
     slug: "riftbound-singles-vs-sealed",
+    // The whole article is one decision, and it resolves in the paragraph the
+    // marker follows — so the strip offers both branches rather than picking for
+    // the reader. Two links, one per answer; adding more would re-open a question
+    // the article just closed.
+    shop: [
+      { label: "Riftbound singles", query: "Riftbound TCG singles" },
+      { label: "Riftbound booster boxes", query: "Riftbound booster box" },
+    ],
     category: "guide",
     title: "Riftbound Singles vs Sealed: What's Better Value?",
     excerpt:
@@ -706,6 +767,8 @@ Compare booster box and pack prices on the **[sealed products page](/sealed)** �
 ## The value reality
 
 A booster box has a fixed expected value spread across many cards. If you only need a few specific cards, you'll usually pay **less by buying those singles directly** than by opening boxes and hoping. If you value the experience or want everything sealed, boxes win. There's no wrong answer — just buy whichever at the best price, which is exactly what RiftCompare is for.
+
+[[shop]]
 
 ## Bottom line
 
@@ -742,11 +805,23 @@ Paste any decklist into the **[deck pricer](/deck)** and it matches every card t
 - **Consolidate orders** — buying several cards from one store can unlock free shipping and beat splitting an order.
 - **Price the whole list first** — the **[deck pricer](/deck)** totals a decklist across every store before you commit to buying.
 
+[[shop]]
+
 ## Then find the cheapest cards
 
 Once you've locked a list, **[search the database](/browse)** for each card and buy from whichever store is cheapest — or read our **[where to buy Riftbound cards guide](/guides/where-to-buy-riftbound-cards)** for the best option in your region.
 
 Build smart, compare prices, and you'll have a competitive Riftbound deck without overspending.`,
+    // Placed mid-article: the tips list above is where a budget builder decides
+    // WHAT to buy (commons, base printings, singles over boxes), so the buy path
+    // belongs there rather than under the FAQ. Bulk lots are deliberately first —
+    // they're the genuinely budget-shaped eBay category and the one a reader can't
+    // get from our own store comparison, which prices singles individually.
+    shop: [
+      { label: "Riftbound card lots & bundles", query: "Riftbound TCG card lot" },
+      { label: "Budget singles — Commons & Uncommons", query: "Riftbound TCG singles" },
+      { label: "Vendetta singles", query: "Riftbound Vendetta single" },
+    ],
   },
   {
     slug: "welcome-to-riftcompareau",
@@ -876,6 +951,14 @@ Want to try these ideas out before committing? **[Price the final deck](/deck)**
   },
   {
     slug: "riftbound-booster-box-ev-worth-ripping-or-buying-singles",
+    // Placed at the rip-or-buy verdict rather than the article's end: the closing
+    // section walks back from the decision into caveats, so a reader who has
+    // already made up their mind has left by then. Both branches offered, since
+    // the section above concludes that either can be right.
+    shop: [
+      { label: "Riftbound booster boxes", query: "Riftbound booster box" },
+      { label: "Riftbound singles", query: "Riftbound TCG singles" },
+    ],
     category: "guide",
     title: "Riftbound Box EV Explained: Should You Rip or Buy Singles?",
     excerpt:
@@ -911,6 +994,8 @@ EV math generally favors singles-buying in a few recurring situations. If you wa
 EV also tends to compress as a set matures. Early after a set's release, uncertainty and hype can push EV estimates around in ways that occasionally favor ripping. As a set ages, prices on individual cards settle, supply catches up with demand, and box EV typically drifts toward (or under) box price - because that gap is exactly what sellers and the market correct over time. A box that looked like a reasonable rip on release week isn't necessarily one months later.
 
 And if you're simply risk-averse - you'd rather know exactly what you're getting for your money - singles-buying is the correct choice regardless of what EV says. EV being favorable doesn't mean any individual box will be; it means the average box will be, and you might not get an average box.
+
+[[shop]]
 
 ## Using EV as a Decision Tool, Not a Guarantee
 
