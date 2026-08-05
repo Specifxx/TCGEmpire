@@ -104,6 +104,36 @@ export function ebayAffiliateUrl(url: string, source?: string): string {
   }
 }
 
+// The eBay marketplace a given RiftCompare market shops on. NZ has no eBay of
+// its own and eBay AU ships there, so it deliberately maps to the AU domain.
+//
+// This lives here, beside ebayAffiliateUrl, because four components had grown
+// their own private copy of it (EbayBuyCta, EbayAd, PartnersStrip,
+// ArticleShopStrip) and they had already drifted: EbayAd's copy is missing SG
+// and CA, so those markets were being sent to ebay.com.au. A map that five
+// surfaces need is a shared fact, not five local constants.
+const EBAY_DOMAIN: Record<string, string> = {
+  AU: "ebay.com.au",
+  NZ: "ebay.com.au", // no eBay NZ; eBay AU ships there
+  US: "ebay.com",
+  UK: "ebay.co.uk",
+  SG: "ebay.com.sg",
+  CA: "ebay.ca",
+};
+
+export function ebayDomain(country: string): string {
+  return EBAY_DOMAIN[country] ?? EBAY_DOMAIN.US;
+}
+
+// An affiliate-tagged eBay SEARCH on the visitor's own marketplace. `source` is
+// the placement segment that reaches EPN's customid (see affiliateSubId above),
+// so reports can answer "which surface earned?" rather than only "did eBay
+// earn?" — pass one at every call site.
+export function ebaySearchUrl(country: string, query: string, source?: string): string {
+  const url = `https://www.${ebayDomain(country)}/sch/i.html?_nkw=${encodeURIComponent(query)}`;
+  return ebayAffiliateUrl(url, source);
+}
+
 // ---- Per-store DIRECT affiliate programs (the long tail of Shopify stores) ------
 // eBay, Amazon and TCGplayer pay us DIRECTLY (best rate — no middleman cut) and are
 // handled above. The 60+ Shopify shops we compare earn nothing UNLESS we sign each

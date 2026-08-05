@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { buildCardWhere, buildCardOrderBy, cardTileSelect } from "@/lib/cards";
 import { DEFAULT_COUNTRY, priceField, COUNTRIES } from "@/lib/country";
 import { CardTile } from "./CardTile";
+import { EbayBuyCta } from "./EbayBuyCta";
 import { formatMoney } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
 import { buildCollectionNarrative, type CollectionKind } from "@/lib/content/collection-narrative";
@@ -173,6 +174,16 @@ export async function FacetPageBody({
           )}
         </>
       )}
+
+      {/* One buy path for every facet route at once — /cards/type/*,
+          /cards/rarity/* and /cards/printing/* all render through this body, and
+          none of them had one. These are collector-shopping queries ("riftbound
+          alt art cards", "riftbound epic cards") landing on a grid sorted by
+          value, so the reader arrives already looking to buy a category rather
+          than a specific card — which is exactly what a marketplace search
+          answers better than our per-card comparison. Placed under the grid, not
+          above it: our own priced cards lead. */}
+      <EbayBuyCta query={facet.label} heading={`${facet.label} cards on eBay`} />
 
       {siblings.length > 1 && (
         <section>

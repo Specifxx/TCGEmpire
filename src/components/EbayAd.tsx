@@ -1,7 +1,7 @@
 "use client";
 
 import { OutboundLink } from "./OutboundLink";
-import { ebayAffiliateUrl } from "@/lib/affiliate";
+import { ebaySearchUrl } from "@/lib/affiliate";
 import { usePremium } from "./PremiumProvider";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
 
@@ -22,25 +22,24 @@ const DIMS: Record<Variant, { w: number; h: number }> = {
   mobileRect: { w: 300, h: 250 },
 };
 
-// riftcompare market codes → eBay domain (NZ has no eBay; eBay AU ships there).
-const EBAY_DOMAIN: Record<string, string> = {
-  AU: "www.ebay.com.au",
-  NZ: "www.ebay.com.au",
-  US: "www.ebay.com",
-  UK: "www.ebay.co.uk",
-};
-
 function tagline(country: string, contextual: boolean): string {
   if (contextual) return country === "NZ" ? "New, used & graded — ships to NZ" : "New, used & graded listings";
   if (country === "US") return "Millions of TCG listings";
   if (country === "NZ") return "Ships to New Zealand";
   if (country === "UK") return "Buy from UK & global sellers";
+  if (country === "SG") return "Buy from SG & global sellers";
+  if (country === "CA") return "Buy from CA & global sellers";
   return "Buy from AU & global sellers";
 }
 
+// This banner ships on EVERY route via FooterAds, so its market map is the most
+// widely-rendered one on the site — and it was the one that had drifted: the
+// local copy listed only AU/NZ/US/UK and fell back to eBay AU, so every SG and
+// CA visitor was sent to the Australian marketplace (in AUD, with AU postage)
+// while affiliate.ts already carried verified ebay.com.sg and ebay.ca rotations.
+// Now resolved from the single shared map.
 function searchUrl(query: string, country: string): string {
-  const host = EBAY_DOMAIN[country] ?? EBAY_DOMAIN.AU;
-  return ebayAffiliateUrl(`https://${host}/sch/i.html?_nkw=${encodeURIComponent(query)}`);
+  return ebaySearchUrl(country, query, "banner");
 }
 
 function Banner({ w, h, country, label, href }: { w: number; h: number; country: string; label: string; href: string }) {

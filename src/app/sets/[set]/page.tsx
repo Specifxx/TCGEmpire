@@ -6,6 +6,7 @@ import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { CardTile } from "@/components/CardTile";
+import { EbayPicks } from "@/components/EbayPicks";
 import { CountUp } from "@/components/CountUp";
 import { Reveal } from "@/components/Reveal";
 import { Filters } from "@/components/Filters";
@@ -370,6 +371,22 @@ export default async function SetPage({
           </section>
         </div>
       )}
+
+      {/* The set's marketplace path. Tailored rather than generic: EbayPicks
+          resolves this set's chase cards to their cheapest live listing, and
+          falls back to a plain affiliate search when a market has no cached
+          rows — which is what makes it safe on a comingSoon set, where that
+          fallback is the honest answer.
+
+          A pre-release set is the strongest case for it on the whole page: no
+          store has stock to compare, so the grid above is a card list rather
+          than a shopping surface, and eBay presale/preorder listings are the
+          only thing a reader can act on. */}
+      <EbayPicks
+        setCode={set.code}
+        heading={`${set.name} singles on eBay right now`}
+        fallbackQuery={`Riftbound ${set.name}`}
+      />
 
       {/* Internal links to the other sets (crawl + UX) */}
       <section>

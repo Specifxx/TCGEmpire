@@ -10,6 +10,7 @@ import { formatMoney } from "@/lib/format";
 import { CHAMPIONS, championBySlug, championCardWhere } from "@/lib/champions";
 import { META_DECKS, resolveDeck, type ResolvedDeck } from "@/lib/meta-decks";
 import { DomainBadge } from "@/components/Badge";
+import { EbayBuyCta } from "@/components/EbayBuyCta";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { breadcrumb } from "@/lib/jsonld";
 import { SITE_URL } from "@/lib/site";
@@ -300,6 +301,16 @@ export default async function ChampionPage({ params }: { params: { slug: string 
             </>
           )}
         </p>
+        {/* The buy path for this champion. Inside the "cheapest way to build"
+            card rather than after it, because both branches of the paragraph
+            above lead here and neither could previously act on it: when a
+            printing IS priced this is the marketplace option beside the store
+            comparison, and when none is — the branch directly above, which is
+            common on an 87-page programmatic surface where most champions have
+            only a handful of printings — it is the ONLY thing on the page a
+            reader can actually buy from. Carries its own disclosure, and unlike
+            the ad units renders for Premium too (see EbayBuyCta's header). */}
+        <EbayBuyCta query={champ.name} className="mt-4" />
       </section>
 
       <section>
