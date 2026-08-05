@@ -574,7 +574,18 @@ export function sealedFloorCents(productType: string, referenceCents?: number | 
 // `referenceCents` is the trusted store/TCGplayer price for this product (when known)
 // — listings priced implausibly below it (or below the per-type floor) are dropped as
 // accessories / mis-listings.
-export async function searchEbaySealed(name: string, productType: string, setCode: string | null, referenceCents?: number | null): Promise<EbayResult | null> {
+export async function searchEbaySealed(
+  name: string,
+  productType: string,
+  setCode: string | null,
+  referenceCents?: number | null,
+  // Which eBay marketplace to search. Defaults to AU only so existing callers
+  // keep their behaviour; the sealed importer now passes one per market.
+  // Prices come back in THAT marketplace's currency, which is what makes the
+  // resulting row storable against a market — SealedListing has no currency
+  // column, so the country IS the currency.
+  marketplace: string = DEFAULT_MARKETPLACE,
+): Promise<EbayResult | null> {
   const token = await getToken();
   if (!token) return null;
   const kw = SEALED_TYPE_KW[productType];
@@ -587,7 +598,7 @@ export async function searchEbaySealed(name: string, productType: string, setCod
   });
   const headers: Record<string, string> = {
     Authorization: `Bearer ${token}`,
-    "X-EBAY-C-MARKETPLACE-ID": DEFAULT_MARKETPLACE,
+    "X-EBAY-C-MARKETPLACE-ID": marketplace,
   };
   if (EBAY_CAMPAIGN_ID) {
     headers["X-EBAY-C-ENDUSERCTX"] = `affiliateCampaignId=${EBAY_CAMPAIGN_ID}`;

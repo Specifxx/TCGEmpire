@@ -218,55 +218,26 @@ export async function importSealed(): Promise<number> {
     }
   }
 
-  // eBay AU prices for each sealed product (best-effort; skips when rate-limited).
-  // eBay is AU-only, so we seed/search against the AU groups.
+  // eBay sealed prices per market (best-effort; skips when rate-limited).
+  //
+  // This used to search the AU marketplace only and hardcode `country: "AU"` on
+  // every row, which meant the US — our DEFAULT market and the largest share of
+  // traffic — had NO eBay sealed listings at all. Its sealed comparison was
+  // TCGplayer plus US Shopify stores, on the highest-value category we carry:
+  // booster boxes are the biggest baskets on the site. That was a structural
+  // zero, not a ranking problem, and no amount of placement work could reach it.
+  //
+  // Cost is not the reason it was AU-only: sealed is a few dozen product groups,
+  // not the ~1,400-card singles catalogue, so a full market sweep is ~100 Browse
+  // calls against a ~4,280 budget. It is rounding error.
+  //
   // Deploys (push) set EBAY_REFRESH=false so they never spend eBay quota; only
   // scheduled / manual runs search eBay (and even then, within the live budget).
   if (isEbayEnabled() && process.env.EBAY_REFRESH !== "false") {
     await primeEbayBudget(); // respect the live daily quota for sealed searches too
-    const groups = await getSealedGroups("AU");
-    // Always attempt eBay for the per-set promo (Nexus Night) packs — even ones no
-    // AU store currently lists (e.g. the Unleashed pack) — so they appear once
-    // available, with an image pulled from the eBay listing.
-    const NEXUS_SEEDS = [
-      { groupKey: "OGN|Nexus Night Pack", setCode: "OGN", name: "Origins Nexus Night Promo Pack", productType: "Nexus Night Pack", imageUrl: null as string | null },
-      { groupKey: "SFD|Nexus Night Pack", setCode: "SFD", name: "Spiritforged Nexus Night Promo Pack", productType: "Nexus Night Pack", imageUrl: null as string | null },
-      { groupKey: "UNL|Nexus Night Pack", setCode: "UNL", name: "Unleashed Nexus Night Promo Pack", productType: "Nexus Night Pack", imageUrl: null as string | null },
-    ];
-    const haveKeys = new Set(groups.map((g) => g.groupKey));
-    // Trusted reference = cheapest NON-eBay (store/TCGplayer) price for the product, so
-    // the eBay search can reject listings priced implausibly below the real product.
-    const trustedRef = (g: SealedGroup): number | null => {
-      const nonEbay = g.listings.filter((l) => l.retailer !== "ebay").map((l) => l.priceCents);
-      return nonEbay.length ? Math.min(...nonEbay) : null;
-    };
-    const searchList = [
-      ...groups.map((g) => ({ groupKey: g.groupKey, setCode: g.setCode, name: g.name, productType: g.productType, imageUrl: g.imageUrl, referenceCents: trustedRef(g) })),
-      ...NEXUS_SEEDS.filter((s) => !haveKeys.has(s.groupKey)).map((s) => ({ ...s, referenceCents: null as number | null })),
-    ];
-    const ebayRows: any[] = [];
-    for (const g of searchList) {
+    for (const mkt of EBAY_SEALED_MARKETS) {
       if (isEbayRateLimited()) break;
-      const r = await searchEbaySealed(g.name, g.productType, g.setCode, g.referenceCents);
-      if (!r) continue;
-      ebayRows.push({
-        groupKey: g.groupKey,
-        title: r.title,
-        productType: g.productType,
-        setCode: g.setCode,
-        retailer: "ebay",
-        retailerName: "eBay",
-        priceCents: r.priceCents,
-        url: r.url,
-        imageUrl: r.imageUrl ?? g.imageUrl,
-        country: "AU", // eBay is AU-only
-        inStock: true,
-      });
-    }
-    if (ebayRows.length > 0) {
-      await prisma.sealedListing.deleteMany({ where: { retailer: "ebay" } });
-      await prisma.sealedListing.createMany({ data: ebayRows });
-      count += ebayRows.length;
+      count += await refreshEbaySealedMarket(mkt);
     }
   }
 
@@ -284,6 +255,97 @@ export async function importSealed(): Promise<number> {
   // from before the filters tightened).
   await cleanupStaleSealed();
 
+  return count;
+}
+
+/** The marketplaces sealed is searched on, in priority order. */
+const EBAY_SEALED_MARKETS = [
+  { country: "US", marketplace: "EBAY_US", retailer: "ebay_us" },
+  { country: "AU", marketplace: "EBAY_AU", retailer: "ebay" },
+  { country: "UK", marketplace: "EBAY_GB", retailer: "ebay_uk" },
+  { country: "SG", marketplace: "EBAY_SG", retailer: "ebay_sg" },
+] as const;
+
+/**
+ * One market's eBay sealed pass. Returns the number of rows written.
+ *
+ * Retailer keys match the singles importer (`ebay`, `ebay_us`, `ebay_uk`,
+ * `ebay_sg`) so every existing `retailer.startsWith("ebay")` test — brand
+ * colouring, buy-button labels, affiliate tagging, the admin breakdown —
+ * classifies these rows without a change.
+ */
+async function refreshEbaySealedMarket(
+  mkt: (typeof EBAY_SEALED_MARKETS)[number],
+): Promise<number> {
+  let count = 0;
+  // Groups are read for THIS market: the reference price below is compared
+  // against listings priced in this marketplace's currency, and SealedListing
+  // has no currency column — an AUD reference against a USD listing would
+  // reject good listings and admit bad ones.
+  const groups = await getSealedGroups(mkt.country);
+  // Always attempt eBay for the per-set promo (Nexus Night) packs — even ones no
+  // AU store currently lists (e.g. the Unleashed pack) — so they appear once
+  // available, with an image pulled from the eBay listing.
+  const NEXUS_SEEDS = [
+    { groupKey: "OGN|Nexus Night Pack", setCode: "OGN", name: "Origins Nexus Night Promo Pack", productType: "Nexus Night Pack", imageUrl: null as string | null },
+    { groupKey: "SFD|Nexus Night Pack", setCode: "SFD", name: "Spiritforged Nexus Night Promo Pack", productType: "Nexus Night Pack", imageUrl: null as string | null },
+    { groupKey: "UNL|Nexus Night Pack", setCode: "UNL", name: "Unleashed Nexus Night Promo Pack", productType: "Nexus Night Pack", imageUrl: null as string | null },
+  ];
+  const haveKeys = new Set(groups.map((g) => g.groupKey));
+  // Trusted reference = cheapest NON-eBay (store/TCGplayer) price for the product, so
+  // the eBay search can reject listings priced implausibly below the real product.
+  const trustedRef = (g: SealedGroup): number | null => {
+    // startsWith, not an exact match: now that eBay writes per-market retailer
+    // keys, an exact `!== "ebay"` test would treat this market's own ebay_us /
+    // ebay_uk / ebay_sg rows as a trusted reference and let last run's eBay
+    // price validate this run's — exactly the self-reinforcing loop the
+    // "trusted = non-eBay" rule exists to prevent.
+    const nonEbay = g.listings.filter((l) => !l.retailer.startsWith("ebay")).map((l) => l.priceCents);
+    return nonEbay.length ? Math.min(...nonEbay) : null;
+  };
+  const searchList = [
+    ...groups.map((g) => ({ groupKey: g.groupKey, setCode: g.setCode, name: g.name, productType: g.productType, imageUrl: g.imageUrl, referenceCents: trustedRef(g) })),
+    ...NEXUS_SEEDS.filter((s) => !haveKeys.has(s.groupKey)).map((s) => ({ ...s, referenceCents: null as number | null })),
+  ];
+  const ebayRows: any[] = [];
+  let truncated = false;
+  for (const g of searchList) {
+    if (isEbayRateLimited()) {
+      truncated = true;
+      break;
+    }
+    const r = await searchEbaySealed(g.name, g.productType, g.setCode, g.referenceCents, mkt.marketplace);
+    if (!r) continue;
+    ebayRows.push({
+      groupKey: g.groupKey,
+      title: r.title,
+      productType: g.productType,
+      setCode: g.setCode,
+      retailer: mkt.retailer,
+      retailerName: "eBay",
+      priceCents: r.priceCents,
+      url: r.url,
+      imageUrl: r.imageUrl ?? g.imageUrl,
+      country: mkt.country,
+      inStock: true,
+    });
+  }
+  // Delete is scoped to THIS market's retailer key. A single
+  // `deleteMany({ retailer: "ebay" })` would now wipe another market's rows.
+  // And, as in the singles pass, a run cut off by the budget keeps what is
+  // already there rather than writing a partial set — a shrunken comparison
+  // reads as "eBay has nothing" rather than "we ran out of quota".
+  if (ebayRows.length > 0 && !truncated) {
+    await prisma.sealedListing.deleteMany({ where: { retailer: mkt.retailer } });
+    await prisma.sealedListing.createMany({ data: ebayRows });
+    count += ebayRows.length;
+    console.log(`eBay sealed ${mkt.country}: ${ebayRows.length} listings.`);
+  } else if (truncated) {
+    console.warn(
+      `eBay sealed ${mkt.country}: budget ran out after ${ebayRows.length} of ${searchList.length} ` +
+        `products — keeping existing rows rather than writing a partial set.`,
+    );
+  }
   return count;
 }
 
