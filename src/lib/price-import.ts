@@ -342,9 +342,35 @@ export const EBAY_ROTATING_MARKETS: EbayMarketCfg[] = [
   { country: "SG", marketplace: "EBAY_SG", currency: "SGD", retailer: "ebay_sg" },
 ];
 
-/** The markets a run on `dayIndex` will search. Pure, so the budget is testable. */
+/**
+ * The markets a run on `dayIndex` will search, IN THE ORDER IT WILL SEARCH THEM.
+ * Pure, so the budget is testable.
+ *
+ * ── WHY THE ALWAYS-MARKETS ALTERNATE (2026-08-05) ───────────────────────────
+ * Order is not cosmetic. refreshEbayMarkets walks this array and `break`s the
+ * moment the Browse budget latches, and a market cut off partway has its ENTIRE
+ * pass discarded rather than written as a partial (see the truncation guard at
+ * the write site — a partial set would shrink coverage). So whichever market is
+ * last in the array is the one that loses everything when a run overspends.
+ *
+ * The budget is genuinely tight: 3 markets × ~1,400 cards = 4,200 calls against
+ * ~4,280 spendable, and every card whose strict query returns nothing costs a
+ * SECOND call for the no-"Riftbound" retry — so overspending is the normal case,
+ * not the exceptional one.
+ *
+ * With a fixed [AU, US] order that made starvation systematic rather than
+ * shared: AU had first claim on quota every single day and was never once
+ * dropped, while US — the default market and the larger share of traffic — took
+ * the loss every time, silently, along with CA (derived from the US pass). That
+ * is a plausible contributor to US eBay coverage looking thin in reporting.
+ *
+ * Alternating by day makes the loser different each day instead of always the
+ * same market. It does not create quota; it stops one market monopolising it.
+ */
 export function ebayMarketsForDay(dayIndex: number): EbayMarketCfg[] {
-  return [...EBAY_ALWAYS_MARKETS, EBAY_ROTATING_MARKETS[dayIndex % EBAY_ROTATING_MARKETS.length]];
+  const always =
+    dayIndex % 2 === 0 ? [...EBAY_ALWAYS_MARKETS] : [...EBAY_ALWAYS_MARKETS].reverse();
+  return [...always, EBAY_ROTATING_MARKETS[dayIndex % EBAY_ROTATING_MARKETS.length]];
 }
 
 /** eBay CA rows are derived from the US pass — see the note at the write site. */
@@ -414,12 +440,18 @@ export async function refreshEbayMarkets(
     // 07:00 and 19:00 UTC runs, a deploy-triggered run and a manual re-run all pick
     // the same one instead of ping-ponging and double-spending quota.
     const dayIndex = Math.floor(sydneyDay().getTime() / 86_400_000);
-    const todays = ROTATING[dayIndex % ROTATING.length];
-    markets = [...ALWAYS, todays];
+    // Built by ebayMarketsForDay rather than assembled here. This line used to
+    // be its own copy of the same expression, which meant the pure function the
+    // budget tests assert against was NOT the one production ran — the two could
+    // drift silently, and the ordering fix below would have landed only in the
+    // tested copy. One source of truth for both.
+    markets = ebayMarketsForDay(dayIndex);
     console.log(
-      `eBay market rotation: ${ALWAYS.map((m) => m.country).join("/")} daily + ${todays.country} today ` +
-        `(${ROTATING.map((m) => m.country).join("/")} alternate by Sydney day; ` +
-        `use EBAY_ONLY_MARKET=<code> to refresh the other one off-cycle).`
+      `eBay market rotation: ${markets.map((m) => m.country).join(" → ")} ` +
+        `(search order; the LAST market is the one dropped if the budget runs out. ` +
+        `${ALWAYS.map((m) => m.country).join("/")} daily with alternating priority, ` +
+        `${ROTATING.map((m) => m.country).join("/")} alternate by Sydney day; ` +
+        `use EBAY_ONLY_MARKET=<code> to refresh one off-cycle).`
     );
   }
   // Check the live quota and set a spend budget (leaves a reserve) so this can never
@@ -942,15 +974,40 @@ export async function importPrices(): Promise<ImportSummary> {
   // quota is ever hit.
   //  - ebayDue:     last eBay refresh was > 20h ago (so it runs ~once a day).
   //  - ebayAllowed: the workflow sets EBAY_REFRESH=false for push/deploy runs.
-  const lastEbay = await prisma.retailerPrice.findFirst({
-    where: { retailer: { startsWith: "ebay" } },
-    orderBy: { lastSeen: "desc" },
-    select: { lastSeen: true },
+  // Staleness is asked PER MARKET, not across all eBay rows at once.
+  //
+  // This used to be a single findFirst ordered by lastSeen desc over every
+  // `ebay*` retailer, i.e. "did ANY market refresh recently?" — which is the
+  // wrong question, and it turned a one-run miss into a multi-day outage. A run
+  // where AU wrote rows and US was dropped by the budget still stamps a fresh
+  // lastSeen (RetailerPrice.lastSeen defaults to now()), so the next run reads
+  // "not due" and skips eBay entirely. The starved market therefore could not be
+  // repaired by the second daily run; it stayed stale until AU itself aged out.
+  //
+  // Asking per market means a market that missed its turn is due again on the
+  // very next run — which, combined with the alternating search order in
+  // ebayMarketsForDay, is what actually lets it recover. Running more often is
+  // safe: primeEbayBudget re-reads the LIVE remaining quota each run, so a
+  // same-day retry spends only what today's limit actually has left.
+  const alwaysRetailers = EBAY_ALWAYS_MARKETS.map((m) => m.retailer);
+  const lastPerMarket = await prisma.retailerPrice.groupBy({
+    by: ["retailer"],
+    where: { retailer: { in: alwaysRetailers } },
+    _max: { lastSeen: true },
   });
+  const freshest = new Map(lastPerMarket.map((r) => [r.retailer, r._max.lastSeen]));
+  const staleCutoff = Date.now() - 20 * 60 * 60 * 1000;
   // EBAY_FORCE=1 bypasses the once-a-day gate, e.g. to push out an eBay matching fix
   // (like the Chinese-listing exclusion) the same day instead of waiting ~20h.
   const ebayForced = process.env.EBAY_FORCE === "1";
-  const ebayDue = ebayForced || !lastEbay || Date.now() - lastEbay.lastSeen.getTime() > 20 * 60 * 60 * 1000;
+  const staleMarkets = alwaysRetailers.filter((r) => {
+    const seen = freshest.get(r);
+    return !seen || seen.getTime() < staleCutoff; // never written counts as stale
+  });
+  const ebayDue = ebayForced || staleMarkets.length > 0;
+  if (staleMarkets.length > 0 && !ebayForced) {
+    console.log(`eBay due: ${staleMarkets.join(", ")} last refreshed >20h ago.`);
+  }
   const ebayAllowed = process.env.EBAY_REFRESH !== "false" && !onlyCountry;
   if (isEbayEnabled() && ebayDue && ebayAllowed) {
     const ebayCards = await prisma.card.findMany({
