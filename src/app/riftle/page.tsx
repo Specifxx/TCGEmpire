@@ -4,6 +4,7 @@ import { Riftle } from "@/components/Riftle";
 import { GameBoundary } from "@/components/GameBoundary";
 import { AdSlot } from "@/components/AdSlot";
 import { TcgplayerAd } from "@/components/TcgplayerAd";
+import { EbayAd } from "@/components/EbayAd";
 import { getCountry } from "@/lib/get-country";
 import { SITE_URL } from "@/lib/site";
 import { RIFTLE_ATTEMPTS } from "@/lib/riftle-shared";
@@ -116,9 +117,15 @@ export default function RiftlePage() {
       <GameBoundary>
         <Riftle />
       </GameBoundary>
-      {/* TCGplayer banner under the puzzle — the game's daily repeat visitors
-          are exactly the audience these creatives convert. */}
+      {/* Partner banners under the puzzle — the game's daily repeat visitors
+          are exactly the audience these creatives convert. Both partners, not
+          one: this slot ran a TCGplayer leaderboard on every game route while
+          eBay had none anywhere in games, the only place on the site where one
+          affiliate held an in-content surface the other was absent from. Same
+          premium suppression, same self-carried disclosure, same click tracking;
+          if the slot is worth a banner it is worth both. */}
       <TcgplayerAd size="leaderboard" country={country} className="mt-8" />
+      <EbayAd size="leaderboard" country={country} className="mt-4" />
       <div className="mx-auto max-w-2xl">
         <AdSlot className="mt-8" height={100} />
 
