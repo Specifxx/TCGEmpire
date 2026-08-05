@@ -198,7 +198,48 @@ test("non-affiliate hosts are returned untouched", () => {
 test("ebayAffiliateUrl still works without a source (existing call sites)", () => {
   const u = new URL(ebayAffiliateUrl("https://www.ebay.co.uk/itm/9"));
   assert.equal(u.searchParams.get("mkevt"), "1");
-  assert.equal(u.searchParams.get("customid"), "rc-uk");
+  // The market prefix is unchanged; the link SHAPE is now appended. See below.
+  assert.equal(u.searchParams.get("customid"), "rc-uk-product");
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// The sub-id records whether the buyer landed on a PRODUCT or a SEARCH page.
+// ─────────────────────────────────────────────────────────────────────────────
+// An item link drops the buyer on the exact card, one click from checkout; a
+// search link drops them on a result list they have to work through. Those
+// should not convert alike — but while both reported the same customid there was
+// no way to prove it, which is precisely the question raised when US conversion
+// (0.78%) was compared with AU (3%). The shape is derived from the URL rather
+// than passed in by callers because eight separate places build eBay links, and
+// a flag each of them had to remember would be wrong somewhere within a month.
+test("an item link and a search link report DIFFERENT customids", () => {
+  const item = new URL(ebayAffiliateUrl("https://www.ebay.com/itm/123456789", "ebay_us"));
+  const search = new URL(ebayAffiliateUrl("https://www.ebay.com/sch/i.html?_nkw=Riftbound", "ebay_us"));
+
+  // NOTE the underscore: affiliateSubId's allow-list keeps `_`, so the retailer
+  // key passes through as `ebay_us`, not `ebay-us`.
+  assert.equal(item.searchParams.get("customid"), "rc-us-ebay_us-product");
+  assert.equal(search.searchParams.get("customid"), "rc-us-ebay_us-search");
+  assert.notEqual(item.searchParams.get("customid"), search.searchParams.get("customid"));
+});
+
+test("every market tags the shape, and the market prefix survives", () => {
+  for (const [url, want] of [
+    ["https://www.ebay.com.au/itm/1", "rc-au-product"],
+    ["https://www.ebay.com/itm/1", "rc-us-product"],
+    ["https://www.ebay.co.uk/sch/i.html?_nkw=x", "rc-uk-search"],
+    ["https://www.ebay.com.sg/sch/i.html?_nkw=x", "rc-sg-search"],
+    ["https://www.ebay.ca/itm/1", "rc-ca-product"],
+  ] as const) {
+    assert.equal(new URL(ebayAffiliateUrl(url)).searchParams.get("customid"), want, url);
+  }
+});
+
+test("a URL that is neither /itm/ nor /sch/ is left unlabelled rather than guessed", () => {
+  // e.g. a seller storefront or a category page — calling it "product" would
+  // corrupt the very comparison this exists to make.
+  const u = new URL(ebayAffiliateUrl("https://www.ebay.com/str/someseller"));
+  assert.equal(u.searchParams.get("customid"), "rc-us");
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

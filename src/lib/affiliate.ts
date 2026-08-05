@@ -95,9 +95,23 @@ export function ebayAffiliateUrl(url: string, source?: string): string {
     u.searchParams.set("siteid", m.siteid);
     u.searchParams.set("campid", EBAY_CAMPAIGN_ID);
     u.searchParams.set("toolid", "10001");
-    // sub-id so EPN reports are segmentable — by market always, by placement too
-    // when the caller knows it.
-    u.searchParams.set("customid", affiliateSubId(m.customid, source));
+    // ── LINK SHAPE IS PART OF THE SUB-ID ────────────────────────────────────
+    // An eBay outbound link is one of two very different things, and until now
+    // EPN could not tell them apart:
+    //   • an ITEM link  (/itm/<id>) — the buyer lands on the exact card they
+    //     were looking at, one click from checkout;
+    //   • a SEARCH link (/sch/i.html?_nkw=…) — they land on a result list and
+    //     have to find it themselves, if it is even there.
+    // Those should not convert alike, but with both reporting the same customid
+    // there was no way to prove it either way — which is exactly the question
+    // asked when US conversion (0.78%) was compared against AU (3%).
+    //
+    // Derived from the URL rather than passed in by callers, deliberately:
+    // there are eight separate places that build eBay links, and a parameter
+    // every one of them had to remember to set correctly would be wrong
+    // somewhere within a month. The URL cannot lie about its own shape.
+    const shape = /\/itm\//.test(u.pathname) ? "product" : /\/sch\//.test(u.pathname) ? "search" : null;
+    u.searchParams.set("customid", affiliateSubId(m.customid, source, shape));
     return u.toString();
   } catch {
     return url;
