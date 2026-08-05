@@ -1,7 +1,7 @@
 "use client";
 
 import { OutboundLink } from "./OutboundLink";
-import { ebayAffiliateUrl } from "@/lib/affiliate";
+import { ebaySearchUrl } from "@/lib/affiliate";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { useCountry } from "./CountryProvider";
 
@@ -18,12 +18,17 @@ import { useCountry } from "./CountryProvider";
 // "widest selection" option beside it, and the funnel for the cards no local store
 // stocks (which is most of the long tail).
 
-const EBAY_MKT: Record<string, { domain: string; label: string; note?: string }> = {
-  AU: { domain: "ebay.com.au", label: "eBay Australia" },
-  NZ: { domain: "ebay.com.au", label: "eBay Australia", note: "ships to New Zealand" },
-  US: { domain: "ebay.com", label: "eBay" },
-  UK: { domain: "ebay.co.uk", label: "eBay UK" },
-  SG: { domain: "ebay.com.sg", label: "eBay Singapore" },
+// Display labels only — the DOMAIN comes from lib/affiliate's shared map, so this
+// can no longer drift from it. CA was missing entirely, which meant a Canadian
+// visitor fell through to `EBAY_MKT.US` and was offered "eBay" on ebay.com even
+// though affiliate.ts has carried a verified ebay.ca rotation all along.
+const EBAY_LABEL: Record<string, { label: string; note?: string }> = {
+  AU: { label: "eBay Australia" },
+  NZ: { label: "eBay Australia", note: "ships to New Zealand" },
+  US: { label: "eBay" },
+  UK: { label: "eBay UK" },
+  SG: { label: "eBay Singapore" },
+  CA: { label: "eBay Canada" },
 };
 
 function truncate(s: string, n: number) {
@@ -57,9 +62,9 @@ export function EbayBuyCta({
   className?: string;
 }) {
   const { country } = useCountry();
-  const mkt = EBAY_MKT[country] ?? EBAY_MKT.US;
+  const mkt = EBAY_LABEL[country] ?? EBAY_LABEL.US;
   const nkw = query ? `${query} Riftbound` : "Riftbound TCG cards";
-  const href = ebayAffiliateUrl(`https://www.${mkt.domain}/sch/i.html?_nkw=${encodeURIComponent(nkw)}`);
+  const href = ebaySearchUrl(country, nkw, query ? "card-cta" : "shop-all");
   const title = heading ?? (query ? `Buy ${truncate(query, 32)} on eBay` : "Shop Riftbound singles on eBay");
   const sub = query
     ? `New, used & graded listings on ${mkt.label}${mkt.note ? ` — ${mkt.note}` : ""}.`

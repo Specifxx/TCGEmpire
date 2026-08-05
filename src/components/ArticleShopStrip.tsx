@@ -3,7 +3,7 @@
 import { useCountry } from "@/components/CountryProvider";
 import { OutboundLink } from "@/components/OutboundLink";
 import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
-import { ebayAffiliateUrl } from "@/lib/affiliate";
+import { ebaySearchUrl } from "@/lib/affiliate";
 import type { ShopLink } from "@/lib/articles";
 
 // "Shop this guide" — turns a well-ranking article into actual purchases. Renders the
@@ -11,18 +11,9 @@ import type { ShopLink } from "@/lib/articles";
 // (AU/US/UK; NZ shops eBay AU, same as the card pages). Client component: localises
 // per market without touching the article page's static rendering, and every click
 // fires the OutboundLink beacon so it shows up in /admin/clicks with the article path.
-const EBAY_DOMAIN: Record<string, string> = {
-  AU: "ebay.com.au",
-  NZ: "ebay.com.au", // no eBay NZ; eBay AU ships there (same convention as card pages)
-  US: "ebay.com",
-  UK: "ebay.co.uk",
-  SG: "ebay.com.sg",
-};
-
 export function ArticleShopStrip({ items }: { items: ShopLink[] }) {
   const { country } = useCountry();
   if (!items.length) return null;
-  const domain = EBAY_DOMAIN[country] ?? "ebay.com";
 
   return (
     <section className="card-surface mt-8 overflow-hidden">
@@ -36,7 +27,7 @@ export function ArticleShopStrip({ items }: { items: ShopLink[] }) {
         {items.map((it) => (
           <li key={it.query}>
             <OutboundLink
-              href={ebayAffiliateUrl(`https://www.${domain}/sch/i.html?_nkw=${encodeURIComponent(it.query)}`)}
+              href={ebaySearchUrl(country, it.query, "guide-strip")}
               retailer="ebay"
               country={country}
               kind="single"
