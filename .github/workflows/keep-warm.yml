@@ -9,13 +9,32 @@ on:
     - cron: "*/5 * * * *"
   workflow_dispatch: {}
 
-concurrency:
-  group: keep-warm
-  cancel-in-progress: true
+# NO concurrency group here, deliberately.
+#
+# This used to carry `group: keep-warm` + `cancel-in-progress: true`, which is the
+# right pattern for CI (see ci.yml, where the group is keyed per-ref so a new push
+# supersedes a stale build of the same branch) and the wrong one here: every
+# scheduled ping shared ONE global group, so each run's job was queued to cancel
+# its own predecessor.
+#
+# That is exactly how run #773 went red — its job never even got a runner
+# (runner_id 0, empty runner_name), sat queued for 15 minutes, and was cancelled
+# by the next tick, which GitHub then surfaced as a run-level `failure`. Nothing
+# was wrong with the site or the curls; the workflow was cancelling itself
+# whenever the hosted-runner queue was slower than the cron interval.
+#
+# Overlapping pings are harmless and, for a keep-warm, are the entire point: the
+# job is two fire-and-forget curls, each capped at 20s and swallowed with
+# `|| true`, so it has no failure mode of its own and nothing to serialise
+# against. Letting a slow run finish late beats killing it.
 
 jobs:
   ping:
     runs-on: ubuntu-latest
+    # Bounds a job that has actually started but hung (DNS, a stalled TLS
+    # handshake). It does NOT cover queue time — the case above — but it stops a
+    # wedged runner burning an hour on a 40-second task.
+    timeout-minutes: 5
     steps:
       - name: Ping warm endpoint + browse API
         run: |
