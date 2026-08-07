@@ -84,19 +84,68 @@ test("re-watching never resets the price baseline", () => {
 });
 
 test("the watchlist page is noindex and never cached", () => {
-  const src = read("src/app/watchlist/page.tsx");
+  const src = read("src/app/watching/page.tsx");
   assert.match(src, /index:\s*false/, "a personal page must not be indexed");
   assert.match(src, /export const dynamic = "force-dynamic"/, "getCurrentUser reads cookies()");
   // A redirect, not a rendered account wall — a gate rendered as content is what
   // the AdSense audit flags as a paywall.
-  assert.match(src, /redirect\("\/login\?next=\/watchlist"\)/, "signed-out must redirect, not render a wall");
+  assert.match(src, /redirect\("\/login\?next=\/watching"\)/, "signed-out must redirect, not render a wall");
   assert.ok(!/AdSlot/.test(src), "never monetise a noindex personal page");
 });
 
 test("the watchlist page exists as a real route and is reachable from the nav", () => {
-  assert.ok(existsSync(join(ROOT, "src/app/watchlist/page.tsx")));
-  assert.match(read("src/components/nav-groups.ts"), /href: "\/watchlist"/);
-  assert.match(read("src/components/UserMenu.tsx"), /href="\/watchlist"/);
+  assert.ok(existsSync(join(ROOT, "src/app/watching/page.tsx")));
+  assert.match(read("src/components/nav-groups.ts"), /href: "\/watching"/);
+  assert.match(read("src/components/UserMenu.tsx"), /href="\/watching"/);
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// THE BUG THIS SUITE MISSED THE FIRST TIME.
+// ─────────────────────────────────────────────────────────────────────────────
+// The page originally shipped at src/app/watchlist/. next.config.js had
+// redirected /watchlist -> /alerts since long before, as a keyword alias for the
+// price-alerts explainer. Redirects are matched BEFORE routing, so the route
+// never rendered once in production — and every assertion above still passed,
+// because they all read source files. Only a request to the deployed site
+// revealed it.
+//
+// This is a general trap, not a one-off: any redirect whose source equals a real
+// page path silently deletes that page, with no build error and no failing test.
+test("NO next.config.js redirect shadows a real app route", () => {
+  const cfg = read("next.config.js");
+  const app = join(ROOT, "src/app");
+
+  // Static sources only. A source with :params or * is a pattern, and matching
+  // those against the route tree properly is a different (much fuzzier) job.
+  const sources = [...cfg.matchAll(/source:\s*"(\/[^"]*)"/g)]
+    .map((m) => m[1])
+    .filter((s) => !s.includes(":") && !s.includes("*"));
+  assert.ok(sources.length > 0, "no static redirect sources parsed — has the config shape changed?");
+
+  const shadowed = sources.filter((s) => {
+    const seg = s.replace(/^\//, "").replace(/\/$/, "");
+    if (!seg) return false;
+    return ["page.tsx", "page.ts", "page.jsx", "page.js", "route.ts", "route.js"].some((f) =>
+      existsSync(join(app, seg, f)),
+    );
+  });
+
+  assert.deepEqual(
+    shadowed,
+    [],
+    `these redirect sources match a real route, which can therefore never render: ${shadowed.join(", ")}`,
+  );
+});
+
+test("/watchlist still redirects to the alerts explainer", () => {
+  // Keeping it is the point — it is a permanent (308) redirect, cached by
+  // browsers and unrevokable from the server, which is exactly why the personal
+  // page moved to /watching instead of trying to reclaim this path.
+  assert.match(
+    read("next.config.js"),
+    /source:\s*"\/watchlist",\s*destination:\s*"\/alerts",\s*permanent:\s*true/,
+    "the /watchlist -> /alerts alias must survive",
+  );
 });
 
 test("the anonymous flow survives — signed-out visitors still get the email path", () => {

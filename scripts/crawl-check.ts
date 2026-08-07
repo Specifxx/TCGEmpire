@@ -43,7 +43,9 @@ const NON_CONTENT = [
   /^\/api\//,
   /^\/_next\//,
   /^\/login/, /^\/register/, /^\/forgot/, /^\/reset/, /^\/verify/,
-  /^\/dashboard/, /^\/profile/, /^\/admin/, /^\/portfolio/, /^\/watchlist/,
+  // /watching, not /watchlist: /watchlist redirects to the /alerts explainer,
+  // which IS content and should keep being crawled.
+  /^\/dashboard/, /^\/profile/, /^\/admin/, /^\/portfolio/, /^\/watching/,
   /^\/unsubscribe/, /^\/announcements\/unsubscribe/, /^\/newsletter\/unsubscribe/,
   /^\/embed\//, /^\/llm\//,
   /\.(xml|txt|json|png|jpg|jpeg|svg|ico|webp|webmanifest)$/,

@@ -18,11 +18,29 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function WatchlistPage() {
+// THE PATH IS /watching, NOT /watchlist, AND THAT IS DELIBERATE.
+//
+// next.config.js has redirected /watchlist -> /alerts (the price-alerts
+// explainer) since long before this page existed, because "watchlist" is a
+// keyword that page targets. Redirects in next.config.js are matched BEFORE
+// routing, so a page at src/app/watchlist/ never renders at all — this one
+// shipped dead, and every nav link pointing at it sent signed-in users to a
+// marketing page instead of their own list.
+//
+// The obvious fix — delete the redirect — is the wrong one. It is
+// `permanent: true`, i.e. a 308, which browsers cache indefinitely and which
+// cannot be revoked from the server. Anyone who already hit /watchlist would
+// keep being bounced to /alerts no matter what we serve there afterwards. So
+// the personal page moves to a path that has never issued a redirect, and
+// /watchlist keeps its SEO job pointing at the explainer.
+//
+// tests/watchlist.test.ts asserts no next.config.js redirect ever shadows an
+// app route again.
+export default async function WatchingPage() {
   const user = await getCurrentUser();
   // A redirect, not a blurred/gated page: an account wall rendered as content is
   // what the AdSense audit flags as a paywall.
-  if (!user) redirect("/login?next=/watchlist");
+  if (!user) redirect("/login?next=/watching");
 
   return (
     <div className="mx-auto max-w-5xl">

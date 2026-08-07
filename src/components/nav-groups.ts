@@ -71,7 +71,7 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "Your collection",
     links: [
       { href: "/portfolio", label: "My Portfolio", emoji: "💼" },
-      { href: "/watchlist", label: "My Watchlist", emoji: "🔔" },
+      { href: "/watching", label: "My Watchlist", emoji: "🔔" },
       { href: "/premium", label: "Premium", emoji: "⭐" },
     ],
   },
