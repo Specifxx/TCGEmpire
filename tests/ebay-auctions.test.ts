@@ -1,0 +1,225 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
+import { cardIdentityStages, listingMatchesCard, isGradedListing, type EbayCardIdentity } from "../src/lib/ebay";
+import { formatTimeLeft } from "../src/components/EbayAuctionsLive";
+import { AUCTION_CARDS_PER_MARKET, AUCTION_MIN_VALUE_CENTS, EBAY_ALWAYS_MARKETS } from "../src/lib/price-import";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Live eBay auctions on chase cards.
+//
+// The failure modes here are all quiet ones — the page still renders, it just
+// says something untrue:
+//   1. A bid reaching the price table. `lowestPriceCents` feeds price history,
+//      the market index, price alerts, the rise predictor, meta-deck costs, the
+//      screener and the Product/Offer JSON-LD. A $12 bid on a $180 card in
+//      RetailerPrice corrupts every one of them and publishes a false price.
+//   2. A closed auction still on screen with a live affiliate link — worse than
+//      showing nothing, because it claims to be live.
+//   3. Identity drift. Auctions reuse the price search's card-matching rules; two
+//      copies would diverge, and the auction copy silently (nobody audits a
+//      widget as closely as the price table).
+//   4. Quota. The auction pass shares a budget the price pass barely fits into.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
+
+const CARD: EbayCardIdentity = {
+  name: "Akali, Rogue Assassin",
+  setCode: "VEN",
+  number: "189",
+  total: "166",
+  isSignature: true,
+};
+const BASE: EbayCardIdentity = {
+  name: "Jinx, Loose Cannon",
+  setCode: "VEN",
+  number: "042",
+  total: "166",
+  isSignature: false,
+};
+const item = (title: string, extra: Record<string, unknown> = {}) => ({
+  title,
+  price: { value: "100.00", currency: "USD" },
+  ...extra,
+});
+
+// ── 1. A bid must never become a price ───────────────────────────────────────
+
+test("auctions are written to EbayAuction, never RetailerPrice", () => {
+  const src = read("src/lib/price-import.ts");
+  const pass = src.slice(src.indexOf("export async function refreshEbayAuctions"));
+  const body = pass.slice(0, pass.indexOf("\n}\n"));
+  assert.ok(body.includes("prisma.ebayAuction"), "the auction pass must write EbayAuction rows");
+  assert.ok(
+    !/prisma\.retailerPrice\.(create|update|upsert)/.test(body),
+    "the auction pass must never write RetailerPrice — a current bid is not a price",
+  );
+  assert.ok(
+    !/lowestPriceCents/.test(body),
+    "the auction pass must not touch the card price columns the whole site reads",
+  );
+});
+
+test("the auction schema is a separate table with its own end date", () => {
+  const schema = read("prisma/schema.prisma");
+  assert.match(schema, /model EbayAuction \{/, "EbayAuction model missing");
+  const model = schema.slice(schema.indexOf("model EbayAuction {"));
+  const body = model.slice(0, model.indexOf("\n}"));
+  for (const field of ["currentBidCents", "bidCount", "endsAt", "isGraded", "itemId"]) {
+    assert.match(body, new RegExp(`\\b${field}\\b`), `EbayAuction.${field} missing`);
+  }
+  // Without an end date nothing can expire the row — the countdown, the sweep
+  // and the read filter all key off it.
+  assert.match(body, /endsAt\s+DateTime\b(?!\?)/, "endsAt must be non-nullable");
+});
+
+// ── 2. Nothing closed may ever be shown ──────────────────────────────────────
+
+test("ended auctions are filtered at every layer that can serve them", () => {
+  // Three independent layers, because a pass runs daily and auctions close
+  // continuously — any single guard leaves a window.
+  const importer = read("src/lib/price-import.ts");
+  assert.match(
+    importer,
+    /ebayAuction\.deleteMany\(\{ where: \{ endsAt: \{ lte: new Date\(\) \} \} \}\)/,
+    "the importer must sweep auctions that have closed",
+  );
+
+  const loader = read("src/components/EbayAuctions.tsx");
+  assert.match(loader, /endsAt: \{ gt: new Date\(\) \}/, "the read must exclude closed auctions");
+
+  const view = read("src/components/EbayAuctionsLive.tsx");
+  assert.match(
+    view,
+    /new Date\(a\.endsAt\)\.getTime\(\) > now/,
+    "the renderer must drop an auction that closes while the page is open",
+  );
+});
+
+test("the countdown reads down to the minute and terminates", () => {
+  assert.equal(formatTimeLeft(-1), "ended");
+  assert.equal(formatTimeLeft(0), "ended");
+  assert.equal(formatTimeLeft(12 * 60_000), "12m left");
+  assert.equal(formatTimeLeft(59 * 60_000), "59m left");
+  assert.equal(formatTimeLeft(60 * 60_000), "1h left");
+  assert.equal(formatTimeLeft(47 * 3_600_000), "47h left");
+  assert.equal(formatTimeLeft(72 * 3_600_000), "3d left");
+});
+
+test("the view re-ticks so a countdown cannot freeze", () => {
+  const view = read("src/components/EbayAuctionsLive.tsx");
+  assert.match(view, /setInterval\(\(\) => setNow\(Date\.now\(\)\), 60_000\)/, "must re-render on a timer");
+  assert.match(view, /clearInterval/, "the timer must be cleared on unmount");
+  // Elapsed time computed during SSR is frozen into ISR-cached HTML and will
+  // disagree with the first client render.
+  assert.match(view, /if \(!mounted \|\| live\.length === 0\) return null;/, "must not render pre-mount");
+});
+
+// ── 3. Identity rules are shared with the price search ───────────────────────
+
+test("the price search and the auction search share one identity definition", () => {
+  const src = read("src/lib/ebay.ts");
+  assert.match(src, /for \(const \{ stage, pred \} of cardIdentityStages\(card\)\)/, "searchEbayLowest must use the shared stages");
+  assert.match(src, /cardIdentityStages\(card, \{ allowGraded: true \}\)/, "searchEbayAuctions must use them too");
+});
+
+test("identity rejects the same wrong listings under a bid as under a price", () => {
+  assert.ok(!listingMatchesCard(item("Riftbound VEN bulk lot 50 cards"), BASE), "lots");
+  assert.ok(!listingMatchesCard(item("Riftbound Vendetta booster box sealed"), BASE), "sealed product");
+  assert.ok(!listingMatchesCard(item("Jinx Loose Cannon VEN 042/166 中文"), BASE), "foreign printing");
+  assert.ok(!listingMatchesCard(item("Jinx Loose Cannon VEN 042/166", { itemLocation: { country: "CN" } }), BASE), "ships from CN");
+  assert.ok(!listingMatchesCard(item("Jinx Loose Cannon VEN 099/166"), BASE), "wrong collector number");
+  assert.ok(!listingMatchesCard(item("Jinx Loose Cannon VEN 042/166 Promo"), BASE), "promo vs base");
+  assert.ok(!listingMatchesCard({ title: "Jinx Loose Cannon VEN 042/166" }, BASE), "no price");
+});
+
+test("graded is kept for auctions and still rejected for prices", () => {
+  const slab = item("PSA 10 Akali Rogue Assassin VEN Signature Overnumbered");
+  const priceStages = cardIdentityStages(CARD);
+  const auctionStages = cardIdentityStages(CARD, { allowGraded: true });
+
+  assert.ok(!priceStages.every((s) => s.pred(slab)), "a slab must not become a price row — it trades far above raw");
+  assert.ok(auctionStages.every((s) => s.pred(slab)), "a slab must survive the auction filter — no store lists graded at all");
+  assert.ok(isGradedListing(slab.title));
+  assert.ok(!isGradedListing("Akali Rogue Assassin VEN Signature"));
+});
+
+test("allowGraded relaxes ONLY grading, not the lot/sealed/foreign guards", () => {
+  const stages = cardIdentityStages(BASE, { allowGraded: true });
+  const rejects = (t: string, extra?: Record<string, unknown>) => !stages.every((s) => s.pred(item(t, extra)));
+  assert.ok(rejects("Riftbound VEN bulk lot 50 cards"), "lots still rejected");
+  assert.ok(rejects("Riftbound Vendetta booster box sealed"), "sealed still rejected");
+  assert.ok(rejects("Jinx Loose Cannon VEN 042/166 简体"), "foreign still rejected");
+  assert.ok(rejects("Jinx Loose Cannon VEN 042/166 playmat"), "accessories still rejected");
+});
+
+// ── 4. Quota ─────────────────────────────────────────────────────────────────
+
+test("the auction pass is bounded and cannot outgrow the price pass", () => {
+  const CATALOGUE = 1400; // cards per market in the singles pass
+  const auctionCalls = AUCTION_CARDS_PER_MARKET * EBAY_ALWAYS_MARKETS.length;
+  assert.ok(
+    auctionCalls < CATALOGUE * 0.1,
+    `auctions cost ${auctionCalls} calls — must stay a rounding error beside the ${CATALOGUE}-card price pass`,
+  );
+  assert.ok(AUCTION_MIN_VALUE_CENTS > 0, "a value floor must exist — a bid on a $2 card says nothing");
+});
+
+test("auctions run after prices and yield the budget to them", () => {
+  const src = read("src/lib/price-import.ts");
+  const singlesAt = src.indexOf("await refreshEbayMarkets(ebayCards)");
+  const auctionsAt = src.indexOf("await refreshEbayAuctions(");
+  assert.ok(singlesAt > 0 && auctionsAt > 0, "could not locate both passes");
+  assert.ok(auctionsAt > singlesAt, "the price pass must run first — prices win a budget tie");
+
+  const pass = src.slice(src.indexOf("export async function refreshEbayAuctions"));
+  assert.match(
+    pass.slice(0, 400),
+    /if \(!isEbayEnabled\(\) \|\| isEbayRateLimited\(\)\) return 0;/,
+    "the auction pass must no-op when the budget is already spent",
+  );
+});
+
+test("auctions use their own Browse call, not a relaxed price search", () => {
+  const src = read("src/lib/ebay.ts");
+  // Sharing the price call would be free but would let auction items — which
+  // enter at a near-zero current bid under sort=price — crowd genuine
+  // fixed-price listings out of a finite window on the priciest cards.
+  assert.match(src, /filter: "buyingOptions:\{AUCTION\}"/, "auctions must filter to AUCTION");
+  assert.match(src, /sort: "endingSoonest"/, "auctions must be ordered by deadline, not price");
+  // Sliced to searchEbayLowest's own body — bounded by the next declaration
+  // rather than a character count, so the assertion cannot start passing or
+  // failing because a comment above it grew.
+  const start = src.indexOf("export async function searchEbayLowest");
+  const end = src.indexOf("export async function searchEbayAuctions");
+  assert.ok(start > 0 && end > start, "could not bound searchEbayLowest");
+  assert.match(
+    src.slice(start, end),
+    /filter: "buyingOptions:\{FIXED_PRICE\}"/,
+    "the price search must still be fixed-price only",
+  );
+});
+
+// ── Placement ────────────────────────────────────────────────────────────────
+
+test("the card page renders auctions outside the comparison table", () => {
+  const page = read("src/app/card/[id]/page.tsx");
+  assert.match(page, /<EbayAuctions cardId=\{card\.id\}/, "card page must render the unit");
+  const market = read("src/components/CardMarketSection.tsx");
+  assert.ok(
+    !market.includes("EbayAuction"),
+    "the comparison table must not know auctions exist — that is what keeps a bid out of the ranking",
+  );
+});
+
+test("every auction link is affiliate-tagged and click-tracked", () => {
+  const view = read("src/components/EbayAuctionsLive.tsx");
+  assert.match(view, /<OutboundLink/, "must use OutboundLink so the click is tracked");
+  assert.match(view, /retailer="ebay_auction"/, "auction clicks need their own retailer key to be attributable");
+  assert.match(view, /<AffiliateDisclosure partner="ebay"/, "an affiliate surface must carry its disclosure");
+  const src = read("src/lib/ebay.ts");
+  assert.match(src, /ebayAffiliateUrl\(it\.itemAffiliateWebUrl \?\? it\.itemWebUrl, "auction"\)/, "auction URLs must be tagged with a placement sub-id");
+});

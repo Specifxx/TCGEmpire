@@ -29,6 +29,7 @@ import { CardPriceMetrics, CardPriceComparison, type EbaySearchMap } from "@/com
 import { MarketplaceHeroBlock } from "@/components/MarketplaceHeroBlock";
 import { getActiveListingsForCard } from "@/lib/marketplace";
 import { EbayAdCarousel } from "@/components/EbayAdCarousel";
+import { EbayAuctions } from "@/components/EbayAuctions";
 import { computeMarket, type MarketRow } from "@/lib/market-rows";
 import { KeywordText } from "@/components/KeywordTooltip";
 import { championForCardName, championCardWhere } from "@/lib/champions";
@@ -956,6 +957,14 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             </p>
             <EbayAdCarousel cardId={card.id} query={cardSearchName(card.name, card)} className="mt-3" />
           </section>
+
+          {/* Live auctions — BELOW the comparison table and outside it, never a
+              row in it. A current bid is the state of an open contest, not a
+              price you can pay, so it is never ranked against store prices and
+              never reaches RetailerPrice (see the EbayAuction model comment for
+              what that would break). Renders nothing when the card has no live
+              auction, which is most cards: the pass only covers the chase tier. */}
+          <EbayAuctions cardId={card.id} take={6} className="mt-6" />
         </div>
       </div>
 
