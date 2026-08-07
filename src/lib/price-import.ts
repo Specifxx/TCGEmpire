@@ -13,7 +13,7 @@ import { snapshotDemand } from "./demand-snapshot";
 import { refreshTcgplayerPrices } from "./tcgplayer";
 import { importMarketplaceListings } from "./marketplace";
 import { refreshCardmarketPrices } from "./cardmarket";
-import { AU_FALLBACK_RETAILERS, SG_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS, pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS } from "./constants";
+import { AU_FALLBACK_RETAILERS, SG_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS, pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, chasePrintRarity } from "./constants";
 import { currencyOf, isoCountry, priceField, type Country } from "./country";
 import { USD_TO } from "./fx";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows } from "./scrape-http";
@@ -310,6 +310,37 @@ export function orderCardsForEbay<T extends { setCode: string }>(
   const rest: T[] = [];
   for (const c of cards) (priority.has((c.setCode ?? "").toUpperCase()) ? first : rest).push(c);
   return [...first, ...rest];
+}
+
+// ── Which cards are worth an eBay call ───────────────────────────────────────
+// Base-rarity Commons and Uncommons are skipped in EVERY market. They are ~45%
+// of the catalogue and the least likely single to be bought through an
+// affiliate link: a $0.30 common is stocked by nearly every tracked store, so
+// eBay rarely wins the price, and nobody clicks out to a marketplace for one.
+// At 3 markets a day that is the largest block of Browse quota we spend on the
+// lowest-value half of the catalogue.
+//
+// They do NOT lose their eBay path. Both the card page and the QuickView show
+// the "no live eBay price — search eBay" panel whenever a market has no eBay
+// row for a card (`!hasEbay`), which is now always true for these, so every one
+// of them keeps an affiliate-tagged search link. The listing data goes away;
+// the buy path does not.
+//
+// EFFECTIVE rarity, not the stored column — this is the trap. A Signature or
+// overnumbered print of a Common is stored as "Common" (import-vendetta stores
+// the rarity of the card it re-prints; only alt-arts were ever reclassified —
+// see chasePrintRarity's note). Filtering the raw column would therefore skip
+// exactly the chase prints most worth searching. chasePrintRarity resolves
+// those to Showcase, so they are kept.
+const EBAY_SKIP_RARITIES = new Set(["Common", "Uncommon"]);
+
+export function eBayWorthSearching(c: {
+  rarity: string;
+  collectorNumber: string;
+  variant?: string | null;
+  isPromo?: boolean;
+}): boolean {
+  return !EBAY_SKIP_RARITIES.has(chasePrintRarity(c));
 }
 
 export interface EbayMarketCfg { country: string; marketplace: string; currency: string; retailer: string }
@@ -640,6 +671,25 @@ export async function refreshEbayMarkets(
       console.log(`eBay CA: ${caRows.length} rows derived from the US pass (0 extra Browse calls).`);
     }
   }
+  // Sweep carousel rows for cards this pass no longer covers.
+  //
+  // The per-market delete above is scoped to the cards a market actually
+  // QUERIED — deliberately, so a truncated run can't wipe the carousel for
+  // cards it never reached. The side effect is that a card which LEAVES the
+  // search set is never cleared by it again, because it is never queried again.
+  // Dropping Common/Uncommon base prints (see eBayWorthSearching) moves ~45% of
+  // the catalogue into exactly that state at once, so without this they would
+  // keep serving their last captured listings indefinitely.
+  //
+  // Expressed as an age sweep rather than a NOT IN over the skipped ids: it is a
+  // small bounded delete instead of a ~600-id exclusion, and it self-heals any
+  // other way a card can fall out of the set (renamed, deleted, de-prioritised).
+  // 7 days is well clear of the rotating markets' ~48h cycle, so a market that
+  // simply had a slow week is never swept.
+  const staleAdCutoff = new Date(Date.now() - 7 * 24 * 3600 * 1000);
+  const sweptAds = await prisma.ebayAdListing.deleteMany({ where: { updatedAt: { lt: staleAdCutoff } } });
+  if (sweptAds.count > 0) console.log(`eBay carousel: swept ${sweptAds.count} rows not refreshed in 7 days.`);
+
   // Stamp every card the pass reached so the card page can distinguish a genuine
   // "no eBay listing" from a budget-skipped one. Done in chunks to avoid a giant IN.
   if (checkedIds.size > 0) {
@@ -687,15 +737,26 @@ export async function refreshEbayAuctions(markets: EbayMarketCfg[]): Promise<num
         { collectorNumber: "desc" }, // "*" sorts high — signature prints lead
         { [priceCol]: { sort: "desc", nulls: "last" } },
       ],
-      take: AUCTION_CARDS_PER_MARKET,
-      select: { id: true, name: true, setCode: true, collectorNumber: true, isPromo: true },
+      // Over-fetch, because the rarity filter below runs in JS (effective rarity
+      // isn't a column). Without headroom a run of skipped cards would silently
+      // return fewer than AUCTION_CARDS_PER_MARKET chase cards.
+      take: AUCTION_CARDS_PER_MARKET * 3,
+      select: {
+        id: true, name: true, setCode: true, collectorNumber: true, isPromo: true,
+        rarity: true, variant: true,
+      },
     });
-    if (cards.length === 0) continue;
+    // Same exclusion as the price pass, for the same reason — and it costs
+    // nothing here, since a Common almost never clears the value floor anyway.
+    // Applying it explicitly means "no eBay for Commons" holds across every
+    // surface rather than depending on a threshold that could later move.
+    const targets = cards.filter(eBayWorthSearching).slice(0, AUCTION_CARDS_PER_MARKET);
+    if (targets.length === 0) continue;
 
     const rows: Prisma.EbayAuctionCreateManyInput[] = [];
     const reached = new Set<string>();
     let truncated = false;
-    for (const c of cards) {
+    for (const c of targets) {
       if (isEbayRateLimited()) {
         truncated = true;
         break;
@@ -1156,10 +1217,20 @@ export async function importPrices(): Promise<ImportSummary> {
         { lowestPriceCents: { sort: "desc", nulls: "last" } },
         { lowestPriceCentsUs: { sort: "desc", nulls: "last" } },
       ],
-      select: { id: true, name: true, setCode: true, collectorNumber: true, isPromo: true },
+      select: {
+        id: true, name: true, setCode: true, collectorNumber: true, isPromo: true,
+        // Needed only to compute effective rarity for the filter below.
+        rarity: true, variant: true,
+      },
     });
-    const n = await refreshEbayMarkets(ebayCards);
-    summary.stores.push({ name: "eBay (AU/US/UK/SG/CA)", products: ebayCards.length, priced: n, matched: n, unmatched: 0 });
+    const ebayTargets = ebayCards.filter(eBayWorthSearching);
+    const skipped = ebayCards.length - ebayTargets.length;
+    console.log(
+      `eBay catalogue: ${ebayTargets.length} of ${ebayCards.length} cards ` +
+        `(${skipped} Common/Uncommon base prints skipped, ~${skipped * 3} calls/day saved).`,
+    );
+    const n = await refreshEbayMarkets(ebayTargets);
+    summary.stores.push({ name: "eBay (AU/US/UK/SG/CA)", products: ebayTargets.length, priced: n, matched: n, unmatched: 0 });
 
     // Chase-tier auctions, on whatever budget the price pass left. Deliberately
     // last and deliberately unguarded by its own quota check — refreshEbayAuctions

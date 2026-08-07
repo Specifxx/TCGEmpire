@@ -337,20 +337,29 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
               {prices && inStock.length > 0 && <AffiliateDisclosure partner="both" tight />}
             </div>
 
-            {/* eBay quota fallback — only when we couldn't reach this card's eBay
-                listings this cycle (not for cards that genuinely have none). */}
+            {/* Shown whenever this market has no live eBay row for the card
+                (`!hasEbay`) — which now includes every Common/Uncommon base
+                print, since those are no longer searched on eBay at all (see
+                eBayWorthSearching). They keep the buy path; only the listing
+                data goes away. The old comment here claimed this appeared only
+                for cards we failed to reach; the gate above has never checked
+                that, and after the rarity change it is emphatically not true.
+
+                Tracked rather than a bare anchor: this is the only eBay path
+                those cards have, so its click rate is the evidence for whether
+                skipping them was the right call. */}
             {ebaySearchUrl && ebayMkt && (
-              <a
+              <OutboundLink
                 href={ebaySearchUrl}
-                target="_blank"
-                rel={outboundRel(ebaySearchUrl)}
+                retailer="ebay_no_listing"
+                country={country}
                 className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-amber-500/25 bg-amber-500/[0.05] p-3 hover:border-amber-500/45"
               >
                 <span className="min-w-0 text-xs text-slate-300">
                   <span className="font-semibold text-white">No live {ebayMkt.label} price right now</span> — search eBay for it directly.
                 </span>
                 <span className="shrink-0 text-xs font-semibold text-amber-300">Search {ebayMkt.label} →</span>
-              </a>
+              </OutboundLink>
             )}
             {ebaySearchUrl && ebayMkt && <AffiliateDisclosure partner="ebay" tight />}
 

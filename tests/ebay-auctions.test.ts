@@ -5,7 +5,7 @@ import { join } from "node:path";
 
 import { cardIdentityStages, listingMatchesCard, isGradedListing, type EbayCardIdentity } from "../src/lib/ebay";
 import { formatTimeLeft } from "../src/components/EbayAuctionsLive";
-import { AUCTION_CARDS_PER_MARKET, AUCTION_MIN_VALUE_CENTS, EBAY_ALWAYS_MARKETS } from "../src/lib/price-import";
+import { AUCTION_CARDS_PER_MARKET, AUCTION_MIN_VALUE_CENTS, EBAY_ALWAYS_MARKETS, eBayWorthSearching } from "../src/lib/price-import";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Live eBay auctions on chase cards.
@@ -170,7 +170,7 @@ test("the auction pass is bounded and cannot outgrow the price pass", () => {
 
 test("auctions run after prices and yield the budget to them", () => {
   const src = read("src/lib/price-import.ts");
-  const singlesAt = src.indexOf("await refreshEbayMarkets(ebayCards)");
+  const singlesAt = src.indexOf("await refreshEbayMarkets(");
   const auctionsAt = src.indexOf("await refreshEbayAuctions(");
   assert.ok(singlesAt > 0 && auctionsAt > 0, "could not locate both passes");
   assert.ok(auctionsAt > singlesAt, "the price pass must run first — prices win a budget tie");
@@ -200,6 +200,72 @@ test("auctions use their own Browse call, not a relaxed price search", () => {
     src.slice(start, end),
     /filter: "buyingOptions:\{FIXED_PRICE\}"/,
     "the price search must still be fixed-price only",
+  );
+});
+
+// ── Which cards get an eBay call at all ──────────────────────────────────────
+
+test("base-rarity Commons and Uncommons are skipped in every market", () => {
+  const base = { collectorNumber: "042/166", variant: null, isPromo: false };
+  assert.equal(eBayWorthSearching({ ...base, rarity: "Common" }), false);
+  assert.equal(eBayWorthSearching({ ...base, rarity: "Uncommon" }), false);
+  assert.equal(eBayWorthSearching({ ...base, rarity: "Rare" }), true);
+  assert.equal(eBayWorthSearching({ ...base, rarity: "Epic" }), true);
+  assert.equal(eBayWorthSearching({ ...base, rarity: "Showcase" }), true);
+});
+
+test("a chase PRINT of a Common is still searched — the trap this filter must not fall into", () => {
+  // import-vendetta stores an overnumbered/Signature print under the rarity of
+  // the card it re-prints, and only alt-arts were ever reclassified (see
+  // chasePrintRarity). Filtering the raw `rarity` column would therefore have
+  // dropped exactly the chase prints most worth an eBay call — a Signature of a
+  // Common is a chase card, not a bulk common.
+  assert.equal(
+    eBayWorthSearching({ rarity: "Common", collectorNumber: "189*/166", variant: null, isPromo: false }),
+    true,
+    "Signature print of a Common must still be searched",
+  );
+  assert.equal(
+    eBayWorthSearching({ rarity: "Common", collectorNumber: "196/166", variant: null, isPromo: false }),
+    true,
+    "overnumbered print of a Common must still be searched",
+  );
+  assert.equal(
+    eBayWorthSearching({ rarity: "Uncommon", collectorNumber: "021a/166", variant: "a", isPromo: false }),
+    true,
+    "alt-art print of an Uncommon must still be searched",
+  );
+  // A promo keeps its base rarity by existing convention, so a Common promo IS
+  // skipped — deliberate, and pinned so the behaviour is a decision not a bug.
+  assert.equal(
+    eBayWorthSearching({ rarity: "Common", collectorNumber: "012/166", variant: null, isPromo: true }),
+    false,
+    "a Common promo follows the base-rarity convention and is skipped",
+  );
+});
+
+test("skipped cards keep an eBay buy path, just not a listing", () => {
+  // The whole justification for skipping them is that they still get a search
+  // link. Both surfaces gate purely on "no eBay row for this market", which is
+  // now permanently true for these cards.
+  const market = read("src/components/CardMarketSection.tsx");
+  assert.match(market, /const ebay = m\.hasEbay \? null : ebaySearch\[country\] \?\? null;/);
+  assert.match(market, /retailer="ebay_no_listing"/, "the card-page fallback must be tracked");
+
+  const quick = read("src/components/QuickView.tsx");
+  assert.match(quick, /prices !== null && ebayMkt && !hasEbay/);
+  assert.match(quick, /retailer="ebay_no_listing"/, "the QuickView fallback must be tracked");
+});
+
+test("carousel rows for cards that leave the search set are swept", () => {
+  // The per-market carousel delete is scoped to cards a market QUERIED, so a
+  // card that stops being searched is never cleared by it again. Dropping ~45%
+  // of the catalogue moves that many cards into exactly that state at once.
+  const src = read("src/lib/price-import.ts");
+  assert.match(
+    src,
+    /ebayAdListing\.deleteMany\(\{ where: \{ updatedAt: \{ lt: staleAdCutoff \} \} \}\)/,
+    "stale carousel rows must be swept or skipped cards serve their last listings forever",
   );
 });
 

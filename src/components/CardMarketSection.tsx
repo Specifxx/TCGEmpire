@@ -9,7 +9,6 @@ import { EbayAd } from "./EbayAd";
 import { timeAgo } from "@/lib/format";
 import { computeMarket, stockElsewhere, type MarketRow } from "@/lib/market-rows";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
-import { outboundRel } from "@/lib/affiliate";
 import { COUNTRIES, COUNTRY_LIST } from "@/lib/country";
 import { isFallbackRetailer } from "@/lib/constants";
 
@@ -322,9 +321,20 @@ export function CardPriceComparison({
                 : <>We don&apos;t have a live {ebay.label} listing for {displayName} right now — search eBay directly to see what&apos;s on offer.</>}
             </p>
           </div>
-          <a href={ebay.url} target="_blank" rel={outboundRel(ebay.url)} className="btn-primary shrink-0 text-sm">
+          {/* Tracked, not a bare anchor. This panel used to be a plain <a>, so
+              its clicks reached neither the database nor Vercel Analytics — and
+              it is now the ONLY eBay path for every Common/Uncommon base print,
+              since those no longer get an eBay listing search at all (see
+              eBayWorthSearching). Whether that trade was right is exactly what
+              this link's click rate answers, so it has to be measurable. */}
+          <OutboundLink
+            href={ebay.url}
+            retailer="ebay_no_listing"
+            country={country}
+            className="btn-primary shrink-0 text-sm"
+          >
             Search {ebay.label} →
-          </a>
+          </OutboundLink>
         </div>
       )}
 
