@@ -114,6 +114,10 @@ async function getToken(): Promise<string | null> {
 }
 
 export interface EbayResult {
+  // eBay's listing id. Optional because most consumers (the price row, the ad
+  // carousel) key on card+retailer and never needed it; the graded table keys on
+  // it so a refresh updates a slab rather than duplicating it.
+  itemId?: string;
   priceCents: number;
   shippingCents: number | null; // actual listing shipping (null if not provided)
   url: string;
@@ -153,6 +157,39 @@ export const GRADED_SLAB = /\b(psa|bgs|cgc|sgc|graded|gem mint)\b/i;
 
 export function isGradedListing(title: string): boolean {
   return GRADED_SLAB.test(title ?? "");
+}
+
+export interface ParsedGrade {
+  grader: string | null; // "PSA" | "BGS" | "CGC" | "SGC"
+  grade: number | null; // 10, 9.5, 9, …
+}
+
+// The grader must sit IMMEDIATELY before the number, with only spaces or a dash
+// between. That ordering is what separates a real grade from a number that
+// happens to be nearby: "1 of 10 PSA graded" and "PSA graded, see photos" both
+// contain a grader and a digit, and neither states a grade.
+//
+// Half grades exist only below 10 (BGS/CGC use .5 increments; nothing grades
+// 10.5), so the alternation is ordered 10 first and the fractional branch is
+// restricted to 1-9 — written the other way round, `1` would match the leading
+// digit of `10` and every PSA 10 slab would be recorded as a PSA 1.
+const GRADE_RE = /\b(PSA|BGS|CGC|SGC)\s*[-–]?\s*(10(?:\.0)?|[1-9](?:\.5)?)\b/i;
+const GRADER_ONLY_RE = /\b(PSA|BGS|CGC|SGC)\b/i;
+
+/**
+ * Pull the grader and numeric grade out of an eBay title.
+ *
+ * Returns the grader alone when a slab word appears with no grade after it —
+ * the listing IS graded, we just cannot say to what, and the UI shows "Graded"
+ * rather than inventing a number. Guessing here would be worse than the gap:
+ * a wrong grade on a slab misvalues the card by a wide margin.
+ */
+export function parseGrade(title: string): ParsedGrade {
+  const t = title ?? "";
+  const m = GRADE_RE.exec(t);
+  if (m) return { grader: m[1].toUpperCase(), grade: parseFloat(m[2]) };
+  const g = GRADER_ONLY_RE.exec(t);
+  return { grader: g ? g[1].toUpperCase() : null, grade: null };
 }
 
 // The original combined guard, unchanged in behaviour — every title EXCLUDE
@@ -401,6 +438,7 @@ export function listingMatchesCard(it: any, card: EbayCardIdentity): boolean {
 
 function mapEbayItem(it: any): EbayResult {
   return {
+    itemId: it?.itemId ? String(it.itemId) : undefined,
     priceCents: Math.round(parseFloat(it.price.value) * 100),
     shippingCents: shippingFromItem(it),
     url: ebayAffiliateUrl(it.itemAffiliateWebUrl ?? it.itemWebUrl),
@@ -448,7 +486,23 @@ export async function searchEbayLowest(
   // filter stage (and a sample of what was dropped) so "0 results" can be
   // attributed to a specific stage instead of guessed at. See
   // scripts/diagnose-card.ts.
-  funnel?: EbayFunnelStage[]
+  funnel?: EbayFunnelStage[],
+  // Optional output array for GRADED (slabbed) listings, filled from this SAME
+  // search at zero extra quota.
+  //
+  // It is free because the graded exclusion was never an API filter — the Browse
+  // request has only ever sent buyingOptions, and EXCLUDE is applied to the items
+  // eBay already returned. So the slabs are sitting in the response we paid for
+  // and were simply being discarded.
+  //
+  // Behaviour-neutral for prices BY CONSTRUCTION: when this is supplied the
+  // identity pass keeps graded listings, then they are partitioned OUT before
+  // anything price-related runs. Every downstream step — the reference-value
+  // guard, the delivered() sort, pruneCheapOutliers' median, captureAdListings
+  // and the returned best — sees exactly the set it would have seen with the
+  // graded exclusion applied at the filter stage instead. Nothing price-shaped
+  // ever observes a slab.
+  captureGraded?: EbayResult[]
 ): Promise<EbayResult | null> {
   const token = await getToken();
   if (!token) return null;
@@ -552,8 +606,20 @@ export async function searchEbayLowest(
   // Identity stages come from cardIdentityStages() so the auction search applies
   // the identical rules — see its doc comment. Each is still recorded separately
   // in the funnel, which is what makes "0 results" attributable to a stage.
-  for (const { stage, pred } of cardIdentityStages(card)) {
+  //
+  // With captureGraded, slabs are allowed THROUGH the identity pass (they are
+  // genuinely this card) and removed immediately after, in their own funnel
+  // stage. The stage is named either way so the diagnostic output states which
+  // mode ran rather than silently reporting different numbers for the same card.
+  for (const { stage, pred } of cardIdentityStages(card, { allowGraded: Boolean(captureGraded) })) {
     cur = drop(stage, cur.filter(pred), cur);
+  }
+  if (captureGraded) {
+    const graded = cur.filter((it) => isGradedListing(it.title ?? ""));
+    captureGraded.push(...graded.map(mapEbayItem));
+    // Partition, not a copy: from here the price pipeline sees a set with no
+    // slabs in it — identical to what the graded exclusion would have produced.
+    cur = drop("graded split out (price path excludes slabs)", cur.filter((it) => !graded.includes(it)), cur);
   }
   // Sanity guard: a single can legitimately cost a bit more on eBay than in a
   // store, but not 8×+. A listing that far above the card's store value (and over

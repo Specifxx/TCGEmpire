@@ -262,6 +262,7 @@ model Card {
   collectedBy         CollectionCard[]
   ebayAdListings      EbayAdListing[]
   ebayAuctions        EbayAuction[]
+  ebayGradedListings  EbayGradedListing[]
 
   @@index([setCode, collectorNumber])
   @@index([nameNormalized])
@@ -527,6 +528,47 @@ model RetailerPrice {
 // an ended auction still carrying a live affiliate link is worse than showing
 // nothing, exactly as EbayAdListing's MAX_AGE_HOURS note argues. `endsAt` is
 // stored so both the reader and the renderer can enforce that independently.
+// A GRADED (slabbed) eBay listing for a chase card — PSA / BGS / CGC / SGC.
+//
+// Its own table for the same reason EbayAuction has one: a slab is genuinely
+// this card but is NOT comparable to a raw copy. It trades far above one, and
+// the price search excludes it precisely because it kept leaking in as a wrong
+// "cheapest" (see GRADED_SLAB in lib/ebay.ts). Keeping slabs out of
+// RetailerPrice is what stops that price reaching lowestPriceCents — and from
+// there price history, the market index, price alerts, the rise predictor and
+// the Product/Offer JSON-LD.
+//
+// Captured for FREE from the same Browse call the price refresh already makes
+// for these cards (searchEbayLowest's captureGraded), so this costs no extra
+// quota: the API never filtered graded out, we did, client-side.
+//
+// No endsAt — a fixed-price listing does not expire on a clock, it simply sells.
+// Freshness is therefore by age: rows not refreshed within MAX_AGE_HOURS are not
+// served, and the importer's sweep removes ones that stop coming back.
+model EbayGradedListing {
+  id            String   @id @default(cuid())
+  cardId        String
+  country       String // marketplace the search ran against
+  itemId        String // eBay listing id — stable across refreshes
+  priceCents    Int
+  shippingCents Int?
+  currency      String
+  url           String // affiliate-tagged
+  title         String
+  imageUrl      String?
+  // Parsed from the title. `grader` is null only when a slab word matched but no
+  // number followed it (e.g. "PSA graded") — the listing is still genuinely
+  // graded, we just cannot say to what, and the UI says so rather than guessing.
+  grader        String? // "PSA" | "BGS" | "CGC" | "SGC"
+  grade         Float? // 10, 9.5, 9, …
+  updatedAt     DateTime @updatedAt
+
+  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, country])
+  @@index([cardId, country])
+}
+
 model EbayAuction {
   id              String   @id @default(cuid())
   cardId          String

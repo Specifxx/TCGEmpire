@@ -122,7 +122,11 @@ test("the view re-ticks so a countdown cannot freeze", () => {
 
 test("the price search and the auction search share one identity definition", () => {
   const src = read("src/lib/ebay.ts");
-  assert.match(src, /for \(const \{ stage, pred \} of cardIdentityStages\(card\)\)/, "searchEbayLowest must use the shared stages");
+  assert.match(
+    src,
+    /for \(const \{ stage, pred \} of cardIdentityStages\(card, \{ allowGraded: Boolean\(captureGraded\) \}\)\)/,
+    "searchEbayLowest must use the shared stages",
+  );
   assert.match(src, /cardIdentityStages\(card, \{ allowGraded: true \}\)/, "searchEbayAuctions must use them too");
 });
 
@@ -235,12 +239,21 @@ test("a chase PRINT of a Common is still searched — the trap this filter must 
     true,
     "alt-art print of an Uncommon must still be searched",
   );
-  // A promo keeps its base rarity by existing convention, so a Common promo IS
-  // skipped — deliberate, and pinned so the behaviour is a decision not a bug.
+  // Promos are ALWAYS searched, whatever the base card's rarity. chasePrintRarity
+  // deliberately leaves a promo on its base rarity for the /browse filter, so a
+  // promo of a Common resolves to "Common" — eBayWorthSearching special-cases
+  // isPromo ahead of the rarity check rather than changing that convention. A
+  // promo is a separate limited printing whose price is unrelated to the bulk
+  // common it re-prints, and it is refreshed twice daily.
   assert.equal(
     eBayWorthSearching({ rarity: "Common", collectorNumber: "012/166", variant: null, isPromo: true }),
-    false,
-    "a Common promo follows the base-rarity convention and is skipped",
+    true,
+    "a promo of a Common must still be searched",
+  );
+  assert.equal(
+    eBayWorthSearching({ rarity: "Uncommon", collectorNumber: "007/166", variant: null, isPromo: true }),
+    true,
+    "a promo of an Uncommon must still be searched",
   );
 });
 
@@ -273,7 +286,11 @@ test("carousel rows for cards that leave the search set are swept", () => {
 
 test("the card page renders auctions outside the comparison table", () => {
   const page = read("src/app/card/[id]/page.tsx");
-  assert.match(page, /<EbayAuctions cardId=\{card\.id\}/, "card page must render the unit");
+  // Auctions reach the card page through the tabbed eBay panel, which sits below
+  // the comparison table rather than inside it.
+  assert.match(page, /<EbayCardPanel cardId=\{card\.id\}/, "card page must render the eBay panel");
+  const panel = read("src/components/EbayCardPanelLive.tsx");
+  assert.match(panel, /<EbayAuctionsLive/, "the panel must include the auctions tab");
   const market = read("src/components/CardMarketSection.tsx");
   assert.ok(
     !market.includes("EbayAuction"),

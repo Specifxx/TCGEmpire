@@ -47,11 +47,16 @@ export function EbayAuctionsLive({
   heading = "Live auctions",
   showCardName = false,
   className,
+  bare,
 }: {
   auctions: AuctionRow[];
   heading?: string;
   showCardName?: boolean;
   className?: string;
+  // Render the list alone — no card surface, no header, no disclosure — for use
+  // inside a tab panel that already provides all three (EbayCardPanelLive).
+  // A card-within-a-card reads as a nesting mistake.
+  bare?: boolean;
 }) {
   const { country } = useCountry();
 
@@ -83,18 +88,33 @@ export function EbayAuctionsLive({
 
   if (!mounted || live.length === 0) return null;
 
-  return (
-    <section className={`card-surface overflow-hidden ${className ?? ""}`} aria-label={heading}>
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-ink-700 bg-ink-950/60 px-4 py-3">
-        <h2 className="flex items-center gap-2 text-sm font-extrabold text-white">
-          <span className="relative flex h-2 w-2" aria-hidden>
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#e5484d] opacity-60 motion-reduce:animate-none" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-[#e5484d]" />
-          </span>
-          {heading}
-        </h2>
-        <span className="text-[11px] text-slate-500">Bids, not fixed prices — the price can still rise</span>
-      </div>
+  // A plain element, NOT a component defined in the render body. Declaring a
+  // component inline gives it a new identity on every render, so React unmounts
+  // and remounts the whole subtree — and this component re-renders every 60s to
+  // tick the countdowns, which would restart image loads and drop focus once a
+  // minute. The wrapper is chosen at the JSX level instead.
+  const body = (
+    <>
+      {!bare && (
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-ink-700 bg-ink-950/60 px-4 py-3">
+          <h2 className="flex items-center gap-2 text-sm font-extrabold text-white">
+            <span className="relative flex h-2 w-2" aria-hidden>
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#e5484d] opacity-60 motion-reduce:animate-none" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#e5484d]" />
+            </span>
+            {heading}
+          </h2>
+          <span className="text-[11px] text-slate-500">Bids, not fixed prices — the price can still rise</span>
+        </div>
+      )}
+      {bare && (
+        // The tab names the section, but the caveat still has to be stated —
+        // a bid is not a price, and that is the one thing a reader must not
+        // misread here.
+        <p className="mb-2 text-[11px] text-slate-500">
+          Bids, not fixed prices — the price can still rise.
+        </p>
+      )}
 
       <ul className="divide-y divide-ink-800">
         {live.map((a) => {
@@ -112,7 +132,7 @@ export function EbayAuctionsLive({
                 href={a.url}
                 retailer="ebay_auction"
                 country={country}
-                className="group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-ink-800"
+                className={`group flex items-center gap-3 py-3 transition-colors hover:bg-ink-800 ${bare ? "" : "px-4"}`}
               >
                 {a.imageUrl && (
                   // Arbitrary eBay CDN hosts, so a plain lazy <img> rather than
@@ -178,9 +198,21 @@ export function EbayAuctionsLive({
         })}
       </ul>
 
-      <div className="border-t border-ink-800 px-4 py-2.5">
-        <AffiliateDisclosure partner="ebay" tight className="mt-0" />
-      </div>
+      {/* Suppressed in `bare` mode ONLY because the parent panel renders one
+          covering this and its sibling tabs. Never drop it without one above. */}
+      {!bare && (
+        <div className="border-t border-ink-800 px-4 py-2.5">
+          <AffiliateDisclosure partner="ebay" tight className="mt-0" />
+        </div>
+      )}
+    </>
+  );
+
+  return bare ? (
+    <div className={className}>{body}</div>
+  ) : (
+    <section className={`card-surface overflow-hidden ${className ?? ""}`} aria-label={heading}>
+      {body}
     </section>
   );
 }

@@ -28,8 +28,7 @@ import { AiInsight } from "@/components/AiInsight";
 import { CardPriceMetrics, CardPriceComparison, type EbaySearchMap } from "@/components/CardMarketSection";
 import { MarketplaceHeroBlock } from "@/components/MarketplaceHeroBlock";
 import { getActiveListingsForCard } from "@/lib/marketplace";
-import { EbayAdCarousel } from "@/components/EbayAdCarousel";
-import { EbayAuctions } from "@/components/EbayAuctions";
+import { EbayCardPanel } from "@/components/EbayCardPanel";
 import { computeMarket, type MarketRow } from "@/lib/market-rows";
 import { KeywordText } from "@/components/KeywordTooltip";
 import { championForCardName, championCardWhere } from "@/lib/champions";
@@ -955,16 +954,18 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               Live listings including used, graded and international sellers — a useful cross-check
               on the store prices above, and often the only source for older printings.
             </p>
-            <EbayAdCarousel cardId={card.id} query={cardSearchName(card.name, card)} className="mt-3" />
-          </section>
+            {/* Listings / Graded / Auctions. Extra tabs appear only when this
+                card has that kind of listing in the visitor's market, so an
+                ordinary card still shows exactly the single carousel it always
+                did, with no tab chrome at all. Chase cards get the full set.
 
-          {/* Live auctions — BELOW the comparison table and outside it, never a
-              row in it. A current bid is the state of an open contest, not a
-              price you can pay, so it is never ranked against store prices and
-              never reaches RetailerPrice (see the EbayAuction model comment for
-              what that would break). Renders nothing when the card has no live
-              auction, which is most cards: the pass only covers the chase tier. */}
-          <EbayAuctions cardId={card.id} take={6} className="mt-6" />
+                All three sit BELOW the price comparison and outside it. A slab
+                and a current bid are both real, and neither is a price you can
+                compare against a store — see the EbayAuction and
+                EbayGradedListing model comments for what letting either into
+                RetailerPrice would break. */}
+            <EbayCardPanel cardId={card.id} query={cardSearchName(card.name, card)} className="mt-3" />
+          </section>
         </div>
       </div>
 

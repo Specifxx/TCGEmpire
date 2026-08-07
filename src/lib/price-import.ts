@@ -7,13 +7,13 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { dbHistory, ensureHistoryCards } from "./db-history";
 import { RETAILER_LIST, RetailerInfo } from "./retailers";
-import { isEbayEnabled, isEbayRateLimited, searchEbayLowest, searchEbayAuctions, primeEbayBudget, ebaySpentThisRun, type EbayResult } from "./ebay";
+import { isEbayEnabled, isEbayRateLimited, searchEbayLowest, searchEbayAuctions, primeEbayBudget, ebaySpentThisRun, parseGrade, type EbayResult } from "./ebay";
 import { importSealed } from "./sealed-import";
 import { snapshotDemand } from "./demand-snapshot";
 import { refreshTcgplayerPrices } from "./tcgplayer";
 import { importMarketplaceListings } from "./marketplace";
 import { refreshCardmarketPrices } from "./cardmarket";
-import { AU_FALLBACK_RETAILERS, SG_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS, pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, chasePrintRarity } from "./constants";
+import { AU_FALLBACK_RETAILERS, SG_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS, pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, chasePrintRarity, isSignature, isOvernumbered } from "./constants";
 import { currencyOf, isoCountry, priceField, type Country } from "./country";
 import { USD_TO } from "./fx";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows } from "./scrape-http";
@@ -340,7 +340,81 @@ export function eBayWorthSearching(c: {
   variant?: string | null;
   isPromo?: boolean;
 }): boolean {
+  // Promos are never skipped, whatever the base card's rarity.
+  //
+  // chasePrintRarity deliberately leaves a promo on its base rarity — that is
+  // the /browse filter convention and not this code's business to change — so a
+  // promo of a Common resolves to "Common" and would be skipped by the rule
+  // below. For eBay that is the wrong call: a promo is a separate, limited
+  // printing that collectors buy as such, its price is unrelated to the bulk
+  // common it re-prints, and it is one of the printings we refresh twice daily
+  // (see EBAY_CHASE_REFRESH). Handled here rather than by altering
+  // chasePrintRarity so the browse-filter convention stays untouched.
+  if (c.isPromo) return true;
   return !EBAY_SKIP_RARITIES.has(chasePrintRarity(c));
+}
+
+/**
+ * The printings refreshed TWICE a day rather than once: promos, Signature
+ * prints and overnumbered prints.
+ *
+ * These are the cards whose prices actually move within a day. They are thin —
+ * often one or two live listings in a market — so a single sale changes the
+ * cheapest price outright, where a Rare with fifteen listings barely moves. They
+ * are also the most expensive things we track, so a stale figure on one is the
+ * most costly kind of wrong.
+ *
+ * Alt-art/Showcase prints are NOT included. They are chase-adjacent but far more
+ * numerous, and adding them would roughly double the pass for a much weaker
+ * freshness argument. One flag away if that changes.
+ */
+export function isTwiceDailyPrinting(c: {
+  collectorNumber: string;
+  isPromo?: boolean;
+}): boolean {
+  return Boolean(c.isPromo) || isSignature(c.collectorNumber) || isOvernumbered(c.collectorNumber);
+}
+
+/** How many slabs we keep per card per market — best grades first. */
+const GRADED_PER_CARD = 6;
+
+/**
+ * Turn captured graded listings into rows.
+ *
+ * Ordered by GRADE first and price second, not price alone: a PSA 10 at $400
+ * and a PSA 8 at $120 are not two prices for one thing, they are different
+ * products, and a buyer looking at slabs is choosing a grade before a price.
+ * Ungraded-but-slabbed listings (a title saying "PSA" with no number) sort last
+ * — they are the least useful and we refuse to guess their grade.
+ *
+ * Deduped on itemId because the strict and broad queries can both return the
+ * same listing, and the table is uniquely keyed on it.
+ */
+function gradedRowsFor(
+  found: EbayResult[],
+  cardId: string,
+  country: string,
+  currency: string,
+): Prisma.EbayGradedListingCreateManyInput[] {
+  const seen = new Set<string>();
+  return found
+    .filter((l) => l.itemId && !seen.has(l.itemId) && seen.add(l.itemId))
+    .map((l) => ({ l, g: parseGrade(l.title) }))
+    .sort((a, b) => (b.g.grade ?? -1) - (a.g.grade ?? -1) || a.l.priceCents - b.l.priceCents)
+    .slice(0, GRADED_PER_CARD)
+    .map(({ l, g }) => ({
+      cardId,
+      country,
+      itemId: l.itemId as string,
+      priceCents: l.priceCents,
+      shippingCents: l.shippingCents,
+      currency,
+      url: l.url,
+      title: l.title,
+      imageUrl: l.imageUrl ?? null,
+      grader: g.grader,
+      grade: g.grade,
+    }));
 }
 
 export interface EbayMarketCfg { country: string; marketplace: string; currency: string; retailer: string }
@@ -530,6 +604,9 @@ export async function refreshEbayMarkets(
     // "eBay Ad" carousel rows for the card page — captured for free from the same
     // Browse API call above (see searchEbayLowest's captureAdListings param).
     const adRows: Prisma.EbayAdListingCreateManyInput[] = [];
+    // Graded (slabbed) listings, captured free from the same calls — the Browse
+    // response always contained them, the price path just discarded them.
+    const gradedRows: Prisma.EbayGradedListingCreateManyInput[] = [];
     // Cards THIS market queried. Deliberately separate from the run-wide
     // `checkedIds`, which accumulates across markets — clearing this market's
     // carousel must only ever touch cards this market actually reached.
@@ -540,6 +617,7 @@ export async function refreshEbayMarkets(
       queriedThisMarket.add(c.id);
       const [rawNum, total] = c.collectorNumber.split("/");
       const captured: EbayResult[] = [];
+      const gradedFound: EbayResult[] = [];
       const r = await searchEbayLowest(
         {
           name: c.name,
@@ -551,8 +629,11 @@ export async function refreshEbayMarkets(
           marketplace: mkt.marketplace,
           referenceCents: refByCard.get(c.id),
         },
-        captured
+        captured,
+        undefined,
+        gradedFound
       );
+      gradedRows.push(...gradedRowsFor(gradedFound, c.id, mkt.country, mkt.currency));
       captured.forEach((l, i) => {
         adRows.push({
           cardId: c.id,
@@ -634,6 +715,20 @@ export async function refreshEbayMarkets(
     }
     if (adRows.length > 0) await prisma.ebayAdListing.createMany({ data: adRows });
 
+    // Graded slabs, scoped to the same reached-cards set and for the same reason:
+    // a budget that ran out partway must not clear the graded panel for cards
+    // this market never looked at. skipDuplicates because the strict and broad
+    // queries can surface one listing twice within a run.
+    for (let i = 0; i < queriedIds.length; i += 1000) {
+      await prisma.ebayGradedListing.deleteMany({
+        where: { country: mkt.country, cardId: { in: queriedIds.slice(i, i + 1000) } },
+      });
+    }
+    if (gradedRows.length > 0) {
+      await prisma.ebayGradedListing.createMany({ data: gradedRows, skipDuplicates: true });
+      console.log(`eBay graded ${mkt.country}: ${gradedRows.length} slabs across ${queriedIds.length} cards (0 extra Browse calls).`);
+    }
+
     // ── CANADA IS DERIVED FROM THE US PASS, NOT SEARCHED ────────────────────
     // eBay CA used to be its own marketplace query — a full ~1,400 extra Browse
     // calls for the smallest market, on a budget that no longer covers even the
@@ -700,6 +795,133 @@ export async function refreshEbayMarkets(
     }
   }
   console.log(`eBay singles: spent ${ebaySpentThisRun()} Browse calls this run (checked ${checkedIds.size} cards).`);
+  return written;
+}
+
+/**
+ * The SECOND daily refresh: promos, Signature prints and overnumbered prints
+ * only (see isTwiceDailyPrinting).
+ *
+ * A separate function rather than a reuse of refreshEbayMarkets, and that is not
+ * a style choice — it is the one thing that would have silently destroyed data.
+ * refreshEbayMarkets replaces a market's rows WHOLESALE:
+ *
+ *     await prisma.retailerPrice.deleteMany({ where: { retailer: mkt.retailer } });
+ *     await prisma.retailerPrice.createMany({ data: rows });
+ *
+ * Handing it a 150-card subset would therefore delete every eBay row in that
+ * market and write back only the subset — silently dropping ~600 cards' prices
+ * twice a day, with no error and no warning. This pass scopes its delete to the
+ * cardIds it actually refreshed, exactly as the ad-carousel and auction writes
+ * already do.
+ *
+ * Returns the number of price rows written.
+ */
+export async function refreshEbayChasePrintings(markets: EbayMarketCfg[]): Promise<number> {
+  if (!isEbayEnabled() || isEbayRateLimited()) return 0;
+
+  const all = await prisma.card.findMany({
+    orderBy: [{ searchCount: "desc" }, { viewCount: "desc" }],
+    select: {
+      id: true, name: true, setCode: true, collectorNumber: true, isPromo: true,
+      rarity: true, variant: true,
+    },
+  });
+  // Both filters: a printing must be twice-daily-worthy AND still pass the
+  // catalogue rule. They agree today (promos are force-kept and signature /
+  // overnumbered resolve to Showcase), but stacking them means a later change to
+  // either cannot quietly reintroduce a card the other excludes.
+  const cards = all.filter(isTwiceDailyPrinting).filter(eBayWorthSearching);
+  if (cards.length === 0) return 0;
+
+  let written = 0;
+  for (const mkt of markets) {
+    if (isEbayRateLimited()) break;
+    const storeLows = await prisma.retailerPrice
+      .groupBy({
+        by: ["cardId"],
+        where: { country: mkt.country, inStock: true, NOT: { retailer: { startsWith: "ebay" } } },
+        _min: { priceCents: true },
+      })
+      .catch(() => [] as { cardId: string; _min: { priceCents: number | null } }[]);
+    const refByCard = new Map<string, number>();
+    for (const s of storeLows) if (s._min.priceCents != null) refByCard.set(s.cardId, s._min.priceCents);
+
+    const rows: Prisma.RetailerPriceCreateManyInput[] = [];
+    const adRows: Prisma.EbayAdListingCreateManyInput[] = [];
+    const gradedRows: Prisma.EbayGradedListingCreateManyInput[] = [];
+    const reached = new Set<string>();
+
+    for (const c of cards) {
+      if (isEbayRateLimited()) break;
+      reached.add(c.id);
+      const [rawNum, total] = c.collectorNumber.split("/");
+      const captured: EbayResult[] = [];
+      const gradedFound: EbayResult[] = [];
+      const r = await searchEbayLowest(
+        {
+          name: c.name,
+          setCode: c.setCode,
+          number: rawNum.replace(/\*/g, ""),
+          total: total ?? "",
+          isSignature: c.collectorNumber.includes("*"),
+          isPromo: c.isPromo,
+          marketplace: mkt.marketplace,
+          referenceCents: refByCard.get(c.id),
+        },
+        captured,
+        undefined,
+        gradedFound,
+      );
+      gradedRows.push(...gradedRowsFor(gradedFound, c.id, mkt.country, mkt.currency));
+      captured.forEach((l, i) => {
+        adRows.push({
+          cardId: c.id, country: mkt.country, rank: i,
+          priceCents: l.priceCents, shippingCents: l.shippingCents, currency: mkt.currency,
+          url: l.url, title: l.title, imageUrl: l.imageUrl ?? null,
+        });
+      });
+      // Budget can run out INSIDE the call, meaning this card was never queried.
+      if (!r && isEbayRateLimited()) { reached.delete(c.id); break; }
+      if (!r) continue;
+      rows.push({
+        cardId: c.id,
+        retailer: mkt.retailer,
+        retailerName: "eBay",
+        title: r.title,
+        url: r.url,
+        condition: r.condition ?? null,
+        isFoil: /foil/i.test(r.title),
+        priceCents: r.priceCents,
+        shippingCents: r.shippingCents,
+        currency: mkt.currency,
+        country: mkt.country,
+        inStock: true,
+      });
+    }
+
+    const reachedIds = [...reached];
+    if (reachedIds.length === 0) continue;
+
+    // SCOPED to the cards this pass refreshed. Every delete below carries the
+    // cardId filter — that is the whole safety property of this function.
+    for (let i = 0; i < reachedIds.length; i += 1000) {
+      const slice = reachedIds.slice(i, i + 1000);
+      await prisma.retailerPrice.deleteMany({ where: { retailer: mkt.retailer, cardId: { in: slice } } });
+      await prisma.ebayAdListing.deleteMany({ where: { country: mkt.country, cardId: { in: slice } } });
+      await prisma.ebayGradedListing.deleteMany({ where: { country: mkt.country, cardId: { in: slice } } });
+    }
+    if (rows.length > 0) {
+      await prisma.retailerPrice.createMany({ data: rows });
+      written += rows.length;
+    }
+    if (adRows.length > 0) await prisma.ebayAdListing.createMany({ data: adRows });
+    if (gradedRows.length > 0) await prisma.ebayGradedListing.createMany({ data: gradedRows, skipDuplicates: true });
+    console.log(
+      `eBay chase ${mkt.country}: refreshed ${reachedIds.length} promo/signature/overnumbered printings ` +
+        `(${rows.length} priced, ${gradedRows.length} slabs).`,
+    );
+  }
   return written;
 }
 
@@ -1186,18 +1408,36 @@ export async function importPrices(): Promise<ImportSummary> {
   const lastPerMarket = await prisma.retailerPrice.groupBy({
     by: ["retailer"],
     where: { retailer: { in: alwaysRetailers } },
-    _max: { lastSeen: true },
+    // _min, NOT _max, and this is load-bearing now that a partial pass exists.
+    //
+    // _max answers "when did ANYTHING in this market last refresh?" — which the
+    // twice-daily chase pass would satisfy every evening by touching ~150 cards,
+    // making the full catalogue look fresh and skipping it forever after. _min
+    // answers "how stale is the OLDEST row?", and since the full pass replaces a
+    // market's rows wholesale, that is precisely the full pass's own timestamp.
+    // A chase write cannot move it, because it never touches the other ~600 rows.
+    _min: { lastSeen: true },
   });
-  const freshest = new Map(lastPerMarket.map((r) => [r.retailer, r._max.lastSeen]));
-  const staleCutoff = Date.now() - 20 * 60 * 60 * 1000;
+  const oldestPerMarket = new Map(lastPerMarket.map((r) => [r.retailer, r._min.lastSeen]));
+  const HOUR = 60 * 60 * 1000;
+  const fullCutoff = Date.now() - 20 * HOUR;
+  // Half a day, so the second scheduled run of the day picks it up. The crons are
+  // 07:00 and 19:00 UTC (12h apart), so 10h clears comfortably at 19:00 without
+  // ever firing twice inside one cycle.
+  const chaseCutoff = Date.now() - 10 * HOUR;
   // EBAY_FORCE=1 bypasses the once-a-day gate, e.g. to push out an eBay matching fix
   // (like the Chinese-listing exclusion) the same day instead of waiting ~20h.
   const ebayForced = process.env.EBAY_FORCE === "1";
-  const staleMarkets = alwaysRetailers.filter((r) => {
-    const seen = freshest.get(r);
-    return !seen || seen.getTime() < staleCutoff; // never written counts as stale
-  });
+  const olderThan = (cutoff: number) =>
+    alwaysRetailers.filter((r) => {
+      const oldest = oldestPerMarket.get(r);
+      return !oldest || oldest.getTime() < cutoff; // never written counts as stale
+    });
+  const staleMarkets = olderThan(fullCutoff);
   const ebayDue = ebayForced || staleMarkets.length > 0;
+  // Only when the full pass is NOT running: it already refreshes these printings,
+  // so running both in one invocation would query them twice for nothing.
+  const chaseDue = !ebayDue && olderThan(chaseCutoff).length > 0;
   if (staleMarkets.length > 0 && !ebayForced) {
     console.log(`eBay due: ${staleMarkets.join(", ")} last refreshed >20h ago.`);
   }
@@ -1243,6 +1483,22 @@ export async function importPrices(): Promise<ImportSummary> {
     } catch (e) {
       // An auction widget must never fail the price import.
       console.warn("eBay auction pass failed:", e);
+    }
+  } else if (chaseDue && isEbayEnabled() && ebayAllowed) {
+    // The evening pass: promo / Signature / overnumbered printings only. These
+    // are thin markets — often one or two live listings — so a single sale moves
+    // the cheapest price outright, and they are the most expensive cards we
+    // track, which makes a stale figure on one the most costly kind of wrong.
+    await primeEbayBudget();
+    try {
+      const n = await refreshEbayChasePrintings(EBAY_ALWAYS_MARKETS);
+      summary.stores.push({ name: "eBay chase (2nd daily)", products: n, priced: n, matched: n, unmatched: 0 });
+      // Auctions ride along: their whole value is a deadline, so a 12-hourly
+      // countdown is worth far more than a daily one, and the cards are the same.
+      const a = await refreshEbayAuctions(EBAY_ALWAYS_MARKETS);
+      if (a > 0) summary.stores.push({ name: "eBay auctions (chase)", products: a, priced: a, matched: a, unmatched: 0 });
+    } catch (e) {
+      console.warn("eBay chase pass failed:", e);
     }
   }
 

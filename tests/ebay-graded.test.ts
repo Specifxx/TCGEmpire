@@ -1,0 +1,251 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
+import { parseGrade, isGradedListing, cardIdentityStages, type EbayCardIdentity } from "../src/lib/ebay";
+import { isTwiceDailyPrinting, eBayWorthSearching } from "../src/lib/price-import";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Graded (slabbed) listings, the twice-daily chase refresh, and the tabbed panel.
+//
+// The expensive mistakes here are all silent:
+//   1. A slab leaking into the price path. It trades far above raw, so it lands
+//      as the "cheapest" and propagates through lowestPriceCents into history,
+//      the index, alerts and the Product JSON-LD.
+//   2. A wrong grade. PSA 10 vs PSA 1 is an order of magnitude of value, and a
+//      naive regex gets this exactly backwards on the most common title there is.
+//   3. The chase pass deleting rows it did not refresh. refreshEbayMarkets
+//      replaces a market WHOLESALE; a subset pass through that path would drop
+//      ~600 cards' prices twice a day with no error.
+//   4. The chase pass's own writes convincing the full pass it is not due.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
+
+// ── Grade parsing ────────────────────────────────────────────────────────────
+
+test("grades parse out of realistic slab titles", () => {
+  const cases: [string, string | null, number | null][] = [
+    ["PSA 10 Akali Rogue Assassin VEN Signature", "PSA", 10],
+    ["Riftbound Jinx PSA10 GEM MINT", "PSA", 10],
+    ["BGS 9.5 Vayne Hunter — Black Label", "BGS", 9.5],
+    ["CGC 9 Riftbound Vi Piltover", "CGC", 9],
+    ["SGC 8.5 Riftbound Lux", "SGC", 8.5],
+    ["Riftbound Ahri PSA-9 Mint", "PSA", 9],
+    ["PSA 10.0 Riftbound Leona", "PSA", 10],
+    // Grader with no number: still graded, grade unknown. Never guessed.
+    ["Riftbound Draven PSA graded, see photos", "PSA", null],
+    ["Riftbound Swain — CGC slab", "CGC", null],
+    // Not graded at all.
+    ["Riftbound Ambessa 196/166 Overnumbered NM", null, null],
+  ];
+  for (const [title, grader, grade] of cases) {
+    const got = parseGrade(title);
+    assert.equal(got.grader, grader, `grader for "${title}"`);
+    assert.equal(got.grade, grade, `grade for "${title}"`);
+  }
+});
+
+test("PSA 10 is never read as PSA 1 — the ordering trap", () => {
+  // A `[1-9]` branch placed before the `10` branch matches the leading digit of
+  // "10" and silently records every gem-mint slab as the worst possible grade.
+  for (const t of ["PSA 10", "PSA10", "BGS 10", "CGC 10 Pristine", "PSA 10.0"]) {
+    assert.equal(parseGrade(`Riftbound Jinx ${t}`).grade, 10, t);
+  }
+});
+
+test("a number not attached to a grader is not a grade", () => {
+  // The grader must sit immediately before the number. These all contain a
+  // grader AND a digit, and none of them states a grade.
+  assert.equal(parseGrade("1 of 10 Riftbound PSA graded").grade, null);
+  assert.equal(parseGrade("Riftbound Vi 042/166 — will PSA grade").grade, null);
+  assert.equal(parseGrade("Riftbound Lux 10th Anniversary PSA").grade, null);
+});
+
+test("isGradedListing and parseGrade agree on what counts as graded", () => {
+  for (const t of ["PSA 10 Jinx", "BGS 9.5 Vi", "Riftbound Vex CGC", "graded Riftbound Ahri"]) {
+    assert.ok(isGradedListing(t), `${t} should be graded`);
+  }
+  assert.ok(!isGradedListing("Riftbound Ambessa 196/166 NM"));
+});
+
+// ── The price path never sees a slab ─────────────────────────────────────────
+
+const CARD: EbayCardIdentity = {
+  name: "Akali, Rogue Assassin", setCode: "VEN", number: "189", total: "166", isSignature: true,
+};
+const item = (title: string) => ({ title, price: { value: "100.00", currency: "USD" } });
+
+test("the graded partition leaves the price survivor set identical", () => {
+  // The property the whole free-capture design rests on: filtering with
+  // allowGraded and then removing graded must equal filtering without it.
+  const titles = [
+    "PSA 10 Akali Rogue Assassin VEN Signature",
+    "Akali Rogue Assassin VEN 189*/166 Signature Foil NM",
+    "BGS 9.5 Akali Rogue Assassin VEN Signature",
+    "Akali Rogue Assassin VEN Signature Overnumbered",
+    "Riftbound VEN bulk lot 50 cards Akali signature",
+    "PSA 10 Akali Rogue Assassin VEN Signature lot of 3",
+  ];
+  const items = titles.map(item);
+
+  const strict = cardIdentityStages(CARD);
+  const today = items.filter((it) => strict.every((s) => s.pred(it)));
+
+  const relaxed = cardIdentityStages(CARD, { allowGraded: true });
+  const kept = items.filter((it) => relaxed.every((s) => s.pred(it)));
+  const graded = kept.filter((it) => isGradedListing(it.title));
+  const pricePath = kept.filter((it) => !graded.includes(it));
+
+  assert.deepEqual(pricePath, today, "partitioned price path must equal today's survivor set");
+  assert.ok(graded.length > 0, "and the graded bucket must actually catch the slabs");
+  // A slab inside a lot is neither: NOT_A_SINGLE rejects it from both buckets.
+  assert.ok(
+    !graded.some((it) => /lot of 3/.test(it.title)),
+    "a slab in a lot must not be captured as a single graded listing",
+  );
+});
+
+test("capture happens before the reference-value guard", () => {
+  // That guard drops anything >8x the store price and over $4,000 — which is the
+  // archetypal PSA 10. Capturing after it would silently lose the most valuable
+  // slabs, the exact listings this feature exists to surface.
+  const src = read("src/lib/ebay.ts");
+  const capture = src.indexOf("captureGraded.push(");
+  const guard = src.indexOf("not absurdly above store value");
+  const prune = src.indexOf("pruneCheapOutliers(valid)");
+  const adSlice = src.indexOf("valid.slice(0, 4)");
+  assert.ok(capture > 0 && guard > 0 && prune > 0 && adSlice > 0, "could not locate all four");
+  assert.ok(capture < guard, "graded must be captured before the reference-value guard");
+  assert.ok(capture < prune, "…and before pruneCheapOutliers, the only set-dependent step");
+  assert.ok(capture < adSlice, "…and before the ad carousel slice, or it fills with slabs");
+});
+
+test("graded rows live in their own table, unreachable from prices", () => {
+  const schema = read("prisma/schema.prisma");
+  assert.match(schema, /model EbayGradedListing \{/);
+  const model = schema.slice(schema.indexOf("model EbayGradedListing {"));
+  const body = model.slice(0, model.indexOf("\n}"));
+  for (const f of ["grader", "grade", "itemId", "priceCents"]) {
+    assert.match(body, new RegExp(`\\b${f}\\b`), `EbayGradedListing.${f} missing`);
+  }
+  const importer = read("src/lib/price-import.ts");
+  const helper = importer.slice(importer.indexOf("function gradedRowsFor"));
+  const helperBody = helper.slice(0, helper.indexOf("\n}\n"));
+  assert.ok(
+    !/retailerPrice|lowestPriceCents/.test(helperBody),
+    "the graded row builder must never touch price tables",
+  );
+});
+
+// ── Twice-daily chase refresh ────────────────────────────────────────────────
+
+test("the twice-daily set is exactly promo, signature and overnumbered", () => {
+  assert.ok(isTwiceDailyPrinting({ collectorNumber: "012/166", isPromo: true }), "promo");
+  assert.ok(isTwiceDailyPrinting({ collectorNumber: "189*/166", isPromo: false }), "signature");
+  assert.ok(isTwiceDailyPrinting({ collectorNumber: "196/166", isPromo: false }), "overnumbered");
+  assert.ok(!isTwiceDailyPrinting({ collectorNumber: "042/166", isPromo: false }), "plain base print");
+});
+
+test("every twice-daily printing also passes the catalogue rule", () => {
+  // The two filters are stacked in the pass. If they ever disagree, a card would
+  // be scheduled for refresh and then skipped — a silent no-op twice a day.
+  const cases = [
+    { rarity: "Common", collectorNumber: "012/166", variant: null, isPromo: true },
+    { rarity: "Uncommon", collectorNumber: "007/166", variant: null, isPromo: true },
+    { rarity: "Common", collectorNumber: "189*/166", variant: null, isPromo: false },
+    { rarity: "Uncommon", collectorNumber: "196/166", variant: null, isPromo: false },
+  ];
+  for (const c of cases) {
+    assert.ok(isTwiceDailyPrinting(c), `${c.collectorNumber} should be twice-daily`);
+    assert.ok(eBayWorthSearching(c), `${c.collectorNumber} scheduled but excluded by the catalogue rule`);
+  }
+});
+
+test("the chase pass NEVER deletes rows it did not refresh", () => {
+  // THE landmine. refreshEbayMarkets replaces a market wholesale:
+  //   deleteMany({ where: { retailer } })
+  // A 150-card subset through that path deletes every eBay row in the market and
+  // writes back only the subset — ~600 cards' prices gone, twice a day, silently.
+  const src = read("src/lib/price-import.ts");
+  const fn = src.slice(src.indexOf("export async function refreshEbayChasePrintings"));
+  const body = fn.slice(0, fn.indexOf("\n/**"));
+  const deletes = body.match(/deleteMany\(\{[^}]*\}[^)]*\)/g) ?? [];
+  assert.ok(deletes.length >= 3, "expected scoped deletes for prices, carousel and graded");
+  for (const d of deletes) {
+    assert.match(d, /cardId: \{ in: slice \}/, `unscoped delete in the chase pass: ${d}`);
+  }
+});
+
+test("the full pass's due-gate cannot be fooled by a chase write", () => {
+  // _max answers "did anything refresh recently?", which a 150-card chase write
+  // satisfies every evening — the full catalogue would then never run again.
+  // _min answers "how stale is the oldest row?", which only the full pass moves.
+  const src = read("src/lib/price-import.ts");
+  const gate = src.slice(src.indexOf("const lastPerMarket = await prisma.retailerPrice.groupBy"));
+  const block = gate.slice(0, gate.indexOf("});") + 3);
+  assert.match(block, /_min: \{ lastSeen: true \}/, "staleness must use _min");
+  assert.ok(!/_max: \{ lastSeen: true \}/.test(block), "_max would let a chase write mask a stale catalogue");
+});
+
+test("the chase pass never runs in the same invocation as the full pass", () => {
+  const src = read("src/lib/price-import.ts");
+  assert.match(
+    src,
+    /const chaseDue = !ebayDue && olderThan\(chaseCutoff\)\.length > 0;/,
+    "chaseDue must exclude the full-pass case, or chase cards get queried twice for nothing",
+  );
+});
+
+// ── The tabbed panel ─────────────────────────────────────────────────────────
+
+test("tabs implement the real ARIA pattern, not aria-pressed buttons", () => {
+  const src = read("src/components/EbayTabs.tsx");
+  for (const attr of ['role="tablist"', 'role="tab"', "aria-selected", "aria-controls", "aria-labelledby"]) {
+    assert.ok(src.includes(attr), `EbayTabs must set ${attr}`);
+  }
+  assert.match(src, /tabIndex=\{isActive \? 0 : -1\}/, "roving tabindex");
+  for (const key of ["ArrowRight", "ArrowLeft", "Home", "End"]) {
+    assert.ok(src.includes(key), `keyboard support for ${key}`);
+  }
+});
+
+test("a single tab renders no tablist chrome", () => {
+  // Most cards have listings only. A tablist of one reads as a broken control.
+  const src = read("src/components/EbayTabs.tsx");
+  assert.match(src, /const showTabs = tabs\.length > 1;/);
+});
+
+test("every eBay tab surface is tracked and disclosed exactly once", () => {
+  const graded = read("src/components/EbayGradedLive.tsx");
+  assert.match(graded, /retailer="ebay_graded"/, "graded clicks need their own key");
+  assert.ok(!graded.includes("AffiliateDisclosure"), "the panel owns the disclosure, not the tab body");
+
+  // …and the two panels that render bare children must each carry one.
+  for (const f of ["src/components/EbayCardPanelLive.tsx", "src/components/QuickView.tsx"]) {
+    assert.match(read(f), /<AffiliateDisclosure partner="ebay" tight \/>/, `${f} must disclose`);
+  }
+});
+
+test("bare mode is only ever used where a parent discloses", () => {
+  // AffiliateDisclosure's rule: if an affiliate link renders, its disclosure
+  // renders. `bare` suppresses the inner one, so it is only safe under a parent
+  // that provides one.
+  for (const f of ["src/components/EbayAdCarouselLive.tsx", "src/components/EbayAuctionsLive.tsx"]) {
+    const src = read(f);
+    assert.match(src, /\{!bare && <AffiliateDisclosure|\{!bare && \(\s*<div className="border-t/, `${f} must gate its disclosure on !bare`);
+  }
+});
+
+test("the auctions view does not remount on every countdown tick", () => {
+  // It re-renders once a minute. A component declared in the render body gets a
+  // new identity each time, so React would unmount and remount the whole list —
+  // restarting image loads and dropping focus once a minute.
+  const src = read("src/components/EbayAuctionsLive.tsx");
+  assert.ok(
+    !/const Shell = bare\s*\?\s*\(\{/.test(src),
+    "wrapper must not be a component defined inside render",
+  );
+  assert.match(src, /const body = \(/, "the wrapper should be chosen at the JSX level");
+});
