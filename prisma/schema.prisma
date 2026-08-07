@@ -76,6 +76,7 @@ model User {
   reviewsWritten      MarketplaceReview[]  @relation("ReviewsWritten")
   reviewsReceived     MarketplaceReview[]  @relation("ReviewsReceived")
   sentOrderMessages   OrderMessage[]
+  priceAlerts         PriceAlert[]
 
   @@index([googleId])
   @@index([discordId])
@@ -450,10 +451,25 @@ model DemandSnapshot {
 // measured against the most recent price, not a stale one.
 model PriceAlert {
   id             String    @id @default(cuid())
-  // Lowercased, trimmed recipient address.
+  // Lowercased, trimmed recipient address. STILL the mail-routing key and STILL
+  // the dedupe key after the user-account migration: a signed-in watch is written
+  // with the account's own email, so @@unique([email, cardId, market]) below keeps
+  // deduping for accounts exactly as it did for anonymous subscribers, and the
+  // drop cron in lib/price-alerts.ts needed no change at all. Safe to keep
+  // denormalised because User.email is never updated in-app — the only
+  // prisma.user.update touching an email field is api/auth/verify (emailVerified).
   email          String
+  // The account that owns this watch, when there is one.
+  //
+  // NULLABLE with no default, deliberately. The feature shipped account-free
+  // ("No account needed" — PriceAlertModal), so most live rows have no account to
+  // point at, and a required column could not be added by the `prisma db push`
+  // that runs on every deploy. NULL means "an email-only subscriber from the
+  // pop-up", and every read path treats it as such: the drop cron ignores this
+  // column entirely, and only the account-scoped watchlist routes filter on it.
+  userId         String?
   cardId         String
-  market         String    @default("AU") // AU | NZ | US | UK
+  market         String    @default("AU") // AU | NZ | US | UK | SG | CA
   // Last lowest price observed for this card+market (the baseline a drop is
   // measured against). null until the card first has a price in this market.
   lastPriceCents Int?
@@ -464,12 +480,19 @@ model PriceAlert {
   // When we last emailed this subscriber about a drop on this card.
   lastNotifiedAt DateTime?
 
-  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  card Card  @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  // Cascade, matching every other User relation in this schema. A price watch is
+  // an opt-IN and should die with the account — the inverse of AnnouncementOptOut,
+  // which is deliberately email-keyed so an opt-OUT survives deletion. Rows with
+  // userId = NULL (every anonymous subscriber) are structurally untouched by a
+  // cascade, since it only matches rows carrying the deleted user's id.
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([email, cardId, market])
   @@index([cardId])
   @@index([email])
   @@index([unsubToken])
+  @@index([userId])
 }
 
 // A live price for a card at an external retailer, used for price comparison.

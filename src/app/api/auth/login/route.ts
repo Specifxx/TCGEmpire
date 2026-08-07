@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { createSession, verifyPassword } from "@/lib/auth";
 import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit";
+import { claimAlertsForUser } from "@/lib/alerts";
 
 const schema = z.object({
   email: z.string().email(),
@@ -47,5 +48,8 @@ export async function POST(req: Request) {
   }
 
   await createSession(user.id);
+  // Adopt any price watches this address created before it had an account —
+  // fire-and-forget: a failure here must never block signing in.
+  void claimAlertsForUser(user.id, user.email).catch(() => {});
   return NextResponse.json({ ok: true });
 }

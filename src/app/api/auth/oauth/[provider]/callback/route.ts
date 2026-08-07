@@ -6,6 +6,7 @@ import { applyReferral } from "@/lib/referral";
 import { grantEarlyAdopterPremium, EARLY_PREMIUM_DAYS } from "@/lib/premium";
 import { sendEarlyAdopterEmail } from "@/lib/email";
 import { providerConfig, isProviderEnabled, isOAuthProvider, redirectUri, type OAuthProvider } from "@/lib/oauth";
+import { claimAlertsForUser } from "@/lib/alerts";
 
 function fail(req: Request, code: string) {
   return NextResponse.redirect(new URL(`/login?error=${code}`, req.url));
@@ -76,6 +77,9 @@ export async function GET(req: Request, { params }: { params: { provider: string
   // 4) Find-or-create the user (by provider id, then by email) and link the identity.
   const { user, isNew } = await upsertOAuthUser(provider, providerId, email, name, avatar);
   await createSession(user.id);
+  // Adopt any price watches this address created before it had an account —
+  // fire-and-forget: a failure here must never block signing in.
+  void claimAlertsForUser(user.id, user.email).catch(() => {});
   if (isNew) {
     // First-ever sign-in: credit any referrer.
     await applyReferral(user.id);
