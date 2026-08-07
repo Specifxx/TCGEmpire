@@ -502,10 +502,20 @@ export async function searchEbayLowest(
   // and the returned best — sees exactly the set it would have seen with the
   // graded exclusion applied at the filter stage instead. Nothing price-shaped
   // ever observes a slab.
-  captureGraded?: EbayResult[]
+  captureGraded?: EbayResult[],
+  // Out-param distinguishing "searched, found nothing" from "the search never
+  // completed". Both return null, and a caller that deletes rows for cards it
+  // searched MUST tell them apart: treating a transient 5xx as "no listing"
+  // deletes a live price. Defaults to ok:true and is set false only when the
+  // call genuinely did not run.
+  status?: { ok: boolean }
 ): Promise<EbayResult | null> {
+  if (status) status.ok = true;
   const token = await getToken();
-  if (!token) return null;
+  if (!token) {
+    if (status) status.ok = false;
+    return null;
+  }
 
   // ── WHY THERE ARE TWO QUERIES ────────────────────────────────────────────
   // Browse ANDs every keyword, so each token is another chance to miss a real
@@ -559,13 +569,18 @@ export async function searchEbayLowest(
   try {
     res = await fetch(`${SEARCH_URL}?${params}`, { headers });
   } catch {
+    if (status) status.ok = false; // network failure — not an answer
     return null;
   }
   if (res.status === 429) {
     rateLimited = true; // daily quota hit — stop the pass
+    if (status) status.ok = false;
     return null;
   }
-  if (!res.ok) return null;
+  if (!res.ok) {
+    if (status) status.ok = false; // 5xx/4xx — not an answer
+    return null;
+  }
   const data = await res.json();
   let items: any[] = data.itemSummaries ?? [];
 

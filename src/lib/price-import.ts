@@ -858,6 +858,7 @@ export async function refreshEbayChasePrintings(markets: EbayMarketCfg[]): Promi
       const [rawNum, total] = c.collectorNumber.split("/");
       const captured: EbayResult[] = [];
       const gradedFound: EbayResult[] = [];
+      const status = { ok: true };
       const r = await searchEbayLowest(
         {
           name: c.name,
@@ -872,7 +873,18 @@ export async function refreshEbayChasePrintings(markets: EbayMarketCfg[]): Promi
         captured,
         undefined,
         gradedFound,
+        status,
       );
+      // A card whose search never COMPLETED must leave `reached`, because
+      // `reached` is the delete scope below. searchEbayLowest returns null for
+      // both "no listing exists" and "the call failed", and treating a transient
+      // 5xx as the former deletes a live price — twice a day, on the most
+      // valuable cards on the site. Only a completed search may clear a row.
+      if (!status.ok) {
+        reached.delete(c.id);
+        if (isEbayRateLimited()) break; // budget gone — stop, keep what's stored
+        continue; // transient failure on one card — try the rest
+      }
       gradedRows.push(...gradedRowsFor(gradedFound, c.id, mkt.country, mkt.currency));
       captured.forEach((l, i) => {
         adRows.push({
@@ -881,9 +893,7 @@ export async function refreshEbayChasePrintings(markets: EbayMarketCfg[]): Promi
           url: l.url, title: l.title, imageUrl: l.imageUrl ?? null,
         });
       });
-      // Budget can run out INSIDE the call, meaning this card was never queried.
-      if (!r && isEbayRateLimited()) { reached.delete(c.id); break; }
-      if (!r) continue;
+      if (!r) continue; // searched successfully, genuinely no listing — row clears
       rows.push({
         cardId: c.id,
         retailer: mkt.retailer,
@@ -1408,36 +1418,46 @@ export async function importPrices(): Promise<ImportSummary> {
   const lastPerMarket = await prisma.retailerPrice.groupBy({
     by: ["retailer"],
     where: { retailer: { in: alwaysRetailers } },
-    // _min, NOT _max, and this is load-bearing now that a partial pass exists.
+    // BOTH aggregates, because the two passes need opposite questions answered.
     //
-    // _max answers "when did ANYTHING in this market last refresh?" — which the
-    // twice-daily chase pass would satisfy every evening by touching ~150 cards,
-    // making the full catalogue look fresh and skipping it forever after. _min
-    // answers "how stale is the OLDEST row?", and since the full pass replaces a
-    // market's rows wholesale, that is precisely the full pass's own timestamp.
-    // A chase write cannot move it, because it never touches the other ~600 rows.
+    // _min = "how stale is the OLDEST row?". The full pass replaces a market's
+    // rows wholesale, so this is precisely the full pass's own timestamp, and a
+    // chase write cannot move it (it never touches the other ~600 rows). That is
+    // what stops a nightly chase run masking a stale catalogue.
+    //
+    // _max = "when did ANYTHING here last refresh?" — which any write advances,
+    // including the chase pass's own. That is what stops the chase pass firing
+    // repeatedly, and it is a bug I shipped: gating chase on _min made it a latch
+    // the chase pass could not clear, so it stayed due for the whole 10-20h
+    // window. There are THREE daily invocations of this import, not two —
+    // .github/workflows/refresh-prices.yml at 07:00 and 19:00, and vercel.json's
+    // own cron at 18:00 — so it fired at 18:00 and again at 19:00, roughly 420
+    // wasted Browse calls, with each primeEbayBudget() also clearing a
+    // rate-limit latch the morning pass had set.
     _min: { lastSeen: true },
+    _max: { lastSeen: true },
   });
   const oldestPerMarket = new Map(lastPerMarket.map((r) => [r.retailer, r._min.lastSeen]));
+  const newestPerMarket = new Map(lastPerMarket.map((r) => [r.retailer, r._max.lastSeen]));
   const HOUR = 60 * 60 * 1000;
   const fullCutoff = Date.now() - 20 * HOUR;
-  // Half a day, so the second scheduled run of the day picks it up. The crons are
-  // 07:00 and 19:00 UTC (12h apart), so 10h clears comfortably at 19:00 without
-  // ever firing twice inside one cycle.
+  // 10h after the LAST eBay write of any kind. With the full pass at 07:00 that
+  // clears at 18:00 (the Vercel cron), and the 19:00 run then sees a 1h-old
+  // write and correctly does nothing.
   const chaseCutoff = Date.now() - 10 * HOUR;
   // EBAY_FORCE=1 bypasses the once-a-day gate, e.g. to push out an eBay matching fix
   // (like the Chinese-listing exclusion) the same day instead of waiting ~20h.
   const ebayForced = process.env.EBAY_FORCE === "1";
-  const olderThan = (cutoff: number) =>
+  const olderThan = (stamps: Map<string, Date | null>, cutoff: number) =>
     alwaysRetailers.filter((r) => {
-      const oldest = oldestPerMarket.get(r);
-      return !oldest || oldest.getTime() < cutoff; // never written counts as stale
+      const seen = stamps.get(r);
+      return !seen || seen.getTime() < cutoff; // never written counts as stale
     });
-  const staleMarkets = olderThan(fullCutoff);
+  const staleMarkets = olderThan(oldestPerMarket, fullCutoff);
   const ebayDue = ebayForced || staleMarkets.length > 0;
   // Only when the full pass is NOT running: it already refreshes these printings,
   // so running both in one invocation would query them twice for nothing.
-  const chaseDue = !ebayDue && olderThan(chaseCutoff).length > 0;
+  const chaseDue = !ebayDue && olderThan(newestPerMarket, chaseCutoff).length > 0;
   if (staleMarkets.length > 0 && !ebayForced) {
     console.log(`eBay due: ${staleMarkets.join(", ")} last refreshed >20h ago.`);
   }
