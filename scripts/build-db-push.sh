@@ -18,6 +18,22 @@
 # appears in, so that question never has to be asked again.
 set -uo pipefail
 
+# The CURRENT project for each database, i.e. the first entry of the resolution
+# chain in src/lib/db.ts and src/lib/db-history.ts respectively. Declared once,
+# here, because the "you resolved to a dead fallback" warnings below used to
+# hard-code the name in the condition AND in the message text — three places per
+# database, and a cutover updated the chain but not the warnings. That is not
+# hypothetical: after the RM3->RM4 and RH6->RH7 cutovers on 2026-08-04, every
+# production deploy printed a ::warning:: naming the CURRENT database as the
+# "exhausted/dead fallback". A warning that cries wolf on every green build is
+# worse than no warning, because it teaches you to scroll past the one line that
+# was supposed to answer "which database did this build actually write to?".
+#
+# tests/db-chain.test.ts asserts these two values still match the head of each
+# chain, so the next cutover fails a test instead of quietly lying in a log.
+CURRENT_OP="RM4"
+CURRENT_HIST="RH7"
+
 # Only push schema for a real Vercel production/preview build with a database
 # configured. A local `next build` (no database vars) must not try to reach anything.
 #
@@ -36,7 +52,7 @@ if ! { [ "${VERCEL_ENV:-}" = "production" ] || [ "${VERCEL_ENV:-}" = "preview" ]
   exit 0
 fi
 
-# RM3-first, same order as lib/db.ts and every GitHub Actions workflow. Unlike the
+# Newest-first, same order as lib/db.ts and every GitHub Actions workflow. Unlike the
 # app runtime (which can silently keep serving from a stale connection until the next
 # cold start), this ALWAYS reflects the current build's actual environment.
 if [ -n "${RM4:-}" ]; then
@@ -53,11 +69,12 @@ else
 fi
 # Name the winner, never the value (it's a credential). This is the one line that
 # turns "P1001 against some unfamiliar host" into an immediate answer: if SOURCE is
-# anything other than RM3, RM3 is missing from THIS Vercel environment/scope — check
-# Settings -> Environment Variables -> RM3 -> is "Production" (or "Preview") ticked.
+# anything other than $CURRENT_OP, that variable is missing from THIS Vercel
+# environment/scope — check Settings -> Environment Variables -> is "Production"
+# (or "Preview") ticked.
 echo "[build-db-push] operational DB source for this build: $SOURCE"
-if [ "$SOURCE" != "RM3" ]; then
-  echo "::warning::[build-db-push] RM3 is not visible in this build (VERCEL_ENV=${VERCEL_ENV:-unset}) — falling back to ${SOURCE}, which lib/db.ts documents as an exhausted/dead fallback. If db push below fails with P1001, this is almost certainly why."
+if [ "$SOURCE" != "$CURRENT_OP" ]; then
+  echo "::warning::[build-db-push] ${CURRENT_OP} is not visible in this build (VERCEL_ENV=${VERCEL_ENV:-unset}) — falling back to ${SOURCE}, which lib/db.ts documents as an exhausted/dead fallback. If db push below fails with P1001, this is almost certainly why."
 fi
 
 # A failed push doesn't fail the build — see the block comment at the bottom for why.
@@ -98,12 +115,12 @@ fi
 
 if [ -n "$HIST" ]; then
   # Same rule as the operational push above: name the winning variable, never its
-  # value. If this says anything other than RH7, RH7 is missing from THIS Vercel
-  # environment/scope — which means the schema is being pushed to an exhausted
-  # project while the app reads a brand-new, TABLE-LESS one.
+  # value. If this says anything other than $CURRENT_HIST, that variable is missing
+  # from THIS Vercel environment/scope — which means the schema is being pushed to
+  # an exhausted project while the app reads a brand-new, TABLE-LESS one.
   echo "[build-db-push] history DB source for this build: $HIST_SOURCE"
-  if [ "$HIST_SOURCE" != "RH6" ]; then
-    echo "::warning::[build-db-push] RH6 is not visible in this build (VERCEL_ENV=${VERCEL_ENV:-unset}) — falling back to ${HIST_SOURCE}, which db-history.ts documents as an exhausted/dead fallback."
+  if [ "$HIST_SOURCE" != "$CURRENT_HIST" ]; then
+    echo "::warning::[build-db-push] ${CURRENT_HIST} is not visible in this build (VERCEL_ENV=${VERCEL_ENV:-unset}) — falling back to ${HIST_SOURCE}, which db-history.ts documents as an exhausted/dead fallback."
   fi
   DATABASE_URL="$HIST" prisma db push --skip-generate --accept-data-loss || true
 else
