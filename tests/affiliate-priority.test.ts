@@ -2,7 +2,7 @@ import { test } from "node:test";
 import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
 import {
-  orderCardsForEbay, ebayMarketsForDay, EBAY_ROTATING_MARKETS, EBAY_CA_RETAILER,
+  orderCardsForEbay, ebayMarketsForDay, EBAY_ROTATING_MARKETS, EBAY_ALWAYS_MARKETS, EBAY_CA_RETAILER,
 } from "../src/lib/price-import";
 import {
   pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, SETS, isFallbackRetailer,
@@ -408,6 +408,68 @@ test("AU and US refresh every day", () => {
     assert.ok(codes.includes("AU"), `day ${day} missing AU`);
     assert.ok(codes.includes("US"), `day ${day} missing US`);
   }
+});
+
+test("no always-market has permanent first claim on the budget", () => {
+  // Search ORDER decides who starves. refreshEbayMarkets walks the array and
+  // breaks the moment the budget latches, and a truncated market's whole pass is
+  // discarded — so the market that is consistently LAST is the one that
+  // consistently gets nothing. With ~4,200 calls against ~4,280 spendable, plus a
+  // second Browse call for every card whose strict query returns zero,
+  // overspending is routine rather than exceptional.
+  //
+  // A fixed [AU, US] order meant AU was never once dropped and US always was.
+  // Every always-market must therefore lead on some day.
+  const leaders = new Set<string>();
+  const DAYS = EBAY_ROTATING_MARKETS.length * 4;
+  for (let day = 0; day < DAYS; day++) leaders.add(ebayMarketsForDay(day)[0].country);
+  for (const m of EBAY_ALWAYS_MARKETS) {
+    assert.ok(leaders.has(m.country), `${m.country} never searches first — it can be starved indefinitely`);
+  }
+});
+
+test("the always-markets always precede the rotating one", () => {
+  // The rotating market is the intended sacrifice when quota runs short: it is
+  // at most ~48h stale by design, whereas an always-market missing its slot is
+  // a coverage gap in a market we promise daily prices for.
+  for (let day = 0; day < EBAY_ROTATING_MARKETS.length * 2; day++) {
+    const codes = ebayMarketsForDay(day).map((m) => m.country);
+    const rotatingAt = codes.findIndex((c) => EBAY_ROTATING_MARKETS.some((m) => m.country === c));
+    assert.equal(rotatingAt, codes.length - 1, `day ${day}: rotating market must be last, got ${codes.join("→")}`);
+  }
+});
+
+test("a day's market set is the same whichever order it is in", () => {
+  // Alternating priority must not change WHICH markets run — only their order.
+  for (let day = 0; day < EBAY_ROTATING_MARKETS.length * 2; day++) {
+    const codes = ebayMarketsForDay(day).map((m) => m.country).sort();
+    assert.equal(new Set(codes).size, codes.length, `day ${day}: duplicate market in ${codes.join(",")}`);
+    assert.equal(codes.length, EBAY_ALWAYS_MARKETS.length + 1, `day ${day}: wrong market count`);
+  }
+});
+
+test("production uses the same market list the budget tests assert on", () => {
+  // refreshEbayMarkets used to assemble `[...ALWAYS, todays]` inline, so the pure
+  // function these tests pin was not the one that actually ran — the two could
+  // drift, and an ordering fix could land only in the tested copy.
+  const src = readFileSync("src/lib/price-import.ts", "utf8");
+  assert.match(
+    src,
+    /markets = ebayMarketsForDay\(dayIndex\)/,
+    "the eBay pass must build its market list from ebayMarketsForDay",
+  );
+});
+
+test("eBay staleness is judged per market, not across all markets at once", () => {
+  // A global "did any eBay market refresh recently?" gate let a successful AU
+  // write mark the whole pass fresh, so a US market dropped by the budget could
+  // not be repaired by the next run — it stayed stale until AU itself aged out.
+  const src = readFileSync("src/lib/price-import.ts", "utf8");
+  assert.match(src, /groupBy\(\{\s*by: \["retailer"\]/, "staleness must be grouped by retailer");
+  assert.ok(
+    !/findFirst\(\{\s*where: \{ retailer: \{ startsWith: "ebay" \} \},\s*orderBy: \{ lastSeen: "desc" \}/.test(src),
+    "the global newest-eBay-row staleness check is back — it hides a starved market",
+  );
 });
 
 test("every rotating market comes round, and none is ever skipped forever", () => {

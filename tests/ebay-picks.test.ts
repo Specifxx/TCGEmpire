@@ -122,8 +122,30 @@ test("the unit is on all five requested pages", () => {
 });
 
 test("it stays opt-in — not silently applied to every article", () => {
-  const optedIn = getArticles().filter((a) => a.ebayPicks);
-  assert.equal(optedIn.length, 3, `expected exactly the 3 requested articles, got ${optedIn.length}`);
+  // An explicit allowlist rather than a count. The point of this guard is that
+  // the unit never spreads to articles nobody chose it for, and a bare
+  // `length === 3` did not actually enforce that — swapping which three articles
+  // opted in would have passed it unchanged. Naming them catches both directions:
+  // a new article silently gaining the unit, and an existing one silently losing
+  // it. Add a slug here only alongside a reason it belongs.
+  const ALLOWED = new Set([
+    // Vendetta spoiler/chase content — readers are shopping by sight.
+    "every-riftbound-vendetta-card-revealed",
+    "riftbound-vendetta-chase-cards-so-far",
+    "riftbound-empower-explained",
+    // Same reason: a chase-card listicle whose readers arrive to buy a printing,
+    // not to learn a rule. It is also the guide the tailored unit suits best —
+    // the article IS a list of the cards the strip shows.
+    "most-valuable-riftbound-cards",
+  ]);
+  const optedIn = getArticles().filter((a) => a.ebayPicks).map((a) => a.slug);
+  const unexpected = optedIn.filter((s) => !ALLOWED.has(s));
+  assert.deepEqual(unexpected, [], `article(s) opted into ebayPicks without being allowlisted: ${unexpected.join(", ")}`);
+  assert.equal(
+    optedIn.length,
+    ALLOWED.size,
+    `expected exactly the ${ALLOWED.size} allowlisted articles, got ${optedIn.length} (${optedIn.join(", ")})`,
+  );
 });
 
 // ── Mobile ───────────────────────────────────────────────────────────────────

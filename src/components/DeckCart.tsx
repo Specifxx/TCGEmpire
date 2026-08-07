@@ -1,10 +1,10 @@
-import Link from "next/link";
 import { buildDeckCart, type DeckCartLine } from "@/lib/deck-basket";
 import { formatMoney } from "@/lib/format";
 import { type Country } from "@/lib/country";
 import { getDisplayCurrency } from "@/lib/get-country";
 import { gbpCentsToEur } from "@/lib/fx";
 import { OutboundLink } from "@/components/OutboundLink";
+import { ebaySearchUrl } from "@/lib/affiliate";
 import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
 
 // "Build this deck: cheapest whole cart" — the buy list. Runs the landed-cost
@@ -83,13 +83,30 @@ export async function DeckCart({ lines, country }: { lines: DeckCartLine[]; coun
       {plan.unbuyable.length > 0 && (
         <div className="border-t border-ink-800 p-4 text-xs text-slate-500">
           Not in stock at a tracked store right now:{" "}
+          {/* Each name is now an eBay search for that card, rather than one
+              shared link into /browse. The old copy sent people back to the
+              database that had just told them the card was unavailable — a
+              circular answer at the highest-intent moment on the page, since
+              this reader has a complete decklist, a total, and exactly these
+              cards standing between them and buying it. eBay is excluded from
+              the cart optimiser on purpose (per-item postage doesn't consolidate
+              — see lib/deck-basket), which is precisely why it's the right
+              fallback for the lines the optimiser couldn't fill. */}
           {plan.unbuyable.map((u, i) => (
             <span key={i}>
               {i > 0 && ", "}
-              {u.qty}× {u.name}
+              {u.qty}×{" "}
+              <OutboundLink
+                href={ebaySearchUrl(country, `${u.name} Riftbound`, "deck-unbuyable")}
+                retailer="ebay_deck"
+                country={country}
+                className="text-brand-400 hover:underline"
+              >
+                {u.name}
+              </OutboundLink>
             </span>
           ))}
-          . <Link href="/browse" className="text-brand-400 hover:underline">Search the database</Link> for other options.
+          {" "}— try eBay for the cards no tracked store has right now.
         </div>
       )}
       {/* Every line above is an affiliate-wrapped store link (see lib/deck-basket). */}

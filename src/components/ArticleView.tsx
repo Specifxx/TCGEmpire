@@ -231,13 +231,22 @@ export async function ArticleView({ article }: { article: Article }) {
     Promise.all(closeups.map((c) => resolveEmbed({ title: "", slugs: c.slugs, rulesContain: c.rulesContain, rulesSet: c.rulesSet, take: 1 }))),
     resolveEmbed(article.embed),
   ]);
-  // Split the body on [[embed:N]] / [[closeup:N]] markers. With two capture groups,
-  // split() yields [text, kind, index, text, kind, index, …] — a stride of 3.
-  const bodyParts = article.body.split(/^\[\[(embed|closeup):(\d+)\]\]$/m);
+  // Split the body on [[embed:N]] / [[closeup:N]] / [[shop]] markers. With two
+  // capture groups, split() yields [text, kind, index, text, kind, index, …] — a
+  // stride of 3. The index is optional (`(?::(\d+))?`) because `shop` takes none:
+  // an article has exactly one `shop` array, so there is nothing to index into.
+  // An absent group comes back `undefined`, which keeps the stride at 3.
+  const bodyParts = article.body.split(/^\[\[(embed|closeup|shop)(?::(\d+))?\]\]$/m);
   const placed = new Set<number>();
   for (let i = 1; i < bodyParts.length; i += 3) {
     if (bodyParts[i] === "embed") placed.add(parseInt(bodyParts[i + 1], 10));
   }
+  // Whether the body positions the shop strip itself. The strip is worth far more
+  // mid-article than under the fold — a reader deciding what to buy is at peak
+  // intent right after the section that told them what to buy, not four blocks
+  // later past the FAQ. When a body places it, the tail copy below is skipped so
+  // the strip can never render twice.
+  const shopPlaced = bodyParts.some((p, i) => i % 3 === 1 && p === "shop");
   const toc = extractToc(article.body);
   const bodyHasFaqSection = /^##+ .*\bFAQ\b/m.test(article.body);
   const isGuide = article.category === "guide";
@@ -390,12 +399,18 @@ export async function ArticleView({ article }: { article: Article }) {
 
       <div className="mt-6 border-t border-ink-800 pt-4">
         {/* Body chunks interleaved with their [[embed:N]] galleries / [[closeup:N]]
-            figures — each sits under its own section heading instead of piling up
-            at the end. Split stride is 3: text, marker kind, marker index. */}
+            figures / [[shop]] strip — each sits under its own section heading
+            instead of piling up at the end. Split stride is 3: text, marker kind,
+            marker index (undefined for `shop`, which takes no index). */}
         {bodyParts.map((part, i) => {
           if (i % 3 === 0) return part.trim() ? <Markdown key={i} content={part} /> : null;
           if (i % 3 === 2) return null; // the index token — consumed with its kind below
           const n = parseInt(bodyParts[i + 1], 10);
+          if (part === "shop") {
+            return article.shop && article.shop.length > 0 ? (
+              <ArticleShopStrip key={i} items={article.shop} />
+            ) : null;
+          }
           if (part === "embed") {
             const e = embeds[n];
             return e ? <EmbedGallery key={i} embed={e} cards={embedsCards[n] ?? []} /> : null;
@@ -427,6 +442,18 @@ export async function ArticleView({ article }: { article: Article }) {
         />
       )}
 
+      {/* "Shop this guide" — ABOVE the FAQ, not below it. The FAQ is a long
+          accordion and ArticleMarketData/ArticleTopValue are full-width blocks;
+          with the strip underneath all three, a reader who finished the article
+          had to scroll past every one of them to reach the only buy path on the
+          page, and most never did. Our own live data still leads (marketData and
+          topValue above) — the commercial block just no longer sits below the
+          page's longest element.
+
+          Skipped when the body positions the strip itself via [[shop]] (see
+          `shopPlaced`), so it can never render twice. */}
+      {!shopPlaced && article.shop && article.shop.length > 0 && <ArticleShopStrip items={article.shop} />}
+
       {/* The FAQ, rendered from the SAME array that feeds the FAQPage JSON-LD
           above — one source of truth, so the markup can never describe questions
           the page doesn't show.
@@ -438,8 +465,6 @@ export async function ArticleView({ article }: { article: Article }) {
           field; until then the body's copy wins, because it is the one the
           author is actually maintaining. */}
       {article.faq && article.faq.length > 0 && !bodyHasFaqSection && <ArticleFaq faq={article.faq} />}
-
-      {article.shop && article.shop.length > 0 && <ArticleShopStrip items={article.shop} />}
 
       {/* Tailored eBay unit, opt-in per article (lib/articles.ts's ebayPicks).
           Sits under the body where a finished reader is deciding what to buy —

@@ -12,39 +12,39 @@ datasource db {
 }
 
 model User {
-  id                String    @id @default(cuid())
-  email             String    @unique
+  id                  String    @id @default(cuid())
+  email               String    @unique
   // Optional — accounts created via Google/Discord sign-in have no password.
-  passwordHash      String?
-  displayName       String
-  avatarUrl         String?
+  passwordHash        String?
+  displayName         String
+  avatarUrl           String?
   // Set when the email is confirmed (instantly for OAuth, which is pre-verified).
-  emailVerified     DateTime?
+  emailVerified       DateTime?
   // OAuth identities (one per provider). Lets a user link Google and/or Discord.
   // Indexed (not DB-unique) so the push stays additive; uniqueness is enforced in
   // the OAuth callback (we find-or-create by provider id, then by email).
-  googleId          String?
-  discordId         String?
+  googleId            String?
+  discordId           String?
   // Wallet balance in AUD cents (e.g. 25000 = $250.00).
   // Funds committed to open buy orders are moved out of balance and held as
   // escrow on the BuyOrder (reservedCents) until the order fills or is cancelled.
-  balanceCents      Int       @default(0)
-  isAdmin           Boolean   @default(false)
+  balanceCents        Int       @default(0)
+  isAdmin             Boolean   @default(false)
   // Verified sellers may list cards in the RiftCompare marketplace (see /marketplace).
-  isVerifiedSeller  Boolean   @default(false)
+  isVerifiedSeller    Boolean   @default(false)
   // ── RiftCompare Premium (Stripe subscription) ──
   // premiumUntil = end of the current paid period (renewals extend it via webhook;
   // a lapsed/cancelled sub simply stops extending). stripeCustomerId links renewal
   // invoices back to the account.
-  premiumUntil      DateTime?
-  stripeCustomerId  String?
+  premiumUntil        DateTime?
+  stripeCustomerId    String?
   // Set the first time this account starts a free trial → one trial per account
   // (a returning user just subscribes, no second trial).
-  trialStartedAt    DateTime?
+  trialStartedAt      DateTime?
   // Set once when the early-adopter "first 100 users get Premium" comp is granted,
   // so the grant is idempotent (never re-granted / re-extended on re-runs).
-  earlyPremiumGranted Boolean @default(false)
-  createdAt         DateTime  @default(now())
+  earlyPremiumGranted Boolean   @default(false)
+  createdAt           DateTime  @default(now())
 
   // ── Saved default shipping address (marketplace checkout) ─────────────────────
   // Prefills the checkout address step; a fresh snapshot is copied onto each Order
@@ -52,14 +52,14 @@ model User {
   // history for past orders. country is NOT user-chosen at checkout (always the
   // listing's own market — same-region-only), but is kept here so a saved address
   // prefills sensibly the next time.
-  shipName          String?
-  shipLine1         String?
-  shipLine2         String?
-  shipCity          String?
-  shipRegion        String? // state/province/county — free text
-  shipPostcode      String?
-  shipCountry       String?
-  shipPhone         String?
+  shipName     String?
+  shipLine1    String?
+  shipLine2    String?
+  shipCity     String?
+  shipRegion   String? // state/province/county — free text
+  shipPostcode String?
+  shipCountry  String?
+  shipPhone    String?
 
   listings            Listing[]
   buyOrders           BuyOrder[]
@@ -261,6 +261,8 @@ model Card {
   marketplaceListings MarketplaceListing[]
   collectedBy         CollectionCard[]
   ebayAdListings      EbayAdListing[]
+  ebayAuctions        EbayAuction[]
+  ebayGradedListings  EbayGradedListing[]
 
   @@index([setCode, collectorNumber])
   @@index([nameNormalized])
@@ -510,6 +512,95 @@ model RetailerPrice {
 // already fetches + filters up to 100 results down to the single cheapest
 // (RetailerPrice's "ebay" row); this just persists the next few from that SAME
 // response, so it costs zero additional Browse API calls/quota.
+// A LIVE eBay AUCTION on a chase-tier card.
+//
+// DELIBERATELY NOT A RetailerPrice ROW, and this is the whole design.
+// A current bid is not a price you can pay: a $12 bid on a $180 Signature would
+// sort to the top of the comparison table, become the card's "cheapest price",
+// and then propagate — lowestPriceCents feeds price history, the market index,
+// price alerts, the rise predictor, meta-deck build costs, Today's Top Deals,
+// the screener, the sitemap and the Product/Offer JSON-LD Google reads. One
+// auction row in the wrong table corrupts all of it and publishes a false price.
+// A separate table cannot make that mistake; a shared one only avoids it for as
+// long as everyone remembers to filter.
+//
+// Rows are replaced per market on each auction pass and are USELESS ONCE STALE —
+// an ended auction still carrying a live affiliate link is worse than showing
+// nothing, exactly as EbayAdListing's MAX_AGE_HOURS note argues. `endsAt` is
+// stored so both the reader and the renderer can enforce that independently.
+// A GRADED (slabbed) eBay listing for a chase card — PSA / BGS / CGC / SGC.
+//
+// Its own table for the same reason EbayAuction has one: a slab is genuinely
+// this card but is NOT comparable to a raw copy. It trades far above one, and
+// the price search excludes it precisely because it kept leaking in as a wrong
+// "cheapest" (see GRADED_SLAB in lib/ebay.ts). Keeping slabs out of
+// RetailerPrice is what stops that price reaching lowestPriceCents — and from
+// there price history, the market index, price alerts, the rise predictor and
+// the Product/Offer JSON-LD.
+//
+// Captured for FREE from the same Browse call the price refresh already makes
+// for these cards (searchEbayLowest's captureGraded), so this costs no extra
+// quota: the API never filtered graded out, we did, client-side.
+//
+// No endsAt — a fixed-price listing does not expire on a clock, it simply sells.
+// Freshness is therefore by age: rows not refreshed within MAX_AGE_HOURS are not
+// served, and the importer's sweep removes ones that stop coming back.
+model EbayGradedListing {
+  id            String   @id @default(cuid())
+  cardId        String
+  country       String // marketplace the search ran against
+  itemId        String // eBay listing id — stable across refreshes
+  priceCents    Int
+  shippingCents Int?
+  currency      String
+  url           String // affiliate-tagged
+  title         String
+  imageUrl      String?
+  // Parsed from the title. `grader` is null only when a slab word matched but no
+  // number followed it (e.g. "PSA graded") — the listing is still genuinely
+  // graded, we just cannot say to what, and the UI says so rather than guessing.
+  grader        String? // "PSA" | "BGS" | "CGC" | "SGC"
+  grade         Float? // 10, 9.5, 9, …
+  updatedAt     DateTime @updatedAt
+
+  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, country])
+  @@index([cardId, country])
+}
+
+model EbayAuction {
+  id              String   @id @default(cuid())
+  cardId          String
+  country         String // marketplace the search ran against (US/AU/UK/SG)
+  // eBay's own listing id — stable identity for a listing across passes, so a
+  // re-import of the same auction updates rather than duplicating it.
+  itemId          String
+  currentBidCents Int
+  bidCount        Int      @default(0)
+  // Auctions may also carry a Buy It Now. Kept because "bid $92, or take it now
+  // for $150" is a materially different decision from a bare auction.
+  buyItNowCents   Int?
+  currency        String
+  endsAt          DateTime
+  url             String // affiliate-tagged
+  title           String
+  imageUrl        String?
+  condition       String?
+  // Graded slabs (PSA/BGS/CGC/SGC) are the category our store comparison
+  // structurally cannot cover — no tracked Shopify store lists them — so this
+  // flags the listings where eBay is the only market that exists.
+  isGraded        Boolean  @default(false)
+  updatedAt       DateTime @updatedAt
+
+  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, country])
+  @@index([cardId, country])
+  // Drives the "ending soon" reads: next-to-close first, within one market.
+  @@index([country, endsAt])
+}
+
 model EbayAdListing {
   id            String   @id @default(cuid())
   cardId        String
@@ -544,7 +635,11 @@ model SealedListing {
   url          String
   imageUrl     String?
   inStock      Boolean  @default(true)
-  // Market: "AU" (Australian stores, AUD) or "NZ" (NZ stores, NZD).
+  // Market this listing belongs to, and — since there is no currency column —
+  // the currency its priceCents is denominated in: AU/AUD, NZ/NZD, US/USD,
+  // UK/GBP, SG/SGD, CA/CAD. (The comment here used to name only AU and NZ; the
+  // other four have been written for some time, and eBay now writes per-market
+  // rows too rather than AU-only.)
   country      String   @default("AU")
   lastSeen     DateTime @default(now())
 
@@ -605,11 +700,11 @@ model Order {
   // refundOrderBySeller), BUYER/ADMIN (mutual-cancel or admin force-refund, both
   // already existed before this field), or AUTO (ship-deadline cron). Nullable so
   // the two refund paths that predate this field never need a backfill.
-  refundedBy     String?
+  refundedBy       String?
   // Free-text reason the seller (or admin) gave for the refund — shown to the
   // buyer and kept for support/dispute records. Not required: a seller can refund
   // without explaining why, same as the existing cancel-request flow allows.
-  refundReason   String?
+  refundReason     String?
   // A support ticket was opened against this order (see SupportTicket.orderId) —
   // blocks the auto-release cron job until an admin resolves it.
   disputedAt       DateTime?
@@ -628,8 +723,8 @@ model Order {
   // stale shipments, disputes) — they can force-release, but are not a gate.
   releaseRequestedAt DateTime? // seller asked for early release: "I believe this delivered, please check"
   adminReviewedAt    DateTime? // an admin looked at tracking (audit trail; no longer delays auto-release)
-  adminReviewedBy    String?   // admin email, for the audit trail
-  releasedBy         String?   // BUYER | ADMIN | AUTO — who/what actually triggered release
+  adminReviewedBy    String? // admin email, for the audit trail
+  releasedBy         String? // BUYER | ADMIN | AUTO — who/what actually triggered release
 
   // ── Mutual-agreement cancellation ──────────────────────────────────────────
   // Either party can propose cancelling a PAID/SHIPPED order; it only actually
@@ -644,14 +739,14 @@ model Order {
   // Shipping address snapshot, captured at checkout (never trust/re-read the
   // buyer's live saved address for an existing order — they might edit or clear
   // it later). country is always the listing's own market, not buyer-chosen.
-  shipName         String?
-  shipLine1        String?
-  shipLine2        String?
-  shipCity         String?
-  shipRegion       String?
-  shipPostcode     String?
-  shipCountry      String?
-  shipPhone        String?
+  shipName     String?
+  shipLine1    String?
+  shipLine2    String?
+  shipCity     String?
+  shipRegion   String?
+  shipPostcode String?
+  shipCountry  String?
+  shipPhone    String?
 
   review   MarketplaceReview?
   messages OrderMessage[]
@@ -712,38 +807,38 @@ model ClickEvent {
 // ── RiftCompare Marketplace ────────────────────────────────────────────────────
 // A verified seller's storefront identity + shipping policy. One per user.
 model SellerProfile {
-  id                String   @id @default(cuid())
-  userId            String   @unique
-  shopName          String
-  bio               String?
+  id                  String    @id @default(cuid())
+  userId              String    @unique
+  shopName            String
+  bio                 String?
   // Market this seller serves; their listings inherit it (AU/NZ/US/UK).
-  country           String   @default("AU")
-  currency          String   @default("AUD")
+  country             String    @default("AU")
+  currency            String    @default("AUD")
   // Shipping: a flat postage estimate per order, free over a threshold (0 = never).
-  shippingFlatCents Int      @default(0)
-  freeOverCents     Int      @default(0)
-  shippingNote      String?
+  shippingFlatCents   Int       @default(0)
+  freeOverCents       Int       @default(0)
+  shippingNote        String?
   // "Ships from" postcode — the origin side of the postcode-based shipping
   // estimate (see lib/shipping.ts). Optional: without it, checkout just falls
   // back to the flat rate above with no remote-area adjustment.
-  postcode          String?
-  handlingDays      Int      @default(2) // typical dispatch time in days
+  postcode            String?
+  handlingDays        Int       @default(2) // typical dispatch time in days
   // The platform's own official store ranks first in marketplace listings.
-  isOfficial        Boolean  @default(false)
+  isOfficial          Boolean   @default(false)
   // Payouts (Stripe Connect Express) — populated once the seller onboards.
-  stripeAccountId   String?
-  payoutsEnabled    Boolean  @default(false)
+  stripeAccountId     String?
+  payoutsEnabled      Boolean   @default(false)
   // Admin trust & safety: a suspended seller's listings are force-PAUSED and they
   // cannot create new ones (see admin/marketplace).
   suspendedAt         DateTime?
   // Denormalised count of COMPLETED marketplace sales — drives the new-seller
   // listing/value caps (lib/marketplace.ts) and Phase-2 seller tiers.
-  completedSalesCount Int      @default(0)
+  completedSalesCount Int       @default(0)
   // Explicit consent to the marketplace seller terms, stamped when the shop
   // profile is first saved with the "I agree" checkbox ticked.
   termsAcceptedAt     DateTime?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -860,18 +955,18 @@ model SupportTicket {
 // (user, card, condition, foil); quantity aggregates duplicates. Populated by the
 // card scanner ("add to my cards") and editable from the profile.
 model CollectionCard {
-  id        String   @id @default(cuid())
-  userId    String
-  cardId    String
-  condition String   @default("NM") // NM, LP, MP, HP, DMG
-  isFoil    Boolean  @default(false)
-  quantity  Int      @default(1)
+  id             String   @id @default(cuid())
+  userId         String
+  cardId         String
+  condition      String   @default("NM") // NM, LP, MP, HP, DMG
+  isFoil         Boolean  @default(false)
+  quantity       Int      @default(1)
   // What the owner paid PER UNIT (market currency, cents). Optional — powers the
   // Premium cost-basis / profit-and-loss view. null = unknown (no P&L for that row).
   costBasisCents Int?
-  note      String? // optional free-text (e.g. "graded PSA 9", "for trade")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  note           String? // optional free-text (e.g. "graded PSA 9", "for trade")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
@@ -897,12 +992,12 @@ model CollectionCard {
 // Keyed by email rather than userId so an opt-out survives account deletion and
 // covers the same person if they re-register.
 model AnnouncementOptOut {
-  id        String   @id @default(cuid())
-  email     String   @unique
+  id         String    @id @default(cuid())
+  email      String    @unique
   // Single-use-ish token embedded in the email's unsubscribe link. Generated per
   // recipient at send time and stored so the link keeps working afterwards.
-  token     String   @unique
-  createdAt DateTime @default(now())
+  token      String    @unique
+  createdAt  DateTime  @default(now())
   // Null until they actually click unsubscribe — the row is created at SEND time
   // (to mint the token), so this is what distinguishes "was emailed" from
   // "opted out". Only rows with a non-null optedOutAt suppress future sends.
@@ -912,16 +1007,16 @@ model AnnouncementOptOut {
 }
 
 model NewsletterSubscriber {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  market    String   @default("AU")
+  id             String   @id @default(cuid())
+  email          String   @unique
+  market         String   @default("AU")
   // Where the subscriber signed up (footer | movers | countdown | …) so we can
   // attribute which surface converts. Null for rows created before this existed.
-  source    String?
-  createdAt DateTime @default(now())
+  source         String?
+  createdAt      DateTime @default(now())
   // One-click unsubscribe token. Nullable so `db push` works on existing rows;
   // backfilled lazily the first time we email the subscriber.
-  unsubToken String? @unique
+  unsubToken     String?  @unique
   // Last digest edition delivered (e.g. "2026-W24") — makes the weekly send
   // idempotent: reruns and resumed partial runs only email who's still due.
   lastEditionKey String?

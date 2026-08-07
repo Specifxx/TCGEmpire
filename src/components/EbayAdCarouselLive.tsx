@@ -45,6 +45,7 @@ export function EbayAdCarouselLive({
   query,
   className,
   compact,
+  bare,
 }: {
   listings: AdListing[];
   query: string;
@@ -52,6 +53,11 @@ export function EbayAdCarouselLive({
   // Tighter tiles + fewer items for space-constrained surfaces (the quick-view
   // popup) — same live data and links as the full-size carousel.
   compact?: boolean;
+  // Suppress the built-in disclosure because a PARENT renders one covering this
+  // and its sibling tabs (see EbayCardPanelLive). Never set this without one
+  // above — AffiliateDisclosure's rule is that if an affiliate link renders, its
+  // disclosure renders.
+  bare?: boolean;
 }) {
   const { country } = useCountry();
   const items = listings
@@ -93,7 +99,7 @@ export function EbayAdCarouselLive({
       {/* Directly under the listings, in BOTH the full card page and the compact
           quick-view popup — EPN specifically flagged the popup as carrying eBay
           affiliate links with no disclosure. */}
-      <AffiliateDisclosure partner="ebay" tight />
+      {!bare && <AffiliateDisclosure partner="ebay" tight />}
     </div>
   );
 }

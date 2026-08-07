@@ -114,6 +114,10 @@ async function getToken(): Promise<string | null> {
 }
 
 export interface EbayResult {
+  // eBay's listing id. Optional because most consumers (the price row, the ad
+  // carousel) key on card+retailer and never needed it; the graded table keys on
+  // it so a refresh updates a slab rather than duplicating it.
+  itemId?: string;
   priceCents: number;
   shippingCents: number | null; // actual listing shipping (null if not provided)
   url: string;
@@ -135,8 +139,62 @@ function shippingFromItem(item: any): number | null {
 // names (e.g. "Annie, Dark Child — Starter"); only the sealed-PRODUCT phrases
 // ("starter deck", "structure deck", "precon") and graded slabs are excluded, since
 // those trade far above a raw single and were leaking in as wrong prices.
-const EXCLUDE =
-  /\b(lot|lots|bundle|joblot|job lot|playset|complete set|full set|master set|set of|bulk|pick your|choose your|your choice|all epic|all rare|all common|all uncommon|all cards|sealed|booster|pack|box|starter deck|structure deck|preconstructed|precon|intro deck|challenger deck|deck box|proxy|custom|chinese|japanese|korean|\d+\s*cards|x\s*\d+|psa|bgs|cgc|sgc|graded|gem mint|keychain|key ?ring|keyring|novelty|sticker|plush|playmat|sleeves?|toploader|top ?loader|binder|lanyard|badge|poster|magnet|funko|pin badge)\b/i;
+// Split in two, because "not a raw single" and "not the same PRODUCT" are
+// different claims and only one of them is always true.
+//
+// NOT_A_SINGLE: a lot, a sealed product, an accessory, a proxy — never the card,
+// under any buying option.
+const NOT_A_SINGLE =
+  /\b(lot|lots|bundle|joblot|job lot|playset|complete set|full set|master set|set of|bulk|pick your|choose your|your choice|all epic|all rare|all common|all uncommon|all cards|sealed|booster|pack|box|starter deck|structure deck|preconstructed|precon|intro deck|challenger deck|deck box|proxy|custom|chinese|japanese|korean|\d+\s*cards|x\s*\d+|keychain|key ?ring|keyring|novelty|sticker|plush|playmat|sleeves?|toploader|top ?loader|binder|lanyard|badge|poster|magnet|funko|pin badge)\b/i;
+
+// GRADED: a slab IS the card, but it is not comparable to a raw one — it trades
+// far above, so it leaked into the price table as a wrong "cheapest". That makes
+// it correct to exclude from PRICE rows and wrong to exclude everywhere: no
+// tracked store lists slabs at all, so for graded copies eBay is the only market
+// there is. The auction search keeps them and flags them (EbayAuction.isGraded);
+// the price search still drops them, exactly as before.
+export const GRADED_SLAB = /\b(psa|bgs|cgc|sgc|graded|gem mint)\b/i;
+
+export function isGradedListing(title: string): boolean {
+  return GRADED_SLAB.test(title ?? "");
+}
+
+export interface ParsedGrade {
+  grader: string | null; // "PSA" | "BGS" | "CGC" | "SGC"
+  grade: number | null; // 10, 9.5, 9, …
+}
+
+// The grader must sit IMMEDIATELY before the number, with only spaces or a dash
+// between. That ordering is what separates a real grade from a number that
+// happens to be nearby: "1 of 10 PSA graded" and "PSA graded, see photos" both
+// contain a grader and a digit, and neither states a grade.
+//
+// Half grades exist only below 10 (BGS/CGC use .5 increments; nothing grades
+// 10.5), so the alternation is ordered 10 first and the fractional branch is
+// restricted to 1-9 — written the other way round, `1` would match the leading
+// digit of `10` and every PSA 10 slab would be recorded as a PSA 1.
+const GRADE_RE = /\b(PSA|BGS|CGC|SGC)\s*[-–]?\s*(10(?:\.0)?|[1-9](?:\.5)?)\b/i;
+const GRADER_ONLY_RE = /\b(PSA|BGS|CGC|SGC)\b/i;
+
+/**
+ * Pull the grader and numeric grade out of an eBay title.
+ *
+ * Returns the grader alone when a slab word appears with no grade after it —
+ * the listing IS graded, we just cannot say to what, and the UI shows "Graded"
+ * rather than inventing a number. Guessing here would be worse than the gap:
+ * a wrong grade on a slab misvalues the card by a wide margin.
+ */
+export function parseGrade(title: string): ParsedGrade {
+  const t = title ?? "";
+  const m = GRADE_RE.exec(t);
+  if (m) return { grader: m[1].toUpperCase(), grade: parseFloat(m[2]) };
+  const g = GRADER_ONLY_RE.exec(t);
+  return { grader: g ? g[1].toUpperCase() : null, grade: null };
+}
+
+// The original combined guard, unchanged in behaviour — every title EXCLUDE
+// matched before still matches.
+const EXCLUDE = new RegExp(`${NOT_A_SINGLE.source}|${GRADED_SLAB.source}`, "i");
 
 // Foreign-language / non-English printings that EXCLUDE's English word-list misses.
 // Riftbound's Chinese release shares our cards' collector numbers but trades far
@@ -294,8 +352,93 @@ export interface EbayFunnelStage {
   samples: string[];
 }
 
+/** The card identity a listing has to match. */
+export interface EbayCardIdentity {
+  name: string;
+  setCode: string;
+  number: string;
+  total: string;
+  isSignature: boolean;
+  isPromo?: boolean;
+}
+
+/**
+ * The identity filter: does this listing describe THIS exact card and printing?
+ *
+ * Returned as named stages rather than one boolean so `searchEbayLowest` keeps
+ * its per-stage funnel instrumentation — every one of these is a place a real
+ * listing can silently disappear, and "0 results" looks identical whether eBay
+ * returned nothing or we rejected everything it returned.
+ *
+ * It is ALSO the single definition of card identity, shared with the auction
+ * search. Auctions are a different buying option, not a different card: a lot,
+ * a Chinese printing, a promo where we wanted the base print or a signature
+ * where we wanted the plain overnumbered is exactly as wrong under a bid as it
+ * is under a fixed price. Two copies of these rules would drift, and the auction
+ * copy would drift silently — nobody checks a widget as closely as the price
+ * table.
+ */
+export function cardIdentityStages(
+  card: EbayCardIdentity,
+  // Keep graded slabs. Only the auction search sets this: a slab is genuinely
+  // this card, just not comparable to a raw copy — see GRADED_SLAB. Auctions
+  // never become price rows, so there is nothing for it to distort, and slabs
+  // are the one tier our store comparison cannot cover at all.
+  opts: { allowGraded?: boolean } = {},
+): { stage: string; pred: (it: any) => boolean }[] {
+  const n = parseInt(card.number.replace(/[^0-9]/g, ""), 10);
+  const notThisProduct = opts.allowGraded ? NOT_A_SINGLE : EXCLUDE;
+  return [
+    { stage: "has price", pred: (it) => Boolean(it?.price?.value) },
+    {
+      stage: opts.allowGraded
+        ? "not excluded (lots/bundles/etc; graded kept)"
+        : "not excluded (lots/bundles/etc)",
+      pred: (it) => !notThisProduct.test(it.title ?? ""),
+    },
+    // Non-English (Chinese etc.) printings share collector numbers with our
+    // English cards but trade much cheaper, so they leak in as the "cheapest".
+    { stage: "not foreign printing", pred: (it) => !isForeignListing(it) },
+    {
+      // The collector number is the identity check for a base card. For a
+      // SIGNATURE print it is too strict alone: there is exactly one signature
+      // printing per card per set and sellers frequently omit the number, so a
+      // signature also qualifies on name + set + "signature" — three independent
+      // signals, a stronger identity than a bare number. Base cards untouched.
+      stage: `collector number matches ${card.number}/${card.total}${card.isSignature ? " (or named signature print)" : ""}`,
+      pred: (it) => {
+        const title = it.title ?? "";
+        if (numberMatches(title, card.number, card.total, card.setCode)) return true;
+        return (
+          card.isSignature &&
+          titleIsSignature(title, n) &&
+          setMentioned(title, card.setCode) &&
+          nameMatches(title, card.name)
+        );
+      },
+    },
+    // Signature ("*") and plain overnumbered share a number — keep them apart.
+    {
+      stage: `signature flag === ${card.isSignature}`,
+      pred: (it) => titleIsSignature(it.title ?? "", n) === card.isSignature,
+    },
+    // Promo and base share a number too. A promo card matches ONLY promo-marked
+    // listings; a base card ONLY non-promo ones.
+    {
+      stage: `promo flag === ${!!card.isPromo}`,
+      pred: (it) => PROMO_HINT.test(it.title ?? "") === !!card.isPromo,
+    },
+  ];
+}
+
+/** Composite of {@link cardIdentityStages} — for callers that don't need a funnel. */
+export function listingMatchesCard(it: any, card: EbayCardIdentity): boolean {
+  return cardIdentityStages(card).every((s) => s.pred(it));
+}
+
 function mapEbayItem(it: any): EbayResult {
   return {
+    itemId: it?.itemId ? String(it.itemId) : undefined,
     priceCents: Math.round(parseFloat(it.price.value) * 100),
     shippingCents: shippingFromItem(it),
     url: ebayAffiliateUrl(it.itemAffiliateWebUrl ?? it.itemWebUrl),
@@ -343,7 +486,23 @@ export async function searchEbayLowest(
   // filter stage (and a sample of what was dropped) so "0 results" can be
   // attributed to a specific stage instead of guessed at. See
   // scripts/diagnose-card.ts.
-  funnel?: EbayFunnelStage[]
+  funnel?: EbayFunnelStage[],
+  // Optional output array for GRADED (slabbed) listings, filled from this SAME
+  // search at zero extra quota.
+  //
+  // It is free because the graded exclusion was never an API filter — the Browse
+  // request has only ever sent buyingOptions, and EXCLUDE is applied to the items
+  // eBay already returned. So the slabs are sitting in the response we paid for
+  // and were simply being discarded.
+  //
+  // Behaviour-neutral for prices BY CONSTRUCTION: when this is supplied the
+  // identity pass keeps graded listings, then they are partitioned OUT before
+  // anything price-related runs. Every downstream step — the reference-value
+  // guard, the delivered() sort, pruneCheapOutliers' median, captureAdListings
+  // and the returned best — sees exactly the set it would have seen with the
+  // graded exclusion applied at the filter stage instead. Nothing price-shaped
+  // ever observes a slab.
+  captureGraded?: EbayResult[]
 ): Promise<EbayResult | null> {
   const token = await getToken();
   if (!token) return null;
@@ -424,11 +583,6 @@ export async function searchEbayLowest(
     }
   }
 
-  // Accept only listings whose collector number matches THIS exact card+printing.
-  // No name-only fallback — that mislabelled overnumbered/alt cards with the base
-  // card's listing. The number is the reliable identity.
-  const n = parseInt(card.number.replace(/[^0-9]/g, ""), 10);
-
   // FUNNEL INSTRUMENTATION. Every filter below is a place a real listing can
   // silently disappear, and "0 results" looks identical whether eBay returned
   // nothing or we rejected everything it returned. Without per-stage counts the
@@ -449,45 +603,24 @@ export async function searchEbayLowest(
 
   let cur: any[] = items;
   if (funnel) funnel.push({ stage: "eBay returned", kept: items.length, dropped: 0, samples: [] });
-  cur = drop("has price", cur.filter((it) => it?.price?.value), cur);
-  cur = drop("not excluded (lots/bundles/etc)", cur.filter((it) => !EXCLUDE.test(it.title ?? "")), cur);
-  // Drop non-English (Chinese etc.) printings — they share collector numbers with
-  // our English cards but trade much cheaper, so they leak in as the "cheapest".
-  cur = drop("not foreign printing", cur.filter((it) => !isForeignListing(it)), cur);
-  // The collector number is the identity check for a base card. For a SIGNATURE
-  // print it is too strict on its own: there is exactly one signature printing
-  // per card per set, and sellers frequently omit the number entirely. So a
-  // signature listing also qualifies when it names the card, names the set and
-  // says "signature" — three independent signals, which is a stronger identity
-  // than a bare number would be anyway. Base cards are untouched.
-  cur = drop(
-    `collector number matches ${card.number}/${card.total}${card.isSignature ? " (or named signature print)" : ""}`,
-    cur.filter((it) => {
-      const title = it.title ?? "";
-      if (numberMatches(title, card.number, card.total, card.setCode)) return true;
-      return (
-        card.isSignature &&
-        titleIsSignature(title, n) &&
-        setMentioned(title, card.setCode) &&
-        nameMatches(title, card.name)
-      );
-    }),
-    cur,
-  );
-  // Signature ("*") and plain overnumbered share a number — keep them apart.
-  cur = drop(
-    `signature flag === ${card.isSignature}`,
-    cur.filter((it) => titleIsSignature(it.title ?? "", n) === card.isSignature),
-    cur,
-  );
-  // Promo and base share a number too. A promo card matches ONLY promo-marked
-  // listings; a base card matches ONLY non-promo listings (so promos don't
-  // pollute the base price and vice versa).
-  cur = drop(
-    `promo flag === ${!!card.isPromo}`,
-    cur.filter((it) => PROMO_HINT.test(it.title ?? "") === !!card.isPromo),
-    cur,
-  );
+  // Identity stages come from cardIdentityStages() so the auction search applies
+  // the identical rules — see its doc comment. Each is still recorded separately
+  // in the funnel, which is what makes "0 results" attributable to a stage.
+  //
+  // With captureGraded, slabs are allowed THROUGH the identity pass (they are
+  // genuinely this card) and removed immediately after, in their own funnel
+  // stage. The stage is named either way so the diagnostic output states which
+  // mode ran rather than silently reporting different numbers for the same card.
+  for (const { stage, pred } of cardIdentityStages(card, { allowGraded: Boolean(captureGraded) })) {
+    cur = drop(stage, cur.filter(pred), cur);
+  }
+  if (captureGraded) {
+    const graded = cur.filter((it) => isGradedListing(it.title ?? ""));
+    captureGraded.push(...graded.map(mapEbayItem));
+    // Partition, not a copy: from here the price pipeline sees a set with no
+    // slabs in it — identical to what the graded exclusion would have produced.
+    cur = drop("graded split out (price path excludes slabs)", cur.filter((it) => !graded.includes(it)), cur);
+  }
   // Sanity guard: a single can legitimately cost a bit more on eBay than in a
   // store, but not 8×+. A listing that far above the card's store value (and over
   // an absolute floor so cheap-card noise isn't over-filtered) is a mismatch.
@@ -517,6 +650,134 @@ export async function searchEbayLowest(
 
   if (!best) return null;
   return mapEbayItem(best);
+}
+
+export interface EbayAuctionResult {
+  itemId: string;
+  currentBidCents: number;
+  bidCount: number;
+  buyItNowCents: number | null;
+  currency: string;
+  endsAt: Date;
+  url: string;
+  title: string;
+  condition?: string;
+  imageUrl: string | null;
+  isGraded: boolean;
+}
+
+/**
+ * LIVE AUCTIONS for one chase-tier card. Never a price source — see the
+ * EbayAuction model comment for why a current bid must not reach RetailerPrice.
+ *
+ * A SEPARATE Browse call rather than relaxing searchEbayLowest's filter, which
+ * would have been free. Two reasons it isn't worth the saving:
+ *
+ *  1. That call uses `sort=price` with a finite window. Auction items enter the
+ *     result set at their CURRENT BID, which for a chase card starts near zero,
+ *     so they sort to the front and push genuine fixed-price listings out of the
+ *     window — degrading the price table on exactly the expensive cards it
+ *     matters most for.
+ *  2. The two searches want different filters: the price search must reject
+ *     graded slabs, this one specifically wants them.
+ *
+ * Sorted by soonest-ending, not by price: an auction's value here is its
+ * deadline, and it is also the only ordering that puts the listings most likely
+ * to still be live when a reader sees them at the top.
+ */
+export async function searchEbayAuctions(
+  card: EbayCardIdentity & { marketplace?: string },
+  limit = 3,
+): Promise<EbayAuctionResult[]> {
+  const token = await getToken();
+  if (!token) return [];
+
+  // Same two-query shape as searchEbayLowest — sellers of chase cards routinely
+  // omit "Riftbound" from the title, and Browse ANDs every keyword. The broad
+  // query runs only if the strict one is empty.
+  const queries = [buildQuery(card, true), buildQuery(card, false)];
+  const params = new URLSearchParams({
+    q: queries[0],
+    filter: "buyingOptions:{AUCTION}",
+    // Soonest-closing first. `sort=endingSoonest` is Browse's own auction
+    // ordering; anything else would rank by a bid that means little mid-auction.
+    sort: "endingSoonest",
+    limit: "50",
+  });
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${token}`,
+    "X-EBAY-C-MARKETPLACE-ID": card.marketplace ?? DEFAULT_MARKETPLACE,
+  };
+  if (EBAY_CAMPAIGN_ID) headers["X-EBAY-C-ENDUSERCTX"] = `affiliateCampaignId=${EBAY_CAMPAIGN_ID}`;
+
+  if (!spend()) return [];
+
+  let items: any[] = [];
+  try {
+    const res = await fetch(`${SEARCH_URL}?${params}`, { headers });
+    if (res.status === 429) {
+      rateLimited = true;
+      return [];
+    }
+    if (!res.ok) return [];
+    items = (await res.json())?.itemSummaries ?? [];
+  } catch {
+    return [];
+  }
+
+  if (items.length === 0 && queries[1] !== queries[0] && spend()) {
+    const retry = new URLSearchParams(params);
+    retry.set("q", queries[1]);
+    try {
+      const res2 = await fetch(`${SEARCH_URL}?${retry}`, { headers });
+      if (res2.status === 429) rateLimited = true;
+      else if (res2.ok) items = (await res2.json())?.itemSummaries ?? [];
+    } catch {
+      /* keep the empty result */
+    }
+  }
+
+  const stages = cardIdentityStages(card, { allowGraded: true });
+  const now = Date.now();
+
+  return items
+    .filter((it) => stages.every((s) => s.pred(it)))
+    .map((it) => mapEbayAuction(it))
+    // An auction with no end date cannot be shown: the countdown, the staleness
+    // guard and the ordering all key off it, and a listing we cannot expire is
+    // the failure mode this feature most has to avoid.
+    .filter((a): a is EbayAuctionResult => a !== null && a.endsAt.getTime() > now)
+    .slice(0, limit);
+}
+
+function mapEbayAuction(it: any): EbayAuctionResult | null {
+  const end = it?.itemEndDate ? new Date(it.itemEndDate) : null;
+  if (!end || Number.isNaN(end.getTime())) return null;
+  const itemId = String(it?.itemId ?? "");
+  if (!itemId) return null;
+
+  // Browse reports an auction's live bid in currentBidPrice; `price` mirrors it
+  // for auction items but is the BIN figure on an auction-with-Buy-It-Now, so
+  // reading `price` alone would show the BIN as if it were the bid.
+  const bid = it?.currentBidPrice ?? it?.price;
+  if (!bid?.value) return null;
+  const options: string[] = it?.buyingOptions ?? [];
+  const hasBin = options.includes("FIXED_PRICE");
+  const binValue = hasBin ? it?.price?.value : null;
+
+  return {
+    itemId,
+    currentBidCents: Math.round(parseFloat(bid.value) * 100),
+    bidCount: Number(it?.bidCount ?? 0),
+    buyItNowCents: binValue != null ? Math.round(parseFloat(binValue) * 100) : null,
+    currency: bid.currency ?? it?.price?.currency ?? "USD",
+    endsAt: end,
+    url: ebayAffiliateUrl(it.itemAffiliateWebUrl ?? it.itemWebUrl, "auction"),
+    title: it.title,
+    condition: it.condition,
+    imageUrl: it.image?.imageUrl ?? it.thumbnailImages?.[0]?.imageUrl ?? null,
+    isGraded: isGradedListing(it.title ?? ""),
+  };
 }
 
 // Keyword each sealed product type must appear as in an eBay title.
@@ -574,7 +835,18 @@ export function sealedFloorCents(productType: string, referenceCents?: number | 
 // `referenceCents` is the trusted store/TCGplayer price for this product (when known)
 // — listings priced implausibly below it (or below the per-type floor) are dropped as
 // accessories / mis-listings.
-export async function searchEbaySealed(name: string, productType: string, setCode: string | null, referenceCents?: number | null): Promise<EbayResult | null> {
+export async function searchEbaySealed(
+  name: string,
+  productType: string,
+  setCode: string | null,
+  referenceCents?: number | null,
+  // Which eBay marketplace to search. Defaults to AU only so existing callers
+  // keep their behaviour; the sealed importer now passes one per market.
+  // Prices come back in THAT marketplace's currency, which is what makes the
+  // resulting row storable against a market — SealedListing has no currency
+  // column, so the country IS the currency.
+  marketplace: string = DEFAULT_MARKETPLACE,
+): Promise<EbayResult | null> {
   const token = await getToken();
   if (!token) return null;
   const kw = SEALED_TYPE_KW[productType];
@@ -587,7 +859,7 @@ export async function searchEbaySealed(name: string, productType: string, setCod
   });
   const headers: Record<string, string> = {
     Authorization: `Bearer ${token}`,
-    "X-EBAY-C-MARKETPLACE-ID": DEFAULT_MARKETPLACE,
+    "X-EBAY-C-MARKETPLACE-ID": marketplace,
   };
   if (EBAY_CAMPAIGN_ID) {
     headers["X-EBAY-C-ENDUSERCTX"] = `affiliateCampaignId=${EBAY_CAMPAIGN_ID}`;

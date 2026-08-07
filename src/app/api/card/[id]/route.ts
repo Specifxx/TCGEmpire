@@ -54,6 +54,33 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
         orderBy: [{ country: "asc" }, { rank: "asc" }],
         select: { country: true, rank: true, priceCents: true, shippingCents: true, currency: true, url: true, title: true, imageUrl: true },
       },
+      // Graded slabs and live auctions for the quick-view's eBay tabs. Both are
+      // chase-tier only, so for most cards these come back empty and the modal
+      // renders exactly the single carousel it always did.
+      //
+      // Filtered HERE rather than in the client: a closed auction or a slab that
+      // stopped refreshing must never reach the browser with an affiliate link
+      // on it. The renderers check again — three independent layers, because a
+      // pass runs on a schedule and listings end continuously.
+      ebayGradedListings: {
+        where: { updatedAt: { gte: new Date(Date.now() - 72 * 3600 * 1000) } },
+        orderBy: [{ grade: "desc" }, { priceCents: "asc" }],
+        take: 24,
+        select: {
+          itemId: true, cardId: true, country: true, priceCents: true, shippingCents: true,
+          currency: true, url: true, title: true, imageUrl: true, grader: true, grade: true,
+        },
+      },
+      ebayAuctions: {
+        where: { endsAt: { gt: new Date() } },
+        orderBy: { endsAt: "asc" },
+        take: 12,
+        select: {
+          itemId: true, cardId: true, country: true, currentBidCents: true, bidCount: true,
+          buyItNowCents: true, currency: true, endsAt: true, url: true, title: true,
+          imageUrl: true, isGraded: true,
+        },
+      },
     },
   });
 

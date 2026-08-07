@@ -3,12 +3,17 @@
 import Link from "next/link";
 import { useState } from "react";
 import { formatMoney } from "@/lib/format";
+import { OutboundLink } from "./OutboundLink";
+import { AffiliateDisclosure } from "./AffiliateDisclosure";
+import { useCountry } from "./CountryProvider";
+import { ebaySearchUrl } from "@/lib/affiliate";
 import type { BasketPlan } from "@/lib/basket";
 
 // The Best-Basket tool UI: paste a decklist, then see the cheapest way to buy
 // it all across stores (postage and free-shipping thresholds included),
 // grouped by store with direct buy links.
 export function BestBasket({ currency }: { currency: string }) {
+  const { country } = useCountry();
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -107,10 +112,30 @@ export function BestBasket({ currency }: { currency: string }) {
           {plan.unbuyable.length > 0 && (
             <div className="card-surface p-4 text-sm">
               <p className="font-semibold text-amber-300">No in-stock store listing for:</p>
-              <p className="mt-1 text-slate-400">
-                {plan.unbuyable.map((u) => `${u.qty}× ${u.name}`).join(" · ")}
+              {/* Each card is now a live eBay search. The old copy named eBay as
+                  the answer — "These may be eBay-only right now" — and then asked
+                  the reader to open each card page one at a time to find it, in
+                  slate-600. Having identified both the need and the marketplace
+                  that fills it, sending them off to look it up themselves was the
+                  one thing left to fix. */}
+              <ul className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1.5">
+                {plan.unbuyable.map((u, i) => (
+                  <li key={i}>
+                    <OutboundLink
+                      href={ebaySearchUrl(country, `${u.name} Riftbound`, "basket-unbuyable")}
+                      retailer="ebay_basket"
+                      country={country}
+                      className="font-medium text-brand-400 hover:underline"
+                    >
+                      {u.qty}× {u.name} →
+                    </OutboundLink>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-2 text-xs text-slate-500">
+                No tracked store has these in stock right now — eBay usually carries the long tail.
               </p>
-              <p className="mt-1 text-xs text-slate-600">These may be eBay-only right now — check each card page for the full list of options.</p>
+              <AffiliateDisclosure partner="ebay" tight />
             </div>
           )}
 
