@@ -178,22 +178,93 @@ test("the chase pass NEVER deletes rows it did not refresh", () => {
   }
 });
 
-test("the full pass's due-gate cannot be fooled by a chase write", () => {
-  // _max answers "did anything refresh recently?", which a 150-card chase write
-  // satisfies every evening — the full catalogue would then never run again.
-  // _min answers "how stale is the oldest row?", which only the full pass moves.
+test("the chase gate uses a stamp the chase pass can actually advance", () => {
+  // REGRESSION. Gating chase on _min made it a latch the chase pass could not
+  // clear: _min is deliberately immune to chase writes (that is what protects
+  // the full pass), so chaseDue stayed true for the entire 10-20h window.
+  //
+  // There are THREE daily invocations of this import, not two — GitHub Actions
+  // at 07:00 and 19:00, and vercel.json's own cron at 18:00 — so it fired at
+  // 18:00 and again at 19:00. ~420 wasted Browse calls, and each
+  // primeEbayBudget() also cleared a rate-limit latch the morning pass had set.
   const src = read("src/lib/price-import.ts");
-  const gate = src.slice(src.indexOf("const lastPerMarket = await prisma.retailerPrice.groupBy"));
-  const block = gate.slice(0, gate.indexOf("});") + 3);
-  assert.match(block, /_min: \{ lastSeen: true \}/, "staleness must use _min");
-  assert.ok(!/_max: \{ lastSeen: true \}/.test(block), "_max would let a chase write mask a stale catalogue");
+  assert.match(src, /_max: \{ lastSeen: true \}/, "the groupBy must also select _max");
+  assert.match(
+    src,
+    /const chaseDue = !ebayDue && olderThan\(newestPerMarket, chaseCutoff\)\.length > 0;/,
+    "chase must gate on the NEWEST write, which its own run advances",
+  );
+  assert.match(
+    src,
+    /const staleMarkets = olderThan\(oldestPerMarket, fullCutoff\);/,
+    "the full pass must still gate on the OLDEST row",
+  );
+});
+
+test("the third cron is accounted for", () => {
+  // The comment that justified the 10h cutoff enumerated only the two GitHub
+  // Actions crons. vercel.json runs the same import a third time at 18:00.
+  const vercel = JSON.parse(read("vercel.json"));
+  const refresh = (vercel.crons ?? []).filter((c: any) => c.path === "/api/cron/refresh-prices");
+  assert.equal(refresh.length, 1, "vercel.json should still schedule the price refresh");
+  const gha = read(".github/workflows/refresh-prices.yml");
+  const crons = [...gha.matchAll(/cron:\s*"([^"]+)"/g)].map((m) => m[1]);
+  assert.equal(crons.length + refresh.length, 3, "expected 3 daily import invocations in total");
+  // If a schedule moves, the reasoning in the gate comment has to move with it.
+  const src = read("src/lib/price-import.ts");
+  assert.match(src, /THREE daily invocations/, "the gate must document all three invocations");
+});
+
+test("a failed search never deletes a price row", () => {
+  // searchEbayLowest returns null for BOTH "no listing" and "the call failed".
+  // The chase pass deletes rows for every card in `reached`, so conflating them
+  // means one transient 5xx wipes a live price on a chase card, twice a day.
+  const ebay = read("src/lib/ebay.ts");
+  const fn = ebay.slice(ebay.indexOf("export async function searchEbayLowest"));
+  const body = fn.slice(0, fn.indexOf("export async function searchEbayAuctions"));
+  // Every non-answer path must mark the call failed.
+  assert.ok(body.includes("status?: { ok: boolean }"), "must expose a status out-param");
+  assert.ok(
+    (body.match(/status\.ok = false/g) ?? []).length >= 4,
+    "no-token, network throw, 429 and !res.ok must all report failure",
+  );
+
+  const importer = read("src/lib/price-import.ts");
+  const chase = importer.slice(importer.indexOf("export async function refreshEbayChasePrintings"));
+  const chaseBody = chase.slice(0, chase.indexOf("\n/**"));
+  assert.match(
+    chaseBody,
+    /if \(!status\.ok\) \{\s*reached\.delete\(c\.id\);/,
+    "a card whose search did not complete must leave the delete scope",
+  );
+});
+
+test("the full pass's due-gate cannot be fooled by a chase write", () => {
+  // The FULL pass must read _min. _max answers "did anything refresh recently?",
+  // which a 150-card chase write satisfies every evening — the full catalogue
+  // would then never run again. _min answers "how stale is the oldest row?",
+  // which only the full pass can move.
+  //
+  // (_max is also selected now, but it belongs to the CHASE gate — see the
+  // regression test above. What matters is which stamp each gate reads.)
+  const src = read("src/lib/price-import.ts");
+  assert.match(
+    src,
+    /const oldestPerMarket = new Map\(lastPerMarket\.map\(\(r\) => \[r\.retailer, r\._min\.lastSeen\]\)\);/,
+    "the oldest-row stamp must come from _min",
+  );
+  assert.match(
+    src,
+    /const staleMarkets = olderThan\(oldestPerMarket, fullCutoff\);/,
+    "the full pass must gate on the oldest row, not the newest",
+  );
 });
 
 test("the chase pass never runs in the same invocation as the full pass", () => {
   const src = read("src/lib/price-import.ts");
   assert.match(
     src,
-    /const chaseDue = !ebayDue && olderThan\(chaseCutoff\)\.length > 0;/,
+    /const chaseDue = !ebayDue && olderThan\(newestPerMarket, chaseCutoff\)\.length > 0;/,
     "chaseDue must exclude the full-pass case, or chase cards get queried twice for nothing",
   );
 });
