@@ -69,6 +69,21 @@ export interface ArticleCloseUp {
 export interface Article {
   slug: string;
   category: ArticleCategory;
+  // Written but NOT published. A draft is filtered out of every public surface —
+  // the /blog and /guides indexes, both feeds, the sitemap, the Google News
+  // section, the related-posts rail and the /llm mirrors — and its page renders
+  // noindex. It stays reachable by direct URL so it can be previewed and shared
+  // for review before going live.
+  //
+  // This exists because ARTICLES had no unpublished state at all: adding an entry
+  // put it in the sitemap and the news feed on the next deploy. That makes it
+  // impossible to land a post that still has facts to verify without publishing
+  // the unverified version first — and a run of half-finished posts appearing at
+  // once is the "scaled content abuse" shape lib/posts.ts already warns about.
+  //
+  // Publishing is therefore a deliberate one-line edit (delete the flag), not a
+  // side effect of writing the file.
+  draft?: boolean;
   title: string;
   excerpt: string;
   author: string;
@@ -4321,6 +4336,596 @@ Everything else — the collector product philosophy, the language pause — is 
 
 *Source: Riot Games' [August 2026 State of the Game](https://playriftbound.com/en-us/news/announcements/august-2026-state-of-the-game/), published 4 August 2026, and the accompanying [Products and Sets into 2027](https://playriftbound.com/en-us/news/announcements/products-and-sets-into-2027/). The developer positions summarised above are Riot's; the interpretation and price commentary are ours. Where we have paraphrased a stated position, read the original for the full wording.*`,
   },
+  // ───────────────────────────────────────────────────────────────────────────
+  // August 2026 trending batch — ALL DRAFTS. Every one carries [TODO] markers
+  // where a fact needs verifying against Riot's own announcement; none of them
+  // may be published until those are resolved and the overlap noted on each is
+  // settled (five of the six have an existing page targeting the same query).
+  // ───────────────────────────────────────────────────────────────────────────
+  {
+    slug: "riftbound-t1-bundle-guide",
+    draft: true,
+    category: "blog",
+    title: "Riftbound × T1 Bundle: The Complete Buyer's Guide",
+    excerpt:
+      "What is in each Riftbound × T1 bundle, which five cards T1's players picked, how the drawing works, and whether the Signature Edition is worth chasing.",
+    author: "RiftCompare",
+    date: "2026-08-08",
+    readMins: 5,
+    tags: ["t1", "collectibles", "esports", "buying", "news"],
+    shop: [
+      { label: "Riftbound singles on eBay", query: "Riftbound TCG singles" },
+      { label: "Riftbound sealed product", query: "Riftbound TCG booster box" },
+    ],
+    summary: [
+      "**Two products, not one.** The T1 Signature Edition is the serialised, player-signed collector release; the Player Bundle is the playable version with accessories.",
+      "**Five cards, each chosen by a player** from T1's championship roster — not a Riot-selected list.",
+      "**It is a drawing, not a storefront sale.** You enter for the right to buy; you cannot simply add it to a cart.",
+      "**[TODO: confirm current drawing status and dates]** before treating any entry window in this post as open.",
+      "**The value question is about the base printings.** The bundle art is exclusive and unpriced, but the ordinary printing of each champion is trackable today.",
+    ],
+    faq: [
+      {
+        q: "What is the Riftbound T1 collaboration?",
+        a: "It is Riot's first single-team Riftbound collaboration, marking T1's 2025 World Championship win. It covers two separate products — a serialised, signed Signature Edition and a playable Player Bundle — built around five cards chosen by the championship roster.",
+      },
+      {
+        q: "What is in the Riftbound T1 bundle?",
+        a: "The Player Bundle pairs the five champion cards in non-serialised art with accessories. [TODO: confirm the exact accessory list and any changes since the original announcement.] The Signature Edition instead contains serialised, gold-stamped signed cards with a foiling treatment made for the collection.",
+      },
+      {
+        q: "How do you buy the T1 Signature Edition?",
+        a: "Through a drawing on the Riot Merch Store rather than an ordinary sale — you enter for the chance to buy. [TODO: verify whether the drawing is currently open, and the entry window.]",
+      },
+      {
+        q: "Is the T1 bundle worth it?",
+        a: "As a collectible it depends on the serialised print run against demand, which is why the number matters more than the sticker price. As a way to own the cards, it is not the cheapest route — the ordinary printing of each champion is available as a single and can be price-compared today.",
+      },
+    ],
+    embed: {
+      title: "The champions T1 picked — ordinary printings",
+      note: "The regular, buyable printing of each card, not the exclusive bundle art. [TODO: confirm this list still matches the final product.]",
+      slugs: [
+        "ambessa-the-wolf-ven-084",
+        "galio-indefatigable-unl-171-219",
+        "miss-fortune-buccaneer-ogn-193-298",
+        "xin-zhao-vigilant-sfd-176-221",
+      ],
+    },
+    browseCta: {
+      href: "/browse",
+      label: "Price the base printings →",
+      blurb: "Compare live prices on the ordinary printing of every champion in the collection.",
+    },
+    body: `The **Riftbound × T1** collaboration is two separate products, and which one you want decides everything else. The **Signature Edition** is the serialised, player-signed collector release. The **Player Bundle** is the playable version with accessories. Both are built around five cards picked by T1's championship roster, and both are distributed by **drawing** rather than ordinary sale — you enter for the right to buy.
+
+If you only want to play with the cards, neither is the cheapest route: the ordinary printing of each champion is on sale as a single right now.
+
+## What the collaboration actually is
+
+Riot's first collaboration with a single esports team rather than a league, marking T1's 2025 World Championship. We covered the announcement in detail when it landed — see **[the Worlds Champion Collection breakdown](/blog/riftbound-t1-worlds-champion-collection)** for the original details.
+
+**[TODO: confirm nothing material has changed since the July announcement — contents, print run, or distribution method.]**
+
+## What is in each bundle
+
+### T1 Signature Edition
+
+The collector product. Serialised cards with a gold-stamped player signature and a foiling treatment made specifically for this collection.
+
+- **Print run:** [TODO: confirm copies per language]
+- **Serial range:** [TODO: confirm the numbering range]
+- **Languages:** [TODO: confirm which languages]
+- **Price:** [TODO: confirm RRP, per language/region]
+
+### T1 Player Bundle
+
+The accessible version, meant to be played with. Same five champions in different, non-serialised art, plus accessories.
+
+- **Contents:** [TODO: confirm the full accessory list]
+- **Price:** [TODO: confirm RRP]
+- **Availability:** [TODO: confirm timing relative to the Signature Edition]
+
+## The five T1 signature cards
+
+Each card was chosen by the corresponding player rather than selected by Riot, which is the detail that makes the set worth explaining at all — it is a roster's personal picks, not a marketing list.
+
+**[TODO: confirm the player-to-card mapping is unchanged from the announcement.]**
+
+[[embed:0]]
+
+**[TODO: add internal links to individual card pages once the final card list is confirmed — one /card/ link per champion.]**
+
+## Where to buy
+
+Entry is through a **drawing on the Riot Merch Store**, not a normal storefront. That distinction matters for planning: there is nothing to compare on price at retail, because there is no retail.
+
+**[TODO: verify current status — is the drawing open, closed, or upcoming? Add the entry window.]**
+
+Secondary-market copies are a different matter. Anything that surfaces after distribution behaves like any other collectible, and **[compare prices across stores](/browse)** applies the moment it does.
+
+[[shop]]
+
+## Is it worth it?
+
+The honest answer splits by which product you mean.
+
+**For the Signature Edition**, the number that decides it is the print run against demand, not the sticker price. A serialised card's value is a supply question first. Until the run and the entry odds are confirmed, any "worth it" claim is a guess — which is why the figures above are marked for verification rather than filled in.
+
+**For the Player Bundle**, compare it against the parts. The five champions exist as ordinary printings you can buy individually today, and the accessories have their own market rate. If the bundle costs more than the singles plus accessories, you are paying for the exclusive art and the packaging — which is a legitimate thing to want, but worth knowing you are doing.
+
+**For actually playing the deck**, buy the singles. That is true of nearly every bundle in every TCG, and it is the same logic behind **[buying singles versus opening packs](/blog/buying-singles-vs-opening-packs)**.
+
+## What to track instead
+
+If you miss the drawing, the base printings stay buyable and priceable. **[The movers dashboard](/movers)** is where collaboration-driven demand shows up first — a champion getting a signature treatment tends to move its ordinary printing too, and that movement is visible before any secondary-market bundle listing appears.
+
+---
+
+*Product details are Riot's; every unverified figure above is marked. Check the collection's own page on [the official Riftbound site](https://playriftbound.com) before relying on any of them.*`,
+  },
+  {
+    slug: "riftbound-vendetta-vault-endless-riches",
+    draft: true,
+    category: "blog",
+    title: "Riftbound Vendetta Vault & Endless Riches Explained",
+    excerpt:
+      "What the Riftbound Vendetta Vault is, what the Endless Riches card does, and how both fit with Unleashed boosters — plus whether the Vault is worth it.",
+    author: "RiftCompare",
+    date: "2026-08-08",
+    readMins: 5,
+    tags: ["vendetta", "unleashed", "sealed", "buying", "news"],
+    shop: [
+      { label: "Vendetta sealed product", query: "Riftbound Vendetta booster box" },
+      { label: "Unleashed boosters", query: "Riftbound Unleashed booster" },
+    ],
+    summary: [
+      "**The Vendetta Vault is a sealed product**, not a set — [TODO: confirm exact product type, contents and RRP].",
+      "**Endless Riches is the card people are searching for.** [TODO: confirm its exact name, rarity, set code and collector number.]",
+      "**[TODO: confirm the Unleashed relationship]** — whether the Vault contains Unleashed boosters, Vendetta boosters, or both.",
+      "**Nothing in this post is confirmed yet.** Every factual claim is marked for verification against Riot's announcement.",
+    ],
+    faq: [
+      {
+        q: "What is the Riftbound Vendetta Vault?",
+        a: "A sealed Riftbound product tied to the Vendetta set. [TODO: confirm the product type, exactly what it contains, its RRP and its release date before publishing this answer.]",
+      },
+      {
+        q: "What does Endless Riches do in Riftbound?",
+        a: "[TODO: confirm the card's full rules text, cost, type and domain. Do not paraphrase from community reporting — use the official card image or Riot's own reveal.]",
+      },
+      {
+        q: "Is the Vendetta Vault worth buying?",
+        a: "That depends on its contents against the price of the same cards bought as singles, which is exactly what our box EV tool measures. [TODO: run the numbers once contents and RRP are confirmed.]",
+      },
+      {
+        q: "How does the Vendetta Vault relate to Unleashed?",
+        a: "[TODO: confirm. Searches pair the Vault with Unleashed boosters, so the relationship needs stating explicitly — whether the Vault includes Unleashed product, or the two are simply being compared by buyers.]",
+      },
+    ],
+    browseCta: {
+      href: "/sets/vendetta",
+      label: "See the Vendetta set →",
+      blurb: "Every Vendetta card with live prices across every store we track.",
+    },
+    body: `> **This post is a draft skeleton.** The Vendetta Vault and Endless Riches are trending faster than they are documented, and nothing below has been verified against an official source yet. Every factual claim is marked **[TODO]**. Do not publish until they are resolved.
+
+The **Riftbound Vendetta Vault** is a sealed product tied to the Vendetta set, and **Endless Riches** is the card driving most of the search interest around it. **[TODO: write the real one-paragraph answer here once contents are confirmed — this intro is the featured-snippet target, so it must state plainly what the Vault is, what is in it, and what Endless Riches does.]**
+
+## What the Vendetta Vault is
+
+**[TODO: confirm all of the following before publishing.]**
+
+- **Product type:** [TODO — box set, collector bundle, or something else]
+- **Contents:** [TODO — full component list]
+- **RRP:** [TODO — per region]
+- **Release date:** [TODO]
+- **Print run:** [TODO — is it limited?]
+
+For the set itself, the **[Vendetta set page](/sets/vendetta)** already carries live prices on all 166 main-set cards, and the **[full card list](/guides/riftbound-vendetta-card-list)** covers what is in the set proper.
+
+## Endless Riches, the card
+
+**[TODO: this is the highest-value section of the post — it is what most of the search traffic is actually looking for. Fill in from the official card image, not community reporting.]**
+
+- **Full name:** [TODO]
+- **Set and collector number:** [TODO]
+- **Rarity:** [TODO]
+- **Type and domain:** [TODO]
+- **Rules text:** [TODO — quote exactly]
+
+**[TODO: add a /card/ link to the Endless Riches card page once it is imported into the database.]**
+
+### Why it is being searched for
+
+**[TODO: confirm the actual reason — is it a chase card, a combo piece, a price spike, or a rules controversy? The framing of this whole post depends on the answer.]**
+
+If it turns out to be a chase-tier printing, it belongs alongside the ones we already track in **[Vendetta's chase cards](/blog/riftbound-vendetta-chase-cards-so-far)**.
+
+## How it fits with Unleashed
+
+Searches pair the Vault with **Unleashed boosters**, which needs explaining rather than assuming.
+
+**[TODO: confirm the relationship.]** The two plausible readings are that the Vault physically contains Unleashed product, or that buyers are simply weighing the Vault against Unleashed boosters as alternative purchases. These lead to completely different posts, so resolve this before writing the section.
+
+The **[Unleashed set page](/sets/unleashed)** has live prices for that set either way.
+
+## Is the Vault worth buying?
+
+The method here does not depend on the unknowns, so it is worth stating even while the numbers are missing: a sealed product is worth buying when its contents cost more bought individually than the product costs sealed, plus whatever you value the sealed experience at.
+
+Once contents and RRP are confirmed, run them through the **[box EV calculator](/tools/box-ev)**, which totals a sealed product's expected value from live singles prices. That turns "is it worth it" from an opinion into a number.
+
+**[TODO: run this and state the result, with the date the prices were sampled.]**
+
+[[shop]]
+
+## Where to buy it cheapest
+
+Once it is on sale, the Vault will be price-compared the same way as every other sealed product — see **[sealed product prices](/sealed)** for live comparisons across every store we track.
+
+**[TODO: confirm which retailers are carrying it, and whether it is a Riot Merch Store exclusive like the T1 collection.]**
+
+---
+
+*Every claim above is unverified. Check [the official Riftbound site](https://playriftbound.com) and replace each [TODO] before this post goes live.*`,
+  },
+  {
+    slug: "riftbound-state-of-the-game-august-2026",
+    draft: true,
+    category: "blog",
+    title: "Riftbound State of the Game (Aug 2026): What Changed",
+    excerpt:
+      "A plain summary of Riftbound's August 2026 State of the Game — what Riot announced, what changed, and what it means if you buy cards.",
+    author: "RiftCompare",
+    date: "2026-08-08",
+    readMins: 5,
+    tags: ["news", "competitive", "meta", "state of the game"],
+    summary: [
+      "**[TODO: one-line summary of the single biggest change.]** This bullet is what an AI answer engine will lift — make it the actual headline.",
+      "**[TODO: second change.]**",
+      "**[TODO: third change.]**",
+      "**The buying angle:** [TODO — what, if anything, this changes about what is worth owning.]",
+    ],
+    faq: [
+      {
+        q: "What is Riftbound's State of the Game?",
+        a: "A periodic developer update from Riot covering design philosophy, format support, product plans and, sometimes, ban policy. It is usually more Q&A than announcement.",
+      },
+      {
+        q: "What changed in the August 2026 State of the Game?",
+        a: "[TODO: summarise the actual changes. Do not reuse the July or the 4 August summary — this answer must reflect the update this post is about.]",
+      },
+      {
+        q: "Does the State of the Game affect card prices?",
+        a: "Indirectly and sometimes sharply. Ban policy, format support and product plans all change what is worth owning — a card that gains a supported format gains a second source of demand.",
+      },
+    ],
+    browseCta: {
+      href: "/movers",
+      label: "See what is moving →",
+      blurb: "The cards whose prices moved most in the last week, across every store we track.",
+    },
+    body: `> **Draft — and a duplication warning.** RiftCompare already published **[Riftbound's August 2026 State of the Game: Five Takeaways](/blog/riftbound-august-2026-state-of-the-game-takeaways)** on 4 August 2026, covering the same update in depth. Publishing this post as a second page for the same query would compete with it rather than add to it. Either point this at a genuinely later update, or merge anything new here into that post and delete this one. See the batch notes for the full picture.
+
+**[TODO: write the answer-first intro. State in the first two sentences what the August 2026 State of the Game changed. This paragraph is the featured-snippet target for "riftbound state of the game", so it must answer the query rather than introduce it.]**
+
+## What was announced
+
+**[TODO: list the actual announcements. Keep each one to a claim you can point at a source for.]**
+
+- **[TODO]**
+- **[TODO]**
+- **[TODO]**
+
+## What changed since last time
+
+The useful framing for a recurring update is the delta, not the contents — readers who follow the game already know the standing positions.
+
+**[TODO: compare against the previous update and state only what moved. If nothing moved, say so plainly; "no change" is a real and useful answer.]**
+
+## What it means if you buy cards
+
+This is the section that justifies the post existing on a price-comparison site rather than a news site, so it should carry the most original thinking.
+
+**[TODO: connect each announcement to a concrete consequence for what is worth owning. Ban policy affects staples; format support creates new demand curves; product plans affect sealed value.]**
+
+Existing context worth linking once the specifics are known:
+
+- Ban policy → **[the current ban list](/guides/riftbound-banlist-explained)**
+- Sealed and collector products → **[the box EV calculator](/tools/box-ev)**
+- Set and product plans → **[the 2027 set roadmap](/blog/riftbound-2027-set-roadmap)**
+
+## What we would actually do
+
+**[TODO: the honest answer is often "nothing this week" — say so if it is true. A post that manufactures urgency it cannot justify reads worse than one that admits most updates are context rather than a trade.]**
+
+---
+
+*Source: [TODO — link Riot's original announcement and give its publication date.] Developer positions are Riot's; interpretation is ours.*`,
+  },
+  {
+    slug: "riftbound-empower-mechanic-guide",
+    draft: true,
+    category: "blog",
+    title: "Empower in Riftbound: How the Mechanic Works",
+    excerpt:
+      "A full guide to Riftbound's Empower mechanic — what it is, when you can use it, whether opponents can react, and whether the effect is permanent.",
+    author: "RiftCompare",
+    date: "2026-08-08",
+    readMins: 6,
+    tags: ["empower", "mechanics", "gameplay", "vendetta", "rules"],
+    ebayPicks: { heading: "Empower cards on eBay right now" },
+    summary: [
+      "**Empower lets a card gain new abilities after it is already in play**, usually by paying an extra cost on a later turn.",
+      "**It is a cheap play now for a bigger payoff later** — the trade is tempo against value.",
+      "**[TODO: confirm the timing window]** — exactly when Empower can be activated, and at what speed.",
+      "**[TODO: confirm whether opponents can respond]** to an Empower activation.",
+    ],
+    faq: [
+      {
+        q: "What is Empower in Riftbound?",
+        a: "Empower gives a card the potential to gain new abilities once it is already in play, usually by paying an extra cost on a later turn — a cheap play now for a bigger payoff later.",
+      },
+      {
+        q: "How does Empower work?",
+        a: "You play the card normally, then on a later turn pay its Empower cost to unlock the additional ability printed on it. [TODO: confirm the exact activation procedure and any restrictions on how often it can be used.]",
+      },
+      {
+        q: "Can you react to Empower?",
+        a: "[TODO: confirm from the official rules whether an Empower activation uses the stack/chain and can be responded to before it resolves. This is the single most-asked Empower question and the answer must come from the rulebook, not inference.]",
+      },
+      {
+        q: "Is Empower permanent?",
+        a: "[TODO: confirm whether the gained ability persists for the rest of the game, only until end of turn, or until the card leaves play. Note also how Disempower interacts, since the two are printed as a pair.]",
+      },
+      {
+        q: "When can you Empower a card?",
+        a: "[TODO: confirm the timing window — main phase only, any time you hold priority, or otherwise — and whether the card must have been in play since the start of the turn.]",
+      },
+      {
+        q: "What speed is Empower?",
+        a: "[TODO: confirm Empower's speed and how it interacts with other timing rules. Cite the rulebook section.]",
+      },
+    ],
+    browseCta: {
+      href: "/browse",
+      label: "Find Empower cards →",
+      blurb: "Browse every card in the database and compare live prices across stores.",
+    },
+    embed: {
+      title: "Cards with Empower",
+      note: "Every card whose rules text includes Empower, populated from the database as reveals land.",
+      rulesContain: "[Empower]",
+      take: 12,
+    },
+    body: `> **Draft — and a duplication warning.** RiftCompare already ranks for this topic with **[Riftbound Empower Explained](/guides/riftbound-empower-explained)**, a guide covering the same mechanic and carrying its own FAQ. A second page targeting "riftbound empower" would compete with it. The stronger play is almost certainly to fold the extra FAQ questions below into that guide instead of publishing this. See the batch notes.
+
+**Empower** lets a Riftbound card gain new abilities *after* it is already in play — you play it cheaply now, then pay an extra cost on a later turn to unlock the rest of it. That trade, tempo now against value later, is the whole mechanic.
+
+## How Empower works
+
+You play an Empower card normally. On a later turn, you pay its Empower cost to unlock the additional ability printed on the card.
+
+**[TODO: confirm the exact activation procedure from the rulebook — where the cost is paid from, whether it can be done more than once, and any restriction on the turn it becomes available.]**
+
+[[embed:0]]
+
+## When you can Empower
+
+**[TODO: confirm the timing window.]** This is where most rules disputes come from, so it needs a precise answer rather than a general one — main phase only, or any time you hold priority; and whether the card must have been in play since the start of your turn.
+
+### Can your opponent respond?
+
+**[TODO: confirm whether an Empower activation can be responded to before it resolves.]** Answer this from the rulebook rather than by analogy with other card games — it is the most-asked question about the mechanic and getting it wrong is worse than leaving it blank.
+
+## Does Empower last?
+
+**[TODO: confirm whether the gained ability is permanent, ends at end of turn, or ends when the card leaves play.]**
+
+Empower is printed alongside **Disempower**, so this section should also cover how the two interact — whether Disempower reverses an already-paid Empower, and what happens to the cost if it does.
+
+## Building around Empower
+
+The deckbuilding tension is that Empower cards are deliberately weak on the turn you play them. A deck full of them has a soft early game and a strong late one, which is a real strategic identity rather than a drawback — but it means the rest of the curve has to cover for it.
+
+**[TODO: confirm with current decklists which Empower cards actually see play, rather than listing every card that has the keyword.]**
+
+For deckbuilding context, **[building for Vendetta](/guides/building-for-riftbound-vendetta)** and **[the best Vendetta decks](/guides/best-riftbound-vendetta-decks)** cover how these fit real lists, and **[Vendetta's new mechanics](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)** covers Empower alongside Flow and Burn.
+
+## Where to buy Empower cards
+
+Empower cards span rarities, so the price range is wide. Compare across stores on **[the card database](/browse)** before buying, and use **[the deck pricer](/deck)** to total a full list at the cheapest live price.
+
+---
+
+*Rules claims above are marked for verification against Riot's official rulebook. Do not publish this post with any [TODO] rules answer still in place — a wrong rules answer is worse than no page.*`,
+  },
+  {
+    slug: "riftbound-vendetta-hub",
+    draft: true,
+    category: "blog",
+    title: "Riftbound Vendetta: Card List, Gallery & Meta Hub",
+    excerpt:
+      "One hub for Riftbound: Vendetta — the full card list and gallery, the chase cards, current decks and meta, plus live prices on every card in the set.",
+    author: "RiftCompare",
+    date: "2026-08-08",
+    readMins: 5,
+    tags: ["vendetta", "card list", "set", "meta", "decks"],
+    shop: [
+      { label: "Vendetta singles on eBay", query: "Riftbound Vendetta single" },
+      { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
+    ],
+    ebayPicks: { setCode: "VEN", heading: "Vendetta chase cards on eBay right now" },
+    summary: [
+      "**Vendetta is a 166-card main set**, released 31 July 2026, and every card is live with prices.",
+      "**Start with the gallery** if you want to see the cards, or the set page if you want to compare prices.",
+      "**[TODO: confirm the current top meta decks]** — the meta section is the part of this hub that dates fastest.",
+    ],
+    faq: [
+      {
+        q: "How many cards are in Riftbound Vendetta?",
+        a: "166 cards in the main set, plus chase-tier printings — signature, over-numbered, alternate-art and promo versions — that sit outside that count.",
+      },
+      {
+        q: "When was Riftbound Vendetta released?",
+        a: "Vendetta released worldwide on 31 July 2026.",
+      },
+      {
+        q: "What are the best Vendetta decks?",
+        a: "[TODO: summarise the current top decks and refresh this answer whenever the meta moves — it is the answer most likely to go stale.]",
+      },
+      {
+        q: "Where can I see every Vendetta card?",
+        a: "The full gallery below lists every card in the set with images, filterable by domain, rarity and type, and each card links through to live prices across every store we track.",
+      },
+    ],
+    embed: {
+      title: "Every Vendetta card",
+      note: "All 166 main-set cards, filterable by domain, rarity and type. Click any card for live prices.",
+      setAll: "VEN",
+      filterable: true,
+    },
+    browseCta: {
+      href: "/sets/vendetta",
+      label: "Compare Vendetta prices →",
+      blurb: "Live prices for every Vendetta card across every store we track.",
+    },
+    body: `> **Draft — and a duplication warning.** RiftCompare already has **[the Vendetta card list](/guides/riftbound-vendetta-card-list)**, **[the complete card gallery](/blog/every-riftbound-vendetta-card-revealed)** and **[the Vendetta set page](/sets/vendetta)**, which between them cover everything this hub does. A fourth page for "riftbound vendetta" would split signal across four URLs rather than concentrating it. Consider making one of the existing pages the hub instead. See the batch notes.
+
+**Riftbound: Vendetta** is the game's 166-card main set, released **31 July 2026**. This page is the hub: the full card gallery, the chase cards worth knowing about, the current decks, and live prices on everything.
+
+## The full card list
+
+Every one of the 166 main-set cards is below, filterable by domain, rarity and type. Click any card for live prices across every store we track.
+
+[[embed:0]]
+
+For the card-by-card write-up rather than the gallery, see **[the Vendetta card list](/guides/riftbound-vendetta-card-list)**.
+
+## The chase cards
+
+Vendetta's chase tier sits outside the 166-card count and is where most of the set's value is concentrated:
+
+- **[Chase cards so far](/blog/riftbound-vendetta-chase-cards-so-far)** — the headline pulls
+- **[Crystal Rose cards](/guides/riftbound-vendetta-crystal-rose-cards)** — the premium treatment
+- **[Over-numbered cards explained](/guides/riftbound-vendetta-overnumbers-explained)** — why some collector numbers exceed 166
+- **[Nexus Night promos](/blog/riftbound-vendetta-nexus-night-promo-cards)** — the organised-play printings
+
+[[shop]]
+
+## Decks and the meta
+
+**[TODO: this is the section that makes a hub worth visiting twice, and the one that dates fastest. Summarise the current top decks in two or three sentences and re-check it whenever the meta moves.]**
+
+For full lists, see **[the best Vendetta decks](/guides/best-riftbound-vendetta-decks)** and **[building for Vendetta](/guides/building-for-riftbound-vendetta)**. Once you have a list, **[the deck pricer](/deck)** totals it at the cheapest live price across stores.
+
+## Bans
+
+**[TODO: confirm whether any Vendetta card is currently banned, and link the specific entry rather than the list as a whole.]**
+
+The current ban list is **[here](/guides/riftbound-banlist-explained)**, and **[July's ban wave](/blog/riftbound-july-2026-ban-list-update)** covers the most recent changes.
+
+## Buying Vendetta
+
+- **Singles** — **[compare every store](/browse)**, or go straight to **[the set page](/sets/vendetta)**
+- **Sealed** — **[compare booster box prices](/sealed)**, and check **[the box EV calculator](/tools/box-ev)** before buying
+- **Cheapest-first** — **[where to buy Vendetta cards cheapest](/blog/riftbound-vendetta-card-prices-where-to-buy-cheapest)**`,
+  },
+  {
+    slug: "riftbound-vendetta-ban-list",
+    draft: true,
+    category: "blog",
+    title: "Riftbound Vendetta Ban List: Every Banned Card",
+    excerpt:
+      "Every card currently banned in Riftbound, why each one went, and what it means for your deck — updated whenever Riot changes the list.",
+    author: "RiftCompare",
+    date: "2026-08-08",
+    readMins: 4,
+    tags: ["banlist", "vendetta", "competitive", "rules"],
+    shop: [
+      { label: "Riftbound singles on eBay", query: "Riftbound TCG singles" },
+    ],
+    summary: [
+      "**[TODO: state the current number of banned cards]** in constructed, and the date of the most recent change.",
+      "**Bans are rare by design** — Riot's stated approach is minimal intervention, so the list moves slowly.",
+      "**There is a separate 2v2 ban list**, which is not the same as the constructed one.",
+      "**[TODO: confirm whether any Vendetta card specifically is banned]**, since that is what this page's query is asking.",
+    ],
+    faq: [
+      {
+        q: "How many Riftbound cards are banned?",
+        a: "[TODO: state the current count for constructed, and note the separate 2v2 list. Update this whenever the list changes.]",
+      },
+      {
+        q: "Are any Vendetta cards banned?",
+        a: "[TODO: confirm. This is the specific question the page targets, so answer it directly in the first sentence rather than describing the list generally.]",
+      },
+      {
+        q: "Why does Riot ban Riftbound cards?",
+        a: "The stated philosophy is minimal intervention — acting only to correct what the team considers an emergency, and often choosing not to act at all on the view that the format will evolve on its own.",
+      },
+      {
+        q: "When does the Riftbound ban list update?",
+        a: "[TODO: confirm whether updates follow a fixed schedule or are announced ad hoc.]",
+      },
+    ],
+    browseCta: {
+      href: "/guides/riftbound-banlist-explained",
+      label: "Read the full ban list guide →",
+      blurb: "Every banned card, the official reason for each, and live prices.",
+    },
+    body: `> **Draft — and a duplication warning.** RiftCompare already has **[Riftbound Ban List Explained: Every Currently Banned Card](/guides/riftbound-banlist-explained)**, which targets this exact query and is kept updated, plus **[the July 2026 ban list update](/blog/riftbound-july-2026-ban-list-update)** for the most recent wave. This post would compete with both. Updating the existing guide is almost certainly the better move. See the batch notes.
+
+**[TODO: open with the direct answer — how many cards are banned, and whether any Vendetta card is among them. This is the featured-snippet target.]**
+
+## Constructed ban list
+
+Structured as a table so it can be updated in place — one row per card, and nothing else in the post needs touching when the list changes.
+
+| Card | Set | Banned | Reason |
+| --- | --- | --- | --- |
+| [TODO] | [TODO] | [TODO] | [TODO] |
+| [TODO] | [TODO] | [TODO] | [TODO] |
+
+**[TODO: add a /card/ link on each card name once the rows are filled in, so readers can see what a banned card is now worth.]**
+
+## Constructed 2v2 ban list
+
+A separate list, not a subset of the one above — a card legal in constructed can be banned in 2v2 and the reverse.
+
+| Card | Set | Banned | Reason |
+| --- | --- | --- | --- |
+| [TODO] | [TODO] | [TODO] | [TODO] |
+
+## Are any Vendetta cards banned?
+
+**[TODO: answer directly. If none are, say so plainly — "no Vendetta card is currently banned" is a complete and useful answer, and it is what most people searching this term want to know.]**
+
+## Why Riftbound bans so few cards
+
+Riot's stated approach is minimal intervention: act only on what the team considers an emergency, and accept that this will often mean doing nothing, on the view that a format keeps evolving on its own. We covered the reasoning in **[the August State of the Game takeaways](/blog/riftbound-august-2026-state-of-the-game-takeaways)**.
+
+**What that means for your wallet:** in games that ban aggressively, expensive staples carry permanent policy risk. A stated preference for rare intervention means Riftbound staples should hold value more reliably — not that bans never happen.
+
+[[shop]]
+
+## What to do if a card you own gets banned
+
+A ban usually moves the price immediately, and usually downward, but not always to zero — a banned constructed card can still be legal in other formats and still be collectable.
+
+**[TODO: confirm which formats a constructed-banned card remains legal in.]**
+
+**[The movers dashboard](/movers)** is where that price move shows up first.
+
+## How this page is maintained
+
+Both tables above are updated in place whenever Riot announces a change, with the date of the most recent update shown at the top. **[TODO: set the updated field on this article whenever the tables change — it drives the dateModified in structured data.]**
+
+---
+
+*Ban list details are Riot's. Every unverified entry above is marked; check [the official Riftbound site](https://playriftbound.com) before relying on this page.*`,
+  },
   // The 2026 SEO content pack — the five briefed articles plus the four
   // AI-visibility target pages and the variant glossary. Kept in their own file
   // so the batch stays reviewable; spread here so every existing surface (the
@@ -4329,11 +4934,17 @@ Everything else — the collector product philosophy, the language pause — is 
   ...SEO_PACK_ARTICLES,
 ];
 
+// PUBLISHED articles only. Every public surface goes through here — the indexes,
+// both feeds, the sitemap, the authors pages, the /llm mirrors — so filtering
+// drafts once, at the source, covers all of them.
 export function getArticles(category?: ArticleCategory): Article[] {
-  const list = category ? ARTICLES.filter((a) => a.category === category) : ARTICLES;
+  const list = ARTICLES.filter((a) => !a.draft && (!category || a.category === category));
   return [...list].sort((a, b) => (a.date < b.date ? 1 : -1));
 }
 
+// Resolves drafts too, deliberately: a draft has to be reachable by direct URL to
+// be reviewed before publication. The page renders it noindex, and nothing links
+// to it, so it cannot be found without the URL.
 export function getArticle(slug: string): Article | undefined {
   return ARTICLES.find((a) => a.slug === slug);
 }

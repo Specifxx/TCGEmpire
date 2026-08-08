@@ -33,7 +33,10 @@ function reportToArticle(r: ReportRow): Article {
 // Individual report pages still resolve directly via getMarketReportPost/
 // getBlogPost for anyone who already has the URL; they just don't get surfaced.
 export async function getBlogPosts(): Promise<Article[]> {
-  return ARTICLES.filter((a) => a.category === "blog").sort((a, b) => (a.date < b.date ? 1 : -1));
+  // `!a.draft` for the same reason the reports are excluded: this feeds /blog,
+  // the RSS/JSON feeds and the Google News sitemap, and an unfinished post must
+  // not reach any of them.
+  return ARTICLES.filter((a) => a.category === "blog" && !a.draft).sort((a, b) => (a.date < b.date ? 1 : -1));
 }
 
 // Resolve a single blog post by slug from either source.

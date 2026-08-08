@@ -23,6 +23,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   return {
     title: { absolute: `${a.title} — RiftCompare Guides` },
     description: a.excerpt,
+    // Reachable by direct URL for review, but never indexed while unfinished.
+    ...(a.draft ? { robots: { index: false, follow: true } } : {}),
     alternates: pageAlternates(`/guides/${a.slug}`, {
       // Machine-readable mirror for agents — the counterpart of the one
       // /blog/[slug] and /card/[id] already advertise.

@@ -198,15 +198,17 @@ function EmbedGallery({ embed, cards }: { embed: ArticleEmbed; cards: CardTileDa
 // next — the opposite of what the module is for.
 function relatedArticles(article: Article, take = 3): Article[] {
   const tags = new Set(article.tags);
+  // `!a.draft` throughout: an unpublished post must not be surfaced by the one
+  // module whose whole job is sending readers to another page.
   const scored = ARTICLES
-    .filter((a) => a.slug !== article.slug && a.tags.some((t) => tags.has(t)))
+    .filter((a) => !a.draft && a.slug !== article.slug && a.tags.some((t) => tags.has(t)))
     .map((a) => ({ a, overlap: a.tags.filter((t) => tags.has(t)).length }))
     .sort((x, y) => y.overlap - x.overlap || (y.a.date < x.a.date ? -1 : 1))
     .map((x) => x.a);
   if (scored.length >= take) return scored.slice(0, take);
   const seen = new Set([article.slug, ...scored.map((a) => a.slug)]);
   const filler = ARTICLES
-    .filter((a) => !seen.has(a.slug) && a.category === article.category)
+    .filter((a) => !a.draft && !seen.has(a.slug) && a.category === article.category)
     .sort((x, y) => (x.date < y.date ? 1 : -1));
   return [...scored, ...filler].slice(0, take);
 }
