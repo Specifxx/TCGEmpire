@@ -58,7 +58,11 @@ async function main() {
         lowestPriceCents: true, lowestPriceCentsUs: true,
       },
     })
-  ).filter(eBayWorthSearching);
+    // Passed explicitly, never as `.filter(eBayWorthSearching)` — filter would
+    // hand the array INDEX to the value-floor parameter and skip everything.
+    // lowestPriceCentsUs is the cheapest US price rather than TCGplayer's
+    // market price specifically, which is close enough to preview with.
+  ).filter((c) => eBayWorthSearching(c, c.lowestPriceCentsUs));
 
   if (wantList || !nameArg) {
     const chase = candidates.filter(isTwiceDailyPrinting).slice(0, 25);

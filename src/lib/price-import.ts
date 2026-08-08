@@ -334,24 +334,70 @@ export function orderCardsForEbay<T extends { setCode: string }>(
 // those to Showcase, so they are kept.
 const EBAY_SKIP_RARITIES = new Set(["Common", "Uncommon"]);
 
-export function eBayWorthSearching(c: {
-  rarity: string;
-  collectorNumber: string;
-  variant?: string | null;
-  isPromo?: boolean;
-}): boolean {
-  // Promos are never skipped, whatever the base card's rarity.
+/**
+ * Value floor, in TCGplayer US market cents. A card below this is not worth a
+ * Browse call: nobody clicks out to a marketplace for a $3 single, and eBay
+ * almost never beats a tracked store on one.
+ *
+ * TCGplayer's US market price is the reference on purpose — it is the one
+ * figure that exists for the same card in the same currency across the whole
+ * catalogue, so the threshold means the same thing for every card. A local
+ * cheapest price would make the floor mean different things in different
+ * markets, and a card would drift in and out of the search set as exchange
+ * rates moved.
+ */
+export const EBAY_MIN_VALUE_USD_CENTS = Number(process.env.EBAY_MIN_VALUE_CENTS ?? 2000);
+
+export function eBayWorthSearching(
+  c: {
+    rarity: string;
+    collectorNumber: string;
+    variant?: string | null;
+    isPromo?: boolean;
+  },
+  // TCGplayer US market price in USD cents. `null`/undefined means we have no
+  // TCGplayer row for this card.
+  tcgUsCents?: number | null,
+): boolean {
+  // UNKNOWN VALUE IS NOT LOW VALUE. A card with no TCGplayer price is kept, and
+  // this is the most important line in the function: the cards that lack one are
+  // overwhelmingly the ones that JUST released. A brand-new set's chase cards
+  // have no market price on day one — which is exactly when their eBay price is
+  // most wanted, and exactly what pricePrioritySetCodes() exists to prioritise.
+  // Treating "no price" as "cheap" would blank the launch window every time.
+  if (tcgUsCents != null && tcgUsCents < EBAY_MIN_VALUE_USD_CENTS) return false;
+
+  // Promos are never skipped on RARITY grounds, whatever the base card's is.
   //
   // chasePrintRarity deliberately leaves a promo on its base rarity — that is
   // the /browse filter convention and not this code's business to change — so a
   // promo of a Common resolves to "Common" and would be skipped by the rule
   // below. For eBay that is the wrong call: a promo is a separate, limited
-  // printing that collectors buy as such, its price is unrelated to the bulk
-  // common it re-prints, and it is one of the printings we refresh twice daily
-  // (see EBAY_CHASE_REFRESH). Handled here rather than by altering
-  // chasePrintRarity so the browse-filter convention stays untouched.
+  // printing that collectors buy as such, and its price is unrelated to the bulk
+  // common it re-prints. Handled here rather than by altering chasePrintRarity
+  // so the browse-filter convention stays untouched.
+  //
+  // The value floor above still applies to promos: a promo genuinely worth $2 is
+  // no more worth a call than any other $2 card.
   if (c.isPromo) return true;
   return !EBAY_SKIP_RARITIES.has(chasePrintRarity(c));
+}
+
+/** TCGplayer US market price per card, in USD cents — the value-floor reference. */
+export async function tcgplayerUsValues(): Promise<Map<string, number>> {
+  const rows = await prisma.retailerPrice.findMany({
+    where: { retailer: "tcgplayer", country: "US" },
+    select: { cardId: true, priceCents: true },
+  });
+  const out = new Map<string, number>();
+  // A card can have several TCGplayer rows (foil/condition variants); the
+  // cheapest is the right reference, so a card is only skipped when even its
+  // cheapest printing is under the floor.
+  for (const r of rows) {
+    const cur = out.get(r.cardId);
+    if (cur == null || r.priceCents < cur) out.set(r.cardId, r.priceCents);
+  }
+  return out;
 }
 
 /**
@@ -831,8 +877,16 @@ export async function refreshEbayChasePrintings(markets: EbayMarketCfg[]): Promi
   // catalogue rule. They agree today (promos are force-kept and signature /
   // overnumbered resolve to Showcase), but stacking them means a later change to
   // either cannot quietly reintroduce a card the other excludes.
-  const cards = all.filter(isTwiceDailyPrinting).filter(eBayWorthSearching);
+  const tcgValues = await tcgplayerUsValues();
+  const cards = all
+    .filter(isTwiceDailyPrinting)
+    .filter((c) => eBayWorthSearching(c, tcgValues.get(c.id)));
   if (cards.length === 0) return 0;
+  console.log(
+    `eBay chase set: ${cards.length} promo/signature/overnumbered printings ` +
+      `at or above $${(EBAY_MIN_VALUE_USD_CENTS / 100).toFixed(0)} TCGplayer US ` +
+      `(of ${all.filter(isTwiceDailyPrinting).length} such printings in total).`,
+  );
 
   let written = 0;
   for (const mkt of markets) {
@@ -949,6 +1003,10 @@ export async function refreshEbayChasePrintings(markets: EbayMarketCfg[]): Promi
 export async function refreshEbayAuctions(markets: EbayMarketCfg[]): Promise<number> {
   if (!isEbayEnabled() || isEbayRateLimited()) return 0;
   let written = 0;
+  // Read once, outside the market loop — the value floor is a USD figure and
+  // does not vary by marketplace, so re-reading the whole RetailerPrice table
+  // per market would buy nothing.
+  const tcgValues = await tcgplayerUsValues();
 
   for (const mkt of markets) {
     if (isEbayRateLimited()) break;
@@ -982,7 +1040,9 @@ export async function refreshEbayAuctions(markets: EbayMarketCfg[]): Promise<num
     // nothing here, since a Common almost never clears the value floor anyway.
     // Applying it explicitly means "no eBay for Commons" holds across every
     // surface rather than depending on a threshold that could later move.
-    const targets = cards.filter(eBayWorthSearching).slice(0, AUCTION_CARDS_PER_MARKET);
+    const targets = cards
+      .filter((c) => eBayWorthSearching(c, tcgValues.get(c.id)))
+      .slice(0, AUCTION_CARDS_PER_MARKET);
     if (targets.length === 0) continue;
 
     const rows: Prisma.EbayAuctionCreateManyInput[] = [];
@@ -1483,11 +1543,26 @@ export async function importPrices(): Promise<ImportSummary> {
         rarity: true, variant: true,
       },
     });
-    const ebayTargets = ebayCards.filter(eBayWorthSearching);
+    // Value floor reference. Read once for the whole pass — TCGplayer is imported
+    // AFTER this block, so these are yesterday's figures; that is fine for a
+    // threshold (a card does not cross $20 and back inside a day) and it avoids
+    // reordering the import for a filter.
+    const tcgValues = await tcgplayerUsValues();
+    const ebayTargets = ebayCards.filter((c) => eBayWorthSearching(c, tcgValues.get(c.id)));
     const skipped = ebayCards.length - ebayTargets.length;
+    const belowFloor = ebayCards.filter((c) => {
+      const v = tcgValues.get(c.id);
+      return v != null && v < EBAY_MIN_VALUE_USD_CENTS;
+    }).length;
+    // Counted on the KEPT set, not the whole catalogue: a Common with no
+    // TCGplayer price was dropped on rarity, and reporting it as "kept" would
+    // overstate what the unknown-value rule is costing.
+    const noValue = ebayTargets.filter((c) => tcgValues.get(c.id) == null).length;
     console.log(
-      `eBay catalogue: ${ebayTargets.length} of ${ebayCards.length} cards ` +
-        `(${skipped} Common/Uncommon base prints skipped, ~${skipped * 3} calls/day saved).`,
+      `eBay catalogue: ${ebayTargets.length} of ${ebayCards.length} cards searched — ` +
+        `${skipped} skipped (${belowFloor} under $${(EBAY_MIN_VALUE_USD_CENTS / 100).toFixed(0)} TCGplayer US, ` +
+        `rest Common/Uncommon base prints); ${noValue} kept with no TCGplayer price (unknown ≠ cheap). ` +
+        `~${skipped * 3} calls/day saved.`,
     );
     const n = await refreshEbayMarkets(ebayTargets);
     summary.stores.push({ name: "eBay (AU/US/UK/SG/CA)", products: ebayTargets.length, priced: n, matched: n, unmatched: 0 });

@@ -258,6 +258,24 @@ export async function importSealed(): Promise<number> {
   return count;
 }
 
+// Sealed product types NOT worth an eBay call.
+//
+// A single booster pack is the one sealed product where an eBay listing tells a
+// buyer nothing useful. The whole category on eBay is resellers breaking boxes,
+// weighed/mapped packs and repacks — prices sit far above the per-pack cost of a
+// box and bear no relation to the sealed-product market we are actually
+// comparing. Every other type (boxes, cases, Proving Grounds, Champion Decks,
+// bundles, Nexus Night packs, tins, starter sets) is a discrete product with a
+// real secondary market, and those all keep their eBay search.
+//
+// "Sleeved Booster" is deliberately NOT here — classifySealed gives it its own
+// type, it is a distinct collectable product, and it is not what this excludes.
+const EBAY_SEALED_SKIP_TYPES = new Set(["Booster Pack"]);
+
+export function ebaySealedWorthSearching(productType: string): boolean {
+  return !EBAY_SEALED_SKIP_TYPES.has(productType);
+}
+
 /** The marketplaces sealed is searched on, in priority order. */
 const EBAY_SEALED_MARKETS = [
   { country: "US", marketplace: "EBAY_US", retailer: "ebay_us" },
@@ -306,7 +324,7 @@ async function refreshEbaySealedMarket(
   const searchList = [
     ...groups.map((g) => ({ groupKey: g.groupKey, setCode: g.setCode, name: g.name, productType: g.productType, imageUrl: g.imageUrl, referenceCents: trustedRef(g) })),
     ...NEXUS_SEEDS.filter((s) => !haveKeys.has(s.groupKey)).map((s) => ({ ...s, referenceCents: null as number | null })),
-  ];
+  ].filter((g) => ebaySealedWorthSearching(g.productType));
   const ebayRows: any[] = [];
   let truncated = false;
   for (const g of searchList) {
