@@ -950,9 +950,17 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               real estate — same compliance, honest placement. */}
           <section className="card-surface mt-6 p-5">
             <h2 className="font-bold text-white">Also available on eBay</h2>
+            {/* This line used to read "including used, graded and international
+                sellers", which stopped being true when graded moved to its own
+                tab: searchEbayLowest partitions slabs out BEFORE the price sort,
+                the outlier prune and the carousel capture, so nothing under
+                Listings is a graded copy. Describing the panel as mixing them
+                was the one place the site still implied a slab could be sitting
+                in the price comparison. */}
             <p className="mt-1 text-xs text-slate-500">
-              Live listings including used, graded and international sellers — a useful cross-check
-              on the store prices above, and often the only source for older printings.
+              Live raw listings, including used and international sellers — a useful cross-check on
+              the store prices above, and often the only source for older printings. Graded slabs
+              and live auctions each get their own tab, so neither distorts the raw price.
             </p>
             {/* Listings / Graded / Auctions. Extra tabs appear only when this
                 card has that kind of listing in the visitor's market, so an

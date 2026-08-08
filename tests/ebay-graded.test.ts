@@ -282,6 +282,44 @@ test("tabs implement the real ARIA pattern, not aria-pressed buttons", () => {
   }
 });
 
+test("the eBay section does not claim its listings include graded copies", () => {
+  // The code has partitioned slabs out of the price path since the Graded tab
+  // shipped, but the card page's own subtitle still read "including used, graded
+  // and international sellers" — so the ONE place a reader was told a slab might
+  // be sitting in the price comparison was the site itself. Copy that contradicts
+  // the pipeline is indistinguishable, to a reader, from the pipeline being wrong.
+  const page = read("src/app/card/[id]/page.tsx");
+  const at = page.indexOf("Also available on eBay");
+  assert.ok(at > 0, "could not locate the eBay section");
+  const section = page.slice(at, at + 1200);
+  assert.doesNotMatch(
+    section,
+    /listings including used, graded/,
+    "the section must not advertise graded copies as part of the raw listings",
+  );
+  assert.match(section, /own tab/, "it should say where graded and auctions actually live");
+});
+
+test("graded is split out before anything that can reach a price", () => {
+  // Order is the whole guarantee. The partition must precede the reference
+  // guard, the delivered() sort, pruneCheapOutliers AND the carousel capture —
+  // a slab surviving into any of them either becomes the published price or
+  // shows up in the Listings tab, which is exactly what the tab exists to stop.
+  const src = read("src/lib/ebay.ts");
+  const split = src.indexOf("captureGraded.push(");
+  assert.ok(split > 0, "could not locate the graded partition");
+  for (const marker of [
+    "not absurdly above store value", // the reference guard
+    "const valid = cur.sort(",         // the price sort
+    "pruneCheapOutliers(valid)",       // the outlier prune
+    "captureAdListings.push(",         // the Listings-tab carousel
+  ]) {
+    const at = src.indexOf(marker);
+    assert.ok(at > 0, `could not locate ${marker}`);
+    assert.ok(at > split, `${marker} runs BEFORE the graded partition — slabs can reach it`);
+  }
+});
+
 test("a single tab renders no tablist chrome", () => {
   // Most cards have listings only. A tablist of one reads as a broken control.
   const src = read("src/components/EbayTabs.tsx");
