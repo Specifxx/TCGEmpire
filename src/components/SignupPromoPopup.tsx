@@ -21,11 +21,14 @@ const SEEN_KEY = "rc_signup_promo_seen";
 const SHOW_DELAY_MS = 25_000; // let a new visitor actually look around first
 const SKIP_PATHS = ["/login", "/register", "/forgot", "/reset", "/verify", "/marketplace"];
 
+// Deliberately NO slot counts. The popup used to render "{remaining} of {limit}
+// early-adopter spots left"; both numbers came from a public, cacheable API
+// response, so the exact signup count was readable by anyone who opened the
+// network tab or hit the endpoint directly. The endpoint no longer sends them —
+// scarcity is now communicated qualitatively, and the count stays server-side.
 interface PromoStatus {
   active: boolean;
-  remaining: number;
   days: number;
-  limit: number;
 }
 
 export function SignupPromoPopup({ providers }: { providers: ("google" | "discord")[] }) {
@@ -34,7 +37,8 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
   const [promo, setPromo] = useState<PromoStatus | null>(null);
   const [phase, setPhase] = useState<"hidden" | "shown">("hidden");
 
-  // Real, day-cached slot count from the server — never guessed client-side.
+  // Whether slots genuinely remain, decided server-side from a real day-cached
+  // count — the popup learns yes/no, never the number.
   useEffect(() => {
     if (!loaded || user) return;
     fetch("/api/promo/early-adopter")
@@ -89,7 +93,7 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
             </svg>
           </div>
           <span className="chip bg-brand-500/15 text-[10px] font-bold uppercase tracking-wide text-brand-300">
-            {promo.remaining} of {promo.limit} early-adopter spots left
+            Few early-adopter spots left
           </span>
           <h2 className="font-display mt-2 text-xl font-bold text-white">
             Sign up for full access to RiftCompare
