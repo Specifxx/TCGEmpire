@@ -485,13 +485,42 @@ export interface EbayMarketCfg { country: string; marketplace: string; currency:
  * day (once per pass). Adding a market here multiplies all three, so a fifth
  * market costs far more than one catalogue sweep. tests/affiliate-priority.test.ts
  * models the whole day rather than the catalogue alone, for exactly that reason.
+ *
+ * ORDER MATTERS AND IS NOT ALPHABETICAL. US is first deliberately — see
+ * EBAY_PRIORITY_MARKET. The chase and auction passes walk this array as declared
+ * (they take no dayIndex, so they cannot call ebayMarketsForDay), so pinning US
+ * in the rotation alone would still have left it second in two of the three
+ * passes. Both mechanisms are needed; the test suite asserts both.
  */
 export const EBAY_ALWAYS_MARKETS: EbayMarketCfg[] = [
-  { country: "AU", marketplace: "EBAY_AU", currency: "AUD", retailer: "ebay" },
   { country: "US", marketplace: "EBAY_US", currency: "USD", retailer: "ebay_us" },
+  { country: "AU", marketplace: "EBAY_AU", currency: "AUD", retailer: "ebay" },
   { country: "UK", marketplace: "EBAY_GB", currency: "GBP", retailer: "ebay_uk" },
   { country: "SG", marketplace: "EBAY_SG", currency: "SGD", retailer: "ebay_sg" },
 ];
+
+/**
+ * The market that always searches FIRST, never rotating into a later slot.
+ *
+ * Search order decides who starves: refreshEbayMarkets walks the list and breaks
+ * the moment the Browse budget latches, and a market cut off partway has its
+ * whole pass discarded rather than half-saved. First place is therefore the only
+ * slot that is guaranteed to complete.
+ *
+ * US holds it for two reasons:
+ *   • It is the default market and the largest share of traffic.
+ *   • CA is DERIVED from the US result set (see EBAY_CA_RETAILER and the write
+ *     site), and the derivation is skipped when the US pass truncates. So a
+ *     starved US pass costs two markets, not one — no other market has that
+ *     property.
+ *
+ * The cost is that US no longer shares the risk: whatever slot it vacates, some
+ * other market now occupies. That is an accepted trade, not an oversight — the
+ * remaining three still rotate among themselves so none of THEM is permanently
+ * last, and at ~79% of budget a truncation is far less likely than it was when
+ * this rotation was written and overspending was routine.
+ */
+export const EBAY_PRIORITY_MARKET = "US";
 
 /**
  * Rotated one per day, in this order — EMPTY, because every market we search is
@@ -513,31 +542,35 @@ export const EBAY_ROTATING_MARKETS: EbayMarketCfg[] = [];
  * the write site — a partial set would shrink coverage). So whichever market is
  * last in the array is the one that loses everything when a run overspends.
  *
- * With a fixed [AU, US] order that made starvation systematic rather than
- * shared: AU had first claim on quota every single day and was never once
- * dropped, while US — the default market and the larger share of traffic — took
- * the loss every time, silently, along with CA (derived from the US pass). That
- * is a plausible contributor to US eBay coverage looking thin in reporting.
+ * The original fixed [AU, US] order made starvation systematic rather than
+ * shared: AU had first claim every single day and was never once dropped, while
+ * US took the loss every time, silently, along with CA (derived from the US
+ * pass). That is a plausible contributor to US eBay coverage looking thin.
  *
- * Rotating by day makes the loser different each day instead of always the same
- * market. It does not create quota; it stops one market monopolising it.
+ * ── WHY US IS PINNED AND THE REST ROTATE (2026-08-08) ───────────────────────
+ * The answer to that was briefly "rotate everything", which shared the risk
+ * evenly — including handing the last slot to US one day in four, reintroducing
+ * exactly the failure that motivated the change. US is now pinned to first (see
+ * EBAY_PRIORITY_MARKET, which also explains why US specifically), and the
+ * remaining markets rotate among THEMSELVES so none of them is permanently last.
  *
- * ── WHY A ROTATION AND NOT A REVERSE (2026-08-08) ───────────────────────────
- * This used to alternate with `reverse()` on odd days, which was sufficient for
- * exactly two always-markets. With four it would produce only two orderings —
- * [AU,US,UK,SG] and [SG,UK,US,AU] — so US and UK could NEVER lead, and the
- * starvation this function exists to prevent would simply move to a new pair.
- * Rotating by dayIndex gives every market the lead, and the last (first to be
- * dropped) slot, once every n days.
+ * A rotation, not a `reverse()`: reverse was sufficient for two markets, but
+ * with three rotating it yields only two orderings and one of them could never
+ * escape the last slot.
  */
 export function ebayMarketsForDay(dayIndex: number): EbayMarketCfg[] {
-  const n = EBAY_ALWAYS_MARKETS.length;
+  const lead = EBAY_ALWAYS_MARKETS.filter((m) => m.country === EBAY_PRIORITY_MARKET);
+  // filter, not splice-around-an-index: if EBAY_PRIORITY_MARKET is ever set to a
+  // market that is not in the always-list, `lead` is simply empty and everything
+  // rotates — rather than an index of -1 quietly reordering or dropping a market.
+  const rest = EBAY_ALWAYS_MARKETS.filter((m) => m.country !== EBAY_PRIORITY_MARKET);
+  const n = rest.length;
   // `% n` twice with an added n: dayIndex is derived from a clock and is always
   // positive today, but a negative index would otherwise produce a negative
   // slice offset and silently return a SHORTER market list — a dropped market,
   // not an error.
   const offset = n === 0 ? 0 : ((dayIndex % n) + n) % n;
-  const always = [...EBAY_ALWAYS_MARKETS.slice(offset), ...EBAY_ALWAYS_MARKETS.slice(0, offset)];
+  const always = [...lead, ...rest.slice(offset), ...rest.slice(0, offset)];
   // No rotating markets today. Indexing an empty array here would yield
   // `undefined` and append it, and the pass would crash on `mkt.marketplace`
   // rather than simply searching the always-markets.

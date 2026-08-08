@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
 import {
   orderCardsForEbay, ebayMarketsForDay, EBAY_ROTATING_MARKETS, EBAY_ALWAYS_MARKETS, EBAY_CA_RETAILER,
-  AUCTION_CARDS_PER_MARKET,
+  AUCTION_CARDS_PER_MARKET, EBAY_PRIORITY_MARKET,
 } from "../src/lib/price-import";
 import {
   pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, SETS, isFallbackRetailer,
@@ -436,38 +436,60 @@ test("every market refreshes every day — none is on a rotation", () => {
   }
 });
 
-test("no always-market has permanent first claim on the budget", () => {
+test("US searches first, every single day", () => {
   // Search ORDER decides who starves. refreshEbayMarkets walks the array and
   // breaks the moment the budget latches, and a truncated market's whole pass is
-  // discarded — so the market that is consistently LAST is the one that
-  // consistently gets nothing. With ~4,200 calls against ~4,280 spendable, plus a
-  // second Browse call for every card whose strict query returns zero,
-  // overspending is routine rather than exceptional.
+  // discarded rather than half-saved — so first place is the only slot
+  // guaranteed to complete.
   //
-  // A fixed [AU, US] order meant AU was never once dropped and US always was.
-  // Every always-market must therefore lead on some day.
-  //
-  // This is why the ordering ROTATES rather than alternating with reverse():
-  // reverse() yields only two orderings, so with four markets the middle two
-  // could never lead and starvation would simply move to a new pair.
-  const leaders = new Set<string>();
-  for (let day = 0; day < CYCLE_DAYS; day++) leaders.add(ebayMarketsForDay(day)[0].country);
-  for (const m of EBAY_ALWAYS_MARKETS) {
-    assert.ok(leaders.has(m.country), `${m.country} never searches first — it can be starved indefinitely`);
+  // US holds it permanently: it is the default market and the largest share of
+  // traffic, and CA is DERIVED from the US result set (skipped entirely when the
+  // US pass truncates), so a starved US pass costs two markets rather than one.
+  for (let day = 0; day < CYCLE_DAYS; day++) {
+    assert.equal(
+      ebayMarketsForDay(day)[0].country,
+      EBAY_PRIORITY_MARKET,
+      `day ${day}: ${EBAY_PRIORITY_MARKET} must search first`,
+    );
   }
+  // The chase and auction passes take no dayIndex — they are handed
+  // EBAY_ALWAYS_MARKETS and walk it as declared. Pinning US in the rotation alone
+  // would still leave it second in two of the three passes that spend quota.
+  assert.equal(
+    EBAY_ALWAYS_MARKETS[0].country,
+    EBAY_PRIORITY_MARKET,
+    "the raw always-list must also lead with US — the chase and auction passes read it directly",
+  );
 });
 
-test("every market also takes the last, first-to-be-dropped slot in turn", () => {
-  // The mirror of the test above and the one that actually matters: leading is
-  // only worth something if the LAST slot — the one discarded when the budget
-  // latches mid-pass — is shared too.
+test("US is never last, and the other markets share the last slot in turn", () => {
+  // The cost of pinning US is that it no longer shares the risk — whatever slot
+  // it vacates, another market occupies. That is accepted, but the remaining
+  // markets must still rotate among themselves: a fixed order would simply move
+  // the permanent-loser problem to whichever market was declared last.
   const trailers = new Set<string>();
   for (let day = 0; day < CYCLE_DAYS; day++) {
     const codes = ebayMarketsForDay(day).map((m) => m.country);
-    trailers.add(codes[codes.length - 1]);
+    const last = codes[codes.length - 1];
+    assert.notEqual(last, EBAY_PRIORITY_MARKET, `day ${day}: ${EBAY_PRIORITY_MARKET} must never be the dropped market`);
+    trailers.add(last);
   }
   for (const m of EBAY_ALWAYS_MARKETS) {
+    if (m.country === EBAY_PRIORITY_MARKET) continue;
     assert.ok(trailers.has(m.country), `${m.country} is never last — some other market always absorbs the loss`);
+  }
+});
+
+test("pinning US does not drop or duplicate a market", () => {
+  // The failure mode of a splice-around-an-index implementation: a priority
+  // market that is not in the always-list yields index -1, which silently
+  // reorders or removes an entry instead of erroring.
+  for (let day = 0; day < CYCLE_DAYS; day++) {
+    const codes = ebayMarketsForDay(day).map((m) => m.country);
+    assert.equal(new Set(codes).size, codes.length, `day ${day}: duplicate market in ${codes.join(",")}`);
+    for (const m of EBAY_ALWAYS_MARKETS) {
+      assert.ok(codes.includes(m.country), `day ${day}: ${m.country} vanished from the order`);
+    }
   }
 });
 
