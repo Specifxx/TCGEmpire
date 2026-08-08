@@ -24,7 +24,7 @@ import { SITE_URL } from "@/lib/site";
 import { PriceHistoryChart } from "@/components/PriceHistoryChart";
 import { getPriceHistory } from "@/lib/price-history";
 import { CardConversionCta } from "@/components/CardConversionCta";
-import { AiInsight } from "@/components/AiInsight";
+import { PriceTake } from "@/components/PriceTake";
 import { CardPriceMetrics, CardPriceComparison, type EbaySearchMap } from "@/components/CardMarketSection";
 import { MarketplaceHeroBlock } from "@/components/MarketplaceHeroBlock";
 import { getActiveListingsForCard } from "@/lib/marketplace";
@@ -858,15 +858,18 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             <CardConversionCta cardId={card.id} />
           </div>
 
-          {/* AI Tips — hidden entirely while the AdSense review is open.
-              It is explicitly AI-labelled, it comments on price direction, and it
-              reads as quasi-financial advice: three separate things a reviewer
-              marks down, on the site's highest-volume template. Restored by
-              setting NEXT_PUBLIC_ADSENSE_REVIEW_MODE=false after approval.
+          {/* Price Take (formerly "AI Tips") — hidden entirely while the AdSense
+              review is open. Two of the three reasons still stand: it comments on
+              price direction and reads as quasi-financial advice, on the site's
+              highest-volume template. The third — an explicit AI label in the
+              heading — is gone, but the module still discloses AI authorship in
+              its footer, correctly, so this stays gated until approval rather
+              than being quietly restored on the strength of a rename. Restored by
+              setting NEXT_PUBLIC_ADSENSE_REVIEW_MODE=false.
               See docs/adsense-remediation.md § Phase 9. */}
           {!ADSENSE_REVIEW_MODE && (
             <section className="card-surface mt-6 p-5">
-              <AiInsight cardId={card.id} />
+              <PriceTake cardId={card.id} />
             </section>
           )}
 

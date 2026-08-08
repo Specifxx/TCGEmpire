@@ -20,7 +20,7 @@ import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { buyButtonClass, buyButtonLabel } from "./CardMarketSection";
 import { useCountry } from "./CountryProvider";
 import { PriceChart } from "./PriceChart";
-import { AiInsight } from "./AiInsight";
+import { PriceTake } from "./PriceTake";
 import type { PricePoint } from "@/lib/price-history";
 
 // eBay marketplace per country for the quota-fallback search link. NZ has no
@@ -441,9 +441,9 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
               </div>
             )}
 
-            {/* AI Tips — funny buy/hold/wait take */}
+            {/* Price Take — funny buy/hold/wait read */}
             <div className="mt-4">
-              <AiInsight cardId={card.id} compact />
+              <PriceTake cardId={card.id} compact />
             </div>
           </div>
         </div>

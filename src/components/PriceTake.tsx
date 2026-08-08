@@ -14,9 +14,18 @@ const STYLE: Record<Verdict, { chip: string; ring: string; dot: string }> = {
   UNKNOWN: { chip: "bg-ink-800 text-slate-400", ring: "border-ink-700", dot: "bg-ink-600" },
 };
 
-// "AI Tips" — a funny, narrative buy/hold/wait take on a card. Fetched lazily so it
-// never blocks the rest of the card view.
-export function AiInsight({ cardId, compact = false }: { cardId: string; compact?: boolean }) {
+// "Price Take" — a funny, narrative buy/hold/wait read on a card. Fetched lazily
+// so it never blocks the rest of the card view.
+//
+// The heading deliberately does NOT say "AI". It used to be "AI Tips" with a
+// "Live AI" badge, which put the technology in the headline of a module whose
+// actual subject is the card's price. The disclosure in the footer stays, and
+// stays specific: the prose genuinely is LLM-written whenever a key is set (see
+// lib/ai-insight.ts), so dropping it would leave AI-generated commentary
+// undisclosed — the thing ad reviewers penalise, rather than the labelling.
+// Renaming the panel and disclosing authorship are not in tension.
+const PANEL_TITLE = "Price Take";
+export function PriceTake({ cardId, compact = false }: { cardId: string; compact?: boolean }) {
   const { country } = useCountry();
   const [insight, setInsight] = useState<Insight | null>(null);
   const [failed, setFailed] = useState(false);
@@ -38,12 +47,11 @@ export function AiInsight({ cardId, compact = false }: { cardId: string; compact
   return (
     <div className={`rounded-lg border ${s.ring} bg-ink-950/40 p-4`}>
       <div className="mb-1.5 flex items-center gap-2">
-        <span className="text-xs font-bold uppercase tracking-wide text-slate-300">AI Tips</span>
-        {insight?.source === "ai" ? (
-          <span className="chip bg-brand-500/15 text-[10px] font-semibold uppercase tracking-wide text-brand-300">Live AI</span>
-        ) : (
-          <span className="chip bg-brand-500/10 text-[10px] font-semibold uppercase tracking-wide text-brand-300">Beta</span>
-        )}
+        <span className="text-xs font-bold uppercase tracking-wide text-slate-300">{PANEL_TITLE}</span>
+        {/* The old "Live AI" / "Beta" pair leaked the implementation into the UI:
+            it told the reader which code path had run, which is not something
+            they can act on, and put "AI" back in the header the rename removed.
+            A reader who wants to know how the prose is written has the footer. */}
         {insight && (
           <span className={`ml-auto chip inline-flex items-center gap-1.5 text-[11px] font-bold ${s.chip}`}>
             <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} aria-hidden />

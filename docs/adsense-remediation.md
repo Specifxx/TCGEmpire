@@ -79,7 +79,7 @@ Sitemaps changed in this pass (thin and empty pages were removed from them). Re-
 NEXT_PUBLIC_ADSENSE_REVIEW_MODE=false
 ```
 
-That restores the homepage Premium teaser and the AI Tips module. Then choose an ad
+That restores the homepage Premium teaser and the Price Take module. Then choose an ad
 strategy — `NEXT_PUBLIC_AD_STRATEGY=auto` (default; enable Auto ads in the console) or
 `manual` (turn Auto ads **off** in the console first). Never both.
 
@@ -688,11 +688,14 @@ tightened to only flag known retailer/affiliate hosts, for the same reason.
 | `/tools/rising`, `/tools/value-finder` | 1 pick + 4 blurred placeholder rows + upsell overlay | **Full list** |
 | `/tools/deal-finder` | First row sharp, the rest blurred behind an overlay | **Full table** |
 | `/portfolio` | Two blurred Premium preview panels | **Rendered** |
-| **AI Tips module** on every card page | Rendered | **Hidden entirely** |
+| **Price Take module** on every card page | Rendered | **Hidden entirely** |
 
-The AI Tips module is hidden rather than reworded: it is explicitly AI-labelled, it
-comments on price direction, and it reads as quasi-financial advice — three separate
-things a reviewer marks down, on the site's highest-volume template.
+The Price Take module (renamed from "AI Tips" on 2026-08-08) is hidden rather than
+reworded: it comments on price direction and reads as quasi-financial advice, on the
+site's highest-volume template. The rename removed the third strike — an explicit AI
+label in the heading — but the module still discloses AI authorship in its footer,
+which is correct and deliberate: undisclosed AI commentary is what a reviewer marks
+down, not disclosed commentary. A rename is not grounds to restore it early.
 
 `/portfolio` is `noindex` already, but noindex is not unreachable: a reviewer following
 links from the header lands on it, and a blur reads as a paywall wherever it appears.
