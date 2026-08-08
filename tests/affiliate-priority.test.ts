@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
 import {
   orderCardsForEbay, ebayMarketsForDay, EBAY_ROTATING_MARKETS, EBAY_ALWAYS_MARKETS, EBAY_CA_RETAILER,
+  AUCTION_CARDS_PER_MARKET,
 } from "../src/lib/price-import";
 import {
   pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, SETS, isFallbackRetailer,
@@ -332,9 +333,21 @@ test("the union covers every per-market list — a new market cannot be forgotte
 // started. These pin the arithmetic so catalogue growth trips a test, not a
 // silent gap in coverage.
 
-const CATALOGUE = 1400;      // cards queried per market, as of the VEN launch
-const SPENDABLE = 4280;      // 5000 daily limit − 600 reserve − ~120 already spent
+const FULL_CATALOGUE = 1400; // every card, as of the VEN launch
+// Cards that actually get a Browse call, after eBayWorthSearching drops
+// Common/Uncommon base prints and anything under $20 TCGplayer US. Measured from
+// production on 2026-08-08: 205 cards priced at or above the floor, plus the ~34
+// with no US price at all (kept deliberately — see the "unknown ≠ cheap" rule),
+// rounded up for the ones priced only by a non-TCGplayer US retailer.
+const CATALOGUE = 280;
+const CHASE_PRINTINGS = 179; // promo+signature+overnumbered at or above the floor
+const SEALED_PER_RUN = 104;  // US 53 + AU 33 + UK 11 + SG 7, before the loose-pack cut
+const SPENDABLE = 4400;      // 5000 daily limit − 600 reserve
 const SECONDS_PER_CARD = 0.75;
+// A card whose strict query returns nothing costs a SECOND Browse call for the
+// no-"Riftbound" retry. Applies to singles only (sealed and auctions each make
+// exactly one call), and is the single largest source of error in this model.
+const RETRY_RATE = 0.25;
 // Read from the workflow rather than copied, so raising one without the other
 // cannot silently reintroduce the mid-market kill.
 const JOB_TIMEOUT_MIN = Number(
@@ -342,30 +355,84 @@ const JOB_TIMEOUT_MIN = Number(
 );
 const STORE_IMPORT_MIN = 18; // the store pass that runs before eBay in the same job
 
-test("a day's markets fit inside the eBay Browse budget", () => {
-  for (let day = 0; day < EBAY_ROTATING_MARKETS.length; day++) {
-    const calls = ebayMarketsForDay(day).length * CATALOGUE;
+// Days to exercise. Keyed off the ALWAYS list, never off EBAY_ROTATING_MARKETS:
+// that list is now empty, and `day < EBAY_ROTATING_MARKETS.length` would run
+// every loop below ZERO times and pass vacuously — the tests would still be
+// green while asserting nothing at all.
+const CYCLE_DAYS = Math.max(EBAY_ALWAYS_MARKETS.length, EBAY_ROTATING_MARKETS.length, 1) * 2;
+
+/**
+ * Browse calls for one whole DAY, not one pass.
+ *
+ * Modelling the catalogue alone is what made the old numbers wrong: the chase
+ * pass and the auction pass are handed EBAY_ALWAYS_MARKETS directly, and the
+ * auction and sealed passes each run TWICE a day (07:00 and 19:00 UTC). A market
+ * added to ALWAYS therefore multiplies three passes, not one.
+ */
+function dailyCalls(day: number): number {
+  const markets = ebayMarketsForDay(day).length;
+  const always = EBAY_ALWAYS_MARKETS.length;
+  const singles = markets * CATALOGUE + always * CHASE_PRINTINGS;
+  const auctions = always * AUCTION_CARDS_PER_MARKET * 2;
+  const sealed = SEALED_PER_RUN * 2;
+  return Math.round(singles * (1 + RETRY_RATE)) + auctions + sealed;
+}
+
+test("a whole day of eBay passes fits inside the Browse budget", () => {
+  for (let day = 0; day < CYCLE_DAYS; day++) {
+    const calls = dailyCalls(day);
     assert.ok(calls <= SPENDABLE, `day ${day}: ${calls} calls exceeds the ${SPENDABLE} budget`);
   }
 });
 
+test("the budget model counts the passes that actually run twice a day", () => {
+  // The failure this pins is an accounting one, not a runtime one: auctions and
+  // sealed were both counted once a day when each in fact runs after BOTH the
+  // 07:00 and 19:00 imports. Undercounting them is how a budget that looks
+  // comfortable turns out to be overspent in production.
+  const src = readFileSync("src/lib/price-import.ts", "utf8");
+  const auctionCalls = (src.match(/await refreshEbayAuctions\(/g) ?? []).length;
+  assert.equal(auctionCalls, 2, "auctions must run in both the full and the chase pass");
+  const sealed = readFileSync("src/lib/sealed-import.ts", "utf8");
+  assert.ok(
+    !/ebayDue|chaseDue|lastSeen/.test(sealed),
+    "sealed has no staleness gate — if one is added, the ×2 in dailyCalls must change",
+  );
+});
+
 test("a day's markets fit inside the job timeout", () => {
-  for (let day = 0; day < EBAY_ROTATING_MARKETS.length; day++) {
-    const mins = STORE_IMPORT_MIN + (ebayMarketsForDay(day).length * CATALOGUE * SECONDS_PER_CARD) / 60;
+  for (let day = 0; day < CYCLE_DAYS; day++) {
+    const markets = ebayMarketsForDay(day).length;
+    // The morning job is the long one: stores, then the full catalogue across
+    // every market, then auctions.
+    const cards = markets * CATALOGUE + EBAY_ALWAYS_MARKETS.length * AUCTION_CARDS_PER_MARKET;
+    const mins = STORE_IMPORT_MIN + (cards * SECONDS_PER_CARD) / 60;
     assert.ok(mins <= JOB_TIMEOUT_MIN, `day ${day}: ~${mins.toFixed(0)} min exceeds the ${JOB_TIMEOUT_MIN} min timeout`);
   }
 });
 
-test("the old 4-market layout would NOT have fit — this is what broke", () => {
-  // Guards against someone "just adding UK back to ALWAYS".
-  assert.ok(4 * CATALOGUE > SPENDABLE, "4 markets should not fit the budget");
+test("four daily markets fit ONLY because of the value floor", () => {
+  // UK and SG were demoted to a rotation on 2026-08-03 because 4 × the full
+  // catalogue did not fit, and promoted back on 2026-08-08 because the $20 floor
+  // shrank the searched set. Both halves are asserted: if the floor is ever
+  // removed or bypassed, four daily markets stop fitting and this fails rather
+  // than silently truncating a market's entire pass again.
+  assert.ok(
+    4 * FULL_CATALOGUE > SPENDABLE,
+    "4 markets × the FULL catalogue should still not fit — that constraint has not gone away",
+  );
+  assert.ok(
+    4 * CATALOGUE <= SPENDABLE,
+    "4 markets × the SEARCHED catalogue must fit, or UK/SG cannot be daily markets",
+  );
 });
 
-test("AU and US refresh every day", () => {
-  for (let day = 0; day < EBAY_ROTATING_MARKETS.length; day++) {
+test("every market refreshes every day — none is on a rotation", () => {
+  for (let day = 0; day < CYCLE_DAYS; day++) {
     const codes = ebayMarketsForDay(day).map((m) => m.country);
-    assert.ok(codes.includes("AU"), `day ${day} missing AU`);
-    assert.ok(codes.includes("US"), `day ${day} missing US`);
+    for (const m of EBAY_ALWAYS_MARKETS) {
+      assert.ok(codes.includes(m.country), `day ${day} missing ${m.country}`);
+    }
   }
 });
 
@@ -379,31 +446,68 @@ test("no always-market has permanent first claim on the budget", () => {
   //
   // A fixed [AU, US] order meant AU was never once dropped and US always was.
   // Every always-market must therefore lead on some day.
+  //
+  // This is why the ordering ROTATES rather than alternating with reverse():
+  // reverse() yields only two orderings, so with four markets the middle two
+  // could never lead and starvation would simply move to a new pair.
   const leaders = new Set<string>();
-  const DAYS = EBAY_ROTATING_MARKETS.length * 4;
-  for (let day = 0; day < DAYS; day++) leaders.add(ebayMarketsForDay(day)[0].country);
+  for (let day = 0; day < CYCLE_DAYS; day++) leaders.add(ebayMarketsForDay(day)[0].country);
   for (const m of EBAY_ALWAYS_MARKETS) {
     assert.ok(leaders.has(m.country), `${m.country} never searches first — it can be starved indefinitely`);
   }
 });
 
-test("the always-markets always precede the rotating one", () => {
-  // The rotating market is the intended sacrifice when quota runs short: it is
-  // at most ~48h stale by design, whereas an always-market missing its slot is
-  // a coverage gap in a market we promise daily prices for.
-  for (let day = 0; day < EBAY_ROTATING_MARKETS.length * 2; day++) {
+test("every market also takes the last, first-to-be-dropped slot in turn", () => {
+  // The mirror of the test above and the one that actually matters: leading is
+  // only worth something if the LAST slot — the one discarded when the budget
+  // latches mid-pass — is shared too.
+  const trailers = new Set<string>();
+  for (let day = 0; day < CYCLE_DAYS; day++) {
     const codes = ebayMarketsForDay(day).map((m) => m.country);
+    trailers.add(codes[codes.length - 1]);
+  }
+  for (const m of EBAY_ALWAYS_MARKETS) {
+    assert.ok(trailers.has(m.country), `${m.country} is never last — some other market always absorbs the loss`);
+  }
+});
+
+test("the always-markets always precede any rotating one", () => {
+  // A rotating market is the intended sacrifice when quota runs short: it is at
+  // most ~48h stale by design, whereas an always-market missing its slot is a
+  // coverage gap in a market we promise daily prices for.
+  //
+  // The rotation is empty today, so this asserts the vacuous case explicitly
+  // rather than looping zero times and reporting a pass: every market a day
+  // schedules must be an always-market.
+  for (let day = 0; day < CYCLE_DAYS; day++) {
+    const codes = ebayMarketsForDay(day).map((m) => m.country);
+    if (EBAY_ROTATING_MARKETS.length === 0) {
+      for (const c of codes) {
+        assert.ok(
+          EBAY_ALWAYS_MARKETS.some((m) => m.country === c),
+          `day ${day}: ${c} is scheduled but is not an always-market`,
+        );
+      }
+      continue;
+    }
     const rotatingAt = codes.findIndex((c) => EBAY_ROTATING_MARKETS.some((m) => m.country === c));
     assert.equal(rotatingAt, codes.length - 1, `day ${day}: rotating market must be last, got ${codes.join("→")}`);
   }
 });
 
 test("a day's market set is the same whichever order it is in", () => {
-  // Alternating priority must not change WHICH markets run — only their order.
-  for (let day = 0; day < EBAY_ROTATING_MARKETS.length * 2; day++) {
+  // Rotating priority must not change WHICH markets run — only their order.
+  // The rotation dropping or duplicating a market is the exact failure a naive
+  // slice-based rotation produces on a negative or out-of-range index.
+  const expected = EBAY_ALWAYS_MARKETS.length + (EBAY_ROTATING_MARKETS.length > 0 ? 1 : 0);
+  for (let day = 0; day < CYCLE_DAYS; day++) {
     const codes = ebayMarketsForDay(day).map((m) => m.country).sort();
     assert.equal(new Set(codes).size, codes.length, `day ${day}: duplicate market in ${codes.join(",")}`);
-    assert.equal(codes.length, EBAY_ALWAYS_MARKETS.length + 1, `day ${day}: wrong market count`);
+    assert.equal(codes.length, expected, `day ${day}: wrong market count — ${codes.join(",")}`);
+  }
+  // Negative indices must not silently shorten the list (see the modulo guard).
+  for (const day of [-1, -3, -7]) {
+    assert.equal(ebayMarketsForDay(day).length, expected, `day ${day}: negative index changed the market count`);
   }
 });
 
@@ -431,19 +535,28 @@ test("eBay staleness is judged per market, not across all markets at once", () =
   );
 });
 
-test("every rotating market comes round, and none is ever skipped forever", () => {
+test("every market we search comes round, and none is ever skipped forever", () => {
   const seen = new Set<string>();
-  for (let day = 0; day < EBAY_ROTATING_MARKETS.length * 3; day++) {
+  for (let day = 0; day < CYCLE_DAYS; day++) {
     for (const m of ebayMarketsForDay(day)) seen.add(m.country);
   }
-  for (const m of EBAY_ROTATING_MARKETS) assert.ok(seen.has(m.country), `${m.country} never scheduled`);
+  // Both lists, so this keeps working whether a market is daily or rotating.
+  for (const m of [...EBAY_ALWAYS_MARKETS, ...EBAY_ROTATING_MARKETS]) {
+    assert.ok(seen.has(m.country), `${m.country} never scheduled`);
+  }
+  // The four markets the site actually sells into. UK and SG were on a rotation
+  // between 2026-08-03 and 2026-08-08 and were each ~48h stale by design; they
+  // are daily again, and a silent demotion would show up here.
+  for (const c of ["AU", "US", "UK", "SG"]) {
+    assert.ok(seen.has(c), `${c} is not searched at all`);
+  }
 });
 
 test("CANADA costs no quota — it is not a searched market", () => {
   // CA reuses the US result set converted to CAD: eBay US ships to Canada, so
   // the listings are substantially the same and a separate ~1,400-call pass for
   // the smallest market is not worth the budget.
-  for (let day = 0; day < EBAY_ROTATING_MARKETS.length; day++) {
+  for (let day = 0; day < CYCLE_DAYS; day++) {
     assert.ok(
       !ebayMarketsForDay(day).some((m) => m.country === "CA"),
       `day ${day} still searches eBay CA`,

@@ -163,13 +163,49 @@ test("allowGraded relaxes ONLY grading, not the lot/sealed/foreign guards", () =
 // ── 4. Quota ─────────────────────────────────────────────────────────────────
 
 test("the auction pass is bounded and cannot outgrow the price pass", () => {
-  const CATALOGUE = 1400; // cards per market in the singles pass
-  const auctionCalls = AUCTION_CARDS_PER_MARKET * EBAY_ALWAYS_MARKETS.length;
+  // Counted per DAY. The pass runs after BOTH the full and the chase import, so
+  // one card here is AUCTION_CARDS_PER_MARKET × markets × 2 calls — the factor
+  // that was missing when this was first sized against a single run.
+  const RUNS_PER_DAY = 2;
+  const auctionCalls = AUCTION_CARDS_PER_MARKET * EBAY_ALWAYS_MARKETS.length * RUNS_PER_DAY;
+  // Singles per day: the searched catalogue across every market, plus the chase
+  // printings again in the evening. See tests/affiliate-priority.test.ts for the
+  // provenance of these figures.
+  const SINGLES_PER_DAY = 280 * EBAY_ALWAYS_MARKETS.length + 179 * EBAY_ALWAYS_MARKETS.length;
   assert.ok(
-    auctionCalls < CATALOGUE * 0.1,
-    `auctions cost ${auctionCalls} calls — must stay a rounding error beside the ${CATALOGUE}-card price pass`,
+    auctionCalls < SINGLES_PER_DAY,
+    `auctions cost ${auctionCalls} calls/day — prices (${SINGLES_PER_DAY}) must remain the larger claim on the budget`,
   );
   assert.ok(AUCTION_MIN_VALUE_CENTS > 0, "a value floor must exist — a bid on a $2 card says nothing");
+});
+
+test("the auction cap stays inside the inventory that actually exists", () => {
+  // The binding constraint is the eligible POOL, not quota: cards at or above
+  // AUCTION_MIN_VALUE_CENTS in the market's own currency, measured on production
+  // 2026-08-08 as AU 200 / US 204 / UK 156 / SG 174. Setting the cap past the
+  // smallest pool spends calls querying a tier that has no more cards in it.
+  const SMALLEST_POOL = 156; // UK
+  assert.ok(
+    AUCTION_CARDS_PER_MARKET <= SMALLEST_POOL,
+    `cap of ${AUCTION_CARDS_PER_MARKET} exceeds the smallest chase tier (${SMALLEST_POOL} cards) — the excess finds nothing`,
+  );
+  assert.ok(AUCTION_CARDS_PER_MARKET >= 60, "the cap should not silently regress below its original value");
+});
+
+test("a day's auctions leave room for the evening chase pass", () => {
+  // The quota is DAILY, so the auction pass following the 07:00 import competes
+  // with the 19:00 chase pass for the same allowance. "Auctions run last and
+  // yield" holds within a run and says nothing about across runs — this is the
+  // guard for that gap.
+  const n = EBAY_ALWAYS_MARKETS.length;
+  const SPENDABLE = 4400;
+  const auctions = AUCTION_CARDS_PER_MARKET * n * 2;
+  const singles = Math.round((280 * n + 179 * n) * 1.25); // catalogue + chase, with retries
+  const sealed = 104 * 2;
+  assert.ok(
+    auctions + singles + sealed <= SPENDABLE,
+    `${auctions + singles + sealed} calls/day exceeds the ${SPENDABLE} budget — the evening chase pass would truncate`,
+  );
 });
 
 test("auctions run after prices and yield the budget to them", () => {

@@ -465,33 +465,42 @@ function gradedRowsFor(
 
 export interface EbayMarketCfg { country: string; marketplace: string; currency: string; retailer: string }
 
-/** Searched on EVERY run. */
+/**
+ * Searched on EVERY run.
+ *
+ * ── WHY UK AND SG CAME BACK (2026-08-08) ────────────────────────────────────
+ * They were demoted to a rotation on 2026-08-03 for one reason: 4 markets ×
+ * ~1,400 cards = 5,600 Browse calls did not fit a ~4,280 budget, and a run that
+ * overspent had its last market discarded whole. The fix then was to search
+ * fewer markets.
+ *
+ * The $20 value floor (see eBayWorthSearching) removed the cause instead: the
+ * searched catalogue is now ~240 cards, not ~1,400, so 4 × ~240 ≈ 960 calls —
+ * roughly a fifth of what forced the demotion. UK and SG no longer have to take
+ * turns, and neither is ever ~48h stale again.
+ *
+ * THIS LIST IS LOAD-BEARING IN THREE PLACES, not one. The catalogue pass builds
+ * from ebayMarketsForDay, but refreshEbayChasePrintings and refreshEbayAuctions
+ * are handed EBAY_ALWAYS_MARKETS directly — and the auction pass runs TWICE a
+ * day (once per pass). Adding a market here multiplies all three, so a fifth
+ * market costs far more than one catalogue sweep. tests/affiliate-priority.test.ts
+ * models the whole day rather than the catalogue alone, for exactly that reason.
+ */
 export const EBAY_ALWAYS_MARKETS: EbayMarketCfg[] = [
   { country: "AU", marketplace: "EBAY_AU", currency: "AUD", retailer: "ebay" },
   { country: "US", marketplace: "EBAY_US", currency: "USD", retailer: "ebay_us" },
-];
-
-/**
- * Rotated one per day, in this order. Add a market and the rotation just gets
- * one day longer — no other change needed.
- *
- * ── WHY UK MOVED OUT OF `ALWAYS` (2026-08-03) ───────────────────────────────
- * The original split was sized for ~1.1k cards. Vendetta took the catalogue to
- * 1,400, and 4 markets × 1,400 = 5,600 Browse calls against a 4,280 budget no
- * longer fits — nor does it fit the 55-minute job timeout at the measured
- * ~0.75s/card. A forced run on 2026-08-03 completed AU (17.6 min) and US
- * (10.1 min), then was KILLED 9 minutes into UK. UK wrote nothing (a truncated
- * market is discarded, never half-saved) and the rotating market never started.
- *
- * So SG/CA had silently stopped refreshing altogether: every run died during UK
- * before reaching them. Two daily markets + one rotating is 3 × 1,400 = 4,200,
- * inside the budget, and each rotating market is at most ~48h stale — far better
- * than one that never runs at all.
- */
-export const EBAY_ROTATING_MARKETS: EbayMarketCfg[] = [
   { country: "UK", marketplace: "EBAY_GB", currency: "GBP", retailer: "ebay_uk" },
   { country: "SG", marketplace: "EBAY_SG", currency: "SGD", retailer: "ebay_sg" },
 ];
+
+/**
+ * Rotated one per day, in this order — EMPTY, because every market we search is
+ * now a daily one. Kept rather than deleted: the rotation is the release valve
+ * if the searched catalogue grows back (a large set launches with no TCGplayer
+ * prices, and "unknown ≠ cheap" keeps all of them), and re-adding a market here
+ * needs no other change. ebayMarketsForDay handles the empty case explicitly.
+ */
+export const EBAY_ROTATING_MARKETS: EbayMarketCfg[] = [];
 
 /**
  * The markets a run on `dayIndex` will search, IN THE ORDER IT WILL SEARCH THEM.
@@ -504,23 +513,35 @@ export const EBAY_ROTATING_MARKETS: EbayMarketCfg[] = [
  * the write site — a partial set would shrink coverage). So whichever market is
  * last in the array is the one that loses everything when a run overspends.
  *
- * The budget is genuinely tight: 3 markets × ~1,400 cards = 4,200 calls against
- * ~4,280 spendable, and every card whose strict query returns nothing costs a
- * SECOND call for the no-"Riftbound" retry — so overspending is the normal case,
- * not the exceptional one.
- *
  * With a fixed [AU, US] order that made starvation systematic rather than
  * shared: AU had first claim on quota every single day and was never once
  * dropped, while US — the default market and the larger share of traffic — took
  * the loss every time, silently, along with CA (derived from the US pass). That
  * is a plausible contributor to US eBay coverage looking thin in reporting.
  *
- * Alternating by day makes the loser different each day instead of always the
- * same market. It does not create quota; it stops one market monopolising it.
+ * Rotating by day makes the loser different each day instead of always the same
+ * market. It does not create quota; it stops one market monopolising it.
+ *
+ * ── WHY A ROTATION AND NOT A REVERSE (2026-08-08) ───────────────────────────
+ * This used to alternate with `reverse()` on odd days, which was sufficient for
+ * exactly two always-markets. With four it would produce only two orderings —
+ * [AU,US,UK,SG] and [SG,UK,US,AU] — so US and UK could NEVER lead, and the
+ * starvation this function exists to prevent would simply move to a new pair.
+ * Rotating by dayIndex gives every market the lead, and the last (first to be
+ * dropped) slot, once every n days.
  */
 export function ebayMarketsForDay(dayIndex: number): EbayMarketCfg[] {
-  const always =
-    dayIndex % 2 === 0 ? [...EBAY_ALWAYS_MARKETS] : [...EBAY_ALWAYS_MARKETS].reverse();
+  const n = EBAY_ALWAYS_MARKETS.length;
+  // `% n` twice with an added n: dayIndex is derived from a clock and is always
+  // positive today, but a negative index would otherwise produce a negative
+  // slice offset and silently return a SHORTER market list — a dropped market,
+  // not an error.
+  const offset = n === 0 ? 0 : ((dayIndex % n) + n) % n;
+  const always = [...EBAY_ALWAYS_MARKETS.slice(offset), ...EBAY_ALWAYS_MARKETS.slice(0, offset)];
+  // No rotating markets today. Indexing an empty array here would yield
+  // `undefined` and append it, and the pass would crash on `mkt.marketplace`
+  // rather than simply searching the always-markets.
+  if (EBAY_ROTATING_MARKETS.length === 0) return always;
   return [...always, EBAY_ROTATING_MARKETS[dayIndex % EBAY_ROTATING_MARKETS.length]];
 }
 
@@ -531,10 +552,11 @@ export const EBAY_CA_RETAILER = "ebay_ca";
 // Auctions are searched for a SMALL, high-value subset, never the whole
 // catalogue. Three reasons, in order of importance:
 //
-//  1. Quota. The singles pass already runs ~3 markets × the full catalogue
-//     against a budget that barely fits it (see ebayMarketsForDay). A per-card
-//     auction call across 1,400 cards would not fit, and the market that lost
-//     would be a real coverage gap rather than a missing widget.
+//  1. Quota. The singles pass runs 4 markets against a shared daily budget, and
+//     this pass runs TWICE a day (once per singles pass) across all four — so a
+//     card added here costs 8 calls/day, not one. A per-card auction call across
+//     the whole catalogue would not fit, and the market that lost would be a
+//     real coverage gap rather than a missing widget.
 //  2. Inventory. Nobody auctions a common. Auctions exist for the tier where
 //     price discovery actually happens.
 //  3. Value. A bid on a $2 card tells a reader nothing. A bid at 51% of the
@@ -543,7 +565,23 @@ export const EBAY_CA_RETAILER = "ebay_ca";
 //
 // The tier is defined the same way the site already defines "chase" for display
 // (see getChaseCards): signature prints first, then by value.
-export const AUCTION_CARDS_PER_MARKET = Number(process.env.EBAY_AUCTION_CARDS ?? 60);
+//
+// ── WHY 120 (2026-08-08) ────────────────────────────────────────────────────
+// Doubled from 60 once the value floor freed the budget. The ceiling that
+// matters is not quota but INVENTORY: the eligible pool is cards at or above
+// AUCTION_MIN_VALUE_CENTS in that market's own currency, measured on 2026-08-08
+// as AU 200 / US 204 / UK 156 / SG 174. Past roughly 150 the extra calls query a
+// tier that has no more cards in it, so they buy nothing.
+//
+// Held at 120 rather than pushed to the pool size because of a cross-pass
+// interaction that is easy to miss: the quota is DAILY, not per-run, so the
+// auction pass that runs after the 07:00 import is spending the same allowance
+// the 19:00 chase pass needs. "Auctions run last and yield" is true within a
+// run — it does not protect the evening pass from the morning's auctions. At 120
+// a day models to ~79% of the spendable budget, leaving real room for a set
+// launch, when every unpriced new card is kept by design (unknown ≠ cheap) and
+// the searched catalogue roughly doubles.
+export const AUCTION_CARDS_PER_MARKET = Number(process.env.EBAY_AUCTION_CARDS ?? 120);
 /** Auctions on cards below this (in the market's own cents) aren't worth a call. */
 export const AUCTION_MIN_VALUE_CENTS = Number(process.env.EBAY_AUCTION_MIN_CENTS ?? 2000);
 /** Live auctions kept per card per market. */
@@ -581,21 +619,9 @@ export async function refreshEbayMarkets(
   // fits ~4×1.1k ≈ 4.4k inside the budget, and each rotating market is at most ~24h
   // staler than the others — far better than one of them being permanently skipped.
   const ALWAYS = EBAY_ALWAYS_MARKETS;
-  // Rotated one-per-day, in this order. Add a market here and the rotation just
-  // gets one day longer — no other change needed.
-  //
-  // ── WHY UK MOVED OUT OF `ALWAYS` (2026-08-03) ───────────────────────────────
-  // The arithmetic above was written for ~1.1k cards. Vendetta took the catalogue
-  // to 1,400, and 4 markets × 1,400 = 5,600 calls against a 4,280 budget no
-  // longer fits — nor does it fit the 55-minute job timeout at the measured
-  // ~0.75s/card. A forced run on 2026-08-03 did AU (17.6 min) and US (10.1 min),
-  // then was KILLED 9 minutes into UK; UK wrote nothing (a truncated market is
-  // discarded, not half-saved) and the rotating market never started at all.
-  //
-  // So SG/CA had silently stopped refreshing entirely: every run died during UK
-  // before reaching them. Two daily markets + one rotating is 3 × 1,400 = 4,200,
-  // which fits the budget, and each rotating market is at most ~48h stale —
-  // far better than one that never runs.
+  // Empty today — every market we search is a daily one. See the note on
+  // EBAY_ROTATING_MARKETS for why UK and SG left the rotation on 2026-08-08 and
+  // why the mechanism is kept rather than deleted.
   const ROTATING = EBAY_ROTATING_MARKETS;
   const ALL = [...ALWAYS, ...ROTATING];
 
@@ -622,9 +648,11 @@ export async function refreshEbayMarkets(
     console.log(
       `eBay market rotation: ${markets.map((m) => m.country).join(" → ")} ` +
         `(search order; the LAST market is the one dropped if the budget runs out. ` +
-        `${ALWAYS.map((m) => m.country).join("/")} daily with alternating priority, ` +
-        `${ROTATING.map((m) => m.country).join("/")} alternate by Sydney day; ` +
-        `use EBAY_ONLY_MARKET=<code> to refresh one off-cycle).`
+        `${ALWAYS.map((m) => m.country).join("/")} daily, priority rotating by Sydney day` +
+        // Empty today: every market is daily. Without this the line printed a
+        // dangling ", alternate by Sydney day" with nothing named in front of it.
+        (ROTATING.length ? `; ${ROTATING.map((m) => m.country).join("/")} alternate by Sydney day` : "") +
+        `; use EBAY_ONLY_MARKET=<code> to refresh one off-cycle).`
     );
   }
   // Check the live quota and set a spend budget (leaves a reserve) so this can never
