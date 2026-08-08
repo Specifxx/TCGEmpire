@@ -4,8 +4,16 @@
 //
 // Resolution order:
 //   1. Explicit choice — the `country` cookie set by the switcher.
-//   2. Geo default — Vercel's `x-vercel-ip-country` header (NZ → NZ, US → US).
-//   3. Australia, for everyone else (and locally, where there's no geo header).
+//   2. Geo default — Vercel's `x-vercel-ip-country` header (AU → AU, NZ → NZ,
+//      GB/EU → UK, SG → SG, CA → CA).
+//   3. DEFAULT_COUNTRY (the United States) for everyone else — including any
+//      undetected visitor and every local/preview request, where there is no geo
+//      header at all.
+//
+// Step 3 said "Australia" until August 2026 and was wrong by then: country.ts had
+// already moved DEFAULT_COUNTRY to US. A comment describing the opposite of what
+// the code does is worse than none on the one module whose entire job is deciding
+// which market — and therefore which currency and which stores — a visitor sees.
 import { cookies, headers } from "next/headers";
 import { COUNTRIES, COUNTRY_COOKIE, COUNTRY_LIST, DEFAULT_COUNTRY, EUR_DISPLAY_COOKIE, INTL_ENABLED, isEuIso, normalizeCountry, type Country } from "./country";
 
@@ -17,7 +25,11 @@ function liveOrDefault(c: Country): Country {
 }
 
 export function getCountry(): Country {
-  if (!INTL_ENABLED) return "AU";
+  // The kill-switch collapses the site to ONE market. That market is
+  // DEFAULT_COUNTRY, not a second hard-coded literal — this returned "AU" while
+  // DEFAULT_COUNTRY was "US", so flipping the switch would silently have moved
+  // every visitor to a market the rest of the app no longer treats as default.
+  if (!INTL_ENABLED) return DEFAULT_COUNTRY;
   const chosen = cookies().get(COUNTRY_COOKIE)?.value;
   if (chosen) return liveOrDefault(normalizeCountry(chosen));
   return liveOrDefault(normalizeCountry(headers().get("x-vercel-ip-country")));

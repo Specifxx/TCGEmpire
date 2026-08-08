@@ -6,7 +6,7 @@
 import { unstable_cache } from "next/cache";
 import { prisma } from "./db";
 import { dbHistory } from "./db-history";
-import type { Country } from "./country";
+import { DEFAULT_COUNTRY, type Country } from "./country";
 import { CONTENT_TAG } from "./revalidate-content";
 
 const VEN_SET_CODE = "VEN";
@@ -83,7 +83,7 @@ async function computeVendettaPulse(country: Country): Promise<VendettaPulse> {
 
 // Day-scoped cache, one read per market per day — same pattern as
 // price-history.ts's getRecentlyUpdated/getPriceMovers.
-export async function getVendettaPulse(country: Country = "AU"): Promise<VendettaPulse> {
+export async function getVendettaPulse(country: Country = DEFAULT_COUNTRY): Promise<VendettaPulse> {
   return cachedOrDirect(
     () => computeVendettaPulse(country),
     ["rc-vendetta-pulse", country, sydneyDayKey()],

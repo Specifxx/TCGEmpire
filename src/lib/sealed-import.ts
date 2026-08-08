@@ -6,7 +6,7 @@ import { RETAILER_LIST } from "./retailers";
 import { isEbayEnabled, isEbayRateLimited, searchEbaySealed, primeEbayBudget, sealedFloorCents } from "./ebay";
 import { fetchTcgplayerSealed, tcgProductUrl, tcgImageUrl, setCodeFromSetName } from "./tcgplayer";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows } from "./scrape-http";
-import type { Country } from "./country";
+import { DEFAULT_COUNTRY, type Country } from "./country";
 
 interface ShopifyImg { src?: string }
 interface ShopifyVar { price: string; available: boolean }
@@ -516,7 +516,7 @@ const DISTRUST_STORE_IMAGE = new Set([
   "Booster Pack", "Nexus Night Pack", "Promo Pack", "Sleeved Booster", "Sleeved Booster (Art Set)",
 ]);
 
-export async function getSealedGroups(country: Country = "AU"): Promise<SealedGroup[]> {
+export async function getSealedGroups(country: Country = DEFAULT_COUNTRY): Promise<SealedGroup[]> {
   const hit = sealedMemo.get(country);
   if (hit && Date.now() - hit.at < SEALED_MEMO_TTL_MS) return hit.data;
   // Only the fields the grouping uses — no point hauling unused columns.

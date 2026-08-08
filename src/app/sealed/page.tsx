@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getSealedGroups } from "@/lib/sealed-import";
 import { getCountry, getDisplayCurrency } from "@/lib/get-country";
-import { COUNTRIES } from "@/lib/country";
+import { COUNTRIES, DEFAULT_COUNTRY } from "@/lib/country";
 import { gbpCentsToEur } from "@/lib/fx";
 import { affiliateUrl, ebayAffiliateUrl } from "@/lib/affiliate";
 import { OutboundLink } from "@/components/OutboundLink";
@@ -66,13 +66,18 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
   const country = getCountry();
   const info = COUNTRIES[country];
   // Sealed data is sourced per market (AU/NZ stores + US TCGplayer). For a market
-  // with no rows of its own (e.g. UK), fall back to AU so the page is never blank —
-  // and price it in AUD so the currency stays honest.
+  // with no rows of its own (e.g. UK), fall back to the default market so the page
+  // is never blank — and price it in that market's currency so the currency stays
+  // honest.
+  //
+  // The fallback was AU, chosen when AU was the default market. US is now both the
+  // default AND the market with the broadest sealed coverage (TCGplayer), so an
+  // unserved visitor lands somewhere fuller rather than in AUD for no reason.
   let all = await getSealedGroups(country);
   let priceCountry = country;
-  if (all.length === 0 && country !== "AU") {
-    all = await getSealedGroups("AU");
-    priceCountry = "AU";
+  if (all.length === 0 && country !== DEFAULT_COUNTRY) {
+    all = await getSealedGroups(DEFAULT_COUNTRY);
+    priceCountry = DEFAULT_COUNTRY;
   }
   const usingFallback = priceCountry !== country;
   const q = one(searchParams.q).trim();

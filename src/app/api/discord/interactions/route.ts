@@ -3,6 +3,7 @@ import { createPublicKey, verify as edVerify } from "node:crypto";
 import { prisma } from "@/lib/db";
 import { normalizeSearch } from "@/lib/format";
 import { getPriceMovers } from "@/lib/price-history";
+import { DEFAULT_COUNTRY } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { cardHref } from "@/lib/card-url";
 import { SITE_URL } from "@/lib/site";
@@ -78,7 +79,10 @@ async function priceEmbed(query: string) {
 }
 
 async function moversEmbed() {
-  const movers = await getPriceMovers("AU", 3);
+  // A Discord interaction carries no IP and no geo header, so there is no region
+  // to detect — this is the pure default path, and it belongs to DEFAULT_COUNTRY
+  // rather than a literal. It was "AU" from when AU was the default market.
+  const movers = await getPriceMovers(DEFAULT_COUNTRY, 3);
   const line = (arr: typeof movers.spiking, up: boolean) =>
     arr.length
       ? arr.map((m) => `${up ? "▲" : "▼"} [**${m.card.name}**](${utm(cardHref(m.card))}) ${m.pct > 0 ? "+" : ""}${m.pct}%`).join("\n")

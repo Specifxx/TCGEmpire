@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { dollarsToCents, normalizeSearch } from "./format";
-import { priceField, type Country } from "./country";
+import { DEFAULT_COUNTRY, priceField, type Country } from "./country";
 
 export interface CardQuery {
   q?: string;
@@ -44,7 +44,7 @@ function csv(v?: string): string[] | undefined {
   return arr.length ? arr : undefined;
 }
 
-export function buildCardWhere(query: CardQuery, country: Country = "AU"): Prisma.CardWhereInput {
+export function buildCardWhere(query: CardQuery, country: Country = DEFAULT_COUNTRY): Prisma.CardWhereInput {
   const where: Prisma.CardWhereInput = {};
   const field = priceField(country);
 
@@ -107,7 +107,7 @@ export function buildCardWhere(query: CardQuery, country: Country = "AU"): Prism
 
 export function buildCardOrderBy(
   sort?: string,
-  country: Country = "AU"
+  country: Country = DEFAULT_COUNTRY
 ): Prisma.CardOrderByWithRelationInput[] {
   const field = priceField(country);
   switch (sort) {
@@ -130,7 +130,7 @@ export { cardSlug, cardHref } from "./card-url";
 // Tile select for a given market. Both price columns are always selected (so client
 // components can switch instantly), but the "N stores" count is filtered to the
 // selected country's in-stock listings.
-export function cardTileSelect(country: Country = "AU") {
+export function cardTileSelect(country: Country = DEFAULT_COUNTRY) {
   return {
     id: true,
     slug: true,

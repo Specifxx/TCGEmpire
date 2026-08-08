@@ -1,6 +1,6 @@
 import { prisma } from "./db";
 import { normalizeSearch } from "./format";
-import { pickPrice, priceField, type Country } from "./country";
+import { DEFAULT_COUNTRY, pickPrice, priceField, type Country } from "./country";
 import type { Prisma } from "@prisma/client";
 import metaDecksData from "../../prisma/meta-decks.json";
 
@@ -181,12 +181,12 @@ function resolveDeckFromMap(seed: MetaDeckSeed, map: Map<string, ResolvedCardDat
   };
 }
 
-export async function resolveDeck(seed: MetaDeckSeed, country: Country = "AU"): Promise<ResolvedDeck> {
+export async function resolveDeck(seed: MetaDeckSeed, country: Country = DEFAULT_COUNTRY): Promise<ResolvedDeck> {
   const map = await buildCardMap([seed.legend, ...seed.cards.map((c) => c.name)], country);
   return resolveDeckFromMap(seed, map);
 }
 
-export async function resolveAllDecks(country: Country = "AU"): Promise<ResolvedDeck[]> {
+export async function resolveAllDecks(country: Country = DEFAULT_COUNTRY): Promise<ResolvedDeck[]> {
   const allNames = META_DECKS.flatMap((d) => [d.legend, ...d.cards.map((c) => c.name)]);
   const map = await buildCardMap(allNames, country);
   return META_DECKS.map((d) => resolveDeckFromMap(d, map));

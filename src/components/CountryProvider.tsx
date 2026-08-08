@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { COUNTRIES, COUNTRY_COOKIE, EUR_DISPLAY_COOKIE, INTL_ENABLED, normalizeCountry, pickPrice, type Country } from "@/lib/country";
+import { COUNTRIES, COUNTRY_COOKIE, DEFAULT_COUNTRY, EUR_DISPLAY_COOKIE, INTL_ENABLED, normalizeCountry, pickPrice, type Country } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { gbpCentsToEur } from "@/lib/fx";
 
@@ -45,11 +45,18 @@ function writeCookie(name: string, value: string) {
 }
 
 export function CountryProvider({ initial, children }: { initial: Country; children: React.ReactNode }) {
-  // While NZ is disabled the site is AU-only — lock it regardless of any stale cookie.
-  const [country, setState] = useState<Country>(INTL_ENABLED ? initial : "AU");
+  // With the switcher disabled the site is single-market — lock it to
+  // DEFAULT_COUNTRY regardless of any stale cookie.
+  //
+  // This MUST be the same constant the server's getCountry() falls back to. Both
+  // said "AU" while DEFAULT_COUNTRY was "US", so flipping the switch would not
+  // just have picked the wrong market — server and client would have picked it
+  // together and silently, and any future divergence between the two literals
+  // shows up as a hydration mismatch rather than an error anyone can read.
+  const [country, setState] = useState<Country>(INTL_ENABLED ? initial : DEFAULT_COUNTRY);
   // The DISPLAY currency (see the CountryCtx doc comment) — defaults to the
   // initial country's native currency; reconciled below just like `country`.
-  const [currency, setCurrency] = useState<string>(COUNTRIES[INTL_ENABLED ? initial : "AU"].currency);
+  const [currency, setCurrency] = useState<string>(COUNTRIES[INTL_ENABLED ? initial : DEFAULT_COUNTRY].currency);
   const router = useRouter();
 
   // Pages are server-rendered/cached with the AU default baked in (the shared

@@ -8,7 +8,7 @@ import { unstable_cache } from "next/cache";
 import { prisma } from "./db";
 import { dbHistory } from "./db-history";
 import { cardTileSelect } from "./cards";
-import type { Country } from "./country";
+import { DEFAULT_COUNTRY, type Country } from "./country";
 import type { CardTileData } from "@/components/CardTile";
 import { CONTENT_TAG } from "./revalidate-content";
 
@@ -59,7 +59,7 @@ async function computePriceHistory(cardId: string, country: Country, take: numbe
 // day read the history DB once, not once per page load. Only cards actually viewed
 // get cached, so this never over-reads. Window trimmed to 120 days (2× the useful
 // chart range) to cap the per-read payload.
-export function getPriceHistory(cardId: string, country: Country = "AU", take = 120): Promise<PricePoint[]> {
+export function getPriceHistory(cardId: string, country: Country = DEFAULT_COUNTRY, take = 120): Promise<PricePoint[]> {
   return cachedOrDirect(
     () => computePriceHistory(cardId, country, take),
     ["rc-card-history", cardId, country, String(take), sydneyDayKey()],
@@ -250,7 +250,7 @@ async function computeRecentlyUpdated(country: Country, limit: number): Promise<
 // Day-scoped cache: ONE whole-market history read per market per day, shared
 // across the homepage and anything else that asks. Keyed on market+day only
 // (not limit), so a bigger caller can't trigger a second read.
-export async function getRecentlyUpdated(country: Country = "AU", limit = 60): Promise<RecentUpdate[]> {
+export async function getRecentlyUpdated(country: Country = DEFAULT_COUNTRY, limit = 60): Promise<RecentUpdate[]> {
   const full = await cachedOrDirect(
     () => computeRecentlyUpdated(country, RECENT_MAX),
     ["rc-recently-updated", country, sydneyDayKey()],
@@ -265,7 +265,7 @@ export async function getRecentlyUpdated(country: Country = "AU", limit = 60): P
 // limit) and slice to the caller's limit — so a bigger /movers list can't trigger a
 // second read. Auto-refreshes at the day rollover.
 const MOVERS_MAX = 50;
-export async function getPriceMovers(country: Country = "AU", limit = LIST_SIZE): Promise<PriceMovers> {
+export async function getPriceMovers(country: Country = DEFAULT_COUNTRY, limit = LIST_SIZE): Promise<PriceMovers> {
   const full = await cachedOrDirect(
     () => computePriceMovers(country, MOVERS_MAX),
     ["rc-price-movers", country, sydneyDayKey()],
