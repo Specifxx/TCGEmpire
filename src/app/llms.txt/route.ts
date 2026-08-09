@@ -38,26 +38,6 @@ const DESC: Record<string, string> = {
   "/tools": "Every RiftCompare tool and calculator in one place.",
 };
 
-// Hubs that are NOT in NAV_GROUPS (the nav is a shortlist, not an index) but are
-// in the sitemap and are exactly what an agent answering "browse Riftbound cards
-// by X" needs. Without this list llms.txt was strictly NARROWER than the
-// crawler-facing sitemap — /movers even had a DESC entry above that the
-// NAV_GROUPS loop could never emit.
-const EXTRA_SECTION: { title: string; links: { href: string; label: string }[] } = {
-  title: "Browse the database",
-  links: [
-    { href: "/sets", label: "Sets" },
-    { href: "/champions", label: "Champions" },
-    { href: "/cards", label: "Card facets" },
-    { href: "/domains", label: "Domains" },
-    { href: "/keywords", label: "Keywords" },
-    { href: "/singles", label: "Singles" },
-    { href: "/movers", label: "Daily price movers" },
-    { href: "/alerts", label: "Price alerts & watchlists" },
-    { href: "/tools", label: "All tools" },
-  ],
-};
-
 const abs = (p: string) => `${SITE_URL}${p}`;
 
 export function GET() {
@@ -100,12 +80,6 @@ export function GET() {
     }
     lines.push("");
   }
-
-  lines.push(`## ${EXTRA_SECTION.title}`);
-  for (const l of EXTRA_SECTION.links) {
-    lines.push(`- [${l.label}](${abs(l.href)})${DESC[l.href] ? `: ${DESC[l.href]}` : ""}`);
-  }
-  lines.push("");
 
   lines.push("## Optional");
   for (const g of optional) {

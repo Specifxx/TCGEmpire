@@ -1,4 +1,5 @@
 import { getArticles, type Article } from "@/lib/articles";
+import { noRetailChannelProduct } from "@/lib/constants";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Card → editorial: which of our ~64 guides and posts are relevant to THIS card.
@@ -50,6 +51,20 @@ type Rule = {
 const EXPENSIVE_CENTS = 4000;
 
 const RULES: Rule[] = [
+  // FIRST, and unconditional for the sets it covers. A drawing-only collector
+  // printing has exactly one thing a reader wants to read next, and the generic
+  // rules could not find it: the needles are the card's set NAME and CODE, and
+  // scoreArticle() matches them as plain substrings against title+tags+excerpt.
+  // "T1 2025 Worlds Champion Collection" never appears verbatim in either T1
+  // article's title (a colon splits it) and "t1s" appears nowhere at all, so a
+  // T1S card page linked to three generic guides and nothing about itself —
+  // while its own About paragraph promised a guide to the drawing.
+  {
+    when: (c) => noRetailChannelProduct(c.setCode) != null,
+    prefer: ["riftbound-t1-signature-edition-drawing", "riftbound-t1-worlds-champion-collection"],
+    match: [],
+    reason: (c) => `How to get ${noRetailChannelProduct(c.setCode)?.product ?? c.setName}, what is in it, and what makes it scarce`,
+  },
   {
     when: (c) => c.isSignature || c.rarity === "Showcase" || c.variant != null,
     prefer: ["understanding-riftbound-card-rarity"],
