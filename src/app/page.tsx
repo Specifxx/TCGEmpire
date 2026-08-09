@@ -4,17 +4,15 @@ import { Archivo } from "next/font/google";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { Reveal } from "@/components/Reveal";
-import { getPopularCards, getChaseCards } from "@/lib/cheapest-cards";
+import { getPopularCards } from "@/lib/cheapest-cards";
 import { DEFAULT_COUNTRY, priceField, type Country } from "@/lib/country";
 import type { MarketStat } from "@/components/home/HeroStats";
-import { SETS, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
+import { SETS, newestReleasedSet, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
 import { getTopDeals, type TopDeals } from "@/lib/top-deals";
 import { getRecentlyUpdated, getPriceMovers } from "@/lib/price-history";
-import { getVendettaPulse, type VendettaPulse } from "@/lib/vendetta";
 import { TodaysTopDeals } from "@/components/TodaysTopDeals";
 import { CinematicHero } from "@/components/home/CinematicHero";
-import { VendettaBlock } from "@/components/home/VendettaBlock";
 import { PopularCardsCarousel } from "@/components/home/PopularCardsCarousel";
 import { PartnersStrip } from "@/components/home/PartnersStrip";
 import { HowItWorks } from "@/components/home/HowItWorks";
@@ -111,9 +109,7 @@ export default async function HomePage() {
     storeRows,
     popularCards,
     popularVendetta,
-    chaseCards,
     topDealsArr,
-    vendettaPulseArr,
     recentlyUpdated,
     movers,
   ] = await Promise.all([
@@ -141,10 +137,6 @@ export default async function HomePage() {
     // the set everyone's talking about right now. Empty (no section shown) until
     // enough early listings are actually priced.
     getPopularCards(8, country, "VEN"),
-    // Vendetta "chase cards" for the homepage Vendetta block — the highest-value
-    // singles in the set (not "most searched" like popularVendetta above), same
-    // AU-baseline-then-client-reprice pattern as every other card list here.
-    getChaseCards(8, country, "VEN"),
     // Today's Top Deals blends four signals; cache per-market. We serialize ALL four
     // markets so the section localises to the visitor's chosen market client-side —
     // the page is ISR-cached with DEFAULT_COUNTRY baked in, so a single-market render
@@ -159,10 +151,6 @@ export default async function HomePage() {
         unstable_cache(() => getTopDeals(c), ["top-deals", c], { revalidate: 3600, tags: [CONTENT_TAG] })(),
       ),
     ),
-    // Vendetta block's cheapest-box price + price-since-release pulse — plain
-    // numbers (not a CardTileData, which already carries every market's price),
-    // so like Top Deals this needs its own per-market array to localise client-side.
-    Promise.all(COUNTRY_CODES.map((c) => getVendettaPulse(c))),
     // "Recently updated" feed — cards whose price genuinely changed in the most
     // recent snapshot (see lib/price-history.ts). Single-market (the baseline),
     // same as popularCards above: it's a real internal-linking/freshness feed,
@@ -200,9 +188,8 @@ export default async function HomePage() {
   // Per-market Top Deals, so the section can localise client-side (see above).
   const topDealsByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, topDealsArr[i]])) as Record<Country, TopDeals>;
   const anyDeals = COUNTRY_CODES.some((c) => topDealsByCountry[c].hasAny);
-  // Per-market Vendetta pulse, so the block can localise client-side (see above).
-  const vendettaPulseByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, vendettaPulseArr[i]])) as Record<Country, VendettaPulse>;
   // Biggest movers tab: both directions, ranked by the size of the move.
+  const newestSet = newestReleasedSet();
   const biggestMovers = [...movers.spiking, ...movers.plummeting]
     .sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct))
     .slice(0, 12);
@@ -215,11 +202,15 @@ export default async function HomePage() {
         statsByCountry={statsByCountry}
       />
 
-      {/* Vendetta block — replaces the old marquee. Real cheapest-box price,
-          price movement since release, and chase cards; red is reserved for
-          this block sitewide (see VendettaBlock). Hidden entirely until there's
-          real data to show. */}
-      <VendettaBlock pulseByCountry={vendettaPulseByCountry} chaseCards={chaseCards} />
+      {/* REMOVED: the "Vendetta — the new set, priced" launch band (cheapest
+          booster box, price-since-release, chase cards). It was a launch-window
+          spotlight and Vendetta released on 31 Jul 2026, so by mid-August it was
+          giving the top of the homepage to a set that is no longer new. Its
+          content still exists, better placed: cheapest sealed on /sealed, price
+          movement on /movers and /market, chase cards on /sets/vendetta. If the
+          band is wanted again for Radiance (23 Oct 2026), the component is in
+          git history — or make it date-windowed off SetInfo.releasedOn rather
+          than hard-coded to one set, which is why it needed removing by hand. */}
 
       {/* Today's Top Deals — the strongest differentiator, moved up from five
           sections deep. Hidden if no market has data. */}
@@ -293,6 +284,23 @@ export default async function HomePage() {
             )
           )}
         </Reveal>
+
+        {/* The homepage's link into the visual gallery, inherited from the
+            removed Vendetta launch band. Kept because it was the strongest
+            internal link that page had (tests/seo-landing-pages.test.ts guards
+            it), but pointed at whichever set is CURRENT rather than at Vendetta
+            by name — so it follows Radiance in October instead of going stale
+            the same way the band did. */}
+        {newestSet && (
+          <p className="mt-3 text-sm">
+            <Link
+              href={`/sets/${newestSet.slug}/gallery`}
+              className="font-semibold text-brand-300 underline-offset-2 hover:underline"
+            >
+              See all{newestSet.totalCards ? ` ${newestSet.totalCards}` : ""} {newestSet.name} cards in the gallery →
+            </Link>
+          </p>
+        )}
 
         <div className="mb-2 mt-6 text-xs font-semibold uppercase tracking-wide text-slate-500">By domain</div>
         <Reveal stagger className="flex flex-wrap gap-2">

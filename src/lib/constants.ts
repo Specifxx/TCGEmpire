@@ -237,6 +237,27 @@ export function pricePrioritySetCodes(now: Date = new Date()): string[] {
     return released >= cutoff && released <= at;
   }).map((s) => s.code);
 }
+/**
+ * The most recently RELEASED set — latest `releasedOn` that is not in the future.
+ *
+ * Exists so a surface can point at "the current set" without naming one. The
+ * homepage used to hard-code Vendetta (a launch band, plus a link to its card
+ * gallery); the band is gone, and the gallery link stays but follows whichever
+ * set is current, so it moves to Radiance on 23 Oct 2026 with no edit.
+ *
+ * Takes `now` for the same reason pricePrioritySetCodes() does: a module-level
+ * constant would freeze the answer for the lifetime of the process, and it makes
+ * the rollover testable without waiting for the date.
+ */
+export function newestReleasedSet(now: Date = new Date()): SetInfo | undefined {
+  const at = now.getTime();
+  return SETS.filter((s) => {
+    if (!s.releasedOn) return false;
+    const released = Date.parse(`${s.releasedOn}T00:00:00Z`);
+    return !Number.isNaN(released) && released <= at;
+  }).sort((a, b) => (a.releasedOn! < b.releasedOn! ? 1 : -1))[0];
+}
+
 export const setBySlug = (slug: string): SetInfo | undefined => SETS.find((s) => s.slug === slug);
 export const setByCode = (code: string): SetInfo | undefined => SETS.find((s) => s.code === code);
 
