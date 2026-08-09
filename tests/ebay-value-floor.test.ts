@@ -198,3 +198,65 @@ test("every sealed market still searches every remaining product type", () => {
   }
   assert.match(src, /for \(const mkt of EBAY_SEALED_MARKETS\)/);
 });
+
+// ── The Riftbound × T1 2025 Worlds Champion Collection ────────────────────────
+// A drawing-only Riot Merch product with no set code and none of the product
+// words every other filter keys off. Before it was wired in, the Signature
+// Edition matched neither SEALED_TITLE nor RIFTBOUND_HINT (so it was dropped
+// entirely) while the Player Bundle fell into the generic "Bundle" bucket — two
+// halves of one collection, classified apart, one of them invisible.
+
+test("both halves of the T1 collection classify as their own product types", () => {
+  assert.equal(
+    classifySealed("Riftbound x T1 2025 Worlds Champion Signature Edition"),
+    "T1 Signature Edition",
+  );
+  assert.equal(
+    classifySealed("Riftbound T1 2025 Worlds Champion Player Bundle"),
+    "T1 Player Bundle",
+  );
+  // Riot's own posts shorten it to "T1 Worlds Signature Set" — same product.
+  assert.equal(
+    classifySealed("Riftbound TCG - T1 Worlds Signature Set (English) SEALED"),
+    "T1 Signature Edition",
+  );
+});
+
+test("the Player Bundle is not swallowed by the generic Bundle rule", () => {
+  // It contains the bare word "bundle", so rule order is load-bearing: the T1
+  // branches must sit ABOVE `vault bundle|worlds bundle|…|\bbundle\b`.
+  const src = read("src/lib/sealed-import.ts");
+  const t1 = src.indexOf('return "T1 Player Bundle"');
+  const generic = src.indexOf('return "Bundle"');
+  assert.ok(t1 > 0 && generic > t1, "the T1 branches must be classified before the generic Bundle rule");
+  assert.notEqual(classifySealed("Riftbound Origins Vault Bundle"), "T1 Player Bundle");
+  assert.equal(classifySealed("Riftbound Origins Vault Bundle"), "Bundle");
+});
+
+test("a Signature SINGLE is never mistaken for the T1 sealed product", () => {
+  // "Signature" on its own is a CARD treatment. Anchoring the T1 matcher on
+  // "worlds champion" (or a nearby "T1") is what keeps singles out of the sealed
+  // table — the exact failure a bare /signature/ test would cause.
+  for (const notT1 of [
+    "Zed, Master of Shadows Signature 191*/166 Vendetta",
+    "Riftbound Vayne Hunter Signature SFD 223*/221 NM",
+    // "Signature Edition" with no T1/Worlds anchor is somebody else's product.
+    "Riftbound Vendetta Signature Edition Playmat",
+  ]) {
+    assert.notEqual(classifySealed(notT1), "T1 Signature Edition", notT1);
+    assert.notEqual(classifySealed(notT1), "T1 Player Bundle", notT1);
+  }
+});
+
+test("both T1 types keep an eBay search, a price floor and a published RRP", () => {
+  // The whole point of cataloguing a drawing-only product: the ONLY market it
+  // will ever have is resale, so if it loses its eBay search it has no prices at
+  // all. The floor and RRP are what make "how far over US$360" answerable.
+  const ebay = read("src/lib/ebay.ts");
+  const msrp = read("src/lib/msrp.ts");
+  for (const type of ["T1 Signature Edition", "T1 Player Bundle"]) {
+    assert.equal(ebaySealedWorthSearching(type), true, `${type} must keep its eBay search`);
+    assert.ok(ebay.includes(`"${type}"`), `${type} needs a SEALED_TYPE_KW + SEALED_MIN_CENTS entry`);
+    assert.ok(msrp.includes(`"${type}"`), `${type} needs an MSRP entry`);
+  }
+});

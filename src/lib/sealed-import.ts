@@ -30,13 +30,36 @@ const SET_NAMES: Record<string, string> = {
 const RIFTBOUND_HINT =
   /riftbound|league\s*of\s*legends|proving\s*grounds|nexus\s*night|spirit\s*forged|spiritforged|\borigins\b|\bunleashed\b|\bvendetta\b|\b(?:OGN|OGS|SFD|UNL|VEN)\b/i;
 
+// The Riftbound × T1 2025 Worlds Champion Collection — Riot's first single-team
+// collaboration, sold ONLY through a Riot Merch Store drawing (English Signature
+// Edition registration 14-17 Aug 2026; Player Bundle later in the year). It carries
+// no set code and none of the usual product words, so without this it is invisible
+// to every filter below: "T1 2025 Worlds Champion Signature Edition" matches neither
+// SEALED_TITLE nor RIFTBOUND_HINT, and the Player Bundle would land in the generic
+// "Bundle" bucket next to gift boxes.
+//
+// ANCHORED ON "worlds champion" (or a nearby "T1"), never on "signature" alone.
+// "Signature" by itself is a CARD treatment ("Zed, Master of Shadows Signature
+// 191*/166"), and matching it here would scrape singles into the sealed table. The
+// second branch exists because Riot's own posts shorten the product to "T1 Worlds
+// Signature Set", dropping the word "Champion" that the first branch needs.
+const T1_COLLECTION =
+  /worlds\s*champion\s*(?:collection|signature\s*edition|player\s*bundle)|\bt1\b[\s\S]{0,30}?(?:signature\s*(?:edition|set)|player\s*bundle)/i;
+
 // Sets that aren't released yet — never list their (pre-order) sealed products.
 // Vendetta sealed IS available now (its singles are still pending — those are kept
 // out separately by SEALED_EXCLUDE + the empty Card table), so only Radiance remains.
 const UNRELEASED_SET = /\bradiance\b|\bRAD\b/i;
 
 function isRiftboundSealed(title: string): boolean {
-  return RIFTBOUND_HINT.test(title) && !UNRELEASED_SET.test(title);
+  return (RIFTBOUND_HINT.test(title) || T1_COLLECTION.test(title)) && !UNRELEASED_SET.test(title);
+}
+
+// "Does this title describe a sealed PRODUCT (rather than a single/accessory)?"
+// SEALED_TITLE keyed off product words the T1 collection simply doesn't use, so it
+// gets its own clause here rather than another alternation nobody can read.
+function looksSealed(title: string): boolean {
+  return (SEALED_TITLE.test(title) || T1_COLLECTION.test(title)) && !SEALED_EXCLUDE.test(title);
 }
 
 // A sealed product title looks like one of these. "nexus night ... pack" (the real
@@ -138,6 +161,13 @@ export function classifySealed(title: string): string {
   if (/pre-?rift|event\s*kit|pre-?release\s*kit/.test(t)) return "Pre-Rift Kit";
   if (/bulk\s*runes/.test(t)) return /\bcase\b/.test(t) ? "Bulk Runes Case" : "Bulk Runes";
   if (/arcane\s*box\s*set|box\s*set/.test(t)) return "Box Set";
+  // BEFORE the generic Bundle rule below, which would otherwise swallow the Player
+  // Bundle on its bare "bundle" and file the two halves of one collection under
+  // different product types. Two distinct types, not one: they are different
+  // products at different prices ($360 vs $70) with different contents, and the
+  // Signature Edition is the serialised/signed one people are actually searching for.
+  if (T1_COLLECTION.test(t) && /signature\s*edition|signature\s*set/.test(t)) return "T1 Signature Edition";
+  if (T1_COLLECTION.test(t) && /player\s*bundle/.test(t)) return "T1 Player Bundle";
   if (/vault\s*bundle|worlds\s*bundle|booster\s*bundle|\bbundle\b|gift\s*box/.test(t)) return "Bundle";
   if (/two[-\s]?player|starter|precon/.test(t)) return "Starter Set";
   if (/\btin\b/.test(t)) return "Tin";
@@ -171,7 +201,7 @@ export async function importSealed(): Promise<number> {
         if (seen.has(p.handle)) continue;
         seen.add(p.handle);
         const title = p.title ?? "";
-        if (!SEALED_TITLE.test(title) || SEALED_EXCLUDE.test(title)) continue;
+        if (!looksSealed(title)) continue;
         if (!isRiftboundSealed(title)) continue; // drop non-Riftbound + unreleased sets
         const priced = p.variants.filter((v) => parseFloat(v.price) > 0);
         if (!priced.length) continue;
@@ -426,7 +456,7 @@ export async function cleanupStaleSealed(): Promise<number> {
   const ids = rows
     .filter((r) => {
       // Title filters — TCGplayer's official catalogue is trusted, never title-filter it.
-      if (r.retailer !== "tcgplayer" && (!SEALED_TITLE.test(r.title) || SEALED_EXCLUDE.test(r.title) || !isRiftboundSealed(r.title))) return true;
+      if (r.retailer !== "tcgplayer" && (!looksSealed(r.title) || !isRiftboundSealed(r.title))) return true;
       // Price-sanity (every source except TCGplayer's trusted catalogue): drop listings
       // priced implausibly below the trusted price / per-type floor — an accessory, a $1
       // deposit/sample variant, or a mis-listing that escaped the title filter.
@@ -522,6 +552,12 @@ const SEALED_TYPE_IMAGE: Record<string, string> = {
   "Bulk Runes Case": "/sealed/sealed-case.png",
   "Proving Grounds": "/sealed/sealed-deck.png",
   "Starter Set": "/sealed/sealed-deck.png",
+  // The one entry here that is a PHOTO of the real product rather than a RiftCompare
+  // graphic. The T1 Signature Edition is drawing-only, so no store or TCGplayer
+  // catalogue photo exists to out-rank it — a generic grey box would be the permanent
+  // thumbnail otherwise. Self-hosted from Riot's own reveal render (public/
+  // t1-worlds-cards/, same approach as the T1 card images in prisma/manual-cards.json).
+  "T1 Signature Edition": "/t1-worlds-cards/t1-worlds-signature-edition.jpg",
 };
 function sealedTypeImage(productType: string): string {
   if (/^Champion Deck/.test(productType)) return "/sealed/sealed-deck.png";

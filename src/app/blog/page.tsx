@@ -7,9 +7,12 @@ import { pageAlternates } from "@/lib/seo";
 // Curated from real traffic (30-day Top Pages), not a live/self-updating ranking —
 // the Vendetta card-gallery post alone outdrew every other blog post combined.
 const FEATURED_POSTS = [
+  // Time-boxed: the T1 Signature Edition registration window is 14-17 Aug 2026, and
+  // this is the post that answers "when does it open". Swap it back out for an
+  // evergreen once the drawing has concluded.
+  "riftbound-t1-signature-edition-drawing",
   "every-riftbound-vendetta-card-revealed",
   "riftbound-vendetta-new-mechanics-flow-burn-empower",
-  "unleashed-meta-snapshot-june-2026",
 ];
 
 const BLOG_SECTIONS: ArticleSection[] = [

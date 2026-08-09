@@ -1851,64 +1851,311 @@ For the complete, always-current picture — including March's original 7 bans �
 
 *Ban reasoning and effective dates are Riot Games' own words from their 17 July 2026 announcement.*`,
   },
+  // IMAGE SLOT (author): under "## How the drawing actually works", a screenshot of
+  // the Riot Merch Store entry form once registration opens on 14 August would make
+  // the "this is a form, not a checkout" point concrete — and it is OUR screenshot,
+  // not Riot's marketing art. Save to public/blog/t1-drawing-entry-form.png and add:
+  //   ![The Riot Merch Store drawing registration form for the T1 2025 Worlds Champion Signature Edition](/blog/t1-drawing-entry-form.png)
+  {
+    slug: "riftbound-t1-signature-edition-drawing",
+    category: "blog",
+    title: "Riftbound T1 Signature Edition Drawing: Dates and Prices",
+    excerpt:
+      "Riot's English T1 2025 Worlds Champion Signature Edition drawing opens 9am PT on Friday 14 August 2026 and closes 6pm PT on Monday 17 August. Every date, the US$360 price, entry rules and all five cards.",
+    author: "RiftCompare",
+    date: "2026-08-09",
+    readMins: 7,
+    tags: ["news", "collectibles", "esports"],
+    hero: {
+      src: "/blog/riftbound-t1-signature-edition-drawing.png",
+      alt: "Riftbound T1 2025 Worlds Champion Signature Edition drawing dates — registration 14-17 August 2026",
+    },
+    summary: [
+      "**Registration opens Friday 14 August 2026, 9am Pacific** and **closes Monday 17 August, 6pm Pacific.** It is a drawing on the Riot Merch Store, not a first-come sale — entering early does nothing.",
+      "**Selection emails start Thursday 20 August**, with further waves on 24 and 27 August if they are needed. Boxes begin arriving from **Wednesday 2 September**.",
+      "**US$360**, **10,125 copies per language** (English, Chinese, Korean). One card in every box is serial-numbered 1-2025 and carries a gold-stamped player signature.",
+      "**There is no Catch Up pool.** Riot has said every entrant has the same chance regardless of past entries or purchases, so a long purchase history buys you nothing here.",
+      "The cheaper **Player Bundle (US$70)** has its own drawing later in the year — same five champions, different art, no serialisation.",
+    ],
+    faq: [
+      {
+        q: "What time does the Riftbound T1 Signature Edition drawing open?",
+        a: "Registration opens at 9am Pacific on Friday 14 August 2026 — 12pm Eastern, 5pm UK, and 2am Saturday 15 August in eastern Australia. It closes at 6pm Pacific on Monday 17 August 2026.",
+      },
+      {
+        q: "Is the T1 drawing first-come, first-served?",
+        a: "No. It is a drawing (a lottery): you register during the window and Riot selects entrants afterwards. Entering in the first minute gives you no advantage over entering on the last day, as long as you are in before registration closes.",
+      },
+      {
+        q: "How much does the Riftbound T1 Signature Edition cost?",
+        a: "US$360 for the English edition. The Chinese edition is CN¥2,025 and the Korean edition is KR₩500,000. The separate Player Bundle is US$70, CN¥399 and KR₩100,000.",
+      },
+      {
+        q: "How many T1 Signature Editions are being made?",
+        a: "10,125 per language across English, Chinese and Korean — just over 30,000 worldwide. Each box contains one card serial-numbered between 1 and 2025, marking the year of T1's championship.",
+      },
+      {
+        q: "Do previous Riot Merch purchases improve my odds in the T1 drawing?",
+        a: "No. Riot has confirmed there is no Catch Up pool for this drawing and that everyone who enters has the same opportunity to be selected regardless of previous entries or purchases.",
+      },
+      {
+        q: "When can I buy the T1 Worlds Champion Player Bundle?",
+        a: "Later in 2026, through its own Riot Merch Store drawing. Riot has not published a registration date for it yet — only that it follows the Signature Edition.",
+      },
+      {
+        q: "Which cards are in the Riftbound T1 collection?",
+        a: "Five champion units, one chosen by each member of T1's championship roster: Ambessa, The Wolf (Doran), Xin Zhao, Vigilant (Oner), Galio, Indefatigable (Faker), Miss Fortune, Buccaneer (Gumayusi) and Seraphine, Not Alone (Keria).",
+      },
+    ],
+    itemList: {
+      name: "Cards in the Riftbound x T1 2025 Worlds Champion Collection",
+      items: [
+        { name: "Ambessa, The Wolf (T1S 001/005)", description: "Chosen by Doran. Body domain unit, 4 energy, 4 might, with Empower 3." },
+        { name: "Xin Zhao, Vigilant (T1S 002/005)", description: "Chosen by Oner. Order domain unit, 3 energy, 4 might, with Tank." },
+        { name: "Galio, Indefatigable (T1S 003/005)", description: "Chosen by Faker. Order domain unit, 3 energy, 6 might, with Deflect and Tank. Also the serialised, gold-signed printing shown in Riot's reveal." },
+        { name: "Miss Fortune, Buccaneer (T1S 004/005)", description: "Chosen by Gumayusi. Chaos domain unit, 4 energy, 4 might, enabling plays to open battlefields." },
+        { name: "Seraphine, Not Alone (T1S 005/005)", description: "Chosen by Keria. Order domain unit, 5 energy, 1 might. From the unreleased Radiance set, so not tournament-legal until Radiance ships." },
+      ],
+    },
+    // Self-populating. These six printings live in prisma/manual-cards.json and land
+    // in the database when `npm run cards:manual` runs; until then resolveEmbed simply
+    // omits them and the article reads normally (never a broken tile).
+    embeds: [
+      {
+        title: "All six T1 printings in our database",
+        note: "The five collection cards plus Faker's serialised Galio. These are drawing-only prints, so they carry no store price until copies reach the secondary market.",
+        slugs: [
+          "ambessa-the-wolf-t1s-001-005",
+          "xin-zhao-vigilant-t1s-002-005",
+          "galio-indefatigable-t1s-003-005",
+          "galio-indefatigable-t1s-003s-005",
+          "miss-fortune-buccaneer-t1s-004-005",
+          "seraphine-not-alone-t1s-005-005",
+        ],
+      },
+      {
+        title: "The retail printings of the same four champions",
+        note: "The normal, buyable versions of the cards T1 picked — live prices across every store we track. Seraphine has no retail printing yet.",
+        slugs: [
+          "ambessa-the-wolf-ven-084",
+          "xin-zhao-vigilant-sfd-176-221",
+          "galio-indefatigable-unl-171-219",
+          "miss-fortune-buccaneer-ogn-193-298",
+        ],
+      },
+    ],
+    browseCta: {
+      href: "/sealed",
+      label: "Compare sealed prices →",
+      blurb: "Every Riftbound sealed product we track, ranked cheapest-first, with an at-RRP flag so you can see what is still selling at retail.",
+    },
+    body: `Riot has published the full timetable for the English **T1 2025 Worlds Champion Signature Edition** drawing. Registration opens at **9am Pacific on Friday 14 August 2026** and closes at **6pm Pacific on Monday 17 August**. It is a lottery on the Riot Merch Store, not a sale — you sign up inside that window, and being early inside it changes nothing.
+
+This is the most expensive Riftbound product Riot has ever made, at **US$360**, and the most limited: **10,125 copies per language**. Here is every date, what you actually get, and the parts of the entry rules that are easy to miss.
+
+![The five Riftbound x T1 2025 Worlds Champion Collection cards side by side: Ambessa The Wolf, Xin Zhao Vigilant, Galio Indefatigable, Miss Fortune Buccaneer and Seraphine Not Alone](/t1-worlds-cards/t1-worlds-champion-collection-cards.jpg)
+
+## Every date in the T1 Signature Edition drawing
+
+| When | What happens |
+| --- | --- |
+| **Fri 14 Aug 2026, 9:00am PT** | Registration opens on the Riot Merch Store |
+| **Mon 17 Aug 2026, 6:00pm PT** | Registration closes |
+| **Thu 20 Aug 2026** | First wave of selection emails goes out |
+| **24 Aug 2026** | Second wave, if one is needed |
+| **27 Aug 2026** | Third wave begins, if one is needed |
+| **Wed 2 Sep 2026** | Boxes begin arriving with players |
+
+Two small things worth knowing about that table. The waves are conditional — Riot will only run the second and third if the first does not fill the allocation, so no email on 20 August is not a rejection. And Riot has said it will post when each wave goes out, and when the drawing has formally concluded, on the official Riftbound account on X, which is the only place a "have I missed out?" answer will exist before your inbox has one.
+
+One correction worth flagging, because it will confuse people reading the announcement: Riot's post labels the later waves "Friday, August 24" and "Monday, August 27". In 2026 the 24th is a Monday and the 27th is a Thursday. The dates themselves follow a sensible Thursday-Monday-Thursday cadence from the 20th, so we have treated the dates as correct and the weekday labels as a slip.
+
+## What time does the drawing open where you live?
+
+The window is published in Pacific time, which is 5pm to 2am in the UK and lands overnight for Australia and New Zealand. Both ends of the window in the six markets we price:
+
+| Market | Opens | Closes |
+| --- | --- | --- |
+| US Pacific | Fri 14 Aug, 9:00am | Mon 17 Aug, 6:00pm |
+| US Eastern | Fri 14 Aug, 12:00pm | Mon 17 Aug, 9:00pm |
+| Canada (Toronto) | Fri 14 Aug, 12:00pm | Mon 17 Aug, 9:00pm |
+| United Kingdom | Fri 14 Aug, 5:00pm | Tue 18 Aug, 2:00am |
+| Singapore | Sat 15 Aug, 12:00am | Tue 18 Aug, 9:00am |
+| Australia (Sydney) | Sat 15 Aug, 2:00am | Tue 18 Aug, 11:00am |
+| New Zealand | Sat 15 Aug, 4:00am | Tue 18 Aug, 1:00pm |
+
+If you are outside North America, the practical advice is to ignore the opening time entirely and enter at a civilised hour on the Saturday, Sunday or Monday. There is no queue and no advantage to being first.
+
+## How the drawing actually works
+
+You register during the window; after it closes, Riot draws from everyone who entered and emails the people it selects with a link to buy. Nothing is reserved at the moment you sign up, and nothing is charged until you complete a purchase from that email.
+
+The single most important rule, and the one most likely to change how people behave: **there is no Catch Up pool.** In some previous Riot Merch drawings, people who had missed out before were weighted more heavily next time. Riot has explicitly said that is not happening here — everyone who enters has the same chance, regardless of prior entries or purchases. If you have been losing drawings all year, that history is worth nothing on this one. If you have never entered one, you are not behind.
+
+Riot has also confirmed two things about the shipping side that matter at this price point. Orders get extra packaging specifically to protect them in transit. And because every serialised card is genuinely unique, a damaged one cannot be replaced with an identical copy — so the remedy is returning the complete set for a full refund, not a swap. If your box arrives damaged, that is a decision to make deliberately rather than a form to fill in.
+
+## What US$360 actually buys
+
+| | Signature Edition | Player Bundle |
+| --- | --- | --- |
+| English price | **US$360** | **US$70** |
+| Chinese price | CN¥2,025 | CN¥399 |
+| Korean price | KR₩500,000 | KR₩100,000 |
+| Print run | 10,125 per language | Not announced |
+| The five cards | Yes, new foiling | Yes, different art |
+| Serialised card | One per box, 1-2025 | No |
+| Gold player signature | On the serialised card | No |
+| Accessories | Display packaging | Sleeves, deckbox, binder, metal die |
+| Drawing | 14-17 Aug 2026 | Later in 2026, date TBA |
+
+The Signature Edition is a display piece: five cards with a foiling treatment made for this release, one of them serialised and signed, in packaging designed to be stood up rather than stored. The Player Bundle is the version aimed at people who want to sleeve these up and play them, and one in every ten of its metal dice is a black-and-gold variant.
+
+Both are English-language Riot Merch Store drawings. The Chinese and Korean editions are handled separately in-region, and Riot has timed the English drawing to coincide with a T1 event for the Korean versions.
+
+## The five cards, and who picked them
+
+Each card was chosen by the T1 player it represents. The card data below is read from Riot's own reveal renders and cross-checked against the existing retail printings of the same cards in our database — the collection uses new art and a new frame, but the rules text and stats are the cards you already know.
+
+| Card | Picked by | Domain | Cost / Might | Ability |
+| --- | --- | --- | --- | --- |
+| **Ambessa, The Wolf** | Doran | Body | 4 / 4 | Empower 3; empowered, gains +3 might and can only be damaged in combat |
+| **Xin Zhao, Vigilant** | Oner | Order | 3 / 4 | Tank; enters ready if you have two or more other units in your base |
+| **Galio, Indefatigable** | Faker | Order | 3 / 6 | Deflect, Tank; deals no combat damage |
+| **Miss Fortune, Buccaneer** | Gumayusi | Chaos | 4 / 4 | Can be played to an open battlefield, and lets your other units do the same |
+| **Seraphine, Not Alone** | Keria | Order | 5 / 1 | Makes a Recruit token when played or exhausted; grows with each exhausted unit you control |
+
+[[embed:0]]
+
+**The Seraphine catch.** Seraphine, Not Alone is from **Radiance**, the fifth Riftbound set, which does not release until [23 October 2026](/blog/riftbound-2027-set-roadmap). Until then the card is not legal for sanctioned play — so a Player Bundle bought to actually play with contains one card you cannot yet use. That is a temporary problem, not a permanent one, but it is worth knowing before October.
+
+## The serialised card is the whole story
+
+Every box contains exactly one card numbered from 1 to 2025 — the year of the title being commemorated — with a gold-stamped signature from the player who picked it. Riot's reveal render shows Faker's Galio in that slot, stamped 0001/2025.
+
+![Faker's serialised Galio, Indefatigable from the T1 2025 Worlds Champion Signature Edition, showing the 0001 of 2025 serial box and gold-stamped signature](/t1-worlds-cards/galio-indefatigable-t1s003-signature.jpg)
+
+If you have read our [variant and finish glossary](/blog/riftbound-variant-glossary), this is a category Riftbound has not had before. Signature cards in normal sets carry the artist's stamp; this is a player's, on a card with a unique serial. Serial number will drive resale value far more than condition here — single digits, and anything under 100, will trade at a large premium over a number in the four figures, exactly as they do in every other serialised collectible.
+
+Riot has separately said it has [no plans to put serialisation into booster packs](/blog/riftbound-august-2026-state-of-the-game-takeaways), which is what makes this interesting rather than a preview of things to come: it is a deliberately walled-off collector release.
+
+## What resale will probably do
+
+We do not price speculation, so treat what follows as reasoning rather than a forecast.
+
+There are 10,125 English boxes and a US$360 entry price. The demand pool is not Riftbound players — it is Riftbound players plus League of Legends fans plus T1 fans, which is a far larger number than 10,125. Every comparable Riot Merch drawing has sold through, and this one has a serialised chase card on top.
+
+The parts we would actually watch:
+
+- **Sealed boxes** will list quickly and above retail. Whether they hold that is a different question, and depends entirely on how many winners flip rather than keep.
+- **Loose serialised cards** are where the real spread will be, and where number matters more than anything else about the card.
+- **The four retail printings** of these champions are the leftover trade. A collection like this puts Faker's Galio and Doran's Ambessa in front of people who have never bought a Riftbound single, and those cards cost cents. We have seen this pattern on every previous crossover; [the daily movers](/movers) is where it shows up first.
+
+[[embed:1]]
+
+## What we're tracking on RiftCompare
+
+All six printings — the five cards plus Faker's serialised Galio — are now in our card database, so they have real pages the moment secondary-market listings exist rather than weeks afterwards. Prices will appear on those pages automatically when they do.
+
+On the sealed side, both the Signature Edition and the Player Bundle now have their own product types in [our sealed comparison](/sealed), each carrying Riot's published US price as its reference. That is the number that matters after the drawing closes: not "what is the cheapest listing", but "how far above US$360 is the cheapest listing". [The deal finder](/tools/deal-finder) applies the same logic across everything else we track.
+
+If you would rather not watch any of this manually, [set a price alert](/alerts) and we will email you when a listing appears.
+
+## The short version
+
+Enter between **14 and 17 August**, at any point in that window. Do not stay up for the opening if you are not in North America. Do not expect prior purchases to help you. And if you miss out, the [Player Bundle drawing](/blog/riftbound-t1-worlds-champion-collection) later this year gets you the same five champions, in different art, for a fifth of the price.
+
+---
+
+*Sources: Riot Games' official announcements — the [August Merch Store Updates](https://playriftbound.com/en-us/news/announcements/august-merch-store-updates/) post of 6 August 2026 (drawing dates, entry rules, shipping policy), [The Riftbound x T1 2025 Worlds Champion Collection](https://playriftbound.com/en-us/news/announcements/the-riftbound-x-t1-2025-worlds-champion-collection/) (contents, print run, prices) and the [August 2026 Roadmap](https://playriftbound.com/en-us/news/announcements/august-2026-roadmap/) (the 14-17 August window). Dates, prices and print runs are Riot's; the timezone conversions, card data, analysis and resale commentary are ours. Card images are our own crops of Riot's reveal renders, re-hosted here. Riot's published schedule can change — check the official post before the window opens.*`,
+  },
   {
     slug: "riftbound-t1-worlds-champion-collection",
     category: "blog",
     title: "Riftbound × T1: The 2025 Worlds Champion Collection Explained",
     excerpt:
-      "Riot's first-ever single-team Riftbound collaboration: a serialised, player-signed Signature Edition and a playable Player Bundle honouring T1's sixth World Championship. Here's what's in each, and the five champions T1 themselves picked.",
+      "Riot's first-ever single-team Riftbound collaboration: a serialised, player-signed Signature Edition at US$360 and a US$70 Player Bundle honouring T1's sixth World Championship. What's in each, and the five champions T1 picked.",
     author: "RiftCompare",
     date: "2026-07-17",
-    readMins: 4,
+    // Rewritten 9 Aug 2026: the drawing timetable and prices are published, the
+    // five collection printings are now in our database, and the original text's
+    // "Seraphine isn't catalogued yet" line was stale. The dated logistics live in
+    // /blog/riftbound-t1-signature-edition-drawing so the two posts don't compete
+    // for the same query — this one stays the product explainer.
+    updated: "2026-08-09",
+    readMins: 5,
     tags: ["news", "collectibles", "esports"],
     shop: [
       { label: "Riftbound singles on eBay", query: "Riftbound TCG singles" },
     ],
-    // Ambessa (VEN, unreleased — no prices yet) plus the three already-released base
-    // printings T1 picked. Seraphine, Not Alone isn't catalogued on RiftCompare yet
-    // (not yet imported/revealed as a standalone printing), so it's named in the
-    // text but has no embed — never a broken link.
-    embed: {
-      title: "The 5 champions T1 picked (base printings)",
-      note: "The regular, buyable printing of each card T1 selected — not the limited Signature/Player Bundle art, which isn't sold through stores.",
-      slugs: [
-        "ambessa-the-wolf-ven-084",
-        "galio-indefatigable-unl-171-219",
-        "miss-fortune-buccaneer-ogn-193-298",
-        "xin-zhao-vigilant-sfd-176-221",
-      ],
-    },
-    body: `Riot just did something it's never done in Riftbound before: partner with a single esports team, rather than the league as a whole, on a dedicated card collection. The **Riftbound × T1 2025 Worlds Champion Collection** honours T1's sixth World Championship title — and third straight — with signed, serialised cards picked by the players themselves.
+    embeds: [
+      {
+        title: "The collection's own printings (T1S 001-005)",
+        note: "Drawing-only prints with all-new art in a bespoke frame, including Faker's serialised Galio. No store sells these, so they carry no price until copies reach the secondary market.",
+        slugs: [
+          "ambessa-the-wolf-t1s-001-005",
+          "xin-zhao-vigilant-t1s-002-005",
+          "galio-indefatigable-t1s-003-005",
+          "galio-indefatigable-t1s-003s-005",
+          "miss-fortune-buccaneer-t1s-004-005",
+          "seraphine-not-alone-t1s-005-005",
+        ],
+      },
+      {
+        title: "The retail printings of the same champions",
+        note: "The regular, buyable version of each card T1 selected — live prices across every store we track.",
+        slugs: [
+          "ambessa-the-wolf-ven-084",
+          "xin-zhao-vigilant-sfd-176-221",
+          "galio-indefatigable-unl-171-219",
+          "miss-fortune-buccaneer-ogn-193-298",
+        ],
+      },
+    ],
+    body: `> **Drawing dates are out.** Registration for the English Signature Edition runs **14-17 August 2026**. Every date, timezone conversion and entry rule is in **[the drawing guide](/blog/riftbound-t1-signature-edition-drawing)**. This page is the product explainer: what the collection is, what is in it, and what it costs.
+
+Riot did something in July it had never done in Riftbound before: partner with a single esports team, rather than the league as a whole, on a dedicated card collection. The **Riftbound × T1 2025 Worlds Champion Collection** honours T1's sixth World Championship title — and third in a row — with signed, serialised cards picked by the players themselves.
 
 ## Two products, two very different audiences
 
-**T1 2025 Worlds Champion Signature Edition** — the premium collector's version. Riot is capping production hard: only **10,125 copies per language** (English, Chinese, Korean), each including one card serial-numbered from 1 to 2025 (marking the championship year) with a gold-stamped signature from the corresponding player. The five cards also get a new foiling effect made specifically for this collection.
+**T1 2025 Worlds Champion Signature Edition — US$360.** The collector's version, capped at **10,125 copies per language** (English, Chinese, Korean; CN¥2,025 and KR₩500,000 respectively). Every box contains one card serial-numbered from 1 to 2025 — the year of the title — carrying a gold-stamped signature from the player who chose it. All five cards use a foiling effect made specifically for this release, and the packaging is built to be displayed rather than stored.
 
-**T1 2025 Worlds Champion Player Bundle** — the accessible version, for people who actually want to play with these cards. Same five champions with different (non-serialised, non-signed) art, plus a Sleeves Pack, Deckbox, Binder, and a Metal Die — 1 in every 10 dies is a special black-and-gold variant.
+**T1 2025 Worlds Champion Player Bundle — US$70.** The version for people who want to sleeve these up and play them (CN¥399, KR₩100,000). Same five champions in different art, with no serialisation and no signature, plus a Sleeves Pack, a Deckbox, a Binder and a Metal Die — one die in ten is a black-and-gold variant.
 
 ## The 5 cards — each hand-picked by a player
 
 Every card was personally chosen by the corresponding member of T1's championship roster:
 
-- **Choi "Doran" Hyeon-jun** → Ambessa, The Wolf
-- **Lee "Faker" Sang-hyeok** → Galio, Indefatigable
-- **Lee "Gumayusi" Min-hyeong** → Miss Fortune, Buccaneer
-- **Ryu "Keria" Min-seok** → Seraphine, Not Alone
-- **Moon "Oner" Hyeon-joon** → Xin Zhao, Vigilant
+- **Choi "Doran" Hyeon-jun** → Ambessa, The Wolf — Body, 4 energy, 4 might, with Empower 3
+- **Moon "Oner" Hyeon-joon** → Xin Zhao, Vigilant — Order, 3 energy, 4 might, with Tank
+- **Lee "Faker" Sang-hyeok** → Galio, Indefatigable — Order, 3 energy, 6 might, with Deflect and Tank
+- **Lee "Gumayusi" Min-hyeong** → Miss Fortune, Buccaneer — Chaos, 4 energy, 4 might
+- **Ryu "Keria" Min-seok** → Seraphine, Not Alone — Order, 5 energy, 1 might
 
 [[embed:0]]
 
-Seraphine, Not Alone isn't in our card database yet — it hasn't been officially catalogued as a standalone printing outside this reveal, so we can't show a price for it yet. We'll add it the moment it's tracked.
+All six printings — the five cards plus Faker's serialised Galio, numbered T1S 001/005 through 005/005 — are now catalogued on RiftCompare, so each has a real page ready for the moment secondary-market listings appear.
+
+**One caveat on Seraphine.** Seraphine, Not Alone comes from **Radiance**, Riftbound's fifth set, which does not release until 23 October 2026 (see [the set roadmap](/blog/riftbound-2027-set-roadmap)). Until then it is not legal for sanctioned play, so a Player Bundle bought to actually play with arrives with one card you cannot yet use.
 
 ## How to actually get one
 
-Both products are distributed through a **drawing on the Riot Merch Store**, not a normal storefront sale — you enter, you don't just add to cart. The Signature Edition's drawing opens in **August 2026**; the Player Bundle follows later in the year, with more details still to come.
+Both products are distributed through a **drawing on the Riot Merch Store**, not a normal storefront sale — you register inside a window and Riot selects entrants afterwards. The English Signature Edition's registration window is **14-17 August 2026**; the Player Bundle follows later in the year with its own drawing, date not yet announced. Chinese and Korean editions are handled separately in-region.
+
+The full timetable, the timezone conversions and the entry rules — including the fact that there is **no Catch Up pool**, so previous purchases do not improve your odds — are in [the drawing guide](/blog/riftbound-t1-signature-edition-drawing).
 
 ## Should you expect these on RiftCompare?
 
-Not directly — the Signature Edition and Player Bundle art are exclusive to this collection and distributed by drawing, so they won't show up as a normal store listing we can price-compare (any secondary-market copies that surface later on eBay would, like any other collectible). What *is* already trackable right now is the regular base printing of each of the four cataloged champions above — worth a look if the collection has you wanting the "normal" version of Faker's or Doran's pick while you wait on the drawing.
+Yes, but as a secondary market rather than a retail one. Nothing in this collection is sold through the stores we price, so there is no launch-day listing to compare; what will appear is resale — sealed boxes and loose serialised cards on [the sealed comparison](/sealed) and on individual card pages, once copies actually change hands. Both product types now carry Riot's published US price as their reference, so the useful question after the drawing is "how far above US$360 is the cheapest listing", not just "what is the cheapest listing".
 
-*Product details (print run, contents, availability) are from Riot's own announcement and reporting on it — see the collection's own page on [Riftbound's official site](https://playriftbound.com) for the latest.*`,
+What is trackable *today* is the ordinary retail printing of each champion T1 picked. If the collection has you wanting Faker's Galio or Doran's Ambessa and you would rather spend cents than US$360, those are below.
+
+[[embed:1]]
+
+For the wider context on where serialised and premium prints sit in this game, see [the variant and finish glossary](/blog/riftbound-variant-glossary) — and note that Riot has said it has [no plans to serialise cards in booster packs](/blog/riftbound-august-2026-state-of-the-game-takeaways), which makes this collection a deliberate one-off rather than a preview.
+
+---
+
+*Sources: Riot Games' [T1 2025 Worlds Champion Collection announcement](https://playriftbound.com/en-us/news/announcements/the-riftbound-x-t1-2025-worlds-champion-collection/) (contents, print run, prices) and the [August Merch Store Updates](https://playriftbound.com/en-us/news/announcements/august-merch-store-updates/) post of 6 August 2026 (drawing window). Product details are Riot's; the card data, analysis and market commentary are ours.*`,
   },
   {
     slug: "jayce-mel-riftbound-empower-explained",
@@ -4397,7 +4644,9 @@ Everything else — the collector product philosophy, the language pause — is 
       label: "Price the base printings →",
       blurb: "Compare live prices on the ordinary printing of every champion in the collection.",
     },
-    body: `The **Riftbound × T1** collaboration is two separate products, and which one you want decides everything else. The **Signature Edition** is the serialised, player-signed collector release. The **Player Bundle** is the playable version with accessories. Both are built around five cards picked by T1's championship roster, and both are distributed by **drawing** rather than ordinary sale — you enter for the right to buy.
+    body: `> **Superseded — do not publish (9 Aug 2026).** Every [TODO] below has since been answered from Riot's own announcements, and the answers now live on two published pages: **[the drawing guide](/blog/riftbound-t1-signature-edition-drawing)** (dates, prices, entry rules) and **[the collection explainer](/blog/riftbound-t1-worlds-champion-collection)** (contents, print run, the five cards). Publishing this would be a third page competing for the same query. Delete this entry unless it is repurposed for something the other two do not cover.
+
+The **Riftbound × T1** collaboration is two separate products, and which one you want decides everything else. The **Signature Edition** is the serialised, player-signed collector release. The **Player Bundle** is the playable version with accessories. Both are built around five cards picked by T1's championship roster, and both are distributed by **drawing** rather than ordinary sale — you enter for the right to buy.
 
 If you only want to play with the cards, neither is the cheapest route: the ordinary printing of each champion is on sale as a single right now.
 
