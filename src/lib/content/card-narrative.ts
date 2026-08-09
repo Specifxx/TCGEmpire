@@ -1,4 +1,5 @@
 import { formatMoney } from "@/lib/format";
+import { hasNoRetailChannel, noRetailChannelProduct } from "@/lib/constants";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The card page's "About" section, generated compositionally from real data.
@@ -275,9 +276,18 @@ function identity(c: NarrativeInput): string {
   // print leads with its scarcity, a promo with its origin, a statted unit with
   // its cost, everything else with its set.
   if (c.isSignature) {
+    // "Past the end of the base run" is true of the usual Signature print
+    // (223*/221 in a 221-card set) and FALSE of one numbered inside its run —
+    // the T1 Worlds Champion Collection prints its signature card as 003*/005.
+    // Asserting it unconditionally put a plainly wrong sentence at the top of
+    // those pages, so the claim is now made only when the number bears it out.
+    const n = c.collectorNumber.match(/^(\d+)\D*\/(\d+)/);
+    const beyondBaseRun = n ? parseInt(n[1], 10) > parseInt(n[2], 10) : false;
+    const scarcity = beyondBaseRun
+      ? `numbered ${c.collectorNumber}, past the end of ${c.setName}'s base run, which is what makes it far scarcer than the ordinary ${c.rarity.toLowerCase()} printing`
+      : `numbered ${c.collectorNumber} and carrying the stamped signature on its art, which makes it far scarcer than the ordinary ${c.rarity.toLowerCase()} printing`;
     return (
-      `${c.displayName} is the Signature print of ${c.name} — numbered ${c.collectorNumber}, past the end of ` +
-      `${c.setName}'s base run, which is what makes it far scarcer than the ordinary ${c.rarity.toLowerCase()} printing. ` +
+      `${c.displayName} is the Signature print of ${c.name} — ${scarcity}. ` +
       `${domainClause}${stats.length ? `, at ${stats.join(" and ")}` : ""}.`
     );
   }
@@ -673,6 +683,28 @@ function noMarketYet(c: NarrativeInput): string {
   }
 
   const otherPriced = c.printings.filter((p) => p.priceCents != null);
+
+  // A printing with NO RETAIL CHANNEL needs the opposite paragraph. The default
+  // below reads the absence of a listing as a fact about supply ("no store has it
+  // on the shelf") and closes by promising a price "the moment one appears" — both
+  // wrong for a lottery-only product no shop will ever stock. Saying that plainly
+  // is the more useful sentence anyway.
+  if (hasNoRetailChannel(c.setCode)) {
+    let s0 =
+      `${c.displayName} has no shop price, and never will: ${c.setName} is distributed by drawing rather than sold ` +
+      `through retailers, so none of the six markets we track can list it at launch. Any price it ever carries is a ` +
+      `resale price.`;
+    if (otherPriced.length) {
+      const cheapest = otherPriced.reduce((a, b) => ((b.priceCents ?? 0) < (a.priceCents ?? 0) ? b : a));
+      s0 +=
+        ` The ${cheapest.label} printing of the same card is on sale normally, at ` +
+        `${formatMoney(cheapest.priceCents!, c.baseline.currency)} — a different product, but the closest live price ` +
+        `for this card, and the cheapest way to actually play it.`;
+    }
+    s0 += ` We watch the secondary market too; a price watch will email you when a copy changes hands.`;
+    return s0;
+  }
+
   let s2 =
     `We have no live listing for ${c.displayName} in any of the six markets we track right now. That is a real ` +
     `signal rather than a gap in the data: it means no store we monitor in Australia, New Zealand, the US, the UK, ` +
@@ -688,6 +720,56 @@ function noMarketYet(c: NarrativeInput): string {
 }
 
 /**
+ * The paragraph a drawing-only printing needs, and the reason it exists.
+ *
+ * A card with no price falls out of buildCardNarrative after two paragraphs
+ * (identity + noMarketYet), because six of the eight observation families below
+ * are price-derived and return null. Measured on the six T1S printings that came
+ * to 127-139 words — under scripts/adsense-audit.ts's THIN_WORDS bar of 150,
+ * which adsense-guard.ts budgets at ZERO for both `indexableThin` and
+ * `affiliateWithoutEditorial`. These pages carry affiliate placements and are now
+ * indexed, so they were the site's best candidates to trip both counters.
+ *
+ * The answer is not padding — it is that a page like this has genuinely more to
+ * say than the template knew how to ask for. Print run, serial arithmetic and
+ * distribution are the facts a reader wants and the ones that explain the missing
+ * price, and every figure here is published by Riot (see lib/constants.ts).
+ */
+function collectorProduct(c: NarrativeInput): string | null {
+  const p = noRetailChannelProduct(c.setCode);
+  if (!p) return null;
+
+  const perLanguage = p.copiesPerLanguage.toLocaleString("en-US");
+  const worldwide = (p.copiesPerLanguage * p.languages.length).toLocaleString("en-US");
+  const langs = `${p.languages.slice(0, -1).join(", ")} and ${p.languages[p.languages.length - 1]}`;
+
+  let s =
+    `This printing exists only inside the ${p.product}, which Riot distributes through ${p.distribution} rather ` +
+    `than through shops — ${p.price} to the winners of that drawing, and no retail price at all. ` +
+    `${perLanguage} copies were made per language edition (${langs}), so ${worldwide} exist worldwide, and the ` +
+    `run is capped: there is no reprint, no second wave and no promo redistribution of this art.`;
+
+  // The serial arithmetic, but only on the printing that actually carries a
+  // serial. Asserting it on the four unserialised cards would be false.
+  if (c.isSignature) {
+    const perCard = Math.round(p.copiesPerLanguage / p.cardsInSet).toLocaleString("en-US");
+    s +=
+      ` This is the serialised one. Each box holds a single card numbered somewhere in 1-${p.serialTop}, ` +
+      `carrying a gold-stamped signature from the player who chose it, and all ${p.cardsInSet} champions share that range — so ` +
+      `roughly ${perCard} serialised copies of this specific card exist per language, and every one of them is a ` +
+      `different number. Riot's own policy is the sharpest statement of what that means: a damaged serialised card ` +
+      `cannot be replaced with an identical copy, only refunded.`;
+  } else {
+    s +=
+      ` It is not the serialised card, though — one card per box carries the 1-${p.serialTop} ` +
+      `serial and the gold-stamped player signature, and this is one of the four that do not.`;
+  }
+
+  s += ` We break the collection down in full in our guide to the drawing.`;
+  return s;
+}
+
+/**
  * Build the About section. Returns paragraphs in reading order.
  *
  * Order matters: identity first (what is this?), then the observation that is
@@ -699,6 +781,8 @@ export function buildCardNarrative(c: NarrativeInput): string[] {
   const hasMarket = c.baseline.lowestCents != null && c.baseline.storeCount > 0;
   if (!hasMarket) {
     paragraphs.push(noMarketYet(c));
+    const collector = collectorProduct(c);
+    if (collector) paragraphs.push(collector);
     const t = trajectory(c);
     if (t) paragraphs.push(t);
     const p = playability(c);

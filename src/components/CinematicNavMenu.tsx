@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Suspense, useEffect, useRef, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useMegaMenu } from "./MegaMenuProvider";
 import { NAV_GROUPS } from "./nav-groups";
-import { SearchBar } from "./SearchBar";
+import { searchNav } from "./nav-search";
 import { BrandLogo } from "./BrandLogo";
 
 // Full-screen, "movie-like" navigation overlay (ported from DexCompare). Stays
@@ -16,6 +16,32 @@ export function CinematicNavMenu() {
   const { open, setOpen } = useMegaMenu();
   const pathname = usePathname();
   const dialogRef = useRef<HTMLDivElement>(null);
+  const [filter, setFilter] = useState("");
+
+  // The panels below, narrowed by the FEATURE filter. Same matcher the ⌘K
+  // launcher uses, so "prices"/"deals"/"blog"/"alerts" behave identically on a
+  // phone and on a desktop.
+  const filtering = filter.trim().length > 0;
+  const sections = useMemo(() => {
+    if (!filtering) return NAV_GROUPS.map((g) => ({ title: g.title, links: g.links }));
+    const hits = searchNav(filter);
+    const byGroup = new Map<string, typeof hits>();
+    for (const h of hits) {
+      const list = byGroup.get(h.group);
+      if (list) list.push(h);
+      else byGroup.set(h.group, [h]);
+    }
+    return NAV_GROUPS.filter((g) => byGroup.has(g.title)).map((g) => ({
+      title: g.title,
+      links: byGroup.get(g.title)!,
+    }));
+  }, [filter, filtering]);
+
+  // A stale filter on reopen would show a fraction of the menu with no obvious
+  // reason why.
+  useEffect(() => {
+    if (!open) setFilter("");
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -107,16 +133,38 @@ export function CinematicNavMenu() {
               </button>
             </div>
 
-            {/* Search front-and-centre */}
+            {/* FEATURE filter front-and-centre — NOT the card search.
+                This slot used to hold the card SearchBar. On a phone
+                this overlay IS the Explore menu (the ⌘K launcher's button is
+                desktop-only and ⌘K needs a keyboard), so the one input sitting
+                directly above a grid of features searched the card database
+                instead of filtering the grid — reported as "the search bar is
+                broken for the explore features… it acts like a normal search bar
+                and searches all the cards". The card search has its own
+                full-width row in the phone navbar, so nothing is lost. */}
             <div className="mx-auto mt-6 max-w-2xl">
-              <Suspense fallback={<div className="input" />}>
-                <SearchBar />
-              </Suspense>
+              <input
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                placeholder="Filter features, tools and pages…"
+                aria-label="Filter RiftCompare features"
+                className="input w-full"
+                type="search"
+              />
+              {filtering && (
+                <p className="mt-2 text-center text-xs text-slate-500">
+                  {sections.reduce((n, s2) => n + s2.links.length, 0)} feature
+                  {sections.reduce((n, s2) => n + s2.links.length, 0) === 1 ? "" : "s"} match &ldquo;{filter}&rdquo; ·{" "}
+                  <Link href={`/browse?q=${encodeURIComponent(filter)}`} onClick={close} className="text-brand-400 hover:underline">
+                    search cards for &ldquo;{filter}&rdquo; instead →
+                  </Link>
+                </p>
+              )}
             </div>
 
             {/* Category panels (flat, single accent, staggered on open) */}
             <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {NAV_GROUPS.map((sec, si) => (
+              {sections.map((sec, si) => (
                 <div
                   key={sec.title}
                   className="cine-item relative overflow-hidden rounded-lg border border-ink-800 border-l-2 border-l-brand-500 bg-ink-850 p-4"

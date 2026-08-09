@@ -173,11 +173,11 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   // stay crawlable; they just point their canonical at the original and drop out
   // of the index. Nothing is deleted or renamed. See lib/card-duplicates.ts.
   const [priceState, twin] = await Promise.all([
-    getCardPriceState(card.id),
+    getCardPriceState(card),
     getCanonicalTwin(card),
   ]);
   const canonicalPath = `/card/${twin ? twin.slug ?? twin.id : card.slug ?? params.id}`;
-  const noindex = priceState.isEmpty || twin != null;
+  const noindex = !priceState.indexable || twin != null;
 
   return {
     title,
@@ -443,14 +443,23 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // rich results in Google.
   const setInfo = setInfoForLd;
   const setUrl = setInfo && !setInfo.comingSoon ? `/sets/${setInfo.slug}` : "/browse";
+  // The set crumb is DROPPED when the set has no page of its own — a collector
+  // product like T1S is not in SETS, so `setUrl` falls back to /browse and the
+  // trail would list the same URL twice under two different names. Two crumbs
+  // pointing at one URL is a malformed trail; three honest levels beat four with
+  // a duplicate in them. (Only visible now that these pages are indexed — while
+  // they carried noindex nothing was reading this.)
+  const hasSetPage = setUrl !== "/browse";
   const breadcrumbLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
       { "@type": "ListItem", position: 2, name: "Cards", item: `${SITE_URL}/browse` },
-      { "@type": "ListItem", position: 3, name: card.setName, item: `${SITE_URL}${setUrl}` },
-      { "@type": "ListItem", position: 4, name: card.name, item: `${SITE_URL}${cardUrl}` },
+      ...(hasSetPage
+        ? [{ "@type": "ListItem", position: 3, name: card.setName, item: `${SITE_URL}${setUrl}` }]
+        : []),
+      { "@type": "ListItem", position: hasSetPage ? 4 : 3, name: card.name, item: `${SITE_URL}${cardUrl}` },
     ],
   };
 
@@ -642,7 +651,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
 
   // The same price-data test that drives the sitemap and the robots tag, so the
   // page can explain its own state honestly when it has nothing to compare.
-  const priceState = await getCardPriceState(card.id);
+  const priceState = await getCardPriceState(card);
 
   // Contextual links from this programmatic page into our real editorial work.
   const relatedGuides = guidesForCard({
@@ -672,6 +681,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     isSpecialPrinting: thisEdition != null,
     specialPrintingLabel: thisEdition ?? "",
     basePriceCents,
+    noRetailChannel: priceState.noRetailChannel,
   });
   const faqLd = {
     "@context": "https://schema.org",
@@ -800,12 +810,35 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               internal links and bookmarks, and an empty shell serves none of them. */}
           {priceState.isEmpty && (
             <section className="mt-6 rounded-xl border border-gold/25 bg-gold/[0.04] p-5">
-              <h2 className="font-bold text-white">No live listings for {displayName} yet</h2>
+              <h2 className="font-bold text-white">
+                {priceState.noRetailChannel
+                  ? `Why there's no price for ${displayName}`
+                  : `No live listings for ${displayName} yet`}
+              </h2>
+              {/* A printing with no retail channel needs a different explanation.
+                  The generic copy below promises the page "fills in the moment a
+                  store lists it" — true for a card shops actually stock, and
+                  misleading for one that is only ever distributed by lottery.
+                  Saying so plainly is both more useful and more honest. */}
               <p className="mt-2 text-sm leading-relaxed text-slate-300">
-                None of the stores we track in Australia, New Zealand, the United States, the United
-                Kingdom, Singapore or Canada has this printing in stock today, and we have fewer than
-                seven days of recorded price history for it — so there is nothing honest to compare
-                yet. We check every store daily; this page fills in on its own the moment one lists it.
+                {priceState.noRetailChannel ? (
+                  <>
+                    {card.setName} is distributed by drawing on the Riot Merch Store, not through
+                    shops — so none of the retailers we track in Australia, New Zealand, the United
+                    States, the United Kingdom, Singapore or Canada will ever stock it at retail, and
+                    there is no launch price to compare. The only market this printing can have is
+                    resale. We track that too: a price appears here as soon as a copy changes hands
+                    somewhere we can see it.
+                  </>
+                ) : (
+                  <>
+                    None of the stores we track in Australia, New Zealand, the United States, the
+                    United Kingdom, Singapore or Canada has this printing in stock today, and we have
+                    fewer than seven days of recorded price history for it — so there is nothing
+                    honest to compare yet. We check every store daily; this page fills in on its own
+                    the moment one lists it.
+                  </>
+                )}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {printings.some((p) => (p[priceField(DEFAULT_COUNTRY)] as number | null) != null) && (
@@ -1109,17 +1142,29 @@ type FaqContext = {
   isSpecialPrinting: boolean;
   specialPrintingLabel: string;
   basePriceCents: number | null;
+  /**
+   * This printing has no retail channel (see lib/card-price-state.ts). These
+   * answers are published as FAQPage JSON-LD, so the two price/where-to-buy
+   * answers below MUST branch on it: the defaults promise that stores stock the
+   * card and that a price will appear, and both are false for a product Riot
+   * only ever distributes by drawing. Getting this wrong is worse than the
+   * noindex it replaces — it is a structured-data claim that contradicts the
+   * page it sits on.
+   */
+  noRetailChannel: boolean;
 };
 
 function buildFaqs(card: CardForCopy, ctx: FaqContext): { q: string; a: string }[] {
   // Every question and answer leaves through tidy() at the end of this function
   // — same reasoning as the narrative's exit point.
-  const { lowest, stores, printingCount, deckCount, deckNames, place, currency, isSpecialPrinting, specialPrintingLabel, basePriceCents } = ctx;
+  const { lowest, stores, printingCount, deckCount, deckNames, place, currency, isSpecialPrinting, specialPrintingLabel, basePriceCents, noRetailChannel } = ctx;
   const faqs = [
     {
       q: `How much does ${card.name} cost?`,
       a: lowest != null && stores > 0
         ? `The cheapest live price for ${card.name} (${card.setCode} ${card.collectorNumber}) is currently ${formatMoney(lowest, currency)} across ${stores} ${stores === 1 ? "store" : "stores"} in ${place}; every other market we cover is compared on this page too. Prices update daily.`
+        : noRetailChannel
+        ? `There is no retail price for ${card.name} (${card.setCode} ${card.collectorNumber}). ${card.setName} is distributed by drawing rather than sold through shops, so no store we track lists it — the only price it can have is a resale price, and this page shows one as soon as a copy changes hands somewhere we can see it.`
         : `We don't have a live price for ${card.name} right now. Prices refresh daily across AU, NZ, US, UK and SG stores — check back soon for the cheapest place to buy it.`,
     },
     {
@@ -1128,7 +1173,9 @@ function buildFaqs(card: CardForCopy, ctx: FaqContext): { q: string; a: string }
     },
     {
       q: `Where can I buy ${card.name}?`,
-      a: `Compare every store selling ${card.name} across Australia, New Zealand, the US, the UK, Singapore and Canada on this page, then buy from whichever retailer offers the lowest total price including postage. RiftCompare links straight through to each store.`,
+      a: noRetailChannel
+        ? `Not from a shop. ${card.name} comes only in ${card.setName}, which Riot distributes through a Riot Merch Store drawing rather than retail, so there is no storefront to compare. Copies reach the open market only when someone who won the drawing resells one — this page tracks that market and will show a price when it appears.`
+        : `Compare every store selling ${card.name} across Australia, New Zealand, the US, the UK, Singapore and Canada on this page, then buy from whichever retailer offers the lowest total price including postage. RiftCompare links straight through to each store.`,
     },
   ];
 

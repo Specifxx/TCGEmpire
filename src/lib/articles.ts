@@ -1864,8 +1864,8 @@ For the complete, always-current picture — including March's original 7 bans �
       "Riot's English T1 2025 Worlds Champion Signature Edition drawing opens 9am PT on Friday 14 August 2026 and closes 6pm PT on Monday 17 August. Every date, the US$360 price, entry rules and all five cards.",
     author: "RiftCompare",
     date: "2026-08-09",
-    readMins: 7,
-    tags: ["news", "collectibles", "esports"],
+    readMins: 10,
+    tags: ["news", "collectibles", "esports", "collecting", "chase cards"],
     hero: {
       src: "/blog/riftbound-t1-signature-edition-drawing.png",
       alt: "Riftbound T1 2025 Worlds Champion Signature Edition drawing dates — registration 14-17 August 2026",
@@ -1875,6 +1875,7 @@ For the complete, always-current picture — including March's original 7 bans �
       "**Selection emails start Thursday 20 August**, with further waves on 24 and 27 August if they are needed. Boxes begin arriving from **Wednesday 2 September**.",
       "**US$360**, **10,125 copies per language** (English, Chinese, Korean). One card in every box is serial-numbered 1-2025 and carries a gold-stamped player signature.",
       "**There is no Catch Up pool.** Riot has said every entrant has the same chance regardless of past entries or purchases, so a long purchase history buys you nothing here.",
+      "**The real scarcity number is 2,025, not 10,125.** Five champions share a 1-2025 serial range, so each one exists in about 2,025 serialised English copies — a fifth of the print run.",
       "The cheaper **Player Bundle (US$70)** has its own drawing later in the year — same five champions, different art, no serialisation.",
     ],
     faq: [
@@ -1905,6 +1906,26 @@ For the complete, always-current picture — including March's original 7 bans �
       {
         q: "Which cards are in the Riftbound T1 collection?",
         a: "Five champion units, one chosen by each member of T1's championship roster: Ambessa, The Wolf (Doran), Xin Zhao, Vigilant (Oner), Galio, Indefatigable (Faker), Miss Fortune, Buccaneer (Gumayusi) and Seraphine, Not Alone (Keria).",
+      },
+      {
+        q: "How rare is the Riftbound T1 Signature Edition?",
+        a: "10,125 copies per language and 30,375 worldwide — but each box holds only one serialised card, and five champions share the 1-2025 serial range (5 x 2,025 = 10,125). So any single champion exists in roughly 2,025 serialised copies per language, or 6,075 worldwide. Riot has not confirmed the champions are distributed evenly, so treat that as the arithmetic's implication rather than a promise.",
+      },
+      {
+        q: "How many serialised Faker Galio cards are there?",
+        a: "About 2,025 in English and 6,075 across English, Chinese and Korean, if the five champions share the 1-2025 serial range evenly. Galio, Indefatigable is the card Lee \"Faker\" Sang-hyeok chose, and the serialised copy carries his gold-stamped signature.",
+      },
+      {
+        q: "Is the Riftbound T1 Signature Edition worth it?",
+        a: "As cards to play with, no — the same five champions exist as ordinary printings that cost cents, and one of them is not tournament-legal until Radiance releases. What US$360 buys is a capped print run with no reprint planned, a one-of-one serialised card, a player's gold-stamped signature and a foiling treatment made for this release. Whether that is worth it depends entirely on whether you want the object.",
+      },
+      {
+        q: "Will the Riftbound T1 cards go up in value?",
+        a: "We do not forecast prices. The only publicly known figure is the US$360 Riot charges drawing winners, and after the window closes even that stops being obtainable, so every number beyond it is a guess. What is factual is the scarcity: a fixed print run, no reprint, no retail channel, and one unique serial per box. All six printings have live pages on RiftCompare and will show a real price the moment a copy trades somewhere we can see it.",
+      },
+      {
+        q: "Can I buy the T1 cards individually?",
+        a: "Not from Riot. The collection is sold only as a complete product through a Riot Merch Store drawing, so individual T1S printings can only ever appear on the secondary market once winners break sets up. The ordinary retail printings of four of the five champions are buyable as singles today.",
       },
     ],
     itemList: {
@@ -1992,6 +2013,8 @@ You register during the window; after it closes, Riot draws from everyone who en
 
 The single most important rule, and the one most likely to change how people behave: **there is no Catch Up pool.** In some previous Riot Merch drawings, people who had missed out before were weighted more heavily next time. Riot has explicitly said that is not happening here — everyone who enters has the same chance, regardless of prior entries or purchases. If you have been losing drawings all year, that history is worth nothing on this one. If you have never entered one, you are not behind.
 
+One thing nobody can tell you, us included: your odds. Riot has never published how many people enter a Merch Store drawing, so "10,125 copies" is a supply figure with no demand figure beside it. Anyone quoting you a percentage chance of winning is making it up.
+
 Riot has also confirmed two things about the shipping side that matter at this price point. Orders get extra packaging specifically to protect them in transit. And because every serialised card is genuinely unique, a damaged one cannot be replaced with an identical copy — so the remedy is returning the complete set for a full refund, not a swap. If your box arrives damaged, that is a decision to make deliberately rather than a form to fill in.
 
 ## What US$360 actually buys
@@ -2034,21 +2057,61 @@ Every box contains exactly one card numbered from 1 to 2025 — the year of the 
 
 ![Faker's serialised Galio, Indefatigable from the T1 2025 Worlds Champion Signature Edition, showing the 0001 of 2025 serial box and gold-stamped signature](/t1-worlds-cards/galio-indefatigable-t1s003-signature.jpg)
 
-If you have read our [variant and finish glossary](/blog/riftbound-variant-glossary), this is a category Riftbound has not had before. Signature cards in normal sets carry the artist's stamp; this is a player's, on a card with a unique serial. Serial number will drive resale value far more than condition here — single digits, and anything under 100, will trade at a large premium over a number in the four figures, exactly as they do in every other serialised collectible.
+If you have read our [variant and finish glossary](/blog/riftbound-variant-glossary), this is a category Riftbound has not had before. Signature cards in normal sets carry the artist's stamp; this is a player's, on a card with a unique serial. In every other serialised collectible market, low numbers trade above high ones, and there is no obvious reason this one would behave differently. No Riftbound serial has ever changed hands, though, so that is a pattern from elsewhere rather than an observation about this card.
 
 Riot has separately said it has [no plans to put serialisation into booster packs](/blog/riftbound-august-2026-state-of-the-game-takeaways), which is what makes this interesting rather than a preview of things to come: it is a deliberately walled-off collector release.
 
-## What resale will probably do
+## How rare is the T1 Signature Edition, exactly?
 
-We do not price speculation, so treat what follows as reasoning rather than a forecast.
+Rare enough that the number is worth doing properly, because "10,125" on its own understates it.
 
-There are 10,125 English boxes and a US$360 entry price. The demand pool is not Riftbound players — it is Riftbound players plus League of Legends fans plus T1 fans, which is a far larger number than 10,125. Every comparable Riot Merch drawing has sold through, and this one has a serialised chase card on top.
+Each box contains **one** serialised card, numbered somewhere in **1–2025**. There are five champions in the set, and 5 × 2,025 = **10,125** — exactly the print run Riot published for each language.
 
-The parts we would actually watch:
+That is not a coincidence, and the arithmetic only closes one way. A single shared 1–2025 pool cannot cover 10,125 boxes when every box holds a uniquely numbered card: you would run out after 2,025 boxes. Five separate 1–2025 runs, one per champion, is the only arrangement that fits the two numbers Riot published.
 
-- **Sealed boxes** will list quickly and above retail. Whether they hold that is a different question, and depends entirely on how many winners flip rather than keep.
-- **Loose serialised cards** are where the real spread will be, and where number matters more than anything else about the card.
-- **The four retail printings** of these champions are the leftover trade. A collection like this puts Faker's Galio and Doran's Ambessa in front of people who have never bought a Riftbound single, and those cards cost cents. We have seen this pattern on every previous crossover; [the daily movers](/movers) is where it shows up first.
+| | English | Per language | Worldwide (EN + CN + KR) |
+| --- | --- | --- | --- |
+| Boxes | 10,125 | 10,125 | 30,375 |
+| Serialised cards | 10,125 | 10,125 | 30,375 |
+| Serialised copies **per champion** | 2,025 | 2,025 | 6,075 |
+
+So the thing collectors will actually chase — a **gold-signed, serialised Galio picked and signed by Faker** — exists in roughly **2,025 English copies**, and 6,075 across all three languages. That is a fifth of the number most coverage is quoting, and it is the number that matters.
+
+Two honest caveats. Riot has published the print run and the serial range but has **not** confirmed that the five champions are distributed evenly across boxes — the arithmetic implies it, Riot has not stated it, and which champion you get is not something you choose. And the four unserialised cards in your box are identical to everybody else's: the serial is what is scarce, not the set.
+
+## What actually makes these cards valuable
+
+Four things, and only one of them is the price tag.
+
+**The print run is fixed and small, and there is no reprint lever.** Riot capped this at 10,125 per language before a single copy shipped. A set that sells out is normally followed by a reprint, a second wave or a promo distribution of the same art. None of those exist here — the collection commemorates a specific championship, and the serial range is literally the year.
+
+**The serial number is a one-of-one.** Every serialised card is unique: there is exactly one #0001 Galio in English and there will never be another. Be precise about what that means, because resellers will not be — the three language editions are numbered separately, so a #0001 Galio exists once in English, once in Chinese and once in Korean. Riot's own returns policy makes the point better than any analysis — a damaged serialised card cannot be replaced with an identical copy, so the remedy is a full refund of the whole set. That is a company saying, in a support policy, that it cannot manufacture a second one.
+
+**There is no retail channel at all.** Every other Riftbound product we track has a shop price, which anchors resale: you can always see what a booster box costs at retail and judge a listing against it. This has no retail price after the drawing closes. The only public number is the US$360 you would have paid to Riot, and once the window shuts even that stops being obtainable. Price discovery happens entirely on the secondary market, starting from nothing. We will report what that produces; we are not going to guess at it in advance.
+
+**The category itself is walled off.** In the same month, Riot said it has [no plans to put serialisation into booster packs](/blog/riftbound-august-2026-state-of-the-game-takeaways). Serialised Riftbound cards are therefore not a thing that will exist in the ordinary product line — they are a thing that exists in dedicated collector releases, of which this is the first.
+
+And one thing that does **not** make them valuable: playability. These are the same five champions you can already buy as ordinary singles for cents apiece — [and one of them, Seraphine, is not tournament-legal until Radiance releases](/blog/riftbound-2027-set-roadmap) in October. Nobody is paying US$360 for a 3-cost 6-might Galio. They are paying for the object.
+
+## What we won't tell you
+
+We do not forecast prices, and this is exactly the product where the temptation is strongest.
+
+**These cards have a cost. They do not yet have a price.** US$360 is what Riot charges a winner; a price is what two strangers agree on, and none has been agreed yet.
+
+Here is the whole of what is actually known: the print run, the serial range, and one price — US$360 — that only winners of the drawing can pay. Every number beyond that is somebody's guess, including ours. Sealed collector products from a first-of-its-kind collaboration have gone both ways in other card games, and anyone quoting you a multiple in the first week is quoting a vibe.
+
+What we will do instead is show you the number when it exists. All six printings have live pages on RiftCompare, and the moment a copy changes hands somewhere we can see it, that page shows the price and starts a history. [Set a price alert](/alerts) if you would rather be told than check.
+
+## Is the Player Bundle the better buy?
+
+For most people who just like the cards, yes — and it is not close on a per-dollar basis.
+
+The gap is worth doing as arithmetic rather than as "a fifth of the price". US$360 minus US$70 is **US$290**, and that US$290 buys exactly three things: the serialisation, the gold-stamped signature and the foiling treatment made for this release. Everything else — the five champions, exclusive art, an object you can hold — is in both.
+
+US$70 gets you the same five champions in their own exclusive art, plus sleeves, a deckbox, a binder and a metal die. If your reason for wanting this collection is "I want Faker's Galio on my shelf", the Player Bundle does that for a fifth of the price; if it is "I want a numbered card that only 2,025 people can own", it does not do that at all, and nothing else will.
+
+Worth pricing the third option honestly too: the ordinary retail printings of four of these five champions are in our database right now and cost cents. If what you want is to **play** these cards, that is the entire cost.
 
 [[embed:1]]
 
@@ -2150,6 +2213,10 @@ Yes, but as a secondary market rather than a retail one. Nothing in this collect
 What is trackable *today* is the ordinary retail printing of each champion T1 picked. If the collection has you wanting Faker's Galio or Doran's Ambessa and you would rather spend cents than US$360, those are below.
 
 [[embed:1]]
+
+## Why it is scarce, in one paragraph
+
+Each box holds exactly one serialised card in a 1-2025 range, and five champions share that range — 5 x 2,025 is 10,125, the published print run for each language. So any one champion (Faker's Galio, say) exists in roughly **2,025 serialised English copies**, not 10,125, with about 6,075 worldwide across the three languages. Add a capped run with no reprint planned, a signature stamped in gold, and no retail channel to anchor a price against, and you have the four things that actually drive a collectible's scarcity. What you do **not** get is playability you could not buy for cents — [the full breakdown is in the drawing guide](/blog/riftbound-t1-signature-edition-drawing#what-actually-makes-these-cards-valuable).
 
 For the wider context on where serialised and premium prints sit in this game, see [the variant and finish glossary](/blog/riftbound-variant-glossary) — and note that Riot has said it has [no plans to serialise cards in booster packs](/blog/riftbound-august-2026-state-of-the-game-takeaways), which makes this collection a deliberate one-off rather than a preview.
 

@@ -1,4 +1,5 @@
 import { prisma } from "./db";
+import { hasNoRetailChannel, NO_RETAIL_CHANNEL_SETS } from "./constants";
 import { dbHistory } from "./db-history";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -27,17 +28,42 @@ import { dbHistory } from "./db-history";
 // useful, and worth indexing, even while it is briefly out of stock everywhere.
 export const MIN_HISTORY_DAYS = 7;
 
+// The no-retail-channel exemption itself lives in constants.ts — card-narrative.ts
+// needs the same predicate to stop promising "a price appears the moment a store
+// lists it" on a printing no store will ever list, and that module must not pull
+// in Prisma. Re-exported here so this file stays the one place to read the rule.
+export { NO_RETAIL_CHANNEL_SETS, hasNoRetailChannel } from "./constants";
+
+/** Enough card data on the row for the page to stand on its own without a price. */
+export function cardIsSubstantial(card: { description?: string | null; imageUrl?: string | null }): boolean {
+  return Boolean(card.description?.trim()) && Boolean(card.imageUrl?.trim());
+}
+
 export type CardPriceState = {
   /** Any in-stock listing, in any market. */
   hasListings: boolean;
   /** Distinct days of recorded price history. */
   historyDays: number;
-  /** True when the page has nothing of substance to show. */
+  /**
+   * True when there is no price data to show. STILL TRUE for a no-retail-channel
+   * printing — the page genuinely has no price, and the "no live listings"
+   * explainer and the thin-page ad treatment both key off this. Do not
+   * repurpose it as "should we index"; that is `indexable`.
+   */
   isEmpty: boolean;
+  /** This printing is never sold at retail, so `isEmpty` carries no signal. */
+  noRetailChannel: boolean;
+  /** The actual robots/sitemap decision. */
+  indexable: boolean;
 };
 
-export function priceStateFrom(hasListings: boolean, historyDays: number): CardPriceState {
-  return { hasListings, historyDays, isEmpty: !hasListings && historyDays < MIN_HISTORY_DAYS };
+export function priceStateFrom(
+  hasListings: boolean,
+  historyDays: number,
+  noRetailChannel = false
+): CardPriceState {
+  const isEmpty = !hasListings && historyDays < MIN_HISTORY_DAYS;
+  return { hasListings, historyDays, isEmpty, noRetailChannel, indexable: !isEmpty || noRetailChannel };
 }
 
 /**
@@ -49,35 +75,61 @@ export function priceStateFrom(hasListings: boolean, historyDays: number): CardP
  * 1,000 indexed pages to a timeout is far worse than briefly indexing a handful
  * of empty ones.
  */
-export async function getCardPriceState(cardId: string): Promise<CardPriceState> {
+export async function getCardPriceState(card: { id: string; setCode: string }): Promise<CardPriceState> {
+  // The substance half of the exemption is looked up HERE rather than taken from
+  // the caller's row on purpose. Passing it in worked and then silently stopped
+  // working, because generateMetadata's `select` does not pull imageUrl — so the
+  // page said noindex while the sitemap (which does select it) submitted the URL,
+  // the exact contradiction this file exists to prevent. One extra round-trip,
+  // only ever for the handful of no-retail-channel printings, buys immunity from
+  // every future caller's select.
+  let exempt = false;
+  if (hasNoRetailChannel(card.setCode)) {
+    exempt = await prisma.card
+      .findUnique({ where: { id: card.id }, select: { description: true, imageUrl: true } })
+      .then((row) => (row ? cardIsSubstantial(row) : false))
+      .catch(() => false);
+  }
   try {
     const [listing, days] = await Promise.all([
       prisma.retailerPrice.findFirst({
-        where: { cardId, inStock: true },
+        where: { cardId: card.id, inStock: true },
         select: { id: true },
       }),
       dbHistory.priceHistory
-        .findMany({ where: { cardId }, select: { day: true }, distinct: ["day"], take: MIN_HISTORY_DAYS })
+        .findMany({ where: { cardId: card.id }, select: { day: true }, distinct: ["day"], take: MIN_HISTORY_DAYS })
         .then((rows) => rows.length)
         .catch(() => 0),
     ]);
-    return priceStateFrom(listing != null, days);
+    return priceStateFrom(listing != null, days, exempt);
   } catch {
-    return priceStateFrom(true, MIN_HISTORY_DAYS);
+    return priceStateFrom(true, MIN_HISTORY_DAYS, exempt);
   }
 }
 
 /**
- * The set of card ids that are EMPTY, for the sitemap generator — one pair of
- * grouped queries for the whole catalogue instead of one round-trip per card.
+ * The set of card ids that must NOT be submitted to the sitemap, for the sitemap
+ * generator — one pair of grouped queries for the whole catalogue instead of one
+ * round-trip per card.
+ *
+ * "Empty AND not exempt", i.e. the exact complement of `CardPriceState.indexable`
+ * above. The two must agree: submitting a URL we simultaneously tell Google not
+ * to index is the contradiction this whole file exists to prevent.
  *
  * Fails OPEN too: an empty set means "nothing is excluded", so a database
  * problem degrades to the previous behaviour rather than emptying the sitemap.
  */
 export async function getEmptyCardIds(): Promise<Set<string>> {
   try {
-    const [allCards, withListings, historyRows] = await Promise.all([
+    const [allCards, exemptCards, withListings, historyRows] = await Promise.all([
       prisma.card.findMany({ select: { id: true } }),
+      // The no-retail-channel test needs description+imageUrl, which are far too
+      // fat to pull for the whole catalogue (see the egress rules in lib/db.ts).
+      // Scoped to the exempt set codes it is a handful of rows.
+      prisma.card.findMany({
+        where: { setCode: { in: [...NO_RETAIL_CHANNEL_SETS] } },
+        select: { id: true, description: true, imageUrl: true },
+      }),
       prisma.retailerPrice
         .groupBy({ by: ["cardId"], where: { inStock: true }, _count: { _all: true } })
         .then((rows) => new Set(rows.map((r) => r.cardId))),
@@ -90,9 +142,13 @@ export async function getEmptyCardIds(): Promise<Set<string>> {
     const daysByCard = new Map<string, number>();
     for (const row of historyRows) daysByCard.set(row.cardId, (daysByCard.get(row.cardId) ?? 0) + 1);
 
+    const exempt = new Set(exemptCards.filter(cardIsSubstantial).map((c) => c.id));
+
     const empty = new Set<string>();
     for (const { id } of allCards) {
-      if (!withListings.has(id) && (daysByCard.get(id) ?? 0) < MIN_HISTORY_DAYS) empty.add(id);
+      if (withListings.has(id) || (daysByCard.get(id) ?? 0) >= MIN_HISTORY_DAYS) continue;
+      if (exempt.has(id)) continue;
+      empty.add(id);
     }
     return empty;
   } catch {

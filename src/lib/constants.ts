@@ -362,3 +362,73 @@ export function isCrystalRose(setCode: string, collectorNumber: string): boolean
 export function conditionInfo(key: string): ConditionInfo {
   return CONDITIONS[key] ?? CONDITIONS.NM;
 }
+
+// ─── The one exception: printings with NO RETAIL CHANNEL ─────────────────────
+// "No listing anywhere" is a signal because almost every printing is SOLD by the
+// stores we scrape, so an absent listing means something. For a printing Riot
+// never sells through retail at all, it means nothing — the page can never earn
+// its way out of the empty bucket no matter how sought-after the card is.
+//
+// The Riftbound × T1 2025 Worlds Champion Collection (T1S) is the first of these:
+// distributed by lottery on the Riot Merch Store, 10,125 copies per language,
+// never stocked by a shop. Its six printings carry full card data, self-hosted
+// art, rules text, our own editorial coverage and — via the name-matched
+// "other printings" block — a live-priced retail sibling for four of the five
+// champions. That is not a thin page; it is a page with no price, which is a
+// different thing, and the page says so in its own words.
+//
+// WHY THIS ONE IS A HAND-MAINTAINED LIST when nothing else here is: "does a shop
+// sell this" is a fact about the world, not about our data. No query we can run
+// derives it, so it cannot be inferred — it has to be asserted, once, per
+// collector product. Keep this list short and keep the bar high: a set belongs
+// here only when it has NO retail distribution at all.
+//
+// The bar has two parts: a set code here is necessary but not sufficient —
+// cardIsSubstantial() in card-price-state.ts also requires real rules text and real art, so a
+// half-entered manual card still stays out of the index.
+export interface NoRetailChannelProduct {
+  /** The product as Riot names it. */
+  product: string;
+  /** How you get one, in a clause that reads inside a sentence. */
+  distribution: string;
+  /** Published print run per language edition. */
+  copiesPerLanguage: number;
+  /** Language editions produced, each with its own print run and numbering. */
+  languages: string[];
+  /** Top of the serial range printed on the one serialised card per box. */
+  serialTop: number;
+  /** Distinct champions sharing that serial range — copies-per-champion is the quotient. */
+  cardsInSet: number;
+  /** Published price of the headline edition, formatted. */
+  price: string;
+  /** Our own coverage, for the card page to link to. */
+  articleSlug: string;
+}
+
+// The facts a card page needs to explain itself when it has no price. Kept here
+// beside the predicate so "this set has no retail channel" and "here is why"
+// cannot drift apart, and deliberately small: published figures only, no
+// analysis (that lives in the article this points at).
+export const NO_RETAIL_CHANNEL: Record<string, NoRetailChannelProduct> = {
+  T1S: {
+    product: "Riftbound × T1 2025 Worlds Champion Collection",
+    distribution: "a drawing on the Riot Merch Store",
+    copiesPerLanguage: 10_125,
+    languages: ["English", "Chinese", "Korean"],
+    serialTop: 2025,
+    cardsInSet: 5,
+    price: "US$360",
+    articleSlug: "riftbound-t1-signature-edition-drawing",
+  },
+};
+
+export const NO_RETAIL_CHANNEL_SETS: ReadonlySet<string> = new Set(Object.keys(NO_RETAIL_CHANNEL));
+
+export function hasNoRetailChannel(setCode: string | null | undefined): boolean {
+  return setCode != null && setCode in NO_RETAIL_CHANNEL;
+}
+
+export function noRetailChannelProduct(setCode: string | null | undefined): NoRetailChannelProduct | null {
+  return setCode != null ? NO_RETAIL_CHANNEL[setCode] ?? null : null;
+}
+
