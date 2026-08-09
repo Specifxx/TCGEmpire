@@ -6,6 +6,10 @@ import { join } from "node:path";
 import { ARTICLES, getArticles } from "../src/lib/articles";
 import { COUNTRY_GUIDE_SLUGS, hreflangForCountryGuide } from "../src/lib/seo";
 import { extractToc, headingId } from "../src/lib/toc";
+import { cardSlug } from "../src/lib/card-url";
+import { setByCode } from "../src/lib/constants";
+
+type ManualCard = { name: string; setCode: string; collectorNumber: string; isPromo?: boolean };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Guards for the editorial content pack.
@@ -271,4 +275,67 @@ test("every content-pack article links to at least three tool or category pages"
     const n = byArticle.get(slug)?.size ?? 0;
     assert.ok(n >= 3, `${slug}: links to only ${n} distinct tool/category pages, needs 3+`);
   }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// prisma/manual-cards.json ↔ the article embeds that reference it.
+// ─────────────────────────────────────────────────────────────────────────────
+// Card slugs are DERIVED (lib/card-url.ts cardSlug: name + set + number, plus a
+// "-promo" suffix when isPromo), while the articles hard-code them as strings.
+// Nothing connected the two, so a field change in the JSON silently broke every
+// embed that pointed at it — flipping the six T1 printings to isPromo moved all
+// six slugs, and the only symptom would have been a gallery quietly rendering
+// nothing (resolveEmbed drops a slug that does not resolve, by design).
+//
+// Source-level and DB-free, like the rest of this file.
+
+test("every article embed slug for a manual card matches what cardSlug() will generate", () => {
+  const manual = (JSON.parse(readFileSync(join(ROOT, "prisma/manual-cards.json"), "utf8")) as unknown[])
+    .filter((x): x is ManualCard => !!x && typeof x === "object" && !("_note" in (x as object)));
+
+  // Scoped to sets with NO automated pipeline behind them — i.e. set codes absent
+  // from constants.ts SETS. For a real set (OGN, VEN…) manual-cards.json holds only
+  // a handful of promos while the importer supplies the rest, so "this set's code
+  // appears in the slug" says nothing about where the card came from. For a
+  // manual-only set it says everything: the JSON is the entire catalogue.
+  const slugsBySet = new Map<string, string[]>();
+  for (const c of manual) {
+    if (setByCode(c.setCode)) continue;
+    const list = slugsBySet.get(c.setCode) ?? [];
+    list.push(cardSlug(c));
+    slugsBySet.set(c.setCode, list);
+  }
+  assert.ok(slugsBySet.size > 0, "expected at least one manual-only set (T1S) — did the scoping rule break?");
+
+  const embedSlugs = ARTICLES.flatMap((a) => [
+    ...(a.embeds ?? []).flatMap((e) => e.slugs ?? []),
+    ...(a.embed?.slugs ?? []),
+    ...(a.closeups ?? []).flatMap((c) => c.slugs ?? []),
+  ]);
+
+  const broken: string[] = [];
+  for (const [setCode, generated] of slugsBySet) {
+    // Any embed slug carrying this set's code segment claims to be one of its
+    // printings, so it has to be one of the slugs the importer will actually write.
+    const marker = `-${setCode.toLowerCase()}-`;
+    for (const s of embedSlugs) {
+      if (s.includes(marker) && !generated.includes(s)) broken.push(`${s} (no ${setCode} manual card generates this)`);
+    }
+  }
+  assert.deepEqual(broken, [], `article embeds point at slugs the importer will never create:\n  ${broken.join("\n  ")}`);
+});
+
+test("manual cards are applied by the deploy, not only by a hand-fired workflow", () => {
+  // THE ROOT CAUSE of the six T1 printings 404ing in production for a day: the
+  // only caller of add-manual-cards.ts was a workflow_dispatch-gated step in
+  // maintenance.yml, so committing a card to the JSON and deploying did nothing
+  // until somebody remembered to fire the job by hand. build-db-push.sh runs on
+  // every Vercel production/preview build and is where the other best-effort
+  // catalogue maintenance already lives.
+  const sh = readFileSync(join(ROOT, "scripts/build-db-push.sh"), "utf8");
+  assert.match(
+    sh,
+    /tsx scripts\/add-manual-cards\.ts/,
+    "prisma/manual-cards.json is only a source of truth if something applies it on deploy"
+  );
 });

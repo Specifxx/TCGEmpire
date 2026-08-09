@@ -499,7 +499,7 @@
     "might": null
   },
   {
-    "_note": "Riftbound x T1 2025 Worlds Champion Collection (setCode T1S, printed bottom-left as \"T1S · NNN/005 · EN\"). Riot distributes this collection by Riot Merch Store DRAWING, not through retail, so it will never appear in RiftScribe, TCGplayer's catalogue or the riftbound.gg sitemap the automated pipelines read — this file is the only way these six printings exist on RiftCompare at all. Card data was read off Riot's own reveal renders (re-hosted at public/t1-worlds-cards/, cropped out of the composite on the reveal page — same self-host approach as the Vendetta Signature block above, never a hotlink). CROSS-CHECKED, not guessed: Xin Zhao/Galio/Miss Fortune already exist in our DB as base printings (SFD 176, UNL 171, OGN 193) and their domain/type/cost/might match these renders exactly, and Ambessa, The Wolf matches VEN 084 (Body, Unit, 4 energy, 4 might, identical Empower text). Seraphine, Not Alone has no other printing — it is from the unreleased Radiance set and is NOT tournament-legal until Radiance ships — so its Order domain is read from the yellow domain bar, the same colour as the two DB-confirmed Order cards in this same frame. rarity is Showcase for all six per constants.ts chasePrintRarity(): every card here is a special treatment (new art, new frame, new foiling) of another card, so it belongs in Showcase rather than cluttering the base tier its retail printing sits in. NO SETS ENTRY on purpose — T1S is a sealed collector product, not a playable set, and adding it to constants.ts SETS would push a 5-card 'set' into pack-sim, box-EV, movers and the homepage set grid. These cards carry no store listings (they cannot be bought as singles), so card-price-state.ts noindexes their pages until secondary-market listings appear — which is correct and self-healing. Run: `npm run cards:manual` (or maintenance.yml task=cards-manual)."
+    "_note": "Riftbound x T1 2025 Worlds Champion Collection (setCode T1S, printed bottom-left as \"T1S · NNN/005 · EN\"). Riot distributes this collection by Riot Merch Store DRAWING, not through retail, so it will never appear in RiftScribe, TCGplayer's catalogue or the riftbound.gg sitemap the automated pipelines read — this file is the only way these six printings exist on RiftCompare at all. Card data was read off Riot's own reveal renders (re-hosted at public/t1-worlds-cards/, cropped out of the composite on the reveal page — same self-host approach as the Vendetta Signature block above, never a hotlink). CROSS-CHECKED, not guessed: Xin Zhao/Galio/Miss Fortune already exist in our DB as base printings (SFD 176, UNL 171, OGN 193) and their domain/type/cost/might match these renders exactly, and Ambessa, The Wolf matches VEN 084 (Body, Unit, 4 energy, 4 might, identical Empower text). Seraphine, Not Alone has no other printing — it is from the unreleased Radiance set and is NOT tournament-legal until Radiance ships — so its Order domain is read from the yellow domain bar, the same colour as the two DB-confirmed Order cards in this same frame. rarity is Showcase for all six per constants.ts chasePrintRarity(): every card here is a special treatment (new art, new frame, new foiling) of another card, so it belongs in Showcase rather than cluttering the base tier its retail printing sits in. NO SETS ENTRY on purpose — T1S is a sealed collector product, not a playable set, and adding it to constants.ts SETS would push a 5-card 'set' into pack-sim, box-EV, movers and the homepage set grid. These cards carry no store listings (they cannot be bought as singles), so card-price-state.ts noindexes their pages until secondary-market listings appear — which is correct and self-healing. Run: `npm run cards:manual` (or maintenance.yml task=cards-manual). isPromo IS TRUE on all six, deliberately: they are a promotional printing in the sense the site's own filters mean it — never sold as a retail single, only handed out through a Riot promotion — so /browse?promo=1 finds them and each tile carries the PROMO badge. TWO CONSEQUENCES worth knowing. (1) cardSlug() appends \"-promo\", so the URLs are /card/<name>-t1s-<num>-005-promo; both T1 articles' embed slug lists were updated to match and tests/content-links.test.ts covers the articles' internal links. (2) chasePrintRarity() leaves a promo's rarity alone rather than forcing Showcase, which is why rarity is set explicitly to Showcase in each entry above instead of being inferred."
   },
   {
     "externalId": "manual-t1s-001-ambessa",
@@ -510,6 +510,7 @@
     "domain": "Body",
     "type": "Unit",
     "rarity": "Showcase",
+    "isPromo": true,
     "energyCost": 4,
     "might": 4,
     "description": "[Empower] [3][C] ([3][C]: Empower me. Use only if not Empowered.)\n[Empowered] [>] I have +3 [S] and can't be dealt damage unless I'm in combat.",
@@ -525,6 +526,7 @@
     "domain": "Order",
     "type": "Unit",
     "rarity": "Showcase",
+    "isPromo": true,
     "energyCost": 3,
     "might": 4,
     "description": "[Tank]\nI enter ready if you have two or more other units in your base.",
@@ -540,6 +542,7 @@
     "domain": "Order",
     "type": "Unit",
     "rarity": "Showcase",
+    "isPromo": true,
     "energyCost": 3,
     "might": 6,
     "description": "[Deflect]\n[Tank]\nI don't deal combat damage.",
@@ -558,6 +561,7 @@
     "domain": "Order",
     "type": "Unit",
     "rarity": "Showcase",
+    "isPromo": true,
     "energyCost": 3,
     "might": 6,
     "description": "[Deflect]\n[Tank]\nI don't deal combat damage.",
@@ -573,6 +577,7 @@
     "domain": "Chaos",
     "type": "Unit",
     "rarity": "Showcase",
+    "isPromo": true,
     "energyCost": 4,
     "might": 4,
     "description": "You may play me to an open battlefield.\nFriendly units may be played to open battlefields.",
@@ -588,6 +593,7 @@
     "domain": "Order",
     "type": "Unit",
     "rarity": "Showcase",
+    "isPromo": true,
     "energyCost": 5,
     "might": 1,
     "description": "When you play me or when I become exhausted, play a 1 [S] Recruit unit token to your base.\nI have +1 [S] for each other exhausted unit you control.",

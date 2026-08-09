@@ -137,6 +137,27 @@ tsx scripts/marketplace-seed.ts || true
 tsx scripts/fix-altart-rarity.ts || true
 tsx scripts/grant-early-premium.ts || true
 
+# MANUAL CARDS — the backstop catalogue for printings our automated sources
+# genuinely cannot see (Organized-Play promos, the drawing-only T1 Worlds
+# Champion Collection, alt-art rune cycles). See prisma/manual-cards.json.
+#
+# WHY THIS IS HERE NOW. This script was the only automated writer to the card
+# table, and add-manual-cards.ts was NOT in it — its single caller was a
+# `workflow_dispatch`-gated step in maintenance.yml (task: cards-manual). So
+# adding an entry to manual-cards.json, committing it and deploying did exactly
+# nothing: the JSON claimed to be the source of truth while the live database
+# never heard about it until someone remembered to fire a workflow by hand. Six
+# T1 printings shipped in the repo, were referenced by two published articles and
+# 404'd in production for that reason alone.
+#
+# Safe to run every deploy, for the same reasons as the three scripts above:
+# it UPSERTS by externalId (never wipes, never touches a card not listed), skips
+# any entry with a FILL_ME placeholder, and is idempotent — a second run reports
+# UPDATEs and changes nothing. `|| true` because a catalogue backstop must never
+# be the reason a deploy fails; the dispatchable maintenance job stays as the
+# manual escape hatch for running it out-of-band.
+tsx scripts/add-manual-cards.ts || true
+
 # Never exit non-zero: everything above is best-effort maintenance that must not
 # block `next build` from running — this preserves the original inline script's
 # trailing `|| true` around the whole block exactly.
