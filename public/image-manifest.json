@@ -209,6 +209,27 @@
     ],
     "fingerprint": "f573c4f051b218f8"
   },
+  "/blog/riftbound-t1-signature-edition-drawing.png": {
+    "src": "/blog/riftbound-t1-signature-edition-drawing.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 42797,
+    "webp": "/blog/riftbound-t1-signature-edition-drawing.webp",
+    "webpBytes": 25830,
+    "avif": "/blog/riftbound-t1-signature-edition-drawing.avif",
+    "avifBytes": 15233,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-t1-signature-edition-drawing-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-t1-signature-edition-drawing-768w.webp"
+      }
+    ],
+    "fingerprint": "e0ce4b109292ea46"
+  },
   "/blog/riftbound-variant-glossary.png": {
     "src": "/blog/riftbound-variant-glossary.png",
     "width": 1200,
@@ -826,6 +847,124 @@
     "variants": [],
     "avif": "/signature-cards/zed-master-of-shadows-ven191.avif",
     "avifBytes": 89266
+  },
+  "/t1-worlds-cards/ambessa-the-wolf-t1s001.jpg": {
+    "src": "/t1-worlds-cards/ambessa-the-wolf-t1s001.jpg",
+    "width": 744,
+    "height": 1038,
+    "bytes": 118111,
+    "webp": "/t1-worlds-cards/ambessa-the-wolf-t1s001.webp",
+    "webpBytes": 93236,
+    "avif": "/t1-worlds-cards/ambessa-the-wolf-t1s001.avif",
+    "avifBytes": 60315,
+    "variants": [],
+    "fingerprint": "baae2c7cabcc6691"
+  },
+  "/t1-worlds-cards/galio-indefatigable-t1s003-signature.jpg": {
+    "src": "/t1-worlds-cards/galio-indefatigable-t1s003-signature.jpg",
+    "width": 744,
+    "height": 1039,
+    "bytes": 115595,
+    "webp": "/t1-worlds-cards/galio-indefatigable-t1s003-signature.webp",
+    "webpBytes": 111112,
+    "avif": "/t1-worlds-cards/galio-indefatigable-t1s003-signature.avif",
+    "avifBytes": 71100,
+    "variants": [],
+    "fingerprint": "520403cc57a73e38"
+  },
+  "/t1-worlds-cards/galio-indefatigable-t1s003.jpg": {
+    "src": "/t1-worlds-cards/galio-indefatigable-t1s003.jpg",
+    "width": 744,
+    "height": 1038,
+    "bytes": 107378,
+    "webp": "/t1-worlds-cards/galio-indefatigable-t1s003.webp",
+    "webpBytes": 102942,
+    "avif": "/t1-worlds-cards/galio-indefatigable-t1s003.avif",
+    "avifBytes": 66191,
+    "variants": [],
+    "fingerprint": "b564a35103a2e273"
+  },
+  "/t1-worlds-cards/miss-fortune-buccaneer-t1s004.jpg": {
+    "src": "/t1-worlds-cards/miss-fortune-buccaneer-t1s004.jpg",
+    "width": 744,
+    "height": 1036,
+    "bytes": 121656,
+    "webp": "/t1-worlds-cards/miss-fortune-buccaneer-t1s004.webp",
+    "webpBytes": 97410,
+    "avif": "/t1-worlds-cards/miss-fortune-buccaneer-t1s004.avif",
+    "avifBytes": 62840,
+    "variants": [],
+    "fingerprint": "a7b0dc56e3325ad7"
+  },
+  "/t1-worlds-cards/seraphine-not-alone-t1s005.jpg": {
+    "src": "/t1-worlds-cards/seraphine-not-alone-t1s005.jpg",
+    "width": 744,
+    "height": 1036,
+    "bytes": 113297,
+    "webp": "/t1-worlds-cards/seraphine-not-alone-t1s005.webp",
+    "webpBytes": 89160,
+    "avif": "/t1-worlds-cards/seraphine-not-alone-t1s005.avif",
+    "avifBytes": 60417,
+    "variants": [],
+    "fingerprint": "38226525eccb3079"
+  },
+  "/t1-worlds-cards/t1-worlds-champion-collection-cards.jpg": {
+    "src": "/t1-worlds-cards/t1-worlds-champion-collection-cards.jpg",
+    "width": 1536,
+    "height": 730,
+    "bytes": 115799,
+    "webp": "/t1-worlds-cards/t1-worlds-champion-collection-cards.webp",
+    "webpBytes": 101032,
+    "avif": "/t1-worlds-cards/t1-worlds-champion-collection-cards.avif",
+    "avifBytes": 81010,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/t1-worlds-cards/t1-worlds-champion-collection-cards-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/t1-worlds-cards/t1-worlds-champion-collection-cards-768w.webp"
+      },
+      {
+        "w": 1200,
+        "src": "/t1-worlds-cards/t1-worlds-champion-collection-cards-1200w.webp"
+      }
+    ],
+    "fingerprint": "1803814c3ef1da4c"
+  },
+  "/t1-worlds-cards/t1-worlds-signature-edition.jpg": {
+    "src": "/t1-worlds-cards/t1-worlds-signature-edition.jpg",
+    "width": 1000,
+    "height": 932,
+    "bytes": 102998,
+    "webp": "/t1-worlds-cards/t1-worlds-signature-edition.webp",
+    "webpBytes": 66696,
+    "avif": "/t1-worlds-cards/t1-worlds-signature-edition.avif",
+    "avifBytes": 48591,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/t1-worlds-cards/t1-worlds-signature-edition-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/t1-worlds-cards/t1-worlds-signature-edition-768w.webp"
+      }
+    ],
+    "fingerprint": "4bbdd681bbc1bbc1"
+  },
+  "/t1-worlds-cards/xin-zhao-vigilant-t1s002.jpg": {
+    "src": "/t1-worlds-cards/xin-zhao-vigilant-t1s002.jpg",
+    "width": 744,
+    "height": 1038,
+    "bytes": 111556,
+    "webp": "/t1-worlds-cards/xin-zhao-vigilant-t1s002.webp",
+    "webpBytes": 86828,
+    "avif": "/t1-worlds-cards/xin-zhao-vigilant-t1s002.avif",
+    "avifBytes": 58607,
+    "variants": [],
+    "fingerprint": "661664c9278d7d5e"
   },
   "/vendetta-archetypes.png": {
     "src": "/vendetta-archetypes.png",

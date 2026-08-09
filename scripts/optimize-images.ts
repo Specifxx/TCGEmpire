@@ -52,6 +52,11 @@ const LIMITS: { match: RegExp; maxWidth: number }[] = [
   // Card art (portrait ~5:7) renders at most at the card-page hero size (~420px).
   { match: /^signature-cards\//, maxWidth: 900 },
   { match: /^nexus-night-promos\//, maxWidth: 900 },
+  // T1 Worlds Champion Collection: card fronts (744px wide, already under any cap),
+  // the sealed product photo and the five-card lineup composite, all shown inside the
+  // article column or a card tile. One cap covers the folder because the widest asset
+  // in it is the 1600px composite.
+  { match: /^t1-worlds-cards\//, maxWidth: 1536 },
   // Sealed product tiles render at ~200px in a grid, ~400px in the quick view.
   { match: /^sealed\//, maxWidth: 800 },
   // Full-bleed article/marketing illustrations inside a max-w-3xl (768px) column.

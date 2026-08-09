@@ -801,6 +801,8 @@ const SEALED_TYPE_KW: Record<string, RegExp> = {
   "Booster Case": /\bcase\b/i,
   "Booster Pack": /booster\s*pack/i,
   Bundle: /bundle|gift/i,
+  "T1 Signature Edition": /t1|worlds\s*champion/i,
+  "T1 Player Bundle": /t1|worlds\s*champion/i,
   "Proving Grounds": /proving\s*grounds/i,
   "Promo Pack": /nexus\s*night|promo\s*pack/i,
   "Starter Set": /starter|two[-\s]?player/i,
@@ -825,6 +827,14 @@ const SEALED_MIN_CENTS: Record<string, number> = {
   "Proving Grounds Case": 5000,
   "Box Set": 1500,
   Bundle: 1500,
+  // Riot's published English RRPs are US$360 (Signature Edition) and US$70 (Player
+  // Bundle) — the highest-priced Riftbound products there have ever been, and both
+  // drawing-only, so eBay will carry plenty of accessory/part-lot listings using the
+  // product's name. Floors sit well under RRP (these WILL be resold under/over it and
+  // the floor's job is only to reject the obviously-not-the-product listing), but far
+  // above the generic 300c default that would have let a $5 promo card through.
+  "T1 Signature Edition": 15000,
+  "T1 Player Bundle": 3000,
   "Pre-Rift Event Kit": 1500,
   "Pre-Rift Kit": 800,
   "Proving Grounds": 800,
