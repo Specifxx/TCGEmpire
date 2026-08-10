@@ -37,7 +37,8 @@ technical SEO is genuinely strong and none of it needed rebuilding:
   listings all carry `noindex, follow` and are withheld from the sitemap by the *same*
   predicate the page uses — so a URL can never be submitted and noindexed at once.
 - **Zero broken links to sitemap URLs, zero soft-404s, zero orphans among submitted
-  pages** in the existing `crawl-check.ts` run.
+  pages** in the existing `crawl-check.ts` run — which walks the whole document
+  including the footer, and is the right check for "is this reachable at all".
 
 The gaps below are about *discoverability and depth*, not correctness.
 
@@ -45,16 +46,18 @@ The gaps below are about *discoverability and depth*, not correctness.
 
 ## 2. Internal-linking graph
 
-Measured from the rendered HTML of all 1,222 pages: `<main>` only, excluding the
-site-wide header and footer (their nav lists appear on every page and would report
-every URL as well-linked). Breadcrumb trails **are** counted — they are real content
-links.
+Measured from the rendered HTML of all 1,222 pages: **`<main>` only**, excluding the
+site-wide header and footer. That exclusion is deliberate — their nav lists appear on
+every page and would report every URL as well-linked — but it means these numbers are
+**contextual links, not total links**. Almost every page also carries site-wide footer
+links that are not counted here. Breadcrumb trails **are** counted; they live in
+`<main>` and are real content links.
 
-### Median inbound internal links, by template
+### Median IN-CONTENT inbound links, by template
 
-| Template | Pages | Median inbound links | Read |
+| Template | Pages | Median in-content inbound | Read |
 |---|---:|---:|---|
-| static | 49 | 5 | wide range — see orphans below |
+| static | 49 | 5 | wide range — see the section below |
 | `/decks/archetype` | 3 | 5 | new; hub-linked only |
 | `/blog/[slug]` | 48 | 7 | **under-surfaced** |
 | `/card/[id]` | 1,404 | 9 | healthy for a 1,400-page surface |
@@ -77,24 +80,38 @@ What is missing is the **sideways** flow: from the 1,000 commercial pages into t
 educational content. Guides sit at a median of 9 inbound links and blog posts at 7,
 almost entirely from *each other* and from the two index pages.
 
-### Orphans — submitted, zero inbound internal links
+### Pages with no in-content inbound link
 
-Four pages are in the sitemap and reachable only from the mega-menu / ⌘K launcher,
-which render client-side and are not in the server HTML a crawler reads. Identical on
-production and locally:
+> **Correction (2026-08-10, after this section first shipped).** An earlier revision
+> of this document called these pages "orphans" with "zero inbound internal links".
+> **That was wrong, and the error was mine.** The crawler builds its link graph from
+> `<main>` only, and I read its output without checking what it excluded. Verified
+> against production HTML: `FooterNav` server-renders every `FOOTER_GROUPS` href as a
+> real `<a>`, so `/learn` carries **two footer links on every one of ~1,700 pages** and
+> is fully reachable and crawlable. So do `/bulk-pricer`, `/about` and `/returns` — and
+> so, for that matter, do `/guides`, `/blog` and `/decks`.
+>
+> What the metric actually measures — and what is still a genuine finding — is
+> **contextual** links: links from within the body of a page. The tool now says so in
+> its output and its header.
 
-| Orphan | Sitemap priority | Note |
-|---|---:|---|
-| **`/learn`** | **0.8** | 359 lines of interactive new-player content. **Zero** inbound links from any of 1,222 pages. |
-| `/bulk-pricer` | 0.6 | tool |
-| `/about` | 0.5 | trust page |
-| `/returns` | 0.6 | deliberately prioritised for Merchant Center |
+Four submitted pages have **no link from the body of any page**. They are reachable
+via the site-wide footer (boilerplate, present on every page, and therefore carrying
+almost no topical signal) and via the mega-menu / ⌘K launcher:
 
-`/learn` is the headline finding. It is the site's flagship newcomer asset, submitted at
-priority 0.8, and **nothing on the site links to it** — not the homepage, not a card
-page, not a set page. Grepping the source confirms the crawl: the only references
-anywhere are `nav-groups.ts` (the client-rendered menu), `llms.txt`, and the sitemap
-entry itself.
+| Page | Sitemap priority | In-content links | Footer links |
+|---|---:|---:|---:|
+| **`/learn`** | **0.8** | **0** | 2 per page |
+| `/bulk-pricer` | 0.6 | 0 | 2 per page |
+| `/about` | 0.5 | 0 | 3 per page |
+| `/returns` | 0.6 | 0 | 1 per page |
+
+`/learn` is still the finding worth acting on. It is the site's flagship newcomer
+asset at priority 0.8, and **not one page's content links to it** — not the homepage,
+not a card page, not a set page. A site-wide footer link is the weakest form of
+internal link there is: it is identical on every page, so it distinguishes nothing and
+tells Google nothing about which pages are topically related to it. The fix is a
+contextual link from the highest-authority page on the site, which is what was added.
 
 ### Where `/learn` and `/guides` are *not* linked from
 
@@ -316,7 +333,7 @@ collecting. No new tracking or third-party scripts were added.
 
 | # | Finding | Evidence | Addressed in |
 |---|---|---|---|
-| 1 | `/learn` is an orphan — 0 inbound links, priority 0.8 | §2 | commit: internal linking |
+| 1 | `/learn` has no contextual inbound link (footer-only), priority 0.8 | §2 | commit: internal linking |
 | 2 | Homepage links to no educational content at all | §2 | commit: internal linking |
 | 3 | Vendetta cards reach no mechanic guide | §2 | commit: internal linking |
 | 4 | `/sets/[set]` and `/domains/[slug]` are list pages with ~80 words of prose, despite 166–295 inbound links | §3 | commit: set/domain prose |

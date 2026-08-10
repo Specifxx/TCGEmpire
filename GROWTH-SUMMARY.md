@@ -36,13 +36,24 @@ Report went from 1,691 rows of mostly noise to 396 real ones against production.
 
 ### Commit 2 — `feat(growth)`: internal linking → **Finding 1**
 
-- **`/learn` was an orphan.** 359 lines of interactive new-player content at
-  sitemap priority 0.8, with **zero** inbound links from any of 1,698 pages —
-  the only reference was `nav-groups.ts`, i.e. the client-rendered mega-menu,
-  which the crawler never sees. The homepage linked to no educational content at
-  all. Added "New to Riftbound? Learn how to play →" to the hero, on its own line
-  below the CTA row and at lower visual weight: that row was deliberately cut
-  from four competing CTAs to two, and a test now pins it at two.
+- **`/learn` had no contextual inbound link.** 359 lines of interactive
+  new-player content at sitemap priority 0.8, and **not one page's body links to
+  it** — not the homepage, not a card page, not a set page. The homepage linked to
+  no educational content at all. Added "New to Riftbound? Learn how to play →" to
+  the hero, on its own line below the CTA row and at lower visual weight: that row
+  was deliberately cut from four competing CTAs to two, and a test now pins it at
+  two.
+
+  > **Correction.** The first version of this document, and of `GROWTH-AUDIT.md`,
+  > called `/learn` an "orphan" with "zero inbound links". **That was wrong.**
+  > `FooterNav` server-renders every `FOOTER_GROUPS` href, so `/learn` has two
+  > footer links on all ~1,700 pages and is fully reachable — as do `/bulk-pricer`,
+  > `/about`, `/returns`, and indeed `/guides`, `/blog` and `/decks`. I read the
+  > crawler's output without checking that it builds its graph from `<main>` only.
+  > The metric is contextual links, which is a real and useful measure — a
+  > site-wide footer link is identical on every page and so distinguishes nothing —
+  > but the "orphan" framing overstated it. The tool now labels this correctly, and
+  > the change made is still the right one for the corrected reason.
 - **No card page linked to the Vendetta mechanic guides.** Measured with
   `guidesForCard()`: a plain Vendetta rare returned three *buying* articles and
   none of Empower/Flow/Burn, which are Vendetta-specific and the site's

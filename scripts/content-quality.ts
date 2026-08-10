@@ -26,6 +26,15 @@
  *   THIN_EDITORIAL                       — under MIN_EDITORIAL_WORDS of PROSE (see below)
  *   BROKEN_INTERNAL_LINK                 — an internal href that does not return 200
  *
+ * IN-CONTENT LINKS, NOT ALL LINKS. The link graph is built from <main> only, so
+ * the site-wide header and footer are excluded. That is deliberate — a footer
+ * link appears on all ~1,700 pages and says nothing about topical relevance, so
+ * counting it would report every page as well-linked. But it means a page this
+ * report shows with zero inbound links is NOT unreachable: FooterNav renders
+ * every FOOTER_GROUPS href as a real <a>, so almost everything has a site-wide
+ * footer link. Read the number as "nothing in the body of any page links here",
+ * which is a real weakness, not as "a crawler cannot find this".
+ *
  * EDITORIAL WORDS, NOT PAGE WORDS. A card page is mostly price tables and a grid
  * of related-card tiles; counting those makes every page look 2,000 words long
  * and hides the thin ones completely. This counts only <p>, <li> and <dd> text —
@@ -365,7 +374,7 @@ async function main(): Promise<void> {
   console.log(`\n${B}Per template${O}`);
   const tmplNames = [...new Set(ok.map((p) => p.template))];
   const w = Math.max(...tmplNames.map((t) => t.length), 8);
-  console.log(`  ${"template".padEnd(w)}  pages  med.prose  min  issues  ${D}median inbound links${O}`);
+  console.log(`  ${"template".padEnd(w)}  pages  med.prose  min  issues  ${D}median in-content inbound${O}`);
   for (const t of tmplNames.sort()) {
     const g = ok.filter((p) => p.template === t);
     const words = g.map((p) => p.editorialWords).sort((a, b) => a - b);
@@ -377,9 +386,15 @@ async function main(): Promise<void> {
     console.log(`  ${t.padEnd(w)}  ${String(g.length).padStart(5)}  ${String(med).padStart(9)}  ${String(words[0] ?? 0).padStart(3)}  ${String(issues).padStart(6)}  ${String(medIn).padStart(6)}   ${flag}`);
   }
 
-  // Orphans: submitted, but nothing in the crawl links to them.
+  // Pages no page BODY links to. Deliberately not called "orphans": the footer
+  // links most of these site-wide, so they are reachable and crawlable — what
+  // they lack is a contextual link from within any page's content, which is the
+  // link that carries topical signal. See the note in the file header.
   const orphans = ok.filter((p) => (inbound.get(p.path)?.size ?? 0) === 0 && p.path !== "/");
-  console.log(`\n${B}Orphans${O} (submitted, zero inbound internal links): ${orphans.length}`);
+  console.log(
+    `\n${B}No in-content inbound links${O} (site-wide header/footer excluded — these are still ` +
+      `footer-linked and crawlable): ${orphans.length}`
+  );
   for (const o of orphans.slice(0, 20)) console.log(`  ${o.path}`);
   if (orphans.length > 20) console.log(`  …and ${orphans.length - 20} more`);
 
