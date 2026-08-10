@@ -33,7 +33,22 @@ export async function FacetPageBody({
   facet: Facet;
   dimensionLabel: string; // "card type" | "rarity" | "printing" — used in copy
   crumbLabel: string; // "Type" | "Rarity" | "Printing" — breadcrumb segment
-  crumbHref: string; // "/cards/type" etc — breadcrumb + sibling link base
+  /**
+   * "/cards/type" etc. — the SIBLING LINK BASE only.
+   *
+   * NOT a breadcrumb href, despite the name it used to carry. There is no route
+   * at /cards/type, /cards/rarity or /cards/printing: src/app/cards/ holds only
+   * the [type]/[rarity]/[printing] dynamic segments and an index page at /cards.
+   * Linking the trail there gave all 15 facet pages a 404 in their breadcrumb —
+   * and, worse, asserted that dead URL as a hierarchy level in BreadcrumbList
+   * JSON-LD, which tells Google the site's own structure includes a page that
+   * does not exist. Found by scripts/content-quality.ts; see GROWTH-AUDIT.md § 4.
+   *
+   * The dimension is now a plain, unlinked trail segment and is absent from the
+   * markup chain, which is Home → Cards → <facet>. `/cards/<dimension>/<slug>`
+   * is still correct and is still used for the sibling chips at the bottom.
+   */
+  crumbHref: string;
   siblings: Facet[]; // other values in the same dimension, for cross-links
   /** Which kind of collection this is, for the generated intro's buyer advice. */
   collectionKind?: CollectionKind;
@@ -88,8 +103,7 @@ export async function FacetPageBody({
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
       { "@type": "ListItem", position: 2, name: "Cards", item: `${SITE_URL}/cards` },
-      { "@type": "ListItem", position: 3, name: crumbLabel, item: `${SITE_URL}${crumbHref}` },
-      { "@type": "ListItem", position: 4, name: facet.label, item: `${SITE_URL}${crumbHref}/${facet.slug}` },
+      { "@type": "ListItem", position: 3, name: facet.label, item: `${SITE_URL}${crumbHref}/${facet.slug}` },
     ],
   };
   const itemListLd =
@@ -126,7 +140,8 @@ export async function FacetPageBody({
           <span>/</span>
           <Link href="/cards" className="hover:text-slate-300">Cards</Link>
           <span>/</span>
-          <Link href={crumbHref} className="hover:text-slate-300">{crumbLabel}</Link>
+          {/* Plain text, not a link — see crumbHref's note above. */}
+          <span>{crumbLabel}</span>
           <span>/</span>
           <span className="text-slate-300">{facet.label}</span>
         </nav>

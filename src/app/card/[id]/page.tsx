@@ -34,10 +34,12 @@ import { KeywordText } from "@/components/KeywordTooltip";
 import { championForCardName, championCardWhere } from "@/lib/champions";
 import { getCardPriceState } from "@/lib/card-price-state";
 import { getCanonicalTwin } from "@/lib/card-duplicates";
+import { typeFacetBySlug, rarityFacetBySlug } from "@/lib/facets";
 import {
   buildCardNarrative,
   editionLabel,
   printingKind,
+  printingLabel,
   tidy,
   PRINTING_DISPLAY,
   type NarrativeMarket,
@@ -149,9 +151,26 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   const priceBit = hasPrice
     ? `Live prices from ${fmtBaselineMoney(lowestCents!)} across ${stores} ${stores === 1 ? "store" : "stores"}, updated daily.`
     : `Compare live prices across AU, NZ, US, UK & SG stores, updated daily.`;
+  // WHICH PRINTING THIS IS, in words rather than only in a collector number.
+  //
+  // 234 card pages — 17% of the template — were flagged as near-duplicate
+  // descriptions of each other (GROWTH-AUDIT.md § 4). They are different
+  // printings of the SAME card, and in the no-rules-text branch the only things
+  // separating them were the collector number and the price. Both are digits,
+  // and a near-duplicate detector — like Google's own clustering — discounts
+  // digits, so two printings read as one sentence:
+  //
+  //   Lee Sin, Centered (Showcase) — Body unit · Showcase from Riftbound Origins (151a/298). Live prices from …
+  //   Lee Sin, Centered (Showcase, Promo) — Body unit · Showcase from Riftbound Origins (151/298). Live prices from …
+  //
+  // printingLabel() is the same helper the page's own "Printing" cell and its
+  // About narrative use, so the description cannot claim a printing the body
+  // contradicts. Base printings get nothing added — there is no distinguishing
+  // fact to state, and padding one in would be the fabrication this avoids.
+  const printingBit = printingKind(card) === "base" ? "" : `the ${printingLabel(card)} printing of a `;
   const description = textBit
     ? `${displayName} (${ident}) — ${textBit} ${priceBit}`
-    : `${displayName} — ${statBit} from Riftbound ${card.setName} (${card.collectorNumber}). ${priceBit}`;
+    : `${displayName} — ${printingBit}${printingBit ? statBit.toLowerCase() : statBit} from Riftbound ${card.setName} (${card.collectorNumber}). ${priceBit}`;
 
   // ── Index only what's worth indexing ─────────────────────────────────────
   // A card with no in-stock listing in ANY market and under a week of recorded
@@ -794,13 +813,25 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             {/* Facet cross-links — internal-linking fix for the crawled-not-indexed
                 backlog: every card page now links out to its type, rarity and domain
                 hub, not just its own set/champion clusters. */}
+            {/* Each chip renders ONLY where the facet page it points at actually
+                exists. The type and rarity routes are generated from TYPE_FACETS
+                and RARITY_FACETS, which are built from CARD_TYPES / RARITY_KEYS —
+                so a card carrying a value outside those lists (a Token, today)
+                linked straight to a 404. Found by scripts/content-quality.ts.
+                Resolving through the same lookup the route uses means a new card
+                type can never mint a dead link again, and gains its chip
+                automatically the day a facet is added for it. */}
             <div className="mt-4 flex flex-wrap gap-2 border-t border-ink-800 pt-4">
-              <Link href={`/cards/type/${card.type.toLowerCase()}`} className="chip bg-ink-800 text-slate-400 transition-colors hover:bg-ink-700 hover:text-slate-200">
-                More {card.type} cards →
-              </Link>
-              <Link href={`/cards/rarity/${card.rarity.toLowerCase()}`} className="chip bg-ink-800 text-slate-400 transition-colors hover:bg-ink-700 hover:text-slate-200">
-                More {card.rarity} cards →
-              </Link>
+              {typeFacetBySlug(card.type.toLowerCase()) && (
+                <Link href={`/cards/type/${card.type.toLowerCase()}`} className="chip bg-ink-800 text-slate-400 transition-colors hover:bg-ink-700 hover:text-slate-200">
+                  More {card.type} cards →
+                </Link>
+              )}
+              {rarityFacetBySlug(card.rarity.toLowerCase()) && (
+                <Link href={`/cards/rarity/${card.rarity.toLowerCase()}`} className="chip bg-ink-800 text-slate-400 transition-colors hover:bg-ink-700 hover:text-slate-200">
+                  More {card.rarity} cards →
+                </Link>
+              )}
               <Link href={`/domains/${domainSlug(card.domain)}`} className="chip bg-ink-800 text-slate-400 transition-colors hover:bg-ink-700 hover:text-slate-200">
                 More {card.domain} cards →
               </Link>

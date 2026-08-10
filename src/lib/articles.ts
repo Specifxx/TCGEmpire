@@ -2057,7 +2057,7 @@ Every box contains exactly one card numbered from 1 to 2025 — the year of the 
 
 ![Faker's serialised Galio, Indefatigable from the T1 2025 Worlds Champion Signature Edition, showing the 0001 of 2025 serial box and gold-stamped signature](/t1-worlds-cards/galio-indefatigable-t1s003-signature.jpg)
 
-If you have read our [variant and finish glossary](/blog/riftbound-variant-glossary), this is a category Riftbound has not had before. Signature cards in normal sets carry the artist's stamp; this is a player's, on a card with a unique serial. In every other serialised collectible market, low numbers trade above high ones, and there is no obvious reason this one would behave differently. No Riftbound serial has ever changed hands, though, so that is a pattern from elsewhere rather than an observation about this card.
+If you have read our [variant and finish glossary](/guides/riftbound-variant-glossary), this is a category Riftbound has not had before. Signature cards in normal sets carry the artist's stamp; this is a player's, on a card with a unique serial. In every other serialised collectible market, low numbers trade above high ones, and there is no obvious reason this one would behave differently. No Riftbound serial has ever changed hands, though, so that is a pattern from elsewhere rather than an observation about this card.
 
 Riot has separately said it has [no plans to put serialisation into booster packs](/blog/riftbound-august-2026-state-of-the-game-takeaways), which is what makes this interesting rather than a preview of things to come: it is a deliberately walled-off collector release.
 
@@ -2218,7 +2218,7 @@ What is trackable *today* is the ordinary retail printing of each champion T1 pi
 
 Each box holds exactly one serialised card in a 1-2025 range, and five champions share that range — 5 x 2,025 is 10,125, the published print run for each language. So any one champion (Faker's Galio, say) exists in roughly **2,025 serialised English copies**, not 10,125, with about 6,075 worldwide across the three languages. Add a capped run with no reprint planned, a signature stamped in gold, and no retail channel to anchor a price against, and you have the four things that actually drive a collectible's scarcity. What you do **not** get is playability you could not buy for cents — [the full breakdown is in the drawing guide](/blog/riftbound-t1-signature-edition-drawing#what-actually-makes-these-cards-valuable).
 
-For the wider context on where serialised and premium prints sit in this game, see [the variant and finish glossary](/blog/riftbound-variant-glossary) — and note that Riot has said it has [no plans to serialise cards in booster packs](/blog/riftbound-august-2026-state-of-the-game-takeaways), which makes this collection a deliberate one-off rather than a preview.
+For the wider context on where serialised and premium prints sit in this game, see [the variant and finish glossary](/guides/riftbound-variant-glossary) — and note that Riot has said it has [no plans to serialise cards in booster packs](/blog/riftbound-august-2026-state-of-the-game-takeaways), which makes this collection a deliberate one-off rather than a preview.
 
 ---
 
@@ -2707,15 +2707,15 @@ An **Overnumbered** card is a special printing whose collector number sits *abov
 
 Nine new champion **Legends** each get their own signed Overnumbered variant — a premium printing carrying an in-universe signature treatment, and the top-end pulls of the whole set:
 
-- **[Akali, Rogue Assassin](/card/rogue-assassin-ven-189)**
-- **[Renekton, Butcher of the Sands](/card/butcher-of-the-sands-ven-190)**
-- **[Zed, Master of Shadows](/card/master-of-shadows-ven-191)**
-- **[Nasus, Curator of the Sands](/card/curator-of-the-sands-ven-192)**
-- **[Shen, Eye of Twilight](/card/eye-of-twilight-ven-193)**
-- **[Jayce, Defender of Tomorrow](/card/defender-of-tomorrow-ven-194)**
-- **[Mel, Soul's Reflection](/card/soul-s-reflection-ven-195)**
-- **[Ambessa, Matriarch of War](/card/matriarch-of-war-ven-196)**
-- **[Kennen, Heart of the Tempest](/card/heart-of-the-tempest-ven-197)**
+- **[Akali, Rogue Assassin](/card/akali-rogue-assassin-ven-189s-166)**
+- **[Renekton, Butcher of the Sands](/card/renekton-butcher-of-the-sands-ven-190s-166)**
+- **[Zed, Master of Shadows](/card/zed-master-of-shadows-ven-191s-166)**
+- **[Nasus, Curator of the Sands](/card/nasus-curator-of-the-sands-ven-192s-166)**
+- **[Shen, Eye of Twilight](/card/shen-eye-of-twilight-ven-193s-166)**
+- **[Jayce, Defender of Tomorrow](/card/jayce-defender-of-tomorrow-ven-194s-166)**
+- **[Mel, Soul's Reflection](/card/mel-soul-s-reflection-ven-195s-166)**
+- **[Ambessa, Matriarch of War](/card/ambessa-matriarch-of-war-ven-196s-166)**
+- **[Kennen, Heart of the Tempest](/card/kennen-heart-of-the-tempest-ven-197s-166)**
 
 ## Rival Overnumbers — the rivalry diptychs
 
