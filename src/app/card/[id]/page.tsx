@@ -664,6 +664,10 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     variant: card.variant,
     isSignature: thisIsSignature,
     priceCents: baseline.lowest,
+    // The printed rules text, so a card that prints a keyword we hold verified
+    // rules for links to THAT mechanic's guide. Matched on the bracket marker
+    // only — nothing is inferred about what the keyword does.
+    description: card.description,
   });
   const faqs = buildFaqs(card, {
     lowest: baseline.lowest,
