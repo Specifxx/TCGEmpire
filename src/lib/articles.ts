@@ -5264,3 +5264,24 @@ export function getArticles(category?: ArticleCategory): Article[] {
 export function getArticle(slug: string): Article | undefined {
   return ARTICLES.find((a) => a.slug === slug);
 }
+
+/**
+ * Response headers that keep a DRAFT out of the index.
+ *
+ * A draft still has [TODO] markers in its body. The HTML pages at /blog/<slug>
+ * and /guides/<slug> already noindex those (metadata `robots: { index: false,
+ * follow: true }`) so they stay reachable for review without being indexed — but
+ * those same pages advertise the markdown mirrors as a `text/markdown`
+ * rel=alternate, and the mirrors were serving the identical unfinished text at
+ * HTTP 200 with no robots signal at all. The noindexed page was pointing
+ * crawlers straight at an indexable copy of itself.
+ *
+ * A header rather than a 404, deliberately, on both counts: `metadata.robots`
+ * does not exist for a non-HTML response, so X-Robots-Tag is the only way to say
+ * this; and the HTML side's reasoning — reachable by direct URL for review, never
+ * indexed — applies unchanged to the mirror. Published posts get {} and are
+ * unaffected.
+ */
+export function draftNoindexHeaders(slug: string): Record<string, string> {
+  return getArticle(slug)?.draft ? { "X-Robots-Tag": "noindex, follow" } : {};
+}

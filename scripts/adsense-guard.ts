@@ -538,6 +538,7 @@ if (!existsSync(auditPath)) {
   console.log("    \x1b[33m·\x1b[0m docs/adsense-audit.json not present — run `npm run adsense:audit` (needs DB access). Skipping.");
 } else {
   type Audit = {
+    generatedAt?: string;
     totals?: {
       indexableThin?: number;
       indexableEmptyCards?: number;
@@ -556,16 +557,46 @@ if (!existsSync(auditPath)) {
     fail("docs/adsense-audit.json is not valid JSON");
   }
   const t = audit.totals ?? {};
-  const budgets: [string, number | undefined, string][] = [
-    ["indexable pages under 150 unique editorial words", t.indexableThin, "Thin content"],
-    ["indexable card pages with no price data", t.indexableEmptyCards, "Low-value content"],
-    ["near-duplicate clusters above 90% similarity", t.duplicateClusters, "Scaled content abuse"],
-    ["pages whose server HTML contains no content at all", t.emptyServerRender, "No content / low value content"],
-    ["soft-404s", t.softFourOhFours, "Site navigation / broken pages"],
-    ["broken internal links", t.brokenInternalLinks, "Site navigation"],
-    ["indexable pages behind a paywall or blur", t.paywalledIndexable, "Behind a login / no content"],
-    ["templates with affiliate links but <150 editorial words", t.affiliateWithoutEditorial, "Thin affiliate"],
-  ];
+
+  // ── Is this snapshot still evidence? ────────────────────────────────────────
+  // Everything below is read from a COMMITTED artefact. Regenerating it needs a
+  // running server and DB access (`npm run adsense:audit`), so the build cannot
+  // do it — which meant the guard would happily print "0 soft-404s", "0 thin
+  // affiliate templates", "37/37 passed" from a file measured nine days and
+  // twelve thousand changed lines ago. Those ticks describe whatever the site
+  // looked like when someone last ran the audit, and nothing said so.
+  //
+  // Deliberately NOT a fail(). A failing build here could not be fixed by the
+  // person who hit it — the fix needs a deployment to crawl — and the last time
+  // a date check hard-stopped this build it took a Vercel deploy down with it
+  // (see 1d). Staleness instead DEMOTES the budgets: they print as observations
+  // rather than passes, so the guard stops vouching for numbers it cannot stand
+  // behind. Green becomes something you have to earn by re-running the audit.
+  //
+  // Age is measured against the wall clock, not git, on purpose: Vercel builds a
+  // SHALLOW clone where the graft makes every file look like it landed at the
+  // same commit, so `git log -1 -- <artefact>` is meaningless exactly where this
+  // most needs to work. A timestamp inside the file works everywhere.
+  const STALE_AFTER_DAYS = 14;
+  const generatedAt = audit.generatedAt ? Date.parse(audit.generatedAt) : NaN;
+  const ageDays = Number.isNaN(generatedAt) ? null : (Date.now() - generatedAt) / 86_400_000;
+  const stale = ageDays == null || ageDays > STALE_AFTER_DAYS;
+  if (ageDays == null) {
+    note(
+      "content budgets: snapshot has no generatedAt — cannot tell how old it is, so the totals below " +
+        "are reported, not asserted. Re-run `npm run adsense:audit` (and `npm run crawl:check`) to restore them as checks.",
+    );
+  } else if (stale) {
+    note(
+      `content budgets: snapshot is ${Math.floor(ageDays)} days old (>${STALE_AFTER_DAYS}) — the totals below are ` +
+        "reported, not asserted. Re-run `npm run adsense:audit` and `npm run crawl:check` against a deployment.",
+    );
+  }
+
+  // Report a budget WITHOUT claiming it passed. A stale 0 is not evidence of 0.
+  const observe = (label: string, value: number) =>
+    console.log(`    \x1b[33m·\x1b[0m ${value} ${label} \x1b[2m(from a stale snapshot — not verified)\x1b[0m`);
+
   // Navigation health comes from the crawl report (scripts/crawl-check.ts).
   const crawlPath = join(ROOT, "docs/crawl-report.json");
   if (existsSync(crawlPath)) {
@@ -587,8 +618,9 @@ if (!existsSync(auditPath)) {
       ] as const) {
         const v = ct[key];
         if (v == null) continue;
-        if (v === 0) ok(`0 ${label}`);
-        else fail(`${v} ${label}  [${policy}]`);
+        if (v > 0) fail(`${v} ${label}  [${policy}]`);
+        else if (stale) observe(label, v);
+        else ok(`0 ${label}`);
       }
     } catch {
       fail("docs/crawl-report.json is not valid JSON");
@@ -597,13 +629,32 @@ if (!existsSync(auditPath)) {
     console.log("    \x1b[33m·\x1b[0m docs/crawl-report.json not present — run `npm run crawl:check`. Skipping.");
   }
 
+  // BUILT AFTER the crawl-report merge above, not before it. These tuples capture
+  // t.<field> BY VALUE, so while this array was declared first, the two
+  // `merged.<field> ??= ct.<field>` lines mutated `t` too late to be seen — and
+  // "broken internal links" reported "not measured in this audit run" even with
+  // docs/crawl-report.json sitting there carrying the number.
+  const budgets: [string, number | undefined, string][] = [
+    ["indexable pages under 150 unique editorial words", t.indexableThin, "Thin content"],
+    ["indexable card pages with no price data", t.indexableEmptyCards, "Low-value content"],
+    ["near-duplicate clusters above 90% similarity", t.duplicateClusters, "Scaled content abuse"],
+    ["pages whose server HTML contains no content at all", t.emptyServerRender, "No content / low value content"],
+    ["soft-404s", t.softFourOhFours, "Site navigation / broken pages"],
+    ["broken internal links", t.brokenInternalLinks, "Site navigation"],
+    ["indexable pages behind a paywall or blur", t.paywalledIndexable, "Behind a login / no content"],
+    ["templates with affiliate links but <150 editorial words", t.affiliateWithoutEditorial, "Thin affiliate"],
+  ];
+
   for (const [label, value, policy] of budgets) {
     if (value == null) {
       console.log(`    \x1b[33m·\x1b[0m ${label}: not measured in this audit run`);
       continue;
     }
-    if (value === 0) ok(`0 ${label}`);
-    else fail(`${value} ${label}  [${policy}]`);
+    // A non-zero total is a real finding whatever its age — a page that was thin
+    // when it was measured does not become fine because the measurement aged.
+    if (value > 0) fail(`${value} ${label}  [${policy}]`);
+    else if (stale) observe(label, value);
+    else ok(`0 ${label}`);
   }
 }
 

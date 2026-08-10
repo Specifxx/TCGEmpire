@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
-import { staticPageDateLabel } from "@/lib/static-page-dates";
+import { STATIC_PAGE_DATES, staticPageDateLabel } from "@/lib/static-page-dates";
 import { RETAILER_LIST } from "@/lib/retailers";
 
 export const revalidate = 86400;
@@ -30,7 +30,11 @@ export default function EditorialPolicyPage() {
     "@type": "WebPage",
     name: "Editorial & pricing policy",
     url: `${SITE_URL}/editorial-policy`,
-    dateModified: "2026-08-01",
+    // From the shared table, not a literal. The visible "Last updated" line below
+    // already reads staticPageDateLabel("/editorial-policy"); a second hardcoded
+    // copy here meant the structured data a crawler consumes could disagree with
+    // the date a human reads, and only one of the two would ever get bumped.
+    dateModified: STATIC_PAGE_DATES["/editorial-policy"],
     publisher: { "@id": `${SITE_URL}/#org` },
     breadcrumb: {
       "@type": "BreadcrumbList",
@@ -127,7 +131,14 @@ export default function EditorialPolicyPage() {
         <section className="space-y-3">
           <h2 className="text-lg font-bold text-white">How often prices refresh</h2>
           <ul className="list-disc space-y-1 pl-5">
-            <li><strong className="text-white">Store prices:</strong> a full import runs once every 24 hours.</li>
+            {/* Twice, not once: .github/workflows/refresh-prices.yml is scheduled at
+                07:00 and 19:00 UTC and store prices are imported on BOTH runs (a
+                Vercel cron hits /api/cron/refresh-prices as well). Only the eBay
+                catalogue pass is held to once a day, by the 20-hour gate in
+                lib/price-import.ts. The page claimed 24 hours for everything, which
+                understated the store cadence and misdescribed eBay's. */}
+            <li><strong className="text-white">Store prices:</strong> a full import runs twice a day.</li>
+            <li><strong className="text-white">eBay listings:</strong> the whole catalogue is searched once every 24 hours; the chase printings (promos, signatures and overnumbered prints above a value floor) refresh twice a day.</li>
             <li><strong className="text-white">Price history:</strong> one recorded point per card per market per day, which is what the charts and trend figures are built from.</li>
             <li><strong className="text-white">Card pages:</strong> regenerated at most every 24 hours, and immediately when that card&rsquo;s data changes.</li>
             <li><strong className="text-white">Index and homepage:</strong> hourly.</li>

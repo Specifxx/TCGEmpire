@@ -24,7 +24,7 @@ const STATIC_PAGE_DATES: Record<string, string> = {
   "/returns": "2026-07-29",
   "/support": "2026-07-26",
   "/privacy": "2026-08-02",
-  "/editorial-policy": "2026-08-01",
+  "/editorial-policy": "2026-08-10",
   "/authors": "2026-08-01",
   "/terms": "2026-08-01",
   "/games/higher-lower": "2026-07-29",

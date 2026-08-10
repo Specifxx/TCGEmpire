@@ -1,4 +1,4 @@
-import { getArticle } from "@/lib/articles";
+import { draftNoindexHeaders, getArticle } from "@/lib/articles";
 import { SITE_URL } from "@/lib/site";
 
 // Clean markdown version of a GUIDE for AI agents — the counterpart to
@@ -28,5 +28,7 @@ export async function GET(_req: Request, { params }: { params: { slug: string } 
     ...(post.faq?.length ? ["## FAQ", "", ...post.faq.flatMap((f) => [`**${f.q}**`, "", f.a, ""])] : []),
     `Source: ${SITE_URL}/guides/${post.slug}`,
   ].join("\n");
-  return new Response(md + "\n", { headers: { "Content-Type": "text/markdown; charset=utf-8" } });
+  return new Response(md + "\n", {
+    headers: { "Content-Type": "text/markdown; charset=utf-8", ...draftNoindexHeaders(post.slug) },
+  });
 }

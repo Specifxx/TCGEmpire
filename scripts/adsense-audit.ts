@@ -477,6 +477,14 @@ async function main() {
   };
 
   const out = {
+    // WHEN this snapshot was taken. scripts/adsense-guard.ts asserts every total
+    // below is 0 on each build, but the file is a committed artefact regenerated
+    // by hand (it needs a running server + DB), so without a timestamp the guard
+    // had no way to tell a fresh measurement from a stale one and reported a
+    // week-old snapshot as a clean pass. Content policy — thin, scaled, thin
+    // affiliate — is the most common AdSense rejection reason, so a false green
+    // there is the most expensive kind.
+    generatedAt: new Date().toISOString(),
     generatedFrom: BASE,
     sampleSize: SAMPLE,
     thresholds: { thinWords: THIN_WORDS, boilerplateThreshold: BOILERPLATE_THRESHOLD, shingle: SHINGLE, dupSimilarity: DUP_SIMILARITY, dupClusterShare: DUP_CLUSTER_SHARE },

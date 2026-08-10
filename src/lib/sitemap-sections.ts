@@ -122,7 +122,14 @@ async function core(): Promise<SitemapEntry[]> {
     // next.config.js); a redirecting URL in a sitemap is a soft error in Search
     // Console, so it is removed rather than left behind.
     { url: `${SITE_URL}/radiance-countdown`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/radiance-countdown") },
-    { url: `${SITE_URL}/feedback`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/feedback") },
+    // /feedback is NOT submitted: src/app/feedback/page.tsx sets
+    // robots: { index: false, follow: true } (AdSense remediation § Phase 7 —
+    // /contact already covers the same intent with real content). Submitting a
+    // URL that then says noindex is the "Submitted URL marked 'noindex'" error in
+    // Search Console: it spends crawl budget to be told to go away, and reads as
+    // a site that disagrees with itself. The noindex is right and stays — the
+    // sitemap entry is what was wrong. The page keeps `follow`, and the footer
+    // still links it, so it remains crawlable and the link graph is untouched.
     { url: `${SITE_URL}/about`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/about") },
     // Trust pages. /editorial-policy and /authors carry the "who writes this and
     // how are the prices collected" disclosures a reviewer looks for, so they are
