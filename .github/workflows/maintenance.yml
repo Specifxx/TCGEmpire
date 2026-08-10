@@ -733,7 +733,13 @@ jobs:
         # DIFFERENT origins to the ads.txt crawler: it fetches ads.txt from the
         # exact domain registered in AdSense, so if the site is registered as
         # www.riftcompare.com that host has to serve the record too.
+        #
+        # context_marker doubles as a comma-separated path override here (the script
+        # reads ADSENSE_VERIFY_PATHS), so a one-off check of specific URLs does not
+        # need a code change — which is exactly how the stale card fixture survived.
         if: inputs.task == 'adsense-verify'
+        env:
+          ADSENSE_VERIFY_PATHS: ${{ inputs.context_marker }}
         run: npx tsx scripts/adsense-verify.ts "${{ inputs.url || 'https://riftcompare.com' }}"
 
       - name: Probe URL (font/style diagnostics)
