@@ -144,3 +144,67 @@ test("the homepage links to the pack simulator", () => {
   // the cheapest lever available. A homepage link is the strongest one.
   assert.match(read("src/app/page.tsx"), /href="\/games\/pack-sim"/);
 });
+
+// ── The three claims the page makes that the simulator has to honour ─────────
+// Each of these shipped as a live falsehood: the page published four Riot rates
+// while the code implemented one, promised no repeats while three slots drew
+// independently, and asserted 14 cards while silently dealing 13.
+
+test("the chase tiers the page publishes are actually reachable in the deal", () => {
+  const route = read("src/app/api/games/pack/route.ts");
+  // Comments stripped first: this file EXPLAINS the `variant: null` filter it
+  // removed, so matching raw source would fail on its own documentation.
+  const code = route.replace(/\/\/[^\n]*/g, "").replace(/\/\*[\s\S]*?\*\//g, "");
+  // The pool query must NOT filter out alt-arts. scripts/fix-altart-rarity.ts
+  // rewrites every `variant != null` row to rarity "Showcase", so a
+  // `variant: null` filter removed every alt-art from the pool — and the
+  // over-numbered and signature prints that survived landed in a "Showcase"
+  // bucket no fallback chain reached. Three of four published rates were dead.
+  assert.doesNotMatch(code, /variant:\s*null/, "a variant:null filter makes every chase rate unreachable");
+  assert.match(route, /poolOf/, "pools must be classified by poolOf(), not by the overwritten rarity column");
+  for (const pool of ["AltArt", "Overnumbered", "Signature"]) {
+    assert.ok(route.includes(pool), `${pool} must be reachable in the deal — it is on the published table`);
+  }
+});
+
+test("every published rate that the deal rolls uses the published number", () => {
+  // The rates come from PULL_RATES rather than being retyped, so the table on
+  // the page and the code dealing cards cannot say different things.
+  const route = read("src/app/api/games/pack/route.ts");
+  assert.match(route, /PULL_RATES/, "chase rolls must read the published rates");
+  assert.doesNotMatch(route, /0\.0139|1\s*\/\s*72\b|1\s*\/\s*720\b/, "rates must not be re-derived by hand");
+});
+
+test("no card can appear twice in one pack", () => {
+  // sampleDistinct dedupes within ONE pool. The Epic upgrade, the foil slot and
+  // the rune were separate uniform draws over overlapping pools, so a pack could
+  // (and did) repeat a card while the page promised it could not.
+  const route = read("src/app/api/games/pack/route.ts");
+  assert.match(route, /const used = new Set<string>\(\)/, "the deal needs one global used-card set");
+  assert.match(route, /!used\.has\(c\.id\)/, "every draw must exclude cards already dealt");
+  assert.match(read("src/app/games/pack-sim/page.tsx"), /no card appears twice/, "the page states this — keep them together");
+});
+
+test("runes are dealt only from the rune slot, and a short pack says so", () => {
+  const route = read("src/app/api/games/pack/route.ts");
+  // Runes carry an ordinary rarity, so leaving them in the base pools let the
+  // same rune be dealt twice — once as a common, once in its own slot.
+  assert.match(route, /runeIds/, "runes must be excluded from the base rarity pools");
+  // A set with no runes catalogued yields 13 cards, not the 14 the page
+  // promises. That is allowed, but it must be reported rather than hidden.
+  assert.match(route, /runeSlotDealt/, "a 13-card pack must be flagged in the response");
+});
+
+test("no keywords meta — the site banned it, and this page had reintroduced it", () => {
+  // app/layout.tsx: "NO `keywords` meta. Google has ignored it since 2009 and
+  // Bing treats stuffing it as a negative signal; it only ever advertised our
+  // target terms to competitors. Removed site-wide."
+  assert.doesNotMatch(read("src/app/games/pack-sim/page.tsx"), /^\s*keywords:/m);
+});
+
+test("the WebApplication node is wired into the site's entity graph", () => {
+  const page = read("src/app/games/pack-sim/page.tsx");
+  assert.match(page, /"@id": `\$\{SITE_URL\}\/games\/pack-sim#app`/, "the node needs an @id");
+  assert.match(page, /isPartOf: \{ "@id": `\$\{SITE_URL\}\/#website` \}/);
+  assert.match(page, /publisher: \{ "@id": `\$\{SITE_URL\}\/#org` \}/);
+});

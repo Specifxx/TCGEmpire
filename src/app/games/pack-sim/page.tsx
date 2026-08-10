@@ -29,14 +29,6 @@ export function generateMetadata({ searchParams }: { searchParams?: { v?: string
     // rendered at 71 and was truncated in the SERP.
     title: "Riftbound Pack Opening Simulator — Free",
     description: DESC,
-    keywords: [
-      "Riftbound pack simulator",
-      "Riftbound pack opening simulator",
-      "open Riftbound packs free",
-      "Riftbound booster pack simulator",
-      "Vendetta pack opening",
-      "Riftbound pull rates",
-    ],
     alternates: pageAlternates("/games/pack-sim"),
     openGraph: pageOpenGraph({
       title: "Riftbound Pack Opening Simulator | RiftCompare",
@@ -113,6 +105,14 @@ export default function PackSimPage() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
+    // @id + graph edges, matching /games and /riftle. Without isPartOf/publisher
+    // the node is an island and the site-wide Organization and WebSite signals
+    // do not reach it — which would be an odd thing to skip on the one page
+    // trying to out-rank a stronger domain.
+    "@id": `${SITE_URL}/games/pack-sim#app`,
+    isPartOf: { "@id": `${SITE_URL}/#website` },
+    publisher: { "@id": `${SITE_URL}/#org` },
+    mainEntityOfPage: `${SITE_URL}/games/pack-sim`,
     name: "Riftbound Pack Opening Simulator",
     url: `${SITE_URL}/games/pack-sim`,
     applicationCategory: "GameApplication",
@@ -264,8 +264,14 @@ export default function PackSimPage() {
             giving a number; we upgrade it {Math.round(FOIL_UPGRADE_CHANCE * 100)}% of the time.
           </p>
           <p className="mt-3 text-sm leading-relaxed text-slate-400">
-            What a simulation cannot show you is the foiling itself, which is half of why a real hit
-            feels like one.
+            One thing we leave out rather than guess at: the rune slot deals ordinary runes only.
+            Riot says it &ldquo;very rarely&rdquo; produces a special alt-art basic rune and gives no
+            figure, and drawing uniformly from every rune we have catalogued would hand one out in
+            half of all packs — wildly overstating it. Not simulating it is the honest option.
+          </p>
+          <p className="mt-3 text-sm leading-relaxed text-slate-400">
+            What a simulation cannot show you at all is the foiling itself, which is half of why a
+            real hit feels like one.
           </p>
         </section>
 

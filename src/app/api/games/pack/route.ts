@@ -4,7 +4,8 @@ import { prisma } from "@/lib/db";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES, pickPrice, priceField, type PriceField } from "@/lib/country";
 import { SETS } from "@/lib/constants";
-import { PACK_SLOTS, EPIC_UPGRADE_PER_RARE_SLOT, FOIL_UPGRADE_CHANCE } from "@/lib/pack-composition";
+import { PACK_SLOTS, PULL_RATES, EPIC_UPGRADE_PER_RARE_SLOT, FOIL_UPGRADE_CHANCE } from "@/lib/pack-composition";
+import { poolOf } from "@/lib/box-ev";
 
 export const dynamic = "force-dynamic";
 
@@ -29,9 +30,21 @@ type PoolCard = {
 const poolForSet = unstable_cache(
   async (setCode: string, field: PriceField) => {
     const rows = await prisma.card.findMany({
-      where: { setCode, variant: null, isPromo: false, imageThumbUrl: { not: null } },
+      // NO `variant: null` FILTER. It used to be here, and it silently made three
+      // of the four rates this page publishes impossible: scripts/fix-altart-
+      // rarity.ts rewrites every `variant != null` row to rarity "Showcase", so
+      // filtering them out removed every alt-art, and the over-numbered and
+      // signature prints that survived were reclassified into a "Showcase"
+      // bucket no fallback chain ever reached. The page listed alt-art,
+      // over-numbered and signature rates that the simulator could never deal.
+      //
+      // Pools are now built with poolOf() from lib/box-ev, which classifies on
+      // collectorNumber/variant/isPromo rather than the rarity column that
+      // script overwrites — which is exactly why it can see them.
+      where: { setCode, isPromo: false, imageThumbUrl: { not: null } },
       select: {
         id: true, slug: true, name: true, setCode: true, collectorNumber: true, rarity: true,
+        variant: true, isOvernumbered: true, isPromo: true,
         type: true, // the rune slot needs to find actual Rune cards
         imageThumbUrl: true,
         lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true,
@@ -84,8 +97,8 @@ export async function GET(req: Request) {
     // on a set nobody picked; now that the simulator DEFAULTS to the newest set,
     // it would be the first thing a visitor sees during exactly the week a new
     // set is being imported.
-    const usable = (rows: { rarity: string }[]) => {
-      const n = (r: string) => rows.filter((c) => c.rarity === r).length;
+    const usable = (rows: { rarity: string; variant?: string | null; isPromo?: boolean; setCode?: string; collectorNumber?: string; isOvernumbered?: boolean }[]) => {
+      const n = (r: string) => rows.filter((c) => c.rarity === r && c.variant == null).length;
       return n("Common") >= slotCount("common") && n("Uncommon") >= slotCount("uncommon") && n("Rare") >= slotCount("rare");
     };
 
@@ -102,14 +115,32 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "No pack data for this set yet." }, { status: 503 });
     }
 
-    const byRarity = new Map<string, typeof rows>();
-    for (const c of rows) (byRarity.get(c.rarity) ?? byRarity.set(c.rarity, []).get(c.rarity)!).push(c);
-    const poolOf = (r: string) => byRarity.get(r) ?? [];
+    // Classify every row into its PACK SLOT pool. Runes are pulled out first:
+    // they carry an ordinary rarity, so leaving them in would let the same rune
+    // be dealt twice — once as a common, once in its own slot.
+    // Every rune, so none of them leak into the base rarity pools…
+    const allRunes = rows.filter((c) => c.type === "Rune");
+    const runeIds = new Set(allRunes.map((c) => c.id));
+    // …but the slot deals BASE runes only. Half of Origins' catalogued runes are
+    // alt-arts, so drawing uniformly handed one out in half of all packs, against
+    // Riot's "and very rarely, a special alt-art basic rune". They publish no
+    // figure for "very rarely", so rather than invent one the alt-art rune is
+    // simply not simulated — and the page says so.
+    const runePool = allRunes.filter((c) => poolOf(c) != null && !["AltArt", "Overnumbered", "Signature"].includes(poolOf(c)!));
+
+    const byPool = new Map<string, typeof rows>();
+    for (const c of rows) {
+      if (runeIds.has(c.id)) continue;
+      const k = poolOf(c);
+      if (!k) continue; // promos aren't pack pulls
+      (byPool.get(k) ?? byPool.set(k, []).get(k)!).push(c);
+    }
+    const poolFor = (r: string) => byPool.get(r) ?? [];
 
     // Highest rarity available at or below a wishlist, so packs still work for
     // sets that don't print every tier.
     const fallback = (chain: string[]): typeof rows => {
-      for (const r of chain) if (poolOf(r).length) return poolOf(r);
+      for (const r of chain) if (poolFor(r).length) return poolFor(r);
       return rows; // last resort: anything
     };
 
@@ -126,33 +157,69 @@ export async function GET(req: Request) {
     // slot rolling 8/22/70 across Showcase/Epic/Rare — thirteen cards, three of
     // the five numbers wrong, and no foil or rune slot at all, on a page that
     // told visitors it used "the same odds by rarity as a physical pack".
-    const slots: typeof rows = [
-      ...sampleDistinct(commons, slotCount("common")),
-      ...sampleDistinct(uncommons, slotCount("uncommon")),
-    ];
+    // ── Dealing, with a GLOBAL no-repeat rule ────────────────────────────
+    // sampleDistinct only dedupes WITHIN one pool, so the later single-card
+    // draws (the Epic upgrade, the foil slot, the rune) could each hand back a
+    // card already in the pack — a double-Epic pack could be the same Epic
+    // twice, and the foil slot repeated one of the seven commons four times in
+    // five. The page promises no card appears twice; now it is true.
+    const slots: typeof rows = [];
+    const used = new Set<string>();
+    const take = (pool: typeof rows): void => {
+      const fresh = pool.filter((c) => !used.has(c.id));
+      const from = fresh.length ? fresh : pool;
+      if (!from.length) return;
+      const card = pick(from);
+      used.add(card.id);
+      slots.push(card);
+    };
+    const takeMany = (pool: typeof rows, k: number): void => {
+      for (let i = 0; i < k; i++) take(pool);
+    };
+
+    takeMany(commons, slotCount("common"));
+    takeMany(uncommons, slotCount("uncommon"));
 
     // Two rare-or-better slots, each independently upgrading to Epic. Riot says
     // an Epic REPLACES a card in the rare slot and that two Epics in one pack is
     // possible, so the upgrade is rolled per slot rather than once per pack.
-    const rareSlots = slotCount("rare");
-    const rareDraw = sampleDistinct(rares, rareSlots);
-    for (let i = 0; i < rareSlots; i++) {
-      const upgraded = Math.random() < EPIC_UPGRADE_PER_RARE_SLOT && epics.length > 0;
-      slots.push(upgraded ? pick(epics) : rareDraw[i] ?? pick(rares));
+    for (let i = 0; i < slotCount("rare"); i++) {
+      take(Math.random() < EPIC_UPGRADE_PER_RARE_SLOT && epics.length ? epics : rares);
     }
 
-    // The foil slot: usually a common or uncommon, sometimes a Rare or Epic.
-    // Rares and Epics are always foil in print, so an upgrade here is the only
-    // way this slot differs from a base card in a simulation that cannot show
-    // foiling. FOIL_UPGRADE_CHANCE is our inference, not Riot's — see the file.
-    const foilPool = Math.random() < FOIL_UPGRADE_CHANCE ? fallback(["Epic", "Rare"]) : fallback(["Uncommon", "Common"]);
-    slots.push(pick(foilPool));
+    // ── The foil slot, and the chase tier that rides on it ───────────────────
+    // This is where Riot's other three published rates actually happen. They are
+    // rolled rarest-first off one uniform so the tiers cannot overlap, at the
+    // published per-pack frequencies (PULL_RATES.onePerPacks, converted from
+    // their per-box figures at 24 packs a box). Before this, alt-art,
+    // over-numbered and signature were printed on the page as rates and were
+    // literally unreachable in the code.
+    const chaseRoll = Math.random();
+    let chased = false;
+    let cumulative = 0;
+    for (const key of ["signature", "overnumbered", "altart"] as const) {
+      const rate = PULL_RATES.find((r) => r.key === key);
+      if (!rate?.onePerPacks) continue;
+      cumulative += 1 / rate.onePerPacks;
+      const pool = poolFor(key === "altart" ? "AltArt" : key === "overnumbered" ? "Overnumbered" : "Signature");
+      if (chaseRoll < cumulative && pool.length) {
+        take(pool);
+        chased = true;
+        break;
+      }
+    }
+    if (!chased) {
+      // No chase this pack: an ordinary foil. Usually a common or uncommon,
+      // sometimes a Rare or Epic. FOIL_UPGRADE_CHANCE is our inference, not
+      // Riot's — see lib/pack-composition.ts.
+      take(Math.random() < FOIL_UPGRADE_CHANCE ? fallback(["Epic", "Rare"]) : fallback(["Uncommon", "Common"]));
+    }
 
     // The token/rune slot. Runes are their own card type rather than a rarity,
-    // so this only deals one when the set actually has them catalogued —
-    // otherwise the slot is dropped rather than filled with a pretend rune.
-    const runes = rows.filter((c) => c.type === "Rune");
-    if (runes.length) slots.push(pick(runes));
+    // so this only deals one when the set actually has them catalogued. The
+    // response says which slots were dealt rather than letting a 13-card pack
+    // quietly contradict the 14 the page promises.
+    if (runePool.length) take(runePool);
 
     const cards: PoolCard[] = slots.map((c) => ({
       id: c.id,
@@ -166,7 +233,15 @@ export async function GET(req: Request) {
     }));
 
     return NextResponse.json(
-      { currency: COUNTRIES[country].currency, setCode: chosen.code, setName: chosen.name, cards },
+      {
+        currency: COUNTRIES[country].currency,
+        setCode: chosen.code,
+        setName: chosen.name,
+        cards,
+        // False when the set has no runes catalogued, so the pack is 13 rather
+        // than the 14 Riot describes. The UI says so rather than staying quiet.
+        runeSlotDealt: runePool.length > 0,
+      },
       { headers: { "Cache-Control": "private, no-store" } }
     );
   } catch {

@@ -186,7 +186,8 @@ export function PackSim({ sets }: { sets: { code: string; name: string }[] }) {
                 </div>
               </div>
               <p className="mt-2 text-center text-[11px] text-slate-600">
-                A simulator for fun — real odds aren&apos;t published. Curious whether opening actually beats buying?{" "}
+                Dealt to Riot&apos;s published pack structure and rates — the tables below cite the
+                source. Curious whether opening actually beats buying?{" "}
                 <Link href="/tools/box-ev" className="text-brand-400 hover:underline">Run the Box EV calculator →</Link>
               </p>
               <RunRecap cards={recapCards} currency={currency} title="🛒 The cards you pulled" />
