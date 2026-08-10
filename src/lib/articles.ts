@@ -342,7 +342,7 @@ Head to the **[Price Movers page](/movers)** to see, for your region, this week'
 - **📉 Biggest drops** — the singles that have fallen the most, often the best time to buy.
 - **💎 Best value right now** — cards trading furthest below their recent high.
 
-Every figure is the live local price in your currency (AUD, NZD, USD or GBP), compared across the stores we track and updated daily. Switch your country at the top of the page to see your market's movers.
+Every figure is the live local price in your own currency — AUD, NZD, USD, GBP, SGD or CAD — compared across the stores we track and updated daily. Switch your country at the top of the page to see your market's movers.
 
 ## Why prices move
 
@@ -488,7 +488,7 @@ New to the game entirely? Start with **[Riftbound for beginners](/guides/riftbou
     category: "guide",
     title: "Where to Buy Riftbound Cards (Australia, NZ, US & UK)",
     excerpt:
-      "The complete guide to buying Riftbound: League of Legends TCG cards — singles and sealed — in Australia, New Zealand, the United States and the United Kingdom, and how to always find the cheapest price.",
+      "The complete guide to buying Riftbound: League of Legends TCG cards — singles and sealed — in Australia, New Zealand, the United States, the United Kingdom, Singapore and Canada, and how to always find the cheapest price.",
     author: "RiftCompare",
     date: "2026-06-08",
     readMins: 6,
@@ -501,7 +501,7 @@ The short version: prices for the same card vary a lot between shops and change 
 
 1. **[Search the card database](/browse)** and open the card you want.
 2. Each card shows the **lowest live price across every store we track**, sorted cheapest-first, with a one-click link straight to the shop.
-3. Use the **country switcher** (top of the page) to set your region — prices then show in your local currency (AUD, NZD, USD or GBP), sourced from local stores, so what you see is what you'll actually pay.
+3. Use the **country switcher** (top of the page) to set your region — prices then show in your local currency (AUD, NZD, USD, GBP, SGD or CAD), sourced from local stores, so what you see is what you'll actually pay.
 
 You can also **[price a whole deck at once](/deck)** or **[compare sealed products](/sealed)** like booster boxes and Proving Grounds.
 
@@ -603,7 +603,7 @@ market, on delivered cost.
 
 ## Compare every sealed price in one place
 
-Head to the **[sealed products page](/sealed)** to see live prices for booster boxes, booster packs, Proving Grounds kits and other sealed Riftbound product across the stores we track — sorted so the cheapest is easy to spot. Set the **country switcher** to your region first so prices show in your local currency (AUD, NZD, USD or GBP).
+Head to the **[sealed products page](/sealed)** to see live prices for booster boxes, booster packs, Proving Grounds kits and other sealed Riftbound product across the stores we track — sorted so the cheapest is easy to spot. Set the **country switcher** to your region first so prices show in your local currency (AUD, NZD, USD, GBP, SGD or CAD).
 
 ## By region
 
@@ -944,7 +944,7 @@ Riftbound has seven domains — **Fury, Calm, Mind, Body, Chaos, Order** and **C
 
 ## Building on a budget
 
-A deck's cost is dominated by a handful of chase cards — the commons, runes and battlefields are cheap. On every **[meta deck page](/decks)** we show the build cost broken down card-by-card and priced across Australian stores, so you can see exactly where the money goes and where to save. Want to tweak a list? Open it in the **[Deck Builder](/deck)** to re-price your own version.
+A deck's cost is dominated by a handful of chase cards — the commons, runes and battlefields are cheap. On every **[meta deck page](/decks)** we show the build cost broken down card-by-card and priced in your own market, so you can see exactly where the money goes and where to save. Want to tweak a list? Open it in the **[Deck Builder](/deck)** to re-price your own version.
 
 ## Mulligan: keep or ship your opening hand
 
@@ -1691,7 +1691,7 @@ Planning a Vendetta deck that mixes old and new cards? Our **[best Vendetta deck
 - **Don't buy the first price you see.** Launch-day listings are the highest they'll be. Always **[compare delivered prices across stores](/browse)** first — shipping included.
 - **Watch the movers.** The **[price movers](/movers)** page shows what's spiking in real time; the hottest chase cards climb fastest, so decide whether to grab early or wait them out.
 - **Price your whole deck at once.** Drop your list into the **[deck pricer](/deck)** — it totals every card at the cheapest live price in your currency, so you buy the whole thing for the least.
-- **Switch to your region.** Prices show in AUD, NZD, USD or GBP — make sure you're seeing *your* market's real cost, delivered.
+- **Switch to your region.** Prices show in AUD, NZD, USD, GBP, SGD or CAD — make sure you're seeing *your* market's real cost, delivered.
 
 ## After the dust settles
 
@@ -1871,7 +1871,7 @@ For the complete, always-current picture — including March's original 7 bans �
       alt: "Riftbound T1 2025 Worlds Champion Signature Edition drawing dates — registration 14-17 August 2026",
     },
     summary: [
-      "**Registration opens Friday 14 August 2026, 9am Pacific** and **closes Monday 17 August, 6pm Pacific.** It is a drawing on the Riot Merch Store, not a first-come sale — entering early does nothing.",
+      "**Registration runs from 16:00 UTC on Friday 14 August 2026 to 01:00 UTC on Tuesday 18 August** (Riot publishes it as 9am-6pm Pacific). It is a drawing on the Riot Merch Store, not a first-come sale — entering early does nothing, so enter at a reasonable hour wherever you are.",
       "**Selection emails start Thursday 20 August**, with further waves on 24 and 27 August if they are needed. Boxes begin arriving from **Wednesday 2 September**.",
       "**US$360**, **10,125 copies per language** (English, Chinese, Korean). One card in every box is serial-numbered 1-2025 and carries a gold-stamped player signature.",
       "**There is no Catch Up pool.** Riot has said every entrant has the same chance regardless of past entries or purchases, so a long purchase history buys you nothing here.",
@@ -1881,7 +1881,7 @@ For the complete, always-current picture — including March's original 7 bans �
     faq: [
       {
         q: "What time does the Riftbound T1 Signature Edition drawing open?",
-        a: "Registration opens at 9am Pacific on Friday 14 August 2026 — 12pm Eastern, 5pm UK, and 2am Saturday 15 August in eastern Australia. It closes at 6pm Pacific on Monday 17 August 2026.",
+        a: "The window opens at 16:00 UTC on Friday 14 August 2026 and closes at 01:00 UTC on Tuesday 18 August. Riot publishes it in Pacific time (9am Friday to 6pm Monday), which is Friday evening in the UK and Saturday morning across Singapore, Australia and New Zealand. The article has the exact local open and close for all six markets we price. Because it is a drawing rather than a first-come sale, the opening minute carries no advantage — enter at any convenient point before it closes.",
       },
       {
         q: "Is the T1 drawing first-come, first-served?",
