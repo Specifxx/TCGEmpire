@@ -8,6 +8,7 @@ import { cardTileSelect } from "@/lib/cards";
 import { COUNTRIES, DEFAULT_COUNTRY, priceField } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { CHAMPIONS, championBySlug, championCardWhere } from "@/lib/champions";
+import { setByCode } from "@/lib/constants";
 import { META_DECKS, resolveDeck, type ResolvedDeck } from "@/lib/meta-decks";
 import { DomainBadge } from "@/components/Badge";
 import { EbayBuyCta } from "@/components/EbayBuyCta";
@@ -39,13 +40,36 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   // the threshold it stays crawlable and linked but is kept out of the index,
   // matching how the type/rarity/printing facets already behave. Fails OPEN: a
   // count query that throws returns -1 and leaves the page indexable.
-  const cardCount = await prisma.card.count({ where: championCardWhere(champ) }).catch(() => -1);
+  // Rows, not a bare count: the description below needs this champion's own
+  // domain and set spread, and both come from the same tiny query. Scoped to one
+  // champion (a few dozen rows of three scalar fields), so this is well inside
+  // the per-request budget in lib/db.ts.
+  const rows = await prisma.card
+    .findMany({ where: championCardWhere(champ), select: { domain: true, setCode: true } })
+    .catch(() => null);
+  const cardCount = rows?.length ?? -1;
+
+  // WHY THIS ISN'T "Every Riftbound {name} card across all sets — …".
+  // That sentence varied only by the champion's name, so all 33 champion hubs
+  // shipped what a near-duplicate detector — and Google's own clustering — reads
+  // as one description (GROWTH-AUDIT.md § 4). The name is one token in ~30.
+  //
+  // Domain and set names are CATEGORICAL and genuinely differ between champions:
+  // Ahri is a Mind champion in Origins, Draven a Chaos/Fury one across Origins
+  // and Unleashed. Those are words, not digits, so they separate the pages for a
+  // reader and a crawler alike — and every one is a fact read off this
+  // champion's own rows, never asserted.
+  const domains = [...new Set(rows?.map((r) => r.domain) ?? [])].sort();
+  const setNames = [...new Set(rows?.map((r) => setByCode(r.setCode)?.name ?? r.setCode) ?? [])];
+  const domainBit = domains.length === 1 ? `a ${domains[0]} champion` : domains.length > 1 ? `spanning ${domains.join(", ")}` : "";
+  const setBit = setNames.length === 1 ? ` in ${setNames[0]}` : setNames.length > 1 ? ` across ${setNames.join(", ")}` : "";
+  const factBit = domainBit ? `${cardCount} printings — ${domainBit}${setBit}. ` : "";
   const title = `${champ.name} Riftbound Cards — All Printings & Live Prices`;
   return {
     title: { absolute: `${title} | RiftCompare` },
     description:
-      `Every Riftbound ${champ.name} card across all sets — Legends, units and alternate-art printings — ` +
-      `with live prices compared across stores so you can find the cheapest way to build ${champ.name}.`,
+      `Every Riftbound ${champ.name} card, priced. ${factBit}` +
+      `Compare live prices across stores to find the cheapest way to build ${champ.name}.`,
     alternates: { canonical: `/champions/${champ.slug}` },
     ...(cardCount >= 0 && cardCount < CHAMPION_THIN_THRESHOLD ? { robots: { index: false, follow: true } } : {}),
     keywords: [

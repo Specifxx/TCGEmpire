@@ -358,11 +358,30 @@ export function deckGroupTitle(g: DeckGroup): string {
 }
 
 export function deckGroupDescription(g: DeckGroup): string {
-  const n = seedsInGroup(g).length;
+  const seeds = seedsInGroup(g);
+  const n = seeds.length;
   const lists = `${n} real tournament ${n === 1 ? "list" : "lists"}`;
+  // NAME THE LEGENDS. Without them these descriptions varied only by the group's
+  // own name, so the nine deck-group pages read as two descriptions to a
+  // near-duplicate detector (GROWTH-AUDIT.md § 4) — digits are discounted and
+  // every other token was shared. Champion names are the most varying real fact
+  // on the page, they are what people actually search, and they come from the
+  // same seed list the page renders, so the snippet can never name a deck the
+  // page doesn't show.
+  //
+  // From the deck NAME, not the `legend` field. Two of the ten legends are
+  // unusable as champion names: "Master, Wuju Bladesman - Starter" carries the
+  // seed.ts slugify bug documented in lib/champions.ts (it should be Master Yi),
+  // and "Void Burrower" has no champion prefix at all. The deck names — "Master
+  // Yi, Wuju Bladesman", "Reksai, Void Burrower" — are clean, and are also the
+  // names a reader would recognise.
+  const legends = [...new Set(seeds.map((s) => s.name.split(",")[0].trim()).filter(Boolean))];
+  const led = legends.length
+    ? ` Led by ${legends.slice(0, 3).join(", ")}${legends.length > 3 ? " and more" : ""}.`
+    : "";
   return g.axis === "archetype"
-    ? `Every ${g.name.toLowerCase()} deck in the current Riftbound metagame — ${lists}, card for card, each priced live across stores so you can see what it costs to build and where to buy it cheapest.`
-    : `Every meta Riftbound deck that plays the ${g.name} domain — ${lists} with live build costs compared across stores, plus the cheapest cart to buy one right now.`;
+    ? `Every ${g.name.toLowerCase()} deck in the current Riftbound metagame — ${lists}, priced live so you can see what each costs to build.${led}`
+    : `Every meta Riftbound deck playing the ${g.name} domain — ${lists} with live build costs and the cheapest cart to buy one.${led}`;
 }
 
 /** H1. Distinct from the <title> on purpose: the tag carries the query, the

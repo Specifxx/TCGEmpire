@@ -7,7 +7,9 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Marketplace Terms",
-  description: `The terms for buying and selling on ${SITE_NAME} Marketplace.`,
+  description:
+    `The terms for buying and selling on ${SITE_NAME} Marketplace: who can sell, which markets are ` +
+    `live, the fees, and how held funds and payouts work.`,
   alternates: { canonical: "/marketplace/terms" },
 };
 

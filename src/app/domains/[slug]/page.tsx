@@ -21,7 +21,13 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const domain = domainBySlug(params.slug);
   if (!domain) return notFoundMetadata("Domain");
   const title = `Riftbound ${domain.label} Cards — Prices, Values & Full List`;
-  const description = `Every Riftbound ${domain.label} card with live prices compared across stores — find the cheapest ${domain.label} singles. Full ${domain.label} domain card list and values, updated daily.`;
+  // domain.tagline ("Aggression & burst", "Control & knowledge") is per-domain
+  // copy that already exists in lib/domains.ts and was going unused in metadata.
+  // Without it the seven domain descriptions differed by a single repeated word
+  // and read as one description to a near-duplicate detector — see
+  // GROWTH-AUDIT.md § 4. It is also simply more useful: it says what the domain
+  // IS, which is what someone searching "riftbound fury cards" wants confirmed.
+  const description = `Every Riftbound ${domain.label} card — ${domain.tagline.toLowerCase()} — with live prices compared across stores. The full ${domain.label} card list and values, updated daily.`;
   return {
     title: { absolute: `${title} | RiftCompare` },
     description,

@@ -56,7 +56,7 @@ async function storeStats(key: string) {
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const store = storeBySlug(params.slug);
   if (!store) return notFoundMetadata("Store");
-  const { count } = await storeStats(store.key);
+  const { count, cheapest } = await storeStats(store.key);
   const place = COUNTRIES[(store.country ?? "AU") as Country];
   // Market-disambiguated where two keys share a trading name (see
   // lib/store-pages.ts) — otherwise the two pages ship the same <title>.
@@ -64,9 +64,17 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const title = `${label} Riftbound Singles — Live Prices & Stock | RiftCompare`;
   return {
     title: { absolute: title },
+    // NAMES A CARD THIS STORE ACTUALLY HAS. The previous sentence varied only by
+    // the store's name and a stock count, so 43 of the 79 store pages read as one
+    // description to a near-duplicate detector — digits are discounted, and
+    // "Australian store" is shared by every AU store (GROWTH-AUDIT.md § 4).
+    // storeStats() already fetched the 24 cheapest in-stock listings for the page
+    // body, so the card name costs no extra query, and it is the most varying
+    // real fact available: it is this store's own cheapest live listing.
     description:
-      `Compare live Riftbound singles prices at ${label}${count > 0 ? ` — ${count} cards in stock right now` : ""}. ` +
-      `See how this ${place.adjective} store's prices stack up against every other store we track.`,
+      `Compare live Riftbound singles prices at ${label}${count > 0 ? ` — ${count} cards in stock` : ""}` +
+      `${cheapest[0] ? `, from ${cheapest[0].card.name} at ${formatMoney(cheapest[0].priceCents, place.currency)}` : ""}. ` +
+      `See how this ${place.adjective} store compares to every other store we track.`,
     alternates: { canonical: `/stores/${store.slug}` },
     // Thin guard: a store with no live inventory (several tracked retailers are
     // deliberately directory-only) would be a page whose only content is

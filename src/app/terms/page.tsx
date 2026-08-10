@@ -6,7 +6,9 @@ import { staticPageDateLabel } from "@/lib/static-page-dates";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
-  description: `The terms and conditions for using ${SITE_NAME}.`,
+  description:
+    `The terms of using ${SITE_NAME}: what our price comparison does and does not guarantee, how ` +
+    `affiliate links work, account rules and acceptable use.`,
   alternates: { canonical: "/terms" },
 };
 
