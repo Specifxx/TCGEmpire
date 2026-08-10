@@ -8,6 +8,7 @@ import { formatMoney } from "../src/lib/format";
 import { META_DECKS } from "../src/lib/meta-decks";
 import { getArticles } from "../src/lib/articles";
 import { SECTIONS } from "../src/lib/sitemap-sections";
+import { STORE_PAGES, storePageName, sharedStoreNames } from "../src/lib/store-pages";
 import {
   ARCHETYPE_GROUPS,
   DECK_GROUPS,
@@ -549,6 +550,44 @@ test("the sitemap submits exactly the indexable groups — never a noindexed URL
   // And the paths are the ones the routes actually serve.
   for (const g of submitted) {
     assert.match(deckGroupPath(g), /^\/decks\/(archetype|domain)\/[a-z0-9-]+$/);
+  }
+});
+
+// ── Duplicate titles outside the new surface ─────────────────────────────────
+
+test("no two store pages can ship the same title", () => {
+  // Found by scripts/seo-gate.ts against PRODUCTION, not locally: Danireon and
+  // Hobbiesville each serve two markets off one domain under one trading name,
+  // so /stores/danireon and /stores/danireonca rendered an identical <title>.
+  // A local database carries far fewer stores, which is why it took a live run.
+  //
+  // Asserted on the same helper the page calls, across every store, so a chain
+  // that adds a third market later is covered without editing this test.
+  const titles = new Map<string, string>();
+  for (const s of STORE_PAGES) {
+    const place = COUNTRIES[(s.country ?? "AU") as keyof typeof COUNTRIES];
+    const title = `${storePageName(s, place.label)} Riftbound Singles — Live Prices & Stock | RiftCompare`;
+    assert.ok(
+      !titles.has(title),
+      `duplicate store title ${JSON.stringify(title)} on /stores/${s.slug} and /stores/${titles.get(title)}`,
+    );
+    titles.set(title, s.slug);
+  }
+});
+
+test("only genuinely shared store names get a market suffix", () => {
+  // The disambiguation must not leak onto the 75 single-market stores — that
+  // would rewrite three-quarters of the store titles for no reason.
+  const shared = new Set(sharedStoreNames());
+  assert.ok(shared.size > 0, "expected at least one trading name tracked in two markets");
+  for (const s of STORE_PAGES) {
+    const place = COUNTRIES[(s.country ?? "AU") as keyof typeof COUNTRIES];
+    const label = storePageName(s, place.label);
+    if (shared.has(s.name)) {
+      assert.equal(label, `${s.name} (${place.label})`, `${s.slug} must name its market`);
+    } else {
+      assert.equal(label, s.name, `${s.slug} must not gain a suffix`);
+    }
   }
 });
 
