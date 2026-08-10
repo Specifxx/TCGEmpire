@@ -10,6 +10,7 @@ import { SITE_URL } from "@/lib/site";
 import { RIFTLE_ATTEMPTS } from "@/lib/riftle-shared";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { faqPage, ldJson } from "@/lib/jsonld";
+import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 
 const DESCRIPTION =
   "Riftle is the free daily Riftbound card guessing game — a Wordle-style puzzle for League of Legends TCG players. Guess the card of the day in 8 tries with feedback on set, domain, type, rarity, cost and might, or play endless cards in Unlimited mode.";
@@ -59,7 +60,20 @@ export function generateMetadata({ searchParams }: { searchParams?: { r?: string
     title: "Riftle — Free Daily Riftbound Card Guessing Game",
     description: DESCRIPTION,
     keywords: ["Riftle", "Riftbound Wordle", "Riftbound card game", "daily Riftbound puzzle", "guess the Riftbound card"],
-    alternates: { canonical: "/riftle" },
+    // pageAlternates(), not a bare { canonical }. Next SHALLOW-merges metadata, so
+    // declaring only a canonical here REPLACED the root's alternates object and
+    // silently dropped this page's RSS/JSON-Feed auto-discovery links and its
+    // x-default — the exact defect lib/seo.ts was written to fix, still live on
+    // the site's highest-repeat-visit page.
+    alternates: pageAlternates("/riftle"),
+    // Same shallow-merge trap on openGraph: with no page-level object the card
+    // fell back to the site-wide one, so every /riftle share unfurled as the
+    // homepage. The ?r= branch below still overrides this with the score card.
+    openGraph: pageOpenGraph({
+      title: "Riftle — Free Daily Riftbound Card Guessing Game",
+      description: "Guess the daily Riftbound card in 8 tries. Free, no account, a new puzzle every day.",
+      url: "/riftle",
+    }),
   };
   const r = typeof searchParams?.r === "string" ? searchParams.r : null;
   if (!r) return base;
@@ -89,6 +103,13 @@ export default function RiftlePage() {
   const game = {
     "@context": "https://schema.org",
     "@type": "VideoGame",
+    // @id + graph edges, matching /games and /games/pack-sim. Without
+    // isPartOf/mainEntityOfPage this node is an island, so the site-level
+    // Organization and WebSite signals never reach the one page whose whole job
+    // is to make Google treat "Riftle" as an entity that belongs to this site.
+    "@id": `${SITE_URL}/riftle#game`,
+    isPartOf: { "@id": `${SITE_URL}/#website` },
+    mainEntityOfPage: `${SITE_URL}/riftle`,
     name: "Riftle",
     alternateName: ["Riftbound Wordle", "Riftle daily card game"],
     url: `${SITE_URL}/riftle`,
@@ -175,9 +196,26 @@ export default function RiftlePage() {
 
         <section className="mt-6 border-t border-ink-800 pt-5">
           <h2 className="text-base font-bold text-white">More Riftbound games &amp; tools</h2>
-          <div className="mt-2 flex flex-wrap gap-2">
+          {/* The pack simulator gets a sentence rather than a bare chip. These are
+              the site's two flagship free tools and they share an audience — the
+              player who does the daily puzzle is the same person who rips a
+              virtual pack — but until now nothing on either page pointed at the
+              other, so each was a dead end for the other's traffic. Descriptive
+              anchor text, because "riftbound pack opening" is the query it needs
+              to carry. */}
+          <p className="mt-2 text-sm leading-relaxed text-slate-400">
+            Done for today? Try the{" "}
+            <Link href="/games/pack-sim" className="font-semibold text-brand-300 hover:underline">
+              Riftbound pack opening simulator
+            </Link>{" "}
+            — free virtual booster packs dealt to Riot&apos;s real 14-card structure, with a live market price on
+            every card you pull.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
             <Link href="/games" className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">All Riftbound games →</Link>
+            <Link href="/games/pack-sim" className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">Pack opening simulator →</Link>
             <Link href="/browse" className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">Card database →</Link>
+            <Link href="/decks" className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">Meta decks &amp; build costs →</Link>
             <Link href="/sets/vendetta/gallery" className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">Vendetta card gallery →</Link>
           </div>
         </section>

@@ -17,6 +17,7 @@ import { SITE_URL } from "@/lib/site";
 import { buildCollectionNarrative } from "@/lib/content/collection-narrative";
 import { getSiteMedianCents } from "@/lib/content/site-median";
 import { CHAMPION_THIN_THRESHOLD } from "@/lib/champions";
+import { DECK_GROUPS, deckGroupPath, deckInGroup } from "@/lib/deck-groups";
 
 // riftdecks.com's /legends/<champion> pages rank #1 for champion queries with
 // build price and win rate in the snippet; ours 404'd entirely. This is the
@@ -133,6 +134,14 @@ export default async function ChampionPage({ params }: { params: { slug: string 
         return deckSeeds.map(unpriced);
       })
     : deckSeeds.map(unpriced);
+
+  // The archetype/domain shelves this champion's real lists belong to. Static
+  // seed data (no DB), so these links survive a pricing outage — and they are
+  // the internal path from an 87-page champion surface into the new programmatic
+  // deck surface, which is the link both sides need to be discovered quickly.
+  const championGroups = deckSeeds.length
+    ? DECK_GROUPS.filter((g) => deckSeeds.some((d) => deckInGroup(d, g)))
+    : [];
 
   // Editorial intro built from this champion's OWN live pool — count, price
   // range, where the value sits, which cards matter, and what that means for
@@ -251,6 +260,22 @@ export default async function ChampionPage({ params }: { params: { slug: string 
           <p className="mb-4 max-w-3xl text-xs text-slate-500">
             Real tournament results, not house-made lists — each links to its source event and its live, priced
             buy list.
+            {championGroups.length > 0 && (
+              <>
+                {" "}
+                {champ.name}&apos;s lists sit in the{" "}
+                {championGroups.map((g, i) => (
+                  <span key={`${g.axis}-${g.slug}`}>
+                    {i > 0 && (i === championGroups.length - 1 ? " and " : ", ")}
+                    <Link href={deckGroupPath(g)} className="text-brand-400 hover:underline">
+                      {g.name}
+                    </Link>
+                  </span>
+                ))}{" "}
+                {championGroups.length === 1 ? "shelf" : "shelves"} — each of those pages prices every deck in
+                the group and shows the cheapest cart to buy one.
+              </>
+            )}
           </p>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {decks.map((d) => (

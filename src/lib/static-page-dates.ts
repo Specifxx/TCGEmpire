@@ -13,7 +13,7 @@ const STATIC_PAGE_DATES: Record<string, string> = {
   "/deck": "2026-07-29",
   "/bulk-pricer": "2026-07-29",
   "/trade": "2026-07-29",
-  "/riftle": "2026-07-29",
+  "/riftle": "2026-08-10",
   "/tools": "2026-07-29",
   "/tools/best-basket": "2026-07-26",
   "/premium": "2026-07-29",

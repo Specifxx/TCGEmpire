@@ -8,6 +8,7 @@ import { cardTileSelect } from "@/lib/cards";
 import { pickPrice, DEFAULT_COUNTRY } from "@/lib/country";
 import { DOMAIN_PAGES, domainBySlug } from "@/lib/domains";
 import { SITE_URL } from "@/lib/site";
+import { deckGroupBySlug, deckGroupPath, seedsInGroup } from "@/lib/deck-groups";
 
 // AU baseline server render (country-neutral copy); card tiles localise the price
 // client-side from the per-market price columns, like the set pages.
@@ -52,6 +53,10 @@ export default async function DomainPage({ params }: { params: { slug: string } 
   const priced = cards.filter((c) => pickPrice(c, country) != null).length;
 
   const otherDomains = DOMAIN_PAGES.filter((d) => d.slug !== domain.slug);
+  // Only when a real meta deck plays this domain — a link to a page that 404s is
+  // worse than no link.
+  const dg = deckGroupBySlug("domain", domain.slug);
+  const deckGroup = dg && seedsInGroup(dg).length > 0 ? dg : null;
 
   const breadcrumb = {
     "@context": "https://schema.org",
@@ -143,6 +148,20 @@ export default async function DomainPage({ params }: { params: { slug: string } 
           </Link>
           .
         </p>
+        {/* The deck-side counterpart. This page answers "which {domain} cards
+            exist and what do they cost"; /decks/domain/{slug} answers "which meta
+            decks play {domain} and what does one cost to build". Linked rather
+            than merged so neither has to chase the other's query — and only when
+            a real list actually plays the domain (Colorless has none today). */}
+        {deckGroup && (
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-400">
+            Building rather than collecting?{" "}
+            <Link href={deckGroupPath(deckGroup)} className="text-brand-400 hover:underline">
+              Every meta deck that plays {domain.label}, with live build costs
+            </Link>{" "}
+            — priced card for card across stores, with the cheapest cart to buy one right now.
+          </p>
+        )}
       </section>
     </div>
   );

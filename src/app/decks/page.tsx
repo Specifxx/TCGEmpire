@@ -11,6 +11,7 @@ import { COUNTRIES, COUNTRY_LIST } from "@/lib/country";
 import { SITE_URL } from "@/lib/site";
 import { cardImageAlt } from "@/lib/image-alt";
 import { deckItemListLd, deckFaqLd, deckFaq, cheapestDeck, bestWinRateDeck } from "@/lib/deck-jsonld";
+import { deckGroupPath, liveDeckGroups } from "@/lib/deck-groups";
 
 export const revalidate = 86400;
 
@@ -81,6 +82,10 @@ export default async function DecksPage() {
   const faqs = deckFaq(decks, ldOpts);
   const cheapest = cheapestDeck(decks);
   const bestWr = bestWinRateDeck(decks);
+  // Static seed data — no DB call, so the band renders even if pricing degrades.
+  const live = liveDeckGroups();
+  const archetypeGroups = live.filter((g) => g.axis === "archetype");
+  const domainGroups = live.filter((g) => g.axis === "domain");
 
   return (
     <>
@@ -177,6 +182,55 @@ export default async function DecksPage() {
             </Link>
           )}
         </div>
+      )}
+
+      {/* Browse band for the programmatic archetype/domain landing pages.
+          An indexable page nothing links to is one Google finds late and trusts
+          little, and this hub is by far the strongest internal link available to
+          them — every group is one click from here. Groups with no real deck are
+          absent (they 404), and single-deck groups are listed but carry their own
+          noindex, so this band never advertises a page we're hiding. */}
+      {(archetypeGroups.length > 0 || domainGroups.length > 0) && (
+        <section>
+          <h2 className="text-xl font-extrabold text-white">Browse decks by archetype &amp; domain</h2>
+          <p className="mt-1 max-w-3xl text-sm text-slate-400">
+            Every list above, cut the two ways people actually search — by what the deck is trying to do, and by
+            the domains it plays. Each page prices its whole shelf live and shows the cheapest cart to buy one
+            right now.
+          </p>
+          {archetypeGroups.length > 0 && (
+            <div className="mt-4">
+              <h3 className="text-[11px] font-extrabold uppercase tracking-wide text-slate-500">Archetypes</h3>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {archetypeGroups.map((g) => (
+                  <Link
+                    key={g.slug}
+                    href={deckGroupPath(g)}
+                    className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500"
+                  >
+                    {g.name} decks →
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+          {domainGroups.length > 0 && (
+            <div className="mt-4">
+              <h3 className="text-[11px] font-extrabold uppercase tracking-wide text-slate-500">Domains</h3>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {domainGroups.map((g) => (
+                  <Link
+                    key={g.slug}
+                    href={deckGroupPath(g)}
+                    className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500"
+                  >
+                    {g.name} decks →
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
       )}
 
       {tiers.map(({ tier, decks: tierDecks }) =>

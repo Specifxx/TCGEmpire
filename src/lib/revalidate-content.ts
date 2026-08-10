@@ -38,12 +38,14 @@ export function revalidateContent(): string[] {
   // Each child is purged BY NAME rather than via the dynamic-route pattern:
   // revalidatePath's type argument only accepts "page" | "layout", so there's no
   // supported way to purge every instance of a dynamic ROUTE HANDLER in one call.
-  // Eleven explicit paths are cheap and unambiguous.
+  // Iterating SECTIONS keeps this correct as sections are added — it is not a
+  // hand-maintained list, so a new child sitemap can't be forgotten here.
   revalidatePath("/sitemap.xml");
   for (const id of SECTIONS) revalidatePath(`/sitemaps/${id}.xml`);
 
   // The cookie/searchParams-DYNAMIC price pages (/market, /decks, /decks/[slug],
-  // /tools/box-ev) render per-request, so revalidatePath can't purge
+  // /decks/archetype/[slug], /decks/domain/[slug], /tools/box-ev) render
+  // per-request, so revalidatePath can't purge
   // them — but each wraps its heavy DB read in unstable_cache tagged CONTENT_TAG
   // (as does the homepage's cached data). Clearing the tag makes them all refetch on
   // the next request. (/sealed self-refreshes via its own 15-min in-process memo.)
