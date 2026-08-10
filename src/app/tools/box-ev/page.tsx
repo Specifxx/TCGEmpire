@@ -244,6 +244,14 @@ export default async function BoxEvPage() {
           always cheaper and always certain — and either way,{" "}
           <Link href="/sealed" className="text-brand-400 hover:underline">compare box prices</Link> before you buy.
         </p>
+        <p className="mt-3 text-sm leading-relaxed text-slate-400">
+          If you would rather feel that distribution than read about it,{" "}
+          <Link href="/games/pack-sim" className="text-brand-400 hover:underline">
+            open some virtual packs
+          </Link>{" "}
+          — same card pool, same pack structure, live prices on every pull, and no money. A dozen
+          packs of mostly bulk makes the argument above far better than a paragraph does.
+        </p>
       </section>
     </div>
   );

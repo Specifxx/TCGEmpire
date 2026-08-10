@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SETS } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
+import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { PackSim } from "@/components/games/PackSim";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { HubFaq } from "@/components/HubFaq";
@@ -15,14 +16,18 @@ import {
   FOIL_UPGRADE_CHANCE,
 } from "@/lib/pack-composition";
 
+// ~157 chars — long enough to say what it is and what makes it different, short
+// enough that Google renders all of it.
 const DESC =
-  "Open free virtual Riftbound booster packs built from the real card pool, dealt to Riot's own pack structure — 7 common, 3 uncommon, 2 rare-or-better, foil and rune — with a live market price on every card you pull.";
+  "Open Riftbound booster packs online, free. Real cards, Riot's real 14-card pack structure and published odds, with a live price on every card you pull.";
 
 // Shared pull links carry ?v=<value> so they unfurl with a custom OG card
 // ("I pulled $X"), pulling friends in to rip their own. Plain link is unchanged.
 export function generateMetadata({ searchParams }: { searchParams?: { v?: string } }): Metadata {
   const base: Metadata = {
-    title: "Riftbound Pack Opening Simulator — Free Virtual Packs",
+    // 53 chars with the " — RiftCompare" template suffix; the previous one
+    // rendered at 71 and was truncated in the SERP.
+    title: "Riftbound Pack Opening Simulator — Free",
     description: DESC,
     keywords: [
       "Riftbound pack simulator",
@@ -32,12 +37,12 @@ export function generateMetadata({ searchParams }: { searchParams?: { v?: string
       "Vendetta pack opening",
       "Riftbound pull rates",
     ],
-    alternates: { canonical: "/games/pack-sim" },
-    openGraph: {
+    alternates: pageAlternates("/games/pack-sim"),
+    openGraph: pageOpenGraph({
       title: "Riftbound Pack Opening Simulator | RiftCompare",
       description: "Rip free virtual Riftbound packs built from real cards, real pack odds and live prices.",
       url: `${SITE_URL}/games/pack-sim`,
-    },
+    }),
   };
   const v = typeof searchParams?.v === "string" ? searchParams.v.slice(0, 14) : null;
   if (!v) return base;
@@ -48,7 +53,7 @@ export function generateMetadata({ searchParams }: { searchParams?: { v?: string
   )}&b=${encodeURIComponent(sub)}&c=${encodeURIComponent("#f5a524")}`;
   return {
     ...base,
-    openGraph: { title: `I pulled ${v} of Riftbound cards`, description: sub, images: [{ url: img, width: 1200, height: 630 }] },
+    openGraph: { ...base.openGraph, title: `I pulled ${v} of Riftbound cards`, description: sub, images: [{ url: img, width: 1200, height: 630 }] },
     twitter: { card: "summary_large_image", title: `I pulled ${v}`, description: sub, images: [img] },
   };
 }
@@ -98,15 +103,10 @@ export default function PackSimPage() {
   const sets = released.map((s) => ({ code: s.code, name: s.name }));
   const current = released[0];
 
-  const breadcrumbLd = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
-      { "@type": "ListItem", position: 2, name: "Games", item: `${SITE_URL}/games` },
-      { "@type": "ListItem", position: 3, name: "Pack Opening Simulator", item: `${SITE_URL}/games/pack-sim` },
-    ],
-  };
+  // NO BreadcrumbList here on purpose: <Breadcrumbs> below emits one already,
+  // from the same trail it renders. Adding a second described the same hierarchy
+  // twice in one document.
+  //
   // WebApplication, matching /tools/box-ev — this is a free browser tool, not a
   // VideoGame (no scoring, no play session) and not a SoftwareApplication to
   // install. Same shape as the box-EV node so the two agree.
@@ -132,7 +132,7 @@ export default function PackSimPage() {
     <div>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumbLd, appLd, faqPage(FAQS)].filter(Boolean)) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify([appLd, faqPage(FAQS)].filter(Boolean)) }}
       />
       <Breadcrumbs trail={[{ name: "Games", href: "/games" }, { name: "Pack Opening Simulator", href: "/games/pack-sim" }]} />
 
@@ -240,8 +240,9 @@ export default function PackSimPage() {
               year: "numeric",
               timeZone: "UTC",
             })}
-            . Rates are for Origins, the set Riot documented; later sets have kept the same pack
-            structure.
+            . Riot documented Origins specifically and has not published a per-set breakdown since;
+            retail packaging for the later sets still states 14 cards a pack, which is the only
+            corroboration we have and is why the structure above is presented as Origins&apos;.
           </p>
         </section>
 

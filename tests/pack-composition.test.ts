@@ -103,7 +103,11 @@ test("the pack simulator page carries the content that makes it rankable", () =>
   const page = read("src/app/games/pack-sim/page.tsx");
   assert.match(page, /faqPage\(/, "needs FAQPage JSON-LD");
   assert.match(page, /"WebApplication"/, "needs WebApplication JSON-LD, as /tools/box-ev has");
-  assert.match(page, /"BreadcrumbList"/, "needs a breadcrumb trail");
+  // Breadcrumb JSON-LD comes from <Breadcrumbs>, which emits it alongside the
+  // trail it renders. The page must NOT hand-write a second BreadcrumbList —
+  // that is what it did, describing the same hierarchy twice in one document.
+  assert.match(page, /<Breadcrumbs\s/, "needs a breadcrumb trail");
+  assert.doesNotMatch(page, /"@type": "BreadcrumbList"|"BreadcrumbList"/, "duplicate BreadcrumbList — <Breadcrumbs> already emits one");
   assert.match(page, /PACK_SLOTS/, "must render the pack-composition table");
   assert.match(page, /PULL_RATES/, "must render the pull-rate table");
   assert.match(page, /PACK_SOURCE/, "must cite the source on the page, not just in code");
