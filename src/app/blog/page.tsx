@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { getBlogPosts } from "@/lib/posts";
 import { FilterableArticles, type ArticleSection } from "@/components/FilterableArticles";
@@ -88,7 +89,13 @@ export default async function BlogPage() {
       <div className="mb-5">
         <h1 className="text-2xl font-extrabold text-white">Blog</h1>
         <p className="mt-1 text-sm text-slate-400">
-          News, meta snapshots and buying guides for Riftbound.
+          News, meta snapshots and buying guides for Riftbound.{" "}
+          {/* The header's editorial link points here now rather than at /guides,
+              so this is what keeps the evergreen half one hop from the top bar
+              instead of two (footer + ⌘K only). */}
+          <Link href="/guides" className="font-semibold text-brand-300 underline-offset-2 hover:underline">
+            Browse the guides →
+          </Link>
         </p>
       </div>
       <FilterableArticles articles={articles} basePath="/blog" sections={BLOG_SECTIONS} featured={FEATURED_POSTS} />

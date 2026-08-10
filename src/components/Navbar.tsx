@@ -66,14 +66,18 @@ export function Navbar() {
               it is still reachable from the ⌘K launcher, the mega-menu and the
               footer via the "Decks" group in nav-groups.ts, so /trade keeps its
               internal links and does not become an orphan page. */}
-          {/* Guides & News — our ~64 original guides and posts, promoted out of
-              the footer into the primary header nav. They were previously
-              reachable only from the footer and the mega-menu, which meant the
-              only genuinely hand-written content on the site was invisible to
-              anyone arriving on a price page. An AdSense reviewer sampling from
-              the homepage has to be able to find the editorial in one click. */}
-          <Link href="/guides" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:block sm:px-2.5">
-            Guides &amp; News
+          {/* Blog — the header's one link into our own writing. It exists because
+              the hand-written content was previously reachable only from the
+              footer and the mega-menu, which made the only genuinely original
+              material on the site invisible to anyone arriving on a price page;
+              an AdSense reviewer sampling from the homepage has to find the
+              editorial in one click. This slot used to point at /guides under the
+              label "Guides & News"; /blog is the livelier half (news, spoilers,
+              meta snapshots — the pages that change weekly) and it carries a
+              "Browse the guides" link of its own, so /guides is still one hop
+              from the header rather than buried. */}
+          <Link href="/blog" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:block sm:px-2.5">
+            Blog
           </Link>
           {/* Marketplace — filled brand chip (not a plain text link) so the P2P
               marketplace is the most visually loud thing in the bar besides the
