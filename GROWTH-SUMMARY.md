@@ -171,6 +171,50 @@ with one prose word each, which is correct for what they are.
 
 ---
 
+## Verified on production — 2026-08-10, after deploy
+
+Everything above is merged to `main` and live. Re-running all three instruments
+against `https://riftcompare.com`:
+
+| Gate | Result |
+|---|---|
+| `seo-gate.ts` | **passed** — 1,702 submitted URLs, all 200; unique titles and descriptions; one self-canonical each; no noindex; valid structured data; no thin pages; **64,925 real price figures all in range** |
+| `template-seo-check.ts` | **passed** — all 14 templates emit a self-canonical, complete OpenGraph and their required structured data |
+| `content-quality.ts` | 396 flagged rows → **83** |
+
+Content-quality, before → after, measured on the live site:
+
+| Issue | Before | After |
+|---|---:|---:|
+| `NEAR_DUPLICATE_DESCRIPTION` | 337 | **55** |
+| `BROKEN_INTERNAL_LINK` | 26 | **0** |
+| `SHORT_DESCRIPTION` | 4 | **0** |
+| `EMPTY_SECTION` | 19 | 19 (detector limits — container sections) |
+| `THIN_EDITORIAL` | 10 | 9 |
+
+Near-duplicate descriptions by template — the hub work landed as intended on real
+inventory, which the local fixture could not prove:
+
+| Template | Before | After |
+|---|---:|---:|
+| `store` | 43 | **0** |
+| `champion` | 33 | **2** |
+| `domain` | 7 | **0** |
+| `decks/domain` + `decks/archetype` | 9 | **0** |
+| `keyword` | 3 | **0** |
+| `card` | 234 | 45 |
+| `set` + `set/gallery` | 8 | 8 |
+
+The remaining 45 card rows are printings that share a printing KIND (two promos
+of one card, say), where the words genuinely are the same and only the collector
+number differs. `set` and `set/gallery` are unchanged and documented above:
+`SETS` carries only `{code, name, slug}`, so there is no categorical fact left to
+differentiate a set page with, and inventing one would be padding.
+
+`content-quality-report.csv` in this repo is this production run.
+
+---
+
 ## Verification
 
 The audit's figures come from the **live site** (1,698 URLs). The before/after
