@@ -166,16 +166,18 @@ export const NAV_GROUPS: NavGroup[] = [
 // TOP-LEVEL header items — the handful of destinations that get their own
 // always-visible link rather than living inside the mega-menu.
 //
-// "Guides & News" is here deliberately. The blog and guides were reachable only
-// from the footer and the mega-menu, which meant the ~64 pieces of genuinely
-// original writing on this site were invisible to anyone who didn't go looking —
-// including an AdSense reviewer sampling pages from the homepage. Original
-// content that a reviewer cannot find might as well not exist.
+// The editorial slot is here deliberately. The blog and guides were reachable
+// only from the footer and the mega-menu, which meant the ~64 pieces of
+// genuinely original writing on this site were invisible to anyone who didn't go
+// looking — including an AdSense reviewer sampling pages from the homepage.
+// Original content that a reviewer cannot find might as well not exist. It
+// points at /blog rather than /guides: same job, and the blog is the half that
+// changes weekly. Keep this in step with Navbar.tsx, which renders the real bar.
 export const PRIMARY_NAV: { href: string; label: string }[] = [
   { href: "/browse", label: "Cards" },
   { href: "/sealed", label: "Sealed" },
   { href: "/market", label: "Index" },
-  { href: "/guides", label: "Guides & News" },
+  { href: "/blog", label: "Blog" },
 ];
 
 // The footer's own grouping — 4 columns instead of NAV_GROUPS' 8-9. Same links,
