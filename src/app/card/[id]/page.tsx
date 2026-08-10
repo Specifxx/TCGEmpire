@@ -35,6 +35,7 @@ import { championForCardName, championCardWhere } from "@/lib/champions";
 import { getCardPriceState } from "@/lib/card-price-state";
 import { getCanonicalTwin } from "@/lib/card-duplicates";
 import { typeFacetBySlug, rarityFacetBySlug } from "@/lib/facets";
+import { pageOpenGraph } from "@/lib/seo";
 import {
   buildCardNarrative,
   editionLabel,
@@ -211,11 +212,11 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     },
     // og:image + twitter:image are provided by the co-located opengraph-image.tsx
     // (a branded price card: art + name + lowest live price).
-    openGraph: {
-      title,
-      description,
-      type: "website",
-    },
+    // pageOpenGraph(), not a bare object: Next SHALLOW-merges metadata, so an
+    // inline openGraph REPLACES the root's and silently drops whatever it does
+    // not restate — here og:url, on all ~1,400 card pages. lib/seo.ts exists for
+    // exactly this and already carries siteName and type. See GROWTH-AUDIT.md § 5.
+    openGraph: pageOpenGraph({ title, description, url: canonicalPath }),
     twitter: {
       card: "summary_large_image",
       title,

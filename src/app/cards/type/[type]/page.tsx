@@ -7,6 +7,7 @@ import { DEFAULT_COUNTRY } from "@/lib/country";
 import { TYPE_FACETS, typeFacetBySlug, FACET_THIN_THRESHOLD } from "@/lib/facets";
 import { FacetPageBody } from "@/components/FacetPageBody";
 import { SITE_URL } from "@/lib/site";
+import { pageOpenGraph } from "@/lib/seo";
 
 export const revalidate = 86400;
 
@@ -31,7 +32,7 @@ export async function generateMetadata({ params }: { params: { type: string } })
     // A real page with genuine unique copy either way — noindex only guards
     // against a page whose ONLY content would be a near-empty card grid.
     ...(total >= 0 && total < FACET_THIN_THRESHOLD ? { robots: { index: false, follow: true } } : {}),
-    openGraph: { title, description: facet.intro, url: `${SITE_URL}/cards/type/${facet.slug}` },
+    openGraph: pageOpenGraph({ title, description: facet.intro, url: `/cards/type/${facet.slug}` }),
   };
 }
 

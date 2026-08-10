@@ -14,6 +14,7 @@ import { EbayBuyCta } from "@/components/EbayBuyCta";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { breadcrumb } from "@/lib/jsonld";
 import { SITE_URL } from "@/lib/site";
+import { pageOpenGraph } from "@/lib/seo";
 import { buildCollectionNarrative } from "@/lib/content/collection-narrative";
 import { getSiteMedianCents } from "@/lib/content/site-median";
 import { CHAMPION_THIN_THRESHOLD } from "@/lib/champions";
@@ -53,7 +54,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       `${champ.name} riftbound deck`,
       `${champ.name} riftbound price`,
     ],
-    openGraph: { title, description: `Every Riftbound ${champ.name} card with live prices.`, url: `${SITE_URL}/champions/${champ.slug}` },
+    openGraph: pageOpenGraph({ title, description: `Every Riftbound ${champ.name} card with live prices.`, url: `/champions/${champ.slug}` }),
   };
 }
 

@@ -9,6 +9,7 @@ import { DEFAULT_COUNTRY } from "@/lib/country";
 import { KEYWORDS, keywordBySlug } from "@/lib/keywords";
 import { getArticle } from "@/lib/articles";
 import { SITE_URL } from "@/lib/site";
+import { pageOpenGraph } from "@/lib/seo";
 
 export const revalidate = 86400;
 
@@ -47,7 +48,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       `riftbound ${kw.name.toLowerCase()} rules`,
       `riftbound ${kw.name.toLowerCase()} cards`,
     ],
-    openGraph: { title, description, url: `${SITE_URL}/keywords/${kw.slug}` },
+    openGraph: pageOpenGraph({ title, description, url: `/keywords/${kw.slug}` }),
   };
 }
 

@@ -29,6 +29,7 @@ import { buildCollectionNarrative } from "@/lib/content/collection-narrative";
 import { getSiteMedianCents } from "@/lib/content/site-median";
 import { SETS, setBySlug } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
+import { pageOpenGraph } from "@/lib/seo";
 
 // searchParams-driven (filters/pagination), so the route stays dynamic — same
 // tradeoff as /browse.
@@ -118,7 +119,7 @@ export async function generateMetadata({
       languages: { "x-default": `${SITE_URL}${canonicalPath}` },
     },
     ...(cardCount === 0 || filtered ? { robots: { index: false, follow: true } } : {}),
-    openGraph: { title: `${title} | RiftCompare`, description, url: `${SITE_URL}${canonicalPath}` },
+    openGraph: pageOpenGraph({ title: `${title} | RiftCompare`, description, url: canonicalPath }),
   };
 }
 

@@ -11,6 +11,7 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { breadcrumb } from "@/lib/jsonld";
 import { cardHref } from "@/lib/card-url";
 import { SITE_URL } from "@/lib/site";
+import { pageOpenGraph } from "@/lib/seo";
 
 export const revalidate = 86400;
 
@@ -72,7 +73,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     // "nothing in stock". Real page, still linked, just not submitted for
     // indexing until it has something to show.
     ...(count >= 0 && count < STORE_THIN_THRESHOLD ? { robots: { index: false, follow: true } } : {}),
-    openGraph: { title, description: `Live Riftbound prices and stock at ${label}.`, url: `${SITE_URL}/stores/${store.slug}` },
+    openGraph: pageOpenGraph({ title, description: `Live Riftbound prices and stock at ${label}.`, url: `/stores/${store.slug}` }),
   };
 }
 

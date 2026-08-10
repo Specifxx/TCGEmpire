@@ -249,7 +249,7 @@ template-level cause, and it is what needs fixing — not the nine hrefs.
 | `/authors/[slug]` | ✓ | ✓ | ✓ Breadcrumb |
 
 **Canonical tags and structured data are correct on every template.** The one
-systematic defect is OpenGraph: **8 templates covering ~1,075 pages** declare
+systematic defect is OpenGraph: **10 templates covering ~1,500 pages** declare
 `openGraph` inline instead of going through `pageOpenGraph()`.
 
 This is the *documented* shallow-merge trap, from `src/lib/seo.ts`'s own header:
@@ -257,9 +257,38 @@ This is the *documented* shallow-merge trap, from `src/lib/seo.ts`'s own header:
 > Next's App Router SHALLOW-merges metadata … The same applies to `openGraph`: a page
 > that sets its own title/description loses the root's siteName and type.
 
-The helper exists precisely to prevent this, and 10 routes already use it. The 8 above
-were never migrated. Consequence: every share of a card, set, domain, champion, keyword,
-facet or store page unfurls without a declared type, and card pages without a URL.
+The helper exists precisely to prevent this, and 10 routes already use it. The ones
+above were never migrated. Consequence: every share of a card, set, domain, champion,
+keyword, facet or store page unfurls without a declared type, and card pages without a
+URL.
+
+### After the fix
+
+Re-running `scripts/template-seo-check.ts` once every template routes through
+`pageOpenGraph()`:
+
+```
+  card             ✓ canonical  ✓ og  ✓ schema   1007 pages · [BreadcrumbList, Product, FAQPage]
+  decks/archetype  ✓ canonical  ✓ og  ✓ schema      3 pages · [BreadcrumbList, ItemList, FAQPage]
+  decks/domain     ✓ canonical  ✓ og  ✓ schema      6 pages · [BreadcrumbList, ItemList, FAQPage]
+  deck             ✓ canonical  ✓ og  ✓ schema     10 pages · [BreadcrumbList]
+  champion         ✓ canonical  ✓ og  ✓ schema     19 pages · [BreadcrumbList, ItemList]
+  keyword          ✓ canonical  ✓ og  ✓ schema      3 pages · [BreadcrumbList, DefinedTerm]
+  domain           ✓ canonical  ✓ og  ✓ schema      7 pages · [BreadcrumbList, CollectionPage]
+  facet            ✓ canonical  ✓ og  ✓ schema     14 pages · [BreadcrumbList]
+  set              ✓ canonical  ✓ og  ✓ schema      5 pages · [BreadcrumbList, CollectionPage]
+  set/gallery      ✓ canonical  ✓ og  ✓ schema      5 pages · [BreadcrumbList, ItemList]
+  store            ✓ canonical  ✓ og  ✓ schema     20 pages · [BreadcrumbList, Organization]
+  guide            ✓ canonical  ✓ og  ✓ schema     29 pages · [BreadcrumbList] also [FAQPage, TechArticle]
+  blog             ✓ canonical  ✓ og  ✓ schema     48 pages · [BreadcrumbList] also [FAQPage, BlogPosting]
+  author           ✓ canonical  ✓ og  ✓ schema      2 pages · [BreadcrumbList]
+
+  All templates emit a self-canonical, complete OpenGraph and their required
+  structured data.
+```
+
+The script exits non-zero on any failure, so it can gate a deploy alongside the
+existing `seo-gate.ts`.
 
 ---
 
