@@ -112,7 +112,12 @@ async function core(): Promise<SitemapEntry[]> {
     { url: `${SITE_URL}/games/price-check`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/price-check") },
     { url: `${SITE_URL}/games/zoomed`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/zoomed") },
     { url: `${SITE_URL}/games/pairs`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/pairs") },
-    { url: `${SITE_URL}/games/pack-sim`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/pack-sim") },
+    // The pack simulator is not a minor mini-game any more: it is the page
+    // targeting "riftbound pack opening simulator", it carries the sourced pack
+    // structure and pull-rate tables, and the incumbent at #1 (riftcore.app)
+    // serves an empty SPA shell that canonicalises to its own homepage. Rated
+    // like the other flagship tools rather than like Riftle.
+    { url: `${SITE_URL}/games/pack-sim`, changeFrequency: "weekly", priority: 0.8, lastModified: staticPageDate("/games/pack-sim") },
     { url: `${SITE_URL}/games/twenty48`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/twenty48") },
     { url: `${SITE_URL}/games/card-smash`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/card-smash") },
     { url: `${SITE_URL}/guides`, changeFrequency: "weekly", priority: 0.7, lastModified: latestGuide },

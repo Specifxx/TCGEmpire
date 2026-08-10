@@ -77,30 +77,49 @@ export function GameShell({
   title,
   tagline,
   bestLabel,
+  /**
+   * Render the shell's own breadcrumb + <h1> + tagline. Default true, which is
+   * every game.
+   *
+   * The pack simulator sets it false because its PAGE owns that chrome: it is
+   * the one game with real editorial around the toy (pack structure, pull rates,
+   * FAQ), so the page needs an <h1> carrying the search query and a breadcrumb
+   * with three levels. Leaving this on gave that page two <h1>s and two
+   * breadcrumb navs — a crawler reading "🎁 Pack Opening Simulator" as a second
+   * top-level heading, competing with the one that actually says "Riftbound".
+   */
+  chrome = true,
   children,
 }: {
   emoji: string;
   title: string;
   tagline: string;
   bestLabel?: string;
+  chrome?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <div className="mx-auto max-w-2xl">
-      <nav className="mb-3 flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
-        <Link href="/games" className="hover:text-slate-300">🎮 Games</Link>
-        <span>/</span>
-        <span className="text-slate-300">{title}</span>
-      </nav>
-      <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <h1 className="flex items-center gap-2 font-display text-2xl font-extrabold text-white">
-            <span aria-hidden>{emoji}</span> {title}
-          </h1>
-          <p className="mt-1 text-sm text-slate-400">{tagline}</p>
-        </div>
-        {bestLabel && <div className="text-right text-xs text-slate-400">{bestLabel}</div>}
-      </div>
+      {chrome ? (
+        <>
+          <nav className="mb-3 flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
+            <Link href="/games" className="hover:text-slate-300">🎮 Games</Link>
+            <span>/</span>
+            <span className="text-slate-300">{title}</span>
+          </nav>
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+            <div>
+              <h1 className="flex items-center gap-2 font-display text-2xl font-extrabold text-white">
+                <span aria-hidden>{emoji}</span> {title}
+              </h1>
+              <p className="mt-1 text-sm text-slate-400">{tagline}</p>
+            </div>
+            {bestLabel && <div className="text-right text-xs text-slate-400">{bestLabel}</div>}
+          </div>
+        </>
+      ) : (
+        bestLabel && <div className="mb-3 text-right text-xs text-slate-400">{bestLabel}</div>
+      )}
       {children}
       {/* Below the game, above the footer — monetises the dwell time without ever
           sitting between the player and the controls. */}

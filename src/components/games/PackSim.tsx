@@ -102,6 +102,8 @@ export function PackSim({ sets }: { sets: { code: string; name: string }[] }) {
       emoji="🎁"
       title="Pack Opening Simulator"
       tagline="Rip virtual Riftbound packs built from real cards and live prices."
+      // The page owns the <h1> and breadcrumb here — see GameShell's `chrome`.
+      chrome={false}
       bestLabel={best > 0 ? `💎 best pack ${formatMoney(best, currency)}` : undefined}
     >
       {/* Controls */}
