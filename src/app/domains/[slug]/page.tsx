@@ -5,7 +5,9 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { CardTile } from "@/components/CardTile";
 import { cardTileSelect } from "@/lib/cards";
-import { pickPrice, DEFAULT_COUNTRY } from "@/lib/country";
+import { pickPrice, DEFAULT_COUNTRY, COUNTRIES } from "@/lib/country";
+import { buildCollectionNarrative } from "@/lib/content/collection-narrative";
+import { getSiteMedianCents } from "@/lib/content/site-median";
 import { DOMAIN_PAGES, domainBySlug } from "@/lib/domains";
 import { SITE_URL } from "@/lib/site";
 import { deckGroupBySlug, deckGroupPath, seedsInGroup } from "@/lib/deck-groups";
@@ -51,6 +53,33 @@ export default async function DomainPage({ params }: { params: { slug: string } 
     select: cardTileSelect(country),
   });
   const priced = cards.filter((c) => pickPrice(c, country) != null).length;
+
+  // Data-derived editorial intro (GROWTH-AUDIT.md § 3). This page measured ~80
+  // words of real prose — an intro sentence, two hand-written lore sentences and
+  // a link row — carrying 233 inbound internal links, which made it the site's
+  // best-linked thin page. buildCollectionNarrative already supported
+  // kind: "domain" and was simply never called here; it is the same generator
+  // the champion hubs and the type/rarity/printing facets use, so the tone
+  // matches by construction rather than by imitation.
+  //
+  // NO EXTRA QUERY: it reads the card rows this page has already fetched, so
+  // every figure is the same data the grid below renders and the two cannot
+  // disagree. Anything the data doesn't support, the generator omits.
+  const siteMedianCents = await getSiteMedianCents(country);
+  const intro = buildCollectionNarrative({
+    kind: "domain",
+    label: domain.label,
+    currency: COUNTRIES[country].currency,
+    place: COUNTRIES[country].place,
+    members: cards.map((c) => ({
+      name: c.name,
+      priceCents: pickPrice(c, country),
+      setCode: c.setCode,
+      rarity: c.rarity,
+      collectorNumber: c.collectorNumber,
+    })),
+    siteMedianCents,
+  });
 
   const otherDomains = DOMAIN_PAGES.filter((d) => d.slug !== domain.slug);
   // Only when a real meta deck plays this domain — a link to a page that 404s is
@@ -104,6 +133,13 @@ export default async function DomainPage({ params }: { params: { slug: string } 
             <>We&apos;re tracking the Riftbound <strong className="text-slate-200">{domain.label}</strong> domain — {domain.label} cards with live prices will appear here as they release.</>
           )}
         </p>
+        {intro.length > 0 && (
+          <div className="mt-3 max-w-3xl space-y-2.5 text-sm leading-relaxed text-slate-400">
+            {intro.map((p, i) => (
+              <p key={i}>{p}</p>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Card grid */}
