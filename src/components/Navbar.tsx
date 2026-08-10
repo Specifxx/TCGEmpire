@@ -62,10 +62,34 @@ export function Navbar() {
           <Link href="/sealed" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:block sm:px-2.5">
             Sealed
           </Link>
-          {/* Trade Calculator was here. Removed from the top bar deliberately —
-              it is still reachable from the ⌘K launcher, the mega-menu and the
-              footer via the "Decks" group in nav-groups.ts, so /trade keeps its
-              internal links and does not become an orphan page. */}
+          {/* Decks — the hub for the metagame surface: 10 real tournament lists,
+              each priced live, plus the archetype/domain landing pages under
+              /decks/archetype/* and /decks/domain/*. It was reachable only from
+              the ⌘K launcher, the mega-menu and the footer, which put the whole
+              deck surface two clicks from every price page and left the nine new
+              landing pages depending on one hub nothing in the header linked.
+              Sits after Sealed rather than before it: Sealed is the deliberate
+              high-AOV slot next to the database (see above), and this is the
+              next-strongest commercial intent after it.
+
+              Trade Calculator used to occupy this slot and was removed on
+              purpose; it is still in the launcher, mega-menu and footer via the
+              same "Decks" group in nav-groups.ts, so /trade keeps its internal
+              links and does not become an orphan.
+
+              lg:block, NOT sm:block like Sealed and Blog. Measured, not guessed:
+              at 768px the header row already needs 738px of content in a 720px
+              box BEFORE this link exists — the bar overflows across roughly
+              640-790px today, which scripts/mobile-check.ts never caught because
+              it only audits 375px. Adding a 62px link at sm would have pushed
+              that ceiling to ~850px and made a live bug worse on every page.
+              From lg the row fits (960/960 at 1024px), and below lg /decks is
+              already in the hamburger via nav-groups.ts — the same treatment
+              Database gets in this nav. The pre-existing 640-790px overflow is
+              still there and still worth fixing; it is a separate change. */}
+          <Link href="/decks" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5">
+            Decks
+          </Link>
           {/* Blog — the header's one link into our own writing. It exists because
               the hand-written content was previously reachable only from the
               footer and the mega-menu, which made the only genuinely original
