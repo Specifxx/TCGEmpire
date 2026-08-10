@@ -47,7 +47,7 @@ function Banner({ w, h, country, label, href }: { w: number; h: number; country:
   return (
     <span
       className="relative inline-block overflow-hidden rounded-lg border border-[#e53238]/30 bg-gradient-to-r from-ink-900 via-[#1a1012] to-ink-900"
-      style={{ width: w, height: h }}
+      style={{ width: w, height: h, maxWidth: "100%" }}
     >
       <OutboundLink href={href} retailer="ebay_banner" country={country} className="absolute inset-0 block transition-colors hover:bg-white/[0.03]">
         <span className={`absolute inset-0 flex px-4 ${horizontal ? "flex-row items-center justify-center gap-3 text-left" : "flex-col items-center justify-center gap-1 text-center"}`}>
@@ -103,17 +103,33 @@ export function EbayAd({
   const desk = DIMS[size];
   const mid = DIMS.leaderboard;
   const mob = DIMS[mobile === "rect" ? "mobileRect" : "mobile"];
+  // THE 728px LEADERBOARD CANNOT APPEAR AT `sm`. Tailwind's sm is 640px, and the
+  // banner is a fixed 728px wide, so from 640px up to ~760px it hung ~90px past
+  // the right edge and made the whole DOCUMENT scroll sideways — on the homepage,
+  // /decks, and every card page, i.e. site-wide. Measured in a real browser:
+  // document scrollWidth 684 in a 640px viewport, 714 in a 700px one.
+  //
+  // The comment above this block used to say the billboard "steps down to the
+  // 728 leaderboard between sm and lg so it never overflows", which was the
+  // intent and not the arithmetic. md (768px, less 2×16px container padding =
+  // 736px) is the first breakpoint a 728px unit actually fits in.
+  //
+  // Both class strings are literals, never interpolated — Tailwind's JIT only
+  // emits classes it can see in the source.
+  const wide = size !== "rect";
+  const deskShow = wide ? "hidden max-w-full md:inline-block" : "hidden max-w-full sm:inline-block";
+  const mobShow = wide ? "max-w-full md:hidden" : "max-w-full sm:hidden";
   return (
-    <div className={`flex flex-col items-center ${className ?? ""}`}>
+    <div className={`flex max-w-full flex-col items-center ${className ?? ""}`}>
       {size === "billboard" ? (
         <>
-          <span className="hidden lg:inline-block"><Banner {...desk} country={country} label={label} href={href} /></span>
-          <span className="hidden sm:inline-block lg:hidden"><Banner {...mid} country={country} label={label} href={href} /></span>
+          <span className="hidden max-w-full lg:inline-block"><Banner {...desk} country={country} label={label} href={href} /></span>
+          <span className="hidden max-w-full md:inline-block lg:hidden"><Banner {...mid} country={country} label={label} href={href} /></span>
         </>
       ) : (
-        <span className="hidden sm:inline-block"><Banner {...desk} country={country} label={label} href={href} /></span>
+        <span className={deskShow}><Banner {...desk} country={country} label={label} href={href} /></span>
       )}
-      <span className="sm:hidden"><Banner {...mob} country={country} label={label} href={href} /></span>
+      <span className={mobShow}><Banner {...mob} country={country} label={label} href={href} /></span>
       {disclosure && <AffiliateDisclosure partner="ebay" tight className="max-w-2xl text-center" />}
     </div>
   );
