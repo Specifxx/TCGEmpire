@@ -38,27 +38,38 @@ import { PrismaClient } from "@prisma/client";
 const BIG_RESULT_ROWS = 500; // only size-check results at least this long (CPU)
 const BIG_RESULT_BYTES = 1_000_000;
 
-// RM4 is the CURRENT operational Neon project (cut over 2026-08-04, after RM3
-// exhausted its monthly network-transfer allowance — RM3 itself replaced
-// DATABASE_URL_2, which replaced the original DATABASE_URL, each for the same
-// reason). Prefer it the moment it's set (in both Vercel and GitHub Actions),
-// same pattern as db-history.ts's fallback chain.
+// RM5 is the CURRENT operational Neon project (cut over 2026-08-10, after RM4
+// exhausted its monthly network-transfer allowance — RM4 itself replaced RM3,
+// which replaced DATABASE_URL_2, which replaced the original DATABASE_URL, each
+// for the same reason). Prefer it the moment it's set (in both Vercel and GitHub
+// Actions), same pattern as db-history.ts's fallback chain.
 //
-// THIS HAS NOW HAPPENED FOUR TIMES, so treat the chain as a rotation rather than
+// THIS HAS NOW HAPPENED FIVE TIMES, so treat the chain as a rotation rather than
 // an accident: each project runs out, a new one is created, it goes on the FRONT
 // of this list, and the old one stays exactly one release as a rollback.
 //
-// The older vars are kept ONLY as fallbacks so a deploy can't hard-fail if RM4
+// RM4's exhaustion is the sharpest example of what that costs. It went from a
+// clean 43-minute price import at 2026-08-09 19:30 UTC to refusing every
+// connection by 04:35 the next morning, and because `next build` prerenders 22
+// database-backed pages, every Vercel deploy failed outright from that moment —
+// with a bare `Error: Command "npm run build" exited with 1` and nothing in it
+// naming a database.
+//
+// The older vars are kept ONLY as fallbacks so a deploy can't hard-fail if RM5
 // is momentarily missing from one environment; treat them as dead/read-only,
-// never the primary target. Once RM4 is confirmed live everywhere and the data
-// is verified across (see migrate-main-db-rm4 in maintenance.yml), they can be
+// never the primary target. Once RM5 is confirmed live everywhere and the data
+// is verified across (see migrate-main-db-rm5 in maintenance.yml), they can be
 // deleted and this collapsed back to a single var.
 //
 // NOTE the ordering rule for any future rotation: the NEWEST project goes
 // first. Getting this backwards silently keeps the site on the exhausted
 // database while looking correct.
 const OPERATIONAL_URL =
-  process.env.RM4 || process.env.RM3 || process.env.DATABASE_URL_2 || process.env.DATABASE_URL;
+  process.env.RM5 ||
+  process.env.RM4 ||
+  process.env.RM3 ||
+  process.env.DATABASE_URL_2 ||
+  process.env.DATABASE_URL;
 
 // Ensure a generous connect_timeout (the standard libpq/Postgres connection
 // param, in seconds) is set. WHY: Neon's pooled compute suspends when idle and
@@ -88,7 +99,9 @@ function withConnectTimeout(url: string | undefined, seconds: number): string | 
 // winning var name once at module init makes the next P1001 self-diagnosing —
 // in particular it distinguishes "RM3 is down" from "RM3 is unset in this
 // environment, so we silently fell back to the exhausted old database".
-export const OPERATIONAL_URL_SOURCE = process.env.RM4
+const RESOLVED_SOURCE = process.env.RM5
+  ? "RM5"
+  : process.env.RM4
   ? "RM4"
   : process.env.RM3
   ? "RM3"
@@ -98,11 +111,28 @@ export const OPERATIONAL_URL_SOURCE = process.env.RM4
   ? "DATABASE_URL"
   : "NONE";
 
-if (OPERATIONAL_URL_SOURCE !== "RM4") {
+// DB_SOURCE_NAME: the same answer, supplied by whoever set the URL.
+//
+// Learned the hard way on 2026-08-10. The chain above can only see variables the
+// PROCESS can see, and every workflow in .github/workflows collapses the whole
+// chain into ONE `DATABASE_URL:` value before the job starts. Inside Actions
+// process.env.RM5 is therefore always undefined and this always reported
+// "DATABASE_URL" — regardless of which secret actually won. While diagnosing the
+// RM4 outage that read as "we silently fell through to the dead original
+// database", which is precisely the failure this diagnostic was written to rule
+// out, and it cost a round trip before the always-true-ness was spotted.
+//
+// So the workflows now also export DB_SOURCE_NAME with the winning variable's
+// NAME (never its value), and it wins here when present. On Vercel the real
+// variables ARE visible, nothing sets DB_SOURCE_NAME, and this resolves natively
+// exactly as before.
+export const OPERATIONAL_URL_SOURCE = process.env.DB_SOURCE_NAME || RESOLVED_SOURCE;
+
+if (OPERATIONAL_URL_SOURCE !== "RM5") {
   console.warn(
-    `[db] operational database resolved from ${OPERATIONAL_URL_SOURCE}, not RM4. ` +
-      `RM4 is the current project; the others are exhausted/read-only fallbacks kept only so a ` +
-      `deploy can't hard-fail. If this appears in a Vercel build log, RM4 is missing from that environment.`
+    `[db] operational database resolved from ${OPERATIONAL_URL_SOURCE}, not RM5. ` +
+      `RM5 is the current project; the others are exhausted/read-only fallbacks kept only so a ` +
+      `deploy can't hard-fail. If this appears in a Vercel build log, RM5 is missing from that environment.`
   );
 }
 

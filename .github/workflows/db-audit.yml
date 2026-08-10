@@ -34,7 +34,12 @@ jobs:
       - run: npx prisma generate
       - name: Run audit
         env:
-          DATABASE_URL: ${{ secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+          # Which of the chain above actually won, by NAME (never its value). lib/db.ts
+          # cannot work this out inside Actions: the chain is collapsed into one
+          # DATABASE_URL before the job starts, so process.env.RM5 is always unset there
+          # and its warning always said "DATABASE_URL". See src/lib/db.ts.
+          DB_SOURCE_NAME: ${{ (secrets.RM5 || vars.RM5) && 'RM5' || (secrets.RM4 || vars.RM4) && 'RM4' || (secrets.RM3 || vars.RM3) && 'RM3' || (secrets.DATABASE_URL_2 || vars.DATABASE_URL_2) && 'DATABASE_URL_2' || 'DATABASE_URL' }}
           # The audit's Freshness section reads PriceHistory, which lives in the
           # separate history project (src/lib/db-history.ts). Without these, that
           # client falls all the way through its chain to DATABASE_URL — the

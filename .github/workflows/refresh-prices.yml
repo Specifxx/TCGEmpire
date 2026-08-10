@@ -77,7 +77,12 @@ jobs:
       # schedule. Do those by hand via maintenance.yml's db-push task.
       - name: Sync database schema (additive)
         env:
-          DATABASE_URL: ${{ secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+          # Which of the chain above actually won, by NAME (never its value). lib/db.ts
+          # cannot work this out inside Actions: the chain is collapsed into one
+          # DATABASE_URL before the job starts, so process.env.RM5 is always unset there
+          # and its warning always said "DATABASE_URL". See src/lib/db.ts.
+          DB_SOURCE_NAME: ${{ (secrets.RM5 || vars.RM5) && 'RM5' || (secrets.RM4 || vars.RM4) && 'RM4' || (secrets.RM3 || vars.RM3) && 'RM3' || (secrets.DATABASE_URL_2 || vars.DATABASE_URL_2) && 'DATABASE_URL_2' || 'DATABASE_URL' }}
         run: |
           if [ -z "${DATABASE_URL:-}" ]; then
             echo "::error::No database URL configured — cannot sync schema."
@@ -91,7 +96,12 @@ jobs:
           fi
       - name: Import prices
         env:
-          DATABASE_URL: ${{ secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+          # Which of the chain above actually won, by NAME (never its value). lib/db.ts
+          # cannot work this out inside Actions: the chain is collapsed into one
+          # DATABASE_URL before the job starts, so process.env.RM5 is always unset there
+          # and its warning always said "DATABASE_URL". See src/lib/db.ts.
+          DB_SOURCE_NAME: ${{ (secrets.RM5 || vars.RM5) && 'RM5' || (secrets.RM4 || vars.RM4) && 'RM4' || (secrets.RM3 || vars.RM3) && 'RM3' || (secrets.DATABASE_URL_2 || vars.DATABASE_URL_2) && 'DATABASE_URL_2' || 'DATABASE_URL' }}
           # eBay is optional — the import skips it if these aren't set.
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
@@ -127,7 +137,12 @@ jobs:
         # Populate the /sealed page (booster boxes/packs across AU/NZ/US). Nothing
         # else scheduled this before, so the table went empty.
         env:
-          DATABASE_URL: ${{ secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+          # Which of the chain above actually won, by NAME (never its value). lib/db.ts
+          # cannot work this out inside Actions: the chain is collapsed into one
+          # DATABASE_URL before the job starts, so process.env.RM5 is always unset there
+          # and its warning always said "DATABASE_URL". See src/lib/db.ts.
+          DB_SOURCE_NAME: ${{ (secrets.RM5 || vars.RM5) && 'RM5' || (secrets.RM4 || vars.RM4) && 'RM4' || (secrets.RM3 || vars.RM3) && 'RM3' || (secrets.DATABASE_URL_2 || vars.DATABASE_URL_2) && 'DATABASE_URL_2' || 'DATABASE_URL' }}
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
           EBAY_AFFILIATE_CAMPAIGN: ${{ secrets.EBAY_AFFILIATE_CAMPAIGN }}

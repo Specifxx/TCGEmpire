@@ -45,7 +45,8 @@ on:
           - remove-seed-accounts # one-off: delete @riftcompare.seed bot personas (dead since the forum autoseeder was removed)
           - test-marketplace-stripe # smoke-test CRON_SECRET + both Stripe webhook secrets + a Connect account create/delete round-trip (test or live)
           - check-cards      # read-only: fail if any card page would render a price in one component and "—" in another (hero vs prose vs JSON-LD)
-          - migrate-main-db-rm4 # full pg_dump/restore of the OPERATIONAL database (RM3) into RM4 + row-count verification. RUN THIS FIRST once RM4 is set — every other task already resolves RM4-first.
+          - migrate-main-db-rm5 # full pg_dump/restore of the OPERATIONAL database (RM4) into RM5 + row-count verification. RUN THIS FIRST once RM5 is set — every other task already resolves RM5-first. NOTE: needs RM4 to be reachable; it exhausted its transfer allowance on 2026-08-10, so if the dump fails with P1001 the data cannot be drained until RM4's allowance resets or its plan is raised.
+          - migrate-main-db-rm4 # LEGACY (RM4 cutover, kept for reference): full pg_dump/restore of the OPERATIONAL database (RM3) into RM4 + row-count verification.
           - migrate-main-db  # LEGACY (RM3 cutover, kept for reference): full pg_dump/restore of the OPERATIONAL database (old DATABASE_URL_2) into RM3 + row-count verification. Read-only against the source; skips PriceHistory/ClickEvent data (served from the history project, RH7) to conserve the source's exhausted transfer allowance. RUN THIS BEFORE any other task once RM3 is set.
       dry_run:
         description: "Dry run (log what would change, write nothing)"
@@ -96,7 +97,12 @@ jobs:
       # ORDERING: this default points at RM3 from the moment it's set, so run
       # migrate-main-db BEFORE any other task here — otherwise a task like
       # import-prices would happily operate against a still-empty RM3.
-      DATABASE_URL: ${{ secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+      DATABASE_URL: ${{ secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+      # Which of the chain above actually won, by NAME (never its value). lib/db.ts
+      # cannot work this out inside Actions: the chain is collapsed into one
+      # DATABASE_URL before the job starts, so process.env.RM5 is always unset there
+      # and its warning always said "DATABASE_URL". See src/lib/db.ts.
+      DB_SOURCE_NAME: ${{ (secrets.RM5 || vars.RM5) && 'RM5' || (secrets.RM4 || vars.RM4) && 'RM4' || (secrets.RM3 || vars.RM3) && 'RM3' || (secrets.DATABASE_URL_2 || vars.DATABASE_URL_2) && 'DATABASE_URL_2' || 'DATABASE_URL' }}
       DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
     steps:
       - uses: actions/checkout@v4
@@ -192,7 +198,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.RH7 || vars.RH7 }}
           # Only ever used for a "did RH7 accidentally get set to the operational
           # database?" guard before this step truncates anything.
-          OPERATIONAL_URL: ${{ secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+          OPERATIONAL_URL: ${{ secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
         run: |
           set -uo pipefail
 
@@ -472,6 +478,140 @@ jobs:
           echo "  3. Leave DATABASE_URL_2 in place for a rollback window; delete it"
           echo "     only once RM3 has been serving cleanly for a while."
 
+      - name: Migrate main (operational) database to RM5
+        # RM4 exhausted its monthly network-transfer allowance on 2026-08-10 —
+        # the fifth project to do so (DATABASE_URL → DATABASE_URL_2 → RM3 → RM4).
+        # Same procedure as the RM4 cutover, one project further along.
+        #
+        # THE THING THAT MAKES THIS CUTOVER DIFFERENT: the previous ones were run
+        # while the outgoing database still answered. RM4 is already refusing
+        # connections ("Can't reach database server at ep-…"), and pg_dump needs
+        # it to answer. If the dump below fails with P1001 the data cannot be
+        # drained until RM4's allowance resets (Neon bills monthly) or its plan is
+        # raised for long enough to copy — a dump is the cheapest possible read,
+        # compressed on the wire, so it is the likeliest thing to succeed if
+        # ANYTHING can. Do not treat an empty RM5 as a successful migration: the
+        # row-count check at the end exists to stop exactly that, and cutting
+        # traffic to an empty database would show a reviewer an empty site.
+        #
+        # SOURCE is pinned to RM4 and TARGET to RM5, deliberately NOT using the
+        # job-level DATABASE_URL default — that default now resolves RM5-FIRST,
+        # so reusing it would point source and target at the same database and
+        # the migration would silently no-op while reporting every row count as
+        # matching.
+        #
+        # PriceHistory/ClickEvent DATA is excluded (schema kept): those are
+        # served from the history project (RH7), and copying them would spend
+        # the source's already-exhausted allowance on rows this database does
+        # not serve.
+        #
+        # Read-only against RM4 — safe to re-run. Each run fully re-syncs the
+        # target from the source's CURRENT state, so run it once for the bulk
+        # copy and again immediately before cutting traffic over.
+        if: inputs.task == 'migrate-main-db-rm5'
+        env:
+          SOURCE_DATABASE_URL: ${{ secrets.RM4 || vars.RM4 }}
+          TARGET_DATABASE_URL: ${{ secrets.RM5 || vars.RM5 }}
+        run: |
+          set -uo pipefail
+          if [ -z "$TARGET_DATABASE_URL" ]; then
+            echo "::error::RM5 secret/variable is not visible to Actions — add it under Settings → Secrets and variables → Actions (exact name RM5)."
+            exit 1
+          fi
+          if [ -z "$SOURCE_DATABASE_URL" ]; then
+            echo "::error::RM4 is not visible to Actions — nothing to migrate FROM."
+            exit 1
+          fi
+          if [ "$SOURCE_DATABASE_URL" = "$TARGET_DATABASE_URL" ]; then
+            echo "::error::SOURCE and TARGET resolve to the SAME database — RM5 must be a different (new) Neon project than RM4. Aborting before doing anything."
+            exit 1
+          fi
+
+          echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-18
+          export PATH="/usr/lib/postgresql/18/bin:$PATH"
+          pg_dump --version; psql --version
+
+          echo "== Can RM4 still be reached at all? =="
+          # Asked FIRST and on its own, because "the source is dead" and "the dump
+          # is broken" produce very different next steps and the pg_dump error
+          # alone does not distinguish them.
+          if ! psql "$SOURCE_DATABASE_URL" -tAc "SELECT 1" >/dev/null 2>&1; then
+            echo "::error::RM4 is unreachable — its transfer allowance is spent, so there is nothing to dump FROM."
+            echo ""
+            echo "RM5 has deliberately NOT been touched. Options, in order of preference:"
+            echo "  1. Raise RM4's Neon plan briefly (or wait for the monthly allowance to reset), re-run this task, then drop the plan again. This is the only route that preserves users, orders, marketplace listings and support tickets."
+            echo "  2. If that data is expendable, run the db-push task against RM5 to create the schema, then cards-sync + cards-manual + import-prices to rebuild the public catalogue and prices from RiftScribe and the store importers. Accounts/orders/listings/tickets would NOT come back."
+            echo "Do NOT cut traffic to an empty RM5 in the meantime — the site would render with no cards while an AdSense review is open."
+            exit 1
+          fi
+          echo "RM4 answered — proceeding with the dump."
+
+          echo "== Source table sizes (from catalog — negligible transfer) =="
+          psql "$SOURCE_DATABASE_URL" -P pager=off -c "
+            SELECT relname AS table,
+                   to_char(n_live_tup, 'FM999,999,999') AS est_rows,
+                   pg_size_pretty(pg_total_relation_size(relid)) AS total_size
+            FROM pg_stat_user_tables
+            ORDER BY pg_total_relation_size(relid) DESC
+            LIMIT 40;" 2>&1 || echo "(size report unavailable — continuing)"
+
+          echo "== Dumping the operational database (schema + data) =="
+          pg_dump "$SOURCE_DATABASE_URL" --no-owner --no-acl --format=custom \
+            --exclude-table-data='public."PriceHistory"' \
+            --exclude-table-data='public."ClickEvent"' \
+            -f main.dump
+          echo "Dump size: $(du -h main.dump | cut -f1)"
+
+          echo "== Restoring into RM5 (existing objects replaced) =="
+          set +e
+          pg_restore --no-owner --no-acl --clean --if-exists --verbose -d "$TARGET_DATABASE_URL" main.dump > restore.log 2>&1
+          RC=$?
+          set -e
+          echo "pg_restore exit code: $RC — non-zero here is often just harmless ownership/extension warnings on managed Postgres; the row-count check below is the real verification."
+          echo "-- restore.log (first 40 lines) --"; head -40 restore.log
+          echo "-- restore.log (last 20 lines) --"; tail -20 restore.log
+
+          echo "== Target inventory after restore =="
+          psql "$TARGET_DATABASE_URL" -c "SELECT current_database(), current_user" -c "\dn" -c "\dt public.*" 2>&1 | head -60
+
+          echo "== Verifying row counts (RM4 vs RM5) =="
+          sleep 3
+          set +e
+          MISMATCH=0
+          for T in 'public."User"' 'public."Card"' 'public."Order"' 'public."MarketplaceListing"' 'public."SellerProfile"' 'public."Counter"' 'public."SupportTicket"' 'public."RetailerPrice"'; do
+            SRC=$(psql "$SOURCE_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
+            DST=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
+            case "$SRC" in ''|*[!0-9]*) echo "$T source query FAILED: $SRC"; MISMATCH=1; continue;; esac
+            case "$DST" in ''|*[!0-9]*) echo "$T target query FAILED: $DST"; MISMATCH=1; continue;; esac
+            if [ "$SRC" = "$DST" ]; then
+              echo "$T: source=$SRC target=$DST ✓"
+            else
+              echo "$T: source=$SRC target=$DST ✗ MISMATCH"
+              MISMATCH=1
+            fi
+          done
+          set -e
+          echo "(PriceHistory + ClickEvent intentionally not copied — served from the history project RH7.)"
+          if [ "$MISMATCH" = "1" ]; then
+            echo "::error::Row-count mismatch on at least one table — do NOT cut traffic over to RM5 yet."
+            exit 1
+          fi
+          echo "All verified tables match — RM5 now holds a full copy of the operational data."
+          echo ""
+          echo "NEXT STEPS:"
+          echo "  1. Re-run this task immediately before cutting over, so anything"
+          echo "     written to RM4 in the meantime is included."
+          echo "  2. RM5 is already FIRST in the chain in src/lib/db.ts, the build"
+          echo "     script and every workflow — once RM5 is set in Vercel (all"
+          echo "     environments) and redeployed, traffic moves."
+          echo "  3. Leave RM4 in place as a rollback window; remove it only once"
+          echo "     RM5 has been serving cleanly."
+
       - name: Migrate main (operational) database to RM4
         # RM3 exhausted its monthly network-transfer allowance, exactly as
         # DATABASE_URL_2 and the original DATABASE_URL did before it. Same
@@ -606,7 +746,7 @@ jobs:
         # so the generated client may not even load.
         if: inputs.task == 'fix-orphan-users'
         env:
-          TARGET_DATABASE_URL: ${{ secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+          TARGET_DATABASE_URL: ${{ secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
         run: |
           set -uo pipefail
           if [ -z "$TARGET_DATABASE_URL" ]; then
@@ -889,7 +1029,12 @@ jobs:
       - name: Audit rarity across sets (read-only census)
         if: inputs.task == 'audit-rarity'
         env:
-          DATABASE_URL: ${{ secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+          # Which of the chain above actually won, by NAME (never its value). lib/db.ts
+          # cannot work this out inside Actions: the chain is collapsed into one
+          # DATABASE_URL before the job starts, so process.env.RM5 is always unset there
+          # and its warning always said "DATABASE_URL". See src/lib/db.ts.
+          DB_SOURCE_NAME: ${{ (secrets.RM5 || vars.RM5) && 'RM5' || (secrets.RM4 || vars.RM4) && 'RM4' || (secrets.RM3 || vars.RM3) && 'RM3' || (secrets.DATABASE_URL_2 || vars.DATABASE_URL_2) && 'DATABASE_URL_2' || 'DATABASE_URL' }}
         run: npx tsx scripts/audit-rarity.ts
 
       - name: Audit VEN cards (read-only census)

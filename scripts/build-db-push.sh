@@ -31,7 +31,7 @@ set -uo pipefail
 #
 # tests/db-chain.test.ts asserts these two values still match the head of each
 # chain, so the next cutover fails a test instead of quietly lying in a log.
-CURRENT_OP="RM4"
+CURRENT_OP="RM5"
 CURRENT_HIST="RH7"
 
 # Only push schema for a real Vercel production/preview build with a database
@@ -40,22 +40,25 @@ CURRENT_HIST="RH7"
 # GATES ON THE WHOLE OPERATIONAL CHAIN, not bare DATABASE_URL. The original check
 # was `['production','preview'].includes(VERCEL_ENV) && DATABASE_URL`, written when
 # DATABASE_URL was the only operational variable. It has since become
-# RM3 || DATABASE_URL_2 || DATABASE_URL (lib/db.ts), and lib/db.ts explicitly tells
+# RM5 || RM4 || RM3 || DATABASE_URL_2 || DATABASE_URL (lib/db.ts), and lib/db.ts explicitly tells
 # the owner the older vars can eventually be deleted — at which point this line
 # would exit 0 on every deploy and silently stop pushing schema to BOTH the
 # operational AND the history database, while logging a benign-looking "skipping".
 # A green deploy against an un-migrated database is exactly the failure this
 # script exists to prevent.
 if ! { [ "${VERCEL_ENV:-}" = "production" ] || [ "${VERCEL_ENV:-}" = "preview" ]; } \
-   || [ -z "${RM4:-}${RM3:-}${DATABASE_URL_2:-}${DATABASE_URL:-}" ]; then
-  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM4 / RM3 / DATABASE_URL_2 / DATABASE_URL) — skipping schema push."
+   || [ -z "${RM5:-}${RM4:-}${RM3:-}${DATABASE_URL_2:-}${DATABASE_URL:-}" ]; then
+  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM5 / RM4 / RM3 / DATABASE_URL_2 / DATABASE_URL) — skipping schema push."
   exit 0
 fi
 
 # Newest-first, same order as lib/db.ts and every GitHub Actions workflow. Unlike the
 # app runtime (which can silently keep serving from a stale connection until the next
 # cold start), this ALWAYS reflects the current build's actual environment.
-if [ -n "${RM4:-}" ]; then
+if [ -n "${RM5:-}" ]; then
+  export DATABASE_URL="$RM5"
+  SOURCE="RM5"
+elif [ -n "${RM4:-}" ]; then
   export DATABASE_URL="$RM4"
   SOURCE="RM4"
 elif [ -n "${RM3:-}" ]; then
