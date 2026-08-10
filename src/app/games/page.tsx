@@ -48,6 +48,19 @@ const GAMES = [
     featured: true,
   },
   {
+    // SECOND, and featured, so it gets the wide hero tile. It is the only game
+    // here targeting a head term of its own ("riftbound pack opening
+    // simulator") and it carries the sourced pack-structure and pull-rate
+    // tables — it earns the position that the other six mini-games do not.
+    href: "/games/pack-sim",
+    emoji: "🎁",
+    name: "Pack Opening Simulator",
+    tag: "Rip packs",
+    desc: "Open virtual Riftbound packs dealt to Riot's real 14-card pack structure, from the actual card pool, with a live price on every pull.",
+    accent: "from-emerald-500/20 to-ink-850",
+    featured: true,
+  },
+  {
     href: "/games/higher-lower",
     emoji: "⚖️",
     name: "Higher or Lower",
@@ -78,14 +91,6 @@ const GAMES = [
     tag: "Memory",
     desc: "Classic memory with real card art. Match all eight pairs in the fewest moves.",
     accent: "from-blue-500/20 to-ink-850",
-  },
-  {
-    href: "/games/pack-sim",
-    emoji: "🎁",
-    name: "Pack Opening Simulator",
-    tag: "Rip packs",
-    desc: "Open virtual Riftbound packs built from real cards and live prices. See what your pull is worth — no money, all the dopamine.",
-    accent: "from-emerald-500/20 to-ink-850",
   },
   {
     href: "/games/twenty48",

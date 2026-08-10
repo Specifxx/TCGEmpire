@@ -321,10 +321,33 @@ export default async function HomePage() {
         </Reveal>
       </section>
 
-      {/* Daily Riftle teaser — moved after the commercial sections (per the
-          reordering brief, games belong after buying content, not interrupting
-          it between two card carousels). */}
-      <Reveal>
+      {/* Games teasers — after the commercial sections (per the reordering brief,
+          games belong after buying content, not interrupting it between two card
+          carousels).
+
+          The pack simulator sits beside Riftle rather than in the ⌘K launcher
+          only: it is the page competing for "riftbound pack opening simulator",
+          and it had no homepage link at all, while the incumbent at #1 is a
+          client-rendered shell with no indexable content. A homepage link is the
+          strongest internal signal we can hand it. Anchor text names the thing
+          people search for, not "play". */}
+      <Reveal stagger className="grid gap-4 sm:grid-cols-2">
+        <Link
+          href="/games/pack-sim"
+          className="card-surface group flex items-center gap-4 p-5 transition-colors hover:border-brand-500/60 hover:bg-ink-800"
+        >
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-gold/15 text-2xl leading-none" aria-hidden>
+            🎁
+          </span>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg font-extrabold text-white">Riftbound pack opening simulator</h2>
+            <p className="mt-0.5 text-sm text-slate-400">
+              Rip free virtual {newestSet?.name ?? "Riftbound"} packs — real pack odds, live prices on every pull.
+            </p>
+          </div>
+          <span className="btn-primary shrink-0 text-sm">Open →</span>
+        </Link>
+
         <Link
           href="/riftle"
           className="card-surface group flex items-center gap-4 p-5 transition-colors hover:border-brand-500/60 hover:bg-ink-800"
