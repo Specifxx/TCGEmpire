@@ -25,6 +25,7 @@ on:
           - probe-imgur      # read-only: render an Imgur album (JS SPA — curl gets an empty shell) and dump every full-res image URL (url input)
           - probe-render     # read-only: render ANY page with a real browser and dump its heading outline, repeated item components, tables, images, palette + full-page screenshot (url input). For researching client-rendered sites that probe-url only sees as an empty shell.
           - smoke-pages     # read-only: assert the key pages return real server-rendered content (post-deploy gate; url input overrides the default production origin)
+          - adsense-verify   # read-only: the AdSense integration gate against a LIVE origin — /ads.txt (status WITHOUT following redirects, content-type, exact body), robots.txt (Mediapartners-Google / AdsBot-Google must not be disallowed), the CSP allow-list, and the loader + ownership meta on 12 templates. url input overrides the default production origin (use it to test the www host).
           - import-prices    # run the store price importer for this ref's store list
           - import-sealed     # refresh sealed products (stores + eBay AU + TCGplayer US) + self-heal stale rows
           - migrate-history  # Prisma-based top-up: copy PriceHistory/ClickEvent from EVERY older source into the newest history DB (tolerates unreadable sources, dedupes). Slower/more transfer than migrate-history-db — prefer that for the bulk copy.
@@ -718,6 +719,22 @@ jobs:
       - name: Smoke-test key pages (real rendered content)
         if: inputs.task == 'smoke-pages'
         run: npx tsx scripts/smoke-pages.ts "${{ inputs.url || 'https://riftcompare.com' }}" --allow-404
+
+      - name: Verify the AdSense integration against a live origin (read-only)
+        # WHY THIS IS DISPATCHABLE: the AdSense console reported "ads.txt not
+        # found" on 2026-08-10. The dev sandbox's egress proxy answers 403 to
+        # CONNECT for riftcompare.com, so the only way to see what the crawler
+        # actually gets is from a runner. scripts/adsense-verify.ts fetches over
+        # raw HTTP with NO browser and NO JS — the same bytes an unrendered
+        # crawler reads — and checks /ads.txt with redirect:"manual", so a 301
+        # hop shows up as a non-200 instead of being silently followed.
+        #
+        # Pass `url` to test a different host. The apex and the www host are
+        # DIFFERENT origins to the ads.txt crawler: it fetches ads.txt from the
+        # exact domain registered in AdSense, so if the site is registered as
+        # www.riftcompare.com that host has to serve the record too.
+        if: inputs.task == 'adsense-verify'
+        run: npx tsx scripts/adsense-verify.ts "${{ inputs.url || 'https://riftcompare.com' }}"
 
       - name: Probe URL (font/style diagnostics)
         # The dev sandbox's egress proxy blocks most external sites; runners don't.
