@@ -48,8 +48,16 @@ const STOP =
   /\b(riftbound|proving\s*grounds|spirit\s*forged|unleashed|vengeance|origins|showcase|signature|overnumbered|alternate\s*art|alt\s*art|foil|holo(foil)?|near mint|lightly played|moderately played|heavily played|damaged|main set|the game|tcg|single)\b/gi;
 
 function numKey(seg: string): string {
-  const m = seg.match(/^0*(\d+)([a-z]*)/i);
-  const base = m ? m[1] + m[2].toLowerCase() : seg.toLowerCase();
+  // Riftbound collector numbers come in two shapes, and BOTH have to normalise
+  // here or the index and the title parser stop agreeing:
+  //   * a plain sequence number — "007", "007a", "223*"
+  //   * a LETTER-PREFIXED cycle number — "R01" / "R01a" / "R01b" for the six
+  //     basic runes every set prints, "t01" for token cards. These carry no
+  //     "/total" at all.
+  // The prefix is part of the card's identity so it is kept; the digits are still
+  // leading-zero normalised, so "R1" and "R01" resolve to the same card.
+  const m = seg.match(/^([a-z]*)0*(\d+)([a-z]*)/i);
+  const base = m ? m[1].toLowerCase() + m[2] + m[3].toLowerCase() : seg.toLowerCase();
   // A "*" marks a Signature print (e.g. "223*/221"), a DIFFERENT card from the
   // plain overnumbered "223/221" — keep their keys distinct so listings don't mix.
   return seg.includes("*") ? `${base}s` : base;
@@ -63,15 +71,45 @@ function cleanProductName(title: string): string {
     .replace(/\[[^\]]*\]/g, " ")
     .replace(STOP, " ");
 }
+// The rune cycle's collector number: "R01", "R02a", "R02b" — a letter prefix, one
+// to three digits and an optional print letter, with NO "/total" after it. Only
+// "R" is accepted, deliberately: this pattern is loose enough that opening it to
+// any letter would start reading store SKUs ("B12", "S2") as collector numbers,
+// and a wrong number is worse than no number — it makes resolveCardId reject the
+// listing outright. Runes are the only letter-prefixed cycle stores actually list.
+//
+// There is deliberately NO set-prefixed variant ("[UNL - R02a]") to go with the
+// `pref` branch below. It isn't needed — every set that prints runes is already
+// recognisable from the title by SET_FROM_TITLE, which reads both the set name
+// and its code — and a `([A-Za-z]{2,4})\s*-\s*` prefix would happily read the
+// word "Rune" itself out of "Fury Rune - R01" and hand resolveCardId "RUNE" as a
+// confident set code, which matches no set and drops the listing.
+const RUNE_BARE = new RegExp(String.raw`\bR\d{1,3}[a-z]?\b`, "i");
+
 // Parse a collector number from any store title format, e.g.:
-//   "(299*/298)", "(053/219)", "OGN-128/298", "[OGN - 213/298]", "239*/221"
+//   "(299*/298)", "(053/219)", "OGN-128/298", "[OGN - 213/298]", "239*/221",
+//   "(R02b) (R02b) - Unleashed Foil", "Calm Rune (R02a) [UNL - R02a]"
 // Keys are normalised via numKey so "039" and "39" compare equal (the leading-zero
 // bug that previously mis-assigned base cards to their alt-art printings).
+//
+// THE RUNE BRANCHES ARE NOT COSMETIC. Every set prints its six basic runes three
+// times — base ("R02"), alt-art ("R02a") and a second special ("R02b") — and all
+// three share one name, "Calm Rune". Because the rune number has no "/total",
+// this function used to return null for every one of those listings, which skips
+// the number-disambiguation guard in resolveCardId entirely and lets name-only
+// matching collapse all three prints onto the base card. In a market where the
+// only listings a store carried were the alt-arts, that is exactly what happened:
+// base runes worth about ten cents were showing $13.70 in NZ and $15.00 in AU,
+// carrying the alt-art's price, in the database and therefore in the pack sim too.
 function parseNumber(title: string): { setCode: string | null; key: string; total: string } | null {
   const pref = title.match(/\b([A-Za-z]{2,4})\s*-\s*(\d+)([a-z*]*)\s*\/\s*(\d+)/);
   if (pref) return { setCode: pref[1].toUpperCase(), key: numKey(pref[2] + pref[3]), total: pref[4] };
   const bare = title.match(/(\d+)([a-z*]*)\s*\/\s*(\d+)/);
   if (bare) return { setCode: null, key: numKey(bare[1] + bare[2]), total: bare[3] };
+  // No "/total" anywhere — the shape a rune number has. `total` stays "" so
+  // setFromTotal() simply declines and the set still has to come from the title.
+  const rune = title.match(RUNE_BARE);
+  if (rune) return { setCode: null, key: numKey(rune[0]), total: "" };
   return null;
 }
 
@@ -1247,7 +1285,23 @@ export function resolveCardId(p: ShopifyProduct, idx: CardIndex): string | null 
     const promoName = nameKey(cleanProductName(t).replace(PROMO_WORDS, " "));
     const byNameHit = promoByName.get(promoName);
     if (byNameHit) return byNameHit;
-    if (num) return promoByNum.get(`${setCode}|${num.key}`) ?? promoByNumAny.get(num.key) ?? null;
+    if (num) {
+      const bySet = promoByNum.get(`${setCode}|${num.key}`);
+      if (bySet) return bySet;
+      // THE ANY-SET FALLBACK NEEDS A SET-UNIQUE NUMBER. It reaches across every
+      // set for a number, which is only defensible when the number itself can
+      // only belong to one of them — and a "/total" is exactly what makes that
+      // true ("134/219" is UNL and nothing else). A rune-cycle number has no
+      // total and is not unique at all: every set prints R01–R06, in base, "a"
+      // and "b" prints. Without this guard an Organized-Play rune listing that
+      // names no set (or names Unleashed, whose "b" runes we hold as ordinary
+      // Showcase cards rather than promos) fell through to whichever set's
+      // promo happened to be indexed first — reliably Vendetta's, because those
+      // are the only R-numbered promos in the catalogue. Leave it unmatched
+      // instead; a promo we cannot place is not a promo we should price.
+      if (confidentSetCode || !num.total) return null;
+      return promoByNumAny.get(num.key) ?? null;
+    }
     return null;
   }
   // NOTE: "Foil" is NOT an alt-art signal — nearly every listing (incl. base
