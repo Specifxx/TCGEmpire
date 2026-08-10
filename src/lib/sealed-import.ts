@@ -154,6 +154,13 @@ export function classifySealed(title: string): string {
   if (/proving\s*grounds/.test(t)) return /\bcase\b/.test(t) ? "Proving Grounds Case" : "Proving Grounds";
   if (/nexus\s*night\s*(?:\d+\s*)?(?:promo\s*)?pack/.test(t)) return "Nexus Night Pack";
   if (/champion\s*deck/.test(t)) { const n = champ ? ` (${champ})` : ""; return /\bdisplay\b/.test(t) ? `Champion Deck${n} Display` : `Champion Deck${n}`; }
+  // MUST stay ahead of the `\bdisplay\b` catch-all below. "Vendetta - Showdown
+  // Decks: Zed vs Shen Display" is a display of DECKS, but that catch-all read the
+  // word "Display" and typed it as a Booster Box — so it landed in VEN|Booster Box
+  // alongside the real Vendetta Booster Display and, being first in the canonical
+  // image map, put a picture of two decks on the booster-box tile. Any future
+  // "<something> Display" that isn't a booster display needs a rule up here too.
+  if (/showdown\s*decks?/.test(t)) return /\bdisplay\b/.test(t) ? "Showdown Decks Display" : "Showdown Decks";
   if (/sleeved\s*booster/.test(t)) return /\[set of|art\s*bundle/.test(t) ? "Sleeved Booster (Art Set)" : "Sleeved Booster";
   if (/(?:display|booster\s*box|sealed)\s*case|booster\s*display\s*case/.test(t)) return "Booster Case";
   if (/booster\s*box|booster\s*display|display\s*box|\bdisplay\b/.test(t)) return "Booster Box";
@@ -174,6 +181,32 @@ export function classifySealed(title: string): string {
   if (/promo\s*pack/.test(t)) return "Promo Pack";
   if (/booster\s*pack|\bblister\b|\bpack\b/.test(t)) return "Booster Pack";
   return "Sealed";
+}
+
+/**
+ * Does this URL actually serve an image? A HEAD is enough (the CDN answers 403 for
+ * a product it has no asset for) and costs no bandwidth. Anything other than a 2xx
+ * with an image content-type counts as missing — including a network error, since
+ * "we could not confirm a real photo" and "there is no real photo" should both fall
+ * back to the on-brand graphic rather than ship a broken tile.
+ */
+export async function imageExists(url: string): Promise<boolean> {
+  try {
+    const r = await fetch(url, { method: "HEAD", headers: UA });
+    return r.ok && (r.headers.get("content-type") ?? "").startsWith("image/");
+  } catch {
+    return false;
+  }
+}
+
+/** Run `fn` over `items` with at most `limit` in flight. */
+async function mapLimit<T>(items: T[], limit: number, fn: (item: T) => Promise<void>): Promise<void> {
+  let i = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, async () => {
+      while (i < items.length) await fn(items[i++]);
+    })
+  );
 }
 
 // Map a TCGplayer setName to our set code (null for cross-set promo products).
@@ -409,6 +442,22 @@ export async function refreshTcgplayerSealed(): Promise<number> {
     console.warn("TCGplayer sealed fetch failed:", (e as Error).message);
     return 0;
   }
+  // TCGplayer's image CDN is addressed BY PRODUCT ID, so tcgImageUrl() happily
+  // builds a URL for a product it has no photo of — the CDN then answers 403
+  // AccessDenied. Those fabricated URLs are non-null, so they beat the on-brand
+  // type-correct fallback in getSealedGroups() and render as a broken tile
+  // (observed on Origins Proving Grounds Box Set Case, Unleashed Nexus Night
+  // Promo Pack and Riftbound Bulk Runes Case — case and promo SKUs are the usual
+  // gaps). Probe once per product at import time and store null when there is no
+  // real asset, so the fallback graphic can do its job.
+  const imageUrls = new Map<number, string | null>();
+  await mapLimit(products, 8, async (p) => {
+    const url = tcgImageUrl(p.productId);
+    imageUrls.set(p.productId, (await imageExists(url)) ? url : null);
+  });
+  const missing = [...imageUrls.values()].filter((v) => v === null).length;
+  if (missing) console.log(`TCGplayer sealed: ${missing} product(s) have no CDN image — using type fallbacks.`);
+
   const rows: any[] = [];
   for (const p of products) {
     const title = (p.productName ?? "").trim();
@@ -428,7 +477,7 @@ export async function refreshTcgplayerSealed(): Promise<number> {
       retailerName: "TCGplayer",
       priceCents: Math.round(market * 100),
       url: tcgProductUrl(p),
-      imageUrl: tcgImageUrl(p.productId),
+      imageUrl: imageUrls.get(p.productId) ?? null,
       country: "US",
       inStock: true,
     });
@@ -558,6 +607,8 @@ const SEALED_TYPE_IMAGE: Record<string, string> = {
   // thumbnail otherwise. Self-hosted from Riot's own reveal render (public/
   // t1-worlds-cards/, same approach as the T1 card images in prisma/manual-cards.json).
   "T1 Signature Edition": "/t1-worlds-cards/t1-worlds-signature-edition.jpg",
+  "Showdown Decks": "/sealed/sealed-deck.png",
+  "Showdown Decks Display": "/sealed/sealed-box.png",
 };
 function sealedTypeImage(productType: string): string {
   if (/^Champion Deck/.test(productType)) return "/sealed/sealed-deck.png";
@@ -669,6 +720,7 @@ export async function getSealedGroups(country: Country = DEFAULT_COUNTRY): Promi
   // Champion Decks slot between bundles and packs (display boxes before singles).
   const rank = (t: string) => {
     if (/champion deck/i.test(t)) return /display/i.test(t) ? 8.4 : 8.6;
+    if (/showdown decks/i.test(t)) return /display/i.test(t) ? 8.3 : 8.5;
     const i = order.indexOf(t);
     return i < 0 ? 99 : i;
   };
