@@ -146,6 +146,38 @@ async function loadTargetIds(label: string): Promise<Set<string>> {
 const cardIdMap = new Map<string, string>();
 let cardMapBuilt = false;
 
+// ── AND NEITHER ARE USER IDs, FOR A DIFFERENT REASON ────────────────────────
+// User.email is unique. RM5 already holds a handful of accounts created since
+// the cutover, and if one of them registered with an email the source also has,
+// createMany(skipDuplicates) silently declines to insert the source row — the
+// target keeps its own id for that person. Every SellerProfile, listing,
+// collection entry and order belonging to them then points at a user id that
+// does not exist, which is precisely how the first real run died: P2003 on
+// SellerProfile_userId_fkey.
+//
+// Mapping source user id → target user id by email fixes both halves of that:
+// the foreign keys resolve, AND someone who re-registered after the cutover gets
+// their old listings and collection attached to the account they are using now,
+// instead of losing them to a row that was never inserted.
+const userIdMap = new Map<string, string>();
+
+async function buildUserIdMap(): Promise<number> {
+  const [src, dst] = await Promise.all([
+    source.user.findMany({ select: { id: true, email: true } }),
+    target.user.findMany({ select: { id: true, email: true } }),
+  ]);
+  const byEmail = new Map(dst.map((u) => [u.email.trim().toLowerCase(), u.id]));
+  let collisions = 0;
+  for (const u of src) {
+    const hit = byEmail.get(u.email.trim().toLowerCase());
+    if (hit && hit !== u.id) {
+      userIdMap.set(u.id, hit);
+      collisions++;
+    }
+  }
+  return collisions;
+}
+
 type CardKeyRow = { id: string; externalId: string | null; setCode: string; collectorNumber: string };
 
 async function buildCardIdMap(): Promise<{ mapped: number; unmatched: number }> {
@@ -227,20 +259,21 @@ async function copy(t: Table): Promise<string> {
     rows = rows.map((r) => Object.fromEntries(Object.entries(r).filter(([k]) => cols.has(k))));
   }
 
-  // Rewrite every card reference from the source's ids to the target's BEFORE
-  // the parent check runs, or the check rejects rows that are perfectly good.
+  // Rewrite every card and user reference from the source's ids to the target's
+  // BEFORE the parent check runs, or the check rejects rows that are perfectly
+  // good — and before the insert, or the foreign key rejects them outright.
   let remapped = 0;
-  const cardFields = (t.parents ?? []).filter((p) => p.of === "Card").map((p) => p.field);
-  if (cardFields.length) {
-    for (const r of rows) {
-      for (const f of cardFields) {
-        const v = r[f];
-        if (typeof v !== "string") continue;
-        const to = cardIdMap.get(v);
-        if (to && to !== v) {
-          r[f] = to;
-          remapped++;
-        }
+  const remapFields = (t.parents ?? [])
+    .filter((p) => p.of === "Card" || p.of === "User")
+    .map((p) => ({ field: p.field, map: p.of === "Card" ? cardIdMap : userIdMap }));
+  for (const r of rows) {
+    for (const { field, map } of remapFields) {
+      const v = r[field];
+      if (typeof v !== "string") continue;
+      const to = map.get(v);
+      if (to && to !== v) {
+        r[field] = to;
+        remapped++;
       }
     }
   }
@@ -259,23 +292,30 @@ async function copy(t: Table): Promise<string> {
     skipped = before - rows.length;
   }
 
-  // Record what this table now contributes, so its own children resolve — in a
-  // dry run too, where these rows are the only thing that will ever "exist".
-  // Only for tables something later actually points at: loadTargetIds selects
-  // `id`, and Counter has no id column at all.
-  if (PARENT_LABELS.has(t.label)) {
-    const own = await loadTargetIds(t.label);
-    for (const r of rows) if (typeof r.id === "string") own.add(r.id);
+  const note = `${drifted ? " [read raw: source schema is older]" : ""}${remapped ? `, ${remapped} refs remapped` : ""}${skipped ? `, ${skipped} skipped (missing parent)` : ""}`;
+  if (DRY_RUN) {
+    // Nothing is written, so a child would find no parent and the whole run
+    // would report zero. Assume these rows land — the estimate is the point.
+    if (PARENT_LABELS.has(t.label)) {
+      const own = await loadTargetIds(t.label);
+      for (const r of rows) if (typeof r.id === "string") own.add(r.id);
+    }
+    return `${pad} would copy ${String(rows.length).padStart(6)}${note}`;
   }
-
-  const note = `${drifted ? " [read raw: source schema is older]" : ""}${remapped ? `, ${remapped} card refs remapped` : ""}${skipped ? `, ${skipped} skipped (missing parent)` : ""}`;
-  if (DRY_RUN) return `${pad} would copy ${String(rows.length).padStart(6)}${note}`;
 
   let written = 0;
   for (let i = 0; i < rows.length; i += BATCH) {
     const batch = rows.slice(i, i + BATCH);
     const res = await (target as any)[t.model].createMany({ data: batch, skipDuplicates: true });
     written += res.count;
+  }
+  // RE-READ, never assume. createMany(skipDuplicates) declines any row that
+  // collides on a unique constraint, so "I sent 137 users" is not "137 user ids
+  // now exist". Optimistically adding the sent ids is what let SellerProfile
+  // rows through the parent check and into a P2003 from Postgres.
+  if (PARENT_LABELS.has(t.label)) {
+    targetIds.delete(t.label);
+    await loadTargetIds(t.label);
   }
   const dup = rows.length - written;
   return `${pad} wrote ${String(written).padStart(6)}${dup ? `, ${dup} already present` : ""}${note}`;
@@ -297,6 +337,8 @@ async function main() {
   const cards = await buildCardIdMap();
   console.log(`card id map: ${cards.mapped} of ${cards.mapped + cards.unmatched} source cards matched in the target${cards.unmatched ? ` (${cards.unmatched} unmatched — rows pointing at those are skipped)` : ""}`);
   if (!cardMapBuilt) throw new Error("card id map was not built — refusing to copy card-linked rows blind");
+  const shared = await buildUserIdMap();
+  console.log(`user id map: ${shared} source account${shared === 1 ? " already exists" : "s already exist"} in the target under a different id (matched by email; their data is attached to the existing account)`);
   console.log("");
 
   for (const t of TABLES) console.log(await copy(t));
