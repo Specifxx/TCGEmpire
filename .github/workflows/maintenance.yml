@@ -586,47 +586,61 @@ jobs:
           # rebuild themselves from public sources; nothing below can.
           TABLES='User MarketplaceListing Order SellerProfile SupportTicket CollectionCard PriceAlert Card'
 
-          # A short statement_timeout so a suspended-but-listening compute fails
-          # fast instead of hanging the job for minutes per candidate.
+          # Bound BOTH the connect and the query, so a suspended-but-listening
+          # compute fails fast instead of hanging the job for minutes per
+          # candidate. These go in the ENVIRONMENT rather than in the SQL: a
+          # `psql -c "SET statement_timeout=…; SELECT count(*)"` prints the SET
+          # command tag on its own line ABOVE the number, so the count parses as
+          # "SET1429", fails the numeric test, and every table reports "-". That
+          # is exactly what the first run of this probe did — it correctly found
+          # nine of ten databases alive and then told us nothing about any of
+          # them.
+          export PGCONNECT_TIMEOUT=15
+          export PGOPTIONS='-c statement_timeout=20000'
+
           probe() {
             NAME="$1"; URL="$2"
             if [ -z "$URL" ]; then
               printf '%-26s %s\n' "$NAME" "(not set in Actions)"
-              return
+              return 0
             fi
-            if ! psql "$URL" -v ON_ERROR_STOP=1 -tAc "SET statement_timeout='20s'; SELECT 1" >/dev/null 2>/tmp/err.$$; then
-              printf '%-26s %s\n' "$NAME" "UNREACHABLE — $(head -1 /tmp/err.$$ | cut -c1-110)"
-              return
+            if ! psql "$URL" -v ON_ERROR_STOP=1 -tAc 'SELECT 1' >/dev/null 2>/tmp/err.$$; then
+              printf '%-26s %s\n' "$NAME" "UNREACHABLE — $(head -1 /tmp/err.$$ 2>/dev/null | cut -c1-110)"
+              return 0
             fi
             OUT=""
             for T in $TABLES; do
-              N=$(psql "$URL" -tAc "SET statement_timeout='20s'; SELECT count(*) FROM public.\"$T\"" 2>/dev/null | tr -d ' ')
+              N=$(psql "$URL" -tAc "SELECT count(*) FROM public.\"$T\"" 2>/dev/null | tr -d ' \n')
               case "$N" in ''|*[!0-9]*) N="-";; esac
               OUT="$OUT $T=$N"
             done
             printf '%-26s REACHABLE %s\n' "$NAME" "$OUT"
+            return 0
           }
 
           echo ""
           echo "===== OPERATIONAL ROTATION (newest first) ====="
-          probe "RM5 (current)"        "${P_RM5:-}"
-          probe "RM4 (previous)"       "${P_RM4:-}"
-          probe "RM3"                  "${P_RM3:-}"
-          probe "DATABASE_URL_2"       "${P_DATABASE_URL_2:-}"
-          probe "DATABASE_URL"         "${P_DATABASE_URL:-}"
+          probe "RM5 (current)"        "${P_RM5:-}" || true
+          probe "RM4 (previous)"       "${P_RM4:-}" || true
+          probe "RM3"                  "${P_RM3:-}" || true
+          probe "DATABASE_URL_2"       "${P_DATABASE_URL_2:-}" || true
+          probe "DATABASE_URL"         "${P_DATABASE_URL:-}" || true
           echo ""
           echo "===== HISTORY ROTATION (may carry a full early copy) ====="
-          probe "RH7 (current)"        "${P_RH7:-}"
-          probe "RH6"                  "${P_RH6:-}"
-          probe "RH5"                  "${P_RH5:-}"
-          probe "HISTORY_DATABASE_URL_4" "${P_HISTORY_DATABASE_URL_4:-}"
-          probe "HISTORY_DATABASE_URL_3" "${P_HISTORY_DATABASE_URL_3:-}"
-          probe "HISTORY_DATABASE_URL_2" "${P_HISTORY_DATABASE_URL_2:-}"
-          probe "HISTORY_DATABASE_URL"  "${P_HISTORY_DATABASE_URL:-}"
+          probe "RH7 (current)"        "${P_RH7:-}" || true
+          probe "RH6"                  "${P_RH6:-}" || true
+          probe "RH5"                  "${P_RH5:-}" || true
+          probe "HISTORY_DATABASE_URL_4" "${P_HISTORY_DATABASE_URL_4:-}" || true
+          probe "HISTORY_DATABASE_URL_3" "${P_HISTORY_DATABASE_URL_3:-}" || true
+          probe "HISTORY_DATABASE_URL_2" "${P_HISTORY_DATABASE_URL_2:-}" || true
+          probe "HISTORY_DATABASE_URL"  "${P_HISTORY_DATABASE_URL:-}" || true
           echo ""
           echo "Read-only survey complete — nothing was written to any database."
           echo "Pick the reachable source with the highest User/MarketplaceListing"
           echo "counts and restore from it with the restore-accounts-into-rm5 task."
+          # A survey must never fail the job on the strength of one dead
+          # candidate — a dead candidate IS the finding.
+          exit 0
 
       - name: Migrate main (operational) database to RM5
         # RM4 exhausted its monthly network-transfer allowance on 2026-08-10 —
