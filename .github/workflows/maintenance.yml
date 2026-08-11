@@ -45,6 +45,8 @@ on:
           - remove-seed-accounts # one-off: delete @riftcompare.seed bot personas (dead since the forum autoseeder was removed)
           - test-marketplace-stripe # smoke-test CRON_SECRET + both Stripe webhook secrets + a Connect account create/delete round-trip (test or live)
           - check-cards      # read-only: fail if any card page would render a price in one component and "—" in another (hero vs prose vs JSON-LD)
+          - probe-databases  # READ-ONLY survey of EVERY database in both rotations (RM5/RM4/RM3/DATABASE_URL_2/DATABASE_URL + RH7…RH5 + the older history vars): which ones still answer, and how many User/MarketplaceListing/Order/SellerProfile rows each holds. Writes nothing. RUN THIS FIRST when data appears to be missing — it tells you which source is worth restoring from.
+          - restore-accounts-into-rm5 # copy ONLY the account/marketplace tables from a chosen source (source input: RM4/RM3/DATABASE_URL_2/DATABASE_URL/RH7/RH6/RH5) into RM5, leaving RM5's freshly-rebuilt Card/RetailerPrice catalogue untouched. Aborts before writing anything if the dump fails or the source holds no rows.
           - migrate-main-db-rm5 # full pg_dump/restore of the OPERATIONAL database (RM4) into RM5 + row-count verification. RUN THIS FIRST once RM5 is set — every other task already resolves RM5-first. NOTE: needs RM4 to be reachable; it exhausted its transfer allowance on 2026-08-10, so if the dump fails with P1001 the data cannot be drained until RM4's allowance resets or its plan is raised.
           - migrate-main-db-rm4 # LEGACY (RM4 cutover, kept for reference): full pg_dump/restore of the OPERATIONAL database (RM3) into RM4 + row-count verification.
           - migrate-main-db  # LEGACY (RM3 cutover, kept for reference): full pg_dump/restore of the OPERATIONAL database (old DATABASE_URL_2) into RM3 + row-count verification. Read-only against the source; skips PriceHistory/ClickEvent data (served from the history project, RH7) to conserve the source's exhausted transfer allowance. RUN THIS BEFORE any other task once RM3 is set.
@@ -56,6 +58,12 @@ on:
         description: "import-prices only: also force an eBay SINGAPORE refresh (~1k calls)"
         type: boolean
         default: false
+      source:
+        description: "restore-accounts-into-rm5 only: which database to copy accounts/marketplace FROM (run probe-databases first)"
+        type: choice
+        required: false
+        default: RM4
+        options: [RM4, RM3, DATABASE_URL_2, DATABASE_URL, RH7, RH6, RH5, HISTORY_DATABASE_URL_4]
       url:
         description: "probe-url only: page to fetch for font/style diagnostics"
         type: string
@@ -478,6 +486,148 @@ jobs:
           echo "  3. Leave DATABASE_URL_2 in place for a rollback window; delete it"
           echo "     only once RM3 has been serving cleanly for a while."
 
+      - name: Restore account/marketplace tables into RM5
+        # THE RESCUE, and deliberately NOT migrate-main-db-rm5.
+        #
+        # That task does a full `pg_restore --clean`: it drops and replaces every
+        # table, which would take RM5's freshly-rebuilt card catalogue and its
+        # corrected rune prices back to RM4's 2026-08-10 snapshot. This copies
+        # ONLY the tables that cannot regenerate themselves — accounts, seller
+        # profiles, listings, offers, orders, reviews, collections, tickets — and
+        # copies them ADDITIVELY, so nothing already in RM5 is touched and anyone
+        # who signed up after the cutover keeps their account.
+        #
+        # Run `probe-databases` FIRST and pick the source with the most rows.
+        if: inputs.task == 'restore-accounts-into-rm5'
+        env:
+          TARGET_DATABASE_URL: ${{ secrets.RM5 || vars.RM5 }}
+          S_RM4: ${{ secrets.RM4 || vars.RM4 }}
+          S_RM3: ${{ secrets.RM3 || vars.RM3 }}
+          S_DATABASE_URL_2: ${{ secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 }}
+          S_DATABASE_URL: ${{ secrets.DATABASE_URL || vars.DATABASE_URL }}
+          S_RH7: ${{ secrets.RH7 || vars.RH7 }}
+          S_RH6: ${{ secrets.RH6 || vars.RH6 }}
+          S_RH5: ${{ secrets.RH5 || vars.RH5 }}
+          S_HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
+          SOURCE_NAME: ${{ inputs.source }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -uo pipefail
+          if [ -z "${SOURCE_NAME:-}" ]; then
+            echo "::error::Set the 'source' input to the database to restore FROM (run probe-databases first to see which ones still answer)."
+            exit 1
+          fi
+          eval "SOURCE_DATABASE_URL=\${S_${SOURCE_NAME}:-}"
+          export SOURCE_DATABASE_URL
+          if [ -z "$SOURCE_DATABASE_URL" ]; then
+            echo "::error::${SOURCE_NAME} is not visible to Actions — add it under Settings → Secrets and variables → Actions, or pick a different source."
+            exit 1
+          fi
+          if [ -z "${TARGET_DATABASE_URL:-}" ]; then
+            echo "::error::RM5 is not visible to Actions — nothing to restore INTO."
+            exit 1
+          fi
+          echo "Restoring FROM ${SOURCE_NAME} INTO RM5 (dry_run=${DRY_RUN:-false})"
+          npx tsx scripts/restore-accounts.ts
+
+      - name: Probe EVERY database in the rotation (read-only survey)
+        # WHERE DID THE ACCOUNTS GO? Answers that question and nothing else.
+        #
+        # After the RM4 → RM5 cutover on 2026-08-10, RM5 served cards and prices
+        # but User / MarketplaceListing / Order / SellerProfile came up empty:
+        # RM4 had already stopped answering, so migrate-main-db-rm5 never got to
+        # run, and RM5's tables were created empty by `prisma db push` and then
+        # repopulated from the PUBLIC sources only (RiftScribe + the store
+        # importers). Those sources know about cards. They know nothing about
+        # accounts, listings or orders.
+        #
+        # Recovering that data means finding a database that still holds a copy,
+        # and there are more candidates than the obvious one:
+        #   * RM4/RM3/DATABASE_URL_2/DATABASE_URL — the operational rotation. Each
+        #     was abandoned when it exhausted its monthly transfer allowance, and
+        #     Neon's allowance RESETS monthly, so an OLDER project may well be
+        #     reachable again even while RM4 is not.
+        #   * RH7/RH6/RH5/HISTORY_DATABASE_URL_4 — the history rotation. These are
+        #     not a long shot: the original split (migrate-neon.yml) restored ONE
+        #     full pg_dump into BOTH the main and the history project, so a
+        #     history database can still carry a complete copy of the operational
+        #     tables from whenever it was created.
+        #
+        # STRICTLY READ-ONLY. `SELECT 1` and `SELECT count(*)`, nothing else, and
+        # every statement is wrapped so a missing table reports "-" instead of
+        # failing the run. It writes to no database, and it never prints a
+        # connection string — only which VARIABLE answered, and how many rows it
+        # holds. Run this FIRST, then decide which source to restore from.
+        if: inputs.task == 'probe-databases'
+        env:
+          P_RM5: ${{ secrets.RM5 || vars.RM5 }}
+          P_RM4: ${{ secrets.RM4 || vars.RM4 }}
+          P_RM3: ${{ secrets.RM3 || vars.RM3 }}
+          P_DATABASE_URL_2: ${{ secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 }}
+          P_DATABASE_URL: ${{ secrets.DATABASE_URL || vars.DATABASE_URL }}
+          P_RH7: ${{ secrets.RH7 || vars.RH7 }}
+          P_RH6: ${{ secrets.RH6 || vars.RH6 }}
+          P_RH5: ${{ secrets.RH5 || vars.RH5 }}
+          P_HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
+          P_HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
+          P_HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
+          P_HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
+        run: |
+          set -uo pipefail
+          echo "== Installing PostgreSQL client tools =="
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-18
+          export PATH="/usr/lib/postgresql/18/bin:$PATH"
+
+          # The tables that actually matter for this incident. Cards and prices
+          # rebuild themselves from public sources; nothing below can.
+          TABLES='User MarketplaceListing Order SellerProfile SupportTicket CollectionCard PriceAlert Card'
+
+          # A short statement_timeout so a suspended-but-listening compute fails
+          # fast instead of hanging the job for minutes per candidate.
+          probe() {
+            NAME="$1"; URL="$2"
+            if [ -z "$URL" ]; then
+              printf '%-26s %s\n' "$NAME" "(not set in Actions)"
+              return
+            fi
+            if ! psql "$URL" -v ON_ERROR_STOP=1 -tAc "SET statement_timeout='20s'; SELECT 1" >/dev/null 2>/tmp/err.$$; then
+              printf '%-26s %s\n' "$NAME" "UNREACHABLE — $(head -1 /tmp/err.$$ | cut -c1-110)"
+              return
+            fi
+            OUT=""
+            for T in $TABLES; do
+              N=$(psql "$URL" -tAc "SET statement_timeout='20s'; SELECT count(*) FROM public.\"$T\"" 2>/dev/null | tr -d ' ')
+              case "$N" in ''|*[!0-9]*) N="-";; esac
+              OUT="$OUT $T=$N"
+            done
+            printf '%-26s REACHABLE %s\n' "$NAME" "$OUT"
+          }
+
+          echo ""
+          echo "===== OPERATIONAL ROTATION (newest first) ====="
+          probe "RM5 (current)"        "${P_RM5:-}"
+          probe "RM4 (previous)"       "${P_RM4:-}"
+          probe "RM3"                  "${P_RM3:-}"
+          probe "DATABASE_URL_2"       "${P_DATABASE_URL_2:-}"
+          probe "DATABASE_URL"         "${P_DATABASE_URL:-}"
+          echo ""
+          echo "===== HISTORY ROTATION (may carry a full early copy) ====="
+          probe "RH7 (current)"        "${P_RH7:-}"
+          probe "RH6"                  "${P_RH6:-}"
+          probe "RH5"                  "${P_RH5:-}"
+          probe "HISTORY_DATABASE_URL_4" "${P_HISTORY_DATABASE_URL_4:-}"
+          probe "HISTORY_DATABASE_URL_3" "${P_HISTORY_DATABASE_URL_3:-}"
+          probe "HISTORY_DATABASE_URL_2" "${P_HISTORY_DATABASE_URL_2:-}"
+          probe "HISTORY_DATABASE_URL"  "${P_HISTORY_DATABASE_URL:-}"
+          echo ""
+          echo "Read-only survey complete — nothing was written to any database."
+          echo "Pick the reachable source with the highest User/MarketplaceListing"
+          echo "counts and restore from it with the restore-accounts-into-rm5 task."
+
       - name: Migrate main (operational) database to RM5
         # RM4 exhausted its monthly network-transfer allowance on 2026-08-10 —
         # the fifth project to do so (DATABASE_URL → DATABASE_URL_2 → RM3 → RM4).
@@ -561,11 +711,30 @@ jobs:
             LIMIT 40;" 2>&1 || echo "(size report unavailable — continuing)"
 
           echo "== Dumping the operational database (schema + data) =="
-          pg_dump "$SOURCE_DATABASE_URL" --no-owner --no-acl --format=custom \
+          # THE DUMP MUST SUCCEED BEFORE THE RESTORE IS ALLOWED TO START. This
+          # script runs under `set -uo pipefail` with no `-e`, so a pg_dump that
+          # died half-way — exactly what an exhausted transfer allowance looks
+          # like, since the connection drops mid-stream rather than being refused
+          # up front — used to fall straight through to a `pg_restore --clean`
+          # against a TRUNCATED dump. That drops RM5's tables and refills only
+          # the part that made it across, turning a failed rescue into a second
+          # data loss. Check the exit code, and sanity-check that the dump's
+          # table of contents actually contains the tables we came for.
+          if ! pg_dump "$SOURCE_DATABASE_URL" --no-owner --no-acl --format=custom \
             --exclude-table-data='public."PriceHistory"' \
             --exclude-table-data='public."ClickEvent"' \
-            -f main.dump
+            -f main.dump; then
+            echo "::error::pg_dump FAILED against the source — almost certainly its transfer allowance dying mid-stream. RM5 has NOT been touched; a partial dump is never restored."
+            exit 1
+          fi
           echo "Dump size: $(du -h main.dump | cut -f1)"
+          for T in User Card MarketplaceListing; do
+            if ! pg_restore -l main.dump | grep -q "\"$T\""; then
+              echo "::error::the dump does not contain table $T — it is incomplete. RM5 has NOT been touched."
+              exit 1
+            fi
+          done
+          echo "Dump contains the expected tables — proceeding to restore."
 
           echo "== Restoring into RM5 (existing objects replaced) =="
           set +e
