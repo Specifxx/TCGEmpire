@@ -586,17 +586,24 @@ jobs:
           # rebuild themselves from public sources; nothing below can.
           TABLES='User MarketplaceListing Order SellerProfile SupportTicket CollectionCard PriceAlert Card'
 
-          # Bound BOTH the connect and the query, so a suspended-but-listening
-          # compute fails fast instead of hanging the job for minutes per
-          # candidate. These go in the ENVIRONMENT rather than in the SQL: a
-          # `psql -c "SET statement_timeout=…; SELECT count(*)"` prints the SET
-          # command tag on its own line ABOVE the number, so the count parses as
-          # "SET1429", fails the numeric test, and every table reports "-". That
-          # is exactly what the first run of this probe did — it correctly found
-          # nine of ten databases alive and then told us nothing about any of
-          # them.
-          export PGCONNECT_TIMEOUT=15
-          export PGOPTIONS='-c statement_timeout=20000'
+          # TWO WAYS THIS PROBE HAS ALREADY LIED, both worth keeping written down.
+          #
+          # 1. DON'T put the timeout in the SQL. `psql -c "SET statement_timeout=…;
+          #    SELECT count(*)"` prints the SET command tag on its own line ABOVE
+          #    the number, so the count parses as "SET1429", fails the numeric
+          #    test, and every table reports "-". One statement per -c.
+          # 2. DON'T put it in PGOPTIONS either. Neon's POOLED endpoints — every
+          #    URL here is a "-pooler" host — reject a startup packet carrying
+          #    `options`, so `PGOPTIONS='-c statement_timeout=…'` does not slow a
+          #    connection down, it REFUSES it. That run reported all ten
+          #    databases unreachable including RM5, which was serving the live
+          #    site at that moment. A diagnostic that reports total catastrophe
+          #    because of its own connection flags is worse than no diagnostic.
+          #
+          # So the query bound is `timeout`, outside libpq entirely, and the only
+          # libpq setting is PGCONNECT_TIMEOUT — an ordinary connection
+          # parameter, not a startup option, so the pooler is happy with it.
+          export PGCONNECT_TIMEOUT=20
 
           probe() {
             NAME="$1"; URL="$2"
@@ -604,13 +611,13 @@ jobs:
               printf '%-26s %s\n' "$NAME" "(not set in Actions)"
               return 0
             fi
-            if ! psql "$URL" -v ON_ERROR_STOP=1 -tAc 'SELECT 1' >/dev/null 2>/tmp/err.$$; then
-              printf '%-26s %s\n' "$NAME" "UNREACHABLE — $(head -1 /tmp/err.$$ 2>/dev/null | cut -c1-110)"
+            if ! timeout 30 psql "$URL" -v ON_ERROR_STOP=1 -tAc 'SELECT 1' >/dev/null 2>/tmp/err.$$; then
+              printf '%-26s %s\n' "$NAME" "UNREACHABLE — $(tr '\n' ' ' </tmp/err.$$ 2>/dev/null | cut -c1-150)"
               return 0
             fi
             OUT=""
             for T in $TABLES; do
-              N=$(psql "$URL" -tAc "SELECT count(*) FROM public.\"$T\"" 2>/dev/null | tr -d ' \n')
+              N=$(timeout 30 psql "$URL" -tAc "SELECT count(*) FROM public.\"$T\"" 2>/dev/null | tr -d ' \n')
               case "$N" in ''|*[!0-9]*) N="-";; esac
               OUT="$OUT $T=$N"
             done
