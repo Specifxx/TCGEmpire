@@ -127,6 +127,50 @@ async function loadTargetIds(label: string): Promise<Set<string>> {
   return set;
 }
 
+// ── CARD IDs ARE NOT STABLE ACROSS A CUTOVER ────────────────────────────────
+// The single thing most likely to make this rescue quietly recover nothing
+// useful. Card.id is a cuid minted when the row is created, and RM5's Card table
+// was not copied from RM4 — it was REBUILT from RiftScribe by cards-sync, which
+// upserts on externalId and therefore minted brand-new ids for all 1,429 rows.
+// So the cardId on every marketplace listing, collection entry and price alert
+// in the source points at an id that does not exist in the target: the parent
+// check would drop all 57 listings and all 617 collection cards, we would
+// "successfully" restore the users alone, and the marketplace would still be
+// empty.
+//
+// externalId is the stable identity — it is what cards-sync itself upserts on —
+// with setCode + collectorNumber as a fallback for rows that predate it. Build
+// source-id → target-id once and rewrite every cardId through it. If the two
+// databases DO happen to share ids the map is the identity function and this
+// costs one query.
+const cardIdMap = new Map<string, string>();
+let cardMapBuilt = false;
+
+type CardKeyRow = { id: string; externalId: string | null; setCode: string; collectorNumber: string };
+
+async function buildCardIdMap(): Promise<{ mapped: number; unmatched: number }> {
+  const select = { id: true, externalId: true, setCode: true, collectorNumber: true };
+  const [src, dst] = await Promise.all([
+    source.card.findMany({ select }) as Promise<CardKeyRow[]>,
+    target.card.findMany({ select }) as Promise<CardKeyRow[]>,
+  ]);
+  const byExternal = new Map<string, string>();
+  const byNumber = new Map<string, string>();
+  for (const c of dst) {
+    if (c.externalId) byExternal.set(c.externalId, c.id);
+    byNumber.set(`${c.setCode}|${c.collectorNumber}`, c.id);
+  }
+  let unmatched = 0;
+  for (const c of src) {
+    const hit =
+      (c.externalId ? byExternal.get(c.externalId) : undefined) ?? byNumber.get(`${c.setCode}|${c.collectorNumber}`);
+    if (hit) cardIdMap.set(c.id, hit);
+    else unmatched++;
+  }
+  cardMapBuilt = true;
+  return { mapped: cardIdMap.size, unmatched };
+}
+
 /** The columns the TARGET actually has for a table, so drift can be projected away. */
 const targetColumnCache = new Map<string, Set<string>>();
 async function targetColumns(label: string): Promise<Set<string>> {
@@ -183,6 +227,24 @@ async function copy(t: Table): Promise<string> {
     rows = rows.map((r) => Object.fromEntries(Object.entries(r).filter(([k]) => cols.has(k))));
   }
 
+  // Rewrite every card reference from the source's ids to the target's BEFORE
+  // the parent check runs, or the check rejects rows that are perfectly good.
+  let remapped = 0;
+  const cardFields = (t.parents ?? []).filter((p) => p.of === "Card").map((p) => p.field);
+  if (cardFields.length) {
+    for (const r of rows) {
+      for (const f of cardFields) {
+        const v = r[f];
+        if (typeof v !== "string") continue;
+        const to = cardIdMap.get(v);
+        if (to && to !== v) {
+          r[f] = to;
+          remapped++;
+        }
+      }
+    }
+  }
+
   let skipped = 0;
   if (t.parents?.length) {
     const parentSets = await Promise.all(t.parents.map((p) => loadTargetIds(p.of)));
@@ -206,7 +268,7 @@ async function copy(t: Table): Promise<string> {
     for (const r of rows) if (typeof r.id === "string") own.add(r.id);
   }
 
-  const note = `${drifted ? " [read raw: source schema is older]" : ""}${skipped ? `, ${skipped} skipped (missing parent)` : ""}`;
+  const note = `${drifted ? " [read raw: source schema is older]" : ""}${remapped ? `, ${remapped} card refs remapped` : ""}${skipped ? `, ${skipped} skipped (missing parent)` : ""}`;
   if (DRY_RUN) return `${pad} would copy ${String(rows.length).padStart(6)}${note}`;
 
   let written = 0;
@@ -231,6 +293,10 @@ async function main() {
     console.log("\nThe source holds no users — it is not a useful restore source. Nothing written.");
     return;
   }
+
+  const cards = await buildCardIdMap();
+  console.log(`card id map: ${cards.mapped} of ${cards.mapped + cards.unmatched} source cards matched in the target${cards.unmatched ? ` (${cards.unmatched} unmatched — rows pointing at those are skipped)` : ""}`);
+  if (!cardMapBuilt) throw new Error("card id map was not built — refusing to copy card-linked rows blind");
   console.log("");
 
   for (const t of TABLES) console.log(await copy(t));
