@@ -213,6 +213,35 @@ differentiate a set page with, and inventing one would be padding.
 
 `content-quality-report.csv` in this repo is this production run.
 
+### Follow-up — 2026-08-12: the seller storefronts
+
+A later production gate run surfaced one more duplicate cluster, on a template
+none of the growth work had touched: all three live `/marketplace/seller/[id]`
+pages shipped the hard-coded title *"Seller storefront — Marketplace"* and no
+description, so they inherited the root description too. It was invisible to the
+earlier runs because the marketplace had only just gone public — the pages
+entered the sitemap after the audit crawl.
+
+Fixed the same way the store pages were: name the seller, add the market as the
+tie-breaker (shop names are user-chosen, so two sellers can pick the same one),
+and vary the description with that seller's own cheapest live listing.
+
+| | Before | After |
+|---|---|---|
+| Title | `Seller storefront — Marketplace` ×3 | `Master Misclick — Riftbound Singles from Australia`, `Electro — … from Canada`, `RiftDog — … from Australia` |
+| Description | root fallback ×3 | seller's stock count + their cheapest live card and price |
+| Structured data | none | `BreadcrumbList` matching the visible trail |
+
+Three related gaps closed with it: pre-launch storefronts now return early
+without touching the database (a beta-gated page should not put a shop name in a
+`<title>`); an empty storefront is `noindex,follow` like a stockless store page;
+and `template-seo-check.ts` gained a `marketplace/seller` row, whose absence is
+why the missing BreadcrumbList went unnoticed in the first place.
+
+Production after the fix — **`seo-gate.ts` passed**: 1,705 submitted URLs, all
+200, no duplicate title or description anywhere, 64,955 price figures in range.
+**`template-seo-check.ts` passed**: 15 templates, all green.
+
 ---
 
 ## Verification
