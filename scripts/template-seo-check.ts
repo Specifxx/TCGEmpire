@@ -59,6 +59,11 @@ const SPECS: Spec[] = [
   { name: "guide", test: (p) => p.startsWith("/guides/"), requires: ["BreadcrumbList"], optional: ["FAQPage", "Article", "BlogPosting", "TechArticle"] },
   { name: "blog", test: (p) => p.startsWith("/blog/"), requires: ["BreadcrumbList"], optional: ["FAQPage", "Article", "BlogPosting", "NewsArticle"] },
   { name: "author", test: (p) => p.startsWith("/authors/"), requires: ["BreadcrumbList"], optional: ["Person", "ProfilePage"] },
+  // Sitemapped only once the marketplace is publicly launched, so this row is
+  // simply absent from the matrix before then. No Organization requirement: a
+  // seller is a person with a shop name, not a business entity we can assert
+  // an address or a founding date for.
+  { name: "marketplace/seller", test: (p) => p.startsWith("/marketplace/seller/"), requires: ["BreadcrumbList"] },
 ];
 const specOf = (p: string) => SPECS.find((s) => s.test(p));
 
