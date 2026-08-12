@@ -18,7 +18,7 @@ import { CONTENT_TAG } from "./revalidate-content";
 // rather than caching. There, caching buys nothing anyway (a one-shot process never
 // reuses it), so fall back to calling the function directly instead of failing the
 // whole script. Any OTHER unstable_cache error still throws as normal.
-async function cachedOrDirect<T>(fn: () => Promise<T>, keys: string[], opts: { revalidate: number; tags: string[] }): Promise<T> {
+export async function cachedOrDirect<T>(fn: () => Promise<T>, keys: string[], opts: { revalidate: number; tags: string[] }): Promise<T> {
   try {
     return await unstable_cache(fn, keys, opts)();
   } catch (e) {
@@ -30,7 +30,7 @@ async function cachedOrDirect<T>(fn: () => Promise<T>, keys: string[], opts: { r
 // Calendar day in Australia/Sydney — see market-index. PriceHistory changes once a
 // day, so history-derived reads are cached with this in the key (recompute daily,
 // not per request). Kept local to avoid an import cycle with market-index.
-function sydneyDayKey(): string {
+export function sydneyDayKey(): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Australia/Sydney" }).format(new Date());
 }
 
