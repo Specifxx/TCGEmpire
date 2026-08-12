@@ -40,15 +40,24 @@
  */
 import { PrismaClient } from "@prisma/client";
 
-// RM3-first, matching src/lib/db.ts. This was bare DATABASE_URL, which only
-// happened to work because maintenance.yml sets a job-level DATABASE_URL from
-// the RM3 chain. MAIN_URL feeds copyCards() — the Card rows that satisfy
-// PriceHistory's foreign key in the target — so if it ever resolved to the OLD
-// exhausted operational project, the target's Card table would be seeded from
-// stale data and copyTable()'s FK filter would then silently DROP every
-// PriceHistory row for any card created since the RM3 cutover, reported only as
-// "skipped N rows for cards not in the target".
-const MAIN_URL = process.env.RM3 || process.env.DATABASE_URL_2 || process.env.DATABASE_URL;
+// CURRENT-first, mirroring src/lib/db.ts's OPERATIONAL_URL exactly. MAIN_URL
+// feeds copyCards() — the Card rows that satisfy PriceHistory's foreign key in
+// the target — so if it resolves to an OLD operational project, the target's
+// Card table gets seeded from stale data and copyTable()'s FK filter then
+// silently DROPS every PriceHistory row for any card created since, reported
+// only as "skipped N rows for cards not in the target".
+//
+// THIS LIST HAD DRIFTED BADLY: it stopped at RM3, so it never learned about RM4
+// or RM5 and would have resolved to a two-generations-dead project on any
+// machine where RM3 was still set — precisely the silent-stale-Card failure the
+// paragraph above describes. Fixed and reordered with the 2026-08-12 rotation
+// onto the original DATABASE_URL project.
+const MAIN_URL =
+  process.env.DATABASE_URL ||
+  process.env.RM5 ||
+  process.env.RM4 ||
+  process.env.RM3 ||
+  process.env.DATABASE_URL_2;
 // CURRENT-first, not newest-first. HISTORY_DATABASE_URL leads because the
 // history database rotated BACKWARD onto it on 2026-08-11 — its Neon allowance
 // reset at the start of the month while RH7 approached its own. See the note on
@@ -62,7 +71,7 @@ const TARGET_LABEL =
   : process.env.RH5 ? "RH5"
   : "HISTORY_DATABASE_URL_4";
 
-if (!MAIN_URL) { console.error("No operational database is set (RM3 / DATABASE_URL_2 / DATABASE_URL)."); process.exit(1); }
+if (!MAIN_URL) { console.error("No operational database is set (DATABASE_URL / RM5 / RM4 / RM3 / DATABASE_URL_2)."); process.exit(1); }
 if (!TARGET_URL) { console.error("None of HISTORY_DATABASE_URL / RH7 / RH6 / RH5 / HISTORY_DATABASE_URL_4 is set — point one at the current history project first."); process.exit(1); }
 if (TARGET_LABEL !== "HISTORY_DATABASE_URL") {
   console.warn(`⚠  Target resolved to ${TARGET_LABEL}, not HISTORY_DATABASE_URL — the current history project is not visible in this environment. RH7 is the rollback and is near its allowance; everything older is exhausted. This is almost certainly not what you want.`);
