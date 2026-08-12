@@ -84,7 +84,7 @@ export default async function BestBasketPage() {
               <PremiumButton />
             ) : (
               <>
-                <Link href="/register?next=/tools/best-basket" className="btn-primary text-sm">Create a free account</Link>
+                <Link href="/login?next=/tools/best-basket" className="btn-primary text-sm">Sign in free</Link>
                 <Link href="/premium" className="btn-ghost text-sm">About Premium</Link>
               </>
             )}

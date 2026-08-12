@@ -1,18 +1,23 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
-// Only allow same-site relative redirects (no open-redirect to external URLs).
-function safeNext(): string {
-  if (typeof window === "undefined") return "/";
-  const n = new URLSearchParams(window.location.search).get("next");
-  return n && n.startsWith("/") && !n.startsWith("//") ? n : "/profile";
-}
+// Sign-in is OAUTH ONLY — Google and Discord. The email/password form, /register,
+// /forgot and /reset were removed along with their API routes.
+//
+// Existing password accounts are NOT orphaned: the OAuth callback finds a user by
+// provider id and then FALLS BACK TO EMAIL (upsertOAuthUser in
+// api/auth/oauth/[provider]/callback), linking the identity to the account that
+// already owns that address. So a member who registered with a password signs in
+// with Google or Discord on the same address and lands on their existing account,
+// wallet, listings and orders intact.
+//
+// The one group this cannot serve is someone whose account email is at a provider
+// they don't use for Google or Discord. They need support to link an identity —
+// hence the note at the bottom of the card rather than a dead end.
 
 const OAUTH_ERRORS: Record<string, string> = {
-  provider_unavailable: "That sign-in option isn't available yet — try email, or another option.",
+  provider_unavailable: "That sign-in option isn't available right now — try the other one.",
   oauth_state: "Sign-in expired or was interrupted. Please try again.",
   oauth_token: "Couldn't complete sign-in with that provider. Please try again.",
   oauth_profile: "Couldn't read your profile from that provider. Please try again.",
@@ -20,27 +25,16 @@ const OAUTH_ERRORS: Record<string, string> = {
 };
 
 export function AuthForm({
-  mode,
   providers,
   bare = false,
 }: {
-  mode: "login" | "register";
   providers: ("google" | "discord")[];
   // Skip the outer full-page wrapper (max-width + vertical padding) so this can be
-  // embedded directly inside a modal, which provides its own sizing. The full pages
-  // (/login, /register) omit this and get the original standalone layout.
+  // embedded directly inside a modal, which provides its own sizing. /login omits
+  // this and gets the original standalone layout.
   bare?: boolean;
 }) {
-  const router = useRouter();
-  const isRegister = mode === "register";
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [registered, setRegistered] = useState(false); // show "check your email" after signup
-  const [needsVerify, setNeedsVerify] = useState(false); // login blocked: email not verified
-  const [resendMsg, setResendMsg] = useState<string | null>(null);
 
   // Surface OAuth failures redirected back as ?error=…
   useEffect(() => {
@@ -48,152 +42,63 @@ export function AuthForm({
     if (e) setError(OAUTH_ERRORS[e] ?? "Sign-in failed — please try again.");
   }, []);
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    setNeedsVerify(false);
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/auth/${mode}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(isRegister ? { email, password, displayName } : { email, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error ?? "Something went wrong");
-        if (data.needsVerify) setNeedsVerify(true); // login: unverified email
-        setLoading(false);
-        return;
-      }
-      // New accounts must verify their email before they can sign in.
-      if (isRegister) {
-        setRegistered(true);
-        setLoading(false);
-        return;
-      }
-      router.push(safeNext());
-      router.refresh();
-    } catch {
-      setError("Network error — please try again.");
-      setLoading(false);
-    }
-  }
-
-  async function resendVerification() {
-    setResendMsg(null);
-    try {
-      const res = await fetch("/api/auth/resend-verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      setResendMsg(
-        res.ok ? "Verification email sent — check your inbox (and spam)." : "Couldn't resend right now — try again shortly.",
-      );
-    } catch {
-      setResendMsg("Network error — try again.");
-    }
-  }
-
-  const nextQ = typeof window !== "undefined" ? window.location.search.replace(/[?&]error=[^&]*/g, "").replace(/^&/, "?") : "";
-  const wrapperClass = bare ? "" : "mx-auto max-w-md py-10";
-
-  // After signup: the account exists but can't sign in until the email is verified.
-  if (registered) {
-    return (
-      <div className={wrapperClass}>
-        <div className="card-surface p-6 text-center">
-          <h1 className="text-xl font-extrabold text-white">Check your email</h1>
-          <p className="mt-2 text-sm leading-relaxed text-slate-400">
-            We&apos;ve sent a verification link to <span className="font-medium text-slate-200">{email}</span>. Click it
-            to activate your account, then sign in.
-          </p>
-          <button onClick={resendVerification} className="btn-ghost mt-4 text-sm">Resend verification email</button>
-          {resendMsg && <p className="mt-2 text-xs text-slate-400">{resendMsg}</p>}
-          <p className="mt-4 text-sm">
-            <Link href={`/login${nextQ}`} className="text-brand-400 hover:underline">Go to sign in →</Link>
-          </p>
-        </div>
-      </div>
-    );
-  }
+  const wrapperClass = bare ? "" : "mx-auto w-full max-w-sm py-10";
 
   return (
     <div className={wrapperClass}>
       <div className="card-surface p-6">
-        <h1 className="text-xl font-extrabold text-white">{isRegister ? "Create your account" : "Sign in"}</h1>
+        <h1 className="text-xl font-extrabold text-white">Sign in</h1>
         <p className="mt-1 text-sm text-slate-400">
-          {isRegister
-            ? "Create a free account to save your wishlist and more."
-            : "Sign in to sync your wishlist and manage your listings."}
+          Sign in to sync your wishlist and manage your listings. No password to remember — creating an
+          account and signing in are the same button.
         </p>
 
-        {/* OAuth — only render a provider's button when its env keys are configured,
-            so we never show a button that just redirects back with an error. */}
-        {providers.length > 0 && (
-          <>
-            <div className="mt-5 flex flex-col gap-2.5">
-              {providers.includes("google") && (
-                <a href="/api/auth/oauth/google" className="flex items-center justify-center gap-2.5 rounded-xl border border-ink-600 bg-white py-2.5 text-sm font-semibold text-ink-950 hover:brightness-95">
-                  <GoogleIcon /> Continue with Google
-                </a>
-              )}
-              {providers.includes("discord") && (
-                <a href="/api/auth/oauth/discord" className="flex items-center justify-center gap-2.5 rounded-xl bg-[#5865F2] py-2.5 text-sm font-semibold text-white hover:brightness-110">
-                  <DiscordIcon /> Continue with Discord
-                </a>
-              )}
-            </div>
-
-            <div className="my-5 flex items-center gap-3 text-xs text-slate-500">
-              <span className="h-px flex-1 bg-ink-700" /> or with email <span className="h-px flex-1 bg-ink-700" />
-            </div>
-          </>
+        {error && (
+          <p role="alert" className="mt-4 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400">
+            {error}
+          </p>
         )}
 
-        <form onSubmit={submit} className="flex flex-col gap-3">
-          {isRegister && (
-            <label className="block">
-              <span className="mb-1 block text-xs font-medium text-slate-400">Display name</span>
-              <input className="input" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="e.g. RiftCollector" autoComplete="nickname" required />
-            </label>
+        {/* Only render a provider's button when its env keys are configured, so we
+            never show a button that just redirects back with an error. */}
+        <div className="mt-5 flex flex-col gap-2.5">
+          {providers.includes("google") && (
+            <a
+              href="/api/auth/oauth/google"
+              className="flex items-center justify-center gap-2.5 rounded-xl border border-ink-600 bg-white py-2.5 text-sm font-semibold text-ink-950 hover:brightness-95"
+            >
+              <GoogleIcon /> Continue with Google
+            </a>
           )}
-          <label className="block">
-            <span className="mb-1 block text-xs font-medium text-slate-400">Email</span>
-            <input type="email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required />
-          </label>
-          <label className="block">
-            <div className="mb-1 flex items-center justify-between">
-              <span className="text-xs font-medium text-slate-400">Password</span>
-              {!isRegister && (
-                <Link href="/forgot" className="text-xs text-brand-400 hover:underline">Forgot password?</Link>
-              )}
-            </div>
-            <input type="password" className="input" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={isRegister ? "new-password" : "current-password"} minLength={6} required />
-          </label>
-
-          {error && <p role="alert" className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400">{error}</p>}
-          {needsVerify && (
-            <p className="text-xs text-slate-400">
-              <button type="button" onClick={resendVerification} className="font-medium text-brand-400 hover:underline">
-                Resend verification email
-              </button>
-              {resendMsg && <span className="ml-2">{resendMsg}</span>}
-            </p>
+          {providers.includes("discord") && (
+            <a
+              href="/api/auth/oauth/discord"
+              className="flex items-center justify-center gap-2.5 rounded-xl bg-[#5865F2] py-2.5 text-sm font-semibold text-white hover:brightness-110"
+            >
+              <DiscordIcon /> Continue with Discord
+            </a>
           )}
+        </div>
 
-          <button type="submit" className="btn-primary mt-1" disabled={loading}>
-            {loading ? "Please wait…" : isRegister ? "Create account" : "Sign in"}
-          </button>
-        </form>
+        {/* Both providers are configured in production; this is the fence for a
+            misconfigured preview or a rotated secret, so the page still says
+            something true instead of rendering an empty card. */}
+        {providers.length === 0 && (
+          <p className="mt-5 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400">
+            Sign-in is temporarily unavailable. Please try again shortly.
+          </p>
+        )}
 
-        <p className="mt-4 text-center text-sm text-slate-400">
-          {isRegister ? (
-            <>Already have an account? <Link href={`/login${nextQ}`} className="text-brand-400 hover:underline">Sign in</Link></>
-          ) : (
-            <>New here? <Link href={`/register${nextQ}`} className="text-brand-400 hover:underline">Create an account</Link></>
-          )}
+        <p className="mt-5 text-center text-xs text-slate-500">
+          New here? Either button creates your account on the spot.
+        </p>
+        <p className="mt-2 text-center text-xs text-slate-500">
+          Signed up with a password before? Use the same email address with Google or Discord and you&apos;ll
+          land straight back on your existing account. If that address isn&apos;t on either,{" "}
+          <a href="/contact" className="text-brand-400 hover:underline">
+            contact us
+          </a>{" "}
+          and we&apos;ll link it for you.
         </p>
       </div>
     </div>

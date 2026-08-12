@@ -57,7 +57,7 @@ export function PremiumCta({
     return (
       <div>
         <p className="text-sm font-semibold text-white">Ready when you are</p>
-        <Link href="/register?next=/premium" className="btn-primary mt-3 text-sm">Create a free account first →</Link>
+        <Link href="/login?next=/premium" className="btn-primary mt-3 text-sm">Sign in first →</Link>
       </div>
     );
   }

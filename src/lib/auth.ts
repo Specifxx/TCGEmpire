@@ -2,7 +2,6 @@ import { cookies } from "next/headers";
 import { cache } from "react";
 import { randomBytes } from "node:crypto";
 import { SignJWT, jwtVerify } from "jose";
-import bcrypt from "bcryptjs";
 import { prisma } from "./db";
 
 const SESSION_COOKIE = "tcge_session";
@@ -60,9 +59,6 @@ export interface SessionUser {
   trialStartedAt: Date | null;
 }
 
-export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, 10);
-}
 
 // One-time tokens for email verification / password reset.
 export async function createAuthToken(
@@ -89,9 +85,6 @@ export async function consumeAuthToken(
   return row.userId;
 }
 
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  return bcrypt.compare(password, hash);
-}
 
 // Issue a signed session cookie for the given user id.
 export async function createSession(userId: string): Promise<void> {

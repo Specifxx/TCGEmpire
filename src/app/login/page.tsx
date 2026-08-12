@@ -23,5 +23,5 @@ function safe(next?: string): string {
 export default async function LoginPage({ searchParams }: { searchParams: { next?: string } }) {
   const user = await getCurrentUser();
   if (user) redirect(safe(searchParams.next));
-  return <AuthForm mode="login" providers={enabledProviders()} />;
+  return <AuthForm providers={enabledProviders()} />;
 }
