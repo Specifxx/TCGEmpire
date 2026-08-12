@@ -1,0 +1,278 @@
+# Growth improvements — summary
+
+**Branch:** `growth-improvements` (5 commits, off `main` at `5a3c460`)
+**Status:** left on the branch for review. Nothing merged, nothing deployed.
+
+Every commit ran `npm test`, `npm run lint` and `npm run build` before landing.
+Final: **455 tests pass** (up from 441 — 24 added), lint clean, build clean.
+
+---
+
+## What changed, and why
+
+### Commit 1 — `docs(growth)`: the audit and the two instruments that produced it
+
+`GROWTH-AUDIT.md`, plus:
+
+- **`scripts/content-quality.ts`** → `content-quality-report.csv`. Crawls the
+  sitemap and asks the one question the two existing crawlers don't: are the
+  ~1,700 generated pages substantively different *from each other*? Flags
+  duplicate and near-duplicate descriptions, missing/short meta, empty sections,
+  thin editorial and broken internal links.
+- **`scripts/template-seo-check.ts`**. Samples URLs per template and asserts
+  canonical, OpenGraph and the structured data appropriate to that page type.
+  Exits non-zero, so it can gate a deploy.
+
+**The instruments needed three correction passes before their output was
+trustworthy**, and that is worth knowing when reading the numbers:
+
+| First run said | Actually |
+|---|---|
+| every template ≥ 700 words | the header/footer nav lists are `<li>` elements, adding a constant ~250 words to every page. Now measures `<main>` only. |
+| 1,388 empty sections | card grids ("More Jinx cards") are `<a>` tiles with no prose. A section is empty only with neither prose *nor* linked content. |
+| the whole card template broken | `sr-only` headings label the component that follows; the price table is server-rendered and fine. |
+
+Report went from 1,691 rows of mostly noise to 396 real ones against production.
+
+### Commit 2 — `feat(growth)`: internal linking → **Finding 1**
+
+- **`/learn` had no contextual inbound link.** 359 lines of interactive
+  new-player content at sitemap priority 0.8, and **not one page's body links to
+  it** — not the homepage, not a card page, not a set page. The homepage linked to
+  no educational content at all. Added "New to Riftbound? Learn how to play →" to
+  the hero, on its own line below the CTA row and at lower visual weight: that row
+  was deliberately cut from four competing CTAs to two, and a test now pins it at
+  two.
+
+  > **Correction.** The first version of this document, and of `GROWTH-AUDIT.md`,
+  > called `/learn` an "orphan" with "zero inbound links". **That was wrong.**
+  > `FooterNav` server-renders every `FOOTER_GROUPS` href, so `/learn` has two
+  > footer links on all ~1,700 pages and is fully reachable — as do `/bulk-pricer`,
+  > `/about`, `/returns`, and indeed `/guides`, `/blog` and `/decks`. I read the
+  > crawler's output without checking that it builds its graph from `<main>` only.
+  > The metric is contextual links, which is a real and useful measure — a
+  > site-wide footer link is identical on every page and so distinguishes nothing —
+  > but the "orphan" framing overstated it. The tool now labels this correctly, and
+  > the change made is still the right one for the corrected reason.
+- **No card page linked to the Vendetta mechanic guides.** Measured with
+  `guidesForCard()`: a plain Vendetta rare returned three *buying* articles and
+  none of Empower/Flow/Burn, which are Vendetta-specific and the site's
+  best-performing editorial. Signature/alt-art printings already reached the
+  variant glossary correctly — that half of the brief's example was already
+  working and is untouched.
+
+  The new rule matches **the bracket marker printed on the card**, read from
+  `KEYWORDS` in `lib/keywords.ts` rather than a second hand-written map. So a
+  card links to the Empower guide exactly when `[Empower]` is on it, and an
+  Origins card whose text contains the word does *not* match, because `KEYWORDS`
+  scopes each keyword to its introducing set. **No rules claims were added** —
+  the DATA-ACCURACY RULE in `lib/keywords.ts` is untouched.
+
+### Commit 3 — `feat(growth)`: set & domain prose → **Finding 2**
+
+`/domains/[slug]` carried ~80 words of real editorial while receiving 233 inbound
+links — the best-linked thin page on the site. `/sets/[set]` the same with 347.
+
+**Nothing new was written.** `src/lib/content/collection-narrative.ts` already
+generated 150+ words from a collection's own data, its `CollectionKind` union
+already included `"domain"` and `"set"`, and it already had buyer advice written
+for both — it had simply never been called from either template. It is the same
+generator the champion hubs and facets use, so the tone matches by construction.
+
+Query cost, per the egress rules in `lib/db.ts`:
+- `/domains/[slug]` adds **zero** queries — it reads rows the page already has,
+  so prose and grid cannot disagree.
+- `/sets/[set]` needs one (the grid is 60 of ~1,800 cards and cannot describe a
+  distribution): four scalar fields per row, cached per set+market under
+  `CONTENT_TAG`, **default view only**, and it fails open — a failure drops the
+  intro, never the page.
+
+Measured: set median prose 447 → 562; domain minimum 292 → 445.
+
+One defect found by reading the rendered output: the "cards to know" line named
+the same card twice ("Fury Rune … Jhin … Fury Rune") because printings cluster at
+the top of a price sort. Deduped by name. This also improves the champion hubs
+and facets, which were already live with it.
+
+### Commit 4 — `fix(growth)`: content-quality causes → **Finding 3**
+
+Four template-level causes. **No individual page was hand-edited.**
+
+| Cause | Scale | Fix |
+|---|---|---|
+| Near-duplicate card descriptions | 234 pages (17%) | Different printings of one card, separated only by digits (collector number, price) — which near-duplicate detection and Google's clustering both discount. The description now names **which printing** in words, via `printingLabel()`, the same helper the page body uses. Base printings get nothing added. **213 → 4.** |
+| Facet breadcrumbs pointed at a 404 | all 15 facet pages | No route exists at `/cards/type`, `/cards/rarity`, `/cards/printing` — and it was asserted as a hierarchy level in `BreadcrumbList` JSON-LD. Now plain text in the trail, absent from the markup chain. |
+| Cards linking a facet that doesn't exist | `/cards/type/token` (404 on production) | Chips built by lowercasing the card's own value. Both now resolve through the lookup the route uses. |
+| 11 dead article links | 9 card slugs + 2 wrong-category | `riftbound-vendetta-overnumbers-explained` linked all nine signed Legend Overnumbers by the **epithet alone** (`/card/rogue-assassin-ven-189`) instead of the full name; two articles linked a guide under `/blog/`. Fixed to the printings the guide is about — the *signed* ones, per its own heading — each verified 200 first. |
+
+**The cause behind the last one matters more than the links.** `routeExists()` in
+`tests/content-links.test.ts` treats a `[param]` directory as matching anything,
+so `/blog/<anything>` and `/card/<anything>` both "exist" — which is why this is a
+repeat of a class the repo already fixed 12 of. Two new validators close it: links
+must resolve to an article of *that category*, and a card link whose anchor names
+the card must have a slug starting with that champion.
+
+Overall: **332 flagged rows → 98** on the same corpus.
+
+### Commit 5 — `fix(growth)`: OpenGraph → **Finding 4**
+
+Canonicals and structured data were correct on all 14 templates and needed
+nothing. OpenGraph was not: **10 templates covering ~1,500 pages** declared an
+inline `openGraph` object instead of calling `pageOpenGraph()` — the documented
+shallow-merge trap that `lib/seo.ts` was written to prevent. Card pages shipped no
+`og:url`; champion, keyword, domain, set, gallery, store and all three facet
+templates shipped no `og:type`. All ten now route through the helper. No copy
+changed. The check reports clean across every template.
+
+---
+
+## Deliberately not done
+
+**1. `/keywords/*` is genuinely thin (70 prose words) and stays that way.**
+A definition plus a card grid, three pages. Fixing it means writing rules content
+for keywords, and `lib/keywords.ts` carries an explicit DATA-ACCURACY RULE
+forbidding that without verified official source text; `docs/seo-backlog.md` #19
+already logs it as blocked. **Needs a human:** supply Riot's Comprehensive Rules
+or sign off per keyword.
+
+**2. Hub descriptions are formulaic across ~59 pages.** The largest remaining
+`NEAR_DUPLICATE_DESCRIPTION` cluster: champion (19), store (13), domain (7),
+gallery (5), keyword (3), set (3), deck-group (9). Each template's description
+varies only by a name — e.g. every champion reads "Every Riftbound {name} card
+across all sets…". Fixing it well means per-template copy that folds in real
+varying data (printing counts, price ranges, set spread), which is five or six
+separate judgement calls about tone. I did not want to rush that across six
+templates in one pass. **Recommended next, and the highest-value remaining item.**
+
+**3. The header overflows horizontally between ~640px and ~790px.** Pre-existing
+and unrelated to this brief (found while measuring an earlier nav change): the
+header row needs 738px of content in a 720px box at tablet width.
+`scripts/mobile-check.ts` only audits 375px, which is why it has never surfaced.
+Fixing it means deciding which of Sealed/Blog/Premium/Discord collapses into the
+hamburger on tablets — **a product call, not a drive-by edit.**
+
+**4. No least-trafficked-page-types table.** `Card.viewCount` / `searchCount` and
+`DemandSnapshot` are real first-party demand data but cover `/card/*` only;
+`ClickEvent` covers affiliate clicks; `gsc-coverage.yml` exists but no-ops until
+`GSC_SA_KEY` is set, and no exported Search Console data is committed. A ranked
+table cannot be produced from the repo without inventing it, so none is presented.
+**One-line unblock: set the `GSC_SA_KEY` repo secret** and the existing daily
+workflow starts collecting. No tracking or third-party scripts were added.
+
+**5. Five `BROKEN_INTERNAL_LINK` rows in the final local run are local-only** —
+Vendetta cards the live importer holds but the seeded database does not. All five
+verified **200 on production**. The committed CSV is the production crawl and does
+not contain them.
+
+**6. 19 `EMPTY_SECTION` and 10 `THIN_EDITORIAL` rows remain**, and are mostly
+detector limits (container sections whose content sits under a sub-heading) plus
+genuinely prose-light tool UIs — `/browse` and `/market` are filter interfaces
+with one prose word each, which is correct for what they are.
+
+---
+
+## Verified on production — 2026-08-10, after deploy
+
+Everything above is merged to `main` and live. Re-running all three instruments
+against `https://riftcompare.com`:
+
+| Gate | Result |
+|---|---|
+| `seo-gate.ts` | **passed** — 1,702 submitted URLs, all 200; unique titles and descriptions; one self-canonical each; no noindex; valid structured data; no thin pages; **64,925 real price figures all in range** |
+| `template-seo-check.ts` | **passed** — all 14 templates emit a self-canonical, complete OpenGraph and their required structured data |
+| `content-quality.ts` | 396 flagged rows → **83** |
+
+Content-quality, before → after, measured on the live site:
+
+| Issue | Before | After |
+|---|---:|---:|
+| `NEAR_DUPLICATE_DESCRIPTION` | 337 | **55** |
+| `BROKEN_INTERNAL_LINK` | 26 | **0** |
+| `SHORT_DESCRIPTION` | 4 | **0** |
+| `EMPTY_SECTION` | 19 | 19 (detector limits — container sections) |
+| `THIN_EDITORIAL` | 10 | 9 |
+
+Near-duplicate descriptions by template — the hub work landed as intended on real
+inventory, which the local fixture could not prove:
+
+| Template | Before | After |
+|---|---:|---:|
+| `store` | 43 | **0** |
+| `champion` | 33 | **2** |
+| `domain` | 7 | **0** |
+| `decks/domain` + `decks/archetype` | 9 | **0** |
+| `keyword` | 3 | **0** |
+| `card` | 234 | 45 |
+| `set` + `set/gallery` | 8 | 8 |
+
+The remaining 45 card rows are printings that share a printing KIND (two promos
+of one card, say), where the words genuinely are the same and only the collector
+number differs. `set` and `set/gallery` are unchanged and documented above:
+`SETS` carries only `{code, name, slug}`, so there is no categorical fact left to
+differentiate a set page with, and inventing one would be padding.
+
+`content-quality-report.csv` in this repo is this production run.
+
+### Follow-up — 2026-08-12: the seller storefronts
+
+A later production gate run surfaced one more duplicate cluster, on a template
+none of the growth work had touched: all three live `/marketplace/seller/[id]`
+pages shipped the hard-coded title *"Seller storefront — Marketplace"* and no
+description, so they inherited the root description too. It was invisible to the
+earlier runs because the marketplace had only just gone public — the pages
+entered the sitemap after the audit crawl.
+
+Fixed the same way the store pages were: name the seller, add the market as the
+tie-breaker (shop names are user-chosen, so two sellers can pick the same one),
+and vary the description with that seller's own cheapest live listing.
+
+| | Before | After |
+|---|---|---|
+| Title | `Seller storefront — Marketplace` ×3 | `Master Misclick — Riftbound Singles from Australia`, `Electro — … from Canada`, `RiftDog — … from Australia` |
+| Description | root fallback ×3 | seller's stock count + their cheapest live card and price |
+| Structured data | none | `BreadcrumbList` matching the visible trail |
+
+Three related gaps closed with it: pre-launch storefronts now return early
+without touching the database (a beta-gated page should not put a shop name in a
+`<title>`); an empty storefront is `noindex,follow` like a stockless store page;
+and `template-seo-check.ts` gained a `marketplace/seller` row, whose absence is
+why the missing BreadcrumbList went unnoticed in the first place.
+
+Production after the fix — **`seo-gate.ts` passed**: 1,705 submitted URLs, all
+200, no duplicate title or description anywhere, 64,955 price figures in range.
+**`template-seo-check.ts` passed**: 15 templates, all green.
+
+---
+
+## Verification
+
+The audit's figures come from the **live site** (1,698 URLs). The before/after
+deltas come from a local production build against a seeded database (1,222 URLs),
+compared like-for-like.
+
+```bash
+npx tsx scripts/content-quality.ts   --url https://riftcompare.com   # → content-quality-report.csv
+npx tsx scripts/template-seo-check.ts --url https://riftcompare.com  # exits non-zero on failure
+npm test && npm run lint && npm run build
+```
+
+**Caveat worth knowing before merging:** the local database is seeded from
+`prisma/riftbound-cards.json` (950 OGN/OGS/SFD/UNL cards) plus `manual-cards.json`,
+and carries **synthetic prices** — the real importer needs live store credentials.
+So the *shape* of the set/domain prose is verified, but the specific figures those
+pages will render in production are not. Re-run `content-quality.ts` against a
+preview deploy before merging to confirm.
+
+---
+
+## Suggested next steps needing human judgment
+
+1. **Differentiate the hub descriptions** (item 2 above) — biggest remaining win,
+   ~59 pages, needs per-template copy decisions.
+2. **Unblock the keyword pages** — supply verified rules text or sign off; each
+   then becomes a same-day addition on the existing template.
+3. **Set `GSC_SA_KEY`** so traffic data exists for the next audit.
+4. **Decide the tablet nav collapse** (item 3 above).
+5. **Consider wiring `template-seo-check.ts` into CI.** It is DB-free only in the
+   sense that it needs a *running server*, so it belongs next to the Vercel
+   preview rather than in the current DB-free `ci.yml` job.

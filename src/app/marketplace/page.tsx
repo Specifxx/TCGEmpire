@@ -20,7 +20,9 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Marketplace — buy Riftbound cards",
-  description: "Buy Riftbound cards directly from verified sellers on RiftCompare.",
+  description:
+    "Buy Riftbound singles direct from verified sellers — browse live listings, compare them " +
+    "against every store we track, and check out with buyer protection.",
   // Always canonicalize to the clean URL — ?cardId=… is just a client-side
   // "open this card" hint now (see the listings query below), not a
   // different page, so every arrival path (search, a card page's deep link,

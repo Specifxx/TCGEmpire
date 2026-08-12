@@ -7,7 +7,9 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Shipping & Tracking",
-  description: `How shipping and tracking work on ${SITE_NAME} Marketplace.`,
+  description:
+    `How shipping works on ${SITE_NAME} Marketplace: same-region delivery, the seller dispatch ` +
+    `deadline, required tracking, and how cards must be packaged.`,
   alternates: { canonical: "/marketplace/shipping" },
 };
 

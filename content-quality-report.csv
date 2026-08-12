@@ -1,0 +1,84 @@
+path,template,issue,detail
+/browse,static,THIN_EDITORIAL,1 prose words
+/sealed,static,THIN_EDITORIAL,1 prose words
+/decks,static,EMPTY_SECTION,Common questions
+/learn,static,EMPTY_SECTION,"Your first week, step by step"
+/learn,static,EMPTY_SECTION,Speak the language
+/learn,static,EMPTY_SECTION,New-player questions
+/tools/value-finder,static,EMPTY_SECTION,How the Value Finder works
+/tools/rising,static,EMPTY_SECTION,How Rising Cards works
+/stores/suggest,store,THIN_EDITORIAL,83 prose words
+/keywords,static,THIN_EDITORIAL,108 prose words
+/guides,static,EMPTY_SECTION,Browse by topic
+/blog,static,EMPTY_SECTION,Browse by topic
+/contact,static,THIN_EDITORIAL,66 prose words
+/support,static,THIN_EDITORIAL,25 prose words
+/card/ambessa-matriarch-of-war-ven-196s-166,card,NEAR_DUPLICATE_DESCRIPTION,"1 others, e.g. /card/ambessa-matriarch-of-war-ven-196"
+/card/nasus-curator-of-the-sands-ven-192s-166,card,NEAR_DUPLICATE_DESCRIPTION,"2 others, e.g. /card/nasus-curator-of-the-sands-ven-192"
+/card/yordle-heart-of-the-tempest-ven-197,card,NEAR_DUPLICATE_DESCRIPTION,"1 others, e.g. /card/yordle-heart-of-the-tempest-ven-155"
+/card/nasus-curator-of-the-sands-ven-192,card,NEAR_DUPLICATE_DESCRIPTION,"2 others, e.g. /card/nasus-curator-of-the-sands-ven-192s-166"
+/card/riven-shattered-ven-041a-166-promo,card,NEAR_DUPLICATE_DESCRIPTION,"2 others, e.g. /card/riven-shattered-ven-041"
+/card/illaoi-prophet-of-the-great-kraken-ven-182,card,NEAR_DUPLICATE_DESCRIPTION,"1 others, e.g. /card/illaoi-prophet-of-the-great-kraken-ven-109"
+/card/ambessa-matriarch-of-war-ven-196,card,NEAR_DUPLICATE_DESCRIPTION,"1 others, e.g. /card/ambessa-matriarch-of-war-ven-196s-166"
+/card/mel-defiant-soul-ven-188,card,NEAR_DUPLICATE_DESCRIPTION,"1 others, e.g. /card/mel-defiant-soul-ven-110a"
+/card/ambessa-respected-and-feared-ven-187,card,NEAR_DUPLICATE_DESCRIPTION,"1 others, e.g. /card/ambessa-respected-and-feared-ven-136a"
+/card/zed-from-the-shadows-ven-169,card,NEAR_DUPLICATE_DESCRIPTION,"2 others, e.g. /card/zed-from-the-shadows-ven-023a"
+/card/renekton-butcher-of-the-sands-ven-190,card,NEAR_DUPLICATE_DESCRIPTION,"1 others, e.g. /card/renekton-butcher-of-the-sands-ven-141"
+/card/renekton-brute-ven-177,card,NEAR_DUPLICATE_DESCRIPTION,"1 others, e.g. /card/renekton-brute-ven-092a"
+/card/nasus-guardian-of-knowledge-ven-178,card,NEAR_DUPLICATE_DESCRIPTION,"2 others, e.g. /card/nasus-guardian-of-knowledge-ven-063a"
+/card/shen-scourge-of-shadows-ven-170,card,NEAR_DUPLICATE_DESCRIPTION,"2 others, e.g. /card/shen-scourge-of-shadows-ven-042a"
+/card/akali-silent-ven-038a,card,NEAR_DUPLICATE_DESCRIPTION,"1 others, e.g. /card/akali-silent-ven-038"
+/card/order-rune-ogn-214b-298-promo,card,NEAR_DUPLICATE_DESCRIPTION,"1 others, e.g. /card/order-rune-ogn-nn1-promo"
+/card/order-rune-ogn-nn1-promo,card,NEAR_DUPLICATE_DESCRIPTION,"1 others, e.g. /card/order-rune-ogn-214b-298-promo"
+/card/zed-from-the-shadows-ven-023a,card,NEAR_DUPLICATE_DESCRIPTION,"2 others, e.g. /card/zed-from-the-shadows-ven-169"
+/card/ambessa-respected-and-feared-ven-136a,card,NEAR_DUPLICATE_DESCRIPTION,"1 others, e.g. /card/ambessa-respected-and-feared-ven-187"
+/card/jayce-brilliant-inventor-ven-068a,card,NEAR_DUPLICATE_DESCRIPTION,"1 others, e.g. /card/jayce-brilliant-inventor-ven-068"
+/card/renekton-brute-ven-092a,card,NEAR_DUPLICATE_DESCRIPTION,"2 others, e.g. /card/renekton-brute-ven-177"
+/card/nasus-guardian-of-knowledge-ven-063a,card,NEAR_DUPLICATE_DESCRIPTION,"2 others, e.g. /card/nasus-guardian-of-knowledge-ven-178"
+/card/mel-defiant-soul-ven-110a,card,NEAR_DUPLICATE_DESCRIPTION,"1 others, e.g. /card/mel-defiant-soul-ven-188"
+/card/shen-scourge-of-shadows-ven-042a,card,NEAR_DUPLICATE_DESCRIPTION,"2 others, e.g. /card/shen-scourge-of-shadows-ven-170"
+/card/jayce-brilliant-inventor-ven-068,card,NEAR_DUPLICATE_DESCRIPTION,"1 others, e.g. /card/jayce-brilliant-inventor-ven-068a"
+/card/akali-silent-ven-038,card,NEAR_DUPLICATE_DESCRIPTION,"1 others, e.g. /card/akali-silent-ven-038a"
+/card/renekton-butcher-of-the-sands-ven-141,card,NEAR_DUPLICATE_DESCRIPTION,"1 others, e.g. /card/renekton-butcher-of-the-sands-ven-190"
+/card/nasus-curator-of-the-sands-ven-145,card,NEAR_DUPLICATE_DESCRIPTION,"2 others, e.g. /card/nasus-curator-of-the-sands-ven-192s-166"
+/card/yordle-heart-of-the-tempest-ven-155,card,NEAR_DUPLICATE_DESCRIPTION,"1 others, e.g. /card/yordle-heart-of-the-tempest-ven-197"
+/card/illaoi-prophet-of-the-great-kraken-ven-109,card,NEAR_DUPLICATE_DESCRIPTION,"1 others, e.g. /card/illaoi-prophet-of-the-great-kraken-ven-182"
+/card/nasus-guardian-of-knowledge-ven-063,card,NEAR_DUPLICATE_DESCRIPTION,"2 others, e.g. /card/nasus-guardian-of-knowledge-ven-178"
+/card/renekton-brute-ven-092,card,NEAR_DUPLICATE_DESCRIPTION,"1 others, e.g. /card/renekton-brute-ven-092a"
+/card/shen-scourge-of-shadows-ven-042,card,NEAR_DUPLICATE_DESCRIPTION,"2 others, e.g. /card/shen-scourge-of-shadows-ven-170"
+/card/riven-shattered-ven-041,card,NEAR_DUPLICATE_DESCRIPTION,"2 others, e.g. /card/riven-shattered-ven-041a-166-promo"
+/card/zed-from-the-shadows-ven-023,card,NEAR_DUPLICATE_DESCRIPTION,"2 others, e.g. /card/zed-from-the-shadows-ven-169"
+/card/sanction-ven-035,card,NEAR_DUPLICATE_DESCRIPTION,"1 others, e.g. /card/mesmerize-ven-052"
+/card/mesmerize-ven-052,card,NEAR_DUPLICATE_DESCRIPTION,"1 others, e.g. /card/sanction-ven-035"
+/card/recruit-de-ogn-271-298,card,NEAR_DUPLICATE_DESCRIPTION,"2 others, e.g. /card/recruit-nx-ogn-272-298"
+/card/recruit-nx-ogn-272-298,card,NEAR_DUPLICATE_DESCRIPTION,"2 others, e.g. /card/recruit-de-ogn-271-298"
+/card/recruit-zn-ogn-273-298,card,NEAR_DUPLICATE_DESCRIPTION,"2 others, e.g. /card/recruit-de-ogn-271-298"
+/card/calm-rune-sfd-r02a,card,NEAR_DUPLICATE_DESCRIPTION,"1 others, e.g. /card/calm-rune-sfd-r02b"
+/card/poppy-defender-of-the-meek-unl-178a-219-promo,card,NEAR_DUPLICATE_DESCRIPTION,"1 others, e.g. /card/poppy-defender-of-the-meek-unl-178-219-promo"
+/card/poppy-defender-of-the-meek-unl-178-219-promo,card,NEAR_DUPLICATE_DESCRIPTION,"1 others, e.g. /card/poppy-defender-of-the-meek-unl-178a-219-promo"
+/card/calm-rune-sfd-r02b,card,NEAR_DUPLICATE_DESCRIPTION,"1 others, e.g. /card/calm-rune-sfd-r02a"
+/card/riven-shattered-ven-041-166-promo,card,NEAR_DUPLICATE_DESCRIPTION,"2 others, e.g. /card/riven-shattered-ven-041a-166-promo"
+/sets/origins,set,NEAR_DUPLICATE_DESCRIPTION,"2 others, e.g. /sets/unleashed"
+/sets/origins/gallery,set/gallery,NEAR_DUPLICATE_DESCRIPTION,"4 others, e.g. /sets/proving-grounds/gallery"
+/sets/proving-grounds/gallery,set/gallery,NEAR_DUPLICATE_DESCRIPTION,"1 others, e.g. /sets/origins/gallery"
+/sets/spiritforged/gallery,set/gallery,NEAR_DUPLICATE_DESCRIPTION,"3 others, e.g. /sets/origins/gallery"
+/sets/unleashed,set,NEAR_DUPLICATE_DESCRIPTION,"2 others, e.g. /sets/origins"
+/sets/unleashed/gallery,set/gallery,NEAR_DUPLICATE_DESCRIPTION,"3 others, e.g. /sets/origins/gallery"
+/sets/vendetta,set,NEAR_DUPLICATE_DESCRIPTION,"2 others, e.g. /sets/origins"
+/sets/vendetta/gallery,set/gallery,NEAR_DUPLICATE_DESCRIPTION,"3 others, e.g. /sets/origins/gallery"
+/keywords/burn,keyword,THIN_EDITORIAL,70 prose words
+/champions/leona,champion,NEAR_DUPLICATE_DESCRIPTION,"1 others, e.g. /champions/shen"
+/champions/shen,champion,NEAR_DUPLICATE_DESCRIPTION,"1 others, e.g. /champions/leona"
+/decks/irelia-blade-dancer,deck,EMPTY_SECTION,Decklist · 55 cards + legend
+/decks/kennen-heart-of-the-tempest,deck,EMPTY_SECTION,Decklist · 55 cards + legend
+/decks/master-yi-wuju-bladesman,deck,EMPTY_SECTION,Decklist · 55 cards + legend
+/decks/diana-scorn-of-the-moon,deck,EMPTY_SECTION,Decklist · 55 cards + legend
+/decks/viktor-herald-of-the-arcane,deck,EMPTY_SECTION,Decklist · 55 cards + legend
+/decks/jayce-defender-of-tomorrow,deck,EMPTY_SECTION,Decklist · 55 cards + legend
+/decks/akali-rogue-assassin,deck,EMPTY_SECTION,Decklist · 55 cards + legend
+/decks/ezreal-prodigal-explorer,deck,EMPTY_SECTION,Decklist · 55 cards + legend
+/decks/reksai-void-burrower,deck,EMPTY_SECTION,Decklist · 55 cards + legend
+/decks/draven-glorious-executioner,deck,EMPTY_SECTION,Decklist · 55 cards + legend
+/guides/cheapest-way-to-start-riftbound,guide,EMPTY_SECTION,The four ways in
+/marketplace,static,THIN_EDITORIAL,33 prose words
+/marketplace/faq,static,THIN_EDITORIAL,38 prose words

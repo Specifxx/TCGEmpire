@@ -50,6 +50,16 @@ export interface ArticleEmbed {
   // scoped to a set) — e.g. "[Empower]" collects every Empower card as reveals land.
   rulesContain?: string;
   rulesSet?: string;
+  // COMPETITIVE STAPLES — the cards played across the real tournament lists in
+  // prisma/meta-decks.json, ordered by how many of those decks run them.
+  //
+  // Exists so a "best cards" article does not have to hard-code a ranking that is
+  // wrong the next time the metagame is re-cut. The gallery is derived from the
+  // same seed file /decks and the archetype pages read, so it CANNOT show a card
+  // that isn't genuinely in a tournament list, and it re-orders itself when the
+  // lists are updated. `minDecks` is the floor for inclusion (default 2 — a card
+  // in one list is that deck's card, not a staple).
+  metaStaples?: boolean | { minDecks?: number };
   take?: number; // default 12
 }
 
@@ -155,6 +165,141 @@ export interface Article {
 }
 
 export const ARTICLES: Article[] = [
+  {
+    slug: "best-riftbound-cards",
+    category: "guide",
+    title: "The Best Riftbound Cards: What Winning Decks Actually Play",
+    excerpt:
+      "Which Riftbound cards are actually the best? Not an opinion — the 48 cards that show up across the real tournament decklists in the current metagame, counted, ranked by how many decks run them, and priced live.",
+    author: "RiftCompare",
+    date: "2026-08-10",
+    readMins: 7,
+    tags: ["best cards", "meta", "staples", "deckbuilding", "buying"],
+    summary: [
+      "**\"Best\" here means most-played, measured.** We counted every card across the real tournament decklists we track and ranked them by how many separate decks run them — no personal ratings.",
+      "**48 cards appear in two or more of the 10 lists.** 20 appear in three or more. The most-played card in the format right now is **Stacked Deck**, in half of them.",
+      "**Spells dominate**: 22 of the 48 are spells, against 15 units, 7 battlefields, 2 gear and 2 champion cards.",
+      "**Most-played is not most-expensive.** If you want the grails instead, that is a [different list](/guides/most-valuable-riftbound-cards) — and the two barely overlap.",
+    ],
+    itemList: {
+      name: "Most-played Riftbound cards in the current metagame",
+      items: [
+        { name: "Stacked Deck", description: "Played in 5 of the 10 tournament decklists we track — the most-played card in the format.", url: "/card/stacked-deck-ogn-183-298" },
+        { name: "Irelia, Fervent", description: "The only champion card played across three separate decks.", url: "/card/irelia-fervent-sfd-057-221" },
+        { name: "Bellows Breath", description: "In three of the ten lists, at up to three copies.", url: "/card/bellows-breath-sfd-080-221" },
+        { name: "Stupefy", description: "In three of the ten lists, at up to three copies.", url: "/card/stupefy-ogn-095-298" },
+        { name: "Tideturner", description: "The most-played unit outside a deck's own champion package.", url: "/card/tideturner-ogn-199-298" },
+        { name: "Zhonya's Hourglass", description: "One of only two gear cards shared across three decks.", url: "/card/zhonya-s-hourglass-ogn-077-298" },
+        { name: "Seat of Power", description: "One of seven battlefields that recur across the field.", url: "/card/seat-of-power-sfd-217-221" },
+      ],
+    },
+    embeds: [
+      {
+        title: "Every card played in two or more meta decks",
+        note: "Pulled live from our database and ordered by how many of the tracked tournament decklists run each card — the most-played first. Tap any card for its full text, every printing, and the cheapest store right now.",
+        metaStaples: { minDecks: 2 },
+        take: 48,
+      },
+      {
+        title: "The core: cards in three or more decks",
+        note: "The tighter cut — cards that turned up in at least three separate lists, across different archetypes and different legends.",
+        metaStaples: { minDecks: 3 },
+        take: 24,
+      },
+    ],
+    browseCta: {
+      href: "/decks",
+      label: "See the decklists these cards come from",
+      blurb: "Every list on this page is a real tournament result, priced card-for-card in your own market — including the cheapest place to buy the whole deck right now.",
+    },
+    shop: [
+      { label: "Riftbound singles on eBay", query: "Riftbound TCG single cards" },
+      { label: "Riftbound Origins singles", query: "Riftbound Origins single card" },
+    ],
+    faq: [
+      {
+        q: "What are the best cards in Riftbound?",
+        a: "Measured by how often they actually appear in winning decklists, the most-played cards in the current metagame are Stacked Deck (in 5 of the 10 tournament lists we track), then a group of twenty cards that each appear in three, including Bellows Breath, Stupefy, Tideturner, Charm, Defy, Discipline, En Garde, Cleave, Hidden Blade, Star-Crossed, Zhonya's Hourglass and Irelia, Fervent. That is a measurement of play rate, not a power rating.",
+      },
+      {
+        q: "How did you decide which cards are best?",
+        a: "By counting. We take the real tournament decklists tracked on our meta decks page, count how many separate decks play each card, and rank by that number. A card in one list is that deck's card; a card in several is a staple. Nothing on this page is a personal rating, and no card appears that is not in a real list.",
+      },
+      {
+        q: "Are the best cards the most expensive ones?",
+        a: "Largely no, and that surprises people. Play rate and price are driven by different things — a common spell that every deck wants can cost less than a chase Epic almost nobody plays, because the Epic's price comes from scarcity and art. Our most valuable Riftbound cards guide covers the price side separately.",
+      },
+      {
+        q: "Why are most of the best cards spells?",
+        a: "It is what the counting shows: 22 of the 48 shared cards are spells, against 15 units, 7 battlefields, 2 gear and 2 champion cards. Units and champion cards tend to be specific to whichever legend a deck is built around, so they are less likely to be shared between decks — spells and battlefields are the slots different decks agree on.",
+      },
+      {
+        q: "How often does this list change?",
+        a: "It re-cuts whenever the underlying decklists do. The gallery on this page is generated from the same decklist data our meta decks pages use, so when a new tournament list is added the counts and the order here update with it rather than going stale.",
+      },
+      {
+        q: "What is the cheapest way to buy these cards?",
+        a: "Open any card above and compare every store we track on delivered cost, or paste a full list into the deck builder to price it in one pass. Buying a spread of cheap staples from one store usually beats buying each from its individually cheapest store once postage is counted.",
+      },
+    ],
+    body: `Ask which Riftbound cards are "best" and you will get ten different answers, most of them somebody's opinion. This page takes the boring route instead: **we counted**.
+
+Every decklist on our [meta decks page](/decks) is a real tournament result. Take all ten, count how many separate decks play each card, and rank by that number. A card that shows up in one list is that deck's card. A card that shows up in five, across different archetypes and different legends, is a card the format has agreed on — and that is a claim you can check rather than take on trust.
+
+## How this list was built
+
+- **Source:** the tournament decklists on [/decks](/decks), tracked from published event results.
+- **Sample:** 10 decks, spanning ten different archetypes from aggro through to value midrange.
+- **Rule:** count each card once per deck, however many copies it runs. Runes are excluded — every deck in a domain runs the same rune base, so counting them would tell you nothing.
+- **Cut-off:** two decks minimum. Below that it is not a staple, it is a preference.
+
+That produces **48 cards**. Twenty of them appear in three decks or more.
+
+One caveat on the gallery below: it is drawn from our own card database, so a card we have not catalogued a printing for yet will be counted here but will not have a tile. That is deliberate — showing a tile for a card we cannot price would be worse than showing one fewer.
+
+## The most-played cards in Riftbound
+
+[[embed:0]]
+
+The single most-played card in the format is **Stacked Deck**, in five of the ten lists — no other card is in more than three. Below it sits a broad, flat tier: twenty cards each appearing in three separate decks, which is what a healthy, unsettled format looks like rather than one with a single obvious best card.
+
+## What the counting shows
+
+Three things stand out, and all three are just arithmetic on the table above.
+
+**Spells are the shared language.** 22 of the 48 are spells, against 15 units, 7 battlefields, 2 gear and 2 champion cards. That gap is not subtle, and it has a straightforward explanation: units and champion cards are chosen to fit whichever legend a deck is built around, so they rarely cross between decks. Spells are the slots different decks independently arrive at.
+
+**Champion cards almost never cross over.** Only two make the list at all — Irelia, Fervent in three decks and Rek'Sai, Breacher in two. Everything else in the champion slot is specific to its own list, which is what you would expect when each deck is built around a different legend.
+
+**Battlefields consolidate hard.** Each deck runs three battlefields, so the ten lists have thirty battlefield slots between them — and only seven distinct battlefields recur across more than one deck. If you are buying, that is a short list doing a lot of work.
+
+Twenty-five of the 48 are run at the full three copies in at least one list, so "buy one" and "buy a playset" are different budgets. Every card above shows its cheapest live price, and the [card database](/browse) will compare every store on delivered cost.
+
+## The core, if you are buying in
+
+[[embed:1]]
+
+These are the cards that turned up in three or more separate decks. If you are new and want the cards least likely to be wasted whatever you end up building, start here rather than with the expensive ones — and check the [cheapest way to start guide](/guides/cheapest-way-to-start-riftbound) for the wider version of that argument.
+
+[[shop]]
+
+## "Best" is not the same as "most valuable"
+
+This is the part worth being clear about, because the two lists barely overlap.
+
+Play rate and price are set by different forces. A common spell that eight decks want can cost less than an Epic almost nobody plays, because the Epic's price comes from print scarcity and art rather than from anyone putting it in a deck. Neither number is wrong — they answer different questions.
+
+- If you want to know what to **play**, this page is the list.
+- If you want to know what is **worth money**, see [the most valuable Riftbound cards](/guides/most-valuable-riftbound-cards) and [the most expensive grails](/blog/most-expensive-riftbound-cards).
+- If you want the current **chase printings** specifically, [Vendetta's chase tiers](/blog/riftbound-vendetta-chase-cards-so-far) breaks those out by tier.
+
+## Keeping this honest
+
+The gallery above is generated from the decklist data itself, not typed into this page. When a new tournament list lands, the counts and the order change with it — and a card that is not in a real list cannot appear here at all, because there is nothing for it to be counted from.
+
+What this page deliberately does not do is tell you *why* any of these cards is good. That is a claim about how the cards play, and the honest place to check it is the card itself: open any tile above for its printed text, every printing, and what it costs right now. If you want the strategy layer, the [best Vendetta decks guide](/guides/best-riftbound-vendetta-decks) covers the archetypes these cards are assembled into.
+`,
+  },
   {
     slug: "is-riftbound-worth-getting-into",
     category: "blog",
@@ -342,7 +487,7 @@ Head to the **[Price Movers page](/movers)** to see, for your region, this week'
 - **📉 Biggest drops** — the singles that have fallen the most, often the best time to buy.
 - **💎 Best value right now** — cards trading furthest below their recent high.
 
-Every figure is the live local price in your currency (AUD, NZD, USD or GBP), compared across the stores we track and updated daily. Switch your country at the top of the page to see your market's movers.
+Every figure is the live local price in your own currency — AUD, NZD, USD, GBP, SGD or CAD — compared across the stores we track and updated daily. Switch your country at the top of the page to see your market's movers.
 
 ## Why prices move
 
@@ -488,7 +633,7 @@ New to the game entirely? Start with **[Riftbound for beginners](/guides/riftbou
     category: "guide",
     title: "Where to Buy Riftbound Cards (Australia, NZ, US & UK)",
     excerpt:
-      "The complete guide to buying Riftbound: League of Legends TCG cards — singles and sealed — in Australia, New Zealand, the United States and the United Kingdom, and how to always find the cheapest price.",
+      "The complete guide to buying Riftbound: League of Legends TCG cards — singles and sealed — in Australia, New Zealand, the United States, the United Kingdom, Singapore and Canada, and how to always find the cheapest price.",
     author: "RiftCompare",
     date: "2026-06-08",
     readMins: 6,
@@ -501,7 +646,7 @@ The short version: prices for the same card vary a lot between shops and change 
 
 1. **[Search the card database](/browse)** and open the card you want.
 2. Each card shows the **lowest live price across every store we track**, sorted cheapest-first, with a one-click link straight to the shop.
-3. Use the **country switcher** (top of the page) to set your region — prices then show in your local currency (AUD, NZD, USD or GBP), sourced from local stores, so what you see is what you'll actually pay.
+3. Use the **country switcher** (top of the page) to set your region — prices then show in your local currency (AUD, NZD, USD, GBP, SGD or CAD), sourced from local stores, so what you see is what you'll actually pay.
 
 You can also **[price a whole deck at once](/deck)** or **[compare sealed products](/sealed)** like booster boxes and Proving Grounds.
 
@@ -603,7 +748,7 @@ market, on delivered cost.
 
 ## Compare every sealed price in one place
 
-Head to the **[sealed products page](/sealed)** to see live prices for booster boxes, booster packs, Proving Grounds kits and other sealed Riftbound product across the stores we track — sorted so the cheapest is easy to spot. Set the **country switcher** to your region first so prices show in your local currency (AUD, NZD, USD or GBP).
+Head to the **[sealed products page](/sealed)** to see live prices for booster boxes, booster packs, Proving Grounds kits and other sealed Riftbound product across the stores we track — sorted so the cheapest is easy to spot. Set the **country switcher** to your region first so prices show in your local currency (AUD, NZD, USD, GBP, SGD or CAD).
 
 ## By region
 
@@ -944,7 +1089,7 @@ Riftbound has seven domains — **Fury, Calm, Mind, Body, Chaos, Order** and **C
 
 ## Building on a budget
 
-A deck's cost is dominated by a handful of chase cards — the commons, runes and battlefields are cheap. On every **[meta deck page](/decks)** we show the build cost broken down card-by-card and priced across Australian stores, so you can see exactly where the money goes and where to save. Want to tweak a list? Open it in the **[Deck Builder](/deck)** to re-price your own version.
+A deck's cost is dominated by a handful of chase cards — the commons, runes and battlefields are cheap. On every **[meta deck page](/decks)** we show the build cost broken down card-by-card and priced in your own market, so you can see exactly where the money goes and where to save. Want to tweak a list? Open it in the **[Deck Builder](/deck)** to re-price your own version.
 
 ## Mulligan: keep or ship your opening hand
 
@@ -1691,7 +1836,7 @@ Planning a Vendetta deck that mixes old and new cards? Our **[best Vendetta deck
 - **Don't buy the first price you see.** Launch-day listings are the highest they'll be. Always **[compare delivered prices across stores](/browse)** first — shipping included.
 - **Watch the movers.** The **[price movers](/movers)** page shows what's spiking in real time; the hottest chase cards climb fastest, so decide whether to grab early or wait them out.
 - **Price your whole deck at once.** Drop your list into the **[deck pricer](/deck)** — it totals every card at the cheapest live price in your currency, so you buy the whole thing for the least.
-- **Switch to your region.** Prices show in AUD, NZD, USD or GBP — make sure you're seeing *your* market's real cost, delivered.
+- **Switch to your region.** Prices show in AUD, NZD, USD, GBP, SGD or CAD — make sure you're seeing *your* market's real cost, delivered.
 
 ## After the dust settles
 
@@ -1871,7 +2016,7 @@ For the complete, always-current picture — including March's original 7 bans �
       alt: "Riftbound T1 2025 Worlds Champion Signature Edition drawing dates — registration 14-17 August 2026",
     },
     summary: [
-      "**Registration opens Friday 14 August 2026, 9am Pacific** and **closes Monday 17 August, 6pm Pacific.** It is a drawing on the Riot Merch Store, not a first-come sale — entering early does nothing.",
+      "**Registration runs from 16:00 UTC on Friday 14 August 2026 to 01:00 UTC on Tuesday 18 August** (Riot publishes it as 9am-6pm Pacific). It is a drawing on the Riot Merch Store, not a first-come sale — entering early does nothing, so enter at a reasonable hour wherever you are.",
       "**Selection emails start Thursday 20 August**, with further waves on 24 and 27 August if they are needed. Boxes begin arriving from **Wednesday 2 September**.",
       "**US$360**, **10,125 copies per language** (English, Chinese, Korean). One card in every box is serial-numbered 1-2025 and carries a gold-stamped player signature.",
       "**There is no Catch Up pool.** Riot has said every entrant has the same chance regardless of past entries or purchases, so a long purchase history buys you nothing here.",
@@ -1881,7 +2026,7 @@ For the complete, always-current picture — including March's original 7 bans �
     faq: [
       {
         q: "What time does the Riftbound T1 Signature Edition drawing open?",
-        a: "Registration opens at 9am Pacific on Friday 14 August 2026 — 12pm Eastern, 5pm UK, and 2am Saturday 15 August in eastern Australia. It closes at 6pm Pacific on Monday 17 August 2026.",
+        a: "The window opens at 16:00 UTC on Friday 14 August 2026 and closes at 01:00 UTC on Tuesday 18 August. Riot publishes it in Pacific time (9am Friday to 6pm Monday), which is Friday evening in the UK and Saturday morning across Singapore, Australia and New Zealand. The article has the exact local open and close for all six markets we price. Because it is a drawing rather than a first-come sale, the opening minute carries no advantage — enter at any convenient point before it closes.",
       },
       {
         q: "Is the T1 drawing first-come, first-served?",
@@ -2057,7 +2202,7 @@ Every box contains exactly one card numbered from 1 to 2025 — the year of the 
 
 ![Faker's serialised Galio, Indefatigable from the T1 2025 Worlds Champion Signature Edition, showing the 0001 of 2025 serial box and gold-stamped signature](/t1-worlds-cards/galio-indefatigable-t1s003-signature.jpg)
 
-If you have read our [variant and finish glossary](/blog/riftbound-variant-glossary), this is a category Riftbound has not had before. Signature cards in normal sets carry the artist's stamp; this is a player's, on a card with a unique serial. In every other serialised collectible market, low numbers trade above high ones, and there is no obvious reason this one would behave differently. No Riftbound serial has ever changed hands, though, so that is a pattern from elsewhere rather than an observation about this card.
+If you have read our [variant and finish glossary](/guides/riftbound-variant-glossary), this is a category Riftbound has not had before. Signature cards in normal sets carry the artist's stamp; this is a player's, on a card with a unique serial. In every other serialised collectible market, low numbers trade above high ones, and there is no obvious reason this one would behave differently. No Riftbound serial has ever changed hands, though, so that is a pattern from elsewhere rather than an observation about this card.
 
 Riot has separately said it has [no plans to put serialisation into booster packs](/blog/riftbound-august-2026-state-of-the-game-takeaways), which is what makes this interesting rather than a preview of things to come: it is a deliberately walled-off collector release.
 
@@ -2218,7 +2363,7 @@ What is trackable *today* is the ordinary retail printing of each champion T1 pi
 
 Each box holds exactly one serialised card in a 1-2025 range, and five champions share that range — 5 x 2,025 is 10,125, the published print run for each language. So any one champion (Faker's Galio, say) exists in roughly **2,025 serialised English copies**, not 10,125, with about 6,075 worldwide across the three languages. Add a capped run with no reprint planned, a signature stamped in gold, and no retail channel to anchor a price against, and you have the four things that actually drive a collectible's scarcity. What you do **not** get is playability you could not buy for cents — [the full breakdown is in the drawing guide](/blog/riftbound-t1-signature-edition-drawing#what-actually-makes-these-cards-valuable).
 
-For the wider context on where serialised and premium prints sit in this game, see [the variant and finish glossary](/blog/riftbound-variant-glossary) — and note that Riot has said it has [no plans to serialise cards in booster packs](/blog/riftbound-august-2026-state-of-the-game-takeaways), which makes this collection a deliberate one-off rather than a preview.
+For the wider context on where serialised and premium prints sit in this game, see [the variant and finish glossary](/guides/riftbound-variant-glossary) — and note that Riot has said it has [no plans to serialise cards in booster packs](/blog/riftbound-august-2026-state-of-the-game-takeaways), which makes this collection a deliberate one-off rather than a preview.
 
 ---
 
@@ -2707,15 +2852,15 @@ An **Overnumbered** card is a special printing whose collector number sits *abov
 
 Nine new champion **Legends** each get their own signed Overnumbered variant — a premium printing carrying an in-universe signature treatment, and the top-end pulls of the whole set:
 
-- **[Akali, Rogue Assassin](/card/rogue-assassin-ven-189)**
-- **[Renekton, Butcher of the Sands](/card/butcher-of-the-sands-ven-190)**
-- **[Zed, Master of Shadows](/card/master-of-shadows-ven-191)**
-- **[Nasus, Curator of the Sands](/card/curator-of-the-sands-ven-192)**
-- **[Shen, Eye of Twilight](/card/eye-of-twilight-ven-193)**
-- **[Jayce, Defender of Tomorrow](/card/defender-of-tomorrow-ven-194)**
-- **[Mel, Soul's Reflection](/card/soul-s-reflection-ven-195)**
-- **[Ambessa, Matriarch of War](/card/matriarch-of-war-ven-196)**
-- **[Kennen, Heart of the Tempest](/card/heart-of-the-tempest-ven-197)**
+- **[Akali, Rogue Assassin](/card/akali-rogue-assassin-ven-189s-166)**
+- **[Renekton, Butcher of the Sands](/card/renekton-butcher-of-the-sands-ven-190s-166)**
+- **[Zed, Master of Shadows](/card/zed-master-of-shadows-ven-191s-166)**
+- **[Nasus, Curator of the Sands](/card/nasus-curator-of-the-sands-ven-192s-166)**
+- **[Shen, Eye of Twilight](/card/shen-eye-of-twilight-ven-193s-166)**
+- **[Jayce, Defender of Tomorrow](/card/jayce-defender-of-tomorrow-ven-194s-166)**
+- **[Mel, Soul's Reflection](/card/mel-soul-s-reflection-ven-195s-166)**
+- **[Ambessa, Matriarch of War](/card/ambessa-matriarch-of-war-ven-196s-166)**
+- **[Kennen, Heart of the Tempest](/card/kennen-heart-of-the-tempest-ven-197s-166)**
 
 ## Rival Overnumbers — the rivalry diptychs
 

@@ -5,9 +5,13 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { CardTile } from "@/components/CardTile";
 import { cardTileSelect } from "@/lib/cards";
-import { pickPrice, DEFAULT_COUNTRY } from "@/lib/country";
+import { pickPrice, DEFAULT_COUNTRY, COUNTRIES } from "@/lib/country";
+import { buildCollectionNarrative } from "@/lib/content/collection-narrative";
+import { getSiteMedianCents } from "@/lib/content/site-median";
 import { DOMAIN_PAGES, domainBySlug } from "@/lib/domains";
 import { SITE_URL } from "@/lib/site";
+import { pageOpenGraph } from "@/lib/seo";
+import { deckGroupBySlug, deckGroupPath, seedsInGroup } from "@/lib/deck-groups";
 
 // AU baseline server render (country-neutral copy); card tiles localise the price
 // client-side from the per-market price columns, like the set pages.
@@ -17,7 +21,13 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const domain = domainBySlug(params.slug);
   if (!domain) return notFoundMetadata("Domain");
   const title = `Riftbound ${domain.label} Cards — Prices, Values & Full List`;
-  const description = `Every Riftbound ${domain.label} card with live prices compared across stores — find the cheapest ${domain.label} singles. Full ${domain.label} domain card list and values, updated daily.`;
+  // domain.tagline ("Aggression & burst", "Control & knowledge") is per-domain
+  // copy that already exists in lib/domains.ts and was going unused in metadata.
+  // Without it the seven domain descriptions differed by a single repeated word
+  // and read as one description to a near-duplicate detector — see
+  // GROWTH-AUDIT.md § 4. It is also simply more useful: it says what the domain
+  // IS, which is what someone searching "riftbound fury cards" wants confirmed.
+  const description = `Every Riftbound ${domain.label} card — ${domain.tagline.toLowerCase()} — with live prices compared across stores. The full ${domain.label} card list and values, updated daily.`;
   return {
     title: { absolute: `${title} | RiftCompare` },
     description,
@@ -29,7 +39,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       `cheapest Riftbound ${domain.label} cards`,
     ],
     alternates: { canonical: `/domains/${domain.slug}` },
-    openGraph: { title: `${title} | RiftCompare`, description, url: `${SITE_URL}/domains/${domain.slug}` },
+    openGraph: pageOpenGraph({ title: `${title} | RiftCompare`, description, url: `/domains/${domain.slug}` }),
   };
 }
 
@@ -51,7 +61,38 @@ export default async function DomainPage({ params }: { params: { slug: string } 
   });
   const priced = cards.filter((c) => pickPrice(c, country) != null).length;
 
+  // Data-derived editorial intro (GROWTH-AUDIT.md § 3). This page measured ~80
+  // words of real prose — an intro sentence, two hand-written lore sentences and
+  // a link row — carrying 233 inbound internal links, which made it the site's
+  // best-linked thin page. buildCollectionNarrative already supported
+  // kind: "domain" and was simply never called here; it is the same generator
+  // the champion hubs and the type/rarity/printing facets use, so the tone
+  // matches by construction rather than by imitation.
+  //
+  // NO EXTRA QUERY: it reads the card rows this page has already fetched, so
+  // every figure is the same data the grid below renders and the two cannot
+  // disagree. Anything the data doesn't support, the generator omits.
+  const siteMedianCents = await getSiteMedianCents(country);
+  const intro = buildCollectionNarrative({
+    kind: "domain",
+    label: domain.label,
+    currency: COUNTRIES[country].currency,
+    place: COUNTRIES[country].place,
+    members: cards.map((c) => ({
+      name: c.name,
+      priceCents: pickPrice(c, country),
+      setCode: c.setCode,
+      rarity: c.rarity,
+      collectorNumber: c.collectorNumber,
+    })),
+    siteMedianCents,
+  });
+
   const otherDomains = DOMAIN_PAGES.filter((d) => d.slug !== domain.slug);
+  // Only when a real meta deck plays this domain — a link to a page that 404s is
+  // worse than no link.
+  const dg = deckGroupBySlug("domain", domain.slug);
+  const deckGroup = dg && seedsInGroup(dg).length > 0 ? dg : null;
 
   const breadcrumb = {
     "@context": "https://schema.org",
@@ -99,6 +140,13 @@ export default async function DomainPage({ params }: { params: { slug: string } 
             <>We&apos;re tracking the Riftbound <strong className="text-slate-200">{domain.label}</strong> domain — {domain.label} cards with live prices will appear here as they release.</>
           )}
         </p>
+        {intro.length > 0 && (
+          <div className="mt-3 max-w-3xl space-y-2.5 text-sm leading-relaxed text-slate-400">
+            {intro.map((p, i) => (
+              <p key={i}>{p}</p>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Card grid */}
@@ -143,6 +191,20 @@ export default async function DomainPage({ params }: { params: { slug: string } 
           </Link>
           .
         </p>
+        {/* The deck-side counterpart. This page answers "which {domain} cards
+            exist and what do they cost"; /decks/domain/{slug} answers "which meta
+            decks play {domain} and what does one cost to build". Linked rather
+            than merged so neither has to chase the other's query — and only when
+            a real list actually plays the domain (Colorless has none today). */}
+        {deckGroup && (
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-400">
+            Building rather than collecting?{" "}
+            <Link href={deckGroupPath(deckGroup)} className="text-brand-400 hover:underline">
+              Every meta deck that plays {domain.label}, with live build costs
+            </Link>{" "}
+            — priced card for card across stores, with the cheapest cart to buy one right now.
+          </p>
+        )}
       </section>
     </div>
   );

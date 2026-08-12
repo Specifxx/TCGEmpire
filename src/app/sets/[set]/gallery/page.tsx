@@ -12,6 +12,7 @@ import type { CardTileData } from "@/components/CardTile";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 import { setBySlug, SETS } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
+import { pageOpenGraph } from "@/lib/seo";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // /sets/<set>/gallery — the visual card gallery
@@ -121,11 +122,7 @@ export async function generateMetadata({ params }: { params: { set: string } }):
       languages: { "x-default": `${SITE_URL}/sets/${set.slug}/gallery` },
     },
     ...(thin ? { robots: { index: false, follow: true } } : {}),
-    openGraph: {
-      title: `${title} | RiftCompare`,
-      description,
-      url: `${SITE_URL}/sets/${set.slug}/gallery`,
-    },
+    openGraph: pageOpenGraph({ title: `${title} | RiftCompare`, description, url: `/sets/${set.slug}/gallery` }),
   };
 }
 

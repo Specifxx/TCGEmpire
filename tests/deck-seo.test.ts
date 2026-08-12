@@ -223,8 +223,15 @@ test("robots directives are untouched", () => {
   const layout = read("src/app/layout.tsx");
   assert.match(layout, /index: true/);
   assert.match(layout, /follow: true/);
-  const page = read("src/app/decks/page.tsx");
+  // code(), not read(): this asserts /decks EMITS no noindex. It used to read the
+  // raw file, so a comment merely EXPLAINING that some linked page is noindexed
+  // failed it — which is the same prose-vs-code confusion the code() helper was
+  // added for at the top of this file. Tightened at the same time to also reject
+  // a `robots:` key in the metadata, which is the actual mechanism a future edit
+  // would use to de-index this page.
+  const page = code("src/app/decks/page.tsx");
   assert.ok(!/noindex/i.test(page), "/decks must stay indexable");
+  assert.ok(!/^\s*robots:/m.test(page), "/decks must declare no robots override at all");
 });
 
 test("deck sitemap lastmod tracks the same stamp as dateModified", () => {

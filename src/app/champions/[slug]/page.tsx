@@ -8,15 +8,18 @@ import { cardTileSelect } from "@/lib/cards";
 import { COUNTRIES, DEFAULT_COUNTRY, priceField } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { CHAMPIONS, championBySlug, championCardWhere } from "@/lib/champions";
+import { setByCode } from "@/lib/constants";
 import { META_DECKS, resolveDeck, type ResolvedDeck } from "@/lib/meta-decks";
 import { DomainBadge } from "@/components/Badge";
 import { EbayBuyCta } from "@/components/EbayBuyCta";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { breadcrumb } from "@/lib/jsonld";
 import { SITE_URL } from "@/lib/site";
+import { pageOpenGraph } from "@/lib/seo";
 import { buildCollectionNarrative } from "@/lib/content/collection-narrative";
 import { getSiteMedianCents } from "@/lib/content/site-median";
 import { CHAMPION_THIN_THRESHOLD } from "@/lib/champions";
+import { DECK_GROUPS, deckGroupPath, deckInGroup } from "@/lib/deck-groups";
 
 // riftdecks.com's /legends/<champion> pages rank #1 for champion queries with
 // build price and win rate in the snippet; ours 404'd entirely. This is the
@@ -37,13 +40,36 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   // the threshold it stays crawlable and linked but is kept out of the index,
   // matching how the type/rarity/printing facets already behave. Fails OPEN: a
   // count query that throws returns -1 and leaves the page indexable.
-  const cardCount = await prisma.card.count({ where: championCardWhere(champ) }).catch(() => -1);
+  // Rows, not a bare count: the description below needs this champion's own
+  // domain and set spread, and both come from the same tiny query. Scoped to one
+  // champion (a few dozen rows of three scalar fields), so this is well inside
+  // the per-request budget in lib/db.ts.
+  const rows = await prisma.card
+    .findMany({ where: championCardWhere(champ), select: { domain: true, setCode: true } })
+    .catch(() => null);
+  const cardCount = rows?.length ?? -1;
+
+  // WHY THIS ISN'T "Every Riftbound {name} card across all sets — …".
+  // That sentence varied only by the champion's name, so all 33 champion hubs
+  // shipped what a near-duplicate detector — and Google's own clustering — reads
+  // as one description (GROWTH-AUDIT.md § 4). The name is one token in ~30.
+  //
+  // Domain and set names are CATEGORICAL and genuinely differ between champions:
+  // Ahri is a Mind champion in Origins, Draven a Chaos/Fury one across Origins
+  // and Unleashed. Those are words, not digits, so they separate the pages for a
+  // reader and a crawler alike — and every one is a fact read off this
+  // champion's own rows, never asserted.
+  const domains = [...new Set(rows?.map((r) => r.domain) ?? [])].sort();
+  const setNames = [...new Set(rows?.map((r) => setByCode(r.setCode)?.name ?? r.setCode) ?? [])];
+  const domainBit = domains.length === 1 ? `a ${domains[0]} champion` : domains.length > 1 ? `spanning ${domains.join(", ")}` : "";
+  const setBit = setNames.length === 1 ? ` in ${setNames[0]}` : setNames.length > 1 ? ` across ${setNames.join(", ")}` : "";
+  const factBit = domainBit ? `${cardCount} printings — ${domainBit}${setBit}. ` : "";
   const title = `${champ.name} Riftbound Cards — All Printings & Live Prices`;
   return {
     title: { absolute: `${title} | RiftCompare` },
     description:
-      `Every Riftbound ${champ.name} card across all sets — Legends, units and alternate-art printings — ` +
-      `with live prices compared across stores so you can find the cheapest way to build ${champ.name}.`,
+      `Every Riftbound ${champ.name} card, priced. ${factBit}` +
+      `Compare live prices across stores to find the cheapest way to build ${champ.name}.`,
     alternates: { canonical: `/champions/${champ.slug}` },
     ...(cardCount >= 0 && cardCount < CHAMPION_THIN_THRESHOLD ? { robots: { index: false, follow: true } } : {}),
     keywords: [
@@ -52,7 +78,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       `${champ.name} riftbound deck`,
       `${champ.name} riftbound price`,
     ],
-    openGraph: { title, description: `Every Riftbound ${champ.name} card with live prices.`, url: `${SITE_URL}/champions/${champ.slug}` },
+    openGraph: pageOpenGraph({ title, description: `Every Riftbound ${champ.name} card with live prices.`, url: `/champions/${champ.slug}` }),
   };
 }
 
@@ -133,6 +159,14 @@ export default async function ChampionPage({ params }: { params: { slug: string 
         return deckSeeds.map(unpriced);
       })
     : deckSeeds.map(unpriced);
+
+  // The archetype/domain shelves this champion's real lists belong to. Static
+  // seed data (no DB), so these links survive a pricing outage — and they are
+  // the internal path from an 87-page champion surface into the new programmatic
+  // deck surface, which is the link both sides need to be discovered quickly.
+  const championGroups = deckSeeds.length
+    ? DECK_GROUPS.filter((g) => deckSeeds.some((d) => deckInGroup(d, g)))
+    : [];
 
   // Editorial intro built from this champion's OWN live pool — count, price
   // range, where the value sits, which cards matter, and what that means for
@@ -251,6 +285,22 @@ export default async function ChampionPage({ params }: { params: { slug: string 
           <p className="mb-4 max-w-3xl text-xs text-slate-500">
             Real tournament results, not house-made lists — each links to its source event and its live, priced
             buy list.
+            {championGroups.length > 0 && (
+              <>
+                {" "}
+                {champ.name}&apos;s lists sit in the{" "}
+                {championGroups.map((g, i) => (
+                  <span key={`${g.axis}-${g.slug}`}>
+                    {i > 0 && (i === championGroups.length - 1 ? " and " : ", ")}
+                    <Link href={deckGroupPath(g)} className="text-brand-400 hover:underline">
+                      {g.name}
+                    </Link>
+                  </span>
+                ))}{" "}
+                {championGroups.length === 1 ? "shelf" : "shelves"} — each of those pages prices every deck in
+                the group and shows the cheapest cart to buy one.
+              </>
+            )}
           </p>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {decks.map((d) => (

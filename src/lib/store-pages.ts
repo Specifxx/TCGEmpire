@@ -41,6 +41,41 @@ export const STORE_PAGES: StorePage[] = RETAILER_LIST.map((r) => ({ ...r, slug: 
 const BY_SLUG = new Map(STORE_PAGES.map((s) => [s.slug, s]));
 export const storeBySlug = (slug: string): StorePage | undefined => BY_SLUG.get(slug.toLowerCase());
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Display name for a store PAGE, disambiguated by market when it has to be.
+// ─────────────────────────────────────────────────────────────────────────────
+// Two chains (Danireon, Hobbiesville) serve more than one market off a single
+// domain via Shopify Markets, and each market is a separate retailer key on
+// purpose — the RetailerPrice rows would otherwise collide on
+// @@unique([cardId, retailer, condition, isFoil]). Both keys carry the same
+// `name`, so both store pages rendered the SAME <title>, which is a duplicate-
+// title pair in Search Console and gives Google no reason to keep both.
+//
+// Found by scripts/seo-gate.ts against production, where all 77 store URLs are
+// live (a local database has far fewer, which is why it had not surfaced).
+//
+// The market is appended ONLY when a name is genuinely shared, so the 75
+// single-market stores are untouched — and it is derived from the data rather
+// than a hand-maintained exception list, so a chain that adds a third market
+// later disambiguates on its own. The suffix is also just better copy: these
+// pages really are different (CAD vs USD pricing, different postage), and
+// saying which market is what a reader needs to know.
+const NAME_COUNTS = STORE_PAGES.reduce<Map<string, number>>(
+  (m, s) => m.set(s.name, (m.get(s.name) ?? 0) + 1),
+  new Map()
+);
+
+/** "Hobbiesville" for a single-market store, "Hobbiesville (Canada)" when the
+ *  same trading name is tracked in more than one market. */
+export function storePageName(store: StorePage, placeLabel: string): string {
+  return (NAME_COUNTS.get(store.name) ?? 0) > 1 ? `${store.name} (${placeLabel})` : store.name;
+}
+
+/** Store names tracked in more than one market — used by the test that pins
+ *  this behaviour so it reads the same data the helper does. */
+export const sharedStoreNames = (): string[] =>
+  [...NAME_COUNTS.entries()].filter(([, n]) => n > 1).map(([name]) => name);
+
 // NOTE ON FALLBACK RETAILERS: these pages are built from RETAILER_LIST, which
 // contains only real configured stores. The converted reference sources
 // (tcgplayer_au/uk/sg, cardmarket) live in lib/constants.ts and are NOT in

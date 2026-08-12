@@ -157,7 +157,15 @@ export function buildCollectionNarrative(c: CollectionInput): string[] {
 
   // ── 3. Notable members, named ──────────────────────────────────────────────
   const byPrice = [...priced].sort((a, b) => b.priceCents - a.priceCents);
-  const dearest = byPrice.slice(0, 3);
+  // DEDUPE BY NAME. A collection routinely holds several printings of one card —
+  // a base, an alternate art, a Signature — and they cluster at the top of the
+  // price sort, so the raw top 3 read "Fury Rune at $195.73, Jhin at $190.47,
+  // Fury Rune at $188.86". Naming the same card twice reads as a bug and wastes
+  // one of only three slots that exist to tell a reader something new. The
+  // dearest printing of each distinct card wins, which is also the one a "cards
+  // to know" line should be quoting.
+  const seenNames = new Set<string>();
+  const dearest = byPrice.filter((m) => !seenNames.has(m.name) && seenNames.add(m.name)).slice(0, 3);
   const cheapest = byPrice[byPrice.length - 1];
   if (dearest.length >= 2) {
     out.push(

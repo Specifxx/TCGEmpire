@@ -1,5 +1,6 @@
 import { getArticles, type Article } from "@/lib/articles";
 import { noRetailChannelProduct } from "@/lib/constants";
+import { KEYWORDS } from "@/lib/keywords";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Card → editorial: which of our ~64 guides and posts are relevant to THIS card.
@@ -33,15 +34,49 @@ export type CardForGuides = {
   isSignature: boolean;
   priceCents: number | null;
   currencyIsMinorUnits?: boolean;
+  /** The card's printed rules text, when the caller has it. Used ONLY to match
+   *  the mechanic guide for a keyword the card actually prints — never to infer
+   *  anything about what the keyword does. */
+  description?: string | null;
 };
+
+/**
+ * The mechanic guide for a keyword THIS CARD ACTUALLY PRINTS, or null.
+ *
+ * Read straight off KEYWORDS (lib/keywords.ts) rather than a second hand-written
+ * map, so the marker, the set scope and the guide slug can never drift from the
+ * keyword pages that use the same three fields. The predicate is the same one
+ * /keywords/[slug] and the guides' own browseCta already use — "the printed
+ * rules text contains the bracket marker" — so a card links to the Empower guide
+ * exactly when Empower is printed on it, and to nothing when it isn't.
+ */
+export function mechanicGuideForCard(c: CardForGuides): { slug: string; name: string } | null {
+  const text = c.description ?? "";
+  if (!text) return null;
+  for (const k of KEYWORDS) {
+    if (k.set !== c.setCode) continue;
+    if (text.includes(k.rulesContain)) return { slug: k.guideSlug, name: k.name };
+  }
+  return null;
+}
 
 type Rule = {
   /** Does this card qualify for this rule? */
   when: (c: CardForGuides) => boolean;
-  /** Article slugs, most specific first. */
-  prefer: string[];
+  /** Article slugs, most specific first. A function when the slug depends on the
+   *  card itself — the mechanic rule resolves a different guide per keyword. */
+  prefer: string[] | ((c: CardForGuides) => string[]);
   /** Tag/keyword fallbacks matched against article tags and titles. */
   match: string[];
+  /**
+   * Skip the tag-matching fallback for this rule and use `prefer` alone.
+   *
+   * Without it a rule with an empty `match` falls through to the set-name
+   * needles, which is right for the generic set rule and wrong for a rule that
+   * has already named the one article it wants: it would spend a second of the
+   * three slots on a loosely set-matched post.
+   */
+  preferOnly?: boolean;
   /** Why this guide is being shown — rendered as the link's supporting line. */
   reason: (c: CardForGuides) => string;
 };
@@ -64,6 +99,25 @@ const RULES: Rule[] = [
     prefer: ["riftbound-t1-signature-edition-drawing", "riftbound-t1-worlds-champion-collection"],
     match: [],
     reason: (c) => `How to get ${noRetailChannelProduct(c.setCode)?.product ?? c.setName}, what is in it, and what makes it scarce`,
+  },
+  // SECOND, ahead of the printing/price rules: when a card prints a keyword we
+  // hold verified rules text for, the guide explaining that keyword is the most
+  // useful thing a reader can open next — it is about the card in their hand,
+  // not about buying in general.
+  //
+  // The gap this closes, measured in GROWTH-AUDIT.md § 2: a plain Vendetta rare
+  // returned the Nexus Night promo post, buying-singles and where-to-buy, and
+  // NONE of the three mechanic guides — which are Vendetta-specific and are the
+  // site's best-performing editorial. 1,400 card pages linked to none of them.
+  {
+    when: (c) => mechanicGuideForCard(c) != null,
+    prefer: (c) => {
+      const g = mechanicGuideForCard(c);
+      return g ? [g.slug] : [];
+    },
+    match: [],
+    preferOnly: true,
+    reason: (c) => `${mechanicGuideForCard(c)?.name} is printed on this card — how the mechanic works, step by step`,
   },
   {
     when: (c) => c.isSignature || c.rarity === "Showcase" || c.variant != null,
@@ -135,8 +189,9 @@ export function guidesForCard(card: CardForGuides, limit = 3): RelatedGuide[] {
     if (picked.length >= limit) break;
     if (!rule.when(card)) continue;
 
-    for (const slug of rule.prefer) take(bySlug.get(slug), rule.reason(card));
-    if (picked.length >= limit) break;
+    const prefer = typeof rule.prefer === "function" ? rule.prefer(card) : rule.prefer;
+    for (const slug of prefer) take(bySlug.get(slug), rule.reason(card));
+    if (picked.length >= limit || rule.preferOnly) continue;
 
     // The set rule has no fixed slugs — match on the set's own name and code.
     const needles = rule.match.length ? rule.match : [card.setName, card.setCode];

@@ -24,9 +24,12 @@ import {
   parsePageSize,
 } from "@/lib/cards";
 import { getCountry } from "@/lib/get-country";
-import { priceField } from "@/lib/country";
+import { priceField, COUNTRIES } from "@/lib/country";
+import { buildCollectionNarrative } from "@/lib/content/collection-narrative";
+import { getSiteMedianCents } from "@/lib/content/site-median";
 import { SETS, setBySlug } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
+import { pageOpenGraph } from "@/lib/seo";
 
 // searchParams-driven (filters/pagination), so the route stays dynamic — same
 // tradeoff as /browse.
@@ -116,7 +119,7 @@ export async function generateMetadata({
       languages: { "x-default": `${SITE_URL}${canonicalPath}` },
     },
     ...(cardCount === 0 || filtered ? { robots: { index: false, follow: true } } : {}),
-    openGraph: { title: `${title} | RiftCompare`, description, url: `${SITE_URL}${canonicalPath}` },
+    openGraph: pageOpenGraph({ title: `${title} | RiftCompare`, description, url: canonicalPath }),
   };
 }
 
@@ -168,6 +171,56 @@ export default async function SetPage({
     : await runQuery();
   const [total, cards] = totalInSet === 0 ? [0, []] : [totalFiltered, cardsFiltered];
   const totalPages = Math.max(1, Math.ceil(total / size));
+
+  // ── Data-derived editorial intro (GROWTH-AUDIT.md § 3) ─────────────────────
+  // This template measured 459 median prose words while carrying 347 inbound
+  // internal links — the best-linked thin page on the site. buildCollectionNarrative
+  // already supported kind: "set" and had simply never been called here; it is
+  // the same generator the champion hubs and facets use, so the analytical tone
+  // matches by construction.
+  //
+  // DEFAULT VIEW ONLY, and its own lean query. The grid above is one page of 60
+  // cards, which cannot describe a set's price distribution — the narrative needs
+  // every card's price, but only four scalar fields of each, so this pulls ~60
+  // bytes a row instead of a full tile payload (see the egress rules in lib/db.ts).
+  // Filtered and paged views skip it entirely: they canonicalise elsewhere, so
+  // they are not the indexed page this prose exists for, and they must not pay
+  // for a query they don't render.
+  const narrativeMembers = isDefaultView
+    ? await unstable_cache(
+        () =>
+          prisma.card.findMany({
+            where: { setCode: set.code },
+            select: { name: true, rarity: true, collectorNumber: true, [priceField(country)]: true },
+          }),
+        ["set-narrative", set.code, country],
+        { revalidate: 3600, tags: [CONTENT_TAG] },
+      )().catch((e) => {
+        // A narrative is worth less than the page. Degrade to no intro.
+        console.error(`sets/${set.slug}: narrative query failed, rendering without the intro:`, e);
+        return [] as Record<string, unknown>[];
+      })
+    : [];
+  const siteMedianCents = isDefaultView ? await getSiteMedianCents(country) : null;
+  const intro =
+    narrativeMembers.length > 0
+      ? buildCollectionNarrative({
+          kind: "set",
+          label: set.name,
+          currency: COUNTRIES[country].currency,
+          place: COUNTRIES[country].place,
+          members: narrativeMembers.map((c) => {
+            const row = c as Record<string, unknown>;
+            return {
+              name: String(row.name),
+              priceCents: (row[priceField(country)] as number | null) ?? null,
+              rarity: row.rarity as string | undefined,
+              collectorNumber: row.collectorNumber as string | undefined,
+            };
+          }),
+          siteMedianCents,
+        })
+      : [];
 
   const otherSets = SETS.filter((s) => s.slug !== set.slug && !s.comingSoon);
   // A comingSoon set (singles not on sale yet) can still be FULLY revealed —
@@ -246,6 +299,18 @@ export default async function SetPage({
               (paginated, filter-driven); a chunk of arriving traffic actually wants
               to LOOK at the set — "<set> card gallery" is its own query cluster —
               so give that intent a first-class exit rather than burying it. */}
+          {/* Data-derived intro: scale and price coverage, the range and where the
+              value is concentrated, the cards worth knowing about by name, and
+              what that means for a buyer. Every figure comes from this set's own
+              rows — see the query above. Renders on the default view only. */}
+          {intro.length > 0 && (
+            <div className="mt-3 max-w-3xl space-y-2.5 text-sm leading-relaxed text-slate-400">
+              {intro.map((p, i) => (
+                <p key={i}>{p}</p>
+              ))}
+            </div>
+          )}
+
           {totalInSet > 0 && (
             <p className="mt-3 text-sm">
               <Link href={`/sets/${set.slug}/gallery`} className="font-semibold text-brand-300 underline-offset-2 hover:underline">

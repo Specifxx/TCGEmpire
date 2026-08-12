@@ -27,13 +27,19 @@ type ManualCard = { name: string; setCode: string; collectorNumber: string; isPr
 const ROOT = process.cwd();
 const APP = join(ROOT, "src/app");
 
-/** Every internal href in every article body, summary, CTA and FAQ answer. */
-function internalLinks(): { slug: string; href: string }[] {
-  const out: { slug: string; href: string }[] = [];
+/** Every internal href in every article body, summary, CTA and FAQ answer.
+ *  `text` is the markdown anchor label, which the card-link check compares
+ *  against the slug — the two disagreeing is itself a defect. */
+function internalLinks(): { slug: string; href: string; text?: string }[] {
+  const out: { slug: string; href: string; text?: string }[] = [];
   const collect = (slug: string, text: string) => {
     // `(?<!!)` skips markdown IMAGES — `![alt](/hero.png)` points at a file in
     // public/, not a route, and is covered by scripts/check-images.ts instead.
-    for (const m of text.matchAll(/(?<!!)\[[^\]]*\]\((\/[^)\s]*)\)/g)) out.push({ slug, href: m[1] });
+    for (const m of text.matchAll(/(?<!!)\[([^\]]*)\]\((\/[^)\s]*)\)/g)) {
+      // Anchors carry inline emphasis (**Akali, Rogue Assassin**) — strip it so
+      // the label compares cleanly against a slug.
+      out.push({ slug, href: m[2], text: m[1].replace(/[*_`]/g, "").trim() });
+    }
   };
   for (const a of ARTICLES) {
     collect(a.slug, a.body);
@@ -323,6 +329,108 @@ test("every article embed slug for a manual card matches what cardSlug() will ge
     }
   }
   assert.deepEqual(broken, [], `article embeds point at slugs the importer will never create:\n  ${broken.join("\n  ")}`);
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Dynamic segments make routeExists() blind — two classes it cannot catch.
+// ─────────────────────────────────────────────────────────────────────────────
+// routeExists() walks src/app and treats a [param] directory as matching
+// ANYTHING, which is correct for "does a route exist" and useless for "does this
+// URL resolve". Both `/blog/[slug]` and `/card/[id]` therefore accept any slug,
+// so the test above passes while an article links to a card that was never
+// imported, or to a guide under /blog.
+//
+// Both shipped. Found by scripts/content-quality.ts against production
+// (GROWTH-AUDIT.md § 4), and both are repeats of a class the repo has fixed
+// before — 12 such links in a prior pass — precisely because the validator could
+// not see them:
+//   • 9 links in riftbound-vendetta-overnumbers-explained built a card slug from
+//     the epithet alone (/card/rogue-assassin-ven-189) instead of the full card
+//     name, so every one of the nine signed Legend Overnumbers 404'd.
+//   • 2 links pointed at /blog/riftbound-variant-glossary, whose category is
+//     "guide"; both route handlers notFound() on a category mismatch.
+
+test("every /guides/ and /blog/ link resolves to an article of THAT category", () => {
+  const bySlug = new Map(ARTICLES.map((a) => [a.slug, a]));
+  const broken: string[] = [];
+  for (const { slug, href } of internalLinks()) {
+    const m = /^\/(guides|blog)\/([^/?#]+)/.exec(href);
+    if (!m) continue;
+    const [, section, target] = m;
+    const article = bySlug.get(target);
+    if (!article) {
+      broken.push(`${slug} → ${href} (no article with that slug)`);
+      continue;
+    }
+    const expected = article.category === "guide" ? "guides" : "blog";
+    if (expected !== section) {
+      broken.push(`${slug} → ${href} (that article is a ${article.category}; use /${expected}/${target})`);
+    }
+  }
+  assert.deepEqual(broken, [], `articles link to the wrong category, which 404s:\n  ${broken.join("\n  ")}`);
+});
+
+test("a /card/ link whose anchor names the card agrees with the slug", () => {
+  // THE CHECK THAT WOULD HAVE CAUGHT THE ORIGINAL BUG, and it needs no database.
+  //
+  // All nine dead links read `[Akali, Rogue Assassin](/card/rogue-assassin-ven-189)`
+  // — the anchor text carried the champion, the slug did not, because a Legend's
+  // slug is built from its FULL enriched name ("Akali, Rogue Assassin") while
+  // whoever wrote the links used the epithet alone. The anchor text and the slug
+  // disagreeing IS the defect, and both are right here in the source.
+  //
+  // Scoped to comma-bearing anchors ("Champion, Epithet"), which is exactly the
+  // shape that goes wrong; a one-word card name has no prefix to drop.
+  const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  const broken: string[] = [];
+  for (const { slug, href, text } of internalLinks()) {
+    const m = /^\/card\/([^/?#]+)/.exec(href);
+    if (!m || !text || !text.includes(",")) continue;
+    const champion = slugify(text.split(",")[0]);
+    if (!champion || champion.length < 2) continue;
+    if (!m[1].startsWith(`${champion}-`)) {
+      broken.push(`${slug} → [${text}](${href}) — slug should start "${champion}-"`);
+    }
+  }
+  assert.deepEqual(
+    broken,
+    [],
+    `article card links disagree with their own anchor text:\n  ${broken.join("\n  ")}`,
+  );
+});
+
+test("every /card/ link into a manual-only set points at a slug that will exist", () => {
+  // Existence, for the sets where it is soundly decidable without a database.
+  //
+  // Same scoping rule as the embed test above and for the same reason: for a
+  // pipeline-imported set (OGN, VEN…) manual-cards.json holds only a handful of
+  // promos while the importer supplies the rest, so "not in the JSON" says
+  // nothing. For a manual-only set the JSON IS the catalogue.
+  //
+  // This deliberately does NOT cover VEN, where the nine dead links lived — no
+  // DB-free ground truth exists for a pipeline set. scripts/content-quality.ts
+  // covers that at runtime by fetching each link, which is how they were found;
+  // run it against a preview before shipping article changes.
+  const manual = (JSON.parse(readFileSync(join(ROOT, "prisma/manual-cards.json"), "utf8")) as unknown[])
+    .filter((x): x is ManualCard => !!x && typeof x === "object" && !("_note" in (x as object)));
+
+  const known = new Set<string>();
+  const manualOnlySets = new Set<string>();
+  for (const c of manual) {
+    if (setByCode(c.setCode)) continue;
+    manualOnlySets.add(c.setCode.toLowerCase());
+    known.add(cardSlug(c));
+  }
+  assert.ok(manualOnlySets.size > 0, "expected at least one manual-only set — did the scoping rule break?");
+
+  const broken: string[] = [];
+  for (const { slug, href } of internalLinks()) {
+    const m = /^\/card\/([^/?#]+)/.exec(href);
+    if (!m) continue;
+    if (![...manualOnlySets].some((s) => m[1].includes(`-${s}-`))) continue;
+    if (!known.has(m[1])) broken.push(`${slug} → ${href}`);
+  }
+  assert.deepEqual(broken, [], `articles link to card slugs nothing will generate:\n  ${broken.join("\n  ")}`);
 });
 
 test("manual cards are applied by the deploy, not only by a hand-fired workflow", () => {

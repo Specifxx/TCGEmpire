@@ -13,6 +13,7 @@
     "blog:heroes": "tsx scripts/gen-blog-heroes.ts",
     "adsense:audit": "tsx scripts/adsense-audit.ts",
     "crawl:check": "tsx scripts/crawl-check.ts",
+    "seo:gate": "tsx scripts/seo-gate.ts",
     "status:check": "tsx scripts/status-check.ts",
     "adsense:verify": "tsx scripts/adsense-verify.ts",
     "mobile:check": "tsx scripts/mobile-check.ts",

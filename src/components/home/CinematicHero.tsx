@@ -96,6 +96,23 @@ export function CinematicHero({
               Top meta decks →
             </Link>
           </div>
+          {/* Newcomer entry point. Deliberately on its OWN line and at a lower
+              visual weight than the two CTAs above, rather than a third item in
+              that row: the row was cut from four competing CTAs to two on
+              purpose (see the note above), and re-crowding it would undo that.
+
+              It earns the space because /learn was an ORPHAN — 359 lines of
+              interactive new-player content at sitemap priority 0.8 with zero
+              inbound internal links from any of 1,698 pages. The only thing
+              referencing it was the mega-menu, which renders client-side and is
+              therefore invisible to the crawler that decides whether the page is
+              worth indexing. See GROWTH-AUDIT.md § 2. */}
+          <Link
+            href="/learn"
+            className="text-xs text-slate-500 underline-offset-4 transition-colors hover:text-brand-400 hover:underline"
+          >
+            New to Riftbound? Learn how to play →
+          </Link>
           <CountryHeroToggle />
         </div>
       </div>

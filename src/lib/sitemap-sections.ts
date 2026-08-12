@@ -14,6 +14,7 @@ import { prisma } from "./db";
 import { dbHistory } from "./db-history";
 import { SITE_URL } from "./site";
 import { META_DECKS, META_UPDATED } from "./meta-decks";
+import { deckGroupPath, indexableDeckGroups } from "./deck-groups";
 import { getArticles } from "./articles";
 import { SETS } from "./constants";
 import { DOMAIN_PAGES } from "./domains";
@@ -47,6 +48,12 @@ export const SECTIONS = [
   "champions",
   "stores",
   "decks",
+  // The programmatic archetype/domain deck landing pages get their own child
+  // rather than joining "decks". They are a NEW template with an unproven index
+  // rate, and per-template coverage reporting is the entire reason this sitemap
+  // is split (see the file header) — folding them into decks would hide whether
+  // they index at the rate the individual deck pages do.
+  "deck-groups",
   "content",
   "marketplace",
 ] as const;
@@ -351,6 +358,23 @@ async function decks(): Promise<SitemapEntry[]> {
   }));
 }
 
+async function deckGroups(): Promise<SitemapEntry[]> {
+  const day = decksModified(await priceDay());
+  // indexableDeckGroups() is the SAME predicate the pages' robots tag reads
+  // (lib/deck-groups.ts), so a group can never be submitted here while telling
+  // Google not to index it — the contradiction that fills Search Console's
+  // "Submitted URL marked 'noindex'" bucket. Groups below the threshold, and
+  // groups with no real deck at all, are simply absent.
+  return indexableDeckGroups().map((g) => ({
+    url: `${SITE_URL}${deckGroupPath(g)}`,
+    changeFrequency: "weekly" as const,
+    // Just under an individual deck page: these are the hub, the decklist is the
+    // destination.
+    priority: 0.65,
+    lastModified: day,
+  }));
+}
+
 async function content(): Promise<SitemapEntry[]> {
   // Real publish OR last-substantive-edit date. `updated` exists on ~30 articles;
   // reading it means a genuinely-refreshed guide no longer looks as stale as one
@@ -405,7 +429,9 @@ async function marketplace(): Promise<SitemapEntry[]> {
 }
 
 const BUILDERS: Record<SectionId, () => Promise<SitemapEntry[]>> = {
-  core, cards, sets, domains, keywords, facets, champions, stores, decks, content, marketplace,
+  core, cards, sets, domains, keywords, facets, champions, stores, decks,
+  "deck-groups": deckGroups,
+  content, marketplace,
 };
 
 /**

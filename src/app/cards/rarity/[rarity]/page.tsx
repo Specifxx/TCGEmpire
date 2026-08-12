@@ -7,6 +7,7 @@ import { DEFAULT_COUNTRY } from "@/lib/country";
 import { RARITY_FACETS, rarityFacetBySlug, FACET_THIN_THRESHOLD } from "@/lib/facets";
 import { FacetPageBody } from "@/components/FacetPageBody";
 import { SITE_URL } from "@/lib/site";
+import { pageOpenGraph } from "@/lib/seo";
 
 export const revalidate = 86400;
 
@@ -29,7 +30,7 @@ export async function generateMetadata({ params }: { params: { rarity: string } 
     description: `${facet.intro} Compare live prices across every store we track.`,
     alternates: { canonical: `/cards/rarity/${facet.slug}` },
     ...(total >= 0 && total < FACET_THIN_THRESHOLD ? { robots: { index: false, follow: true } } : {}),
-    openGraph: { title, description: facet.intro, url: `${SITE_URL}/cards/rarity/${facet.slug}` },
+    openGraph: pageOpenGraph({ title, description: facet.intro, url: `/cards/rarity/${facet.slug}` }),
   };
 }
 

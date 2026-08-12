@@ -303,11 +303,22 @@ export default function PackSimPage() {
                 if you would rather just buy the one you wanted.
               </li>
             )}
+            {/* Named, not lumped into "the rest": Riftle is the site's other
+                flagship free tool and shares this page's audience, and a bare
+                /games link made it two clicks away from the page most likely to
+                send it a visitor. Reciprocates the link /riftle now carries back
+                to this page. */}
+            <li>
+              <Link href="/riftle" className="font-semibold text-brand-300 hover:underline">
+                Riftle, the daily Riftbound card puzzle →
+              </Link>{" "}
+              one mystery card a day, eight guesses, free.
+            </li>
             <li>
               <Link href="/games" className="font-semibold text-brand-300 hover:underline">
                 More Riftbound games →
               </Link>{" "}
-              Riftle, price guessing and the rest.
+              price guessing, the art quiz and the rest.
             </li>
           </ul>
         </section>
