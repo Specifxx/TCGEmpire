@@ -21,6 +21,9 @@ import { ArticleFaq } from "./ArticleFaq";
 import { ArticleShare } from "./ArticleShare";
 import { ArticleTopValue } from "./ArticleTopValue";
 import { Picture } from "./Picture";
+import { META_DECKS } from "@/lib/meta-decks";
+import { groupStaples } from "@/lib/deck-groups";
+import { normalizeSearch } from "@/lib/format";
 
 // A card printed beyond the set's total (e.g. 167/166) or carrying an SP special
 // number — the "overnumbered" chase class. Signature "*" prints are their own thing
@@ -48,6 +51,39 @@ async function resolveEmbed(e: ArticleEmbed | undefined): Promise<CardTileData[]
       const rows = await prisma.card.findMany({ where: { slug: { in: e.slugs } }, select });
       const bySlug = new Map(rows.map((r) => [r.slug, r]));
       return e.slugs.map((sl) => bySlug.get(sl)).filter(Boolean) as unknown as CardTileData[];
+    }
+    if (e.metaStaples) {
+      // Competitive staples, from the real decklists. groupStaples() is the same
+      // function the archetype/domain deck pages use, so "played in N of the
+      // tournament lists" means the identical thing everywhere on the site.
+      const minDecks = typeof e.metaStaples === "object" ? e.metaStaples.minDecks ?? 2 : 2;
+      const staples = groupStaples(META_DECKS, minDecks);
+      if (!staples.length) return [];
+      const wanted = staples.map((s) => normalizeSearch(s.name));
+      const rows = await prisma.card.findMany({
+        where: { nameNormalized: { in: wanted }, isPromo: false },
+        select: { ...select, nameNormalized: true, collectorNumber: true },
+      });
+      // Prefer the BASE printing of each staple: a deck list names a card, not a
+      // finish, and the alternate-art or Signature print of the same card is a
+      // different (usually far pricier) product. Same rule lib/meta-decks.ts
+      // applies when it prices a decklist, so the gallery and the build costs
+      // agree about which printing "the card" means.
+      const isBase = (c: { collectorNumber: string }) =>
+        !c.collectorNumber.includes("*") && !/\d+[a-z]/i.test(c.collectorNumber);
+      const byName = new Map<string, (typeof rows)[number]>();
+      for (const r of rows) {
+        const prev = byName.get(r.nameNormalized);
+        if (!prev || (isBase(r) && !isBase(prev))) byName.set(r.nameNormalized, r);
+      }
+      // Staple order (most-played first) is the point of the gallery, so map over
+      // the staples rather than the query result. A staple with no card row is
+      // dropped silently — the article must never render a tile for a card the
+      // database doesn't have.
+      return staples
+        .map((s) => byName.get(normalizeSearch(s.name)))
+        .filter(Boolean)
+        .slice(0, e.take ?? 24) as unknown as CardTileData[];
     }
     if (e.rulesContain) {
       const rows = await prisma.card.findMany({

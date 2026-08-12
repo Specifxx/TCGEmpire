@@ -50,6 +50,16 @@ export interface ArticleEmbed {
   // scoped to a set) — e.g. "[Empower]" collects every Empower card as reveals land.
   rulesContain?: string;
   rulesSet?: string;
+  // COMPETITIVE STAPLES — the cards played across the real tournament lists in
+  // prisma/meta-decks.json, ordered by how many of those decks run them.
+  //
+  // Exists so a "best cards" article does not have to hard-code a ranking that is
+  // wrong the next time the metagame is re-cut. The gallery is derived from the
+  // same seed file /decks and the archetype pages read, so it CANNOT show a card
+  // that isn't genuinely in a tournament list, and it re-orders itself when the
+  // lists are updated. `minDecks` is the floor for inclusion (default 2 — a card
+  // in one list is that deck's card, not a staple).
+  metaStaples?: boolean | { minDecks?: number };
   take?: number; // default 12
 }
 
@@ -155,6 +165,141 @@ export interface Article {
 }
 
 export const ARTICLES: Article[] = [
+  {
+    slug: "best-riftbound-cards",
+    category: "guide",
+    title: "The Best Riftbound Cards: What Winning Decks Actually Play",
+    excerpt:
+      "Which Riftbound cards are actually the best? Not an opinion — the 48 cards that show up across the real tournament decklists in the current metagame, counted, ranked by how many decks run them, and priced live.",
+    author: "RiftCompare",
+    date: "2026-08-10",
+    readMins: 7,
+    tags: ["best cards", "meta", "staples", "deckbuilding", "buying"],
+    summary: [
+      "**\"Best\" here means most-played, measured.** We counted every card across the real tournament decklists we track and ranked them by how many separate decks run them — no personal ratings.",
+      "**48 cards appear in two or more of the 10 lists.** 20 appear in three or more. The most-played card in the format right now is **Stacked Deck**, in half of them.",
+      "**Spells dominate**: 22 of the 48 are spells, against 15 units, 7 battlefields, 2 gear and 2 champion cards.",
+      "**Most-played is not most-expensive.** If you want the grails instead, that is a [different list](/guides/most-valuable-riftbound-cards) — and the two barely overlap.",
+    ],
+    itemList: {
+      name: "Most-played Riftbound cards in the current metagame",
+      items: [
+        { name: "Stacked Deck", description: "Played in 5 of the 10 tournament decklists we track — the most-played card in the format.", url: "/card/stacked-deck-ogn-183-298" },
+        { name: "Irelia, Fervent", description: "The only champion card played across three separate decks.", url: "/card/irelia-fervent-sfd-057-221" },
+        { name: "Bellows Breath", description: "In three of the ten lists, at up to three copies.", url: "/card/bellows-breath-sfd-080-221" },
+        { name: "Stupefy", description: "In three of the ten lists, at up to three copies.", url: "/card/stupefy-ogn-095-298" },
+        { name: "Tideturner", description: "The most-played unit outside a deck's own champion package.", url: "/card/tideturner-ogn-199-298" },
+        { name: "Zhonya's Hourglass", description: "One of only two gear cards shared across three decks.", url: "/card/zhonya-s-hourglass-ogn-077-298" },
+        { name: "Seat of Power", description: "One of seven battlefields that recur across the field.", url: "/card/seat-of-power-sfd-217-221" },
+      ],
+    },
+    embeds: [
+      {
+        title: "Every card played in two or more meta decks",
+        note: "Pulled live from our database and ordered by how many of the tracked tournament decklists run each card — the most-played first. Tap any card for its full text, every printing, and the cheapest store right now.",
+        metaStaples: { minDecks: 2 },
+        take: 48,
+      },
+      {
+        title: "The core: cards in three or more decks",
+        note: "The tighter cut — cards that turned up in at least three separate lists, across different archetypes and different legends.",
+        metaStaples: { minDecks: 3 },
+        take: 24,
+      },
+    ],
+    browseCta: {
+      href: "/decks",
+      label: "See the decklists these cards come from",
+      blurb: "Every list on this page is a real tournament result, priced card-for-card in your own market — including the cheapest place to buy the whole deck right now.",
+    },
+    shop: [
+      { label: "Riftbound singles on eBay", query: "Riftbound TCG single cards" },
+      { label: "Riftbound Origins singles", query: "Riftbound Origins single card" },
+    ],
+    faq: [
+      {
+        q: "What are the best cards in Riftbound?",
+        a: "Measured by how often they actually appear in winning decklists, the most-played cards in the current metagame are Stacked Deck (in 5 of the 10 tournament lists we track), then a group of twenty cards that each appear in three, including Bellows Breath, Stupefy, Tideturner, Charm, Defy, Discipline, En Garde, Cleave, Hidden Blade, Star-Crossed, Zhonya's Hourglass and Irelia, Fervent. That is a measurement of play rate, not a power rating.",
+      },
+      {
+        q: "How did you decide which cards are best?",
+        a: "By counting. We take the real tournament decklists tracked on our meta decks page, count how many separate decks play each card, and rank by that number. A card in one list is that deck's card; a card in several is a staple. Nothing on this page is a personal rating, and no card appears that is not in a real list.",
+      },
+      {
+        q: "Are the best cards the most expensive ones?",
+        a: "Largely no, and that surprises people. Play rate and price are driven by different things — a common spell that every deck wants can cost less than a chase Epic almost nobody plays, because the Epic's price comes from scarcity and art. Our most valuable Riftbound cards guide covers the price side separately.",
+      },
+      {
+        q: "Why are most of the best cards spells?",
+        a: "It is what the counting shows: 22 of the 48 shared cards are spells, against 15 units, 7 battlefields, 2 gear and 2 champion cards. Units and champion cards tend to be specific to whichever legend a deck is built around, so they are less likely to be shared between decks — spells and battlefields are the slots different decks agree on.",
+      },
+      {
+        q: "How often does this list change?",
+        a: "It re-cuts whenever the underlying decklists do. The gallery on this page is generated from the same decklist data our meta decks pages use, so when a new tournament list is added the counts and the order here update with it rather than going stale.",
+      },
+      {
+        q: "What is the cheapest way to buy these cards?",
+        a: "Open any card above and compare every store we track on delivered cost, or paste a full list into the deck builder to price it in one pass. Buying a spread of cheap staples from one store usually beats buying each from its individually cheapest store once postage is counted.",
+      },
+    ],
+    body: `Ask which Riftbound cards are "best" and you will get ten different answers, most of them somebody's opinion. This page takes the boring route instead: **we counted**.
+
+Every decklist on our [meta decks page](/decks) is a real tournament result. Take all ten, count how many separate decks play each card, and rank by that number. A card that shows up in one list is that deck's card. A card that shows up in five, across different archetypes and different legends, is a card the format has agreed on — and that is a claim you can check rather than take on trust.
+
+## How this list was built
+
+- **Source:** the tournament decklists on [/decks](/decks), tracked from published event results.
+- **Sample:** 10 decks, spanning ten different archetypes from aggro through to value midrange.
+- **Rule:** count each card once per deck, however many copies it runs. Runes are excluded — every deck in a domain runs the same rune base, so counting them would tell you nothing.
+- **Cut-off:** two decks minimum. Below that it is not a staple, it is a preference.
+
+That produces **48 cards**. Twenty of them appear in three decks or more.
+
+One caveat on the gallery below: it is drawn from our own card database, so a card we have not catalogued a printing for yet will be counted here but will not have a tile. That is deliberate — showing a tile for a card we cannot price would be worse than showing one fewer.
+
+## The most-played cards in Riftbound
+
+[[embed:0]]
+
+The single most-played card in the format is **Stacked Deck**, in five of the ten lists — no other card is in more than three. Below it sits a broad, flat tier: twenty cards each appearing in three separate decks, which is what a healthy, unsettled format looks like rather than one with a single obvious best card.
+
+## What the counting shows
+
+Three things stand out, and all three are just arithmetic on the table above.
+
+**Spells are the shared language.** 22 of the 48 are spells, against 15 units, 7 battlefields, 2 gear and 2 champion cards. That gap is not subtle, and it has a straightforward explanation: units and champion cards are chosen to fit whichever legend a deck is built around, so they rarely cross between decks. Spells are the slots different decks independently arrive at.
+
+**Champion cards almost never cross over.** Only two make the list at all — Irelia, Fervent in three decks and Rek'Sai, Breacher in two. Everything else in the champion slot is specific to its own list, which is what you would expect when each deck is built around a different legend.
+
+**Battlefields consolidate hard.** Each deck runs three battlefields, so the ten lists have thirty battlefield slots between them — and only seven distinct battlefields recur across more than one deck. If you are buying, that is a short list doing a lot of work.
+
+Twenty-five of the 48 are run at the full three copies in at least one list, so "buy one" and "buy a playset" are different budgets. Every card above shows its cheapest live price, and the [card database](/browse) will compare every store on delivered cost.
+
+## The core, if you are buying in
+
+[[embed:1]]
+
+These are the cards that turned up in three or more separate decks. If you are new and want the cards least likely to be wasted whatever you end up building, start here rather than with the expensive ones — and check the [cheapest way to start guide](/guides/cheapest-way-to-start-riftbound) for the wider version of that argument.
+
+[[shop]]
+
+## "Best" is not the same as "most valuable"
+
+This is the part worth being clear about, because the two lists barely overlap.
+
+Play rate and price are set by different forces. A common spell that eight decks want can cost less than an Epic almost nobody plays, because the Epic's price comes from print scarcity and art rather than from anyone putting it in a deck. Neither number is wrong — they answer different questions.
+
+- If you want to know what to **play**, this page is the list.
+- If you want to know what is **worth money**, see [the most valuable Riftbound cards](/guides/most-valuable-riftbound-cards) and [the most expensive grails](/blog/most-expensive-riftbound-cards).
+- If you want the current **chase printings** specifically, [Vendetta's chase tiers](/blog/riftbound-vendetta-chase-cards-so-far) breaks those out by tier.
+
+## Keeping this honest
+
+The gallery above is generated from the decklist data itself, not typed into this page. When a new tournament list lands, the counts and the order change with it — and a card that is not in a real list cannot appear here at all, because there is nothing for it to be counted from.
+
+What this page deliberately does not do is tell you *why* any of these cards is good. That is a claim about how the cards play, and the honest place to check it is the card itself: open any tile above for its printed text, every printing, and what it costs right now. If you want the strategy layer, the [best Vendetta decks guide](/guides/best-riftbound-vendetta-decks) covers the archetypes these cards are assembled into.
+`,
+  },
   {
     slug: "is-riftbound-worth-getting-into",
     category: "blog",
