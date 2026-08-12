@@ -17,22 +17,34 @@ import { PrismaClient } from "@prisma/client";
 // SAFE BY DEFAULT: falls back to the same database as db.ts when NO history
 // variable is set at all, so this ships as a NO-OP (same physical database,
 // identical behaviour) until a second Neon project is provisioned and the
-// current history variable — RH7, see the chain below — is added to Vercel +
-// GitHub secrets. (Adding HISTORY_DATABASE_URL today would do nothing useful:
-// it is the OLDEST project in the chain and sits fifth, behind RH7/RH6/RH5/_4.
-// If you provision a new project, give it a NEW name and put it FIRST here —
-// never re-use an older name, which is also listed as a migration SOURCE in
-// .github/workflows/maintenance.yml and would make source and target the same
-// database.) The schema
+// current history variable — HISTORY_DATABASE_URL, see the chain below — is
+// added to Vercel + GitHub secrets. The schema
 // (prisma/schema.prisma) is unchanged and shared — run `prisma db push` against
 // the new URL once to create the tables there too (the unused Card/RetailerPrice/
 // etc. tables it also creates cost negligible storage empty; only PriceHistory /
 // ClickEvent get real traffic).
 
-// RH7 (secrets.RH7) is the CURRENT history project — cut over 2026-08-04 after
-// RH6 came within reach of its monthly Neon network-transfer allowance in FOUR
-// DAYS (RH6 itself replaced RH5 on 2026-07-31 for the same reason; _4 went
-// unreachable with P1001 before that, and _3/_2/base before it).
+// HISTORY_DATABASE_URL is the CURRENT history project — cut over 2026-08-11
+// when RH7 came within reach of its own allowance, a week after RH7 replaced RH6
+// for the same reason (RH6 replaced RH5 on 2026-07-31; _4 went unreachable with
+// P1001 before that, and _3/_2/base before it).
+//
+// THE CHAIN IS CURRENT-FIRST, NOT NEWEST-FIRST, AND THIS ENTRY IS WHY. Every
+// previous rotation moved forward onto a freshly provisioned project, so "newest
+// first" and "current first" happened to mean the same thing and the comments
+// here said "newest". This one moves BACKWARD, onto the OLDEST project in the
+// list: Neon's caps are per project and per month, HISTORY_DATABASE_URL was
+// retired long enough ago that its allowance has reset, and re-using rested
+// capacity we already own beats provisioning an RH8 and beats paying. The head
+// of this list is therefore whichever project is in service TODAY — read it as a
+// precedence order, never as a timeline.
+//
+// A recycled name carries one trap the forward rotations never had: the older
+// vars are also migration SOURCES in .github/workflows/maintenance.yml, so a
+// name that is both the target and a listed source would make a migration
+// silently no-op while reporting every row count as matching. HISTORY_DATABASE_URL
+// has been removed from every source list for that reason — grep it before
+// rotating again.
 //
 // SIX PROJECTS IN ~TWO WEEKS IS A READ-PATTERN PROBLEM, NOT A CAPACITY ONE. A
 // fresh project buys roughly four days at the current burn rate, so treat the
@@ -43,10 +55,11 @@ import { PrismaClient } from "@prisma/client";
 // lib/card-price-state.ts groups the ENTIRE PriceHistory table with no `where`,
 // no `take` and no cache, so its payload grows every day forever.
 //
-// RH6 and every older var are kept ONLY as read-only fallbacks/migration sources;
-// treat them as dead, never the primary target. Once everything's copied
-// across (see the `migrate-history-db` task in .github/workflows/maintenance.yml)
-// and nothing references the older vars anymore, they can be removed entirely.
+// RH7 is kept as the rollback fallback and every older var below it is a
+// read-only fallback/migration source; treat them as dead, never the primary
+// target. Once everything's copied across (see the `migrate-history-db-to-hdu`
+// task in .github/workflows/maintenance.yml) and nothing references the older
+// vars anymore, they can be removed entirely.
 //
 // ORDER MATTERS AND IS LOAD-BEARING: this list is duplicated, by necessity, in
 // several places that cannot import this module (GitHub Actions `env:` blocks,
@@ -55,11 +68,11 @@ import { PrismaClient } from "@prisma/client";
 // that silently stops at an exhausted project is exactly how this repo has lost
 // a day to an "unexplained" P1001 more than once.
 const HISTORY_URL =
+  process.env.HISTORY_DATABASE_URL ||
   process.env.RH7 ||
   process.env.RH6 ||
   process.env.RH5 ||
   process.env.HISTORY_DATABASE_URL_4 ||
-  process.env.HISTORY_DATABASE_URL ||
   process.env.HISTORY_DATABASE_URL_2 ||
   process.env.HISTORY_DATABASE_URL_3 ||
   process.env.DATABASE_URL;
@@ -68,19 +81,20 @@ const HISTORY_URL =
 // in the logs immediately answers "which database did it actually try?".
 // Mirrors the same diagnostic in scripts/build-db-push.sh and lib/db.ts.
 export const HISTORY_URL_SOURCE =
-  process.env.RH7 ? "RH7"
+  process.env.HISTORY_DATABASE_URL ? "HISTORY_DATABASE_URL"
+  : process.env.RH7 ? "RH7"
   : process.env.RH6 ? "RH6"
   : process.env.RH5 ? "RH5"
   : process.env.HISTORY_DATABASE_URL_4 ? "HISTORY_DATABASE_URL_4"
-  : process.env.HISTORY_DATABASE_URL ? "HISTORY_DATABASE_URL"
   : process.env.HISTORY_DATABASE_URL_2 ? "HISTORY_DATABASE_URL_2"
   : process.env.HISTORY_DATABASE_URL_3 ? "HISTORY_DATABASE_URL_3"
   : "DATABASE_URL (no history project set — history shares the operational DB)";
 
-if (HISTORY_URL_SOURCE !== "RH7") {
+if (HISTORY_URL_SOURCE !== "HISTORY_DATABASE_URL") {
   console.warn(
-    `[db-history] history DB resolved to ${HISTORY_URL_SOURCE}, not RH7 — RH7 is missing from this ` +
-      `environment. Every older project is exhausted/dead; expect P1001 or writes landing in the wrong place.`
+    `[db-history] history DB resolved to ${HISTORY_URL_SOURCE}, not HISTORY_DATABASE_URL — the current ` +
+      `history project is missing from this environment. RH7 is kept only as a rollback and is near its ` +
+      `allowance; everything older is exhausted. Expect P1001 or writes landing in the wrong place.`
   );
 }
 

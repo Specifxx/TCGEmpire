@@ -32,7 +32,11 @@ set -uo pipefail
 # tests/db-chain.test.ts asserts these two values still match the head of each
 # chain, so the next cutover fails a test instead of quietly lying in a log.
 CURRENT_OP="RM5"
-CURRENT_HIST="RH7"
+# Rotated BACKWARD on 2026-08-11: RH7 neared its monthly allowance, and
+# HISTORY_DATABASE_URL — the oldest project in the chain — had its allowance
+# reset at the start of the month. The chains are CURRENT-first, not newest-first;
+# see the long note on HISTORY_URL in src/lib/db-history.ts.
+CURRENT_HIST="HISTORY_DATABASE_URL"
 
 # Only push schema for a real Vercel production/preview build with a database
 # configured. A local `next build` (no database vars) must not try to reach anything.
@@ -96,9 +100,12 @@ fi
 # pushed nothing at all while reporting success. That is precisely how a new
 # column can 500 the admin clicks page in production despite a green deploy.
 #
-# This chain now MIRRORS src/lib/db-history.ts exactly, newest-first. Keep the two
-# in sync — if you add a project there, add it here in the same position.
-if [ -n "${RH7:-}" ]; then
+# This chain MIRRORS src/lib/db-history.ts exactly, CURRENT-first. Keep the two
+# in sync — if you rotate there, rotate here into the same position.
+# tests/db-chain.test.ts compares the two lists and fails if they drift.
+if [ -n "${HISTORY_DATABASE_URL:-}" ]; then
+  HIST="$HISTORY_DATABASE_URL"; HIST_SOURCE="HISTORY_DATABASE_URL"
+elif [ -n "${RH7:-}" ]; then
   HIST="$RH7"; HIST_SOURCE="RH7"
 elif [ -n "${RH6:-}" ]; then
   HIST="$RH6"; HIST_SOURCE="RH6"
@@ -106,8 +113,6 @@ elif [ -n "${RH5:-}" ]; then
   HIST="$RH5"; HIST_SOURCE="RH5"
 elif [ -n "${HISTORY_DATABASE_URL_4:-}" ]; then
   HIST="$HISTORY_DATABASE_URL_4"; HIST_SOURCE="HISTORY_DATABASE_URL_4"
-elif [ -n "${HISTORY_DATABASE_URL:-}" ]; then
-  HIST="$HISTORY_DATABASE_URL"; HIST_SOURCE="HISTORY_DATABASE_URL"
 elif [ -n "${HISTORY_DATABASE_URL_2:-}" ]; then
   HIST="$HISTORY_DATABASE_URL_2"; HIST_SOURCE="HISTORY_DATABASE_URL_2"
 elif [ -n "${HISTORY_DATABASE_URL_3:-}" ]; then

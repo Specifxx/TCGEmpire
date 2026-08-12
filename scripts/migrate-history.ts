@@ -49,28 +49,39 @@ import { PrismaClient } from "@prisma/client";
 // PriceHistory row for any card created since the RM3 cutover, reported only as
 // "skipped N rows for cards not in the target".
 const MAIN_URL = process.env.RM3 || process.env.DATABASE_URL_2 || process.env.DATABASE_URL;
+// CURRENT-first, not newest-first. HISTORY_DATABASE_URL leads because the
+// history database rotated BACKWARD onto it on 2026-08-11 — its Neon allowance
+// reset at the start of the month while RH7 approached its own. See the note on
+// HISTORY_URL in src/lib/db-history.ts; this chain must match it.
 const TARGET_URL =
-  process.env.RH7 || process.env.RH6 || process.env.RH5 || process.env.HISTORY_DATABASE_URL_4 || process.env.HISTORY_DATABASE_URL;
+  process.env.HISTORY_DATABASE_URL || process.env.RH7 || process.env.RH6 || process.env.RH5 || process.env.HISTORY_DATABASE_URL_4;
 const TARGET_LABEL =
-  process.env.RH7 ? "RH7"
+  process.env.HISTORY_DATABASE_URL ? "HISTORY_DATABASE_URL"
+  : process.env.RH7 ? "RH7"
   : process.env.RH6 ? "RH6"
   : process.env.RH5 ? "RH5"
-  : process.env.HISTORY_DATABASE_URL_4 ? "HISTORY_DATABASE_URL_4"
-  : "HISTORY_DATABASE_URL";
+  : "HISTORY_DATABASE_URL_4";
 
 if (!MAIN_URL) { console.error("No operational database is set (RM3 / DATABASE_URL_2 / DATABASE_URL)."); process.exit(1); }
-if (!TARGET_URL) { console.error("None of RH7 / RH6 / RH5 / HISTORY_DATABASE_URL_4 / HISTORY_DATABASE_URL is set — point one at the current history project first."); process.exit(1); }
-if (TARGET_LABEL !== "RH7") {
-  console.warn(`⚠  Target resolved to ${TARGET_LABEL}, not RH7 — RH7 is not visible in this environment. Every older project is exhausted/dead; this is almost certainly not what you want.`);
+if (!TARGET_URL) { console.error("None of HISTORY_DATABASE_URL / RH7 / RH6 / RH5 / HISTORY_DATABASE_URL_4 is set — point one at the current history project first."); process.exit(1); }
+if (TARGET_LABEL !== "HISTORY_DATABASE_URL") {
+  console.warn(`⚠  Target resolved to ${TARGET_LABEL}, not HISTORY_DATABASE_URL — the current history project is not visible in this environment. RH7 is the rollback and is near its allowance; everything older is exhausted. This is almost certainly not what you want.`);
 }
 
 // Every distinct source to pull from (main + older history projects), excluding the
 // target itself. De-duplicated by URL so we never read the same DB twice.
 const sourceUrls = [
   { label: "main (DATABASE_URL)", url: MAIN_URL },
-  // RH6 first among the history sources: it served 2026-07-31 → 2026-08-04, so
-  // it holds the newest rows. The TARGET_URL filter below keeps it out when it
-  // is itself the target (i.e. RH7 not visible in this environment).
+  // RH7 first among the history sources: it served 2026-08-04 → 2026-08-11, so
+  // it holds the newest rows.
+  //
+  // HISTORY_DATABASE_URL IS STILL LISTED BELOW and that is deliberate, not an
+  // oversight — it is now the TARGET, and the `s.url !== TARGET_URL` filter on
+  // this array is what keeps it out. Leaving the entry in place means the list
+  // stays a complete inventory of every history project that has ever existed,
+  // so a future rotation onto yet another recycled name is covered by the same
+  // filter rather than needing someone to remember to re-add a line.
+  { label: "RH7", url: process.env.RH7 },
   { label: "RH6", url: process.env.RH6 },
   { label: "RH5", url: process.env.RH5 },
   { label: "HISTORY_DATABASE_URL_4", url: process.env.HISTORY_DATABASE_URL_4 },

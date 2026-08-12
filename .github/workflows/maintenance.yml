@@ -29,7 +29,8 @@ on:
           - import-prices    # run the store price importer for this ref's store list
           - import-sealed     # refresh sealed products (stores + eBay AU + TCGplayer US) + self-heal stale rows
           - migrate-history  # Prisma-based top-up: copy PriceHistory/ClickEvent from EVERY older source into the newest history DB (tolerates unreadable sources, dedupes). Slower/more transfer than migrate-history-db — prefer that for the bulk copy.
-          - migrate-history-db # full pg_dump/restore of the HISTORY database (RH6) into RH7 + row-count verification. Compressed on the wire, so it's the cheapest way to drain a project that has exhausted its transfer allowance. RUN THIS BEFORE any other history task once RH7 is set.
+          - migrate-history-db # LEGACY (RH6 → RH7 cutover, kept for reference): full pg_dump/restore of the HISTORY database (RH6) into RH7 + row-count verification.
+          - migrate-history-db-to-hdu # CURRENT history cutover: full pg_dump/restore of RH7 into HISTORY_DATABASE_URL + row-count verification. Rotates BACK onto the oldest project in the chain, whose monthly Neon allowance reset at the start of this month, because RH7 is nearing its own. Compressed on the wire, so it is the cheapest way to drain a project that is near its transfer allowance. RUN THIS BEFORE deploying the HISTORY_DATABASE_URL-first chain.
           - audit-ven        # read-only census of VEN cards (chase-tier fields)
           - audit-runes      # read-only census of every set's Rune printings + which lack real art
           - set-rune-art     # attach real English art to placeholder rune printings (OGN 'b' promos, UNL alt arts, SFD Nexus Night) + clear the Chinese-only VEN alt-art prints
@@ -127,10 +128,11 @@ jobs:
           # The click/price-history tables can live in a SECOND Neon project
           # (src/lib/db-history.ts). Ordinary pushes never reach it, so new columns
           # (e.g. ClickEvent.path) 500 the admin clicks page until pushed here too.
-          # RH7 is the CURRENT project (2026-08-04, after RH6 neared its Neon
-          # network-transfer allowance in four days — see db-history.ts);
-          # RH6/RH5/_4/base/_2/_3 are older, dead/exhausted fallbacks only.
-          HISTORY_DB: ${{ secrets.RH7 || vars.RH7 || secrets.RH6 || vars.RH6 || secrets.RH5 || vars.RH5 || secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 || secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL || secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 || secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
+          # HISTORY_DATABASE_URL is the CURRENT project (2026-08-11, after RH7
+          # neared its Neon network-transfer allowance a week into service — see
+          # db-history.ts, which explains why this chain is CURRENT-first rather
+          # than newest-first). RH7 is the rollback; everything below it is dead.
+          HISTORY_DB: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL || secrets.RH7 || vars.RH7 || secrets.RH6 || vars.RH6 || secrets.RH5 || vars.RH5 || secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 || secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 || secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
         run: |
           # --accept-data-loss: some schema changes are intentionally destructive
           # (e.g. dropping a removed feature's tables/columns) — prisma db push
@@ -156,13 +158,13 @@ jobs:
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
         run: |
-          TARGET="${RH7:-${RH6:-${RH5:-${HISTORY_DATABASE_URL_4:-$HISTORY_DATABASE_URL}}}}"
+          TARGET="${HISTORY_DATABASE_URL:-${RH7:-${RH6:-${RH5:-$HISTORY_DATABASE_URL_4}}}}"
           if [ -z "$TARGET" ]; then
-            echo "::error::No target history DB visible to Actions (RH7 / RH6 / RH5 / HISTORY_DATABASE_URL_4 / HISTORY_DATABASE_URL)."
+            echo "::error::No target history DB visible to Actions (HISTORY_DATABASE_URL / RH7 / RH6 / RH5 / HISTORY_DATABASE_URL_4)."
             exit 1
           fi
-          if [ -z "${RH7:-}" ]; then
-            echo "::warning::RH7 is not visible to Actions — this is copying into an OLDER (exhausted) history project. Add RH7 under Settings → Secrets and variables → Actions."
+          if [ -z "${HISTORY_DATABASE_URL:-}" ]; then
+            echo "::warning::HISTORY_DATABASE_URL is not visible to Actions — this is copying into a project that is NOT the current one. Add it under Settings → Secrets and variables → Actions."
           fi
           echo "Pushing schema to the target history database…"
           # Non-fatal: a forked history DB can carry EXTRA columns this ref's schema
@@ -330,6 +332,184 @@ jobs:
           echo "     grep the Vercel logs for [egress-guard:history] — db-history.ts"
           echo "     logs any single history query returning >=1 MB, which names the"
           echo "     model and operation actually draining the allowance."
+
+      - name: Migrate the HISTORY database (RH7 → HISTORY_DATABASE_URL) via pg_dump/pg_restore
+        # ROTATING BACK ONTO A RECYCLED PROJECT. RH7 is approaching its monthly
+        # network-transfer allowance; HISTORY_DATABASE_URL is the OLDEST project
+        # in the chain, retired long ago, and its allowance reset at the start of
+        # this month — so it is empty capacity we already own. Neon's caps are
+        # per project and per month, which makes re-using a rested project a
+        # legitimate move rather than a hack, and it costs nothing.
+        #
+        # The direction is the only thing unusual here: every other migration in
+        # this file moves FORWARD onto a newly provisioned project. This one moves
+        # BACK. That inverts the "newest first" convention the chains were written
+        # around, so db-history.ts, build-db-push.sh and the workflow env blocks
+        # now describe themselves as CURRENT-first instead — see the comment on
+        # HISTORY_URL. tests/db-chain.test.ts pins app and build to each other.
+        #
+        # The cheapest CORRECT way to drain a Neon project that is near its
+        # allowance. Mirrors the migrate-main-db step below, scoped to the three
+        # tables a history project actually holds (Card is only there as the FK
+        # parent for PriceHistory; see ensureHistoryCards() in lib/db-history.ts).
+        #
+        # WHY NOT the `migrate-history` task above? scripts/migrate-history.ts
+        # streams every row over the UNCOMPRESSED Postgres wire protocol and
+        # re-reads the whole Card table on top — the most expensive possible way
+        # to read a database that is already out of allowance. pg_dump
+        # --format=custom compresses on the wire. Keep the Prisma script for what
+        # it's better at (multi-source top-ups, tolerating a dead source, dedupe);
+        # use THIS for the bulk copy.
+        #
+        # RE-RUNNABLE: truncates the target's three tables and re-copies, so every
+        # run is a full re-sync of the source's CURRENT state. Run it once for the
+        # bulk copy, then once more immediately before deploying the new chain, so
+        # anything written in between is included.
+        #
+        # THE TARGET IS AN OLD PROJECT, so unlike the RH6→RH7 migration its schema
+        # is not merely empty, it is STALE — it predates every migration since it
+        # was retired. `prisma db push` below brings it up to the current schema
+        # before anything is restored.
+        if: inputs.task == 'migrate-history-db-to-hdu'
+        env:
+          # SOURCE deliberately EXCLUDES RH7 — that's the NEW project we migrate
+          # TO. Resolving it with the RH7-first chain used everywhere else would
+          # point source and target at the same database, and the migration would
+          # silently no-op while reporting every row count as matching. This is
+          # not hypothetical: the same trap is documented on migrate-main-db.
+          #
+          # RH6 leads the source list because that is where the live data is: it
+          # served from 2026-07-31 until RH7 replaced it, so it holds every row
+          # written in that window. The older vars remain behind it as fallbacks
+          # for a re-run against an already-drained RH6.
+          SOURCE_HISTORY_URL: ${{ secrets.RH7 || vars.RH7 }}
+          TARGET_HISTORY_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
+          # Only ever used for a "did RH7 accidentally get set to the operational
+          # database?" guard before this step truncates anything.
+          OPERATIONAL_URL: ${{ secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+        run: |
+          set -uo pipefail
+
+          if [ -z "$TARGET_HISTORY_URL" ]; then
+            echo "::error::HISTORY_DATABASE_URL is not visible to Actions — add it under Settings → Secrets and variables → Actions (exact name HISTORY_DATABASE_URL)."
+            exit 1
+          fi
+          if [ -z "$SOURCE_HISTORY_URL" ]; then
+            echo "::error::RH7 is not visible to Actions — nothing to migrate FROM."
+            exit 1
+          fi
+          if [ "$SOURCE_HISTORY_URL" = "$TARGET_HISTORY_URL" ]; then
+            echo "::error::SOURCE and TARGET resolve to the SAME database — HISTORY_DATABASE_URL must be a different Neon project than RH7. Aborting before doing anything."
+            exit 1
+          fi
+          if [ -n "${OPERATIONAL_URL:-}" ] && [ "$TARGET_HISTORY_URL" = "$OPERATIONAL_URL" ]; then
+            echo "::error::HISTORY_DATABASE_URL resolves to the OPERATIONAL database. This step TRUNCATES its target — aborting rather than wiping production data."
+            exit 1
+          fi
+
+          # Neon runs a newer Postgres major than ubuntu-latest's stock pg_dump
+          # (16.x), and pg_dump refuses to dump from a server newer than itself.
+          # Install from PGDG's own apt repo rather than guessing a version.
+          echo "== Installing PostgreSQL client tools from PGDG =="
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-18
+          export PATH="/usr/lib/postgresql/18/bin:$PATH"
+          pg_dump --version; psql --version
+
+          # Catalog statistics only — a few rows of metadata, NOT the tables. Tells
+          # us what this migration is about to cost before spending any allowance.
+          echo "== Source table sizes (from catalog — negligible transfer) =="
+          psql "$SOURCE_HISTORY_URL" -P pager=off -c "
+            SELECT relname AS table,
+                   to_char(n_live_tup, 'FM999,999,999') AS est_rows,
+                   pg_size_pretty(pg_total_relation_size(relid)) AS total_size
+            FROM pg_stat_user_tables
+            ORDER BY pg_total_relation_size(relid) DESC
+            LIMIT 20;" 2>&1 || echo "(size report unavailable — continuing)"
+
+          echo "== Bringing the target's schema up to date (it is an OLD project — its schema predates recent migrations) =="
+          DATABASE_URL="$TARGET_HISTORY_URL" npx prisma db push --skip-generate --accept-data-loss
+
+          # LAST-LINE SAFETY GUARD, checked AFTER the schema exists and BEFORE any
+          # destructive statement: a history project holds no accounts. If "User"
+          # has rows, RH7 is pointed at a real operational database and the
+          # TRUNCATE below would destroy production data.
+          USERS=$(psql "$TARGET_HISTORY_URL" -tAc 'SELECT COUNT(*) FROM public."User"' 2>/dev/null || echo "0")
+          case "$USERS" in ''|*[!0-9]*) USERS=0;; esac
+          if [ "$USERS" -gt 0 ]; then
+            echo "::error::Target has $USERS rows in public.\"User\" — that is an OPERATIONAL database, not a history project. Refusing to truncate. Check what the HISTORY_DATABASE_URL secret is set to."
+            exit 1
+          fi
+          echo "Target public.\"User\" rows: 0 ✓ (confirmed history-only project)"
+
+          # DUMP BEFORE TRUNCATE, always — if the source refuses reads (fully
+          # exhausted), we must not have already destroyed the target's contents.
+          echo "== Dumping Card + ClickEvent + PriceHistory from the source (compressed) =="
+          if ! pg_dump "$SOURCE_HISTORY_URL" --no-owner --no-acl --format=custom --data-only \
+                 -t 'public."Card"' -t 'public."ClickEvent"' -t 'public."PriceHistory"' \
+                 -f history.dump; then
+            echo "::error::Could not read RH7. If it is hard-capped, its history cannot be drained — the site still works on an empty target (charts and the Index rebuild from the next price import onward). Nothing was written to the target."
+            exit 1
+          fi
+          echo "Dump size: $(du -h history.dump | cut -f1)"
+
+          echo "== Clearing the target's history tables for a clean re-sync =="
+          psql "$TARGET_HISTORY_URL" -c 'TRUNCATE public."PriceHistory", public."ClickEvent", public."Card" CASCADE;'
+
+          # ORDER IS LOAD-BEARING: PriceHistory.cardId REFERENCES Card(id), so Card
+          # rows must land first or every COPY fails the FK. pg_restore replays
+          # archive entries in the order pg_dump wrote them (alphabetical: Card,
+          # ClickEvent, PriceHistory) which is coincidentally correct — but relying
+          # on alphabetical luck is not a design. Restore Card explicitly first.
+          # The dump file is LOCAL, so this second pass costs zero source transfer.
+          echo "== Restoring Card (the FK parent) =="
+          pg_restore --no-owner --no-acl --data-only -t 'Card' -d "$TARGET_HISTORY_URL" history.dump
+          echo "== Restoring ClickEvent + PriceHistory =="
+          pg_restore --no-owner --no-acl --data-only -t 'ClickEvent' -t 'PriceHistory' -d "$TARGET_HISTORY_URL" history.dump
+
+          echo "== Verifying row counts (source vs target) =="
+          # COUNT(*) transfers a single integer per table rather than re-reading
+          # data — do NOT "verify" by re-reading rows; an earlier version of the
+          # migrate-main-db job did that and burned the allowance it was saving.
+          # set +e so every count is attempted and every error is PRINTED rather
+          # than swallowed into a command substitution.
+          set +e
+          MISMATCH=0
+          for T in 'public."Card"' 'public."ClickEvent"' 'public."PriceHistory"'; do
+            SRC=$(psql "$SOURCE_HISTORY_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
+            DST=$(psql "$TARGET_HISTORY_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
+            case "$SRC" in ''|*[!0-9]*) echo "$T source query FAILED: $SRC"; MISMATCH=1; continue;; esac
+            case "$DST" in ''|*[!0-9]*) echo "$T target query FAILED: $DST"; MISMATCH=1; continue;; esac
+            if [ "$SRC" = "$DST" ]; then
+              echo "$T: source=$SRC target=$DST ✓"
+            else
+              echo "$T: source=$SRC target=$DST ✗ MISMATCH"
+              MISMATCH=1
+            fi
+          done
+          set -e
+          if [ "$MISMATCH" = "1" ]; then
+            echo "::error::Row-count mismatch — do NOT deploy the HISTORY_DATABASE_URL-first chain yet. Re-run this task, or inspect the pg_restore output above."
+            exit 1
+          fi
+          echo "All tables match — HISTORY_DATABASE_URL now holds a full copy of the history data."
+          echo ""
+          echo "NEXT STEPS:"
+          echo "  1. Re-run this task immediately before deploying, so anything the"
+          echo "     price importer wrote to RH7 in the meantime is included."
+          echo "  2. src/lib/db-history.ts, scripts/build-db-push.sh and the workflow"
+          echo "     chains now put HISTORY_DATABASE_URL FIRST, so a deploy moves"
+          echo "     history reads/writes onto it. HISTORY_DATABASE_URL is already"
+          echo "     set in Vercel — confirm it is ticked for Production, Preview"
+          echo "     AND Development."
+          echo "  3. Leave RH7 set as the rollback fallback; remove it only once the"
+          echo "     new target has been serving cleanly for a while."
+          echo "  4. This buys a fresh monthly allowance, not a fix. The burn rate is"
+          echo "     the real problem — grep the Vercel logs for [egress-guard:history];"
+          echo "     db-history.ts names getEmptyCardIds() as the first suspect."
 
       - name: Migrate main (operational) database to RM3
         # Full pg_dump/pg_restore of the ENTIRE operational schema (users, cards,
