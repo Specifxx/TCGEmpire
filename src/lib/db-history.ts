@@ -100,19 +100,32 @@ if (HISTORY_URL_SOURCE !== "HISTORY_DATABASE_URL") {
 
 // True when the history tables live in their OWN database. When split, PriceHistory's
 // Card foreign key means card rows must exist there too — see ensureHistoryCards().
-// Compared against the RESOLVED operational URL, not bare DATABASE_URL. db.ts
-// resolves the operational database as RM3 || DATABASE_URL_2 || DATABASE_URL,
-// so comparing to DATABASE_URL alone got this wrong in a specific, quiet way:
-// with RM3 set and no history variable at all, HISTORY_URL falls through to
-// DATABASE_URL, which is NOT the operational database — yet this returned
-// false ("not split"). ensureHistoryCards() then no-ops, and the next
-// price-import's createMany fails PriceHistory's Card foreign key, swallowed by
-// its try/catch as a single warning line.
+// Compared against the RESOLVED operational URL, not bare DATABASE_URL:
+// comparing to DATABASE_URL alone got this wrong in a specific, quiet way —
+// with a newer operational project set and no history variable at all,
+// HISTORY_URL falls through to DATABASE_URL, which is NOT the operational
+// database, yet this returned false ("not split"). ensureHistoryCards() then
+// no-ops, and the next price-import's createMany fails PriceHistory's Card
+// foreign key, swallowed by its try/catch as a single warning line.
+//
+// THIS LIST HAD ITSELF DRIFTED, which is the same bug one level up: it stopped
+// at RM3 while db.ts had moved on to RM5 || RM4 || RM3 || … So with RM5 serving
+// and RM3 still set as a fallback, "the operational database" resolved here to
+// RM3 — a different, dead project — and any comparison against it was answering
+// about the wrong database. It happens to have been harmless (the history
+// project is a distinct URL either way, so historyIsSplit stayed true), but a
+// chain that is wrong-but-currently-harmless is exactly how this repo has lost
+// a day to a P1001 more than once. Mirrors src/lib/db.ts's OPERATIONAL_URL.
 //
 // Resolved inline rather than imported from db.ts on purpose: db.ts constructs
 // the operational PrismaClient at module scope, so importing it here eagerly
 // would spin up a second client in every context that only wants history.
-const OPERATIONAL_URL = process.env.RM3 || process.env.DATABASE_URL_2 || process.env.DATABASE_URL;
+const OPERATIONAL_URL =
+  process.env.RM5 ||
+  process.env.RM4 ||
+  process.env.RM3 ||
+  process.env.DATABASE_URL_2 ||
+  process.env.DATABASE_URL;
 export const historyIsSplit = HISTORY_URL !== OPERATIONAL_URL;
 
 // Ensure a generous connect_timeout (Postgres/libpq connection param, in

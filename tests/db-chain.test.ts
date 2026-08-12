@@ -85,3 +85,17 @@ test("the 'you fell back to a dead project' warnings name the CURRENT project", 
   assert.match(read("src/lib/db.ts"), new RegExp(`OPERATIONAL_URL_SOURCE !== "${op}"`));
   assert.match(read("src/lib/db-history.ts"), new RegExp(`HISTORY_URL_SOURCE !== "${hist}"`));
 });
+
+test("db-history's idea of the operational database matches db.ts's", () => {
+  // historyIsSplit compares the resolved history URL against the resolved
+  // OPERATIONAL one. If db-history.ts's copy of that chain lags behind db.ts's,
+  // it is answering about a different — usually dead — project. That is how this
+  // list came to stop at RM3 while db.ts had moved on to RM5, and the failure it
+  // guards (ensureHistoryCards() no-opping, then price-import silently dropping
+  // every PriceHistory row on a Card foreign key) is swallowed into one warning
+  // line, so nothing at runtime would have told us.
+  assert.deepEqual(
+    chainFrom(read("src/lib/db-history.ts"), "OPERATIONAL_URL"),
+    chainFrom(read("src/lib/db.ts"), "OPERATIONAL_URL")
+  );
+});
