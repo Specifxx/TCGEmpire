@@ -5,11 +5,17 @@ import { SITE_URL } from "@/lib/site";
 
 // Single-page glossary + hub. riftbound.gg's /glossary (launched 2026-07-18) is one
 // page covering every keyword briefly; this page covers the same "one-page intent"
-// (every known keyword name, alphabetised reference) while each verified entry also
-// links out to its own deep page — direct answer, worked examples with real card
-// images, edge-case rulings and a live "every card with this keyword" list, which a
-// single glossary page structurally can't do. See lib/keywords.ts for why only some
-// names are linked: we only publish rules text we can verify against a real source.
+// (every known keyword name, alphabetised reference) while each entry also links
+// out to its own deep page — direct answer, worked examples with real card images,
+// edge-case rulings and a live "every card with this keyword" list, which a single
+// glossary page structurally can't do.
+//
+// EVERY keyword is now linked (as of 2026-08-12 — see lib/keywords.ts's header for
+// the source). The `entry ? … : …` branch below is kept rather than assumed away:
+// it's what makes an unlinked name a "Soon" placeholder instead of a broken link if
+// ALL_KEYWORD_NAMES ever grows a name before its KEYWORDS entry is written — a
+// deliberate future state the data-accuracy rule requires (verify before publishing),
+// not a leftover from an earlier, incomplete version of this page.
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
@@ -59,10 +65,10 @@ export default function KeywordsIndexPage() {
         </nav>
         <h1 className="text-2xl font-extrabold text-white sm:text-3xl">Riftbound keywords &amp; game actions glossary</h1>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
-          Every Riftbound keyword and game action in one place. The mechanics below have a quick rules
-          reference — a direct answer plus every card printed with it, live-priced — and link out to a
-          full step-by-step guide for the deckbuilding detail. The rest are listed here as a reference
-          index while we source verified rules text for them.
+          Every Riftbound keyword and game action, from Empower and Flow to Tank, Reaction and the
+          rest — {KEYWORDS.length} in total, each with a quick rules reference straight from Riot&apos;s
+          own Core Rules: a direct answer, every card printed with it (live-priced), and a link out to
+          a full guide for the deckbuilding detail.
         </p>
       </div>
 

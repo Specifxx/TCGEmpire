@@ -2746,6 +2746,275 @@ Full decklists that use Burn are in the **[best Vendetta decks guide](/guides/be
 Burn cards are live with real prices on the **[Vendetta set page](/sets/vendetta)** — RiftCompare compares every store so you pay the cheapest delivered price. Browse the whole set visually in the **[Vendetta card gallery](/sets/vendetta/gallery)**.`,
   },
   {
+    slug: "riftbound-combat-keywords-explained",
+    category: "guide",
+    title: "Riftbound Combat Keywords Explained: Tank, Shield, Deflect, Assault, Backline & Ganking",
+    excerpt:
+      "A plain-English guide to Riftbound's six combat keywords — Tank, Shield, Deflect, Assault, Backline and Ganking — how each one changes damage assignment or movement, and how to build a defensive (or aggressive) shell around them.",
+    author: "RiftCompare",
+    date: "2026-08-12",
+    readMins: 6,
+    tags: ["combat", "keywords", "rules", "deckbuilding", "guide"],
+    faq: [
+      { q: "What's the difference between Tank and Backline?", a: "Tank must be assigned lethal combat damage first among your units; Backline must be assigned it last. They're direct opposites, and combining both on different units gives you a controlled front line and back line." },
+      { q: "What's the difference between Shield and Assault?", a: "Shield gives bonus Might only while a unit is defending; Assault gives the same kind of bonus only while it's attacking. A unit only ever benefits from one of the two in a given combat." },
+      { q: "Does Deflect stop targeting outright?", a: "No — Deflect is a tax, not a block. It adds a mandatory extra Power cost every time an opponent's spell or ability targets the Deflect card; they can still pay it and target anyway." },
+      { q: "Does Ganking give a unit an extra move?", a: "No — it widens the destinations a unit's existing standard move can reach (battlefield to battlefield, not just through base), it doesn't grant an additional movement action." },
+      { q: "Can a unit have more than one of these keywords?", a: "Yes — nothing stops a card from combining, say, Tank and Shield, making it both the unit that has to be hit first AND tougher while defending." },
+      { q: "Are these keywords new to Vendetta?", a: "No — Tank, Shield, Deflect, Assault, Backline and Ganking are core Riftbound combat rules, not mechanics introduced by a specific set, unlike Empower, Flow and Burn." },
+    ],
+    embeds: [
+      {
+        title: "Cards printed with Tank",
+        note: "Real, officially catalogued cards whose rules text carries the Tank keyword.",
+        rulesContain: "[Tank]",
+        rulesSet: "VEN",
+        take: 6,
+      },
+      {
+        title: "Cards printed with Shield",
+        note: "Real, officially catalogued cards whose rules text carries the Shield keyword.",
+        rulesContain: "[Shield",
+        rulesSet: "VEN",
+        take: 6,
+      },
+    ],
+    body: `Six of Riftbound's keywords exist purely to change what happens during combat — who has to be hit, how much Might a unit is really swinging with, and where a unit is even allowed to move. None of the six are new to a single set the way Empower, Flow and Burn are; they're part of the core combat rules, and each has its own quick-reference page with a live "every card" list — this guide is the plain-English walkthrough of how they interact.
+
+## Tank: forces damage toward itself
+
+**A unit with Tank must be assigned lethal combat damage before any of your other units that don't have Tank.** It's the classic "hit me first" ability — an attacker literally isn't allowed to assign damage anywhere else on your board until every Tank unit you control has already taken lethal. If you have more than one Tank unit, the attacker chooses which takes it. Full reference: **[Tank keyword page](/keywords/tank)**.
+
+[[embed:0]]
+
+## Shield: tougher on defense only
+
+**Shield [X] gives a unit +X Might, but only while it's defending in combat.** The bonus disappears the instant combat ends or the unit stops being the defender — it does nothing on offense, and nothing outside a fight. Multiple sources of Shield on one unit simply add together. Full reference: **[Shield keyword page](/keywords/shield)**.
+
+[[embed:1]]
+
+## Deflect: a tax on being targeted
+
+**Deflect [X] makes an opponent pay X extra Power, of any domain, every time their spell or ability targets the card with Deflect.** It doesn't stop them from targeting it — it just makes doing so more expensive, which is often enough to make a removal spell not worth casting at all.
+
+## Assault: tougher on offense only
+
+**Assault [X] is Shield's mirror image — +X Might, but only while the unit is attacking.** Where Shield rewards sitting back and letting the opponent walk into your wall, Assault rewards initiating combat yourself. A unit can't benefit from both Shield and Assault in the same combat, since it's never attacking and defending at once.
+
+## Backline: forces damage away from itself
+
+**Backline is Tank's opposite — a unit with it must be assigned lethal damage LAST, after every other unit you control without Backline already has.** It's the keyword for protecting something you don't want to lose in a small skirmish: a value engine, a card-draw source, anything you'd rather keep alive through the fight than sacrifice early.
+
+## Ganking: battlefield-to-battlefield movement
+
+**Ganking lets a unit's standard move go directly from one battlefield to another, instead of being limited to your base or an adjacent location.** It's purely additive — it never removes a move a unit already had, it just opens up a shortcut. That makes it valuable the moment your units are spread across more than one battlefield: reinforcing a fight, or bailing out of a losing one, without routing back through base first.
+
+## Building a defensive shell (or an aggressive one)
+
+**A defensive board** wants Tank on your cheapest, most expendable unit (so it absorbs the first hit), Backline on whatever you actually care about keeping, and Shield scattered across units you expect to be defending regularly. **An aggressive board** wants Assault on your biggest attackers and Ganking on anything you need to reposition into a fresh fight. Deflect works for either plan — it's valuable on any unit that's already doing its job and you don't want removed.
+
+None of these six replace deckbuilding fundamentals — a great Tank unit still needs a reasonable body underneath the keyword. But knowing exactly what each one does (and doesn't do) is the difference between reading a card correctly and guessing.
+
+Every combat-keyword card is live with real prices — browse **[Tank](/keywords/tank)**, **[Shield](/keywords/shield)**, **[Deflect](/keywords/deflect)**, **[Assault](/keywords/assault)**, **[Backline](/keywords/backline)** and **[Ganking](/keywords/ganking)** on their own reference pages, or see the full **[Riftbound keywords glossary](/keywords)** for every mechanic in the game.`,
+  },
+  {
+    slug: "riftbound-timing-keywords-explained",
+    category: "guide",
+    title: "Riftbound Timing Keywords Explained: Action, Reaction, Hidden & Ambush",
+    excerpt:
+      "How Action, Reaction, Hidden and Ambush change WHEN a Riftbound card can be played — instant-speed tricks, facedown surprise plays, and dropping a unit into a fight already in progress.",
+    author: "RiftCompare",
+    date: "2026-08-12",
+    readMins: 5,
+    tags: ["timing", "keywords", "rules", "deckbuilding", "guide"],
+    faq: [
+      { q: "What's the actual difference between Action and Reaction?", a: "Reaction includes everything Action grants — permission to play during a Showdown — plus the additional permission to play during a Closed state, Riftbound's most restrictive, truly any-time timing window. A card only needs Reaction to get both." },
+      { q: "Can you play a Hidden card the turn you hide it?", a: "No — a hidden card only gains its free cost and Reaction-speed timing starting the next turn, not immediately." },
+      { q: "Can Ambush put a unit on an empty battlefield?", a: "No — Ambush specifically requires a battlefield where you already control one or more units; an empty battlefield isn't a valid Ambush destination." },
+      { q: "Do these keywords change what a card does?", a: "No — all four are pure permissions. They change when and where a card can be played, never its actual effect once it resolves." },
+      { q: "Are Action, Reaction, Hidden and Ambush new to Vendetta?", a: "No — they're core Riftbound timing rules, not set-specific mechanics like Empower, Flow and Burn." },
+    ],
+    embeds: [
+      {
+        title: "Cards printed with Reaction",
+        note: "Real, officially catalogued cards whose rules text carries the Reaction keyword.",
+        rulesContain: "[Reaction]",
+        rulesSet: "VEN",
+        take: 6,
+      },
+      {
+        title: "Cards printed with Ambush",
+        note: "Real, officially catalogued cards whose rules text carries the Ambush keyword.",
+        rulesContain: "[Ambush]",
+        rulesSet: "VEN",
+        take: 6,
+      },
+    ],
+    body: `Riftbound splits a turn into states — Open, Showdown, Closed — and most cards can only be played during your own Open state, on your own turn. Four keywords exist purely to carve out exceptions to that: Action, Reaction, Hidden and Ambush. None change what a card does — only when and, for two of them, where it can be played.
+
+## Action: permission to play during a Showdown
+
+**Action lets a card or ability be played or activated during a Showdown, even on your opponent's turn** — a state that would otherwise lock most cards out. It's pure permission: an Action unit still has to be played to a base or a battlefield you control, exactly like normal. Full reference: **[Action keyword page](/keywords/action)**.
+
+## Reaction: true instant speed
+
+**Reaction includes everything Action grants, plus permission to play during a Closed state** — Riftbound's tightest timing window, and the closest thing the game has to a universal "any time" instant. A Reaction card can respond on either player's turn, which is what makes Reaction cards feel like tricks and counters rather than ordinary plays. Full reference: **[Reaction keyword page](/keywords/reaction)**.
+
+[[embed:0]]
+
+## Hidden: pay now, play later as a surprise
+
+**Hidden lets you pay a cost to place a card facedown at a battlefield you control.** From the next turn on, that facedown card gains Reaction and can be played for free — your opponent has no idea what it is until it resolves. The tradeoff: targeting from a Hidden play is usually restricted to the battlefield it was hidden at, since the card already committed to a location the moment it went facedown. Full reference: **[Hidden keyword page](/keywords/hidden)**.
+
+## Ambush: dropping into an ongoing fight
+
+**Ambush lets a unit be played to a battlefield where you already control units** — normally off-limits, since units can usually only go to your base or somewhere you already have presence — and grants it Reaction for that specific play. Full reference: **[Ambush keyword page](/keywords/ambush)**.
+
+[[embed:1]]
+
+## Building a tempo deck around timing keywords
+
+Hidden and Ambush are natural partners: hide a threat one turn, then Ambush a second unit into the same fight the next, and your opponent has to play around two unknowns instead of one visible board. Reaction abilities that Add resources let you hold energy back and still cover a cost you didn't fully plan for. None of these four keywords do anything on their own — their value is entirely in disrupting what an opponent thinks they know about the board, which is exactly why a deck built around them rewards patient, information-heavy play over straightforward curve-outs.
+
+See the full **[Riftbound keywords glossary](/keywords)** for every mechanic in the game, including the set's headline new keywords in the **[Empower](/guides/riftbound-empower-explained)**, **[Flow](/guides/riftbound-flow-explained)** and **[Burn](/guides/riftbound-burn-explained)** guides.`,
+  },
+  {
+    slug: "riftbound-growth-keywords-explained",
+    category: "guide",
+    title: "Riftbound Growth & Value Keywords Explained: Legion, Level, Hunt, Weaponmaster, Equip, Accelerate, Vision & Deathknell",
+    excerpt:
+      "Eight Riftbound keywords built around scaling up over the course of a game — XP thresholds, playing multiple cards a turn, equipping gear, card selection and death triggers, all explained in plain English.",
+    author: "RiftCompare",
+    date: "2026-08-12",
+    readMins: 7,
+    tags: ["deckbuilding", "keywords", "rules", "guide"],
+    faq: [
+      { q: "How do you gain the XP that Level checks for?", a: "Hunt is the most direct source — it grants XP whenever a unit with Hunt Conquers or Holds a battlefield, defaulting to 1 XP unless a higher value is printed." },
+      { q: "Does Legion need two cards WITH Legion to turn on?", a: "No — playing any one other card that turn satisfies every Legion ability you control, not just a matching pair." },
+      { q: "What's the difference between Equip and Weaponmaster?", a: "Equip is something you pay for and activate yourself, on your own timing. Weaponmaster automatically offers a discounted equip the instant a unit with that keyword is played — no separate activation needed." },
+      { q: "Does Accelerate do anything once a unit is already on the board?", a: "No — it only affects how the unit enters (readied instead of exhausted); it has no function afterward." },
+      { q: "Does Deathknell trigger if a permanent is recalled instead of dying?", a: "No — Deathknell specifically watches for the permanent being Killed and sent to the trash. If that death is replaced by something else, like a recall, the trigger never fires." },
+      { q: "Are any of these eight keywords new to Vendetta?", a: "No — Legion, Level, Hunt, Weaponmaster, Equip, Accelerate, Vision and Deathknell are all core Riftbound rules, not set-specific mechanics like Empower, Flow and Burn." },
+    ],
+    embeds: [
+      {
+        title: "Cards printed with Weaponmaster",
+        note: "Real, officially catalogued cards whose rules text carries the Weaponmaster keyword.",
+        rulesContain: "[Weaponmaster]",
+        rulesSet: "VEN",
+        take: 6,
+      },
+      {
+        title: "Cards printed with Deathknell",
+        note: "Real, officially catalogued cards whose rules text carries the Deathknell keyword.",
+        rulesContain: "[Deathknell]",
+        rulesSet: "VEN",
+        take: 6,
+      },
+    ],
+    body: `Where the combat keywords decide who takes damage and the timing keywords decide when a card can be played, this cluster of eight is about the long game — scaling a board up, banking XP toward a threshold, arming a unit with gear, and turning a card's death into an advantage instead of a loss.
+
+## Legion: rewards playing more than one card a turn
+
+**A Legion ability is dormant until you've played a second card the same turn — then it stays active for the rest of that turn.** It's a running condition, not a one-time trigger, and playing any single other card turns on every Legion ability you control at once. Full reference: **[Legion keyword page](/keywords/legion)**.
+
+## Level: a running XP threshold
+
+**A Level [N] ability is active for as long as your XP total stays at N or more,** and goes inactive the instant it drops below — including if the card changes controller and the new controller doesn't meet the threshold. It's a long-game investment: unremarkable early, and only worth its full text once your XP engine catches up. Full reference: **[Level keyword page](/keywords/level)**.
+
+## Hunt: the XP engine behind Level
+
+**Hunt X grants that much XP whenever the unit with it Conquers OR Holds a battlefield** — both winning a fight and simply keeping a battlefield you already hold can trigger it, so a Hunt unit that sticks around keeps paying out turn after turn. It's the most direct way to reach the thresholds Level cards check for. Full reference: **[Hunt keyword page](/keywords/hunt)**.
+
+## Weaponmaster: free equipping on entry
+
+**When you play a unit with Weaponmaster, you may immediately choose an Equipment card you control and attach it, paying the Equip cost at a discount.** It only does something if you already have Gear sitting around — a payoff for a deck that plays Equipment early and expects to arm a threat later. Full reference: **[Weaponmaster keyword page](/keywords/weaponmaster)**.
+
+[[embed:0]]
+
+## Equip: attaching gear on your own timing
+
+**Equip [Cost] is an activated ability on Gear cards — pay it, choose a unit you control, and the Gear attaches to it.** It's the manual version of what Weaponmaster automates: you control exactly when it happens, rather than only getting the option the turn a Weaponmaster unit lands. Full reference: **[Equip keyword page](/keywords/equip)**.
+
+## Accelerate: pay more now, act immediately
+
+**Accelerate lets you pay an optional extra cost as you play a unit so it enters the board readied instead of exhausted** — meaning it can attack or block right away instead of sitting out its first turn. It only matters at the moment of playing the card; once the unit's on the board, Accelerate has already done its job. Full reference: **[Accelerate keyword page](/keywords/accelerate)**.
+
+## Vision: card selection on entry
+
+**Vision triggers when the permanent with it is played, letting its controller Predict** — look at the top card of their deck and choose whether to keep it there or Recycle it away. It doesn't draw an extra card; it just smooths out what you're about to draw next, and it's most valuable stacked across several sources. Full reference: **[Vision keyword page](/keywords/vision)**.
+
+## Deathknell: turning a death into value
+
+**Deathknell is short for "when I die, [Effect]" — it fires when the permanent is Killed and actually sent to the trash,** not if that death is replaced by something else (a recall, for instance). It rewards a deck that's happy to trade a unit away, or even sacrifice it deliberately, because the death itself is the payoff. Full reference: **[Deathknell keyword page](/keywords/deathknell)**.
+
+[[embed:1]]
+
+## How these eight fit together
+
+Hunt feeds Level. Legion rewards a low, wide curve of cheap cards. Equip and Weaponmaster both want a Gear-heavy shell, just on different timings. Accelerate and Vision are both about smoothing out a game plan rather than winning it outright — one skips downtime, the other skips a bad draw. Deathknell is the odd one out: it's the only keyword here that wants a unit gone, not scaled up, which makes it a natural fit alongside sacrifice effects and trades you were happy to make anyway.
+
+See the full **[Riftbound keywords glossary](/keywords)** for every mechanic in the game, or the **[Empower](/guides/riftbound-empower-explained)**, **[Flow](/guides/riftbound-flow-explained)** and **[Burn](/guides/riftbound-burn-explained)** guides for Vendetta's three headline new mechanics.`,
+  },
+  {
+    slug: "riftbound-game-actions-explained",
+    category: "guide",
+    title: "Riftbound Game Actions Explained: Buff, Stun, Predict, Add, Repeat, Temporary, Unique & Mighty",
+    excerpt:
+      "The verbs Riftbound cards actually use inside their ability text — Buff, Stun, Predict, Add, Repeat, Temporary, Unique and Mighty — explained precisely, straight from the Core Rules.",
+    author: "RiftCompare",
+    date: "2026-08-12",
+    readMins: 6,
+    tags: ["rules", "keywords", "beginners", "guide"],
+    faq: [
+      { q: "What's the difference between a Keyword and a Game Action in Riftbound?", a: "A Keyword is a standalone bracketed line on a card, like [Tank] or [Empower]. A Game Action is a verb used INSIDE other cards' ability text — 'Buff a unit', 'Add [2]', 'Stun a unit' — that Riot's Core Rules still defines precisely, even though it isn't its own keyword line." },
+      { q: "Can you Buff a unit that already has a Buff counter?", a: "You can still choose it, but no additional counter is placed — a unit can only hold one Buff counter at a time unless a specific effect says otherwise." },
+      { q: "Does a Stunned unit still need full damage to die?", a: "Yes — being Stunned only removes a unit's Might from that combat's damage; it still needs damage equal to its full Might to actually be killed." },
+      { q: "Is Mighty something a card grants me?", a: "No — Mighty is a derived threshold. Any unit with 5 or more current Might automatically counts as Mighty, and stops the instant that total drops." },
+      { q: "Does Unique do anything once the game has started?", a: "No — Unique is purely a deckbuilding restriction (only one copy of that named card per deck). It has zero effect once the game is underway." },
+      { q: "What happens if you Repeat a spell's effect?", a: "Paying the Repeat cost as you play a spell or ability makes its instructions execute a second time on resolution — and the choices for that second execution don't have to match the first." },
+    ],
+    body: `Not every precise rule in Riftbound is a bracketed keyword line. Riot's Core Rules also defines a set of "Game Actions" — verbs that show up inside OTHER cards' ability text, like "Buff a unit" or "Add [2]" — with the same rigor as a full keyword. This guide covers eight of them: the ones that show up most often once you start reading real cards closely.
+
+## Buff: a single counter, not a stacking bonus
+
+**Buffing places a Buff counter on a chosen unit — but only if it doesn't already have one.** A unit can hold just one Buff counter at a time by default, so re-Buffing an already-Buffed unit doesn't add anything further; it can still be chosen, the instruction just doesn't do more. Some cards check whether a Buff actually landed ("if it was buffed this way...") before triggering a bonus. Full reference: **[Buff keyword page](/keywords/buff)**.
+
+## Stun: skips one combat, doesn't kill
+
+**A Stunned unit doesn't contribute its Might to combat damage that turn** — it's a binary status, on or off, and re-Stunning an already-Stunned unit does nothing further. Stunned wears off automatically at end-of-turn cleanup, and a Stunned unit still needs damage equal to its full Might to actually die — Stun is a tempo tool for winning one fight, not permanent removal. Full reference: **[Stun keyword page](/keywords/stun)**.
+
+## Predict: looking before you draw
+
+**Predicting shows you the top card of your own Main Deck and lets you choose to keep it there or Recycle it away.** "Predict X" does this for X cards at once. It doesn't draw anything — it's pure card selection, most commonly triggered by the [Vision](/keywords/vision) keyword. Full reference: **[Predict keyword page](/keywords/predict)**.
+
+## Add: putting resources in your pool
+
+**Adding puts Energy or Power into your Rune Pool** — "Add [2]" means 2 Energy, a domain letter means Power of that domain. Abilities that Add resolve immediately rather than passing priority, which is what makes an Add ability with Reaction so flexible: it can be activated the instant a cost needs paying, mid-resolution of something else entirely. Full reference: **[Add keyword page](/keywords/add)**.
+
+## Repeat: running a spell's effect twice
+
+**Paying "Repeat [Cost]" as you play a spell or ability lets its instructions execute a second time on resolution** — the choices for that second execution (targets, modes) don't have to match the first. Multiple instances of Repeat can each be paid separately, for one additional execution per instance. Full reference: **[Repeat keyword page](/keywords/repeat)**.
+
+## Temporary: built to last exactly one round
+
+**A permanent with Temporary is automatically killed at the very start of its controller's next Beginning Phase, before scoring.** It gets the rest of the turn it entered on, plus reaches the start of the following one — then it's gone. It's how Riftbound prints a self-cleaning, one-cycle effect. Full reference: **[Temporary keyword page](/keywords/temporary)**.
+
+## Unique: a deckbuilding rule, not a gameplay effect
+
+**Unique restricts a deck to only one card of that exact name.** Unlike everything else in this guide, it does absolutely nothing once a game has started — it's checked purely when a deck list is validated. Full reference: **[Unique keyword page](/keywords/unique)**.
+
+## Mighty: a threshold, not a keyword you're granted
+
+**A unit "is Mighty" automatically whenever its current Might is 5 or greater**, and stops being Mighty the instant that total drops — there's no separate status to track, it's derived live from the number. Cards that check "while I'm Mighty..." turn their bonus on and off with the unit's stats. Full reference: **[Mighty keyword page](/keywords/mighty)**.
+
+## Why these matter even though they're not "keywords"
+
+Reading a Riftbound card correctly means reading these verbs precisely, not intuitively — "Buff" doesn't stack past one counter the way a generic "+1/+1" might in another game, and "Stun" doesn't kill even though it feels like it should. Getting a Game Action's exact rule wrong is one of the most common ways a new player misreads what a card actually does.
+
+See the full **[Riftbound keywords glossary](/keywords)** for every mechanic in the game — combat keywords like Tank and Shield are in the **[Combat Keywords guide](/guides/riftbound-combat-keywords-explained)**, and Vendetta's three headline new mechanics are in the **[Empower](/guides/riftbound-empower-explained)**, **[Flow](/guides/riftbound-flow-explained)** and **[Burn](/guides/riftbound-burn-explained)** guides.`,
+  },
+  {
     slug: "riftbound-vendetta-card-list",
     category: "guide",
     title: "Riftbound Vendetta Card List — All 166 Cards Confirmed",
