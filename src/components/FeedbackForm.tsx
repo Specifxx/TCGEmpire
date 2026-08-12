@@ -48,7 +48,7 @@ export function FeedbackForm({ months }: { months: number }) {
         </p>
         <Link href="/login?next=/feedback" className="btn-primary mt-4 inline-flex">Sign in →</Link>
         <p className="mt-2 text-xs text-slate-500">
-          No account? <Link href="/register?next=/feedback" className="text-brand-400 hover:underline">Create one free →</Link>
+          No account? <Link href="/login?next=/feedback" className="text-brand-400 hover:underline">Sign in free →</Link>
         </p>
       </div>
     );

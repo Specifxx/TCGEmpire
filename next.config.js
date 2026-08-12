@@ -183,6 +183,13 @@ const nextConfig = {
       // in the Unleashed era and fell out of the Vendetta tier list; their URLs
       // were indexed and internally linked, so they 301 to the deck index rather
       // than 404. Add a line here whenever a slug leaves prisma/meta-decks.json.
+      // RETIRED PASSWORD AUTH. Sign-in is Google/Discord only; /register, /forgot
+      // and /reset no longer exist. They were linked from the navbar, a dozen
+      // in-page CTAs and previously-sent emails, so they 301 to /login — which is
+      // now both "sign in" and "create account" — rather than 404.
+      { source: "/register", destination: "/login", permanent: true },
+      { source: "/forgot", destination: "/login", permanent: true },
+      { source: "/reset", destination: "/login", permanent: true },
       { source: "/decks/leblanc-deceiver", destination: "/decks", permanent: true },
       { source: "/decks/fiora-grand-duelist", destination: "/decks", permanent: true },
       { source: "/decks/vex-gloomist", destination: "/decks", permanent: true },

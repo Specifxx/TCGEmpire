@@ -138,7 +138,7 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
                 <Link href="/tools" onClick={onClose} className="btn-ghost mt-2 text-sm">Go to your tools →</Link>
               </div>
             ) : !user ? (
-              <Link href="/register?next=/premium" onClick={onClose} className={GOLD_BTN}>
+              <Link href="/login?next=/premium" onClick={onClose} className={GOLD_BTN}>
                 Create a free account to start →
               </Link>
             ) : !premiumCheckout ? (

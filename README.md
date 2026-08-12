@@ -27,7 +27,11 @@ npm run dev          # start the dev server at http://localhost:3000
 The seed creates a ready-to-use account:
 
 - **Email:** `demo@tcgempire.au`
-- **Password:** `password123`
+
+> Sign-in is **Google or Discord only** — the email/password flow was removed.
+> The seeded accounts exist for their marketplace data (listings, orders, wallet);
+> to sign in as one locally, sign in with an OAuth provider on the same address,
+> or set `googleId`/`discordId` on the row by hand.
 - Starts with **$500** in demo wallet credit (it's pre-filled on the sign-in page).
 
 It is pre-loaded alongside 6 seller accounts, 54 cards (the "Origins" set) and

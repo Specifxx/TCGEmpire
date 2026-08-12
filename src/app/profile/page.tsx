@@ -15,10 +15,12 @@ export default async function ProfilePage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/profile");
 
-  const account = await prisma.user.findUnique({ where: { id: user.id }, select: { googleId: true, discordId: true, passwordHash: true } });
+  const account = await prisma.user.findUnique({ where: { id: user.id }, select: { googleId: true, discordId: true } });
 
+  // Password sign-in was removed; Google and Discord are the only ways in, so a
+  // "Password" row here would advertise a method nothing can use. The column is
+  // still on the model — see the note in api/auth/oauth/[provider]/callback.
   const methods = [
-    { label: "Password", on: !!account?.passwordHash },
     { label: "Google", on: !!account?.googleId },
     { label: "Discord", on: !!account?.discordId },
   ];

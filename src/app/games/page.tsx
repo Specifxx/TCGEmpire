@@ -176,7 +176,7 @@ export default async function GamesPage() {
             🏆 <strong className="text-white">Make a free account</strong> to save your scores and climb the global leaderboards.
           </p>
           <div className="flex shrink-0 gap-2">
-            <Link href="/register?next=/games" className="btn-primary text-sm">Create account</Link>
+            <Link href="/login?next=/games" className="btn-primary text-sm">Sign in</Link>
             <Link href="/login?next=/games" className="btn-ghost text-sm">Sign in</Link>
           </div>
         </div>

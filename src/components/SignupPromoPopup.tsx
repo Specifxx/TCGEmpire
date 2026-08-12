@@ -19,7 +19,7 @@ import { formatPremiumDuration } from "@/lib/premium-format";
 // marketplace all at once read as overwhelming/untrustworthy to a new visitor).
 const SEEN_KEY = "rc_signup_promo_seen";
 const SHOW_DELAY_MS = 25_000; // let a new visitor actually look around first
-const SKIP_PATHS = ["/login", "/register", "/forgot", "/reset", "/verify", "/marketplace"];
+const SKIP_PATHS = ["/login", "/verify", "/marketplace"];
 
 // Deliberately NO slot counts. The popup used to render "{remaining} of {limit}
 // early-adopter spots left"; both numbers came from a public, cacheable API
@@ -105,7 +105,7 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
         </div>
 
         <div className="px-6 pb-6 pt-0">
-          <AuthForm mode="register" providers={providers} bare />
+          <AuthForm providers={providers} bare />
         </div>
       </div>
     </div>

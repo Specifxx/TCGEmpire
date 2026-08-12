@@ -246,7 +246,7 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
                   breakdown — not just the top pick.
                 </p>
                 <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-                  {user ? <PremiumButton /> : <Link href="/register?next=/tools/rising" className="btn-primary text-sm">Create a free account</Link>}
+                  {user ? <PremiumButton /> : <Link href="/login?next=/tools/rising" className="btn-primary text-sm">Sign in free</Link>}
                   <Link href="/movers" className="btn-ghost text-sm">Free price movers →</Link>
                 </div>
               </div>

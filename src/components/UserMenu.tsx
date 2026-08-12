@@ -8,7 +8,7 @@ import { useMe } from "@/lib/use-me";
 import { usePremiumDialog } from "./PremiumDialog";
 
 // Auth routes we never want to "return to" after sign-in (would loop).
-const AUTH_PATHS = ["/login", "/register", "/forgot", "/reset", "/verify"];
+const AUTH_PATHS = ["/login", "/verify"];
 
 export interface MenuUser {
   displayName: string;

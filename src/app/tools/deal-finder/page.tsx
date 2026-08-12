@@ -487,7 +487,7 @@ function LockedTable({ children, signedIn }: { children: React.ReactNode; signed
             {signedIn ? (
               <PremiumButton />
             ) : (
-              <Link href="/register?next=/tools/deal-finder" className="btn-primary text-sm">Create a free account</Link>
+              <Link href="/login?next=/tools/deal-finder" className="btn-primary text-sm">Sign in free</Link>
             )}
             <Link href="/movers" className="btn-ghost text-sm">Free price movers →</Link>
           </div>

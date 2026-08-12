@@ -157,7 +157,7 @@ export default async function ValueFinderPage() {
                   {user ? (
                     <PremiumButton />
                   ) : (
-                    <Link href="/register?next=/tools/value-finder" className="btn-primary text-sm">Create a free account</Link>
+                    <Link href="/login?next=/tools/value-finder" className="btn-primary text-sm">Sign in free</Link>
                   )}
                   <Link href="/browse" className="btn-ghost text-sm">Search the database →</Link>
                 </div>
