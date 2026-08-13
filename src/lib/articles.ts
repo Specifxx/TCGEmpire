@@ -6110,6 +6110,87 @@ Rather than trying to keep a static list current (champions are added with every
 
 If you're coming from League of Legends and want the easiest way in, starting with a Legend you already have hours on is a genuinely good approach — you already understand their identity and strengths, which carries over into how they play as a Legend. See [Riftbound for beginners](/guides/riftbound-for-beginners) for how to build your first deck around one, or [what Riftbound actually is](/guides/is-there-a-league-of-legends-card-game) if you're still getting your bearings.`,
   },
+  {
+    slug: "shen-eye-of-twilight-signature-underrated-vendetta",
+    category: "blog",
+    title: "Why Shen's \"Armpit Boi\" Signature Might Be Vendetta's Most Underrated Chase Card",
+    excerpt:
+      "Our case for why the Shen, Eye of Twilight Signature — known to collectors as \"Armpit Boi\" — deserves more attention than it's getting. Opinion, with the real prices shown alongside it.",
+    author: "RiftCompare",
+    date: "2026-08-13",
+    readMins: 5,
+    tags: ["opinion", "vendetta", "chase cards", "signature", "shen"],
+    summary: [
+      "**This is opinion, not a price call.** The numbers below are real and current; the case for \"underrated\" is our read on them, not a guarantee.",
+      "**Shen, Eye of Twilight (VEN 193★/166)** is currently US$544.66 / A$816.70 / £618.70 / S$895.78 / C$746.18 — already a genuinely expensive card, not a hidden cheap one.",
+      "**The case rests on three real things**: an unusually tight, distinctive art crop (hence the nickname), a thin two-store market that hasn't fully priced in how hard it may get to find, and Shen's broad popularity as a League of Legends champion.",
+      "**A close comparable — Ambessa, Matriarch of War's Signature — trades at a similar price on similarly thin stock**, so this isn't a case of Shen being cheap next to its peers. It's a case that the whole tier might have room to move.",
+    ],
+    faq: [
+      {
+        q: "What is the Shen \"Armpit Boi\" card in Riftbound?",
+        a: "It's the community nickname for Shen, Eye of Twilight (VEN 193★/166) — Shen's Signature-tier Legend printing from Vendetta, hand-signed by artist Oscar Vega. The nickname comes from the art's unusually tight crop, framed around a raised-arm pose.",
+      },
+      {
+        q: "Is Shen, Eye of Twilight expensive?",
+        a: "Yes — it's currently priced around US$545 / A$817, in line with other Vendetta Signature Legends, not a bargain-bin card. \"Underrated\" here refers to our view that it has room to move further, not that it's currently cheap.",
+      },
+      {
+        q: "Is the Shen Signature a good investment?",
+        a: "That's genuinely a matter of opinion, and we'd rather be straight about that than pretend otherwise. Riftbound doesn't have a long enough price history for confident predictions, and RiftCompare's role is to report real, live prices — this article is our take, not a guarantee.",
+      },
+      {
+        q: "Why is it called \"Armpit Boi\"?",
+        a: "It's a collector nickname for the card's art — an unusually tight, cropped composition built around Shen's raised arm — rather than an official Riot name.",
+      },
+    ],
+    browseCta: {
+      href: "/card/shen-eye-of-twilight-ven-193s-166",
+      label: "See live prices for this card →",
+      blurb: "Current price across every store we track, updated as the market moves.",
+    },
+    body: `A quick disclosure before anything else: **this is our opinion**, not a price call you should treat as guaranteed. Riftbound doesn't have the price history to make confident predictions about anything, and we say so on every valuation piece we publish. What follows is our honest read on one specific card, with the real numbers shown alongside it so you can weigh it yourself.
+
+## The card
+
+**Shen, Eye of Twilight** (VEN 193★/166) is Shen's Signature-tier Legend printing from [Vendetta](/sets/vendetta) — a Calm-domain Legend whose printed ability reads: *"ACTION: Give a friendly unit Tank this turn."* Like every Signature printing, it carries a real hand-signature from its artist, Oscar Vega, over a premium alternate-art treatment. It's the reason Signature cards sit at the very top of Riftbound's rarity ladder: each one is a physically unique object, not just a scarce print run.
+
+Collectors have taken to calling it **"Armpit Boi"** — and having looked at the actual card, it's an accurate description, not an exaggeration. The art is an unusually tight, close-cropped composition built around Shen's raised arm, a bolder crop than most Legend art goes for. It's a distinctive piece specifically because of that choice, not despite it.
+
+## The real numbers
+
+As of publishing, Shen, Eye of Twilight is priced at:
+
+| Market | Price |
+| --- | --- |
+| Australia | A$816.70 |
+| United States | US$544.66 |
+| United Kingdom | £618.70 |
+| Singapore | S$895.78 |
+| Canada | C$746.18 |
+
+That's already a serious price — this is not a card sitting cheap and unnoticed. It's also thinly stocked: only **two stores** carry it right now across the markets we track. [Check the live price](/card/shen-eye-of-twilight-ven-193s-166) before it moves.
+
+There's a second, separate "Shen, Eye of Twilight" printing (193/166, without the signature) at a much lower price — that's a different, non-signed Showcase alternate-art, not the same card. If you're chasing the signed one specifically, check the collector number carries the ★.
+
+## The case for underrated
+
+Here's our reasoning, laid out plainly as reasoning rather than fact:
+
+**The art is doing something few other Legends do.** Most Legend art plays it safe with a fuller, more conventional character portrait. This one commits fully to an unconventional crop, which is exactly the kind of choice that tends to age into being more sought-after, not less, once a set's early-days pricing settles down.
+
+**The stock is thin enough that the current price may not hold.** Two stores carrying a card at all six of RiftCompare's tracked markets is a genuinely small sample — a market that thin can reprice quickly in either direction the moment even one of those listings sells or a new buyer starts actively looking.
+
+**Shen's reach as a League of Legends champion is broad.** He's one of the more enduringly popular characters in League's own roster, which matters here specifically because signature Legend prices tend to track character demand as much as in-game strategic relevance.
+
+## What this isn't
+
+We checked the closest comparable we could find — **Ambessa, Matriarch of War**'s Signature printing, also from Vendetta — and it's priced within a similar band on similarly thin stock (around US$495 / A$727, two stores). So this isn't a claim that Shen's Signature is mispriced against its direct peers; it currently isn't. The case here is broader: that Vendetta's Signature Legends as a tier, Shen's included, may not have finished settling into their real price yet — and if that's right, a card with this card's specific combination of distinctive art, thin stock and character popularity is a reasonable one to have on a watchlist.
+
+## Make your own call
+
+We'd rather show you the real numbers and our actual reasoning than tell you what to do with them. If you want to track it, [set a price alert](/alerts) rather than committing based on any one article — ours included.`,
+  },
   // The 2026 SEO content pack — the five briefed articles plus the four
   // AI-visibility target pages and the variant glossary. Kept in their own file
   // so the batch stays reviewable; spread here so every existing surface (the
