@@ -861,13 +861,40 @@ Want to find your grail? **[Browse every Riftbound card](/browse)** and sort by 
       "New to Riftbound: League of Legends TCG? Here's how the game works, how to start playing, and exactly what to buy first without overspending.",
     author: "RiftCompare",
     date: "2026-06-08",
+    updated: "2026-08-13",
     readMins: 5,
     tags: ["beginners", "guide", "how to start"],
+    summary: [
+      "**Riftbound is Riot Games' physical League of Legends card game**, published in English by UVS Games — a real, official product, not a fan project.",
+      "**The cheapest way in is a ready-to-play product** (a preconstructed deck or a Proving Grounds kit), not a booster box.",
+      "**Five sets are out so far**: Origins, Origins: Proving Grounds, Spirit Forged, Unleashed and Vendetta — see [every set in order](/guides/riftbound-sets-in-order) for the full picture, including what's next.",
+      "Coming from League of Legends itself rather than another card game? [Here's how the two connect](/guides/is-there-a-league-of-legends-card-game).",
+    ],
+    faq: [
+      {
+        q: "What do I need to start playing Riftbound?",
+        a: "A single preconstructed deck or Proving Grounds kit is enough to play your first game — it comes complete and ready to play, no singles required.",
+      },
+      {
+        q: "Is Riftbound expensive to get into?",
+        a: "Not if you start right. A preconstructed deck is a fixed, modest cost, and you can upgrade it one card at a time with cheap singles rather than buying booster boxes hoping to pull what you need.",
+      },
+      {
+        q: "How many Riftbound sets are there for a beginner to worry about?",
+        a: "Five have released — Origins, Origins: Proving Grounds, Spirit Forged, Unleashed and Vendetta — but you don't need to know all of them to start. A single starter deck from any set is a complete, playable game on its own.",
+      },
+      {
+        q: "Do I need to learn the full rules before buying anything?",
+        a: "No — buy or borrow a starter deck first, then learn by playing. RiftCompare's interactive learn page walks through a full game step by step if you want the rules before you sit down.",
+      },
+    ],
     body: `**Riftbound** is the **League of Legends Trading Card Game** from Riot Games (published in English by UVS Games). If you're brand new, here's how to start playing — and exactly what to buy first without overspending.
 
 ## What is Riftbound?
 
-Riftbound is a collectible card game set in the League of Legends universe. You build a deck around a **Legend** (your champion) using cards across the game's domains — **Fury, Calm, Mind, Body, Chaos, Order** and Colorless — and card types like **Units, Spells, Gear, Runes and Battlefields**. Sets so far include **Origins (OGN)**, **Proving Grounds**, **Spirit Forged (SFD)** and **Unleashed (UNL)**.
+Riftbound is a collectible card game set in the League of Legends universe. You build a deck around a **Legend** (your champion) using cards across the game's domains — **Fury, Calm, Mind, Body, Chaos, Order** and Colorless — and card types like **Units, Spells, Gear, Runes and Battlefields**. Five sets have released so far: **Origins (OGN)**, **Origins: Proving Grounds**, **Spirit Forged (SFD)**, **Unleashed (UNL)** and **Vendetta (VEN)** — see [every Riftbound set in order](/guides/riftbound-sets-in-order) if you want the full picture, including what's coming next. Coming from the video game rather than another card game? [Here's exactly how Riftbound connects to League of Legends](/guides/is-there-a-league-of-legends-card-game).
+
+Want the full rules before you buy anything? The **[interactive learn page](/learn)** walks through a whole game step by step, domain by domain, free and with no signup.
 
 ## The easiest way to start
 
@@ -5922,6 +5949,166 @@ Riftbound's highest-value chase cards — Signature printings, alt-arts, cards t
 When you're comparing prices — on RiftCompare or anywhere else — the condition grade is doing as much work as the number next to it. A "cheap" Moderately Played listing next to a Near Mint one at a similar price isn't actually the better deal.
 
 [Browse every Riftbound card](/browse) for live prices across every store we track, or read [how to store and protect your cards](/guides/how-to-store-and-protect-riftbound-cards) so the condition you buy at is the condition you still have next year.`,
+  },
+  {
+    slug: "is-there-a-league-of-legends-card-game",
+    category: "guide",
+    title: "Is There a League of Legends Card Game? Yes — It's Called Riftbound",
+    excerpt:
+      "Searching for a League of Legends card game? Riftbound is Riot's real, physical trading card game set in the League universe — official, in stores now, with real LoL champions as playable cards.",
+    author: "RiftCompare",
+    date: "2026-08-13",
+    readMins: 6,
+    tags: ["beginners", "guide", "league of legends", "new player"],
+    summary: [
+      "**Yes — it's called Riftbound.** A real, physical trading card game from Riot Games, published in English by UVS Games, set in the League of Legends universe.",
+      "**It's official, not a fan project** — the same company that makes League of Legends made this, and it's sold in game stores worldwide.",
+      "**Real League champions are playable cards.** Ahri, Jinx, Yasuo, Zed, Lux and dozens more already have Riftbound cards — see [which champions are in Riftbound](/guides/league-of-legends-champions-in-riftbound).",
+      "**It's a different kind of game.** No client to install, no matchmaking — Riftbound is a turn-based strategy card game you play with a physical deck, closer to a board game night than a MOBA.",
+    ],
+    faq: [
+      {
+        q: "Is there a League of Legends card game?",
+        a: "Yes — it's called Riftbound: League of Legends TCG. It's a real, physical trading card game made by Riot Games (the studio behind League of Legends) and published in English by UVS Games. It's an official product, sold in game and hobby stores, not a fan-made spinoff.",
+      },
+      {
+        q: "What is Riftbound?",
+        a: "Riftbound is a collectible card game set in the League of Legends universe. Players build a deck around a Legend — a champion from League of Legends — using cards drawn from the game's six domains (Fury, Calm, Mind, Body, Chaos, Order) plus Colorless, and card types including Units, Spells, Gear, Runes and Battlefields.",
+      },
+      {
+        q: "Is Riftbound made by Riot Games?",
+        a: "Yes. Riftbound is Riot Games' own physical trading card game, published in English by UVS Games — it isn't a third-party or unofficial product.",
+      },
+      {
+        q: "Can I play as my favourite League of Legends champion in Riftbound?",
+        a: "Many League champions already have real Riftbound cards, and more are added with every new set — see the full, always-current list on the champions page to check yours specifically.",
+      },
+      {
+        q: "How is Riftbound different from League of Legends the video game?",
+        a: "They share a universe and characters, but they're different kinds of games entirely. League of Legends is a live, real-time multiplayer video game you play online. Riftbound is a turn-based physical card game — you build a deck, shuffle real cards, and play across a table (or online through unofficial simulators), with no client, matchmaking or reflexes involved.",
+      },
+      {
+        q: "How do I start playing Riftbound?",
+        a: "The cheapest way in is a preconstructed starter deck — it's complete and playable out of the box. See the full beginner's guide for exactly what to buy first.",
+      },
+    ],
+    browseCta: {
+      href: "/learn",
+      label: "Learn to play, free →",
+      blurb: "An interactive, step-by-step walkthrough of a full Riftbound game — no signup, no rules book required.",
+    },
+    body: `If you searched something like "LoL card game" or "is there a League of Legends card game" and landed here — yes. It's called **Riftbound**, and it's real: an official, physical trading card game from Riot Games, the same studio that makes League of Legends.
+
+## So, is there a League of Legends card game?
+
+Yes. **Riftbound: League of Legends TCG** is a genuine, in-print trading card game — not a fan project, not a mobile spin-off, not a mod. It's published in English by UVS Games, sold through game and hobby stores the same way Magic: The Gathering or Pokémon are, and it's set directly in the League of Legends universe: the same champions, the same world, translated into a deck-building card game you play with real cards across a table.
+
+If you've played League of Legends and are curious whether "there's a card game version," the honest short answer is: yes, and it's had real, dedicated sets released regularly since launch — five so far, with [more already dated](/guides/riftbound-sets-in-order).
+
+## What Riftbound actually is
+
+Riftbound is a collectible card game built around **Legends** — champion cards that anchor your deck. You've likely recognised the name already: Legends are drawn from League of Legends' own champion roster. Around them, you build a deck using cards from six **domains** — Fury, Calm, Mind, Body, Chaos and Order, plus a Colorless pool any deck can use — and several card types: Units, Spells, Gear, Runes and Battlefields.
+
+That's the whole shape of it. Two players build decks, take turns, and use their Legend and supporting cards to out-manoeuvre each other — the same kind of structure you'd recognise from any strategy card game, just wearing League of Legends' characters and world.
+
+## How it connects to the game you already know
+
+The connection isn't just cosmetic. Real League of Legends champions are the actual playable Legend cards — **Ahri, Jinx, Yasuo, Zed, Lux, Ezreal, Katarina, Vi, Caitlyn, Jhin** and dozens more already have real, released Riftbound cards, and every new set adds champions who didn't have cards before. Radiance, the next confirmed set, adds five more: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV.
+
+If you're wondering whether your specific main made the cut, the [champions page](/champions) is a live, always-current list — every League champion with a Riftbound card, how many cards they have, and what those cards cost right now.
+
+## What's different from the video game
+
+It's worth being upfront about this, because the two products don't play anything alike:
+
+- **No client, no matchmaking.** League of Legends is a live online video game. Riftbound is a physical (and, through community tools, digital-simulator) card game — you build a deck ahead of time and play it out, turn by turn, rather than queuing into a live match.
+- **Strategy over reflexes.** There's no mechanical skill ceiling the way there is with last-hitting or skillshots — the game is decided by deckbuilding decisions and the choices you make each turn.
+- **A collection, not an account.** Progress in Riftbound is physical cards you own, not an account you level up. That's also why prices matter — which is the entire reason RiftCompare exists.
+
+If that sounds appealing rather than off-putting, the crossover tends to land well: the same champion identities and world-building, in a genre that rewards patient, considered play over reaction time.
+
+## How to start playing
+
+You don't need to know the full rule set before you touch a card. The fastest way in:
+
+1. **Get a starter product.** A preconstructed deck gives you a complete, playable deck immediately — no guessing what to buy. Compare prices on the [sealed products page](/sealed).
+2. **Learn by playing.** The [interactive learn page](/learn) walks through a full game step by step, domain by domain, free and with no signup — good either before or after your first real game.
+3. **Upgrade with singles, not boxes.** Once you know what your deck wants, [individual cards](/browse) are the cheapest way to improve it — far cheaper than opening boosters hoping to pull what you need.
+
+For the fuller walkthrough — what to buy first, what to skip, and how to budget your first purchase — see the [complete beginner's guide](/guides/riftbound-for-beginners).
+
+## Where to buy
+
+Once you're ready to buy anything — a starter deck, a booster box, or your first few singles — RiftCompare compares live prices across every store we track in your market, so you're not stuck taking the first price you find. [Browse the card database](/browse) or [compare sealed products](/sealed) to get started.`,
+  },
+  {
+    slug: "league-of-legends-champions-in-riftbound",
+    category: "guide",
+    title: "Which League of Legends Champions Are in Riftbound?",
+    excerpt:
+      "Ahri, Jinx, Yasuo, Zed and dozens more League of Legends champions already have real Riftbound cards, with more added every set. Here's how the champion system works, and how to check if yours does.",
+    author: "RiftCompare",
+    date: "2026-08-13",
+    readMins: 5,
+    tags: ["champions", "guide", "league of legends", "new player"],
+    summary: [
+      "**Dozens of League of Legends champions already have real Riftbound cards** as Legends — the champion that anchors a deck — with more added in every new set.",
+      "**Recognisable names already in the game** include Ahri, Jinx, Yasuo, Zed, Lux, Ezreal, Katarina, Vi, Caitlyn and Jhin.",
+      "**Radiance, the next set, adds five more**: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV.",
+      "The exact, always-current list — every champion with a card, how many, and live prices — is on the [champions page](/champions), not a static list that goes stale.",
+    ],
+    faq: [
+      {
+        q: "Are League of Legends champions playable in Riftbound?",
+        a: "Yes — a League of Legends champion becomes a Legend card in Riftbound, the card that anchors and identifies your deck. Dozens of champions already have real cards, and more are added with every new set.",
+      },
+      {
+        q: "How many League of Legends champions are in Riftbound?",
+        a: "Dozens so far, and the number grows with every set — Riftbound only adds a champion once real cards for them exist, rather than announcing one in advance. See the champions page for the exact, always-current count and list.",
+      },
+      {
+        q: "Is my favourite League of Legends champion in Riftbound?",
+        a: "Check the champions page — it's a live list built directly from the card database, so it's always accurate to what's actually printed, rather than a list that can go stale.",
+      },
+      {
+        q: "What is a Legend card in Riftbound?",
+        a: "A Legend is the champion card your deck is built around — the closest thing Riftbound has to League of Legends' own champion select. Your Legend shapes what domains and strategies your deck leans into.",
+      },
+      {
+        q: "Do champions get new cards in every Riftbound set?",
+        a: "Existing champions can get additional printings and treatments, and each new set has historically introduced champions who didn't have a Riftbound card before — Radiance, the next set, adds five: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV.",
+      },
+    ],
+    browseCta: {
+      href: "/champions",
+      label: "See every champion with a card →",
+      blurb: "The full, live list — every League of Legends champion with a Riftbound card, how many, and today's cheapest price.",
+    },
+    body: `If you play League of Legends and are wondering whether your main made it into Riftbound, there's a good chance they already have — and if not yet, there's a real chance they will.
+
+## How champions work in Riftbound
+
+Every League of Legends champion who appears in Riftbound does so as a **Legend** card — the card your entire deck is built around. It's the closest thing Riftbound has to picking a champion in League of Legends itself: your Legend sets the tone for which [domains](/learn) (Fury, Calm, Mind, Body, Chaos, Order) and strategies your deck leans into.
+
+Champions aren't added speculatively. A champion gets real Riftbound cards through an actual set release, not an announcement — which means the list of "who's in Riftbound" only ever reflects cards that genuinely exist and are genuinely buyable.
+
+## Champions already in the game
+
+Dozens of League of Legends champions already have real, released Riftbound cards. Recognisable names already in the game include:
+
+**Ahri**, **Jinx**, **Yasuo**, **Zed**, **Lux**, **Ezreal**, **Katarina**, **Vi**, **Caitlyn**, **Jhin**, **Lee Sin**, **Darius**, **Garen**, **Jayce**, **Mel**, **Ashe**, **Sett** — and that's a small sample, not the full list. New champions have joined with every set released so far.
+
+## Who's next: Radiance's new champions
+
+The next confirmed set, [Radiance](/radiance-countdown), adds **five** champions who don't have a Riftbound Legend card yet: **Seraphine**, **Evelynn**, **Ekko**, **Ziggs** and **Jarvan IV**. If one of those is your main, Radiance — dated 23 October 2026 — is when you'll be able to build around them.
+
+## Check if your main is in Riftbound
+
+Rather than trying to keep a static list current (champions are added with every set, so any fixed list here would be out of date within weeks), the **[champions page](/champions)** is a live table built directly from the card database: every League of Legends champion with a Riftbound card, exactly how many cards they have, and today's cheapest price for each. It's the one place this list can't go stale.
+
+## Start with a champion you already know
+
+If you're coming from League of Legends and want the easiest way in, starting with a Legend you already have hours on is a genuinely good approach — you already understand their identity and strengths, which carries over into how they play as a Legend. See [Riftbound for beginners](/guides/riftbound-for-beginners) for how to build your first deck around one, or [what Riftbound actually is](/guides/is-there-a-league-of-legends-card-game) if you're still getting your bearings.`,
   },
   // The 2026 SEO content pack — the five briefed articles plus the four
   // AI-visibility target pages and the variant glossary. Kept in their own file
