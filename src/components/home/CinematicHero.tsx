@@ -47,16 +47,16 @@ export function CinematicHero({
       {/* ── Foreground content (re-aligned to the normal grid) ───────────────── */}
       <div className="container-app relative z-10 w-full py-8 text-center sm:py-10">
         {/* Kinetic headline — MARKET-NEUTRAL: this page is cached (ISR), so one
-            version serves every visitor and crawler; naming all four markets
-            ranks in all four. Prices localise client-side after hydration.
+            version serves every visitor and crawler; naming all six markets
+            ranks in all six. Prices localise client-side after hydration.
             Sized to lead the page without dominating it. Capped at lg:text-5xl
             (not 6xl) with a wider max-w-4xl measure so the full sentence
             settles into ~2 lines at desktop instead of wrapping to 3. */}
         <h1 className="animate-fade-in [animation-delay:160ms] mx-auto mt-4 max-w-4xl text-3xl font-extrabold leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-5xl">
-          Compare <span className="text-brand-400">Riftbound</span> card prices across AU, NZ, US &amp; UK stores
+          Compare <span className="text-brand-400">Riftbound</span> card prices across AU, NZ, US, UK, SG &amp; CA stores
         </h1>
         <p className="animate-fade-in [animation-delay:240ms] mx-auto mt-4 max-w-2xl text-base text-slate-300">
-          Find the cheapest place to buy Riftbound TCG cards — live local prices in AUD, NZD, USD &amp; GBP
+          Find the cheapest place to buy Riftbound TCG cards — live local prices in AUD, NZD, USD, GBP, SGD &amp; CAD
           compared across stores in Australia, New Zealand, the US, the UK, Singapore and Canada, updated daily.
         </p>
 
