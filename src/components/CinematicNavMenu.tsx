@@ -16,7 +16,18 @@ export function CinematicNavMenu() {
   const { open, setOpen } = useMegaMenu();
   const pathname = usePathname();
   const dialogRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
   const [filter, setFilter] = useState("");
+
+  // React 18's JSX `inert` prop doesn't reliably reach the DOM (no first-class
+  // support until React 19 — the attribute was silently missing from the
+  // rendered HTML, which is exactly what let a close button and search input
+  // stay tab-reachable inside this aria-hidden subtree while closed). Setting
+  // the DOM property directly bypasses that gap; `HTMLElement.prototype.inert`
+  // itself is supported by every browser this site targets.
+  useEffect(() => {
+    if (overlayRef.current) overlayRef.current.inert = !open;
+  }, [open]);
 
   // The panels below, narrowed by the FEATURE filter. Same matcher the ⌘K
   // launcher uses, so "prices"/"deals"/"blog"/"alerts" behave identically on a
@@ -87,10 +98,11 @@ export function CinematicNavMenu() {
     // input focusable inside an aria-hidden subtree — a screen-reader user could
     // tab into controls that, as far as the accessibility tree is concerned, do
     // not exist. `inert` removes them from the tab order and from hit-testing
-    // for exactly as long as aria-hidden is set, so the two can't disagree.
+    // for exactly as long as aria-hidden is set, so the two can't disagree (set
+    // imperatively via overlayRef above — see that comment for why).
     <div
+      ref={overlayRef}
       aria-hidden={!open}
-      {...(open ? {} : { inert: true })}
       className={`fixed inset-0 z-[95] ${open ? "" : "pointer-events-none"}`}
     >
       {/* Solid backdrop — no transparency, no blur. */}

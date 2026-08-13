@@ -24,22 +24,38 @@ export function CountryHeroToggle() {
       <div className="inline-flex items-center gap-1 rounded-full border border-ink-800 p-0.5">
         {COUNTRY_LIST.map((c) => {
           const active = c.code === country;
+          // aria-labelledby, not aria-label: it concatenates the referenced
+          // elements' own text, in this order, so the accessible name is built
+          // FROM the visible "US"/"USD" text instead of a hand-written string
+          // that has to be kept in sync with it. A hand-written aria-label
+          // ("US — United States (USD)") still failed label-content-name-mismatch
+          // even starting with "US", because axe compares against the visible
+          // text run as actually concatenated in the DOM ("USUSD", no separator
+          // between the two spans) — not just "starts with the same word".
+          const codeId = `chc-${c.code}-code`;
+          const currencyId = `chc-${c.code}-currency`;
+          const descId = `chc-${c.code}-desc`;
           return (
             <button
               key={c.code}
               onClick={() => setCountry(c.code)}
               aria-pressed={active}
-              // Includes the visible "US"/"UK" code, so the accessible name
-              // contains the visible label (label-content-name-mismatch).
-              aria-label={`${c.code} — ${c.label} (${active ? currency : c.currency})`}
+              aria-labelledby={active ? `${codeId} ${currencyId} ${descId}` : `${codeId} ${descId}`}
               className={`flex min-h-11 items-center gap-1 rounded-full px-2.5 text-xs font-medium transition-colors ${
                 active
                   ? "bg-ink-800 text-slate-200"
                   : "text-slate-500 hover:bg-ink-900 hover:text-slate-300"
               }`}
             >
-              <span>{c.code}</span>
-              {active && <span className="text-[9px] font-medium text-slate-400">{currency}</span>}
+              <span id={codeId}>{c.code}</span>
+              {active && (
+                <span id={currencyId} className="text-[9px] font-medium text-slate-400">
+                  {currency}
+                </span>
+              )}
+              <span id={descId} className="sr-only">
+                — {c.label}
+              </span>
             </button>
           );
         })}

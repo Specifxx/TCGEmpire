@@ -46,7 +46,7 @@ gtag('consent','default',{
   wait_for_update:500
 });
 gtag('set','ads_data_redaction',true);
-window.__rcConsent={ad:false,analytics:false};
+window.__rcConsent={analytics:false};
 `.trim();
 
 export function ConsentDefaults() {

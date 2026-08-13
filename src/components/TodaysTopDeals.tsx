@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { COUNTRIES, type Country } from "@/lib/country";
 import type { Deal, TopDeals } from "@/lib/top-deals";
 import { formatMoney } from "@/lib/format";
@@ -43,8 +44,12 @@ function DealRow({ deal, currency, country }: { deal: Deal; currency: string; co
     <>
       <div className="h-11 w-8 shrink-0 overflow-hidden rounded bg-ink-900">
         {deal.imageUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={deal.imageUrl} alt={cardImageAlt({ name: deal.title })} width={32} height={44} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+          // next/image: the source is either riftscribe card art or a TCGplayer
+          // sealed-product photo served at a fixed 1000x1000 — both were being
+          // downloaded at full resolution for a 32x44 tile. next/image re-encodes
+          // to AVIF/WebP at the real display size instead (see remotePatterns in
+          // next.config.js).
+          <Image src={deal.imageUrl} alt={cardImageAlt({ name: deal.title })} width={32} height={44} className="h-full w-full object-cover" />
         )}
       </div>
       <div className="min-w-0 flex-1">

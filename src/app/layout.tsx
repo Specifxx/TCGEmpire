@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { Inter, JetBrains_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
@@ -19,15 +20,23 @@ import { FooterNav } from "@/components/FooterNav";
 import { NativeShell } from "@/components/NativeShell";
 import { ReferralCapture } from "@/components/ReferralCapture";
 import { FooterAds } from "@/components/FooterAds";
-import { PriceAlertModal } from "@/components/PriceAlertModal";
-import { SignupPromoPopup } from "@/components/SignupPromoPopup";
 import { enabledProviders } from "@/lib/oauth";
-import { MetaPixel } from "@/components/MetaPixel";
 import { AdSenseLoader } from "@/components/AdSenseLoader";
 import { ConsentDefaults } from "@/components/ConsentDefaults";
 import { ConsentGatedAnalytics } from "@/components/ConsentGatedAnalytics";
 import { PrivacySettingsLink } from "@/components/PrivacySettingsLink";
 import { ADSENSE_CLIENT_ID, ADSENSE_CONFIGURED } from "@/lib/adsense";
+
+// Neither is needed for the initial paint or SEO: the alert modal only opens in
+// response to a PriceWatchButton click, and the signup popup waits 25s before
+// showing itself. ssr:false + dynamic import keeps both out of the JS the
+// browser has to parse/execute before first paint.
+const PriceAlertModal = dynamic(() => import("@/components/PriceAlertModal").then((m) => m.PriceAlertModal), {
+  ssr: false,
+});
+const SignupPromoPopup = dynamic(() => import("@/components/SignupPromoPopup").then((m) => m.SignupPromoPopup), {
+  ssr: false,
+});
 
 // PREVIEW BRANCH — emulates the official Riftbound/League of Legends site's
 // typographic DNA (a sharp, flared serif for titling over a clean humanist sans
@@ -325,9 +334,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             Outside the consent message's scope this mounts after a short grace
             period, so non-EEA measurement is unaffected. */}
         <ConsentGatedAnalytics />
-        {/* Meta Pixel — ad measurement + retargeting for Meta (Facebook/Instagram)
-            ads. Production + web only; see the component for the guards. */}
-        <MetaPixel />
         </PremiumDialogProvider>
         </PremiumProvider>
       </body>

@@ -87,6 +87,22 @@ const securityHeaders = [
 
 const nextConfig = {
   reactStrictMode: true,
+  images: {
+    // Lets next/image re-encode (AVIF/WebP) and downsize these three hotlinked
+    // CDNs instead of shipping their full-resolution source at thumbnail display
+    // size. cdn.riftscribe.gg (card art) and tcgplayer-cdn.tcgplayer.com (sealed
+    // product photos, served at a fixed 1000x1000) are single, fixed hosts, so
+    // they're safe to allow-list outright. i.ebayimg.com is listed too, but
+    // components/EbayPicksLive.tsx and EbayAdCarouselLive.tsx deliberately stay
+    // on a plain <img>: eBay listing photos come from whichever host the seller's
+    // listing happens to use, not always this one, and next/image throws for any
+    // host not on this list — see the comment at their <img> tags.
+    remotePatterns: [
+      { protocol: "https", hostname: "cdn.riftscribe.gg" },
+      { protocol: "https", hostname: "tcgplayer-cdn.tcgplayer.com" },
+      { protocol: "https", hostname: "i.ebayimg.com" },
+    ],
+  },
   async redirects() {
     return [
       // Confirmed 404 in Search Console: an incomplete/truncated deck slug (the

@@ -16,19 +16,34 @@ export function RegionToggle({ label = "Market", className = "" }: { label?: str
       <div className="inline-flex items-center gap-0.5 rounded-lg border border-ink-700 bg-ink-900 p-1">
         {COUNTRY_LIST.map((c) => {
           const active = c.code === country;
+          // aria-labelledby, not aria-label: see the comment on the equivalent
+          // buttons in CountryHeroToggle for why a hand-written string kept
+          // failing label-content-name-mismatch even when it started with the
+          // right word.
+          const flagId = `rt-${c.code}-flag`;
+          const codeId = `rt-${c.code}-code`;
+          const currencyId = `rt-${c.code}-currency`;
+          const descId = `rt-${c.code}-desc`;
           return (
             <button
               key={c.code}
               onClick={() => setCountry(c.code)}
               aria-pressed={active}
-              aria-label={`${c.label} (${active ? currency : c.currency})`}
+              aria-labelledby={active ? `${flagId} ${codeId} ${currencyId} ${descId}` : `${flagId} ${codeId} ${descId}`}
               className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-sm font-semibold transition-colors ${
                 active ? "bg-brand-500 text-ink-950" : "text-slate-300 hover:bg-ink-800 hover:text-white"
               }`}
             >
-              <span className="text-base leading-none">{c.flag}</span>
-              <span>{c.code}</span>
-              {active && <span className="text-[10px] font-medium text-white/80">{currency}</span>}
+              <span id={flagId} className="text-base leading-none">{c.flag}</span>
+              <span id={codeId}>{c.code}</span>
+              {active && (
+                <span id={currencyId} className="text-[10px] font-medium text-white/80">
+                  {currency}
+                </span>
+              )}
+              <span id={descId} className="sr-only">
+                — {c.label}
+              </span>
             </button>
           );
         })}

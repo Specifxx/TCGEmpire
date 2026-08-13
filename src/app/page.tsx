@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { Archivo } from "next/font/google";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
@@ -13,7 +14,6 @@ import { getTopDeals, type TopDeals } from "@/lib/top-deals";
 import { getRecentlyUpdated, getPriceMovers } from "@/lib/price-history";
 import { TodaysTopDeals } from "@/components/TodaysTopDeals";
 import { CinematicHero } from "@/components/home/CinematicHero";
-import { PopularCardsCarousel } from "@/components/home/PopularCardsCarousel";
 import { PartnersStrip } from "@/components/home/PartnersStrip";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { EbayPicks } from "@/components/EbayPicks";
@@ -22,6 +22,15 @@ import { CardsIcon } from "@/components/icons/HomeIcons";
 import { RETAILER_LIST } from "@/lib/retailers";
 import { pageAlternates } from "@/lib/seo";
 import { webPage } from "@/lib/jsonld";
+
+// Below-the-fold, client-rendered tab carousel — code-split into its own chunk
+// (still SSR'd for content/SEO) so its JS isn't part of the bundle the browser
+// has to parse/compile before the hero above it can hydrate and paint. It's
+// well below the LCP candidate (the hero stat line), so nothing here needs to
+// be ready any earlier than "whenever it's scrolled to."
+const PopularCardsCarousel = dynamic(() =>
+  import("@/components/home/PopularCardsCarousel").then((m) => m.PopularCardsCarousel),
+);
 
 // Homepage titling face — a heavy neutral grotesque matching the official
 // Riftbound wordmark lockup ("RIFTBOUND / LEAGUE OF LEGENDS TRADING CARD GAME"),

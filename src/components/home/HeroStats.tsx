@@ -29,7 +29,12 @@ export function HeroStats({
   const storeWord = s.stores === 1 ? "store" : "stores";
 
   return (
-    <p className="animate-fade-in [animation-delay:420ms] num mt-3 text-center text-xs text-slate-500 sm:text-sm">
+    // No entrance animation here (unlike its siblings in CinematicHero): this line
+    // is Lighthouse's LCP element on mobile, and an opacity-0 → 1 fade with a
+    // staggered delay pushes back the moment it's actually painted, directly
+    // inflating LCP. It's real informational content, not decoration, so it
+    // renders immediately with the rest of the SSR'd hero.
+    <p className="num mt-3 text-center text-xs text-slate-500 sm:text-sm">
       <CountUp value={totalCards} /> cards · <CountUp value={s.priced} /> priced ·{" "}
       <CountUp value={s.inStock} /> in-stock listings · <CountUp value={s.stores} /> {country} {storeWord}
     </p>
