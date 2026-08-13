@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { Article } from "@/lib/articles";
 import { fmtDate } from "@/components/ArticleList";
+import { Picture } from "@/components/Picture";
 
 // A named group of articles, surfaced as a topic BUTTON under the Latest list.
 // Matched by tag; `accent` is a hex colour for the button's dot, purely decorative.
@@ -271,21 +272,41 @@ function ArticleCard({
   return (
     <Link
       href={`${basePath}/${a.slug}`}
-      className={`card-surface relative flex flex-col p-5 transition-all hover:-translate-y-0.5 hover:shadow-glow ${
+      className={`card-surface group relative flex flex-col overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-glow ${
         popular ? "border-gold/40" : ""
       } ${className}`}
     >
-      <div className="flex flex-wrap items-center gap-1.5">
-        {popular && <span className="chip bg-gold/15 font-semibold text-gold">Popular</span>}
-        {isNew(a.date) && <span className="chip bg-brand-500/15 font-semibold text-brand-300">New</span>}
-        {a.tags.slice(0, popular || isNew(a.date) ? 2 : 3).map((t) => (
-          <span key={t} className="chip bg-ink-800 text-slate-400">{t}</span>
-        ))}
-      </div>
-      <h2 className="mt-2 text-lg font-bold text-white">{a.title}</h2>
-      <p className="mt-1 line-clamp-3 flex-1 text-sm text-slate-400">{a.excerpt}</p>
-      <div className="mt-3 text-xs text-slate-500">
-        {fmtDate(a.date)} · {a.readMins} min read
+      {/* Real card art when the article has one — most don't yet, so this is
+          conditional rather than a reserved-but-empty box (see LatestPosts.tsx
+          for the "always reserve the slot" version, appropriate there because it
+          only ever shows 3 curated posts). aspect-[1.91/1] + object-cover crops
+          a portrait card photo to a scannable landscape strip, the same treatment
+          the homepage teaser row already uses for consistency. */}
+      {a.hero && (
+        <div className="relative aspect-[1.91/1] w-full shrink-0 overflow-hidden bg-ink-900">
+          <Picture
+            src={a.hero.src}
+            alt={a.hero.alt}
+            width={744}
+            height={1039}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+          />
+        </div>
+      )}
+      <div className="flex flex-1 flex-col p-5">
+        <div className="flex flex-wrap items-center gap-1.5">
+          {popular && <span className="chip bg-gold/15 font-semibold text-gold">Popular</span>}
+          {isNew(a.date) && <span className="chip bg-brand-500/15 font-semibold text-brand-300">New</span>}
+          {a.tags.slice(0, popular || isNew(a.date) ? 2 : 3).map((t) => (
+            <span key={t} className="chip bg-ink-800 text-slate-400">{t}</span>
+          ))}
+        </div>
+        <h2 className="mt-2 text-lg font-bold text-white">{a.title}</h2>
+        <p className="mt-1 line-clamp-3 flex-1 text-sm text-slate-400">{a.excerpt}</p>
+        <div className="mt-3 text-xs text-slate-500">
+          {fmtDate(a.date)} · {a.readMins} min read
+        </div>
       </div>
     </Link>
   );

@@ -312,7 +312,9 @@ export async function ArticleView({ article }: { article: Article }) {
     // so the Organization's entity signals propagate rather than each post being
     // an island.
     isPartOf: { "@id": `${SITE_URL}/#website` },
-    ...(article.hero ? { image: [`${SITE_URL}${article.hero.src}`] } : {}),
+    ...(article.hero
+      ? { image: [article.hero.src.startsWith("http") ? article.hero.src : `${SITE_URL}${article.hero.src}`] }
+      : {}),
     articleSection: article.tags[0],
     wordCount: article.body.split(/\s+/).filter(Boolean).length,
   };
@@ -414,15 +416,23 @@ export async function ArticleView({ article }: { article: Article }) {
 
       {/* Featured image. `priority` because on an article this IS the LCP element,
           and <Picture> serves it as AVIF/WebP with explicit intrinsic dimensions
-          from the build-time manifest, so it can't shift the layout. */}
+          from the build-time manifest, so it can't shift the layout. `object-contain`
+          + a height cap is deliberate: a landscape generated banner still fills
+          edge-to-edge (its scaled height never reaches the cap), while a portrait
+          card photo is shown whole, letterboxed, rather than cropped or stretched
+          to banner-tall. */}
       {article.hero && (
-        <Picture
-          src={article.hero.src}
-          alt={article.hero.alt}
-          priority
-          sizes="(max-width: 768px) 100vw, 768px"
-          className="mt-5 h-auto w-full rounded-xl border border-ink-700"
-        />
+        <div className="mt-5 overflow-hidden rounded-xl border border-ink-700 bg-ink-900">
+          <Picture
+            src={article.hero.src}
+            alt={article.hero.alt}
+            priority
+            sizes="(max-width: 768px) 100vw, 768px"
+            width={744}
+            height={1039}
+            className="h-auto max-h-[480px] w-full object-contain"
+          />
+        </div>
       )}
 
       {/* Answer-first TL;DR — the block a featured snippet or an AI answer engine

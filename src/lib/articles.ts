@@ -147,9 +147,14 @@ export interface Article {
   // this is the block a featured snippet or an AI answer engine lifts, so lead
   // with the answer rather than context.
   summary?: string[];
-  // Featured image, shown at the top of the article and used as the OG image
-  // fallback. Site-relative path into public/ (so the build-time optimiser has a
-  // manifest entry for it) plus REQUIRED descriptive alt text.
+  // Featured image, shown at the top of the article (ArticleView) and in the
+  // homepage "Latest" teaser (LatestPosts) — NOT the OG/social image, which is
+  // always a generated branded card regardless of this field (opengraph-image.tsx).
+  // Either a site-relative path into public/ (so the build-time optimiser has a
+  // manifest entry for it) or a full URL already used for card art elsewhere in
+  // the app (riftcompare.com/... re-hosted specials, or cdn.riftscribe.gg — both
+  // already allow-listed for next/image in next.config.js). REQUIRED descriptive
+  // alt text either way.
   hero?: { src: string; alt: string };
   // Attach the LIVE "most expensive cards right now" table (ArticleTopValue) for
   // one market. Used by the most-expensive-cards listicle instead of typing a
@@ -864,6 +869,10 @@ Want to find your grail? **[Browse every Riftbound card](/browse)** and sort by 
     updated: "2026-08-13",
     readMins: 5,
     tags: ["beginners", "guide", "how to start"],
+    hero: {
+      src: "/signature-cards/renekton-butcher-of-the-sands-ven190.jpg",
+      alt: "Renekton, Butcher of the Sands — a real Riftbound Signature card, hand-signed by its artist",
+    },
     summary: [
       "**Riftbound is Riot Games' physical League of Legends card game**, published in English by UVS Games — a real, official product, not a fan project.",
       "**The cheapest way in is a ready-to-play product** (a preconstructed deck or a Proving Grounds kit), not a booster box.",
@@ -5693,6 +5702,10 @@ Both tables above are updated in place whenever Riot announces a change, with th
     date: "2026-08-13",
     readMins: 5,
     tags: ["sets", "guide", "origins", "vendetta", "radiance"],
+    hero: {
+      src: "/signature-cards/jayce-defender-of-tomorrow-ven194.jpg",
+      alt: "Jayce, Defender of Tomorrow — a real Riftbound Signature card from Vendetta, the newest released set",
+    },
     summary: [
       "**Five sets are out today, in this order**: Origins, Origins: Proving Grounds, Spirit Forged, Unleashed, then Vendetta (31 Jul 2026).",
       "**Origins is the biggest so far** — 298 base cards, plus 54 Showcase treatments on top.",
@@ -5777,6 +5790,10 @@ Every set gets its own page on RiftCompare the moment its cards are catalogued, 
     date: "2026-08-13",
     readMins: 6,
     tags: ["sets", "guide", "origins", "rarity", "collecting"],
+    hero: {
+      src: "https://cdn.riftscribe.gg/cards/originals/ogn-305-298-8e1d15a18d1dffb2.png",
+      alt: "Yasuo, Unforgiven — a Showcase-rarity card from the Riftbound Origins set",
+    },
     summary: [
       "**298 base cards**, numbered 001/298 through 298/298 with no gaps — Origins is still the largest Riftbound set released.",
       "**Rarity splits 88 Common / 84 Uncommon / 84 Rare / 42 Epic** across the base set, plus 54 Showcase-rarity alternate printings layered on top (352 total printings).",
@@ -5872,6 +5889,10 @@ If you're building toward a specific rarity or domain, the [rarity and printings
     date: "2026-08-13",
     readMins: 6,
     tags: ["condition", "grading", "guide", "collecting", "buying"],
+    hero: {
+      src: "/signature-cards/kennen-heart-of-the-tempest-ven197.jpg",
+      alt: "Kennen, Heart of the Tempest — a real Riftbound Signature card, the kind of premium print worth careful handling",
+    },
     summary: [
       "**Five condition tiers, standard across the TCG hobby**: Near Mint, Lightly Played, Moderately Played, Heavily Played, Damaged — Riftbound cards use the same scale as every other trading card game.",
       "**Prices on RiftCompare assume Near Mint** unless a listing says otherwise — that's the benchmark every store's headline price is quoted against.",
@@ -5960,6 +5981,10 @@ When you're comparing prices — on RiftCompare or anywhere else — the conditi
     date: "2026-08-13",
     readMins: 6,
     tags: ["beginners", "guide", "league of legends", "new player"],
+    hero: {
+      src: "/signature-cards/zed-master-of-shadows-ven191.jpg",
+      alt: "Zed, Master of Shadows — a real, hand-signed Riftbound Signature card of the League of Legends champion",
+    },
     summary: [
       "**Yes — it's called Riftbound.** A real, physical trading card game from Riot Games, published in English by UVS Games, set in the League of Legends universe.",
       "**It's official, not a fan project** — the same company that makes League of Legends made this, and it's sold in game stores worldwide.",
@@ -6051,6 +6076,10 @@ Once you're ready to buy anything — a starter deck, a booster box, or your fir
     date: "2026-08-13",
     readMins: 5,
     tags: ["champions", "guide", "league of legends", "new player"],
+    hero: {
+      src: "https://cdn.riftscribe.gg/cards/originals/ogn-303-298-83981e813ecd5837.png",
+      alt: "Ahri, Nine-Tailed Fox — a Showcase-rarity Riftbound card from the Origins set",
+    },
     summary: [
       "**Dozens of League of Legends champions already have real Riftbound cards** as Legends — the champion that anchors a deck — with more added in every new set.",
       "**Recognisable names already in the game** include Ahri, Jinx, Yasuo, Zed, Lux, Ezreal, Katarina, Vi, Caitlyn and Jhin.",
@@ -6120,6 +6149,10 @@ If you're coming from League of Legends and want the easiest way in, starting wi
     date: "2026-08-13",
     readMins: 5,
     tags: ["opinion", "vendetta", "chase cards", "signature", "shen"],
+    hero: {
+      src: "/signature-cards/shen-eye-of-twilight-ven193.jpg",
+      alt: "Shen, Eye of Twilight Signature (VEN 193★/166) — the tightly-cropped \"Armpit Boi\" art, hand-signed by artist Oscar Vega",
+    },
     summary: [
       "**This is opinion, not a price call.** The numbers below are real and current; the case for \"underrated\" is our read on them, not a guarantee.",
       "**Shen, Eye of Twilight (VEN 193★/166)** is currently US$544.66 / A$816.70 / £618.70 / S$895.78 / C$746.18 — already a genuinely expensive card, not a hidden cheap one.",
