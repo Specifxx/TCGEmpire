@@ -329,6 +329,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             policy using assets owned by Riot Games. Riot Games does not endorse or
             sponsor this project.
           </p>
+          <p className="mt-2">&copy; {new Date().getFullYear()} {SITE_NAME}. All rights reserved.</p>
         </footer>
         {/* Detects the Capacitor native runtime and shows native AdMob ads, styles
             the status bar and wires the Android back button. No-op on the web. */}
