@@ -5656,6 +5656,273 @@ Both tables above are updated in place whenever Riot announces a change, with th
 
 *Ban list details are Riot's. Every unverified entry above is marked; check [the official Riftbound site](https://playriftbound.com) before relying on this page.*`,
   },
+  {
+    slug: "riftbound-sets-in-order",
+    category: "guide",
+    title: "Every Riftbound Set, In Order (And What's Next)",
+    excerpt:
+      "Origins through Vendetta, in release order, with the real card count for each — plus Radiance's confirmed date and where to check what's beyond it.",
+    author: "RiftCompare",
+    date: "2026-08-13",
+    readMins: 5,
+    tags: ["sets", "guide", "origins", "vendetta", "radiance"],
+    summary: [
+      "**Five sets are out today, in this order**: Origins, Origins: Proving Grounds, Spirit Forged, Unleashed, then Vendetta (31 Jul 2026).",
+      "**Origins is the biggest so far** — 298 base cards, plus 54 Showcase treatments on top.",
+      "**Radiance (Set 5) is next**, dated 23 October 2026 with around 180 cards — the only future set with a confirmed date right now.",
+      "Everything after Radiance (Legacy, The Reckoning, two unnamed sets) is covered in full in the [2027 set roadmap](/blog/riftbound-2027-set-roadmap) — this page sticks to what's already out.",
+    ],
+    faq: [
+      {
+        q: "How many Riftbound sets are there?",
+        a: "Five sets have released as of August 2026: Origins, Origins: Proving Grounds, Spirit Forged, Unleashed and Vendetta. A sixth, Radiance, is dated for 23 October 2026, and four more are announced for later in 2027 without full detail yet — see the 2027 set roadmap for those.",
+      },
+      {
+        q: "What was the first Riftbound set?",
+        a: "Origins (set code OGN) — the foundational set the game launched with, and still the largest by card count at 298 base cards.",
+      },
+      {
+        q: "What is the newest Riftbound set?",
+        a: "Vendetta is the newest set that has actually released, on 31 July 2026, with 166 cards. Radiance is dated for 23 October 2026 but hasn't released yet.",
+      },
+      {
+        q: "When is the next Riftbound set?",
+        a: "Radiance, 23 October 2026 — around 180 cards, with five new champion Legends confirmed: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV.",
+      },
+      {
+        q: "Which Riftbound set has the most cards?",
+        a: "Origins, at 298 base cards (352 once you count its 54 Showcase alternate printings) — more than any set released since. Spirit Forged and Unleashed are the next-largest, both in the 220s.",
+      },
+    ],
+    browseCta: {
+      href: "/sets",
+      label: "Browse every set →",
+      blurb: "Every Riftbound set on one page, with live prices the moment a set's cards are catalogued.",
+    },
+    body: `Riftbound has released five sets so far, always in the same order shops and players refer to them in. Here's that order, with the real card count for each straight from our own database — not a marketing figure — plus what's actually confirmed to come next.
+
+## The sets, in order
+
+| # | Set | Code | Cards | Released |
+| --- | --- | --- | --- | --- |
+| 1 | **[Origins](/sets/origins)** | OGN | 298 (+54 Showcase) | Launch set |
+| 2 | **Origins: Proving Grounds** | OGS | 24 | Shortly after Origins |
+| 3 | **Spirit Forged** | SFD | 222 (+66 Showcase) | — |
+| 4 | **Unleashed** | UNL | 225 (+61 Showcase) | — |
+| 5 | **[Vendetta](/sets/vendetta)** | VEN | 166 | 31 Jul 2026 |
+| 6 | **[Radiance](/radiance-countdown)** | RAD | ~180 (announced) | 23 Oct 2026 |
+
+Card counts are pulled from our own catalogue, not a press release, so "298" for Origins means 298 distinct base printings actually sit in our database with that set code — the same number printed on the card itself (Origins collector numbers run from 001/298 up to 298/298). We don't have confirmed release dates for Origins, Proving Grounds, Spirit Forged or Unleashed — Riot didn't publish exact street dates for those the way it later did for Vendetta and Radiance — but the order above is the order every set list, deck legality note and "what's next" post on the game agrees on.
+
+## Origins — the launch set
+
+[Origins](/sets/origins) is where Riftbound started, and it's still the biggest set by a wide margin: 298 base cards across every domain, plus 54 additional Showcase-rarity alternate printings of cards that already exist in the base 298 — 352 individual printings in total once you count both. If you want the full breakdown by rarity, domain and card type, we've written that up separately: [what's actually in the Origins set](/guides/whats-in-the-riftbound-origins-set).
+
+## Origins: Proving Grounds — the smallest set
+
+At 24 cards, Proving Grounds is by far the smallest Riftbound release to date — closer to a focused companion set than a full expansion. It shares Origins' set-code family (OGS) and released not long after it.
+
+## Spirit Forged and Unleashed
+
+The next two sets, Spirit Forged (SFD) and Unleashed (UNL), are similarly sized to each other: 222 and 225 base cards respectively, each with its own run of Showcase alternate printings (66 for Spirit Forged, 61 for Unleashed) on top. Between them they're the sets most current decks outside the newest formats are still built from.
+
+## Vendetta — the current set
+
+[Vendetta](/sets/vendetta) released on 31 July 2026 with 166 cards and introduced three new mechanics — Empower, Flow and Burn — none of which existed in any earlier set. It's the most recent set that's actually out, and the one every card page, price chart and deal on RiftCompare treats as "current" until Radiance lands.
+
+## What's next: Radiance and beyond
+
+[Radiance](/radiance-countdown) — Set 5 — is dated for **23 October 2026** with around 180 cards and five confirmed new champion Legends: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV. It's the only future set with a real, Riot-confirmed release date right now.
+
+Beyond Radiance, Riot has mapped out the rest of 2027 — Legacy (Set 6, 29 Jan 2027, its biggest set yet at roughly 346 cards), The Reckoning (Set 7, 30 Apr 2027), and two further unnamed sets pencilled in for Q3 and Q4 2027. Rather than repeat those details here — and risk them drifting out of sync if Riot's dates move — the full breakdown, with what each set means for buyers, lives in the **[2027 set roadmap](/blog/riftbound-2027-set-roadmap)**.
+
+## Track prices as new sets land
+
+Every set gets its own page on RiftCompare the moment its cards are catalogued, with live prices compared across every store we track in your market. [Browse every set](/sets), or [set a price alert](/alerts) on a card or champion you're watching so you hear about it the moment a price moves — new-set launches are exactly when that matters most.`,
+  },
+  {
+    slug: "whats-in-the-riftbound-origins-set",
+    category: "guide",
+    title: "What's Actually in the Riftbound Origins Set: The Full Breakdown",
+    excerpt:
+      "298 base cards, 54 Showcase alternates, and exactly how they split across rarity, domain and card type — the real numbers from Riftbound's first and biggest set.",
+    author: "RiftCompare",
+    date: "2026-08-13",
+    readMins: 6,
+    tags: ["sets", "guide", "origins", "rarity", "collecting"],
+    summary: [
+      "**298 base cards**, numbered 001/298 through 298/298 with no gaps — Origins is still the largest Riftbound set released.",
+      "**Rarity splits 88 Common / 84 Uncommon / 84 Rare / 42 Epic** across the base set, plus 54 Showcase-rarity alternate printings layered on top (352 total printings).",
+      "**Units are the largest card type** at 142, well ahead of Spells (84), Gear (30), Battlefields (24), Legends (12) and Runes (6).",
+      "All seven domains are represented — Fury and Calm lead at 49 cards each, Colorless sits lowest at 28.",
+    ],
+    faq: [
+      {
+        q: "How many cards are in the Riftbound Origins set?",
+        a: "298 base cards, numbered 001/298 through 298/298. Counting the 54 additional Showcase-rarity alternate printings, there are 352 distinct Origins printings in total.",
+      },
+      {
+        q: "What is the rarity breakdown of Origins?",
+        a: "88 Common, 84 Uncommon, 84 Rare and 42 Epic across the 298 base cards — plus 54 Showcase-tier alternate printings of cards that already exist at one of those four rarities.",
+      },
+      {
+        q: "How many Legend cards are in Origins?",
+        a: "12 — the smallest card-type count in the set, well behind Units (142), Spells (84), Gear (30), Battlefields (24) and Runes (6).",
+      },
+      {
+        q: "Which domain has the most cards in Origins?",
+        a: "Fury and Calm are tied for the most at 49 cards each, followed by Mind and Body at 45 each, Chaos and Order at 41 each, and Colorless at 28.",
+      },
+    ],
+    browseCta: {
+      href: "/sets/origins",
+      label: "Browse every Origins card →",
+      blurb: "All 298 base cards and 54 Showcase printings, with live prices across every store we track.",
+    },
+    body: `Origins is Riftbound's first and, to date, biggest set. Here's exactly what's in it — not an estimate, the real counts from our own catalogue, broken down the way a set list actually gets used: by rarity, by domain and by card type.
+
+## The headline number: 298 base cards
+
+Origins' collector numbers run from 001/298 to 298/298 with no gaps — a clean, complete base set of 298 cards. On top of that, 54 cards also have a **Showcase**-rarity alternate printing: a premium treatment of a card that already exists in the base 298, not a new card. Counting both, there are **352 individual Origins printings** in our database.
+
+That makes Origins comfortably the largest Riftbound set so far — see [every set in order](/guides/riftbound-sets-in-order) for how it compares to what came after.
+
+## Rarity breakdown
+
+| Rarity | Cards |
+| --- | --- |
+| Common | 88 |
+| Uncommon | 84 |
+| Rare | 84 |
+| Epic | 42 |
+| **Base total** | **298** |
+| Showcase (alternate printings) | 54 |
+
+Commons are the largest single tier at 88, but Uncommon and Rare are printed in almost identical numbers — 84 each — which is worth knowing if you're trying to gauge how "rare" a Rare-tier Origins card actually is relative to the rest of the set.
+
+## Card type breakdown
+
+| Type | Cards |
+| --- | --- |
+| Unit | 142 |
+| Spell | 84 |
+| Gear | 30 |
+| Battlefield | 24 |
+| Legend | 12 |
+| Rune | 6 |
+
+Units make up almost half the base set on their own. Legends — the champion cards that anchor a deck — are deliberately the scarcest type at just 12, and Runes are scarcer still at 6.
+
+## Domain breakdown
+
+| Domain | Cards |
+| --- | --- |
+| Fury | 49 |
+| Calm | 49 |
+| Mind | 45 |
+| Body | 45 |
+| Chaos | 41 |
+| Order | 41 |
+| Colorless | 28 |
+
+Every domain gets real support in Origins — the spread runs from 28 (Colorless, which is expected to be the thinnest since it's usable in any deck rather than a deck's core identity) up to 49 for Fury and Calm.
+
+## See the actual cards
+
+Numbers are useful for planning a collection goal, but the fastest way to see what's actually printed is to browse the set itself: every Origins card, its live price across every store we track, and its full rules text.
+
+[Browse the Origins set](/sets/origins) · [Origins card gallery](/sets/origins/gallery)
+
+If you're building toward a specific rarity or domain, the [rarity and printings guide](/guides/understanding-riftbound-card-rarity) covers what separates a Showcase alternate from the base printing it comes from — worth reading before you go chasing one.`,
+  },
+  {
+    slug: "riftbound-card-condition-guide",
+    category: "guide",
+    title: "Riftbound Card Condition Guide: NM, LP, MP, HP and DMG Explained",
+    excerpt:
+      "What separates Near Mint from Lightly Played, why grading affects the price you should pay, and the real value multipliers RiftCompare uses for each condition tier.",
+    author: "RiftCompare",
+    date: "2026-08-13",
+    readMins: 6,
+    tags: ["condition", "grading", "guide", "collecting", "buying"],
+    summary: [
+      "**Five condition tiers, standard across the TCG hobby**: Near Mint, Lightly Played, Moderately Played, Heavily Played, Damaged — Riftbound cards use the same scale as every other trading card game.",
+      "**Prices on RiftCompare assume Near Mint** unless a listing says otherwise — that's the benchmark every store's headline price is quoted against.",
+      "**Condition is a real price multiplier, not a vague discount**: a Lightly Played card is worth roughly 85% of the same card Near Mint; Damaged drops to around 40%.",
+      "Grading is always the seller's judgement call — the same card can get graded differently by two different stores, so check listing photos on anything but a cheap common.",
+    ],
+    faq: [
+      {
+        q: "What does NM mean for a Riftbound card?",
+        a: "Near Mint — a card with no visible wear: sharp corners, no scratches or scuffs, no whitening on the edges or back. It's the benchmark condition every store's headline price assumes unless stated otherwise.",
+      },
+      {
+        q: "What's the difference between Lightly Played and Moderately Played?",
+        a: "Lightly Played (LP) means minor wear only — a little edge whitening or a faint scuff, nothing that affects how the card looks from a normal distance. Moderately Played (MP) is a step up: visible scratches, more noticeable whitening, or light surface wear you'd spot without looking closely.",
+      },
+      {
+        q: "Does card condition actually affect the price?",
+        a: "Yes, substantially. As a rough guide, Lightly Played typically prices around 85% of Near Mint, Moderately Played around 70%, Heavily Played around 55%, and Damaged around 40% — though individual stores set their own exact discounts.",
+      },
+      {
+        q: "Who decides a card's condition grade?",
+        a: "The seller, at the point of listing — Riftbound doesn't have a centralised third-party grading body the way some other collectibles do. That's why the same card can be graded slightly differently by two different stores; check listing photos before buying anything above a low-value common.",
+      },
+      {
+        q: "Should I buy graded (slabbed) Riftbound cards?",
+        a: "Third-party grading (PSA and similar) exists for Riftbound's highest-value chase cards, but it's a separate market from raw (ungraded) singles pricing, and most cards you'll buy day-to-day are traded raw. Treat a graded card's price as its own thing rather than a multiple of the raw price.",
+      },
+    ],
+    browseCta: {
+      href: "/browse",
+      label: "Browse Riftbound cards →",
+      blurb: "Every card's live price across every store we track — Near Mint unless a listing says otherwise.",
+    },
+    body: `Every Riftbound price you see — on RiftCompare or anywhere else — is quoted against a condition grade, whether or not the store says so out loud. Here's what each grade actually means, and why it should change what you're willing to pay.
+
+## The five condition tiers
+
+Riftbound singles use the same five-tier condition scale as most other modern trading card games:
+
+| Grade | Full name | What it looks like |
+| --- | --- | --- |
+| **NM** | Near Mint | No visible wear — sharp corners, clean surface, no edge whitening. The benchmark condition. |
+| **LP** | Lightly Played | Minor wear only: a touch of edge whitening or a faint scuff, not obvious at a glance. |
+| **MP** | Moderately Played | Visible scratches or scuffing, more noticeable whitening, wear you'd spot without looking closely. |
+| **HP** | Heavily Played | Significant wear — creasing, heavier whitening, rounded or damaged corners. Still whole and playable. |
+| **DMG** | Damaged | Structural damage: tears, water damage, heavy creasing, writing, or anything beyond cosmetic wear. |
+
+**Near Mint is the benchmark.** Unless a listing explicitly says otherwise, assume a quoted price is for a Near Mint copy — that's the condition every price comparison on RiftCompare, and effectively every store's headline price, is quoted against.
+
+## Why condition changes what you should pay
+
+Condition isn't a vague "a bit cheaper" — it's a real, fairly consistent discount off the Near Mint price. As a rough guide across the hobby:
+
+- **Lightly Played** — around 85% of Near Mint
+- **Moderately Played** — around 70% of Near Mint
+- **Heavily Played** — around 55% of Near Mint
+- **Damaged** — around 40% of Near Mint
+
+Those are typical ranges, not a fixed rule — individual stores set their own condition discounts, and a genuinely rare or expensive card can hold its value at a lower grade better than a cheap common does, simply because demand for that specific card is higher regardless of condition.
+
+## Grading is a judgement call, not a certificate
+
+Unlike some collectibles markets, raw Riftbound singles don't go through a centralised third-party grader before they're sold — the store or the seller assigns the condition at the point of listing, based on their own eye and their own standards. That means:
+
+- **The same physical card can get graded differently by two stores.** One might call a card Lightly Played where another calls it Near Mint.
+- **Photos matter more than the label.** On anything above a cheap common, look at the actual listing photos rather than trusting the grade alone — especially for corners and edges, where wear is easiest to miss in a low-resolution photo and easiest to spot in a good one.
+- **"NM/M" or "NM-M" listings** (Near Mint to Mint) are common shorthand for "as good as it gets" — factory-fresh, no handling wear at all.
+
+## Third-party grading (slabbed cards)
+
+Riftbound's highest-value chase cards — Signature printings, alt-arts, cards tied to popular champions — increasingly get sent to third-party grading services (PSA and similar), which assign a numeric grade and seal the card in a protective case. That's a genuinely different market from raw singles: a graded card's price reflects both the card and the grade, and doesn't move as a simple multiple of the raw Near Mint price. If you're buying to collect rather than to play, it's worth deciding up front whether you want raw or graded copies — the two markets can diverge significantly on a card's most expensive printings.
+
+## Buying with condition in mind
+
+When you're comparing prices — on RiftCompare or anywhere else — the condition grade is doing as much work as the number next to it. A "cheap" Moderately Played listing next to a Near Mint one at a similar price isn't actually the better deal.
+
+[Browse every Riftbound card](/browse) for live prices across every store we track, or read [how to store and protect your cards](/guides/how-to-store-and-protect-riftbound-cards) so the condition you buy at is the condition you still have next year.`,
+  },
   // The 2026 SEO content pack — the five briefed articles plus the four
   // AI-visibility target pages and the variant glossary. Kept in their own file
   // so the batch stays reviewable; spread here so every existing surface (the
