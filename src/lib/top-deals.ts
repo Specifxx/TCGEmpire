@@ -30,6 +30,10 @@ export type Deal = {
   imageUrl: string | null;
   priceCents: number;
   pctLabel: number | null; // magnitude of saving / drop / discount, shown as a badge
+  // Absolute dollar counterpart to pctLabel (e.g. the $4.10 in "US$4.10 · Save
+  // 47%") — null for a deal type with no natural "delta" (cheapest-sealed has no
+  // "was" price, only the MSRP context folded into `note` below).
+  deltaCents: number | null;
   note: string | null; // small context, e.g. "vs Card Empire" or "30-day avg"
 };
 
@@ -58,6 +62,7 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
           imageUrl: it.card.imageThumbUrl,
           priceCents: it.ebayCents,
           pctLabel: it.savingPct,
+          deltaCents: it.savingCents,
           note: `vs ${it.storeName}`,
         }));
       } catch {
@@ -77,6 +82,7 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
           imageUrl: m.card.imageThumbUrl,
           priceCents: m.nowCents,
           pctLabel: Math.abs(Math.round(m.pct)),
+          deltaCents: Math.max(0, m.refCents - m.nowCents),
           note: "7-day drop",
         }));
       } catch {
@@ -95,6 +101,18 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
             // so the headline price and the buy link agree. One is guaranteed to exist
             // because the group was filtered to lowestPriceCents != null.
             const best = g.listings.find((l) => l.inStock) ?? g.listings[0];
+            // "vs avg" context for sealed: there's no rolling average-price series
+            // for sealed products (unlike singles' PriceHistory), but RRP/MSRP is a
+            // real, already-computed reference (see lib/msrp.ts, threaded through
+            // by getSealedGroups) — so use that instead of fabricating an average.
+            // Folded into `note` (same slot `retailerName` already uses) rather than
+            // a new field, since the row only has room for one context line.
+            let msrpNote: string | null = null;
+            if (g.msrpCents != null) {
+              const pct = g.overMsrpPct ?? 0;
+              msrpNote =
+                Math.abs(pct) <= 2 ? "at MSRP" : pct < 0 ? `${Math.round(Math.abs(pct))}% below MSRP` : `${Math.round(pct)}% over MSRP`;
+            }
             return {
               dealType: "cheapest-sealed" as const,
               title: g.name,
@@ -105,7 +123,8 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
               imageUrl: g.imageUrl,
               priceCents: g.lowestPriceCents!,
               pctLabel: null,
-              note: best?.retailerName ?? null,
+              deltaCents: null,
+              note: [best?.retailerName, msrpNote].filter(Boolean).join(" · ") || null,
             };
           });
       } catch {
@@ -125,6 +144,7 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
           imageUrl: p.card.imageThumbUrl,
           priceCents: p.currentCents,
           pctLabel: p.discountPct,
+          deltaCents: Math.max(0, p.avgCents - p.currentCents),
           note: "below 30-day avg",
         }));
       } catch {

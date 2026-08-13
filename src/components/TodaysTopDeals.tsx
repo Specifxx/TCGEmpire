@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { track } from "@vercel/analytics";
 import { COUNTRIES, type Country } from "@/lib/country";
 import type { Deal, TopDeals } from "@/lib/top-deals";
 import { formatMoney } from "@/lib/format";
@@ -32,10 +34,57 @@ const COLUMNS: ColumnDef[] = [
   { key: "undervalued", label: "Undervalued", premium: true, allHref: "/tools/value-finder", allLabel: "Value Finder" },
 ];
 
-function PctBadge({ deal }: { deal: Deal }) {
+// Budget tiers — "rounded to natural values per market" (not FX-converted at
+// render time; these are UI filter buckets, like an e-commerce price facet, not
+// a data claim). US$5 / US$25 are the anchor; other markets get a hand-rounded
+// equivalent scaled to that currency's rough purchasing power.
+type Tier = "all" | "small" | "mid" | "big";
+const TIER_THRESHOLDS: Record<Country, { small: number; mid: number }> = {
+  AU: { small: 800, mid: 4000 },
+  NZ: { small: 800, mid: 4000 },
+  US: { small: 500, mid: 2500 },
+  UK: { small: 400, mid: 2000 },
+  SG: { small: 700, mid: 3500 },
+  CA: { small: 700, mid: 3500 },
+};
+const TIERS: { key: Tier; label: (t: { small: number; mid: number }, fmt: (c: number) => string) => string }[] = [
+  { key: "all", label: () => "All" },
+  { key: "small", label: (t, fmt) => `Under ${fmt(t.small)}` },
+  { key: "mid", label: (t, fmt) => `Under ${fmt(t.mid)}` },
+  { key: "big", label: () => "Big ticket" },
+];
+
+function inTier(cents: number, tier: Tier, t: { small: number; mid: number }): boolean {
+  if (tier === "all") return true;
+  if (tier === "small") return cents <= t.small;
+  if (tier === "mid") return cents <= t.mid;
+  return cents > t.mid;
+}
+
+// Default ("All") ordering: pull items at/under the $25-equivalent tier toward
+// the front, interleaved with pricier ones, so the single item a non-Premium
+// visitor sees for a gated column is more often an approachable price — real
+// items, real order within each bucket, just presented cheap-first when a cheap
+// one exists. Only used for the default view; an explicit tier pick shows that
+// tier's items in their original (signal) order.
+function mixByTier(items: Deal[], midThreshold: number): Deal[] {
+  const cheap = items.filter((d) => d.priceCents <= midThreshold);
+  const pricey = items.filter((d) => d.priceCents > midThreshold);
+  const out: Deal[] = [];
+  for (let i = 0; i < cheap.length || i < pricey.length; i++) {
+    if (i < cheap.length) out.push(cheap[i]);
+    if (i < pricey.length) out.push(pricey[i]);
+  }
+  return out;
+}
+
+function PctBadge({ deal, currency }: { deal: Deal; currency: string }) {
   if (deal.pctLabel == null) return null;
-  const text =
-    deal.dealType === "savings-vs-market" ? `Save ${deal.pctLabel}%` : `−${deal.pctLabel}%`;
+  const pctText = deal.dealType === "savings-vs-market" ? `Save ${deal.pctLabel}%` : `−${deal.pctLabel}%`;
+  // "US$4.10 · Save 47%" — the absolute counterpart to the percentage, on every
+  // row that has one (cheapest-sealed has no "was" price, so deltaCents is null
+  // and this just shows the percentage as before).
+  const text = deal.deltaCents != null && deal.deltaCents > 0 ? `${formatMoney(deal.deltaCents, currency)} · ${pctText}` : pctText;
   return <span className="chip num shrink-0 bg-brand-500/15 text-brand-300">{text}</span>;
 }
 
@@ -61,7 +110,7 @@ function DealRow({ deal, currency, country }: { deal: Deal; currency: string; co
       </div>
       <div className="flex shrink-0 flex-col items-end gap-1">
         <span className="num text-sm font-bold text-accent">{formatMoney(deal.priceCents, currency)}</span>
-        <PctBadge deal={deal} />
+        <PctBadge deal={deal} currency={currency} />
       </div>
     </>
   );
@@ -122,9 +171,32 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
   const currency = info.currency;
   const place = info.place;
   const deals = dealsByCountry[country] ?? dealsByCountry.AU;
+  const thresholds = TIER_THRESHOLDS[country] ?? TIER_THRESHOLDS.AU;
+  const [tier, setTier] = useState<Tier>("all");
 
-  const columns = COLUMNS.map((c) => ({ def: c, items: deals[c.key] })).filter((c) => c.items.length > 0);
-  if (columns.length === 0) return null;
+  // Tier-independent: is there ANYTHING to show today, in any tier? If not, the
+  // section hides entirely (unchanged behaviour) rather than showing a shell
+  // with tabs over nothing.
+  const allColumns = COLUMNS.map((c) => ({ def: c, items: deals[c.key] })).filter((c) => c.items.length > 0);
+  if (allColumns.length === 0) return null;
+
+  // "All" mixes cheap-first (see mixByTier) so a Premium column's single
+  // unlocked item is more often approachable; an explicit tier just filters,
+  // keeping each signal's own order (biggest saving / drop / discount first).
+  const columns = allColumns
+    .map(({ def, items }) => ({
+      def,
+      items: tier === "all" ? mixByTier(items, thresholds.mid) : items.filter((d) => inTier(d.priceCents, tier, thresholds)),
+    }))
+    .filter((c) => c.items.length > 0);
+
+  function fmtT(cents: number) {
+    return formatMoney(cents, currency);
+  }
+  function changeTier(t: Tier) {
+    setTier(t);
+    track("deals_tab_change", { tab: t });
+  }
 
   return (
     <section>
@@ -136,6 +208,28 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
         <Link href="/tools/deal-finder" className="btn-ghost hidden text-sm sm:inline-flex">Browse all deals →</Link>
       </div>
 
+      <div className="mb-3 flex flex-wrap gap-1.5" role="tablist" aria-label="Filter deals by price">
+        {TIERS.map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            role="tab"
+            aria-selected={tier === t.key}
+            onClick={() => changeTier(t.key)}
+            className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+              tier === t.key ? "bg-brand-500 text-ink-950" : "bg-ink-900 text-slate-400 hover:bg-ink-800 hover:text-slate-200"
+            }`}
+          >
+            {t.label(thresholds, fmtT)}
+          </button>
+        ))}
+      </div>
+
+      {columns.length === 0 ? (
+        <div className="card-surface p-6 text-center text-sm text-slate-400">
+          No {TIERS.find((t) => t.key === tier)?.label(thresholds, fmtT).toLowerCase()} deals in {place} right now — try another filter.
+        </div>
+      ) : (
       <div className={`grid items-stretch gap-4 ${GRID_COLS[columns.length] ?? GRID_COLS[4]}`}>
         {columns.map(({ def, items }) => {
           // Premium columns normally reveal only the single best deal; the rest is
@@ -180,6 +274,7 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
           );
         })}
       </div>
+      )}
     </section>
   );
 }

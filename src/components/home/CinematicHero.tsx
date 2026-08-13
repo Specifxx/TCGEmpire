@@ -4,6 +4,8 @@ import { ParallaxRoot } from "./ParallaxRoot";
 import { CountryHeroToggle } from "@/components/CountryHeroToggle";
 import { SearchBar } from "@/components/SearchBar";
 import { HeroStats, type MarketStat } from "./HeroStats";
+import { TrendingChips } from "./TrendingChips";
+import type { CardTileData } from "@/components/CardTile";
 import type { Country } from "@/lib/country";
 
 // The cinematic, full-bleed homepage hero. Breaks out of the centered content
@@ -22,10 +24,18 @@ import type { Country } from "@/lib/country";
 export function CinematicHero({
   totalCards,
   statsByCountry,
+  trendingCards,
+  freshness,
 }: {
   totalCards: number;
   // Per-market stat tiles — localised to the visitor's market client-side (HeroStats).
   statsByCountry: Record<Country, MarketStat>;
+  // Top slice of the same most-searched-cards signal that powers "Most popular
+  // cards" below — rendered as one-click trending chips under the search bar.
+  trendingCards: CardTileData[];
+  // Pre-formatted "Xh ago" string — see HeroStats' doc comment for why this is
+  // computed server-side once rather than client-recomputed.
+  freshness: string | null;
 }) {
   return (
     <ParallaxShell>
@@ -80,9 +90,14 @@ export function CinematicHero({
           </Suspense>
         </div>
 
+        {/* Trending search chips — an instant path in for a visitor who doesn't
+            know what to type yet. Server-rendered (real data, real hrefs); only
+            the click beacon is client-side. */}
+        <TrendingChips cards={trendingCards} />
+
         {/* One thin stat line, directly under the search field — was 4 bordered
             boxes. */}
-        <HeroStats totalCards={totalCards} statsByCountry={statsByCountry} />
+        <HeroStats totalCards={totalCards} statsByCountry={statsByCountry} freshness={freshness} />
 
         {/* One primary button + one secondary text link — was 4 competing CTAs
             (Browse / Marketplace / Decks / ⌘K launcher). Marketplace and the

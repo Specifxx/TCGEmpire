@@ -8,20 +8,26 @@ import { Reveal } from "@/components/Reveal";
 import { getPopularCards } from "@/lib/cheapest-cards";
 import { DEFAULT_COUNTRY, priceField, type Country } from "@/lib/country";
 import type { MarketStat } from "@/components/home/HeroStats";
-import { SETS, newestReleasedSet, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
-import { SITE_URL } from "@/lib/site";
+import { SETS, newestReleasedSet, nextUpcomingSet, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
+import { SITE_URL, SITE_NAME } from "@/lib/site";
 import { getTopDeals, type TopDeals } from "@/lib/top-deals";
-import { getRecentlyUpdated, getPriceMovers } from "@/lib/price-history";
+import { getRecentlyUpdated, getPriceMovers, type PriceMovers } from "@/lib/price-history";
+import { getBlogPosts } from "@/lib/posts";
+import { timeAgo } from "@/lib/format";
 import { TodaysTopDeals } from "@/components/TodaysTopDeals";
+import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { CinematicHero } from "@/components/home/CinematicHero";
+import { MarketPulse } from "@/components/home/MarketPulse";
+import { ReturnVisitCards } from "@/components/home/ReturnVisitCards";
+import { RadianceCountdownCard } from "@/components/home/RadianceCountdownCard";
+import { LatestPosts } from "@/components/home/LatestPosts";
 import { PartnersStrip } from "@/components/home/PartnersStrip";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { EbayPicks } from "@/components/EbayPicks";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
-import { CardsIcon } from "@/components/icons/HomeIcons";
 import { RETAILER_LIST } from "@/lib/retailers";
 import { pageAlternates } from "@/lib/seo";
-import { webPage } from "@/lib/jsonld";
+import { webPage, faqPage } from "@/lib/jsonld";
 
 // Below-the-fold, client-rendered tab carousel — code-split into its own chunk
 // (still SSR'd for content/SEO) so its JS isn't part of the bundle the browser
@@ -120,7 +126,9 @@ export default async function HomePage() {
     popularVendetta,
     topDealsArr,
     recentlyUpdated,
-    movers,
+    moversArr,
+    lastPriceRefresh,
+    blogPosts,
   ] = await Promise.all([
     prisma.card.count(),
     // Priced-card count PER MARKET (one indexed count per price column) — the hero
@@ -167,9 +175,24 @@ export default async function HomePage() {
     // serialize all five markets for client-side localisation. Rendered as a
     // tab in PopularCardsCarousel (see below), not its own section.
     getRecentlyUpdated(country, 24),
-    // Biggest movers (up + down) for the unified popular-cards carousel's third
-    // tab — same AU-baseline pattern as popularCards/popularVendetta.
-    getPriceMovers(country, 6),
+    // Biggest movers (up + down), PER MARKET — unlike the single-baseline reads
+    // above, the new "Market pulse" strip shows a real per-visitor-market % (not
+    // just a re-priced card with a baseline-market % caption), so this needs all
+    // six markets, same Promise.all-of-getX pattern as topDealsArr. Each call is
+    // day-cached (see price-history.ts), so this is six cheap cache reads, not
+    // six fresh DB scans. moversByCountry[country] (the baseline) also feeds the
+    // popular-cards carousel's "Movers" tab below, unchanged from before.
+    Promise.all(COUNTRY_CODES.map((c) => getPriceMovers(c, 6))),
+    // Real last-refresh timestamp for the hero's freshness signal ("Prices
+    // updated 47m ago") — proof beats "Updated daily". Formatted server-side
+    // once (see HeroStats' doc comment for why) via the plain aggregate max, not
+    // a dedicated "last import" table (none exists) — RetailerPrice.lastSeen is
+    // touched by the importer on every listing it sees, so its max IS the last
+    // refresh. Never blocks the page: if this read fails the section just hides.
+    prisma.retailerPrice.aggregate({ _max: { lastSeen: true } }),
+    // Latest blog posts for the "Latest from the blog" teaser — in-memory list
+    // filter/sort (lib/posts.ts), not a DB query, so this adds no egress.
+    getBlogPosts(),
   ]);
   // Assemble per-market stat tiles; the client picks the visitor's market after hydration.
   const inStockByCountry: Record<string, number> = {};
@@ -197,11 +220,27 @@ export default async function HomePage() {
   // Per-market Top Deals, so the section can localise client-side (see above).
   const topDealsByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, topDealsArr[i]])) as Record<Country, TopDeals>;
   const anyDeals = COUNTRY_CODES.some((c) => topDealsByCountry[c].hasAny);
-  // Biggest movers tab: both directions, ranked by the size of the move.
+  // Per-market movers, so Market Pulse can localise client-side (see above).
+  const moversByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, moversArr[i]])) as Record<Country, PriceMovers>;
+  // Biggest movers tab: both directions, ranked by the size of the move. Reads
+  // the baseline market's movers, same as before moversByCountry existed.
   const newestSet = newestReleasedSet();
-  const biggestMovers = [...movers.spiking, ...movers.plummeting]
+  const biggestMovers = [...moversByCountry[country].spiking, ...moversByCountry[country].plummeting]
     .sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct))
     .slice(0, 12);
+  // Pre-formatted once server-side — see HeroStats' doc comment for why this
+  // must not be recomputed client-side. Hides the whole signal on a DB miss.
+  const freshness = lastPriceRefresh._max.lastSeen ? timeAgo(lastPriceRefresh._max.lastSeen) : null;
+  // The next announced-but-unreleased set (Radiance today; rolls forward on its
+  // own — see nextUpcomingSet's doc comment). undefined hides the whole card.
+  const radianceSet = nextUpcomingSet();
+  const latestPosts = blogPosts.slice(0, 3);
+  // Guarding these at the page level (rather than always mounting <Reveal> and
+  // letting the child render null) matches how {anyDeals && <Reveal>…} already
+  // works above — an empty Reveal wrapper is harmless, but there's no reason to
+  // mount an IntersectionObserver over nothing.
+  const showRadianceCard = radianceSet != null;
+  const showLatestPosts = latestPosts.length > 0;
 
   return (
     <div className={`${archivo.variable} rb-display-sans flex flex-col gap-10`}>
@@ -209,17 +248,27 @@ export default async function HomePage() {
       <CinematicHero
         totalCards={totalCards}
         statsByCountry={statsByCountry}
+        trendingCards={popularCards.slice(0, 6)}
+        freshness={freshness}
       />
+
+      {/* Market pulse — today's top risers/fallers, reusing the Daily Movers
+          data. Sits right after the hero: the single strongest "come back
+          tomorrow" signal a price site can show, so it earns above-the-fold
+          placement. Hides itself if there's nothing to show today. */}
+      <MarketPulse moversByCountry={moversByCountry} />
 
       {/* REMOVED: the "Vendetta — the new set, priced" launch band (cheapest
           booster box, price-since-release, chase cards). It was a launch-window
           spotlight and Vendetta released on 31 Jul 2026, so by mid-August it was
           giving the top of the homepage to a set that is no longer new. Its
           content still exists, better placed: cheapest sealed on /sealed, price
-          movement on /movers and /market, chase cards on /sets/vendetta. If the
-          band is wanted again for Radiance (23 Oct 2026), the component is in
-          git history — or make it date-windowed off SetInfo.releasedOn rather
-          than hard-coded to one set, which is why it needed removing by hand. */}
+          movement on /movers and /market, chase cards on /sets/vendetta.
+          UPDATE: the "date-windowed off SetInfo.releasedOn rather than hard-
+          coded to one set" version predicted here now exists as
+          RadianceCountdownCard below (sourced from lib/constants.ts's
+          nextUpcomingSet()) — different spot on the page (after Explore), not a
+          revival of this band. */}
 
       {/* Today's Top Deals — the strongest differentiator, moved up from five
           sections deep. Hidden if no market has data. */}
@@ -228,6 +277,21 @@ export default async function HomePage() {
           <TodaysTopDeals dealsByCountry={topDealsByCountry} />
         </Reveal>
       )}
+
+      {/* Inline email capture with a concrete value prop, right after the deals
+          the reader was just looking at — the footer signup (still there too)
+          is easy to never scroll to. Exact same handler/API as the footer form,
+          just a different `source` for attribution. No popup/exit-intent — the
+          brief is explicit that this stays inline. */}
+      <div className="mx-auto w-full max-w-xl">
+        <NewsletterSignup
+          siteName={SITE_NAME}
+          source="home"
+          variant="card"
+          heading={`📈 Get the weekly ${SITE_NAME} Index — the market summary every collector reads, each Monday. Free.`}
+          cta="Subscribe"
+        />
+      </div>
 
       {/* Tailored eBay unit — the set's chase cards with their cheapest live
           listing, rather than a generic banner. Sits after Top Deals so the
@@ -250,6 +314,16 @@ export default async function HomePage() {
         storeCount={storeCount}
         storeWord={storeWord}
       />
+
+      {/* Return-visit hooks — Riftle, the pack simulator, and price alerts —
+          directly after Most popular cards (were buried near the bottom, after
+          How it works and Explore). These are the site's best "come back
+          tomorrow" mechanics that aren't the price data itself, so they get the
+          slot right after the strongest card-browsing section instead of
+          competing with it. */}
+      <Reveal stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ReturnVisitCards newestSetName={newestSet?.name} />
+      </Reveal>
 
       {/* How it works — orients first-time visitors to the search → compare → buy
           mechanic. Moved after the commercial sections (deals, popular cards,
@@ -330,49 +404,27 @@ export default async function HomePage() {
         </Reveal>
       </section>
 
-      {/* Games teasers — after the commercial sections (per the reordering brief,
-          games belong after buying content, not interrupting it between two card
-          carousels).
+      {/* Radiance countdown — new-set hype, right after Explore (which already
+          shows Radiance as a disabled "Coming soon" tile above): new-set
+          searches are the biggest organic traffic spikes in TCGs, so this
+          captures that intent on the homepage instead of waiting for a visitor
+          to find /radiance-countdown on their own. Hides itself once nothing
+          upcoming is announced. */}
+      {showRadianceCard && (
+        <Reveal>
+          <RadianceCountdownCard set={radianceSet} />
+        </Reveal>
+      )}
 
-          The pack simulator sits beside Riftle rather than in the ⌘K launcher
-          only: it is the page competing for "riftbound pack opening simulator",
-          and it had no homepage link at all, while the incumbent at #1 is a
-          client-rendered shell with no indexable content. A homepage link is the
-          strongest internal signal we can hand it. Anchor text names the thing
-          people search for, not "play". */}
-      <Reveal stagger className="grid gap-4 sm:grid-cols-2">
-        <Link
-          href="/games/pack-sim"
-          className="card-surface group flex items-center gap-4 p-5 transition-colors hover:border-brand-500/60 hover:bg-ink-800"
-        >
-          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-gold/15 text-2xl leading-none" aria-hidden>
-            🎁
-          </span>
-          <div className="min-w-0 flex-1">
-            <h2 className="text-lg font-extrabold text-white">Riftbound pack opening simulator</h2>
-            <p className="mt-0.5 text-sm text-slate-400">
-              Rip free virtual {newestSet?.name ?? "Riftbound"} packs — real pack odds, live prices on every pull.
-            </p>
-          </div>
-          <span className="btn-primary shrink-0 text-sm">Open →</span>
-        </Link>
-
-        <Link
-          href="/riftle"
-          className="card-surface group flex items-center gap-4 p-5 transition-colors hover:border-brand-500/60 hover:bg-ink-800"
-        >
-          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-brand-500/15 text-brand-400">
-            <CardsIcon className="h-6 w-6" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <h2 className="text-lg font-extrabold text-white">Play today&apos;s Riftle</h2>
-            <p className="mt-0.5 text-sm text-slate-400">
-              Guess the daily Riftbound card in 8 tries — a new one every day.
-            </p>
-          </div>
-          <span className="btn-primary shrink-0 text-sm">Play →</span>
-        </Link>
-      </Reveal>
+      {/* Latest from the blog — fresh internal links + fresh content near the
+          bottom of the homepage for crawl frequency and long-tail discovery.
+          Hides itself if there are no posts (shouldn't happen, but no fake
+          placeholders either way). */}
+      {showLatestPosts && (
+        <Reveal>
+          <LatestPosts posts={latestPosts} />
+        </Reveal>
+      )}
 
       {/* About + FAQ — keyword-relevant content for search */}
       <section className="card-surface p-6">
@@ -427,15 +479,11 @@ export default async function HomePage() {
               description:
                 "Compare live Riftbound TCG card prices across stores in the US, UK, Australia, New Zealand, Canada and Singapore — total cost including shipping, no hidden fees.",
             }),
-            {
-              "@context": "https://schema.org",
-              "@type": "FAQPage",
-              mainEntity: FAQS.map((f) => ({
-                "@type": "Question",
-                name: f.q,
-                acceptedAnswer: { "@type": "Answer", text: f.a },
-              })),
-            },
+            // Matches the visible FAQ accordion in the About+FAQ section below
+            // exactly (same FAQS array) — faqPage() is the shared builder every
+            // other FAQ-bearing page uses; the homepage used to hand-duplicate
+            // this shape inline.
+            faqPage(FAQS),
             // ItemList of the "Most popular Riftbound cards" actually rendered above.
             ...(popularCards.length > 0
               ? [
