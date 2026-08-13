@@ -88,17 +88,30 @@ const securityHeaders = [
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    // Lets next/image re-encode (AVIF/WebP) and downsize these three hotlinked
-    // CDNs instead of shipping their full-resolution source at thumbnail display
-    // size. cdn.riftscribe.gg (card art) and tcgplayer-cdn.tcgplayer.com (sealed
-    // product photos, served at a fixed 1000x1000) are single, fixed hosts, so
-    // they're safe to allow-list outright. i.ebayimg.com is listed too, but
-    // components/EbayPicksLive.tsx and EbayAdCarouselLive.tsx deliberately stay
-    // on a plain <img>: eBay listing photos come from whichever host the seller's
-    // listing happens to use, not always this one, and next/image throws for any
-    // host not on this list — see the comment at their <img> tags.
+    // Lets next/image re-encode (AVIF/WebP) and downsize these hotlinked CDNs
+    // instead of shipping their full-resolution source at thumbnail display
+    // size. cdn.riftscribe.gg (card art for the bulk-imported catalogue),
+    // cmsassets.rgpub.io (Riot's own CDN — card art for Vendetta and every set
+    // onward, see prisma/riftbound-cards.json vs. the live-feed import) and
+    // tcgplayer-cdn.tcgplayer.com (sealed product photos, served at a fixed
+    // 1000x1000) are single, fixed hosts, so they're safe to allow-list
+    // outright. i.ebayimg.com is listed too, but components/EbayPicksLive.tsx
+    // and EbayAdCarouselLive.tsx deliberately stay on a plain <img>: eBay
+    // listing photos come from whichever host the seller's listing happens to
+    // use, not always this one, and next/image throws for any host not on
+    // this list — see the comment at their <img> tags.
+    //
+    // cmsassets.rgpub.io was missing until 2026-08-13: every card.imageUrl /
+    // imageThumbUrl from Vendetta onward points there (see the live-feed
+    // import), and components/TodaysTopDeals.tsx renders deal.imageUrl
+    // through next/image directly — so once Vendetta started dominating
+    // "today's deals" as the newest, most-traded set, a large share of that
+    // section's thumbnails 400'd instead of rendering. cdn.riftscribe.gg-only
+    // cards (everything pre-Vendetta) were unaffected, which is why this
+    // wasn't visible until Vendetta's card mix caught up.
     remotePatterns: [
       { protocol: "https", hostname: "cdn.riftscribe.gg" },
+      { protocol: "https", hostname: "cmsassets.rgpub.io" },
       { protocol: "https", hostname: "tcgplayer-cdn.tcgplayer.com" },
       { protocol: "https", hostname: "i.ebayimg.com" },
     ],
