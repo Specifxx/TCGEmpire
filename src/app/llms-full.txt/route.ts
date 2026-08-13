@@ -20,7 +20,8 @@ export async function GET() {
   lines.push(
     "> A machine-readable snapshot of the Riftbound market on RiftCompare. Prices are the lowest " +
       "live in-stock Australian price unless noted; the full per-region data is on each card page " +
-      `(append \`.md\` for markdown) and the index JSON is at ${SITE_URL}/api/v1/index.json.`
+      `(append \`.md\` for markdown) and the index JSON is at ${SITE_URL}/api/v1/index.json. ` +
+      `The full public data API is described at ${SITE_URL}/openapi.json (OpenAPI 3.1) — no API key required.`
   );
   lines.push("");
 

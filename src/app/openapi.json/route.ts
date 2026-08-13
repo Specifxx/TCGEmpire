@@ -1,8 +1,8 @@
 import { buildOpenApiSpec } from "@/lib/openapi";
 
-// Kept working at the old location for anything that already linked here — the
-// canonical route is now /openapi.json (see that route and lib/openapi.ts for
-// the actual spec, shared by both so they can't drift apart).
+// Canonical OpenAPI 3.1 description of the public data API (see lib/openapi.ts).
+// Root-level so it's where an agent framework or MCP client expects to find it
+// by convention; /api/v1/openapi.json still works too, same content.
 export const revalidate = 86400;
 
 export function GET() {

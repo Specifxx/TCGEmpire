@@ -8,13 +8,20 @@ import {
   CardQuery,
 } from "@/lib/cards";
 import { getCountry } from "@/lib/get-country";
+import { normalizeCountry } from "@/lib/country";
 
-// Paginated card feed for the Browse infinite-scroll. Same filters/sort as the
-// server-rendered first page, just the next slice. Prices follow the country cookie.
+// Paginated card feed for the Browse infinite-scroll (same filters/sort as the
+// server-rendered first page, just the next slice) — and, with an explicit
+// ?market= override, the same search deterministic and cacheable enough to
+// document as a public API: without it, prices follow the country cookie (a
+// signed-out agent has none, so results are undefined for it); with it, the
+// response is the same for anyone requesting that market and safe to cache
+// and share cross-origin. See /api/v1/openapi.json.
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const sp = Object.fromEntries(url.searchParams.entries()) as CardQuery & { page?: string };
-  const country = getCountry();
+  const marketParam = url.searchParams.get("market");
+  const country = marketParam ? normalizeCountry(marketParam) : getCountry();
   const select = cardTileSelect(country);
 
   // Fetch-by-ids mode (used by the wishlist page so it always reflects the live
@@ -41,9 +48,19 @@ export async function GET(req: Request) {
     take: CARD_PAGE_SIZE,
   });
 
-  // Response varies by the country cookie, so don't share it across viewers.
+  // Without an explicit market, the response depends on an invisible cookie, so
+  // it must stay private/uncached. With one, it's the same response for every
+  // caller in that market — safe to cache briefly and to expose cross-origin
+  // for the documented public search use.
   return NextResponse.json(
     { cards, page },
-    { headers: { "Cache-Control": "private, no-store" } }
+    {
+      headers: marketParam
+        ? {
+            "Cache-Control": "public, s-maxage=300, stale-while-revalidate=1800",
+            "Access-Control-Allow-Origin": "*",
+          }
+        : { "Cache-Control": "private, no-store" },
+    }
   );
 }

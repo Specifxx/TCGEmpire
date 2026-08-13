@@ -209,6 +209,16 @@ const nextConfig = {
       { source: "/decks/leblanc-deceiver", destination: "/decks", permanent: true },
       { source: "/decks/fiora-grand-duelist", destination: "/decks", permanent: true },
       { source: "/decks/vex-gloomist", destination: "/decks", permanent: true },
+      // AI-AGENT ".md" CONVENTION. llms.txt and llms-full.txt tell agents that a
+      // card page's markdown version is reachable by appending ".md" to its URL —
+      // but /card/<slug> is a real page route, not a markdown one, so
+      // /card/<slug>.md 404'd. The actual markdown route is /llm/card/<slug> (see
+      // app/llm/card/[id]/route.ts and the card page's own rel=alternate
+      // type=text/markdown link). Rather than rewrite the docs to a less
+      // discoverable convention, this makes the documented shorthand real: a
+      // named param followed by a literal suffix in the same segment is a
+      // supported next.config.js redirect pattern.
+      { source: "/card/:slug.md", destination: "/llm/card/:slug", permanent: true },
     ];
   },
   async headers() {

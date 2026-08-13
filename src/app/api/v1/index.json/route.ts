@@ -18,14 +18,38 @@ export async function GET(req: Request) {
   const market = parseMarket(new URL(req.url).searchParams.get("market"));
   const index = await getMarketIndex(market).catch(() => null);
 
+  // Sparse history (a brand-new market, or the index hasn't accumulated enough
+  // days yet) used to be a 503 — a hard failure that reads as "this endpoint is
+  // broken" to an agent that only checked llms.txt, which advertises this URL
+  // unconditionally. It's a real, expected, temporary state, not an error: 200
+  // with an explicit status field, so a caller can tell "not ready yet" from
+  // "this URL doesn't work" without guessing from the HTTP status alone.
   if (!index) {
     return Response.json(
-      { error: "index_unavailable", market },
-      { status: 503, headers: { "X-Robots-Tag": "noindex" } }
+      {
+        status: "warming",
+        name: "The RiftCompare Index",
+        market,
+        asOf: new Date().toISOString(),
+        entries: [],
+        message: "Not enough price history for this market yet — check back soon.",
+        source: `${SITE_URL}/market`,
+      },
+      {
+        headers: {
+          "X-Robots-Tag": "noindex",
+          // Short TTL: unlike the ready payload below, this state is expected to
+          // resolve on its own as history accumulates, so callers should recheck
+          // sooner than the normal 30-minute index cache.
+          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=1800",
+          "Access-Control-Allow-Origin": "*",
+        },
+      }
     );
   }
 
   const body = {
+    status: "ready",
     name: "The RiftCompare Index",
     description:
       "A daily search-weighted price index of the most-searched Riftbound: League of Legends TCG singles (base 100).",

@@ -376,6 +376,38 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           priceValidUntil,
         }]
       : []),
+    // One Offer per tracked store, alongside the AggregateOffer summary above —
+    // this is where "total delivered cost" (the site's whole differentiator)
+    // actually reaches structured data instead of living only in the visible
+    // table. `row.ship` is the SAME effective-shipping figure already shown to
+    // visitors (real per-listing cost where the source gives one, e.g. eBay;
+    // otherwise the store's documented flat estimate — see
+    // lib/market-rows.ts/effectiveShippingCents), so this asserts nothing the
+    // page doesn't already claim. shippingDetails is omitted, not zeroed, for
+    // the rare row where even that estimate is unknown ("at checkout").
+    // hasMerchantReturnPolicy is deliberately NOT set here (unlike the
+    // Marketplace Offers below) — return policy is a fact about the individual
+    // third-party retailer that this data does not track, and asserting one
+    // uniformly would be the same kind of overclaim the Marketplace policy note
+    // above warns against.
+    ...baseline.prices.map((row) => ({
+      "@type": "Offer",
+      price: (row.priceCents / 100).toFixed(2),
+      priceCurrency: baseline.currency,
+      availability: "https://schema.org/InStock",
+      seller: { "@type": "Organization", name: row.retailerName },
+      url: row.buyHref,
+      priceValidUntil,
+      ...(row.ship != null
+        ? {
+            shippingDetails: {
+              "@type": "OfferShippingDetails",
+              shippingRate: { "@type": "MonetaryAmount", value: (row.ship / 100).toFixed(2), currency: baseline.currency },
+              shippingDestination: { "@type": "DefinedRegion", addressCountry: isoCountry(baseline.market) },
+            },
+          }
+        : {}),
+    })),
     ...mpListings.map((l) => {
       const shipCents = l.seller.sellerProfile?.shippingFlatCents;
       return {

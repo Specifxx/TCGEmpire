@@ -10,9 +10,14 @@
 // catch, where a handful of numbers per card is not.
 import { prisma } from "./db";
 import { dbHistory } from "./db-history";
-import { DEFAULT_COUNTRY, type Country } from "./country";
+import { COUNTRIES, DEFAULT_COUNTRY, type Country } from "./country";
 import { CONTENT_TAG } from "./revalidate-content";
 import { cachedOrDirect, sydneyDayKey } from "./price-history";
+import { cardHref } from "./card-url";
+import { affiliateUrl } from "./affiliate";
+import { effectiveShippingCents, shippingPolicyUrl } from "./retailers";
+import { computeMarket, type MarketRow } from "./market-rows";
+import { SITE_URL } from "./site";
 
 export interface BulkCardEntry {
   externalId: string | null;
@@ -122,4 +127,98 @@ export function getBulkCardSummary(country: Country = DEFAULT_COUNTRY): Promise<
     ["rc-public-api-cards", country, sydneyDayKey()],
     { revalidate: 172800, tags: [CONTENT_TAG] },
   );
+}
+
+const cardWhereParam = (p: string) => ({ OR: [{ slug: p }, { id: p }] });
+
+// Shared by /api/v1/card/[id]/prices.json and the MCP get_card_prices tool —
+// one query, one response shape, so the two surfaces can't drift apart.
+export async function getCardPricesData(idOrSlug: string) {
+  const card = await prisma.card
+    .findFirst({
+      where: cardWhereParam(idOrSlug),
+      select: {
+        id: true, slug: true, name: true, setName: true, setCode: true, collectorNumber: true, imageUrl: true,
+        lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true,
+        lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true,
+      },
+    })
+    .catch(() => null);
+  if (!card) return null;
+
+  return {
+    card: {
+      name: card.name,
+      set: card.setName,
+      setCode: card.setCode,
+      collectorNumber: card.collectorNumber,
+      url: `${SITE_URL}${cardHref(card)}`,
+      image: card.imageUrl,
+    },
+    prices: {
+      AU: { lowestCents: card.lowestPriceCents, currency: "AUD" },
+      NZ: { lowestCents: card.lowestPriceCentsNz, currency: "NZD" },
+      US: { lowestCents: card.lowestPriceCentsUs, currency: "USD" },
+      UK: { lowestCents: card.lowestPriceCentsUk, currency: "GBP" },
+      SG: { lowestCents: card.lowestPriceCentsSg, currency: "SGD" },
+      CA: { lowestCents: card.lowestPriceCentsCa, currency: "CAD" },
+    },
+    note: "Prices are the lowest live in-stock listing per market, in integer cents. null = no tracked in-stock listing.",
+    source: `${SITE_URL}${cardHref(card)}`,
+    generatedAt: new Date().toISOString(),
+  };
+}
+
+// Shared by /api/v1/card/[id]/listings.json and the MCP cheapest_listing tool —
+// the full per-store comparison table, cheapest total delivered cost first. Same
+// query + enrichment (affiliateUrl, shippingPolicyUrl, effectiveShippingCents)
+// and the pure computeMarket() ranking the card page itself renders from.
+export async function getCardListingsData(idOrSlug: string, market: Country = DEFAULT_COUNTRY) {
+  const card = await prisma.card
+    .findFirst({
+      where: cardWhereParam(idOrSlug),
+      select: {
+        id: true, slug: true, name: true,
+        retailerPrices: {
+          orderBy: { priceCents: "asc" },
+          select: {
+            id: true, country: true, retailer: true, retailerName: true, priceCents: true,
+            shippingCents: true, condition: true, isFoil: true, inStock: true, lastSeen: true, url: true,
+          },
+        },
+      },
+    })
+    .catch(() => null);
+  if (!card) return null;
+
+  const pageUrl = `${SITE_URL}${cardHref(card)}`;
+  const rows: MarketRow[] = card.retailerPrices.map((p) => ({
+    id: p.id,
+    country: p.country,
+    retailer: p.retailer,
+    retailerName: p.retailerName,
+    priceCents: p.priceCents,
+    ship: effectiveShippingCents(p.shippingCents),
+    condition: p.condition,
+    isFoil: p.isFoil,
+    inStock: p.inStock,
+    lastSeen: p.lastSeen.toISOString(),
+    buyHref: affiliateUrl(p.url, p.retailer, pageUrl),
+    policyUrl: shippingPolicyUrl(p.retailer),
+  }));
+  const view = computeMarket(rows, market);
+
+  return {
+    name: card.name,
+    market,
+    currency: COUNTRIES[market].currency,
+    storeCount: view.storeCount,
+    hasEbay: view.hasEbay,
+    // Each row already carries `delivered` (priceCents + ship) — see ComputedRow
+    // in market-rows.ts — so this is a direct pass-through, not a re-derivation.
+    listings: view.prices,
+    outOfStock: view.outOfStock,
+    source: pageUrl,
+    generatedAt: new Date().toISOString(),
+  };
 }

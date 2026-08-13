@@ -16,15 +16,25 @@ export async function GET(req: Request) {
   const market = parseMarket(new URL(req.url).searchParams.get("market"));
   const cards = await getBulkCardSummary(market).catch(() => null);
 
+  // Same reasoning as /api/v1/index.json: a transient build failure is a real,
+  // temporary state an agent should be able to tell apart from "this URL is
+  // broken" — 200 + an explicit status, never a 5xx for it.
   if (!cards) {
     return Response.json(
-      { error: "unavailable", market },
-      { status: 503, headers: { "X-Robots-Tag": "noindex" } },
+      { status: "warming", market, asOf: new Date().toISOString(), cards: [] },
+      {
+        headers: {
+          "X-Robots-Tag": "noindex",
+          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=1800",
+          "Access-Control-Allow-Origin": "*",
+        },
+      },
     );
   }
 
   return Response.json(
     {
+      status: "ready",
       market,
       currency: COUNTRIES[market].currency,
       note: "priceCents is the lowest live in-stock listing per card. dNCents is the nearest available point to N days ago (null when the window doesn't reach that far back).",

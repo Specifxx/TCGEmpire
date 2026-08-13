@@ -44,6 +44,7 @@
     "@capacitor/browser": "^6.0.6",
     "@capacitor/core": "^6.2.1",
     "@capacitor/status-bar": "^6.0.3",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "@prisma/client": "^5.22.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",

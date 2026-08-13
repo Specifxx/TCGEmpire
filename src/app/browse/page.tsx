@@ -4,6 +4,7 @@ import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { getCountry } from "@/lib/get-country";
+import { normalizeCountry } from "@/lib/country";
 import { Filters } from "@/components/Filters";
 import { ActiveFilters } from "@/components/ActiveFilters";
 import { EbayPicks } from "@/components/EbayPicks";
@@ -62,13 +63,22 @@ export async function generateMetadata({ searchParams }: { searchParams: CardQue
   return { ...base, alternates: { canonical: "/browse" } };
 }
 
-export default async function BrowsePage({ searchParams }: { searchParams: CardQuery }) {
+export default async function BrowsePage({ searchParams }: { searchParams: CardQuery & { market?: string } }) {
   // The route reads searchParams so it is per-request dynamic regardless — the
   // cookie read costs nothing extra here, and sort/filter MUST use the visitor's
   // market or the grid renders local prices in AU-column order (US$12 above US$3)
   // and price filters drop cards with no AU listing. Only the METADATA is
   // market-neutral (that's what Googlebot indexes).
-  const country = getCountry();
+  //
+  // ?market=US (etc.) is an explicit override of the cookie/geo default, so an
+  // agent (which carries neither) can construct a deterministic URL for
+  // "cheapest X for a US buyer" instead of the market being invisible client
+  // state. normalizeCountry() safely coerces anything invalid to the US
+  // default, so an unrecognised value degrades to today's behaviour rather
+  // than erroring. No explicit noindex/canonical handling needed here: like
+  // every other filter param, a non-empty searchParams object already falls
+  // through generateMetadata's default branch to `canonical: "/browse"`.
+  const country = searchParams.market ? normalizeCountry(searchParams.market) : getCountry();
   const where = buildCardWhere(searchParams, country);
   const orderBy = buildCardOrderBy(searchParams.sort, country);
   const size = parsePageSize(searchParams.size);
