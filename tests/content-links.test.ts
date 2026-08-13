@@ -159,6 +159,10 @@ test("every article hero image exists on disk and has alt text", () => {
   for (const a of ARTICLES) {
     if (!a.hero) continue;
     assert.ok(a.hero.alt.trim(), `${a.slug}: hero image has no alt text`);
+    // An absolute URL (e.g. cdn.riftscribe.gg, same CDN every regular card
+    // image already comes from) is intentionally hosted off-repo — see the
+    // matching isAbsolute check in ArticleView.tsx / guides & blog metadata.
+    if (a.hero.src.startsWith("http")) continue;
     const file = join(ROOT, "public", a.hero.src.replace(/^\//, ""));
     assert.ok(existsSync(file), `${a.slug}: hero image ${a.hero.src} is not in public/`);
   }
