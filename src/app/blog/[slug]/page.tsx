@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       publishedTime: a.date,
       modifiedTime: a.updated ?? a.date,
       authors: [a.author],
-      ...(a.hero ? { images: [`${SITE_URL}${a.hero.src}`] } : {}),
+      ...(a.hero ? { images: [a.hero.src.startsWith("http") ? a.hero.src : `${SITE_URL}${a.hero.src}`] } : {}),
     }),
   };
 }
