@@ -56,8 +56,16 @@ export function Reveal({
       // threshold 0 (not 0.12): a grid taller than the viewport can never reach 12%
       // visibility, so it would never reveal and its children would stay at opacity 0
       // (this is why the tall /sealed grid showed nothing). 0 reveals as soon as any
-      // part enters the viewport (minus the 8% bottom margin) — works at any height.
-      { threshold: 0, rootMargin: "0px 0px -8% 0px" }
+      // part enters the viewport — works at any height.
+      //
+      // rootMargin bottom is a POSITIVE 200px lead-in (was a negative -8%, i.e. the
+      // reveal used to start only once already a little inside the viewport). On a
+      // fast scroll/fling, a several-hundred-ms fade that only *starts* once content
+      // is already visible reads as a blank/dim flash — the section is scrolled past
+      // before it finishes appearing. Pre-triggering ~200px before the element is
+      // actually on screen gives the transition a head start, so by the time it's
+      // in view it's already fading in (or done) rather than starting from opacity 0.
+      { threshold: 0, rootMargin: "0px 0px 200px 0px" }
     );
     io.observe(el);
     return () => io.disconnect();

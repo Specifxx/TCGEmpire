@@ -261,6 +261,31 @@ export function newestReleasedSet(now: Date = new Date()): SetInfo | undefined {
 export const setBySlug = (slug: string): SetInfo | undefined => SETS.find((s) => s.slug === slug);
 export const setByCode = (code: string): SetInfo | undefined => SETS.find((s) => s.code === code);
 
+/**
+ * The next set that hasn't released yet — symmetric with newestReleasedSet()
+ * above. Lets a surface (the homepage's release-hype card) point at "the next
+ * set" without naming one, so it rolls from Radiance to Legacy on its own once
+ * Radiance ships, with no code change.
+ *
+ * Prefers the earliest dated `comingSoon` entry; an undated one (announced but
+ * no release date yet) sorts after any dated entry, since "no date" is further
+ * from certain than "has a date, just further out."
+ */
+export function nextUpcomingSet(now: Date = new Date()): SetInfo | undefined {
+  const at = now.getTime();
+  return SETS.filter((s) => {
+    if (!s.comingSoon) return false;
+    if (!s.releasedOn) return true;
+    const released = Date.parse(`${s.releasedOn}T00:00:00Z`);
+    return Number.isNaN(released) || released > at;
+  }).sort((a, b) => {
+    if (!a.releasedOn && !b.releasedOn) return 0;
+    if (!a.releasedOn) return 1;
+    if (!b.releasedOn) return -1;
+    return a.releasedOn < b.releasedOn ? -1 : 1;
+  })[0];
+}
+
 export interface RarityInfo {
   key: string;
   label: string;

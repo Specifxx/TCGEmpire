@@ -318,12 +318,21 @@ html.capacitor-native.has-native-banner body {
    IntersectionObserver (works in every browser). The hidden state lives only on
    the `.reveal-init` / `.reveal-stagger` classes, which JS adds at runtime — so
    server HTML and no-JS visitors render fully visible. */
+/* Durations were 0.7s (block) / 0.6s (stagger children) with delays fanning out
+   to 545ms — over a second before a big grid's last child finished appearing.
+   Combined with Reveal's old rootMargin (which only started the fade once
+   content was already a little inside the viewport), a fast scroll/fling would
+   outrun the animation and the section would read as a blank/dim flash rather
+   than a smooth reveal. Reveal now pre-triggers ~200px early (see Reveal.tsx);
+   shortening these too means the whole cascade resolves well inside that
+   lead-in instead of continuing to animate after the content is already on
+   screen. */
 .reveal-init {
   opacity: 0;
   transform: translateY(26px);
   transition:
-    opacity 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) var(--reveal-delay, 0ms),
-    transform 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) var(--reveal-delay, 0ms);
+    opacity 0.4s cubic-bezier(0.22, 0.61, 0.36, 1) var(--reveal-delay, 0ms),
+    transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1) var(--reveal-delay, 0ms);
   will-change: opacity, transform;
 }
 .reveal-init.reveal-in {
@@ -336,8 +345,8 @@ html.capacitor-native.has-native-banner body {
   opacity: 0;
   transform: translateY(22px);
   transition:
-    opacity 0.6s cubic-bezier(0.22, 0.61, 0.36, 1),
-    transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+    opacity 0.35s cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
   will-change: opacity, transform;
 }
 .reveal-stagger.reveal-in > * {
@@ -345,16 +354,16 @@ html.capacitor-native.has-native-banner body {
   transform: none;
 }
 .reveal-stagger.reveal-in > *:nth-child(1) { transition-delay: 0ms; }
-.reveal-stagger.reveal-in > *:nth-child(2) { transition-delay: 55ms; }
-.reveal-stagger.reveal-in > *:nth-child(3) { transition-delay: 110ms; }
-.reveal-stagger.reveal-in > *:nth-child(4) { transition-delay: 165ms; }
-.reveal-stagger.reveal-in > *:nth-child(5) { transition-delay: 220ms; }
-.reveal-stagger.reveal-in > *:nth-child(6) { transition-delay: 275ms; }
-.reveal-stagger.reveal-in > *:nth-child(7) { transition-delay: 330ms; }
-.reveal-stagger.reveal-in > *:nth-child(8) { transition-delay: 385ms; }
-.reveal-stagger.reveal-in > *:nth-child(9) { transition-delay: 440ms; }
-.reveal-stagger.reveal-in > *:nth-child(10) { transition-delay: 495ms; }
-.reveal-stagger.reveal-in > *:nth-child(n + 11) { transition-delay: 545ms; }
+.reveal-stagger.reveal-in > *:nth-child(2) { transition-delay: 30ms; }
+.reveal-stagger.reveal-in > *:nth-child(3) { transition-delay: 60ms; }
+.reveal-stagger.reveal-in > *:nth-child(4) { transition-delay: 90ms; }
+.reveal-stagger.reveal-in > *:nth-child(5) { transition-delay: 120ms; }
+.reveal-stagger.reveal-in > *:nth-child(6) { transition-delay: 150ms; }
+.reveal-stagger.reveal-in > *:nth-child(7) { transition-delay: 180ms; }
+.reveal-stagger.reveal-in > *:nth-child(8) { transition-delay: 210ms; }
+.reveal-stagger.reveal-in > *:nth-child(9) { transition-delay: 240ms; }
+.reveal-stagger.reveal-in > *:nth-child(10) { transition-delay: 270ms; }
+.reveal-stagger.reveal-in > *:nth-child(n + 11) { transition-delay: 300ms; }
 
 /* Cinematic hero parallax. The layers read CSS custom properties set at runtime by
    useParallax (scroll/pointer); the var() fallbacks of 0 mean the server HTML and

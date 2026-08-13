@@ -14,6 +14,7 @@ export function NewsletterSignup({
   cta = "Sign up",
   done,
   variant = "footer",
+  trackEvent = "newsletter_signup",
 }: {
   siteName: string;
   source?: string;
@@ -21,6 +22,11 @@ export function NewsletterSignup({
   cta?: string;
   done?: string;
   variant?: "footer" | "card";
+  // Lets a call site fire its own distinctly-named event (e.g. Radiance's
+  // "Notify me" wants `radiance_notify_click`, not a generic signup event) while
+  // still sharing this exact submit handler/validation/API call — the ask is one
+  // handler, not one event name.
+  trackEvent?: string;
 }) {
   // May render OUTSIDE CountryProvider (footer) — read the market cookie directly.
   const country = typeof document !== "undefined" ? /(?:^|; )country=(\w+)/.exec(document.cookie)?.[1] ?? "AU" : "AU";
@@ -40,7 +46,7 @@ export function NewsletterSignup({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim(), market: country, source }),
       });
-      if (r.ok) track("newsletter_signup", { source });
+      if (r.ok) track(trackEvent, { source });
       setState(r.ok ? "done" : "error");
     } catch {
       setState("error");

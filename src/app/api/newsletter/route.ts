@@ -6,7 +6,7 @@ import { sendNewsletterWelcomeEmail } from "@/lib/email";
 import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit";
 import { SITE_URL } from "@/lib/site";
 
-const SOURCES = new Set(["footer", "movers", "countdown", "blog", "market"]);
+const SOURCES = new Set(["footer", "movers", "countdown", "blog", "market", "home"]);
 const schema = z.object({
   email: z.string().email().max(200),
   market: z.string().max(2).optional(),

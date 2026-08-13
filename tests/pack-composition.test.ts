@@ -142,7 +142,10 @@ test("the pack simulator is in the sitemap, rated as a tool rather than a mini-g
 test("the homepage links to the pack simulator", () => {
   // The incumbent at #1 has no indexable content at all, so internal signals are
   // the cheapest lever available. A homepage link is the strongest one.
-  assert.match(read("src/app/page.tsx"), /href="\/games\/pack-sim"/);
+  // The link itself now lives in ReturnVisitCards (one of the homepage's
+  // "come back tomorrow" hooks, rendered from src/app/page.tsx) rather than
+  // inline in page.tsx.
+  assert.match(read("src/components/home/ReturnVisitCards.tsx"), /href="\/games\/pack-sim"/);
 });
 
 // ── The three claims the page makes that the simulator has to honour ─────────
