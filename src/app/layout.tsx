@@ -308,6 +308,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </a>
             .
           </p>
+          {/* Cross-promotion: our other Riftbound side project. Cheeky on purpose —
+              per owner request 2026-08-13. */}
+          <p className="mb-2">
+            Yes, we know Riftbound cards aren&apos;t literally stocks. Try telling
+            that to{" "}
+            <a
+              href="https://riftboundstocks.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-brand-400 hover:underline"
+            >
+              RiftboundStocks.com
+            </a>
+            , our other site, where we track them like the market&apos;s open anyway.
+          </p>
           <p>
             RiftCompare · Riftbound card database &amp; price comparison for
             Australia, New Zealand, the US, the UK, Singapore and Canada. Prices are sourced from public store listings and may be out
@@ -323,6 +338,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             policy using assets owned by Riot Games. Riot Games does not endorse or
             sponsor this project.
           </p>
+          <p className="mt-2">&copy; {new Date().getFullYear()} {SITE_NAME}. All rights reserved.</p>
         </footer>
         {/* Detects the Capacitor native runtime and shows native AdMob ads, styles
             the status bar and wires the Android back button. No-op on the web. */}

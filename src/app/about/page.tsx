@@ -115,7 +115,9 @@ export default function AboutPage() {
             store we compare. Card names and artwork are the property of their respective owners and are
             used to identify the cards being priced. We also run a sister site,{" "}
             <a href="https://dexcompare.app" target="_blank" rel="noopener noreferrer" className="text-brand-400 hover:underline">DexCompare</a>,
-            for the Pokémon TCG.
+            for the Pokémon TCG — and{" "}
+            <a href="https://riftboundstocks.com" target="_blank" rel="noopener noreferrer" className="text-brand-400 hover:underline">RiftboundStocks.com</a>,
+            for treating Riftbound cards like they&rsquo;re on a stock ticker.
           </p>
         </section>
 

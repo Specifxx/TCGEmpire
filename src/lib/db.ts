@@ -38,38 +38,57 @@ import { PrismaClient } from "@prisma/client";
 const BIG_RESULT_ROWS = 500; // only size-check results at least this long (CPU)
 const BIG_RESULT_BYTES = 1_000_000;
 
-// RM5 is the CURRENT operational Neon project (cut over 2026-08-10, after RM4
-// exhausted its monthly network-transfer allowance — RM4 itself replaced RM3,
-// which replaced DATABASE_URL_2, which replaced the original DATABASE_URL, each
-// for the same reason). Prefer it the moment it's set (in both Vercel and GitHub
-// Actions), same pattern as db-history.ts's fallback chain.
+// DATABASE_URL — the ORIGINAL project this site launched on — is the CURRENT
+// operational Neon project again, cut over 2026-08-12 after RM5 neared its
+// monthly network-transfer allowance. It is the sixth rotation (DATABASE_URL →
+// DATABASE_URL_2 → RM3 → RM4 → RM5 → back to DATABASE_URL), and the first that
+// goes BACKWARD: Neon's caps are per project and per month, the original was
+// retired long enough ago that its allowance has reset, and re-using rested
+// capacity we already own beats provisioning an RM6 and beats paying.
 //
-// THIS HAS NOW HAPPENED FIVE TIMES, so treat the chain as a rotation rather than
-// an accident: each project runs out, a new one is created, it goes on the FRONT
-// of this list, and the old one stays exactly one release as a rollback.
+// THE CHAIN IS CURRENT-FIRST, NOT NEWEST-FIRST. Every rotation before this one
+// moved forward onto a freshly provisioned project, so "newest first" and
+// "current first" meant the same thing and this comment used to say "newest".
+// It no longer does. Read the head of this list as "whichever project is in
+// service TODAY" — a precedence order, never a timeline. Same convention as
+// db-history.ts, which rotated backward onto HISTORY_DATABASE_URL a day earlier.
 //
-// RM4's exhaustion is the sharpest example of what that costs. It went from a
-// clean 43-minute price import at 2026-08-09 19:30 UTC to refusing every
-// connection by 04:35 the next morning, and because `next build` prerenders 22
-// database-backed pages, every Vercel deploy failed outright from that moment —
-// with a bare `Error: Command "npm run build" exited with 1` and nothing in it
-// naming a database.
+// WHAT ROTATING ONTO THE NAME `DATABASE_URL` COSTS, stated plainly because it
+// is genuinely a hazard: prisma/schema.prisma reads env("DATABASE_URL")
+// directly, nearly every script assigns `DATABASE_URL=<something> npx tsx …` to
+// aim Prisma at a specific database, and the GitHub Actions workflows assign it
+// from this same chain. So the name now means two things at once — "whichever
+// database this process should talk to" and "the specific project at the head
+// of this chain" — and in production they coincide, which is what would make a
+// mistake quiet rather than loud. Locally it resolves to the dev Postgres in
+// .env.local, which is correct and is why local dev is unaffected. If there is
+// a seventh rotation, give the project a FRESH name (RM6) instead of recycling
+// the generic one.
 //
-// The older vars are kept ONLY as fallbacks so a deploy can't hard-fail if RM5
-// is momentarily missing from one environment; treat them as dead/read-only,
-// never the primary target. Once RM5 is confirmed live everywhere and the data
-// is verified across (see migrate-main-db-rm5 in maintenance.yml), they can be
-// deleted and this collapsed back to a single var.
+// RM4's exhaustion is the sharpest example of what an unplanned rotation costs.
+// It went from a clean 43-minute price import at 2026-08-09 19:30 UTC to
+// refusing every connection by 04:35 the next morning, and because `next build`
+// prerenders 22 database-backed pages, every Vercel deploy failed outright from
+// that moment — with a bare `Error: Command "npm run build" exited with 1` and
+// nothing in it naming a database.
 //
-// NOTE the ordering rule for any future rotation: the NEWEST project goes
-// first. Getting this backwards silently keeps the site on the exhausted
-// database while looking correct.
+// RM5 is kept as the rollback and every var below it is dead/read-only; treat
+// none of them as a write target. Once the original project is confirmed
+// serving cleanly everywhere (see migrate-main-db-to-original in
+// maintenance.yml), they can be deleted and this collapsed back to one var.
+//
+// ORDER MATTERS AND IS DUPLICATED: this list is mirrored, by necessity, in
+// places that cannot import this module — scripts/build-db-push.sh and the
+// `env:` blocks of .github/workflows/{maintenance,refresh-prices,db-audit,
+// weekly-promo}.yml. tests/db-chain.test.ts pins the app and build chains to
+// each other; the workflow blocks are checked by eye. Rotate them together, or
+// the site reads one database while the importers write to another.
 const OPERATIONAL_URL =
+  process.env.DATABASE_URL ||
   process.env.RM5 ||
   process.env.RM4 ||
   process.env.RM3 ||
-  process.env.DATABASE_URL_2 ||
-  process.env.DATABASE_URL;
+  process.env.DATABASE_URL_2;
 
 // Ensure a generous connect_timeout (the standard libpq/Postgres connection
 // param, in seconds) is set. WHY: Neon's pooled compute suspends when idle and
@@ -99,7 +118,9 @@ function withConnectTimeout(url: string | undefined, seconds: number): string | 
 // winning var name once at module init makes the next P1001 self-diagnosing —
 // in particular it distinguishes "RM3 is down" from "RM3 is unset in this
 // environment, so we silently fell back to the exhausted old database".
-const RESOLVED_SOURCE = process.env.RM5
+const RESOLVED_SOURCE = process.env.DATABASE_URL
+  ? "DATABASE_URL"
+  : process.env.RM5
   ? "RM5"
   : process.env.RM4
   ? "RM4"
@@ -107,8 +128,6 @@ const RESOLVED_SOURCE = process.env.RM5
   ? "RM3"
   : process.env.DATABASE_URL_2
   ? "DATABASE_URL_2"
-  : process.env.DATABASE_URL
-  ? "DATABASE_URL"
   : "NONE";
 
 // DB_SOURCE_NAME: the same answer, supplied by whoever set the URL.
@@ -128,11 +147,12 @@ const RESOLVED_SOURCE = process.env.RM5
 // exactly as before.
 export const OPERATIONAL_URL_SOURCE = process.env.DB_SOURCE_NAME || RESOLVED_SOURCE;
 
-if (OPERATIONAL_URL_SOURCE !== "RM5") {
+if (OPERATIONAL_URL_SOURCE !== "DATABASE_URL") {
   console.warn(
-    `[db] operational database resolved from ${OPERATIONAL_URL_SOURCE}, not RM5. ` +
-      `RM5 is the current project; the others are exhausted/read-only fallbacks kept only so a ` +
-      `deploy can't hard-fail. If this appears in a Vercel build log, RM5 is missing from that environment.`
+    `[db] operational database resolved from ${OPERATIONAL_URL_SOURCE}, not DATABASE_URL. ` +
+      `DATABASE_URL is the current project (the original, rotated back onto 2026-08-12); RM5 is the ` +
+      `rollback and everything below it is exhausted/read-only, kept only so a deploy can't hard-fail. ` +
+      `If this appears in a Vercel build log, DATABASE_URL is missing from that environment.`
   );
 }
 

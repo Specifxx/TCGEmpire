@@ -31,7 +31,12 @@ set -uo pipefail
 #
 # tests/db-chain.test.ts asserts these two values still match the head of each
 # chain, so the next cutover fails a test instead of quietly lying in a log.
-CURRENT_OP="RM5"
+# Rotated BACKWARD on 2026-08-12, the same move the history database made a day
+# earlier: RM5 neared its monthly allowance and the ORIGINAL project (the
+# DATABASE_URL secret) had its allowance reset. See the long note on
+# OPERATIONAL_URL in src/lib/db.ts, including why recycling this particular name
+# is a hazard worth not repeating.
+CURRENT_OP="DATABASE_URL"
 # Rotated BACKWARD on 2026-08-11: RH7 neared its monthly allowance, and
 # HISTORY_DATABASE_URL — the oldest project in the chain — had its allowance
 # reset at the start of the month. The chains are CURRENT-first, not newest-first;
@@ -44,22 +49,32 @@ CURRENT_HIST="HISTORY_DATABASE_URL"
 # GATES ON THE WHOLE OPERATIONAL CHAIN, not bare DATABASE_URL. The original check
 # was `['production','preview'].includes(VERCEL_ENV) && DATABASE_URL`, written when
 # DATABASE_URL was the only operational variable. It has since become
-# RM5 || RM4 || RM3 || DATABASE_URL_2 || DATABASE_URL (lib/db.ts), and lib/db.ts explicitly tells
+# DATABASE_URL || RM5 || RM4 || RM3 || DATABASE_URL_2 (lib/db.ts), and lib/db.ts explicitly tells
 # the owner the older vars can eventually be deleted — at which point this line
 # would exit 0 on every deploy and silently stop pushing schema to BOTH the
 # operational AND the history database, while logging a benign-looking "skipping".
 # A green deploy against an un-migrated database is exactly the failure this
 # script exists to prevent.
 if ! { [ "${VERCEL_ENV:-}" = "production" ] || [ "${VERCEL_ENV:-}" = "preview" ]; } \
-   || [ -z "${RM5:-}${RM4:-}${RM3:-}${DATABASE_URL_2:-}${DATABASE_URL:-}" ]; then
-  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM5 / RM4 / RM3 / DATABASE_URL_2 / DATABASE_URL) — skipping schema push."
+   || [ -z "${DATABASE_URL:-}${RM5:-}${RM4:-}${RM3:-}${DATABASE_URL_2:-}" ]; then
+  echo "[build-db-push] not a Vercel production/preview build with an operational database set (DATABASE_URL / RM5 / RM4 / RM3 / DATABASE_URL_2) — skipping schema push."
   exit 0
 fi
 
-# Newest-first, same order as lib/db.ts and every GitHub Actions workflow. Unlike the
-# app runtime (which can silently keep serving from a stale connection until the next
-# cold start), this ALWAYS reflects the current build's actual environment.
-if [ -n "${RM5:-}" ]; then
+# CURRENT-first, same order as lib/db.ts and every GitHub Actions workflow. Unlike
+# the app runtime (which can silently keep serving from a stale connection until
+# the next cold start), this ALWAYS reflects the current build's actual environment.
+#
+# THE FIRST BRANCH DELIBERATELY DOES NOT `export`. Every other branch has to
+# copy its winning variable INTO DATABASE_URL, because that is the only name
+# `prisma db push` reads. When DATABASE_URL is itself the winner there is
+# nothing to copy — `export DATABASE_URL="$DATABASE_URL"` would be a no-op at
+# best, and writing it out invites someone to "fix" it later into something that
+# isn't. That asymmetry is a direct consequence of rotating onto the generic
+# name; see the note on OPERATIONAL_URL in src/lib/db.ts.
+if [ -n "${DATABASE_URL:-}" ]; then
+  SOURCE="DATABASE_URL"
+elif [ -n "${RM5:-}" ]; then
   export DATABASE_URL="$RM5"
   SOURCE="RM5"
 elif [ -n "${RM4:-}" ]; then
@@ -68,11 +83,9 @@ elif [ -n "${RM4:-}" ]; then
 elif [ -n "${RM3:-}" ]; then
   export DATABASE_URL="$RM3"
   SOURCE="RM3"
-elif [ -n "${DATABASE_URL_2:-}" ]; then
+else
   export DATABASE_URL="$DATABASE_URL_2"
   SOURCE="DATABASE_URL_2"
-else
-  SOURCE="DATABASE_URL"
 fi
 # Name the winner, never the value (it's a credential). This is the one line that
 # turns "P1001 against some unfamiliar host" into an immediate answer: if SOURCE is
