@@ -17,9 +17,6 @@ import { CONTACT_EMAIL, DISCORD_URL, SITE_NAME, SITE_URL } from "@/lib/site";
 import { IMPACT_SITE_VERIFICATION } from "@/lib/affiliate";
 import { MARKETPLACE_NAV_VISIBLE } from "@/components/nav-groups";
 import { FooterNav } from "@/components/FooterNav";
-import { NativeShell } from "@/components/NativeShell";
-import { ReferralCapture } from "@/components/ReferralCapture";
-import { FooterAds } from "@/components/FooterAds";
 import { enabledProviders } from "@/lib/oauth";
 import { AdSenseLoader } from "@/components/AdSenseLoader";
 import { ConsentDefaults } from "@/components/ConsentDefaults";
@@ -35,6 +32,19 @@ const PriceAlertModal = dynamic(() => import("@/components/PriceAlertModal").the
   ssr: false,
 });
 const SignupPromoPopup = dynamic(() => import("@/components/SignupPromoPopup").then((m) => m.SignupPromoPopup), {
+  ssr: false,
+});
+// Real footer ad content — kept SSR'd (ssr: true, the default) for the same
+// reason the rest of the site's ad units are: an AdSense reviewer or crawler
+// fetching raw HTML must still see it. Only the JS is split out of the
+// initial hydration bundle.
+const FooterAds = dynamic(() => import("@/components/FooterAds").then((m) => m.FooterAds));
+// Both render nothing on the web (NativeShell no-ops outside the Capacitor
+// native app; ReferralCapture is a pure side-effect that writes a cookie) —
+// ssr:false costs nothing content-wise and keeps their JS out of the bundle
+// every browser visitor has to parse before hydration.
+const NativeShell = dynamic(() => import("@/components/NativeShell").then((m) => m.NativeShell), { ssr: false });
+const ReferralCapture = dynamic(() => import("@/components/ReferralCapture").then((m) => m.ReferralCapture), {
   ssr: false,
 });
 

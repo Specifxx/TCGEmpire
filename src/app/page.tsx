@@ -12,7 +12,6 @@ import { SETS, newestReleasedSet, domainInfo, DOMAIN_KEYS } from "@/lib/constant
 import { SITE_URL } from "@/lib/site";
 import { getTopDeals, type TopDeals } from "@/lib/top-deals";
 import { getRecentlyUpdated, getPriceMovers } from "@/lib/price-history";
-import { TodaysTopDeals } from "@/components/TodaysTopDeals";
 import { CinematicHero } from "@/components/home/CinematicHero";
 import { PartnersStrip } from "@/components/home/PartnersStrip";
 import { HowItWorks } from "@/components/home/HowItWorks";
@@ -23,11 +22,12 @@ import { RETAILER_LIST } from "@/lib/retailers";
 import { pageAlternates } from "@/lib/seo";
 import { webPage } from "@/lib/jsonld";
 
-// Below-the-fold, client-rendered tab carousel — code-split into its own chunk
-// (still SSR'd for content/SEO) so its JS isn't part of the bundle the browser
-// has to parse/compile before the hero above it can hydrate and paint. It's
-// well below the LCP candidate (the hero stat line), so nothing here needs to
-// be ready any earlier than "whenever it's scrolled to."
+// Below-the-fold, client-rendered components — code-split into their own
+// chunks (still SSR'd for content/SEO) so their JS isn't part of the bundle
+// the browser has to parse/compile before the hero above them can hydrate and
+// paint. Both are well below the LCP candidate (the hero stat line), so
+// neither needs to be ready any earlier than "whenever it's scrolled to."
+const TodaysTopDeals = dynamic(() => import("@/components/TodaysTopDeals").then((m) => m.TodaysTopDeals));
 const PopularCardsCarousel = dynamic(() =>
   import("@/components/home/PopularCardsCarousel").then((m) => m.PopularCardsCarousel),
 );

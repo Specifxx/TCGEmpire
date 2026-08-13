@@ -1,9 +1,15 @@
+import dynamic from "next/dynamic";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { getChaseCards } from "@/lib/cheapest-cards";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
-import { EbayPicksLive, type PickListing } from "./EbayPicksLive";
+import type { PickListing } from "./EbayPicksLive";
+
+// Below-the-fold on every page it appears on. Kept SSR'd (ssr: true, the
+// default) — same reviewer/crawler reasoning as FooterAds — just split out of
+// the JS the browser parses before hydrating the above-the-fold content.
+const EbayPicksLive = dynamic(() => import("./EbayPicksLive").then((m) => m.EbayPicksLive));
 
 /**
  * Server half of the tailored eBay unit.
