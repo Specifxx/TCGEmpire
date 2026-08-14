@@ -75,7 +75,15 @@ export function FloatingCardShowcase({
       data-rc-showcase={side}
       className={[
         "pointer-events-none absolute top-1/2 hidden -translate-y-1/2 min-[1400px]:block",
-        isLeft ? "left-4" : "right-4",
+        // 32px, not 16px. The ghost stack fans OUTWARD — rotated 6° and pushed
+        // 18px away from the hero — so the wrapper's own box understates how far
+        // the composition actually reaches: rotating a 240×400 box by 6° widens
+        // its half-width to 120·cos6 + 200·sin6 = 140px, and at a 16px inset that
+        // put the outer ghost's corner 14px past the viewport edge on both sides.
+        // The shell clips it (no horizontal scroll — that was measured), but a
+        // faint decorative panel sliced off by the screen edge reads as a
+        // rendering bug rather than depth. 32px puts it ~2px inside.
+        isLeft ? "left-8" : "right-8",
       ].join(" ")}
       // Above the background layers, below the hero's own text column — so even
       // if a future copy change did collide, the text stays readable.
