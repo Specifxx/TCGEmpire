@@ -27,14 +27,31 @@ const GREEN = "#34d17e";
 type Row = { name: string; price: string };
 type Featured = { name: string; setLine: string; art: string | null; rows: Row[] } | null;
 
-// One card, several real stores, cheapest first — the product in one picture.
-// Deliberately picks a card that HAS competing listings rather than the most
-// expensive one: a comparison needs at least two prices to be a comparison.
+// The market to draw. ONE market, not "the cheapest listings anywhere": the
+// first cut of this took the three lowest prices across every country and
+// produced a card showing "TCGplayer £0.00 / TCGplayer US$0.05 / TCGplayer
+// S$0.10" — the same shop three times, in three currencies, which is a
+// currency conversion rather than a price comparison and reads as broken.
+const OG_MARKET = "US";
+// Below this the card is bulk filler. The first cut ordered by listing count,
+// which selects for commons that every shop stocks — it picked a five-cent
+// card, and "$0.05" as the hero number undersells the product badly.
+const MIN_INTERESTING_CENTS = 500;
+
+// One card, several real stores in ONE market, cheapest first — the product in
+// a single picture. A comparison needs at least two DISTINCT retailers to be a
+// comparison, so candidates are scanned until one qualifies rather than
+// trusting the first row the database returns.
 async function loadFeatured(): Promise<Featured> {
   try {
-    const card = await prisma.card.findFirst({
-      where: { imageUrl: { not: null }, retailerPrices: { some: { inStock: true } } },
-      orderBy: { retailerPrices: { _count: "desc" } },
+    const candidates = await prisma.card.findMany({
+      where: {
+        imageUrl: { not: null },
+        lowestPriceCentsUs: { gte: MIN_INTERESTING_CENTS },
+        retailerPrices: { some: { inStock: true, country: OG_MARKET } },
+      },
+      orderBy: { lowestPriceCentsUs: "desc" },
+      take: 20,
       select: {
         name: true,
         setCode: true,
@@ -42,23 +59,33 @@ async function loadFeatured(): Promise<Featured> {
         imageUrl: true,
         imageThumbUrl: true,
         retailerPrices: {
-          where: { inStock: true },
+          where: { inStock: true, country: OG_MARKET },
           orderBy: { priceCents: "asc" },
-          take: 3,
           select: { retailerName: true, priceCents: true, currency: true },
         },
       },
     });
-    if (!card || card.retailerPrices.length < 2) return null;
-    return {
-      name: card.name,
-      setLine: `${card.setCode} · ${card.collectorNumber}`,
-      art: card.imageUrl ?? card.imageThumbUrl,
-      rows: card.retailerPrices.map((p) => ({
-        name: p.retailerName,
-        price: formatMoney(p.priceCents, p.currency),
-      })),
-    };
+
+    for (const card of candidates) {
+      // One row per retailer — a store's second listing for the same card is
+      // not a competitor, and showing it twice makes the comparison look fake.
+      const seen = new Set<string>();
+      const rows: Row[] = [];
+      for (const p of card.retailerPrices) {
+        if (seen.has(p.retailerName)) continue;
+        seen.add(p.retailerName);
+        rows.push({ name: p.retailerName, price: formatMoney(p.priceCents, p.currency) });
+        if (rows.length === 3) break;
+      }
+      if (rows.length < 2) continue;
+      return {
+        name: card.name,
+        setLine: `${card.setCode} · ${card.collectorNumber}`,
+        art: card.imageUrl ?? card.imageThumbUrl,
+        rows,
+      };
+    }
+    return null;
   } catch {
     // A build with no database reachable still needs to produce an image, so
     // the caller falls back to the brand-only composition below.
@@ -84,7 +111,7 @@ export default async function OgImage() {
         }}
       >
         {/* ── Left: wordmark + pitch ─────────────────────────────────────── */}
-        <div style={{ display: "flex", flexDirection: "column", maxWidth: 600 }}>
+        <div style={{ display: "flex", flexDirection: "column", maxWidth: 470 }}>
           <div style={{ display: "flex", alignItems: "center" }}>
             <div
               style={{
@@ -143,19 +170,19 @@ export default async function OgImage() {
               <img
                 src={featured.art}
                 alt=""
-                width={224}
-                height={313}
+                width={196}
+                height={274}
                 style={{
-                  width: 224,
-                  height: 313,
+                  width: 196,
+                  height: 274,
                   borderRadius: 16,
                   objectFit: "cover",
                   border: "2px solid #243047",
-                  marginRight: 26,
+                  marginRight: 22,
                 }}
               />
             )}
-            <div style={{ display: "flex", flexDirection: "column", width: 330 }}>
+            <div style={{ display: "flex", flexDirection: "column", width: 300 }}>
               <div
                 style={{
                   display: "flex",
