@@ -302,7 +302,11 @@ test("skipped cards keep an eBay buy path, just not a listing", () => {
   assert.match(market, /retailer="ebay_no_listing"/, "the card-page fallback must be tracked");
 
   const quick = read("src/components/QuickView.tsx");
-  assert.match(quick, /prices !== null && ebayMkt && !hasEbay/);
+  // ebayMkt (the fallback's label/domain lookup) is unconditional since every
+  // market has one — see lib/affiliate.ts's ebayLabel — so the gate is just
+  // !hasEbay now, not "&& ebayMkt" as well. Same gate, one fewer always-true
+  // clause.
+  assert.match(quick, /prices !== null && !hasEbay/);
   assert.match(quick, /retailer="ebay_no_listing"/, "the QuickView fallback must be tracked");
 });
 

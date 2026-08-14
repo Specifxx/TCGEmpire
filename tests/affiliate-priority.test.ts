@@ -10,7 +10,7 @@ import {
   ALL_FALLBACK_RETAILERS, AU_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS,
   SG_FALLBACK_RETAILERS, CA_FALLBACK_RETAILERS, NZ_FALLBACK_RETAILERS,
 } from "../src/lib/constants";
-import { affiliateUrl, affiliateSubId, ebayAffiliateUrl, EBAY_CAMPAIGN_ID } from "../src/lib/affiliate";
+import { affiliateUrl, affiliateSubId, ebayAffiliateUrl, ebaySearchUrl, ebayLabel, EBAY_CAMPAIGN_ID } from "../src/lib/affiliate";
 import { TCG_US, TCG_UK, TCG_SG, TCG_AU, TCG_CA } from "../src/lib/tcgplayer";
 import { computeMarket } from "../src/lib/market-rows";
 import { COUNTRY_LIST } from "../src/lib/country";
@@ -241,6 +241,58 @@ test("a URL that is neither /itm/ nor /sch/ is left unlabelled rather than guess
   // corrupt the very comparison this exists to make.
   const u = new URL(ebayAffiliateUrl("https://www.ebay.com/str/someseller"));
   assert.equal(u.searchParams.get("customid"), "rc-us");
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Singapore has no EPN program (confirmed against EPN's own help docs,
+// 2026-08-14) — every ebay.com.sg URL reroutes onto the verified US rotation
+// instead of being tagged with an invented siteid=216 rotation that nothing
+// backs. customid keeps reporting it as SG so EPN's by-custom-id report can
+// still show what that traffic is worth.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("ebaySearchUrl(SG) builds an ebay.com link on the verified US rotation, tagged rc-sg", () => {
+  const u = new URL(ebaySearchUrl("SG", "Riftbound"));
+  assert.equal(u.hostname, "www.ebay.com");
+  assert.equal(u.searchParams.get("siteid"), "0");
+  // The US rotation id — see EBAY_MARKETS["ebay.com"] — not a Singapore-specific
+  // one, because there isn't one.
+  assert.equal(u.searchParams.get("mkrid"), "711-53200-19255-0");
+  assert.match(u.searchParams.get("customid")!, /^rc-sg\b/);
+});
+
+test("a real ebay.com.sg LISTING url (from the Browse API's EBAY_SG marketplace search, not one we built) reroutes the same way", () => {
+  // mapEbayItem() in lib/ebay.ts calls ebayAffiliateUrl on whatever host eBay's
+  // own API response carries — this must not depend on the caller knowing the
+  // URL is SG-shaped, since ebay.ts never threads a "country" through to here.
+  // No explicit source: the "product" shape below is auto-derived from the
+  // /itm/ path (see ebayAffiliateUrl), not something a caller passes in.
+  const u = new URL(ebayAffiliateUrl("https://www.ebay.com.sg/itm/137597929650"));
+  assert.equal(u.hostname, "www.ebay.com");
+  assert.equal(u.pathname, "/itm/137597929650", "item id must survive the reroute unchanged");
+  assert.equal(u.searchParams.get("siteid"), "0");
+  assert.equal(u.searchParams.get("mkrid"), "711-53200-19255-0");
+  assert.equal(u.searchParams.get("customid"), "rc-sg-product");
+});
+
+test("SG's eBay label no longer claims a Singapore-specific site", () => {
+  // The link lands on ebay.com now (see above), so a "Singapore" label would
+  // describe a destination the click never visits. Matches US, the site it
+  // actually shares.
+  assert.equal(ebayLabel("SG"), ebayLabel("US"));
+  assert.doesNotMatch(ebayLabel("SG"), /singapore/i);
+});
+
+test("UK and CA keep their own distinct, non-US rotations (only SG reroutes)", () => {
+  const us = new URL(ebayAffiliateUrl("https://www.ebay.com/itm/1"));
+  const uk = new URL(ebayAffiliateUrl("https://www.ebay.co.uk/itm/1"));
+  const ca = new URL(ebayAffiliateUrl("https://www.ebay.ca/itm/1"));
+  assert.equal(uk.hostname, "www.ebay.co.uk");
+  assert.equal(ca.hostname, "www.ebay.ca");
+  assert.notEqual(uk.searchParams.get("siteid"), us.searchParams.get("siteid"));
+  assert.notEqual(uk.searchParams.get("mkrid"), us.searchParams.get("mkrid"));
+  assert.notEqual(ca.searchParams.get("siteid"), us.searchParams.get("siteid"));
+  assert.notEqual(ca.searchParams.get("mkrid"), us.searchParams.get("mkrid"));
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

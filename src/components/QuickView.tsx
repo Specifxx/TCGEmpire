@@ -10,7 +10,7 @@ import { isFallbackRetailer, isOvernumbered, isSignature, isCrystalRose } from "
 import { cardHref } from "@/lib/card-url";
 import { cardDisplayName, cardSearchName } from "@/lib/card-name";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
-import { affiliateUrl, ebayAffiliateUrl, outboundRel } from "@/lib/affiliate";
+import { affiliateUrl, ebayLabel, ebaySearchUrl as buildEbaySearchUrl, outboundRel } from "@/lib/affiliate";
 import { OutboundLink } from "./OutboundLink";
 import { EbayAdCarouselLive, type AdListing } from "./EbayAdCarouselLive";
 import { EbayTabs, type EbayTab } from "./EbayTabs";
@@ -22,16 +22,6 @@ import { useCountry } from "./CountryProvider";
 import { PriceChart } from "./PriceChart";
 import { AiInsight } from "./AiInsight";
 import type { PricePoint } from "@/lib/price-history";
-
-// eBay marketplace per country for the quota-fallback search link. NZ has no
-// eBay of its own — eBay AU ships there, so NZ falls back to it.
-const EBAY_MKT: Record<string, { domain: string; label: string } | undefined> = {
-  AU: { domain: "ebay.com.au", label: "eBay Australia" },
-  NZ: { domain: "ebay.com.au", label: "eBay AU (ships to NZ)" },
-  US: { domain: "ebay.com", label: "eBay" },
-  UK: { domain: "ebay.co.uk", label: "eBay UK" },
-  SG: { domain: "ebay.com.sg", label: "eBay Singapore" },
-};
 
 interface RetailerPrice {
   id: string;
@@ -171,12 +161,14 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
   // eBay quota fallback — mirrors the full card page (src/app/card/[id]/page.tsx).
   // Whenever this market has no live eBay row for the card, offer an
   // affiliate-tagged eBay search — a thin market must never be a dead end.
-  // (NZ has no local eBay; eBay AU ships there.)
-  const ebayMkt = EBAY_MKT[country];
+  // (NZ has no local eBay; eBay AU ships there. Domain/label come from
+  // lib/affiliate.ts, not a local copy — this map used to lack a CA entry,
+  // silently dropping the fallback for CA visitors specifically.)
+  const ebayMkt = { label: ebayLabel(country) };
   const hasEbay = (prices ?? []).some((p) => p.retailer.startsWith("ebay") && p.inStock && p.country === country);
   const ebaySearchUrl =
-    prices !== null && ebayMkt && !hasEbay
-      ? ebayAffiliateUrl(`https://www.${ebayMkt.domain}/sch/i.html?_nkw=${encodeURIComponent(`${cardSearchName(card.name, card)} Riftbound`)}`)
+    prices !== null && !hasEbay
+      ? buildEbaySearchUrl(country, `${cardSearchName(card.name, card)} Riftbound`, "quickview")
       : null;
 
   return (

@@ -11,7 +11,7 @@ import { ShareButton } from "@/components/ShareButton";
 import { CardViewBeacon } from "@/components/CardViewBeacon";
 import { formatMoney } from "@/lib/format";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
-import { affiliateUrl, ebayAffiliateUrl } from "@/lib/affiliate";
+import { affiliateUrl, ebayLabel, ebaySearchUrl } from "@/lib/affiliate";
 import { cardCredentials, cardDisplayName, cardSearchName } from "@/lib/card-name";
 import { CardTile } from "@/components/CardTile";
 import { cardTileSelect } from "@/lib/cards";
@@ -293,25 +293,24 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // no live eBay row — whether we couldn't check eBay this cycle (quota) or eBay
   // genuinely had nothing at last check, a zero-listing market must never be a dead
   // end. NZ has no local eBay; eBay AU ships there.
-  const EBAY_MKT: Record<string, { domain: string; label: string }> = {
-    AU: { domain: "ebay.com.au", label: "eBay Australia" },
-    NZ: { domain: "ebay.com.au", label: "eBay AU (ships to NZ)" },
-    US: { domain: "ebay.com", label: "eBay" },
-    UK: { domain: "ebay.co.uk", label: "eBay UK" },
-    SG: { domain: "ebay.com.sg", label: "eBay Singapore" },
-  };
+  //
+  // Domain/label come from lib/affiliate.ts, not a local copy — this map used to
+  // hand-list AU/NZ/US/UK/SG only, silently omitting CA from this fallback (a
+  // Canadian visitor got no eBay search offer at all here, unlike every other
+  // market). Iterating COUNTRY_LIST instead of a hand-kept object literal means
+  // a future market can't be missed the same way twice.
   // Special printings (Signature/Overnumbered/Alt Art/Showcase/Promo) need their
   // credentials IN the search query — searching just the base name only ever
   // surfaces the base card's listings, which is useless for the printing this
   // page is actually about.
   const ebaySearchTerm = `${cardSearchName(card.name, card)} Riftbound`;
   const ebaySearch: EbaySearchMap = Object.fromEntries(
-    Object.entries(EBAY_MKT).map(([c, mkt]) => [
-      c,
+    COUNTRY_LIST.map((c) => [
+      c.code,
       {
-        url: ebayAffiliateUrl(`https://www.${mkt.domain}/sch/i.html?_nkw=${encodeURIComponent(ebaySearchTerm)}`),
-        label: mkt.label,
-        nz: c === "NZ",
+        url: ebaySearchUrl(c.code, ebaySearchTerm, "card-fallback"),
+        label: ebayLabel(c.code),
+        nz: c.code === "NZ",
       },
     ])
   );

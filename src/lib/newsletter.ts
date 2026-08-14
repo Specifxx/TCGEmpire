@@ -6,18 +6,7 @@ import { formatMoney } from "./format";
 import { currencyOf, normalizeCountry, COUNTRIES, type Country } from "./country";
 import { cardHref } from "./card-url";
 import { SITE_URL } from "./site";
-import { ebayAffiliateUrl } from "./affiliate";
-
-// Per-market eBay domain, same convention as ArticleShopStrip/EbayBuyCta — NZ has
-// no eBay of its own (eBay AU ships there).
-const EBAY_DOMAIN: Record<Country, string> = {
-  AU: "ebay.com.au",
-  NZ: "ebay.com.au",
-  US: "ebay.com",
-  UK: "ebay.co.uk",
-  SG: "ebay.com.sg",
-  CA: "ebay.ca",
-};
+import { ebaySearchUrl } from "./affiliate";
 
 export interface NewsletterRunSummary {
   edition: string; // e.g. "2026-W24"
@@ -50,9 +39,7 @@ const signedPct = (pct: number) => `${pct > 0 ? "+" : ""}${pct}%`;
 // to the site first.
 function moverRow(m: Mover, currency: string, market: Country): string {
   const color = m.pct > 0 ? "#f08c4a" : "#34d17e";
-  const ebayHref = ebayAffiliateUrl(
-    `https://www.${EBAY_DOMAIN[market]}/sch/i.html?_nkw=${encodeURIComponent(`${m.card.name} Riftbound`)}`,
-  );
+  const ebayHref = ebaySearchUrl(market, `${m.card.name} Riftbound`, "newsletter");
   const ebayTagged = `${ebayHref}${ebayHref.includes("?") ? "&" : "?"}utm_source=newsletter&utm_medium=email&utm_campaign=weekly-digest`;
   return `<tr><td style="padding:10px 0;border-bottom:1px solid #233047">
     <a href="${utm(cardHref(m.card))}" style="color:#fff;font-weight:700;text-decoration:none;font-size:15px">${m.card.name}</a>
