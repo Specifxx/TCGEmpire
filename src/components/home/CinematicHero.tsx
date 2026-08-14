@@ -7,6 +7,7 @@ import { HeroStats, type MarketStat } from "./HeroStats";
 import { TrendingChips } from "./TrendingChips";
 import type { CardTileData } from "@/components/CardTile";
 import type { Country } from "@/lib/country";
+import { FloatingCardShowcase, type FeaturedCard } from "./FloatingCardShowcase";
 
 // The cinematic, full-bleed homepage hero. Breaks out of the centered content
 // column to fill the viewport (left-1/2 + w-screen + -translate-x-1/2). All
@@ -26,6 +27,7 @@ export function CinematicHero({
   statsByCountry,
   trendingCards,
   freshness,
+  featuredCard,
 }: {
   totalCards: number;
   // Per-market stat tiles — localised to the visitor's market client-side (HeroStats).
@@ -36,6 +38,10 @@ export function CinematicHero({
   // Pre-formatted "Xh ago" string — see HeroStats' doc comment for why this is
   // computed server-side once rather than client-recomputed.
   freshness: string | null;
+  // One real chase card at its real live price, floated beside the hero on wide
+  // desktop. Null when it has no live price, in which case nothing renders — see
+  // FloatingCardShowcase.
+  featuredCard: FeaturedCard | null;
 }) {
   return (
     <ParallaxShell>
@@ -43,6 +49,11 @@ export function CinematicHero({
       <div className="pointer-events-none absolute inset-0 z-0" aria-hidden>
         <div className="absolute inset-0 bg-ink-950 border-b border-ink-800" />
       </div>
+
+      {/* Floating chase card — ≥1400px only, absolutely positioned, so the
+          centred search-first column below is completely unaffected at every
+          smaller size. Real card, real live price; renders nothing without one. */}
+      <FloatingCardShowcase card={featuredCard} />
 
       {/* ── Foreground content (re-aligned to the normal grid) ───────────────── */}
       <div className="container-app relative z-10 w-full py-8 text-center sm:py-10">

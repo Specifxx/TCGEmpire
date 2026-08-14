@@ -6,7 +6,7 @@ import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { Reveal } from "@/components/Reveal";
 import { getPopularCards } from "@/lib/cheapest-cards";
-import { DEFAULT_COUNTRY, priceField, type Country } from "@/lib/country";
+import { COUNTRIES, DEFAULT_COUNTRY, priceField, type Country } from "@/lib/country";
 import type { MarketStat } from "@/components/home/HeroStats";
 import { SETS, newestReleasedSet, nextUpcomingSet, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
 import { SITE_URL, SITE_NAME } from "@/lib/site";
@@ -26,6 +26,14 @@ import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { RETAILER_LIST } from "@/lib/retailers";
 import { pageAlternates } from "@/lib/seo";
 import { webPage, faqPage } from "@/lib/jsonld";
+
+// The card floated beside the hero on wide desktop (home/FloatingCardShowcase).
+// A slug rather than "most expensive card" on purpose: the hero should show a
+// card that is recognisable to someone who has never heard of Riftbound, and
+// Ahri is the most recognisable champion in the game's Origins set. Its price
+// and store count are read live — only the CHOICE is hard-coded. If this card
+// ever loses its price the showcase renders nothing rather than a blank card.
+const FEATURED_CARD_SLUG = "ahri-nine-tailed-fox-ogn-303s-298";
 
 // Below-the-fold, client-rendered components — code-split into their own
 // chunks (still SSR'd for content/SEO) so their JS isn't part of the bundle
@@ -225,6 +233,56 @@ export default async function HomePage() {
   const moversByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, moversArr[i]])) as Record<Country, PriceMovers>;
   // Biggest movers tab: both directions, ranked by the size of the move. Reads
   // the baseline market's movers, same as before moversByCountry existed.
+  // The hero's floating chase card. ONE row, five columns, matched on a unique
+  // slug — deliberately the smallest query on this page (~1 KB), because this
+  // page is ISR-cached at 24h and the whole point of the 2026-08-14 egress work
+  // was that a hero flourish must never become a per-request read. Renders
+  // nothing if it has no live price (see FloatingCardShowcase), so a
+  // never-priced or delisted card degrades to an empty hero rather than a fake
+  // one. Change FEATURED_CARD_SLUG to feature a different card.
+  const featuredRow = await prisma.card
+    .findFirst({
+      where: { slug: FEATURED_CARD_SLUG },
+      // All six price columns rather than a computed key: they are six small
+      // integers on a single row, and indexing a typed object beats a
+      // `[priceField(country)]: true` select that TypeScript cannot check.
+      select: {
+        slug: true,
+        name: true,
+        setCode: true,
+        collectorNumber: true,
+        imageUrl: true,
+        imageThumbUrl: true,
+        lowestPriceCents: true,
+        lowestPriceCentsNz: true,
+        lowestPriceCentsUs: true,
+        lowestPriceCentsUk: true,
+        lowestPriceCentsSg: true,
+        lowestPriceCentsCa: true,
+        _count: { select: { retailerPrices: true } },
+      },
+    })
+    .catch(() => null);
+  const featuredCard = (() => {
+    if (!featuredRow) return null;
+    const cents = featuredRow[priceField(country)] ?? 0;
+    const img = featuredRow.imageUrl || featuredRow.imageThumbUrl || "";
+    // slug is nullable on Card, and the showcase links to /card/<slug> — a
+    // null one would render a link to /card/null, so it disqualifies the card
+    // exactly like a missing price or image does.
+    if (!cents || !img || !featuredRow.slug) return null;
+    return {
+      slug: featuredRow.slug,
+      name: featuredRow.name,
+      setCode: featuredRow.setCode,
+      collectorNumber: featuredRow.collectorNumber,
+      imageUrl: img,
+      priceCents: cents,
+      currency: COUNTRIES[country].currency,
+      storeCount: featuredRow._count.retailerPrices,
+    };
+  })();
+
   const newestSet = newestReleasedSet();
   const biggestMovers = [...moversByCountry[country].spiking, ...moversByCountry[country].plummeting]
     .sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct))
@@ -251,6 +309,7 @@ export default async function HomePage() {
         statsByCountry={statsByCountry}
         trendingCards={popularCards.slice(0, 6)}
         freshness={freshness}
+        featuredCard={featuredCard}
       />
 
       {/* Market pulse — today's top risers/fallers, reusing the Daily Movers

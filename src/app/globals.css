@@ -394,6 +394,17 @@ html.capacitor-native.has-native-banner body {
 }
 .cine-open .cine-item { opacity: 1; transform: none; }
 
+/* Slow drift for the hero's floating chase-card showcase
+   (components/home/FloatingCardShowcase.tsx). Deliberately small and slow — it
+   reads as "floating", not as something demanding attention next to the search
+   box, which is the hero's actual job. Declared ABOVE the reduced-motion block
+   below, which neutralises it (and everything else) with !important. */
+@keyframes rc-float {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50%      { transform: translateY(-14px) rotate(-1deg); }
+}
+.animate-float { animation: rc-float 7s ease-in-out infinite; }
+
 /* Respect users who prefer less motion: neutralise every animation/transition. */
 @media (prefers-reduced-motion: reduce) {
   .cine-item { opacity: 1 !important; transform: none !important; transition: none !important; }

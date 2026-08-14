@@ -101,7 +101,6 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/tools/rising", label: "Rising Cards", emoji: "🚀", keywords: ["rising", "hot", "momentum", "spiking", "going up"] },
       { href: "/tools/best-basket", label: "Best Basket", emoji: "🧺", keywords: ["basket", "cart", "multi card", "cheapest combination", "one order", "shipping"] },
       { href: "/tools/box-ev", label: "Box EV Calc", emoji: "🎲", keywords: ["ev", "expected value", "is a box worth it", "booster box value", "box ev"] },
-      { href: "/sell-cards", label: "Sell us your cards", emoji: "💵", keywords: ["sell", "sell my cards", "buylist", "cash", "trade in"] },
       { href: "/tools", label: "All Tools", emoji: "🧰", keywords: ["tools", "calculators", "utilities"] },
     ],
   },

@@ -32,7 +32,12 @@ const MUST_FIND: [query: string, href: string][] = [
   ["deals", "/tools/deal-finder"],
   ["blog", "/blog"],
   ["alerts", "/alerts"],
-  ["sell", "/sell-cards"],
+  // No "sell" row. The /sell-cards buylist lander was retired (it advertised a
+  // mail-in service around a placeholder postal address), and the surviving
+  // seller page — /marketplace/sell — only enters NAV_GROUPS when
+  // NEXT_PUBLIC_MARKETPLACE_PUBLIC=1, which is unset here. So "sell" correctly
+  // matches nothing right now, and asserting otherwise would either fail or
+  // force a fake destination into the index.
   ["set", "/sets"],
   ["sets", "/sets"],
   ["champion", "/champions"],
@@ -100,7 +105,12 @@ test("nonsense finds nothing rather than everything", () => {
 
 test("stop words are dropped so a typed question still resolves", () => {
   assert.deepEqual(queryTokens("how do i sell my cards"), ["sell", "card"]);
-  assert.ok(searchNav("how do i sell my cards").some((l) => l.href === "/sell-cards"));
+  // Resolution is checked on a different sentence: the tokeniser assertion above
+  // stands on its own, but the destination for "sell" was /sell-cards, which has
+  // been retired. This phrase exercises the same stop-word path ("how", "do",
+  // "i", "my" all dropped) against a page that isn't feature-flagged.
+  assert.deepEqual(queryTokens("how do i track my collection"), ["track", "collection"]);
+  assert.ok(searchNav("how do i track my collection").some((l) => l.href === "/watching"));
   // …but a query that is ENTIRELY stop words keeps them, so it narrows to
   // something instead of silently returning the whole index.
   assert.notEqual(searchNav("what is the").length, NAV_INDEX.length);

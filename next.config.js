@@ -134,6 +134,19 @@ const nextConfig = {
         destination: "/browse",
         permanent: true,
       },
+      // Retired the "Sell us your cards" buylist lander. It described a service
+      // that doesn't exist — a four-step mail-in flow around a placeholder postal
+      // address ("PO Box 0000") that was never replaced with a real one, so every
+      // visitor who followed it to the end was told to post cards to nowhere.
+      // The page was noindex/nofollow and only reachable from the command
+      // launcher, so there is nothing indexed to preserve; the redirect is purely
+      // so a bookmark or launcher-history entry lands somewhere instead of 404ing.
+      // /marketplace is the surviving "I want to sell cards" path.
+      {
+        source: "/sell-cards",
+        destination: "/marketplace",
+        permanent: true,
+      },
       // Retired the proxy printer entirely (thin/low-value utility page, part of
       // the AdSense Publisher Policy remediation). 301 any indexed/inbound links
       // (incl. ?list= shares) to the deck pricer, its nearest surviving equivalent.
