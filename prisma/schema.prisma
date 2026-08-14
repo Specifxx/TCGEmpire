@@ -354,18 +354,52 @@ model ContactMessage {
   @@index([createdAt])
 }
 
-// User feedback submitted via the on-site feedback form. First submission per user
-// earns a Premium grant (see /api/feedback). Kept as its own model (not
-// ContactMessage) so we can tie it to the account and track the reward.
+// Feedback / reviews submitted from anywhere on the site. Kept as its own model
+// (not ContactMessage) so we can tie it to an account when there is one and track
+// the Premium reward.
+//
+// userId IS NULLABLE, and that is the whole point. It was REQUIRED until
+// 2026-08-14, which meant /api/feedback 401'd anyone signed out and
+// components/FeedbackForm.tsx rendered a "Sign in →" wall instead of a form. So
+// the only people who could tell us the site was hard to use were the people who
+// had already committed to an account — precisely the wrong sample, and the
+// reason this table stayed near-empty. Anonymous rows carry userId: null; a
+// signed-in submission still records the account (and still earns the one-time
+// Premium grant, which anonymous submissions cannot — there is no account to
+// grant it to).
 model Feedback {
   id        String   @id @default(cuid())
-  userId    String
+  userId    String? // null = submitted by a signed-out visitor
   message   String
   rating    Int? // optional 1–5 star rating
   createdAt DateTime @default(now())
 
+  // Optional reply address for signed-out submitters. NEVER rendered publicly —
+  // it exists so a real complaint can get a real answer. Signed-in rows leave it
+  // null (the account already has an address).
+  email String?
+  // What the submitter wants to be called IF they consented to publication.
+  // Free text, moderated before it is ever shown.
+  displayName String?
+  // Where the feedback came from, so a complaint can be read in context: the
+  // path ("/card/foo") and which surface raised it.
+  page   String?
+  source String @default("page") // page | widget | riftle
+
+  // MODERATION. Nothing reaches a public surface on submission — status starts
+  // NEW and an admin must move it to APPROVED. consentPublic records whether the
+  // submitter actually ticked "you can show this publicly"; BOTH are required
+  // before display (see lib/reviews.ts). Publishing someone's words because they
+  // happened to be positive, without asking, is not something to leave possible
+  // by accident.
+  status        String    @default("NEW") // NEW | APPROVED | HIDDEN | SPAM
+  consentPublic Boolean   @default(false)
+  publishedAt   DateTime?
+
   @@index([createdAt])
   @@index([userId])
+  // Serves the public "approved reviews" read without scanning the table.
+  @@index([status, publishedAt])
 }
 
 // A "clicked Premium" intent event — someone opened the Premium upsell dialog or

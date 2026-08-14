@@ -59,7 +59,17 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
       /* private mode — worst case it can show once more next session */
     }
     if (seen) return;
-    const t = setTimeout(() => setPhase("shown"), SHOW_DELAY_MS);
+    const t = setTimeout(() => {
+      // Never stack on top of another dialog. FeedbackWidget sets this flag
+      // while its panel is open; opening a full-screen signup wall over a
+      // visitor who is mid-sentence writing us feedback would lose the feedback
+      // AND read as the exact "wall of asks" this popup's own delay exists to
+      // avoid. Deliberately does NOT mark SEEN_KEY when it skips, so that
+      // visitor still gets the promo on a later visit rather than silently
+      // losing it forever.
+      if (document.body.dataset.rcDialog === "1") return;
+      setPhase("shown");
+    }, SHOW_DELAY_MS);
     return () => clearTimeout(t);
   }, [loaded, user, promo, pathname]);
 

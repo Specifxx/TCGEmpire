@@ -19,7 +19,11 @@ export function FooterAds() {
   const adFree = usePremium();
   if (adFree) return null;
   return (
-    <div className="container-app flex flex-col items-center gap-3 pb-8">
+    // id is load-bearing, not decorative: FeedbackWidget observes this element
+    // and hides its floating launcher whenever this zone is on screen, so the
+    // launcher can never obscure a live ad unit (Google program policy; see
+    // docs/adsense-remediation.md).
+    <div id="rc-ad-zone" className="container-app flex flex-col items-center gap-3 pb-8">
       <TcgplayerAd size="leaderboard" country={country} disclosure={false} />
       <EbayAd size="leaderboard" country={country} disclosure={false} />
       {/* One combined line for the pair, directly beneath them — this is the

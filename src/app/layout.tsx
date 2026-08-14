@@ -17,6 +17,7 @@ import { CONTACT_EMAIL, DISCORD_URL, SITE_NAME, SITE_URL } from "@/lib/site";
 import { IMPACT_SITE_VERIFICATION } from "@/lib/affiliate";
 import { MARKETPLACE_NAV_VISIBLE } from "@/components/nav-groups";
 import { FooterNav } from "@/components/FooterNav";
+import { ShareRow } from "@/components/ShareRow";
 import { enabledProviders } from "@/lib/oauth";
 import { AdSenseLoader } from "@/components/AdSenseLoader";
 import { ConsentDefaults } from "@/components/ConsentDefaults";
@@ -32,6 +33,12 @@ const PriceAlertModal = dynamic(() => import("@/components/PriceAlertModal").the
   ssr: false,
 });
 const SignupPromoPopup = dynamic(() => import("@/components/SignupPromoPopup").then((m) => m.SignupPromoPopup), {
+  ssr: false,
+});
+// The always-available feedback launcher. ssr:false because it renders nothing
+// until a visitor clicks it, so there is no content for a crawler to miss and no
+// reason to pay for it in the server HTML.
+const FeedbackWidget = dynamic(() => import("@/components/FeedbackWidget").then((m) => m.FeedbackWidget), {
   ssr: false,
 });
 // Real footer ad content — kept SSR'd (ssr: true, the default) for the same
@@ -248,6 +255,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <main id="main-content" className="container-app min-w-0 py-6">{children}</main>
                 <PriceAlertModal />
                 <SignupPromoPopup providers={enabledProviders()} />
+                {/* Feedback launcher. Deliberately never auto-opens — see the
+                    component header for why a second uninvited dialog would be
+                    self-defeating here. It hides itself over the ad zone below. */}
+                <FeedbackWidget />
               </MegaMenuProvider>
             </CommandLauncherProvider>
           </SealedQuickViewProvider>
@@ -267,6 +278,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               4 columns on desktop, collapsible accordions on mobile — see
               FooterNav / nav-groups.ts's FOOTER_GROUPS for the re-bucketing. */}
           <FooterNav />
+          {/* Share band. The site's only other share controls are per-article
+              (ArticleShare) and per-card (ShareButton), so there was nowhere to
+              share RiftCompare ITSELF from — the thing a happy visitor is most
+              likely to want to pass on. Sits in the footer on every page:
+              always reachable, never an interruption. */}
+          <div className="mb-5 flex flex-col items-center gap-2 border-y border-ink-800/70 py-4">
+            <span className="text-xs text-slate-400">Find RiftCompare useful? Send it to someone who buys Riftbound.</span>
+            <ShareRow source="footer" size="sm" />
+          </div>
           <div className="mb-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm">
             <Link href="/about" className="tap-link text-slate-300 hover:text-brand-400">About</Link>
             <span className="text-ink-700">·</span>

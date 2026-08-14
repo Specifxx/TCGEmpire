@@ -19,6 +19,7 @@ import { CinematicHero } from "@/components/home/CinematicHero";
 import { RadianceCountdownCard } from "@/components/home/RadianceCountdownCard";
 import { LatestPosts } from "@/components/home/LatestPosts";
 import { PartnersStrip } from "@/components/home/PartnersStrip";
+import { ReviewsSection } from "@/components/ReviewsSection";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { EbayPicks } from "@/components/EbayPicks";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
@@ -425,6 +426,12 @@ export default async function HomePage() {
           <LatestPosts posts={latestPosts} />
         </Reveal>
       )}
+
+      {/* Real, consented, approved reviews — renders NOTHING until there are at
+          least a few genuine ones (see ReviewsSection). No placeholder state on
+          purpose: an empty "reviews" block, or a seeded example, would be worse
+          than no block at all. */}
+      <ReviewsSection />
 
       {/* About + FAQ — keyword-relevant content for search */}
       <section className="card-surface p-6">
