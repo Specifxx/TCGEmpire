@@ -405,6 +405,16 @@ html.capacitor-native.has-native-banner body {
 }
 .animate-float { animation: rc-float 7s ease-in-out infinite; }
 
+/* Mirror of rc-float for the hero's LEFT floating card, so the pair leans away
+   from the centred hero column instead of both tilting the same way. Separate
+   keyframes rather than a CSS variable purely to keep the consuming component
+   free of custom-property casts. */
+@keyframes rc-float-mirror {
+  0%, 100% { transform: translateY(0) rotate(1deg); }
+  50%      { transform: translateY(-14px) rotate(1deg); }
+}
+.animate-float-mirror { animation: rc-float-mirror 7s ease-in-out infinite; }
+
 /* Respect users who prefer less motion: neutralise every animation/transition. */
 @media (prefers-reduced-motion: reduce) {
   .cine-item { opacity: 1 !important; transform: none !important; transition: none !important; }

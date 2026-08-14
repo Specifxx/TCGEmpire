@@ -27,7 +27,8 @@ export function CinematicHero({
   statsByCountry,
   trendingCards,
   freshness,
-  featuredCard,
+  featuredCardLeft,
+  featuredCardRight,
 }: {
   totalCards: number;
   // Per-market stat tiles — localised to the visitor's market client-side (HeroStats).
@@ -38,10 +39,11 @@ export function CinematicHero({
   // Pre-formatted "Xh ago" string — see HeroStats' doc comment for why this is
   // computed server-side once rather than client-recomputed.
   freshness: string | null;
-  // One real chase card at its real live price, floated beside the hero on wide
-  // desktop. Null when it has no live price, in which case nothing renders — see
-  // FloatingCardShowcase.
-  featuredCard: FeaturedCard | null;
+  // Two real chase cards at their real live prices, floated either side of the
+  // hero on wide desktop. Either is null when it has no live price, in which
+  // case that side renders nothing — see FloatingCardShowcase.
+  featuredCardLeft: FeaturedCard | null;
+  featuredCardRight: FeaturedCard | null;
 }) {
   return (
     <ParallaxShell>
@@ -50,10 +52,12 @@ export function CinematicHero({
         <div className="absolute inset-0 bg-ink-950 border-b border-ink-800" />
       </div>
 
-      {/* Floating chase card — ≥1400px only, absolutely positioned, so the
-          centred search-first column below is completely unaffected at every
-          smaller size. Real card, real live price; renders nothing without one. */}
-      <FloatingCardShowcase card={featuredCard} />
+      {/* Floating chase cards, one either side — ≥1400px only, absolutely
+          positioned, so the centred search-first column below is completely
+          unaffected at every smaller size. Real cards, real live prices; each
+          side renders nothing without one. */}
+      <FloatingCardShowcase card={featuredCardLeft} side="left" />
+      <FloatingCardShowcase card={featuredCardRight} side="right" />
 
       {/* ── Foreground content (re-aligned to the normal grid) ───────────────── */}
       <div className="container-app relative z-10 w-full py-8 text-center sm:py-10">

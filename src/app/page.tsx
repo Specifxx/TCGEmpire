@@ -27,13 +27,18 @@ import { RETAILER_LIST } from "@/lib/retailers";
 import { pageAlternates } from "@/lib/seo";
 import { webPage, faqPage } from "@/lib/jsonld";
 
-// The card floated beside the hero on wide desktop (home/FloatingCardShowcase).
-// A slug rather than "most expensive card" on purpose: the hero should show a
-// card that is recognisable to someone who has never heard of Riftbound, and
-// Ahri is the most recognisable champion in the game's Origins set. Its price
-// and store count are read live — only the CHOICE is hard-coded. If this card
-// ever loses its price the showcase renders nothing rather than a blank card.
-const FEATURED_CARD_SLUG = "ahri-nine-tailed-fox-ogn-303s-298";
+// The two cards floated either side of the hero (home/FloatingCardShowcase).
+// Slugs rather than "the two most expensive cards" on purpose: the hero should
+// show cards a person who has never heard of Riftbound still recognises, and
+// these are the two most recognisable names in the game — Ahri from Origins and
+// Baron Nashor from Unleashed. Both are the top-end printing of their card
+// (Showcase rarity, over-numbered: OGN 303★/298 and UNL 238/219). Their prices
+// and store counts are read live — only the CHOICE is hard-coded. If either
+// loses its price, that side renders nothing rather than a blank card.
+const FEATURED_CARD_SLUGS = {
+  left: "baron-nashor-unl-238-219",
+  right: "ahri-nine-tailed-fox-ogn-303s-298",
+} as const;
 
 // Below-the-fold, client-rendered components — code-split into their own
 // chunks (still SSR'd for content/SEO) so their JS isn't part of the bundle
@@ -233,16 +238,17 @@ export default async function HomePage() {
   const moversByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, moversArr[i]])) as Record<Country, PriceMovers>;
   // Biggest movers tab: both directions, ranked by the size of the move. Reads
   // the baseline market's movers, same as before moversByCountry existed.
-  // The hero's floating chase card. ONE row, five columns, matched on a unique
-  // slug — deliberately the smallest query on this page (~1 KB), because this
-  // page is ISR-cached at 24h and the whole point of the 2026-08-14 egress work
-  // was that a hero flourish must never become a per-request read. Renders
-  // nothing if it has no live price (see FloatingCardShowcase), so a
-  // never-priced or delisted card degrades to an empty hero rather than a fake
-  // one. Change FEATURED_CARD_SLUG to feature a different card.
-  const featuredRow = await prisma.card
-    .findFirst({
-      where: { slug: FEATURED_CARD_SLUG },
+  // The hero's floating chase cards. TWO rows in ONE query — a findMany over an
+  // `in` on the unique slug, not two findFirsts — deliberately the smallest
+  // query on this page (~2 KB), because this page is ISR-cached at 24h and the
+  // whole point of the 2026-08-14 egress work was that a hero flourish must
+  // never become a per-request read. Renders nothing for a card with no live
+  // price (see FloatingCardShowcase), so a never-priced or delisted card
+  // degrades to an empty side rather than a fake one. Change
+  // FEATURED_CARD_SLUGS to feature different cards.
+  const featuredRows = await prisma.card
+    .findMany({
+      where: { slug: { in: [FEATURED_CARD_SLUGS.left, FEATURED_CARD_SLUGS.right] } },
       // All six price columns rather than a computed key: they are six small
       // integers on a single row, and indexing a typed object beats a
       // `[priceField(country)]: true` select that TypeScript cannot check.
@@ -262,26 +268,29 @@ export default async function HomePage() {
         _count: { select: { retailerPrices: true } },
       },
     })
-    .catch(() => null);
-  const featuredCard = (() => {
-    if (!featuredRow) return null;
-    const cents = featuredRow[priceField(country)] ?? 0;
-    const img = featuredRow.imageUrl || featuredRow.imageThumbUrl || "";
+    .catch(() => []);
+  const toFeaturedCard = (slug: string) => {
+    const row = featuredRows.find((r) => r.slug === slug);
+    if (!row) return null;
+    const cents = row[priceField(country)] ?? 0;
+    const img = row.imageUrl || row.imageThumbUrl || "";
     // slug is nullable on Card, and the showcase links to /card/<slug> — a
     // null one would render a link to /card/null, so it disqualifies the card
     // exactly like a missing price or image does.
-    if (!cents || !img || !featuredRow.slug) return null;
+    if (!cents || !img || !row.slug) return null;
     return {
-      slug: featuredRow.slug,
-      name: featuredRow.name,
-      setCode: featuredRow.setCode,
-      collectorNumber: featuredRow.collectorNumber,
+      slug: row.slug,
+      name: row.name,
+      setCode: row.setCode,
+      collectorNumber: row.collectorNumber,
       imageUrl: img,
       priceCents: cents,
       currency: COUNTRIES[country].currency,
-      storeCount: featuredRow._count.retailerPrices,
+      storeCount: row._count.retailerPrices,
     };
-  })();
+  };
+  const featuredCardLeft = toFeaturedCard(FEATURED_CARD_SLUGS.left);
+  const featuredCardRight = toFeaturedCard(FEATURED_CARD_SLUGS.right);
 
   const newestSet = newestReleasedSet();
   const biggestMovers = [...moversByCountry[country].spiking, ...moversByCountry[country].plummeting]
@@ -309,7 +318,8 @@ export default async function HomePage() {
         statsByCountry={statsByCountry}
         trendingCards={popularCards.slice(0, 6)}
         freshness={freshness}
-        featuredCard={featuredCard}
+        featuredCardLeft={featuredCardLeft}
+        featuredCardRight={featuredCardRight}
       />
 
       {/* Market pulse — today's top risers/fallers, reusing the Daily Movers
