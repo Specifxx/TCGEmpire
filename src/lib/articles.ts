@@ -742,14 +742,14 @@ market, on delivered cost.
     slug: "cheapest-riftbound-booster-boxes",
     marketData: "US",
     category: "guide",
-    title: "Cheapest Riftbound Booster Boxes & Sealed (AU, NZ, US & UK)",
+    title: "Cheapest Riftbound Booster Boxes & Sealed (AU, NZ, US, UK, SG & CA)",
     excerpt:
-      "How to find the cheapest Riftbound: League of Legends TCG booster boxes and sealed product across Australia, New Zealand, the US and the UK — and whether boxes or singles are better value.",
+      "How to find the cheapest Riftbound: League of Legends TCG booster boxes and sealed product across Australia, New Zealand, the US, the UK, Singapore and Canada — and whether boxes or singles are better value.",
     author: "RiftCompare",
     date: "2026-06-08",
     readMins: 5,
     tags: ["buying", "guide", "sealed", "booster box"],
-    body: `Booster boxes are the most exciting — and most expensive — way to buy into **Riftbound: League of Legends TCG**. But box prices swing a lot between shops and over time, so before you buy, it pays to compare. This guide covers **where to find the cheapest Riftbound booster boxes** and sealed product in **Australia, New Zealand, the United States and the United Kingdom**.
+    body: `Booster boxes are the most exciting — and most expensive — way to buy into **Riftbound: League of Legends TCG**. But box prices swing a lot between shops and over time, so before you buy, it pays to compare. This guide covers **where to find the cheapest Riftbound booster boxes** and sealed product in **Australia, New Zealand, the United States, the United Kingdom, Singapore and Canada**.
 
 ## Compare every sealed price in one place
 
@@ -761,6 +761,8 @@ Head to the **[sealed products page](/sealed)** to see live prices for booster b
 - **🇳🇿 New Zealand:** fewer stockists than AU, so comparing NZD prices is the easiest way to avoid overpaying.
 - **🇺🇸 United States:** the deepest market — the most competitive box pricing is usually here. Compare USD prices and check shipping.
 - **🇬🇧 United Kingdom:** UK retailers price sealed in GBP; buying domestically avoids import duty.
+- **🇸🇬 Singapore:** a growing roster of local sellers, several trading primarily through Instagram or Carousell rather than a storefront — compare SGD prices on the **[sealed page](/sealed)** to catch them alongside the traditional shops.
+- **🇨🇦 Canada:** one of the newer markets we track — compare CAD prices across Canadian stockists and factor in shipping between provinces.
 
 ## Booster box vs singles: which is better value?
 
