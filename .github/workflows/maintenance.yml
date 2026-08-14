@@ -57,6 +57,10 @@ on:
         description: "Dry run (log what would change, write nothing)"
         type: boolean
         default: false
+      overwrite_live_db:
+        description: "migrate-main-db-to-du2 only: allow overwriting the database production is CURRENTLY serving (destructive — discards every write since the cutover)"
+        type: boolean
+        default: false
       ebay_sg:
         description: "import-prices only: also force an eBay SINGAPORE refresh (~1k calls)"
         type: boolean
@@ -1213,6 +1217,34 @@ jobs:
           if [ "$SOURCE_DATABASE_URL" = "$TARGET_DATABASE_URL" ]; then
             echo "::error::SOURCE and TARGET resolve to the SAME database. DATABASE_URL_2 must point at a DIFFERENT Neon project than DATABASE_URL. Aborting before doing anything."
             exit 1
+          fi
+
+          # ── SAFETY: never overwrite the database production is serving ──────
+          # This task is a ONE-WAY `pg_restore --clean` of SOURCE over TARGET.
+          # That is correct BEFORE the cutover deploy, while TARGET is an idle
+          # spare. It is destructive AFTER it, once TARGET is live: every row
+          # written since the deploy is reverted to the source's frozen
+          # snapshot, and the row-count check still reports "all match" because
+          # counts are necessarily equal after a --clean restore.
+          #
+          # This is not hypothetical. On 2026-08-14 the task was re-run ~87
+          # minutes after the cutover as a "top-up", on the assumption the
+          # importer was still writing to the source. It was not — the source
+          # was byte-identical across both runs — so the re-run copied stale
+          # data over live data and silently discarded the writes in between.
+          #
+          # src/lib/db.ts is the authority on which variable production resolves
+          # FIRST, and tests/db-chain.test.ts keeps that list honest, so read it
+          # here instead of duplicating the chain into yet another place.
+          FIRST_IN_CHAIN=$(sed -n '/^const OPERATIONAL_URL =/,/;/p' src/lib/db.ts \
+            | grep -oE 'process\.env\.[A-Z_0-9]+' | head -1 | sed 's/process\.env\.//')
+          echo "Chain in src/lib/db.ts resolves first: ${FIRST_IN_CHAIN:-<could not parse>}"
+          if [ "$FIRST_IN_CHAIN" = "DATABASE_URL_2" ]; then
+            if [ "${{ inputs.overwrite_live_db }}" != "true" ]; then
+              echo "::error::REFUSING TO RUN — DATABASE_URL_2 is LIVE. src/lib/db.ts resolves it first, so it is the database production is serving right now. This task would restore the frozen DATABASE_URL over it and discard every row written since the cutover (signups, feedback, orders, listings). Nothing has been touched. If you truly intend this — a deliberate rollback to the old project — re-run with overwrite_live_db = true."
+              exit 1
+            fi
+            echo "::warning::DATABASE_URL_2 is LIVE and overwrite_live_db was set. Proceeding with a DESTRUCTIVE overwrite of production data."
           fi
 
           echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
