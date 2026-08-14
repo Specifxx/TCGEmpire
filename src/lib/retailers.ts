@@ -1424,14 +1424,19 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. S$2.50 · free over S$60",
     country: "SG",
   },
+  // Re-verified 2026-08-14: live SGD Shopify store, riftbound-singles and
+  // riftbound-origins collections both real and populated. Free-shipping
+  // threshold corrected to a confirmed value — the site's own banner reads
+  // "Free Shipping within Singapore on Orders $80 & Up!" — not the S$60
+  // estimate this entry launched with.
   goattcg: {
     key: "goattcg",
     name: "GOAT TCG",
     base: "https://www.goattcg.com",
     collections: ["riftbound-origins"], // probe: 1,332 in stock (English + Chinese printings)
     shippingFlatCents: 250,
-    freeOverCents: 6000,
-    shippingNote: "est. S$2.50 · free over S$60",
+    freeOverCents: 8000, // confirmed: site banner reads "Free Shipping within Singapore on Orders $80 & Up!"
+    shippingNote: "est. S$2.50 · free over S$80",
     country: "SG",
   },
   teamcardgame: {
