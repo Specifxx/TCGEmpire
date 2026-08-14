@@ -463,8 +463,12 @@ export default async function HomePage() {
 
       {/* Approved partners + affiliate disclosure — moved below the fold out of
           the hero (see PartnersStrip). Still travels together as one unit, still
-          on the page, still adjacent to the actual affiliate links. */}
-      <PartnersStrip country={country} />
+          on the page, still adjacent to the actual affiliate links. Client
+          component now (reads useCountry() itself) — see PartnersStrip.tsx for
+          why: this page is ISR-cached with DEFAULT_COUNTRY baked in, and every
+          visitor's eBay click here was being tagged with that baked-in country
+          regardless of who they actually were. */}
+      <PartnersStrip />
 
       <script
         type="application/ld+json"

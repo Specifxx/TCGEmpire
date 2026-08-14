@@ -1,22 +1,26 @@
+"use client";
+
 import { OutboundLink } from "@/components/OutboundLink";
 import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
-import { affiliateUrl, ebayAffiliateUrl } from "@/lib/affiliate";
-import type { Country } from "@/lib/country";
-
-// eBay marketplace domain per market (NZ has no eBay of its own → AU).
-const EBAY_DOMAIN: Record<string, string> = {
-  AU: "ebay.com.au", NZ: "ebay.com.au", US: "ebay.com", UK: "ebay.co.uk", SG: "ebay.com.sg",
-};
+import { affiliateUrl, ebaySearchUrl } from "@/lib/affiliate";
+import { useCountry } from "@/components/CountryProvider";
 
 // The "Approved partners" trust strip — extracted out of the hero and moved
 // below the fold (see CinematicHero's history: this used to live at the bottom
 // of the hero itself, which kept it inside the first viewport). Both marks are
 // affiliate-tagged, so the disclosure travels with them as one unit, never
 // detached from the links it describes — see AffiliateDisclosure's own rules.
-export function PartnersStrip({ country }: { country: Country }) {
-  const ebayHref = ebayAffiliateUrl(
-    `https://www.${EBAY_DOMAIN[country] ?? "ebay.com"}/sch/i.html?_nkw=${encodeURIComponent("Riftbound TCG")}`
-  );
+//
+// Client component reading useCountry(), NOT a `country` prop baked server-side
+// — page.tsx is ISR-cached with DEFAULT_COUNTRY ("US"), so every visitor's eBay
+// click here was tagged US regardless of their actual selected market: a
+// Singapore visitor's click landed on ebay.com, credited (if at all) as a US
+// sale in EPN reporting, not SG. Same fix FooterAds already applies to EbayAd.
+// ebaySearchUrl (not a local EBAY_DOMAIN map) so this can't drift from the
+// shared domain/rotation table in lib/affiliate.ts the way EbayAd's copy once did.
+export function PartnersStrip() {
+  const { country } = useCountry();
+  const ebayHref = ebaySearchUrl(country, "Riftbound TCG", "partners_strip");
   const tcgHref = affiliateUrl(
     "https://www.tcgplayer.com/search/riftbound-league-of-legends-trading-card-game/product"
   );
