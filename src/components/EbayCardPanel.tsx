@@ -106,12 +106,33 @@ export async function EbayCardPanel({
   let auctions: AuctionRow[] = [];
   let listings: AdListing[] = [];
   try {
-    // Five minutes, not the hour used elsewhere on this page: an auction ending
-    // in two hours cannot sit behind a one-hour cache and still be honest.
+    // ⚠ THIS TTL MUST NOT BE LOWER THAN THE PAGE'S OWN `revalidate` (86400, see
+    // app/card/[id]/page.tsx). It was 300 until 2026-08-14, and that single
+    // number was burning roughly 2 GB of Neon transfer a day — the reason five
+    // consecutive database projects hit their monthly allowance in days.
+    //
+    // WHY, because it is not obvious and nothing warns you: an `unstable_cache`
+    // revalidate does not only bound ITS OWN entry. Next.js applies it to the
+    // whole route segment's static-generation store, taking the LOWER of the two
+    // (next/dist/server/web/spec-extension/unstable-cache.js — `store.revalidate
+    // = options.revalidate` unless the store's is already smaller). So this 300
+    // silently overrode the page's 86400 and re-ran EVERY query on the card page
+    // — ~10 uncached round trips, ~60 KB each — up to 288× a day per URL instead
+    // of once. It was visible only in .next/prerender-manifest.json, where all
+    // 200 prerendered /card/* routes carried initialRevalidateSeconds: 300.
+    //
+    // Freshness does not depend on this number anyway: revalidateContent()
+    // purges CONTENT_TAG *and* the /card/[id] path after every price import
+    // (lib/revalidate-content.ts), which is the site's actual freshness
+    // mechanism. Matching 86400 keeps this panel exactly as fresh as every other
+    // price on the page — refreshed on each import, capped at 24h if a purge is
+    // missed. The cost is that auction bids/end-times are no longer 5 minutes
+    // fresh; if that is wanted back, fetch them CLIENT-side so the TTL can never
+    // propagate to the segment again.
     [graded, auctions, listings] = await unstable_cache(
       () => Promise.all([loadGraded(cardId), loadAuctions(cardId), loadListings(cardId)]),
       ["ebay-card-panel", cardId],
-      { revalidate: 300, tags: [CONTENT_TAG] },
+      { revalidate: 86400, tags: [CONTENT_TAG] },
     )();
   } catch {
     // A database blip must never take down a card page for a panel.

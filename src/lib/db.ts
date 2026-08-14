@@ -29,6 +29,31 @@ import { PrismaClient } from "@prisma/client";
 //      count is unbounded.
 //   4. Whole-table reads belong in workflows/scripts (daily refresh, seeds),
 //      never in request handlers.
+//   5. NEVER give unstable_cache a `revalidate` LOWER than the page's own
+//      `export const revalidate`. This rule cost five database projects before
+//      anyone found it, and none of the rules above would have caught it,
+//      because the offending query was small and correctly cached.
+//
+//      An unstable_cache revalidate is not scoped to its own entry: Next.js
+//      applies it to the whole ROUTE SEGMENT, taking the lower of the two
+//      (server/web/spec-extension/unstable-cache.js sets `store.revalidate =
+//      options.revalidate` unless the store's is already smaller). So one
+//      `{ revalidate: 300 }` inside a component on a `revalidate = 86400` page
+//      silently re-ran EVERY query on that page — including all the uncached
+//      ones around it — 288× a day instead of once.
+//
+//      That is exactly what components/EbayCardPanel.tsx did to /card/[id]
+//      until 2026-08-14: ~10 uncached round trips × ~60 KB × 288 × ~200 hot
+//      card URLs ≈ 2 GB/day, matching the observed burn almost exactly. It is
+//      invisible in the source — the only evidence was
+//      .next/prerender-manifest.json showing every /card/* route at
+//      initialRevalidateSeconds: 300 instead of 86400.
+//
+//      TO CHECK: after a build, grep that manifest for a route whose
+//      initialRevalidateSeconds is lower than the `export const revalidate` in
+//      its page.tsx. If freshness genuinely needs a shorter window than the
+//      page, fetch it CLIENT-side instead — that is the only way the TTL cannot
+//      propagate to the segment.
 //
 // The egress guard below makes violations VISIBLE: any single query returning
 // a ~1 MB+ payload logs loudly to the Vercel function logs instead of silently
@@ -38,13 +63,26 @@ import { PrismaClient } from "@prisma/client";
 const BIG_RESULT_ROWS = 500; // only size-check results at least this long (CPU)
 const BIG_RESULT_BYTES = 1_000_000;
 
-// DATABASE_URL — the ORIGINAL project this site launched on — is the CURRENT
-// operational Neon project again, cut over 2026-08-12 after RM5 neared its
-// monthly network-transfer allowance. It is the sixth rotation (DATABASE_URL →
-// DATABASE_URL_2 → RM3 → RM4 → RM5 → back to DATABASE_URL), and the first that
-// goes BACKWARD: Neon's caps are per project and per month, the original was
-// retired long enough ago that its allowance has reset, and re-using rested
-// capacity we already own beats provisioning an RM6 and beats paying.
+// DATABASE_URL_2 is the CURRENT operational Neon project, cut over 2026-08-14.
+// Seventh rotation (DATABASE_URL → DATABASE_URL_2 → RM3 → RM4 → RM5 →
+// DATABASE_URL → back to DATABASE_URL_2), and the second to go BACKWARD onto
+// rested capacity: Neon's caps are per project and per month, _2 was retired
+// months ago so its allowance long since reset, and re-using a project we
+// already own beats provisioning an RM6 and beats paying.
+//
+// ⚠ THIS ROTATION IS NOT A FIX, AND THE NEXT ONE WON'T BE EITHER. The previous
+// cutover happened on 2026-08-12. DATABASE_URL burned 4 of its 5 GB in the TWO
+// DAYS that followed — roughly 2 GB/day, which gives this project about the
+// same. Five consecutive projects have now been exhausted the same way, which
+// makes this a systemic read-volume problem, not bad luck with allowances.
+// Rotating buys days; it has never bought a fix. The burn rate itself is the
+// open problem — see the note on RetailerPrice below.
+//
+// SIZE CONTEXT FOR WHOEVER PICKS THIS UP: RetailerPrice is 77,861 rows (counted
+// during the 2026-08-14 cutover) against Card's 1,429. Any hot path that reads
+// RetailerPrice without a `take`/narrow `select`, or any cache that silently
+// stops caching it, moves tens of MB per request — which is the only shape of
+// bug that reaches 2 GB/day at this traffic level. Start there.
 //
 // THE CHAIN IS CURRENT-FIRST, NOT NEWEST-FIRST. Every rotation before this one
 // moved forward onto a freshly provisioned project, so "newest first" and
@@ -53,17 +91,17 @@ const BIG_RESULT_BYTES = 1_000_000;
 // service TODAY" — a precedence order, never a timeline. Same convention as
 // db-history.ts, which rotated backward onto HISTORY_DATABASE_URL a day earlier.
 //
-// WHAT ROTATING ONTO THE NAME `DATABASE_URL` COSTS, stated plainly because it
-// is genuinely a hazard: prisma/schema.prisma reads env("DATABASE_URL")
-// directly, nearly every script assigns `DATABASE_URL=<something> npx tsx …` to
-// aim Prisma at a specific database, and the GitHub Actions workflows assign it
-// from this same chain. So the name now means two things at once — "whichever
-// database this process should talk to" and "the specific project at the head
-// of this chain" — and in production they coincide, which is what would make a
-// mistake quiet rather than loud. Locally it resolves to the dev Postgres in
-// .env.local, which is correct and is why local dev is unaffected. If there is
-// a seventh rotation, give the project a FRESH name (RM6) instead of recycling
-// the generic one.
+// THE NAME HAZARD IS NOW THE OTHER WAY AROUND, and it is worth reading before
+// touching anything here. prisma/schema.prisma reads env("DATABASE_URL")
+// directly, and nearly every script assigns `DATABASE_URL=<something> npx tsx …`
+// to aim Prisma at a database. While DATABASE_URL was itself the head of this
+// chain those two meanings coincided and nothing had to be copied. They no
+// longer coincide: the head is DATABASE_URL_2, so anything that runs Prisma
+// MUST copy the winner into DATABASE_URL first or it will talk to the previous
+// project while the app talks to the current one. scripts/build-db-push.sh does
+// exactly that copy, and it is the reason its first branch now exports where it
+// previously did not. Locally this all still resolves to the dev Postgres in
+// .env.local, which is why local dev is unaffected.
 //
 // RM4's exhaustion is the sharpest example of what an unplanned rotation costs.
 // It went from a clean 43-minute price import at 2026-08-09 19:30 UTC to
@@ -72,10 +110,11 @@ const BIG_RESULT_BYTES = 1_000_000;
 // that moment — with a bare `Error: Command "npm run build" exited with 1` and
 // nothing in it naming a database.
 //
-// RM5 is kept as the rollback and every var below it is dead/read-only; treat
-// none of them as a write target. Once the original project is confirmed
-// serving cleanly everywhere (see migrate-main-db-to-original in
-// maintenance.yml), they can be deleted and this collapsed back to one var.
+// DATABASE_URL is kept as the rollback (it holds a complete, row-count-verified
+// copy as of the 2026-08-14 cutover) and every var below it is dead/read-only;
+// treat none of them as a write target. Do NOT delete DATABASE_URL: beyond the
+// rollback, several scripts and Prisma itself still read that literal name, so
+// unsetting it breaks far more than it tidies.
 //
 // ORDER MATTERS AND IS DUPLICATED: this list is mirrored, by necessity, in
 // places that cannot import this module — scripts/build-db-push.sh and the
@@ -84,11 +123,11 @@ const BIG_RESULT_BYTES = 1_000_000;
 // each other; the workflow blocks are checked by eye. Rotate them together, or
 // the site reads one database while the importers write to another.
 const OPERATIONAL_URL =
+  process.env.DATABASE_URL_2 ||
   process.env.DATABASE_URL ||
   process.env.RM5 ||
   process.env.RM4 ||
-  process.env.RM3 ||
-  process.env.DATABASE_URL_2;
+  process.env.RM3;
 
 // Ensure a generous connect_timeout (the standard libpq/Postgres connection
 // param, in seconds) is set. WHY: Neon's pooled compute suspends when idle and
@@ -118,7 +157,9 @@ function withConnectTimeout(url: string | undefined, seconds: number): string | 
 // winning var name once at module init makes the next P1001 self-diagnosing —
 // in particular it distinguishes "RM3 is down" from "RM3 is unset in this
 // environment, so we silently fell back to the exhausted old database".
-const RESOLVED_SOURCE = process.env.DATABASE_URL
+const RESOLVED_SOURCE = process.env.DATABASE_URL_2
+  ? "DATABASE_URL_2"
+  : process.env.DATABASE_URL
   ? "DATABASE_URL"
   : process.env.RM5
   ? "RM5"
@@ -126,8 +167,6 @@ const RESOLVED_SOURCE = process.env.DATABASE_URL
   ? "RM4"
   : process.env.RM3
   ? "RM3"
-  : process.env.DATABASE_URL_2
-  ? "DATABASE_URL_2"
   : "NONE";
 
 // DB_SOURCE_NAME: the same answer, supplied by whoever set the URL.
@@ -147,7 +186,7 @@ const RESOLVED_SOURCE = process.env.DATABASE_URL
 // exactly as before.
 export const OPERATIONAL_URL_SOURCE = process.env.DB_SOURCE_NAME || RESOLVED_SOURCE;
 
-if (OPERATIONAL_URL_SOURCE !== "DATABASE_URL") {
+if (OPERATIONAL_URL_SOURCE !== "DATABASE_URL_2") {
   console.warn(
     `[db] operational database resolved from ${OPERATIONAL_URL_SOURCE}, not DATABASE_URL. ` +
       `DATABASE_URL is the current project (the original, rotated back onto 2026-08-12); RM5 is the ` +

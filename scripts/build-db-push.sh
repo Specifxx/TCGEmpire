@@ -36,7 +36,7 @@ set -uo pipefail
 # DATABASE_URL secret) had its allowance reset. See the long note on
 # OPERATIONAL_URL in src/lib/db.ts, including why recycling this particular name
 # is a hazard worth not repeating.
-CURRENT_OP="DATABASE_URL"
+CURRENT_OP="DATABASE_URL_2"
 # Rotated BACKWARD on 2026-08-11: RH7 neared its monthly allowance, and
 # HISTORY_DATABASE_URL — the oldest project in the chain — had its allowance
 # reset at the start of the month. The chains are CURRENT-first, not newest-first;
@@ -56,8 +56,8 @@ CURRENT_HIST="HISTORY_DATABASE_URL"
 # A green deploy against an un-migrated database is exactly the failure this
 # script exists to prevent.
 if ! { [ "${VERCEL_ENV:-}" = "production" ] || [ "${VERCEL_ENV:-}" = "preview" ]; } \
-   || [ -z "${DATABASE_URL:-}${RM5:-}${RM4:-}${RM3:-}${DATABASE_URL_2:-}" ]; then
-  echo "[build-db-push] not a Vercel production/preview build with an operational database set (DATABASE_URL / RM5 / RM4 / RM3 / DATABASE_URL_2) — skipping schema push."
+   || [ -z "${DATABASE_URL_2:-}${DATABASE_URL:-}${RM5:-}${RM4:-}${RM3:-}" ]; then
+  echo "[build-db-push] not a Vercel production/preview build with an operational database set (DATABASE_URL_2 / DATABASE_URL / RM5 / RM4 / RM3) — skipping schema push."
   exit 0
 fi
 
@@ -65,14 +65,19 @@ fi
 # the app runtime (which can silently keep serving from a stale connection until
 # the next cold start), this ALWAYS reflects the current build's actual environment.
 #
-# THE FIRST BRANCH DELIBERATELY DOES NOT `export`. Every other branch has to
-# copy its winning variable INTO DATABASE_URL, because that is the only name
-# `prisma db push` reads. When DATABASE_URL is itself the winner there is
-# nothing to copy — `export DATABASE_URL="$DATABASE_URL"` would be a no-op at
-# best, and writing it out invites someone to "fix" it later into something that
-# isn't. That asymmetry is a direct consequence of rotating onto the generic
-# name; see the note on OPERATIONAL_URL in src/lib/db.ts.
-if [ -n "${DATABASE_URL:-}" ]; then
+# EVERY BRANCH EXCEPT THE DATABASE_URL ONE MUST `export`, because DATABASE_URL
+# is the only name `prisma db push` reads. The asymmetry moved on 2026-08-14:
+# while DATABASE_URL was itself the head of the chain, the first branch had
+# nothing to copy and deliberately did not export. Now the head is
+# DATABASE_URL_2, so the FIRST branch is the one that must copy — and getting
+# this wrong is silent and expensive, because `prisma db push` would migrate the
+# PREVIOUS project while the app (src/lib/db.ts, DATABASE_URL_2-first) reads the
+# current one. A green deploy against an un-migrated database is exactly the
+# failure this script exists to prevent.
+if [ -n "${DATABASE_URL_2:-}" ]; then
+  export DATABASE_URL="$DATABASE_URL_2"
+  SOURCE="DATABASE_URL_2"
+elif [ -n "${DATABASE_URL:-}" ]; then
   SOURCE="DATABASE_URL"
 elif [ -n "${RM5:-}" ]; then
   export DATABASE_URL="$RM5"
@@ -80,12 +85,16 @@ elif [ -n "${RM5:-}" ]; then
 elif [ -n "${RM4:-}" ]; then
   export DATABASE_URL="$RM4"
   SOURCE="RM4"
-elif [ -n "${RM3:-}" ]; then
+else
+  # RM3 is now the tail of the chain, so this branch is unreachable: the gate
+  # above already exited unless at least one chain variable is set. It used to
+  # assign DATABASE_URL_2 as a catch-all, which after the 2026-08-14 rotation
+  # would have been both wrong (that is the HEAD now, matched first) and
+  # dangerous (it would `export DATABASE_URL=""` if nothing were set, pointing
+  # prisma at an empty string). Fail loudly rather than migrate something
+  # unnamed.
   export DATABASE_URL="$RM3"
   SOURCE="RM3"
-else
-  export DATABASE_URL="$DATABASE_URL_2"
-  SOURCE="DATABASE_URL_2"
 fi
 # Name the winner, never the value (it's a credential). This is the one line that
 # turns "P1001 against some unfamiliar host" into an immediate answer: if SOURCE is

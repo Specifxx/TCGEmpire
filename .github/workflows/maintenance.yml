@@ -108,12 +108,12 @@ jobs:
       # ORDERING: this default points at RM3 from the moment it's set, so run
       # migrate-main-db BEFORE any other task here — otherwise a task like
       # import-prices would happily operate against a still-empty RM3.
-      DATABASE_URL: ${{ secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 }}
       # Which of the chain above actually won, by NAME (never its value). lib/db.ts
       # cannot work this out inside Actions: the chain is collapsed into one
       # DATABASE_URL before the job starts, so process.env.RM5 is always unset there
       # and its warning always said "DATABASE_URL". See src/lib/db.ts.
-      DB_SOURCE_NAME: ${{ (secrets.DATABASE_URL || vars.DATABASE_URL) && 'DATABASE_URL' || (secrets.RM5 || vars.RM5) && 'RM5' || (secrets.RM4 || vars.RM4) && 'RM4' || (secrets.RM3 || vars.RM3) && 'RM3' || 'DATABASE_URL_2' }}
+      DB_SOURCE_NAME: ${{ (secrets.DATABASE_URL_2 || vars.DATABASE_URL_2) && 'DATABASE_URL_2' || (secrets.DATABASE_URL || vars.DATABASE_URL) && 'DATABASE_URL' || (secrets.RM5 || vars.RM5) && 'RM5' || (secrets.RM4 || vars.RM4) && 'RM4' || 'RM3' }}
       DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
     steps:
       - uses: actions/checkout@v4
@@ -210,7 +210,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.RH7 || vars.RH7 }}
           # Only ever used for a "did RH7 accidentally get set to the operational
           # database?" guard before this step truncates anything.
-          OPERATIONAL_URL: ${{ secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 }}
+          OPERATIONAL_URL: ${{ secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 }}
         run: |
           set -uo pipefail
 
@@ -388,7 +388,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
           # Only ever used for a "did RH7 accidentally get set to the operational
           # database?" guard before this step truncates anything.
-          OPERATIONAL_URL: ${{ secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 }}
+          OPERATIONAL_URL: ${{ secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 }}
         run: |
           set -uo pipefail
 
@@ -1454,7 +1454,7 @@ jobs:
         # so the generated client may not even load.
         if: inputs.task == 'fix-orphan-users'
         env:
-          TARGET_DATABASE_URL: ${{ secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 }}
+          TARGET_DATABASE_URL: ${{ secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 }}
         run: |
           set -uo pipefail
           if [ -z "$TARGET_DATABASE_URL" ]; then
@@ -1737,12 +1737,12 @@ jobs:
       - name: Audit rarity across sets (read-only census)
         if: inputs.task == 'audit-rarity'
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 }}
           # Which of the chain above actually won, by NAME (never its value). lib/db.ts
           # cannot work this out inside Actions: the chain is collapsed into one
           # DATABASE_URL before the job starts, so process.env.RM5 is always unset there
           # and its warning always said "DATABASE_URL". See src/lib/db.ts.
-          DB_SOURCE_NAME: ${{ (secrets.DATABASE_URL || vars.DATABASE_URL) && 'DATABASE_URL' || (secrets.RM5 || vars.RM5) && 'RM5' || (secrets.RM4 || vars.RM4) && 'RM4' || (secrets.RM3 || vars.RM3) && 'RM3' || 'DATABASE_URL_2' }}
+          DB_SOURCE_NAME: ${{ (secrets.DATABASE_URL_2 || vars.DATABASE_URL_2) && 'DATABASE_URL_2' || (secrets.DATABASE_URL || vars.DATABASE_URL) && 'DATABASE_URL' || (secrets.RM5 || vars.RM5) && 'RM5' || (secrets.RM4 || vars.RM4) && 'RM4' || 'RM3' }}
         run: npx tsx scripts/audit-rarity.ts
 
       - name: Audit VEN cards (read-only census)
