@@ -324,20 +324,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <PrivacySettingsLink />
             <a href={`mailto:${CONTACT_EMAIL}`} className="tap-link text-gold hover:underline">{CONTACT_EMAIL}</a>
           </div>
-          {/* Cross-promotion: our sister site for the Pokémon TCG. */}
-          <p className="mb-2">
-            Collect <strong className="font-semibold text-slate-400">Pokémon</strong> cards too? Compare
-            prices across every English card on our sister site{" "}
-            <a
-              href="https://dexcompare.app"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-semibold text-brand-400 hover:underline"
-            >
-              DexCompare.app
-            </a>
-            .
-          </p>
           {/* Cross-promotion: our other Riftbound side project. Cheeky on purpose —
               per owner request 2026-08-13. */}
           <p className="mb-2">
