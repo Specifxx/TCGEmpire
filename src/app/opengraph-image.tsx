@@ -1,23 +1,74 @@
 import { ImageResponse } from "next/og";
+import { prisma } from "@/lib/db";
+import { formatMoney } from "@/lib/format";
 
-// Default social-share card for the whole site. Applies to every route that
-// doesn't set its own image (card pages override it with the real card art, the
-// Riftle page has its own). Drawn with plain divs — no font/emoji fetches — so
-// it's statically generated once at build.
+// Default social-share card for the whole site — the image that unfurls in
+// Discord, Slack, iMessage, Facebook and X for every route that doesn't set its
+// own (card pages override it with their own art; Riftle has its own).
+//
+// It used to be a MOCK-UP: three rounded rectangles containing grey placeholder
+// bars, drawn to *suggest* a price comparison. Nothing on it was real, so the
+// single most-shared image of the product demonstrated nothing the product
+// does — it was an illustration of a UI rather than the UI. This renders the
+// real thing instead: a genuine card, its genuine art, and the genuine
+// competing store prices for it, cheapest highlighted, exactly as the site
+// ranks them. Someone seeing this in a chat window learns what the site is for.
+//
+// runtime = "nodejs" because Prisma cannot run on edge. This is generated once
+// at build (a static route), so the query below costs one small read per
+// deploy, not per share.
+export const runtime = "nodejs";
 export const alt = "RiftCompare — Riftbound card prices compared across stores";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 const GREEN = "#34d17e";
 
-// A stylised price-comparison list: three "store rows", cheapest highlighted.
-const ROWS = [
-  { w: 150, win: true },
-  { w: 190, win: false },
-  { w: 120, win: false },
-];
+type Row = { name: string; price: string };
+type Featured = { name: string; setLine: string; art: string | null; rows: Row[] } | null;
 
-export default function OgImage() {
+// One card, several real stores, cheapest first — the product in one picture.
+// Deliberately picks a card that HAS competing listings rather than the most
+// expensive one: a comparison needs at least two prices to be a comparison.
+async function loadFeatured(): Promise<Featured> {
+  try {
+    const card = await prisma.card.findFirst({
+      where: { imageUrl: { not: null }, retailerPrices: { some: { inStock: true } } },
+      orderBy: { retailerPrices: { _count: "desc" } },
+      select: {
+        name: true,
+        setCode: true,
+        collectorNumber: true,
+        imageUrl: true,
+        imageThumbUrl: true,
+        retailerPrices: {
+          where: { inStock: true },
+          orderBy: { priceCents: "asc" },
+          take: 3,
+          select: { retailerName: true, priceCents: true, currency: true },
+        },
+      },
+    });
+    if (!card || card.retailerPrices.length < 2) return null;
+    return {
+      name: card.name,
+      setLine: `${card.setCode} · ${card.collectorNumber}`,
+      art: card.imageUrl ?? card.imageThumbUrl,
+      rows: card.retailerPrices.map((p) => ({
+        name: p.retailerName,
+        price: formatMoney(p.priceCents, p.currency),
+      })),
+    };
+  } catch {
+    // A build with no database reachable still needs to produce an image, so
+    // the caller falls back to the brand-only composition below.
+    return null;
+  }
+}
+
+export default async function OgImage() {
+  const featured = await loadFeatured();
+
   return new ImageResponse(
     (
       <div
@@ -27,99 +78,143 @@ export default function OgImage() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "70px 80px",
+          padding: "64px 72px",
           background: "linear-gradient(135deg, #0b0f17 0%, #101826 55%, #0c2018 100%)",
           fontFamily: "sans-serif",
         }}
       >
-        {/* Left: wordmark + pitch */}
-        <div style={{ display: "flex", flexDirection: "column", maxWidth: 660 }}>
+        {/* ── Left: wordmark + pitch ─────────────────────────────────────── */}
+        <div style={{ display: "flex", flexDirection: "column", maxWidth: 600 }}>
           <div style={{ display: "flex", alignItems: "center" }}>
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                width: 84,
-                height: 84,
-                borderRadius: 20,
+                width: 78,
+                height: 78,
+                borderRadius: 18,
                 background: GREEN,
                 color: "#06130c",
-                fontSize: 56,
+                fontSize: 52,
                 fontWeight: 800,
-                marginRight: 24,
+                marginRight: 22,
               }}
             >
               R
             </div>
-            <div style={{ display: "flex", fontSize: 84, fontWeight: 800, letterSpacing: -2 }}>
+            <div style={{ display: "flex", fontSize: 76, fontWeight: 800, letterSpacing: -2 }}>
               <span style={{ color: "#ffffff" }}>Rift</span>
               <span style={{ color: GREEN }}>Compare</span>
             </div>
           </div>
-          <div style={{ display: "flex", marginTop: 30, fontSize: 40, color: "#e6ebf2", lineHeight: 1.25, fontWeight: 700 }}>
+          <div
+            style={{
+              display: "flex",
+              marginTop: 26,
+              fontSize: 38,
+              color: "#e6ebf2",
+              lineHeight: 1.25,
+              fontWeight: 700,
+            }}
+          >
             Riftbound card prices, compared
           </div>
-          <div style={{ display: "flex", marginTop: 14, fontSize: 28, color: "#8b95a5", lineHeight: 1.4 }}>
+          <div style={{ display: "flex", marginTop: 12, fontSize: 26, color: "#8b95a5" }}>
             Every card · every store · cheapest first
           </div>
           {/* No emoji here on purpose: ImageResponse has no emoji font unless one
-              is fetched, so flags would render as blank gaps. */}
-          <div style={{ display: "flex", marginTop: 30, fontSize: 26, color: "#7c8696" }}>
-            Australia · New Zealand · United States · United Kingdom
+              is fetched, so flags would render as blank gaps.
+              SIX markets — this line read "Australia · New Zealand · United
+              States · United Kingdom" long after Singapore and Canada shipped,
+              so the most-shared image of the site was advertising two thirds of
+              its coverage. Abbreviated because six full country names wrap to
+              three lines at this width. */}
+          <div style={{ display: "flex", marginTop: 26, fontSize: 25, color: "#7c8696" }}>
+            AU · NZ · US · UK · Singapore · Canada
           </div>
         </div>
 
-        {/* Right: stylised price-comparison rows, cheapest highlighted */}
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          {ROWS.map((r, i) => (
-            <div
-              key={i}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                width: 330,
-                marginTop: i === 0 ? 0 : 18,
-                padding: "18px 22px",
-                borderRadius: 16,
-                background: r.win ? "rgba(52,209,126,0.14)" : "#141b28",
-                border: r.win ? `3px solid ${GREEN}` : "2px solid #243047",
-              }}
-            >
+        {/* ── Right: a REAL comparison, or brand-only if the DB was unreachable ── */}
+        {featured ? (
+          <div style={{ display: "flex", alignItems: "center" }}>
+            {featured.art && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={featured.art}
+                alt=""
+                width={224}
+                height={313}
+                style={{
+                  width: 224,
+                  height: 313,
+                  borderRadius: 16,
+                  objectFit: "cover",
+                  border: "2px solid #243047",
+                  marginRight: 26,
+                }}
+              />
+            )}
+            <div style={{ display: "flex", flexDirection: "column", width: 330 }}>
               <div
                 style={{
                   display: "flex",
-                  width: 44,
-                  height: 44,
-                  borderRadius: 10,
-                  background: r.win ? GREEN : "#243047",
+                  fontSize: 25,
+                  fontWeight: 700,
+                  color: "#ffffff",
+                  marginBottom: 2,
                 }}
-              />
-              <div style={{ display: "flex", flexDirection: "column", marginLeft: 16 }}>
-                <div style={{ display: "flex", width: r.w, height: 14, borderRadius: 7, background: r.win ? "#9fe8c4" : "#37445c" }} />
-                <div style={{ display: "flex", width: 70, height: 12, borderRadius: 6, marginTop: 10, background: r.win ? GREEN : "#2c374b" }} />
+              >
+                {featured.name.length > 24 ? `${featured.name.slice(0, 23)}…` : featured.name}
               </div>
-              {r.win && (
+              <div style={{ display: "flex", fontSize: 19, color: "#7c8696", marginBottom: 16 }}>
+                {featured.setLine}
+              </div>
+              {featured.rows.map((r, i) => (
                 <div
+                  key={i}
                   style={{
                     display: "flex",
-                    marginLeft: "auto",
-                    padding: "6px 14px",
-                    borderRadius: 999,
-                    background: GREEN,
-                    color: "#06210f",
-                    fontSize: 22,
-                    fontWeight: 800,
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    marginTop: i === 0 ? 0 : 12,
+                    padding: "14px 18px",
+                    borderRadius: 14,
+                    background: i === 0 ? "rgba(52,209,126,0.14)" : "#141b28",
+                    border: i === 0 ? `3px solid ${GREEN}` : "2px solid #243047",
                   }}
                 >
-                  BEST
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      maxWidth: 172,
+                    }}
+                  >
+                    <div style={{ display: "flex", fontSize: 20, color: "#cdd5e0" }}>
+                      {r.name.length > 17 ? `${r.name.slice(0, 16)}…` : r.name}
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      fontSize: 24,
+                      fontWeight: 800,
+                      color: i === 0 ? GREEN : "#8b95a5",
+                    }}
+                  >
+                    {r.price}
+                  </div>
                 </div>
-              )}
+              ))}
+              <div style={{ display: "flex", marginTop: 14, fontSize: 19, color: "#7c8696" }}>
+                Live prices · updated daily
+              </div>
             </div>
-          ))}
-        </div>
+          </div>
+        ) : null}
       </div>
     ),
-    size
+    size,
   );
 }

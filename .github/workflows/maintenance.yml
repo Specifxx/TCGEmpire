@@ -46,6 +46,7 @@ on:
           - remove-seed-accounts # one-off: delete @riftcompare.seed bot personas (dead since the forum autoseeder was removed)
           - test-marketplace-stripe # smoke-test CRON_SECRET + both Stripe webhook secrets + a Connect account create/delete round-trip (test or live)
           - check-cards      # read-only: fail if any card page would render a price in one component and "—" in another (hero vs prose vs JSON-LD)
+          - repair-history-card-ids # THE FIX for blank price charts: rewrites a history project's Card.id values onto the LIVE catalogue, matching on externalId, so PriceHistory rows join again (the FK cascades them). Every history project currently has 0% of its cardIds resolving against the live Card table, because the operational catalogue was REBUILT rather than restored and every card got a fresh cuid. DRY RUN unless dry_run is set to false. Optional `source` input picks which history variable to repair (default: whichever db-history.ts resolves).
           - probe-history    # READ-ONLY survey of PriceHistory across EVERY history project (RH7 / HISTORY_DATABASE_URL / RH6 / RH5 / HISTORY_DATABASE_URL_4/_2/_3): row counts, day ranges, per-country coverage, and — the number that actually matters — how many of each project's cardIds still resolve against the LIVE Card table. A project can be full of rows and still render empty charts if its cardIds belong to a retired operational database. RUN THIS FIRST when price history looks stale or a card's chart is blank.
           - probe-databases  # READ-ONLY survey of EVERY database in both rotations (RM5/RM4/RM3/DATABASE_URL_2/DATABASE_URL + RH7…RH5 + the older history vars): which ones still answer, and how many User/MarketplaceListing/Order/SellerProfile rows each holds. Writes nothing. RUN THIS FIRST when data appears to be missing — it tells you which source is worth restoring from.
           - restore-accounts-into-rm5 # copy ONLY the account/marketplace tables from a chosen source (source input: RM4/RM3/DATABASE_URL_2/DATABASE_URL/RH7/RH6/RH5) into RM5, leaving RM5's freshly-rebuilt Card/RetailerPrice catalogue untouched. Aborts before writing anything if the dump fails or the source holds no rows.
@@ -71,7 +72,7 @@ on:
         type: choice
         required: false
         default: RM4
-        options: [RM4, RM3, DATABASE_URL_2, DATABASE_URL, RH7, RH6, RH5, HISTORY_DATABASE_URL_4]
+        options: [RM4, RM3, DATABASE_URL_2, DATABASE_URL, RH7, RH6, RH5, HISTORY_DATABASE_URL, HISTORY_DATABASE_URL_4, HISTORY_DATABASE_URL_2, HISTORY_DATABASE_URL_3]
       url:
         description: "probe-url only: page to fetch for font/style diagnostics"
         type: string
@@ -1852,6 +1853,33 @@ jobs:
           RM4: ${{ secrets.RM4 || vars.RM4 }}
           RM3: ${{ secrets.RM3 || vars.RM3 }}
         run: npx tsx scripts/probe-history-dbs.ts
+
+      # Dry run unless dry_run is explicitly false — the inverse of every other
+      # task here, deliberately: this one rewrites primary keys, so the safe
+      # default has to be the one you get by clicking Run without thinking.
+      - name: Repair history card ids (re-key onto the live catalogue)
+        if: inputs.task == 'repair-history-card-ids'
+        env:
+          RH7: ${{ secrets.RH7 || vars.RH7 }}
+          RH6: ${{ secrets.RH6 || vars.RH6 }}
+          RH5: ${{ secrets.RH5 || vars.RH5 }}
+          HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
+          HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
+          HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
+          HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
+          DATABASE_URL_2: ${{ secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL || vars.DATABASE_URL }}
+          RM5: ${{ secrets.RM5 || vars.RM5 }}
+          RM4: ${{ secrets.RM4 || vars.RM4 }}
+          RM3: ${{ secrets.RM3 || vars.RM3 }}
+        run: |
+          ARGS=""
+          if [ -n "${{ inputs.source }}" ] && [ "${{ inputs.source }}" != "RM4" ]; then
+            ARGS="--db=${{ inputs.source }}"
+          fi
+          if [ "${{ inputs.dry_run }}" = "false" ]; then ARGS="$ARGS --apply"; fi
+          echo "npx tsx scripts/repair-history-card-ids.ts $ARGS"
+          npx tsx scripts/repair-history-card-ids.ts $ARGS
 
       - name: Audit users/Premium (read-only census)
         if: inputs.task == 'audit-users'
