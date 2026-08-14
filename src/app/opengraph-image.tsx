@@ -120,6 +120,10 @@ export default async function OgImage() {
                 justifyContent: "center",
                 width: 78,
                 height: 78,
+                // Without this the flex parent squeezes the tile to a sliver
+                // once the text beside it is wide enough — the logo rendered as
+                // a green bar with no "R" in it.
+                flexShrink: 0,
                 borderRadius: 18,
                 background: GREEN,
                 color: "#06130c",
