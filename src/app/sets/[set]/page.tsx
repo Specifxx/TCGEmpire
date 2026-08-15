@@ -86,7 +86,22 @@ export async function generateMetadata({
   // thin content. Noindex it so Google doesn't sink crawl budget into a soft-thin
   // page; these empty set URLs are the bulk of the "discovered/crawled – not indexed"
   // pile. It flips back to indexable automatically the moment cards are imported.
-  const cardCount = await prisma.card.count({ where: { setCode: set.code } });
+  // GUARDED, and the -1 sentinel matters. This route is force-dynamic, so this
+  // count runs against the database on EVERY request — and an unguarded await in
+  // generateMetadata throws before the page renders at all, i.e. a hard 500
+  // rather than a degraded page. /browse makes the identical call and already
+  // guards it (`.catch(() => 0)`); this one did not, which is why a spike in
+  // 5xx on 2026-08-13 landed on /sets/[set] specifically while /browse rode it
+  // out: the operational database was days from exhausting its Neon transfer
+  // allowance (the rotation onto DATABASE_URL_2 followed on 2026-08-14).
+  //
+  // -1, NOT 0, because `cardCount === 0` below emits robots:noindex for
+  // genuinely empty sets. Falling back to 0 would mean a transient database
+  // blip tells Google to drop a real, fully-populated set page — and noindex is
+  // cached, so the damage outlasts the outage by far more than a 500 would.
+  // Unknown therefore fails OPEN for indexability; Math.max(1, …) below already
+  // collapses a negative to a single page, so pagination stays sane too.
+  const cardCount = await prisma.card.count({ where: { setCode: set.code } }).catch(() => -1);
   // A filtered/searched view (like /browse's ?q=) is a permutation of the same
   // content, not a distinct page — noindex it and point Google at the clean set page.
   const filtered = !isCleanPagination(searchParams);
