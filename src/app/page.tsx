@@ -13,6 +13,7 @@ import { SITE_URL, SITE_NAME } from "@/lib/site";
 import { getTopDeals, type TopDeals } from "@/lib/top-deals";
 import { getRecentlyUpdated, getPriceMovers, type PriceMovers } from "@/lib/price-history";
 import { getBlogPosts } from "@/lib/posts";
+import { getHeroRailData } from "@/lib/hero-rail";
 import { timeAgo } from "@/lib/format";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { CinematicHero } from "@/components/home/CinematicHero";
@@ -140,6 +141,7 @@ export default async function HomePage() {
     moversArr,
     lastPriceRefresh,
     blogPosts,
+    railData,
   ] = await Promise.all([
     prisma.card.count(),
     // Priced-card count PER MARKET (one indexed count per price column) — the hero
@@ -204,6 +206,11 @@ export default async function HomePage() {
     // Latest blog posts for the "Latest from the blog" teaser — in-memory list
     // filter/sort (lib/posts.ts), not a DB query, so this adds no egress.
     getBlogPosts(),
+    // Real eBay / TCGplayer listings for the two hero rails. ONE hard-cached
+    // entry for the whole site, tag-invalidated by the daily import — see
+    // lib/hero-rail.ts for why a revenue-bearing read is allowed here when the
+    // decorative chase-card read that used to sit below this array was not.
+    getHeroRailData(),
   ]);
   // Assemble per-market stat tiles; the client picks the visitor's market after hydration.
   const inStockByCountry: Record<string, number> = {};
@@ -261,6 +268,7 @@ export default async function HomePage() {
         statsByCountry={statsByCountry}
         trendingCards={popularCards.slice(0, 6)}
         freshness={freshness}
+        railData={railData}
       />
 
       {/* Market pulse — today's top risers/fallers, reusing the Daily Movers

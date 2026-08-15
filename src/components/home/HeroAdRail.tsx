@@ -6,6 +6,8 @@ import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
 import { usePremium } from "@/components/PremiumProvider";
 import { useCountry } from "@/components/CountryProvider";
 import { affiliateUrl, ebayLabel, ebaySearchUrl } from "@/lib/affiliate";
+import type { HeroRailData, RailListing } from "@/lib/hero-rail";
+import { formatMoney } from "@/lib/format";
 import type { Country } from "@/lib/country";
 
 // The two vertical affiliate rails either side of the homepage hero. Replaced
@@ -258,7 +260,89 @@ function RailPanel({ unit, country }: { unit: RailUnit; country: string }) {
   );
 }
 
-export function HeroAdRail({ side }: { side: "left" | "right" }) {
+
+// Height of the image-led panel. Chosen from measurement, not taste: the hero
+// shell is 595px tall, the H1's first line ends 82px down, and a CENTRED rail
+// therefore cannot exceed ~363px before its band starts overlapping that line
+// (measured: at 1400px a 360px rail clears by 145px, a 400px one by 10px). The
+// old house banner sat at 340 for exactly that reason.
+//
+// So this stops centring and hangs from the BOTTOM of the hero instead, which
+// is where the room is: 489px between the end of the H1 and the shell's floor,
+// and everything down there — subhead, search, chips, stats, CTAs — is
+// max-w-2xl (672px), half the H1's 874px, so the horizontal clearance is
+// WIDER below the headline than beside it. See the wrapper's comment.
+const LISTING_PANEL_H = 424;
+
+// The real-listing creative: an actual photo of the actual thing being sold, at
+// its actual price. Deliberately the same shape as the chase-card showcase that
+// used to occupy these slots — 5:7 art, name, set line, price — because that
+// shape reads as a product, whereas the text-only house banner it replaces read
+// as an advert and converted like one.
+function ListingPanel({ listing, country }: { listing: RailListing; country: string }) {
+  const ebay = listing.partner === "ebay";
+  return (
+    <div
+      className={[
+        "relative overflow-hidden rounded-2xl border shadow-[0_24px_60px_rgba(0,0,0,0.55)] backdrop-blur",
+        ebay ? "border-[#e53238]/30 bg-ink-900/95" : "border-sky-500/30 bg-ink-900/95",
+      ].join(" ")}
+      style={{ height: LISTING_PANEL_H }}
+    >
+      <OutboundLink
+        href={listing.url}
+        retailer={ebay ? "ebay_hero_rail" : "tcgplayer_hero_rail"}
+        country={country}
+        className="absolute inset-0 block p-3 transition-colors hover:bg-white/[0.03]"
+      >
+        {/* Fixed 5:7 frame — the card proportion — so a tall seller photo and a
+            square one occupy identical space and neither can shift the panel. */}
+        <span className="relative block aspect-[5/7] w-full overflow-hidden rounded-xl bg-ink-950">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={listing.imageUrl}
+            alt={`${listing.cardName} — ${listing.setLine}`}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover"
+          />
+          <span
+            className={`absolute left-2 top-2 rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide backdrop-blur ${
+              ebay ? "bg-ink-950/80 text-[#f5af02]" : "bg-ink-950/80 text-sky-300"
+            }`}
+          >
+            {ebay ? "On eBay now" : "On TCGplayer"}
+          </span>
+        </span>
+
+        <span className="mt-2.5 block px-0.5">
+          <span className="block truncate text-sm font-bold text-white">{listing.cardName}</span>
+          <span className="mt-0.5 block text-[11px] text-slate-400">{listing.setLine}</span>
+          <span className="mt-2 flex items-end justify-between gap-2">
+            <span className="num text-lg font-extrabold leading-none text-accent">
+              {formatMoney(listing.priceCents, listing.currency)}
+            </span>
+            <span
+              className={`shrink-0 rounded-md px-2.5 py-1 text-[11px] font-bold ${
+                ebay ? "bg-[#0064d2]/20 text-sky-300" : "bg-sky-500/15 text-sky-300"
+              }`}
+            >
+              {ebay ? "View →" : "Buy →"}
+            </span>
+          </span>
+        </span>
+      </OutboundLink>
+
+      {/* Outside the anchor so it can never read as part of the offer, and
+          pointer-events-none so it never eats a click. */}
+      <span className="pointer-events-none absolute right-1 top-1 rounded bg-ink-950/70 px-1 text-[9px] font-semibold uppercase tracking-wide text-slate-500">
+        Ad
+      </span>
+    </div>
+  );
+}
+
+export function HeroAdRail({ side, data }: { side: "left" | "right"; data: HeroRailData }) {
   // EVERY HOOK BEFORE EVERY EARLY RETURN, deliberately.
   //
   // usePremium() is a useContext whose value flips false → true one render after
@@ -300,9 +384,28 @@ export function HeroAdRail({ side }: { side: "left" | "right" }) {
   if (!mounted) return null;
 
   const dualEbay = country === "AU" || country === "NZ";
-  // The right rail is always eBay singles; only the left one changes hands.
-  const unit = side === "right" ? ebaySinglesUnit(country) : dualEbay ? ebaySealedUnit(country) : tcgplayerUnit(country);
   const isLeft = side === "left";
+
+  // REAL LISTING FIRST. The right rail is always eBay; the left is eBay too in
+  // AU/NZ (TCGplayer is US-centric) and TCGplayer everywhere else. In AU/NZ the
+  // two rails take DIFFERENT cards from the same market's list, because two
+  // identical panels either side of the headline look like a rendering fault.
+  const ebayForMarket = data.ebay[country] ?? [];
+  const listing: RailListing | null = !isLeft
+    ? ebayForMarket[0] ?? null
+    : dualEbay
+      ? ebayForMarket[1] ?? null
+      : data.tcgplayer;
+
+  // Fallback to the text-only house creative only when no live listing exists
+  // for this slot — a stale-data day, or a market whose import found nothing.
+  // Worse-looking than the real thing, still better than an empty gutter and
+  // still monetised.
+  const unit = !isLeft
+    ? ebaySinglesUnit(country)
+    : dualEbay
+      ? ebaySealedUnit(country)
+      : tcgplayerUnit(country);
 
   // 1400px, and it is a MEASURED threshold inherited from the chase-card
   // showcase this replaced — not a guess, and not something to re-derive from
@@ -343,7 +446,23 @@ export function HeroAdRail({ side }: { side: "left" | "right" }) {
         // disclosure hangs below the panel, the panel's own centre now sits
         // ~25px above that midline — so the visible creative reaches slightly
         // less far down than the old card did and about the same distance up.
-        "pointer-events-none absolute top-1/2 hidden -translate-y-1/2 min-[1400px]:block",
+        // BOTTOM-ANCHORED, not centred, and that is what buys the height.
+        //
+        // Measured on a harness reproducing this hero with the H1 pinned to its
+        // real 874px text measure: the shell is 595px tall, the H1's FIRST line
+        // ends 82px down, and the rail's vertical band grows symmetrically about
+        // its anchor. Centred, the band therefore cannot exceed ~363px before it
+        // starts overlapping that first line — at 1400px a 360px rail clears by
+        // 145px and a 400px one by 10px. The old 340px house banner sat under
+        // that ceiling; a panel with a real 5:7 card image cannot.
+        //
+        // Hanging from the bottom moves the band into the 489px of room BELOW
+        // the headline, where the only neighbours are the subhead, search, chips,
+        // stats and CTAs — all max-w-2xl (672px), barely more than half the H1's
+        // 874px. So the clearance beside a tall rail is WIDER than beside the
+        // short centred one it replaces, and the H1's long first line is out of
+        // the band entirely rather than merely missed.
+        "pointer-events-none absolute bottom-6 hidden min-[1400px]:block",
         // 32px rather than 16px. Inherited from the showcase, where it was
         // calibrated against a ghost stack that fanned outward (rotated 6° and
         // pushed 18px out, widening its effective half-width to ~140px and
@@ -392,14 +511,18 @@ export function HeroAdRail({ side }: { side: "left" | "right" }) {
           required, and neither is visible to the build, lint, the tests or the
           adsense guard. */}
       <div className="pointer-events-auto w-[240px]">
-        <RailPanel unit={unit} country={country} />
+        {listing ? (
+          <ListingPanel listing={listing} country={country} />
+        ) : (
+          <RailPanel unit={unit} country={country} />
+        )}
         {/* Each rail carries its OWN disclosure. The two sides are ~1100px apart
             at 1400px, so one shared line could not sit "clear and prominent" next
             to both (EPN Participation Requirements I.G. — see AffiliateDisclosure's
             header for the July 2026 flag that made this a rule rather than a
             preference). It renders on first paint, for every visitor who sees the
             link, and is never collapsed or hover-gated. */}
-        <AffiliateDisclosure partner={unit.partner} tight />
+        <AffiliateDisclosure partner={listing ? listing.partner : unit.partner} tight />
       </div>
     </div>
   );

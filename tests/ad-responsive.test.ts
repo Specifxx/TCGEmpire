@@ -176,8 +176,20 @@ test("the hero rails never render on a phone or tablet", () => {
   // would render at EVERY width, phones included.
   assert.match(
     rail,
-    /"pointer-events-none absolute top-1\/2 hidden -translate-y-1\/2 min-\[1400px\]:block"/,
+    /"pointer-events-none absolute bottom-6 hidden min-\[1400px\]:block"/,
     `${HERO_RAIL}: the rails must be hidden by default and shown only from a literal min-[1400px]`,
+  );
+  // BOTTOM-anchored, not centred, and that is a measured requirement rather
+  // than a layout preference. The hero shell is 595px tall and the H1's FIRST
+  // (longer) line ends 82px down, so a rail centred on the shell cannot exceed
+  // ~363px before its vertical band overlaps that line — at 1400px a 360px rail
+  // clears by 145px and a 400px one by 10px. The image-led panel is 446px tall.
+  // Hanging it from the floor puts the band in the 489px below the headline,
+  // where every neighbour is max-w-2xl rather than the H1's 874px. Re-centring
+  // it would silently reintroduce the collision at every width under ~1500px.
+  assert.ok(
+    !/top-1\/2[^"]*min-\[1400px\]/.test(rail),
+    `${HERO_RAIL}: the rail must not be re-centred — at 446px tall a centred band overlaps the H1's first line below ~1500px`,
   );
   // 240px wide at a 32px inset is the measured geometry the 1400px clearance
   // table depends on; change either and the table stops describing the page.
@@ -190,9 +202,13 @@ test("the hero rails carry their own affiliate disclosure", () => {
   // EPN Participation Requirements I.G — an affiliate banner must never render
   // without a visible disclosure. The two rails are ~1100px apart, so one shared
   // line cannot sit "clear and prominent" next to both; each carries its own.
+  // The rail renders a REAL listing when one exists and falls back to the
+  // text-only house creative when it does not, so the disclosure has to follow
+  // whichever of the two actually rendered — naming eBay beside a TCGplayer
+  // link (or the reverse) is a disclosure that discloses the wrong merchant.
   assert.match(
     rail,
-    /<AffiliateDisclosure partner=\{unit\.partner\}/,
+    /<AffiliateDisclosure partner=\{listing \? listing\.partner : unit\.partner\}/,
     `${HERO_RAIL}: each rail must render a disclosure for the partner it actually links to`,
   );
   // And it must not be gated behind a hover/expand interaction.

@@ -8,6 +8,7 @@ import { TrendingChips } from "./TrendingChips";
 import type { CardTileData } from "@/components/CardTile";
 import type { Country } from "@/lib/country";
 import { HeroAdRail } from "./HeroAdRail";
+import type { HeroRailData } from "@/lib/hero-rail";
 
 // The cinematic, full-bleed homepage hero. Breaks out of the centered content
 // column to fill the viewport (left-1/2 + w-screen + -translate-x-1/2). All
@@ -27,6 +28,7 @@ export function CinematicHero({
   statsByCountry,
   trendingCards,
   freshness,
+  railData,
 }: {
   totalCards: number;
   // Per-market stat tiles — localised to the visitor's market client-side (HeroStats).
@@ -37,6 +39,10 @@ export function CinematicHero({
   // Pre-formatted "Xh ago" string — see HeroStats' doc comment for why this is
   // computed server-side once rather than client-recomputed.
   freshness: string | null;
+  // Real eBay / TCGplayer listings for the two hero rails. Loaded server-side
+  // (one hard-cached query, see lib/hero-rail.ts) because a client fetch would
+  // add a round-trip to the one thing on this page that earns money.
+  railData: HeroRailData;
 }) {
   return (
     <ParallaxShell>
@@ -53,8 +59,8 @@ export function CinematicHero({
           ISR-cached page. Which partner lands on which side is decided
           client-side per market — AU/NZ get eBay on both sides, since TCGplayer
           is US-centric — and Premium subscribers get neither. See HeroAdRail. */}
-      <HeroAdRail side="left" />
-      <HeroAdRail side="right" />
+      <HeroAdRail side="left" data={railData} />
+      <HeroAdRail side="right" data={railData} />
 
       {/* ── Foreground content (re-aligned to the normal grid) ───────────────── */}
       <div className="container-app relative z-10 w-full py-8 text-center sm:py-10">
