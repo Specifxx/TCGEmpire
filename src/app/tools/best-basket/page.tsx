@@ -2,26 +2,26 @@ import type { Metadata } from "next";
 import { HubIntro } from "@/components/HubIntro";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
-import { isPremium } from "@/lib/premium";
+import { hasAccount } from "@/lib/premium";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { SITE_URL } from "@/lib/site";
 import { BestBasket } from "@/components/BestBasket";
-import { PremiumButton } from "@/components/PremiumButton";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: { absolute: "Best Basket — Cheapest Way to Buy a Riftbound Deck | RiftCompare" },
   description:
-    "Paste a Riftbound decklist or use your wishlist and get the cheapest way to buy every card across stores — postage and free-shipping thresholds included. A RiftCompare Premium tool.",
+    "Paste a Riftbound decklist or use your wishlist and get the cheapest way to buy every card across stores — postage and free-shipping thresholds included. Free with a RiftCompare account.",
   alternates: { canonical: "/tools/best-basket" },
   openGraph: { title: "Best Basket — cheapest way to buy your Riftbound list", url: `${SITE_URL}/tools/best-basket` },
 };
 
 export default async function BestBasketPage() {
   const user = await getCurrentUser();
-  const premium = isPremium(user);
+  // ACCOUNT tier, not Premium — a free account is the whole gate here.
+  const signedIn = hasAccount(user);
   const country = getCountry();
   const info = COUNTRIES[country];
 
@@ -70,27 +70,23 @@ export default async function BestBasketPage() {
         </p>
       </div>
 
-      {premium ? (
+      {signedIn ? (
         <BestBasket currency={info.currency} />
       ) : (
         <div className="card-surface p-6 text-center">
-          <h2 className="text-lg font-extrabold text-white">Best Basket is a Premium tool</h2>
+          <h2 className="text-lg font-extrabold text-white">Sign in to use Best Basket</h2>
           <p className="mx-auto mt-1 max-w-md text-sm text-slate-400">
-            Premium members get the full optimiser — paste any decklist or use your wishlist and we&apos;ll work out the
-            cheapest combination of stores to buy it all, postage included, with direct buy links.
+            Best Basket is free with a RiftCompare account — no card, no Premium. Paste any decklist or use your
+            wishlist and we&apos;ll work out the cheapest combination of stores to buy it all, postage included, with
+            direct buy links.
           </p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-            {user ? (
-              <PremiumButton />
-            ) : (
-              <>
-                <Link href="/login?next=/tools/best-basket" className="btn-primary text-sm">Sign in free</Link>
-                <Link href="/premium" className="btn-ghost text-sm">About Premium</Link>
-              </>
-            )}
+            <Link href="/login?next=/tools/best-basket" className="btn-primary text-sm">Create a free account</Link>
+            <Link href="/tools" className="btn-ghost text-sm">Browse free tools</Link>
           </div>
           <p className="mt-4 text-xs text-slate-600">
-            Just want per-card prices? The <Link href="/deck" className="text-brand-400 hover:underline">deck pricer</Link> is free.
+            Just want per-card prices? The <Link href="/deck" className="text-brand-400 hover:underline">deck pricer</Link>{" "}
+            needs no account.
           </p>
         </div>
       )}

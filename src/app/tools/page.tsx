@@ -31,7 +31,7 @@ export const metadata: Metadata = {
 const FAQS = [
   {
     q: "Are the RiftCompare tools free?",
-    a: "Most are. The box EV calculator, best basket, deck builder, trade calculator and bulk pricer are free and need no account. The Deal Finder, value finder and rising-cards screeners show their single best result free and unlock the full list with Premium.",
+    a: "All of them are free to use; a few ask you to be signed in. The box EV calculator, deck builder, trade calculator and sealed prices need no account at all. The bulk pricer and best basket are free with a free account. The Deal Finder, value finder and rising-cards screeners show their single best result free and unlock the full list with Premium.",
   },
   {
     q: "What does the Deal Finder do?",
@@ -39,7 +39,7 @@ const FAQS = [
   },
   {
     q: "Do I need an account to use RiftCompare tools?",
-    a: "No. Browsing, comparing prices and running the calculators need no account. An account only adds watchlists, price alerts and portfolio tracking.",
+    a: "Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds the two list tools — the bulk pricer and best basket — plus watchlists, price alerts, portfolio tracking and the marketplace.",
   },
   {
     q: "Which Riftbound tool should I use to buy a whole decklist?",
@@ -93,6 +93,14 @@ const GROUPS: ToolGroup[] = [
         emoji: "🧺",
         title: "Best basket",
         desc: "Building a want-list? Find the cheapest single-store (or split) basket to buy it all.",
+        badge: "Account",
+      },
+      {
+        href: "/bulk-pricer",
+        emoji: "📋",
+        title: "Bulk pricer",
+        desc: "Paste a whole want-list, trade pile or collection and price every card at once with a running total.",
+        badge: "Account",
       },
     ],
   },
@@ -176,9 +184,10 @@ export default function ToolsHubPage() {
 
       <h1 className="text-2xl font-extrabold text-white sm:text-3xl">Tools &amp; calculators</h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-        Every RiftCompare tool in one place — most are free, no sign-up. Price-check a card, work out whether a box
-        is worth ripping, and build decks for less. The two pro screeners (<span className="text-gold">Premium</span>)
-        go deeper for keen buyers and collectors.
+        Every RiftCompare tool in one place. Price-check a card, work out whether a box is worth ripping, and build
+        decks for less — most need no sign-up at all. The two list tools (
+        <span className="text-slate-300">Account</span>) are free once you have an account, and the pro screeners (
+        <span className="text-gold">Premium</span>) go deeper for keen buyers and collectors.
       </p>
 
       {GROUPS.map((group) => (
@@ -200,8 +209,13 @@ export default function ToolsHubPage() {
                     {t.badge && (
                       <span
                         className={`chip text-[10px] font-semibold ${
-                          t.badge === "Premium" ? "bg-gold/20 text-gold" : "bg-brand-500/15 text-brand-300"
+                          t.badge === "Premium"
+                            ? "bg-gold/20 text-gold"
+                            : t.badge === "Account"
+                              ? "bg-ink-700 text-slate-300"
+                              : "bg-brand-500/15 text-brand-300"
                         }`}
+                        title={t.badge === "Account" ? "Free — needs a RiftCompare account" : undefined}
                       >
                         {t.badge}
                       </span>

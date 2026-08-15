@@ -1,15 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMe } from "@/lib/use-me";
 import { AuthForm } from "./AuthForm";
-import { formatPremiumDuration } from "@/lib/premium-format";
 
 // Shown at most ONCE ever per browser (localStorage, mirrors PriceAlertModal's
 // convention) — dismissing or signing up both suppress it for good. Never shown
-// signed in, never shown on the auth pages themselves, and never shown unless the
-// promo API confirms real slots remain (never a stale/fabricated count).
+// signed in, and never shown on the auth pages themselves.
 //
 // Skipped entirely on /marketplace — a visitor specifically evaluating the
 // marketplace (e.g. after seeing it linked from a community post) shouldn't be
@@ -17,40 +16,34 @@ import { formatPremiumDuration } from "@/lib/premium-format";
 // delay sitewide (was 6s) avoids the "wall of asks" first impression more
 // broadly (real feedback: ads + subscription pitch + a still-growing
 // marketplace all at once read as overwhelming/untrustworthy to a new visitor).
+//
+// THE PITCH IS NOW THE ACCOUNT TIER, NOT A PREMIUM COMP. This popup used to
+// promise a free week of Premium and gated its own appearance on a promo API
+// reporting that slots remained — so retiring that comp would have silently
+// stopped the popup from ever showing. It now stands on what a free account
+// permanently unlocks (see lib/premium.ts's tier note), which needs no
+// server round-trip and can't lapse, so the popup renders on its own.
 const SEEN_KEY = "rc_signup_promo_seen";
 const SHOW_DELAY_MS = 25_000; // let a new visitor actually look around first
 const SKIP_PATHS = ["/login", "/verify", "/marketplace"];
 
-// Deliberately NO slot counts. The popup used to render "{remaining} of {limit}
-// early-adopter spots left"; both numbers came from a public, cacheable API
-// response, so the exact signup count was readable by anyone who opened the
-// network tab or hit the endpoint directly. The endpoint no longer sends them —
-// scarcity is now communicated qualitatively, and the count stays server-side.
-interface PromoStatus {
-  active: boolean;
-  days: number;
-}
+// What signing up actually gets you — the two power tools first, since they're
+// the concrete upgrade over browsing signed out.
+const PERKS: [string, string][] = [
+  ["Bulk Pricer", "price a whole want-list or trade pile in one paste"],
+  ["Best Basket", "the cheapest split across stores, postage included"],
+  ["Price alerts", "get told when a card hits your price"],
+  ["Portfolio & marketplace", "track what you own, buy and sell"],
+];
 
 export function SignupPromoPopup({ providers }: { providers: ("google" | "discord")[] }) {
   const { user, loaded } = useMe();
   const pathname = usePathname();
-  const [promo, setPromo] = useState<PromoStatus | null>(null);
   const [phase, setPhase] = useState<"hidden" | "shown">("hidden");
 
-  // Whether slots genuinely remain, decided server-side from a real day-cached
-  // count — the popup learns yes/no, never the number.
+  // Auto-show once, after a delay — only for a signed-out visitor, off the auth pages.
   useEffect(() => {
     if (!loaded || user) return;
-    fetch("/api/promo/early-adopter")
-      .then((r) => r.json())
-      .then((d: PromoStatus) => setPromo(d))
-      .catch(() => setPromo(null));
-  }, [loaded, user]);
-
-  // Auto-show once, after a delay — only for a signed-out visitor, off the auth
-  // pages, with a genuinely active promo and slots remaining.
-  useEffect(() => {
-    if (!loaded || user || !promo?.active) return;
     if (SKIP_PATHS.some((p) => pathname?.startsWith(p))) return;
     let seen = false;
     try {
@@ -71,7 +64,7 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
       setPhase("shown");
     }, SHOW_DELAY_MS);
     return () => clearTimeout(t);
-  }, [loaded, user, promo, pathname]);
+  }, [loaded, user, pathname]);
 
   function dismiss() {
     setPhase("hidden");
@@ -82,7 +75,7 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
     }
   }
 
-  if (phase === "hidden" || !promo?.active) return null;
+  if (phase === "hidden") return null;
 
   return (
     <div className="fixed inset-0 z-[75] flex items-center justify-center p-4" role="dialog" aria-modal="true">
@@ -103,19 +96,36 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
             </svg>
           </div>
           <span className="chip bg-brand-500/15 text-[10px] font-bold uppercase tracking-wide text-brand-300">
-            Few early-adopter spots left
+            Free account
           </span>
           <h2 className="font-display mt-2 text-xl font-bold text-white">
-            Sign up for full access to RiftCompare
+            Unlock the tools that save you the most
           </h2>
           <p className="mx-auto mt-1.5 max-w-xs text-sm leading-relaxed text-slate-300">
-            Price alerts, notifications and the marketplace all need a free account — create yours below and we&apos;ll also
-            comp {formatPremiumDuration(promo.days)} of Premium free, no card required.
+            Comparing prices is free for everyone. A free account adds the tools that price a whole list at once — no
+            card required.
           </p>
+          <ul className="mx-auto mt-3 max-w-xs space-y-1.5 text-left">
+            {PERKS.map(([k, v]) => (
+              <li key={k} className="flex gap-2 text-xs leading-relaxed text-slate-400">
+                <span aria-hidden="true" className="font-bold text-brand-400">✓</span>
+                <span>
+                  <strong className="font-semibold text-slate-200">{k}</strong> — {v}
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
 
         <div className="px-6 pb-6 pt-0">
           <AuthForm providers={providers} bare />
+          <p className="mt-3 text-center text-[11px] text-slate-600">
+            Want the pro screeners and an ad-free site too?{" "}
+            <Link href="/premium" onClick={dismiss} className="text-slate-400 hover:underline">
+              See Premium
+            </Link>
+            .
+          </p>
         </div>
       </div>
     </div>

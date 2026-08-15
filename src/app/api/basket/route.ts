@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { isPremium } from "@/lib/premium";
 import { getCountry } from "@/lib/get-country";
 import { priceField } from "@/lib/country";
 import { normalizeSearch } from "@/lib/format";
@@ -12,15 +11,13 @@ import { optimizeBasket, type BasketCard } from "@/lib/basket";
 
 export const dynamic = "force-dynamic";
 
-// Best-Basket optimiser (Premium). Resolve a pasted decklist to cards, pull every
-// in-stock STORE listing in the viewer's market (eBay excluded — its per-item
-// postage isn't comparable), and return the cheapest landed plan.
+// Best-Basket optimiser — ACCOUNT tier (see lib/premium.ts's tier note): any signed-in
+// user, free or Premium. Resolve a pasted decklist to cards, pull every in-stock STORE
+// listing in the viewer's market (eBay excluded — its per-item postage isn't
+// comparable), and return the cheapest landed plan.
 export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in first" }, { status: 401 });
-  if (!isPremium(user)) {
-    return NextResponse.json({ error: "Best Basket is a Premium feature", upgrade: true }, { status: 403 });
-  }
 
   const country = getCountry();
   const body = await req.json().catch(() => null);

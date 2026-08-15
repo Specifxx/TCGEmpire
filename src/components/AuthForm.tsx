@@ -49,8 +49,8 @@ export function AuthForm({
       <div className="card-surface p-6">
         <h1 className="text-xl font-extrabold text-white">Sign in</h1>
         <p className="mt-1 text-sm text-slate-400">
-          Sign in to sync your wishlist and manage your listings. No password to remember — creating an
-          account and signing in are the same button.
+          A free account unlocks the Bulk Pricer and Best Basket, plus price alerts, your portfolio and the
+          marketplace. No password to remember — creating an account and signing in are the same button.
         </p>
 
         {error && (

@@ -3920,7 +3920,7 @@ Just search the card. Whatever's cheapest — store or marketplace listing — s
 ## What actually changed
 
 - **Standard sellers**: 5% → **2%** on every completed sale.
-- **Premium sellers**: **1%** — half the standard rate, on top of everything else Premium already includes (Value Finder, Rising Cards, the full Deal Finder list, Best Basket, and an ad-free site).
+- **Premium sellers**: **1%** — half the standard rate, on top of everything else Premium already includes (Value Finder, Rising Cards, the full Deal Finder list, and an ad-free site).
 - **Evaluated per sale, not per listing.** The rate that applies is whatever your account status is *at the moment a sale completes* — upgrade to Premium today, and your very next sale is charged at 1%, even on a listing you posted weeks ago.
 - **Nothing else changes.** Same escrow protection, same 14-day ship deadline, same buyer-side experience. This is purely a fee cut.
 

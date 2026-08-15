@@ -65,6 +65,28 @@ export function premiumAnnualEnabled(): boolean {
 // one-line change with no other edits.
 export const PORTFOLIO_FREE = true;
 
+// ── Access tiers ──────────────────────────────────────────────────────────────
+// The site has THREE tiers, and every gate is one of these two checks:
+//
+//   1. SIGNED OUT — the whole public site: search, browse, card/set/store pages,
+//      the deck builder, trade calculator, box EV, sealed prices, the index and
+//      movers. No wall anywhere.
+//   2. ACCOUNT (free, `hasAccount`) — the above PLUS the two power tools that are
+//      the reason to sign up: the Bulk Pricer and the Best Basket optimiser, on
+//      top of watchlists, price alerts, the portfolio and the marketplace.
+//   3. PREMIUM (paid, `isPremium`) — the above plus Value Finder, Rising Cards,
+//      the full Deal Finder list, the reduced marketplace fee and no ads.
+//
+// Tier 2 replaced a "free week of Premium on signup" comp. That comp handed new
+// accounts the PAID tier and then silently withdrew it a week later, which is a
+// worse first experience than permanently owning two genuinely useful tools —
+// and it gave signup no durable payoff once the week lapsed. The grant machinery
+// (and its signup email) is gone rather than switched off by env, so a stale
+// EARLY_PREMIUM_DAYS in a deploy environment can't quietly resurrect it.
+export function hasAccount(user: { id: string } | null | undefined): boolean {
+  return !!user;
+}
+
 export function isPremium(user: { premiumUntil: Date | null; isAdmin?: boolean } | null | undefined): boolean {
   if (!user) return false;
   // Admins always count as Premium — the team can use every paid feature without
@@ -78,19 +100,15 @@ export async function getPremiumUntil(userId: string): Promise<Date | null> {
   return u?.premiumUntil ?? null;
 }
 
-// ── Promotional Premium grants (early adopters + feedback reward) ────────────────
+// ── Promotional Premium grants (feedback + referral rewards) ────────────────────
 // These grant Premium WITHOUT Stripe (a comp), by extending premiumUntil directly.
-// The early-adopter promo is DAY-granular (a week, not a month) and env-tunable;
-// set EARLY_PREMIUM_DAYS=0 to switch it off (or raise it, e.g. =30 for a month).
-export const EARLY_PREMIUM_DAYS = Math.max(0, Math.floor(Number(process.env.EARLY_PREMIUM_DAYS ?? 7)));
-export const EARLY_PREMIUM_LIMIT = Math.max(0, Math.floor(Number(process.env.EARLY_PREMIUM_LIMIT ?? 300)));
+// NOTE the early-adopter signup comp that used to live here is deliberately gone —
+// see the access-tier note above. Signing up now unlocks the ACCOUNT tier, not a
+// temporary slice of the paid one. These two remain because both are earned by an
+// action after signup, not handed out for merely registering.
 export const FEEDBACK_PREMIUM_MONTHS = Math.max(0, Math.floor(Number(process.env.FEEDBACK_PREMIUM_MONTHS ?? 1)));
 // +1 month of Premium to the REFERRER for each friend who signs up via their link.
 export const REFERRAL_PREMIUM_MONTHS = Math.max(0, Math.floor(Number(process.env.REFERRAL_PREMIUM_MONTHS ?? 1)));
-export function earlyPremiumPromoActive(): boolean {
-  return EARLY_PREMIUM_DAYS > 0 && EARLY_PREMIUM_LIMIT > 0;
-}
-export { formatPremiumDuration } from "./premium-format";
 export function feedbackPremiumActive(): boolean {
   return FEEDBACK_PREMIUM_MONTHS > 0;
 }
@@ -123,8 +141,8 @@ export async function grantPremiumMonths(userId: string, months: number): Promis
   return until;
 }
 
-// Same as grantPremiumMonths, but day-granular — used by the early-adopter promo
-// (a week, not a whole month) where calendar-month math would be the wrong unit.
+// Same as grantPremiumMonths, but day-granular, for any comp whose natural unit is
+// days rather than calendar months (support goodwill, a short campaign).
 export async function grantPremiumDays(userId: string, days: number): Promise<Date | null> {
   if (days <= 0) return null;
   const u = await prisma.user.findUnique({ where: { id: userId }, select: { premiumUntil: true } });
@@ -137,8 +155,7 @@ export async function grantPremiumDays(userId: string, days: number): Promise<Da
 }
 
 // Synthetic seed accounts (local dev-reset personas + the marketplace test buyer) —
-// never real users, so they're excluded from the early-adopter promo (see
-// EARLY_PREMIUM_LIMIT) and its rank count.
+// never real users, so they're excluded from real-user counts and reporting.
 export function isSeedEmail(email: string): boolean {
   return email.endsWith("@tcgempire.au") || email === "test@test.com";
 }
@@ -147,26 +164,6 @@ export const NOT_SEED_WHERE = {
     OR: [{ email: { endsWith: "@tcgempire.au" } }, { email: { equals: "test@test.com" } }],
   },
 };
-
-// Grant the early-adopter comp to a user IF they're within the first
-// EARLY_PREMIUM_LIMIT REAL registrations and haven't already been granted. Idempotent
-// via the earlyPremiumGranted flag, so it's safe to run on every signup AND re-run as
-// a backfill. Seed accounts are skipped and don't consume a slot. No-op when the promo
-// is off. Returns true if a grant happened.
-export async function grantEarlyAdopterPremium(userId: string): Promise<boolean> {
-  if (!earlyPremiumPromoActive()) return false;
-  const u = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { createdAt: true, earlyPremiumGranted: true, email: true },
-  });
-  if (!u || u.earlyPremiumGranted || isSeedEmail(u.email)) return false;
-  // Registration rank among REAL accounts, up to and including this one.
-  const rank = await prisma.user.count({ where: { AND: [NOT_SEED_WHERE, { createdAt: { lte: u.createdAt } }] } });
-  if (rank > EARLY_PREMIUM_LIMIT) return false;
-  await grantPremiumDays(userId, EARLY_PREMIUM_DAYS);
-  await prisma.user.update({ where: { id: userId }, data: { earlyPremiumGranted: true } });
-  return true;
-}
 
 // ── Portfolio ─────────────────────────────────────────────────────────────────
 

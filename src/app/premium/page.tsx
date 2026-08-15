@@ -17,7 +17,7 @@ const PREMIUM_FEE_PCT = MARKETPLACE_PREMIUM_FEE_BPS / 100;
 
 export const metadata: Metadata = {
   title: "RiftCompare Premium — power tools for buyers & sellers",
-  description: `RiftCompare Premium: a ${PREMIUM_FEE_PCT}% Marketplace seller fee (down from ${FEE_PCT}%), the Best-Basket cart optimiser, the Value Finder screener, Rising Cards, the full Deal Finder list and an ad-free site. Price comparison and the portfolio tracker stay free.`,
+  description: `RiftCompare Premium: a ${PREMIUM_FEE_PCT}% Marketplace seller fee (down from ${FEE_PCT}%), the Value Finder screener, Rising Cards, the full Deal Finder list and an ad-free site. Price comparison is free for everyone, and a free account adds the Bulk Pricer and Best Basket.`,
   alternates: { canonical: "/premium" },
 };
 
@@ -28,12 +28,6 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
     body: `Sell on the RiftCompare Marketplace for just ${PREMIUM_FEE_PCT}% instead of ${FEE_PCT}% — applies to every sale the moment you're Premium, no separate opt-in.`,
     href: "/marketplace/sell",
     cta: "Open seller dashboard",
-  },
-  {
-    title: "Best-Basket cart optimiser",
-    body: "The cheapest way to buy a whole deck list — the smartest split across stores once postage and free-shipping thresholds are in, with direct buy links.",
-    href: "/tools/best-basket",
-    cta: "Open Best Basket",
   },
   {
     title: "Value Finder screener",
@@ -61,28 +55,32 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
   },
 ];
 
-// Free vs Premium. `true`/`false` render a tick/dash; a string renders verbatim.
-const COMPARE: { feature: string; free: boolean | string; premium: boolean | string }[] = [
-  { feature: "Compare prices across every store + eBay", free: true, premium: true },
-  { feature: "Full card database, search & browse", free: true, premium: true },
-  { feature: "Portfolio tracker — history, P&L, CSV export", free: true, premium: true },
-  { feature: "Price alerts", free: true, premium: true },
-  { feature: "RiftCompare Index, movers & daily wrap", free: true, premium: true },
-  { feature: "Marketplace seller fee", free: `${FEE_PCT}%`, premium: `${PREMIUM_FEE_PCT}%` },
-  { feature: "Deal Finder", free: "Top pick", premium: "Full list" },
-  { feature: "Rising Cards", free: "Top pick", premium: "Full list" },
-  { feature: "Best-Basket cart optimiser", free: false, premium: true },
-  { feature: "Value Finder screener", free: false, premium: true },
-  { feature: "Ad-free experience", free: false, premium: true },
+// The three tiers, in the order a visitor moves through them (see lib/premium.ts).
+// `true`/`false` render a tick/dash; a string renders verbatim.
+const COMPARE: { feature: string; anon: boolean | string; account: boolean | string; premium: boolean | string }[] = [
+  { feature: "Compare prices across every store + eBay", anon: true, account: true, premium: true },
+  { feature: "Full card database, search & browse", anon: true, account: true, premium: true },
+  { feature: "Deck builder, trade calculator & box EV", anon: true, account: true, premium: true },
+  { feature: "RiftCompare Index, movers & daily wrap", anon: true, account: true, premium: true },
+  { feature: "Bulk Pricer — price a whole list at once", anon: false, account: true, premium: true },
+  { feature: "Best-Basket cart optimiser", anon: false, account: true, premium: true },
+  { feature: "Price alerts", anon: false, account: true, premium: true },
+  { feature: "Portfolio tracker — history, P&L, CSV export", anon: false, account: true, premium: true },
+  { feature: "Buy & sell on the Marketplace", anon: false, account: true, premium: true },
+  { feature: "Marketplace seller fee", anon: false, account: `${FEE_PCT}%`, premium: `${PREMIUM_FEE_PCT}%` },
+  { feature: "Deal Finder", anon: "Top pick", account: "Top pick", premium: "Full list" },
+  { feature: "Rising Cards", anon: "Top pick", account: "Top pick", premium: "Full list" },
+  { feature: "Value Finder screener", anon: false, account: false, premium: true },
+  { feature: "Ad-free experience", anon: false, account: false, premium: true },
 ];
 
 const INCLUDED = [
   `Marketplace seller fee cut to ${PREMIUM_FEE_PCT}% (from ${FEE_PCT}%)`,
-  "Best-Basket cart optimiser",
   "Value Finder screener",
   "Rising Cards",
   "Full Deal Finder list",
   "Ad-free on every page",
+  "Everything in the free account tier",
 ];
 
 function Cell({ v }: { v: boolean | string }) {
@@ -112,7 +110,7 @@ export default async function PremiumPage() {
             "@context": "https://schema.org",
             "@type": "Product",
             name: "RiftCompare Premium",
-            description: `A ${PREMIUM_FEE_PCT}% Marketplace seller fee, the Best-Basket cart optimiser, the Value Finder screener, Rising Cards, the full Deal Finder list and an ad-free RiftCompare.`,
+            description: `A ${PREMIUM_FEE_PCT}% Marketplace seller fee, the Value Finder screener, Rising Cards, the full Deal Finder list and an ad-free RiftCompare.`,
             brand: { "@type": "Organization", name: "RiftCompare", url: SITE_URL },
             offers: {
               "@type": "Offer",
@@ -134,7 +132,7 @@ export default async function PremiumPage() {
         <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-400">
           {already
             ? "Everything you've unlocked is below — jump straight into any of it. Thanks for supporting RiftCompare."
-            : "Price comparison and the portfolio tracker stay free. Premium adds the pro tools and an ad-free site — cancel anytime."}
+            : "Price comparison is free for everyone, and a free account adds the Bulk Pricer, Best Basket, alerts and your portfolio. Premium adds the pro screeners and an ad-free site — cancel anytime."}
         </p>
       </div>
 
@@ -212,15 +210,23 @@ export default async function PremiumPage() {
         </div>
       )}
 
-      {/* Free vs Premium comparison */}
+      {/* Tier comparison */}
       <div className="mt-10">
-        <h2 className="mb-3 text-center text-lg font-extrabold text-white">Free vs Premium</h2>
+        <h2 className="mb-1 text-center text-lg font-extrabold text-white">What you get at each tier</h2>
+        <p className="mb-3 text-center text-xs text-slate-500">
+          A free account is the biggest single step — it unlocks the two list-pricing tools.
+        </p>
         <div className="card-surface overflow-x-auto p-1">
-          <table className="w-full min-w-[520px] border-collapse text-sm">
+          <table className="w-full min-w-[560px] border-collapse text-sm">
             <thead>
               <tr className="border-b border-ink-700 text-left">
                 <th className="px-3 py-2.5 font-semibold text-slate-400">Feature</th>
-                <th className="w-24 px-3 py-2.5 text-center font-semibold text-slate-400">Free</th>
+                <th className="w-24 px-3 py-2.5 text-center font-semibold text-slate-400">
+                  No account
+                </th>
+                <th className="w-24 px-3 py-2.5 text-center font-bold text-brand-300">
+                  Free account
+                </th>
                 <th className="w-24 px-3 py-2.5 text-center font-bold text-gold">Premium</th>
               </tr>
             </thead>
@@ -228,13 +234,22 @@ export default async function PremiumPage() {
               {COMPARE.map((r) => (
                 <tr key={r.feature} className="border-b border-ink-800 last:border-0">
                   <td className="px-3 py-2.5 text-slate-200">{r.feature}</td>
-                  <td className="px-3 py-2.5 text-center"><Cell v={r.free} /></td>
+                  <td className="px-3 py-2.5 text-center"><Cell v={r.anon} /></td>
+                  <td className="px-3 py-2.5 text-center"><Cell v={r.account} /></td>
                   <td className="px-3 py-2.5 text-center"><Cell v={r.premium} /></td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        {!user && (
+          <p className="mt-3 text-center text-xs text-slate-400">
+            <Link href="/login?next=/premium" className="text-brand-400 hover:underline">
+              Create a free account
+            </Link>{" "}
+            to unlock the middle column — no card required.
+          </p>
+        )}
       </div>
 
       {/* Feature detail cards */}
@@ -250,8 +265,8 @@ export default async function PremiumPage() {
 
       {/* Footer note */}
       <p className="mx-auto mt-8 max-w-xl text-center text-xs leading-relaxed text-slate-500">
-        Premium pays for the servers and price data and keeps the core — price comparison and the portfolio tracker —
-        free for everyone.{" "}
+        Premium pays for the servers and price data, which is what keeps price comparison free for everyone and the
+        list tools, alerts and portfolio free with an account.{" "}
         {already ? (
           <>Update your card or cancel anytime via &ldquo;Manage subscription&rdquo; above. </>
         ) : trialEligible ? (

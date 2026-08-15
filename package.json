@@ -19,7 +19,6 @@
     "mobile:check": "tsx scripts/mobile-check.ts",
     "smoke": "tsx scripts/smoke-pages.ts",
     "start": "next start",
-    "grant:early": "tsx scripts/grant-early-premium.ts",
     "cards:sync": "tsx scripts/sync-cards.ts",
     "cards:manual": "tsx scripts/add-manual-cards.ts",
     "cards:tcg-printings": "tsx scripts/add-tcg-printings.ts",
