@@ -261,17 +261,42 @@ function setMentioned(title: string, setCode: string): boolean {
 // Confirm the title is THIS exact card by its collector number — letter-aware so
 // base "238" never matches alt "238a"/overnumbered, tolerant of leading zeros.
 // Strong: matches "238/219". Fallback: number token + the set is named in the title.
+//
+// PREFIX-AWARE. Some cards number outside the set's regular 1..total range with a
+// LEADING letter instead of (or as well as) a trailing variant one: Crystal Rose
+// is "SP1".."SP6", the rune cycle is "R01A".."R06B", Nexus Night promos are
+// "NN1", the Panda Teemo promo is "WB25". A prior version stripped every letter
+// out via `number.replace(/[^0-9]/g, "")` and grabbed "the first letter it saw"
+// for the trailing-variant slot — for "SP3" that grabbed the leading "S" as if it
+// were a variant suffix, and the match regex required a WORD BOUNDARY directly
+// before the digit (`\b0*3`), which "SP3" can never satisfy: "P" and "3" are both
+// word characters, so there is no boundary between them. The result was that a
+// real listing titled "... SP3/006 ..." could never match, however it was worded
+// — this is why Crystal Rose and every other prefixed-number card showed no
+// price despite real eBay/store listings existing for them.
 function numberMatches(title: string, number: string, total: string, setCode: string): boolean {
-  const digits = number.replace(/[^0-9]/g, "");
-  if (!digits) return false;
+  // <leading letters><digits, leading zeros optional><one trailing letter>. A
+  // number with no digits at all (e.g. "P" for a Buff//Buff-style card) fails to
+  // match and correctly returns false below, same as before this fix.
+  const parsed = number.match(/^([a-z]*)0*(\d+)([a-z]?)$/i);
+  if (!parsed) return false;
+  const [, rawPrefix, digits, rawSuffix] = parsed;
   const n = parseInt(digits, 10);
-  const letter = (number.match(/[a-z]/i)?.[0] ?? "").toLowerCase();
+  const letter = rawSuffix.toLowerCase();
+  // Letters only (guaranteed by the regex above), so no regex-special characters
+  // to escape — still built via a literal alternative rather than interpolated
+  // raw, in case a future collector-number format introduces one.
+  const prefix = rawPrefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  // The prefix (if any) IS the boundary: "SP3" must match "SP3", not the bare "3"
+  // that a plain `0*3` would also match inside an unrelated "OGN 123/298". Either
+  // way the token is preceded by \b once, applied where it is actually needed.
+  const numToken = `${prefix}0*${n}`;
 
-  const full = title.match(new RegExp(`\\b0*${n}([a-z]?)\\s*\\*?\\s*/\\s*${total}\\b`, "i"));
+  const full = title.match(new RegExp(`\\b${numToken}([a-z]?)\\s*\\*?\\s*/\\s*${total}\\b`, "i"));
   if (full) return (full[1] || "").toLowerCase() === letter;
 
   if (setMentioned(title, setCode)) {
-    const tok = title.match(new RegExp(`\\b0*${n}([a-z]?)\\b`, "i"));
+    const tok = title.match(new RegExp(`\\b${numToken}([a-z]?)\\b`, "i"));
     if (tok) return (tok[1] || "").toLowerCase() === letter;
   }
   return false;
