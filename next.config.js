@@ -14,7 +14,15 @@
 // appears in this file, so the two can't drift.
 //
 // Allow-list rationale (third parties that actually load on the site):
-//  • Google AdSense delivery + Privacy & Messaging (see the ADS_* lists below)
+//  • Google AdSense delivery + Privacy & Messaging (see the ADS_* lists below) —
+//    kept even though Ezoic is now the default network (lib/ezoic.ts), since
+//    AD_NETWORK can switch back to "adsense" without a code change.
+//  • Ezoic's standalone header script + consent manager + analytics (see
+//    EZOIC_SCRIPT_ORIGINS below) — the domain's DNS moved to Ezoic's
+//    nameservers, which reverse-proxy to this app; Ezoic's own ad rendering
+//    happens through many more origins injected by that proxy layer that
+//    aren't a fixed, publishable list, so only the header script this codebase
+//    loads directly is enumerated here.
 //  • Vercel Analytics + Speed Insights (va.vercel-scripts.com, *.vercel-insights.com)
 //  • Card art CDN (cdn.riftscribe.gg) + sealed/marketplace product images
 //  • TCGplayer + eBay affiliate banners (partner.tcgplayer.com, *.ebay.com)
@@ -37,6 +45,21 @@ const ADS_FRAME_SRC = [
   "https://www.google.com",
   "https://fundingchoicesmessages.google.com",
 ];
+// Ezoic's standalone header script + its consent-manager dependency + Ezoic
+// Analytics — confirmed against docs.ezoic.com/docs/ezoicads/integration.
+// Mirrors EZOIC_SCRIPT_ORIGINS in src/lib/ezoic.ts (next.config.js can't import
+// a TS module at config-load time, so — same as the ADS_* arrays above — this
+// is a duplicated literal, not an import). Ezoic's actual ad creative/exchange
+// delivery happens through many more origins injected by its proxy layer that
+// aren't published as a fixed list, so this covers only the header script this
+// codebase loads directly, not everything Ezoic's proxy may inject.
+const EZOIC_SCRIPT_SRC = [
+  "https://cmp.gatekeeperconsent.com",
+  "https://the.gatekeeperconsent.com",
+  "https://www.ezojs.com",
+  "https://ezoicanalytics.com",
+];
+
 const ADS_CONNECT_SRC = [
   "https://pagead2.googlesyndication.com",
   "https://googleads.g.doubleclick.net",
@@ -52,7 +75,7 @@ const ADS_CONNECT_SRC = [
 
 const cspReportOnly = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://*.vercel-insights.com ${ADS_SCRIPT_SRC.join(" ")}`,
+  `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://*.vercel-insights.com ${ADS_SCRIPT_SRC.join(" ")} ${EZOIC_SCRIPT_SRC.join(" ")}`,
   "style-src 'self' 'unsafe-inline'",
   // Ad creatives and tracking pixels come from arbitrary advertiser domains, so
   // img-src must stay open to https: — narrowing it would blank creatives.

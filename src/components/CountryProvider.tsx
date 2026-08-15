@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { COUNTRIES, COUNTRY_COOKIE, DEFAULT_COUNTRY, EUR_DISPLAY_COOKIE, INTL_ENABLED, normalizeCountry, pickPrice, type Country } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { gbpCentsToEur } from "@/lib/fx";
+import { useMe } from "@/lib/use-me";
 
 type PricedCard = { lowestPriceCents: number | null; lowestPriceCentsNz?: number | null; lowestPriceCentsUs?: number | null; lowestPriceCentsUk?: number | null; lowestPriceCentsCa?: number | null; lowestPriceCentsSg?: number | null };
 
@@ -58,6 +59,9 @@ export function CountryProvider({ initial, children }: { initial: Country; child
   // initial country's native currency; reconciled below just like `country`.
   const [currency, setCurrency] = useState<string>(COUNTRIES[INTL_ENABLED ? initial : DEFAULT_COUNTRY].currency);
   const router = useRouter();
+  // Shares the module-level /api/me fetch cache with NavUser/PremiumProvider —
+  // this doesn't add a second request.
+  const { user: meUser, loaded: meLoaded } = useMe();
 
   // Pages are server-rendered/cached with the AU default baked in (the shared
   // chrome deliberately no longer reads the country cookie — that dynamic read
@@ -111,6 +115,35 @@ export function CountryProvider({ initial, children }: { initial: Country; child
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Signed-in accounts remember their market (User.preferredCountry) —
+  // authoritative over the cookie/geo-detect resolution above, since it
+  // survives across devices and doesn't depend on IP-geo detection staying
+  // accurate (that header goes stale once traffic is proxied through a
+  // third-party CDN in front of Vercel, e.g. Ezoic — see get-country.ts).
+  // Runs once /api/me resolves, so it may briefly show the cookie/geo guess
+  // first and then correct itself — same pattern as the geo-fetch above.
+  useEffect(() => {
+    if (!INTL_ENABLED || !meLoaded || !meUser) return;
+    if (meUser.preferredCountry) {
+      const c = normalizeCountry(meUser.preferredCountry);
+      setState((prev) => (c !== prev ? c : prev));
+      if (c !== "UK") setCurrency(COUNTRIES[c].currency);
+      writeCookie(COUNTRY_COOKIE, c);
+    } else {
+      // First time this signed-in account has been seen — persist whatever
+      // market it's currently resolved to (cookie or geo-detected) so it's
+      // remembered from here on, without waiting for an explicit switcher pick.
+      fetch("/api/account/country", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ country }),
+      }).catch(() => {
+        /* best-effort backfill */
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [meLoaded, meUser?.preferredCountry]);
+
   const setCountry = useCallback(
     (c: Country) => {
       if (!INTL_ENABLED || c === country) return;
@@ -122,10 +155,21 @@ export function CountryProvider({ initial, children }: { initial: Country; child
       // getCountry()/getDisplayCurrency().
       writeCookie(COUNTRY_COOKIE, c);
       writeCookie(EUR_DISPLAY_COOKIE, "GBP");
+      // Signed in? Remember this choice on the account too, so it follows the
+      // user to their next device/session instead of just this browser's cookie.
+      if (meUser) {
+        fetch("/api/account/country", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ country: c }),
+        }).catch(() => {
+          /* best-effort */
+        });
+      }
       // Re-render server components (prices, store lists) for the new market.
       router.refresh();
     },
-    [country, router]
+    [country, router, meUser]
   );
 
   const setEurDisplay = useCallback(

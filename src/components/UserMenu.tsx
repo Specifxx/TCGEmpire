@@ -16,6 +16,9 @@ export interface MenuUser {
   avatarUrl: string | null;
   emailVerified: boolean;
   balanceCents: number;
+  // The account's remembered market (see prisma User.preferredCountry) — null
+  // until backfilled or explicitly chosen. Used by CountryProvider, not this menu.
+  preferredCountry: string | null;
 }
 
 // Profile icon (top-right) + dropdown. Signed out → a "sign in" person icon linking

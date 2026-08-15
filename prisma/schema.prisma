@@ -46,6 +46,16 @@ model User {
   earlyPremiumGranted Boolean   @default(false)
   createdAt           DateTime  @default(now())
 
+  // The market (AU/NZ/US/UK/SG/CA) this account browses/prices in, remembered
+  // across devices and sign-ins. Null until the account's first resolved
+  // country (cookie or geo-detected) is backfilled, or the user explicitly
+  // switches markets while signed in (see CountryProvider + POST
+  // /api/account/country). Exists because IP-geo detection (x-vercel-ip-country)
+  // is unreliable once traffic is proxied through a third-party CDN in front of
+  // Vercel (e.g. Ezoic) — a signed-in visitor should still land on their real
+  // market even when the geo header no longer reflects their true location.
+  preferredCountry    String?
+
   // ── Saved default shipping address (marketplace checkout) ─────────────────────
   // Prefills the checkout address step; a fresh snapshot is copied onto each Order
   // at purchase time (see Order.ship* below) so editing this later never rewrites
