@@ -6247,7 +6247,7 @@ We'd rather show you the real numbers and our actual reasoning than tell you wha
     },
     summary: [
       "**Unleashed is a 219-card set** (collector numbers run to /219), with over-numbered chase prints continuing past that into the 220s and 230s.",
-      "**Its chase cards compete with Origins on price.** Diana, Scorn of the Moon (UNL 197/219) at US$1,899.99 and Baron Nashor (UNL 238/219) at US$1,634.89 are third and fourth most expensive in the entire game.",
+      "**Its chase cards compete with Origins on price.** Diana, Scorn of the Moon (UNL 197/219, promo) at US$1,899.99 and Baron Nashor (UNL 238/219) at US$1,634.89 are third and fourth most expensive in the entire game.",
       "**Baron Nashor is the set's signature card in every sense but the label** — a Showcase print of the game's most recognisable neutral monster, over-numbered at 238/219.",
       "**The gallery below is live.** It reads the card database directly, so it stays complete and correctly priced as listings change, rather than freezing at whatever was true the day this was written.",
     ],
@@ -6277,7 +6277,7 @@ We'd rather show you the real numbers and our actual reasoning than tell you wha
       },
       {
         q: "What is the most expensive Unleashed card?",
-        a: "Diana, Scorn of the Moon (UNL 197/219) at US$1,899.99 as of 15 August 2026, followed by Baron Nashor (UNL 238/219) at US$1,634.89. Both rank in the top four most expensive Riftbound cards overall.",
+        a: "Diana, Scorn of the Moon (UNL 197/219, the promo printing) at US$1,899.99 as of 15 August 2026, followed by Baron Nashor (UNL 238/219) at US$1,634.89. Both rank in the top four most expensive Riftbound cards overall. The non-promo 197/219 is a completely different price — see the note below on why that matters.",
       },
       {
         q: "Why is Baron Nashor numbered 238 in a 219-card set?",
@@ -6308,11 +6308,12 @@ Baron Nashor at **238/219** is the clearest example, and it is the card most peo
 
 | Card | Number | Rarity | Live US price |
 |------|--------|--------|---------------|
-| Diana, Scorn of the Moon | 197/219 | Rare | **US$1,899.99** |
+| Diana, Scorn of the Moon | 197/219 *(promo)* | Rare | **US$1,899.99** |
 | Baron Nashor | 238/219 | Showcase | US$1,634.89 |
 | Diana, Scorn of the Moon | 234*/219 | Showcase | US$1,435.78 |
+| Diana, Scorn of the Moon | 197/219 *(non-promo)* | Rare | US$0.18 |
 
-The Diana pair is the interesting story. The **Rare** at 197/219 is worth *more* than its own Showcase print at 234*/219 — around US$460 more. That is unusual, and it is a useful reminder that in Riftbound the rarity stamp describes the print treatment, not the market's opinion of the card.
+The Diana pair is the interesting story, and it is a warning as much as a fact. **Two cards share the exact number 197/219** — same name, same rarity, same "no asterisk, within the set total" collector number that would normally tell you it's an ordinary base print. One is a promo stamp worth nearly **US$1,900**. The other is a genuinely cheap card at **18 US cents**. Nothing in the collector number tells you which one a listing is; only the "promo" label does. That is a sharper trap than the asterisk-and-overnumbering rules cover, because those are visible in the number itself — this one isn't.
 
 Baron Nashor sits between them. It is not a champion card at all — it is the neutral monster every League player recognises, given the set's most collectible treatment.
 
@@ -6322,7 +6323,7 @@ Baron Nashor sits between them. It is not a champion card at all — it is the n
 
 Three practical notes if you are starting on this set:
 
-**Check the base print before the chase print.** Diana is the proof that the cheaper-looking number is not always the cheaper card. Search the card name and compare every printing before committing.
+**Check the promo label, not just the number.** Diana 197/219 is the proof: the collector number alone can't tell two ten-thousand-times-apart prices apart when the only difference is a promo stamp. Search the card name and compare every printing — promo included — before committing.
 
 **The chase tier is thin.** As with every Riftbound set's top end, most of these cards have very few sellers at any one time. Prices move on single sales, so the figure you see today is a snapshot rather than a settled valuation.
 
@@ -6688,6 +6689,189 @@ The same pattern repeats on **Ahri, Inquisitive** in Spirit Forged: SFD 227/221 
 - [How to read a Riftbound card](/blog/how-to-read-a-riftbound-card) — where the collector number and the asterisk live, and how to spot a Signature.
 - [The most expensive Riftbound cards](/blog/most-expensive-riftbound-cards) — the full top of the market, live.
 - [League of Legends champions in Riftbound](/guides/league-of-legends-champions-in-riftbound) — who else has made it into the game.
+`,
+  },
+  {
+    slug: "are-riftbound-cards-a-real-investment",
+    category: "blog",
+    title: "Are Riftbound Cards a Real Investment?",
+    excerpt:
+      "Riftbound's own market index is eleven days old. Here's what that actually means for anyone asking whether these cards are an investment — with the real prices, real fees and real risks, not a guess dressed up as one.",
+    author: "RiftCompare",
+    date: "2026-08-15",
+    readMins: 9,
+    tags: ["investing", "opinion", "market analysis", "risk", "collecting"],
+    hero: {
+      src: "https://cdn.riftscribe.gg/cards/originals/ogn-303-star-298-d34b6d90cc0eee6c.png",
+      alt: "Ahri, Nine-Tailed Fox (OGN 303*/298), the Signature printing — priced nine times its unsigned twin, and the clearest real example of where Riftbound value actually sits today",
+    },
+    summary: [
+      "**This is analysis, not financial advice — and the honest headline finding is that nobody has enough data yet to give real investment advice about Riftbound cards.** The RiftCompare Index, our own tracked basket of the game's most-traded singles, is eleven days old as of this writing.",
+      "**We can't tell you the 7-day or 30-day return, because those numbers don't exist yet.** Not \"we won't say\" — the data literally isn't there. Our own live Index API returns `null` for both.",
+      "**What we can show you is real and current:** which printings already carry genuine scarcity premiums (one card is worth 9× its twin for a single printed signature), how volatile a market this thin already looks, and exactly what it costs to buy and sell.",
+      "**If you already own cards and want to know what they're worth, that's a different — and answerable — question.** [Set a free price alert](/alerts) rather than guessing.",
+    ],
+    faq: [
+      {
+        q: "Are Riftbound cards a good investment?",
+        a: "Nobody can honestly answer that yet, ourselves included. Riftbound has released five sets, the newest of which is two weeks old, and the RiftCompare Index — our own tracked measure of the secondary market — only has data back to 4 August 2026. There is no multi-year track record to point to, up or down. What we can tell you is what the market looks like today: real prices, real fees, real volatility. Whether today's prices look smart in five years is not something the data can answer yet.",
+      },
+      {
+        q: "How is the RiftCompare Index calculated, and how far back does it go?",
+        a: "It's a search-weighted basket of 200 of the most-traded Riftbound singles, rebased to 100 on its start date of 4 August 2026 (see /market for the live number and methodology). As of this writing it sits at 111.6, and its own API reports a null value for both the 7-day and 30-day change, because the Index isn't old enough to have completed either window yet.",
+      },
+      {
+        q: "What actually makes a Riftbound card valuable right now?",
+        a: "Print scarcity, almost entirely. A Signature printing (marked with an asterisk in the collector number) or an over-numbered chase print can be worth many times its plain twin — Ahri, Nine-Tailed Fox goes from US$374.22 unsigned to US$3,420.28 signed, identical art and rules. That's a real, observable premium for scarcity today. It is not evidence that the premium will still be there next year — nobody has owned these long enough to know.",
+      },
+      {
+        q: "What fees will I actually pay if I sell a Riftbound card?",
+        a: "It depends where you sell. RiftCompare's own marketplace charges 2% (1% for Premium members). eBay's final value fee for trading cards is commonly around 13.25%, charged on the total including shipping. TCGplayer charges a tiered marketplace commission plus separate payment processing, netting most sellers somewhere in the low-to-mid 80% of the sale price before shipping costs. A direct trade or local sale avoids commission entirely but gives up buyer protection.",
+      },
+      {
+        q: "Can a Riftbound card lose value overnight through no fault of the card?",
+        a: "Yes, and it's already happened. On 24 July 2026, Riot banned three cards from Standard play — Stealthy Pursuer, The Arena's Greatest and Aspirant's Climb — and introduced a separate ban list for Constructed 2v2. A card that's competitively banned doesn't stop existing, but it loses the demand that comes from being playable, which is a risk that doesn't exist for a closed, no-longer-published collectible like a vintage trading card.",
+      },
+    ],
+    browseCta: {
+      href: "/alerts",
+      label: "Track what you already own →",
+      blurb: "Free price alerts across every store we track — the honest alternative to guessing whether now is the time to sell.",
+    },
+    closeups: [
+      {
+        caption: "The white signature across the artwork is the entire visible difference between this US$3,420.28 card and its US$374.22 unsigned twin. That gap is real and current. Whether it's still there in a year is exactly the kind of thing an 11-day-old market can't tell you.",
+        slugs: ["ahri-nine-tailed-fox-ogn-303s-298"],
+        topPct: 34,
+        heightPct: 28,
+      },
+    ],
+    embeds: [
+      {
+        title: "The cards named in this article",
+        note: "Every price above is live and checkable — click through to see every store selling each printing, in your own market.",
+        slugs: [
+          "ahri-nine-tailed-fox-ogn-303-298",
+          "ahri-nine-tailed-fox-ogn-303s-298",
+          "ahri-nine-tailed-fox-ogn-255-298",
+          "ahri-nine-tailed-fox-ogn-255-298-promo",
+          "diana-scorn-of-the-moon-unl-197-219",
+          "diana-scorn-of-the-moon-unl-197-219-promo",
+        ],
+        take: 6,
+      },
+    ],
+    body: `Type "are Pokémon cards a real investment" into a search engine and you'll find guides pulling on three decades of PSA grading volumes and named auction sales to answer it — Pikachu Illustrator, Charizard's climb, all of it dated, sourced, arguable but *checkable*.
+
+Type the same question with "Riftbound" instead, and there's no honest way to answer it the same way. Not because we don't want to. Because the data doesn't exist yet.
+
+That absence is itself the most useful thing we can tell you, so we're going to open with it rather than bury it, and then show you everything we actually *can* verify: today's real prices, today's real volatility, and today's real cost of doing business — none of which requires pretending we have a track record we don't.
+
+## Eleven days is not a track record
+
+RiftCompare runs a market index — a tracked basket of 200 of the game's most-traded singles, rebased to 100, the same idea as the S&P 500 but for Riftbound cards instead of large-cap stocks. You can watch it move in real time at [/market](/market).
+
+Here's what it actually shows, as of this writing:
+
+| | |
+| --- | --- |
+| Index start date | **4 August 2026** |
+| Current level | 111.6 (base 100) |
+| Change since start | +11.6% |
+| 1-day change | +0.4% |
+| **7-day change** | **null — not enough history** |
+| **30-day change** | **null — not enough history** |
+
+That's not a rounding artifact or a display bug. It's the honest state of the underlying data: the Index's own public API, at /api/v1/index.json, literally returns the value *null* for both the 7-day and 30-day change fields, because neither window has completed yet. We could report "up 11.6%" as if it means something — plenty of sites would — but eleven days of a thinly-traded, brand-new market isn't a return, it's noise that hasn't had time to average out.
+
+For scale: Riftbound has released five sets. The newest, Vendetta, came out on 31 July 2026 — [two weeks before this article](/blog/riftbound-vendetta-is-here-early-release). We don't even have confirmed release dates for four of the other five sets in our own database, because Riot never published exact street dates for them. A market needs years to show whether an asset holds value; this one hasn't finished its first month.
+
+## What we can actually say, versus what we can't
+
+| | Riftbound cards (today) | S&P 500 |
+| --- | --- | --- |
+| Track record | 11 days (RiftCompare Index) | ~100 years |
+| Historical average annual return | Unknown — insufficient data | Roughly 10%/year nominal, long-run average |
+| Minimum entry | Cents to low dollars for most cards | Fraction of a share via most brokers |
+| Liquidity | Thin — see the spread example below | Extremely deep, sub-cent spreads |
+| Typical selling cost | 2%–13.25%+ depending on venue | ~0.03%–0.20% fund expense ratio, or a few dollars in brokerage fees |
+| Regulatory protection | None (unregulated collectibles market) | SIPC/regulator-backed depending on jurisdiction |
+| Can the asset itself be banned/devalued by the publisher | Yes — has already happened once | Not applicable |
+
+We're showing you this table specifically *because* half of it can't be filled in. That's the point. A guide that fills in "expected return" for Riftbound with a confident-sounding number is making it up. We'd rather show you an empty cell than a fabricated one.
+
+## Where the real value already sits: print scarcity
+
+None of the above means nothing is measurable. Scarcity premiums between different printings of the *same card* are real, current, and easy to verify yourself — you don't need years of history to see that two otherwise-identical objects are priced differently today.
+
+The clearest example in the whole game: **Ahri, Nine-Tailed Fox**, printed both with and without a Signature — the artist's actual signature, stamped across the art.
+
+| Printing | Signature? | Live US price |
+| --- | --- | --- |
+| OGN 303/298 | No | US$374.22 |
+| OGN 303*/298 | Yes | **US$3,420.28** |
+
+[[closeup:0]]
+
+Same art, same rules, same rarity tier. The signature alone accounts for roughly **US$3,046** of the difference — about 9 times the unsigned price. That's a real, observable, checkable fact about today's market. It is not a prediction about tomorrow's.
+
+A second, sharper trap sits in the same data: **promo status**, which — unlike a Signature asterisk or an over-numbered collector number — leaves no visible mark on the number itself.
+
+| Card | Number | Promo? | Live US price |
+| --- | --- | --- | --- |
+| Ahri, Nine-Tailed Fox | 255/298 | No | US$2.99 |
+| Ahri, Nine-Tailed Fox | 255/298 | Yes | US$269.00 |
+| Diana, Scorn of the Moon | 197/219 | No | US$0.18 |
+| Diana, Scorn of the Moon | 197/219 | Yes | **US$1,899.99** |
+
+The Diana pair is the extreme case: two cards, identical collector number, roughly **10,000 times** apart in price, and the only difference is a promo flag you can't see by reading the number. If you're pricing anything more valuable than pocket change, check the listing's promo status specifically — the number alone won't warn you.
+
+[[embed:0]]
+
+## What volatility looks like in a market this young
+
+An 11-day-old, thinly-traded index is not going to behave like a mature one, and it doesn't. The Index's own volatility reading today sits at **2.11%** — for comparison, a mature equity index typically runs closer to 1% on an ordinary day. Of the 200 tracked cards, 89 are up, 76 are down and 35 are unchanged as of this writing — nothing close to a one-directional market.
+
+Individual cards move far harder than the aggregate. As of this writing, several constituents have moved more than 100% in a week: Rhasa the Sunderer (OGN 195/298) is up 415% over 7 days on a US$3.93 card, and multiple others are up well over 100% in the same window. These aren't chase cards — they're cheap ones, which is exactly the point: in a thin market, a handful of trades at a new price can swing the reported price enormously, in either direction, on cards worth a few dollars just as easily as on five-figure Signatures.
+
+Liquidity friction shows up even inside a single day. Take Defy (OGN 045/298) — currently the listings for this one card, on the same day, in the same market, range from **US$3.93 to US$11.00**: nearly a 3x spread for the identical printing. That's not a typo or a stale listing; it's what "price discovery" looks like before a market has had time to converge. [The Index methodology](/guides/understanding-the-riftcompare-index-methodology) explains why we build ours from a liquid basket specifically to smooth this kind of noise out — but the noise is still there in any individual card you might actually try to buy or sell.
+
+## What it costs to actually buy or sell one
+
+Whatever the price on a card page says, it isn't what you'll net if you sell, and it isn't the last dollar you'll spend if you buy. Real numbers, by venue:
+
+| Venue | Seller pays | Notes |
+| --- | --- | --- |
+| **[RiftCompare Marketplace](/marketplace)** | 2% (1% for Premium) | Escrow-protected P2P, lowest fee we're aware of in this market |
+| **eBay** | ~13.25% final value fee | Charged on item price *plus* shipping |
+| **TCGplayer** | Tiered commission + payment processing | Nets most sellers roughly 80–85% of sale price before shipping |
+| **Direct/local sale** | 0% commission | No buyer protection either side |
+
+None of that includes shipping, packaging, or — if you're selling across a border — currency conversion, which typically costs a further few percent depending on how you're paid. [TCGplayer fees, explained in full](/blog/tcgplayer-fees) and [currency conversion costs](/blog/currency-conversion-fees) both break these down further if you're weighing where to sell.
+
+## Grading: a separate market, not a multiplier
+
+Riftbound doesn't have a centralised third-party grading body for raw card sales — the seller assigns the condition at the point of listing, based on their own judgement, which means the same physical card can be labelled differently by two different stores. [Our condition guide](/guides/riftbound-card-condition-guide) covers what each grade actually means.
+
+Third-party grading (PSA and similar) does exist for Riftbound's highest-value chase cards, but it's its own market, running on its own pricing logic, layered on top of the raw singles market rather than a fixed multiple of it. Don't assume a graded card is simply "raw price × some standard number" — check the graded market for that specific card directly.
+
+## A risk that doesn't exist for a closed collectible
+
+Riftbound is an actively developed, competitively played game, which cuts both ways. The upside: it's built on League of Legends, one of the most-played games in the world, with a real organised competitive scene — [UVS Games ran the most recent Regional Qualifier in Los Angeles](/blog/riftbound-2026-regional-qualifier-los-angeles) in September, requiring a linked Riot Account to enter. That's genuine, ongoing investment in the game as a product, not just as a card set.
+
+The downside: Riot can change the rules under you, and already has. On **24 July 2026**, a week before Vendetta released, [Riot banned three cards from Standard play](/blog/riftbound-july-2026-ban-list-update) — Stealthy Pursuer (over a documented infinite combo), The Arena's Greatest and Aspirant's Climb — and introduced a separate ban list for Constructed 2v2 starting with Master Yi, Wuju Bladesman. A banned card doesn't vanish from existence, but it loses whatever demand came from being tournament-legal. That's a live-game risk that a closed, no-longer-printed vintage collectible simply doesn't carry, and it's worth weighing against any scarcity premium a card currently holds.
+
+## What we'd actually suggest
+
+Not "buy" and not "don't." Three practical things that don't require a track record we don't have:
+
+**If you're buying:** treat every purchase as buying a card you like, at a price you'd be fine never seeing again — because right now, nobody can tell you what it'll be worth later, including us. Compare the printing carefully (asterisk, over-numbering, and *especially* promo status) before you pay a premium.
+
+**If you're selling:** run the real fee math before you list anywhere. A 13.25% eBay fee versus a 2% RiftCompare Marketplace fee is the difference between a good and a bad sale on the same card.
+
+**If you already own cards and just want to know what they're worth without checking daily:** that's a genuinely answerable question, unlike the investment question. [Set a free price alert](/alerts) and let the number come to you.
+
+We built the Index, the price history, and the alerts specifically because we think a market this new deserves honest tools instead of confident-sounding guesses. We'll revisit this piece once there's actually enough history to say more.
 `,
   },
   ...SEO_PACK_ARTICLES,
