@@ -118,10 +118,9 @@ export function CountryProvider({ initial, children }: { initial: Country; child
   // Signed-in accounts remember their market (User.preferredCountry) —
   // authoritative over the cookie/geo-detect resolution above, since it
   // survives across devices and doesn't depend on IP-geo detection staying
-  // accurate (that header goes stale once traffic is proxied through a
-  // third-party CDN in front of Vercel, e.g. Ezoic — see get-country.ts).
-  // Runs once /api/me resolves, so it may briefly show the cookie/geo guess
-  // first and then correct itself — same pattern as the geo-fetch above.
+  // accurate (see get-country.ts's caveat on that header). Runs once /api/me
+  // resolves, so it may briefly show the cookie/geo guess first and then
+  // correct itself — same pattern as the geo-fetch above.
   useEffect(() => {
     if (!INTL_ENABLED || !meLoaded || !meUser) return;
     if (meUser.preferredCountry) {

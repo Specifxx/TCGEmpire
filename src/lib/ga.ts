@@ -14,7 +14,7 @@ export const GA_ENABLED = GA_MEASUREMENT_ID.toLowerCase() !== "off" && /^G-[A-Z0
 
 // Origins gtag.js talks to. Mirrored into next.config.js's Report-Only CSP —
 // next.config.js cannot import a TS module at config-load time, so that copy is
-// a duplicated literal exactly like the ADS_* / EZOIC_* arrays beside it.
+// a duplicated literal exactly like the ADS_* array beside it.
 export const GA_SCRIPT_ORIGINS = ["https://www.googletagmanager.com"] as const;
 export const GA_CONNECT_ORIGINS = [
   "https://www.googletagmanager.com",

@@ -50,10 +50,8 @@ model User {
   // across devices and sign-ins. Null until the account's first resolved
   // country (cookie or geo-detected) is backfilled, or the user explicitly
   // switches markets while signed in (see CountryProvider + POST
-  // /api/account/country). Exists because IP-geo detection (x-vercel-ip-country)
-  // is unreliable once traffic is proxied through a third-party CDN in front of
-  // Vercel (e.g. Ezoic) — a signed-in visitor should still land on their real
-  // market even when the geo header no longer reflects their true location.
+  // /api/account/country) — a signed-in visitor should land on their real
+  // market on any device, not just the one that had the right cookie/geo guess.
   preferredCountry    String?
 
   // ── Saved default shipping address (marketplace checkout) ─────────────────────
