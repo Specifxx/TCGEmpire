@@ -60,6 +60,21 @@ const EZOIC_SCRIPT_SRC = [
   "https://ezoicanalytics.com",
 ];
 
+// Google Analytics 4 (gtag.js) + its collection endpoints. Mirrors
+// GA_SCRIPT_ORIGINS / GA_CONNECT_ORIGINS in src/lib/ga.ts — next.config.js can't
+// import a TS module at config-load time, so this is a duplicated literal like
+// the ADS_* and EZOIC_* arrays around it. The CSP is Report-Only today, but the
+// header comment's rule is that the allow-list stays correct and complete so
+// promoting it to enforcing can never silently kill measurement.
+const GA_SCRIPT_SRC = ["https://www.googletagmanager.com"];
+const GA_CONNECT_SRC = [
+  "https://www.googletagmanager.com",
+  "https://www.google-analytics.com",
+  // Regional collectors: region1.google-analytics.com, analytics.google.com, ...
+  "https://*.google-analytics.com",
+  "https://*.analytics.google.com",
+];
+
 const ADS_CONNECT_SRC = [
   "https://pagead2.googlesyndication.com",
   "https://googleads.g.doubleclick.net",
@@ -75,13 +90,13 @@ const ADS_CONNECT_SRC = [
 
 const cspReportOnly = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://*.vercel-insights.com ${ADS_SCRIPT_SRC.join(" ")} ${EZOIC_SCRIPT_SRC.join(" ")}`,
+  `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://*.vercel-insights.com ${ADS_SCRIPT_SRC.join(" ")} ${EZOIC_SCRIPT_SRC.join(" ")} ${GA_SCRIPT_SRC.join(" ")}`,
   "style-src 'self' 'unsafe-inline'",
   // Ad creatives and tracking pixels come from arbitrary advertiser domains, so
   // img-src must stay open to https: — narrowing it would blank creatives.
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  `connect-src 'self' https://*.vercel-insights.com https://vitals.vercel-insights.com https://cdn.riftscribe.gg ${ADS_CONNECT_SRC.join(" ")}`,
+  `connect-src 'self' https://*.vercel-insights.com https://vitals.vercel-insights.com https://cdn.riftscribe.gg ${ADS_CONNECT_SRC.join(" ")} ${GA_CONNECT_SRC.join(" ")}`,
   // Ads render inside cross-origin iframes; the consent message does too.
   `frame-src 'self' https: ${ADS_FRAME_SRC.join(" ")}`,
   "frame-ancestors 'self'",

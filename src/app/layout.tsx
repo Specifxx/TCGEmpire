@@ -22,6 +22,7 @@ import { enabledProviders } from "@/lib/oauth";
 import { AdSenseLoader } from "@/components/AdSenseLoader";
 import { EzoicLoader } from "@/components/EzoicLoader";
 import { ConsentDefaults } from "@/components/ConsentDefaults";
+import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { ConsentGatedAnalytics } from "@/components/ConsentGatedAnalytics";
 import { PrivacySettingsLink } from "@/components/PrivacySettingsLink";
 import { ADSENSE_CLIENT_ID, ADSENSE_CONFIGURED } from "@/lib/adsense";
@@ -213,6 +214,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Google Consent Mode v2 defaults — MUST be the first thing that runs, so
             the ad/measurement tags below never fire against an unset state. */}
         <ConsentDefaults />
+        {/* Google Analytics 4. Mounted AFTER ConsentDefaults on purpose — Consent
+            Mode only applies to hits queued behind its defaults, so the order of
+            these two lines is load-bearing, not cosmetic. See the component
+            header for why this is not Google's verbatim snippet. */}
+        <GoogleAnalytics />
         {/* Impact / TCGplayer affiliate site-ownership verification. Impact looks for
             the non-standard `value` attribute, so spread it past the meta typing. */}
         <meta {...({ name: "impact-site-verification", value: IMPACT_SITE_VERIFICATION } as any)} />
