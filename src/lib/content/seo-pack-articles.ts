@@ -622,6 +622,32 @@ RiftCompare compares live Riftbound prices across US, UK, AU, NZ, CA, and SG sto
     // deepest set of listings; the component derives its currency from the same
     // value, so figures and symbol cannot disagree.
     topValue: { country: "US", take: 10 },
+    // The page explained the tiers and printed a live value table, but never
+    // SHOWED a single card. For a "most expensive" query that is the obvious
+    // gap: the reader wants to see the grails. This gallery is DB-backed, so it
+    // prices itself in the visitor's market and cannot drift out of date the way
+    // a hard-coded list of names would.
+    embeds: [
+      {
+        title: "The current top twelve, by live US price",
+        note: "Ranked when this was written; the gallery re-prices itself in your market. Click any card for every store selling it.",
+        slugs: [
+          "ahri-nine-tailed-fox-ogn-303s-298",
+          "ahri-inquisitive-sfd-227s-221",
+          "diana-scorn-of-the-moon-unl-197-219-promo",
+          "baron-nashor-unl-238-219",
+          "irelia-fervent-sfd-225s-221",
+          "miss-fortune-bounty-hunter-ogn-309s-298",
+          "diana-scorn-of-the-moon-unl-234s-219",
+          "teemo-scout-ogn-197b-298-promo",
+          "zed-master-of-shadows-ven-191s-166",
+          "jinx-loose-cannon-ogn-301s-298",
+          "lee-sin-blind-monk-ogn-304s-298",
+          "jayce-defender-of-tomorrow-ven-194s-166",
+        ],
+        take: 12,
+      },
+    ],
     summary: [
       "The most expensive Riftbound cards are almost always **Signature and Metal variants** of popular champions, reaching four figures ungraded.",
       "Four things drive value: **variant treatment, scarcity/pull rate, grade, and meta relevance.**",

@@ -6231,6 +6231,465 @@ We'd rather show you the real numbers and our actual reasoning than tell you wha
   // so the batch stays reviewable; spread here so every existing surface (the
   // /blog and /guides indexes, the sitemap's `content` section, the feeds, the
   // related-posts module, the /llm markdown mirrors) picks them up unchanged.
+  {
+    slug: "whats-in-the-riftbound-unleashed-set",
+    category: "guide",
+    title: "What's in the Riftbound Unleashed Set?",
+    excerpt:
+      "A complete guide to Riftbound Unleashed (UNL) — a 219-card set whose chase cards include the most expensive non-Origins printing in the game. Every card, filterable, with live prices.",
+    author: "RiftCompare",
+    date: "2026-08-15",
+    readMins: 6,
+    tags: ["unleashed", "set guide", "card list", "collecting"],
+    hero: {
+      src: "https://cdn.riftscribe.gg/cards/originals/unl-238-219-bc6d759458719516.png",
+      alt: "Baron Nashor (UNL 238/219) — the over-numbered Showcase chase card from Riftbound Unleashed",
+    },
+    summary: [
+      "**Unleashed is a 219-card set** (collector numbers run to /219), with over-numbered chase prints continuing past that into the 220s and 230s.",
+      "**Its chase cards compete with Origins on price.** Diana, Scorn of the Moon (UNL 197/219) at US$1,899.99 and Baron Nashor (UNL 238/219) at US$1,634.89 are third and fourth most expensive in the entire game.",
+      "**Baron Nashor is the set's signature card in every sense but the label** — a Showcase print of the game's most recognisable neutral monster, over-numbered at 238/219.",
+      "**The gallery below is live.** It reads the card database directly, so it stays complete and correctly priced as listings change, rather than freezing at whatever was true the day this was written.",
+    ],
+    embeds: [
+      {
+        title: "Unleashed chase cards",
+        note: "The over-numbered and Showcase prints — the expensive end of the set.",
+        chaseSet: "UNL",
+        take: 12,
+      },
+      {
+        title: "Every card in Unleashed",
+        note: "Filter by domain, rarity or type, or search by name. Prices are live in your market.",
+        setAll: "UNL",
+        filterable: true,
+        take: 240,
+      },
+    ],
+    shop: [
+      { label: "Unleashed singles", query: "Riftbound Unleashed" },
+      { label: "Unleashed booster boxes", query: "Riftbound Unleashed booster box" },
+    ],
+    faq: [
+      {
+        q: "How many cards are in Riftbound Unleashed?",
+        a: "The base set runs to 219 cards — every card's collector number is written out of /219. Chase printings continue past that total with over-numbered slots such as 234*/219 and 238/219, which is why you will see numbers higher than 219 on the most expensive cards.",
+      },
+      {
+        q: "What is the most expensive Unleashed card?",
+        a: "Diana, Scorn of the Moon (UNL 197/219) at US$1,899.99 as of 15 August 2026, followed by Baron Nashor (UNL 238/219) at US$1,634.89. Both rank in the top four most expensive Riftbound cards overall.",
+      },
+      {
+        q: "Why is Baron Nashor numbered 238 in a 219-card set?",
+        a: "It is an over-numbered chase print. Riftbound places its premium treatments in collector-number slots beyond the set total, so a card numbered above /219 is by definition one of the set's chase cards rather than part of the base run.",
+      },
+      {
+        q: "Is Unleashed still worth buying sealed?",
+        a: "That depends entirely on current box pricing against the value of what is inside, which moves. The honest answer is to check the live box price against the set's chase cards rather than take a rule of thumb from an article — both are on this site and both change weekly.",
+      },
+    ],
+    body: `
+Unleashed (set code **UNL**) is a 219-card Riftbound set, and it punches well above its share of the conversation. Two of the four most expensive cards in the entire game come from it.
+
+## The shape of the set
+
+Every base card is numbered out of **/219**. Above that total sit the over-numbered chase prints — the slots Riftbound reserves for premium treatments. That is the quickest way to read any Riftbound collector number: **a number higher than the set total is always a chase card**, no exceptions.
+
+So in Unleashed:
+
+- **001–219** — the base set. Commons through Epics, everything you open in a normal pack.
+- **220+** — chase territory. Showcase treatments, alternate arts, and the set's headline cards.
+
+Baron Nashor at **238/219** is the clearest example, and it is the card most people picture when they think of this set.
+
+[[embed:0]]
+
+## Where the money is
+
+| Card | Number | Rarity | Live US price |
+|------|--------|--------|---------------|
+| Diana, Scorn of the Moon | 197/219 | Rare | **US$1,899.99** |
+| Baron Nashor | 238/219 | Showcase | US$1,634.89 |
+| Diana, Scorn of the Moon | 234*/219 | Showcase | US$1,435.78 |
+
+The Diana pair is the interesting story. The **Rare** at 197/219 is worth *more* than its own Showcase print at 234*/219 — around US$460 more. That is unusual, and it is a useful reminder that in Riftbound the rarity stamp describes the print treatment, not the market's opinion of the card.
+
+Baron Nashor sits between them. It is not a champion card at all — it is the neutral monster every League player recognises, given the set's most collectible treatment.
+
+[[shop]]
+
+## Buying into Unleashed
+
+Three practical notes if you are starting on this set:
+
+**Check the base print before the chase print.** Diana is the proof that the cheaper-looking number is not always the cheaper card. Search the card name and compare every printing before committing.
+
+**The chase tier is thin.** As with every Riftbound set's top end, most of these cards have very few sellers at any one time. Prices move on single sales, so the figure you see today is a snapshot rather than a settled valuation.
+
+**Sealed versus singles is an arithmetic question.** If you want one specific card, singles are almost always cheaper than chasing it through boxes. If you want breadth, sealed can make sense. Our [buying singles vs opening packs](/blog/buying-singles-vs-opening-packs) piece works through the maths properly.
+
+## Every card in the set
+
+The gallery below is generated from the live card database rather than typed out here, which means two things: it is complete, and the prices in it are current in your own market. Filter it by domain, rarity or type, or search it by name.
+
+[[embed:1]]
+`,
+  },
+  {
+    slug: "how-to-read-a-riftbound-card",
+    category: "guide",
+    title: "How to Read a Riftbound Card",
+    excerpt:
+      "Every number, colour and symbol on a Riftbound card, explained on real cards — including the rarity gem that tells you what you pulled before you read a word.",
+    author: "RiftCompare",
+    date: "2026-08-15",
+    readMins: 7,
+    tags: ["beginners", "card anatomy", "rarity", "collecting"],
+    hero: {
+      src: "https://cdn.riftscribe.gg/cards/originals/ogn-205-298-532138033790fe52.png",
+      alt: "Yasuo, Windrider (OGN 205/298) — a Riftbound Epic showing the card layout: energy cost, might, domain rune, type line and rarity gem",
+    },
+    summary: [
+      "**Top-left is what it costs, top-right is how hard it hits.** Energy cost sits in the circle; might sits behind the shield.",
+      "**The gem at the bottom-centre is the rarity, and it counts up.** Round orb for Common, then 3, 4, 5 and 6 sides as you climb — triangle, diamond, pentagon, hexagon.",
+      "**Colour means domain.** The name banner, the rune discs and the little symbol bottom-right are all the same colour, and it tells you which of the seven domains the card belongs to.",
+      "**The bottom-left corner is the only thing that matters when buying.** Set code plus collector number identifies the exact printing — an asterisk there means a Signature, and Signatures can cost ten times the plain version of the same card.",
+    ],
+    closeups: [
+      {
+        caption: "Top corners: the energy cost (left) is what you pay to play it; the might (right, behind the shield) is how much damage it deals and absorbs. The green disc underneath is one Calm rune — the domain cost, on top of the energy.",
+        slugs: ["ahri-alluring-ogn-066-298"],
+        topPct: 2,
+        heightPct: 20,
+      },
+      {
+        caption: "The type line and the name banner. 'CHAMPION UNIT' is what the card is; 'AHRI' and 'IONIA' are its tags. The banner is green because this is a Calm card — every domain has its own colour.",
+        slugs: ["ahri-alluring-ogn-066-298"],
+        topPct: 50,
+        heightPct: 15,
+      },
+      {
+        caption: "Rules text on top, flavour text in italics below the little coloured square. Only the top half is rules — the italic line does nothing in the game. Note that Riftbound writes its rules in the first person: 'When I hold…'",
+        slugs: ["ahri-alluring-ogn-066-298"],
+        topPct: 70,
+        heightPct: 22,
+      },
+      {
+        caption: "The bottom edge, and the most important line on the card for buyers: set code, collector number, rarity gem, artist. This is a Rare — the magenta diamond has four sides.",
+        slugs: ["ahri-alluring-ogn-066-298"],
+        topPct: 92,
+        heightPct: 8,
+      },
+      {
+        caption: "A Common, from the same set: the rarity gem is a plain round white orb with no facets at all.",
+        slugs: ["arena-bar-ogn-124-298"],
+        topPct: 92,
+        heightPct: 8,
+      },
+      {
+        caption: "A Showcase, the top tier: a gold six-sided gem. Same position on every card in the game, so you can tell what you pulled from the bottom edge alone.",
+        slugs: ["ahri-alluring-ogn-066a-298"],
+        topPct: 92,
+        heightPct: 8,
+      },
+    ],
+    embeds: [
+      {
+        title: "One card at each rarity",
+        note: "The five cards used above, so you can open them full-size and see the gem for yourself.",
+        slugs: [
+          "arena-bar-ogn-124-298",
+          "acceptable-losses-ogn-179-298",
+          "ahri-alluring-ogn-066-298",
+          "ahri-inquisitive-ogn-119-298",
+          "ahri-alluring-ogn-066a-298",
+        ],
+        take: 5,
+      },
+    ],
+    faq: [
+      {
+        q: "What do the numbers in the top corners of a Riftbound card mean?",
+        a: "The number in the circle at the top-left is the energy cost — what you pay to play the card. The number at the top-right, behind the shield symbol, is might: how much damage the unit deals and how much it can take. Cards that are not units, such as spells, have a cost but no might.",
+      },
+      {
+        q: "How can I tell a Riftbound card's rarity by looking at it?",
+        a: "Look at the small gem in the centre of the bottom edge. It gains a side as rarity climbs: a round white orb is Common, a teal triangle is Uncommon, a magenta diamond is Rare, an orange pentagon is Epic, and a gold hexagon is Showcase. The position is identical on every card, so you can sort a pile face-up without reading a single word.",
+      },
+      {
+        q: "What are the coloured discs on the left edge of a Riftbound card?",
+        a: "They are the domain runes the card requires, on top of its energy cost. Count them for how many you need and read the colour for which domain: red is Fury, green is Calm, blue is Mind, orange is Body, purple is Chaos and yellow is Order. Not every card has them — plenty of cards ask only for energy, and those simply have no discs.",
+      },
+      {
+        q: "What does an asterisk in the collector number mean?",
+        a: "It marks a Signature printing, and you can usually see why: the artist's signature is printed across the artwork. It matters enormously for price. Ahri, Nine-Tailed Fox is OGN 303/298 at US$374.22 and OGN 303*/298 at US$3,420.28 — identical art and identical rules, with the signature the only visible difference.",
+      },
+      {
+        q: "Why is the text on a Riftbound battlefield printed upside down?",
+        a: "It is printed twice, once each way up. Battlefields sit in the middle of the table between the two players, so each player gets a copy of the rules text facing them. They are also the only cards printed in landscape rather than portrait.",
+      },
+    ],
+    browseCta: {
+      href: "/browse",
+      label: "Look up a card you own →",
+      blurb: "Search by name, or type the collector number straight in to land on the exact printing — with live prices from every store we track.",
+    },
+    body: `
+A Riftbound card carries about nine pieces of information, and once you know where each one lives you can read any card in the game in a couple of seconds — including cards you have never seen before, in a language you do not speak.
+
+Everything below is shown on real cards, cropped from the actual printed artwork.
+
+## The top corners: cost and might
+
+[[closeup:0]]
+
+**Top-left, in the circle, is the energy cost.** That is what you pay to put the card into play.
+
+**Top-right, behind the shield, is might.** That is the unit's power — how hard it hits and how much it survives. Cards that are not units still have a cost but no might, so that corner is simply empty on most spells.
+
+**The coloured discs down the left edge are domain runes**, and they are an *additional* cost. Ahri above needs five energy **and** one Calm rune. Anivia, Primal needs seven energy and two Body runes, so it shows two orange discs.
+
+Plenty of cards have no discs at all — Blazing Scorcher costs five energy and nothing else. An empty left edge is normal, not a misprint.
+
+## The middle: what it is and what it does
+
+[[closeup:1]]
+
+The thin line above the name is the **type line**: what the card is, followed by its tags. Ahri, Alluring is a *Champion Unit* tagged *Ahri* and *Ionia*.
+
+Then the **name banner** — and the banner's colour is the fastest domain read on the card:
+
+| Domain | Colour |
+| --- | --- |
+| Fury | Red |
+| Calm | Green |
+| Mind | Blue |
+| Body | Orange |
+| Chaos | Purple |
+| Order | Yellow |
+| Colorless | Grey |
+
+The same colour repeats in the rune discs and in the small symbol at the bottom-right, so the card tells you its domain three separate times. A card that belongs to two domains — some Legends do — gets a two-colour gradient banner and one disc of each colour.
+
+[[closeup:2]]
+
+Below that is the **rules text**, and then, under a small coloured square, the **flavour text** in italics. The flavour text is scene-setting and does nothing in the game.
+
+One quirk worth knowing: **Riftbound writes rules in the first person.** "When I hold, you score 1 point" means *this card*, not you. Once you notice it, cards read much faster.
+
+## The bottom edge: everything a buyer needs
+
+[[closeup:3]]
+
+This strip is small and easy to ignore, and it is the only part of the card that matters when you are buying or selling.
+
+- **Bottom-left — set code and collector number.** \`OGN · 066/298\` means Origins, card 66 of 298. This is the card's real identity. Names repeat constantly; this does not.
+- **Bottom-centre — the rarity gem.**
+- **Bottom-right — the artist**, the copyright line, and the domain symbol again.
+
+## The rarity gem, which counts up
+
+The gem in the centre of the bottom edge is the single most useful symbol on the card, because **it gains a side as rarity climbs**:
+
+| Rarity | Gem | Sides | Colour |
+| --- | --- | --- | --- |
+| Common | Orb | round | White |
+| Uncommon | Triangle | 3 | Teal |
+| Rare | Diamond | 4 | Magenta |
+| Epic | Pentagon | 5 | Orange |
+| Showcase | Hexagon | 6 | Gold |
+
+Round, three, four, five, six. That is the whole system, and it is in the same place on every card in every set — so you can fan a stack face-up and sort it without reading anything.
+
+[[closeup:4]]
+
+[[closeup:5]]
+
+[[embed:0]]
+
+## The asterisk, and why it is worth thousands
+
+If the collector number contains an asterisk — \`303*/298\` rather than \`303/298\` — you are holding a **Signature** printing, and you can normally see it: the artist's signature is printed across the artwork in white.
+
+It is the most expensive single character in the game. Ahri, Nine-Tailed Fox exists both ways:
+
+| Printing | Signature? | Live US price |
+| --- | --- | --- |
+| OGN 303/298 | No | US$374.22 |
+| OGN 303*/298 | Yes | **US$3,420.28** |
+
+Same art, same rules, same rarity. The signature accounts for roughly **US$3,046** of difference — about nine times the price. We pulled that comparison apart properly in [every Ahri card in Riftbound](/guides/every-ahri-card-in-riftbound).
+
+A collector number **higher than the set total** — 238 in a 219-card set — signals a chase print in a different way. The full list of treatments is in the [variant and finish glossary](/guides/riftbound-variant-glossary).
+
+## Two layouts that break the pattern
+
+**Showcase and full-art printings** move things around. The art runs to the edges, the text sits directly on it, and the cost and might float in gold filigree instead of tidy boxes. The information is all still there and still in roughly the same corners — it is just harder to spot at first.
+
+**Battlefields are landscape**, the only cards in the game printed that way, and their rules text is **printed twice — once upside down**. That is not a misprint either: a battlefield sits between the two players, so each player gets a readable copy facing them.
+
+## Where to go next
+
+- [Understanding Riftbound card rarity](/guides/understanding-riftbound-card-rarity) — what the tiers mean for pull rates and price.
+- [The variant and finish glossary](/guides/riftbound-variant-glossary) — every treatment, and how to tell them apart.
+- [Riftbound card condition guide](/guides/riftbound-card-condition-guide) — how to grade what you are holding.
+`,
+  },
+  {
+    slug: "every-ahri-card-in-riftbound",
+    category: "guide",
+    title: "Every Ahri Card in Riftbound (and What Each One Costs)",
+    excerpt:
+      "Twelve Ahri printings across three different cards, from US$8.95 to US$3,420.28 — with the two prints that are visually identical except for a signature worth US$3,046.",
+    author: "RiftCompare",
+    date: "2026-08-15",
+    readMins: 6,
+    tags: ["ahri", "champions", "collecting", "chase cards"],
+    hero: {
+      src: "https://cdn.riftscribe.gg/cards/originals/ogn-303-star-298-d34b6d90cc0eee6c.png",
+      alt: "Ahri, Nine-Tailed Fox (OGN 303*/298) — the Signature printing, the most expensive Riftbound card tracked",
+    },
+    summary: [
+      "**There are twelve Ahri printings**, and they are not twelve versions of one card — they are three different cards: Nine-Tailed Fox, Inquisitive and Alluring.",
+      "**The range is enormous.** US$8.95 for the base Ahri, Inquisitive; US$3,420.28 for the Signature Nine-Tailed Fox. That is the same champion, roughly 382 times apart.",
+      "**Ahri holds the top two spots** in the whole Riftbound market — the OGN Signature Legend and the SFD Signature Unit.",
+      "**One printed signature is worth about US$3,046.** OGN 303/298 and 303*/298 are the same art, rules and rarity; only the asterisk and the signature across the artwork differ.",
+    ],
+    closeups: [
+      {
+        caption: "The white scrawl across the artwork is the artist's signature (Airi Pan). It is the only visible difference between the US$374.22 printing and the US$3,420.28 one.",
+        slugs: ["ahri-nine-tailed-fox-ogn-303s-298"],
+        topPct: 34,
+        heightPct: 28,
+      },
+    ],
+    embeds: [
+      {
+        title: "All twelve Ahri printings",
+        note: "Grouped by card and printing. Prices are live and in your own market — click any card for every store that stocks it.",
+        slugs: [
+          "ahri-nine-tailed-fox-ogn-303s-298",
+          "ahri-inquisitive-sfd-227s-221",
+          "ahri-inquisitive-sfd-227-221",
+          "ahri-nine-tailed-fox-ogn-303-298",
+          "ahri-nine-tailed-fox-ogn-255-298",
+          "ahri-nine-tailed-fox-ogn-255-298-promo",
+          "ahri-alluring-ogn-066-298",
+          "ahri-alluring-ogn-066-298-promo",
+          "ahri-inquisitive-ven",
+          "ahri-inquisitive-ogn-119a-298",
+          "ahri-alluring-ogn-066a-298",
+          "ahri-inquisitive-ogn-119-298",
+        ],
+        take: 12,
+      },
+    ],
+    shop: [
+      { label: "Ahri singles", query: "Riftbound Ahri" },
+      { label: "Ahri Signature", query: "Riftbound Ahri signature" },
+    ],
+    faq: [
+      {
+        q: "How many Ahri cards are there in Riftbound?",
+        a: "Twelve printings as of 15 August 2026, spread across three distinct cards: Ahri, Nine-Tailed Fox (a Calm Legend), Ahri, Inquisitive (a Mind Unit) and Ahri, Alluring (a Calm Champion Unit). The rest of the twelve are alternate arts, promos and Signature versions of those three.",
+      },
+      {
+        q: "What is the most expensive Ahri card?",
+        a: "Ahri, Nine-Tailed Fox OGN 303*/298 — the Signature printing — at US$3,420.28, which is also the most expensive Riftbound card we track. Ahri, Inquisitive SFD 227*/221 is second at US$3,089.05.",
+      },
+      {
+        q: "What is the cheapest Ahri card?",
+        a: "Ahri, Inquisitive OGN 119/298, the base Epic printing, at US$8.95 with eleven stores stocking it. It is the same character and the same rules text as printings costing hundreds of times more.",
+      },
+      {
+        q: "Why are two Ahri cards with the same number priced so differently?",
+        a: "Check for an asterisk. OGN 303/298 is US$374.22 and OGN 303*/298 is US$3,420.28. The asterisk marks a Signature printing, which carries the artist's signature across the artwork. The art, the rules and the rarity are otherwise identical.",
+      },
+      {
+        q: "Which Ahri card should I buy to actually play with?",
+        a: "The cheapest printing of whichever card your deck wants, because printings are interchangeable in play. Ahri, Inquisitive at US$8.95 plays exactly the same as the US$3,089.05 Signature of the same card. Premium printings are a collecting decision, not a competitive one.",
+      },
+    ],
+    browseCta: {
+      href: "/browse?q=Ahri",
+      label: "Compare every Ahri printing →",
+      blurb: "All twelve, side by side, with live prices from every store we track in your market.",
+    },
+    body: `
+Ahri is the most valuable champion in Riftbound, and it is not close. She holds **both** of the top two spots in the entire market. She is also, at the other end, one of the cheapest champions you can put in a deck.
+
+Both of those things are true at once, and the gap between them is the whole story of how Riftbound pricing works.
+
+## Three different cards, not one
+
+The first thing that trips people up: "an Ahri card" is ambiguous, because there are **three separate cards** with her name on them.
+
+| Card | Type | Domain | First printed in |
+| --- | --- | --- | --- |
+| **Ahri, Nine-Tailed Fox** | Legend | Calm | Origins |
+| **Ahri, Inquisitive** | Unit | Mind | Origins |
+| **Ahri, Alluring** | Champion Unit | Calm | Origins |
+
+They do different things and go in different decks. A listing that just says "Ahri" tells you almost nothing — you need the collector number.
+
+## The full range
+
+Across those three cards there are **twelve printings**, and the spread is extraordinary:
+
+| Printing | Card | Live US price |
+| --- | --- | --- |
+| OGN 303*/298 | Nine-Tailed Fox *(Signature)* | **US$3,420.28** |
+| SFD 227*/221 | Inquisitive *(Signature)* | US$3,089.05 |
+| SFD 227/221 | Inquisitive | US$640.00 |
+| OGN 303/298 | Nine-Tailed Fox | US$374.22 |
+| OGN 255/298 | Nine-Tailed Fox *(promo)* | US$269.00 |
+| OGN 066/298 | Alluring *(promo)* | US$173.55 |
+| VEN SP3/006 | Inquisitive | US$92.48 |
+| OGN 119a/298 | Inquisitive *(alt art)* | US$16.90 |
+| OGN 066a/298 | Alluring *(alt art)* | US$10.25 |
+| OGN 119/298 | Inquisitive | **US$8.95** |
+
+Top to bottom that is a factor of roughly **382**. Same champion, same artwork in several cases, same rules text.
+
+[[embed:0]]
+
+## The US$3,046 signature
+
+The clearest illustration in the game sits inside this list. **Ahri, Nine-Tailed Fox** was printed twice at collector number 303:
+
+| | OGN 303/298 | OGN 303*/298 |
+| --- | --- | --- |
+| Artwork | Identical | Identical |
+| Rules text | Identical | Identical |
+| Rarity | Showcase | Showcase |
+| Artist signature | — | Printed across the art |
+| **Live US price** | US$374.22 | **US$3,420.28** |
+
+[[closeup:0]]
+
+That white scrawl is the entire difference. It is worth about **US$3,046**, or roughly nine times the price of the unsigned card.
+
+This is why the asterisk in a collector number matters more than almost anything else when you are buying. If a listing photo is low-resolution and the seller has written only "Ahri Showcase", you are looking at two possible cards an order of magnitude apart in value. Ask for the number.
+
+The same pattern repeats on **Ahri, Inquisitive** in Spirit Forged: SFD 227/221 is US$640.00 and SFD 227*/221 is US$3,089.05 — about 4.8 times, for the same reason.
+
+[[shop]]
+
+## What this means if you are buying
+
+**To play: buy the cheapest printing.** Printings are interchangeable at the table. Ahri, Inquisitive at **US$8.95** does exactly what the US$3,089.05 Signature does. Eleven stores stock the cheap one, so you will not struggle to find it.
+
+**To collect: decide which of the three cards you actually want**, then pick a tier within it. The Legend is the flagship; Inquisitive is the one with the strongest premium market in two sets; Alluring is the accessible one, with a Showcase alternate art at **US$10.25** that looks far more expensive than it is.
+
+**Whatever you do, buy by collector number.** Every real difference in this article is a number, not a name.
+
+## Related reading
+
+- [How to read a Riftbound card](/guides/how-to-read-a-riftbound-card) — where the collector number and the asterisk live, and how to spot a Signature.
+- [The most expensive Riftbound cards](/blog/most-expensive-riftbound-cards) — the full top of the market, live.
+- [League of Legends champions in Riftbound](/guides/league-of-legends-champions-in-riftbound) — who else has made it into the game.
+`,
+  },
   ...SEO_PACK_ARTICLES,
 ];
 
