@@ -427,19 +427,29 @@ export function cardIdentityStages(
     {
       // The collector number is the identity check for a base card. For a
       // SIGNATURE print it is too strict alone: there is exactly one signature
-      // printing per card per set and sellers frequently omit the number, so a
-      // signature also qualifies on name + set + "signature" — three independent
-      // signals, a stronger identity than a bare number. Base cards untouched.
+      // printing per card NAME in the whole game (verified against the live
+      // catalogue — zero collisions among 36 signature prints, which tracks:
+      // it is a one-per-champion treatment, not a per-set one), and sellers of a
+      // $500+ chase card very often title it just "<Champion, Title> Signature"
+      // with no collector number AND no set code — name + "signature" is already
+      // a stronger identity than a bare number, so requiring the set on top
+      // rejects exactly the listings this fallback exists to catch.
+      //
+      // setMentioned() USED to be required here too. It silently made this
+      // fallback nearly unreachable: Soraka, Wanderer; Sett, The Boss; Master Yi,
+      // Wuju Master; Ivern, Green Father and Akali, Rogue Assassin all sat at
+      // "No price yet" in every market but the ones sourced from TCGplayer/a real
+      // store — not because no eBay listing existed (real AU listings for every
+      // one of them were confirmed directly on eBay), but because "Riftbound
+      // Soraka, Wanderer Signature" never says "SFD" or "Spiritforged", so the
+      // fallback demanded something the very listings it was built for don't say.
+      // Base cards are untouched: numberMatches (checked first) still requires
+      // the real number for everything that isn't a signature.
       stage: `collector number matches ${card.number}/${card.total}${card.isSignature ? " (or named signature print)" : ""}`,
       pred: (it) => {
         const title = it.title ?? "";
         if (numberMatches(title, card.number, card.total, card.setCode)) return true;
-        return (
-          card.isSignature &&
-          titleIsSignature(title, n) &&
-          setMentioned(title, card.setCode) &&
-          nameMatches(title, card.name)
-        );
+        return card.isSignature && titleIsSignature(title, n) && nameMatches(title, card.name);
       },
     },
     // Signature ("*") and plain overnumbered share a number — keep them apart.
