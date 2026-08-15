@@ -6233,7 +6233,7 @@ We'd rather show you the real numbers and our actual reasoning than tell you wha
   // related-posts module, the /llm markdown mirrors) picks them up unchanged.
   {
     slug: "whats-in-the-riftbound-unleashed-set",
-    category: "guide",
+    category: "blog",
     title: "What's in the Riftbound Unleashed Set?",
     excerpt:
       "A complete guide to Riftbound Unleashed (UNL) — a 219-card set whose chase cards include the most expensive non-Origins printing in the game. Every card, filterable, with live prices.",
@@ -6337,7 +6337,7 @@ The gallery below is generated from the live card database rather than typed out
   },
   {
     slug: "how-to-read-a-riftbound-card",
-    category: "guide",
+    category: "blog",
     title: "How to Read a Riftbound Card",
     excerpt:
       "Every number, colour and symbol on a Riftbound card, explained on real cards — including the rarity gem that tells you what you pulled before you read a word.",
@@ -6518,7 +6518,7 @@ It is the most expensive single character in the game. Ahri, Nine-Tailed Fox exi
 | OGN 303/298 | No | US$374.22 |
 | OGN 303*/298 | Yes | **US$3,420.28** |
 
-Same art, same rules, same rarity. The signature accounts for roughly **US$3,046** of difference — about nine times the price. We pulled that comparison apart properly in [every Ahri card in Riftbound](/guides/every-ahri-card-in-riftbound).
+Same art, same rules, same rarity. The signature accounts for roughly **US$3,046** of difference — about nine times the price. We pulled that comparison apart properly in [every Ahri card in Riftbound](/blog/every-ahri-card-in-riftbound).
 
 A collector number **higher than the set total** — 238 in a 219-card set — signals a chase print in a different way. The full list of treatments is in the [variant and finish glossary](/guides/riftbound-variant-glossary).
 
@@ -6537,7 +6537,7 @@ A collector number **higher than the set total** — 238 in a 219-card set — s
   },
   {
     slug: "every-ahri-card-in-riftbound",
-    category: "guide",
+    category: "blog",
     title: "Every Ahri Card in Riftbound (and What Each One Costs)",
     excerpt:
       "Twelve Ahri printings across three different cards, from US$8.95 to US$3,420.28 — with the two prints that are visually identical except for a signature worth US$3,046.",
@@ -6685,7 +6685,7 @@ The same pattern repeats on **Ahri, Inquisitive** in Spirit Forged: SFD 227/221 
 
 ## Related reading
 
-- [How to read a Riftbound card](/guides/how-to-read-a-riftbound-card) — where the collector number and the asterisk live, and how to spot a Signature.
+- [How to read a Riftbound card](/blog/how-to-read-a-riftbound-card) — where the collector number and the asterisk live, and how to spot a Signature.
 - [The most expensive Riftbound cards](/blog/most-expensive-riftbound-cards) — the full top of the market, live.
 - [League of Legends champions in Riftbound](/guides/league-of-legends-champions-in-riftbound) — who else has made it into the game.
 `,

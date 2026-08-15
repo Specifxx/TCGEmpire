@@ -12,7 +12,7 @@ import { SETS, newestReleasedSet, nextUpcomingSet, domainInfo, DOMAIN_KEYS } fro
 import { SITE_URL, SITE_NAME } from "@/lib/site";
 import { getTopDeals, type TopDeals } from "@/lib/top-deals";
 import { getRecentlyUpdated, getPriceMovers, type PriceMovers } from "@/lib/price-history";
-import { getBlogPosts } from "@/lib/posts";
+import { getArticles } from "@/lib/articles";
 import { getHeroRailData } from "@/lib/hero-rail";
 import { timeAgo } from "@/lib/format";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
@@ -140,7 +140,6 @@ export default async function HomePage() {
     recentlyUpdated,
     moversArr,
     lastPriceRefresh,
-    blogPosts,
     railData,
   ] = await Promise.all([
     prisma.card.count(),
@@ -203,9 +202,6 @@ export default async function HomePage() {
     // touched by the importer on every listing it sees, so its max IS the last
     // refresh. Never blocks the page: if this read fails the section just hides.
     prisma.retailerPrice.aggregate({ _max: { lastSeen: true } }),
-    // Latest blog posts for the "Latest from the blog" teaser — in-memory list
-    // filter/sort (lib/posts.ts), not a DB query, so this adds no egress.
-    getBlogPosts(),
     // Real eBay / TCGplayer listings for the two hero rails. ONE hard-cached
     // entry for the whole site, tag-invalidated by the daily import — see
     // lib/hero-rail.ts for why a revenue-bearing read is allowed here when the
@@ -252,7 +248,12 @@ export default async function HomePage() {
   // The next announced-but-unreleased set (Radiance today; rolls forward on its
   // own — see nextUpcomingSet's doc comment). undefined hides the whole card.
   const radianceSet = nextUpcomingSet();
-  const latestPosts = blogPosts.slice(0, 3);
+  // The teaser row shows GUIDES, not blog posts. Both are the same Article shape
+  // from the same in-memory list, so this is still a filter/sort and not a DB
+  // read — but guides are the evergreen, reference-shaped content, which is what
+  // a first-time visitor landing on the homepage actually needs. The blog stays
+  // one click away in the nav and in the "See all guides" row below.
+  const latestPosts = getArticles("guide").slice(0, 3);
   // Guarding these at the page level (rather than always mounting <Reveal> and
   // letting the child render null) matches how {anyDeals && <Reveal>…} already
   // works above — an empty Reveal wrapper is harmless, but there's no reason to

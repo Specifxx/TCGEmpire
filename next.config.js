@@ -162,6 +162,31 @@ const nextConfig = {
         destination: "/marketplace",
         permanent: true,
       },
+      // These three shipped as guides and were moved to the blog shortly after.
+      // Both routes assert the article's category (app/guides/[slug]/page.tsx
+      // notFound()s when it isn't "guide"), so the old paths became hard 404s the
+      // moment the category flipped — and they had already been served live and
+      // listed in sitemaps/content.xml. 301 rather than leave them dead.
+      //
+      // These are safe to keep permanently: /guides/[slug] is a dynamic route, so
+      // a static source here only ever shadows a slug that no longer resolves
+      // under /guides. Should any of the three ever move back, delete its entry —
+      // a permanent redirect is browser-cached and would otherwise win.
+      {
+        source: "/guides/how-to-read-a-riftbound-card",
+        destination: "/blog/how-to-read-a-riftbound-card",
+        permanent: true,
+      },
+      {
+        source: "/guides/every-ahri-card-in-riftbound",
+        destination: "/blog/every-ahri-card-in-riftbound",
+        permanent: true,
+      },
+      {
+        source: "/guides/whats-in-the-riftbound-unleashed-set",
+        destination: "/blog/whats-in-the-riftbound-unleashed-set",
+        permanent: true,
+      },
       // Retired the proxy printer entirely (thin/low-value utility page, part of
       // the AdSense Publisher Policy remediation). 301 any indexed/inbound links
       // (incl. ?list= shares) to the deck pricer, its nearest surviving equivalent.

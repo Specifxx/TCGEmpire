@@ -8,22 +8,34 @@ function formatPostDate(iso: string): string {
   return d.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 }
 
-// Latest-content teaser — the 3 most recent posts, near the bottom of the
-// homepage (above the SEO prose). Fresh internal links + fresh content on the
-// homepage help crawl frequency and long-tail discovery. getBlogPosts() is
-// already newest-first (lib/posts.ts), so this is just its top slice — no new
-// sort/fetch logic, and it costs no DB query (ARTICLES is an in-memory list).
+// Latest-content teaser — 3 items near the bottom of the homepage (above the SEO
+// prose). Fresh internal links + fresh content on the homepage help crawl
+// frequency and long-tail discovery. getArticles() is already newest-first, so
+// this is just its top slice — no new sort/fetch logic, and it costs no DB query
+// (ARTICLES is an in-memory list).
+//
+// It feeds on GUIDES rather than blog posts. Both are Articles and render
+// identically here, so the only thing that had to change is where each card
+// links: a guide lives at /guides/<slug> and a blog post at /blog/<slug>, and
+// the wrong prefix is a hard 404 because each route asserts the category (see
+// app/guides/[slug]/page.tsx). Hence articleHref() below derives the path from
+// the article itself instead of hardcoding one — mixing categories in this row,
+// or switching it back to the blog, then cannot produce a dead link.
+function articleHref(a: Article): string {
+  return a.category === "guide" ? `/guides/${a.slug}` : `/blog/${a.slug}`;
+}
+
 export function LatestPosts({ posts }: { posts: Article[] }) {
   if (posts.length === 0) return null;
   return (
     <section>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-xl font-extrabold text-white">Latest from the blog</h2>
-          <p className="mt-0.5 text-xs text-slate-500">Market analysis, guides and news.</p>
+          <h2 className="text-xl font-extrabold text-white">Guides &amp; explainers</h2>
+          <p className="mt-0.5 text-xs text-slate-500">How Riftbound cards, sets and prices actually work.</p>
         </div>
-        <Link href="/blog" className="btn-ghost hidden text-xs sm:inline-flex">
-          See all posts →
+        <Link href="/guides" className="btn-ghost hidden text-xs sm:inline-flex">
+          See all guides →
         </Link>
       </div>
 
@@ -31,7 +43,7 @@ export function LatestPosts({ posts }: { posts: Article[] }) {
         {posts.map((p) => (
           <Link
             key={p.slug}
-            href={`/blog/${p.slug}`}
+            href={articleHref(p)}
             className="card-surface group flex flex-col overflow-hidden transition-colors hover:border-brand-500/60 hover:bg-ink-800"
           >
             {/* Fixed aspect box either way — a post without a hero image (most
