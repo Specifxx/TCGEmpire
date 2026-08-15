@@ -36,29 +36,18 @@ monetise the site via AdSense mediation while its record is missing from
 `/ads.txt`, and it takes Google 24–48h to recrawl the file after a change. Do
 this as early as possible, not after everything else.
 
-### 3. Decide what happens to the in-progress AdSense review
+### 3. AdSense review — DECIDED: abandoned in favour of Ezoic
 
 `docs/adsense-remediation.md` records that this account was **rejected twice**
 and a **third review was in progress** (requested 27 Jul 2026) when this branch
-was written. This branch sets `NEXT_PUBLIC_AD_NETWORK=ezoic` as the default,
-which stops rendering the direct AdSense loader script and ownership meta tag
-(`src/components/AdSenseLoader.tsx`, gated in `src/lib/ezoic.ts`).
-
-If that review is still active: a reviewer finding the verification script
-gone is a plausible new rejection reason, on top of the two this project
-already worked hard to fix. Before deploying this branch to production, check
-the review's actual status and pick one:
-
-- **Review has concluded (approved or the account is otherwise resolved)** —
-  proceed with Ezoic as the default. If Ezoic's own AdSense-mediation feature
-  is used, it commonly serves AdSense demand under Ezoic's account/console
-  relationship rather than this site's direct loader — read Ezoic's
-  [AdSense Mediation docs](https://support.ezoic.com/kb/article/google-adsense-mediation)
-  before assuming direct AdSense is now redundant vs. still required.
-- **Review is still pending** — either hold this branch until it resolves, or
-  set `NEXT_PUBLIC_AD_NETWORK=adsense` in Vercel to keep the current direct
-  AdSense behaviour live (still safe to merge DNS/Ezoic-CDN changes; only the
-  ad-network switch is deferred) while you sort out the review.
+was written. Owner decision (2026-08-15): stop pursuing that review — Ezoic is
+the ad network going forward, full stop. `NEXT_PUBLIC_AD_NETWORK` defaults to
+`ezoic`, which stops rendering the direct AdSense loader script and ownership
+meta tag (`src/components/AdSenseLoader.tsx`, gated in `src/lib/ezoic.ts`); no
+action needed to make that take effect, and no further AdSense review follow-up
+is expected. The `adsense` value/code path is left in place only as a possible
+future fallback (e.g. if Ezoic's AdSense-mediation wants the direct loader
+present too), not because anyone is still waiting on Google.
 
 ### 4. Set `NEXT_PUBLIC_AD_NETWORK` in Vercel once you've decided
 
