@@ -57,6 +57,10 @@ export interface SessionUser {
   premiumUntil: Date | null;
   // When this account first started a free trial (null = never → trial-eligible).
   trialStartedAt: Date | null;
+  // The market (AU/NZ/US/UK/SG/CA) this account browses/prices in — see the
+  // schema comment on User.preferredCountry. Raw/untyped here (auth.ts stays
+  // decoupled from lib/country.ts); consumers normalize with normalizeCountry().
+  preferredCountry: string | null;
 }
 
 
@@ -134,6 +138,7 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Ses
       isVerifiedSeller: !!user.emailVerified || user.isAdmin || isAdminEmail(user.email),
       premiumUntil: user.premiumUntil,
       trialStartedAt: user.trialStartedAt,
+      preferredCountry: user.preferredCountry,
     };
   } catch {
     return null;

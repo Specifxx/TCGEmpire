@@ -23,6 +23,7 @@ export async function GET() {
             avatarUrl: user.avatarUrl ?? null,
             emailVerified: !!user.emailVerified,
             balanceCents: user.balanceCents,
+            preferredCountry: user.preferredCountry,
           }
         : null,
       premium: isPremium(user),

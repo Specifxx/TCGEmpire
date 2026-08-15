@@ -20,10 +20,12 @@ import { FooterNav } from "@/components/FooterNav";
 import { ShareRow } from "@/components/ShareRow";
 import { enabledProviders } from "@/lib/oauth";
 import { AdSenseLoader } from "@/components/AdSenseLoader";
+import { EzoicLoader } from "@/components/EzoicLoader";
 import { ConsentDefaults } from "@/components/ConsentDefaults";
 import { ConsentGatedAnalytics } from "@/components/ConsentGatedAnalytics";
 import { PrivacySettingsLink } from "@/components/PrivacySettingsLink";
 import { ADSENSE_CLIENT_ID, ADSENSE_CONFIGURED } from "@/lib/adsense";
+import { AD_NETWORK } from "@/lib/ezoic";
 
 // Neither is needed for the initial paint or SEO: the alert modal only opens in
 // response to a PriceWatchButton click, and the signup popup waits 25s before
@@ -219,14 +221,25 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             literal here again. A hardcoded, out-of-date id on this exact line,
             belonging to no account under review, is the fault that most likely
             voided the last two applications. See docs/adsense-remediation.md. */}
-        {ADSENSE_CONFIGURED && <meta name="google-adsense-account" content={ADSENSE_CLIENT_ID} />}
+        {AD_NETWORK === "adsense" && ADSENSE_CONFIGURED && (
+          <meta name="google-adsense-account" content={ADSENSE_CLIENT_ID} />
+        )}
         {/* The AdSense loader: ownership verification + Auto ads + the EEA/UK/CH
-            consent message, on every page, ungated. See the component header. */}
+            consent message, on every page. See the component header — gated on
+            AD_NETWORK, off by default now that DNS/ads moved to Ezoic. */}
         <AdSenseLoader />
+        {/* Ezoic's standalone header script — the AD_NETWORK counterpart above. */}
+        <EzoicLoader />
         {/* Ad/consent origins — shaving a round-trip off the loader and the
             consent message, which is what the 0-impression message needed. */}
         <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossOrigin="" />
         <link rel="preconnect" href="https://fundingchoicesmessages.google.com" crossOrigin="" />
+        {AD_NETWORK === "ezoic" && (
+          <>
+            <link rel="preconnect" href="https://www.ezojs.com" crossOrigin="" />
+            <link rel="preconnect" href="https://cmp.gatekeeperconsent.com" crossOrigin="" />
+          </>
+        )}
         {/* Warm up the image CDN connection so card thumbnails start loading sooner. */}
         <link rel="preconnect" href="https://cdn.riftscribe.gg" crossOrigin="" />
         <link rel="dns-prefetch" href="https://cdn.riftscribe.gg" />

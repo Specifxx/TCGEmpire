@@ -1,4 +1,5 @@
 import { ADSENSE_CONFIGURED, ADSENSE_LOADER_SRC } from "@/lib/adsense";
+import { AD_NETWORK } from "@/lib/ezoic";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The AdSense loader — rendered in <head> on EVERY page, unconditionally.
@@ -12,9 +13,16 @@ import { ADSENSE_CONFIGURED, ADSENSE_LOADER_SRC } from "@/lib/adsense";
 //      message to EEA/UK/CH visitors. The published message has recorded 0
 //      impressions purely because this script was never installed.
 //
-// IT MUST NEVER BE GATED. Not by ADSENSE_REVIEW_MODE, not by AD_UNITS_ENABLED,
-// not by Premium status, not by an interaction. Those flags control whether ad
-// UNITS fill; this script is the account's verification and consent transport.
+// IT MUST NEVER BE GATED BY ADSENSE_REVIEW_MODE, AD_UNITS_ENABLED, Premium
+// status, or an interaction — those flags control whether ad UNITS fill; this
+// script is the account's verification and consent transport.
+//
+// IT IS GATED BY AD_NETWORK (lib/ezoic.ts), added when DNS moved to Ezoic:
+// direct AdSense only renders while AD_NETWORK === "adsense". While the site is
+// mid-review with Google (docs/adsense-remediation.md — rejected twice, third
+// review was in progress when this gate was added), be aware that a reviewer
+// finding this script absent is a real risk; confirm the review's status/needs
+// before relying on AD_NETWORK defaulting away from "adsense" in production.
 //
 // ── Why a plain <script async> and not <Script strategy="afterInteractive"> ──
 // The remediation brief asked for next/script + afterInteractive. In the Next 14
@@ -51,6 +59,7 @@ import { ADSENSE_CONFIGURED, ADSENSE_LOADER_SRC } from "@/lib/adsense";
 // docs/adsense-remediation.md § Phase 4 for the full analysis and the options
 // considered.
 export function AdSenseLoader() {
+  if (AD_NETWORK !== "adsense") return null;
   // Only omitted when no publisher id is configured at all — a build with an
   // invalid id never gets this far (lib/adsense.ts throws in production).
   if (!ADSENSE_CONFIGURED) return null;
