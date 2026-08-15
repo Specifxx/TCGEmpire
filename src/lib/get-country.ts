@@ -10,14 +10,13 @@
 //      undetected visitor and every local/preview request, where there is no geo
 //      header at all.
 //
-// CAVEAT if the domain is ever routed through Ezoic (or any reverse-proxy CDN)
-// in front of Vercel again: Vercel derives x-vercel-ip-country from the IP of
-// the connection it terminates, which would then be the proxy's edge, not the
-// visitor's real IP — step 2 would stop reliably detecting anything and most
-// visitors would silently fall through to step 3 (US). Not a concern while
-// Vercel serves the domain directly, as it does now (DNS reverted 2026-08-15
-// after a brief Ezoic trial — see docs/ezoic-integration.md). Kept regardless
-// of the DNS provider: signed-in accounts remember their real market on
+// CAVEAT if the domain is ever routed through a reverse-proxy CDN in front of
+// Vercel: Vercel derives x-vercel-ip-country from the IP of the connection it
+// terminates, which would then be the proxy's edge, not the visitor's real IP —
+// step 2 would stop reliably detecting anything and most visitors would
+// silently fall through to step 3 (US). Not a concern while Vercel serves the
+// domain directly, as it does now. Signed-in accounts have an extra layer of
+// protection either way: they remember their real market on
 // User.preferredCountry (see CountryProvider + POST /api/account/country), so
 // a returning signed-in visitor lands correctly even on a first request before
 // any geo/cookie signal is available.

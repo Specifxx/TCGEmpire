@@ -36,18 +36,9 @@ export const dynamic = "force-static";
 // line for them would introduce an unverifiable seller record, which is worse
 // than an absent one.
 //
-// EZOIC (lib/ezoic.ts, the site's ad network since DNS moved to Ezoic's
-// nameservers) belongs here too, but its exact ads.txt record(s) are
-// account-specific — Ezoic → Settings/Integration → ads.txt hands out the real
-// line(s) once the domain is connected. Google explicitly will not let a partner
-// monetise the site while it's missing from this file (24-48h to recrawl after
-// it's added), so this is a real blocker for Ezoic's AdSense-mediation demand
-// until someone pastes it in.
-//
-// If a future ad partner (Ezoic included — a header-bidding SSP, an ad-network
-// reseller, an AdExchange partner) DOES supply records, paste them between the
-// markers below exactly as that partner published them — one record per line,
-// never edited:
+// If a future ad partner (a header-bidding SSP, an ad-network reseller, an
+// AdExchange partner) DOES supply records, paste them between the markers below
+// exactly as that partner published them — one record per line, never edited:
 //
 //   <domain>, <publisher id>, DIRECT|RESELLER, <certification authority id>
 //

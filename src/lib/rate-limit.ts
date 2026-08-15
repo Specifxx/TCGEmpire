@@ -41,17 +41,8 @@ export function rateLimit(key: string, limit: number, windowMs: number): RateLim
   return { ok: true, retryAfter: 0 };
 }
 
-// Best-effort client IP. Preference order:
-//   1. x-middleton-ip — Ezoic's own header carrying the real visitor IP,
-//      unaffected by however many hops precede it. Present only when traffic is
-//      routed through Ezoic's proxy in front of Vercel.
-//   2. x-forwarded-for — Vercel sets this directly when Ezoic isn't in the
-//      path; when it is, Ezoic forwards the visitor's IP as (one of) the
-//      entries here too, so this remains a reasonable fallback.
-//   3. x-real-ip.
+// Best-effort client IP. Vercel sets x-forwarded-for; fall back to x-real-ip.
 export function clientIp(req: Request): string {
-  const middleton = req.headers.get("x-middleton-ip");
-  if (middleton) return middleton.trim();
   const xff = req.headers.get("x-forwarded-for");
   if (xff) return xff.split(",")[0]!.trim();
   return req.headers.get("x-real-ip") ?? "unknown";
