@@ -7,7 +7,7 @@ import { HeroStats, type MarketStat } from "./HeroStats";
 import { TrendingChips } from "./TrendingChips";
 import type { CardTileData } from "@/components/CardTile";
 import type { Country } from "@/lib/country";
-import { FloatingCardShowcase, type FeaturedCard } from "./FloatingCardShowcase";
+import { HeroAdRail } from "./HeroAdRail";
 
 // The cinematic, full-bleed homepage hero. Breaks out of the centered content
 // column to fill the viewport (left-1/2 + w-screen + -translate-x-1/2). All
@@ -27,8 +27,6 @@ export function CinematicHero({
   statsByCountry,
   trendingCards,
   freshness,
-  featuredCardLeft,
-  featuredCardRight,
 }: {
   totalCards: number;
   // Per-market stat tiles — localised to the visitor's market client-side (HeroStats).
@@ -39,11 +37,6 @@ export function CinematicHero({
   // Pre-formatted "Xh ago" string — see HeroStats' doc comment for why this is
   // computed server-side once rather than client-recomputed.
   freshness: string | null;
-  // Two real chase cards at their real live prices, floated either side of the
-  // hero on wide desktop. Either is null when it has no live price, in which
-  // case that side renders nothing — see FloatingCardShowcase.
-  featuredCardLeft: FeaturedCard | null;
-  featuredCardRight: FeaturedCard | null;
 }) {
   return (
     <ParallaxShell>
@@ -52,12 +45,16 @@ export function CinematicHero({
         <div className="absolute inset-0 bg-ink-950 border-b border-ink-800" />
       </div>
 
-      {/* Floating chase cards, one either side — ≥1400px only, absolutely
+      {/* Vertical affiliate rails, one either side — ≥1400px only, absolutely
           positioned, so the centred search-first column below is completely
-          unaffected at every smaller size. Real cards, real live prices; each
-          side renders nothing without one. */}
-      <FloatingCardShowcase card={featuredCardLeft} side="left" />
-      <FloatingCardShowcase card={featuredCardRight} side="right" />
+          unaffected at every smaller size. They occupy the exact slots (and the
+          exact measured 1400px clearance) that the floating chase-card showcase
+          used to; that showcase earned nothing and cost a serial DB read on an
+          ISR-cached page. Which partner lands on which side is decided
+          client-side per market — AU/NZ get eBay on both sides, since TCGplayer
+          is US-centric — and Premium subscribers get neither. See HeroAdRail. */}
+      <HeroAdRail side="left" />
+      <HeroAdRail side="right" />
 
       {/* ── Foreground content (re-aligned to the normal grid) ───────────────── */}
       <div className="container-app relative z-10 w-full py-8 text-center sm:py-10">

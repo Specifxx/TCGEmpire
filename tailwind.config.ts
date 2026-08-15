@@ -85,10 +85,13 @@ const config: Config = {
           "0%": { opacity: "0" },
           "100%": { opacity: "1" },
         },
-        float: {
-          "0%,100%": { transform: "translateY(0)" },
-          "50%": { transform: "translateY(-4px)" },
-        },
+        // REMOVED: `float`. Nothing referenced `animate-float` once the hero's
+        // floating chase-card showcase became the affiliate rails, and this
+        // entry was a live hazard rather than dead weight: globals.css declared
+        // its OWN `.animate-float` (rc-float, 14px/7s) after @tailwind
+        // utilities, so this 4px/4s version was permanently shadowed. Deleting
+        // only the CSS half would have left the class name working with
+        // different motion, which is worse than either.
         // Slow, organic drift for the blurred hero "aurora" blobs.
         blob: {
           "0%,100%": { transform: "translate(0px,0px) scale(1)" },
@@ -104,7 +107,6 @@ const config: Config = {
       animation: {
         "fade-up": "fade-up 0.5s ease-out both",
         "fade-in": "fade-in 0.6s ease-out both",
-        float: "float 4s ease-in-out infinite",
         blob: "blob 16s ease-in-out infinite",
         "glow-pulse": "glow-pulse 3.4s ease-in-out infinite",
       },
