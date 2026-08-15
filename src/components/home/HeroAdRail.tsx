@@ -125,9 +125,16 @@ function ebaySealedUnit(country: Country): RailUnit {
     href: ebaySearchUrl(country, "Riftbound booster box", "hero_rail_sealed"),
     retailer: "ebay_hero_rail",
     kind: "sealed",
-    headline: "Sealed boxes & bundles",
+    headline: "Sealed booster boxes",
     destination: `on ${ebayLabel(country)}`,
-    points: ["Booster boxes & displays", "Bundles & starter decks", "Factory-sealed product"],
+    // Every bullet has to be true of what `_nkw=Riftbound booster box` actually
+    // RETURNS. eBay ANDs the keywords in a /sch/ query (see ebaySearchUrl), so
+    // this search cannot surface a bundle or a starter deck — the earlier copy
+    // promised "Bundles & starter decks" and the headline promised "bundles",
+    // and the click landed on a result page without them. Broadening the query
+    // to match the copy would have been the other fix, but it would blunt the
+    // one thing that differentiates this rail from the singles rail beside it.
+    points: ["Booster boxes & displays", "Factory-sealed, unopened", "Compare live seller prices"],
     cta: "Search eBay →",
   };
 }
@@ -347,15 +354,43 @@ export function HeroAdRail({ side }: { side: "left" | "right" }) {
         // not add rotation or an outward transform here without redoing it.
         isLeft ? "left-8" : "right-8",
       ].join(" ")}
-      // Above the background layers, below the hero's own text column (which is
-      // z-10), so even if a future copy change did collide the headline stays
-      // readable. Inline because Tailwind's default scale has no z-5.
-      style={{ zIndex: 5 }}
+      // ABOVE the hero's text column (z-10), and that is a hit-testing
+      // requirement, not a cosmetic preference.
+      //
+      // This was zIndex 5 — inherited verbatim from the chase-card showcase —
+      // and at 5 the rails were unclickable. The foreground column at
+      // CinematicHero.tsx is `container-app relative z-10`, i.e. `mx-auto w-full
+      // max-w-[1400px]` (globals.css), and it is the shell's only in-flow child,
+      // so its border box runs from max(0,(vw−1400)/2) to min(vw,(vw+1400)/2)
+      // and spans the shell's full height — taller and wider than the rail band
+      // in the same containing block. It has no background, but a transparent
+      // HTML element still hit-tests across its whole border box (that is what
+      // pointer-events:none exists to opt out of, which is why the decorative
+      // background layer next to it sets exactly that). So at 1400px the column
+      // covered 100% of both rails, and the click landed on the column: no
+      // pointer cursor, no hover state, no navigation, no buy_click event, no
+      // EPN click. Full coverage to 1464px, the centred CTA pill and wordmark
+      // still covered to ~1704px, some overlap all the way to 1944px — i.e.
+      // every 1440/1512/1536/1600/1680 laptop the clearance table below was
+      // measured for.
+      //
+      // 20 is safe precisely BECAUSE of that table: the rails clear the nearest
+      // H1 glyph by ≥87px at every width they render at, and the hero's own
+      // interactive children (SearchBar and its z-50 dropdown, chips, stat
+      // links, CTAs, region toggle) are all max-w-2xl-or-narrower and centred,
+      // so they never reach the 240px gutters the rails occupy. Nothing is
+      // obscured and no hero control loses a click. The shell itself is
+      // `-translate-x-1/2`, and a transform creates a stacking context, so this
+      // 20 is scoped to the hero and can never rise above site chrome.
+      // Inline because Tailwind's default scale has no z-20 arbitrary need.
+      style={{ zIndex: 20 }}
     >
-      {/* pointer-events-auto is load-bearing: the wrapper above disables hit
-          testing, and without re-enabling it here the banners would render
-          perfectly and be completely unclickable — a silent revenue-zero bug no
-          build, lint or test would catch. */}
+      {/* pointer-events-auto is load-bearing but NOT sufficient on its own: the
+          wrapper above disables hit testing, and without re-enabling it here the
+          banners would render perfectly and be completely unclickable. The
+          zIndex note above is the other half of the same invariant — both are
+          required, and neither is visible to the build, lint, the tests or the
+          adsense guard. */}
       <div className="pointer-events-auto w-[240px]">
         <RailPanel unit={unit} country={country} />
         {/* Each rail carries its OWN disclosure. The two sides are ~1100px apart
