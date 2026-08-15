@@ -116,6 +116,29 @@ async function load(): Promise<HeroRailData> {
       });
     }
 
+    // ── Markets the importer never captures, mapped to where their buyers
+    //    actually shop ────────────────────────────────────────────────────────
+    // Measured against production: EbayAdListing only ever holds AU, SG, UK and
+    // US rows — NZ and CA are never imported. Left alone, those two markets fall
+    // through to the text-only house creative, and NZ is one of the two markets
+    // that is supposed to show eBay on BOTH rails, so the dual-eBay rule would
+    // have been dead exactly where it matters most.
+    //
+    // The mapping mirrors the routing affiliate.ts ALREADY applies, so nobody is
+    // sent somewhere they would not otherwise have gone:
+    //   NZ → AU. ebaySearchUrl("NZ", …) resolves to www.ebay.com.au on the AU
+    //            rotation (705-53470-19255-0); there is no eBay New Zealand.
+    //            An NZ buyer is on the Australian marketplace either way, so an
+    //            AU listing at its real AUD price is what they would actually
+    //            pay, and the stored URL carries the matching AU tagging.
+    //   CA → US. Same principle as the existing Singapore reroute. Canada has
+    //            its own ebay.ca rotation, but with no ca rows to show, a real
+    //            ebay.com listing beats a text banner. NOTE: those clicks report
+    //            under the US sub-id, because an ebay.com URL must carry the US
+    //            mkrid — tagging it with CA's would break the credit entirely.
+    if (!ebay.NZ?.length && ebay.AU?.length) ebay.NZ = ebay.AU;
+    if (!ebay.CA?.length && ebay.US?.length) ebay.CA = ebay.US;
+
     // ── TCGplayer: official card art + its real TCGplayer price ─────────────
     // No listing photo exists for these rows, and that is fine: TCGplayer sells
     // by product, not by individual photographed item, so the official art IS
