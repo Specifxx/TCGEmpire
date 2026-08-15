@@ -2,6 +2,16 @@
 
 Branch: `claude/domain-transfer-vercel-ezoic-hbgair`
 
+**STATUS (2026-08-15): DNS REVERTED, `NEXT_PUBLIC_AD_NETWORK` NOT YET
+REVISITED.** DNS was switched back to Vercel shortly after the transfer. The
+code below stays in the tree either way (Ezoic support is a toggle, not a
+deletion — see `NEXT_PUBLIC_AD_NETWORK` in `.env.example`), but as of this
+note `NEXT_PUBLIC_AD_NETWORK` still defaults to `"ezoic"`, meaning the site is
+currently running Ezoic's header script with no Ezoic proxy/account actually
+in front of it, and AdSense's loader is still off. Whether to flip back to `"adsense"` (full revert) or leave `"ezoic"` (the
+header script serves fine without the DNS-level integration too, if that's
+wanted) is a pending owner decision — don't assume either way.
+
 Scope confirmed for this pass: **DNS/domain only**. Ezoic becomes the
 nameserver-level reverse proxy in front of the site (their "Ezoic Cloud"
 product); the Next.js app, its cron jobs, database and Vercel Analytics all
