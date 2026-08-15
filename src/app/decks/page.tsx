@@ -147,6 +147,24 @@ export default async function DecksPage() {
             How a Riftbound deck is built →
           </Link>
         </p>
+        {/* Same 24 July 2026 rules wave, and the one place it changes what a reader
+            below can legally play: the Constructed 2v2 ban list. Called out here
+            because a tier-2 list on this very page is built on the only Legend it
+            bans, and nothing else on /decks mentions format legality at all.
+            The card and its 2v2-only status come from the CURATED, Riot-sourced
+            list in /guides/riftbound-banlist-explained — deliberately not from
+            prisma/riftbound-cards.json's `is_banned` flag, which predates this wave
+            and still reads false for this exact printing. */}
+        <p className="mt-2 border-t border-ink-800 pt-2 text-sm text-slate-400">
+          The same update opened a separate{" "}
+          <strong className="text-slate-200">Constructed 2v2 ban list</strong>: the whole Standard banlist plus{" "}
+          <strong className="text-slate-200">Master Yi, Wuju Bladesman</strong>, which is banned in 2v2 only and
+          stays legal in 1v1 Standard — so the Master Yi list below is a 1v1 deck. Every other deck here is legal
+          in both.{" "}
+          <Link href="/guides/riftbound-banlist-explained" className="text-brand-400 underline hover:text-brand-300">
+            Every banned card →
+          </Link>
+        </p>
       </section>
 
       {/* High-intent shortcuts: "cheapest/budget X deck" and "best win rate X deck"

@@ -286,6 +286,28 @@ export function nextUpcomingSet(now: Date = new Date()): SetInfo | undefined {
   })[0];
 }
 
+/**
+ * Has this set code NOT shipped yet? — i.e. anything a store sells for it today is
+ * a PRE-ORDER, not stock it can post you.
+ *
+ * Date-driven like every other helper here, so it needs no edit on release day:
+ * Radiance stops being a pre-order set the moment 23 Oct 2026 passes, and its
+ * listings graduate into the normal sealed pages on their own.
+ *
+ * An unknown code reads as released. That is the safe default: the only thing
+ * this flag suppresses is a "pre-order" label and separate treatment, so guessing
+ * "released" for a code we don't recognise shows a real listing plainly rather
+ * than hiding it behind a badge that might be wrong.
+ */
+export function isPreorderSetCode(code: string | null | undefined, now: Date = new Date()): boolean {
+  if (!code) return false;
+  const set = setByCode(code);
+  if (!set?.comingSoon) return false;
+  if (!set.releasedOn) return true; // announced, no date — still unreleased
+  const released = Date.parse(`${set.releasedOn}T00:00:00Z`);
+  return Number.isNaN(released) || released > now.getTime();
+}
+
 export interface RarityInfo {
   key: string;
   label: string;

@@ -68,6 +68,11 @@ export const NAV_GROUPS: NavGroup[] = [
       // page is one ⌘K away all through the pre-launch window, when it is the
       // single highest-intent page on the site.
       { href: "/radiance-countdown", label: "Radiance release date", emoji: "✨", keywords: ["release date", "countdown", "when", "next set", "set 5", "radiance"] },
+      // Label deliberately omits the word "prices": nav search scores the label, and
+      // "Radiance pre-order prices" outranked the Bulk Pricer on a bare "prices"
+      // query (caught by tests/nav-search.test.ts). The pre-order keywords below
+      // still carry every intent that should land here.
+      { href: "/radiance-preorders", label: "Radiance pre-orders", emoji: "🛒", keywords: ["preorder", "pre-order", "radiance preorder", "booster box preorder", "set 5 preorder"] },
       { href: "/market", label: "Market Index", emoji: "📊", keywords: ["index", "market", "chart", "trend", "how is the market"] },
       { href: "/movers", label: "Daily Movers", emoji: "📈", keywords: ["movers", "risers", "fallers", "gainers", "drops", "trending", "biggest movers"] },
       { href: "/stores/tracked", label: "Stores we track", emoji: "🏪", keywords: ["stores", "shops", "retailers", "which stores"] },

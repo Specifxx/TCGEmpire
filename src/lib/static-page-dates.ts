@@ -18,6 +18,7 @@ const STATIC_PAGE_DATES: Record<string, string> = {
   "/tools/best-basket": "2026-07-26",
   "/premium": "2026-07-29",
   "/radiance-countdown": "2026-08-04",
+  "/radiance-preorders": "2026-08-15",
   "/feedback": "2026-07-26",
   "/about": "2026-07-26",
   "/contact": "2026-07-26",

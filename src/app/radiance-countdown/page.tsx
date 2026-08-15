@@ -81,7 +81,7 @@ const FAQS = [
   },
   {
     q: "Can I pre-order Radiance yet?",
-    a: "Some stores open pre-orders for sealed product ahead of release. RiftCompare tracks sealed prices across every store it follows, so you can compare booster box pre-order prices as they appear rather than taking the first one you see.",
+    a: "Yes — tracked stores are already taking pre-orders on Radiance booster boxes, the Radiance Vault, Showdown Decks and event kits, and their opening prices differ a lot. Our Radiance pre-order page compares every one of them in your currency, cheapest first, so you can see the real spread rather than taking the first price you find.",
   },
   {
     q: "What comes after Radiance?",
@@ -189,9 +189,12 @@ export default function RadianceCountdownPage() {
           {CHAMPIONS.length} new Legends
           <span className="mt-0.5 block text-xs font-normal text-slate-500">Seraphine, Evelynn, Ekko…</span>
         </div>
-        <Link href="/sealed" className="card-surface p-3 text-center text-sm font-semibold text-white transition-colors hover:border-brand-500">
-          Sealed prices
-          <span className="mt-0.5 block text-xs font-normal text-slate-500">compare pre-orders</span>
+        {/* Points at the pre-order comparison, not /sealed. This tile promised
+            "compare pre-orders" while the importer was still dropping every
+            unreleased-set listing, so /sealed could never show one. */}
+        <Link href="/radiance-preorders" className="card-surface p-3 text-center text-sm font-semibold text-white transition-colors hover:border-brand-500">
+          Pre-order prices
+          <span className="mt-0.5 block text-xs font-normal text-slate-500">compare every store</span>
         </Link>
       </div>
 

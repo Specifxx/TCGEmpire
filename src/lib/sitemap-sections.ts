@@ -134,6 +134,7 @@ async function core(): Promise<SitemapEntry[]> {
     // next.config.js); a redirecting URL in a sitemap is a soft error in Search
     // Console, so it is removed rather than left behind.
     { url: `${SITE_URL}/radiance-countdown`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/radiance-countdown") },
+    { url: `${SITE_URL}/radiance-preorders`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/radiance-preorders") },
     // /feedback is NOT submitted: src/app/feedback/page.tsx sets
     // robots: { index: false, follow: true } (AdSense remediation § Phase 7 —
     // /contact already covers the same intent with real content). Submitting a

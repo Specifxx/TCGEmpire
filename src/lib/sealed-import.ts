@@ -7,6 +7,7 @@ import { isEbayEnabled, isEbayRateLimited, searchEbaySealed, primeEbayBudget, se
 import { fetchTcgplayerSealed, tcgProductUrl, tcgImageUrl, setCodeFromSetName } from "./tcgplayer";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows } from "./scrape-http";
 import { DEFAULT_COUNTRY, type Country } from "./country";
+import { isPreorderSetCode } from "./constants";
 
 interface ShopifyImg { src?: string }
 interface ShopifyVar { price: string; available: boolean }
@@ -17,10 +18,16 @@ const SET_FROM_TITLE: [RegExp, string][] = [
   [/spirit\s*forged|\bSFD\b/i, "SFD"],
   [/unleashed|\bUNL\b/i, "UNL"],
   [/vendetta|\bVEN\b/i, "VEN"],
+  // MUST stay ahead of Origins: Radiance products are titled e.g. "Riftbound:
+  // League of Legends - Radiance Booster Box (Pre-Order)", which contains no
+  // other set word, but ordering it late costs nothing and guards against a
+  // future title carrying both.
+  [/\bradiance\b|\bRAD\b/i, "RAD"],
   [/origins|\bOGN\b/i, "OGN"],
 ];
 const SET_NAMES: Record<string, string> = {
   OGN: "Origins", OGS: "Proving Grounds", SFD: "Spiritforged", UNL: "Unleashed", VEN: "Vendetta",
+  RAD: "Radiance",
 };
 
 // A sealed product must be identifiably RIFTBOUND. Other games slip in when a store
@@ -46,13 +53,42 @@ const RIFTBOUND_HINT =
 const T1_COLLECTION =
   /worlds\s*champion\s*(?:collection|signature\s*edition|player\s*bundle)|\bt1\b[\s\S]{0,30}?(?:signature\s*(?:edition|set)|player\s*bundle)/i;
 
-// Sets that aren't released yet — never list their (pre-order) sealed products.
-// Vendetta sealed IS available now (its singles are still pending — those are kept
-// out separately by SEALED_EXCLUDE + the empty Card table), so only Radiance remains.
-const UNRELEASED_SET = /\bradiance\b|\bRAD\b/i;
+// Riftbound's unreleased sets ARE imported now — as pre-orders. They used to be
+// dropped here wholesale, which was right while nothing could tell a pre-order from
+// stock on a shelf: an unshipped box listed beside real inventory reads as buyable,
+// and its price would have fed "cheapest sealed" and an InStock offer for a product
+// no store can post you.
+//
+// That separation now exists downstream instead of at the door: setCode carries the
+// set, constants.isPreorderSetCode() derives "hasn't shipped yet" FROM THE RELEASE
+// DATE, and getSealedGroups() keeps pre-orders out of the normal sealed pages while
+// getPreorderGroups() serves the dedicated, clearly-labelled pre-order page. So the
+// listings are captured while the pre-order window is the whole story, and they
+// graduate into the ordinary pages by themselves on release day.
+//
+// POKÉMON "ASTRAL RADIANCE" IS THE TRAP HERE. Searching tracked stores for
+// "radiance" returns Pokémon Astral Radiance boxes, packs and singles far more often
+// than Riftbound's set. isRiftboundSealed() already demands a Riftbound marker, which
+// is the real guard, but this is the exact collision class that put booster-box
+// photos on pack listings once before — so it is also excluded by name, because two
+// independent guards is the difference between a bug and a bad headline.
+const FOREIGN_RADIANCE = /\bastral\s*radiance\b/i;
 
 function isRiftboundSealed(title: string): boolean {
-  return (RIFTBOUND_HINT.test(title) || T1_COLLECTION.test(title)) && !UNRELEASED_SET.test(title);
+  return (RIFTBOUND_HINT.test(title) || T1_COLLECTION.test(title)) && !FOREIGN_RADIANCE.test(title);
+}
+
+/**
+ * Would a store listing with this title be captured as Riftbound sealed?
+ *
+ * Exported for tests only — it composes the two private gates every scrape path
+ * runs (`isRiftboundSealed` + `looksSealed`) without re-stating their regexes,
+ * which a test that copied them would silently stop checking the moment either
+ * changed. This is the gate that decides whether a real pre-order on a real
+ * storefront reaches the site at all, so it is worth being able to assert on.
+ */
+export function isTrackableSealedTitle(title: string): boolean {
+  return isRiftboundSealed(title) && looksSealed(title);
 }
 
 // "Does this title describe a sealed PRODUCT (rather than a single/accessory)?"
@@ -69,7 +105,7 @@ function looksSealed(title: string): boolean {
 // Poro Promo Nexus Night 1" — that's a single card, not the sealed pack, and must
 // never be scraped as sealed.
 const SEALED_TITLE =
-  /booster\s*box|booster\s*pack|booster\s*display|display\s*box|display\s*case|booster\s*bundle|\bbundle\b|box\s*set|champion\s*deck|pre-?rift|event\s*kit|elite|collector|gift\s*box|blister|proving\s*grounds|nexus\s*night\s*(?:\d+\s*)?(?:promo\s*)?pack|promo\s*pack|two[-\s]?player|starter\s*(deck|set)|precon|\bcase\b|mega\s*box|\btin\b|sealed/i;
+  /booster\s*box|booster\s*pack|booster\s*display|display\s*box|display\s*case|booster\s*bundle|\bbundle\b|box\s*set|champion\s*deck|showdown\s*decks?|pre-?rift|event\s*kit|elite|collector|gift\s*box|blister|proving\s*grounds|nexus\s*night\s*(?:\d+\s*)?(?:promo\s*)?pack|promo\s*pack|two[-\s]?player|starter\s*(deck|set)|precon|\bcase\b|mega\s*box|\btin\b|\bvault\b|sealed/i;
 // …but never these. Singles / accessories / bulk / break slots / non-English slip
 // through otherwise. Condition codes (NM/LP/…) and a set name in parentheses
 // (e.g. "(Origins: Proving Grounds)") are tell-tale signs of a single card.
@@ -176,6 +212,12 @@ export function classifySealed(title: string): string {
   if (T1_COLLECTION.test(t) && /signature\s*edition|signature\s*set/.test(t)) return "T1 Signature Edition";
   if (T1_COLLECTION.test(t) && /player\s*bundle/.test(t)) return "T1 Player Bundle";
   if (/vault\s*bundle|worlds\s*bundle|booster\s*bundle|\bbundle\b|gift\s*box/.test(t)) return "Bundle";
+  // AFTER the Bundle rule, never before it: "Vault Bundle" is an existing product
+  // that must keep typing as "Bundle". This catches the BARE "Vault" — a separate
+  // SKU introduced with Radiance ("Riftbound … - Radiance Vault"), which until now
+  // matched no product word at all and so was dropped at the door rather than
+  // mis-typed. Found by testing the gate against real storefront titles.
+  if (/\bvault\b/.test(t)) return "Vault";
   if (/two[-\s]?player|starter|precon/.test(t)) return "Starter Set";
   if (/\btin\b/.test(t)) return "Tin";
   if (/promo\s*pack/.test(t)) return "Promo Pack";
@@ -463,9 +505,9 @@ export async function refreshTcgplayerSealed(): Promise<number> {
     const title = (p.productName ?? "").trim();
     const market = p.marketPrice;
     if (!title || market == null || market <= 0) continue;
-    if (UNRELEASED_SET.test(title)) continue; // Vendetta / Radiance not released yet
+    // Pokémon's Astral Radiance, not Riftbound's Radiance — see FOREIGN_RADIANCE.
+    if (FOREIGN_RADIANCE.test(title)) continue;
     const setCode = setCodeFromSetName(p.setName ?? "");
-    if (setCode && UNRELEASED_SET.test(setCode)) continue;
     const type = classifySealed(title);
     const groupKey = setCode ? `${setCode}|${type}` : title.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 40);
     rows.push({
@@ -621,7 +663,10 @@ const DISTRUST_STORE_IMAGE = new Set([
   "Booster Pack", "Nexus Night Pack", "Promo Pack", "Sleeved Booster", "Sleeved Booster (Art Set)",
 ]);
 
-export async function getSealedGroups(country: Country = DEFAULT_COUNTRY): Promise<SealedGroup[]> {
+// Every sealed group in a market, pre-orders included. Not exported: callers pick a
+// side via getSealedGroups() (shipped) or getPreorderGroups() (not yet), so nothing
+// can accidentally price an unshipped box as though it were on a shelf.
+async function getAllSealedGroups(country: Country = DEFAULT_COUNTRY): Promise<SealedGroup[]> {
   const hit = sealedMemo.get(country);
   if (hit && Date.now() - hit.at < SEALED_MEMO_TTL_MS) return hit.data;
   // Only the fields the grouping uses — no point hauling unused columns.
@@ -704,16 +749,23 @@ export async function getSealedGroups(country: Country = DEFAULT_COUNTRY): Promi
     // Headline price comes from IN-STOCK listings only (null = sold out everywhere).
     g.lowestPriceCents = inStock[0]?.priceCents ?? null;
     g.storeCount = new Set(inStock.map((l) => l.retailerName)).size;
-    // Availability-at-MSRP for this market.
-    g.msrpCents = msrpCents(g.productType, country);
-    g.atMsrp = g.lowestPriceCents != null && isAtMsrp(g.lowestPriceCents, g.productType, country);
-    g.overMsrpPct = g.lowestPriceCents != null ? overMsrpPct(g.lowestPriceCents, g.productType, country) : null;
+    // Availability-at-MSRP for this market — but NEVER for a set that hasn't
+    // shipped. lib/msrp.ts is keyed by productType alone, so an unreleased set's
+    // Booster Box would silently inherit the CURRENT set's published RRP and render
+    // "at RRP" / "12% over RRP" badges about a product whose RRP nobody has
+    // announced. That table's own header promises it "never guesses"; leaving these
+    // null is how that promise is kept until a real Radiance RRP exists.
+    const preorder = isPreorderSetCode(g.setCode);
+    g.msrpCents = preorder ? null : msrpCents(g.productType, country);
+    g.atMsrp = !preorder && g.lowestPriceCents != null && isAtMsrp(g.lowestPriceCents, g.productType, country);
+    g.overMsrpPct =
+      !preorder && g.lowestPriceCents != null ? overMsrpPct(g.lowestPriceCents, g.productType, country) : null;
     return g;
   });
   // Boxes/cases first, then by price.
   const order = [
     "Booster Box", "Booster Case", "Proving Grounds", "Proving Grounds Case", "Box Set",
-    "Pre-Rift Event Kit", "Pre-Rift Kit", "Bundle", "Starter Set",
+    "Pre-Rift Event Kit", "Pre-Rift Kit", "Vault", "Bundle", "Starter Set",
     "Nexus Night Pack", "Promo Pack", "Sleeved Booster (Art Set)", "Sleeved Booster",
     "Booster Pack", "Bulk Runes Case", "Bulk Runes", "Tin", "Sealed",
   ];
@@ -731,4 +783,29 @@ export async function getSealedGroups(country: Country = DEFAULT_COUNTRY): Promi
   });
   sealedMemo.set(country, { at: Date.now(), data: out });
   return out;
+}
+
+/**
+ * Sealed products a store can actually post you today — pre-orders excluded.
+ *
+ * This is the drop-in every existing caller already had: /sealed, the set pages and
+ * the sealed JSON-LD keep behaving exactly as before, because a set that hasn't
+ * shipped is filtered out here rather than at import. On release day
+ * isPreorderSetCode() flips on the date alone and the set's listings appear in all
+ * of them with no code change.
+ */
+export async function getSealedGroups(country: Country = DEFAULT_COUNTRY): Promise<SealedGroup[]> {
+  const all = await getAllSealedGroups(country);
+  return all.filter((g) => !isPreorderSetCode(g.setCode));
+}
+
+/**
+ * The mirror image: ONLY products for sets that haven't shipped yet.
+ *
+ * Feeds /radiance-preorders. Returns [] the moment the set releases — the page then
+ * says so and points at the live prices, rather than showing stale "pre-order" rows.
+ */
+export async function getPreorderGroups(country: Country = DEFAULT_COUNTRY): Promise<SealedGroup[]> {
+  const all = await getAllSealedGroups(country);
+  return all.filter((g) => isPreorderSetCode(g.setCode));
 }

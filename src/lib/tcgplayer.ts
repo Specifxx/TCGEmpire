@@ -60,6 +60,11 @@ export function setCodeFromSetName(setName?: string): string | null {
   if (/spiritforged|spirit\s*forged/.test(s)) return "SFD";
   if (/unleashed/.test(s)) return "UNL";
   if (/vendetta/.test(s)) return "VEN";
+  // Pokémon's "Astral Radiance" reaches this function too (the sealed importer
+  // shares it), and it must never be typed as Riftbound's Radiance — see
+  // FOREIGN_RADIANCE in lib/sealed-import.ts, which drops those titles outright.
+  // Excluded here as well so the set signal is wrong in neither layer.
+  if (/radiance/.test(s) && !/astral/.test(s)) return "RAD";
   if (/origins/.test(s)) return "OGN";
   return null;
 }
