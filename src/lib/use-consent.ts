@@ -6,10 +6,16 @@ import { useEffect, useState } from "react";
 // One consent signal, shared by every measurement tag.
 // ─────────────────────────────────────────────────────────────────────────────
 // Consent Mode v2 defaults every signal to denied (see components/
-// ConsentDefaults.tsx). Google's own tags read that state themselves; anything
-// that isn't a Google tag — Vercel Analytics — has to be wired to the same
-// decision explicitly, or the site is asking for consent and then ignoring the
-// answer for half its vendors.
+// ConsentDefaults.tsx). EVERY vendor has to be told when that changes — Google's
+// tags included. They read the DEFAULT state on their own, which is easy to
+// misread as them tracking this decision too; they do not. A gtag('consent',
+// 'update') is the only thing that moves them off the default, so grant() below
+// pushes one. Non-Google vendors (Vercel Analytics) read the returned state.
+//
+// Getting that wrong is not a subtle failure: until the update call was added,
+// the site asked for consent, decided the visitor could be measured, honoured it
+// for Vercel, and left GA4 on the denied default — so GA4 saw only cookieless
+// consent-denied pings for all traffic and reported zero users indefinitely.
 //
 // How the decision is made, in order:
 //   • Google's Privacy & Messaging message is a TCF v2.2 CMP, so it exposes
@@ -41,6 +47,10 @@ declare global {
   interface Window {
     __tcfapi?: TcfApi;
     __rcConsent?: { analytics: boolean };
+    // Defined by components/ConsentDefaults.tsx as an inline <head> script, so it
+    // exists before any React code runs. Optional anyway: if that script were ever
+    // removed, the optional call below no-ops instead of throwing.
+    gtag?: (...args: unknown[]) => void;
   }
 }
 
@@ -60,6 +70,19 @@ export function useConsent(): ConsentState {
     const grant = (cmpPresent: boolean) => {
       if (settled) return;
       settled = true;
+      // Tell GOOGLE'S tags, not just our own flag. Consent Mode defaults every
+      // signal to denied (ConsentDefaults.tsx) and Google's tags never learn
+      // about the decision made here unless it is pushed to them explicitly —
+      // without this line the grant reached Vercel Analytics only, and GA4
+      // received nothing but cookieless consent-denied pings for 100% of
+      // traffic, worldwide, forever.
+      //
+      // ONLY analytics_storage moves. A consent 'update' is a partial merge, so
+      // the three advertising signals keep the denied value set by the default;
+      // they stay denied until the AdSense review completes. Do not add them
+      // here — widening this object is an advertising-policy change, not a
+      // measurement fix.
+      window.gtag?.("consent", "update", { analytics_storage: "granted" });
       if (window.__rcConsent) window.__rcConsent.analytics = true;
       setState({ analytics: true, cmpPresent });
     };
