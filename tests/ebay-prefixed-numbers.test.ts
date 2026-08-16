@@ -111,3 +111,111 @@ test("the query token is case-normalised but never empty for a real number", () 
   assert.equal(queryNumberToken("sp3"), "SP3");
   assert.equal(queryNumberToken(" SP3 "), "SP3", "whitespace from a split() must not leak into the query");
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// The THIRD bug on the same cards: sellers who name the treatment, not the number.
+// ─────────────────────────────────────────────────────────────────────────────
+// Even with the number parsed and the query fixed, a listing titled
+// "Ahri, Inquisitive - Crystal Rose - Riftbound Vendetta" matched nothing: it
+// carries no SP number, and only SIGNATURE prints had a name-based fallback.
+// Crystal Rose is the same shape of exception — six cards, one per name.
+//
+// The safety argument had to be checked rather than assumed, because EVERY one of
+// the six names is REUSED across printings. Verified against the live catalogue:
+//   Ahri, Inquisitive → OGN 119, OGN 119a, SFD 227, SFD 227*, VEN SP3
+//   Kai'Sa, Survivor  → OGN 039, OGN 039a, VEN SP1
+//   Sona, Harmonious  → OGN 073, VEN SP2
+//   Sett, Brawler     → OGN 164, OGN 164a, SFD 232, SFD 232*, VEN SP4
+//   Ezreal, Prodigy   → SFD 149, SFD 149a, VEN SP5
+//   Lux, Crownguard   → OGS 014, VEN SP6
+// Only ONE printing per name is Crystal Rose, and the "crystal rose" marker is
+// what separates them — which is exactly what these tests pin.
+
+/** Every real printing of the six Crystal Rose names, for collision testing. */
+const UNIVERSE: Record<string, EbayCardIdentity> = {
+  ahriBase: { name: "Ahri, Inquisitive", setCode: "OGN", number: "119", total: "298", isSignature: false },
+  ahriAlt: { name: "Ahri, Inquisitive", setCode: "OGN", number: "119a", total: "298", isSignature: false },
+  ahriOver: { name: "Ahri, Inquisitive", setCode: "SFD", number: "227", total: "221", isSignature: false },
+  ahriSig: { name: "Ahri, Inquisitive", setCode: "SFD", number: "227", total: "221", isSignature: true },
+  ahriCR: { name: "Ahri, Inquisitive", setCode: "VEN", number: "SP3", total: "006", isSignature: false },
+  kaisaBase: { name: "Kai'Sa, Survivor", setCode: "OGN", number: "039", total: "298", isSignature: false },
+  kaisaCR: { name: "Kai'Sa, Survivor", setCode: "VEN", number: "SP1", total: "006", isSignature: false },
+  sonaBase: { name: "Sona, Harmonious", setCode: "OGN", number: "073", total: "298", isSignature: false },
+  sonaCR: { name: "Sona, Harmonious", setCode: "VEN", number: "SP2", total: "006", isSignature: false },
+  settBase: { name: "Sett, Brawler", setCode: "OGN", number: "164", total: "298", isSignature: false },
+  settSig: { name: "Sett, Brawler", setCode: "SFD", number: "232", total: "221", isSignature: true },
+  settCR: { name: "Sett, Brawler", setCode: "VEN", number: "SP4", total: "006", isSignature: false },
+  ezrealBase: { name: "Ezreal, Prodigy", setCode: "SFD", number: "149", total: "221", isSignature: false },
+  ezrealCR: { name: "Ezreal, Prodigy", setCode: "VEN", number: "SP5", total: "006", isSignature: false },
+  luxBase: { name: "Lux, Crownguard", setCode: "OGS", number: "014", total: "024", isSignature: false },
+  luxCR: { name: "Lux, Crownguard", setCode: "VEN", number: "SP6", total: "006", isSignature: false },
+};
+
+/** Which printings in UNIVERSE a listing matches. Exactly one is the goal. */
+const resolve = (title: string): string[] =>
+  Object.entries(UNIVERSE)
+    .filter(([, c]) => listingMatchesCard(item(title), c))
+    .map(([k]) => k);
+
+test("every Crystal Rose card resolves from a numberless, treatment-named listing", () => {
+  // The shape that matched nothing before this fix — checked for ALL SIX, not
+  // just the one that was reported, and against the full competing-printing set.
+  const cases: [string, string][] = [
+    ["ahriCR", "Ahri, Inquisitive - Crystal Rose - Riftbound Vendetta NM"],
+    ["kaisaCR", "Riftbound League of Legends Kai'Sa, Survivor Crystal Rose Alt Art"],
+    ["sonaCR", "RIFTBOUND VENDETTA SONA, HARMONIOUS CRYSTAL ROSE"],
+    ["settCR", "Riftbound Vendetta Crystal Rose Sett, Brawler"],
+    ["ezrealCR", "Ezreal, Prodigy Crystal Rose Riftbound Vendetta"],
+    ["luxCR", "Riftbound Lux, Crownguard crystal-rose VEN"],
+  ];
+  for (const [expected, title] of cases) {
+    assert.deepEqual(resolve(title), [expected], `"${title}" must resolve to exactly ${expected}`);
+  }
+});
+
+test("a numbered Crystal Rose listing still resolves, including separator variants", () => {
+  for (const title of [
+    "Riftbound Sona, Harmonious SP2/006 Crystal Rose Foil NM",
+    "Riftbound Vendetta Crystal Rose Sona, Harmonious SP-2/006",
+    "Riftbound Vendetta Crystal Rose Sona, Harmonious SP 2",
+  ]) {
+    assert.deepEqual(resolve(title), ["sonaCR"], `"${title}" must resolve to exactly sonaCR`);
+  }
+});
+
+test("a non-Crystal-Rose listing never reaches the Crystal Rose printing", () => {
+  // The collision that makes this fix dangerous if done carelessly: these names
+  // each have several other printings, and a listing for one of them must keep
+  // going to that one.
+  const cases: [string, string][] = [
+    ["ahriBase", "Riftbound Ahri, Inquisitive OGN 119/298 NM"],
+    ["ahriAlt", "Riftbound Ahri, Inquisitive OGN 119a/298 Alt Art"],
+    ["ahriOver", "Riftbound Ahri, Inquisitive SFD 227/221 Overnumbered"],
+    ["ahriSig", "Riftbound Ahri, Inquisitive Signature"],
+    ["sonaBase", "Riftbound Sona, Harmonious OGN 073/298"],
+    ["settSig", "Riftbound Sett, Brawler Signature"],
+    ["luxBase", "Riftbound Lux, Crownguard OGS 014/024"],
+  ];
+  for (const [expected, title] of cases) {
+    assert.deepEqual(resolve(title), [expected], `"${title}" must resolve to exactly ${expected}`);
+  }
+});
+
+test("the Crystal Rose marker cannot pull in merchandise, sets, bundles or foreign printings", () => {
+  // A real Crystal Rose Sona PLAYMAT exists (it was an event promo), which is why
+  // this is a live hazard and not a hypothetical one.
+  for (const title of [
+    "Riftbound Crystal Rose Sona, Harmonious PLAYMAT",
+    "Riftbound Vendetta Crystal Rose complete set of 6 SP1-SP6",
+    "Riftbound Crystal Rose Ahri Inquisitive 中文",
+    "Riftbound Crystal Rose bundle 3 cards Ahri Sona Lux",
+  ]) {
+    assert.deepEqual(resolve(title), [], `"${title}" must match nothing`);
+  }
+});
+
+test("a Crystal Rose listing never cross-matches a DIFFERENT Crystal Rose card", () => {
+  // Six cards share the treatment; only the name separates them.
+  assert.deepEqual(resolve("Riftbound Vendetta Crystal Rose Sona, Harmonious"), ["sonaCR"]);
+  assert.deepEqual(resolve("Riftbound Vendetta Crystal Rose Lux, Crownguard"), ["luxCR"]);
+});

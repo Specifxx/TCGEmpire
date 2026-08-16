@@ -10,6 +10,10 @@
 // treat results as a secondary signal (lowest Buy-It-Now, AU marketplace).
 
 import { EBAY_CAMPAIGN_ID, ebayAffiliateUrl } from "./affiliate";
+// constants.ts imports nothing at all, so this cannot create a cycle. Using its
+// isCrystalRose() rather than re-testing /^sp\d/ here keeps one definition of
+// what a Crystal Rose printing IS — the same reason classifySealed is shared.
+import { isCrystalRose } from "./constants";
 
 const TOKEN_URL = "https://api.ebay.com/identity/v1/oauth2/token";
 const SEARCH_URL = "https://api.ebay.com/buy/browse/v1/item_summary/search";
@@ -290,7 +294,13 @@ function numberMatches(title: string, number: string, total: string, setCode: st
   // The prefix (if any) IS the boundary: "SP3" must match "SP3", not the bare "3"
   // that a plain `0*3` would also match inside an unrelated "OGN 123/298". Either
   // way the token is preceded by \b once, applied where it is actually needed.
-  const numToken = `${prefix}0*${n}`;
+  //
+  // A separator between prefix and digits is optional and tolerated — sellers
+  // write "SP3", "SP-3" and "SP 3" for the same card, and all three are equally
+  // unambiguous because the prefix is still required. Only for a PREFIXED number:
+  // an unprefixed one keeps its exact previous behaviour, since `[\s\-]*` in front
+  // of a bare digit run would let it drift onto neighbouring text.
+  const numToken = prefix ? `${prefix}[\\s\\-]*0*${n}` : `0*${n}`;
 
   const full = title.match(new RegExp(`\\b${numToken}([a-z]?)\\s*\\*?\\s*/\\s*${total}\\b`, "i"));
   if (full) return (full[1] || "").toLowerCase() === letter;
@@ -323,6 +333,16 @@ function titleIsSignature(title: string, n: number): boolean {
     /\bsignature\b|\bsigned\b|\bautograph|\bsig\b/i.test(title) ||
     new RegExp(`\\b0*${n}\\s*\\*`).test(title)
   );
+}
+
+// Does this listing name the Crystal Rose treatment? The VEN SP1–SP6 alt-arts are
+// the Wild Rift "Crystal Rose" skin line, and that phrase is how sellers label
+// them when they don't type the SP number — which, measured against real listings,
+// is often. Hyphen/slash tolerated ("crystal-rose"); the two words must be
+// adjacent, so a title merely containing "crystal" (a Crystal Rose-unrelated card
+// name) or "rose" cannot trip it.
+function titleIsCrystalRose(title: string): boolean {
+  return /\bcrystal[\s\-/]*rose\b/i.test(title);
 }
 
 /**
@@ -445,11 +465,37 @@ export function cardIdentityStages(
       // fallback demanded something the very listings it was built for don't say.
       // Base cards are untouched: numberMatches (checked first) still requires
       // the real number for everything that isn't a signature.
-      stage: `collector number matches ${card.number}/${card.total}${card.isSignature ? " (or named signature print)" : ""}`,
+      // CRYSTAL ROSE gets the same treatment, for the same reason and with the
+      // same safety argument. There are exactly six (VEN SP1–SP6), one per card
+      // name, and sellers routinely title them "<Champion, Title> Crystal Rose"
+      // with no SP number at all — measured against real listings, which is how
+      // this was found: those titles matched NOTHING and the card stayed unpriced
+      // even after the number-parsing and query bugs were fixed.
+      //
+      // WHY THIS IS COLLISION-SAFE, checked against the live catalogue rather
+      // than assumed — and it needed checking, because every one of the six names
+      // is REUSED across printings (Ahri, Inquisitive alone exists as OGN 119,
+      // OGN 119a, SFD 227, SFD 227* and VEN SP3). The discriminator is the
+      // "crystal rose" marker, and only ONE printing per name carries it:
+      //   • a Crystal Rose listing cannot match the OGN/SFD printings — none of
+      //     them is a Crystal Rose card, so none gets this branch, and each still
+      //     demands its own collector number, which such a listing doesn't carry;
+      //   • a non-Crystal-Rose listing cannot match SP3 — this branch requires
+      //     the marker, and the plain printings' listings don't say it.
+      // The real "Crystal Rose Sona, Harmonious playmat" is already dropped by
+      // NOT_A_SINGLE's `playmat`, so the marker can't pull in merchandise.
+      stage: `collector number matches ${card.number}/${card.total}${
+        card.isSignature ? " (or named signature print)" : ""
+      }${isCrystalRose(card.setCode, card.number) ? " (or named Crystal Rose print)" : ""}`,
       pred: (it) => {
         const title = it.title ?? "";
         if (numberMatches(title, card.number, card.total, card.setCode)) return true;
-        return card.isSignature && titleIsSignature(title, n) && nameMatches(title, card.name);
+        if (card.isSignature && titleIsSignature(title, n) && nameMatches(title, card.name)) return true;
+        return (
+          isCrystalRose(card.setCode, card.number) &&
+          titleIsCrystalRose(title) &&
+          nameMatches(title, card.name)
+        );
       },
     },
     // Signature ("*") and plain overnumbered share a number — keep them apart.
