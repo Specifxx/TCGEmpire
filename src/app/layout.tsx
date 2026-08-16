@@ -22,6 +22,7 @@ import { enabledProviders } from "@/lib/oauth";
 import { AdSenseLoader } from "@/components/AdSenseLoader";
 import { ConsentDefaults } from "@/components/ConsentDefaults";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
+import { GoogleAnalyticsUser } from "@/components/GoogleAnalyticsUser";
 import { ConsentGatedAnalytics } from "@/components/ConsentGatedAnalytics";
 import { PrivacySettingsLink } from "@/components/PrivacySettingsLink";
 import { ADSENSE_CLIENT_ID, ADSENSE_CONFIGURED } from "@/lib/adsense";
@@ -217,6 +218,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             these two lines is load-bearing, not cosmetic. See the component
             header for why this is not Google's verbatim snippet. */}
         <GoogleAnalytics />
+        {/* GA4 User-ID. Renders nothing; sets an opaque per-account identifier once
+            /api/me resolves and consent allows, and clears it on sign-out. Safe to
+            mount in <head> — it is a client component with no markup, so it does
+            not depend on being anywhere in particular. */}
+        <GoogleAnalyticsUser />
         {/* Impact / TCGplayer affiliate site-ownership verification. Impact looks for
             the non-standard `value` attribute, so spread it past the meta typing. */}
         <meta {...({ name: "impact-site-verification", value: IMPACT_SITE_VERIFICATION } as any)} />

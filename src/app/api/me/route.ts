@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { analyticsUserId } from "@/lib/ga-user-id";
 import { isPremium, premiumCheckoutEnabled, premiumTrialEnabled, premiumAnnualEnabled, PREMIUM_TRIAL_DAYS } from "@/lib/premium";
 
 // Session endpoint for the client-side chrome (UserMenu, wishlist sync,
@@ -26,6 +27,10 @@ export async function GET() {
             preferredCountry: user.preferredCountry,
           }
         : null,
+      // GA4 User-ID (components/GoogleAnalyticsUser.tsx). Hashed here rather than
+      // sent raw so User.id stays server-side — see lib/ga-user-id.ts. Null when
+      // signed out, which is what clears the id on the client.
+      analyticsId: user ? analyticsUserId(user.id) : null,
       premium: isPremium(user),
       // Premium upsell state for the client (the one-click Premium dialog).
       premiumCheckout: premiumCheckoutEnabled(),

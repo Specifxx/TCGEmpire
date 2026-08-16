@@ -9,6 +9,10 @@ import type { MenuUser } from "@/components/UserMenu";
 // hydrates the signed-in state from here.
 export interface Me {
   user: MenuUser | null;
+  // Opaque GA4 User-ID for the signed-in account, or null when signed out.
+  // Deliberately NOT part of MenuUser: it is a measurement identifier, not
+  // profile data, and nothing that renders the account chrome should read it.
+  analyticsId: string | null;
   premium: boolean;
   premiumCheckout: boolean; // Stripe premium checkout is configured
   trialEligible: boolean; // signed in, not premium, trial on + never trialed
@@ -16,7 +20,7 @@ export interface Me {
   premiumAnnual: boolean; // annual plan is configured (Stripe annual price set)
 }
 
-const EMPTY_ME: Me = { user: null, premium: false, premiumCheckout: false, trialEligible: false, trialDays: 0, premiumAnnual: false };
+const EMPTY_ME: Me = { user: null, analyticsId: null, premium: false, premiumCheckout: false, trialEligible: false, trialDays: 0, premiumAnnual: false };
 
 let mePromise: Promise<Me> | null = null;
 
@@ -26,6 +30,7 @@ function fetchMe(): Promise<Me> {
       .then((r) => (r.ok ? r.json() : EMPTY_ME))
       .then((d) => ({
         user: d.user ?? null,
+        analyticsId: typeof d.analyticsId === "string" ? d.analyticsId : null,
         premium: !!d.premium,
         premiumCheckout: !!d.premiumCheckout,
         trialEligible: !!d.trialEligible,
