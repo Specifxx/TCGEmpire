@@ -256,7 +256,7 @@ const loadingFiles = ALL_FILES.filter((p) => /src\/app\/(.*\/)?loading\.tsx$/.te
 if (loadingFiles.some((p) => rel(p) === "src/app/loading.tsx")) {
   fail(
     "src/app/loading.tsx exists — it turns every notFound() into a soft 404",
-    "Move it into the leaf segments that need it (see src/app/sealed/loading.tsx).",
+    "Move it into the leaf segments that need it (see src/app/singles/loading.tsx).",
   );
 } else {
   ok("no root loading.tsx (notFound() can set a real 404 status)");
