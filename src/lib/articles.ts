@@ -5749,12 +5749,12 @@ Both tables above are updated in place whenever Riot announces a change, with th
 | --- | --- | --- | --- | --- |
 | 1 | **[Origins](/sets/origins)** | OGN | 298 (+54 Showcase) | Launch set |
 | 2 | **Origins: Proving Grounds** | OGS | 24 | Shortly after Origins |
-| 3 | **Spirit Forged** | SFD | 222 (+66 Showcase) | — |
-| 4 | **Unleashed** | UNL | 225 (+61 Showcase) | — |
+| 3 | **Spirit Forged** | SFD | 221 (+66 Showcase) | — |
+| 4 | **[Unleashed](/blog/whats-in-the-riftbound-unleashed-set)** | UNL | 219 (+61 Showcase) | — |
 | 5 | **[Vendetta](/sets/vendetta)** | VEN | 166 | 31 Jul 2026 |
 | 6 | **[Radiance](/radiance-countdown)** | RAD | ~180 (announced) | 23 Oct 2026 |
 
-Card counts are pulled from our own catalogue, not a press release, so "298" for Origins means 298 distinct base printings actually sit in our database with that set code — the same number printed on the card itself (Origins collector numbers run from 001/298 up to 298/298). We don't have confirmed release dates for Origins, Proving Grounds, Spirit Forged or Unleashed — Riot didn't publish exact street dates for those the way it later did for Vendetta and Radiance — but the order above is the order every set list, deck legality note and "what's next" post on the game agrees on.
+The **Cards** column is each set's own printed total — the denominator on every card in it. Origins collector numbers run 001/298 to 298/298, so Origins is 298; Spirit Forged cards are numbered out of /221 and Unleashed out of /219. That number is checkable on any single card you own, which is why we use it in preference to a catalogue row count: printings above the total (Signatures, over-numbered chase cards, promos) are real cards but they are not part of the base run, and counting them inflates a set. We don't have confirmed release dates for Origins, Proving Grounds, Spirit Forged or Unleashed — Riot didn't publish exact street dates for those the way it later did for Vendetta and Radiance — but the order above is the order every set list, deck legality note and "what's next" post on the game agrees on.
 
 ## Origins — the launch set
 
@@ -5766,7 +5766,9 @@ At 24 cards, Proving Grounds is by far the smallest Riftbound release to date �
 
 ## Spirit Forged and Unleashed
 
-The next two sets, Spirit Forged (SFD) and Unleashed (UNL), are similarly sized to each other: 222 and 225 base cards respectively, each with its own run of Showcase alternate printings (66 for Spirit Forged, 61 for Unleashed) on top. Between them they're the sets most current decks outside the newest formats are still built from.
+The next two sets, Spirit Forged (SFD) and Unleashed (UNL), are similarly sized to each other: 221 and 219 base cards respectively, each with its own run of Showcase alternate printings (66 for Spirit Forged, 61 for Unleashed) on top. Between them they're the sets most current decks outside the newest formats are still built from.
+
+Unleashed is the one worth a closer look if you're buying rather than just cataloguing — two of the four most expensive cards in the game come out of it. We've broken the whole set down separately: [what's in the Riftbound Unleashed set](/blog/whats-in-the-riftbound-unleashed-set).
 
 ## Vendetta — the current set
 
