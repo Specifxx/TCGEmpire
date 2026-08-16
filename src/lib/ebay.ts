@@ -295,12 +295,17 @@ function numberMatches(title: string, number: string, total: string, setCode: st
   // that a plain `0*3` would also match inside an unrelated "OGN 123/298". Either
   // way the token is preceded by \b once, applied where it is actually needed.
   //
-  // A separator between prefix and digits is optional and tolerated — sellers
-  // write "SP3", "SP-3" and "SP 3" for the same card, and all three are equally
-  // unambiguous because the prefix is still required. Only for a PREFIXED number:
-  // an unprefixed one keeps its exact previous behaviour, since `[\s\-]*` in front
-  // of a bare digit run would let it drift onto neighbouring text.
-  const numToken = prefix ? `${prefix}[\\s\\-]*0*${n}` : `0*${n}`;
+  // A HYPHEN between prefix and digits is tolerated ("SP-3" alongside "SP3").
+  //
+  // WHITESPACE IS NOT, and that is deliberate: "SP" is also the standard condition
+  // abbreviation for Slightly Played, so allowing "SP 3" made ordinary stock
+  // wording collide with the card number — "…Ahri Inquisitive 119/298 NM/SP 3
+  // available" matched VEN SP3, i.e. a cheap Origins base copy would have been
+  // published as the price of the chase print. Single-letter prefixes were worse
+  // still ("Gold Token T 3" → SFD t03). A hyphen has no such second meaning, and
+  // it is bounded to one so "SP - - 3" cannot creep back in.
+  // Prefixed numbers only; an unprefixed one keeps its exact previous behaviour.
+  const numToken = prefix ? `${prefix}-?0*${n}` : `0*${n}`;
 
   const full = title.match(new RegExp(`\\b${numToken}([a-z]?)\\s*\\*?\\s*/\\s*${total}\\b`, "i"));
   if (full) return (full[1] || "").toLowerCase() === letter;
@@ -344,6 +349,18 @@ function titleIsSignature(title: string, n: number): boolean {
 function titleIsCrystalRose(title: string): boolean {
   return /\bcrystal[\s\-/]*rose\b/i.test(title);
 }
+
+// Does the title state an ordinary <number>/<total> collector number?
+//
+// The treatment-name fallbacks below identify a card by NAME plus a printing word
+// when the seller gives no number. A seller who DID give a number has already told
+// us which printing it is, and it must win — otherwise "Riftbound Origins Ahri
+// Inquisitive 119/298 Epic — not the Crystal Rose version" is read as the Crystal
+// Rose card because the words "Crystal Rose" appear in it, and a $9 Origins base
+// copy gets published as the price of the ~$90 chase print. Nothing downstream
+// catches that: the reference guard only rejects prices ABOVE the store low, and
+// pruneCheapOutliers needs several surviving listings before it will drop one.
+const STATES_A_COLLECTOR_NUMBER = /\b\d{1,3}[a-z]?\s*\*?\s*\/\s*\d{2,4}\b/i;
 
 /**
  * DIAGNOSTIC ONLY: run a raw Browse search and report how many items came back.
@@ -490,6 +507,10 @@ export function cardIdentityStages(
       pred: (it) => {
         const title = it.title ?? "";
         if (numberMatches(title, card.number, card.total, card.setCode)) return true;
+        // Both name-based fallbacks are for listings that give NO number. If the
+        // title states one and numberMatches already rejected it above, the seller
+        // has identified a different printing — believe them, not the keyword.
+        if (STATES_A_COLLECTOR_NUMBER.test(title)) return false;
         if (card.isSignature && titleIsSignature(title, n) && nameMatches(title, card.name)) return true;
         return (
           isCrystalRose(card.setCode, card.number) &&
@@ -700,6 +721,48 @@ export async function searchEbayLowest(
       else if (res2.ok) items = (await res2.json())?.itemSummaries ?? [];
     } catch {
       /* keep the empty result */
+    }
+  }
+
+  // ── CRYSTAL ROSE NEEDS A SECOND, DIFFERENTLY-SHAPED QUERY ─────────────────
+  // The queries above all pin the collector number, and Browse ANDs every
+  // keyword — so a listing titled "Ahri, Inquisitive — Crystal Rose — Riftbound
+  // Vendetta" is never RETURNED, and the treatment fallback in
+  // cardIdentityStages never gets to accept it. Relaxing only the filter left
+  // these cards exactly as unpriced as before; this is what makes that fix
+  // reachable.
+  //
+  // A MERGE, not a fallback-on-empty. The two title shapes are largely disjoint —
+  // store-style listings give "SP3/006" and no treatment words, collector-style
+  // listings give "Crystal Rose" and no number — so whichever query runs second
+  // still has to contribute. The existing retry above only fires on zero results
+  // and would never run when the numbered query found something.
+  //
+  // Bounded cost: there are exactly six Crystal Rose cards, so this is 6 extra
+  // Browse calls per market per run, against a budget in the thousands. It is
+  // spend()-gated like every other call, so it can never overrun the quota.
+  if (isCrystalRose(card.setCode, card.number) && !isEbayRateLimited() && spend()) {
+    const alt = new URLSearchParams(params);
+    alt.set("q", `${card.name} crystal rose`);
+    try {
+      const res3 = await fetch(`${SEARCH_URL}?${alt}`, { headers });
+      if (res3.status === 429) rateLimited = true;
+      else if (res3.ok) {
+        const extra: any[] = (await res3.json())?.itemSummaries ?? [];
+        // Dedupe on itemId (falling back to the URL) so a listing returned by
+        // both queries isn't counted twice into the cheapest/median maths.
+        const key = (it: any) => String(it?.itemId ?? it?.itemWebUrl ?? "");
+        const seen = new Set(items.map(key));
+        for (const it of extra) {
+          const k = key(it);
+          if (k && !seen.has(k)) {
+            seen.add(k);
+            items.push(it);
+          }
+        }
+      }
+    } catch {
+      /* keep whatever the numbered query found */
     }
   }
 

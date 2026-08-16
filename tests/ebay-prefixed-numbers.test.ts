@@ -1,5 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { listingMatchesCard, queryNumberToken, type EbayCardIdentity } from "../src/lib/ebay";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -218,4 +220,49 @@ test("a Crystal Rose listing never cross-matches a DIFFERENT Crystal Rose card",
   // Six cards share the treatment; only the name separates them.
   assert.deepEqual(resolve("Riftbound Vendetta Crystal Rose Sona, Harmonious"), ["sonaCR"]);
   assert.deepEqual(resolve("Riftbound Vendetta Crystal Rose Lux, Crownguard"), ["luxCR"]);
+});
+
+// ── Two regressions the first cut of the treatment fallback actually shipped ──
+// Both were caught by an adversarial pass AFTER deploy, and both published a
+// WRONG price rather than merely missing one, which is the worse failure here.
+
+test("a stated collector number beats the treatment word", () => {
+  // The dangerous direction: a ~$9 Origins base copy priced as the ~$90 chase
+  // print because the words "Crystal Rose" happened to appear in its title.
+  // Nothing downstream catches a too-LOW price — the reference guard only
+  // rejects prices ABOVE the store low.
+  for (const title of [
+    "Riftbound Origins Ahri Inquisitive 119/298 Epic - not the Crystal Rose version",
+    "Riftbound Ahri Inquisitive 119/298 Origins Epic (Crystal Rose art also available)",
+    "Riftbound Ahri Inquisitive OGN 119a/298 Alt Art - see also my Crystal Rose listings",
+    "Riftbound Sona Harmonious 073/298 Origins Rare - Crystal Rose Wild Rift skin art",
+  ]) {
+    const hits = resolve(title);
+    assert.ok(!hits.includes("ahriCR") && !hits.includes("sonaCR"), `"${title}" must not reach a Crystal Rose card (got ${JSON.stringify(hits)})`);
+  }
+});
+
+test('"SP" as the Slightly Played condition never matches an SP collector number', () => {
+  // SP is the standard abbreviation for Slightly Played, so a whitespace-tolerant
+  // "SP 3" made ordinary stock wording collide with the card number.
+  for (const title of [
+    "Riftbound Vendetta Ahri Inquisitive 119/298 NM/SP 3 available",
+    "Riftbound Vendetta Ahri Inquisitive Alt Art SP 3 left",
+    "Riftbound Vendetta Ahri Inquisitive LP SP 3 in stock",
+  ]) {
+    assert.ok(!resolve(title).includes("ahriCR"), `"${title}" must not match the SP3 card`);
+  }
+  // The hyphen form is still accepted — it has no competing meaning.
+  assert.deepEqual(resolve("Riftbound Vendetta Crystal Rose Ahri, Inquisitive SP-3/006"), ["ahriCR"]);
+});
+
+test("the Crystal Rose search runs a second, treatment-shaped query and merges it", () => {
+  // Without this the filter fix above is unreachable in production: every query
+  // pins the collector number, Browse ANDs keywords, so a numberless
+  // "… Crystal Rose …" listing is never returned to be judged.
+  const src = readFileSync(join(process.cwd(), "src/lib/ebay.ts"), "utf8");
+  assert.match(src, /alt\.set\("q", `\$\{card\.name\} crystal rose`\)/, "a treatment-shaped query must be issued");
+  assert.match(src, /isCrystalRose\(card\.setCode, card\.number\) && !isEbayRateLimited\(\) && spend\(\)/, "it must be quota-gated like every other call");
+  // Merge, not replace — the numbered results must survive.
+  assert.match(src, /const seen = new Set\(items\.map\(key\)\)/, "results must be merged and de-duplicated, not overwritten");
 });
