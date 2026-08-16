@@ -120,100 +120,18 @@ test("banners and their wrappers are capped at their container", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// The hero rails: a third affiliate creative with hardcoded pixel geometry.
-// ─────────────────────────────────────────────────────────────────────────────
-// HeroAdRail is not an EbayAd/TcgplayerAd variant — it is a first-party portrait
-// creative in a fixed 240px absolutely-positioned slot — so none of the rules
-// above reach it. It shipped with `zIndex: 5`, inherited from the decorative
-// chase-card showcase it replaced, which put it UNDERNEATH the hero's own
-// `container-app relative z-10` text column. That column is `max-w-[1400px]`,
-// centred, has no background and spans the shell's full height, and a
-// transparent HTML element still hit-tests across its whole border box — so it
-// swallowed every click on both rails from 1400px (100% covered) up to ~1944px.
-// The banners rendered perfectly and earned exactly nothing: no navigation, no
-// buy_click, no EPN click. Nothing else in this repo can see that — not tsc,
-// not eslint, not the guard, not the audit.
-const HERO_RAIL = "src/components/home/HeroAdRail.tsx";
-const HERO = "src/components/home/CinematicHero.tsx";
-
-test("the hero rails paint above the hero text column, or they are unclickable", () => {
-  const rail = read(HERO_RAIL);
-  const hero = read(HERO);
-
-  const railZ = rail.match(/zIndex:\s*(\d+)/);
-  assert.ok(railZ, `${HERO_RAIL}: expected an explicit numeric zIndex on the rail wrapper`);
-
-  // The stacking rival, read from the hero itself rather than hardcoded, so this
-  // keeps holding if the column's z-index is ever changed.
-  const colZ = hero.match(/container-app[^"]*?\bz-(\d+)\b/);
-  assert.ok(colZ, `${HERO}: expected the foreground container-app column to carry a z-index`);
-
-  assert.ok(
-    Number(railZ[1]) > Number(colZ[1]),
-    `${HERO_RAIL}: rail z-index ${railZ[1]} is not above the hero column's z-${colZ[1]} — ` +
-      `the transparent column covers the rails' whole box at every width they render at ` +
-      `(1400px–1944px) and hit-testing returns the column, so every click is swallowed`,
-  );
-
-  // The other half of the same invariant: the wrapper opts out of hit testing,
-  // so the inner box has to opt back in.
-  assert.match(
-    rail,
-    /pointer-events-none absolute/,
-    `${HERO_RAIL}: the positioning wrapper must stay pointer-events-none`,
-  );
-  assert.match(
-    rail,
-    /pointer-events-auto w-\[240px\]/,
-    `${HERO_RAIL}: the panel box must re-enable pointer events, or the rails are unclickable`,
-  );
-});
-
-test("the hero rails never render on a phone or tablet", () => {
-  const rail = read(HERO_RAIL);
-  // Written as a literal on purpose — Tailwind's JIT only emits classes it can
-  // see, so an interpolated breakpoint would never be generated and the rails
-  // would render at EVERY width, phones included.
-  assert.match(
-    rail,
-    /"pointer-events-none absolute bottom-6 hidden min-\[1400px\]:block"/,
-    `${HERO_RAIL}: the rails must be hidden by default and shown only from a literal min-[1400px]`,
-  );
-  // BOTTOM-anchored, not centred, and that is a measured requirement rather
-  // than a layout preference. The hero shell is 595px tall and the H1's FIRST
-  // (longer) line ends 82px down, so a rail centred on the shell cannot exceed
-  // ~363px before its vertical band overlaps that line — at 1400px a 360px rail
-  // clears by 145px and a 400px one by 10px. The image-led panel is 446px tall.
-  // Hanging it from the floor puts the band in the 489px below the headline,
-  // where every neighbour is max-w-2xl rather than the H1's 874px. Re-centring
-  // it would silently reintroduce the collision at every width under ~1500px.
-  assert.ok(
-    !/top-1\/2[^"]*min-\[1400px\]/.test(rail),
-    `${HERO_RAIL}: the rail must not be re-centred — at 446px tall a centred band overlaps the H1's first line below ~1500px`,
-  );
-  // 240px wide at a 32px inset is the measured geometry the 1400px clearance
-  // table depends on; change either and the table stops describing the page.
-  assert.match(rail, /w-\[240px\]/, `${HERO_RAIL}: the rail must stay 240px wide`);
-  assert.match(rail, /isLeft \? "left-8" : "right-8"/, `${HERO_RAIL}: the rail must stay 32px in from each edge`);
-});
-
-test("the hero rails carry their own affiliate disclosure", () => {
-  const rail = read(HERO_RAIL);
-  // EPN Participation Requirements I.G — an affiliate banner must never render
-  // without a visible disclosure. The two rails are ~1100px apart, so one shared
-  // line cannot sit "clear and prominent" next to both; each carries its own.
-  // The rail renders a REAL listing when one exists and falls back to the
-  // text-only house creative when it does not, so the disclosure has to follow
-  // whichever of the two actually rendered — naming eBay beside a TCGplayer
-  // link (or the reverse) is a disclosure that discloses the wrong merchant.
-  assert.match(
-    rail,
-    /<AffiliateDisclosure partner=\{listing \? listing\.partner : unit\.partner\}/,
-    `${HERO_RAIL}: each rail must render a disclosure for the partner it actually links to`,
-  );
-  // And it must not be gated behind a hover/expand interaction.
-  assert.ok(
-    !/hidden[^"]*group-hover:block[^"]*"\s*>\s*<AffiliateDisclosure/.test(rail),
-    `${HERO_RAIL}: the disclosure must render on first paint, never hover-gated`,
-  );
-});
+// The hero rails used to be asserted here — three tests covering their z-index
+// (they once shipped unclickable behind the hero's own text column), their
+// breakpoint gating, and their per-rail affiliate disclosure.
+//
+// Removed 2026-08-16 along with the rails themselves: the slots either side of
+// the hero are now deliberately empty (see CinematicHero), and the component
+// they asserted against, src/components/home/HeroAdRail.tsx, no longer exists.
+// tests/hero-rail-clickable.test.ts went the same way for the same reason.
+//
+// The lesson they encoded is NOT rail-specific and outlived them: a transparent
+// element still hit-tests across its whole border box, so an absolutely
+// positioned creative can render perfectly and earn nothing. If anything is ever
+// placed in those slots again, re-derive that check against the new component
+// rather than trusting layout maths — nothing else in this repo evaluates hit
+// testing.

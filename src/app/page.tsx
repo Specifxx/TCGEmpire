@@ -13,7 +13,6 @@ import { SITE_URL, SITE_NAME } from "@/lib/site";
 import { getTopDeals, type TopDeals } from "@/lib/top-deals";
 import { getRecentlyUpdated, getPriceMovers, type PriceMovers } from "@/lib/price-history";
 import { getArticles } from "@/lib/articles";
-import { getHeroRailData } from "@/lib/hero-rail";
 import { timeAgo } from "@/lib/format";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { CinematicHero } from "@/components/home/CinematicHero";
@@ -28,15 +27,16 @@ import { RETAILER_LIST } from "@/lib/retailers";
 import { pageAlternates } from "@/lib/seo";
 import { webPage, faqPage } from "@/lib/jsonld";
 
-// REMOVED: FEATURED_CARD_SLUGS and the prisma.card.findMany that read them —
-// the two hard-picked chase cards floated either side of the hero. Those slots
-// now carry the affiliate rails in home/HeroAdRail, which need no data at all,
-// so the query went with the component. It was a STANDALONE `await` after this
-// page's main Promise.all — a serial extra round-trip plus a `_count` aggregate
-// over retailerPrices on every regeneration — and a decorative read on an
-// ISR-cached page is exactly the shape of the egress leak the 2026-08-14 work
-// existed to remove. Keeping it while nothing consumed it would have been a
-// regression with no upside.
+// REMOVED: everything that ever fed the two slots either side of the hero —
+// first FEATURED_CARD_SLUGS + its prisma.card.findMany (hard-picked floating
+// chase cards), then getHeroRailData() + its cached listings query (the
+// affiliate rails that replaced them, removed 2026-08-16 because a pair of ad
+// panes framing the search box is the wrong first impression for a price
+// comparison). Both reads went with their component, and that is the point: a
+// decorative or revenue read on an ISR-cached page is exactly the shape of the
+// egress leak the 2026-08-14 work existed to remove, and keeping one alive
+// after nothing consumed it would be a regression with no upside. The hero now
+// needs NO data beyond the stats it already renders.
 
 // Below-the-fold, client-rendered components — code-split into their own
 // chunks (still SSR'd for content/SEO) so their JS isn't part of the bundle
@@ -140,7 +140,6 @@ export default async function HomePage() {
     recentlyUpdated,
     moversArr,
     lastPriceRefresh,
-    railData,
   ] = await Promise.all([
     prisma.card.count(),
     // Priced-card count PER MARKET (one indexed count per price column) — the hero
@@ -202,11 +201,6 @@ export default async function HomePage() {
     // touched by the importer on every listing it sees, so its max IS the last
     // refresh. Never blocks the page: if this read fails the section just hides.
     prisma.retailerPrice.aggregate({ _max: { lastSeen: true } }),
-    // Real eBay / TCGplayer listings for the two hero rails. ONE hard-cached
-    // entry for the whole site, tag-invalidated by the daily import — see
-    // lib/hero-rail.ts for why a revenue-bearing read is allowed here when the
-    // decorative chase-card read that used to sit below this array was not.
-    getHeroRailData(),
   ]);
   // Assemble per-market stat tiles; the client picks the visitor's market after hydration.
   const inStockByCountry: Record<string, number> = {};
@@ -269,7 +263,6 @@ export default async function HomePage() {
         statsByCountry={statsByCountry}
         trendingCards={popularCards.slice(0, 6)}
         freshness={freshness}
-        railData={railData}
       />
 
       {/* Market pulse — today's top risers/fallers, reusing the Daily Movers

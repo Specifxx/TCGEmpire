@@ -7,8 +7,6 @@ import { HeroStats, type MarketStat } from "./HeroStats";
 import { TrendingChips } from "./TrendingChips";
 import type { CardTileData } from "@/components/CardTile";
 import type { Country } from "@/lib/country";
-import { HeroAdRail } from "./HeroAdRail";
-import type { HeroRailData } from "@/lib/hero-rail";
 
 // The cinematic, full-bleed homepage hero. Breaks out of the centered content
 // column to fill the viewport (left-1/2 + w-screen + -translate-x-1/2). All
@@ -28,7 +26,6 @@ export function CinematicHero({
   statsByCountry,
   trendingCards,
   freshness,
-  railData,
 }: {
   totalCards: number;
   // Per-market stat tiles — localised to the visitor's market client-side (HeroStats).
@@ -39,10 +36,6 @@ export function CinematicHero({
   // Pre-formatted "Xh ago" string — see HeroStats' doc comment for why this is
   // computed server-side once rather than client-recomputed.
   freshness: string | null;
-  // Real eBay / TCGplayer listings for the two hero rails. Loaded server-side
-  // (one hard-cached query, see lib/hero-rail.ts) because a client fetch would
-  // add a round-trip to the one thing on this page that earns money.
-  railData: HeroRailData;
 }) {
   return (
     <ParallaxShell>
@@ -51,16 +44,17 @@ export function CinematicHero({
         <div className="absolute inset-0 bg-ink-950 border-b border-ink-800" />
       </div>
 
-      {/* Vertical affiliate rails, one either side — ≥1400px only, absolutely
-          positioned, so the centred search-first column below is completely
-          unaffected at every smaller size. They occupy the exact slots (and the
-          exact measured 1400px clearance) that the floating chase-card showcase
-          used to; that showcase earned nothing and cost a serial DB read on an
-          ISR-cached page. Which partner lands on which side is decided
-          client-side per market — AU/NZ get eBay on both sides, since TCGplayer
-          is US-centric — and Premium subscribers get neither. See HeroAdRail. */}
-      <HeroAdRail side="left" data={railData} />
-      <HeroAdRail side="right" data={railData} />
+      {/* NOTHING FLANKS THE HERO, deliberately. Two vertical affiliate rails sat
+          here (≥1400px only, absolutely positioned) and were removed on
+          2026-08-16: on a page whose entire job is "search, then a fact, then
+          go", a pair of ad panes framing the search box is the first thing a
+          wide-screen visitor sees, and it reads as an ad site rather than a
+          price comparison. Their predecessor — a floating chase-card showcase —
+          was removed from these same slots for a related reason. Twice now this
+          position has been filled and then emptied, so treat it as a slot that
+          costs more in first impression than anything has yet earned back.
+          Affiliate revenue still runs through PartnersStrip and FooterAds below
+          the fold, where it doesn't compete with the search box. */}
 
       {/* ── Foreground content (re-aligned to the normal grid) ───────────────── */}
       <div className="container-app relative z-10 w-full py-8 text-center sm:py-10">

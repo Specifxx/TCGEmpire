@@ -395,10 +395,11 @@ html.capacitor-native.has-native-banner body {
 .cine-open .cine-item { opacity: 1; transform: none; }
 
 /* REMOVED: .animate-float / .animate-float-mirror (rc-float, rc-float-mirror).
-   Their only consumer was the hero's floating chase-card showcase, which the
-   vertical affiliate rails replaced (components/home/HeroAdRail.tsx — a flat,
-   deliberately still panel; a drifting ad next to the search box would demand
-   attention the hero needs for its own job). Tailwind's own `float` keyframe +
+   Their only consumer was the hero's floating chase-card showcase, which was
+   replaced by vertical affiliate rails and then, on 2026-08-16, by nothing at
+   all — the hero now has empty margins on purpose (see CinematicHero). Both
+   occupants of those slots are gone, so these keyframes have no route back.
+   Tailwind's own `float` keyframe +
    animation were deleted from tailwind.config.ts in the same change: that
    config generated a SECOND, different `.animate-float` (4px/4s) which this
    rule shadowed at 14px/7s, so removing only this half would have left the
