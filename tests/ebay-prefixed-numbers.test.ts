@@ -256,6 +256,91 @@ test('"SP" as the Slightly Played condition never matches an SP collector number
   assert.deepEqual(resolve("Riftbound Vendetta Crystal Rose Ahri, Inquisitive SP-3/006"), ["ahriCR"]);
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// REAL eBay listings, verbatim. Gathered from live search results in Aug 2026
+// (eBay blocks this environment's IPs directly, so these came via web search).
+// ─────────────────────────────────────────────────────────────────────────────
+// Everything above this point was reasoned from how sellers PROBABLY write
+// titles. These are how they actually do, and they caught a false positive the
+// synthetic cases missed: a six-card set listed as "…Skin Set SP1-SP6…", which
+// no set/lot phrase in NOT_A_SINGLE matches, and which then matched Kai'Sa on
+// the literal "SP1" inside the range.
+
+const REAL_SORAKA_OVER: EbayCardIdentity = { name: "Soraka, Wanderer", setCode: "SFD", number: "239", total: "221", isSignature: false };
+const REAL_SORAKA_SIG: EbayCardIdentity = { name: "Soraka, Wanderer", setCode: "SFD", number: "239", total: "221", isSignature: true };
+
+test("real live Crystal Rose listings resolve to the right card", () => {
+  const cases: [string, string][] = [
+    ["ahriCR", "Ahri Inquisitive - Crystal Rose Alt Art - Vendetta SP3/006"],
+    // Seller wrote the WRONG total (166, the main-set size, not 006) and tacked
+    // on "·SC" — still resolves, via the set-name path rather than the full form.
+    ["ahriCR", "Riftbound TCG Ahri Inquisitive SP3/166·SC Crystal Rose Skin VEN Alt Art NM"],
+    ["ahriCR", "Ahri, Inquisitive Crystal Rose Skin Alt Art Vendetta SP3/006 Riftbound"],
+    ["ahriCR", "Riftbound Vendetta Ahri Inquisitive Crystal Rose SP3/006 Alt Art Foil Wild Rift"],
+    // Sellers also call the treatment "Showcase"/"SC" rather than Crystal Rose;
+    // these carry the number, so they resolve on it.
+    ["sonaCR", "Riftbound TCG Vendetta Sona Harmonious SP2/006 Showcase Foil Alt Art NM"],
+    ["sonaCR", "Riftbound TCG Sona Harmonious Champion Unit SP2/006 EN Cost 4"],
+    // The ORDINARY Origins printing of a Crystal Rose name must still go to itself.
+    ["sonaBase", "Riftbound TCG - Sona Harmonious - 073/298 - League Of Legends"],
+  ];
+  for (const [expected, title] of cases) {
+    assert.deepEqual(resolve(title), [expected], `real listing must resolve to ${expected}: ${title}`);
+  }
+});
+
+test("real multi-card, foreign and graded listings resolve to nothing", () => {
+  for (const title of [
+    // Two different cards in one listing ("Kai'Sa … x2").
+    "Crystal Rose Ahri - SP3/006, Kai’Sa - Survivor x2, Riftbound Vendetta English NM",
+    // The whole six-card treatment as one lot — the case that slipped through.
+    "Riftbound Vendetta Crystal Rose Skin Set SP1-SP6 KaiSa Sona Ahri Sett Ezreal Lux",
+    "Riftbound Card Chinese LOL Vendetta Sona Harmonious VEN SP2/006 SC Alt Art",
+  ]) {
+    assert.deepEqual(resolve(title), [], `must match nothing: ${title}`);
+  }
+});
+
+test("real Soraka listings keep signature and overnumbered apart (same digits, 239)", () => {
+  // Both printings are numbered 239; only the "*"/"signature" marker separates
+  // them, and these are the real titles sellers use for each.
+  const sig = (t: string) => listingMatchesCard(item(t), REAL_SORAKA_SIG);
+  const over = (t: string) => listingMatchesCard(item(t), REAL_SORAKA_OVER);
+
+  const sigTitle = "Soraka Wanderer Signature English Overnumbered 239* Spiritforged";
+  assert.ok(sig(sigTitle) && !over(sigTitle), "the signature listing is the signature card only");
+
+  for (const overTitle of [
+    "Soraka Wanderer Overnumbered 239/221 - Riftbound Spiritforged TCG English",
+    "Soraka - Wanderer (Overnumbered) [SFD - 239/221] - NM [Foil] TCG Riftbound",
+  ]) {
+    assert.ok(over(overTitle) && !sig(overTitle), `the overnumbered listing is not the signature: ${overTitle}`);
+  }
+
+  // A graded slab and the Chinese printings must reach neither.
+  for (const t of [
+    "2026 Riftbound Soraka Signature Spiriforged Overnumbered 239* BGS 10 BLACK LABEL",
+    "Riftbound League of Legends TCG Chinese Spiritforged Soraka Overnumbered 239/221",
+    "Riftbound League of Legends TCG Soraka SFD 239*/221 Signature NM Card Chinese",
+    "Soraka SFD 239*/221 League of Legends - Riftbound TCG Card Chinese signature NM",
+  ]) {
+    assert.ok(!sig(t) && !over(t), `must match neither printing: ${t}`);
+  }
+});
+
+test("a collector-number RANGE marks a lot, without dropping legitimate singles", () => {
+  const ahriCR = UNIVERSE.ahriCR;
+  // Range = several cards.
+  assert.ok(!listingMatchesCard(item("Riftbound Vendetta Crystal Rose Set SP1-SP6"), ahriCR));
+  // A single written with a hyphen instead of a slash is NOT a range, and a
+  // shipping blurb ("1-2 day") must not be read as one either.
+  assert.ok(listingMatchesCard(item("Riftbound Vendetta Crystal Rose Ahri, Inquisitive SP-3/006"), ahriCR));
+  assert.ok(
+    listingMatchesCard(item("Riftbound Ahri, Inquisitive SP3/006 Crystal Rose - 1-2 day shipping"), ahriCR),
+    "a 1-2 day shipping blurb must not be mistaken for a card-number range",
+  );
+});
+
 test("the Crystal Rose search runs a second, treatment-shaped query and merges it", () => {
   // Without this the filter fix above is unreachable in production: every query
   // pins the collector number, Browse ANDs keywords, so a numberless

@@ -151,6 +151,18 @@ function shippingFromItem(item: any): number | null {
 const NOT_A_SINGLE =
   /\b(lot|lots|bundle|joblot|job lot|playset|complete set|full set|master set|set of|bulk|pick your|choose your|your choice|all epic|all rare|all common|all uncommon|all cards|sealed|booster|pack|box|starter deck|structure deck|preconstructed|precon|intro deck|challenger deck|deck box|proxy|custom|chinese|japanese|korean|\d+\s*cards|x\s*\d+|keychain|key ?ring|keyring|novelty|sticker|plush|playmat|sleeves?|toploader|top ?loader|binder|lanyard|badge|poster|magnet|funko|pin badge)\b/i;
 
+// A RANGE of collector numbers — "SP1-SP6", "R01-R06" — which only ever describes
+// several cards sold together. Found from a real live listing, "Riftbound Vendetta
+// Crystal Rose Skin Set SP1-SP6 KaiSa Sona Ahri Sett Ezreal Lux": the whole
+// six-card treatment in one lot, whose "Skin Set" wording none of NOT_A_SINGLE's
+// set/lot phrases catch, and which then matched Kai'Sa on the literal "SP1".
+//
+// Both sides must carry the SAME letter prefix, which is what keeps it precise:
+// it fires on "SP1-SP6" and "R01-R06", and deliberately NOT on "SP3-006" (one
+// card written with a hyphen instead of a slash) or on prose like "1-2 day
+// shipping" — either of which would otherwise drop a legitimate single.
+const NUMBER_RANGE = /\b([a-z]{1,3})\d{1,3}\s*[-–—]\s*\1\d{1,3}\b/i;
+
 // GRADED: a slab IS the card, but it is not comparable to a raw one — it trades
 // far above, so it leaked into the price table as a wrong "cheapest". That makes
 // it correct to exclude from PRICE rows and wrong to exclude everywhere: no
@@ -456,7 +468,15 @@ export function cardIdentityStages(
       stage: opts.allowGraded
         ? "not excluded (lots/bundles/etc; graded kept)"
         : "not excluded (lots/bundles/etc)",
-      pred: (it) => !notThisProduct.test(it.title ?? ""),
+      // NUMBER_RANGE is tested separately rather than folded into the regex
+      // above: it carries a backreference (\1, "same prefix both sides"), and
+      // alternating it into EXCLUDE's source would renumber that group and
+      // silently break it. It applies on BOTH paths — a multi-card lot is not a
+      // single under any buying option, graded or otherwise.
+      pred: (it) => {
+        const title = it.title ?? "";
+        return !notThisProduct.test(title) && !NUMBER_RANGE.test(title);
+      },
     },
     // Non-English (Chinese etc.) printings share collector numbers with our
     // English cards but trade much cheaper, so they leak in as the "cheapest".
