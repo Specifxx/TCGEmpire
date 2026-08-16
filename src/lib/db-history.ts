@@ -24,27 +24,29 @@ import { PrismaClient } from "@prisma/client";
 // etc. tables it also creates cost negligible storage empty; only PriceHistory /
 // ClickEvent get real traffic).
 
-// HISTORY_DATABASE_URL is the CURRENT history project — cut over 2026-08-11
-// when RH7 came within reach of its own allowance, a week after RH7 replaced RH6
-// for the same reason (RH6 replaced RH5 on 2026-07-31; _4 went unreachable with
-// P1001 before that, and _3/_2/base before it).
+// HISTORY_DATABASE_URL_2 is the CURRENT history project — cut over 2026-08-16
+// when HISTORY_DATABASE_URL approached its own 5 GB monthly network-transfer
+// allowance, five days after it took over from RH7 (RH7 replaced RH6 on
+// 2026-08-04; RH6 replaced RH5 on 2026-07-31; _4 went unreachable with P1001
+// before that, and _3/_2/base before it).
 //
-// THE CHAIN IS CURRENT-FIRST, NOT NEWEST-FIRST, AND THIS ENTRY IS WHY. Every
-// previous rotation moved forward onto a freshly provisioned project, so "newest
-// first" and "current first" happened to mean the same thing and the comments
-// here said "newest". This one moves BACKWARD, onto the OLDEST project in the
-// list: Neon's caps are per project and per month, HISTORY_DATABASE_URL was
-// retired long enough ago that its allowance has reset, and re-using rested
-// capacity we already own beats provisioning an RH8 and beats paying. The head
-// of this list is therefore whichever project is in service TODAY — read it as a
-// precedence order, never as a timeline.
+// THE CHAIN IS CURRENT-FIRST, NOT NEWEST-FIRST. Early rotations moved forward
+// onto freshly provisioned projects, so "newest first" and "current first"
+// happened to coincide. They no longer do: this is the second consecutive
+// rotation onto a RECYCLED project, and _2 is one of the oldest names in the
+// list. Neon's caps are per project and per month, so a project retired long
+// enough ago has a fully reset allowance — re-using rested capacity we already
+// own beats provisioning an RH8 and beats paying. The head of this list is
+// therefore whichever project is in service TODAY; read it as a precedence
+// order, never as a timeline.
 //
 // A recycled name carries one trap the forward rotations never had: the older
 // vars are also migration SOURCES in .github/workflows/maintenance.yml, so a
 // name that is both the target and a listed source would make a migration
-// silently no-op while reporting every row count as matching. HISTORY_DATABASE_URL
-// has been removed from every source list for that reason — grep it before
-// rotating again.
+// silently no-op while reporting every row count as matching. HISTORY_DATABASE_URL_2
+// has been removed from every source list for that reason, and
+// HISTORY_DATABASE_URL — no longer the target — has been put back into them.
+// Grep both before rotating again.
 //
 // SIX PROJECTS IN ~TWO WEEKS IS A READ-PATTERN PROBLEM, NOT A CAPACITY ONE. A
 // fresh project buys roughly four days at the current burn rate, so treat the
@@ -55,11 +57,11 @@ import { PrismaClient } from "@prisma/client";
 // lib/card-price-state.ts groups the ENTIRE PriceHistory table with no `where`,
 // no `take` and no cache, so its payload grows every day forever.
 //
-// RH7 is kept as the rollback fallback and every older var below it is a
-// read-only fallback/migration source; treat them as dead, never the primary
-// target. Once everything's copied across (see the `migrate-history-db-to-hdu`
-// task in .github/workflows/maintenance.yml) and nothing references the older
-// vars anymore, they can be removed entirely.
+// HISTORY_DATABASE_URL is kept as the rollback fallback and every older var
+// below it is a read-only fallback/migration source; treat them as dead, never
+// the primary target. Once everything's copied across (see the
+// `migrate-history-db-to-hdu2` task in .github/workflows/maintenance.yml) and
+// nothing references the older vars anymore, they can be removed entirely.
 //
 // ORDER MATTERS AND IS LOAD-BEARING: this list is duplicated, by necessity, in
 // several places that cannot import this module (GitHub Actions `env:` blocks,
@@ -68,12 +70,12 @@ import { PrismaClient } from "@prisma/client";
 // that silently stops at an exhausted project is exactly how this repo has lost
 // a day to an "unexplained" P1001 more than once.
 const HISTORY_URL =
+  process.env.HISTORY_DATABASE_URL_2 ||
   process.env.HISTORY_DATABASE_URL ||
   process.env.RH7 ||
   process.env.RH6 ||
   process.env.RH5 ||
   process.env.HISTORY_DATABASE_URL_4 ||
-  process.env.HISTORY_DATABASE_URL_2 ||
   process.env.HISTORY_DATABASE_URL_3 ||
   process.env.DATABASE_URL;
 
@@ -81,20 +83,20 @@ const HISTORY_URL =
 // in the logs immediately answers "which database did it actually try?".
 // Mirrors the same diagnostic in scripts/build-db-push.sh and lib/db.ts.
 export const HISTORY_URL_SOURCE =
-  process.env.HISTORY_DATABASE_URL ? "HISTORY_DATABASE_URL"
+  process.env.HISTORY_DATABASE_URL_2 ? "HISTORY_DATABASE_URL_2"
+  : process.env.HISTORY_DATABASE_URL ? "HISTORY_DATABASE_URL"
   : process.env.RH7 ? "RH7"
   : process.env.RH6 ? "RH6"
   : process.env.RH5 ? "RH5"
   : process.env.HISTORY_DATABASE_URL_4 ? "HISTORY_DATABASE_URL_4"
-  : process.env.HISTORY_DATABASE_URL_2 ? "HISTORY_DATABASE_URL_2"
   : process.env.HISTORY_DATABASE_URL_3 ? "HISTORY_DATABASE_URL_3"
   : "DATABASE_URL (no history project set — history shares the operational DB)";
 
-if (HISTORY_URL_SOURCE !== "HISTORY_DATABASE_URL") {
+if (HISTORY_URL_SOURCE !== "HISTORY_DATABASE_URL_2") {
   console.warn(
-    `[db-history] history DB resolved to ${HISTORY_URL_SOURCE}, not HISTORY_DATABASE_URL — the current ` +
-      `history project is missing from this environment. RH7 is kept only as a rollback and is near its ` +
-      `allowance; everything older is exhausted. Expect P1001 or writes landing in the wrong place.`
+    `[db-history] history DB resolved to ${HISTORY_URL_SOURCE}, not HISTORY_DATABASE_URL_2 — the current ` +
+      `history project is missing from this environment. HISTORY_DATABASE_URL is kept only as a rollback and ` +
+      `is at its allowance; everything older is exhausted. Expect P1001 or writes landing in the wrong place.`
   );
 }
 

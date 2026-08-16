@@ -37,11 +37,12 @@ set -uo pipefail
 # OPERATIONAL_URL in src/lib/db.ts, including why recycling this particular name
 # is a hazard worth not repeating.
 CURRENT_OP="DATABASE_URL_2"
-# Rotated BACKWARD on 2026-08-11: RH7 neared its monthly allowance, and
-# HISTORY_DATABASE_URL — the oldest project in the chain — had its allowance
-# reset at the start of the month. The chains are CURRENT-first, not newest-first;
+# Rotated onto another recycled project on 2026-08-16: HISTORY_DATABASE_URL
+# approached its 5 GB monthly network-transfer allowance, and
+# HISTORY_DATABASE_URL_2 — retired long enough ago for its allowance to have
+# fully reset — took over. The chains are CURRENT-first, not newest-first;
 # see the long note on HISTORY_URL in src/lib/db-history.ts.
-CURRENT_HIST="HISTORY_DATABASE_URL"
+CURRENT_HIST="HISTORY_DATABASE_URL_2"
 
 # Only push schema for a real Vercel production/preview build with a database
 # configured. A local `next build` (no database vars) must not try to reach anything.
@@ -125,7 +126,9 @@ fi
 # This chain MIRRORS src/lib/db-history.ts exactly, CURRENT-first. Keep the two
 # in sync — if you rotate there, rotate here into the same position.
 # tests/db-chain.test.ts compares the two lists and fails if they drift.
-if [ -n "${HISTORY_DATABASE_URL:-}" ]; then
+if [ -n "${HISTORY_DATABASE_URL_2:-}" ]; then
+  HIST="$HISTORY_DATABASE_URL_2"; HIST_SOURCE="HISTORY_DATABASE_URL_2"
+elif [ -n "${HISTORY_DATABASE_URL:-}" ]; then
   HIST="$HISTORY_DATABASE_URL"; HIST_SOURCE="HISTORY_DATABASE_URL"
 elif [ -n "${RH7:-}" ]; then
   HIST="$RH7"; HIST_SOURCE="RH7"
@@ -135,8 +138,6 @@ elif [ -n "${RH5:-}" ]; then
   HIST="$RH5"; HIST_SOURCE="RH5"
 elif [ -n "${HISTORY_DATABASE_URL_4:-}" ]; then
   HIST="$HISTORY_DATABASE_URL_4"; HIST_SOURCE="HISTORY_DATABASE_URL_4"
-elif [ -n "${HISTORY_DATABASE_URL_2:-}" ]; then
-  HIST="$HISTORY_DATABASE_URL_2"; HIST_SOURCE="HISTORY_DATABASE_URL_2"
 elif [ -n "${HISTORY_DATABASE_URL_3:-}" ]; then
   HIST="$HISTORY_DATABASE_URL_3"; HIST_SOURCE="HISTORY_DATABASE_URL_3"
 else

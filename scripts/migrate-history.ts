@@ -3,11 +3,12 @@
  * into the CURRENT history database — used when a Neon history project exhausts its
  * monthly network-transfer allowance or goes unreachable, and is replaced.
  *
- *   target  = RH7 if set, else RH6, else RH5, else HISTORY_DATABASE_URL_4, else
- *             HISTORY_DATABASE_URL — mirrors src/lib/db-history.ts's own priority,
- *             so this script always fills whatever the app itself reads.
- *   sources = main DATABASE_URL + every OLDER history project (RH6, RH5, _4, base,
- *             _2, _3), in order
+ *   target  = HISTORY_DATABASE_URL_2 if set, else HISTORY_DATABASE_URL, else RH7,
+ *             else RH6, else RH5, else HISTORY_DATABASE_URL_4 — mirrors
+ *             src/lib/db-history.ts's own priority, so this script always fills
+ *             whatever the app itself reads.
+ *   sources = main DATABASE_URL + every OTHER history project (base, RH7, RH6,
+ *             RH5, _4, _3), in order; the target is filtered out by URL
  *
  * NOTE (2026-08-04): RH6 (in use since 2026-07-31) came within reach of its
  * monthly Neon network-transfer allowance after only FOUR DAYS — RH7 is its
@@ -58,43 +59,44 @@ const MAIN_URL =
   process.env.RM4 ||
   process.env.RM3 ||
   process.env.DATABASE_URL_2;
-// CURRENT-first, not newest-first. HISTORY_DATABASE_URL leads because the
-// history database rotated BACKWARD onto it on 2026-08-11 — its Neon allowance
-// reset at the start of the month while RH7 approached its own. See the note on
-// HISTORY_URL in src/lib/db-history.ts; this chain must match it.
+// CURRENT-first, not newest-first. HISTORY_DATABASE_URL_2 leads because the
+// history database rotated onto it on 2026-08-16, when HISTORY_DATABASE_URL
+// approached its own 5 GB monthly allowance five days into service. See the note
+// on HISTORY_URL in src/lib/db-history.ts; this chain must match it.
 const TARGET_URL =
-  process.env.HISTORY_DATABASE_URL || process.env.RH7 || process.env.RH6 || process.env.RH5 || process.env.HISTORY_DATABASE_URL_4;
+  process.env.HISTORY_DATABASE_URL_2 || process.env.HISTORY_DATABASE_URL || process.env.RH7 || process.env.RH6 || process.env.RH5 || process.env.HISTORY_DATABASE_URL_4;
 const TARGET_LABEL =
-  process.env.HISTORY_DATABASE_URL ? "HISTORY_DATABASE_URL"
+  process.env.HISTORY_DATABASE_URL_2 ? "HISTORY_DATABASE_URL_2"
+  : process.env.HISTORY_DATABASE_URL ? "HISTORY_DATABASE_URL"
   : process.env.RH7 ? "RH7"
   : process.env.RH6 ? "RH6"
   : process.env.RH5 ? "RH5"
   : "HISTORY_DATABASE_URL_4";
 
 if (!MAIN_URL) { console.error("No operational database is set (DATABASE_URL / RM5 / RM4 / RM3 / DATABASE_URL_2)."); process.exit(1); }
-if (!TARGET_URL) { console.error("None of HISTORY_DATABASE_URL / RH7 / RH6 / RH5 / HISTORY_DATABASE_URL_4 is set — point one at the current history project first."); process.exit(1); }
-if (TARGET_LABEL !== "HISTORY_DATABASE_URL") {
-  console.warn(`⚠  Target resolved to ${TARGET_LABEL}, not HISTORY_DATABASE_URL — the current history project is not visible in this environment. RH7 is the rollback and is near its allowance; everything older is exhausted. This is almost certainly not what you want.`);
+if (!TARGET_URL) { console.error("None of HISTORY_DATABASE_URL_2 / HISTORY_DATABASE_URL / RH7 / RH6 / RH5 / HISTORY_DATABASE_URL_4 is set — point one at the current history project first."); process.exit(1); }
+if (TARGET_LABEL !== "HISTORY_DATABASE_URL_2") {
+  console.warn(`⚠  Target resolved to ${TARGET_LABEL}, not HISTORY_DATABASE_URL_2 — the current history project is not visible in this environment. HISTORY_DATABASE_URL is the rollback and is at its allowance; everything older is exhausted. This is almost certainly not what you want.`);
 }
 
 // Every distinct source to pull from (main + older history projects), excluding the
 // target itself. De-duplicated by URL so we never read the same DB twice.
 const sourceUrls = [
   { label: "main (DATABASE_URL)", url: MAIN_URL },
-  // RH7 first among the history sources: it served 2026-08-04 → 2026-08-11, so
-  // it holds the newest rows.
+  // HISTORY_DATABASE_URL leads the history sources: it served 2026-08-11 →
+  // 2026-08-16, so it holds the newest rows.
   //
-  // HISTORY_DATABASE_URL IS STILL LISTED BELOW and that is deliberate, not an
+  // HISTORY_DATABASE_URL_2 IS STILL LISTED BELOW and that is deliberate, not an
   // oversight — it is now the TARGET, and the `s.url !== TARGET_URL` filter on
   // this array is what keeps it out. Leaving the entry in place means the list
   // stays a complete inventory of every history project that has ever existed,
   // so a future rotation onto yet another recycled name is covered by the same
   // filter rather than needing someone to remember to re-add a line.
+  { label: "HISTORY_DATABASE_URL", url: process.env.HISTORY_DATABASE_URL },
   { label: "RH7", url: process.env.RH7 },
   { label: "RH6", url: process.env.RH6 },
   { label: "RH5", url: process.env.RH5 },
   { label: "HISTORY_DATABASE_URL_4", url: process.env.HISTORY_DATABASE_URL_4 },
-  { label: "HISTORY_DATABASE_URL", url: process.env.HISTORY_DATABASE_URL },
   { label: "HISTORY_DATABASE_URL_2", url: process.env.HISTORY_DATABASE_URL_2 },
   { label: "HISTORY_DATABASE_URL_3", url: process.env.HISTORY_DATABASE_URL_3 },
 ].filter((s): s is { label: string; url: string } => !!s.url && s.url !== TARGET_URL);

@@ -44,12 +44,12 @@ const APPLY = process.argv.includes("--apply");
 const DB_ARG = process.argv.find((a) => a.startsWith("--db="))?.slice(5);
 
 const HISTORY_VARS = [
+  "HISTORY_DATABASE_URL_2",
   "HISTORY_DATABASE_URL",
   "RH7",
   "RH6",
   "RH5",
   "HISTORY_DATABASE_URL_4",
-  "HISTORY_DATABASE_URL_2",
   "HISTORY_DATABASE_URL_3",
 ];
 const OPERATIONAL_VARS = ["DATABASE_URL_2", "DATABASE_URL", "RM5", "RM4", "RM3"];
