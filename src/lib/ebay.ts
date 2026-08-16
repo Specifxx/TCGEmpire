@@ -489,8 +489,32 @@ function buildQuery(
   card: { name: string; number: string; isSignature: boolean; isPromo?: boolean },
   withGame: boolean,
 ): string {
-  const num = card.isSignature ? "" : ` ${card.number.replace(/[^0-9]/g, "")}`;
+  const num = card.isSignature ? "" : ` ${queryNumberToken(card.number)}`;
   return `${card.name}${num}${card.isSignature ? " signature" : ""}${card.isPromo ? " promo" : ""}${withGame ? " Riftbound" : ""}`;
+}
+
+/**
+ * The collector-number keyword to put in the Browse `q`.
+ *
+ * Browse ANDs every keyword, so this token has to be one a seller would actually
+ * type. For an ordinary number that is the digits: a card numbered 042 is listed
+ * as "042/166", which tokenises to "042", and searching "042" finds it.
+ *
+ * For a LETTER-PREFIXED number it is not. Stripping "SP3" to its digits asks eBay
+ * for the token "3", and a listing titled "… Crystal Rose SP3/006 …" contains no
+ * bare "3" — so the search returned ZERO ITEMS and every downstream filter,
+ * including the prefix-aware identity match added alongside this, never saw a
+ * candidate to judge. That is why Crystal Rose (SP1–SP6) stayed unpriced in the
+ * text-searched markets even after the matching fix: two independent bugs on the
+ * same cards, and fixing only the filter left the search itself empty-handed.
+ * The rune cycle (R01A–R06B) had the same shape, asking for "01".
+ *
+ * So: keep the prefix. "SP3" stays "SP3", "R01A" stays "R01A" — exactly how the
+ * number is printed and how sellers write it. Unprefixed numbers are untouched.
+ */
+export function queryNumberToken(number: string): string {
+  const trimmed = number.trim();
+  return /^[a-z]/i.test(trimmed) ? trimmed.toUpperCase() : trimmed.replace(/[^0-9]/g, "");
 }
 
 // Lowest legitimate single-card AU listing for a specific card. Requires the

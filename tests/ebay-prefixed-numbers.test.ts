@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { listingMatchesCard, type EbayCardIdentity } from "../src/lib/ebay";
+import { listingMatchesCard, queryNumberToken, type EbayCardIdentity } from "../src/lib/ebay";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Letter-PREFIXED collector numbers — Crystal Rose ("SP1".."SP6"), the rune
@@ -79,4 +79,35 @@ test("plain unlettered numbers are unaffected by the fix", () => {
   const base: EbayCardIdentity = { name: "Jinx, Loose Cannon", setCode: "VEN", number: "042", total: "166", isSignature: false };
   assert.ok(listingMatchesCard(item("Riftbound Jinx Loose Cannon VEN 042/166"), base));
   assert.ok(!listingMatchesCard(item("Riftbound Jinx Loose Cannon VEN 099/166"), base));
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// The SEARCH, not the filter — the second half of the same bug.
+// ─────────────────────────────────────────────────────────────────────────────
+// Fixing the identity filter above was necessary and NOT sufficient: eBay's
+// Browse API ANDs every keyword in `q`, and the query was built by stripping the
+// collector number to its digits. For "SP3" that asked eBay for the token "3",
+// which no listing titled "… Crystal Rose SP3/006 …" contains — so the search
+// returned zero items and the filter never saw a candidate to accept. The cards
+// stayed unpriced after the filter fix shipped, which is how this was found.
+
+test("a prefixed collector number keeps its prefix in the eBay query", () => {
+  // "SP3", not "3" — the token a seller actually types.
+  assert.equal(queryNumberToken("SP3"), "SP3");
+  assert.equal(queryNumberToken("R01A"), "R01A", "the rune cycle had the same bug, asking for '01'");
+  assert.equal(queryNumberToken("NN1"), "NN1");
+  assert.equal(queryNumberToken("WB25"), "WB25");
+});
+
+test("an unprefixed collector number keeps its existing digits-only query", () => {
+  // Unchanged behaviour, pinned: "042/166" tokenises to "042", so digits already
+  // find these and widening them would only add noise.
+  assert.equal(queryNumberToken("042"), "042");
+  assert.equal(queryNumberToken("069B"), "069", "trailing-letter variants stay permissive; the filter disambiguates");
+  assert.equal(queryNumberToken("310"), "310");
+});
+
+test("the query token is case-normalised but never empty for a real number", () => {
+  assert.equal(queryNumberToken("sp3"), "SP3");
+  assert.equal(queryNumberToken(" SP3 "), "SP3", "whitespace from a split() must not leak into the query");
 });
