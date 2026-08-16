@@ -13,7 +13,18 @@ import { SealedTile } from "@/components/SealedTile";
 import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
 import { SITE_URL } from "@/lib/site";
 
-export const revalidate = 86400;
+// searchParams-driven (q/type/set/min/max/instock/atmsrp/sort), so the route is
+// per-request dynamic regardless — same reasoning as /browse, /market and
+// /sets/[set]. DB load is unaffected: getSealedGroups() keeps its own 15-minute
+// per-market in-process memo (see lib/sealed-import.ts), so this is one DB pull
+// per market per warm lambda per TTL either way.
+//
+// This was `revalidate = 86400` alongside a sealed/loading.tsx. That pair — an
+// ISR window on a page that ALSO reads searchParams, with a route-level Suspense
+// boundary — meant the first request for any filter combination the cache hadn't
+// seen returned the loading spinner as the COMPLETE response, with real content
+// only on a second visit. A crawler's first look at a URL saw no products.
+export const dynamic = "force-dynamic";
 
 interface SealedParams {
   q?: string | string[];

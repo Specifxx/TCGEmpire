@@ -14,9 +14,26 @@ import { IndexStats } from "@/components/IndexStats";
 import { IndexConstituents } from "@/components/IndexConstituents";
 import { cardImageAlt } from "@/lib/image-alt";
 
-// Recompute hourly — the underlying PriceHistory only changes on the daily import,
-// so a longer cache window keeps DB egress down without losing meaningful freshness.
-export const revalidate = 3600;
+// searchParams-driven (?market=), so the route is dynamic regardless of any
+// page-level revalidate window — same reasoning as /browse and /sets/[set]. The
+// real caching lives one layer down: getMarketIndex() is itself day-cached via
+// unstable_cache (see lib/market-index.ts), shared across every caller, so this
+// page hits Postgres at most once per market per Sydney day no matter how the
+// page component itself is rendered — a page-level `revalidate` bought nothing
+// here that wasn't already bought there.
+//
+// This used to be `export const revalidate = 3600` with a market/loading.tsx
+// above it. That combination — an ISR revalidate window on a page that ALSO
+// reads searchParams, with a route-level Suspense boundary via loading.tsx — is
+// exactly what produced a real, reproducible bug: the FIRST-ever request for any
+// specific `?market=` value the ISR cache hadn't seen returned the loading.tsx
+// spinner as the COMPLETE, final response (confirmed via a bare fetch — no JS
+// execution needed to reproduce it), with the real content only appearing on a
+// second visit once the background render finished. A crawler's first (and
+// often only) visit to a URL variant would have seen nothing. force-dynamic
+// removes the ambiguity: every request blocks until the real render is ready,
+// so there's nothing to fall back to.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: { absolute: "The RiftCompare Index — Riftbound Market Tracker | RiftCompare" },

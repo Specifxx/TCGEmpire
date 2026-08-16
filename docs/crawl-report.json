@@ -1,8 +1,9 @@
 {
+  "generatedAt": "2026-08-16T03:11:54.763Z",
   "base": "http://localhost:3111",
-  "crawled": 601,
-  "contentPages": 596,
-  "indexable": 565,
+  "crawled": 701,
+  "contentPages": 695,
+  "indexable": 144,
   "maxDepth": 4,
   "totals": {
     "broken": 0,

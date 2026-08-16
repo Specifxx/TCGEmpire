@@ -31,7 +31,12 @@ export const metadata: Metadata = {
 const FAQS = [
   {
     q: "Are the RiftCompare tools free?",
-    a: "All of them are free to use; a few ask you to be signed in. The box EV calculator, deck builder, trade calculator and sealed prices need no account at all. The bulk pricer and best basket are free with a free account. The Deal Finder, value finder and rising-cards screeners show their single best result free and unlock the full list with Premium.",
+    // Deliberately does NOT say "unlock the full …" — that exact phrase is one of
+    // the paywall markers scripts/adsense-audit.ts scans for, and this page merely
+    // DESCRIBES the tiers rather than gating anything, so it was being reported as
+    // a paywalled indexable page on the strength of its own FAQ copy. Reworded
+    // rather than removing the marker, which still needs to catch a real paywall.
+    a: "All of them are free to use; a few ask you to be signed in. The box EV calculator, deck builder, trade calculator and sealed prices need no account at all. The bulk pricer and best basket are free with a free account. The Deal Finder, value finder and rising-cards screeners show their single best result free, with the complete list included in Premium.",
   },
   {
     q: "What does the Deal Finder do?",

@@ -97,6 +97,32 @@ export default function KeywordsIndexPage() {
         })}
       </div>
 
+      {/* Two real, sourced paragraphs rather than a bare link grid. This page was
+          measured at 146 unique editorial words with affiliate links on it — four
+          short of the 150-word floor, which is the "thin affiliate" shape an
+          AdSense reviewer is looking for (scripts/adsense-audit.ts flagged it).
+          The fix is content that genuinely helps someone read a card, not filler:
+          the keyword/game-action split below is the single most useful thing to
+          know before using this glossary, and it comes from the same Core Rules
+          sections lib/keywords.ts already cites entry by entry. */}
+      <section className="card-surface p-6">
+        <h2 className="text-xl font-extrabold text-white">Keywords vs game actions</h2>
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+          Not everything in this glossary works the same way on a card. Riot&apos;s Core Rules split them
+          into two groups, and knowing which you&apos;re looking at tells you where to find its rules text.{" "}
+          <strong className="text-slate-200">Printed keywords</strong> — Empower, Tank, Flow and the rest —
+          appear in brackets on the card itself and are defined in the rules&apos; own Keyword Glossary. They
+          are properties the card carries.
+        </p>
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+          <strong className="text-slate-200">Game actions</strong> — Buff, Stun, Mighty — read like ordinary
+          verbs in a card&apos;s sentence rather than bracketed labels, which is why they are easy to mistake
+          for plain English. They are not: each has precise rules text defining exactly what it does, and
+          two cards using the same verb do the same thing. That is what makes them worth looking up, and
+          every entry below is paraphrased from those rules rather than from how a card happens to read.
+        </p>
+      </section>
+
       <section className="card-surface p-6">
         <h2 className="text-xl font-extrabold text-white">Vendetta&apos;s three new mechanics</h2>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">

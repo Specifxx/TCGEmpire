@@ -256,7 +256,7 @@ const loadingFiles = ALL_FILES.filter((p) => /src\/app\/(.*\/)?loading\.tsx$/.te
 if (loadingFiles.some((p) => rel(p) === "src/app/loading.tsx")) {
   fail(
     "src/app/loading.tsx exists — it turns every notFound() into a soft 404",
-    "Move it into the leaf segments that need it (see src/app/browse/loading.tsx).",
+    "Move it into the leaf segments that need it (see src/app/sealed/loading.tsx).",
   );
 } else {
   ok("no root loading.tsx (notFound() can set a real 404 status)");
@@ -278,6 +278,41 @@ if (unsafeBoundaries.length) {
   fail("a loading.tsx sits above a notFound()-calling route", unsafeBoundaries.join("\n"));
 } else {
   ok(`${loadingFiles.length} scoped loading.tsx boundaries, none above a notFound() route`);
+}
+
+// ── The SAME boundary, the OTHER failure: an empty server render ─────────────
+// A loading.tsx above a page that reads searchParams is a second, quieter bug,
+// and it is the one an AdSense reviewer actually sees. The boundary lets the
+// shell flush immediately; a searchParams-reading page can't be prerendered per
+// URL variant, so the FIRST request for any query string the cache hasn't seen
+// returns the spinner as the COMPLETE, FINAL response — no JS execution needed
+// to reproduce it, just `curl`. /browse served a one-word "Loading…" body to
+// every raw fetch; /market and /sealed did the same on any cold ?param.
+//
+// Measured, not theorised: scripts/crawl-check.ts reported these as
+// emptyServerRender, and the same crawl reported 0 after the boundaries were
+// removed. The routes that keep a loading.tsx (/singles, /movers, /portfolio)
+// don't read searchParams, so they have no per-URL variant to miss.
+const searchParamPages = ALL_FILES.filter(
+  (p) => /src\/app\/.*\/page\.tsx$/.test(rel(p)) && /\bsearchParams\b/.test(read(p)),
+).map((p) => rel(p).replace(/^src\/app\//, "").replace(/\/page\.tsx$/, ""));
+
+const emptyRenderRisk: string[] = [];
+for (const lf of loadingFiles) {
+  const seg = rel(lf).replace(/^src\/app\//, "").replace(/\/?loading\.tsx$/, "");
+  const covered = searchParamPages.filter((sp) => seg === "" || sp === seg || sp.startsWith(`${seg}/`));
+  if (covered.length) emptyRenderRisk.push(`${rel(lf)} covers ${covered.slice(0, 3).join(", ")}`);
+}
+if (emptyRenderRisk.length) {
+  fail(
+    "a loading.tsx sits above a searchParams-reading route — its server HTML can be an empty spinner",
+    emptyRenderRisk.join("\n") +
+      "\n\nDelete that loading.tsx (and set `export const dynamic = \"force-dynamic\"` on the page,\n" +
+      "which such a route already is per-request). Verify with:\n" +
+      "  npx tsx scripts/crawl-check.ts --url http://localhost:3111   → emptyServerRender must be 0",
+  );
+} else {
+  ok("no loading.tsx above a searchParams-reading route (no empty-spinner server HTML)");
 }
 
 // ── 1d. Policy "last updated" drift ─────────────────────────────────────────
