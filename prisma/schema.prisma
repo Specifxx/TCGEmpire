@@ -1113,3 +1113,31 @@ model NewsletterSubscriber {
   // idempotent: reruns and resumed partial runs only email who's still due.
   lastEditionKey String?
 }
+
+// Suppression + per-edition send-tracking for the weekly digest sent to
+// REGISTERED ACCOUNTS that never opted into the newsletter (see
+// lib/user-digest.ts). Deliberately a SEPARATE table from AnnouncementOptOut
+// even though the shape mirrors it: runReleaseDayBlast() treats the mere
+// EXISTENCE of an AnnouncementOptOut row as "already got that one-off
+// campaign" (its own idempotency marker, since users have no lastEditionKey
+// column). Minting rows there from a job that runs every week would make it
+// look like every account had already received the next set-release blast
+// the moment they'd received nothing but a weekly digest — so this audience
+// gets its own token/suppression table instead. Keyed by email (not userId)
+// so an opt-out survives account deletion, same rationale as
+// AnnouncementOptOut.
+model UserDigestOptOut {
+  email          String    @id
+  // One-click unsubscribe token, minted at first send.
+  token          String    @unique
+  createdAt      DateTime  @default(now())
+  // Null until they click unsubscribe; non-null suppresses all future sends.
+  optedOutAt     DateTime?
+  // Last digest edition delivered (e.g. "2026-W24"). The free-tier email
+  // provider caps sends per day, so one edition can take several days of the
+  // daily cron to fully clear — this is what makes each day's run resumable.
+  lastEditionKey String?
+
+  @@index([optedOutAt])
+  @@index([lastEditionKey])
+}

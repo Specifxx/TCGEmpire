@@ -34,6 +34,46 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
   }
 }
 
+export function isBrevoEnabled(): boolean {
+  return !!process.env.BREVO_API_KEY;
+}
+
+// Splits the same "Name <email@x.com>" string EMAIL_FROM already uses for
+// Resend into Brevo's separate sender.name/sender.email fields.
+function parseFrom(raw: string): { name: string; email: string } {
+  const m = raw.match(/^(.*)<(.+)>$/);
+  if (m) return { name: m[1]!.trim().replace(/^"|"$/g, ""), email: m[2]!.trim() };
+  return { name: SITE_NAME, email: raw.trim() };
+}
+
+// Sends via Brevo (app.brevo.com) instead of Resend. Used ONLY for the weekly
+// digest to registered accounts (see lib/user-digest.ts) so that larger,
+// recurring audience never eats into the Resend quota the rest of the app's
+// transactional email (verification, password reset, price alerts, the
+// opt-in newsletter) depends on. Free tier: 300 emails/day, no card required
+// — app.brevo.com → SMTP & API → API Keys. The sender address must be
+// verified inside Brevo separately from Resend's domain verification.
+export async function sendEmailBrevo(to: string, subject: string, html: string): Promise<boolean> {
+  const key = process.env.BREVO_API_KEY;
+  if (!key) {
+    console.warn(`[email] BREVO_API_KEY not set — "${subject}" to ${to} was NOT sent.`);
+    return false;
+  }
+  const sender = parseFrom(process.env.EMAIL_FROM ?? `${SITE_NAME} <noreply@riftcompare.com>`);
+  try {
+    const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: { "api-key": key, "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ sender, to: [{ email: to }], subject, htmlContent: html }),
+    });
+    if (!res.ok) console.warn(`[email] Brevo returned ${res.status} for "${subject}".`);
+    return res.ok;
+  } catch (e) {
+    console.warn("[email] Brevo send failed:", e);
+    return false;
+  }
+}
+
 // On-brand HTML wrapper for transactional emails.
 function layout(heading: string, body: string, cta: { label: string; url: string }): string {
   return `<!doctype html><html><body style="margin:0;background:#0b0e14;font-family:Arial,Helvetica,sans-serif">
@@ -328,6 +368,26 @@ export async function sendReleaseDayEmail(
 
   const footer = recipient === "account" ? announcementFooter(unsubUrl) : newsletterFooter(unsubUrl);
   return sendEmail(to, subject, emailShell(`${setName} is here`, inner, footer));
+}
+
+// ─── Weekly digest to registered accounts (not opt-in subscribers) ──────────
+
+// A separate footer from newsletterFooter above: this audience never opted
+// into anything, so the copy says so — and it points at the digest-specific
+// opt-out (UserDigestOptOut), which is deliberately its own suppression list,
+// not AnnouncementOptOut (see the long comment on that model in schema.prisma
+// for why sharing it with the one-off release-day blast would be a bug).
+function accountDigestFooter(unsubUrl: string): string {
+  return `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">
+    You're getting this because you have a ${SITE_NAME} account. It's our weekly market digest, sent to every member.<br/>
+    <a href="${unsubUrl}" style="color:#9aa4b2;text-decoration:underline">Unsubscribe from this digest</a> · RiftCompare · Riftbound card price comparison.
+  </td></tr>`;
+}
+
+// Same content shape as sendNewsletterDigestEmail (built by lib/user-digest.ts
+// reusing lib/newsletter.ts's buildDigest), sent via Brevo instead of Resend.
+export async function sendUserDigestEmail(to: string, subject: string, heading: string, inner: string, unsubUrl: string): Promise<boolean> {
+  return sendEmailBrevo(to, subject, emailShell(heading, inner, accountDigestFooter(unsubUrl)));
 }
 
 // Sent once on first signup so subscribers hear from us immediately (and get the
