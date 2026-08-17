@@ -1,26 +1,33 @@
-// "Today's Top Deals" — one normalized feed blending the four live deal signals so
+// "Today's Top Deals" — one normalized feed blending the live deal signals so
 // the homepage can surface the best opportunities in the viewer's market:
 //   • savings-vs-market  (PREMIUM) — cards eBay is cheapest on vs the best store
 //   • price-drops        (free)    — biggest 7-day price falls
 //   • cheapest-sealed    (free)    — lowest in-stock sealed products right now
-//   • undervalued        (PREMIUM) — cards furthest below their 30-day average
 //
-// price-drops + undervalued depend on PriceHistory (AU-only today) and savings needs
-// an eBay market, so some columns are naturally empty in some markets — the homepage
+// price-drops depends on PriceHistory (AU-only today) and savings needs an eBay
+// market, so some columns are naturally empty in some markets — the homepage
 // hides empty columns. Each source is independently guarded, so one failing never
-// sinks the rest. The two PREMIUM columns are gated in the UI (only the single top
+// sinks the rest. The one PREMIUM column is gated in the UI (only the single top
 // item is rendered to non-subscribers); the data layer itself is ungated.
 import { unstable_cache } from "next/cache";
+//
+// "undervalued" (cards furthest below their 30-day average) USED to be a fourth
+// column here — removed from the homepage feed entirely (not just hidden in the
+// UI) per a homepage-declutter pass: four competing signals on one page read as
+// "study this table," not "here's a deal." The Value Finder tool
+// (/tools/value-finder, src/app/tools/value-finder/page.tsx) still calls
+// getUndervalued() directly for visitors who want that specific signal — this
+// file no longer needs to fetch it just to leave it unrendered.
 import type { Country } from "./country";
 import { cardHref } from "./card-url";
 import { affiliateUrl } from "./affiliate";
 import { getEbayCheapest } from "./arbitrage";
 import { getPriceMovers } from "./price-history";
 import { getSealedGroups } from "./sealed-import";
-import { getUndervalued } from "./screener";
 import { CONTENT_TAG } from "./revalidate-content";
+import type { CardTileData } from "@/components/CardTile";
 
-export type DealType = "savings-vs-market" | "price-drops" | "cheapest-sealed" | "undervalued";
+export type DealType = "savings-vs-market" | "price-drops" | "cheapest-sealed";
 
 export type Deal = {
   dealType: DealType;
@@ -31,35 +38,37 @@ export type Deal = {
   outboundRetailer: string | null; // retailer key for OutboundLink logging
   imageUrl: string | null;
   priceCents: number;
-  pctLabel: number | null; // magnitude of saving / drop / discount, shown as a badge
+  pctLabel: number | null; // magnitude of saving / drop, shown as a badge
   // Absolute dollar counterpart to pctLabel (e.g. the $4.10 in "US$4.10 · Save
   // 47%") — null for a deal type with no natural "delta" (cheapest-sealed has no
   // "was" price, only the MSRP context folded into `note` below).
   deltaCents: number | null;
   // The OTHER side of the comparison priceCents is being measured against — the
   // cheapest-store price for savingsVsMarket, the 7-days-ago price for
-  // priceDrops, the 30-day average for undervalued. Rendered as "was X" next to
-  // the badge so the two numbers on a row can't be misread as a before→after
-  // pair with the new price higher than the old (a >50% drop puts deltaCents
-  // ABOVE priceCents, e.g. "$10.00" then a badge dollar figure of "$10.64" reads
-  // like a price INCREASE unless the reader knows that second number is a delta,
-  // not a price). Null wherever deltaCents is null (cheapest-sealed).
+  // priceDrops. Null wherever deltaCents is null (cheapest-sealed). Kept for
+  // callers that want the full figure (e.g. /tools/deal-finder); the homepage
+  // feed's own badge deliberately no longer renders it — see TodaysTopDeals.tsx.
   refCents: number | null;
-  note: string | null; // small context, e.g. "vs Card Empire" or "30-day avg"
+  note: string | null; // small context, e.g. "vs Card Empire" or "7-day drop"
+  // Full card-tile data for singles (savings-vs-market, price-drops), so the
+  // homepage can pop the shared QuickView preview on click instead of always
+  // navigating to the full card page — null for cheapest-sealed, which isn't a
+  // card and has no QuickView equivalent (it already goes straight to an
+  // outbound buy link, which is the correct click target for a sealed product).
+  card: CardTileData | null;
 };
 
 export type TopDeals = {
   savingsVsMarket: Deal[]; // PREMIUM
   priceDrops: Deal[]; // free
   cheapestSealed: Deal[]; // free
-  undervalued: Deal[]; // PREMIUM
   hasAny: boolean;
 };
 
 const sub = (c: { setCode: string; collectorNumber: string }) => `${c.setCode} · ${c.collectorNumber}`;
 
 export async function getTopDeals(country: Country, perType = 4): Promise<TopDeals> {
-  const [savingsVsMarket, priceDrops, cheapestSealed, undervalued] = await Promise.all([
+  const [savingsVsMarket, priceDrops, cheapestSealed] = await Promise.all([
     (async (): Promise<Deal[]> => {
       try {
         const { items } = await getEbayCheapest(country, "saving", 1, perType);
@@ -76,6 +85,7 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
           deltaCents: it.savingCents,
           refCents: it.storeCents,
           note: `vs ${it.storeName}`,
+          card: it.card,
         }));
       } catch {
         return [];
@@ -97,6 +107,7 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
           deltaCents: Math.max(0, m.refCents - m.nowCents),
           refCents: m.refCents,
           note: "7-day drop",
+          card: m.card,
         }));
       } catch {
         return [];
@@ -139,45 +150,24 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
               deltaCents: null,
               refCents: null,
               note: [best?.retailerName, msrpNote].filter(Boolean).join(" · ") || null,
+              card: null,
             };
           });
       } catch {
         return [];
       }
     })(),
-    (async (): Promise<Deal[]> => {
-      try {
-        const picks = await getUndervalued(country, perType);
-        return picks.slice(0, perType).map((p) => ({
-          dealType: "undervalued" as const,
-          title: p.card.name,
-          subtitle: sub(p.card),
-          href: cardHref(p.card),
-          outboundUrl: null,
-          outboundRetailer: null,
-          imageUrl: p.card.imageThumbUrl,
-          priceCents: p.currentCents,
-          pctLabel: p.discountPct,
-          deltaCents: Math.max(0, p.avgCents - p.currentCents),
-          refCents: p.avgCents,
-          note: "below 30-day avg",
-        }));
-      } catch {
-        return [];
-      }
-    })(),
   ]);
 
-  const hasAny =
-    savingsVsMarket.length + priceDrops.length + cheapestSealed.length + undervalued.length > 0;
-  return { savingsVsMarket, priceDrops, cheapestSealed, undervalued, hasAny };
+  const hasAny = savingsVsMarket.length + priceDrops.length + cheapestSealed.length > 0;
+  return { savingsVsMarket, priceDrops, cheapestSealed, hasAny };
 }
 
 // Cached wrapper, keyed by market only ["top-deals", country] — so "/" and all
 // five region home pages (/au, /nz, /uk, /sg, /ca) share ONE cache entry per
 // market instead of each route computing its own copy of the same blended
 // deal feed. getTopDeals() itself calls getEbayCheapest/getSealedGroups/
-// getUndervalued, none of which are cheap to run six times an hour times six
+// getPriceMovers, none of which are cheap to run six times an hour times six
 // routes. Same 1h TTL as the homepage used inline before this was factored
 // out — CONTENT_TAG lets the daily import bust it on-demand; the TTL is the
 // self-healing fallback for environments where that on-demand ping is skipped.

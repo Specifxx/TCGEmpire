@@ -12,17 +12,25 @@ import { cardImageAlt } from "@/lib/image-alt";
 import { useCountry } from "@/components/CountryProvider";
 import { useQuickView } from "@/components/QuickView";
 
-// "Market pulse" — the day's top 4 risers + top 4 fallers, reusing the exact
-// Daily Movers data (lib/price-history.ts's getPriceMovers, the same source
-// /movers and the Price Watch teaser use) rather than a new signal. Sits between
-// the hero and Today's Top Deals: the strongest "come back tomorrow" hook a
+// "Market pulse" — the day's top risers + fallers, reusing the exact Daily
+// Movers data (lib/price-history.ts's getPriceMovers, the same source /movers
+// and the Price Watch teaser use) rather than a new signal. Sits between the
+// hero and Today's Top Deals: the strongest "come back tomorrow" hook a
 // price-comparison site has, so it earns a spot above the fold.
+//
+// Trimmed to 3 risers + 3 fallers (was 4+4=8) and put on a slow, continuous
+// right-to-left marquee instead of a static grid — 8 cards across a grid read
+// as a wall of numbers, and a visitor's eye had nowhere obvious to start.
+// Fewer cards, always in motion, reads as "the market is alive" at a glance
+// instead of "study this table."
 //
 // Deliberately NOT wrapped in <Reveal> (unlike most sections below it) — it's
 // close enough to the hero to often be in the initial viewport, and HeroStats
 // sets the precedent that near-fold real content renders immediately rather
 // than fading in. Fixed-size rows mean no reserved-space/CLS concern either way.
-function PulseCard({ m, up, currency }: { m: Mover; up: boolean; currency: string }) {
+const COUNT_PER_SIDE = 3;
+
+function PulseCard({ m, up, currency, duplicate }: { m: Mover; up: boolean; currency: string; duplicate: boolean }) {
   const c = m.card;
   const { open } = useQuickView();
   // Same instant-preview pattern as CardTile: left-click opens the quick-view
@@ -50,7 +58,12 @@ function PulseCard({ m, up, currency }: { m: Mover; up: boolean; currency: strin
       prefetch={false}
       onPointerDown={onPointerDown}
       onClick={onClick}
-      className="card-surface flex w-32 shrink-0 snap-start flex-col gap-1.5 p-2.5 transition-colors hover:border-brand-500/60 hover:bg-ink-800 sm:w-auto"
+      // Fixed width regardless of breakpoint — a marquee track needs every
+      // card the same size for the "translate by exactly one copy's width"
+      // loop trick (see the animate-marquee keyframes) to stay seamless.
+      aria-hidden={duplicate || undefined}
+      tabIndex={duplicate ? -1 : undefined}
+      className="card-surface flex w-32 shrink-0 flex-col gap-1.5 p-2.5 transition-colors hover:border-brand-500/60 hover:bg-ink-800 sm:w-36"
     >
       <div className="flex items-center gap-2">
         <div className="h-10 w-7 shrink-0 overflow-hidden rounded bg-ink-900">
@@ -91,9 +104,29 @@ export function MarketPulse({ moversByCountry }: { moversByCountry: Record<Count
   const { country } = useCountry();
   const info = COUNTRIES[country];
   const movers = moversByCountry[country] ?? moversByCountry.AU;
-  const risers = movers.spiking.slice(0, 4);
-  const fallers = movers.plummeting.slice(0, 4);
+  const risers = movers.spiking.slice(0, COUNT_PER_SIDE);
+  const fallers = movers.plummeting.slice(0, COUNT_PER_SIDE);
   if (risers.length === 0 && fallers.length === 0) return null;
+
+  // Interleaved (up, down, up, down…) rather than "all risers then all
+  // fallers" — a marquee is read as one continuous strip, not two grouped
+  // halves, so mixing them keeps green/red variety in view at all times
+  // instead of a visitor watching six green cards scroll by before the first
+  // red one appears.
+  const pulse: (Mover & { up: boolean })[] = [];
+  for (let i = 0; i < Math.max(risers.length, fallers.length); i++) {
+    if (risers[i]) pulse.push({ ...risers[i], up: true });
+    if (fallers[i]) pulse.push({ ...fallers[i], up: false });
+  }
+
+  // The marquee loops by translating exactly -50%, so the track must render
+  // the same card list TWICE back-to-back — the second copy is purely visual
+  // (aria-hidden, unfocusable) filler that seamlessly continues the first as
+  // it scrolls off, not a duplicate the user is meant to notice or reach.
+  const track = [
+    ...pulse.map((m) => ({ m, duplicate: false })),
+    ...pulse.map((m) => ({ m, duplicate: true })),
+  ];
 
   return (
     <section>
@@ -107,13 +140,25 @@ export function MarketPulse({ moversByCountry }: { moversByCountry: Record<Count
         </Link>
       </div>
 
-      <div className="flex snap-x gap-2.5 overflow-x-auto pb-1 sm:grid sm:grid-cols-4 sm:gap-3 lg:grid-cols-8">
-        {risers.map((m) => (
-          <PulseCard key={`up-${m.card.id}`} m={m} up currency={info.currency} />
-        ))}
-        {fallers.map((m) => (
-          <PulseCard key={`down-${m.card.id}`} m={m} up={false} currency={info.currency} />
-        ))}
+      {/* Soft fade at both edges so cards don't feel like they're cut off
+          mid-scroll — a small touch that reads as intentional motion design
+          rather than an overflow accident. group-hover pauses the scroll so a
+          visitor can actually read/click a card instead of chasing it.
+          motion-reduce freezes the track at its start position for anyone who
+          has asked their OS to minimise motion — the (aria-hidden,
+          unfocusable) duplicate half then just sits clipped out of view by
+          this wrapper's overflow-hidden, exactly as if it were never
+          rendered, so no separate reduced-motion layout is needed. */}
+      <div
+        className="group overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_28px,black_calc(100%-28px),transparent)]"
+        role="region"
+        aria-label="Today's biggest risers and fallers"
+      >
+        <div className="flex w-max animate-marquee gap-2.5 group-hover:[animation-play-state:paused] motion-reduce:animate-none">
+          {track.map(({ m, duplicate }, i) => (
+            <PulseCard key={`${m.up ? "up" : "down"}-${m.card.id}-${i}`} m={m} up={m.up} currency={info.currency} duplicate={duplicate} />
+          ))}
+        </div>
       </div>
 
       <Link href="/market" className="mt-3 block text-center text-xs font-semibold text-brand-300 hover:underline sm:hidden">
