@@ -45,6 +45,21 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
   useEffect(() => {
     if (!loaded || user) return;
     if (SKIP_PATHS.some((p) => pathname?.startsWith(p))) return;
+    // NEVER on the homepage. This is a genuine `pathname === "/"` exact match,
+    // deliberately NOT folded into SKIP_PATHS above (which uses startsWith —
+    // "/" would match every route on the site, not just the homepage itself).
+    // The homepage-redesign brief's accessibility section is explicit and
+    // unconditional: "No newsletter popup, no overlay, no region modal.
+    // Ever." This isn't a newsletter popup, but it unquestionably IS an
+    // auto-opening, full-screen `role="dialog"` overlay — exactly the class
+    // of interruption that rule exists to rule out, on the one page this
+    // whole task is about making a single, uninterrupted job. It's left
+    // fully live everywhere else (149 other routes, unchanged, still firing
+    // on its own 25s delay) — this component and its sitewide behavior
+    // predate this task and are out of its stated scope everywhere except
+    // the homepage itself, where the brief's rule is unambiguous. See
+    // DECISIONS.md's Phase 5 section for the full reasoning.
+    if (pathname === "/") return;
     let seen = false;
     try {
       seen = localStorage.getItem(SEEN_KEY) === "1";
