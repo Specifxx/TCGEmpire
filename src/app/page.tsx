@@ -249,7 +249,14 @@ export default async function HomePage() {
   const radianceSet = nextUpcomingSet();
 
   return (
-    <div className={`${archivo.variable} rb-display-sans flex flex-col gap-10`}>
+    // gap-8, not gap-10: a real, measured contributor to the desktop
+    // page-height hard target (scripts/homepage-audit.mjs, ≤2.6 screens) —
+    // five gaps between six top-level sections at 40px each spent 200px on
+    // whitespace alone. 32px is still a clearly-readable section break (every
+    // section already carries its own heading/border to separate it
+    // visually) and saves 40px total, one small piece of the gap this phase
+    // closed alongside the bigger structural cuts (see DECISIONS.md).
+    <div className={`${archivo.variable} rb-display-sans flex flex-col gap-8`}>
       {/* Scroll-depth measurement (25/50/75/90%) — see ScrollDepthTracker.tsx
           for why this is mounted per-route here rather than in the root
           layout. Renders nothing; purely a side-effecting analytics mount. */}
