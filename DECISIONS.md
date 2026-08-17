@@ -1818,3 +1818,301 @@ structural comparison, not a stand-in for production numbers" caveat Phase
 - `tests/pack-composition.test.ts` — fixed a vacuously-passing test (see
   above)
 - This `DECISIONS.md` section
+
+---
+
+## Phase 5 — Accessibility & Mobile (2026-08-17)
+
+### Crash recovery
+
+This exact phase had a prior attempt that was cut off mid-work by a session
+usage limit and never committed. Per the handoff instructions, the first
+step was `git status`/`git diff` on the working tree, not re-doing the work
+from scratch. The prior attempt had left 14 real source files modified and
+5 throwaway `__scratch_*.mjs` debug/verification scripts at the repo root,
+uncommitted.
+
+Every one of the 14 modified files was read in full (`git diff` on each)
+and judged on its own merits against this phase's checklist rather than
+either blindly kept or blindly reverted:
+
+- `src/app/layout.tsx` — skip link floor to `min-h-11` on focus, `.tap-link`
+  on the plain `riftboundstocks.com` credit link. Correct, kept as-is.
+- `src/app/page.tsx` — `.tap-link` on the "See all N cards in the gallery"
+  link. Correct, kept as-is.
+- `src/components/CommandLauncher.tsx` — `focus-visible:ring-2` added to
+  the ⌘K launcher's search input, which had `outline-none` with nothing
+  standing in for it. Verified genuinely missing before the fix (the
+  sitewide `:focus-visible { outline: 2px solid #34d17e }` rule in
+  `globals.css` is a lower-specificity global selector that a local
+  `focus:outline-none` utility class silently wins against — see the
+  contrast/focus review below for why this matters). Correct, kept.
+- `src/components/CountryHeroToggle.tsx` — `min-w-11` added alongside the
+  existing `min-h-11` on the region pills; a 2-letter inactive chip ("NZ")
+  was measured under 44px wide even though height already cleared it.
+  Correct, kept.
+- `src/components/FeedbackWidget.tsx` — launcher shrunk to a 44×44
+  icon-only circle below `sm:` (was a wider pill measuring ~38px tall on
+  mobile), text label returns at `sm:` and up, `aria-label` added so the
+  accessible name survives losing its visible text at narrow widths, and a
+  new `IntersectionObserver` keyed on `id="rc-hero"` hides the launcher
+  entirely while the hero — and the hero's own autocomplete dropdown — is
+  in view. Verified the `id="rc-hero"` marker the effect depends on was in
+  fact present (see `CinematicHero.tsx`'s diff below) rather than assuming
+  it, per the crash-recovery instructions' explicit warning to check. It
+  was there, correctly wired through `ParallaxRoot`'s new `id` prop.
+  Correct, kept.
+- `src/components/OutboundLink.tsx` — forwards a new optional `aria-label`
+  prop to the rendered `<a>`. This closes a real gap Phase 2 explicitly
+  flagged and deferred to this phase: `PartnersStrip`'s eBay/TCGplayer
+  wordmark links were passing `aria-label` and having it silently dropped.
+  Correct, kept.
+- `src/components/ShareRow.tsx` — `min-w-11` added to the `size="sm"` share
+  button variant; the single-character "X" label measured ~26px wide even
+  though `.btn`'s own `min-h-11` already covered height. Correct, kept.
+- `src/components/SignupPromoPopup.tsx` — exempts `pathname === "/"`
+  specifically (a real, deliberate exact-match check, not folded into the
+  existing `SKIP_PATHS.some(startsWith)` list, which would have matched
+  every route). The comment it left cites the master brief's own
+  unconditional "No newsletter popup, no overlay, no region modal. Ever."
+  line and reasons correctly that this component — an auto-opening,
+  full-screen `role="dialog"` overlay on a 25s timer — is exactly that
+  class of interruption, even though it isn't literally a newsletter form.
+  The reasoning is sound and the fix is minimal and correctly scoped
+  (homepage only; the other 149 routes keep this component's existing,
+  out-of-task-scope sitewide behavior unchanged). Verified end-to-end with
+  a real 27-second wait in a live browser (see Verification below) that it
+  truly never appears on `/` and still does appear, unchanged, on `/market`.
+  Correct, kept.
+- `src/components/home/CinematicHero.tsx` — `.tap-link` +
+  `focus-visible:ring-2` on the hero's one surviving secondary link
+  ("Browse all N cards"), plus `id="rc-hero"` added to `ParallaxShell`'s
+  root `<section>` as the marker `FeedbackWidget` depends on. Both correct.
+  One regression was found and fixed in this phase (see below): the doc
+  comment this diff added contained the literal substring `<Link>` in
+  prose, which broke `tests/internal-linking.test.ts`'s naive
+  `/<Link\b/g` source-text count for "the hero has exactly one `<Link>`."
+- `src/components/home/DealsRow.tsx` — `.tap-link-block` on the mobile
+  "See all deals →" link. Correct, kept.
+- `src/components/home/ParallaxRoot.tsx` — accepts and forwards an optional
+  `id` prop so `CinematicHero` can stamp `id="rc-hero"` onto the actual
+  rendered `<section>` (this file owns that element; `CinematicHero` only
+  passes children through it). Minimal, correct, kept.
+- `src/components/home/PartnersStrip.tsx` — `.tap-link` on the eBay and
+  TCGplayer wordmark links, which had no flex display and no min-height so
+  the sitewide `min-h-11`/pointer-coarse floor had nothing to act on
+  (measured ~18px/16px tall). Their existing `aria-label` props now
+  actually reach the DOM once `OutboundLink` forwards them (see above).
+  Correct, kept.
+- `src/components/home/RadianceCountdownCard.tsx` — `.tap-link` on the
+  "Full release details →" link. Correct, kept.
+- `src/components/home/TrendingChips.tsx` — `min-h-11` added to the chip
+  links, which measured ~22px tall (the shared `.chip` class itself was
+  deliberately left untouched since most of its other sitewide uses are
+  non-interactive labels/badges, not tap targets). Correct, kept.
+
+All fourteen files were correct and complete as found — nothing needed
+reverting or redoing. The `.tap-link` / `.tap-link-block` / `.tap-icon`
+classes and the sitewide `pointer: coarse` 44/48px floor these diffs lean
+on are pre-existing infrastructure from a pass that predates this entire
+task (visible in `git log -- src/app/globals.css`, well before Phase 1's
+first commit) — the prior attempt was reusing an established pattern
+correctly, not inventing a parallel one.
+
+The five `__scratch_*.mjs` files were reviewed for anything worth keeping
+before deletion. `__scratch_a11y_audit.mjs` was a genuinely thorough,
+well-designed Playwright verification script (tab-order capture, ARIA
+combobox assertions, `prefers-reduced-motion` neutralization check, live
+pixel-sampled contrast ratios on the hero placeholder and stat line, a
+full-page 44×44 tap-target sweep on a real 390×844 viewport, and a real
+27-second `SignupPromoPopup` timing check on both `/` and `/market`) — it
+was run for real against the local dev server (see Verification below)
+rather than just read, since a script that was never executed proves
+nothing. The four `__scratch_debug*.mjs` files were narrower one-off
+investigations (logo/RiftboundStocks/ShareRow tap-target measurements, a
+raw ARIA-combobox probe, a focus-ring probe, a dialog-detection probe) that
+fed directly into the source fixes above and had nothing further to
+extract. All five were deleted after use, per the crash-recovery
+instructions — they were never a deliverable.
+
+### What this phase found and fixed beyond the recovered diff
+
+1. **A real regression in the recovered diff's own doc comment.**
+   `tests/internal-linking.test.ts` has a naive regex check —
+   `hero.match(/<Link\b/g).length === 1` — pinning that the hero renders
+   exactly one `<Link>` element (a deliberate, intentionally brittle guard
+   against the hero quietly re-growing a wall of CTAs). The recovered
+   diff's new comment on `CinematicHero.tsx` explained the focus-ring fix
+   using the literal phrase "a bare `<Link>`" in prose, which the regex —
+   scanning raw file text, not JSX AST — counted as a second match. Fixed
+   by rewording to "a bare Next.js link" (no `<` character), preserving the
+   comment's meaning with zero behavior change. Caught by `npm test`, not
+   by inspection — a reminder that a source-text-matching test is exactly
+   as literal as it sounds, and doc comments participate in it.
+2. **One remaining `focus:outline-none`-with-no-ring gap**, found by
+   grepping every homepage-in-scope component tree for `outline-none`
+   after auditing the recovered diff's own two fixes (`CommandLauncher.tsx`,
+   `CinematicHero.tsx`) for completeness rather than assuming the sweep was
+   exhaustive: `FeedbackForm.tsx` (the form inside `FeedbackWidget`'s
+   panel, explicitly in scope since this phase already touches that
+   component) had three text inputs sharing the same base styling; two
+   already carried `focus:ring-1 focus:ring-brand-500/40` alongside
+   `focus:outline-none`, but the third (the optional "name to show
+   publicly" field, only rendered once a checkbox is ticked) was missing
+   the ring — almost certainly an oversight when the other two were fixed
+   at some earlier point, not something this task introduced. Added the
+   same ring for consistency.
+3. **Confirmed, not re-decided:** `useParallax.ts` already bails out
+   entirely (writes nothing, leaving the CSS var fallbacks at their flat
+   0-state) when `matchMedia('(prefers-reduced-motion: reduce)').matches`
+   — pre-existing, correct, untouched. `globals.css`'s
+   `@media (prefers-reduced-motion: reduce)` block already neutralizes
+   every `animation-duration`/`transition-duration` sitewide via a
+   `*, *::before, *::after { ... !important }` catch-all, which covers
+   Tailwind's `animate-fade-in` keyframe (used by the hero's staggered
+   entrance) and the `.reveal-init`/`.reveal-stagger` scroll-in classes
+   alike without needing a per-component opt-in. Verified live, not just
+   read: a real Chromium context with `reducedMotion: "reduce"` emulated
+   showed every sampled `animate-fade-in`/`reveal-*` element's computed
+   `animation-duration`/`transition-duration` collapsed to `1e-06s` (the
+   `0.001ms !important` override, as expected) with `opacity: 1` (the
+   settled, fully-visible end state, not stuck mid-fade). No code change
+   needed — item 4 of this phase's checklist was already fully satisfied.
+4. **Confirmed, not re-decided:** the contrast concern the master brief
+   flagged for the search placeholder and the muted stats line turned out
+   to already be solved at the design-token level, from a pass that
+   predates this entire task (`git log -- tailwind.config.ts` shows it well
+   before Phase 1). Tailwind's stock `slate-500`/`slate-600` were replaced
+   sitewide with `#8593a6`/`#76828f` specifically because the originals
+   measured 4.11:1 / worse on this palette's dark surfaces, under the
+   4.5:1 AA floor for body text — the replacements clear 6.05:1 and 4.82:1
+   on `ink-900` respectively, documented in the token file's own comment
+   with the math shown. Because this is a token-level fix (not per-class),
+   every component that reaches for `text-slate-500`/`-600` — including
+   `HeroStats.tsx`'s stat line and `TrendingChips.tsx`'s "Trending" label —
+   inherits it automatically; nothing in this task's own new components
+   (`ProofStrip.tsx`, `DealsRow.tsx`) uses a different, unaudited color.
+   Verified live, not just from the token math: a real Chromium session
+   read the actual computed `color`/`background-color` off the rendered
+   hero search input's `::placeholder` pseudo-element (6.05:1) and the
+   hero stat line (6.26:1) — both comfortably over 4.5:1. The one
+   deliberate exception (`PartnersStrip.tsx`'s eBay wordmark, hand-colored
+   per letter to eBay's own brand colors) is exempt under WCAG's own
+   logotype carve-out ("text that is part of a logo... has no minimum
+   contrast requirement") and is unaffected either way, since its
+   accessible name now comes from `aria-label`, not the colored glyphs.
+5. **Confirmed, not fixed — a real, deliberate design tradeoff, not a
+   defect.** On a real desktop browser context (Playwright's default,
+   which reports a "fine" pointer), the hero's `autoFocusDesktop` effect
+   (Phase 3's work, unchanged this phase) puts real keyboard focus into
+   the hero search input immediately on page load — this is the master
+   brief's own explicit ask ("focus programmatically via JS, gated to
+   non-touch pointers... this is exactly what Scryfall does"), not
+   something introduced or revisited here. One consequence, verified
+   directly rather than assumed: because focus starts inside the hero
+   input rather than at the top of the document, a **forward**-only Tab
+   walkthrough from page load never visits the skip link or the header
+   (logo, nav links, Marketplace, Premium, region switcher, Sign in) —
+   they sit earlier in DOM order than the point focus already occupies.
+   This is not a keyboard trap and nothing is actually unreachable:
+   confirmed with a real `Shift+Tab` walk from the autofocused state,
+   which correctly stepped backward through Sign in → region switcher →
+   Discord → Premium → Blog → Decks → Sealed → Database → Explore → the
+   RiftCompare logo → the skip link, in sensible reverse-DOM order, before
+   hitting the top of the document. A touch/coarse-pointer visitor (where
+   the autofocus gate correctly does NOT fire, confirmed separately) gets
+   the conventional forward-from-top order, skip link first. This is
+   logged here as a verified, intentional characteristic of a
+   brief-mandated pattern, not left as an open question — there is nothing
+   for a later phase to decide.
+
+### Verification
+
+Ran the recovered `__scratch_a11y_audit.mjs` for real against the local dev
+server (Postgres cluster restarted first — the container had recycled
+since Phase 4, `pg_lsclusters` showed the "16 main" cluster `down`; brought
+back up with `pg_ctlcluster 16 main start` per this file's own documented
+recipe, no data loss, same seeded DB Phase 4 left behind) before making any
+further changes, then again after this phase's own edits (the `<Link>`
+regex fix, the `FeedbackForm.tsx` ring). Zero failures both times, one
+expected/benign note ("FeedbackWidget launcher not found/visible at
+initial mobile load" — correct, since the hero occupies the entire first
+mobile screen and `overHero` correctly hides the launcher there by design).
+Full summary of what it covers:
+
+| Check | Result |
+|---|---|
+| No visible `[role=dialog]` on load, desktop and mobile | PASS |
+| Desktop tab sequence advances, never stuck, every stop visible | PASS |
+| Hero search: `role="combobox"`, `aria-haspopup="listbox"`, `aria-controls` resolves to a real element in the DOM | PASS |
+| `aria-expanded` flips true once results render | PASS |
+| `aria-activedescendant` set after ArrowDown, points at a real `role="option"` with `aria-selected="true"` | PASS |
+| A second ArrowDown moves `aria-activedescendant` to a different option | PASS |
+| Escape closes the combobox (`aria-expanded="false"`) | PASS |
+| Hero "Browse all N cards" link reachable via real keyboard Tab, with a real `:focus-visible` ring painted | PASS |
+| Hero search placeholder contrast (live computed pixels) | 6.05:1 (≥4.5:1 floor) |
+| Hero stat line contrast (live computed pixels) | 6.26:1 (≥4.5:1 floor) |
+| `prefers-reduced-motion: reduce` neutralizes every sampled animated element | PASS |
+| First mobile Tab lands on the skip link; it becomes properly sized once focused | PASS |
+| Full-page mobile (390×844) tap-target sweep: every real, reachable interactive element | 103 found, **0 under 44×44** |
+| `SignupPromoPopup` does NOT appear on `/` after a real 27s wait | PASS |
+| `SignupPromoPopup` STILL appears, unchanged, on `/market` after a real 27s wait | PASS |
+
+A supplementary, throwaway (also deleted after use) script independently
+confirmed the from-autofocus `Shift+Tab` backward walk described in
+finding 5 above, since the recovered script's own forward-only tab loop
+couldn't observe it (focus started mid-page, not at the top).
+
+`DealsRow`'s deal cards and the Explore-by-set grid tiles were checked by
+direct code inspection rather than live-rendered on this phase's local
+data (each card/tile is a single full-bleed `<a>`/`<Link>` — the deal
+card's `h-24` image alone exceeds the 44px floor before any padding or
+text is counted, and the set tiles are `p-4` cards with two lines of text)
+— `DealsRow` did not render against the current local seed data (same
+sparse-data gap Phase 4 already documented: it needs eBay-listing/
+price-history/sealed signals the throwaway seed rows don't carry), so its
+tap targets could not be swept by the live 390×844 script this round. Not
+re-fixed or re-seeded this phase since Phase 4 already logged this gap in
+detail and it's a data-availability issue, not an accessibility defect —
+flagged again here only so a later phase with richer data doesn't need to
+rediscover it.
+
+`TradeCalculator.tsx`, `MyCollection.tsx`, `MarketSwitcher.tsx`, and
+`FilterableCardGallery.tsx` were found via a sitewide `outline-none` grep
+run while checking item 3 of this phase's checklist, but are not rendered
+anywhere in the homepage's component tree (confirmed by grepping
+`src/app/page.tsx` and `src/components/home/*.tsx` for their names — zero
+hits) — out of this task's stated scope ("Homepage, shared homepage
+components, footer, and analytics only"), so left untouched. Noting this
+explicitly so it reads as a scope boundary that was checked, not one that
+was missed.
+
+| Command | Result | Notes |
+|---|---|---|
+| `npm run typecheck` | PASS (0 errors) | |
+| `npm run lint` | PASS (exit 0) | Zero new warnings; same pre-existing `react/no-unescaped-entities` set every prior phase already catalogued, none in files this phase touched |
+| `npm test` | PASS — 581/581 | Failed at 580/581 mid-phase (`tests/internal-linking.test.ts`'s hero-`<Link>`-count test) due to the doc-comment regression described above; green again immediately after that one-line reword — no test logic was changed, only the prose that tripped it |
+| `npm run build` | PASS (exit 0) | Full production build. Homepage (`/`) still a static (`○`) route: **12.3 kB page / 146 kB First Load JS** — unchanged from Phase 4's ending size, as expected, since this phase's changes are markup/class/comment-only and add no new client-side logic |
+
+### Phase 5 deliverables
+
+- `src/app/layout.tsx` — skip link tap-target floor
+- `src/app/page.tsx` — `.tap-link` on the by-set gallery link
+- `src/components/CommandLauncher.tsx` — focus ring on the ⌘K search input
+- `src/components/CountryHeroToggle.tsx` — `min-w-11` on region pills
+- `src/components/FeedbackForm.tsx` — focus ring on the display-name field
+  (this phase's own fix, beyond the recovered diff)
+- `src/components/FeedbackWidget.tsx` — 44×44 icon-only launcher below
+  `sm:`, hidden while the hero is in view
+- `src/components/OutboundLink.tsx` — forwards `aria-label`
+- `src/components/ShareRow.tsx` — `min-w-11` on the compact share buttons
+- `src/components/SignupPromoPopup.tsx` — never on `/`
+- `src/components/home/CinematicHero.tsx` — tap target + focus ring on the
+  browse-all link, `id="rc-hero"` marker, and this phase's doc-comment fix
+  for the `<Link>`-count regression
+- `src/components/home/DealsRow.tsx` — `.tap-link-block` on mobile
+- `src/components/home/ParallaxRoot.tsx` — forwards an `id` prop
+- `src/components/home/PartnersStrip.tsx` — `.tap-link` on wordmark links
+- `src/components/home/RadianceCountdownCard.tsx` — `.tap-link`
+- `src/components/home/TrendingChips.tsx` — `min-h-11` on chip links
+- This `DECISIONS.md` section
