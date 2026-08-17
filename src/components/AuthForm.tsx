@@ -22,6 +22,8 @@ const OAUTH_ERRORS: Record<string, string> = {
   oauth_token: "Couldn't complete sign-in with that provider. Please try again.",
   oauth_profile: "Couldn't read your profile from that provider. Please try again.",
   oauth_noemail: "That provider didn't share an email address, which we need to create your account.",
+  oauth_unverified:
+    "That provider hasn't confirmed your email address yet. Verify it with them first, then sign in here again.",
 };
 
 export function AuthForm({

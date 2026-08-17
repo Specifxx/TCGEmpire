@@ -55,22 +55,38 @@ export async function GET(req: Request, { params }: { params: { provider: string
   }
 
   // 3) Normalise the fields per provider.
+  //
+  // emailVerified is NOT decoration — it is the entire basis on which step 4 is
+  // allowed to hand this sign-in an existing account. Both providers let an
+  // account CLAIM an address it has not proven: Discord returns `verified:false`
+  // on /users/@me until the new address is confirmed, and Google returns
+  // `email_verified:false` for accounts whose address it hasn't validated. So the
+  // address alone says nothing about who owns the inbox — anyone can point a
+  // throwaway account at someone else's address and authorise from it.
   let providerId: string | undefined;
   let email: string | undefined;
+  let emailVerified = false;
   let name: string | undefined;
   let avatar: string | null = null;
   if (provider === "google") {
     providerId = profile.sub as string;
     email = (profile.email as string)?.toLowerCase();
+    emailVerified = profile.email_verified === true || profile.email_verified === "true";
     name = profile.name as string;
     avatar = (profile.picture as string) ?? null;
   } else {
     providerId = profile.id as string;
     email = (profile.email as string)?.toLowerCase();
+    emailVerified = profile.verified === true;
     name = (profile.global_name as string) || (profile.username as string);
     avatar = profile.avatar ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png` : null;
   }
   if (!providerId || !email) return fail(req, "oauth_noemail");
+  // Strict, not "unverified means create a fresh account": this site grants
+  // moderator powers by email address (isAdminEmail in lib/auth.ts), and a new
+  // account carrying an admin address would be an admin. An unproven address must
+  // not enter the system at all.
+  if (!emailVerified) return fail(req, "oauth_unverified");
 
   // 4) Find-or-create the user (by provider id, then by email) and link the identity.
   const { user, isNew } = await upsertOAuthUser(provider, providerId, email, name, avatar);
@@ -110,8 +126,11 @@ async function upsertOAuthUser(
     return { user, isNew: false };
   }
 
-  // Otherwise link to an existing account with the same email (the provider has
-  // verified this email, so it's the same person). Security: if that account was
+  // Otherwise link to an existing account with the same email. This is only sound
+  // because the caller has already rejected unverified provider emails — the
+  // provider vouching for the address is what makes "same email" mean "same
+  // person" here, and without that check this branch is an account takeover.
+  // Security: if that account was
   // NEVER email-verified yet has a password, the password was set without proving
   // inbox ownership (a possible squatter) — discard it, since the OAuth provider is
   // now the authority on this email. The real owner can set a fresh one via /forgot.
