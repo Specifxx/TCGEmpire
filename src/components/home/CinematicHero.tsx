@@ -270,12 +270,23 @@ export function CinematicHero({
 // intersect". Harmless on every other route: none of them render this id, so
 // the observer there finds nothing and no-ops, same shape as the existing
 // #rc-ad-zone check right next to it in that file.
+//
+// NO overflow-hidden here (removed 2026-08-17): it used to contain the
+// .parallax-art/.parallax-aurora background layers' translate3d/scale, which
+// could otherwise bleed past the hero's edges during scroll/pointer parallax.
+// Both layers — and .hero-vignette — were cut when the hero's background was
+// flattened to the plain bg-ink-950 panel above (see "NOTHING FLANKS THE
+// HERO" below); none of globals.css's three parallax/vignette classes are
+// referenced by any component anymore. The overflow-hidden outlived them and
+// became a real bug instead of dead weight: CountryHeroToggle's dropdown and
+// SearchBar's suggestion list are both position:absolute descendants that sit
+// INSIDE this section, so they don't grow the section's own (short, ~30vh)
+// height — the ancestor's overflow-hidden was silently slicing both dropdowns
+// off at the hero's bottom edge instead of letting them float over the
+// content below, exactly as a z-50 absolute dropdown is meant to.
 function ParallaxShell({ children }: { children: React.ReactNode }) {
   return (
-    <ParallaxRoot
-      id="rc-hero"
-      className="relative left-1/2 -mt-6 flex min-h-[30vh] w-screen -translate-x-1/2 items-center overflow-hidden"
-    >
+    <ParallaxRoot id="rc-hero" className="relative left-1/2 -mt-6 flex min-h-[30vh] w-screen -translate-x-1/2 items-center">
       {children}
     </ParallaxRoot>
   );
