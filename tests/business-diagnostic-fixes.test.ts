@@ -238,7 +238,10 @@ test("the hero's primary CTA row still carries only two <Link>s (test constraint
 });
 
 test("Best Basket has a homepage section with a real crawlable Link", () => {
-  const src = read("src/app/page.tsx");
+  // Moved into HomeSections.tsx (shared with the 5 region home pages) when
+  // the homepage's feature sections were factored out — see that file's own
+  // header comment.
+  const src = read("src/components/home/HomeSections.tsx");
   assert.match(src, /href="\/tools\/best-basket"/);
 });
 

@@ -1,32 +1,63 @@
 import Link from "next/link";
 import { getPopularCards } from "@/lib/cheapest-cards";
 import { getHomeStats } from "@/lib/home-stats";
+import { getCachedTopDeals, type TopDeals } from "@/lib/top-deals";
+import { getRecentlyUpdated, getPriceMovers, type PriceMovers } from "@/lib/price-history";
 import { COUNTRIES, type Country } from "@/lib/country";
 import { COUNTRY_GUIDE_SLUGS } from "@/lib/seo";
 import { CinematicHero } from "./CinematicHero";
+import { HomeSections } from "./HomeSections";
 import { webPage, faqPage, breadcrumb, ldJson } from "@/lib/jsonld";
+
+const COUNTRY_CODES: Country[] = ["AU", "NZ", "US", "UK", "SG", "CA"];
 
 // Region home pages (/au, /nz, /uk, /sg, /ca — see app/au/page.tsx etc): the
 // homepage's own hero/search/stat building blocks, reused rather than
-// duplicated, PLUS genuinely region-specific content below the fold (real
-// counts from THIS market, a link to that market's own buying guide, a
-// region-scoped FAQ). Deliberately NOT a full re-render of every homepage
-// section (deals ticker, movers, popular-cards carousel, reviews, partner
-// strip, newsletter card, …) — six near-identical copies of that would be
-// exactly the near-duplicate-content problem the rest of this site's SEO work
-// has been fighting, for a stat block and an H1 as the only real difference.
-// This stays a focused, honestly-thinner landing page with its own real facts,
-// which is what actually earns a market-specific query rather than just
-// declaring a URL for one.
+// duplicated, PLUS the exact same feature set as "/" (Today's Top Deals,
+// Market Pulse, the popular-cards carousel, How It Works, Explore, reviews,
+// partners — see HomeSections.tsx), PLUS genuinely region-specific content
+// below all of that (real counts from THIS market, a link to that market's
+// own buying guide, a region-scoped FAQ).
+//
+// AN EARLIER VERSION OF THIS PAGE deliberately left HomeSections' entire
+// feature set out, reasoning that six near-identical copies of it would be
+// the near-duplicate-content problem this site's SEO work has fought
+// elsewhere. In practice that made the region toggle in the hero feel
+// broken: picking AU/NZ/UK/SG/CA silently dropped the site down to a stub
+// page with the deals ticker, movers, popular cards and How It Works all
+// gone. A visitor who picks a market must land on the SAME site, not a
+// thinner one — see the region-specific block below for how the genuine
+// per-market content (real counts, that market's own buying guide, a
+// region-scoped FAQ) still earns the page its own query without needing to
+// starve it of the features every other page on the site has.
+//
+// The underlying data reuses the SAME caches "/" already populates
+// (getCachedTopDeals/getPriceMovers/getRecentlyUpdated are all keyed by
+// market, not by route — see their own doc comments), so this costs no
+// extra DB egress beyond what "/" was already computing once an hour.
 export async function RegionHome({ region }: { region: Country }) {
   const info = COUNTRIES[region];
-  const [{ totalCards, statsByCountry, freshness }, trendingCards] = await Promise.all([
+  const [
+    { totalCards, statsByCountry, freshness },
+    popularCards,
+    popularVendetta,
+    topDealsArr,
+    recentlyUpdated,
+    moversArr,
+  ] = await Promise.all([
     getHomeStats(),
-    getPopularCards(6, region),
+    getPopularCards(12, region),
+    getPopularCards(8, region, "VEN"),
+    Promise.all(COUNTRY_CODES.map((c) => getCachedTopDeals(c))),
+    getRecentlyUpdated(region, 24),
+    Promise.all(COUNTRY_CODES.map((c) => getPriceMovers(c, 6))),
   ]);
+  const trendingCards = popularCards.slice(0, 6);
   const stat = statsByCountry[region];
   const storeWord = stat.stores === 1 ? "store" : "stores";
   const guideSlug = COUNTRY_GUIDE_SLUGS[region];
+  const topDealsByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, topDealsArr[i]])) as Record<Country, TopDeals>;
+  const moversByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, moversArr[i]])) as Record<Country, PriceMovers>;
 
   const faqs = [
     {
@@ -47,6 +78,21 @@ export async function RegionHome({ region }: { region: Country }) {
         trendingCards={trendingCards}
         freshness={freshness}
         region={{ code: region, adjective: info.adjective }}
+      />
+
+      {/* The full "/" feature set — Market Pulse, Today's Top Deals, popular
+          cards, How It Works, Explore, reviews, partners — see HomeSections.tsx
+          and this file's own header comment for why this exists here now. */}
+      <HomeSections
+        country={region}
+        totalCards={totalCards}
+        storeCount={stat.stores}
+        storeWord={storeWord}
+        popularCards={popularCards}
+        popularVendetta={popularVendetta}
+        topDealsByCountry={topDealsByCountry}
+        moversByCountry={moversByCountry}
+        recentlyUpdated={recentlyUpdated}
       />
 
       <section className="container-app">

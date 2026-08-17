@@ -144,7 +144,19 @@ export function CinematicHero({
             check that runs on raw HTML. The Navbar wraps its two SearchBar
             instances in exactly this boundary; the hero was the one that
             didn't. See docs/adsense-remediation.md § Phase 11. */}
-        <div className="animate-fade-in [animation-delay:300ms] mt-6">
+        {/* `relative z-20` here is load-bearing, not decoration. TrendingChips,
+            HeroStats and the CTA row below all carry their own `animate-fade-in`
+            (an opacity keyframe), which makes EACH of them a stacking context in
+            its own right. With none of these siblings on an explicit z-index,
+            paint order falls back to DOM order — so those later siblings painted
+            OVER this box's search-results dropdown (z-50, but scoped INSIDE this
+            wrapper's own stacking context, unable to escape it) instead of the
+            dropdown floating above them like an overlay should. An explicit
+            z-index here beats every z-index:auto sibling regardless of DOM
+            order, which is what actually fixes it — bumping the dropdown's own
+            z-50 higher would not, since the two are compared in different
+            stacking contexts. */}
+        <div className="animate-fade-in [animation-delay:300ms] relative z-20 mt-6">
           <Suspense fallback={<div className="input mx-auto h-12 max-w-2xl" />}>
             <SearchBar variant="hero" autoFocusDesktop />
           </Suspense>

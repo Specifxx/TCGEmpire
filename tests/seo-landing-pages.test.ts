@@ -76,7 +76,9 @@ test("the current set's gallery is internally linked from the key surfaces", () 
   // set is current instead of naming one — which is why this assertion looks for
   // a template literal rather than a "/sets/vendetta/gallery" string.
   const surfaces: [string, string][] = [
-    ["src/app/page.tsx", "homepage"],
+    // Moved into HomeSections.tsx (shared with the 5 region home pages) when
+    // the homepage's feature sections were factored out of app/page.tsx.
+    ["src/components/home/HomeSections.tsx", "homepage"],
     ["src/app/sets/[set]/page.tsx", "set page"],
     ["src/lib/articles.ts", "guides/blog"],
   ];

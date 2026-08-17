@@ -10,6 +10,7 @@
 // hides empty columns. Each source is independently guarded, so one failing never
 // sinks the rest. The two PREMIUM columns are gated in the UI (only the single top
 // item is rendered to non-subscribers); the data layer itself is ungated.
+import { unstable_cache } from "next/cache";
 import type { Country } from "./country";
 import { cardHref } from "./card-url";
 import { affiliateUrl } from "./affiliate";
@@ -17,6 +18,7 @@ import { getEbayCheapest } from "./arbitrage";
 import { getPriceMovers } from "./price-history";
 import { getSealedGroups } from "./sealed-import";
 import { getUndervalued } from "./screener";
+import { CONTENT_TAG } from "./revalidate-content";
 
 export type DealType = "savings-vs-market" | "price-drops" | "cheapest-sealed" | "undervalued";
 
@@ -169,4 +171,19 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
   const hasAny =
     savingsVsMarket.length + priceDrops.length + cheapestSealed.length + undervalued.length > 0;
   return { savingsVsMarket, priceDrops, cheapestSealed, undervalued, hasAny };
+}
+
+// Cached wrapper, keyed by market only ["top-deals", country] — so "/" and all
+// five region home pages (/au, /nz, /uk, /sg, /ca) share ONE cache entry per
+// market instead of each route computing its own copy of the same blended
+// deal feed. getTopDeals() itself calls getEbayCheapest/getSealedGroups/
+// getUndervalued, none of which are cheap to run six times an hour times six
+// routes. Same 1h TTL as the homepage used inline before this was factored
+// out — CONTENT_TAG lets the daily import bust it on-demand; the TTL is the
+// self-healing fallback for environments where that on-demand ping is skipped.
+export function getCachedTopDeals(country: Country): Promise<TopDeals> {
+  return unstable_cache(() => getTopDeals(country), ["top-deals", country], {
+    revalidate: 3600,
+    tags: [CONTENT_TAG],
+  })();
 }

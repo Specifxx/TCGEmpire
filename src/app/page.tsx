@@ -1,26 +1,13 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import dynamic from "next/dynamic";
 import { Archivo } from "next/font/google";
-import { unstable_cache } from "next/cache";
-import { Reveal } from "@/components/Reveal";
 import { getPopularCards } from "@/lib/cheapest-cards";
 import { DEFAULT_COUNTRY, type Country } from "@/lib/country";
-import { SETS, newestReleasedSet, nextUpcomingSet, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
-import { SITE_URL, SITE_NAME } from "@/lib/site";
-import { getTopDeals, type TopDeals } from "@/lib/top-deals";
+import { SITE_NAME } from "@/lib/site";
+import { getCachedTopDeals, type TopDeals } from "@/lib/top-deals";
 import { getRecentlyUpdated, getPriceMovers, type PriceMovers } from "@/lib/price-history";
-import { getArticles } from "@/lib/articles";
 import { getHomeStats } from "@/lib/home-stats";
-import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { CinematicHero } from "@/components/home/CinematicHero";
-import { RadianceCountdownCard } from "@/components/home/RadianceCountdownCard";
-import { LatestPosts } from "@/components/home/LatestPosts";
-import { PartnersStrip } from "@/components/home/PartnersStrip";
-import { ReviewsSection } from "@/components/ReviewsSection";
-import { HowItWorks } from "@/components/home/HowItWorks";
-import { EbayPicks } from "@/components/EbayPicks";
-import { CONTENT_TAG } from "@/lib/revalidate-content";
+import { HomeSections } from "@/components/home/HomeSections";
 import { pageAlternates, regionHomeHreflang } from "@/lib/seo";
 import { webPage, faqPage } from "@/lib/jsonld";
 
@@ -34,18 +21,6 @@ import { webPage, faqPage } from "@/lib/jsonld";
 // egress leak the 2026-08-14 work existed to remove, and keeping one alive
 // after nothing consumed it would be a regression with no upside. The hero now
 // needs NO data beyond the stats it already renders.
-
-// Below-the-fold, client-rendered components — code-split into their own
-// chunks (still SSR'd for content/SEO) so their JS isn't part of the bundle
-// the browser has to parse/compile before the hero above them can hydrate and
-// paint. Both are well below the LCP candidate (the hero stat line), so
-// neither needs to be ready any earlier than "whenever it's scrolled to."
-const TodaysTopDeals = dynamic(() => import("@/components/TodaysTopDeals").then((m) => m.TodaysTopDeals));
-const PopularCardsCarousel = dynamic(() =>
-  import("@/components/home/PopularCardsCarousel").then((m) => m.PopularCardsCarousel),
-);
-const MarketPulse = dynamic(() => import("@/components/home/MarketPulse").then((m) => m.MarketPulse));
-const ReturnVisitCards = dynamic(() => import("@/components/home/ReturnVisitCards").then((m) => m.ReturnVisitCards));
 
 // Homepage titling face — a heavy neutral grotesque matching the official
 // Riftbound wordmark lockup ("RIFTBOUND / LEAGUE OF LEGENDS TRADING CARD GAME"),
@@ -157,11 +132,7 @@ export default async function HomePage() {
     // when CRON_SECRET is configured, so a shorter TTL guarantees daily-import data
     // reaches the homepage even if the on-demand ping is skipped. (v4 index key busts
     // the stale entry that had frozen the market index at an old date.)
-    Promise.all(
-      COUNTRY_CODES.map((c) =>
-        unstable_cache(() => getTopDeals(c), ["top-deals", c], { revalidate: 3600, tags: [CONTENT_TAG] })(),
-      ),
-    ),
+    Promise.all(COUNTRY_CODES.map((c) => getCachedTopDeals(c))),
     // "Recently updated" feed — cards whose price genuinely changed in the most
     // recent snapshot (see lib/price-history.ts). Single-market (the baseline),
     // same as popularCards above: it's a real internal-linking/freshness feed,
@@ -180,32 +151,11 @@ export default async function HomePage() {
   ]);
   const storeCount = statsByCountry[country].stores;
   const storeWord = storeCount === 1 ? "store" : "stores";
-  // Per-market Top Deals, so the section can localise client-side (see above).
+  // Per-market Top Deals/movers, so HomeSections' sections can localise
+  // client-side to whichever market the VISITOR is actually in (see its own
+  // doc comment) — not just the AU baseline this page's ISR render bakes in.
   const topDealsByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, topDealsArr[i]])) as Record<Country, TopDeals>;
-  const anyDeals = COUNTRY_CODES.some((c) => topDealsByCountry[c].hasAny);
-  // Per-market movers, so Market Pulse can localise client-side (see above).
   const moversByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, moversArr[i]])) as Record<Country, PriceMovers>;
-  const newestSet = newestReleasedSet();
-  // Biggest movers tab: both directions, ranked by the size of the move. Reads
-  // the baseline market's movers, same as before moversByCountry existed.
-  const biggestMovers = [...moversByCountry[country].spiking, ...moversByCountry[country].plummeting]
-    .sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct))
-    .slice(0, 12);
-  // The next announced-but-unreleased set (Radiance today; rolls forward on its
-  // own — see nextUpcomingSet's doc comment). undefined hides the whole card.
-  const radianceSet = nextUpcomingSet();
-  // The teaser row shows GUIDES, not blog posts. Both are the same Article shape
-  // from the same in-memory list, so this is still a filter/sort and not a DB
-  // read — but guides are the evergreen, reference-shaped content, which is what
-  // a first-time visitor landing on the homepage actually needs. The blog stays
-  // one click away in the nav and in the "See all guides" row below.
-  const latestPosts = getArticles("guide").slice(0, 3);
-  // Guarding these at the page level (rather than always mounting <Reveal> and
-  // letting the child render null) matches how {anyDeals && <Reveal>…} already
-  // works above — an empty Reveal wrapper is harmless, but there's no reason to
-  // mount an IntersectionObserver over nothing.
-  const showRadianceCard = radianceSet != null;
-  const showLatestPosts = latestPosts.length > 0;
 
   return (
     <div className={`${archivo.variable} rb-display-sans flex flex-col gap-10`}>
@@ -217,12 +167,6 @@ export default async function HomePage() {
         freshness={freshness}
       />
 
-      {/* Market pulse — today's top risers/fallers, reusing the Daily Movers
-          data. Sits right after the hero: the single strongest "come back
-          tomorrow" signal a price site can show, so it earns above-the-fold
-          placement. Hides itself if there's nothing to show today. */}
-      <MarketPulse moversByCountry={moversByCountry} />
-
       {/* REMOVED: the "Vendetta — the new set, priced" launch band (cheapest
           booster box, price-since-release, chase cards). It was a launch-window
           spotlight and Vendetta released on 31 Jul 2026, so by mid-August it was
@@ -231,197 +175,26 @@ export default async function HomePage() {
           movement on /movers and /market, chase cards on /sets/vendetta.
           UPDATE: the "date-windowed off SetInfo.releasedOn rather than hard-
           coded to one set" version predicted here now exists as
-          RadianceCountdownCard below (sourced from lib/constants.ts's
-          nextUpcomingSet()) — different spot on the page (after Explore), not a
+          RadianceCountdownCard (sourced from lib/constants.ts's
+          nextUpcomingSet()) — inside HomeSections below, after Explore — not a
           revival of this band. */}
 
-      {/* Today's Top Deals — the strongest differentiator, moved up from five
-          sections deep. Hidden if no market has data. */}
-      {anyDeals && (
-        <Reveal>
-          <TodaysTopDeals dealsByCountry={topDealsByCountry} />
-        </Reveal>
-      )}
-
-      {/* Inline email capture with a concrete value prop, right after the deals
-          the reader was just looking at — the footer signup (still there too)
-          is easy to never scroll to. Exact same handler/API as the footer form,
-          just a different `source` for attribution. No popup/exit-intent — the
-          brief is explicit that this stays inline. */}
-      <div className="mx-auto w-full max-w-xl">
-        <NewsletterSignup
-          siteName={SITE_NAME}
-          source="home"
-          variant="card"
-          heading={`📈 Get the weekly ${SITE_NAME} Index — the market summary every collector reads, each Monday. Free.`}
-          cta="Subscribe"
-        />
-      </div>
-
-      {/* Tailored eBay unit — the set's chase cards with their cheapest live
-          listing, rather than a generic banner. Sits after Top Deals so the
-          commercial run reads own-inventory first, affiliate second. */}
-      <EbayPicks />
-
-      {/* Unified popular-cards carousel — merges what used to be two identical
-          "Most popular…" sections (Vendetta-scoped and all-time), a "Biggest
-          movers" tab, AND (per your request) "Recently updated prices" — which
-          used to be its own always-expanded section — into one compact, tabbed,
-          one-row horizontal scroll. Real cards whose price genuinely changed in
-          the latest snapshot (see lib/price-history.ts's outlier-guarded diff,
-          never fabricated); the tab simply doesn't appear until there's at least
-          one real change to show. */}
-      <PopularCardsCarousel
-        vendetta={popularVendetta}
-        allTime={popularCards}
-        movers={biggestMovers}
-        recentlyUpdated={recentlyUpdated}
+      {/* Everything below the hero — Market Pulse, Today's Top Deals, the
+          popular-cards carousel, How It Works, Explore, reviews, partners —
+          shared with the 5 region home pages (/au, /nz, /uk, /sg, /ca) via
+          HomeSections, so a visitor who picks a market in the hero toggle gets
+          the SAME feature set, not a stripped-down page. See HomeSections.tsx. */}
+      <HomeSections
+        country={country}
+        totalCards={totalCards}
         storeCount={storeCount}
         storeWord={storeWord}
+        popularCards={popularCards}
+        popularVendetta={popularVendetta}
+        topDealsByCountry={topDealsByCountry}
+        moversByCountry={moversByCountry}
+        recentlyUpdated={recentlyUpdated}
       />
-
-      {/* Return-visit hooks — Riftle, the pack simulator, and price alerts —
-          directly after Most popular cards (were buried near the bottom, after
-          How it works and Explore). These are the site's best "come back
-          tomorrow" mechanics that aren't the price data itself, so they get the
-          slot right after the strongest card-browsing section instead of
-          competing with it. */}
-      <Reveal stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <ReturnVisitCards newestSetName={newestSet?.name} />
-      </Reveal>
-
-      {/* How it works — orients first-time visitors to the search → compare → buy
-          mechanic. Moved after the commercial sections (deals, popular cards,
-          movers) per the reordering brief: those are the stronger differentiator
-          and shouldn't sit behind an explainer. */}
-      <HowItWorks totalCards={totalCards} />
-
-      {/* Best Basket promo — the multi-store cart optimiser is the hardest
-          feature in this category to replicate (it needs real per-store
-          shipping data, not just prices) and answers the single highest-intent
-          moment in the hobby: "I have a decklist, what's the cheapest way to
-          buy all of it". It shipped with full SEO scaffolding at
-          /tools/best-basket but had no homepage presence and no header link —
-          the single most valuable thing on the site was effectively hidden.
-          Server-rendered real <Link>, so it's crawlable, not a client-only
-          teaser. */}
-      <Link
-        href="/tools/best-basket"
-        className="card-surface group flex flex-wrap items-center gap-4 p-5 transition-colors hover:border-brand-500/60 hover:bg-ink-800 sm:flex-nowrap"
-      >
-        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-brand-500/15 text-2xl leading-none" aria-hidden>
-          🧺
-        </span>
-        <div className="min-w-0 flex-1">
-          <h2 className="text-lg font-extrabold text-white">Building a decklist? Find the cheapest way to buy it</h2>
-          <p className="mt-0.5 text-sm text-slate-400">
-            Best Basket splits your list across stores — postage included — and finds the lowest total cost, not just
-            the lowest sticker price on each card.
-          </p>
-        </div>
-        <span className="btn-primary shrink-0 text-sm">Try Best Basket →</span>
-      </Link>
-
-      {/* Explore — sets + domains consolidated into one entry point */}
-      <section>
-        <h2 className="mb-4 text-xl font-extrabold text-white">Explore the database</h2>
-
-        <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">By set</div>
-        <Reveal stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {SETS.map((s) =>
-            // Fully unreleased (no cards, no sealed) → disabled tile. Vendetta has
-            // revealed cards + sealed live, so it links through with a green "New"
-            // cue (the revealed-card list is browsable now; store prices land at
-            // release).
-            s.comingSoon && !s.sealedAvailable ? (
-              <div key={s.code} className="card-surface flex flex-col gap-1 p-4 opacity-60" aria-disabled>
-                <span className="flex items-center gap-2 text-lg font-bold text-white">
-                  {s.code}
-                  <span className="chip bg-gold/20 text-gold">Coming soon</span>
-                </span>
-                <span className="text-xs text-slate-400">{s.name}</span>
-              </div>
-            ) : (
-              <Link
-                key={s.code}
-                href={`/sets/${s.slug}`}
-                className="card-surface flex flex-col gap-1 p-4 transition-colors duration-200 hover:border-brand-500 hover:bg-ink-800"
-              >
-                <span className="flex flex-wrap items-center gap-1.5 text-lg font-bold text-white">
-                  {s.code}
-                  {((s.comingSoon && s.sealedAvailable) || s.recentlyReleased) && (
-                    <span className="chip bg-up/20 font-bold uppercase tracking-wide text-up">New</span>
-                  )}
-                </span>
-                <span className="text-xs text-slate-400">{s.name}</span>
-              </Link>
-            )
-          )}
-        </Reveal>
-
-        {/* The homepage's link into the visual gallery, inherited from the
-            removed Vendetta launch band. Kept because it was the strongest
-            internal link that page had (tests/seo-landing-pages.test.ts guards
-            it), but pointed at whichever set is CURRENT rather than at Vendetta
-            by name — so it follows Radiance in October instead of going stale
-            the same way the band did. */}
-        {newestSet && (
-          <p className="mt-3 text-sm">
-            <Link
-              href={`/sets/${newestSet.slug}/gallery`}
-              className="font-semibold text-brand-300 underline-offset-2 hover:underline"
-            >
-              See all{newestSet.totalCards ? ` ${newestSet.totalCards}` : ""} {newestSet.name} cards in the gallery →
-            </Link>
-          </p>
-        )}
-
-        <div className="mb-2 mt-6 text-xs font-semibold uppercase tracking-wide text-slate-500">By domain</div>
-        <Reveal stagger className="flex flex-wrap gap-2">
-          {DOMAIN_KEYS.map((k) => {
-            const d = domainInfo(k);
-            return (
-              <Link
-                key={k}
-                href={`/domains/${k.toLowerCase()}`}
-                className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors duration-200 hover:border-brand-500 hover:bg-ink-800"
-                style={{ color: d.color }}
-              >
-                <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: d.color }} />
-                {d.label}
-              </Link>
-            );
-          })}
-        </Reveal>
-      </section>
-
-      {/* Radiance countdown — new-set hype, right after Explore (which already
-          shows Radiance as a disabled "Coming soon" tile above): new-set
-          searches are the biggest organic traffic spikes in TCGs, so this
-          captures that intent on the homepage instead of waiting for a visitor
-          to find /radiance-countdown on their own. Hides itself once nothing
-          upcoming is announced. */}
-      {showRadianceCard && (
-        <Reveal>
-          <RadianceCountdownCard set={radianceSet} />
-        </Reveal>
-      )}
-
-      {/* Latest from the blog — fresh internal links + fresh content near the
-          bottom of the homepage for crawl frequency and long-tail discovery.
-          Hides itself if there are no posts (shouldn't happen, but no fake
-          placeholders either way). */}
-      {showLatestPosts && (
-        <Reveal>
-          <LatestPosts posts={latestPosts} />
-        </Reveal>
-      )}
-
-      {/* Real, consented, approved reviews — renders NOTHING until there are at
-          least a few genuine ones (see ReviewsSection). No placeholder state on
-          purpose: an empty "reviews" block, or a seeded example, would be worse
-          than no block at all. */}
-      <ReviewsSection />
 
       {/* About + FAQ — keyword-relevant content for search */}
       <section className="card-surface p-6">
@@ -459,65 +232,26 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Approved partners + affiliate disclosure — moved below the fold out of
-          the hero (see PartnersStrip). Still travels together as one unit, still
-          on the page, still adjacent to the actual affiliate links. Client
-          component now (reads useCountry() itself) — see PartnersStrip.tsx for
-          why: this page is ISR-cached with DEFAULT_COUNTRY baked in, and every
-          visitor's eBay click here was being tagged with that baked-in country
-          regardless of who they actually were. */}
-      <PartnersStrip />
-
+      {/* The homepage is the site's canonical entity landing page and carried
+          no node describing itself — only an FAQPage, unlinked to the
+          Organization/WebSite graph in app/layout.tsx. The two ItemLists
+          (most popular / recently updated) live in HomeSections' own script
+          now, next to the sections and data they actually describe. */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify([
-            // The homepage is the site's canonical entity landing page and carried
-            // no node describing itself — only an FAQPage and two ItemLists, all
-            // unlinked to the Organization/WebSite graph in app/layout.tsx.
             webPage({
               name: "RiftCompare — Riftbound Card Database & Price Comparison",
               href: "/",
               description:
                 "Compare live Riftbound TCG card prices across stores in the US, UK, Australia, New Zealand, Canada and Singapore — total cost including shipping, no hidden fees.",
             }),
-            // Matches the visible FAQ accordion in the About+FAQ section below
+            // Matches the visible FAQ accordion in the About+FAQ section above
             // exactly (same FAQS array) — faqPage() is the shared builder every
             // other FAQ-bearing page uses; the homepage used to hand-duplicate
             // this shape inline.
             faqPage(FAQS),
-            // ItemList of the "Most popular Riftbound cards" actually rendered above.
-            ...(popularCards.length > 0
-              ? [
-                  {
-                    "@context": "https://schema.org",
-                    "@type": "ItemList",
-                    name: "Most popular Riftbound cards",
-                    itemListElement: popularCards.map((c, i) => ({
-                      "@type": "ListItem",
-                      position: i + 1,
-                      name: c.name,
-                      url: `${SITE_URL}/card/${c.slug ?? c.id}`,
-                    })),
-                  },
-                ]
-              : []),
-            // ItemList of the "Recently updated prices" feed actually rendered above.
-            ...(recentlyUpdated.length > 0
-              ? [
-                  {
-                    "@context": "https://schema.org",
-                    "@type": "ItemList",
-                    name: "Recently updated Riftbound prices",
-                    itemListElement: recentlyUpdated.map((u, i) => ({
-                      "@type": "ListItem",
-                      position: i + 1,
-                      name: u.card.name,
-                      url: `${SITE_URL}/card/${u.card.slug ?? u.card.id}`,
-                    })),
-                  },
-                ]
-              : []),
           ]),
         }}
       />
