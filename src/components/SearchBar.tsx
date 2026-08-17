@@ -49,6 +49,15 @@ export function SearchBar({
   const boxRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  // How tall the results list is actually allowed to grow. A flat CSS cap
+  // (this used to be max-h-[70vh], then a smaller fixed max-h-80) can't be
+  // right here: it measures against the WHOLE viewport, not the space
+  // actually left below the input — and on the hero, the input sits well
+  // down the page (below the H1 and subhead), so a flat cap routinely ran
+  // past the bottom of the window. It rendered with no visible bottom
+  // border/shadow/footer link and nothing to scroll it into view, so it just
+  // looked cut off. 320 is the pre-measurement fallback for the first paint.
+  const [dropdownMaxHeight, setDropdownMaxHeight] = useState(320);
 
   useEffect(() => {
     if (autoFocusDesktop && window.matchMedia("(min-width: 1024px)").matches) {
@@ -95,6 +104,38 @@ export function SearchBar({
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
+
+  // Fit the dropdown to the space actually left below the input, recomputed
+  // whenever it opens (the window may have been resized while it was closed)
+  // and live while it's open (window resize, or the page scrolling under it —
+  // this box is `position: absolute`, so it moves with the page, not with the
+  // viewport). 480 caps how tall it gets on a very tall window — a search
+  // dropdown that fills nearly the whole screen isn't actually more useful,
+  // just harder to scan. Below ~120px available there's no good layout left,
+  // so that's the floor rather than letting it shrink to near-nothing.
+  useEffect(() => {
+    if (!open) return;
+    function recompute() {
+      if (!boxRef.current) return;
+      // The measured edge is the INPUT box's own bottom; the dropdown then
+      // adds `mt-2` (8px) before it starts, and DROPDOWN_MARGIN is the
+      // breathing room left below the dropdown itself once it's placed —
+      // both have to come out of the available space, or the dropdown ends
+      // up sized to sit flush against the very edge of the viewport.
+      const GAP_ABOVE_DROPDOWN = 8; // mt-2
+      const DROPDOWN_MARGIN = 24;
+      const available =
+        window.innerHeight - boxRef.current.getBoundingClientRect().bottom - GAP_ABOVE_DROPDOWN - DROPDOWN_MARGIN;
+      setDropdownMaxHeight(Math.max(120, Math.min(available, 480)));
+    }
+    recompute();
+    window.addEventListener("resize", recompute);
+    window.addEventListener("scroll", recompute, true);
+    return () => {
+      window.removeEventListener("resize", recompute);
+      window.removeEventListener("scroll", recompute, true);
+    };
+  }, [open]);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -150,7 +191,16 @@ export function SearchBar({
               {loading ? "Searching…" : "No matches — press Enter to search anyway."}
             </div>
           ) : (
-            <ul className="max-h-[70vh] overflow-y-auto py-1">
+            // Height comes from dropdownMaxHeight (measured against the real
+            // space below the input — see that state's own doc comment), not a
+            // flat Tailwind max-h-*: a flat cap measures against the WHOLE
+            // viewport regardless of where the input sits on the page, and on
+            // the hero (well below the H1/subhead) that routinely ran past the
+            // bottom of the window with no visible bottom border/shadow/footer
+            // link and no scroll-into-view — it just looked cut off.
+            // overscroll-contain keeps scrolling through a long result list
+            // from chaining into the page behind it once you ARE inside the list.
+            <ul className="overflow-y-auto overscroll-contain py-1" style={{ maxHeight: dropdownMaxHeight }}>
               {results.map((r) => (
                 <li key={r.id}>
                   <Link
