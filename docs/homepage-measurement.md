@@ -44,25 +44,24 @@ This is the number that answers "did the rebuilt homepage get people into the on
 it exists to do" — not bounce rate, not time-on-page, not scroll depth (those are all
 diagnostic, not the headline number).
 
-**Known measurement gap, honestly flagged**: trending-chip clicks are currently tracked
-only in Vercel Analytics (`track("trending_chip_click", …)` in
-`src/components/home/TrendingChips.tsx`), not as a GA4 event — Vercel Analytics and GA4
-are two separate products with two separate dashboards, and a GA4 Exploration cannot pull
-in a Vercel Analytics event. Until a `trending_chip_click`-equivalent GA4 event exists,
-compute search initiation rate from `search_initiated` and `search_submitted` alone (a
-slight undercount, since a chip click that doesn't also touch the search field won't be
-captured) and check the trending-chip slice separately in Vercel Analytics. This gap is
-logged in `DECISIONS.md` as an assumption for whichever phase next touches
-`TrendingChips.tsx` to close.
+**Measurement gap closed in the Hero & Search phase**: trending-chip clicks used to be
+tracked only in Vercel Analytics (`track("trending_chip_click", …)`), which a GA4
+Exploration cannot read. `src/components/home/TrendingChips.tsx` now ALSO fires the GA4
+`search_initiated` event on a chip click, with `trigger: "trending_chip"` — reusing the
+existing event rather than adding a fourth one, so the formula above stays a plain
+"`search_initiated` OR `search_submitted`" query with no separate trending-chip union
+required. The Vercel Analytics `track()` call is untouched (still fires alongside), so
+the click-volume dashboard keeps working exactly as before.
 
-GA4 event reference for building this metric (all added by this phase — see
-`src/lib/ga-events.ts` and its call sites for the authoritative param list):
+GA4 event reference for building this metric (all added by this phase and the Hero &
+Search phase after it — see `src/lib/ga-events.ts` and its call sites for the
+authoritative param list):
 
 | Event | Fires when | Key params |
 |---|---|---|
-| `search_initiated` | First keystroke in either search box, OR the box stays focused ~1.2s without typing (a deliberate "focus with intent," not a tab-through) | `trigger` (`keystroke` \| `focus_dwell`), `variant` (`nav` \| `hero`) |
-| `search_submitted` | Enter / "See all results" clicked | `query`, `variant` |
-| `search_suggestion_selected` | A card or sealed-product row in the live-preview dropdown is clicked | `suggestion_rank` (1-based, across the whole dropdown), `result_type` (`card` \| `sealed`), `query`, `card_id` (cards only), `variant` |
+| `search_initiated` | First keystroke in a search box, OR the box stays focused ~1.2s without typing (a deliberate "focus with intent," not a tab-through), OR a hero trending chip is clicked | `trigger` (`keystroke` \| `focus_dwell` \| `trending_chip`), `variant` (`nav` \| `hero`), `card_id` (trending-chip clicks only) |
+| `search_submitted` | Enter / "See all results" clicked, or a recent-search suggestion selected | `query`, `variant` |
+| `search_suggestion_selected` | A row in the search dropdown is selected (live-preview results, or a zero-state trending/recent suggestion) | `suggestion_rank` (1-based, across the whole visible list), `result_type` (`card` \| `sealed` \| `trending` \| `recent`), `query`, `card_id` (card/trending rows only), `variant` |
 | `search_no_results` | A debounced query (≥2 chars) returns zero cards and zero sealed matches | `query`, `variant` |
 | `store_click` | Any outbound retailer link (`OutboundLink`) is clicked, sitewide | `card_id`, `card_name`, `store`, `market`, `price`, `position_in_list`, `page_type` — all except `store`/`market` are optional and populated only where the calling component already has the data |
 | `scroll_depth` | Scroll position crosses 25/50/75/90% of the page, once each per pageview | `percent_scrolled`, `page_path` |
