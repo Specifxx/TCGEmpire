@@ -6,6 +6,7 @@ import { join } from "node:path";
 import { KEYWORDS } from "../src/lib/keywords";
 import { getArticles } from "../src/lib/articles";
 import { guidesForCard, mechanicGuideForCard, type CardForGuides } from "../src/lib/content/related-guides";
+import { NAV_GROUPS, FOOTER_GROUPS } from "../src/components/nav-groups";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Internal linking into the editorial content (GROWTH-AUDIT.md § 2).
@@ -28,35 +29,74 @@ import { guidesForCard, mechanicGuideForCard, type CardForGuides } from "../src/
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 
 // ── /learn must stay reachable from the server-rendered homepage ─────────────
+//
+// This used to assert the /learn link lived IN the hero (src/components/home/
+// CinematicHero.tsx). The homepage-redesign brief explicitly moved it out —
+// "Delete from the hero: ... the 'New to Riftbound? Learn how to play →'
+// link" — on the reasoning that the hero should carry exactly one secondary
+// text link ("Browse all N cards →") and nothing else competing with the
+// search box. That's a deliberate, brief-mandated change, not a regression,
+// but the underlying concern these tests exist to guard — /learn must not go
+// back to being an orphan — is still real and still needs a pin.
+//
+// Since the hero stopped carrying it, the fix is the SAME mechanism every
+// other section this rebuild moved off the homepage now relies on: a real,
+// server-rendered link in nav-groups.ts → FOOTER_GROUPS → FooterNav.tsx,
+// which layout.tsx renders on every route (including "/") with no client-only
+// gating. That is a strictly more robust fix than a single hero link ever
+// was — it's sitewide, not homepage-only — so these tests now pin THAT
+// mechanism instead of grepping a specific component for one specific href.
 
-test("the homepage hero links to /learn in the server HTML", () => {
-  const hero = read("src/components/home/CinematicHero.tsx");
-  assert.ok(hero.includes('href="/learn"'), "the hero must carry a /learn entry point");
-  // A <Link> renders a real <a href>; a router.push in an onClick does not, and
-  // is invisible to a crawler — which is exactly how /learn became an orphan.
-  assert.ok(
-    /<Link\s+[^>]*href="\/learn"|href="\/learn"[\s\S]{0,200}?>/.test(hero),
-    "/learn must be a real anchor, not JS-only navigation",
-  );
-  assert.ok(!/onClick=\{\(\) => (router|window\.location)/.test(hero), "no JS-only navigation in the hero");
+test("/learn has a real, non-hidden entry in the shared nav data", () => {
+  const entry = NAV_GROUPS.flatMap((g) => g.links).find((l) => l.href === "/learn");
+  assert.ok(entry, "nav-groups.ts must carry a /learn entry point");
+  assert.ok(!entry!.hideInFooter, "/learn must not be hidden from the footer — it's the homepage's only remaining path to it");
 });
 
-test("the /learn link is descriptive, not a bare 'click here'", () => {
-  const hero = read("src/components/home/CinematicHero.tsx");
-  const anchor = /href="\/learn"[\s\S]{0,400}?>([\s\S]*?)<\/Link>/.exec(hero)?.[1] ?? "";
-  const text = anchor.replace(/\{[^}]*\}/g, " ").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
-  assert.ok(text.length > 12, `anchor text is too short to be descriptive: ${JSON.stringify(text)}`);
-  assert.match(text, /riftbound|learn|play/i, `anchor text should say what the page is: ${JSON.stringify(text)}`);
+test("/learn's footer entry point is descriptive, not a bare 'click here'", () => {
+  const entry = NAV_GROUPS.flatMap((g) => g.links).find((l) => l.href === "/learn");
+  assert.ok(entry, "nav-groups.ts must carry a /learn entry point");
+  assert.ok(entry!.label.length > 4, `label is too short to be descriptive: ${JSON.stringify(entry!.label)}`);
+  assert.match(entry!.label, /riftbound|learn|play/i, `label should say what the page is: ${JSON.stringify(entry!.label)}`);
 });
 
-test("the hero does not become a wall of competing CTAs", () => {
-  // The CTA row was cut from four competing calls to action to two on purpose.
-  // The /learn entry point is deliberately a quieter, separate line — this pins
-  // that intent so the next addition has to think about it too.
+test("/learn's group actually reaches FOOTER_GROUPS (not launcher-only)", () => {
+  const inFooter = FOOTER_GROUPS.some((g) => g.links.some((l) => l.href === "/learn"));
+  assert.ok(inFooter, "/learn's nav group must be one of the groups spread into FOOTER_GROUPS");
+});
+
+test("FooterNav renders FOOTER_GROUPS as real anchors, not JS-only navigation", () => {
+  const footerNav = read("src/components/FooterNav.tsx");
+  assert.ok(!footerNav.startsWith('"use client"'), "FooterNav must stay a server component so its links exist in the raw server HTML");
+  assert.ok(/<Link[\s\S]*?href=\{l\.href\}/.test(footerNav), "footer links must render as real <Link href> anchors");
+  assert.ok(!/onClick=\{\(\) => (router|window\.location)/.test(footerNav), "no JS-only navigation in the footer");
+});
+
+test("the footer renders on every route, including the homepage", () => {
+  const layout = read("src/app/layout.tsx");
+  // FooterNav must be unconditional in the root layout — no `{pathname ===
+  // "/" ? null : <FooterNav />}`-style gate that would silently re-orphan
+  // /learn (and everything else the redesign moved out of the homepage body)
+  // on the one route that most needs it reachable.
+  const call = /<FooterNav\s*\/>/.exec(layout);
+  assert.ok(call, "layout.tsx must render <FooterNav /> unconditionally");
+});
+
+test("the hero carries exactly one secondary text link, not a wall of CTAs", () => {
+  // Rebuilt per the homepage-redesign brief: the hero's old CTA row (up to
+  // four competing calls to action across earlier iterations) is now exactly
+  // one plain-text link ("Browse all N cards →") below the search box, plus
+  // the quiet region toggle (a control, not a CTA, and not a <Link>). This
+  // pins that a future edit can't quietly re-crowd the hero.
   const hero = read("src/components/home/CinematicHero.tsx");
-  const row = /flex flex-wrap items-center justify-center gap-x-4[\s\S]*?<\/div>/.exec(hero)?.[0] ?? "";
-  const ctas = (row.match(/<Link/g) ?? []).length;
-  assert.ok(ctas <= 2, `the primary CTA row has ${ctas} links; keep it at two`);
+  const links = hero.match(/<Link\b/g) ?? [];
+  assert.equal(links.length, 1, `the hero has ${links.length} <Link> elements; the brief calls for exactly one`);
+  assert.ok(hero.includes('href="/browse"'), "the hero's one remaining link should point at the database, not somewhere new");
+  // Scoped to an actual className attribute value, not the raw file text — the
+  // hero's own doc comments are allowed to reference the class name in prose
+  // (e.g. explaining that it deliberately ISN'T applied here) without tripping
+  // this check.
+  assert.ok(!/className="[^"]*btn-primary/.test(hero), "the hero's secondary link must not be styled as a filled button — that's a second CTA in disguise");
 });
 
 // ── Card → mechanic guide ────────────────────────────────────────────────────
