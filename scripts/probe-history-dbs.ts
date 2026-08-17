@@ -43,7 +43,7 @@ const HISTORY_VARS = [
 
 // The operational chain, in db.ts order — we need the LIVE Card ids to test
 // history rows against.
-const OPERATIONAL_VARS = ["DATABASE_URL_3", "DATABASE_URL_2", "DATABASE_URL", "RM5", "RM4", "RM3"] as const;
+const OPERATIONAL_VARS = ["RM6", "DATABASE_URL_2", "DATABASE_URL", "RM5", "RM4", "RM3"] as const;
 
 function clientFor(url: string) {
   return new PrismaClient({ datasources: { db: { url } }, log: ["error"] });

@@ -50,13 +50,13 @@ import { PrismaClient } from "@prisma/client";
 //
 // THIS LIST HAD DRIFTED TWICE: it was fixed for the 2026-08-12 rotation onto
 // DATABASE_URL, then never updated for the 2026-08-14 (→ DATABASE_URL_2) or
-// 2026-08-17 (→ DATABASE_URL_3) cutovers, so it would have resolved to a
+// 2026-08-17 (→ RM6) cutovers, so it would have resolved to a
 // one-or-two-generations-dead project on any machine where the older vars were
 // still set — precisely the silent-stale-Card failure the paragraph above
 // describes. Fixed and reordered to mirror src/lib/db.ts's OPERATIONAL_URL
 // exactly with the 2026-08-17 rotation.
 const MAIN_URL =
-  process.env.DATABASE_URL_3 ||
+  process.env.RM6 ||
   process.env.DATABASE_URL_2 ||
   process.env.DATABASE_URL ||
   process.env.RM5 ||
@@ -76,7 +76,7 @@ const TARGET_LABEL =
   : process.env.RH5 ? "RH5"
   : "HISTORY_DATABASE_URL_4";
 
-if (!MAIN_URL) { console.error("No operational database is set (DATABASE_URL_3 / DATABASE_URL_2 / DATABASE_URL / RM5 / RM4 / RM3)."); process.exit(1); }
+if (!MAIN_URL) { console.error("No operational database is set (RM6 / DATABASE_URL_2 / DATABASE_URL / RM5 / RM4 / RM3)."); process.exit(1); }
 if (!TARGET_URL) { console.error("None of HISTORY_DATABASE_URL_2 / HISTORY_DATABASE_URL / RH7 / RH6 / RH5 / HISTORY_DATABASE_URL_4 is set — point one at the current history project first."); process.exit(1); }
 if (TARGET_LABEL !== "HISTORY_DATABASE_URL_2") {
   console.warn(`⚠  Target resolved to ${TARGET_LABEL}, not HISTORY_DATABASE_URL_2 — the current history project is not visible in this environment. HISTORY_DATABASE_URL is the rollback and is at its allowance; everything older is exhausted. This is almost certainly not what you want.`);

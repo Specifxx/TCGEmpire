@@ -52,7 +52,7 @@ const HISTORY_VARS = [
   "HISTORY_DATABASE_URL_4",
   "HISTORY_DATABASE_URL_3",
 ];
-const OPERATIONAL_VARS = ["DATABASE_URL_3", "DATABASE_URL_2", "DATABASE_URL", "RM5", "RM4", "RM3"];
+const OPERATIONAL_VARS = ["RM6", "DATABASE_URL_2", "DATABASE_URL", "RM5", "RM4", "RM3"];
 
 function pick(vars: string[], forced?: string): { name: string; url: string } | null {
   const list = forced ? [forced] : vars;

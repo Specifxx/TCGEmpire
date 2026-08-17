@@ -127,7 +127,7 @@ if (HISTORY_URL_SOURCE !== "HISTORY_DATABASE_URL_2") {
 // the operational PrismaClient at module scope, so importing it here eagerly
 // would spin up a second client in every context that only wants history.
 const OPERATIONAL_URL =
-  process.env.DATABASE_URL_3 ||
+  process.env.RM6 ||
   process.env.DATABASE_URL_2 ||
   process.env.DATABASE_URL ||
   process.env.RM5 ||
