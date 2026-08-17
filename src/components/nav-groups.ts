@@ -153,6 +153,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/learn", label: "Learn Riftbound", emoji: "🎓", keywords: ["learn", "beginner", "how to play", "getting started", "rules"] },
       { href: "/authors", label: "Who writes this", emoji: "✍️", keywords: ["authors", "team", "byline", "who writes"] },
       { href: "/editorial-policy", label: "Editorial policy", emoji: "📐", keywords: ["editorial", "policy", "standards", "corrections"] },
+      { href: "/methodology", label: "Methodology", emoji: "📏", keywords: ["methodology", "condition", "grading", "fx", "currency", "ranking"] },
     ],
   },
   {

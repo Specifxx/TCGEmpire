@@ -81,10 +81,17 @@ function mixByTier(items: Deal[], midThreshold: number): Deal[] {
 function PctBadge({ deal, currency }: { deal: Deal; currency: string }) {
   if (deal.pctLabel == null) return null;
   const pctText = deal.dealType === "savings-vs-market" ? `Save ${deal.pctLabel}%` : `−${deal.pctLabel}%`;
-  // "US$4.10 · Save 47%" — the absolute counterpart to the percentage, on every
-  // row that has one (cheapest-sealed has no "was" price, so deltaCents is null
-  // and this just shows the percentage as before).
-  const text = deal.deltaCents != null && deal.deltaCents > 0 ? `${formatMoney(deal.deltaCents, currency)} · ${pctText}` : pctText;
+  // "was US$1,167.94 · Save 14%" — the REFERENCE price the percentage is measured
+  // against, not the dollar amount saved. This used to render the delta amount
+  // instead ("US$167.94 · Save 14.4%" next to a headline price of "US$1,000.00"),
+  // which reads as a before→after PRICE pair to anyone scanning the row — and for
+  // a >50% drop, the delta is literally larger than the current price, so a
+  // genuine drop ("now $10.00, was $20.64") rendered as "US$10.64 · −52%" next to
+  // "US$10.00", which looks like the price INCREASED. Showing the actual
+  // reference price makes the two numbers unambiguous and matches how a
+  // qualified savings claim should read: the current price next to what it's
+  // being compared against, not a derived delta with no label of its own.
+  const text = deal.refCents != null && deal.refCents > 0 ? `was ${formatMoney(deal.refCents, currency)} · ${pctText}` : pctText;
   return <span className="chip num shrink-0 bg-brand-500/15 text-brand-300">{text}</span>;
 }
 

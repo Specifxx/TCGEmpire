@@ -156,7 +156,7 @@ export default function EditorialPolicyPage() {
           <ul className="list-disc space-y-1 pl-5">
             <li>A listing that hasn&rsquo;t been seen in a recent import is marked out of stock rather than left standing as a live price.</li>
             <li>Prices are compared in each market&rsquo;s own currency. We do not convert between currencies to declare a winner, because we would be publishing an exchange rate we can&rsquo;t stand behind.</li>
-            <li>Rankings are by delivered cost where a store&rsquo;s postage is known, and item price otherwise — never by what we earn.</li>
+            <li>Rankings are by item price, with a store&rsquo;s known postage breaking ties between otherwise-equal prices — delivered cost (price plus postage) is always shown alongside the price so you can compare on it yourself, but a store is never penalised in the ranking just because its postage happens to be known when a competitor&rsquo;s isn&rsquo;t. Never by what we earn.</li>
             <li>A consistency audit runs over the card database on demand, checking for duplicate records, broken identifiers, impossible prices and stale listings.</li>
           </ul>
         </section>

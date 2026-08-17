@@ -24,7 +24,7 @@ const FAQS = [
   },
   {
     q: "Does RiftCompare include postage in the price comparison?",
-    a: "Yes. The price table on every card page ranks stores by total delivered cost — the listed price plus the retailer's estimated postage to your area. Free-shipping thresholds are factored in automatically, so a store with slightly higher card prices but free shipping will often rank above a cheaper store that charges for delivery.",
+    a: "Yes, but it isn't the primary sort. The price table on every card page ranks stores by item price first, with a store's known postage only breaking ties between otherwise-equal prices — that way a store isn't penalised in the ranking just because its shipping cost happens to be known upfront when a competitor's isn't. Delivered cost (price plus postage) is always shown alongside the price so you can compare on it yourself, and free-shipping thresholds are factored into that figure automatically.",
   },
   {
     q: "Which countries does RiftCompare cover?",
@@ -68,7 +68,8 @@ export default function TrackedStoresPage() {
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
           RiftCompare compares live prices across <span className="num text-slate-300">{total}</span> Riftbound retailers
           plus eBay and our own RiftCompare Marketplace, grouped by market below. Every card&apos;s comparison ranks these
-          by total delivered cost (price + postage), and prices refresh daily.
+          by item price, with delivered cost (price + postage) shown alongside so you can compare on it yourself, and
+          prices refresh daily.
         </p>
       </div>
 

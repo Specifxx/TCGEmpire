@@ -351,6 +351,54 @@ export const CONDITION_MULTIPLIER: Record<string, number> = {
   DMG: 0.4,
 };
 
+// Normalise a RAW condition string from any of the four writers into one of our
+// five grades, or null when it genuinely can't be told. Four incompatible source
+// vocabularies feed RetailerPrice.condition (see prisma/schema.prisma) with no
+// mapping between them today:
+//   • Shopify stores — the store's own variant title verbatim ("Near Mint", "NM",
+//     "Lightly Played", or a non-condition title like "Default Title")
+//   • eBay Browse API — eBay's OWN condition vocabulary ("New", "Used", "Brand
+//     New", "Very Good", "Good", "Acceptable" — not a TCG grading scale at all)
+//   • TCGplayer — always the literal string "NM", stamped onto an algorithmic
+//     ALL-CONDITION market price (see the note at price-import.ts's TCGplayer import)
+//   • Cardmarket — same shape, always "NM" over a converted low price
+//
+// price-import.ts's private conditionRank() solves a DIFFERENT problem — picking
+// the best-condition Shopify variant to price — and its `return 0` default quietly
+// treats anything unrecognised as Near Mint. That default is fine for its actual
+// job (Shopify variant titles are rarely enigmatic) but would be actively wrong
+// applied to eBay's condition vocabulary: an eBay "Used" listing is not NM, and
+// mapping it there is worse than showing nothing. This function is stricter —
+// eBay's non-TCG conditions map explicitly, and anything neither writer's shape
+// matches returns null rather than guessing.
+export function normaliseCondition(raw: string | null | undefined): keyof typeof CONDITIONS | null {
+  const t = (raw ?? "").trim().toLowerCase();
+  if (!t || t === "default title") return null;
+  // TCG-grading-scale phrasing (Shopify variant titles, and our own labels).
+  if (/near\s*mint|\bnm\b|\bmint\b/.test(t)) return "NM";
+  if (/light(ly)?\s*play|\blp\b/.test(t)) return "LP";
+  if (/moderate(ly)?\s*play|\bmp\b/.test(t)) return "MP";
+  if (/heav(ily)?\s*play|\bhp\b/.test(t)) return "HP";
+  if (/damaged|\bdmg\b|\bdamage\b/.test(t)) return "DMG";
+  // eBay's raw-card condition vocabulary is its OWN 4-tier scale for the trading
+  // cards category — "Near Mint or Better / Excellent / Very Good / Poor" — not a
+  // TCG grading scale and not the generic New/Used item condition. Mapped by
+  // relative rank onto our 5-tier scale (best → worst), since guessing a mapping
+  // for anything eBay actually returns is worse than getting the order wrong.
+  // Checked AFTER the TCG-scale patterns above but deliberately BEFORE any bare
+  // "poor" could be mistaken for the TCG-tradition "poor = damaged" — eBay's own
+  // "Poor" means the worst of ITS four tiers, not a synonym for actually damaged:
+  if (/near\s*mint\s*or\s*better/.test(t)) return "NM";
+  if (/^excellent$/.test(t)) return "LP";
+  if (/very\s*good/.test(t)) return "MP";
+  if (/^poor$/.test(t)) return "HP";
+  // Generic eBay item-condition strings (used outside the raw-card scale, e.g.
+  // sealed product listings): "New"/"Brand New" is the closest real equivalent of
+  // Near Mint for an unopened item.
+  if (/^(brand\s*new|new(\s+other)?)$/.test(t)) return "NM";
+  return null;
+}
+
 export function domainInfo(key: string): DomainInfo {
   return DOMAINS[(key as DomainKey)] ?? DOMAINS.Colorless;
 }

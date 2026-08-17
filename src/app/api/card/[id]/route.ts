@@ -45,7 +45,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
         orderBy: { priceCents: "asc" },
         // country is returned so the client can show just the selected market's
         // listings (keeps this response cacheable regardless of the viewer's country).
-        select: { id: true, retailer: true, retailerName: true, priceCents: true, shippingCents: true, condition: true, url: true, inStock: true, country: true, isFoil: true },
+        select: { id: true, retailer: true, retailerName: true, priceCents: true, shippingCents: true, condition: true, url: true, inStock: true, country: true, isFoil: true, lastSeen: true },
       },
       // Cached eBay Ad carousel listings (same data the full card page shows) —
       // a handful of rows per market, so returning every country here is cheap

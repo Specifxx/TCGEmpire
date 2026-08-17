@@ -284,3 +284,25 @@ export function outboundRel(_href: string): string {
   void _href;
   return "nofollow sponsored noopener noreferrer";
 }
+
+// Is this outbound URL ACTUALLY monetised — i.e. did affiliateUrl() do something to
+// it, or would it fall through untouched? Mirrors the three live branches in
+// affiliateUrl() above (eBay / Amazon / TCGplayer) plus DIRECT_PROGRAMS, which is
+// checked structurally so a store added there is automatically covered without a
+// second hand-maintained list. Used to gate a per-link "Paid link" disclosure: with
+// DIRECT_PROGRAMS empty today, the ~60 Shopify store links earn nothing, and
+// labelling every row "Paid link" regardless would over-disclose on the majority of
+// rows — the FTC concern this exists to address is UNDER-disclosure, not padding
+// every link with a label that isn't true for it.
+export function isPaidLink(href: string | null | undefined): boolean {
+  if (!href) return false;
+  try {
+    const u = new URL(href);
+    if (/(?:^|\.)ebay\./i.test(u.hostname)) return true;
+    if (/(?:^|\.)amazon\./i.test(u.hostname)) return true;
+    if (TCGPLAYER_IMPACT_LINK && /(?:^|\.)tcgplayer\.com$/i.test(u.hostname)) return true;
+    return directProgramUrl(u) != null;
+  } catch {
+    return false;
+  }
+}

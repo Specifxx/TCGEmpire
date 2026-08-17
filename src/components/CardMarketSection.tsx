@@ -8,9 +8,10 @@ import { TcgplayerAd } from "./TcgplayerAd";
 import { EbayAd } from "./EbayAd";
 import { timeAgo } from "@/lib/format";
 import { computeMarket, stockElsewhere, type MarketRow } from "@/lib/market-rows";
-import { AffiliateDisclosure } from "./AffiliateDisclosure";
+import { AffiliateDisclosure, PaidLinkTag } from "./AffiliateDisclosure";
 import { COUNTRIES, COUNTRY_LIST } from "@/lib/country";
-import { isFallbackRetailer } from "@/lib/constants";
+import { isFallbackRetailer, normaliseCondition, CONDITIONS } from "@/lib/constants";
+import { isPaidLink } from "@/lib/affiliate";
 
 // The market-dependent half of the card page. The page itself is ISR-cached with
 // the AU baseline (no cookie reads server-side — that's what makes the route
@@ -172,7 +173,16 @@ export function CardPriceComparison({
           <h2 className="font-bold text-white">
             Price comparison <span className="text-slate-500">({prices.length})</span>
           </h2>
-          {mounted && prices[0] && <span className="text-xs text-slate-500">updated {timeAgo(prices[0].lastSeen)}</span>}
+          {/* Oldest row in the table, not the cheapest row's timestamp — a single
+              "updated Xh ago" over the whole panel used the freshest row's stamp to
+              describe every row, including ones seen far longer ago. Each row now
+              also carries its own timestamp below (see the per-row meta line), so
+              this header line is the panel's worst case, not its best. */}
+          {mounted && prices.length > 0 && (
+            <span className="text-xs text-slate-500">
+              oldest listing {timeAgo(prices.reduce((old, p) => (p.lastSeen < old ? p.lastSeen : old), prices[0].lastSeen))}
+            </span>
+          )}
         </div>
 
         {prices.length === 0 && outOfStock.length === 0 ? (
@@ -213,7 +223,25 @@ export function CardPriceComparison({
                   </div>
                   <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
                     {p.isFoil && <span className="chip bg-gold/15 font-semibold text-gold">✦ Foil</span>}
-                    {p.condition && <span className="chip bg-ink-800 text-slate-300">{p.condition}</span>}
+                    {/* Native grade (the store's own wording — a Shopify variant
+                        title, TCGplayer's blanket "NM", eBay's raw-card scale) PLUS
+                        our normalised grade, side by side, rather than showing only
+                        one. Four marketplaces use four incompatible scales with no
+                        official cross-marketplace mapping, so silently picking one
+                        interpretation and calling it "the condition" compares
+                        apples to oranges; showing both lets a buyer see exactly
+                        what was translated from what (mapping published at
+                        /methodology). */}
+                    {(() => {
+                      const grade = normaliseCondition(p.condition);
+                      return grade ? (
+                        <span className="chip bg-ink-800 text-slate-300" title={`Store listed as "${p.condition}"`}>
+                          {CONDITIONS[grade].label}
+                        </span>
+                      ) : (
+                        p.condition && <span className="chip bg-ink-800 text-slate-300">{p.condition}</span>
+                      );
+                    })()}
                     <span className="text-brand-400">● In stock</span>
                     <span>
                       {p.ship == null ? "postage at checkout" : p.ship === 0 ? "free postage" : `+ ${fmt(p.ship)} postage`}
@@ -228,6 +256,12 @@ export function CardPriceComparison({
                         shipping policy ↗
                       </a>
                     )}
+                    {/* Per-row freshness — was only shown once for the whole panel
+                        (see the header note above), using the CHEAPEST row's
+                        timestamp for every row regardless of how stale that
+                        specific listing actually was. */}
+                    {mounted && <span>updated {timeAgo(p.lastSeen)}</span>}
+                    {isPaidLink(p.buyHref) && <PaidLinkTag />}
                   </div>
                 </div>
                 <div className="shrink-0 text-right">
@@ -269,8 +303,18 @@ export function CardPriceComparison({
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-semibold text-slate-300">{p.retailerName}</div>
                     <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
-                      {p.condition && <span className="chip bg-ink-800 text-slate-400">{p.condition}</span>}
+                      {(() => {
+                        const grade = normaliseCondition(p.condition);
+                        return grade ? (
+                          <span className="chip bg-ink-800 text-slate-400" title={`Store listed as "${p.condition}"`}>
+                            {CONDITIONS[grade].label}
+                          </span>
+                        ) : (
+                          p.condition && <span className="chip bg-ink-800 text-slate-400">{p.condition}</span>
+                        );
+                      })()}
                       <span className="text-slate-500">● Out of stock</span>
+                      {mounted && <span>last seen {timeAgo(p.lastSeen)}</span>}
                     </div>
                   </div>
                   <div className="shrink-0 text-right">

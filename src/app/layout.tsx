@@ -328,6 +328,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             )}
             <Link href="/editorial-policy" className="tap-link text-slate-300 hover:text-brand-400">Editorial policy</Link>
             <span className="text-ink-700">·</span>
+            <Link href="/methodology" className="tap-link text-slate-300 hover:text-brand-400">Methodology</Link>
+            <span className="text-ink-700">·</span>
             <Link href="/authors" className="tap-link text-slate-300 hover:text-brand-400">Who writes this</Link>
             <span className="text-ink-700">·</span>
             {/* Re-opens Google's consent message (EEA/UK/CH only — renders

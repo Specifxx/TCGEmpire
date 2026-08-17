@@ -6,17 +6,18 @@ import { CardTileData } from "./CardTile";
 import { CardImage } from "./CardImage";
 import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge, CrystalRoseBadge } from "./Badge";
 import { PriceWatchButton } from "./PriceWatchButton";
-import { isFallbackRetailer, isOvernumbered, isSignature, isCrystalRose } from "@/lib/constants";
+import { isFallbackRetailer, isOvernumbered, isSignature, isCrystalRose, normaliseCondition, CONDITIONS } from "@/lib/constants";
 import { cardHref } from "@/lib/card-url";
 import { cardDisplayName, cardSearchName } from "@/lib/card-name";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
-import { affiliateUrl, ebayLabel, ebaySearchUrl as buildEbaySearchUrl, outboundRel } from "@/lib/affiliate";
+import { affiliateUrl, ebayLabel, ebaySearchUrl as buildEbaySearchUrl, outboundRel, isPaidLink } from "@/lib/affiliate";
 import { OutboundLink } from "./OutboundLink";
 import { EbayAdCarouselLive, type AdListing } from "./EbayAdCarouselLive";
 import { EbayTabs, type EbayTab } from "./EbayTabs";
 import { EbayGradedLive, type GradedRow } from "./EbayGradedLive";
 import { EbayAuctionsLive, type AuctionRow } from "./EbayAuctionsLive";
-import { AffiliateDisclosure } from "./AffiliateDisclosure";
+import { AffiliateDisclosure, PaidLinkTag } from "./AffiliateDisclosure";
+import { timeAgo } from "@/lib/format";
 import { buyButtonClass, buyButtonLabel } from "./CardMarketSection";
 import { useCountry } from "./CountryProvider";
 import { PriceChart } from "./PriceChart";
@@ -34,6 +35,7 @@ interface RetailerPrice {
   inStock: boolean;
   country: string;
   isFoil: boolean;
+  lastSeen?: string;
 }
 
 const Ctx = createContext<{ open: (card: CardTileData) => void }>({ open: () => {} });
@@ -354,9 +356,18 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
+                        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-slate-500">
                           {p.isFoil && <span className="font-semibold text-gold">✦ Foil</span>}
-                          {p.condition && <span>{p.condition}</span>}
+                          {(() => {
+                            const grade = normaliseCondition(p.condition);
+                            return grade ? (
+                              <span title={p.condition ? `Store listed as "${p.condition}"` : undefined}>{CONDITIONS[grade].label}</span>
+                            ) : (
+                              p.condition && <span>{p.condition}</span>
+                            );
+                          })()}
+                          {p.lastSeen && <span>updated {timeAgo(p.lastSeen)}</span>}
+                          {isPaidLink(affiliateUrl(p.url, p.retailer)) && <PaidLinkTag />}
                         </div>
                       </div>
                       <div className="text-right">

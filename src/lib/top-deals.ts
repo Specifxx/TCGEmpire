@@ -34,6 +34,15 @@ export type Deal = {
   // 47%") — null for a deal type with no natural "delta" (cheapest-sealed has no
   // "was" price, only the MSRP context folded into `note` below).
   deltaCents: number | null;
+  // The OTHER side of the comparison priceCents is being measured against — the
+  // cheapest-store price for savingsVsMarket, the 7-days-ago price for
+  // priceDrops, the 30-day average for undervalued. Rendered as "was X" next to
+  // the badge so the two numbers on a row can't be misread as a before→after
+  // pair with the new price higher than the old (a >50% drop puts deltaCents
+  // ABOVE priceCents, e.g. "$10.00" then a badge dollar figure of "$10.64" reads
+  // like a price INCREASE unless the reader knows that second number is a delta,
+  // not a price). Null wherever deltaCents is null (cheapest-sealed).
+  refCents: number | null;
   note: string | null; // small context, e.g. "vs Card Empire" or "30-day avg"
 };
 
@@ -63,6 +72,7 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
           priceCents: it.ebayCents,
           pctLabel: it.savingPct,
           deltaCents: it.savingCents,
+          refCents: it.storeCents,
           note: `vs ${it.storeName}`,
         }));
       } catch {
@@ -83,6 +93,7 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
           priceCents: m.nowCents,
           pctLabel: Math.abs(Math.round(m.pct)),
           deltaCents: Math.max(0, m.refCents - m.nowCents),
+          refCents: m.refCents,
           note: "7-day drop",
         }));
       } catch {
@@ -124,6 +135,7 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
               priceCents: g.lowestPriceCents!,
               pctLabel: null,
               deltaCents: null,
+              refCents: null,
               note: [best?.retailerName, msrpNote].filter(Boolean).join(" · ") || null,
             };
           });
@@ -145,6 +157,7 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
           priceCents: p.currentCents,
           pctLabel: p.discountPct,
           deltaCents: Math.max(0, p.avgCents - p.currentCents),
+          refCents: p.avgCents,
           note: "below 30-day avg",
         }));
       } catch {
