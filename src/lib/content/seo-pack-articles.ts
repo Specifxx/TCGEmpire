@@ -371,7 +371,7 @@ Buying often enough that the research time adds up? [RiftCompare Premium](${L.pr
   {
     slug: "tcgplayer-fees",
     category: "blog",
-    title: "TCGplayer Fees Explained: What Sellers and Buyers Actually Pay in 2026",
+    title: "TCGplayer Fees: What You Actually Pay",
     excerpt:
       "Understand every TCGplayer fee — marketplace commission, payment processing, shipping — and how to calculate your true net when selling Riftbound cards.",
     author: AUTHOR,
@@ -498,7 +498,7 @@ RiftCompare shows the true all-in price of any Riftbound card across TCGplayer, 
   {
     slug: "currency-conversion-fees",
     category: "blog",
-    title: "Currency Conversion Fees on Card Purchases: The Hidden Cost of Buying Abroad",
+    title: "Currency Conversion Fees on Card Purchases",
     excerpt:
       "Buying Riftbound cards from overseas stores? Learn how currency conversion fees, FX markups and card surcharges inflate the price — and how to pay less.",
     author: AUTHOR,
@@ -607,7 +607,7 @@ RiftCompare compares live Riftbound prices across US, UK, AU, NZ, CA, and SG sto
   {
     slug: "most-expensive-riftbound-cards",
     category: "blog",
-    title: "The Most Expensive Riftbound Cards: Top Grails and What Drives Their Prices",
+    title: "The Most Expensive Riftbound Cards",
     excerpt:
       "A ranked look at the most expensive Riftbound TCG cards, why Signature and Metal variants command four figures, and how to track live prices with RiftCompare.",
     author: AUTHOR,
@@ -851,7 +851,7 @@ Next: [how to choose a Riftbound marketplace](${L.choosing}) turns this into a s
   {
     slug: "riftbound-card-price-comparison",
     category: "blog",
-    title: "Riftbound Card Price Comparison: How to Find the Real Lowest Price",
+    title: "Riftbound Card Price Comparison",
     excerpt:
       "How Riftbound card price comparison actually works — sticker price vs total cost, which markets are tracked, and how to find the genuinely cheapest place to buy.",
     author: AUTHOR,
@@ -944,7 +944,7 @@ Related: [the 10 best Riftbound marketplaces](${L.marketplaces}), [how to choose
   {
     slug: "riftcompare-review",
     category: "blog",
-    title: "RiftCompare Review: An Honest Look at the Riftbound Price-Comparison Tool",
+    title: "RiftCompare Review: An Honest Look",
     excerpt:
       "A straight review of RiftCompare — what the Riftbound TCG price comparison tool does well, what it doesn't do, who it suits, and how it compares to checking stores yourself.",
     author: AUTHOR,
@@ -1038,7 +1038,7 @@ Related reading: [the 10 best Riftbound marketplaces](${L.marketplaces}), [how t
   {
     slug: "how-to-choose-a-riftbound-marketplace",
     category: "blog",
-    title: "How to Choose a Riftbound Card Marketplace: A 7-Point Checklist",
+    title: "How to Choose a Riftbound Card Marketplace",
     excerpt:
       "Seven criteria for picking where to buy Riftbound cards — total cost, coverage, buyer protection, shipping, fees, condition accuracy and dispute handling.",
     author: AUTHOR,
@@ -1138,7 +1138,7 @@ Related: [the 10 best Riftbound marketplaces](${L.marketplaces}), [Riftbound car
   {
     slug: "riftbound-variant-glossary",
     category: "guide",
-    title: "Riftbound Variant & Finish Glossary: Standard, Foil, Signature, Metal, Overnumbered, Alternate Art",
+    title: "Riftbound Variant & Finish Glossary",
     excerpt:
       "Every Riftbound card treatment defined in one place — standard, foil, Signature, Metal, Overnumbered and Alternate Art — and how to tell them apart before you buy.",
     author: AUTHOR,

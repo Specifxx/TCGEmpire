@@ -587,7 +587,7 @@ Ready to list? **[Sell on the marketplace](/marketplace)** or **[browse the data
   {
     slug: "beginner-mistakes-buying-riftbound-cards",
     category: "blog",
-    title: "5 Beginner Mistakes When Buying Riftbound Cards (and How to Avoid Them)",
+    title: "5 Beginner Mistakes Buying Riftbound Cards",
     excerpt:
       "New to buying Riftbound singles? Avoid these five common — and expensive — mistakes, and you'll build your collection for a lot less.",
     author: "RiftCompare",
@@ -742,7 +742,7 @@ market, on delivered cost.
     slug: "cheapest-riftbound-booster-boxes",
     marketData: "US",
     category: "guide",
-    title: "Cheapest Riftbound Booster Boxes & Sealed (AU, NZ, US, UK, SG & CA)",
+    title: "Cheapest Riftbound Booster Boxes & Sealed",
     excerpt:
       "How to find the cheapest Riftbound: League of Legends TCG booster boxes and sealed product across Australia, New Zealand, the US, the UK, Singapore and Canada — and whether boxes or singles are better value.",
     author: "RiftCompare",
@@ -1204,7 +1204,7 @@ A workable routine: check current EV estimates with the [Box EV calculator](/too
   {
     slug: "how-to-find-riftbound-arbitrage-opportunities",
     category: "guide",
-    title: "Riftbound Card Arbitrage: How to Actually Spot a Real Price Gap",
+    title: "How to Find Riftbound Arbitrage",
     excerpt:
       "\"Arbitrage\" gets thrown around a lot in TCG circles - here's what it really means for Riftbound cards, and how to tell a genuine price gap from a mirage.",
     author: "RiftCompare",
@@ -1433,7 +1433,7 @@ Vendetta leans into new two-domain colour pairings for deckbuilding: **Fury + Ca
   {
     slug: "riftbound-vendetta-new-mechanics-flow-burn-empower",
     category: "blog",
-    title: "Riftbound Vendetta's New Mechanics Explained: Flow, Burn & Empower",
+    title: "Riftbound Vendetta's New Mechanics Explained",
     excerpt:
       "Vendetta introduces three new Riftbound mechanics — Flow, Burn and Empower. Here's what each one does and how it changes the way you build and play.",
     author: "RiftCompare",
@@ -1508,7 +1508,7 @@ Both card types feed Vendetta's rivalry identity — Domains pitted against thei
   {
     slug: "building-for-riftbound-vendetta",
     category: "guide",
-    title: "Building for Riftbound Vendetta: Decks, Synergies & What to Look Out For",
+    title: "Building for Riftbound Vendetta",
     excerpt:
       "How Vendetta's new mechanics and domain pairings point toward fresh Riftbound archetypes — plus the champions, chase cards and value to watch as early singles start trading.",
     author: "RiftCompare",
@@ -1575,7 +1575,7 @@ The whole set is out and trading, so this is genuinely the moment to start assem
   {
     slug: "best-riftbound-vendetta-decks",
     category: "guide",
-    title: "Best Riftbound Vendetta Decks: Archetypes, Synergies & How to Build Them",
+    title: "Best Riftbound Vendetta Decks",
     excerpt:
       "Three full 40-card Riftbound Vendetta decks — Flow Value, Burn and Empower Midrange — with example decklists, 10-card side decks, real card visuals, and how to start buying into each one now that Vendetta singles are trading.",
     author: "RiftCompare",
@@ -1981,7 +1981,7 @@ We'll update this guide the moment any further changes to either ban list are an
   {
     slug: "riftbound-july-2026-ban-list-update",
     category: "blog",
-    title: "Riftbound's July 2026 Ban List: Stealthy Pursuer, Two Battlefields Banned — Plus a New 2v2 Ban List",
+    title: "Riftbound's July 2026 Ban List Update",
     excerpt:
       "Riot just announced Riftbound's second ban wave: Stealthy Pursuer (over an infinite Recruit combo), The Arena's Greatest and Aspirant's Climb, effective 24 July — and a brand-new Constructed 2v2 ban list starting with Master Yi, Wuju Bladesman.",
     author: "RiftCompare",
@@ -2786,7 +2786,7 @@ Burn cards are live with real prices on the **[Vendetta set page](/sets/vendetta
   {
     slug: "riftbound-combat-keywords-explained",
     category: "guide",
-    title: "Riftbound Combat Keywords Explained: Tank, Shield, Deflect, Assault, Backline & Ganking",
+    title: "Riftbound Combat Keywords Explained",
     excerpt:
       "A plain-English guide to Riftbound's six combat keywords — Tank, Shield, Deflect, Assault, Backline and Ganking — how each one changes damage assignment or movement, and how to build a defensive (or aggressive) shell around them.",
     author: "RiftCompare",
@@ -2858,7 +2858,7 @@ Every combat-keyword card is live with real prices — browse **[Tank](/keywords
   {
     slug: "riftbound-timing-keywords-explained",
     category: "guide",
-    title: "Riftbound Timing Keywords Explained: Action, Reaction, Hidden & Ambush",
+    title: "Riftbound Timing Keywords Explained",
     excerpt:
       "How Action, Reaction, Hidden and Ambush change WHEN a Riftbound card can be played — instant-speed tricks, facedown surprise plays, and dropping a unit into a fight already in progress.",
     author: "RiftCompare",
@@ -2919,7 +2919,7 @@ See the full **[Riftbound keywords glossary](/keywords)** for every mechanic in 
   {
     slug: "riftbound-growth-keywords-explained",
     category: "guide",
-    title: "Riftbound Growth & Value Keywords Explained: Legion, Level, Hunt, Weaponmaster, Equip, Accelerate, Vision & Deathknell",
+    title: "Riftbound Growth Keywords Explained",
     excerpt:
       "Eight Riftbound keywords built around scaling up over the course of a game — XP thresholds, playing multiple cards a turn, equipping gear, card selection and death triggers, all explained in plain English.",
     author: "RiftCompare",
@@ -2997,7 +2997,7 @@ See the full **[Riftbound keywords glossary](/keywords)** for every mechanic in 
   {
     slug: "riftbound-game-actions-explained",
     category: "guide",
-    title: "Riftbound Game Actions Explained: Buff, Stun, Predict, Add, Repeat, Temporary, Unique & Mighty",
+    title: "Riftbound Game Actions Explained",
     excerpt:
       "The verbs Riftbound cards actually use inside their ability text — Buff, Stun, Predict, Add, Repeat, Temporary, Unique and Mighty — explained precisely, straight from the Core Rules.",
     author: "RiftCompare",
@@ -3190,7 +3190,7 @@ For the full picture of the set, read **[everything you need to know about Vende
   {
     slug: "riftbound-vendetta-synergies-with-existing-cards",
     category: "blog",
-    title: "Vendetta Synergies: How the New Mechanics Combo With Cards You Already Own",
+    title: "Vendetta Synergies With Your Existing Cards",
     excerpt:
       "Flow, Burn and Empower don't arrive in a vacuum — they slot into shells that already exist. A detailed look at how Vendetta's new mechanics combo with current Origins, Unleashed and Spiritforged cards, domain by domain.",
     author: "RiftCompare",
@@ -3673,7 +3673,7 @@ Tap any card below to open its full page: rules text, printings, price history, 
   {
     slug: "where-to-buy-riftbound-singles",
     category: "blog",
-    title: "Where to Buy Riftbound Singles — The Cheapest Place to Buy Single Cards",
+    title: "Where to Buy Riftbound Singles",
     excerpt:
       "The complete guide to buying Riftbound: League of Legends TCG singles: what singles are, singles vs packs, how to find the cheapest price for any card across stores in AU, NZ, US, UK, Singapore & Canada, and how to buy safely. Free, updated daily.",
     author: "RiftCompare",
@@ -3803,7 +3803,7 @@ The marketplace is new, so if anything looks off, there's a "Found a bug? Report
   {
     slug: "riftcompare-marketplace-buyer-protection-explained",
     category: "blog",
-    title: "Is the RiftCompare Marketplace Safe? Buyer Protection, Escrow & Refunds Explained",
+    title: "RiftCompare Marketplace Buyer Protection",
     excerpt:
       "How the RiftCompare Marketplace actually protects your money when buying Riftbound cards from another player — escrow, auto-refunds, ship deadlines and what happens if a trade goes wrong.",
     author: "RiftCompare",
@@ -3903,7 +3903,7 @@ Just search the card. Whatever's cheapest — store or marketplace listing — s
   {
     slug: "riftcompare-marketplace-fee-cut-2-percent",
     category: "blog",
-    title: "RiftCompare Marketplace Fees Just Dropped to 2% (1% for Premium)",
+    title: "RiftCompare Marketplace Fees Dropped to 2%",
     excerpt:
       "We've cut the RiftCompare Marketplace seller fee from 5% to 2% — and Premium members now sell for just 1%. Here's what changed, why, and how it stacks up against Cardmarket.",
     author: "RiftCompare",
@@ -4132,7 +4132,7 @@ Once you've picked a direction, drop your planned list into the **[deck pricer](
   {
     slug: "riftbound-vendetta-card-prices-where-to-buy-cheapest",
     category: "blog",
-    title: "Riftbound Vendetta Card Prices: Where to Buy for the Lowest Price",
+    title: "Riftbound Vendetta: Where to Buy Cheapest",
     excerpt:
       "RiftCompare tracks every Riftbound Vendetta card's price live across 70+ stores in Australia, New Zealand, the US, the UK, Singapore and Canada, plus eBay — so you always find the cheapest place to buy Vendetta singles and sealed.",
     author: "RiftCompare",
@@ -4191,7 +4191,7 @@ Vendetta is in its launch window — it released on 31 July 2026 — so supply i
   {
     slug: "riftbound-pre-rift-rules-explained",
     category: "guide",
-    title: "Riftbound Pre-Rift Rules Explained: The Sealed Format for Launch-Week Events",
+    title: "Riftbound Pre-Rift Rules Explained",
     excerpt:
       "Pre-Rift events let you crack open a new Riftbound set and build a deck before street date — but the deck-building rules are different from Constructed. Here's exactly how Sealed works: deck size, copy limits and domain rules.",
     author: "RiftCompare",
@@ -4238,7 +4238,7 @@ If you're gearing up for Vendetta's own Pre-Rift week, our **[Vendetta early-acc
   {
     slug: "riftbound-2026-regional-qualifier-los-angeles",
     category: "blog",
-    title: "Riftbound Regional Qualifier: Los Angeles (Sept 25–27, 2026) — Everything We Know",
+    title: "Riftbound Regional Qualifier: Los Angeles",
     excerpt:
       "The final Riftbound Regional Qualifier of 2026 lands at the Los Angeles Convention Center, September 25–27 — here's the venue, ticket tiers, requirements and the exclusive promos on offer.",
     author: "RiftCompare",
@@ -4282,7 +4282,7 @@ Regional Qualifiers are also where a lot of early Vendetta singles and promos ch
   {
     slug: "riftbound-vendetta-crystal-rose-cards",
     category: "guide",
-    title: "Riftbound Vendetta's Crystal Rose Cards: All 6 Wild Rift Alt-Arts, Priced",
+    title: "Riftbound Vendetta's Crystal Rose Cards",
     excerpt:
       "Vendetta's Crystal Rose line brings six Wild Rift skins to physical cards for the first time — Kai'Sa, Sona, Ahri, Sett, Ezreal and Lux. Here's every card, what makes them different from a normal alt-art, and live prices across every store we track.",
     author: "RiftCompare",
@@ -4672,7 +4672,7 @@ Start with **[Riftbound for beginners](/guides/riftbound-for-beginners)** for th
   {
     slug: "riftbound-vendetta-nexus-night-promo-cards",
     category: "blog",
-    title: "Riftbound Vendetta Nexus Night Promo Cards: Every One Revealed So Far",
+    title: "Riftbound Vendetta Nexus Night Promo Cards",
     excerpt:
       "Vendetta's weekly Nexus Night events hand out a 25-card promo cycle at local stores — and the chase card is Mel, Newly Awakened. Here's every promo confirmed so far: Mel plus the full 6-card promo rune cycle, with live prices and pop-up card views.",
     author: "RiftCompare",
@@ -4872,7 +4872,7 @@ If you already run a Teemo deck (or just want the meme on cardboard), GGEZ Teemo
   {
     slug: "lee-sin-centered-nexus-night-promo",
     category: "blog",
-    title: "Lee Sin, Centered: Unleashed's Nexus Night Chase Card, Explained",
+    title: "Lee Sin, Centered: Nexus Night Chase Card",
     excerpt:
       "Lee Sin, Centered (151b/298) is Unleashed's confirmed Nexus Night chase card — actually a promo reprint of an Origins favourite. What it does, and how it stacks up against Riftbound's other grails.",
     author: "RiftCompare",
@@ -4972,7 +4972,7 @@ If you're building around Body-domain buffs, Lee Sin, Centered is a genuinely st
   {
     slug: "mel-newly-awakened-vendetta-spotlight",
     category: "blog",
-    title: "Mel, Newly Awakened: Vendetta's Nexus Night Chase Card, Up Close",
+    title: "Mel, Newly Awakened: Nexus Night Chase Card",
     excerpt:
       "A deep dive on Mel, Newly Awakened's Nexus Night promo (069b/166) — her draw-and-Empower payoff explained, every printing compared, and how she stacks up against Riftbound's other grails.",
     author: "RiftCompare",
@@ -5084,7 +5084,7 @@ If you're building a control shell around Mel, the promo print is a genuine coll
   {
     slug: "riftbound-2027-set-roadmap",
     category: "blog",
-    title: "Riftbound's 2027 Set Roadmap: Radiance, Legacy, The Reckoning and Two Unnamed Sets",
+    title: "Riftbound's 2027 Set Roadmap",
     excerpt:
       "Riot has mapped Riftbound's releases through 2027 — Radiance in October, Legacy in January, The Reckoning in April, and two unnamed sets after. What each means if you're buying.",
     author: "RiftCompare",
@@ -5201,7 +5201,7 @@ Every set gets a page on RiftCompare the moment its cards are catalogued, with l
   {
     slug: "riftbound-legacy-pack-changes-and-card-templating",
     category: "blog",
-    title: "Riftbound Legacy: The Pack Change and Card Templating Updates, Explained",
+    title: "Riftbound Legacy: Pack & Templating Changes",
     excerpt:
       "Legacy trades a common for a dedicated Legend or Battlefield slot, is the first set built for draft, and changes how card text is written. Here's what each change does in plain language.",
     author: "RiftCompare",
@@ -6106,7 +6106,7 @@ Every set gets its own page on RiftCompare the moment its cards are catalogued, 
   {
     slug: "whats-in-the-riftbound-origins-set",
     category: "guide",
-    title: "What's Actually in the Riftbound Origins Set: The Full Breakdown",
+    title: "What's in the Riftbound Origins Set?",
     excerpt:
       "298 base cards, 54 Showcase alternates, and exactly how they split across rarity, domain and card type — the real numbers from Riftbound's first and biggest set.",
     author: "RiftCompare",
@@ -6205,7 +6205,7 @@ If you're building toward a specific rarity or domain, the [rarity and printings
   {
     slug: "riftbound-card-condition-guide",
     category: "guide",
-    title: "Riftbound Card Condition Guide: NM, LP, MP, HP and DMG Explained",
+    title: "Riftbound Card Condition Guide",
     excerpt:
       "What separates Near Mint from Lightly Played, why grading affects the price you should pay, and the real value multipliers RiftCompare uses for each condition tier.",
     author: "RiftCompare",
@@ -6297,7 +6297,7 @@ When you're comparing prices — on RiftCompare or anywhere else — the conditi
   {
     slug: "is-there-a-league-of-legends-card-game",
     category: "guide",
-    title: "Is There a League of Legends Card Game? Yes — It's Called Riftbound",
+    title: "Is There a League of Legends Card Game?",
     excerpt:
       "Searching for a League of Legends card game? Riftbound is Riot's real, physical trading card game set in the League universe — official, in stores now, with real LoL champions as playable cards.",
     author: "RiftCompare",
@@ -6465,7 +6465,7 @@ If you're coming from League of Legends and want the easiest way in, starting wi
   {
     slug: "shen-eye-of-twilight-signature-underrated-vendetta",
     category: "blog",
-    title: "Why Shen's \"Armpit Boi\" Signature Might Be Vendetta's Most Underrated Chase Card",
+    title: "Shen's Underrated Vendetta Signature Card",
     excerpt:
       "Our case for why the Shen, Eye of Twilight Signature — known to collectors as \"Armpit Boi\" — deserves more attention than it's getting. Opinion, with the real prices shown alongside it.",
     author: "RiftCompare",
