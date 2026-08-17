@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { CONDITION_KEYS } from "@/lib/constants";
 import { CURRENCY_BY_COUNTRY } from "@/lib/marketplace-countries";
@@ -11,6 +11,7 @@ import { StripeErrorNotice } from "./StripeErrorNotice";
 import { MarketplaceReportBug } from "./MarketplaceReportBug";
 import { EarningsChart, type EarningsPoint } from "./EarningsChart";
 import { cardImageAlt } from "@/lib/image-alt";
+import { CardSearch, type SearchCard } from "./CardSearch";
 
 // Launch markets — see lib/marketplace.ts's MARKETPLACE_LAUNCH_COUNTRIES. The
 // server rejects any other market anyway; keeping the picker in sync avoids a
@@ -40,24 +41,6 @@ interface Profile {
   handlingDays: number;
   postcode: string | null;
   termsAcceptedAt: string | null;
-}
-
-interface SearchCard {
-  id: string;
-  name: string;
-  slug?: string | null;
-  setCode: string;
-  collectorNumber: string;
-  imageThumbUrl: string | null;
-  variant: string | null;
-  isPromo: boolean;
-  rarity: string;
-  lowestPriceCents: number | null;
-  lowestPriceCentsNz?: number | null;
-  lowestPriceCentsUs?: number | null;
-  lowestPriceCentsUk?: number | null;
-  lowestPriceCentsSg?: number | null;
-  lowestPriceCentsCa?: number | null;
 }
 
 interface Listing {
@@ -357,6 +340,7 @@ function AddListing({ country, currency, isPremiumSeller, onAdded }: { country: 
       <h2 className="mb-3 font-bold text-white">List a card</h2>
       {!card ? (
         <CardSearch
+          placeholder="Search a card to list…"
           onPick={(c) => {
             setCard(c);
             // Prefill from the current cheapest price in this region — still
@@ -422,47 +406,6 @@ function AddListing({ country, currency, isPremiumSeller, onAdded }: { country: 
         {msg && <span className="text-sm text-slate-400">{msg}</span>}
       </div>
     </form>
-  );
-}
-
-function CardSearch({ onPick }: { onPick: (c: SearchCard) => void }) {
-  const [q, setQ] = useState("");
-  const [results, setResults] = useState<SearchCard[]>([]);
-  const abort = useRef<AbortController | null>(null);
-
-  useEffect(() => {
-    const term = q.trim();
-    if (term.length < 2) { setResults([]); return; }
-    const t = setTimeout(async () => {
-      abort.current?.abort();
-      const ctrl = new AbortController();
-      abort.current = ctrl;
-      try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(term)}`, { signal: ctrl.signal });
-        const data = await res.json();
-        setResults((data.results ?? []).slice(0, 8));
-      } catch { /* aborted */ }
-    }, 180);
-    return () => clearTimeout(t);
-  }, [q]);
-
-  return (
-    <div className="relative">
-      <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search a card to list…" className="input" autoComplete="off" />
-      {results.length > 0 && (
-        <ul className="absolute z-30 mt-1 max-h-72 w-full overflow-auto rounded-lg border border-ink-700 bg-ink-850 shadow-2xl">
-          {results.map((r) => (
-            <li key={r.id}>
-              <button type="button" onClick={() => { onPick(r); setQ(""); setResults([]); }} className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-ink-800">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                {r.imageThumbUrl ? <img src={r.imageThumbUrl} alt={cardImageAlt(r)} width={28} height={36} className="h-9 w-7 rounded object-cover" /> : <div className="h-9 w-7 rounded bg-ink-800" />}
-                <span className="min-w-0 flex-1 truncate text-sm text-white">{cardDisplayName(r.name, r)} <span className="text-xs text-slate-500">{r.setCode} {r.collectorNumber}</span></span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
   );
 }
 

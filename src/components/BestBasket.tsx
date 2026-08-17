@@ -1,25 +1,60 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { formatMoney } from "@/lib/format";
 import { OutboundLink } from "./OutboundLink";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { useCountry } from "./CountryProvider";
 import { ebaySearchUrl } from "@/lib/affiliate";
+import { pickPrice } from "@/lib/country";
+import { cardDisplayName } from "@/lib/card-name";
+import { cardImageAlt } from "@/lib/image-alt";
+import { CardSearch, type SearchCard } from "./CardSearch";
 import type { BasketPlan } from "@/lib/basket";
 
-// The Best-Basket tool UI: paste a decklist, then see the cheapest way to buy
-// it all across stores (postage and free-shipping thresholds included),
-// grouped by store with direct buy links.
+interface PickedLine {
+  card: SearchCard;
+  qty: number;
+}
+
+// The Best-Basket tool UI. Primary flow: search for a card, pick the exact
+// printing, set a quantity — build up a list, then price it. Pasting a raw
+// decklist is kept as a secondary "advanced" option for anyone who already
+// has a list in TCGplayer Mass-Entry format (deck import links, etc.) rather
+// than picking cards one at a time.
 export function BestBasket({ currency, initialList }: { currency: string; initialList?: string }) {
   const { country } = useCountry();
-  const [text, setText] = useState(initialList ?? "");
+  const [picked, setPicked] = useState<PickedLine[]>([]);
+  const [showPaste, setShowPaste] = useState(false);
+  const [pasteText, setPasteText] = useState(initialList ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [plan, setPlan] = useState<BasketPlan | null>(null);
 
-  async function run(listText: string = text) {
+  async function runLines(lines: { cardId: string; qty: number }[]) {
+    setLoading(true);
+    setError(null);
+    setPlan(null);
+    try {
+      const res = await fetch("/api/basket", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lines }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        setError(d.error ?? "Something went wrong");
+        return;
+      }
+      setPlan(d.plan as BasketPlan);
+    } catch {
+      setError("Network error — try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function runPasted(listText: string) {
     setLoading(true);
     setError(null);
     setPlan(null);
@@ -46,33 +81,120 @@ export function BestBasket({ currency, initialList }: { currency: string; initia
   // deck page) runs automatically — someone who followed that link is trying
   // to SEE a result, not re-paste a list they already had priced elsewhere.
   // Guarded to fire once, and only when a real list was actually handed in.
+  // The paste panel opens too, since the auto-priced list lives there.
   const autoRan = useRef(false);
   useEffect(() => {
     if (autoRan.current || !initialList?.trim()) return;
     autoRan.current = true;
-    void run(initialList);
+    setShowPaste(true);
+    void runPasted(initialList);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fmt = (c: number) => formatMoney(c, currency);
 
+  function addCard(c: SearchCard) {
+    setPicked((prev) => {
+      const i = prev.findIndex((p) => p.card.id === c.id);
+      if (i >= 0) {
+        const next = [...prev];
+        next[i] = { ...next[i], qty: Math.min(99, next[i].qty + 1) };
+        return next;
+      }
+      return [...prev, { card: c, qty: 1 }];
+    });
+  }
+
+  function setQty(cardId: string, qty: number) {
+    setPicked((prev) => prev.map((p) => (p.card.id === cardId ? { ...p, qty: Math.max(1, Math.min(99, qty)) } : p)));
+  }
+
+  function removeCard(cardId: string) {
+    setPicked((prev) => prev.filter((p) => p.card.id !== cardId));
+  }
+
   return (
     <div className="space-y-5">
       <div className="card-surface p-5">
-        <label className="mb-1 block text-xs font-medium text-slate-400">Paste a decklist (or any card list)</label>
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          rows={6}
-          placeholder={"3 Jinx, Loose Cannon\n2 Vayne, Hunter\n1 Yasuo, the Unforgiven"}
-          className="input font-mono text-sm"
-        />
+        <label className="mb-1 block text-xs font-medium text-slate-400">Search for a card and add it to your basket</label>
+        <CardSearch placeholder="e.g. Jinx, Loose Cannon" onPick={addCard} />
+
+        {picked.length > 0 && (
+          <ul className="mt-3 divide-y divide-ink-800 rounded-lg border border-ink-800">
+            {picked.map((p) => (
+              <li key={p.card.id} className="flex items-center gap-3 p-2.5">
+                {p.card.imageThumbUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={p.card.imageThumbUrl} alt={cardImageAlt(p.card)} width={28} height={40} className="h-10 w-7 shrink-0 rounded object-cover" />
+                ) : (
+                  <div className="h-10 w-7 shrink-0 rounded bg-ink-800" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium text-white">{cardDisplayName(p.card.name, p.card)}</div>
+                  <div className="truncate text-xs text-slate-500">
+                    {p.card.setCode} · {p.card.collectorNumber}
+                    {(() => {
+                      const c = pickPrice(p.card, country);
+                      return c != null ? <> · <span className="text-accent">{fmt(c)}</span></> : null;
+                    })()}
+                  </div>
+                </div>
+                <input
+                  type="number"
+                  min={1}
+                  max={99}
+                  value={p.qty}
+                  onChange={(e) => setQty(p.card.id, parseInt(e.target.value, 10) || 1)}
+                  aria-label={`Quantity for ${p.card.name}`}
+                  className="input w-14 shrink-0 py-1 text-center text-sm"
+                />
+                <button
+                  onClick={() => removeCard(p.card.id)}
+                  aria-label={`Remove ${p.card.name}`}
+                  className="shrink-0 text-slate-600 hover:text-rose-300"
+                >
+                  ✕
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <button onClick={() => run()} disabled={loading || !text.trim()} className="btn-primary text-sm disabled:opacity-50">
+          <button
+            onClick={() => void runLines(picked.map((p) => ({ cardId: p.card.id, qty: p.qty })))}
+            disabled={loading || picked.length === 0}
+            className="btn-primary text-sm disabled:opacity-50"
+          >
             {loading ? "Optimising…" : "🧺 Find the cheapest basket"}
+          </button>
+          <button type="button" onClick={() => setShowPaste((v) => !v)} className="text-xs text-slate-500 hover:text-slate-300">
+            {showPaste ? "Hide" : "Advanced: paste a decklist instead"}
           </button>
         </div>
         {error && <p role="alert" className="mt-2 text-sm text-rose-400">{error}</p>}
+
+        {showPaste && (
+          <div className="mt-4 border-t border-ink-800 pt-4">
+            <label className="mb-1 block text-xs font-medium text-slate-400">Paste a decklist (or any card list)</label>
+            <textarea
+              value={pasteText}
+              onChange={(e) => setPasteText(e.target.value)}
+              rows={6}
+              placeholder={"3 Jinx, Loose Cannon\n2 Vayne, Hunter\n1 Yasuo, the Unforgiven"}
+              className="input font-mono text-sm"
+            />
+            <div className="mt-3">
+              <button
+                onClick={() => void runPasted(pasteText)}
+                disabled={loading || !pasteText.trim()}
+                className="btn-ghost text-sm disabled:opacity-50"
+              >
+                {loading ? "Optimising…" : "🧺 Find the cheapest basket"}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {plan && (
