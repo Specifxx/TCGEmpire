@@ -245,10 +245,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen bg-ink-950">
         {/* Skip link: lets keyboard/AT users bypass the navbar and jump straight
-            to content. Visually hidden until focused (WCAG 2.4.1 Level A). */}
+            to content. Visually hidden until focused (WCAG 2.4.1 Level A).
+            focus:min-h-11 + flex/items-center: measured ~36px tall once
+            focused (py-2 + text-sm alone) — short of this site's 44px mobile
+            tap-target floor. Still keyboard-first in practice (Tab then
+            Enter, not a touch tap), but there's no reason to leave a known,
+            cheap-to-fix gap against the same floor everything else on the
+            page now meets. */}
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded-lg focus:bg-ink-900 focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-brand-400 focus:ring-2 focus:ring-brand-400"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:flex focus:min-h-11 focus:items-center focus:rounded-lg focus:bg-ink-900 focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-brand-400 focus:ring-2 focus:ring-brand-400"
         >
           Skip to main content
         </a>
@@ -332,6 +338,26 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <span className="text-ink-700">·</span>
             <Link href="/authors" className="tap-link text-slate-300 hover:text-brand-400">Who writes this</Link>
             <span className="text-ink-700">·</span>
+            {/* Discord was header-only (see Navbar.tsx) plus the Organization
+                JSON-LD's sameAs below — the homepage-redesign brief's footer
+                table explicitly lists it as something the footer itself must
+                show, so it gets a real row here too. A plain external <a>
+                (not FooterNav/NAV_GROUPS): NAV_GROUPS also feeds the ⌘K
+                command launcher, whose keyboard-select path calls Next's
+                router.push(href) — built for internal routes, not an
+                external https:// URL — so adding it there risked a broken
+                launcher entry for the sake of one footer link. This row
+                already carries other plain external links (RiftboundStocks.com
+                below, the mailto: link) with the same pattern. */}
+            <a
+              href={DISCORD_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="tap-link text-slate-300 hover:text-[#5865F2]"
+            >
+              Discord
+            </a>
+            <span className="text-ink-700">·</span>
             {/* Re-opens Google's consent message (EEA/UK/CH only — renders
                 nothing where no message applies). Required for a published
                 GDPR message: consent has to be revocable. */}
@@ -343,11 +369,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <p className="mb-2">
             Yes, we know Riftbound cards aren&apos;t literally stocks. Try telling
             that to{" "}
+            {/* tap-link: measured ~15px tall on mobile (a plain inline <a>,
+                min-height doesn't apply without a flex/inline-flex display) —
+                same fix as this row's other plain external links above. */}
             <a
               href="https://riftboundstocks.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-semibold text-brand-400 hover:underline"
+              className="tap-link font-semibold text-brand-400 hover:underline"
             >
               RiftboundStocks.com
             </a>

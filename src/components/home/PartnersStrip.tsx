@@ -28,10 +28,17 @@ export function PartnersStrip() {
     <section className="flex flex-col items-center gap-1 text-center">
       <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-slate-500">
         <span className="uppercase tracking-wide">Approved partners</span>
-        <OutboundLink href={ebayHref} retailer="ebay_search" country={country} className="text-lg font-extrabold lowercase leading-none transition-opacity hover:opacity-80" aria-label="eBay Partner Network">
+        {/* tap-link: these wordmarks had no flex display and no min-height, so
+            min-h-11's sitewide pointer:coarse bump had nothing to act on —
+            measured ~18px/16px tall on a real mobile viewport. aria-label now
+            actually reaches the rendered <a> (see OutboundLink's own doc
+            comment on why it silently didn't before this pass) — the fuller
+            name reads better than the bare "ebay"/"TCGplayer" text content
+            these links already fell back to as their accessible name. */}
+        <OutboundLink href={ebayHref} retailer="ebay_search" country={country} className="tap-link text-lg font-extrabold lowercase leading-none transition-opacity hover:opacity-80" aria-label="eBay Partner Network">
           <span style={{ color: "#e53238" }}>e</span><span style={{ color: "#0064d2" }}>b</span><span style={{ color: "#f5af02" }}>a</span><span style={{ color: "#86b817" }}>y</span>
         </OutboundLink>
-        <OutboundLink href={tcgHref} retailer="tcgplayer" country={country} className="text-base font-extrabold leading-none text-white transition-opacity hover:opacity-80" aria-label="TCGplayer">
+        <OutboundLink href={tcgHref} retailer="tcgplayer" country={country} className="tap-link text-base font-extrabold leading-none text-white transition-opacity hover:opacity-80" aria-label="TCGplayer">
           TCG<span className="text-sky-400">player</span>
         </OutboundLink>
       </div>

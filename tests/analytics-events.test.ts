@@ -10,25 +10,46 @@ const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 // tests/business-diagnostic-fixes.test.ts); these pin the previously-missing
 // events, each wired to a real UI action rather than a raw scattered gtag call.
 
-test("trackEvent() mirrors to both Vercel Analytics and GA4, with an undefined-gtag guard", () => {
+test("trackEvent() mirrors to both Vercel Analytics and GA4, stripping undefined params before either sees them", () => {
   const src = read("src/lib/analytics.ts");
-  assert.match(src, /vercelTrack\(name, params\)/);
-  assert.match(src, /window\.gtag\?\.\("event", name, params\)/);
+  // Reconciled with the homepage-redesign brief's own optional-param events
+  // (OutboundLink's card_id/price/etc.) — `params` may contain `undefined`
+  // entries, filtered into `cleaned` before either destination is called, so
+  // neither a Vercel Analytics type error nor a literal-undefined GA4
+  // dimension can happen. See DECISIONS.md's merge-reconciliation section.
+  assert.match(src, /vercelTrack\(name, cleaned\)/);
+  assert.match(src, /window\.gtag\?\.\("event", name, cleaned\)/);
   assert.match(src, /typeof window !== "undefined"/, "must guard the window access for any non-browser caller");
+  assert.match(src, /filter\(\(\[, v\]\) => v !== undefined\)/, "undefined params must be stripped before either destination sees them");
 });
 
-test("card_search fires on submit with the term and the already-resolved preview count", () => {
+test("search_submitted fires on real submit with results_count, and on a recent-search resubmit without it", () => {
+  // Reconciled with an independent pass that built the same "search
+  // submitted" signal under the name `card_search`: kept this branch's
+  // richer 4-stage funnel (search_initiated/suggestion_selected/submitted/
+  // no_results) and folded the other pass's `results_count` field in as
+  // enrichment on `search_submitted`, rather than firing two events for one
+  // action. See DECISIONS.md's merge-reconciliation section.
   const src = read("src/components/SearchBar.tsx");
-  assert.match(src, /trackEvent\("card_search", \{ search_term: q, results_count: results\.length \+ sealed\.length \}\)/);
-  // Must not fire for an empty query (that's "browse everything", not a search).
-  assert.match(src, /if \(q\) trackEvent\("card_search"/);
+  assert.match(src, /trackEvent\("search_submitted", \{ query: q, variant, results_count: opts\?\.resultsCount \}\)/);
+  // The direct-submit path passes a real count from the already-resolved preview.
+  assert.match(src, /commitSearch\(value, \{ resultsCount: results\.length \+ sealed\.length \}\)/);
+  // A recent-search resubmit has no fresh count to report (no debounced fetch
+  // waited on before navigating), so it correctly omits resultsCount.
+  assert.match(src, /commitSearch\(activeSuggestion\.term, \{ newTab \}\)/);
 });
 
-test("region_switch fires from the homepage hero toggle with both region codes, and skips a no-op click", () => {
+test("CountryHeroToggle's region pick funnels through CountryProvider's setCountry(), not a second/duplicate analytics call", () => {
+  // Reconciled with an independent pass that fired region_switch directly
+  // from this component's onClick. Kept this branch's centralized
+  // region_changed (fired once, from CountryProvider.setCountry() — the one
+  // choke point every region control in the app shares) to avoid double-
+  // counting a hero-triggered switch. See DECISIONS.md's merge-reconciliation
+  // section and tests/region-pages.test.ts for the navigation behaviour.
   const src = read("src/components/CountryHeroToggle.tsx");
-  assert.match(src, /trackEvent\("region_switch", \{ from_region: country, to_region: c\.code \}\)/);
-  const onClickBody = src.slice(src.indexOf("onClick={() => {"), src.indexOf("aria-pressed"));
-  assert.match(onClickBody, /if \(active\) return;/, "the guard must come before the track call, not after");
+  assert.doesNotMatch(src, /trackEvent\(/, "no separate analytics call here — setCountry() already fires region_changed");
+  const provider = read("src/components/CountryProvider.tsx");
+  assert.match(provider, /trackEvent\("region_changed", \{ from: country, to: c \}\)/);
 });
 
 test("pack_sim_open fires once per mount; pack_sim_pack_opened fires once a real pack resolves", () => {

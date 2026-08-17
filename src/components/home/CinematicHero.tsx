@@ -47,11 +47,12 @@ function otherMarketsList(exclude: Country): string {
 //
 // Search-first: the old hero packed in 4 CTAs, 4 stat boxes, a partner-logo row
 // and the affiliate disclosure — nothing above the fold was an actual price. Now
-// the hero is H1 → subhead → search → one stat line → one button + one link +
-// the (quiet) region toggle. The partner row and disclosure moved to
-// PartnersStrip, rendered below the fold in page.tsx (disclosure still travels
-// with the links it discloses — see AffiliateDisclosure's rules — just further
-// down the page instead of inside the first viewport).
+// the hero is H1 → subhead → search (THE dominant element) → trending chips →
+// one stat line → one text link + the (quiet, auto-detected) region toggle.
+// The partner row and disclosure moved to PartnersStrip, rendered below the
+// fold in page.tsx (disclosure still travels with the links it discloses —
+// see AffiliateDisclosure's rules — just further down the page instead of
+// inside the first viewport).
 export function CinematicHero({
   totalCards,
   statsByCountry,
@@ -111,7 +112,19 @@ export function CinematicHero({
             traffic (markets with far less competition than the US) survive
             the reorder. Sized to lead the page without dominating it. Capped
             at lg:text-5xl (not 6xl) with a wider max-w-4xl measure so the full
-            sentence settles into ~2 lines at desktop instead of wrapping to 3. */}
+            sentence settles into ~2 lines at desktop instead of wrapping to 3.
+
+            RECONCILED with the homepage-redesign brief's own (older, market-
+            neutral, job-not-features) H1 — two independent passes rewrote
+            this same line the same day. This US-first version wins: it's the
+            more recent decision, backed by real traffic data rather than a
+            general heuristic, and it has real infrastructure built around it
+            (the HeroRegion system above, five real region pages) that a
+            market-neutral H1 would leave half-orphaned. The brief's actual
+            underlying goal — one short, job-focused sentence instead of a
+            60-character country list — is still fully honored here, just
+            phrased in the market-aware way. See DECISIONS.md for the full
+            reasoning. */}
         <h1 className="animate-fade-in [animation-delay:160ms] mx-auto mt-4 max-w-4xl text-3xl font-extrabold leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-5xl">
           Compare <span className="text-brand-400">Riftbound</span> card prices across every {heroAdjective} store
         </h1>
@@ -144,21 +157,46 @@ export function CinematicHero({
             check that runs on raw HTML. The Navbar wraps its two SearchBar
             instances in exactly this boundary; the hero was the one that
             didn't. See docs/adsense-remediation.md § Phase 11. */}
-        {/* `relative z-20` here is load-bearing, not decoration. TrendingChips,
-            HeroStats and the CTA row below all carry their own `animate-fade-in`
-            (an opacity keyframe), which makes EACH of them a stacking context in
-            its own right. With none of these siblings on an explicit z-index,
-            paint order falls back to DOM order — so those later siblings painted
-            OVER this box's search-results dropdown (z-50, but scoped INSIDE this
-            wrapper's own stacking context, unable to escape it) instead of the
-            dropdown floating above them like an overlay should. An explicit
-            z-index here beats every z-index:auto sibling regardless of DOM
-            order, which is what actually fixes it — bumping the dropdown's own
-            z-50 higher would not, since the two are compared in different
-            stacking contexts. */}
-        <div className="animate-fade-in [animation-delay:300ms] relative z-20 mt-6">
+        {/* relative z-20: a real stacking-context bug, found auditing search
+            (not merely a test-script inconvenience — confirmed with a real
+            screenshot) — independently, by two separate passes at this file
+            the same day, which found and fixed the identical bug the same
+            way. Every direct child of this section that carries
+            `animate-fade-in` (this one, TrendingChips' row, the browse-link/
+            region-toggle row below) becomes a CSS stacking context for as
+            long as its animation is "in effect" — which, with `animation-
+            fill-mode: both`, is forever, not just during the 0.6s it plays —
+            per the CSS spec, an element that is (or has been) the target of
+            an animation on a stacking-context-triggering property forms one
+            REGARDLESS of its own `position`/`transform` staying static/none
+            afterward. None of these siblings sets an explicit z-index, so
+            each is sorted as z-index:0 in THIS section's own stacking order,
+            and ties break by DOM order — meaning TrendingChips (mounted
+            after this div) was silently painting, and hit-testing, ABOVE
+            this div's own dropdown despite the dropdown's internal `z-50`,
+            because that z-50 only ever competed against siblings INSIDE this
+            div's now-separate stacking context, never against TrendingChips
+            directly. The visible symptom: opening the dropdown showed its
+            rows visually interleaved with the trending chips underneath, and
+            a real mouse click on a dropdown suggestion could land on a chip
+            instead. `relative z-20` gives this whole div an EXPLICIT,
+            positive stacking level at the section's own top scope — now
+            unambiguously above every animation-promoted sibling regardless
+            of DOM order, closing the gap for good rather than only for the
+            one sibling (TrendingChips) this instance happened to be tested
+            against. */}
+        <div className="relative z-20 animate-fade-in [animation-delay:300ms] mt-6">
           <Suspense fallback={<div className="input mx-auto h-12 max-w-2xl" />}>
-            <SearchBar variant="hero" autoFocusDesktop />
+            {/* trendingCards feeds the box's own zero-state dropdown (focused +
+                empty — see SearchBar's doc comment) in addition to the
+                always-visible TrendingChips row below. The nav variant of
+                this same component doesn't get this prop: trending-card data
+                is computed here, once, from this page's own server data, and
+                threading it into the site-wide Navbar (every route, not just
+                "/") would mean a new sitewide data fetch for a component
+                whose zero-state degrades perfectly well to "recent searches
+                only" without it. */}
+            <SearchBar variant="hero" autoFocusDesktop trendingCards={trendingCards} />
           </Suspense>
         </div>
 
@@ -171,34 +209,42 @@ export function CinematicHero({
             boxes. */}
         <HeroStats totalCards={totalCards} statsByCountry={statsByCountry} freshness={freshness} lockCountry={region?.code} />
 
-        {/* One primary button + one secondary text link — was 4 competing CTAs
-            (Browse / Marketplace / Decks / ⌘K launcher). Marketplace and the
-            command launcher stay reachable from the nav; nothing here is a
-            dead end. The region switcher rides along in the same row, kept
-            visually quiet (see CountryHeroToggle) so it doesn't compete. */}
-        <div className="animate-fade-in [animation-delay:360ms] mt-6 flex flex-col items-center gap-2">
-          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-            <Link href="/browse" className="btn-primary px-5 py-2.5 text-base">Browse the database</Link>
-            <Link href="/decks" className="text-sm font-semibold text-slate-300 underline-offset-4 hover:text-brand-400 hover:underline">
-              Top meta decks →
-            </Link>
-          </div>
-          {/* Newcomer entry point. Deliberately on its OWN line and at a lower
-              visual weight than the two CTAs above, rather than a third item in
-              that row: the row was cut from four competing CTAs to two on
-              purpose (see the note above), and re-crowding it would undo that.
+        {/* EXACTLY ONE secondary action below the search box, per the redesign
+            brief: "the search box is the hero", so nothing here competes with
+            it for primary-CTA weight. This used to be a filled "Browse the
+            database" BUTTON plus two more links ("Top meta decks →", "New to
+            Riftbound? Learn how to play →") — three separate above-the-fold
+            targets, none of them the search box, one of them (meta decks)
+            pointing away from the price-comparison job entirely. All three
+            are gone; a single plain-text link survives, deliberately styled
+            below button weight (no .btn-primary fill) so it reads as an
+            escape hatch for "I don't want to search, just show me
+            everything" rather than a second call to action.
 
-              It earns the space because /learn was an ORPHAN — 359 lines of
-              interactive new-player content at sitemap priority 0.8 with zero
-              inbound internal links from any of 1,698 pages. The only thing
-              referencing it was the mega-menu, which renders client-side and is
-              therefore invisible to the crawler that decides whether the page is
-              worth indexing. See GROWTH-AUDIT.md § 2. */}
+            /decks and /learn are not orphaned by this cut: /decks is a
+            top-level Navbar link (md:block, see Navbar.tsx) and /learn has a
+            real, server-rendered footer link via NAV_GROUPS → FOOTER_GROUPS →
+            FooterNav.tsx (confirmed by reading that chain — FooterNav is a
+            plain server component, no client-only gating), which did not
+            exist when /learn's hero link was first added to fix its orphan
+            problem. Both destinations are still one click away everywhere on
+            the site; they just don't need a second, competing home in the
+            hero above the fold. */}
+        <div className="animate-fade-in [animation-delay:360ms] mt-6 flex flex-col items-center gap-2">
+          {/* tap-link: this is the hero's one surviving secondary action, so its
+              hit area needs the same 44/48px floor every other tap target on the
+              page gets — a plain text link with no padding measured ~20px tall,
+              short of that. focus-visible:ring-*: a real, measured gap found
+              auditing keyboard focus — this link's default outline was suppressed
+              (globals.css's focus-visible reset applies to .btn/.input/etc, not a
+              bare Next.js link) with nothing standing in for it, so a keyboard user
+              tabbing to it saw no indicator at all. Same ring treatment
+              CinematicNavMenu already uses for its own bare links. */}
           <Link
-            href="/learn"
-            className="text-xs text-slate-500 underline-offset-4 transition-colors hover:text-brand-400 hover:underline"
+            href="/browse"
+            className="tap-link rounded text-sm font-semibold text-slate-300 underline-offset-4 outline-none transition-colors hover:text-brand-400 hover:underline focus-visible:ring-2 focus-visible:ring-brand-400"
           >
-            New to Riftbound? Learn how to play →
+            Browse all {totalCards.toLocaleString()} cards →
           </Link>
           <CountryHeroToggle />
         </div>
@@ -216,9 +262,20 @@ export function CinematicHero({
 // this floor just stops a short-content flash on the very first paint. Trimmed
 // again (36vh → 30vh) alongside the tighter padding/H1 above — the section was
 // running ~650px tall with a large dead band before the first content section.
+//
+// id="rc-hero": a stable marker FeedbackWidget looks for (IntersectionObserver)
+// so its launcher can hide itself while the hero — and the hero's own search +
+// autocomplete — is in view, without FeedbackWidget needing to know anything
+// about page structure beyond "does an element with this id exist and
+// intersect". Harmless on every other route: none of them render this id, so
+// the observer there finds nothing and no-ops, same shape as the existing
+// #rc-ad-zone check right next to it in that file.
 function ParallaxShell({ children }: { children: React.ReactNode }) {
   return (
-    <ParallaxRoot className="relative left-1/2 -mt-6 flex min-h-[30vh] w-screen -translate-x-1/2 items-center overflow-hidden">
+    <ParallaxRoot
+      id="rc-hero"
+      className="relative left-1/2 -mt-6 flex min-h-[30vh] w-screen -translate-x-1/2 items-center overflow-hidden"
+    >
       {children}
     </ParallaxRoot>
   );

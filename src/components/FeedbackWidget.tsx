@@ -49,6 +49,7 @@ export function FeedbackWidget() {
   const [honeypot, setHoneypot] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [overAdZone, setOverAdZone] = useState(false);
+  const [overHero, setOverHero] = useState(false);
 
   const panelRef = useRef<HTMLDivElement>(null);
   const launcherRef = useRef<HTMLButtonElement>(null);
@@ -67,6 +68,26 @@ export function FeedbackWidget() {
     const zone = document.getElementById("rc-ad-zone");
     if (!zone || typeof IntersectionObserver === "undefined") return;
     const io = new IntersectionObserver((entries) => setOverAdZone(entries[0]?.isIntersecting ?? false));
+    io.observe(zone);
+    return () => io.disconnect();
+  }, [pathname]);
+
+  // ── Never compete with the hero's search + autocomplete ──────────────────
+  // The homepage-redesign brief flags this exact launcher (fixed bottom-4
+  // right-4) as a real risk of sitting near — and on a short mobile viewport,
+  // occasionally under — the hero search's autocomplete dropdown, right at
+  // the one moment the whole redesigned page is built around. Rather than
+  // hand-roll a scrollY threshold, this reuses the SAME pattern the ad-zone
+  // check right above it already established: look for a marker element by
+  // id and hide for as long as it's in view. CinematicHero's outermost
+  // section carries id="rc-hero" for exactly this. On every OTHER route
+  // (149 of them), that id doesn't exist, `zone` is null, and this becomes a
+  // pure no-op — so the launcher's behavior everywhere except the homepage
+  // is completely unchanged by this effect.
+  useEffect(() => {
+    const zone = document.getElementById("rc-hero");
+    if (!zone || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver((entries) => setOverHero(entries[0]?.isIntersecting ?? false));
     io.observe(zone);
     return () => io.disconnect();
   }, [pathname]);
@@ -169,16 +190,28 @@ export function FeedbackWidget() {
     <>
       {/* Launcher. z-40 keeps it under every dialog (SignupPromoPopup is z-75,
           QuickView z-60) and under the sticky nav, so it can never trap or
-          cover a more important surface. */}
-      {!open && !overAdZone && (
+          cover a more important surface.
+
+          Sized down to a 44x44 icon-only circle below `sm` (was a wider
+          "💬 Feedback" pill at every breakpoint, measuring ~38px tall on a
+          real mobile viewport — under this site's own 44px tap-target floor,
+          and a bigger footprint than it needed on the viewport most likely
+          to have it fighting for space against other page furniture). The
+          text label returns from `sm:` up, where there's room to spare and
+          no touch-target minimum to hit; `aria-label` keeps the accessible
+          name identical in both states so this is a visual-only change.
+          `!overHero` (see the effect above) additionally hides the whole
+          launcher on the homepage for as long as the hero is in view. */}
+      {!open && !overAdZone && !overHero && (
         <button
           ref={launcherRef}
           type="button"
           onClick={openWidget}
-          className="fixed bottom-4 right-4 z-40 flex items-center gap-2 rounded-full border border-ink-700 bg-ink-900/95 px-4 py-2.5 text-xs font-semibold text-slate-200 shadow-lg backdrop-blur transition-colors hover:border-brand-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+          aria-label="Send feedback"
+          className="fixed bottom-4 right-4 z-40 flex h-11 w-11 items-center justify-center gap-2 rounded-full border border-ink-700 bg-ink-900/95 text-xs font-semibold text-slate-200 shadow-lg backdrop-blur transition-colors hover:border-brand-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50 sm:h-auto sm:w-auto sm:px-4 sm:py-2.5"
         >
           <span aria-hidden>💬</span>
-          <span>Feedback</span>
+          <span className="hidden sm:inline">Feedback</span>
         </button>
       )}
 

@@ -235,9 +235,13 @@ test("the hero H1 leads with the US by default, not an alphabetised six-market l
   );
 });
 
-test("the hero's primary CTA row still carries only two <Link>s (test constraint from internal-linking.test.ts)", () => {
+test("the hero's primary CTA row still carries only one <Link> (test constraint from internal-linking.test.ts)", () => {
+  // Re-derived after the homepage-redesign brief's own hero rebuild collapsed
+  // this row further — see tests/internal-linking.test.ts's "the hero carries
+  // exactly one secondary text link, not a wall of CTAs" for the real,
+  // maintained invariant this duplicates a narrower check of.
   const src = read("src/components/home/CinematicHero.tsx");
-  const row = /flex flex-wrap items-center justify-center gap-x-4[\s\S]*?<\/div>/.exec(src);
+  const row = /flex flex-col items-center gap-2[\s\S]*?<\/div>/.exec(src);
   assert.ok(row, "the primary CTA row markup moved — re-derive this test");
   const linkCount = (row[0].match(/<Link/g) ?? []).length;
   assert.ok(linkCount <= 2, `the CTA row has ${linkCount} <Link>s — tests/internal-linking.test.ts caps it at 2`);
@@ -342,15 +346,26 @@ test("the signed-out gate preserves ?list= through the login redirect", () => {
 // GA4 key event.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("OutboundLink fires a GA4 buy_click event alongside the existing Vercel Analytics one", () => {
+test("OutboundLink fires a GA4 buy_click event (enriched with optional card/price fields) alongside the existing Vercel Analytics one", () => {
   // Both calls now live in the shared trackEvent() helper (lib/analytics.ts) —
-  // see tests/analytics-events.test.ts for the helper's own guarantees — so
-  // OutboundLink itself is asserted only to call it with "buy_click".
+  // see tests/analytics-events.test.ts for the helper's own guarantees.
+  //
+  // Reconciled with an independent pass (the homepage-redesign brief) that
+  // built a second, richer event (`store_click`, with card_id/card_name/
+  // price/position_in_list/page_type) for the exact same click. Kept this
+  // event's name — already live, already the subject of GA4 key-event
+  // planning — and folded the richer fields in as enrichment rather than
+  // firing two events per click. See DECISIONS.md's merge-reconciliation
+  // section.
   const src = read("src/components/OutboundLink.tsx");
-  assert.match(src, /trackEvent\("buy_click", \{ retailer, country, kind \}\)/);
+  assert.match(src, /trackEvent\("buy_click", \{/);
+  assert.match(src, /retailer,\s*\n\s*country,\s*\n\s*kind,/);
+  for (const field of ["card_id: cardId", "card_name: cardName", "price,", "position_in_list: positionInList", "page_type: pageType"]) {
+    assert.ok(src.includes(field), `expected OutboundLink's buy_click call to include ${field}`);
+  }
   const helper = read("src/lib/analytics.ts");
-  assert.match(helper, /vercelTrack\(name, params\)/, "the existing Vercel Analytics event must still fire too");
-  assert.match(helper, /window\.gtag\?\.\("event", name, params\)/, "and the GA4 mirror");
+  assert.match(helper, /vercelTrack\(name, cleaned\)/, "the existing Vercel Analytics event must still fire too");
+  assert.match(helper, /window\.gtag\?\.\("event", name, cleaned\)/, "and the GA4 mirror");
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

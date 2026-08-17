@@ -1,6 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { prisma } from "@/lib/db";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
+import { HowItWorks } from "@/components/home/HowItWorks";
+
+// This page had no DB read at all before HowItWorks (below) needed a live
+// card count for its subhead — a daily revalidation window is plenty fresh
+// for a number that only grows by a set's worth of cards every few weeks,
+// same convention /sets already uses for its own per-set counts.
+export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: "About RiftCompare",
@@ -27,7 +35,8 @@ const aboutLd = {
   publisher: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
 };
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const totalCards = await prisma.card.count();
   return (
     <article className="mx-auto max-w-3xl">
       <script
@@ -54,6 +63,14 @@ export default function AboutPage() {
             to use, with no account required.
           </p>
         </section>
+
+        {/* The homepage's old three-step "search → compare → buy" explainer,
+            unchanged — moved here per the homepage-redesign brief (the
+            homepage itself now proves the same point with a live example,
+            ProofStrip, instead of describing it). This is the one place on
+            the site that still spells the mechanic out for a first-time
+            visitor who lands directly on /about rather than the homepage. */}
+        <HowItWorks totalCards={totalCards} />
 
         <section className="space-y-2">
           <h2 className="text-lg font-bold text-white">Why we built it</h2>

@@ -157,7 +157,13 @@ function LauncherOverlay({ onClose }: { onClose: () => void }) {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onKeyDown}
             placeholder="Search features, tools, pages…"
-            className="w-full bg-transparent text-base text-slate-100 placeholder:text-slate-500 outline-none"
+            // focus-visible:ring-*: autoFocus puts real focus here the instant
+            // the dialog opens, so the missing indicator was invisible in the
+            // common case — but Shift+Tab back into this field (e.g. from the
+            // results list, or after tabbing to the close/backdrop) landed on
+            // it with zero visible focus state. Same ring treatment
+            // CinematicNavMenu already uses for its own bare links.
+            className="w-full rounded bg-transparent text-base text-slate-100 placeholder:text-slate-500 outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
             aria-label="Search RiftCompare features"
             role="combobox"
             aria-expanded

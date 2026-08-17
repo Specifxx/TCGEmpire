@@ -24,7 +24,15 @@ export function CountrySwitcher({ className = "" }: { className?: string }) {
   if (!INTL_ENABLED) return null;
 
   return (
-    <div ref={ref} className={`relative ${className}`}>
+    // data-region-control: paired with CountryHeroToggle's "hero" tag — see
+    // that component's own doc comment. scripts/homepage-audit.mjs uses this
+    // to assert at most one region selector is visible above the fold at a
+    // time (the desktop scroll-gate this control's sibling search box gets
+    // via HeaderSearchSlot has no equivalent here, since the header's region
+    // switcher was never a duplicate of the hero's — it's a compact icon+code
+    // button, not a six-button strip — but the tag exists either way so the
+    // audit measures reality instead of assuming it).
+    <div ref={ref} data-region-control="nav" className={`relative ${className}`}>
       <button
         onClick={() => setOpen((o) => !o)}
         // The accessible name must CONTAIN the visible text ("US"), or a

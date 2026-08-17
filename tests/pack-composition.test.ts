@@ -13,6 +13,7 @@ import {
   FOIL_UPGRADE_CHANCE,
 } from "../src/lib/pack-composition";
 import { DEFAULT_BASE_RATES } from "../src/lib/box-ev";
+import { NAV_GROUPS, FOOTER_GROUPS } from "../src/components/nav-groups";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // What is in a Riftbound booster pack — and why this file exists.
@@ -139,13 +140,37 @@ test("the pack simulator is in the sitemap, rated as a tool rather than a mini-g
   assert.match(line!, /priority: 0\.8/, "it targets a head term and carries real content — not 0.6");
 });
 
-test("the homepage links to the pack simulator", () => {
+test("the pack simulator is reachable from the homepage", () => {
   // The incumbent at #1 has no indexable content at all, so internal signals are
   // the cheapest lever available. A homepage link is the strongest one.
-  // The link itself now lives in ReturnVisitCards (one of the homepage's
-  // "come back tomorrow" hooks, rendered from src/app/page.tsx) rather than
-  // inline in page.tsx.
-  assert.match(read("src/components/home/ReturnVisitCards.tsx"), /href="\/games\/pack-sim"/);
+  //
+  // This used to assert the link lived IN ReturnVisitCards, one of the
+  // homepage's own "come back tomorrow" hooks (src/components/home/
+  // ReturnVisitCards.tsx), rendered directly from src/app/page.tsx. The
+  // homepage-redesign brief explicitly removes that whole section — "Pack
+  // opening simulator | own page — footer + nav" in its "what moves, and
+  // where" table — on the reasoning that a "one job" homepage doesn't need
+  // its own dedicated return-visit hooks when the same destinations are
+  // already one click away sitewide. That's a deliberate, brief-mandated
+  // change, not a regression, but the underlying SEO concern this test
+  // exists to guard — the homepage must still link to /games/pack-sim
+  // somewhere real — is still real and still needs a pin.
+  //
+  // The old assertion only ever grepped ReturnVisitCards.tsx's OWN source,
+  // never page.tsx itself, so it would have kept passing even after the
+  // component stopped being mounted on the homepage at all — a silent,
+  // vacuous pass. Fixed the same way tests/internal-linking.test.ts already
+  // fixed the equivalent /learn case: pin the real, sitewide mechanism
+  // instead — a real, non-hidden nav-groups.ts entry that reaches
+  // FOOTER_GROUPS, which layout.tsx renders unconditionally on every route
+  // including "/" (see FooterNav.tsx — a plain server component, real
+  // <Link href> anchors, no client-only gating). That's strictly more
+  // robust than a single homepage-body link ever was.
+  const entry = NAV_GROUPS.flatMap((g) => g.links).find((l) => l.href === "/games/pack-sim");
+  assert.ok(entry, "nav-groups.ts must carry a /games/pack-sim entry point");
+  assert.ok(!entry!.hideInFooter, "/games/pack-sim must not be hidden from the footer — it's the homepage's only remaining path to it");
+  const inFooter = FOOTER_GROUPS.some((g) => g.links.some((l) => l.href === "/games/pack-sim"));
+  assert.ok(inFooter, "/games/pack-sim's nav group must be one of the groups spread into FOOTER_GROUPS");
 });
 
 // ── The three claims the page makes that the simulator has to honour ─────────

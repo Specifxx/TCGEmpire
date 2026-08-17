@@ -60,10 +60,21 @@ test("region pages are declared in the sitemap, mapped from REGION_HOME_PATH rat
 });
 
 test("CountryHeroToggle navigates to the region's own URL on a real switch, and skips navigation on a no-op click", () => {
+  // Reconciled with an independent pass that guarded this onClick with its
+  // own `if (active) return;` before calling setCountry/navigating. Kept
+  // this branch's version, which relies on setCountry()'s OWN no-op guard
+  // (CountryProvider: `if (!INTL_ENABLED || c === country) return;`) — the
+  // one shared choke point every region control in the app already goes
+  // through, so a same-market click still cleanly no-ops without a second,
+  // locally-duplicated check. See DECISIONS.md's merge-reconciliation
+  // section and tests/analytics-events.test.ts for the analytics half of
+  // this same reconciliation.
   const src = read("src/components/CountryHeroToggle.tsx");
-  assert.match(src, /if \(active\) return;/, "clicking the already-active market must not re-navigate");
   assert.match(src, /router\.push\(target\)/);
+  assert.match(src, /if \(target !== pathname\) router\.push\(target\)/, "must not push when the target IS the current path");
   assert.match(src, /REGION_HOME_PATH\[c\.code\]/);
+  const provider = read("src/components/CountryProvider.tsx");
+  assert.match(provider, /if \(!INTL_ENABLED \|\| c === country\) return;/, "setCountry() itself must still no-op on a same-market pick");
 });
 
 test("CountrySwitcher (navbar) is untouched — it must stay URL-stable so switching market re-prices the CURRENT page", () => {

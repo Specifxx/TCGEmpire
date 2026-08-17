@@ -187,7 +187,7 @@ export function FeedbackForm({ months }: { months: number }) {
             onChange={(e) => setDisplayName(e.target.value)}
             placeholder="Name to show (optional)"
             maxLength={60}
-            className="mt-2 w-full rounded-lg border border-ink-700 bg-ink-900 px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-brand-500 focus:outline-none"
+            className="mt-2 w-full rounded-lg border border-ink-700 bg-ink-900 px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/40"
             aria-label="Display name for the public review, optional"
           />
         )}

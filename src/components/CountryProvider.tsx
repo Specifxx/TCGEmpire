@@ -6,6 +6,7 @@ import { COUNTRIES, COUNTRY_COOKIE, DEFAULT_COUNTRY, EUR_DISPLAY_COOKIE, INTL_EN
 import { formatMoney } from "@/lib/format";
 import { gbpCentsToEur } from "@/lib/fx";
 import { useMe } from "@/lib/use-me";
+import { trackEvent } from "@/lib/analytics";
 
 type PricedCard = { lowestPriceCents: number | null; lowestPriceCentsNz?: number | null; lowestPriceCentsUs?: number | null; lowestPriceCentsUk?: number | null; lowestPriceCentsCa?: number | null; lowestPriceCentsSg?: number | null };
 
@@ -146,6 +147,17 @@ export function CountryProvider({ initial, children }: { initial: Country; child
   const setCountry = useCallback(
     (c: Country) => {
       if (!INTL_ENABLED || c === country) return;
+      // Every region control in the app (CountryHeroToggle, RegionToggle, the
+      // navbar's CountrySwitcher, the marketplace's inline pickers) shares this
+      // one callback — there is no separate "region changed" code path per
+      // component, so firing the event here covers all of them at once. This
+      // deliberately does NOT fire for the silent auto-detect/account-restore
+      // paths above (the geo-fetch effect and the signed-in preferredCountry
+      // effect both call setState directly, bypassing setCountry) — those are
+      // the page choosing a starting market for a visitor who hasn't acted
+      // yet, not the visitor changing anything. `region_changed` should mean
+      // "a person clicked a market", which is exactly what reaches this line.
+      trackEvent("region_changed", { from: country, to: c });
       setState(c);
       // A deliberate switcher pick always uses that market's real currency —
       // no surprise EUR conversion for someone who just explicitly chose UK.
