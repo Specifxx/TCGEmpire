@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { dollarsToCents, normalizeSearch } from "./format";
 import { DEFAULT_COUNTRY, priceField, type Country } from "./country";
+import { ALL_FALLBACK_RETAILERS } from "./constants";
 
 export interface CardQuery {
   q?: string;
@@ -157,7 +158,14 @@ export function cardTileSelect(country: Country = DEFAULT_COUNTRY) {
     lowestPriceCentsCa: true,
     // Count only in-stock listings for this market for the "N stores" tile label
     // (out-of-stock listings are shown on the card page but shouldn't inflate it).
-    _count: { select: { retailerPrices: { where: { inStock: true, country } } } },
+    // Converted reference rows are excluded for the same reason they are excluded
+    // from the price above and from computeMarket() on the card page: the tile
+    // promises a number of BUYABLE stores. Counting them made every AU/UK/SG/CA
+    // tile claim one store more than the card page could then show — "2 stores"
+    // on the grid, one row after the click.
+    _count: {
+      select: { retailerPrices: { where: { inStock: true, country, retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } } } },
+    },
   } satisfies Prisma.CardSelect;
 }
 

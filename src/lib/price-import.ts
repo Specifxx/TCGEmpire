@@ -13,7 +13,7 @@ import { snapshotDemand } from "./demand-snapshot";
 import { refreshTcgplayerPrices } from "./tcgplayer";
 import { importMarketplaceListings } from "./marketplace";
 import { refreshCardmarketPrices } from "./cardmarket";
-import { AU_FALLBACK_RETAILERS, SG_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS, pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, chasePrintRarity, isSignature, isOvernumbered } from "./constants";
+import { ALL_FALLBACK_RETAILERS, pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, chasePrintRarity, isSignature, isOvernumbered } from "./constants";
 import { currencyOf, isoCountry, priceField, type Country } from "./country";
 import { USD_TO } from "./fx";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows } from "./scrape-http";
@@ -1729,16 +1729,24 @@ export async function importPrices(): Promise<ImportSummary> {
   // then refuses to show as a store (computeMarket in lib/market-rows.ts excludes
   // them from the comparison too). A card with no real local listing gets null here
   // — "no price yet" — rather than a misleading converted figure.
-  // CA has no converted-reference source of its own (no tcgplayer_ca — see the
-  // note in constants.ts), so like NZ it takes every in-stock row for the market
-  // with no fallback-retailer exclusion.
+  // EVERY market uses the SAME exclusion list the card page's computeMarket()
+  // applies (isFallbackRetailer, backed by ALL_FALLBACK_RETAILERS) rather than
+  // its own per-market list. Naming one list per market is what let CA drift:
+  // the comment here used to say "CA has no converted-reference source of its
+  // own (no tcgplayer_ca)", but refreshTcgplayerPrices() iterates TCG_CA and
+  // writes a converted tcgplayer_ca row for essentially the whole catalogue, so
+  // /browse and the "cheapest cards" strip advertised a Canadian "from" price
+  // that the card page then refused to show as a store. The read side already
+  // filtered country-agnostically; the write side asking the same question the
+  // same way is what stops the next added market repeating it. "tcgplayer" (US)
+  // is deliberately NOT in that list — it is a real buyable store there.
   const [pricedAuReal, pricedNz, pricedUs, pricedSgReal, pricedUkReal, pricedCa] = await Promise.all([
-    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "AU", retailer: { notIn: [...AU_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
-    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "NZ" }, _min: { priceCents: true } }),
-    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "US" }, _min: { priceCents: true } }),
-    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "SG", retailer: { notIn: [...SG_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
-    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "UK", retailer: { notIn: [...UK_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
-    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "CA" }, _min: { priceCents: true } }),
+    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "AU", retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
+    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "NZ", retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
+    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "US", retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
+    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "SG", retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
+    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "UK", retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
+    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "CA", retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
   ]);
   const lowAuReal = new Map(pricedAuReal.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowNz = new Map(pricedNz.map((r) => [r.cardId, r._min.priceCents ?? null]));

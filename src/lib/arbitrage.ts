@@ -95,9 +95,13 @@ export const TCGPLAYER_KEY: Record<Country, string | null> = {
   US: TCG_US.retailer,
   UK: TCGPLAYER_UK_RETAILER,
   SG: TCGPLAYER_SG_RETAILER,
-  // CA has no TCGplayer reference row: there's no tcgplayer_ca retailer (adding one
-  // would need a USD→CAD conversion source this repo doesn't have — see the note in
-  // constants.ts). Like NZ, CA's arbitrage uses real CA store rows + eBay CA only.
+  // CA's arbitrage uses real CA store rows + eBay CA only. NOT because the row is
+  // missing — tcgplayer_ca exists and refreshTcgplayerPrices() writes it (that
+  // claim was stale here and had already caused a real bug: price-import.ts
+  // believed it too and let the converted row set lowestPriceCentsCa) — but
+  // because switching it on changes what the Deal Finder recommends to Canadian
+  // users, which is a product call rather than a correctness one. Flip this to
+  // TCGPLAYER_CA_RETAILER when that call is made; nothing else stands in the way.
   CA: null,
 };
 const MARKETPLACE_FEE_PCT = MARKETPLACE_FEE_BPS / 10000;
