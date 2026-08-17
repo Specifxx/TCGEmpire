@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SITE_URL, SITE_NAME } from "@/lib/site";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { RadianceCountdownTimer } from "@/components/RadianceCountdownTimer";
 
 // Revalidate hourly so the day count stays honest without a per-request render.
 export const revalidate = 3600;
@@ -24,15 +25,27 @@ export const revalidate = 3600;
 // pre-launch. Computing from the release date at render time means the HTML a
 // crawler sees and the HTML a visitor sees are the same, and the hourly
 // revalidate keeps it current.
-const RELEASE = { label: "23 October 2026", iso: "2026-10-23" };
+// RELEASE.iso IS AN ASSUMED TIME, NOT A CONFIRMED ONE — flagged explicitly,
+// unlike every other fact on this page (see the header note above). Riot has
+// announced the DATE (23 October 2026) but has never published an exact hour
+// for a Riftbound street date; researched against Vendetta's 31 Jul 2026
+// launch and found the same thing there — a physical TCG's in-store
+// availability is set by each retailer/distributor, not a single global
+// clock-hour the way a digital unlock would be. Absent a confirmed hour, this
+// assumes 12:00 AM Pacific Time (Riot's own home time zone, and the
+// convention most digital-adjacent product/storefront drops use) — 07:00 UTC
+// on 23 Oct 2026, since PDT (UTC-7) is still in effect that date (DST doesn't
+// end until 1 Nov 2026). If Riot publishes a real hour, replace this value;
+// until then, this is a labelled best-guess, not a fact — the same standard
+// the rest of this page holds every other figure to.
+const RELEASE = { label: "23 October 2026", iso: "2026-10-23T07:00:00.000Z" };
 const SET_NUMBER = 5;
 const CARD_COUNT_APPROX = 180;
 const CHAMPIONS = ["Seraphine", "Evelynn", "Ekko", "Ziggs", "Jarvan IV"];
 
-/** Whole days from now until the release date (UTC midnight), floored at 0. */
-function daysUntilRelease(): number {
-  const release = new Date(`${RELEASE.iso}T00:00:00.000Z`).getTime();
-  return Math.max(0, Math.ceil((release - Date.now()) / 86_400_000));
+/** True once the (assumed) release moment has actually passed. */
+function isReleased(): boolean {
+  return Date.now() >= new Date(RELEASE.iso).getTime();
 }
 
 export const metadata: Metadata = {
@@ -94,8 +107,7 @@ const FAQS = [
 ];
 
 export default function RadianceCountdownPage() {
-  const days = daysUntilRelease();
-  const released = days === 0;
+  const released = isReleased();
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -148,14 +160,7 @@ export default function RadianceCountdownPage() {
           {released ? "Riftbound: Radiance is out now" : "Riftbound: Radiance releases 23 October 2026"}
         </h1>
 
-        {!released && (
-          <div className="mt-5">
-            <div className="num text-6xl font-extrabold leading-none text-brand-300 sm:text-7xl">{days}</div>
-            <div className="mt-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
-              {days === 1 ? "day to go" : "days to go"}
-            </div>
-          </div>
-        )}
+        {!released && <RadianceCountdownTimer targetIso={RELEASE.iso} />}
 
         <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-slate-400">
           {released ? (
