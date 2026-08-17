@@ -215,9 +215,13 @@ test("marketplace routes and seller-management links stay intact (nav-only remov
 // Homepage — US-first hero, Best Basket promo section, reconciled stat claims.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("the hero H1 leads with the US, not an alphabetised six-market list", () => {
+test("the hero H1 leads with the US by default, not an alphabetised six-market list", () => {
   const src = read("src/components/home/CinematicHero.tsx");
-  assert.match(src, /across every US store/);
+  // heroAdjective defaults to "US" when no `region` prop is passed — i.e. the
+  // real homepage, unchanged. Region pages (/au, /nz, /uk, /sg, /ca) override
+  // it via the region prop — see components/home/RegionHome.tsx.
+  assert.match(src, /heroAdjective = region\?\.adjective \?\? "US"/);
+  assert.match(src, /across every \{heroAdjective\} store/);
   assert.doesNotMatch(
     src,
     /AU, NZ, US, UK, SG/,
@@ -330,9 +334,14 @@ test("the signed-out gate preserves ?list= through the login redirect", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 test("OutboundLink fires a GA4 buy_click event alongside the existing Vercel Analytics one", () => {
+  // Both calls now live in the shared trackEvent() helper (lib/analytics.ts) —
+  // see tests/analytics-events.test.ts for the helper's own guarantees — so
+  // OutboundLink itself is asserted only to call it with "buy_click".
   const src = read("src/components/OutboundLink.tsx");
-  assert.match(src, /window\.gtag\?\.\("event", "buy_click"/);
-  assert.match(src, /track\("buy_click"/, "the existing Vercel Analytics event must still fire too");
+  assert.match(src, /trackEvent\("buy_click", \{ retailer, country, kind \}\)/);
+  const helper = read("src/lib/analytics.ts");
+  assert.match(helper, /vercelTrack\(name, params\)/, "the existing Vercel Analytics event must still fire too");
+  assert.match(helper, /window\.gtag\?\.\("event", name, params\)/, "and the GA4 mirror");
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

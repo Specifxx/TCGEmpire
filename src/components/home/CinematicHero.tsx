@@ -6,7 +6,38 @@ import { SearchBar } from "@/components/SearchBar";
 import { HeroStats, type MarketStat } from "./HeroStats";
 import { TrendingChips } from "./TrendingChips";
 import type { CardTileData } from "@/components/CardTile";
-import type { Country } from "@/lib/country";
+import { COUNTRY_LIST, type Country } from "@/lib/country";
+
+/** The bit of a region home page (/au, /nz, /uk, /sg, /ca) that varies the
+ *  hero's copy and locks its stat block — see app/au/page.tsx etc. */
+export interface HeroRegion {
+  code: Country;
+  /** e.g. "Australian", "US", "UK" — reused verbatim from lib/country.ts's
+   *  COUNTRIES so the hero never invents its own copy of that map. */
+  adjective: string;
+}
+
+// Short, subhead-style place names — deliberately NOT CountryInfo.place (which
+// spells out "the United Kingdom"/"the United States" for prose elsewhere): this
+// sentence already reads "...retailer we track, plus five more markets..." and
+// keeping these short is what makes it read as a list rather than a run-on.
+const SHORT_PLACE: Record<Country, string> = {
+  AU: "Australia",
+  NZ: "New Zealand",
+  US: "the US",
+  UK: "the UK",
+  SG: "Singapore",
+  CA: "Canada",
+};
+
+/** "Australia, New Zealand, the UK, Singapore and Canada" — every market EXCEPT
+ *  the one leading the H1, so a region page never re-lists its own market as
+ *  one of the "five more". */
+function otherMarketsList(exclude: Country): string {
+  const names = COUNTRY_LIST.filter((c) => c.code !== exclude).map((c) => SHORT_PLACE[c.code]);
+  if (names.length <= 1) return names.join("");
+  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+}
 
 // The cinematic, full-bleed homepage hero. Breaks out of the centered content
 // column to fill the viewport (left-1/2 + w-screen + -translate-x-1/2). All
@@ -26,6 +57,7 @@ export function CinematicHero({
   statsByCountry,
   trendingCards,
   freshness,
+  region,
 }: {
   totalCards: number;
   // Per-market stat tiles — localised to the visitor's market client-side (HeroStats).
@@ -36,7 +68,14 @@ export function CinematicHero({
   // Pre-formatted "Xh ago" string — see HeroStats' doc comment for why this is
   // computed server-side once rather than client-recomputed.
   freshness: string | null;
+  // Present only on a region home page (/au, /nz, /uk, /sg, /ca). Swaps the
+  // US-first H1/subhead for that region's own and locks the stat block to it —
+  // omitted on the real homepage, which keeps its existing US-first copy and
+  // switcher-following stat exactly as before.
+  region?: HeroRegion;
 }) {
+  const heroAdjective = region?.adjective ?? "US";
+  const otherMarkets = otherMarketsList(region?.code ?? "US");
   return (
     <ParallaxShell>
       {/* ── Background (flat terminal panel) ─────────────────────────────────── */}
@@ -74,12 +113,11 @@ export function CinematicHero({
             at lg:text-5xl (not 6xl) with a wider max-w-4xl measure so the full
             sentence settles into ~2 lines at desktop instead of wrapping to 3. */}
         <h1 className="animate-fade-in [animation-delay:160ms] mx-auto mt-4 max-w-4xl text-3xl font-extrabold leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-5xl">
-          Compare <span className="text-brand-400">Riftbound</span> card prices across every US store
+          Compare <span className="text-brand-400">Riftbound</span> card prices across every {heroAdjective} store
         </h1>
         <p className="animate-fade-in [animation-delay:240ms] mx-auto mt-4 max-w-2xl text-base text-slate-300">
-          Find the cheapest place to buy Riftbound TCG cards — live prices from every US retailer we track,
-          plus five more markets in their own currency: Australia, New Zealand, the UK, Singapore and Canada,
-          updated daily.
+          Find the cheapest place to buy Riftbound TCG cards — live prices from every {heroAdjective} retailer we track,
+          plus five more markets in their own currency: {otherMarkets}, updated daily.
         </p>
 
         {/* The primary action: search, not a row of buttons. Wired to the exact
@@ -119,7 +157,7 @@ export function CinematicHero({
 
         {/* One thin stat line, directly under the search field — was 4 bordered
             boxes. */}
-        <HeroStats totalCards={totalCards} statsByCountry={statsByCountry} freshness={freshness} />
+        <HeroStats totalCards={totalCards} statsByCountry={statsByCountry} freshness={freshness} lockCountry={region?.code} />
 
         {/* One primary button + one secondary text link — was 4 competing CTAs
             (Browse / Marketplace / Decks / ⌘K launcher). Marketplace and the

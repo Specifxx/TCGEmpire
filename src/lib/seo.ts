@@ -13,7 +13,7 @@
 // cares about without dropping the bits it doesn't.
 import type { Metadata } from "next";
 import { SITE_NAME, SITE_URL } from "./site";
-import type { Country } from "./country";
+import { COUNTRIES, type Country } from "./country";
 
 /** Feed auto-discovery, declared once, re-attached by pageAlternates(). */
 const FEED_TYPES = {
@@ -116,4 +116,51 @@ export function hreflangForCountryGuide(slug: string): Record<string, string> | 
   }
   map["x-default"] = `${SITE_URL}/blog/${COUNTRY_GUIDE_SLUGS.US}`;
   return map;
+}
+
+/**
+ * The second honest hreflang group on the site: the homepage ("/") plus its 5
+ * region variants (/au, /nz, /uk, /sg, /ca — see app/au/page.tsx etc). Each is
+ * a genuinely distinct, separately-indexable page — its own H1, its own
+ * region-locked stat block, its own store list — not a re-skin, so this is not
+ * the "inventing hreflang" case hreflangForCountryGuide's header warns against.
+ *
+ * Keyed by market so the map, the routes and the sitemap entries can't drift.
+ */
+export const REGION_HOME_PATH: Record<Country, string> = {
+  US: "/",
+  UK: "/uk",
+  AU: "/au",
+  NZ: "/nz",
+  CA: "/ca",
+  SG: "/sg",
+};
+
+/** hreflang map for the homepage + all 5 region pages. x-default points at "/",
+ *  the site's default market (DEFAULT_COUNTRY, currently US). */
+export function regionHomeHreflang(): Record<string, string> {
+  const map: Record<string, string> = {};
+  for (const [country, path] of Object.entries(REGION_HOME_PATH) as [Country, string][]) {
+    map[HREFLANG[country]] = `${SITE_URL}${path === "/" ? "" : path}`;
+  }
+  map["x-default"] = SITE_URL;
+  return map;
+}
+
+/** Full <Metadata> for one of the 5 region home pages (not "/" itself, which
+ *  keeps its own hand-written metadata in app/page.tsx). Every one of the
+ *  region-locked facts here (adjective, currency, canonical path) reads off
+ *  COUNTRIES/REGION_HOME_PATH so a page can never describe a market other than
+ *  the one it actually renders. */
+export function regionHomeMetadata(region: Exclude<Country, "US">): Metadata {
+  const info = COUNTRIES[region];
+  const path = REGION_HOME_PATH[region];
+  const title = `Compare Riftbound Card Prices Across Every ${info.adjective} Store | RiftCompare`;
+  const description = `Compare live Riftbound TCG card prices across ${info.adjective} stores in ${info.currency} — total delivered cost including ${info.adjective} shipping, updated daily. Free.`;
+  return {
+    title: { absolute: title },
+    description,
+    alternates: pageAlternates(path, { languages: regionHomeHreflang() }),
+    openGraph: pageOpenGraph({ title, description, url: path }),
+  };
 }

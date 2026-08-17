@@ -1,6 +1,9 @@
 "use client";
 
+import { useRouter, usePathname } from "next/navigation";
 import { COUNTRY_LIST, INTL_ENABLED } from "@/lib/country";
+import { REGION_HOME_PATH } from "@/lib/seo";
+import { trackEvent } from "@/lib/analytics";
 import { useCountry } from "./CountryProvider";
 
 // Market chooser for the homepage hero — pill toggle of 🇦🇺/🇳🇿/🇺🇸 that switches
@@ -8,8 +11,17 @@ import { useCountry } from "./CountryProvider";
 // quiet (small type, low-contrast border, no filled active state) — it's a
 // utility, not a CTA, and shouldn't compete with the search box or the
 // hero's one primary button.
+//
+// UNLIKE CountrySwitcher (the navbar one), this toggle only ever appears on the
+// homepage / region home pages (see CinematicHero), so a pick here also
+// navigates to that market's own crawlable URL (REGION_HOME_PATH — "/" for US,
+// "/au" etc. otherwise) rather than only mutating the client-side country
+// cookie. CountrySwitcher stays URL-stable on purpose: switching market on a
+// card/browse/set page must re-price that SAME page, not navigate away from it.
 export function CountryHeroToggle() {
   const { country, setCountry, currency } = useCountry();
+  const router = useRouter();
+  const pathname = usePathname();
   if (!INTL_ENABLED) return null;
 
   return (
@@ -38,7 +50,13 @@ export function CountryHeroToggle() {
           return (
             <button
               key={c.code}
-              onClick={() => setCountry(c.code)}
+              onClick={() => {
+                if (active) return;
+                trackEvent("region_switch", { from_region: country, to_region: c.code });
+                setCountry(c.code);
+                const target = REGION_HOME_PATH[c.code];
+                if (target !== pathname) router.push(target);
+              }}
               aria-pressed={active}
               aria-labelledby={active ? `${codeId} ${currencyId} ${descId}` : `${codeId} ${descId}`}
               className={`flex min-h-11 items-center gap-1 rounded-full px-2.5 text-xs font-medium transition-colors ${

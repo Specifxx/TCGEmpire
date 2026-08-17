@@ -3,17 +3,15 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Archivo } from "next/font/google";
 import { unstable_cache } from "next/cache";
-import { prisma } from "@/lib/db";
 import { Reveal } from "@/components/Reveal";
 import { getPopularCards } from "@/lib/cheapest-cards";
-import { DEFAULT_COUNTRY, priceField, type Country } from "@/lib/country";
-import type { MarketStat } from "@/components/home/HeroStats";
+import { DEFAULT_COUNTRY, type Country } from "@/lib/country";
 import { SETS, newestReleasedSet, nextUpcomingSet, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
 import { SITE_URL, SITE_NAME } from "@/lib/site";
 import { getTopDeals, type TopDeals } from "@/lib/top-deals";
 import { getRecentlyUpdated, getPriceMovers, type PriceMovers } from "@/lib/price-history";
 import { getArticles } from "@/lib/articles";
-import { timeAgo } from "@/lib/format";
+import { getHomeStats } from "@/lib/home-stats";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { CinematicHero } from "@/components/home/CinematicHero";
 import { RadianceCountdownCard } from "@/components/home/RadianceCountdownCard";
@@ -23,8 +21,7 @@ import { ReviewsSection } from "@/components/ReviewsSection";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { EbayPicks } from "@/components/EbayPicks";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
-import { RETAILER_LIST } from "@/lib/retailers";
-import { pageAlternates } from "@/lib/seo";
+import { pageAlternates, regionHomeHreflang } from "@/lib/seo";
 import { webPage, faqPage } from "@/lib/jsonld";
 
 // REMOVED: everything that ever fed the two slots either side of the hero —
@@ -98,7 +95,11 @@ export const metadata: Metadata = {
     "Riftbound Vendetta",
     "Riftbound Vendetta prices",
   ],
-  alternates: pageAlternates("/"),
+  // The homepage is the US/x-default member of the region-home alternate set
+  // (see /au, /nz, /uk, /sg, /ca — lib/seo.ts's regionHomeHreflang()). hreflang
+  // is reciprocal by spec: every page in the group must declare the full set,
+  // not just the five newer pages pointing back at this one.
+  alternates: pageAlternates("/", { languages: regionHomeHreflang() }),
 };
 
 // MARKET-NEUTRAL FAQs: this page is cached (real ISR) and Googlebot crawls
@@ -130,35 +131,17 @@ export default async function HomePage() {
   const country = DEFAULT_COUNTRY;
   const COUNTRY_CODES: Country[] = ["AU", "NZ", "US", "UK", "SG", "CA"];
   const [
-    totalCards,
-    pricedCounts,
-    inStockGroups,
-    storeRows,
+    { totalCards, statsByCountry, freshness },
     popularCards,
     popularVendetta,
     topDealsArr,
     recentlyUpdated,
     moversArr,
-    lastPriceRefresh,
   ] = await Promise.all([
-    prisma.card.count(),
-    // Priced-card count PER MARKET (one indexed count per price column) — the hero
-    // stat tiles localise to the visitor's market client-side, so we serialize all four.
-    Promise.all(COUNTRY_CODES.map((c) => prisma.card.count({ where: { [priceField(c)]: { not: null } } }))),
-    // Live in-stock listings per market, in one grouped count (market-guide reference
-    // rows aren't a buyable unit, so excluded).
-    prisma.retailerPrice.groupBy({
-      by: ["country"],
-      where: { inStock: true, NOT: { retailer: { startsWith: "marketguide" } } },
-      _count: { _all: true },
-    }),
-    // Distinct stores per market with LIVE PRICE ROWS (eBay excluded). Singles AND
-    // sealed listings both count — a store with live booster-box prices (e.g.
-    // Flagship Games SG) is genuinely priced before it lists singles.
-    Promise.all([
-      prisma.retailerPrice.groupBy({ by: ["country", "retailer"], where: { NOT: { retailer: { startsWith: "ebay" } } } }),
-      prisma.sealedListing.groupBy({ by: ["country", "retailer"], where: { NOT: { retailer: { startsWith: "ebay" } } } }),
-    ]).then(([singles, sealed]) => [...singles, ...sealed]),
+    // Per-market stat tiles + the "Prices updated Xh ago" freshness signal —
+    // shared with the 5 region home pages (see lib/home-stats.ts) so they read
+    // the exact same cached figures instead of a second, potentially-drifting copy.
+    getHomeStats(),
     // Most-searched singles (ties → more expensive card) — the cards people most want.
     getPopularCards(12, country),
     // Most-searched VENDETTA singles specifically — same demand signal, scoped to
@@ -194,35 +177,7 @@ export default async function HomePage() {
     // six fresh DB scans. moversByCountry[country] (the baseline) also feeds the
     // popular-cards carousel's "Movers" tab below, unchanged from before.
     Promise.all(COUNTRY_CODES.map((c) => getPriceMovers(c, 6))),
-    // Real last-refresh timestamp for the hero's freshness signal ("Prices
-    // updated 47m ago") — proof beats "Updated daily". Formatted server-side
-    // once (see HeroStats' doc comment for why) via the plain aggregate max, not
-    // a dedicated "last import" table (none exists) — RetailerPrice.lastSeen is
-    // touched by the importer on every listing it sees, so its max IS the last
-    // refresh. Never blocks the page: if this read fails the section just hides.
-    prisma.retailerPrice.aggregate({ _max: { lastSeen: true } }),
   ]);
-  // Assemble per-market stat tiles; the client picks the visitor's market after hydration.
-  const inStockByCountry: Record<string, number> = {};
-  for (const g of inStockGroups) inStockByCountry[g.country] = g._count._all;
-  // "Stores" means real, currently-tracked retailers — intersect the DB rows with
-  // RETAILER_LIST (the single source of truth also used by /stores/tracked) rather
-  // than trusting raw distinct `retailer` values. Without this a store REMOVED from
-  // retailers.ts still counts forever (its old RetailerPrice/SealedListing rows are
-  // never deleted once nothing targets that key again — see the STORES_WITH_POLICY
-  // cleanup note in retailers.ts for the same drift), and TCGplayer/Cardmarket/
-  // Marketplace pseudo-retailers (never in RETAILER_LIST, only excluded here by
-  // name for eBay) get counted as if they were independent "stores" too. This is
-  // the actual reason the homepage stat and /stores/tracked's count could disagree.
-  const validRetailerKeys = new Set(RETAILER_LIST.map((r) => r.key));
-  const storesByCountry: Record<string, Set<string>> = {};
-  for (const r of storeRows) {
-    if (!validRetailerKeys.has(r.retailer)) continue;
-    (storesByCountry[r.country] ??= new Set()).add(r.retailer);
-  }
-  const statsByCountry = Object.fromEntries(
-    COUNTRY_CODES.map((c, i) => [c, { priced: pricedCounts[i], inStock: inStockByCountry[c] ?? 0, stores: storesByCountry[c]?.size ?? 0 }]),
-  ) as Record<Country, MarketStat>;
   const storeCount = statsByCountry[country].stores;
   const storeWord = storeCount === 1 ? "store" : "stores";
   // Per-market Top Deals, so the section can localise client-side (see above).
@@ -236,9 +191,6 @@ export default async function HomePage() {
   const biggestMovers = [...moversByCountry[country].spiking, ...moversByCountry[country].plummeting]
     .sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct))
     .slice(0, 12);
-  // Pre-formatted once server-side — see HeroStats' doc comment for why this
-  // must not be recomputed client-side. Hides the whole signal on a DB miss.
-  const freshness = lastPriceRefresh._max.lastSeen ? timeAgo(lastPriceRefresh._max.lastSeen) : null;
   // The next announced-but-unreleased set (Radiance today; rolls forward on its
   // own — see nextUpcomingSet's doc comment). undefined hides the whole card.
   const radianceSet = nextUpcomingSet();

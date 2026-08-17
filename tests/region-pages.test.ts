@@ -1,0 +1,83 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync, existsSync } from "node:fs";
+import { join } from "node:path";
+import { REGION_HOME_PATH, regionHomeHreflang, regionHomeMetadata } from "../src/lib/seo";
+
+const ROOT = join(__dirname, "..");
+const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
+
+// Region-specific indexable pages: /au /nz /uk /sg /ca, reusing the homepage's
+// hero components with a region-locked stat block, a self-referencing canonical,
+// and hreflang across all 6 markets (the 5 new pages plus "/" itself).
+
+test("a route file exists for every non-US region", () => {
+  for (const [country, dir] of [["AU", "au"], ["NZ", "nz"], ["UK", "uk"], ["SG", "sg"], ["CA", "ca"]] as const) {
+    const p = `src/app/${dir}/page.tsx`;
+    assert.ok(existsSync(join(ROOT, p)), `expected ${p} for ${country}`);
+    const src = read(p);
+    assert.match(src, new RegExp(`regionHomeMetadata\\("${country}"\\)`), `${p} must build its metadata from regionHomeMetadata("${country}")`);
+    assert.match(src, new RegExp(`region="${country}"`), `${p} must render <RegionHome region="${country}" />`);
+  }
+});
+
+test("REGION_HOME_PATH maps every market to a distinct path, US to \"/\"", () => {
+  assert.equal(REGION_HOME_PATH.US, "/");
+  const paths = Object.values(REGION_HOME_PATH);
+  assert.equal(new Set(paths).size, paths.length, "no two markets may share a path");
+  for (const [country, path] of Object.entries(REGION_HOME_PATH)) {
+    if (country === "US") continue;
+    assert.equal(path, `/${country.toLowerCase()}`);
+  }
+});
+
+test("regionHomeHreflang() is reciprocal — every market's own page is present, plus x-default", () => {
+  const map = regionHomeHreflang();
+  assert.equal(Object.keys(map).length, 7, "6 markets + x-default");
+  assert.equal(map["en-GB"], `${new URL(map["x-default"]).origin}/uk`, "UK's region subtag must be GB, not UK");
+  assert.ok(map["x-default"].endsWith("/") || !map["x-default"].includes("//", 8), "x-default must point at the bare origin (\"/\")");
+});
+
+test("every region page's metadata self-references its own canonical and carries the full hreflang set", () => {
+  for (const country of ["AU", "NZ", "UK", "SG", "CA"] as const) {
+    const meta = regionHomeMetadata(country);
+    assert.equal(meta.alternates?.canonical, REGION_HOME_PATH[country]);
+    const languages = meta.alternates?.languages as Record<string, string> | undefined;
+    assert.ok(languages, `${country} region page must declare hreflang alternates`);
+    assert.equal(Object.keys(languages).length, 7);
+  }
+});
+
+test("the homepage itself carries the same reciprocal hreflang set, not just a bare x-default", () => {
+  const src = read("src/app/page.tsx");
+  assert.match(src, /alternates: pageAlternates\("\/", \{ languages: regionHomeHreflang\(\) \}\)/);
+});
+
+test("region pages are declared in the sitemap, mapped from REGION_HOME_PATH rather than hand-listed", () => {
+  const src = read("src/lib/sitemap-sections.ts");
+  assert.match(src, /REGION_HOME_PATH/);
+  assert.match(src, /regionHomeEntries/);
+});
+
+test("CountryHeroToggle navigates to the region's own URL on a real switch, and skips navigation on a no-op click", () => {
+  const src = read("src/components/CountryHeroToggle.tsx");
+  assert.match(src, /if \(active\) return;/, "clicking the already-active market must not re-navigate");
+  assert.match(src, /router\.push\(target\)/);
+  assert.match(src, /REGION_HOME_PATH\[c\.code\]/);
+});
+
+test("CountrySwitcher (navbar) is untouched — it must stay URL-stable so switching market re-prices the CURRENT page", () => {
+  const src = read("src/components/CountrySwitcher.tsx");
+  assert.doesNotMatch(src, /router\.push|REGION_HOME_PATH/, "the navbar switcher must not navigate away from card/browse/set pages on a market switch");
+});
+
+test("HeroStats defaults to the switcher's country when lockCountry is absent (the real homepage's behaviour is unchanged)", () => {
+  const src = read("src/components/home/HeroStats.tsx");
+  assert.match(src, /const country = lockCountry \?\? switcherCountry;/);
+});
+
+test("RegionHome never lists a market's own name among its 'five more markets'", () => {
+  const src = read("src/components/home/CinematicHero.tsx");
+  assert.match(src, /function otherMarketsList\(exclude: Country\)/);
+  assert.match(src, /COUNTRY_LIST\.filter\(\(c\) => c\.code !== exclude\)/);
+});

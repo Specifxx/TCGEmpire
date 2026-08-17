@@ -30,6 +30,7 @@ import { DEFAULT_COUNTRY } from "./country";
 import { hasAnyMarketPrice } from "./market-rows";
 import { staticPageDate } from "./static-page-dates";
 import { AUTHORS } from "./content/authors";
+import { REGION_HOME_PATH } from "./seo";
 
 export interface SitemapEntry {
   url: string;
@@ -87,8 +88,16 @@ async function core(): Promise<SitemapEntry[]> {
   const latestGuide = guideDates.length ? new Date(Math.max(...guideDates)) : staticPageDate("/guides");
   const latestBlog = blogDates.length ? new Date(Math.max(...blogDates)) : staticPageDate("/blog");
 
+  // Region home pages (/au, /nz, /uk, /sg, /ca) — real, region-locked variants
+  // of "/" itself (see components/home/RegionHome.tsx). REGION_HOME_PATH also
+  // maps US to "/", already listed on the next line, so it's skipped here.
+  const regionHomeEntries: SitemapEntry[] = Object.entries(REGION_HOME_PATH)
+    .filter(([, path]) => path !== "/")
+    .map(([, path]) => ({ url: `${SITE_URL}${path}`, changeFrequency: "daily" as const, priority: 0.9, lastModified: day }));
+
   return [
     { url: `${SITE_URL}/`, changeFrequency: "daily", priority: 1, lastModified: day },
+    ...regionHomeEntries,
     { url: `${SITE_URL}/browse`, changeFrequency: "daily", priority: 0.9, lastModified: day },
     { url: `${SITE_URL}/singles`, changeFrequency: "daily", priority: 0.9, lastModified: day },
     { url: `${SITE_URL}/movers`, changeFrequency: "daily", priority: 0.8, lastModified: day },
