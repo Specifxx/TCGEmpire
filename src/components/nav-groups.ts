@@ -35,6 +35,13 @@ export interface NavGroupLink {
    * the secondary mini-games, whose hub (/games) is in the footer already.
    */
   hideInFooter?: boolean;
+  /**
+   * One of the ~10 highest-traffic destinations — the default view the phone
+   * Explore overlay (CinematicNavMenu) leads with, before a visitor asks to see
+   * everything. See POPULAR_LINKS below for the full contract on what belongs
+   * here.
+   */
+  popular?: boolean;
 }
 
 export interface NavGroup {
@@ -70,21 +77,15 @@ export const NAV_GROUPS: NavGroup[] = [
     // Core price/data pages — the heart of the site.
     title: "Prices",
     links: [
-      { href: "/browse", label: "Card Database", emoji: "🗃️", keywords: ["cards", "search", "find", "lookup", "compare prices", "database", "singles"] },
-      { href: "/sealed", label: "Sealed Products", emoji: "📦", keywords: ["booster box", "packs", "boxes", "bundles", "cases", "sealed"] },
-      // The countdown for whichever set is NEXT. Its predecessor
-      // (/vendetta-countdown) was never in the nav and depended entirely on
-      // article links for discovery; putting the slot here means the release-date
-      // page is one ⌘K away all through the pre-launch window, when it is the
-      // single highest-intent page on the site.
-      { href: "/radiance-countdown", label: "Radiance release date", emoji: "✨", keywords: ["release date", "countdown", "when", "next set", "set 5", "radiance"] },
+      { href: "/browse", label: "Card Database", emoji: "🗃️", keywords: ["cards", "search", "find", "lookup", "compare prices", "database", "singles"], popular: true },
+      { href: "/sealed", label: "Sealed Products", emoji: "📦", keywords: ["booster box", "packs", "boxes", "bundles", "cases", "sealed"], popular: true },
       // Label deliberately omits the word "prices": nav search scores the label, and
       // "Radiance pre-order prices" outranked the Bulk Pricer on a bare "prices"
       // query (caught by tests/nav-search.test.ts). The pre-order keywords below
       // still carry every intent that should land here.
       { href: "/radiance-preorders", label: "Radiance pre-orders", emoji: "🛒", keywords: ["preorder", "pre-order", "radiance preorder", "booster box preorder", "set 5 preorder"] },
-      { href: "/market", label: "Market Index", emoji: "📊", keywords: ["index", "market", "chart", "trend", "how is the market"] },
-      { href: "/movers", label: "Daily Movers", emoji: "📈", keywords: ["movers", "risers", "fallers", "gainers", "drops", "trending", "biggest movers"] },
+      { href: "/market", label: "Market Index", emoji: "📊", keywords: ["index", "market", "chart", "trend", "how is the market"], popular: true },
+      { href: "/movers", label: "Daily Movers", emoji: "📈", keywords: ["movers", "risers", "fallers", "gainers", "drops", "trending", "biggest movers"], popular: true },
       { href: "/stores/tracked", label: "Stores we track", emoji: "🏪", keywords: ["stores", "shops", "retailers", "which stores"] },
       { href: "/bulk-pricer", label: "Bulk Pricer", emoji: "📋", keywords: ["bulk", "price a list", "paste a list", "collection value"] },
     ],
@@ -100,6 +101,14 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "Browse the database",
     links: [
       { href: "/sets", label: "Sets & card lists", emoji: "🗂️", keywords: ["sets", "set list", "card list", "vendetta", "origins", "unleashed", "spirit forged", "proving grounds", "radiance"] },
+      // The countdown for whichever set is NEXT. Its predecessor
+      // (/vendetta-countdown) was never in the nav and depended entirely on
+      // article links for discovery; putting the slot here means the release-date
+      // page is one ⌘K away all through the pre-launch window, when it is the
+      // single highest-intent page on the site. Lives here, not under "Prices"
+      // (moved 2026-08-17): it's a release-date countdown, not a price — the
+      // one page in that group with nothing to do with comparing a price.
+      { href: "/radiance-countdown", label: "Radiance release date", emoji: "✨", keywords: ["release date", "countdown", "when", "next set", "set 5", "radiance"] },
       { href: "/champions", label: "Champions", emoji: "🦸", keywords: ["champions", "by champion", "legends"] },
       { href: "/cards", label: "By type & rarity", emoji: "🔤", keywords: ["type", "rarity", "showcase", "epic", "signature", "promo", "printings", "facets", "alt art"] },
       { href: "/domains", label: "Domains", emoji: "🌀", keywords: ["domains", "colours", "colors", "fury", "calm", "mind", "body", "chaos", "order"] },
@@ -111,10 +120,10 @@ export const NAV_GROUPS: NavGroup[] = [
     // Smart-shopping / value tools (several Premium).
     title: "Deals & value",
     links: [
-      { href: "/tools/deal-finder", label: "Deal Finder", emoji: "💱", keywords: ["deals", "bargains", "cheapest", "savings", "arbitrage", "underpriced"] },
+      { href: "/tools/deal-finder", label: "Deal Finder", emoji: "💱", keywords: ["deals", "bargains", "cheapest", "savings", "arbitrage", "underpriced"], popular: true },
       { href: "/tools/value-finder", label: "Value Finder", emoji: "🔎", keywords: ["value", "best value", "worth", "undervalued"] },
       { href: "/tools/rising", label: "Rising Cards", emoji: "🚀", keywords: ["rising", "hot", "momentum", "spiking", "going up"] },
-      { href: "/tools/best-basket", label: "Best Basket", emoji: "🧺", keywords: ["basket", "cart", "multi card", "cheapest combination", "one order", "shipping"] },
+      { href: "/tools/best-basket", label: "Best Basket", emoji: "🧺", keywords: ["basket", "cart", "multi card", "cheapest combination", "one order", "shipping"], popular: true },
       { href: "/tools/box-ev", label: "Box EV Calc", emoji: "🎲", keywords: ["ev", "expected value", "is a box worth it", "booster box value", "box ev"] },
       { href: "/tools", label: "All Tools", emoji: "🧰", keywords: ["tools", "calculators", "utilities"] },
     ],
@@ -124,15 +133,15 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "Your collection",
     links: [
       { href: "/portfolio", label: "My Portfolio", emoji: "💼", keywords: ["collection", "my cards", "holdings", "portfolio", "what is mine worth"] },
-      { href: "/watching", label: "My Watchlist", emoji: "🔔", keywords: ["watchlist", "watching", "saved", "favourites", "favorites", "tracked cards"] },
+      { href: "/watching", label: "My Watchlist", emoji: "🔔", keywords: ["watchlist", "watching", "saved", "favourites", "favorites", "tracked cards"], popular: true },
       { href: "/alerts", label: "Price Alerts", emoji: "📩", keywords: ["alerts", "price alerts", "notify me", "notifications", "email me", "price drop"] },
-      { href: "/premium", label: "Premium", emoji: "⭐", keywords: ["premium", "upgrade", "subscription", "pro", "plans", "pricing"] },
+      { href: "/premium", label: "Premium", emoji: "⭐", keywords: ["premium", "upgrade", "subscription", "pro", "plans", "pricing"], popular: true },
     ],
   },
   {
     title: "Decks",
     links: [
-      { href: "/decks", label: "Meta Decks", emoji: "🏆", keywords: ["meta", "tier list", "decklists", "best decks"] },
+      { href: "/decks", label: "Meta Decks", emoji: "🏆", keywords: ["meta", "tier list", "decklists", "best decks"], popular: true },
       { href: "/deck", label: "Deck Builder", emoji: "🛠️", keywords: ["build a deck", "deck price", "brew", "deck cost"] },
       { href: "/trade", label: "Trade Calculator", emoji: "🔁", keywords: ["trade", "swap", "fair trade", "is this trade fair"] },
     ],
@@ -159,7 +168,7 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "Guides & News",
     links: [
       { href: "/guides", label: "Guides", emoji: "📖", keywords: ["guides", "how to", "tutorials", "explainers"] },
-      { href: "/blog", label: "News & analysis", emoji: "📰", keywords: ["blog", "news", "articles", "posts", "updates", "announcements"] },
+      { href: "/blog", label: "News & analysis", emoji: "📰", keywords: ["blog", "news", "articles", "posts", "updates", "announcements"], popular: true },
       { href: "/learn", label: "Learn Riftbound", emoji: "🎓", keywords: ["learn", "beginner", "how to play", "getting started", "rules"] },
       { href: "/authors", label: "Who writes this", emoji: "✍️", keywords: ["authors", "team", "byline", "who writes"] },
       { href: "/editorial-policy", label: "Editorial policy", emoji: "📐", keywords: ["editorial", "policy", "standards", "corrections"] },
@@ -185,6 +194,21 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
 ];
+
+// The phone Explore overlay's DEFAULT view (CinematicNavMenu) — the ~10
+// highest-traffic destinations, flat (no category headers), instead of every
+// link across all ~9 groups. Reported directly: "we don't need everything to
+// show up... we can have a subset of the most used features and have a way
+// for them to look at all features only if they want to." Chosen to mirror
+// the destinations already promoted elsewhere on the site rather than a new,
+// separate editorial call — PRIMARY_NAV below (Cards/Sealed/Index/Blog), the
+// header's own md/lg-and-up row (Decks, Best Basket, Premium), plus the
+// highest-intent tool/collection pages (Deal Finder, Daily Movers,
+// Watchlist). The full grouped list is always one tap away via "Show all
+// features" — this is a default, not a wall. Order follows NAV_GROUPS, not a
+// separate list, so a link can't silently drift out of sync with its own
+// entry there.
+export const POPULAR_LINKS: NavGroupLink[] = NAV_GROUPS.flatMap((g) => g.links).filter((l) => l.popular);
 
 // TOP-LEVEL header items — the handful of destinations that get their own
 // always-visible link rather than living inside the mega-menu.
@@ -223,14 +247,25 @@ const byTitle = Object.fromEntries(
 );
 const marketplaceLinks = byTitle["Marketplace"] ?? [];
 
+// /radiance-countdown lives in the "Browse the database" NAV_GROUP (it's a
+// release-date countdown, not a price — moved out of "Prices" 2026-08-17),
+// but pinned back into the Shop FOOTER column specifically: without this,
+// Shop drops to 7 links against Learn & play's 15 — just over the 2x column-
+// balance ceiling this file's own header comment guards. NAV_GROUPS itself
+// (and therefore the launcher/hamburger categorisation the move was actually
+// about) is untouched; only which footer column this one link lands in.
+const browseDbLinks = byTitle["Browse the database"] ?? [];
+const radianceCountdown = browseDbLinks.find((l) => l.href === "/radiance-countdown");
+const browseDbFooterLinks = browseDbLinks.filter((l) => l.href !== "/radiance-countdown");
+
 export const FOOTER_GROUPS: NavGroup[] = [
   {
     title: "Shop",
-    links: [...(byTitle["Prices"] ?? []), ...marketplaceLinks.slice(0, 2)],
+    links: [...(byTitle["Prices"] ?? []), ...(radianceCountdown ? [radianceCountdown] : []), ...marketplaceLinks.slice(0, 2)],
   },
   {
     title: "Browse & collect",
-    links: [...(byTitle["Browse the database"] ?? []), ...(byTitle["Your collection"] ?? [])],
+    links: [...browseDbFooterLinks, ...(byTitle["Your collection"] ?? [])],
   },
   {
     title: "Deals & decks",

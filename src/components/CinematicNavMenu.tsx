@@ -4,9 +4,33 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useMegaMenu } from "./MegaMenuProvider";
-import { NAV_GROUPS } from "./nav-groups";
+import { NAV_GROUPS, POPULAR_LINKS, type NavGroupLink } from "./nav-groups";
 import { searchNav } from "./nav-search";
 import { BrandLogo } from "./BrandLogo";
+
+// Shared by the Popular grid and the full category panels below — both need
+// the identical active-pathname/external branching, so it's factored out
+// rather than duplicated (and drifting) between the two render paths.
+function FeatureLink({ l, pathname, onClick }: { l: NavGroupLink; pathname: string; onClick: () => void }) {
+  const active = !l.external && (pathname === l.href || (l.href !== "/" && pathname.startsWith(l.href)));
+  const className = `group flex min-h-11 items-center gap-3 rounded-md px-2 py-2 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand-400 ${
+    active ? "bg-brand-500 font-semibold text-ink-950" : "text-slate-200 hover:bg-ink-800 hover:text-white"
+  }`;
+  if (l.external) {
+    return (
+      <a href={l.href} target="_blank" rel="noopener noreferrer" onClick={onClick} className={className}>
+        <span className="text-lg" aria-hidden>{l.emoji}</span>
+        <span className="font-medium">{l.label}</span>
+      </a>
+    );
+  }
+  return (
+    <Link href={l.href} onClick={onClick} aria-current={active ? "page" : undefined} className={className}>
+      <span className="text-lg" aria-hidden>{l.emoji}</span>
+      <span className="font-medium">{l.label}</span>
+    </Link>
+  );
+}
 
 // Full-screen, "movie-like" navigation overlay (ported from DexCompare). Stays
 // mounted and toggles via classes (animates in AND out): scroll-lock, Escape,
@@ -18,6 +42,13 @@ export function CinematicNavMenu() {
   const dialogRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const [filter, setFilter] = useState("");
+  // Reported directly: "we don't need everything to show up... have a subset
+  // of the most used features and have a way for them to look at all
+  // features only if they want to." Default view is POPULAR_LINKS (flat, no
+  // category headers); this reveals the full NAV_GROUPS panel instead —
+  // typing a filter always searches the full index regardless of this flag,
+  // since narrowing-by-search already IS "show me something specific".
+  const [showAll, setShowAll] = useState(false);
 
   // React 18's JSX `inert` prop doesn't reliably reach the DOM (no first-class
   // support until React 19 — the attribute was silently missing from the
@@ -48,10 +79,14 @@ export function CinematicNavMenu() {
     }));
   }, [filter, filtering]);
 
-  // A stale filter on reopen would show a fraction of the menu with no obvious
-  // reason why.
+  // A stale filter (or a stale "showing everything") on reopen would show a
+  // fraction — or an overwhelming amount — of the menu with no obvious reason
+  // why. Every open starts fresh: Popular, unfiltered.
   useEffect(() => {
-    if (!open) setFilter("");
+    if (!open) {
+      setFilter("");
+      setShowAll(false);
+    }
   }, [open]);
 
   useEffect(() => {
@@ -174,44 +209,61 @@ export function CinematicNavMenu() {
               )}
             </div>
 
-            {/* Category panels (flat, single accent, staggered on open) */}
-            <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {sections.map((sec, si) => (
-                <div
-                  key={sec.title}
-                  className="cine-item relative overflow-hidden rounded-lg border border-ink-800 border-l-2 border-l-brand-500 bg-ink-850 p-4"
-                  style={{ "--cine-delay": `${si * 70}ms` } as CSSProperties}
-                >
+            {/* Default view: the curated Popular set, flat (no category
+                headers — the whole point is "glance, tap, done" instead of
+                hunting through ~9 categories). Swaps out for the full
+                category-grouped panel below the moment a visitor filters
+                (real search intent — narrower is better) or explicitly asks
+                to see everything. */}
+            {!filtering && !showAll ? (
+              <>
+                <div className="mt-7 rounded-lg border border-ink-800 border-l-2 border-l-brand-500 bg-ink-850 p-4">
                   <div className="mb-2 flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-wide text-slate-400">
                     <span className="h-2 w-2 rounded-full bg-brand-500" aria-hidden />
-                    {sec.title}
+                    Popular
                   </div>
-                  <ul className="space-y-0.5">
-                    {sec.links.map((l) => {
-                      const active = !l.external && (pathname === l.href || (l.href !== "/" && pathname.startsWith(l.href)));
-                      const linkClassName = `group flex min-h-11 items-center gap-3 rounded-md px-2 py-2 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand-400 ${
-                        active ? "bg-brand-500 font-semibold text-ink-950" : "text-slate-200 hover:bg-ink-800 hover:text-white"
-                      }`;
-                      return (
-                        <li key={l.href}>
-                          {l.external ? (
-                            <a href={l.href} target="_blank" rel="noopener noreferrer" onClick={close} className={linkClassName}>
-                              <span className="text-lg" aria-hidden>{l.emoji}</span>
-                              <span className="font-medium">{l.label}</span>
-                            </a>
-                          ) : (
-                            <Link href={l.href} onClick={close} aria-current={active ? "page" : undefined} className={linkClassName}>
-                              <span className="text-lg" aria-hidden>{l.emoji}</span>
-                              <span className="font-medium">{l.label}</span>
-                            </Link>
-                          )}
-                        </li>
-                      );
-                    })}
+                  <ul className="grid gap-0.5 sm:grid-cols-2 lg:grid-cols-3">
+                    {POPULAR_LINKS.map((l) => (
+                      <li key={l.href}>
+                        <FeatureLink l={l} pathname={pathname} onClick={close} />
+                      </li>
+                    ))}
                   </ul>
                 </div>
-              ))}
-            </div>
+                <div className="mt-4 text-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowAll(true)}
+                    className="tap-link inline-flex min-h-11 items-center rounded-md px-3 text-sm font-semibold text-brand-300 outline-none transition-colors hover:text-brand-200 hover:underline focus-visible:ring-2 focus-visible:ring-brand-400"
+                  >
+                    Show all features →
+                  </button>
+                </div>
+              </>
+            ) : (
+              /* Category panels (flat, single accent, staggered on open) */
+              <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {sections.map((sec, si) => (
+                  <div
+                    key={sec.title}
+                    className="cine-item relative overflow-hidden rounded-lg border border-ink-800 border-l-2 border-l-brand-500 bg-ink-850 p-4"
+                    style={{ "--cine-delay": `${si * 70}ms` } as CSSProperties}
+                  >
+                    <div className="mb-2 flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-wide text-slate-400">
+                      <span className="h-2 w-2 rounded-full bg-brand-500" aria-hidden />
+                      {sec.title}
+                    </div>
+                    <ul className="space-y-0.5">
+                      {sec.links.map((l) => (
+                        <li key={l.href}>
+                          <FeatureLink l={l} pathname={pathname} onClick={close} />
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
