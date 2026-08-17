@@ -1,24 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { track } from "@vercel/analytics";
 import { COUNTRIES, type Country } from "@/lib/country";
 import type { Deal, TopDeals } from "@/lib/top-deals";
 import { formatMoney } from "@/lib/format";
 import { OutboundLink } from "@/components/OutboundLink";
 import { useCountry } from "@/components/CountryProvider";
+import { useQuickView } from "@/components/QuickView";
 import { cardImageAlt } from "@/lib/image-alt";
 import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
 
-// Homepage "Today's Top Deals". Up to four columns, one per signal (the grid
+// Homepage "Today's Top Deals". Up to three columns, one per signal (the grid
 // itself only declares as many columns as actually have data — see GRID_COLS
-// below). The two PREMIUM columns (arbitrage savings, undervalued) reveal only
-// their single best deal — matching the /tools gate — then a clearly-locked
-// teaser funnelling to the full Premium tool, when there's really more behind
-// it. Free columns (price drops, cheapest sealed) show in full. Empty columns
-// (a signal with no data in this market) are dropped entirely.
+// below). The PREMIUM column (arbitrage savings) reveals only its single best
+// deal — matching the /tools gate — then a clearly-locked teaser funnelling to
+// the full Premium tool, when there's really more behind it. The free columns
+// (price drops, cheapest sealed) show in full. Empty columns (a signal with no
+// data in this market) are dropped entirely.
+//
+// A fourth column, "undervalued", used to sit here — removed per a homepage-
+// declutter pass (not just hidden: lib/top-deals.ts no longer fetches it for
+// this feed at all). Four competing signals read as "study this table," not
+// "here's a deal," and the Value Finder tool (/tools/value-finder) already
+// serves that exact signal on its own dedicated page with room to explain it.
 type ColumnDef = {
   key: keyof Omit<TopDeals, "hasAny">;
   label: string;
@@ -31,7 +37,6 @@ const COLUMNS: ColumnDef[] = [
   { key: "savingsVsMarket", label: "Biggest savings", premium: true, allHref: "/tools/deal-finder", allLabel: "All opportunities" },
   { key: "priceDrops", label: "Price drops", premium: false, allHref: "/movers", allLabel: "All movers" },
   { key: "cheapestSealed", label: "Cheapest sealed", premium: false, allHref: "/sealed", allLabel: "All sealed" },
-  { key: "undervalued", label: "Undervalued", premium: true, allHref: "/tools/value-finder", allLabel: "Value Finder" },
 ];
 
 // Budget tiers — "rounded to natural values per market" (not FX-converted at
@@ -78,34 +83,65 @@ function mixByTier(items: Deal[], midThreshold: number): Deal[] {
   return out;
 }
 
-function PctBadge({ deal, currency }: { deal: Deal; currency: string }) {
+// A single, plain "-Y%" badge — no reference price alongside it. This used to
+// also read "was US$1,167.94 · Save 14%", showing the exact price being
+// compared against so the two numbers on a row couldn't be misread as a
+// before→after PRICE pair (see git history for the bug that fixed). That
+// caveat is real, but on a homepage the fix traded one kind of confusion for
+// another: a row of small print squeezed between the title and the headline
+// price, on a page meant to be readable at a glance. The percentage alone is
+// the number a visitor scanning this section actually wants ("how big a
+// deal is this"); the exact reference price is one click away on the card's
+// own page or its QuickView popup, which both still show it in full.
+function PctBadge({ deal }: { deal: Deal }) {
   if (deal.pctLabel == null) return null;
-  const pctText = deal.dealType === "savings-vs-market" ? `Save ${deal.pctLabel}%` : `−${deal.pctLabel}%`;
-  // "was US$1,167.94 · Save 14%" — the REFERENCE price the percentage is measured
-  // against, not the dollar amount saved. This used to render the delta amount
-  // instead ("US$167.94 · Save 14.4%" next to a headline price of "US$1,000.00"),
-  // which reads as a before→after PRICE pair to anyone scanning the row — and for
-  // a >50% drop, the delta is literally larger than the current price, so a
-  // genuine drop ("now $10.00, was $20.64") rendered as "US$10.64 · −52%" next to
-  // "US$10.00", which looks like the price INCREASED. Showing the actual
-  // reference price makes the two numbers unambiguous and matches how a
-  // qualified savings claim should read: the current price next to what it's
-  // being compared against, not a derived delta with no label of its own.
-  const text = deal.refCents != null && deal.refCents > 0 ? `was ${formatMoney(deal.refCents, currency)} · ${pctText}` : pctText;
+  const text = deal.dealType === "savings-vs-market" ? `Save ${deal.pctLabel}%` : `−${deal.pctLabel}%`;
   return <span className="chip num shrink-0 bg-brand-500/15 text-brand-300">{text}</span>;
 }
 
 function DealRow({ deal, currency, country }: { deal: Deal; currency: string; country: Country }) {
+  const { open } = useQuickView();
+  // Same instant-preview pattern as CardTile/MarketPulse: a plain left-click on
+  // a card deal (savings-vs-market, price-drops) opens the QuickView popup
+  // instead of navigating away, so scanning today's deals doesn't cost a full
+  // page load per row. Sealed deals have no QuickView equivalent and already
+  // go straight to an outbound buy link below — that branch is untouched.
+  const downRef = useRef<{ x: number; y: number; t: number } | null>(null);
+  function onPointerDown(e: React.PointerEvent) {
+    downRef.current = { x: e.clientX, y: e.clientY, t: Date.now() };
+  }
+  function onClick(e: React.MouseEvent) {
+    track("top_deal_click", { deal: deal.dealType, title: deal.title });
+    if (!deal.card) return; // no QuickView data — fall through to a normal navigation
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    const down = downRef.current;
+    if (down && (Math.abs(e.clientX - down.x) > 8 || Math.abs(e.clientY - down.y) > 8 || Date.now() - down.t > 600)) return;
+    e.preventDefault();
+    open(deal.card);
+  }
+
   const inner = (
     <>
       <div className="h-11 w-8 shrink-0 overflow-hidden rounded bg-ink-900">
         {deal.imageUrl && (
-          // next/image: the source is either riftscribe card art or a TCGplayer
-          // sealed-product photo served at a fixed 1000x1000 — both were being
-          // downloaded at full resolution for a 32x44 tile. next/image re-encodes
-          // to AVIF/WebP at the real display size instead (see remotePatterns in
-          // next.config.js).
-          <Image src={deal.imageUrl} alt={cardImageAlt({ name: deal.title })} width={32} height={44} className="h-full w-full object-cover" />
+          // Plain <img>, not next/image: deal images come from three different
+          // sources (RiftScribe, Riot's own CDN, TCGplayer sealed photos) plus
+          // occasional re-hosted/legacy hosts next/image has no allow-list entry
+          // for — any of those, passed to next/image, silently fails to render
+          // instead of falling back to a plain image request. A fixed 32x44 tile
+          // doesn't need next/image's resizing to begin with (same reasoning as
+          // MarketPulse.tsx's and PriceWatch.tsx's tiles), so there is nothing
+          // to trade away by using a plain tag here.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={deal.imageUrl}
+            alt={cardImageAlt({ name: deal.title })}
+            width={32}
+            height={44}
+            className="h-full w-full object-cover"
+            loading="lazy"
+            decoding="async"
+          />
         )}
       </div>
       <div className="min-w-0 flex-1">
@@ -117,7 +153,7 @@ function DealRow({ deal, currency, country }: { deal: Deal; currency: string; co
       </div>
       <div className="flex shrink-0 flex-col items-end gap-1">
         <span className="num text-sm font-bold text-accent">{formatMoney(deal.priceCents, currency)}</span>
-        <PctBadge deal={deal} currency={currency} />
+        <PctBadge deal={deal} />
       </div>
     </>
   );
@@ -134,7 +170,7 @@ function DealRow({ deal, currency, country }: { deal: Deal; currency: string; co
   }
   return (
     <li>
-      <Link href={deal.href ?? "#"} className={cls}>
+      <Link href={deal.href ?? "#"} prefetch={false} onPointerDown={onPointerDown} onClick={onClick} className={cls}>
         {inner}
       </Link>
     </li>
@@ -159,13 +195,12 @@ function LockedTeaser({ count, href }: { count: number; href: string }) {
 
 // Column-count classes are looked up (not string-built) so Tailwind's build-time
 // class scan can see every literal — the grid always matches how many columns
-// actually have data today instead of a fixed 4, which used to leave the right
-// half of the row empty on days a signal or two had nothing to show.
+// actually have data today instead of a fixed count, which used to leave the
+// right half of the row empty on days a signal or two had nothing to show.
 const GRID_COLS: Record<number, string> = {
   1: "",
   2: "sm:grid-cols-2",
-  3: "sm:grid-cols-2 lg:grid-cols-3",
-  4: "sm:grid-cols-2 lg:grid-cols-4",
+  3: "sm:grid-cols-3",
 };
 
 // Reactive to the country switcher: the page serializes all four markets' deals and
@@ -189,7 +224,7 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
 
   // "All" mixes cheap-first (see mixByTier) so a Premium column's single
   // unlocked item is more often approachable; an explicit tier just filters,
-  // keeping each signal's own order (biggest saving / drop / discount first).
+  // keeping each signal's own order (biggest saving / drop first).
   const columns = allColumns
     .map(({ def, items }) => ({
       def,
@@ -237,7 +272,7 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
           No {TIERS.find((t) => t.key === tier)?.label(thresholds, fmtT).toLowerCase()} deals in {place} right now — try another filter.
         </div>
       ) : (
-      <div className={`grid items-stretch gap-4 ${GRID_COLS[columns.length] ?? GRID_COLS[4]}`}>
+      <div className={`grid items-stretch gap-4 ${GRID_COLS[columns.length] ?? GRID_COLS[3]}`}>
         {columns.map(({ def, items }) => {
           // Premium columns normally reveal only the single best deal; the rest is
           // locked — "locked" means how many REAL deals exist behind it, not a fixed

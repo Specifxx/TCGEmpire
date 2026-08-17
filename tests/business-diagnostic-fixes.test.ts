@@ -31,26 +31,32 @@ const readCode = (p: string) => read(p).replace(/(^|[^:])\/\/.*$/gm, "$1").repla
 // delta genuinely is larger than the current price. The fix isn't the math
 // (it always reconciled), it's showing the actual reference price instead.
 
-test("Deal carries refCents, and the badge renders it as a labelled reference price", () => {
-  const src = read("src/components/TodaysTopDeals.tsx");
-  assert.match(
-    src,
-    /deal\.refCents/,
-    "the badge must read refCents (the reference price), not just deltaCents (an unlabelled delta)"
-  );
-  assert.match(
-    src,
-    /was \$\{formatMoney\(deal\.refCents/,
-    'the badge text must be explicitly labelled "was X", not a bare dollar figure a reader could mistake for a second price'
-  );
+test("the homepage deal badge is a plain percentage, not a 'was $X' reference price", () => {
+  // Superseded by a homepage-declutter pass: the badge used to read "was
+  // US$1,167.94 · Save 14%" specifically to stop the two numbers on a row
+  // being misread as a before→after price pair. That fix was correct but
+  // added a second dollar figure to a row that's supposed to be readable at
+  // a glance — the percentage alone answers "how big a deal is this," and
+  // the exact reference price is one click away via QuickView. See
+  // TodaysTopDeals.tsx's PctBadge for the current reasoning.
+  const src = readCode("src/components/TodaysTopDeals.tsx");
+  const badgeAt = src.indexOf("function PctBadge");
+  assert.ok(badgeAt >= 0, "expected the PctBadge component");
+  const body = src.slice(badgeAt, badgeAt + 500);
+  assert.doesNotMatch(body, /was \$/, 'the badge must not render a "was $X" reference price');
+  assert.doesNotMatch(body, /deal\.refCents/, "the badge must not read refCents at all — it's a plain percentage now");
+  assert.match(body, /Save \$\{deal\.pctLabel\}%/, "savings-vs-market must still show its percentage");
 });
 
-test("every Deal-producing branch in top-deals.ts populates refCents", () => {
-  const src = read("src/lib/top-deals.ts");
+test("every Deal-producing branch in top-deals.ts still populates refCents (kept for other consumers), and undervalued is gone", () => {
+  const src = readCode("src/lib/top-deals.ts");
   const refCentsAssignments = (src.match(/refCents:/g) ?? []).length;
   // One in the type definition + one per dealType branch (savings-vs-market,
-  // price-drops, cheapest-sealed, undervalued) = 5.
-  assert.equal(refCentsAssignments, 5, "expected refCents declared once and populated in all four deal branches");
+  // price-drops, cheapest-sealed) = 4. "undervalued" was removed from this
+  // feed entirely — see the file's own header comment — so this is 4, not 5.
+  assert.equal(refCentsAssignments, 4, "expected refCents declared once and populated in all three remaining deal branches");
+  assert.doesNotMatch(src, /dealType:\s*"undervalued"/, "the undervalued column must be gone from this feed's code, not just hidden in the UI");
+  assert.doesNotMatch(src, /getUndervalued\(/, "top-deals.ts must no longer fetch it at all, per its own header comment");
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

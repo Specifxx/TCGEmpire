@@ -103,12 +103,21 @@ const config: Config = {
           "0%,100%": { opacity: "0.5", transform: "scale(1)" },
           "50%": { opacity: "0.85", transform: "scale(1.06)" },
         },
+        // Continuous right-to-left ticker. Translates by exactly -50%: the
+        // caller renders its track content TWICE back-to-back (see
+        // MarketPulse.tsx), so -50% is precisely one full copy's width and the
+        // loop point is seamless regardless of how many cards are in it.
+        marquee: {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
       },
       animation: {
         "fade-up": "fade-up 0.5s ease-out both",
         "fade-in": "fade-in 0.6s ease-out both",
         blob: "blob 16s ease-in-out infinite",
         "glow-pulse": "glow-pulse 3.4s ease-in-out infinite",
+        marquee: "marquee 42s linear infinite",
       },
     },
   },
