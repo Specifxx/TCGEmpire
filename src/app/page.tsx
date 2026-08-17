@@ -344,6 +344,32 @@ export default async function HomePage() {
           and shouldn't sit behind an explainer. */}
       <HowItWorks totalCards={totalCards} />
 
+      {/* Best Basket promo — the multi-store cart optimiser is the hardest
+          feature in this category to replicate (it needs real per-store
+          shipping data, not just prices) and answers the single highest-intent
+          moment in the hobby: "I have a decklist, what's the cheapest way to
+          buy all of it". It shipped with full SEO scaffolding at
+          /tools/best-basket but had no homepage presence and no header link —
+          the single most valuable thing on the site was effectively hidden.
+          Server-rendered real <Link>, so it's crawlable, not a client-only
+          teaser. */}
+      <Link
+        href="/tools/best-basket"
+        className="card-surface group flex flex-wrap items-center gap-4 p-5 transition-colors hover:border-brand-500/60 hover:bg-ink-800 sm:flex-nowrap"
+      >
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-brand-500/15 text-2xl leading-none" aria-hidden>
+          🧺
+        </span>
+        <div className="min-w-0 flex-1">
+          <h2 className="text-lg font-extrabold text-white">Building a decklist? Find the cheapest way to buy it</h2>
+          <p className="mt-0.5 text-sm text-slate-400">
+            Best Basket splits your list across stores — postage included — and finds the lowest total cost, not just
+            the lowest sticker price on each card.
+          </p>
+        </div>
+        <span className="btn-primary shrink-0 text-sm">Try Best Basket →</span>
+      </Link>
+
       {/* Explore — sets + domains consolidated into one entry point */}
       <section>
         <h2 className="mb-4 text-xl font-extrabold text-white">Explore the database</h2>

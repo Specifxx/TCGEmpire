@@ -58,18 +58,28 @@ export function CinematicHero({
 
       {/* ── Foreground content (re-aligned to the normal grid) ───────────────── */}
       <div className="container-app relative z-10 w-full py-8 text-center sm:py-10">
-        {/* Kinetic headline — MARKET-NEUTRAL: this page is cached (ISR), so one
-            version serves every visitor and crawler; naming all six markets
-            ranks in all six. Prices localise client-side after hydration.
-            Sized to lead the page without dominating it. Capped at lg:text-5xl
-            (not 6xl) with a wider max-w-4xl measure so the full sentence
-            settles into ~2 lines at desktop instead of wrapping to 3. */}
+        {/* Kinetic headline — US-FIRST, not market-neutral. This page is cached
+            (ISR) and DEFAULT_COUNTRY is "US" (lib/country.ts), which is also
+            where the traffic actually is: SimilarWeb reports the real visitor
+            split as ~89% US / ~11% AU, with NZ/UK/SG/CA not registering — so a
+            headline enumerating six countries greeted the vast majority of
+            visitors with five markets they don't live in before the one they
+            do. The other five markets aren't dropped, just demoted: they're
+            still named in the very next sentence (this page's own subhead),
+            in the About section further down, in metadata.description and in
+            the organization JSON-LD's areaServed — every one of those is real,
+            crawlable text, so the geo keywords that matter for AU/NZ/SG search
+            traffic (markets with far less competition than the US) survive
+            the reorder. Sized to lead the page without dominating it. Capped
+            at lg:text-5xl (not 6xl) with a wider max-w-4xl measure so the full
+            sentence settles into ~2 lines at desktop instead of wrapping to 3. */}
         <h1 className="animate-fade-in [animation-delay:160ms] mx-auto mt-4 max-w-4xl text-3xl font-extrabold leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-5xl">
-          Compare <span className="text-brand-400">Riftbound</span> card prices across AU, NZ, US, UK, SG &amp; CA stores
+          Compare <span className="text-brand-400">Riftbound</span> card prices across every US store
         </h1>
         <p className="animate-fade-in [animation-delay:240ms] mx-auto mt-4 max-w-2xl text-base text-slate-300">
-          Find the cheapest place to buy Riftbound TCG cards — live local prices in AUD, NZD, USD, GBP, SGD &amp; CAD
-          compared across stores in Australia, New Zealand, the US, the UK, Singapore and Canada, updated daily.
+          Find the cheapest place to buy Riftbound TCG cards — live prices from every US retailer we track,
+          plus five more markets in their own currency: Australia, New Zealand, the UK, Singapore and Canada,
+          updated daily.
         </p>
 
         {/* The primary action: search, not a row of buttons. Wired to the exact

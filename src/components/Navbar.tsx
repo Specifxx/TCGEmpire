@@ -8,9 +8,7 @@ import { CountrySwitcher } from "./CountrySwitcher";
 import { NavUser } from "./NavUser";
 import { PremiumButton } from "./PremiumButton";
 import { DISCORD_URL } from "@/lib/site";
-import { MARKETPLACE_NAV_VISIBLE } from "./nav-groups";
 import { BrandLogo } from "./BrandLogo";
-import { CartIcon } from "./icons/HomeIcons";
 
 // NO server-side session read here: the navbar renders on every route, so a
 // cookies() read would force the whole site dynamic (killing ISR). NavUser
@@ -105,6 +103,18 @@ export function Navbar() {
           <Link href="/decks" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white md:block md:px-2.5">
             Decks
           </Link>
+          {/* Best Basket — the multi-store cart optimiser (cheapest way to buy
+              several cards, postage included). Previously reachable only from
+              the ⌘K launcher, the mega-menu, /tools and a handful of contextual
+              links — never from the header, never from the homepage — despite
+              being the hardest feature in this category to replicate (it needs
+              per-store shipping data, not just prices) and the highest-intent
+              moment it answers ("I have a list, what's the cheapest way to buy
+              it") having no header presence at all. Same md:block treatment as
+              Sealed/Decks/Blog. */}
+          <Link href="/tools/best-basket" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white md:block md:px-2.5">
+            Best Basket
+          </Link>
           {/* Blog — the header's one link into our own writing. It exists because
               the hand-written content was previously reachable only from the
               footer and the mega-menu, which made the only genuinely original
@@ -118,22 +128,18 @@ export function Navbar() {
           <Link href="/blog" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white md:block md:px-2.5">
             Blog
           </Link>
-          {/* Marketplace — filled brand chip (not a plain text link) so the P2P
-              marketplace is the most visually loud thing in the bar besides the
-              logo. Only appears once MARKETPLACE_NAV_VISIBLE (mirrors
-              NEXT_PUBLIC_MARKETPLACE_PUBLIC). Always visible (even on phones,
-              unlike Sealed/Guides/Premium/Discord above) — icon-only below sm,
-              full label from sm up. */}
-          {MARKETPLACE_NAV_VISIBLE && (
-            <Link
-              href="/marketplace"
-              aria-label="Marketplace"
-              className="flex items-center gap-1 rounded-lg bg-brand-500 px-1.5 py-1.5 text-xs font-bold text-ink-950 shadow-sm transition-colors hover:bg-brand-400 sm:gap-1.5 sm:px-2.5 sm:py-2 sm:text-sm"
-            >
-              <CartIcon className="h-4 w-4 shrink-0" />
-              <span className="hidden sm:inline">Marketplace</span>
-            </Link>
-          )}
+          {/* NO Marketplace chip here, deliberately (removed 2026-08-17). The P2P
+              marketplace needs liquidity, and liquidity needs the traffic this
+              site does not yet have — a two-sided market that can't clear is a
+              worse first impression than no market at all, and the header is
+              the single most valuable acquisition surface on the site. This is
+              a NAV-ONLY change: /marketplace and every seller-management route
+              (orders, funds, dashboard) stay fully live and linked from the
+              footer and UserMenu, so a seller with an in-flight order or a
+              pending payout keeps normal access — nothing here strands anyone's
+              money. MARKETPLACE_NAV_VISIBLE (nav-groups.ts) still gates the
+              mega-menu/⌘K "Buy on Marketplace" group and the footer legal
+              links; only the primary header chip is gone unconditionally. */}
           {/* Premium — one-click into the upsell dialog from anywhere. */}
           <PremiumButton className="hidden rounded-lg px-2 py-2 text-sm font-semibold text-gold hover:bg-ink-800 lg:block lg:px-2.5">
             ✦ Premium
