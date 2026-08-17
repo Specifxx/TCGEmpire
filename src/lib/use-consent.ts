@@ -29,7 +29,11 @@ import { useEffect, useState } from "react";
 // Failing OPEN outside the CMP's scope and CLOSED inside it is the same shape as
 // Google's own region-scoped consent defaults.
 
-const CMP_GRACE_MS = 2500;
+// Exported so ConsentDefaults.tsx's wait_for_update (a plain template string,
+// not code that can import across the "use client" boundary this module sits
+// behind) can be asserted numerically >= this value by a test instead of only
+// by a comment.
+export const CMP_GRACE_MS = 2500;
 
 type TcData = {
   gdprApplies?: boolean;
@@ -61,6 +65,16 @@ export type ConsentState = {
   cmpPresent: boolean;
 };
 
+// MODULE-level, not per-hook-instance: useConsent() is called from more than one
+// component on the same page (ConsentGatedAnalytics, GoogleAnalyticsUser), each
+// mounting its own effect with its own `settled` closure. Without a guard shared
+// across all of them, every mounted instance that resolves pushes its own
+// `gtag('consent','update', ...)` — the duplicate visible in the live dataLayer
+// trace. This only needs to gate the ONE thing Google's tags must hear once per
+// page; each instance's own React state below is untouched, so per-component
+// gating (e.g. GoogleAnalyticsUser withholding user_id) keeps working.
+let pushedConsentUpdate = false;
+
 export function useConsent(): ConsentState {
   const [state, setState] = useState<ConsentState>({ analytics: false, cmpPresent: false });
 
@@ -82,7 +96,10 @@ export function useConsent(): ConsentState {
       // they stay denied until the AdSense review completes. Do not add them
       // here — widening this object is an advertising-policy change, not a
       // measurement fix.
-      window.gtag?.("consent", "update", { analytics_storage: "granted" });
+      if (!pushedConsentUpdate) {
+        pushedConsentUpdate = true;
+        window.gtag?.("consent", "update", { analytics_storage: "granted" });
+      }
       if (window.__rcConsent) window.__rcConsent.analytics = true;
       setState({ analytics: true, cmpPresent });
     };
