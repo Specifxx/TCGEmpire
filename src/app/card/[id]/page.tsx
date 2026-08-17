@@ -5,11 +5,11 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { CardImage } from "@/components/CardImage";
 import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge, CrystalRoseBadge } from "@/components/Badge";
-import { isOvernumbered, isSignature, isCrystalRose } from "@/lib/constants";
+import { isOvernumbered, isSignature, isCrystalRose, normaliseCondition } from "@/lib/constants";
 import { PriceWatchButton } from "@/components/PriceWatchButton";
 import { ShareButton } from "@/components/ShareButton";
 import { CardViewBeacon } from "@/components/CardViewBeacon";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, normalizeSearch } from "@/lib/format";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
 import { affiliateUrl, ebayLabel, ebaySearchUrl } from "@/lib/affiliate";
 import { cardCredentials, cardDisplayName, cardSearchName } from "@/lib/card-name";
@@ -287,6 +287,15 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   const baseline = computeMarket(rows, DEFAULT_COUNTRY);
   const baselinePlace = COUNTRIES[baseline.market].place;
   const fmtBaseline = (cents: number) => formatMoney(cents, baseline.currency);
+
+  // Every market's view, for the cross-market price table further down. `rows`
+  // already carries all six markets (no country filter server-side), so this is
+  // free — the same computeMarket() call the client re-runs after hydration for
+  // the visitor's own market, just run once per market here for the ISR-cached
+  // HTML. Markets with no live listing are dropped rather than shown as "—".
+  const marketPrices = COUNTRY_LIST.map((info) => ({ info, view: computeMarket(rows, info.code) })).filter(
+    (x) => x.view.storeCount > 0 && x.view.lowest != null,
+  );
 
   // eBay fallback search per market, precomputed (affiliate tagging is server-side).
   // Built for EVERY market and shown by the client section whenever that market has
@@ -580,6 +589,31 @@ export default async function CardPage({ params }: { params: { id: string } }) {
       ? `More cards from ${card.setName}`
       : `More ${card.domain} cards from ${card.setName}`;
 
+  // Cheaper alternatives — same set, same domain AND same type (so a unit is
+  // never offered as an "alternative" to a spell), strictly priced below this
+  // card's own baseline. Gated on `baseline.lowest != null` below so the section
+  // never renders for an unpriced card — it would otherwise have to compare
+  // against nothing. Deliberately NOT worded as "functional alternative": rules
+  // similarity is a claim about gameplay this data cannot support (see
+  // lib/content/card-narrative.ts's convention of asserting only what a figure
+  // actually proves), so the heading says exactly what the query guarantees —
+  // cheaper, same set, same domain, same card type.
+  const cheaperAlternatives =
+    baseline.lowest != null
+      ? await prisma.card.findMany({
+          where: {
+            setCode: card.setCode,
+            domain: card.domain,
+            type: card.type,
+            id: { not: card.id },
+            [priceField(DEFAULT_COUNTRY)]: { lt: baseline.lowest, not: null },
+          },
+          orderBy: [{ [priceField(DEFAULT_COUNTRY)]: { sort: "desc" as const, nulls: "last" as const } }],
+          take: 6,
+          select: cardTileSelect(DEFAULT_COUNTRY),
+        })
+      : [];
+
   // "More {Champion} cards" — cross-SET topical cluster (e.g. every Jinx card across
   // Origins/Unleashed/Spiritforged). The champion is the name before the comma
   // ("Jinx, Loose Cannon" → "Jinx"); only Legend/unit cards are named that way, so
@@ -607,6 +641,33 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   const allRelatedDecks = decksUsingCard(card.name);
   const relatedDecks = allRelatedDecks.slice(0, 6);
 
+  // "Often played with" — co-occurrence derived from those SAME meta decks, in
+  // process (no extra static lookup): count how often each other card name
+  // appears across every deck that plays this one, excluding runes (a mana-base
+  // choice, not a synergy) and this card itself, then resolve the top names to
+  // real card rows in ONE bounded query. With only a handful of meta decks
+  // seeded today (see prisma/meta-decks.json), this is correctly empty for most
+  // cards — gated on allRelatedDecks.length below rather than always rendering
+  // a near-empty section.
+  const coPlayCounts = new Map<string, number>();
+  for (const d of allRelatedDecks) {
+    for (const c of d.cards) {
+      if (c.section === "rune" || c.name === card.name) continue;
+      coPlayCounts.set(c.name, (coPlayCounts.get(c.name) ?? 0) + 1);
+    }
+  }
+  const coPlayNames = [...coPlayCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 12)
+    .map(([name]) => normalizeSearch(name));
+  const playedAlongside = coPlayNames.length
+    ? await prisma.card.findMany({
+        where: { nameNormalized: { in: coPlayNames }, id: { not: card.id } },
+        take: 12,
+        select: cardTileSelect(DEFAULT_COUNTRY),
+      })
+    : [];
+
   // AU price history (day-cached — see lib/price-history) reused here for the
   // genuine price-trend paragraph below. Same cache key as the chart's own fetch
   // (default take=120), so this never doubles the day's history read.
@@ -627,8 +688,18 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     const view = computeMarket(rows, country);
     const inStock = view.prices;
     const delivered = inStock.map((p) => p.delivered).sort((a, b) => a - b);
-    const nm = inStock.filter((p) => /near\s*mint|^nm$/i.test(p.condition ?? ""));
-    const played = inStock.filter((p) => p.condition && !/near\s*mint|^nm$/i.test(p.condition));
+    // normaliseCondition is the ONE mapping from four incompatible marketplace
+    // condition vocabularies (Shopify variant titles, eBay's raw-card scale,
+    // TCGplayer/Cardmarket's blanket "NM") onto our five grades — used here
+    // instead of a page-local regex so this split can't silently drift from
+    // what the price table itself labels as NM (see CardMarketSection.tsx).
+    // A row whose condition genuinely can't be classified lands in NEITHER
+    // bucket, same as before — the narrative should not guess.
+    const nm = inStock.filter((p) => normaliseCondition(p.condition) === "NM");
+    const played = inStock.filter((p) => {
+      const g = normaliseCondition(p.condition);
+      return g != null && g !== "NM";
+    });
     const min = (xs: { priceCents: number }[]) =>
       xs.length ? Math.min(...xs.map((x) => x.priceCents)) : null;
     return {
@@ -1018,6 +1089,60 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             </dl>
           </section>
 
+          {/* Cross-market prices — every market's listings are ALREADY on this
+              page (rows carries all six, no country filter server-side; see the
+              `rows` comment above), so this costs zero extra queries. Previously
+              this data only ever reached the reader as prose inside the "About"
+              narrative below — never a navigable, at-a-glance table. Only
+              markets with an actual live listing render. */}
+          {marketPrices.length > 1 && (
+            <section className="card-surface mt-6 p-5">
+              <h2 className="font-bold text-white">{card.name} prices by market</h2>
+              <ul className="mt-3 divide-y divide-ink-800">
+                {marketPrices.map(({ info, view }) => (
+                  <li key={info.code} className="flex items-center justify-between gap-3 py-2 text-sm">
+                    <span className="flex items-center gap-2 text-slate-300">
+                      <span aria-hidden>{info.flag}</span>
+                      {info.place}
+                    </span>
+                    <span className="num text-white">
+                      {formatMoney(view.lowest!, view.currency)}
+                      <span className="ml-1.5 text-xs text-slate-500">
+                        · {view.storeCount} {view.storeCount === 1 ? "store" : "stores"}
+                      </span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {/* Tool strip — the actual "what do I do with this price" next step.
+              Every one of these tools already existed; none was linked from a
+              card page before. This is the highest-traffic template on the
+              site (~1,400 renders), so it's also the highest-leverage place to
+              route a reader toward the tools rather than dead-ending on one
+              card's price. */}
+          <section className="card-surface mt-6 p-5">
+            <h2 className="font-bold text-white">Do more with this price</h2>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Link href="/deck" className="chip border border-ink-700 hover:border-brand-500 hover:bg-ink-800">
+                Price a whole deck →
+              </Link>
+              <Link href="/tools/best-basket" className="chip border border-ink-700 hover:border-brand-500 hover:bg-ink-800">
+                Cheapest multi-card cart →
+              </Link>
+              <Link href="/bulk-pricer" className="chip border border-ink-700 hover:border-brand-500 hover:bg-ink-800">
+                Bulk price a list →
+              </Link>
+              {setInfo && !setInfo.comingSoon && (
+                <Link href={`/sealed?set=${card.setCode}`} className="chip border border-ink-700 hover:border-brand-500 hover:bg-ink-800">
+                  Sealed {card.setName} products →
+                </Link>
+              )}
+            </div>
+          </section>
+
           {/* Into our real editorial work. On a programmatic page this is the
               shortest path a reader — or a reviewer — has to something a person
               actually wrote, and it's chosen from this card's own attributes
@@ -1112,6 +1237,41 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                   ))}
                 </div>
               </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Often played with — co-occurrence from the same meta decks as "Played in
+          these decks" above, resolved to actual card rows. Absent for most
+          cards today (only a handful of meta decks are seeded), which is
+          correct — it should not render a near-empty section. */}
+      {playedAlongside.length > 0 && (
+        <section className="mt-10">
+          <h2 className="mb-1 text-xl font-extrabold text-white">Often played with {displayName}</h2>
+          <p className="mb-4 text-xs text-slate-500">Cards that show up in the same meta decks as this one.</p>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            {playedAlongside.map((c) => (
+              <CardTile key={c.id} card={c} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Cheaper alternatives — same set, domain and card type, strictly priced
+          below this card. Gated on the query itself (empty when unpriced), so
+          this never asserts a comparison the data can't back. */}
+      {cheaperAlternatives.length > 0 && (
+        <section className="mt-10">
+          <h2 className="mb-1 text-xl font-extrabold text-white">
+            Cheaper {card.domain === "Colorless" ? "" : `${card.domain} `}{card.type ? `${card.type.toLowerCase()}s` : "cards"} in {card.setName}
+          </h2>
+          <p className="mb-4 text-xs text-slate-500">
+            Same set, same domain, same card type — priced below {fmtBaseline(baseline.lowest!)} in {baselinePlace}.
+          </p>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            {cheaperAlternatives.map((c) => (
+              <CardTile key={c.id} card={c} />
             ))}
           </div>
         </section>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatMoney } from "@/lib/format";
 import { OutboundLink } from "./OutboundLink";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
@@ -12,14 +12,14 @@ import type { BasketPlan } from "@/lib/basket";
 // The Best-Basket tool UI: paste a decklist, then see the cheapest way to buy
 // it all across stores (postage and free-shipping thresholds included),
 // grouped by store with direct buy links.
-export function BestBasket({ currency }: { currency: string }) {
+export function BestBasket({ currency, initialList }: { currency: string; initialList?: string }) {
   const { country } = useCountry();
-  const [text, setText] = useState("");
+  const [text, setText] = useState(initialList ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [plan, setPlan] = useState<BasketPlan | null>(null);
 
-  async function run() {
+  async function run(listText: string = text) {
     setLoading(true);
     setError(null);
     setPlan(null);
@@ -27,7 +27,7 @@ export function BestBasket({ currency }: { currency: string }) {
       const res = await fetch("/api/basket", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text: listText }),
       });
       const d = await res.json();
       if (!res.ok) {
@@ -41,6 +41,18 @@ export function BestBasket({ currency }: { currency: string }) {
       setLoading(false);
     }
   }
+
+  // A list arriving via ?list= (e.g. "Price this deck in Best Basket" from a
+  // deck page) runs automatically — someone who followed that link is trying
+  // to SEE a result, not re-paste a list they already had priced elsewhere.
+  // Guarded to fire once, and only when a real list was actually handed in.
+  const autoRan = useRef(false);
+  useEffect(() => {
+    if (autoRan.current || !initialList?.trim()) return;
+    autoRan.current = true;
+    void run(initialList);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const fmt = (c: number) => formatMoney(c, currency);
 

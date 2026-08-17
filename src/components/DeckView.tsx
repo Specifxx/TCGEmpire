@@ -27,7 +27,19 @@ const GROUPS: { title: string; sections: string[]; muted?: boolean }[] = [
   { title: "Side Deck", sections: ["sideboard"], muted: true },
 ];
 
-export function DeckView({ deck, builderHref }: { deck: ResolvedDeck; builderHref: string }) {
+export function DeckView({
+  deck,
+  builderHref,
+  bestBasketHref,
+}: {
+  deck: ResolvedDeck;
+  builderHref: string;
+  /** Same decklist, pre-filled into the account-gated Best Basket optimiser — a
+   *  handoff, not a duplicate of the free inline <DeckCart> below. Optional so
+   *  other DeckView callers (deck GROUP pages, which already show their own
+   *  Best-Basket-style cart) aren't forced to wire it. */
+  bestBasketHref?: string;
+}) {
   const { fmt, country } = useCountry();
   const label = COUNTRIES[country].label;
   // The big image on the left follows whichever card you hover (defaults to legend).
@@ -174,6 +186,11 @@ export function DeckView({ deck, builderHref }: { deck: ResolvedDeck; builderHre
             <Link href={builderHref} className="btn-primary mt-3 w-full text-center">
               Open in Deck Builder →
             </Link>
+            {bestBasketHref && (
+              <Link href={bestBasketHref} className="btn-ghost mt-2 w-full text-center text-sm">
+                Price this deck in Best Basket →
+              </Link>
+            )}
             <p className="mt-2 text-center text-[11px] text-slate-600">Hover a card to preview it here.</p>
           </div>
         </div>
