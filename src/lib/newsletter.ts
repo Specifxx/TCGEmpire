@@ -59,7 +59,9 @@ function section(title: string, items: Mover[], currency: string, take: number, 
       .join("")}</table></td></tr>`;
 }
 
-interface Digest {
+// Exported so lib/user-digest.ts (the weekly send to registered accounts) can
+// build and reuse the exact same content instead of duplicating it.
+export interface Digest {
   subject: string;
   heading: string;
   inner: string;
@@ -72,7 +74,7 @@ interface Digest {
 // permanently-ageing legacy row — i.e. mailing subscribers a months-old,
 // noindexed page as though it were this week's. The digest now points at /movers
 // (live, always current) instead.
-function buildDigest(movers: PriceMovers, market: Country): Digest | null {
+export function buildDigest(movers: PriceMovers, market: Country): Digest | null {
   if (!movers.spiking.length && !movers.plummeting.length && !movers.value.length) return null;
 
   const info = COUNTRIES[market];
