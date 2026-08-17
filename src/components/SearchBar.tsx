@@ -168,6 +168,17 @@ export function SearchBar({
   // is actually trying to search, not every keystroke/focus after that.
   const initiatedRef = useRef(false);
   const focusIntentTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Set right before the autofocus effect below calls .focus() programmatically,
+  // and read (then cleared) by onFocus — see that effect's own comment for why
+  // this exists: without it, autoFocusDesktop's own focus() call triggered
+  // onFocus's normal "open the zero-state dropdown" behavior, popping the
+  // trending-suggestions panel open on every desktop page load before the
+  // visitor did anything at all — covering the trending chips/stats/link/region
+  // toggle underneath it with an already-open dropdown showing the exact same
+  // six trending cards a second time. A REAL subsequent focus (the visitor
+  // clicking or tabbing back into the box) is untouched: this flag is
+  // one-shot, consumed by the very next onFocus regardless of cause.
+  const suppressNextFocusOpenRef = useRef(false);
   const suggestionCap = useSuggestionCap();
   // Stable per-instance id prefix — up to 3 SearchBars are mounted on the same
   // page at once (nav desktop, nav mobile, hero), and their listbox/option ids
@@ -200,6 +211,11 @@ export function SearchBar({
 
   useEffect(() => {
     if (autoFocusDesktop && window.matchMedia("(min-width: 1024px)").matches && window.matchMedia("(pointer: fine)").matches) {
+      // The whole point of autoFocusDesktop is "let the visitor start typing
+      // immediately" — it is not itself a signal that they want to BROWSE the
+      // zero-state dropdown, so the onFocus handler below must not treat this
+      // programmatic focus like a real one.
+      suppressNextFocusOpenRef.current = true;
       inputRef.current?.focus();
     }
     // Mount-only: re-focusing on every re-render would steal focus back from
@@ -444,7 +460,16 @@ export function SearchBar({
     `flex items-center gap-3 px-3 py-2 ${active ? "bg-ink-800 ring-1 ring-inset ring-brand-500/50" : "hover:bg-ink-800"}`;
 
   return (
-    <div ref={boxRef} className={`relative ${isHero ? "mx-auto w-full max-w-2xl" : "max-w-xl"}`}>
+    // data-primary-cta: the audit script's (scripts/homepage-audit.mjs)
+    // selector for "the page's one primary above-the-fold action" — per the
+    // redesign brief, that's the hero search box itself, not a button, so it
+    // needs an explicit marker rather than a `.btn-primary`-style class this
+    // component was never going to have. Only the hero instance carries it;
+    // the nav variant is a secondary, always-available convenience, not THE
+    // primary CTA (there can be only one, and it moves to the hero the moment
+    // the hero is on screen — see HeaderSearchSlot for the desktop scroll gate
+    // that keeps the two from ever both claiming the role at once).
+    <div ref={boxRef} data-primary-cta={isHero ? "true" : undefined} className={`relative ${isHero ? "mx-auto w-full max-w-2xl" : "max-w-xl"}`}>
       <form onSubmit={submit}>
         <svg
           className={`pointer-events-none absolute top-1/2 -translate-y-1/2 text-slate-500 ${
@@ -472,6 +497,18 @@ export function SearchBar({
             setOpen(true);
           }}
           onFocus={() => {
+            // Consume the one-shot flag the autoFocusDesktop effect set right
+            // before calling .focus() itself — that focus is the app putting
+            // the cursor somewhere useful, not a visitor asking to browse the
+            // zero-state dropdown, and it isn't evidence of search intent
+            // either (a visitor who hasn't done anything yet gets "focus_dwell"
+            // for free after 1200ms of simply not having typed, which isn't
+            // what that event is supposed to mean). Any focus after this one —
+            // a real click, a real Tab back into the box — is untouched.
+            if (suppressNextFocusOpenRef.current) {
+              suppressNextFocusOpenRef.current = false;
+              return;
+            }
             setOpen(true);
             // Pick up anything saved by another SearchBar instance (or this
             // one, on a prior visit) since the last time this mounted.
