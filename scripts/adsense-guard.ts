@@ -56,6 +56,15 @@ function note(msg: string) {
 const SKIP_DIRS = new Set([
   "node_modules", ".git", ".next", "out", "build", "dist", ".vercel",
   "android", "ios", "Pods",
+  // Generated verification output (Lighthouse JSON/HTML reports, screenshots),
+  // not source code — added by the homepage-redesign task's final verification
+  // phase, which is required to commit real Lighthouse reports into this
+  // directory. A saved Lighthouse report legitimately embeds the real
+  // ca-pub- id in whatever adsbygoogle.js request URL it observed the page
+  // make; that's the guard's exact single source of truth
+  // (NEXT_PUBLIC_ADSENSE_CLIENT_ID) doing its job correctly, not a second,
+  // drifting hardcoded literal — this directory holds no application source.
+  "artifacts",
 ]);
 const TEXT_EXT = new Set([
   ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".json", ".md", ".css",
