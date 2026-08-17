@@ -180,6 +180,20 @@ export function SearchBar({
   // one-shot, consumed by the very next onFocus regardless of cause.
   const suppressNextFocusOpenRef = useRef(false);
   const suggestionCap = useSuggestionCap();
+  // Safety-net cap for the dropdown's own height, independent of
+  // suggestionCap's ROW-count limiting above. suggestionCap is the primary
+  // no-scrollbar mechanism (Baymard: never scroll inside the dropdown — show
+  // fewer rows instead), and it's normally enough on its own. But it caps by
+  // COUNT, not by measured space, so on the hero — where the input sits well
+  // down the page, below the H1/subhead — even a capped row count can still
+  // run past the bottom of a short window: no visible rounded bottom border,
+  // shadow or footer link, and nothing to scroll it into view, just a hard
+  // cut-off. This measures the space actually left below the input and, only
+  // in that rare case where the capped list still doesn't fit, lets the list
+  // scroll within a bounded height rather than visually overflow the
+  // viewport — a graceful degradation, not the common-case UX. 320 is the
+  // pre-measurement fallback for the first paint.
+  const [dropdownMaxHeight, setDropdownMaxHeight] = useState(320);
   // Stable per-instance id prefix — up to 3 SearchBars are mounted on the same
   // page at once (nav desktop, nav mobile, hero), and their listbox/option ids
   // must not collide.
@@ -314,6 +328,38 @@ export function SearchBar({
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
+
+  // Fit the dropdown to the space actually left below the input, recomputed
+  // whenever it opens (the window may have been resized while it was closed)
+  // and live while it's open (window resize, or the page scrolling under it —
+  // this box is `position: absolute`, so it moves with the page, not with the
+  // viewport). 480 caps how tall it gets on a very tall window; below ~120px
+  // available there's no good layout left, so that's the floor rather than
+  // letting it shrink to near-nothing. See dropdownMaxHeight's own doc
+  // comment for why this exists alongside (not instead of) suggestionCap.
+  useEffect(() => {
+    if (!open) return;
+    function recompute() {
+      if (!boxRef.current) return;
+      // The measured edge is the INPUT box's own bottom; the dropdown then
+      // adds `mt-2` (8px) before it starts, and DROPDOWN_MARGIN is the
+      // breathing room left below the dropdown itself once it's placed —
+      // both have to come out of the available space, or the dropdown ends
+      // up sized to sit flush against the very edge of the viewport.
+      const GAP_ABOVE_DROPDOWN = 8; // mt-2
+      const DROPDOWN_MARGIN = 24;
+      const available =
+        window.innerHeight - boxRef.current.getBoundingClientRect().bottom - GAP_ABOVE_DROPDOWN - DROPDOWN_MARGIN;
+      setDropdownMaxHeight(Math.max(120, Math.min(available, 480)));
+    }
+    recompute();
+    window.addEventListener("resize", recompute);
+    window.addEventListener("scroll", recompute, true);
+    return () => {
+      window.removeEventListener("resize", recompute);
+      window.removeEventListener("scroll", recompute, true);
+    };
+  }, [open]);
 
   function trackCardView(card: Result) {
     fetch(`/api/card/${card.slug ?? card.id}/view?source=search`, { method: "POST", keepalive: true }).catch(() => {});
@@ -564,7 +610,22 @@ export function SearchBar({
       {showDropdown && (
         <div className="absolute z-50 mt-2 w-full overflow-hidden rounded-xl border border-ink-700 bg-ink-850 shadow-2xl">
           {isZeroState ? (
-            <ul id={listboxId} role="listbox" aria-label="Search suggestions" className="py-1">
+            /* overflow-y-auto + a measured maxHeight is a safety net, not the
+                primary no-scrollbar mechanism — see dropdownMaxHeight's own
+                doc comment. In the common case suggestionCap's row limiting
+                already keeps this list shorter than dropdownMaxHeight, so no
+                scrollbar appears; this only engages when the input sits low
+                enough on a short-enough viewport that even the capped row
+                count wouldn't otherwise fit. overscroll-contain keeps
+                scrolling through a long list from chaining into the page
+                behind it once you ARE inside the list. */
+            <ul
+              id={listboxId}
+              role="listbox"
+              aria-label="Search suggestions"
+              className="overflow-y-auto overscroll-contain py-1"
+              style={{ maxHeight: dropdownMaxHeight }}
+            >
               {visibleTrending.length > 0 && (
                 <li className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500" role="presentation">
                   Trending
@@ -645,7 +706,22 @@ export function SearchBar({
               {loading ? "Searching…" : "No matches — press Enter to search anyway."}
             </div>
           ) : (
-            <ul id={listboxId} role="listbox" aria-label="Search suggestions" className="py-1">
+            /* overflow-y-auto + a measured maxHeight is a safety net, not the
+                primary no-scrollbar mechanism — see dropdownMaxHeight's own
+                doc comment. In the common case suggestionCap's row limiting
+                already keeps this list shorter than dropdownMaxHeight, so no
+                scrollbar appears; this only engages when the input sits low
+                enough on a short-enough viewport that even the capped row
+                count wouldn't otherwise fit. overscroll-contain keeps
+                scrolling through a long list from chaining into the page
+                behind it once you ARE inside the list. */
+            <ul
+              id={listboxId}
+              role="listbox"
+              aria-label="Search suggestions"
+              className="overflow-y-auto overscroll-contain py-1"
+              style={{ maxHeight: dropdownMaxHeight }}
+            >
               {visibleResults.map((r, i) => {
                 const active = activeIndex === i;
                 return (
