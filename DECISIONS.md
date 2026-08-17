@@ -3476,3 +3476,24 @@ several of this branch's optional fields (card_id, price, etc.) needed.
 lint`, `npm test`, and `npm run build` re-run clean against the merged tree
 (see the top-level session summary for exact results) before this merge was
 pushed to `main`.
+
+**11. A second round: `SearchBar.tsx`'s dropdown-height fix, merged not
+picked.** After the first merge commit above, one more commit had landed on
+`main` in the meantime — an independent, real fix for the search dropdown
+overflowing past the bottom of the viewport on short screens (a flat CSS
+`max-h-[70vh]` measured against the whole viewport, not the space actually
+left below the input, which sits well down the page on the hero). This
+branch's own row-count capping (`suggestionCap`, Baymard's "never scroll —
+show fewer rows instead") normally prevents that same problem, but caps by
+COUNT, not measured space, so a short-enough viewport could still overflow
+even a capped list. These are complementary, not competing: kept
+`suggestionCap` as the primary no-scrollbar mechanism, and added the other
+fix's live-measured `dropdownMaxHeight` (recomputed on open/resize/scroll,
+floored at 120px, capped at 480px) as a safety net — `overflow-y-auto` only
+engages in the rare case where even the capped row count doesn't fit the
+actual space, which is graceful degradation rather than the common-case UX.
+Ported by hand rather than via `git merge` (the second merge's 3-way diff
+recreated the entire already-resolved rebuild-vs-original-file conflict,
+since the fix's own history still passed through main's pre-rebuild
+SearchBar.tsx) — verified identical in effect to the original commit, then
+adapted to sit inside this branch's already-rebuilt combobox structure.

@@ -21,7 +21,11 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const a = getArticle(params.slug);
   if (!a || a.category !== "guide") return notFoundMetadata("Guide");
   return {
-    title: { absolute: `${a.title} — RiftCompare Guides` },
+    // " — RiftCompare", matching every other indexed page's suffix (the root
+    // layout's title template, and TITLE_SUFFIX in lib/deck-groups.ts) — see
+    // the identical note in blog/[slug]/page.tsx for why the longer, category-
+    // naming suffix was dropped.
+    title: { absolute: `${a.title} — RiftCompare` },
     description: a.excerpt,
     // Reachable by direct URL for review, but never indexed while unfinished.
     ...(a.draft ? { robots: { index: false, follow: true } } : {}),

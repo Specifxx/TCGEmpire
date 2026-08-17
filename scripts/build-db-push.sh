@@ -165,6 +165,14 @@ tsx scripts/marketplace-seed.ts || true
 tsx scripts/fix-altart-rarity.ts || true
 tsx scripts/grant-early-premium.ts || true
 
+# IndexNow: submit every blog/guide URL on every deploy, not just once a day.
+# See the script's own header for why this exists — a real content change
+# (a new or edited post) used to wait on the next scheduled batch (up to 24h)
+# before anything told Bing/Yandex/Seznam/Naver it existed. `|| true` for the
+# same reason as the three scripts above: best-effort, never blocks the build.
+# No-ops outside production (pingIndexNow's own isProduction() gate).
+tsx scripts/indexnow-ping-deploy.ts || true
+
 # MANUAL CARDS — the backstop catalogue for printings our automated sources
 # genuinely cannot see (Organized-Play promos, the drawing-only T1 Worlds
 # Champion Collection, alt-art rune cycles). See prisma/manual-cards.json.
