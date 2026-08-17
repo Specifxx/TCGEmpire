@@ -18,6 +18,8 @@
     "adsense:verify": "tsx scripts/adsense-verify.ts",
     "mobile:check": "tsx scripts/mobile-check.ts",
     "smoke": "tsx scripts/smoke-pages.ts",
+    "audit:homepage": "node scripts/homepage-audit.mjs",
+    "audit:homepage-analytics": "node scripts/homepage-audit-analytics.mjs",
     "start": "next start",
     "cards:sync": "tsx scripts/sync-cards.ts",
     "cards:manual": "tsx scripts/add-manual-cards.ts",
