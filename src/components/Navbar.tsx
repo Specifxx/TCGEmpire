@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { NavbarShell } from "./NavbarShell";
 import { CommandLauncherButton } from "./CommandLauncher";
 import { SearchBar } from "./SearchBar";
+import { HeaderSearchSlot } from "./HeaderSearchSlot";
 import { MobileNav } from "./MobileNav";
 import { CountrySwitcher } from "./CountrySwitcher";
 import { NavUser } from "./NavUser";
@@ -38,12 +39,15 @@ export function Navbar() {
           </Link>
         </div>
 
-        {/* Search — inline on desktop; on smaller screens it gets its own full-width row below */}
-        <div className="hidden flex-1 lg:block">
+        {/* Search — inline on desktop; on smaller screens it gets its own full-width row below.
+            HeaderSearchSlot hides this specific box until scroll, but ONLY on the
+            homepage (see its own doc comment) — every other route renders it
+            immediately, unchanged from before. */}
+        <HeaderSearchSlot>
           <Suspense fallback={<div className="input max-w-xl" />}>
             <SearchBar />
           </Suspense>
-        </div>
+        </HeaderSearchSlot>
 
         {/* Nav.
             ── BREAKPOINTS, and why they are what they are ───────────────────
