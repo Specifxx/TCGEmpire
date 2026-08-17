@@ -4771,6 +4771,10 @@ Find your nearest Riftbound local game store and show up for their weekly Nexus 
     date: "2026-08-17",
     readMins: 4,
     tags: ["origins", "teemo", "promo", "chase cards", "collecting", "nexus night"],
+    hero: {
+      src: "https://static.dotgg.gg/riftbound/cards/OGN-197b.webp",
+      alt: "Teemo, Scout — GG EZ (OGN 197b/298) — Origins' first Nexus Night promo, one of Riftbound's priciest cards",
+    },
     summary: [
       "**GGEZ Teemo is the nickname for Teemo, Scout (OGN 197b/298)** — the promo printing given out at Origins' very first Nexus Night events.",
       "**It's a 2-energy, 1-Might Chaos unit with Hidden** — pay 1 rune to hide it face-down, then flip it in for free with +3 Might.",
@@ -4879,6 +4883,10 @@ If you already run a Teemo deck (or just want the meme on cardboard), GGEZ Teemo
     date: "2026-08-17",
     readMins: 4,
     tags: ["unleashed", "origins", "lee sin", "promo", "chase cards", "collecting", "nexus night"],
+    hero: {
+      src: "https://static.dotgg.gg/riftbound/cards/OGN-151b.webp",
+      alt: "Lee Sin, Centered (OGN 151b/298) — Unleashed's Nexus Night promo, a reprint of the Origins card",
+    },
     summary: [
       "**Lee Sin, Centered (151b/298) is Unleashed's Nexus Night chase card** — but it's a promo reprint of an existing Origins card, not a new Unleashed-exclusive printing.",
       "**It's a 6-energy, 6-Might Body unit with Accelerate**, and its own ability buffs other buffed friendly units at its battlefield by +2 Might.",
@@ -4979,6 +4987,10 @@ If you're building around Body-domain buffs, Lee Sin, Centered is a genuinely st
     date: "2026-08-17",
     readMins: 4,
     tags: ["vendetta", "mel", "promo", "chase cards", "collecting", "nexus night"],
+    hero: {
+      src: "https://riftcompare.com/nexus-night-promos/mel-newly-awakened-ven069b.jpg",
+      alt: "Mel, Newly Awakened (VEN 069b/166) — Vendetta's current Nexus Night promo",
+    },
     summary: [
       "**Mel, Newly Awakened's Nexus Night promo is 069b/166** — Vendetta's current confirmed Nexus Night chase card.",
       "**She draws a card the instant she's played**, then rewards Empowering her later: your spells and abilities can't be countered, and -Might effects hit for one extra.",
