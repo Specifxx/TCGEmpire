@@ -9,6 +9,7 @@ export interface AlertRunSummary {
   drops: number; // individual card price drops found
   emails: number; // recipients emailed
   updated: number; // baselines moved (up or down)
+  held: number; // baselines deliberately NOT moved because their digest failed to send
 }
 
 // Walk every wishlist price-drop subscription, compare each card's current lowest
@@ -49,7 +50,7 @@ export async function runPriceAlerts(): Promise<AlertRunSummary> {
     },
   });
 
-  const summary: AlertRunSummary = { alerts: alerts.length, drops: 0, emails: 0, updated: 0 };
+  const summary: AlertRunSummary = { alerts: alerts.length, drops: 0, emails: 0, updated: 0, held: 0 };
 
   // email → { token, items[] } for cards that dropped.
   const byEmail = new Map<string, { token: string; items: PriceDropItem[] }>();
@@ -87,25 +88,43 @@ export async function runPriceAlerts(): Promise<AlertRunSummary> {
 
   // Send one digest per email. Sequential to stay gentle on the email provider's
   // rate limits; the daily volume is small.
+  const failedEmails = new Set<string>();
   for (const [email, { token, items }] of byEmail) {
     const unsubUrl = `${SITE_URL}/unsubscribe?token=${encodeURIComponent(token)}`;
     const sent = await sendPriceDropEmail(email, items, unsubUrl);
     if (sent) summary.emails++;
+    else failedEmails.add(email);
   }
 
-  // Persist new baselines + note who we notified. Done after sending so a send
-  // failure doesn't swallow the drop (we'd retry it on the next run).
-  summary.updated = updates.length;
-  if (updates.length) {
+  // Persist new baselines + note who we notified. Deferring the write until after
+  // sending is only half of what makes a failed send retryable — the baseline for
+  // THAT alert has to be held back too. Advancing it regardless (which is what
+  // this did) means the next run compares the new, lower price against itself,
+  // sees no drop, and the alert the user asked for is gone for good: silent, and
+  // invisible in the summary, which counts `updated` either way.
+  //
+  // Only drop-bearing alerts whose digest failed are held. A rise, or a first-ever
+  // observation, sends no email and still advances — otherwise a single failing
+  // address would freeze baselines it has nothing to do with.
+  const notifiedSet = new Set(notifiedIds);
+  const heldIds = failedEmails.size
+    ? new Set(alerts.filter((a) => failedEmails.has(a.email) && notifiedSet.has(a.id)).map((a) => a.id))
+    : new Set<string>();
+  const dueUpdates = heldIds.size ? updates.filter((u) => !heldIds.has(u.id)) : updates;
+  const dueNotifiedIds = heldIds.size ? notifiedIds.filter((id) => !heldIds.has(id)) : notifiedIds;
+
+  summary.updated = dueUpdates.length;
+  summary.held = updates.length - dueUpdates.length;
+  if (dueUpdates.length) {
     await prisma.$transaction(
-      updates.map((u) =>
+      dueUpdates.map((u) =>
         prisma.priceAlert.update({ where: { id: u.id }, data: { lastPriceCents: u.price } })
       )
     );
   }
-  if (notifiedIds.length) {
+  if (dueNotifiedIds.length) {
     await prisma.priceAlert.updateMany({
-      where: { id: { in: notifiedIds } },
+      where: { id: { in: dueNotifiedIds } },
       data: { lastNotifiedAt: new Date() },
     });
   }
