@@ -42,15 +42,27 @@ type Item = {
 export function MyCollection() {
   const { fmt, price } = useCountry();
   const [items, setItems] = useState<Item[] | null>(null);
+  const [loadError, setLoadError] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
 
-  useEffect(() => {
-    fetch("/api/collection")
-      .then((r) => (r.ok ? r.json() : { items: [] }))
+  const load = useCallback(() => {
+    setLoadError(false);
+    return fetch("/api/collection")
+      .then((r) => {
+        if (!r.ok) throw new Error("collection fetch failed");
+        return r.json();
+      })
       .then((d) => setItems(d.items ?? []))
-      .catch(() => setItems([]));
+      // A failed fetch must NOT read as "you own nothing" — that's indistinguishable
+      // from a genuinely empty collection and would tell a real collector their
+      // holdings vanished. Keep items unset and show a retry affordance instead.
+      .catch(() => setLoadError(true));
   }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const summary = useMemo(() => {
     if (!items) return { distinct: 0, total: 0, value: 0, priced: false };
@@ -110,7 +122,9 @@ export function MyCollection() {
         <div>
           <h2 className="font-bold text-white">My Collection</h2>
           <p className="text-sm text-slate-400">
-            {items == null
+            {loadError
+              ? "Couldn't load your collection."
+              : items == null
               ? "Loading…"
               : items.length === 0
               ? "Your collection is empty."
@@ -127,7 +141,16 @@ export function MyCollection() {
 
       {importing && <BulkImport onDone={refresh} />}
 
-      {items != null && items.length === 0 && (
+      {loadError && (
+        <p role="alert" className="mt-4 text-sm text-rose-400">
+          Something went wrong loading your collection — it&apos;s still there, this page just couldn&apos;t reach it.{" "}
+          <button onClick={() => void load()} className="font-semibold text-brand-300 hover:underline">
+            Try again
+          </button>
+        </p>
+      )}
+
+      {!loadError && items != null && items.length === 0 && (
         <p className="mt-4 text-sm text-slate-500">
           Search a card above (or <span className="font-semibold text-brand-300">📋 Import a list</span>) to start tracking what you own — we&apos;ll value the whole thing live as prices move. It&apos;s separate from any{" "}
           <Link href="/browse" className="text-brand-400 hover:underline">price watches</Link> you&apos;ve set.

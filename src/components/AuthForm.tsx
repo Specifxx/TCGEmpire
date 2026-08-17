@@ -24,6 +24,7 @@ const OAUTH_ERRORS: Record<string, string> = {
   oauth_noemail: "That provider didn't share an email address, which we need to create your account.",
   oauth_unverified:
     "That provider hasn't confirmed your email address yet. Verify it with them first, then sign in here again.",
+  oauth_session: "Something went wrong finishing sign-in. Please try again.",
 };
 
 export function AuthForm({

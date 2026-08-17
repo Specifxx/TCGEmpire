@@ -86,11 +86,21 @@ export async function GET(req: Request, { params }: { params: { provider: string
   }
   if (!providerId || !email) return fail(req, "oauth_noemail");
 
-  // 4) Find-or-create the user (by provider id, then by email) and link the identity.
-  const linked = await upsertOAuthUser(provider, providerId, email, emailVerified, name, avatar);
-  if (!linked) return fail(req, "oauth_unverified");
-  const { user, isNew } = linked;
-  await createSession(user.id);
+  // 4) Find-or-create the user (by provider id, then by email), link the identity,
+  // and start their session. Wrapped so a DB blip or a misconfigured AUTH_SECRET
+  // (see lib/auth.ts's getSecret()) redirects back to a clear "try again" message
+  // instead of throwing an unhandled 500 mid-sign-in.
+  let user: { id: string; email: string };
+  let isNew: boolean;
+  try {
+    const linked = await upsertOAuthUser(provider, providerId, email, emailVerified, name, avatar);
+    if (!linked) return fail(req, "oauth_unverified");
+    user = linked.user;
+    isNew = linked.isNew;
+    await createSession(user.id);
+  } catch {
+    return fail(req, "oauth_session");
+  }
   // Adopt any price watches this address created before it had an account —
   // fire-and-forget: a failure here must never block signing in.
   void claimAlertsForUser(user.id, user.email).catch(() => {});
@@ -98,7 +108,7 @@ export async function GET(req: Request, { params }: { params: { provider: string
     // First-ever sign-in: credit any referrer. New accounts get the ACCOUNT tier
     // (Bulk Pricer + Best Basket + alerts + portfolio + marketplace) immediately
     // by virtue of existing — there is no signup-time Premium comp to apply.
-    await applyReferral(user.id);
+    await applyReferral(user.id).catch(() => {});
   }
   // Land new/returning sign-ins on their profile by default.
   return NextResponse.redirect(new URL("/profile", req.url));
