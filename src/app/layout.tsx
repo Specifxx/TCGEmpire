@@ -330,6 +330,26 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <span className="text-ink-700">·</span>
             <Link href="/authors" className="tap-link text-slate-300 hover:text-brand-400">Who writes this</Link>
             <span className="text-ink-700">·</span>
+            {/* Discord was header-only (see Navbar.tsx) plus the Organization
+                JSON-LD's sameAs below — the homepage-redesign brief's footer
+                table explicitly lists it as something the footer itself must
+                show, so it gets a real row here too. A plain external <a>
+                (not FooterNav/NAV_GROUPS): NAV_GROUPS also feeds the ⌘K
+                command launcher, whose keyboard-select path calls Next's
+                router.push(href) — built for internal routes, not an
+                external https:// URL — so adding it there risked a broken
+                launcher entry for the sake of one footer link. This row
+                already carries other plain external links (RiftboundStocks.com
+                below, the mailto: link) with the same pattern. */}
+            <a
+              href={DISCORD_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="tap-link text-slate-300 hover:text-[#5865F2]"
+            >
+              Discord
+            </a>
+            <span className="text-ink-700">·</span>
             {/* Re-opens Google's consent message (EEA/UK/CH only — renders
                 nothing where no message applies). Required for a published
                 GDPR message: consent has to be revocable. */}
