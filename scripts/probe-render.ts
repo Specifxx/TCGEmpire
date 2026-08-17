@@ -46,7 +46,9 @@ async function main() {
 
   let chromium;
   try {
-    // @ts-expect-error — playwright is an OPTIONAL dependency installed in CI just for probe tasks.
+    // playwright is now a real devDependency (pinned to 1.56.1 for the
+    // homepage-rebuild task's audit tooling — see DECISIONS.md), so this
+    // dynamic import type-checks without a @ts-expect-error escape hatch.
     ({ chromium } = await import("playwright"));
   } catch {
     console.error("Playwright not installed. Run:\n  npm i --no-save playwright && npx playwright install --with-deps chromium");
