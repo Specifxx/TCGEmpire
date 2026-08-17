@@ -487,3 +487,318 @@ every `<input>` matching the selector.
 No homepage code, analytics code, or audit script touched this phase —
 scope was strictly orientation + infrastructure + baseline, per the phase
 brief.
+
+---
+
+## Phase 2 — Analytics (2026-08-17)
+
+Implemented first, ahead of any homepage layout change, per the brief's own
+ordering requirement ("do this FIRST... so there's a clean before/after
+baseline"). Touched exactly the files the phase brief named:
+`src/components/OutboundLink.tsx`, `src/components/SearchBar.tsx`,
+`src/components/CountryProvider.tsx`, a new `src/lib/ga-events.ts` shared
+helper, a new `src/components/ScrollDepthTracker.tsx`, and one mount point
+(`src/app/page.tsx`). `CountryHeroToggle.tsx` itself needed **no** edit — see
+the mechanism note below.
+
+### Mechanism findings (read before assuming anything about how region
+changes work)
+
+`CountryHeroToggle`, `RegionToggle`, the navbar's `CountrySwitcher`, and two
+marketplace pickers all call the **same single** `setCountry()` callback
+exposed by `CountryProvider`'s context — there is no per-component "region
+changed" code path to instrument separately. So `region_changed` is fired
+from **inside `setCountry()` itself**, once, covering every region control
+sitewide simultaneously. This deliberately does **not** fire for the two
+silent auto-detect paths in the same file (the `/api/geo` IP-detect effect
+and the signed-in `preferredCountry` restore effect) — both call `setState()`
+directly, bypassing `setCountry()` entirely, because those are the app
+choosing a starting market for a visitor who hasn't acted yet, not a person
+changing anything. An event named `region_changed` should mean "a person
+clicked a market," and only the `setCountry()` path is that.
+
+### Decisions made / assumptions logged
+
+1. **`gtag`'s built-in `transport_type: 'beacon'`**, not a hand-rolled
+   `navigator.sendBeacon` call to GA4's collect endpoint, for `store_click`.
+   Reasoning: gtag.js already owns serializing a hit for its own endpoint
+   (measurement protocol version, client/session ids, consent state, etc.);
+   reimplementing that by hand would mean maintaining a second, unofficial
+   copy of Google's payload format for no benefit. `transport_type: 'beacon'`
+   is gtag.js's own documented mechanism for exactly this situation (an event
+   fired as the page is about to unload via a real navigation) and uses
+   `sendBeacon` internally when available. Verified working in this sandbox
+   via the Playwright script described below (the event lands in
+   `window.dataLayer` — see the note under "Verification" for what that does
+   and doesn't prove about a real network beacon, since this sandbox's
+   `gtag.js` never actually loads from `googletagmanager.com`).
+2. **`search_initiated` definition**: fires on whichever happens first —
+   (a) the first keystroke that makes the field non-empty, or (b) the field
+   staying focused for `FOCUS_INTENT_MS` (1200ms, a constant in
+   `SearchBar.tsx`) without either typing or blurring. Only ever fires once
+   per component mount (each of the 3 `<SearchBar>` instances in the DOM —
+   navbar mobile, navbar desktop, hero — has its own independent "has this
+   fired yet" ref, since each is a genuinely separate visitor-facing search
+   box). 1200ms was picked as long enough that a tab-through or an
+   accidental click-and-immediate-blur doesn't count as intent, short enough
+   that a visitor who's paused to think about what to type still gets
+   counted before necessarily typing anything. Not empirically tuned against
+   real user data (none exists in this sandbox) — if real GA4 data later
+   shows this threshold is miscalibrated (e.g. most real "intent" focuses
+   resolve in under or over that window), it's a one-constant change.
+3. **`search_no_results` fires per settled (debounced) query**, not per
+   submitted search. The existing 180ms debounce on the live-preview fetch
+   already collapses a fast typist down to the strings they actually paused
+   on, so firing on every zero-result settled fetch (rather than only on
+   Enter/submit) catches more real product gaps — including a query the
+   visitor typed, saw had no matches, and adjusted before ever pressing
+   Enter — without meaningfully flooding GA4.
+4. **`suggestion_rank` in `search_suggestion_selected` is 1-based across the
+   WHOLE dropdown** (cards first, then sealed products below, continuing the
+   same count), not two independent per-section counts starting at 1 each —
+   it matches what the visitor actually saw top-to-bottom in one list.
+5. **`ScrollDepthTracker` is mounted from `src/app/page.tsx`, not
+   `src/app/layout.tsx`.** The brief left this an explicit choice. Reasoning:
+   Next's App Router keeps a layout mounted across client-side navigations
+   between routes that share it — only the route segment below it swaps. A
+   tracker mounted in the root layout (which wraps every route in this app)
+   would only run its mount effect once per full document load, not once per
+   pageview — a visitor who went home → a card page → back home via
+   client-side `<Link>`s would get scroll-depth events for only the first of
+   those two homepage visits, silently undercounting the second. Mounting
+   inside `page.tsx` means the "/" route segment (and the tracker's `fired`
+   Set with it) is torn down and recreated on every navigation TO the
+   homepage, which is exactly "once per pageview." The component itself
+   (`src/components/ScrollDepthTracker.tsx`) has zero homepage-specific code
+   — it's written as generic, reusable chrome any other route can mount the
+   same way once scroll-depth reporting is wanted there too, matching the
+   brief's "shared" framing even though only the homepage uses it today.
+6. **`gaEvent()` guard is `typeof window.gtag === "function"`**, exactly as
+   the phase brief specified, and deliberately does **not** re-check consent
+   state itself. `window.gtag` is defined by `ConsentDefaults.tsx`'s inline
+   `<head>` script as the very first thing on the page (`function
+   gtag(){dataLayer.push(arguments)}`), before Consent Mode's grant/deny
+   decision is even made — so this guard is really "does the shim exist at
+   all" (true unless `GA_ENABLED` is off, or an ad blocker deleted it), not
+   "has this visitor consented." Consent gating is a property of `gtag()`
+   itself (Consent Mode v2's `analytics_storage` default, flipped by
+   `lib/use-consent.ts`'s grant), already covers every event pushed through
+   it automatically, and needed no new code this phase — see `ga-events.ts`'s
+   header comment for the full mechanism chain.
+7. **`OutboundLink`'s five new props (`cardId`, `cardName`, `price`,
+   `positionInList`, `pageType`) are all optional and unwired at every
+   existing call site.** Per the phase brief's own instruction, only the
+   base params (`store`/`retailer`, `market`/`country`, and now
+   `transport_type`) are populated everywhere; the richer per-card params
+   stay `undefined` at the 20+ existing call sites (`TodaysTopDeals`,
+   `PartnersStrip`, `EbayPicksLive`, card-detail buy buttons, the
+   marketplace, etc.) until a later phase touches each one for its own
+   reasons (Phase 3/4's homepage work, most obviously the proof strip and
+   the collapsed deals row) and wires the fields it already has in hand.
+   This is expected and intentional, not an oversight — an event missing an
+   optional field is normal in GA4, not an error.
+
+### A pre-existing build breakage found and fixed (not caused by this
+phase's own feature work, but blocking every phase after it if left alone)
+
+`npm run build` failed on a clean checkout of Phase 1's own final commit
+(confirmed via `git stash` — the failure reproduces with **zero** of this
+phase's edits applied). Root cause: Phase 1 added `playwright` as a real
+`package.json` devDependency (previously it was an *optional*,
+not-listed dependency, dynamically `import()`-ed inside a `try/catch` in
+four `scripts/*.ts` probe/fetch utilities, each guarded by a `// @ts-expect-
+error` comment because TypeScript couldn't resolve an unlisted package).
+Once `playwright` became a real listed dependency, that dynamic import
+started type-checking cleanly on its own — which makes the now-unnecessary
+`@ts-expect-error` comment itself a TypeScript error (`TS2578: Unused
+'@ts-expect-error' directive`), a hard failure under this repo's strict
+`tsc --noEmit` gate that `next build` runs as part of its own build step.
+
+This is a side effect of Phase 1's dependency change, not this phase's
+analytics work, and normally the instruction is "note pre-existing failures,
+don't burn the phase chasing them" — but every phase from here on needs a
+green `npm run build` to verify its own changes, and the fix was a trivial,
+safe, one-comment-block removal in four files with zero behavioral change
+(the dynamic `import("playwright")` line itself is untouched; only the now-
+stale `@ts-expect-error` escape hatch above it was removed, in
+`scripts/fetch-official-images.ts`, `scripts/fetch-vendetta-official.ts`,
+`scripts/probe-imgur.ts`, `scripts/probe-render.ts`). Fixed here so the
+build stays green for the rest of this task rather than leaving every
+subsequent phase to independently rediscover and re-diagnose the same
+Phase-1-caused break.
+
+### A dev-server gotcha hit while verifying (environment note, not a code
+change)
+
+Running `npm run build` (a production build) while Phase 1's `next dev`
+server was still running against the same `.next` directory corrupted the
+dev server's module registry (`next build` and `next dev` don't share a
+`.next` layout — the production build's manifest overwrote files the
+running dev server's webpack HMR runtime still had open handles/references
+to). Symptom: every route started 500ing with `Cannot find module
+'./8948.js'` until the dev server was killed and restarted fresh. Fixed by
+killing the stale `next dev` process and starting a new one (same
+`DATABASE_URL`-prefixed command as Phase 1's recipe). **Flagging for every
+later phase**: do not run `npm run build` and rely on a concurrently-running
+`next dev` staying healthy afterward — restart `next dev` after any build,
+or run the build only when no dev server needs to stay up.
+
+### Known gap logged for a later phase: trending-chip clicks are GA4-blind
+
+`TrendingChips.tsx` (rendered in the hero, one row of 6 cards under the
+search box) already fires a **Vercel Analytics** `track("trending_chip_click",
+…)` event, but nothing in GA4. The measurement doc (`docs/homepage-
+measurement.md`) defines "search initiation rate" as search-or-trending-chip
+activity, which is the metric the redesign should be judged on — but a GA4
+Exploration cannot read Vercel Analytics data, so today that metric can only
+be computed from `search_initiated`/`search_submitted` in GA4 (a slight
+undercount) plus a separate manual check of the Vercel Analytics dashboard
+for the chip-click slice. **Not fixed this phase**: `TrendingChips.tsx` is
+not one of the files this phase's brief named, and Phase 3 ("Hero & Search")
+already touches that exact component for its own reasons (the brief keeps
+trending chips in the rebuilt hero) — that is the natural place to add a
+`gaEvent("search_initiated", { trigger: "trending_chip", … })` or similar
+call alongside the existing `track()` call, not a reason to leave it
+unaddressed forever. Logged here so it isn't forgotten.
+
+### Known gap logged for a later phase: `OutboundLink` doesn't forward
+`aria-label`
+
+Discovered while writing the verification script (see below): `src/
+components/home/PartnersStrip.tsx` passes `aria-label="eBay Partner
+Network"` / `aria-label="TCGplayer"` straight to `<OutboundLink>`, but
+`OutboundLink`'s prop type has never declared or forwarded an `aria-label`
+(or any other pass-through DOM attribute) to the `<a>` it renders — confirmed
+against the live rendered DOM, the attribute never reaches the page. Since
+both of those specific links render as decorative colored letter-spans with
+no other accessible text, this is a real pre-existing accessibility gap (an
+unlabeled link) sitewide wherever the same pattern is used, not just on the
+homepage. **Not fixed this phase**: changing `OutboundLink`'s rendering
+surface for an unrelated accessibility concern, while already mid-edit on it
+for `store_click`, risked conflating two unrelated changes in one component
+this phase wasn't asked to audit for accessibility. Flagging explicitly for
+Phase 5 ("Accessibility & Mobile polish"), which already owns exactly this
+class of fix.
+
+### Open question for the account owner (cannot be resolved from code)
+
+**GA4 engagement-time-limit setting** (Admin → Data Streams → [stream] →
+"Adjust session timeout" region, or Admin → Data Collection → session
+settings, depending on which GA4 admin UI revision the account is on — the
+setting is called "engagement time" or "session timeout" and defaults to
+10s, adjustable 10–60s): this phase has no way to read the property's live
+admin configuration from code, and the setting silently changes what counts
+as an "engaged" session independent of anything in this codebase. **Action
+needed from the account owner**: log the property's actual current value
+here (this file) before the first before/after comparison in `docs/homepage-
+measurement.md` is pulled, and do not change it between the before and after
+measurement windows — see that doc's §5 for why.
+
+### GA4 key event — exact click path for the account owner
+
+`store_click` must be marked as a GA4 **key event** (formerly called
+"conversion" in GA4's UI prior to a 2024 rename — if the property still
+shows the old label, look for "Mark as conversion" instead). This cannot be
+done from code; it's a one-time manual step in the GA4 web UI:
+
+1. Go to **analytics.google.com**, select the RiftCompare property
+   (measurement ID `G-B5BB9ZRWM3` unless a `NEXT_PUBLIC_GA_ID` env override is
+   in place — check `src/lib/ga.ts` if unsure which property this is).
+2. Click **Admin** (the gear icon, bottom-left of the left nav).
+3. Under the **Property** column, click **Events** (in newer GA4 UI
+   revisions this may show as **Data display → Events**).
+4. **`store_click` will only appear in this list after it has fired at
+   least once in production** (GA4 populates the event list from real
+   traffic, not from code). Once deployed, wait for at least one real
+   outbound click, then refresh this page.
+5. Find `store_click` in the events table. Toggle the **"Mark as key event"**
+   switch in its row to ON.
+   - If the toggle isn't visible in that table (older UI revision): go to
+     **Admin → Key events** instead, click **New key event**, and select
+     `store_click` from the event-name dropdown (it only appears there once
+     it has fired at least once), then **Save**.
+6. Confirm it took: **Admin → Key events** should now list `store_click`
+   with a checkmark. It can take up to 24 hours for historical/Realtime
+   reports to fully reflect the change; new sessions are affected
+   immediately.
+7. Do **not** also mark any of the `search_*` events or `region_changed` as
+   key events — per `docs/homepage-measurement.md`, they're diagnostic
+   signals for the "search initiation rate" metric, not conversion signals,
+   and marking them as key events would dilute what "Session key event rate"
+   means in the Exploration that doc sets up.
+
+### Verification — how the events were proven real, not just plausible
+
+Wrote a throwaway Playwright script (not `scripts/homepage-audit.mjs` — that
+is Phase 6's real deliverable) that launches a real Chromium against the
+local `next dev` server, drives real user interactions (typing, focusing,
+clicking a suggestion, pressing Enter, scrolling, switching region, clicking
+an outbound link), and asserts on the contents of `window.dataLayer` rather
+than reading the source and assuming it works. This is possible without any
+real network egress to Google because `ConsentDefaults.tsx`'s inline
+`<head>` script defines `function gtag(){dataLayer.push(arguments)}` itself
+— that shim exists (and is exactly what `gaEvent()` calls) regardless of
+whether the real `gtag.js` ever finishes loading from
+`googletagmanager.com`, so every event this phase added shows up as a plain
+array in `window.dataLayer` the instant it fires, which the script reads
+back and asserts against.
+
+**What this does and does not prove**: it proves each event fires with the
+right name, the right params, the right trigger conditions (once per mount,
+no re-fire on scroll-up-then-down, etc.) — real client-side behavior, not
+just "the code looks right." It does **not** prove a real network beacon
+reaches Google's collectors in production, since `gtag.js` never actually
+loads in this sandboxed environment (no path to `googletagmanager.com`) —
+that half is only verifiable after a real deploy, by checking GA4 Realtime
+or DebugView against real traffic.
+
+Final run, 22 assertions across all 8 events/behaviors (`search_initiated`
+×2 triggers, `search_no_results`, `search_suggestion_selected`,
+`search_submitted`, `scroll_depth` fire-once-per-threshold semantics,
+`region_changed`, `store_click` with beacon transport): **22/22 passed**.
+Each test runs in its own fresh browser instance (not just a fresh page) —
+a real flake was found and fixed during this phase where a ctrl-clicked
+link's spawned popup tab occasionally left a *shared* browser context in a
+state where a later test's `page.goto()` failed with "Target page, context
+or browser has been closed"; full per-test isolation costs a few seconds of
+extra Chromium startup but removed the flake entirely. The script also
+surfaced two real, pre-existing bugs while being written — the `Approved
+partners` div `:has-text()` selector initially clicked the wrong link on the
+page entirely (see the `aria-label` forwarding gap logged above, which is
+*why* a text-based selector was tried in the first place: the more obvious
+`getByLabel("eBay Partner Network")` locator found nothing, because that
+label never reaches the DOM), and `store_click`'s test needed a URL-param-
+based selector (`a[href*="partners_strip"]`, matching the `source` tag
+`PartnersStrip.tsx` passes into `ebaySearchUrl()`) once the div-based
+selector was shown to be unreliable. The script itself was not committed
+(explicitly out of scope per the phase brief — `scripts/homepage-audit.mjs`
+is Phase 6's deliverable) and was deleted after use.
+
+### Verification results (this phase's own changes)
+
+| Command | Result | Notes |
+|---|---|---|
+| `npm run typecheck` | PASS (0 errors) | Confirmed the 4 pre-existing `scripts/*.ts` errors reproduce identically with this phase's diff `git stash`ed out — not caused by this phase; fixed anyway (see above) since they block every later phase's build |
+| `npm run lint` | PASS (exit 0) | One new warning surfaced and fixed: `SearchBar.tsx`'s debounced-fetch `useEffect` needed `variant` added to its dependency array (it's read inside for the `search_no_results` event) — `variant` is a static prop per mount, so this changes no runtime behavior, just satisfies `react-hooks/exhaustive-deps` honestly instead of suppressing it. All other lint output is the same pre-existing `react/no-unescaped-entities` warnings in unrelated files Phase 1 already catalogued |
+| `npm run build` | PASS (exit 0) | Homepage (`/`) still builds as a static (`○`) route, 18.4 kB page / 148 kB First Load JS (up from Phase 1's baseline 17.9 kB / 147 kB — the delta is this phase's own analytics code, expected) |
+| `npm test` | PASS — 578/578 | Full suite, against the local seeded DB, unchanged pass count from Phase 1's baseline — this phase touched no test-covered contract (search ranking, footer balance, country-default fallback, etc.) |
+
+### Phase 2 deliverables
+
+- `src/lib/ga-events.ts` (new) — shared `gaEvent()` helper
+- `src/components/ScrollDepthTracker.tsx` (new) — 25/50/75/90% scroll-depth
+  events, fire-once-per-threshold-per-pageview
+- `src/components/OutboundLink.tsx` — `store_click` GA4 event, 5 new optional
+  props, beacon transport
+- `src/components/SearchBar.tsx` — `search_initiated`,
+  `search_suggestion_selected`, `search_submitted`, `search_no_results`
+- `src/components/CountryProvider.tsx` — `region_changed`
+- `src/app/page.tsx` — mounts `<ScrollDepthTracker />`
+- `scripts/fetch-official-images.ts`, `scripts/fetch-vendetta-official.ts`,
+  `scripts/probe-imgur.ts`, `scripts/probe-render.ts` — removed 4 now-stale
+  `@ts-expect-error` comments (build-breakage fix, see above; no behavioral
+  change)
+- `docs/homepage-measurement.md` (new) — engagement-rate-not-bounce-rate
+  framing, "search initiation rate" definition, GA4 Exploration setup,
+  Contentsquare context, no-published-TCG-benchmark honesty note
+- This `DECISIONS.md` section
