@@ -4750,6 +4750,325 @@ Find your nearest Riftbound local game store and show up for their weekly Nexus 
       { q: "Are Nexus Night promos worth anything?", a: "Promo prints are historically one of Riftbound's more volatile chase tiers — small, event-bound print runs can outprice regular chase cards once a season's supply dries up. Check each card's live page for the current picture." },
     ],
   },
+  // ── Nexus Night promo card spotlights ────────────────────────────────────────
+  // Three single-card deep dives on the promo cards collectors actually talk
+  // about by nickname. Complements (not duplicates) the roundup post above:
+  // that one tracks "every promo confirmed so far" for Vendetta's season; these
+  // are card-by-card profiles, one each from Origins, Unleashed and Vendetta,
+  // cross-linked into a loose trilogy. Every fact (stats, ability text, promo
+  // cycle, GG EZ nickname, Lee Sin's Origins-not-Unleashed collector number) was
+  // checked against our own live card database plus independent secondary
+  // sources before writing — see each post's body for what's confirmed vs.
+  // approximate. No prices are hard-coded in the prose; the embedded card tiles
+  // pull the live number at render time, same as everywhere else on the site.
+  {
+    slug: "ggez-teemo-riftbound-explained",
+    category: "blog",
+    title: "GGEZ Teemo: Riftbound's Most Infamous Promo, Explained",
+    excerpt:
+      "Meet GGEZ Teemo — Origins' first Nexus Night promo and one of Riftbound's priciest cards. What it does, why the name, and how it compares to the game's other big promo grails.",
+    author: "RiftCompare",
+    date: "2026-08-17",
+    readMins: 4,
+    tags: ["origins", "teemo", "promo", "chase cards", "collecting", "nexus night"],
+    summary: [
+      "**GGEZ Teemo is the nickname for Teemo, Scout (OGN 197b/298)** — the promo printing given out at Origins' very first Nexus Night events.",
+      "**It's a 2-energy, 1-Might Chaos unit with Hidden** — pay 1 rune to hide it face-down, then flip it in for free with +3 Might.",
+      "**The name is a League of Legends in-joke**: \"gg ez\" is the taunt Teemo mains are notorious for, and Riot leaned into it on the card itself.",
+      "**It's one of the priciest individual cards in Riftbound** — tap the card above for the current live number, since this market moves daily.",
+    ],
+    shop: [
+      { label: "GGEZ Teemo on eBay", query: "Riftbound Teemo GG EZ promo" },
+      { label: "Origins Nexus Night promos", query: "Riftbound Origins Nexus Night promo" },
+    ],
+    browseCta: {
+      href: "/card/teemo-scout-ogn-197b-298-promo",
+      label: "See GGEZ Teemo's live price →",
+      blurb: "Every store we track, side by side, updated daily — in your own market's currency.",
+    },
+    embeds: [
+      {
+        title: "GGEZ Teemo",
+        note: "Teemo, Scout (197b/298) — the Origins Nexus Night promo, straight from our live database. Tap it for the full price comparison.",
+        slugs: ["teemo-scout-ogn-197b-298-promo"],
+      },
+      {
+        title: "Every Teemo, Scout printing",
+        note: "Base Rare, the Showcase alt-art, and the GG EZ promo — same card, wildly different price tags.",
+        slugs: ["teemo-scout-ogn-197-298", "teemo-scout-ogn-197a-298", "teemo-scout-ogn-197b-298-promo"],
+      },
+    ],
+    closeups: [
+      {
+        caption: "The printed Hidden line and the +3 Might trigger on GGEZ Teemo's actual card.",
+        slugs: ["teemo-scout-ogn-197b-298-promo"],
+        topPct: 54,
+        heightPct: 32,
+      },
+    ],
+    faq: [
+      {
+        q: "What is GGEZ Teemo?",
+        a: "GGEZ Teemo is the collector nickname for Teemo, Scout (197b/298) — the promo printing of Origins' Teemo, Scout card, given out during Origins' first Nexus Night season. It's a 2-energy, 1-Might Chaos unit with Hidden.",
+      },
+      {
+        q: "Why is it called GGEZ Teemo?",
+        a: "\"gg ez\" (\"good game, easy\") is a League of Legends taunt Teemo mains are notoriously associated with typing after a win. Riot leaned into the joke with this promo, and the nickname stuck harder than the card's actual collector number ever did.",
+      },
+      {
+        q: "What does GGEZ Teemo do?",
+        a: "It carries Hidden: pay 1 rune to hide it face-down at a battlefield, then play it for free from the next turn onward whenever a Reaction card could be played. Playing it this way gives it +3 Might for that turn.",
+      },
+      {
+        q: "How much is GGEZ Teemo worth?",
+        a: "Prices move daily and it's a scarce card with very few live listings at any moment — check its live card page for the current cheapest price across every store we track, in your own market's currency.",
+      },
+      {
+        q: "Is GGEZ Teemo the most expensive Riftbound promo?",
+        a: "It's consistently one of the priciest individual cards in the game, and the most expensive of Riftbound's three big Nexus Night promo grails (GGEZ Teemo, Mel Newly Awakened, and Lee Sin Centered) as of this post — though a ranking like that can shift as each promo cycle's supply dries up further.",
+      },
+    ],
+    body: `If you've spent any time around Riftbound collectors, you've probably seen someone mention **"GGEZ Teemo"** like everyone should already know what that means — and among collectors, most people kind of do. It's the nickname for one specific printing of one specific card: **Teemo, Scout**, promo number **197b/298** from **Origins**, and it's become one of the most talked-about (and priciest) pieces of cardboard in the whole game.
+
+## What GGEZ Teemo actually is
+
+Strip away the nickname and the card underneath is a **2-energy, 1-Might Chaos unit** — the promo printing of the base Teemo, Scout card that's been in Origins packs since launch. What makes it a Nexus Night promo rather than just another pull is the collector number: **197b**, the "b" marking it as the promo treatment of card 197, given out during Origins' very first wave of **Nexus Nights** — Riftbound's weekly, casual, local-game-store events, not a tournament.
+
+[[embed:0]]
+
+## The card, not just the meme
+
+GGEZ Teemo carries **Hidden**: pay 1 rune to hide it face-down at one of your battlefields, then from the next turn onward you can play it for free — ignoring its printed cost — whenever a Reaction card could be played. Flip it in and it gets **+3 Might for that turn**, turning a 1-Might scout into a surprise 4-Might blocker or attacker your opponent didn't see coming. (New to Hidden? [Our full keyword guide](/keywords/hidden) breaks down exactly how hiding and playing from Hidden works.)
+
+[[closeup:0]]
+
+It's a genuinely playable little tempo card even before the collector value enters the picture — cheap, disruptive, and exactly the kind of trick a scout unit should have.
+
+## Why "GG EZ"?
+
+"gg ez" — "good game, easy" — is one of League of Legends' most notorious taunts: something you type in all-chat after a win to rub it in, and something Teemo mains in particular have a long-running reputation for typing rather too often. Riot leaned all the way into the joke on this promo, and the community ran with it — "GGEZ Teemo" stuck as the card's name well before most people learned its actual collector number.
+
+## Every Teemo, Scout printing, side by side
+
+The base Rare print, the Showcase alt-art, and the GG EZ promo are, mechanically, the exact same card — same stats, same Hidden ability. What separates them is purely collectibility: print run, distribution method, and how early in Origins' life each one showed up.
+
+[[embed:1]]
+
+## How rare is it, really?
+
+Nexus Night promos are handed out in small batches at local stores running weekly casual events — nothing close to the print run of a booster box pull. GGEZ Teemo was the very first card in that promo cycle, from Origins' very first season of Nexus Nights, which is a big part of why it's held its value ever since. Prices move daily — tap the card above for the current live number across every store we track — but this has consistently been one of the most expensive individual cards in Riftbound's short history.
+
+## Where it sits against the other Nexus Night grails
+
+GGEZ Teemo isn't the only Nexus Night promo to become a genuine chase card — [Lee Sin, Centered](/blog/lee-sin-centered-nexus-night-promo) (Unleashed's season) and [Mel, Newly Awakened](/blog/mel-newly-awakened-vendetta-spotlight) (Vendetta's current season) followed the same playbook. As of this post, GGEZ Teemo is comfortably the priciest of the three — Mel is a clear step down but still a real grail, and Lee Sin, Centered is the most attainable of the trio. That gap is basically a lesson in how these prices work: age and how thoroughly a card's original print run has dried up tend to matter more than how loud the demand was on release day.
+
+## Is it worth chasing?
+
+If you already run a Teemo deck (or just want the meme on cardboard), GGEZ Teemo is a legitimately fun, cheap Hidden unit that happens to carry serious collector weight — a rare combination. If you're chasing it purely as an investment, treat it the way you'd treat any grail: check the live comps before you buy, not the first asking price you see, and don't assume the trend line only goes up.
+
+[[shop]]
+`,
+  },
+  {
+    slug: "lee-sin-centered-nexus-night-promo",
+    category: "blog",
+    title: "Lee Sin, Centered: Unleashed's Nexus Night Chase Card, Explained",
+    excerpt:
+      "Lee Sin, Centered (151b/298) is Unleashed's confirmed Nexus Night chase card — actually a promo reprint of an Origins favourite. What it does, and how it stacks up against Riftbound's other grails.",
+    author: "RiftCompare",
+    date: "2026-08-17",
+    readMins: 4,
+    tags: ["unleashed", "origins", "lee sin", "promo", "chase cards", "collecting", "nexus night"],
+    summary: [
+      "**Lee Sin, Centered (151b/298) is Unleashed's Nexus Night chase card** — but it's a promo reprint of an existing Origins card, not a new Unleashed-exclusive printing.",
+      "**It's a 6-energy, 6-Might Body unit with Accelerate**, and its own ability buffs other buffed friendly units at its battlefield by +2 Might.",
+      "**It's the most attainable of Riftbound's three big Nexus Night grails** — a real step down in price from Mel, Newly Awakened and GGEZ Teemo.",
+      "**Check its live card page for the current price** — the figures in this post are relative, not fixed numbers.",
+    ],
+    shop: [
+      { label: "Lee Sin, Centered promo on eBay", query: "Riftbound Lee Sin Centered promo" },
+      { label: "Origins singles on eBay", query: "Riftbound Origins single card" },
+    ],
+    browseCta: {
+      href: "/card/lee-sin-centered-ogn-151b-298-promo",
+      label: "See Lee Sin, Centered's live price →",
+      blurb: "Every store we track, side by side, updated daily — in your own market's currency.",
+    },
+    embeds: [
+      {
+        title: "Lee Sin, Centered — the Nexus Night promo",
+        note: "151b/298 — Unleashed's confirmed Nexus Night chase card, straight from our live database.",
+        slugs: ["lee-sin-centered-ogn-151b-298-promo"],
+      },
+      {
+        title: "Every Lee Sin, Centered printing",
+        note: "Base Rare, the Showcase alt-art, and the Nexus Night promo — same 6/6 Accelerate unit, three very different price tags.",
+        slugs: ["lee-sin-centered-ogn-151-298", "lee-sin-centered-ogn-151a-298", "lee-sin-centered-ogn-151b-298-promo"],
+      },
+    ],
+    closeups: [
+      {
+        caption: "The printed Accelerate cost and the buff-payoff ability on Lee Sin, Centered's actual card.",
+        slugs: ["lee-sin-centered-ogn-151b-298-promo"],
+        topPct: 54,
+        heightPct: 32,
+      },
+    ],
+    faq: [
+      {
+        q: "What is Lee Sin, Centered?",
+        a: "Lee Sin, Centered is a Body-domain unit, and 151b/298 is its Nexus Night promo printing — the confirmed chase card for Unleashed's Nexus Night season.",
+      },
+      {
+        q: "Is Lee Sin, Centered an Unleashed card or an Origins card?",
+        a: "Its collector number (151/298) is an Origins card, first printed there as a Rare. Unleashed's Nexus Night season promoted a new \"b\" variant of that same Origins card as its chase promo, rather than debuting an Unleashed-exclusive printing.",
+      },
+      {
+        q: "What does Lee Sin, Centered do?",
+        a: "It's a 6-energy, 6-Might Body unit with Accelerate — pay an extra Body as you play it to have it enter the battlefield already readied instead of exhausted. Its own printed ability gives other buffed friendly units at its battlefield +2 Might.",
+      },
+      {
+        q: "How much is Lee Sin, Centered worth?",
+        a: "It's the most attainable of Riftbound's three big Nexus Night promo grails (alongside GGEZ Teemo and Mel, Newly Awakened) — check its live card page for the current cheapest price across every store we track.",
+      },
+      {
+        q: "How do I get the Lee Sin, Centered promo?",
+        a: "It was distributed through Unleashed's weekly Nexus Night events at local game stores — completing a demo or casual event earned a promo pack. Now that the season has passed, the secondary market (eBay, TCGplayer and specialist stores) is the way in.",
+      },
+    ],
+    body: `Every Nexus Night season gets one card the community actually chases, and Unleashed's was **Lee Sin, Centered** — collector number **151b/298**, a promo reprint that turned an already-loved card into one of the set's most talked-about pulls.
+
+## The twist: it's not even an Unleashed card
+
+Here's the part that trips people up: **Lee Sin, Centered** isn't a new Unleashed-exclusive printing. Its collector number — **151/298** — places it squarely in **Origins**, where it's been a Rare-rarity Body unit since the set launched. What Unleashed's Nexus Night season did was hand out a **new promo treatment of that same Origins card** (the "b" variant, 151b) as its chase card, rather than debuting something Unleashed-native. It's a reprint promoted into a new season, not a new card.
+
+[[embed:0]]
+
+## What Lee Sin, Centered actually does
+
+Strip away the promo shine and it's a **6-energy, 6-Might Body unit** — a genuine heavyweight — carrying **Accelerate**: pay an extra Body as you play it and it enters the battlefield already readied instead of exhausted, letting it act the moment it lands instead of sitting out a turn. (New to Accelerate? [Our keyword guide](/keywords/accelerate) covers exactly how the cost and payoff work.)
+
+[[closeup:0]]
+
+Its own printed ability rewards you for building around it: **other buffed friendly units at its battlefield get +2 Might**, turning it into a genuine payoff card for a deck that's already stacking buffs rather than a standalone beater.
+
+## Every Lee Sin, Centered printing, side by side
+
+Same story as GGEZ Teemo: the base Rare, the Showcase alt-art, and the Nexus Night promo are mechanically identical — same 6/6, same Accelerate, same buff-payoff text. The gap between them is pure collectibility.
+
+[[embed:1]]
+
+## How it compares to Riftbound's other Nexus Night grails
+
+Lee Sin, Centered is the most attainable of Riftbound's three big Nexus Night promo chase cards — a real step down in price from both [Mel, Newly Awakened](/blog/mel-newly-awakened-vendetta-spotlight) (Vendetta's current season) and especially [GGEZ Teemo](/blog/ggez-teemo-riftbound-explained) (Origins' original, and still the priciest of the three by a wide margin). That doesn't make it unimportant — it makes it the version of this chase you can actually still complete without needing four figures.
+
+## Is it worth chasing?
+
+If you're building around Body-domain buffs, Lee Sin, Centered is a genuinely strong payoff card on top of being a collectible — a rare case where the chase print and the good deckbuilding choice are the same card. And if you're new to promo-hunting, this is a far friendlier entry point than Origins' original grail: real, confirmed scarcity, without needing GGEZ Teemo money to get in.
+
+[[shop]]
+`,
+  },
+  {
+    slug: "mel-newly-awakened-vendetta-spotlight",
+    category: "blog",
+    title: "Mel, Newly Awakened: Vendetta's Nexus Night Chase Card, Up Close",
+    excerpt:
+      "A deep dive on Mel, Newly Awakened's Nexus Night promo (069b/166) — her draw-and-Empower payoff explained, every printing compared, and how she stacks up against Riftbound's other grails.",
+    author: "RiftCompare",
+    date: "2026-08-17",
+    readMins: 4,
+    tags: ["vendetta", "mel", "promo", "chase cards", "collecting", "nexus night"],
+    summary: [
+      "**Mel, Newly Awakened's Nexus Night promo is 069b/166** — Vendetta's current confirmed Nexus Night chase card.",
+      "**She draws a card the instant she's played**, then rewards Empowering her later: your spells and abilities can't be countered, and -Might effects hit for one extra.",
+      "**She sits in the middle of Riftbound's three big Nexus Night grails** — pricier than Lee Sin, Centered, well short of GGEZ Teemo.",
+      "**The promo is mechanically identical to the base print** — you're paying for art and scarcity, not extra power.",
+    ],
+    shop: [
+      { label: "Mel, Newly Awakened promo on eBay", query: "Riftbound Mel Newly Awakened promo" },
+      { label: "Vendetta Nexus Night promos", query: "Riftbound Vendetta Nexus Night promo" },
+    ],
+    browseCta: {
+      href: "/card/mel-newly-awakened-ven-069b-166-promo",
+      label: "See Mel, Newly Awakened's live price →",
+      blurb: "Every store we track, side by side, updated daily — in your own market's currency.",
+    },
+    embeds: [
+      {
+        title: "Mel, Newly Awakened — the Nexus Night promo",
+        note: "069b/166 — Vendetta's confirmed Nexus Night chase card, straight from our live database.",
+        slugs: ["mel-newly-awakened-ven-069b-166-promo"],
+      },
+      {
+        title: "Every Mel, Newly Awakened printing",
+        note: "The Epic base print, the Showcase alt-art, and the Nexus Night promo — same card, three very different price tags.",
+        slugs: ["mel-newly-awakened-ven-069", "mel-newly-awakened-ven-069a", "mel-newly-awakened-ven-069b-166-promo"],
+      },
+    ],
+    closeups: [
+      {
+        caption: "The printed draw trigger and Empower payoff on Mel, Newly Awakened's actual card.",
+        slugs: ["mel-newly-awakened-ven-069b-166-promo"],
+        topPct: 54,
+        heightPct: 32,
+      },
+    ],
+    faq: [
+      {
+        q: "What does Mel, Newly Awakened do?",
+        a: "She's a 4-energy, 4-Might Mind unit. When played, draw 1 card. She also carries Empower (3 energy, once): once Empowered, your spells and abilities can't be countered, and any -Might effect you control gives an additional -1 Might.",
+      },
+      {
+        q: "What is the Mel, Newly Awakened Nexus Night promo?",
+        a: "069b/166 — the promo printing of the existing Mel, Newly Awakened unit, confirmed as the chase card for Vendetta's current Nexus Night season. Mechanically identical to the base print; the difference is the art treatment and scarcity.",
+      },
+      {
+        q: "How much is the Mel, Newly Awakened promo worth?",
+        a: "It sits between Riftbound's other two big Nexus Night grails — pricier than Lee Sin, Centered, well short of GGEZ Teemo. Check its live card page for the current cheapest price across every store we track.",
+      },
+      {
+        q: "How do I get the Mel, Newly Awakened promo?",
+        a: "Attend your local game store's weekly Vendetta Nexus Night event — completing a demo or casual event earns a promo pack. See our full rundown of every confirmed Vendetta Nexus Night promo for the rest of the cycle.",
+      },
+      {
+        q: "Is Mel, Newly Awakened good in Vendetta's current meta?",
+        a: "Her ability is built for a control shell: a free card the instant she lands, then a two-stage upgrade that protects your spells from being countered and hits harder with -Might effects once Empowered — a strong fit for a legend built around outlasting the opponent rather than racing them.",
+      },
+    ],
+    body: `We've already covered [every confirmed Vendetta Nexus Night promo](/blog/riftbound-vendetta-nexus-night-promo-cards) as a set — this post is the deep dive on the one everyone's actually chasing: **Mel, Newly Awakened**, promo printing **069b/166**.
+
+## What Mel, Newly Awakened does
+
+She's a **4-energy, 4-Might Mind unit**, and her printed text does two jobs at once. First, a simple value trigger: **"When you play me, draw 1."** Second, a scaling payoff through **Empower**: pay 3 energy on a later turn (once, and only while she isn't already Empowered) to flip her Empowered — after which **your spells and abilities can't be countered**, and **any effect you control that would give a unit -Might gives an additional -1 Might**. (New to Empower? [Our full keyword guide](/keywords/empower) breaks down exactly how the two-stage upgrade works.)
+
+[[embed:0]]
+
+[[closeup:0]]
+
+That's a genuinely control-shaped payoff — protect your own removal and spells from being countered, then make the removal you do land hit harder — which tracks with Mel's reputation as a Vendetta control legend's headline piece.
+
+## Draw-1 now, a bigger Mel later
+
+The two halves work on different clocks. The draw trigger fires the instant she hits the board, so she's never a dead card even if you never find the spare energy to Empower her. Empower is the payoff for sticking around: bank 3 energy on a turn you can spare it, and every spell or removal effect you play afterward gets meaningfully harder to fight through.
+
+## Every Mel, Newly Awakened printing, side by side
+
+The regular Epic base print, the Showcase alt-art, and the Nexus Night promo are, once again, the same card mechanically — same stats, same text. The promo (069b) is the one that turned Vendetta's current Nexus Night season into a genuine chase.
+
+[[embed:1]]
+
+## Where she sits against the other Nexus Night grails
+
+Mel, Newly Awakened sits in the middle of Riftbound's three big Nexus Night promo grails: pricier than [Lee Sin, Centered](/blog/lee-sin-centered-nexus-night-promo) (Unleashed's season), but well short of [GGEZ Teemo](/blog/ggez-teemo-riftbound-explained) (Origins' original, and still the priciest of the three). That's partly a function of timing — Vendetta's Nexus Night season is Riftbound's current one, so her print run hasn't had nearly as long to dry up as Origins' did.
+
+## Is she worth chasing?
+
+If you're building a control shell around Mel, the promo print is a genuine collectible upgrade to your deck's showpiece — the ability is identical to the base print, so you're paying for the art and the scarcity, not extra power. If you just want in on Vendetta's current chase-card conversation while it's still actively unfolding, rather than years-settled the way Origins' is, this is the one to watch.
+
+[[shop]]
+`,
+  },
   // ── August 2026 announcement coverage ──────────────────────────────────────
   // Three posts covering Riot's 4 Aug 2026 "Products and Sets into 2027" and
   // "August 2026 State of the Game" announcements. Written from the
