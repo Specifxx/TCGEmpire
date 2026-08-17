@@ -56,13 +56,16 @@ export async function GET(req: Request, { params }: { params: { provider: string
 
   // 3) Normalise the fields per provider.
   //
-  // emailVerified is NOT decoration — it is the entire basis on which step 4 is
-  // allowed to hand this sign-in an existing account. Both providers let an
-  // account CLAIM an address it has not proven: Discord returns `verified:false`
-  // on /users/@me until the new address is confirmed, and Google returns
-  // `email_verified:false` for accounts whose address it hasn't validated. So the
-  // address alone says nothing about who owns the inbox — anyone can point a
-  // throwaway account at someone else's address and authorise from it.
+  // emailVerified is NOT decoration — it is the entire basis on which an EMAIL
+  // MATCH is allowed to hand this sign-in someone's account. Both providers let
+  // an account CLAIM an address it has not proven: Discord returns
+  // `verified:false` on /users/@me until the new address is confirmed, and Google
+  // returns `email_verified:false` for accounts whose address it hasn't
+  // validated. So the address alone says nothing about who owns the inbox —
+  // anyone can point a throwaway account at someone else's address and authorise
+  // from it. It is passed down to upsertOAuthUser, which gates the two branches
+  // that actually consume the address; see the note there for why the gate does
+  // NOT live up here.
   let providerId: string | undefined;
   let email: string | undefined;
   let emailVerified = false;
@@ -82,14 +85,11 @@ export async function GET(req: Request, { params }: { params: { provider: string
     avatar = profile.avatar ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png` : null;
   }
   if (!providerId || !email) return fail(req, "oauth_noemail");
-  // Strict, not "unverified means create a fresh account": this site grants
-  // moderator powers by email address (isAdminEmail in lib/auth.ts), and a new
-  // account carrying an admin address would be an admin. An unproven address must
-  // not enter the system at all.
-  if (!emailVerified) return fail(req, "oauth_unverified");
 
   // 4) Find-or-create the user (by provider id, then by email) and link the identity.
-  const { user, isNew } = await upsertOAuthUser(provider, providerId, email, name, avatar);
+  const linked = await upsertOAuthUser(provider, providerId, email, emailVerified, name, avatar);
+  if (!linked) return fail(req, "oauth_unverified");
+  const { user, isNew } = linked;
   await createSession(user.id);
   // Adopt any price watches this address created before it had an account —
   // fire-and-forget: a failure here must never block signing in.
@@ -104,10 +104,23 @@ export async function GET(req: Request, { params }: { params: { provider: string
   return NextResponse.redirect(new URL("/profile", req.url));
 }
 
+// Returns null when the sign-in must be refused. `emailVerified` says whether the
+// PROVIDER vouches for the address; it gates only the two branches that use the
+// address to decide which account this is.
+//
+// It deliberately does NOT gate the whole function. Matching on googleId/discordId
+// is proof of identity that does not involve the email at all — that branch never
+// reads the parameter — so refusing it would lock a member out of an account they
+// linked long ago because their provider-side address happens to be mid-
+// reverification. On an OAuth-only site (password auth and /forgot are gone, see
+// tests/auth-oauth-only.test.ts) that is a real availability cost for zero
+// security gain: the attack this guards against is impersonating an address, and
+// an attacker holding the linked provider id already owns the account.
 async function upsertOAuthUser(
   provider: OAuthProvider,
   providerId: string,
   email: string,
+  emailVerified: boolean,
   name: string | undefined,
   avatar: string | null
 ) {
@@ -118,19 +131,37 @@ async function upsertOAuthUser(
   const link = provider === "google" ? { googleId: providerId } : { discordId: providerId };
 
   // Already linked to this provider id → just refresh avatar / verification.
+  // Note this never writes `email`, so a member who repoints their provider
+  // account at someone else's address cannot move their RiftCompare address onto
+  // it — including onto one isAdminEmail() honours.
   if (byProvider) {
     const user = await prisma.user.update({
       where: { id: byProvider.id },
-      data: { emailVerified: byProvider.emailVerified ?? new Date(), avatarUrl: byProvider.avatarUrl ?? avatar },
+      data: {
+        // Only an address the provider vouches for may stamp an account verified:
+        // emailVerified feeds isVerifiedSeller (lib/auth.ts), so stamping it from
+        // an unproven address would hand out seller standing. An account that is
+        // already verified stays verified.
+        emailVerified: byProvider.emailVerified ?? (emailVerified ? new Date() : null),
+        avatarUrl: byProvider.avatarUrl ?? avatar,
+      },
     });
     return { user, isNew: false };
   }
 
-  // Otherwise link to an existing account with the same email. This is only sound
-  // because the caller has already rejected unverified provider emails — the
-  // provider vouching for the address is what makes "same email" mean "same
-  // person" here, and without that check this branch is an account takeover.
-  // Security: if that account was
+  // FROM HERE DOWN THE EMAIL DECIDES WHICH ACCOUNT THIS IS, so it has to be one
+  // the provider has actually verified.
+  //
+  // Refused rather than downgraded to "create a separate account", because
+  // isAdminEmail() in lib/auth.ts grants moderator powers BY ADDRESS: a brand-new
+  // account carrying one of those addresses would be an admin. An unproven
+  // address must not enter the system at all.
+  if (!emailVerified) return null;
+
+  // Link to an existing account with the same email — sound only because of the
+  // check immediately above. The provider vouching for the address is what makes
+  // "same email" mean "same person"; without it this branch is an account
+  // takeover. Security: if that account was
   // NEVER email-verified yet has a password, the password was set without proving
   // inbox ownership (a possible squatter) — discard it, since the OAuth provider is
   // now the authority on this email. The real owner can set a fresh one via /forgot.

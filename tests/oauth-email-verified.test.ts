@@ -47,23 +47,57 @@ test("the callback reads each provider's email-verification flag", () => {
   );
 });
 
-test("an unverified provider email cannot sign in at all", () => {
+test("an unverified provider email cannot reach the email-matching branches", () => {
   assert.match(
     callback,
-    /if \(!emailVerified\)\s*return fail\(req, "oauth_unverified"\)/,
-    "an unproven address must be rejected outright: creating a fresh account for " +
-      "it would still hand out admin when the address is one isAdminEmail() honours"
+    /if \(!emailVerified\) return null;/,
+    "an unproven address must be refused outright once the email is what decides " +
+      "which account this is: creating a fresh account for it would still hand out " +
+      "admin when the address is one isAdminEmail() honours"
+  );
+  assert.match(
+    callback,
+    /if \(!linked\) return fail\(req, "oauth_unverified"\)/,
+    "the refusal has to surface as a failed sign-in, not a thrown 500"
   );
 });
 
-test("the verification gate runs BEFORE any account is found or created", () => {
-  const gate = callback.search(/if \(!emailVerified\)/);
-  const upsert = callback.search(/upsertOAuthUser\(/);
-  assert.ok(gate >= 0 && upsert >= 0, "expected both the gate and the upsert call");
+test("the gate sits between the provider-id match and the email lookups", () => {
+  // Position matters, but not the position the first version of this test pinned.
+  // Gating the WHOLE callback also refused users matched on googleId/discordId —
+  // a branch that never reads the email — locking members out of accounts they had
+  // already linked, on a site with no password fallback, for no security gain.
+  // The takeover risk lives strictly in the two branches that let an ADDRESS pick
+  // the account, so the gate belongs between them.
+  const byProvider = callback.search(/if \(byProvider\) \{/);
+  const gate = callback.search(/if \(!emailVerified\) return null;/);
+  const byEmail = callback.search(/const byEmail = await prisma\.user\.findUnique/);
+  const create = callback.search(/prisma\.user\.create\(/);
   assert.ok(
-    gate < upsert,
-    "the gate must precede upsertOAuthUser — checking after it has linked the " +
-      "identity and returned a user is checking after the takeover"
+    byProvider >= 0 && gate >= 0 && byEmail >= 0 && create >= 0,
+    "expected the provider-id branch, the gate, the email lookup and the create"
+  );
+  assert.ok(byProvider < gate, "an already-linked provider id must NOT be gated on its email");
+  assert.ok(gate < byEmail, "the email-link branch must be gated");
+  assert.ok(gate < create, "account creation must be gated");
+});
+
+test("signing in never moves an existing account's email address", () => {
+  // The provider-id branch is ungated, so it must not be able to carry a new
+  // address in — otherwise repointing a linked provider account at an admin
+  // address would escalate on the next sign-in, reintroducing the bug one level down.
+  const branch = /if \(byProvider\) \{([\s\S]*?)\n  \}/.exec(callback);
+  assert.ok(branch, "the byProvider branch moved — re-derive this test");
+  assert.doesNotMatch(branch[1], /(^|[^.\w])email[,:]/, "the provider-id branch must not write `email`");
+});
+
+test("an unverified address cannot stamp an account as email-verified", () => {
+  // emailVerified feeds isVerifiedSeller in lib/auth.ts, so an unconditional
+  // `?? new Date()` would hand seller standing to an unproven address.
+  assert.match(
+    callback,
+    /emailVerified: byProvider\.emailVerified \?\? \(emailVerified \? new Date\(\) : null\)/,
+    "only a provider-vouched address may newly verify an account"
   );
 });
 
