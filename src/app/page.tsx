@@ -1,25 +1,28 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import dynamic from "next/dynamic";
 import { Archivo } from "next/font/google";
-import { unstable_cache } from "next/cache";
-import { Reveal } from "@/components/Reveal";
 import { getPopularCards } from "@/lib/cheapest-cards";
 import { DEFAULT_COUNTRY, type Country } from "@/lib/country";
-import { SETS, newestReleasedSet, nextUpcomingSet } from "@/lib/constants";
-import { SITE_URL } from "@/lib/site";
 import { getCachedTopDeals, type TopDeals } from "@/lib/top-deals";
-import { getProofStripPick, type ProofStripPick } from "@/lib/proof-strip";
+import { getRecentlyUpdated, getPriceMovers, type PriceMovers } from "@/lib/price-history";
 import { getHomeStats } from "@/lib/home-stats";
-import { ScrollDepthTracker } from "@/components/ScrollDepthTracker";
 import { CinematicHero } from "@/components/home/CinematicHero";
-import { ProofStrip } from "@/components/home/ProofStrip";
-import { RadianceCountdownCard } from "@/components/home/RadianceCountdownCard";
-import { PartnersStrip } from "@/components/home/PartnersStrip";
-import { EbayPicks } from "@/components/EbayPicks";
-import { CONTENT_TAG } from "@/lib/revalidate-content";
+import { HomeSections } from "@/components/home/HomeSections";
 import { pageAlternates, regionHomeHreflang } from "@/lib/seo";
 import { webPage, faqPage } from "@/lib/jsonld";
+
+// RESTORED (2026-08-17), overriding a same-day "one job" redesign that had
+// briefly replaced this body with ProofStrip + DealsRow: direct owner
+// feedback on the live redesign was that it looked worse, not better — too
+// unfamiliar a layout, and specifically missed Market Pulse and Today's Top
+// Deals' full grid. Rather than re-litigate the redesign's own reasoning
+// (still valid, still preserved as HomeSections' full feature set below,
+// still what the 5 region pages render), this reverts "/" to the same body
+// the region pages already use, restoring feature parity across all six
+// markets. CinematicHero, SearchBar and every sitewide fix landed alongside
+// the redesign (accessibility, the search-dropdown stacking bug, etc.) are
+// untouched by this revert — only which body mounts below the hero changed.
+// ProofStrip/DealsRow/proof-strip.ts are left in the tree, unmounted, rather
+// than deleted, in case a future pass wants to revisit them deliberately.
 
 // REMOVED: everything that ever fed the two slots either side of the hero —
 // first FEATURED_CARD_SLUGS + its prisma.card.findMany (hard-picked floating
@@ -31,38 +34,6 @@ import { webPage, faqPage } from "@/lib/jsonld";
 // egress leak the 2026-08-14 work existed to remove, and keeping one alive
 // after nothing consumed it would be a regression with no upside. The hero now
 // needs NO data beyond the stats it already renders.
-//
-// REMOVED (this pass — the homepage-redesign brief's "one job" rebuild):
-// MarketPulse (risers/fallers — full version lives at /market, footer-linked),
-// TodaysTopDeals' 4-column grid + its price-tier filter chips (collapsed into
-// DealsRow below, ONE row, chips gone entirely — they belong on the deals page,
-// not a homepage teaser of it), the inline mid-page NewsletterSignup card
-// (exactly one capture survives, in the footer — see app/layout.tsx),
-// PopularCardsCarousel and its four tabs (Vendetta/all-time/movers/recently-
-// updated — /browse, /sets/vendetta and /movers already cover the same ground),
-// ReturnVisitCards (pack sim → /games/pack-sim, Riftle → /riftle, both already
-// in nav/footer; the price-alerts promo card had no ready homepage-agnostic
-// replacement — see DECISIONS.md, re-adding it to card detail pages is future
-// work this task doesn't touch), HowItWorks' three-step explainer (replaced by
-// ProofStrip below; the full three-step version still exists, now on /about),
-// RadianceCountdownCard's own full-width card + its own newsletter capture
-// (folded into one line inside "Explore by set" instead), LatestPosts' guides
-// grid (/guides is already footer-linked) and ReviewsSection (renders nothing
-// until real reviews exist; removing the mount removes a DB read that was
-// already producing nothing here). Every one of those still has a real page
-// and a real nav/footer entry — see DECISIONS.md's Phase 4 section for the
-// full "what moved, and where" table. EbayPicks is the one exception: it stays,
-// unmoved — tests/ebay-picks.test.ts pins it on all five of its intended pages
-// including this one, it carries its own affiliate disclosure, and at one
-// unlabelled row with no <h2> of its own it costs nothing this rebuild is
-// trying to save.
-
-// Below-the-fold, client-rendered components — code-split into their own
-// chunks (still SSR'd for content/SEO) so their JS isn't part of the bundle
-// the browser has to parse/compile before the hero above them can hydrate and
-// paint. DealsRow is well below the LCP candidate (the hero stat line), so it
-// doesn't need to be ready any earlier than "whenever it's scrolled to."
-const DealsRow = dynamic(() => import("@/components/home/DealsRow").then((m) => m.DealsRow));
 
 // Homepage titling face — a heavy neutral grotesque matching the official
 // Riftbound wordmark lockup ("RIFTBOUND / LEAGUE OF LEGENDS TRADING CARD GAME"),
@@ -150,16 +121,21 @@ export default async function HomePage() {
   const [
     { totalCards, statsByCountry, freshness },
     popularCards,
+    popularVendetta,
     topDealsArr,
+    recentlyUpdated,
+    moversArr,
   ] = await Promise.all([
     // Per-market stat tiles + the "Prices updated Xh ago" freshness signal —
     // shared with the 5 region home pages (see lib/home-stats.ts) so they read
     // the exact same cached figures instead of a second, potentially-drifting copy.
     getHomeStats(),
     // Most-searched singles (ties → more expensive card) — the cards people most want.
-    // Also doubles as the ProofStrip's candidate pool below (most popular first,
-    // priced-only) and the search box's zero-state trending suggestions.
     getPopularCards(12, country),
+    // Most-searched VENDETTA singles specifically — same demand signal, scoped to
+    // the set everyone's talking about right now. Empty (no section shown) until
+    // enough early listings are actually priced.
+    getPopularCards(8, country, "VEN"),
     // Today's Top Deals blends four signals; cache per-market. We serialize ALL four
     // markets so the section localises to the visitor's chosen market client-side —
     // the page is ISR-cached with DEFAULT_COUNTRY baked in, so a single-market render
@@ -169,55 +145,33 @@ export default async function HomePage() {
     // when CRON_SECRET is configured, so a shorter TTL guarantees daily-import data
     // reaches the homepage even if the on-demand ping is skipped. (v4 index key busts
     // the stale entry that had frozen the market index at an old date.)
-    // getCachedTopDeals — the region-pages work's own factored-out version of
-    // what used to be an inline unstable_cache(() => getTopDeals(c), ...) call
-    // here; same cache key/TTL/tag, just shared with the 5 region pages now
-    // instead of re-declared per route. See lib/top-deals.ts.
     Promise.all(COUNTRY_CODES.map((c) => getCachedTopDeals(c))),
+    // "Recently updated" feed — cards whose price genuinely changed in the most
+    // recent snapshot (see lib/price-history.ts). Single-market (the baseline),
+    // same as popularCards above: it's a real internal-linking/freshness feed,
+    // not a per-market data section like Top Deals, so there's no reason to
+    // serialize all five markets for client-side localisation. Rendered as a
+    // tab in PopularCardsCarousel (see below), not its own section.
+    getRecentlyUpdated(country, 24),
+    // Biggest movers (up + down), PER MARKET — unlike the single-baseline reads
+    // above, the "Market pulse" strip shows a real per-visitor-market % (not
+    // just a re-priced card with a baseline-market % caption), so this needs all
+    // six markets, same Promise.all-of-getX pattern as topDealsArr. Each call is
+    // day-cached (see price-history.ts), so this is six cheap cache reads, not
+    // six fresh DB scans. moversByCountry[country] (the baseline) also feeds the
+    // popular-cards carousel's "Movers" tab below, unchanged from before.
+    Promise.all(COUNTRY_CODES.map((c) => getPriceMovers(c, 6))),
   ]);
   const storeCount = statsByCountry[country].stores;
   const storeWord = storeCount === 1 ? "store" : "stores";
-  // Per-market Top Deals, so DealsRow can localise client-side to whichever
-  // market the VISITOR is actually in — not just the AU baseline this page's
-  // ISR render bakes in.
+  // Per-market Top Deals/movers, so HomeSections' sections can localise
+  // client-side to whichever market the VISITOR is actually in (see its own
+  // doc comment) — not just the AU baseline this page's ISR render bakes in.
   const topDealsByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, topDealsArr[i]])) as Record<Country, TopDeals>;
-  const anyDeals = COUNTRY_CODES.some((c) => topDealsByCountry[c].hasAny);
-  // ProofStrip's per-market pick depends on `popularCards` just resolved above,
-  // so it's a second read rather than part of the first Promise.all — same
-  // per-market/CONTENT_TAG caching contract as topDealsArr just above (see
-  // lib/db.ts's egress rules: this is bounded to a handful of already-fetched
-  // candidate ids per market, never a table scan). getProofStripPick() itself
-  // is new aggregation code built ON the same read-only helpers the card page
-  // uses (computeMarket, effectiveShippingCents) — see lib/proof-strip.ts.
-  const proofArr = await Promise.all(
-    COUNTRY_CODES.map((c) =>
-      unstable_cache(() => getProofStripPick(popularCards, c), ["proof-strip", c], { revalidate: 3600, tags: [CONTENT_TAG] })(),
-    ),
-  );
-  const proofByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, proofArr[i]])) as Record<
-    Country,
-    ProofStripPick | null
-  >;
-  const anyProof = COUNTRY_CODES.some((c) => proofByCountry[c] != null);
-  const newestSet = newestReleasedSet();
-  // The next announced-but-unreleased set (Radiance today; rolls forward on its
-  // own — see nextUpcomingSet's doc comment). undefined hides the whole line.
-  const radianceSet = nextUpcomingSet();
+  const moversByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, moversArr[i]])) as Record<Country, PriceMovers>;
 
   return (
-    // gap-8, not gap-10: a real, measured contributor to the desktop
-    // page-height hard target (scripts/homepage-audit.mjs, ≤2.6 screens) —
-    // five gaps between six top-level sections at 40px each spent 200px on
-    // whitespace alone. 32px is still a clearly-readable section break (every
-    // section already carries its own heading/border to separate it
-    // visually) and saves 40px total, one small piece of the gap this phase
-    // closed alongside the bigger structural cuts (see DECISIONS.md).
-    <div className={`${archivo.variable} rb-display-sans flex flex-col gap-8`}>
-      {/* Scroll-depth measurement (25/50/75/90%) — see ScrollDepthTracker.tsx
-          for why this is mounted per-route here rather than in the root
-          layout. Renders nothing; purely a side-effecting analytics mount. */}
-      <ScrollDepthTracker />
-
+    <div className={`${archivo.variable} rb-display-sans flex flex-col gap-10`}>
       {/* Cinematic full-bleed hero — search-first (see CinematicHero + Task 3). */}
       <CinematicHero
         totalCards={totalCards}
@@ -235,141 +189,29 @@ export default async function HomePage() {
           UPDATE: the "date-windowed off SetInfo.releasedOn rather than hard-
           coded to one set" version predicted here now exists as
           RadianceCountdownCard (sourced from lib/constants.ts's
-          nextUpcomingSet()), folded into one line inside "Explore by set"
-          below — not a revival of this band.
+          nextUpcomingSet()) — inside HomeSections below, after Explore — not a
+          revival of this band. */}
 
-          NOTE ON HomeSections: the 5 region home pages (/au, /nz, /uk, /sg,
-          /ca) render a DIFFERENT, separate component — HomeSections.tsx —
-          that keeps the fuller, pre-redesign feature set (Market Pulse,
-          Today's Top Deals' 4-column grid, the popular-cards carousel, etc.).
-          That was a deliberate, later, independent decision (give the region
-          pages full feature parity with what "/" used to look like) and is
-          explicitly out of this redesign brief's scope ("/" only) — "/" itself
-          never renders HomeSections; everything below is this page's own,
-          intentionally slimmer body. */}
+      {/* Everything below the hero — Market Pulse, Today's Top Deals, the
+          popular-cards carousel, How It Works, Explore, reviews, partners —
+          shared with the 5 region home pages (/au, /nz, /uk, /sg, /ca) via
+          HomeSections, so a visitor who picks a market in the hero toggle gets
+          the SAME feature set, not a stripped-down page. See HomeSections.tsx. */}
+      <HomeSections
+        country={country}
+        totalCards={totalCards}
+        storeCount={storeCount}
+        storeWord={storeWord}
+        popularCards={popularCards}
+        popularVendetta={popularVendetta}
+        topDealsByCountry={topDealsByCountry}
+        moversByCountry={moversByCountry}
+        recentlyUpdated={recentlyUpdated}
+      />
 
-      {/* Proof strip — one real, popular card with its three cheapest store
-          prices side by side and the saving highlighted, replacing the old
-          three-step "How RiftCompare works" explainer (still there in full on
-          /about). PCPartPicker's pattern: prove the value proposition with
-          the product itself instead of describing it. Deliberately NOT
-          wrapped in <Reveal> (unlike most sections below it) — same reasoning
-          MarketPulse used to document in this exact spot: it's close enough
-          to the hero to often be in the initial viewport, so it renders
-          immediately rather than fading in after a delay. Hides entirely if
-          no popular card has three-plus priced stores in the visitor's
-          market (see lib/proof-strip.ts) — a thin two-price "comparison"
-          would undercut the point it's trying to prove. */}
-      {anyProof && <ProofStrip pickByCountry={proofByCountry} />}
-
-      {/* ONE deals row — collapses what used to be Market pulse + Today's Top
-          Deals' 4-column grid + its filter chips into a single horizontally-
-          scrolling row of up to six cards. Hidden if no market has data. */}
-      {anyDeals && (
-        <Reveal>
-          <DealsRow dealsByCountry={topDealsByCountry} />
-        </Reveal>
-      )}
-
-      {/* Tailored eBay unit — the set's chase cards with their cheapest live
-          listing, rather than a generic banner. Kept in place (unlike most of
-          what used to surround it) — tests/ebay-picks.test.ts pins it on all
-          five of its intended high-traffic pages including this one, it
-          carries its own affiliate disclosure, and it costs no <h2> of its
-          own. Sits right after the deals row so the commercial run reads
-          organic-comparison first, affiliate second. */}
-      <EbayPicks />
-
-      {/* Explore — sets, compressed. The "by domain" sub-grid that used to sit
-          here moved to /domains (a fuller hub page for exactly that content,
-          already nav/footer-linked — see DECISIONS.md); the Radiance
-          countdown that used to be its own full-width card two sections down
-          is now one line at the foot of this one instead. */}
-      <section>
-        <h2 className="mb-4 text-xl font-extrabold text-white">Explore by set</h2>
-
-        {/* lg:grid-cols-6, not -5: SETS has exactly 6 entries today, and one
-            row instead of two is a real, easy win against the page-height
-            hard target (see DECISIONS.md's Phase 4 section for the measured
-            page-height breakdown) — this still reads fine at the 1024px+
-            widths that breakpoint applies to. Revisit if SETS ever grows
-            past 6 (a 7th entry would wrap to a lonely second row either way). */}
-        <Reveal stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          {SETS.map((s) =>
-            // Fully unreleased (no cards, no sealed) → disabled tile. Vendetta has
-            // revealed cards + sealed live, so it links through with a green "New"
-            // cue (the revealed-card list is browsable now; store prices land at
-            // release).
-            s.comingSoon && !s.sealedAvailable ? (
-              <div key={s.code} className="card-surface flex flex-col gap-1 p-4 opacity-60" aria-disabled>
-                <span className="flex items-center gap-2 text-lg font-bold text-white">
-                  {s.code}
-                  <span className="chip bg-gold/20 text-gold">Coming soon</span>
-                </span>
-                <span className="text-xs text-slate-400">{s.name}</span>
-              </div>
-            ) : (
-              <Link
-                key={s.code}
-                href={`/sets/${s.slug}`}
-                className="card-surface flex flex-col gap-1 p-4 transition-colors duration-200 hover:border-brand-500 hover:bg-ink-800"
-              >
-                <span className="flex flex-wrap items-center gap-1.5 text-lg font-bold text-white">
-                  {s.code}
-                  {((s.comingSoon && s.sealedAvailable) || s.recentlyReleased) && (
-                    <span className="chip bg-up/20 font-bold uppercase tracking-wide text-up">New</span>
-                  )}
-                </span>
-                <span className="text-xs text-slate-400">{s.name}</span>
-              </Link>
-            )
-          )}
-        </Reveal>
-
-        {/* The homepage's link into the visual gallery, inherited from the
-            removed Vendetta launch band. Kept because it was the strongest
-            internal link that page had (tests/seo-landing-pages.test.ts guards
-            it), but pointed at whichever set is CURRENT rather than at Vendetta
-            by name — so it follows Radiance in October instead of going stale
-            the same way the band did. */}
-        {newestSet && (
-          <p className="mt-3 text-sm">
-            {/* tap-link: a plain text link measured ~17px tall on mobile —
-                short of the 44px tap-target floor (see globals.css's
-                pointer:coarse block). */}
-            <Link
-              href={`/sets/${newestSet.slug}/gallery`}
-              className="tap-link font-semibold text-brand-300 underline-offset-2 hover:underline"
-            >
-              See all{newestSet.totalCards ? ` ${newestSet.totalCards}` : ""} {newestSet.name} cards in the gallery →
-            </Link>
-          </p>
-        )}
-
-        {/* New-set hype, folded to one line — used to be its own full-width
-            card (with its own newsletter capture) between Explore and the
-            blog teaser. Radiance already gets a disabled "Coming soon" tile
-            in the grid above; this is the one extra fact (how soon) that
-            tile can't say on its own. Hides itself once nothing upcoming is
-            announced. */}
-        <RadianceCountdownCard set={radianceSet} />
-      </section>
-
-      {/* About + FAQ — keyword-relevant content for search. Heading shortened
-          in this pass (was "Riftbound prices in Australia, New Zealand, the
-          US, the UK, Singapore and Canada — all in one place", ~103 chars —
-          wrapped to 3+ lines at text-xl/extrabold on a 390px viewport and
-          was a real, measured contributor to the mobile page-height hard
-          target; a country-code abbreviation of the same sentence still
-          wrapped twice). The six country names aren't dropped, just moved
-          entirely to where they were already doing the real keyword work —
-          the paragraph directly below (full names) and the page's own meta
-          description (also full names) — rather than duplicated a third
-          time, in the most expensive-to-render place, in a shorter form
-          that's a weaker keyword signal anyway. The FAQPage JSON-LD is
-          untouched either way; this on-page heading was never part of it. */}
-      <section className="card-surface p-5 sm:p-6">
-        <h2 className="text-xl font-extrabold text-white">Riftbound prices, compared across every store we track</h2>
+      {/* About + FAQ — keyword-relevant content for search */}
+      <section className="card-surface p-6">
+        <h2 className="text-xl font-extrabold text-white">Riftbound prices in Australia, New Zealand, the US, the UK, Singapore and Canada — all in one place</h2>
         {/* Full width, matching the heading above — a capped/centred measure
             here just shifted the paragraph out of alignment with the heading
             (text starting a third of the way across the card reads as broken,
@@ -405,10 +247,9 @@ export default async function HomePage() {
 
       {/* The homepage is the site's canonical entity landing page and carried
           no node describing itself — only an FAQPage, unlinked to the
-          Organization/WebSite graph in app/layout.tsx. (The 5 region home
-          pages' own ItemLists — most popular / recently updated — live in
-          HomeSections' own script instead, next to the fuller feature set
-          only they render; "/" keeps its own trimmed ItemList below.) */}
+          Organization/WebSite graph in app/layout.tsx. The two ItemLists
+          (most popular / recently updated) live in HomeSections' own script
+          now, next to the sections and data they actually describe. */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -424,26 +265,6 @@ export default async function HomePage() {
             // other FAQ-bearing page uses; the homepage used to hand-duplicate
             // this shape inline.
             faqPage(FAQS),
-            // ItemList of the trending cards actually rendered above (the hero's
-            // TrendingChips row shows the top 6 of this exact list) — trimmed
-            // from 12 to 6 in this pass so the structured data matches what's
-            // really on the page: PopularCardsCarousel, which used to render
-            // all 12, is gone (see the REMOVED comment at the top of this file).
-            ...(popularCards.length > 0
-              ? [
-                  {
-                    "@context": "https://schema.org",
-                    "@type": "ItemList",
-                    name: "Trending Riftbound cards",
-                    itemListElement: popularCards.slice(0, 6).map((c, i) => ({
-                      "@type": "ListItem",
-                      position: i + 1,
-                      name: c.name,
-                      url: `${SITE_URL}/card/${c.slug ?? c.id}`,
-                    })),
-                  },
-                ]
-              : []),
           ]),
         }}
       />
