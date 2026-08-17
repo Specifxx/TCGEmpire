@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { formatMoney } from "@/lib/format";
 import { RARITIES } from "@/lib/constants";
+import { trackEvent } from "@/lib/analytics";
 import { GameShell, RunRecap, cardUrl, useShare, type GameCard } from "./shared";
 
 // Pack Opening Simulator — rip a virtual Riftbound pack built from the real card
@@ -42,6 +43,11 @@ export function PackSim({ sets }: { sets: { code: string; name: string }[] }) {
     return () => timers.current.forEach(clearTimeout);
   }, []);
 
+  // Fires once per mount (i.e. once per page view of the simulator) — not once
+  // per set change, which setCode alone in the deps would cause.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { trackEvent("pack_sim_open", { set_id: setCode }); }, []);
+
   const openPack = useCallback(async () => {
     timers.current.forEach(clearTimeout);
     timers.current = [];
@@ -56,6 +62,7 @@ export function PackSim({ sets }: { sets: { code: string; name: string }[] }) {
       setPack(cards);
       setSetName(d.setName ?? "");
       setCurrency(d.currency ?? "AUD");
+      trackEvent("pack_sim_pack_opened", { set_id: setCode });
 
       // Sequential reveal: brisk through the commons, a beat before the final
       // (chase) card for suspense.

@@ -11,6 +11,7 @@ import { cardDisplayName } from "@/lib/card-name";
 import { cardImageAlt } from "@/lib/image-alt";
 import { CardSearch, type SearchCard } from "./CardSearch";
 import type { BasketPlan } from "@/lib/basket";
+import { trackEvent } from "@/lib/analytics";
 
 interface PickedLine {
   card: SearchCard;
@@ -46,7 +47,9 @@ export function BestBasket({ currency, initialList }: { currency: string; initia
         setError(d.error ?? "Something went wrong");
         return;
       }
-      setPlan(d.plan as BasketPlan);
+      const built = d.plan as BasketPlan;
+      setPlan(built);
+      trackEvent("best_basket_build", { card_count: built.matchedCards, total_price: built.totalCents / 100, region: country });
     } catch {
       setError("Network error — try again.");
     } finally {
@@ -69,7 +72,9 @@ export function BestBasket({ currency, initialList }: { currency: string; initia
         setError(d.error ?? "Something went wrong");
         return;
       }
-      setPlan(d.plan as BasketPlan);
+      const built = d.plan as BasketPlan;
+      setPlan(built);
+      trackEvent("best_basket_build", { card_count: built.matchedCards, total_price: built.totalCents / 100, region: country });
     } catch {
       setError("Network error — try again.");
     } finally {

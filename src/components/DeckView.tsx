@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ResolvedDeck, ResolvedCardData, ResolvedCard } from "@/lib/meta-decks";
 import { DomainBadge } from "./Badge";
 import { TierBadge } from "./TierBadge";
@@ -10,6 +10,7 @@ import { useCountry } from "./CountryProvider";
 import { COUNTRIES } from "@/lib/country";
 import { cardHref } from "@/lib/card-url";
 import { cardImageAlt } from "@/lib/image-alt";
+import { trackEvent } from "@/lib/analytics";
 
 // Tidy display for cards our data labels with a precon suffix (e.g. OGS starter
 // legends imported as "Master, Wuju Bladesman - Starter").
@@ -42,6 +43,8 @@ export function DeckView({
 }) {
   const { fmt, country } = useCountry();
   const label = COUNTRIES[country].label;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { trackEvent("deck_view", { deck_id: deck.slug, archetype: deck.archetype }); }, [deck.slug]);
   // The big image on the left follows whichever card you hover (defaults to legend).
   const [preview, setPreview] = useState<ResolvedCardData | null>(deck.legendCard);
   const bigImage = preview?.imageUrl ?? preview?.imageThumbUrl ?? deck.imageUrl;

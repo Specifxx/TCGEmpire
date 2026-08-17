@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { cardHref } from "@/lib/card-url";
 import { cardDisplayName } from "@/lib/card-name";
+import { trackEvent } from "@/lib/analytics";
 import { useQuickView } from "./QuickView";
 import { useCountry } from "./CountryProvider";
 import type { CardTileData } from "./CardTile";
@@ -99,6 +100,12 @@ export function SearchBar({
     e.preventDefault();
     const q = value.trim();
     setOpen(false);
+    // results_count is the preview dropdown's count at the moment of submit —
+    // the debounced fetch above means those results have already resolved by
+    // the time a visitor can act on them, so this is a real count of matches
+    // for the term, not a fabricated one. Skipped for an empty query (that's
+    // "browse everything", not a search).
+    if (q) trackEvent("card_search", { search_term: q, results_count: results.length + sealed.length });
     router.push(q ? `/browse?q=${encodeURIComponent(q)}` : "/browse");
   }
 

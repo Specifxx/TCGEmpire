@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { track } from "@vercel/analytics";
+import { trackEvent } from "@/lib/analytics";
 import { outboundRel } from "@/lib/affiliate";
 
 // An outbound "buy" link. Used to also fire a click beacon (to /api/click) for
@@ -34,15 +34,12 @@ export function OutboundLink({
   children: ReactNode;
 }) {
   function onClick(e: React.MouseEvent<HTMLAnchorElement>) {
-    track("buy_click", { retailer, country, kind });
-    // GA4 mirror of the same event, so it can be marked a Key Event in the GA4
-    // UI — the funnel/attribution surface most teams actually look at. Vercel
-    // Analytics (above) already has this event; GA4 didn't, which meant every
-    // affiliate click session that bounced after one pageview counted as a dead
-    // session with no conversion signal at all. window.gtag is declared global
-    // in lib/use-consent.ts, so no import/typing is needed here; it is a no-op
-    // when GA hasn't loaded (ad blocker, consent denied, GA_ENABLED off).
-    window.gtag?.("event", "buy_click", { retailer, country, kind });
+    // This is the single most commercially meaningful event on the site — it's
+    // the buy click every affiliate/marketplace dollar depends on. Mirrors to
+    // both Vercel Analytics and GA4 (see lib/analytics.ts) so it can be marked
+    // a Key Event in the GA4 UI, the funnel/attribution surface most teams
+    // actually look at.
+    trackEvent("buy_click", { retailer, country, kind });
     // Inside the native app, open retailer links in the system browser so the user
     // leaves our WebView (and can come back), instead of getting stuck on the
     // store's site. On the web this branch never runs — it's a normal link.
