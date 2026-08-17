@@ -63,6 +63,7 @@ export function OutboundLink({
   price,
   positionInList,
   pageType,
+  "aria-label": ariaLabel,
 }: {
   href: string;
   retailer: string;
@@ -70,6 +71,16 @@ export function OutboundLink({
   kind?: "single" | "sealed";
   className?: string;
   children: ReactNode;
+  /** Accessible name override, forwarded verbatim to the rendered <a>. TS's
+   *  JSX checker exempts aria- and data- prefixed attributes from
+   *  excess-property checks on ANY component regardless of whether its
+   *  props type declares them, so callers could already pass this without a
+   *  type error — but the prop was never destructured, so it silently never
+   *  reached the DOM. Found auditing PartnersStrip's eBay/TCGplayer wordmark
+   *  links, which pass this and (until now) had it dropped: their visible
+   *  text ("ebay", "TCGplayer") still gave them SOME accessible name, just a
+   *  less descriptive one than the caller intended. */
+  "aria-label"?: string;
   /** Card's id/slug, when this link is attached to a specific priced card. */
   cardId?: string;
   /** Card's display name, when known — lets the GA4 report read card_name
@@ -115,6 +126,7 @@ export function OutboundLink({
       target="_blank"
       rel={outboundRel(href)}
       className={className}
+      aria-label={ariaLabel}
       onClick={onClick}
     >
       {children}
