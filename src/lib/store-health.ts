@@ -85,7 +85,7 @@ export async function checkStoreHealth(): Promise<{ rows: StoreHealthRow[]; aler
     const trackedKeys = RETAILER_LIST.map((r) => r.key);
     const key = (retailer: string, country: string) => `${retailer}|${country}`;
 
-    const [counts, lastSeenRows, inStockRows, inStockPrices] = await Promise.all([
+    const [counts, lastSeenRows, inStockRows, medianRows] = await Promise.all([
       prisma.retailerPrice.groupBy({
         by: ["retailer", "country"],
         where: { retailer: { in: trackedKeys } },
@@ -101,22 +101,28 @@ export async function checkStoreHealth(): Promise<{ rows: StoreHealthRow[]; aler
         where: { retailer: { in: trackedKeys }, inStock: true },
         _count: { _all: true },
       }),
-      // Raw in-stock prices per store, to compute a real median below — groupBy
-      // has no median aggregate, only min/max/avg, and avg is skewed by outliers
-      // exactly the way a health check can least afford.
-      prisma.retailerPrice.findMany({
-        where: { retailer: { in: trackedKeys }, inStock: true },
-        select: { retailer: true, country: true, priceCents: true },
-      }),
+      // Median in-stock price per store, computed IN Postgres via percentile_cont
+      // rather than pulling every in-stock row into Node — RetailerPrice is a
+      // whole-catalogue table (tens of thousands of rows across every tracked
+      // store), and this repo has already exhausted five consecutive Neon
+      // projects' transfer allowances from exactly this shape of unbounded read
+      // (see the rotation history in lib/db.ts). Prisma's groupBy has no median
+      // aggregate — only min/max/avg, and avg is skewed by outliers in exactly
+      // the way a health check can least afford — so this is the one query in
+      // this file that has to drop to raw SQL. Only the small aggregate (one row
+      // per store/market, not one per listing) crosses the wire.
+      prisma.$queryRaw<{ retailer: string; country: string; median: number | null }[]>`
+        SELECT retailer, country,
+               percentile_cont(0.5) WITHIN GROUP (ORDER BY "priceCents") AS median
+        FROM "RetailerPrice"
+        WHERE "inStock" = true AND retailer = ANY(${trackedKeys}::text[])
+        GROUP BY retailer, country
+      `,
     ]);
 
     const lastSeenByKey = new Map(lastSeenRows.map((r) => [key(r.retailer, r.country), r._max.lastSeen]));
     const inStockByKey = new Map(inStockRows.map((r) => [key(r.retailer, r.country), r._count._all]));
-    const pricesByKey = new Map<string, number[]>();
-    for (const p of inStockPrices) {
-      const k = key(p.retailer, p.country);
-      (pricesByKey.get(k) ?? pricesByKey.set(k, []).get(k)!).push(p.priceCents);
-    }
+    const medianByKey = new Map(medianRows.map((r) => [key(r.retailer, r.country), r.median != null ? Math.round(r.median) : null]));
 
     // 7-day history for the trend comparisons, one query for every store at
     // once (grouped in-process rather than one query per store). Table may not
@@ -143,7 +149,7 @@ export async function checkStoreHealth(): Promise<{ rows: StoreHealthRow[]; aler
       const listings = c._count._all;
       const inStock = inStockByKey.get(k) ?? 0;
       const lastSeen = lastSeenByKey.get(k) ?? null;
-      const medianPriceCents = median(pricesByKey.get(k) ?? []) || null;
+      const medianPriceCents = medianByKey.get(k) ?? null;
       const hist = historyByKey.get(k) ?? [];
       const historyDays = new Set(hist.map((h) => h.day.getTime())).size;
       const medianListings7d = historyDays >= MIN_HISTORY_DAYS ? median(hist.map((h) => h.listings)) : null;

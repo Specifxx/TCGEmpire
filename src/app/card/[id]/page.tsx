@@ -660,13 +660,38 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 12)
     .map(([name]) => normalizeSearch(name));
-  const playedAlongside = coPlayNames.length
+  // A champion/legend name routinely has several printings (base, Showcase,
+  // Signature, alt-art) — nameNormalized has no unique constraint, and a raw
+  // `take: 12` over 12 NAMES can silently fill its budget with several PRINTS
+  // of one splashy co-play champion, both showing that champion twice under a
+  // section titled "played alongside" and dropping a genuinely different
+  // ranked synergy card. Same dedup lib/meta-decks.ts's buildCardMap() already
+  // uses (prefer base art; otherwise the first — cheapest, since results are
+  // requested cheapest-first below) — matched here rather than a fresh
+  // heuristic, so the two "which printing represents this name" decisions on
+  // the site can't independently drift.
+  const isBasePrinting = (collectorNumber: string) => !collectorNumber.includes("*") && !/\d+[a-z]/i.test(collectorNumber);
+  const playedAlongsideMatches = coPlayNames.length
     ? await prisma.card.findMany({
         where: { nameNormalized: { in: coPlayNames }, id: { not: card.id } },
-        take: 12,
+        orderBy: [{ [priceField(DEFAULT_COUNTRY)]: { sort: "asc" as const, nulls: "last" as const } }],
         select: cardTileSelect(DEFAULT_COUNTRY),
       })
     : [];
+  const playedAlongsideByName = new Map<string, (typeof playedAlongsideMatches)[number]>();
+  for (const m of playedAlongsideMatches) {
+    const key = normalizeSearch(m.name);
+    const existing = playedAlongsideByName.get(key);
+    if (!existing || (isBasePrinting(m.collectorNumber) && !isBasePrinting(existing.collectorNumber))) {
+      playedAlongsideByName.set(key, m);
+    }
+  }
+  // Re-ordered to the co-play frequency ranking (the dedup Map above was built
+  // in query order, not synergy order) — already capped to ≤12 distinct names
+  // by coPlayNames itself.
+  const playedAlongside = coPlayNames
+    .map((n) => playedAlongsideByName.get(n))
+    .filter((m): m is NonNullable<typeof m> => m != null);
 
   // AU price history (day-cached — see lib/price-history) reused here for the
   // genuine price-trend paragraph below. Same cache key as the chart's own fetch

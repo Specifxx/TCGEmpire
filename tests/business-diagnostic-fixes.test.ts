@@ -12,7 +12,14 @@ const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 // commit messages/doc comments in this codebase routinely explain what used to
 // be there and why it was removed, which would otherwise trip a naive
 // doesNotMatch on the removed thing's own name.
-const readCode = (p: string) => read(p).replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/.*$/gm, "$1");
+//
+// Line comments MUST be stripped BEFORE block comments: at least one existing
+// // comment in this codebase contains a literal "/*"-shaped substring (a
+// "/card/*" URL pattern in prose), and stripping block comments first treats
+// that as a real block-comment OPEN, then greedily eats everything up to the
+// next unrelated "*/" anywhere later in the file — silently deleting hundreds
+// of real lines, including the very code a test meant to assert on.
+const readCode = (p: string) => read(p).replace(/(^|[^:])\/\/.*$/gm, "$1").replace(/\/\*[\s\S]*?\*\//g, "");
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Top Deals badge — the "second number" must be a labelled reference price,
@@ -269,6 +276,32 @@ test("the card page derives 'played alongside' from the SAME meta-deck data as '
   assert.match(coPlaySection, /section === "rune"/, "runes are a mana-base choice, not synergy — must be excluded");
 });
 
+test("'played alongside' dedupes multi-print card names before rendering, so one champion can't occupy two slots", () => {
+  // A champion/legend name routinely has several printings (base, Showcase,
+  // Signature, alt-art) sharing one nameNormalized with no unique constraint —
+  // a raw findMany over 12 co-play NAMES can return more than 12 ROWS. Without
+  // a dedup step, take:12 can silently fill with several prints of one
+  // champion while dropping a genuinely different ranked synergy card, so
+  // "Often played with X" would show the same card twice under a subhead
+  // promising OTHER cards. Pinned against a real, confirmed regression a
+  // pre-production review caught with real catalogue data (verified: cards
+  // co-played with a 4-print champion in the seeded meta decks return 13-18
+  // candidate rows for 12 names).
+  const code = readCode("src/app/card/[id]/page.tsx");
+  const at = code.indexOf("const coPlayNames");
+  const section = code.slice(at, code.indexOf("const playedAlongside =", at) + 400);
+  assert.match(
+    section,
+    /playedAlongsideByName/,
+    "the resolved rows must be deduped by normalised name into a Map before rendering"
+  );
+  assert.doesNotMatch(
+    section,
+    /take:\s*12/,
+    "a bare take:12 on the ROW query is exactly the bug — the cap belongs on the deduped NAME list (already applied via coPlayNames.slice(0, 12)), not on raw rows that can include several prints per name"
+  );
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Deck → Best Basket handoff.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -323,6 +356,25 @@ test("checkStoreHealth and its Discord poster are both guarded to fail soft", ()
   const discord = read("src/lib/discord.ts");
   assert.match(discord, /export async function postDiscordAlert/);
   assert.match(discord, /if \(!webhook\) return \{ ok: false/, "must no-op, not throw, when DISCORD_WEBHOOK_URL is unset");
+});
+
+test("store health computes today's median price via a SQL aggregate, not a whole-table findMany", () => {
+  // A pre-production review caught the original version pulling every in-stock
+  // RetailerPrice row (tens of thousands, across all 142 tracked stores) into
+  // Node on every invocation — twice a day via cron, plus every 5 minutes the
+  // admin page is viewed after its cache expires. lib/db.ts documents this
+  // exact shape ("whole-table reads ... never in request handlers") as the
+  // cause of five separate exhausted Neon transfer allowances. Fixed by
+  // computing the median IN Postgres (percentile_cont), so only one row per
+  // store/market crosses the wire instead of one row per LISTING.
+  const src = read("src/lib/store-health.ts");
+  assert.match(src, /percentile_cont/, "the median must be computed in SQL, not by pulling raw prices into Node");
+  assert.match(src, /\$queryRaw/, "expected a raw query for the per-store median aggregate");
+  assert.doesNotMatch(
+    src,
+    /retailerPrice\.findMany\(\{\s*where:\s*\{\s*retailer:\s*\{\s*in:\s*trackedKeys\s*\},\s*inStock:\s*true\s*\}/,
+    "must not fetch every in-stock row across all tracked stores with no row cap"
+  );
 });
 
 test("the store-health cron route fails CLOSED with no CRON_SECRET", () => {
