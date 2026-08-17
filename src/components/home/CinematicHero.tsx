@@ -108,7 +108,33 @@ export function CinematicHero({
             check that runs on raw HTML. The Navbar wraps its two SearchBar
             instances in exactly this boundary; the hero was the one that
             didn't. See docs/adsense-remediation.md § Phase 11. */}
-        <div className="animate-fade-in [animation-delay:300ms] mt-6">
+        {/* relative z-20: a real stacking-context bug, found auditing search
+            (not merely a test-script inconvenience — confirmed with a real
+            screenshot). Every direct child of this section that carries
+            `animate-fade-in` (this one, TrendingChips' row, the browse-link/
+            region-toggle row below) becomes a CSS stacking context for as
+            long as its animation is "in effect" — which, with `animation-
+            fill-mode: both`, is forever, not just during the 0.6s it plays —
+            per the CSS spec, an element that is (or has been) the target of
+            an animation on a stacking-context-triggering property forms one
+            REGARDLESS of its own `position`/`transform` staying static/none
+            afterward. None of these siblings sets an explicit z-index, so
+            each is sorted as z-index:0 in THIS section's own stacking order,
+            and ties break by DOM order — meaning TrendingChips (mounted
+            after this div) was silently painting, and hit-testing, ABOVE
+            this div's own dropdown despite the dropdown's internal `z-50`,
+            because that z-50 only ever competed against siblings INSIDE this
+            div's now-separate stacking context, never against TrendingChips
+            directly. The visible symptom: opening the dropdown showed its
+            rows visually interleaved with the trending chips underneath, and
+            a real mouse click on a dropdown suggestion could land on a chip
+            instead. `relative z-20` gives this whole div an EXPLICIT,
+            positive stacking level at the section's own top scope — now
+            unambiguously above every animation-promoted sibling regardless
+            of DOM order, closing the gap for good rather than only for the
+            one sibling (TrendingChips) this instance happened to be tested
+            against. */}
+        <div className="relative z-20 animate-fade-in [animation-delay:300ms] mt-6">
           <Suspense fallback={<div className="input mx-auto h-12 max-w-2xl" />}>
             {/* trendingCards feeds the box's own zero-state dropdown (focused +
                 empty — see SearchBar's doc comment) in addition to the
