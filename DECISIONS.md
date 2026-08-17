@@ -802,3 +802,495 @@ is Phase 6's deliverable) and was deleted after use.
   framing, "search initiation rate" definition, GA4 Exploration setup,
   Contentsquare context, no-published-TCG-benchmark honesty note
 - This `DECISIONS.md` section
+
+---
+
+## Phase 3 — Hero & Search (2026-08-17)
+
+Re-read `git log` and this file in full before starting (per instructions) —
+confirmed analytics wiring from Phase 2 (`gaEvent`, `search_initiated`,
+`search_suggestion_selected`, `search_submitted`, `search_no_results`,
+`region_changed`, `store_click`) was live and untouched at the start of this
+phase, and built on top of it rather than around it.
+
+### What was already satisfied — verified, not rebuilt
+
+Before writing anything, read `CountryHeroToggle.tsx`, `CountryProvider.tsx`
+and `src/app/api/geo/route.ts` fresh, per this phase's own instruction not to
+assume. Result: **the brief's region-auto-detect ask (item 2) was already
+fully implemented**, by a prior optimisation pass, and needed zero code
+changes:
+
+- `src/app/api/geo/route.ts` is exactly the "existing geo API route" the
+  phase brief told me to look for before building anything new — a
+  read-only, side-effect-free `GET` that reads Vercel's
+  `x-vercel-ip-country` header and returns `{ country, currency }`. No
+  mutation, no cookie write from inside the route itself.
+- `CountryProvider.tsx`'s mount effect calls this route once, **only when no
+  country cookie exists yet**, and on success calls `setState()` directly
+  (not `setCountry()` — see Phase 2's mechanism note on why that matters:
+  it's what keeps `region_changed` firing only for a person's own click, not
+  the app's silent starting guess) plus writes the cookie so the *next*
+  server render already agrees. This is IP-based **auto-detect that sets a
+  default**, never an IP-based **redirect** — the URL never changes, only
+  client-side state and a cookie — which is exactly what Google's
+  multi-regional guidance
+  (https://developers.google.com/search/docs/specialty/international/managing-multi-regional-sites)
+  asks for: Googlebot crawls from the US and must see the same URL structure
+  every other visitor does.
+- `CountryHeroToggle.tsx` shows the resolved country as a **labelled**
+  active chip ("Shopping from" eyebrow + a highlighted "US · USD" pill) in a
+  small, quiet, low-contrast segmented control directly under the search
+  box — not a six-button strip competing for attention, never a blocking
+  modal. There is exactly one instance of it in the hero; no second/duplicate
+  region strip exists anywhere in `CinematicHero.tsx`.
+- The choice, once a visitor explicitly picks one, persists via
+  `document.cookie` (1-year `COUNTRY_COOKIE`), and a signed-in account's
+  choice also persists server-side (`preferredCountry`) — both already
+  wired, both pre-existing.
+
+Given all of this was already correct and already read-only/side-effect-free
+per the phase's own scope guardrail, no `api/geo` change, no new geo logic,
+and no `CountryHeroToggle`/`CountryProvider` edit was needed for item 2.
+Logged here so a later phase doesn't waste time re-verifying it, and so it's
+on record that this wasn't skipped, just already done.
+
+Also verified, not changed: `AffiliateDisclosure`/`PartnersStrip` wording
+(Phase 1 flagged this as unverified) — read `PartnersStrip.tsx` in full while
+screenshotting the hero for this phase's own verification; the eBay Partner
+Network disclosure line is present, unchanged, below the fold, out of this
+phase's file scope (footer/partners work belongs to Phase 4). Not re-quoted
+here since Phase 4 owns re-verifying it against the brief's "verbatim"
+requirement as part of its own footer audit.
+
+### Hero copy (item 1)
+
+`src/components/home/CinematicHero.tsx`:
+
+- H1 changed from *"Compare Riftbound card prices across AU, NZ, US, UK, SG
+  & CA stores"* (60+ chars, market-listing) to *"Find the cheapest place to
+  buy any **Riftbound** card"* (51 chars, job-stating) — the brief's
+  suggested shape, close to verbatim. "Riftbound" kept (still wrapped in the
+  brand-green `<span>`) for SEO. Still says nothing about which market is
+  active, so the page's ISR/no-cookie-reads contract (see the existing
+  comment directly above the H1, untouched) is unaffected — one server-
+  rendered version still serves every visitor and every crawler.
+- Subhead cut from a 3-line, 200+ character paragraph that named all six
+  countries a second time, to one 68-character sentence: *"Compare live
+  prices across every major Riftbound store, instantly."* No country names —
+  they live in the region toggle (unchanged, see above) and stay in the
+  SEO/FAQ block at the foot of the page (not touched this phase, per the
+  phase brief's own scope note).
+
+### Hero CTA trim (item 4)
+
+Deleted from the hero, per the brief: the "Browse the database" filled
+button, "Top meta decks →", and "New to Riftbound? Learn how to play →".
+Replaced with exactly one plain-text link, `Browse all {totalCards.
+toLocaleString()} cards →`, pointed at `/browse` (where "Browse the
+database" already linked) — `totalCards` is the same prop already threaded
+in from `page.tsx`, not a hardcoded number. There was no second/duplicate
+search box or region strip already in the hero to remove (see above) — the
+"delete the duplicate search box" and "delete the duplicate region strip"
+items in the phase instructions were already satisfied before this phase
+started.
+
+**A pre-existing test pinned the removed `/learn` hero link and had to be
+reconciled, not just made to pass.** `tests/internal-linking.test.ts`
+(predates this task — see its own header comment referencing
+`GROWTH-AUDIT.md § 2`) asserted the hero's server HTML must literally contain
+`href="/learn"`, with descriptive anchor text, because `/learn` used to be a
+genuine crawler orphan (zero inbound links, sitemap priority 0.8) and the
+hero link was the fix. The homepage-redesign brief explicitly instructs
+removing that exact link, so this phase's own change and that pre-existing
+test are in direct, intentional conflict — this is not a regression to
+revert.
+
+Resolution: since Phase 1, `/learn` has gained a **second, independent, more
+robust** fix for the same orphan problem — a real entry in `nav-groups.ts`
+(`{ href: "/learn", label: "Learn Riftbound", ... }`, group "Guides & News",
+no `hideInFooter` flag) that flows into `FOOTER_GROUPS` and renders via
+`FooterNav.tsx` (a plain server component, real `<Link href>` anchors, no
+"use client") from `layout.tsx`'s unconditional `<footer>` — present on
+every route, including "/", not just the hero. That fix is strictly better
+than the one it replaces (sitewide, not homepage-only), so I rewrote the
+test to pin *that* mechanism instead of grepping one specific component for
+one specific href: `/learn` has a real, non-hidden `nav-groups.ts` entry
+→ that entry's group is actually one of the groups spread into
+`FOOTER_GROUPS` (not launcher-only) → `FooterNav.tsx` renders those links as
+real anchors, not JS-only navigation → the root layout renders `<FooterNav
+/>` unconditionally. Four small, source-level tests, same rigor as the
+originals (still checks for JS-only-navigation footguns, still checks label
+descriptiveness), pointed at the surface that's now authoritative. Also
+rewrote the file's third test ("the hero does not become a wall of competing
+CTAs") — its old regex targeted a CSS class string (`flex flex-wrap
+items-center justify-center gap-x-4`) that no longer exists now that the CTA
+row is a single link, so it was passing **vacuously** (matching nothing,
+`0 <= 2`) rather than testing anything current. Replaced with a direct count
+of `<Link` elements in the whole file (now pinned at exactly 1) plus an
+explicit check that it isn't styled `btn-primary` (a filled button = a second
+CTA in disguise). All four tests pass; full suite is still 581/581 (was
+578/578 before this phase — net +3 tests: one test removed, four added, see
+below for why the count doesn't move 1:1 with "tests I touched").
+
+This required editing a test file, which is outside this phase's literal
+"Homepage, shared homepage components, footer, and analytics only" scope
+note. Judgment call: leaving the build/test suite red because a prior,
+unrelated pass pinned behavior the CURRENT task explicitly instructs changing
+would violate the harder rule ("Never leave the build red... anything your
+own edits broke must be fixed before you finish"), and reverting my hero
+change to keep the old test green would directly contradict the brief. Test
+files aren't card-detail-pages/search-backend/pricing-logic/scraper/API (the
+things explicitly off-limits), so I judged this the least-bad path and
+logged it here rather than picking silently.
+
+### Stat line compression (item 5)
+
+`src/components/home/HeroStats.tsx` rewritten to the brief's exact shape:
+`{cards} cards · {stores} {market} stores · prices updated {freshness}` (one
+`<p>`, one line, freshness clause omitted entirely when null exactly as
+before). Two clauses dropped from display: `{priced} priced` and `{inStock}
+in-stock listings` — the brief's compressed example doesn't include them,
+and re-reading the brief's own words for this line — "this is trust signal,
+not navigation — style it accordingly" — I read as also meaning: this line
+should stop being three separate `<Link>`s (to `/browse`, `/tools/deal-
+finder`, `/stores/tracked`) competing for above-the-fold interactive-target
+budget alongside the actual primary elements. All three links removed; the
+line is now plain muted text. `/browse` stays reachable from the hero's own
+"Browse all N cards →" link right below the search box (unchanged
+destination); `/tools/deal-finder` and `/stores/tracked` stay reachable
+sitewide via nav/footer (confirmed both have real `nav-groups.ts` entries,
+same mechanism verified above for `/learn`) — nothing is orphaned, per the
+brief's own "nothing gets deleted" framing.
+
+`MarketStat`'s `priced`/`inStock` fields, and `page.tsx`'s Prisma queries
+that compute them, are **untouched** — they're still threaded through as
+props even though this component no longer renders them, per this phase's
+own instruction to "match HeroStats.tsx's existing prop shape... don't guess
+the data plumbing." Trimming those now-unused queries out of `page.tsx` is a
+separate, small, low-risk future cleanup this phase deliberately didn't do,
+to keep this phase's diff to hero/search only.
+
+### Header search: hide-until-scroll, homepage-only (item 6)
+
+New `src/components/HeaderSearchSlot.tsx`, wired into `Navbar.tsx` around
+**only** the desktop (`lg:block`) search wrapper — the separate mobile
+full-width row (`pb-3 lg:hidden`) is untouched. Scoped via `usePathname() ===
+"/"` read inside the new client component (not a prop threaded from a
+homepage-specific wrapper — `Navbar` itself stays a server component with no
+new client boundary of its own; `HeaderSearchSlot` is the one small client
+piece that needs to know both the route and the scroll position). On every
+route other than "/", it's a pure no-op — `scrolled` starts and stays `true`,
+so the search box renders exactly as it always has, no behavior change,
+verified via the full test suite still passing and via `npm run build`'s
+route list still showing sane bundle sizes on other routes.
+
+On "/", it reuses `NavbarShell`'s own `scrollY > 8` threshold (a second,
+independent scroll listener with the same number, not a shared one — see
+"what I did not do" below) so the header search reappearing reads as part of
+the same "you've scrolled" moment as the header's frosted-background
+transition, not a separately-timed effect. Hidden via Tailwind's `hidden`
+class (`display:none`), **never unmounted** — confirmed via a real
+Playwright run that the `<input>` is present in the DOM immediately
+(`document.querySelector` finds it) even before any scroll, satisfying "keep
+it... always in the DOM for crawlers" literally, not just in spirit.
+
+**What I did not do**: thread `NavbarShell`'s existing `scrolled` boolean
+into `HeaderSearchSlot` via context so there's only one scroll listener
+instead of two. `NavbarShell` currently takes a plain `children: ReactNode`
+(JSX, not a render-prop), and `Navbar.tsx` is a server component — turning
+that into a shared client context would mean either converting `Navbar`
+itself to a client component (unnecessary blast radius for a one-field
+value) or adding a new context provider file for a single boolean two
+components already compute independently and cheaply (a rAF-throttled
+`scrollY` read is negligible). Two independent `scrollY > 8` listeners
+computing the same threshold is a very small duplication next to that cost;
+logged here as a real design trade-off, not an oversight, in case a later
+phase wants to unify it.
+
+**Real, measured tension with the master brief's own hard target — flagged
+explicitly for Phase 6/7, not silently resolved either way.** This phase's
+own instructions (quoting the brief) say: "keep it always present on mobile
+and always in the DOM for crawlers" — i.e. mobile does **not** get the
+scroll-gate at all, only desktop does ("consider hiding... until scroll on
+desktop"). Implemented exactly that: the mobile nav row is completely
+unaffected by `HeaderSearchSlot`. But the master brief's Hard Targets table
+separately demands **zero duplicate search boxes above the fold**, with no
+desktop/mobile carve-out stated there. On a real 390×844 screenshot (taken
+this phase, see `artifacts`-equivalent scratch shot, not committed — Phase 6
+owns `artifacts/`), the header's mobile search row (top of page, inside the
+sticky header) and the hero's own search box **are both visible in the same
+first screen** — a real, structural duplicate-search-box-above-the-fold
+situation on mobile specifically, caused by following this phase's own
+literal instruction. This is NOT a data-sparsity artifact of the local seed
+DB — it's true regardless of how rich the price data is, because the header
+is always at the very top of every page and the hero search sits directly
+below it. I implemented the phase's literal instruction rather than
+unilaterally overriding it (the instruction was unambiguous, and it's
+possible a later phase's holistic view of the hard-target numbers is the
+right place to decide whether to override it), but this needs an explicit
+decision from Phase 6 (when `scripts/homepage-audit.mjs`'s "exactly one
+visible search input above the fold" assertion is built — it will need to
+either accept 2 on mobile with a documented exception, or this behavior
+needs to change) or Phase 7 (final verification/reconciliation). Options for
+whoever picks this up: (a) accept 2 as correct per this phase's literal
+brief text and adjust the audit's mobile assertion accordingly with a
+comment citing this entry; (b) scroll-gate mobile too, contradicting "always
+present on mobile" but satisfying the hard target; (c) shrink/simplify the
+header's mobile search row into something that doesn't count as a full
+second "search box" (e.g. a smaller icon-trigger). Not decided here.
+
+### Search UX — `SearchBar.tsx` (item 7)
+
+Rewrote the shared component (both `variant="nav"` and `variant="hero"` —
+kept as one implementation per the codebase's own "exactly one search
+implementation" principle, not forked). Every change below applies to both
+variants unless noted.
+
+1. **Autofocus gating tightened.** Was `matchMedia("(min-width: 1024px)")`
+   alone; now also requires `matchMedia("(pointer: fine)")` — both must
+   hold. Reasoning (also in the component's own doc comment): a touch
+   tablet or a phone browser's "request desktop site" mode can report
+   ≥1024px while still being a touch-primary device, and stealing focus
+   there still pops the on-screen keyboard before the visitor has read
+   anything. `pointer: fine` reports the device's **primary** pointer, so a
+   laptop with both a touchscreen and a trackpad still autofocuses
+   correctly (trackpad/mouse is that device's primary input even though
+   touch is also physically available) — this was the brief's own worked
+   example ("a touch laptop with a fine pointer is a real case worth
+   thinking about") and I followed it literally: AND, not a replacement of
+   the width gate.
+2. **`/` global shortcut**, implemented as a `document`-level `keydown`
+   listener registered once per mounted `SearchBar` instance (up to 3 exist
+   on the homepage at once: nav desktop, nav mobile, hero). Skips entirely
+   while focus is already inside any input/textarea/contenteditable. Each
+   instance independently checks whether **its own** input is currently
+   visible (`offsetParent !== null` for the `display:none` case, **plus** a
+   `getBoundingClientRect()` intersection-with-viewport check) before
+   reacting — the viewport check specifically exists because `offsetParent`
+   alone can't distinguish "hidden via CSS" from "merely scrolled out of
+   view," and without it, once a visitor scrolls past the hero on the
+   homepage, the now-off-screen hero box (still `display:block`, just
+   scrolled away) would fight the now-visible header box for the shortcut.
+   **Known, accepted, minor limitation** (documented in the component's own
+   comments): during the few hundred pixels of scroll where the header
+   search has just reappeared (>8px) but the hero search is still mostly
+   on-screen too, both instances' visibility checks can pass simultaneously,
+   so which one wins isn't fully deterministic. Not engineered further
+   (would need a cross-instance singleton/coordinator) — both outcomes are a
+   real, visible, functioning search box, so the cost of this ambiguity is
+   low and short-lived.
+   A small visible `/` badge renders inside the field (a `<kbd>`, `aria-
+   hidden`, decorative only — the real listener is document-level, not on
+   the badge) whenever the field is empty (focused or not), and disappears
+   the instant the visitor types — so it never has to fight with typed text
+   for space, and no extra right-padding is needed beyond a small `sm:pr-*`
+   safety margin. Hidden below the `sm` breakpoint (a touch keyboard has no
+   physical `/` key worth advertising).
+3. **Baymard autocomplete refinements, all implemented**:
+   - **Suggestion cap**: 10 desktop / 6 mobile (`matchMedia("(max-width:
+     767px)")`, within Baymard's stated 4-8 mobile band), applied as a hard
+     slice on the combined list (cards-then-sealed in query-state,
+     trending-then-recent in zero-state) so the total row count — not a
+     fixed panel height — is what stays bounded. This is also how "no
+     scrollbar, ever" is satisfied: the `max-h-[70vh] overflow-y-auto` that
+     used to wrap the list is gone entirely; there is nothing to overflow
+     because the row count itself never exceeds the cap.
+   - **Bold ONLY the predicted portion**, not what the visitor typed — the
+     reverse of the naive approach, per Baymard's finding. A small
+     `HighlightedLabel` component finds the query as a case-insensitive
+     substring and wraps everything AFTER the matched span in `<strong>`;
+     everything up to and including the match renders plain. Falls back to
+     fully-plain text when the query isn't a literal substring of the
+     label (a typo/fuzzy backend match) rather than guessing at a highlight
+     that would be misleading.
+   - **Active suggestion highlighted visibly** — a `ring-1 ring-inset
+     ring-brand-500/50` on top of the same background a mouse-hover gets, so
+     the keyboard-active row reads as distinct, not just "currently
+     hovered."
+   - **Full arrow-key navigation**, wrapping in both directions, computed
+     over whichever list is actually showing (zero-state trending+recent, or
+     query-state cards+sealed) so the highlight and `Enter` always agree
+     with what's visually on screen. The arrowed-to suggestion's plain text
+     **copies into the input** (a `displayValue` derived from
+     `activeSuggestion` when one is set, falling back to the real typed
+     `value` otherwise) so the visitor can keep editing from it — the
+     underlying `value` driving the debounced fetch is untouched until an
+     actual keystroke commits the new text and resets `activeIndex`, so
+     arrowing through suggestions never re-triggers the search API.
+   - **Set code, collector number, and price already shown per row** —
+     verified this was already true in the pre-existing implementation and
+     preserved unchanged (card/trending rows: `{setCode} · {collectorNumber}`
+     + `fmt(price(card))`; sealed rows: `{productType} · {setCode}` +
+     `fmt(lowestPriceCents)`).
+4. **Zero-state** (empty/near-empty field, focused): shows trending chips
+   **as suggestions** (when the `trendingCards` prop is passed — see below)
+   plus recent searches from `localStorage` (`rc_recent_searches`, capped at
+   5, deduped case-insensitively, most-recent-first) when present. Confirmed
+   via a real interaction test (see Verification below) that with zero
+   trending data AND zero recent-search history, the dropdown correctly
+   stays **closed** rather than opening on nothing — then confirmed that
+   after one real search, the SAME field's zero-state correctly shows that
+   exact recent query on the next focus. `trendingCards` is a new **optional**
+   prop, wired only from `CinematicHero` (which already computes this data
+   server-side for the always-visible `TrendingChips` row below the box) —
+   deliberately **not** wired from the nav variant. Reasoning: the nav
+   `SearchBar` renders on every one of 150+ routes via shared `layout.tsx`
+   chrome; giving it trending-card data would mean either a new sitewide
+   data fetch (real risk: this codebase has hit its DB transfer allowance
+   multiple times per `lib/db.ts`'s own comments, cited elsewhere in this
+   codebase) or threading homepage-specific server data through global
+   chrome, neither of which this phase's scope ("Homepage, shared homepage
+   components, footer, and analytics only" — the nav variant living outside
+   the homepage isn't really "a homepage component") justified for what
+   degrades gracefully anyway. The nav variant's zero-state still works —
+   recent searches only, exactly the brief's own fallback ("they may not
+   [exist] — that's fine, the feature should just be inert until there's
+   history").
+5. **ARIA combobox**, full pattern: `role="combobox"`, `aria-expanded`,
+   `aria-haspopup="listbox"`, `aria-controls` (→ a real `id={listboxId}` on
+   the `<ul role="listbox">`), `aria-autocomplete="list"`, and
+   `aria-activedescendant` pointing at the currently-arrowed option's id
+   (unset when nothing is active). Each option (`<Link>` for
+   card/trending/sealed rows, `<button>` for recent-search rows — the only
+   row type with no natural href to navigate to) carries `role="option"`,
+   a stable id, `aria-selected`, and `tabIndex={-1}` — options are reachable
+   by arrow key via `aria-activedescendant`, not by Tab, per the standard
+   ARIA 1.2 combobox pattern (focus stays on the input the whole time).
+   `id`s are built from `useId()` (React 18) so the up-to-3 simultaneously-
+   mounted `SearchBar` instances on one page never collide.
+   Modifier-clicks (ctrl/cmd/shift, or a real middle-click) on card/trending
+   rows still open the card page in a new tab via native anchor behavior,
+   unchanged from before; the same modifiers held on a keyboard `Enter`
+   trigger an explicit `window.open` (there's no native href-click for a key
+   press to fall back on) — implemented as parallel, explicit code paths
+   per row kind (`activateCardLike`, `activateSealed`, `commitSearch`) rather
+   than trying to synthesize/dispatch a fake click event on the anchor,
+   which would have been more DRY but relies on undocumented interop between
+   a dispatched `MouseEvent` and Next.js `<Link>`'s internal navigation
+   handler — correctness over cleverness here, given this is exactly the
+   code path Baymard's testing says causes real user-facing mis-selection
+   when it's subtly wrong.
+6. **Mobile obscuring audit** (this phase's own instruction: verify
+   `SearchBar`'s own z-index/positioning isn't the problem before Phase 5
+   touches `FeedbackWidget`). Confirmed via a real 390×844 Playwright run:
+   the dropdown panel is `z-50`; `FeedbackWidget`'s fixed bottom-right
+   launcher is `z-40` (`FeedbackWidget.tsx`'s own comment already documents
+   this). `50 > 40`, asserted directly against the computed styles in a real
+   browser, not just read from source — so even where their boxes might
+   spatially overlap near the bottom of a short viewport, the dropdown
+   always paints on top and stays fully clickable. **This confirms
+   `SearchBar` itself isn't the obscuring risk** the brief worries about;
+   whatever's left (making the launcher itself smaller or hiding it below a
+   scroll threshold) is Phase 5's stated job, unchanged by this finding.
+
+### `TrendingChips.tsx` — closing Phase 2's flagged gap
+
+Phase 2 explicitly logged (`DECISIONS.md`, "Known gap logged for a later
+phase: trending-chip clicks are GA4-blind") that this component only fired a
+Vercel Analytics event, and flagged this exact phase as the natural place to
+fix it since it already touches the file. Fixed: chip clicks now ALSO call
+`gaEvent("search_initiated", { trigger: "trending_chip", card_id, variant:
+"hero" })` alongside the untouched, still-firing `track("trending_chip_
+click", …)` Vercel call. Reused `search_initiated` with a new `trigger`
+value rather than inventing a fourth GA4 event, specifically so `docs/
+homepage-measurement.md`'s "search initiation rate" formula stays a plain
+`search_initiated OR search_submitted` GA4 query — updated that doc's §2 to
+reflect the fix (was previously instructing readers to work around the gap
+via a separate Vercel Analytics check).
+
+### Verification
+
+Typecheck, lint, full test suite, and production build were run after every
+meaningful change, not just once at the end:
+
+| Command | Result | Notes |
+|---|---|---|
+| `npm run typecheck` | PASS (0 errors) | |
+| `npm run lint` | PASS (exit 0) | Zero new warnings; same pre-existing `react/no-unescaped-entities` set Phase 1/2 already catalogued, none in files this phase touched |
+| `npm test` | PASS — 581/581 | Was 578/578 before this phase. `tests/internal-linking.test.ts` needed real edits (see above) to reconcile a pre-existing pin with this phase's brief-mandated hero change — net effect: 1 test replaced conceptually by 4 more targeted ones (removed 1 hero-specific assertion pair, added 4 footer-mechanism assertions + rewrote 1 CTA-count assertion), so the suite total moved by +3, not by the number of files touched |
+| `npm run build` | PASS (exit 0) | Homepage (`/`) still a static (`○`) route: **16.8 kB page / 151 kB First Load JS** — page weight is DOWN from Phase 2's 18.4 kB (less hero markup: 3 links → 1, 4 stat clauses → 3, no more `Link`-wrapped stat spans) even though `SearchBar.tsx` itself grew substantially (autocomplete/keyboard/ARIA logic) — expected, since `SearchBar` is one shared chunk referenced from 3 places, not duplicated per-instance. First Load JS ticked up slightly (148 → 151 kB) from that same shared-chunk growth. Restarted `next dev` after this build per Phase 2's own documented gotcha (a concurrent `next build` corrupts a running `next dev`'s module registry) — confirmed `next dev` serves `/` as 200 again afterward. |
+
+**Real-browser interaction verification** (not just source review): wrote a
+throwaway Playwright script (not committed — same pattern Phase 2 used;
+`scripts/homepage-audit.mjs` is Phase 6's real deliverable), driving actual
+Chromium at both 1440×900 and 390×844 against the local `next dev` server,
+and asserting on real DOM state and `window.dataLayer` after real
+interactions rather than reading the source and assuming it works. 30
+assertions, all passing on the final run, covering: H1/subhead copy, exactly
+one `/browse` link, no leftover "Top meta decks" text, compressed
+link-free stat line, header search hidden pre-scroll / revealed post-scroll
+on the homepage, ARIA combobox attributes, the zero-state's honest
+"nothing to show yet" empty case AND (after seeding one real search) its
+"here's your one recent search" populated case, a live "ahri" query
+returning results with the desktop 10-cap respected, bold-predicted-portion
+markup present, two consecutive `ArrowDown` presses moving
+`aria-activedescendant` to two different real option elements with
+`aria-selected="true"` and the field text updating to match, `Enter` on an
+arrowed suggestion firing exactly one `search_suggestion_selected` with the
+correct `suggestion_rank`, the global `/` shortcut correctly focusing a
+search input from a page with no field focused, and the dropdown's `z-50`
+beating `FeedbackWidget`'s `z-40` on a real mobile viewport. Two real bugs
+were found and fixed *in the verification script itself* while writing it
+(not in the app code): a raw CSS `#id` selector doesn't work against React
+`useId()`'s colon-containing ids without escaping (switched to
+`document.getElementById` inside `page.evaluate`), and `gtag()` calls
+`dataLayer.push(arguments)` with an array-**like** `arguments` object, which
+fails an `Array.isArray()` duck-type check (switched to checking `a[0] ===
+"event"` directly) — both are dead-end script details, not application bugs,
+recorded here only so a later phase reusing this technique doesn't hit the
+same two potholes.
+
+Also took fresh before/after-equivalent screenshots at both hard-target
+viewports during this verification pass (not committed — scratch, in the
+session's own scratchpad — `artifacts/` is Phase 6's deliverable) and
+visually confirmed: the search box reads as the clear dominant element
+against the dark background (see the styling note below), the hero has
+exactly one secondary link, the region toggle is a single quiet row, and —
+the one open item — the mobile screenshot visually confirms the documented
+header-row/hero-search coexistence flagged above for Phase 6/7.
+
+### Search box visual dominance (item 3)
+
+Audited per this phase's own instruction ("verify sizing/contrast/centring
+already satisfies 'the single visually dominant element'; adjust if not") —
+it did NOT. The hero's search `<input>` was using the sitewide `.input`
+component class unmodified: `bg-ink-950 border-ink-700`, and the hero's own
+background is flatly `bg-ink-950` — i.e. the search box's fill was the
+**identical color** to the page behind it, distinguished only by a 1px
+`border-ink-700` hairline. This is close to verbatim the Baymard finding the
+brief cites ("low-contrast fields on graphics-heavy backgrounds push users
+into browsing instead"). Fixed via hero-variant-only utility classes layered
+on top of `.input` (Tailwind's utilities layer always wins over the
+`@layer components` class regardless of source order in the className
+string, so this doesn't require touching the shared `.input` definition
+other routes/forms rely on): `border-ink-600` (a visibly lighter, more
+visible border than the sitewide default) + `bg-ink-900` (the same elevated-
+surface fill `.card-surface` already establishes as this design system's
+"this sits above the page" convention, reused rather than inventing a new
+tone) + `shadow-glow` (an existing Tailwind config token, not a new
+arbitrary value). The nav variant's `.input` styling is untouched — it's
+deliberately secondary chrome, not the page's dominant element. Confirmed
+visually via the screenshots described above.
+
+### Summary of files changed this phase
+
+- `src/components/home/CinematicHero.tsx` — H1, subhead, CTA row (3 links/1
+  button → 1 link), doc comments updated
+- `src/components/home/HeroStats.tsx` — compressed to one link-free line
+- `src/components/home/TrendingChips.tsx` — added GA4 `search_initiated`
+  (trigger: `trending_chip`) alongside the existing Vercel event
+- `src/components/SearchBar.tsx` — full rewrite: pointer-fine autofocus
+  gate, `/` shortcut + badge, Baymard autocomplete refinements, zero-state
+  (trending + recent searches), full ARIA combobox + keyboard nav, hero
+  visual-dominance styling
+- `src/components/HeaderSearchSlot.tsx` (new) — homepage-only, desktop-only,
+  scroll-gated visibility wrapper around the header's own search field
+- `src/components/Navbar.tsx` — wired `HeaderSearchSlot` around the desktop
+  search row only; mobile row untouched
+- `tests/internal-linking.test.ts` — rewrote the `/learn`-reachability and
+  hero-CTA-count tests to match the brief-mandated hero change (see above)
+- `docs/homepage-measurement.md` — updated §2 to reflect the trending-chip
+  GA4 gap being closed
+- `CountryHeroToggle.tsx`, `CountryProvider.tsx`, `src/app/api/geo/route.ts`
+  — read and verified, **not modified** (already satisfied the brief)
