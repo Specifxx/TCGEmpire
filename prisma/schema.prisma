@@ -484,6 +484,33 @@ model DemandSnapshot {
   @@index([cardId, day])
 }
 
+// Daily snapshot of each STORE's listing count and freshness, keyed by retailer
+// (a plain String key, not a foreign key — RetailerPrice.retailer is likewise
+// unconstrained, since retailers.ts is the source of truth, not a DB table).
+// Purely additive/history: nothing reads this to render a page. It exists so a
+// silently-broken scraper can be told apart from a genuinely quiet store — the
+// two look identical in a single day's snapshot (a frozen listing count is not,
+// by itself, distinguishable from a store that just hasn't restocked), which is
+// why the health check compares TODAY's row against a 7-day trend of these
+// rows rather than a single reading. Written by /api/cron/store-health (see
+// lib/store-health.ts); one row per store per market per Australia/Sydney day,
+// same bucketing and same-day-replace convention as DemandSnapshot/PriceHistory.
+model StoreHealthSnapshot {
+  id               String    @id @default(cuid())
+  retailer         String
+  country          String
+  day              DateTime  @db.Date // Australia/Sydney calendar day
+  listings         Int // total RetailerPrice rows for this store/market
+  inStock          Int // of which currently in stock
+  medianPriceCents Int? // null when the store has zero in-stock rows that day
+  lastSeen         DateTime? // most recent RetailerPrice.lastSeen for this store/market
+  recordedAt       DateTime  @default(now())
+
+  @@unique([retailer, country, day])
+  @@index([day])
+  @@index([retailer, day])
+}
+
 // An email subscription for wishlist price-drop alerts. No account required — the
 // pop-up on the wishlist heart collects an email and creates one row per card per
 // market. A daily cron (/api/cron/price-alerts) compares each card's current

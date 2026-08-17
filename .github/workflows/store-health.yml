@@ -1,0 +1,54 @@
+name: Store data health
+
+# Per-store scraper health check — the highest-leverage engineering surface for
+# a solo operator running 100+ store scrapers: a scraper that silently breaks
+# (bot-blocked, page redesign, selector stopped matching) keeps reporting
+# "success" while its listings quietly go stale, and that looks identical to a
+# genuinely quiet store until someone notices weeks later. This checks every
+# tracked store against its own 7-day trend and posts to Discord only when
+# something looks broken — see src/lib/store-health.ts for the exact checks.
+#
+# Scheduled an hour after each price-import run (07:00/19:00 UTC in
+# refresh-prices.yml, plus 18:00 UTC via the Vercel cron — see the note at
+# src/lib/price-import.ts) so the day's fresh RetailerPrice rows are in place
+# before this reads them. Runs via GH Actions rather than Vercel Cron because
+# Vercel's Hobby-plan cron only fires once a day — see marketplace-maintenance.yml
+# for the same reasoning.
+#
+# SETUP (one-time): add a repository secret named CRON_SECRET matching the
+# value already used to guard /api/revalidate and the other /api/cron/* routes.
+# The Discord post itself additionally needs DISCORD_WEBHOOK_URL set as a
+# VERCEL environment variable (not a GitHub secret — the route runs on Vercel,
+# this workflow only triggers it over HTTP); until that's set the check still
+# runs and its result is still visible in this workflow's log and at
+# /admin/store-health, it just won't post to Discord (postDiscordAlert no-ops
+# when the webhook is unset).
+
+on:
+  schedule:
+    - cron: "0 8,20 * * *"
+  workflow_dispatch: {} # manual "Run workflow" button
+
+concurrency:
+  group: store-health
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Run store health check
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: "https://riftcompare.com"
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::No CRON_SECRET secret set — cannot call the store-health endpoint."
+            exit 1
+          fi
+          code=$(curl -s -o response.json -w "%{http_code}" --max-time 120 \
+            "$SITE_URL/api/cron/store-health" -H "Authorization: Bearer $CRON_SECRET")
+          echo "store-health -> HTTP ${code}"
+          cat response.json || true
+          [ "$code" = "200" ]

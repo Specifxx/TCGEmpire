@@ -86,6 +86,12 @@ const TOOLS: Tool[] = [
     icon: "🏆",
     desc: "Top marketplace buyers/sellers, biggest collections, longest-tenured Premium members.",
   },
+  {
+    href: "/admin/store-health",
+    title: "Store data health",
+    icon: "🩺",
+    desc: "Per-store checks — stale fetch, dropped listings, frozen or jumped prices — for a scraper breaking silently.",
+  },
 ];
 
 export default async function AdminHome({ searchParams }: { searchParams: { key?: string } }) {
