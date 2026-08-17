@@ -154,9 +154,18 @@ export function CinematicHero({
             the site; they just don't need a second, competing home in the
             hero above the fold. */}
         <div className="animate-fade-in [animation-delay:360ms] mt-6 flex flex-col items-center gap-2">
+          {/* tap-link: this is the hero's one surviving secondary action, so its
+              hit area needs the same 44/48px floor every other tap target on the
+              page gets — a plain text link with no padding measured ~20px tall,
+              short of that. focus-visible:ring-*: a real, measured gap found
+              auditing keyboard focus — this link's default outline was suppressed
+              (globals.css's focus-visible reset applies to .btn/.input/etc, not a
+              bare Next.js link) with nothing standing in for it, so a keyboard user
+              tabbing to it saw no indicator at all. Same ring treatment
+              CinematicNavMenu already uses for its own bare links. */}
           <Link
             href="/browse"
-            className="text-sm font-semibold text-slate-300 underline-offset-4 transition-colors hover:text-brand-400 hover:underline"
+            className="tap-link rounded text-sm font-semibold text-slate-300 underline-offset-4 outline-none transition-colors hover:text-brand-400 hover:underline focus-visible:ring-2 focus-visible:ring-brand-400"
           >
             Browse all {totalCards.toLocaleString()} cards →
           </Link>
@@ -176,9 +185,20 @@ export function CinematicHero({
 // this floor just stops a short-content flash on the very first paint. Trimmed
 // again (36vh → 30vh) alongside the tighter padding/H1 above — the section was
 // running ~650px tall with a large dead band before the first content section.
+//
+// id="rc-hero": a stable marker FeedbackWidget looks for (IntersectionObserver)
+// so its launcher can hide itself while the hero — and the hero's own search +
+// autocomplete — is in view, without FeedbackWidget needing to know anything
+// about page structure beyond "does an element with this id exist and
+// intersect". Harmless on every other route: none of them render this id, so
+// the observer there finds nothing and no-ops, same shape as the existing
+// #rc-ad-zone check right next to it in that file.
 function ParallaxShell({ children }: { children: React.ReactNode }) {
   return (
-    <ParallaxRoot className="relative left-1/2 -mt-6 flex min-h-[30vh] w-screen -translate-x-1/2 items-center overflow-hidden">
+    <ParallaxRoot
+      id="rc-hero"
+      className="relative left-1/2 -mt-6 flex min-h-[30vh] w-screen -translate-x-1/2 items-center overflow-hidden"
+    >
       {children}
     </ParallaxRoot>
   );
