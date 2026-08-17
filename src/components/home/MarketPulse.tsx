@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import Link from "next/link";
 import { track } from "@vercel/analytics";
 import { COUNTRIES, type Country } from "@/lib/country";
@@ -9,6 +10,7 @@ import { cardHref } from "@/lib/card-url";
 import { cardDisplayName } from "@/lib/card-name";
 import { cardImageAlt } from "@/lib/image-alt";
 import { useCountry } from "@/components/CountryProvider";
+import { useQuickView } from "@/components/QuickView";
 
 // "Market pulse" — the day's top 4 risers + top 4 fallers, reusing the exact
 // Daily Movers data (lib/price-history.ts's getPriceMovers, the same source
@@ -22,11 +24,32 @@ import { useCountry } from "@/components/CountryProvider";
 // than fading in. Fixed-size rows mean no reserved-space/CLS concern either way.
 function PulseCard({ m, up, currency }: { m: Mover; up: boolean; currency: string }) {
   const c = m.card;
+  const { open } = useQuickView();
+  // Same instant-preview pattern as CardTile: left-click opens the quick-view
+  // popup instead of navigating away, so a scan through the day's risers/fallers
+  // doesn't cost a full page load per card. The real href stays on the <Link>
+  // for SEO, sharing, and middle/ctrl-click (open in new tab) — only a plain
+  // left click is intercepted. Drag/scroll-synthesized clicks are ignored via
+  // the same pointerdown-distance/time check CardTile uses, so this never pops
+  // the preview open mid-scroll on touch.
+  const downRef = useRef<{ x: number; y: number; t: number } | null>(null);
+  function onPointerDown(e: React.PointerEvent) {
+    downRef.current = { x: e.clientX, y: e.clientY, t: Date.now() };
+  }
+  function onClick(e: React.MouseEvent) {
+    track("market_pulse_click", { card: c.slug ?? c.id, direction: up ? "up" : "down" });
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    const down = downRef.current;
+    if (down && (Math.abs(e.clientX - down.x) > 8 || Math.abs(e.clientY - down.y) > 8 || Date.now() - down.t > 600)) return;
+    e.preventDefault();
+    open(c);
+  }
   return (
     <Link
       href={cardHref(c)}
       prefetch={false}
-      onClick={() => track("market_pulse_click", { card: c.slug ?? c.id, direction: up ? "up" : "down" })}
+      onPointerDown={onPointerDown}
+      onClick={onClick}
       className="card-surface flex w-32 shrink-0 snap-start flex-col gap-1.5 p-2.5 transition-colors hover:border-brand-500/60 hover:bg-ink-800 sm:w-auto"
     >
       <div className="flex items-center gap-2">
