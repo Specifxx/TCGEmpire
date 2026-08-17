@@ -58,14 +58,28 @@ export function CountryHeroToggle() {
           starting with "Shopping from — currently US..." still failed
           label-content-name-mismatch because axe compares against the visible
           text run as actually concatenated in the DOM ("Shopping fromUSUSD",
-          no separators), not just "starts with the same words". */}
+          no separators), not just "starts with the same words".
+
+          The Lighthouse/axe run in the redesign's final verification phase
+          caught a residual instance of exactly that: the browser's own
+          aria-labelledby name-computation algorithm inserts a normalizing
+          space between each referenced id's text ("Shopping from US USD"),
+          but there was no actual whitespace between this span and the next
+          one in the DOM, so the *visible* text axe extracts read "Shopping
+          fromUS USD" — one word glued together — which is never a substring
+          of the space-separated accessible name. The `{" "}` immediately
+          below is that missing separator, restoring the substring match.
+          It's a text node, not a flex item, so Flexbox's own "whitespace-
+          only text runs are not flex items" rule (CSS Flexbox §4) means it
+          costs nothing visually — the `gap-1.5` on this button already
+          supplies the real visual spacing regardless. */}
       <button
         onClick={() => setOpen((o) => !o)}
         aria-labelledby="cht-trigger-eyebrow cht-trigger-code cht-trigger-currency cht-trigger-desc"
         aria-expanded={open}
         className="flex min-h-11 items-center gap-1.5 rounded-full border border-ink-800 px-3 py-1 text-[11px] font-medium text-slate-400 transition-colors hover:border-ink-700 hover:text-slate-300"
       >
-        <span id="cht-trigger-eyebrow" className="text-[9px] font-medium uppercase tracking-wide text-slate-500">Shopping from</span>
+        <span id="cht-trigger-eyebrow" className="text-[9px] font-medium uppercase tracking-wide text-slate-500">Shopping from</span>{" "}
         <span className="font-semibold text-slate-200">
           <span id="cht-trigger-code">{current.code}</span> <span id="cht-trigger-currency" className="text-slate-500">{currency}</span>
         </span>
