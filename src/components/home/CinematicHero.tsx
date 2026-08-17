@@ -284,9 +284,25 @@ export function CinematicHero({
 // height — the ancestor's overflow-hidden was silently slicing both dropdowns
 // off at the hero's bottom edge instead of letting them float over the
 // content below, exactly as a z-50 absolute dropdown is meant to.
+//
+// z-10 here (added 2026-08-17, right after the overflow-hidden removal above):
+// once the dropdowns were free to extend past the hero's own short height,
+// they ran into a SECOND, previously-masked bug one level up from the
+// TrendingChips stacking fix documented inside CinematicHero's own search
+// wrapper. Market Pulse's marquee row (HomeSections, the very next sibling
+// below this section) animates via `transform` (animate-marquee), which —
+// exactly like animate-fade-in above — makes it (or its ancestor) a CSS
+// stacking context regardless of its own position staying static. Neither
+// this section nor Market Pulse's wrapper carried an explicit z-index, so
+// they were both z-index:auto and painted in DOM order — Market Pulse, being
+// LATER in the page, painted its opaque cards OVER this section's dropdowns
+// instead of behind them, which read as the dropdown itself being
+// see-through. An explicit, positive z-index here beats that z-index:auto
+// sibling outright, regardless of DOM order — the actual fix, not a
+// workaround for Market Pulse's own animation (which is correct as-is).
 function ParallaxShell({ children }: { children: React.ReactNode }) {
   return (
-    <ParallaxRoot id="rc-hero" className="relative left-1/2 -mt-6 flex min-h-[30vh] w-screen -translate-x-1/2 items-center">
+    <ParallaxRoot id="rc-hero" className="relative z-10 left-1/2 -mt-6 flex min-h-[30vh] w-screen -translate-x-1/2 items-center">
       {children}
     </ParallaxRoot>
   );
