@@ -1,5 +1,24 @@
 import Link from "next/link";
-import { FOOTER_GROUPS } from "./nav-groups";
+import { FOOTER_GROUPS, type NavGroupLink } from "./nav-groups";
+
+// A link that leaves the site (currently just Discord) can't go through
+// next/link's client-side router the way an internal path can — it needs a
+// plain <a target="_blank"> instead. Shared so both footer layouts below
+// branch identically rather than drifting.
+function FooterLink({ l, className }: { l: NavGroupLink; className: string }) {
+  if (l.external) {
+    return (
+      <a href={l.href} target="_blank" rel="noopener noreferrer" className={className}>
+        {l.label}
+      </a>
+    );
+  }
+  return (
+    <Link href={l.href} className={className}>
+      {l.label}
+    </Link>
+  );
+}
 
 // The footer's site-map nav: 4 columns on desktop, collapsible accordions on
 // mobile (same chevron/<details> pattern as the homepage FAQ). Every link from
@@ -26,9 +45,7 @@ export function FooterNav() {
             <ul className="tap-list mt-3 space-y-2">
               {group.links.map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} className="tap-link text-xs text-slate-400 hover:text-brand-400">
-                    {l.label}
-                  </Link>
+                  <FooterLink l={l} className="tap-link text-xs text-slate-400 hover:text-brand-400" />
                 </li>
               ))}
             </ul>
@@ -43,9 +60,7 @@ export function FooterNav() {
             <ul className="tap-list space-y-1">
               {group.links.map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} className="tap-link text-xs text-slate-400 hover:text-brand-400">
-                    {l.label}
-                  </Link>
+                  <FooterLink l={l} className="tap-link text-xs text-slate-400 hover:text-brand-400" />
                 </li>
               ))}
             </ul>

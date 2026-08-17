@@ -16,8 +16,9 @@ import { join } from "node:path";
 // "Horizontal scrolling on mobile" is a Google mobile-usability failure and an
 // AdSense site-behaviour risk, and it is invisible in review: the page looks
 // fine at desktop width and fine on a phone, and is broken only in the band
-// between them. scripts/mobile-check.ts audits 375px only, which is exactly why
-// it never surfaced.
+// between them. scripts/mobile-check.ts audited 375px only at the time, which
+// is exactly why it never surfaced — it now also sweeps the 640-790px tablet
+// band for the same reason (see its TABLET_WIDTHS note).
 //
 // Two independent guarantees, and this asserts both, because either alone has
 // already proved insufficient:

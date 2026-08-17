@@ -1,0 +1,90 @@
+name: SEO gate (PR preview)
+
+# Runs the two live-crawl SEO instruments — scripts/content-quality.ts and
+# scripts/template-seo-check.ts — against the Vercel PREVIEW deploy for a pull
+# request. Neither can run in ci.yml: that workflow is deliberately DB-free and
+# network-free (see its own header), and both of these need a live, running
+# server to crawl, not just source files. This is the "next" step ci.yml's own
+# comment already called for — "belongs next to the Vercel preview rather than
+# in the current DB-free ci.yml job" (see GROWTH-SUMMARY.md's suggested next
+# steps, #5).
+#
+# TRIGGER: reacts to Vercel's own `deployment_status` event rather than
+# polling — Vercel's GitHub App posts this automatically once a preview build
+# finishes, the same GitHub Deployments API probe-deploy.yml already reads
+# from (see that workflow for a worked example of the same API). No Vercel API
+# token or extra secret needed. This is the standard, widely-used contract for
+# "run something against my Vercel preview" (see e.g. the long-standing
+# wait-for-vercel-preview GitHub Action, which reads the same two fields this
+# workflow does) — deployment_status.environment_url is the preview URL,
+# falling back to target_url for older integrations that only set that one.
+#
+# GATING: template-seo-check.ts exits non-zero on a real template-level defect
+# (missing canonical/OpenGraph/structured-data) and gates this check.
+# content-quality.ts is deliberately NOT a gate on flagged-row count — its own
+# header says so explicitly ("Report-only by design: this is a diagnostic that
+# informs template fixes, not a gate. seo-gate.ts is the thing that blocks a
+# deploy.") — it only fails this job if the crawl itself errors (a bad URL, a
+# script crash), which is exactly what "fail on non-zero exit" already means
+# for a script whose exit code is 0 for "ran to completion" regardless of how
+# many rows it flagged. Its report is uploaded as a build artifact so a
+# reviewer can read it against the PR without needing to re-run it locally.
+on:
+  deployment_status:
+
+permissions:
+  contents: read
+  deployments: read
+
+concurrency:
+  group: seo-preview-gate-${{ github.event.deployment.sha }}
+  cancel-in-progress: true
+
+jobs:
+  seo-gate:
+    if: >
+      github.event.deployment_status.state == 'success' &&
+      github.event.deployment.environment == 'Preview'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.deployment.sha }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Resolve the preview URL
+        id: preview
+        run: |
+          URL="${{ github.event.deployment_status.environment_url }}"
+          if [ -z "$URL" ]; then URL="${{ github.event.deployment_status.target_url }}"; fi
+          if [ -z "$URL" ]; then
+            echo "No environment_url or target_url on this deployment_status event — nothing to crawl." >&2
+            exit 1
+          fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "Preview URL: $URL"
+
+      # GATE. Exits non-zero on a real template-level defect.
+      - name: Template SEO check
+        run: npx tsx scripts/template-seo-check.ts --url "${{ steps.preview.outputs.url }}"
+
+      # Report-only (see header). Exits non-zero only if the crawl itself
+      # fails — that failure still fails this job, same as any other step.
+      - name: Content quality report
+        run: npx tsx scripts/content-quality.ts --url "${{ steps.preview.outputs.url }}"
+
+      - name: Upload content-quality-report.csv
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: content-quality-report
+          path: content-quality-report.csv
+          retention-days: 14

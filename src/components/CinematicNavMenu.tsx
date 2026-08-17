@@ -188,20 +188,23 @@ export function CinematicNavMenu() {
                   </div>
                   <ul className="space-y-0.5">
                     {sec.links.map((l) => {
-                      const active = pathname === l.href || (l.href !== "/" && pathname.startsWith(l.href));
+                      const active = !l.external && (pathname === l.href || (l.href !== "/" && pathname.startsWith(l.href)));
+                      const linkClassName = `group flex min-h-11 items-center gap-3 rounded-md px-2 py-2 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand-400 ${
+                        active ? "bg-brand-500 font-semibold text-ink-950" : "text-slate-200 hover:bg-ink-800 hover:text-white"
+                      }`;
                       return (
                         <li key={l.href}>
-                          <Link
-                            href={l.href}
-                            onClick={close}
-                            aria-current={active ? "page" : undefined}
-                            className={`group flex min-h-11 items-center gap-3 rounded-md px-2 py-2 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand-400 ${
-                              active ? "bg-brand-500 font-semibold text-ink-950" : "text-slate-200 hover:bg-ink-800 hover:text-white"
-                            }`}
-                          >
-                            <span className="text-lg" aria-hidden>{l.emoji}</span>
-                            <span className="font-medium">{l.label}</span>
-                          </Link>
+                          {l.external ? (
+                            <a href={l.href} target="_blank" rel="noopener noreferrer" onClick={close} className={linkClassName}>
+                              <span className="text-lg" aria-hidden>{l.emoji}</span>
+                              <span className="font-medium">{l.label}</span>
+                            </a>
+                          ) : (
+                            <Link href={l.href} onClick={close} aria-current={active ? "page" : undefined} className={linkClassName}>
+                              <span className="text-lg" aria-hidden>{l.emoji}</span>
+                              <span className="font-medium">{l.label}</span>
+                            </Link>
+                          )}
                         </li>
                       );
                     })}

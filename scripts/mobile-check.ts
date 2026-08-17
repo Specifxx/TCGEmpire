@@ -1,5 +1,6 @@
 /**
- * scripts/mobile-check.ts — 375px viewport audit.
+ * scripts/mobile-check.ts — 375px viewport audit, plus a 640/720/790px tablet
+ * horizontal-overflow sweep.
  *
  *   npx tsx scripts/mobile-check.ts --url http://localhost:3111
  *
@@ -12,6 +13,12 @@
  *   • elements overflowing the right edge (the thing that CAUSES the scroll)
  *   • tap targets under 44×44 CSS px (Apple HIG / Google's mobile-usability bar)
  *   • text clipped by an overflow:hidden ancestor
+ *
+ * It then runs a second, narrower sweep at 640/720/790px — the tablet band
+ * where the header once needed 738px of content in a 720px box (see
+ * TABLET_WIDTHS below) while this script only ever looked at 375px. That
+ * regression is why this second pass exists: horizontal-scroll only, not the
+ * full four-fault audit, since tap-target sizing is a phone-specific concern.
  *
  * Uses the pre-installed Chromium via playwright-core; skips cleanly with an
  * explanatory message if neither is present, so it never breaks a build.
@@ -36,6 +43,22 @@ const PATHS = (
 const VIEWPORT = { width: 375, height: 667 };
 const VERBOSE = args.includes("--verbose");
 const MIN_TAP = 44;
+
+// The header overflowed horizontally across roughly 640-790px — a real browser
+// window resized to tablet width, not a phone or a design-tool device preset —
+// and this script auditing 375px only is exactly why it went unnoticed (see
+// Navbar.tsx's breakpoint note for the fix). These three widths bracket that
+// band: 640 is Tailwind's `sm`, 790 is just past the header's own "no overflow"
+// measurement at 768, and 720 sits in the middle where nothing shrinks it.
+// Narrower in scope than the full 375px sweep (tap-target-size guidance is a
+// PHONE concern; a mis-sized 640-790px control is not the failure mode that
+// bit this site) — this only asserts the one thing that actually regressed:
+// no page may need more horizontal space than its viewport has.
+const TABLET_WIDTHS = [640, 720, 790];
+// The header is the same global component on every route, so a couple of
+// representative pages are enough — this isn't re-running the whole PATHS
+// sweep at three more widths for no added signal.
+const TABLET_PATHS = (process.env.MOBILE_CHECK_TABLET_PATHS ?? "/,/browse").split(",").map((s) => s.trim()).filter(Boolean);
 
 // Interactive elements only — a 20px-tall <span> is not a tap target.
 const TAP_SELECTOR = 'a[href], button, [role="button"], input:not([type="hidden"]), select, textarea, summary';
@@ -62,7 +85,7 @@ type PageLike = {
   evaluate(script: string): Promise<unknown>;
   close(): Promise<void>;
 };
-type ContextLike = { newPage(): Promise<PageLike> };
+type ContextLike = { newPage(): Promise<PageLike>; close(): Promise<void> };
 type BrowserLike = {
   newContext(opts: Record<string, unknown>): Promise<ContextLike>;
   close(): Promise<void>;
@@ -263,13 +286,46 @@ async function main() {
     }
   }
 
-  await browser.close();
   const pct = (n: number) => (totalVisible ? ((n / totalVisible) * 100).toFixed(0) : "0");
   console.log(
     `\nTap targets across ${PATHS.length} pages: ${totalUnder44}/${totalVisible} under 44px (${pct(totalUnder44)}%), ` +
       `${totalUnder48}/${totalVisible} under 48px (${pct(totalUnder48)}%).`,
   );
   console.log(`${failures === 0 ? "All pages clean at 375px." : `${failures} of ${PATHS.length} pages have mobile issues.`}\n`);
+
+  // Tablet sweep — horizontal-scroll only (see TABLET_WIDTHS above for why).
+  let tabletFailures = 0;
+  console.log(`Tablet overflow audit at ${TABLET_WIDTHS.join("/")}px\n`);
+  for (const width of TABLET_WIDTHS) {
+    const tabletContext = await browser.newContext({ viewport: { width, height: 900 } });
+    for (const path of TABLET_PATHS) {
+      const page = await tabletContext.newPage();
+      try {
+        await page.goto(`${BASE}${path}`, { waitUntil: "networkidle", timeout: 45000 });
+        await page.waitForTimeout(400);
+        const scrollWidth = (await page.evaluate(
+          "Math.max(document.documentElement.scrollWidth, document.body.scrollWidth)"
+        )) as number;
+        const hScroll = scrollWidth > width + 1;
+        if (hScroll) tabletFailures++;
+        console.log(
+          `${hScroll ? "\x1b[31m✗\x1b[0m" : "\x1b[32m✓\x1b[0m"} ${width}px ${path}` +
+            (hScroll ? `   \x1b[90mdocument is ${scrollWidth}px wide\x1b[0m` : ""),
+        );
+      } catch (e) {
+        tabletFailures++;
+        console.log(`\x1b[31m✗\x1b[0m ${width}px ${path} — ${String(e).slice(0, 120)}`);
+      } finally {
+        await page.close();
+      }
+    }
+    await tabletContext.close();
+  }
+  console.log(
+    `\n${tabletFailures === 0 ? `No horizontal overflow at ${TABLET_WIDTHS.join("/")}px.` : `${tabletFailures} tablet-width overflow${tabletFailures === 1 ? "" : "s"} found.`}\n`,
+  );
+
+  await browser.close();
 }
 
 void main();

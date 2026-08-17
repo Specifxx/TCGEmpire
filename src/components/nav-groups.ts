@@ -1,3 +1,5 @@
+import { DISCORD_URL } from "@/lib/site";
+
 // The grouped site navigation, shared by the ⌘K command launcher
 // (CommandLauncher.tsx), the footer site-map (FOOTER_GROUPS below) and
 // /llms.txt — edit a link here once and all three follow.
@@ -5,6 +7,14 @@ export interface NavGroupLink {
   href: string;
   label: string;
   emoji: string;
+  /**
+   * True for a link that leaves the site (opens in a new tab, never routed
+   * through next/link's client-side navigation or router.push — both would
+   * either mis-handle an absolute non-app URL or navigate the current tab
+   * away from RiftCompare). Every renderer of NavGroupLink (FooterNav,
+   * CinematicNavMenu, CommandLauncher) must branch on this.
+   */
+  external?: boolean;
   /**
    * Extra words the ⌘K launcher should match this link on — synonyms, plurals
    * the label doesn't contain, and the words people actually type.
@@ -164,6 +174,14 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/feedback", label: "Suggest a feature", emoji: "💡", keywords: ["feedback", "suggest", "idea", "feature request", "vote"] },
       { href: "/stores/suggest", label: "Suggest a store", emoji: "➕", keywords: ["suggest a store", "add a store", "missing store", "list my store"] },
       { href: "/about", label: "About RiftCompare", emoji: "ℹ️", keywords: ["about", "who we are", "riftcompare", "compare"] },
+      // The header's own Discord icon is desktop-only (Navbar.tsx, lg:grid) —
+      // below that breakpoint (everything under 1024px: every phone AND the
+      // whole 640-1023px tablet range) it was reachable from NOWHERE, despite
+      // a header comment claiming "Discord is in the footer, so no link is
+      // lost." DISCORD_URL had never actually been added to NAV_GROUPS, so
+      // that claim was false — this makes it true. External, so every
+      // renderer of this list must open it in a new tab, not route through it.
+      { href: DISCORD_URL, label: "Join our Discord", emoji: "💬", keywords: ["discord", "community", "chat", "server"], external: true },
     ],
   },
 ];

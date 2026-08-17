@@ -102,10 +102,14 @@ function LauncherOverlay({ onClose }: { onClose: () => void }) {
     listRef.current?.querySelector('[data-active="true"]')?.scrollIntoView({ block: "nearest" });
   }, [active, searching]);
 
+  // router.push() is for internal app routes only — handed an absolute external
+  // URL (Discord) it can't navigate there. window.open matches what the
+  // desktop header's own Discord icon does: a new tab, current page untouched.
   const go = useCallback(
-    (href: string) => {
+    (href: string, external?: boolean) => {
       onClose();
-      router.push(href);
+      if (external) window.open(href, "_blank", "noopener,noreferrer");
+      else router.push(href);
     },
     [onClose, router]
   );
@@ -120,7 +124,8 @@ function LauncherOverlay({ onClose }: { onClose: () => void }) {
       setActive((i) => (i - 1 + results.length) % results.length);
     } else if (e.key === "Enter") {
       e.preventDefault();
-      go(results[Math.min(active, results.length - 1)].href);
+      const r = results[Math.min(active, results.length - 1)];
+      go(r.href, r.external);
     }
   };
 
@@ -175,24 +180,46 @@ function LauncherOverlay({ onClose }: { onClose: () => void }) {
               </p>
             ) : (
               <ul className="space-y-0.5">
-                {results.map((l, i) => (
-                  <li key={l.href}>
-                    <Link
-                      href={l.href}
-                      onClick={onClose}
-                      data-active={i === active}
-                      onMouseEnter={() => setActive(i)}
-                      aria-current={i === active ? "true" : undefined}
-                      className={`flex items-center gap-2.5 rounded-lg px-2 py-2 text-sm font-medium transition-colors ${
-                        i === active ? "bg-ink-800 text-white" : "text-slate-200 hover:bg-ink-800 hover:text-white"
-                      }`}
-                    >
+                {results.map((l, i) => {
+                  const resultClassName = `flex items-center gap-2.5 rounded-lg px-2 py-2 text-sm font-medium transition-colors ${
+                    i === active ? "bg-ink-800 text-white" : "text-slate-200 hover:bg-ink-800 hover:text-white"
+                  }`;
+                  const inner = (
+                    <>
                       <span className="text-base leading-none" aria-hidden>{l.emoji}</span>
                       <span className="min-w-0 flex-1 truncate">{l.label}</span>
                       <span className="shrink-0 text-[11px] uppercase tracking-wide text-slate-500">{l.group}</span>
-                    </Link>
-                  </li>
-                ))}
+                    </>
+                  );
+                  return (
+                    <li key={l.href}>
+                      {l.external ? (
+                        <a
+                          href={l.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={onClose}
+                          data-active={i === active}
+                          onMouseEnter={() => setActive(i)}
+                          className={resultClassName}
+                        >
+                          {inner}
+                        </a>
+                      ) : (
+                        <Link
+                          href={l.href}
+                          onClick={onClose}
+                          data-active={i === active}
+                          onMouseEnter={() => setActive(i)}
+                          aria-current={i === active ? "true" : undefined}
+                          className={resultClassName}
+                        >
+                          {inner}
+                        </Link>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             )
           ) : (
@@ -201,18 +228,28 @@ function LauncherOverlay({ onClose }: { onClose: () => void }) {
                 <div key={g.title}>
                   <div className="mb-1.5 px-1 text-[11px] font-bold uppercase tracking-wide text-brand-300">{g.title}</div>
                   <ul className="space-y-0.5">
-                    {g.links.map((l) => (
-                      <li key={l.href}>
-                        <Link
-                          href={l.href}
-                          onClick={onClose}
-                          className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-slate-200 transition-colors hover:bg-ink-800 hover:text-white"
-                        >
+                    {g.links.map((l) => {
+                      const groupedClassName = "flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-slate-200 transition-colors hover:bg-ink-800 hover:text-white";
+                      const inner = (
+                        <>
                           <span className="text-base leading-none" aria-hidden>{l.emoji}</span>
                           {l.label}
-                        </Link>
-                      </li>
-                    ))}
+                        </>
+                      );
+                      return (
+                        <li key={l.href}>
+                          {l.external ? (
+                            <a href={l.href} target="_blank" rel="noopener noreferrer" onClick={onClose} className={groupedClassName}>
+                              {inner}
+                            </a>
+                          ) : (
+                            <Link href={l.href} onClick={onClose} className={groupedClassName}>
+                              {inner}
+                            </Link>
+                          )}
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
               ))}

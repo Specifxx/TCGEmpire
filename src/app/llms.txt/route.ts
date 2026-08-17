@@ -38,7 +38,10 @@ const DESC: Record<string, string> = {
   "/tools": "Every RiftCompare tool and calculator in one place.",
 };
 
-const abs = (p: string) => `${SITE_URL}${p}`;
+// Most NAV_GROUPS hrefs are site-relative paths; the Discord link (external:
+// true) is already an absolute URL and must pass through unchanged, or this
+// would produce "https://riftcompare.comhttps://discord.gg/...".
+const abs = (p: string) => (/^https?:\/\//i.test(p) ? p : `${SITE_URL}${p}`);
 
 export function GET() {
   const lines: string[] = [];
