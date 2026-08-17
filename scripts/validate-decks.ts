@@ -23,8 +23,10 @@
 import { normalizeSearch } from "../src/lib/format";
 import metaDecksData from "../prisma/meta-decks.json";
 
-// Mirrors src/lib/db.ts's fallback chain — RM3 is the current project.
-const HAS_DB = Boolean(process.env.RM3 || process.env.DATABASE_URL_2 || process.env.DATABASE_URL);
+// Mirrors src/lib/db.ts's fallback chain — DATABASE_URL_3 is the current project.
+const HAS_DB = Boolean(
+  process.env.DATABASE_URL_3 || process.env.DATABASE_URL_2 || process.env.DATABASE_URL || process.env.RM3
+);
 
 const MAIN_TOTAL = 56; // incl. the legend
 const RUNES = 12;
@@ -100,7 +102,7 @@ function checkRules() {
 async function checkNames() {
   if (!HAS_DB) {
     console.log(
-      "\nName check: SKIPPED — no RM3 / DATABASE_URL_2 / DATABASE_URL set.\n" +
+      "\nName check: SKIPPED — no DATABASE_URL_3 / DATABASE_URL_2 / DATABASE_URL / RM3 set.\n" +
         "  (Set one to verify every deck card resolves to a real catalogue card.)"
     );
     return;

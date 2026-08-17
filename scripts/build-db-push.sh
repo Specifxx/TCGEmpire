@@ -31,12 +31,12 @@ set -uo pipefail
 #
 # tests/db-chain.test.ts asserts these two values still match the head of each
 # chain, so the next cutover fails a test instead of quietly lying in a log.
-# Rotated BACKWARD on 2026-08-12, the same move the history database made a day
-# earlier: RM5 neared its monthly allowance and the ORIGINAL project (the
-# DATABASE_URL secret) had its allowance reset. See the long note on
-# OPERATIONAL_URL in src/lib/db.ts, including why recycling this particular name
-# is a hazard worth not repeating.
-CURRENT_OP="DATABASE_URL_2"
+# Rotated onto DATABASE_URL_3 on 2026-08-17: DATABASE_URL_2 hit 4.8 of its 5 GB
+# monthly transfer allowance just three days after the 2026-08-14 cutover onto
+# it. Unlike the DATABASE_URL_2/HISTORY_DATABASE_URL_2 backward rotations,
+# DATABASE_URL_3 is a genuinely new project, not rested capacity. See the long
+# note on OPERATIONAL_URL in src/lib/db.ts.
+CURRENT_OP="DATABASE_URL_3"
 # Rotated onto another recycled project on 2026-08-16: HISTORY_DATABASE_URL
 # approached its 5 GB monthly network-transfer allowance, and
 # HISTORY_DATABASE_URL_2 — retired long enough ago for its allowance to have
@@ -50,15 +50,15 @@ CURRENT_HIST="HISTORY_DATABASE_URL_2"
 # GATES ON THE WHOLE OPERATIONAL CHAIN, not bare DATABASE_URL. The original check
 # was `['production','preview'].includes(VERCEL_ENV) && DATABASE_URL`, written when
 # DATABASE_URL was the only operational variable. It has since become
-# DATABASE_URL || RM5 || RM4 || RM3 || DATABASE_URL_2 (lib/db.ts), and lib/db.ts explicitly tells
-# the owner the older vars can eventually be deleted — at which point this line
-# would exit 0 on every deploy and silently stop pushing schema to BOTH the
-# operational AND the history database, while logging a benign-looking "skipping".
-# A green deploy against an un-migrated database is exactly the failure this
-# script exists to prevent.
+# DATABASE_URL_3 || DATABASE_URL_2 || DATABASE_URL || RM5 || RM4 || RM3 (lib/db.ts), and lib/db.ts
+# explicitly tells the owner the older vars can eventually be deleted — at which
+# point this line would exit 0 on every deploy and silently stop pushing schema
+# to BOTH the operational AND the history database, while logging a
+# benign-looking "skipping". A green deploy against an un-migrated database is
+# exactly the failure this script exists to prevent.
 if ! { [ "${VERCEL_ENV:-}" = "production" ] || [ "${VERCEL_ENV:-}" = "preview" ]; } \
-   || [ -z "${DATABASE_URL_2:-}${DATABASE_URL:-}${RM5:-}${RM4:-}${RM3:-}" ]; then
-  echo "[build-db-push] not a Vercel production/preview build with an operational database set (DATABASE_URL_2 / DATABASE_URL / RM5 / RM4 / RM3) — skipping schema push."
+   || [ -z "${DATABASE_URL_3:-}${DATABASE_URL_2:-}${DATABASE_URL:-}${RM5:-}${RM4:-}${RM3:-}" ]; then
+  echo "[build-db-push] not a Vercel production/preview build with an operational database set (DATABASE_URL_3 / DATABASE_URL_2 / DATABASE_URL / RM5 / RM4 / RM3) — skipping schema push."
   exit 0
 fi
 
@@ -67,15 +67,16 @@ fi
 # the next cold start), this ALWAYS reflects the current build's actual environment.
 #
 # EVERY BRANCH EXCEPT THE DATABASE_URL ONE MUST `export`, because DATABASE_URL
-# is the only name `prisma db push` reads. The asymmetry moved on 2026-08-14:
-# while DATABASE_URL was itself the head of the chain, the first branch had
-# nothing to copy and deliberately did not export. Now the head is
-# DATABASE_URL_2, so the FIRST branch is the one that must copy — and getting
-# this wrong is silent and expensive, because `prisma db push` would migrate the
-# PREVIOUS project while the app (src/lib/db.ts, DATABASE_URL_2-first) reads the
-# current one. A green deploy against an un-migrated database is exactly the
-# failure this script exists to prevent.
-if [ -n "${DATABASE_URL_2:-}" ]; then
+# is the only name `prisma db push` reads. Now that the head is DATABASE_URL_3,
+# the FIRST branch is the one that must copy — and getting this wrong is silent
+# and expensive, because `prisma db push` would migrate a PREVIOUS project while
+# the app (src/lib/db.ts, DATABASE_URL_3-first) reads the current one. A green
+# deploy against an un-migrated database is exactly the failure this script
+# exists to prevent.
+if [ -n "${DATABASE_URL_3:-}" ]; then
+  export DATABASE_URL="$DATABASE_URL_3"
+  SOURCE="DATABASE_URL_3"
+elif [ -n "${DATABASE_URL_2:-}" ]; then
   export DATABASE_URL="$DATABASE_URL_2"
   SOURCE="DATABASE_URL_2"
 elif [ -n "${DATABASE_URL:-}" ]; then
@@ -88,12 +89,8 @@ elif [ -n "${RM4:-}" ]; then
   SOURCE="RM4"
 else
   # RM3 is now the tail of the chain, so this branch is unreachable: the gate
-  # above already exited unless at least one chain variable is set. It used to
-  # assign DATABASE_URL_2 as a catch-all, which after the 2026-08-14 rotation
-  # would have been both wrong (that is the HEAD now, matched first) and
-  # dangerous (it would `export DATABASE_URL=""` if nothing were set, pointing
-  # prisma at an empty string). Fail loudly rather than migrate something
-  # unnamed.
+  # above already exited unless at least one chain variable is set. Fail
+  # loudly rather than migrate something unnamed if that ever changes.
   export DATABASE_URL="$RM3"
   SOURCE="RM3"
 fi
