@@ -50,7 +50,8 @@ on:
           - probe-history    # READ-ONLY survey of PriceHistory across EVERY history project (HISTORY_DATABASE_URL_2 / HISTORY_DATABASE_URL / RH7 / RH6 / RH5 / HISTORY_DATABASE_URL_4/_3): row counts, day ranges, per-country coverage, and — the number that actually matters — how many of each project's cardIds still resolve against the LIVE Card table. A project can be full of rows and still render empty charts if its cardIds belong to a retired operational database. RUN THIS FIRST when price history looks stale or a card's chart is blank.
           - probe-databases  # READ-ONLY survey of EVERY database in both rotations (RM5/RM4/RM3/DATABASE_URL_2/DATABASE_URL + RH7…RH5 + the older history vars): which ones still answer, and how many User/MarketplaceListing/Order/SellerProfile rows each holds. Writes nothing. RUN THIS FIRST when data appears to be missing — it tells you which source is worth restoring from.
           - restore-accounts-into-rm5 # copy ONLY the account/marketplace tables from a chosen source (source input: RM4/RM3/DATABASE_URL_2/DATABASE_URL/RH7/RH6/RH5) into RM5, leaving RM5's freshly-rebuilt Card/RetailerPrice catalogue untouched. Aborts before writing anything if the dump fails or the source holds no rows.
-          - migrate-main-db-to-du2 # CURRENT operational cutover (2026-08-14): full pg_dump/restore of the live DATABASE_URL project into DATABASE_URL_2 + row-count verification. DATABASE_URL burned 4 of its 5 GB in the two days since the last rotation, so it rotates onto DATABASE_URL_2 — the second project in the chain, idle for months, so its monthly allowance has long since reset (probe-databases on 2026-08-14 confirmed it REACHABLE). DESTRUCTIVE to the target, which still holds a months-old snapshot (104 users vs 151 live); dumps before it restores and verifies row counts after. RUN THIS BEFORE deploying the DATABASE_URL_2-first chain.
+          - migrate-main-db-to-rm6 # CURRENT operational cutover (2026-08-17): full pg_dump/restore of the live DATABASE_URL_2 project into RM6 + row-count verification. DATABASE_URL_2 hit 4.8 of its 5 GB monthly transfer allowance just three days after the 2026-08-14 cutover onto it, so it rotates onto RM6 — a genuinely NEW project (RM3, the obvious rested candidate, was already at its own capacity). RUN THIS BEFORE deploying the RM6-first chain.
+          - migrate-main-db-to-du2 # LEGACY (DATABASE_URL → DATABASE_URL_2 cutover, kept for reference): full pg_dump/restore of the live DATABASE_URL project into DATABASE_URL_2 + row-count verification. DATABASE_URL burned 4 of its 5 GB in the two days since the last rotation, so it rotates onto DATABASE_URL_2 — the second project in the chain, idle for months, so its monthly allowance has long since reset (probe-databases on 2026-08-14 confirmed it REACHABLE). DESTRUCTIVE to the target, which still holds a months-old snapshot (104 users vs 151 live); dumps before it restores and verifies row counts after.
           - migrate-main-db-to-original # LEGACY (RM5 → DATABASE_URL cutover, kept for reference): full pg_dump/restore of RM5 into the ORIGINAL project (the DATABASE_URL secret) + row-count verification. Rotates BACK onto the first project this site ever used, whose monthly Neon allowance has reset, because RM5 is nearing its own. DESTRUCTIVE to the target (it still holds the old catalogue it served months ago) — dumps before it restores and verifies row counts after. RUN THIS BEFORE deploying the DATABASE_URL-first chain.
           - migrate-main-db-rm5 # LEGACY (RM4 → RM5 cutover, kept for reference): full pg_dump/restore of the OPERATIONAL database (RM4) into RM5 + row-count verification. RUN THIS FIRST once RM5 is set — every other task already resolves RM5-first. NOTE: needs RM4 to be reachable; it exhausted its transfer allowance on 2026-08-10, so if the dump fails with P1001 the data cannot be drained until RM4's allowance resets or its plan is raised.
           - migrate-main-db-rm4 # LEGACY (RM4 cutover, kept for reference): full pg_dump/restore of the OPERATIONAL database (RM3) into RM4 + row-count verification.
@@ -60,7 +61,7 @@ on:
         type: boolean
         default: false
       overwrite_live_db:
-        description: "migrate-main-db-to-du2 only: allow overwriting the database production is CURRENTLY serving (destructive — discards every write since the cutover)"
+        description: "migrate-main-db-to-rm6/du2 only: allow overwriting the database production is CURRENTLY serving (destructive — discards every write since the cutover)"
         type: boolean
         default: false
       ebay_sg:
@@ -101,25 +102,25 @@ jobs:
       group: ${{ inputs.task == 'import-prices' && 'refresh-prices' || format('maintenance-{0}', github.run_id) }}
       cancel-in-progress: false
     env:
-      # RM3 is the CURRENT operational project (cut over 2026-07-29 after
-      # DATABASE_URL_2 exhausted its monthly network-transfer allowance, exactly
-      # as the original DATABASE_URL had before it). Newest-first, matching
+      # RM6 is the CURRENT operational project (cut over 2026-08-17 after
+      # DATABASE_URL_2 hit 4.8 of its 5 GB monthly network-transfer allowance
+      # just three days after its own cutover). Current-first, matching
       # src/lib/db.ts.
       #
-      # migrate-main-db's own step below deliberately does NOT use this default:
-      # it pins SOURCE to DATABASE_URL_2/DATABASE_URL (the OLD project it reads
-      # FROM) and TARGET to RM3, and aborts outright if the two resolve to the
+      # migrate-main-db-to-rm6's own step below deliberately does NOT use this
+      # default: it pins SOURCE to DATABASE_URL_2 (the OLD project it reads
+      # FROM) and TARGET to RM6, and aborts outright if the two resolve to the
       # same database.
       #
-      # ORDERING: this default points at RM3 from the moment it's set, so run
-      # migrate-main-db BEFORE any other task here — otherwise a task like
-      # import-prices would happily operate against a still-empty RM3.
-      DATABASE_URL: ${{ secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 }}
+      # ORDERING: this default points at RM6 from the moment it's set, so run
+      # migrate-main-db-to-rm6 BEFORE any other task here — otherwise a task
+      # like import-prices would happily operate against a still-empty RM6.
+      DATABASE_URL: ${{ secrets.RM6 || vars.RM6 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 }}
       # Which of the chain above actually won, by NAME (never its value). lib/db.ts
       # cannot work this out inside Actions: the chain is collapsed into one
       # DATABASE_URL before the job starts, so process.env.RM5 is always unset there
       # and its warning always said "DATABASE_URL". See src/lib/db.ts.
-      DB_SOURCE_NAME: ${{ (secrets.DATABASE_URL_2 || vars.DATABASE_URL_2) && 'DATABASE_URL_2' || (secrets.DATABASE_URL || vars.DATABASE_URL) && 'DATABASE_URL' || (secrets.RM5 || vars.RM5) && 'RM5' || (secrets.RM4 || vars.RM4) && 'RM4' || 'RM3' }}
+      DB_SOURCE_NAME: ${{ (secrets.RM6 || vars.RM6) && 'RM6' || (secrets.DATABASE_URL_2 || vars.DATABASE_URL_2) && 'DATABASE_URL_2' || (secrets.DATABASE_URL || vars.DATABASE_URL) && 'DATABASE_URL' || (secrets.RM5 || vars.RM5) && 'RM5' || (secrets.RM4 || vars.RM4) && 'RM4' || 'RM3' }}
       DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
     steps:
       - uses: actions/checkout@v4
@@ -224,7 +225,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.RH7 || vars.RH7 }}
           # Only ever used for a "did RH7 accidentally get set to the operational
           # database?" guard before this step truncates anything.
-          OPERATIONAL_URL: ${{ secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 }}
+          OPERATIONAL_URL: ${{ secrets.RM6 || vars.RM6 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 }}
         run: |
           set -uo pipefail
 
@@ -408,7 +409,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
           # Only ever used for a "did HISTORY_DATABASE_URL_2 accidentally get set
           # to the operational database?" guard before this step truncates anything.
-          OPERATIONAL_URL: ${{ secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 }}
+          OPERATIONAL_URL: ${{ secrets.RM6 || vars.RM6 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 }}
         run: |
           set -uo pipefail
 
@@ -763,6 +764,7 @@ jobs:
         # holds. Run this FIRST, then decide which source to restore from.
         if: inputs.task == 'probe-databases'
         env:
+          P_RM6: ${{ secrets.RM6 || vars.RM6 }}
           P_RM5: ${{ secrets.RM5 || vars.RM5 }}
           P_RM4: ${{ secrets.RM4 || vars.RM4 }}
           P_RM3: ${{ secrets.RM3 || vars.RM3 }}
@@ -829,12 +831,13 @@ jobs:
           }
 
           echo ""
-          echo "===== OPERATIONAL ROTATION (newest first) ====="
-          probe "RM5 (current)"        "${P_RM5:-}" || true
-          probe "RM4 (previous)"       "${P_RM4:-}" || true
-          probe "RM3"                  "${P_RM3:-}" || true
+          echo "===== OPERATIONAL ROTATION (current first) ====="
+          probe "RM6 (current)"        "${P_RM6:-}" || true
           probe "DATABASE_URL_2"       "${P_DATABASE_URL_2:-}" || true
           probe "DATABASE_URL"         "${P_DATABASE_URL:-}" || true
+          probe "RM5"                  "${P_RM5:-}" || true
+          probe "RM4"                  "${P_RM4:-}" || true
+          probe "RM3"                  "${P_RM3:-}" || true
           echo ""
           echo "===== HISTORY ROTATION (may carry a full early copy) ====="
           probe "HISTORY_DATABASE_URL_2 (current)" "${P_HISTORY_DATABASE_URL_2:-}" || true
@@ -1188,15 +1191,193 @@ jobs:
           echo "  3. Leave RM5 set as the rollback fallback; remove it only once the"
           echo "     original project has been serving cleanly for a while."
 
+      - name: Migrate main (operational) database to RM6
+        # 2026-08-17 cutover. DATABASE_URL_2 hit 4.8 of its 5 GB monthly network
+        # transfer allowance just THREE DAYS after the 2026-08-14 rotation onto
+        # it — the same ~2 GB/day burn every prior project has shown. RM6 is a
+        # genuinely NEW Neon project: RM3, the obvious next rested candidate
+        # (it retired longest ago), turned out to already be back at its own
+        # capacity, which is why this rotation broke the "recycle a name"
+        # pattern of the last two cutovers.
+        #
+        # THE BURN RATE IS NOT FIXED BY THIS TASK. At ~2 GB/day the target lasts
+        # about as long as the source did. This buys time; it is not the cure —
+        # see the note on RetailerPrice in src/lib/db.ts.
+        #
+        # SOURCE is pinned to DATABASE_URL_2 and TARGET to RM6, deliberately NOT
+        # using the job-level DATABASE_URL default — once the chain is flipped
+        # RM6-first, reusing that default would point source and target at the
+        # same database and the migration would silently no-op while reporting
+        # every row count as matching.
+        #
+        # PriceHistory/ClickEvent DATA is excluded (schema kept): those are served
+        # from the history project, and copying them would spend the source's
+        # nearly-exhausted allowance on rows this database does not serve.
+        #
+        # Read-only against the source — safe to re-run. Each run fully re-syncs
+        # the target from the source's CURRENT state, so run it once for the bulk
+        # copy and again immediately before cutting traffic over.
+        if: inputs.task == 'migrate-main-db-to-rm6'
+        env:
+          SOURCE_DATABASE_URL: ${{ secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 }}
+          TARGET_DATABASE_URL: ${{ secrets.RM6 || vars.RM6 }}
+        run: |
+          set -uo pipefail
+
+          if [ -z "$TARGET_DATABASE_URL" ]; then
+            echo "::error::RM6 is not visible to Actions — add it under Settings → Secrets and variables → Actions (exact name RM6)."
+            exit 1
+          fi
+          if [ -z "$SOURCE_DATABASE_URL" ]; then
+            echo "::error::DATABASE_URL_2 is not visible to Actions — nothing to migrate FROM."
+            exit 1
+          fi
+          if [ "$SOURCE_DATABASE_URL" = "$TARGET_DATABASE_URL" ]; then
+            echo "::error::SOURCE and TARGET resolve to the SAME database. RM6 must point at a DIFFERENT Neon project than DATABASE_URL_2. Aborting before doing anything."
+            exit 1
+          fi
+
+          # ── SAFETY: never overwrite the database production is serving ──────
+          # This task is a ONE-WAY `pg_restore --clean` of SOURCE over TARGET.
+          # That is correct BEFORE the cutover deploy, while TARGET is an idle
+          # spare. It is destructive AFTER it, once TARGET is live: every row
+          # written since the deploy is reverted to the source's frozen
+          # snapshot, and the row-count check still reports "all match" because
+          # counts are necessarily equal after a --clean restore.
+          #
+          # This is not hypothetical — see the 2026-08-14 incident recorded in
+          # the DATABASE_URL_2 task below, where a "top-up" re-run 87 minutes
+          # after that cutover discarded live writes the same way.
+          #
+          # src/lib/db.ts is the authority on which variable production resolves
+          # FIRST, and tests/db-chain.test.ts keeps that list honest, so read it
+          # here instead of duplicating the chain into yet another place.
+          FIRST_IN_CHAIN=$(sed -n '/^const OPERATIONAL_URL =/,/;/p' src/lib/db.ts \
+            | grep -oE 'process\.env\.[A-Z_0-9]+' | head -1 | sed 's/process\.env\.//')
+          echo "Chain in src/lib/db.ts resolves first: ${FIRST_IN_CHAIN:-<could not parse>}"
+          if [ "$FIRST_IN_CHAIN" = "RM6" ]; then
+            if [ "${{ inputs.overwrite_live_db }}" != "true" ]; then
+              echo "::error::REFUSING TO RUN — RM6 is LIVE. src/lib/db.ts resolves it first, so it is the database production is serving right now. This task would restore the frozen DATABASE_URL_2 over it and discard every row written since the cutover (signups, feedback, orders, listings). Nothing has been touched. If you truly intend this — a deliberate rollback to the old project — re-run with overwrite_live_db = true."
+              exit 1
+            fi
+            echo "::warning::RM6 is LIVE and overwrite_live_db was set. Proceeding with a DESTRUCTIVE overwrite of production data."
+          fi
+
+          echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-18
+          export PATH="/usr/lib/postgresql/18/bin:$PATH"
+          pg_dump --version; psql --version
+
+          echo "== Can the source still be reached at all? =="
+          if ! psql "$SOURCE_DATABASE_URL" -tAc "SELECT 1" >/dev/null 2>&1; then
+            echo "::error::DATABASE_URL_2 is unreachable — its transfer allowance is spent, so there is nothing to dump FROM. RM6 has NOT been touched."
+            exit 1
+          fi
+          echo "Source answered — proceeding."
+
+          echo "== Source table sizes (from catalog — negligible transfer) =="
+          # Doubles as the first real evidence for the egress investigation: the
+          # biggest table here is the likeliest thing a hot query is re-reading.
+          psql "$SOURCE_DATABASE_URL" -P pager=off -c "
+            SELECT relname AS table,
+                   to_char(n_live_tup, 'FM999,999,999') AS est_rows,
+                   pg_size_pretty(pg_total_relation_size(relid)) AS total_size
+            FROM pg_stat_user_tables
+            ORDER BY pg_total_relation_size(relid) DESC
+            LIMIT 40;" 2>&1 || echo "(size report unavailable — continuing)"
+
+          echo "== What the target holds BEFORE we replace it =="
+          for T in 'public."User"' 'public."Card"' 'public."MarketplaceListing"' 'public."Order"'; do
+            N=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1 | tr -d ' \n')
+            echo "  target $T: $N"
+          done
+
+          echo "== Dumping the operational database (schema + data) =="
+          # The dump MUST succeed before the restore is allowed to start: this
+          # runs under `set -uo pipefail` with no `-e`, so a pg_dump that died
+          # half-way — what an exhausted allowance looks like, since the
+          # connection drops mid-stream rather than being refused up front —
+          # would otherwise fall through to a `pg_restore --clean` against a
+          # TRUNCATED dump, dropping the target's tables and refilling only the
+          # part that made it across.
+          if ! pg_dump "$SOURCE_DATABASE_URL" --no-owner --no-acl --format=custom \
+            --exclude-table-data='public."PriceHistory"' \
+            --exclude-table-data='public."ClickEvent"' \
+            -f main.dump; then
+            echo "::error::pg_dump FAILED against DATABASE_URL_2 — almost certainly its transfer allowance dying mid-stream. RM6 has NOT been touched; a partial dump is never restored."
+            exit 1
+          fi
+          echo "Dump size: $(du -h main.dump | cut -f1)"
+          # Anchored on "TABLE DATA public <name> " — pg_restore -l prints the
+          # identifier UNQUOTED. The trailing space matters: without it "Card"
+          # also matches "CollectionCard".
+          for T in User Card MarketplaceListing; do
+            if ! pg_restore -l main.dump | grep -qE "TABLE DATA public ${T} "; then
+              echo "::error::the dump has no data section for table $T — it is incomplete. RM6 has NOT been touched."
+              exit 1
+            fi
+          done
+          echo "Dump contains a data section for every expected table — proceeding to restore."
+
+          echo "== Restoring into RM6 (existing objects replaced) =="
+          set +e
+          pg_restore --no-owner --no-acl --clean --if-exists --verbose -d "$TARGET_DATABASE_URL" main.dump > restore.log 2>&1
+          RC=$?
+          set -e
+          echo "pg_restore exit code: $RC — non-zero here is often just harmless ownership/extension warnings on managed Postgres; the row-count check below is the real verification."
+          echo "-- restore.log (first 40 lines) --"; head -40 restore.log
+          echo "-- restore.log (last 20 lines) --"; tail -20 restore.log
+
+          echo "== Target inventory after restore =="
+          psql "$TARGET_DATABASE_URL" -c "SELECT current_database(), current_user" -c "\dn" -c "\dt public.*" 2>&1 | head -60
+
+          echo "== Verifying row counts (DATABASE_URL_2 vs RM6) =="
+          sleep 3
+          set +e
+          MISMATCH=0
+          for T in 'public."User"' 'public."Card"' 'public."Order"' 'public."MarketplaceListing"' 'public."SellerProfile"' 'public."Counter"' 'public."SupportTicket"' 'public."RetailerPrice"' 'public."Feedback"'; do
+            SRC=$(psql "$SOURCE_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
+            DST=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
+            case "$SRC" in ''|*[!0-9]*) echo "$T source query FAILED: $SRC"; MISMATCH=1; continue;; esac
+            case "$DST" in ''|*[!0-9]*) echo "$T target query FAILED: $DST"; MISMATCH=1; continue;; esac
+            if [ "$SRC" = "$DST" ]; then
+              echo "$T: source=$SRC target=$DST ✓"
+            else
+              echo "$T: source=$SRC target=$DST ✗ MISMATCH"
+              MISMATCH=1
+            fi
+          done
+          set -e
+          echo "(PriceHistory + ClickEvent intentionally not copied — served from the history project.)"
+          if [ "$MISMATCH" = "1" ]; then
+            echo "::error::Row-count mismatch on at least one table — do NOT deploy the RM6-first chain yet."
+            exit 1
+          fi
+          echo "All verified tables match — RM6 now holds a full copy of the operational data."
+          echo ""
+          echo "NEXT STEPS:"
+          echo "  1. Re-run this task immediately before deploying, so anything the"
+          echo "     price importer wrote to DATABASE_URL_2 in the meantime is included."
+          echo "  2. src/lib/db.ts, scripts/build-db-push.sh and every workflow chain"
+          echo "     must put RM6 FIRST, so a deploy moves traffic onto it."
+          echo "  3. Leave DATABASE_URL_2 set as the rollback fallback."
+          echo "  4. THE BURN RATE IS STILL UNEXPLAINED — ~2 GB/day will exhaust this"
+          echo "     project too in roughly two days. Find the cause before it does."
+
       - name: Migrate main (operational) database to DATABASE_URL_2
-        # 2026-08-14 cutover. The live DATABASE_URL project burned 4 of its 5 GB
-        # of monthly network transfer in the TWO DAYS since the RM5 → DATABASE_URL
-        # rotation, so it has to move again. DATABASE_URL_2 is the second project
-        # in this chain's history — abandoned months ago, which is exactly what
-        # makes it usable now: Neon's caps are per project per month, so its
-        # allowance reset long ago. probe-databases confirmed it REACHABLE on
-        # 2026-08-14 (104 users / 39 listings — a months-old snapshot this restore
-        # overwrites wholesale).
+        # LEGACY (2026-08-14 cutover, kept for reference — superseded by
+        # migrate-main-db-to-rm6 above on 2026-08-17). The live DATABASE_URL
+        # project burned 4 of its 5 GB of monthly network transfer in the TWO
+        # DAYS since the RM5 → DATABASE_URL rotation, so it had to move again.
+        # DATABASE_URL_2 was the second project in this chain's history —
+        # abandoned months ago, which is exactly what made it usable then:
+        # Neon's caps are per project per month, so its allowance reset long
+        # ago. probe-databases confirmed it REACHABLE on 2026-08-14 (104 users /
+        # 39 listings — a months-old snapshot this restore overwrites wholesale).
         #
         # THE BURN RATE IS NOT FIXED BY THIS TASK. At ~2 GB/day the target lasts
         # about as long as the source did. This buys time to find the cause; it is
@@ -1503,7 +1684,7 @@ jobs:
         # so the generated client may not even load.
         if: inputs.task == 'fix-orphan-users'
         env:
-          TARGET_DATABASE_URL: ${{ secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 }}
+          TARGET_DATABASE_URL: ${{ secrets.RM6 || vars.RM6 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 }}
         run: |
           set -uo pipefail
           if [ -z "$TARGET_DATABASE_URL" ]; then
@@ -1786,12 +1967,12 @@ jobs:
       - name: Audit rarity across sets (read-only census)
         if: inputs.task == 'audit-rarity'
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 }}
+          DATABASE_URL: ${{ secrets.RM6 || vars.RM6 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 }}
           # Which of the chain above actually won, by NAME (never its value). lib/db.ts
           # cannot work this out inside Actions: the chain is collapsed into one
           # DATABASE_URL before the job starts, so process.env.RM5 is always unset there
           # and its warning always said "DATABASE_URL". See src/lib/db.ts.
-          DB_SOURCE_NAME: ${{ (secrets.DATABASE_URL_2 || vars.DATABASE_URL_2) && 'DATABASE_URL_2' || (secrets.DATABASE_URL || vars.DATABASE_URL) && 'DATABASE_URL' || (secrets.RM5 || vars.RM5) && 'RM5' || (secrets.RM4 || vars.RM4) && 'RM4' || 'RM3' }}
+          DB_SOURCE_NAME: ${{ (secrets.RM6 || vars.RM6) && 'RM6' || (secrets.DATABASE_URL_2 || vars.DATABASE_URL_2) && 'DATABASE_URL_2' || (secrets.DATABASE_URL || vars.DATABASE_URL) && 'DATABASE_URL' || (secrets.RM5 || vars.RM5) && 'RM5' || (secrets.RM4 || vars.RM4) && 'RM4' || 'RM3' }}
         run: npx tsx scripts/audit-rarity.ts
 
       - name: Audit VEN cards (read-only census)
