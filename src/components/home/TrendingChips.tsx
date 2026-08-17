@@ -8,10 +8,11 @@ import type { CardTileData } from "@/components/CardTile";
 import { gaEvent } from "@/lib/ga-events";
 
 // Under the hero search bar: instant paths into the database for a visitor who
-// doesn't know what to search yet. Same demand signal that powers "Most popular
-// cards" below (most-searched priced cards) — not a separate "trending" concept,
-// just the top slice of it surfaced earlier, where it can shorten
-// search→compare→buy to one click.
+// doesn't know what to search yet. Same demand signal (most-searched priced
+// cards) that used to also power a "Most popular cards" section further down
+// the homepage — that section is gone (its job is /browse's now, per the
+// homepage-redesign brief), but the underlying signal lives on here, where it
+// can shorten search→compare→buy to one click.
 export function TrendingChips({ cards }: { cards: CardTileData[] }) {
   if (cards.length === 0) return null;
   return (
