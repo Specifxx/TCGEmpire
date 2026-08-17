@@ -15,6 +15,7 @@ import { getRecentlyUpdated, getPriceMovers, type PriceMovers } from "@/lib/pric
 import { getArticles } from "@/lib/articles";
 import { timeAgo } from "@/lib/format";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
+import { ScrollDepthTracker } from "@/components/ScrollDepthTracker";
 import { CinematicHero } from "@/components/home/CinematicHero";
 import { RadianceCountdownCard } from "@/components/home/RadianceCountdownCard";
 import { LatestPosts } from "@/components/home/LatestPosts";
@@ -257,6 +258,11 @@ export default async function HomePage() {
 
   return (
     <div className={`${archivo.variable} rb-display-sans flex flex-col gap-10`}>
+      {/* Scroll-depth measurement (25/50/75/90%) — see ScrollDepthTracker.tsx
+          for why this is mounted per-route here rather than in the root
+          layout. Renders nothing; purely a side-effecting analytics mount. */}
+      <ScrollDepthTracker />
+
       {/* Cinematic full-bleed hero — search-first (see CinematicHero + Task 3). */}
       <CinematicHero
         totalCards={totalCards}
