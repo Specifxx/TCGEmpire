@@ -18,6 +18,37 @@
     "imageThumbUrl": "https://tcgplayer-cdn.tcgplayer.com/product/693156_in_400x400.jpg"
   },
   {
+    "_note": "IMAGE FIX, not a new card. The 'b' Nexus Night promo variants of these two OGN cards (197b/298 and 151b/298, distinct from the 'op' promo above and from each other's own base/alt-art prints) were imported with their BASE card's art — RiftScribe/the import pipeline had no distinct art for the 'b' promo yet at import time and silently fell back to the base image, so the promo pages were showing the wrong card face. Corrected against dotgg.gg's per-collector-number scans (static.dotgg.gg/riftbound/cards/<SET>-<number>.webp), verified by eye against both cards' real printed text: Teemo's shows the repeating 'GGEZ' holo pattern and the printed Hidden/+3 Might text; Lee Sin's shows the gold League-Splash-Team treatment and the printed Accelerate/+2 Might text. NO externalId set, deliberately: these rows already exist (created by the automated import, not this file), so matching by setCode+collectorNumber+isPromo — unambiguous for a 'b'-suffixed promo number — finds and updates the existing row. Setting a fresh externalId here would miss on the id lookup and create a duplicate card instead of fixing the real one."
+  },
+  {
+    "name": "Teemo, Scout",
+    "setCode": "OGN",
+    "setName": "Origins",
+    "collectorNumber": "197b/298",
+    "domain": "Chaos",
+    "type": "Unit",
+    "rarity": "Showcase",
+    "isPromo": true,
+    "energyCost": 2,
+    "might": 1,
+    "imageUrl": "https://static.dotgg.gg/riftbound/cards/OGN-197b.webp",
+    "imageThumbUrl": "https://static.dotgg.gg/riftbound/cards/OGN-197b.webp"
+  },
+  {
+    "name": "Lee Sin, Centered",
+    "setCode": "OGN",
+    "setName": "Origins",
+    "collectorNumber": "151b/298",
+    "domain": "Body",
+    "type": "Unit",
+    "rarity": "Showcase",
+    "isPromo": true,
+    "energyCost": 6,
+    "might": 6,
+    "imageUrl": "https://static.dotgg.gg/riftbound/cards/OGN-151b.webp",
+    "imageThumbUrl": "https://static.dotgg.gg/riftbound/cards/OGN-151b.webp"
+  },
+  {
     "externalId": "promo-worlds-bundle-2025-panda-teemo",
     "name": "Teemo, Swift Scout (Panda)",
     "setCode": "OGN",
