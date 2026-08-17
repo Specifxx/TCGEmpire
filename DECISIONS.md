@@ -1294,3 +1294,527 @@ visually via the screenshots described above.
   GA4 gap being closed
 - `CountryHeroToggle.tsx`, `CountryProvider.tsx`, `src/app/api/geo/route.ts`
   — read and verified, **not modified** (already satisfied the brief)
+
+---
+
+## Phase 4 — Sections & Footer (2026-08-17)
+
+Re-read `git log` and this file in full before starting. Confirmed Phase 3's
+hero/search rebuild (shortened H1, one CTA link, quiet region toggle,
+Baymard-refined `SearchBar`) was live and untouched, and read the CURRENT
+`src/app/page.tsx` fresh (not the FACTS summary, which predates Phase 2/3) —
+it still carried `MarketPulse`, the 4-column `TodaysTopDeals` + its filter
+chips, an inline `NewsletterSignup`, `EbayPicks`, `PopularCardsCarousel` (4
+tabs), `ReturnVisitCards` (3 cards), `HowItWorks`, an inline Explore section
+(by-set + by-domain), `RadianceCountdownCard` (own card + own newsletter
+capture), `LatestPosts`, `ReviewsSection`, the About+FAQ section, and
+`PartnersStrip` — i.e. Phases 2/3 had deliberately left all of section-level
+structure exactly as Phase 1 found it, per their own stated scope. This was
+the phase that actually does the section-consolidation half of the brief.
+
+### What was built
+
+- **`src/lib/proof-strip.ts`** (new) — `getProofStripPick(candidates,
+  country)`: given a popularity-ordered candidate list (the homepage's own
+  `popularCards`), finds the first candidate with ≥3 distinct in-stock
+  stores in that market and returns its cheapest three ranked by TOTAL
+  DELIVERED cost (item + shipping), same ranking rule the card page itself
+  uses. Two queries, not one per candidate: a single small `groupBy` across
+  every candidate id (`by: [cardId, retailer], _min: {priceCents}`, scoped
+  to `country` + `inStock: true`) finds out WHICH card qualifies; only then
+  does a second `findMany` fetch the winner's full rows. Both are bounded to
+  a handful of already-fetched candidate ids for one market, never a table
+  scan (see `lib/db.ts`'s egress rules — read before writing this, not
+  guessed at). Built entirely from READ-ONLY reuse of existing pricing-lib
+  exports: `computeMarket()`/`MarketRow` from `lib/market-rows.ts` (same
+  file the card page's own price table uses) and `effectiveShippingCents()`
+  from `lib/retailers.ts` — imported, never edited, per this task's
+  pricing-logic-is-off-limits rule. `affiliateUrl()`/`cardHref()` reused the
+  same way. This is new AGGREGATION code (selecting/ranking already-computed
+  prices), not new pricing logic.
+- **`src/components/home/ProofStrip.tsx`** (new, client) — renders the
+  card + its 3 cheapest stores (cheapest one badged and highlighted) + a
+  "Save $X ... delivered" line (only when `savingsCents > 0`) + the brief's
+  exact caption text ("Every store, ranked by total delivered cost. Free, no
+  sign-up."). Server-serializes `pickByCountry` for all six markets (same
+  pattern `MarketPulse`/`TodaysTopDeals` already used) so it localises to
+  the visitor's actual market client-side; hides entirely for a market with
+  no qualifying candidate — a thin two-price "comparison" would undercut the
+  exact point it exists to prove. Deliberately **not** wrapped in `<Reveal>`
+  — it now sits where `MarketPulse` used to (right after the hero), and
+  reused that component's own documented reasoning verbatim: close enough to
+  the hero to often be in the initial viewport, so it should render
+  immediately rather than fade in on scroll. Wires `OutboundLink`'s Phase-2
+  optional props (`cardId`, `cardName`, `price`, `positionInList`,
+  `pageType: "homepage"`) on all three store links, since this call site was
+  already being touched for its own reasons — exactly what Phase 2 asked the
+  next component that touched `OutboundLink` to do.
+- **`src/components/home/DealsRow.tsx`** (new, client) — collapses
+  `MarketPulse` + the old 4-column `TodaysTopDeals` grid + its price-tier
+  filter chips into ONE horizontally-scrolling row of up to 6 cards + a
+  single "See all deals →" link. Reuses `lib/top-deals.ts`'s **existing**
+  `getTopDeals()` blend (`savingsVsMarket`, `priceDrops`, `cheapestSealed`,
+  `undervalued`) completely unchanged — this file only SELECTS from data
+  already computed elsewhere; it invents no new pricing aggregation, which
+  is what the phase brief's "reuse its data source rather than inventing a
+  new one" instruction asked for. `MarketPulse`'s own risers/fallers content
+  is NOT folded into the row's data — that full experience already lives at
+  `/market` (footer-linked, see "what moved, and where" below); the row only
+  absorbs `TodaysTopDeals`' four "deal-signal columns", matching the phase
+  instructions' literal wording ("the deal-signal columns" = TodaysTopDeals'
+  own `COLUMNS` array, not Market Pulse's movers). Filter chips are gone
+  entirely, per the brief ("they belong on the deals page, not here").
+  **Premium-gating decision**: the row shows plain cards with no lock/teaser
+  UI at all — but the SIX-card cap plus a deliberate bucket order
+  (`[priceDrops, cheapestSealed, savingsVsMarket, undervalued]`, free
+  signals first) means the round-robin selection can only ever pull ONE item
+  from each Premium signal (`savingsVsMarket`, `undervalued`) before moving
+  on to a second pass that only reaches the free signals ahead of them in
+  the array — i.e. it exposes **exactly** the same amount of Premium-sourced
+  data for free that the retired `TodaysTopDeals.COLUMNS`' `gated ?
+  items.slice(0, 1) : items` logic already did, just without re-implementing
+  a locked-teaser UI in a six-card row. Logged as a deliberate design choice,
+  not an oversight: re-implementing the old blur/lock UI in a compact
+  horizontal row was judged not worth the complexity for a homepage teaser
+  whose whole point is restraint, and the exposure level is provably
+  unchanged either way.
+- **`src/components/home/RadianceCountdownCard.tsx`** (rewritten in place,
+  same export name/prop) — was a full-width `card-surface` block with its
+  own heading, digit countdown and its own `<NewsletterSignup source=
+  "countdown">`. Now a single `<p>` line: a small "{set} is coming" chip +
+  "{days} days to go — Full release details →". The newsletter capture is
+  **gone entirely** (not moved anywhere) — the brief wants exactly one
+  capture, footer-only, and `/radiance-countdown`'s own page still carries
+  the full release-hype treatment (with its own capture) for anyone who
+  clicks through wanting more, so nothing is lost, just not duplicated on
+  the homepage. Still server-computed, no client timer (same ISR-consistency
+  reasoning as before).
+- **`src/app/about/page.tsx`** — added `<HowItWorks totalCards={totalCards}
+  />` (the untouched three-step search→compare→buy explainer component),
+  right after the "What RiftCompare is" intro section, before "Why we built
+  it". `/about` had zero DB reads before this; added one
+  `prisma.card.count()` and `export const revalidate = 86400` (same daily
+  cadence `/sets` already uses for its own per-set counts) so the page stays
+  statically cacheable rather than becoming force-dynamic for one number
+  that changes maybe once a set. This is the brief's own explicit
+  instruction ("HowItWorks itself should keep existing (unchanged) as the
+  full version on /about... add it there if not already present") — verified
+  first that `/about`'s existing prose "How it works" section (data
+  methodology — sourcing/matching/snapshots) is a DIFFERENT thing from
+  `HowItWorks`' user-facing three-step mechanic, so this is additive, not a
+  duplicate.
+- **`src/app/page.tsx`** — the big one. Removed: `MarketPulse`,
+  `TodaysTopDeals` (both replaced by `DealsRow`), the inline mid-page
+  `<NewsletterSignup source="home">` card, `PopularCardsCarousel` and its
+  four tabs, `ReturnVisitCards` (all 3 cards — see below), `HowItWorks`
+  (moved to `/about`), the by-domain chip sub-grid inside Explore (moved
+  conceptually to `/domains`, an existing fuller hub page for exactly that
+  content — see below), `RadianceCountdownCard`'s old full-width mount
+  (replaced by its new one-line self, folded into the Explore section),
+  `LatestPosts`, `ReviewsSection`. Kept, repositioned: `EbayPicks` (see
+  pinned-test note below), the Explore-by-set grid (compressed), the
+  About+FAQ section (heading shortened, see page-height section below;
+  paragraph and FAQ content byte-for-byte unchanged), `PartnersStrip`.
+  New mounts: `ProofStrip` (right after the hero), `DealsRow` (below
+  ProofStrip, inside the same `anyDeals`-gated `<Reveal>` wrapper
+  `TodaysTopDeals` used to sit in). Data-fetching trimmed to match: dropped
+  `getPopularCards(8, country, "VEN")` (`popularVendetta`, only consumed by
+  the now-gone Vendetta tab), `getRecentlyUpdated()` (only consumed by the
+  now-gone "recently updated" tab AND its own ItemList — see JSON-LD note
+  below), and the six-market `getPriceMovers()` sweep + `biggestMovers`
+  derivation (only consumed by `MarketPulse` and the now-gone "movers" tab).
+  `storeCount`/`storeWord` (only ever fed `PopularCardsCarousel`'s
+  description text) dropped too. Added one new per-market read
+  (`proofArr`/`getProofStripPick`, same `unstable_cache`+`CONTENT_TAG`
+  pattern as `topDealsArr`) — net effect is FEWER Prisma round-trips than
+  before this phase, not more, despite the new section.
+
+### `EbayPicks` — kept, not moved (a real pinned-test conflict, resolved by
+NOT removing it)
+
+The master brief's own "target page structure" list (sections 1-6) and "what
+moves, and where" table don't mention `EbayPicks` at all, and my phase's own
+explicit "REMOVE FROM HOMEPAGE BODY" list doesn't name it either — but
+`tests/ebay-picks.test.ts` has a real, pre-existing, deliberate assertion:
+`assert.match(read("src/app/page.tsx"), /<EbayPicks \/>/, "/ must render
+it")`, part of a test literally titled "the unit is on all five requested
+pages". Reading the surrounding test file: this is a genuine business/EPN-
+placement requirement (5 specific high-traffic pages, homepage included),
+not an accident. Read `EbayPicksLive.tsx` in full before deciding: it's
+compact (ONE unlabelled row of up to 6 tiles, `aria-label` on the `<section>`
+instead of a real `<h2>` — zero `<h2>` budget cost), carries its own
+`AffiliateDisclosure`, and degrades to a single-CTA fallback (`EbayBuyCta`)
+when a market has no fresh cached listings (confirmed in the local seed
+render — see screenshots). Decision: **kept, unmoved**, repositioned
+directly after `DealsRow` (matching its old relative position right after
+the deals content, before what used to be "Most popular cards"). This reads
+as consistent with the master brief's own explicit monetisation carve-out
+("Keep in the header: Marketplace and Premium stay prominent — they're
+monetisation") applied to the one below-the-fold monetisation unit the
+homepage already had, rather than a violation of "one job" — it's a single
+compact row, not a market portal. No test file was touched for this one;
+the existing pin is satisfied by simply keeping the mount.
+
+### The `ReturnVisitCards` price-alerts card — dropped, not relocated
+(future work, out of this task's scope)
+
+Per the phase brief: pack sim and Riftle both already have real, non-hidden
+`nav-groups.ts` entries reaching `FOOTER_GROUPS` (confirmed by reading
+`nav-groups.ts` directly — Games group, `hideInFooter` unset on either), so
+removing their homepage-body promo cards doesn't orphan them. The **third**
+card (`/alerts`, "Watching a card? Get an alert the moment its price
+drops") has no such ready alternative — the master brief says explicitly
+this promo "belongs on card detail pages, where intent exists," but card
+detail pages are off-limits to this task ("Do not modify card detail
+pages"). So: the whole `ReturnVisitCards` mount is removed from the
+homepage (all three cards, not just the alerts one — pack sim and Riftle
+don't need a homepage-specific promo when they're already one click away
+sitewide), and re-adding the alerts promo to card detail pages is logged
+here as explicit **future work outside this task's scope**, not attempted.
+`/alerts` itself stays reachable — it already has a real `nav-groups.ts`
+entry ("Price Alerts", "Your collection" group → "Browse & collect" footer
+column).
+
+### A real, vacuously-passing pre-existing test found and fixed (same shape
+as Phase 3's `/learn` fix)
+
+`tests/pack-composition.test.ts` had a test titled "the homepage links to
+the pack simulator" whose own comment explained real intent ("the incumbent
+at #1 has no indexable content at all... a homepage link is the strongest
+lever") — but its assertion only ever grepped
+`src/components/home/ReturnVisitCards.tsx`'s OWN source text for
+`href="/games/pack-sim"`, never `src/app/page.tsx` itself. That means the
+test would have kept passing **even after `ReturnVisitCards` stopped being
+mounted on the homepage at all** — exactly the "vacuous pass" shape Phase 3
+found and fixed for `/learn`'s hero-link test. Since this phase's own
+(brief-mandated) change is precisely "stop mounting `ReturnVisitCards` on
+the homepage," fixed the same way Phase 3 did: rewrote the test to pin the
+real, sitewide mechanism — a real, non-hidden `nav-groups.ts` entry for
+`/games/pack-sim` that reaches `FOOTER_GROUPS` (already true, verified, zero
+`nav-groups.ts` changes needed) — instead of grepping one specific
+now-unmounted component. Renamed the test to "the pack simulator is
+reachable from the homepage" since "the homepage links to..." was no longer
+literally true (nor does it need to be — the mechanism is sitewide chrome,
+same reasoning Phase 3 already established for `/learn`). Full test suite:
+581/581 both before and after this one file's edit (net zero — one test
+rewritten in place, not added/removed).
+
+### Explore by set — compressed, by-domain moved, Radiance folded in
+
+- **By-domain sub-grid**: removed from the homepage entirely. Checked
+  `/domains` first (per the phase brief's explicit instruction to check
+  before duplicating) — it's not a stub, it's a genuinely FULLER hub page
+  for exactly this content (per-domain card counts, lore/tagline copy, same
+  chip-grid concept) than the homepage's own 6-chip row ever was, and it
+  already has a real `nav-groups.ts` entry (`Browse the database` group →
+  `Browse & collect` footer column). Nothing to build, nothing orphaned —
+  just stopped duplicating a lesser version of a page that already exists.
+  Added one small, low-risk cross-link FROM `/sets` TO `/domains` ("Building
+  around a colour instead? Browse cards by domain.") since `/sets` didn't
+  link to it before and the phase brief asked to "wire the sets page's
+  domain filter/links there if not already surfaced" — the primary
+  reachability already existed via nav/footer regardless, this is a purely
+  additive UX improvement.
+- **Radiance one-liner**: folded into this section (see
+  `RadianceCountdownCard` rewrite above), right after the gallery link.
+- **Grid density**: `lg:grid-cols-5` → `lg:grid-cols-6`. `SETS` has exactly
+  6 entries today (5 released + Radiance), so 5 columns wrapped a 6th tile
+  to a lonely second row; 6 columns fits all of them in one row on desktop
+  and was a real, measured, easy win against the page-height hard target
+  (94px saved — see below). Will need revisiting if a 7th set is ever added
+  (wraps to a 2nd row regardless of 6 vs 7 columns at that point) — not a
+  problem to solve today.
+
+### JSON-LD — one ItemList trimmed, one removed cleanly (not left stale)
+
+- **"Most popular Riftbound cards" → "Trending Riftbound cards", 12 → 6
+  items.** Renamed and re-scoped to `popularCards.slice(0, 6)` — exactly the
+  6 cards `TrendingChips` actually renders visibly in the hero. The old
+  ItemList's own comment said "the ItemList of the cards actually rendered
+  above"; since `PopularCardsCarousel` (which used to render all 12) is
+  gone, leaving the ItemList at 12 would have made that comment false and
+  the structured data would no longer describe anything genuinely on the
+  page. Trimming it to match what `TrendingChips` shows keeps the honesty
+  contract Google's structured-data guidance cares about (markup should
+  reflect visible content).
+- **"Recently updated Riftbound prices" ItemList — removed entirely**, not
+  kept alive on a smaller feed. Nothing on the rebuilt homepage renders that
+  content anymore (its one consumer, `PopularCardsCarousel`'s "recently
+  updated" tab, is gone), and keeping the query + the ItemList block just to
+  preserve stale structured data referencing nothing visible would be
+  exactly the anti-pattern the trimmed "Trending" ItemList above was fixing.
+  `getRecentlyUpdated()`'s import was removed from `page.tsx` along with it
+  — a real, measurable data-fetching reduction, not just a display change.
+
+### Discord in the footer — resolved (a real gap, fixed WITHOUT touching
+`nav-groups.ts`)
+
+Phase 1 flagged this as unresolved; this phase makes the call. Confirmed
+`DISCORD_URL` (`src/lib/site.ts`) exists and is real (not fabricated) and
+was header-only (`Navbar.tsx`) plus the Organization JSON-LD's `sameAs` —
+genuinely absent from `nav-groups.ts`/`FOOTER_GROUPS`/`FooterNav`, matching
+the master brief's footer table which explicitly lists "Discord" as
+something the footer itself must show. **Deliberately did NOT add it to
+`nav-groups.ts`**, even though that would have been the more "consistent"
+mechanism (same one `/learn` and `/games/pack-sim` now rely on): read
+`CommandLauncher.tsx` first and found its keyboard-select path calls
+`router.push(href)` — Next's client-side router, built for internal routes.
+An `https://discord.gg/...` entry in `NAV_GROUPS` would also feed the ⌘K
+launcher, whose Enter-to-open path would call `router.push()` on an
+external absolute URL — untested, unintended behavior for that mechanism,
+and not worth risking for one footer link. Instead added a plain external
+`<a href={DISCORD_URL} target="_blank" rel="noopener noreferrer">Discord</a>`
+directly into `layout.tsx`'s existing legal-links row, matching the exact
+pattern that row already uses for two other external links (the
+RiftboundStocks.com cross-promo, the `mailto:` contact link). Verified live
+via Playwright: `a[href*="discord.gg"]` present and matches `DISCORD_URL`.
+Zero `nav-groups.ts`/`FooterNav.tsx`/`tests/nav-search.test.ts` changes
+needed — confirmed the footer-column-balance test is unaffected (this link
+isn't part of `FOOTER_GROUPS` at all, so column counts don't move).
+
+### `ReviewsSection` — mount removed (a judgment call, documented)
+
+The phase brief left this as "your call, document it." Removed the mount
+entirely rather than leaving it in place-but-inert. Reasoning: it's not
+part of the master brief's target structure (sections 1-6), it's an async
+server component that runs a real `getApprovedReviews()` Prisma query on
+every homepage render (ISR-cached, so not per-visitor, but still a real
+read for a section that — per its own doc comment — "renders NOTHING until
+there are at least a few genuine ones", which is every render so far, in
+this sandbox and evidently in production too or the master brief's own
+13-section inventory would have listed it as content, not a `<h2>`). Cutting
+the dead read is a small, real efficiency win consistent with this phase's
+broader "remove sections with no upside" theme, and the component itself
+is untouched — nothing stops a later pass from re-mounting it the moment
+real reviews exist.
+
+### Footer reachability — confirmed comprehensive, cross-checked against the
+brief's own list
+
+Market index (`/market`), All deals (`/tools/deal-finder` — see below),
+Price movers (`/movers`), Sealed (`/sealed`), Value finder
+(`/tools/value-finder`), Decks (`/decks`), Riftle (`/riftle`), Pack
+simulator (`/games/pack-sim`), Price alerts (`/alerts`), Guides (`/guides`),
+Store list (`/stores/tracked`), Discord (see above) — every one confirmed
+present in `nav-groups.ts` with a real, non-hidden entry reaching
+`FOOTER_GROUPS`, all already true before this phase touched anything (Phase
+1's FACTS summary was accurate). `AffiliateDisclosure`'s exact wording
+(flagged unverified by Phase 1, spot-checked by Phase 3) is now formally
+re-verified: read `AffiliateDisclosure.tsx` in full this phase (the
+`TEXT` map's `both` string — "Affiliate links: as an eBay Partner Network
+affiliate and a TCGplayer affiliate, RiftCompare earns from qualifying
+purchases — at no extra cost to you.") and confirmed via a live Playwright
+render that this exact text renders on the homepage (via `PartnersStrip`)
+— untouched, byte-for-byte, this phase changed nothing in that file.
+
+**"See all deals →" destination**: points at `/tools/deal-finder`, per the
+phase brief's own suggested candidate. Logged honestly: no single existing
+page shows exactly the same 4-signal blend `DealsRow` draws from (price
+drops live at `/movers`, cheapest sealed at `/sealed`, undervalued at
+`/tools/value-finder`, and `/tools/deal-finder` itself is actually a
+DIFFERENT arbitrage tool — eBay-flip / TCGplayer-flip / eBay-cheapest, not
+the same `lib/top-deals.ts` blend). `/tools/deal-finder` was still judged
+the best single link: it's explicitly what the phase brief named as "the
+closest fit," it's already one of the four old `TodaysTopDeals` columns'
+own "All opportunities" destination, and it's the closest single-page
+match for "more deals" as a general concept. Not a perfect 1:1 content
+match — logged here rather than silently treated as one.
+
+### Local test-data gotcha discovered (and worked around) while verifying —
+important for Phase 5/6/7 to know about
+
+The local sandbox DB has **zero** `RetailerPrice`/`SealedListing` rows (see
+Phase 1), so `ProofStrip` and `DealsRow` render nothing there by default —
+same as `MarketPulse`/`TodaysTopDeals` always did against this seed. To
+actually SEE and verify the new sections render correctly (not just trust
+the code), wrote a throwaway, NOT-COMMITTED Node script
+(`__scratch_seed_prices.mjs`, deleted after use — same "throwaway script,
+not committed" pattern Phase 2/3 already established for their own
+verification scripts) that inserts a small number of real `RetailerPrice`
+rows (5 US retailers, varying prices/shipping) against 5-7 of the real
+seeded cards, and backfills the `Card.lowestPriceCentsUs` denormalized
+column those rows imply (the real price-importer's job in production;
+`getPopularCards`' `priced: "1"` filter reads that column, not
+`RetailerPrice` directly, so inserting listings alone isn't enough to make
+a card "popular-and-priced"). **This data was left in the local DB** (not
+rolled back) — it's genuinely useful test fixture for Phase 5/6/7 to reuse
+(without it, `ProofStrip` and large parts of any visual/audit verification
+stay permanently empty against this seed), and per Phase 1's own framing
+this whole Postgres instance is ephemeral, non-committed test
+infrastructure a later phase can always reset via `db:seed` if a truly
+clean baseline is needed. Current extra state: ~21 `RetailerPrice` rows
+across 7 cards (5 with ≥3 distinct US stores, qualifying for `ProofStrip`),
+country `US` only. `prisma/seed.ts` itself was **not** touched.
+
+**A real gotcha worth flagging explicitly**: after inserting this data,
+`ProofStrip`/`DealsRow` still rendered EMPTY for a while — not a bug in the
+new code, but `unstable_cache`'s on-disk cache (`.next/cache`) had already
+memoized the empty result from a request made BEFORE the seed script ran,
+keyed by `["proof-strip", "US"]`/`["top-deals", "US"]` with a 1-hour
+`revalidate`. Restarting the `next dev` PROCESS does **not** bust this —
+the cache lives on disk, not in process memory, and survives a plain
+restart. Only `rm -rf .next/cache` (or waiting out the full hour, or a real
+`CONTENT_TAG` revalidation via `/api/revalidate`, which needs
+`CRON_SECRET`) actually clears it. **Any later phase that inserts/changes
+local price data expecting to see it reflected immediately must delete
+`.next/cache` first** — this cost real time to diagnose this phase and is
+worth not re-discovering.
+
+### The page-height hard target — measured, and a structural finding logged
+for Phase 6/7 (not silently resolved either way)
+
+Built a throwaway Playwright measurement script (not committed) that reads
+real `getBoundingClientRect()` heights for every top-level section, against
+the local dev server with the test price data above. Two safe, low-risk,
+homepage/footer-scoped trims were applied as a direct result (both already
+reflected in the file changes above): the Explore grid's `lg:grid-cols-6`
+(saved 94px @ 1440×900 by fitting all 6 sets in one row instead of two),
+and shortening the About/FAQ section's own visible `<h2>` from "Riftbound
+prices in Australia, New Zealand, the US, the UK, Singapore and Canada —
+all in one place" (~103 chars, wrapped to 3+ lines at 390px width) to
+"Riftbound prices, compared across every store we track" (56 chars) plus
+`p-6` → `p-5 sm:p-6` on that card (saved a combined ~64px on mobile). Full
+before/after numbers, this phase's own local measurements only (NOT the
+brief's real-production numbers, same caveat Phase 1 already established —
+Phase 7 owns the real before/after table):
+
+| Viewport | Before this phase's height trims | After | Target |
+|---|---|---|---|
+| 1440×900 | 3,024px (3.36 screens) | 2,930px (3.26 screens) | ≤2,350px (2.6 screens) |
+| 390×844 | 3,943px (4.67 screens) | 3,879px (4.59 screens) | ≤3,798px (4.5 screens) |
+
+**Neither target is hit yet, and the desktop gap is large enough (580px)
+that it needed real investigation, not just more trimming.** Measured the
+full section-by-section breakdown at 1440×900 (see the raw numbers in this
+phase's own scratch measurement, not reproduced verbatim here, but summed
+below) and found the miss is NOT primarily coming from homepage BODY
+content — it's coming from chrome that was already there before this task
+started, present on every one of 150+ routes, not homepage-specific:
+
+- Header: 65px
+- `FooterAds` (the sitewide TCGplayer + eBay banner pair above the footer):
+  **~282px**
+- `<footer>` itself (newsletter capture + `FooterNav`'s 4-column site map +
+  share row + legal links + Riot's required "Legal Jibber Jabber" notice +
+  copyright): **~834px**, of which `FooterNav` alone (the site map — real
+  content this phase's OWN "everything removed from the body must remain
+  reachable" mandate is exactly what makes it this comprehensive) is ~407px
+
+Header + FooterAds + footer = **~1,181px (1.31 screens)** of shared,
+pre-existing, largely non-homepage-specific chrome, before the hero (543.5px
+= 0.6 screens, deliberately close to a full screen by the brief's own hero
+design intent — "one screen, and it is the whole first impression") or a
+single word of homepage BODY content is counted. That leaves roughly
+**625px (0.7 screens)** of the 2,350px budget for `ProofStrip` + `DealsRow`
++ `EbayPicks` + Explore-by-set + the FAQ combined — and Explore-by-set
+(194px, already compressed to one row) + the FAQ (now ~571px even after
+this phase's own trims, most of it the brief-mandated "keep the long-form
+intro paragraph and FAQ" content) alone already exceed that remaining
+budget, before `ProofStrip` (240px, itself comfortably "well under half a
+screen" per ITS OWN brief target) is even added.
+
+**This was not silently resolved.** Two further trims exist that would
+close most or all of the remaining gap, and neither was applied this phase,
+on purpose:
+
+1. Make `FooterNav` collapse into `<details>` accordions on desktop too
+   (today it only does that below `sm:` — the ≥`sm:` view is a fully
+   expanded 4-column grid). This is the SAME collapsed-but-crawlable
+   pattern this very page already uses for its own FAQ ("collapsed by
+   default... answers still in the DOM"), so it's philosophically
+   consistent with the brief. Estimated to save ~300px+ of the footer's
+   834px. **Not done**: this is genuinely sitewide chrome shared by every
+   route, and changing its default visual behavior site-wide as a side
+   effect of one page's screen-height metric is a bigger, more visible
+   product decision than this phase's own footer mandate ("confirm
+   reachability") covers — it changes what every visitor on every page sees
+   in the footer, not just this one.
+2. Shrink `FooterAds`' banner sizing or drop it from the homepage
+   specifically. **Not done**: it's explicit sitewide monetisation
+   ("BOTH live partners... on every page, so no page is left unmonetised")
+   that predates this task and that the master brief's own header carve-out
+   ("Marketplace and Premium stay prominent — they're monetisation")
+   suggests should be preserved, not cut, on a homepage rebuild that is
+   otherwise deliberately NOT anti-monetisation (see the `EbayPicks`
+   decision above).
+
+**Recommendation, not a decision** (this genuinely isn't this phase's call
+to make alone): if hitting ≤2.6 screens is a hard requirement rather than a
+target to get "as close as possible" to (the master brief's own words for
+Phase 6's audit script), option 1 above is the highest-leverage lever left
+and is low-risk against every EXISTING test (`FooterNav` would stay a
+server component with real `<Link href>` anchors either way —
+`tests/internal-linking.test.ts`'s "FooterNav renders FOOTER_GROUPS as real
+anchors, not JS-only navigation" test doesn't care whether they're inside a
+`<details>`). Left for Phase 5 (which may touch `FooterNav`/`FeedbackWidget`
+for its own accessibility reasons already) or Phase 6/7 (which will have
+the REAL audit script and Lighthouse numbers, not this phase's own
+approximate local-seed measurements) to decide with full context, rather
+than this phase unilaterally redesigning sitewide chrome under a "Sections
+& Footer" mandate that was framed as reachability, not visual redesign.
+
+Mobile (390×844) is much closer — only 81px (1.6% of viewport) over after
+this phase's own trims — and is plausibly closable by Phase 6's own
+iteration against real (not hand-seeded) data, without needing the bigger
+`FooterNav` call above.
+
+### Verification
+
+Real-browser verification via a throwaway Playwright script (not committed,
+deleted after use — same pattern every prior phase used): confirmed the
+FAQ's `FAQPage` JSON-LD parses as valid JSON and contains all 4 original
+questions (`mainEntity.length === 4`), the affiliate disclosure text
+renders verbatim on the page, the Discord footer link renders with the
+correct `href`, `ProofStrip` renders the expected card/store/savings
+markup against the seeded test price data, and `DealsRow`/`EbayPicks`
+degrade gracefully (a locked-teaser-free empty state / the `EbayBuyCta`
+fallback respectively) against markets with no qualifying data. Also
+visually reviewed full-page screenshots at both hard-target viewports
+(`prefers-reduced-motion: reduce` emulated so the `<Reveal>` scroll-in
+animation doesn't leave later sections at `opacity: 0` mid-capture — a
+capture-only artifact, not a real bug, discovered while taking the first,
+confusing-looking screenshot) — page reads cleanly top to bottom, matches
+the target structure precisely, no visual breakage.
+
+| Command | Result | Notes |
+|---|---|---|
+| `npm run typecheck` | PASS (0 errors) | |
+| `npm run lint` | PASS (exit 0) | Zero new warnings; same pre-existing `react/no-unescaped-entities` set every prior phase already catalogued, none in files this phase touched |
+| `npm test` | PASS — 581/581 | Unchanged from Phase 3's ending count (one test in `tests/pack-composition.test.ts` rewritten in place, net zero) |
+| `npm run build` | PASS (exit 0) | Homepage (`/`) still a static (`○`) route: **12.3 kB page / 146 kB First Load JS** — DOWN from Phase 3's 16.8 kB / 151 kB despite two whole new components, because far more markup left the page than arrived (8 sections removed, 2 added). `/about` (previously a fully static page with no DB read) now 600 B / 96.8 kB. Restarted `next dev` after every build per Phase 2's documented gotcha. |
+
+### Local/seed metrics this phase (NOT the brief's real-production numbers
+— same caveat as every prior phase's own local table; Phase 7 owns the
+real before/after against the brief's Hard Targets)
+
+| Metric | 1440×900 (after this phase) | 390×844 (after this phase) |
+|---|---|---|
+| Page height | 2,930px = 3.26 screens | 3,879px = 4.59 screens |
+| `<h2>` in `<main>` | 3 (would be 4 with `DealsRow` visible — no eBay/price-history/sealed test data exists locally to exercise that section; still ≤6 either way) | 3 |
+| DOM nodes | 889 | 838 |
+| Images in `<main>` | 7 | 1 (the ProofStrip card thumbnail is the only in-viewport-relevant image at this narrow width in the current local render; the by-set grid has none, `EbayPicksLive`'s fallback CTA has none) |
+| `[autofocus]` elements | 0 | 0 |
+| Primary CTA above the fold | 1 (the search box) | 1 |
+
+Both are structurally lower than the brief's real-production numbers would
+be (richer price data means `DealsRow` would actually render, `EbayPicks`
+would show 6 real tiles instead of the CTA fallback, etc.) — same "valid for
+structural comparison, not a stand-in for production numbers" caveat Phase
+1 already established for its own before-table.
+
+### Phase 4 deliverables
+
+- `src/lib/proof-strip.ts` (new)
+- `src/components/home/ProofStrip.tsx` (new)
+- `src/components/home/DealsRow.tsx` (new)
+- `src/components/home/RadianceCountdownCard.tsx` — rewritten to a one-line
+  component, newsletter capture removed
+- `src/components/home/TrendingChips.tsx` — doc-comment accuracy fix only
+  (no behavior change)
+- `src/app/page.tsx` — the section consolidation described above
+- `src/app/about/page.tsx` — mounts `<HowItWorks>`, one new DB read
+- `src/app/layout.tsx` — Discord footer link
+- `src/app/sets/page.tsx` — cross-link to `/domains`
+- `tests/pack-composition.test.ts` — fixed a vacuously-passing test (see
+  above)
+- This `DECISIONS.md` section
