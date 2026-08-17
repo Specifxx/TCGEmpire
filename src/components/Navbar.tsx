@@ -4,6 +4,7 @@ import { NavbarShell } from "./NavbarShell";
 import { CommandLauncherButton } from "./CommandLauncher";
 import { SearchBar } from "./SearchBar";
 import { HeaderSearchSlot } from "./HeaderSearchSlot";
+import { HomeHeaderReveal } from "./HomeHeaderReveal";
 import { MobileNav } from "./MobileNav";
 import { CountrySwitcher } from "./CountrySwitcher";
 import { NavUser } from "./NavUser";
@@ -71,6 +72,11 @@ export function Navbar() {
             Measured after: 590px at 640, 652px at 768, no overflow anywhere, and
             ~130px of headroom left for the wider avatar a signed-in user gets. */}
         <nav className="flex shrink-0 items-center gap-0.5 sm:gap-1">
+          {/* HomeHeaderReveal: on "/" only, this whole group (⌘K through Blog)
+              stays hidden until the visitor scrolls — see that component's own
+              doc comment for why. Every other route renders exactly as before;
+              `isHome` inside it makes this a no-op everywhere else. */}
+          <HomeHeaderReveal>
           {/* Command launcher — every page can reach every page from here (⌘K). */}
           {/* Inline text/⌘K nav is desktop-only — on phones it overflowed the bar
               (worse once the logged-in avatar showed). Everything here is reachable
@@ -122,6 +128,7 @@ export function Navbar() {
           <Link href="/blog" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white md:block md:px-2.5">
             Blog
           </Link>
+          </HomeHeaderReveal>
           {/* Marketplace — filled brand chip (not a plain text link) so the P2P
               marketplace is the most visually loud thing in the bar besides the
               logo. Only appears once MARKETPLACE_NAV_VISIBLE (mirrors
@@ -145,6 +152,15 @@ export function Navbar() {
           {/* Single nav entry point: the ⌘K "Explore" command launcher (above) is the
               full-nav surface on desktop — it lists the same NAV_GROUPS searchably — so
               the separate "Menu" mega-dropdown is gone (matches DexCompare's one-tab model). */}
+          {/* HomeHeaderReveal again: Discord, the region switcher and the
+              sign-in control are the second contiguous group this phase's
+              audit found worth deferring on "/" — see the component's own
+              doc comment, in particular the CountrySwitcher/CountryHeroToggle
+              duplicate-region-selector finding. MobileNav (the hamburger)
+              stays OUTSIDE this wrapper on purpose: below `lg` it is the only
+              way to reach Sealed/Decks/Blog/Discord/Premium at all, so hiding
+              it pre-scroll would strand a mobile visitor with no navigation. */}
+          <HomeHeaderReveal>
           {/* Join our Discord — opens the permanent invite in a new tab */}
           <a
             href={DISCORD_URL}
@@ -160,16 +176,25 @@ export function Navbar() {
           </a>
           <CountrySwitcher className="ml-0.5 sm:ml-1" />
           <NavUser />
+          </HomeHeaderReveal>
           <MobileNav />
         </nav>
        </div>
 
         {/* Search gets its own full-width row below the lg breakpoint (so it's
-            never cramped on phones/tablets). */}
+            never cramped on phones/tablets). HeaderSearchSlot's `mobile`
+            variant scroll-gates this exactly like the desktop row above,
+            but ONLY on the homepage — see that component's own doc comment
+            for why the hero's own always-visible mobile search box makes
+            this safe (nowhere loses search access) and necessary (the hard
+            target for zero duplicate search boxes above the fold has no
+            mobile carve-out). */}
         <div className="pb-3 lg:hidden">
-          <Suspense fallback={<div className="input" />}>
-            <SearchBar />
-          </Suspense>
+          <HeaderSearchSlot mobile>
+            <Suspense fallback={<div className="input" />}>
+              <SearchBar />
+            </Suspense>
+          </HeaderSearchSlot>
         </div>
       </div>
     </NavbarShell>
