@@ -120,8 +120,32 @@ was explicit not to pad copy to clear a linter.
   server (Playwright): **no horizontal overflow at 640/720/790px** on `/` or
   `/browse`, and the Discord link is present, visible, `target="_blank"`
   inside the phone/tablet overlay at all three widths.
-- Committed and pushed to `main`, Vercel deploy verified, production smoke
-  test: **see the closing paragraph below** for the final result.
+- **Committed (`2891c0b`) and pushed to `main`.** This repo had multiple other
+  sessions pushing to `main` concurrently during the ship window (3 unrelated
+  commits landed within ~15 minutes of this one) — `2891c0b` is confirmed a
+  strict ancestor of the current `main` HEAD, and a diff of every file this
+  change touched between the commit right before it and the current HEAD
+  shows zero overlap, so nothing here was reverted or clobbered.
+- **Vercel deploy confirmed live** — not by matching this exact commit SHA to
+  a deployment record (the rapid concurrent pushes meant Vercel's build queue
+  moved past individual SHAs faster than `probe-deploy.yml` could catch one),
+  but by direct evidence the new code is actually rendering: the literal link
+  text "Join our Discord" (which only this change's `NAV_GROUPS` entry
+  produces — the pre-existing header icon has no text, only an `aria-label`)
+  appears **exactly 3 times** in production's homepage HTML, matching the 3
+  places it should now render (`FooterNav`'s mobile accordion + desktop grid,
+  `CinematicNavMenu`'s always-mounted overlay).
+- **Smoke test**: `/`, `/keywords/empower`, `/card/jinx-loose-cannon-ogn-251-298`,
+  `/browse`, `/sets/origins`, `/champions/jinx` — all **200**, no
+  `Application error`/server-side-exception markers in any response body.
+  Console-error verification against production itself was blocked by this
+  environment's outbound-proxy rules for a Chromium-driven browser (curl
+  through the same proxy works fine — a sandbox networking limit, not a site
+  issue); this exact commit's client code was already verified console-clean
+  via a real Chromium run against a local server serving the identical build
+  before it shipped (see the tablet-overflow verification above), so this is
+  corroborating rather than sole evidence.
+- **No revert needed.**
 
 ## 5. Restated for the human: `GSC_SA_KEY`
 
@@ -134,4 +158,35 @@ needed, and none was made here.
 
 ---
 
-**[Closing summary — finalized after the ship gate below.]**
+## What shipped, what didn't, what's left
+
+**Shipped and live on production** (`2891c0b`, verified via direct content
+fingerprint and a clean smoke test, no revert needed): a real Discord-
+reachability bug found while re-verifying the tablet-overflow fix (Discord
+was reachable from nowhere below 1024px despite a comment claiming otherwise
+— now fixed in all three nav renderers plus `llms.txt`); a
+640/720/790px overflow assertion added to `scripts/mobile-check.ts`; a new
+`seo-preview-gate.yml` CI workflow wiring both audit instruments into PR
+previews; the refreshed `content-quality-report.csv` from a live production
+crawl; and one new test file locking in the Discord fix (4 tests, all
+passing alongside the existing 665).
+
+**Didn't change, on purpose**: no page content or template copy — every row
+in the fresh `content-quality.ts` diff (§2) traced to either an
+already-documented, human-blocked issue at greater scale, a genuinely
+non-differentiable printing (verified fresh, not assumed), a detector
+limitation in the instrument itself, or an expectedly-thin utility page.
+Padding any of these to clear a linter would have made the copy worse, not
+better, which the brief explicitly warned against.
+
+**Left for a human**: the `GSC_SA_KEY` secret (§5) — one setting, unlocks
+per-template traffic data for the next audit. The new `seo-preview-gate.yml`
+workflow's exact GitHub `deployment_status` payload fields are standard and
+well-documented, but untested against a real firing (no live PR+preview
+cycle was available in this session) — worth a glance at its first real run.
+The `content-quality.ts` `EMPTY_SECTION` false-positive pattern found on
+`/guides/best-riftbound-cards`, `/sealed` and the new `marketplace/seller`
+pages (adjacent same-level headings; a tile whose link precedes its heading)
+is a real, reproducible gap in the instrument itself — not touched here to
+keep this pass scoped, but worth a dedicated correction pass the same way the
+instrument's own history describes three earlier ones.
