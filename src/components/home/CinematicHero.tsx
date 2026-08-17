@@ -16,11 +16,12 @@ import type { Country } from "@/lib/country";
 //
 // Search-first: the old hero packed in 4 CTAs, 4 stat boxes, a partner-logo row
 // and the affiliate disclosure — nothing above the fold was an actual price. Now
-// the hero is H1 → subhead → search → one stat line → one button + one link +
-// the (quiet) region toggle. The partner row and disclosure moved to
-// PartnersStrip, rendered below the fold in page.tsx (disclosure still travels
-// with the links it discloses — see AffiliateDisclosure's rules — just further
-// down the page instead of inside the first viewport).
+// the hero is H1 → subhead → search (THE dominant element) → trending chips →
+// one stat line → one text link + the (quiet, auto-detected) region toggle.
+// The partner row and disclosure moved to PartnersStrip, rendered below the
+// fold in page.tsx (disclosure still travels with the links it discloses —
+// see AffiliateDisclosure's rules — just further down the page instead of
+// inside the first viewport).
 export function CinematicHero({
   totalCards,
   statsByCountry,
@@ -61,15 +62,26 @@ export function CinematicHero({
         {/* Kinetic headline — MARKET-NEUTRAL: this page is cached (ISR), so one
             version serves every visitor and crawler; naming all six markets
             ranks in all six. Prices localise client-side after hydration.
-            Sized to lead the page without dominating it. Capped at lg:text-5xl
-            (not 6xl) with a wider max-w-4xl measure so the full sentence
-            settles into ~2 lines at desktop instead of wrapping to 3. */}
-        <h1 className="animate-fade-in [animation-delay:160ms] mx-auto mt-4 max-w-4xl text-3xl font-extrabold leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-5xl">
-          Compare <span className="text-brand-400">Riftbound</span> card prices across AU, NZ, US, UK, SG &amp; CA stores
+            Sized to lead the page without dominating it.
+
+            Rebuilt per the homepage-redesign brief: the previous H1 spent 60+
+            characters listing all six countries the region control already
+            names ("Compare Riftbound card prices across AU, NZ, US, UK, SG &
+            CA stores") — real estate that told the visitor about the site's
+            coverage instead of its job. This version states the job in one
+            short sentence ("find the cheapest place to buy any Riftbound
+            card") and keeps "Riftbound" for SEO; the countries themselves
+            still live in CountryHeroToggle below and in the SEO/FAQ block at
+            the foot of the page, not here. Still market-neutral (says
+            nothing about which market is active), so the ISR-cached HTML is
+            still identical for every visitor and crawler. */}
+        <h1 className="animate-fade-in [animation-delay:160ms] mx-auto mt-4 max-w-3xl text-3xl font-extrabold leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-5xl">
+          Find the cheapest place to buy any <span className="text-brand-400">Riftbound</span> card
         </h1>
-        <p className="animate-fade-in [animation-delay:240ms] mx-auto mt-4 max-w-2xl text-base text-slate-300">
-          Find the cheapest place to buy Riftbound TCG cards — live local prices in AUD, NZD, USD, GBP, SGD &amp; CAD
-          compared across stores in Australia, New Zealand, the US, the UK, Singapore and Canada, updated daily.
+        {/* One sentence, no repeated country list — the old 3-line subhead
+            named the same six markets a second time. */}
+        <p className="animate-fade-in [animation-delay:240ms] mx-auto mt-4 max-w-xl text-base text-slate-300">
+          Compare live prices across every major Riftbound store, instantly.
         </p>
 
         {/* The primary action: search, not a row of buttons. Wired to the exact
@@ -98,7 +110,16 @@ export function CinematicHero({
             didn't. See docs/adsense-remediation.md § Phase 11. */}
         <div className="animate-fade-in [animation-delay:300ms] mt-6">
           <Suspense fallback={<div className="input mx-auto h-12 max-w-2xl" />}>
-            <SearchBar variant="hero" autoFocusDesktop />
+            {/* trendingCards feeds the box's own zero-state dropdown (focused +
+                empty — see SearchBar's doc comment) in addition to the
+                always-visible TrendingChips row below. The nav variant of
+                this same component doesn't get this prop: trending-card data
+                is computed here, once, from this page's own server data, and
+                threading it into the site-wide Navbar (every route, not just
+                "/") would mean a new sitewide data fetch for a component
+                whose zero-state degrades perfectly well to "recent searches
+                only" without it. */}
+            <SearchBar variant="hero" autoFocusDesktop trendingCards={trendingCards} />
           </Suspense>
         </div>
 
@@ -111,34 +132,33 @@ export function CinematicHero({
             boxes. */}
         <HeroStats totalCards={totalCards} statsByCountry={statsByCountry} freshness={freshness} />
 
-        {/* One primary button + one secondary text link — was 4 competing CTAs
-            (Browse / Marketplace / Decks / ⌘K launcher). Marketplace and the
-            command launcher stay reachable from the nav; nothing here is a
-            dead end. The region switcher rides along in the same row, kept
-            visually quiet (see CountryHeroToggle) so it doesn't compete. */}
-        <div className="animate-fade-in [animation-delay:360ms] mt-6 flex flex-col items-center gap-2">
-          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-            <Link href="/browse" className="btn-primary px-5 py-2.5 text-base">Browse the database</Link>
-            <Link href="/decks" className="text-sm font-semibold text-slate-300 underline-offset-4 hover:text-brand-400 hover:underline">
-              Top meta decks →
-            </Link>
-          </div>
-          {/* Newcomer entry point. Deliberately on its OWN line and at a lower
-              visual weight than the two CTAs above, rather than a third item in
-              that row: the row was cut from four competing CTAs to two on
-              purpose (see the note above), and re-crowding it would undo that.
+        {/* EXACTLY ONE secondary action below the search box, per the redesign
+            brief: "the search box is the hero", so nothing here competes with
+            it for primary-CTA weight. This used to be a filled "Browse the
+            database" BUTTON plus two more links ("Top meta decks →", "New to
+            Riftbound? Learn how to play →") — three separate above-the-fold
+            targets, none of them the search box, one of them (meta decks)
+            pointing away from the price-comparison job entirely. All three
+            are gone; a single plain-text link survives, deliberately styled
+            below button weight (no .btn-primary fill) so it reads as an
+            escape hatch for "I don't want to search, just show me
+            everything" rather than a second call to action.
 
-              It earns the space because /learn was an ORPHAN — 359 lines of
-              interactive new-player content at sitemap priority 0.8 with zero
-              inbound internal links from any of 1,698 pages. The only thing
-              referencing it was the mega-menu, which renders client-side and is
-              therefore invisible to the crawler that decides whether the page is
-              worth indexing. See GROWTH-AUDIT.md § 2. */}
+            /decks and /learn are not orphaned by this cut: /decks is a
+            top-level Navbar link (md:block, see Navbar.tsx) and /learn has a
+            real, server-rendered footer link via NAV_GROUPS → FOOTER_GROUPS →
+            FooterNav.tsx (confirmed by reading that chain — FooterNav is a
+            plain server component, no client-only gating), which did not
+            exist when /learn's hero link was first added to fix its orphan
+            problem. Both destinations are still one click away everywhere on
+            the site; they just don't need a second, competing home in the
+            hero above the fold. */}
+        <div className="animate-fade-in [animation-delay:360ms] mt-6 flex flex-col items-center gap-2">
           <Link
-            href="/learn"
-            className="text-xs text-slate-500 underline-offset-4 transition-colors hover:text-brand-400 hover:underline"
+            href="/browse"
+            className="text-sm font-semibold text-slate-300 underline-offset-4 transition-colors hover:text-brand-400 hover:underline"
           >
-            New to Riftbound? Learn how to play →
+            Browse all {totalCards.toLocaleString()} cards →
           </Link>
           <CountryHeroToggle />
         </div>
