@@ -271,45 +271,64 @@ export async function releaseFundsForOrder(orderId: string): Promise<void> {
   });
 }
 
-// Refunds a PAID (not yet shipped/delivered) order in full — used by the
+// Refunds ONE PAID (not yet shipped/delivered) order in full — used by the
 // ship-deadline cron job when a seller never uploads tracking in time, and by
 // mutual-cancellation acceptance. Refunding before any transfer happens is a
 // plain platform-side refund; the seller is unaffected either way since they
 // were never paid.
+//
+// "In full" means this ORDER's own total, never the whole charge. Every Order
+// row from one checkout shares a single PaymentIntent, and that charge can span
+// SEVERAL SELLERS (see orders/route.ts's groupKey, which is
+// stripeSessionId:sellerId — a "group" is one seller's slice of a cart, not the
+// cart). Neither caller cancels a whole cart:
+//
+//   • the ship-deadline cron selects individual PAID rows whose OWN seller never
+//     shipped (cron/marketplace-maintenance/route.ts), so a two-seller cart where
+//     one seller shipped on time and the other never did reaches this function
+//     for the late seller's row only;
+//   • mutual cancellation is agreed between the buyer and ONE seller, per row
+//     (respondCancelOrder) or per seller-group (respondCancelGroup).
+//
+// So an unqualified `refunds.create({ payment_intent })` — which refunds the
+// whole remaining charge — handed back the OTHER sellers' money too, while their
+// orders stayed SHIPPED and went on to release funds to them on schedule: the
+// platform paid those sellers out of its own balance and the buyer got a free
+// parcel. Passing an explicit `amount` is what makes this safe, exactly as
+// refundOrderBySeller() below already does for the same reason.
+//
+// The per-order amounts still sum to the whole charge, so a cart that IS fully
+// cancelled ends up fully refunded: checkout bills Σ(priceCents × quantity) plus
+// one shipping line per seller, and each Order's totalCents carries its own line
+// plus that seller's shipping attributed to their first row
+// (marketplace/stripe/checkout/route.ts).
 export async function refundOrder(orderId: string): Promise<void> {
   const order = await prisma.order.findUnique({
     where: { id: orderId },
-    select: { id: true, kind: true, stripePaymentIntent: true, refundedAt: true },
+    select: { id: true, kind: true, stripePaymentIntent: true, refundedAt: true, totalCents: true },
   });
   if (!order || order.kind !== "MARKETPLACE" || order.refundedAt) return;
 
   if (order.stripePaymentIntent) {
-    // Every Order row from one checkout shares a single PaymentIntent (one
-    // card charge can span several listing lines, even several sellers — see
-    // orders/route.ts's groupKey). If a sibling order already refunded that
-    // same PaymentIntent, asking Stripe to refund it again would error
-    // ("charge has already been refunded") — just mark this order refunded
-    // too instead of calling Stripe a second time for the same money.
-    const alreadyRefundedSibling = await prisma.order.findFirst({
-      where: { id: { not: order.id }, stripePaymentIntent: order.stripePaymentIntent, refundedAt: { not: null } },
-      select: { id: true },
+    await stripe().refunds.create({ payment_intent: order.stripePaymentIntent, amount: order.totalCents }).catch((e) => {
+      // Legacy carts only: before this function scoped its refund, a sibling row
+      // could refund the ENTIRE shared PaymentIntent. If such a cart has another
+      // line cancelled now, Stripe rejects the second refund as exceeding what is
+      // left — but the buyer has already been made whole for this order, so
+      // marking it refunded below is the correct end state rather than an error.
+      // Anything else is a real Stripe failure and must not be swallowed.
+      if (!/exceeds|already been refunded/i.test(e?.message ?? "")) throw e;
     });
-    if (!alreadyRefundedSibling) {
-      await stripe().refunds.create({ payment_intent: order.stripePaymentIntent });
-    }
   }
   await prisma.order.update({ where: { id: order.id }, data: { refundedAt: new Date() } });
 }
 
-// Seller-initiated refund of ONE order. Unlike refundOrder() above (used by the
-// mutual-cancel/ship-deadline paths, where refunding the WHOLE shared PaymentIntent
-// is correct because every order sharing it is being cancelled together), this can
-// legitimately be called on a single seller's order while OTHER sellers' orders
-// from the same multi-seller checkout remain valid and paid — refunding the full
-// PaymentIntent here would wrongly hand back money that belongs to a different
-// seller's still-good sale. So this ALWAYS passes an explicit `amount` (this
-// order's own totalCents), which Stripe treats as a partial refund of the shared
-// charge — safe regardless of how many other orders share the PaymentIntent.
+// Seller-initiated refund of ONE order. Like refundOrder() above, this ALWAYS
+// passes an explicit `amount` (this order's own totalCents), which Stripe treats
+// as a partial refund of the shared charge — safe regardless of how many other
+// orders, or other SELLERS, share the PaymentIntent. Refunding the full
+// PaymentIntent from a single-order path would hand back money belonging to a
+// different seller's still-good sale.
 //
 // Also handles the case where the seller was already paid out (stripeTransferId
 // set): reverses that specific transfer first so the platform recovers the money

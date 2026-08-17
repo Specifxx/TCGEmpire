@@ -78,7 +78,14 @@ async function pruneNotifications(): Promise<number> {
 async function autoReleaseShipped(): Promise<number> {
   const cutoff = new Date(Date.now() - MARKETPLACE_AUTO_RELEASE_DAYS * 86_400_000);
   const orders = await prisma.order.findMany({
-    where: { kind: "MARKETPLACE", status: "SHIPPED", shippedAt: { lt: cutoff }, disputedAt: null },
+    // cancelRequestedAt pauses release for the same reason disputedAt does: the
+    // parties are mid-negotiation over this order, and releasing funds while a
+    // cancellation is pending means a later acceptance refunds the buyer out of
+    // the platform's balance instead of the seller's (refundOrder is the
+    // pre-transfer path and reverses nothing). respondCancelOrder now also
+    // refuses a stale request, so the race is closed from both ends. Withdrawing
+    // or declining the request clears the field and release resumes on the next run.
+    where: { kind: "MARKETPLACE", status: "SHIPPED", shippedAt: { lt: cutoff }, disputedAt: null, cancelRequestedAt: null },
     select: { id: true, orderNumber: true, quantity: true, totalCents: true, feeCents: true, currency: true, buyerId: true, sellerId: true, marketplaceListingId: true },
     take: BATCH,
   });

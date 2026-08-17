@@ -311,6 +311,17 @@ export async function respondCancelOrder(orderId: string, userId: string, accept
   if (order.buyerId !== userId && order.sellerId !== userId) {
     return { ok: false, error: "Only the buyer or seller can respond", httpStatus: 403 };
   }
+  // Re-check what requestCancelOrder() checked. A cancellation request is not
+  // instantaneous — it sits pending until the other party answers, and the order
+  // can move underneath it in the meantime. Without this, accepting a stale
+  // request on a COMPLETED order calls refundOrder(), which pays the buyer back
+  // WITHOUT reversing the seller's transfer (it is the pre-transfer refund path,
+  // by design), so the platform funds both sides out of its own balance.
+  // autoReleaseShipped now also skips orders with a pending cancellation, which
+  // closes the same race from the other end.
+  if (order.status !== "PAID" && order.status !== "SHIPPED") {
+    return { ok: false, error: `Can't cancel a ${order.status} order`, httpStatus: 400 };
+  }
 
   const listing = order.marketplaceListingId
     ? await prisma.marketplaceListing.findUnique({ where: { id: order.marketplaceListingId }, select: { id: true, cardId: true, status: true, card: { select: { name: true } } } })
@@ -351,8 +362,10 @@ export async function respondCancelOrder(orderId: string, userId: string, accept
 // A single checkout — one Stripe charge — creates one Order row per LISTING
 // LINE (see orders/route.ts's groupKey), so acting on "the whole parcel" means
 // several rows sharing ONE underlying side-effect: one support ticket, one
-// cancellation-negotiation email, one refund of the shared PaymentIntent — not
-// one of each per line. These validate every row up front (failing the whole
+// cancellation-negotiation email, one pair of confirmation emails — not one of
+// each per line. (Refunds are the exception: they stay per-row, each scoped to
+// that row's own total, because the charge is shared with other sellers whose
+// orders are not being cancelled.) These validate every row up front (failing the whole
 // group before touching anything if any row isn't eligible) and only trigger
 // the shared side-effect once, then update every row.
 
@@ -483,6 +496,10 @@ export async function respondCancelGroup(orderIds: string[], userId: string, acc
   if (orders.some((o) => o.buyerId !== userId && o.sellerId !== userId)) {
     return { ok: false, error: "Only the buyer or seller can respond", httpStatus: 403 };
   }
+  // Same stale-request guard as respondCancelOrder — see the note there.
+  if (orders.some((o) => o.status !== "PAID" && o.status !== "SHIPPED")) {
+    return { ok: false, error: "One or more of these items can no longer be cancelled", httpStatus: 400 };
+  }
 
   const first = orders[0];
   const totalCents = orders.reduce((sum, o) => sum + o.totalCents, 0);
@@ -502,10 +519,11 @@ export async function respondCancelGroup(orderIds: string[], userId: string, acc
     return { ok: true, status: "declined" };
   }
 
-  // Accept: refund each order (refundOrder is safe to call per-row even though
-  // they share one PaymentIntent — it detects an already-refunded sibling and
-  // skips the duplicate Stripe call, see lib/connect.ts), restock every
-  // listing, cancel every row, then send ONE pair of emails for the group.
+  // Accept: refund each order (refundOrder scopes its Stripe refund to that
+  // row's own totalCents, so calling it per-row is safe even though the rows
+  // share one PaymentIntent with OTHER sellers' still-good orders — see
+  // lib/connect.ts), restock every listing, cancel every row, then send ONE
+  // pair of emails for the group.
   for (const o of orders) {
     await refundOrder(o.id);
     await prisma.order.update({ where: { id: o.id }, data: { status: "CANCELLED" } });
