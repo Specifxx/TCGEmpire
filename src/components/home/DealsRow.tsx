@@ -143,7 +143,10 @@ export function DealsRow({ dealsByCountry }: { dealsByCountry: Record<Country, T
         />
       </div>
 
-      <Link href="/tools/deal-finder" className="mt-3 block text-center text-sm font-semibold text-brand-300 hover:underline sm:hidden">
+      {/* tap-link-block: a plain `block` text link measured short of the 44px
+          mobile tap-target floor (same class the codebase's footer/legal
+          links already use for the identical problem). */}
+      <Link href="/tools/deal-finder" className="tap-link-block mt-3 justify-center text-sm font-semibold text-brand-300 hover:underline sm:hidden">
         See all deals →
       </Link>
     </section>

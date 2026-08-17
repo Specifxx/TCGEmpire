@@ -56,7 +56,12 @@ export function ShareRow({ url, title, source, className, size = "md" }: ShareRo
     { key: "whatsapp", label: "Share on WhatsApp", short: "WhatsApp", href: `https://api.whatsapp.com/send?text=${t}%20${u}` },
   ];
 
-  const btn = size === "sm" ? "btn-ghost px-2 py-1 text-[11px]" : "btn-ghost text-xs";
+  // min-w-11: the "sm" variant's tighter px-2 padding measured a real ~26px
+  // width for the single-character "X" label on a 390px viewport — .btn's own
+  // min-h-11 already covers height, but nothing was flooring width. The
+  // longer labels (Reddit, Facebook, WhatsApp, "Copy link") were already
+  // comfortably past 44px, so this is a no-op for them.
+  const btn = size === "sm" ? "btn-ghost min-w-11 px-2 py-1 text-[11px]" : "btn-ghost text-xs";
 
   async function nativeShare() {
     try {

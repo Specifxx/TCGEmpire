@@ -37,7 +37,13 @@ export function TrendingChips({ cards }: { cards: CardTileData[] }) {
             // trending_chip_click GA4 event to also union in.
             gaEvent("search_initiated", { trigger: "trending_chip", card_id: c.id, variant: "hero" });
           }}
-          className="chip max-w-[9.5rem] border border-ink-700 bg-ink-900 text-slate-300 transition-colors hover:border-brand-500 hover:text-white"
+          // min-h-11: .chip's own py-0.5 measured ~22px tall on a real 390px
+          // viewport, short of the 44px mobile tap-target floor every other
+          // interactive control on the page gets (see globals.css's
+          // pointer:coarse block, which bumps this exact utility to 48px on
+          // touch) — .chip itself stays untouched since most of its other
+          // sitewide uses are non-interactive labels/badges, not tap targets.
+          className="chip min-h-11 max-w-[9.5rem] border border-ink-700 bg-ink-900 text-slate-300 transition-colors hover:border-brand-500 hover:text-white"
         >
           <span className="truncate">{cardDisplayName(c.name, c)}</span>
         </Link>

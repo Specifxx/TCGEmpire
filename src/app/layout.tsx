@@ -245,10 +245,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen bg-ink-950">
         {/* Skip link: lets keyboard/AT users bypass the navbar and jump straight
-            to content. Visually hidden until focused (WCAG 2.4.1 Level A). */}
+            to content. Visually hidden until focused (WCAG 2.4.1 Level A).
+            focus:min-h-11 + flex/items-center: measured ~36px tall once
+            focused (py-2 + text-sm alone) — short of this site's 44px mobile
+            tap-target floor. Still keyboard-first in practice (Tab then
+            Enter, not a touch tap), but there's no reason to leave a known,
+            cheap-to-fix gap against the same floor everything else on the
+            page now meets. */}
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded-lg focus:bg-ink-900 focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-brand-400 focus:ring-2 focus:ring-brand-400"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:flex focus:min-h-11 focus:items-center focus:rounded-lg focus:bg-ink-900 focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-brand-400 focus:ring-2 focus:ring-brand-400"
         >
           Skip to main content
         </a>
@@ -361,11 +367,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <p className="mb-2">
             Yes, we know Riftbound cards aren&apos;t literally stocks. Try telling
             that to{" "}
+            {/* tap-link: measured ~15px tall on mobile (a plain inline <a>,
+                min-height doesn't apply without a flex/inline-flex display) —
+                same fix as this row's other plain external links above. */}
             <a
               href="https://riftboundstocks.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-semibold text-brand-400 hover:underline"
+              className="tap-link font-semibold text-brand-400 hover:underline"
             >
               RiftboundStocks.com
             </a>

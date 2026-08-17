@@ -41,7 +41,11 @@ export function CountryHeroToggle() {
               onClick={() => setCountry(c.code)}
               aria-pressed={active}
               aria-labelledby={active ? `${codeId} ${currencyId} ${descId}` : `${codeId} ${descId}`}
-              className={`flex min-h-11 items-center gap-1 rounded-full px-2.5 text-xs font-medium transition-colors ${
+              // min-w-11 alongside the existing min-h-11: measured a 2-letter
+              // inactive chip ("NZ", no currency suffix shown) at ~37px wide on
+              // a real 390px viewport — under the 44px mobile tap-target floor
+              // even though the height was already covered.
+              className={`flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-full px-2.5 text-xs font-medium transition-colors ${
                 active
                   ? "bg-ink-800 text-slate-200"
                   : "text-slate-500 hover:bg-ink-900 hover:text-slate-300"

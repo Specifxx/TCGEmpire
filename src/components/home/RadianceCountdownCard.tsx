@@ -42,7 +42,9 @@ export function RadianceCountdownCard({ set }: { set: SetInfo | undefined }) {
         ) : (
           "Release window not yet announced. "
         )}
-        <Link href="/radiance-countdown" className="font-semibold text-brand-300 underline-offset-2 hover:underline">
+        {/* tap-link: same fix as the "See all N cards" link right above this
+            in Explore by set — a bare text link measured ~17px tall on mobile. */}
+        <Link href="/radiance-countdown" className="tap-link font-semibold text-brand-300 underline-offset-2 hover:underline">
           Full release details →
         </Link>
       </span>

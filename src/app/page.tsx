@@ -349,9 +349,12 @@ export default async function HomePage() {
             the same way the band did. */}
         {newestSet && (
           <p className="mt-3 text-sm">
+            {/* tap-link: a plain text link measured ~17px tall on mobile —
+                short of the 44px tap-target floor (see globals.css's
+                pointer:coarse block). */}
             <Link
               href={`/sets/${newestSet.slug}/gallery`}
-              className="font-semibold text-brand-300 underline-offset-2 hover:underline"
+              className="tap-link font-semibold text-brand-300 underline-offset-2 hover:underline"
             >
               See all{newestSet.totalCards ? ` ${newestSet.totalCards}` : ""} {newestSet.name} cards in the gallery →
             </Link>
