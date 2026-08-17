@@ -27,6 +27,7 @@ import { buildCardWhere } from "./cards";
 import { getEmptyCardIds } from "./card-price-state";
 import { getDuplicateCardIds } from "./card-duplicates";
 import { DEFAULT_COUNTRY } from "./country";
+import { hasAnyMarketPrice } from "./market-rows";
 import { staticPageDate } from "./static-page-dates";
 import { AUTHORS } from "./content/authors";
 
@@ -169,9 +170,29 @@ async function core(): Promise<SitemapEntry[]> {
 async function cards(): Promise<SitemapEntry[]> {
   const day = await priceDay();
   const [rows, empty, dupes] = await Promise.all([
+    // The BASELINE market's column, not the AU one. `lowestPriceCents` is
+    // Australia (see schema.prisma) while DEFAULT_COUNTRY is "US" — the market
+    // the card page actually renders for a crawler, and the one whose rows gate
+    // its Product JSON-LD. Reading the AU column meant the sitemap described a
+    // page it wasn't looking at: US coverage is catalogue-wide (TCGplayer is a
+    // real US store) where AU coverage is only what local stores stock, so the
+    // common "US-priced, no AU listing" card was stamped with createdAt as its
+    // lastmod — a date frozen at import, since Card has no @updatedAt — telling
+    // Google a page whose prices change daily had not changed in months.
     prisma.card.findMany({
-      select: { id: true, slug: true, lowestPriceCents: true, imageUrl: true, createdAt: true },
-      orderBy: { lowestPriceCents: { sort: "desc", nulls: "last" } },
+      select: {
+        id: true,
+        slug: true,
+        lowestPriceCents: true,
+        lowestPriceCentsNz: true,
+        lowestPriceCentsUs: true,
+        lowestPriceCentsUk: true,
+        lowestPriceCentsSg: true,
+        lowestPriceCentsCa: true,
+        imageUrl: true,
+        createdAt: true,
+      },
+      orderBy: { lowestPriceCentsUs: { sort: "desc", nulls: "last" } },
     }),
     // Cards with no in-stock listing anywhere AND under a week of price history
     // carry `robots: noindex` (see app/card/[id]/page.tsx), so listing them here
@@ -188,19 +209,26 @@ async function cards(): Promise<SitemapEntry[]> {
     // URL belongs here. Also self-healing — merge the rows and they come back.
     getDuplicateCardIds(),
   ]);
-  return rows.filter((c) => !empty.has(c.id) && !dupes.has(c.id)).map((c) => ({
-    url: `${SITE_URL}/card/${c.slug ?? c.id}`,
-    changeFrequency: "daily" as const,
-    // Priced cards (the ones people search for) rank slightly higher; their
-    // prices refresh with every snapshot, so that day is their real lastmod.
-    priority: c.lowestPriceCents != null ? 0.8 : 0.5,
-    // Unpriced cards have no price history to anchor a date to — their own
-    // import date (createdAt) is still a real fact about the record, never a
-    // fabricated "now". (Also covers a priceDay lookup failure for priced cards.)
-    lastModified: c.lowestPriceCents != null ? day ?? c.createdAt : c.createdAt,
-    // Image sitemap: surface each card's unique art to image search (absolute URLs only).
-    ...(c.imageUrl && c.imageUrl.startsWith("http") ? { images: [c.imageUrl] } : {}),
-  }));
+  return rows.filter((c) => !empty.has(c.id) && !dupes.has(c.id)).map((c) => {
+    // "Priced" means priced in ANY market we track, not just the baseline one.
+    // The card page localises client-side off a single ISR render, so a card with
+    // only a UK price still serves a page whose prices moved with today's import
+    // — its lastmod is that day, not its import date.
+    const priced = hasAnyMarketPrice(c);
+    return {
+      url: `${SITE_URL}/card/${c.slug ?? c.id}`,
+      changeFrequency: "daily" as const,
+      // Priced cards (the ones people search for) rank slightly higher; their
+      // prices refresh with every snapshot, so that day is their real lastmod.
+      priority: priced ? 0.8 : 0.5,
+      // Unpriced cards have no price history to anchor a date to — their own
+      // import date (createdAt) is still a real fact about the record, never a
+      // fabricated "now". (Also covers a priceDay lookup failure for priced cards.)
+      lastModified: priced ? day ?? c.createdAt : c.createdAt,
+      // Image sitemap: surface each card's unique art to image search (absolute URLs only).
+      ...(c.imageUrl && c.imageUrl.startsWith("http") ? { images: [c.imageUrl] } : {}),
+    };
+  });
 }
 
 async function sets(): Promise<SitemapEntry[]> {

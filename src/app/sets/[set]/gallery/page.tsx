@@ -84,16 +84,30 @@ export async function generateMetadata({ params }: { params: { set: string } }):
   const set = setBySlug(params.set);
   if (!set) return notFoundMetadata("Set");
 
-  const total = await prisma.card.count({ where: { setCode: set.code, isPromo: false } }).catch(() => 0);
+  // -1, NOT 0 — the same sentinel the parent set page, the facet pages and the
+  // store pages all use, and for the reason spelled out at sets/[set]/page.tsx:98:
+  // "couldn't count" is not "there is nothing here". Falling back to 0 tripped the
+  // thin-page noindex below on any transient database failure, and because this
+  // route is statically rendered (revalidate = 3600) that noindex is BAKED INTO
+  // the cached HTML — an outage during a deploy would have noindexed every set's
+  // gallery at once, long outlasting the outage itself. Unknown fails OPEN.
+  const total = await prisma.card.count({ where: { setCode: set.code, isPromo: false } }).catch(() => -1);
 
   // Title leads with the exact query shape ("<set> card gallery"), then the count —
   // a concrete number is the CTR lever on a list page, and it is the thing the
   // competing wiki-style results do not put in their title. Stepped down so the
   // longest set names keep "<set> Card Gallery" intact inside Google's ~60-char
   // truncation, losing only the count.
+  // Never let the -1 sentinel reach the title as "All -1 Cards" — a set with no
+  // totalCards constant falls back to the live count, which may now be unknown.
+  const shownTotal = set.totalCards ?? (total >= 0 ? total : null);
   const titleCandidates = [
-    `Riftbound ${set.name} Card Gallery — All ${set.totalCards ?? total} Cards`,
-    `Riftbound ${set.name} Card Gallery — ${set.totalCards ?? total} Cards`,
+    ...(shownTotal != null
+      ? [
+          `Riftbound ${set.name} Card Gallery — All ${shownTotal} Cards`,
+          `Riftbound ${set.name} Card Gallery — ${shownTotal} Cards`,
+        ]
+      : []),
     `Riftbound ${set.name} Card Gallery`,
     `${set.name} Card Gallery`,
   ];
@@ -104,6 +118,7 @@ export async function generateMetadata({ params }: { params: { set: string } }):
 
   // A set with nothing imported has no gallery to show — noindex until it does,
   // matching the parent set page's rule. Flips back automatically on import.
+  // Only a CONFIRMED zero trips this; -1 ("couldn't count") deliberately does not.
   const thin = total === 0;
 
   return {
