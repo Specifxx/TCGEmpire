@@ -71,7 +71,18 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
   const [savingsVsMarket, priceDrops, cheapestSealed] = await Promise.all([
     (async (): Promise<Deal[]> => {
       try {
-        const { items } = await getEbayCheapest(country, "saving", 1, perType);
+        // "pct", not "saving" (raw dollar amount) — sorting this homepage
+        // feed by absolute savings let a four-figure chase card's modest
+        // percentage discount outrank an everyday card's much bigger
+        // percentage-off deal, just because the dollar figure was larger.
+        // TodaysTopDeals' own mixByTier() already tries to interleave a
+        // cheap item to the front of the default view, but it can only work
+        // with what this fetch hands it — a perType=4 dollar-sorted slice
+        // could easily be four uniformly expensive cards with nothing cheap
+        // left to interleave. Sorting by percentage upstream fixes that at
+        // the source: /tools/deal-finder (the "All opportunities" link this
+        // column points to) still defaults to its own sort, unaffected.
+        const { items } = await getEbayCheapest(country, "pct", 1, perType);
         return items.map((it) => ({
           dealType: "savings-vs-market" as const,
           title: it.card.name,
