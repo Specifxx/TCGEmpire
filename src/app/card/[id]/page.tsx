@@ -851,7 +851,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
       )}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
-      <CardViewBeacon idOrSlug={card.slug ?? card.id} />
+      <CardViewBeacon idOrSlug={card.slug ?? card.id} cardId={card.id} cardName={displayName} rarity={card.rarity} />
       <nav aria-label="Breadcrumb" className="mb-4 text-sm text-slate-400">
         <ol className="flex flex-wrap items-center gap-1.5">
           <li><Link href="/" className="hover:text-white">Home</Link></li>

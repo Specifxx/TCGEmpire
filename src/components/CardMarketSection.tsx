@@ -282,6 +282,14 @@ export function CardPriceComparison({
                   href={p.buyHref}
                   retailer={p.retailer}
                   country={country}
+                  cardName={displayName}
+                  price={p.priceCents / 100}
+                  positionInList={i + 1}
+                  pageType="card_detail"
+                  inStock
+                  variant={p.isFoil ? "foil" : "nonfoil"}
+                  condition={p.condition}
+                  surface="table"
                   className={`${buyButtonClass(p.retailer)} order-last w-full basis-full justify-center sm:order-none sm:w-auto sm:basis-auto`}
                 >
                   {buyButtonLabel(p.retailer)}
@@ -324,6 +332,13 @@ export function CardPriceComparison({
                     href={p.buyHref}
                     retailer={p.retailer}
                     country={country}
+                    cardName={displayName}
+                    price={p.priceCents / 100}
+                    pageType="card_detail"
+                    inStock={false}
+                    variant={p.isFoil ? "foil" : "nonfoil"}
+                    condition={p.condition}
+                    surface="out_of_stock"
                     className="btn-ghost order-last w-full basis-full justify-center sm:order-none sm:w-auto sm:basis-auto"
                   >
                     Check →
@@ -375,6 +390,9 @@ export function CardPriceComparison({
             href={ebay.url}
             retailer="ebay_no_listing"
             country={country}
+            cardName={displayName}
+            pageType="card_detail"
+            surface="table"
             className="btn-primary shrink-0 text-sm"
           >
             Search {ebay.label} →

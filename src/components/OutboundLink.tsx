@@ -64,6 +64,10 @@ export function OutboundLink({
   price,
   positionInList,
   pageType,
+  inStock,
+  variant,
+  condition,
+  surface,
   "aria-label": ariaLabel,
 }: {
   href: string;
@@ -97,6 +101,24 @@ export function OutboundLink({
    *  "deals", "sealed") — lets the GA4 report segment buy_click by origin
    *  without joining back to page_location. */
   pageType?: string;
+  /** Whether this specific listing was in stock when clicked. The qualified-
+   *  click-through-rate guardrail (a click on an out-of-stock "Check" link
+   *  must not count toward it) depends on this being present and correct —
+   *  omit it only for links with no real stock concept (e.g. a bare eBay
+   *  search fallback). */
+  inStock?: boolean;
+  /** "foil" | "nonfoil", when this link is attached to a specific priced
+   *  listing that has a known print. */
+  variant?: "foil" | "nonfoil";
+  /** The store's own condition label for this listing (native, not our
+   *  normalised grade) — kept as free text since stores use incompatible
+   *  scales; see /methodology. */
+  condition?: string | null;
+  /** WHICH on-page surface this click came from — the comparison table, the
+   *  QuickView modal, the eBay listings strip, or the collapsed out-of-stock
+   *  list — so a qualified-CTR report can be sliced by surface without
+   *  re-deriving it from page_type + DOM position. */
+  surface?: "table" | "modal" | "ebay_strip" | "out_of_stock";
 }) {
   function onClick(e: React.MouseEvent<HTMLAnchorElement>) {
     trackEvent("buy_click", {
@@ -108,6 +130,10 @@ export function OutboundLink({
       price,
       position_in_list: positionInList,
       page_type: pageType,
+      in_stock: inStock,
+      variant,
+      condition: condition ?? undefined,
+      surface,
       transport_type: "beacon",
     });
     // Inside the native app, open retailer links in the system browser so the user

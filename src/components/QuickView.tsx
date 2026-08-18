@@ -388,7 +388,21 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                           )}
                         </div>
                       </div>
-                      <OutboundLink href={affiliateUrl(p.url, p.retailer)} retailer={p.retailer} country={country} className={`${buyButtonClass(p.retailer)} px-3 py-1.5 text-xs`}>
+                      <OutboundLink
+                        href={affiliateUrl(p.url, p.retailer)}
+                        retailer={p.retailer}
+                        country={country}
+                        cardId={card.id}
+                        cardName={cardDisplayName(card.name, card)}
+                        price={p.priceCents / 100}
+                        positionInList={i + 1}
+                        pageType="card_detail"
+                        inStock
+                        variant={p.isFoil ? "foil" : "nonfoil"}
+                        condition={p.condition}
+                        surface="modal"
+                        className={`${buyButtonClass(p.retailer)} px-3 py-1.5 text-xs`}
+                      >
                         {buyButtonLabel(p.retailer)}
                       </OutboundLink>
                     </li>
@@ -422,6 +436,10 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                 href={ebaySearchUrl}
                 retailer="ebay_no_listing"
                 country={country}
+                cardId={card.id}
+                cardName={cardDisplayName(card.name, card)}
+                pageType="card_detail"
+                surface="modal"
                 className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-amber-500/25 bg-amber-500/[0.05] p-3 hover:border-amber-500/45"
               >
                 <span className="min-w-0 text-xs text-slate-300">
