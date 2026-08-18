@@ -390,6 +390,31 @@ export async function sendUserDigestEmail(to: string, subject: string, heading: 
   return sendEmailBrevo(to, subject, emailShell(heading, inner, accountDigestFooter(unsubUrl)));
 }
 
+// ─── Premium free-trial reminder ─────────────────────────────────────────────
+
+// Sent once, ~a day before a Premium free trial converts to a paid subscription
+// (see runPremiumTrialReminders in lib/premium.ts) — a card was collected up front,
+// so without this warning the first a trialist hears about the charge is the charge
+// itself. amountLabel/chargeDate come from the trialist's own live Stripe
+// subscription, never guessed, since it also has to be right for annual trials.
+function trialReminderFooter(): string {
+  return `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">
+    You're getting this because you started a RiftCompare Premium free trial.<br/>
+    RiftCompare · Riftbound card price comparison.
+  </td></tr>`;
+}
+
+export async function sendTrialEndingEmail(to: string, chargeDate: Date, amountLabel: string): Promise<boolean> {
+  const dateLabel = chargeDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  const inner = `
+    <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      Your RiftCompare Premium free trial ends on <strong style="color:#e6ebf2">${dateLabel}</strong>. Unless you cancel
+      before then, the card on file will be charged ${amountLabel} and your subscription continues automatically.
+    </td></tr>
+    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/premium" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Manage subscription</a></td></tr>`;
+  return sendEmail(to, `Your RiftCompare Premium trial ends ${dateLabel}`, emailShell("Your free trial is ending soon", inner, trialReminderFooter()));
+}
+
 // Sent once on first signup so subscribers hear from us immediately (and get the
 // unsubscribe link up front) instead of silence until Friday.
 export async function sendNewsletterWelcomeEmail(to: string, unsubUrl: string): Promise<boolean> {

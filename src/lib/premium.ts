@@ -11,6 +11,10 @@ import { pickPrice, priceField, type Country } from "./country";
 import { CONDITION_MULTIPLIER } from "./constants";
 import { getMarketIndex, sydneyDayKey } from "./market-index";
 import { CONTENT_TAG } from "./revalidate-content";
+import { stripe, stripeEnabled } from "./stripe";
+import { sendTrialEndingEmail } from "./email";
+import { formatMoney } from "./format";
+import { PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD } from "./site";
 
 // The portfolio's PriceHistory read, day-scoped per (exact card set, market). The
 // wishlist itself is fetched fresh above (edits reflect instantly); only the heavy
@@ -42,14 +46,67 @@ export function premiumCheckoutEnabled(): boolean {
   return Boolean(process.env.STRIPE_SECRET_KEY && PREMIUM_PRICE_ID);
 }
 
-// Free-trial length (days) for a first-time subscriber. 0 = OFF (immediate charge,
-// the default and current behaviour). Set PREMIUM_TRIAL_DAYS=1 to switch on the
-// card-gated free trial — do this ONLY after enabling the Stripe customer portal +
-// the trial-ending reminder email, so trialists can cancel and aren't surprise-
-// charged. Abuse is blocked by card fingerprint regardless (see the webhook).
-export const PREMIUM_TRIAL_DAYS = Math.max(0, Math.floor(Number(process.env.PREMIUM_TRIAL_DAYS ?? 0)));
+// Free-trial length (days) for a first-time subscriber. Defaults to 3 — set
+// PREMIUM_TRIAL_DAYS=0 in the environment to switch it back off (immediate charge,
+// no trial). Card-gated: a card is still required up front (payment_method_collection
+// in the checkout route), so the trial auto-converts to paid unless cancelled.
+// Turning this on requires BOTH the Stripe customer portal (api/premium/portal —
+// done) AND the trial-ending reminder email (runPremiumTrialReminders below — done)
+// so trialists can see the charge coming and cancel before it happens. Abuse is
+// blocked by card fingerprint regardless of trial length (see the webhook).
+export const PREMIUM_TRIAL_DAYS = Math.max(0, Math.floor(Number(process.env.PREMIUM_TRIAL_DAYS ?? 3)));
 export function premiumTrialEnabled(): boolean {
   return PREMIUM_TRIAL_DAYS > 0;
+}
+
+// The reminder half of the trial precondition above. A 3-day trial is too short
+// for Stripe's own customer.subscription.trial_will_end webhook to help — Stripe
+// doesn't fire it when the whole trial is 3 days or less — so this runs as a daily
+// cron (see api/cron/premium-trial-reminders) instead of reacting to a webhook.
+//
+// Finds trials converting to paid within the next 24h that haven't been warned yet,
+// looks up each trialist's OWN live Stripe subscription for the real charge amount
+// (never PREMIUM_PRICE_AMOUNT alone — an annual trial converts to the yearly price,
+// and guessing wrong in a billing email is worse than the extra API call), and
+// stamps trialReminderSentAt regardless of send success so a lost email doesn't
+// retry forever (same convention as Order.shipReminderAt).
+export async function runPremiumTrialReminders(): Promise<number> {
+  if (!stripeEnabled()) return 0;
+
+  const cutoff = new Date(Date.now() + 86_400_000);
+  const candidates = await prisma.user.findMany({
+    where: {
+      trialStartedAt: { not: null },
+      trialReminderSentAt: null,
+      stripeCustomerId: { not: null },
+      premiumUntil: { gt: new Date(), lte: cutoff },
+    },
+    select: { id: true, email: true, stripeCustomerId: true },
+  });
+  if (!candidates.length) return 0;
+
+  let sent = 0;
+  for (const u of candidates) {
+    try {
+      const subs = await stripe().subscriptions.list({ customer: u.stripeCustomerId!, status: "trialing", limit: 1 });
+      const sub = subs.data[0];
+      if (sub?.trial_end) {
+        const price = sub.items.data[0]?.price;
+        const amountLabel =
+          price?.unit_amount != null
+            ? `${formatMoney(price.unit_amount, price.currency.toUpperCase())}/${price.recurring?.interval ?? "mo"}`
+            : `${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD}`;
+        if (await sendTrialEndingEmail(u.email, new Date(sub.trial_end * 1000), amountLabel)) sent++;
+      }
+      // No active trialing subscription (already converted, cancelled, or a lookup
+      // race) — nothing to warn about, but still stamp below so this account is
+      // never re-checked.
+    } catch {
+      /* best-effort — one failed lookup must not block the rest of the batch */
+    }
+    await prisma.user.update({ where: { id: u.id }, data: { trialReminderSentAt: new Date() } }).catch(() => {});
+  }
+  return sent;
 }
 
 // Annual plan — inert until STRIPE_PREMIUM_ANNUAL_PRICE_ID is set (a yearly Stripe

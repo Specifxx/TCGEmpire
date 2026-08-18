@@ -41,6 +41,10 @@ model User {
   // Set the first time this account starts a free trial → one trial per account
   // (a returning user just subscribes, no second trial).
   trialStartedAt      DateTime?
+  // Dedupe stamp for the "your trial ends soon" email (see runPremiumTrialReminders
+  // in lib/premium.ts) — set once the reminder is sent so a daily cron re-run never
+  // double-emails the same trialist. Mirrors Order.shipReminderAt's convention.
+  trialReminderSentAt DateTime?
   // Set once when the early-adopter "first 100 users get Premium" comp is granted,
   // so the grant is idempotent (never re-granted / re-extended on re-runs).
   earlyPremiumGranted Boolean   @default(false)
