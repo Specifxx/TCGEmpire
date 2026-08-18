@@ -8,6 +8,7 @@ import { sendOrderReceiptEmail, sendSaleNotificationEmail } from "@/lib/marketpl
 import { shipByDate } from "@/lib/marketplace-policy";
 import { notify } from "@/lib/notifications";
 import { formatMoney } from "@/lib/format";
+import { PREMIUM_TRIAL_DAYS } from "@/lib/premium";
 
 export const dynamic = "force-dynamic";
 // Stripe needs the raw, unparsed body to verify the signature.
@@ -198,9 +199,10 @@ async function premiumStarted(session: Stripe.Checkout.Session) {
     }
   }
   // If the subscription read failed: grant a short grace window that the precise
-  // period end (invoice.paid / renewal) will correct — 1 day for a trial, ~a month
-  // for a paid start.
-  if (!until) until = new Date(Date.now() + (isTrial ? 1 : 32) * 86400_000);
+  // period end (invoice.paid / renewal) will correct — PREMIUM_TRIAL_DAYS for a
+  // trial, ~a month for a paid start. Was hardcoded to 1 day here, which under-
+  // granted once the trial length moved off its original 1-day value.
+  if (!until) until = new Date(Date.now() + (isTrial ? PREMIUM_TRIAL_DAYS : 32) * 86400_000);
 
   await prisma.user.update({
     where: { id: userId },
