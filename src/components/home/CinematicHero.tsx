@@ -5,6 +5,7 @@ import { CountryHeroToggle } from "@/components/CountryHeroToggle";
 import { SearchBar } from "@/components/SearchBar";
 import { HeroStats, type MarketStat } from "./HeroStats";
 import { TrendingChips } from "./TrendingChips";
+import { BrandLogo } from "@/components/BrandLogo";
 import type { CardTileData } from "@/components/CardTile";
 import { COUNTRY_LIST, type Country } from "@/lib/country";
 
@@ -98,6 +99,20 @@ export function CinematicHero({
 
       {/* ── Foreground content (re-aligned to the normal grid) ───────────────── */}
       <div className="container-app relative z-10 w-full py-8 text-center sm:py-10">
+        {/* Brand mark, centered above the headline — the nav's own logo sits
+            in the fixed header, but this is the FIRST thing painted (the
+            hero often IS the first viewport, above the header having
+            scrolled/loaded), and the H1 below leads with "Riftbound" (the
+            game), not "RiftCompare" (the site) — so nothing in the hero
+            previously named the site itself at a glance. Reuses BrandLogo
+            verbatim (same mark, same mask technique) rather than a new
+            asset/component. */}
+        <div className="animate-fade-in [animation-delay:80ms] flex items-center justify-center gap-2">
+          <BrandLogo className="h-8 w-8" />
+          <span className="text-lg font-extrabold tracking-tight text-white">
+            Rift<span className="text-brand-400">Compare</span>
+          </span>
+        </div>
         {/* Kinetic headline — US-FIRST, not market-neutral. This page is cached
             (ISR) and DEFAULT_COUNTRY is "US" (lib/country.ts), which is also
             where the traffic actually is: SimilarWeb reports the real visitor

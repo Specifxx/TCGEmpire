@@ -63,7 +63,7 @@ function PulseCard({ m, up, currency, duplicate }: { m: Mover; up: boolean; curr
       // loop trick (see the animate-marquee keyframes) to stay seamless.
       aria-hidden={duplicate || undefined}
       tabIndex={duplicate ? -1 : undefined}
-      className="card-surface flex w-32 shrink-0 flex-col gap-1.5 p-2.5 transition-colors hover:border-brand-500/60 hover:bg-ink-800 sm:w-36"
+      className="card-surface flex w-36 shrink-0 flex-col gap-1.5 p-2.5 transition-colors hover:border-brand-500/60 hover:bg-ink-800 sm:w-40"
     >
       <div className="flex items-center gap-2">
         <div className="h-10 w-7 shrink-0 overflow-hidden rounded bg-ink-900">
@@ -83,8 +83,16 @@ function PulseCard({ m, up, currency, duplicate }: { m: Mover; up: boolean; curr
             />
           )}
         </div>
+        {/* line-clamp-2, not truncate: at this card width most Riftbound
+            names (e.g. "Jayce, Manslayer", "Miss Fortune") were getting cut
+            off mid-word on a single line. Two lines plus the wider card
+            above fits the great majority in full; `title` gives the rest a
+            hover fallback. Fixed-height row (h-8 ~ 2 lines at text-xs)
+            keeps every card the same size for the marquee's width math. */}
         <div className="min-w-0 flex-1">
-          <div className="truncate text-xs font-semibold text-white">{cardDisplayName(c.name, c)}</div>
+          <div className="line-clamp-2 h-8 text-xs font-semibold leading-tight text-white" title={cardDisplayName(c.name, c)}>
+            {cardDisplayName(c.name, c)}
+          </div>
           <div className="truncate text-[10px] text-slate-500">
             {c.setCode} · {c.collectorNumber}
           </div>
@@ -123,10 +131,28 @@ export function MarketPulse({ moversByCountry }: { moversByCountry: Record<Count
   // the same card list TWICE back-to-back — the second copy is purely visual
   // (aria-hidden, unfocusable) filler that seamlessly continues the first as
   // it scrolls off, not a duplicate the user is meant to notice or reach.
-  const track = [
-    ...pulse.map((m) => ({ m, duplicate: false })),
-    ...pulse.map((m) => ({ m, duplicate: true })),
-  ];
+  //
+  // On a quiet day `pulse` can be short (as few as 1-2 movers) — even
+  // doubled, a handful of 144px cards falls well short of the page's 1400px
+  // max content width (.container-app). The track then sits flush left
+  // inside the wider overflow-hidden wrapper, leaving a permanent gap of
+  // bare background to its right — and because that short track keeps
+  // scrolling left inside its own small width, the boundary between "cards"
+  // and "empty" visibly creeps toward the left edge before snapping back,
+  // reading as a black bar that slides left. Cycling the real movers up to
+  // MIN_COPY_CARDS before duplicating guarantees each half is comfortably
+  // wider than any real layout, however few movers exist today. Only the
+  // genuine first pass through the unique movers (i < pulse.length) is
+  // real/focusable content; every cycled repeat and the whole second half
+  // are `duplicate` (aria-hidden, unfocusable) filler.
+  const MIN_COPY_CARDS = 16;
+  const copyLen = Math.max(pulse.length, MIN_COPY_CARDS);
+  const track: { m: (typeof pulse)[number]; duplicate: boolean }[] = [];
+  for (let pass = 0; pass < 2; pass++) {
+    for (let i = 0; i < copyLen; i++) {
+      track.push({ m: pulse[i % pulse.length], duplicate: pass === 1 || i >= pulse.length });
+    }
+  }
 
   return (
     <section>
