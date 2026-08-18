@@ -102,12 +102,6 @@ const HEROES: Hero[] = [
     chips: ["Standard → Signature", "Overnumbered", "Alternate art"],
   },
   {
-    slug: "why-origins-cards-are-worth-more",
-    kicker: "Origins · Set 1",
-    title: "Why Origins Cards Are Worth More",
-    chips: ["298 cards", "Launch set", "2 of the top 4 in the game"],
-  },
-  {
     slug: "riftbound-2027-set-roadmap",
     kicker: "News · Roadmap",
     title: "Riftbound's 2027 Set Roadmap",

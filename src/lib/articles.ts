@@ -7218,8 +7218,8 @@ We built the Index, the price history, and the alerts specifically because we th
     readMins: 7,
     tags: ["origins", "chase cards", "collecting", "market analysis"],
     hero: {
-      src: "/blog/why-origins-cards-are-worth-more.png",
-      alt: "Generated banner reading \"Why Origins Cards Are Worth More\", labelled Origins · Set 1, with stat chips for 298 cards, the launch set, and 2 of the top 4 cards in the game",
+      src: "https://tcgplayer-cdn.tcgplayer.com/product/635368_in_1000x1000.jpg",
+      alt: "A real Riftbound: League of Legends TCG Origins booster box, showing the set's launch-art champions across the display box and individual booster packs",
     },
     summary: [
       "**Origins isn't the single most expensive set in Riftbound right now** — Spirit Forged's top card and its typical card both price higher. What Origins holds instead is depth: as of publishing, it's still home to two of the four most valuable cards in the entire game.",

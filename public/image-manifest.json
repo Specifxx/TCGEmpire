@@ -293,27 +293,6 @@
     ],
     "fingerprint": "c076dea240cd7a64"
   },
-  "/blog/why-origins-cards-are-worth-more.png": {
-    "src": "/blog/why-origins-cards-are-worth-more.png",
-    "width": 1200,
-    "height": 630,
-    "bytes": 49067,
-    "webp": "/blog/why-origins-cards-are-worth-more.webp",
-    "webpBytes": 23174,
-    "avif": "/blog/why-origins-cards-are-worth-more.avif",
-    "avifBytes": 14011,
-    "variants": [
-      {
-        "w": 480,
-        "src": "/blog/why-origins-cards-are-worth-more-480w.webp"
-      },
-      {
-        "w": 768,
-        "src": "/blog/why-origins-cards-are-worth-more-768w.webp"
-      }
-    ],
-    "fingerprint": "344c403a02a7d821"
-  },
   "/icon-512.png": {
     "src": "/icon-512.png",
     "width": 512,
