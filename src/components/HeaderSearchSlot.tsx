@@ -22,27 +22,20 @@ import { useEffect, useState, type ReactNode } from "react";
 // the page and must never be hidden there — this component is a no-op
 // (`scrolled` starts and stays `true`) whenever `pathname !== "/"`.
 //
-// The mobile row WAS deliberately left un-gated by an earlier pass ("keep it
-// always present on mobile" — the master brief's own line about the header
-// search under "Keep in the header"). Re-examined for this phase's audit
-// script: that line was written to keep search reachable without a scroll on
-// phones — but on THIS codebase's homepage, the hero already renders its own
-// full-size search box immediately below the header on every viewport,
-// mobile included (autoFocusDesktop is desktop-only, but the box itself is
-// not). So on "/" specifically, "always present" bought nothing a visitor
-// couldn't already do one tap below it, at the cost of a real, measured
-// duplicate-search-box-above-the-fold on a real 390×844 screenshot — exactly
-// what the brief's own Hard Targets table separately requires to be zero,
-// with no mobile/desktop carve-out written there. Gating the mobile row the
-// same way desktop's already is resolves that conflict in the hard target's
-// favour without dropping the field from the page: it is still rendered
-// unconditionally (see the `hidden` note below), still the very first search
-// box below the header for a visitor who scrolls even slightly, and the
-// hero's own box is right there, immediately, for anyone who lands and wants
-// to search before scrolling at all. Every route other than "/" is completely
-// unaffected — `mobile` only ever changes anything when `isHome` is also
-// true. See DECISIONS.md's audit-script phase entry for the fuller reasoning
-// and the two alternatives this route was chosen over.
+// The mobile row is ALWAYS visible, never scroll-gated — reverted 2026-08-17.
+// A prior pass gated it the same as the desktop row (below), reasoning that
+// the hero's own full-size search box sits immediately below the header on
+// every viewport, so hiding the smaller header copy pre-scroll cost a visitor
+// nothing on paper. In practice, that made the entire mobile homepage header
+// read as empty before the first scroll: the mobile viewport has no space for
+// the desktop nav's other links (they're all `md:`/`lg:` and up — see
+// Navbar.tsx), so the search field was the only thing HomeHeaderReveal-style
+// gating could actually remove from a phone screen, and removing it left just
+// a bare logo, "Database" and the hamburger. Explicit product call: a visibly
+// present header beats one extra duplicate-search-box audit point. The
+// desktop row below keeps the scroll gate — desktop has plenty else in the
+// header pre-scroll (Premium, the logo, Database), so it doesn't read as
+// empty the same way.
 //
 // display:none via Tailwind's `hidden` class, never an unmount: the field
 // stays in the DOM at all times (crawlers, and any assistive tech that reads
@@ -79,10 +72,9 @@ export function HeaderSearchSlot({ children, mobile = false }: { children: React
     };
   }, [isHome]);
 
-  // The mobile row's own parent (`<div className="pb-3 lg:hidden">` in
-  // Navbar.tsx) already restricts it to <lg widths, so this variant just
-  // toggles hidden/block with no breakpoint prefix — adding `lg:` here would
-  // be a no-op at best and a footgun at worst if that parent's breakpoint
-  // ever changes independently of this one.
-  return <div className={mobile ? (scrolled ? "block" : "hidden") : `hidden flex-1 ${scrolled ? "lg:block" : ""}`}>{children}</div>;
+  // mobile: always "block", ignoring `scrolled` entirely — see the doc
+  // comment above. The mobile row's own parent (`<div className="pb-3
+  // lg:hidden">` in Navbar.tsx) already restricts it to <lg widths, so no
+  // breakpoint prefix is needed here either way.
+  return <div className={mobile ? "block" : `hidden flex-1 ${scrolled ? "lg:block" : ""}`}>{children}</div>;
 }
