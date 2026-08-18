@@ -6,7 +6,6 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { cardHref } from "@/lib/card-url";
 import { cardDisplayName } from "@/lib/card-name";
 import { trackEvent } from "@/lib/analytics";
-import { useQuickView } from "./QuickView";
 import { useCountry } from "./CountryProvider";
 import type { CardTileData } from "./CardTile";
 import { cardImageAlt } from "@/lib/image-alt";
@@ -152,7 +151,6 @@ export function SearchBar({
 }) {
   const router = useRouter();
   const params = useSearchParams();
-  const { open: openQuickView } = useQuickView();
   const { fmt, price } = useCountry();
   const [value, setValue] = useState(params.get("q") ?? "");
   const [results, setResults] = useState<Result[]>([]);
@@ -371,16 +369,25 @@ export function SearchBar({
   // (it lets the real `<a href>` open a new tab natively; see each row's
   // onClick below), only a modifier held on keyboard Enter does, since there
   // Enter has no native href-click to fall back on.
+  //
+  // Real navigation to the card page, not QuickView — a search result used
+  // to open the modal instead of going anywhere, so the URL never changed,
+  // the back button did nothing useful, and every click cost an extra "close
+  // the modal, click again" round trip before a visitor could actually reach
+  // a buy button. QuickView itself is untouched (still used by Market Pulse,
+  // trending chips, card tiles elsewhere) — this only changes what a SEARCH
+  // result's own click does.
   function activateCardLike(card: Result, rank: number, resultType: "card" | "trending", newTab: boolean) {
     trackCardView(card);
     trackEvent("search_suggestion_selected", { suggestion_rank: rank, result_type: resultType, query: value.trim(), card_id: card.id, variant });
+    const href = cardHref(card);
     if (newTab) {
-      window.open(cardHref(card), "_blank", "noopener");
+      window.open(href, "_blank", "noopener");
       return;
     }
     setOpen(false);
     setActiveIndex(-1);
-    openQuickView(card);
+    router.push(href);
   }
 
   // Keyboard-only counterpart to the sealed row's onClick below (which relies
