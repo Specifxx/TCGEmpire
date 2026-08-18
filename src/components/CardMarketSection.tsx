@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useCountry } from "./CountryProvider";
 import { OutboundLink } from "./OutboundLink";
 import { TcgMarketPrice } from "./TcgMarketPrice";
 import { TcgplayerAd } from "./TcgplayerAd";
 import { EbayAd } from "./EbayAd";
+import { EbayTabs, type EbayTab } from "./EbayTabs";
+import { EbayGradedLive, type GradedRow } from "./EbayGradedLive";
 import { timeAgo } from "@/lib/format";
-import { computeMarket, stockElsewhere, type MarketRow } from "@/lib/market-rows";
+import { computeMarket, stockElsewhere, type ComputedRow, type MarketRow } from "@/lib/market-rows";
 import { AffiliateDisclosure, PaidLinkTag } from "./AffiliateDisclosure";
 import { COUNTRIES, COUNTRY_LIST } from "@/lib/country";
 import { isFallbackRetailer, normaliseCondition, CONDITIONS } from "@/lib/constants";
@@ -125,16 +127,34 @@ export function CardPriceComparison({
   displayName,
   ebaySearch,
   ebayQuery,
+  graded,
 }: {
   rows: MarketRow[];
   displayName: string;
   ebaySearch: EbaySearchMap;
   ebayQuery: string;
+  /** Graded (slabbed) eBay listings — every market's, filtered to the
+   *  visitor's here and inside EbayGradedLive itself (same double-filter
+   *  pattern EbayCardPanelLive already uses). Optional so QuickView's
+   *  compact table (no graded payload) keeps working unaffected. */
+  graded?: GradedRow[];
 }) {
   const { country, fmt, secondaryFmt } = useCountry();
   const m = useMemo(() => computeMarket(rows, country), [rows, country]);
   const { prices, outOfStock } = m;
   const ebay = m.hasEbay ? null : ebaySearch[country] ?? null;
+  // Like-for-like: a foil and a raw copy aren't the same product, so they no
+  // longer rank in one interleaved list (a $3 basic foil topping the table
+  // above the $10 non-foil a "standard" shopper actually wants). A store's
+  // cheapest listing in the active view is the one that appears — if that
+  // store only has a foil, it appears under Foil, never backfilled into
+  // Standard, because these are two disjoint slices of the same `prices`/
+  // `outOfStock` arrays, not a re-ranked merge.
+  const standardPrices = useMemo(() => prices.filter((p) => !p.isFoil), [prices]);
+  const standardOOS = useMemo(() => outOfStock.filter((p) => !p.isFoil), [outOfStock]);
+  const foilPrices = useMemo(() => prices.filter((p) => p.isFoil), [prices]);
+  const foilOOS = useMemo(() => outOfStock.filter((p) => p.isFoil), [outOfStock]);
+  const gradedHere = useMemo(() => (graded ?? []).filter((g) => g.country === country), [graded, country]);
   // TCGplayer publishes ONE USD market price; its US row is serialized onto every
   // card page (market-neutral — no country filter server-side). Convert it to the
   // visitor's currency and surface it as a reference — but ONLY in markets where
@@ -169,146 +189,140 @@ export function CardPriceComparison({
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  return (
-    <>
-      <div className="card-surface mt-4 overflow-hidden sm:mt-6">
-        <div className="flex items-center justify-between border-b border-ink-700 p-3 sm:p-4">
-          <h2 className="font-bold text-white">
-            Price comparison <span className="text-slate-500">({prices.length})</span>
-          </h2>
-          {/* Oldest row in the table, not the cheapest row's timestamp — a single
-              "updated Xh ago" over the whole panel used the freshest row's stamp to
-              describe every row, including ones seen far longer ago. Each row now
-              also carries its own timestamp below (see the per-row meta line), so
-              this header line is the panel's worst case, not its best. */}
-          {mounted && prices.length > 0 && (
-            <span className="text-xs text-slate-500">
-              oldest listing {timeAgo(prices.reduce((old, p) => (p.lastSeen < old ? p.lastSeen : old), prices[0].lastSeen))}
-            </span>
-          )}
+  // One variant's rows-list + out-of-stock section — Standard and Foil each
+  // get their own instance of exactly what this table always rendered, just
+  // scoped to that variant's slice of `prices`/`outOfStock` instead of the
+  // interleaved whole. `isDefault` keeps Standard's copy identical to the
+  // table's original (pre-toggle) wording for the common case where a card
+  // has no foil/graded at all and the toggle never shows any chrome.
+  function variantList(list: ComputedRow[], oosList: ComputedRow[], noun: string, isDefault: boolean): ReactNode {
+    if (list.length === 0 && oosList.length === 0) {
+      return (
+        <div className="p-8 text-center text-sm text-slate-400">
+          <p className="font-semibold text-white">{isDefault ? "No prices found yet" : `No ${noun} listings found yet`}</p>
+          <p className="mt-1">
+            We haven&apos;t matched this card to a {isDefault ? "" : `${noun} `}store listing in this market. Check back
+            soon — our price feeds refresh regularly.
+          </p>
         </div>
-
-        {prices.length === 0 && outOfStock.length === 0 ? (
-          <div className="p-8 text-center text-sm text-slate-400">
-            <p className="font-semibold text-white">No prices found yet</p>
-            <p className="mt-1">
-              We haven&apos;t matched this card to a store listing in this market. Check back soon —
-              our price feeds refresh regularly.
-            </p>
-          </div>
-        ) : prices.length === 0 ? (
-          <div className="p-6 text-center text-sm text-slate-400">
-            <p className="font-semibold text-white">Currently sold out everywhere</p>
-            <p className="mt-1">
-              {outOfStock.length} {outOfStock.length === 1 ? "store has" : "stores have"} listed
-              this card but it&apos;s out of stock right now. See them below.
-            </p>
-          </div>
-        ) : (
-          <ul className="divide-y divide-ink-800">
-            {prices.map((p, i) => (
-              <li
-                key={p.id}
-                className="flex flex-wrap items-center gap-x-3 gap-y-2 p-3 hover:bg-ink-900/50 sm:flex-nowrap sm:p-4"
-              >
-                <div className="w-5 shrink-0 text-center text-sm font-bold text-slate-500 sm:w-6">{i + 1}</div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex min-w-0 items-center gap-2">
-                    <span className="min-w-0 truncate font-semibold text-white">{p.retailerName}</span>
-                    {/* The cheapest row is the one visitors should click — a small
-                        badge draws the eye there, the same way a highlighted price
-                        naturally pulls clicks. */}
-                    {i === 0 && prices.length > 1 && (
-                      <span className="chip shrink-0 bg-brand-500/20 text-[10px] font-bold uppercase tracking-wide text-brand-300">
-                        Cheapest
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
-                    {p.isFoil && <span className="chip bg-gold/15 font-semibold text-gold">✦ Foil</span>}
-                    {/* Native grade (the store's own wording — a Shopify variant
-                        title, TCGplayer's blanket "NM", eBay's raw-card scale) PLUS
-                        our normalised grade, side by side, rather than showing only
-                        one. Four marketplaces use four incompatible scales with no
-                        official cross-marketplace mapping, so silently picking one
-                        interpretation and calling it "the condition" compares
-                        apples to oranges; showing both lets a buyer see exactly
-                        what was translated from what (mapping published at
-                        /methodology). */}
-                    {(() => {
-                      const grade = normaliseCondition(p.condition);
-                      return grade ? (
-                        <span className="chip bg-ink-800 text-slate-300" title={`Store listed as "${p.condition}"`}>
-                          {CONDITIONS[grade].label}
-                        </span>
-                      ) : (
-                        p.condition && <span className="chip bg-ink-800 text-slate-300">{p.condition}</span>
-                      );
-                    })()}
-                    <span className="text-brand-400">● In stock</span>
-                    <span>
-                      {p.ship == null ? "postage at checkout" : p.ship === 0 ? "free postage" : `+ ${fmt(p.ship)} postage`}
+      );
+    }
+    if (list.length === 0) {
+      return (
+        <div className="p-6 text-center text-sm text-slate-400">
+          <p className="font-semibold text-white">Currently sold out everywhere</p>
+          <p className="mt-1">
+            {oosList.length} {oosList.length === 1 ? "store has" : "stores have"} listed this{" "}
+            {isDefault ? "card" : `${noun} copy`} but it&apos;s out of stock right now. See them below.
+          </p>
+        </div>
+      );
+    }
+    return (
+      <>
+        <ul className="divide-y divide-ink-800">
+          {list.map((p, i) => (
+            <li
+              key={p.id}
+              className="flex flex-wrap items-center gap-x-3 gap-y-2 p-3 hover:bg-ink-900/50 sm:flex-nowrap sm:p-4"
+            >
+              <div className="w-5 shrink-0 text-center text-sm font-bold text-slate-500 sm:w-6">{i + 1}</div>
+              <div className="min-w-0 flex-1">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="min-w-0 truncate font-semibold text-white">{p.retailerName}</span>
+                  {/* The cheapest row is the one visitors should click — a small
+                      badge draws the eye there, the same way a highlighted price
+                      naturally pulls clicks. */}
+                  {i === 0 && list.length > 1 && (
+                    <span className="chip shrink-0 bg-brand-500/20 text-[10px] font-bold uppercase tracking-wide text-brand-300">
+                      Cheapest
                     </span>
-                    {p.ship == null && p.policyUrl && (
-                      <a
-                        href={p.policyUrl}
-                        target="_blank"
-                        rel="sponsored nofollow noopener noreferrer"
-                        className="text-slate-400 underline decoration-dotted underline-offset-2 hover:text-slate-200"
-                      >
-                        shipping policy ↗
-                      </a>
-                    )}
-                    {/* Per-row freshness — was only shown once for the whole panel
-                        (see the header note above), using the CHEAPEST row's
-                        timestamp for every row regardless of how stale that
-                        specific listing actually was. */}
-                    {mounted && <span>updated {timeAgo(p.lastSeen)}</span>}
-                    {isPaidLink(p.buyHref) && <PaidLinkTag />}
-                  </div>
-                </div>
-                <div className="shrink-0 text-right">
-                  <div className={`num text-lg font-bold ${i === 0 ? "text-accent" : "text-white"}`}>
-                    {fmt(p.priceCents)}
-                  </div>
-                  {secondaryFmt(p.priceCents) && (
-                    <div className="num text-[11px] text-slate-500">≈ {secondaryFmt(p.priceCents)}</div>
-                  )}
-                  {p.ship != null && (
-                    <div className="num text-[11px] text-slate-400">≈ {fmt(p.delivered)} delivered</div>
                   )}
                 </div>
-                {/* Full-width below the row on phones; inline button on sm+. Brand-
-                    coloured for eBay/TCGplayer — a familiar brand button converts
-                    better than a generic one users don't immediately recognise. */}
-                <OutboundLink
-                  href={p.buyHref}
-                  retailer={p.retailer}
-                  country={country}
-                  cardName={displayName}
-                  price={p.priceCents / 100}
-                  positionInList={i + 1}
-                  pageType="card_detail"
-                  inStock
-                  variant={p.isFoil ? "foil" : "nonfoil"}
-                  condition={p.condition}
-                  surface="table"
-                  className={`${buyButtonClass(p.retailer)} order-last w-full basis-full justify-center sm:order-none sm:w-auto sm:basis-auto`}
-                >
-                  {buyButtonLabel(p.retailer)}
-                </OutboundLink>
-              </li>
-            ))}
-          </ul>
-        )}
+                <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
+                  {p.isFoil && <span className="chip bg-gold/15 font-semibold text-gold">✦ Foil</span>}
+                  {/* Native grade (the store's own wording — a Shopify variant
+                      title, TCGplayer's blanket "NM", eBay's raw-card scale) PLUS
+                      our normalised grade, side by side, rather than showing only
+                      one. Four marketplaces use four incompatible scales with no
+                      official cross-marketplace mapping, so silently picking one
+                      interpretation and calling it "the condition" compares
+                      apples to oranges; showing both lets a buyer see exactly
+                      what was translated from what (mapping published at
+                      /methodology). */}
+                  {(() => {
+                    const grade = normaliseCondition(p.condition);
+                    return grade ? (
+                      <span className="chip bg-ink-800 text-slate-300" title={`Store listed as "${p.condition}"`}>
+                        {CONDITIONS[grade].label}
+                      </span>
+                    ) : (
+                      p.condition && <span className="chip bg-ink-800 text-slate-300">{p.condition}</span>
+                    );
+                  })()}
+                  <span className="text-brand-400">● In stock</span>
+                  <span>
+                    {p.ship == null ? "postage at checkout" : p.ship === 0 ? "free postage" : `+ ${fmt(p.ship)} postage`}
+                  </span>
+                  {p.ship == null && p.policyUrl && (
+                    <a
+                      href={p.policyUrl}
+                      target="_blank"
+                      rel="sponsored nofollow noopener noreferrer"
+                      className="text-slate-400 underline decoration-dotted underline-offset-2 hover:text-slate-200"
+                    >
+                      shipping policy ↗
+                    </a>
+                  )}
+                  {/* Per-row freshness — was only shown once for the whole panel
+                      (see the header note above), using the CHEAPEST row's
+                      timestamp for every row regardless of how stale that
+                      specific listing actually was. */}
+                  {mounted && <span>updated {timeAgo(p.lastSeen)}</span>}
+                  {isPaidLink(p.buyHref) && <PaidLinkTag />}
+                </div>
+              </div>
+              <div className="shrink-0 text-right">
+                <div className={`num text-lg font-bold ${i === 0 ? "text-accent" : "text-white"}`}>
+                  {fmt(p.priceCents)}
+                </div>
+                {secondaryFmt(p.priceCents) && (
+                  <div className="num text-[11px] text-slate-500">≈ {secondaryFmt(p.priceCents)}</div>
+                )}
+                {p.ship != null && (
+                  <div className="num text-[11px] text-slate-400">≈ {fmt(p.delivered)} delivered</div>
+                )}
+              </div>
+              {/* Full-width below the row on phones; inline button on sm+. Brand-
+                  coloured for eBay/TCGplayer — a familiar brand button converts
+                  better than a generic one users don't immediately recognise. */}
+              <OutboundLink
+                href={p.buyHref}
+                retailer={p.retailer}
+                country={country}
+                cardName={displayName}
+                price={p.priceCents / 100}
+                positionInList={i + 1}
+                pageType="card_detail"
+                inStock
+                variant={p.isFoil ? "foil" : "nonfoil"}
+                condition={p.condition}
+                surface="table"
+                className={`${buyButtonClass(p.retailer)} order-last w-full basis-full justify-center sm:order-none sm:w-auto sm:basis-auto`}
+              >
+                {buyButtonLabel(p.retailer)}
+              </OutboundLink>
+            </li>
+          ))}
+        </ul>
 
-        {outOfStock.length > 0 && (
+        {oosList.length > 0 && (
           <div className="border-t border-ink-800">
             <div className="bg-ink-900/40 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Out of stock ({outOfStock.length}) · last listed price
+              Out of stock ({oosList.length}) · last listed price
             </div>
             <ul className="divide-y divide-ink-800">
-              {outOfStock.map((p) => (
+              {oosList.map((p) => (
                 <li key={p.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 p-3 opacity-60 sm:flex-nowrap sm:p-4">
                   <div className="w-5 shrink-0 text-center text-slate-600 sm:w-6">—</div>
                   <div className="min-w-0 flex-1">
@@ -351,6 +365,68 @@ export function CardPriceComparison({
             </ul>
           </div>
         )}
+      </>
+    );
+  }
+
+  // [Standard][Foil][Graded] — reuses the eBay panel's own tabs pattern
+  // (EbayTabs) rather than inventing a new toggle widget. Standard is
+  // always present; Foil/Graded are dropped by THIS caller (not hidden
+  // inside EbayTabs) when this card genuinely has none, per EbayTabs' own
+  // "a tab with no content is worse than no tab" rule — the ordinary card
+  // with no foil/graded data still shows exactly the single list it always
+  // did, with no tab chrome at all.
+  const tabs: EbayTab[] = [
+    { key: "standard", label: "Standard", content: variantList(standardPrices, standardOOS, "standard", true) },
+  ];
+  if (foilPrices.length > 0 || foilOOS.length > 0) {
+    tabs.push({
+      key: "foil",
+      label: "Foil",
+      count: foilPrices.length || undefined,
+      content: variantList(foilPrices, foilOOS, "foil", false),
+    });
+  }
+  if (gradedHere.length > 0) {
+    tabs.push({
+      key: "graded",
+      label: "Graded",
+      count: gradedHere.length,
+      content: <EbayGradedLive listings={graded ?? []} />,
+    });
+  }
+
+  return (
+    <>
+      <div className="card-surface mt-4 overflow-hidden sm:mt-6">
+        <div className="flex items-center justify-between border-b border-ink-700 p-3 sm:p-4">
+          <h2 className="font-bold text-white">
+            Price comparison <span className="text-slate-500">({prices.length})</span>
+          </h2>
+          {/* Oldest row in the table, not the cheapest row's timestamp — a single
+              "updated Xh ago" over the whole panel used the freshest row's stamp to
+              describe every row, including ones seen far longer ago. Each row now
+              also carries its own timestamp below (see the per-row meta line), so
+              this header line is the panel's worst case, not its best. */}
+          {mounted && prices.length > 0 && (
+            <span className="text-xs text-slate-500">
+              oldest listing {timeAgo(prices.reduce((old, p) => (p.lastSeen < old ? p.lastSeen : old), prices[0].lastSeen))}
+            </span>
+          )}
+        </div>
+
+        {/* pt-3/tabListClassName give the tab BUTTONS breathing room under the
+            header border without padding the panel below — each row inside
+            variantList() already reaches the card's edges (and the header
+            border) with its own p-3/p-4, so padding the wrapper unconditionally
+            would double that gap for the ordinary card that never shows tab
+            chrome at all (EbayTabs.showTabs mirrored here as tabs.length > 1). */}
+        <EbayTabs
+          tabs={tabs}
+          label={`${displayName} price comparison, by variant`}
+          className={tabs.length > 1 ? "pt-3 sm:pt-4" : undefined}
+          tabListClassName="px-3 sm:px-4"
+        />
 
         {/* Disclosure sits INSIDE the comparison panel, directly under the buy
             buttons it describes — not in the page footer. Wording names both

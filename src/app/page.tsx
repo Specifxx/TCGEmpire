@@ -100,7 +100,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "How do I find the cheapest Riftbound prices?",
-    a: "Search or browse the card database — every card shows the lowest live price across the stores in your market, ranked by total delivered cost (item plus shipping). It's the fastest way to find the cheapest Riftbound cards wherever you are.",
+    a: "Search or browse the card database — every card shows the lowest live price across the stores in your market, ranked by price, with delivered cost shown where a store publishes its shipping. It's the fastest way to find the cheapest Riftbound cards wherever you are.",
   },
   {
     q: "Does RiftCompare cover Riftbound singles and sealed products?",

@@ -18,7 +18,13 @@ const STEPS = [
     n: 2,
     Icon: ScaleIcon,
     title: "Compare every store",
-    body: "See live prices from every store in your market side by side — ranked by total delivered cost (item + postage), plus eBay.",
+    // "ranked by total delivered cost" overclaimed: computeMarket() ranks by
+    // item price (postage only breaks ties), because most stores don't
+    // publish shipping until checkout — showing a store's known postage but
+    // never letting it decide the ranking would otherwise penalise a store
+    // for being upfront about a cost eBay's checkout hides. Softened to what
+    // actually happens.
+    body: "See live prices from every store in your market side by side — ranked by price, with delivered cost shown where stores publish postage, plus eBay.",
   },
   {
     n: 3,

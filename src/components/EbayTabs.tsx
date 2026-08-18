@@ -32,11 +32,16 @@ export function EbayTabs({
   tabs,
   label,
   className,
+  tabListClassName,
 }: {
   tabs: EbayTab[];
   /** Accessible name for the tablist, e.g. "eBay listings for Akali". */
   label: string;
   className?: string;
+  /** Extra classes on the tablist row only — e.g. horizontal padding a caller
+   *  wants around the tab BUTTONS but not around the panel content below,
+   *  where a row's own padding already reaches the edges. */
+  tabListClassName?: string;
 }) {
   const baseId = useId();
   const [active, setActive] = useState(0);
@@ -71,7 +76,7 @@ export function EbayTabs({
   return (
     <div className={className}>
       {showTabs && (
-        <div role="tablist" aria-label={label} className="mb-3 flex flex-wrap gap-2">
+        <div role="tablist" aria-label={label} className={`mb-3 flex flex-wrap gap-2 ${tabListClassName ?? ""}`}>
           {tabs.map((t, i) => {
             const isActive = i === active;
             return (
