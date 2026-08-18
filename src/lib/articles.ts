@@ -7207,6 +7207,224 @@ Not "buy" and not "don't." Three practical things that don't require a track rec
 We built the Index, the price history, and the alerts specifically because we think a market this new deserves honest tools instead of confident-sounding guesses. We'll revisit this piece once there's actually enough history to say more.
 `,
   },
+  {
+    slug: "why-origins-cards-are-worth-more",
+    category: "blog",
+    title: "Why Origins Cards Are Worth More",
+    excerpt:
+      "Origins isn't the single highest-priced set in Riftbound today — but it still holds two of the four most valuable cards in the entire game. Here's the real, checkable case for why the launch set holds a premium.",
+    author: "RiftCompare",
+    date: "2026-08-18",
+    readMins: 7,
+    tags: ["origins", "chase cards", "collecting", "market analysis"],
+    hero: {
+      src: "/blog/why-origins-cards-are-worth-more.png",
+      alt: "Generated banner reading \"Why Origins Cards Are Worth More\", labelled Origins · Set 1, with stat chips for 298 cards, the launch set, and 2 of the top 4 cards in the game",
+    },
+    summary: [
+      "**Origins isn't the single most expensive set in Riftbound right now** — Spirit Forged's top card and its typical card both price higher. What Origins holds instead is depth: as of publishing, it's still home to two of the four most valuable cards in the entire game.",
+      "**It's the biggest card pool in the game** — 298 base cards, more than any set released since — and the set every other set's promo tier gets measured against.",
+      "**None of this is a guarantee.** Riftbound doesn't have the price history to prove a launch-set premium will hold, and reprints of Origins cards into newer sets are a real, documented pattern working against it.",
+      "**The honest case:** Origins earns its premium from scale and scarcity, not from being untouchable. Treat this as analysis, not a forecast.",
+    ],
+    faq: [
+      {
+        q: "Is Origins the most valuable set in Riftbound?",
+        a: "Not by every measure — Spirit Forged's single most expensive card and its typical card both price higher right now. What Origins holds is depth: as of publishing it's still home to two of the four most valuable cards in the entire game (Ahri, Nine-Tailed Fox and Kai'Sa, Daughter of the Void, both Signature printings), despite being the oldest set competing against four newer releases.",
+      },
+      {
+        q: "What's the difference between a Signature, a promo and a base Origins card?",
+        a: "A Signature carries a ★ in its collector number and the artist's actual stamped signature — the rarest tier, and a physically unique object rather than just a scarce print run. A promo is a separate printing distributed through prereleases, Nexus Night packs or organized play, and can outprice a Signature — GGEZ Teemo, Origins' most famous promo, is a good example. Everything else is part of the base 298-card set.",
+      },
+      {
+        q: "Will Origins cards keep going up in price?",
+        a: "We don't know, and anyone who tells you they do is guessing. Riftbound doesn't have the multi-year price history to confirm a launch-set premium will hold the way it has in older card games. What we can show you is what's true today: real prices, real scarcity, and a real reprint risk working the other way.",
+      },
+      {
+        q: "What's the cheapest way into Origins chase cards?",
+        a: "Start with the base, unsigned printing of a card whose Signature you eventually want — it's mechanically identical, just without the stamped signature and the collector premium. Browse the Origins set and sort by price to see the full spread from cents to four figures.",
+      },
+      {
+        q: "Is Origins still being printed?",
+        a: "Origins was Riftbound's launch set, and four sets — Spirit Forged, Unleashed, Vendetta and the upcoming Radiance — have released since. It's no longer the current set, which is part of why its Signature and promo pool only gets scarcer relative to demand rather than being diluted by a fresh print run of the same cards.",
+      },
+    ],
+    browseCta: {
+      href: "/sets/origins",
+      label: "Browse every Origins card →",
+      blurb: "All 298 base cards plus every Signature, Showcase and promo printing we track, with live prices in your own market.",
+    },
+    closeups: [
+      {
+        caption: "Ahri, Nine-Tailed Fox (OGN 303★/298) — Origins' single most valuable card, and as of publishing the third most valuable card in the entire game across every set combined.",
+        slugs: ["ahri-nine-tailed-fox-ogn-303s-298"],
+        topPct: 34,
+        heightPct: 28,
+      },
+    ],
+    embeds: [
+      {
+        title: "Origins Signature Legends",
+        note: "Every ★-numbered Signature printing from Origins in our database, live-priced. This is the tier that produced two of the four most valuable cards in the whole game.",
+        chaseSet: "OGN",
+        chaseTier: "signature",
+        take: 12,
+      },
+      {
+        title: "Origins promo cards",
+        note: "Prerelease, Nexus Night and organized-play promos from Riftbound's launch set — the tier every later set's own promo chase gets compared against.",
+        chaseSet: "OGN",
+        chaseTier: "promo",
+        take: 16,
+      },
+    ],
+    body: `**Origins** is where Riftbound started — the game's launch set, and still the biggest single card pool in the game at **298 base cards**. Four sets have released since (Spirit Forged, Unleashed, Vendetta, and Radiance, due 23 October 2026), and Origins hasn't been the newest set on the shelf in over a year. By the usual logic of a trading card game, that should make it the least interesting set to watch.
+
+The real numbers say otherwise.
+
+## Origins still punches above its age
+
+As of publishing, two of the four most valuable cards in the *entire* game — every set combined — are Origins Signature printings:
+
+| Rank (site-wide) | Card | Printing | Live price (US) |
+| --- | --- | --- | --- |
+| #3 | Ahri, Nine-Tailed Fox | OGN 303★/298 (Signature) | US$3,000.96 |
+| #4 | Kai'Sa, Daughter of the Void | OGN 299★/298 (Signature) | US$2,739.16 |
+
+That's a genuinely strong showing for the oldest set in the game, going up against four newer ones — including Spirit Forged, whose own top card (Ezreal, Prodigal Explorer, a promo, at US$3,499.99) currently outprices both. **We're not going to pretend Origins is the single most expensive set** — it isn't, by that measure, today. What it is: the set that keeps showing up at the very top of the market a year-plus into the game's life, which is a different and arguably more interesting claim than "the most expensive."
+
+[[closeup:0]]
+
+## Why the depth, not just the top card
+
+Three real, checkable reasons Origins holds up:
+
+**It's the biggest set.** 298 base cards is more than any set that followed — Spirit Forged (221), Unleashed (219) and Vendetta (166) are all smaller. A bigger set means a bigger pool of chase-tier printings competing for collector attention from the same launch.
+
+**It set the precedent for every promo tier since.** Origins' organized-play promos — headlined by [GGEZ Teemo](/blog/ggez-teemo-riftbound-explained), Origins' first Nexus Night promo — are still the benchmark the game's later promo tiers get measured against; we said as much when covering [Vendetta's own chase cards](/blog/riftbound-vendetta-chase-cards-so-far). A promo tier needs real time in market — prereleases, Nexus Night packs, organized-play events — to build that kind of reputation, and Origins has simply had the most of it.
+
+**It's the launch set.** Every major trading card game has shown some version of this pattern — Magic's Alpha and Beta, Pokémon's Base Set — where the first set a game ever printed carries a premium that outlasts sets released around it. We're not claiming Riftbound has years of data to prove the same pattern holds here — it doesn't, yet — but the structural logic behind it (a fixed, non-growing pool of first-ever printings) is real regardless of how the price ends up behaving.
+
+## The honest risk
+
+Two things work against Origins specifically, and we'd rather say so than not:
+
+**It isn't the top set by every measure.** Spirit Forged's most expensive card and its typical card both price higher right now. If "worth more" means "the single highest number in the game," Origins doesn't win that contest today.
+
+**Reprints are a real pattern in this game, not a hypothetical risk.** Riftbound has already reprinted functionally identical cards from older sets into newer ones, with new art and a new collector number. A reprint doesn't touch the *original* Origins printing's own scarcity, but it can cool demand for the character generally if the newer version is cheaper and easier to find. Treat any Origins chase card as subject to that risk, not immune to it.
+
+## The Origins chase tier, live
+
+[[embed:0]]
+
+Origins' promo tier — the deepest of any set, and the one every other set's promo chase gets compared to:
+
+[[embed:1]]
+
+## Where to check the real numbers
+
+Every price above moves. **[Browse the full Origins set](/sets/origins)** for live prices across every store we track, or open any card above for its full comparison in your own market.`,
+  },
+  {
+    slug: "riftbound-cards-to-watch",
+    category: "blog",
+    title: "Riftbound Cards to Watch: Short-Term Meta Movers vs Long-Term Chase Plays",
+    excerpt:
+      "Not a price prediction — a look at the real signals behind which Riftbound cards could move: current tournament demand for the short term, and chase-tier scarcity for the long term, with real numbers throughout.",
+    author: "RiftCompare",
+    date: "2026-08-18",
+    readMins: 8,
+    tags: ["market analysis", "meta", "chase cards", "opinion", "collecting"],
+    hero: {
+      src: "https://cdn.riftscribe.gg/cards/originals/sfd-225-star-221-94b78cb569b2c9f3.png",
+      alt: "Irelia, Fervent (SFD 225★/221), the Signature printing of the current format's most-played legend, and this article's clearest example of a card with real short-term demand",
+    },
+    summary: [
+      "**This is analysis of real signals, not a price prediction.** Riftbound doesn't have the price history for confident forecasting, and we say so on every valuation piece we publish.",
+      "**Short term, the signal we trust is tournament play**, not a chart. A card that's core to the format's highest-share or highest-win-rate deck has real, observable demand pressure right now — win rate and meta share are pulled live from the same tournament decklists our meta page tracks.",
+      "**Long term, the signal is chase-tier scarcity** — Signature, Overnumbered and promo printings, the same structural pattern that made Origins' chase tier what it is today.",
+      "**Both signals carry real, specific risks**: a ban list can erase short-term demand overnight, and a reprint can cool long-term scarcity. We show both sides.",
+    ],
+    faq: [
+      {
+        q: "Are these cards guaranteed to go up in price?",
+        a: "No, and we wouldn't trust a source that told you otherwise. Riftbound doesn't have the price history for confident predictions. What follows is real, current signal — tournament play for the short term, chase-tier scarcity for the long term — not a guarantee about where any specific price goes next.",
+      },
+      {
+        q: "What's the biggest risk to a short-term, meta-driven pick?",
+        a: "A ban. On 24 July 2026, Riot banned three cards from Standard play — Stealthy Pursuer, The Arena's Greatest and Aspirant's Climb — and introduced a separate ban list for Constructed 2v2 starting with Master Yi, Wuju Bladesman. A banned card doesn't disappear, but it loses the demand that comes from being tournament-legal, almost overnight. That risk is unique to an actively developed, competitively played game.",
+      },
+      {
+        q: "What's the biggest risk to a long-term, chase-tier pick?",
+        a: "A reprint. Riftbound has already reprinted functionally identical cards from older sets into newer ones with new art and a new collector number, which can cool demand for the character generally even though it doesn't touch the original printing's own scarcity.",
+      },
+      {
+        q: "How do you decide which cards to feature?",
+        a: "For the short-term section, we pull directly from the same real tournament decklists tracked on our meta decks page, ranked by meta share and win rate — not a personal pick. For the long-term section, we look at chase-tier structure (Signature, Overnumbered, promo) rather than any single card's recent price move, because a single week's percentage change on a thinly-traded chase card is usually noise, not signal — we've seen printings move over 1,000% in a week on a handful of trades, which says more about thin markets than about real demand.",
+      },
+      {
+        q: "Where can I track a specific card instead of guessing?",
+        a: "Set a free price alert and let the number come to you instead of checking manually — the honest alternative to trying to time a market this thin.",
+      },
+    ],
+    browseCta: {
+      href: "/decks",
+      label: "See the real decklists behind this article →",
+      blurb: "Every deck referenced here is a real tournament result, priced card-for-card in your own market.",
+    },
+    embeds: [
+      {
+        title: "Short term: cards from the format's top decks",
+        note: "Pulled live from the same tournament decklists our meta page tracks, ordered by how many decks run them. A card here has real, current tournament demand — not a guess.",
+        metaStaples: { minDecks: 2 },
+        take: 16,
+      },
+      {
+        title: "Long term: Vendetta's own Signature tier",
+        note: "The current set's chase-tier Legends — the printings furthest from settled, since Vendetta is the newest full set in our database and hasn't had Origins' years in market yet.",
+        chaseSet: "VEN",
+        chaseTier: "signature",
+        take: 9,
+      },
+    ],
+    body: `We're not going to tell you which Riftbound cards will be worth more in six months or in five years, because nobody can honestly answer that yet — [we've written at length about why](/blog/are-riftbound-cards-a-real-investment). What we can do is show you the two real, different signals that actually exist today, and let you weigh them yourself: **tournament demand** for the short term, and **chase-tier scarcity** for the long term.
+
+## Short term: follow the decklists, not a chart
+
+A single week's price swing on a thinly-traded card is usually just noise — we've seen chase-tier printings move over 1,000% in a week on a handful of trades, which is a market with almost no depth repricing itself, not a real signal. The signal we actually trust is simpler and checkable: **is this card core to a deck that's winning right now?**
+
+Our [meta decks page](/decks) tracks real tournament decklists, with real meta share and win rate attached to each. Right now, the field's benchmark deck is **Irelia, Blade Dancer** — Tier 1, **10% meta share**, a **52% win rate**. Its Signature printing already reflects that: **Irelia, Fervent (SFD 225★/221)** is US$1,505.59 as of publishing. But the same card, in its ordinary base printing (SFD 057/221), is US$19.31 — a card that's core to the single most-played deck in the format, for the price of a few singles.
+
+The highest win rate in the current top tier isn't Irelia's deck, though — it's **Kennen, Heart of the Tempest**, at a **58% win rate** on **9% meta share**. Its key alternate-art printing, Kennen, Storm of Shuriken (VEN 113A/166), is currently US$12.11 — genuinely cheap, and fully tracked with real listings across all six markets we cover, unlike some of the four-figure chase cards in this piece.
+
+| Deck (legend) | Tier | Meta share | Win rate | Key card | Live price (US) |
+| --- | --- | --- | --- | --- | --- |
+| Irelia, Blade Dancer | 1 | 10% | 52% | Irelia, Fervent (base) | US$19.31 |
+| Kennen, Heart of the Tempest | 2 | 9% | **58%** | Kennen, Storm of Shuriken (alt) | US$12.11 |
+| Master Yi, Wuju Bladesman | 2 | 9% | 47% | Master Yi, Tempered (alt) | US$2.96 |
+
+None of this is a claim that these specific printings will rise. It's a claim that they already have something a randomly chosen cheap card doesn't: **real, active demand from people building decks to win with them today.** If a deck's meta share grows, its cheapest core pieces are usually the first to move — because that's where the volume is.
+
+[[embed:0]]
+
+## Long term: chase-tier scarcity, the pattern Origins already proved
+
+The long-term case doesn't come from meta share at all — it comes from the same structural pattern behind [why Origins cards hold a premium](/blog/why-origins-cards-are-worth-more): a fixed pool of Signature, Overnumbered and promo printings that only gets scarcer as a set ages out of being current.
+
+Vendetta is the newest full set in our database, which makes it the set where this pattern is least settled — its Signature Legends are still finding their real price the way Origins' did years ago. As of publishing, Vendetta's own Signature tier includes **Akali, Rogue Assassin (VEN 189★/166)** at US$2,478.89 and **Jayce, Defender of Tomorrow (VEN 194★/166)** at US$1,144.45 — both champions who are also seeing real tournament play (Akali's package shows up splashed into the Irelia deck; Jayce headlines his own Tier 3 list at a 39% win rate), which is the closest thing to a genuine short-and-long-term overlap in this whole piece.
+
+[[embed:1]]
+
+## Two risks that cut the other way
+
+**Short term: a ban can erase demand overnight.** On 24 July 2026, Riot banned three cards from Standard play — Stealthy Pursuer, The Arena's Greatest and Aspirant's Climb — and separately banned Master Yi, Wuju Bladesman from Constructed 2v2. A card that's core to a top-tier deck today loses that demand instantly if the deck (or the card itself) gets hit. Meta-driven value is real, but it's the least stable kind there is.
+
+**Long term: a reprint can cool scarcity.** Riftbound has already reprinted functionally identical cards from older sets into newer ones. It doesn't erase a specific printing's own collector-number scarcity, but it can soften demand for the character generally if a cheaper, easier-to-find version exists.
+
+## Watch instead of guessing
+
+The honest version of "which cards are going up" is: nobody knows for certain, but real tournament data and real scarcity structure are better signals than a gut feeling or a single week's percentage swing. **[Browse the current meta decks](/decks)** to see the full picture these numbers came from, or **[set a free price alert](/alerts)** on anything specific you're already watching.`,
+  },
   ...SEO_PACK_ARTICLES,
 ];
 
