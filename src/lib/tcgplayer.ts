@@ -133,6 +133,22 @@ export function isNonEnglishProduct(p: TcgProduct): boolean {
   return CJK_RE.test(s) || /\b(chinese|simplified|traditional|japanese|korean)\b/i.test(s);
 }
 
+// TCGplayer's "Riftbound Organized Play Promotional Cards" set \u2014 event-exclusive
+// metal reprints (Prize Wall, Best Of, \u2026) that Riot gives out at tournaments, NOT
+// a booster-pack pull. Its products reuse the SAME collector number as the real
+// card they depict (a metal "Ahri, Nine-Tailed Fox" is still numbered 255/298),
+// so byKey/setFromTotal matching below can't tell a promo apart from the base
+// card by number alone \u2014 and once matched to the same cardId, the "when two
+// products collide, keep the higher market price" rule (built for the English-
+// vs-Chinese-duplicate case) picked the promo's four-figure metal-card price
+// over the real card's every time, turning e.g. a $0.34 common into a "$4,400
+// rare" on /tools/box-ev. Detected by setName, not productName: the SET carries
+// the signal ("Riftbound Organized Play Promotional Cards"), not the card name.
+const PROMO_SET_RE = /organized\s*play|promotional\s*cards?/i;
+export function isPromoProduct(p: TcgProduct): boolean {
+  return PROMO_SET_RE.test(p.setName ?? "");
+}
+
 function searchBody(from: number, productTypeName?: string[]) {
   const term: Record<string, string[]> = { productLineName: [PRODUCT_LINE] };
   if (productTypeName) term.productTypeName = productTypeName;
@@ -298,7 +314,11 @@ export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: Tcg
     if (isNonEnglishProduct(p)) continue; // drop obvious foreign-language products
     const numStr = p.customAttributes?.number;
     const [num, total] = (numStr ?? "").split("/");
-    const sc = setFromTotal(total);
+    // Organized Play promo reprints reuse a real card's collector number but are
+    // a different physical product (see isPromoProduct's doc comment) — never
+    // resolve them via number+set, only via an explicit externalId link, exactly
+    // like the set-less runes a few lines below.
+    const sc = isPromoProduct(p) ? null : setFromTotal(total);
     // Match by set+number first; then by externalId (our TCGplayer-created cards);
     // finally, for set-less numbers ("R04a" runes), by the product's own setName —
     // the only set signal such a printing has.
