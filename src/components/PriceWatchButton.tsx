@@ -83,10 +83,15 @@ export function PriceWatchButton({
         aria-pressed={watching}
         aria-label={label}
         title={hint}
+        // Quiet secondary/outline, never the brand-green primary fill — the
+        // page's retailer buy buttons are the only primary CTA (see
+        // CardMarketSection's buyButtonClass). "Watching" keeps a gold
+        // border/tint as its active-state signal, which reads as a distinct
+        // state, not a second competing primary colour.
         className={
           watching
             ? "btn border border-gold/50 bg-gold/15 text-gold hover:bg-gold/25"
-            : "btn bg-ink-800 text-slate-200 hover:bg-ink-700"
+            : "btn-ghost"
         }
       >
         {bell}

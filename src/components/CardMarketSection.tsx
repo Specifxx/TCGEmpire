@@ -24,14 +24,17 @@ import { isPaidLink } from "@/lib/affiliate";
 // server-only). null = market has live eBay rows or the quota gate doesn't apply.
 export type EbaySearchMap = Record<string, { url: string; label: string; nz: boolean } | null>;
 
-// Brand-coloured buy buttons for the two marketplaces users already recognise by
-// colour — a familiar brand button converts better than a generic green one. Every
-// other (independent-store) row keeps the plain site accent. Reuses the shared
-// `.btn` base (layout/sizing) from globals.css, just swapping the colour utilities.
-// Exported so QuickView's compact price list uses the exact same treatment.
-export function buyButtonClass(retailer: string): string {
-  if (retailer.startsWith("ebay")) return "btn bg-[#0064d2] text-white hover:bg-[#0079e6]";
-  if (retailer.startsWith("tcgplayer")) return "btn bg-[#0a3161] text-white hover:bg-[#124a8f]";
+// ONE visual language for every retailer CTA (UX audit finding: mixing eBay
+// blue / TCGplayer navy / brand green by store read as three different kinds
+// of button doing three different things, when they're all the exact same
+// action — "buy this listing"). Brand-coloured buttons used to reason that a
+// familiar marketplace colour converts better than a generic one; the
+// counter-finding is that a single, consistent, unmissable primary colour is
+// what actually makes the #1 row's CTA read as THE thing to click, on every
+// row, every retailer, every page. Reuses the shared `.btn` base (layout/
+// sizing) from globals.css. Exported so QuickView's compact price list uses
+// the exact same treatment.
+export function buyButtonClass(_retailer: string): string {
   return "btn-primary";
 }
 export function buyButtonLabel(retailer: string): string {
@@ -42,7 +45,7 @@ export function buyButtonLabel(retailer: string): string {
 
 function Metric({ label, value, highlight, sub }: { label: string; value: string; highlight?: boolean; sub?: string }) {
   return (
-    <div className="rounded-lg bg-ink-900 p-3">
+    <div className="rounded-lg bg-ink-900 p-2 sm:p-3">
       <div className="text-[11px] uppercase tracking-wide text-slate-500">{label}</div>
       <div className={`num text-lg font-bold ${highlight ? "text-accent" : "text-white"}`}>{value}</div>
       {sub && <div className="num text-[11px] text-slate-500">{sub}</div>}
@@ -91,7 +94,7 @@ export function CardPriceMetrics({
   );
 
   return (
-    <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <div className="mt-3 grid grid-cols-3 gap-2 sm:mt-4 sm:grid-cols-4 sm:gap-3">
       <Metric
         label={`${m.cheapestFoil != null ? "Standard from" : "Cheapest price"} · ${place}`}
         value={(m.cheapestStandard ?? m.lowest) != null ? fmt((m.cheapestStandard ?? m.lowest)!) : "—"}
@@ -168,8 +171,8 @@ export function CardPriceComparison({
 
   return (
     <>
-      <div className="card-surface mt-6 overflow-hidden">
-        <div className="flex items-center justify-between border-b border-ink-700 p-4">
+      <div className="card-surface mt-4 overflow-hidden sm:mt-6">
+        <div className="flex items-center justify-between border-b border-ink-700 p-3 sm:p-4">
           <h2 className="font-bold text-white">
             Price comparison <span className="text-slate-500">({prices.length})</span>
           </h2>

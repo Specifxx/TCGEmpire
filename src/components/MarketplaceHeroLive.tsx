@@ -103,7 +103,10 @@ export function MarketplaceHeroLive({ cardId, initial }: { cardId: string; initi
             </div>
           )}
         </div>
-        <Link href={href} className="btn-primary shrink-0 whitespace-nowrap">
+        {/* btn-ghost, not btn-primary: this navigates to the marketplace listing
+            view, not a direct buy — the in-stock retailer buy buttons in the
+            comparison table below are the page's only primary CTA. */}
+        <Link href={href} className="btn-ghost shrink-0 whitespace-nowrap">
           {here.length ? "View listings →" : "See marketplace →"}
         </Link>
       </div>

@@ -852,7 +852,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       <CardViewBeacon idOrSlug={card.slug ?? card.id} cardId={card.id} cardName={displayName} rarity={card.rarity} />
-      <nav aria-label="Breadcrumb" className="mb-4 text-sm text-slate-400">
+      <nav aria-label="Breadcrumb" className="mb-2 text-sm text-slate-400 sm:mb-4">
         <ol className="flex flex-wrap items-center gap-1.5">
           <li><Link href="/" className="hover:text-white">Home</Link></li>
           <li className="text-ink-700">/</li>
@@ -864,17 +864,25 @@ export default async function CardPage({ params }: { params: { id: string } }) {
         </ol>
       </nav>
 
-      <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
-        {/* Card visual */}
+      <div className="grid gap-4 lg:gap-6 lg:grid-cols-[320px_1fr]">
+        {/* Card visual. Capped much smaller on phones than desktop (was a flat
+            max-w-[320px] at every breakpoint) — at 390px wide, a 320px-wide
+            5:7 card image ran ~450px tall and, combined with the header stat
+            card below it, pushed the price comparison table's #1 row well
+            past a full mobile viewport before this pass. The image is still
+            the same picture at the same aspect ratio, just smaller until the
+            desktop two-column layout has room to spare. */}
         <div className="lg:sticky lg:top-20 lg:self-start">
-          <div className="card-surface mx-auto max-w-[320px] p-4">
+          <div className="card-surface mx-auto max-w-[140px] p-3 sm:max-w-[220px] sm:p-4 lg:max-w-[320px]">
             <CardImage card={card} full priority className="aspect-[5/7] w-full" />
           </div>
         </div>
 
         {/* Details + price comparison */}
         <div className="min-w-0">
-          <div className="card-surface p-5">
+          {/* p-4 on phones (was a flat p-5) — one more small contributor to the
+              same above-the-fold budget as the smaller image above. */}
+          <div className="card-surface p-4 sm:p-5">
             <div className="flex flex-wrap items-center gap-2">
               <DomainBadge domain={card.domain} href={`/domains/${domainSlug(card.domain)}`} />
               <RarityBadge rarity={card.rarity} />
@@ -885,9 +893,9 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               <CrystalRoseBadge show={isCrystalRose(card.setCode, card.collectorNumber)} />
               <PromoBadge show={card.isPromo} />
             </div>
-            <div className="mt-3 flex items-start justify-between gap-3">
+            <div className="mt-2 flex items-start justify-between gap-3 sm:mt-3">
               <div>
-                <h1 className="text-2xl font-extrabold text-white">{displayName}</h1>
+                <h1 className="text-xl font-extrabold text-white sm:text-2xl">{displayName}</h1>
                 <p className="mt-1 font-mono text-xs text-slate-500">
                   {card.setName} ({card.setCode}) · {card.collectorNumber}
                 </p>
@@ -900,71 +908,21 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             <CardPriceMetrics rows={rows} energyCost={card.energyCost} might={card.might} power={card.power} />
           </div>
 
-          {/* ── OUR OWN ANALYSIS, FIRST ────────────────────────────────────────
-              This section used to sit near the bottom, below an eBay affiliate
-              carousel that was the first substantive element on the page. To an
-              AdSense reviewer opening a random /card/* URL, that reads as an
-              affiliate lander with some data attached — "little or no original
-              content", the objection that no amount of writing further down
-              answers, because nobody scrolls that far to find it.
-              Our writing now leads, and the affiliate block sits below the
-              comparison table, the chart and the FAQ. See docs/adsense-
-              remediation.md § Phase 8. */}
-          <section className="card-surface mt-6 p-5">
-            <h2 className="font-bold text-white">About {card.name}</h2>
-            <div className="mt-3 space-y-3 text-sm leading-relaxed text-slate-300">
-              {about.map((p, i) => (
-                <p key={i}>{p}</p>
-              ))}
-              {card.description && (
-                <p className="text-slate-400">
-                  <KeywordText text={card.description} />
-                </p>
-              )}
-              {card.flavorText && <p className="italic text-slate-500">&ldquo;{card.flavorText}&rdquo;</p>}
-            </div>
-            {tags.length > 0 && (
-              <div className="mt-4 flex flex-wrap gap-2">
-                {tags.map((t) => (
-                  // Real crawlable links to a tag-filtered browse view — internal-link
-                  // distribution + a "same keyword/archetype" hub (was a dead <span>).
-                  <Link
-                    key={t}
-                    href={`/browse?tag=${encodeURIComponent(t)}`}
-                    className="chip bg-ink-800 text-slate-400 transition-colors hover:bg-ink-700 hover:text-slate-200"
-                  >
-                    {t}
-                  </Link>
-                ))}
-              </div>
-            )}
-            {/* Facet cross-links — internal-linking fix for the crawled-not-indexed
-                backlog: every card page now links out to its type, rarity and domain
-                hub, not just its own set/champion clusters. */}
-            {/* Each chip renders ONLY where the facet page it points at actually
-                exists. The type and rarity routes are generated from TYPE_FACETS
-                and RARITY_FACETS, which are built from CARD_TYPES / RARITY_KEYS —
-                so a card carrying a value outside those lists (a Token, today)
-                linked straight to a 404. Found by scripts/content-quality.ts.
-                Resolving through the same lookup the route uses means a new card
-                type can never mint a dead link again, and gains its chip
-                automatically the day a facet is added for it. */}
-            <div className="mt-4 flex flex-wrap gap-2 border-t border-ink-800 pt-4">
-              {typeFacetBySlug(card.type.toLowerCase()) && (
-                <Link href={`/cards/type/${card.type.toLowerCase()}`} className="chip bg-ink-800 text-slate-400 transition-colors hover:bg-ink-700 hover:text-slate-200">
-                  More {card.type} cards →
-                </Link>
-              )}
-              {rarityFacetBySlug(card.rarity.toLowerCase()) && (
-                <Link href={`/cards/rarity/${card.rarity.toLowerCase()}`} className="chip bg-ink-800 text-slate-400 transition-colors hover:bg-ink-700 hover:text-slate-200">
-                  More {card.rarity} cards →
-                </Link>
-              )}
-              <Link href={`/domains/${domainSlug(card.domain)}`} className="chip bg-ink-800 text-slate-400 transition-colors hover:bg-ink-700 hover:text-slate-200">
-                More {card.domain} cards →
-              </Link>
-            </div>
-          </section>
+          {/* ── PRICE COMPARISON LEADS, ABOVE THE FOLD ─────────────────────────
+              Reordered 2026-08 (UX audit: qualified retailer click-through
+              rate). The #1 in-stock retailer row must be visible without
+              scrolling — that's the whole point of a price-comparison site,
+              and it used to sit below an entire "About" essay + empty-state
+              fallback + Marketplace hero. Moving it up front is a REORDER, not
+              a content deletion: About/FAQ/prices-by-market/the affiliate eBay
+              block are all still in the DOM a little further down (rankings
+              depend on content EXISTING in the DOM, not on where — see
+              docs/adsense-remediation.md § Phase 8 for the original reasoning
+              behind writing this page's own analysis instead of leading with
+              an affiliate carousel, which still holds: our own writing is
+              still well ahead of the affiliate eBay block at the very
+              bottom, just after — not before — the thing most visitors
+              actually came for. */}
 
           {/* No live market anywhere: say so plainly, then be genuinely useful —
               the other printings that ARE priced, the set and domain to browse
@@ -1022,19 +980,12 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             </section>
           )}
 
-          {/* RiftCompare Marketplace hero — the main attention-grab, shown only
-              when this card actually has active P2P listings. Sits above the
-              store price comparison so a marketplace deal is the first thing a
-              buyer sees when one exists. */}
-          <MarketplaceHeroBlock cardId={card.id} cardName={displayName} />
-
           {/* Price comparison + eBay fallback + contextual affiliate banners —
               everything that varies with the visitor's market lives in the client
               section so the route itself stays cookie-free and ISR-cacheable. An
               explicit H2 here (rather than just the component's own internal
-              heading) gives this block a crawlable section signal distinct from
-              "About" above it. */}
-          <section className="mt-6">
+              heading) gives this block its own crawlable section signal. */}
+          <section className="mt-4 sm:mt-6">
             <h2 className="sr-only">Price history &amp; where to buy {card.name}</h2>
             <CardPriceComparison
               rows={rows}
@@ -1047,6 +998,116 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                 collected on the AU baseline market). */}
             <PriceHistoryChart cardId={card.id} />
           </section>
+
+          {/* RiftCompare Marketplace hero — the main attention-grab, shown only
+              when this card actually has active P2P listings. Moved BELOW the
+              store price comparison (was above it): the store table is the
+              proven, always-populated primary path, and a P2P listing (when
+              one exists) is the secondary upsell beneath it, not competing
+              with it for the first thing a buyer sees. */}
+          <MarketplaceHeroBlock cardId={card.id} cardName={displayName} />
+
+          {/* ── OUR OWN ANALYSIS ────────────────────────────────────────────
+              Still leads over the FAQ, the prices-by-market table and — most
+              importantly — the affiliate eBay block at the very bottom of the
+              column, so an AdSense reviewer (or a reader) hits real, original
+              writing well before any affiliate content. See docs/adsense-
+              remediation.md § Phase 8. */}
+          <section className="card-surface mt-6 p-5">
+            <h2 className="font-bold text-white">About {card.name}</h2>
+            <div className="mt-3 space-y-3 text-sm leading-relaxed text-slate-300">
+              {about.map((p, i) => (
+                <p key={i}>{p}</p>
+              ))}
+              {card.description && (
+                <p className="text-slate-400">
+                  <KeywordText text={card.description} />
+                </p>
+              )}
+              {card.flavorText && <p className="italic text-slate-500">&ldquo;{card.flavorText}&rdquo;</p>}
+            </div>
+            {tags.length > 0 && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {tags.map((t) => (
+                  // Real crawlable links to a tag-filtered browse view — internal-link
+                  // distribution + a "same keyword/archetype" hub (was a dead <span>).
+                  <Link
+                    key={t}
+                    href={`/browse?tag=${encodeURIComponent(t)}`}
+                    className="chip bg-ink-800 text-slate-400 transition-colors hover:bg-ink-700 hover:text-slate-200"
+                  >
+                    {t}
+                  </Link>
+                ))}
+              </div>
+            )}
+            {/* Facet cross-links — internal-linking fix for the crawled-not-indexed
+                backlog: every card page now links out to its type, rarity and domain
+                hub, not just its own set/champion clusters. */}
+            {/* Each chip renders ONLY where the facet page it points at actually
+                exists. The type and rarity routes are generated from TYPE_FACETS
+                and RARITY_FACETS, which are built from CARD_TYPES / RARITY_KEYS —
+                so a card carrying a value outside those lists (a Token, today)
+                linked straight to a 404. Found by scripts/content-quality.ts.
+                Resolving through the same lookup the route uses means a new card
+                type can never mint a dead link again, and gains its chip
+                automatically the day a facet is added for it. */}
+            <div className="mt-4 flex flex-wrap gap-2 border-t border-ink-800 pt-4">
+              {typeFacetBySlug(card.type.toLowerCase()) && (
+                <Link href={`/cards/type/${card.type.toLowerCase()}`} className="chip bg-ink-800 text-slate-400 transition-colors hover:bg-ink-700 hover:text-slate-200">
+                  More {card.type} cards →
+                </Link>
+              )}
+              {rarityFacetBySlug(card.rarity.toLowerCase()) && (
+                <Link href={`/cards/rarity/${card.rarity.toLowerCase()}`} className="chip bg-ink-800 text-slate-400 transition-colors hover:bg-ink-700 hover:text-slate-200">
+                  More {card.rarity} cards →
+                </Link>
+              )}
+              <Link href={`/domains/${domainSlug(card.domain)}`} className="chip bg-ink-800 text-slate-400 transition-colors hover:bg-ink-700 hover:text-slate-200">
+                More {card.domain} cards →
+              </Link>
+            </div>
+          </section>
+
+          <section className="card-surface mt-6 p-5">
+            <h2 className="font-bold text-white">Frequently asked questions</h2>
+            <dl className="mt-3 space-y-4">
+              {faqs.map((f) => (
+                <div key={f.q}>
+                  <dt className="font-semibold text-white">{f.q}</dt>
+                  <dd className="mt-1 text-sm leading-relaxed text-slate-400">{f.a}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+
+          {/* Cross-market prices — every market's listings are ALREADY on this
+              page (rows carries all six, no country filter server-side; see the
+              `rows` comment above), so this costs zero extra queries. Previously
+              this data only ever reached the reader as prose inside the "About"
+              narrative above — never a navigable, at-a-glance table. Only
+              markets with an actual live listing render. */}
+          {marketPrices.length > 1 && (
+            <section className="card-surface mt-6 p-5">
+              <h2 className="font-bold text-white">{card.name} prices by market</h2>
+              <ul className="mt-3 divide-y divide-ink-800">
+                {marketPrices.map(({ info, view }) => (
+                  <li key={info.code} className="flex items-center justify-between gap-3 py-2 text-sm">
+                    <span className="flex items-center gap-2 text-slate-300">
+                      <span aria-hidden>{info.flag}</span>
+                      {info.place}
+                    </span>
+                    <span className="num text-white">
+                      {formatMoney(view.lowest!, view.currency)}
+                      <span className="ml-1.5 text-xs text-slate-500">
+                        · {view.storeCount} {view.storeCount === 1 ? "store" : "stores"}
+                      </span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           {/* Conversion island (client → route stays ISR): watch-this-price email
               capture + a Value Finder teaser for non-members. */}
@@ -1101,46 +1162,6 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               </div>
             </dl>
           </section>
-
-          <section className="card-surface mt-6 p-5">
-            <h2 className="font-bold text-white">Frequently asked questions</h2>
-            <dl className="mt-3 space-y-4">
-              {faqs.map((f) => (
-                <div key={f.q}>
-                  <dt className="font-semibold text-white">{f.q}</dt>
-                  <dd className="mt-1 text-sm leading-relaxed text-slate-400">{f.a}</dd>
-                </div>
-              ))}
-            </dl>
-          </section>
-
-          {/* Cross-market prices — every market's listings are ALREADY on this
-              page (rows carries all six, no country filter server-side; see the
-              `rows` comment above), so this costs zero extra queries. Previously
-              this data only ever reached the reader as prose inside the "About"
-              narrative below — never a navigable, at-a-glance table. Only
-              markets with an actual live listing render. */}
-          {marketPrices.length > 1 && (
-            <section className="card-surface mt-6 p-5">
-              <h2 className="font-bold text-white">{card.name} prices by market</h2>
-              <ul className="mt-3 divide-y divide-ink-800">
-                {marketPrices.map(({ info, view }) => (
-                  <li key={info.code} className="flex items-center justify-between gap-3 py-2 text-sm">
-                    <span className="flex items-center gap-2 text-slate-300">
-                      <span aria-hidden>{info.flag}</span>
-                      {info.place}
-                    </span>
-                    <span className="num text-white">
-                      {formatMoney(view.lowest!, view.currency)}
-                      <span className="ml-1.5 text-xs text-slate-500">
-                        · {view.storeCount} {view.storeCount === 1 ? "store" : "stores"}
-                      </span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
 
           {/* Tool strip — the actual "what do I do with this price" next step.
               Every one of these tools already existed; none was linked from a

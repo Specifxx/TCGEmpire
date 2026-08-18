@@ -31,7 +31,10 @@ export function CardConversionCta({ cardId }: { cardId: string }) {
         </p>
       </div>
       <div className="flex shrink-0 flex-wrap items-center gap-2">
-        <button onClick={watch} className="btn-primary text-sm">
+        {/* btn-ghost, not btn-primary: this is another "watch this price"
+            affordance (same family as PriceWatchButton above it on the page) —
+            the in-stock retailer buy buttons are the page's only primary CTA. */}
+        <button onClick={watch} className="btn-ghost text-sm">
           {watching ? "✓ Watching" : "Email me when it drops"}
         </button>
         {!premium && (

@@ -303,7 +303,10 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                 </div>
               ) : (
                 <>
-                  <button onClick={addToCollection} disabled={coll === "saving"} className="btn-primary flex-1 justify-center text-sm">
+                  {/* btn-ghost, not btn-primary: the in-stock retailer buy buttons
+                      above are the page's only primary (filled) CTA — this is a
+                      secondary action and shouldn't compete with them visually. */}
+                  <button onClick={addToCollection} disabled={coll === "saving"} className="btn-ghost flex-1 justify-center text-sm">
                     {coll === "saving" ? "Adding…" : coll === "error" ? "Try again" : "＋ Add to collection"}
                   </button>
                   <button
