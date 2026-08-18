@@ -55,6 +55,96 @@ function Metric({ label, value, highlight, sub }: { label: string; value: string
   );
 }
 
+// Out-of-stock stores, closed by default behind a native <details> disclosure.
+// A store's last-listed price (the "$19 ghost anchor under a $20 live price")
+// trained visitors to wait for a price that isn't actually available — so the
+// list, and every price/name in it, is not rendered into the DOM at all until
+// a visitor opens it (not just visually hidden: `open &&` below unmounts the
+// content, it isn't CSS display:none over text that's still there to read).
+// A real <details>/<summary> rather than a styled button+state pair: native
+// keyboard toggling and an `open` attribute for free, no ARIA to hand-roll.
+//
+// Module-scope, not declared inside CardPriceComparison's render body: a
+// component defined inline in a parent's render gets a new identity every
+// render, forcing React to unmount/remount it — which would silently reset
+// this disclosure's own `open` state back to closed on every re-render of
+// the parent (country switch, `mounted` flip, anything). The eBay panel's
+// countdown-driven auctions view hit the identical bug from the identity
+// side rather than the state side — same root cause, opposite symptom.
+function OutOfStockDisclosure({
+  oosList,
+  country,
+  displayName,
+  fmt,
+  mounted,
+}: {
+  oosList: ComputedRow[];
+  country: string;
+  displayName: string;
+  fmt: (cents: number) => string;
+  mounted: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  if (oosList.length === 0) return null;
+  return (
+    <details className="border-t border-ink-800" onToggle={(e) => setOpen(e.currentTarget.open)}>
+      <summary className="flex cursor-pointer list-none items-center justify-between bg-ink-900/40 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 marker:content-none hover:text-slate-300">
+        <span>
+          {oosList.length} out-of-stock {oosList.length === 1 ? "store" : "stores"}
+        </span>
+        <span aria-hidden className="text-slate-600 transition-transform open:rotate-90">▸</span>
+      </summary>
+      {open && (
+        <ul className="divide-y divide-ink-800">
+          {oosList.map((p) => (
+            <li key={p.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 p-3 opacity-60 sm:flex-nowrap sm:p-4">
+              <div className="w-5 shrink-0 text-center text-slate-600 sm:w-6">—</div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate font-semibold text-slate-300">{p.retailerName}</div>
+                <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
+                  {(() => {
+                    const grade = normaliseCondition(p.condition);
+                    return grade ? (
+                      <span className="chip bg-ink-800 text-slate-400" title={`Store listed as "${p.condition}"`}>
+                        {CONDITIONS[grade].label}
+                      </span>
+                    ) : (
+                      p.condition && <span className="chip bg-ink-800 text-slate-400">{p.condition}</span>
+                    );
+                  })()}
+                  <span className="text-slate-500">● Out of stock</span>
+                  {mounted && <span>last seen {timeAgo(p.lastSeen)}</span>}
+                </div>
+              </div>
+              <div className="shrink-0 text-right">
+                <div className="num text-lg font-bold text-slate-400 line-through">{fmt(p.priceCents)}</div>
+              </div>
+              {/* Plain text link, not a button — an out-of-stock row isn't a
+                  primary CTA (see the WS1 CTA-hierarchy note above); this is
+                  the site's only non-btn OutboundLink usage, deliberately. */}
+              <OutboundLink
+                href={p.buyHref}
+                retailer={p.retailer}
+                country={country}
+                cardName={displayName}
+                price={p.priceCents / 100}
+                pageType="card_detail"
+                inStock={false}
+                variant={p.isFoil ? "foil" : "nonfoil"}
+                condition={p.condition}
+                surface="out_of_stock"
+                className="order-last w-full basis-full text-center text-xs font-semibold text-slate-400 underline decoration-dotted underline-offset-2 hover:text-slate-200 sm:order-none sm:w-auto sm:basis-auto"
+              >
+                Check →
+              </OutboundLink>
+            </li>
+          ))}
+        </ul>
+      )}
+    </details>
+  );
+}
+
 // Headline metrics under the card title: cheapest standard/foil, store count, and
 // the card's play stats (shown when there's room, mirroring the original layout).
 export function CardPriceMetrics({
@@ -209,13 +299,16 @@ export function CardPriceComparison({
     }
     if (list.length === 0) {
       return (
-        <div className="p-6 text-center text-sm text-slate-400">
-          <p className="font-semibold text-white">Currently sold out everywhere</p>
-          <p className="mt-1">
-            {oosList.length} {oosList.length === 1 ? "store has" : "stores have"} listed this{" "}
-            {isDefault ? "card" : `${noun} copy`} but it&apos;s out of stock right now. See them below.
-          </p>
-        </div>
+        <>
+          <div className="p-6 text-center text-sm text-slate-400">
+            <p className="font-semibold text-white">Currently sold out everywhere</p>
+            <p className="mt-1">
+              {oosList.length} {oosList.length === 1 ? "store has" : "stores have"} listed this{" "}
+              {isDefault ? "card" : `${noun} copy`} but it&apos;s out of stock right now. See them below.
+            </p>
+          </div>
+          <OutOfStockDisclosure oosList={oosList} country={country} displayName={displayName} fmt={fmt} mounted={mounted} />
+        </>
       );
     }
     return (
@@ -316,55 +409,7 @@ export function CardPriceComparison({
           ))}
         </ul>
 
-        {oosList.length > 0 && (
-          <div className="border-t border-ink-800">
-            <div className="bg-ink-900/40 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Out of stock ({oosList.length}) · last listed price
-            </div>
-            <ul className="divide-y divide-ink-800">
-              {oosList.map((p) => (
-                <li key={p.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 p-3 opacity-60 sm:flex-nowrap sm:p-4">
-                  <div className="w-5 shrink-0 text-center text-slate-600 sm:w-6">—</div>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate font-semibold text-slate-300">{p.retailerName}</div>
-                    <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
-                      {(() => {
-                        const grade = normaliseCondition(p.condition);
-                        return grade ? (
-                          <span className="chip bg-ink-800 text-slate-400" title={`Store listed as "${p.condition}"`}>
-                            {CONDITIONS[grade].label}
-                          </span>
-                        ) : (
-                          p.condition && <span className="chip bg-ink-800 text-slate-400">{p.condition}</span>
-                        );
-                      })()}
-                      <span className="text-slate-500">● Out of stock</span>
-                      {mounted && <span>last seen {timeAgo(p.lastSeen)}</span>}
-                    </div>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <div className="num text-lg font-bold text-slate-400 line-through">{fmt(p.priceCents)}</div>
-                  </div>
-                  <OutboundLink
-                    href={p.buyHref}
-                    retailer={p.retailer}
-                    country={country}
-                    cardName={displayName}
-                    price={p.priceCents / 100}
-                    pageType="card_detail"
-                    inStock={false}
-                    variant={p.isFoil ? "foil" : "nonfoil"}
-                    condition={p.condition}
-                    surface="out_of_stock"
-                    className="btn-ghost order-last w-full basis-full justify-center sm:order-none sm:w-auto sm:basis-auto"
-                  >
-                    Check →
-                  </OutboundLink>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <OutOfStockDisclosure oosList={oosList} country={country} displayName={displayName} fmt={fmt} mounted={mounted} />
       </>
     );
   }
