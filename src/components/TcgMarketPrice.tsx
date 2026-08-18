@@ -22,10 +22,15 @@ export function TcgMarketPrice({
   usdCents,
   usdCentsFoil,
   href,
+  // Defaults ON — an affiliate link must never render without a visible
+  // disclosure beside it. Pass false ONLY where a caller renders its own
+  // adjacent disclosure covering this block (see CardMarketSection).
+  disclosure = true,
 }: {
   usdCents: number | null; // standard (non-foil) TCGplayer market price, USD cents
   usdCentsFoil: number | null; // foil market price, USD cents (if the card has a foil)
   href: string | null; // affiliate-wrapped TCGplayer product URL
+  disclosure?: boolean;
 }) {
   const { country, currency: cur } = useCountry();
   if (usdCents == null && usdCentsFoil == null) return null;
@@ -70,7 +75,7 @@ export function TcgMarketPrice({
           TCGplayer&apos;s US market price, converted to {cur} at an approximate rate. A reference value —
           TCGplayer may not ship to your country.
         </p>
-        {href && <AffiliateDisclosure partner="tcgplayer" tight />}
+        {href && disclosure && <AffiliateDisclosure partner="tcgplayer" tight />}
       </div>
       {href && (
         <OutboundLink

@@ -26,6 +26,7 @@ export function PriceChart({
   compact = false,
   fmt,
   upIsGood = false,
+  nowOverrideCents,
 }: {
   points: PricePoint[];
   currency?: string;
@@ -34,6 +35,22 @@ export function PriceChart({
   // For a market INDEX, rising = good = green (stock convention). Default false keeps
   // the per-card buyer convention (rising price = bad for the buyer = red).
   upIsGood?: boolean;
+  /**
+   * The LIVE cheapest in-stock price, when the caller has one (the card page
+   * and QuickView both do — see CardPriceMetrics/computeMarket). "Now" is a
+   * daily import snapshot at least several hours old, sourced from a
+   * different table than the header's cheapest-price figure — the two could
+   * quietly disagree ("Now US$16.50" next to a header reading "US$20.00")
+   * whenever a listing changed between yesterday's import and this page
+   * load. When this is provided, "Now" shows THIS number instead of the
+   * chart's own last data point, so the two headline figures on the page
+   * are always sourced from the exact same computeMarket() call and can
+   * never contradict each other. The plotted line/dots stay the genuine
+   * historical series either way — only the "Now" stat text changes; the
+   * "▲/▼ X%" trend arrow still describes real tracked history, not a
+   * fabricated data point.
+   */
+  nowOverrideCents?: number | null;
 }) {
   const label = fmt ?? ((v: number) => formatMoney(v, currency));
   const [range, setRange] = useState<RangeKey>("ALL");
@@ -72,6 +89,11 @@ export function PriceChart({
 
   const first = data[0].v;
   const last = data[n - 1].v;
+  // The value the "Now" stat actually displays — see nowOverrideCents' doc
+  // comment. Trend math (delta/pct/up/flat) deliberately still compares
+  // against `last`, the real last tracked snapshot: that arrow describes
+  // history, not today's live price.
+  const nowValue = nowOverrideCents ?? last;
   const delta = last - first;
   const pct = first > 0 ? Math.round((delta / first) * 100) : 0;
   const up = delta > 0;
@@ -95,7 +117,7 @@ export function PriceChart({
       {/* Stats header */}
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
-          <span className="text-white">Now <span className="font-bold text-accent">{label(last)}</span></span>
+          <span className="text-white">Now <span className="font-bold text-accent">{label(nowValue)}</span></span>
           <span className="text-slate-500">Low {label(min)}</span>
           <span className="text-slate-500">High {label(max)}</span>
           {!flat && (

@@ -5,6 +5,7 @@ import { useCountry } from "@/components/CountryProvider";
 import { PriceChart } from "@/components/PriceChart";
 import { currencyOf, type Country } from "@/lib/country";
 import { gbpCentsToEur } from "@/lib/fx";
+import { computeMarket, type MarketRow } from "@/lib/market-rows";
 import type { PricePoint } from "@/lib/price-history";
 
 // Steam-style localized price history using REAL per-market data. The importer records
@@ -17,10 +18,17 @@ export function LocalizedPriceHistory({
   cardId,
   initialPoints,
   initialCountry,
+  rows,
 }: {
   cardId: string;
   initialPoints: PricePoint[];
   initialCountry: Country;
+  /** Every market's listings — same data CardPriceMetrics/CardPriceComparison
+   *  compute from, so "Now" below can read the identical live cheapest price
+   *  instead of the daily-import snapshot the history series is built from.
+   *  Optional so QuickView's compact chart (no full rows payload) keeps
+   *  working unaffected. */
+  rows?: MarketRow[];
 }) {
   const { country, isEurDisplay } = useCountry();
   const [points, setPoints] = useState<PricePoint[]>(initialPoints);
@@ -56,6 +64,19 @@ export function LocalizedPriceHistory({
   const currency = showEur ? "EUR" : currencyOf(loaded);
   const chartPoints = useMemo(() => (showEur ? points.map((p) => ({ ...p, v: gbpCentsToEur(p.v) })) : points), [points, showEur]);
 
+  // Only trust the live figure once the chart has actually caught up to this
+  // market (loaded === country) — mid-fetch, `chartPoints` is still the OLD
+  // market's series, and computeMarket(rows, country) would already be in
+  // the NEW market's currency, a mismatch worse than the one this exists to
+  // fix. Same raw-cents-in-the-market's-native-currency convention as
+  // `points`, so it gets the identical GBP→EUR conversion when showEur.
+  const liveLowestCents = useMemo(() => {
+    if (!rows || loaded !== country) return null;
+    const lowest = computeMarket(rows, country).lowest;
+    if (lowest == null) return null;
+    return showEur ? gbpCentsToEur(lowest) : lowest;
+  }, [rows, country, loaded, showEur]);
+
   return (
     <section className="card-surface mt-6 p-5">
       <h2 className="flex items-center gap-2 font-bold text-white">
@@ -66,7 +87,7 @@ export function LocalizedPriceHistory({
         </span>
       </h2>
       <div className="mt-3">
-        <PriceChart points={chartPoints} currency={currency} />
+        <PriceChart points={chartPoints} currency={currency} nowOverrideCents={liveLowestCents} />
       </div>
     </section>
   );

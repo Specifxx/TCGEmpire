@@ -356,7 +356,16 @@ export function CardPriceComparison({
             buttons it describes — not in the page footer. Wording names both
             partners explicitly and uses slate-400 for legibility (the old
             slate-600 "may earn a commission on some links" line was both vague
-            and below contrast guidance). */}
+            and below contrast guidance).
+            This is the ONE canonical disclosure for the whole price-comparison
+            + TCGplayer-reference + ad-banner cluster below — TcgMarketPrice,
+            TcgplayerAd and EbayAd all render in immediate succession after
+            this and each carries its own disclosure prop, so they're told to
+            stay quiet here rather than stacking 3-4 copies of the same
+            "may earn a commission" line in one screenful. (The separate eBay
+            listings/graded/auctions panel further down the page keeps its own
+            — it's a genuinely distinct affiliate surface, not adjacent to
+            this one.) */}
         <div className="border-t border-ink-800 p-3 text-center">
           <p className="text-[11px] text-slate-500">
             Prices are collected from public store listings and may change.
@@ -366,8 +375,9 @@ export function CardPriceComparison({
       </div>
 
       {/* TCGplayer market price (reference, currency-converted) — rendered below the
-          buyable table so it still appears on cards with no local listings. */}
-      {tcg && <TcgMarketPrice usdCents={tcg.usdCents} usdCentsFoil={tcg.usdCentsFoil} href={tcg.href} />}
+          buyable table so it still appears on cards with no local listings.
+          disclosure=false: covered by the canonical disclosure above. */}
+      {tcg && <TcgMarketPrice usdCents={tcg.usdCents} usdCentsFoil={tcg.usdCentsFoil} href={tcg.href} disclosure={false} />}
 
       {/* eBay fallback — shown whenever this market has no live eBay row for the
           card, so a thin market is never a dead end (mirrors the NZ behaviour). */}
@@ -404,12 +414,14 @@ export function CardPriceComparison({
       )}
 
       {/* TCGplayer affiliate banner — pays commission on click-through
-          purchases, so it gets the prime spot under the price table. */}
-      <TcgplayerAd size="rect" mobile="rect" country={country} className="mt-6" />
+          purchases, so it gets the prime spot under the price table.
+          disclosure=false: covered by the canonical disclosure above. */}
+      <TcgplayerAd size="rect" mobile="rect" country={country} className="mt-6" disclosure={false} />
 
       {/* Contextual eBay banner — searches for THIS card (new, used & graded);
-          the most relevant eBay placement converts far better than a generic one. */}
-      <EbayAd size="leaderboard" country={country} query={ebayQuery} className="mt-4" />
+          the most relevant eBay placement converts far better than a generic one.
+          disclosure=false: covered by the canonical disclosure above. */}
+      <EbayAd size="leaderboard" country={country} query={ebayQuery} className="mt-4" disclosure={false} />
     </>
   );
 }

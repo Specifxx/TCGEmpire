@@ -97,15 +97,26 @@ export function CountryProvider({ initial, children }: { initial: Country; child
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (cancelled || !d?.country) return;
+        // A manual pick (setCountry, or the signed-in preferredCountry sync)
+        // may have landed while this fetch was in flight — re-check the
+        // cookie now rather than trusting the closure's stale `cookieCountry`,
+        // so a slow geo response can't silently clobber a choice the visitor
+        // already made (was overwriting country AND currency unconditionally
+        // here, e.g. "picked US, geo resolves after and snaps it back to a
+        // detected SG IP" — currency symbol flips to S$ under a US selection).
+        if (readCookie(COUNTRY_COOKIE)) return;
         const geo = normalizeCountry(d.country);
         setState((prev) => (geo !== prev ? geo : prev));
-        if (typeof d.currency === "string") {
-          setCurrency(d.currency);
-          if (geo === "UK") writeCookie(EUR_DISPLAY_COOKIE, d.currency === "EUR" ? "EUR" : "GBP");
-        }
-        // Backfill the country cookie too if this was a first-ever visit, so the
-        // next server-rendered page load (no client JS needed) already agrees.
-        if (!cookieCountry) writeCookie(COUNTRY_COOKIE, geo);
+        // Derive from the market registry rather than trusting d.currency
+        // verbatim — one canonical mapping, not a second source of truth that
+        // could drift from COUNTRIES if the API's own logic ever changes.
+        const geoCurrency = geo === "UK" && d.currency === "EUR" ? "EUR" : COUNTRIES[geo].currency;
+        setCurrency(geoCurrency);
+        if (geo === "UK") writeCookie(EUR_DISPLAY_COOKIE, geoCurrency === "EUR" ? "EUR" : "GBP");
+        // Backfill the country cookie so the next server-rendered page load
+        // (no client JS needed) already agrees, and so a second in-flight
+        // effect (e.g. a fast remount) won't re-apply a stale geo guess.
+        writeCookie(COUNTRY_COOKIE, geo);
       })
       .catch(() => {
         /* geo is best-effort — the AU default stands */

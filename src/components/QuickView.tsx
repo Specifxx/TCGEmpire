@@ -21,7 +21,6 @@ import { timeAgo } from "@/lib/format";
 import { buyButtonClass, buyButtonLabel } from "./CardMarketSection";
 import { useCountry } from "./CountryProvider";
 import { PriceChart } from "./PriceChart";
-import { AiInsight } from "./AiInsight";
 import type { PricePoint } from "@/lib/price-history";
 
 interface RetailerPrice {
@@ -461,14 +460,16 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                 <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
                   Price history <span className="font-normal normal-case text-slate-600">· {country}</span>
                 </div>
-                <PriceChart points={history} currency={currency} compact />
+                {/* nowOverrideCents: the same "Now disagrees with the header
+                    cheapest price" fix as the full card page — history is a
+                    daily import snapshot, inStock[0] is this modal's own
+                    live cheapest row, already sorted price-ascending above. */}
+                <PriceChart points={history} currency={currency} compact nowOverrideCents={inStock[0]?.priceCents ?? null} />
               </div>
             )}
 
-            {/* AI Tips — funny buy/hold/wait take */}
-            <div className="mt-4">
-              <AiInsight cardId={card.id} compact />
-            </div>
+            {/* AI Tips is gated off every purchase surface (this modal has a
+                buy button above) — same reasoning as the full card page. */}
           </div>
         </div>
       </div>

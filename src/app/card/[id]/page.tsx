@@ -24,7 +24,6 @@ import { SITE_URL } from "@/lib/site";
 import { PriceHistoryChart } from "@/components/PriceHistoryChart";
 import { getPriceHistory } from "@/lib/price-history";
 import { CardConversionCta } from "@/components/CardConversionCta";
-import { AiInsight } from "@/components/AiInsight";
 import { CardPriceMetrics, CardPriceComparison, type EbaySearchMap } from "@/components/CardMarketSection";
 import { MarketplaceHeroBlock } from "@/components/MarketplaceHeroBlock";
 import { getActiveListingsForCard } from "@/lib/marketplace";
@@ -45,7 +44,6 @@ import {
   PRINTING_DISPLAY,
   type NarrativeMarket,
 } from "@/lib/content/card-narrative";
-import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
 import { guidesForCard } from "@/lib/content/related-guides";
 
 // REAL ISR: no cookie/header reads anywhere in this route's tree — the page is
@@ -996,7 +994,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
 
             {/* Price-history chart — free for everyone (AU history; the series is
                 collected on the AU baseline market). */}
-            <PriceHistoryChart cardId={card.id} />
+            <PriceHistoryChart cardId={card.id} rows={rows} />
           </section>
 
           {/* RiftCompare Marketplace hero — the main attention-grab, shown only
@@ -1115,17 +1113,14 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             <CardConversionCta cardId={card.id} />
           </div>
 
-          {/* AI Tips — hidden entirely while the AdSense review is open.
-              It is explicitly AI-labelled, it comments on price direction, and it
-              reads as quasi-financial advice: three separate things a reviewer
-              marks down, on the site's highest-volume template. Restored by
-              setting NEXT_PUBLIC_ADSENSE_REVIEW_MODE=false after approval.
-              See docs/adsense-remediation.md § Phase 9. */}
-          {!ADSENSE_REVIEW_MODE && (
-            <section className="card-surface mt-6 p-5">
-              <AiInsight cardId={card.id} />
-            </section>
-          )}
+          {/* AI Tips is suppressed on this page — not just while the AdSense
+              review is open (see docs/adsense-remediation.md § Phase 9), but
+              permanently: this template's whole point is the buy button in
+              the price table above, and quasi-financial "AI thinks the price
+              will drop" copy sitting next to a purchase CTA undercuts the
+              action we want. AiInsight itself is untouched and still used
+              elsewhere — it's just gated off every surface with a buy button
+              (this page and QuickView). */}
 
           {/* In-content ad — below the price table the visitor came for, so it never
               gets between them and the prices. Suppressed entirely on a page with
