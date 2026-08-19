@@ -128,18 +128,21 @@ export const PORTFOLIO_FREE = true;
 //   1. SIGNED OUT — the whole public site: search, browse, card/set/store pages,
 //      the deck builder, trade calculator, box EV, sealed prices, the index and
 //      movers. No wall anywhere.
-//   2. ACCOUNT (free, `hasAccount`) — the above PLUS the two power tools that are
-//      the reason to sign up: the Bulk Pricer and the Best Basket optimiser, on
-//      top of watchlists, price alerts, the portfolio and the marketplace.
+//   2. ACCOUNT (free, `hasAccount`) — the above PLUS watchlists, price alerts,
+//      the portfolio and the marketplace.
 //   3. PREMIUM (paid, `isPremium`) — the above plus Value Finder, Rising Cards,
-//      the full Deal Finder list, the reduced marketplace fee and no ads.
+//      the full Deal Finder list, the Bulk Pricer, the Best Basket optimiser,
+//      the reduced marketplace fee and no ads.
 //
-// Tier 2 replaced a "free week of Premium on signup" comp. That comp handed new
-// accounts the PAID tier and then silently withdrew it a week later, which is a
-// worse first experience than permanently owning two genuinely useful tools —
-// and it gave signup no durable payoff once the week lapsed. The grant machinery
-// (and its signup email) is gone rather than switched off by env, so a stale
-// EARLY_PREMIUM_DAYS in a deploy environment can't quietly resurrect it.
+// The Bulk Pricer and Best Basket optimiser moved here FROM tier 2 (a deliberate
+// reversal — they used to be "the reason to sign up" for a free account, per an
+// earlier version of this comment). Tier 2 replaced a "free week of Premium on
+// signup" comp that handed new accounts the PAID tier and silently withdrew it a
+// week later — that reasoning (a durable free payoff beats a comp that expires)
+// still holds for watchlists/alerts/portfolio/marketplace, which stay free. The
+// grant machinery for the old comp (and its signup email) is gone rather than
+// switched off by env, so a stale EARLY_PREMIUM_DAYS in a deploy environment
+// can't quietly resurrect it.
 export function hasAccount(user: { id: string } | null | undefined): boolean {
   return !!user;
 }

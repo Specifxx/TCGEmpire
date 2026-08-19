@@ -106,7 +106,7 @@ export async function GET(req: Request, { params }: { params: { provider: string
   void claimAlertsForUser(user.id, user.email).catch(() => {});
   if (isNew) {
     // First-ever sign-in: credit any referrer. New accounts get the ACCOUNT tier
-    // (Bulk Pricer + Best Basket + alerts + portfolio + marketplace) immediately
+    // (alerts + portfolio + marketplace) immediately
     // by virtue of existing — there is no signup-time Premium comp to apply.
     await applyReferral(user.id).catch(() => {});
   }

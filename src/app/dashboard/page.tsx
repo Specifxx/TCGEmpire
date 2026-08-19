@@ -17,6 +17,7 @@ export const metadata: Metadata = {
 };
 
 const TOOLS = [
+  { title: "Bulk Pricer", desc: "Price a whole want-list or trade pile in one paste.", href: "/bulk-pricer", icon: "📋" },
   { title: "Best Basket", desc: "The cheapest multi-store cart for a whole deck list.", href: "/tools/best-basket", icon: "🧺" },
   { title: "Value Finder", desc: "Cards trading below their recent average — undervalued picks.", href: "/tools/value-finder", icon: "🔎" },
   { title: "Rising Cards", desc: "Cards ranked by demand + price-timing signals — likely to go up soon.", href: "/tools/rising", icon: "🚀" },

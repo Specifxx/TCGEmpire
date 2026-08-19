@@ -11,7 +11,7 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: { absolute: "Free Riftbound TCG Tools & Calculators | RiftCompare" },
   description:
-    "Every RiftCompare tool in one place: box EV, best basket, deck and trade calculators, plus the Premium Deal Finder and value screeners.",
+    "Every RiftCompare tool in one place: box EV, deck and trade calculators, plus Premium's Best Basket, Deal Finder and value screeners.",
   alternates: pageAlternates("/tools"),
   keywords: [
     "riftbound tools",
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   ],
   openGraph: pageOpenGraph({
     title: "Free Riftbound TCG Tools & Calculators",
-    description: "Box EV, best basket, deck and trade calculators — plus the Premium Deal Finder & value screeners.",
+    description: "Box EV, deck and trade calculators — plus Premium's Best Basket, Deal Finder & value screeners.",
     url: "/tools",
   }),
 };
@@ -36,7 +36,7 @@ const FAQS = [
     // DESCRIBES the tiers rather than gating anything, so it was being reported as
     // a paywalled indexable page on the strength of its own FAQ copy. Reworded
     // rather than removing the marker, which still needs to catch a real paywall.
-    a: "All of them are free to use; a few ask you to be signed in. The box EV calculator, deck builder, trade calculator and sealed prices need no account at all. The bulk pricer and best basket are free with a free account. The Deal Finder, value finder and rising-cards screeners show their single best result free, with the complete list included in Premium.",
+    a: "Most of them; a few ask you to be signed in or to be Premium. The box EV calculator, deck builder, trade calculator and sealed prices need no account at all. The Deal Finder, value finder and rising-cards screeners show their single best result free, with the complete list included in Premium — the bulk pricer and best basket are also part of Premium.",
   },
   {
     q: "What does the Deal Finder do?",
@@ -44,7 +44,7 @@ const FAQS = [
   },
   {
     q: "Do I need an account to use RiftCompare tools?",
-    a: "Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds the two list tools — the bulk pricer and best basket — plus watchlists, price alerts, portfolio tracking and the marketplace.",
+    a: "Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds watchlists, price alerts, portfolio tracking and the marketplace. The bulk pricer and best basket — the two list tools — are part of Premium.",
   },
   {
     q: "Which Riftbound tool should I use to buy a whole decklist?",

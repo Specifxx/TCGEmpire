@@ -5,7 +5,8 @@ import type { Prisma } from "@prisma/client";
 import { BulkPricer } from "@/components/BulkPricer";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { hasAccount } from "@/lib/premium";
+import { isPremium } from "@/lib/premium";
+import { PremiumButton } from "@/components/PremiumButton";
 import { getCountry, getDisplayCurrency } from "@/lib/get-country";
 import { pickPrice, priceField, COUNTRIES } from "@/lib/country";
 import { gbpCentsToEur } from "@/lib/fx";
@@ -20,7 +21,7 @@ export const dynamic = "force-dynamic";
 
 const TITLE = "Bulk Riftbound Card Price Checker";
 const DESC =
-  "Paste any list of Riftbound card names and price every one at once — each matched to its cheapest live store price, with a running total. Free with a RiftCompare account.";
+  "Paste any list of Riftbound card names and price every one at once — each matched to its cheapest live store price, with a running total. A RiftCompare Premium tool.";
 
 // Decode the base64 ?list= param the way BulkPricer encodes it
 // (btoa(unescape(encodeURIComponent(text)))). Returns "" on anything malformed.
@@ -96,10 +97,11 @@ export async function generateMetadata({ searchParams }: { searchParams: { list?
 
 export default async function BulkPricerPage({ searchParams }: { searchParams: { list?: string } }) {
   const info = COUNTRIES[getCountry()];
-  // ACCOUNT tier (see lib/premium.ts). Only the TOOL is gated — the heading, intro
+  // PREMIUM tier (see lib/premium.ts). Only the TOOL is gated — the heading, intro
   // and hub copy above it still render for everyone, so the page stays indexable
   // and a shared ?list= link still unfurls its "this list is worth $X" OG card.
-  const signedIn = hasAccount(await getCurrentUser());
+  const user = await getCurrentUser();
+  const premium = isPremium(user);
   return (
     <div>
       <Breadcrumbs trail={[{ name: "Bulk Price Checker", href: "/bulk-pricer" }]} />
@@ -108,20 +110,20 @@ export default async function BulkPricerPage({ searchParams }: { searchParams: {
       <HubIntro path="/bulk-pricer" />
         <p className="mt-1 text-sm text-slate-400">
           Paste a list of card names — a want-list, a trade, a stack you&apos;re selling — and get every card
-          matched with the cheapest {info.adjective} price and a running total. Free with an account.
+          matched with the cheapest {info.adjective} price and a running total. A RiftCompare Premium tool.
         </p>
       </div>
-      {signedIn ? (
+      {premium ? (
         <BulkPricer initialList={searchParams.list} />
       ) : (
         <div className="card-surface p-6 text-center">
-          <h2 className="text-lg font-extrabold text-white">Sign in to price a whole list</h2>
+          <h2 className="text-lg font-extrabold text-white">Go Premium to price a whole list</h2>
           <p className="mx-auto mt-1 max-w-md text-sm text-slate-400">
-            The bulk pricer is free with a RiftCompare account — no card, no Premium. Create one and price an entire
-            want-list, trade pile or collection in one paste.
+            The bulk pricer is a RiftCompare Premium tool. Upgrade and price an entire want-list, trade pile or
+            collection in one paste.
           </p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-            <Link href="/login?next=/bulk-pricer" className="btn-primary text-sm">Create a free account</Link>
+            {user ? <PremiumButton /> : <Link href="/login?next=/bulk-pricer" className="btn-primary text-sm">Sign in free</Link>}
             <Link href="/tools" className="btn-ghost text-sm">Browse free tools</Link>
           </div>
           <p className="mt-4 text-xs text-slate-600">
