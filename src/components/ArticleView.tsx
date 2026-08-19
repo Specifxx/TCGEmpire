@@ -542,6 +542,19 @@ export async function ArticleView({ article }: { article: Article }) {
         <Link href={cta.href} className="btn-primary shrink-0">{cta.label}</Link>
       </section>
 
+      {/* Explore more — a fixed set of internal links into the site's other main
+          surfaces (sealed product, decks, champion hubs), present on every blog/
+          guide page regardless of topic. The bounce rate on this template is
+          high and rising; a reader who finishes an article and has nowhere to go
+          but "Ready to buy?" (cards specifically) or a same-tag related read is
+          one who bounces if neither fits what they actually came here for. */}
+      <nav aria-label="Explore RiftCompare" className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm text-slate-400">
+        <span className="text-slate-500">Explore:</span>
+        <Link href="/sealed" className="text-brand-400 hover:underline">Sealed product prices →</Link>
+        <Link href="/decks" className="text-brand-400 hover:underline">Deck prices →</Link>
+        <Link href="/champions" className="text-brand-400 hover:underline">Champion hubs →</Link>
+      </nav>
+
       {/* Related guides — same-tag articles, so a reader who liked this piece has
           somewhere obvious to go next instead of bouncing. */}
       {related.length > 0 && (

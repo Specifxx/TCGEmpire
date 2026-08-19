@@ -21,8 +21,18 @@ function safe(next?: string): string {
   return next && next.startsWith("/") && !next.startsWith("//") ? next : "/profile";
 }
 
+// Where "cancel" goes, for a signed-out visitor who landed here (often
+// redirected, unasked, off a gated feature) and wants back out. NOT safe()'s
+// "/profile" fallback — that requires being signed in, so an unauthenticated
+// visitor with no `next` clicking Cancel would just bounce straight back to
+// this same page. Falls back to the homepage instead, which is always a real
+// escape route.
+function cancelTarget(next?: string): string {
+  return next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
+}
+
 export default async function LoginPage({ searchParams }: { searchParams: { next?: string } }) {
   const user = await getCurrentUser();
   if (user) redirect(safe(searchParams.next));
-  return <AuthForm providers={enabledProviders()} />;
+  return <AuthForm providers={enabledProviders()} cancelHref={cancelTarget(searchParams.next)} />;
 }

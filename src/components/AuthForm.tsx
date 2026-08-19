@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 // Sign-in is OAUTH ONLY — Google and Discord. The email/password form, /register,
@@ -30,12 +31,19 @@ const OAUTH_ERRORS: Record<string, string> = {
 export function AuthForm({
   providers,
   bare = false,
+  cancelHref,
 }: {
   providers: ("google" | "discord")[];
   // Skip the outer full-page wrapper (max-width + vertical padding) so this can be
   // embedded directly inside a modal, which provides its own sizing. /login omits
   // this and gets the original standalone layout.
   bare?: boolean;
+  // Standalone /login only (bare's modal already has its own close button). A
+  // visitor who lands here off a gated feature, unasked, previously had no way
+  // out but the browser Back button — a dead end matching the exact pattern
+  // WS4 collapsed elsewhere on the site. /login/page.tsx computes this from
+  // ?next=, falling back to the homepage.
+  cancelHref?: string;
 }) {
   const [error, setError] = useState<string | null>(null);
 
@@ -50,6 +58,11 @@ export function AuthForm({
   return (
     <div className={wrapperClass}>
       <div className="card-surface p-6">
+        {!bare && cancelHref && (
+          <Link href={cancelHref} className="mb-3 inline-block text-xs text-slate-500 hover:text-white">
+            ← Back
+          </Link>
+        )}
         <h1 className="text-xl font-extrabold text-white">Sign in</h1>
         <p className="mt-1 text-sm text-slate-400">
           A free account unlocks the Bulk Pricer and Best Basket, plus price alerts, your portfolio and the
