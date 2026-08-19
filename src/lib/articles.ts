@@ -2042,11 +2042,12 @@ For the complete, always-current picture — including March's original 7 bans �
   {
     slug: "riftbound-t1-signature-edition-drawing",
     category: "blog",
-    title: "Riftbound T1 Signature Edition Drawing: Dates and Prices",
+    title: "Riftbound T1 Drawing 2026: Registration Closed, Winners Emailed From Aug 20",
     excerpt:
-      "Riot's English T1 2025 Worlds Champion Signature Edition drawing opens 9am PT on Friday 14 August 2026 and closes 6pm PT on Monday 17 August. Every date, the US$360 price, entry rules and all five cards.",
+      "Registration for Riot's US$360 Riftbound T1 Signature Edition drawing closed 17 August 2026 — selection emails go out in waves from 20 August. Every date, the odds, all five cards, and when the cheaper Player Bundle drawing opens.",
     author: "RiftCompare",
     date: "2026-08-09",
+    updated: "2026-08-19",
     readMins: 10,
     tags: ["news", "collectibles", "esports", "collecting", "chase cards"],
     hero: {
@@ -2153,9 +2154,9 @@ For the complete, always-current picture — including March's original 7 bans �
       label: "Compare sealed prices →",
       blurb: "Every Riftbound sealed product we track, ranked cheapest-first, with an at-RRP flag so you can see what is still selling at retail.",
     },
-    body: `Riot has published the full timetable for the English **T1 2025 Worlds Champion Signature Edition** drawing. Registration opens at **9am Pacific on Friday 14 August 2026** and closes at **6pm Pacific on Monday 17 August**. It is a lottery on the Riot Merch Store, not a sale — you sign up inside that window, and being early inside it changes nothing.
+    body: `**Registration for the English T1 2025 Worlds Champion Signature Edition drawing is closed.** The window ran from **9am Pacific on Friday 14 August 2026** to **6pm Pacific on Monday 17 August** — it was a lottery on the Riot Merch Store, not a sale, so entering early inside that window bought no advantage. If you registered, selection emails start going out **20 August**, in waves. If you missed it, there is no second entry point for this drawing; the separate, cheaper **Player Bundle** drawing hasn't opened yet (see below).
 
-This is the most expensive Riftbound product Riot has ever made, at **US$360**, and the most limited: **10,125 copies per language**. Here is every date, what you actually get, and the parts of the entry rules that are easy to miss.
+This was the most expensive Riftbound product Riot has ever made, at **US$360**, and the most limited: **10,125 copies per language**. Here is every date, what winners actually get, and the parts of the entry rules that were easy to miss.
 
 ![The five Riftbound x T1 2025 Worlds Champion Collection cards side by side: Ambessa The Wolf, Xin Zhao Vigilant, Galio Indefatigable, Miss Fortune Buccaneer and Seraphine Not Alone](/t1-worlds-cards/t1-worlds-champion-collection-cards.jpg)
 
@@ -2595,12 +2596,12 @@ Empower cards are live with real prices on the **[Vendetta set page](/sets/vende
   {
     slug: "riftbound-flow-explained",
     category: "guide",
-    title: "Riftbound Flow Explained: How the Flow Mechanic Works",
+    title: "Riftbound Flow Explained (2026): Play Cards From Your Trash",
     excerpt:
-      "A complete guide to Flow — the Riftbound: Vendetta mechanic that lets you play cards from your trash instead of your hand. How it works and how to build around it.",
+      "Flow lets you cast a card straight from your trash instead of your hand — Riftbound: Vendetta's recursion mechanic, explained step by step for 2026 with deckbuilding tips and every Flow card in the set.",
     author: "RiftCompare",
     date: "2026-07-08",
-    updated: "2026-07-31",
+    updated: "2026-08-19",
     readMins: 4,
     tags: ["vendetta", "mechanics", "flow", "gameplay", "guide"],
     faq: [
@@ -3631,14 +3632,32 @@ Shopping from [Australia](/blog/buy-riftbound-cards-australia), [the US](/blog/b
     slug: "every-riftbound-vendetta-card-revealed",
     ebayPicks: { heading: "Vendetta chase cards on eBay right now" },
     category: "blog",
-    title: "Every Riftbound Vendetta Card Revealed — All 166 Confirmed",
+    title: "Riftbound Vendetta Card List (2026): All 166 Cards + Live Prices",
     excerpt:
-      "The complete Riftbound Vendetta card list and gallery — all 166 main-set cards officially confirmed, plus Showcase alt-arts, Overnumbers, runes and promos, embedded live from our database. Tap any card for its page and launch-day prices.",
+      "The complete Riftbound Vendetta card list and gallery for 2026 — all 166 main-set cards, plus Showcase alt-arts, Overnumbers, runes and promos, embedded live from our database with launch-day prices. Tap any card for its page.",
     author: "RiftCompare",
     date: "2026-07-10",
-    updated: "2026-07-31",
+    updated: "2026-08-19",
     readMins: 3,
     tags: ["vendetta", "spoilers", "card gallery", "card list", "news"],
+    faq: [
+      {
+        q: "How many cards are in Riftbound Vendetta?",
+        a: "166 main-set cards, officially confirmed and all revealed. That's the base count — the set also has alternate-art Showcase printings, Overnumbered chase cards (numbered beyond 166), SP-numbered specials, a rune cycle and Nexus Night promos on top of the 166.",
+      },
+      {
+        q: "When did Riftbound Vendetta release?",
+        a: "31 July 2026. It was the third mainline Riftbound set, following Origins and Spirit Forged, and introduced three new mechanics: Empower, Flow and Burn.",
+      },
+      {
+        q: "Where can I see every Vendetta card in one place?",
+        a: "The gallery embedded in this article, or the full sortable Vendetta set page — both pull live from our database and show launch-day and current prices across every store we track.",
+      },
+      {
+        q: "What are Vendetta's new mechanics?",
+        a: "Empower (a card gains a new ability once it's in play), Flow (play a card straight from your trash instead of your hand), and Burn (send cards to your trash to fuel Flow). Each has its own explainer guide linked below.",
+      },
+    ],
     shop: [
       { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
       { label: "Vendetta singles on eBay", query: "Riftbound Vendetta" },
@@ -3654,11 +3673,11 @@ Shopping from [Australia](/blog/buy-riftbound-cards-australia), [the US](/blog/b
         take: 400,
       },
     ],
-    body: `This is the **complete Riftbound Vendetta card list and gallery** — all 166 main-set cards, officially confirmed, embedded live from our database in collector-number order. Vendetta is out — this is the complete base set, released 31 July 2026.
+    body: `This is the **complete Riftbound Vendetta card list and gallery** — all 166 main-set cards, officially confirmed, embedded live from our database in collector-number order. Vendetta released **31 July 2026** and this is the complete base set.
 
-**Vendetta releases 31 July 2026.** The set runs **166 main-set cards** plus alternate-art Showcase printings, Overnumbered chase cards (numbered beyond 166), SP-numbered specials, runes and tokens. The mechanics are new too — read up on **[Empower](/guides/riftbound-empower-explained)**, **[Flow](/guides/riftbound-flow-explained)** and **[Burn](/guides/riftbound-burn-explained)** while you browse.
+The set runs **166 main-set cards** plus alternate-art Showcase printings, Overnumbered chase cards (numbered beyond 166), SP-numbered specials, runes and tokens. The mechanics are new too — read up on **[Empower](/guides/riftbound-empower-explained)**, **[Flow](/guides/riftbound-flow-explained)** and **[Burn](/guides/riftbound-burn-explained)** while you browse.
 
-Tap any card below to open its full page: rules text, printings, price history, and live store prices the moment Vendetta singles go on sale — compared across every store we track in Australia, New Zealand, the US, the UK, Singapore and Canada.
+Tap any card below to open its full page: rules text, printings, price history, and live store prices — compared across every store we track in Australia, New Zealand, the US, the UK, Singapore and Canada.
 
 [[embed:0]]
 
@@ -4672,12 +4691,12 @@ Start with **[Riftbound for beginners](/guides/riftbound-for-beginners)** for th
   {
     slug: "riftbound-vendetta-nexus-night-promo-cards",
     category: "blog",
-    title: "Riftbound Vendetta Nexus Night Promo Cards",
+    title: "Vendetta Nexus Night Promo Cards (2026): Mel + All 7 Confirmed So Far",
     excerpt:
-      "Vendetta's weekly Nexus Night events hand out a 25-card promo cycle at local stores — and the chase card is Mel, Newly Awakened. Here's every promo confirmed so far: Mel plus the full 6-card promo rune cycle, with live prices and pop-up card views.",
+      "Riftbound Vendetta's weekly Nexus Night events hand out a 25-card promo cycle — Mel, Newly Awakened is the chase card. 7 of 25 promos are confirmed as of this update: Mel plus the full 6-card promo rune cycle, with live prices.",
     author: "RiftCompare",
     date: "2026-08-01",
-    updated: "2026-08-01",
+    updated: "2026-08-19",
     readMins: 4,
     tags: ["vendetta", "nexus night", "promo", "chase cards", "collecting"],
     shop: [
