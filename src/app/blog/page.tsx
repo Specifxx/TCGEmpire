@@ -21,7 +21,7 @@ const BLOG_SECTIONS: ArticleSection[] = [
   {
     title: "Getting Started & Selling",
     accent: "#06b6d4",
-    tags: ["beginners", "opinion", "selling", "marketplace", "about", "tips"],
+    tags: ["beginners", "opinion", "selling", "about", "tips"],
   },
   {
     title: "Where to Buy & Market Updates",

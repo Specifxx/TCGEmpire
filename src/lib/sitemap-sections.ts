@@ -57,7 +57,6 @@ export const SECTIONS = [
   // they index at the rate the individual deck pages do.
   "deck-groups",
   "content",
-  "marketplace",
 ] as const;
 export type SectionId = (typeof SECTIONS)[number];
 
@@ -457,9 +456,14 @@ async function content(): Promise<SitemapEntry[]> {
   }));
 }
 
-async function marketplace(): Promise<SitemapEntry[]> {
-  // Only once publicly launched — pre-launch these are noindexed, and a sitemap
-  // entry pointing at a noindex page is a Search Console warning.
+// ARCHIVED (2026-08-19): the marketplace feature is fully disabled (see
+// lib/marketplace.ts) and this builder is no longer registered in BUILDERS/
+// SECTIONS below, so /sitemaps/marketplace.xml now 404s (see [section]/route.ts's
+// own "unknown section 404s" comment) instead of serving an always-empty
+// sitemap. Kept here, still gated on MARKETPLACE_PUBLIC, so re-registering it
+// is a one-line change if the feature comes back. Exported (unlike the other
+// builders) purely so it counts as used while unregistered.
+export async function marketplace(): Promise<SitemapEntry[]> {
   if (!MARKETPLACE_PUBLIC) return [];
   const day = await priceDay();
   const base: SitemapEntry[] = [
@@ -493,7 +497,7 @@ async function marketplace(): Promise<SitemapEntry[]> {
 const BUILDERS: Record<SectionId, () => Promise<SitemapEntry[]>> = {
   core, cards, sets, domains, keywords, facets, champions, stores, decks,
   "deck-groups": deckGroups,
-  content, marketplace,
+  content,
 };
 
 /**

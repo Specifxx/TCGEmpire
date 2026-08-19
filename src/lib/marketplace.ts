@@ -58,26 +58,37 @@ export const MARKETPLACE_OFFERS = process.env.MARKETPLACE_OFFERS === "1";
 // can be suspended outright (SellerProfile.suspendedAt). Sellers may now list
 // unlimited inventory at any value.
 
-// ── Private beta gating ────────────────────────────────────────────────────────
-// While false, marketplace listings are NOT shown in the public price comparison
-// and are only visible/buyable to the allow-listed beta emails (the test buyer);
-// the Marketplace nav entries (hamburger menu, UserMenu, footer policy links —
-// see nav-groups.ts) also stay hidden. NEXT_PUBLIC_-prefixed (not just
-// MARKETPLACE_PUBLIC) so the exact same flag/value drives nav-groups.ts's
-// client-side visibility check without a second env var to remember. Flip
-// NEXT_PUBLIC_MARKETPLACE_PUBLIC=1 (env, redeploy) to launch publicly.
-export const MARKETPLACE_PUBLIC = process.env.NEXT_PUBLIC_MARKETPLACE_PUBLIC === "1";
+// ── Feature disabled (2026-08-19) ───────────────────────────────────────────────
+// The marketplace is fully switched off site-wide — no browsing, buying, or
+// creating new listings/offers for anyone, including admins and beta testers.
+// Hardcoded rather than env-driven so a code push, not a separate Vercel
+// dashboard change, is what re-enables/disables it — NEXT_PUBLIC_MARKETPLACE_PUBLIC
+// is no longer read. All the pre-launch "private beta" plumbing this flag already
+// drove (nav-groups.ts's MARKETPLACE_NAV_VISIBLE, the sitemap/JSON-LD/merchant-feed
+// gates below) still exists and keys off this same constant, so flipping it back
+// to `process.env.NEXT_PUBLIC_MARKETPLACE_PUBLIC === "1"` is enough to fully
+// restore the old env-driven launch behavior.
+//
+// Deliberately NOT disabled: the escrow-enforcement cron
+// (api/cron/marketplace-maintenance), the Stripe webhooks, the order/funds
+// management routes, and the /admin/marketplace console — these keep resolving
+// any orders that were already in flight when this shipped. See that cron's own
+// header comment for why turning it off too would leave live Stripe escrow stuck.
+export const MARKETPLACE_PUBLIC = false;
 export const MARKETPLACE_BETA_EMAILS = (process.env.MARKETPLACE_BETA_EMAILS ?? "test@test.com")
   .split(",")
   .map((e) => e.trim().toLowerCase())
   .filter(Boolean);
 
-// Who may see/buy listings right now. Public when launched; otherwise only the
-// allow-listed beta testers and admins (so admins can manage/test the marketplace
-// while it stays invisible to everyone else — including the owner's own listings).
-export function canViewMarketplaceListings(email?: string | null, isAdmin?: boolean): boolean {
-  if (MARKETPLACE_PUBLIC || isAdmin) return true;
-  return !!email && MARKETPLACE_BETA_EMAILS.includes(email.toLowerCase());
+// Who may see/buy listings right now — nobody, while the feature is off (see
+// above). No admin/beta-tester bypass: this used to let admins preview the
+// pre-launch marketplace while it stayed invisible to everyone else, but that
+// bypass has no purpose while the feature is fully disabled rather than
+// pre-launch, and leaving it would mean "fully disabled" wasn't actually true
+// for those accounts. Existing order/fund management is unaffected — those
+// routes gate on the user's own order/seller ownership, not this function.
+export function canViewMarketplaceListings(_email?: string | null, _isAdmin?: boolean): boolean {
+  return MARKETPLACE_PUBLIC;
 }
 
 export const MARKETPLACE_COUNTRIES = ["AU", "NZ", "US", "UK", "SG", "CA"] as const;

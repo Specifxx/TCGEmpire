@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useMe } from "@/lib/use-me";
 import { AnnualPriceBlock } from "./AnnualPriceBlock";
 import { PREMIUM_PRICE_LABEL, PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, PREMIUM_ANNUAL_AMOUNT, annualSavingPct } from "@/lib/site";
-import { MARKETPLACE_FEE_BPS, MARKETPLACE_PREMIUM_FEE_BPS } from "@/lib/marketplace-policy";
 
 // A site-wide Premium upsell dialog so users can subscribe / start the trial from
 // wherever they hit a wall — no navigating to /premium first. Any client component
@@ -21,7 +20,6 @@ export function usePremiumDialog() {
 // account tier (see lib/premium.ts), so pitching it as a reason to pay would be
 // selling something the reader already has.
 const FEATURES: { k: string; v: string }[] = [
-  { k: "Marketplace seller fee", v: `${MARKETPLACE_PREMIUM_FEE_BPS / 100}% instead of ${MARKETPLACE_FEE_BPS / 100}%` },
   { k: "Value Finder", v: "undervalued-card screener" },
   { k: "Rising Cards", v: "demand + price-timing screener" },
   { k: "Arbitrage finder", v: "full flips & deals list" },

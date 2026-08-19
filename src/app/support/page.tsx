@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Support",
-  description: "Get help with a RiftCompare Marketplace order, payment, or account issue.",
+  description: "Get help with a RiftCompare order, payment, or account issue.",
   alternates: pageAlternates("/support"),
 };
 
@@ -42,7 +42,7 @@ export default async function SupportPage({ searchParams }: { searchParams: { ca
       <Breadcrumbs trail={[{ name: "Support", href: "/support" }]} />
       <h1 className="mb-2 font-display text-2xl font-extrabold text-white">🆘 Support</h1>
       <p className="mb-4 text-sm text-slate-400">
-        Problem with a marketplace order, payment, or your account? Send us a message and we'll reply by email —
+        Problem with an order, payment, or your account? Send us a message and we'll reply by email —
         usually within a day or two.
       </p>
       <SupportForm

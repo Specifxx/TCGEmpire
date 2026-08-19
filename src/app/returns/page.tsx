@@ -253,12 +253,7 @@ export default function ReturnsPage() {
         <section className="space-y-2">
           <h2 className="text-lg font-bold text-white">Related pages</h2>
           <p>
-            The same protections are described in escrow terms on our{" "}
-            <Link href="/marketplace/buyer-protection" className="text-brand-400 hover:underline">Buyer Protection</Link>{" "}
-            page, with delivery detail on{" "}
-            <Link href="/marketplace/shipping" className="text-brand-400 hover:underline">Shipping &amp; Tracking</Link>.
             The binding legal terms are in our{" "}
-            <Link href="/marketplace/terms" className="text-brand-400 hover:underline">Marketplace Terms</Link> and{" "}
             <Link href="/terms" className="text-brand-400 hover:underline">Site Terms</Link>.
           </p>
           <p>

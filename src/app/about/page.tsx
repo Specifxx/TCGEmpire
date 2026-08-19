@@ -110,23 +110,6 @@ export default async function AboutPage() {
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-lg font-bold text-white">The RiftCompare Marketplace</h2>
-          <p>
-            Alongside price comparison, {SITE_NAME} also runs its own peer-to-peer{" "}
-            <Link href="/marketplace" className="text-brand-400 hover:underline">Marketplace</Link>, where
-            verified sellers list Riftbound singles for sale directly to other players. For most listings
-            {SITE_NAME} is acting purely as the facilitator — payment is processed by Stripe and held in
-            escrow until delivery is confirmed, and the seller (not {SITE_NAME}) is who you&rsquo;re buying
-            from. A small number of listings are marked &ldquo;Official Store&rdquo; and are sold directly
-            by {SITE_NAME} itself. Full details are in the{" "}
-            <Link href="/marketplace/terms" className="text-brand-400 hover:underline">Marketplace Terms</Link>{" "}
-            and{" "}
-            <Link href="/marketplace/buyer-protection" className="text-brand-400 hover:underline">Buyer Protection</Link>{" "}
-            pages.
-          </p>
-        </section>
-
-        <section className="space-y-2">
           <h2 className="text-lg font-bold text-white">Independent &amp; community-made</h2>
           <p>
             {SITE_NAME} is an independent project, not affiliated with or endorsed by Riot Games or any

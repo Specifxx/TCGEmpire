@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { MARKETPLACE_NAV_VISIBLE } from "./nav-groups";
 import { useMe } from "@/lib/use-me";
 import { usePremiumDialog } from "./PremiumDialog";
 
@@ -138,13 +137,14 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
             <MenuLink href="/profile" onClick={() => setOpen(false)}>Profile</MenuLink>
             <MenuLink href="/profile#collection" onClick={() => setOpen(false)}>My collection</MenuLink>
             <MenuLink href="/watching" onClick={() => setOpen(false)}>🔔 My watchlist</MenuLink>
-            <MenuLink href="/marketplace/sell" onClick={() => setOpen(false)}>Seller dashboard</MenuLink>
-            {MARKETPLACE_NAV_VISIBLE && (
-              <>
-                <MenuLink href="/marketplace/orders" onClick={() => setOpen(false)}>🛒 My marketplace orders</MenuLink>
-                <MenuLink href="/marketplace/funds" onClick={() => setOpen(false)}>💰 Seller funds</MenuLink>
-              </>
-            )}
+            {/* Marketplace disabled site-wide (2026-08-19) — this whole block used to
+                render "Seller dashboard" unconditionally (unlike the two links below
+                it, which were already gated by MARKETPLACE_NAV_VISIBLE) and the two
+                gated links. All three are gone from this menu now. The routes
+                themselves are untouched — anyone with an existing order/listing to
+                manage can still reach /marketplace/sell, /marketplace/orders and
+                /marketplace/funds directly (e.g. via a transactional email link);
+                they're just no longer linked from here. See lib/marketplace.ts. */}
             <MenuLink href="/feedback" onClick={() => setOpen(false)}>
               Feedback{!premium ? <span className="text-gold"> · get Premium</span> : null}
             </MenuLink>

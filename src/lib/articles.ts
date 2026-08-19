@@ -508,7 +508,7 @@ Every figure is the live local price in your own currency — AUD, NZD, USD, GBP
 
 ## How to use this as a seller
 
-If you have cards sitting in a binder, the risers list tells you what's worth listing right now. List them in the **[marketplace](/marketplace)** while demand is hot.
+If you have cards sitting in a binder, the risers list tells you what's worth listing right now — sell while demand is hot rather than waiting for a peak that may already be behind you.
 
 Want to dive in? **[See this week's Riftbound price movers](/movers)**, or **[browse the full database](/browse)** and sort by price to find your next pickup.`,
   },
@@ -552,7 +552,7 @@ Vendetta sealed is live now, and the singles will populate the **[Vendetta page]
     author: "RiftCompare",
     date: "2026-06-09",
     readMins: 5,
-    tags: ["selling", "marketplace", "prices"],
+    tags: ["selling", "prices"],
     body: `Got a stack of Riftbound cards gathering dust — duplicates, cards from a deck you've moved on from, or pulls you don't need? Here's how to turn them into cash (or store credit) and get a fair price.
 
 ## 1. Price your cards accurately first
@@ -565,8 +565,8 @@ Before you list anything, find out what your cards are actually worth **today**.
 
 ## 2. Choose where to sell
 
-- **The RiftCompare marketplace.** If you sell regularly, becoming a **[verified seller](/marketplace)** puts your listings right inside the price comparison, in front of buyers at the moment they're choosing where to buy.
 - **eBay and local stores.** For high-value chase cards, a wider audience can help — just factor in fees and postage when you compare your net.
+- **Local trading groups and Discord communities.** Lower fees than a marketplace, but you're on your own for buyer trust and shipping protection.
 
 ## 3. Set a competitive price
 
@@ -582,7 +582,7 @@ The cards that sell fastest are the ones priced at or just under the cheapest co
 - Post quickly and communicate — repeat buyers come from good experiences.
 - Bundle small cards together so postage doesn't eat the value of a cheap sale.
 
-Ready to list? **[Sell on the marketplace](/marketplace)** or **[browse the database](/browse)** to price your collection first. Selling to fund your next deck? See **[where to buy Riftbound cards](/guides/where-to-buy-riftbound-cards)** to spend it well.`,
+Ready to list? **[Browse the database](/browse)** to price your collection first. Selling to fund your next deck? See **[where to buy Riftbound cards](/guides/where-to-buy-riftbound-cards)** to spend it well.`,
   },
   {
     slug: "beginner-mistakes-buying-riftbound-cards",
@@ -719,7 +719,7 @@ Deeper dives per region — real store counts, presale links and payment tips: *
 
 **Do Riftbound prices differ between countries?** Yes, and not just by exchange rate. Regional allocation, local stock levels and import costs all matter — see [why Riftbound prices change](/guides/why-riftbound-card-prices-change). RiftCompare prices each market in its own currency from stores that actually ship there.
 
-**Does RiftCompare sell cards directly?** RiftCompare is primarily a price-comparison tool that links you to the retailer, and it also runs its own peer-to-peer [Marketplace](/marketplace) where verified sellers list cards, with payment held until delivery is confirmed.
+**Does RiftCompare sell cards directly?** No — RiftCompare is a price-comparison tool that links you through to the retailer with the best price; you always buy from the store itself.
 
 ## Why our prices are accurate for each market
 
@@ -735,7 +735,7 @@ market, on delivered cost.
       { q: "Can I buy Riftbound cards near me?", a: "Local game stores stock sealed product and often singles, and many also sell online. RiftCompare's \"stores we track\" page lists every retailer in the comparison grouped by market, so you can see which are local to you." },
       { q: "Is it cheaper to buy Riftbound singles or sealed product?", a: "For a specific card you've already chosen, singles are almost always cheaper — sealed means paying for many cards you didn't need. Sealed makes sense when you want the experience of opening packs." },
       { q: "Do Riftbound prices differ between countries?", a: "Yes, and not just by exchange rate. Regional allocation, local stock levels and import costs all affect price. RiftCompare prices each market in its own currency from stores that actually ship there." },
-      { q: "Does RiftCompare sell cards directly?", a: "RiftCompare is primarily a price-comparison tool that links you through to the retailer. It also runs its own peer-to-peer Marketplace where verified sellers list cards, with payment held until delivery is confirmed." },
+      { q: "Does RiftCompare sell cards directly?", a: "No — RiftCompare is a price-comparison tool that links you through to the retailer with the best price; you always buy from the store itself." },
     ],
   },
   {
@@ -1047,7 +1047,6 @@ Riftbound is exciting, but tracking down the cheapest copy of a specific card ac
 - **[Deck pricer](/deck)** — paste or build a decklist and price the entire thing across every store in one pass.
 - **Tools** — an arbitrage/deal finder and a box-EV calculator.
 - **[Riftle](/riftle)** — our free daily Wordle-style "guess the card" game, plus an Unlimited mode.
-- **[Buy & sell on the marketplace](/marketplace)** — trade directly with verified sellers.
 - **Wishlist, price alerts and portfolio tracking** — for a free account, track the cards you want, get notified on price drops, and value your whole collection.
 
 ## How prices work
@@ -3771,6 +3770,10 @@ Want the store-by-store breakdown for your market? See **[Australia](/blog/buy-r
   {
     slug: "how-to-buy-on-riftcompare-marketplace",
     category: "guide",
+    // Marketplace disabled site-wide (2026-08-19, see lib/marketplace.ts) — this
+    // guide describes a feature that's currently off. Draft rather than deleted,
+    // per the "keep archived" decision; delete this line to republish.
+    draft: true,
     title: "How to Buy Riftbound Cards on the RiftCompare Marketplace",
     excerpt:
       "A step-by-step guide to buying Riftbound singles directly from other players on the RiftCompare Marketplace — finding a listing, checking out, and what happens to your money until the card actually arrives.",
@@ -3837,6 +3840,10 @@ The marketplace is new, so if anything looks off, there's a "Found a bug? Report
   {
     slug: "riftcompare-marketplace-buyer-protection-explained",
     category: "blog",
+    // Marketplace disabled site-wide (2026-08-19, see lib/marketplace.ts) — this
+    // post describes a feature that's currently off. Draft rather than deleted,
+    // per the "keep archived" decision; delete this line to republish.
+    draft: true,
     title: "RiftCompare Marketplace Buyer Protection",
     excerpt:
       "How the RiftCompare Marketplace actually protects your money when buying Riftbound cards from another player — escrow, auto-refunds, ship deadlines and what happens if a trade goes wrong.",
@@ -3897,6 +3904,10 @@ Full details, including the exact policy language, are on the **[buyer protectio
   {
     slug: "marketplace-vs-stores-where-to-buy-riftbound",
     category: "blog",
+    // Marketplace disabled site-wide (2026-08-19, see lib/marketplace.ts) — this
+    // post describes a feature that's currently off. Draft rather than deleted,
+    // per the "keep archived" decision; delete this line to republish.
+    draft: true,
     title: "Marketplace vs Stores: Where Should You Buy Riftbound Cards?",
     excerpt:
       "RiftCompare shows you store prices AND player-to-player marketplace listings side by side. Here's when to buy from a store and when the marketplace is the better (or cheaper) call.",
@@ -3937,6 +3948,10 @@ Just search the card. Whatever's cheapest — store or marketplace listing — s
   {
     slug: "riftcompare-marketplace-fee-cut-2-percent",
     category: "blog",
+    // Marketplace disabled site-wide (2026-08-19, see lib/marketplace.ts) — this
+    // post describes a feature that's currently off. Draft rather than deleted,
+    // per the "keep archived" decision; delete this line to republish.
+    draft: true,
     title: "RiftCompare Marketplace Fees Dropped to 2%",
     excerpt:
       "We've cut the RiftCompare Marketplace seller fee from 5% to 2% — and Premium members now sell for just 1%. Here's what changed, why, and how it stacks up against Cardmarket.",
@@ -7093,7 +7108,7 @@ The same pattern repeats on **Ahri, Inquisitive** in Spirit Forged: SFD 227/221 
       },
       {
         q: "What fees will I actually pay if I sell a Riftbound card?",
-        a: "It depends where you sell. RiftCompare's own marketplace charges 2% (1% for Premium members). eBay's final value fee for trading cards is commonly around 13.25%, charged on the total including shipping. TCGplayer charges a tiered marketplace commission plus separate payment processing, netting most sellers somewhere in the low-to-mid 80% of the sale price before shipping costs. A direct trade or local sale avoids commission entirely but gives up buyer protection.",
+        a: "It depends where you sell. eBay's final value fee for trading cards is commonly around 13.25%, charged on the total including shipping. TCGplayer charges a tiered marketplace commission plus separate payment processing, netting most sellers somewhere in the low-to-mid 80% of the sale price before shipping costs. A direct trade or local sale avoids commission entirely but gives up buyer protection.",
       },
       {
         q: "Can a Riftbound card lose value overnight through no fault of the card?",
@@ -7209,7 +7224,6 @@ Whatever the price on a card page says, it isn't what you'll net if you sell, an
 
 | Venue | Seller pays | Notes |
 | --- | --- | --- |
-| **[RiftCompare Marketplace](/marketplace)** | 2% (1% for Premium) | Escrow-protected P2P, lowest fee we're aware of in this market |
 | **eBay** | ~13.25% final value fee | Charged on item price *plus* shipping |
 | **TCGplayer** | Tiered commission + payment processing | Nets most sellers roughly 80–85% of sale price before shipping |
 | **Direct/local sale** | 0% commission | No buyer protection either side |
@@ -7234,7 +7248,7 @@ Not "buy" and not "don't." Three practical things that don't require a track rec
 
 **If you're buying:** treat every purchase as buying a card you like, at a price you'd be fine never seeing again — because right now, nobody can tell you what it'll be worth later, including us. Compare the printing carefully (asterisk, over-numbering, and *especially* promo status) before you pay a premium.
 
-**If you're selling:** run the real fee math before you list anywhere. A 13.25% eBay fee versus a 2% RiftCompare Marketplace fee is the difference between a good and a bad sale on the same card.
+**If you're selling:** run the real fee math before you list anywhere — eBay's ~13.25% final value fee versus TCGplayer's tiered commission is the difference between a good and a bad sale on the same card.
 
 **If you already own cards and just want to know what they're worth without checking daily:** that's a genuinely answerable question, unlike the investment question. [Set a free price alert](/alerts) and let the number come to you.
 

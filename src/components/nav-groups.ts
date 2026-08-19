@@ -49,13 +49,15 @@ export interface NavGroup {
   links: NavGroupLink[];
 }
 
-// Kept as a single NEXT_PUBLIC_-prefixed flag (not the server-only
-// MARKETPLACE_PUBLIC in lib/marketplace.ts, which pulls in Prisma and can't be
-// imported into these client-bundled nav components) so nav visibility and the
-// public price-comparison/listing gating flip together from one Vercel env var.
-// While unset, the marketplace is fully live under the hood (routes, Stripe,
-// escrow, cron) but not linked from anywhere a visitor would stumble onto it.
-export const MARKETPLACE_NAV_VISIBLE = process.env.NEXT_PUBLIC_MARKETPLACE_PUBLIC === "1";
+// Feature disabled (2026-08-19) — hardcoded false, mirroring MARKETPLACE_PUBLIC
+// in lib/marketplace.ts (that constant can't be imported here: it pulls in
+// Prisma, which can't reach a client-bundled nav component). The two used to be
+// one env-driven flag; now they're two hardcoded literals that must be kept in
+// sync by hand — see lib/marketplace.ts's comment for how to re-enable both.
+// The marketplace's routes/Stripe/escrow/cron all keep running under the hood
+// for orders already in flight — this constant only controls whether anything
+// links to it.
+export const MARKETPLACE_NAV_VISIBLE = false;
 
 // The P2P marketplace nav group — see docs/MARKETPLACE.md. Spread in only once
 // launched (NEXT_PUBLIC_MARKETPLACE_PUBLIC=1); kept as its own object so
