@@ -114,7 +114,7 @@ async function autoReleaseShipped(): Promise<number> {
         currency: o.currency,
       };
       if (seller?.email) await sendFundsReleasedEmail(seller.email, info).catch(() => {});
-      if (buyer?.email) await sendOrderCompletedBuyerEmail(buyer.email, info, { auto: true }).catch(() => {});
+      if (buyer?.email) await sendOrderCompletedBuyerEmail(buyer.email, info, { releasedBy: "auto" }).catch(() => {});
       if (listing) await revalidateCardPage(listing.cardId).catch(() => {});
       await notify(o.sellerId, "funds_released", "Funds released", `${formatMoney(o.totalCents - o.feeCents, o.currency)} sent for ${info.cardName} (order ${o.orderNumber ?? o.id}).`, "/marketplace/funds").catch(() => {});
       await notify(o.buyerId, "order_completed", "Order complete", `Order for ${info.cardName} auto-completed and the seller has been paid.`, "/marketplace/orders").catch(() => {});
@@ -181,7 +181,7 @@ async function sendShipReminders(): Promise<number> {
           { orderId: first.id, orderNumber: first.orderNumber, cardName, quantity: first.quantity, totalCents, currency: first.currency },
           new Date(first.paidAt.getTime() + MARKETPLACE_SHIP_DEADLINE_DAYS * 86_400_000)
         ).catch(() => {});
-        await notify(first.sellerId, "ship_reminder", "Ship soon", `Order for ${cardName} must ship within 24 hours or it's auto-cancelled.`, "/marketplace/sell").catch(() => {});
+        await notify(first.sellerId, "ship_reminder", "Ship soon", `Order for ${cardName} must ship within 24 hours or it's auto-cancelled.`, "/marketplace/orders?tab=Sales").catch(() => {});
         emailed++;
       }
     } finally {
@@ -312,7 +312,7 @@ async function autoCancelUnshipped(): Promise<number> {
       if (seller?.email) await sendAutoCancelledSellerEmail(seller.email, info).catch(() => {});
       if (listing) await revalidateCardPage(listing.cardId).catch(() => {});
       await notify(o.buyerId, "order_cancelled", "Order cancelled", `Order for ${info.cardName} was cancelled and refunded in full — the seller didn't ship in time.`, "/marketplace/orders").catch(() => {});
-      await notify(o.sellerId, "order_cancelled", "Order auto-cancelled", `Order for ${info.cardName} was auto-cancelled for missing the ship deadline.`, "/marketplace/sell").catch(() => {});
+      await notify(o.sellerId, "order_cancelled", "Order auto-cancelled", `Order for ${info.cardName} was auto-cancelled for missing the ship deadline.`, "/marketplace/orders?tab=Sales").catch(() => {});
     } catch {
       // Skip this order this run; it's picked up again on the next pass.
     }

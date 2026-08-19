@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { CONDITION_KEYS } from "@/lib/constants";
 import { CURRENCY_BY_COUNTRY } from "@/lib/marketplace-countries";
 import { MARKETPLACE_FEE_BPS, MARKETPLACE_PREMIUM_FEE_BPS, platformFeeCents } from "@/lib/marketplace-policy";
@@ -55,6 +56,28 @@ interface Listing {
   card: SearchCard;
 }
 
+// Just enough of /api/marketplace/orders's shape to render a compact preview —
+// full ship/track/cancel actions live on the real /marketplace/orders page.
+interface SaleOrder {
+  id: string;
+  role: "buyer" | "seller";
+  status: string;
+  quantity: number;
+  totalCents: number;
+  createdAt: string;
+  counterparty: string;
+  listing: { currency: string; card: { name: string; imageThumbUrl: string | null } } | null;
+}
+
+const SALE_STATUS: Record<string, { label: string; className: string }> = {
+  PENDING: { label: "pending", className: "text-slate-500" },
+  PAID: { label: "ready to ship", className: "text-gold" },
+  SHIPPED: { label: "shipped", className: "text-accent" },
+  COMPLETED: { label: "completed", className: "text-brand-300" },
+  CANCELLED: { label: "cancelled", className: "text-slate-500" },
+  REFUNDED: { label: "refunded", className: "text-slate-500" },
+};
+
 const lowestFor = (c: SearchCard, country: Country): number | null =>
   country === "US" ? c.lowestPriceCentsUs ?? null
   : country === "UK" ? c.lowestPriceCentsUk ?? null
@@ -64,26 +87,49 @@ export function SellerDashboard() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [listings, setListings] = useState<Listing[]>([]);
   const [payoutsEnabled, setPayoutsEnabled] = useState(false);
+  const [hasStripeAccount, setHasStripeAccount] = useState(false);
   const [isPremiumSeller, setIsPremiumSeller] = useState(false);
   const [series, setSeries] = useState<{ currency: string; points: EarningsPoint[] } | null>(null);
+  const [sales, setSales] = useState<SaleOrder[]>([]);
   const [loaded, setLoaded] = useState(false);
 
   const load = useCallback(async () => {
-    const [p, l, c, f] = await Promise.all([
+    const [p, l, c, f, o] = await Promise.all([
       fetch("/api/marketplace/profile").then((r) => r.json()).catch(() => ({})),
       fetch("/api/marketplace/listings?mine=1").then((r) => r.json()).catch(() => ({ listings: [] })),
       fetch("/api/marketplace/stripe/connect").then((r) => r.json()).catch(() => ({})),
       fetch("/api/marketplace/funds").then((r) => r.json()).catch(() => ({})),
+      fetch("/api/marketplace/orders").then((r) => r.json()).catch(() => ({ orders: [] })),
     ]);
     setProfile(p.profile ?? null);
     setIsPremiumSeller(!!p.isPremium);
     setListings(l.listings ?? []);
     setPayoutsEnabled(!!c.payoutsEnabled);
+    setHasStripeAccount(!!c.hasAccount);
     setSeries(f.series ?? null);
+    setSales(((o.orders ?? []) as SaleOrder[]).filter((row) => row.role === "seller"));
     setLoaded(true);
   }, []);
 
   useEffect(() => { void load(); }, [load]);
+
+  // Stripe's Account Link sends the seller back here with ?connect=return (they
+  // finished, or at least reached the end of, the hosted onboarding flow) or
+  // ?connect=refresh (the link expired before they finished). Both cases used to
+  // land back on this page with zero acknowledgement — the setup card either
+  // silently vanished (success) or silently reappeared unchanged (expired),
+  // giving no feedback either way. Surface a banner once, then strip the param.
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [connectNotice, setConnectNotice] = useState<"return" | "refresh" | null>(null);
+  useEffect(() => {
+    const connect = searchParams.get("connect");
+    if (connect === "return" || connect === "refresh") {
+      setConnectNotice(connect);
+      router.replace("/marketplace/sell");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const country = (profile?.country ?? "AU") as Country;
 
@@ -109,6 +155,21 @@ export function SellerDashboard() {
           <Link href="/marketplace/funds" className="btn-ghost text-sm">Seller funds →</Link>
         </div>
       </div>
+
+      {connectNotice && loaded && (
+        <div
+          className={`mb-5 rounded-xl border px-4 py-3 text-sm ${
+            connectNotice === "return" && payoutsEnabled
+              ? "border-brand-500/30 bg-brand-500/5 text-brand-200"
+              : "border-gold/30 bg-gold/5 text-slate-300"
+          }`}
+        >
+          {connectNotice === "return" && payoutsEnabled && "✓ Payouts are set up — funds from your sales will now pay out automatically."}
+          {connectNotice === "return" && !payoutsEnabled &&
+            "Stripe is still verifying your details — this is usually quick. If \"Set up payouts\" is still showing in a few minutes, reopen it to finish anything Stripe flagged."}
+          {connectNotice === "refresh" && "That Stripe setup link expired before you finished — click \"Set up payouts\" below to pick up where you left off."}
+        </div>
+      )}
 
       {!isPremiumSeller && loaded && (
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gold/30 bg-gold/5 px-4 py-3">
@@ -143,13 +204,14 @@ export function SellerDashboard() {
             <>
               {/* Payouts are never required to list or sell — buyers pay RiftCompare
                   directly, and funds simply stay held until a seller finishes Stripe
-                  Connect onboarding (then release automatically). Shown as a nudge,
-                  not a gate, so a seller without payouts set up yet doesn't block a
-                  buyer who's ready to purchase right now. */}
-              {!payoutsEnabled && <PayoutsOnboarding />}
+                  Connect onboarding (then release automatically). Always shown, in
+                  either its "not set up yet" or confirmed state, so payouts status
+                  is never just silently absent from the page. */}
+              <PayoutsCard payoutsEnabled={payoutsEnabled} hasStripeAccount={hasStripeAccount} />
               <AddListing country={country} currency={profile.currency} isPremiumSeller={isPremiumSeller} onAdded={load} />
             </>
           )}
+          <RecentSales sales={sales} />
           <MyListings listings={listings} isPremiumSeller={isPremiumSeller} onChange={load} />
         </div>
       )}
@@ -161,7 +223,12 @@ export function SellerDashboard() {
 // RiftCompare directly), but funds stay held until Stripe Connect is set up, since
 // that's how we actually pay YOU. Stripe runs the identity/KYC check as part of
 // this flow, so there's nothing custom to build.
-function PayoutsOnboarding() {
+//
+// Always renders SOMETHING — never just disappears once payoutsEnabled flips true.
+// The POST endpoint itself already branches on payoutsEnabled (returns a fresh
+// onboarding link vs. a one-time login link into the seller's own Stripe
+// dashboard), so the same start() call works for both states here.
+function PayoutsCard({ payoutsEnabled, hasStripeAccount }: { payoutsEnabled: boolean; hasStripeAccount: boolean }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -175,16 +242,75 @@ function PayoutsOnboarding() {
     else setError(data.error ?? "Couldn't reach Stripe — try again shortly");
   }
 
+  if (payoutsEnabled) {
+    return (
+      <div className="card-surface border-brand-500/30 p-5">
+        <h2 className="mb-1 flex items-center gap-2 font-bold text-white">
+          <span className="text-brand-400">✓</span> Payouts are set up
+        </h2>
+        <p className="text-sm text-slate-500">
+          Stripe verified your details — funds from your sales release to your bank automatically, on the schedule you set.
+        </p>
+        <div className="mt-3 flex items-center gap-3">
+          <button onClick={start} disabled={busy} className="btn-ghost text-sm">{busy ? "Opening Stripe…" : "Manage payouts in Stripe →"}</button>
+          <Link href="/marketplace/funds" className="text-sm text-brand-300 hover:underline">Payout schedule &amp; balance →</Link>
+        </div>
+        {error && <StripeErrorNotice message={error} />}
+      </div>
+    );
+  }
+
   return (
     <div className="card-surface border-gold/30 p-5">
-      <h2 className="mb-1 font-bold text-white">Set up payouts to get paid</h2>
+      <h2 className="mb-1 font-bold text-white">{hasStripeAccount ? "Finish setting up payouts" : "Set up payouts to get paid"}</h2>
       <p className="text-sm text-slate-500">
-        You can list and sell right away — but funds from any sale stay held until you set this up, since it's how
-        RiftCompare actually pays you. Stripe verifies your identity and handles payouts to your bank, so we never
-        touch your funds or your ID. It takes a couple of minutes.
+        {hasStripeAccount
+          ? "You started this before but Stripe still needs a bit more to verify your details — pick up where you left off."
+          : "You can list and sell right away — but funds from any sale stay held until you set this up, since it's how RiftCompare actually pays you. Stripe verifies your identity and handles payouts to your bank, so we never touch your funds or your ID. It takes a couple of minutes."}
       </p>
-      <button onClick={start} disabled={busy} className="btn-primary mt-3">{busy ? "Opening Stripe…" : "Set up payouts →"}</button>
+      <button onClick={start} disabled={busy} className="btn-primary mt-3">
+        {busy ? "Opening Stripe…" : hasStripeAccount ? "Continue payouts setup →" : "Set up payouts →"}
+      </button>
       {error && <StripeErrorNotice message={error} />}
+    </div>
+  );
+}
+
+// Compact preview of recent sales — full ship/track/message/cancel actions live on
+// the real /marketplace/orders page (its "Sales" tab); this just makes sure a
+// seller lands on evidence of their sales without leaving the dashboard, and
+// without duplicating that page's stateful order-action UI here.
+function RecentSales({ sales }: { sales: SaleOrder[] }) {
+  const recent = sales.slice(0, 6);
+  return (
+    <div className="card-surface p-5">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <h2 className="font-bold text-white">Recent sales {sales.length > 0 && `(${sales.length})`}</h2>
+        <Link href="/marketplace/orders?tab=Sales" className="text-xs text-brand-300 hover:underline">View all sales →</Link>
+      </div>
+      {recent.length === 0 ? (
+        <p className="text-sm text-slate-500">No sales yet — once a buyer checks out, it shows up here.</p>
+      ) : (
+        <ul className="divide-y divide-ink-800">
+          {recent.map((o) => {
+            const st = SALE_STATUS[o.status] ?? { label: o.status.toLowerCase(), className: "text-slate-500" };
+            return (
+              <li key={o.id} className="flex items-center gap-3 py-2.5">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {o.listing?.card.imageThumbUrl ? <img src={o.listing.card.imageThumbUrl} alt="" width={28} height={38} className="h-[38px] w-7 shrink-0 rounded-sm object-cover" loading="lazy" /> : <div className="h-[38px] w-7 shrink-0 rounded-sm bg-ink-800" />}
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium text-white">
+                    {o.quantity > 1 ? `${o.quantity} × ` : ""}{o.listing?.card.name ?? "Order"}
+                  </div>
+                  <div className="text-xs text-slate-500">to {o.counterparty}</div>
+                </div>
+                <span className="text-right text-sm font-semibold text-accent">{formatMoney(o.totalCents, o.listing?.currency ?? "AUD")}</span>
+                <span className={`w-24 shrink-0 text-right text-xs font-medium ${st.className}`}>{st.label}</span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }

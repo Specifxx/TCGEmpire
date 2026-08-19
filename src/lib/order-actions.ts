@@ -138,7 +138,7 @@ export async function receiveOrder(orderId: string, userId: string): Promise<Act
     currency: order.currency,
   };
   if (seller?.email) await sendFundsReleasedEmail(seller.email, info).catch(() => {});
-  if (buyer?.email) await sendOrderCompletedBuyerEmail(buyer.email, info, { auto: false }).catch(() => {});
+  if (buyer?.email) await sendOrderCompletedBuyerEmail(buyer.email, info, { releasedBy: "buyer" }).catch(() => {});
   if (listing) await revalidateCardPage(listing.cardId).catch(() => {});
 
   await notify(order.sellerId, "funds_released", "Funds released", `${formatMoney(order.totalCents - order.feeCents, order.currency)} sent for ${info.cardName} (order ${formatOrderNumber(info.orderNumber) ?? info.orderId}).`, "/marketplace/funds").catch(() => {});
@@ -217,7 +217,7 @@ export async function sellerRefundOrder(orderId: string, userId: string, reason?
   if (buyer?.email) await sendSellerRefundedEmail(buyer.email, info, reason).catch(() => {});
   if (seller?.email) await sendSellerRefundConfirmedEmail(seller.email, info, wasTransferred).catch(() => {});
   await notify(order.buyerId, "order_refunded", "Order refunded", `The seller refunded ${formatMoney(order.totalCents, order.currency)} for ${info.cardName}.`, "/marketplace/orders").catch(() => {});
-  await notify(order.sellerId, "order_refunded", "Refund sent", `You refunded order ${formatOrderNumber(order.orderNumber) ?? order.id}.`, "/marketplace/orders").catch(() => {});
+  await notify(order.sellerId, "order_refunded", "Refund sent", `You refunded order ${formatOrderNumber(order.orderNumber) ?? order.id}.`, "/marketplace/orders?tab=Sales").catch(() => {});
 
   return { ok: true, status: "REFUNDED" };
 }
@@ -354,7 +354,7 @@ export async function respondCancelOrder(orderId: string, userId: string, accept
   if (buyer?.email) await sendCancelledMutualEmail(buyer.email, info).catch(() => {});
   if (seller?.email) await sendCancelledMutualEmail(seller.email, info).catch(() => {});
   await notify(order.buyerId, "order_cancelled", "Order cancelled", `Order ${formatOrderNumber(order.orderNumber) ?? order.id} was cancelled and refunded.`, "/marketplace/orders").catch(() => {});
-  await notify(order.sellerId, "order_cancelled", "Order cancelled", `Order ${formatOrderNumber(order.orderNumber) ?? order.id} was cancelled and refunded.`, "/marketplace/sell").catch(() => {});
+  await notify(order.sellerId, "order_cancelled", "Order cancelled", `Order ${formatOrderNumber(order.orderNumber) ?? order.id} was cancelled and refunded.`, "/marketplace/orders?tab=Sales").catch(() => {});
   return { ok: true, status: "CANCELLED" };
 }
 
@@ -386,9 +386,122 @@ async function loadGroup(orderIds: string[]) {
       cancelRequestedBy: true,
       cancelRequestedAt: true,
       stripeTransferId: true,
+      paidAt: true,
+      shipCountry: true,
     },
   });
   return orders.filter((o) => o.kind === "MARKETPLACE");
+}
+
+// Group twin of shipOrder — a single checkout (or a multi-item cart bought from
+// one seller) creates one Order row per LISTING LINE, so "mark this parcel
+// shipped" from the bulk endpoint used to loop shipOrder() once per row with NO
+// dedupe (unlike requestReleaseOrder's group caller, which explicitly gates its
+// email to the first row). The buyer got one "Your order has shipped" email per
+// CARD instead of one for the whole parcel, each naming only that single card —
+// confusing at best, and reading as duplicate/wrong shipping notifications for
+// anyone who bought more than one card from the same seller in one order.
+export async function shipOrderGroup(
+  orderIds: string[],
+  userId: string,
+  carrier: string,
+  trackingNumber: string,
+  tracking?: string
+): Promise<ActionResult> {
+  const orders = await loadGroup(orderIds);
+  if (orders.length === 0) return { ok: false, error: "Order not found", httpStatus: 404 };
+  if (orders.some((o) => o.sellerId !== userId)) {
+    return { ok: false, error: "Only the seller can mark shipped", httpStatus: 403 };
+  }
+  if (orders.some((o) => o.status !== "PAID")) {
+    return { ok: false, error: "Can't ship — one or more of these items isn't PAID", httpStatus: 400 };
+  }
+  if (orders.some((o) => o.cancelRequestedAt)) {
+    return { ok: false, error: "A cancellation is pending on this order — resolve it first", httpStatus: 400 };
+  }
+
+  const shippedAt = new Date();
+  await prisma.order.updateMany({
+    where: { id: { in: orders.map((o) => o.id) } },
+    data: { status: "SHIPPED", shippedAt, carrier, trackingNumber, trackingNote: tracking?.trim() || null },
+  });
+
+  const first = orders[0]!;
+  const [buyer, sellerProfile] = await Promise.all([
+    prisma.user.findUnique({ where: { id: first.buyerId }, select: { email: true } }),
+    prisma.sellerProfile.findUnique({ where: { userId: first.sellerId }, select: { handlingDays: true } }),
+  ]);
+  const listing = first.marketplaceListingId
+    ? await prisma.marketplaceListing.findUnique({ where: { id: first.marketplaceListingId }, select: { card: { select: { name: true } } } })
+    : null;
+  // Same "N items" convention as every other group email in this file (see
+  // requestCancelGroup/sellerRefundOrderGroup) — one combined total, not one
+  // email's worth of info repeated N times.
+  const totalCents = orders.reduce((sum, o) => sum + o.totalCents, 0);
+  const cardName = orders.length > 1 ? `${orders.length} items` : listing?.card.name ?? "your order";
+
+  if (buyer?.email) {
+    const eta = estimateDeliveryWindow({
+      paidAt: first.paidAt,
+      shippedAt,
+      handlingDays: sellerProfile?.handlingDays ?? 2,
+      country: first.shipCountry,
+    });
+    await sendShippedEmail(
+      buyer.email,
+      { orderId: first.id, orderNumber: first.orderNumber, cardName, quantity: first.quantity, totalCents, currency: first.currency },
+      carrier,
+      trackingNumber,
+      eta,
+      autoReleaseDate(shippedAt)
+    ).catch(() => {});
+  }
+  await notify(
+    first.buyerId,
+    "order_shipped",
+    "Order shipped",
+    orders.length > 1 ? `${cardName} are on the way.` : `${cardName === "your order" ? "Your order" : cardName} is on the way.`,
+    "/marketplace/orders"
+  ).catch(() => {});
+  return { ok: true, status: "SHIPPED" };
+}
+
+// Corrects the carrier/tracking number on an already-shipped parcel — e.g. a
+// typo off the shipping receipt, or the seller printed the wrong label. Deliberately
+// NOT a re-run of shipOrderGroup: it doesn't touch status/shippedAt (so it can't be
+// used to un-ship or re-trigger the auto-release clock), and it sends a short
+// "tracking updated" notice instead of resending the full "your order has shipped"
+// email — the buyer already got that once and doesn't need it twice for a correction.
+export async function updateTrackingGroup(
+  orderIds: string[],
+  userId: string,
+  carrier: string,
+  trackingNumber: string,
+  tracking?: string
+): Promise<ActionResult> {
+  const orders = await loadGroup(orderIds);
+  if (orders.length === 0) return { ok: false, error: "Order not found", httpStatus: 404 };
+  if (orders.some((o) => o.sellerId !== userId)) {
+    return { ok: false, error: "Only the seller can update tracking", httpStatus: 403 };
+  }
+  if (orders.some((o) => !["SHIPPED", "COMPLETED"].includes(o.status))) {
+    return { ok: false, error: "Tracking can only be updated once an order has shipped", httpStatus: 400 };
+  }
+
+  await prisma.order.updateMany({
+    where: { id: { in: orders.map((o) => o.id) } },
+    data: { carrier, trackingNumber, trackingNote: tracking?.trim() || null },
+  });
+
+  const first = orders[0]!;
+  await notify(
+    first.buyerId,
+    "tracking_updated",
+    "Tracking updated",
+    `The seller updated the tracking for order ${formatOrderNumber(first.orderNumber) ?? first.id}.`,
+    "/marketplace/orders"
+  ).catch(() => {});
+  return { ok: true, status: "TRACKING_UPDATED" };
 }
 
 export async function reportOrderGroup(orderIds: string[], userId: string, userEmail: string, userName: string, message: string): Promise<ActionResult> {
@@ -552,7 +665,7 @@ export async function respondCancelGroup(orderIds: string[], userId: string, acc
   if (buyer?.email) await sendCancelledMutualEmail(buyer.email, info).catch(() => {});
   if (seller?.email) await sendCancelledMutualEmail(seller.email, info).catch(() => {});
   await notify(first.buyerId, "order_cancelled", "Order cancelled", `Order ${formatOrderNumber(first.orderNumber) ?? first.id} was cancelled and refunded.`, "/marketplace/orders").catch(() => {});
-  await notify(first.sellerId, "order_cancelled", "Order cancelled", `Order ${formatOrderNumber(first.orderNumber) ?? first.id} was cancelled and refunded.`, "/marketplace/sell").catch(() => {});
+  await notify(first.sellerId, "order_cancelled", "Order cancelled", `Order ${formatOrderNumber(first.orderNumber) ?? first.id} was cancelled and refunded.`, "/marketplace/orders?tab=Sales").catch(() => {});
   return { ok: true, status: "CANCELLED" };
 }
 
@@ -612,7 +725,7 @@ export async function sellerRefundOrderGroup(orderIds: string[], userId: string,
   if (buyer?.email) await sendSellerRefundedEmail(buyer.email, info, reason).catch(() => {});
   if (seller?.email) await sendSellerRefundConfirmedEmail(seller.email, info, anyTransferred).catch(() => {});
   await notify(first.buyerId, "order_refunded", "Order refunded", `The seller refunded ${formatMoney(totalCents, first.currency)} for ${info.cardName}.`, "/marketplace/orders").catch(() => {});
-  await notify(first.sellerId, "order_refunded", "Refund sent", `You refunded order ${formatOrderNumber(first.orderNumber) ?? first.id}.`, "/marketplace/orders").catch(() => {});
+  await notify(first.sellerId, "order_refunded", "Refund sent", `You refunded order ${formatOrderNumber(first.orderNumber) ?? first.id}.`, "/marketplace/orders?tab=Sales").catch(() => {});
 
   return { ok: true, status: "REFUNDED" };
 }

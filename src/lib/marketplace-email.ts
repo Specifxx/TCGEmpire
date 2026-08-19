@@ -162,14 +162,18 @@ export async function sendReleaseRequestedEmail(o: OrderEmailInfo, scheduledRele
   return sendEmail(SUPPORT_EMAIL, `[RC] Early release requested — ${num}`, emailShell("Early release requested", inner + button("Review in admin →", `${SITE_URL}/admin/marketplace`), footer()));
 }
 
-// Buyer "order complete" + review prompt — fires on BOTH release paths (manual
-// confirm and the 14-day auto-release), since previously neither told the buyer
-// anything and no review nudge existed at all.
-export async function sendOrderCompletedBuyerEmail(to: string, o: OrderEmailInfo, opts: { auto: boolean }): Promise<boolean> {
+// Buyer "order complete" + review prompt — fires on all THREE release paths
+// (manual confirm, the 14-day auto-release, and an admin force-release after
+// reviewing a dispute), since previously only the first two told the buyer
+// anything and an admin override left them with no idea their funds moved.
+export async function sendOrderCompletedBuyerEmail(to: string, o: OrderEmailInfo, opts: { releasedBy: "buyer" | "auto" | "admin" }): Promise<boolean> {
   const num = formatOrderNumber(o.orderNumber) ?? o.orderId;
-  const body = opts.auto
-    ? `Order <strong style="color:#fff">${num}</strong> auto-completed ${MARKETPLACE_AUTO_RELEASE_DAYS} days after it shipped, and the seller has been paid. If something's wrong, contact support.`
-    : `Thanks for confirming delivery on order <strong style="color:#fff">${num}</strong> — the seller has been paid.`;
+  const body =
+    opts.releasedBy === "auto"
+      ? `Order <strong style="color:#fff">${num}</strong> auto-completed ${MARKETPLACE_AUTO_RELEASE_DAYS} days after it shipped, and the seller has been paid. If something's wrong, contact support.`
+      : opts.releasedBy === "admin"
+      ? `Order <strong style="color:#fff">${num}</strong> has been marked complete by our team after review, and the seller has been paid. If something's wrong, contact support.`
+      : `Thanks for confirming delivery on order <strong style="color:#fff">${num}</strong> — the seller has been paid.`;
   const inner = `
     <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">${body}</td></tr>`;
   return sendEmail(to, `Order complete — ${num}`, emailShell("Order complete", inner + button("★ Review your seller", `${SITE_URL}/marketplace/orders`), footer()));
@@ -229,14 +233,17 @@ export async function sendCancelledMutualEmail(to: string, o: OrderEmailInfo): P
 }
 
 // To the buyer, when the SELLER unilaterally refunds an order (no mutual
-// agreement needed — see order-actions.ts's sellerRefundOrder). Distinct from
-// sendCancelledMutualEmail: this is one-sided, so the copy doesn't say "by
-// mutual agreement", and includes the seller's reason when they gave one.
-export async function sendSellerRefundedEmail(to: string, o: OrderEmailInfo, reason?: string | null): Promise<boolean> {
+// agreement needed — see order-actions.ts's sellerRefundOrder), OR when an
+// admin refunds it after a dispute review (order-actions.ts couldn't cover
+// that path — it's admin/marketplace/route.ts's own force-refund). Distinct
+// from sendCancelledMutualEmail: this is one-sided, so the copy doesn't say
+// "by mutual agreement", and includes the seller's reason when they gave one.
+export async function sendSellerRefundedEmail(to: string, o: OrderEmailInfo, reason?: string | null, actor: "seller" | "admin" = "seller"): Promise<boolean> {
   const num = formatOrderNumber(o.orderNumber) ?? o.orderId;
+  const actorLine = actor === "admin" ? "Our team has refunded" : "The seller has refunded";
   const inner = `
     <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
-      The seller has refunded order <strong style="color:#fff">${num}</strong> (${o.quantity} × ${escHtml(o.cardName)})
+      ${actorLine} order <strong style="color:#fff">${num}</strong> (${o.quantity} × ${escHtml(o.cardName)})
       in full — ${formatMoney(o.totalCents, o.currency)} is on its way back to your original payment method
       (usually 5-10 business days to appear, depending on your bank).
       ${reason ? `<br><br>Reason given: &ldquo;${escHtml(reason)}&rdquo;` : ""}
@@ -244,16 +251,22 @@ export async function sendSellerRefundedEmail(to: string, o: OrderEmailInfo, rea
   return sendEmail(to, `Order refunded — ${num}`, emailShell("Order refunded", inner + button("View orders", `${SITE_URL}/marketplace/orders`), footer()));
 }
 
-// To the seller, confirming their own refund went through (and, if they'd
-// already been paid out, that the payout was reversed rather than left owing).
-export async function sendSellerRefundConfirmedEmail(to: string, o: OrderEmailInfo, reversedPayout: boolean): Promise<boolean> {
+// To the seller: confirms their own refund went through (and, if they'd
+// already been paid out, that the payout was reversed rather than left owing) —
+// or, for actor="admin", that our team refunded the buyer after review instead.
+// The admin path (refundOrder in lib/connect.ts) does NOT reverse a prior
+// payout the way refundOrderBySeller does, so that sentence is deliberately
+// dropped rather than reused for admin — it would otherwise claim a reversal
+// that didn't happen.
+export async function sendSellerRefundConfirmedEmail(to: string, o: OrderEmailInfo, reversedPayout: boolean, actor: "seller" | "admin" = "seller"): Promise<boolean> {
   const num = formatOrderNumber(o.orderNumber) ?? o.orderId;
-  const inner = `
-    <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
-      You refunded order <strong style="color:#fff">${num}</strong> (${o.quantity} × ${escHtml(o.cardName)}) —
+  const body =
+    actor === "admin"
+      ? `Order <strong style="color:#fff">${num}</strong> (${o.quantity} × ${escHtml(o.cardName)}) was refunded by our team after review — the buyer has been refunded ${formatMoney(o.totalCents, o.currency)} in full.`
+      : `You refunded order <strong style="color:#fff">${num}</strong> (${o.quantity} × ${escHtml(o.cardName)}) —
       the buyer has been refunded ${formatMoney(o.totalCents, o.currency)} in full.
-      ${reversedPayout ? "Since this sale had already been paid out to you, that payout has been reversed to cover the refund." : ""}
-    </td></tr>`;
+      ${reversedPayout ? "Since this sale had already been paid out to you, that payout has been reversed to cover the refund." : ""}`;
+  const inner = `<tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">${body}</td></tr>`;
   return sendEmail(to, `Refund sent — ${num}`, emailShell("Refund sent", inner + button("View sales", `${SITE_URL}/marketplace/orders`), footer()));
 }
 

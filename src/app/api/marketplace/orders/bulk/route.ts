@@ -4,7 +4,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { CARRIERS } from "@/lib/tracking";
 import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit";
 import {
-  shipOrder,
+  shipOrderGroup,
+  updateTrackingGroup,
   receiveOrder,
   requestReleaseOrder,
   reportOrderGroup,
@@ -18,7 +19,7 @@ export const dynamic = "force-dynamic";
 
 const schema = z.object({
   orderIds: z.array(z.string().min(1)).min(1).max(50),
-  action: z.enum(["ship", "receive", "report", "request-release", "request-cancel", "accept-cancel", "decline-cancel", "withdraw-cancel", "refund"]),
+  action: z.enum(["ship", "update-tracking", "receive", "report", "request-release", "request-cancel", "accept-cancel", "decline-cancel", "withdraw-cancel", "refund"]),
   carrier: z.enum(CARRIERS).optional(),
   trackingNumber: z.string().trim().min(3).max(60).optional(),
   tracking: z.string().max(120).optional(),
@@ -32,12 +33,12 @@ const schema = z.object({
 // "mark this parcel shipped" or "confirm this delivery" means acting on
 // several rows at once.
 //
-// ship/receive loop per-row (each is an independent Prisma update / its own
-// Connect transfer slice of the shared charge — no duplication risk). The
-// other actions have a SHARED side-effect (one support ticket, one
-// cancellation email, one refund of the group's shared PaymentIntent) and use
-// the group-aware helpers in lib/order-actions.ts so that side-effect only
-// fires once, not once per line item.
+// receive/request-release loop per-row (each is an independent Prisma update /
+// its own Connect transfer slice of the shared charge — no duplication risk).
+// Every other action has a SHARED side-effect (one support ticket, one shipped/
+// cancellation/tracking-update email, one refund of the group's shared
+// PaymentIntent) and uses the group-aware helpers in lib/order-actions.ts so
+// that side-effect only fires once, not once per line item.
 export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in" }, { status: 401 });
@@ -49,7 +50,7 @@ export async function POST(req: Request) {
   if (!parsed.success) return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   const { orderIds, action, carrier, trackingNumber, tracking, message, reason } = parsed.data;
 
-  if (action === "ship" && (!carrier || !trackingNumber)) {
+  if ((action === "ship" || action === "update-tracking") && (!carrier || !trackingNumber)) {
     return NextResponse.json({ error: "Carrier and tracking number are required" }, { status: 400 });
   }
   if (action === "report" && !message) {
@@ -90,17 +91,29 @@ export async function POST(req: Request) {
       if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.httpStatus });
       return NextResponse.json(result);
     }
+    // One shared side-effect (a single "shipped" email for the whole parcel),
+    // same reasoning as the group actions above — see shipOrderGroup for why
+    // this used to be a per-row loop that spammed the buyer with one email per
+    // card instead of one for the order.
+    case "ship": {
+      const result = await shipOrderGroup(orderIds, user.id, carrier!, trackingNumber!, tracking);
+      if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.httpStatus });
+      return NextResponse.json(result);
+    }
+    case "update-tracking": {
+      const result = await updateTrackingGroup(orderIds, user.id, carrier!, trackingNumber!, tracking);
+      if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.httpStatus });
+      return NextResponse.json(result);
+    }
   }
 
-  // ship / receive / request-release — loop per row, reporting each one's
-  // outcome so the client can show exactly what did and didn't go through.
+  // receive / request-release — loop per row, reporting each one's outcome so
+  // the client can show exactly what did and didn't go through.
   const results: { orderId: string; ok: boolean; error?: string }[] = [];
   for (let i = 0; i < orderIds.length; i++) {
     const orderId = orderIds[i]!;
     const result = await (async () => {
       switch (action) {
-        case "ship":
-          return shipOrder(orderId, user.id, carrier!, trackingNumber!, tracking);
         case "receive":
           return receiveOrder(orderId, user.id);
         case "request-release":
