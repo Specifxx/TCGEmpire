@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { trackEvent } from "@/lib/analytics";
 import type { SealedGroup } from "@/lib/sealed-import";
 import { OutboundLink } from "./OutboundLink";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
@@ -32,7 +33,12 @@ const EBAY_HOST: Record<string, string> = {
 export function SealedQuickViewProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<OpenArg | null>(null);
 
-  const open = useCallback((group: SealedGroup, currency: string) => setState({ group, currency }), []);
+  const open = useCallback((group: SealedGroup, currency: string) => {
+    setState({ group, currency });
+    // Sealed twin of QuickView's quickview_open — same event name, so the two
+    // surfaces roll up into one engagement metric rather than splitting it.
+    trackEvent("quickview_open", { card: group.groupKey });
+  }, []);
   const close = useCallback(() => setState(null), []);
 
   return (

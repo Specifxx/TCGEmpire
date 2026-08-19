@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { track } from "@vercel/analytics";
+import { trackEvent } from "@/lib/analytics";
 import { CardTileData } from "./CardTile";
 import { CardImage } from "./CardImage";
 import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge, CrystalRoseBadge } from "./Badge";
@@ -59,7 +59,7 @@ export function QuickViewProvider({ children }: { children: React.ReactNode }) {
     // event by design — it's the main engagement signal for "which cards do
     // people actually stop to look at", distinct from search/view counts
     // (which mix quickview opens with full page loads and API traffic).
-    track("quickview_open", { card: c.slug ?? c.id });
+    trackEvent("quickview_open", { card: c.slug ?? c.id });
   }, []);
 
   const close = useCallback(() => {

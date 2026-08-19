@@ -24,10 +24,15 @@ import { GA_ENABLED, GA_MEASUREMENT_ID } from "@/lib/ga";
 //      runs once per page rather than re-executing on every client-side route
 //      change, which a hand-rolled tag in the App Router does not.
 //
-// PAGEVIEWS ON ROUTE CHANGES ARE HANDLED BY GA ITSELF. GA4's "Enhanced
-// measurement" includes browser History API events, so client-side navigations
-// are recorded without a manual router-event listener. Adding one on top is the
-// standard way people end up double-counting every pageview.
+// PAGEVIEWS ON ROUTE CHANGES ARE FIRED EXPLICITLY, by GAPageViewTracker.tsx —
+// not left to GA4's "Enhanced measurement" History API detection. That toggle
+// lives in the GA4 Admin panel, is unverifiable from this codebase, and its
+// absence/unreliability is the leading explanation for GA4 reporting ~770
+// sessions against Vercel Analytics' 2,382 for the same window: a lot of
+// client-side App Router navigations were never being recorded at all. The
+// `send_page_view: false` below turns off gtag's OWN automatic initial
+// page_view so GAPageViewTracker's first firing is the only one — no
+// double-count with the config call.
 //
 // WHAT THIS WILL AND WILL NOT REPORT — read this before concluding GA is broken.
 // ConsentDefaults sets analytics_storage:'denied' GLOBALLY (not region-scoped —
@@ -48,7 +53,7 @@ export function GoogleAnalytics() {
         strategy="afterInteractive"
       />
       <Script id="ga4-config" strategy="afterInteractive">
-        {`gtag('js', new Date());gtag('config', '${GA_MEASUREMENT_ID}');`}
+        {`gtag('js', new Date());gtag('config', '${GA_MEASUREMENT_ID}', { send_page_view: false });`}
       </Script>
     </>
   );

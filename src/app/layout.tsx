@@ -22,6 +22,7 @@ import { enabledProviders } from "@/lib/oauth";
 import { AdSenseLoader } from "@/components/AdSenseLoader";
 import { ConsentDefaults } from "@/components/ConsentDefaults";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
+import { GAPageViewTracker } from "@/components/GAPageViewTracker";
 import { GoogleAnalyticsUser } from "@/components/GoogleAnalyticsUser";
 import { ConsentGatedAnalytics } from "@/components/ConsentGatedAnalytics";
 import { PrivacySettingsLink } from "@/components/PrivacySettingsLink";
@@ -218,6 +219,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             these two lines is load-bearing, not cosmetic. See the component
             header for why this is not Google's verbatim snippet. */}
         <GoogleAnalytics />
+        {/* Fires GA4's page_view explicitly on every client-side route change —
+            see the component header for why this replaced relying on GA4's
+            Enhanced Measurement History-API auto-detection. */}
+        <GAPageViewTracker />
         {/* GA4 User-ID. Renders nothing; sets an opaque per-account identifier once
             /api/me resolves and consent allows, and clears it on sign-out. Safe to
             mount in <head> — it is a client component with no markup, so it does
