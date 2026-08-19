@@ -46,6 +46,42 @@ function writeCookie(name: string, value: string) {
   document.cookie = `${name}=${value}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
 }
 
+// localStorage mirror of the two cookies above. The cookie stays authoritative
+// — it's what getCountry()/getDisplayCurrency() read server-side, which is the
+// whole reason this is cookie-based rather than localStorage-based in the
+// first place (see the reconcile effect below: a dynamic per-request cookie
+// read was deliberately removed from the shared chrome because it killed ISR;
+// localStorage can never be read server-side at all, so it could never replace
+// the cookie without reintroducing that same problem). This mirror exists so
+// the choice survives a cleared/blocked cookie (Safari ITP, a privacy
+// extension, a user manually deleting cookies) without touching a device the
+// visitor hasn't signed into — a plain client-side fallback, not a second
+// source of truth. Wrapped in try/catch: private browsing and storage-disabled
+// contexts throw on access, and this must never be why the page breaks.
+function readLocalStorage(name: string): string | null {
+  try {
+    return window.localStorage.getItem(name);
+  } catch {
+    return null;
+  }
+}
+
+function writeLocalStorage(name: string, value: string) {
+  try {
+    window.localStorage.setItem(name, value);
+  } catch {
+    /* best-effort */
+  }
+}
+
+// Every real write of a choice (as opposed to the localStorage->cookie
+// backfill in the reconcile effect below, which only ever moves data the
+// other direction) goes through both stores together so they can't drift.
+function persist(name: string, value: string) {
+  writeCookie(name, value);
+  writeLocalStorage(name, value);
+}
+
 export function CountryProvider({ initial, children }: { initial: Country; children: React.ReactNode }) {
   // With the switcher disabled the site is single-market — lock it to
   // DEFAULT_COUNTRY regardless of any stale cookie.
@@ -76,8 +112,20 @@ export function CountryProvider({ initial, children }: { initial: Country; child
   // EUR display (see the eur_display cookie below).
   useEffect(() => {
     if (!INTL_ENABLED) return; // AU-only: ignore any country cookie
-    const cookieCountry = readCookie(COUNTRY_COOKIE);
-    const cookieCurrency = readCookie(EUR_DISPLAY_COOKIE);
+    // Cookie first (server-authoritative); localStorage only covers a visitor
+    // whose cookie was cleared/blocked but whose browser storage wasn't — and
+    // when it does, backfill the cookie so the next server render agrees too.
+    let cookieCountry = readCookie(COUNTRY_COOKIE);
+    let cookieCurrency = readCookie(EUR_DISPLAY_COOKIE);
+    if (!cookieCountry) {
+      const lsCountry = readLocalStorage(COUNTRY_COOKIE);
+      if (lsCountry) {
+        cookieCountry = lsCountry;
+        cookieCurrency = readLocalStorage(EUR_DISPLAY_COOKIE);
+        writeCookie(COUNTRY_COOKIE, lsCountry);
+        if (cookieCurrency) writeCookie(EUR_DISPLAY_COOKIE, cookieCurrency);
+      }
+    }
     if (cookieCountry) {
       const c = normalizeCountry(cookieCountry);
       if (c !== country) setState(c);
@@ -112,11 +160,11 @@ export function CountryProvider({ initial, children }: { initial: Country; child
         // could drift from COUNTRIES if the API's own logic ever changes.
         const geoCurrency = geo === "UK" && d.currency === "EUR" ? "EUR" : COUNTRIES[geo].currency;
         setCurrency(geoCurrency);
-        if (geo === "UK") writeCookie(EUR_DISPLAY_COOKIE, geoCurrency === "EUR" ? "EUR" : "GBP");
+        if (geo === "UK") persist(EUR_DISPLAY_COOKIE, geoCurrency === "EUR" ? "EUR" : "GBP");
         // Backfill the country cookie so the next server-rendered page load
         // (no client JS needed) already agrees, and so a second in-flight
         // effect (e.g. a fast remount) won't re-apply a stale geo guess.
-        writeCookie(COUNTRY_COOKIE, geo);
+        persist(COUNTRY_COOKIE, geo);
       })
       .catch(() => {
         /* geo is best-effort — the AU default stands */
@@ -139,7 +187,7 @@ export function CountryProvider({ initial, children }: { initial: Country; child
       const c = normalizeCountry(meUser.preferredCountry);
       setState((prev) => (c !== prev ? c : prev));
       if (c !== "UK") setCurrency(COUNTRIES[c].currency);
-      writeCookie(COUNTRY_COOKIE, c);
+      persist(COUNTRY_COOKIE, c);
     } else {
       // First time this signed-in account has been seen — persist whatever
       // market it's currently resolved to (cookie or geo-detected) so it's
@@ -174,9 +222,10 @@ export function CountryProvider({ initial, children }: { initial: Country; child
       // no surprise EUR conversion for someone who just explicitly chose UK.
       setCurrency(COUNTRIES[c].currency);
       // 1-year cookies so the choice persists; server components read them via
-      // getCountry()/getDisplayCurrency().
-      writeCookie(COUNTRY_COOKIE, c);
-      writeCookie(EUR_DISPLAY_COOKIE, "GBP");
+      // getCountry()/getDisplayCurrency(). Mirrored to localStorage too (see
+      // persist() above).
+      persist(COUNTRY_COOKIE, c);
+      persist(EUR_DISPLAY_COOKIE, "GBP");
       // Signed in? Remember this choice on the account too, so it follows the
       // user to their next device/session instead of just this browser's cookie.
       if (meUser) {
@@ -199,7 +248,7 @@ export function CountryProvider({ initial, children }: { initial: Country; child
       if (country !== "UK") return;
       const next = eur ? "EUR" : "GBP";
       setCurrency(next);
-      writeCookie(EUR_DISPLAY_COOKIE, next);
+      persist(EUR_DISPLAY_COOKIE, next);
       router.refresh();
     },
     [country, router]
