@@ -288,7 +288,9 @@ export async function getPortfolio(userId: string, country: Country, windowDays 
   });
 
   const cardIds = [...new Set(rows.map((r) => r.cardId))].sort();
-  const hist = cardIds.length ? await portfolioHistory(cardIds, country, windowDays) : [];
+  // Best-effort, same as the market-index read below: a history-DB hiccup should
+  // cost the value chart and d7/d30 deltas, not the whole portfolio page.
+  const hist = cardIds.length ? await portfolioHistory(cardIds, country, windowDays).catch(() => []) : [];
 
   // Per-card daily price map + the card's own 7d move.
   const byCard = new Map<string, Map<number, number>>();
