@@ -3,21 +3,26 @@
  * into the CURRENT history database — used when a Neon history project exhausts its
  * monthly network-transfer allowance or goes unreachable, and is replaced.
  *
- *   target  = HISTORY_DATABASE_URL_2 if set, else HISTORY_DATABASE_URL, else RH7,
- *             else RH6, else RH5, else HISTORY_DATABASE_URL_4 — mirrors
- *             src/lib/db-history.ts's own priority, so this script always fills
- *             whatever the app itself reads.
+ *   target  = HISTORY_DATABASE_URL_3 if set, else HISTORY_DATABASE_URL_2, else
+ *             HISTORY_DATABASE_URL, else RH7, else RH6, else RH5, else
+ *             HISTORY_DATABASE_URL_4 — mirrors src/lib/db-history.ts's own
+ *             priority, so this script always fills whatever the app itself reads.
  *   sources = main DATABASE_URL + every OTHER history project (base, RH7, RH6,
- *             RH5, _4, _3), in order; the target is filtered out by URL
+ *             RH5, _4, _2), in order; the target is filtered out by URL
+ *
+ * NOTE (2026-08-19): HISTORY_DATABASE_URL_2 (in use since 2026-08-16) came
+ * within reach of its monthly Neon network-transfer allowance after only THREE
+ * DAYS — HISTORY_DATABASE_URL_3 is its replacement. _2 is now a source only.
  *
  * NOTE (2026-08-04): RH6 (in use since 2026-07-31) came within reach of its
  * monthly Neon network-transfer allowance after only FOUR DAYS — RH7 is its
  * replacement. RH6 is now a source only.
  *
- * Six projects in ~two weeks means the burn rate, not the capacity, is the
- * problem: RH7 buys about another four days on its own. Before provisioning an
- * RH8, grep the Vercel logs for "[egress-guard:history]" — db-history.ts already
- * logs any single history query returning >=1 MB, which names the offender.
+ * Seven projects in ~two and a half weeks means the burn rate, not the
+ * capacity, is the problem: a fresh project buys only three to four days on its
+ * own. Before provisioning an RH8, grep the Vercel logs for
+ * "[egress-guard:history]" — db-history.ts already logs any single history
+ * query returning >=1 MB, which names the offender.
  *
  * PREFER THE pg_dump PATH FOR A BULK COPY. This Prisma-based copier reads every
  * row over the uncompressed Postgres wire protocol, which is the most expensive
@@ -62,14 +67,15 @@ const MAIN_URL =
   process.env.RM5 ||
   process.env.RM4 ||
   process.env.RM3;
-// CURRENT-first, not newest-first. HISTORY_DATABASE_URL_2 leads because the
-// history database rotated onto it on 2026-08-16, when HISTORY_DATABASE_URL
-// approached its own 5 GB monthly allowance five days into service. See the note
-// on HISTORY_URL in src/lib/db-history.ts; this chain must match it.
+// CURRENT-first, not newest-first. HISTORY_DATABASE_URL_3 leads because the
+// history database rotated onto it on 2026-08-19, when HISTORY_DATABASE_URL_2
+// approached its own 5 GB monthly allowance three days into service. See the
+// note on HISTORY_URL in src/lib/db-history.ts; this chain must match it.
 const TARGET_URL =
-  process.env.HISTORY_DATABASE_URL_2 || process.env.HISTORY_DATABASE_URL || process.env.RH7 || process.env.RH6 || process.env.RH5 || process.env.HISTORY_DATABASE_URL_4;
+  process.env.HISTORY_DATABASE_URL_3 || process.env.HISTORY_DATABASE_URL_2 || process.env.HISTORY_DATABASE_URL || process.env.RH7 || process.env.RH6 || process.env.RH5 || process.env.HISTORY_DATABASE_URL_4;
 const TARGET_LABEL =
-  process.env.HISTORY_DATABASE_URL_2 ? "HISTORY_DATABASE_URL_2"
+  process.env.HISTORY_DATABASE_URL_3 ? "HISTORY_DATABASE_URL_3"
+  : process.env.HISTORY_DATABASE_URL_2 ? "HISTORY_DATABASE_URL_2"
   : process.env.HISTORY_DATABASE_URL ? "HISTORY_DATABASE_URL"
   : process.env.RH7 ? "RH7"
   : process.env.RH6 ? "RH6"
@@ -77,30 +83,30 @@ const TARGET_LABEL =
   : "HISTORY_DATABASE_URL_4";
 
 if (!MAIN_URL) { console.error("No operational database is set (RM6 / DATABASE_URL_2 / DATABASE_URL / RM5 / RM4 / RM3)."); process.exit(1); }
-if (!TARGET_URL) { console.error("None of HISTORY_DATABASE_URL_2 / HISTORY_DATABASE_URL / RH7 / RH6 / RH5 / HISTORY_DATABASE_URL_4 is set — point one at the current history project first."); process.exit(1); }
-if (TARGET_LABEL !== "HISTORY_DATABASE_URL_2") {
-  console.warn(`⚠  Target resolved to ${TARGET_LABEL}, not HISTORY_DATABASE_URL_2 — the current history project is not visible in this environment. HISTORY_DATABASE_URL is the rollback and is at its allowance; everything older is exhausted. This is almost certainly not what you want.`);
+if (!TARGET_URL) { console.error("None of HISTORY_DATABASE_URL_3 / HISTORY_DATABASE_URL_2 / HISTORY_DATABASE_URL / RH7 / RH6 / RH5 / HISTORY_DATABASE_URL_4 is set — point one at the current history project first."); process.exit(1); }
+if (TARGET_LABEL !== "HISTORY_DATABASE_URL_3") {
+  console.warn(`⚠  Target resolved to ${TARGET_LABEL}, not HISTORY_DATABASE_URL_3 — the current history project is not visible in this environment. HISTORY_DATABASE_URL_2 is the rollback and is at its allowance; everything older is exhausted. This is almost certainly not what you want.`);
 }
 
 // Every distinct source to pull from (main + older history projects), excluding the
 // target itself. De-duplicated by URL so we never read the same DB twice.
 const sourceUrls = [
   { label: "main (DATABASE_URL)", url: MAIN_URL },
-  // HISTORY_DATABASE_URL leads the history sources: it served 2026-08-11 →
-  // 2026-08-16, so it holds the newest rows.
+  // HISTORY_DATABASE_URL_2 leads the history sources: it served 2026-08-16 →
+  // 2026-08-19, so it holds the newest rows.
   //
-  // HISTORY_DATABASE_URL_2 IS STILL LISTED BELOW and that is deliberate, not an
+  // HISTORY_DATABASE_URL_3 IS STILL LISTED BELOW and that is deliberate, not an
   // oversight — it is now the TARGET, and the `s.url !== TARGET_URL` filter on
   // this array is what keeps it out. Leaving the entry in place means the list
   // stays a complete inventory of every history project that has ever existed,
   // so a future rotation onto yet another recycled name is covered by the same
   // filter rather than needing someone to remember to re-add a line.
+  { label: "HISTORY_DATABASE_URL_2", url: process.env.HISTORY_DATABASE_URL_2 },
   { label: "HISTORY_DATABASE_URL", url: process.env.HISTORY_DATABASE_URL },
   { label: "RH7", url: process.env.RH7 },
   { label: "RH6", url: process.env.RH6 },
   { label: "RH5", url: process.env.RH5 },
   { label: "HISTORY_DATABASE_URL_4", url: process.env.HISTORY_DATABASE_URL_4 },
-  { label: "HISTORY_DATABASE_URL_2", url: process.env.HISTORY_DATABASE_URL_2 },
   { label: "HISTORY_DATABASE_URL_3", url: process.env.HISTORY_DATABASE_URL_3 },
 ].filter((s): s is { label: string; url: string } => !!s.url && s.url !== TARGET_URL);
 // Dedupe by URL.
