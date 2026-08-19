@@ -5,6 +5,16 @@ import { getCurrentUser } from "@/lib/auth";
 import { releaseFundsForOrder, refundOrder } from "@/lib/connect";
 import { revalidateCardPage } from "@/lib/revalidate-card";
 import { importMarketplaceListings } from "@/lib/marketplace";
+import { notify } from "@/lib/notifications";
+import { formatMoney } from "@/lib/format";
+import { formatOrderNumber } from "@/lib/order-number";
+import {
+  sendOrderCompletedBuyerEmail,
+  sendFundsReleasedEmail,
+  sendSellerRefundedEmail,
+  sendSellerRefundConfirmedEmail,
+  type OrderEmailInfo,
+} from "@/lib/marketplace-email";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +52,7 @@ export async function POST(req: Request) {
   switch (action) {
     case "force-release": {
       if (!orderId) return NextResponse.json({ error: "orderId required" }, { status: 400 });
+      const before = await loadOrderForEmail(orderId);
       await prisma.order.update({
         where: { id: orderId },
         data: {
@@ -54,6 +65,15 @@ export async function POST(req: Request) {
         },
       });
       await releaseFundsForOrder(orderId);
+      // Every other release path (buyer confirms, the 14-day auto-release) tells
+      // both sides their money moved — an admin override used to leave both of
+      // them finding out only if they happened to check My orders.
+      if (before) {
+        if (before.buyerEmail) await sendOrderCompletedBuyerEmail(before.buyerEmail, before.info, { releasedBy: "admin" }).catch(() => {});
+        if (before.sellerEmail) await sendFundsReleasedEmail(before.sellerEmail, before.info).catch(() => {});
+        await notify(before.buyerId, "order_completed", "Order complete", `Order for ${before.info.cardName} was marked complete by our team after review.`, "/marketplace/orders").catch(() => {});
+        await notify(before.sellerId, "funds_released", "Funds released", `${formatMoney(before.info.totalCents - (before.info.feeCents ?? 0), before.info.currency)} sent for ${before.info.cardName} (order ${formatOrderNumber(before.info.orderNumber) ?? before.info.orderId}).`, "/marketplace/orders?tab=Sales").catch(() => {});
+      }
       return NextResponse.json({ ok: true });
     }
     // "I checked tracking — not clearly delivered yet, keep waiting." Doesn't
@@ -66,17 +86,26 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true });
     }
     // An admin spotting a problem directly (vs. a buyer/seller filing a report) —
-    // blocks auto-release the same way a support-ticket dispute does.
+    // blocks auto-release the same way a support-ticket dispute does. Notified
+    // in-app only (no email), matching reportOrderGroup's own restraint for the
+    // buyer/seller-filed version of this same event.
     case "flag-dispute": {
       if (!orderId) return NextResponse.json({ error: "orderId required" }, { status: 400 });
+      const order = await prisma.order.findUnique({ where: { id: orderId }, select: { buyerId: true, sellerId: true, orderNumber: true } });
       await prisma.order.update({
         where: { id: orderId },
         data: { disputedAt: new Date(), adminReviewedAt: new Date(), adminReviewedBy: user.email },
       });
+      if (order) {
+        const msg = `Order ${formatOrderNumber(order.orderNumber) ?? orderId} has been flagged for review — it's paused until our team resolves it.`;
+        await notify(order.buyerId, "order_disputed", "A problem was flagged", msg, "/marketplace/orders").catch(() => {});
+        await notify(order.sellerId, "order_disputed", "A problem was flagged", msg, "/marketplace/orders?tab=Sales").catch(() => {});
+      }
       return NextResponse.json({ ok: true });
     }
     case "force-refund": {
       if (!orderId) return NextResponse.json({ error: "orderId required" }, { status: 400 });
+      const before = await loadOrderForEmail(orderId);
       const order = await prisma.order.findUnique({ where: { id: orderId }, select: { marketplaceListingId: true, quantity: true } });
       await refundOrder(orderId);
       await prisma.order.update({ where: { id: orderId }, data: { status: "CANCELLED", disputedAt: null } });
@@ -91,11 +120,26 @@ export async function POST(req: Request) {
           await revalidateCardPage(listing.cardId).catch(() => {});
         }
       }
+      // Same reasoning as force-release above — sellerRefundOrder already emails
+      // both sides for a seller-initiated refund; this admin path (triggered by
+      // a dispute) previously emailed neither.
+      if (before) {
+        if (before.buyerEmail) await sendSellerRefundedEmail(before.buyerEmail, before.info, null, "admin").catch(() => {});
+        if (before.sellerEmail) await sendSellerRefundConfirmedEmail(before.sellerEmail, before.info, false, "admin").catch(() => {});
+        await notify(before.buyerId, "order_refunded", "Order refunded", `Our team refunded ${formatMoney(before.info.totalCents, before.info.currency)} for ${before.info.cardName}.`, "/marketplace/orders").catch(() => {});
+        await notify(before.sellerId, "order_refunded", "Order refunded", `Order ${formatOrderNumber(before.info.orderNumber) ?? before.info.orderId} was refunded by our team after review.`, "/marketplace/orders?tab=Sales").catch(() => {});
+      }
       return NextResponse.json({ ok: true });
     }
     case "clear-dispute": {
       if (!orderId) return NextResponse.json({ error: "orderId required" }, { status: 400 });
+      const order = await prisma.order.findUnique({ where: { id: orderId }, select: { buyerId: true, sellerId: true, orderNumber: true } });
       await prisma.order.update({ where: { id: orderId }, data: { disputedAt: null, adminReviewedAt: new Date(), adminReviewedBy: user.email } });
+      if (order) {
+        const msg = `The review is done — order ${formatOrderNumber(order.orderNumber) ?? orderId} is unpaused and continues as normal.`;
+        await notify(order.buyerId, "order_disputed", "Review resolved", msg, "/marketplace/orders").catch(() => {});
+        await notify(order.sellerId, "order_disputed", "Review resolved", msg, "/marketplace/orders?tab=Sales").catch(() => {});
+      }
       return NextResponse.json({ ok: true });
     }
     case "suspend-seller": {
@@ -118,4 +162,56 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true });
     }
   }
+}
+
+// Snapshot of an order's identity + both parties' emails, taken BEFORE the
+// status-changing update, so force-release/force-refund can tell both sides
+// what happened — every other path that completes/refunds an order already
+// does this (receiveOrder, autoReleaseShipped, sellerRefundOrder); these two
+// admin actions previously didn't, leaving both parties to find out only if
+// they happened to check My orders.
+async function loadOrderForEmail(orderId: string): Promise<{
+  buyerId: string;
+  sellerId: string;
+  buyerEmail: string | null;
+  sellerEmail: string | null;
+  info: OrderEmailInfo;
+} | null> {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: {
+      id: true,
+      orderNumber: true,
+      quantity: true,
+      totalCents: true,
+      feeCents: true,
+      currency: true,
+      buyerId: true,
+      sellerId: true,
+      marketplaceListingId: true,
+    },
+  });
+  if (!order) return null;
+  const [buyer, seller, listing] = await Promise.all([
+    prisma.user.findUnique({ where: { id: order.buyerId }, select: { email: true } }),
+    prisma.user.findUnique({ where: { id: order.sellerId }, select: { email: true } }),
+    order.marketplaceListingId
+      ? prisma.marketplaceListing.findUnique({ where: { id: order.marketplaceListingId }, select: { card: { select: { name: true } } } })
+      : Promise.resolve(null),
+  ]);
+  return {
+    buyerId: order.buyerId,
+    sellerId: order.sellerId,
+    buyerEmail: buyer?.email ?? null,
+    sellerEmail: seller?.email ?? null,
+    info: {
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      cardName: listing?.card.name ?? "your order",
+      quantity: order.quantity,
+      totalCents: order.totalCents,
+      feeCents: order.feeCents,
+      currency: order.currency,
+    },
+  };
 }

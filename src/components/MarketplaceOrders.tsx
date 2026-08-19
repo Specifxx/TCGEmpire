@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { formatMoney } from "@/lib/format";
 import { CARRIERS, CARRIER_LABEL, trackingUrl } from "@/lib/tracking";
 import { formatDay, formatDateRange } from "@/lib/delivery-estimate";
@@ -434,7 +435,15 @@ function CardCell({ l }: { l: NonNullable<OrderRow["listing"]> | OfferRow["listi
 }
 
 export function MarketplaceOrders({ offersEnabled = false }: { offersEnabled?: boolean }) {
-  const [tab, setTab] = useState<Tab>("Purchases");
+  // Seller notifications (a sale, a ship reminder) link here as
+  // /marketplace/orders?tab=Sales so the click lands directly on the right tab
+  // instead of the Purchases default — see the notify() calls in the Stripe
+  // webhook and marketplace-maintenance cron.
+  const searchParams = useSearchParams();
+  const [tab, setTab] = useState<Tab>(() => {
+    const requested = searchParams.get("tab");
+    return (TABS as readonly string[]).includes(requested ?? "") ? (requested as Tab) : "Purchases";
+  });
   const [orders, setOrders] = useState<OrderRow[] | null>(null);
   const [made, setMade] = useState<OfferRow[]>([]);
   const [received, setReceived] = useState<OfferRow[]>([]);
@@ -443,6 +452,7 @@ export function MarketplaceOrders({ offersEnabled = false }: { offersEnabled?: b
   const [flash, setFlash] = useState<string | null>(null);
   const [reviewFor, setReviewFor] = useState<OrderGroup | null>(null);
   const [shipFor, setShipFor] = useState<OrderGroup | null>(null);
+  const [editTrackingFor, setEditTrackingFor] = useState<OrderGroup | null>(null);
   const [reportFor, setReportFor] = useState<OrderGroup | null>(null);
   const [cancelFor, setCancelFor] = useState<OrderGroup | null>(null);
   const [refundFor, setRefundFor] = useState<OrderGroup | null>(null);
@@ -618,6 +628,11 @@ export function MarketplaceOrders({ offersEnabled = false }: { offersEnabled?: b
                 )
               )}
               <TrackingLink g={g} />
+              {["SHIPPED", "COMPLETED"].includes(g.status) && (
+                <button onClick={() => setEditTrackingFor(g)} disabled={!!busy} className="text-[11px] text-slate-500 hover:text-brand-300 disabled:opacity-50">
+                  ✏️ Edit tracking
+                </button>
+              )}
               <PayoutBadge g={g} role="seller" />
               <CancelStatus g={g} busy={busy} onRequest={() => setCancelFor(g)} onAct={(body, msg) => groupAct(g.orderIds, body, msg)} />
               {["PAID", "SHIPPED", "COMPLETED"].includes(g.status) && !g.cancelRequestedAt && (
@@ -722,6 +737,19 @@ export function MarketplaceOrders({ offersEnabled = false }: { offersEnabled?: b
           onSubmit={async (carrier, trackingNumber) => {
             const ok = await groupAct(shipFor.orderIds, { action: "ship", carrier, trackingNumber }, "✓ Marked shipped");
             if (ok) setShipFor(null);
+          }}
+        />
+      )}
+
+      {editTrackingFor && (
+        <ShipModal
+          group={editTrackingFor}
+          busy={!!busy}
+          mode="edit"
+          onClose={() => setEditTrackingFor(null)}
+          onSubmit={async (carrier, trackingNumber) => {
+            const ok = await groupAct(editTrackingFor.orderIds, { action: "update-tracking", carrier, trackingNumber }, "✓ Tracking updated");
+            if (ok) setEditTrackingFor(null);
           }}
         />
       )}
@@ -881,25 +909,32 @@ function ReviewModal({
 // Structured tracking entry — carrier + number, deep-linked from the buyer's
 // side via lib/tracking.ts. No carrier account/API needed, so this works from
 // day one without an ABN. One entry ships every item in the parcel at once.
+//
+// Doubles as the "edit tracking" modal (mode="edit") for a SHIPPED/COMPLETED
+// order — same fields, prefilled from the group's current carrier/tracking
+// instead of blank, and a different title/submit label so it's clear this is a
+// correction, not a second shipment.
 function ShipModal({
   group,
   busy,
+  mode = "ship",
   onClose,
   onSubmit,
 }: {
   group: OrderGroup;
   busy: boolean;
+  mode?: "ship" | "edit";
   onClose: () => void;
   onSubmit: (carrier: string, trackingNumber: string) => void;
 }) {
-  const [carrier, setCarrier] = useState<string>(CARRIERS[0]);
-  const [trackingNumber, setTrackingNumber] = useState("");
+  const [carrier, setCarrier] = useState<string>(mode === "edit" && group.carrier ? group.carrier : CARRIERS[0]);
+  const [trackingNumber, setTrackingNumber] = useState(mode === "edit" ? group.trackingNumber ?? "" : "");
   const valid = trackingNumber.trim().length >= 3;
   return (
     <div className="fixed inset-0 z-[85] flex items-center justify-center p-4" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-black/70" onClick={onClose} />
       <div className="relative z-10 w-full max-w-md rounded-2xl border border-ink-700 bg-ink-900 p-5 shadow-2xl">
-        <h2 className="text-lg font-extrabold text-white">📦 Mark as shipped</h2>
+        <h2 className="text-lg font-extrabold text-white">{mode === "edit" ? "✏️ Edit tracking" : "📦 Mark as shipped"}</h2>
         <p className="mt-1 text-sm text-slate-400">
           {group.orders.length === 1 ? `${group.orders[0]!.listing?.card.name} ×${group.orders[0]!.quantity}` : `${group.orders.length} items`} to {group.counterparty}
         </p>
@@ -914,12 +949,14 @@ function ShipModal({
           <input value={trackingNumber} onChange={(e) => setTrackingNumber(e.target.value)} maxLength={60} className="input" placeholder="Off your shipping receipt" />
         </label>
         <p className="mt-2 text-xs text-slate-600">
-          {group.orders.length > 1 ? "Applies to every item in this order — enter tracking once." : "The buyer gets a link straight to the carrier's tracking page."} Funds release automatically on a fixed date 14 days from today — sooner if the buyer confirms delivery first.
+          {mode === "edit"
+            ? "Corrects the tracking on file — the buyer gets a short heads-up, not another \"shipped\" email."
+            : `${group.orders.length > 1 ? "Applies to every item in this order — enter tracking once." : "The buyer gets a link straight to the carrier's tracking page."} Funds release automatically on a fixed date 14 days from today — sooner if the buyer confirms delivery first.`}
         </p>
         <div className="mt-4 flex justify-end gap-2">
           <button onClick={onClose} className="btn-ghost text-sm">Cancel</button>
           <button onClick={() => onSubmit(carrier, trackingNumber.trim())} disabled={busy || !valid} className="btn-primary text-sm disabled:opacity-50">
-            {busy ? "Saving…" : "Mark shipped"}
+            {busy ? "Saving…" : mode === "edit" ? "Save tracking" : "Mark shipped"}
           </button>
         </div>
       </div>
