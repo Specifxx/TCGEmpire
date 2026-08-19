@@ -197,9 +197,9 @@ export default function ToolsHubPage() {
       <h1 className="text-2xl font-extrabold text-white sm:text-3xl">Tools &amp; calculators</h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
         Every RiftCompare tool in one place. Price-check a card, work out whether a box is worth ripping, and build
-        decks for less — most need no sign-up at all. The two list tools (
-        <span className="text-slate-300">Account</span>) are free once you have an account, and the pro screeners (
-        <span className="text-gold">Premium</span>) go deeper for keen buyers and collectors.
+        decks for less — most need no sign-up at all. A free account adds watchlists and price alerts, and the
+        list tools and pro screeners (<span className="text-gold">Premium</span>) go deeper for keen buyers and
+        collectors.
       </p>
 
       {GROUPS.map((group) => (
