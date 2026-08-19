@@ -84,13 +84,27 @@ function OutOfStockDisclosure({
 }) {
   const [open, setOpen] = useState(false);
   if (oosList.length === 0) return null;
+  // DISTINCT retailers, not row count — rows are unique per
+  // [retailer, condition, isFoil], so one store listing both an NM and a foil
+  // copy contributes two rows and would otherwise be announced as "2
+  // out-of-stock stores". Same rule (and same reason) as computeMarket's own
+  // storeCount for the in-stock side; these two counts sit a few hundred
+  // pixels apart on the page and must be counted the same way.
+  const storeCount = new Set(oosList.map((p) => p.retailer)).size;
   return (
-    <details className="border-t border-ink-800" onToggle={(e) => setOpen(e.currentTarget.open)}>
+    <details className="group border-t border-ink-800" onToggle={(e) => setOpen(e.currentTarget.open)}>
       <summary className="flex cursor-pointer list-none items-center justify-between bg-ink-900/40 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 marker:content-none hover:text-slate-300">
         <span>
-          {oosList.length} out-of-stock {oosList.length === 1 ? "store" : "stores"}
+          {storeCount} out-of-stock {storeCount === 1 ? "store" : "stores"}
         </span>
-        <span aria-hidden className="text-slate-600 transition-transform open:rotate-90">▸</span>
+        {/* group-open:, not open: — Tailwind's `open:` variant compiles to
+            `&[open]`, which only ever matches the element carrying the
+            attribute. [open] lands on the <details>, never on this <span>, so
+            `open:rotate-90` here silently never fired and the chevron sat
+            still whether the list was open or shut. Every other disclosure on
+            the site already does it the working way (group on the <details>,
+            group-open: on the marker). */}
+        <span aria-hidden className="text-slate-600 transition-transform group-open:rotate-90">▸</span>
       </summary>
       {open && (
         <ul className="divide-y divide-ink-800">
@@ -316,9 +330,18 @@ export function CardPriceComparison({
         ) : prices.length === 0 ? (
           <div className="p-6 text-center text-sm text-slate-400">
             <p className="font-semibold text-white">Currently sold out everywhere</p>
+            {/* Distinct retailers, matching the disclosure's own count (see the
+                note in OutOfStockDisclosure). And "expand … below" rather than
+                the old "see them below": the list underneath is a
+                closed-by-default disclosure, so there is nothing to see until
+                the reader opens it — the copy has to name the action. */}
             <p className="mt-1">
-              {outOfStock.length} {outOfStock.length === 1 ? "store has" : "stores have"} listed
-              this card but it&apos;s out of stock right now. See them below.
+              {(() => {
+                const n = new Set(outOfStock.map((p) => p.retailer)).size;
+                return `${n} ${n === 1 ? "store has" : "stores have"}`;
+              })()}{" "}
+              listed this card but it&apos;s out of stock right now — expand the list below to see
+              their last known prices.
             </p>
           </div>
         ) : (

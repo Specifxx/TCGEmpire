@@ -40,7 +40,9 @@ It is pre-loaded alongside 6 seller accounts, 54 cards (the "Origins" set) and
 ## Features
 
 - **Browse marketplace** — responsive grid of listings with search and faceted
-  filters (domain, rarity, card type, condition, price range, foil) plus sorting.
+  filters (domain, rarity, card type, condition, price range) plus sorting.
+  Deliberately NOT foil: finish is shown as a per-listing ✦ Foil badge, never
+  as a filter — a foil ranks on price alongside everything else.
 - **Card detail** — every active listing for a card, sorted by price, with a
   one-click buy (wallet-backed).
 - **Sell** — list any card with condition, foil and price; live card preview.
