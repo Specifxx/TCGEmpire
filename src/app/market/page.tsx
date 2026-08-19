@@ -13,6 +13,7 @@ import { MarketSectionNav } from "@/components/MarketSectionNav";
 import { IndexStats } from "@/components/IndexStats";
 import { IndexConstituents } from "@/components/IndexConstituents";
 import { cardImageAlt } from "@/lib/image-alt";
+import { pageAlternates } from "@/lib/seo";
 
 // searchParams-driven (?market=), so the route is dynamic regardless of any
 // page-level revalidate window — same reasoning as /browse and /sets/[set]. The
@@ -47,10 +48,9 @@ export const metadata: Metadata = {
     "Riftbound market health",
     "TCG market index",
   ],
-  alternates: {
-    canonical: "/market",
+  alternates: pageAlternates("/market", {
     types: { "text/markdown": `${SITE_URL}/llm/market` },
-  },
+  }),
   openGraph: {
     title: "The RiftCompare Index — the Riftbound market in one number",
     description:

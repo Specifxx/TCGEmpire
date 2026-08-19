@@ -15,7 +15,7 @@ import { EbayBuyCta } from "@/components/EbayBuyCta";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { breadcrumb } from "@/lib/jsonld";
 import { SITE_URL } from "@/lib/site";
-import { pageOpenGraph } from "@/lib/seo";
+import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { buildCollectionNarrative } from "@/lib/content/collection-narrative";
 import { getSiteMedianCents } from "@/lib/content/site-median";
 import { CHAMPION_THIN_THRESHOLD } from "@/lib/champions";
@@ -70,7 +70,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     description:
       `Every Riftbound ${champ.name} card, priced. ${factBit}` +
       `Compare live prices across stores to find the cheapest way to build ${champ.name}.`,
-    alternates: { canonical: `/champions/${champ.slug}` },
+    // pageAlternates(), not a bare object — see the identical fix + reasoning
+    // on card/[id]/page.tsx (same bug, same lib/seo.ts helper).
+    alternates: pageAlternates(`/champions/${champ.slug}`),
     ...(cardCount >= 0 && cardCount < CHAMPION_THIN_THRESHOLD ? { robots: { index: false, follow: true } } : {}),
     keywords: [
       `${champ.name} riftbound`,

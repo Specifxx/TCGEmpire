@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ALL_KEYWORD_NAMES, KEYWORDS, keywordSlug } from "@/lib/keywords";
 import { SITE_URL } from "@/lib/site";
+import { pageAlternates } from "@/lib/seo";
 
 // Single-page glossary + hub. riftbound.gg's /glossary (launched 2026-07-18) is one
 // page covering every keyword briefly; this page covers the same "one-page intent"
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
   title: { absolute: "Riftbound Keywords & Game Actions Glossary | RiftCompare" },
   description:
     "Every Riftbound keyword and game action, in one place — Empower, Flow, Burn and more, each with a quick rules reference, live card prices, and a link to the full guide.",
-  alternates: { canonical: "/keywords" },
+  alternates: pageAlternates("/keywords"),
   openGraph: {
     title: "Riftbound Keywords Glossary | RiftCompare",
     description: "Every Riftbound keyword and game action in one place, with a quick rules reference for the mechanics people search most.",

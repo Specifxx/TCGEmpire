@@ -34,7 +34,7 @@ import { championForCardName, championCardWhere } from "@/lib/champions";
 import { getCardPriceState } from "@/lib/card-price-state";
 import { getCanonicalTwin } from "@/lib/card-duplicates";
 import { typeFacetBySlug, rarityFacetBySlug } from "@/lib/facets";
-import { pageOpenGraph } from "@/lib/seo";
+import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import {
   buildCardNarrative,
   editionLabel,
@@ -201,13 +201,18 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     title,
     description,
     ...(noindex ? { robots: { index: false, follow: true } } : {}),
-    alternates: {
-      canonical: canonicalPath,
+    // pageAlternates(), not a bare object: a hand-rolled `alternates` here
+    // shallow-replaces the root's, which was silently dropping this route's
+    // RSS/JSON-Feed auto-discovery links on every one of its ~1,000+ pages —
+    // the site's single highest-volume template was hit by exactly the bug
+    // this helper exists to fix (see lib/seo.ts's header comment), just
+    // never migrated to use it. Machine-readable markdown for AI agents
+    // (rel=alternate type=text/markdown) is preserved via `types`.
+    alternates: pageAlternates(canonicalPath, {
       // Single cookie-switched URL is the global default for all four markets.
       languages: { "x-default": `${SITE_URL}${canonicalPath}` },
-      // Machine-readable markdown for AI agents (rel=alternate type=text/markdown).
       types: { "text/markdown": `${SITE_URL}/llm${canonicalPath}` },
-    },
+    }),
     // og:image + twitter:image are provided by the co-located opengraph-image.tsx
     // (a branded price card: art + name + lowest live price).
     // pageOpenGraph(), not a bare object: Next SHALLOW-merges metadata, so an

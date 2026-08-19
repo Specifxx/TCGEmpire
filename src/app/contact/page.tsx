@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { CONTACT_EMAIL } from "@/lib/site";
+import { pageAlternates } from "@/lib/seo";
 import { MARKETPLACE_NAV_VISIBLE } from "@/components/nav-groups";
 
 export const metadata = {
   title: "Contact & Feedback",
   description: "Get in touch with RiftCompare — report a price issue, suggest a store to add, or send feedback.",
-  alternates: { canonical: "/contact" },
+  alternates: pageAlternates("/contact"),
 };
 
 export default function ContactPage() {

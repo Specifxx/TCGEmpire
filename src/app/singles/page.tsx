@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { SETS, DOMAIN_KEYS, domainInfo } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
+import { pageAlternates } from "@/lib/seo";
 import { EbayBuyCta } from "@/components/EbayBuyCta";
 
 // SEO hub for the "Riftbound singles" search intent. Market-neutral, richly
@@ -26,7 +27,7 @@ export const metadata: Metadata = {
     "Riftbound card prices",
     "compare Riftbound singles",
   ],
-  alternates: { canonical: "/singles" },
+  alternates: pageAlternates("/singles"),
   openGraph: {
     title: "Buy Riftbound Singles — Compare Prices Across Every Store",
     description:

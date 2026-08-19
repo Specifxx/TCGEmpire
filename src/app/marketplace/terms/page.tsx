@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
 import { staticPageDateLabel } from "@/lib/static-page-dates";
 import { MARKETPLACE_FEE_BPS, MARKETPLACE_PREMIUM_FEE_BPS, MARKETPLACE_SHIP_DEADLINE_DAYS, MARKETPLACE_AUTO_RELEASE_DAYS, MARKETPLACE_LAUNCH_COUNTRIES } from "@/lib/marketplace";
+import { pageAlternates } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const metadata: Metadata = {
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
   description:
     `The terms for buying and selling on ${SITE_NAME} Marketplace: who can sell, which markets are ` +
     `live, the fees, and how held funds and payouts work.`,
-  alternates: { canonical: "/marketplace/terms" },
+  alternates: pageAlternates("/marketplace/terms"),
 };
 
 const FEE_PCT = (MARKETPLACE_FEE_BPS / 100).toFixed(0);

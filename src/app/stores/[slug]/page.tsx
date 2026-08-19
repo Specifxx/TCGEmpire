@@ -11,7 +11,7 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { breadcrumb } from "@/lib/jsonld";
 import { cardHref } from "@/lib/card-url";
 import { SITE_URL } from "@/lib/site";
-import { pageOpenGraph } from "@/lib/seo";
+import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 
 export const revalidate = 86400;
 
@@ -75,7 +75,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       `Compare live Riftbound singles prices at ${label}${count > 0 ? ` — ${count} cards in stock` : ""}` +
       `${cheapest[0] ? `, from ${cheapest[0].card.name} at ${formatMoney(cheapest[0].priceCents, place.currency)}` : ""}. ` +
       `See how this ${place.adjective} store compares to every other store we track.`,
-    alternates: { canonical: `/stores/${store.slug}` },
+    alternates: pageAlternates(`/stores/${store.slug}`),
     // Thin guard: a store with no live inventory (several tracked retailers are
     // deliberately directory-only) would be a page whose only content is
     // "nothing in stock". Real page, still linked, just not submitted for

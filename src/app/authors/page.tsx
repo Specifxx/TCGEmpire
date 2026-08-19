@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AUTHORS } from "@/lib/content/authors";
 import { getArticles } from "@/lib/articles";
 import { SITE_URL } from "@/lib/site";
+import { pageAlternates } from "@/lib/seo";
 
 export const revalidate = 86400;
 
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
   title: "Who writes RiftCompare",
   description:
     "The bylines behind RiftCompare's Riftbound guides, posts and market coverage — who writes what, and how it's researched.",
-  alternates: { canonical: "/authors" },
+  alternates: pageAlternates("/authors"),
 };
 
 export default function AuthorsPage() {

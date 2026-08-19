@@ -14,6 +14,7 @@ import {
 import { MARKETPLACE_SHIP_DEADLINE_DAYS } from "@/lib/marketplace-policy";
 import { ALL_FALLBACK_RETAILERS } from "@/lib/constants";
 import { stripeEnabled } from "@/lib/stripe";
+import { pageAlternates } from "@/lib/seo";
 import { MarketplaceClient, type MktCard } from "@/components/MarketplaceClient";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +28,7 @@ export const metadata: Metadata = {
   // "open this card" hint now (see the listings query below), not a
   // different page, so every arrival path (search, a card page's deep link,
   // a bookmark) points Google at the one real, indexable marketplace URL.
-  alternates: { canonical: "/marketplace" },
+  alternates: pageAlternates("/marketplace"),
   // Indexable once the marketplace is publicly launched; noindex while the
   // private beta shows non-testers only a Coming-Soon teaser (NEXT_PUBLIC_ env
   // is baked at build time, so this resolves at build like the nav flag).

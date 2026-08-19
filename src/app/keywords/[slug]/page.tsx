@@ -9,7 +9,7 @@ import { DEFAULT_COUNTRY } from "@/lib/country";
 import { KEYWORDS, keywordBySlug } from "@/lib/keywords";
 import { getArticle } from "@/lib/articles";
 import { SITE_URL } from "@/lib/site";
-import { pageOpenGraph } from "@/lib/seo";
+import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 
 export const revalidate = 86400;
 
@@ -52,7 +52,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   return {
     title: { absolute: title },
     description,
-    alternates: { canonical: `/keywords/${kw.slug}` },
+    alternates: pageAlternates(`/keywords/${kw.slug}`),
     keywords: [
       `riftbound ${kw.name.toLowerCase()} keyword`,
       `riftbound ${kw.name.toLowerCase()} reference`,

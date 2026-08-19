@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
+import { pageAlternates } from "@/lib/seo";
 import { HowItWorks } from "@/components/home/HowItWorks";
 
 // This page had no DB read at all before HowItWorks (below) needed a live
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
   title: "About RiftCompare",
   description:
     "RiftCompare is an independent price-comparison and database for Riftbound: League of Legends TCG — how it started, how it works, and who's behind it.",
-  alternates: { canonical: "/about" },
+  alternates: pageAlternates("/about"),
 };
 
 const breadcrumbLd = {

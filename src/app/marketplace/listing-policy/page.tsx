@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
 import { MARKETPLACE_PUBLIC } from "@/lib/marketplace";
+import { pageAlternates } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const revalidate = 86400;
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
   title: "Marketplace listing content policy",
   description:
     "What may and may not be listed on the RiftCompare Marketplace, how listings are moderated, and how to report one.",
-  alternates: { canonical: "/marketplace/listing-policy" },
+  alternates: pageAlternates("/marketplace/listing-policy"),
   // Follows the rest of the marketplace: indexed only once the marketplace is
   // publicly launched, crawlable either way.
   ...(MARKETPLACE_PUBLIC ? {} : { robots: { index: false, follow: true } }),

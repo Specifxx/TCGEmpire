@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import { HubIntro } from "@/components/HubIntro";
 import { TradeCalculator } from "@/components/TradeCalculator";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { pageAlternates } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Trade Calculator — Compare Riftbound card trade values",
   description:
     "Trading Riftbound cards in person? Add each side's cards and instantly compare their total value using RiftCompare's live lowest prices — so you know a trade is fair before you shake on it.",
-  alternates: { canonical: "/trade" },
+  alternates: pageAlternates("/trade"),
 };
 
 // Static shell; the calculator itself is client-side (reads the country cookie via

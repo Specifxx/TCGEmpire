@@ -10,6 +10,7 @@ import { parseDeckList } from "@/lib/deck";
 import { normalizeSearch, formatMoney } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { pageAlternates } from "@/lib/seo";
 
 const TITLE = "Riftbound Deck Builder & Deck Price Calculator";
 const DESC =
@@ -29,7 +30,7 @@ function decodeList(b64: string): string {
 // Shared deck links carry ?list=; price the deck server-side and unfurl with a
 // dynamic OG card ("This Riftbound deck costs $X") so a shared list pulls people in.
 export async function generateMetadata({ searchParams }: { searchParams: { list?: string } }): Promise<Metadata> {
-  const base: Metadata = { title: TITLE, description: DESC, alternates: { canonical: "/deck" } };
+  const base: Metadata = { title: TITLE, description: DESC, alternates: pageAlternates("/deck") };
   const raw = searchParams.list ? decodeList(searchParams.list) : "";
   if (!raw.trim()) return base;
 

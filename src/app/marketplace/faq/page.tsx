@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
+import { pageAlternates } from "@/lib/seo";
 import {
   MARKETPLACE_FEE_BPS,
   MARKETPLACE_PREMIUM_FEE_BPS,
@@ -12,7 +13,7 @@ import {
 export const metadata: Metadata = {
   title: "Marketplace FAQ",
   description: `Answers to common questions about buying and selling on ${SITE_NAME} Marketplace — fees, buyer protection, shipping, payouts and trust.`,
-  alternates: { canonical: "/marketplace/faq" },
+  alternates: pageAlternates("/marketplace/faq"),
 };
 
 const FEE_PCT = (MARKETPLACE_FEE_BPS / 100).toFixed(0);

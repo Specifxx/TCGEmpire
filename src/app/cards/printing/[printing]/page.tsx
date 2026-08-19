@@ -7,7 +7,7 @@ import { DEFAULT_COUNTRY } from "@/lib/country";
 import { PRINTING_FACETS, printingFacetBySlug, FACET_THIN_THRESHOLD } from "@/lib/facets";
 import { FacetPageBody } from "@/components/FacetPageBody";
 import { SITE_URL } from "@/lib/site";
-import { pageOpenGraph } from "@/lib/seo";
+import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 
 export const revalidate = 86400;
 
@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: { params: { printing: string 
   return {
     title: { absolute: title },
     description: `${facet.intro} Compare live prices across every store we track.`,
-    alternates: { canonical: `/cards/printing/${facet.slug}` },
+    alternates: pageAlternates(`/cards/printing/${facet.slug}`),
     ...(total >= 0 && total < FACET_THIN_THRESHOLD ? { robots: { index: false, follow: true } } : {}),
     openGraph: pageOpenGraph({ title, description: facet.intro, url: `/cards/printing/${facet.slug}` }),
   };

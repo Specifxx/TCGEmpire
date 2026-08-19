@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { DOMAIN_PAGES } from "@/lib/domains";
 import { SITE_URL } from "@/lib/site";
+import { pageAlternates } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const revalidate = 86400;
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
   title: { absolute: "Riftbound Domains — Fury, Calm, Mind, Body, Chaos & Order | RiftCompare" },
   description:
     "Browse Riftbound: League of Legends TCG cards by domain. Compare live prices for every Fury, Calm, Mind, Body, Chaos and Order card and find the cheapest singles for your deck.",
-  alternates: { canonical: "/domains" },
+  alternates: pageAlternates("/domains"),
   openGraph: {
     title: "Riftbound Domains | RiftCompare",
     description: "Browse Riftbound cards by domain and compare live prices.",

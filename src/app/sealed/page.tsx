@@ -12,6 +12,7 @@ import { SealedSort } from "@/components/SealedSort";
 import { SealedTile } from "@/components/SealedTile";
 import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
 import { SITE_URL } from "@/lib/site";
+import { pageAlternates } from "@/lib/seo";
 
 // searchParams-driven (q/type/set/min/max/instock/atmsrp/sort), so the route is
 // per-request dynamic regardless — same reasoning as /browse, /market and
@@ -68,7 +69,7 @@ export async function generateMetadata({ searchParams }: { searchParams: SealedP
       : "Riftbound Sealed Prices — Boxes, Packs & Sets",
     description:
       "Compare live prices on Riftbound booster boxes, packs, bundles & Proving Grounds across AU, NZ, US, UK & SG stores — find the cheapest sealed. Updated daily.",
-    alternates: { canonical: "/sealed" },
+    alternates: pageAlternates("/sealed"),
     robots: isFilteredParams(searchParams) ? { index: false, follow: true } : undefined,
   };
 }

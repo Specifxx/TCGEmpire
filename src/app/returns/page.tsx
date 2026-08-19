@@ -4,6 +4,7 @@ import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
 import { MARKETPLACE_AUTO_RELEASE_DAYS, MARKETPLACE_SHIP_DEADLINE_DAYS } from "@/lib/marketplace";
 import { MARKETPLACE_LAUNCH_COUNTRIES } from "@/lib/marketplace-countries";
 import { COUNTRIES, type Country } from "@/lib/country";
+import { pageAlternates } from "@/lib/seo";
 
 // Store Return & Shipping Policy — the CONVENTIONAL-RETAIL restatement of the
 // same rules the Buyer Protection and Shipping & Tracking pages describe in
@@ -34,7 +35,7 @@ export const metadata: Metadata = {
   description:
     `Returns, refunds and shipping for orders placed on ${SITE_NAME}: a ${MARKETPLACE_AUTO_RELEASE_DAYS}-day return window, ` +
     "free return postage, no restocking fee, and a full refund including original shipping.",
-  alternates: { canonical: "/returns" },
+  alternates: pageAlternates("/returns"),
   openGraph: {
     title: `Store Return & Shipping Policy | ${SITE_NAME}`,
     description: `${MARKETPLACE_AUTO_RELEASE_DAYS}-day returns, free return postage, no restocking fee, full refunds including original shipping.`,

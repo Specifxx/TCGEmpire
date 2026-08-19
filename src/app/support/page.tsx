@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { pageAlternates } from "@/lib/seo";
 import { SupportForm, type SupportOrderOption } from "@/components/SupportForm";
 
 export const dynamic = "force-dynamic";
@@ -9,7 +10,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Support",
   description: "Get help with a RiftCompare Marketplace order, payment, or account issue.",
-  alternates: { canonical: "/support" },
+  alternates: pageAlternates("/support"),
 };
 
 export default async function SupportPage({ searchParams }: { searchParams: { category?: string; subject?: string } }) {

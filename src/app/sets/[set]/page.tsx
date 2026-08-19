@@ -29,7 +29,7 @@ import { buildCollectionNarrative } from "@/lib/content/collection-narrative";
 import { getSiteMedianCents } from "@/lib/content/site-median";
 import { SETS, setBySlug } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
-import { pageOpenGraph } from "@/lib/seo";
+import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 
 // searchParams-driven (filters/pagination), so the route stays dynamic — same
 // tradeoff as /browse.
@@ -128,11 +128,8 @@ export async function generateMetadata({
       `cheapest Riftbound ${set.name} cards`,
       `Riftbound ${set.name} value`,
     ],
-    alternates: {
-      canonical: canonicalPath,
-      // Single cookie-switched URL is the global default for all four markets.
-      languages: { "x-default": `${SITE_URL}${canonicalPath}` },
-    },
+    // Single cookie-switched URL is the global default for all four markets.
+    alternates: pageAlternates(canonicalPath, { languages: { "x-default": `${SITE_URL}${canonicalPath}` } }),
     ...(cardCount === 0 || filtered ? { robots: { index: false, follow: true } } : {}),
     openGraph: pageOpenGraph({ title: `${title} | RiftCompare`, description, url: canonicalPath }),
   };

@@ -5,6 +5,7 @@ import { COUNTRIES, type Country } from "@/lib/country";
 import { SITE_URL } from "@/lib/site";
 import { MARKETPLACE_PUBLIC } from "@/lib/marketplace";
 import { storeSlug } from "@/lib/store-pages";
+import { pageAlternates } from "@/lib/seo";
 
 export const revalidate = 86400;
 
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
   title: "Stores we track — every Riftbound retailer in the comparison",
   description:
     "The full list of Riftbound stores RiftCompare compares prices across, by market (Australia, New Zealand, the US, the UK, Singapore and Canada). Don't see your store? Request it.",
-  alternates: { canonical: "/stores/tracked" },
+  alternates: pageAlternates("/stores/tracked"),
 };
 
 const MARKETS: Country[] = ["AU", "NZ", "US", "UK", "SG", "CA"];

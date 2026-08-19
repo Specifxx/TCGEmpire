@@ -13,6 +13,7 @@ import { cardHref } from "@/lib/card-url";
 import { PremiumButton } from "@/components/PremiumButton";
 import { SITE_URL } from "@/lib/site";
 import { cardImageAlt } from "@/lib/image-alt";
+import { pageAlternates } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +22,7 @@ export const metadata: Metadata = {
   description:
     "A Premium screener ranking Riftbound cards by demand and price-timing signals — high or rising search interest that hasn't re-rated yet. Transparent scoring, backtested, not financial advice.",
   keywords: ["riftbound rising cards", "riftbound price predictions", "riftbound card demand", "riftbound investing", "riftbound cards going up"],
-  alternates: { canonical: "/tools/rising" },
+  alternates: pageAlternates("/tools/rising"),
   openGraph: { title: "Rising Cards — Riftbound cards likely to go up", url: `${SITE_URL}/tools/rising` },
 };
 

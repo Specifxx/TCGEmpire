@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CONTACT_EMAIL, SITE_NAME } from "@/lib/site";
 import { MARKETPLACE_AUTO_RELEASE_DAYS, MARKETPLACE_SHIP_DEADLINE_DAYS } from "@/lib/marketplace";
+import { pageAlternates } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Buyer Protection",
   description: `How ${SITE_NAME} Marketplace protects buyers — held funds, tracking, and dispute support.`,
-  alternates: { canonical: "/marketplace/buyer-protection" },
+  alternates: pageAlternates("/marketplace/buyer-protection"),
 };
 
 export default function BuyerProtectionPage() {

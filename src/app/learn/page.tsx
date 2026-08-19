@@ -10,6 +10,7 @@ import { DeckAnatomy } from "@/components/learn/DeckAnatomy";
 import { GameFlow } from "@/components/learn/GameFlow";
 import { LegendQuiz, type QuizLegend } from "@/components/learn/LegendQuiz";
 import { cardImageAlt } from "@/lib/image-alt";
+import { pageAlternates } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Learn Riftbound — Interactive New-Player Guide",
@@ -24,7 +25,7 @@ export const metadata: Metadata = {
     "Riftbound deck building",
     "League of Legends TCG how to play",
   ],
-  alternates: { canonical: "/learn" },
+  alternates: pageAlternates("/learn"),
 };
 
 // Everything on this page is data-backed (live counts + real example cards) or

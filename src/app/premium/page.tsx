@@ -8,6 +8,7 @@ import { PremiumCta } from "@/components/PremiumCta";
 import { ManageSubscriptionButton } from "@/components/ManageSubscriptionButton";
 import { AnnualPriceBlock } from "@/components/AnnualPriceBlock";
 import { SITE_URL, PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, PREMIUM_ANNUAL_AMOUNT } from "@/lib/site";
+import { pageAlternates } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +19,7 @@ const PREMIUM_FEE_PCT = MARKETPLACE_PREMIUM_FEE_BPS / 100;
 export const metadata: Metadata = {
   title: "RiftCompare Premium — power tools for buyers & sellers",
   description: `RiftCompare Premium: a ${PREMIUM_FEE_PCT}% Marketplace seller fee (down from ${FEE_PCT}%), the Value Finder screener, Rising Cards, the full Deal Finder list and an ad-free site. Price comparison is free for everyone, and a free account adds the Bulk Pricer and Best Basket.`,
-  alternates: { canonical: "/premium" },
+  alternates: pageAlternates("/premium"),
 };
 
 // Detailed feature cards (all real Premium features).

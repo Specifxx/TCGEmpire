@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { FeedbackForm } from "@/components/FeedbackForm";
 import { FEEDBACK_PREMIUM_MONTHS, feedbackPremiumActive } from "@/lib/premium";
 import { SITE_URL } from "@/lib/site";
+import { pageAlternates } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
   title: "Feedback — Shape RiftCompare (and get Premium)",
   description:
     "Tell us what would make RiftCompare better. Your first feedback earns free RiftCompare Premium — help us build the best Riftbound price tool.",
-  alternates: { canonical: "/feedback" },
+  alternates: pageAlternates("/feedback"),
   openGraph: {
     title: "Feedback — Shape RiftCompare",
     description: "Tell us what would make RiftCompare better — your first feedback earns free Premium.",

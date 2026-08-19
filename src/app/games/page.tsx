@@ -10,6 +10,7 @@ import { cardHref } from "@/lib/card-url";
 import { SITE_URL } from "@/lib/site";
 import { AdSlot } from "@/components/AdSlot";
 import { cardImageAlt } from "@/lib/image-alt";
+import { pageAlternates } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Riftbound Games — Free Daily Puzzles & Arcade",
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
     "higher or lower TCG",
     "Riftbound quiz",
   ],
-  alternates: { canonical: "/games" },
+  alternates: pageAlternates("/games"),
   openGraph: {
     title: "Riftbound Games — Free Daily Puzzles & Arcade | RiftCompare",
     description:

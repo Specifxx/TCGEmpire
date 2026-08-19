@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { SITE_URL, CONTACT_EMAIL } from "@/lib/site";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { RETAILER_LIST } from "@/lib/retailers";
+import { pageAlternates } from "@/lib/seo";
 
 export const revalidate = 3600;
 
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
   title: "RiftCompare for Stores — Pricing Intelligence for Riftbound Retailers",
   description:
     "Sell Riftbound? RiftCompare already compares your prices against every competitor, daily. Get the same intelligence we use: a live repricing report showing exactly where you're winning, losing, and leaving margin on the table.",
-  alternates: { canonical: "/stores" },
+  alternates: pageAlternates("/stores"),
 };
 
 const PITCH = [

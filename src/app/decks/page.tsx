@@ -12,6 +12,7 @@ import { SITE_URL } from "@/lib/site";
 import { cardImageAlt } from "@/lib/image-alt";
 import { deckItemListLd, deckFaqLd, deckFaq, cheapestDeck, bestWinRateDeck } from "@/lib/deck-jsonld";
 import { deckGroupPath, liveDeckGroups } from "@/lib/deck-groups";
+import { pageAlternates } from "@/lib/seo";
 
 export const revalidate = 86400;
 
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
   title: "Riftbound Top Meta Decks & Build Cost",
   description:
     "Real top-finishing Riftbound Vendetta decklists, each priced live across stores. See what it costs to build a deck and where to buy every card.",
-  alternates: { canonical: "/decks" },
+  alternates: pageAlternates("/decks"),
   openGraph: {
     type: "website",
     url: `${SITE_URL}/decks`,

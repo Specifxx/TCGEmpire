@@ -40,7 +40,7 @@ test("gallery emits ItemList structured data and a canonical", () => {
   const src = read(GALLERY);
   assert.ok(src.includes('"@type": "ItemList"'), "gallery must emit ItemList JSON-LD");
   assert.ok(src.includes("itemListElement"), "ItemList must carry its items");
-  assert.ok(src.includes("canonical:"), "gallery must declare a canonical");
+  assert.ok(src.includes("pageAlternates("), "gallery must declare a canonical via the shared helper");
 });
 
 test("gallery caps its payload so a big set can't wreck LCP", () => {

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { AuthForm } from "@/components/AuthForm";
 import { getCurrentUser } from "@/lib/auth";
 import { enabledProviders } from "@/lib/oauth";
+import { pageAlternates } from "@/lib/seo";
 
 // auth/utility — never indexed. The self-referencing canonical is what collapses
 // the ?next= family: the navbar's sign-in link carries the current path as ?next=,
@@ -13,7 +14,7 @@ import { enabledProviders } from "@/lib/oauth";
 // stop Google seeing the noindex — see app/robots.ts.)
 export const metadata: Metadata = {
   robots: { index: false },
-  alternates: { canonical: "/login" },
+  alternates: pageAlternates("/login"),
 };
 
 function safe(next?: string): string {

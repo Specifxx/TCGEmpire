@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     "Riftbound cards spiking",
     "Riftbound trending cards",
   ],
-  alternates: { canonical: "/movers" },
+  alternates: pageAlternates("/movers"),
   openGraph: {
     title: "Riftbound Price Movers — Top Risers & Drops",
     description:

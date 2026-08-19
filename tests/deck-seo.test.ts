@@ -190,7 +190,7 @@ test("cheapest ignores unpriced decks; best win rate picks the maximum", () => {
 
 test("the page keeps its self-referencing canonical and adds no fabricated hreflang", () => {
   const page = code("src/app/decks/page.tsx");
-  assert.match(page, /alternates: \{ canonical: "\/decks" \}/, "canonical must self-reference");
+  assert.match(page, /alternates: pageAlternates\("\/decks"\)/, "canonical must self-reference via the shared helper");
   // Region is a cookie on ONE url set (lib/get-country.ts). hreflang alternates
   // would have to point at per-region URLs that do not exist — worse than none.
   assert.ok(!/hreflang/i.test(page), "no hreflang until region-segmented URLs exist");

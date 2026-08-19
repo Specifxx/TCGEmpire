@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SITE_NAME } from "@/lib/site";
 import { MARKETPLACE_SHIP_DEADLINE_DAYS, MARKETPLACE_LAUNCH_COUNTRIES } from "@/lib/marketplace";
 import { CARRIER_LABEL } from "@/lib/tracking";
+import { pageAlternates } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const metadata: Metadata = {
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
   description:
     `How shipping works on ${SITE_NAME} Marketplace: same-region delivery, the seller dispatch ` +
     `deadline, required tracking, and how cards must be packaged.`,
-  alternates: { canonical: "/marketplace/shipping" },
+  alternates: pageAlternates("/marketplace/shipping"),
 };
 
 export default function MarketplaceShippingPage() {

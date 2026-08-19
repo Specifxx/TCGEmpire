@@ -3,13 +3,14 @@ import Link from "next/link";
 import { SuggestStoreForm } from "@/components/SuggestStoreForm";
 import { RETAILER_LIST } from "@/lib/retailers";
 import { SITE_URL } from "@/lib/site";
+import { pageAlternates } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Suggest a Store — Get Listed on RiftCompare",
   description:
     "Run a store that sells Riftbound: League of Legends TCG singles? Suggest it and we'll add it to RiftCompare's price comparison — free listing, more customers.",
-  alternates: { canonical: "/stores/suggest" },
+  alternates: pageAlternates("/stores/suggest"),
   openGraph: {
     title: "Suggest a Store — Get Listed on RiftCompare",
     description: "Sell Riftbound cards? Get your store listed on RiftCompare's price comparison, free.",

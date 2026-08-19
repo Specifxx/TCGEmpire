@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SITE_URL, SITE_NAME } from "@/lib/site";
+import { pageAlternates } from "@/lib/seo";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { RadianceCountdownTimer } from "@/components/RadianceCountdownTimer";
@@ -59,7 +60,7 @@ export const metadata: Metadata = {
     "when does Riftbound Radiance release",
     "Riftbound Radiance cards",
   ],
-  alternates: { canonical: "/radiance-countdown" },
+  alternates: pageAlternates("/radiance-countdown"),
   openGraph: {
     title: "Riftbound Radiance — Releases 23 October 2026",
     description: "Set 5 lands 23 October 2026 with ~180 cards. Live prices from every store the moment it drops.",

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
 import { STATIC_PAGE_DATES, staticPageDateLabel } from "@/lib/static-page-dates";
 import { RETAILER_LIST } from "@/lib/retailers";
+import { pageAlternates } from "@/lib/seo";
 
 export const revalidate = 86400;
 
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
   title: "Editorial & pricing policy",
   description:
     "Who writes RiftCompare, how we collect and verify card prices, how often they refresh, how we handle affiliate links, and how to report an error.",
-  alternates: { canonical: "/editorial-policy" },
+  alternates: pageAlternates("/editorial-policy"),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -3,13 +3,14 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import Link from "next/link";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
 import { staticPageDateLabel } from "@/lib/static-page-dates";
+import { pageAlternates } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
   description:
     `The terms of using ${SITE_NAME}: what our price comparison does and does not guarantee, how ` +
     `affiliate links work, account rules and acceptable use.`,
-  alternates: { canonical: "/terms" },
+  alternates: pageAlternates("/terms"),
 };
 
 

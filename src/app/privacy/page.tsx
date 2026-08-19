@@ -3,11 +3,12 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import Link from "next/link";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
 import { staticPageDateLabel } from "@/lib/static-page-dates";
+import { pageAlternates } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description: `How ${SITE_NAME} handles your data, cookies and third-party advertising.`,
-  alternates: { canonical: "/privacy" },
+  alternates: pageAlternates("/privacy"),
 };
 
 

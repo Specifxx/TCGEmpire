@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { STATIC_PAGE_DATES, staticPageDateLabel } from "@/lib/static-page-dates";
 import { USD_TO } from "@/lib/fx";
+import { pageAlternates } from "@/lib/seo";
 
 export const revalidate = 86400;
 
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
   title: "Methodology — condition grading, FX and comparison rules",
   description:
     "How RiftCompare maps condition grades across eBay, TCGplayer, Cardmarket and independent stores, how currency conversion is handled, and how the price comparison is ranked.",
-  alternates: { canonical: "/methodology" },
+  alternates: pageAlternates("/methodology"),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

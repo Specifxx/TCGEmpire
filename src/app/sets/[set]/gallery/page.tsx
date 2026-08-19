@@ -12,7 +12,7 @@ import type { CardTileData } from "@/components/CardTile";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 import { setBySlug, SETS } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
-import { pageOpenGraph } from "@/lib/seo";
+import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // /sets/<set>/gallery — the visual card gallery
@@ -132,10 +132,9 @@ export async function generateMetadata({ params }: { params: { set: string } }):
       `Riftbound ${set.name} all cards`,
       `${set.name} card images`,
     ],
-    alternates: {
-      canonical: `/sets/${set.slug}/gallery`,
+    alternates: pageAlternates(`/sets/${set.slug}/gallery`, {
       languages: { "x-default": `${SITE_URL}/sets/${set.slug}/gallery` },
-    },
+    }),
     ...(thin ? { robots: { index: false, follow: true } } : {}),
     openGraph: pageOpenGraph({ title: `${title} | RiftCompare`, description, url: `/sets/${set.slug}/gallery` }),
   };

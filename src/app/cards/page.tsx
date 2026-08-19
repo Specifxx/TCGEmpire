@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { TYPE_FACETS, RARITY_FACETS, PRINTING_FACETS, FACET_THIN_THRESHOLD } from "@/lib/facets";
 import { DOMAIN_PAGES } from "@/lib/domains";
 import { SITE_URL } from "@/lib/site";
+import { pageAlternates } from "@/lib/seo";
 
 // Facet index — links every card-type, rarity and printing hub in one place, plus
 // the existing domain hubs. This is the internal-linking backbone item B2 needs:
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
   title: { absolute: "Browse Riftbound Cards by Type, Rarity & Printing | RiftCompare" },
   description:
     "Every way to browse the Riftbound card database — by domain, card type, rarity and printing — each with live prices across every store we track.",
-  alternates: { canonical: "/cards" },
+  alternates: pageAlternates("/cards"),
   openGraph: { title: "Browse Riftbound Cards | RiftCompare", description: "Browse by domain, type, rarity and printing.", url: `${SITE_URL}/cards` },
 };
 

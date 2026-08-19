@@ -7,6 +7,7 @@ import { SETS } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
 import { BoxEvCalculator, type BoxEvSet, type PullCard } from "@/components/BoxEvCalculator";
 import { poolOf, POOL_ORDER, type PoolKey } from "@/lib/box-ev";
+import { pageAlternates } from "@/lib/seo";
 import { AdSlot } from "@/components/AdSlot";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -31,7 +32,7 @@ export const metadata: Metadata = {
     "Riftbound expected value",
     "TCG box EV calculator",
   ],
-  alternates: { canonical: "/tools/box-ev" },
+  alternates: pageAlternates("/tools/box-ev"),
   openGraph: {
     title: "Riftbound Booster Box EV Calculator",
     description: "Expected value per box from real market prices — is opening worth it?",

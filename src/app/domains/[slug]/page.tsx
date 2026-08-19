@@ -10,7 +10,7 @@ import { buildCollectionNarrative } from "@/lib/content/collection-narrative";
 import { getSiteMedianCents } from "@/lib/content/site-median";
 import { DOMAIN_PAGES, domainBySlug } from "@/lib/domains";
 import { SITE_URL } from "@/lib/site";
-import { pageOpenGraph } from "@/lib/seo";
+import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { deckGroupBySlug, deckGroupPath, seedsInGroup } from "@/lib/deck-groups";
 
 // AU baseline server render (country-neutral copy); card tiles localise the price
@@ -38,7 +38,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       `${domain.label} domain Riftbound`,
       `cheapest Riftbound ${domain.label} cards`,
     ],
-    alternates: { canonical: `/domains/${domain.slug}` },
+    alternates: pageAlternates(`/domains/${domain.slug}`),
     openGraph: pageOpenGraph({ title: `${title} | RiftCompare`, description, url: `/domains/${domain.slug}` }),
   };
 }
