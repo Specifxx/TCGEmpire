@@ -24,79 +24,87 @@ import { PrismaClient } from "@prisma/client";
 // etc. tables it also creates cost negligible storage empty; only PriceHistory /
 // ClickEvent get real traffic).
 
-// HISTORY_DATABASE_URL_2 is the CURRENT history project — cut over 2026-08-16
-// when HISTORY_DATABASE_URL approached its own 5 GB monthly network-transfer
-// allowance, five days after it took over from RH7 (RH7 replaced RH6 on
-// 2026-08-04; RH6 replaced RH5 on 2026-07-31; _4 went unreachable with P1001
-// before that, and _3/_2/base before it).
+// HISTORY_DATABASE_URL_3 is the CURRENT history project — cut over 2026-08-19
+// when HISTORY_DATABASE_URL_2 approached its own 5 GB monthly network-transfer
+// allowance, three days after it took over from HISTORY_DATABASE_URL (which
+// replaced RH7 on 2026-08-16; RH7 replaced RH6 on 2026-08-04; RH6 replaced RH5
+// on 2026-07-31; _4 went unreachable with P1001 before that).
 //
 // THE CHAIN IS CURRENT-FIRST, NOT NEWEST-FIRST. Early rotations moved forward
 // onto freshly provisioned projects, so "newest first" and "current first"
-// happened to coincide. They no longer do: this is the second consecutive
-// rotation onto a RECYCLED project, and _2 is one of the oldest names in the
-// list. Neon's caps are per project and per month, so a project retired long
-// enough ago has a fully reset allowance — re-using rested capacity we already
-// own beats provisioning an RH8 and beats paying. The head of this list is
-// therefore whichever project is in service TODAY; read it as a precedence
-// order, never as a timeline.
+// happened to coincide. They no longer do: this is the THIRD consecutive
+// rotation onto a RECYCLED project — _2 and now _3 are both among the oldest
+// names in the list. Neon's caps are per project and per month, so a project
+// retired long enough ago has a fully reset allowance — re-using rested
+// capacity we already own beats provisioning an RH8 and beats paying. The head
+// of this list is therefore whichever project is in service TODAY; read it as
+// a precedence order, never as a timeline.
 //
 // A recycled name carries one trap the forward rotations never had: the older
 // vars are also migration SOURCES in .github/workflows/maintenance.yml, so a
 // name that is both the target and a listed source would make a migration
-// silently no-op while reporting every row count as matching. HISTORY_DATABASE_URL_2
-// has been removed from every source list for that reason, and
-// HISTORY_DATABASE_URL — no longer the target — has been put back into them.
-// Grep both before rotating again.
+// silently no-op while reporting every row count as matching.
+// HISTORY_DATABASE_URL_3 has been made the SOURCE-EXCLUDED target in the new
+// `migrate-history-db-to-hdu3` task for that reason (pinned SOURCE =
+// HISTORY_DATABASE_URL_2 only, never a fallback chain that could resolve back
+// to _3 itself). HISTORY_DATABASE_URL_2 — no longer the target — is safe to
+// leave in other tasks' fallback/source chains. Grep both before rotating again.
 //
-// SIX PROJECTS IN ~TWO WEEKS IS A READ-PATTERN PROBLEM, NOT A CAPACITY ONE. A
-// fresh project buys roughly four days at the current burn rate, so treat the
-// next exhaustion as a signal to find the query, not to provision RH8. The
-// egress guard below already logs any single history query returning ≥1 MB —
-// grep the Vercel logs for "[egress-guard:history]" and it will name the
-// model/operation. One known offender to check first: getEmptyCardIds() in
+// SEVEN PROJECTS IN ~TWO WEEKS IS A READ-PATTERN PROBLEM, NOT A CAPACITY ONE. A
+// fresh project buys roughly three to four days at the current burn rate, so
+// treat the next exhaustion as a signal to find the query, not to provision
+// RH8. The egress guard below already logs any single history query returning
+// ≥1 MB — grep the Vercel logs for "[egress-guard:history]" and it will name
+// the model/operation. One known offender to check first: getEmptyCardIds() in
 // lib/card-price-state.ts groups the ENTIRE PriceHistory table with no `where`,
 // no `take` and no cache, so its payload grows every day forever.
 //
-// HISTORY_DATABASE_URL is kept as the rollback fallback and every older var
+// HISTORY_DATABASE_URL_2 is kept as the rollback fallback and every older var
 // below it is a read-only fallback/migration source; treat them as dead, never
 // the primary target. Once everything's copied across (see the
-// `migrate-history-db-to-hdu2` task in .github/workflows/maintenance.yml) and
+// `migrate-history-db-to-hdu3` task in .github/workflows/maintenance.yml) and
 // nothing references the older vars anymore, they can be removed entirely.
 //
 // ORDER MATTERS AND IS LOAD-BEARING: this list is duplicated, by necessity, in
-// several places that cannot import this module (GitHub Actions `env:` blocks,
-// scripts/build-db-push.sh). When you add a new project here, grep for the
-// PREVIOUS variable name across the whole repo and update every hit — a chain
-// that silently stops at an exhausted project is exactly how this repo has lost
-// a day to an "unexplained" P1001 more than once.
+// a few places that cannot import this module (scripts/build-db-push.sh runs
+// pre-build as a raw shell script; scripts/migrate-history.ts,
+// scripts/probe-history-dbs.ts and scripts/repair-history-card-ids.ts are
+// standalone scripts with their own resolution/inventory). GitHub Actions
+// `env:` blocks are NOT part of this — every script here imports dbHistory
+// from this module, so as long as a workflow step passes the var through
+// (regardless of YAML order), this one chain decides precedence for all of
+// them. When you add a new project here, grep for the PREVIOUS variable name
+// across the whole repo and update every hit in the files above — a chain that
+// silently stops at an exhausted project is exactly how this repo has lost a
+// day to an "unexplained" P1001 more than once.
 const HISTORY_URL =
+  process.env.HISTORY_DATABASE_URL_3 ||
   process.env.HISTORY_DATABASE_URL_2 ||
   process.env.HISTORY_DATABASE_URL ||
   process.env.RH7 ||
   process.env.RH6 ||
   process.env.RH5 ||
   process.env.HISTORY_DATABASE_URL_4 ||
-  process.env.HISTORY_DATABASE_URL_3 ||
   process.env.DATABASE_URL;
 
 // Names the winning variable (never its value — it's a credential) so a P1001
 // in the logs immediately answers "which database did it actually try?".
 // Mirrors the same diagnostic in scripts/build-db-push.sh and lib/db.ts.
 export const HISTORY_URL_SOURCE =
-  process.env.HISTORY_DATABASE_URL_2 ? "HISTORY_DATABASE_URL_2"
+  process.env.HISTORY_DATABASE_URL_3 ? "HISTORY_DATABASE_URL_3"
+  : process.env.HISTORY_DATABASE_URL_2 ? "HISTORY_DATABASE_URL_2"
   : process.env.HISTORY_DATABASE_URL ? "HISTORY_DATABASE_URL"
   : process.env.RH7 ? "RH7"
   : process.env.RH6 ? "RH6"
   : process.env.RH5 ? "RH5"
   : process.env.HISTORY_DATABASE_URL_4 ? "HISTORY_DATABASE_URL_4"
-  : process.env.HISTORY_DATABASE_URL_3 ? "HISTORY_DATABASE_URL_3"
   : "DATABASE_URL (no history project set — history shares the operational DB)";
 
-if (HISTORY_URL_SOURCE !== "HISTORY_DATABASE_URL_2") {
+if (HISTORY_URL_SOURCE !== "HISTORY_DATABASE_URL_3") {
   console.warn(
-    `[db-history] history DB resolved to ${HISTORY_URL_SOURCE}, not HISTORY_DATABASE_URL_2 — the current ` +
-      `history project is missing from this environment. HISTORY_DATABASE_URL is kept only as a rollback and ` +
-      `is at its allowance; everything older is exhausted. Expect P1001 or writes landing in the wrong place.`
+    `[db-history] history DB resolved to ${HISTORY_URL_SOURCE}, not HISTORY_DATABASE_URL_3 — the current ` +
+      `history project is missing from this environment. HISTORY_DATABASE_URL_2 is kept only as a rollback ` +
+      `and is at its allowance; everything older is exhausted. Expect P1001 or writes landing in the wrong place.`
   );
 }
 

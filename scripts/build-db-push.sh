@@ -42,7 +42,7 @@ CURRENT_OP="RM6"
 # HISTORY_DATABASE_URL_2 — retired long enough ago for its allowance to have
 # fully reset — took over. The chains are CURRENT-first, not newest-first;
 # see the long note on HISTORY_URL in src/lib/db-history.ts.
-CURRENT_HIST="HISTORY_DATABASE_URL_2"
+CURRENT_HIST="HISTORY_DATABASE_URL_3"
 
 # Only push schema for a real Vercel production/preview build with a database
 # configured. A local `next build` (no database vars) must not try to reach anything.
@@ -111,19 +111,14 @@ fi
 
 # History database (PriceHistory/ClickEvent) — same optional, best-effort push.
 #
-# BUG FIXED HERE (2026-07-31): this block used to read ONLY
-#   HISTORY_DATABASE_URL_3 / HISTORY_DATABASE_URL_2
-# — the two OLDEST, long-dead projects, in the reverse of the app's own
-# precedence. It had never been updated when the history DB moved _2 -> _3 -> _4
-# -> RH5 -> RH6 -> RH7, so on every Vercel deploy it either pushed the schema into an exhausted
-# project the app never reads, or (when only the current var was set) silently
-# pushed nothing at all while reporting success. That is precisely how a new
-# column can 500 the admin clicks page in production despite a green deploy.
-#
-# This chain MIRRORS src/lib/db-history.ts exactly, CURRENT-first. Keep the two
+# BUG FIXED 2026-07-31 (this chain used to read the two OLDEST, long-dead
+# projects, reversed): fixed again 2026-08-19 for the _2 -> _3 rotation. This
+# chain MIRRORS src/lib/db-history.ts exactly, CURRENT-first. Keep the two
 # in sync — if you rotate there, rotate here into the same position.
 # tests/db-chain.test.ts compares the two lists and fails if they drift.
-if [ -n "${HISTORY_DATABASE_URL_2:-}" ]; then
+if [ -n "${HISTORY_DATABASE_URL_3:-}" ]; then
+  HIST="$HISTORY_DATABASE_URL_3"; HIST_SOURCE="HISTORY_DATABASE_URL_3"
+elif [ -n "${HISTORY_DATABASE_URL_2:-}" ]; then
   HIST="$HISTORY_DATABASE_URL_2"; HIST_SOURCE="HISTORY_DATABASE_URL_2"
 elif [ -n "${HISTORY_DATABASE_URL:-}" ]; then
   HIST="$HISTORY_DATABASE_URL"; HIST_SOURCE="HISTORY_DATABASE_URL"
@@ -135,8 +130,6 @@ elif [ -n "${RH5:-}" ]; then
   HIST="$RH5"; HIST_SOURCE="RH5"
 elif [ -n "${HISTORY_DATABASE_URL_4:-}" ]; then
   HIST="$HISTORY_DATABASE_URL_4"; HIST_SOURCE="HISTORY_DATABASE_URL_4"
-elif [ -n "${HISTORY_DATABASE_URL_3:-}" ]; then
-  HIST="$HISTORY_DATABASE_URL_3"; HIST_SOURCE="HISTORY_DATABASE_URL_3"
 else
   HIST=""; HIST_SOURCE=""
 fi
