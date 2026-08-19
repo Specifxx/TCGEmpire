@@ -13,6 +13,7 @@ import { CardTile } from "@/components/CardTile";
 import { Pagination } from "@/components/Pagination";
 import { PageSizeSelect } from "@/components/PageSizeSelect";
 import { AdSlot } from "@/components/AdSlot";
+import { CHAMPIONS } from "@/lib/champions";
 import {
   buildCardOrderBy,
   buildCardWhere,
@@ -25,6 +26,12 @@ import { SITE_URL } from "@/lib/site";
 
 // searchParams-driven (filters/pagination), so the route stays dynamic.
 export const dynamic = "force-dynamic";
+
+// Breakout Google Trends champions get first billing in the cross-link row
+// below. Deliberately a short curated list, not all ~80 champions — this is
+// a discovery aid on the default view, not a directory (that's what
+// /champions itself, linked right after these, is for).
+const POPULAR_CHAMPION_SLUGS = ["vex", "draven", "azir", "leblanc", "irelia"];
 
 // Browse is the main "buy Riftbound cards" landing page, so give it a strong title
 // and description. Metadata is market-neutral: Googlebot crawls mostly from US IPs,
@@ -173,6 +180,31 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
               Browse every Riftbound TCG single and compare live prices across local stores in AU, NZ,
               US &amp; UK to find the cheapest place to buy.
             </p>
+            {/* Popular-champion cross-links — /browse had no path into the
+                per-champion hub pages at all (card pages already link to
+                them; this was the other half the brief asked for). Only
+                on the default view, matching the H1/subhead above it, so a
+                filtered/searched view (noindexed, canonicalized to plain
+                /browse) doesn't carry a duplicate set of the same links. */}
+            <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
+              <span className="text-slate-500">Popular champions:</span>
+              {POPULAR_CHAMPION_SLUGS.map((slug) => {
+                const champ = CHAMPIONS.find((c) => c.slug === slug);
+                if (!champ) return null;
+                return (
+                  <Link
+                    key={slug}
+                    href={`/champions/${slug}`}
+                    className="chip border border-ink-700 px-2.5 py-1 font-semibold text-slate-300 transition-colors hover:border-brand-500 hover:text-white"
+                  >
+                    {champ.name}
+                  </Link>
+                );
+              })}
+              <Link href="/champions" className="text-brand-400 hover:underline">
+                All champions →
+              </Link>
+            </div>
           </div>
         )}
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
