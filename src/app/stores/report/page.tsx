@@ -40,19 +40,26 @@ export default async function StoreReportPage({ searchParams }: { searchParams: 
     },
   });
   const cardIds = [...new Set(mine.map((m) => m.cardId))];
+  // `distinct` + `orderBy priceCents asc` pushes the "cheapest rival per (card,
+  // country, finish)" reduction down to Postgres (DISTINCT ON) instead of pulling
+  // every competing listing across every rival store and reducing in Node — for a
+  // store carrying a large slice of the catalog this query used to return every
+  // in-stock rival row for every one of its cards, i.e. a large fraction of the
+  // whole RetailerPrice table, on a force-dynamic page with no caching. See the
+  // egress rules in lib/db.ts.
   const rivals = cardIds.length
     ? await prisma.retailerPrice.findMany({
         where: { cardId: { in: cardIds }, inStock: true, NOT: { retailer: partner.retailer } },
         select: { cardId: true, priceCents: true, country: true, isFoil: true, retailerName: true },
+        orderBy: { priceCents: "asc" },
+        distinct: ["cardId", "country", "isFoil"],
       })
     : [];
 
-  // Cheapest rival per (card, country, finish) — foils compete with foils.
+  // Already the cheapest rival per (card, country, finish) — foils compete with foils.
   const bestRival = new Map<string, { priceCents: number; retailerName: string }>();
   for (const r of rivals) {
-    const k = `${r.cardId}|${r.country}|${r.isFoil}`;
-    const cur = bestRival.get(k);
-    if (!cur || r.priceCents < cur.priceCents) bestRival.set(k, { priceCents: r.priceCents, retailerName: r.retailerName });
+    bestRival.set(`${r.cardId}|${r.country}|${r.isFoil}`, { priceCents: r.priceCents, retailerName: r.retailerName });
   }
 
   type Row = {
