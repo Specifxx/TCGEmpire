@@ -27,7 +27,7 @@ import { CardConversionCta } from "@/components/CardConversionCta";
 import { CardPriceMetrics, CardPriceComparison, type EbaySearchMap } from "@/components/CardMarketSection";
 import { MarketplaceHeroBlock } from "@/components/MarketplaceHeroBlock";
 import { getActiveListingsForCard } from "@/lib/marketplace";
-import { EbayCardPanel, loadGradedCached } from "@/components/EbayCardPanel";
+import { EbayCardPanel } from "@/components/EbayCardPanel";
 import { computeMarket, type MarketRow } from "@/lib/market-rows";
 import { KeywordText } from "@/components/KeywordTooltip";
 import { championForCardName, championCardWhere } from "@/lib/champions";
@@ -267,12 +267,6 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     buyHref: affiliateUrl(p.url, p.retailer, `${SITE_URL}/card/${card.slug ?? params.id}`),
     policyUrl: shippingPolicyUrl(p.retailer),
   }));
-
-  // Graded (slabbed) eBay listings for the price-comparison table's own
-  // [Standard][Foil][Graded] toggle — see loadGradedCached's doc comment for
-  // why this shares a cache entry with the separate eBay panel further down
-  // rather than reading the DB twice.
-  const graded = await loadGradedCached(card.id);
 
   // BASELINE view for the cached HTML — structured data, prose and FAQ. This is
   // the same market the SSR'd client components render before hydration, i.e.
@@ -996,7 +990,6 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               displayName={displayName}
               ebaySearch={ebaySearch}
               ebayQuery={`${cardSearchName(card.name, card)} ${card.collectorNumber}`}
-              graded={graded}
             />
 
             {/* Price-history chart — free for everyone (AU history; the series is

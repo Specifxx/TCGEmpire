@@ -8,10 +8,8 @@ import type { AuctionRow } from "./EbayAuctionsLive";
 import type { AdListing } from "./EbayAdCarouselLive";
 
 /**
- * Server half of the card page's tabbed eBay panel: Listings / Auctions.
- * (Graded moved to the price-comparison table's own [Standard][Foil][Graded]
- * toggle — see CardMarketSection.tsx and loadGradedCached below — so it isn't
- * shown in two different tab widgets on the same page.)
+ * Server half of the card page's tabbed eBay panel: Listings / Graded /
+ * Auctions.
  *
  * Loads EVERY market's rows and lets the client half select the visitor's, so
  * the card page stays statically cacheable — the same split EbayPicks,
@@ -40,23 +38,6 @@ async function marketPrices(cardIds: string[]): Promise<Map<string, number>> {
     }
   }
   return out;
-}
-
-// Exported (and independently cached) so the price-comparison table's own
-// Graded tab (see CardMarketSection's [Standard][Foil][Graded] toggle) can
-// read the exact same graded listings without a second uncached DB round
-// trip — unstable_cache's Data Cache entry is shared by key, not by caller,
-// so whichever of this panel or page.tsx runs first populates it and the
-// other reads it back.
-export async function loadGradedCached(cardId: string): Promise<GradedRow[]> {
-  try {
-    return await unstable_cache(() => loadGraded(cardId), ["ebay-graded", cardId], {
-      revalidate: 86400,
-      tags: [CONTENT_TAG],
-    })();
-  } catch {
-    return [];
-  }
 }
 
 async function loadGraded(cardId: string): Promise<GradedRow[]> {
@@ -121,6 +102,7 @@ export async function EbayCardPanel({
   query: string;
   className?: string;
 }) {
+  let graded: GradedRow[] = [];
   let auctions: AuctionRow[] = [];
   let listings: AdListing[] = [];
   try {
@@ -147,13 +129,14 @@ export async function EbayCardPanel({
     // missed. The cost is that auction bids/end-times are no longer 5 minutes
     // fresh; if that is wanted back, fetch them CLIENT-side so the TTL can never
     // propagate to the segment again.
-    [auctions, listings] = await unstable_cache(
-      () => Promise.all([loadAuctions(cardId), loadListings(cardId)]),
+    [graded, auctions, listings] = await unstable_cache(
+      () => Promise.all([loadGraded(cardId), loadAuctions(cardId), loadListings(cardId)]),
       ["ebay-card-panel", cardId],
       { revalidate: 86400, tags: [CONTENT_TAG] },
     )();
   } catch {
     // A database blip must never take down a card page for a panel.
+    graded = [];
     auctions = [];
     listings = [];
   }
@@ -163,7 +146,7 @@ export async function EbayCardPanel({
       cardId={cardId}
       query={query}
       listings={listings}
-      graded={[]}
+      graded={graded}
       auctions={auctions}
       className={className}
     />
