@@ -268,6 +268,10 @@ function PayoutsCard({ payoutsEnabled, hasStripeAccount }: { payoutsEnabled: boo
           ? "You started this before but Stripe still needs a bit more to verify your details — pick up where you left off."
           : "You can list and sell right away — but funds from any sale stay held until you set this up, since it's how RiftCompare actually pays you. Stripe verifies your identity and handles payouts to your bank, so we never touch your funds or your ID. It takes a couple of minutes."}
       </p>
+      <p className="mt-2 text-xs text-slate-600">
+        On the next screen, Stripe asks for your real legal name and government ID — separate from your shop name above,
+        and never shown to buyers. Type it exactly as it appears on your ID, or verification will fail.
+      </p>
       <button onClick={start} disabled={busy} className="btn-primary mt-3">
         {busy ? "Opening Stripe…" : hasStripeAccount ? "Continue payouts setup →" : "Set up payouts →"}
       </button>

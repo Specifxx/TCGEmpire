@@ -46,18 +46,26 @@ function accountParamsFor(country: string): import("stripe").Stripe.AccountCreat
 
 // Creates the seller's Express account (idempotent per call — always makes a new
 // one, so only call this when SellerProfile.stripeAccountId is still null) and
-// returns its id to store on SellerProfile. Pre-fills whatever we already know
-// (email, name) so Stripe's hosted onboarding form skips those fields instead
-// of asking again — the account shape itself (capabilities/tos_acceptance) is
-// unavoidable per accountParamsFor's comment, but every already-known field we
-// pass here is one less screen the seller has to fill in themselves.
-export async function createExpressAccount(country: string, email: string, displayName?: string | null): Promise<string> {
-  const [firstName, ...rest] = (displayName ?? "").trim().split(/\s+/).filter(Boolean);
-  const lastName = rest.join(" ");
+// returns its id to store on SellerProfile. Pre-fills the email (always
+// correct) but deliberately does NOT pre-fill a legal name.
+//
+// BUG FIXED HERE: this used to split User.displayName into individual.first_name/
+// last_name and hand that to Stripe as the account's LEGAL name — the same name
+// Stripe's identity verification checks against the government ID the seller
+// uploads. displayName is sourced from the OAuth provider's profile name (see
+// the oauth callback route) or the email's local-part — a Discord handle, a
+// nickname, whatever the seller picked as their public identity on the site,
+// with zero guarantee it's their real legal name. A seller whose account name
+// wasn't their real name got a form that LOOKED already filled in correctly,
+// then failed identity verification with no obvious reason why — exactly what
+// this was reported as ("my store name doesn't match my real name ID"), even
+// though the shop name itself is a separate field that's never sent to Stripe
+// at all. Leaving this blank makes Stripe's onboarding ask for the real legal
+// name fresh, which is the only name that was ever going to pass verification.
+export async function createExpressAccount(country: string, email: string): Promise<string> {
   const account = await stripe().accounts.create({
     ...accountParamsFor(country),
     email,
-    ...(firstName && lastName ? { individual: { email, first_name: firstName, last_name: lastName } } : {}),
   });
   return account.id;
 }
