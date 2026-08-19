@@ -268,6 +268,18 @@ async function sets(): Promise<SitemapEntry[]> {
     .then((rows) => new Map(rows.map((c) => [c.setCode, c._count._all])))
     .catch(() => null);
 
+  // The gallery route noindexes on a DIFFERENT count than the set page —
+  // sets/[set]/gallery/page.tsx excludes promos (`isPromo: false`), since a
+  // promo-only set has nothing for the gallery specifically to show even if
+  // countByCode above (all cards) is non-zero. Gating the gallery URL on the
+  // same count as the set page would submit a URL the page itself noindexes —
+  // exactly the "submitted but noindexed" contradiction this sitemap split
+  // exists to avoid (see file header). Same fail-open contract as countByCode.
+  const galleryCountByCode = await prisma.card
+    .groupBy({ by: ["setCode"], where: { isPromo: false }, _count: { _all: true } })
+    .then((rows) => new Map(rows.map((c) => [c.setCode, c._count._all])))
+    .catch(() => null);
+
   // comingSoon sets that DO have cards are included at lower priority: pre-release
   // query volume ("riftbound vendetta") is real, the page is live/indexable and
   // linked from the blog, and it self-upgrades the day singles land. All sets
@@ -278,20 +290,27 @@ async function sets(): Promise<SitemapEntry[]> {
   // prices" vs "vendetta card gallery" — so both belong in the index. The gallery
   // sits just under its set page: it is a genuine landing page for the browse
   // queries, but the set page is still the commercial destination.
-  return SETS.filter((s) => !countByCode || (countByCode.get(s.code) ?? 0) > 0).flatMap((s) => [
-    {
-      url: `${SITE_URL}/sets/${s.slug}`,
-      changeFrequency: "daily" as const,
-      priority: s.comingSoon ? 0.6 : 0.85,
-      lastModified: day,
-    },
-    {
-      url: `${SITE_URL}/sets/${s.slug}/gallery`,
-      changeFrequency: "daily" as const,
-      priority: s.comingSoon ? 0.5 : 0.8,
-      lastModified: day,
-    },
-  ]);
+  return SETS.filter((s) => !countByCode || (countByCode.get(s.code) ?? 0) > 0).flatMap((s) => {
+    const galleryIndexable = !galleryCountByCode || (galleryCountByCode.get(s.code) ?? 0) > 0;
+    return [
+      {
+        url: `${SITE_URL}/sets/${s.slug}`,
+        changeFrequency: "daily" as const,
+        priority: s.comingSoon ? 0.6 : 0.85,
+        lastModified: day,
+      },
+      ...(galleryIndexable
+        ? [
+            {
+              url: `${SITE_URL}/sets/${s.slug}/gallery`,
+              changeFrequency: "daily" as const,
+              priority: s.comingSoon ? 0.5 : 0.8,
+              lastModified: day,
+            },
+          ]
+        : []),
+    ];
+  });
 }
 
 async function domains(): Promise<SitemapEntry[]> {
