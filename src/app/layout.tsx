@@ -129,10 +129,21 @@ export const metadata: Metadata = {
   // Search engine site verification. Google's "HTML tag" method verifies a
   // URL-prefix property INSTANTLY (no DNS propagation wait) — the token below is
   // served in <head> on every page. Override per-deploy via env if needed.
+  //
+  // Bing Webmaster Tools uses the same "meta tag" method, keyed `msvalidate.01`
+  // — Next's `verification.other` emits it as a second <meta name="..."> next to
+  // Google's. UNLIKE Google's, there is no real token to fall back to here: this
+  // repo has never had one, so — deliberately, unlike GOOGLE_SITE_VERIFICATION
+  // above — nothing renders until BING_SITE_VERIFICATION is set in the deploy
+  // env. A fabricated placeholder would just fail Bing's verification check
+  // silently; omitting the tag entirely until a real token exists is the
+  // correct failure mode. Bing + DuckDuckGo + Brave (Bing-indexed) are ~45% of
+  // this site's search referrals and were unmonitored before this.
   verification: {
     google:
       process.env.GOOGLE_SITE_VERIFICATION ??
       "fPFxAkXOBeYdNPNbNGo-ZItApU0457uWVkbPkfzzzXs",
+    ...(process.env.BING_SITE_VERIFICATION ? { other: { "msvalidate.01": process.env.BING_SITE_VERIFICATION } } : {}),
   },
 };
 
