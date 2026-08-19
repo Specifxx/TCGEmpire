@@ -65,8 +65,8 @@ export function AuthForm({
         )}
         <h1 className="text-xl font-extrabold text-white">Sign in</h1>
         <p className="mt-1 text-sm text-slate-400">
-          A free account unlocks the Bulk Pricer and Best Basket, plus price alerts, your portfolio and the
-          marketplace. No password to remember — creating an account and signing in are the same button.
+          A free account unlocks price alerts, your portfolio and your watchlist. No password to remember —
+          creating an account and signing in are the same button.
         </p>
 
         {error && (

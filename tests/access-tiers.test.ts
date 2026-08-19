@@ -22,28 +22,32 @@ const BASKET_API = "src/app/api/basket/route.ts";
 const POPUP = "src/components/SignupPromoPopup.tsx";
 const PREMIUM_LIB = "src/lib/premium.ts";
 
-test("the two account-tier tools gate on an account, not on Premium", () => {
+test("the two list tools gate on Premium, not merely on an account", () => {
+  // Deliberate reversal (see the tier note in lib/premium.ts): these two used to
+  // be "the reason to sign up" for a free account. hasAccount() here would put
+  // them back on the free tier — the exact state this change exists to undo.
   for (const page of [BULK, BASKET]) {
     const src = read(page);
-    assert.match(src, /hasAccount\(/, `${page} must gate via hasAccount()`);
-    // isPremium() here would put the tool back behind the paywall — the exact
-    // regression this change exists to undo.
-    assert.ok(!/isPremium\s*\(/.test(src), `${page} must not gate on isPremium()`);
+    assert.match(src, /isPremium\(/, `${page} must gate via isPremium()`);
+    assert.ok(!/hasAccount\s*\(/.test(src), `${page} must not gate on hasAccount()`);
   }
 });
 
-test("the basket API requires a session but never requires Premium", () => {
+test("the basket API requires Premium, not just a session", () => {
+  // The page only conditionally RENDERS <BestBasket> — that's no obstacle to a
+  // signed-in-but-not-Premium caller hitting this route directly, and its output
+  // (the optimized store split) is the exact thing Premium is sold on.
   const src = read(BASKET_API);
   assert.match(src, /if \(!user\) return NextResponse\.json\(/, "must still reject signed-out callers");
-  assert.ok(!/isPremium/.test(src), "basket API must not re-add a Premium check");
+  assert.match(src, /isPremium\(user\)/, "basket API must also reject a signed-in non-Premium caller");
 });
 
 test("the bulk pricer gates the TOOL without gating the page's indexable content", () => {
   const src = read(BULK);
   // The heading and intro must render for everyone, or the page drops out of the
   // index for the terms it ranks on and the shared ?list= OG card stops unfurling.
-  const gateIdx = src.indexOf("signedIn ?");
-  assert.ok(gateIdx > 0, "expected a signedIn ternary around the tool");
+  const gateIdx = src.indexOf("premium ?");
+  assert.ok(gateIdx > 0, "expected a premium ternary around the tool");
   const beforeGate = src.slice(0, gateIdx);
   assert.match(beforeGate, /<h1/, "the H1 must render above the gate, for signed-out visitors too");
   assert.match(beforeGate, /HubIntro/, "the hub intro must render above the gate");
@@ -78,8 +82,16 @@ test("the popup pitches the account tier rather than a Premium comp", () => {
   // Matching the rendered phrase rather than the word "comp" keeps this from
   // tripping over prose that merely mentions the retired promo.
   assert.ok(!/of Premium free/i.test(src), "popup must not promise a comped subscription");
-  assert.match(src, /Bulk Pricer/, "popup should name what an account actually unlocks");
-  assert.match(src, /Best Basket/, "popup should name what an account actually unlocks");
+  // Scope to the PERKS array itself (not the whole file — a comment is allowed to
+  // explain, in prose, that Bulk Pricer/Best Basket moved to Premium) so this
+  // checks what's actually PITCHED, not whether the tool names appear anywhere.
+  const perksMatch = src.match(/const PERKS[^=]*=\s*\[([\s\S]*?)\n\];/);
+  assert.ok(perksMatch, "expected a PERKS array declaration");
+  const perks = perksMatch![1];
+  assert.ok(!/Bulk Pricer/.test(perks), "popup must not pitch Bulk Pricer — it's Premium now");
+  assert.ok(!/Best Basket/.test(perks), "popup must not pitch Best Basket — it's Premium now");
+  assert.match(perks, /Price alerts/, "popup should name what an account actually unlocks");
+  assert.match(perks, /Watchlist/, "popup should name what an account actually unlocks");
 });
 
 test("the retired signup comp is gone from the codebase, not just switched off", () => {

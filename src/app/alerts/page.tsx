@@ -47,7 +47,7 @@ const FAQS = [
   },
   {
     q: "Which price triggers the alert?",
-    a: "The lowest live in-stock price across every store and marketplace tracked for your market, including shipping — the same number the comparison shows.",
+    a: "The lowest live in-stock price across every store tracked for your market, including shipping — the same number the comparison shows.",
   },
   {
     q: "How often are prices checked?",
@@ -107,7 +107,7 @@ export default function AlertsPage() {
       name: "Riftbound Price Alerts & Watchlists",
       href: CANONICAL,
       description:
-        "Track any Riftbound card and get told when it hits your price, across every store and marketplace RiftCompare tracks.",
+        "Track any Riftbound card and get told when it hits your price, across every store RiftCompare tracks.",
     }),
     faqPage(FAQS)
   );
@@ -122,8 +122,8 @@ export default function AlertsPage() {
       <AnswerBox>
         <p>
           A watchlist is a list of Riftbound cards you want; a price alert is an email when one of them reaches the
-          price you set. Both are free. The trigger is the lowest live in-stock price across every store and
-          marketplace we track for your market — shipping included — so an alert means the card is genuinely buyable
+          price you set. Both are free. The trigger is the lowest live in-stock price across every store we track
+          for your market — shipping included — so an alert means the card is genuinely buyable
           at that number, not that one listing looks cheap before postage.
         </p>
       </AnswerBox>

@@ -135,7 +135,7 @@ export const SEO_PACK_ARTICLES: Article[] = [
     browseCta: {
       href: L.browse,
       label: "Look up a card's live value →",
-      blurb: "Search any Riftbound card and see live prices across every store and marketplace we track, shipping included.",
+      blurb: "Search any Riftbound card and see live prices across every store we track, shipping included.",
     },
     body: `The fastest way to get a reliable current value for any Riftbound card is to run it through a live price tracker that aggregates recent sold listings across multiple marketplaces, then cross-check the graded premium before you buy, sell, or grade. Asking prices on active listings routinely run 20-40% above what cards actually clear for, so sold comps are the only number worth anchoring to.
 
@@ -724,7 +724,7 @@ RiftCompare pulls live prices for these cards across US, UK, AU, NZ, CA, and SG 
 
 ## Track every grail's live price
 
-Don't rely on a stale list. RiftCompare shows real-time prices for the most expensive Riftbound cards across every tracked store and marketplace, with shipping included and a [daily movers dashboard](${L.movers}) so you know whether a grail is rising or cooling.
+Don't rely on a stale list. RiftCompare shows real-time prices for the most expensive Riftbound cards across every tracked store, with shipping included and a [daily movers dashboard](${L.movers}) so you know whether a grail is rising or cooling.
 
 Browse [the full card database](${L.browse}), dig into [a specific set](${L.sets}) — [Origins](${L.origins}) included — or [search by champion](${L.champions}), then set your [watchlist alerts](${L.alerts}) so the next move finds you instead of the other way round.`,
   },
@@ -736,9 +736,9 @@ Browse [the full card database](${L.browse}), dig into [a specific set](${L.sets
   {
     slug: "best-riftbound-marketplaces",
     category: "blog",
-    title: "The 10 Best Riftbound TCG Marketplaces (2026), Compared",
+    title: "The 9 Best Riftbound TCG Marketplaces (2026), Compared",
     excerpt:
-      "Where to actually buy and sell Riftbound cards in 2026: ten marketplaces compared on coverage, fees, buyer protection and true total cost including shipping.",
+      "Where to actually buy and sell Riftbound cards in 2026: nine marketplaces compared on coverage, fees, buyer protection and true total cost including shipping.",
     author: AUTHOR,
     date: PUBLISHED,
     readMins: 11,
@@ -774,19 +774,18 @@ Browse [the full card database](${L.browse}), dig into [a specific set](${L.sets
     browseCta: {
       href: L.dealFinder,
       label: "Compare all of them at once →",
-      blurb: "One search across every tracked store and marketplace, with shipping included in the total.",
+      blurb: "One search across every tracked store, with shipping included in the total.",
     },
     // Mirrors the visible comparison table exactly, in the same order — an
     // ItemList that disagreed with the table would be markup describing a page
     // that doesn't exist.
     itemList: {
-      name: "The 10 best Riftbound TCG marketplaces (2026)",
+      name: "The 9 best Riftbound TCG marketplaces (2026)",
       items: [
         { name: "TCGplayer", description: "Best for mid-value singles, bulk and set completion. US-centric." },
         { name: "eBay", description: "Best for scarce chase cards, graded slabs and auctions, across most markets." },
         { name: "Specialist local card stores", description: "Best for the newest sets, preorders and no-shipping pickup." },
         { name: "CardMarket", description: "Best for European buyers and sellers." },
-        { name: "RiftCompare Marketplace", description: "Peer-to-peer Riftbound singles with escrow.", url: "https://riftcompare.com/marketplace" },
         { name: "Amazon", description: "Convenient for sealed product; weak singles coverage." },
         { name: "Whatnot and live auction apps", description: "Live breaks and impulse buys; easy to overpay in the moment." },
         { name: "Facebook groups and Discord servers", description: "Community trades and hard-to-find promos; no escrow by default." },
@@ -796,9 +795,9 @@ Browse [the full card database](${L.browse}), dig into [a specific set](${L.sets
     },
     body: `**Short answer:** there is no single best Riftbound marketplace. The venue that wins depends on the card's value, which country you're in, and whether you're buying one card or twenty. What is consistent is the method — compare *total cost including shipping* across venues for the specific card you want, rather than defaulting to whichever site you used last time.
 
-This page lists the ten places Riftbound cards actually change hands in 2026, what each is genuinely good at, and where each one costs you money you didn't expect.
+This page lists the nine places Riftbound cards actually change hands in 2026, what each is genuinely good at, and where each one costs you money you didn't expect.
 
-## The ten marketplaces, compared
+## The nine marketplaces, compared
 
 | # | Marketplace | Best for | Markets | Watch out for |
 | --- | --- | --- | --- | --- |
@@ -806,12 +805,11 @@ This page lists the ten places Riftbound cards actually change hands in 2026, wh
 | 2 | **eBay** | Scarce chase cards, graded slabs, auctions | US, UK, AU, CA, SG and more | Final value fee commonly around 13.25% for trading cards, applied to the total *including* shipping |
 | 3 | **Specialist local card stores** | Newest sets, preorders, no-shipping pickup | Every tracked market | Stock is thin outside launch windows; prices vary widely store to store |
 | 4 | **CardMarket** | European buyers and sellers | EU/UK | Its own commission structure; less relevant outside Europe |
-| 5 | **RiftCompare Marketplace** | Peer-to-peer singles with escrow | Where enabled | A newer, smaller pool than the giants — [how buyer protection works](${L.buyerProtection}) |
-| 6 | **Amazon** | Sealed product convenience | Broad | Third-party sellers vary in reliability; singles coverage is poor |
-| 7 | **Whatnot / live auction apps** | Live breaks and impulse buys | US-led | Auction psychology; easy to pay above market in the moment |
-| 8 | **Facebook groups and Discord servers** | Community trades, hard-to-find promos | Global | No escrow by default; verify the seller and use protected payment |
-| 9 | **Mercari and general resale apps** | Occasional underpriced listings | Market-dependent | Weak card-specific search; condition descriptions are inconsistent |
-| 10 | **Store webstores direct** | Avoiding marketplace fees entirely | Every tracked market | You have to check each one — which is the problem RiftCompare exists to solve |
+| 5 | **Amazon** | Sealed product convenience | Broad | Third-party sellers vary in reliability; singles coverage is poor |
+| 6 | **Whatnot / live auction apps** | Live breaks and impulse buys | US-led | Auction psychology; easy to pay above market in the moment |
+| 7 | **Facebook groups and Discord servers** | Community trades, hard-to-find promos | Global | No escrow by default; verify the seller and use protected payment |
+| 8 | **Mercari and general resale apps** | Occasional underpriced listings | Market-dependent | Weak card-specific search; condition descriptions are inconsistent |
+| 9 | **Store webstores direct** | Avoiding marketplace fees entirely | Every tracked market | You have to check each one — which is the problem RiftCompare exists to solve |
 
 ## How to read that table
 
@@ -833,9 +831,7 @@ Three things matter more than the ordering.
 
 ## Where RiftCompare fits
 
-RiftCompare is not a marketplace competing with the ten above for most purchases — it's the comparison layer over them. It tracks live prices across local stores, eBay and TCGplayer in the US, UK, Australia, New Zealand, Canada and Singapore, and shows the transparent total cost including shipping, with no hidden fees. One search replaces ten tabs.
-
-It does also run [its own peer-to-peer marketplace](${L.marketplaceVsStores}) with escrow, which is entry 5 above and is held to the same comparison as everything else.
+RiftCompare is not a marketplace competing with the nine above — it's the comparison layer over them. It tracks live prices across local stores, eBay and TCGplayer in the US, UK, Australia, New Zealand, Canada and Singapore, and shows the transparent total cost including shipping, with no hidden fees. One search replaces ten tabs.
 
 ## Key takeaways
 
@@ -871,7 +867,7 @@ Next: [how to choose a Riftbound marketplace](${L.choosing}) turns this into a s
     faq: [
       {
         q: "How do I compare Riftbound card prices?",
-        a: "Search the exact card by collector number and variant, then compare the total cost including shipping across every store and marketplace that has it in stock. RiftCompare does this in one search across local stores, eBay and TCGplayer in six markets.",
+        a: "Search the exact card by collector number and variant, then compare the total cost including shipping across every store that has it in stock. RiftCompare does this in one search across local stores, eBay and TCGplayer in six markets.",
       },
       {
         q: "Which countries does RiftCompare cover?",
@@ -887,7 +883,7 @@ Next: [how to choose a Riftbound marketplace](${L.choosing}) turns this into a s
       },
       {
         q: "How often do the prices update?",
-        a: "Prices are re-imported from tracked stores and marketplaces on a regular schedule, and the daily movers dashboard shows what changed. Riftbound reprices fast, so daily data matters more here than in older TCGs.",
+        a: "Prices are re-imported from tracked stores on a regular schedule, and the daily movers dashboard shows what changed. Riftbound reprices fast, so daily data matters more here than in older TCGs.",
       },
     ],
     browseCta: {
@@ -938,7 +934,7 @@ If you're buying eight cards, comparing each one independently gives you eight o
 - Buying several cards? Compare the **basket**.
 - Set [a price alert](${L.alerts}) instead of refreshing — most cards are worth waiting a week for.
 
-Related: [the 10 best Riftbound marketplaces](${L.marketplaces}), [how to choose one](${L.choosing}), and [what a RiftCompare search actually gives you](${L.review}).`,
+Related: [the 9 best Riftbound marketplaces](${L.marketplaces}), [how to choose one](${L.choosing}), and [what a RiftCompare search actually gives you](${L.review}).`,
   },
 
   {
@@ -950,7 +946,7 @@ Related: [the 10 best Riftbound marketplaces](${L.marketplaces}), [how to choose
     author: AUTHOR,
     date: PUBLISHED,
     readMins: 8,
-    tags: ["marketplace", "about", "price comparison", "tools", "comparison"],
+    tags: ["about", "price comparison", "tools", "comparison"],
     hero: {
       src: "/blog/riftcompare-review.png",
       alt: "RiftCompare reviewed — what the Riftbound price comparison tool does, what it doesn't, and who it's for",
@@ -972,11 +968,11 @@ Related: [the 10 best Riftbound marketplaces](${L.marketplaces}), [how to choose
       },
       {
         q: "Does RiftCompare sell cards?",
-        a: "Mostly no — it links you to the store or marketplace with the best total price. It also runs an optional peer-to-peer marketplace with escrow, which appears in the comparison on the same terms as everyone else.",
+        a: "No — it links you to the store with the best total price; you always buy from the store itself.",
       },
       {
         q: "How accurate are RiftCompare's prices?",
-        a: "Prices come from tracked store feeds and marketplace data and are re-imported on a schedule. Where a card has no live listing in your market, the tool shows no price rather than estimating one.",
+        a: "Prices come from tracked store feeds and are re-imported on a schedule. Where a card has no live listing in your market, the tool shows no price rather than estimating one.",
       },
       {
         q: "Who is RiftCompare for?",
@@ -1010,7 +1006,7 @@ This is our own tool, so treat this page as a spec sheet with the limitations in
 
 Being specific about this is more useful than another feature list.
 
-- **It isn't a shop for most purchases.** For the great majority of cards it hands you off to the store or marketplace with the best total. That's the design, not a gap.
+- **It isn't a shop for most purchases.** For the great majority of cards it hands you off to the store with the best total. That's the design, not a gap.
 - **It can't price a card nobody is selling.** If your market has no live listing for a printing, you get "no price yet", not an estimate. That's deliberate — a made-up number is worse than an honest blank.
 - **It doesn't track graded slabs as a separate market.** Raw and graded copies are different products; for PSA comps you still want completed listings on eBay. [How to value a card](${L.values}) covers that workflow.
 - **Coverage varies by market.** The US and Australia are deepest; smaller markets have fewer stores, so fewer rows to compare.
@@ -1032,7 +1028,7 @@ Checking five stores by hand is free and takes about ten minutes per card, and y
 
 If you buy Riftbound singles more than occasionally, it removes a genuinely annoying manual step and will find you a cheaper total more often than not. If you buy sealed product locally once a set, it's a bookmark, not a habit.
 
-Related reading: [the 10 best Riftbound marketplaces](${L.marketplaces}), [how to choose a marketplace](${L.choosing}), and [how price comparison actually works](${L.comparison}).`,
+Related reading: [the 9 best Riftbound marketplaces](${L.marketplaces}), [how to choose a marketplace](${L.choosing}), and [how price comparison actually works](${L.comparison}).`,
   },
 
   {
@@ -1076,7 +1072,7 @@ Related reading: [the 10 best Riftbound marketplaces](${L.marketplaces}), [how t
     browseCta: {
       href: L.dealFinder,
       label: "Score them all at once →",
-      blurb: "One comparison across every tracked store and marketplace, with shipping in the total.",
+      blurb: "One comparison across every tracked store, with shipping in the total.",
     },
     body: `**Short answer:** choose per purchase, not once. Score each candidate venue against seven criteria, weight them by the card's value, and buy from whichever wins *for that card*. Below is the checklist, the weighting, and the red flags that should end a purchase regardless of price.
 
@@ -1128,7 +1124,7 @@ You want a mid-value single for a tournament on Saturday.
 - Confirm the printing before comparing anything.
 - No venue wins every time — which is why the comparison, not the venue, is the habit worth having.
 
-Related: [the 10 best Riftbound marketplaces](${L.marketplaces}), [Riftbound card price comparison explained](${L.comparison}), and [an honest look at RiftCompare itself](${L.review}).`,
+Related: [the 9 best Riftbound marketplaces](${L.marketplaces}), [Riftbound card price comparison explained](${L.comparison}), and [an honest look at RiftCompare itself](${L.review}).`,
   },
 
   // ───────────────────────────────────────────────────────────────────────────

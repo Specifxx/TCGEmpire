@@ -14,12 +14,24 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "RiftCompare Premium — power tools for buyers & sellers",
-  description: "RiftCompare Premium: the Value Finder screener, Rising Cards, the full Deal Finder list and an ad-free site. Price comparison is free for everyone, and a free account adds the Bulk Pricer and Best Basket.",
+  description: "RiftCompare Premium: the Bulk Pricer, Best Basket, Value Finder screener, Rising Cards, the full Deal Finder list and an ad-free site. Price comparison is free for everyone.",
   alternates: pageAlternates("/premium"),
 };
 
 // Detailed feature cards (all real Premium features).
 const FEATURES: { title: string; body: string; href: string | null; cta: string | null }[] = [
+  {
+    title: "Bulk Pricer",
+    body: "Paste an entire want-list, trade pile or collection and price every card at once, each matched to its cheapest live store price with a running total.",
+    href: "/bulk-pricer",
+    cta: "Open Bulk Pricer",
+  },
+  {
+    title: "Best Basket",
+    body: "The cheapest way to actually buy a whole deck or wishlist — the lowest landed total across stores once postage and free-shipping thresholds are factored in, not just the lowest price per card.",
+    href: "/tools/best-basket",
+    cta: "Open Best Basket",
+  },
   {
     title: "Value Finder screener",
     body: "Every card trading below its own 30-day average right now, ranked by discount — spot undervalued cards before they bounce back.",
@@ -53,17 +65,19 @@ const COMPARE: { feature: string; anon: boolean | string; account: boolean | str
   { feature: "Full card database, search & browse", anon: true, account: true, premium: true },
   { feature: "Deck builder, trade calculator & box EV", anon: true, account: true, premium: true },
   { feature: "RiftCompare Index, movers & daily wrap", anon: true, account: true, premium: true },
-  { feature: "Bulk Pricer — price a whole list at once", anon: false, account: true, premium: true },
-  { feature: "Best-Basket cart optimiser", anon: false, account: true, premium: true },
   { feature: "Price alerts", anon: false, account: true, premium: true },
   { feature: "Portfolio tracker — history, P&L, CSV export", anon: false, account: true, premium: true },
   { feature: "Deal Finder", anon: "Top pick", account: "Top pick", premium: "Full list" },
   { feature: "Rising Cards", anon: "Top pick", account: "Top pick", premium: "Full list" },
   { feature: "Value Finder screener", anon: false, account: false, premium: true },
+  { feature: "Bulk Pricer — price a whole list at once", anon: false, account: false, premium: true },
+  { feature: "Best Basket — cheapest store split, postage included", anon: false, account: false, premium: true },
   { feature: "Ad-free experience", anon: false, account: false, premium: true },
 ];
 
 const INCLUDED = [
+  "Bulk Pricer",
+  "Best Basket",
   "Value Finder screener",
   "Rising Cards",
   "Full Deal Finder list",
@@ -120,7 +134,7 @@ export default async function PremiumPage() {
         <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-400">
           {already
             ? "Everything you've unlocked is below — jump straight into any of it. Thanks for supporting RiftCompare."
-            : "Price comparison is free for everyone, and a free account adds the Bulk Pricer, Best Basket, alerts and your portfolio. Premium adds the pro screeners and an ad-free site — cancel anytime."}
+            : "Price comparison is free for everyone, and a free account adds alerts and your portfolio. Premium adds the Bulk Pricer, Best Basket, the pro screeners and an ad-free site — cancel anytime."}
         </p>
       </div>
 
@@ -188,6 +202,7 @@ export default async function PremiumPage() {
       {already && (
         <div className="mt-6 flex flex-wrap items-center justify-center gap-2 text-sm">
           <Link href="/dashboard" className="btn-primary">◆ Your dashboard</Link>
+          <Link href="/bulk-pricer" className="btn-ghost">Bulk Pricer</Link>
           <Link href="/tools/best-basket" className="btn-ghost">Best Basket</Link>
           <Link href="/tools/value-finder" className="btn-ghost">Value Finder</Link>
           <Link href="/tools/rising" className="btn-ghost">Rising Cards</Link>

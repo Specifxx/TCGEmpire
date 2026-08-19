@@ -216,8 +216,8 @@ async function FlipView({
   return (
     <>
       <p className="mb-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-        Cards that sell for more on <strong className="text-slate-200">eBay</strong> than the cheapest {info.adjective} store,{" "}
-        our own <Link href="/marketplace" className="text-brand-400 hover:underline">Marketplace</Link>, or <strong className="text-slate-200">TCGplayer</strong> charges.
+        Cards that sell for more on <strong className="text-slate-200">eBay</strong> than the cheapest {info.adjective} store or{" "}
+        <strong className="text-slate-200">TCGplayer</strong> charges.
         Handy if you&apos;re deciding whether to sell one. The gap is after an estimated ~{Math.round(EBAY_FEE * 100)}% eBay fee;
         postage isn&apos;t included.
       </p>
@@ -341,8 +341,7 @@ async function TcgFlipView({
   return (
     <>
       <p className="mb-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-        Cards a {info.adjective} store, <strong className="text-slate-200">eBay</strong>, or our own{" "}
-        <Link href="/marketplace" className="text-brand-400 hover:underline">Marketplace</Link> is selling for less than{" "}
+        Cards a {info.adjective} store or <strong className="text-slate-200">eBay</strong> is selling for less than{" "}
         <strong className="text-slate-200">TCGplayer&apos;s</strong> own
         US market price (converted to {info.currency}) — i.e. underpriced relative to the wider US market. TCGplayer only
         tracks one market price per card, so this is a reference gap, not a fee-adjusted resale estimate — shipping a card

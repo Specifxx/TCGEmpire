@@ -66,8 +66,8 @@ export async function ArticleTopValue({
     <section className="mt-10" id="live-most-expensive">
       <h2 className="scroll-mt-24 text-xl font-extrabold text-white">{title}</h2>
       <p className="mt-1 text-sm text-slate-400">
-        Live from the RiftCompare database — the highest current prices across every {meta.adjective} store and
-        marketplace we track, in {meta.currency}. Updated with each price import, so this list re-ranks itself as the
+        Live from the RiftCompare database — the highest current prices across every {meta.adjective} store we
+        track, in {meta.currency}. Updated with each price import, so this list re-ranks itself as the
         market moves.
       </p>
       <div className="mt-4 overflow-x-auto rounded-xl border border-ink-700">
@@ -121,7 +121,7 @@ export async function ArticleTopValue({
         </table>
       </div>
       <p className="mt-2 text-xs text-slate-500">
-        Prices are the lowest live in-stock listing we can see, including the stores and marketplaces tracked for{" "}
+        Prices are the lowest live in-stock listing we can see, including the stores tracked for{" "}
         {meta.place}. <Link href="/movers" className="text-brand-400 underline">Check the daily movers</Link> before
         you buy — a card at the top of this table may be mid-spike.
       </p>

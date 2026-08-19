@@ -27,13 +27,13 @@ const SEEN_KEY = "rc_signup_promo_seen";
 const SHOW_DELAY_MS = 25_000; // let a new visitor actually look around first
 const SKIP_PATHS = ["/login", "/verify", "/marketplace"];
 
-// What signing up actually gets you — the two power tools first, since they're
-// the concrete upgrade over browsing signed out.
+// What signing up actually gets you. The Bulk Pricer and Best Basket moved to
+// Premium (see lib/premium.ts's tier note) and are pitched there instead — this
+// list only promises what a free account genuinely, permanently unlocks.
 const PERKS: [string, string][] = [
-  ["Bulk Pricer", "price a whole want-list or trade pile in one paste"],
-  ["Best Basket", "the cheapest split across stores, postage included"],
   ["Price alerts", "get told when a card hits your price"],
-  ["Portfolio & marketplace", "track what you own, buy and sell"],
+  ["Portfolio tracking", "see what your collection is worth, live"],
+  ["Watchlist", "save cards and jump back to them anytime"],
 ];
 
 export function SignupPromoPopup({ providers }: { providers: ("google" | "discord")[] }) {

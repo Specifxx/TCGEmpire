@@ -68,7 +68,7 @@ export default function TrackedStoresPage() {
         <h1 className="text-2xl font-extrabold text-white sm:text-3xl">Stores we track</h1>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
           RiftCompare compares live prices across <span className="num text-slate-300">{total}</span> Riftbound retailers
-          plus eBay and our own RiftCompare Marketplace, grouped by market below. Every card&apos;s comparison ranks these
+          plus eBay, grouped by market below. Every card&apos;s comparison ranks these
           by item price, with delivered cost (price + postage) shown alongside so you can compare on it yourself, and
           prices refresh daily.
         </p>

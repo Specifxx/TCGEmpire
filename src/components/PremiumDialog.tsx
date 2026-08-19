@@ -16,10 +16,10 @@ export function usePremiumDialog() {
   return useContext(PremiumDialogContext);
 }
 
-// Premium-ONLY perks. Best Basket used to be listed here; it moved to the free
-// account tier (see lib/premium.ts), so pitching it as a reason to pay would be
-// selling something the reader already has.
+// Premium-ONLY perks (see the tier comment in lib/premium.ts).
 const FEATURES: { k: string; v: string }[] = [
+  { k: "Bulk Pricer", v: "price a whole list at once" },
+  { k: "Best Basket", v: "cheapest store split, postage included" },
   { k: "Value Finder", v: "undervalued-card screener" },
   { k: "Rising Cards", v: "demand + price-timing screener" },
   { k: "Arbitrage finder", v: "full flips & deals list" },
