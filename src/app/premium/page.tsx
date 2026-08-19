@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "RiftCompare Premium — power tools for buyers & sellers",
-  description: "RiftCompare Premium: the Bulk Pricer, Best Basket, Value Finder screener, Rising Cards, the full Deal Finder list and an ad-free site. Price comparison is free for everyone.",
+  description: "RiftCompare Premium: the Bulk Pricer, Best Basket, Value Finder screener, Rising Cards, the full Deal Finder list, daily Arbitrage Alerts and an ad-free site. Price comparison is free for everyone.",
   alternates: pageAlternates("/premium"),
 };
 
@@ -46,9 +46,21 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
   },
   {
     title: "Deal Finder",
-    body: "The full list of cards worth more on eBay than in stores (handy if you're selling) and the cards eBay is cheapest to buy — all sources, sortable, updated daily. Free shows only the top pick.",
+    body: "The full list of cards worth more on eBay than in stores (handy if you're selling), the cards eBay is cheapest to buy, and cards priced meaningfully cheaper in another tracked market — all sources, sortable, updated daily. Free shows only the top pick.",
     href: "/tools/deal-finder",
     cta: "Open Deal Finder",
+  },
+  {
+    title: "Arbitrage Alerts",
+    body: "A daily digest of today's best flips and cross-region price gaps, straight to your inbox — the same Deal Finder engine, delivered automatically. No separate opt-in; one-click unsubscribe if you'd rather check the page yourself.",
+    href: "/tools/deal-finder",
+    cta: "See what it finds",
+  },
+  {
+    title: "Condition Impact Calculator",
+    body: "Estimate how a card's value shifts between NM, LP, MP, HP and DMG — the same multiplier scale your portfolio is valued with, run forward on any card.",
+    href: "/tools/condition-calculator",
+    cta: "Open the calculator",
   },
   {
     title: "Ad-free everywhere",
@@ -72,6 +84,8 @@ const COMPARE: { feature: string; anon: boolean | string; account: boolean | str
   { feature: "Value Finder screener", anon: false, account: false, premium: true },
   { feature: "Bulk Pricer — price a whole list at once", anon: false, account: false, premium: true },
   { feature: "Best Basket — cheapest store split, postage included", anon: false, account: false, premium: true },
+  { feature: "Arbitrage Alerts — daily flip + cross-region digest", anon: false, account: false, premium: true },
+  { feature: "Condition Impact Calculator", anon: false, account: false, premium: true },
   { feature: "Ad-free experience", anon: false, account: false, premium: true },
 ];
 
@@ -81,6 +95,8 @@ const INCLUDED = [
   "Value Finder screener",
   "Rising Cards",
   "Full Deal Finder list",
+  "Arbitrage Alerts daily digest",
+  "Condition Impact Calculator",
   "Ad-free on every page",
   "Everything in the free account tier",
 ];
@@ -112,7 +128,7 @@ export default async function PremiumPage() {
             "@context": "https://schema.org",
             "@type": "Product",
             name: "RiftCompare Premium",
-            description: "The Value Finder screener, Rising Cards, the full Deal Finder list and an ad-free RiftCompare.",
+            description: "The Bulk Pricer, Best Basket, Value Finder screener, Rising Cards, the full Deal Finder list, daily Arbitrage Alerts and an ad-free RiftCompare.",
             brand: { "@type": "Organization", name: "RiftCompare", url: SITE_URL },
             offers: {
               "@type": "Offer",
@@ -207,6 +223,7 @@ export default async function PremiumPage() {
           <Link href="/tools/value-finder" className="btn-ghost">Value Finder</Link>
           <Link href="/tools/rising" className="btn-ghost">Rising Cards</Link>
           <Link href="/tools/deal-finder" className="btn-ghost">Deal Finder</Link>
+          <Link href="/tools/condition-calculator" className="btn-ghost">Condition Calculator</Link>
           <Link href="/portfolio" className="btn-ghost">Portfolio</Link>
           {checkoutLive && <ManageSubscriptionButton />}
         </div>
@@ -216,7 +233,7 @@ export default async function PremiumPage() {
       <div className="mt-10">
         <h2 className="mb-1 text-center text-lg font-extrabold text-white">What you get at each tier</h2>
         <p className="mb-3 text-center text-xs text-slate-500">
-          A free account is the biggest single step — it unlocks the two list-pricing tools.
+          A free account unlocks alerts, your portfolio and price history — Premium adds the list-pricing tools and the pro screeners.
         </p>
         <div className="card-surface overflow-x-auto p-1">
           <table className="w-full min-w-[560px] border-collapse text-sm">
@@ -267,8 +284,8 @@ export default async function PremiumPage() {
 
       {/* Footer note */}
       <p className="mx-auto mt-8 max-w-xl text-center text-xs leading-relaxed text-slate-500">
-        Premium pays for the servers and price data, which is what keeps price comparison free for everyone and the
-        list tools, alerts and portfolio free with an account.{" "}
+        Premium pays for the servers and price data, which is what keeps price comparison free for everyone and
+        alerts and your portfolio free with an account.{" "}
         {already ? (
           <>Update your card or cancel anytime via &ldquo;Manage subscription&rdquo; above. </>
         ) : trialEligible ? (

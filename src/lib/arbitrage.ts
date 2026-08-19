@@ -12,12 +12,12 @@
 // a per-request unbounded pull is exactly what has burned through this project's
 // Neon free-tier transfer allowance before.
 import { prisma } from "./db";
-import type { Country } from "./country";
+import { COUNTRY_LIST, currencyOf, pickPrice, type Country } from "./country";
 import { RETAILERS } from "./retailers";
 import { affiliateUrl } from "./affiliate";
 import { cardTileSelect } from "./cards";
 import { TCG_US } from "./tcgplayer";
-import { usdCentsToCountry } from "./fx";
+import { usdCentsToCountry, convertCents } from "./fx";
 import { MARKETPLACE_RETAILER, MARKETPLACE_PUBLIC } from "./marketplace";
 import { MARKETPLACE_FEE_BPS } from "./marketplace-policy";
 import { TCGPLAYER_SG_RETAILER, TCGPLAYER_UK_RETAILER } from "./constants";
@@ -512,6 +512,98 @@ export async function getArbitrageVsTcgplayer(
       .filter((x): x is ArbItem => x !== null);
 
     return { items, total, page: p, pageSize, pageCount };
+  } catch {
+    return { items: [], total: 0, page, pageSize, pageCount: 1 };
+  }
+}
+
+// ── Cross-region price gaps ──────────────────────────────────────────────────
+// Where the SAME card is priced meaningfully cheaper in another tracked market
+// than the viewer's own. Deliberately INFORMATIONAL, not a buy/sell execution
+// flow like the arbitrage functions above — acting on it means actually
+// shipping cross-border, and this models none of that (international postage
+// cost/time, customs, and whether the away market's stores will even ship
+// overseas are all real, unmodelled costs; see the disclaimer in the page
+// copy). Reuses the per-country lowestPriceCents* columns already sitting on
+// every Card row, so unlike getArbitrage above this needs no RetailerPrice
+// scan and no memoization — one Card query, one in-memory pass.
+export interface CrossRegionGap {
+  card: CardTileData;
+  homeCents: number;
+  homeCurrency: string;
+  homeCountry: Country;
+  awayCountry: Country;
+  awayCurrency: string; // the away market's OWN currency
+  awayCentsNative: number; // in awayCurrency — what it's actually listed at
+  awayCentsConverted: number; // converted into homeCurrency, for the gap math
+  gapPct: number;
+}
+
+export interface CrossRegionPage {
+  items: CrossRegionGap[];
+  total: number;
+  page: number;
+  pageSize: number;
+  pageCount: number;
+}
+
+const XREGION_MIN_HOME_CENTS = 300; // same floor as MIN_BUY_CENTS — ignore near-zero prices
+const XREGION_MIN_GAP_PCT = 20; // has to be a meaningful gap to be worth surfacing at all
+const XREGION_MAX_GAP_PCT = 300; // same outlier-guard reasoning as MAX_MARGIN_PCT — a huge gap is
+// almost always a converted reference price or a thin/stale market, not a real 300%+ difference.
+
+export async function getCrossRegionGaps(homeCountry: Country, page = 1, pageSize = 25): Promise<CrossRegionPage> {
+  try {
+    const homeCurrency = currencyOf(homeCountry);
+    const cards = await prisma.card.findMany({
+      where: { variant: null, isPromo: false },
+      select: cardTileSelect(homeCountry),
+    });
+
+    type Row = { card: CardTileData; homeCents: number; away: Country; awayNative: number; awayConverted: number; pct: number };
+    const rows: Row[] = [];
+    for (const c of cards as unknown as CardTileData[]) {
+      const homeCents = pickPrice(c, homeCountry);
+      if (homeCents == null || homeCents < XREGION_MIN_HOME_CENTS) continue;
+
+      let best: { native: number; converted: number; country: Country; pct: number } | null = null;
+      for (const info of COUNTRY_LIST) {
+        if (info.code === homeCountry) continue;
+        const awayNative = pickPrice(c, info.code);
+        if (awayNative == null) continue;
+        const awayConverted = convertCents(awayNative, info.currency, homeCurrency);
+        if (awayConverted >= homeCents) continue;
+        const pct = Math.round(((homeCents - awayConverted) / homeCents) * 1000) / 10;
+        if (pct < XREGION_MIN_GAP_PCT || pct > XREGION_MAX_GAP_PCT) continue;
+        if (!best || pct > best.pct) best = { native: awayNative, converted: awayConverted, country: info.code, pct };
+      }
+      if (!best) continue;
+      rows.push({ card: c, homeCents, away: best.country, awayNative: best.native, awayConverted: best.converted, pct: best.pct });
+    }
+    rows.sort((a, b) => b.pct - a.pct);
+
+    const total = rows.length;
+    const pageCount = Math.max(1, Math.ceil(total / pageSize));
+    const p = Math.min(Math.max(1, page), pageCount);
+    const slice = rows.slice((p - 1) * pageSize, p * pageSize);
+
+    return {
+      items: slice.map((r) => ({
+        card: r.card,
+        homeCents: r.homeCents,
+        homeCurrency,
+        homeCountry,
+        awayCountry: r.away,
+        awayCurrency: currencyOf(r.away),
+        awayCentsNative: r.awayNative,
+        awayCentsConverted: r.awayConverted,
+        gapPct: r.pct,
+      })),
+      total,
+      page: p,
+      pageSize,
+      pageCount,
+    };
   } catch {
     return { items: [], total: 0, page, pageSize, pageCount: 1 };
   }

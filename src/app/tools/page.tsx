@@ -40,7 +40,7 @@ const FAQS = [
   },
   {
     q: "What does the Deal Finder do?",
-    a: "It compares the same Riftbound card's live price across every tracked store and surfaces where the gap is large enough to matter — including cards worth more on eBay than in stores, and the cheapest place to buy a given card all-in.",
+    a: "It compares the same Riftbound card's live price across every tracked store and region and surfaces where the gap is large enough to matter — including cards worth more on eBay than in stores, the cheapest place to buy a given card all-in, and cards priced meaningfully cheaper in another tracked market. Premium members also get its top picks as a daily Arbitrage Alerts email.",
   },
   {
     q: "Do I need an account to use RiftCompare tools?",
@@ -90,7 +90,7 @@ const GROUPS: ToolGroup[] = [
         href: "/tools/deal-finder",
         emoji: "💱",
         title: "Deal Finder",
-        desc: "Spot cards that are cheaper in one place than another — and cards worth more if you resell them.",
+        desc: "Spot cards that are cheaper in one place than another — including another market entirely — and cards worth more if you resell them.",
         badge: "Premium",
       },
       {
@@ -98,14 +98,21 @@ const GROUPS: ToolGroup[] = [
         emoji: "🧺",
         title: "Best basket",
         desc: "Building a want-list? Find the cheapest single-store (or split) basket to buy it all.",
-        badge: "Account",
+        badge: "Premium",
       },
       {
         href: "/bulk-pricer",
         emoji: "📋",
         title: "Bulk pricer",
         desc: "Paste a whole want-list, trade pile or collection and price every card at once with a running total.",
-        badge: "Account",
+        badge: "Premium",
+      },
+      {
+        href: "/tools/condition-calculator",
+        emoji: "🩹",
+        title: "Condition calculator",
+        desc: "Estimate how a card's value shifts between NM, LP, MP, HP and DMG — the same scale your portfolio uses.",
+        badge: "Premium",
       },
     ],
   },

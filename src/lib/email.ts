@@ -185,6 +185,96 @@ export async function sendAlertConfirmationEmail(to: string, cardCount: number, 
   return sendEmail(to, "You're watching your RiftCompare wishlist for price drops", emailShell("Price-drop alerts are on", inner, alertFooter(unsubUrl)));
 }
 
+// ─── Arbitrage Alerts (Premium daily digest) ─────────────────────────────────
+// Reuses lib/arbitrage.ts's engine (see lib/arbitrage-alerts.ts for the cron
+// that builds these) — same-market flips (buy low, sell high across stores/
+// eBay/the Marketplace) plus cross-region gaps, in one daily email.
+
+export interface ArbitrageAlertFlip {
+  name: string;
+  setCode: string;
+  collectorNumber: string;
+  url: string;
+  currency: string;
+  buyCents: number;
+  buyStoreName: string;
+  sellCents: number;
+  sellName: string;
+  netCents: number;
+  marginPct: number;
+}
+
+export interface ArbitrageAlertGap {
+  name: string;
+  setCode: string;
+  collectorNumber: string;
+  url: string;
+  homeCurrency: string;
+  homeCents: number;
+  awayLabel: string; // e.g. "US"
+  awayCentsConverted: number;
+  gapPct: number;
+}
+
+function arbitrageFooter(unsubUrl: string): string {
+  return `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">
+    You're getting this because you're a RiftCompare Premium member.<br/>
+    <a href="${unsubUrl}" style="color:#9aa4b2;text-decoration:underline">Unsubscribe from Arbitrage Alerts</a> — this only turns off this digest, your subscription is unaffected. · RiftCompare Marketplace.
+  </td></tr>`;
+}
+
+function flipRow(item: ArbitrageAlertFlip): string {
+  return `<tr><td style="padding:12px 0;border-bottom:1px solid #233047">
+    <a href="${item.url}" style="color:#fff;font-weight:700;text-decoration:none;font-size:15px">${item.name}</a>
+    <div style="font-size:12px;color:#6b7585;margin-top:2px">${item.setCode} · ${item.collectorNumber}</div>
+    <div style="margin-top:6px;font-size:14px;color:#b8c0cc">
+      Buy ${formatMoney(item.buyCents, item.currency)} <span style="color:#6b7585">(${item.buyStoreName})</span>
+      &nbsp;→&nbsp;Sell ${formatMoney(item.sellCents, item.currency)} <span style="color:#6b7585">(${item.sellName})</span>
+      &nbsp;<span style="background:#13351f;color:#34d17e;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px">+${formatMoney(item.netCents, item.currency)} · ${item.marginPct}%</span>
+    </div>
+  </td></tr>`;
+}
+
+function gapRow(item: ArbitrageAlertGap): string {
+  return `<tr><td style="padding:12px 0;border-bottom:1px solid #233047">
+    <a href="${item.url}" style="color:#fff;font-weight:700;text-decoration:none;font-size:15px">${item.name}</a>
+    <div style="font-size:12px;color:#6b7585;margin-top:2px">${item.setCode} · ${item.collectorNumber}</div>
+    <div style="margin-top:6px;font-size:14px;color:#b8c0cc">
+      Your market ${formatMoney(item.homeCents, item.homeCurrency)}
+      &nbsp;vs&nbsp;${item.awayLabel} ${formatMoney(item.awayCentsConverted, item.homeCurrency)} <span style="color:#6b7585">(converted)</span>
+      &nbsp;<span style="background:#1e2a13;color:#a3e635;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px">-${item.gapPct}%</span>
+    </div>
+  </td></tr>`;
+}
+
+// The daily digest itself. Either section may be empty — the caller (see
+// runArbitrageAlerts) only sends when there's at least one item total, so this
+// never has to render a section-less "nothing today" email.
+export async function sendArbitrageAlertEmail(
+  to: string,
+  flips: ArbitrageAlertFlip[],
+  gaps: ArbitrageAlertGap[],
+  unsubUrl: string
+): Promise<boolean> {
+  const count = flips.length + gaps.length;
+  const flipsBlock = flips.length
+    ? `<tr><td style="padding:4px 32px 4px;font-size:13px;font-weight:700;color:#8b95a5;text-transform:uppercase;letter-spacing:.4px">Today's best flips</td></tr>
+       <tr><td style="padding:0 32px 8px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${flips.map(flipRow).join("")}</table></td></tr>`
+    : "";
+  const gapsBlock = gaps.length
+    ? `<tr><td style="padding:12px 32px 4px;font-size:13px;font-weight:700;color:#8b95a5;text-transform:uppercase;letter-spacing:.4px">Cheaper in another market</td></tr>
+       <tr><td style="padding:0 32px 8px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${gaps.map(gapRow).join("")}</table></td></tr>
+       <tr><td style="padding:2px 32px 4px;font-size:11px;color:#6b7585">Doesn't include international shipping, customs or whether the store ships overseas at all — check before you buy.</td></tr>`
+    : "";
+  const inner = `
+    <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">Today's top opportunities from the Deal Finder engine:</td></tr>
+    ${flipsBlock}
+    ${gapsBlock}
+    <tr><td style="padding:8px 32px 24px"><a href="${SITE_URL}/tools/deal-finder" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Open Deal Finder</a></td></tr>`;
+  const subject = count === 1 ? "1 new arbitrage opportunity today" : `${count} new arbitrage opportunities today`;
+  return sendEmail(to, subject, emailShell("Arbitrage Alerts", inner, arbitrageFooter(unsubUrl)));
+}
+
 // ─── Weekly newsletter digest ────────────────────────────────────────────────
 
 // Newsletter footer: the audience opted in via the footer signup, so the copy

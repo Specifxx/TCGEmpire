@@ -22,6 +22,7 @@ const TOOLS = [
   { title: "Value Finder", desc: "Cards trading below their recent average — undervalued picks.", href: "/tools/value-finder", icon: "🔎" },
   { title: "Rising Cards", desc: "Cards ranked by demand + price-timing signals — likely to go up soon.", href: "/tools/rising", icon: "🚀" },
   { title: "Deal Finder", desc: "Cards worth more on eBay and the cheapest eBay buys, updated daily.", href: "/tools/deal-finder", icon: "⚖️" },
+  { title: "Condition Calculator", desc: "Estimate a card's value swap between NM, LP, MP, HP and DMG.", href: "/tools/condition-calculator", icon: "🩹" },
 ];
 
 export default async function DashboardPage() {
@@ -95,7 +96,8 @@ export default async function DashboardPage() {
       </div>
 
       <p className="mt-6 text-center text-xs text-slate-600">
-        Ad-free is active across the site while you&apos;re Premium. Thanks for supporting RiftCompare.
+        Ad-free is active across the site while you&apos;re Premium, and Arbitrage Alerts — a daily digest of today&apos;s
+        best flips and cross-region gaps — lands in your inbox automatically. Thanks for supporting RiftCompare.
       </p>
     </div>
   );

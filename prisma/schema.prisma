@@ -1145,3 +1145,24 @@ model UserDigestOptOut {
   @@index([optedOutAt])
   @@index([lastEditionKey])
 }
+
+// Suppression list for the daily "Arbitrage Alerts" digest sent to PREMIUM
+// members only (see lib/arbitrage-alerts.ts) — today's best flip opportunities
+// from the same engine behind Deal Finder, plus cross-region price gaps.
+// Deliberately a separate table from every other opt-out here, for the same
+// reason UserDigestOptOut is separate from AnnouncementOptOut: this is a
+// distinct audience (Premium members) and a distinct recurring send, and
+// conflating its opt-out with the general weekly digest's would let
+// unsubscribing from one silently suppress the other. Keyed by email, not
+// userId, so an opt-out survives account deletion — same rationale as every
+// other opt-out table.
+model ArbitrageAlertOptOut {
+  email      String    @id
+  // One-click unsubscribe token, minted at first send.
+  token      String    @unique
+  createdAt  DateTime  @default(now())
+  // Null until they click unsubscribe; non-null suppresses all future sends.
+  optedOutAt DateTime?
+
+  @@index([optedOutAt])
+}

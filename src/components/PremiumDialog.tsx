@@ -22,7 +22,8 @@ const FEATURES: { k: string; v: string }[] = [
   { k: "Best Basket", v: "cheapest store split, postage included" },
   { k: "Value Finder", v: "undervalued-card screener" },
   { k: "Rising Cards", v: "demand + price-timing screener" },
-  { k: "Arbitrage finder", v: "full flips & deals list" },
+  { k: "Arbitrage Alerts", v: "daily flip + cross-region digest" },
+  { k: "Condition Calculator", v: "NM → LP → MP → HP → DMG value" },
   { k: "Ad-free", v: "no ads on any page" },
 ];
 

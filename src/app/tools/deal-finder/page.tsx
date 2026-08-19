@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { HubIntro } from "@/components/HubIntro";
 import Link from "next/link";
-import { getArbitrage, getArbitrageVsTcgplayer, getEbayCheapest, getArbSources, TCGPLAYER_KEY, EBAY_FEE, type ArbSort, type DealSort } from "@/lib/arbitrage";
+import { getArbitrage, getArbitrageVsTcgplayer, getEbayCheapest, getCrossRegionGaps, getArbSources, TCGPLAYER_KEY, EBAY_FEE, type ArbSort, type DealSort } from "@/lib/arbitrage";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
@@ -24,7 +24,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: { absolute: "Riftbound Deal Finder — Cross-Store, eBay & TCGplayer Deals | RiftCompare" },
   description:
-    "Find the best Riftbound deals: cards worth more on eBay than in stores (handy if you're selling), cards underpriced vs TCGplayer's US market price, and the cards eBay is cheapest to buy. Sortable, updated daily, with direct links. A Premium tool — the top pick is free to preview.",
+    "Find the best Riftbound deals: cards worth more on eBay than in stores (handy if you're selling), cards underpriced vs TCGplayer's US market price, the cards eBay is cheapest to buy, and cards priced meaningfully cheaper in another tracked market. Sortable, updated daily, with direct links. A Premium tool — the top pick is free to preview.",
   alternates: pageAlternates("/tools/deal-finder"),
   openGraph: { title: "Riftbound Deal Finder — Cross-Store, eBay & TCGplayer Deals", url: `${SITE_URL}/tools/deal-finder` },
 };
@@ -75,8 +75,8 @@ export default async function ArbitragePage({
   // TCGplayer itself (it's the fixed sell/reference side there, so it's never a
   // buy option in its own view).
   const tcgSources = sources.filter((s) => s.key !== tcgKey);
-  const view: "flip" | "deals" | "tcg" =
-    searchParams.view === "deals" ? "deals" : searchParams.view === "tcg" ? "tcg" : "flip";
+  const view: "flip" | "deals" | "tcg" | "xregion" =
+    searchParams.view === "deals" ? "deals" : searchParams.view === "tcg" ? "tcg" : searchParams.view === "xregion" ? "xregion" : "flip";
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
 
   return (
@@ -144,9 +144,18 @@ export default async function ArbitragePage({
         >
           Cheapest on eBay
         </Link>
+        <Link
+          href="/tools/deal-finder?view=xregion"
+          aria-current={view === "xregion" ? "page" : undefined}
+          className={`flex-1 rounded-md px-3 py-2 text-center text-sm font-bold ${view === "xregion" ? "bg-lime-500/20 text-lime-200" : "text-slate-400 hover:text-white"}`}
+        >
+          Cross-region
+        </Link>
       </div>
 
-      {view === "tcg" ? (
+      {view === "xregion" ? (
+        await XRegionView({ country, info, page, premium, signedIn })
+      ) : view === "tcg" ? (
         await TcgFlipView({
           country, info, sort: searchParams.sort === "margin" ? "margin" : "profit", page, buy: searchParams.buy,
           sources: tcgSources, defaultBuyKeys: tcgBuyKeys, premium, signedIn,
@@ -296,6 +305,57 @@ async function DealsView({
       ) : (
         <LockedTable signedIn={signedIn}>
           <DealsTable items={data.items} country={country} info={info} />
+        </LockedTable>
+      )}
+    </>
+  );
+}
+
+// ── Cross-region view (same card, meaningfully cheaper in another tracked market) ──
+// Deliberately informational, not a flip — see getCrossRegionGaps's own header
+// comment. No sort/filter UI (unlike the other three views): there's exactly
+// one ranking that makes sense here (biggest gap first), and no buy/sell source
+// selection since this compares MARKETS, not stores within one market.
+async function XRegionView({
+  country,
+  info,
+  page,
+  premium,
+  signedIn,
+}: {
+  country: ReturnType<typeof getCountry>;
+  info: (typeof COUNTRIES)[keyof typeof COUNTRIES];
+  page: number;
+  premium: boolean;
+  signedIn: boolean;
+}) {
+  const data = await getCrossRegionGaps(country, premium ? page : 1, premium ? PAGE_SIZE : TEASER_SIZE);
+  const href = (p: number) => `/tools/deal-finder?view=xregion&page=${p}`;
+
+  return (
+    <>
+      <p className="mb-2 max-w-2xl text-sm leading-relaxed text-slate-400">
+        Cards priced meaningfully cheaper in <strong className="text-slate-200">another tracked market</strong> than in{" "}
+        {info.place} — a live per-region price comparison, not a buy/sell flip.
+      </p>
+      <p className="mb-4 text-xs text-slate-500">
+        This doesn&apos;t account for international shipping, customs, or whether the other market&apos;s stores will
+        ship overseas at all — check before you buy. Currency conversion is an approximate reference rate, not a live
+        FX quote.
+      </p>
+
+      {data.items.length === 0 ? (
+        <Empty>No card is meaningfully cheaper in another tracked market right now.</Empty>
+      ) : premium ? (
+        <>
+          <div className="card-surface overflow-x-auto">
+            <XRegionTable items={data.items} info={info} />
+          </div>
+          <Pager total={data.total} page={data.page} pageCount={data.pageCount} hrefFor={href} unit="cards" />
+        </>
+      ) : (
+        <LockedTable signedIn={signedIn}>
+          <XRegionTable items={data.items} info={info} />
         </LockedTable>
       )}
     </>
@@ -460,6 +520,38 @@ function DealsTable({
             <td className="px-4 py-2 text-right">
               <span className="num font-bold text-up">{formatMoney(it.savingCents, info.currency)}</span>
               <span className="num ml-1 text-[11px] font-semibold text-up">({it.savingPct}%)</span>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+function XRegionTable({ items, info }: { items: Awaited<ReturnType<typeof getCrossRegionGaps>>["items"]; info: (typeof COUNTRIES)[keyof typeof COUNTRIES] }) {
+  return (
+    <table className="w-full min-w-[640px] text-sm">
+      <thead>
+        <tr className="border-b border-ink-700 text-left text-[10px] uppercase tracking-wide text-slate-500">
+          <th className="px-4 py-2.5 font-semibold">Card</th>
+          <th className="px-2 py-2.5 text-right font-semibold">{info.label}</th>
+          <th className="px-2 py-2.5 text-right font-semibold">Cheaper market</th>
+          <th className="px-4 py-2.5 text-right font-semibold">Gap</th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-ink-800">
+        {items.map((it) => (
+          <tr key={it.card.id} className="hover:bg-ink-800">
+            <CardCell card={it.card} />
+            <td className="num px-2 py-2 text-right text-slate-300">{formatMoney(it.homeCents, it.homeCurrency)}</td>
+            <td className="px-2 py-2 text-right">
+              <div className="num font-semibold text-lime-300">{formatMoney(it.awayCentsNative, it.awayCurrency)}</div>
+              <div className="text-[10px] text-slate-500">
+                {COUNTRIES[it.awayCountry].label} · ≈{formatMoney(it.awayCentsConverted, it.homeCurrency)}
+              </div>
+            </td>
+            <td className="px-4 py-2 text-right">
+              <span className="num font-bold text-lime-300">-{it.gapPct}%</span>
             </td>
           </tr>
         ))}
