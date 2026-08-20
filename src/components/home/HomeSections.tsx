@@ -39,7 +39,7 @@ export interface HomeSectionsProps {
   storeWord: string;
   popularCards: CardTileData[];
   popularVendetta: CardTileData[];
-  // ALL FIVE markets, not just `country` — TodaysTopDeals/MarketPulse localise
+  // ALL SIX markets, not just `country` — TodaysTopDeals/MarketPulse localise
   // to the VISITOR's own market client-side (useCountry()), which can differ
   // from the page's URL/baseline market (e.g. a bookmarked /au visited by
   // someone whose cookie says UK), same as the homepage always has.
@@ -50,8 +50,8 @@ export interface HomeSectionsProps {
 
 // Everything below the hero that used to exist ONLY on "/" — Today's Top
 // Deals, Market Pulse, the popular-cards carousel, How It Works, Explore, the
-// reviews and every other feature section. Factored out so the four region
-// home pages (/au, /uk, /sg, /ca — see RegionHome.tsx) render the exact
+// reviews and every other feature section. Factored out so the five region
+// home pages (/au, /uk, /sg, /ca, /de — see RegionHome.tsx) render the exact
 // same feature set as "/" instead of a stripped-down page: a visitor who
 // picks a market in the hero toggle must land on the SAME site, not a thinner
 // one. Each region page fetches its own region-scoped data (still cache-
@@ -70,7 +70,7 @@ export function HomeSections({
   moversByCountry,
   recentlyUpdated,
 }: HomeSectionsProps) {
-  const COUNTRY_CODES: Country[] = ["AU", "US", "UK", "SG", "CA"];
+  const COUNTRY_CODES: Country[] = ["AU", "US", "UK", "SG", "CA", "DE"];
   const anyDeals = COUNTRY_CODES.some((c) => topDealsByCountry[c].hasAny);
   // Biggest movers tab: both directions, ranked by the size of the move, for
   // THIS page's own market.

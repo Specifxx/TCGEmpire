@@ -141,6 +141,7 @@ export async function getCardPricesData(idOrSlug: string) {
         id: true, slug: true, name: true, setName: true, setCode: true, collectorNumber: true, imageUrl: true,
         lowestPriceCents: true, lowestPriceCentsUs: true,
         lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true,
+        lowestPriceCentsDe: true,
       },
     })
     .catch(() => null);
@@ -161,6 +162,7 @@ export async function getCardPricesData(idOrSlug: string) {
       UK: { lowestCents: card.lowestPriceCentsUk, currency: "GBP" },
       SG: { lowestCents: card.lowestPriceCentsSg, currency: "SGD" },
       CA: { lowestCents: card.lowestPriceCentsCa, currency: "CAD" },
+      DE: { lowestCents: card.lowestPriceCentsDe, currency: "EUR" },
     },
     note: "Prices are the lowest live in-stock listing per market, in integer cents. null = no tracked in-stock listing.",
     source: `${SITE_URL}${cardHref(card)}`,

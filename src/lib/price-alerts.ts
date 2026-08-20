@@ -44,6 +44,7 @@ export async function runPriceAlerts(): Promise<AlertRunSummary> {
           // fire at all. Same trap for CA without this.
           lowestPriceCentsSg: true,
           lowestPriceCentsCa: true,
+          lowestPriceCentsDe: true,
         },
       },
     },

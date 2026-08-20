@@ -9,7 +9,7 @@ import { CinematicHero } from "./CinematicHero";
 import { HomeSections } from "./HomeSections";
 import { webPage, faqPage, breadcrumb, ldJson } from "@/lib/jsonld";
 
-const COUNTRY_CODES: Country[] = ["AU", "US", "UK", "SG", "CA"];
+const COUNTRY_CODES: Country[] = ["AU", "US", "UK", "SG", "CA", "DE"];
 
 // Region home pages (/au, /uk, /sg, /ca — see app/au/page.tsx etc): the
 // homepage's own hero/search/stat building blocks, reused rather than

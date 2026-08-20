@@ -18,7 +18,7 @@ import { SITE_URL } from "@/lib/site";
 // throttle or block abusive traffic without notice. Be a good citizen: the
 // Cache-Control header on every response states exactly how long a result is
 // good for — cache accordingly rather than polling.
-const MARKET_ENUM = ["AU", "US", "UK", "SG", "CA"] as const;
+const MARKET_ENUM = ["AU", "US", "UK", "SG", "CA", "DE"] as const;
 
 const MARKET_PARAM = {
   name: "market",
@@ -201,9 +201,9 @@ export function buildOpenApiSpec() {
       "/api/v1/card/{id}/prices.json": {
         get: {
           operationId: "getCardPrices",
-          summary: "Lowest live in-stock price in EVERY market (AU/US/UK/SG/CA) for one card, in a single response.",
+          summary: "Lowest live in-stock price in EVERY market (AU/US/UK/SG/CA/DE) for one card, in a single response.",
           description:
-            "Returns all five markets at once — there is no ?market= param here because there's no need for one; " +
+            "Returns all six markets at once — there is no ?market= param here because there's no need for one; " +
             "filter the `prices` object client-side for the market you want.",
           parameters: [CARD_ID_PARAM],
           responses: {
@@ -227,7 +227,7 @@ export function buildOpenApiSpec() {
                       },
                       prices: {
                         type: "object",
-                        description: "One entry per market code (AU/US/UK/SG/CA).",
+                        description: "One entry per market code (AU/US/UK/SG/CA/DE).",
                         additionalProperties: {
                           type: "object",
                           properties: { lowestCents: { type: ["integer", "null"] }, currency: CURRENCY },

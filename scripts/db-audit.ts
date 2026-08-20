@@ -63,6 +63,7 @@ async function main() {
       isPromo: true, domain: true, type: true, rarity: true, imageUrl: true, imageThumbUrl: true,
       lowestPriceCents: true, lowestPriceCentsUs: true,
       lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true,
+      lowestPriceCentsDe: true,
       ebayCheckedAt: true,
     },
   });
@@ -139,6 +140,7 @@ async function main() {
     { code: "UK", field: "lowestPriceCentsUk" },
     { code: "SG", field: "lowestPriceCentsSg" },
     { code: "CA", field: "lowestPriceCentsCa" },
+    { code: "DE", field: "lowestPriceCentsDe" },
   ];
   for (const m of MARKETS) {
     const phantom = cards.filter((c) => c[m.field] != null && !stock.get(`${c.id}|${m.code}`));
@@ -161,7 +163,7 @@ async function main() {
     zombies.length
   );
   const badCountry = await prisma.retailerPrice.groupBy({ by: ["country"], _count: { _all: true } });
-  const unknownMarkets = badCountry.filter((r) => !["AU", "US", "UK"].includes(r.country));
+  const unknownMarkets = badCountry.filter((r) => !["AU", "US", "UK", "SG", "CA", "DE"].includes(r.country));
   report("listings with an unknown market code", unknownMarkets.map((r) => `"${r.country}" × ${r._count._all}`));
 
   // ── Freshness ────────────────────────────────────────────────────────────────

@@ -82,7 +82,7 @@ export interface ArbSource {
 }
 
 // eBay retailer key per market.
-const EBAY_KEY: Record<Country, string | null> = { AU: "ebay", US: "ebay_us", UK: "ebay_uk", SG: "ebay_sg", CA: "ebay_ca" };
+const EBAY_KEY: Record<Country, string | null> = { AU: "ebay", US: "ebay_us", UK: "ebay_uk", SG: "ebay_sg", CA: "ebay_ca", DE: "ebay_de" };
 // TCGplayer retailer key per market — the same converted-reference rows used as a
 // fallback in the main price comparison (see UK_FALLBACK_RETAILERS / SG_FALLBACK_RETAILERS)
 // double as a real, always-available BUY source here. Excluded for AU on purpose:
@@ -102,6 +102,10 @@ export const TCGPLAYER_KEY: Record<Country, string | null> = {
   // users, which is a product call rather than a correctness one. Flip this to
   // TCGPLAYER_CA_RETAILER when that call is made; nothing else stands in the way.
   CA: null,
+  // No TCG_DE market exists in tcgplayer.ts — TCGplayer has no native EUR
+  // listing this system treats as a reference row (unlike UK/SG's converted
+  // USD figures), so DE has none to offer here either.
+  DE: null,
 };
 const MARKETPLACE_FEE_PCT = MARKETPLACE_FEE_BPS / 10000;
 

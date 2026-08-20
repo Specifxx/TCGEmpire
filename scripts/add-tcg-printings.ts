@@ -106,7 +106,7 @@ async function main() {
           setCode: sc, setName: setNameByCode.get(sc) ?? rest.setName,
           viewCount: 0, searchCount: 0, lastViewedAt: null, marketPriceCents: 0,
           lowestPriceCents: null, lowestPriceCentsUs: null, lowestPriceCentsUk: null,
-          lowestPriceCentsSg: null, lowestPriceCentsCa: null,
+          lowestPriceCentsSg: null, lowestPriceCentsCa: null, lowestPriceCentsDe: null,
         },
       }).catch((e) => { console.warn("create failed", collectorNumber, e.message); created--; usedSlugs.delete(slug); });
     }

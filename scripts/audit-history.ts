@@ -11,7 +11,7 @@
  */
 import { dbHistory, HISTORY_URL_SOURCE } from "../src/lib/db-history";
 
-const CC = ["AU", "US", "UK", "SG", "CA"];
+const CC = ["AU", "US", "UK", "SG", "CA", "DE"];
 
 function median(xs: number[]): number {
   if (!xs.length) return 0;

@@ -76,7 +76,7 @@ export function pageOpenGraph(opts: {
  *
  * RiftCompare serves one URL set and switches market on a cookie, so there are
  * no /en-gb/ style locale paths and inventing hreflang for them would be a lie.
- * The six country buying guides are the exception: each is a genuinely distinct,
+ * The country buying guides are the exception: each is a genuinely distinct,
  * separately-indexable page about buying in ONE market, in that market's
  * currency, and they are alternates of each other in exactly the sense hreflang
  * describes.
@@ -89,6 +89,7 @@ export const COUNTRY_GUIDE_SLUGS: Record<Country, string> = {
   AU: "buy-riftbound-cards-australia",
   CA: "buy-riftbound-cards-canada",
   SG: "riftbound-price-comparison-singapore",
+  DE: "buy-riftbound-cards-germany",
 };
 
 /** BCP-47 tag per market. UK's region subtag is GB, not UK. */
@@ -98,6 +99,7 @@ const HREFLANG: Record<Country, string> = {
   AU: "en-AU",
   CA: "en-CA",
   SG: "en-SG",
+  DE: "de-DE",
 };
 
 /**
@@ -117,8 +119,8 @@ export function hreflangForCountryGuide(slug: string): Record<string, string> | 
 }
 
 /**
- * The second honest hreflang group on the site: the homepage ("/") plus its 4
- * region variants (/au, /uk, /sg, /ca — see app/au/page.tsx etc). Each is
+ * The second honest hreflang group on the site: the homepage ("/") plus its
+ * region variants (/au, /uk, /sg, /ca, /de — see app/au/page.tsx etc). Each is
  * a genuinely distinct, separately-indexable page — its own H1, its own
  * region-locked stat block, its own store list — not a re-skin, so this is not
  * the "inventing hreflang" case hreflangForCountryGuide's header warns against.
@@ -131,9 +133,10 @@ export const REGION_HOME_PATH: Record<Country, string> = {
   AU: "/au",
   CA: "/ca",
   SG: "/sg",
+  DE: "/de",
 };
 
-/** hreflang map for the homepage + all 5 region pages. x-default points at "/",
+/** hreflang map for the homepage + all region pages. x-default points at "/",
  *  the site's default market (DEFAULT_COUNTRY, currently US). */
 export function regionHomeHreflang(): Record<string, string> {
   const map: Record<string, string> = {};
@@ -144,7 +147,7 @@ export function regionHomeHreflang(): Record<string, string> {
   return map;
 }
 
-/** Full <Metadata> for one of the 4 region home pages (not "/" itself, which
+/** Full <Metadata> for one of the region home pages (not "/" itself, which
  *  keeps its own hand-written metadata in app/page.tsx). Every one of the
  *  region-locked facts here (adjective, currency, canonical path) reads off
  *  COUNTRIES/REGION_HOME_PATH so a page can never describe a market other than

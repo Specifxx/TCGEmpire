@@ -26,7 +26,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       select: {
         id: true, slug: true, name: true, setCode: true, setName: true, collectorNumber: true,
         rarity: true, imageThumbUrl: true,
-        lowestPriceCents: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true,
+        lowestPriceCents: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true, lowestPriceCentsDe: true,
         retailerPrices: {
           where: { country: market, inStock: true },
           select: { id: true },
@@ -61,6 +61,7 @@ type EmbedCard = {
   id: string; slug: string | null; name: string; setCode: string; setName: string; collectorNumber: string;
   rarity: string; imageThumbUrl: string | null;
   lowestPriceCents: number | null; lowestPriceCentsUs: number | null; lowestPriceCentsUk: number | null;
+  lowestPriceCentsSg?: number | null; lowestPriceCentsCa?: number | null; lowestPriceCentsDe?: number | null;
   retailerPrices: { id: string }[];
 };
 

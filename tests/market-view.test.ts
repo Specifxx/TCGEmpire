@@ -165,6 +165,7 @@ test("tile: every per-country price column is considered", () => {
     "lowestPriceCentsUk",
     "lowestPriceCentsSg",
     "lowestPriceCentsCa",
+    "lowestPriceCentsDe",
   ] as const;
   // One column per tracked market — a market added to COUNTRY_LIST without a
   // column here would silently report "not stocked anywhere".

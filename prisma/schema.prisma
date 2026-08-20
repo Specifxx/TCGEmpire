@@ -240,6 +240,7 @@ model Card {
   //   lowestPriceCentsUk = United Kingdom (GBP cents), from UK stores + eBay UK + TCGplayer
   //   lowestPriceCentsSg = Singapore (SGD cents), from SG stores + eBay SG
   //   lowestPriceCentsCa = Canada (CAD cents), from CA stores + eBay CA
+  //   lowestPriceCentsDe = Germany (EUR cents), from DE stores + eBay DE (rotation)
   lowestPriceCents   Int?
   lowestPriceCentsUs Int?
   lowestPriceCentsUk Int?
@@ -250,6 +251,7 @@ model Card {
   // the next price import; null everywhere until then, which every read path
   // already handles as "no price yet".
   lowestPriceCentsCa Int?
+  lowestPriceCentsDe Int?
   artSeed            Int       @default(0)
   // Popularity signals. searchCount (clicks from the search box) is the purer demand
   // metric and drives eBay prioritisation; viewCount (any open, incl. featured
@@ -285,6 +287,7 @@ model Card {
   // browse grid sorts on it, so SG was doing sequential scans for both.
   @@index([lowestPriceCentsSg])
   @@index([lowestPriceCentsCa])
+  @@index([lowestPriceCentsDe])
   @@index([domain])
   @@index([rarity])
   @@index([type])

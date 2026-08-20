@@ -129,6 +129,7 @@ type UniverseCard = {
   lowestPriceCentsUk: number | null;
   lowestPriceCentsSg: number | null;
   lowestPriceCentsCa: number | null;
+  lowestPriceCentsDe: number | null;
 };
 
 // Lookahead-free backtest of the reconstructable price-timing signal ("room to run"
@@ -191,6 +192,7 @@ export async function getRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
       variant: true, isPromo: true, rarity: true, imageThumbUrl: true,
       searchCount: true, viewCount: true,
       lowestPriceCents: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true,
+      lowestPriceCentsDe: true,
     },
   })) as UniverseCard[];
 

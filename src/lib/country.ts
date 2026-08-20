@@ -1,16 +1,22 @@
 // Country / market selection. The UNITED STATES is the global default; a visitor is
-// auto-switched to AU, UK, SG or CA only when IP geo detects one of those
+// auto-switched to AU, UK, SG, CA or DE only when IP geo detects one of those
 // (everything else — incl. the US and undetectable — resolves to US). This module is
 // PURE (no next/headers) so it's safe to import from both server and client
 // components. The server-side cookie + geo reader lives in get-country.ts.
 //
 // New Zealand support was removed 2026-08-20 (NZ never had eBay coverage — see
-// arbitrage.ts/affiliate.ts — so the removal frees no eBay credits; the actual
-// saving is ~10 fewer Shopify store scrapes per price-import run and dropping
+// arbitrage.ts/affiliate.ts — so the removal freed no eBay credits; the actual
+// saving was ~10 fewer Shopify store scrapes per price-import run and dropping
 // the dedicated Card.lowestPriceCentsNz column/index). NZ is kept archived in
 // git history, not behind a flag — re-adding it is a normal "add a market" pass.
+//
+// Germany (DE) was added 2026-08-20 — the first EUR market with its own real
+// store inventory (previously EUR was ONLY a display conversion of UK's real
+// GBP prices for EU shoppers; see the EU_ISO note below, which DE no longer
+// falls under). eBay DE runs on a rotation, not daily (see EBAY_ROTATING_MARKETS
+// in price-import.ts), to launch it without pushing the Browse API budget.
 
-export type Country = "AU" | "US" | "UK" | "SG" | "CA";
+export type Country = "AU" | "US" | "UK" | "SG" | "CA" | "DE";
 
 export interface CountryInfo {
   code: Country;
@@ -28,11 +34,12 @@ export const COUNTRIES: Record<Country, CountryInfo> = {
   UK: { code: "UK", label: "United Kingdom", adjective: "UK", place: "the United Kingdom", flag: "🇬🇧", currency: "GBP", locale: "en-GB" },
   SG: { code: "SG", label: "Singapore", adjective: "Singapore", place: "Singapore", flag: "🇸🇬", currency: "SGD", locale: "en-SG" },
   CA: { code: "CA", label: "Canada", adjective: "Canadian", place: "Canada", flag: "🇨🇦", currency: "CAD", locale: "en-CA" },
+  DE: { code: "DE", label: "Germany", adjective: "German", place: "Germany", flag: "🇩🇪", currency: "EUR", locale: "de-DE" },
 };
 
 // Order shown in the switcher. UK is live, priced in GBP (TCGplayer now; eBay UK
 // joins on the next daily import, CardTrader once its API token is set).
-export const COUNTRY_LIST: CountryInfo[] = [COUNTRIES.AU, COUNTRIES.US, COUNTRIES.UK, COUNTRIES.SG, COUNTRIES.CA];
+export const COUNTRY_LIST: CountryInfo[] = [COUNTRIES.AU, COUNTRIES.US, COUNTRIES.UK, COUNTRIES.SG, COUNTRIES.CA, COUNTRIES.DE];
 // US is the default market (the ISR baseline + the fallback when geo can't place a
 // visitor in AU/UK). Geo auto-switches AU/UK visitors client-side.
 export const DEFAULT_COUNTRY: Country = "US";
@@ -42,18 +49,21 @@ export const COUNTRY_COOKIE = "country";
 // quickly if a market's data needs work, without code surgery.)
 export const INTL_ENABLED = process.env.NEXT_PUBLIC_INTL_DISABLED !== "true";
 
-const VALID = new Set<Country>(["AU", "US", "UK", "SG", "CA"]);
+const VALID = new Set<Country>(["AU", "US", "UK", "SG", "CA", "DE"]);
 
-// EU member states (+ EEA/Schengen-adjacent UK-shipping-friendly neighbours) —
-// there's no separate EU store/eBay market, but UK (GBP, real UK stores) is a
-// far closer match for a European shopper's real prices/shipping than the US
-// default: nearer currency, nearer postage. A visitor from one of these markets
-// browses the same real UK store inventory as a genuine UK visitor, but SEES
-// prices displayed in EUR by default (see get-country.ts's getDisplayCurrency
-// and CountryProvider's `currency`/`fmt`) — GBP is the real, buyable currency;
-// EUR is a display conversion of it, never a second market.
+// EU member states (+ EEA/Schengen-adjacent UK-shipping-friendly neighbours) MINUS
+// Germany — DE has its own real store inventory and eBay market now (see COUNTRIES
+// above), so it's resolved directly by the VALID check in normalizeCountry() below
+// and never reaches this set. Every OTHER EU visitor still has no separate EU
+// store/eBay market, so UK (GBP, real UK stores) remains the closest match: nearer
+// currency, nearer postage than the US default. That visitor browses the same real
+// UK store inventory as a genuine UK visitor, but SEES prices displayed in EUR by
+// default (see get-country.ts's getDisplayCurrency and CountryProvider's
+// `currency`/`fmt`) — GBP is the real, buyable currency; EUR is a display
+// conversion of it, never a second market. (Germany's EUR prices, by contrast, ARE
+// a second market — real DE stores, not a converted GBP figure.)
 const EU_ISO = new Set([
-  "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU",
+  "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "GR", "HU",
   "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE",
 ]);
 
@@ -65,8 +75,8 @@ export function isEuIso(v: string | undefined | null): boolean {
 }
 
 // Coerce any cookie/geo/query value to a supported Country. Accepts ISO country
-// codes from the geo header too (e.g. "AU", "GB"). AU/UK/SG geo hits
-// pass straight through; an EU country defaults to UK (see EU_ISO above);
+// codes from the geo header too (e.g. "AU", "GB", "DE"). AU/UK/SG/CA/DE geo hits
+// pass straight through; any OTHER EU country defaults to UK (see EU_ISO above);
 // everything else (incl. the US and undetectable) falls through to US.
 export function normalizeCountry(v: string | undefined | null): Country {
   let up = (v ?? "").toUpperCase();
@@ -96,7 +106,8 @@ export type PriceField =
   | "lowestPriceCentsUs"
   | "lowestPriceCentsUk"
   | "lowestPriceCentsSg"
-  | "lowestPriceCentsCa";
+  | "lowestPriceCentsCa"
+  | "lowestPriceCentsDe";
 export function priceField(country: Country): PriceField {
   return country === "US"
     ? "lowestPriceCentsUs"
@@ -106,6 +117,8 @@ export function priceField(country: Country): PriceField {
     ? "lowestPriceCentsSg"
     : country === "CA"
     ? "lowestPriceCentsCa"
+    : country === "DE"
+    ? "lowestPriceCentsDe"
     : "lowestPriceCents";
 }
 
@@ -117,6 +130,7 @@ export function pickPrice(
     lowestPriceCentsUk?: number | null;
     lowestPriceCentsSg?: number | null;
     lowestPriceCentsCa?: number | null;
+    lowestPriceCentsDe?: number | null;
   },
   country: Country
 ): number | null {
@@ -124,6 +138,7 @@ export function pickPrice(
   if (country === "UK") return card.lowestPriceCentsUk ?? null;
   if (country === "SG") return card.lowestPriceCentsSg ?? null;
   if (country === "CA") return card.lowestPriceCentsCa ?? null;
+  if (country === "DE") return card.lowestPriceCentsDe ?? null;
   return card.lowestPriceCents;
 }
 

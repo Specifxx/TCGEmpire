@@ -23,6 +23,7 @@ export interface SearchCard {
   lowestPriceCentsUk?: number | null;
   lowestPriceCentsSg?: number | null;
   lowestPriceCentsCa?: number | null;
+  lowestPriceCentsDe?: number | null;
 }
 
 export function CardSearch({ onPick, placeholder = "Search for a card…" }: { onPick: (c: SearchCard) => void; placeholder?: string }) {

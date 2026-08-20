@@ -8,7 +8,7 @@ import type { ShopLink } from "@/lib/articles";
 
 // "Shop this guide" — turns a well-ranking article into actual purchases. Renders the
 // article's eBay searches as affiliate-tagged links on the visitor's own eBay site
-// (AU/US/UK). Client component: localises
+// (AU/US/UK/SG/CA/DE). Client component: localises
 // per market without touching the article page's static rendering, and every click
 // fires the OutboundLink beacon so it shows up in /admin/clicks with the article path.
 export function ArticleShopStrip({ items }: { items: ShopLink[] }) {

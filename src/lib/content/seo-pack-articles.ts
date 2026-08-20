@@ -68,6 +68,7 @@ const L = {
   au: "/blog/buy-riftbound-cards-australia",
   ca: "/blog/buy-riftbound-cards-canada",
   sg: "/blog/riftbound-price-comparison-singapore",
+  de: "/blog/buy-riftbound-cards-germany",
   // Sibling articles in this batch.
   values: "/blog/riftbound-card-values",
   bidding: "/blog/ebay-bidding-strategies",
@@ -488,7 +489,7 @@ Selling across a border adds another layer on top of all of this — see [curren
 
 ## Stop guessing your real payout
 
-RiftCompare shows the true all-in price of any Riftbound card across TCGplayer, eBay, and local US/UK/AU/CA/SG stores — shipping included — so you can price listings that still net a profit after fees. Check the live comparison before your next listing, and start from [the US buying guide](${L.us}) if you're selling into the US market.`,
+RiftCompare shows the true all-in price of any Riftbound card across TCGplayer, eBay, and local US/UK/AU/CA/SG/DE stores — shipping included — so you can price listings that still net a profit after fees. Check the live comparison before your next listing, and start from [the US buying guide](${L.us}) if you're selling into the US market.`,
   },
 
   // ───────────────────────────────────────────────────────────────────────────
@@ -535,7 +536,7 @@ RiftCompare shows the true all-in price of any Riftbound card across TCGplayer, 
     browseCta: {
       href: L.dealFinder,
       label: "See the true cross-border price →",
-      blurb: "Live prices across US, UK, AU, CA and SG stores plus eBay and TCGplayer, with shipping included.",
+      blurb: "Live prices across US, UK, AU, CA, SG and DE stores plus eBay and TCGplayer, with shipping included.",
     },
     body: `When you buy a Riftbound card from a store in another country, the price you see is rarely the price you pay. Between your card issuer's foreign transaction fee, the exchange-rate markup baked into the conversion, and any dynamic currency conversion (DCC) offered at checkout, cross-border purchases can quietly cost 3-7% more than the listed price. For collectors chasing the lowest global price, understanding these fees is the difference between a genuine deal and an illusory one.
 
@@ -553,9 +554,9 @@ Stack all three and a card listed for the equivalent of $50 abroad can land at $
 
 ## Why this matters for Riftbound buyers specifically
 
-RiftCompare tracks prices across the US, UK, Australia, Canada, and Singapore — you can see [every store in the comparison](${L.tracked}) for each. The lowest sticker price is frequently in another country — but the lowest sticker price is not always the lowest true cost once conversion fees and international shipping are added. A card that's $3 cheaper in a UK store may cost more than the US listing after a foreign transaction fee and FX markup.
+RiftCompare tracks prices across the US, UK, Australia, Canada, Singapore, and Germany — you can see [every store in the comparison](${L.tracked}) for each. The lowest sticker price is frequently in another country — but the lowest sticker price is not always the lowest true cost once conversion fees and international shipping are added. A card that's $3 cheaper in a UK store may cost more than the US listing after a foreign transaction fee and FX markup.
 
-That's precisely the trap RiftCompare's total-cost comparison is designed to expose: it shows the all-in landed price, not just the headline number. Each market has its own buying guide — [US](${L.us}), [UK](${L.uk}), [Australia](${L.au}), [Canada](${L.ca}) and [Singapore](${L.sg}) — with the stores actually in that comparison.
+That's precisely the trap RiftCompare's total-cost comparison is designed to expose: it shows the all-in landed price, not just the headline number. Each market has its own buying guide — [US](${L.us}), [UK](${L.uk}), [Australia](${L.au}), [Canada](${L.ca}), [Singapore](${L.sg}) and [Germany](${L.de}) — with the stores actually in that comparison.
 
 ## How to calculate your true landed cost
 
@@ -595,7 +596,7 @@ RiftCompare does this comparison for you across all six tracked markets, so you 
 
 ## See the true cross-border price instantly
 
-RiftCompare compares live Riftbound prices across US, UK, AU, CA, and SG stores plus eBay and TCGplayer — with shipping included — so you can spot when an overseas "deal" is real and when conversion fees erase it. Check [the all-in comparison](${L.dealFinder}) before you buy abroad.`,
+RiftCompare compares live Riftbound prices across US, UK, AU, CA, SG, and DE stores plus eBay and TCGplayer — with shipping included — so you can spot when an overseas "deal" is real and when conversion fees erase it. Check [the all-in comparison](${L.dealFinder}) before you buy abroad.`,
   },
 
   // ───────────────────────────────────────────────────────────────────────────
@@ -711,7 +712,7 @@ Before paying a premium, check whether a spike reflects durable demand (sustaine
 - **Compare total cost across stores.** The lowest sticker isn't always the lowest landed price once shipping (and, for overseas stores, [currency conversion](${L.fx})) is included.
 - **Watch the daily movers.** Buying into a spike often means buying at the top.
 
-RiftCompare pulls live prices for these cards across US, UK, AU, CA, and SG stores plus eBay and TCGplayer, with shipping included — so you can see the real all-in price of a grail before you commit.
+RiftCompare pulls live prices for these cards across US, UK, AU, CA, SG, and DE stores plus eBay and TCGplayer, with shipping included — so you can see the real all-in price of a grail before you commit.
 
 ## Key takeaways
 
@@ -759,7 +760,7 @@ Browse [the full card database](${L.browse}), dig into [a specific set](${L.sets
       },
       {
         q: "Is there a Riftbound price comparison site?",
-        a: "Yes. RiftCompare tracks live Riftbound prices across local stores, eBay and TCGplayer in the US, UK, Australia, Canada and Singapore, and shows total cost with shipping included.",
+        a: "Yes. RiftCompare tracks live Riftbound prices across local stores, eBay and TCGplayer in the US, UK, Australia, Canada, Singapore and Germany, and shows total cost with shipping included.",
       },
       {
         q: "Which marketplace has the lowest fees for Riftbound sellers?",
@@ -830,7 +831,7 @@ Three things matter more than the ordering.
 
 ## Where RiftCompare fits
 
-RiftCompare is not a marketplace competing with the nine above — it's the comparison layer over them. It tracks live prices across local stores, eBay and TCGplayer in the US, UK, Australia, Canada and Singapore, and shows the transparent total cost including shipping, with no hidden fees. One search replaces ten tabs.
+RiftCompare is not a marketplace competing with the nine above — it's the comparison layer over them. It tracks live prices across local stores, eBay and TCGplayer in the US, UK, Australia, Canada, Singapore and Germany, and shows the transparent total cost including shipping, with no hidden fees. One search replaces ten tabs.
 
 ## Key takeaways
 
@@ -855,22 +856,22 @@ Next: [how to choose a Riftbound marketplace](${L.choosing}) turns this into a s
     tags: ["price comparison", "buying", "prices", "tools"],
     hero: {
       src: "/blog/riftbound-card-price-comparison.png",
-      alt: "Riftbound card price comparison across five markets with shipping included — RiftCompare",
+      alt: "Riftbound card price comparison across six markets with shipping included — RiftCompare",
     },
     summary: [
       "**Compare total cost, not sticker price.** Shipping regularly reorders the results — the cheapest listing is often not the cheapest purchase.",
-      "RiftCompare tracks local stores, eBay and TCGplayer across **five markets**: US, UK, Australia, Canada and Singapore.",
+      "RiftCompare tracks local stores, eBay and TCGplayer across **six markets**: US, UK, Australia, Canada, Singapore and Germany.",
       "Confirm the **collector number and variant** before comparing; two printings of the same champion are different products at different prices.",
       `Buying several cards? Compare the **basket**, not each card — [Best Basket](${L.bestBasket}) minimises the combined shipping.`,
     ],
     faq: [
       {
         q: "How do I compare Riftbound card prices?",
-        a: "Search the exact card by collector number and variant, then compare the total cost including shipping across every store that has it in stock. RiftCompare does this in one search across local stores, eBay and TCGplayer in five markets.",
+        a: "Search the exact card by collector number and variant, then compare the total cost including shipping across every store that has it in stock. RiftCompare does this in one search across local stores, eBay and TCGplayer in six markets.",
       },
       {
         q: "Which countries does RiftCompare cover?",
-        a: "The United States, the United Kingdom, Australia, Canada and Singapore. Prices are shown in each market's own currency.",
+        a: "The United States, the United Kingdom, Australia, Canada, Singapore and Germany. Prices are shown in each market's own currency.",
       },
       {
         q: "Does the comparison include shipping?",
@@ -909,9 +910,9 @@ Riftbound prints the same champion in several treatments, and they are not subst
 
 The fastest way to land on the right printing is [browsing the set](${L.sets}) — for example [Origins](${L.origins}) — or [searching by champion](${L.champions}).
 
-## The five markets, and why the cheapest is often local
+## The six markets, and why the cheapest is often local
 
-RiftCompare tracks the US, UK, Australia, Canada and Singapore. Each has its own set of stores, its own currency, and its own eBay and TCGplayer coverage — start from your market's guide: [US](${L.us}), [UK](${L.uk}), [AU](${L.au}), [CA](${L.ca}), [SG](${L.sg}).
+RiftCompare tracks the US, UK, Australia, Canada, Singapore and Germany. Each has its own set of stores, its own currency, and its own eBay and TCGplayer coverage — start from your market's guide: [US](${L.us}), [UK](${L.uk}), [AU](${L.au}), [CA](${L.ca}), [SG](${L.sg}), [DE](${L.de}).
 
 It's tempting to shop the global minimum, but a cheaper sticker abroad usually loses once you add international postage, your card's foreign transaction fee and the exchange-rate markup — typically 3–7% before shipping. [Currency conversion fees](${L.fx}) covers the full arithmetic.
 
@@ -929,7 +930,7 @@ If you're buying eight cards, comparing each one independently gives you eight o
 ## Key takeaways
 
 - Compare **total cost including shipping**, in one currency, for one exact printing.
-- Five markets are tracked; the cheapest is usually your own once postage is counted.
+- Six markets are tracked; the cheapest is usually your own once postage is counted.
 - Buying several cards? Compare the **basket**.
 - Set [a price alert](${L.alerts}) instead of refreshing — most cards are worth waiting a week for.
 
@@ -951,7 +952,7 @@ Related: [the 9 best Riftbound marketplaces](${L.marketplaces}), [how to choose 
       alt: "RiftCompare reviewed — what the Riftbound price comparison tool does, what it doesn't, and who it's for",
     },
     summary: [
-      "**What it is:** a free price-comparison tool for Riftbound TCG cards across local stores, eBay and TCGplayer in five markets, showing total cost with shipping.",
+      "**What it is:** a free price-comparison tool for Riftbound TCG cards across local stores, eBay and TCGplayer in six markets, showing total cost with shipping.",
       "**Best for:** anyone buying more than an occasional card, and collectors tracking Signature/Metal printings.",
       "**Not for:** buying directly in most cases — RiftCompare sends you to the store; it isn't trying to be the shop for every purchase.",
       "**Honest limitation:** coverage is only as good as the stores tracked in your market, and a card with no listings shows no price rather than a guess.",
@@ -959,7 +960,7 @@ Related: [the 9 best Riftbound marketplaces](${L.marketplaces}), [how to choose 
     faq: [
       {
         q: "What is RiftCompare?",
-        a: "RiftCompare is a price-comparison tool for Riftbound TCG cards. It tracks live prices across local stores, eBay and TCGplayer in the US, UK, Australia, Canada and Singapore, and shows the transparent total cost including shipping.",
+        a: "RiftCompare is a price-comparison tool for Riftbound TCG cards. It tracks live prices across local stores, eBay and TCGplayer in the US, UK, Australia, Canada, Singapore and Germany, and shows the transparent total cost including shipping.",
       },
       {
         q: "Is RiftCompare free?",
@@ -983,7 +984,7 @@ Related: [the 9 best Riftbound marketplaces](${L.marketplaces}), [how to choose 
       label: "Try it on a card you own →",
       blurb: "The fastest way to judge a price-comparison tool is to run a card you already know the price of.",
     },
-    body: `**Short answer:** RiftCompare is a free Riftbound TCG price-comparison tool that shows the total cost — including shipping — of one card across local stores, eBay and TCGplayer in five markets. It's most useful if you buy singles regularly or track chase printings; it's least useful if you buy one starter deck a year from the shop down the road.
+    body: `**Short answer:** RiftCompare is a free Riftbound TCG price-comparison tool that shows the total cost — including shipping — of one card across local stores, eBay and TCGplayer in six markets. It's most useful if you buy singles regularly or track chase printings; it's least useful if you buy one starter deck a year from the shop down the road.
 
 This is our own tool, so treat this page as a spec sheet with the limitations included rather than an independent review. The claims below are all checkable in about a minute — run a card you already know the price of.
 
@@ -993,7 +994,7 @@ This is our own tool, so treat this page as a spec sheet with the limitations in
 | --- | --- | --- |
 | Cross-store price comparison | Every tracked store's live price for one printing, ranked by total cost | [Card database](${L.browse}) |
 | Shipping included | Totals, not stickers, so the ranking is honest | Every price surface |
-| Five markets | US, UK, AU, CA, SG, each in its own currency | [Guides per market](${L.us}) |
+| Six markets | US, UK, AU, CA, SG, DE, each in its own currency | [Guides per market](${L.us}) |
 | Daily movers | What went up and down, and by how much | [Movers](${L.movers}) |
 | Deal finder | Where the same card is meaningfully cheaper than the market | [Deal Finder](${L.dealFinder}) |
 | Basket optimisation | Cheapest split of a wantlist across stores | [Best Basket](${L.bestBasket}) |
@@ -1111,7 +1112,7 @@ More money is lost to buying the wrong printing than to picking the wrong venue.
 You want a mid-value single for a tournament on Saturday.
 
 1. Confirm the printing by collector number — [browse the set](${L.sets}) or [the champion](${L.champions}).
-2. Compare total costs across venues in your market ([US](${L.us}), [UK](${L.uk}), [AU](${L.au}), [CA](${L.ca}), [SG](${L.sg})).
+2. Compare total costs across venues in your market ([US](${L.us}), [UK](${L.uk}), [AU](${L.au}), [CA](${L.ca}), [SG](${L.sg}), [DE](${L.de})).
 3. Drop any venue that can't deliver before Saturday — criterion 4 outweighs a small saving here.
 4. Of what's left, take the lowest total from a seller with real photos and a feedback history.
 5. Buying the rest of the deck too? Run [Best Basket](${L.bestBasket}) instead of steps 2–4 per card.

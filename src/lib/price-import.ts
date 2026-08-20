@@ -532,13 +532,21 @@ export const EBAY_ALWAYS_MARKETS: EbayMarketCfg[] = [
 ];
 
 /**
- * Rotated one per day, in this order — EMPTY, because every market we search is
- * now a daily one. Kept rather than deleted: the rotation is the release valve
- * if the searched catalogue grows back (a large set launches with no TCGplayer
- * prices, and "unknown ≠ cheap" keeps all of them), and re-adding a market here
- * needs no other change. ebayMarketsForDay handles the empty case explicitly.
+ * Rotated one per day, in this order.
+ *
+ * DE (2026-08-20) is the first market to actually use this list since it went
+ * empty on 2026-08-08 — launched here rather than in EBAY_ALWAYS_MARKETS on
+ * purpose, even though the current ~240-card catalogue has plenty of headroom
+ * (4 always-markets × ~240 ≈ 960 calls against a ~4,280 budget). A brand-new
+ * market's real per-day call cost is unproven until it's run for real, and a
+ * rotation slot costs nothing extra on the days it isn't picked — the safer
+ * way to introduce it than assuming it behaves like the four markets already
+ * proven to fit. Promote it to EBAY_ALWAYS_MARKETS once its real daily cost is
+ * confirmed comfortably inside budget.
  */
-export const EBAY_ROTATING_MARKETS: EbayMarketCfg[] = [];
+export const EBAY_ROTATING_MARKETS: EbayMarketCfg[] = [
+  { country: "DE", marketplace: "EBAY_DE", currency: "EUR", retailer: "ebay_de" },
+];
 
 /**
  * The markets a run on `dayIndex` will search, IN THE ORDER IT WILL SEARCH THEM.
@@ -1740,18 +1748,23 @@ export async function importPrices(): Promise<ImportSummary> {
   // filtered country-agnostically; the write side asking the same question the
   // same way is what stops the next added market repeating it. "tcgplayer" (US)
   // is deliberately NOT in that list — it is a real buyable store there.
-  const [pricedAuReal, pricedUs, pricedSgReal, pricedUkReal, pricedCa] = await Promise.all([
+  const [pricedAuReal, pricedUs, pricedSgReal, pricedUkReal, pricedCa, pricedDe] = await Promise.all([
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "AU", retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "US", retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "SG", retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "UK", retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "CA", retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
+    // DE has no TCGplayer/Cardmarket reference source wired in yet, so this
+    // exclusion is a no-op for it today — kept for parity with every other
+    // market so a future DE reference source can't slip past it unnoticed.
+    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "DE", retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
   ]);
   const lowAuReal = new Map(pricedAuReal.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowUs = new Map(pricedUs.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowSgReal = new Map(pricedSgReal.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowUkReal = new Map(pricedUkReal.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowCa = new Map(pricedCa.map((r) => [r.cardId, r._min.priceCents ?? null]));
+  const lowDe = new Map(pricedDe.map((r) => [r.cardId, r._min.priceCents ?? null]));
   // Diff-based update: write each card STRAIGHT to its new lowest only when it
   // changed. We must NOT reset every card to null first (the old approach) — that
   // briefly showed "No price yet" for the whole catalogue on every import/deploy
@@ -1765,6 +1778,7 @@ export async function importPrices(): Promise<ImportSummary> {
       lowestPriceCentsUk: true,
       lowestPriceCentsSg: true,
       lowestPriceCentsCa: true,
+      lowestPriceCentsDe: true,
     },
   });
   let changed = 0;
@@ -1780,12 +1794,14 @@ export async function importPrices(): Promise<ImportSummary> {
     const nUk = lowUkReal.get(c.id) ?? null;
     const nSg = lowSgReal.get(c.id) ?? null;
     const nCa = lowCa.get(c.id) ?? null;
+    const nDe = lowDe.get(c.id) ?? null;
     if (
       nAu !== c.lowestPriceCents ||
       nUs !== c.lowestPriceCentsUs ||
       nUk !== c.lowestPriceCentsUk ||
       nSg !== c.lowestPriceCentsSg ||
-      nCa !== c.lowestPriceCentsCa
+      nCa !== c.lowestPriceCentsCa ||
+      nDe !== c.lowestPriceCentsDe
     ) {
       await prisma.card.update({
         where: { id: c.id },
@@ -1795,6 +1811,7 @@ export async function importPrices(): Promise<ImportSummary> {
           lowestPriceCentsUk: nUk,
           lowestPriceCentsSg: nSg,
           lowestPriceCentsCa: nCa,
+          lowestPriceCentsDe: nDe,
         },
       });
       changed++;
@@ -1818,15 +1835,17 @@ export async function importPrices(): Promise<ImportSummary> {
       const uk = lowUkReal.get(c.id) ?? null;
       const sg = lowSgReal.get(c.id) ?? null;
       const ca = lowCa.get(c.id) ?? null;
+      const de = lowDe.get(c.id) ?? null;
       if (au != null) rows.push({ cardId: c.id, country: "AU", day, lowestPriceCents: au });
       if (us != null) rows.push({ cardId: c.id, country: "US", day, lowestPriceCents: us });
       if (uk != null) rows.push({ cardId: c.id, country: "UK", day, lowestPriceCents: uk });
       if (sg != null) rows.push({ cardId: c.id, country: "SG", day, lowestPriceCents: sg });
       if (ca != null) rows.push({ cardId: c.id, country: "CA", day, lowestPriceCents: ca });
+      if (de != null) rows.push({ cardId: c.id, country: "DE", day, lowestPriceCents: de });
     }
     await dbHistory.priceHistory.deleteMany({ where: { day } });
     if (rows.length > 0) await dbHistory.priceHistory.createMany({ data: rows });
-    console.log(`Price history: recorded ${rows.length} points (AU/US/UK/SG/CA) for ${day.toISOString().slice(0, 10)}.`);
+    console.log(`Price history: recorded ${rows.length} points (AU/US/UK/SG/CA/DE) for ${day.toISOString().slice(0, 10)}.`);
   } catch (e) {
     console.warn("Price-history snapshot failed:", e);
   }

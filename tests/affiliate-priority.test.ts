@@ -302,9 +302,10 @@ test("UK and CA keep their own distinct, non-US rotations (only SG reroutes)", (
 // market everywhere else (its own eBay rotation, its own lowestPriceCentsCa
 // column, its own FX rate) — had no TCGplayer reference price at all.
 
-test("every tracked market has a TCGplayer reference price", () => {
+test("every tracked market has a TCGplayer reference price, except DE (no TCGplayer Germany exists)", () => {
   const covered = new Set(TCG_MARKETS.map((m) => m.country));
   for (const c of COUNTRY_LIST) {
+    if (c.code === "DE") continue;
     assert.ok(covered.has(c.code), `${c.code} has no TCGplayer market configured`);
   }
 });
@@ -540,17 +541,26 @@ test("no always-market has permanent first claim on the budget", () => {
   }
 });
 
-test("every market also takes the last, first-to-be-dropped slot in turn", () => {
+test("every always-market takes the position most exposed to starvation within the always block", () => {
   // The mirror of the test above and the one that actually matters: leading is
-  // only worth something if the LAST slot — the one discarded when the budget
-  // latches mid-pass — is shared too.
+  // only worth something if the riskiest trailing slot is shared too.
+  //
+  // With DE now in EBAY_ROTATING_MARKETS, the TRUE last slot in the schedule is
+  // always DE's (see "the always-markets always precede any rotating one" above)
+  // — that is the whole point of demoting a market to rotation: it becomes the
+  // designated sacrifice, so no always-market is ever truncated by budget
+  // exhaustion while a rotating market exists to absorb the loss first. What
+  // still needs to rotate fairly is which always-market sits last WITHIN the
+  // always block itself — the one dropped if the always pass alone runs out of
+  // budget before even reaching the rotating market's slot.
   const trailers = new Set<string>();
   for (let day = 0; day < CYCLE_DAYS; day++) {
     const codes = ebayMarketsForDay(day).map((m) => m.country);
-    trailers.add(codes[codes.length - 1]);
+    const alwaysCodes = EBAY_ROTATING_MARKETS.length > 0 ? codes.slice(0, -1) : codes;
+    trailers.add(alwaysCodes[alwaysCodes.length - 1]);
   }
   for (const m of EBAY_ALWAYS_MARKETS) {
-    assert.ok(trailers.has(m.country), `${m.country} is never last — some other market always absorbs the loss`);
+    assert.ok(trailers.has(m.country), `${m.country} never sits last within the always block`);
   }
 });
 
@@ -559,9 +569,9 @@ test("the always-markets always precede any rotating one", () => {
   // most ~48h stale by design, whereas an always-market missing its slot is a
   // coverage gap in a market we promise daily prices for.
   //
-  // The rotation is empty today, so this asserts the vacuous case explicitly
-  // rather than looping zero times and reporting a pass: every market a day
-  // schedules must be an always-market.
+  // Germany launched into the rotation on 2026-08-20 (see EBAY_ROTATING_MARKETS'
+  // own doc comment), so the vacuous branch below no longer fires in practice —
+  // kept anyway so this stays correct if the rotation is ever emptied out again.
   for (let day = 0; day < CYCLE_DAYS; day++) {
     const codes = ebayMarketsForDay(day).map((m) => m.country);
     if (EBAY_ROTATING_MARKETS.length === 0) {

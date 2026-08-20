@@ -51,13 +51,13 @@ test("every market's lowest-price query excludes converted reference rows", () =
   const queries = [...block.matchAll(/country:\s*"(\w+)"/g)].map((m) => m[1]);
   assert.deepEqual(
     [...queries].sort(),
-    ["AU", "CA", "SG", "UK", "US"],
+    ["AU", "CA", "DE", "SG", "UK", "US"],
     "expected exactly one lowest-price query per tracked market"
   );
   // Split on the per-market `country:` markers so each query is checked alone —
   // one market keeping the exclusion must not cover for another dropping it.
   const parts = block.split(/(?=prisma\.retailerPrice\.groupBy)/).filter((p) => /country:/.test(p));
-  assert.equal(parts.length, 5, "expected five separable groupBy calls");
+  assert.equal(parts.length, 6, "expected six separable groupBy calls");
   for (const part of parts) {
     const country = /country:\s*"(\w+)"/.exec(part)![1];
     assert.match(
@@ -122,6 +122,7 @@ test("every tracked market is covered by the union", () => {
   const covered = new Set(ALL_FALLBACK_RETAILERS.map((r) => r.replace(/^tcgplayer_?/, "").toUpperCase()));
   for (const c of COUNTRY_LIST) {
     if (c.code === "US") continue; // US TCGplayer is a real store, by design
+    if (c.code === "DE") continue; // no TCGplayer Germany exists — nothing converted to exclude
     assert.ok(
       covered.has(c.code) || c.code === "UK",
       `${c.code} has no reference retailer registered in ALL_FALLBACK_RETAILERS`

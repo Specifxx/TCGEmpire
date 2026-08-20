@@ -14,9 +14,10 @@ export interface RetailerInfo {
   freeOverCents: number; // order total at/above which shipping is free
   shippingNote: string;
   // Market the store serves. Omitted = "AU" (the original Australian stores).
-  // US/UK/SG/CA stores are scraped with ?country=US/GB/SG/CA and priced in
-  // USD/GBP/SGD/CAD. eBay runs for AU + US + UK + SG + CA.
-  country?: "AU" | "US" | "UK" | "SG" | "CA";
+  // US/UK/SG/CA/DE stores are scraped with ?country=US/GB/SG/CA/DE and priced in
+  // USD/GBP/SGD/CAD/EUR. eBay runs for AU + US + UK + SG always, DE on a rotation
+  // (see EBAY_ROTATING_MARKETS in price-import.ts).
+  country?: "AU" | "US" | "UK" | "SG" | "CA" | "DE";
 }
 
 export const RETAILERS: Record<string, RetailerInfo> = {
@@ -1686,12 +1687,71 @@ export const RETAILERS: Record<string, RetailerInfo> = {
   //     — real Canadian TCG stores, but no Riftbound collection surfaced in
   //     search this pass. Worth a direct re-check when someone has live network
   //     access; absence of a search hit is not proof of absence of stock.
+
+  // ---- German stores (country: "DE"; prices in EUR) --------------------------
+  // Thinner than every other launch market on purpose: trinketmage is the only
+  // one with a confirmed LIVE singles collection today (30 real Riftbound
+  // listings, EUR, verified against its own /products.json — not a guess). The
+  // other three are real, Germany-based, Shopify-confirmed stores currently
+  // selling Riftbound sealed/accessories only; their `collections` entries are
+  // best-guess handles that will start contributing the moment each store opens
+  // a singles collection, same pattern as several SG stores at their own launch.
+  // Checked and explicitly REJECTED, do not re-add without re-verifying:
+  //   - riftbound-shop.de — same legal entity as amzicards.de but is Shopify's
+  //     own non-functional DEMO storefront ("no orders shall be fulfilled").
+  //   - threeforonetrading.com — real Shopify store with real Riftbound stock,
+  //     but its Impressum places it in Vienna, AUSTRIA, not Germany.
+  //   - nomeko-store.de — real Shopify store, still password-protected/unopened.
+  // Cardmarket (cardmarket.com/en/Riftbound) is a large, real Germany-based
+  // marketplace with genuine Riftbound listings, but it's a peer-to-peer
+  // per-seller marketplace, not a single Shopify storefront — needs its own
+  // integration path (like Cardmarket's UK handling), not a RetailerInfo entry.
+  trinketmage: {
+    key: "trinketmage",
+    name: "Trinket Mage",
+    base: "https://trinket-mage.eu",
+    collections: ["riftbound-single"],
+    shippingFlatCents: 499,
+    freeOverCents: 25000,
+    shippingNote: "est. €4.99 (DHL) · free over €250",
+    country: "DE",
+  },
+  battlebear: {
+    key: "battlebear",
+    name: "Battle Bear Trading Cards & Games",
+    base: "https://battle-bear.de",
+    collections: ["riftbound-league-of-legends-tcg", "riftbound-einzelkarten"],
+    shippingFlatCents: 395,
+    freeOverCents: 6000,
+    shippingNote: "est. €3.95 · free over €60",
+    country: "DE",
+  },
+  cardknights: {
+    key: "cardknights",
+    name: "Card-Knights",
+    base: "https://card-knights.de",
+    collections: ["riftbound-origins", "riftbound-league-of-legends-tcg", "riftbound-league-of-legends-tcg-spiritforged"],
+    shippingFlatCents: 395,
+    freeOverCents: 6000,
+    shippingNote: "est. €3.95 · free over €60",
+    country: "DE",
+  },
+  pokeparadies: {
+    key: "pokeparadies",
+    name: "Poke Paradies",
+    base: "https://poke-paradies.de",
+    collections: ["riftbound"],
+    shippingFlatCents: 395,
+    freeOverCents: 6000,
+    shippingNote: "est. €3.95 · free over €60",
+    country: "DE",
+  },
 };
 
 export const RETAILER_LIST = Object.values(RETAILERS);
 
 // The market a store serves (defaults to AU for the original stores).
-export function retailerCountry(retailerKey: string): "AU" | "US" | "UK" | "SG" | "CA" {
+export function retailerCountry(retailerKey: string): "AU" | "US" | "UK" | "SG" | "CA" | "DE" {
   return RETAILERS[retailerKey]?.country ?? "AU";
 }
 

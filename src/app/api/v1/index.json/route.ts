@@ -5,7 +5,7 @@ import { SITE_URL } from "@/lib/site";
 // Public, machine-readable RiftCompare Index — the citable JSON an AI agent or a
 // third-party dashboard can consume without scraping the page. Referenced as the
 // Dataset `distribution` on /market and from llms.txt.
-// `?market=AU|US|UK|SG|CA|GLOBAL`.
+// `?market=AU|US|UK|SG|CA|DE|GLOBAL`.
 export const revalidate = 1800;
 
 function parseMarket(v: string | null): MarketScope {

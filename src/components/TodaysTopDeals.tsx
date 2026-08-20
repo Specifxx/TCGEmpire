@@ -50,6 +50,7 @@ const TIER_THRESHOLDS: Record<Country, { small: number; mid: number }> = {
   UK: { small: 400, mid: 2000 },
   SG: { small: 700, mid: 3500 },
   CA: { small: 700, mid: 3500 },
+  DE: { small: 450, mid: 2200 },
 };
 const TIERS: { key: Tier; label: (t: { small: number; mid: number }, fmt: (c: number) => string) => string }[] = [
   { key: "all", label: () => "All" },

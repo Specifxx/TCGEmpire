@@ -281,7 +281,7 @@ test("only a card with NO stock in any market claims none anywhere", () => {
       history: { points: [] },
     }),
   );
-  assert.match(t, /no live listing for .* in any of the five markets/i);
+  assert.match(t, /no live listing for .* in any of the six markets/i);
 });
 
 test("an empty card never claims a trend or a spread", () => {

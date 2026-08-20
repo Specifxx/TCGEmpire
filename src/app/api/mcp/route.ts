@@ -24,7 +24,7 @@ import { SITE_URL } from "@/lib/site";
 // doc comment in the SDK).
 export const dynamic = "force-dynamic";
 
-const MARKET_ENUM = ["AU", "US", "UK", "SG", "CA"] as const;
+const MARKET_ENUM = ["AU", "US", "UK", "SG", "CA", "DE"] as const;
 const marketSchema = z.enum(MARKET_ENUM).default("US").describe("Market scope — determines currency, in-stock stores and shipping estimates.");
 
 function json(value: unknown, isError = false) {
@@ -65,7 +65,7 @@ function buildServer(): McpServer {
     "get_card_prices",
     {
       title: "Get a card's price in every market",
-      description: "Lowest live in-stock price for one card in all five markets (AU/US/UK/SG/CA) at once.",
+      description: "Lowest live in-stock price for one card in all six markets (AU/US/UK/SG/CA/DE) at once.",
       inputSchema: { id: z.string().describe("Card URL slug (e.g. \"vayne-hunter-sfd-223-221\") or its raw id.") },
     },
     async ({ id }) => {

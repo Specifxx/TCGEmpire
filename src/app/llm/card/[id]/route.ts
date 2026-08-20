@@ -17,7 +17,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
       where: whereParam(params.id),
       select: {
         id: true, slug: true, name: true, setName: true, setCode: true, collectorNumber: true,
-        lowestPriceCents: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true,
+        lowestPriceCents: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true, lowestPriceCentsDe: true,
       },
     })
     .catch(() => null);
@@ -36,6 +36,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     line("United Kingdom (GBP)", card.lowestPriceCentsUk, "GBP"),
     line("Singapore (SGD)", card.lowestPriceCentsSg, "SGD"),
     line("Canada (CAD)", card.lowestPriceCentsCa, "CAD"),
+    line("Germany (EUR)", card.lowestPriceCentsDe, "EUR"),
     "",
     `Compare all listings: ${url}`,
     `JSON: ${SITE_URL}/api/v1/card/${card.slug ?? card.id}/prices.json`,

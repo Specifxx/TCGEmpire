@@ -36,11 +36,22 @@ export const TCGPLAYER_IMPACT_LINK =
 // UK and CA verified directly against the live EPN dashboard on 2026-08-14 (CA's
 // was previously an unverified placeholder — see git history — that turned out
 // to be correct).
+//
+// DE (ebay.de) is UNVERIFIED, same starting state CA was once in — siteid 77 is
+// eBay's own public, stable platform Site ID for Germany (a Trading API/RSS
+// constant published across eBay's developer docs, not affiliate-specific), and
+// the mkrid follows the documented EPN rotation-id pattern for that siteid, but
+// neither has been confirmed against the LIVE EPN dashboard for this specific
+// campaign the way UK/CA were. It still keeps German clicks on ebay.de instead of
+// silently rerouting to the US site (the generic eBay-TLD fallback below), which
+// matters regardless of whether the exact commission tracking is dialed in yet —
+// confirm against the dashboard and delete this note once done.
 const EBAY_MARKETS: Record<string, { mkrid: string; siteid: string; customid: string }> = {
   "ebay.com.au": { mkrid: "705-53470-19255-0", siteid: "15", customid: "rc-au" },
   "ebay.com": { mkrid: "711-53200-19255-0", siteid: "0", customid: "rc-us" },
   "ebay.co.uk": { mkrid: "710-53481-19255-0", siteid: "3", customid: "rc-uk" },
   "ebay.ca": { mkrid: "706-53473-19255-0", siteid: "2", customid: "rc-ca" },
+  "ebay.de": { mkrid: "707-53477-19255-0", siteid: "77", customid: "rc-de" },
 };
 
 // eBay Partner Network has NO commissionable program for Singapore at all —
@@ -168,6 +179,7 @@ const EBAY_DOMAIN: Record<string, string> = {
   UK: "ebay.co.uk",
   SG: "ebay.com.sg",
   CA: "ebay.ca",
+  DE: "ebay.de",
 };
 
 export function ebayDomain(country: string): string {
@@ -186,6 +198,7 @@ const EBAY_LABEL: Record<string, string> = {
   UK: "eBay UK",
   SG: "eBay",
   CA: "eBay Canada",
+  DE: "eBay Germany",
 };
 
 export function ebayLabel(country: string): string {
