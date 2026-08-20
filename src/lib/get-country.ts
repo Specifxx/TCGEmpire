@@ -4,7 +4,7 @@
 //
 // Resolution order:
 //   1. Explicit choice — the `country` cookie set by the switcher.
-//   2. Geo default — Vercel's `x-vercel-ip-country` header (AU → AU, NZ → NZ,
+//   2. Geo default — Vercel's `x-vercel-ip-country` header (AU → AU,
 //      GB/EU → UK, SG → SG, CA → CA).
 //   3. DEFAULT_COUNTRY (the United States) for everyone else — including any
 //      undetected visitor and every local/preview request, where there is no geo

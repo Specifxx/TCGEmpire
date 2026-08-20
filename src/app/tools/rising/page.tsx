@@ -161,7 +161,7 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
   const country = getCountry();
 
   const raw = (searchParams.scope ?? "").toUpperCase();
-  const scope: RiseScope = raw === "AU" || raw === "NZ" || raw === "US" || raw === "UK" ? (raw as RiseScope) : "GLOBAL";
+  const scope: RiseScope = raw === "AU" || raw === "US" || raw === "UK" ? (raw as RiseScope) : "GLOBAL";
   const isGlobal = scope === "GLOBAL";
   const currency = isGlobal ? "AUD" : currencyOf(scope);
 

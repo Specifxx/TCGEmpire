@@ -106,7 +106,6 @@ export function computeMarket(rows: MarketRow[], country: Country): MarketView {
 /** Per-country cheapest-price columns as baked into a card list payload. */
 export interface LocalisedLowest {
   lowestPriceCents: number | null;
-  lowestPriceCentsNz?: number | null;
   lowestPriceCentsUs?: number | null;
   lowestPriceCentsUk?: number | null;
   lowestPriceCentsSg?: number | null;
@@ -117,7 +116,6 @@ export interface LocalisedLowest {
 export function hasAnyMarketPrice(c: LocalisedLowest): boolean {
   return [
     c.lowestPriceCents,
-    c.lowestPriceCentsNz,
     c.lowestPriceCentsUs,
     c.lowestPriceCentsUk,
     c.lowestPriceCentsSg,

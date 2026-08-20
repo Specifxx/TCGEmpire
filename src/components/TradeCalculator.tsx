@@ -20,7 +20,6 @@ interface TradeCard {
   rarity?: string;
   imageThumbUrl: string | null;
   lowestPriceCents: number | null;
-  lowestPriceCentsNz?: number | null;
   lowestPriceCentsUs?: number | null;
   lowestPriceCentsUk?: number | null;
   lowestPriceCentsSg?: number | null;

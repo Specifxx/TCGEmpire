@@ -22,7 +22,7 @@ export type HubIntro = { paragraphs: string[] };
 export const HUB_INTROS: Record<string, HubIntro> = {
   "/cards": {
     paragraphs: [
-      "Every Riftbound card we track, sliced the ways people actually search for them: by card type, by rarity, and by printing. Each facet below is its own page with the full list, live prices from stores in Australia, New Zealand, the United States, the United Kingdom, Singapore and Canada, and a breakdown of where the money in that slice actually sits.",
+      "Every Riftbound card we track, sliced the ways people actually search for them: by card type, by rarity, and by printing. Each facet below is its own page with the full list, live prices from stores in Australia, the United States, the United Kingdom, Singapore and Canada, and a breakdown of where the money in that slice actually sits.",
       "Type is the most useful cut if you are building a deck — you know you need runes, or a legend, and want to see what is available and what it costs. Rarity is the most useful cut if you are opening product and want to know what a pull is worth. Printing is for collectors: alternate arts, promos, Signature prints and overnumbered cards trade completely separately from the base card, often at several times the price, and each has its own page here.",
       "Facets with only a handful of cards are left out of search deliberately — a page listing three cards is a list, not a resource — but every one is still linked and browsable from here.",
     ],

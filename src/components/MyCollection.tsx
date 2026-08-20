@@ -19,7 +19,6 @@ type CollCard = {
   isPromo: boolean;
   rarity: string | null;
   lowestPriceCents: number | null;
-  lowestPriceCentsNz: number | null;
   lowestPriceCentsUs: number | null;
   lowestPriceCentsUk: number | null;
   lowestPriceCentsSg: number | null;

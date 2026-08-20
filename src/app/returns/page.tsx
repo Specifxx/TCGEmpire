@@ -245,7 +245,7 @@ export default function ReturnsPage() {
           <h2 className="text-lg font-bold text-white">Statutory rights</h2>
           <p>
             Nothing in this policy limits your rights under consumer law in your country, including the Australian
-            Consumer Law, the UK Consumer Rights Act, the New Zealand Consumer Guarantees Act, and applicable US state
+            Consumer Law, the UK Consumer Rights Act, and applicable US state
             and federal consumer protection law. Where those rights are broader than this policy, they apply.
           </p>
         </section>

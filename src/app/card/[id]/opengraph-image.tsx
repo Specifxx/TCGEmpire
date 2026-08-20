@@ -82,7 +82,7 @@ export default async function Image({ params }: { params: { id: string } }) {
             ) : null}
           </div>
 
-          <div style={{ color: "#cbd5e1", fontSize: 22, fontWeight: 500 }}>Compare live prices across AU · NZ · US · UK · SG · CA</div>
+          <div style={{ color: "#cbd5e1", fontSize: 22, fontWeight: 500 }}>Compare live prices across AU · US · UK · SG · CA</div>
         </div>
 
         {/* Right: card art */}

@@ -74,7 +74,6 @@ export default async function AdminDemandPage({
     viewCount: true,
     lastViewedAt: true,
     lowestPriceCents: true,
-    lowestPriceCentsNz: true,
     lowestPriceCentsUs: true,
     lowestPriceCentsUk: true,
     lowestPriceCentsSg: true,

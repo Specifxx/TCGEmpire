@@ -242,7 +242,13 @@ const nextConfig = {
       { source: "/guides/us", destination: "/blog/buy-riftbound-cards-us", permanent: true },
       { source: "/guides/uk", destination: "/blog/buy-riftbound-cards-uk", permanent: true },
       { source: "/guides/au", destination: "/blog/buy-riftbound-cards-australia", permanent: true },
-      { source: "/guides/nz", destination: "/blog/buy-riftbound-cards-nz", permanent: true },
+      // NZ was removed as a supported market 2026-08-20 (see lib/country.ts);
+      // /nz (the region homepage), /guides/nz and /blog/buy-riftbound-cards-nz
+      // no longer exist, so any inbound link/bookmark now lands somewhere real
+      // instead of a 404.
+      { source: "/nz", destination: "/", permanent: true },
+      { source: "/guides/nz", destination: "/guides/where-to-buy-riftbound-cards", permanent: true },
+      { source: "/blog/buy-riftbound-cards-nz", destination: "/guides/where-to-buy-riftbound-cards", permanent: true },
       { source: "/guides/ca", destination: "/blog/buy-riftbound-cards-canada", permanent: true },
       { source: "/guides/sg", destination: "/blog/riftbound-price-comparison-singapore", permanent: true },
       // The watchlist/alerts explainer lives at /alerts; /watchlist is the other

@@ -365,7 +365,7 @@ async function XRegionView({
 // ── TCGplayer flip view (buy store → sell benchmark = TCGplayer US market price) ──
 // A second flip benchmark alongside eBay: TCGplayer's own market price (converted to
 // the local currency) instead of the cheapest current eBay listing. Available in
-// every market — including ones with no eBay coverage (e.g. NZ) — since it isn't
+// every market — including ones with no eBay coverage — since it isn't
 // eBay-based at all.
 async function TcgFlipView({
   country,

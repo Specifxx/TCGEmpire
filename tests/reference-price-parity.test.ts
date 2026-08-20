@@ -51,13 +51,13 @@ test("every market's lowest-price query excludes converted reference rows", () =
   const queries = [...block.matchAll(/country:\s*"(\w+)"/g)].map((m) => m[1]);
   assert.deepEqual(
     [...queries].sort(),
-    ["AU", "CA", "NZ", "SG", "UK", "US"],
+    ["AU", "CA", "SG", "UK", "US"],
     "expected exactly one lowest-price query per tracked market"
   );
   // Split on the per-market `country:` markers so each query is checked alone —
   // one market keeping the exclusion must not cover for another dropping it.
   const parts = block.split(/(?=prisma\.retailerPrice\.groupBy)/).filter((p) => /country:/.test(p));
-  assert.equal(parts.length, 6, "expected six separable groupBy calls");
+  assert.equal(parts.length, 5, "expected five separable groupBy calls");
   for (const part of parts) {
     const country = /country:\s*"(\w+)"/.exec(part)![1];
     assert.match(
@@ -73,7 +73,7 @@ test("every market's lowest-price query excludes converted reference rows", () =
 test("the importer uses the shared union, not per-market lists", () => {
   // A hand-listed subset is how CA was missed; naming the union is what makes a
   // newly added market safe by default rather than by remembering.
-  for (const name of ["AU_FALLBACK_RETAILERS", "SG_FALLBACK_RETAILERS", "UK_FALLBACK_RETAILERS", "CA_FALLBACK_RETAILERS", "NZ_FALLBACK_RETAILERS"]) {
+  for (const name of ["AU_FALLBACK_RETAILERS", "SG_FALLBACK_RETAILERS", "UK_FALLBACK_RETAILERS", "CA_FALLBACK_RETAILERS"]) {
     assert.doesNotMatch(
       lowestBlock(),
       new RegExp(`\\[\\.\\.\\.${name}\\]`),

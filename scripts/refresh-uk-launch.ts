@@ -10,26 +10,25 @@ async function main() {
   console.log("TCGplayer rows written:", n);
 
   console.log("Recomputing lowest price per market…");
-  const [au, nz, us, uk] = await Promise.all([
+  const [au, us, uk] = await Promise.all([
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "AU" }, _min: { priceCents: true } }),
-    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "NZ" }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "US" }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "UK" }, _min: { priceCents: true } }),
   ]);
   const toMap = (g: { cardId: string; _min: { priceCents: number | null } }[]) =>
     new Map(g.map((r) => [r.cardId, r._min.priceCents ?? null]));
-  const mAu = toMap(au), mNz = toMap(nz), mUs = toMap(us), mUk = toMap(uk);
+  const mAu = toMap(au), mUs = toMap(us), mUk = toMap(uk);
 
   const cards = await prisma.card.findMany({
-    select: { id: true, lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true },
+    select: { id: true, lowestPriceCents: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true },
   });
   let changed = 0;
   for (const c of cards) {
-    const nAu = mAu.get(c.id) ?? null, nNz = mNz.get(c.id) ?? null, nUs = mUs.get(c.id) ?? null, nUk = mUk.get(c.id) ?? null;
-    if (nAu !== c.lowestPriceCents || nNz !== c.lowestPriceCentsNz || nUs !== c.lowestPriceCentsUs || nUk !== c.lowestPriceCentsUk) {
+    const nAu = mAu.get(c.id) ?? null, nUs = mUs.get(c.id) ?? null, nUk = mUk.get(c.id) ?? null;
+    if (nAu !== c.lowestPriceCents || nUs !== c.lowestPriceCentsUs || nUk !== c.lowestPriceCentsUk) {
       await prisma.card.update({
         where: { id: c.id },
-        data: { lowestPriceCents: nAu, lowestPriceCentsNz: nNz, lowestPriceCentsUs: nUs, lowestPriceCentsUk: nUk },
+        data: { lowestPriceCents: nAu, lowestPriceCentsUs: nUs, lowestPriceCentsUk: nUk },
       });
       changed++;
     }

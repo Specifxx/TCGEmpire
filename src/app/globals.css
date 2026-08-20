@@ -56,7 +56,7 @@ h1 {
 
    Deliberately does NOT force text-transform: uppercase. The reference lockup is
    a single short word; this page's h1 is a full sentence ("Compare Riftbound
-   card prices across AU, NZ, US & UK stores"), and setting a string that long in
+   card prices across AU, US & UK stores"), and setting a string that long in
    tracked-out caps hurts legibility badly — the same reason .rb-eyebrow below is
    opt-in for short labels rather than applied to headings wholesale. Use
    .rb-eyebrow where you want the tracked all-caps treatment. */

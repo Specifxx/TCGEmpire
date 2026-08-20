@@ -38,7 +38,7 @@ export function TcgMarketPrice({
   // Convert the USD market price into the visitor's DISPLAY currency (EUR for a
   // European shopper browsing the UK market, otherwise the market's own currency);
   // keep the original USD alongside it for honesty. (The parent only renders this
-  // block in markets where TCGplayer isn't natively listed — AU/NZ — so the
+  // block in markets where TCGplayer isn't natively listed — AU — so the
   // currency is never USD here.)
   const local = (usd: number | null) => (usd == null ? null : convertUsdCents(usd, cur));
   const std = local(usdCents);

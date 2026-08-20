@@ -33,7 +33,6 @@ const click = (id: string) => `https://partner.tcgplayer.com/c/${ACCOUNT}/${id}/
 // about speed; everyone else cares whether TCGplayer ships to them.
 function tagline(country: string): string {
   if (country === "US") return "Fast US shipping";
-  if (country === "NZ") return "Ships to New Zealand";
   if (country === "UK") return "Ships to the UK";
   if (country === "AU") return "Ships to Australia";
   return "Ships worldwide";

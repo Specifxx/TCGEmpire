@@ -23,7 +23,7 @@
  *   RESEND_API_KEY        optional — enables the promo-pack email
  *   EMAIL_FROM            optional — verified sender (defaults in lib/email)
  *   PROMO_EMAIL           optional — recipient (default: CONTACT_EMAIL)
- *   PROMO_MARKET          optional — AU | NZ | US | UK (default AU)
+ *   PROMO_MARKET          optional — AU | US | UK (default AU)
  *
  * Scheduled by .github/workflows/weekly-promo.yml (Sat 06:30 AEST, after the
  * Friday-evening price refresh, so the numbers are fresh).
@@ -116,7 +116,7 @@ function redditBody(d: PromoData, market: Country): string {
   if (d.value.length)
     sections.push(`**💎 Best value vs recent high**\n\n${redditTable(d.value, cur, 5)}`);
   sections.push(
-    `Interactive version with price-history charts (covers AU / NZ / US / UK): [riftcompare.com/movers](${utm("/movers", "reddit")})`
+    `Interactive version with price-history charts (covers AU / US / UK): [riftcompare.com/movers](${utm("/movers", "reddit")})`
   );
   sections.push(
     `*Prices are the ${info.place} market in ${cur}. Disclosure: I run RiftCompare — it's a free price-comparison site; happy to answer questions or take feedback.*`

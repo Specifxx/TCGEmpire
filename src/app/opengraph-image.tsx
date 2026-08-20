@@ -156,13 +156,13 @@ export default async function OgImage() {
           </div>
           {/* No emoji here on purpose: ImageResponse has no emoji font unless one
               is fetched, so flags would render as blank gaps.
-              SIX markets — this line read "Australia · New Zealand · United
+              FIVE markets — this line read "Australia · New Zealand · United
               States · United Kingdom" long after Singapore and Canada shipped,
               so the most-shared image of the site was advertising two thirds of
-              its coverage. Abbreviated because six full country names wrap to
+              its coverage. Abbreviated because five full country names wrap to
               three lines at this width. */}
           <div style={{ display: "flex", marginTop: 26, fontSize: 25, color: "#7c8696" }}>
-            AU · NZ · US · UK · Singapore · Canada
+            AU · US · UK · Singapore · Canada
           </div>
         </div>
 

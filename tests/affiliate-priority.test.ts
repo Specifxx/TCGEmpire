@@ -8,7 +8,7 @@ import {
 import {
   pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, SETS, isFallbackRetailer,
   ALL_FALLBACK_RETAILERS, AU_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS,
-  SG_FALLBACK_RETAILERS, CA_FALLBACK_RETAILERS, NZ_FALLBACK_RETAILERS,
+  SG_FALLBACK_RETAILERS, CA_FALLBACK_RETAILERS,
 } from "../src/lib/constants";
 import { affiliateUrl, affiliateSubId, ebayAffiliateUrl, ebaySearchUrl, ebayLabel, EBAY_CAMPAIGN_ID } from "../src/lib/affiliate";
 import { TCG_US, TCG_UK, TCG_SG, TCG_AU, TCG_CA } from "../src/lib/tcgplayer";
@@ -305,9 +305,6 @@ test("UK and CA keep their own distinct, non-US rotations (only SG reroutes)", (
 test("every tracked market has a TCGplayer reference price", () => {
   const covered = new Set(TCG_MARKETS.map((m) => m.country));
   for (const c of COUNTRY_LIST) {
-    // NZ is the one deliberate exclusion — no eBay market and no TCGplayer
-    // reference; it is served by local stores only.
-    if (c.code === "NZ") continue;
     assert.ok(covered.has(c.code), `${c.code} has no TCGplayer market configured`);
   }
 });
@@ -368,7 +365,7 @@ test("every market's TCGplayer link is affiliate-tagged", () => {
 // THE RULE: a converted TCGplayer price is never a price-comparison row.
 // ─────────────────────────────────────────────────────────────────────────────
 // Nobody can buy from "TCGplayer Australia". Showing its FX-converted USD price
-// as a store would let it undercut the real AU/NZ stores the site exists to
+// as a store would let it undercut the real AU stores the site exists to
 // compare, on a price that excludes international postage and duty.
 
 test("AUSTRALIA: TCGplayer is never a comparison row or a counted store", () => {
@@ -377,13 +374,6 @@ test("AUSTRALIA: TCGplayer is never a comparison row or a counted store", () => 
   assert.equal(v.prices.length, 0);
   assert.equal(v.storeCount, 0);
   assert.equal(v.lowest, null, "a converted price must not set the AU 'from' price");
-});
-
-test("NEW ZEALAND: there is no TCGplayer market at all, and must not be", () => {
-  // NZ is served by local stores and eBay NZ only. Nothing to filter because
-  // nothing is ever written — this pins that.
-  assert.equal(TCG_MARKETS.find((m) => m.country === "NZ"), undefined);
-  assert.equal(computeMarket([tcgRow("NZ", "tcgplayer_nz")], "NZ").storeCount, 0);
 });
 
 test("every non-US market excludes its converted TCGplayer row", () => {
@@ -411,7 +401,7 @@ test("isFallbackRetailer covers every converted variant and no real store", () =
 });
 
 test("the union covers every per-market list — a new market cannot be forgotten", () => {
-  for (const list of [AU_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS, SG_FALLBACK_RETAILERS, CA_FALLBACK_RETAILERS, NZ_FALLBACK_RETAILERS]) {
+  for (const list of [AU_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS, SG_FALLBACK_RETAILERS, CA_FALLBACK_RETAILERS]) {
     for (const r of list) assert.ok(ALL_FALLBACK_RETAILERS.includes(r), `${r} missing from the union`);
   }
 });

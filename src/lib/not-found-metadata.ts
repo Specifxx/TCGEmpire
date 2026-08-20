@@ -31,7 +31,7 @@ export function notFoundMetadata(what = "Page"): Metadata {
   return {
     title: { absolute: `${what} not found — RiftCompare` },
     description:
-      "We couldn't find that page. Search the Riftbound card database for live prices across stores in Australia, New Zealand, the US, the UK, Singapore and Canada.",
+      "We couldn't find that page. Search the Riftbound card database for live prices across stores in Australia, the US, the UK, Singapore and Canada.",
     robots: { index: false, follow: false },
   };
 }

@@ -36,7 +36,6 @@ export async function runPriceAlerts(): Promise<AlertRunSummary> {
           setCode: true,
           collectorNumber: true,
           lowestPriceCents: true,
-          lowestPriceCentsNz: true,
           lowestPriceCentsUs: true,
           lowestPriceCentsUk: true,
           // Sg was missing here (added with Ca): pickPrice() below reads the column

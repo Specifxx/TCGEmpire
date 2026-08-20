@@ -22,7 +22,7 @@ import { isPaidLink } from "@/lib/affiliate";
 
 // Per-market eBay fallback search, precomputed on the server (affiliate tagging is
 // server-only). null = market has live eBay rows or the quota gate doesn't apply.
-export type EbaySearchMap = Record<string, { url: string; label: string; nz: boolean } | null>;
+export type EbaySearchMap = Record<string, { url: string; label: string } | null>;
 
 // ONE visual language for every retailer CTA (UX audit finding: mixing eBay
 // blue / TCGplayer navy / brand green by store read as three different kinds
@@ -270,7 +270,7 @@ export function CardPriceComparison({
   // card page (market-neutral — no country filter server-side). Convert it to the
   // visitor's currency and surface it as a reference — but ONLY in markets where
   // TCGplayer isn't already in the buyable table (US shows the native USD row, UK the
-  // GBP `tcgplayer_uk` row), so it's purely additive for AU/NZ and never duplicates an
+  // GBP `tcgplayer_uk` row), so it's purely additive for AU and never duplicates an
   // existing row. It's a reference figure regardless: it never feeds `prices`/
   // `storeCount`/the cheapest metrics (those come only from computeMarket).
   const tcg = useMemo(() => {
@@ -475,7 +475,7 @@ export function CardPriceComparison({
       {tcg && <TcgMarketPrice usdCents={tcg.usdCents} usdCentsFoil={tcg.usdCentsFoil} href={tcg.href} disclosure={false} />}
 
       {/* eBay fallback — shown whenever this market has no live eBay row for the
-          card, so a thin market is never a dead end (mirrors the NZ behaviour). */}
+          card, so a thin market is never a dead end. */}
       {ebay && (
         <div className="card-surface mt-4 flex flex-wrap items-center justify-between gap-3 border-amber-500/25 bg-amber-500/[0.04] p-4">
           <div className="min-w-0">
@@ -483,9 +483,7 @@ export function CardPriceComparison({
               No live {ebay.label} price for this card right now
             </div>
             <p className="mt-1 text-xs text-slate-400">
-              {ebay.nz
-                ? <>New Zealand has no eBay marketplace of its own, but eBay Australia ships here — search it directly to see what&apos;s on offer for {displayName}.</>
-                : <>We don&apos;t have a live {ebay.label} listing for {displayName} right now — search eBay directly to see what&apos;s on offer.</>}
+              We don&apos;t have a live {ebay.label} listing for {displayName} right now — search eBay directly to see what&apos;s on offer.
             </p>
           </div>
           {/* Tracked, not a bare anchor. This panel used to be a plain <a>, so

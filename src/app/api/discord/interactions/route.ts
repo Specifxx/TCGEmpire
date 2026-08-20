@@ -49,7 +49,7 @@ async function priceEmbed(query: string) {
     select: {
       id: true, slug: true, name: true, setCode: true, setName: true, collectorNumber: true,
       rarity: true, imageThumbUrl: true,
-      lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true,
+      lowestPriceCents: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true,
     },
   });
   if (!card) return null;
@@ -61,7 +61,6 @@ async function priceEmbed(query: string) {
     { label: "🇬🇧 UK", cents: card.lowestPriceCentsUk, cur: "GBP" },
     { label: "🇸🇬 SG", cents: card.lowestPriceCentsSg, cur: "SGD" },
     { label: "🇨🇦 CA", cents: card.lowestPriceCentsCa, cur: "CAD" },
-    { label: "🇳🇿 NZ", cents: card.lowestPriceCentsNz, cur: "NZD" },
   ];
   const priced = markets.filter((m) => m.cents != null);
   return {

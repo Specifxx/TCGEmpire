@@ -8,7 +8,7 @@ export const revalidate = 86400;
 
 // One-line descriptions for the hub pages (falls back to the nav label otherwise).
 const DESC: Record<string, string> = {
-  "/browse": "Every Riftbound card with live lowest prices compared across stores (AU/NZ/US/UK/SG/CA).",
+  "/browse": "Every Riftbound card with live lowest prices compared across stores (AU/US/UK/SG/CA).",
   "/sealed": "Sealed products — booster boxes, packs and bundles — with the cheapest live price.",
   "/movers": "The biggest Riftbound price rises and falls, updated daily.",
   "/market": "The RiftCompare Index — a daily search-weighted market index for Riftbound singles, with key stats.",
@@ -49,7 +49,7 @@ export function GET() {
   lines.push("");
   lines.push(
     "> Free Riftbound: League of Legends TCG card database and live price comparison across " +
-      "the United States, the United Kingdom, Australia, New Zealand, Canada and Singapore — with the " +
+      "the United States, the United Kingdom, Australia, Canada and Singapore — with the " +
       "transparent total cost including shipping, and no hidden fees. Home of the RiftCompare " +
       "Index (a daily market index for Riftbound singles), price movers, sealed products and buyer tools."
   );

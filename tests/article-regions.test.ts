@@ -77,7 +77,7 @@ test("the T1 drawing window is stated region-neutrally", () => {
 test("no summary or FAQ answer names some markets' local times but not others", () => {
   // Naming a handful of specific regions in a one-line answer is the exact shape
   // of the original bug: it looks complete and silently excludes the rest.
-  const REGION = /\b(Pacific|Eastern|UK|United Kingdom|Australia|New Zealand|Singapore|Canada)\b/g;
+  const REGION = /\b(Pacific|Eastern|UK|United Kingdom|Australia|Singapore|Canada)\b/g;
   const bad: string[] = [];
   for (const a of articles) {
     for (const text of [...(a.summary ?? []), ...(a.faq ?? []).map((f) => f.a)]) {

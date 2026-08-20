@@ -1,5 +1,5 @@
 // Refresh the sealed-products table (booster boxes, packs, Nexus Night packs, …).
-// Pulls the AU/NZ Shopify store feeds + eBay AU (importSealed) AND the US TCGplayer
+// Pulls the AU Shopify store feeds + eBay AU (importSealed) AND the US TCGplayer
 // sealed catalogue (refreshTcgplayerSealed). Run on the price-refresh schedule so the
 // /sealed page stays populated — previously nothing scheduled the sealed importer, so
 // the table went stale/empty and the page showed nothing.

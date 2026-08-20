@@ -5,7 +5,7 @@ import { COUNTRY_LIST, INTL_ENABLED } from "@/lib/country";
 import { REGION_HOME_PATH } from "@/lib/seo";
 import { useCountry } from "./CountryProvider";
 
-// Market chooser for the homepage hero — pill toggle of AU/NZ/US/UK/SG/CA
+// Market chooser for the homepage hero — pill toggle of AU/US/UK/SG/CA
 // that switches all prices + store lists. Mirrors the compact navbar switcher.
 // Deliberately quiet (small type, low-contrast border, no filled active
 // state) — it's a utility, not a CTA, and shouldn't compete with the search
@@ -44,7 +44,7 @@ export function CountryHeroToggle() {
       <span className="text-[9px] font-medium uppercase tracking-wide text-slate-500">Shopping from</span>
       {/* Compact segmented control: one label per chip (country code only — no
           flag glyph, since regional-indicator flag emoji render as literal
-          "AU"/"NZ" text on several platforms, which duplicated the code right
+          "AU"/"US" text on several platforms, which duplicated the code right
           next to it), currency shown only on the active chip. Stays a single
           tight row even with 4+ markets on a phone; min-h-11 keeps each chip's
           tap target accessible despite the small type. */}
@@ -77,7 +77,7 @@ export function CountryHeroToggle() {
               aria-pressed={active}
               aria-labelledby={active ? `${codeId} ${currencyId} ${descId}` : `${codeId} ${descId}`}
               // min-w-11 alongside the existing min-h-11: measured a 2-letter
-              // inactive chip ("NZ", no currency suffix shown) at ~37px wide on
+              // inactive chip ("SG", no currency suffix shown) at ~37px wide on
               // a real 390px viewport — under the 44px mobile tap-target floor
               // even though the height was already covered.
               className={`flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-full px-2.5 text-xs font-medium transition-colors ${

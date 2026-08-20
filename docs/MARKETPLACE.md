@@ -79,7 +79,7 @@ Released badge and the exact scheduled release date per order.
 ## Data model
 
 - `User.isVerifiedSeller` — gate for listing.
-- `SellerProfile` — shop name, market (AU/NZ/US/UK), flat postage, free-over threshold, dispatch time, (later) `stripeAccountId` / `payoutsEnabled`.
+- `SellerProfile` — shop name, market (AU/US/UK), flat postage, free-over threshold, dispatch time, (later) `stripeAccountId` / `payoutsEnabled`.
 - `MarketplaceListing` — sellerId, cardId, condition, isFoil, priceCents, quantity, currency, country, status (ACTIVE/SOLD_OUT/PAUSED/REMOVED).
 - `Order` (existing) gains `kind="MARKETPLACE"` + `marketplaceListingId`.
 
@@ -94,7 +94,7 @@ comparison can show a delivered estimate (most stores can't, so this is a plus).
 
 `importMarketplaceListings()` (in `src/lib/marketplace.ts`) rebuilds the marketplace
 rows in `RetailerPrice`: for each `(card, market)` it writes the **cheapest active
-listing** under a per-market retailer key (`marketplace`, `marketplace_nz`,
+listing** under a per-market retailer key (`marketplace`, `marketplace_au`,
 `marketplace_us`, `marketplace_uk` — mirroring eBay) so the unique key never
 collides. It runs in the price importer **and** after every listing change, so the
 comparison updates immediately. Marketplace prices feed the per-market "lowest"

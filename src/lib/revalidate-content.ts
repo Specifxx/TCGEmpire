@@ -17,13 +17,12 @@ export function revalidateContent(): string[] {
   // /card/* pages at once — which is the whole point.
   const staticPaths: [string, "page"][] = [
     ["/", "page"],
-    // Region home pages (/au, /nz, /uk, /sg, /ca — see app/au/page.tsx etc.)
+    // Region home pages (/au, /uk, /sg, /ca — see app/au/page.tsx etc.)
     // share the homepage's own getHomeStats() cache entry (lib/home-stats.ts,
     // tagged CONTENT_TAG below) but each still needs its own page-level purge,
     // same as "/" above, or it would keep serving its pre-import HTML for up to
     // an hour after the tag bust.
     ["/au", "page"],
-    ["/nz", "page"],
     ["/uk", "page"],
     ["/sg", "page"],
     ["/ca", "page"],

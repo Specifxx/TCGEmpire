@@ -21,11 +21,10 @@ type OpenArg = { group: SealedGroup; currency: string };
 const Ctx = createContext<{ open: (group: SealedGroup, currency: string) => void }>({ open: () => {} });
 export const useSealedQuickView = () => useContext(Ctx);
 
-// eBay hosts per market (NZ has no local eBay — the AU site ships there). Mirrors
-// the marketplace hosts the /sealed page uses for its secondary-market searches.
+// eBay hosts per market. Mirrors the marketplace hosts the /sealed page uses
+// for its secondary-market searches.
 const EBAY_HOST: Record<string, string> = {
   AU: "ebay.com.au",
-  NZ: "ebay.com.au",
   US: "ebay.com",
   UK: "ebay.co.uk",
 };

@@ -55,7 +55,7 @@ export function HeroStats({
   totalCards: number;
   statsByCountry: Record<Country, MarketStat>;
   freshness?: string | null;
-  /** Region home pages (/au, /nz, /uk, /sg, /ca) show THAT market's own stat on
+  /** Region home pages (/au, /uk, /sg, /ca) show THAT market's own stat on
    *  first paint regardless of the visitor's actual market — the whole point of
    *  a region-specific landing page — so they lock this instead of reading the
    *  site-wide switcher. Omitted everywhere else (the real homepage), where the

@@ -162,9 +162,9 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
   // eBay quota fallback — mirrors the full card page (src/app/card/[id]/page.tsx).
   // Whenever this market has no live eBay row for the card, offer an
   // affiliate-tagged eBay search — a thin market must never be a dead end.
-  // (NZ has no local eBay; eBay AU ships there. Domain/label come from
-  // lib/affiliate.ts, not a local copy — this map used to lack a CA entry,
-  // silently dropping the fallback for CA visitors specifically.)
+  // (Domain/label come from lib/affiliate.ts, not a local copy — this map
+  // used to lack a CA entry, silently dropping the fallback for CA visitors
+  // specifically.)
   const ebayMkt = { label: ebayLabel(country) };
   const hasEbay = (prices ?? []).some((p) => p.retailer.startsWith("ebay") && p.inStock && p.country === country);
   const ebaySearchUrl =
@@ -330,7 +330,7 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                 <div className="py-4 text-sm text-slate-500">
                   <p>No in-stock listings right now.</p>
                   {/* Never a dead end: a zero-stock modal still offers the
-                      affiliate eBay search (eBay AU for NZ, which has no eBay). */}
+                      affiliate eBay search. */}
                   {ebaySearchUrl && ebayMkt && (
                     <>
                       <a

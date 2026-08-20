@@ -24,7 +24,7 @@
 //    is consistent across markets and only the currency changes.
 //
 //    The honest cost of that choice, which the UI must state: a converted US
-//    market price is NOT local retail. AU/NZ singles typically sell above the
+//    market price is NOT local retail. AU singles typically sell above the
 //    converted USD figure, so this reads low against what you would actually pay
 //    at a local store. It is a consistent yardstick, not a local quote.
 

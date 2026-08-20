@@ -46,7 +46,6 @@ test("an undetectable visitor resolves to the default, not Australia", () => {
 test("a detected region still wins over the default", () => {
   // The whole point of the default is that it only applies when detection fails.
   assert.equal(normalizeCountry("AU"), "AU");
-  assert.equal(normalizeCountry("NZ"), "NZ");
   assert.equal(normalizeCountry("SG"), "SG");
   assert.equal(normalizeCountry("CA"), "CA");
   assert.equal(normalizeCountry("GB"), "UK", "the geo header uses ISO GB; we use UK");

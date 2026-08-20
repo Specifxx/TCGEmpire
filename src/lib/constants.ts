@@ -50,20 +50,14 @@ export const AU_FALLBACK_RETAILERS: readonly string[] = [TCGPLAYER_AU_RETAILER];
 export const TCGPLAYER_CA_RETAILER = "tcgplayer_ca";
 export const CA_FALLBACK_RETAILERS: readonly string[] = [TCGPLAYER_CA_RETAILER];
 
-// Registered but NOT produced — see the AU/NZ note below. No TCG_NZ market
-// exists in tcgplayer.ts, and this exists so that if one is ever added it lands
-// as a reference price rather than as a New Zealand "store".
-export const TCGPLAYER_NZ_RETAILER = "tcgplayer_nz";
-export const NZ_FALLBACK_RETAILERS: readonly string[] = [TCGPLAYER_NZ_RETAILER];
-
 // ─────────────────────────────────────────────────────────────────────────────
 // THE RULE: a converted reference price is never a row in the price comparison.
 // ─────────────────────────────────────────────────────────────────────────────
-// TCGplayer is a US marketplace. Its AU/NZ/UK/SG/CA figures are its USD market
+// TCGplayer is a US marketplace. Its AU/UK/SG/CA figures are its USD market
 // price run through an FX rate — useful as a "what is this worth?" reference,
 // but NOT a local listing: nobody can buy from "TCGplayer Australia", the price
 // excludes international postage and duty, and showing it as a store would let
-// it undercut the real AU/NZ stores we exist to compare. Cardmarket is the same
+// it undercut the real AU stores we exist to compare. Cardmarket is the same
 // shape for the UK.
 //
 // So they are excluded ENTIRELY — not deprioritised — from:
@@ -74,17 +68,9 @@ export const NZ_FALLBACK_RETAILERS: readonly string[] = [TCGPLAYER_NZ_RETAILER];
 // They survive only in the Deal Finder (arbitrage needs a sell-side reference)
 // and in the card page's clearly-labelled TcgMarketPrice block.
 //
-// AUSTRALIA AND NEW ZEALAND, EXPLICITLY — a standing product rule, not an
-// implementation detail: TCGplayer must never appear as a price-comparison row
-// in either market.
-//
-// AU is covered by AU_FALLBACK_RETAILERS above. NZ has no TCGplayer row at all
-// today (it is absent from TCG_MARKETS in tcgplayer.ts), which means the rule
-// held only because nothing wrote the row — add a `TCG_NZ` and NZ would start
-// showing TCGplayer as a buyable local store immediately, with no filter
-// standing in the way. NZ_FALLBACK_RETAILERS closes that: the key is registered
-// as a reference source in advance, so the guard is structural rather than
-// incidental. It costs one array entry and removes a live footgun.
+// AUSTRALIA, EXPLICITLY — a standing product rule, not an implementation
+// detail: TCGplayer must never appear as a price-comparison row there, covered
+// by AU_FALLBACK_RETAILERS above.
 //
 // Use this union rather than hand-listing the per-market arrays. Three call
 // sites did the latter and every one of them was missing a market by the time CA
@@ -95,7 +81,6 @@ export const ALL_FALLBACK_RETAILERS: readonly string[] = [
   ...UK_FALLBACK_RETAILERS,
   ...SG_FALLBACK_RETAILERS,
   ...CA_FALLBACK_RETAILERS,
-  ...NZ_FALLBACK_RETAILERS,
 ];
 
 /** True when `retailer` is a converted reference price, not a buyable store. */

@@ -312,10 +312,10 @@ export async function sendNewsletterDigestEmail(to: string, subject: string, hea
 // reusable for future sets.
 //
 // EVERY NUMBER IS PASSED IN, NOT HARDCODED. The previous version of this template
-// asserted "60+ stores in AU, NZ, US and the UK" in static copy. That silently went
-// stale: the comparison now covers SIX markets (Singapore and Canada were added
+// asserted "60+ stores in AU, US and the UK" in static copy. That silently went
+// stale: the comparison now covers FIVE markets (Singapore and Canada were added
 // after it was written) and well over a hundred stores, so the email was
-// understating coverage and omitting two markets entirely to real subscribers.
+// understating coverage and omitting markets entirely to real subscribers.
 // Counts now come from live queries at send time (see the script), and any stat the
 // caller can't resolve is simply omitted rather than guessed — same rule the site
 // itself follows for prices.
@@ -511,7 +511,7 @@ export async function sendNewsletterWelcomeEmail(to: string, unsubUrl: string): 
   const inner = `
     <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
       You're on the list — every week you'll get the ${SITE_NAME} Index summary: the cards that spiked,
-      the cards that dropped, and where the best value is across AU, NZ, US and UK stores.
+      the cards that dropped, and where the best value is across AU, US and UK stores.
       The next edition lands this Saturday morning (Sydney time).
     </td></tr>
     <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/movers?utm_source=newsletter&utm_medium=email&utm_campaign=welcome" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">See this week's movers</a></td></tr>`;

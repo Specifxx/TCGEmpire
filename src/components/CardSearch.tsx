@@ -19,7 +19,6 @@ export interface SearchCard {
   isPromo: boolean;
   rarity: string;
   lowestPriceCents: number | null;
-  lowestPriceCentsNz?: number | null;
   lowestPriceCentsUs?: number | null;
   lowestPriceCentsUk?: number | null;
   lowestPriceCentsSg?: number | null;

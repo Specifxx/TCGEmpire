@@ -12,7 +12,7 @@ name: Weekly promo pack
 #     EMAIL_FROM            (optional) verified sender
 #     PROMO_EMAIL           (optional) recipient; defaults to the site contact email
 #   Variables (optional):
-#     PROMO_MARKET          AU | NZ | US | UK — market the digest prices (default AU)
+#     PROMO_MARKET          AU | US | UK — market the digest prices (default AU)
 
 on:
   schedule:

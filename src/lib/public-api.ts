@@ -139,7 +139,7 @@ export async function getCardPricesData(idOrSlug: string) {
       where: cardWhereParam(idOrSlug),
       select: {
         id: true, slug: true, name: true, setName: true, setCode: true, collectorNumber: true, imageUrl: true,
-        lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true,
+        lowestPriceCents: true, lowestPriceCentsUs: true,
         lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true,
       },
     })
@@ -157,7 +157,6 @@ export async function getCardPricesData(idOrSlug: string) {
     },
     prices: {
       AU: { lowestCents: card.lowestPriceCents, currency: "AUD" },
-      NZ: { lowestCents: card.lowestPriceCentsNz, currency: "NZD" },
       US: { lowestCents: card.lowestPriceCentsUs, currency: "USD" },
       UK: { lowestCents: card.lowestPriceCentsUk, currency: "GBP" },
       SG: { lowestCents: card.lowestPriceCentsSg, currency: "SGD" },

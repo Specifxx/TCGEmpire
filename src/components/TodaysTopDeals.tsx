@@ -46,7 +46,6 @@ const COLUMNS: ColumnDef[] = [
 type Tier = "all" | "small" | "mid" | "big";
 const TIER_THRESHOLDS: Record<Country, { small: number; mid: number }> = {
   AU: { small: 800, mid: 4000 },
-  NZ: { small: 800, mid: 4000 },
   US: { small: 500, mid: 2500 },
   UK: { small: 400, mid: 2000 },
   SG: { small: 700, mid: 3500 },

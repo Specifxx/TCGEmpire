@@ -88,7 +88,7 @@ export default async function AdminRisingPage({
   // Scope defaults to GLOBAL (like the RiftCompare Index): demand is market-agnostic,
   // so Global uses each card's best-covered price series + total cross-market supply.
   const raw = (searchParams.country ?? "").toUpperCase();
-  const scope: RiseScope = raw === "AU" || raw === "NZ" || raw === "US" || raw === "UK" ? (raw as RiseScope) : "GLOBAL";
+  const scope: RiseScope = raw === "AU" || raw === "US" || raw === "UK" ? (raw as RiseScope) : "GLOBAL";
   const isGlobal = scope === "GLOBAL";
 
   // Cache the heavy scan (400 cards × price history) per scope; refreshed on the

@@ -224,14 +224,14 @@ test("marketplace routes and seller-management links stay intact (nav-only remov
 test("the hero H1 leads with the US by default, not an alphabetised six-market list", () => {
   const src = read("src/components/home/CinematicHero.tsx");
   // heroAdjective defaults to "US" when no `region` prop is passed — i.e. the
-  // real homepage, unchanged. Region pages (/au, /nz, /uk, /sg, /ca) override
+  // real homepage, unchanged. Region pages (/au, /uk, /sg, /ca) override
   // it via the region prop — see components/home/RegionHome.tsx.
   assert.match(src, /heroAdjective = region\?\.adjective \?\? "US"/);
   assert.match(src, /across every \{heroAdjective\} store/);
   assert.doesNotMatch(
     src,
-    /AU, NZ, US, UK, SG/,
-    "the old six-market H1 string must be gone — the markets are now named in the subhead instead"
+    /AU, US, UK, SG/,
+    "the old market-list H1 string must be gone — the markets are now named in the subhead instead"
   );
 });
 

@@ -17,7 +17,7 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: { absolute: "Riftbound Sets — Full Card Lists & Prices | RiftCompare" },
   description:
-    "Every Riftbound: League of Legends TCG set — Origins, Proving Grounds, Spirit Forged and more — with the full card list and live prices compared across AU, NZ, US, UK & SG stores.",
+    "Every Riftbound: League of Legends TCG set — Origins, Proving Grounds, Spirit Forged and more — with the full card list and live prices compared across AU, US, UK & SG stores.",
   alternates: pageAlternates("/sets"),
   keywords: ["Riftbound sets", "Riftbound card list", "Riftbound set prices", "Riftbound TCG sets"],
   openGraph: pageOpenGraph({
@@ -79,7 +79,7 @@ export default async function SetsIndexPage() {
     },
     {
       q: "Are Riftbound set prices the same in every country?",
-      a: "No. Each market has its own stores, currency and shipping costs, so the cheapest source differs by country. RiftCompare tracks the US, UK, Australia, New Zealand, Canada and Singapore separately.",
+      a: "No. Each market has its own stores, currency and shipping costs, so the cheapest source differs by country. RiftCompare tracks the US, UK, Australia, Canada and Singapore separately.",
     },
   ];
 
@@ -182,7 +182,7 @@ export default async function SetsIndexPage() {
         <h2 className="text-xl font-extrabold text-white">About Riftbound sets</h2>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
           Riftbound: League of Legends TCG releases in sets, each adding new cards, mechanics and chase
-          singles. RiftCompare tracks live prices for every card in every released set across AU, NZ, US
+          singles. RiftCompare tracks live prices for every card in every released set across AU, US
           and UK stores — pick a set above to see its full card list ranked by price and find the cheapest
           place to buy.
         </p>

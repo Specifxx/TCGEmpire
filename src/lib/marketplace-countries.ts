@@ -10,11 +10,11 @@
 // visible and contained — a Canadian seller can't finish Connect onboarding, so
 // `payoutsEnabled` stays false and they can't list. It does NOT affect the
 // read-only CA price comparison, which needs none of this.
-export const MARKETPLACE_LAUNCH_COUNTRIES = ["AU", "UK", "US", "NZ", "SG", "CA"] as const;
+export const MARKETPLACE_LAUNCH_COUNTRIES = ["AU", "UK", "US", "SG", "CA"] as const;
 
 export function isLaunchCountry(country: string | null | undefined): boolean {
   return !!country && (MARKETPLACE_LAUNCH_COUNTRIES as readonly string[]).includes(country);
 }
 
 // Also pure — every marketplace region's settlement currency.
-export const CURRENCY_BY_COUNTRY: Record<string, string> = { AU: "AUD", NZ: "NZD", US: "USD", UK: "GBP", SG: "SGD", CA: "CAD" };
+export const CURRENCY_BY_COUNTRY: Record<string, string> = { AU: "AUD", US: "USD", UK: "GBP", SG: "SGD", CA: "CAD" };

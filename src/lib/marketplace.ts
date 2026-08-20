@@ -31,7 +31,6 @@ export { MARKETPLACE_FEE_BPS, MARKETPLACE_PREMIUM_FEE_BPS, marketplaceFeeBps, pl
 // per market.
 export const MARKETPLACE_RETAILER: Record<string, string> = {
   AU: "marketplace",
-  NZ: "marketplace_nz",
   US: "marketplace_us",
   UK: "marketplace_uk",
   SG: "marketplace_sg",
@@ -91,7 +90,7 @@ export function canViewMarketplaceListings(_email?: string | null, _isAdmin?: bo
   return MARKETPLACE_PUBLIC;
 }
 
-export const MARKETPLACE_COUNTRIES = ["AU", "NZ", "US", "UK", "SG", "CA"] as const;
+export const MARKETPLACE_COUNTRIES = ["AU", "US", "UK", "SG", "CA"] as const;
 
 // ── Offers ─────────────────────────────────────────────────────────────────────
 // "Make an offer" guardrails: offers live 72h, and a lowball below 30% of asking

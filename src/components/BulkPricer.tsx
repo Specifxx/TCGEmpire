@@ -53,7 +53,6 @@ interface PickedCard {
   isPromo: boolean;
   rarity: string;
   lowestPriceCents: number | null;
-  lowestPriceCentsNz?: number | null;
   lowestPriceCentsUs?: number | null;
   lowestPriceCentsUk?: number | null;
   lowestPriceCentsSg?: number | null;
@@ -80,7 +79,6 @@ interface ApiMatchedCard {
   imageThumbUrl: string | null;
   variant: string | null;
   lowestPriceCents: number | null;
-  lowestPriceCentsNz?: number | null;
   lowestPriceCentsUs?: number | null;
   lowestPriceCentsUk?: number | null;
   lowestPriceCentsSg?: number | null;

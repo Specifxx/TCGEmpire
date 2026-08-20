@@ -105,7 +105,7 @@ async function main() {
           ...rest, rarity, externalId, collectorNumber, slug, variant, isPromo,
           setCode: sc, setName: setNameByCode.get(sc) ?? rest.setName,
           viewCount: 0, searchCount: 0, lastViewedAt: null, marketPriceCents: 0,
-          lowestPriceCents: null, lowestPriceCentsNz: null, lowestPriceCentsUs: null, lowestPriceCentsUk: null,
+          lowestPriceCents: null, lowestPriceCentsUs: null, lowestPriceCentsUk: null,
           lowestPriceCentsSg: null, lowestPriceCentsCa: null,
         },
       }).catch((e) => { console.warn("create failed", collectorNumber, e.message); created--; usedSlugs.delete(slug); });

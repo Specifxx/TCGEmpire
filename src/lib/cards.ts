@@ -99,7 +99,7 @@ export function buildCardWhere(query: CardQuery, country: Country = DEFAULT_COUN
   if (query.max) price.lte = dollarsToCents(query.max);
   if (query.priced === "1" || price.gte != null || price.lte != null) {
     price.not = null;
-    // Filter on the selected market's price column (AU vs NZ).
+    // Filter on the selected market's price column.
     where[field] = price;
   }
 
@@ -114,7 +114,7 @@ export function buildCardOrderBy(
   switch (sort) {
     case "price_asc":
       // Nulls last so unpriced cards don't dominate the top. Sort on the selected
-      // market's price column (AU vs NZ).
+      // market's price column.
       return [{ [field]: { sort: "asc", nulls: "last" } } as Prisma.CardOrderByWithRelationInput, { name: "asc" }];
     case "price_desc":
       return [{ [field]: { sort: "desc", nulls: "last" } } as Prisma.CardOrderByWithRelationInput, { name: "asc" }];
@@ -151,7 +151,6 @@ export function cardTileSelect(country: Country = DEFAULT_COUNTRY) {
     imageUrl: true,
     imageThumbUrl: true,
     lowestPriceCents: true,
-    lowestPriceCentsNz: true,
     lowestPriceCentsUs: true,
     lowestPriceCentsUk: true,
     lowestPriceCentsSg: true,

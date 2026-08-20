@@ -134,7 +134,7 @@ jobs:
           NEXT_PUBLIC_MARKETPLACE_PUBLIC: ${{ vars.NEXT_PUBLIC_MARKETPLACE_PUBLIC || '1' }}
         run: npx tsx scripts/import-prices.ts
       - name: Import sealed products
-        # Populate the /sealed page (booster boxes/packs across AU/NZ/US). Nothing
+        # Populate the /sealed page (booster boxes/packs across AU/US). Nothing
         # else scheduled this before, so the table went empty.
         env:
           DATABASE_URL: ${{ secrets.RM6 || vars.RM6 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 }}

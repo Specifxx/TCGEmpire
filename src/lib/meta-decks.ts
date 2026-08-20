@@ -99,7 +99,6 @@ const CARD_SELECT = {
   imageThumbUrl: true,
   imageUrl: true,
   lowestPriceCents: true,
-  lowestPriceCentsNz: true,
   lowestPriceCentsUs: true,
   lowestPriceCentsUk: true,
   lowestPriceCentsSg: true,
@@ -109,7 +108,7 @@ const CARD_SELECT = {
 // Build a name -> cheapest base printing map for a set of card names in ONE query.
 // (Resolving each card individually would fire ~100 queries per page and can
 // exhaust the serverless DB connection pool.) Prices reflect the selected market:
-// ResolvedCardData.lowestPriceCents is set to the AU or NZ column accordingly.
+// ResolvedCardData.lowestPriceCents is set to the market's column accordingly.
 async function buildCardMap(names: string[], country: Country): Promise<Map<string, ResolvedCardData>> {
   const keys = Array.from(new Set(names.map(normalizeSearch)));
   const field = priceField(country);

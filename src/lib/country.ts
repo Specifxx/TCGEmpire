@@ -1,10 +1,16 @@
 // Country / market selection. The UNITED STATES is the global default; a visitor is
-// auto-switched to AU, NZ, UK, SG or CA only when IP geo detects one of those
+// auto-switched to AU, UK, SG or CA only when IP geo detects one of those
 // (everything else — incl. the US and undetectable — resolves to US). This module is
 // PURE (no next/headers) so it's safe to import from both server and client
 // components. The server-side cookie + geo reader lives in get-country.ts.
+//
+// New Zealand support was removed 2026-08-20 (NZ never had eBay coverage — see
+// arbitrage.ts/affiliate.ts — so the removal frees no eBay credits; the actual
+// saving is ~10 fewer Shopify store scrapes per price-import run and dropping
+// the dedicated Card.lowestPriceCentsNz column/index). NZ is kept archived in
+// git history, not behind a flag — re-adding it is a normal "add a market" pass.
 
-export type Country = "AU" | "NZ" | "US" | "UK" | "SG" | "CA";
+export type Country = "AU" | "US" | "UK" | "SG" | "CA";
 
 export interface CountryInfo {
   code: Country;
@@ -18,7 +24,6 @@ export interface CountryInfo {
 
 export const COUNTRIES: Record<Country, CountryInfo> = {
   AU: { code: "AU", label: "Australia", adjective: "Australian", place: "Australia", flag: "🇦🇺", currency: "AUD", locale: "en-AU" },
-  NZ: { code: "NZ", label: "New Zealand", adjective: "New Zealand", place: "New Zealand", flag: "🇳🇿", currency: "NZD", locale: "en-NZ" },
   US: { code: "US", label: "United States", adjective: "US", place: "the United States", flag: "🇺🇸", currency: "USD", locale: "en-US" },
   UK: { code: "UK", label: "United Kingdom", adjective: "UK", place: "the United Kingdom", flag: "🇬🇧", currency: "GBP", locale: "en-GB" },
   SG: { code: "SG", label: "Singapore", adjective: "Singapore", place: "Singapore", flag: "🇸🇬", currency: "SGD", locale: "en-SG" },
@@ -27,9 +32,9 @@ export const COUNTRIES: Record<Country, CountryInfo> = {
 
 // Order shown in the switcher. UK is live, priced in GBP (TCGplayer now; eBay UK
 // joins on the next daily import, CardTrader once its API token is set).
-export const COUNTRY_LIST: CountryInfo[] = [COUNTRIES.AU, COUNTRIES.NZ, COUNTRIES.US, COUNTRIES.UK, COUNTRIES.SG, COUNTRIES.CA];
+export const COUNTRY_LIST: CountryInfo[] = [COUNTRIES.AU, COUNTRIES.US, COUNTRIES.UK, COUNTRIES.SG, COUNTRIES.CA];
 // US is the default market (the ISR baseline + the fallback when geo can't place a
-// visitor in AU/NZ/UK). Geo auto-switches AU/NZ/UK visitors client-side.
+// visitor in AU/UK). Geo auto-switches AU/UK visitors client-side.
 export const DEFAULT_COUNTRY: Country = "US";
 export const COUNTRY_COOKIE = "country";
 
@@ -37,7 +42,7 @@ export const COUNTRY_COOKIE = "country";
 // quickly if a market's data needs work, without code surgery.)
 export const INTL_ENABLED = process.env.NEXT_PUBLIC_INTL_DISABLED !== "true";
 
-const VALID = new Set<Country>(["AU", "NZ", "US", "UK", "SG", "CA"]);
+const VALID = new Set<Country>(["AU", "US", "UK", "SG", "CA"]);
 
 // EU member states (+ EEA/Schengen-adjacent UK-shipping-friendly neighbours) —
 // there's no separate EU store/eBay market, but UK (GBP, real UK stores) is a
@@ -60,7 +65,7 @@ export function isEuIso(v: string | undefined | null): boolean {
 }
 
 // Coerce any cookie/geo/query value to a supported Country. Accepts ISO country
-// codes from the geo header too (e.g. "AU", "NZ", "GB"). AU/NZ/UK/SG geo hits
+// codes from the geo header too (e.g. "AU", "GB"). AU/UK/SG geo hits
 // pass straight through; an EU country defaults to UK (see EU_ISO above);
 // everything else (incl. the US and undetectable) falls through to US.
 export function normalizeCountry(v: string | undefined | null): Country {
@@ -88,15 +93,12 @@ export function isoCountry(country: Country): string {
 // The Card column holding the lowest price for this market.
 export type PriceField =
   | "lowestPriceCents"
-  | "lowestPriceCentsNz"
   | "lowestPriceCentsUs"
   | "lowestPriceCentsUk"
   | "lowestPriceCentsSg"
   | "lowestPriceCentsCa";
 export function priceField(country: Country): PriceField {
-  return country === "NZ"
-    ? "lowestPriceCentsNz"
-    : country === "US"
+  return country === "US"
     ? "lowestPriceCentsUs"
     : country === "UK"
     ? "lowestPriceCentsUk"
@@ -111,7 +113,6 @@ export function priceField(country: Country): PriceField {
 export function pickPrice(
   card: {
     lowestPriceCents: number | null;
-    lowestPriceCentsNz?: number | null;
     lowestPriceCentsUs?: number | null;
     lowestPriceCentsUk?: number | null;
     lowestPriceCentsSg?: number | null;
@@ -119,7 +120,6 @@ export function pickPrice(
   },
   country: Country
 ): number | null {
-  if (country === "NZ") return card.lowestPriceCentsNz ?? null;
   if (country === "US") return card.lowestPriceCentsUs ?? null;
   if (country === "UK") return card.lowestPriceCentsUk ?? null;
   if (country === "SG") return card.lowestPriceCentsSg ?? null;

@@ -92,7 +92,7 @@ export const metadata: Metadata = {
     template: "%s — RiftCompare",
   },
   description:
-    "The Riftbound TCG card database and price comparison. Browse every card and compare live prices across stores in Australia, New Zealand, the US, the UK, Singapore and Canada to find the cheapest place to buy.",
+    "The Riftbound TCG card database and price comparison. Browse every card and compare live prices across stores in Australia, the US, the UK, Singapore and Canada to find the cheapest place to buy.",
   applicationName: SITE_NAME,
   // NO `keywords` meta. Google has ignored it since 2009 and Bing treats stuffing
   // it as a negative signal; it only ever advertised our target terms to
@@ -116,7 +116,7 @@ export const metadata: Metadata = {
     url: SITE_URL,
     title: "RiftCompare — Riftbound Card Database & Price Comparison",
     description:
-      "Compare live Riftbound TCG card prices across stores in Australia, New Zealand, the US, the UK, Singapore and Canada to find the cheapest place to buy.",
+      "Compare live Riftbound TCG card prices across stores in Australia, the US, the UK, Singapore and Canada to find the cheapest place to buy.",
   },
   twitter: { card: "summary_large_image" },
   // Opt into large image thumbnails + full text snippets in Google/Bing results
@@ -179,7 +179,6 @@ const orgJsonLd = {
       // Markets served (drives regional entity understanding without per-locale URLs).
       areaServed: [
         { "@type": "Country", name: "Australia" },
-        { "@type": "Country", name: "New Zealand" },
         { "@type": "Country", name: "United States" },
         { "@type": "Country", name: "United Kingdom" },
         { "@type": "Country", name: "Singapore" },
@@ -192,7 +191,7 @@ const orgJsonLd = {
         availableLanguage: "English",
       },
       description:
-        "Riftbound: League of Legends TCG card database and live price-comparison across Australia, New Zealand, the United States, the United Kingdom, Singapore and Canada, home of the RiftCompare Index.",
+        "Riftbound: League of Legends TCG card database and live price-comparison across Australia, the United States, the United Kingdom, Singapore and Canada, home of the RiftCompare Index.",
     },
     {
       "@type": "WebSite",
@@ -217,8 +216,8 @@ const orgJsonLd = {
 // resolved client-side instead (CountryProvider reconciles from
 // document.cookie + /api/geo; NavUser/PremiumProvider fetch /api/me).
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  // Neutral lang="en": one cookie-switched URL serves all four English markets
-  // (AU/NZ/US/UK), so a single market tag like en-AU would mislabel the others.
+  // Neutral lang="en": one cookie-switched URL serves all three English markets
+  // (AU/US/UK), so a single market tag like en-AU would mislabel the others.
   return (
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable} ${fraunces.variable}`}>
       <head>
@@ -400,7 +399,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </p>
           <p>
             RiftCompare · Riftbound card database &amp; price comparison for
-            Australia, New Zealand, the US, the UK, Singapore and Canada. Prices are sourced from public store listings and may be out
+            Australia, the US, the UK, Singapore and Canada. Prices are sourced from public store listings and may be out
             of date — always confirm on the retailer&apos;s site.
           </p>
           {/* Riot's Legal Jibber Jabber policy requires this EXACT notice, displayed

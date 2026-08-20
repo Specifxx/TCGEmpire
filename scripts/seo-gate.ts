@@ -249,7 +249,7 @@ const decode = (s: string) =>
 
 // Every currency symbol lib/format.ts can emit. Kept in sync deliberately: a
 // symbol missing here means that market's prices are silently unchecked.
-const SYMBOLS = String.raw`(?:A\$|NZ\$|US\$|C\$|S\$|£|€|\$)`;
+const SYMBOLS = String.raw`(?:A\$|US\$|C\$|S\$|£|€|\$)`;
 const MONEY_RE = new RegExp(`${SYMBOLS}\\s?-?[\\d,]+(?:\\.\\d{1,2})?`, "g");
 const BROKEN_MONEY_RE = new RegExp(`${SYMBOLS}\\s*(?:NaN|Infinity|undefined|null)`, "i");
 

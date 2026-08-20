@@ -55,7 +55,6 @@ explicit link up/down to the primary).
 | Query pattern | Primary URL | Notes |
 |---|---|---|
 | `buy riftbound cards australia` | `/blog/buy-riftbound-cards-australia` | Real: 19 AU stores tracked |
-| `buy riftbound cards nz` | `/blog/buy-riftbound-cards-nz` | Real: 10 NZ stores tracked |
 | `buy riftbound cards us` | `/blog/buy-riftbound-cards-us` | Real: ~19 US stores + TCGplayer + eBay |
 | `buy riftbound cards uk` | `/blog/buy-riftbound-cards-uk` | Real: 14 UK stores + eBay |
 | `riftbound singapore` | `/blog/riftbound-price-comparison-singapore` | Real: 11 SG stores |

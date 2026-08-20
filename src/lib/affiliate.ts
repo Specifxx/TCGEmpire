@@ -147,8 +147,7 @@ export function ebayAffiliateUrl(url: string, source?: string): string {
   }
 }
 
-// The eBay marketplace a given RiftCompare market shops on. NZ has no eBay of
-// its own and eBay AU ships there, so it deliberately maps to the AU domain.
+// The eBay marketplace a given RiftCompare market shops on.
 // SG is left as "ebay.com.sg" here too — this is the LOGICAL site the market
 // shops on, not necessarily where a link actually ends up; ebayAffiliateUrl's
 // SG reroute (see ebayMarket above) is what actually redirects it onto
@@ -165,7 +164,6 @@ export function ebayAffiliateUrl(url: string, source?: string): string {
 // eight surfaces need is a shared fact, not eight local constants.
 const EBAY_DOMAIN: Record<string, string> = {
   AU: "ebay.com.au",
-  NZ: "ebay.com.au", // no eBay NZ; eBay AU ships there
   US: "ebay.com",
   UK: "ebay.co.uk",
   SG: "ebay.com.sg",
@@ -184,7 +182,6 @@ export function ebayDomain(country: string): string {
 // it verbatim rather than inventing a third phrasing for one destination.
 const EBAY_LABEL: Record<string, string> = {
   AU: "eBay Australia",
-  NZ: "eBay AU (ships to NZ)",
   US: "eBay",
   UK: "eBay UK",
   SG: "eBay",

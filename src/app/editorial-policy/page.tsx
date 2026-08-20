@@ -116,7 +116,7 @@ export default function EditorialPolicyPage() {
         <section className="space-y-3">
           <h2 className="text-lg font-bold text-white">How prices are collected</h2>
           <p>
-            We track roughly {storeCount} retailers across Australia, New Zealand, the United
+            We track roughly {storeCount} retailers across Australia, the United
             States, the United Kingdom, Singapore and Canada, plus eBay in each market and
             TCGplayer. Prices come from those stores&rsquo; own public product listings and from
             official marketplace APIs. We do not accept price submissions from retailers, and no

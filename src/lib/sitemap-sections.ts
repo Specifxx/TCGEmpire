@@ -87,7 +87,7 @@ async function core(): Promise<SitemapEntry[]> {
   const latestGuide = guideDates.length ? new Date(Math.max(...guideDates)) : staticPageDate("/guides");
   const latestBlog = blogDates.length ? new Date(Math.max(...blogDates)) : staticPageDate("/blog");
 
-  // Region home pages (/au, /nz, /uk, /sg, /ca) — real, region-locked variants
+  // Region home pages (/au, /uk, /sg, /ca) — real, region-locked variants
   // of "/" itself (see components/home/RegionHome.tsx). REGION_HOME_PATH also
   // maps US to "/", already listed on the next line, so it's skipped here.
   const regionHomeEntries: SitemapEntry[] = Object.entries(REGION_HOME_PATH)
@@ -197,7 +197,6 @@ async function cards(): Promise<SitemapEntry[]> {
         id: true,
         slug: true,
         lowestPriceCents: true,
-        lowestPriceCentsNz: true,
         lowestPriceCentsUs: true,
         lowestPriceCentsUk: true,
         lowestPriceCentsSg: true,

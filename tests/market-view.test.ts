@@ -161,7 +161,6 @@ test("tile: a local price with a zero count says nothing rather than '0 stores'"
 test("tile: every per-country price column is considered", () => {
   const cols = [
     "lowestPriceCents",
-    "lowestPriceCentsNz",
     "lowestPriceCentsUs",
     "lowestPriceCentsUk",
     "lowestPriceCentsSg",

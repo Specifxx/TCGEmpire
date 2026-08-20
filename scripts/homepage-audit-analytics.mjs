@@ -291,13 +291,13 @@ async function testRegionChanged(browser) {
   const { context, page } = await freshPage(browser);
   const trigger = page.locator('[data-region-control="hero"] button').first();
   await trigger.click();
-  const nzOption = page.locator('[data-region-control="hero"] button:has-text("New Zealand")');
-  await nzOption.waitFor({ state: "visible", timeout: 3000 });
-  await nzOption.click();
+  const ukOption = page.locator('[data-region-control="hero"] button:has-text("United Kingdom")');
+  await ukOption.waitFor({ state: "visible", timeout: 3000 });
+  await ukOption.click();
   await page.waitForTimeout(200);
   const dl = await getDataLayer(page);
   const changed = eventsNamed(dl, "region_changed");
-  const match = changed.find((p) => p.to === "NZ");
+  const match = changed.find((p) => p.to === "UK");
   record("region_changed fires with from/to when the hero region control is used", !!match, JSON.stringify(match ?? changed));
   await context.close();
 }

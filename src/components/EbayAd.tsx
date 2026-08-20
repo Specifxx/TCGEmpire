@@ -23,9 +23,8 @@ const DIMS: Record<Variant, { w: number; h: number }> = {
 };
 
 function tagline(country: string, contextual: boolean): string {
-  if (contextual) return country === "NZ" ? "New, used & graded — ships to NZ" : "New, used & graded listings";
+  if (contextual) return "New, used & graded listings";
   if (country === "US") return "Millions of TCG listings";
-  if (country === "NZ") return "Ships to New Zealand";
   if (country === "UK") return "Buy from UK & global sellers";
   if (country === "SG") return "Buy from SG & global sellers";
   if (country === "CA") return "Buy from CA & global sellers";
@@ -34,7 +33,7 @@ function tagline(country: string, contextual: boolean): string {
 
 // This banner ships on EVERY route via FooterAds, so its market map is the most
 // widely-rendered one on the site — and it was the one that had drifted: the
-// local copy listed only AU/NZ/US/UK and fell back to eBay AU, so every SG and
+// local copy listed only AU/US/UK and fell back to eBay AU, so every SG and
 // CA visitor was sent to the Australian marketplace (in AUD, with AU postage)
 // while affiliate.ts already carried verified ebay.com.sg and ebay.ca rotations.
 // Now resolved from the single shared map.

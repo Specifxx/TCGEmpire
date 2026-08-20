@@ -99,7 +99,7 @@ const RUNE_BARE = new RegExp(String.raw`\bR\d{1,3}[a-z]?\b`, "i");
 // the number-disambiguation guard in resolveCardId entirely and lets name-only
 // matching collapse all three prints onto the base card. In a market where the
 // only listings a store carried were the alt-arts, that is exactly what happened:
-// base runes worth about ten cents were showing $13.70 in NZ and $15.00 in AU,
+// base runes worth about ten cents were showing $13.70 in one region and $15.00 in AU,
 // carrying the alt-art's price, in the database and therefore in the pack sim too.
 function parseNumber(title: string): { setCode: string | null; key: string; total: string } | null {
   const pref = title.match(/\b([A-Za-z]{2,4})\s*-\s*(\d+)([a-z*]*)\s*\/\s*(\d+)/);
@@ -201,7 +201,7 @@ async function fetchCollection(store: RetailerInfo, handle: string): Promise<Sho
     // country=XX is CRITICAL: Shopify Markets serves a different price per visitor
     // country, and our (US) server was getting US/default prices — e.g. $33 when the
     // real AU price is $45. Forcing the store's market gives the local shopper price
-    // (AUD for AU stores, NZD for NZ stores).
+    // (AUD for AU stores, USD for US stores, etc).
     const url = `${store.base}/collections/${handle}/products.json?limit=250&page=${page}&country=${isoCountry(cc)}&_=${Date.now()}`;
     let res: Response;
     try {
@@ -261,7 +261,7 @@ async function verifyCheapestListings(onlyCountry?: string): Promise<number> {
     select: { id: true, cardId: true, priceCents: true, url: true, country: true },
     orderBy: { priceCents: "asc" },
   });
-  // Cheapest in-stock listing per card PER MARKET (AU and NZ are verified separately).
+  // Cheapest in-stock listing per card PER MARKET, verified separately.
   const cheapest = new Map<string, { id: string; priceCents: number; url: string; country: string }>();
   for (const r of rows) {
     const k = `${r.cardId}|${r.country}`;
@@ -1536,7 +1536,7 @@ export async function importPrices(): Promise<ImportSummary> {
   // (push). AU/US/UK/SG/CA ≈ 5×~1k calls; primeEbayBudget() reads the LIVE remaining
   // quota and reserves QUOTA_RESERVE, so this can never exhaust eBay's ~5,000/day
   // Browse limit — it just stops early, dropping the last market(s) in the array
-  // (CA first, by design — see refreshEbayMarkets). NZ is store-only (no eBay).
+  // (CA first, by design — see refreshEbayMarkets).
   // Cards are ordered by search demand so the most-wanted are covered first if the
   // quota is ever hit.
   //  - ebayDue:     last eBay refresh was > 20h ago (so it runs ~once a day).
@@ -1740,16 +1740,14 @@ export async function importPrices(): Promise<ImportSummary> {
   // filtered country-agnostically; the write side asking the same question the
   // same way is what stops the next added market repeating it. "tcgplayer" (US)
   // is deliberately NOT in that list — it is a real buyable store there.
-  const [pricedAuReal, pricedNz, pricedUs, pricedSgReal, pricedUkReal, pricedCa] = await Promise.all([
+  const [pricedAuReal, pricedUs, pricedSgReal, pricedUkReal, pricedCa] = await Promise.all([
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "AU", retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
-    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "NZ", retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "US", retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "SG", retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "UK", retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "CA", retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
   ]);
   const lowAuReal = new Map(pricedAuReal.map((r) => [r.cardId, r._min.priceCents ?? null]));
-  const lowNz = new Map(pricedNz.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowUs = new Map(pricedUs.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowSgReal = new Map(pricedSgReal.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowUkReal = new Map(pricedUkReal.map((r) => [r.cardId, r._min.priceCents ?? null]));
@@ -1763,7 +1761,6 @@ export async function importPrices(): Promise<ImportSummary> {
     select: {
       id: true,
       lowestPriceCents: true,
-      lowestPriceCentsNz: true,
       lowestPriceCentsUs: true,
       lowestPriceCentsUk: true,
       lowestPriceCentsSg: true,
@@ -1779,14 +1776,12 @@ export async function importPrices(): Promise<ImportSummary> {
     // from the comparison entirely — see lib/market-rows.ts). Reference prices
     // stay queryable for the Deal Finder via AU/UK/SG_FALLBACK_RETAILERS directly.
     const nAu = lowAuReal.get(c.id) ?? null;
-    const nNz = lowNz.get(c.id) ?? null;
     const nUs = lowUs.get(c.id) ?? null;
     const nUk = lowUkReal.get(c.id) ?? null;
     const nSg = lowSgReal.get(c.id) ?? null;
     const nCa = lowCa.get(c.id) ?? null;
     if (
       nAu !== c.lowestPriceCents ||
-      nNz !== c.lowestPriceCentsNz ||
       nUs !== c.lowestPriceCentsUs ||
       nUk !== c.lowestPriceCentsUk ||
       nSg !== c.lowestPriceCentsSg ||
@@ -1796,7 +1791,6 @@ export async function importPrices(): Promise<ImportSummary> {
         where: { id: c.id },
         data: {
           lowestPriceCents: nAu,
-          lowestPriceCentsNz: nNz,
           lowestPriceCentsUs: nUs,
           lowestPriceCentsUk: nUk,
           lowestPriceCentsSg: nSg,
@@ -1820,13 +1814,11 @@ export async function importPrices(): Promise<ImportSummary> {
     const rows: { cardId: string; country: string; day: Date; lowestPriceCents: number }[] = [];
     for (const c of existing) {
       const au = lowAuReal.get(c.id) ?? null;
-      const nz = lowNz.get(c.id) ?? null;
       const us = lowUs.get(c.id) ?? null;
       const uk = lowUkReal.get(c.id) ?? null;
       const sg = lowSgReal.get(c.id) ?? null;
       const ca = lowCa.get(c.id) ?? null;
       if (au != null) rows.push({ cardId: c.id, country: "AU", day, lowestPriceCents: au });
-      if (nz != null) rows.push({ cardId: c.id, country: "NZ", day, lowestPriceCents: nz });
       if (us != null) rows.push({ cardId: c.id, country: "US", day, lowestPriceCents: us });
       if (uk != null) rows.push({ cardId: c.id, country: "UK", day, lowestPriceCents: uk });
       if (sg != null) rows.push({ cardId: c.id, country: "SG", day, lowestPriceCents: sg });
@@ -1834,7 +1826,7 @@ export async function importPrices(): Promise<ImportSummary> {
     }
     await dbHistory.priceHistory.deleteMany({ where: { day } });
     if (rows.length > 0) await dbHistory.priceHistory.createMany({ data: rows });
-    console.log(`Price history: recorded ${rows.length} points (AU/NZ/US/UK/SG/CA) for ${day.toISOString().slice(0, 10)}.`);
+    console.log(`Price history: recorded ${rows.length} points (AU/US/UK/SG/CA) for ${day.toISOString().slice(0, 10)}.`);
   } catch (e) {
     console.warn("Price-history snapshot failed:", e);
   }

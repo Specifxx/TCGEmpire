@@ -1,4 +1,4 @@
-// Run only the sealed-product import (booster boxes/packs/etc.) across all AU + NZ
+// Run only the sealed-product import (booster boxes/packs/etc.) across all AU
 // stores. Useful after changing sealed matching without re-scraping all singles.
 // Run: npx tsx scripts/import-sealed-only.ts
 import { importSealed } from "../src/lib/sealed-import";

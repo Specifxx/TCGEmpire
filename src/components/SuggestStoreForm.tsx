@@ -6,7 +6,6 @@ type State = { kind: "idle" | "loading" | "ok" | "already" | "error"; msg?: stri
 
 const MARKETS: { value: string; label: string }[] = [
   { value: "AU", label: "🇦🇺 Australia" },
-  { value: "NZ", label: "🇳🇿 New Zealand" },
   { value: "US", label: "🇺🇸 United States" },
   { value: "UK", label: "🇬🇧 United Kingdom" },
   { value: "SG", label: "🇸🇬 Singapore" },

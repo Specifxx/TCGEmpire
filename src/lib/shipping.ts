@@ -21,7 +21,6 @@ const POSTCODE_PATTERN: Record<string, RegExp> = {
   // Canadian FSA/LDU, e.g. "K1E 3J1" / "k1e3j1". Without this, validatePostcode's
   // `pattern ? … : p.length > 0` fallback accepts ANY non-empty string.
   CA: /^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/,
-  NZ: /^\d{4}$/,
   SG: /^\d{6}$/,
 };
 

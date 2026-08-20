@@ -152,7 +152,7 @@ async function fetchProducts(base: string, handle: string, country: string): Pro
   for (let page = 1; page <= 10; page++) {
     if (page > 1) await sleep(REQUEST_DELAY_MS);
     // country=XX forces the store's market price (Shopify Markets serves a different
-    // price per country): AUD for AU stores, NZD for NZ stores.
+    // price per country): AUD for AU stores, USD for US stores, etc.
     const url = `${base}${path}?limit=250&page=${page}&country=${country}&_=${Date.now()}`;
     let res: Response;
     try {
@@ -261,7 +261,7 @@ export async function importSealed(): Promise<number> {
     const cc = store.country ?? "AU";
     // Auto-discover from the sitemap, but fall back to the store's configured
     // collections (some stores' sitemaps don't expose their collection handles —
-    // this is why NZ sealed stores were being skipped). Mirrors price-import.ts.
+    // some sealed stores were being skipped). Mirrors price-import.ts.
     let handles = await discoverCollections(store.base);
     handles = Array.from(new Set([...handles, ...(store.collections ?? [])]));
     if (!handles.length) continue;
@@ -584,7 +584,7 @@ export interface SealedGroup {
   }[];
 }
 
-// Group sealed listings by product for the /sealed page, for one market (AU/NZ/US).
+// Group sealed listings by product for the /sealed page, for one market (AU/US).
 //
 // CACHED IN PROCESS MEMORY: this pulls the market's entire sealed table on
 // every call — fetching it from Neon per request is the network-transfer
@@ -723,7 +723,7 @@ async function getAllSealedGroups(country: Country = DEFAULT_COUNTRY): Promise<S
     g.listings.push({ retailer: r.retailer, retailerName: r.retailerName, priceCents: r.priceCents, url: r.url, inStock: r.inStock });
   }
   // Override with the official TCGplayer catalogue image where we have one — correct
-  // per-product art, market-agnostic, so it fixes markets (AU/NZ/UK) whose only
+  // per-product art, market-agnostic, so it fixes markets (AU/UK) whose only
   // listings are store photos of the wrong product.
   for (const g of groups.values()) {
     const canon = canonicalImg.get(g.groupKey);

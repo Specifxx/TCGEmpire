@@ -81,17 +81,16 @@ export interface ArbSource {
   feePct: number;
 }
 
-// eBay retailer key per market (NZ has no eBay coverage).
-const EBAY_KEY: Record<Country, string | null> = { AU: "ebay", NZ: null, US: "ebay_us", UK: "ebay_uk", SG: "ebay_sg", CA: "ebay_ca" };
+// eBay retailer key per market.
+const EBAY_KEY: Record<Country, string | null> = { AU: "ebay", US: "ebay_us", UK: "ebay_uk", SG: "ebay_sg", CA: "ebay_ca" };
 // TCGplayer retailer key per market — the same converted-reference rows used as a
 // fallback in the main price comparison (see UK_FALLBACK_RETAILERS / SG_FALLBACK_RETAILERS)
 // double as a real, always-available BUY source here. Excluded for AU on purpose:
 // unlike UK/SG (where it fills a genuine coverage gap), AU already has plenty of
 // real tracked stores, so a converted reference price would just add noise rather
-// than a real opportunity. NZ has no TCGplayer row at all, so it has none either.
+// than a real opportunity.
 export const TCGPLAYER_KEY: Record<Country, string | null> = {
   AU: null,
-  NZ: null,
   US: TCG_US.retailer,
   UK: TCGPLAYER_UK_RETAILER,
   SG: TCGPLAYER_SG_RETAILER,
@@ -389,8 +388,7 @@ export async function getArbitrage(
 // from USD into the viewer's local currency via the shared fx table. This is a
 // REFERENCE comparison, not a specific listing — TCGplayer only has one retailer row
 // per card (US, in USD), so there's no "cheapest" to pick and no marketplace fee to
-// net off (unlike eBay's ~13% final-value fee). Available in every market, including
-// ones with no eBay coverage (e.g. NZ).
+// net off (unlike eBay's ~13% final-value fee). Available in every market.
 export async function getArbitrageVsTcgplayer(
   country: Country,
   opts: { buy: string[]; sort: ArbSort; page?: number; pageSize?: number }

@@ -87,7 +87,6 @@ export const COUNTRY_GUIDE_SLUGS: Record<Country, string> = {
   US: "buy-riftbound-cards-us",
   UK: "buy-riftbound-cards-uk",
   AU: "buy-riftbound-cards-australia",
-  NZ: "buy-riftbound-cards-nz",
   CA: "buy-riftbound-cards-canada",
   SG: "riftbound-price-comparison-singapore",
 };
@@ -97,7 +96,6 @@ const HREFLANG: Record<Country, string> = {
   US: "en-US",
   UK: "en-GB",
   AU: "en-AU",
-  NZ: "en-NZ",
   CA: "en-CA",
   SG: "en-SG",
 };
@@ -119,8 +117,8 @@ export function hreflangForCountryGuide(slug: string): Record<string, string> | 
 }
 
 /**
- * The second honest hreflang group on the site: the homepage ("/") plus its 5
- * region variants (/au, /nz, /uk, /sg, /ca — see app/au/page.tsx etc). Each is
+ * The second honest hreflang group on the site: the homepage ("/") plus its 4
+ * region variants (/au, /uk, /sg, /ca — see app/au/page.tsx etc). Each is
  * a genuinely distinct, separately-indexable page — its own H1, its own
  * region-locked stat block, its own store list — not a re-skin, so this is not
  * the "inventing hreflang" case hreflangForCountryGuide's header warns against.
@@ -131,7 +129,6 @@ export const REGION_HOME_PATH: Record<Country, string> = {
   US: "/",
   UK: "/uk",
   AU: "/au",
-  NZ: "/nz",
   CA: "/ca",
   SG: "/sg",
 };
@@ -147,7 +144,7 @@ export function regionHomeHreflang(): Record<string, string> {
   return map;
 }
 
-/** Full <Metadata> for one of the 5 region home pages (not "/" itself, which
+/** Full <Metadata> for one of the 4 region home pages (not "/" itself, which
  *  keeps its own hand-written metadata in app/page.tsx). Every one of the
  *  region-locked facts here (adjective, currency, canonical path) reads off
  *  COUNTRIES/REGION_HOME_PATH so a page can never describe a market other than

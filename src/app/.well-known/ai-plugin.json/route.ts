@@ -15,7 +15,7 @@ export function GET() {
       name_for_human: "RiftCompare",
       name_for_model: "riftcompare",
       description_for_human:
-        "Compare live Riftbound: League of Legends TCG card prices across stores in Australia, New Zealand, " +
+        "Compare live Riftbound: League of Legends TCG card prices across stores in Australia, " +
         "the US, the UK, Singapore and Canada, including real shipping cost.",
       description_for_model:
         "Read-only Riftbound TCG price data: card search, per-card prices in every market, the full " +

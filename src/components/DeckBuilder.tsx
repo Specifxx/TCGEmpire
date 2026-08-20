@@ -51,7 +51,6 @@ interface DeckBuilderCard {
   imageThumbUrl: string | null;
   imageUrl: string | null;
   lowestPriceCents: number | null;
-  lowestPriceCentsNz?: number | null;
   lowestPriceCentsUs?: number | null;
   lowestPriceCentsUk?: number | null;
   lowestPriceCentsSg?: number | null;
@@ -116,7 +115,7 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Re-price when the market (AU/NZ) changes so totals reflect the new currency/stores.
+  // Re-price when the market changes so totals reflect the new currency/stores.
   useEffect(() => {
     if (result && text.trim()) void price(text);
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -17,7 +17,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
       where: whereParam(params.id),
       select: {
         id: true, slug: true, name: true, setName: true, setCode: true, collectorNumber: true,
-        lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true,
+        lowestPriceCents: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true,
       },
     })
     .catch(() => null);
@@ -32,7 +32,6 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     "",
     "## Lowest price by market",
     line("Australia (AUD)", card.lowestPriceCents, "AUD"),
-    line("New Zealand (NZD)", card.lowestPriceCentsNz, "NZD"),
     line("United States (USD)", card.lowestPriceCentsUs, "USD"),
     line("United Kingdom (GBP)", card.lowestPriceCentsUk, "GBP"),
     line("Singapore (SGD)", card.lowestPriceCentsSg, "SGD"),

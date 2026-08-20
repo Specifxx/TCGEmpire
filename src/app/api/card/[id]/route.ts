@@ -6,9 +6,9 @@ import { getCountry } from "@/lib/get-country";
 // Card detail (incl. live retailer prices) for the quick-view modal. Resolves by
 // slug or legacy id. Short CDN cache since prices refresh every ~3h.
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
-  // While NZ is off, hard-filter to AU so no NZ rows ever reach the client (the
-  // client still filters by country, but this is defence-in-depth). When NZ is on
-  // we return all markets and let the client switch without a re-fetch.
+  // While intl is off, hard-filter to AU so no non-AU rows ever reach the client
+  // (the client still filters by country, but this is defence-in-depth). When
+  // intl is on we return all markets and let the client switch without a re-fetch.
   const priceWhere = INTL_ENABLED ? undefined : { country: getCountry() };
   const card = await prisma.card.findFirst({
     where: { OR: [{ slug: params.id }, { id: params.id }] },
@@ -33,7 +33,6 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
       orientation: true,
       artSeed: true,
       lowestPriceCents: true,
-      lowestPriceCentsNz: true,
       lowestPriceCentsUs: true,
       lowestPriceCentsUk: true,
       lowestPriceCentsSg: true,

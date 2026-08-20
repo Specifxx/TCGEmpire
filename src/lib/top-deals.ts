@@ -175,10 +175,10 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
 }
 
 // Cached wrapper, keyed by market only ["top-deals", country] — so "/" and all
-// five region home pages (/au, /nz, /uk, /sg, /ca) share ONE cache entry per
+// four region home pages (/au, /uk, /sg, /ca) share ONE cache entry per
 // market instead of each route computing its own copy of the same blended
 // deal feed. getTopDeals() itself calls getEbayCheapest/getSealedGroups/
-// getPriceMovers, none of which are cheap to run six times an hour times six
+// getPriceMovers, none of which are cheap to run six times an hour times five
 // routes. Same 1h TTL as the homepage used inline before this was factored
 // out — CONTENT_TAG lets the daily import bust it on-demand; the TTL is the
 // self-healing fallback for environments where that on-demand ping is skipped.

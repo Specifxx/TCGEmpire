@@ -149,7 +149,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   const statBit = `${card.domain} ${card.type.toLowerCase()} · ${card.rarity}`;
   const priceBit = hasPrice
     ? `Live prices from ${fmtBaselineMoney(lowestCents!)} across ${stores} ${stores === 1 ? "store" : "stores"}, updated daily.`
-    : `Compare live prices across AU, NZ, US, UK & SG stores, updated daily.`;
+    : `Compare live prices across AU, US, UK & SG stores, updated daily.`;
   // WHICH PRINTING THIS IS, in words rather than only in a collector number.
   //
   // 234 card pages — 17% of the template — were flagged as near-duplicate
@@ -304,10 +304,10 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // Built for EVERY market and shown by the client section whenever that market has
   // no live eBay row — whether we couldn't check eBay this cycle (quota) or eBay
   // genuinely had nothing at last check, a zero-listing market must never be a dead
-  // end. NZ has no local eBay; eBay AU ships there.
+  // end.
   //
   // Domain/label come from lib/affiliate.ts, not a local copy — this map used to
-  // hand-list AU/NZ/US/UK/SG only, silently omitting CA from this fallback (a
+  // hand-list AU/US/UK/SG only, silently omitting CA from this fallback (a
   // Canadian visitor got no eBay search offer at all here, unlike every other
   // market). Iterating COUNTRY_LIST instead of a hand-kept object literal means
   // a future market can't be missed the same way twice.
@@ -322,7 +322,6 @@ export default async function CardPage({ params }: { params: { id: string } }) {
       {
         url: ebaySearchUrl(c.code, ebaySearchTerm, "card-fallback"),
         label: ebayLabel(c.code),
-        nz: c.code === "NZ",
       },
     ])
   );
@@ -948,7 +947,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                 {priceState.noRetailChannel ? (
                   <>
                     {card.setName} is distributed by drawing on the Riot Merch Store, not through
-                    shops — so none of the retailers we track in Australia, New Zealand, the United
+                    shops — so none of the retailers we track in Australia, the United
                     States, the United Kingdom, Singapore or Canada will ever stock it at retail, and
                     there is no launch price to compare. The only market this printing can have is
                     resale. We track that too: a price appears here as soon as a copy changes hands
@@ -956,7 +955,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                   </>
                 ) : (
                   <>
-                    None of the stores we track in Australia, New Zealand, the United States, the
+                    None of the stores we track in Australia, the United States, the
                     United Kingdom, Singapore or Canada has this printing in stock today, and we have
                     fewer than seven days of recorded price history for it — so there is nothing
                     honest to compare yet. We check every store daily; this page fills in on its own
@@ -1438,7 +1437,7 @@ function buildFaqs(card: CardForCopy, ctx: FaqContext): { q: string; a: string }
         ? `The cheapest live price for ${card.name} (${card.setCode} ${card.collectorNumber}) is currently ${formatMoney(lowest, currency)} across ${stores} ${stores === 1 ? "store" : "stores"} in ${place}; every other market we cover is compared on this page too. Prices update daily.`
         : noRetailChannel
         ? `There is no retail price for ${card.name} (${card.setCode} ${card.collectorNumber}). ${card.setName} is distributed by drawing rather than sold through shops, so no store we track lists it — the only price it can have is a resale price, and this page shows one as soon as a copy changes hands somewhere we can see it.`
-        : `We don't have a live price for ${card.name} right now. Prices refresh daily across AU, NZ, US, UK and SG stores — check back soon for the cheapest place to buy it.`,
+        : `We don't have a live price for ${card.name} right now. Prices refresh daily across AU, US, UK and SG stores — check back soon for the cheapest place to buy it.`,
     },
     {
       q: `What set is ${card.name} from?`,
@@ -1448,7 +1447,7 @@ function buildFaqs(card: CardForCopy, ctx: FaqContext): { q: string; a: string }
       q: `Where can I buy ${card.name}?`,
       a: noRetailChannel
         ? `Not from a shop. ${card.name} comes only in ${card.setName}, which Riot distributes through a Riot Merch Store drawing rather than retail, so there is no storefront to compare. Copies reach the open market only when someone who won the drawing resells one — this page tracks that market and will show a price when it appears.`
-        : `Compare every store selling ${card.name} across Australia, New Zealand, the US, the UK, Singapore and Canada on this page, then buy from whichever retailer offers the lowest total price including postage. RiftCompare links straight through to each store.`,
+        : `Compare every store selling ${card.name} across Australia, the US, the UK, Singapore and Canada on this page, then buy from whichever retailer offers the lowest total price including postage. RiftCompare links straight through to each store.`,
     },
   ];
 

@@ -293,7 +293,7 @@ export function FeedbackWidget() {
                   maxLength={4000}
                   placeholder={
                     positive
-                      ? "e.g. add a price alert for sealed, or cover more NZ stores…"
+                      ? "e.g. add a price alert for sealed, or cover more UK stores…"
                       : "e.g. the price on X looked wrong, or search didn't find…"
                   }
                   className="input mt-3 w-full resize-y"

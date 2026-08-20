@@ -220,7 +220,7 @@ export function editionLabel(c: PrintingFields & { rarity?: string }): string | 
 // them with ". " produced, live on the site:
 //
 //   "…a price watch will tell you if it moves before you check back. the United
-//    States is currently the only one of our six markets with a copy in stock…"
+//    States is currently the only one of our five markets with a copy in stock…"
 //
 // `sentences()` is the only sanctioned way to join fragments into sentences: it
 // capitalises each one, terminates it, and collapses the whitespace and doubled
@@ -526,7 +526,7 @@ function conditionEconomics(c: NarrativeInput): string | null {
 
 // ── 3c. Coverage notes ───────────────────────────────────────────────────────
 // What the ABSENCE of data means, said plainly. A priced card with no recorded
-// history, or stocked in only one of six markets, is a real and useful fact
+// history, or stocked in only one of five markets, is a real and useful fact
 // about that card — and saying so beats leaving a chart area unexplained. These
 // only fire when the corresponding richer paragraph could NOT, so they add
 // information rather than padding.
@@ -543,7 +543,7 @@ function coverageNotes(c: NarrativeInput): string | null {
   const stocked = c.markets.filter((m) => m.storeCount > 0);
   if (stocked.length === 1 && c.baseline.storeCount > 0) {
     bits.push(
-      `${stocked[0].place} is currently the only one of our six markets with a copy in stock — Australia, New Zealand, ` +
+      `${stocked[0].place} is currently the only one of our five markets with a copy in stock — Australia, ` +
         `the US, the UK, Singapore and Canada are all checked daily, and the others have nothing listed today`,
     );
   }
@@ -664,7 +664,7 @@ function playability(c: NarrativeInput): string | null {
 function noMarketYet(c: NarrativeInput): string {
   // A card can be unpriced in the BASELINE market and perfectly well stocked
   // somewhere else — the page is cached on one market, not sold in one. Saying
-  // "no live listing in any of the six markets" to a reader looking at a card
+  // "no live listing in any of the five markets" to a reader looking at a card
   // that four Australian shops have in stock is simply false, and this function
   // is reached on the baseline check alone, so it has to distinguish the two.
   const elsewhere = c.markets.filter((m) => m.storeCount > 0 && m.lowestCents != null);
@@ -692,7 +692,7 @@ function noMarketYet(c: NarrativeInput): string {
   if (hasNoRetailChannel(c.setCode)) {
     let s0 =
       `${c.displayName} has no shop price, and never will: ${c.setName} is distributed by drawing rather than sold ` +
-      `through retailers, so none of the six markets we track can list it at launch. Any price it ever carries is a ` +
+      `through retailers, so none of the five markets we track can list it at launch. Any price it ever carries is a ` +
       `resale price.`;
     if (otherPriced.length) {
       const cheapest = otherPriced.reduce((a, b) => ((b.priceCents ?? 0) < (a.priceCents ?? 0) ? b : a));
@@ -706,8 +706,8 @@ function noMarketYet(c: NarrativeInput): string {
   }
 
   let s2 =
-    `We have no live listing for ${c.displayName} in any of the six markets we track right now. That is a real ` +
-    `signal rather than a gap in the data: it means no store we monitor in Australia, New Zealand, the US, the UK, ` +
+    `We have no live listing for ${c.displayName} in any of the five markets we track right now. That is a real ` +
+    `signal rather than a gap in the data: it means no store we monitor in Australia, the US, the UK, ` +
     `Singapore or Canada currently has it on the shelf.`;
   if (otherPriced.length) {
     const cheapest = otherPriced.reduce((a, b) => ((b.priceCents ?? 0) < (a.priceCents ?? 0) ? b : a));

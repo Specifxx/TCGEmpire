@@ -71,7 +71,7 @@ export const metadata: Metadata = {
   title: { absolute: "Buy & Compare Riftbound Card Prices | RiftCompare" },
   // Kept to 25–160 chars (Bing/Google snippet limit) while staying market-neutral.
   description:
-    "Compare live Riftbound TCG card prices across AU, NZ, US, UK, Singapore & Canada stores to find the cheapest place to buy singles and sealed. Updated daily.",
+    "Compare live Riftbound TCG card prices across AU, US, UK, Singapore & Canada stores to find the cheapest place to buy singles and sealed. Updated daily.",
   keywords: [
     "buy Riftbound cards",
     "Riftbound prices",
@@ -84,9 +84,9 @@ export const metadata: Metadata = {
     "Riftbound Vendetta prices",
   ],
   // The homepage is the US/x-default member of the region-home alternate set
-  // (see /au, /nz, /uk, /sg, /ca — lib/seo.ts's regionHomeHreflang()). hreflang
+  // (see /au, /uk, /sg, /ca — lib/seo.ts's regionHomeHreflang()). hreflang
   // is reciprocal by spec: every page in the group must declare the full set,
-  // not just the five newer pages pointing back at this one.
+  // not just the four newer pages pointing back at this one.
   alternates: pageAlternates("/", { languages: regionHomeHreflang() }),
 };
 
@@ -96,7 +96,7 @@ export const metadata: Metadata = {
 const FAQS: { q: string; a: string }[] = [
   {
     q: "Where can I buy Riftbound cards?",
-    a: "RiftCompare compares live Riftbound prices across a wide range of local stores in Australia, New Zealand, the US, the UK, Singapore and Canada, plus eBay (AU, US, UK, SG and CA), so you can buy Riftbound cards from whichever shop is cheapest. Search any card to see every store's price and click straight through to buy.",
+    a: "RiftCompare compares live Riftbound prices across a wide range of local stores in Australia, the US, the UK, Singapore and Canada, plus eBay (AU, US, UK, SG and CA), so you can buy Riftbound cards from whichever shop is cheapest. Search any card to see every store's price and click straight through to buy.",
   },
   {
     q: "How do I find the cheapest Riftbound prices?",
@@ -108,7 +108,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "Are the Riftbound prices shown in my local currency?",
-    a: "Yes. Prices are shown in the local currency of your selected market — AUD in Australia, NZD in New Zealand, USD in the US, GBP in the UK, SGD in Singapore and CAD in Canada — so there are no surprise currency conversions.",
+    a: "Yes. Prices are shown in the local currency of your selected market — AUD in Australia, USD in the US, GBP in the UK, SGD in Singapore and CAD in Canada — so there are no surprise currency conversions.",
   },
 ];
 
@@ -117,7 +117,7 @@ export default async function HomePage() {
   // "Australia"); CardTile re-prices to the visitor's market after hydration.
   // The copy Google indexes (hero, FAQs, about) is market-neutral.
   const country = DEFAULT_COUNTRY;
-  const COUNTRY_CODES: Country[] = ["AU", "NZ", "US", "UK", "SG", "CA"];
+  const COUNTRY_CODES: Country[] = ["AU", "US", "UK", "SG", "CA"];
   const [
     { totalCards, statsByCountry, freshness },
     popularCards,
@@ -194,7 +194,7 @@ export default async function HomePage() {
 
       {/* Everything below the hero — Market Pulse, Today's Top Deals, the
           popular-cards carousel, How It Works, Explore, reviews, partners —
-          shared with the 5 region home pages (/au, /nz, /uk, /sg, /ca) via
+          shared with the 4 region home pages (/au, /uk, /sg, /ca) via
           HomeSections, so a visitor who picks a market in the hero toggle gets
           the SAME feature set, not a stripped-down page. See HomeSections.tsx. */}
       <HomeSections
@@ -211,7 +211,7 @@ export default async function HomePage() {
 
       {/* About + FAQ — keyword-relevant content for search */}
       <section className="card-surface p-6">
-        <h2 className="text-xl font-extrabold text-white">Riftbound prices in Australia, New Zealand, the US, the UK, Singapore and Canada — all in one place</h2>
+        <h2 className="text-xl font-extrabold text-white">Riftbound prices in Australia, the US, the UK, Singapore and Canada — all in one place</h2>
         {/* Full width, matching the heading above — a capped/centred measure
             here just shifted the paragraph out of alignment with the heading
             (text starting a third of the way across the card reads as broken,
@@ -258,7 +258,7 @@ export default async function HomePage() {
               name: "RiftCompare — Riftbound Card Database & Price Comparison",
               href: "/",
               description:
-                "Compare live Riftbound TCG card prices across stores in the US, UK, Australia, New Zealand, Canada and Singapore — total cost including shipping, no hidden fees.",
+                "Compare live Riftbound TCG card prices across stores in the US, UK, Australia, Canada and Singapore — total cost including shipping, no hidden fees.",
             }),
             // Matches the visible FAQ accordion in the About+FAQ section above
             // exactly (same FAQS array) — faqPage() is the shared builder every

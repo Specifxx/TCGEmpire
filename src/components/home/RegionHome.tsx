@@ -9,9 +9,9 @@ import { CinematicHero } from "./CinematicHero";
 import { HomeSections } from "./HomeSections";
 import { webPage, faqPage, breadcrumb, ldJson } from "@/lib/jsonld";
 
-const COUNTRY_CODES: Country[] = ["AU", "NZ", "US", "UK", "SG", "CA"];
+const COUNTRY_CODES: Country[] = ["AU", "US", "UK", "SG", "CA"];
 
-// Region home pages (/au, /nz, /uk, /sg, /ca — see app/au/page.tsx etc): the
+// Region home pages (/au, /uk, /sg, /ca — see app/au/page.tsx etc): the
 // homepage's own hero/search/stat building blocks, reused rather than
 // duplicated, PLUS the exact same feature set as "/" (Today's Top Deals,
 // Market Pulse, the popular-cards carousel, How It Works, Explore, reviews,
@@ -20,10 +20,10 @@ const COUNTRY_CODES: Country[] = ["AU", "NZ", "US", "UK", "SG", "CA"];
 // own buying guide, a region-scoped FAQ).
 //
 // AN EARLIER VERSION OF THIS PAGE deliberately left HomeSections' entire
-// feature set out, reasoning that six near-identical copies of it would be
+// feature set out, reasoning that five near-identical copies of it would be
 // the near-duplicate-content problem this site's SEO work has fought
 // elsewhere. In practice that made the region toggle in the hero feel
-// broken: picking AU/NZ/UK/SG/CA silently dropped the site down to a stub
+// broken: picking AU/UK/SG/CA silently dropped the site down to a stub
 // page with the deals ticker, movers, popular cards and How It Works all
 // gone. A visitor who picks a market must land on the SAME site, not a
 // thinner one — see the region-specific block below for how the genuine

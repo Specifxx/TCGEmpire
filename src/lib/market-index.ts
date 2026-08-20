@@ -179,7 +179,7 @@ async function computeRegionIndex(country: Country): Promise<MarketIndex | null>
     select: {
       id: true, name: true, slug: true, setCode: true, collectorNumber: true,
       imageThumbUrl: true, searchCount: true,
-      lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true,
+      lowestPriceCents: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true,
     },
   });
   if (cards.length < 5) return null; // not enough market to index

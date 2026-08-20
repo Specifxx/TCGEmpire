@@ -1,5 +1,5 @@
 // Shared per-market stat tiles + freshness signal for the homepage hero, factored
-// out so the 5 region home pages (/au, /nz, /uk, /sg, /ca — see app/[region]/page.tsx)
+// out so the 4 region home pages (/au, /uk, /sg, /ca — see app/[region]/page.tsx)
 // can show a real, region-scoped first-paint stat without re-deriving this query set
 // or drifting from the homepage's own numbers.
 //
@@ -16,7 +16,7 @@ import { CONTENT_TAG } from "./revalidate-content";
 import { timeAgo } from "./format";
 import type { MarketStat } from "@/components/home/HeroStats";
 
-const COUNTRY_CODES: Country[] = ["AU", "NZ", "US", "UK", "SG", "CA"];
+const COUNTRY_CODES: Country[] = ["AU", "US", "UK", "SG", "CA"];
 
 export interface HomeStats {
   totalCards: number;

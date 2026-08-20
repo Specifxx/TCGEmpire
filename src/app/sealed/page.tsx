@@ -42,11 +42,9 @@ const csvParam = (v?: string | string[]) => one(v).split(",").map((s) => s.trim(
 const isFilteredParams = (sp: SealedParams) =>
   Boolean(one(sp.q) || one(sp.type) || one(sp.set) || one(sp.min) || one(sp.max) || one(sp.instock) || one(sp.atmsrp));
 
-// Marketplace hosts per site market (NZ has no local eBay/Amazon — the AU sites
-// are the closest and ship there).
+// Marketplace hosts per site market.
 const MARKETPLACE_HOSTS: Record<string, { ebay: string; amazon: string }> = {
   AU: { ebay: "ebay.com.au", amazon: "amazon.com.au" },
-  NZ: { ebay: "ebay.com.au", amazon: "amazon.com.au" },
   US: { ebay: "ebay.com", amazon: "amazon.com" },
   UK: { ebay: "ebay.co.uk", amazon: "amazon.co.uk" },
 };
@@ -68,7 +66,7 @@ export async function generateMetadata({ searchParams }: { searchParams: SealedP
       ? `${q} — Riftbound sealed products`
       : "Riftbound Sealed Prices — Boxes, Packs & Sets",
     description:
-      "Compare live prices on Riftbound booster boxes, packs, bundles & Proving Grounds across AU, NZ, US, UK & SG stores — find the cheapest sealed. Updated daily.",
+      "Compare live prices on Riftbound booster boxes, packs, bundles & Proving Grounds across AU, US, UK & SG stores — find the cheapest sealed. Updated daily.",
     alternates: pageAlternates("/sealed"),
     robots: isFilteredParams(searchParams) ? { index: false, follow: true } : undefined,
   };
@@ -77,7 +75,7 @@ export async function generateMetadata({ searchParams }: { searchParams: SealedP
 export default async function SealedPage({ searchParams }: { searchParams: SealedParams }) {
   const country = getCountry();
   const info = COUNTRIES[country];
-  // Sealed data is sourced per market (AU/NZ stores + US TCGplayer). For a market
+  // Sealed data is sourced per market (AU stores + US TCGplayer). For a market
   // with no rows of its own (e.g. UK), fall back to the default market so the page
   // is never blank — and price it in that market's currency so the currency stays
   // honest.

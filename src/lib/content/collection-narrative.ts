@@ -103,7 +103,7 @@ export function buildCollectionNarrative(c: CollectionInput): string[] {
   if (!priced.length) {
     out.push(
       `Every card below links to its own page with its full text, its printings, and price comparison across ` +
-        `Australia, New Zealand, the United States, the United Kingdom, Singapore and Canada.`,
+        `Australia, the United States, the United Kingdom, Singapore and Canada.`,
     );
     return out;
   }

@@ -86,7 +86,6 @@ async function main() {
           isPromo: true,
           slug: cardSlug({ name: base.name, setCode: base.setCode, collectorNumber, isPromo: true }),
           lowestPriceCents: null,
-          lowestPriceCentsNz: null,
           lowestPriceCentsUs: null,
           lowestPriceCentsUk: null,
           lowestPriceCentsSg: null,

@@ -47,7 +47,7 @@ const poolForSet = unstable_cache(
         variant: true, isOvernumbered: true, isPromo: true,
         type: true, // the rune slot needs to find actual Rune cards
         imageThumbUrl: true,
-        lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true,
+        lowestPriceCents: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true,
       },
       take: 2000,
     });

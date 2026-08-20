@@ -7,12 +7,12 @@ import { REGION_HOME_PATH, regionHomeHreflang, regionHomeMetadata } from "../src
 const ROOT = join(__dirname, "..");
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 
-// Region-specific indexable pages: /au /nz /uk /sg /ca, reusing the homepage's
+// Region-specific indexable pages: /au /uk /sg /ca, reusing the homepage's
 // hero components with a region-locked stat block, a self-referencing canonical,
-// and hreflang across all 6 markets (the 5 new pages plus "/" itself).
+// and hreflang across all 5 markets (the 4 new pages plus "/" itself).
 
 test("a route file exists for every non-US region", () => {
-  for (const [country, dir] of [["AU", "au"], ["NZ", "nz"], ["UK", "uk"], ["SG", "sg"], ["CA", "ca"]] as const) {
+  for (const [country, dir] of [["AU", "au"], ["UK", "uk"], ["SG", "sg"], ["CA", "ca"]] as const) {
     const p = `src/app/${dir}/page.tsx`;
     assert.ok(existsSync(join(ROOT, p)), `expected ${p} for ${country}`);
     const src = read(p);
@@ -33,18 +33,18 @@ test("REGION_HOME_PATH maps every market to a distinct path, US to \"/\"", () =>
 
 test("regionHomeHreflang() is reciprocal — every market's own page is present, plus x-default", () => {
   const map = regionHomeHreflang();
-  assert.equal(Object.keys(map).length, 7, "6 markets + x-default");
+  assert.equal(Object.keys(map).length, 6, "5 markets + x-default");
   assert.equal(map["en-GB"], `${new URL(map["x-default"]).origin}/uk`, "UK's region subtag must be GB, not UK");
   assert.ok(map["x-default"].endsWith("/") || !map["x-default"].includes("//", 8), "x-default must point at the bare origin (\"/\")");
 });
 
 test("every region page's metadata self-references its own canonical and carries the full hreflang set", () => {
-  for (const country of ["AU", "NZ", "UK", "SG", "CA"] as const) {
+  for (const country of ["AU", "UK", "SG", "CA"] as const) {
     const meta = regionHomeMetadata(country);
     assert.equal(meta.alternates?.canonical, REGION_HOME_PATH[country]);
     const languages = meta.alternates?.languages as Record<string, string> | undefined;
     assert.ok(languages, `${country} region page must declare hreflang alternates`);
-    assert.equal(Object.keys(languages).length, 7);
+    assert.equal(Object.keys(languages).length, 6);
   }
 });
 

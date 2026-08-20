@@ -55,7 +55,6 @@ test("the priced decision drives both lastmod and priority", () => {
 test("hasAnyMarketPrice sees a card priced in any single market", () => {
   const bare = {
     lowestPriceCents: null,
-    lowestPriceCentsNz: null,
     lowestPriceCentsUs: null,
     lowestPriceCentsUk: null,
     lowestPriceCentsSg: null,

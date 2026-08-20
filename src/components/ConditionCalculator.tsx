@@ -17,7 +17,6 @@ import type { Country } from "@/lib/country";
 const lowestFor = (c: SearchCard, country: Country): number | null =>
   country === "US" ? c.lowestPriceCentsUs ?? null
   : country === "UK" ? c.lowestPriceCentsUk ?? null
-  : country === "NZ" ? c.lowestPriceCentsNz ?? null
   : country === "SG" ? c.lowestPriceCentsSg ?? null
   : country === "CA" ? c.lowestPriceCentsCa ?? null
   : c.lowestPriceCents;

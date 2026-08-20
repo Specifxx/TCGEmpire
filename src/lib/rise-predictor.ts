@@ -25,7 +25,7 @@ import { zScores, percentileRanks, spearman, mean, median, clamp } from "./stats
 // neutral — so GLOBAL uses each card's best-covered market series for timing and its
 // total cross-market supply. The DISPLAYED price uses that card's basis market.
 export type RiseScope = Country | "GLOBAL";
-const MARKET_PREF: Country[] = ["AU", "US", "NZ", "UK"]; // reference order for a GLOBAL card's displayed price
+const MARKET_PREF: Country[] = ["AU", "US", "UK"]; // reference order for a GLOBAL card's displayed price
 
 const SCAN = 400; // universe: most-searched priced cards
 const HISTORY_DAYS = 120;
@@ -125,7 +125,6 @@ type UniverseCard = {
   searchCount: number;
   viewCount: number;
   lowestPriceCents: number | null;
-  lowestPriceCentsNz: number | null;
   lowestPriceCentsUs: number | null;
   lowestPriceCentsUk: number | null;
   lowestPriceCentsSg: number | null;
@@ -177,7 +176,6 @@ export async function getRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
     ? {
         OR: [
           { lowestPriceCents: { not: null } },
-          { lowestPriceCentsNz: { not: null } },
           { lowestPriceCentsUs: { not: null } },
           { lowestPriceCentsUk: { not: null } },
         ],
@@ -192,7 +190,7 @@ export async function getRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
       id: true, slug: true, name: true, setCode: true, collectorNumber: true,
       variant: true, isPromo: true, rarity: true, imageThumbUrl: true,
       searchCount: true, viewCount: true,
-      lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true,
+      lowestPriceCents: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true,
     },
   })) as UniverseCard[];
 

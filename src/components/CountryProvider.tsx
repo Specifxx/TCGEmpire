@@ -8,7 +8,7 @@ import { gbpCentsToEur } from "@/lib/fx";
 import { useMe } from "@/lib/use-me";
 import { trackEvent } from "@/lib/analytics";
 
-type PricedCard = { lowestPriceCents: number | null; lowestPriceCentsNz?: number | null; lowestPriceCentsUs?: number | null; lowestPriceCentsUk?: number | null; lowestPriceCentsCa?: number | null; lowestPriceCentsSg?: number | null };
+type PricedCard = { lowestPriceCents: number | null; lowestPriceCentsUs?: number | null; lowestPriceCentsUk?: number | null; lowestPriceCentsCa?: number | null; lowestPriceCentsSg?: number | null };
 
 interface CountryCtx {
   country: Country;
@@ -107,7 +107,7 @@ export function CountryProvider({ initial, children }: { initial: Country; child
   // client-localised prices match the user's actual choice. Runs
   // post-hydration, so it can't cause a hydration mismatch. First-time
   // visitors with no cookie get one geo-detection fetch (/api/geo reads
-  // Vercel's IP-country header) so NZ/US/UK visitors still land on their
+  // Vercel's IP-country header) so AU/US/UK visitors still land on their
   // local market automatically — and an EU visitor lands on UK stores with
   // EUR display (see the eur_display cookie below).
   useEffect(() => {
