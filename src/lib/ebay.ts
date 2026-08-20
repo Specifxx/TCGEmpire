@@ -167,8 +167,8 @@ const NUMBER_RANGE = /\b([a-z]{1,3})\d{1,3}\s*[-–—]\s*\1\d{1,3}\b/i;
 // far above, so it leaked into the price table as a wrong "cheapest". That makes
 // it correct to exclude from PRICE rows and wrong to exclude everywhere: no
 // tracked store lists slabs at all, so for graded copies eBay is the only market
-// there is. The auction search keeps them and flags them (EbayAuction.isGraded);
-// the price search still drops them, exactly as before.
+// there is. searchEbayLowest's captureGraded therefore splits them out into
+// EbayGradedListing rows; the price path still drops them, exactly as before.
 export const GRADED_SLAB = /\b(psa|bgs|cgc|sgc|graded|gem mint)\b/i;
 
 export function isGradedListing(title: string): boolean {
@@ -444,20 +444,20 @@ export interface EbayCardIdentity {
  * listing can silently disappear, and "0 results" looks identical whether eBay
  * returned nothing or we rejected everything it returned.
  *
- * It is ALSO the single definition of card identity, shared with the auction
- * search. Auctions are a different buying option, not a different card: a lot,
- * a Chinese printing, a promo where we wanted the base print or a signature
- * where we wanted the plain overnumbered is exactly as wrong under a bid as it
- * is under a fixed price. Two copies of these rules would drift, and the auction
- * copy would drift silently — nobody checks a widget as closely as the price
- * table.
+ * It is ALSO the single definition of card identity, shared with the graded
+ * pass (`allowGraded`). A slab is a different CONDITION of the card, not a
+ * different card: a lot, a Chinese printing, a promo where we wanted the base
+ * print or a signature where we wanted the plain overnumbered is exactly as
+ * wrong in a slab as it is raw. Two copies of these rules would drift, and the
+ * widget's copy would drift silently — nobody checks a widget as closely as the
+ * price table.
  */
 export function cardIdentityStages(
   card: EbayCardIdentity,
-  // Keep graded slabs. Only the auction search sets this: a slab is genuinely
-  // this card, just not comparable to a raw copy — see GRADED_SLAB. Auctions
-  // never become price rows, so there is nothing for it to distort, and slabs
-  // are the one tier our store comparison cannot cover at all.
+  // Keep graded slabs. Only searchEbayLowest's captureGraded path sets this: a
+  // slab is genuinely this card, just not comparable to a raw copy — see
+  // GRADED_SLAB. Those rows never become price rows, so there is nothing for it
+  // to distort, and slabs are the one tier our store comparison cannot cover.
   opts: { allowGraded?: boolean } = {},
 ): { stage: string; pred: (it: any) => boolean }[] {
   const n = parseInt(card.number.replace(/[^0-9]/g, ""), 10);
@@ -806,7 +806,7 @@ export async function searchEbayLowest(
 
   let cur: any[] = items;
   if (funnel) funnel.push({ stage: "eBay returned", kept: items.length, dropped: 0, samples: [] });
-  // Identity stages come from cardIdentityStages() so the auction search applies
+  // Identity stages come from cardIdentityStages() so every eBay pass applies
   // the identical rules — see its doc comment. Each is still recorded separately
   // in the funnel, which is what makes "0 results" attributable to a stage.
   //
@@ -853,134 +853,6 @@ export async function searchEbayLowest(
 
   if (!best) return null;
   return mapEbayItem(best);
-}
-
-export interface EbayAuctionResult {
-  itemId: string;
-  currentBidCents: number;
-  bidCount: number;
-  buyItNowCents: number | null;
-  currency: string;
-  endsAt: Date;
-  url: string;
-  title: string;
-  condition?: string;
-  imageUrl: string | null;
-  isGraded: boolean;
-}
-
-/**
- * LIVE AUCTIONS for one chase-tier card. Never a price source — see the
- * EbayAuction model comment for why a current bid must not reach RetailerPrice.
- *
- * A SEPARATE Browse call rather than relaxing searchEbayLowest's filter, which
- * would have been free. Two reasons it isn't worth the saving:
- *
- *  1. That call uses `sort=price` with a finite window. Auction items enter the
- *     result set at their CURRENT BID, which for a chase card starts near zero,
- *     so they sort to the front and push genuine fixed-price listings out of the
- *     window — degrading the price table on exactly the expensive cards it
- *     matters most for.
- *  2. The two searches want different filters: the price search must reject
- *     graded slabs, this one specifically wants them.
- *
- * Sorted by soonest-ending, not by price: an auction's value here is its
- * deadline, and it is also the only ordering that puts the listings most likely
- * to still be live when a reader sees them at the top.
- */
-export async function searchEbayAuctions(
-  card: EbayCardIdentity & { marketplace?: string },
-  limit = 3,
-): Promise<EbayAuctionResult[]> {
-  const token = await getToken();
-  if (!token) return [];
-
-  // Same two-query shape as searchEbayLowest — sellers of chase cards routinely
-  // omit "Riftbound" from the title, and Browse ANDs every keyword. The broad
-  // query runs only if the strict one is empty.
-  const queries = [buildQuery(card, true), buildQuery(card, false)];
-  const params = new URLSearchParams({
-    q: queries[0],
-    filter: "buyingOptions:{AUCTION}",
-    // Soonest-closing first. `sort=endingSoonest` is Browse's own auction
-    // ordering; anything else would rank by a bid that means little mid-auction.
-    sort: "endingSoonest",
-    limit: "50",
-  });
-  const headers: Record<string, string> = {
-    Authorization: `Bearer ${token}`,
-    "X-EBAY-C-MARKETPLACE-ID": card.marketplace ?? DEFAULT_MARKETPLACE,
-  };
-  if (EBAY_CAMPAIGN_ID) headers["X-EBAY-C-ENDUSERCTX"] = `affiliateCampaignId=${EBAY_CAMPAIGN_ID}`;
-
-  if (!spend()) return [];
-
-  let items: any[] = [];
-  try {
-    const res = await fetch(`${SEARCH_URL}?${params}`, { headers });
-    if (res.status === 429) {
-      rateLimited = true;
-      return [];
-    }
-    if (!res.ok) return [];
-    items = (await res.json())?.itemSummaries ?? [];
-  } catch {
-    return [];
-  }
-
-  if (items.length === 0 && queries[1] !== queries[0] && spend()) {
-    const retry = new URLSearchParams(params);
-    retry.set("q", queries[1]);
-    try {
-      const res2 = await fetch(`${SEARCH_URL}?${retry}`, { headers });
-      if (res2.status === 429) rateLimited = true;
-      else if (res2.ok) items = (await res2.json())?.itemSummaries ?? [];
-    } catch {
-      /* keep the empty result */
-    }
-  }
-
-  const stages = cardIdentityStages(card, { allowGraded: true });
-  const now = Date.now();
-
-  return items
-    .filter((it) => stages.every((s) => s.pred(it)))
-    .map((it) => mapEbayAuction(it))
-    // An auction with no end date cannot be shown: the countdown, the staleness
-    // guard and the ordering all key off it, and a listing we cannot expire is
-    // the failure mode this feature most has to avoid.
-    .filter((a): a is EbayAuctionResult => a !== null && a.endsAt.getTime() > now)
-    .slice(0, limit);
-}
-
-function mapEbayAuction(it: any): EbayAuctionResult | null {
-  const end = it?.itemEndDate ? new Date(it.itemEndDate) : null;
-  if (!end || Number.isNaN(end.getTime())) return null;
-  const itemId = String(it?.itemId ?? "");
-  if (!itemId) return null;
-
-  // Browse reports an auction's live bid in currentBidPrice; `price` mirrors it
-  // for auction items but is the BIN figure on an auction-with-Buy-It-Now, so
-  // reading `price` alone would show the BIN as if it were the bid.
-  const bid = it?.currentBidPrice ?? it?.price;
-  if (!bid?.value) return null;
-  const options: string[] = it?.buyingOptions ?? [];
-  const hasBin = options.includes("FIXED_PRICE");
-  const binValue = hasBin ? it?.price?.value : null;
-
-  return {
-    itemId,
-    currentBidCents: Math.round(parseFloat(bid.value) * 100),
-    bidCount: Number(it?.bidCount ?? 0),
-    buyItNowCents: binValue != null ? Math.round(parseFloat(binValue) * 100) : null,
-    currency: bid.currency ?? it?.price?.currency ?? "USD",
-    endsAt: end,
-    url: ebayAffiliateUrl(it.itemAffiliateWebUrl ?? it.itemWebUrl, "auction"),
-    title: it.title,
-    condition: it.condition,
-    imageUrl: it.image?.imageUrl ?? it.thumbnailImages?.[0]?.imageUrl ?? null,
-    isGraded: isGradedListing(it.title ?? ""),
-  };
 }
 
 // Keyword each sealed product type must appear as in an eBay title.

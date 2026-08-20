@@ -1224,15 +1224,14 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               Live listings including used, graded and international sellers — a useful cross-check
               on the store prices above, and often the only source for older printings.
             </p>
-            {/* Listings / Graded / Auctions. Extra tabs appear only when this
-                card has that kind of listing in the visitor's market, so an
-                ordinary card still shows exactly the single carousel it always
-                did, with no tab chrome at all. Chase cards get the full set.
+            {/* Listings / Graded. The Graded tab appears only when this card
+                has slabs in the visitor's market, so an ordinary card still
+                shows exactly the single carousel it always did, with no tab
+                chrome at all.
 
-                All three sit BELOW the price comparison and outside it. A slab
-                and a current bid are both real, and neither is a price you can
-                compare against a store — see the EbayAuction and
-                EbayGradedListing model comments for what letting either into
+                Both sit BELOW the price comparison and outside it. A slab is
+                real but is not a price you can compare against a store — see
+                the EbayGradedListing model comment for what letting one into
                 RetailerPrice would break. */}
             <EbayCardPanel cardId={card.id} query={cardSearchName(card.name, card)} className="mt-3" />
           </section>

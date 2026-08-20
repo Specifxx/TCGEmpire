@@ -170,7 +170,10 @@ test("the chase pass NEVER deletes rows it did not refresh", () => {
   // writes back only the subset — ~600 cards' prices gone, twice a day, silently.
   const src = read("src/lib/price-import.ts");
   const fn = src.slice(src.indexOf("export async function refreshEbayChasePrintings"));
-  const body = fn.slice(0, fn.indexOf("\n/**"));
+  // Ends at the function's own closing brace (column 0) rather than at the next
+  // block comment: that boundary silently moved when the auction pass below it
+  // was deleted, and the slice then swallowed unrelated functions.
+  const body = fn.slice(0, fn.indexOf("\n}\n"));
   const deletes = body.match(/deleteMany\(\{[^}]*\}[^)]*\)/g) ?? [];
   assert.ok(deletes.length >= 3, "expected scoped deletes for prices, carousel and graded");
   for (const d of deletes) {
@@ -221,7 +224,7 @@ test("a failed search never deletes a price row", () => {
   // means one transient 5xx wipes a live price on a chase card, twice a day.
   const ebay = read("src/lib/ebay.ts");
   const fn = ebay.slice(ebay.indexOf("export async function searchEbayLowest"));
-  const body = fn.slice(0, fn.indexOf("export async function searchEbayAuctions"));
+  const body = fn.slice(0, fn.indexOf("// Keyword each sealed product type"));
   // Every non-answer path must mark the call failed.
   assert.ok(body.includes("status?: { ok: boolean }"), "must expose a status out-param");
   assert.ok(
@@ -231,7 +234,7 @@ test("a failed search never deletes a price row", () => {
 
   const importer = read("src/lib/price-import.ts");
   const chase = importer.slice(importer.indexOf("export async function refreshEbayChasePrintings"));
-  const chaseBody = chase.slice(0, chase.indexOf("\n/**"));
+  const chaseBody = chase.slice(0, chase.indexOf("\n}\n"));
   assert.match(
     chaseBody,
     /if \(!status\.ok\) \{\s*reached\.delete\(c\.id\);/,
@@ -303,20 +306,9 @@ test("bare mode is only ever used where a parent discloses", () => {
   // AffiliateDisclosure's rule: if an affiliate link renders, its disclosure
   // renders. `bare` suppresses the inner one, so it is only safe under a parent
   // that provides one.
-  for (const f of ["src/components/EbayAdCarouselLive.tsx", "src/components/EbayAuctionsLive.tsx"]) {
+  for (const f of ["src/components/EbayAdCarouselLive.tsx"]) {
     const src = read(f);
     assert.match(src, /\{!bare && <AffiliateDisclosure|\{!bare && \(\s*<div className="border-t/, `${f} must gate its disclosure on !bare`);
   }
 });
 
-test("the auctions view does not remount on every countdown tick", () => {
-  // It re-renders once a minute. A component declared in the render body gets a
-  // new identity each time, so React would unmount and remount the whole list —
-  // restarting image loads and dropping focus once a minute.
-  const src = read("src/components/EbayAuctionsLive.tsx");
-  assert.ok(
-    !/const Shell = bare\s*\?\s*\(\{/.test(src),
-    "wrapper must not be a component defined inside render",
-  );
-  assert.match(src, /const body = \(/, "the wrapper should be chosen at the JSX level");
-});
