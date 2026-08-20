@@ -6,6 +6,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { cardHref } from "@/lib/card-url";
 import { cardDisplayName } from "@/lib/card-name";
 import { trackEvent } from "@/lib/analytics";
+import { useQuickView } from "./QuickView";
 import { useCountry } from "./CountryProvider";
 import type { CardTileData } from "./CardTile";
 import { cardImageAlt } from "@/lib/image-alt";
@@ -151,6 +152,7 @@ export function SearchBar({
 }) {
   const router = useRouter();
   const params = useSearchParams();
+  const { open: openQuickView } = useQuickView();
   const { fmt, price } = useCountry();
   const [value, setValue] = useState(params.get("q") ?? "");
   const [results, setResults] = useState<Result[]>([]);
@@ -370,24 +372,31 @@ export function SearchBar({
   // onClick below), only a modifier held on keyboard Enter does, since there
   // Enter has no native href-click to fall back on.
   //
-  // Real navigation to the card page, not QuickView — a search result used
-  // to open the modal instead of going anywhere, so the URL never changed,
-  // the back button did nothing useful, and every click cost an extra "close
-  // the modal, click again" round trip before a visitor could actually reach
-  // a buy button. QuickView itself is untouched (still used by Market Pulse,
-  // trending chips, card tiles elsewhere) — this only changes what a SEARCH
-  // result's own click does.
+  // Opens QuickView, not a real navigation — this used to push to the full
+  // card page instead, on the reasoning that the modal "never changed the URL
+  // and left the back button doing nothing useful." That reasoning doesn't
+  // hold up against what QuickView.tsx actually does: `open()` pushes
+  // /card/slug via history.pushState (so the URL bar, copy-link and
+  // share-this-card all work exactly as if it were a real navigation) and a
+  // popstate listener closes the modal on Back — see that file's own comment.
+  // What a search click SHOULD optimise for is what quickview_open's own
+  // tracking comment already says elsewhere in this codebase: query → result
+  // → looking at the card, with nothing in between. A full-page navigation
+  // means a slower page load AND leaving the search results (and whatever
+  // else was on screen) to get there; the modal keeps both. Every other
+  // QuickView entry point on the site (CardTile, Market Pulse, trending
+  // chips) already opens the modal for exactly this reason — search is the
+  // one surface that had drifted from that pattern.
   function activateCardLike(card: Result, rank: number, resultType: "card" | "trending", newTab: boolean) {
     trackCardView(card);
     trackEvent("search_suggestion_selected", { suggestion_rank: rank, result_type: resultType, query: value.trim(), card_id: card.id, variant });
-    const href = cardHref(card);
     if (newTab) {
-      window.open(href, "_blank", "noopener");
+      window.open(cardHref(card), "_blank", "noopener");
       return;
     }
     setOpen(false);
     setActiveIndex(-1);
-    router.push(href);
+    openQuickView(card);
   }
 
   // Keyboard-only counterpart to the sealed row's onClick below (which relies
