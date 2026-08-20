@@ -63,7 +63,7 @@ export function SignupPromoPopup({
     // of interruption that rule exists to rule out, on the one page this
     // whole task is about making a single, uninterrupted job. It's left
     // fully live everywhere else (149 other routes, unchanged, still firing
-    // on its own 25s delay) — this component and its sitewide behavior
+    // on its own short delay) — this component and its sitewide behavior
     // predate this task and are out of its stated scope everywhere except
     // the homepage itself, where the brief's rule is unambiguous. See
     // DECISIONS.md's Phase 5 section for the full reasoning.
