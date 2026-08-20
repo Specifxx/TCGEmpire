@@ -111,10 +111,28 @@ const BIG_RESULT_BYTES = 1_000_000;
 // that cannot serve a single request. Freshness is worth nothing from a project
 // that won't connect.
 //
-// RM5 is therefore the real rollback: older data, but allowance left as of
+// RM8 SITS DIRECTLY BEHIND RM7 as the designated rollback for when RM7 spends
+// its allowance — every project before it has, within days. RM5 stays behind
+// RM8 as the second rollback: real (if older) data, allowance left as of
 // 2026-08-20. Prefer "answers at all" over "answers with the newest rows" —
 // that is the whole job of this list. Revisit when RM6's allowance resets at
 // the start of the next billing month, at which point it can move back up.
+//
+// ⚠ TWO THINGS TO KNOW BEFORE RELYING ON RM8.
+//
+// 1. THIS IS NOT AUTOMATIC FAILOVER. `||` falls through on an UNSET variable,
+//    not on an unreachable database. An exhausted RM7 is still SET, so this
+//    chain keeps choosing it and the site keeps failing. Promoting RM8 is a
+//    deliberate act: UNSET RM7 in Vercel (and GitHub), redeploy, and RM8 takes
+//    over. Health-based failover would mean a live connection check on every
+//    cold start, which costs a round trip on the very database whose transfer
+//    allowance is the problem — so this stays manual on purpose.
+//
+// 2. AN EMPTY RM8 IS WORSE THAN A STALE RM5. A fallback only helps if it holds
+//    data; restoring onto an empty project is exactly how production served
+//    404s during the 2026-08-20 cutover. Run maintenance.yml's
+//    `migrate-main-db-to-rm8` (RM7 → RM8) and keep re-running it periodically,
+//    or RM8 is a fallback to a blank site.
 //
 // Do NOT delete DATABASE_URL: several scripts and Prisma itself still read that
 // literal name, so unsetting it breaks far more than it tidies.
@@ -127,6 +145,7 @@ const BIG_RESULT_BYTES = 1_000_000;
 // the site reads one database while the importers write to another.
 const OPERATIONAL_URL =
   process.env.RM7 ||
+  process.env.RM8 ||
   process.env.RM5 ||
   process.env.DATABASE_URL_2 ||
   process.env.DATABASE_URL ||
@@ -164,6 +183,8 @@ function withConnectTimeout(url: string | undefined, seconds: number): string | 
 // environment, so we silently fell back to the exhausted old database".
 const RESOLVED_SOURCE = process.env.RM7
   ? "RM7"
+  : process.env.RM8
+  ? "RM8"
   : process.env.RM5
   ? "RM5"
   : process.env.DATABASE_URL_2
@@ -198,8 +219,8 @@ export const OPERATIONAL_URL_SOURCE = process.env.DB_SOURCE_NAME || RESOLVED_SOU
 if (OPERATIONAL_URL_SOURCE !== "RM7") {
   console.warn(
     `[db] operational database resolved from ${OPERATIONAL_URL_SOURCE}, not RM7. ` +
-      `RM7 is the current project (cut over 2026-08-20); RM5 is the ` +
-      `rollback and everything below it is exhausted/read-only (RM6 last of all — freshest data, but its ` +
+      `RM7 is the current project (cut over 2026-08-20); RM8 is the designated rollback and RM5 the one behind it; ` +
+      `everything below them is exhausted/read-only (RM6 last of all — freshest data, but its ` +
       `allowance is spent, so it cannot serve), kept only so a deploy can't hard-fail. ` +
       `If this appears in a Vercel build log, RM7 is missing from that environment.`
   );

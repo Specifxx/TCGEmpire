@@ -49,15 +49,15 @@ CURRENT_HIST="HISTORY_DATABASE_URL_3"
 # GATES ON THE WHOLE OPERATIONAL CHAIN, not bare DATABASE_URL. The original check
 # was `['production','preview'].includes(VERCEL_ENV) && DATABASE_URL`, written when
 # DATABASE_URL was the only operational variable. It has since become
-# RM7 || RM6 || DATABASE_URL_2 || DATABASE_URL || RM5 || RM4 || RM3 (lib/db.ts), and lib/db.ts explicitly
+# RM7 || RM8 || RM5 || DATABASE_URL_2 || DATABASE_URL || RM4 || RM3 || RM6 (lib/db.ts), and lib/db.ts explicitly
 # tells the owner the older vars can eventually be deleted — at which point
 # this line would exit 0 on every deploy and silently stop pushing schema to
 # BOTH the operational AND the history database, while logging a
 # benign-looking "skipping". A green deploy against an un-migrated database is
 # exactly the failure this script exists to prevent.
 if ! { [ "${VERCEL_ENV:-}" = "production" ] || [ "${VERCEL_ENV:-}" = "preview" ]; } \
-   || [ -z "${RM7:-}${RM5:-}${DATABASE_URL_2:-}${DATABASE_URL:-}${RM4:-}${RM3:-}${RM6:-}" ]; then
-  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM7 / RM5 / DATABASE_URL_2 / DATABASE_URL / RM4 / RM3 / RM6) — skipping schema push."
+   || [ -z "${RM7:-}${RM8:-}${RM5:-}${DATABASE_URL_2:-}${DATABASE_URL:-}${RM4:-}${RM3:-}${RM6:-}" ]; then
+  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM7 / RM8 / RM5 / DATABASE_URL_2 / DATABASE_URL / RM4 / RM3 / RM6) — skipping schema push."
   exit 0
 fi
 
@@ -75,6 +75,12 @@ fi
 if [ -n "${RM7:-}" ]; then
   export DATABASE_URL="$RM7"
   SOURCE="RM7"
+elif [ -n "${RM8:-}" ]; then
+  # The designated rollback for when RM7 spends its allowance. Reached only by
+  # UNSETTING RM7 — this chain falls through on an unset variable, never on an
+  # unreachable database. See the note on OPERATIONAL_URL in src/lib/db.ts.
+  export DATABASE_URL="$RM8"
+  SOURCE="RM8"
 elif [ -n "${RM5:-}" ]; then
   export DATABASE_URL="$RM5"
   SOURCE="RM5"
