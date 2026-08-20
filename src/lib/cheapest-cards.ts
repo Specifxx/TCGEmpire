@@ -1,6 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
-import { buildCardWhere, buildCardOrderBy, cardTileSelect } from "./cards";
+import { buildCardWhere, buildCardOrderBy, cardTileSelect, withStoreCounts } from "./cards";
 import { DEFAULT_COUNTRY, pickPrice, priceField, type Country } from "./country";
 import type { CardTileData } from "@/components/CardTile";
 
@@ -22,7 +22,11 @@ export async function getPopularCards(limit = 12, country: Country = DEFAULT_COU
     take: limit,
     select: cardTileSelect(country),
   })) as CardTileData[];
-  return cards;
+  // Ship EVERY market's in-stock count, not just `country`'s. The homepage
+  // renders this with DEFAULT_COUNTRY and is then ISR-cached while CardTile
+  // re-prices to the visitor's market on the client, so a count baked for one
+  // market would sit beside another market's price. See storeCountsByCountry.
+  return withStoreCounts(cards);
 }
 
 // "Cheapest cards" — the lowest-priced Riftbound singles in the visitor's market,
@@ -40,13 +44,14 @@ export async function getCheapestCards(limit = 12, country: Country = DEFAULT_CO
     select: cardTileSelect(country),
   })) as CardTileData[];
 
-  return cards
+  const ranked = cards
     .sort(
       (a, b) =>
         (pickPrice(a, country)! - pickPrice(b, country)!) ||
         b._count.retailerPrices - a._count.retailerPrices
     )
     .slice(0, limit);
+  return withStoreCounts(ranked);
 }
 
 // "Most valuable cards" — the highest-priced Riftbound singles in the visitor's
@@ -60,7 +65,7 @@ export async function getValuableCards(limit = 12, country: Country = DEFAULT_CO
     take: limit,
     select: cardTileSelect(country),
   })) as CardTileData[];
-  return cards;
+  return withStoreCounts(cards);
 }
 
 // Editorial display-order tiebreak among priced Signature Legends — these
@@ -97,7 +102,7 @@ export async function getChaseCards(limit = 8, country: Country = DEFAULT_COUNTR
   // Array#sort is stable — this reorders by tier while preserving the
   // price-desc (nulls-last) order the query already gave within each tier.
   signatures.sort((a, b) => chaseSortTier(a.name) - chaseSortTier(b.name));
-  if (signatures.length >= limit) return signatures;
+  if (signatures.length >= limit) return withStoreCounts(signatures);
   const pricedWhere = buildCardWhere({ set: setCode, priced: "1" }, country);
   const rest = (await prisma.card.findMany({
     where: { ...pricedWhere, id: { notIn: signatures.map((c) => c.id) } },
@@ -105,5 +110,5 @@ export async function getChaseCards(limit = 8, country: Country = DEFAULT_COUNTR
     take: limit - signatures.length,
     select: cardTileSelect(country),
   })) as CardTileData[];
-  return [...signatures, ...rest];
+  return withStoreCounts([...signatures, ...rest]);
 }

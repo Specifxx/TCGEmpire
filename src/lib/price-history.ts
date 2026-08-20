@@ -7,7 +7,7 @@
 import { unstable_cache } from "next/cache";
 import { prisma } from "./db";
 import { dbHistory } from "./db-history";
-import { cardTileSelect } from "./cards";
+import { cardTileSelect, withStoreCounts } from "./cards";
 import { DEFAULT_COUNTRY, type Country } from "./country";
 import type { CardTileData } from "@/components/CardTile";
 import { CONTENT_TAG } from "./revalidate-content";
@@ -159,7 +159,13 @@ async function computePriceMovers(country: Country, limit: number): Promise<Pric
   // Hydrate tile data for every card we'll show (in the requested market's currency).
   const ids = Array.from(new Set([...spikingStats, ...plummetStats, ...valueStats].map((s) => s.cardId)));
   if (!ids.length) return empty;
-  const cards = await prisma.card.findMany({ where: { id: { in: ids } }, select: cardTileSelect(country) });
+  // withStoreCounts: this feed is hydrated for ONE market and rendered on the
+  // ISR-cached homepage, where CardTile re-prices to the visitor's market on the
+  // client — so the tile needs every market's in-stock count, not just this
+  // one's, or it shows one market's price beside another's store count.
+  const cards = await withStoreCounts(
+    await prisma.card.findMany({ where: { id: { in: ids } }, select: cardTileSelect(country) })
+  );
   const byId = new Map(cards.map((c) => [c.id, c as unknown as CardTileData]));
 
   const toMover = (s: Stat, ref: number, pct: number): Mover | null => {
@@ -247,10 +253,14 @@ async function computeRecentlyUpdated(country: Country, limit: number): Promise<
     stats.sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct));
     const top = stats.slice(0, Math.min(limit, RECENT_MAX));
 
-    const cards = await prisma.card.findMany({
-      where: { id: { in: top.map((s) => s.cardId) } },
-      select: cardTileSelect(country),
-    });
+    // Every market's in-stock count, for the same reason as computePriceMovers
+    // above: this renders on the ISR-cached homepage and re-prices client-side.
+    const cards = await withStoreCounts(
+      await prisma.card.findMany({
+        where: { id: { in: top.map((s) => s.cardId) } },
+        select: cardTileSelect(country),
+      })
+    );
     const byId = new Map(cards.map((c) => [c.id, c as unknown as CardTileData]));
 
     const out: RecentUpdate[] = [];
