@@ -14,7 +14,7 @@ import { LocaleProvider } from "@/components/LocaleProvider";
 import { PremiumProvider } from "@/components/PremiumProvider";
 import { PremiumDialogProvider } from "@/components/PremiumDialog";
 import { DEFAULT_COUNTRY } from "@/lib/country";
-import { CONTACT_EMAIL, DISCORD_URL, SITE_NAME, SITE_URL } from "@/lib/site";
+import { CONTACT_EMAIL, DISCORD_URL, FACEBOOK_URL, INSTAGRAM_URL, SITE_NAME, SITE_URL, X_URL } from "@/lib/site";
 import { IMPACT_SITE_VERIFICATION } from "@/lib/affiliate";
 import { MARKETPLACE_NAV_VISIBLE } from "@/components/nav-groups";
 import { FooterNav } from "@/components/FooterNav";
@@ -164,10 +164,10 @@ const orgJsonLd = {
       url: SITE_URL,
       logo: `${SITE_URL}/icon-512.png`,
       // Linked profiles — entity signals tying the org to its community presence.
-      // ADD real profile URLs here as they exist (X/Twitter, YouTube, Reddit) and a
-      // Wikidata item once created; each `sameAs` strengthens entity disambiguation
-      // for AI answer engines (Gemini/Perplexity) where brand signals outweigh links.
-      sameAs: [DISCORD_URL],
+      // ADD real profile URLs here as they exist (YouTube, Reddit) and a Wikidata
+      // item once created; each `sameAs` strengthens entity disambiguation for AI
+      // answer engines (Gemini/Perplexity) where brand signals outweigh links.
+      sameAs: [DISCORD_URL, INSTAGRAM_URL, X_URL, FACEBOOK_URL],
       // What this entity is authoritative about — helps NER map "RiftCompare" to the
       // specific TCG-pricing entity rather than a generic term.
       knowsAbout: [
@@ -380,6 +380,36 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               className="tap-link text-slate-300 hover:text-[#5865F2]"
             >
               Discord
+            </a>
+            <span className="text-ink-700">·</span>
+            {/* Same plain-external-link pattern as Discord above — official
+                social profiles, also listed in the Organization JSON-LD's
+                sameAs for entity-disambiguation SEO (see orgJsonLd below). */}
+            <a
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="tap-link text-slate-300 hover:text-[#E1306C]"
+            >
+              Instagram
+            </a>
+            <span className="text-ink-700">·</span>
+            <a
+              href={X_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="tap-link text-slate-300 hover:text-white"
+            >
+              X
+            </a>
+            <span className="text-ink-700">·</span>
+            <a
+              href={FACEBOOK_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="tap-link text-slate-300 hover:text-[#1877F2]"
+            >
+              Facebook
             </a>
             <span className="text-ink-700">·</span>
             {/* Re-opens Google's consent message (EEA/UK/CH only — renders

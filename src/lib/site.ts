@@ -12,6 +12,12 @@ export const SITE_NAME = "RiftCompare";
 // Community Discord invite (permanent; opens in a new tab from the navbar icon).
 export const DISCORD_URL = "https://discord.gg/NypdmfAMTa";
 
+// Official social profiles — shown in the footer and listed in the Organization
+// JSON-LD's sameAs (see app/layout.tsx) for entity-disambiguation SEO.
+export const INSTAGRAM_URL = "https://www.instagram.com/riftcompare/";
+export const X_URL = "https://x.com/RiftCompareTCG";
+export const FACEBOOK_URL = "https://www.facebook.com/profile.php?id=61591482521945";
+
 // Canonical origin (no trailing slash). Used for metadata, sitemap and robots.
 export const SITE_URL = "https://riftcompare.com";
 
