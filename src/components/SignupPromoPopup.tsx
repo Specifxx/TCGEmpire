@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMe } from "@/lib/use-me";
@@ -51,6 +51,9 @@ export function SignupPromoPopup({
   const { user, loaded } = useMe();
   const pathname = usePathname();
   const [phase, setPhase] = useState<"hidden" | "shown">("hidden");
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const closeRef = useRef<HTMLButtonElement | null>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
 
   // Auto-show once per session, after a delay — only for a signed-out visitor,
   // off the auth/marketplace pages. Deliberately fires on the homepage too — an
@@ -82,79 +85,185 @@ export function SignupPromoPopup({
     return () => clearTimeout(t);
   }, [loaded, user, pathname]);
 
-  function dismiss() {
+  const dismiss = useCallback(() => {
     setPhase("hidden");
     try {
       sessionStorage.setItem(SEEN_KEY, "1");
     } catch {
       /* private mode */
     }
-  }
+    // Hand focus back where the visitor was, rather than stranding it on a
+    // removed node (which drops screen readers to the top of the document).
+    const prev = returnFocusRef.current;
+    if (prev && document.contains(prev)) prev.focus();
+  }, []);
+
+  // ESC to close, a focus trap, and a background scroll lock for as long as this
+  // is open — the same contract FeedbackWidget already implements. Its absence
+  // here was a genuine keyboard trap: with the close button rendered off-screen
+  // (see the layout note below) there was NO way to dismiss this dialog at all.
+  useEffect(() => {
+    if (phase !== "shown") return;
+    // Claim the shared dialog flag so FeedbackWidget can't open on top of us,
+    // mirroring the check this component already makes before auto-opening.
+    document.body.dataset.rcDialog = "1";
+    const { overflow } = document.body.style;
+    document.body.style.overflow = "hidden";
+
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        dismiss();
+        return;
+      }
+      if (e.key !== "Tab" || !cardRef.current) return;
+      const focusable = cardRef.current.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), a[href], input:not([type="hidden"]), textarea, select, [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = overflow;
+      delete document.body.dataset.rcDialog;
+    };
+  }, [phase, dismiss]);
+
+  // Move focus to the close button when it opens: it is the first thing a
+  // keyboard or screen-reader user needs, and focusing it also guarantees the
+  // scroll container reveals it.
+  useEffect(() => {
+    if (phase !== "shown") return;
+    returnFocusRef.current = document.activeElement as HTMLElement | null;
+    closeRef.current?.focus();
+  }, [phase]);
 
   if (phase === "hidden") return null;
 
   return (
-    <div className="fixed inset-0 z-[75] flex items-center justify-center p-4" role="dialog" aria-modal="true">
-      <div className="absolute inset-0 bg-black/70" onClick={dismiss} />
-      <div className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl border border-ink-700 bg-ink-900 shadow-2xl">
-        <button
-          onClick={dismiss}
-          aria-label="Close"
-          className="absolute right-3 top-3 z-20 tap-icon  rounded-full bg-ink-950/60 text-slate-400 hover:bg-ink-800 hover:text-slate-200"
+    // THE OVERLAY IS A SCROLL CONTAINER, and that is the whole fix. This used to
+    // be `fixed inset-0 flex items-center justify-center` with an
+    // `overflow-hidden` card and no scrolling anywhere. Once the card was taller
+    // than the viewport, centring overflowed it EQUALLY IN BOTH DIRECTIONS, so
+    // the close button — pinned to the card's top — sat ABOVE the top of the
+    // screen with no way to reach it. Measured before this change: the button
+    // rendered at y = -131 on a 375x667 iPhone SE, y = -188 once Safari's
+    // toolbars were showing, and y = -234 on a 360x480 window. The card covered
+    // the full width, so there was no backdrop left to tap either, and there was
+    // no ESC handler. On a short phone this dialog was genuinely inescapable.
+    //
+    // `min-h-full` on the inner wrapper (NOT `h-full`) is the load-bearing
+    // detail: the wrapper grows to the card's height when the card is taller
+    // than the viewport, so centring has nothing left to overflow and the
+    // container simply scrolls instead.
+    //
+    // h-[100dvh] is for iOS Safari specifically — the reported browser. `inset-0`
+    // resolves against the LARGE viewport there, so the bottom of a full-height
+    // fixed element sits behind the address/tab bars; the dynamic viewport unit
+    // tracks the chrome as it shows and hides. Paired with safe-area insets below
+    // so nothing lands under a notch or the home indicator.
+    <div className="fixed inset-0 z-[75] h-[100dvh] overflow-y-auto overscroll-contain">
+      <div className="fixed inset-0 bg-black/70" aria-hidden="true" />
+      {/* The dismiss handler lives on this WRAPPER, not on the backdrop behind
+          it. The wrapper stretches over the whole scroll area to do its
+          centring, so it covers the backdrop — putting the handler on the
+          backdrop alone meant a tap on empty space hit this element instead and
+          did nothing, silently costing the easiest escape route on a phone.
+          The card stops propagation so taps inside it never dismiss. */}
+      <div
+        onClick={dismiss}
+        className="relative flex min-h-full items-center justify-center p-4"
+        style={{
+          paddingTop: "max(1rem, env(safe-area-inset-top))",
+          paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
+        }}
+      >
+        <div
+          ref={cardRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="signup-promo-title"
+          onClick={(e) => e.stopPropagation()}
+          className="relative w-full max-w-md rounded-2xl border border-ink-700 bg-ink-900 shadow-2xl"
         >
-          ✕
-        </button>
+          <button
+            ref={closeRef}
+            onClick={dismiss}
+            aria-label="Close"
+            className="absolute right-2 top-2 z-20 tap-icon rounded-full bg-ink-950/80 text-slate-300 hover:bg-ink-800 hover:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+          >
+            ✕
+          </button>
 
-        <div className="p-6 pb-2 text-center">
-          <div className="mx-auto mb-2 grid h-11 w-11 place-items-center rounded-full bg-gold/15 text-gold">
-            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
-              <path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7-6.2-3.4L5.8 21.2 7 14.2l-5-4.9 7.1-.7z" />
-            </svg>
-          </div>
-          {signupPremiumDays > 0 ? (
-            <span className="chip bg-gold/15 text-[10px] font-bold uppercase tracking-wide text-gold">
-              {signupPremiumDays === 1 ? "1 day" : `${signupPremiumDays} days`} of Premium free
-            </span>
-          ) : (
-            <span className="chip bg-brand-500/15 text-[10px] font-bold uppercase tracking-wide text-brand-300">
-              Free account
-            </span>
-          )}
-          <h2 className="font-display mt-2 text-xl font-bold text-white">
-            {signupPremiumDays > 0 ? "Try Premium free, keep the rest for good" : "Unlock the tools that save you the most"}
-          </h2>
-          <p className="mx-auto mt-1.5 max-w-xs text-sm leading-relaxed text-slate-300">
+          {/* Deliberately short. Every line here is vertical space on a phone,
+              and the old copy (icon + chip + heading + two-line paragraph +
+              three described perks + a footnote) made the card ~955px tall
+              against a 553px viewport — which is what pushed the close button
+              off-screen in the first place. Shorter copy is not just tidier
+              here, it is part of the fix. */}
+          <div className="px-5 pb-2 pt-6 text-center">
             {signupPremiumDays > 0 ? (
-              <>
-                Comparing prices is free for everyone. Create a free account and your first{" "}
-                {signupPremiumDays === 1 ? "day" : `${signupPremiumDays} days`} of Premium is on us — no card
-                required. After that, you keep:
-              </>
+              <span className="chip bg-gold/15 text-[10px] font-bold uppercase tracking-wide text-gold">
+                {signupPremiumDays === 1 ? "1 day" : `${signupPremiumDays} days`} of Premium free
+              </span>
             ) : (
-              "Comparing prices is free for everyone. A free account adds these, no card required:"
+              <span className="chip bg-brand-500/15 text-[10px] font-bold uppercase tracking-wide text-brand-300">
+                Free account
+              </span>
             )}
-          </p>
-          <ul className="mx-auto mt-3 max-w-xs space-y-1.5 text-left">
-            {PERKS.map(([k, v]) => (
-              <li key={k} className="flex gap-2 text-xs leading-relaxed text-slate-400">
-                <span aria-hidden="true" className="font-bold text-brand-400">✓</span>
-                <span>
-                  <strong className="font-semibold text-slate-200">{k}</strong> — {v}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
+            <h2 id="signup-promo-title" className="font-display mt-2 text-lg font-bold text-white">
+              {signupPremiumDays > 0 ? "Create an account, get Premium free" : "Create a free account"}
+            </h2>
+            <p className="mx-auto mt-1 max-w-xs text-xs leading-relaxed text-slate-400">
+              {signupPremiumDays > 0 ? (
+                <>
+                  Your first {signupPremiumDays === 1 ? "day" : `${signupPremiumDays} days`} of Premium is on us, no
+                  card needed. You keep these for good:
+                </>
+              ) : (
+                "No card needed. You get:"
+              )}
+            </p>
+            <ul className="mx-auto mt-2 flex max-w-xs flex-wrap justify-center gap-x-3 gap-y-1 text-[11px] text-slate-400">
+              {PERKS.map(([k]) => (
+                <li key={k} className="flex items-center gap-1">
+                  <span aria-hidden="true" className="font-bold text-brand-400">✓</span>
+                  <span className="font-semibold text-slate-300">{k}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
 
-        <div className="px-6 pb-6 pt-0">
-          <AuthForm providers={providers} bare signupPremiumDays={signupPremiumDays} />
-          <p className="mt-3 text-center text-[11px] text-slate-600">
-            Want the pro screeners and an ad-free site too?{" "}
-            <Link href="/premium" onClick={dismiss} className="text-slate-400 hover:underline">
-              See Premium
-            </Link>
-            .
-          </p>
+          <div className="px-5 pb-5 pt-0">
+            <AuthForm providers={providers} bare compact signupPremiumDays={signupPremiumDays} />
+            {/* A SECOND, OBVIOUS WAY OUT, in the thumb zone. The ✕ is a small
+                target in a top corner — the hardest place to reach one-handed on
+                a large phone — so the primary escape is now a full-width control
+                right where the visitor's thumb already is, directly under the
+                sign-in buttons. */}
+            <button
+              type="button"
+              onClick={dismiss}
+              className="mt-3 w-full rounded-lg px-3 py-2.5 text-center text-xs font-semibold text-slate-400 hover:bg-ink-800 hover:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+            >
+              Maybe later
+            </button>
+            <p className="mt-1 text-center text-[11px] text-slate-600">
+              <Link href="/premium" onClick={dismiss} className="text-slate-500 hover:underline">
+                See Premium
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>
