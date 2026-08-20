@@ -9,7 +9,7 @@ import { computeMarket, type MarketRow } from "@/lib/market-rows";
 import type { PricePoint } from "@/lib/price-history";
 
 // Steam-style localized price history using REAL per-market data. The importer records
-// a genuine daily lowest-price series for every market (AU/US/UK/SG/CA/DE), so instead of
+// a genuine daily lowest-price series for every market (AU/US/UK/SG/CA), so instead of
 // converting one market's numbers we show the visitor's OWN market history — client-
 // fetched so the /card route stays cookie-free ISR. SSR renders the DEFAULT_COUNTRY
 // baseline (so crawlers get a real series); after mount we swap to the visitor's

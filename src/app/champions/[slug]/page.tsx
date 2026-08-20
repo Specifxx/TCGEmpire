@@ -26,7 +26,7 @@ import { DECK_GROUPS, deckGroupPath, deckInGroup } from "@/lib/deck-groups";
 // cross-set topical hub for "<champion> riftbound" — every printing of every
 // card featuring them, priced live, which is the one thing we can do better than
 // a deck site: they show one TCGplayer USD figure, we show the cheapest
-// delivered price across six markets.
+// delivered price across five markets.
 export const revalidate = 86400;
 
 export async function generateStaticParams() {

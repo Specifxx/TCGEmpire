@@ -28,7 +28,6 @@ function tagline(country: string, contextual: boolean): string {
   if (country === "UK") return "Buy from UK & global sellers";
   if (country === "SG") return "Buy from SG & global sellers";
   if (country === "CA") return "Buy from CA & global sellers";
-  if (country === "DE") return "Ships to Germany";
   return "Buy from AU & global sellers";
 }
 

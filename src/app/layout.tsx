@@ -10,7 +10,6 @@ import { SealedQuickViewProvider } from "@/components/SealedQuickView";
 import { CommandLauncherProvider } from "@/components/CommandLauncher";
 import { MegaMenuProvider } from "@/components/MegaMenuProvider";
 import { CountryProvider } from "@/components/CountryProvider";
-import { LocaleProvider } from "@/components/LocaleProvider";
 import { PremiumProvider } from "@/components/PremiumProvider";
 import { PremiumDialogProvider } from "@/components/PremiumDialog";
 import { DEFAULT_COUNTRY } from "@/lib/country";
@@ -94,7 +93,7 @@ export const metadata: Metadata = {
     template: "%s — RiftCompare",
   },
   description:
-    "The Riftbound TCG card database and price comparison. Browse every card and compare live prices across stores in Australia, the US, the UK, Singapore, Canada and Germany to find the cheapest place to buy.",
+    "The Riftbound TCG card database and price comparison. Browse every card and compare live prices across stores in Australia, the US, the UK, Singapore and Canada to find the cheapest place to buy.",
   applicationName: SITE_NAME,
   // NO `keywords` meta. Google has ignored it since 2009 and Bing treats stuffing
   // it as a negative signal; it only ever advertised our target terms to
@@ -118,7 +117,7 @@ export const metadata: Metadata = {
     url: SITE_URL,
     title: "RiftCompare — Riftbound Card Database & Price Comparison",
     description:
-      "Compare live Riftbound TCG card prices across stores in Australia, the US, the UK, Singapore, Canada and Germany to find the cheapest place to buy.",
+      "Compare live Riftbound TCG card prices across stores in Australia, the US, the UK, Singapore and Canada to find the cheapest place to buy.",
   },
   twitter: { card: "summary_large_image" },
   // Opt into large image thumbnails + full text snippets in Google/Bing results
@@ -185,7 +184,6 @@ const orgJsonLd = {
         { "@type": "Country", name: "United Kingdom" },
         { "@type": "Country", name: "Singapore" },
         { "@type": "Country", name: "Canada" },
-        { "@type": "Country", name: "Germany" },
       ],
       contactPoint: {
         "@type": "ContactPoint",
@@ -194,7 +192,7 @@ const orgJsonLd = {
         availableLanguage: "English",
       },
       description:
-        "Riftbound: League of Legends TCG card database and live price-comparison across Australia, the United States, the United Kingdom, Singapore, Canada and Germany, home of the RiftCompare Index.",
+        "Riftbound: League of Legends TCG card database and live price-comparison across Australia, the United States, the United Kingdom, Singapore and Canada, home of the RiftCompare Index.",
     },
     {
       "@type": "WebSite",
@@ -280,13 +278,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <PremiumProvider>
         <PremiumDialogProvider>
         <CountryProvider initial={DEFAULT_COUNTRY}>
-        {/* Nested inside CountryProvider (not a sibling) because its DE-default
-            logic reads useCountry() — and extended to wrap the footer below
-            (not just the boundary CountryProvider used to close at) so
-            FooterNav's <Localized> leaves can reach it too. See LocaleProvider's
-            own header comment for why the language toggle is scoped to "a facet
-            of Germany mode" rather than an independent global preference. */}
-        <LocaleProvider>
           <QuickViewProvider>
           <SealedQuickViewProvider>
             <CommandLauncherProvider>
@@ -313,6 +304,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             FooterAds reads the market from the client country context (inside
             CountryProvider) so the layout stays cookie-free and cacheable. */}
         <FooterAds />
+        </CountryProvider>
         <footer className="container-app border-t border-ink-800 py-8 text-center text-xs text-slate-500">
           <NewsletterSignup siteName="RiftCompare" />
           {/* Site-map — surfaced here so every page links to every feature even
@@ -438,7 +430,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </p>
           <p>
             RiftCompare · Riftbound card database &amp; price comparison for
-            Australia, the US, the UK, Singapore, Canada and Germany. Prices are sourced from public store listings and may be out
+            Australia, the US, the UK, Singapore and Canada. Prices are sourced from public store listings and may be out
             of date — always confirm on the retailer&apos;s site.
           </p>
           {/* Riot's Legal Jibber Jabber policy requires this EXACT notice, displayed
@@ -453,8 +445,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </p>
           <p className="mt-2">&copy; {new Date().getFullYear()} {SITE_NAME}. All rights reserved.</p>
         </footer>
-        </LocaleProvider>
-        </CountryProvider>
         {/* Detects the Capacitor native runtime and shows native AdMob ads, styles
             the status bar and wires the Android back button. No-op on the web. */}
         <NativeShell />

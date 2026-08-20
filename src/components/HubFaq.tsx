@@ -1,5 +1,3 @@
-import { Localized } from "./Localized";
-
 /**
  * The visible FAQ block for a hub page (/tools, /movers, /sets, /champions …),
  * paired with faqPage() from lib/jsonld in the page's JSON-LD array.
@@ -27,12 +25,7 @@ export function HubFaq({
   if (!faqs.length) return null;
   return (
     <section className={className ?? "mt-10"}>
-      <h2 className="mb-3 text-xl font-extrabold text-white">
-        {/* Only the shared default gets a German translation — a caller-provided
-            heading (e.g. DeckGroupView's per-set variant) is page-specific prose,
-            out of "chrome only" scope, and left exactly as passed in. */}
-        {heading === DEFAULT_HEADING ? <Localized en={DEFAULT_HEADING} de="Häufig gestellte Fragen" /> : heading}
-      </h2>
+      <h2 className="mb-3 text-xl font-extrabold text-white">{heading}</h2>
       <div className="divide-y divide-ink-800 rounded-xl border border-ink-700">
         {faqs.map((f) => (
           <details key={f.q} className="group p-4">

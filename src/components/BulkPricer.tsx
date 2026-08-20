@@ -57,7 +57,6 @@ interface PickedCard {
   lowestPriceCentsUk?: number | null;
   lowestPriceCentsSg?: number | null;
   lowestPriceCentsCa?: number | null;
-  lowestPriceCentsDe?: number | null;
 }
 
 interface PickedLine {
@@ -84,7 +83,6 @@ interface ApiMatchedCard {
   lowestPriceCentsUk?: number | null;
   lowestPriceCentsSg?: number | null;
   lowestPriceCentsCa?: number | null;
-  lowestPriceCentsDe?: number | null;
 }
 function fromApiCard(c: ApiMatchedCard): PickedCard {
   return { ...c, isPromo: false, rarity: "" };

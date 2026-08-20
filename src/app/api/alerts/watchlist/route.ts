@@ -55,7 +55,7 @@ export async function GET() {
 
 const schema = z.object({
   cardId: z.string().min(1).max(64),
-  market: z.enum(["AU", "US", "UK", "SG", "CA", "DE"]).default("AU"),
+  market: z.enum(["AU", "US", "UK", "SG", "CA"]).default("AU"),
 });
 
 // POST — watch one card for the signed-in account.
@@ -81,7 +81,6 @@ export async function POST(req: Request) {
       lowestPriceCentsUk: true,
       lowestPriceCentsSg: true,
       lowestPriceCentsCa: true,
-      lowestPriceCentsDe: true,
     },
   });
   if (!card) return NextResponse.json({ error: "No matching card" }, { status: 400 });

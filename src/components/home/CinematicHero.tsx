@@ -20,7 +20,7 @@ export interface HeroRegion {
 
 // Short, subhead-style place names — deliberately NOT CountryInfo.place (which
 // spells out "the United Kingdom"/"the United States" for prose elsewhere): this
-// sentence already reads "...retailer we track, plus five more markets..." and
+// sentence already reads "...retailer we track, plus four more markets..." and
 // keeping these short is what makes it read as a list rather than a run-on.
 const SHORT_PLACE: Record<Country, string> = {
   AU: "Australia",
@@ -28,10 +28,9 @@ const SHORT_PLACE: Record<Country, string> = {
   UK: "the UK",
   SG: "Singapore",
   CA: "Canada",
-  DE: "Germany",
 };
 
-/** "Australia, the UK, Singapore, Canada and Germany" — every market EXCEPT
+/** "Australia, the UK, Singapore and Canada" — every market EXCEPT
  *  the one leading the H1, so a region page never re-lists its own market as
  *  one of the "others". */
 function otherMarketsList(exclude: Country): string {
@@ -116,14 +115,14 @@ export function CinematicHero({
         {/* Kinetic headline — US-FIRST, not market-neutral. This page is cached
             (ISR) and DEFAULT_COUNTRY is "US" (lib/country.ts), which is also
             where the traffic actually is: SimilarWeb reports the real visitor
-            split as ~89% US / ~11% AU, with UK/SG/CA/DE not registering — so a
-            headline enumerating six countries greeted the vast majority of
-            visitors with five markets they don't live in before the one they
-            do. The other five markets aren't dropped, just demoted: they're
+            split as ~89% US / ~11% AU, with UK/SG/CA not registering — so a
+            headline enumerating five countries greeted the vast majority of
+            visitors with four markets they don't live in before the one they
+            do. The other four markets aren't dropped, just demoted: they're
             still named in the very next sentence (this page's own subhead),
             in the About section further down, in metadata.description and in
             the organization JSON-LD's areaServed — every one of those is real,
-            crawlable text, so the geo keywords that matter for AU/SG/DE search
+            crawlable text, so the geo keywords that matter for AU/SG search
             traffic (markets with far less competition than the US) survive
             the reorder. Sized to lead the page without dominating it. Capped
             at lg:text-5xl (not 6xl) with a wider max-w-4xl measure so the full
@@ -134,7 +133,7 @@ export function CinematicHero({
             this same line the same day. This US-first version wins: it's the
             more recent decision, backed by real traffic data rather than a
             general heuristic, and it has real infrastructure built around it
-            (the HeroRegion system above, five real region pages) that a
+            (the HeroRegion system above, four real region pages) that a
             market-neutral H1 would leave half-orphaned. The brief's actual
             underlying goal — one short, job-focused sentence instead of a
             60-character country list — is still fully honored here, just
@@ -145,7 +144,7 @@ export function CinematicHero({
         </h1>
         <p className="animate-fade-in [animation-delay:240ms] mx-auto mt-4 max-w-2xl text-base text-slate-300">
           Find the cheapest place to buy Riftbound TCG cards — live prices from every {heroAdjective} retailer we track,
-          plus five more markets in their own currency: {otherMarkets}, updated daily.
+          plus four more markets in their own currency: {otherMarkets}, updated daily.
         </p>
 
         {/* The primary action: search, not a row of buttons. Wired to the exact

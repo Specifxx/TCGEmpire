@@ -103,7 +103,7 @@ export function buildCollectionNarrative(c: CollectionInput): string[] {
   if (!priced.length) {
     out.push(
       `Every card below links to its own page with its full text, its printings, and price comparison across ` +
-        `Australia, the United States, the United Kingdom, Singapore, Canada and Germany.`,
+        `Australia, the United States, the United Kingdom, Singapore and Canada.`,
     );
     return out;
   }
@@ -182,11 +182,11 @@ export function buildCollectionNarrative(c: CollectionInput): string[] {
 
   // ── 4. What a buyer should actually do with this ───────────────────────────
   const buyerAdvice: Record<CollectionKind, string> = {
-    champion: `Every printing of a ${c.label} card is a separate product with its own price — a promo, an alternate art and a Signature print of the same card rarely track each other. The prices below are the cheapest live listing for each printing, compared across all six markets we cover, so building a ${c.label} deck usually means checking which market each individual card is cheapest in rather than buying the whole list from one shop.`,
+    champion: `Every printing of a ${c.label} card is a separate product with its own price — a promo, an alternate art and a Signature print of the same card rarely track each other. The prices below are the cheapest live listing for each printing, compared across all five markets we cover, so building a ${c.label} deck usually means checking which market each individual card is cheapest in rather than buying the whole list from one shop.`,
     type: `${c.label} cards are bought for play far more often than for collection, which means condition matters less than price: a lightly played copy plays identically behind a sleeve. Sorting by delivered cost rather than sticker price is worth doing here — postage regularly outweighs the card on anything at the cheap end.`,
     rarity: `Rarity sets the pull rate, not the price. Plenty of ${c.label.toLowerCase()} cards here trade below cards two tiers under them, because demand comes from whether a card is played, not from what is printed on it. The prices below are what stores actually charge today.`,
     printing: `${c.label} printings are collector products: mechanically identical to the base card, priced entirely on scarcity and looks. If you want the card to play with, the base printing is on each card's own page and is almost always cheaper. If you want this one, the comparison below is the cheapest live listing in each market.`,
-    domain: `Domain decides what a card can go in, which is why ${c.label} prices move with the ${c.label} decks that are winning rather than with the rest of the set. Cards below are priced from the cheapest live listing across all six markets we track.`,
+    domain: `Domain decides what a card can go in, which is why ${c.label} prices move with the ${c.label} decks that are winning rather than with the rest of the set. Cards below are priced from the cheapest live listing across all five markets we track.`,
     set: `Buying a set card by card and buying sealed are different questions — the box EV calculator answers the second, and the prices below answer the first. Both use the same daily price data.`,
     keyword: `Cards sharing a keyword tend to be bought together, because they are what a deck built around that mechanic actually needs. Prices below are the cheapest live listing for each, so a whole shopping list can be costed in one pass rather than card by card.`,
   };

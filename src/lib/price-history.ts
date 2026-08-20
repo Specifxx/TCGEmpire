@@ -1,7 +1,7 @@
 // Price-history helpers: per-card time series for the charts, the weekly
 // "movers" used by the homepage Price Watch, and the homepage's "recently
 // updated" feed. PriceHistory records one lowest-price point per card PER
-// MARKET per Sydney day (AU/US/UK/SG/CA/DE — see price-import.ts's snapshot
+// MARKET per Sydney day (AU/US/UK/SG/CA — see price-import.ts's snapshot
 // write), so every function here takes a `country` and is priced in that
 // market's own currency; nothing below is AU-only despite this file's history.
 import { unstable_cache } from "next/cache";
@@ -38,7 +38,7 @@ export type PricePoint = { t: number; v: number };
 
 // Daily lowest-price points for one card in one market (oldest → newest), in that
 // market's OWN currency. The importer records a real point per card per market per
-// Sydney day (AU/US/UK/SG/CA/DE — see price-import.ts), so each market has its own genuine
+// Sydney day (AU/US/UK/SG/CA — see price-import.ts), so each market has its own genuine
 // series — no currency conversion needed. Resilient: returns [] on any DB error so a
 // page never crashes over the chart.
 async function computePriceHistory(cardId: string, country: Country, take: number): Promise<PricePoint[]> {

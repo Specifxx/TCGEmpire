@@ -9,7 +9,7 @@ import { CinematicHero } from "./CinematicHero";
 import { HomeSections } from "./HomeSections";
 import { webPage, faqPage, breadcrumb, ldJson } from "@/lib/jsonld";
 
-const COUNTRY_CODES: Country[] = ["AU", "US", "UK", "SG", "CA", "DE"];
+const COUNTRY_CODES: Country[] = ["AU", "US", "UK", "SG", "CA"];
 
 // Region home pages (/au, /uk, /sg, /ca — see app/au/page.tsx etc): the
 // homepage's own hero/search/stat building blocks, reused rather than
@@ -20,7 +20,7 @@ const COUNTRY_CODES: Country[] = ["AU", "US", "UK", "SG", "CA", "DE"];
 // own buying guide, a region-scoped FAQ).
 //
 // AN EARLIER VERSION OF THIS PAGE deliberately left HomeSections' entire
-// feature set out, reasoning that five near-identical copies of it would be
+// feature set out, reasoning that four near-identical copies of it would be
 // the near-duplicate-content problem this site's SEO work has fought
 // elsewhere. In practice that made the region toggle in the hero feel
 // broken: picking AU/UK/SG/CA silently dropped the site down to a stub

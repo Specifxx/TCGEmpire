@@ -8,7 +8,7 @@ export const revalidate = 86400;
 
 // One-line descriptions for the hub pages (falls back to the nav label otherwise).
 const DESC: Record<string, string> = {
-  "/browse": "Every Riftbound card with live lowest prices compared across stores (AU/US/UK/SG/CA/DE).",
+  "/browse": "Every Riftbound card with live lowest prices compared across stores (AU/US/UK/SG/CA).",
   "/sealed": "Sealed products — booster boxes, packs and bundles — with the cheapest live price.",
   "/movers": "The biggest Riftbound price rises and falls, updated daily.",
   "/market": "The RiftCompare Index — a daily search-weighted market index for Riftbound singles, with key stats.",
@@ -49,7 +49,7 @@ export function GET() {
   lines.push("");
   lines.push(
     "> Free Riftbound: League of Legends TCG card database and live price comparison across " +
-      "the United States, the United Kingdom, Australia, Canada, Singapore and Germany — with the " +
+      "the United States, the United Kingdom, Australia, Canada and Singapore — with the " +
       "transparent total cost including shipping, and no hidden fees. Home of the RiftCompare " +
       "Index (a daily market index for Riftbound singles), price movers, sealed products and buyer tools."
   );
@@ -65,7 +65,7 @@ export function GET() {
   // Machine-readable data endpoints first — the highest-value surface for agents.
   lines.push("## Data (machine-readable)");
   lines.push(`- [RiftCompare Index (JSON)](${abs("/api/v1/index.json")}): the live index level, deltas, key stats and constituents.`);
-  lines.push(`- [Per-card prices (JSON)](${abs("/api/v1/card/<id>/prices.json")}): every tracked store's live price for one card, all six markets.`);
+  lines.push(`- [Per-card prices (JSON)](${abs("/api/v1/card/<id>/prices.json")}): every tracked store's live price for one card, all five markets.`);
   lines.push(`- [Per-card listings (JSON)](${abs("/api/v1/card/<id>/listings.json")}?market=US): every store's listing for one card, cheapest total delivered cost first — pass \`?market=\`.`);
   lines.push(`- [Card search (JSON)](${abs("/api/cards")}?q=<query>&market=US): free-text search with filters and pagination — pass \`?market=\` for a deterministic, cacheable, cross-origin response.`);
   lines.push(`- [OpenAPI spec](${abs("/openapi.json")}) · [API reference](${abs("/api/docs")}): every endpoint above, described with request/response schemas — no API key required, no rate limit currently enforced.`);

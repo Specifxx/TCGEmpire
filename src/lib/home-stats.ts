@@ -4,8 +4,8 @@
 // or drifting from the homepage's own numbers.
 //
 // unstable_cache-wrapped with a FIXED key (no per-route/per-country key): the
-// underlying query set covers all six markets in one batch already, so every
-// caller — "/" and all five region pages — shares the exact same cache entry
+// underlying query set covers all five markets in one batch already, so every
+// caller — "/" and all four region pages — shares the exact same cache entry
 // instead of each route paying for its own copy of the same aggregates. Same
 // egress discipline as getTopDeals() in app/page.tsx.
 import { unstable_cache } from "next/cache";
@@ -16,7 +16,7 @@ import { CONTENT_TAG } from "./revalidate-content";
 import { timeAgo } from "./format";
 import type { MarketStat } from "@/components/home/HeroStats";
 
-const COUNTRY_CODES: Country[] = ["AU", "US", "UK", "SG", "CA", "DE"];
+const COUNTRY_CODES: Country[] = ["AU", "US", "UK", "SG", "CA"];
 
 export interface HomeStats {
   totalCards: number;

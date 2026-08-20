@@ -56,7 +56,6 @@ const STOP = new Set([
 
 export interface IndexedLink extends NavGroupLink {
   group: string;
-  groupDe?: string;
   /** Every searchable word, stemmed and deduped. */
   haystack: string[];
   /** The label's own words, stemmed — used for ranking, not matching. */
@@ -75,7 +74,6 @@ export const NAV_INDEX: IndexedLink[] = NAV_GROUPS.flatMap((g) =>
     return {
       ...l,
       group: g.title,
-      groupDe: g.titleDe,
       labelWords,
       labelLower: l.label.toLowerCase(),
       phrases: (l.keywords ?? []).map((k) => k.toLowerCase()),

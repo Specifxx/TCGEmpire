@@ -89,7 +89,6 @@ export const COUNTRY_GUIDE_SLUGS: Record<Country, string> = {
   AU: "buy-riftbound-cards-australia",
   CA: "buy-riftbound-cards-canada",
   SG: "riftbound-price-comparison-singapore",
-  DE: "buy-riftbound-cards-germany",
 };
 
 /** BCP-47 tag per market. UK's region subtag is GB, not UK. */
@@ -99,7 +98,6 @@ const HREFLANG: Record<Country, string> = {
   AU: "en-AU",
   CA: "en-CA",
   SG: "en-SG",
-  DE: "de-DE",
 };
 
 /**
@@ -120,7 +118,7 @@ export function hreflangForCountryGuide(slug: string): Record<string, string> | 
 
 /**
  * The second honest hreflang group on the site: the homepage ("/") plus its
- * region variants (/au, /uk, /sg, /ca, /de — see app/au/page.tsx etc). Each is
+ * region variants (/au, /uk, /sg, /ca — see app/au/page.tsx etc). Each is
  * a genuinely distinct, separately-indexable page — its own H1, its own
  * region-locked stat block, its own store list — not a re-skin, so this is not
  * the "inventing hreflang" case hreflangForCountryGuide's header warns against.
@@ -133,7 +131,6 @@ export const REGION_HOME_PATH: Record<Country, string> = {
   AU: "/au",
   CA: "/ca",
   SG: "/sg",
-  DE: "/de",
 };
 
 /** hreflang map for the homepage + all region pages. x-default points at "/",

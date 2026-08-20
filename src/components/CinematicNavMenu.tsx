@@ -7,14 +7,11 @@ import { useMegaMenu } from "./MegaMenuProvider";
 import { NAV_GROUPS, POPULAR_LINKS, type NavGroupLink } from "./nav-groups";
 import { searchNav } from "./nav-search";
 import { BrandLogo } from "./BrandLogo";
-import { useLocale } from "./LocaleProvider";
 
 // Shared by the Popular grid and the full category panels below — both need
 // the identical active-pathname/external branching, so it's factored out
 // rather than duplicated (and drifting) between the two render paths.
 function FeatureLink({ l, pathname, onClick }: { l: NavGroupLink; pathname: string; onClick: () => void }) {
-  const { locale } = useLocale();
-  const label = locale === "de" ? (l.labelDe ?? l.label) : l.label;
   const active = !l.external && (pathname === l.href || (l.href !== "/" && pathname.startsWith(l.href)));
   const className = `group flex min-h-11 items-center gap-3 rounded-md px-2 py-2 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand-400 ${
     active ? "bg-brand-500 font-semibold text-ink-950" : "text-slate-200 hover:bg-ink-800 hover:text-white"
@@ -23,14 +20,14 @@ function FeatureLink({ l, pathname, onClick }: { l: NavGroupLink; pathname: stri
     return (
       <a href={l.href} target="_blank" rel="noopener noreferrer" onClick={onClick} className={className}>
         <span className="text-lg" aria-hidden>{l.emoji}</span>
-        <span className="font-medium">{label}</span>
+        <span className="font-medium">{l.label}</span>
       </a>
     );
   }
   return (
     <Link href={l.href} onClick={onClick} aria-current={active ? "page" : undefined} className={className}>
       <span className="text-lg" aria-hidden>{l.emoji}</span>
-      <span className="font-medium">{label}</span>
+      <span className="font-medium">{l.label}</span>
     </Link>
   );
 }
@@ -41,7 +38,6 @@ function FeatureLink({ l, pathname, onClick }: { l: NavGroupLink; pathname: stri
 // single accent (brand green). Fully prefers-reduced-motion safe.
 export function CinematicNavMenu() {
   const { open, setOpen } = useMegaMenu();
-  const { locale } = useLocale();
   const pathname = usePathname();
   const dialogRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -69,7 +65,7 @@ export function CinematicNavMenu() {
   // phone and on a desktop.
   const filtering = filter.trim().length > 0;
   const sections = useMemo(() => {
-    if (!filtering) return NAV_GROUPS.map((g) => ({ title: g.title, titleDe: g.titleDe, links: g.links }));
+    if (!filtering) return NAV_GROUPS.map((g) => ({ title: g.title, links: g.links }));
     const hits = searchNav(filter);
     const byGroup = new Map<string, typeof hits>();
     for (const h of hits) {
@@ -79,7 +75,6 @@ export function CinematicNavMenu() {
     }
     return NAV_GROUPS.filter((g) => byGroup.has(g.title)).map((g) => ({
       title: g.title,
-      titleDe: g.titleDe,
       links: byGroup.get(g.title)!,
     }));
   }, [filter, filtering]);
@@ -156,7 +151,7 @@ export function CinematicNavMenu() {
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-label={locale === "de" ? "Seitennavigation" : "Site navigation"}
+        aria-label="Site navigation"
         onKeyDown={onKeyDown}
         onClick={(e) => {
           if (e.target === e.currentTarget) close();
@@ -178,10 +173,10 @@ export function CinematicNavMenu() {
                 type="button"
                 data-autofocus
                 onClick={close}
-                aria-label={locale === "de" ? "Menü schließen" : "Close menu"}
+                aria-label="Close menu"
                 className="rounded-md border border-ink-800 bg-ink-850 px-3 py-2 text-sm font-bold text-white outline-none transition-colors hover:border-ink-600 hover:bg-ink-800 focus-visible:ring-2 focus-visible:ring-brand-400 min-h-11"
               >
-                {locale === "de" ? "Schließen ✕" : "Close ✕"}
+                Close ✕
               </button>
             </div>
 
@@ -198,30 +193,18 @@ export function CinematicNavMenu() {
               <input
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                placeholder={locale === "de" ? "Funktionen, Tools und Seiten filtern…" : "Filter features, tools and pages…"}
-                aria-label={locale === "de" ? "RiftCompare-Funktionen filtern" : "Filter RiftCompare features"}
+                placeholder="Filter features, tools and pages…"
+                aria-label="Filter RiftCompare features"
                 className="input w-full"
                 type="search"
               />
               {filtering && (
                 <p className="mt-2 text-center text-xs text-slate-500">
-                  {locale === "de" ? (
-                    <>
-                      {sections.reduce((n, s2) => n + s2.links.length, 0)} Funktion
-                      {sections.reduce((n, s2) => n + s2.links.length, 0) === 1 ? "" : "en"} gefunden für &bdquo;{filter}&ldquo; ·{" "}
-                      <Link href={`/browse?q=${encodeURIComponent(filter)}`} onClick={close} className="text-brand-400 hover:underline">
-                        stattdessen nach &bdquo;{filter}&ldquo; in den Karten suchen →
-                      </Link>
-                    </>
-                  ) : (
-                    <>
-                      {sections.reduce((n, s2) => n + s2.links.length, 0)} feature
-                      {sections.reduce((n, s2) => n + s2.links.length, 0) === 1 ? "" : "s"} match &ldquo;{filter}&rdquo; ·{" "}
-                      <Link href={`/browse?q=${encodeURIComponent(filter)}`} onClick={close} className="text-brand-400 hover:underline">
-                        search cards for &ldquo;{filter}&rdquo; instead →
-                      </Link>
-                    </>
-                  )}
+                  {sections.reduce((n, s2) => n + s2.links.length, 0)} feature
+                  {sections.reduce((n, s2) => n + s2.links.length, 0) === 1 ? "" : "s"} match &ldquo;{filter}&rdquo; ·{" "}
+                  <Link href={`/browse?q=${encodeURIComponent(filter)}`} onClick={close} className="text-brand-400 hover:underline">
+                    search cards for &ldquo;{filter}&rdquo; instead →
+                  </Link>
                 </p>
               )}
             </div>
@@ -237,7 +220,7 @@ export function CinematicNavMenu() {
                 <div className="mt-7 rounded-lg border border-ink-800 border-l-2 border-l-brand-500 bg-ink-850 p-4">
                   <div className="mb-2 flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-wide text-slate-400">
                     <span className="h-2 w-2 rounded-full bg-brand-500" aria-hidden />
-                    {locale === "de" ? "Beliebt" : "Popular"}
+                    Popular
                   </div>
                   <ul className="grid gap-0.5 sm:grid-cols-2 lg:grid-cols-3">
                     {POPULAR_LINKS.map((l) => (
@@ -253,7 +236,7 @@ export function CinematicNavMenu() {
                     onClick={() => setShowAll(true)}
                     className="tap-link inline-flex min-h-11 items-center rounded-md px-3 text-sm font-semibold text-brand-300 outline-none transition-colors hover:text-brand-200 hover:underline focus-visible:ring-2 focus-visible:ring-brand-400"
                   >
-                    {locale === "de" ? "Alle Funktionen anzeigen →" : "Show all features →"}
+                    Show all features →
                   </button>
                 </div>
               </>
@@ -268,7 +251,7 @@ export function CinematicNavMenu() {
                   >
                     <div className="mb-2 flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-wide text-slate-400">
                       <span className="h-2 w-2 rounded-full bg-brand-500" aria-hidden />
-                      {locale === "de" ? (sec.titleDe ?? sec.title) : sec.title}
+                      {sec.title}
                     </div>
                     <ul className="space-y-0.5">
                       {sec.links.map((l) => (

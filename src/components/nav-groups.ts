@@ -6,12 +6,6 @@ import { DISCORD_URL } from "@/lib/site";
 export interface NavGroupLink {
   href: string;
   label: string;
-  // Chrome-language German label (see lib/locale.ts) — every renderer of
-  // NavGroupLink (FooterNav, CinematicNavMenu, CommandLauncher) falls back to
-  // `label` when this is absent, so a link can go untranslated without
-  // breaking anything; keep adding these opportunistically rather than
-  // blocking on 100% coverage.
-  labelDe?: string;
   emoji: string;
   /**
    * True for a link that leaves the site (opens in a new tab, never routed
@@ -52,7 +46,6 @@ export interface NavGroupLink {
 
 export interface NavGroup {
   title: string;
-  titleDe?: string;
   links: NavGroupLink[];
 }
 
@@ -71,14 +64,13 @@ export const MARKETPLACE_NAV_VISIBLE = false;
 // UserMenu.tsx and layout.tsx's footer can reuse the same visibility flag.
 const MARKETPLACE_GROUP: NavGroup = {
   title: "Marketplace",
-  titleDe: "Marktplatz",
   links: [
-    { href: "/marketplace", label: "Buy on Marketplace", labelDe: "Im Marktplatz kaufen", emoji: "🛒", keywords: ["marketplace", "p2p", "from players", "second hand"] },
-    { href: "/marketplace/sell", label: "Sell a card", labelDe: "Karte verkaufen", emoji: "🏷️", keywords: ["sell", "list a card", "seller"] },
-    { href: "/marketplace/orders", label: "My orders", labelDe: "Meine Bestellungen", emoji: "📦", keywords: ["orders", "purchases", "tracking"] },
-    { href: "/marketplace/funds", label: "Seller funds", labelDe: "Verkäufer-Guthaben", emoji: "💰", keywords: ["payout", "balance", "earnings"] },
-    { href: "/marketplace/buyer-protection", label: "Buyer protection", labelDe: "Käuferschutz", emoji: "🛡️", keywords: ["protection", "refund", "dispute", "escrow"] },
-    { href: "/marketplace/faq", label: "Marketplace FAQ", labelDe: "Marktplatz-FAQ", emoji: "❓", keywords: ["faq", "questions", "how it works"] },
+    { href: "/marketplace", label: "Buy on Marketplace", emoji: "🛒", keywords: ["marketplace", "p2p", "from players", "second hand"] },
+    { href: "/marketplace/sell", label: "Sell a card", emoji: "🏷️", keywords: ["sell", "list a card", "seller"] },
+    { href: "/marketplace/orders", label: "My orders", emoji: "📦", keywords: ["orders", "purchases", "tracking"] },
+    { href: "/marketplace/funds", label: "Seller funds", emoji: "💰", keywords: ["payout", "balance", "earnings"] },
+    { href: "/marketplace/buyer-protection", label: "Buyer protection", emoji: "🛡️", keywords: ["protection", "refund", "dispute", "escrow"] },
+    { href: "/marketplace/faq", label: "Marketplace FAQ", emoji: "❓", keywords: ["faq", "questions", "how it works"] },
   ],
 };
 
@@ -86,19 +78,18 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     // Core price/data pages — the heart of the site.
     title: "Prices",
-    titleDe: "Preise",
     links: [
-      { href: "/browse", label: "Card Database", labelDe: "Kartendatenbank", emoji: "🗃️", keywords: ["cards", "search", "find", "lookup", "compare prices", "database", "singles"], popular: true },
-      { href: "/sealed", label: "Sealed Products", labelDe: "Versiegelte Produkte", emoji: "📦", keywords: ["booster box", "packs", "boxes", "bundles", "cases", "sealed"], popular: true },
+      { href: "/browse", label: "Card Database", emoji: "🗃️", keywords: ["cards", "search", "find", "lookup", "compare prices", "database", "singles"], popular: true },
+      { href: "/sealed", label: "Sealed Products", emoji: "📦", keywords: ["booster box", "packs", "boxes", "bundles", "cases", "sealed"], popular: true },
       // Label deliberately omits the word "prices": nav search scores the label, and
       // "Radiance pre-order prices" outranked the Bulk Pricer on a bare "prices"
       // query (caught by tests/nav-search.test.ts). The pre-order keywords below
       // still carry every intent that should land here.
-      { href: "/radiance-preorders", label: "Radiance pre-orders", labelDe: "Radiance Vorbestellungen", emoji: "🛒", keywords: ["preorder", "pre-order", "radiance preorder", "booster box preorder", "set 5 preorder"] },
-      { href: "/market", label: "Market Index", labelDe: "Marktindex", emoji: "📊", keywords: ["index", "market", "chart", "trend", "how is the market"], popular: true },
-      { href: "/movers", label: "Daily Movers", labelDe: "Tagesbewegungen", emoji: "📈", keywords: ["movers", "risers", "fallers", "gainers", "drops", "trending", "biggest movers"], popular: true },
-      { href: "/stores/tracked", label: "Stores we track", labelDe: "Erfasste Händler", emoji: "🏪", keywords: ["stores", "shops", "retailers", "which stores"] },
-      { href: "/bulk-pricer", label: "Bulk Pricer", labelDe: "Sammel-Preisrechner", emoji: "📋", keywords: ["bulk", "price a list", "paste a list", "collection value"] },
+      { href: "/radiance-preorders", label: "Radiance pre-orders", emoji: "🛒", keywords: ["preorder", "pre-order", "radiance preorder", "booster box preorder", "set 5 preorder"] },
+      { href: "/market", label: "Market Index", emoji: "📊", keywords: ["index", "market", "chart", "trend", "how is the market"], popular: true },
+      { href: "/movers", label: "Daily Movers", emoji: "📈", keywords: ["movers", "risers", "fallers", "gainers", "drops", "trending", "biggest movers"], popular: true },
+      { href: "/stores/tracked", label: "Stores we track", emoji: "🏪", keywords: ["stores", "shops", "retailers", "which stores"] },
+      { href: "/bulk-pricer", label: "Bulk Pricer", emoji: "📋", keywords: ["bulk", "price a list", "paste a list", "collection value"] },
     ],
   },
   ...(MARKETPLACE_NAV_VISIBLE ? [MARKETPLACE_GROUP] : []),
@@ -110,9 +101,8 @@ export const NAV_GROUPS: NavGroup[] = [
     // pages we very much have — so they live here and llms.txt reads them from
     // this one list instead of keeping its own copy.
     title: "Browse the database",
-    titleDe: "Datenbank durchsuchen",
     links: [
-      { href: "/sets", label: "Sets & card lists", labelDe: "Sets & Kartenlisten", emoji: "🗂️", keywords: ["sets", "set list", "card list", "vendetta", "origins", "unleashed", "spirit forged", "proving grounds", "radiance"] },
+      { href: "/sets", label: "Sets & card lists", emoji: "🗂️", keywords: ["sets", "set list", "card list", "vendetta", "origins", "unleashed", "spirit forged", "proving grounds", "radiance"] },
       // The countdown for whichever set is NEXT. Its predecessor
       // (/vendetta-countdown) was never in the nav and depended entirely on
       // article links for discovery; putting the slot here means the release-date
@@ -120,61 +110,57 @@ export const NAV_GROUPS: NavGroup[] = [
       // single highest-intent page on the site. Lives here, not under "Prices"
       // (moved 2026-08-17): it's a release-date countdown, not a price — the
       // one page in that group with nothing to do with comparing a price.
-      { href: "/radiance-countdown", label: "Radiance release date", labelDe: "Radiance Erscheinungsdatum", emoji: "✨", keywords: ["release date", "countdown", "when", "next set", "set 5", "radiance"] },
-      { href: "/champions", label: "Champions", labelDe: "Champions", emoji: "🦸", keywords: ["champions", "by champion", "legends"] },
-      { href: "/cards", label: "By type & rarity", labelDe: "Nach Typ & Seltenheit", emoji: "🔤", keywords: ["type", "rarity", "showcase", "epic", "signature", "promo", "printings", "facets", "alt art"] },
-      { href: "/domains", label: "Domains", labelDe: "Domänen", emoji: "🌀", keywords: ["domains", "colours", "colors", "fury", "calm", "mind", "body", "chaos", "order"] },
-      { href: "/keywords", label: "Keywords glossary", labelDe: "Schlüsselwörter-Glossar", emoji: "📚", keywords: ["keywords", "glossary", "mechanics", "rules", "empower", "flow", "burn", "tank", "deflect", "what does"] },
-      { href: "/singles", label: "Buy singles", labelDe: "Einzelkarten kaufen", emoji: "🃏", keywords: ["singles", "buy singles", "cheapest single"] },
+      { href: "/radiance-countdown", label: "Radiance release date", emoji: "✨", keywords: ["release date", "countdown", "when", "next set", "set 5", "radiance"] },
+      { href: "/champions", label: "Champions", emoji: "🦸", keywords: ["champions", "by champion", "legends"] },
+      { href: "/cards", label: "By type & rarity", emoji: "🔤", keywords: ["type", "rarity", "showcase", "epic", "signature", "promo", "printings", "facets", "alt art"] },
+      { href: "/domains", label: "Domains", emoji: "🌀", keywords: ["domains", "colours", "colors", "fury", "calm", "mind", "body", "chaos", "order"] },
+      { href: "/keywords", label: "Keywords glossary", emoji: "📚", keywords: ["keywords", "glossary", "mechanics", "rules", "empower", "flow", "burn", "tank", "deflect", "what does"] },
+      { href: "/singles", label: "Buy singles", emoji: "🃏", keywords: ["singles", "buy singles", "cheapest single"] },
     ],
   },
   {
     // Smart-shopping / value tools (several Premium).
     title: "Deals & value",
-    titleDe: "Angebote & Wert",
     links: [
-      { href: "/tools/deal-finder", label: "Deal Finder", labelDe: "Angebotsfinder", emoji: "💱", keywords: ["deals", "bargains", "cheapest", "savings", "arbitrage", "underpriced"], popular: true },
-      { href: "/tools/value-finder", label: "Value Finder", labelDe: "Wertfinder", emoji: "🔎", keywords: ["value", "best value", "worth", "undervalued"] },
-      { href: "/tools/rising", label: "Rising Cards", labelDe: "Aufsteigende Karten", emoji: "🚀", keywords: ["rising", "hot", "momentum", "spiking", "going up"] },
-      { href: "/tools/best-basket", label: "Best Basket", labelDe: "Bester Warenkorb", emoji: "🧺", keywords: ["basket", "cart", "multi card", "cheapest combination", "one order", "shipping"], popular: true },
-      { href: "/tools/condition-calculator", label: "Condition Calculator", labelDe: "Zustandsrechner", emoji: "🩹", keywords: ["condition", "nm", "lp", "mp", "hp", "damaged", "grading", "value calculator"] },
-      { href: "/tools/box-ev", label: "Box EV Calc", labelDe: "Box-EV-Rechner", emoji: "🎲", keywords: ["ev", "expected value", "is a box worth it", "booster box value", "box ev"] },
-      { href: "/tools", label: "All Tools", labelDe: "Alle Tools", emoji: "🧰", keywords: ["tools", "calculators", "utilities"] },
+      { href: "/tools/deal-finder", label: "Deal Finder", emoji: "💱", keywords: ["deals", "bargains", "cheapest", "savings", "arbitrage", "underpriced"], popular: true },
+      { href: "/tools/value-finder", label: "Value Finder", emoji: "🔎", keywords: ["value", "best value", "worth", "undervalued"] },
+      { href: "/tools/rising", label: "Rising Cards", emoji: "🚀", keywords: ["rising", "hot", "momentum", "spiking", "going up"] },
+      { href: "/tools/best-basket", label: "Best Basket", emoji: "🧺", keywords: ["basket", "cart", "multi card", "cheapest combination", "one order", "shipping"], popular: true },
+      { href: "/tools/condition-calculator", label: "Condition Calculator", emoji: "🩹", keywords: ["condition", "nm", "lp", "mp", "hp", "damaged", "grading", "value calculator"] },
+      { href: "/tools/box-ev", label: "Box EV Calc", emoji: "🎲", keywords: ["ev", "expected value", "is a box worth it", "booster box value", "box ev"] },
+      { href: "/tools", label: "All Tools", emoji: "🧰", keywords: ["tools", "calculators", "utilities"] },
     ],
   },
   {
     // The signed-in user's own stuff + the upgrade.
     title: "Your collection",
-    titleDe: "Deine Sammlung",
     links: [
-      { href: "/portfolio", label: "My Portfolio", labelDe: "Mein Portfolio", emoji: "💼", keywords: ["collection", "my cards", "holdings", "portfolio", "what is mine worth"] },
-      { href: "/watching", label: "My Watchlist", labelDe: "Meine Watchlist", emoji: "🔔", keywords: ["watchlist", "watching", "saved", "favourites", "favorites", "tracked cards"], popular: true },
-      { href: "/alerts", label: "Price Alerts", labelDe: "Preisalarme", emoji: "📩", keywords: ["alerts", "price alerts", "notify me", "notifications", "email me", "price drop"] },
-      { href: "/premium", label: "Premium", labelDe: "Premium", emoji: "⭐", keywords: ["premium", "upgrade", "subscription", "pro", "plans", "pricing"], popular: true },
+      { href: "/portfolio", label: "My Portfolio", emoji: "💼", keywords: ["collection", "my cards", "holdings", "portfolio", "what is mine worth"] },
+      { href: "/watching", label: "My Watchlist", emoji: "🔔", keywords: ["watchlist", "watching", "saved", "favourites", "favorites", "tracked cards"], popular: true },
+      { href: "/alerts", label: "Price Alerts", emoji: "📩", keywords: ["alerts", "price alerts", "notify me", "notifications", "email me", "price drop"] },
+      { href: "/premium", label: "Premium", emoji: "⭐", keywords: ["premium", "upgrade", "subscription", "pro", "plans", "pricing"], popular: true },
     ],
   },
   {
     title: "Decks",
-    titleDe: "Decks",
     links: [
-      { href: "/decks", label: "Meta Decks", labelDe: "Meta-Decks", emoji: "🏆", keywords: ["meta", "tier list", "decklists", "best decks"], popular: true },
-      { href: "/deck", label: "Deck Builder", labelDe: "Deck-Builder", emoji: "🛠️", keywords: ["build a deck", "deck price", "brew", "deck cost"] },
-      { href: "/trade", label: "Trade Calculator", labelDe: "Tauschrechner", emoji: "🔁", keywords: ["trade", "swap", "fair trade", "is this trade fair"] },
+      { href: "/decks", label: "Meta Decks", emoji: "🏆", keywords: ["meta", "tier list", "decklists", "best decks"], popular: true },
+      { href: "/deck", label: "Deck Builder", emoji: "🛠️", keywords: ["build a deck", "deck price", "brew", "deck cost"] },
+      { href: "/trade", label: "Trade Calculator", emoji: "🔁", keywords: ["trade", "swap", "fair trade", "is this trade fair"] },
     ],
   },
   {
     title: "Games",
-    titleDe: "Spiele",
     links: [
-      { href: "/riftle", label: "Riftle (daily)", labelDe: "Riftle (täglich)", emoji: "🃏", keywords: ["riftle", "wordle", "daily", "puzzle", "guess the card"] },
-      { href: "/games/pack-sim", label: "Pack Simulator", labelDe: "Pack-Simulator", emoji: "🎁", keywords: ["pack sim", "pack opening", "open packs", "rip packs", "simulator"] },
-      { href: "/games/price-check", label: "Price Check", labelDe: "Preis-Check", emoji: "💲", keywords: ["price check", "guess the price"], hideInFooter: true },
-      { href: "/games/higher-lower", label: "Higher or Lower", labelDe: "Höher oder Niedriger", emoji: "↕️", keywords: ["higher lower", "higher or lower"], hideInFooter: true },
-      { href: "/games/card-smash", label: "Card Smash", labelDe: "Card Smash", emoji: "🔨", keywords: ["card smash", "whack a mole", "reflex"], hideInFooter: true },
-      { href: "/games/pairs", label: "Pairs", labelDe: "Paare", emoji: "🧠", keywords: ["pairs", "memory", "matching"], hideInFooter: true },
-      { href: "/games/twenty48", label: "Riftbound 2048", labelDe: "Riftbound 2048", emoji: "🔢", keywords: ["2048", "twenty48", "merge"], hideInFooter: true },
-      { href: "/games/zoomed", label: "Zoomed In", labelDe: "Reingezoomt", emoji: "🔍", keywords: ["zoomed", "guess the card", "art quiz"], hideInFooter: true },
-      { href: "/games", label: "All Games", labelDe: "Alle Spiele", emoji: "🎮", keywords: ["games", "play", "fun", "quiz", "minigames"] },
+      { href: "/riftle", label: "Riftle (daily)", emoji: "🃏", keywords: ["riftle", "wordle", "daily", "puzzle", "guess the card"] },
+      { href: "/games/pack-sim", label: "Pack Simulator", emoji: "🎁", keywords: ["pack sim", "pack opening", "open packs", "rip packs", "simulator"] },
+      { href: "/games/price-check", label: "Price Check", emoji: "💲", keywords: ["price check", "guess the price"], hideInFooter: true },
+      { href: "/games/higher-lower", label: "Higher or Lower", emoji: "↕️", keywords: ["higher lower", "higher or lower"], hideInFooter: true },
+      { href: "/games/card-smash", label: "Card Smash", emoji: "🔨", keywords: ["card smash", "whack a mole", "reflex"], hideInFooter: true },
+      { href: "/games/pairs", label: "Pairs", emoji: "🧠", keywords: ["pairs", "memory", "matching"], hideInFooter: true },
+      { href: "/games/twenty48", label: "Riftbound 2048", emoji: "🔢", keywords: ["2048", "twenty48", "merge"], hideInFooter: true },
+      { href: "/games/zoomed", label: "Zoomed In", emoji: "🔍", keywords: ["zoomed", "guess the card", "art quiz"], hideInFooter: true },
+      { href: "/games", label: "All Games", emoji: "🎮", keywords: ["games", "play", "fun", "quiz", "minigames"] },
     ],
   },
   {
@@ -183,25 +169,23 @@ export const NAV_GROUPS: NavGroup[] = [
     // reader) landing on a programmatic price page needs a one-click path to
     // something a person wrote, or the whole site reads as a data feed.
     title: "Guides & News",
-    titleDe: "Guides & News",
     links: [
-      { href: "/guides", label: "Guides", labelDe: "Ratgeber", emoji: "📖", keywords: ["guides", "how to", "tutorials", "explainers"] },
-      { href: "/blog", label: "News & analysis", labelDe: "News & Analysen", emoji: "📰", keywords: ["blog", "news", "articles", "posts", "updates", "announcements"], popular: true },
-      { href: "/learn", label: "Learn Riftbound", labelDe: "Riftbound lernen", emoji: "🎓", keywords: ["learn", "beginner", "how to play", "getting started", "rules"] },
-      { href: "/authors", label: "Who writes this", labelDe: "Wer schreibt das", emoji: "✍️", keywords: ["authors", "team", "byline", "who writes"] },
-      { href: "/editorial-policy", label: "Editorial policy", labelDe: "Redaktionelle Richtlinien", emoji: "📐", keywords: ["editorial", "policy", "standards", "corrections"] },
-      { href: "/methodology", label: "Methodology", labelDe: "Methodik", emoji: "📏", keywords: ["methodology", "condition", "grading", "fx", "currency", "ranking"] },
+      { href: "/guides", label: "Guides", emoji: "📖", keywords: ["guides", "how to", "tutorials", "explainers"] },
+      { href: "/blog", label: "News & analysis", emoji: "📰", keywords: ["blog", "news", "articles", "posts", "updates", "announcements"], popular: true },
+      { href: "/learn", label: "Learn Riftbound", emoji: "🎓", keywords: ["learn", "beginner", "how to play", "getting started", "rules"] },
+      { href: "/authors", label: "Who writes this", emoji: "✍️", keywords: ["authors", "team", "byline", "who writes"] },
+      { href: "/editorial-policy", label: "Editorial policy", emoji: "📐", keywords: ["editorial", "policy", "standards", "corrections"] },
+      { href: "/methodology", label: "Methodology", emoji: "📏", keywords: ["methodology", "condition", "grading", "fx", "currency", "ranking"] },
     ],
   },
   {
     title: "Help",
-    titleDe: "Hilfe",
     links: [
-      { href: "/support", label: "Support", labelDe: "Support", emoji: "🆘", keywords: ["support", "help", "faq", "problem", "issue", "something is broken"] },
-      { href: "/contact", label: "Contact & feedback", labelDe: "Kontakt & Feedback", emoji: "✉️", keywords: ["contact", "email", "get in touch", "reach us"] },
-      { href: "/feedback", label: "Suggest a feature", labelDe: "Feature vorschlagen", emoji: "💡", keywords: ["feedback", "suggest", "idea", "feature request", "vote"] },
-      { href: "/stores/suggest", label: "Suggest a store", labelDe: "Händler vorschlagen", emoji: "➕", keywords: ["suggest a store", "add a store", "missing store", "list my store"] },
-      { href: "/about", label: "About RiftCompare", labelDe: "Über RiftCompare", emoji: "ℹ️", keywords: ["about", "who we are", "riftcompare", "compare"] },
+      { href: "/support", label: "Support", emoji: "🆘", keywords: ["support", "help", "faq", "problem", "issue", "something is broken"] },
+      { href: "/contact", label: "Contact & feedback", emoji: "✉️", keywords: ["contact", "email", "get in touch", "reach us"] },
+      { href: "/feedback", label: "Suggest a feature", emoji: "💡", keywords: ["feedback", "suggest", "idea", "feature request", "vote"] },
+      { href: "/stores/suggest", label: "Suggest a store", emoji: "➕", keywords: ["suggest a store", "add a store", "missing store", "list my store"] },
+      { href: "/about", label: "About RiftCompare", emoji: "ℹ️", keywords: ["about", "who we are", "riftcompare", "compare"] },
       // The header's own Discord icon is desktop-only (Navbar.tsx, lg:grid) —
       // below that breakpoint (everything under 1024px: every phone AND the
       // whole 640-1023px tablet range) it was reachable from NOWHERE, despite
@@ -209,7 +193,7 @@ export const NAV_GROUPS: NavGroup[] = [
       // lost." DISCORD_URL had never actually been added to NAV_GROUPS, so
       // that claim was false — this makes it true. External, so every
       // renderer of this list must open it in a new tab, not route through it.
-      { href: DISCORD_URL, label: "Join our Discord", labelDe: "Unserem Discord beitreten", emoji: "💬", keywords: ["discord", "community", "chat", "server"], external: true },
+      { href: DISCORD_URL, label: "Join our Discord", emoji: "💬", keywords: ["discord", "community", "chat", "server"], external: true },
     ],
   },
 ];
@@ -239,10 +223,10 @@ export const POPULAR_LINKS: NavGroupLink[] = NAV_GROUPS.flatMap((g) => g.links).
 // Original content that a reviewer cannot find might as well not exist. It
 // points at /blog rather than /guides: same job, and the blog is the half that
 // changes weekly. Keep this in step with Navbar.tsx, which renders the real bar.
-export const PRIMARY_NAV: { href: string; label: string; labelDe?: string }[] = [
-  { href: "/browse", label: "Cards", labelDe: "Karten" },
-  { href: "/sealed", label: "Sealed", labelDe: "Versiegelt" },
-  { href: "/market", label: "Index", labelDe: "Index" },
+export const PRIMARY_NAV: { href: string; label: string }[] = [
+  { href: "/browse", label: "Cards" },
+  { href: "/sealed", label: "Sealed" },
+  { href: "/market", label: "Index" },
   { href: "/blog", label: "Blog" },
 ];
 
@@ -280,22 +264,18 @@ const browseDbFooterLinks = browseDbLinks.filter((l) => l.href !== "/radiance-co
 export const FOOTER_GROUPS: NavGroup[] = [
   {
     title: "Shop",
-    titleDe: "Shop",
     links: [...(byTitle["Prices"] ?? []), ...(radianceCountdown ? [radianceCountdown] : []), ...marketplaceLinks.slice(0, 2)],
   },
   {
     title: "Browse & collect",
-    titleDe: "Durchsuchen & Sammeln",
     links: [...browseDbFooterLinks, ...(byTitle["Your collection"] ?? [])],
   },
   {
     title: "Deals & decks",
-    titleDe: "Angebote & Decks",
     links: [...(byTitle["Deals & value"] ?? []), ...(byTitle["Decks"] ?? []), ...marketplaceLinks.slice(2, 4)],
   },
   {
     title: "Learn & play",
-    titleDe: "Lernen & Spielen",
     links: [
       ...(byTitle["Games"] ?? []),
       ...(byTitle["Guides & News"] ?? []),

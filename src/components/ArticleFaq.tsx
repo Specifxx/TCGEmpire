@@ -1,5 +1,4 @@
 import { InlineMarkdown } from "./Markdown";
-import { Localized } from "./Localized";
 
 /**
  * The article's FAQ, rendered VISIBLY from the same `faq` array that feeds the
@@ -22,9 +21,7 @@ export function ArticleFaq({ faq, heading = DEFAULT_HEADING }: { faq: { q: strin
   if (!faq.length) return null;
   return (
     <section className="mt-10" id="faq">
-      <h2 className="mb-3 scroll-mt-24 text-xl font-extrabold text-white">
-        {heading === DEFAULT_HEADING ? <Localized en={DEFAULT_HEADING} de="Häufig gestellte Fragen" /> : heading}
-      </h2>
+      <h2 className="mb-3 scroll-mt-24 text-xl font-extrabold text-white">{heading}</h2>
       <div className="divide-y divide-ink-800 rounded-xl border border-ink-700">
         {faq.map((f, i) => (
           <details key={i} className="group p-4">

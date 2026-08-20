@@ -29,8 +29,8 @@ export type RiseScope = Country | "GLOBAL";
 // COUNTRIES: a card priced only in a market missing from this list falls through
 // to the "AU" default and renders AU's price (or a dash) under an AU label, which
 // is silently wrong rather than loudly broken. SG/CA were missing for both of
-// their launches; DE was missing for its 2026-08-20 launch.
-const MARKET_PREF: Country[] = ["AU", "US", "UK", "SG", "CA", "DE"];
+// their launches.
+const MARKET_PREF: Country[] = ["AU", "US", "UK", "SG", "CA"];
 
 // The set of market codes that currently EXIST. PriceHistory.country is a plain
 // text column, so it can hold codes for markets since retired (NZ rows survived
@@ -140,7 +140,6 @@ type UniverseCard = {
   lowestPriceCentsUk: number | null;
   lowestPriceCentsSg: number | null;
   lowestPriceCentsCa: number | null;
-  lowestPriceCentsDe: number | null;
 };
 
 // Lookahead-free backtest of the reconstructable price-timing signal ("room to run"
@@ -217,7 +216,7 @@ async function computeRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
   const priced = isGlobal
     ? {
         // Every priced market, not just the original three — a card priced ONLY
-        // in SG/CA/DE is still a real, rankable card, and omitting those columns
+        // in SG/CA is still a real, rankable card, and omitting those columns
         // here quietly excluded them from the GLOBAL universe entirely.
         OR: [
           { lowestPriceCents: { not: null } },
@@ -225,7 +224,6 @@ async function computeRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
           { lowestPriceCentsUk: { not: null } },
           { lowestPriceCentsSg: { not: null } },
           { lowestPriceCentsCa: { not: null } },
-          { lowestPriceCentsDe: { not: null } },
         ],
       }
     : { [priceField(scope)]: { not: null } };
@@ -243,7 +241,7 @@ async function computeRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
       // `undefined`, so pickPrice() returned null and the price rendered as "—"
       // for every card whose basis market was SG or CA.
       lowestPriceCents: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true,
-      lowestPriceCentsSg: true, lowestPriceCentsCa: true, lowestPriceCentsDe: true,
+      lowestPriceCentsSg: true, lowestPriceCentsCa: true,
     },
   })) as UniverseCard[];
 

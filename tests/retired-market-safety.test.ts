@@ -36,7 +36,7 @@ test("currencyOf survives a market code that no longer exists", () => {
   assert.doesNotThrow(() => currencyOf(undefined as unknown as Country));
   // Live markets must still resolve to their own real currency, not the fallback.
   assert.equal(currencyOf("AU"), "AUD");
-  assert.equal(currencyOf("DE"), "EUR");
+  assert.equal(currencyOf("SG"), "SGD");
 });
 
 test("rise-predictor validates PriceHistory.country before casting it to Country", () => {

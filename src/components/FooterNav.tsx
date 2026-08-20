@@ -1,30 +1,23 @@
 import Link from "next/link";
 import { FOOTER_GROUPS, type NavGroupLink } from "./nav-groups";
 import { HomeFooterToggle } from "./HomeFooterToggle";
-import { Localized } from "./Localized";
 
 // A link that leaves the site (currently just Discord) can't go through
 // next/link's client-side router the way an internal path can — it needs a
 // plain <a target="_blank"> instead. Shared so every layout below (both the
 // homepage's collapsed accordion and every other route's full grid) branches
 // identically rather than drifting.
-//
-// <Localized> (not a plain locale check) because FooterNav stays a server
-// component — see this file's own header comment on why — so it can't call
-// useLocale() itself; falls back to the English label when a link has no
-// labelDe yet.
 function FooterLink({ l, className }: { l: NavGroupLink; className: string }) {
-  const text = <Localized en={l.label} de={l.labelDe ?? l.label} />;
   if (l.external) {
     return (
       <a href={l.href} target="_blank" rel="noopener noreferrer" className={className}>
-        {text}
+        {l.label}
       </a>
     );
   }
   return (
     <Link href={l.href} className={className}>
-      {text}
+      {l.label}
     </Link>
   );
 }
@@ -78,7 +71,7 @@ export function FooterNav() {
         <nav aria-label="Site map" className="mb-6 border-b border-ink-800 pb-2 text-left">
           <details className="group py-3">
             <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 text-xs font-semibold uppercase tracking-wide text-slate-300 [&::-webkit-details-marker]:hidden">
-              <Localized en="Full site map" de="Komplette Übersicht" />
+              Full site map
               <svg
                 className="h-3.5 w-3.5 shrink-0 text-slate-500 transition-transform group-open:rotate-180"
                 viewBox="0 0 24 24"
@@ -93,7 +86,7 @@ export function FooterNav() {
             <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
               {FOOTER_GROUPS.map((group) => (
                 <div key={group.title}>
-                  <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500"><Localized en={group.title} de={group.titleDe ?? group.title} /></div>
+                  <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">{group.title}</div>
                   <ul className="tap-list space-y-1">
                     {group.links.map((l) => (
                       <li key={l.href}>
@@ -114,7 +107,7 @@ export function FooterNav() {
             {FOOTER_GROUPS.map((group) => (
               <details key={group.title} className="group py-3">
                 <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 text-xs font-semibold uppercase tracking-wide text-slate-300 sm:min-h-0 [&::-webkit-details-marker]:hidden">
-                  <Localized en={group.title} de={group.titleDe ?? group.title} />
+                  {group.title}
                   <svg
                     className="h-3.5 w-3.5 shrink-0 text-slate-500 transition-transform group-open:rotate-180"
                     viewBox="0 0 24 24"
@@ -139,7 +132,7 @@ export function FooterNav() {
           <div className="hidden text-left sm:grid sm:grid-cols-4 sm:gap-x-6 sm:gap-y-4">
             {FOOTER_GROUPS.map((group) => (
               <div key={group.title}>
-                <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500"><Localized en={group.title} de={group.titleDe ?? group.title} /></div>
+                <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">{group.title}</div>
                 <ul className="tap-list space-y-1">
                   {group.links.map((l) => (
                     <li key={l.href}>

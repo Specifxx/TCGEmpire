@@ -49,7 +49,7 @@ test("a detected region still wins over the default", () => {
   assert.equal(normalizeCountry("SG"), "SG");
   assert.equal(normalizeCountry("CA"), "CA");
   assert.equal(normalizeCountry("GB"), "UK", "the geo header uses ISO GB; we use UK");
-  assert.equal(normalizeCountry("DE"), "DE", "Germany is its own real market now, not a UK fallback");
+  assert.equal(normalizeCountry("DE"), "UK", "other EU visitors still browse the UK market's real GBP inventory");
   assert.equal(normalizeCountry("FR"), "UK", "other EU visitors still browse the UK market's real GBP inventory");
 });
 

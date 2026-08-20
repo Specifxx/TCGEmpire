@@ -215,15 +215,15 @@ test("no NEW content-pack article duplicates its FAQ in the body", () => {
   assert.deepEqual(offenders, [], `content-pack articles duplicating their FAQ: ${offenders.join(", ")}`);
 });
 
-test("the six country buying guides form a complete hreflang cluster", () => {
+test("the five country buying guides form a complete hreflang cluster", () => {
   for (const slug of Object.values(COUNTRY_GUIDE_SLUGS)) {
     const article = ARTICLES.find((a) => a.slug === slug);
     assert.ok(article, `hreflang cluster names ${slug}, which is not an article`);
     assert.equal(article!.category, "blog", `${slug} must live under /blog for its hreflang URLs to resolve`);
     const map = hreflangForCountryGuide(slug);
     assert.ok(map, `${slug} should be recognised as a country guide`);
-    // Six markets plus x-default, all pointing at real cluster members.
-    assert.equal(Object.keys(map!).length, 7, `${slug}: expected 6 locales + x-default`);
+    // Five markets plus x-default, all pointing at real cluster members.
+    assert.equal(Object.keys(map!).length, 6, `${slug}: expected 5 locales + x-default`);
   }
 });
 

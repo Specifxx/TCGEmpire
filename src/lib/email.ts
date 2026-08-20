@@ -511,7 +511,7 @@ export async function sendNewsletterWelcomeEmail(to: string, unsubUrl: string): 
   const inner = `
     <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
       You're on the list — every week you'll get the ${SITE_NAME} Index summary: the cards that spiked,
-      the cards that dropped, and where the best value is across AU, US, UK, SG, CA and DE stores.
+      the cards that dropped, and where the best value is across AU, US, UK, SG and CA stores.
       The next edition lands this Saturday morning (Sydney time).
     </td></tr>
     <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/movers?utm_source=newsletter&utm_medium=email&utm_campaign=welcome" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">See this week's movers</a></td></tr>`;
