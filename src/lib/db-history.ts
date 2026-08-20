@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { HISTORY_VARS, OPERATIONAL_VARS, resolveUrl, resolveVar } from "./db-chains";
 
 // A SECOND physical database, reserved for the write-heavy, ever-growing,
 // rarely-fully-queried tables: PriceHistory (daily price snapshots) and
@@ -77,28 +78,15 @@ import { PrismaClient } from "@prisma/client";
 // across the whole repo and update every hit in the files above — a chain that
 // silently stops at an exhausted project is exactly how this repo has lost a
 // day to an "unexplained" P1001 more than once.
-const HISTORY_URL =
-  process.env.HISTORY_DATABASE_URL_3 ||
-  process.env.HISTORY_DATABASE_URL ||
-  process.env.RH6 ||
-  process.env.RH7 ||
-  process.env.RH5 ||
-  process.env.HISTORY_DATABASE_URL_4 ||
-  process.env.HISTORY_DATABASE_URL_2 ||
-  process.env.DATABASE_URL;
+const HISTORY_URL = resolveUrl(HISTORY_VARS);
 
 // Names the winning variable (never its value — it's a credential) so a P1001
 // in the logs immediately answers "which database did it actually try?".
 // Mirrors the same diagnostic in scripts/build-db-push.sh and lib/db.ts.
 export const HISTORY_URL_SOURCE =
-  process.env.HISTORY_DATABASE_URL_3 ? "HISTORY_DATABASE_URL_3"
-  : process.env.HISTORY_DATABASE_URL ? "HISTORY_DATABASE_URL"
-  : process.env.RH6 ? "RH6"
-  : process.env.RH7 ? "RH7"
-  : process.env.RH5 ? "RH5"
-  : process.env.HISTORY_DATABASE_URL_4 ? "HISTORY_DATABASE_URL_4"
-  : process.env.HISTORY_DATABASE_URL_2 ? "HISTORY_DATABASE_URL_2"
-  : "DATABASE_URL (no history project set — history shares the operational DB)";
+  resolveVar(HISTORY_VARS) === "DATABASE_URL" || resolveVar(HISTORY_VARS) === null
+    ? "DATABASE_URL (no history project set — history shares the operational DB)"
+    : resolveVar(HISTORY_VARS)!;
 
 if (HISTORY_URL_SOURCE !== "HISTORY_DATABASE_URL_3") {
   console.warn(
@@ -135,15 +123,10 @@ if (HISTORY_URL_SOURCE !== "HISTORY_DATABASE_URL_3") {
 // Resolved inline rather than imported from db.ts on purpose: db.ts constructs
 // the operational PrismaClient at module scope, so importing it here eagerly
 // would spin up a second client in every context that only wants history.
-const OPERATIONAL_URL =
-  process.env.RM7 ||
-  process.env.RM8 ||
-  process.env.RM5 ||
-  process.env.DATABASE_URL_2 ||
-  process.env.DATABASE_URL ||
-  process.env.RM4 ||
-  process.env.RM3 ||
-  process.env.RM6;
+// Imported from the same place db.ts uses, so the two can no longer disagree
+// about which project "the operational database" means — a drift that once made
+// ensureHistoryCards() silently no-op.
+const OPERATIONAL_URL = resolveUrl(OPERATIONAL_VARS);
 export const historyIsSplit = HISTORY_URL !== OPERATIONAL_URL;
 
 // Ensure a generous connect_timeout (Postgres/libpq connection param, in

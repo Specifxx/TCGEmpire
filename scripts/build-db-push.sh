@@ -56,8 +56,8 @@ CURRENT_HIST="HISTORY_DATABASE_URL_3"
 # benign-looking "skipping". A green deploy against an un-migrated database is
 # exactly the failure this script exists to prevent.
 if ! { [ "${VERCEL_ENV:-}" = "production" ] || [ "${VERCEL_ENV:-}" = "preview" ]; } \
-   || [ -z "${RM7:-}${RM8:-}${RM5:-}${DATABASE_URL_2:-}${DATABASE_URL:-}${RM4:-}${RM3:-}${RM6:-}" ]; then
-  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM7 / RM8 / RM5 / DATABASE_URL_2 / DATABASE_URL / RM4 / RM3 / RM6) — skipping schema push."
+   || [ -z "${RM7:-}${RM8:-}${DATABASE_URL:-}" ]; then
+  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM7 / RM8 / DATABASE_URL) — skipping schema push."
   exit 0
 fi
 
@@ -76,33 +76,17 @@ if [ -n "${RM7:-}" ]; then
   export DATABASE_URL="$RM7"
   SOURCE="RM7"
 elif [ -n "${RM8:-}" ]; then
-  # The designated rollback for when RM7 spends its allowance. Reached only by
-  # UNSETTING RM7 — this chain falls through on an unset variable, never on an
-  # unreachable database. See the note on OPERATIONAL_URL in src/lib/db.ts.
+  # Designated rollback. Reached by UNSETTING RM7 — this chain falls through on
+  # an unset variable, never on an unreachable one.
   export DATABASE_URL="$RM8"
   SOURCE="RM8"
-elif [ -n "${RM5:-}" ]; then
-  export DATABASE_URL="$RM5"
-  SOURCE="RM5"
-elif [ -n "${DATABASE_URL_2:-}" ]; then
-  export DATABASE_URL="$DATABASE_URL_2"
-  SOURCE="DATABASE_URL_2"
-elif [ -n "${DATABASE_URL:-}" ]; then
-  SOURCE="DATABASE_URL"
-elif [ -n "${RM4:-}" ]; then
-  export DATABASE_URL="$RM4"
-  SOURCE="RM4"
-elif [ -n "${RM3:-}" ]; then
-  export DATABASE_URL="$RM3"
-  SOURCE="RM3"
 else
-  # RM6 is now the tail of the chain, so this branch is unreachable: the gate
-  # above already exited unless at least one chain variable is set. Fail
-  # loudly rather than migrate something unnamed if that ever changes.
-  # It sits last DESPITE holding the freshest data because its transfer
-  # allowance is spent — see the long note on OPERATIONAL_URL in src/lib/db.ts.
-  export DATABASE_URL="$RM6"
-  SOURCE="RM6"
+  # DATABASE_URL is last and is NOT a good production fallback — it is kept
+  # because prisma/schema.prisma reads that literal name and local dev sets only
+  # it. Retired projects (RM3/RM4/RM5/RM6/DATABASE_URL_2) were removed from this
+  # chain on 2026-08-20: a decommissioned project whose variable lingers is not a
+  # safety net, it is a trap. See src/lib/db-chains.ts.
+  SOURCE="DATABASE_URL"
 fi
 # Name the winner, never the value (it's a credential). This is the one line that
 # turns "P1001 against some unfamiliar host" into an immediate answer: if SOURCE is
@@ -129,20 +113,13 @@ fi
 if [ -n "${HISTORY_DATABASE_URL_3:-}" ]; then
   HIST="$HISTORY_DATABASE_URL_3"; HIST_SOURCE="HISTORY_DATABASE_URL_3"
 elif [ -n "${HISTORY_DATABASE_URL:-}" ]; then
+  # Rollback: a byte-identical, reachable copy of _3 as of the 2026-08-20 survey.
   HIST="$HISTORY_DATABASE_URL"; HIST_SOURCE="HISTORY_DATABASE_URL"
-elif [ -n "${RH6:-}" ]; then
-  HIST="$RH6"; HIST_SOURCE="RH6"
-elif [ -n "${RH7:-}" ]; then
-  HIST="$RH7"; HIST_SOURCE="RH7"
-elif [ -n "${RH5:-}" ]; then
-  HIST="$RH5"; HIST_SOURCE="RH5"
-elif [ -n "${HISTORY_DATABASE_URL_4:-}" ]; then
-  HIST="$HISTORY_DATABASE_URL_4"; HIST_SOURCE="HISTORY_DATABASE_URL_4"
-elif [ -n "${HISTORY_DATABASE_URL_2:-}" ]; then
-  # LAST: its 5 GB monthly allowance is spent. Kept only so a deploy can't
-  # hard-fail with no history target at all. See src/lib/db-history.ts.
-  HIST="$HISTORY_DATABASE_URL_2"; HIST_SOURCE="HISTORY_DATABASE_URL_2"
 else
+  # No separate history project — history shares the operational database, which
+  # the push above already covered. RH5/RH7/_4 were dropped as ORPHANED (0% of
+  # their card ids resolve against the live catalogue) and _2 as out of
+  # allowance; RH6 is a migration SOURCE, not a runtime target.
   HIST=""; HIST_SOURCE=""
 fi
 

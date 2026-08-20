@@ -45,6 +45,7 @@
  * Usage (CI): npx tsx scripts/migrate-history.ts
  */
 import { PrismaClient } from "@prisma/client";
+import { OPERATIONAL_VARS, resolveUrl } from "../src/lib/db-chains";
 
 // CURRENT-first, mirroring src/lib/db.ts's OPERATIONAL_URL exactly. MAIN_URL
 // feeds copyCards() — the Card rows that satisfy PriceHistory's foreign key in
@@ -60,13 +61,10 @@ import { PrismaClient } from "@prisma/client";
 // still set — precisely the silent-stale-Card failure the paragraph above
 // describes. Fixed and reordered to mirror src/lib/db.ts's OPERATIONAL_URL
 // exactly with the 2026-08-17 rotation.
-const MAIN_URL =
-  process.env.RM6 ||
-  process.env.DATABASE_URL_2 ||
-  process.env.DATABASE_URL ||
-  process.env.RM5 ||
-  process.env.RM4 ||
-  process.env.RM3;
+// Imported, never re-typed. This list had drifted THREE times (see the note in
+// src/lib/db-chains.ts); the last drift left it RM6-first after the RM7 cutover,
+// which is exactly the stale-Card failure the paragraph above describes.
+const MAIN_URL = resolveUrl(OPERATIONAL_VARS);
 // CURRENT-first, not newest-first. HISTORY_DATABASE_URL_3 leads because the
 // history database rotated onto it on 2026-08-19, when HISTORY_DATABASE_URL_2
 // approached its own 5 GB monthly allowance three days into service. See the
@@ -82,7 +80,7 @@ const TARGET_LABEL =
   : process.env.RH5 ? "RH5"
   : "HISTORY_DATABASE_URL_4";
 
-if (!MAIN_URL) { console.error("No operational database is set (RM6 / DATABASE_URL_2 / DATABASE_URL / RM5 / RM4 / RM3)."); process.exit(1); }
+if (!MAIN_URL) { console.error(`No operational database is set (${OPERATIONAL_VARS.join(" / ")}).`); process.exit(1); }
 if (!TARGET_URL) { console.error("None of HISTORY_DATABASE_URL_3 / HISTORY_DATABASE_URL_2 / HISTORY_DATABASE_URL / RH7 / RH6 / RH5 / HISTORY_DATABASE_URL_4 is set — point one at the current history project first."); process.exit(1); }
 if (TARGET_LABEL !== "HISTORY_DATABASE_URL_3") {
   console.warn(`⚠  Target resolved to ${TARGET_LABEL}, not HISTORY_DATABASE_URL_3 — the current history project is not visible in this environment. HISTORY_DATABASE_URL_2 is the rollback and is at its allowance; everything older is exhausted. This is almost certainly not what you want.`);

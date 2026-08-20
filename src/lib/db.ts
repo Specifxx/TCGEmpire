@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { OPERATIONAL_VARS, resolveUrl, resolveVar } from "./db-chains";
 
 // ─── DATA-EGRESS RULES (read before adding queries) ────────────────────────────
 // Neon's free tier has a 5 GB/month NETWORK TRANSFER allowance. DexCompare has
@@ -101,57 +102,39 @@ const BIG_RESULT_BYTES = 1_000_000;
 // that moment — with a bare `Error: Command "npm run build" exited with 1` and
 // nothing in it naming a database.
 //
-// RM6 IS DELIBERATELY LAST, BELOW EVEN THE LONG-DEAD PROJECTS, and that is not
-// an ordering mistake. It holds the freshest data of any fallback — a complete,
-// row-count-verified copy as of the 2026-08-20 cutover — but it is also the one
-// project KNOWN to have spent its monthly transfer allowance, hours before that
-// cutover. A fallback exists to keep the site answering when the head of the
-// chain is missing from an environment; an exhausted project refuses
-// connections, so promoting RM6 on freshness would hand the site a database
-// that cannot serve a single request. Freshness is worth nothing from a project
-// that won't connect.
+// THE CHAIN NOW HOLDS ONLY LIVE PROJECTS: RM7 (current), RM8 (rollback), and
+// DATABASE_URL. RM3/RM4/RM5/RM6/DATABASE_URL_2 were removed on 2026-08-20.
 //
-// RM8 SITS DIRECTLY BEHIND RM7 as the designated rollback for when RM7 spends
-// its allowance — every project before it has, within days. RM5 stays behind
-// RM8 as the second rollback: real (if older) data, allowance left as of
-// 2026-08-20. Prefer "answers at all" over "answers with the newest rows" —
-// that is the whole job of this list. Revisit when RM6's allowance resets at
-// the start of the next billing month, at which point it can move back up.
+// WHY REMOVING THEM IS A CORRECTNESS FIX, NOT TIDYING. A retired project is
+// eventually DECOMMISSIONED, but its variable lingers in Vercel and GitHub long
+// after. This chain falls through on an UNSET variable — never on an
+// unreachable one — so a lingering dead name is not a safety net: the app
+// selects it, connects to nothing, and the failure reads as an outage rather
+// than a misconfiguration. A shorter chain fails faster and more honestly.
 //
-// ⚠ TWO THINGS TO KNOW BEFORE RELYING ON RM8.
+// Those projects are still reachable BY NAME from the migrate-* tasks in
+// .github/workflows/maintenance.yml, which is where draining a project before
+// switching it off belongs. Draining must not depend on the runtime chain.
 //
-// 1. THIS IS NOT AUTOMATIC FAILOVER. `||` falls through on an UNSET variable,
-//    not on an unreachable database. An exhausted RM7 is still SET, so this
-//    chain keeps choosing it and the site keeps failing. Promoting RM8 is a
-//    deliberate act: UNSET RM7 in Vercel (and GitHub), redeploy, and RM8 takes
-//    over. Health-based failover would mean a live connection check on every
-//    cold start, which costs a round trip on the very database whose transfer
-//    allowance is the problem — so this stays manual on purpose.
+// DATABASE_URL is last and is NOT a good production fallback. It is kept
+// because prisma/schema.prisma reads env("DATABASE_URL") literally and local
+// development sets only that name in .env.local.
 //
-// 2. AN EMPTY RM8 IS WORSE THAN A STALE RM5. A fallback only helps if it holds
-//    data; restoring onto an empty project is exactly how production served
-//    404s during the 2026-08-20 cutover. Run maintenance.yml's
-//    `migrate-main-db-to-rm8` (RM7 → RM8) and keep re-running it periodically,
-//    or RM8 is a fallback to a blank site.
+// ⚠ RM8 IS NOT AUTOMATIC FAILOVER. Promoting it is deliberate: UNSET RM7 in
+// Vercel and GitHub, then redeploy. Health-based failover would mean a live
+// connection check on every cold start, against the very database whose
+// transfer allowance is the problem.
 //
-// Do NOT delete DATABASE_URL: several scripts and Prisma itself still read that
-// literal name, so unsetting it breaks far more than it tidies.
+// ⚠ AN EMPTY RM8 IS WORSE THAN NO ROLLBACK. Run maintenance.yml's
+// `migrate-main-db-to-rm8` before it is ever needed, and re-run it periodically.
 //
-// ORDER MATTERS AND IS DUPLICATED: this list is mirrored, by necessity, in
-// places that cannot import this module — scripts/build-db-push.sh and the
-// `env:` blocks of .github/workflows/{maintenance,refresh-prices,db-audit,
-// weekly-promo}.yml. tests/db-chain.test.ts pins the app and build chains to
-// each other; the workflow blocks are checked by eye. Rotate them together, or
-// the site reads one database while the importers write to another.
-const OPERATIONAL_URL =
-  process.env.RM7 ||
-  process.env.RM8 ||
-  process.env.RM5 ||
-  process.env.DATABASE_URL_2 ||
-  process.env.DATABASE_URL ||
-  process.env.RM4 ||
-  process.env.RM3 ||
-  process.env.RM6;
+// THE LIST ITSELF LIVES IN src/lib/db-chains.ts and is imported here. Everything
+// that runs in Node imports it too, so the copies that used to drift (seven
+// scripts, db-history.ts) no longer exist. Only two consumers genuinely cannot
+// import it — scripts/build-db-push.sh (bash, runs pre-build) and the `env:`
+// blocks of .github/workflows/{maintenance,refresh-prices,db-audit,
+// weekly-promo}.yml — and tests/db-chain.test.ts pins both to db-chains.ts.
+const OPERATIONAL_URL = resolveUrl(OPERATIONAL_VARS);
 
 // Ensure a generous connect_timeout (the standard libpq/Postgres connection
 // param, in seconds) is set. WHY: Neon's pooled compute suspends when idle and
@@ -181,23 +164,7 @@ function withConnectTimeout(url: string | undefined, seconds: number): string | 
 // winning var name once at module init makes the next P1001 self-diagnosing —
 // in particular it distinguishes "RM3 is down" from "RM3 is unset in this
 // environment, so we silently fell back to the exhausted old database".
-const RESOLVED_SOURCE = process.env.RM7
-  ? "RM7"
-  : process.env.RM8
-  ? "RM8"
-  : process.env.RM5
-  ? "RM5"
-  : process.env.DATABASE_URL_2
-  ? "DATABASE_URL_2"
-  : process.env.DATABASE_URL
-  ? "DATABASE_URL"
-  : process.env.RM4
-  ? "RM4"
-  : process.env.RM3
-  ? "RM3"
-  : process.env.RM6
-  ? "RM6"
-  : "NONE";
+const RESOLVED_SOURCE = resolveVar(OPERATIONAL_VARS) ?? "NONE";
 
 // DB_SOURCE_NAME: the same answer, supplied by whoever set the URL.
 //
