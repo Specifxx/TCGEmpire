@@ -56,8 +56,8 @@ CURRENT_HIST="HISTORY_DATABASE_URL_3"
 # benign-looking "skipping". A green deploy against an un-migrated database is
 # exactly the failure this script exists to prevent.
 if ! { [ "${VERCEL_ENV:-}" = "production" ] || [ "${VERCEL_ENV:-}" = "preview" ]; } \
-   || [ -z "${RM7:-}${RM6:-}${DATABASE_URL_2:-}${DATABASE_URL:-}${RM5:-}${RM4:-}${RM3:-}" ]; then
-  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM7 / RM6 / DATABASE_URL_2 / DATABASE_URL / RM5 / RM4 / RM3) — skipping schema push."
+   || [ -z "${RM7:-}${RM5:-}${DATABASE_URL_2:-}${DATABASE_URL:-}${RM4:-}${RM3:-}${RM6:-}" ]; then
+  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM7 / RM5 / DATABASE_URL_2 / DATABASE_URL / RM4 / RM3 / RM6) — skipping schema push."
   exit 0
 fi
 
@@ -75,26 +75,28 @@ fi
 if [ -n "${RM7:-}" ]; then
   export DATABASE_URL="$RM7"
   SOURCE="RM7"
-elif [ -n "${RM6:-}" ]; then
-  export DATABASE_URL="$RM6"
-  SOURCE="RM6"
+elif [ -n "${RM5:-}" ]; then
+  export DATABASE_URL="$RM5"
+  SOURCE="RM5"
 elif [ -n "${DATABASE_URL_2:-}" ]; then
   export DATABASE_URL="$DATABASE_URL_2"
   SOURCE="DATABASE_URL_2"
 elif [ -n "${DATABASE_URL:-}" ]; then
   SOURCE="DATABASE_URL"
-elif [ -n "${RM5:-}" ]; then
-  export DATABASE_URL="$RM5"
-  SOURCE="RM5"
 elif [ -n "${RM4:-}" ]; then
   export DATABASE_URL="$RM4"
   SOURCE="RM4"
-else
-  # RM3 is now the tail of the chain, so this branch is unreachable: the gate
-  # above already exited unless at least one chain variable is set. Fail
-  # loudly rather than migrate something unnamed if that ever changes.
+elif [ -n "${RM3:-}" ]; then
   export DATABASE_URL="$RM3"
   SOURCE="RM3"
+else
+  # RM6 is now the tail of the chain, so this branch is unreachable: the gate
+  # above already exited unless at least one chain variable is set. Fail
+  # loudly rather than migrate something unnamed if that ever changes.
+  # It sits last DESPITE holding the freshest data because its transfer
+  # allowance is spent — see the long note on OPERATIONAL_URL in src/lib/db.ts.
+  export DATABASE_URL="$RM6"
+  SOURCE="RM6"
 fi
 # Name the winner, never the value (it's a credential). This is the one line that
 # turns "P1001 against some unfamiliar host" into an immediate answer: if SOURCE is

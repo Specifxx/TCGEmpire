@@ -101,11 +101,23 @@ const BIG_RESULT_BYTES = 1_000_000;
 // that moment — with a bare `Error: Command "npm run build" exited with 1` and
 // nothing in it naming a database.
 //
-// RM6 is kept as the rollback (it holds a complete, row-count-verified copy as
-// of the 2026-08-20 cutover) and every var below it is dead/read-only; treat
-// none of them as a write target. Do NOT delete DATABASE_URL: beyond the
-// rollback, several scripts and Prisma itself still read that literal name, so
-// unsetting it breaks far more than it tidies.
+// RM6 IS DELIBERATELY LAST, BELOW EVEN THE LONG-DEAD PROJECTS, and that is not
+// an ordering mistake. It holds the freshest data of any fallback — a complete,
+// row-count-verified copy as of the 2026-08-20 cutover — but it is also the one
+// project KNOWN to have spent its monthly transfer allowance, hours before that
+// cutover. A fallback exists to keep the site answering when the head of the
+// chain is missing from an environment; an exhausted project refuses
+// connections, so promoting RM6 on freshness would hand the site a database
+// that cannot serve a single request. Freshness is worth nothing from a project
+// that won't connect.
+//
+// RM5 is therefore the real rollback: older data, but allowance left as of
+// 2026-08-20. Prefer "answers at all" over "answers with the newest rows" —
+// that is the whole job of this list. Revisit when RM6's allowance resets at
+// the start of the next billing month, at which point it can move back up.
+//
+// Do NOT delete DATABASE_URL: several scripts and Prisma itself still read that
+// literal name, so unsetting it breaks far more than it tidies.
 //
 // ORDER MATTERS AND IS DUPLICATED: this list is mirrored, by necessity, in
 // places that cannot import this module — scripts/build-db-push.sh and the
@@ -115,12 +127,12 @@ const BIG_RESULT_BYTES = 1_000_000;
 // the site reads one database while the importers write to another.
 const OPERATIONAL_URL =
   process.env.RM7 ||
-  process.env.RM6 ||
+  process.env.RM5 ||
   process.env.DATABASE_URL_2 ||
   process.env.DATABASE_URL ||
-  process.env.RM5 ||
   process.env.RM4 ||
-  process.env.RM3;
+  process.env.RM3 ||
+  process.env.RM6;
 
 // Ensure a generous connect_timeout (the standard libpq/Postgres connection
 // param, in seconds) is set. WHY: Neon's pooled compute suspends when idle and
@@ -152,18 +164,18 @@ function withConnectTimeout(url: string | undefined, seconds: number): string | 
 // environment, so we silently fell back to the exhausted old database".
 const RESOLVED_SOURCE = process.env.RM7
   ? "RM7"
-  : process.env.RM6
-  ? "RM6"
+  : process.env.RM5
+  ? "RM5"
   : process.env.DATABASE_URL_2
   ? "DATABASE_URL_2"
   : process.env.DATABASE_URL
   ? "DATABASE_URL"
-  : process.env.RM5
-  ? "RM5"
   : process.env.RM4
   ? "RM4"
   : process.env.RM3
   ? "RM3"
+  : process.env.RM6
+  ? "RM6"
   : "NONE";
 
 // DB_SOURCE_NAME: the same answer, supplied by whoever set the URL.
@@ -186,8 +198,9 @@ export const OPERATIONAL_URL_SOURCE = process.env.DB_SOURCE_NAME || RESOLVED_SOU
 if (OPERATIONAL_URL_SOURCE !== "RM7") {
   console.warn(
     `[db] operational database resolved from ${OPERATIONAL_URL_SOURCE}, not RM7. ` +
-      `RM7 is the current project (cut over 2026-08-20); RM6 is the ` +
-      `rollback and everything below it is exhausted/read-only, kept only so a deploy can't hard-fail. ` +
+      `RM7 is the current project (cut over 2026-08-20); RM5 is the ` +
+      `rollback and everything below it is exhausted/read-only (RM6 last of all — freshest data, but its ` +
+      `allowance is spent, so it cannot serve), kept only so a deploy can't hard-fail. ` +
       `If this appears in a Vercel build log, RM7 is missing from that environment.`
   );
 }
