@@ -135,6 +135,7 @@ if (HISTORY_URL_SOURCE !== "HISTORY_DATABASE_URL_3") {
 // the operational PrismaClient at module scope, so importing it here eagerly
 // would spin up a second client in every context that only wants history.
 const OPERATIONAL_URL =
+  process.env.RM7 ||
   process.env.RM6 ||
   process.env.DATABASE_URL_2 ||
   process.env.DATABASE_URL ||
@@ -221,7 +222,22 @@ export async function ensureHistoryCards(cardIds: string[]): Promise<void> {
   const missing = cardIds.filter((id) => !haveSet.has(id));
   if (missing.length === 0) return;
   const rows = await prisma.card.findMany({ where: { id: { in: missing } } });
-  // Strip nothing — Card has no outgoing FKs, so full rows insert cleanly.
-  await dbHistory.card.createMany({ data: rows, skipDuplicates: true });
-  console.log(`History DB: copied ${rows.length} missing card rows (FK for PriceHistory).`);
+  // Upsert BY ID rather than createMany({ skipDuplicates: true }) — createMany
+  // silently drops a row that collides with ANY unique field, not just id. That
+  // is exactly what happens for a card whose id changed in a catalogue rebuild
+  // but whose slug/externalId still belongs to a stale row left behind in this
+  // history-only Card table: the row we actually need for the FK never gets
+  // inserted, this logged as if every row succeeded (it counted rows ATTEMPTED,
+  // not rows actually written), and the next PriceHistory write for that card
+  // then failed its FK check — silently, every day, since the snapshot write
+  // is best-effort (see the try/catch around it in price-import.ts). Upsert by
+  // id either creates the row we need or throws a specific, diagnosable error
+  // (caught by that same try/catch) instead of a silent no-op.
+  let inserted = 0;
+  for (const row of rows) {
+    // Strip nothing else — Card has no outgoing FKs, so the full row upserts cleanly.
+    await dbHistory.card.upsert({ where: { id: row.id }, create: row, update: row });
+    inserted++;
+  }
+  console.log(`History DB: copied ${inserted}/${missing.length} missing card rows (FK for PriceHistory).`);
 }

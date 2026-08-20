@@ -63,16 +63,13 @@ import { PrismaClient } from "@prisma/client";
 const BIG_RESULT_ROWS = 500; // only size-check results at least this long (CPU)
 const BIG_RESULT_BYTES = 1_000_000;
 
-// RM6 is the CURRENT operational Neon project, cut over 2026-08-17. Eighth
+// RM7 is the CURRENT operational Neon project, cut over 2026-08-20. Ninth
 // rotation (DATABASE_URL → DATABASE_URL_2 → RM3 → RM4 → RM5 → DATABASE_URL →
-// DATABASE_URL_2 → RM6) and the first to move onto a genuinely NEW project
-// name rather than recycling one — RM3 (the obvious next rested candidate)
-// turned out to already be at its own capacity, so this is fresh, not rested.
-// DATABASE_URL_2 hit 4.8 of its 5 GB monthly transfer allowance just THREE
-// DAYS after the 2026-08-14 cutover onto it — the same ~2 GB/day burn every
-// prior project has shown.
+// DATABASE_URL_2 → RM6 → RM7). RM6 exhausted its 5 GB monthly network-transfer
+// allowance just THREE DAYS after the 2026-08-17 cutover onto it — the same
+// ~2 GB/day burn every prior project has shown.
 //
-// ⚠ THIS ROTATION IS NOT A FIX, AND THE NEXT ONE WON'T BE EITHER. Six
+// ⚠ THIS ROTATION IS NOT A FIX, AND THE NEXT ONE WON'T BE EITHER. Seven
 // consecutive projects have now been exhausted the same way, which makes this
 // a systemic read-volume problem, not bad luck with allowances. Rotating buys
 // days; it has never bought a fix. The burn rate itself is the open problem —
@@ -91,7 +88,7 @@ const BIG_RESULT_BYTES = 1_000_000;
 // THE NAME HAZARD, and it is worth reading before touching anything here.
 // prisma/schema.prisma reads env("DATABASE_URL") directly, and nearly every
 // script assigns `DATABASE_URL=<something> npx tsx …` to aim Prisma at a
-// database. The head of this chain is RM6, so anything that runs Prisma MUST
+// database. The head of this chain is RM7, so anything that runs Prisma MUST
 // copy the winner into DATABASE_URL first or it will talk to a previous
 // project while the app talks to the current one. scripts/build-db-push.sh
 // does exactly that copy. Locally this all still resolves to the dev Postgres
@@ -104,9 +101,9 @@ const BIG_RESULT_BYTES = 1_000_000;
 // that moment — with a bare `Error: Command "npm run build" exited with 1` and
 // nothing in it naming a database.
 //
-// DATABASE_URL_2 is kept as the rollback (it holds a complete, row-count-verified
-// copy as of the 2026-08-17 cutover) and every var below it is dead/read-only;
-// treat none of them as a write target. Do NOT delete DATABASE_URL: beyond the
+// RM6 is kept as the rollback (it holds a complete, row-count-verified copy as
+// of the 2026-08-20 cutover) and every var below it is dead/read-only; treat
+// none of them as a write target. Do NOT delete DATABASE_URL: beyond the
 // rollback, several scripts and Prisma itself still read that literal name, so
 // unsetting it breaks far more than it tidies.
 //
@@ -117,6 +114,7 @@ const BIG_RESULT_BYTES = 1_000_000;
 // each other; the workflow blocks are checked by eye. Rotate them together, or
 // the site reads one database while the importers write to another.
 const OPERATIONAL_URL =
+  process.env.RM7 ||
   process.env.RM6 ||
   process.env.DATABASE_URL_2 ||
   process.env.DATABASE_URL ||
@@ -152,7 +150,9 @@ function withConnectTimeout(url: string | undefined, seconds: number): string | 
 // winning var name once at module init makes the next P1001 self-diagnosing —
 // in particular it distinguishes "RM3 is down" from "RM3 is unset in this
 // environment, so we silently fell back to the exhausted old database".
-const RESOLVED_SOURCE = process.env.RM6
+const RESOLVED_SOURCE = process.env.RM7
+  ? "RM7"
+  : process.env.RM6
   ? "RM6"
   : process.env.DATABASE_URL_2
   ? "DATABASE_URL_2"
@@ -183,12 +183,12 @@ const RESOLVED_SOURCE = process.env.RM6
 // exactly as before.
 export const OPERATIONAL_URL_SOURCE = process.env.DB_SOURCE_NAME || RESOLVED_SOURCE;
 
-if (OPERATIONAL_URL_SOURCE !== "RM6") {
+if (OPERATIONAL_URL_SOURCE !== "RM7") {
   console.warn(
-    `[db] operational database resolved from ${OPERATIONAL_URL_SOURCE}, not RM6. ` +
-      `RM6 is the current project (cut over 2026-08-17); DATABASE_URL_2 is the ` +
+    `[db] operational database resolved from ${OPERATIONAL_URL_SOURCE}, not RM7. ` +
+      `RM7 is the current project (cut over 2026-08-20); RM6 is the ` +
       `rollback and everything below it is exhausted/read-only, kept only so a deploy can't hard-fail. ` +
-      `If this appears in a Vercel build log, RM6 is missing from that environment.`
+      `If this appears in a Vercel build log, RM7 is missing from that environment.`
   );
 }
 
