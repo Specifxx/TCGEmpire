@@ -12,10 +12,7 @@ import { AuthForm } from "./AuthForm";
 //
 // Skipped entirely on /marketplace — a visitor specifically evaluating the
 // marketplace (e.g. after seeing it linked from a community post) shouldn't be
-// hit with a full-screen signup wall on top of everything else there; a longer
-// delay sitewide (was 6s) avoids the "wall of asks" first impression more
-// broadly (real feedback: ads + subscription pitch + a still-growing
-// marketplace all at once read as overwhelming/untrustworthy to a new visitor).
+// hit with a full-screen signup wall on top of everything else there.
 //
 // THE PITCH IS NOW THE ACCOUNT TIER, NOT A PREMIUM COMP. This popup used to
 // promise a free week of Premium and gated its own appearance on a promo API
@@ -24,7 +21,7 @@ import { AuthForm } from "./AuthForm";
 // permanently unlocks (see lib/premium.ts's tier note), which needs no
 // server round-trip and can't lapse, so the popup renders on its own.
 const SEEN_KEY = "rc_signup_promo_seen";
-const SHOW_DELAY_MS = 25_000; // let a new visitor actually look around first
+const SHOW_DELAY_MS = 5_000; // fire early so more visitors actually see it before leaving
 const SKIP_PATHS = ["/login", "/verify", "/marketplace"];
 
 // What signing up actually gets you. The Bulk Pricer and Best Basket moved to
