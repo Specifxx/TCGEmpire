@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { AuthForm } from "@/components/AuthForm";
 import { getCurrentUser } from "@/lib/auth";
 import { enabledProviders } from "@/lib/oauth";
+import { SIGNUP_PREMIUM_DAYS } from "@/lib/premium";
 import { pageAlternates } from "@/lib/seo";
 
 // auth/utility — never indexed. The self-referencing canonical is what collapses
@@ -34,5 +35,11 @@ function cancelTarget(next?: string): string {
 export default async function LoginPage({ searchParams }: { searchParams: { next?: string } }) {
   const user = await getCurrentUser();
   if (user) redirect(safe(searchParams.next));
-  return <AuthForm providers={enabledProviders()} cancelHref={cancelTarget(searchParams.next)} />;
+  return (
+    <AuthForm
+      providers={enabledProviders()}
+      cancelHref={cancelTarget(searchParams.next)}
+      signupPremiumDays={SIGNUP_PREMIUM_DAYS}
+    />
+  );
 }

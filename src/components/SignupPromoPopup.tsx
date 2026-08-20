@@ -17,26 +17,37 @@ import { AuthForm } from "./AuthForm";
 // broadly (real feedback: ads + subscription pitch + a still-growing
 // marketplace all at once read as overwhelming/untrustworthy to a new visitor).
 //
-// THE PITCH IS NOW THE ACCOUNT TIER, NOT A PREMIUM COMP. This popup used to
-// promise a free week of Premium and gated its own appearance on a promo API
-// reporting that slots remained — so retiring that comp would have silently
-// stopped the popup from ever showing. It now stands on what a free account
-// permanently unlocks (see lib/premium.ts's tier note), which needs no
-// server round-trip and can't lapse, so the popup renders on its own.
+// THE PITCH IS THE ACCOUNT TIER, NOT A PREMIUM COMP — WITH ONE EXCEPTION. This
+// popup used to promise a free week of Premium and gated its own appearance on a
+// promo API reporting that slots remained; retiring that comp meant standing on
+// what a free account permanently unlocks instead (see lib/premium.ts's tier
+// note), which needs no server round-trip, so the popup renders on its own. A
+// much shorter Premium PREVIEW is back via SIGNUP_PREMIUM_DAYS (lib/premium.ts) —
+// threaded down as a prop since this file can't import that server-only module
+// directly. The copy below is deliberately careful to frame it as a taste on top
+// of the account, never as the account's own payoff — that framing (not the
+// existence of a comp) was the old version's actual problem.
 const SEEN_KEY = "rc_signup_promo_seen";
 const SHOW_DELAY_MS = 25_000; // let a new visitor actually look around first
 const SKIP_PATHS = ["/login", "/verify", "/marketplace"];
 
-// What signing up actually gets you. The Bulk Pricer and Best Basket moved to
-// Premium (see lib/premium.ts's tier note) and are pitched there instead — this
-// list only promises what a free account genuinely, permanently unlocks.
+// What a free account PERMANENTLY unlocks — the thing that's still true after
+// any Premium preview lapses. The Bulk Pricer and Best Basket moved to Premium
+// (see lib/premium.ts's tier note) and are pitched there instead — this list
+// only promises what an account genuinely, permanently unlocks on its own.
 const PERKS: [string, string][] = [
   ["Price alerts", "get told when a card hits your price"],
   ["Portfolio tracking", "see what your collection is worth, live"],
   ["Watchlist", "save cards and jump back to them anytime"],
 ];
 
-export function SignupPromoPopup({ providers }: { providers: ("google" | "discord")[] }) {
+export function SignupPromoPopup({
+  providers,
+  signupPremiumDays = 0,
+}: {
+  providers: ("google" | "discord")[];
+  signupPremiumDays?: number;
+}) {
   const { user, loaded } = useMe();
   const pathname = usePathname();
   const [phase, setPhase] = useState<"hidden" | "shown">("hidden");
@@ -110,15 +121,28 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
               <path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7-6.2-3.4L5.8 21.2 7 14.2l-5-4.9 7.1-.7z" />
             </svg>
           </div>
-          <span className="chip bg-brand-500/15 text-[10px] font-bold uppercase tracking-wide text-brand-300">
-            Free account
-          </span>
+          {signupPremiumDays > 0 ? (
+            <span className="chip bg-gold/15 text-[10px] font-bold uppercase tracking-wide text-gold">
+              {signupPremiumDays === 1 ? "1 day" : `${signupPremiumDays} days`} of Premium free
+            </span>
+          ) : (
+            <span className="chip bg-brand-500/15 text-[10px] font-bold uppercase tracking-wide text-brand-300">
+              Free account
+            </span>
+          )}
           <h2 className="font-display mt-2 text-xl font-bold text-white">
-            Unlock the tools that save you the most
+            {signupPremiumDays > 0 ? "Try Premium free, keep the rest for good" : "Unlock the tools that save you the most"}
           </h2>
           <p className="mx-auto mt-1.5 max-w-xs text-sm leading-relaxed text-slate-300">
-            Comparing prices is free for everyone. A free account adds the tools that price a whole list at once — no
-            card required.
+            {signupPremiumDays > 0 ? (
+              <>
+                Comparing prices is free for everyone. Create a free account and your first{" "}
+                {signupPremiumDays === 1 ? "day" : `${signupPremiumDays} days`} of Premium is on us — no card
+                required. After that, you keep:
+              </>
+            ) : (
+              "Comparing prices is free for everyone. A free account adds these, no card required:"
+            )}
           </p>
           <ul className="mx-auto mt-3 max-w-xs space-y-1.5 text-left">
             {PERKS.map(([k, v]) => (
@@ -133,7 +157,7 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
         </div>
 
         <div className="px-6 pb-6 pt-0">
-          <AuthForm providers={providers} bare />
+          <AuthForm providers={providers} bare signupPremiumDays={signupPremiumDays} />
           <p className="mt-3 text-center text-[11px] text-slate-600">
             Want the pro screeners and an ad-free site too?{" "}
             <Link href="/premium" onClick={dismiss} className="text-slate-400 hover:underline">
