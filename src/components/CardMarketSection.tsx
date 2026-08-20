@@ -12,6 +12,8 @@ import { AffiliateDisclosure, PaidLinkTag } from "./AffiliateDisclosure";
 import { COUNTRIES, COUNTRY_LIST } from "@/lib/country";
 import { isFallbackRetailer, normaliseCondition, CONDITIONS } from "@/lib/constants";
 import { isPaidLink } from "@/lib/affiliate";
+import { useLocale } from "./LocaleProvider";
+import type { Locale } from "@/lib/locale";
 
 // The market-dependent half of the card page. The page itself is ISR-cached with
 // the AU baseline (no cookie reads server-side — that's what makes the route
@@ -37,7 +39,12 @@ export type EbaySearchMap = Record<string, { url: string; label: string } | null
 export function buyButtonClass(_retailer: string): string {
   return "btn-primary";
 }
-export function buyButtonLabel(retailer: string): string {
+export function buyButtonLabel(retailer: string, locale: Locale = "en"): string {
+  if (locale === "de") {
+    if (retailer.startsWith("ebay")) return "Bei eBay kaufen →";
+    if (retailer.startsWith("tcgplayer")) return "Bei TCGplayer kaufen →";
+    return "Angebot ansehen →";
+  }
   if (retailer.startsWith("ebay")) return "Buy on eBay →";
   if (retailer.startsWith("tcgplayer")) return "Buy on TCGplayer →";
   return "View deal →";
@@ -252,6 +259,7 @@ export function CardPriceComparison({
   ebayQuery: string;
 }) {
   const { country, fmt, secondaryFmt } = useCountry();
+  const { locale } = useLocale();
   const m = useMemo(() => computeMarket(rows, country), [rows, country]);
   const { prices, outOfStock } = m;
   const ebay = m.hasEbay ? null : ebaySearch[country] ?? null;
@@ -436,7 +444,7 @@ export function CardPriceComparison({
                   surface="table"
                   className={`${buyButtonClass(p.retailer)} order-last w-full basis-full justify-center sm:order-none sm:w-auto sm:basis-auto`}
                 >
-                  {buyButtonLabel(p.retailer)}
+                  {buyButtonLabel(p.retailer, locale)}
                 </OutboundLink>
               </li>
             ))}

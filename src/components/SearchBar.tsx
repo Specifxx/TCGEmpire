@@ -7,6 +7,7 @@ import { cardHref } from "@/lib/card-url";
 import { cardDisplayName } from "@/lib/card-name";
 import { trackEvent } from "@/lib/analytics";
 import { useCountry } from "./CountryProvider";
+import { useLocale } from "./LocaleProvider";
 import type { CardTileData } from "./CardTile";
 import { cardImageAlt } from "@/lib/image-alt";
 
@@ -152,6 +153,7 @@ export function SearchBar({
   const router = useRouter();
   const params = useSearchParams();
   const { fmt, price } = useCountry();
+  const { locale } = useLocale();
   const [value, setValue] = useState(params.get("q") ?? "");
   const [results, setResults] = useState<Result[]>([]);
   const [sealed, setSealed] = useState<SealedResult[]>([]);
@@ -583,9 +585,13 @@ export function SearchBar({
           }}
           onBlur={clearFocusIntentTimer}
           onKeyDown={onKeyDown}
-          placeholder={isHero ? "Search any Riftbound card…" : "Search cards, champions, sets…"}
+          placeholder={
+            locale === "de"
+              ? isHero ? "Beliebige Riftbound-Karte suchen…" : "Karten, Champions, Sets suchen…"
+              : isHero ? "Search any Riftbound card…" : "Search cards, champions, sets…"
+          }
           className={isHero ? "input border-ink-600 bg-ink-900 py-3.5 pl-11 text-base shadow-glow sm:pr-9 sm:text-lg" : "input pl-9 sm:pr-8"}
-          aria-label="Search cards"
+          aria-label={locale === "de" ? "Karten suchen" : "Search cards"}
           autoComplete="off"
           enterKeyHint="search"
           role="combobox"

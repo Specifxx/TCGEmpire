@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SITE_URL } from "@/lib/site";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { AnswerBox } from "@/components/AnswerBox";
+import { Localized } from "@/components/Localized";
 import { faqPage, ldJson, webPage } from "@/lib/jsonld";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 
@@ -177,7 +178,7 @@ export default function AlertsPage() {
         </table>
       </div>
 
-      <h2 className="mt-10 text-xl font-extrabold text-white">Frequently asked questions</h2>
+      <h2 className="mt-10 text-xl font-extrabold text-white"><Localized en="Frequently asked questions" de="Häufig gestellte Fragen" /></h2>
       <div className="mt-3 divide-y divide-ink-800 rounded-xl border border-ink-700">
         {FAQS.map((f) => (
           <details key={f.q} className="group p-4">

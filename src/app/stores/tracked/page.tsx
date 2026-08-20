@@ -6,6 +6,7 @@ import { SITE_URL } from "@/lib/site";
 import { MARKETPLACE_PUBLIC } from "@/lib/marketplace";
 import { storeSlug } from "@/lib/store-pages";
 import { pageAlternates } from "@/lib/seo";
+import { Localized } from "@/components/Localized";
 
 export const revalidate = 86400;
 
@@ -126,7 +127,7 @@ export default function TrackedStoresPage() {
 
       {/* FAQ — answers common buyer questions and enables FAQPage rich results */}
       <section className="card-surface divide-y divide-ink-800 overflow-hidden">
-        <h2 className="px-6 py-4 text-lg font-extrabold text-white">Frequently asked questions</h2>
+        <h2 className="px-6 py-4 text-lg font-extrabold text-white"><Localized en="Frequently asked questions" de="Häufig gestellte Fragen" /></h2>
         {FAQS.map((f) => (
           <details key={f.q} className="group px-6 py-4">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold text-slate-200 hover:text-white">

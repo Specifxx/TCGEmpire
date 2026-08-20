@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useMe } from "@/lib/use-me";
 import { useWatchlist } from "@/lib/use-watchlist";
 import { useCountry } from "./CountryProvider";
+import { useLocale } from "./LocaleProvider";
 
 // "Watch this card's price" — and, now, "stop watching it".
 //
@@ -29,6 +30,7 @@ export function PriceWatchButton({
   const { user, loaded: meLoaded } = useMe();
   const { watched, watch, unwatch } = useWatchlist();
   const { country } = useCountry();
+  const { locale } = useLocale();
   const [busy, setBusy] = useState(false);
 
   const watching = !!watched?.has(cardId);
@@ -70,10 +72,16 @@ export function PriceWatchButton({
     </svg>
   );
 
-  const label = watching ? "Stop watching this card" : "Watch this card's price";
-  const hint = watching
-    ? "You'll get an email when the price drops — click to stop"
-    : "Get an email when the price drops";
+  const label = locale === "de"
+    ? watching ? "Beobachtung dieser Karte beenden" : "Preis dieser Karte beobachten"
+    : watching ? "Stop watching this card" : "Watch this card's price";
+  const hint = locale === "de"
+    ? watching
+      ? "Du bekommst eine E-Mail, wenn der Preis fällt — klicke zum Beenden"
+      : "E-Mail erhalten, wenn der Preis fällt"
+    : watching
+      ? "You'll get an email when the price drops — click to stop"
+      : "Get an email when the price drops";
 
   if (variant === "full") {
     return (
@@ -95,7 +103,9 @@ export function PriceWatchButton({
         }
       >
         {bell}
-        {watching ? "Watching" : "Watch price"}
+        {locale === "de"
+          ? watching ? "Beobachtet" : "Preis beobachten"
+          : watching ? "Watching" : "Watch price"}
       </button>
     );
   }

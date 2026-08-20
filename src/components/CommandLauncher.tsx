@@ -14,6 +14,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { NAV_GROUPS } from "./nav-groups";
 import { searchNav } from "./nav-search";
+import { useLocale } from "./LocaleProvider";
 
 // A global "command launcher": one searchable, full-screen overlay listing every
 // section of the site, opened from a button on any page (navbar) or the homepage
@@ -85,6 +86,7 @@ export function CommandLauncherProvider({ children }: { children: ReactNode }) {
 
 function LauncherOverlay({ onClose }: { onClose: () => void }) {
   const router = useRouter();
+  const { locale } = useLocale();
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
@@ -135,7 +137,7 @@ function LauncherOverlay({ onClose }: { onClose: () => void }) {
   // list is also the only thing arrow keys can traverse sensibly.
   const grouped = useMemo(() => {
     if (searching) return [];
-    return NAV_GROUPS.map((g) => ({ title: g.title, links: g.links }));
+    return NAV_GROUPS.map((g) => ({ title: g.title, titleDe: g.titleDe, links: g.links }));
   }, [searching]);
 
   return (
@@ -143,9 +145,9 @@ function LauncherOverlay({ onClose }: { onClose: () => void }) {
       className="fixed inset-0 z-[60] flex items-start justify-center p-4 sm:p-6"
       role="dialog"
       aria-modal="true"
-      aria-label="Explore RiftCompare"
+      aria-label={locale === "de" ? "RiftCompare durchsuchen" : "Explore RiftCompare"}
     >
-      <button className="absolute inset-0 animate-fade-in bg-ink-950/80 backdrop-blur-md" aria-label="Close" onClick={onClose} />
+      <button className="absolute inset-0 animate-fade-in bg-ink-950/80 backdrop-blur-md" aria-label={locale === "de" ? "Schließen" : "Close"} onClick={onClose} />
       <div className="card-surface relative z-10 mt-[7vh] flex max-h-[82vh] w-full max-w-3xl animate-fade-up flex-col overflow-hidden">
         {/* Search */}
         <div className="flex items-center gap-2 border-b border-ink-800 p-3">
@@ -156,7 +158,7 @@ function LauncherOverlay({ onClose }: { onClose: () => void }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onKeyDown}
-            placeholder="Search features, tools, pages…"
+            placeholder={locale === "de" ? "Funktionen, Tools, Seiten suchen…" : "Search features, tools, pages…"}
             // focus-visible:ring-*: autoFocus puts real focus here the instant
             // the dialog opens, so the missing indicator was invisible in the
             // common case — but Shift+Tab back into this field (e.g. from the
@@ -164,7 +166,7 @@ function LauncherOverlay({ onClose }: { onClose: () => void }) {
             // it with zero visible focus state. Same ring treatment
             // CinematicNavMenu already uses for its own bare links.
             className="w-full rounded bg-transparent text-base text-slate-100 placeholder:text-slate-500 outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
-            aria-label="Search RiftCompare features"
+            aria-label={locale === "de" ? "RiftCompare-Funktionen suchen" : "Search RiftCompare features"}
             role="combobox"
             aria-expanded
             aria-controls="launcher-results"
@@ -172,7 +174,9 @@ function LauncherOverlay({ onClose }: { onClose: () => void }) {
           />
           {searching && (
             <span className="shrink-0 text-xs tabular-nums text-slate-500">
-              {results.length} {results.length === 1 ? "result" : "results"}
+              {locale === "de"
+                ? `${results.length} ${results.length === 1 ? "Ergebnis" : "Ergebnisse"}`
+                : `${results.length} ${results.length === 1 ? "result" : "results"}`}
             </span>
           )}
         </div>
@@ -181,8 +185,12 @@ function LauncherOverlay({ onClose }: { onClose: () => void }) {
           {searching ? (
             results.length === 0 ? (
               <p className="py-10 text-center text-sm text-slate-500">
-                No features match &ldquo;{query}&rdquo;. This searches pages and tools — to look up a
-                card, use the search box in the header.
+                {locale === "de" ? (
+                  <>Keine Funktionen für &bdquo;{query}&ldquo; gefunden. Diese Suche durchsucht Seiten und Tools — für eine Karte nutze die Suche im Header.</>
+                ) : (
+                  <>No features match &ldquo;{query}&rdquo;. This searches pages and tools — to look up a
+                  card, use the search box in the header.</>
+                )}
               </p>
             ) : (
               <ul className="space-y-0.5">
@@ -193,8 +201,8 @@ function LauncherOverlay({ onClose }: { onClose: () => void }) {
                   const inner = (
                     <>
                       <span className="text-base leading-none" aria-hidden>{l.emoji}</span>
-                      <span className="min-w-0 flex-1 truncate">{l.label}</span>
-                      <span className="shrink-0 text-[11px] uppercase tracking-wide text-slate-500">{l.group}</span>
+                      <span className="min-w-0 flex-1 truncate">{locale === "de" ? (l.labelDe ?? l.label) : l.label}</span>
+                      <span className="shrink-0 text-[11px] uppercase tracking-wide text-slate-500">{locale === "de" ? (l.groupDe ?? l.group) : l.group}</span>
                     </>
                   );
                   return (
@@ -232,14 +240,14 @@ function LauncherOverlay({ onClose }: { onClose: () => void }) {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {grouped.map((g) => (
                 <div key={g.title}>
-                  <div className="mb-1.5 px-1 text-[11px] font-bold uppercase tracking-wide text-brand-300">{g.title}</div>
+                  <div className="mb-1.5 px-1 text-[11px] font-bold uppercase tracking-wide text-brand-300">{locale === "de" ? (g.titleDe ?? g.title) : g.title}</div>
                   <ul className="space-y-0.5">
                     {g.links.map((l) => {
                       const groupedClassName = "flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-slate-200 transition-colors hover:bg-ink-800 hover:text-white";
                       const inner = (
                         <>
                           <span className="text-base leading-none" aria-hidden>{l.emoji}</span>
-                          {l.label}
+                          {locale === "de" ? (l.labelDe ?? l.label) : l.label}
                         </>
                       );
                       return (

@@ -10,6 +10,7 @@ import { SealedQuickViewProvider } from "@/components/SealedQuickView";
 import { CommandLauncherProvider } from "@/components/CommandLauncher";
 import { MegaMenuProvider } from "@/components/MegaMenuProvider";
 import { CountryProvider } from "@/components/CountryProvider";
+import { LocaleProvider } from "@/components/LocaleProvider";
 import { PremiumProvider } from "@/components/PremiumProvider";
 import { PremiumDialogProvider } from "@/components/PremiumDialog";
 import { DEFAULT_COUNTRY } from "@/lib/country";
@@ -279,6 +280,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <PremiumProvider>
         <PremiumDialogProvider>
         <CountryProvider initial={DEFAULT_COUNTRY}>
+        {/* Nested inside CountryProvider (not a sibling) because its DE-default
+            logic reads useCountry() — and extended to wrap the footer below
+            (not just the boundary CountryProvider used to close at) so
+            FooterNav's <Localized> leaves can reach it too. See LocaleProvider's
+            own header comment for why the language toggle is scoped to "a facet
+            of Germany mode" rather than an independent global preference. */}
+        <LocaleProvider>
           <QuickViewProvider>
           <SealedQuickViewProvider>
             <CommandLauncherProvider>
@@ -305,7 +313,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             FooterAds reads the market from the client country context (inside
             CountryProvider) so the layout stays cookie-free and cacheable. */}
         <FooterAds />
-        </CountryProvider>
         <footer className="container-app border-t border-ink-800 py-8 text-center text-xs text-slate-500">
           <NewsletterSignup siteName="RiftCompare" />
           {/* Site-map — surfaced here so every page links to every feature even
@@ -416,6 +423,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </p>
           <p className="mt-2">&copy; {new Date().getFullYear()} {SITE_NAME}. All rights reserved.</p>
         </footer>
+        </LocaleProvider>
+        </CountryProvider>
         {/* Detects the Capacitor native runtime and shows native AdMob ads, styles
             the status bar and wires the Android back button. No-op on the web. */}
         <NativeShell />

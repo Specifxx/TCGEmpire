@@ -7,10 +7,12 @@ import { HeaderSearchSlot } from "./HeaderSearchSlot";
 import { HomeHeaderReveal } from "./HomeHeaderReveal";
 import { MobileNav } from "./MobileNav";
 import { CountrySwitcher } from "./CountrySwitcher";
+import { LocaleSwitcher } from "./LocaleSwitcher";
 import { NavUser } from "./NavUser";
 import { PremiumButton } from "./PremiumButton";
 import { DISCORD_URL } from "@/lib/site";
 import { BrandLogo } from "./BrandLogo";
+import { Localized } from "./Localized";
 
 // NO server-side session read here: the navbar renders on every route, so a
 // cookies() read would force the whole site dynamic (killing ISR). NavUser
@@ -34,7 +36,7 @@ export function Navbar() {
             </span>
           </Link>
           <Link href="/browse" className="inline-flex min-h-11 items-center rounded-lg px-2.5 text-sm font-semibold text-slate-200 hover:bg-ink-800 hover:text-white lg:hidden">
-            Database
+            <Localized en="Database" de="Datenbank" />
           </Link>
         </div>
 
@@ -84,11 +86,11 @@ export function Navbar() {
           </span>
           {/* Database is beside the logo on smaller screens; keep it in the right nav on desktop. */}
           <Link href="/browse" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:px-2.5 lg:block">
-            Database
+            <Localized en="Database" de="Datenbank" />
           </Link>
           {/* Sealed products — high-AOV, right after the database. */}
           <Link href="/sealed" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white md:block md:px-2.5">
-            Sealed
+            <Localized en="Sealed" de="Versiegelt" />
           </Link>
           {/* Decks — the hub for the metagame surface: 10 real tournament lists,
               each priced live, plus the archetype/domain landing pages under
@@ -123,7 +125,7 @@ export function Navbar() {
               it") having no header presence at all. Same md:block treatment as
               Sealed/Decks/Blog. */}
           <Link href="/tools/best-basket" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white md:block md:px-2.5">
-            Best Basket
+            <Localized en="Best Basket" de="Bester Warenkorb" />
           </Link>
           {/* Blog — the header's one link into our own writing. It exists because
               the hand-written content was previously reachable only from the
@@ -187,6 +189,7 @@ export function Navbar() {
             </svg>
           </a>
           <CountrySwitcher className="ml-0.5 sm:ml-1" />
+          <LocaleSwitcher className="ml-0.5 sm:ml-1" />
           <NavUser />
           </HomeHeaderReveal>
           <MobileNav />

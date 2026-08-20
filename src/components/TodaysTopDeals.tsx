@@ -8,6 +8,7 @@ import type { Deal, TopDeals } from "@/lib/top-deals";
 import { formatMoney } from "@/lib/format";
 import { OutboundLink } from "@/components/OutboundLink";
 import { useCountry } from "@/components/CountryProvider";
+import { useLocale } from "@/components/LocaleProvider";
 import { useQuickView } from "@/components/QuickView";
 import { cardImageAlt } from "@/lib/image-alt";
 import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
@@ -209,6 +210,7 @@ const GRID_COLS: Record<number, string> = {
 // currency (e.g. US$ to an AU visitor) — the card tiles already localise this way.
 export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Country, TopDeals> }) {
   const { country } = useCountry();
+  const { locale } = useLocale();
   const info = COUNTRIES[country];
   const currency = info.currency;
   const place = info.place;
@@ -244,10 +246,14 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
     <section>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-xl font-extrabold text-white">Today&apos;s Top Deals</h2>
+          <h2 className="text-xl font-extrabold text-white">
+            {locale === "de" ? "Die besten Deals heute" : <>Today&apos;s Top Deals</>}
+          </h2>
           <p className="mt-0.5 text-sm text-slate-400">The best live opportunities in {place} right now — refreshed daily.</p>
         </div>
-        <Link href="/tools/deal-finder" className="btn-ghost hidden text-sm sm:inline-flex">Browse all deals →</Link>
+        <Link href="/tools/deal-finder" className="btn-ghost hidden text-sm sm:inline-flex">
+          {locale === "de" ? "Alle Deals ansehen →" : "Browse all deals →"}
+        </Link>
       </div>
 
       <div className="mb-3 flex flex-wrap gap-1.5" role="tablist" aria-label="Filter deals by price">

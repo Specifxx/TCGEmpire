@@ -1,4 +1,5 @@
 import { InlineMarkdown } from "./Markdown";
+import { Localized } from "./Localized";
 
 /**
  * The article's FAQ, rendered VISIBLY from the same `faq` array that feeds the
@@ -15,11 +16,15 @@ import { InlineMarkdown } from "./Markdown";
  * a 3,000-word article is a wall; the answers are still in the server-rendered
  * DOM either way, which is what a crawler reads.
  */
-export function ArticleFaq({ faq, heading = "Frequently asked questions" }: { faq: { q: string; a: string }[]; heading?: string }) {
+const DEFAULT_HEADING = "Frequently asked questions";
+
+export function ArticleFaq({ faq, heading = DEFAULT_HEADING }: { faq: { q: string; a: string }[]; heading?: string }) {
   if (!faq.length) return null;
   return (
     <section className="mt-10" id="faq">
-      <h2 className="mb-3 scroll-mt-24 text-xl font-extrabold text-white">{heading}</h2>
+      <h2 className="mb-3 scroll-mt-24 text-xl font-extrabold text-white">
+        {heading === DEFAULT_HEADING ? <Localized en={DEFAULT_HEADING} de="Häufig gestellte Fragen" /> : heading}
+      </h2>
       <div className="divide-y divide-ink-800 rounded-xl border border-ink-700">
         {faq.map((f, i) => (
           <details key={i} className="group p-4">

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { COUNTRY_LIST, INTL_ENABLED } from "@/lib/country";
 import { useCountry } from "./CountryProvider";
+import { useLocale } from "./LocaleProvider";
 
 // Market chooser: 🇦🇺 Australia / 🇺🇸 United States / 🇬🇧 United Kingdom / 🇸🇬
 // Singapore / 🇨🇦 Canada. Switching reloads prices + store lists for the chosen
@@ -10,6 +11,7 @@ import { useCountry } from "./CountryProvider";
 // (the site is US-only then).
 export function CountrySwitcher({ className = "" }: { className?: string }) {
   const { country, setCountry, isEurDisplay, setEurDisplay } = useCountry();
+  const { locale } = useLocale();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const current = COUNTRY_LIST.find((c) => c.code === country) ?? COUNTRY_LIST[0];
@@ -54,7 +56,7 @@ export function CountrySwitcher({ className = "" }: { className?: string }) {
       {open && (
         <div className="absolute right-0 top-full z-50 mt-1.5 w-52 overflow-hidden rounded-xl border border-ink-700 bg-ink-850/95 p-1 shadow-2xl backdrop-blur">
           <div className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-            Shop &amp; prices for
+            {locale === "de" ? "Einkaufen & Preise für" : "Shop & prices for"}
           </div>
           {COUNTRY_LIST.map((c) => (
             <button
@@ -71,7 +73,10 @@ export function CountrySwitcher({ className = "" }: { className?: string }) {
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-medium text-white">{c.label}</div>
                 <div className="text-xs text-slate-500">
-                  Prices in {c.code === "UK" && c.code === country && isEurDisplay ? "EUR (converted)" : c.currency}
+                  {locale === "de" ? "Preise in " : "Prices in "}
+                  {c.code === "UK" && c.code === country && isEurDisplay
+                    ? locale === "de" ? "EUR (umgerechnet)" : "EUR (converted)"
+                    : c.currency}
                 </div>
               </div>
               {c.code === country && (

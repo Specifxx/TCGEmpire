@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { CardImage } from "@/components/CardImage";
+import { Localized } from "@/components/Localized";
 import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge, CrystalRoseBadge } from "@/components/Badge";
 import { isOvernumbered, isSignature, isCrystalRose, normaliseCondition } from "@/lib/constants";
 import { PriceWatchButton } from "@/components/PriceWatchButton";
@@ -1072,7 +1073,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           </section>
 
           <section className="card-surface mt-6 p-5">
-            <h2 className="font-bold text-white">Frequently asked questions</h2>
+            <h2 className="font-bold text-white"><Localized en="Frequently asked questions" de="Häufig gestellte Fragen" /></h2>
             <dl className="mt-3 space-y-4">
               {faqs.map((f) => (
                 <div key={f.q}>
