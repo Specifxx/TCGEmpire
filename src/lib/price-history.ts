@@ -88,6 +88,21 @@ const MIN_CENTS = 300; // $3
 const WINDOW_DAYS = 21;
 const LIST_SIZE = 5;
 
+// The daily import's price-history snapshot write is best-effort (see
+// price-import.ts's try/catch around dbHistory.priceHistory.createMany) — it can
+// fail silently for days at a time (e.g. an FK mismatch after a catalogue
+// rebuild, or the history project being unreachable) while the rest of the
+// import keeps succeeding, since Card.lowestPriceCents itself updates via a
+// separate path. When that happens, the LATEST row in PriceHistory can be many
+// days old, and "now" vs "~7 days ago" stops meaning what a visitor would read
+// it as — a stale $6.00 shown as today's price next to a wild swing against an
+// equally stale reference reads as "this data is wrong", not "the site hasn't
+// updated in a while". Refuse to serve movers/recently-updated at all once the
+// freshest snapshot is older than this, so the section just doesn't render
+// (both callers already treat an empty result as "hide this") instead of
+// presenting stale numbers as today's market.
+const STALE_HISTORY_MS = 3 * 86400_000;
+
 // Compute this-week's biggest gainers, biggest fallers, and best-value buys (the
 // largest discounts off a card's recent high). Reads the whole market's history
 // window, so it's day-cached below — the raw compute runs once per (market, limit)
@@ -102,6 +117,8 @@ async function computePriceMovers(country: Country, limit: number): Promise<Pric
     select: { cardId: true, day: true, lowestPriceCents: true },
   });
   if (!rows.length) return empty;
+  const latestRowDay = rows.reduce((max, r) => (r.day > max ? r.day : max), rows[0].day).getTime();
+  if (Date.now() - latestRowDay > STALE_HISTORY_MS) return empty;
 
   // Group into per-card series.
   const series = new Map<string, PricePoint[]>();
@@ -195,6 +212,7 @@ async function computeRecentlyUpdated(country: Country, limit: number): Promise<
     if (!rows.length) return [];
 
     const latestDay = rows.reduce((max, r) => (r.day > max ? r.day : max), rows[0].day).getTime();
+    if (Date.now() - latestDay > STALE_HISTORY_MS) return [];
 
     const series = new Map<string, { day: number; v: number }[]>();
     for (const r of rows) {
