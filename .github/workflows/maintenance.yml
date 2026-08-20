@@ -40,6 +40,7 @@ on:
           - fix-op-promo-flag # flip isPromo=true for organized-play promos add-tcg-printings.ts mis-tagged (Nexus Night rune cycle)
           - fix-kennen-name  # one-off: rename VEN 155/166 + 197/166 from RiftScribe's "Yordle, Heart of the Tempest" placeholder to "Kennen, Heart of the Tempest" (matches the manually-corrected 197*/166 Signature)
           - audit-history    # read-only per-day price-history diagnostic
+          - revoke-premium   # remove Premium from ONE account (email input): clears premiumUntil + the retired early-adopter comp flag, and REPORTS the account's full premium state before/after. Honours dry_run. Does NOT touch isAdmin (admins read as Premium regardless — it says so loudly) and does not cancel a live Stripe subscription. Set reset_trial to also clear trialStartedAt so the account can trial again.
           - audit-users      # read-only user/Premium census (no PII printed)
           - audit-clicks     # read-only outbound-click leaderboard per retailer (affiliate-outreach priority)
           - backfill-alert-user-ids # link existing email-keyed price alerts to the accounts that own them (idempotent; honours dry_run)
@@ -78,6 +79,14 @@ on:
         required: false
         default: RM4
         options: [RM4, RM3, DATABASE_URL_2, DATABASE_URL, HISTORY_DATABASE_URL_2, HISTORY_DATABASE_URL, RH7, RH6, RH5, HISTORY_DATABASE_URL_4, HISTORY_DATABASE_URL_3]
+      email:
+        description: "revoke-premium only: the account's email address"
+        type: string
+        required: false
+      reset_trial:
+        description: "revoke-premium only: ALSO clear trialStartedAt so the account can start a free trial again"
+        type: boolean
+        default: false
       url:
         description: "probe-url only: page to fetch for font/style diagnostics"
         type: string
@@ -2706,6 +2715,13 @@ jobs:
       - name: Audit users/Premium (read-only census)
         if: inputs.task == 'audit-users'
         run: npx tsx scripts/audit-users.ts
+
+      - name: Remove Premium from one account
+        if: inputs.task == 'revoke-premium'
+        env:
+          TARGET_EMAIL: ${{ inputs.email }}
+          RESET_TRIAL: ${{ inputs.reset_trial && '1' || '' }}
+        run: npx tsx scripts/revoke-premium.ts
 
       - name: Remove @riftcompare.seed persona accounts
         if: inputs.task == 'remove-seed-accounts'
