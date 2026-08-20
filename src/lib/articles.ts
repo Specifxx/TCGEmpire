@@ -3612,7 +3612,7 @@ Shopping from [Australia](/blog/buy-riftbound-cards-australia), [the US](/blog/b
     faq: [
       {
         q: "Wo kann ich Riftbound Karten in Deutschland kaufen?",
-        a: "RiftCompare vergleicht Riftbound: League of Legends TCG Preise bei deutschen Händlern (aktuell u. a. Trinket Mage für Einzelkarten) sowie eBay.de, und zeigt den Gesamtpreis inklusive Versand statt nur des Angebotspreises. Die Auswahl an deutschen Händlern ist aktuell noch kleiner als in unseren älteren Märkten (AU, US, UK, Singapur, Kanada) — wir ergänzen laufend neue, geprüfte Shops.",
+        a: "RiftCompare vergleicht Riftbound: League of Legends TCG Preise bei deutschen Händlern (aktuell u. a. Trinket Mage und ImperialCards für Einzelkarten) sowie eBay.de, und zeigt den Gesamtpreis inklusive Versand statt nur des Angebotspreises. Die Auswahl an deutschen Händlern ist aktuell noch kleiner als in unseren älteren Märkten (AU, US, UK, Singapur, Kanada) — wir ergänzen laufend neue, geprüfte Shops.",
       },
       {
         q: "Sind die Riftbound-Karten auf Deutsch erhältlich?",
@@ -3631,7 +3631,7 @@ Shopping from [Australia](/blog/buy-riftbound-cards-australia), [the US](/blog/b
 
 ## Riftbound Karten kaufen in Deutschland — was RiftCompare bietet
 
-- **Deutsche Händler in einer Übersicht.** Aktuell verfolgen wir **[Trinket Mage](https://trinket-mage.eu)** mit einer echten Einzelkarten-Auswahl, dazu **Battle Bear**, **Card-Knights** und **Poke Paradies** — drei weitere reale, in Deutschland ansässige Shops, deren Riftbound-Sortiment bisher vor allem versiegelte Ware (Booster, Displays) umfasst und deren Einzelkartenangebot wächst.
+- **Deutsche Händler in einer Übersicht.** Aktuell verfolgen wir **[Trinket Mage](https://trinket-mage.eu)** mit einer echten Einzelkarten-Auswahl sowie **ImperialCards**, ebenfalls ein echter Einzelkarten-Shop (aktuell allerdings ausverkauft — sobald neue Ware da ist, taucht sie hier auf). Dazu **Battle Bear**, **Card-Knights** und **Poke Paradies** — drei weitere reale, in Deutschland ansässige Shops, deren Riftbound-Sortiment bisher vor allem versiegelte Ware (Booster, Displays) umfasst und deren Einzelkartenangebot wächst.
 - **Plus eBay.de.** Riftbound-Angebote von eBay Deutschland fließen mit in den Vergleich ein.
 - **Ehrliche Marktgröße.** Deutschland ist unser jüngster Markt, direkt nach Australien, den USA, UK, Singapur und Kanada — die Händlerauswahl ist deshalb noch kleiner als in diesen etablierten Märkten. Wir listen lieber ehrlich weniger, geprüfte Shops als eine aufgeblähte Liste.
 - **Rangfolge nach Gesamtkosten.** Jeder Vergleich berücksichtigt automatisch den Versand und die jeweilige Versandkostenfrei-Grenze jedes Händlers.

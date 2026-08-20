@@ -142,6 +142,68 @@ export const PENDING_US_STORES: PendingPlatformCandidate[] = [
   },
 ];
 
+// ── Germany: real stores found trying to grow retailers.ts's German section
+// from 4 to 10 (2026-08-20). Direct-fetch verified (Impressum + live product
+// pages), unlike PENDING_US_STORES above (search-synthesis only) — the
+// blocker here is purely platform support, not permission or unverified data.
+// None of these expose /products.json, so discoverRiftboundCollections()/
+// fetchCollection() would build the wrong URL shape entirely and silently
+// find nothing — same trap PENDING_US_STORES's header warns about. Do not add
+// these to RETAILERS until a WooCommerce/Shopware (or platform-specific)
+// adapter exists; imperialcards.de was the only Shopify hit from this same
+// pass and IS in RETAILERS already.
+export interface PendingDeStoreCandidate {
+  name: string;
+  base: string;
+  location: string; // city, confirmed via Impressum
+  platform: "woocommerce" | "shopware" | "unknown";
+  stockType: "sealed-only" | "sealed-confirmed-singles-unconfirmed";
+  note: string;
+}
+
+export const PENDING_DE_STORES: PendingDeStoreCandidate[] = [
+  {
+    name: "Amzicards (Amziverse)",
+    base: "https://amzicards.de",
+    location: "Berlin",
+    platform: "woocommerce",
+    stockType: "sealed-only",
+    note: "~52 Riftbound products (branded accessories + boosters/displays/champion decks Sets 1-4); most sealed product AUSVERKAUFT as of 2026-08-20, a handful of accessories in stock. wp-content/woocommerce strings confirmed in source; /products.json 404s.",
+  },
+  {
+    name: "Gate to the Games GmbH",
+    base: "https://www.gate-to-the-games.de",
+    location: "Sülzetal",
+    platform: "unknown",
+    stockType: "sealed-only",
+    note: "~55 Riftbound products across 3 pages, several confirmed purchasable (Origins Booster, two playmats/sleeves). /products.json 404s so not Shopify; underlying platform not otherwise identified. Shipping (~€1.69, free €50) is third-party-aggregator sourced, not verified directly.",
+  },
+  {
+    name: "BB-Spiele",
+    base: "https://www.bb-spiele.de",
+    location: "Rosenheim",
+    platform: "shopware",
+    stockType: "sealed-only",
+    note: "~5-6 Riftbound sealed listings (Radiance/Vendetta/Unleashed product). Shopware confirmed via source signature. Shipping (~€4.99, free €50-75) is third-party-aggregator sourced, not verified directly.",
+  },
+  {
+    name: "Mayener Fantasyland",
+    base: "https://mayener-fantasyland.de",
+    location: "Mayen",
+    platform: "unknown",
+    stockType: "sealed-only",
+    note: "18 Riftbound items catalogued but only 1 in stock as of 2026-08-20 (Vendetta Pre-Rift Kit Pack, €34.99) — very thin even by this market's standards. Confirmed directly from the site's own banner/footer: free shipping over €49 (the one German store here with a first-party-confirmed shipping figure).",
+  },
+  {
+    name: "Collect-it.de",
+    base: "https://www.collect-it.de",
+    location: "Dreieich (hybrid online + physical \"Card Store Dreieich\")",
+    platform: "unknown",
+    stockType: "sealed-confirmed-singles-unconfirmed",
+    note: "Sealed confirmed live (playmats, displays, champion decks). Has an \"Einzelkarten\" (singles) subcategory link under Riftbound, but that specific page could not be loaded to confirm it's actually populated — do not claim singles as confirmed. Shipping figures conflict across third-party sources (€3.99 flat vs. free thresholds variously €80/€89/€99) — none verified directly.",
+  },
+];
+
 // ── Permission-blocked, NOT technically-blocked — a categorically different
 // situation from PENDING_US_STORES above. For these, the data is confirmed
 // real and plausibly fetchable; what's missing is confirmed permission to

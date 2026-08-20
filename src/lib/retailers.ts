@@ -1689,19 +1689,41 @@ export const RETAILERS: Record<string, RetailerInfo> = {
   //     access; absence of a search hit is not proof of absence of stock.
 
   // ---- German stores (country: "DE"; prices in EUR) --------------------------
-  // Thinner than every other launch market on purpose: trinketmage is the only
-  // one with a confirmed LIVE singles collection today (30 real Riftbound
-  // listings, EUR, verified against its own /products.json — not a guess). The
-  // other three are real, Germany-based, Shopify-confirmed stores currently
-  // selling Riftbound sealed/accessories only; their `collections` entries are
-  // best-guess handles that will start contributing the moment each store opens
-  // a singles collection, same pattern as several SG stores at their own launch.
+  // Thinner than every other launch market on purpose: trinketmage and
+  // imperialcards are the only two with a confirmed Shopify /products.json feed
+  // (i.e. the importer can actually read them) that expose real Riftbound SINGLE
+  // cards — trinketmage has 30 real live listings; imperialcards has a genuine
+  // 41-card singles catalog but every listing was SOLD OUT as of 2026-08-20 (its
+  // own products.json variants[].available all false), so it will show 0 stores
+  // until it restocks — that's real scraper behaviour, not a placeholder. The
+  // other three (battlebear, cardknights, pokeparadies) are real, Germany-based,
+  // Shopify-confirmed stores currently selling Riftbound sealed/accessories
+  // only; their `collections` entries are best-guess handles that will start
+  // contributing the moment each store opens a singles collection, same pattern
+  // as several SG stores at their own launch.
+  //
+  // A 2026-08-20 pass found 6 more real German Riftbound stores while trying to
+  // reach 10 total, but only imperialcards (added below) turned out to be
+  // Shopify — the other 5 (amzicards.de/WooCommerce, gate-to-the-games.de,
+  // bb-spiele.de/Shopware, mayener-fantasyland.de, collect-it.de — none expose
+  // /products.json) are real stores this importer cannot read at all; see
+  // PENDING_DE_STORES in pending-platforms.ts for what's blocking each one
+  // rather than silently adding a RetailerInfo entry that would show "0 stores"
+  // forever with no explanation.
+  //
   // Checked and explicitly REJECTED, do not re-add without re-verifying:
   //   - riftbound-shop.de — same legal entity as amzicards.de but is Shopify's
   //     own non-functional DEMO storefront ("no orders shall be fulfilled").
   //   - threeforonetrading.com — real Shopify store with real Riftbound stock,
   //     but its Impressum places it in Vienna, AUSTRIA, not Germany.
   //   - nomeko-store.de — real Shopify store, still password-protected/unopened.
+  //   - trader-online.de — reads as a multi-seller aggregator ("24 Angebote"),
+  //     the Cardmarket/eBay shape this file deliberately keeps out of RETAILERS.
+  //   - poke-sammelshop.de — site is a full "under restructuring" placeholder,
+  //     no navigation or products at all as of 2026-08-20; recheck later.
+  // Unconfirmed (Cloudflare-blocked or unreachable every attempt, not rejected —
+  // worth a direct re-check when someone has live network access):
+  //   tabletop-dragon.de, whiterabbit-cgs.de, god-of-games.de.
   // Cardmarket (cardmarket.com/en/Riftbound) is a large, real Germany-based
   // marketplace with genuine Riftbound listings, but it's a peer-to-peer
   // per-seller marketplace, not a single Shopify storefront — needs its own
@@ -1714,6 +1736,16 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingFlatCents: 499,
     freeOverCents: 25000,
     shippingNote: "est. €4.99 (DHL) · free over €250",
+    country: "DE",
+  },
+  imperialcards: {
+    key: "imperialcards",
+    name: "ImperialCards",
+    base: "https://imperialcards.de",
+    collections: ["riftbound-einzelkarten"],
+    shippingFlatCents: 395,
+    freeOverCents: 6000,
+    shippingNote: "est. €3.95 · free over €60",
     country: "DE",
   },
   battlebear: {
