@@ -13,7 +13,7 @@ import { snapshotDemand } from "./demand-snapshot";
 import { refreshTcgplayerPrices } from "./tcgplayer";
 import { importMarketplaceListings } from "./marketplace";
 import { refreshCardmarketPrices } from "./cardmarket";
-import { ALL_FALLBACK_RETAILERS, pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, chasePrintRarity, isSignature, isOvernumbered } from "./constants";
+import { ALL_FALLBACK_RETAILERS, pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, chasePrintRarity, isSignature, isOvernumbered, EBAY_CA_RETAILER } from "./constants";
 import { currencyOf, isoCountry, priceField, type Country } from "./country";
 import { USD_TO } from "./fx";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows } from "./scrape-http";
@@ -384,15 +384,19 @@ const EBAY_SKIP_RARITIES = new Set(["Common", "Uncommon"]);
  * markets, and a card would drift in and out of the search set as exchange
  * rates moved.
  *
- * Lowered $20→$10 on 2026-08-20, the same day Germany's removal from
- * EBAY_ROTATING_MARKETS freed ~350 Browse calls/day back into the budget (see
- * EBAY_ALWAYS_MARKETS below). Read the real card count this adds off the
- * "eBay catalogue: X of Y cards searched" log line on the next run — the
- * $10→lower decision after this one should be made from that number, not a
- * second guess. The chase-auction pass was deleted on 2026-08-20 (the feature
- * was dropped), returning a further ~960 calls/day to this budget.
+ * Lowered $20→$10→$5, all on 2026-08-20. The first drop was funded by
+ * Germany's removal from EBAY_ROTATING_MARKETS (~350 Browse calls/day freed —
+ * see EBAY_ALWAYS_MARKETS below) and measured for real: a forced production
+ * run read "347 of 1429 cards searched" (up from a 280-card baseline at $20).
+ * The second drop to $5 is funded by removing the chase-auction pass entirely
+ * (refreshEbayAuctions and the EbayAuction model, deleted the same day —
+ * ~960 Browse calls/day for a countdown widget, the single most expensive
+ * line in the whole quota model relative to what it returned). Read the real
+ * card count this adds off the "eBay catalogue: X of Y cards searched" log
+ * line on the next run — any move past $5 should be made from that number,
+ * not a second guess.
  */
-export const EBAY_MIN_VALUE_USD_CENTS = Number(process.env.EBAY_MIN_VALUE_CENTS ?? 1000);
+export const EBAY_MIN_VALUE_USD_CENTS = Number(process.env.EBAY_MIN_VALUE_CENTS ?? 500);
 
 export function eBayWorthSearching(
   c: {
@@ -593,8 +597,9 @@ export function ebayMarketsForDay(dayIndex: number): EbayMarketCfg[] {
   return [...always, EBAY_ROTATING_MARKETS[dayIndex % EBAY_ROTATING_MARKETS.length]];
 }
 
-/** eBay CA rows are derived from the US pass — see the note at the write site. */
-export const EBAY_CA_RETAILER = "ebay_ca";
+// EBAY_CA_RETAILER moved to constants.ts (2026-08-20) so sealed-import.ts can
+// share it without an import cycle — see the note there. Rows here are still
+// derived from the US pass, not a separate search; see the write site below.
 
 export async function refreshEbayMarkets(
   cards: { id: string; name: string; setCode: string; collectorNumber: string; isPromo: boolean }[]
@@ -1492,7 +1497,6 @@ export async function importPrices(): Promise<ImportSummary> {
     );
     const n = await refreshEbayMarkets(ebayTargets);
     summary.stores.push({ name: "eBay (AU/US/UK/SG/CA)", products: ebayTargets.length, priced: n, matched: n, unmatched: 0 });
-
   } else if (chaseDue && isEbayEnabled() && ebayAllowed) {
     // The evening pass: promo / Signature / overnumbered printings only. These
     // are thin markets — often one or two live listings — so a single sale moves

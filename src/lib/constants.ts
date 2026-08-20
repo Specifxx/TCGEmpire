@@ -50,6 +50,15 @@ export const AU_FALLBACK_RETAILERS: readonly string[] = [TCGPLAYER_AU_RETAILER];
 export const TCGPLAYER_CA_RETAILER = "tcgplayer_ca";
 export const CA_FALLBACK_RETAILERS: readonly string[] = [TCGPLAYER_CA_RETAILER];
 
+// eBay CA. For SINGLES this key is written by price-import.ts's US pass (CA rows
+// are FX-derived from the US Browse results, not a separate ~1,400-card search —
+// see the note at that write site); for SEALED (sealed-import.ts) it's a real,
+// separate Browse search, since sealed is only ~30 product groups per market and
+// a native search there is cheap. Defined here (constants.ts imports nothing) so
+// both files can share the one key without creating an import cycle between them
+// — price-import.ts already imports sealed-import.ts's importSealed().
+export const EBAY_CA_RETAILER = "ebay_ca";
+
 // ─────────────────────────────────────────────────────────────────────────────
 // THE RULE: a converted reference price is never a row in the price comparison.
 // ─────────────────────────────────────────────────────────────────────────────
