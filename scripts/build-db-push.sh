@@ -128,18 +128,20 @@ fi
 # tests/db-chain.test.ts compares the two lists and fails if they drift.
 if [ -n "${HISTORY_DATABASE_URL_3:-}" ]; then
   HIST="$HISTORY_DATABASE_URL_3"; HIST_SOURCE="HISTORY_DATABASE_URL_3"
-elif [ -n "${HISTORY_DATABASE_URL_2:-}" ]; then
-  HIST="$HISTORY_DATABASE_URL_2"; HIST_SOURCE="HISTORY_DATABASE_URL_2"
 elif [ -n "${HISTORY_DATABASE_URL:-}" ]; then
   HIST="$HISTORY_DATABASE_URL"; HIST_SOURCE="HISTORY_DATABASE_URL"
-elif [ -n "${RH7:-}" ]; then
-  HIST="$RH7"; HIST_SOURCE="RH7"
 elif [ -n "${RH6:-}" ]; then
   HIST="$RH6"; HIST_SOURCE="RH6"
+elif [ -n "${RH7:-}" ]; then
+  HIST="$RH7"; HIST_SOURCE="RH7"
 elif [ -n "${RH5:-}" ]; then
   HIST="$RH5"; HIST_SOURCE="RH5"
 elif [ -n "${HISTORY_DATABASE_URL_4:-}" ]; then
   HIST="$HISTORY_DATABASE_URL_4"; HIST_SOURCE="HISTORY_DATABASE_URL_4"
+elif [ -n "${HISTORY_DATABASE_URL_2:-}" ]; then
+  # LAST: its 5 GB monthly allowance is spent. Kept only so a deploy can't
+  # hard-fail with no history target at all. See src/lib/db-history.ts.
+  HIST="$HISTORY_DATABASE_URL_2"; HIST_SOURCE="HISTORY_DATABASE_URL_2"
 else
   HIST=""; HIST_SOURCE=""
 fi

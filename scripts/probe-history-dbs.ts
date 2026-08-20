@@ -43,7 +43,13 @@ const HISTORY_VARS = [
 
 // The operational chain, in db.ts order — we need the LIVE Card ids to test
 // history rows against.
-const OPERATIONAL_VARS = ["RM6", "DATABASE_URL_2", "DATABASE_URL", "RM5", "RM4", "RM3"] as const;
+// MIRRORS src/lib/db.ts's OPERATIONAL_URL, and must keep doing so. This list had
+// gone stale at RM6 — which is over its allowance and refuses connections — so the
+// probe fell through to RM5, a RETIRED project, and reported "N cards resolve"
+// against a catalogue the site no longer serves. That is the one number this
+// script exists to produce, so a stale list here quietly answers the wrong
+// question. (RM6 last: freshest data, spent allowance — see db.ts.)
+const OPERATIONAL_VARS = ["RM7", "RM8", "RM5", "DATABASE_URL_2", "DATABASE_URL", "RM4", "RM3", "RM6"] as const;
 
 function clientFor(url: string) {
   return new PrismaClient({ datasources: { db: { url } }, log: ["error"] });

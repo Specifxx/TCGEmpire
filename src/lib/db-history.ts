@@ -79,12 +79,12 @@ import { PrismaClient } from "@prisma/client";
 // day to an "unexplained" P1001 more than once.
 const HISTORY_URL =
   process.env.HISTORY_DATABASE_URL_3 ||
-  process.env.HISTORY_DATABASE_URL_2 ||
   process.env.HISTORY_DATABASE_URL ||
-  process.env.RH7 ||
   process.env.RH6 ||
+  process.env.RH7 ||
   process.env.RH5 ||
   process.env.HISTORY_DATABASE_URL_4 ||
+  process.env.HISTORY_DATABASE_URL_2 ||
   process.env.DATABASE_URL;
 
 // Names the winning variable (never its value — it's a credential) so a P1001
@@ -92,19 +92,20 @@ const HISTORY_URL =
 // Mirrors the same diagnostic in scripts/build-db-push.sh and lib/db.ts.
 export const HISTORY_URL_SOURCE =
   process.env.HISTORY_DATABASE_URL_3 ? "HISTORY_DATABASE_URL_3"
-  : process.env.HISTORY_DATABASE_URL_2 ? "HISTORY_DATABASE_URL_2"
   : process.env.HISTORY_DATABASE_URL ? "HISTORY_DATABASE_URL"
-  : process.env.RH7 ? "RH7"
   : process.env.RH6 ? "RH6"
+  : process.env.RH7 ? "RH7"
   : process.env.RH5 ? "RH5"
   : process.env.HISTORY_DATABASE_URL_4 ? "HISTORY_DATABASE_URL_4"
+  : process.env.HISTORY_DATABASE_URL_2 ? "HISTORY_DATABASE_URL_2"
   : "DATABASE_URL (no history project set — history shares the operational DB)";
 
 if (HISTORY_URL_SOURCE !== "HISTORY_DATABASE_URL_3") {
   console.warn(
     `[db-history] history DB resolved to ${HISTORY_URL_SOURCE}, not HISTORY_DATABASE_URL_3 — the current ` +
-      `history project is missing from this environment. HISTORY_DATABASE_URL_2 is kept only as a rollback ` +
-      `and is at its allowance; everything older is exhausted. Expect P1001 or writes landing in the wrong place.`
+      `history project is missing from this environment. HISTORY_DATABASE_URL is the rollback (an identical copy) ` +
+      `and RH6 holds the deep pre-2026-08-04 history; HISTORY_DATABASE_URL_2 is LAST because its allowance is spent. ` +
+      `Expect P1001 or writes landing in the wrong place.`
   );
 }
 
