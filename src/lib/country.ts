@@ -142,6 +142,20 @@ export function pickPrice(
   return card.lowestPriceCents;
 }
 
+// TOTAL BY DESIGN — never index COUNTRIES bare here. The `Country` union is a
+// COMPILE-time guarantee only, and this function's real callers include values
+// cast from RUNTIME strings that TypeScript never checked: PriceHistory.country
+// is a plain text column holding whatever market the importer wrote on the day
+// the row was created, and a market can later be REMOVED from the union.
+//
+// That is not hypothetical. New Zealand was removed on 2026-08-20 (see the note
+// at the top of this file), which deleted COUNTRIES.NZ — but left ~120 days of
+// `country = 'NZ'` rows in the history database, because the removal purged no
+// data. lib/rise-predictor.ts read those rows back, cast the string to Country,
+// and called currencyOf("NZ"); `COUNTRIES["NZ"]` was undefined, `.currency`
+// threw a TypeError, and /tools/rising returned a hard 500 on its default
+// GLOBAL view for every visitor. Falling back to the default market renders a
+// slightly wrong currency label in that rare case; throwing takes the page down.
 export function currencyOf(country: Country): string {
-  return COUNTRIES[country].currency;
+  return (COUNTRIES[country] ?? COUNTRIES[DEFAULT_COUNTRY]).currency;
 }

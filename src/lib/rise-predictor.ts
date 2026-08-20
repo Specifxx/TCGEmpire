@@ -1,6 +1,6 @@
 import { prisma } from "./db";
 import { dbHistory } from "./db-history";
-import { priceField, pickPrice, currencyOf, type Country } from "./country";
+import { priceField, pickPrice, currencyOf, COUNTRIES, type Country } from "./country";
 import { computeSignals, type Signals } from "./ai-insight";
 import type { PricePoint } from "./price-history";
 import { cardDisplayName } from "./card-name";
@@ -25,7 +25,18 @@ import { zScores, percentileRanks, spearman, mean, median, clamp } from "./stats
 // neutral — so GLOBAL uses each card's best-covered market series for timing and its
 // total cross-market supply. The DISPLAYED price uses that card's basis market.
 export type RiseScope = Country | "GLOBAL";
-const MARKET_PREF: Country[] = ["AU", "US", "UK"]; // reference order for a GLOBAL card's displayed price
+// Reference order for a GLOBAL card's displayed price. Must cover EVERY market in
+// COUNTRIES: a card priced only in a market missing from this list falls through
+// to the "AU" default and renders AU's price (or a dash) under an AU label, which
+// is silently wrong rather than loudly broken. SG/CA were missing for both of
+// their launches; DE was missing for its 2026-08-20 launch.
+const MARKET_PREF: Country[] = ["AU", "US", "UK", "SG", "CA", "DE"];
+
+// The set of market codes that currently EXIST. PriceHistory.country is a plain
+// text column, so it can hold codes for markets since retired (NZ rows survived
+// its 2026-08-20 removal) — those must never be cast to Country and indexed into
+// COUNTRIES. See the note on currencyOf in lib/country.ts for what that cost.
+const KNOWN_COUNTRIES = Object.keys(COUNTRIES) as Country[];
 
 const SCAN = 400; // universe: most-searched priced cards
 const HISTORY_DAYS = 120;
@@ -170,15 +181,51 @@ function backtest(seriesById: Map<string, PricePoint[]>): RiseBacktest | null {
   };
 }
 
+// The "nothing to show" result. Shared so the empty-universe path and the
+// failure path below can't drift apart.
+function emptyAnalysis(scope: RiseScope): RiseAnalysis {
+  return {
+    picks: [], universeSize: 0, qualifying: 0,
+    withAnyHistory: 0, deepestSeries: 0, minPointsRequired: MIN_POINTS,
+    demandPriceSpearman: 0, velocityActive: false, snapshotDays: 0,
+    backtest: null, generatedAt: new Date().toISOString(), scope,
+  };
+}
+
+// NEVER let a data anomaly 500 the page. Every other reader of PriceHistory in
+// this codebase already degrades to an empty result on failure
+// (computePriceMovers in price-history.ts, market-index.ts, screener.ts); this
+// module was the one that didn't, which is the only reason a single bad country
+// string became a hard 500 on /tools/rising instead of an empty screener. The
+// page renders its "no price history yet" branch from this shape, so an outage
+// here now costs freshness, not availability.
+//
+// The throw is logged, not swallowed silently — a persistently empty screener
+// with a stack trace in the function logs is diagnosable; one without isn't.
 export async function getRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
+  try {
+    return await computeRisingCards(scope);
+  } catch (err) {
+    console.error(`[rise-predictor] getRisingCards(${scope}) failed — serving an empty analysis:`, err);
+    return emptyAnalysis(scope);
+  }
+}
+
+async function computeRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
   const isGlobal = scope === "GLOBAL";
   // Universe: most-searched cards priced in the scope market (any market for GLOBAL).
   const priced = isGlobal
     ? {
+        // Every priced market, not just the original three — a card priced ONLY
+        // in SG/CA/DE is still a real, rankable card, and omitting those columns
+        // here quietly excluded them from the GLOBAL universe entirely.
         OR: [
           { lowestPriceCents: { not: null } },
           { lowestPriceCentsUs: { not: null } },
           { lowestPriceCentsUk: { not: null } },
+          { lowestPriceCentsSg: { not: null } },
+          { lowestPriceCentsCa: { not: null } },
+          { lowestPriceCentsDe: { not: null } },
         ],
       }
     : { [priceField(scope)]: { not: null } };
@@ -191,20 +238,17 @@ export async function getRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
       id: true, slug: true, name: true, setCode: true, collectorNumber: true,
       variant: true, isPromo: true, rarity: true, imageThumbUrl: true,
       searchCount: true, viewCount: true,
+      // MUST list every field UniverseCard declares. The `as UniverseCard[]` cast
+      // below is a lie the compiler cannot catch: an unselected column arrives as
+      // `undefined`, so pickPrice() returned null and the price rendered as "—"
+      // for every card whose basis market was SG or CA.
       lowestPriceCents: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true,
-      lowestPriceCentsDe: true,
+      lowestPriceCentsSg: true, lowestPriceCentsCa: true, lowestPriceCentsDe: true,
     },
   })) as UniverseCard[];
 
   const ids = universe.map((c) => c.id);
-  if (!ids.length) {
-    return {
-      picks: [], universeSize: 0, qualifying: 0,
-      withAnyHistory: 0, deepestSeries: 0, minPointsRequired: MIN_POINTS,
-      demandPriceSpearman: 0, velocityActive: false, snapshotDays: 0,
-      backtest: null, generatedAt: new Date().toISOString(), scope,
-    };
-  }
+  if (!ids.length) return emptyAnalysis(scope);
 
   // Bulk fetch — never per-card. For GLOBAL, pull every market's history/supply (no
   // country filter); for a single market, filter to it.
@@ -216,7 +260,15 @@ export async function getRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
     // OPERATIONAL client, landing a 400-card × 120-day pull on the database
     // that's actually strained. Fixed to match the established pattern.
     dbHistory.priceHistory.findMany({
-      where: { cardId: { in: ids }, day: { gte: cutoff }, ...(isGlobal ? {} : { country: scope }) },
+      // GLOBAL pulls every market — but only markets that still EXIST. Without the
+      // `in` filter this read back `country = 'NZ'` rows left behind by the market's
+      // removal (the removal purged no data), which crashed the page downstream and
+      // also paid transfer for rows that can never be displayed.
+      where: {
+        cardId: { in: ids },
+        day: { gte: cutoff },
+        country: isGlobal ? { in: KNOWN_COUNTRIES } : scope,
+      },
       orderBy: { day: "asc" },
       select: { cardId: true, country: true, day: true, lowestPriceCents: true },
     }),
@@ -237,7 +289,13 @@ export async function getRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
   if (isGlobal) {
     const byCardCountry = new Map<string, Map<Country, PricePoint[]>>();
     for (const r of histRows) {
-      const c = (r.country as Country) || "AU";
+      // Validate before casting — `r.country` is an unconstrained text column, and
+      // a code for a retired market must be SKIPPED, not folded into AU: those are
+      // real prices in a different currency, and merging them would corrupt AU's
+      // range (and therefore posPct, the core "room to run" signal).
+      const raw = String(r.country ?? "").toUpperCase();
+      if (!(raw in COUNTRIES)) continue;
+      const c = raw as Country;
       let m = byCardCountry.get(r.cardId);
       if (!m) byCardCountry.set(r.cardId, (m = new Map()));
       (m.get(c) ?? m.set(c, []).get(c)!).push({ t: r.day.getTime(), v: r.lowestPriceCents });
