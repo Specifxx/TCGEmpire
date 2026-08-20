@@ -104,6 +104,102 @@
     ],
     "fingerprint": "d016e1ece2e9aa86"
   },
+  "/blog/premium/00-pricing-cards.png": {
+    "src": "/blog/premium/00-pricing-cards.png",
+    "width": 1280,
+    "height": 700,
+    "bytes": 25536,
+    "webp": null,
+    "webpBytes": null,
+    "avif": null,
+    "avifBytes": null,
+    "variants": [],
+    "fingerprint": "8d2baac39a9f6585"
+  },
+  "/blog/premium/01-premium-header.png": {
+    "src": "/blog/premium/01-premium-header.png",
+    "width": 1280,
+    "height": 400,
+    "bytes": 16038,
+    "webp": null,
+    "webpBytes": null,
+    "avif": null,
+    "avifBytes": null,
+    "variants": [],
+    "fingerprint": "3fa250aa9a29534e"
+  },
+  "/blog/premium/02-feature-cards-bottom.png": {
+    "src": "/blog/premium/02-feature-cards-bottom.png",
+    "width": 1280,
+    "height": 900,
+    "bytes": 40157,
+    "webp": null,
+    "webpBytes": null,
+    "avif": "/blog/premium/02-feature-cards-bottom.avif",
+    "avifBytes": 37633,
+    "variants": [],
+    "fingerprint": "1c1f0193687cae67"
+  },
+  "/blog/premium/03-value-finder.png": {
+    "src": "/blog/premium/03-value-finder.png",
+    "width": 1280,
+    "height": 420,
+    "bytes": 19916,
+    "webp": null,
+    "webpBytes": null,
+    "avif": null,
+    "avifBytes": null,
+    "variants": [],
+    "fingerprint": "a3cf6c2085fcd464"
+  },
+  "/blog/premium/04-rising-cards.png": {
+    "src": "/blog/premium/04-rising-cards.png",
+    "width": 1280,
+    "height": 420,
+    "bytes": 19496,
+    "webp": null,
+    "webpBytes": null,
+    "avif": null,
+    "avifBytes": null,
+    "variants": [],
+    "fingerprint": "01966f5e8d5b4012"
+  },
+  "/blog/premium/05-deal-finder.png": {
+    "src": "/blog/premium/05-deal-finder.png",
+    "width": 1280,
+    "height": 660,
+    "bytes": 40022,
+    "webp": null,
+    "webpBytes": null,
+    "avif": null,
+    "avifBytes": null,
+    "variants": [],
+    "fingerprint": "ed7897afa1039427"
+  },
+  "/blog/premium/06-condition-calculator.png": {
+    "src": "/blog/premium/06-condition-calculator.png",
+    "width": 1280,
+    "height": 1555,
+    "bytes": 71697,
+    "webp": null,
+    "webpBytes": null,
+    "avif": null,
+    "avifBytes": null,
+    "variants": [],
+    "fingerprint": "71210f866b044cd3"
+  },
+  "/blog/premium/07-marketplace-sell.png": {
+    "src": "/blog/premium/07-marketplace-sell.png",
+    "width": 1280,
+    "height": 420,
+    "bytes": 20288,
+    "webp": null,
+    "webpBytes": null,
+    "avif": null,
+    "avifBytes": null,
+    "variants": [],
+    "fingerprint": "e0129bbfa0b52c18"
+  },
   "/blog/riftbound-2027-set-roadmap.png": {
     "src": "/blog/riftbound-2027-set-roadmap.png",
     "width": 1200,
@@ -250,6 +346,27 @@
       }
     ],
     "fingerprint": "1367a8b7adca33e4"
+  },
+  "/blog/riftcompare-premium-explained.png": {
+    "src": "/blog/riftcompare-premium-explained.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 44742,
+    "webp": "/blog/riftcompare-premium-explained.webp",
+    "webpBytes": 29714,
+    "avif": "/blog/riftcompare-premium-explained.avif",
+    "avifBytes": 16840,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftcompare-premium-explained-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftcompare-premium-explained-768w.webp"
+      }
+    ],
+    "fingerprint": "711924d98a63c1af"
   },
   "/blog/riftcompare-review.png": {
     "src": "/blog/riftcompare-review.png",
