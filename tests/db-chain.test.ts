@@ -27,10 +27,16 @@ const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 // Both are silent-by-construction: the build stays green either way. These are
 // source-level assertions precisely because nothing at runtime catches them.
 
-const chainFrom = (src: string, decl: string) => {
-  const body = new RegExp(`const ${decl} =([\\s\\S]*?);`).exec(src)?.[1] ?? "";
-  assert.ok(body, `${decl} declaration not found`);
-  return [...body.matchAll(/process\.env\.(\w+)/g)].map((m) => m[1]);
+// The chains now live in ONE place (src/lib/db-chains.ts) and everything that
+// runs in Node imports them. Only the two consumers that CANNOT import — this
+// bash script and the workflow `env:` blocks — still restate them, so this file
+// pins those to the shared list rather than to another copy.
+const chainFrom = (_src: string, decl: string) => {
+  const chains = read("src/lib/db-chains.ts");
+  const name = decl === "OPERATIONAL_URL" ? "OPERATIONAL_VARS" : "HISTORY_VARS";
+  const body = new RegExp(`export const ${name} = \\[([^\\]]*)\\]`).exec(chains)?.[1] ?? "";
+  assert.ok(body, `${name} declaration not found in db-chains.ts`);
+  return [...body.matchAll(/"(\w+)"/g)].map((m) => m[1]);
 };
 
 // The build script assigns the winning variable's NAME to SOURCE/HIST_SOURCE in
@@ -86,7 +92,7 @@ test("the 'you fell back to a dead project' warnings name the CURRENT project", 
   assert.match(read("src/lib/db-history.ts"), new RegExp(`HISTORY_URL_SOURCE !== "${hist}"`));
 });
 
-test("db-history's idea of the operational database matches db.ts's", () => {
+test("db-history and db.ts resolve the operational database from ONE shared list", () => {
   // historyIsSplit compares the resolved history URL against the resolved
   // OPERATIONAL one. If db-history.ts's copy of that chain lags behind db.ts's,
   // it is answering about a different — usually dead — project. That is how this
@@ -94,8 +100,16 @@ test("db-history's idea of the operational database matches db.ts's", () => {
   // guards (ensureHistoryCards() no-opping, then price-import silently dropping
   // every PriceHistory row on a Card foreign key) is swallowed into one warning
   // line, so nothing at runtime would have told us.
-  assert.deepEqual(
-    chainFrom(read("src/lib/db-history.ts"), "OPERATIONAL_URL"),
-    chainFrom(read("src/lib/db.ts"), "OPERATIONAL_URL")
-  );
+  // Previously these were two hand-maintained copies and they drifted (db-history
+  // stopped at RM3 while db.ts had moved to RM5, silently no-opping
+  // ensureHistoryCards). Now both import OPERATIONAL_VARS, so the only way to
+  // regress is to reintroduce a local copy — which is what this asserts against.
+  for (const f of ["src/lib/db.ts", "src/lib/db-history.ts"]) {
+    const src = read(f);
+    assert.match(src, /from "\.\/db-chains"/, `${f} must import the shared chains`);
+    assert.ok(
+      !/const OPERATIONAL_URL =\s*\n?\s*process\.env\./.test(src),
+      `${f} must not re-declare the operational chain inline`
+    );
+  }
 });

@@ -45,12 +45,12 @@ jobs:
       - run: npx prisma generate
       - name: Generate and send promo pack
         env:
-          DATABASE_URL: ${{ secrets.RM7 || vars.RM7 || secrets.RM8 || vars.RM8 || secrets.RM5 || vars.RM5 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.RM6 || vars.RM6 }}
+          DATABASE_URL: ${{ secrets.RM7 || vars.RM7 || secrets.RM8 || vars.RM8 || secrets.DATABASE_URL || vars.DATABASE_URL }}
           # Which of the chain above actually won, by NAME (never its value). lib/db.ts
           # cannot work this out inside Actions: the chain is collapsed into one
           # DATABASE_URL before the job starts, so process.env.RM5 is always unset there
           # and its warning always said "DATABASE_URL". See src/lib/db.ts.
-          DB_SOURCE_NAME: ${{ (secrets.RM7 || vars.RM7) && 'RM7' || (secrets.RM8 || vars.RM8) && 'RM8' || (secrets.RM5 || vars.RM5) && 'RM5' || (secrets.DATABASE_URL_2 || vars.DATABASE_URL_2) && 'DATABASE_URL_2' || (secrets.DATABASE_URL || vars.DATABASE_URL) && 'DATABASE_URL' || (secrets.RM4 || vars.RM4) && 'RM4' || (secrets.RM3 || vars.RM3) && 'RM3' || 'RM6' }}
+          DB_SOURCE_NAME: ${{ (secrets.RM7 || vars.RM7) && 'RM7' || (secrets.RM8 || vars.RM8) && 'RM8' || 'DATABASE_URL' }}
           # The whole promo is built from price MOVERS, which come from
           # PriceHistory in the separate history project (src/lib/db-history.ts).
           # These were never set here, so that client fell through its entire
