@@ -136,12 +136,12 @@ if (HISTORY_URL_SOURCE !== "HISTORY_DATABASE_URL_3") {
 // would spin up a second client in every context that only wants history.
 const OPERATIONAL_URL =
   process.env.RM7 ||
-  process.env.RM6 ||
+  process.env.RM5 ||
   process.env.DATABASE_URL_2 ||
   process.env.DATABASE_URL ||
-  process.env.RM5 ||
   process.env.RM4 ||
-  process.env.RM3;
+  process.env.RM3 ||
+  process.env.RM6;
 export const historyIsSplit = HISTORY_URL !== OPERATIONAL_URL;
 
 // Ensure a generous connect_timeout (Postgres/libpq connection param, in

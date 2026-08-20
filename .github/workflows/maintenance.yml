@@ -105,25 +105,29 @@ jobs:
       group: ${{ inputs.task == 'import-prices' && 'refresh-prices' || format('maintenance-{0}', github.run_id) }}
       cancel-in-progress: false
     env:
-      # RM6 is the CURRENT operational project (cut over 2026-08-17 after
-      # DATABASE_URL_2 hit 4.8 of its 5 GB monthly network-transfer allowance
-      # just three days after its own cutover). Current-first, matching
-      # src/lib/db.ts.
+      # RM7 is the CURRENT operational project (cut over 2026-08-20 after RM6
+      # spent its 5 GB monthly network-transfer allowance just three days after
+      # its own cutover). Current-first, matching src/lib/db.ts.
       #
-      # migrate-main-db-to-rm6's own step below deliberately does NOT use this
-      # default: it pins SOURCE to DATABASE_URL_2 (the OLD project it reads
-      # FROM) and TARGET to RM6, and aborts outright if the two resolve to the
-      # same database.
+      # RM6 now sits LAST in this chain, below even the long-dead projects,
+      # because a fallback that cannot connect is worth less than a stale one
+      # that can — see the long note on OPERATIONAL_URL in src/lib/db.ts. RM5 is
+      # the real rollback.
       #
-      # ORDERING: this default points at RM6 from the moment it's set, so run
-      # migrate-main-db-to-rm6 BEFORE any other task here — otherwise a task
-      # like import-prices would happily operate against a still-empty RM6.
-      DATABASE_URL: ${{ secrets.RM7 || vars.RM7 || secrets.RM6 || vars.RM6 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 }}
+      # migrate-main-db-to-rm7's own step below deliberately does NOT use this
+      # default: it pins SOURCE to RM6 (the OLD project it reads FROM) and
+      # TARGET to RM7, and aborts outright if the two resolve to the same
+      # database.
+      #
+      # ORDERING: this default points at RM7 from the moment it's set, so run
+      # migrate-main-db-to-rm7 BEFORE any other task here — otherwise a task
+      # like import-prices would happily operate against a still-empty RM7.
+      DATABASE_URL: ${{ secrets.RM7 || vars.RM7 || secrets.RM5 || vars.RM5 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.RM6 || vars.RM6 }}
       # Which of the chain above actually won, by NAME (never its value). lib/db.ts
       # cannot work this out inside Actions: the chain is collapsed into one
       # DATABASE_URL before the job starts, so process.env.RM5 is always unset there
       # and its warning always said "DATABASE_URL". See src/lib/db.ts.
-      DB_SOURCE_NAME: ${{ (secrets.RM7 || vars.RM7) && 'RM7' || (secrets.RM6 || vars.RM6) && 'RM6' || (secrets.DATABASE_URL_2 || vars.DATABASE_URL_2) && 'DATABASE_URL_2' || (secrets.DATABASE_URL || vars.DATABASE_URL) && 'DATABASE_URL' || (secrets.RM5 || vars.RM5) && 'RM5' || (secrets.RM4 || vars.RM4) && 'RM4' || 'RM3' }}
+      DB_SOURCE_NAME: ${{ (secrets.RM7 || vars.RM7) && 'RM7' || (secrets.RM5 || vars.RM5) && 'RM5' || (secrets.DATABASE_URL_2 || vars.DATABASE_URL_2) && 'DATABASE_URL_2' || (secrets.DATABASE_URL || vars.DATABASE_URL) && 'DATABASE_URL' || (secrets.RM4 || vars.RM4) && 'RM4' || (secrets.RM3 || vars.RM3) && 'RM3' || 'RM6' }}
       DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
     steps:
       - uses: actions/checkout@v4
@@ -248,7 +252,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.RH7 || vars.RH7 }}
           # Only ever used for a "did RH7 accidentally get set to the operational
           # database?" guard before this step truncates anything.
-          OPERATIONAL_URL: ${{ secrets.RM7 || vars.RM7 || secrets.RM6 || vars.RM6 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 }}
+          OPERATIONAL_URL: ${{ secrets.RM7 || vars.RM7 || secrets.RM5 || vars.RM5 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.RM6 || vars.RM6 }}
         run: |
           set -uo pipefail
 
@@ -436,7 +440,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
           # Only ever used for a "did HISTORY_DATABASE_URL_2 accidentally get set
           # to the operational database?" guard before this step truncates anything.
-          OPERATIONAL_URL: ${{ secrets.RM7 || vars.RM7 || secrets.RM6 || vars.RM6 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 }}
+          OPERATIONAL_URL: ${{ secrets.RM7 || vars.RM7 || secrets.RM5 || vars.RM5 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.RM6 || vars.RM6 }}
         run: |
           set -uo pipefail
 
@@ -622,7 +626,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
           # Only ever used for a "did HISTORY_DATABASE_URL_3 accidentally get set
           # to the operational database?" guard before this step truncates anything.
-          OPERATIONAL_URL: ${{ secrets.RM7 || vars.RM7 || secrets.RM6 || vars.RM6 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 }}
+          OPERATIONAL_URL: ${{ secrets.RM7 || vars.RM7 || secrets.RM5 || vars.RM5 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.RM6 || vars.RM6 }}
         run: |
           set -uo pipefail
 
@@ -1544,10 +1548,29 @@ jobs:
           psql "$TARGET_DATABASE_URL" -c "SELECT current_database(), current_user" -c "\dn" -c "\dt public.*" 2>&1 | head -60
 
           echo "== Verifying row counts (RM6 vs RM7) =="
+          # ENUMERATED FROM THE SOURCE, not hand-listed. This used to check nine
+          # named tables, which silently said nothing about the rest — after the
+          # 2026-08-20 migration, ArbitrageAlertOptOut, UserDigestOptOut and
+          # StoreHealthSnapshot (all added while the source was live, all holding
+          # real rows) were restored but never verified, and confirming they had
+          # survived took a manual dig through the job log afterwards. A table
+          # added between rotations is exactly the kind a hand-maintained list
+          # forgets, so ask the database instead.
+          #
+          # PriceHistory/ClickEvent are excluded because the dump deliberately
+          # skips their DATA (--exclude-table-data) — they are served from the
+          # separate history project.
           sleep 3
           set +e
+          TABLES=$(psql "$SOURCE_DATABASE_URL" -tAc \
+            "SELECT quote_ident(tablename) FROM pg_tables WHERE schemaname='public' AND tablename NOT IN ('PriceHistory','ClickEvent') ORDER BY tablename")
+          if [ -z "$TABLES" ]; then
+            echo "::error::could not enumerate source tables — refusing to report an unverified migration as verified."
+            exit 1
+          fi
+          echo "Verifying $(printf '%s\n' "$TABLES" | wc -l) tables."
           MISMATCH=0
-          for T in 'public."User"' 'public."Card"' 'public."Order"' 'public."MarketplaceListing"' 'public."SellerProfile"' 'public."Counter"' 'public."SupportTicket"' 'public."RetailerPrice"' 'public."Feedback"'; do
+          for T in $(printf 'public.%s\n' $TABLES); do
             SRC=$(psql "$SOURCE_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
             DST=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
             case "$SRC" in ''|*[!0-9]*) echo "$T source query FAILED: $SRC"; MISMATCH=1; continue;; esac
@@ -1566,13 +1589,43 @@ jobs:
             exit 1
           fi
           echo "All verified tables match — RM7 now holds a full copy of the operational data."
+
+          # ── RE-ALIGN THE SCHEMA TO THE DEPLOYED CODE ────────────────────────
+          # `pg_restore --clean` recreates every object FROM THE DUMP, so the
+          # target now carries the SOURCE's schema — which is older than this
+          # repo's by definition if any schema change landed after the source
+          # stopped receiving deploys.
+          #
+          # That is not hypothetical. On 2026-08-20 a commit adding
+          # Card.lowestPriceCentsDe merged SEVEN SECONDS before the cutover
+          # commit; Vercel pushed the new column to the target, and this task's
+          # restore then dropped it again, leaving deployed code selecting a
+          # column that no longer existed. It was only re-added by an unrelated
+          # `prisma db push` that happened to run afterwards — luck, not design.
+          #
+          # So push the repo's schema at the target before anyone deploys.
+          # Additive for a normal rotation; --accept-data-loss is what lets it
+          # also drop columns the schema has genuinely removed, which is the
+          # correct end state because the app is what has to run against this.
+          #
+          # RUN THIS TASK FROM THE REF YOU ARE ABOUT TO DEPLOY (normally main) —
+          # the schema pushed here is the one checked out for this job.
+          echo ""
+          echo "== Re-aligning TARGET schema to this ref's prisma/schema.prisma =="
+          if ! DATABASE_URL="$TARGET_DATABASE_URL" npx prisma db push --skip-generate --accept-data-loss; then
+            echo "::error::schema push against RM7 FAILED. The data is copied, but its schema may be older than the deployed code (that is how a restore silently drops a just-added column). Do NOT deploy until this succeeds."
+            exit 1
+          fi
+          echo "TARGET schema now matches this ref."
           echo ""
           echo "NEXT STEPS:"
           echo "  1. Re-run this task immediately before deploying, so anything the"
           echo "     price importer wrote to RM6 in the meantime is included."
           echo "  2. src/lib/db.ts, scripts/build-db-push.sh and every workflow chain"
           echo "     must put RM7 FIRST, so a deploy moves traffic onto it."
-          echo "  3. Leave RM6 set as the rollback fallback."
+          echo "  3. Keep RM5 as the rollback fallback. RM6 holds fresher data but"
+          echo "     its transfer allowance is spent, so it cannot serve traffic —"
+          echo "     it sits last in the chain until that resets."
           echo "  4. THE BURN RATE IS STILL UNEXPLAINED — ~2 GB/day will exhaust this"
           echo "     project too in roughly two days. Find the cause before it does."
 
@@ -2022,7 +2075,7 @@ jobs:
         # so the generated client may not even load.
         if: inputs.task == 'fix-orphan-users'
         env:
-          TARGET_DATABASE_URL: ${{ secrets.RM7 || vars.RM7 || secrets.RM6 || vars.RM6 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 }}
+          TARGET_DATABASE_URL: ${{ secrets.RM7 || vars.RM7 || secrets.RM5 || vars.RM5 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.RM6 || vars.RM6 }}
         run: |
           set -uo pipefail
           if [ -z "$TARGET_DATABASE_URL" ]; then
@@ -2305,12 +2358,12 @@ jobs:
       - name: Audit rarity across sets (read-only census)
         if: inputs.task == 'audit-rarity'
         env:
-          DATABASE_URL: ${{ secrets.RM7 || vars.RM7 || secrets.RM6 || vars.RM6 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM5 || vars.RM5 || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 }}
+          DATABASE_URL: ${{ secrets.RM7 || vars.RM7 || secrets.RM5 || vars.RM5 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL || vars.DATABASE_URL || secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.RM6 || vars.RM6 }}
           # Which of the chain above actually won, by NAME (never its value). lib/db.ts
           # cannot work this out inside Actions: the chain is collapsed into one
           # DATABASE_URL before the job starts, so process.env.RM5 is always unset there
           # and its warning always said "DATABASE_URL". See src/lib/db.ts.
-          DB_SOURCE_NAME: ${{ (secrets.RM7 || vars.RM7) && 'RM7' || (secrets.RM6 || vars.RM6) && 'RM6' || (secrets.DATABASE_URL_2 || vars.DATABASE_URL_2) && 'DATABASE_URL_2' || (secrets.DATABASE_URL || vars.DATABASE_URL) && 'DATABASE_URL' || (secrets.RM5 || vars.RM5) && 'RM5' || (secrets.RM4 || vars.RM4) && 'RM4' || 'RM3' }}
+          DB_SOURCE_NAME: ${{ (secrets.RM7 || vars.RM7) && 'RM7' || (secrets.RM5 || vars.RM5) && 'RM5' || (secrets.DATABASE_URL_2 || vars.DATABASE_URL_2) && 'DATABASE_URL_2' || (secrets.DATABASE_URL || vars.DATABASE_URL) && 'DATABASE_URL' || (secrets.RM4 || vars.RM4) && 'RM4' || (secrets.RM3 || vars.RM3) && 'RM3' || 'RM6' }}
         run: npx tsx scripts/audit-rarity.ts
 
       - name: Audit VEN cards (read-only census)

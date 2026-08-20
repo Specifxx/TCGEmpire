@@ -31,6 +31,7 @@ const OAUTH_ERRORS: Record<string, string> = {
 export function AuthForm({
   providers,
   bare = false,
+  compact = false,
   cancelHref,
   signupPremiumDays = 0,
 }: {
@@ -39,6 +40,15 @@ export function AuthForm({
   // embedded directly inside a modal, which provides its own sizing. /login omits
   // this and gets the original standalone layout.
   bare?: boolean;
+  // Drop the heading, the value-prop paragraph, the surrounding card chrome and
+  // the password-migration footnote, leaving just the provider buttons.
+  //
+  // For SignupPromoPopup, which already states the pitch immediately above this
+  // form. Rendering both meant the same three perks were listed TWICE, one
+  // restatement under the other, inside a dialog whose excessive height is what
+  // pushed its own close button off-screen on a phone (see the layout note in
+  // SignupPromoPopup). Height here is not cosmetic — it is the bug.
+  compact?: boolean;
   // Standalone /login only (bare's modal already has its own close button). A
   // visitor who lands here off a gated feature, unasked, previously had no way
   // out but the browser Back button — a dead end matching the exact pattern
@@ -62,27 +72,31 @@ export function AuthForm({
 
   return (
     <div className={wrapperClass}>
-      <div className="card-surface p-6">
+      <div className={compact ? "" : "card-surface p-6"}>
         {!bare && cancelHref && (
           <Link href={cancelHref} className="mb-3 inline-block text-xs text-slate-500 hover:text-white">
             ← Back
           </Link>
         )}
-        <h1 className="text-xl font-extrabold text-white">Sign in</h1>
-        <p className="mt-1 text-sm text-slate-400">
-          A free account unlocks price alerts, your portfolio and your watchlist
-          {signupPremiumDays > 0 && (
-            <>
-              {" "}
-              — plus your first{" "}
-              <span className="font-semibold text-gold">
-                {signupPremiumDays === 1 ? "day" : `${signupPremiumDays} days`} of Premium
-              </span>{" "}
-              free
-            </>
-          )}
-          . No password to remember — creating an account and signing in are the same button.
-        </p>
+        {!compact && (
+          <>
+            <h1 className="text-xl font-extrabold text-white">Sign in</h1>
+            <p className="mt-1 text-sm text-slate-400">
+              A free account unlocks price alerts, your portfolio and your watchlist
+              {signupPremiumDays > 0 && (
+                <>
+                  {" "}
+                  — plus your first{" "}
+                  <span className="font-semibold text-gold">
+                    {signupPremiumDays === 1 ? "day" : `${signupPremiumDays} days`} of Premium
+                  </span>{" "}
+                  free
+                </>
+              )}
+              . No password to remember — creating an account and signing in are the same button.
+            </p>
+          </>
+        )}
 
         {error && (
           <p role="alert" className="mt-4 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400">
@@ -120,17 +134,23 @@ export function AuthForm({
           </p>
         )}
 
-        <p className="mt-5 text-center text-xs text-slate-500">
+        <p className={`${compact ? "mt-3" : "mt-5"} text-center text-xs text-slate-500`}>
           New here? Either button creates your account on the spot.
         </p>
-        <p className="mt-2 text-center text-xs text-slate-500">
-          Signed up with a password before? Use the same email address with Google or Discord and you&apos;ll
-          land straight back on your existing account. If that address isn&apos;t on either,{" "}
-          <a href="/contact" className="text-brand-400 hover:underline">
-            contact us
-          </a>{" "}
-          and we&apos;ll link it for you.
-        </p>
+        {/* The password-migration note is genuinely useful on /login, where
+            someone actively troubleshooting sign-in has room to read it. In the
+            promo popup it is four lines of edge-case prose that push the dialog
+            past the height of a phone screen; /login remains one tap away. */}
+        {!compact && (
+          <p className="mt-2 text-center text-xs text-slate-500">
+            Signed up with a password before? Use the same email address with Google or Discord and you&apos;ll
+            land straight back on your existing account. If that address isn&apos;t on either,{" "}
+            <a href="/contact" className="text-brand-400 hover:underline">
+              contact us
+            </a>{" "}
+            and we&apos;ll link it for you.
+          </p>
+        )}
       </div>
     </div>
   );
