@@ -189,7 +189,7 @@ export const CARD_TILE_SELECT = cardTileSelect("AU");
  * cardTileSelect — that a per-market count would mean one row per in-stock
  * listing — does not apply to this shape. GROUP BY does the counting IN
  * POSTGRES and returns one small row per (card, market) that actually has
- * stock: at most cards x 6, tens of bytes each, versus the thousands of listing
+ * stock: at most cards x 5, tens of bytes each, versus the thousands of listing
  * rows that idea would have moved. That distinction matters on a project that
  * has exhausted its Neon transfer allowance repeatedly (see lib/db.ts).
  *
