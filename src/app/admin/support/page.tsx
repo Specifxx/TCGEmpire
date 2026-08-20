@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { AdminSupportRow } from "@/components/AdminSupportRow";
@@ -28,6 +29,7 @@ export default async function AdminSupportPage({ searchParams }: { searchParams:
   const user = await getCurrentUser();
   const authed = keyOk || !!user?.isAdmin;
   if (!authed) notFound();
+  const keySuffix = keyOk && !user?.isAdmin ? `?key=${encodeURIComponent(token!)}` : "";
 
   const tickets = await prisma.supportTicket.findMany({
     orderBy: [{ status: "asc" }, { createdAt: "desc" }],
@@ -39,6 +41,11 @@ export default async function AdminSupportPage({ searchParams }: { searchParams:
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
+      <nav className="mb-2 flex items-center gap-1.5 text-xs text-slate-500">
+        <Link href={`/admin/marketplace${keySuffix}`} className="hover:text-slate-300">Marketplace admin</Link>
+        <span>/</span>
+        <span className="text-slate-300">Support tickets</span>
+      </nav>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-white">Support tickets</h1>
         <p className="text-sm text-slate-400">

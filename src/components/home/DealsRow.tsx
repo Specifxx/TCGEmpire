@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { COUNTRIES, type Country } from "@/lib/country";
-import type { Deal, DealType, TopDeals } from "@/lib/top-deals";
+import type { Deal, DealColumnKey, DealType, TopDeals } from "@/lib/top-deals";
 import { formatMoney } from "@/lib/format";
 import { OutboundLink } from "@/components/OutboundLink";
 import { useCountry } from "@/components/CountryProvider";
@@ -33,6 +33,10 @@ const KIND_LABEL: Record<DealType, string> = {
   "price-drops": "Price drop",
   "cheapest-sealed": "Cheapest sealed",
   "savings-vs-market": "eBay deal",
+  // This row is unmounted (see page.tsx's own comment) and was never updated
+  // when Rising Cards was added to TopDeals/TodaysTopDeals.tsx — kept here
+  // only so DealType stays exhaustive and this dead file still compiles.
+  "rising-cards": "Rising card",
 };
 
 // Free signals FIRST. The old per-column gating on the homepage revealed
@@ -43,8 +47,10 @@ const KIND_LABEL: Record<DealType, string> = {
 // row: the first pass takes one item per signal (one free preview from the
 // Premium column, same as before), and only a SECOND pass — which only ever
 // reaches the free signals, since they're ordered first — pulls in the extra
-// cards needed to fill out to six.
-const SIGNAL_ORDER: (keyof Omit<TopDeals, "hasAny">)[] = ["priceDrops", "cheapestSealed", "savingsVsMarket"];
+// cards needed to fill out to six. Deliberately does NOT include the later-
+// added "risingCards" signal — this row is unmounted dead code, not a live
+// second surface to keep in sync with every TopDeals addition.
+const SIGNAL_ORDER: DealColumnKey[] = ["priceDrops", "cheapestSealed", "savingsVsMarket"];
 const ROW_SIZE = 6;
 
 function pickSix(deals: TopDeals): Deal[] {

@@ -20,6 +20,14 @@ export default async function AdminMarketplacePage({ searchParams }: { searchPar
   const keyOk = !!token && searchParams.key === token;
   const user = await getCurrentUser();
   if (!(keyOk || user?.isAdmin)) notFound();
+  const keySuffix = keyOk && !user?.isAdmin ? `?key=${encodeURIComponent(token!)}` : "";
+
+  // Support tickets are a separate model/page (/admin/support) but the same
+  // wind-down operation as everything else here — a marketplace order gone
+  // wrong is usually how a ticket gets opened — so the dashboard now sends
+  // people to this one tile and this header link gets them the rest of the
+  // way instead of keeping a second, mostly-empty tile.
+  const openTickets = await prisma.supportTicket.count({ where: { status: { in: ["OPEN", "IN_PROGRESS"] } } });
 
   // EXCEPTIONS ONLY — every shipped order now auto-releases on its own scheduled
   // date (shippedAt + MARKETPLACE_AUTO_RELEASE_DAYS) unless disputed, so doing
@@ -110,9 +118,14 @@ export default async function AdminMarketplacePage({ searchParams }: { searchPar
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Marketplace admin</h1>
-        <p className="text-sm text-slate-400">Exceptions queue: early-release requests, stale shipments, disputes, seller controls.</p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Marketplace admin</h1>
+          <p className="text-sm text-slate-400">Exceptions queue: early-release requests, stale shipments, disputes, seller controls.</p>
+        </div>
+        <Link href={`/admin/support${keySuffix}`} className="chip shrink-0 bg-ink-800 text-slate-300 hover:text-white">
+          Support tickets{openTickets > 0 && <> · <strong className="text-gold">{openTickets}</strong> open</>} →
+        </Link>
       </div>
 
       <section className="mb-8">
