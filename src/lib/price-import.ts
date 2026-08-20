@@ -1822,9 +1822,17 @@ export async function importPrices(): Promise<ImportSummary> {
     const day = sydneyDay();
     // Split-history setups: make sure every card exists in the history DB first
     // (PriceHistory has an FK to Card there too). No-op on single-DB setups.
-    await ensureHistoryCards(existing.map((c) => c.id));
+    const writable = await ensureHistoryCards(existing.map((c) => c.id));
     const rows: { cardId: string; country: string; day: Date; lowestPriceCents: number }[] = [];
     for (const c of existing) {
+      // Skip any card the history DB could not be given a Card row for. The
+      // write below is ONE createMany, so a single unsatisfiable foreign key
+      // rejects every row in the batch — that is how one card with a stale
+      // duplicate slug cost eleven days of price history for all ~1,400 cards
+      // while the import kept reporting success. Losing one card's point is a
+      // rounding error; losing the day is not. (null = single-database setup,
+      // where the FK is against the same Card table and always satisfied.)
+      if (writable && !writable.has(c.id)) continue;
       const au = lowAuReal.get(c.id) ?? null;
       const us = lowUs.get(c.id) ?? null;
       const uk = lowUkReal.get(c.id) ?? null;
@@ -1838,7 +1846,11 @@ export async function importPrices(): Promise<ImportSummary> {
     }
     await dbHistory.priceHistory.deleteMany({ where: { day } });
     if (rows.length > 0) await dbHistory.priceHistory.createMany({ data: rows });
-    console.log(`Price history: recorded ${rows.length} points (AU/US/UK/SG/CA) for ${day.toISOString().slice(0, 10)}.`);
+    const skipped = writable ? existing.filter((c) => !writable.has(c.id)).length : 0;
+    console.log(
+      `Price history: recorded ${rows.length} points (AU/US/UK/SG/CA) for ${day.toISOString().slice(0, 10)}` +
+        (skipped ? ` — ${skipped} card(s) skipped: no Card row in the history DB` : "") + "."
+    );
   } catch (e) {
     console.warn("Price-history snapshot failed:", e);
   }
