@@ -416,24 +416,24 @@ test("the union covers every per-market list — a new market cannot be forgotte
 // started. These pin the arithmetic so catalogue growth trips a test, not a
 // silent gap in coverage.
 
-const FULL_CATALOGUE = 1400; // every card, as of the VEN launch
+const FULL_CATALOGUE = 1429; // every card — measured 2026-08-20, up from 1400 at the VEN launch measurement
 // Cards that actually get a Browse call, after eBayWorthSearching drops
-// Common/Uncommon base prints and anything under the value floor. Measured from
-// production on 2026-08-08 AT THE THEN-$20 FLOOR: 205 cards priced at or above
-// it, plus the ~34 with no US price at all (kept deliberately — see the
-// "unknown ≠ cheap" rule), rounded up for the ones priced only by a
-// non-TCGplayer US retailer.
-//
-// STALE AS OF 2026-08-20: EBAY_MIN_VALUE_USD_CENTS dropped $20→$10 the same
-// day, specifically to grow this number (freed by Germany's removal from
-// EBAY_ROTATING_MARKETS — see EBAY_ALWAYS_MARKETS in price-import.ts). The
-// real post-drop count is not yet known from production — read it off the
-// "eBay catalogue: X of Y cards searched" log line on the next run and update
-// this constant (and CHASE_PRINTINGS below, if any newly-captured card is
-// promo/signature/overnumbered) with the real measurement. Left at the old
-// value in the meantime: the budget test below still passes at 280, so it is
-// a safe (if now understated) floor, not a broken assertion.
-const CATALOGUE = 280;
+// Common/Uncommon base prints and anything under the value floor. Measured
+// from a forced production run on 2026-08-20 AT THE $10 FLOOR (the same day
+// it dropped from $20, freed by Germany's removal from EBAY_ROTATING_MARKETS
+// — see EBAY_ALWAYS_MARKETS in price-import.ts): the log line read
+// "347 of 1429 cards searched — 1082 skipped (1016 under $10 TCGplayer US,
+// rest Common/Uncommon base prints); 115 kept with no TCGplayer price". Up
+// from 280 at the old $20 floor — real growth, but far short of the ~187-card
+// ceiling the pre-measurement estimate floated; TCG price distributions are
+// more front-loaded near the floor than that estimate assumed.
+const CATALOGUE = 347;
+// NOT re-measured alongside CATALOGUE above — the 2026-08-20 forced run was
+// the FULL/catalogue pass (ebay_force bypasses the staleness gate and always
+// runs the full pass), not the twice-daily CHASE-ONLY pass that reports this
+// number on its own log line. Left at its last real measurement (still under
+// the $20 floor); update it from that pass's own log line next time it fires
+// due, or force it specifically to check sooner.
 const CHASE_PRINTINGS = 179; // promo+signature+overnumbered at or above the floor
 const SEALED_PER_RUN = 104;  // US 53 + AU 33 + UK 11 + SG 7, before the loose-pack cut
 const SPENDABLE = 4400;      // 5000 daily limit − 600 reserve
