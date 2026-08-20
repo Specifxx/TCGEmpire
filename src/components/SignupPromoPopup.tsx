@@ -6,9 +6,12 @@ import { usePathname } from "next/navigation";
 import { useMe } from "@/lib/use-me";
 import { AuthForm } from "./AuthForm";
 
-// Shown at most ONCE ever per browser (localStorage, mirrors PriceAlertModal's
-// convention) — dismissing or signing up both suppress it for good. Never shown
-// signed in, and never shown on the auth pages themselves.
+// Shown once per BROWSER SESSION (sessionStorage, not localStorage) — dismissing
+// suppresses it for the rest of that session/tab, but it comes back on the next
+// visit once the tab/browser is closed and reopened. Signing up suppresses it for
+// good, same as before, simply because a signed-in visitor never re-enters this
+// effect at all (see the `user` check below). Fires on every route, including the
+// homepage.
 //
 // Skipped entirely on /marketplace — a visitor specifically evaluating the
 // marketplace (e.g. after seeing it linked from a community post) shouldn't be
@@ -49,30 +52,20 @@ export function SignupPromoPopup({
   const pathname = usePathname();
   const [phase, setPhase] = useState<"hidden" | "shown">("hidden");
 
-  // Auto-show once, after a delay — only for a signed-out visitor, off the auth pages.
+  // Auto-show once per session, after a delay — only for a signed-out visitor,
+  // off the auth/marketplace pages. Deliberately fires on the homepage too — an
+  // earlier version excluded "/" on accessibility grounds (see DECISIONS.md's
+  // Phase 5 section); that exclusion was a product call, not a technical
+  // constraint, and has since been reversed: the homepage is now explicitly
+  // in scope.
   useEffect(() => {
     if (!loaded || user) return;
     if (SKIP_PATHS.some((p) => pathname?.startsWith(p))) return;
-    // NEVER on the homepage. This is a genuine `pathname === "/"` exact match,
-    // deliberately NOT folded into SKIP_PATHS above (which uses startsWith —
-    // "/" would match every route on the site, not just the homepage itself).
-    // The homepage-redesign brief's accessibility section is explicit and
-    // unconditional: "No newsletter popup, no overlay, no region modal.
-    // Ever." This isn't a newsletter popup, but it unquestionably IS an
-    // auto-opening, full-screen `role="dialog"` overlay — exactly the class
-    // of interruption that rule exists to rule out, on the one page this
-    // whole task is about making a single, uninterrupted job. It's left
-    // fully live everywhere else (149 other routes, unchanged, still firing
-    // on its own short delay) — this component and its sitewide behavior
-    // predate this task and are out of its stated scope everywhere except
-    // the homepage itself, where the brief's rule is unambiguous. See
-    // DECISIONS.md's Phase 5 section for the full reasoning.
-    if (pathname === "/") return;
     let seen = false;
     try {
-      seen = localStorage.getItem(SEEN_KEY) === "1";
+      seen = sessionStorage.getItem(SEEN_KEY) === "1";
     } catch {
-      /* private mode — worst case it can show once more next session */
+      /* private mode — worst case it can show again next page load */
     }
     if (seen) return;
     const t = setTimeout(() => {
@@ -92,7 +85,7 @@ export function SignupPromoPopup({
   function dismiss() {
     setPhase("hidden");
     try {
-      localStorage.setItem(SEEN_KEY, "1");
+      sessionStorage.setItem(SEEN_KEY, "1");
     } catch {
       /* private mode */
     }
