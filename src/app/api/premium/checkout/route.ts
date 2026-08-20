@@ -48,9 +48,11 @@ export async function POST(req: Request) {
       metadata: { kind: "premium", userId: user.id, trial: trialEligible ? "1" : "0" },
       subscription_data: {
         metadata: { userId: user.id },
-        // 1-day free trial for first-timers. A card is still required up front
-        // (payment_method_collection below), so the trial auto-converts to paid
-        // unless cancelled — and we can fingerprint the card to block trial abuse.
+        // PREMIUM_TRIAL_DAYS free trial for first-timers, same length on both plans
+        // (annual just converts to the yearly price after it ends). A card is still
+        // required up front (payment_method_collection below), so the trial
+        // auto-converts to paid unless cancelled — and we can fingerprint the card
+        // to block trial abuse.
         ...(trialEligible
           ? {
               trial_period_days: PREMIUM_TRIAL_DAYS,

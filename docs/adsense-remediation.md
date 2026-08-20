@@ -1384,11 +1384,13 @@ nothing at all.
    was consolidated, and the eight buying guides gained live, market-specific data that is
    real information. **Owner: the remaining short posts are a genuine, if secondary,
    weakness — the highest-value ones to expand by hand are listed in Phase 12b.**
-6. **`/tools/deal-finder`, `/tools/rising`, `/tools/value-finder` and `/portfolio` are
-   fully open while review mode is on.** That gives away Premium content to everyone,
-   including subscribers' peers, for as long as the flag is set. It is temporary and
-   reversible with one env var, and "content behind a paywall" is its own rejection
-   reason. **Turn the flag off promptly after approval.**
+6. **`/tools/deal-finder`, `/tools/rising`, `/tools/value-finder` and `/portfolio` were
+   fully open while review mode was on.** That gave away Premium content to everyone,
+   including subscribers' peers. **UPDATE 2026-08-20:** found live in production while
+   the third review was still pending, and closed — `ADSENSE_REVIEW_MODE`'s default
+   flipped from open to closed in `lib/adsense.ts` (see that file's header comment).
+   The paywall now takes priority over AdSense approval odds; review mode is opt-in
+   (`NEXT_PUBLIC_ADSENSE_REVIEW_MODE=true`) for a future submission, not opt-out.
 7. **Inline footer policy links and the logo stay under 44px.** Explained in Phase 11f.
 8. **AdMob (`ca-app-pub-…`) in `mobile/` untouched.** Different product, different id
    namespace, native app only. The guard's literal check excludes it explicitly.
