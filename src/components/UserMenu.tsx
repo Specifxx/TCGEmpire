@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useMe } from "@/lib/use-me";
+import { markSignupSource } from "@/lib/signup-source";
 import { usePremiumDialog } from "./PremiumDialog";
 
 // Auth routes we never want to "return to" after sign-in (would loop).
@@ -60,6 +61,7 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
         rel="nofollow"
         aria-label="Sign in"
         title="Sign in"
+        onClick={() => markSignupSource("navbar")}
         className="tap-icon rounded-lg text-slate-200 hover:bg-ink-800 hover:text-white"
       >
         <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">

@@ -24,6 +24,7 @@ import { AdSenseLoader } from "@/components/AdSenseLoader";
 import { ConsentDefaults } from "@/components/ConsentDefaults";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { GAPageViewTracker } from "@/components/GAPageViewTracker";
+import { SignupWelcome } from "@/components/SignupWelcome";
 import { GoogleAnalyticsUser } from "@/components/GoogleAnalyticsUser";
 import { ConsentGatedAnalytics } from "@/components/ConsentGatedAnalytics";
 import { PrivacySettingsLink } from "@/components/PrivacySettingsLink";
@@ -289,6 +290,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <main id="main-content" className="container-app min-w-0 py-6">{children}</main>
                 <PriceAlertModal />
                 <SignupPromoPopup providers={enabledProviders()} signupPremiumDays={SIGNUP_PREMIUM_DAYS} />
+                {/* Converts the OAuth callback's one-time ?welcome= param into
+                    the sign_up analytics event, then strips it from the URL.
+                    Renders nothing. */}
+                <SignupWelcome />
                 {/* Feedback launcher. Deliberately never auto-opens — see the
                     component header for why a second uninvited dialog would be
                     self-defeating here. It hides itself over the ad zone below. */}

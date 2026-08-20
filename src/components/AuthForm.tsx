@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { markSignupSource } from "@/lib/signup-source";
 
 // Sign-in is OAUTH ONLY — Google and Discord. The email/password form, /register,
 // /forgot and /reset were removed along with their API routes.
@@ -34,6 +35,7 @@ export function AuthForm({
   compact = false,
   cancelHref,
   signupPremiumDays = 0,
+  source,
 }: {
   providers: ("google" | "discord")[];
   // Skip the outer full-page wrapper (max-width + vertical padding) so this can be
@@ -59,8 +61,14 @@ export function AuthForm({
   // (this file has no server-only imports, so it can't read it directly). Default
   // 0 renders the plain account-only pitch, matching the comp being turned off.
   signupPremiumDays?: number;
+  // Which surface this form is embedded in ("popup", "alert_modal", …) — fed to
+  // markSignupSource on provider click so the sign_in_click event and, if the
+  // OAuth round trip completes, User.signupSource both carry the surface that
+  // actually converted. Defaults to "login" (the standalone page).
+  source?: string;
 }) {
   const [error, setError] = useState<string | null>(null);
+  const onProviderClick = () => markSignupSource(source ?? "login");
 
   // Surface OAuth failures redirected back as ?error=…
   useEffect(() => {
@@ -110,6 +118,7 @@ export function AuthForm({
           {providers.includes("google") && (
             <a
               href="/api/auth/oauth/google"
+              onClick={onProviderClick}
               className="flex items-center justify-center gap-2.5 rounded-xl border border-ink-600 bg-white py-2.5 text-sm font-semibold text-ink-950 hover:brightness-95"
             >
               <GoogleIcon /> Continue with Google
@@ -118,6 +127,7 @@ export function AuthForm({
           {providers.includes("discord") && (
             <a
               href="/api/auth/oauth/discord"
+              onClick={onProviderClick}
               className="flex items-center justify-center gap-2.5 rounded-xl bg-[#5865F2] py-2.5 text-sm font-semibold text-white hover:brightness-110"
             >
               <DiscordIcon /> Continue with Discord

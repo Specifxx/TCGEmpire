@@ -48,6 +48,12 @@ model User {
   // Set once when the early-adopter "first 100 users get Premium" comp is granted,
   // so the grant is idempotent (never re-granted / re-extended on re-runs).
   earlyPremiumGranted Boolean   @default(false)
+  // Which sign-in CTA produced this account — one of lib/signup-source-shared's
+  // whitelisted values (navbar/popup/alert_modal/…), stamped once by the OAuth
+  // callback from the short-lived rc_signup_src cookie the clicked CTA set.
+  // Null for accounts that predate the instrumentation or arrived with no
+  // cookie (e.g. typed /login directly). Nullable + no default = additive push.
+  signupSource        String?
   createdAt           DateTime  @default(now())
 
   // The market (AU/NZ/US/UK/SG/CA) this account browses/prices in, remembered

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { track } from "@vercel/analytics";
+import { trackEvent } from "@/lib/analytics";
 import { useCountry } from "./CountryProvider";
 
 // Where we remember the visitor's email so clicking "watch price" again
@@ -61,9 +61,15 @@ export function PriceAlertModal() {
       if (!cardId) return;
       const saved = ls()?.getItem(EMAIL_KEY) ?? null;
       if (saved) {
-        // Returning subscriber — extend their watch quietly, no modal.
+        // Returning subscriber — extend their watch quietly, no modal. Counted
+        // separately from price_alert_subscribed: this is the cohort that gets
+        // value repeatedly without ever seeing an account (or any other) pitch,
+        // and its size was invisible before this event existed.
         void subscribe(saved, cardId).then((r) => {
-          if (r.ok) flashToast("Watching this card's price ✓");
+          if (r.ok) {
+            flashToast("Watching this card's price ✓");
+            trackEvent("price_alert_silent_extend", { card: cardId });
+          }
         });
         return;
       }
@@ -71,6 +77,7 @@ export function PriceAlertModal() {
       setPhase("form");
       setEmail("");
       setOpen(true);
+      trackEvent("price_alert_modal_shown", { trigger: "auto" });
     };
 
     // Deliberate "email me when it drops" click (CardConversionCta) — always
@@ -83,6 +90,7 @@ export function PriceAlertModal() {
       setEmail(ls()?.getItem(EMAIL_KEY) ?? "");
       setPhase("form");
       setOpen(true);
+      trackEvent("price_alert_modal_shown", { trigger: "explicit" });
     };
 
     window.addEventListener("price-alert-prompt", handler as EventListener);
@@ -116,7 +124,10 @@ export function PriceAlertModal() {
       } catch {
         /* private mode — fine, we just re-prompt next time */
       }
-      track("price_alert_subscribed", { card: pendingCardId });
+      // trackEvent (GA4 + Vercel), not the old Vercel-only track() — this is
+      // the site's highest-volume conversion event and GA4 couldn't see it,
+      // which made any GA4 funnel around alerts/signup silently incomplete.
+      trackEvent("price_alert_subscribed", { card: pendingCardId });
       setPhase("success");
     } else {
       setPhase("error");
