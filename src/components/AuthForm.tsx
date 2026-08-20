@@ -32,6 +32,7 @@ export function AuthForm({
   providers,
   bare = false,
   cancelHref,
+  signupPremiumDays = 0,
 }: {
   providers: ("google" | "discord")[];
   // Skip the outer full-page wrapper (max-width + vertical padding) so this can be
@@ -44,6 +45,10 @@ export function AuthForm({
   // WS4 collapsed elsewhere on the site. /login/page.tsx computes this from
   // ?next=, falling back to the homepage.
   cancelHref?: string;
+  // lib/premium.ts's SIGNUP_PREMIUM_DAYS, threaded down from a server component
+  // (this file has no server-only imports, so it can't read it directly). Default
+  // 0 renders the plain account-only pitch, matching the comp being turned off.
+  signupPremiumDays?: number;
 }) {
   const [error, setError] = useState<string | null>(null);
 
@@ -65,8 +70,18 @@ export function AuthForm({
         )}
         <h1 className="text-xl font-extrabold text-white">Sign in</h1>
         <p className="mt-1 text-sm text-slate-400">
-          A free account unlocks price alerts, your portfolio and your watchlist. No password to remember —
-          creating an account and signing in are the same button.
+          A free account unlocks price alerts, your portfolio and your watchlist
+          {signupPremiumDays > 0 && (
+            <>
+              {" "}
+              — plus your first{" "}
+              <span className="font-semibold text-gold">
+                {signupPremiumDays === 1 ? "day" : `${signupPremiumDays} days`} of Premium
+              </span>{" "}
+              free
+            </>
+          )}
+          . No password to remember — creating an account and signing in are the same button.
         </p>
 
         {error && (

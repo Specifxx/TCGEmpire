@@ -5,6 +5,7 @@ import { createSession } from "@/lib/auth";
 import { applyReferral } from "@/lib/referral";
 import { providerConfig, isProviderEnabled, isOAuthProvider, redirectUri, type OAuthProvider } from "@/lib/oauth";
 import { claimAlertsForUser } from "@/lib/alerts";
+import { grantPremiumDays, SIGNUP_PREMIUM_DAYS } from "@/lib/premium";
 
 function fail(req: Request, code: string) {
   return NextResponse.redirect(new URL(`/login?error=${code}`, req.url));
@@ -105,10 +106,13 @@ export async function GET(req: Request, { params }: { params: { provider: string
   // fire-and-forget: a failure here must never block signing in.
   void claimAlertsForUser(user.id, user.email).catch(() => {});
   if (isNew) {
-    // First-ever sign-in: credit any referrer. New accounts get the ACCOUNT tier
-    // (alerts + portfolio + marketplace) immediately
-    // by virtue of existing — there is no signup-time Premium comp to apply.
+    // First-ever sign-in: credit any referrer, and hand the new account a short
+    // taste of Premium (see SIGNUP_PREMIUM_DAYS in lib/premium.ts) — the ACCOUNT
+    // tier itself (alerts + portfolio + watchlist) is still granted immediately
+    // by virtue of existing and is the durable payoff; this is just a preview of
+    // what Premium adds on top, and lapses on its own via premiumUntil.
     await applyReferral(user.id).catch(() => {});
+    if (SIGNUP_PREMIUM_DAYS > 0) await grantPremiumDays(user.id, SIGNUP_PREMIUM_DAYS).catch(() => {});
   }
   // Land new/returning sign-ins on their profile by default.
   return NextResponse.redirect(new URL("/profile", req.url));

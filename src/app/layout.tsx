@@ -19,6 +19,7 @@ import { MARKETPLACE_NAV_VISIBLE } from "@/components/nav-groups";
 import { FooterNav } from "@/components/FooterNav";
 import { ShareRow } from "@/components/ShareRow";
 import { enabledProviders } from "@/lib/oauth";
+import { SIGNUP_PREMIUM_DAYS } from "@/lib/premium";
 import { AdSenseLoader } from "@/components/AdSenseLoader";
 import { ConsentDefaults } from "@/components/ConsentDefaults";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
@@ -287,7 +288,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     with real prices instead of a repeating marquee claim. */}
                 <main id="main-content" className="container-app min-w-0 py-6">{children}</main>
                 <PriceAlertModal />
-                <SignupPromoPopup providers={enabledProviders()} />
+                <SignupPromoPopup providers={enabledProviders()} signupPremiumDays={SIGNUP_PREMIUM_DAYS} />
                 {/* Feedback launcher. Deliberately never auto-opens — see the
                     component header for why a second uninvited dialog would be
                     self-defeating here. It hides itself over the ad zone below. */}

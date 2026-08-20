@@ -139,10 +139,16 @@ export const PORTFOLIO_FREE = true;
 // earlier version of this comment). Tier 2 replaced a "free week of Premium on
 // signup" comp that handed new accounts the PAID tier and silently withdrew it a
 // week later — that reasoning (a durable free payoff beats a comp that expires)
-// still holds for watchlists/alerts/portfolio, which stay free. The
-// grant machinery for the old comp (and its signup email) is gone rather than
-// switched off by env, so a stale EARLY_PREMIUM_DAYS in a deploy environment
-// can't quietly resurrect it.
+// still holds for watchlists/alerts/portfolio, which stay free regardless of
+// Premium. The grant machinery for that WEEK-long comp (and its signup email) is
+// gone rather than switched off by env, so a stale EARLY_PREMIUM_DAYS in a deploy
+// environment can't quietly resurrect it.
+//
+// A much shorter Premium PREVIEW is back, though — see SIGNUP_PREMIUM_DAYS below.
+// The old comp's problem was duration, not the idea of a taste: a week is long
+// enough to feel like the account's own tier, so losing it read as a downgrade.
+// A day reads as exactly what it is — a preview — with tier 2's own perks above
+// still the thing signing up permanently keeps.
 export function hasAccount(user: { id: string } | null | undefined): boolean {
   return !!user;
 }
@@ -160,12 +166,13 @@ export async function getPremiumUntil(userId: string): Promise<Date | null> {
   return u?.premiumUntil ?? null;
 }
 
-// ── Promotional Premium grants (feedback + referral rewards) ────────────────────
+// ── Promotional Premium grants (feedback + referral + signup preview) ───────────
 // These grant Premium WITHOUT Stripe (a comp), by extending premiumUntil directly.
-// NOTE the early-adopter signup comp that used to live here is deliberately gone —
-// see the access-tier note above. Signing up now unlocks the ACCOUNT tier, not a
-// temporary slice of the paid one. These two remain because both are earned by an
-// action after signup, not handed out for merely registering.
+// Feedback and referral are earned by an action after signup. SIGNUP_PREMIUM_DAYS
+// below is the one exception — a short preview handed out for merely registering,
+// deliberately reintroduced; see its own comment and the access-tier note above
+// for why this is safe against the failure mode the original, week-long version
+// of this had.
 export const FEEDBACK_PREMIUM_MONTHS = Math.max(0, Math.floor(Number(process.env.FEEDBACK_PREMIUM_MONTHS ?? 1)));
 // +1 month of Premium to the REFERRER for each friend who signs up via their link.
 export const REFERRAL_PREMIUM_MONTHS = Math.max(0, Math.floor(Number(process.env.REFERRAL_PREMIUM_MONTHS ?? 1)));
@@ -175,6 +182,22 @@ export function feedbackPremiumActive(): boolean {
 export function referralPremiumActive(): boolean {
   return REFERRAL_PREMIUM_MONTHS > 0;
 }
+
+// A short, automatic taste of Premium for every NEW account — not a Stripe trial
+// (see PREMIUM_TRIAL_DAYS above, the separate CARD-GATED trial at checkout).
+// Applied exactly once, at account creation (the `isNew` branch of the OAuth
+// callback), and never re-granted on a later sign-in. Default 1 day; set
+// SIGNUP_PREMIUM_DAYS=0 to turn it off — grantPremiumDays() already no-ops on
+// days<=0, so the call site needs no extra guard.
+//
+// This reintroduces a scaled-down version of the "free week of Premium on
+// signup" comp the tier note above describes retiring. That comp's problem was
+// duration — a WEEK reads as a tier of its own, so losing it read as a downgrade —
+// not the idea of a taste. A single day is short enough to read as a preview, and
+// the free ACCOUNT tier (watchlists/alerts/portfolio) is still explicitly pitched
+// everywhere as the durable, permanent reason to sign up — see
+// SignupPromoPopup.tsx and AuthForm.tsx, which both say so alongside this.
+export const SIGNUP_PREMIUM_DAYS = Math.max(0, Math.floor(Number(process.env.SIGNUP_PREMIUM_DAYS ?? 1)));
 
 function addMonths(base: Date, months: number): Date {
   const d = new Date(base);

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { isPremium, premiumCheckoutEnabled, premiumTrialEnabled, premiumAnnualEnabled, PREMIUM_TRIAL_DAYS } from "@/lib/premium";
+import { isPremium, premiumCheckoutEnabled, premiumTrialEnabled, premiumAnnualEnabled, PREMIUM_TRIAL_DAYS, SIGNUP_PREMIUM_DAYS } from "@/lib/premium";
 import { PremiumCta } from "@/components/PremiumCta";
 import { ManageSubscriptionButton } from "@/components/ManageSubscriptionButton";
 import { AnnualPriceBlock } from "@/components/AnnualPriceBlock";
@@ -266,7 +266,14 @@ export default async function PremiumPage() {
             <Link href="/login?next=/premium" className="text-brand-400 hover:underline">
               Create a free account
             </Link>{" "}
-            to unlock the middle column — no card required.
+            to unlock the middle column — no card required
+            {SIGNUP_PREMIUM_DAYS > 0 && (
+              <>
+                , plus your first {SIGNUP_PREMIUM_DAYS === 1 ? "day" : `${SIGNUP_PREMIUM_DAYS} days`} of the right
+                column free
+              </>
+            )}
+            .
           </p>
         )}
       </div>
