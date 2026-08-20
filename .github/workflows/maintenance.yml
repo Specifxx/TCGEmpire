@@ -14,6 +14,7 @@ on:
         required: true
         options:
           - db-push          # prisma db push (additive schema sync for this ref)
+          - revalidate-now   # on-demand ISR purge only, no data touched: calls /api/revalidate (revalidateContent()) to immediately clear every /card/* page + homepage + region homes + movers/box-ev + sitemap, instead of waiting out their 24h TTL. RUN THIS after any DB cutover/migration or incident where a page's live data changed but its cached HTML (incl. a cached 404 from a gap while a new database was still empty) did not.
           - cards-sync       # fetch latest RiftScribe snapshot + additive upsert
           - cards-manual     # apply prisma/manual-cards.json (promos/backstop)
           - fetch-promos     # scrape riftbound.gg's official card-page sitemap for promo printings (incl. R-numbered promo runes) + apply additively (no dry-run — both scripts are additive/idempotent by design)
@@ -160,6 +161,26 @@ jobs:
           else
             echo "No history-database secret — single-database setup, nothing extra to push."
           fi
+
+      - name: Revalidate site pages (on-demand ISR, no data written)
+        # Standalone version of the same ping fix-kennen-name fires after itself —
+        # for when the thing that went stale isn't a card-name typo but a whole
+        # database cutover: a page rendered (and got ISR-cached) a 404/empty state
+        # while the new source was still empty, and would otherwise keep serving
+        # that cached response for up to 24h even though the data is now correct.
+        if: inputs.task == 'revalidate-now'
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: "https://riftcompare.com"
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::No CRON_SECRET secret — cannot revalidate."
+            exit 1
+          fi
+          code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 -X POST \
+            "$SITE_URL/api/revalidate" -H "Authorization: Bearer $CRON_SECRET" || true)
+          echo "revalidate -> HTTP ${code:-000}"
+          [ "$code" = "200" ]
 
       - name: Migrate history to the new history database
         if: inputs.task == 'migrate-history'
