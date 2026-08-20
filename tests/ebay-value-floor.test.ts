@@ -23,11 +23,13 @@ const PROMO = { rarity: "Common", collectorNumber: "012/166", variant: null, isP
 
 // ── The floor itself ─────────────────────────────────────────────────────────
 
-test("the floor is $20 USD unless the environment overrides it", () => {
-  // Not asserted as a literal 2000 — the point is that it is a real dollar
+test("the floor is $10 USD unless the environment overrides it", () => {
+  // Not asserted as a literal 1000 — the point is that it is a real dollar
   // figure in USD cents, and that the env override exists so it can be moved
-  // without a deploy if quota pressure changes.
-  assert.equal(EBAY_MIN_VALUE_USD_CENTS, Number(process.env.EBAY_MIN_VALUE_CENTS ?? 2000));
+  // without a deploy if quota pressure changes. Lowered from $20 on 2026-08-20,
+  // the same day Germany's removal freed quota to spend on it — see the header
+  // comment on EBAY_MIN_VALUE_USD_CENTS in price-import.ts.
+  assert.equal(EBAY_MIN_VALUE_USD_CENTS, Number(process.env.EBAY_MIN_VALUE_CENTS ?? 1000));
   assert.ok(Number.isFinite(EBAY_MIN_VALUE_USD_CENTS) && EBAY_MIN_VALUE_USD_CENTS > 0);
 });
 
@@ -37,7 +39,7 @@ test("a card below the TCGplayer US floor is not searched, whatever its rarity",
   assert.equal(eBayWorthSearching(SIGNATURE, 150), false, "a $1.50 Signature is still a $1.50 card");
 });
 
-test("the floor is inclusive — a card exactly at $20 is searched", () => {
+test("the floor is inclusive — a card exactly at the floor is searched", () => {
   // A strict `>` would drop cards sitting exactly on a round number, and TCGplayer
   // market prices land on round numbers constantly.
   assert.equal(eBayWorthSearching(RARE, EBAY_MIN_VALUE_USD_CENTS), true);
@@ -98,7 +100,7 @@ test("all three eBay passes filter on the value floor", () => {
 test("the preview script passes the value explicitly, never as a bare .filter reference", () => {
   // `.filter(eBayWorthSearching)` type-checks and is catastrophically wrong:
   // Array.filter hands the ELEMENT INDEX to the second parameter, so every card
-  // at an index below the floor reads as a sub-$20 card and the script prints
+  // at an index below the floor reads as a sub-floor card and the script prints
   // nothing at all.
   // Comments stripped first: the script names the wrong form in a warning
   // comment on purpose, and that mention must not read as the bug itself.
@@ -110,7 +112,7 @@ test("the preview script passes the value explicitly, never as a bare .filter re
 test("cards dropped by the floor still keep a way to reach eBay", () => {
   // The justification for skipping them is that the buy path survives — the
   // surfaces fall back to an affiliate eBay SEARCH link when a card has no eBay
-  // row, which is now permanently true for sub-$20 cards as well as Commons.
+  // row, which is now permanently true for sub-floor cards as well as Commons.
   const market = read("src/components/CardMarketSection.tsx");
   assert.match(market, /const ebay = m\.hasEbay \? null : ebaySearch\[country\] \?\? null;/);
   assert.match(market, /retailer="ebay_no_listing"/);

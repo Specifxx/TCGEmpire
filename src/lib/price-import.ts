@@ -383,8 +383,18 @@ const EBAY_SKIP_RARITIES = new Set(["Common", "Uncommon"]);
  * cheapest price would make the floor mean different things in different
  * markets, and a card would drift in and out of the search set as exchange
  * rates moved.
+ *
+ * Lowered $20→$10 on 2026-08-20, the same day Germany's removal from
+ * EBAY_ROTATING_MARKETS freed ~350 Browse calls/day back into the budget (see
+ * EBAY_ALWAYS_MARKETS below). This floor only, not AUCTION_MIN_VALUE_CENTS —
+ * auctions are already inventory-capped at AUCTION_CARDS_PER_MARKET regardless
+ * of the singles floor, so leaving it at $20 keeps that pass's cost fixed
+ * while this one grows. Read the real card count this adds off the
+ * "eBay catalogue: X of Y cards searched" log line on the next run — the
+ * $10→lower decision after this one should be made from that number, not a
+ * second guess.
  */
-export const EBAY_MIN_VALUE_USD_CENTS = Number(process.env.EBAY_MIN_VALUE_CENTS ?? 2000);
+export const EBAY_MIN_VALUE_USD_CENTS = Number(process.env.EBAY_MIN_VALUE_CENTS ?? 1000);
 
 export function eBayWorthSearching(
   c: {
@@ -1629,8 +1639,8 @@ export async function importPrices(): Promise<ImportSummary> {
     });
     // Value floor reference. Read once for the whole pass — TCGplayer is imported
     // AFTER this block, so these are yesterday's figures; that is fine for a
-    // threshold (a card does not cross $20 and back inside a day) and it avoids
-    // reordering the import for a filter.
+    // threshold (a card does not cross the floor and back inside a day) and it
+    // avoids reordering the import for a filter.
     const tcgValues = await tcgplayerUsValues();
     const ebayTargets = ebayCards.filter((c) => eBayWorthSearching(c, tcgValues.get(c.id)));
     const skipped = ebayCards.length - ebayTargets.length;

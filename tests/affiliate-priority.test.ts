@@ -418,10 +418,21 @@ test("the union covers every per-market list — a new market cannot be forgotte
 
 const FULL_CATALOGUE = 1400; // every card, as of the VEN launch
 // Cards that actually get a Browse call, after eBayWorthSearching drops
-// Common/Uncommon base prints and anything under $20 TCGplayer US. Measured from
-// production on 2026-08-08: 205 cards priced at or above the floor, plus the ~34
-// with no US price at all (kept deliberately — see the "unknown ≠ cheap" rule),
-// rounded up for the ones priced only by a non-TCGplayer US retailer.
+// Common/Uncommon base prints and anything under the value floor. Measured from
+// production on 2026-08-08 AT THE THEN-$20 FLOOR: 205 cards priced at or above
+// it, plus the ~34 with no US price at all (kept deliberately — see the
+// "unknown ≠ cheap" rule), rounded up for the ones priced only by a
+// non-TCGplayer US retailer.
+//
+// STALE AS OF 2026-08-20: EBAY_MIN_VALUE_USD_CENTS dropped $20→$10 the same
+// day, specifically to grow this number (freed by Germany's removal from
+// EBAY_ROTATING_MARKETS — see EBAY_ALWAYS_MARKETS in price-import.ts). The
+// real post-drop count is not yet known from production — read it off the
+// "eBay catalogue: X of Y cards searched" log line on the next run and update
+// this constant (and CHASE_PRINTINGS below, if any newly-captured card is
+// promo/signature/overnumbered) with the real measurement. Left at the old
+// value in the meantime: the budget test below still passes at 280, so it is
+// a safe (if now understated) floor, not a broken assertion.
 const CATALOGUE = 280;
 const CHASE_PRINTINGS = 179; // promo+signature+overnumbered at or above the floor
 const SEALED_PER_RUN = 104;  // US 53 + AU 33 + UK 11 + SG 7, before the loose-pack cut
@@ -496,10 +507,11 @@ test("a day's markets fit inside the job timeout", () => {
 
 test("four daily markets fit ONLY because of the value floor", () => {
   // UK and SG were demoted to a rotation on 2026-08-03 because 4 × the full
-  // catalogue did not fit, and promoted back on 2026-08-08 because the $20 floor
-  // shrank the searched set. Both halves are asserted: if the floor is ever
-  // removed or bypassed, four daily markets stop fitting and this fails rather
-  // than silently truncating a market's entire pass again.
+  // catalogue did not fit, and promoted back on 2026-08-08 because the value
+  // floor (then $20, now $10 as of 2026-08-20 — see CATALOGUE above) shrank the
+  // searched set. Both halves are asserted: if the floor is ever removed or
+  // bypassed, four daily markets stop fitting and this fails rather than
+  // silently truncating a market's entire pass again.
   assert.ok(
     4 * FULL_CATALOGUE > SPENDABLE,
     "4 markets × the FULL catalogue should still not fit — that constraint has not gone away",
