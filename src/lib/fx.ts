@@ -25,10 +25,11 @@ export const USD_TO: Record<string, number> = {
   GBP: rate(process.env.NEXT_PUBLIC_USD_TO_GBP, 0.79),
   SGD: rate(process.env.NEXT_PUBLIC_USD_TO_SGD, 1.35),
   CAD: rate(process.env.NEXT_PUBLIC_USD_TO_CAD, 1.37),
-  // Germany's REAL market currency (DE stores + eBay DE price natively in EUR —
-  // see country.ts's COUNTRIES.DE) — not just the UK-EUR display conversion below
-  // anymore. Still doubles as that: gbpCentsToEur converts a real GBP price into
-  // an approximate EUR figure for the (non-DE) EU visitors who still land on UK.
+  // Germany (DE) was briefly a real priced market (added and removed the same
+  // day, 2026-08-20 — see country.ts's header note) with its own EUR rate. Now
+  // this is purely the display conversion: gbpCentsToEur turns a real GBP price
+  // into an approximate EUR figure for EU visitors, who all land on the UK
+  // market (see country.ts's EU_ISO) and see it priced in EUR by default.
   EUR: rate(process.env.NEXT_PUBLIC_USD_TO_EUR, 0.92),
 };
 

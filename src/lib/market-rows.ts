@@ -110,7 +110,6 @@ export interface LocalisedLowest {
   lowestPriceCentsUk?: number | null;
   lowestPriceCentsSg?: number | null;
   lowestPriceCentsCa?: number | null;
-  lowestPriceCentsDe?: number | null;
 }
 
 /** True when the card has a price in SOME tracked market. */
@@ -121,7 +120,6 @@ export function hasAnyMarketPrice(c: LocalisedLowest): boolean {
     c.lowestPriceCentsUk,
     c.lowestPriceCentsSg,
     c.lowestPriceCentsCa,
-    c.lowestPriceCentsDe,
   ].some((v) => v != null);
 }
 

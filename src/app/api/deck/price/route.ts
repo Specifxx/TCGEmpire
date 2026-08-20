@@ -23,7 +23,6 @@ const cardSelect = {
   lowestPriceCentsUk: true,
   lowestPriceCentsSg: true,
   lowestPriceCentsCa: true,
-  lowestPriceCentsDe: true,
 } as const;
 
 type DeckCard = {
@@ -41,7 +40,6 @@ type DeckCard = {
   lowestPriceCentsUk: number | null;
   lowestPriceCentsSg: number | null;
   lowestPriceCentsCa: number | null;
-  lowestPriceCentsDe: number | null;
 };
 
 export async function POST(req: Request) {

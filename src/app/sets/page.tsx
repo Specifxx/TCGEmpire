@@ -79,7 +79,7 @@ export default async function SetsIndexPage() {
     },
     {
       q: "Are Riftbound set prices the same in every country?",
-      a: "No. Each market has its own stores, currency and shipping costs, so the cheapest source differs by country. RiftCompare tracks the US, UK, Australia, Canada, Singapore and Germany separately.",
+      a: "No. Each market has its own stores, currency and shipping costs, so the cheapest source differs by country. RiftCompare tracks the US, UK, Australia, Canada and Singapore separately.",
     },
   ];
 

@@ -78,7 +78,6 @@ export default async function AdminDemandPage({
     lowestPriceCentsUk: true,
     lowestPriceCentsSg: true,
     lowestPriceCentsCa: true,
-    lowestPriceCentsDe: true,
   } as const;
 
   // ── Searches / views, windowed ──────────────────────────────────────────────
