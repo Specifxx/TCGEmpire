@@ -53,14 +53,14 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
         orderBy: [{ country: "asc" }, { rank: "asc" }],
         select: { country: true, rank: true, priceCents: true, shippingCents: true, currency: true, url: true, title: true, imageUrl: true },
       },
-      // Graded slabs for the quick-view's eBay tabs — chase-tier only, so for
-      // most cards these come back empty and the modal renders exactly the
+      // Graded slabs for the quick-view's eBay tabs. Chase-tier only, so for
+      // most cards this comes back empty and the modal renders exactly the
       // single carousel it always did.
       //
       // Filtered HERE rather than in the client: a slab that stopped refreshing
       // must never reach the browser with an affiliate link on it. The renderer
       // checks again — two independent layers, because a pass runs on a
-      // schedule and rows go stale continuously.
+      // schedule and listings end continuously.
       ebayGradedListings: {
         where: { updatedAt: { gte: new Date(Date.now() - 72 * 3600 * 1000) } },
         orderBy: [{ grade: "desc" }, { priceCents: "asc" }],

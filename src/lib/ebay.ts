@@ -167,10 +167,8 @@ const NUMBER_RANGE = /\b([a-z]{1,3})\d{1,3}\s*[-–—]\s*\1\d{1,3}\b/i;
 // far above, so it leaked into the price table as a wrong "cheapest". That makes
 // it correct to exclude from PRICE rows and wrong to exclude everywhere: no
 // tracked store lists slabs at all, so for graded copies eBay is the only market
-// there is. The regular price search's own results are mined for graded listings
-// alongside the price rows (see gradedRowsFor in price-import.ts, EbayGradedListing)
-// at zero extra Browse cost; the price search itself still drops them, exactly as
-// before.
+// there is. searchEbayLowest's captureGraded therefore splits them out into
+// EbayGradedListing rows; the price path still drops them, exactly as before.
 export const GRADED_SLAB = /\b(psa|bgs|cgc|sgc|graded|gem mint)\b/i;
 
 export function isGradedListing(title: string): boolean {
@@ -446,20 +444,20 @@ export interface EbayCardIdentity {
  * listing can silently disappear, and "0 results" looks identical whether eBay
  * returned nothing or we rejected everything it returned.
  *
- * It is the single definition of card identity for every eBay pass: a lot, a
- * Chinese printing, a promo where we wanted the base print, or a signature
- * where we wanted the plain overnumbered is exactly as wrong here as anywhere
- * else that filters listings. One shared definition means it can't drift
- * between passes.
+ * It is ALSO the single definition of card identity, shared with the graded
+ * pass (`allowGraded`). A slab is a different CONDITION of the card, not a
+ * different card: a lot, a Chinese printing, a promo where we wanted the base
+ * print or a signature where we wanted the plain overnumbered is exactly as
+ * wrong in a slab as it is raw. Two copies of these rules would drift, and the
+ * widget's copy would drift silently — nobody checks a widget as closely as the
+ * price table.
  */
 export function cardIdentityStages(
   card: EbayCardIdentity,
-  // Keep graded slabs. Only the graded-capture pass (searchEbayLowest with
-  // captureGraded set) sets this: a slab is genuinely this card, just not
-  // comparable to a raw copy — see GRADED_SLAB. Slabs never become price rows
-  // (captured separately, into EbayGradedListing), so there is nothing for it
-  // to distort, and slabs are the one tier our store comparison cannot cover
-  // at all.
+  // Keep graded slabs. Only searchEbayLowest's captureGraded path sets this: a
+  // slab is genuinely this card, just not comparable to a raw copy — see
+  // GRADED_SLAB. Those rows never become price rows, so there is nothing for it
+  // to distort, and slabs are the one tier our store comparison cannot cover.
   opts: { allowGraded?: boolean } = {},
 ): { stage: string; pred: (it: any) => boolean }[] {
   const n = parseInt(card.number.replace(/[^0-9]/g, ""), 10);
@@ -808,9 +806,9 @@ export async function searchEbayLowest(
 
   let cur: any[] = items;
   if (funnel) funnel.push({ stage: "eBay returned", kept: items.length, dropped: 0, samples: [] });
-  // Identity stages come from cardIdentityStages() — see its doc comment. Each
-  // is still recorded separately in the funnel, which is what makes "0 results"
-  // attributable to a stage.
+  // Identity stages come from cardIdentityStages() so every eBay pass applies
+  // the identical rules — see its doc comment. Each is still recorded separately
+  // in the funnel, which is what makes "0 results" attributable to a stage.
   //
   // With captureGraded, slabs are allowed THROUGH the identity pass (they are
   // genuinely this card) and removed immediately after, in their own funnel

@@ -384,17 +384,17 @@ const EBAY_SKIP_RARITIES = new Set(["Common", "Uncommon"]);
  * markets, and a card would drift in and out of the search set as exchange
  * rates moved.
  *
- * Lowered $20→$10→$5, both moves on 2026-08-20. The first drop was funded by
+ * Lowered $20→$10→$5, all on 2026-08-20. The first drop was funded by
  * Germany's removal from EBAY_ROTATING_MARKETS (~350 Browse calls/day freed —
  * see EBAY_ALWAYS_MARKETS below) and measured for real: a forced production
  * run read "347 of 1429 cards searched" (up from a 280-card baseline at $20).
- * The second drop to $5 is funded by removing the auction pass entirely
- * (refreshEbayAuctions and the EbayAuction model — auctions cost ~960
- * Browse calls/day for a countdown widget, the single most expensive line in
- * the whole quota model relative to what it returned). Read the real card
- * count this adds off the "eBay catalogue: X of Y cards searched" log line on
- * the next run — any move past $5 should be made from that number, not a
- * second guess.
+ * The second drop to $5 is funded by removing the chase-auction pass entirely
+ * (refreshEbayAuctions and the EbayAuction model, deleted the same day —
+ * ~960 Browse calls/day for a countdown widget, the single most expensive
+ * line in the whole quota model relative to what it returned). Read the real
+ * card count this adds off the "eBay catalogue: X of Y cards searched" log
+ * line on the next run — any move past $5 should be made from that number,
+ * not a second guess.
  */
 export const EBAY_MIN_VALUE_USD_CENTS = Number(process.env.EBAY_MIN_VALUE_CENTS ?? 500);
 
@@ -531,10 +531,10 @@ export interface EbayMarketCfg { country: string; marketplace: string; currency:
  *
  * THIS LIST IS LOAD-BEARING IN TWO PLACES, not one. The catalogue pass builds
  * from ebayMarketsForDay, but refreshEbayChasePrintings is handed
- * EBAY_ALWAYS_MARKETS directly. Adding a market here multiplies both, so a
- * fifth market costs more than one catalogue sweep alone.
- * tests/affiliate-priority.test.ts models the whole day rather than the
- * catalogue alone, for exactly that reason.
+ * EBAY_ALWAYS_MARKETS directly — and the chase pass runs TWICE a day. Adding a
+ * market here multiplies both, so a fifth market costs far more than one
+ * catalogue sweep. tests/affiliate-priority.test.ts models the whole day rather
+ * than the catalogue alone, for exactly that reason.
  */
 export const EBAY_ALWAYS_MARKETS: EbayMarketCfg[] = [
   { country: "AU", marketplace: "EBAY_AU", currency: "AUD", retailer: "ebay" },
@@ -900,8 +900,8 @@ export async function refreshEbayMarkets(
  * Handing it a 150-card subset would therefore delete every eBay row in that
  * market and write back only the subset — silently dropping ~600 cards' prices
  * twice a day, with no error and no warning. This pass scopes its delete to the
- * cardIds it actually refreshed, exactly as the ad-carousel and auction writes
- * already do.
+ * cardIds it actually refreshed, exactly as the ad-carousel write already
+ * does.
  *
  * Returns the number of price rows written.
  */

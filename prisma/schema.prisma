@@ -606,8 +606,8 @@ model RetailerPrice {
 // response, so it costs zero additional Browse API calls/quota.
 // A GRADED (slabbed) eBay listing for a chase card — PSA / BGS / CGC / SGC.
 //
-// DELIBERATELY NOT A RetailerPrice ROW: a slab is genuinely this card but is
-// NOT comparable to a raw copy. It trades far above one, and
+// Its own table, and deliberately not a RetailerPrice row: a slab is genuinely
+// this card but is NOT comparable to a raw copy. It trades far above one, and
 // the price search excludes it precisely because it kept leaking in as a wrong
 // "cheapest" (see GRADED_SLAB in lib/ebay.ts). Keeping slabs out of
 // RetailerPrice is what stops that price reaching lowestPriceCents — and from

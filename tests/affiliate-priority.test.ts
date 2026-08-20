@@ -449,8 +449,8 @@ const SEALED_PER_RUN = 104;
 const SPENDABLE = 4400;      // 5000 daily limit − 600 reserve
 const SECONDS_PER_CARD = 0.75;
 // A card whose strict query returns nothing costs a SECOND Browse call for the
-// no-"Riftbound" retry. Applies to singles only (sealed and auctions each make
-// exactly one call), and is the single largest source of error in this model.
+// no-"Riftbound" retry. Applies to singles only (the sealed search makes exactly
+// one call), and is the single largest source of error in this model.
 const RETRY_RATE = 0.25;
 // Read from the workflow rather than copied, so raising one without the other
 // cannot silently reintroduce the mid-market kill.
@@ -473,11 +473,12 @@ const CYCLE_DAYS = Math.max(EBAY_ALWAYS_MARKETS.length, EBAY_ROTATING_MARKETS.le
  * pass's own market list. A market added to ALWAYS therefore multiplies both
  * passes, not one.
  *
- * No `auctions` term as of 2026-08-20 — refreshEbayAuctions and the EbayAuction
- * model are gone (~960 calls/day freed, spent instead on the value floor — see
- * EBAY_MIN_VALUE_USD_CENTS). `sealed` is SEALED_PER_RUN × 1, not × 2: sealed's
- * eBay pass gained its own 20h staleness gate the same day (see "sealed" below)
- * and no longer runs unconditionally on both the 07:00 and 19:00 imports.
+ * The chase-AUCTION pass was a third term here (always × 120 × 2 ≈ 960
+ * calls/day) until 2026-08-20, when the auctions feature — refreshEbayAuctions
+ * and the EbayAuction model — was removed outright. `sealed` is SEALED_PER_RUN
+ * × 1, not × 2, for the same reason it used to need the ×2: sealed's eBay pass
+ * gained its own 20h staleness gate the same day (see "sealed" below) and no
+ * longer runs unconditionally on both the 07:00 and 19:00 imports.
  */
 function dailyCalls(day: number): number {
   const markets = ebayMarketsForDay(day).length;

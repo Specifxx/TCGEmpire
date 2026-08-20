@@ -44,8 +44,7 @@ async function loadGraded(cardId: string): Promise<GradedRow[]> {
       cardId,
       // A fixed-price listing has no end time — it just sells — so freshness is
       // by age. A sold slab still on screen sends a buyer to a dead page with an
-      // affiliate tag on it, which is why this window exists at all. The
-      // importer also sweeps rows that stop returning.
+      // affiliate tag on it. The importer also sweeps rows that stop returning.
       updatedAt: { gte: new Date(Date.now() - GRADED_MAX_AGE_HOURS * 3600 * 1000) },
     },
     orderBy: [{ grade: "desc" }, { priceCents: "asc" }],
@@ -104,7 +103,8 @@ export async function EbayCardPanel({
     // (lib/revalidate-content.ts), which is the site's actual freshness
     // mechanism. Matching 86400 keeps this panel exactly as fresh as every other
     // price on the page — refreshed on each import, capped at 24h if a purge is
-    // missed.
+    // missed. If anything here ever needs a shorter window than the page, fetch
+    // it CLIENT-side so the TTL can never propagate to the segment again.
     [graded, listings] = await unstable_cache(
       () => Promise.all([loadGraded(cardId), loadListings(cardId)]),
       ["ebay-card-panel", cardId],

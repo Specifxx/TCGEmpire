@@ -229,13 +229,13 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
             {/* Tabs appear only for what this card actually has in this market,
                 so an ordinary card shows exactly the compact carousel it always
                 did with no tab chrome (EbayTabs hides the tablist for one tab).
-                Chase cards gain Graded.
+                Chase cards gain a Graded tab.
 
                 marketCents is derived here from the card's own price column
                 rather than sent by the API: `price(card)` is already the
                 visitor-market figure the modal displays above, so deriving it
-                guarantees the "× raw" multiple and the "% of Buy It Now" cite
-                the same number the user is looking at. */}
+                guarantees the "× raw" multiple cites the same number the user
+                is looking at. */}
             <EbayTabs
               className="mt-3"
               label={`eBay listings for ${card.name}`}

@@ -66,9 +66,7 @@ function Metric({ label, value, highlight, sub }: { label: string; value: string
 // component defined inline in a parent's render gets a new identity every
 // render, forcing React to unmount/remount it — which would silently reset
 // this disclosure's own `open` state back to closed on every re-render of
-// the parent (country switch, `mounted` flip, anything). The eBay panel's
-// countdown-driven auctions view hit the identical bug from the identity
-// side rather than the state side — same root cause, opposite symptom.
+// the parent (country switch, `mounted` flip, anything).
 function OutOfStockDisclosure({
   oosList,
   country,
@@ -458,9 +456,8 @@ export function CardPriceComparison({
             this and each carries its own disclosure prop, so they're told to
             stay quiet here rather than stacking 3-4 copies of the same
             "may earn a commission" line in one screenful. (The separate eBay
-            listings/graded/auctions panel further down the page keeps its own
-            — it's a genuinely distinct affiliate surface, not adjacent to
-            this one.) */}
+            listings/graded panel further down the page keeps its own — it's a
+            genuinely distinct affiliate surface, not adjacent to this one.) */}
         <div className="border-t border-ink-800 p-3 text-center">
           <p className="text-[11px] text-slate-500">
             Prices are collected from public store listings and may change.

@@ -170,14 +170,10 @@ test("the chase pass NEVER deletes rows it did not refresh", () => {
   // writes back only the subset — ~600 cards' prices gone, twice a day, silently.
   const src = read("src/lib/price-import.ts");
   const fn = src.slice(src.indexOf("export async function refreshEbayChasePrintings"));
-  // Bounded by the next module-level export, not a doc-comment marker — the
-  // latter shifted (and silently over-matched into an unrelated store-scrape
-  // delete) once refreshEbayAuctions, which used to sit right after this
-  // function, was removed on 2026-08-20. An export boundary holds regardless
-  // of what comment style (or none) precedes whatever comes next. `fn` starts
-  // with this function's own "export", which has no preceding newline, so
-  // searching for "\nexport " from index 0 correctly skips it.
-  const body = fn.slice(0, fn.indexOf("\nexport "));
+  // Ends at the function's own closing brace (column 0) rather than at the next
+  // block comment: that boundary silently moved when the auction pass below it
+  // was deleted, and the slice then swallowed unrelated functions.
+  const body = fn.slice(0, fn.indexOf("\n}\n"));
   const deletes = body.match(/deleteMany\(\{[^}]*\}[^)]*\)/g) ?? [];
   assert.ok(deletes.length >= 3, "expected scoped deletes for prices, carousel and graded");
   for (const d of deletes) {
@@ -228,7 +224,7 @@ test("a failed search never deletes a price row", () => {
   // means one transient 5xx wipes a live price on a chase card, twice a day.
   const ebay = read("src/lib/ebay.ts");
   const fn = ebay.slice(ebay.indexOf("export async function searchEbayLowest"));
-  const body = fn.slice(0, fn.indexOf("export function sealedFloorCents"));
+  const body = fn.slice(0, fn.indexOf("// Keyword each sealed product type"));
   // Every non-answer path must mark the call failed.
   assert.ok(body.includes("status?: { ok: boolean }"), "must expose a status out-param");
   assert.ok(
@@ -238,7 +234,7 @@ test("a failed search never deletes a price row", () => {
 
   const importer = read("src/lib/price-import.ts");
   const chase = importer.slice(importer.indexOf("export async function refreshEbayChasePrintings"));
-  const chaseBody = chase.slice(0, chase.indexOf("\n/**"));
+  const chaseBody = chase.slice(0, chase.indexOf("\n}\n"));
   assert.match(
     chaseBody,
     /if \(!status\.ok\) \{\s*reached\.delete\(c\.id\);/,
@@ -315,3 +311,4 @@ test("bare mode is only ever used where a parent discloses", () => {
     assert.match(src, /\{!bare && <AffiliateDisclosure|\{!bare && \(\s*<div className="border-t/, `${f} must gate its disclosure on !bare`);
   }
 });
+

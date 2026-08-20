@@ -1,19 +1,19 @@
 /**
- * Show what the graded panel will actually contain, for one card, against
- * LIVE eBay — before any of it is written to the database.
+ * Show what the graded panel will actually contain, for one card, against LIVE
+ * eBay — before any of it is written to the database.
  *
- * This exists because the panel is invisible until real data lands: it
- * renders nothing when a card has no live slab, which is the correct
- * behaviour and also indistinguishable from "the feature is broken". This runs
- * the exact production search paths and prints what the tab would show.
+ * This exists because the panel is invisible until real data lands: it renders
+ * nothing when a card has no live slab, which is the correct behaviour and also
+ * indistinguishable from "the feature is broken". This runs the exact production
+ * search path and prints what the tab would show.
  *
  *   npx tsx scripts/preview-ebay-chase.ts "Akali, Rogue Assassin"
  *   npx tsx scripts/preview-ebay-chase.ts "Jinx" --market US
  *   npx tsx scripts/preview-ebay-chase.ts --list        # pick a card to try
  *
- * Needs EBAY_CLIENT_ID / EBAY_CLIENT_SECRET. Costs 1 Browse call per market,
- * and does NOT go through primeEbayBudget — so run it a handful of times, not
- * in a loop.
+ * Needs EBAY_CLIENT_ID / EBAY_CLIENT_SECRET. Costs 1-2 Browse calls per market
+ * per section, and does NOT go through primeEbayBudget — so run it a handful of
+ * times, not in a loop.
  */
 import { prisma } from "../src/lib/db";
 import {

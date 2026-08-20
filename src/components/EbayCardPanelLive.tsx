@@ -14,7 +14,7 @@ import { useCountry } from "./CountryProvider";
  * Tabs appear only for the ones that have something in THIS market. A tab that
  * opens onto "nothing here" is worse than no tab: it advertises a section the
  * card does not have. Most cards will show a single Listings tab and no chrome
- * at all (EbayTabs hides the tablist for one tab); chase cards get the full set.
+ * at all (EbayTabs hides the tablist for one tab); chase cards also get Graded.
  *
  * Counts are computed per market, which is why this is a client component — the
  * server ships every market's rows so the page can stay ISR-cached.
@@ -35,8 +35,8 @@ export function EbayCardPanelLive({
 }) {
   const { country } = useCountry();
 
-  // Elapsed-time and per-market counts computed during SSR are frozen into the
-  // ISR-cached HTML and would disagree with the first client render. Same gate
+  // Per-market counts computed during SSR are frozen into the ISR-cached HTML
+  // and would disagree with the first client render. Same gate
   // CardMarketSection's "updated N ago" line uses.
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
