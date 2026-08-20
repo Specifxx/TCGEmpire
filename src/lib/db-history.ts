@@ -136,6 +136,7 @@ if (HISTORY_URL_SOURCE !== "HISTORY_DATABASE_URL_3") {
 // would spin up a second client in every context that only wants history.
 const OPERATIONAL_URL =
   process.env.RM7 ||
+  process.env.RM8 ||
   process.env.RM5 ||
   process.env.DATABASE_URL_2 ||
   process.env.DATABASE_URL ||
@@ -214,13 +215,16 @@ if (process.env.NODE_ENV !== "production") {
 // that doesn't exist THERE yet fails the whole createMany. Before writing history
 // rows, copy any missing Card rows from the operational DB. No-op when the history
 // tables share the main database, and cheap otherwise (id-set diff + tiny insert).
-export async function ensureHistoryCards(cardIds: string[]): Promise<void> {
-  if (!historyIsSplit || cardIds.length === 0) return;
+// Returns the ids that are CONFIRMED present in the history DB, so the caller can
+// drop any card it could not copy instead of losing the whole batch to one FK
+// violation. null means "not a split setup" — nothing to filter against.
+export async function ensureHistoryCards(cardIds: string[]): Promise<Set<string> | null> {
+  if (!historyIsSplit || cardIds.length === 0) return null;
   const { prisma } = await import("./db");
   const have = await dbHistory.card.findMany({ where: { id: { in: cardIds } }, select: { id: true } });
   const haveSet = new Set(have.map((c) => c.id));
   const missing = cardIds.filter((id) => !haveSet.has(id));
-  if (missing.length === 0) return;
+  if (missing.length === 0) return haveSet;
   const rows = await prisma.card.findMany({ where: { id: { in: missing } } });
   // Upsert BY ID rather than createMany({ skipDuplicates: true }) — createMany
   // silently drops a row that collides with ANY unique field, not just id. That
@@ -234,10 +238,66 @@ export async function ensureHistoryCards(cardIds: string[]): Promise<void> {
   // id either creates the row we need or throws a specific, diagnosable error
   // (caught by that same try/catch) instead of a silent no-op.
   let inserted = 0;
+  let repaired = 0;
+  let failed = 0;
   for (const row of rows) {
     // Strip nothing else — Card has no outgoing FKs, so the full row upserts cleanly.
-    await dbHistory.card.upsert({ where: { id: row.id }, create: row, update: row });
-    inserted++;
+    try {
+      await dbHistory.card.upsert({ where: { id: row.id }, create: row, update: row });
+      inserted++;
+    } catch (err) {
+      // P2002 = one of Card's OTHER unique columns (slug, externalId) is already
+      // held by a DIFFERENT, older row in this history-only table. Upserting by
+      // id finds no match, falls through to CREATE, and collides.
+      //
+      // This is the same catalogue-rebuild drift the comment above describes,
+      // and switching to upsert only made it VISIBLE — it still threw, and
+      // because that throw escaped this loop it aborted the whole snapshot, so
+      // NO card got a PriceHistory row. Production sat frozen at 2026-08-09 for
+      // eleven days while every import reported success.
+      if (!isUniqueConflict(err)) {
+        failed++;
+        console.warn(`History DB: could not copy card ${row.id}:`, err);
+        continue;
+      }
+      // Free the contested value from whichever stale row holds it. Nulling is
+      // safe and lossless here: Postgres allows many NULLs in a unique column,
+      // this table exists ONLY to satisfy PriceHistory's foreign key, and
+      // nothing reads its slug/externalId — whereas DELETING the stale row
+      // would cascade away the price history attached to it.
+      try {
+        for (const field of ["slug", "externalId"] as const) {
+          const value = row[field];
+          if (!value) continue;
+          await dbHistory.card.updateMany({
+            where: { [field]: value, id: { not: row.id } },
+            data: { [field]: null },
+          });
+        }
+        await dbHistory.card.upsert({ where: { id: row.id }, create: row, update: row });
+        inserted++;
+        repaired++;
+      } catch (err2) {
+        failed++;
+        console.warn(`History DB: card ${row.id} still unresolvable after freeing its unique fields:`, err2);
+      }
+    }
   }
-  console.log(`History DB: copied ${inserted}/${missing.length} missing card rows (FK for PriceHistory).`);
+  const extra = [repaired ? `${repaired} after clearing a stale row's unique fields` : "", failed ? `${failed} FAILED` : ""]
+    .filter(Boolean)
+    .join(", ");
+  console.log(
+    `History DB: copied ${inserted}/${missing.length} missing card rows (FK for PriceHistory)${extra ? ` — ${extra}` : ""}.`
+  );
+  // Re-read rather than assuming: the caller uses this to decide which rows are
+  // safe to write, and a wrong assumption here costs the entire day's snapshot.
+  const present = await dbHistory.card.findMany({ where: { id: { in: cardIds } }, select: { id: true } });
+  return new Set(present.map((c) => c.id));
+}
+
+// Prisma's unique-constraint violation. Checked by code rather than by message so
+// a Prisma version bump can't silently turn the repair path above back into a
+// hard failure.
+function isUniqueConflict(err: unknown): boolean {
+  return !!err && typeof err === "object" && (err as { code?: string }).code === "P2002";
 }

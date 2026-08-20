@@ -66,3 +66,41 @@ test("ensureHistoryCards upserts by id instead of createMany+skipDuplicates", ()
   assert.match(body, /let inserted = 0/, "must track the real insert count, not just log the input length");
   assert.match(body, /\$\{inserted\}\/\$\{missing\.length\}/, "the log must show inserted/attempted, not claim full success unconditionally");
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// The SECOND act of the same incident. Switching to upsert-by-id made the bug
+// visible but not fixed: Card also has unique `slug` and `externalId`, so a
+// stale row holding this card's slug under a different id makes the CREATE half
+// of the upsert throw P2002. That throw escaped ensureHistoryCards and aborted
+// the whole snapshot, so NO card got a point. Confirmed in the 2026-08-20 07:30
+// import log — "Unique constraint failed on the fields: (`slug`)" followed by
+// "Price-history snapshot failed" — with the history table frozen at
+// 2026-08-09 for eleven days while every run still reported success.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("a stale duplicate slug cannot abort the whole snapshot", () => {
+  const src = read(DB_HISTORY);
+  const fnMatch = src.match(/export async function ensureHistoryCards[\s\S]*?\n\}/);
+  const body = fnMatch![0];
+  // Per-row isolation: one unusable card must cost one card, not the batch.
+  assert.match(body, /try \{[\s\S]*?await dbHistory\.card\.upsert/, "each row's upsert must be attempted independently");
+  assert.match(src, /function isUniqueConflict/, "expected a P2002 check by CODE, not by message text");
+  assert.match(src, /=== "P2002"/, "unique-constraint detection must key off the Prisma error code");
+  // The repair: free the contested unique value from the stale row rather than
+  // deleting it (deleting cascades away that row's price history).
+  assert.match(body, /for \(const field of \["slug", "externalId"\] as const\)/, "must free BOTH of Card's unique columns");
+  assert.match(body, /updateMany\(\{[\s\S]*?id: \{ not: row\.id \}[\s\S]*?\}\)/, "must clear the value on the OTHER row, never this one");
+  assert.ok(!/dbHistory\.card\.delete/.test(body), "must not delete the stale row — its PriceHistory would cascade away");
+});
+
+test("the snapshot skips uncopyable cards instead of losing the day", () => {
+  const src = read("src/lib/price-import.ts");
+  // ensureHistoryCards reports what actually landed; the caller must use it,
+  // because the write is a single createMany and one bad FK rejects every row.
+  assert.match(src, /const writable = await ensureHistoryCards\(/, "the caller must capture what actually landed");
+  assert.match(src, /if \(writable && !writable\.has\(c\.id\)\) continue;/, "rows for uncopyable cards must be dropped before the batch write");
+  // null means single-database setup — filtering there would drop everything.
+  const dbh = read(DB_HISTORY);
+  assert.match(dbh, /Promise<Set<string> \| null>/, "must distinguish 'nothing to filter' from 'nothing is writable'");
+  assert.match(dbh, /if \(!historyIsSplit \|\| cardIds\.length === 0\) return null;/, "a single-DB setup must return null, not an empty set");
+});
