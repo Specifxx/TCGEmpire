@@ -13,7 +13,7 @@ on:
     # the 07:00 run does the full catalogue across all four markets, and the 19:00
     # run does the promo/signature/overnumbered chase set (a 20h gate keeps the
     # full pass to one a day, a 10h gate lets the chase pass run in between).
-    # The sealed search follows BOTH runs. Roughly 2,600 Browse calls a day all
+    # The sealed search follows BOTH runs. Roughly 2,850 Browse calls a day all
     # told (the chase-auction pass was removed on 2026-08-20, returning ~960
     # calls/day), against eBay's 5,000/day limit less a 600 reserve —
     # tests/affiliate-priority.test.ts models the whole day and fails if it stops
