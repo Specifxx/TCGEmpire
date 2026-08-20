@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { EbayTabs, type EbayTab } from "./EbayTabs";
 import { EbayAdCarouselLive, type AdListing } from "./EbayAdCarouselLive";
 import { EbayGradedLive, type GradedRow } from "./EbayGradedLive";
-import { EbayAuctionsLive, type AuctionRow } from "./EbayAuctionsLive";
 import { EbayBuyCta } from "./EbayBuyCta";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { useCountry } from "./CountryProvider";
@@ -25,7 +24,6 @@ export function EbayCardPanelLive({
   query,
   listings,
   graded,
-  auctions,
   className,
 }: {
   cardId: string;
@@ -33,21 +31,17 @@ export function EbayCardPanelLive({
   /** Ad-carousel listings, already loaded by the page for the Listings tab. */
   listings?: AdListing[];
   graded: GradedRow[];
-  auctions: AuctionRow[];
   className?: string;
 }) {
   const { country } = useCountry();
 
   // Elapsed-time and per-market counts computed during SSR are frozen into the
   // ISR-cached HTML and would disagree with the first client render. Same gate
-  // the auction panel and CardMarketSection's "updated N ago" line use.
+  // CardMarketSection's "updated N ago" line uses.
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
   const gradedHere = graded.filter((g) => g.country === country);
-  const auctionsHere = auctions.filter(
-    (a) => a.country === country && new Date(a.endsAt).getTime() > Date.now(),
-  );
 
   const tabs: EbayTab[] = [
     {
@@ -68,20 +62,9 @@ export function EbayCardPanelLive({
       content: <EbayGradedLive listings={graded} />,
     });
   }
-  if (mounted && auctionsHere.length > 0) {
-    tabs.push({
-      key: "auctions",
-      label: "Auctions",
-      count: auctionsHere.length,
-      // Heading suppressed: the tab already names it, and the panel's own
-      // header would repeat the word directly under the tab that says it.
-      content: <EbayAuctionsLive auctions={auctions} heading="Live auctions" bare />,
-    });
-  }
-
   return (
     <div className={className} data-card={cardId}>
-      <EbayTabs tabs={tabs} label="eBay listings, graded copies and auctions" />
+      <EbayTabs tabs={tabs} label="eBay listings and graded copies" />
       {/* One disclosure for the whole panel — every tab is affiliate-tagged, and
           repeating it per tab would be noise. Outside the tabpanel so it is
           never hidden with an inactive tab. */}

@@ -23,13 +23,14 @@ const PROMO = { rarity: "Common", collectorNumber: "012/166", variant: null, isP
 
 // ── The floor itself ─────────────────────────────────────────────────────────
 
-test("the floor is $10 USD unless the environment overrides it", () => {
-  // Not asserted as a literal 1000 — the point is that it is a real dollar
+test("the floor is $5 USD unless the environment overrides it", () => {
+  // Not asserted as a literal 500 — the point is that it is a real dollar
   // figure in USD cents, and that the env override exists so it can be moved
-  // without a deploy if quota pressure changes. Lowered from $20 on 2026-08-20,
-  // the same day Germany's removal freed quota to spend on it — see the header
-  // comment on EBAY_MIN_VALUE_USD_CENTS in price-import.ts.
-  assert.equal(EBAY_MIN_VALUE_USD_CENTS, Number(process.env.EBAY_MIN_VALUE_CENTS ?? 1000));
+  // without a deploy if quota pressure changes. Lowered $20→$10→$5, both moves
+  // on 2026-08-20: the first funded by Germany's removal, the second by
+  // removing the eBay auction pass entirely — see the header comment on
+  // EBAY_MIN_VALUE_USD_CENTS in price-import.ts.
+  assert.equal(EBAY_MIN_VALUE_USD_CENTS, Number(process.env.EBAY_MIN_VALUE_CENTS ?? 500));
   assert.ok(Number.isFinite(EBAY_MIN_VALUE_USD_CENTS) && EBAY_MIN_VALUE_USD_CENTS > 0);
 });
 
@@ -85,16 +86,18 @@ test("the rarity rule and the value floor are independent gates", () => {
 
 // ── Wiring: every pass that spends quota must apply the floor ────────────────
 
-test("all three eBay passes filter on the value floor", () => {
+test("both eBay singles passes filter on the value floor", () => {
   const src = read("src/lib/price-import.ts");
-  // The catalogue pass, the twice-daily chase pass and the auction pass each
-  // spend Browse calls. A pass that read the value map but forgot to pass it
-  // would keep working and quietly spend the quota this change exists to save.
+  // The catalogue pass and the twice-daily chase pass each spend Browse calls.
+  // A pass that read the value map but forgot to pass it would keep working
+  // and quietly spend the quota this change exists to save. (Was 3 — the
+  // auction pass was the third — until refreshEbayAuctions was removed
+  // entirely on 2026-08-20.)
   const calls = src.match(/eBayWorthSearching\(c, tcgValues\.get\(c\.id\)\)/g) ?? [];
-  assert.equal(calls.length, 3, "expected the catalogue, chase and auction passes to each apply the floor");
+  assert.equal(calls.length, 2, "expected the catalogue and chase passes to each apply the floor");
   // Read once per pass, never per card — the map is a whole-table read.
   const reads = src.match(/await tcgplayerUsValues\(\)/g) ?? [];
-  assert.equal(reads.length, 3, "tcgplayerUsValues must be read once per pass, not inside a market loop");
+  assert.equal(reads.length, 2, "tcgplayerUsValues must be read once per pass, not inside a market loop");
 });
 
 test("the preview script passes the value explicitly, never as a bare .filter reference", () => {
@@ -193,9 +196,10 @@ test("the sealed exclusion is applied to the search list, before any call is mad
 
 test("every sealed market still searches every remaining product type", () => {
   // The user-facing half of the request: sealed eBay coverage is all products
-  // (minus loose packs) across all four searched marketplaces, not US-only.
+  // (minus loose packs) across all five searched marketplaces (CA added
+  // 2026-08-20), not US-only.
   const src = read("src/lib/sealed-import.ts");
-  for (const m of ["EBAY_US", "EBAY_AU", "EBAY_GB", "EBAY_SG"]) {
+  for (const m of ["EBAY_US", "EBAY_AU", "EBAY_GB", "EBAY_SG", "EBAY_CA"]) {
     assert.ok(src.includes(m), `${m} must remain in EBAY_SEALED_MARKETS`);
   }
   assert.match(src, /for \(const mkt of EBAY_SEALED_MARKETS\)/);

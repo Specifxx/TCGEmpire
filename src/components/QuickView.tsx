@@ -15,7 +15,6 @@ import { OutboundLink } from "./OutboundLink";
 import { EbayAdCarouselLive, type AdListing } from "./EbayAdCarouselLive";
 import { EbayTabs, type EbayTab } from "./EbayTabs";
 import { EbayGradedLive, type GradedRow } from "./EbayGradedLive";
-import { EbayAuctionsLive, type AuctionRow } from "./EbayAuctionsLive";
 import { AffiliateDisclosure, PaidLinkTag } from "./AffiliateDisclosure";
 import { timeAgo } from "@/lib/format";
 import { buyButtonClass, buyButtonLabel } from "./CardMarketSection";
@@ -94,7 +93,6 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
   const [prices, setPrices] = useState<RetailerPrice[] | null>(null);
   const [adListings, setAdListings] = useState<AdListing[]>([]);
   const [graded, setGraded] = useState<GradedRow[]>([]);
-  const [auctions, setAuctions] = useState<AuctionRow[]>([]);
   const [ebayCheckedAt, setEbayCheckedAt] = useState<string | null>(null);
   const [history, setHistory] = useState<PricePoint[] | null>(null);
   const [coll, setColl] = useState<"idle" | "saving" | "added" | "signin" | "error">("idle");
@@ -129,7 +127,7 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
     fetch(`/api/card/${ref}/view`, { method: "POST", keepalive: true }).catch(() => {});
     fetch(`/api/card/${ref}`)
       .then((r) => r.json())
-      .then((d) => { if (alive) { setPrices(d.retailerPrices ?? []); setAdListings(d.ebayAdListings ?? []); setGraded(d.ebayGradedListings ?? []); setAuctions(d.ebayAuctions ?? []); setEbayCheckedAt(d.ebayCheckedAt ?? null); } })
+      .then((d) => { if (alive) { setPrices(d.retailerPrices ?? []); setAdListings(d.ebayAdListings ?? []); setGraded(d.ebayGradedListings ?? []); setEbayCheckedAt(d.ebayCheckedAt ?? null); } })
       .catch(() => { if (alive) setPrices([]); });
     // Region-specific price history (its own currency), keyed by URL for clean caching.
     fetch(`/api/card/${ref}/history?country=${country}`)
@@ -231,7 +229,7 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
             {/* Tabs appear only for what this card actually has in this market,
                 so an ordinary card shows exactly the compact carousel it always
                 did with no tab chrome (EbayTabs hides the tablist for one tab).
-                Chase cards gain Graded and Auctions.
+                Chase cards gain Graded.
 
                 marketCents is derived here from the card's own price column
                 rather than sent by the API: `price(card)` is already the
@@ -263,23 +261,6 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                         content: (
                           <EbayGradedLive
                             listings={graded.map((g) => ({ ...g, marketCents: lowest ?? null }))}
-                          />
-                        ),
-                      } satisfies EbayTab,
-                    ]
-                  : []),
-                ...(auctions.some((a) => a.country === country && new Date(a.endsAt).getTime() > Date.now())
-                  ? [
-                      {
-                        key: "auctions",
-                        label: "Auctions",
-                        count: auctions.filter(
-                          (a) => a.country === country && new Date(a.endsAt).getTime() > Date.now(),
-                        ).length,
-                        content: (
-                          <EbayAuctionsLive
-                            auctions={auctions.map((a) => ({ ...a, marketCents: lowest ?? null }))}
-                            bare
                           />
                         ),
                       } satisfies EbayTab,

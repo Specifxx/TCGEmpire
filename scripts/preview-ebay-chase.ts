@@ -1,23 +1,23 @@
 /**
- * Show what the auction + graded panels will actually contain, for one card,
- * against LIVE eBay — before any of it is written to the database.
+ * Show what the graded panel will actually contain, for one card, against
+ * LIVE eBay — before any of it is written to the database.
  *
- * This exists because the panels are invisible until real data lands: they
- * render nothing when a card has no live auction or slab, which is the correct
+ * This exists because the panel is invisible until real data lands: it
+ * renders nothing when a card has no live slab, which is the correct
  * behaviour and also indistinguishable from "the feature is broken". This runs
- * the exact production search paths and prints what each tab would show.
+ * the exact production search paths and prints what the tab would show.
  *
  *   npx tsx scripts/preview-ebay-chase.ts "Akali, Rogue Assassin"
  *   npx tsx scripts/preview-ebay-chase.ts "Jinx" --market US
  *   npx tsx scripts/preview-ebay-chase.ts --list        # pick a card to try
  *
- * Needs EBAY_CLIENT_ID / EBAY_CLIENT_SECRET. Costs 1-2 Browse calls per market
- * per section, and does NOT go through primeEbayBudget — so run it a handful of
- * times, not in a loop.
+ * Needs EBAY_CLIENT_ID / EBAY_CLIENT_SECRET. Costs 1 Browse call per market,
+ * and does NOT go through primeEbayBudget — so run it a handful of times, not
+ * in a loop.
  */
 import { prisma } from "../src/lib/db";
 import {
-  isEbayEnabled, searchEbayLowest, searchEbayAuctions, parseGrade, primeEbayBudget,
+  isEbayEnabled, searchEbayLowest, parseGrade, primeEbayBudget,
   type EbayResult,
 } from "../src/lib/ebay";
 import { EBAY_ALWAYS_MARKETS, isTwiceDailyPrinting, eBayWorthSearching } from "../src/lib/price-import";
@@ -32,22 +32,14 @@ const marketArg = (() => {
 })();
 const nameArg = args.filter((a) => !a.startsWith("--") && a !== marketArg).join(" ").trim();
 
-function timeLeft(ms: number): string {
-  if (ms <= 0) return "ended";
-  const m = Math.floor(ms / 60_000);
-  if (m < 60) return `${m}m`;
-  const h = Math.floor(m / 60);
-  return h < 48 ? `${h}h` : `${Math.floor(h / 24)}d`;
-}
-
 async function main() {
   if (!isEbayEnabled()) {
     console.error("EBAY_CLIENT_ID / EBAY_CLIENT_SECRET not set — nothing to query.");
     process.exit(1);
   }
 
-  // The cards the feature actually covers, best candidates first. Auctions and
-  // slabs exist for chase printings; asking about a bulk common proves nothing.
+  // The cards the feature actually covers, best candidates first. Slabs exist
+  // for chase printings; asking about a bulk common proves nothing.
   const candidates = (
     await prisma.card.findMany({
       orderBy: [{ lowestPriceCentsUs: { sort: "desc", nulls: "last" } }],
@@ -130,21 +122,6 @@ async function main() {
       const label = grader ? `${grader}${grade != null ? " " + grade : " (no grade stated)"}` : "graded";
       console.log(`    ${label.padEnd(22)} ${formatMoney(g.priceCents, mkt.currency).padStart(10)}${mult}`);
       console.log(`      ${g.title.slice(0, 66)}`);
-    }
-
-    // ── Auctions, its own call (see searchEbayAuctions on why not shared).
-    const auctions = await searchEbayAuctions({ ...identity, marketplace: mkt.marketplace }, 5);
-    console.log(`\n  AUCTIONS tab — ${auctions.length} live`);
-    if (auctions.length === 0) console.log("    (nothing; the tab would not appear)");
-    for (const a of auctions) {
-      const pct = marketPrice ? ` · ${Math.round((a.currentBidCents / marketPrice) * 100)}% of cheapest BIN` : "";
-      const left = timeLeft(a.endsAt.getTime() - Date.now());
-      console.log(
-        `    ${formatMoney(a.currentBidCents, mkt.currency).padStart(10)}  ` +
-          `${String(a.bidCount).padStart(2)} bid(s)  ${left.padStart(5)} left` +
-          `${a.isGraded ? "  [graded]" : ""}${pct}`,
-      );
-      console.log(`      ${a.title.slice(0, 66)}`);
     }
   }
   console.log("");

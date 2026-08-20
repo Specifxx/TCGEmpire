@@ -272,7 +272,6 @@ model Card {
   marketplaceListings MarketplaceListing[]
   collectedBy         CollectionCard[]
   ebayAdListings      EbayAdListing[]
-  ebayAuctions        EbayAuction[]
   ebayGradedListings  EbayGradedListing[]
 
   @@index([setCode, collectorNumber])
@@ -605,26 +604,10 @@ model RetailerPrice {
 // already fetches + filters up to 100 results down to the single cheapest
 // (RetailerPrice's "ebay" row); this just persists the next few from that SAME
 // response, so it costs zero additional Browse API calls/quota.
-// A LIVE eBay AUCTION on a chase-tier card.
-//
-// DELIBERATELY NOT A RetailerPrice ROW, and this is the whole design.
-// A current bid is not a price you can pay: a $12 bid on a $180 Signature would
-// sort to the top of the comparison table, become the card's "cheapest price",
-// and then propagate — lowestPriceCents feeds price history, the market index,
-// price alerts, the rise predictor, meta-deck build costs, Today's Top Deals,
-// the screener, the sitemap and the Product/Offer JSON-LD Google reads. One
-// auction row in the wrong table corrupts all of it and publishes a false price.
-// A separate table cannot make that mistake; a shared one only avoids it for as
-// long as everyone remembers to filter.
-//
-// Rows are replaced per market on each auction pass and are USELESS ONCE STALE —
-// an ended auction still carrying a live affiliate link is worse than showing
-// nothing, exactly as EbayAdListing's MAX_AGE_HOURS note argues. `endsAt` is
-// stored so both the reader and the renderer can enforce that independently.
 // A GRADED (slabbed) eBay listing for a chase card — PSA / BGS / CGC / SGC.
 //
-// Its own table for the same reason EbayAuction has one: a slab is genuinely
-// this card but is NOT comparable to a raw copy. It trades far above one, and
+// DELIBERATELY NOT A RetailerPrice ROW: a slab is genuinely this card but is
+// NOT comparable to a raw copy. It trades far above one, and
 // the price search excludes it precisely because it kept leaking in as a wrong
 // "cheapest" (see GRADED_SLAB in lib/ebay.ts). Keeping slabs out of
 // RetailerPrice is what stops that price reaching lowestPriceCents — and from
@@ -660,38 +643,6 @@ model EbayGradedListing {
 
   @@unique([itemId, country])
   @@index([cardId, country])
-}
-
-model EbayAuction {
-  id              String   @id @default(cuid())
-  cardId          String
-  country         String // marketplace the search ran against (US/AU/UK/SG)
-  // eBay's own listing id — stable identity for a listing across passes, so a
-  // re-import of the same auction updates rather than duplicating it.
-  itemId          String
-  currentBidCents Int
-  bidCount        Int      @default(0)
-  // Auctions may also carry a Buy It Now. Kept because "bid $92, or take it now
-  // for $150" is a materially different decision from a bare auction.
-  buyItNowCents   Int?
-  currency        String
-  endsAt          DateTime
-  url             String // affiliate-tagged
-  title           String
-  imageUrl        String?
-  condition       String?
-  // Graded slabs (PSA/BGS/CGC/SGC) are the category our store comparison
-  // structurally cannot cover — no tracked Shopify store lists them — so this
-  // flags the listings where eBay is the only market that exists.
-  isGraded        Boolean  @default(false)
-  updatedAt       DateTime @updatedAt
-
-  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
-
-  @@unique([itemId, country])
-  @@index([cardId, country])
-  // Drives the "ending soon" reads: next-to-close first, within one market.
-  @@index([country, endsAt])
 }
 
 model EbayAdListing {
