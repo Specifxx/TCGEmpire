@@ -170,3 +170,58 @@ export function cardTileSelect(country: Country = DEFAULT_COUNTRY) {
 
 // Default (Australia) tile select, kept for callers that don't vary by market.
 export const CARD_TILE_SELECT = cardTileSelect("AU");
+
+/**
+ * In-stock store counts per card PER MARKET.
+ *
+ * WHY THIS EXISTS. `cardTileSelect(country)`'s `_count` is filtered to ONE
+ * country and baked into the payload at render time — but a tile's PRICE is
+ * localised on the CLIENT (CountryProvider geo-switches the market after
+ * hydration and CardTile re-prices through pickPrice). On a page rendered with
+ * DEFAULT_COUNTRY and then ISR-cached — the homepage, and every other
+ * cardTileSelect(DEFAULT_COUNTRY) caller — those two describe DIFFERENT markets
+ * for anyone outside Australia: the visitor read a US price next to Australia's
+ * store count. Reported from production as "it says 3 stores when there is only
+ * 1, and 10 when there are 3", which is exactly the shape of a count taken from
+ * the wrong market.
+ *
+ * Shipping every market's count fixes it at the source, and the earlier note on
+ * cardTileSelect — that a per-market count would mean one row per in-stock
+ * listing — does not apply to this shape. GROUP BY does the counting IN
+ * POSTGRES and returns one small row per (card, market) that actually has
+ * stock: at most cards x 6, tens of bytes each, versus the thousands of listing
+ * rows that idea would have moved. That distinction matters on a project that
+ * has exhausted its Neon transfer allowance repeatedly (see lib/db.ts).
+ *
+ * Same filters as the `_count` above — in-stock only, converted reference rows
+ * excluded — so a market's number here equals what the card page will show.
+ */
+export async function storeCountsByCountry(
+  cardIds: string[]
+): Promise<Map<string, Partial<Record<Country, number>>>> {
+  const out = new Map<string, Partial<Record<Country, number>>>();
+  if (!cardIds.length) return out;
+  const { prisma } = await import("./db");
+  const rows = await prisma.retailerPrice.groupBy({
+    by: ["cardId", "country"],
+    where: { cardId: { in: cardIds }, inStock: true, retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } },
+    _count: { _all: true },
+  });
+  for (const r of rows) {
+    const per = out.get(r.cardId) ?? {};
+    per[r.country as Country] = r._count._all;
+    out.set(r.cardId, per);
+  }
+  return out;
+}
+
+/**
+ * Attach per-market store counts to a page of tiles, so CardTile can show the
+ * count for whichever market the visitor is actually in. One extra grouped
+ * query per page — never per card.
+ */
+export async function withStoreCounts<T extends { id: string }>(cards: T[]): Promise<T[]> {
+  if (!cards.length) return cards;
+  const counts = await storeCountsByCountry(cards.map((c) => c.id));
+  return cards.map((c) => ({ ...c, storeCounts: counts.get(c.id) ?? {} }));
+}

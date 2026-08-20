@@ -11,6 +11,7 @@ import { cardHref } from "@/lib/card-url";
 import { rarityInfo, isOvernumbered, isSignature, isCrystalRose } from "@/lib/constants";
 import { cardDisplayName } from "@/lib/card-name";
 import { tileStock } from "@/lib/market-rows";
+import type { Country } from "@/lib/country";
 
 export interface CardTileData {
   id: string;
@@ -36,27 +37,37 @@ export interface CardTileData {
   lowestPriceCentsSg?: number | null;
   lowestPriceCentsCa?: number | null;
   _count: { retailerPrices: number };
+  // In-stock store count for EVERY market, so the number can follow the same
+  // market as the localised price (see storeCountsByCountry in lib/cards.ts).
+  // Optional: callers that render for one market and never re-localise (the
+  // dynamic list pages, which read the visitor's country server-side) can keep
+  // using `_count` alone.
+  storeCounts?: Partial<Record<Country, number>>;
 }
 
 export function CardTile({ card }: { card: CardTileData }) {
   const r = rarityInfo(card.rarity);
   const { open } = useQuickView();
-  const { fmt, price } = useCountry();
+  const { fmt, price, country } = useCountry();
   const lowest = price(card);
 
-  // ── Why the store count is gated on `lowest` ────────────────────────────────
-  // The rule (and the bug it fixes — a tile reading "No price yet" and "1 store"
-  // at once) lives in lib/market-rows.ts tileStock(), shared with the card page
-  // so the two surfaces cannot drift apart again. Short version:
-  // `_count.retailerPrices` is baked SERVER-side for one country while `lowest`
-  // is localised on the CLIENT to the visitor's, so the count is only shown next
-  // to a price from the same market.
+  // ── The store count must come from the SAME market as the price ─────────────
+  // The rule (and the "No price yet" + "1 store" bug it first fixed) lives in
+  // lib/market-rows.ts tileStock(), shared with the card page so the two
+  // surfaces cannot drift apart.
   //
-  // A per-market count would mean shipping one row per in-stock listing on every
-  // tile — on /browse that is ~1,400 extra rows a page, on a project that has
-  // exhausted its database transfer allowance three times (see lib/db.ts). Not
-  // worth it for a secondary signal.
-  const stock = tileStock(lowest, card._count.retailerPrices, card);
+  // `_count.retailerPrices` is filtered SERVER-side to ONE country, while
+  // `lowest` is localised on the CLIENT to the visitor's. On a page rendered
+  // with DEFAULT_COUNTRY and then ISR-cached — the homepage above all — those
+  // are different markets for every visitor outside Australia, so the tile
+  // showed a US price beside an AU store count. That reached production as
+  // "3 stores when there is only 1".
+  //
+  // `storeCounts` carries every market's number (see storeCountsByCountry), so
+  // prefer the visitor's own. Fall back to `_count` only for callers that render
+  // for a single market and never re-localise.
+  const localisedCount = card.storeCounts?.[country] ?? card._count.retailerPrices;
+  const stock = tileStock(lowest, localisedCount, card);
   const downRef = useRef<{ x: number; y: number; t: number } | null>(null);
 
   // Left-click opens an instant in-page quick view (no navigation = no lag). The
