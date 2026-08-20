@@ -3,11 +3,12 @@
 //   • savings-vs-market  (PREMIUM) — cards eBay is cheapest on vs the best store
 //   • price-drops        (free)    — biggest 7-day price falls
 //   • cheapest-sealed    (free)    — lowest in-stock sealed products right now
+//   • rising-cards       (PREMIUM) — the Rising Cards screener's top picks
 //
 // price-drops depends on PriceHistory (AU-only today) and savings needs an eBay
 // market, so some columns are naturally empty in some markets — the homepage
 // hides empty columns. Each source is independently guarded, so one failing never
-// sinks the rest. The one PREMIUM column is gated in the UI (only the single top
+// sinks the rest. Both PREMIUM columns are gated in the UI (only the single top
 // item is rendered to non-subscribers); the data layer itself is ungated.
 import { unstable_cache } from "next/cache";
 //
@@ -18,16 +19,31 @@ import { unstable_cache } from "next/cache";
 // (/tools/value-finder, src/app/tools/value-finder/page.tsx) still calls
 // getUndervalued() directly for visitors who want that specific signal — this
 // file no longer needs to fetch it just to leave it unrendered.
+//
+// Rising Cards was added as a FOURTH column on 2026-08-20, a deliberate
+// reversal of part of that declutter call (explicit request) — the grid can
+// now show up to four columns on a given day instead of three. Kept as its
+// own gated PREMIUM column rather than folded into savings-vs-market so its
+// distinct screener (demand + price-timing, not "cheaper on eBay than in
+// stores") stays legible as its own signal.
 import type { Country } from "./country";
 import { cardHref } from "./card-url";
 import { affiliateUrl } from "./affiliate";
 import { getEbayCheapest } from "./arbitrage";
 import { getPriceMovers } from "./price-history";
 import { getSealedGroups } from "./sealed-import";
+import { getRisingCards } from "./rise-predictor";
 import { CONTENT_TAG } from "./revalidate-content";
 import type { CardTileData } from "@/components/CardTile";
 
-export type DealType = "savings-vs-market" | "price-drops" | "cheapest-sealed";
+export type DealType = "savings-vs-market" | "price-drops" | "cheapest-sealed" | "rising-cards";
+
+// The Deal[]-valued keys of TopDeals — i.e. NOT hasAny (boolean) and NOT the
+// *Total number fields (savingsVsMarketTotal, risingCardsTotal). Shared so
+// TodaysTopDeals.tsx and DealsRow.tsx both index TopDeals the same narrow way
+// instead of each re-deriving it from `keyof Omit<TopDeals, "hasAny">`, which
+// would incorrectly include those number fields too.
+export type DealColumnKey = "savingsVsMarket" | "priceDrops" | "cheapestSealed" | "risingCards";
 
 export type Deal = {
   dealType: DealType;
@@ -60,16 +76,27 @@ export type Deal = {
 
 export type TopDeals = {
   savingsVsMarket: Deal[]; // PREMIUM
+  // The REAL count behind the Premium gate — getEbayCheapest's own `total`,
+  // never derived from savingsVsMarket.length. That array is capped at perType
+  // (4) for this feed regardless of how many deals actually exist, so
+  // items.length - 1 would silently understate "how many more" to almost
+  // every visitor almost every day (there are usually well over 4). The
+  // homepage teaser reads this field instead — see TodaysTopDeals.tsx.
+  savingsVsMarketTotal: number;
   priceDrops: Deal[]; // free
   cheapestSealed: Deal[]; // free
+  risingCards: Deal[]; // PREMIUM
+  // Real total behind the gate, same reasoning as savingsVsMarketTotal — capped
+  // at the Rising Cards screener's own DISPLAY limit (40), not at perType.
+  risingCardsTotal: number;
   hasAny: boolean;
 };
 
 const sub = (c: { setCode: string; collectorNumber: string }) => `${c.setCode} · ${c.collectorNumber}`;
 
 export async function getTopDeals(country: Country, perType = 4): Promise<TopDeals> {
-  const [savingsVsMarket, priceDrops, cheapestSealed] = await Promise.all([
-    (async (): Promise<Deal[]> => {
+  const [savings, priceDrops, cheapestSealed, rising] = await Promise.all([
+    (async (): Promise<{ deals: Deal[]; total: number }> => {
       try {
         // "pct", not "saving" (raw dollar amount) — sorting this homepage
         // feed by absolute savings let a four-figure chase card's modest
@@ -82,8 +109,8 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
         // left to interleave. Sorting by percentage upstream fixes that at
         // the source: /tools/deal-finder (the "All opportunities" link this
         // column points to) still defaults to its own sort, unaffected.
-        const { items } = await getEbayCheapest(country, "pct", 1, perType);
-        return items.map((it) => ({
+        const { items, total } = await getEbayCheapest(country, "pct", 1, perType);
+        const deals = items.map((it) => ({
           dealType: "savings-vs-market" as const,
           title: it.card.name,
           subtitle: sub(it.card),
@@ -98,8 +125,9 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
           note: `vs ${it.storeName}`,
           card: it.card,
         }));
+        return { deals, total };
       } catch {
-        return [];
+        return { deals: [], total: 0 };
       }
     })(),
     (async (): Promise<Deal[]> => {
@@ -168,10 +196,57 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
         return [];
       }
     })(),
+    (async (): Promise<{ deals: Deal[]; total: number }> => {
+      try {
+        // Per-market scope (not GLOBAL, the tool's own default): every other
+        // column here is genuinely priced in the visitor's market, and
+        // RisePick.priceCents is only safe to show under the country's
+        // currency symbol when that country WAS the scope — GLOBAL mixes each
+        // card's own basis-market price under one blended view. Cache key
+        // matches /tools/rising's own ["rising-cards-public", scope] exactly,
+        // so a visit to either page warms the same entry — no extra query
+        // cost for adding this column on top of the tool that already exists.
+        const analysis = await unstable_cache(() => getRisingCards(country), ["rising-cards-public", country], {
+          revalidate: 3600,
+          tags: [CONTENT_TAG],
+        })();
+        const priced = analysis.picks.filter((p) => p.priceCents != null);
+        const deals = priced.slice(0, perType).map((p) => ({
+          dealType: "rising-cards" as const,
+          title: p.displayName,
+          subtitle: sub(p),
+          href: cardHref(p),
+          outboundUrl: null,
+          outboundRetailer: null,
+          imageUrl: p.imageThumbUrl,
+          priceCents: p.priceCents!,
+          pctLabel: p.score,
+          deltaCents: null,
+          refCents: null,
+          note: `${p.confidence} confidence`,
+          card: null,
+        }));
+        // The real total, not the perType slice — same fix as savingsVsMarket
+        // above. Already capped at the tool's own DISPLAY limit (40), which is
+        // a genuine, disclosed limit of the screener itself, not a hidden
+        // homepage-feed truncation.
+        return { deals, total: priced.length };
+      } catch {
+        return { deals: [], total: 0 };
+      }
+    })(),
   ]);
 
-  const hasAny = savingsVsMarket.length + priceDrops.length + cheapestSealed.length > 0;
-  return { savingsVsMarket, priceDrops, cheapestSealed, hasAny };
+  const hasAny = savings.deals.length + priceDrops.length + cheapestSealed.length + rising.deals.length > 0;
+  return {
+    savingsVsMarket: savings.deals,
+    savingsVsMarketTotal: savings.total,
+    priceDrops,
+    cheapestSealed,
+    risingCards: rising.deals,
+    risingCardsTotal: rising.total,
+    hasAny,
+  };
 }
 
 // Cached wrapper, keyed by market only ["top-deals", country] — so "/" and all
