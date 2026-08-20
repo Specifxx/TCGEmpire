@@ -31,12 +31,11 @@ set -uo pipefail
 #
 # tests/db-chain.test.ts asserts these two values still match the head of each
 # chain, so the next cutover fails a test instead of quietly lying in a log.
-# Rotated onto RM6 on 2026-08-17: DATABASE_URL_2 hit 4.8 of its 5 GB monthly
-# transfer allowance just three days after the 2026-08-14 cutover onto it, and
-# unlike the DATABASE_URL_2/HISTORY_DATABASE_URL_2 backward rotations, RM6 is
-# a genuinely new project (RM3, the obvious rested candidate, was already at
-# its own capacity). See the long note on OPERATIONAL_URL in src/lib/db.ts.
-CURRENT_OP="RM6"
+# Rotated onto RM7 on 2026-08-20: RM6 exhausted its 5 GB monthly transfer
+# allowance just three days after the 2026-08-17 cutover onto it — the same
+# ~2 GB/day burn every prior project has shown. See the long note on
+# OPERATIONAL_URL in src/lib/db.ts.
+CURRENT_OP="RM7"
 # Rotated onto another recycled project on 2026-08-16: HISTORY_DATABASE_URL
 # approached its 5 GB monthly network-transfer allowance, and
 # HISTORY_DATABASE_URL_2 — retired long enough ago for its allowance to have
@@ -50,15 +49,15 @@ CURRENT_HIST="HISTORY_DATABASE_URL_3"
 # GATES ON THE WHOLE OPERATIONAL CHAIN, not bare DATABASE_URL. The original check
 # was `['production','preview'].includes(VERCEL_ENV) && DATABASE_URL`, written when
 # DATABASE_URL was the only operational variable. It has since become
-# RM6 || DATABASE_URL_2 || DATABASE_URL || RM5 || RM4 || RM3 (lib/db.ts), and lib/db.ts explicitly
+# RM7 || RM6 || DATABASE_URL_2 || DATABASE_URL || RM5 || RM4 || RM3 (lib/db.ts), and lib/db.ts explicitly
 # tells the owner the older vars can eventually be deleted — at which point
 # this line would exit 0 on every deploy and silently stop pushing schema to
 # BOTH the operational AND the history database, while logging a
 # benign-looking "skipping". A green deploy against an un-migrated database is
 # exactly the failure this script exists to prevent.
 if ! { [ "${VERCEL_ENV:-}" = "production" ] || [ "${VERCEL_ENV:-}" = "preview" ]; } \
-   || [ -z "${RM6:-}${DATABASE_URL_2:-}${DATABASE_URL:-}${RM5:-}${RM4:-}${RM3:-}" ]; then
-  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM6 / DATABASE_URL_2 / DATABASE_URL / RM5 / RM4 / RM3) — skipping schema push."
+   || [ -z "${RM7:-}${RM6:-}${DATABASE_URL_2:-}${DATABASE_URL:-}${RM5:-}${RM4:-}${RM3:-}" ]; then
+  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM7 / RM6 / DATABASE_URL_2 / DATABASE_URL / RM5 / RM4 / RM3) — skipping schema push."
   exit 0
 fi
 
@@ -67,13 +66,16 @@ fi
 # the next cold start), this ALWAYS reflects the current build's actual environment.
 #
 # EVERY BRANCH EXCEPT THE DATABASE_URL ONE MUST `export`, because DATABASE_URL
-# is the only name `prisma db push` reads. Now that the head is RM6, the FIRST
+# is the only name `prisma db push` reads. Now that the head is RM7, the FIRST
 # branch is the one that must copy — and getting this wrong is silent and
 # expensive, because `prisma db push` would migrate a PREVIOUS project while
-# the app (src/lib/db.ts, RM6-first) reads the current one. A green deploy
+# the app (src/lib/db.ts, RM7-first) reads the current one. A green deploy
 # against an un-migrated database is exactly the failure this script exists to
 # prevent.
-if [ -n "${RM6:-}" ]; then
+if [ -n "${RM7:-}" ]; then
+  export DATABASE_URL="$RM7"
+  SOURCE="RM7"
+elif [ -n "${RM6:-}" ]; then
   export DATABASE_URL="$RM6"
   SOURCE="RM6"
 elif [ -n "${DATABASE_URL_2:-}" ]; then
