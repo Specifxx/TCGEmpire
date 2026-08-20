@@ -52,9 +52,10 @@ test("every Deal-producing branch in top-deals.ts still populates refCents (kept
   const src = readCode("src/lib/top-deals.ts");
   const refCentsAssignments = (src.match(/refCents:/g) ?? []).length;
   // One in the type definition + one per dealType branch (savings-vs-market,
-  // price-drops, cheapest-sealed) = 4. "undervalued" was removed from this
-  // feed entirely — see the file's own header comment — so this is 4, not 5.
-  assert.equal(refCentsAssignments, 4, "expected refCents declared once and populated in all three remaining deal branches");
+  // price-drops, cheapest-sealed, rising-cards) = 5. "undervalued" was removed
+  // from this feed entirely — see the file's own header comment — so this is
+  // 5, not 6.
+  assert.equal(refCentsAssignments, 5, "expected refCents declared once and populated in all four remaining deal branches");
   assert.doesNotMatch(src, /dealType:\s*"undervalued"/, "the undervalued column must be gone from this feed's code, not just hidden in the UI");
   assert.doesNotMatch(src, /getUndervalued\(/, "top-deals.ts must no longer fetch it at all, per its own header comment");
 });

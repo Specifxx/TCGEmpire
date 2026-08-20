@@ -3,7 +3,6 @@ import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
 import {
   orderCardsForEbay, ebayMarketsForDay, EBAY_ROTATING_MARKETS, EBAY_ALWAYS_MARKETS, EBAY_CA_RETAILER,
-  AUCTION_CARDS_PER_MARKET,
 } from "../src/lib/price-import";
 import {
   pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, SETS, isFallbackRetailer,
@@ -416,31 +415,31 @@ test("the union covers every per-market list — a new market cannot be forgotte
 // started. These pin the arithmetic so catalogue growth trips a test, not a
 // silent gap in coverage.
 
-const FULL_CATALOGUE = 1400; // every card, as of the VEN launch
+const FULL_CATALOGUE = 1429; // every card — measured 2026-08-20, up from 1400 at the VEN launch measurement
 // Cards that actually get a Browse call, after eBayWorthSearching drops
-// Common/Uncommon base prints and anything under the value floor. Measured from
-// production on 2026-08-08 AT THE THEN-$20 FLOOR: 205 cards priced at or above
-// it, plus the ~34 with no US price at all (kept deliberately — see the
-// "unknown ≠ cheap" rule), rounded up for the ones priced only by a
-// non-TCGplayer US retailer.
-//
-// STALE AS OF 2026-08-20: EBAY_MIN_VALUE_USD_CENTS dropped $20→$10 the same
-// day, specifically to grow this number (freed by Germany's removal from
-// EBAY_ROTATING_MARKETS — see EBAY_ALWAYS_MARKETS in price-import.ts). The
-// real post-drop count is not yet known from production — read it off the
-// "eBay catalogue: X of Y cards searched" log line on the next run and update
-// this constant (and CHASE_PRINTINGS below, if any newly-captured card is
-// promo/signature/overnumbered) with the real measurement. Left at the old
-// value in the meantime: the budget test below still passes at 280, so it is
-// a safe (if now understated) floor, not a broken assertion.
-const CATALOGUE = 280;
+// Common/Uncommon base prints and anything under the value floor. Measured
+// from a forced production run on 2026-08-20 AT THE $10 FLOOR (the same day
+// it dropped from $20, freed by Germany's removal from EBAY_ROTATING_MARKETS
+// — see EBAY_ALWAYS_MARKETS in price-import.ts): the log line read
+// "347 of 1429 cards searched — 1082 skipped (1016 under $10 TCGplayer US,
+// rest Common/Uncommon base prints); 115 kept with no TCGplayer price". Up
+// from 280 at the old $20 floor — real growth, but far short of the ~187-card
+// ceiling the pre-measurement estimate floated; TCG price distributions are
+// more front-loaded near the floor than that estimate assumed.
+const CATALOGUE = 347;
+// NOT re-measured alongside CATALOGUE above — the 2026-08-20 forced run was
+// the FULL/catalogue pass (ebay_force bypasses the staleness gate and always
+// runs the full pass), not the twice-daily CHASE-ONLY pass that reports this
+// number on its own log line. Left at its last real measurement (still under
+// the $20 floor); update it from that pass's own log line next time it fires
+// due, or force it specifically to check sooner.
 const CHASE_PRINTINGS = 179; // promo+signature+overnumbered at or above the floor
 const SEALED_PER_RUN = 104;  // US 53 + AU 33 + UK 11 + SG 7, before the loose-pack cut
 const SPENDABLE = 4400;      // 5000 daily limit − 600 reserve
 const SECONDS_PER_CARD = 0.75;
 // A card whose strict query returns nothing costs a SECOND Browse call for the
-// no-"Riftbound" retry. Applies to singles only (sealed and auctions each make
-// exactly one call), and is the single largest source of error in this model.
+// no-"Riftbound" retry. Applies to singles only (the sealed search makes exactly
+// one call), and is the single largest source of error in this model.
 const RETRY_RATE = 0.25;
 // Read from the workflow rather than copied, so raising one without the other
 // cannot silently reintroduce the mid-market kill.
@@ -459,17 +458,19 @@ const CYCLE_DAYS = Math.max(EBAY_ALWAYS_MARKETS.length, EBAY_ROTATING_MARKETS.le
  * Browse calls for one whole DAY, not one pass.
  *
  * Modelling the catalogue alone is what made the old numbers wrong: the chase
- * pass and the auction pass are handed EBAY_ALWAYS_MARKETS directly, and the
- * auction and sealed passes each run TWICE a day (07:00 and 19:00 UTC). A market
- * added to ALWAYS therefore multiplies three passes, not one.
+ * pass is handed EBAY_ALWAYS_MARKETS directly, and the sealed pass runs TWICE a
+ * day (07:00 and 19:00 UTC). A market added to ALWAYS therefore multiplies more
+ * than one pass.
+ *
+ * The chase-AUCTION pass was a third term here (always × 120 × 2 ≈ 960 calls/day)
+ * until 2026-08-20, when the auctions feature was removed outright.
  */
 function dailyCalls(day: number): number {
   const markets = ebayMarketsForDay(day).length;
   const always = EBAY_ALWAYS_MARKETS.length;
   const singles = markets * CATALOGUE + always * CHASE_PRINTINGS;
-  const auctions = always * AUCTION_CARDS_PER_MARKET * 2;
   const sealed = SEALED_PER_RUN * 2;
-  return Math.round(singles * (1 + RETRY_RATE)) + auctions + sealed;
+  return Math.round(singles * (1 + RETRY_RATE)) + sealed;
 }
 
 test("a whole day of eBay passes fits inside the Browse budget", () => {
@@ -480,13 +481,18 @@ test("a whole day of eBay passes fits inside the Browse budget", () => {
 });
 
 test("the budget model counts the passes that actually run twice a day", () => {
-  // The failure this pins is an accounting one, not a runtime one: auctions and
-  // sealed were both counted once a day when each in fact runs after BOTH the
-  // 07:00 and 19:00 imports. Undercounting them is how a budget that looks
-  // comfortable turns out to be overspent in production.
+  // The failure this pins is an accounting one, not a runtime one: the sealed
+  // search was counted once a day when it in fact runs after BOTH the 07:00 and
+  // 19:00 imports. Undercounting it is how a budget that looks comfortable turns
+  // out to be overspent in production.
   const src = readFileSync("src/lib/price-import.ts", "utf8");
-  const auctionCalls = (src.match(/await refreshEbayAuctions\(/g) ?? []).length;
-  assert.equal(auctionCalls, 2, "auctions must run in both the full and the chase pass");
+  // The auctions feature is gone: nothing may reintroduce a per-card pass under
+  // its name without also re-adding its term to dailyCalls above.
+  assert.equal(
+    (src.match(/refreshEbayAuctions/g) ?? []).length,
+    0,
+    "the auction pass was removed — dailyCalls no longer budgets for it",
+  );
   const sealed = readFileSync("src/lib/sealed-import.ts", "utf8");
   assert.ok(
     !/ebayDue|chaseDue|lastSeen/.test(sealed),
@@ -498,8 +504,8 @@ test("a day's markets fit inside the job timeout", () => {
   for (let day = 0; day < CYCLE_DAYS; day++) {
     const markets = ebayMarketsForDay(day).length;
     // The morning job is the long one: stores, then the full catalogue across
-    // every market, then auctions.
-    const cards = markets * CATALOGUE + EBAY_ALWAYS_MARKETS.length * AUCTION_CARDS_PER_MARKET;
+    // every market.
+    const cards = markets * CATALOGUE;
     const mins = STORE_IMPORT_MIN + (cards * SECONDS_PER_CARD) / 60;
     assert.ok(mins <= JOB_TIMEOUT_MIN, `day ${day}: ~${mins.toFixed(0)} min exceeds the ${JOB_TIMEOUT_MIN} min timeout`);
   }

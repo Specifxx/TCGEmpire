@@ -85,16 +85,17 @@ test("the rarity rule and the value floor are independent gates", () => {
 
 // ── Wiring: every pass that spends quota must apply the floor ────────────────
 
-test("all three eBay passes filter on the value floor", () => {
+test("both eBay passes filter on the value floor", () => {
   const src = read("src/lib/price-import.ts");
-  // The catalogue pass, the twice-daily chase pass and the auction pass each
-  // spend Browse calls. A pass that read the value map but forgot to pass it
-  // would keep working and quietly spend the quota this change exists to save.
+  // The catalogue pass and the twice-daily chase pass each spend Browse calls.
+  // A pass that read the value map but forgot to pass it would keep working and
+  // quietly spend the quota this change exists to save. (There were three until
+  // 2026-08-20, when the chase-auction pass was deleted with the feature.)
   const calls = src.match(/eBayWorthSearching\(c, tcgValues\.get\(c\.id\)\)/g) ?? [];
-  assert.equal(calls.length, 3, "expected the catalogue, chase and auction passes to each apply the floor");
+  assert.equal(calls.length, 2, "expected the catalogue and chase passes to each apply the floor");
   // Read once per pass, never per card — the map is a whole-table read.
   const reads = src.match(/await tcgplayerUsValues\(\)/g) ?? [];
-  assert.equal(reads.length, 3, "tcgplayerUsValues must be read once per pass, not inside a market loop");
+  assert.equal(reads.length, 2, "tcgplayerUsValues must be read once per pass, not inside a market loop");
 });
 
 test("the preview script passes the value explicitly, never as a bare .filter reference", () => {

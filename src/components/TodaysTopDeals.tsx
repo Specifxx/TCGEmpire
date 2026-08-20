@@ -4,39 +4,53 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { track } from "@vercel/analytics";
 import { COUNTRIES, type Country } from "@/lib/country";
-import type { Deal, TopDeals } from "@/lib/top-deals";
+import type { Deal, DealColumnKey, TopDeals } from "@/lib/top-deals";
 import { formatMoney } from "@/lib/format";
 import { OutboundLink } from "@/components/OutboundLink";
 import { useCountry } from "@/components/CountryProvider";
 import { useQuickView } from "@/components/QuickView";
+import { useMe } from "@/lib/use-me";
 import { cardImageAlt } from "@/lib/image-alt";
 import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
 
-// Homepage "Today's Top Deals". Up to three columns, one per signal (the grid
+// Homepage "Today's Top Deals". Up to four columns, one per signal (the grid
 // itself only declares as many columns as actually have data — see GRID_COLS
-// below). The PREMIUM column (arbitrage savings) reveals only its single best
-// deal — matching the /tools gate — then a clearly-locked teaser funnelling to
-// the full Premium tool, when there's really more behind it. The free columns
-// (price drops, cheapest sealed) show in full. Empty columns (a signal with no
-// data in this market) are dropped entirely.
+// below). Each PREMIUM column (arbitrage savings, rising cards) reveals only
+// its single best pick — matching its own /tools page's gate — then a clearly-
+// locked teaser funnelling to the full Premium tool, when there's really more
+// behind it, ONLY for a visitor who isn't already a Premium subscriber (see
+// useMe() below — this used to gate on `def.premium` alone, which locked the
+// column for every visitor including paying subscribers, since nothing here
+// ever read their actual entitlement). The free columns (price drops, cheapest
+// sealed) show in full. Empty columns (a signal with no data in this market)
+// are dropped entirely.
 //
-// A fourth column, "undervalued", used to sit here — removed per a homepage-
-// declutter pass (not just hidden: lib/top-deals.ts no longer fetches it for
-// this feed at all). Four competing signals read as "study this table," not
-// "here's a deal," and the Value Finder tool (/tools/value-finder) already
-// serves that exact signal on its own dedicated page with room to explain it.
+// "undervalued" used to sit here as a fourth column — removed per an earlier
+// homepage-declutter pass (not just hidden: lib/top-deals.ts no longer
+// fetches it for this feed at all) on the reasoning that four competing
+// signals read as "study this table," not "here's a deal." Rising Cards is
+// today's actual fourth column, added back deliberately — see lib/top-deals.ts's
+// header comment for why that call was reversed for this specific signal.
+// Value Finder (/tools/value-finder) still serves the undervalued signal on
+// its own dedicated page with room to explain it, unaffected by either change.
 type ColumnDef = {
-  key: keyof Omit<TopDeals, "hasAny">;
+  key: DealColumnKey;
   label: string;
   premium: boolean;
   allHref: string;
   allLabel: string;
+  // For a PREMIUM column, the sibling TopDeals field holding the REAL count
+  // behind the gate — never derived from items.length, which is capped at
+  // perType (4) for this feed regardless of how many deals actually exist.
+  // Undefined for free columns (nothing gates them).
+  totalKey?: "savingsVsMarketTotal" | "risingCardsTotal";
 };
 
 const COLUMNS: ColumnDef[] = [
-  { key: "savingsVsMarket", label: "Biggest savings", premium: true, allHref: "/tools/deal-finder", allLabel: "All opportunities" },
+  { key: "savingsVsMarket", label: "Biggest savings", premium: true, allHref: "/tools/deal-finder", allLabel: "All opportunities", totalKey: "savingsVsMarketTotal" },
   { key: "priceDrops", label: "Price drops", premium: false, allHref: "/movers", allLabel: "All movers" },
   { key: "cheapestSealed", label: "Cheapest sealed", premium: false, allHref: "/sealed", allLabel: "All sealed" },
+  { key: "risingCards", label: "Rising cards", premium: true, allHref: "/tools/rising", allLabel: "All rising cards", totalKey: "risingCardsTotal" },
 ];
 
 // Budget tiers — "rounded to natural values per market" (not FX-converted at
@@ -94,7 +108,14 @@ function mixByTier(items: Deal[], midThreshold: number): Deal[] {
 // own page or its QuickView popup, which both still show it in full.
 function PctBadge({ deal }: { deal: Deal }) {
   if (deal.pctLabel == null) return null;
-  const text = deal.dealType === "savings-vs-market" ? `Save ${deal.pctLabel}%` : `−${deal.pctLabel}%`;
+  // rising-cards' pctLabel is a 0-100 screener SCORE, not a price change — the
+  // only one of the four deal types where that distinction matters here.
+  const text =
+    deal.dealType === "savings-vs-market"
+      ? `Save ${deal.pctLabel}%`
+      : deal.dealType === "rising-cards"
+      ? `Score ${deal.pctLabel}`
+      : `−${deal.pctLabel}%`;
   return <span className="chip num shrink-0 bg-brand-500/15 text-brand-300">{text}</span>;
 }
 
@@ -200,6 +221,7 @@ const GRID_COLS: Record<number, string> = {
   1: "",
   2: "sm:grid-cols-2",
   3: "sm:grid-cols-3",
+  4: "sm:grid-cols-2 lg:grid-cols-4",
 };
 
 // Reactive to the country switcher: the page serializes all four markets' deals and
@@ -211,6 +233,15 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
   const info = COUNTRIES[country];
   const currency = info.currency;
   const place = info.place;
+  // Real entitlement, resolved client-side post-hydration — same reason
+  // PriceWatchButton/CountryProvider do — so this section (part of the ISR-
+  // cached homepage HTML, shared across every visitor) can still show a
+  // Premium subscriber their own unlocked columns without busting that cache
+  // per-user. `premium` defaults false until loaded, so a genuine subscriber
+  // can see a brief locked flash before it resolves — the safe direction to
+  // default in, since the alternative is a free visitor briefly seeing
+  // unlocked Premium content.
+  const { premium } = useMe();
   const deals = dealsByCountry[country] ?? dealsByCountry.AU;
   const thresholds = TIER_THRESHOLDS[country] ?? TIER_THRESHOLDS.AU;
   const [tier, setTier] = useState<Tier>("all");
@@ -276,9 +307,13 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
       <div className={`grid items-stretch gap-4 ${GRID_COLS[columns.length] ?? GRID_COLS[3]}`}>
         {columns.map(({ def, items }) => {
           // Premium columns normally reveal only the single best deal; the rest is
-          // locked — "locked" means how many REAL deals exist behind it, not a fixed
-          // filler count (a day with only 1 real deal shows no locked teaser at all,
-          // since there's nothing behind it to unlock).
+          // locked — "locked" means how many REAL deals exist behind it (totalKey,
+          // NOT items.length — items is capped at perType=4 for this feed
+          // regardless of how many real deals/picks exist, so a fixed filler count
+          // would silently understate almost every day). A day with only 1 real
+          // deal shows no locked teaser at all, since there's nothing behind it to
+          // unlock — and `premium` (see useMe() above) means an actual subscriber
+          // never sees a lock on their own column at all.
           //
           // WHILE ADSENSE_REVIEW_MODE IS ON, every column is shown in full and the
           // "Unlock N more with Premium" teaser is not rendered at all. A reviewer
@@ -288,9 +323,10 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
           // link stays as an ordinary CTA below the column; it just no longer stands
           // in place of content. Restored by setting
           // NEXT_PUBLIC_ADSENSE_REVIEW_MODE=false. See docs/adsense-remediation.md.
-          const gated = def.premium && !ADSENSE_REVIEW_MODE;
+          const gated = def.premium && !premium && !ADSENSE_REVIEW_MODE;
           const shown = gated ? items.slice(0, 1) : items;
-          const locked = gated ? Math.max(0, items.length - 1) : 0;
+          const total = def.totalKey ? deals[def.totalKey] : items.length;
+          const locked = gated ? Math.max(0, total - shown.length) : 0;
           return (
             <div key={def.key} className="card-surface flex h-full flex-col p-3 transition-colors duration-200 hover:border-brand-500/60 hover:bg-ink-800">
               <div className="mb-1 flex items-center justify-between gap-2 px-1">

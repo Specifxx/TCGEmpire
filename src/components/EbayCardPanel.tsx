@@ -4,17 +4,15 @@ import { COUNTRY_LIST, priceField } from "@/lib/country";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { EbayCardPanelLive } from "./EbayCardPanelLive";
 import type { GradedRow } from "./EbayGradedLive";
-import type { AuctionRow } from "./EbayAuctionsLive";
 import type { AdListing } from "./EbayAdCarouselLive";
 
 /**
- * Server half of the card page's tabbed eBay panel: Listings / Graded /
- * Auctions.
+ * Server half of the card page's tabbed eBay panel: Listings / Graded.
  *
  * Loads EVERY market's rows and lets the client half select the visitor's, so
- * the card page stays statically cacheable — the same split EbayPicks,
- * EbayAdCarousel and EbayAuctions already use. Reading the country here would
- * force the route dynamic and undo the ISR work the page depends on.
+ * the card page stays statically cacheable — the same split EbayPicks and
+ * EbayAdCarousel already use. Reading the country here would force the route
+ * dynamic and undo the ISR work the page depends on.
  */
 
 /** Rows not refreshed within this window are not served. */
@@ -46,8 +44,7 @@ async function loadGraded(cardId: string): Promise<GradedRow[]> {
       cardId,
       // A fixed-price listing has no end time — it just sells — so freshness is
       // by age. A sold slab still on screen sends a buyer to a dead page with an
-      // affiliate tag on it, which is the same failure the auction panel guards
-      // against with endsAt. The importer also sweeps rows that stop returning.
+      // affiliate tag on it. The importer also sweeps rows that stop returning.
       updatedAt: { gte: new Date(Date.now() - GRADED_MAX_AGE_HOURS * 3600 * 1000) },
     },
     orderBy: [{ grade: "desc" }, { priceCents: "asc" }],
@@ -59,25 +56,6 @@ async function loadGraded(cardId: string): Promise<GradedRow[]> {
   });
   const prices = await marketPrices([cardId]);
   return rows.map((r) => ({ ...r, marketCents: prices.get(`${r.country}|${r.cardId}`) ?? null }));
-}
-
-async function loadAuctions(cardId: string): Promise<AuctionRow[]> {
-  const rows = await prisma.ebayAuction.findMany({
-    where: { cardId, endsAt: { gt: new Date() } },
-    orderBy: { endsAt: "asc" },
-    take: 12,
-    select: {
-      itemId: true, cardId: true, country: true, currentBidCents: true, bidCount: true,
-      buyItNowCents: true, currency: true, endsAt: true, url: true, title: true,
-      imageUrl: true, isGraded: true,
-    },
-  });
-  const prices = await marketPrices([cardId]);
-  return rows.map((r) => ({
-    ...r,
-    endsAt: r.endsAt.toISOString(),
-    marketCents: prices.get(`${r.country}|${r.cardId}`) ?? null,
-  }));
 }
 
 /** Ad-carousel rows — the Listings tab. Same query EbayAdCarousel used. */
@@ -103,7 +81,6 @@ export async function EbayCardPanel({
   className?: string;
 }) {
   let graded: GradedRow[] = [];
-  let auctions: AuctionRow[] = [];
   let listings: AdListing[] = [];
   try {
     // ⚠ THIS TTL MUST NOT BE LOWER THAN THE PAGE'S OWN `revalidate` (86400, see
@@ -126,18 +103,16 @@ export async function EbayCardPanel({
     // (lib/revalidate-content.ts), which is the site's actual freshness
     // mechanism. Matching 86400 keeps this panel exactly as fresh as every other
     // price on the page — refreshed on each import, capped at 24h if a purge is
-    // missed. The cost is that auction bids/end-times are no longer 5 minutes
-    // fresh; if that is wanted back, fetch them CLIENT-side so the TTL can never
-    // propagate to the segment again.
-    [graded, auctions, listings] = await unstable_cache(
-      () => Promise.all([loadGraded(cardId), loadAuctions(cardId), loadListings(cardId)]),
+    // missed. If anything here ever needs a shorter window than the page, fetch
+    // it CLIENT-side so the TTL can never propagate to the segment again.
+    [graded, listings] = await unstable_cache(
+      () => Promise.all([loadGraded(cardId), loadListings(cardId)]),
       ["ebay-card-panel", cardId],
       { revalidate: 86400, tags: [CONTENT_TAG] },
     )();
   } catch {
     // A database blip must never take down a card page for a panel.
     graded = [];
-    auctions = [];
     listings = [];
   }
 
@@ -147,7 +122,6 @@ export async function EbayCardPanel({
       query={query}
       listings={listings}
       graded={graded}
-      auctions={auctions}
       className={className}
     />
   );

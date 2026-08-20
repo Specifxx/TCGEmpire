@@ -7,7 +7,6 @@ import { prisma } from "@/lib/db";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { CardTile } from "@/components/CardTile";
 import { EbayPicks } from "@/components/EbayPicks";
-import { EbayAuctions } from "@/components/EbayAuctions";
 import { CountUp } from "@/components/CountUp";
 import { Reveal } from "@/components/Reveal";
 import { Filters } from "@/components/Filters";
@@ -464,18 +463,6 @@ export default async function SetPage({
         setCode={set.code}
         heading={`${set.name} singles on eBay right now`}
         fallbackQuery={`Riftbound ${set.name}`}
-      />
-
-      {/* Chase-card auctions closing soonest, across the whole set. This is the
-          one surface where the deadline is the product: a set hub is browsed,
-          not searched, so "three of this set's chase cards are mid-auction and
-          the first closes in four hours" is a reason to be here now rather than
-          a link to somewhere else. Renders nothing when none are live. */}
-      <EbayAuctions
-        setCode={set.code}
-        take={6}
-        heading={`${set.name} chase cards — auctions ending soon`}
-        showCardName
       />
 
       {/* Internal links to the other sets (crawl + UX) */}

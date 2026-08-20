@@ -405,7 +405,7 @@ export function buildOpenApiSpec() {
           parameters: [CARD_ID_PARAM],
           responses: {
             "200": {
-              description: "Card detail, retailer prices (all markets) and eBay carousel/graded/auction data.",
+              description: "Card detail, retailer prices (all markets) and eBay carousel/graded data.",
               content: { "application/json": { schema: { type: "object" } } },
             },
             "404": NOT_FOUND_RESPONSE,
