@@ -2678,6 +2678,11 @@ jobs:
           HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
+          # The orphan check needs the LIVE operational database to compare card
+          # ids against; without these it fell through to the retired RM5 and
+          # answered the one question this probe exists for against the wrong DB.
+          RM7: ${{ secrets.RM7 || vars.RM7 }}
+          RM8: ${{ secrets.RM8 || vars.RM8 }}
           DATABASE_URL_2: ${{ secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 }}
           DATABASE_URL: ${{ secrets.DATABASE_URL || vars.DATABASE_URL }}
           RM5: ${{ secrets.RM5 || vars.RM5 }}
@@ -2698,6 +2703,11 @@ jobs:
           HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
+          # The orphan check needs the LIVE operational database to compare card
+          # ids against; without these it fell through to the retired RM5 and
+          # answered the one question this probe exists for against the wrong DB.
+          RM7: ${{ secrets.RM7 || vars.RM7 }}
+          RM8: ${{ secrets.RM8 || vars.RM8 }}
           DATABASE_URL_2: ${{ secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 }}
           DATABASE_URL: ${{ secrets.DATABASE_URL || vars.DATABASE_URL }}
           RM5: ${{ secrets.RM5 || vars.RM5 }}
