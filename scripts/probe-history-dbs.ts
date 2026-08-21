@@ -32,13 +32,13 @@ import { PrismaClient } from "@prisma/client";
 // operator may want to migrate INTO. Kept as a list of names so the report can
 // say which variable it is talking about without ever printing a credential.
 const HISTORY_VARS = [
+  "HISTORY_DATABASE_URL_4",
   "HISTORY_DATABASE_URL_3",
   "HISTORY_DATABASE_URL_2",
   "HISTORY_DATABASE_URL",
   "RH7",
   "RH6",
   "RH5",
-  "HISTORY_DATABASE_URL_4",
 ] as const;
 
 // The operational chain, in db.ts order — we need the LIVE Card ids to test

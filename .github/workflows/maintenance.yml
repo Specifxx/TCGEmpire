@@ -155,14 +155,14 @@ jobs:
           # The click/price-history tables can live in a SECOND Neon project
           # (src/lib/db-history.ts). Ordinary pushes never reach it, so new columns
           # (e.g. ClickEvent.path) 500 the admin clicks page until pushed here too.
-          # HISTORY_DATABASE_URL_3 is the CURRENT project (2026-08-19, after
-          # HISTORY_DATABASE_URL_2 neared its 5 GB Neon network-transfer allowance —
+          # HISTORY_DATABASE_URL_4 is the CURRENT project (2026-08-21, after
+          # HISTORY_DATABASE_URL_3 went over its 5 GB Neon network-transfer allowance —
           # see db-history.ts, which explains why this chain is CURRENT-first
-          # rather than newest-first). HISTORY_DATABASE_URL_2 is the rollback;
+          # rather than newest-first). HISTORY_DATABASE_URL_3 is the rollback;
           # everything below it is dead. This is a schema-push TARGET chain, so it
           # mirrors the app's precedence exactly — pushing a new column into any
           # project other than the one the app reads is how a green deploy 500s.
-          HISTORY_DB: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 || secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 || secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL || secrets.RH7 || vars.RH7 || secrets.RH6 || vars.RH6 || secrets.RH5 || vars.RH5 || secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
+          HISTORY_DB: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 || secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 || secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 || secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL || secrets.RH7 || vars.RH7 || secrets.RH6 || vars.RH6 || secrets.RH5 || vars.RH5 }}
         run: |
           # --accept-data-loss: some schema changes are intentionally destructive
           # (e.g. dropping a removed feature's tables/columns) — prisma db push
@@ -208,13 +208,13 @@ jobs:
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
         run: |
-          TARGET="${HISTORY_DATABASE_URL_3:-${HISTORY_DATABASE_URL_2:-${HISTORY_DATABASE_URL:-${RH7:-${RH6:-${RH5:-$HISTORY_DATABASE_URL_4}}}}}}"
+          TARGET="${HISTORY_DATABASE_URL_4:-${HISTORY_DATABASE_URL_3:-${HISTORY_DATABASE_URL_2:-${HISTORY_DATABASE_URL:-${RH7:-${RH6:-$RH5}}}}}}"
           if [ -z "$TARGET" ]; then
-            echo "::error::No target history DB visible to Actions (HISTORY_DATABASE_URL_3 / _2 / HISTORY_DATABASE_URL / RH7 / RH6 / RH5 / HISTORY_DATABASE_URL_4)."
+            echo "::error::No target history DB visible to Actions (HISTORY_DATABASE_URL_4 / _3 / _2 / HISTORY_DATABASE_URL / RH7 / RH6 / RH5)."
             exit 1
           fi
-          if [ -z "${HISTORY_DATABASE_URL_3:-}" ]; then
-            echo "::warning::HISTORY_DATABASE_URL_3 is not visible to Actions — this is copying into a project that is NOT the current one. Add it under Settings → Secrets and variables → Actions."
+          if [ -z "${HISTORY_DATABASE_URL_4:-}" ]; then
+            echo "::warning::HISTORY_DATABASE_URL_4 is not visible to Actions — this is copying into a project that is NOT the current one. Add it under Settings → Secrets and variables → Actions."
           fi
           echo "Pushing schema to the target history database…"
           # Non-fatal: a forked history DB can carry EXTRA columns this ref's schema
@@ -1251,13 +1251,13 @@ jobs:
           probe "RM3"                  "${P_RM3:-}" || true
           echo ""
           echo "===== HISTORY ROTATION (may carry a full early copy) ====="
-          probe "HISTORY_DATABASE_URL_3 (current)" "${P_HISTORY_DATABASE_URL_3:-}" || true
-          probe "HISTORY_DATABASE_URL_2 (rollback)" "${P_HISTORY_DATABASE_URL_2:-}" || true
+          probe "HISTORY_DATABASE_URL_4 (current)" "${P_HISTORY_DATABASE_URL_4:-}" || true
+          probe "HISTORY_DATABASE_URL_3 (rollback)" "${P_HISTORY_DATABASE_URL_3:-}" || true
+          probe "HISTORY_DATABASE_URL_2" "${P_HISTORY_DATABASE_URL_2:-}" || true
           probe "HISTORY_DATABASE_URL"  "${P_HISTORY_DATABASE_URL:-}" || true
           probe "RH7"                  "${P_RH7:-}" || true
           probe "RH6"                  "${P_RH6:-}" || true
           probe "RH5"                  "${P_RH5:-}" || true
-          probe "HISTORY_DATABASE_URL_4" "${P_HISTORY_DATABASE_URL_4:-}" || true
           echo ""
           echo "Read-only survey complete — nothing was written to any database."
           echo "Pick the reachable source with the highest User/MarketplaceListing"

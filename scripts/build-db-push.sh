@@ -36,12 +36,12 @@ set -uo pipefail
 # ~2 GB/day burn every prior project has shown. See the long note on
 # OPERATIONAL_URL in src/lib/db.ts.
 CURRENT_OP="RM7"
-# Rotated onto another recycled project on 2026-08-16: HISTORY_DATABASE_URL
-# approached its 5 GB monthly network-transfer allowance, and
-# HISTORY_DATABASE_URL_2 — retired long enough ago for its allowance to have
+# Rotated onto another recycled project on 2026-08-21: HISTORY_DATABASE_URL_3
+# went over its 5 GB monthly network-transfer allowance, and
+# HISTORY_DATABASE_URL_4 — retired long enough ago for its allowance to have
 # fully reset — took over. The chains are CURRENT-first, not newest-first;
 # see the long note on HISTORY_URL in src/lib/db-history.ts.
-CURRENT_HIST="HISTORY_DATABASE_URL_3"
+CURRENT_HIST="HISTORY_DATABASE_URL_4"
 
 # Only push schema for a real Vercel production/preview build with a database
 # configured. A local `next build` (no database vars) must not try to reach anything.
@@ -106,20 +106,21 @@ fi
 # History database (PriceHistory/ClickEvent) — same optional, best-effort push.
 #
 # BUG FIXED 2026-07-31 (this chain used to read the two OLDEST, long-dead
-# projects, reversed): fixed again 2026-08-19 for the _2 -> _3 rotation. This
-# chain MIRRORS src/lib/db-history.ts exactly, CURRENT-first. Keep the two
-# in sync — if you rotate there, rotate here into the same position.
+# projects, reversed): fixed again 2026-08-19 for the _2 -> _3 rotation, and
+# again 2026-08-21 for the _3 -> _4 rotation. This chain MIRRORS
+# src/lib/db-history.ts exactly, CURRENT-first. Keep the two in sync — if you
+# rotate there, rotate here into the same position.
 # tests/db-chain.test.ts compares the two lists and fails if they drift.
-if [ -n "${HISTORY_DATABASE_URL_3:-}" ]; then
+if [ -n "${HISTORY_DATABASE_URL_4:-}" ]; then
+  HIST="$HISTORY_DATABASE_URL_4"; HIST_SOURCE="HISTORY_DATABASE_URL_4"
+elif [ -n "${HISTORY_DATABASE_URL_3:-}" ]; then
+  # Rollback: served from 2026-08-19 until the 2026-08-21 cutover, reachable.
   HIST="$HISTORY_DATABASE_URL_3"; HIST_SOURCE="HISTORY_DATABASE_URL_3"
-elif [ -n "${HISTORY_DATABASE_URL:-}" ]; then
-  # Rollback: a byte-identical, reachable copy of _3 as of the 2026-08-20 survey.
-  HIST="$HISTORY_DATABASE_URL"; HIST_SOURCE="HISTORY_DATABASE_URL"
 else
   # No separate history project — history shares the operational database, which
-  # the push above already covered. RH5/RH7/_4 were dropped as ORPHANED (0% of
-  # their card ids resolve against the live catalogue) and _2 as out of
-  # allowance; RH6 is a migration SOURCE, not a runtime target.
+  # the push above already covered. RH5/RH7 were dropped as ORPHANED (0% of
+  # their card ids resolve against the live catalogue) and _2/HISTORY_DATABASE_URL
+  # (bare) as superseded; RH6 is a migration SOURCE, not a runtime target.
   HIST=""; HIST_SOURCE=""
 fi
 

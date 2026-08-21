@@ -121,7 +121,7 @@ export async function getCardPriceState(card: { id: string; setCode: string }): 
  */
 export async function getEmptyCardIds(): Promise<Set<string>> {
   try {
-    const [allCards, exemptCards, withListings, historyRows] = await Promise.all([
+    const [allCards, exemptCards, withListings, richHistoryCardIds] = await Promise.all([
       prisma.card.findMany({ select: { id: true } }),
       // The no-retail-channel test needs description+imageUrl, which are far too
       // fat to pull for the whole catalogue (see the egress rules in lib/db.ts).
@@ -133,20 +133,30 @@ export async function getEmptyCardIds(): Promise<Set<string>> {
       prisma.retailerPrice
         .groupBy({ by: ["cardId"], where: { inStock: true }, _count: { _all: true } })
         .then((rows) => new Set(rows.map((r) => r.cardId))),
-      dbHistory.priceHistory
-        .groupBy({ by: ["cardId", "day"], _count: { _all: true } })
-        .then((rows) => rows)
-        .catch(() => [] as { cardId: string }[]),
+      // Was `groupBy({ by: ["cardId", "day"] })` with no threshold — one row PER
+      // (card, day) pair across the WHOLE table, every call. PriceHistory has up
+      // to one row per (card, day, market), so that grouped result still grows
+      // with total card-days recorded FOREVER (this file's caller comment named
+      // it as the prime suspect after three straight Neon transfer-allowance
+      // rotations in two weeks — the 2026-08-21 HISTORY_DATABASE_URL_4 rotation
+      // is the fourth). All this function needs is a boolean per card ("does it
+      // have >= MIN_HISTORY_DAYS distinct days"), never the per-day breakdown,
+      // so HAVING does the counting in Postgres and only the cards that CLEAR
+      // the bar cross the wire — bounded by card count, not by history depth.
+      dbHistory.$queryRaw<{ cardId: string }[]>`
+        SELECT "cardId"
+        FROM "PriceHistory"
+        GROUP BY "cardId"
+        HAVING COUNT(DISTINCT day) >= ${MIN_HISTORY_DAYS}
+      `.catch(() => [] as { cardId: string }[]),
     ]);
 
-    const daysByCard = new Map<string, number>();
-    for (const row of historyRows) daysByCard.set(row.cardId, (daysByCard.get(row.cardId) ?? 0) + 1);
-
+    const richHistory = new Set(richHistoryCardIds.map((r) => r.cardId));
     const exempt = new Set(exemptCards.filter(cardIsSubstantial).map((c) => c.id));
 
     const empty = new Set<string>();
     for (const { id } of allCards) {
-      if (withListings.has(id) || (daysByCard.get(id) ?? 0) >= MIN_HISTORY_DAYS) continue;
+      if (withListings.has(id) || richHistory.has(id)) continue;
       if (exempt.has(id)) continue;
       empty.add(id);
     }

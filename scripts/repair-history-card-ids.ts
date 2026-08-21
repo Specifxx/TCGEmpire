@@ -44,15 +44,21 @@ const APPLY = process.argv.includes("--apply");
 const DB_ARG = process.argv.find((a) => a.startsWith("--db="))?.slice(5);
 
 const HISTORY_VARS = [
+  "HISTORY_DATABASE_URL_4",
   "HISTORY_DATABASE_URL_3",
   "HISTORY_DATABASE_URL_2",
   "HISTORY_DATABASE_URL",
   "RH7",
   "RH6",
   "RH5",
-  "HISTORY_DATABASE_URL_4",
 ];
-const OPERATIONAL_VARS = ["RM6", "DATABASE_URL_2", "DATABASE_URL", "RM5", "RM4", "RM3"];
+// RM7/RM8 prepended 2026-08-21 — this list had gone stale at RM6 (missing the
+// 2026-08-20 RM7 cutover entirely), which is exactly the "operational chain
+// drifted from db-chains.ts" failure mode db-chains.ts's own header warns
+// about. Kept as a superset (not the bare db-chains.ts OPERATIONAL_VARS) since
+// this script's `pick()` is a best-effort "find ANY live operational database"
+// for the externalId join, not a strict current-vs-dead diagnostic.
+const OPERATIONAL_VARS = ["RM7", "RM8", "RM6", "DATABASE_URL_2", "DATABASE_URL", "RM5", "RM4", "RM3"];
 
 function pick(vars: string[], forced?: string): { name: string; url: string } | null {
   const list = forced ? [forced] : vars;
