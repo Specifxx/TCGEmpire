@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMe } from "@/lib/use-me";
+import { trackEvent } from "@/lib/analytics";
 import { AuthForm } from "./AuthForm";
 
 // Shown once per BROWSER SESSION (sessionStorage, not localStorage) — dismissing
@@ -81,12 +82,17 @@ export function SignupPromoPopup({
       // losing it forever.
       if (document.body.dataset.rcDialog === "1") return;
       setPhase("shown");
+      // Impression event — with dismiss (below) this makes the popup's
+      // conversion rate knowable for the first time: shown vs dismissed vs
+      // sign_in_click(source=popup) vs sign_up.
+      trackEvent("signup_promo_shown", { path: pathname ?? "/" });
     }, SHOW_DELAY_MS);
     return () => clearTimeout(t);
   }, [loaded, user, pathname]);
 
   const dismiss = useCallback(() => {
     setPhase("hidden");
+    trackEvent("signup_promo_dismissed");
     try {
       sessionStorage.setItem(SEEN_KEY, "1");
     } catch {
@@ -245,7 +251,7 @@ export function SignupPromoPopup({
           </div>
 
           <div className="px-5 pb-5 pt-0">
-            <AuthForm providers={providers} bare compact signupPremiumDays={signupPremiumDays} />
+            <AuthForm providers={providers} bare compact signupPremiumDays={signupPremiumDays} source="popup" />
             {/* A SECOND, OBVIOUS WAY OUT, in the thumb zone. The ✕ is a small
                 target in a top corner — the hardest place to reach one-handed on
                 a large phone — so the primary escape is now a full-width control

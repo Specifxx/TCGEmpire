@@ -6,6 +6,7 @@ import { applyReferral } from "@/lib/referral";
 import { providerConfig, isProviderEnabled, isOAuthProvider, redirectUri, type OAuthProvider } from "@/lib/oauth";
 import { claimAlertsForUser } from "@/lib/alerts";
 import { grantPremiumDays, SIGNUP_PREMIUM_DAYS } from "@/lib/premium";
+import { SIGNUP_SOURCE_COOKIE, parseSignupSource } from "@/lib/signup-source-shared";
 
 function fail(req: Request, code: string) {
   return NextResponse.redirect(new URL(`/login?error=${code}`, req.url));
@@ -113,9 +114,26 @@ export async function GET(req: Request, { params }: { params: { provider: string
     // what Premium adds on top, and lapses on its own via premiumUntil.
     await applyReferral(user.id).catch(() => {});
     if (SIGNUP_PREMIUM_DAYS > 0) await grantPremiumDays(user.id, SIGNUP_PREMIUM_DAYS).catch(() => {});
+    // Which CTA produced this account. The clicked sign-in surface set a
+    // short-lived rc_signup_src cookie (see lib/signup-source.ts); the value is
+    // whitelisted here before it touches the DB, and the write is best-effort —
+    // attribution must never break a sign-in. Cleared either way so a stale
+    // cookie can't claim credit for a later, unrelated session.
+    const signupSource = parseSignupSource(cookies().get(SIGNUP_SOURCE_COOKIE)?.value);
+    if (signupSource) {
+      await prisma.user.update({ where: { id: user.id }, data: { signupSource } }).catch(() => {});
+    }
   }
-  // Land new/returning sign-ins on their profile by default.
-  return NextResponse.redirect(new URL("/profile", req.url));
+  cookies().set(SIGNUP_SOURCE_COOKIE, "", { path: "/", maxAge: 0 });
+  // Land new/returning sign-ins on their profile by default. A NEW account
+  // carries ?welcome=<provider> so the client (SignupWelcome.tsx) can fire the
+  // sign_up analytics event — the server knows isNew, the analytics run in the
+  // browser, and this param is the bridge across the OAuth redirect. The
+  // component strips it from the URL immediately, so it never survives into a
+  // refresh, share, or bookmark (no double-fire).
+  const dest = new URL("/profile", req.url);
+  if (isNew) dest.searchParams.set("welcome", provider);
+  return NextResponse.redirect(dest);
 }
 
 // Returns null when the sign-in must be refused. `emailVerified` says whether the
