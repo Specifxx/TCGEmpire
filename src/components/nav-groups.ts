@@ -1,8 +1,9 @@
 import { DISCORD_URL } from "@/lib/site";
 
 // The grouped site navigation, shared by the ⌘K command launcher
-// (CommandLauncher.tsx), the footer site-map (FOOTER_GROUPS below) and
-// /llms.txt — edit a link here once and all three follow.
+// (CommandLauncher.tsx), the persistent desktop rail (SideNav.tsx), the footer
+// site-map (FOOTER_GROUPS below) and /llms.txt — edit a link here once and all
+// four follow.
 export interface NavGroupLink {
   href: string;
   label: string;
@@ -12,7 +13,7 @@ export interface NavGroupLink {
    * through next/link's client-side navigation or router.push — both would
    * either mis-handle an absolute non-app URL or navigate the current tab
    * away from RiftCompare). Every renderer of NavGroupLink (FooterNav,
-   * CinematicNavMenu, CommandLauncher) must branch on this.
+   * CinematicNavMenu, CommandLauncher, SideNav) must branch on this.
    */
   external?: boolean;
   /**
