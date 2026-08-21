@@ -7,6 +7,7 @@ import { providerConfig, isProviderEnabled, isOAuthProvider, redirectUri, type O
 import { claimAlertsForUser } from "@/lib/alerts";
 import { grantPremiumDays, SIGNUP_PREMIUM_DAYS } from "@/lib/premium";
 import { SIGNUP_SOURCE_COOKIE, parseSignupSource } from "@/lib/signup-source-shared";
+import { sanitizeNextPath } from "@/lib/next-param";
 
 function fail(req: Request, code: string) {
   return NextResponse.redirect(new URL(`/login?error=${code}`, req.url));
@@ -125,13 +126,20 @@ export async function GET(req: Request, { params }: { params: { provider: string
     }
   }
   cookies().set(SIGNUP_SOURCE_COOKIE, "", { path: "/", maxAge: 0 });
-  // Land new/returning sign-ins on their profile by default. A NEW account
-  // carries ?welcome=<provider> so the client (SignupWelcome.tsx) can fire the
-  // sign_up analytics event — the server knows isNew, the analytics run in the
-  // browser, and this param is the bridge across the OAuth redirect. The
-  // component strips it from the URL immediately, so it never survives into a
-  // refresh, share, or bookmark (no double-fire).
-  const dest = new URL("/profile", req.url);
+  // Land where the visitor was headed, not always /profile. The start route
+  // stored their sanitized ?next= in a short-lived cookie (mirroring the CSRF
+  // state cookie); it's re-sanitized here — defense in depth, since a cookie is
+  // client-writable — and cleared either way. Fixes the old flow where someone
+  // who signed in to see /watching was dumped on an empty profile instead.
+  //
+  // A NEW account additionally carries ?welcome=<provider> so the client
+  // (SignupWelcome.tsx) can fire the sign_up analytics event — the server knows
+  // isNew, the analytics run in the browser, and this param is the bridge
+  // across the OAuth redirect. The component strips it from the URL
+  // immediately, so it never survives into a refresh, share, or bookmark.
+  const next = sanitizeNextPath(cookies().get(`oauth_next_${provider}`)?.value);
+  cookies().set(`oauth_next_${provider}`, "", { path: "/", maxAge: 0 });
+  const dest = new URL(next ?? "/profile", req.url);
   if (isNew) dest.searchParams.set("welcome", provider);
   return NextResponse.redirect(dest);
 }

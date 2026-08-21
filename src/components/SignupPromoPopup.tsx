@@ -31,6 +31,16 @@ import { AuthForm } from "./AuthForm";
 const SEEN_KEY = "rc_signup_promo_seen";
 const SHOW_DELAY_MS = 5_000; // fire early so more visitors actually see it before leaving
 const SKIP_PATHS = ["/login", "/verify", "/marketplace"];
+// Session pageview counter (see the gate below). Incremented once per route.
+const PV_KEY = "rc_pv_count";
+// Only arm the popup once the session has seen this many pages. A first-page
+// lander — including every homepage lander — hasn't extracted any value yet,
+// and a full-screen modal over content they haven't used is the definition of
+// interruptive; a visitor on their second page has demonstrated engagement.
+// (The 5s delay alone couldn't express this: it fired on page ONE for
+// everyone.) signup_promo_shown/_dismissed measure whether the dismiss-rate
+// improves as total shows drop.
+const MIN_PAGEVIEWS = 2;
 
 // What a free account PERMANENTLY unlocks — the thing that's still true after
 // any Premium preview lapses. The Bulk Pricer and Best Basket moved to Premium
@@ -62,16 +72,37 @@ export function SignupPromoPopup({
   // Phase 5 section); that exclusion was a product call, not a technical
   // constraint, and has since been reversed: the homepage is now explicitly
   // in scope.
+  // Count route views once per pathname, separately from the arming effect
+  // below — that one re-runs when auth state loads, and counting there would
+  // double-increment the same page.
+  const lastCountedPath = useRef<string | null>(null);
+  useEffect(() => {
+    if (!pathname || lastCountedPath.current === pathname) return;
+    lastCountedPath.current = pathname;
+    try {
+      const n = Number(sessionStorage.getItem(PV_KEY) ?? "0") || 0;
+      sessionStorage.setItem(PV_KEY, String(n + 1));
+    } catch {
+      /* private mode — the gate below fails open on its own read */
+    }
+  }, [pathname]);
+
   useEffect(() => {
     if (!loaded || user) return;
     if (SKIP_PATHS.some((p) => pathname?.startsWith(p))) return;
     let seen = false;
+    let pageviews = MIN_PAGEVIEWS; // private-mode fallback: fail open, old behavior
     try {
       seen = sessionStorage.getItem(SEEN_KEY) === "1";
+      pageviews = Number(sessionStorage.getItem(PV_KEY) ?? "0") || 0;
     } catch {
       /* private mode — worst case it can show again next page load */
     }
     if (seen) return;
+    // Engagement gate: never a modal over the FIRST page of a session (see
+    // MIN_PAGEVIEWS above). Deliberately does NOT mark SEEN_KEY when it skips —
+    // the visitor still gets the promo once they've browsed further.
+    if (pageviews < MIN_PAGEVIEWS) return;
     const t = setTimeout(() => {
       // Never stack on top of another dialog. FeedbackWidget sets this flag
       // while its panel is open; opening a full-screen signup wall over a
@@ -251,7 +282,14 @@ export function SignupPromoPopup({
           </div>
 
           <div className="px-5 pb-5 pt-0">
-            <AuthForm providers={providers} bare compact signupPremiumDays={signupPremiumDays} source="popup" />
+            <AuthForm
+              providers={providers}
+              bare
+              compact
+              signupPremiumDays={signupPremiumDays}
+              source="popup"
+              next={pathname ?? undefined}
+            />
             {/* A SECOND, OBVIOUS WAY OUT, in the thumb zone. The ✕ is a small
                 target in a top corner — the hardest place to reach one-handed on
                 a large phone — so the primary escape is now a full-width control

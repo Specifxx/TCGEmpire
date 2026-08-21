@@ -1,8 +1,12 @@
 "use client";
 
-import { Suspense, useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { trackEvent } from "@/lib/analytics";
+import { useMe } from "@/lib/use-me";
+import { useWatchlist } from "@/lib/use-watchlist";
+import type { Country } from "@/lib/country";
+import { PENDING_WATCH_KEY } from "@/lib/signup-source-shared";
 
 // Fires the sign_up analytics event for a BRAND-NEW account.
 //
@@ -25,6 +29,10 @@ function SignupWelcomeInner() {
   const pathname = usePathname();
   const router = useRouter();
   const fired = useRef(false);
+  const { user, loaded } = useMe();
+  const { watch } = useWatchlist();
+  const claimed = useRef(false);
+  const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
     const welcome = searchParams?.get("welcome");
@@ -38,7 +46,39 @@ function SignupWelcomeInner() {
     router.replace(qs ? `${pathname}?${qs}` : pathname ?? "/", { scroll: false });
   }, [searchParams, pathname, router]);
 
-  return null;
+  // Complete a watch that was mid-flight when the visitor chose the account
+  // path in PriceAlertModal — the stash survives the OAuth round trip in
+  // localStorage. Runs for NEW and RETURNING sign-ins alike (a returning
+  // member who clicked the account option had the same pending watch), which
+  // is why it keys off the signed-in state, not the welcome param.
+  useEffect(() => {
+    if (!loaded || !user || claimed.current) return;
+    let pending: { cardId?: string; market?: string } | null = null;
+    try {
+      const raw = localStorage.getItem(PENDING_WATCH_KEY);
+      if (raw) pending = JSON.parse(raw);
+      localStorage.removeItem(PENDING_WATCH_KEY);
+    } catch {
+      /* private mode / corrupt stash — nothing to complete */
+    }
+    if (!pending?.cardId || !pending.market) return;
+    claimed.current = true;
+    void watch(pending.cardId, pending.market as Country).then((ok) => {
+      if (ok) {
+        setToast("Watching that card ✓ — it's on your watchlist");
+        setTimeout(() => setToast(null), 5000);
+      }
+    });
+  }, [loaded, user, watch]);
+
+  if (!toast) return null;
+  return (
+    <div className="fixed inset-x-0 bottom-4 z-[80] flex justify-center px-4">
+      <div className="rounded-xl border border-brand-500/40 bg-ink-900/95 px-4 py-2.5 text-sm font-medium text-slate-100 shadow-2xl">
+        {toast}
+      </div>
+    </div>
+  );
 }
 
 export function SignupWelcome() {

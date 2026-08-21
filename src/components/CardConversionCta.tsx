@@ -26,8 +26,8 @@ export function CardConversionCta({ cardId }: { cardId: string }) {
         </div>
         <p className="mt-0.5 text-xs text-slate-400">
           {watching
-            ? "Added — enter your email in the popup to get drop alerts."
-            : "We'll email you when it drops. No account needed."}
+            ? "Added — finish in the popup to get drop alerts."
+            : "We'll email you when it drops — free, and with an account your watchlist syncs everywhere."}
         </p>
       </div>
       <div className="flex shrink-0 flex-wrap items-center gap-2">

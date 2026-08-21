@@ -31,3 +31,10 @@ export const SIGNUP_SOURCES = new Set([
 export function parseSignupSource(value: string | null | undefined): string | null {
   return value && SIGNUP_SOURCES.has(value) ? value : null;
 }
+
+// localStorage key for a watch that was mid-flight when a signed-out visitor
+// chose the account path in PriceAlertModal. Defined here (not in the modal)
+// because SignupWelcome — statically imported by the root layout — also reads
+// it, and importing the modal for one constant would drag the whole
+// dynamically-imported (ssr:false) modal into the layout's eager bundle.
+export const PENDING_WATCH_KEY = "rc_pending_watch";

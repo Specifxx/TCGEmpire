@@ -137,3 +137,72 @@ test("the accounts admin page charts signups over time, by source, and the uncla
   assert.match(src, /prisma\.priceAlert\.findMany\(\{ where: \{ userId: null \}, distinct: \["email"\]/);
   assert.match(src, /\(untracked\)/, "null sources must be labeled, not dropped from the breakdown");
 });
+
+// ── Phase 1: conversion fixes ────────────────────────────────────────────────
+
+test("the signed-out navbar has a VISIBLE Sign in button, not just an icon", () => {
+  const src = read("src/components/UserMenu.tsx");
+  // Text pill on sm+, icon below sm — both attributed, both nofollow (the
+  // ?next= family must stay out of the crawl graph, see the SEO note there).
+  assert.match(src, />\s*Sign in\s*<\/Link>/);
+  assert.match(src, /hidden whitespace-nowrap px-3 py-1\.5 text-xs sm:inline-flex/);
+  assert.match(src, /sm:hidden/);
+  const nofollow = src.match(/rel="nofollow"/g) ?? [];
+  assert.ok(nofollow.length >= 2, "both signed-out links must keep rel=nofollow");
+});
+
+test("PriceAlertModal keeps the email path intact — the account option is a reframe, NOT a gate", () => {
+  // Pins the product decision: the anonymous email flow was a deliberate prior
+  // choice and survives account-first framing. Deleting the input or the
+  // subscribe path here is a regression even if every account test passes.
+  const src = read("src/components/PriceAlertModal.tsx");
+  assert.match(src, /type="email"/);
+  assert.match(src, /Notify me of price drops/);
+  assert.match(src, /localStorage\.setItem\(EMAIL_KEY/);
+  // Account option embedded for signed-out visitors, attributed to the modal.
+  assert.match(src, /source="alert_modal"/);
+  assert.match(src, /or just get emails — no account needed/);
+  // The watch survives the OAuth trip via the stash SignupWelcome completes.
+  assert.match(src, /PENDING_WATCH_KEY/);
+  // Both post-subscribe surfaces upsell the account with the true "watches
+  // come with you" claim (claimAlertsForUser adopts them by email match).
+  const successLinks = src.match(/markSignupSource\("alert_success"\)/g) ?? [];
+  assert.equal(successLinks.length, 2, "success phase AND silent toast both link to an account");
+});
+
+test("the card page CTA no longer undercuts the account pitch", () => {
+  const src = read("src/components/CardConversionCta.tsx");
+  assert.doesNotMatch(src, /No account needed/);
+  assert.match(src, /watchlist syncs everywhere/);
+});
+
+test("the popup never fires on the first page of a session", () => {
+  const src = read("src/components/SignupPromoPopup.tsx");
+  assert.match(src, /const MIN_PAGEVIEWS = 2/);
+  assert.match(src, /if \(pageviews < MIN_PAGEVIEWS\) return/);
+  // The pageview counter increments once per pathname, in its own effect —
+  // counting inside the arming effect would double-count when auth state loads.
+  assert.match(src, /lastCountedPath/);
+  // The hard-won dismissibility contract must survive this change untouched.
+  assert.match(src, /SKIP_PATHS/);
+  assert.match(src, /document\.body\.dataset\.rcDialog/);
+  assert.match(src, /Maybe later/);
+});
+
+test("the homepage finally pitches the free account (AccountStrip)", () => {
+  const strip = read("src/components/home/AccountStrip.tsx");
+  assert.match(strip, /markSignupSource\("home"\)/);
+  assert.match(strip, /Create your free account/);
+  // Hidden for signed-in members; renders identically on first paint (ISR-safe).
+  assert.match(strip, /if \(loaded && user\) return null/);
+  const home = read("src/components/home/HomeSections.tsx");
+  assert.match(home, /<AccountStrip \/>/);
+});
+
+test("/login leads with account creation, not returning-user framing", () => {
+  const src = read("src/components/AuthForm.tsx");
+  assert.match(src, /Create your free account/);
+  assert.match(src, /Already have one\? The same buttons sign you in\./);
+  // The perks row replaced the 12px grey prose as the page's value prop.
+  assert.match(src, /const PERKS = \["Price alerts", "Portfolio tracking", "Watchlist"\]/);
+});

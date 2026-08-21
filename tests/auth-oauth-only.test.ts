@@ -46,8 +46,12 @@ test("both providers are still offered", () => {
   const src = read("src/lib/oauth.ts");
   assert.match(src, /OAUTH_PROVIDERS: OAuthProvider\[\] = \["google", "discord"\]/);
   const form = read("src/components/AuthForm.tsx");
-  assert.match(form, /\/api\/auth\/oauth\/google/);
-  assert.match(form, /\/api\/auth\/oauth\/discord/);
+  // The href moved from two literals to one template (oauthHref carries the
+  // optional ?next= through the OAuth round trip — see tests/oauth-next.test.ts);
+  // both provider buttons still render from it.
+  assert.match(form, /\/api\/auth\/oauth\/\$\{provider\}/);
+  assert.match(form, /oauthHref\("google"\)/);
+  assert.match(form, /oauthHref\("discord"\)/);
 });
 
 test("the sign-in form no longer collects credentials", () => {
