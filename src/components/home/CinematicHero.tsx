@@ -104,8 +104,18 @@ export function CinematicHero({
           this the hero's H1/search/trending-chips column — which re-centers
           on the FULL viewport via container-app's mx-auto, same as the
           breakout background it sits inside — would render partly behind
-          the fixed SideNav on every page ≥1280px, not just visually below it. */}
-      <div className="pl-[var(--sidenav-w)]">
+          the fixed SideNav on every page ≥1280px, not just visually below it.
+          `w-full` HERE IS LOAD-BEARING: ParallaxRoot (this div's parent) is
+          `flex items-center`, and the background layer is `position:absolute`
+          (out of flow), so this wrapper is the row's ONLY normal-flow flex
+          item — without an explicit width a flex item sizes to its CONTENT
+          (shrink-to-fit), not the row's full width, which is what actually
+          broke the hero's centering the first time this shipped: the wrapper
+          shrank to content width and sat at the row's flex-start (the
+          left edge) instead of spanning the row for container-app's mx-auto
+          to center within. The inner container-app div's own `w-full` was
+          providing this before there were two nested divs; now both need it. */}
+      <div className="w-full pl-[var(--sidenav-w)]">
       <div className="container-app relative z-10 w-full py-8 text-center sm:py-10">
         {/* Brand mark, centered above the headline — the nav's own logo sits
             in the fixed header, but this is the FIRST thing painted (the

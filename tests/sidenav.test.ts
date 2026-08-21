@@ -99,6 +99,17 @@ test("CinematicHero's full-bleed breakout compensates for --sidenav-w, not a bar
   // mx-auto same as the breakout background, so without this it would render
   // partly behind the fixed panel, not just visually below it.
   const foregroundIdx = src.indexOf("Foreground content");
-  const nearby = src.slice(foregroundIdx, foregroundIdx + 400);
+  const nearby = src.slice(foregroundIdx, foregroundIdx + 2000);
   assert.match(nearby, /pl-\[var\(--sidenav-w\)\]/);
+  // REGRESSION PIN: shipped once WITHOUT `w-full` on this exact wrapper and
+  // the hero rendered visibly off-center on any screen wide enough for
+  // container-app to hit its own 1400px cap (confirmed with pixel
+  // measurements: search box centered ~300px left of the correct
+  // S/2 + viewportWidth/2). ROOT CAUSE: ParallaxRoot (this wrapper's parent)
+  // is `flex items-center`, and the decorative background layer is
+  // `position: absolute` (out of flow) — so this wrapper is the row's ONLY
+  // normal-flow flex item. A flex item with no explicit width sizes to its
+  // OWN CONTENT (shrink-to-fit) and sits at the row's flex-start, not the
+  // full row width `container-app`'s own `mx-auto` needs to center within.
+  assert.match(nearby, /className="w-full pl-\[var\(--sidenav-w\)\]"/);
 });
