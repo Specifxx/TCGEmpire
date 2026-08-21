@@ -25,9 +25,14 @@ export interface CardTileData {
   setCode: string;
   setName: string;
   collectorNumber: string;
-  energyCost: number | null;
-  might: number | null;
-  artSeed: number;
+  // Optional: CardImage only ever reads these three when a card has NO real
+  // image (its own fallback-art branch — see CardImage.tsx). A page rendering
+  // hundreds of tiles that mostly DO have real images can drop them before
+  // crossing into this client component; see lib/cards.ts's
+  // trimTileArtFallback() for where that happens.
+  energyCost?: number | null;
+  might?: number | null;
+  artSeed?: number;
   orientation: string | null;
   imageUrl: string | null;
   imageThumbUrl: string | null;

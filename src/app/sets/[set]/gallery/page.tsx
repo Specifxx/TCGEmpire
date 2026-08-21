@@ -7,7 +7,7 @@ import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { notFoundMetadata } from "@/lib/not-found-metadata";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { FilterableCardGallery } from "@/components/FilterableCardGallery";
-import { cardTileSelect } from "@/lib/cards";
+import { cardTileSelect, trimTileArtFallback } from "@/lib/cards";
 import type { CardTileData } from "@/components/CardTile";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 import { setBySlug, SETS } from "@/lib/constants";
@@ -240,7 +240,7 @@ export default async function SetGalleryPage({ params }: { params: { set: string
           <h2 className="sr-only">All {set.name} cards</h2>
           {/* Server-rendered tiles, client-side filtering only — every card is a real
               crawlable <a href> in the HTML whatever the filter state. */}
-          <FilterableCardGallery cards={cards} />
+          <FilterableCardGallery cards={cards.map(trimTileArtFallback)} />
           {capped && (
             <p className="mt-6 text-sm text-slate-400">
               Showing the first {MAX_TILES.toLocaleString()} {set.name} cards.{" "}

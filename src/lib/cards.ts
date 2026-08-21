@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { dollarsToCents, normalizeSearch } from "./format";
 import { DEFAULT_COUNTRY, priceField, type Country } from "./country";
 import { ALL_FALLBACK_RETAILERS } from "./constants";
+import type { CardTileData } from "@/components/CardTile";
 
 export interface CardQuery {
   q?: string;
@@ -170,6 +171,30 @@ export function cardTileSelect(country: Country = DEFAULT_COUNTRY) {
 
 // Default (Australia) tile select, kept for callers that don't vary by market.
 export const CARD_TILE_SELECT = cardTileSelect("AU");
+
+/**
+ * Drops energyCost/might/artSeed from a CardTile row when it has a real image.
+ *
+ * CardImage (components/CardImage.tsx) only ever reads those three fields in
+ * its fallback branch — generated SVG art for a card with NO imageUrl AND NO
+ * imageThumbUrl. On a card that has a real photo, they cross the server/client
+ * boundary into CardTile's props, get serialized into the page's RSC hydration
+ * payload, and are never read: genuinely dead weight, not a legitimately-used
+ * field like the five per-market price columns (which stay, because instant
+ * currency switching on the client needs all of them). Same "strip what this
+ * render never reads" pattern as toPulseMovers() in lib/price-history.ts,
+ * applied where a page renders enough tiles for the bytes to matter — see its
+ * use in /browse and /sets/[set]/gallery, the two heaviest CardTile grids.
+ */
+export function trimTileArtFallback<T extends Pick<CardTileData, "imageUrl" | "imageThumbUrl" | "energyCost" | "might" | "artSeed">>(
+  card: T
+): Omit<T, "energyCost" | "might" | "artSeed"> {
+  if (card.imageUrl || card.imageThumbUrl) {
+    const { energyCost: _energyCost, might: _might, artSeed: _artSeed, ...rest } = card;
+    return rest;
+  }
+  return card;
+}
 
 /**
  * In-stock store counts per card PER MARKET.

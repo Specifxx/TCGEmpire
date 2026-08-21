@@ -18,6 +18,7 @@ import {
   buildCardOrderBy,
   buildCardWhere,
   cardTileSelect,
+  trimTileArtFallback,
   CardQuery,
   parsePageNum,
   parsePageSize,
@@ -257,7 +258,7 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
           <>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
               {cards.map((c) => (
-                <CardTile key={c.id} card={c} />
+                <CardTile key={c.id} card={trimTileArtFallback(c)} />
               ))}
             </div>
             <Pagination page={page} totalPages={totalPages} params={searchParams as Record<string, string | undefined>} />
