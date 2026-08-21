@@ -113,6 +113,10 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/radiance-countdown", label: "Radiance release date", emoji: "✨", keywords: ["release date", "countdown", "when", "next set", "set 5", "radiance"] },
       { href: "/champions", label: "Champions", emoji: "🦸", keywords: ["champions", "by champion", "legends"] },
       { href: "/cards", label: "By type & rarity", emoji: "🔤", keywords: ["type", "rarity", "showcase", "epic", "signature", "promo", "printings", "facets", "alt art"] },
+      // The set-agnostic hub for /sets/<set>/gallery (added 2026-08-20 to target
+      // "riftbound card gallery" directly — see that route's own doc comment for
+      // the Search Console data behind the per-set galleries it links to).
+      { href: "/gallery", label: "Card gallery", emoji: "🖼️", keywords: ["gallery", "card gallery", "full art", "browse art", "card images"] },
       { href: "/domains", label: "Domains", emoji: "🌀", keywords: ["domains", "colours", "colors", "fury", "calm", "mind", "body", "chaos", "order"] },
       { href: "/keywords", label: "Keywords glossary", emoji: "📚", keywords: ["keywords", "glossary", "mechanics", "rules", "empower", "flow", "burn", "tank", "deflect", "what does"] },
       { href: "/singles", label: "Buy singles", emoji: "🃏", keywords: ["singles", "buy singles", "cheapest single"] },

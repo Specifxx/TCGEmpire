@@ -52,10 +52,22 @@ const isCleanPagination = (searchParams: CardQuery) =>
 export async function generateMetadata({ searchParams }: { searchParams: CardQuery }): Promise<Metadata> {
   const q = (searchParams.q ?? "").trim();
   const page = parsePageNum(searchParams.page);
+  // Title leads with the exact phrase "Riftbound Cards" (2026-08-20 SEO audit):
+  // /browse is the site's card-database/browse-intent page, while "/" targets
+  // the comparison-intent "Riftbound prices" query — deliberately differentiated
+  // now rather than both pages competing with near-identical "Riftbound Card
+  // Database ... Prices"-shaped titles, which the same audit flagged as a real
+  // keyword-cannibalization risk (66 internal article links already send
+  // "card database"/"compare every store" anchor text here, vs. zero to "/").
+  // NO manual "| RiftCompare" suffix — title is a plain string here (not
+  // wrapped in { absolute: ... }), so layout.tsx's title template ("%s —
+  // RiftCompare") already appends it once; adding it by hand doubled the
+  // suffix ("... | RiftCompare — RiftCompare"), caught visually while
+  // verifying this change.
   const base = {
-    title: q ? `${q} — Riftbound cards & prices` : "Riftbound Card Database — All Cards & Prices",
+    title: q ? `${q} — Riftbound cards & prices` : "Riftbound Cards — Browse & Compare Prices",
     description:
-      "Browse every Riftbound TCG card and compare live prices across local stores in AU, US, UK & SG to find the cheapest place to buy singles. Updated daily.",
+      "Every Riftbound card, one database: browse and compare live prices across local stores in AU, US, UK & SG to find the cheapest place to buy singles. Updated daily.",
   };
   if (q) return { ...base, alternates: { canonical: "/browse" }, robots: { index: false, follow: true } };
   if (page > 1 && isCleanPagination(searchParams)) {

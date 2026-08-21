@@ -138,12 +138,23 @@ export function CinematicHero({
             underlying goal — one short, job-focused sentence instead of a
             60-character country list — is still fully honored here, just
             phrased in the market-aware way. See DECISIONS.md for the full
-            reasoning. */}
+            reasoning.
+
+            "Riftbound" + "prices" ADJACENT, not split by "card": an SEO audit
+            (2026-08-20, "riftbound prices" ranking ~13th) found this exact
+            phrase absent from every on-page signal — title, meta description,
+            H1, JSON-LD — always broken up by "Card"/"TCG". This H1 is the
+            single highest-leverage place to fix that (see page.tsx's metadata
+            for the matching title/description/JSON-LD fix). The subhead below
+            now carries the "Riftbound cards" and "Riftbound card prices"
+            variants verbatim instead, so all three of the site's target
+            phrases land in the first ~45 words without stuffing any one of
+            them into the H1 alongside the others. */}
         <h1 className="animate-fade-in [animation-delay:160ms] mx-auto mt-4 max-w-4xl text-3xl font-extrabold leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-5xl">
-          Compare <span className="text-brand-400">Riftbound</span> card prices across every {heroAdjective} store
+          Compare <span className="text-brand-400">Riftbound</span> prices across every {heroAdjective} store
         </h1>
         <p className="animate-fade-in [animation-delay:240ms] mx-auto mt-4 max-w-2xl text-base text-slate-300">
-          Find the cheapest place to buy Riftbound TCG cards — live prices from every {heroAdjective} retailer we track,
+          Find the cheapest place to buy Riftbound cards — live Riftbound card prices from every {heroAdjective} retailer we track,
           plus four more markets in their own currency: {otherMarkets}, updated daily.
         </p>
 

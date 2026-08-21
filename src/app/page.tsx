@@ -7,7 +7,7 @@ import { getRecentlyUpdated, getPriceMovers, type PriceMovers } from "@/lib/pric
 import { getHomeStats } from "@/lib/home-stats";
 import { CinematicHero } from "@/components/home/CinematicHero";
 import { HomeSections } from "@/components/home/HomeSections";
-import { pageAlternates, regionHomeHreflang } from "@/lib/seo";
+import { pageAlternates, pageOpenGraph, regionHomeHreflang } from "@/lib/seo";
 import { webPage, faqPage } from "@/lib/jsonld";
 
 // RESTORED (2026-08-17), overriding a same-day "one job" redesign that had
@@ -67,22 +67,39 @@ export const revalidate = 3600;
 
 // Market-neutral metadata (no country in the title) so search results aren't biased
 // to one country — the visible page below is still tailored to the visitor's market.
+//
+// Title/description rewritten 2026-08-20: an SEO audit (prompted by "riftbound
+// prices" ranking ~13th on Google) found the exact phrase "Riftbound prices"
+// appeared NOWHERE in the title, description, H1 or JSON-LD — every instance
+// was split by "Card"/"TCG" ("Riftbound Card Prices", "Riftbound TCG card
+// prices"). Title/description/H1 (CinematicHero.tsx)/JSON-LD name below are
+// now front-loaded with the literal, consecutive phrase — the single highest-
+// leverage on-page signal for an exact-match query the homepage is built to
+// answer. "Riftbound card prices" (the closest variant query) still gets
+// verbatim coverage via the description's second sentence and the hero
+// subhead, without diluting the title's own exact match.
 export const metadata: Metadata = {
-  title: { absolute: "Buy & Compare Riftbound Card Prices | RiftCompare" },
+  title: { absolute: "Riftbound Prices — Compare Every Store | RiftCompare" },
   // Kept to 25–160 chars (Bing/Google snippet limit) while staying market-neutral.
+  // Leads with "Riftbound prices", then covers the "Riftbound card prices"
+  // variant verbatim in the same sentence.
   description:
-    "Compare live Riftbound TCG card prices across AU, US, UK, Singapore & Canada stores to find the cheapest place to buy singles and sealed. Updated daily.",
-  keywords: [
-    "buy Riftbound cards",
-    "Riftbound prices",
-    "compare Riftbound card prices",
-    "cheapest Riftbound cards",
-    "Riftbound singles",
-    "Riftbound TCG",
-    "Riftbound card prices",
-    "Riftbound Vendetta",
-    "Riftbound Vendetta prices",
-  ],
+    "Riftbound prices, compared live: see every Riftbound card price across AU, US, UK, Singapore & Canada stores and find the cheapest place to buy. Updated daily.",
+  // NO keywords meta — removed 2026-08-20. Google has ignored this tag since 2009
+  // (see layout.tsx's own sitewide policy comment, which this page had quietly
+  // re-added and contradicted); it carried the exact phrase "Riftbound prices"
+  // but that's invisible to ranking. The real fix is the title/description above.
+  //
+  // Page-specific OpenGraph/Twitter: without this, Next's metadata merge fell
+  // through to layout.tsx's site-wide default ("RiftCompare — Riftbound Card
+  // Database & Price Comparison"), so every social-share unfurl (Facebook/X/
+  // Discord/Slack) showed a different, less specific tagline than the actual
+  // <title> — found by the same audit.
+  openGraph: pageOpenGraph({
+    title: "Riftbound Prices — Compare Every Store",
+    description: "Riftbound card prices compared live across every store we track — find the cheapest place to buy.",
+    url: "/",
+  }),
   // The homepage is the US/x-default member of the region-home alternate set
   // (see /au, /uk, /sg, /ca — lib/seo.ts's regionHomeHreflang()). hreflang
   // is reciprocal by spec: every page in the group must declare the full set,
@@ -255,10 +272,10 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{
           __html: JSON.stringify([
             webPage({
-              name: "RiftCompare — Riftbound Card Database & Price Comparison",
+              name: "RiftCompare — Riftbound Prices & Card Database",
               href: "/",
               description:
-                "Compare live Riftbound TCG card prices across stores in the US, UK, Australia, Canada and Singapore — total cost including shipping, no hidden fees.",
+                "Riftbound prices compared live across stores in the US, UK, Australia, Canada and Singapore — total cost including shipping, no hidden fees.",
             }),
             // Matches the visible FAQ accordion in the About+FAQ section above
             // exactly (same FAQS array) — faqPage() is the shared builder every

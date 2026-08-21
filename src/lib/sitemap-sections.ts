@@ -126,6 +126,10 @@ async function core(): Promise<SitemapEntry[]> {
     { url: `${SITE_URL}/domains`, changeFrequency: "weekly", priority: 0.7, lastModified: day },
     { url: `${SITE_URL}/keywords`, changeFrequency: "weekly", priority: 0.7, lastModified: staticPageDate("/keywords") },
     { url: `${SITE_URL}/cards`, changeFrequency: "weekly", priority: 0.7, lastModified: day },
+    // Added 2026-08-20 targeting "riftbound cards rarity" / "riftbound card
+    // gallery" directly — see each route's own doc comment.
+    { url: `${SITE_URL}/cards/rarity`, changeFrequency: "weekly", priority: 0.7, lastModified: day },
+    { url: `${SITE_URL}/gallery`, changeFrequency: "daily", priority: 0.8, lastModified: day },
     { url: `${SITE_URL}/champions`, changeFrequency: "daily", priority: 0.8, lastModified: day },
     { url: `${SITE_URL}/stores`, changeFrequency: "monthly", priority: 0.5, lastModified: day },
     { url: `${SITE_URL}/games/higher-lower`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/higher-lower") },

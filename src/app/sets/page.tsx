@@ -116,6 +116,8 @@ export default async function SetsIndexPage() {
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
             Every set in Riftbound: League of Legends TCG. Open a set for its full card list with live
             prices compared across stores, so you can find the cheapest singles — or complete the set.
+            Want to look rather than price-check? Every set has its own{" "}
+            <Link href="/gallery" className="text-brand-400 hover:underline">full-art card gallery</Link>.
             Building around a colour instead? Browse{" "}
             <Link href="/domains" className="text-brand-400 hover:underline">cards by domain</Link>.
           </p>
