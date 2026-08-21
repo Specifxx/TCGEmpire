@@ -4,7 +4,6 @@ import { NavbarShell } from "./NavbarShell";
 import { CommandLauncherButton } from "./CommandLauncher";
 import { SearchBar } from "./SearchBar";
 import { HeaderSearchSlot } from "./HeaderSearchSlot";
-import { HomeHeaderReveal } from "./HomeHeaderReveal";
 import { MobileNav } from "./MobileNav";
 import { CountrySwitcher } from "./CountrySwitcher";
 import { NavUser } from "./NavUser";
@@ -70,11 +69,16 @@ export function Navbar() {
             Measured after: 590px at 640, 652px at 768, no overflow anywhere, and
             ~130px of headroom left for the wider avatar a signed-in user gets. */}
         <nav className="flex shrink-0 items-center gap-0.5 sm:gap-1">
-          {/* HomeHeaderReveal: on "/" only, this whole group (⌘K through Blog)
-              stays hidden until the visitor scrolls — see that component's own
-              doc comment for why. Every other route renders exactly as before;
-              `isHome` inside it makes this a no-op everywhere else. */}
-          <HomeHeaderReveal>
+          {/* This whole group (⌘K through Blog), the sign-in control, and the
+              other secondary chrome below used to be gated behind
+              HomeHeaderReveal — hidden pre-scroll on "/" alone, in service of
+              a "≤12 interactive elements above the fold" homepage-redesign
+              target. Reverted: hiding the sign-in control specifically was
+              undercutting the signup funnel this same codebase spent real
+              effort instrumenting and fixing elsewhere (see the Phase 0-2
+              signup-growth work) — a visitor who never scrolls never sees a
+              way to sign in at all. The whole nav is unconditionally visible
+              on every route now, homepage included. */}
           {/* Command launcher — every page can reach every page from here (⌘K). */}
           {/* Inline text/⌘K nav is desktop-only — on phones it overflowed the bar
               (worse once the logged-in avatar showed). Everything here is reachable
@@ -138,7 +142,6 @@ export function Navbar() {
           <Link href="/blog" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white md:block md:px-2.5">
             Blog
           </Link>
-          </HomeHeaderReveal>
           {/* NO Marketplace chip here, deliberately (removed 2026-08-17, before
               this phase's own homepage-decluttering pass — the two changes
               are independent and both still hold). The P2P marketplace needs
@@ -164,15 +167,11 @@ export function Navbar() {
           {/* Single nav entry point: the ⌘K "Explore" command launcher (above) is the
               full-nav surface on desktop — it lists the same NAV_GROUPS searchably — so
               the separate "Menu" mega-dropdown is gone (matches DexCompare's one-tab model). */}
-          {/* HomeHeaderReveal again: Discord, the region switcher and the
-              sign-in control are the second contiguous group this phase's
-              audit found worth deferring on "/" — see the component's own
-              doc comment, in particular the CountrySwitcher/CountryHeroToggle
-              duplicate-region-selector finding. MobileNav (the hamburger)
-              stays OUTSIDE this wrapper on purpose: below `lg` it is the only
-              way to reach Sealed/Decks/Blog/Discord/Premium at all, so hiding
-              it pre-scroll would strand a mobile visitor with no navigation. */}
-          <HomeHeaderReveal>
+          {/* Discord, the region switcher and the sign-in control (NavUser) —
+              always visible now, see the doc comment above this nav's opening
+              tag for why the prior pre-scroll hiding on "/" was reverted. A
+              signed-out visitor on the homepage sees the same "Sign in" the
+              rest of the site shows, from the very first paint. */}
           {/* Join our Discord — opens the permanent invite in a new tab */}
           <a
             href={DISCORD_URL}
@@ -188,7 +187,6 @@ export function Navbar() {
           </a>
           <CountrySwitcher className="ml-0.5 sm:ml-1" />
           <NavUser />
-          </HomeHeaderReveal>
           <MobileNav />
         </nav>
        </div>

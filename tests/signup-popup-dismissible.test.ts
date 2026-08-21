@@ -94,6 +94,9 @@ test("the popup does not repeat the pitch AuthForm already makes", () => {
 
   const auth = read(AUTH);
   assert.match(auth, /compact\?: boolean/, "AuthForm must accept compact");
-  assert.match(auth, /\{!compact && \(\s*<>\s*<h1/, "compact must drop the duplicated heading + value paragraph");
+  // A comment now precedes the heading inside the block (the /login reframe's
+  // rationale); the contract is unchanged — everything between {!compact && (
+  // and the <h1 is dropped in compact mode, so the popup never repeats it.
+  assert.match(auth, /\{!compact && \(\s*<>[\s\S]{0,600}?<h1/, "compact must drop the duplicated heading + value block");
   assert.match(auth, /className=\{compact \? "" : "card-surface p-6"\}/, "compact must drop the nested card chrome");
 });

@@ -5,6 +5,7 @@ import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { EbayPicks } from "@/components/EbayPicks";
 import { ReviewsSection } from "@/components/ReviewsSection";
 import { HowItWorks } from "@/components/home/HowItWorks";
+import { AccountStrip } from "@/components/home/AccountStrip";
 import { RadianceCountdownCard } from "@/components/home/RadianceCountdownCard";
 import { LatestPosts } from "@/components/home/LatestPosts";
 import { PartnersStrip } from "@/components/home/PartnersStrip";
@@ -277,6 +278,10 @@ export function HomeSections({
           purpose: an empty "reviews" block, or a seeded example, would be worse
           than no block at all. */}
       <ReviewsSection />
+
+      {/* The homepage's one free-account pitch — hides itself for members.
+          See AccountStrip for why this is ISR-safe. */}
+      <AccountStrip />
 
       {/* Approved partners + affiliate disclosure. Client component (reads
           useCountry() itself) so every visitor's eBay click here is tagged
