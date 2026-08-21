@@ -3,20 +3,19 @@ import { HubIntro } from "@/components/HubIntro";
 import { HubFaq } from "@/components/HubFaq";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
-import { isPremium } from "@/lib/premium";
+import { hasAccount } from "@/lib/premium";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { faqPage } from "@/lib/jsonld";
 import { BestBasket } from "@/components/BestBasket";
-import { PremiumButton } from "@/components/PremiumButton";
 
 export const dynamic = "force-dynamic";
 
 const TITLE = "Best Basket — Cheapest Way to Buy a Riftbound Deck | RiftCompare";
 const DESCRIPTION =
-  "Paste a Riftbound decklist or use your wishlist and get the cheapest way to buy every card across stores — postage and free-shipping thresholds included. A RiftCompare Premium tool.";
+  "Paste a Riftbound decklist or use your wishlist and get the cheapest way to buy every card across stores — postage and free-shipping thresholds included. Free with a RiftCompare account.";
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },
@@ -32,7 +31,7 @@ export const metadata: Metadata = {
 const FAQS = [
   {
     q: "Is Best Basket free?",
-    a: "It's part of RiftCompare Premium, alongside Value Finder, Rising Cards and the full Deal Finder list. A free account still gets the deck pricer at /deck for per-card prices.",
+    a: "Yes — Best Basket is free with a RiftCompare account. Just sign in (no card required); nothing about it is behind Premium.",
   },
   {
     q: "Does it account for shipping?",
@@ -43,8 +42,8 @@ const FAQS = [
     a: "Any decklist in standard list format, or your own wishlist/watchlist from your RiftCompare account. It matches by card name and set/collector number where given.",
   },
   {
-    q: "Do I need Premium just to price a list, not buy it?",
-    a: "No — the free deck pricer at /deck needs no account at all if you only want per-card prices. Best Basket's Premium gate is specifically for the store-split optimisation.",
+    q: "Do I need an account just to price a list, not buy it?",
+    a: "No — the free deck pricer at /deck needs no account at all if you only want per-card prices. An account is only needed for Best Basket's store-split optimisation, and that account is free.",
   },
 ];
 
@@ -62,8 +61,8 @@ function decodeList(b64: string): string {
 
 export default async function BestBasketPage({ searchParams }: { searchParams: { list?: string } }) {
   const user = await getCurrentUser();
-  // PREMIUM tier (see lib/premium.ts).
-  const premium = isPremium(user);
+  // ACCOUNT tier (see lib/premium.ts) — free, no Premium required.
+  const signedIn = hasAccount(user);
   const country = getCountry();
   const info = COUNTRIES[country];
   // A deck page can hand off its own list via ?list= (see decks/[slug]/page.tsx's
@@ -117,26 +116,23 @@ export default async function BestBasketPage({ searchParams }: { searchParams: {
         </p>
       </div>
 
-      {premium ? (
+      {signedIn ? (
         <BestBasket currency={info.currency} initialList={initialList} />
       ) : (
         <div className="card-surface p-6 text-center">
-          <h2 className="text-lg font-extrabold text-white">Go Premium to use Best Basket</h2>
+          <h2 className="text-lg font-extrabold text-white">Sign in free to use Best Basket</h2>
           <p className="mx-auto mt-1 max-w-md text-sm text-slate-400">
-            Best Basket is a RiftCompare Premium tool. Paste any decklist or use your wishlist and we&apos;ll work out
-            the cheapest combination of stores to buy it all, postage included, with direct buy links.
+            Best Basket is free with a RiftCompare account — no card, no Premium. Paste any decklist or use your
+            wishlist and we&apos;ll work out the cheapest combination of stores to buy it all, postage included, with
+            direct buy links.
           </p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-            {user ? (
-              <PremiumButton />
-            ) : (
-              <Link
-                href={`/login?next=${encodeURIComponent(searchParams.list ? `/tools/best-basket?list=${searchParams.list}` : "/tools/best-basket")}`}
-                className="btn-primary text-sm"
-              >
-                Sign in free
-              </Link>
-            )}
+            <Link
+              href={`/login?next=${encodeURIComponent(searchParams.list ? `/tools/best-basket?list=${searchParams.list}` : "/tools/best-basket")}`}
+              className="btn-primary text-sm"
+            >
+              Sign in free
+            </Link>
             <Link href="/tools" className="btn-ghost text-sm">Browse free tools</Link>
           </div>
           <p className="mt-4 text-xs text-slate-600">

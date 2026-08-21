@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { isPremium } from "@/lib/premium";
 import { getCountry } from "@/lib/get-country";
 import { priceField } from "@/lib/country";
 import { normalizeSearch } from "@/lib/format";
@@ -12,15 +11,14 @@ import { optimizeBasket, type BasketCard } from "@/lib/basket";
 
 export const dynamic = "force-dynamic";
 
-// Best-Basket optimiser — PREMIUM tier (see lib/premium.ts's tier note). Checked
-// here, not just on the page: the page only conditionally RENDERS <BestBasket>,
-// which is no obstacle at all to a signed-in-but-not-Premium caller hitting this
-// route directly, and this endpoint's actual output (the optimized store split)
-// is the exact thing Premium is being sold on. Resolve the requested cards —
-// either a structured list of exact printings (the primary search-and-add flow)
-// or a pasted decklist (the advanced/paste fallback) — pull every in-stock STORE
-// listing in the viewer's market (eBay excluded — its per-item postage isn't
-// comparable), and return the cheapest landed plan.
+// Best-Basket optimiser — ACCOUNT tier (see lib/premium.ts's tier note), not
+// Premium. Only a signed-in check here, but still checked SERVER-SIDE rather than
+// left to the page: the page only conditionally RENDERS <BestBasket>, which is no
+// obstacle at all to a signed-out caller hitting this route directly. Resolve the
+// requested cards — either a structured list of exact printings (the primary
+// search-and-add flow) or a pasted decklist (the advanced/paste fallback) — pull
+// every in-stock STORE listing in the viewer's market (eBay excluded — its
+// per-item postage isn't comparable), and return the cheapest landed plan.
 
 // A basket line the client already resolved to an exact printing (via the
 // CardSearch autocomplete) — bypasses name-based resolution entirely, so a
@@ -34,7 +32,6 @@ interface PickedLine {
 export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in first" }, { status: 401 });
-  if (!isPremium(user)) return NextResponse.json({ error: "Best Basket is a Premium feature" }, { status: 403 });
 
   const country = getCountry();
   const body = await req.json().catch(() => null);

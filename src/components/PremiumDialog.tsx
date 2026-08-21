@@ -19,7 +19,6 @@ export function usePremiumDialog() {
 // Premium-ONLY perks (see the tier comment in lib/premium.ts).
 const FEATURES: { k: string; v: string }[] = [
   { k: "Bulk Pricer", v: "price a whole list at once" },
-  { k: "Best Basket", v: "cheapest store split, postage included" },
   { k: "Value Finder", v: "undervalued-card screener" },
   { k: "Rising Cards", v: "demand + price-timing screener" },
   { k: "Arbitrage Alerts", v: "daily flip + cross-region digest" },

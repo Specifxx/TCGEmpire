@@ -23,24 +23,32 @@ const POPUP = "src/components/SignupPromoPopup.tsx";
 const PREMIUM_LIB = "src/lib/premium.ts";
 const OAUTH_CALLBACK = "src/app/api/auth/oauth/[provider]/callback/route.ts";
 
-test("the two list tools gate on Premium, not merely on an account", () => {
-  // Deliberate reversal (see the tier note in lib/premium.ts): these two used to
-  // be "the reason to sign up" for a free account. hasAccount() here would put
-  // them back on the free tier — the exact state this change exists to undo.
-  for (const page of [BULK, BASKET]) {
-    const src = read(page);
-    assert.match(src, /isPremium\(/, `${page} must gate via isPremium()`);
-    assert.ok(!/hasAccount\s*\(/.test(src), `${page} must not gate on hasAccount()`);
-  }
+test("the bulk pricer gates on Premium, not merely on an account", () => {
+  // The Bulk Pricer stays on the paid tier (see the tier note in lib/premium.ts).
+  // hasAccount() here would put it back on the free tier.
+  const src = read(BULK);
+  assert.match(src, /isPremium\(/, `${BULK} must gate via isPremium()`);
+  assert.ok(!/hasAccount\s*\(/.test(src), `${BULK} must not gate on hasAccount()`);
 });
 
-test("the basket API requires Premium, not just a session", () => {
+test("Best Basket gates on having an account, not on Premium", () => {
+  // Best Basket moved BACK to the free account tier (see the tier note in
+  // lib/premium.ts) — a generosity play to make it the reason to sign up, since
+  // signups were near-zero. isPremium() here would put it back behind the paywall
+  // this change exists to remove it from.
+  const src = read(BASKET);
+  assert.match(src, /hasAccount\(/, `${BASKET} must gate via hasAccount()`);
+  assert.ok(!/isPremium\s*\(/.test(src), `${BASKET} must not gate on isPremium()`);
+});
+
+test("the basket API requires a session, and nothing more", () => {
   // The page only conditionally RENDERS <BestBasket> — that's no obstacle to a
-  // signed-in-but-not-Premium caller hitting this route directly, and its output
-  // (the optimized store split) is the exact thing Premium is sold on.
+  // signed-out caller hitting this route directly, so the sign-in check has to
+  // live here too. It must NOT also require Premium — Best Basket is a free
+  // account-tier tool now.
   const src = read(BASKET_API);
   assert.match(src, /if \(!user\) return NextResponse\.json\(/, "must still reject signed-out callers");
-  assert.match(src, /isPremium\(user\)/, "basket API must also reject a signed-in non-Premium caller");
+  assert.ok(!/isPremium\s*\(/.test(src), "basket API must not require Premium — it's account-tier now");
 });
 
 test("the bulk pricer gates the TOOL without gating the page's indexable content", () => {
@@ -54,9 +62,10 @@ test("the bulk pricer gates the TOOL without gating the page's indexable content
   assert.match(beforeGate, /HubIntro/, "the hub intro must render above the gate");
 });
 
-test("neither tool still advertises itself as needing no account", () => {
+test("neither list tool still advertises itself as needing no account", () => {
   // Both pages used to say exactly this, and a stale claim here is a promise the
-  // gate immediately breaks.
+  // gate immediately breaks — Best Basket still requires a free account even
+  // though it no longer requires Premium.
   for (const page of [BULK, BASKET]) {
     const src = read(page);
     assert.ok(!/No account needed/i.test(src), `${page} still claims "no account needed"`);
@@ -77,17 +86,17 @@ test("the signup popup still appears on its own, with no promo gate", () => {
   assert.match(src, /if \(!loaded \|\| user\) return/, "still only shown to signed-out visitors");
 });
 
-test("the popup's permanent perks never include Bulk Pricer or Best Basket", () => {
+test("the popup's permanent perks include Best Basket but never Bulk Pricer", () => {
   const src = read(POPUP);
   // Scope to the PERKS array itself (not the whole file — a comment is allowed to
-  // explain, in prose, that Bulk Pricer/Best Basket moved to Premium) so this
-  // checks what's actually PITCHED as a permanent account perk, not whether the
-  // tool names appear anywhere.
+  // explain, in prose, that Bulk Pricer stays Premium) so this checks what's
+  // actually PITCHED as a permanent account perk, not whether the tool names
+  // appear anywhere.
   const perksMatch = src.match(/const PERKS[^=]*=\s*\[([\s\S]*?)\n\];/);
   assert.ok(perksMatch, "expected a PERKS array declaration");
   const perks = perksMatch![1];
-  assert.ok(!/Bulk Pricer/.test(perks), "popup must not pitch Bulk Pricer — it's Premium now");
-  assert.ok(!/Best Basket/.test(perks), "popup must not pitch Best Basket — it's Premium now");
+  assert.ok(!/Bulk Pricer/.test(perks), "popup must not pitch Bulk Pricer — it's Premium only");
+  assert.match(perks, /Best Basket/, "popup must pitch Best Basket — it's a free account perk again, and the whole point of this change is to advertise it");
   assert.match(perks, /Price alerts/, "popup should name what an account actually unlocks");
   assert.match(perks, /Watchlist/, "popup should name what an account actually unlocks");
 });

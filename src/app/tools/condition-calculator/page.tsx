@@ -35,7 +35,7 @@ const FAQS = [
   },
   {
     q: "Why is this Premium?",
-    a: "It's one of the tools bundled with RiftCompare Premium, alongside the Bulk Pricer, Best Basket, Value Finder, Rising Cards and the full Deal Finder list.",
+    a: "It's one of the tools bundled with RiftCompare Premium, alongside the Bulk Pricer, Value Finder, Rising Cards and the full Deal Finder list.",
   },
 ];
 

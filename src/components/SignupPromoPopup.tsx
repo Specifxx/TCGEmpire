@@ -44,10 +44,13 @@ const PV_KEY = "rc_pv_count";
 const MIN_PAGEVIEWS = 2;
 
 // What a free account PERMANENTLY unlocks — the thing that's still true after
-// any Premium preview lapses. The Bulk Pricer and Best Basket moved to Premium
-// (see lib/premium.ts's tier note) and are pitched there instead — this list
-// only promises what an account genuinely, permanently unlocks on its own.
+// any Premium preview lapses. Best Basket moved BACK to the account tier (see
+// lib/premium.ts's tier note) specifically to be the strongest item on this list —
+// it's listed first for that reason. The Bulk Pricer stays Premium and is pitched
+// there instead; everything else here an account genuinely, permanently unlocks
+// on its own.
 const PERKS: [string, string][] = [
+  ["Best Basket", "cheapest store split to buy a whole deck, postage included"],
   ["Price alerts", "get told when a card hits your price"],
   ["Portfolio tracking", "see what your collection is worth, live"],
   ["Watchlist", "save cards and jump back to them anytime"],
