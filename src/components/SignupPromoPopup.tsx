@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useMe } from "@/lib/use-me";
 import { trackEvent } from "@/lib/analytics";
 import { AuthForm } from "./AuthForm";
+import { ANON_SEARCH_LIMIT, FREE_SEARCH_LIMIT } from "@/lib/search-limits";
 
 // Shown once per BROWSER SESSION (sessionStorage, not localStorage) — dismissing
 // suppresses it for the rest of that session/tab, but it comes back on the next
@@ -259,7 +260,7 @@ export function SignupPromoPopup({
               </span>
             )}
             <h2 id="signup-promo-title" className="font-display mt-2 text-lg font-bold text-white">
-              {signupPremiumDays > 0 ? "Create an account, get Premium free" : "Create a free account"}
+              {signupPremiumDays > 0 ? "Create an account, get Premium free" : `Get ${Math.round(FREE_SEARCH_LIMIT / ANON_SEARCH_LIMIT)}x more searches — free`}
             </h2>
             <p className="mx-auto mt-1 max-w-xs text-xs leading-relaxed text-slate-400">
               {signupPremiumDays > 0 ? (
@@ -279,6 +280,31 @@ export function SignupPromoPopup({
                 </li>
               ))}
             </ul>
+
+            {/* Search allowance ladder — the one concrete, felt difference
+                between the three tiers (enforced server-side, see
+                lib/search-limits.ts + api/search/route.ts), so it's a
+                stronger hook than another checkmark: a signed-out visitor who
+                has already hit "10 searches" mid-session sees exactly what
+                signing up buys them, in the same units they just ran out of.
+                Kept to one compact row — see the doc comment above this
+                popup's own height history for why brevity here is load-bearing,
+                not optional. */}
+            <div className="mx-auto mt-3 grid max-w-xs grid-cols-3 divide-x divide-ink-800 rounded-lg border border-ink-800 bg-ink-950/40 text-center">
+              <div className="px-1.5 py-2">
+                <div className="text-sm font-black text-slate-500">{ANON_SEARCH_LIMIT}</div>
+                <div className="text-[9px] font-semibold uppercase tracking-wide text-slate-600">Signed out</div>
+              </div>
+              <div className="px-1.5 py-2">
+                <div className="text-sm font-black text-brand-300">{FREE_SEARCH_LIMIT}</div>
+                <div className="text-[9px] font-semibold uppercase tracking-wide text-brand-400">Free account</div>
+              </div>
+              <div className="px-1.5 py-2">
+                <div className="text-sm font-black text-gold">∞</div>
+                <div className="text-[9px] font-semibold uppercase tracking-wide text-gold/80">Premium</div>
+              </div>
+            </div>
+            <p className="mt-1.5 text-[10px] text-slate-500">Searches per day — free is {Math.round(FREE_SEARCH_LIMIT / ANON_SEARCH_LIMIT)}x more</p>
           </div>
 
           <div className="px-5 pb-5 pt-0">

@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { cardHref } from "@/lib/card-url";
 import { cardDisplayName } from "@/lib/card-name";
 import { trackEvent } from "@/lib/analytics";
+import { markSignupSource } from "@/lib/signup-source";
+import { ANON_SEARCH_LIMIT, FREE_SEARCH_LIMIT } from "@/lib/search-limits";
 import { useQuickView } from "./QuickView";
 import { useCountry } from "./CountryProvider";
 import type { CardTileData } from "./CardTile";
@@ -24,6 +26,10 @@ const FOCUS_INTENT_MS = 1200;
 // show fewer rows instead). 6 sits in the middle of the mobile range.
 const DESKTOP_SUGGESTION_CAP = 10;
 const MOBILE_SUGGESTION_CAP = 6;
+
+// Below this many remaining searches, the dropdown surfaces a quiet "N left
+// today" line — a heads-up before the gate hits, not a nag on every search.
+const LOW_REMAINING_THRESHOLD = 3;
 
 // Recent searches (per-browser, no account needed) — the other half of
 // Baymard's zero-state guidance, alongside trending chips.
@@ -152,11 +158,19 @@ export function SearchBar({
 }) {
   const router = useRouter();
   const params = useSearchParams();
+  const pathname = usePathname();
   const { open: openQuickView } = useQuickView();
   const { fmt, price } = useCountry();
   const [value, setValue] = useState(params.get("q") ?? "");
   const [results, setResults] = useState<Result[]>([]);
   const [sealed, setSealed] = useState<SealedResult[]>([]);
+  // The daily search meter (see /api/search + lib/search-limits.ts). `gate` set
+  // means the API refused this query — the dropdown renders the upsell instead
+  // of results. `remaining` (non-Premium only) drives the "N left today" nudge
+  // as the meter runs down.
+  const [gate, setGate] = useState<null | { signedIn: boolean; limit: number }>(null);
+  const [remaining, setRemaining] = useState<number | null>(null);
+  const gateShownRef = useRef(false);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -299,6 +313,19 @@ export function SearchBar({
         const nextSealed: SealedResult[] = data.sealed ?? [];
         setResults(nextResults);
         setSealed(nextSealed);
+        if (data.limited) {
+          setGate({ signedIn: !!data.signedIn, limit: data.limit ?? ANON_SEARCH_LIMIT });
+          setRemaining(0);
+          // Impression, once per mount — a blocked visitor keeps typing, and
+          // every settled keystroke re-hits the gate; one event is the signal.
+          if (!gateShownRef.current) {
+            gateShownRef.current = true;
+            trackEvent("search_gate_shown", { tier: data.signedIn ? "free" : "anon", variant });
+          }
+          return;
+        }
+        setGate(null);
+        setRemaining(typeof data.remaining === "number" ? data.remaining : null);
         // A free product-gap report: every distinct, debounced-settled query
         // that came back completely empty. Firing per settled query (not per
         // keystroke — the 180ms debounce above already collapses a fast typist
@@ -717,6 +744,41 @@ export function SearchBar({
                 );
               })}
             </ul>
+          ) : gate ? (
+            // Daily search limit hit — see /api/search + lib/search-limits.ts.
+            // Anonymous visitors are pitched the free-account tier (10 → 100/day);
+            // signed-in free accounts are pitched Premium (100/day → unlimited),
+            // since a free account is the tier they're already in.
+            <div className="px-4 py-4 text-center">
+              <p className="text-sm font-semibold text-white">You've used today's {gate.limit} free searches</p>
+              <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                {gate.signedIn ? (
+                  <>Premium search is unlimited — plus Deal Finder, Rising Cards and more.</>
+                ) : (
+                  <>A free account bumps this to {FREE_SEARCH_LIMIT}/day. Premium is unlimited.</>
+                )}
+              </p>
+              {gate.signedIn ? (
+                <Link
+                  href="/premium"
+                  onClick={() => setOpen(false)}
+                  className="btn-primary mt-3 inline-flex w-full items-center justify-center bg-gold text-ink-950 hover:bg-gold/90"
+                >
+                  ✦ Go Premium — unlimited search
+                </Link>
+              ) : (
+                <Link
+                  href={`/login?next=${encodeURIComponent(pathname || "/")}`}
+                  onClick={() => {
+                    markSignupSource("gate");
+                    setOpen(false);
+                  }}
+                  className="btn-primary mt-3 inline-flex w-full items-center justify-center"
+                >
+                  Create a free account — {FREE_SEARCH_LIMIT}/day
+                </Link>
+              )}
+            </div>
           ) : results.length === 0 && sealed.length === 0 ? (
             <div className="px-4 py-3 text-sm text-slate-400">
               {loading ? "Searching…" : "No matches — press Enter to search anyway."}
@@ -738,6 +800,16 @@ export function SearchBar({
               className="overflow-y-auto overscroll-contain py-1"
               style={{ maxHeight: dropdownMaxHeight }}
             >
+              {/* Low-quota nudge — only once the meter is genuinely close to
+                  running out (LOW_REMAINING_THRESHOLD), never on every search,
+                  so it reads as a heads-up rather than nagging. */}
+              {remaining != null && remaining <= LOW_REMAINING_THRESHOLD && (
+                <li className="border-b border-ink-800 px-3 py-2 text-[11px] text-slate-500" role="presentation">
+                  {remaining === 0
+                    ? "Last free search today"
+                    : `${remaining} free ${remaining === 1 ? "search" : "searches"} left today`}
+                </li>
+              )}
               {visibleResults.map((r, i) => {
                 const active = activeIndex === i;
                 return (
