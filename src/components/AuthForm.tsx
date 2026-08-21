@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { markSignupSource } from "@/lib/signup-source";
+import { markSignupSource, stashSignupSource } from "@/lib/signup-source";
 
 // Sign-in is OAUTH ONLY — Google and Discord. The email/password form, /register,
 // /forgot and /reset were removed along with their API routes.
@@ -29,6 +29,12 @@ const OAUTH_ERRORS: Record<string, string> = {
   oauth_session: "Something went wrong finishing sign-in. Please try again.",
 };
 
+// What a free account PERMANENTLY unlocks — same three perks the signup popup
+// pitches (its PERKS list), rendered here as the /login page's value prop so
+// the standalone page finally sells the account instead of assuming the
+// visitor already wants one.
+const PERKS = ["Price alerts", "Portfolio tracking", "Watchlist"] as const;
+
 export function AuthForm({
   providers,
   bare = false,
@@ -36,6 +42,9 @@ export function AuthForm({
   cancelHref,
   signupPremiumDays = 0,
   source,
+  next,
+  contextLine,
+  onProviderClick: onProviderClickProp,
 }: {
   providers: ("google" | "discord")[];
   // Skip the outer full-page wrapper (max-width + vertical padding) so this can be
@@ -66,14 +75,48 @@ export function AuthForm({
   // OAuth round trip completes, User.signupSource both carry the surface that
   // actually converted. Defaults to "login" (the standalone page).
   source?: string;
+  // Where to land after the OAuth round trip. Threaded into the provider hrefs
+  // as ?next=; the start route stores it in a short-lived cookie and the
+  // callback honors it (see lib/next-param.ts). Without it, sign-in dumps
+  // everyone on /profile regardless of where they started.
+  next?: string;
+  // One line of destination-specific persuasion above the buttons — e.g.
+  // /login?next=/watching renders "see and manage your watchlist" instead of a
+  // cold generic form. Supplied by login/page.tsx's next→reason map.
+  contextLine?: string;
+  // Runs just before the provider anchor navigates, in addition to the source
+  // attribution. PriceAlertModal uses it to stash the pending watch in
+  // localStorage so SignupWelcome can complete it after the OAuth round trip.
+  onProviderClick?: () => void;
 }) {
   const [error, setError] = useState<string | null>(null);
-  const onProviderClick = () => markSignupSource(source ?? "login");
+  // Off-site campaign source (?src=email from the email-footer CTAs) — captured
+  // so the provider click below attributes to the CAMPAIGN, not the generic
+  // "login" default that would otherwise clobber it.
+  const [urlSrc, setUrlSrc] = useState<string | null>(null);
+  const onProviderClick = () => {
+    markSignupSource(source ?? urlSrc ?? "login");
+    onProviderClickProp?.();
+  };
+  const oauthHref = (provider: "google" | "discord") =>
+    `/api/auth/oauth/${provider}${next ? `?next=${encodeURIComponent(next)}` : ""}`;
 
   // Surface OAuth failures redirected back as ?error=…
   useEffect(() => {
-    const e = new URLSearchParams(window.location.search).get("error");
+    const params = new URLSearchParams(window.location.search);
+    const e = params.get("error");
     if (e) setError(OAUTH_ERRORS[e] ?? "Sign-in failed — please try again.");
+    // Off-site campaign attribution (?src=email from the email-footer CTAs):
+    // stash the cookie NOW (so the OAuth callback sees it even in edge flows)
+    // and remember it for the click handler above. stashSignupSource is
+    // cookie-only — recording a page LOAD as a sign_in_click would inflate the
+    // click metric. The whitelist means an arbitrary ?src= can only ever record
+    // as "other", never as invented attribution.
+    const src = params.get("src");
+    if (src) {
+      stashSignupSource(src);
+      setUrlSrc(src);
+    }
   }, []);
 
   const wrapperClass = bare ? "" : "mx-auto w-full max-w-sm py-10";
@@ -88,21 +131,28 @@ export function AuthForm({
         )}
         {!compact && (
           <>
-            <h1 className="text-xl font-extrabold text-white">Sign in</h1>
-            <p className="mt-1 text-sm text-slate-400">
-              A free account unlocks price alerts, your portfolio and your watchlist
-              {signupPremiumDays > 0 && (
-                <>
-                  {" "}
-                  — plus your first{" "}
-                  <span className="font-semibold text-gold">
-                    {signupPremiumDays === 1 ? "day" : `${signupPremiumDays} days`} of Premium
-                  </span>{" "}
-                  free
-                </>
-              )}
-              . No password to remember — creating an account and signing in are the same button.
-            </p>
+            {/* New-user framing on purpose: a near-zero-signup site is serving
+                first-timers, not returning members, and the OAuth flow genuinely
+                is the same button for both — so the returning case is one small
+                honest line instead of the page's whole identity. */}
+            <h1 className="text-xl font-extrabold text-white">Create your free account</h1>
+            <p className="mt-0.5 text-xs text-slate-500">Already have one? The same buttons sign you in.</p>
+            {contextLine && <p className="mt-3 text-sm font-medium text-slate-200">{contextLine}</p>}
+            <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-sm text-slate-300">
+              {PERKS.map((perk) => (
+                <li key={perk} className="flex items-center gap-1.5">
+                  <span aria-hidden className="font-bold text-brand-400">✓</span>
+                  <span className="font-semibold">{perk}</span>
+                </li>
+              ))}
+            </ul>
+            {signupPremiumDays > 0 && (
+              <p className="mt-2">
+                <span className="chip bg-gold/15 text-[10px] font-bold uppercase tracking-wide text-gold">
+                  + your first {signupPremiumDays === 1 ? "day" : `${signupPremiumDays} days`} of Premium free
+                </span>
+              </p>
+            )}
           </>
         )}
 
@@ -117,7 +167,7 @@ export function AuthForm({
         <div className="mt-5 flex flex-col gap-2.5">
           {providers.includes("google") && (
             <a
-              href="/api/auth/oauth/google"
+              href={oauthHref("google")}
               onClick={onProviderClick}
               className="flex items-center justify-center gap-2.5 rounded-xl border border-ink-600 bg-white py-2.5 text-sm font-semibold text-ink-950 hover:brightness-95"
             >
@@ -126,7 +176,7 @@ export function AuthForm({
           )}
           {providers.includes("discord") && (
             <a
-              href="/api/auth/oauth/discord"
+              href={oauthHref("discord")}
               onClick={onProviderClick}
               className="flex items-center justify-center gap-2.5 rounded-xl bg-[#5865F2] py-2.5 text-sm font-semibold text-white hover:brightness-110"
             >

@@ -91,8 +91,10 @@ export async function POST(req: Request) {
   // repeat heart-click.
   if (result.count > 0) {
     const unsubUrl = `${SITE_URL}/unsubscribe?token=${encodeURIComponent(unsubToken)}`;
-    // Don't block the response on the network round-trip.
-    void sendAlertConfirmationEmail(email, total, unsubUrl);
+    // Don't block the response on the network round-trip. `userId == null`
+    // means this watch has no account behind it — those recipients (and only
+    // those) get the create-a-free-account block in the confirmation.
+    void sendAlertConfirmationEmail(email, total, unsubUrl, userId == null);
   }
 
   return NextResponse.json({ ok: true, added: result.count, watching: total });

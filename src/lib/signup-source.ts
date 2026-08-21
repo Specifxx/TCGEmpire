@@ -21,9 +21,18 @@ import { SIGNUP_SOURCE_COOKIE, parseSignupSource } from "./signup-source-shared"
 export function markSignupSource(source: string): void {
   const safe = parseSignupSource(source) ?? "other";
   trackEvent("sign_in_click", { source: safe });
+  stashSignupSource(safe);
+}
+
+// Cookie only, no event — for attribution that ISN'T a click. The email-footer
+// CTAs land on /login?src=email; recording that arrival as a sign_in_click
+// would inflate the click metric with page loads, so the landing stashes the
+// source silently and the real provider-button click still fires the event.
+export function stashSignupSource(source: string): void {
+  const safe = parseSignupSource(source) ?? "other";
   try {
     document.cookie = `${SIGNUP_SOURCE_COOKIE}=${safe}; path=/; max-age=1800; samesite=lax`;
   } catch {
-    /* non-browser / privacy mode — the click event above already fired */
+    /* non-browser / privacy mode */
   }
 }

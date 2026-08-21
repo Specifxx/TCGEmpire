@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SITE_URL } from "@/lib/site";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { AnswerBox } from "@/components/AnswerBox";
+import { AlertsSignupCta } from "@/components/AlertsSignupCta";
 import { faqPage, ldJson, webPage } from "@/lib/jsonld";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 
@@ -200,7 +201,12 @@ export default function AlertsPage() {
             <Link href="/movers" className="text-brand-400 underline">what&apos;s moving today</Link> first.
           </p>
         </div>
-        <Link href="/browse" className="btn-primary shrink-0">Browse cards →</Link>
+        {/* Primary CTA = the account (this page explains the account feature);
+            browsing stays one click away as the secondary route. */}
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <AlertsSignupCta />
+          <Link href="/browse" className="btn-ghost">Browse cards →</Link>
+        </div>
       </section>
     </div>
   );

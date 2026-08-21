@@ -288,7 +288,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     block (right under the hero) carries the "it's here" message
                     with real prices instead of a repeating marquee claim. */}
                 <main id="main-content" className="container-app min-w-0 py-6">{children}</main>
-                <PriceAlertModal />
+                <PriceAlertModal providers={enabledProviders()} />
                 <SignupPromoPopup providers={enabledProviders()} signupPremiumDays={SIGNUP_PREMIUM_DAYS} />
                 {/* Converts the OAuth callback's one-time ?welcome= param into
                     the sign_up analytics event, then strips it from the URL.

@@ -38,12 +38,21 @@ test("THE FORGERY GUARD: subscribe only claims ownership when the session's own 
   );
 });
 
-test("the drop-notification cron is untouched — it must never learn accounts exist", () => {
+test("the drop-notification cron never FILTERS on userId — anonymous watchers keep their emails", () => {
   // Every row still carries an email, so lib/price-alerts.ts keeps serving
-  // account-owned and email-only watches identically. If this file starts
-  // filtering on userId, anonymous subscribers silently stop being emailed.
+  // account-owned and email-only watches identically. The invariant is about
+  // WHO GETS EMAILED: the query must have no userId condition, or anonymous
+  // subscribers silently stop being notified. (The cron MAY read userId per
+  // row — since 2026-08-21 it decides whether the email carries the
+  // create-a-free-account block, which changes copy, never recipients.)
   const cron = read("src/lib/price-alerts.ts");
-  assert.ok(!/userId/.test(cron), "price-alerts.ts must not reference userId");
+  const findMany = cron.slice(cron.indexOf("prisma.priceAlert.findMany"));
+  const beforeSelect = findMany.slice(0, findMany.indexOf("select:"));
+  assert.ok(!/where/.test(beforeSelect) && !/userId:\s*(?!true)/.test(beforeSelect), "the alerts query must fetch every row, never filtered by account status");
+  // The send loop must not skip anyone on account status either.
+  assert.doesNotMatch(cron, /if \(.*userId.*\)\s*continue/, "no row may be skipped because of its userId");
+  // And the copy flag is the only use: rows are bucketed for email regardless.
+  assert.match(cron, /if \(a\.userId != null\) bucket\.anonymous = false/);
 });
 
 test("unsubscribe stays token-addressed and session-free", () => {
