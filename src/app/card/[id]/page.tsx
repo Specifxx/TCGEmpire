@@ -132,6 +132,17 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   //
   // Built longest-first and stepped down so the card name + "Riftbound" + set id
   // always survive Google's ~60-char truncation on even the longest legend names.
+  //
+  // Candidates are checked WITH " | RiftCompare" appended (matching
+  // sets/[set]/page.tsx's pattern exactly) and the result is wrapped in
+  // `{ absolute }` below, so the root layout's title.template never appends its
+  // own " — RiftCompare" on top. The previous version checked each candidate's
+  // bare length against 62 and returned a plain string — the template silently
+  // added 14 more characters afterward, so the guard was sizing every candidate
+  // 14 characters short of what actually rendered. Bing flagged 397 pages as
+  // "Title too long" for exactly this: simulated against the real card corpus,
+  // 87.5% of rendered titles landed over 65 chars, and this template alone (the
+  // site's highest-volume, ~1,400 pages) was more than enough to explain it.
   const ident = `Riftbound ${card.setCode} ${card.collectorNumber}`;
   const tail = hasPrice ? "Card Text & Live Prices" : "Card Text, Stats & Printings";
   const titleCandidates = [
@@ -140,7 +151,8 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     `${displayName} — ${ident}`,
     `${displayName} — Riftbound ${card.setCode}`,
   ];
-  const title = titleCandidates.find((t) => t.length <= 62) ?? titleCandidates[titleCandidates.length - 1];
+  const title =
+    titleCandidates.find((t) => `${t} | RiftCompare`.length <= 60) ?? titleCandidates[titleCandidates.length - 1];
 
   // DESCRIPTION — lead with what the card DOES (the informational half of the
   // intent), then the commercial half. Degrades in three steps so a card with no
@@ -198,7 +210,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   const noindex = !priceState.indexable || twin != null;
 
   return {
-    title,
+    title: { absolute: `${title} | RiftCompare` },
     description,
     ...(noindex ? { robots: { index: false, follow: true } } : {}),
     // pageAlternates(), not a bare object: a hand-rolled `alternates` here
@@ -219,10 +231,10 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     // inline openGraph REPLACES the root's and silently drops whatever it does
     // not restate — here og:url, on all ~1,400 card pages. lib/seo.ts exists for
     // exactly this and already carries siteName and type. See GROWTH-AUDIT.md § 5.
-    openGraph: pageOpenGraph({ title, description, url: canonicalPath }),
+    openGraph: pageOpenGraph({ title: `${title} | RiftCompare`, description, url: canonicalPath }),
     twitter: {
       card: "summary_large_image",
-      title,
+      title: `${title} | RiftCompare`,
       description,
     },
   };

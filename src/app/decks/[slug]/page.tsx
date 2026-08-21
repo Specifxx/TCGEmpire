@@ -27,13 +27,26 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const seed = getDeckSeed(params.slug);
   if (!seed) return notFoundMetadata("Deck");
   const legendName = seed.legend.replace(/\s*-\s*Starter$/i, "");
-  const title = `${seed.name} — Riftbound meta deck & build cost`;
+  // Stepped down like card/[id]/page.tsx and sets/[set]/page.tsx: checked WITH
+  // " | RiftCompare" appended, wrapped in `{ absolute }` below so the root
+  // layout's title.template doesn't append its own " — RiftCompare" on top.
+  // The previous single fixed string had neither guard — every one of the 10
+  // deck pages rendered over 65 chars (several at 77), part of Bing's 397
+  // "Title too long" warnings.
+  const titleCandidates = [
+    `${seed.name} — Riftbound Meta Deck & Build Cost`,
+    `${seed.name} — Riftbound Meta Deck`,
+    `${seed.name} Riftbound Deck`,
+    `${seed.name} Deck`,
+  ];
+  const title =
+    titleCandidates.find((t) => `${t} | RiftCompare`.length <= 60) ?? titleCandidates[titleCandidates.length - 1];
   const description = `${seed.description} See the full ${legendName} decklist priced live across stores.`;
   return {
-    title,
+    title: { absolute: `${title} | RiftCompare` },
     description,
     alternates: pageAlternates(`/decks/${params.slug}`),
-    openGraph: pageOpenGraph({ title, description, url: `/decks/${params.slug}` }),
+    openGraph: pageOpenGraph({ title: `${title} | RiftCompare`, description, url: `/decks/${params.slug}` }),
   };
 }
 

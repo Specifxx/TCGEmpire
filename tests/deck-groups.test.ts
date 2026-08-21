@@ -566,7 +566,21 @@ test("no two store pages can ship the same title", () => {
   const titles = new Map<string, string>();
   for (const s of STORE_PAGES) {
     const place = COUNTRIES[(s.country ?? "AU") as keyof typeof COUNTRIES];
-    const title = `${storePageName(s, place.label)} Riftbound Singles — Live Prices & Stock | RiftCompare`;
+    const label = storePageName(s, place.label);
+    // Mirrors the step-down candidate ladder in stores/[slug]/page.tsx's
+    // generateMetadata (added so every store title clears ~60 chars with the
+    // " | RiftCompare" suffix, part of the fix for Bing's 397 "Title too long"
+    // pages) — same formula, so two stores sharing a label still collide here
+    // regardless of which rung of the ladder they land on.
+    const candidates = [
+      `${label} Riftbound Singles — Live Prices & Stock`,
+      `${label} Riftbound Singles — Live Prices`,
+      `${label} — Riftbound Singles`,
+      `${label} — Riftbound Store`,
+      label,
+    ];
+    const bare = candidates.find((t) => `${t} | RiftCompare`.length <= 60) ?? candidates[candidates.length - 1];
+    const title = `${bare} | RiftCompare`;
     assert.ok(
       !titles.has(title),
       `duplicate store title ${JSON.stringify(title)} on /stores/${s.slug} and /stores/${titles.get(title)}`,

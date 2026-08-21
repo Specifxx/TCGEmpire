@@ -173,7 +173,7 @@ export const ARTICLES: Article[] = [
   {
     slug: "best-riftbound-cards",
     category: "guide",
-    title: "The Best Riftbound Cards: What Winning Decks Actually Play",
+    title: "Best Riftbound Cards: What Winning Decks Play",
     excerpt:
       "Which Riftbound cards are actually the best? Not an opinion — the 48 cards that show up across the real tournament decklists in the current metagame, counted, ranked by how many decks run them, and priced live.",
     author: "RiftCompare",
@@ -347,7 +347,7 @@ You can get a feel for the cards completely free: play **[Riftle](/riftle)**, ou
   {
     slug: "buying-singles-vs-opening-packs",
     category: "blog",
-    title: "Buying Singles vs Opening Packs: The Smart-Money Guide",
+    title: "Buying Singles vs Opening Packs: Smart-Money Guide",
     excerpt:
       "Should you buy the exact Riftbound cards you want, or open packs and hope? The maths, the fun factor, and how to decide every time.",
     author: "RiftCompare",
@@ -475,7 +475,7 @@ Want to see the chase cards in action? Read **[the most valuable Riftbound cards
   {
     slug: "riftbound-price-movers-how-to-track",
     category: "blog",
-    title: "What's Moving in Riftbound This Week — and How to Track It",
+    title: "What's Moving in Riftbound This Week",
     excerpt:
       "Riftbound card prices change every day. Here's how to spot which singles are spiking, which are dropping, and where the best-value buys are — before everyone else does.",
     author: "RiftCompare",
@@ -950,7 +950,7 @@ Not sure whether your card clears the bar? **[Check its live raw price across ev
   {
     slug: "riftbound-for-beginners",
     category: "guide",
-    title: "Riftbound for Beginners: How to Start & What to Buy First",
+    title: "Riftbound for Beginners: How to Start",
     excerpt:
       "New to Riftbound: League of Legends TCG? Here's how the game works, how to start playing, and exactly what to buy first without overspending.",
     author: "RiftCompare",
@@ -1404,7 +1404,7 @@ Used honestly, the Index is a health check, not a trading signal. It won't tell 
   {
     slug: "riftbound-set-checklist-how-to-complete-a-set",
     category: "guide",
-    title: "Completing a Riftbound Set on a Budget: A Collector's Plan",
+    title: "Completing a Riftbound Set on a Budget",
     excerpt:
       "Chasing a full Riftbound set doesn't have to drain your wallet. Here's the order to buy in, when packs beat singles, and how to track what's left.",
     author: "RiftCompare",
@@ -1563,7 +1563,7 @@ Want to know what to build with them? Read our **[Vendetta deckbuilding guide](/
   {
     slug: "riftbound-vendetta-unit-gear-decrees",
     category: "blog",
-    title: "Riftbound Vendetta's New Card Types: Unit-Gear and Decrees",
+    title: "Vendetta's New Card Types: Unit-Gear & Decrees",
     excerpt:
       "Vendetta adds two new card concepts to Riftbound — Unit-Gear, which is both a unit and a piece of gear, and Decrees, a cycle of rivalry spells. Here's how they work.",
     author: "RiftCompare",
@@ -1859,7 +1859,7 @@ For the full picture, read **[everything you need to know about Vendetta](/blog/
   {
     slug: "riftbound-vendetta-countdown-how-long-until-release",
     category: "blog",
-    title: "Riftbound Vendetta Release Date — Out Now (31 July 2026)",
+    title: "Riftbound Vendetta Release Date — Out Now",
     excerpt:
       "Riftbound: Vendetta drops 31 July 2026, with Pre-Rift launch events from 24 July. Here are the key dates, what's in the set, and where to buy it now that it's out.",
     author: "RiftCompare",
@@ -1976,7 +1976,7 @@ Vendetta is out now — browse **[every card with live prices](/sets/vendetta)**
   {
     slug: "riftbound-banlist-explained",
     category: "guide",
-    title: "Riftbound Ban List Explained: Every Currently Banned Card",
+    title: "Riftbound Ban List Explained",
     excerpt:
       "The complete, up-to-date Riftbound banlist — every card currently banned from competitive constructed play, the new Constructed 2v2 ban list, the official reason for each ban, and live prices for all of them.",
     author: "RiftCompare",
@@ -2128,7 +2128,7 @@ For the complete, always-current picture — including March's original 7 bans �
   {
     slug: "riftbound-t1-signature-edition-drawing",
     category: "blog",
-    title: "Riftbound T1 Drawing 2026: Winners Emailed From Aug 20",
+    title: "Riftbound T1 Drawing 2026: Winners Emailed",
     excerpt:
       "Riftbound T1 Signature Edition drawing: registration closed 17 August 2026, selection emails go out from 20 August. Every date, the odds, and all five cards.",
     author: "RiftCompare",
@@ -2403,7 +2403,7 @@ Enter between **14 and 17 August**, at any point in that window. Do not stay up 
   {
     slug: "riftbound-t1-worlds-champion-collection",
     category: "blog",
-    title: "Riftbound × T1: The 2025 Worlds Champion Collection Explained",
+    title: "Riftbound × T1 Worlds Champion Collection",
     excerpt:
       "Riot's first-ever single-team Riftbound collaboration: a serialised, player-signed Signature Edition at US$360 and a US$70 Player Bundle honouring T1's sixth World Championship. What's in each, and the five champions T1 picked.",
     author: "RiftCompare",
@@ -2496,7 +2496,7 @@ For the wider context on where serialised and premium prints sit in this game, s
   {
     slug: "jayce-mel-riftbound-empower-explained",
     category: "guide",
-    title: "Jayce & Mel in Riftbound: Vendetta's New Champion Printings",
+    title: "Jayce & Mel: Vendetta's New Champion Printings",
     excerpt:
       "Every confirmed Jayce and Mel printing in Riftbound, including two brand-new Vendetta cards — real stats, domains and rarities, not speculation.",
     author: "RiftCompare",
@@ -3156,7 +3156,7 @@ See the full **[Riftbound keywords glossary](/keywords)** for every mechanic in 
   {
     slug: "riftbound-vendetta-card-list",
     category: "guide",
-    title: "Riftbound Vendetta Card List — All 166 Cards Confirmed",
+    title: "Riftbound Vendetta Card List — All 166 Cards",
     excerpt:
       "The complete, confirmed Riftbound: Vendetta card list — every one of the 166 main-set cards, the new champions, mechanics and product line-up, ahead of the 31 July 2026 release.",
     author: "RiftCompare",
@@ -3220,7 +3220,7 @@ Planning a deck already? Our **[best Vendetta decks guide](/guides/best-riftboun
   {
     slug: "riftbound-vendetta-overnumbers-explained",
     category: "guide",
-    title: "Riftbound Vendetta Overnumbers & Rival Cards Explained",
+    title: "Riftbound Vendetta Overnumbers Explained",
     excerpt:
       "What are Overnumbered and Rival Overnumber cards in Riftbound: Vendetta? A guide to the set's premium chase cards — the signed Legend variants and the 22 rivalry diptychs — and why collectors want them.",
     author: "RiftCompare",
@@ -3358,7 +3358,7 @@ Read the mechanics in full — **[Flow](/guides/riftbound-flow-explained)**, **[
     slug: "riftbound-vendetta-chase-cards-so-far",
     ebayPicks: { heading: "These chase cards on eBay right now" },
     category: "blog",
-    title: "Riftbound Vendetta Chase Cards — Every Tier, With Live Prices",
+    title: "Riftbound Vendetta Chase Cards — Every Tier",
     excerpt:
       "Vendetta is out. Here's every chase-card tier in the set — signed Signature Legends, connecting-art Rival Overnumbers, Showcases, alt-arts and the Epic sleepers — each with a live gallery and real prices compared across every store.",
     author: "RiftCompare",
@@ -3487,7 +3487,7 @@ See the full **[Vendetta card list](/guides/riftbound-vendetta-card-list)**, bro
     slug: "riftbound-price-comparison-singapore",
     marketData: "SG",
     category: "blog",
-    title: "Riftbound Card Prices Singapore — Compare 11 SG Stores",
+    title: "Riftbound Card Prices Singapore — 11 Stores",
     excerpt:
       "Compare Riftbound card prices across Singapore stores, eBay SG and TCGplayer — live SGD prices ranked by total delivered cost. Free, updated daily.",
     author: "RiftCompare",
@@ -3531,7 +3531,7 @@ Happy hunting — and pay less for the cards you want. Start at the **[card data
     slug: "buy-riftbound-cards-australia",
     marketData: "AU",
     category: "blog",
-    title: "Riftbound Card Prices Australia — Compare 19 AU Stores",
+    title: "Riftbound Card Prices Australia — 19 Stores",
     excerpt:
       "Compare Riftbound card prices across Australian stores — live AUD prices at 19 AU retailers plus eBay AU, ranked by total delivered cost. Free, updated daily.",
     author: "RiftCompare",
@@ -3571,7 +3571,7 @@ Buying from overseas, or curious about other markets? See **[the US](/blog/buy-r
     slug: "buy-riftbound-cards-us",
     marketData: "US",
     category: "blog",
-    title: "Riftbound Card Prices USA — Stores, TCGplayer & eBay",
+    title: "Riftbound Card Prices USA — Stores & eBay",
     excerpt:
       "Compare Riftbound card prices across US stores, TCGplayer and eBay — live USD prices ranked by total delivered cost. Free, updated daily.",
     author: "RiftCompare",
@@ -3651,7 +3651,7 @@ Shopping from **[Australia](/blog/buy-riftbound-cards-australia)** or **[the US]
     slug: "buy-riftbound-cards-canada",
     marketData: "CA",
     category: "blog",
-    title: "Riftbound Card Prices Canada — Compare 20 Canadian Stores",
+    title: "Riftbound Card Prices Canada — 20 Stores",
     excerpt:
       "Compare Riftbound card prices across Canadian stores — live CAD prices at 20 Canadian retailers, ranked by total delivered cost. Free, updated daily.",
     author: "RiftCompare",
@@ -3819,7 +3819,7 @@ Want the store-by-store breakdown for your market? See **[Australia](/blog/buy-r
     // guide describes a feature that's currently off. Draft rather than deleted,
     // per the "keep archived" decision; delete this line to republish.
     draft: true,
-    title: "How to Buy Riftbound Cards on the RiftCompare Marketplace",
+    title: "How to Buy on the RiftCompare Marketplace",
     excerpt:
       "A step-by-step guide to buying Riftbound singles directly from other players on the RiftCompare Marketplace — finding a listing, checking out, and what happens to your money until the card actually arrives.",
     author: "RiftCompare",
@@ -3953,7 +3953,7 @@ Full details, including the exact policy language, are on the **[buyer protectio
     // post describes a feature that's currently off. Draft rather than deleted,
     // per the "keep archived" decision; delete this line to republish.
     draft: true,
-    title: "Marketplace vs Stores: Where Should You Buy Riftbound Cards?",
+    title: "Marketplace vs Stores: Where to Buy Riftbound",
     excerpt:
       "RiftCompare shows you store prices AND player-to-player marketplace listings side by side. Here's when to buy from a store and when the marketplace is the better (or cheaper) call.",
     author: "RiftCompare",
@@ -4102,7 +4102,7 @@ That's an important distinction if you're chasing a specific card: the **[Vendet
   {
     slug: "riftbound-vendetta-is-here-early-release",
     category: "blog",
-    title: "Riftbound: Vendetta Is Out — Where to Buy Every Card",
+    title: "Riftbound: Vendetta Is Out — Where to Buy",
     excerpt:
       "Riftbound: Vendetta has arrived early. Vendetta released worldwide on 31 July 2026 after a week of Pre-Rift launch events — here's what's live, where to buy it, and what to watch for through the launch window.",
     author: "RiftCompare",
@@ -4163,7 +4163,7 @@ Early-window prices on a brand-new set are volatile — a handful of listings ca
   {
     slug: "how-to-start-buying-riftbound-vendetta-decks",
     category: "blog",
-    title: "How to Start Buying Into Riftbound Vendetta's First Decks",
+    title: "How to Start Buying Riftbound Vendetta Decks",
     excerpt:
       "Vendetta is out — it released on 31 July 2026. Here's how to actually start buying into Flow Value, Burn/Disruption or Empower Midrange today — without overpaying in the early rush.",
     author: "RiftCompare",
@@ -4440,7 +4440,7 @@ Every Crystal Rose card's cheapest current price, ranked across every store Rift
   {
     slug: "why-riftbound-card-prices-change",
     category: "guide",
-    title: "Why Riftbound Card Prices Change — And When They Usually Drop",
+    title: "Why Riftbound Card Prices Change",
     excerpt:
       "Why one Riftbound set costs more than another, why prices tend to fall after a launch, why a card costs a different amount in Australia than the US, and which events actually move the market. A plain explanation of the forces behind the numbers.",
     author: "RiftCompare",
@@ -4570,7 +4570,7 @@ On that last point, our position is straightforward: we report what the market i
   {
     slug: "cheapest-way-to-start-riftbound",
     category: "guide",
-    title: "The Cheapest Way to Start Riftbound (Without Wasting Money)",
+    title: "The Cheapest Way to Start Riftbound",
     excerpt:
       "Every realistic way into Riftbound compared on cost: a ready-to-play deck, a starter product, singles for one deck, or a booster box. What each actually gets you, what to skip first, and how to check live prices in your own market.",
     author: "RiftCompare",
@@ -4685,7 +4685,7 @@ Once you've played a few games, **[Riftbound for beginners](/guides/riftbound-fo
   {
     slug: "riftbound-rules-explained",
     category: "guide",
-    title: "Riftbound Rules Explained — Every Mechanic, In One Place",
+    title: "Riftbound Rules Explained",
     excerpt:
       "A hub for how Riftbound actually works: the keywords introduced in Vendetta, the chase-print numbering, deck construction, the banlist, and the event formats — each linked to a full guide.",
     author: "RiftCompare",
@@ -4765,7 +4765,7 @@ Start with **[Riftbound for beginners](/guides/riftbound-for-beginners)** for th
   {
     slug: "riftbound-vendetta-nexus-night-promo-cards",
     category: "blog",
-    title: "Vendetta Nexus Night Promo Cards (2026): Mel + All 7 Confirmed So Far",
+    title: "Vendetta Nexus Night Promo Cards: All 7 Confirmed",
     excerpt:
       "Riftbound Vendetta's weekly Nexus Night events hand out a 25-card promo cycle — Mel, Newly Awakened is the chase card. 7 of 25 promos are confirmed as of this update: Mel plus the full 6-card promo rune cycle, with live prices.",
     author: "RiftCompare",
@@ -4857,7 +4857,7 @@ Find your nearest Riftbound local game store and show up for their weekly Nexus 
   {
     slug: "ggez-teemo-riftbound-explained",
     category: "blog",
-    title: "GGEZ Teemo: Riftbound's Most Infamous Promo, Explained",
+    title: "GGEZ Teemo: Riftbound's Most Infamous Promo",
     excerpt:
       "Meet GGEZ Teemo — Origins' first Nexus Night promo and one of Riftbound's priciest cards. What it does, why the name, and how it compares to the game's other big promo grails.",
     author: "RiftCompare",
@@ -5435,7 +5435,7 @@ None of it is actionable in August 2026. It is actionable in January 2027, and t
   {
     slug: "riftbound-august-2026-state-of-the-game-takeaways",
     category: "blog",
-    title: "Riftbound's August 2026 State of the Game: Five Takeaways",
+    title: "Riftbound's August 2026 State of the Game",
     excerpt:
       "Riot's August State of the Game covered ban philosophy, 2v2, collector products and language rollout. Here are the takeaways that actually change what you should buy and track.",
     author: "RiftCompare",
@@ -5766,7 +5766,7 @@ Once it is on sale, the Vault will be price-compared the same way as every other
     slug: "riftbound-state-of-the-game-august-2026",
     draft: true,
     category: "blog",
-    title: "Riftbound State of the Game (Aug 2026): What Changed",
+    title: "Riftbound State of the Game (Aug 2026)",
     excerpt:
       "A plain summary of Riftbound's August 2026 State of the Game — what Riot announced, what changed, and what it means if you buy cards.",
     author: "RiftCompare",
@@ -6965,7 +6965,7 @@ A collector number **higher than the set total** — 238 in a 219-card set — s
   {
     slug: "every-ahri-card-in-riftbound",
     category: "blog",
-    title: "Every Ahri Card in Riftbound (and What Each One Costs)",
+    title: "Every Ahri Card in Riftbound",
     excerpt:
       "Twelve Ahri printings across three different cards, from US$8.95 to US$3,420.28 — with the two prints that are visually identical except for a signature worth US$3,046.",
     author: "RiftCompare",
@@ -7420,7 +7420,7 @@ Every price above moves. **[Browse the full Origins set](/sets/origins)** for li
   {
     slug: "riftbound-cards-to-watch",
     category: "blog",
-    title: "Riftbound Cards to Watch: Short-Term Meta Movers vs Long-Term Chase Plays",
+    title: "Riftbound Cards to Watch: Movers & Chase Plays",
     excerpt:
       "Not a price prediction — a look at the real signals behind which Riftbound cards could move: current tournament demand for the short term, and chase-tier scarcity for the long term, with real numbers throughout.",
     author: "RiftCompare",

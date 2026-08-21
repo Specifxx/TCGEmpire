@@ -240,7 +240,7 @@ Stop checking five tabs to find the lowest price on a Riftbound card. RiftCompar
   {
     slug: "ebay-bidding-strategies",
     category: "blog",
-    title: "eBay Bidding Strategies for Buyers: Win More, Pay Less",
+    title: "eBay Bidding Strategies: Win More, Pay Less",
     excerpt:
       "Proxy bidding, sniping and setting a maximum you can defend — a disciplined eBay bidding strategy for buyers of Riftbound cards and other collectibles.",
     author: AUTHOR,
@@ -735,7 +735,7 @@ Browse [the full card database](${L.browse}), dig into [a specific set](${L.sets
   {
     slug: "best-riftbound-marketplaces",
     category: "blog",
-    title: "The 9 Best Riftbound TCG Marketplaces (2026), Compared",
+    title: "The 9 Best Riftbound TCG Marketplaces (2026)",
     excerpt:
       "Where to actually buy and sell Riftbound cards in 2026: nine marketplaces compared on coverage, fees, buyer protection and true total cost including shipping.",
     author: AUTHOR,

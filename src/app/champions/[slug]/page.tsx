@@ -64,7 +64,18 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const domainBit = domains.length === 1 ? `a ${domains[0]} champion` : domains.length > 1 ? `spanning ${domains.join(", ")}` : "";
   const setBit = setNames.length === 1 ? ` in ${setNames[0]}` : setNames.length > 1 ? ` across ${setNames.join(", ")}` : "";
   const factBit = domainBit ? `${cardCount} printings — ${domainBit}${setBit}. ` : "";
-  const title = `${champ.name} Riftbound Cards — All Printings & Live Prices`;
+  // Stepped down like card/[id]/page.tsx and sets/[set]/page.tsx: the previous
+  // single fixed string had no length guard at all — every one of the 87
+  // champion pages rendered over 60 chars and 43 over 65, part of Bing's 397
+  // "Title too long" warnings.
+  const titleCandidates = [
+    `${champ.name} Riftbound Cards — All Printings & Live Prices`,
+    `${champ.name} Riftbound Cards — Prices & Printings`,
+    `${champ.name} — Riftbound Cards`,
+    `Riftbound ${champ.name} Cards`,
+  ];
+  const title =
+    titleCandidates.find((t) => `${t} | RiftCompare`.length <= 60) ?? titleCandidates[titleCandidates.length - 1];
   return {
     title: { absolute: `${title} | RiftCompare` },
     description:

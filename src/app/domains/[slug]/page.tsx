@@ -20,7 +20,17 @@ export const revalidate = 86400;
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const domain = domainBySlug(params.slug);
   if (!domain) return notFoundMetadata("Domain");
-  const title = `Riftbound ${domain.label} Cards — Prices, Values & Full List`;
+  // Stepped down like card/[id]/page.tsx and sets/[set]/page.tsx: the previous
+  // single fixed string had no length guard — every one of the 7 domain pages
+  // rendered over 60 chars with the suffix, part of Bing's 397 "Title too
+  // long" warnings.
+  const titleCandidates = [
+    `Riftbound ${domain.label} Cards — Prices, Values & Full List`,
+    `Riftbound ${domain.label} Cards — Prices & Values`,
+    `Riftbound ${domain.label} Cards`,
+  ];
+  const title =
+    titleCandidates.find((t) => `${t} | RiftCompare`.length <= 60) ?? titleCandidates[titleCandidates.length - 1];
   // domain.tagline ("Aggression & burst", "Control & knowledge") is per-domain
   // copy that already exists in lib/domains.ts and was going unused in metadata.
   // Without it the seven domain descriptions differed by a single repeated word

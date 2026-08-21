@@ -61,9 +61,25 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   // Market-disambiguated where two keys share a trading name (see
   // lib/store-pages.ts) — otherwise the two pages ship the same <title>.
   const label = storePageName(store, place.label);
-  const title = `${label} Riftbound Singles — Live Prices & Stock | RiftCompare`;
+  // Stepped down like card/[id]/page.tsx and sets/[set]/page.tsx: checked WITH
+  // " | RiftCompare" appended. The previous single fixed string had no length
+  // guard at all — computed over all 132 store pages, 97 rendered over 65 chars
+  // and 39 over 70, part of Bing's 397 "Title too long" warnings. `label` itself
+  // can carry a market-disambiguation suffix (e.g. "Danireon Cards & Games
+  // (United States)" — see storePageName's own doc comment for why that exists
+  // and can't be dropped), so even the shortest candidate here isn't guaranteed
+  // to clear 60 for every store; the bare label is the honest final fallback.
+  const titleCandidates = [
+    `${label} Riftbound Singles — Live Prices & Stock`,
+    `${label} Riftbound Singles — Live Prices`,
+    `${label} — Riftbound Singles`,
+    `${label} — Riftbound Store`,
+    label,
+  ];
+  const title =
+    titleCandidates.find((t) => `${t} | RiftCompare`.length <= 60) ?? titleCandidates[titleCandidates.length - 1];
   return {
-    title: { absolute: title },
+    title: { absolute: `${title} | RiftCompare` },
     // NAMES A CARD THIS STORE ACTUALLY HAS. The previous sentence varied only by
     // the store's name and a stock count, so 43 of the 79 store pages read as one
     // description to a near-duplicate detector — digits are discounted, and
@@ -81,7 +97,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     // "nothing in stock". Real page, still linked, just not submitted for
     // indexing until it has something to show.
     ...(count >= 0 && count < STORE_THIN_THRESHOLD ? { robots: { index: false, follow: true } } : {}),
-    openGraph: pageOpenGraph({ title, description: `Live Riftbound prices and stock at ${label}.`, url: `/stores/${store.slug}` }),
+    openGraph: pageOpenGraph({ title: `${title} | RiftCompare`, description: `Live Riftbound prices and stock at ${label}.`, url: `/stores/${store.slug}` }),
   };
 }
 
