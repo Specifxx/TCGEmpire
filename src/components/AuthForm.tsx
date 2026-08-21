@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { markSignupSource } from "@/lib/signup-source";
+import { markSignupSource, stashSignupSource } from "@/lib/signup-source";
 
 // Sign-in is OAUTH ONLY — Google and Discord. The email/password form, /register,
 // /forgot and /reset were removed along with their API routes.
@@ -90,8 +90,12 @@ export function AuthForm({
   onProviderClick?: () => void;
 }) {
   const [error, setError] = useState<string | null>(null);
+  // Off-site campaign source (?src=email from the email-footer CTAs) — captured
+  // so the provider click below attributes to the CAMPAIGN, not the generic
+  // "login" default that would otherwise clobber it.
+  const [urlSrc, setUrlSrc] = useState<string | null>(null);
   const onProviderClick = () => {
-    markSignupSource(source ?? "login");
+    markSignupSource(source ?? urlSrc ?? "login");
     onProviderClickProp?.();
   };
   const oauthHref = (provider: "google" | "discord") =>
@@ -99,8 +103,20 @@ export function AuthForm({
 
   // Surface OAuth failures redirected back as ?error=…
   useEffect(() => {
-    const e = new URLSearchParams(window.location.search).get("error");
+    const params = new URLSearchParams(window.location.search);
+    const e = params.get("error");
     if (e) setError(OAUTH_ERRORS[e] ?? "Sign-in failed — please try again.");
+    // Off-site campaign attribution (?src=email from the email-footer CTAs):
+    // stash the cookie NOW (so the OAuth callback sees it even in edge flows)
+    // and remember it for the click handler above. stashSignupSource is
+    // cookie-only — recording a page LOAD as a sign_in_click would inflate the
+    // click metric. The whitelist means an arbitrary ?src= can only ever record
+    // as "other", never as invented attribution.
+    const src = params.get("src");
+    if (src) {
+      stashSignupSource(src);
+      setUrlSrc(src);
+    }
   }, []);
 
   const wrapperClass = bare ? "" : "mx-auto w-full max-w-sm py-10";

@@ -110,7 +110,9 @@ test("the navbar sign-in link attributes its clicks", () => {
 
 test("AuthForm's provider buttons attribute their clicks, defaulting to the login page", () => {
   const src = read("src/components/AuthForm.tsx");
-  assert.match(src, /markSignupSource\(source \?\? "login"\)/);
+  // Since Phase 2 a ?src= landing (urlSrc) outranks the generic default but
+  // never outranks an explicit source prop from the mounting surface.
+  assert.match(src, /markSignupSource\(source \?\? urlSrc \?\? "login"\)/);
   // Both provider anchors carry the click handler — one instrumented button
   // and one silent one would skew every per-provider comparison.
   const clicks = src.match(/onClick=\{onProviderClick\}/g) ?? [];

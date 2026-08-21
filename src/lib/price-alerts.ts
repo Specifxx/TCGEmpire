@@ -28,6 +28,9 @@ export async function runPriceAlerts(): Promise<AlertRunSummary> {
       market: true,
       lastPriceCents: true,
       unsubToken: true,
+      // Whether this watch belongs to an account — decides if the drop email
+      // carries the "create a free account" block (anonymous watchers only).
+      userId: true,
       card: {
         select: {
           id: true,
@@ -52,7 +55,7 @@ export async function runPriceAlerts(): Promise<AlertRunSummary> {
   const summary: AlertRunSummary = { alerts: alerts.length, drops: 0, emails: 0, updated: 0, held: 0 };
 
   // email → { token, items[] } for cards that dropped.
-  const byEmail = new Map<string, { token: string; items: PriceDropItem[] }>();
+  const byEmail = new Map<string, { token: string; items: PriceDropItem[]; anonymous: boolean }>();
   // Baseline writes to apply after we've decided who to notify.
   const updates: { id: string; price: number }[] = [];
   const notifiedIds: string[] = [];
@@ -76,8 +79,11 @@ export async function runPriceAlerts(): Promise<AlertRunSummary> {
         newCents: current,
         market,
       };
-      const bucket = byEmail.get(a.email) ?? { token: a.unsubToken, items: [] };
+      const bucket = byEmail.get(a.email) ?? { token: a.unsubToken, items: [], anonymous: true };
       bucket.items.push(item);
+      // ANY linked row means this address has an account (claimAlertsForUser
+      // adopts them all on signup, but pre-claim mixes can exist briefly).
+      if (a.userId != null) bucket.anonymous = false;
       byEmail.set(a.email, bucket);
     }
 
@@ -88,9 +94,9 @@ export async function runPriceAlerts(): Promise<AlertRunSummary> {
   // Send one digest per email. Sequential to stay gentle on the email provider's
   // rate limits; the daily volume is small.
   const failedEmails = new Set<string>();
-  for (const [email, { token, items }] of byEmail) {
+  for (const [email, { token, items, anonymous }] of byEmail) {
     const unsubUrl = `${SITE_URL}/unsubscribe?token=${encodeURIComponent(token)}`;
-    const sent = await sendPriceDropEmail(email, items, unsubUrl);
+    const sent = await sendPriceDropEmail(email, items, unsubUrl, anonymous);
     if (sent) summary.emails++;
     else failedEmails.add(email);
   }
