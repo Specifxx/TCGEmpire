@@ -112,6 +112,7 @@ async function core(): Promise<SitemapEntry[]> {
     { url: `${SITE_URL}/games`, changeFrequency: "weekly", priority: 0.7, lastModified: day },
     { url: `${SITE_URL}/tools`, changeFrequency: "weekly", priority: 0.7, lastModified: staticPageDate("/tools") },
     { url: `${SITE_URL}/tools/box-ev`, changeFrequency: "weekly", priority: 0.7, lastModified: day },
+    { url: `${SITE_URL}/tools/selling-fees`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/tools/selling-fees") },
     // Raised from 0.6 to 0.8 alongside promoting it to a header nav item and a
     // homepage section — it is the most defensible, hardest-to-replicate feature
     // on the site (per-store shipping optimisation, not just price lookup) and

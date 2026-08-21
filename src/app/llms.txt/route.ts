@@ -18,6 +18,7 @@ const DESC: Record<string, string> = {
   "/tools/rising": "Ranks cards by demand and price-timing signals to surface ones likely to rise soon.",
   "/tools/best-basket": "Cheapest single-store basket for a list of cards (minimises combined shipping).",
   "/tools/box-ev": "Booster-box expected value: the pull value of a sealed box vs its price.",
+  "/tools/selling-fees": "Net proceeds calculator for selling on TCGplayer or eBay: stacks commission, processing and shipping.",
   "/decks": "Tournament meta decks, each costed live from current card prices.",
   "/deck": "Deck builder — assemble a deck and price it in real time.",
   "/trade": "Trade calculator — value two sides of a card trade fairly.",

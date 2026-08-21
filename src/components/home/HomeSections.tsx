@@ -14,7 +14,7 @@ import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { getArticles } from "@/lib/articles";
 import type { Country } from "@/lib/country";
 import type { TopDeals } from "@/lib/top-deals";
-import type { PriceMovers } from "@/lib/price-history";
+import { toPulseMovers, type PriceMovers } from "@/lib/price-history";
 import type { CardTileData } from "@/components/CardTile";
 import type { RecentUpdate } from "@/lib/price-history";
 
@@ -74,10 +74,26 @@ export function HomeSections({
   const COUNTRY_CODES: Country[] = ["AU", "US", "UK", "SG", "CA"];
   const anyDeals = COUNTRY_CODES.some((c) => topDealsByCountry[c].hasAny);
   // Biggest movers tab: both directions, ranked by the size of the move, for
-  // THIS page's own market.
+  // THIS page's own market. Trimmed to {card, pct} — the only two fields
+  // PopularCardsCarousel's "Biggest movers" tab reads (see its own Tab type) —
+  // right here, before it crosses into that client component, so each mover's
+  // sparkline `points` and nowCents/refCents don't ride along unused.
   const biggestMovers = [...moversByCountry[country].spiking, ...moversByCountry[country].plummeting]
     .sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct))
-    .slice(0, 12);
+    .slice(0, 12)
+    .map((m) => ({ card: m.card, pct: m.pct }));
+  // Same trim for "Recently updated" — a separate variable (not reassigning
+  // the `recentlyUpdated` prop) because the JSON-LD ItemList further down
+  // still needs the full RecentUpdate list it was passed.
+  const recentlyUpdatedCards = recentlyUpdated.map((u) => ({ card: u.card, pct: u.pct }));
+  // MarketPulse renders across all five markets (client-side switching, no
+  // refetch) but only ever reads spiking/plummeting's card/nowCents/pct — see
+  // toPulseMovers' doc comment in lib/price-history.ts for exactly what this
+  // drops (the unused "value" list and every mover's sparkline points) and why
+  // it's safe.
+  const pulseMoversByCountry = Object.fromEntries(
+    COUNTRY_CODES.map((c) => [c, toPulseMovers(moversByCountry[c])])
+  ) as Record<Country, ReturnType<typeof toPulseMovers>>;
   const newestSet = newestReleasedSet();
   // The next announced-but-unreleased set (Radiance today; rolls forward on
   // its own — see nextUpcomingSet's doc comment). undefined hides the card.
@@ -95,7 +111,7 @@ export function HomeSections({
           data. Sits right after the hero: the single strongest "come back
           tomorrow" signal a price site can show, so it earns above-the-fold
           placement. Hides itself if there's nothing to show today. */}
-      <MarketPulse moversByCountry={moversByCountry} />
+      <MarketPulse moversByCountry={pulseMoversByCountry} />
 
       {/* Today's Top Deals — the strongest differentiator, moved up from five
           sections deep. Hidden if no market has data. */}
@@ -137,7 +153,7 @@ export function HomeSections({
         vendetta={popularVendetta}
         allTime={popularCards}
         movers={biggestMovers}
-        recentlyUpdated={recentlyUpdated}
+        recentlyUpdated={recentlyUpdatedCards}
         storeCount={storeCount}
         storeWord={storeWord}
       />

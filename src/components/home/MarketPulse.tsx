@@ -4,7 +4,7 @@ import { useRef } from "react";
 import Link from "next/link";
 import { track } from "@vercel/analytics";
 import { COUNTRIES, type Country } from "@/lib/country";
-import type { Mover, PriceMovers } from "@/lib/price-history";
+import type { MoverSummary, PulseMovers } from "@/lib/price-history";
 import { formatMoney } from "@/lib/format";
 import { cardHref } from "@/lib/card-url";
 import { cardDisplayName } from "@/lib/card-name";
@@ -30,7 +30,7 @@ import { useQuickView } from "@/components/QuickView";
 // than fading in. Fixed-size rows mean no reserved-space/CLS concern either way.
 const COUNT_PER_SIDE = 3;
 
-function PulseCard({ m, up, currency, duplicate }: { m: Mover; up: boolean; currency: string; duplicate: boolean }) {
+function PulseCard({ m, up, currency, duplicate }: { m: MoverSummary; up: boolean; currency: string; duplicate: boolean }) {
   const c = m.card;
   const { open } = useQuickView();
   // Same instant-preview pattern as CardTile: left-click opens the quick-view
@@ -108,7 +108,7 @@ function PulseCard({ m, up, currency, duplicate }: { m: Mover; up: boolean; curr
   );
 }
 
-export function MarketPulse({ moversByCountry }: { moversByCountry: Record<Country, PriceMovers> }) {
+export function MarketPulse({ moversByCountry }: { moversByCountry: Record<Country, PulseMovers> }) {
   const { country } = useCountry();
   const info = COUNTRIES[country];
   const movers = moversByCountry[country] ?? moversByCountry.AU;
@@ -121,7 +121,7 @@ export function MarketPulse({ moversByCountry }: { moversByCountry: Record<Count
   // halves, so mixing them keeps green/red variety in view at all times
   // instead of a visitor watching six green cards scroll by before the first
   // red one appears.
-  const pulse: (Mover & { up: boolean })[] = [];
+  const pulse: (MoverSummary & { up: boolean })[] = [];
   for (let i = 0; i < Math.max(risers.length, fallers.length); i++) {
     if (risers[i]) pulse.push({ ...risers[i], up: true });
     if (fallers[i]) pulse.push({ ...fallers[i], up: false });

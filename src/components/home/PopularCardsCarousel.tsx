@@ -4,16 +4,23 @@ import { useState } from "react";
 import Link from "next/link";
 import { CardTile, type CardTileData } from "@/components/CardTile";
 import { Reveal } from "@/components/Reveal";
-import type { Mover, RecentUpdate } from "@/lib/price-history";
+
+// A card + its % change — all this carousel's movers/recently-updated tabs
+// ever need. Deliberately narrower than the full Mover/RecentUpdate shapes
+// those signals are computed as (lib/price-history.ts, which also carries a
+// sparkline `points` series and nowCents/refCents/prevCents this component
+// never renders) — HomeSections trims down to exactly this before either list
+// crosses the server/client boundary into this component, so that unused data
+// doesn't ride along into the homepage's hydration payload.
+type CardWithDelta = { card: CardTileData; pct: number };
 
 // One tab's worth of content: either a plain card list (Vendetta / All-time) or
 // a list with a per-card % delta (price movers, or the recently-updated feed).
 // Rendering all these shapes through the same tab strip is what actually merges
 // what used to be three separate homepage sections instead of just visually
 // pairing them. `deltas` only ever needs `.pct` — it deliberately isn't typed as
-// the full `Mover` (which also carries a sparkline `points` series this
-// component doesn't render), so any per-card-delta list can feed a tab, not
-// just real movers.
+// the full `CardWithDelta` (which also carries the card), so any per-card-delta
+// list can feed a tab, not just real movers.
 type Tab = {
   key: string;
   label: string;
@@ -44,8 +51,8 @@ export function PopularCardsCarousel({
 }: {
   vendetta: CardTileData[];
   allTime: CardTileData[];
-  movers: Mover[];
-  recentlyUpdated: RecentUpdate[];
+  movers: CardWithDelta[];
+  recentlyUpdated: CardWithDelta[];
   storeCount: number;
   storeWord: string;
 }) {
@@ -82,7 +89,7 @@ export function PopularCardsCarousel({
             allHref: "/movers",
             allLabel: "See all movers →",
             cards: movers.map((m) => m.card),
-            deltas: movers,
+            deltas: movers.map((m) => ({ pct: m.pct })),
           },
         ]
       : []),
@@ -96,7 +103,7 @@ export function PopularCardsCarousel({
             allHref: "/movers",
             allLabel: "See all movers →",
             cards: recentlyUpdated.map((u) => u.card),
-            deltas: recentlyUpdated,
+            deltas: recentlyUpdated.map((u) => ({ pct: u.pct })),
           },
         ]
       : []),

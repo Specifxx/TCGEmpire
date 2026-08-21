@@ -132,6 +132,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/tools/best-basket", label: "Best Basket", emoji: "🧺", keywords: ["basket", "cart", "multi card", "cheapest combination", "one order", "shipping"], popular: true },
       { href: "/tools/condition-calculator", label: "Condition Calculator", emoji: "🩹", keywords: ["condition", "nm", "lp", "mp", "hp", "damaged", "grading", "value calculator"] },
       { href: "/tools/box-ev", label: "Box EV Calc", emoji: "🎲", keywords: ["ev", "expected value", "is a box worth it", "booster box value", "box ev"] },
+      { href: "/tools/selling-fees", label: "Selling Fee Calc", emoji: "🧾", keywords: ["tcgplayer fees", "ebay fees", "selling fees", "net proceeds", "marketplace commission"] },
       { href: "/tools", label: "All Tools", emoji: "🧰", keywords: ["tools", "calculators", "utilities"] },
     ],
   },

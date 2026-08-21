@@ -98,7 +98,7 @@ export default async function DecksPage() {
         <span className="chip bg-brand-500 text-[10px] font-extrabold uppercase tracking-wide text-ink-950">
           {SET_LABEL} metagame
         </span>
-        <h1 className="mt-2 text-2xl font-extrabold text-white sm:text-3xl">Top Meta Decks</h1>
+        <h1 className="mt-2 text-2xl font-extrabold text-white sm:text-3xl">Riftbound Top Meta Decks</h1>
         <p className="mt-2 max-w-3xl text-sm text-slate-400">
           Real top-finishing decklists from the {SET_LABEL} metagame — the Riftbound Online Series, Haven
           Online Challenger Series, Runes League Invitational and the rest of the post-release circuit. Every

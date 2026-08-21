@@ -67,7 +67,7 @@ export async function generateMetadata({ searchParams }: { searchParams: CardQue
   const base = {
     title: q ? `${q} — Riftbound cards & prices` : "Riftbound Cards — Browse & Compare Prices",
     description:
-      "Every Riftbound card, one database: browse and compare live prices across local stores in AU, US, UK & SG to find the cheapest place to buy singles. Updated daily.",
+      "Every Riftbound card, one database: browse and compare live prices across AU, US, UK & SG stores — find the cheapest place to buy. Updated daily.",
   };
   if (q) return { ...base, alternates: { canonical: "/browse" }, robots: { index: false, follow: true } };
   if (page > 1 && isCleanPagination(searchParams)) {

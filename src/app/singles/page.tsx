@@ -15,9 +15,9 @@ import { EbayBuyCta } from "@/components/EbayBuyCta";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: { absolute: "Buy Riftbound Singles — Compare Prices Across Every Store | RiftCompare" },
+  title: { absolute: "Buy Riftbound Singles — Compare Prices | RiftCompare" },
   description:
-    "The cheapest place to buy Riftbound: League of Legends TCG singles. Compare live prices for every single card across stores in AU, US, UK, Singapore & Canada — ranked by delivered cost, updated daily. Free.",
+    "The cheapest place to buy Riftbound singles — compare live prices across AU, US, UK, Singapore & Canada stores, ranked by delivered cost. Updated daily.",
   keywords: [
     "Riftbound singles",
     "buy Riftbound singles",
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   ],
   alternates: pageAlternates("/singles"),
   openGraph: {
-    title: "Buy Riftbound Singles — Compare Prices Across Every Store",
+    title: "Buy Riftbound Singles — Compare Prices",
     description:
       "Compare live prices for every Riftbound single across stores in AU, US, UK, Singapore & Canada — ranked by delivered cost, updated daily. Free.",
     url: `${SITE_URL}/singles`,

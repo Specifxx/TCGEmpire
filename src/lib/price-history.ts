@@ -77,6 +77,28 @@ export type Mover = {
 
 export type PriceMovers = { spiking: Mover[]; plummeting: Mover[]; value: Mover[] };
 
+// Lean shape for MarketPulse — the homepage's client-rendered risers/fallers
+// marquee (see components/home/MarketPulse.tsx). It ships ALL FIVE markets'
+// worth of movers at once (so a visitor switching markets client-side doesn't
+// need a refetch — same reasoning as CardTile's multi-market price fields),
+// but PulseCard only ever reads a Mover's `.card`, `.nowCents` and `.pct` —
+// never `.points` (the per-card sparkline series /movers' own chart renders,
+// unused here) and never PriceMovers.value (the "best value vs recent high"
+// list /movers and the weekly digest use, which MarketPulse never renders at
+// all — see its own source). Passing the full shape through five markets'
+// worth of movers was serializing ~30 unused "value" cards plus a ~21-point
+// sparkline series on every remaining mover into the homepage's hydration
+// payload for a component that renders none of it. toPulseMovers() strips
+// both right at the server/client boundary, in HomeSections.tsx, without
+// touching this function's real callers (/movers, /games, the newsletter
+// digest) which still get the full PriceMovers shape, points and all.
+export type MoverSummary = Omit<Mover, "points">;
+export type PulseMovers = { spiking: MoverSummary[]; plummeting: MoverSummary[] };
+export function toPulseMovers(m: PriceMovers): PulseMovers {
+  const strip = ({ points: _points, ...rest }: Mover): MoverSummary => rest;
+  return { spiking: m.spiking.map(strip), plummeting: m.plummeting.map(strip) };
+}
+
 // Only consider cards worth caring about, to keep the lists signal-rich (a $0.50
 // common doubling to $1 isn't interesting).
 const MIN_CENTS = 300; // $3

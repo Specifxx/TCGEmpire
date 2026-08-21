@@ -84,7 +84,7 @@ export const metadata: Metadata = {
   // Leads with "Riftbound prices", then covers the "Riftbound card prices"
   // variant verbatim in the same sentence.
   description:
-    "Riftbound prices, compared live: see every Riftbound card price across AU, US, UK, Singapore & Canada stores and find the cheapest place to buy. Updated daily.",
+    "Riftbound prices, compared live: see every card price across AU, US, UK, Singapore & Canada stores and find the cheapest place to buy. Updated daily.",
   // NO keywords meta — removed 2026-08-20. Google has ignored this tag since 2009
   // (see layout.tsx's own sitewide policy comment, which this page had quietly
   // re-added and contradicted); it carried the exact phrase "Riftbound prices"

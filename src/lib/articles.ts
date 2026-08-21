@@ -840,7 +840,7 @@ Want to find your grail? **[Browse every Riftbound card](/browse)** and sort by 
 
 **What makes a Riftbound card valuable?** Scarcity first, then desirability — how rarely the printing appears per box, how sought-after the champion or art is, and condition. Playability matters for ordinary singles but much less for chase prints. See [why Riftbound prices change](/guides/why-riftbound-card-prices-change).
 
-**Should I get my Riftbound cards graded?** Grading mainly matters for high-value chase cards in excellent condition, since the fee is fixed regardless of what the card is worth. For ordinary singles it rarely makes sense.
+**Should I get my Riftbound cards graded?** Grading mainly matters for high-value chase cards in excellent condition, since the fee is fixed regardless of what the card is worth. For ordinary singles it rarely makes sense. See **[the PSA & BGS grading guide](/guides/riftbound-psa-bgs-grading-guide)** for how the two services compare and what graders actually look at.
 
 **Do Riftbound cards go up in value over time?** Some have and some haven't. Riftbound is a young game without a long price record, so treat any confident claim about future value sceptically — RiftCompare reports live prices and history rather than predictions.`,
     faq: [
@@ -850,6 +850,102 @@ Want to find your grail? **[Browse every Riftbound card](/browse)** and sort by 
       { q: "Should I get my Riftbound cards graded?", a: "Grading mainly matters for high-value chase cards in excellent condition, since the grading fee is fixed regardless of what the card is worth. For ordinary singles it rarely makes financial sense." },
       { q: "Do Riftbound cards go up in value over time?", a: "Some have and some haven't. Riftbound is a young game without a long price record, so treat confident claims about future value sceptically. RiftCompare reports live prices and price history rather than predictions." },
     ],
+  },
+  {
+    slug: "riftbound-psa-bgs-grading-guide",
+    shop: [
+      { label: "Graded Riftbound cards (PSA & BGS)", query: "Riftbound PSA graded" },
+      { label: "Signature & alt-art printings", query: "Riftbound signature alt art" },
+    ],
+    category: "guide",
+    title: "Riftbound PSA & BGS Grading Guide",
+    excerpt:
+      "How to get Riftbound cards graded — PSA vs BGS, the grading scale, what graders look for, and whether it's worth it for your card.",
+    author: "RiftCompare",
+    date: "2026-08-21",
+    readMins: 7,
+    tags: ["collecting", "grading", "guide", "condition", "chase cards", "buying"],
+    summary: [
+      "**PSA and BGS are the two grading services collectors use for Riftbound** — neither is affiliated with Riot Games or UVS Games; they grade physical trading cards from any game.",
+      "**PSA gives one overall grade, 1 (Poor) to 10 (Gem Mint)**, and is the most widely recognised, most liquid grading name in the hobby.",
+      "**BGS gives four subgrades — centering, corners, edges, surface — plus an overall grade**; a card with all four subgrades at 10 earns BGS's famous Black Label.",
+      "**Grading is worth it for Riftbound's chase tiers** — Signature, Showcase and Overnumbered printings — not for ordinary singles, where the flat submission fee usually costs more than the card is worth.",
+    ],
+    faq: [
+      {
+        q: "Should I get my Riftbound cards graded?",
+        a: "Usually only your highest-value chase cards — Signature printings, Showcase alt-arts, Overnumbered prints — since the submission fee is fixed no matter what the card is worth. For an ordinary single, grading rarely pays for itself.",
+      },
+      {
+        q: "PSA or BGS — which is better for Riftbound?",
+        a: "PSA is the more widely recognised name and the deeper resale market, which matters for liquidity when you eventually sell. BGS's four subgrades give a more granular picture of a card's condition, which some collectors prefer for display-grade copies. Neither service is exclusive to Riftbound — both grade cards from any trading card game.",
+      },
+      {
+        q: "What do graders actually look at?",
+        a: "Four things: centering (how evenly the border frames the art on all sides), corners (sharpness, no whitening or rounding), edges (no nicks, roughness or whitening), and surface (no scratches, print lines, or indentations). PSA folds these into one overall number; BGS scores each separately as a subgrade.",
+      },
+      {
+        q: "How much does it cost to grade a Riftbound card, and how long does it take?",
+        a: "Both PSA and BGS run multiple submission tiers priced by turnaround speed and the card's declared value, and both change their pricing and wait times fairly often — check the current fees and turnaround directly on PSA's or Beckett's own site before submitting, rather than trusting a number from anywhere else.",
+      },
+      {
+        q: "Is a Riftbound card officially graded by Riot or UVS Games?",
+        a: "No. PSA and BGS are independent third-party companies with no affiliation to Riftbound's publishers — they'll grade a Riftbound card exactly the way they grade a card from any other game.",
+      },
+    ],
+    browseCta: {
+      href: "/guides/most-valuable-riftbound-cards",
+      label: "See which cards are worth grading →",
+      blurb: "The chase tiers — Signature, Showcase, Overnumbered — where grading fees are most likely to pay off.",
+    },
+    body: `**PSA and BGS** are the two names collectors mean when they talk about "getting a card graded" — independent companies with no affiliation to Riot Games or UVS Games, which grade physical trading cards from any game, Riftbound included. Here's how the two services differ, what graders are actually looking at, and when grading a Riftbound card is worth the fee.
+
+## Why grade a card at all
+
+Grading does two things: it locks the card in a tamper-evident case (a "slab") that protects it from further wear, and it puts an independent, numeric condition grade on it that a buyer doesn't have to take your word for. For a raw (ungraded) single, condition is a judgement call the seller makes at listing time — see [the Riftbound condition guide](/guides/riftbound-card-condition-guide) for how that works. A graded slab replaces that judgement call with a third party's number, which is worth something specifically on cards expensive enough that buyers want that certainty.
+
+## PSA vs BGS
+
+- **PSA (Professional Sports Authenticator)** grades on a single 1-10 scale — Poor at the bottom, Gem Mint 10 at the top — collapsing centering, corners, edges and surface into one overall number. It's the most widely recognised grading name in the hobby, and that recognition tends to translate into the deepest, most liquid resale market for a graded card.
+- **BGS (Beckett Grading Services)** grades all four criteria separately as subgrades, then combines them into an overall grade in half-point increments. A card that scores a perfect 10 on every subgrade earns BGS's **Black Label** — a genuinely rare result that carries real premium over an ordinary 10. The subgrades give a more granular read on exactly where a card falls short, which matters more to some collectors than the single PSA number does.
+
+Neither is objectively "better" — PSA's name recognition usually wins on resale liquidity, BGS's subgrades win on detail. Some collectors submit their most valuable pulls to both over time and compare.
+
+## What graders actually look at
+
+Both services score the same four things, whether or not they show it as one number or four:
+
+- **Centering** — how evenly the printed border frames the card's art and text on all four sides. A card that looks fine at a glance can still be noticeably off-center under close inspection.
+- **Corners** — sharp, undamaged corners with no whitening, fraying or rounding.
+- **Edges** — clean edges with no nicks, roughness or whitening where the card's colour gives way to white card stock.
+- **Surface** — no scratches, indentations, print lines or other marks across the front or back.
+
+You can check the first three yourself before submitting: hold the card up to a light and compare the border margins on all four sides for centering, and run a finger lightly along the edges and corners (never the printed surface) to feel for damage a photo might miss.
+
+## Is it worth it for Riftbound specifically?
+
+Grading only makes financial sense once a card's raw value clears the submission fee by a comfortable margin — so it's a question of which Riftbound printings are worth enough to clear that bar. That's [the same chase tier as the rest of the value conversation](/guides/most-valuable-riftbound-cards): Signature printings, Showcase alt-arts and Overnumbered prints, not ordinary Commons or Uncommons. Riftbound is still a young game without a long graded-sales history the way an established TCG has, so treat any specific resale-premium claim for a graded Riftbound card skeptically — the graded aftermarket for this game is still forming.
+
+## Before you submit
+
+- **Never touch the printed surface with bare fingers** — oils transfer and can affect the surface grade. Handle a card by its edges only, or wear cotton gloves.
+- **Sleeve it immediately** in a fresh penny sleeve, then a rigid toploader — a card that arrives at the grader already damaged in shipping grades exactly as it arrives.
+- **Don't try to "fix" a card** — trimming, pressing or cleaning a card before submission is grading fraud at every major service and will get the card rejected or the submitter banned, not a better grade.
+- **Check current fees and turnaround on the grader's own site** before submitting — both PSA and BGS run multiple tiers priced by speed and declared card value, and both change pricing and wait times often enough that any number printed elsewhere, including here, risks being stale by the time you read it.
+
+## Grading FAQ
+
+**Should I get my Riftbound cards graded?** Usually only your highest-value chase cards — Signature printings, Showcase alt-arts, Overnumbered prints — since the submission fee is fixed no matter what the card is worth. For an ordinary single, grading rarely pays for itself.
+
+**PSA or BGS — which is better for Riftbound?** PSA's name recognition tends to mean deeper resale liquidity; BGS's four subgrades give a more granular read on condition. Neither is exclusive to Riftbound — both grade cards from any trading card game.
+
+**What do graders actually look at?** Centering, corners, edges and surface — PSA folds these into one overall number, BGS scores each as a separate subgrade.
+
+**Is a Riftbound card officially graded by Riot or UVS Games?** No — PSA and BGS are independent companies with no affiliation to Riftbound's publishers.
+
+[[shop]]
+
+Not sure whether your card clears the bar? **[Check its live raw price across every store we track](/browse)** first — if it's nowhere near the chase tier, save the submission fee and enjoy the card raw.`,
   },
   {
     slug: "riftbound-for-beginners",
@@ -1567,7 +1663,7 @@ The whole set is out and trading, so this is genuinely the moment to start assem
     category: "guide",
     title: "Best Riftbound Vendetta Decks",
     excerpt:
-      "Three full 40-card Riftbound Vendetta decks — Flow Value, Burn and Empower Midrange — with example decklists, 10-card side decks, real card visuals, and how to start buying into each one now that Vendetta singles are trading.",
+      "Three full 40-card Riftbound Vendetta decks — Flow Value, Burn and Empower Midrange — with decklists, side decks and where to buy the pieces now singles are trading.",
     author: "RiftCompare",
     date: "2026-07-07",
     updated: "2026-07-31",
@@ -2032,9 +2128,9 @@ For the complete, always-current picture — including March's original 7 bans �
   {
     slug: "riftbound-t1-signature-edition-drawing",
     category: "blog",
-    title: "Riftbound T1 Drawing 2026: Registration Closed, Winners Emailed From Aug 20",
+    title: "Riftbound T1 Drawing 2026: Winners Emailed From Aug 20",
     excerpt:
-      "Registration for Riot's US$360 Riftbound T1 Signature Edition drawing closed 17 August 2026 — selection emails go out in waves from 20 August. Every date, the odds, all five cards, and when the cheaper Player Bundle drawing opens.",
+      "Riftbound T1 Signature Edition drawing: registration closed 17 August 2026, selection emails go out from 20 August. Every date, the odds, and all five cards.",
     author: "RiftCompare",
     date: "2026-08-09",
     updated: "2026-08-19",
@@ -2472,7 +2568,7 @@ Bookmark this page — it updates as new Jayce or Mel printings land in the data
     category: "guide",
     title: "Riftbound Empower Explained: How the Empower Mechanic Works",
     excerpt:
-      "A complete guide to Empower — the Riftbound: Vendetta mechanic that lets a card gain new abilities after it's in play. How it works, why it's strong, and how to build around it.",
+      "A complete guide to Riftbound's Empower mechanic — a card that gains new abilities after it's already in play. How it works and how to build around it.",
     author: "RiftCompare",
     date: "2026-07-08",
     updated: "2026-07-31",
@@ -2596,9 +2692,9 @@ Empower cards are live with real prices on the **[Vendetta set page](/sets/vende
   {
     slug: "riftbound-flow-explained",
     category: "guide",
-    title: "Riftbound Flow Explained: How the Flow Mechanic Works (2026)",
+    title: "Riftbound Flow Explained: How the Flow Mechanic Works",
     excerpt:
-      "Flow lets you cast a card straight from your trash instead of your hand — Riftbound: Vendetta's recursion mechanic, explained step by step for 2026 with deckbuilding tips and every Flow card in the set.",
+      "Riftbound Flow lets you cast a card straight from your trash instead of your hand — how the mechanic works, deckbuilding tips, and every Flow card in Vendetta.",
     author: "RiftCompare",
     date: "2026-07-08",
     updated: "2026-08-19",
@@ -3595,9 +3691,9 @@ Shopping from [Australia](/blog/buy-riftbound-cards-australia), [the US](/blog/b
     slug: "every-riftbound-vendetta-card-revealed",
     ebayPicks: { heading: "Vendetta chase cards on eBay right now" },
     category: "blog",
-    title: "Riftbound Vendetta Card List (2026): All 166 Cards + Live Prices",
+    title: "Riftbound Vendetta Card List: All 166 Cards",
     excerpt:
-      "The complete Riftbound Vendetta card list and gallery for 2026 — all 166 main-set cards, plus Showcase alt-arts, Overnumbers, runes and promos, embedded live from our database with launch-day prices. Tap any card for its page.",
+      "The complete Riftbound Vendetta card list and gallery — all 166 main-set cards plus Showcase alt-arts, Overnumbers and promos, live from our database with prices.",
     author: "RiftCompare",
     date: "2026-07-10",
     updated: "2026-08-19",
@@ -6295,7 +6391,7 @@ Unlike some collectibles markets, raw Riftbound singles don't go through a centr
 
 ## Third-party grading (slabbed cards)
 
-Riftbound's highest-value chase cards — Signature printings, alt-arts, cards tied to popular champions — increasingly get sent to third-party grading services (PSA and similar), which assign a numeric grade and seal the card in a protective case. That's a genuinely different market from raw singles: a graded card's price reflects both the card and the grade, and doesn't move as a simple multiple of the raw Near Mint price. If you're buying to collect rather than to play, it's worth deciding up front whether you want raw or graded copies — the two markets can diverge significantly on a card's most expensive printings.
+Riftbound's highest-value chase cards — Signature printings, alt-arts, cards tied to popular champions — increasingly get sent to third-party grading services (PSA and similar), which assign a numeric grade and seal the card in a protective case. That's a genuinely different market from raw singles: a graded card's price reflects both the card and the grade, and doesn't move as a simple multiple of the raw Near Mint price. If you're buying to collect rather than to play, it's worth deciding up front whether you want raw or graded copies — the two markets can diverge significantly on a card's most expensive printings. See **[the PSA & BGS grading guide](/guides/riftbound-psa-bgs-grading-guide)** for how the two services differ and whether it's worth it for a specific card.
 
 ## Buying with condition in mind
 

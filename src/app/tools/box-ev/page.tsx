@@ -22,9 +22,9 @@ import { AdSlot } from "@/components/AdSlot";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: { absolute: "Riftbound Booster Box EV Calculator — Is a Box Worth Opening? | RiftCompare" },
+  title: { absolute: "Riftbound Booster Box EV Calculator | RiftCompare" },
   description:
-    "Expected value of a Riftbound booster box, built from TCGplayer market prices and including the signature, over-numbered and alt-art chase pulls that most EV maths leaves out. Tune the pull rates yourself.",
+    "Expected value of a Riftbound booster box, from real TCGplayer prices — including signature, over-numbered and alt-art chase pulls. Tune the pull rates yourself.",
   keywords: [
     "Riftbound box EV",
     "Riftbound booster box value",
@@ -196,7 +196,7 @@ export default async function BoxEvPage() {
           <span>/</span>
           <span className="text-slate-300">Box EV Calculator</span>
         </nav>
-        <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">Booster Box EV Calculator</h1>
+        <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">Riftbound Booster Box EV Calculator</h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
           Is a Riftbound booster box worth opening? Every card is valued at its{" "}
           <strong className="text-slate-200">TCGplayer market price</strong>, and the chase prints most EV maths
