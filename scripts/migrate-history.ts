@@ -31,13 +31,16 @@
  * "[egress-guard:history]" — db-history.ts already logs any single history
  * query returning >=1 MB, which names the next offender.
  *
- * PREFER THE pg_dump PATH FOR A BULK COPY. This Prisma-based copier reads every
- * row over the uncompressed Postgres wire protocol, which is the most expensive
- * possible way to drain a project that is ALREADY out of transfer allowance. The
+ * PREFER THE pg_dump PATH FOR A BULK COPY. This Prisma-based copier re-reads the
+ * whole Card table on top of every history table it copies — a genuinely
+ * redundant read — and NEITHER approach benefits from pg_dump's compression
+ * flags: Neon's own docs say those run client-side, after the data has already
+ * crossed the network, so they never reduce billed transfer
+ * (https://neon.com/docs/introduction/network-transfer). The
  * `migrate-history-db-to-hdu4` task in .github/workflows/maintenance.yml does the
- * same job with `pg_dump --format=custom` (compressed on the wire) and should be
- * used for a bulk copy. Keep this script for what it is genuinely better at:
- * topping up the target from SEVERAL sources at once, tolerating a source that
+ * same job via `pg_dump`'s COPY format, reading each table exactly once, and
+ * should be used for a bulk copy. Keep this script for what it is genuinely
+ * better at: topping up the target from SEVERAL sources at once, tolerating a source that
  * refuses reads, and de-duplicating on the way in.
  *
  * NOTE (2026-07-26): HISTORY_DATABASE_URL_4 (the project in use since 2026-07-20)

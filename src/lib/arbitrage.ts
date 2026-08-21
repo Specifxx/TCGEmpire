@@ -550,35 +550,58 @@ const XREGION_MIN_GAP_PCT = 20; // has to be a meaningful gap to be worth surfac
 const XREGION_MAX_GAP_PCT = 300; // same outlier-guard reasoning as MAX_MARGIN_PCT — a huge gap is
 // almost always a converted reference price or a thin/stale market, not a real 300%+ difference.
 
+type XRegionRow = { card: CardTileData; homeCents: number; away: Country; awayNative: number; awayConverted: number; pct: number };
+type XRegionRowsMemo = Map<Country, { at: number; data: XRegionRow[] }>;
+// Same in-memory-memoization pattern as getEbayRowsMemoized/getTcgUsRowsMemoized
+// above (see this file's header comment on why: a per-request unbounded pull is
+// exactly what has burned through this project's Neon transfer allowance
+// before). This one was missing it entirely — a plain `prisma.card.findMany`
+// with no `where` bound beyond variant/isPromo, no `take`, and no cache, so it
+// re-pulled the WHOLE catalogue (every scalar column `cardTileSelect` selects,
+// including two image URLs, for ~1,000-1,500 cards) on every single request to
+// the deal-finder page's cross-region tab — the page is `force-dynamic` with no
+// ISR/ unstable_cache anywhere above it, so nothing else was bounding this.
+const xRegionRowsMemo: XRegionRowsMemo = ((globalThis as unknown as { __arbXRegionRows?: XRegionRowsMemo }).__arbXRegionRows ??= new Map());
+
+async function computeCrossRegionRows(homeCountry: Country): Promise<XRegionRow[]> {
+  const hit = xRegionRowsMemo.get(homeCountry);
+  if (hit && Date.now() - hit.at < ARB_MEMO_TTL_MS) return hit.data;
+
+  const homeCurrency = currencyOf(homeCountry);
+  const cards = await prisma.card.findMany({
+    where: { variant: null, isPromo: false },
+    select: cardTileSelect(homeCountry),
+  });
+
+  const rows: XRegionRow[] = [];
+  for (const c of cards as unknown as CardTileData[]) {
+    const homeCents = pickPrice(c, homeCountry);
+    if (homeCents == null || homeCents < XREGION_MIN_HOME_CENTS) continue;
+
+    let best: { native: number; converted: number; country: Country; pct: number } | null = null;
+    for (const info of COUNTRY_LIST) {
+      if (info.code === homeCountry) continue;
+      const awayNative = pickPrice(c, info.code);
+      if (awayNative == null) continue;
+      const awayConverted = convertCents(awayNative, info.currency, homeCurrency);
+      if (awayConverted >= homeCents) continue;
+      const pct = Math.round(((homeCents - awayConverted) / homeCents) * 1000) / 10;
+      if (pct < XREGION_MIN_GAP_PCT || pct > XREGION_MAX_GAP_PCT) continue;
+      if (!best || pct > best.pct) best = { native: awayNative, converted: awayConverted, country: info.code, pct };
+    }
+    if (!best) continue;
+    rows.push({ card: c, homeCents, away: best.country, awayNative: best.native, awayConverted: best.converted, pct: best.pct });
+  }
+  rows.sort((a, b) => b.pct - a.pct);
+
+  xRegionRowsMemo.set(homeCountry, { at: Date.now(), data: rows });
+  return rows;
+}
+
 export async function getCrossRegionGaps(homeCountry: Country, page = 1, pageSize = 25): Promise<CrossRegionPage> {
   try {
     const homeCurrency = currencyOf(homeCountry);
-    const cards = await prisma.card.findMany({
-      where: { variant: null, isPromo: false },
-      select: cardTileSelect(homeCountry),
-    });
-
-    type Row = { card: CardTileData; homeCents: number; away: Country; awayNative: number; awayConverted: number; pct: number };
-    const rows: Row[] = [];
-    for (const c of cards as unknown as CardTileData[]) {
-      const homeCents = pickPrice(c, homeCountry);
-      if (homeCents == null || homeCents < XREGION_MIN_HOME_CENTS) continue;
-
-      let best: { native: number; converted: number; country: Country; pct: number } | null = null;
-      for (const info of COUNTRY_LIST) {
-        if (info.code === homeCountry) continue;
-        const awayNative = pickPrice(c, info.code);
-        if (awayNative == null) continue;
-        const awayConverted = convertCents(awayNative, info.currency, homeCurrency);
-        if (awayConverted >= homeCents) continue;
-        const pct = Math.round(((homeCents - awayConverted) / homeCents) * 1000) / 10;
-        if (pct < XREGION_MIN_GAP_PCT || pct > XREGION_MAX_GAP_PCT) continue;
-        if (!best || pct > best.pct) best = { native: awayNative, converted: awayConverted, country: info.code, pct };
-      }
-      if (!best) continue;
-      rows.push({ card: c, homeCents, away: best.country, awayNative: best.native, awayConverted: best.converted, pct: best.pct });
-    }
-    rows.sort((a, b) => b.pct - a.pct);
+    const rows = await computeCrossRegionRows(homeCountry);
 
     const total = rows.length;
     const pageCount = Math.max(1, Math.ceil(total / pageSize));
