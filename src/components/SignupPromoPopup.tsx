@@ -68,8 +68,14 @@ const PV_KEY = "rc_pv_count";
 const MIN_PAGEVIEWS = 1;
 
 // Distinguishes this comparison layout from the perk-list version it replaced,
-// on signup_promo_shown/_dismissed, so the two are separable in Vercel Analytics
-// rather than averaged together across the changeover.
+// on signup_promo_shown/_dismissed, so the two are separable rather than
+// averaged together across the changeover.
+//
+// READ THESE IN GA4, NOT VERCEL. Both events are in GA4_ONLY_EVENTS
+// (lib/analytics.ts): shown is an impression that fires for a large share of
+// visitors, and Vercel bills custom events against a monthly quota, so the pair
+// was crowding out buy_click and sign_up. The trackEvent() calls below are
+// unchanged and still carry this variant — only the Vercel leg is suppressed.
 const PROMO_VARIANT = "comparison";
 
 // The comparison itself. EVERY ROW IS DERIVED FROM A REAL ENTITLEMENT CHECK —

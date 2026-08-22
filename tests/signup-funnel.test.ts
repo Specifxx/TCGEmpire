@@ -83,12 +83,47 @@ test("the signup popup reports shown and dismissed — its conversion rate is me
   const src = read("src/components/SignupPromoPopup.tsx");
   // Both events carry `variant`, so the comparison layout stays separable from
   // the perk-list version it replaced instead of being averaged together across
-  // the changeover in Vercel Analytics.
+  // the changeover. Read them in GA4 — see the GA4_ONLY_EVENTS test below.
   assert.match(src, /trackEvent\("signup_promo_shown", \{ path: pathname \?\? "\/", variant: PROMO_VARIANT \}\)/);
   assert.match(src, /trackEvent\("signup_promo_dismissed", \{ variant: PROMO_VARIANT \}\)/);
   assert.match(src, /const PROMO_VARIANT = "comparison"/, "the variant must be a named constant, not inlined at each call");
   // The embedded AuthForm attributes its provider clicks to the popup.
   assert.match(src, /source="popup"/);
+});
+
+test("the promo impression events are GA4-only — they must not bill Vercel's event quota", () => {
+  // signup_promo_shown fires for a large share of visitors (26% at its peak,
+  // the site's #1 event by volume) and _dismissed tracks it closely. Vercel
+  // bills custom events against a monthly quota, so the pair was crowding out
+  // buy_click, sign_up and price_alert_subscribed — the handful-a-day events
+  // that actually decide whether the site works.
+  const src = read("src/lib/analytics.ts");
+  const setMatch = src.match(/const GA4_ONLY_EVENTS = new Set\(\[([\s\S]*?)\]\)/);
+  assert.ok(setMatch, "expected a GA4_ONLY_EVENTS set");
+  assert.match(setMatch![1], /"signup_promo_shown"/);
+  assert.match(setMatch![1], /"signup_promo_dismissed"/);
+  // The Vercel leg must be the one that is gated, and GA4's must NOT be —
+  // suppressing both would delete the funnel rather than move it.
+  assert.match(src, /if \(!GA4_ONLY_EVENTS\.has\(name\)\) vercelTrack\(name, cleaned\);/);
+  // Pinned as a POSITIVE match on the whole statement: the GA4 leg is guarded
+  // by the window check and nothing else. A negative "GA4_ONLY_EVENTS near
+  // gtag" regex looks equivalent and is not — the two dispatch lines are
+  // adjacent, so any proximity window spans them and fails on correct code.
+  assert.match(
+    src,
+    /\n {2}if \(typeof window !== "undefined"\) window\.gtag\?\.\("event", name, cleaned\);/,
+    "the GA4 dispatch must be guarded only by the window check, never by GA4_ONLY_EVENTS"
+  );
+
+  // The call sites stay intact — the exclusion is a destination policy, not a
+  // deletion. Dropping the trackEvent() call instead is what makes the two
+  // destinations silently diverge, which is why this dispatcher exists.
+  const popup = read("src/components/SignupPromoPopup.tsx");
+  assert.match(popup, /trackEvent\("signup_promo_shown"/);
+  assert.match(popup, /trackEvent\("signup_promo_dismissed"/);
+
+  // Nothing may reach Vercel around these events except through trackEvent().
+  assert.ok(!/@vercel\/analytics/.test(popup), "the popup must not import Vercel's track() directly");
 });
 
 test("PriceAlertModal events reach BOTH analytics systems, and the silent path is finally visible", () => {
