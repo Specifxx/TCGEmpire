@@ -1876,7 +1876,20 @@ jobs:
           # the schema pushed here is the one checked out for this job.
           echo ""
           echo "== Re-aligning TARGET schema to this ref's prisma/schema.prisma =="
-          if ! DATABASE_URL="$TARGET_DATABASE_URL" npx prisma db push --skip-generate --accept-data-loss; then
+          # PUSH OVER THE DIRECT ENDPOINT, NOT THE POOLER. `prisma db push`
+          # introspects the live schema first, and against Neon's PgBouncer
+          # endpoint that introspection comes back EMPTY — so Prisma concludes
+          # the tables are missing and aborts with
+          #   P1014  The underlying table for model `Card` does not exist
+          # even though the restore immediately above verified Card row-for-row.
+          # Seen for real on 2026-08-22 (run 32555324191): every table matched
+          # source=target, then the push failed claiming Card was absent.
+          # Neon's direct host is the pooled one minus the "-pooler" suffix;
+          # everything else about the URL is identical. Falls back to the
+          # original URL when there is no -pooler to strip (a direct URL, or a
+          # non-Neon database).
+          DIRECT_TARGET_URL="${TARGET_DATABASE_URL/-pooler/}"
+          if ! DATABASE_URL="$DIRECT_TARGET_URL" npx prisma db push --skip-generate --accept-data-loss; then
             echo "::error::schema push against RM8 FAILED. The data is copied, but its schema may be older than the deployed code (that is how a restore silently drops a just-added column). Do NOT deploy until this succeeds."
             exit 1
           fi
@@ -2124,7 +2137,20 @@ jobs:
           # the schema pushed here is the one checked out for this job.
           echo ""
           echo "== Re-aligning TARGET schema to this ref's prisma/schema.prisma =="
-          if ! DATABASE_URL="$TARGET_DATABASE_URL" npx prisma db push --skip-generate --accept-data-loss; then
+          # PUSH OVER THE DIRECT ENDPOINT, NOT THE POOLER. `prisma db push`
+          # introspects the live schema first, and against Neon's PgBouncer
+          # endpoint that introspection comes back EMPTY — so Prisma concludes
+          # the tables are missing and aborts with
+          #   P1014  The underlying table for model `Card` does not exist
+          # even though the restore immediately above verified Card row-for-row.
+          # Seen for real on 2026-08-22 (run 32555324191): every table matched
+          # source=target, then the push failed claiming Card was absent.
+          # Neon's direct host is the pooled one minus the "-pooler" suffix;
+          # everything else about the URL is identical. Falls back to the
+          # original URL when there is no -pooler to strip (a direct URL, or a
+          # non-Neon database).
+          DIRECT_TARGET_URL="${TARGET_DATABASE_URL/-pooler/}"
+          if ! DATABASE_URL="$DIRECT_TARGET_URL" npx prisma db push --skip-generate --accept-data-loss; then
             echo "::error::schema push against RM7 FAILED. The data is copied, but its schema may be older than the deployed code (that is how a restore silently drops a just-added column). Do NOT deploy until this succeeds."
             exit 1
           fi
