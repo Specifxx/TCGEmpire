@@ -1635,11 +1635,30 @@ jobs:
         # about as long as the source did. This buys time; it is not the cure —
         # see the note on RetailerPrice in src/lib/db.ts.
         #
-        # SOURCE is pinned to RM7 and TARGET to RM8, deliberately NOT using the
-        # job-level DATABASE_URL default — once the chain is flipped RM8-first,
-        # reusing that default would point source and target at the same
-        # database and the migration would silently no-op while reporting every
-        # row count as matching.
+        # SOURCE IS RM6, NOT RM7, AND THAT IS THE 2026-08-22 INCIDENT TALKING.
+        # This task was written to copy RM7 (then live) into RM8 as a pre-staged
+        # rollback, and it was never run. RM7 then went over its Neon transfer
+        # allowance two days after cutover, and the probe-databases survey on
+        # 2026-08-22 found: RM7 UNREACHABLE (quota), RM8 REACHABLE but EMPTY —
+        # every table count came back "-", i.e. no schema at all. So the rollback
+        # this task exists to create did not exist when it was needed, and the
+        # source it was pinned to could no longer be dumped.
+        #
+        # That same survey found RM6 REACHABLE and holding the most complete
+        # catalogue of any live project (User=186, Card=1,429, CollectionCard=635
+        # — ahead of DATABASE_URL's 151 users and RM5's 144). RM6 served as the
+        # operational database until the 2026-08-20 cutover, so it is both the
+        # freshest reachable source and a superset of the older ones. It is
+        # therefore the source now.
+        #
+        # Pinned by NAME on both ends, deliberately NOT using the job-level
+        # DATABASE_URL default — once the chain is flipped RM8-first, reusing
+        # that default would point source and target at the same database and the
+        # migration would silently no-op while reporting every row count as
+        # matching.
+        #
+        # WHEN RM7's ALLOWANCE RESETS it becomes the better source again (it holds
+        # the 08-20..08-22 writes RM6 does not). Point SOURCE back at RM7 then.
         #
         # PriceHistory/ClickEvent DATA is excluded (schema kept): those are served
         # from the history project, and copying them would spend the source's
@@ -1650,7 +1669,7 @@ jobs:
         # copy and again immediately before cutting traffic over.
         if: inputs.task == 'migrate-main-db-to-rm8'
         env:
-          SOURCE_DATABASE_URL: ${{ secrets.RM7 || vars.RM7 }}
+          SOURCE_DATABASE_URL: ${{ secrets.RM6 || vars.RM6 }}
           TARGET_DATABASE_URL: ${{ secrets.RM8 || vars.RM8 }}
         run: |
           set -uo pipefail
@@ -1683,8 +1702,20 @@ jobs:
           # src/lib/db.ts is the authority on which variable production resolves
           # FIRST, and tests/db-chain.test.ts keeps that list honest, so read it
           # here instead of duplicating the chain into yet another place.
-          FIRST_IN_CHAIN=$(sed -n '/^const OPERATIONAL_URL =/,/;/p' src/lib/db.ts \
-            | grep -oE 'process\.env\.[A-Z_0-9]+' | head -1 | sed 's/process\.env\.//')
+          # READS db-chains.ts, NOT db.ts. This used to sed db.ts for
+          # `const OPERATIONAL_URL = ... process.env.X`, but db.ts now delegates
+          # to resolveUrl(OPERATIONAL_VARS) and holds no process.env reference at
+          # all — so the regex matched nothing, FIRST_IN_CHAIN came back EMPTY,
+          # and the "refusing to overwrite the live database" guard below could
+          # never fire. It was inert in all three migrate tasks. db-chains.ts is
+          # the single source of truth (tests/db-chain.test.ts keeps it honest),
+          # so parse the head of OPERATIONAL_VARS straight out of it.
+          FIRST_IN_CHAIN=$(sed -n '/^export const OPERATIONAL_VARS =/,/;/p' src/lib/db-chains.ts \
+            | grep -oE '"[A-Z_0-9]+"' | head -1 | tr -d '"')
+          if [ -z "${FIRST_IN_CHAIN:-}" ]; then
+            echo "::error::could not determine which database is live from src/lib/db-chains.ts. Refusing to run a destructive migration blind."
+            exit 1
+          fi
           echo "Chain in src/lib/db.ts resolves first: ${FIRST_IN_CHAIN:-<could not parse>}"
           if [ "$FIRST_IN_CHAIN" = "RM8" ]; then
             if [ "${{ inputs.overwrite_live_db }}" != "true" ]; then
@@ -1705,7 +1736,7 @@ jobs:
 
           echo "== Can the source still be reached at all? =="
           if ! psql "$SOURCE_DATABASE_URL" -tAc "SELECT 1" >/dev/null 2>&1; then
-            echo "::error::RM7 is unreachable — its transfer allowance is spent, so there is nothing to dump FROM. RM8 has NOT been touched."
+            echo "::error::the SOURCE project is unreachable — most likely its transfer allowance is spent, so there is nothing to dump FROM. RM8 has NOT been touched. Run probe-databases to see which projects still answer, then point SOURCE_DATABASE_URL at the freshest reachable one."
             exit 1
           fi
           echo "Source answered — proceeding."
@@ -1739,7 +1770,7 @@ jobs:
             --exclude-table-data='public."PriceHistory"' \
             --exclude-table-data='public."ClickEvent"' \
             -f main.dump; then
-            echo "::error::pg_dump FAILED against RM7 — almost certainly its transfer allowance dying mid-stream. RM8 has NOT been touched; a partial dump is never restored."
+            echo "::error::pg_dump FAILED against the SOURCE project — almost certainly its transfer allowance dying mid-stream. RM8 has NOT been touched; a partial dump is never restored."
             exit 1
           fi
           echo "Dump size: $(du -h main.dump | cut -f1)"
@@ -1766,7 +1797,7 @@ jobs:
           echo "== Target inventory after restore =="
           psql "$TARGET_DATABASE_URL" -c "SELECT current_database(), current_user" -c "\dn" -c "\dt public.*" 2>&1 | head -60
 
-          echo "== Verifying row counts (RM7 vs RM8) =="
+          echo "== Verifying row counts (source vs RM8) =="
           # ENUMERATED FROM THE SOURCE, not hand-listed. This used to check nine
           # named tables, which silently said nothing about the rest — after the
           # 2026-08-20 migration, ArbitrageAlertOptOut, UserDigestOptOut and
@@ -1905,8 +1936,20 @@ jobs:
           # src/lib/db.ts is the authority on which variable production resolves
           # FIRST, and tests/db-chain.test.ts keeps that list honest, so read it
           # here instead of duplicating the chain into yet another place.
-          FIRST_IN_CHAIN=$(sed -n '/^const OPERATIONAL_URL =/,/;/p' src/lib/db.ts \
-            | grep -oE 'process\.env\.[A-Z_0-9]+' | head -1 | sed 's/process\.env\.//')
+          # READS db-chains.ts, NOT db.ts. This used to sed db.ts for
+          # `const OPERATIONAL_URL = ... process.env.X`, but db.ts now delegates
+          # to resolveUrl(OPERATIONAL_VARS) and holds no process.env reference at
+          # all — so the regex matched nothing, FIRST_IN_CHAIN came back EMPTY,
+          # and the "refusing to overwrite the live database" guard below could
+          # never fire. It was inert in all three migrate tasks. db-chains.ts is
+          # the single source of truth (tests/db-chain.test.ts keeps it honest),
+          # so parse the head of OPERATIONAL_VARS straight out of it.
+          FIRST_IN_CHAIN=$(sed -n '/^export const OPERATIONAL_VARS =/,/;/p' src/lib/db-chains.ts \
+            | grep -oE '"[A-Z_0-9]+"' | head -1 | tr -d '"')
+          if [ -z "${FIRST_IN_CHAIN:-}" ]; then
+            echo "::error::could not determine which database is live from src/lib/db-chains.ts. Refusing to run a destructive migration blind."
+            exit 1
+          fi
           echo "Chain in src/lib/db.ts resolves first: ${FIRST_IN_CHAIN:-<could not parse>}"
           if [ "$FIRST_IN_CHAIN" = "RM7" ]; then
             if [ "${{ inputs.overwrite_live_db }}" != "true" ]; then
@@ -2124,8 +2167,20 @@ jobs:
           # src/lib/db.ts is the authority on which variable production resolves
           # FIRST, and tests/db-chain.test.ts keeps that list honest, so read it
           # here instead of duplicating the chain into yet another place.
-          FIRST_IN_CHAIN=$(sed -n '/^const OPERATIONAL_URL =/,/;/p' src/lib/db.ts \
-            | grep -oE 'process\.env\.[A-Z_0-9]+' | head -1 | sed 's/process\.env\.//')
+          # READS db-chains.ts, NOT db.ts. This used to sed db.ts for
+          # `const OPERATIONAL_URL = ... process.env.X`, but db.ts now delegates
+          # to resolveUrl(OPERATIONAL_VARS) and holds no process.env reference at
+          # all — so the regex matched nothing, FIRST_IN_CHAIN came back EMPTY,
+          # and the "refusing to overwrite the live database" guard below could
+          # never fire. It was inert in all three migrate tasks. db-chains.ts is
+          # the single source of truth (tests/db-chain.test.ts keeps it honest),
+          # so parse the head of OPERATIONAL_VARS straight out of it.
+          FIRST_IN_CHAIN=$(sed -n '/^export const OPERATIONAL_VARS =/,/;/p' src/lib/db-chains.ts \
+            | grep -oE '"[A-Z_0-9]+"' | head -1 | tr -d '"')
+          if [ -z "${FIRST_IN_CHAIN:-}" ]; then
+            echo "::error::could not determine which database is live from src/lib/db-chains.ts. Refusing to run a destructive migration blind."
+            exit 1
+          fi
           echo "Chain in src/lib/db.ts resolves first: ${FIRST_IN_CHAIN:-<could not parse>}"
           if [ "$FIRST_IN_CHAIN" = "RM6" ]; then
             if [ "${{ inputs.overwrite_live_db }}" != "true" ]; then
@@ -2266,8 +2321,20 @@ jobs:
           # src/lib/db.ts is the authority on which variable production resolves
           # FIRST, and tests/db-chain.test.ts keeps that list honest, so read it
           # here instead of duplicating the chain into yet another place.
-          FIRST_IN_CHAIN=$(sed -n '/^const OPERATIONAL_URL =/,/;/p' src/lib/db.ts \
-            | grep -oE 'process\.env\.[A-Z_0-9]+' | head -1 | sed 's/process\.env\.//')
+          # READS db-chains.ts, NOT db.ts. This used to sed db.ts for
+          # `const OPERATIONAL_URL = ... process.env.X`, but db.ts now delegates
+          # to resolveUrl(OPERATIONAL_VARS) and holds no process.env reference at
+          # all — so the regex matched nothing, FIRST_IN_CHAIN came back EMPTY,
+          # and the "refusing to overwrite the live database" guard below could
+          # never fire. It was inert in all three migrate tasks. db-chains.ts is
+          # the single source of truth (tests/db-chain.test.ts keeps it honest),
+          # so parse the head of OPERATIONAL_VARS straight out of it.
+          FIRST_IN_CHAIN=$(sed -n '/^export const OPERATIONAL_VARS =/,/;/p' src/lib/db-chains.ts \
+            | grep -oE '"[A-Z_0-9]+"' | head -1 | tr -d '"')
+          if [ -z "${FIRST_IN_CHAIN:-}" ]; then
+            echo "::error::could not determine which database is live from src/lib/db-chains.ts. Refusing to run a destructive migration blind."
+            exit 1
+          fi
           echo "Chain in src/lib/db.ts resolves first: ${FIRST_IN_CHAIN:-<could not parse>}"
           if [ "$FIRST_IN_CHAIN" = "DATABASE_URL_2" ]; then
             if [ "${{ inputs.overwrite_live_db }}" != "true" ]; then
