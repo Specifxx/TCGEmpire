@@ -46,6 +46,7 @@ on:
           - revoke-premium   # remove Premium from ONE account (email input): clears premiumUntil + the retired early-adopter comp flag, and REPORTS the account's full premium state before/after. Honours dry_run. Does NOT touch isAdmin (admins read as Premium regardless — it says so loudly) and does not cancel a live Stripe subscription. Set reset_trial to also clear trialStartedAt so the account can trial again.
           - audit-users      # read-only user/Premium census (no PII printed)
           - audit-clicks     # read-only outbound-click leaderboard per retailer (affiliate-outreach priority)
+          - audit-egress     # READ-ONLY forensics on the ~2 GB/day Neon transfer burn that has now killed nine projects in a row (each dies 2-3 days after cutover). Reads ONLY statistics views — pg_stat_database, pg_stat_user_tables and, if present, pg_stat_statements — and attributes the churn to a TABLE and then to a QUERY SHAPE, with rows costed into estimated bytes. Run it a few hours after a cutover, not minutes: Neon resets these counters whenever the compute endpoint restarts, so the window is short and one import run inside it dominates the extrapolation.
           - backfill-alert-user-ids # link existing email-keyed price alerts to the accounts that own them (idempotent; honours dry_run)
           - fix-orphan-users # repair FK orphans: delete rows in GameScore/AuthToken/Notification/SellerProfile/CollectionCard whose userId no longer exists in User (they block `prisma db push` from adding the FK, which fails the Vercel build)
           - diagnose-card    # read-only: why does ONE card have no price? dumps its RetailerPrice + eBay carousel rows and re-runs the LIVE eBay search (card input)
@@ -126,23 +127,22 @@ jobs:
       group: ${{ inputs.task == 'import-prices' && 'refresh-prices' || format('maintenance-{0}', github.run_id) }}
       cancel-in-progress: false
     env:
-      # RM7 is the CURRENT operational project (cut over 2026-08-20 after RM6
-      # spent its 5 GB monthly network-transfer allowance just three days after
-      # its own cutover). Current-first, matching src/lib/db.ts.
+      # RM8 is the CURRENT operational project (cut over 2026-08-22, mid-outage,
+      # after RM7 spent its 5 GB monthly network-transfer allowance just TWO days
+      # after its own cutover and every in-stock listing on the site vanished).
+      # Current-first, matching src/lib/db-chains.ts — that file is the source of
+      # truth for this order and tests/db-chain.test.ts pins this chain to it.
       #
-      # RM6 now sits LAST in this chain, below even the long-dead projects,
-      # because a fallback that cannot connect is worth less than a stale one
-      # that can — see the long note on OPERATIONAL_URL in src/lib/db.ts. RM5 is
-      # the real rollback.
+      # The migrate-* steps below deliberately do NOT use this default: each pins
+      # its own SOURCE (the OLD project it reads FROM) and TARGET, and aborts if
+      # the two resolve to the same database.
       #
-      # migrate-main-db-to-rm7's own step below deliberately does NOT use this
-      # default: it pins SOURCE to RM6 (the OLD project it reads FROM) and
-      # TARGET to RM7, and aborts outright if the two resolve to the same
-      # database.
-      #
-      # ORDERING: this default points at RM7 from the moment it's set, so run
-      # migrate-main-db-to-rm7 BEFORE any other task here — otherwise a task
-      # like import-prices would happily operate against a still-empty RM7.
+      # ORDERING: this default points at the newest project from the moment its
+      # variable is set, so run the matching migrate-main-db-to-* task BEFORE any
+      # other task here — otherwise something like import-prices would happily
+      # operate against a still-empty target. This is not hypothetical: on
+      # 2026-08-22 RM8 was set but completely empty, and cutting over without
+      # staging it first would have replaced "no listings" with "no site".
       DATABASE_URL: ${{ secrets.RM8 || vars.RM8 || secrets.RM7 || vars.RM7 || secrets.DATABASE_URL || vars.DATABASE_URL }}
       # Which of the chain above actually won, by NAME (never its value). lib/db.ts
       # cannot work this out inside Actions: the chain is collapsed into one
@@ -3075,6 +3075,28 @@ jobs:
       - name: Audit users/Premium (read-only census)
         if: inputs.task == 'audit-users'
         run: npx tsx scripts/audit-users.ts
+
+      - name: Audit database egress (read-only forensics)
+        # THE OPEN INCIDENT. Nine Neon projects have been burned through at
+        # ~2 GB/day, each dying 2-3 days after it was cut over to. The
+        # 2026-08-14 sweep found and fixed a segment-TTL inversion that
+        # regenerated /card/[id] 288x a day — and the rate did not change: RM6
+        # died in 3 days and RM7 in 2 days AFTER that fix, taking the site down.
+        # So the remaining burn has never been measured, only hypothesised, and
+        # RM8 is on the same clock right now.
+        #
+        # This step measures it instead of guessing. It writes nothing: only
+        # pg_stat_database, pg_stat_user_tables and pg_stat_statements, plus one
+        # CREATE EXTENSION IF NOT EXISTS for the last of those (Neon preloads the
+        # library; the extension itself still has to be created once per project,
+        # and creating it is what makes the NEXT run useful).
+        #
+        # TIMING MATTERS. Neon resets these counters when the compute endpoint
+        # restarts, which for a suspend-happy serverless project is often. Run
+        # this a few HOURS into a window, not minutes — the script prints the
+        # window length and refuses to stand behind anything under an hour.
+        if: inputs.task == 'audit-egress'
+        run: npx tsx scripts/audit-egress.ts
 
       - name: Audit Stripe subscriptions against the database (read-only unless fix)
         # The companion to grant-premium: instead of repairing ONE account you
