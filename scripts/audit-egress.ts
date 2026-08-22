@@ -433,16 +433,31 @@ async function main() {
     }
 
     section("Estimated client egress");
-    console.log(`  Top 20 application statements: ${gb(egressTotal)}` +
-      (windowDays > 0 ? `  →  ${gb(perDay(egressTotal))}/day` : ""));
+    // THE WINDOW TOTAL IS THE MEASUREMENT. Everything below it is arithmetic on
+    // an assumption, so it is printed second and labelled as such.
+    console.log(`  MEASURED — top 20 application statements over this window: ${gb(egressTotal)}`);
+    console.log("  Top 20 only, and joins are attributed to ONE table — this is a FLOOR.");
     if (windowDays > 0) {
       const daily = perDay(egressTotal);
       const monthly = daily * 30;
-      console.log(`  Extrapolated monthly: ${gb(monthly)} against a ${MONTHLY_ALLOWANCE_GB} GB allowance` +
-        ` (${(monthly / (MONTHLY_ALLOWANCE_GB * 1024 ** 3)).toFixed(1)}× the limit).`);
-      console.log(`  At this rate a fresh project lasts ~${((MONTHLY_ALLOWANCE_GB * 1024 ** 3) / Math.max(1, daily)).toFixed(1)} days.`);
+      console.log("");
+      console.log("  EXTRAPOLATED — valid ONLY if this window is representative of a whole day:");
+      console.log(`    ${gb(daily)}/day · ${gb(monthly)}/month against a ${MONTHLY_ALLOWANCE_GB} GB allowance` +
+        ` (${(monthly / (MONTHLY_ALLOWANCE_GB * 1024 ** 3)).toFixed(1)}× the limit)` +
+        ` · a fresh project lasts ~${((MONTHLY_ALLOWANCE_GB * 1024 ** 3) / Math.max(1, daily)).toFixed(1)} days.`);
+      console.log("");
+      // A window holding a batch job is NOT representative, and this line has
+      // already misled once. The price import runs twice a day at 07:00 and
+      // 19:00 UTC; a 40-minute window spanning one of them measured 0.04 GB and
+      // this extrapolation reported 1.31 GB/day — i.e. it billed a twice-daily
+      // job as if it ran 36 times. The right arithmetic is:
+      //   (window total − trough share of the window) = cost of ONE run
+      //   then multiply by how many times a day it ACTUALLY runs.
+      console.log("    ⚠ IF A CRON, IMPORT OR BUILD RAN INSIDE THIS WINDOW, THAT LINE IS WRONG.");
+      console.log("      It bills a job that runs twice a day as if it ran all day. Instead:");
+      console.log("      subtract a trough-window baseline to get the cost of ONE run, then");
+      console.log("      multiply by its real daily frequency. Price imports: 07:00 + 19:00 UTC.");
     }
-    console.log("  Top 20 only, and joins are attributed to ONE table — this is a FLOOR.");
 
     if (noise.length) {
       const noiseRows = noise.reduce((n, st) => n + Number(st.rows), 0);
