@@ -3,6 +3,7 @@ import { notFoundMetadata } from "@/lib/not-found-metadata";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 import { CardImage } from "@/components/CardImage";
 import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge, CrystalRoseBadge } from "@/components/Badge";
 import { isOvernumbered, isSignature, isCrystalRose, normaliseCondition } from "@/lib/constants";
@@ -745,22 +746,55 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     };
   };
 
-  // Where this card sits in its set's price distribution — one grouped query,
-  // and the only input the narrative can't derive from data already on the page.
-  const setPrices = await prisma.card
-    .findMany({
-      where: { setCode: card.setCode, [priceField(DEFAULT_COUNTRY)]: { not: null } },
-      select: { [priceField(DEFAULT_COUNTRY)]: true } as Record<string, boolean>,
-    })
-    .then((rowsIn) => (rowsIn as unknown as Record<string, number>[]).map((r) => r[priceField(DEFAULT_COUNTRY)]).filter((n): n is number => n != null))
-    .catch(() => [] as number[]);
-  const sortedSetPrices = [...setPrices].sort((a, b) => a - b);
+  // Where this card sits in its set's price distribution — THREE NUMBERS, so
+  // three numbers is what crosses the wire.
+  //
+  // THE MOST EXPENSIVE QUERY ON THE SITE, until 2026-08-22. It was a findMany
+  // over every priced card in the set, sorted and reduced HERE, to produce a
+  // count, a count-below and a median. Measured on RM8 over a 15-minute delta of
+  // live traffic (scripts/audit-egress.ts --sample=15), it was the #1 shape by
+  // rows returned, by a factor of six over the next one:
+  //
+  //   SELECT "Card"."id", "Card"."lowestPriceCentsUs" FROM "Card"
+  //   WHERE "setCode" = $1 AND "lowestPriceCentsUs" IS NOT NULL
+  //   820 calls · 267,596 rows · 326.3 rows/call
+  //
+  // 326 rows per card-page render, ~79,000 renders a day. Prisma adds the `id`
+  // to the projection, so it was ~40 bytes a row for two numbers we throw away
+  // immediately. This is on the page that IS the site.
+  //
+  // array_agg(...)[floor(n/2) + 1] is the EXACT equivalent of the old
+  // `sorted[Math.floor(sorted.length / 2)]` — deliberately not percentile_cont,
+  // which interpolates between the two middle values, or percentile_disc, which
+  // takes the lower one on an even count. The published number must not shift
+  // because the reduction moved.
+  //
+  // Fails OPEN (null → no set context → the narrative omits that sentence), the
+  // same as the .catch(() => []) it replaces.
+  // Prisma.raw does no escaping, so the identifier is re-checked against the
+  // closed set priceField() can return before it is spliced in. It is typed
+  // PriceField and cannot be user input today; this is here so that stays true
+  // if the column ever becomes a parameter.
+  const priceCol = priceField(DEFAULT_COUNTRY);
+  if (!/^lowestPriceCents(Us|Uk|Sg|Ca)?$/.test(priceCol)) throw new Error(`bad price column: ${priceCol}`);
+  const setStats = await prisma
+    .$queryRaw<{ priced: bigint; cheaper: bigint; median: number | null }[]>`
+      SELECT COUNT(*) AS priced,
+             COUNT(*) FILTER (WHERE ${Prisma.raw(`"${priceCol}"`)} < ${baseline.lowest ?? -1}) AS cheaper,
+             (array_agg(${Prisma.raw(`"${priceCol}"`)} ORDER BY ${Prisma.raw(`"${priceCol}"`)}))[
+               (COUNT(*) / 2)::int + 1
+             ] AS median
+      FROM "Card"
+      WHERE "setCode" = ${card.setCode} AND ${Prisma.raw(`"${priceCol}"`)} IS NOT NULL
+    `
+    .then((rows) => rows[0] ?? null)
+    .catch(() => null);
   const setContext =
-    sortedSetPrices.length && baseline.lowest != null
+    setStats && Number(setStats.priced) > 0 && setStats.median != null && baseline.lowest != null
       ? {
-          pricedInSet: sortedSetPrices.length,
-          cheaperThan: sortedSetPrices.filter((p) => p < baseline.lowest!).length,
-          setMedianCents: sortedSetPrices[Math.floor(sortedSetPrices.length / 2)],
+          pricedInSet: Number(setStats.priced),
+          cheaperThan: Number(setStats.cheaper),
+          setMedianCents: setStats.median,
         }
       : null;
 

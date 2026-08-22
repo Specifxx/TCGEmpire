@@ -142,6 +142,16 @@ type Snapshot = {
   db: DbStat | undefined;
 };
 
+// Column count per table, for the projection-width correction in costOf().
+async function readColumnCounts(): Promise<{ table_name: string; n: bigint }[]> {
+  return prisma.$queryRaw`
+    SELECT table_name, COUNT(*) AS n
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+    GROUP BY table_name
+  `;
+}
+
 async function readTables(): Promise<TableStat[]> {
   return prisma.$queryRaw<TableStat[]>`
     SELECT relname,
@@ -310,7 +320,7 @@ async function main() {
   section(`Per-table scan attribution (${windowLabel})`);
   console.log(
     "  " + "table".padEnd(22) + "rows".padStart(10) + "row B".padStart(8) +
-      "seq scans".padStart(11) + "seq rows read".padStart(15) + "idx rows".padStart(12) + "≈read/day".padStart(12)
+      "seq scans".padStart(11) + "seq rows read".padStart(15) + "idx rows".padStart(14) + "≈read/day".padStart(14)
   );
   let churnTotal = 0;
   for (const t of tables) {
@@ -320,7 +330,7 @@ async function main() {
     console.log(
       "  " + t.relname.padEnd(22) + num(t.n_live_tup).padStart(10) + widthOf(t).toFixed(0).padStart(8) +
         num(t.seq_scan).padStart(11) + num(t.seq_tup_read).padStart(15) +
-        num(t.idx_tup_fetch ?? 0).padStart(12) + rate(read * widthOf(t)).padStart(12)
+        num(t.idx_tup_fetch ?? 0).padStart(14) + rate(read * widthOf(t)).padStart(14)
     );
   }
   console.log(`\n  Total scan churn: ${gb(churnTotal)}` + (windowDays > 0 ? `  →  ${gb(perDay(churnTotal))}/day` : ""));
@@ -340,13 +350,36 @@ async function main() {
   }
 
   // ── Per-statement: the honest proxy ───────────────────────────────────────
+  const columnCounts = await readColumnCounts().catch(() => [] as { table_name: string; n: bigint }[]);
   const widths = new Map(tables.map((t) => [t.relname.toLowerCase(), widthOf(t)]));
-  // Attribute each statement to a table so its rows can be costed. Crude on
-  // purpose: the first known table name appearing in the query text wins, so a
-  // join across two wide tables is UNDER-counted, never over.
+  const colCounts = new Map(columnCounts.map((c) => [c.table_name.toLowerCase(), Number(c.n)]));
+
+  // Cost a statement's rows in bytes. Two corrections matter, and getting either
+  // wrong changes the ranking, not just the magnitude:
+  //
+  //   TABLE — the first known table name in the query text wins. Crude on
+  //   purpose: a join across two wide tables is UNDER-counted, never over.
+  //
+  //   WIDTH — a table's average row width is pg_relation_size/n_live_tup, i.e.
+  //   the width of a WHOLE row. Most of these statements project a handful of
+  //   columns out of a wide table, so charging them the full width overstates
+  //   them badly. Card averages 1,622 bytes a row, but the card page's set-median
+  //   query selects two columns and gets ~40. Scaling by the fraction of columns
+  //   selected is still an approximation (columns are not equal widths — one TEXT
+  //   description dwarfs ten ints), but it is far closer than not scaling at all,
+  //   and it stops a narrow projection from a fat table dominating the ranking
+  //   for no reason.
   const costOf = (q: string, rows: bigint) => {
+    const lower = q.toLowerCase();
     for (const [name, w] of widths) {
-      if (q.toLowerCase().includes(`"${name}"`) || q.toLowerCase().includes(` ${name} `)) return Number(rows) * w;
+      if (!lower.includes(`\"${name}\"`) && !lower.includes(` ${name} `)) continue;
+      const total = colCounts.get(name) ?? 0;
+      // Count the projected columns: `"public"."Table"."col"` occurrences, which
+      // is how Prisma writes every select. A raw `SELECT *`, an aggregate, or a
+      // hand-written query has none of those and is charged the full width.
+      const projected = new Set([...q.matchAll(/\.\"(\w+)\"(?=\s*(?:,|FROM))/gi)].map((m) => m[1])).size;
+      const fraction = total > 0 && projected > 0 ? Math.min(1, projected / total) : 1;
+      return Number(rows) * w * fraction;
     }
     return 0;
   };
