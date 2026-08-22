@@ -57,6 +57,24 @@
  * Run it with N large enough to span normal traffic (10+ minutes); a window
  * that lands on a cron tick will attribute that cron's whole cost to the rate.
  *
+ * ── DO NOT SAMPLE WHILE A DEPLOY IS IN FLIGHT ───────────────────────────────
+ * This is the trap that has already produced one wrong answer, so it is worth
+ * being blunt about. A Vercel build runs generateStaticParams and PRERENDERS
+ * ~770 pages — 200 of them card pages — against this same database. Those
+ * renders are indistinguishable from traffic in here, and they do NOT appear in
+ * Vercel's function-invocation metrics, so nothing on the Vercel side
+ * contradicts the inflated number afterwards.
+ *
+ * On 2026-08-22 a --sample=15 opened two minutes after a push to main. It read
+ * 820 calls of the card page's set-median query and that extrapolated to ~79,000
+ * renders a day; Vercel Observability for the same 24 hours showed 1.8K function
+ * invocations and ~3.5K ISR writes for the route. The sample had measured a
+ * build.
+ *
+ * So: check that no deploy is running, and that none is triggered during the
+ * window, before believing a delta. The cron schedule matters too — see
+ * .github/workflows for refresh-prices (07:00, 19:00 UTC) and the rest.
+ *
  * Usage:
  *   npx tsx scripts/audit-egress.ts              # cumulative
  *   npx tsx scripts/audit-egress.ts --sample=10  # 10-minute delta (a real rate)
@@ -227,6 +245,13 @@ async function main() {
     console.log(`  DELTA mode: sampling for ${SAMPLE_MINUTES} minute(s) of live traffic.`);
     console.log("  Only counters that MOVE in this window are reported, so a restore or a");
     console.log("  one-off import that ran earlier cannot inflate the rate.");
+    console.log("");
+    console.log("  ⚠ A VERCEL BUILD INSIDE THIS WINDOW WILL INVALIDATE THE RESULT. Builds");
+    console.log("    prerender ~770 pages (200 of them card pages) against this database, and");
+    console.log("    they do NOT show up in Vercel's function-invocation metrics — so nothing");
+    console.log("    downstream will contradict the inflated figure. Confirm no deploy is in");
+    console.log("    flight before trusting anything below. See the header for the time this");
+    console.log("    exact mistake was made and what it produced.");
     await new Promise((r) => setTimeout(r, SAMPLE_MINUTES * 60_000));
     const second = await snapshot();
 

@@ -749,19 +749,30 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // Where this card sits in its set's price distribution — THREE NUMBERS, so
   // three numbers is what crosses the wire.
   //
-  // THE MOST EXPENSIVE QUERY ON THE SITE, until 2026-08-22. It was a findMany
-  // over every priced card in the set, sorted and reduced HERE, to produce a
-  // count, a count-below and a median. Measured on RM8 over a 15-minute delta of
-  // live traffic (scripts/audit-egress.ts --sample=15), it was the #1 shape by
-  // rows returned, by a factor of six over the next one:
+  // It was a findMany over every priced card in the set, sorted and reduced HERE,
+  // to produce a count, a count-below and a median. Measured on RM8 over a
+  // 15-minute delta (scripts/audit-egress.ts --sample=15) it was the #1 shape by
+  // rows returned, six times clear of the next:
   //
   //   SELECT "Card"."id", "Card"."lowestPriceCentsUs" FROM "Card"
   //   WHERE "setCode" = $1 AND "lowestPriceCentsUs" IS NOT NULL
   //   820 calls · 267,596 rows · 326.3 rows/call
   //
-  // 326 rows per card-page render, ~79,000 renders a day. Prisma adds the `id`
-  // to the projection, so it was ~40 bytes a row for two numbers we throw away
-  // immediately. This is on the page that IS the site.
+  // 326 rows to produce three numbers, and Prisma adds the `id` to the projection,
+  // so both columns fetched were discarded immediately.
+  //
+  // ON THE CALL VOLUME, HONESTLY: 820 calls in 15 minutes was first extrapolated
+  // to ~79,000 renders a day. That was wrong. A deploy was pushed two minutes
+  // before that sample opened, and a Vercel build PRERENDERS 200 card pages via
+  // generateStaticParams — against this same database, and invisible to Vercel's
+  // function-invocation metrics. The window measured a build, not a day of
+  // traffic. Vercel Observability for the same 24h: 1.8K function invocations,
+  // ~3.5K ISR writes over 982 unique paths.
+  //
+  // The rewrite stands regardless — 326 rows to one row is right at any volume,
+  // and a build pays it 200 times per deploy — but the "most expensive query on
+  // the site" framing did not survive checking. See the sampling note in
+  // scripts/audit-egress.ts.
   //
   // array_agg(...)[floor(n/2) + 1] is the EXACT equivalent of the old
   // `sorted[Math.floor(sorted.length / 2)]` — deliberately not percentile_cont,
