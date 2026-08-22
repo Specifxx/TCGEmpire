@@ -22,6 +22,11 @@ export const SIGNUP_SOURCES = new Set([
   "alerts_page",
   "login",
   "email",
+  // RETIRED — no surface sets this any more. The search-limit gate that did was
+  // removed (see api/search/route.ts). Kept in the whitelist deliberately: real
+  // accounts created during the day it shipped carry "gate" in User.signupSource,
+  // and a cookie set just before the deploy must still parse rather than fall
+  // back to null and silently mis-attribute a signup.
   "gate",
   "referral",
   "other",

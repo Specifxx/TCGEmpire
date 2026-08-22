@@ -81,8 +81,12 @@ test("SignupWelcome is mounted in the root layout", () => {
 
 test("the signup popup reports shown and dismissed — its conversion rate is measurable", () => {
   const src = read("src/components/SignupPromoPopup.tsx");
-  assert.match(src, /trackEvent\("signup_promo_shown", \{ path: pathname \?\? "\/" \}\)/);
-  assert.match(src, /trackEvent\("signup_promo_dismissed"\)/);
+  // Both events carry `variant`, so the comparison layout stays separable from
+  // the perk-list version it replaced instead of being averaged together across
+  // the changeover in Vercel Analytics.
+  assert.match(src, /trackEvent\("signup_promo_shown", \{ path: pathname \?\? "\/", variant: PROMO_VARIANT \}\)/);
+  assert.match(src, /trackEvent\("signup_promo_dismissed", \{ variant: PROMO_VARIANT \}\)/);
+  assert.match(src, /const PROMO_VARIANT = "comparison"/, "the variant must be a named constant, not inlined at each call");
   // The embedded AuthForm attributes its provider clicks to the popup.
   assert.match(src, /source="popup"/);
 });

@@ -20,7 +20,6 @@ import { MARKETPLACE_NAV_VISIBLE } from "@/components/nav-groups";
 import { FooterNav } from "@/components/FooterNav";
 import { ShareRow } from "@/components/ShareRow";
 import { enabledProviders } from "@/lib/oauth";
-import { SIGNUP_PREMIUM_DAYS } from "@/lib/premium";
 import { AdSenseLoader } from "@/components/AdSenseLoader";
 import { ConsentDefaults } from "@/components/ConsentDefaults";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
@@ -301,7 +300,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <main id="main-content" className="container-app min-w-0 py-6">{children}</main>
                 </div>
                 <PriceAlertModal providers={enabledProviders()} />
-                <SignupPromoPopup providers={enabledProviders()} signupPremiumDays={SIGNUP_PREMIUM_DAYS} />
+                <SignupPromoPopup providers={enabledProviders()} />
                 {/* Converts the OAuth callback's one-time ?welcome= param into
                     the sign_up analytics event, then strips it from the URL.
                     Renders nothing. */}

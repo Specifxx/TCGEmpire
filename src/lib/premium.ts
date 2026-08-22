@@ -201,11 +201,19 @@ export function referralPremiumActive(): boolean {
 // This reintroduces a scaled-down version of the "free week of Premium on
 // signup" comp the tier note above describes retiring. That comp's problem was
 // duration — a WEEK reads as a tier of its own, so losing it read as a downgrade —
-// not the idea of a taste. A single day is short enough to read as a preview, and
-// the free ACCOUNT tier (watchlists/alerts/portfolio) is still explicitly pitched
-// everywhere as the durable, permanent reason to sign up — see
-// SignupPromoPopup.tsx and AuthForm.tsx, which both say so alongside this.
-export const SIGNUP_PREMIUM_DAYS = Math.max(0, Math.floor(Number(process.env.SIGNUP_PREMIUM_DAYS ?? 1)));
+// not the idea of a taste. Three days is long enough to actually open the paid
+// tools more than once (a single day, the previous default, often lapsed before
+// a new account came back for a second session) while still reading as a preview
+// rather than an entitlement. The free ACCOUNT tier
+// (watchlists/alerts/portfolio/Best Basket) remains the durable, permanent reason
+// to sign up.
+//
+// WHERE THIS IS PITCHED: /login and AuthForm's full (non-compact) layout. It is
+// deliberately NOT pitched in SignupPromoPopup — see that file's header for why
+// the popup is a free-account-only conversion moment. The grant itself is
+// unconditional on the pitch: it happens in the OAuth callback's isNew branch
+// regardless of which surface the signup came from.
+export const SIGNUP_PREMIUM_DAYS = Math.max(0, Math.floor(Number(process.env.SIGNUP_PREMIUM_DAYS ?? 3)));
 
 function addMonths(base: Date, months: number): Date {
   const d = new Date(base);

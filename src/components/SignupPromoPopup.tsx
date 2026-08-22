@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import { useMe } from "@/lib/use-me";
 import { trackEvent } from "@/lib/analytics";
 import { AuthForm } from "./AuthForm";
-import { ANON_SEARCH_LIMIT, FREE_SEARCH_LIMIT } from "@/lib/search-limits";
 
 // Shown once per BROWSER SESSION (sessionStorage, not localStorage) — dismissing
 // suppresses it for the rest of that session/tab, but it comes back on the next
@@ -19,18 +18,36 @@ import { ANON_SEARCH_LIMIT, FREE_SEARCH_LIMIT } from "@/lib/search-limits";
 // marketplace (e.g. after seeing it linked from a community post) shouldn't be
 // hit with a full-screen signup wall on top of everything else there.
 //
-// THE PITCH IS THE ACCOUNT TIER, NOT A PREMIUM COMP — WITH ONE EXCEPTION. This
-// popup used to promise a free week of Premium and gated its own appearance on a
-// promo API reporting that slots remained; retiring that comp meant standing on
-// what a free account permanently unlocks instead (see lib/premium.ts's tier
-// note), which needs no server round-trip, so the popup renders on its own. A
-// much shorter Premium PREVIEW is back via SIGNUP_PREMIUM_DAYS (lib/premium.ts) —
-// threaded down as a prop since this file can't import that server-only module
-// directly. The copy below is deliberately careful to frame it as a taste on top
-// of the account, never as the account's own payoff — that framing (not the
-// existence of a comp) was the old version's actual problem.
+// THIS POPUP IS A NO-ACCOUNT → FREE-ACCOUNT MOMENT, AND NOTHING ELSE.
+//
+// Premium is deliberately absent. Earlier versions led with a comp — first a free
+// WEEK of Premium, later a shorter SIGNUP_PREMIUM_DAYS preview threaded in as a
+// prop — which made the ask about the paid tier at the exact moment the visitor
+// had not yet agreed to the free one. The signup grant itself still happens
+// server-side in the OAuth callback (see SIGNUP_PREMIUM_DAYS in lib/premium.ts,
+// and /login, which does still pitch it); it just isn't this dialog's hook.
+//
+// It also no longer sells a search allowance. A tiered search cap shipped as this
+// popup's headline and was removed a day later — see api/search/route.ts for what
+// it cost. Manufacturing a limit to sell the fix is the shape of thing this
+// component should never do again.
+//
+// What replaced both: an honest side-by-side of what browsing already gives you
+// against what an account adds, built from the actual entitlement checks in the
+// codebase (see COMPARISON below). Row one is a tie on purpose — signing up takes
+// nothing away — and the price-alerts row concedes the anonymous email path
+// rather than pretending alerts are account-only, because they aren't.
 const SEEN_KEY = "rc_signup_promo_seen";
-const SHOW_DELAY_MS = 5_000; // fire early so more visitors actually see it before leaving
+
+// THE SINGLE SOURCE OF TRUTH FOR THE PROMO'S DELAY. Nothing else may hardcode it.
+//
+// Was 5s, which fired while a visitor was still reading the first thing they
+// landed on: 26% of visitors saw this dialog and 78% dismissed it, alongside a
+// measured drop in pages/visitor and buy_click. 15s is long enough that anyone
+// who sees it has actually engaged with a page, which is the only state in which
+// the comparison below means anything.
+export const PROMO_DELAY_MS = 15_000;
+
 const SKIP_PATHS = ["/login", "/verify", "/marketplace"];
 // Session pageview counter (see the gate below). Incremented once per route.
 const PV_KEY = "rc_pv_count";
@@ -43,26 +60,37 @@ const PV_KEY = "rc_pv_count";
 // improves as total shows drop.
 const MIN_PAGEVIEWS = 2;
 
-// What a free account PERMANENTLY unlocks — the thing that's still true after
-// any Premium preview lapses. Best Basket moved BACK to the account tier (see
-// lib/premium.ts's tier note) specifically to be the strongest item on this list —
-// it's listed first for that reason. The Bulk Pricer stays Premium and is pitched
-// there instead; everything else here an account genuinely, permanently unlocks
-// on its own.
-const PERKS: [string, string][] = [
-  ["Best Basket", "cheapest store split to buy a whole deck, postage included"],
-  ["Price alerts", "get told when a card hits your price"],
-  ["Portfolio tracking", "see what your collection is worth, live"],
-  ["Watchlist", "save cards and jump back to them anytime"],
+// Distinguishes this comparison layout from the perk-list version it replaced,
+// on signup_promo_shown/_dismissed, so the two are separable in Vercel Analytics
+// rather than averaged together across the changeover.
+const PROMO_VARIANT = "comparison";
+
+// The comparison itself. EVERY ROW IS DERIVED FROM A REAL ENTITLEMENT CHECK —
+// nothing here is aspirational:
+//
+//   Compare prices   no gate anywhere (deliberately: it's the whole site)
+//   Best Basket      api/basket 401 + tools/best-basket hasAccount()
+//   Watchlist        app/watching redirect + api/alerts/watchlist/* 401
+//   Price alerts     api/alerts/subscribe — anonymous EMAIL path exists and stays
+//   Portfolio        app/portfolio redirect + api/collection/*, portfolio/export 401
+//
+// `browsing: false` renders an em dash; a string renders as-is, for the rows
+// where signed-out visitors genuinely get something. Two of the five are not a
+// flat "no", and saying so is the point — a comparison that overstates the wall
+// is a dark pattern, and this one is checkable against the code by anyone.
+//
+// Premium-gated tools (Bulk Pricer, the screeners) are deliberately absent: this
+// dialog never mentions the paid tier. Keep this list at 4-6 rows — the card's
+// height is load-bearing on short phones (see the overlay's own note below).
+const COMPARISON: { label: string; desc: string; browsing: string | false }[] = [
+  { label: "Compare every store + eBay", desc: "Live prices on every card", browsing: "Yes" },
+  { label: "Best Basket", desc: "The cheapest way to buy a whole decklist, postage included", browsing: false },
+  { label: "Watchlist", desc: "Save cards and pick up where you left off", browsing: false },
+  { label: "Price alerts", desc: "Get told when a card hits your price", browsing: "One card, by email" },
+  { label: "Portfolio", desc: "What your collection is worth, and what it's made you", browsing: false },
 ];
 
-export function SignupPromoPopup({
-  providers,
-  signupPremiumDays = 0,
-}: {
-  providers: ("google" | "discord")[];
-  signupPremiumDays?: number;
-}) {
+export function SignupPromoPopup({ providers }: { providers: ("google" | "discord")[] }) {
   const { user, loaded } = useMe();
   const pathname = usePathname();
   const [phase, setPhase] = useState<"hidden" | "shown">("hidden");
@@ -120,14 +148,20 @@ export function SignupPromoPopup({
       // Impression event — with dismiss (below) this makes the popup's
       // conversion rate knowable for the first time: shown vs dismissed vs
       // sign_in_click(source=popup) vs sign_up.
-      trackEvent("signup_promo_shown", { path: pathname ?? "/" });
-    }, SHOW_DELAY_MS);
+      trackEvent("signup_promo_shown", { path: pathname ?? "/", variant: PROMO_VARIANT });
+    }, PROMO_DELAY_MS);
     return () => clearTimeout(t);
   }, [loaded, user, pathname]);
 
   const dismiss = useCallback(() => {
     setPhase("hidden");
-    trackEvent("signup_promo_dismissed");
+    trackEvent("signup_promo_dismissed", { variant: PROMO_VARIANT });
+    // PERSISTS THE DISMISSAL for the rest of the browser session. The arming
+    // effect above reads SEEN_KEY before it re-arms, so a dismissed promo does
+    // not come back on the next pageview — only on a genuinely new session
+    // (tab/browser closed and reopened). Written synchronously here, not on a
+    // later effect, so a dismiss immediately followed by a navigation still
+    // sticks.
     try {
       sessionStorage.setItem(SEEN_KEY, "1");
     } catch {
@@ -246,79 +280,65 @@ export function SignupPromoPopup({
             ✕
           </button>
 
-          {/* Deliberately short. Every line here is vertical space on a phone,
-              and the old copy (icon + chip + heading + two-line paragraph +
-              three described perks + a footnote) made the card ~955px tall
-              against a 553px viewport — which is what pushed the close button
-              off-screen in the first place. Shorter copy is not just tidier
-              here, it is part of the fix. */}
-          <div className="px-5 pb-2 pt-6 text-center">
-            {signupPremiumDays > 0 ? (
-              <span className="chip bg-gold/15 text-[10px] font-bold uppercase tracking-wide text-gold">
-                {signupPremiumDays === 1 ? "1 day" : `${signupPremiumDays} days`} of Premium free
-              </span>
-            ) : (
-              <span className="chip bg-brand-500/15 text-[10px] font-bold uppercase tracking-wide text-brand-300">
-                Free account
-              </span>
-            )}
-            <h2 id="signup-promo-title" className="font-display mt-2 text-lg font-bold text-white">
-              {signupPremiumDays > 0 ? "Create an account, get Premium free" : `Get ${Math.round(FREE_SEARCH_LIMIT / ANON_SEARCH_LIMIT)}x more searches — free`}
+          {/* Every line here is vertical space on a phone, and an earlier
+              version of this card (icon + chip + heading + two-line paragraph +
+              three described perks + a footnote) reached ~955px against a 553px
+              viewport — which is what pushed the close button off-screen and
+              made the dialog genuinely inescapable. The comparison below is
+              denser than the perk chips it replaced, so it is deliberately
+              capped at 5 short rows with tight leading; verified closable at
+              360x640. Adding rows here is not free. */}
+          <div className="px-5 pb-2 pt-6">
+            <h2 id="signup-promo-title" className="font-display text-center text-lg font-bold text-white">
+              What a free account adds
             </h2>
-            <p className="mx-auto mt-1 max-w-xs text-xs leading-relaxed text-slate-400">
-              {signupPremiumDays > 0 ? (
-                <>
-                  Your first {signupPremiumDays === 1 ? "day" : `${signupPremiumDays} days`} of Premium is on us, no
-                  card needed. You keep these for good:
-                </>
-              ) : (
-                "No card needed. You get:"
-              )}
+            <p className="mx-auto mt-1 max-w-xs text-center text-xs leading-relaxed text-slate-400">
+              You keep everything you already have. No card, no spam.
             </p>
-            <ul className="mx-auto mt-2 flex max-w-xs flex-wrap justify-center gap-x-3 gap-y-1 text-[11px] text-slate-400">
-              {PERKS.map(([k]) => (
-                <li key={k} className="flex items-center gap-1">
-                  <span aria-hidden="true" className="font-bold text-brand-400">✓</span>
-                  <span className="font-semibold text-slate-300">{k}</span>
-                </li>
-              ))}
-            </ul>
 
-            {/* Search allowance ladder — the one concrete, felt difference
-                between the three tiers (enforced server-side, see
-                lib/search-limits.ts + api/search/route.ts), so it's a
-                stronger hook than another checkmark: a signed-out visitor who
-                has already hit "10 searches" mid-session sees exactly what
-                signing up buys them, in the same units they just ran out of.
-                Kept to one compact row — see the doc comment above this
-                popup's own height history for why brevity here is load-bearing,
-                not optional. */}
-            <div className="mx-auto mt-3 grid max-w-xs grid-cols-3 divide-x divide-ink-800 rounded-lg border border-ink-800 bg-ink-950/40 text-center">
-              <div className="px-1.5 py-2">
-                <div className="text-sm font-black text-slate-500">{ANON_SEARCH_LIMIT}</div>
-                <div className="text-[9px] font-semibold uppercase tracking-wide text-slate-600">Signed out</div>
-              </div>
-              <div className="px-1.5 py-2">
-                <div className="text-sm font-black text-brand-300">{FREE_SEARCH_LIMIT}</div>
-                <div className="text-[9px] font-semibold uppercase tracking-wide text-brand-400">Free account</div>
-              </div>
-              <div className="px-1.5 py-2">
-                <div className="text-sm font-black text-gold">∞</div>
-                <div className="text-[9px] font-semibold uppercase tracking-wide text-gold/80">Premium</div>
-              </div>
-            </div>
-            <p className="mt-1.5 text-[10px] text-slate-500">Searches per day — free is {Math.round(FREE_SEARCH_LIMIT / ANON_SEARCH_LIMIT)}x more</p>
+            {/* Two tier columns, one row per feature. Semantically a table
+                because it IS one — a screen reader announcing "Best Basket,
+                Browsing: no, Free account: yes" is exactly the comparison a
+                sighted visitor gets from the marks. */}
+            <table className="mt-3 w-full border-collapse text-left">
+              <thead>
+                <tr className="border-b border-ink-800">
+                  <th scope="col" className="pb-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                    <span className="sr-only">Feature</span>
+                  </th>
+                  <th scope="col" className="w-[68px] pb-1.5 text-center text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                    Browsing
+                  </th>
+                  <th scope="col" className="w-[68px] pb-1.5 text-center text-[10px] font-semibold uppercase tracking-wide text-brand-300">
+                    Free
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {COMPARISON.map((row) => (
+                  <tr key={row.label} className="border-b border-ink-800/60 last:border-0">
+                    <th scope="row" className="py-1.5 pr-2 font-normal">
+                      <span className="block text-xs font-semibold leading-tight text-slate-200">{row.label}</span>
+                      <span className="block text-[10px] leading-tight text-slate-500">{row.desc}</span>
+                    </th>
+                    <td className="px-1 text-center align-middle">
+                      {row.browsing === false ? (
+                        <span className="text-slate-600" aria-label="Not included">—</span>
+                      ) : (
+                        <span className="text-[10px] font-medium leading-tight text-slate-400">{row.browsing}</span>
+                      )}
+                    </td>
+                    <td className="px-1 text-center align-middle">
+                      <span className="font-bold text-brand-400" aria-label="Included">✓</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
 
-          <div className="px-5 pb-5 pt-0">
-            <AuthForm
-              providers={providers}
-              bare
-              compact
-              signupPremiumDays={signupPremiumDays}
-              source="popup"
-              next={pathname ?? undefined}
-            />
+          <div className="px-5 pb-5 pt-3">
+            <AuthForm providers={providers} bare compact source="popup" next={pathname ?? undefined} />
             {/* A SECOND, OBVIOUS WAY OUT, in the thumb zone. The ✕ is a small
                 target in a top corner — the hardest place to reach one-handed on
                 a large phone — so the primary escape is now a full-width control
@@ -331,11 +351,10 @@ export function SignupPromoPopup({
             >
               Maybe later
             </button>
-            <p className="mt-1 text-center text-[11px] text-slate-600">
-              <Link href="/premium" onClick={dismiss} className="text-slate-500 hover:underline">
-                See Premium
-              </Link>
-            </p>
+            {/* No "See Premium" link here any more. It was the last Premium
+                mention left in the dialog, and it pointed the one visitor
+                actually engaging with a free-account pitch at the paid tier
+                instead — a second ask stacked on the first. */}
           </div>
         </div>
       </div>

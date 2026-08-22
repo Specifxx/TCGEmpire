@@ -9,7 +9,6 @@ import { AnnualPriceBlock } from "@/components/AnnualPriceBlock";
 import { SITE_URL, PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, PREMIUM_ANNUAL_AMOUNT } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
-import { ANON_SEARCH_LIMIT, FREE_SEARCH_LIMIT } from "@/lib/search-limits";
 
 export const dynamic = "force-dynamic";
 
@@ -68,7 +67,6 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
 // The three tiers, in the order a visitor moves through them (see lib/premium.ts).
 // `true`/`false` render a tick/dash; a string renders verbatim.
 const COMPARE: { feature: string; anon: boolean | string; account: boolean | string; premium: boolean | string }[] = [
-  { feature: "Card searches per day", anon: `${ANON_SEARCH_LIMIT}/day`, account: `${FREE_SEARCH_LIMIT}/day`, premium: "Unlimited" },
   { feature: "Compare prices across every store + eBay", anon: true, account: true, premium: true },
   { feature: "Full card database, search & browse", anon: true, account: true, premium: true },
   { feature: "Deck builder, trade calculator & box EV", anon: true, account: true, premium: true },
