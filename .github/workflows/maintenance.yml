@@ -82,6 +82,10 @@ on:
         required: false
         default: RM4
         options: [RM4, RM3, DATABASE_URL_2, DATABASE_URL, HISTORY_DATABASE_URL_2, HISTORY_DATABASE_URL, RH7, RH6, RH5, HISTORY_DATABASE_URL_4, HISTORY_DATABASE_URL_3]
+      apply:
+        description: "audit-premium-vs-stripe only: actually WRITE the repairs (default: report only)"
+        type: boolean
+        default: false
       premium_until:
         description: "grant-premium only: end date, e.g. 2026-08-30 (a date-only value means through the END of that day)"
         type: string
@@ -3077,10 +3081,20 @@ jobs:
         # no-ops behind a .catch(() => {}), so they keep paying and quietly stop
         # being extended.
         #
-        # dry_run (default) reports only. Set dry_run=false to repair.
+        # Reports only unless `apply` is ticked.
+        #
+        # NOTE THE POLARITY, it bit this very step once. GitHub's `&&`/`||`
+        # return an OPERAND, not a boolean, and '' is FALSY — so
+        # `${{ inputs.dry_run && '' || '1' }}` evaluates `true && ''` to '',
+        # which is falsy, and falls through to '1'. The "read-only" flag
+        # therefore selected WRITE mode, every time. It was only harmless
+        # because the first run found nothing to change.
+        #
+        # The safe shape is always: TRUE branch is the NON-EMPTY string, i.e.
+        # `${{ inputs.apply && '1' || '' }}`. Never put '' on the true side.
         if: inputs.task == 'audit-premium-vs-stripe'
         env:
-          FIX: ${{ inputs.dry_run && '' || '1' }}
+          FIX: ${{ inputs.apply && '1' || '' }}
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
         run: npx tsx scripts/audit-premium-vs-stripe.ts
 
