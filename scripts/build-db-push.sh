@@ -31,11 +31,12 @@ set -uo pipefail
 #
 # tests/db-chain.test.ts asserts these two values still match the head of each
 # chain, so the next cutover fails a test instead of quietly lying in a log.
-# Rotated onto RM7 on 2026-08-20: RM6 exhausted its 5 GB monthly transfer
-# allowance just three days after the 2026-08-17 cutover onto it — the same
-# ~2 GB/day burn every prior project has shown. See the long note on
-# OPERATIONAL_URL in src/lib/db.ts.
-CURRENT_OP="RM7"
+# Rotated onto RM8 on 2026-08-22: RM7 went over its 5 GB monthly transfer
+# allowance just TWO days after the 2026-08-20 cutover onto it — the same
+# ~2 GB/day burn every prior project has shown. RM8 was empty at that point
+# (the pre-stage task had never been run) and was restored from RM6 first.
+# See the long note on OPERATIONAL_VARS in src/lib/db-chains.ts.
+CURRENT_OP="RM8"
 # Rotated onto another recycled project on 2026-08-21: HISTORY_DATABASE_URL_3
 # went over its 5 GB monthly network-transfer allowance, and
 # HISTORY_DATABASE_URL_4 — retired long enough ago for its allowance to have
@@ -56,8 +57,8 @@ CURRENT_HIST="HISTORY_DATABASE_URL_4"
 # benign-looking "skipping". A green deploy against an un-migrated database is
 # exactly the failure this script exists to prevent.
 if ! { [ "${VERCEL_ENV:-}" = "production" ] || [ "${VERCEL_ENV:-}" = "preview" ]; } \
-   || [ -z "${RM7:-}${RM8:-}${DATABASE_URL:-}" ]; then
-  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM7 / RM8 / DATABASE_URL) — skipping schema push."
+   || [ -z "${RM8:-}${RM7:-}${DATABASE_URL:-}" ]; then
+  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM8 / RM7 / DATABASE_URL) — skipping schema push."
   exit 0
 fi
 
@@ -66,20 +67,21 @@ fi
 # the next cold start), this ALWAYS reflects the current build's actual environment.
 #
 # EVERY BRANCH EXCEPT THE DATABASE_URL ONE MUST `export`, because DATABASE_URL
-# is the only name `prisma db push` reads. Now that the head is RM7, the FIRST
+# is the only name `prisma db push` reads. Now that the head is RM8, the FIRST
 # branch is the one that must copy — and getting this wrong is silent and
 # expensive, because `prisma db push` would migrate a PREVIOUS project while
-# the app (src/lib/db.ts, RM7-first) reads the current one. A green deploy
+# the app (src/lib/db-chains.ts, RM8-first) reads the current one. A green deploy
 # against an un-migrated database is exactly the failure this script exists to
 # prevent.
-if [ -n "${RM7:-}" ]; then
-  export DATABASE_URL="$RM7"
-  SOURCE="RM7"
-elif [ -n "${RM8:-}" ]; then
-  # Designated rollback. Reached by UNSETTING RM7 — this chain falls through on
-  # an unset variable, never on an unreachable one.
+if [ -n "${RM8:-}" ]; then
   export DATABASE_URL="$RM8"
   SOURCE="RM8"
+elif [ -n "${RM7:-}" ]; then
+  # The previous project, demoted 2026-08-22 when it went over its transfer
+  # allowance. Reached by UNSETTING RM8 — this chain falls through on an unset
+  # variable, never on an unreachable one.
+  export DATABASE_URL="$RM7"
+  SOURCE="RM7"
 else
   # DATABASE_URL is last and is NOT a good production fallback — it is kept
   # because prisma/schema.prisma reads that literal name and local dev sets only
