@@ -146,15 +146,46 @@ test("the accounts admin page charts signups over time, by source, and the uncla
 
 // ── Phase 1: conversion fixes ────────────────────────────────────────────────
 
-test("the signed-out navbar has a VISIBLE Sign in button, not just an icon", () => {
+test("the signed-out navbar names BOTH logging in and signing up, not just an icon", () => {
   const src = read("src/components/UserMenu.tsx");
-  // Text pill on sm+, icon below sm — both attributed, both nofollow (the
-  // ?next= family must stay out of the crawl graph, see the SEO note there).
-  assert.match(src, />\s*Sign in\s*<\/Link>/);
+  // A lone "Sign in" reads as a door for people who already have an account, so
+  // a first-time visitor has no reason to think it's for them. Both halves must
+  // be named — that's what makes the header an entry point, not a return path.
+  assert.match(src, />\s*Log in \/ Sign up\s*<\/Link>/, "the sm+ pill must name both halves");
+  // Below sm the glyph can't carry text, so its accessible name must.
+  assert.match(src, /aria-label="Log in or sign up"/, "the mobile icon needs both halves in its label");
+  // ONE control, not two: both words open the same OAuth screen (there is no
+  // separate registration flow), so two links would imply a distinction the
+  // auth system doesn't have.
+  const links = src.match(/href=\{loginHref\}/g) ?? [];
+  assert.equal(links.length, 2, "expected exactly the sm+ pill and the below-sm icon, both to /login");
   assert.match(src, /hidden whitespace-nowrap px-3 py-1\.5 text-xs sm:inline-flex/);
   assert.match(src, /sm:hidden/);
   const nofollow = src.match(/rel="nofollow"/g) ?? [];
   assert.ok(nofollow.length >= 2, "both signed-out links must keep rel=nofollow");
+});
+
+test("the header row has the slack to actually RENDER the wider signed-out CTA", () => {
+  // Widening the CTA to "Log in / Sign up" made the nav row's intrinsic minimum
+  // exceed the container between 1024 and ~1056px, and the container CLIPPED it
+  // — "Log in / Sign up" rendered as "Log". No page scroll, so
+  // scripts/mobile-check.ts's overflow sweep could not see it; measured with a
+  // real browser instead (ctaRight === viewportWidth, i.e. hard against the
+  // edge, at 1024/1032/1040/1048/1056).
+  //
+  // Two independent reservations of slack, both pinned here because either one
+  // silently reverting re-clips the CTA:
+  const src = read("src/components/Navbar.tsx");
+  // 1. The nav LINKS turn on at the same breakpoint as the search bar — the only
+  //    element in the row that can flex and absorb the difference.
+  assert.ok(!/md:block md:px-2\.5/.test(src), "nav links must not turn on at md — the flexible search bar is lg-and-up");
+  const lgLinks = src.match(/lg:block lg:px-2\.5/g) ?? [];
+  assert.ok(lgLinks.length >= 4, `expected the nav links gated at lg, found ${lgLinks.length}`);
+  // 2. The two NON-navigational items defer to xl, which is what buys the
+  //    1024-1056 band its headroom. Premium stays reachable from UserMenu and
+  //    /premium; Discord from the footer.
+  assert.match(src, /<PremiumButton className="[^"]*\bxl:block\b/, "the Premium button must defer to xl");
+  assert.match(src, /aria-label="Join our Discord"[\s\S]{0,300}?\bxl:grid\b/, "the Discord icon must defer to xl");
 });
 
 test("PriceAlertModal keeps the email path intact — the account option is a reframe, NOT a gate", () => {
@@ -182,10 +213,17 @@ test("the card page CTA no longer undercuts the account pitch", () => {
   assert.match(src, /watchlist syncs everywhere/);
 });
 
-test("the popup never fires on the first page of a session", () => {
+test("the popup gates on engagement, now via the delay rather than a second pageview", () => {
   const src = read("src/components/SignupPromoPopup.tsx");
-  assert.match(src, /const MIN_PAGEVIEWS = 2/);
+  // MIN_PAGEVIEWS was 2 because a 5s timer fired on page ONE for everyone, and
+  // requiring a second pageview was the only way to express "has engaged".
+  // PROMO_DELAY_MS is 15s now and expresses that directly, so the pageview gate
+  // relaxed to 1 — stacking both gated the dialog twice for one reason, and with
+  // bounce up 5pts it excluded every single-page session from ever seeing the
+  // pitch. The counter itself stays (it's how the gate is enforced at all).
+  assert.match(src, /const MIN_PAGEVIEWS = 1/);
   assert.match(src, /if \(pageviews < MIN_PAGEVIEWS\) return/);
+  assert.match(src, /export const PROMO_DELAY_MS = 15_000;/, "the delay must carry the engagement gate now");
   // The pageview counter increments once per pathname, in its own effect —
   // counting inside the arming effect would double-count when auth state loads.
   assert.match(src, /lastCountedPath/);

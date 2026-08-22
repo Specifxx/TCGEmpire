@@ -57,11 +57,22 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
   if (!user) {
     // A VISIBLE text button on sm+ — the icon-only person glyph was the entire
     // signed-out chrome, and an unlabeled 20px outline is not a call to action.
-    // "Sign in" (short) rather than "Create free account": this header has
-    // fought real overflow battles at 640–790px, and the /login page it opens
-    // now carries the full create-your-free-account pitch. Below sm the icon
-    // stays, protecting the crowded mobile header. Both keep rel="nofollow" and
-    // the ?next= carry (see the SEO note above).
+    //
+    // "Log in / Sign up", not "Sign in" alone: a lone "Sign in" reads as a door
+    // for people who already have an account, so a first-time visitor has no
+    // reason to think it's for them — naming both halves is what makes the
+    // header an entry point rather than a return path. One link, not two: both
+    // words go to the same OAuth screen (there is no separate registration
+    // flow — see /login), so splitting them into two controls would imply a
+    // distinction the auth system doesn't have.
+    //
+    // The width is the cost, and this header has fought real overflow battles at
+    // 640-790px (see scripts/mobile-check.ts's TABLET_WIDTHS sweep, which is the
+    // check to run after touching this string). It fits because `sm:` starts at
+    // 640 and the nav links collapse into the overflow menu below `md`. Below
+    // `sm` the icon still stays — its label carries both words for screen
+    // readers even though the glyph can't. Both keep rel="nofollow" and the
+    // ?next= carry (see the SEO note above).
     return (
       <>
         <Link
@@ -70,13 +81,13 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
           onClick={() => markSignupSource("navbar")}
           className="btn-primary hidden whitespace-nowrap px-3 py-1.5 text-xs sm:inline-flex"
         >
-          Sign in
+          Log in / Sign up
         </Link>
         <Link
           href={loginHref}
           rel="nofollow"
-          aria-label="Sign in"
-          title="Sign in"
+          aria-label="Log in or sign up"
+          title="Log in or sign up"
           onClick={() => markSignupSource("navbar")}
           className="tap-icon rounded-lg text-slate-200 hover:bg-ink-800 hover:text-white sm:hidden"
         >

@@ -51,14 +51,21 @@ export const PROMO_DELAY_MS = 15_000;
 const SKIP_PATHS = ["/login", "/verify", "/marketplace"];
 // Session pageview counter (see the gate below). Incremented once per route.
 const PV_KEY = "rc_pv_count";
-// Only arm the popup once the session has seen this many pages. A first-page
-// lander — including every homepage lander — hasn't extracted any value yet,
-// and a full-screen modal over content they haven't used is the definition of
-// interruptive; a visitor on their second page has demonstrated engagement.
-// (The 5s delay alone couldn't express this: it fired on page ONE for
-// everyone.) signup_promo_shown/_dismissed measure whether the dismiss-rate
-// improves as total shows drop.
-const MIN_PAGEVIEWS = 2;
+// Only arm the popup once the session has seen this many pages.
+//
+// WAS 2, NOW 1 — and the delay above is why. This gate existed because a 5s
+// timer fired on page ONE for everyone, before the visitor had extracted any
+// value; requiring a second pageview was the only way to express "has actually
+// engaged". PROMO_DELAY_MS now expresses that directly: 15 seconds on a page is
+// itself the engagement signal, so stacking a second-pageview requirement on
+// top gated the dialog twice for the same reason.
+//
+// It also cost the reach that matters most. Bounce rose 5pts over the rollout,
+// so a large and growing share of sessions are a single page — under
+// MIN_PAGEVIEWS = 2 those visitors could never see the pitch at all, no matter
+// how long they stayed. Set back to 2 if shows-per-visitor climbs without
+// sign_up following.
+const MIN_PAGEVIEWS = 1;
 
 // Distinguishes this comparison layout from the perk-list version it replaced,
 // on signup_promo_shown/_dismissed, so the two are separable in Vercel Analytics
