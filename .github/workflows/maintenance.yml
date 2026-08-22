@@ -133,12 +133,12 @@ jobs:
       # ORDERING: this default points at RM7 from the moment it's set, so run
       # migrate-main-db-to-rm7 BEFORE any other task here — otherwise a task
       # like import-prices would happily operate against a still-empty RM7.
-      DATABASE_URL: ${{ secrets.RM7 || vars.RM7 || secrets.RM8 || vars.RM8 || secrets.DATABASE_URL || vars.DATABASE_URL }}
+      DATABASE_URL: ${{ secrets.RM8 || vars.RM8 || secrets.RM7 || vars.RM7 || secrets.DATABASE_URL || vars.DATABASE_URL }}
       # Which of the chain above actually won, by NAME (never its value). lib/db.ts
       # cannot work this out inside Actions: the chain is collapsed into one
       # DATABASE_URL before the job starts, so process.env.RM5 is always unset there
       # and its warning always said "DATABASE_URL". See src/lib/db.ts.
-      DB_SOURCE_NAME: ${{ (secrets.RM7 || vars.RM7) && 'RM7' || (secrets.RM8 || vars.RM8) && 'RM8' || 'DATABASE_URL' }}
+      DB_SOURCE_NAME: ${{ (secrets.RM8 || vars.RM8) && 'RM8' || (secrets.RM7 || vars.RM7) && 'RM7' || 'DATABASE_URL' }}
       DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
     steps:
       - uses: actions/checkout@v4
@@ -266,7 +266,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.RH7 || vars.RH7 }}
           # Only ever used for a "did RH7 accidentally get set to the operational
           # database?" guard before this step truncates anything.
-          OPERATIONAL_URL: ${{ secrets.RM7 || vars.RM7 || secrets.RM8 || vars.RM8 || secrets.DATABASE_URL || vars.DATABASE_URL }}
+          OPERATIONAL_URL: ${{ secrets.RM8 || vars.RM8 || secrets.RM7 || vars.RM7 || secrets.DATABASE_URL || vars.DATABASE_URL }}
         run: |
           set -uo pipefail
 
@@ -457,7 +457,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
           # Only ever used for a "did HISTORY_DATABASE_URL_2 accidentally get set
           # to the operational database?" guard before this step truncates anything.
-          OPERATIONAL_URL: ${{ secrets.RM7 || vars.RM7 || secrets.RM8 || vars.RM8 || secrets.DATABASE_URL || vars.DATABASE_URL }}
+          OPERATIONAL_URL: ${{ secrets.RM8 || vars.RM8 || secrets.RM7 || vars.RM7 || secrets.DATABASE_URL || vars.DATABASE_URL }}
         run: |
           set -uo pipefail
 
@@ -646,7 +646,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
           # Only ever used for a "did HISTORY_DATABASE_URL_3 accidentally get set
           # to the operational database?" guard before this step truncates anything.
-          OPERATIONAL_URL: ${{ secrets.RM7 || vars.RM7 || secrets.RM8 || vars.RM8 || secrets.DATABASE_URL || vars.DATABASE_URL }}
+          OPERATIONAL_URL: ${{ secrets.RM8 || vars.RM8 || secrets.RM7 || vars.RM7 || secrets.DATABASE_URL || vars.DATABASE_URL }}
         run: |
           set -uo pipefail
 
@@ -829,7 +829,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
           # Only ever used for a "did HISTORY_DATABASE_URL_4 accidentally get set
           # to the operational database?" guard before this step truncates anything.
-          OPERATIONAL_URL: ${{ secrets.RM7 || vars.RM7 || secrets.RM8 || vars.RM8 || secrets.DATABASE_URL || vars.DATABASE_URL }}
+          OPERATIONAL_URL: ${{ secrets.RM8 || vars.RM8 || secrets.RM7 || vars.RM7 || secrets.DATABASE_URL || vars.DATABASE_URL }}
         run: |
           set -uo pipefail
 
@@ -1716,7 +1716,7 @@ jobs:
             echo "::error::could not determine which database is live from src/lib/db-chains.ts. Refusing to run a destructive migration blind."
             exit 1
           fi
-          echo "Chain in src/lib/db.ts resolves first: ${FIRST_IN_CHAIN:-<could not parse>}"
+          echo "Chain in src/lib/db-chains.ts resolves first: ${FIRST_IN_CHAIN:-<could not parse>}"
           if [ "$FIRST_IN_CHAIN" = "RM8" ]; then
             if [ "${{ inputs.overwrite_live_db }}" != "true" ]; then
               echo "::error::REFUSING TO RUN — RM8 is LIVE. src/lib/db.ts resolves it first, so it is the database production is serving right now. This task would restore the frozen RM7 over it and discard every row written since the cutover (signups, feedback, orders, listings). Nothing has been touched. If you truly intend this — a deliberate rollback to the old project — re-run with overwrite_live_db = true."
@@ -1753,8 +1753,22 @@ jobs:
             LIMIT 40;" 2>&1 || echo "(size report unavailable — continuing)"
 
           echo "== What the target holds BEFORE we replace it =="
+          # `|| true` PER ITERATION, and it is load-bearing. GitHub runs these
+          # steps as `bash -e {0}`; the `set -uo pipefail` above ADDS to that, it
+          # does not clear the -e. So when the target is an EMPTY project — no
+          # schema at all, which is precisely the state a pre-stage task exists to
+          # fix — the first COUNT(*) hits "relation does not exist", psql exits
+          # non-zero, and -e killed the whole step before a single byte was
+          # restored. These tasks could therefore never INITIALISE an empty
+          # target, only refresh an already-populated one.
+          #
+          # That is very likely why RM8 sat empty until the 2026-08-22 outage
+          # needed it as a rollback: the job "failed", and the failure looked like
+          # a database problem rather than a shell one. Found the hard way, during
+          # that outage, in all four migrate tasks at once.
           for T in 'public."User"' 'public."Card"' 'public."MarketplaceListing"' 'public."Order"'; do
-            N=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1 | tr -d ' \n')
+            N=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>/dev/null | tr -d ' \n') || true
+            case "$N" in ''|*[!0-9]*) N="(absent — target has no such table yet)";; esac
             echo "  target $T: $N"
           done
 
@@ -1950,7 +1964,7 @@ jobs:
             echo "::error::could not determine which database is live from src/lib/db-chains.ts. Refusing to run a destructive migration blind."
             exit 1
           fi
-          echo "Chain in src/lib/db.ts resolves first: ${FIRST_IN_CHAIN:-<could not parse>}"
+          echo "Chain in src/lib/db-chains.ts resolves first: ${FIRST_IN_CHAIN:-<could not parse>}"
           if [ "$FIRST_IN_CHAIN" = "RM7" ]; then
             if [ "${{ inputs.overwrite_live_db }}" != "true" ]; then
               echo "::error::REFUSING TO RUN — RM7 is LIVE. src/lib/db.ts resolves it first, so it is the database production is serving right now. This task would restore the frozen RM6 over it and discard every row written since the cutover (signups, feedback, orders, listings). Nothing has been touched. If you truly intend this — a deliberate rollback to the old project — re-run with overwrite_live_db = true."
@@ -1987,8 +2001,22 @@ jobs:
             LIMIT 40;" 2>&1 || echo "(size report unavailable — continuing)"
 
           echo "== What the target holds BEFORE we replace it =="
+          # `|| true` PER ITERATION, and it is load-bearing. GitHub runs these
+          # steps as `bash -e {0}`; the `set -uo pipefail` above ADDS to that, it
+          # does not clear the -e. So when the target is an EMPTY project — no
+          # schema at all, which is precisely the state a pre-stage task exists to
+          # fix — the first COUNT(*) hits "relation does not exist", psql exits
+          # non-zero, and -e killed the whole step before a single byte was
+          # restored. These tasks could therefore never INITIALISE an empty
+          # target, only refresh an already-populated one.
+          #
+          # That is very likely why RM8 sat empty until the 2026-08-22 outage
+          # needed it as a rollback: the job "failed", and the failure looked like
+          # a database problem rather than a shell one. Found the hard way, during
+          # that outage, in all four migrate tasks at once.
           for T in 'public."User"' 'public."Card"' 'public."MarketplaceListing"' 'public."Order"'; do
-            N=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1 | tr -d ' \n')
+            N=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>/dev/null | tr -d ' \n') || true
+            case "$N" in ''|*[!0-9]*) N="(absent — target has no such table yet)";; esac
             echo "  target $T: $N"
           done
 
@@ -2181,7 +2209,7 @@ jobs:
             echo "::error::could not determine which database is live from src/lib/db-chains.ts. Refusing to run a destructive migration blind."
             exit 1
           fi
-          echo "Chain in src/lib/db.ts resolves first: ${FIRST_IN_CHAIN:-<could not parse>}"
+          echo "Chain in src/lib/db-chains.ts resolves first: ${FIRST_IN_CHAIN:-<could not parse>}"
           if [ "$FIRST_IN_CHAIN" = "RM6" ]; then
             if [ "${{ inputs.overwrite_live_db }}" != "true" ]; then
               echo "::error::REFUSING TO RUN — RM6 is LIVE. src/lib/db.ts resolves it first, so it is the database production is serving right now. This task would restore the frozen DATABASE_URL_2 over it and discard every row written since the cutover (signups, feedback, orders, listings). Nothing has been touched. If you truly intend this — a deliberate rollback to the old project — re-run with overwrite_live_db = true."
@@ -2335,7 +2363,7 @@ jobs:
             echo "::error::could not determine which database is live from src/lib/db-chains.ts. Refusing to run a destructive migration blind."
             exit 1
           fi
-          echo "Chain in src/lib/db.ts resolves first: ${FIRST_IN_CHAIN:-<could not parse>}"
+          echo "Chain in src/lib/db-chains.ts resolves first: ${FIRST_IN_CHAIN:-<could not parse>}"
           if [ "$FIRST_IN_CHAIN" = "DATABASE_URL_2" ]; then
             if [ "${{ inputs.overwrite_live_db }}" != "true" ]; then
               echo "::error::REFUSING TO RUN — DATABASE_URL_2 is LIVE. src/lib/db.ts resolves it first, so it is the database production is serving right now. This task would restore the frozen DATABASE_URL over it and discard every row written since the cutover (signups, feedback, orders, listings). Nothing has been touched. If you truly intend this — a deliberate rollback to the old project — re-run with overwrite_live_db = true."
@@ -2372,8 +2400,22 @@ jobs:
             LIMIT 40;" 2>&1 || echo "(size report unavailable — continuing)"
 
           echo "== What the target holds BEFORE we replace it =="
+          # `|| true` PER ITERATION, and it is load-bearing. GitHub runs these
+          # steps as `bash -e {0}`; the `set -uo pipefail` above ADDS to that, it
+          # does not clear the -e. So when the target is an EMPTY project — no
+          # schema at all, which is precisely the state a pre-stage task exists to
+          # fix — the first COUNT(*) hits "relation does not exist", psql exits
+          # non-zero, and -e killed the whole step before a single byte was
+          # restored. These tasks could therefore never INITIALISE an empty
+          # target, only refresh an already-populated one.
+          #
+          # That is very likely why RM8 sat empty until the 2026-08-22 outage
+          # needed it as a rollback: the job "failed", and the failure looked like
+          # a database problem rather than a shell one. Found the hard way, during
+          # that outage, in all four migrate tasks at once.
           for T in 'public."User"' 'public."Card"' 'public."MarketplaceListing"' 'public."Order"'; do
-            N=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1 | tr -d ' \n')
+            N=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>/dev/null | tr -d ' \n') || true
+            case "$N" in ''|*[!0-9]*) N="(absent — target has no such table yet)";; esac
             echo "  target $T: $N"
           done
 
@@ -2583,7 +2625,7 @@ jobs:
         # so the generated client may not even load.
         if: inputs.task == 'fix-orphan-users'
         env:
-          TARGET_DATABASE_URL: ${{ secrets.RM7 || vars.RM7 || secrets.RM8 || vars.RM8 || secrets.DATABASE_URL || vars.DATABASE_URL }}
+          TARGET_DATABASE_URL: ${{ secrets.RM8 || vars.RM8 || secrets.RM7 || vars.RM7 || secrets.DATABASE_URL || vars.DATABASE_URL }}
         run: |
           set -uo pipefail
           if [ -z "$TARGET_DATABASE_URL" ]; then
@@ -2866,12 +2908,12 @@ jobs:
       - name: Audit rarity across sets (read-only census)
         if: inputs.task == 'audit-rarity'
         env:
-          DATABASE_URL: ${{ secrets.RM7 || vars.RM7 || secrets.RM8 || vars.RM8 || secrets.DATABASE_URL || vars.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.RM8 || vars.RM8 || secrets.RM7 || vars.RM7 || secrets.DATABASE_URL || vars.DATABASE_URL }}
           # Which of the chain above actually won, by NAME (never its value). lib/db.ts
           # cannot work this out inside Actions: the chain is collapsed into one
           # DATABASE_URL before the job starts, so process.env.RM5 is always unset there
           # and its warning always said "DATABASE_URL". See src/lib/db.ts.
-          DB_SOURCE_NAME: ${{ (secrets.RM7 || vars.RM7) && 'RM7' || (secrets.RM8 || vars.RM8) && 'RM8' || 'DATABASE_URL' }}
+          DB_SOURCE_NAME: ${{ (secrets.RM8 || vars.RM8) && 'RM8' || (secrets.RM7 || vars.RM7) && 'RM7' || 'DATABASE_URL' }}
         run: npx tsx scripts/audit-rarity.ts
 
       - name: Audit VEN cards (read-only census)
