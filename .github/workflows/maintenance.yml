@@ -1224,7 +1224,15 @@ jobs:
 
           # The tables that actually matter for this incident. Cards and prices
           # rebuild themselves from public sources; nothing below can.
-          TABLES='User MarketplaceListing Order SellerProfile SupportTicket CollectionCard PriceAlert Card'
+          # RetailerPrice IS IN THIS LIST DELIBERATELY, and it was the one number
+          # missing when it mattered most. During the 2026-08-22 outage this
+          # probe was the first thing run, and it answered "RM8 REACHABLE" with
+          # every table "-" — but it could not say whether RM8 held any STOCK,
+          # which is the only number that decides whether in-stock listings come
+          # back after a cutover. That had to be inferred from a later migration
+          # log instead of read here. It is ~78k rows and counts in milliseconds;
+          # there was never a reason to leave it out.
+          TABLES='User MarketplaceListing Order SellerProfile SupportTicket CollectionCard PriceAlert Card RetailerPrice SealedListing'
 
           # TWO WAYS THIS PROBE HAS ALREADY LIED, both worth keeping written down.
           #
