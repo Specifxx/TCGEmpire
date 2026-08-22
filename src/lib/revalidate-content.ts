@@ -36,6 +36,24 @@ export function revalidateContent(): string[] {
     ["/card/[id]", "page"],
     ["/sets/[set]", "page"],
     ["/domains/[slug]", "page"],
+    // THE ARTICLES. Blog posts and guides embed live card galleries (see
+    // ArticleView's resolveEmbed), so they are price-derived surfaces like every
+    // path above — but they were missing from this list, and the compensation
+    // was a 600-second `export const revalidate` on both routes.
+    //
+    // That is the expensive half of the strategy this file's header describes,
+    // inverted. 56 posts + 38 guides = 94 prerendered pages regenerating 144x a
+    // day each: ~13,500 renders a day, every one of them re-running that
+    // article's embed queries, instead of the ~2 a day an import actually makes
+    // necessary. /feed.xml, /feed.json and /news-sitemap.xml carried the same
+    // 600 for the same reason and are purged here too.
+    //
+    // With the purge in place the TTL is a 24h fallback again, and freshness
+    // goes UP, not down: an import now clears these immediately rather than
+    // leaving them up to ten minutes stale.
+    ["/blog", "page"],
+    ["/blog/[slug]", "page"],
+    ["/guides/[slug]", "page"],
   ];
   for (const [p, type] of staticPaths) revalidatePath(p, type);
 
@@ -51,6 +69,13 @@ export function revalidateContent(): string[] {
   // hand-maintained list, so a new child sitemap can't be forgotten here.
   revalidatePath("/sitemap.xml");
   for (const id of SECTIONS) revalidatePath(`/sitemaps/${id}.xml`);
+
+  // Article feeds — route handlers, so they need naming individually for the
+  // same reason the child sitemaps do (revalidatePath's type argument takes only
+  // "page" | "layout"). These three carried `export const revalidate = 600`
+  // alongside the article pages; they are purged here so they can drop to a 24h
+  // fallback with everything else.
+  for (const feed of ["/feed.xml", "/feed.json", "/news-sitemap.xml"]) revalidatePath(feed);
 
   // The cookie/searchParams-DYNAMIC price pages (/market, /decks, /decks/[slug],
   // /decks/archetype/[slug], /decks/domain/[slug], /tools/box-ev) render

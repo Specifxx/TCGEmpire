@@ -6,7 +6,10 @@ import { SITE_NAME, SITE_URL } from "@/lib/site";
 // get faster, higher-frequency crawls. Referenced from robots.ts alongside the
 // main sitemap. getBlogPosts() only returns hand-written posts — auto-generated
 // market reports are excluded (see lib/posts.ts).
-export const revalidate = 600;
+// ISR: 24 hours; purged on demand by the price importer (lib/revalidate-content.ts).
+// It was 600, which regenerated this 144x a day to publish a feed whose contents
+// only change when an article ships (a deploy) or the importer runs.
+export const revalidate = 86400;
 
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
