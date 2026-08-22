@@ -166,10 +166,23 @@ async function main() {
           console.log(`  subscription : ${live.id} (${live.status})`);
           console.log(`  period end   : ${new Date(live.current_period_end * 1000).toISOString()}`);
           console.log(`  metadata.userId (before): ${live.metadata?.userId ?? "unset"}`);
-          if (!DRY && live.metadata?.userId !== user.id) {
+          if (live.metadata?.userId === user.id) {
+            console.log("  metadata.userId already correct — renewals will resolve this account.");
+          } else if (!DRY) {
             // THE load-bearing repair: premiumRenewed() reads this FIRST.
             await stripe().subscriptions.update(live.id, { metadata: { ...live.metadata, userId: user.id } });
             console.log(`  metadata.userId (after) : ${user.id}  ← re-linked`);
+          }
+
+          // Restore trialStartedAt from STRIPE's own record rather than
+          // inventing one. It enforces "one free trial per account"; left null
+          // after a restore, the account can redeem a second free trial it is
+          // not entitled to. Only ever set when Stripe says a trial really
+          // happened, and never overwritten if we already hold a value.
+          if (live.trial_start && !user.trialStartedAt) {
+            const started = new Date(live.trial_start * 1000);
+            console.log(`  trialStartedAt   : null → ${started.toISOString()} (from Stripe)`);
+            if (!DRY) await prisma.user.update({ where: { id: user.id }, data: { trialStartedAt: started } });
           }
           break;
         }
