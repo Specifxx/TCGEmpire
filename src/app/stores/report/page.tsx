@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 import { formatMoney } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -40,20 +41,40 @@ export default async function StoreReportPage({ searchParams }: { searchParams: 
     },
   });
   const cardIds = [...new Set(mine.map((m) => m.cardId))];
-  // `distinct` + `orderBy priceCents asc` pushes the "cheapest rival per (card,
-  // country, finish)" reduction down to Postgres (DISTINCT ON) instead of pulling
-  // every competing listing across every rival store and reducing in Node — for a
-  // store carrying a large slice of the catalog this query used to return every
-  // in-stock rival row for every one of its cards, i.e. a large fraction of the
-  // whole RetailerPrice table, on a force-dynamic page with no caching. See the
-  // egress rules in lib/db.ts.
+  // Cheapest rival per (card, country, finish), reduced IN POSTGRES.
+  //
+  // THIS IS RAW SQL BECAUSE PRISMA'S `distinct` IS A LIE HERE. This query was
+  // written as findMany({ orderBy: { priceCents: "asc" }, distinct: ["cardId",
+  // "country", "isFoil"] }) with a comment claiming that pushed a DISTINCT ON
+  // down to Postgres. It does not. Prisma applies `distinct` (and `take`) in the
+  // CLIENT for findMany; the emitted SQL, captured from the query log on
+  // 2026-08-22, carries neither:
+  //
+  //   SELECT "id","cardId","priceCents","country","isFoil","retailerName"
+  //   FROM "RetailerPrice"
+  //   WHERE "cardId" IN (...) AND "inStock" = $n AND (NOT "retailer" = $n)
+  //   ORDER BY "priceCents" ASC OFFSET $n
+  //
+  // So the page still did exactly what the comment said it had stopped doing:
+  // return every in-stock rival row for every card the store carries — a large
+  // fraction of the whole RetailerPrice table — on a force-dynamic page with no
+  // caching. See the egress rules in lib/db.ts.
+  //
+  // DISTINCT ON needs the leading ORDER BY terms to match the DISTINCT ON list,
+  // so priceCents sorts LAST; that is what makes the surviving row per group the
+  // cheapest one, which is the whole point.
   const rivals = cardIds.length
-    ? await prisma.retailerPrice.findMany({
-        where: { cardId: { in: cardIds }, inStock: true, NOT: { retailer: partner.retailer } },
-        select: { cardId: true, priceCents: true, country: true, isFoil: true, retailerName: true },
-        orderBy: { priceCents: "asc" },
-        distinct: ["cardId", "country", "isFoil"],
-      })
+    ? await prisma.$queryRaw<
+        { cardId: string; priceCents: number; country: string; isFoil: boolean; retailerName: string }[]
+      >`
+        SELECT DISTINCT ON ("cardId", country, "isFoil")
+               "cardId", "priceCents", country, "isFoil", "retailerName"
+        FROM "RetailerPrice"
+        WHERE "cardId" IN (${Prisma.join(cardIds)})
+          AND "inStock" = true
+          AND retailer <> ${partner.retailer}
+        ORDER BY "cardId", country, "isFoil", "priceCents" ASC
+      `
     : [];
 
   // Already the cheapest rival per (card, country, finish) — foils compete with foils.

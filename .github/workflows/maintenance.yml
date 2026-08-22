@@ -99,6 +99,10 @@ on:
         description: "revoke-premium only: ALSO clear trialStartedAt so the account can start a free trial again"
         type: boolean
         default: false
+      sample_minutes:
+        description: "audit-egress only: sample live traffic for this many minutes and report only what MOVED (a real burn rate). 0/empty = cumulative counters, which include one-off work like a restore or a full import."
+        type: string
+        required: false
       url:
         description: "probe-url only: page to fetch for font/style diagnostics"
         type: string
@@ -3096,7 +3100,15 @@ jobs:
         # this a few HOURS into a window, not minutes — the script prints the
         # window length and refuses to stand behind anything under an hour.
         if: inputs.task == 'audit-egress'
-        run: npx tsx scripts/audit-egress.ts
+        # The job's 45-minute timeout bounds sample_minutes; anything approaching
+        # it will be killed mid-sample and report nothing.
+        run: |
+          ARGS=""
+          if [ -n "${{ inputs.sample_minutes }}" ] && [ "${{ inputs.sample_minutes }}" != "0" ]; then
+            ARGS="--sample=${{ inputs.sample_minutes }}"
+          fi
+          echo "npx tsx scripts/audit-egress.ts $ARGS"
+          npx tsx scripts/audit-egress.ts $ARGS
 
       - name: Audit Stripe subscriptions against the database (read-only unless fix)
         # The companion to grant-premium: instead of repairing ONE account you

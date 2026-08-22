@@ -96,9 +96,30 @@ export async function getCardPriceState(card: { id: string; setCode: string }): 
         where: { cardId: card.id, inStock: true },
         select: { id: true },
       }),
-      dbHistory.priceHistory
-        .findMany({ where: { cardId: card.id }, select: { day: true }, distinct: ["day"], take: MIN_HISTORY_DAYS })
-        .then((rows) => rows.length)
+      // COUNT(DISTINCT day), NOT findMany({ distinct }) — this needs a number,
+      // and it runs on EVERY card page (twice: generateMetadata and the body).
+      //
+      // It was `findMany({ select: { day: true }, distinct: ["day"], take:
+      // MIN_HISTORY_DAYS })`, which reads as "at most 7 rows". Prisma emits
+      // (captured from the query log, 2026-08-22):
+      //
+      //   SELECT "PriceHistory"."id", "PriceHistory"."day" FROM "PriceHistory"
+      //   WHERE "PriceHistory"."cardId" = $1 ORDER BY "id" ASC OFFSET $2
+      //
+      // No DISTINCT, no LIMIT. `distinct` and `take` are BOTH applied in the
+      // client, so this pulled that card's ENTIRE history — one row per (day,
+      // market), growing every day the importer runs, forever — and then threw
+      // all but the count away. On the site's highest-volume page, against the
+      // history project, which has itself now rotated through four transfer
+      // allowances.
+      //
+      // getEmptyCardIds() below already does the same counting in Postgres for
+      // the whole catalogue; this is the single-card version of it.
+      dbHistory
+        .$queryRaw<{ days: bigint }[]>`
+          SELECT COUNT(DISTINCT day) AS days FROM "PriceHistory" WHERE "cardId" = ${card.id}
+        `
+        .then((rows) => Number(rows[0]?.days ?? 0))
         .catch(() => 0),
     ]);
     return priceStateFrom(listing != null, days, exempt);

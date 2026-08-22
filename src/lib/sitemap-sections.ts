@@ -477,12 +477,17 @@ export async function marketplace(): Promise<SitemapEntry[]> {
     { url: `${SITE_URL}/marketplace/terms`, changeFrequency: "yearly", priority: 0.3, lastModified: staticPageDate("/marketplace/terms") },
   ];
   try {
-    const sellers = await prisma.marketplaceListing.findMany({
-      where: { status: "ACTIVE", quantity: { gt: 0 } },
-      distinct: ["sellerId"],
-      select: { sellerId: true },
-      take: 1000,
-    });
+    // GROUP BY, not findMany({ distinct }) — Prisma applies BOTH `distinct` and
+    // `take` in the client, so that form selects every active listing row and
+    // dedupes here, with the `take: 1000` bounding the deduped array rather than
+    // the query. Postgres does the dedupe and the LIMIT. Same bug class as
+    // demandSnapshotDays() in lib/demand-snapshot.ts.
+    const sellers = await prisma.$queryRaw<{ sellerId: string }[]>`
+      SELECT "sellerId" FROM "MarketplaceListing"
+      WHERE status = 'ACTIVE' AND quantity > 0
+      GROUP BY "sellerId"
+      LIMIT 1000
+    `;
     base.push(
       ...sellers.map((s) => ({
         url: `${SITE_URL}/marketplace/seller/${s.sellerId}`,

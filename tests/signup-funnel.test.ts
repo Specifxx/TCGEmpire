@@ -175,7 +175,16 @@ test("the accounts admin page charts signups over time, by source, and the uncla
   // shorter axis.
   assert.match(src, /Array\.from\(\{ length: 30 \}/);
   // The convertible pool: distinct alert emails with no account.
-  assert.match(src, /prisma\.priceAlert\.findMany\(\{ where: \{ userId: null \}, distinct: \["email"\]/);
+  //
+  // Asserted on the SHAPE of the question, not on one implementation of it.
+  // This used to pin the literal `prisma.priceAlert.findMany({ where: { userId:
+  // null }, distinct: ["email"] })`, which then had to be rewritten — Prisma
+  // dedupes `distinct` in the client, so that form selected every unclaimed
+  // alert row to read its .length (see tests/prisma-client-side-distinct.test.ts).
+  // What this test exists to protect is that the page still measures the pool
+  // claimAlertsForUser() converts, and still counts EMAILS rather than rows.
+  assert.match(src, /COUNT\(DISTINCT email\)[\s\S]{0,80}"PriceAlert"[\s\S]{0,60}"userId" IS NULL/);
+  assert.match(src, /unclaimedAlertEmails\s*=/, "the count must still reach the rendered stat");
   assert.match(src, /\(untracked\)/, "null sources must be labeled, not dropped from the breakdown");
 });
 
