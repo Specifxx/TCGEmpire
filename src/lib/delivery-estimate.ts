@@ -9,10 +9,16 @@
 // carrier ETA) would simply take precedence over the computed window here,
 // and no calling surface has to change.
 
-// Domestic parcel transit in BUSINESS days (min–max), keyed by the order's
-// shipCountry. Same-region-only delivery means origin and destination share a
-// country, so one range per market is enough. Deliberately wide — a pleasant
-// surprise beats a missed promise.
+// Parcel transit in BUSINESS days (min–max), keyed by the order's shipCountry.
+// For every market except EU this is DOMESTIC transit: same-region-only delivery
+// means origin and destination share a country, so one range per market is
+// enough. Deliberately wide — a pleasant surprise beats a missed promise.
+//
+// EU BREAKS THAT ASSUMPTION and is the reason this comment no longer says
+// "domestic". Origin and destination share a MARKET there, not a country: a
+// Rotterdam seller shipping to Madrid is inside one customs union but is still
+// posting internationally, which is slower and far more variable than any
+// domestic lane here.
 const TRANSIT_BUSINESS_DAYS: Record<string, { min: number; max: number }> = {
   AU: { min: 2, max: 6 },
   UK: { min: 2, max: 4 },
@@ -22,6 +28,12 @@ const TRANSIT_BUSINESS_DAYS: Record<string, { min: number; max: number }> = {
   // especially outside the Toronto–Montreal–Vancouver corridor. Kept deliberately
   // wide (the file's own rule: "a pleasant surprise beats a missed promise").
   CA: { min: 3, max: 9 },
+  // The widest range on the board, matching DEFAULT_TRANSIT rather than
+  // undercutting it: intra-EU cross-border post ranges from next-day
+  // (Netherlands→Belgium) to well over a week (Finland→Portugal), and this
+  // market covers ~20 countries with no way to tell which pair an order is
+  // until the addresses are known.
+  EU: { min: 3, max: 10 },
 };
 const DEFAULT_TRANSIT = { min: 3, max: 10 };
 

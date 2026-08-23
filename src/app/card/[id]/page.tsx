@@ -1005,7 +1005,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                   <>
                     {card.setName} is distributed by drawing on the Riot Merch Store, not through
                     shops — so none of the retailers we track in Australia, the United
-                    States, the United Kingdom, Singapore or Canada will ever stock it at retail, and
+                    States, the United Kingdom, Singapore, Canada or the EU will ever stock it at retail, and
                     there is no launch price to compare. The only market this printing can have is
                     resale. We track that too: a price appears here as soon as a copy changes hands
                     somewhere we can see it.
@@ -1013,7 +1013,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                 ) : (
                   <>
                     None of the stores we track in Australia, the United States, the
-                    United Kingdom, Singapore or Canada has this printing in stock today, and we have
+                    United Kingdom, Singapore, Canada or the EU has this printing in stock today, and we have
                     fewer than seven days of recorded price history for it — so there is nothing
                     honest to compare yet. We check every store daily; this page fills in on its own
                     the moment one lists it.
@@ -1503,7 +1503,7 @@ function buildFaqs(card: CardForCopy, ctx: FaqContext): { q: string; a: string }
       q: `Where can I buy ${card.name}?`,
       a: noRetailChannel
         ? `Not from a shop. ${card.name} comes only in ${card.setName}, which Riot distributes through a Riot Merch Store drawing rather than retail, so there is no storefront to compare. Copies reach the open market only when someone who won the drawing resells one — this page tracks that market and will show a price when it appears.`
-        : `Compare every store selling ${card.name} across Australia, the US, the UK, Singapore and Canada on this page, then buy from whichever retailer offers the lowest total price including postage. RiftCompare links straight through to each store.`,
+        : `Compare every store selling ${card.name} across Australia, the US, the UK, Singapore, Canada and the EU on this page, then buy from whichever retailer offers the lowest total price including postage. RiftCompare links straight through to each store.`,
     },
   ];
 

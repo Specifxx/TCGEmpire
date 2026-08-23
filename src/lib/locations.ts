@@ -39,6 +39,12 @@ export const MARKET_COUNTRY: Record<string, string> = {
   // prefilling.
   SG: "Singapore",
   CA: "Canada",
+  // NO "EU" ENTRY, DELIBERATELY — and this one is a real decision, not the
+  // oversight the SG note above describes. "EU" is ~20 countries, so any value
+  // here would prefill the wrong country for most European sellers, which is
+  // worse than prefilling nothing: a wrong value that looks filled-in gets
+  // submitted, an empty field gets answered. The documented fallback (free-text
+  // country field, no prefill) is the right outcome for this market.
 };
 
 // Canadian provinces/territories — Canada Post two-letter codes.

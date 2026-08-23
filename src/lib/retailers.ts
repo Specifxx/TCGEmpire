@@ -15,8 +15,19 @@ export interface RetailerInfo {
   shippingNote: string;
   // Market the store serves. Omitted = "AU" (the original Australian stores).
   // US/UK/SG/CA stores are scraped with ?country=US/GB/SG/CA and priced in
-  // USD/GBP/SGD/CAD. eBay runs for AU + US + UK + SG always.
-  country?: "AU" | "US" | "UK" | "SG" | "CA";
+  // USD/GBP/SGD/CAD.
+  //
+  // "EU" is a MARKET, not a country: eurozone stores are all scraped with
+  // ?country=ES (isoCountry("EU") — see lib/country.ts's EU_ANCHOR_ISO) whatever
+  // member state they are actually in, because Shopify Markets needs one ISO
+  // country and every eurozone store quotes the same EUR price across the single
+  // market. A store whose Shopify Markets does NOT cover Spain will silently
+  // serve some other currency to that request, which is why every EU entry below
+  // has to clear scripts/probe-eu-stores.ts's currency proof before it is added.
+  //
+  // eBay runs for AU + US daily; UK, SG and EU take turns one per day (see
+  // EBAY_ALWAYS_MARKETS / EBAY_ROTATING_MARKETS in price-import.ts).
+  country?: "AU" | "US" | "UK" | "SG" | "CA" | "EU";
 }
 
 export const RETAILERS: Record<string, RetailerInfo> = {
@@ -1687,12 +1698,380 @@ export const RETAILERS: Record<string, RetailerInfo> = {
   //     search this pass. Worth a direct re-check when someone has live network
   //     access; absence of a search hit is not proof of absence of stock.
 
+  // ---- Eurozone stores (country: "EU"; prices in EUR via ?country=ES) --------
+  // New market, added 2026-08-23. Thirty stores across NINE eurozone countries
+  // (ES 9, DE 7, AT 5, IT 3, PT 2, HR/FR/BE/NL 1 each) — the point of drawing
+  // the market as the whole eurozone rather than one country (see lib/country.ts's
+  // header note): no single member state has enough Riftbound stores to price a
+  // catalogue from, which is exactly why the Germany-only market lasted a day.
+  //
+  // EVERY ONE OF THESE WAS DIRECTLY VERIFIED, not search-synthesised — unlike the
+  // US and CA batches above, which say so in their own headers. Each cleared
+  // `npx tsx scripts/probe-eu-stores.ts` on a live run: Shopify sitemap resolves,
+  // robots.txt permits the products.json feed, a Riftbound singles collection
+  // exists, it has in-stock products, AND the product page re-fetched under the
+  // same ?country=ES returns priceCurrency EUR. That last check is the one that
+  // matters most here and is not optional: 292 of the 354 candidates were
+  // REJECTED, and the currency proof is what separates a genuine EUR store from
+  // one whose Shopify Markets doesn't cover Spain and would have had its USD
+  // numbers filed as EUR cents. The handles below are the ones that run actually
+  // observed; as everywhere else they are only a fallback, since
+  // discoverRiftboundCollections() re-derives them from each sitemap at scrape time.
+  //
+  // A REJECTION FROM THAT SWEEP IS NOT PROOF OF ABSENCE. El Duelista below was
+  // rejected as "not Shopify" and is plainly Shopify — one timed-out sitemap
+  // fetch under concurrency was enough. It is the only false negative found, but
+  // it was found by chance, so assume there are others among the 292 and re-probe
+  // in smaller batches before concluding a store is a "no".
+  //
+  // SHIPPING FIGURES ARE UNVERIFIED PLACEHOLDERS (€4.95 · free over €60),
+  // deliberately uniform so nobody mistakes them for researched per-store rates —
+  // same convention as the UK and CA batches. 26 of the 30 publish a real
+  // /policies/shipping-policy page and are in STORES_WITH_POLICY below, so the UI
+  // links shoppers to the store's own current rate instead of showing the guess.
+  //
+  // THE ESTIMATE IS WEAKER HERE THAN IN ANY OTHER MARKET, and that is structural
+  // rather than a research gap. Every other market is one country, so its buyer
+  // and its stores share a domestic postage lane and a flat estimate is roughly
+  // right. A EU shopper is routinely buying ACROSS a border — Madrid from
+  // Rotterdam — where postage runs several times the domestic rate even though
+  // the item price needs no conversion and clears no customs. So the delivered-cost
+  // ranking is directionally right within a country and optimistic across one.
+  // Fixing it properly means per-origin-country rates keyed on the buyer's own
+  // location, which is a real feature, not a number to tune here.
+  manamarketeu: {
+    key: "manamarketeu",
+    name: "Mana Market EU",
+    base: "https://manamarket.eu",
+    collections: ["riftbound-display", "riftbound-single", "riftbound", "riftbound-singles"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  endturn: {
+    key: "endturn",
+    name: "End Turn",
+    base: "https://www.endturn.pt",
+    collections: ["riftbound-single", "riftbound", "unleashed-riftbound", "riftbound-champion-decks"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  universetcg: {
+    key: "universetcg",
+    name: "Universe TCG",
+    base: "https://www.universetcg.com",
+    collections: ["riftbound", "riftbound-spiritforged", "riftbound-vendetta", "riftbound-unleashed"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  gsgameon: {
+    key: "gsgameon",
+    name: "GS-GameOn",
+    base: "https://www.gs-gameon.com",
+    collections: ["riftbound", "riftbound-card-game-unleashed", "riftbound-league-of-legends-tcg-vendetta", "riftbound-display"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  battlebearsb: {
+    key: "battlebearsb",
+    name: "Battle Bear Saarbrücken",
+    base: "https://www.battle-bear-sb.de",
+    collections: ["riftbound-league-of-legends-tcg", "riftbound-events", "riftbound-einzelkarten"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  fireanddice: {
+    key: "fireanddice",
+    name: "Fire & Dice",
+    base: "https://www.fireanddice.it",
+    collections: ["riftbound", "riftbound-champion-decks", "riftbound-display", "riftbound-single"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  templarsarena: {
+    key: "templarsarena",
+    name: "Templars Arena",
+    base: "https://templarsarena.com",
+    collections: ["riftbound-league-of-legends-tcg", "riftbound-origins", "riftbound-spiritforged", "riftbound-summoner-skirmish-event"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  freakcorp: {
+    key: "freakcorp",
+    name: "FreakCorp",
+    base: "https://freakcorp.com",
+    collections: ["riftbound", "riftbound-spiritforged", "riftbound-cajas-y-sobres", "riftbound-unleashed"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  breakthecase: {
+    key: "breakthecase",
+    name: "BreakTheCase",
+    base: "https://www.breakthecase.de",
+    collections: ["league-of-legends-riftbound-trading-card-game", "league-of-legends-riftbound-decks", "league-of-legends-riftbound-kollektionen", "league-of-legends-riftbound-trading-card-game-zubehor"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  sgames: {
+    key: "sgames",
+    name: "S-Games",
+    base: "https://s-games.at",
+    collections: ["riftbound", "riftbound-league-of-legends-tcg-vendetta", "riftbound-league-of-legends-tcg-spiritforged", "riftbound-league-of-legends-tcg-unleashed"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  jjcollection: {
+    key: "jjcollection",
+    name: "JJ Collection",
+    base: "https://www.jjcollection.es",
+    collections: ["riftbound", "riftbound-origins", "riftbound-spiritforged", "riftbound-unleashed"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  freakshowstore: {
+    key: "freakshowstore",
+    name: "Freakshow Store",
+    base: "https://www.freakshowstore.com",
+    collections: ["league-of-legends-riftbound-origins", "riftbound-tcg", "riftbound-vendetta"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  brickznmore: {
+    key: "brickznmore",
+    name: "Brickz'n'More",
+    base: "https://brickznmore.myshopify.com",
+    collections: ["riftbound-league-of-legends-tcg"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  cardcorner: {
+    key: "cardcorner",
+    name: "Cardcorner",
+    base: "https://www.cardcorner.at",
+    collections: ["riftbound"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  treasurehub: {
+    key: "treasurehub",
+    name: "TreasureHub TCG",
+    base: "https://treasurehubtcg.com",
+    collections: ["riftbound"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  teamlunti: {
+    key: "teamlunti",
+    name: "Team Lunti Trading Cards",
+    base: "https://www.teamlunti.de",
+    collections: ["riftbound"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  laescotilla: {
+    key: "laescotilla",
+    name: "La Escotilla",
+    base: "https://laescotillajuegos.com",
+    collections: ["riftbound-league-of-legends-tcg"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  sarumangames: {
+    key: "sarumangames",
+    name: "Saruman Games",
+    base: "https://sarumangames.es",
+    collections: ["riftbound"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  dctrading: {
+    key: "dctrading",
+    name: "DC-Trading",
+    base: "https://dctrading.at",
+    collections: ["riftbound", "riftbound-front-page"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  battlebear: {
+    key: "battlebear",
+    name: "Battle Bear",
+    base: "https://www.battle-bear.de",
+    collections: ["riftbound-league-of-legends-tcg", "riftbound-showdown-series-germany"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  threestones: {
+    key: "threestones",
+    name: "Three Stones Games",
+    base: "https://threestonesgames.com",
+    collections: ["riftbound"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  ikigaicomics: {
+    key: "ikigaicomics",
+    name: "Ikigai Comics",
+    base: "https://ikigaicomicstienda.com",
+    collections: ["riftbound-lol"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  vaultofdelights: {
+    key: "vaultofdelights",
+    name: "Vault of Delights",
+    base: "https://vaultofdelights.com",
+    collections: ["riftbound-tcg"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  lmshandel: {
+    key: "lmshandel",
+    name: "Crossroads (LMS Handel)",
+    base: "https://lms-handel.de",
+    collections: ["riftbound-display", "riftbound-starter-deck", "riftbound-einzelkarten", "riftbound-special"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  lepotoryko: {
+    key: "lepotoryko",
+    name: "Le Poto Ryko",
+    base: "https://lepotoryko.fr",
+    collections: ["riftbound-1"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  boostertcg: {
+    key: "boostertcg",
+    name: "Booster Trading Cards",
+    base: "https://boostertcg.de",
+    collections: ["riftbound-league-of-legends"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  zillerstore: {
+    key: "zillerstore",
+    name: "Zillerstore",
+    base: "https://www.zillerstore.it",
+    collections: ["riftbound", "mazzi-riftbound-1", "ogn-riftbound-origins-carte-singole", "da-cancellare-riftbound"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  // The deepest Spanish catalogue by a wide margin — 811 in-stock of 1,327
+  // listed, with a real /collections/riftbound-single. It was REJECTED by the
+  // first probe sweep ("not Shopify") and that was a false negative: a single
+  // timed-out /sitemap.xml fetch under 8-way concurrency is enough to fail the
+  // isShopify check outright. A targeted re-probe passed it cleanly. The probe
+  // now retries that one fetch (see fetchSitemap in probe-eu-stores.ts) — worth
+  // fixing rather than just re-running, because the store this cost us was the
+  // single best one in the market the whole pass was requested for.
+  elduelista: {
+    key: "elduelista",
+    name: "El Duelista",
+    base: "https://www.elduelista.com",
+    collections: ["riftbound-single", "riftbound", "unleashed-riftbound", "riftbound-sets"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  outpostbrussels: {
+    key: "outpostbrussels",
+    name: "Outpost Brussels",
+    base: "https://outpostbrussels.be",
+    collections: ["riftbound"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  tcgfamily: {
+    key: "tcgfamily",
+    name: "TCGFamily",
+    base: "https://www.tcgfamily.nl",
+    collections: ["riftbound"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+
+  // ---- Eurozone leads found and NOT added ------------------------------------
+  //   - latiendascum.com — the store that ASKED to be listed (an inbound request
+  //     naming the Spanish market, 2026-08-23), and the reason this market exists
+  //     at all. It is a real Spanish shop and it is NOT added, because it runs
+  //     PrestaShop, not Shopify: /products.json and /collections.json both return
+  //     its 404 template, so discoverRiftboundCollections()/fetchCollection()
+  //     would build the wrong endpoint shape entirely and silently find nothing —
+  //     the store would appear on /stores/tracked with a store page that never
+  //     shows a single price. That is worse for them than not being listed. This
+  //     is a platform gap, not a permission one: its robots.txt allows `*` (it
+  //     disallows named AI crawlers only). See lib/pending-platforms.ts.
+  //   - ~27 further Spanish shops on PrestaShop and ~72 more eurozone shops on
+  //     WooCommerce, same blocker, same file.
+  //   - The 292 probe rejections are not all platform gaps: most are Shopify
+  //     stores with no Riftbound collection or no in-stock singles, and a handful
+  //     serve a non-EUR currency to a ?country=ES request. Re-run the probe before
+  //     assuming any of them is still a "no" — several are clearly growing.
+
 };
 
 export const RETAILER_LIST = Object.values(RETAILERS);
 
 // The market a store serves (defaults to AU for the original stores).
-export function retailerCountry(retailerKey: string): "AU" | "US" | "UK" | "SG" | "CA" {
+export function retailerCountry(retailerKey: string): NonNullable<RetailerInfo["country"]> {
   return RETAILERS[retailerKey]?.country ?? "AU";
 }
 
@@ -1751,6 +2130,20 @@ const STORES_WITH_POLICY = new Set([
   // SG — the first Singapore entries here. Only these two of the round-5 batch
   // publish a policy page; the rest (incl. the big three singles catalogues) 404.
   "tefuda", "avidcollectors",
+  // EU — every one of these was probed live (scripts/probe-eu-stores.ts) and
+  // confirmed to serve a real /policies/shipping-policy page. The other four of
+  // the batch (End Turn, FreakCorp, Team Lunti, DC-Trading) 404 there and are
+  // deliberately left out, so they keep showing the estimate rather than linking
+  // a dead page. Worth more here than in any other market: the €4.95 placeholder
+  // is a DOMESTIC figure and a cross-border EU order costs well above it, so the
+  // store's own policy page is the only honest number for most of these orders.
+  "manamarketeu", "universetcg", "gsgameon", "battlebearsb", "fireanddice", "elduelista",
+  "templarsarena", "breakthecase", "sgames", "jjcollection", "freakshowstore",
+  "brickznmore", "cardcorner", "treasurehub", "laescotilla", "sarumangames",
+  "battlebear", "threestones", "ikigaicomics", "vaultofdelights", "lmshandel",
+  // "exchangeplayinvest" was here until El Duelista replaced it in RETAILERS above.
+  "lepotoryko", "boostertcg", "zillerstore", "outpostbrussels",
+  "tcgfamily",
 ]);
 
 // The store's shipping-policy page URL, or null if it doesn't have one / isn't a store.

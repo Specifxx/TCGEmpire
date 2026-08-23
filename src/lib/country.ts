@@ -1,5 +1,5 @@
 // Country / market selection. The UNITED STATES is the global default; a visitor is
-// auto-switched to AU, UK, SG or CA only when IP geo detects one of those
+// auto-switched to AU, UK, SG, CA or EU only when IP geo detects one of those
 // (everything else — incl. the US and undetectable — resolves to US). This module is
 // PURE (no next/headers) so it's safe to import from both server and client
 // components. The server-side cookie + geo reader lives in get-country.ts.
@@ -17,8 +17,32 @@
 // "add a market" pass, not a restore. Removing it freed its EBAY_ROTATING_MARKETS
 // slot back to the quota (see price-import.ts) — DE fell back under EU_ISO below,
 // same as every other EU visitor.
+//
+// ── EU (2026-08-23): THE EUROZONE AS ONE MARKET, NOT A SIXTH COUNTRY ─────────
+// The EU market is the direct answer to why DE failed. DE was one country, and
+// one country's worth of Riftbound stores was too thin to price a catalogue
+// from. The eurozone shares a currency AND a customs union, so a shopper in
+// Madrid can buy from a store in Rotterdam at the listed EUR price with no
+// conversion and no import duty — which makes "cheapest EUR listing across the
+// eurozone" a real, buyable number in a way "cheapest listing in Germany" was
+// only marginally. One market pooling ~20 countries' stores clears the coverage
+// bar that one country could not.
+//
+// It is therefore NOT a country code, and three places have to translate it to
+// one: isoCountry() (Shopify Markets' ?country= param), the eBay marketplace
+// (see EBAY_ROTATING_MARKETS in price-import.ts) and hreflang (see seo.ts).
+// All three resolve to SPAIN — the market's lead country, and the one the
+// request that created this market named. Each of those is a single documented
+// line, deliberately, so the anchor country can be moved without a sweep.
+//
+// NON-EURO EU STATES (PL/CZ/SE/DK/HU/RO/BG) resolve here too. Their visitors do
+// not pay in EUR, so the price they see is a foreign-currency figure — but it
+// is a REAL figure from a store that ships to them inside the single market,
+// which is strictly better than what they had before this market existed (a UK
+// GBP price converted to EUR for display, from stores now outside the customs
+// union). Currency-accurate markets for them are a later pass, not a blocker.
 
-export type Country = "AU" | "US" | "UK" | "SG" | "CA";
+export type Country = "AU" | "US" | "UK" | "SG" | "CA" | "EU";
 
 export interface CountryInfo {
   code: Country;
@@ -36,11 +60,19 @@ export const COUNTRIES: Record<Country, CountryInfo> = {
   UK: { code: "UK", label: "United Kingdom", adjective: "UK", place: "the United Kingdom", flag: "🇬🇧", currency: "GBP", locale: "en-GB" },
   SG: { code: "SG", label: "Singapore", adjective: "Singapore", place: "Singapore", flag: "🇸🇬", currency: "SGD", locale: "en-SG" },
   CA: { code: "CA", label: "Canada", adjective: "Canadian", place: "Canada", flag: "🇨🇦", currency: "CAD", locale: "en-CA" },
+  // The one entry whose `code` is not an ISO 3166 country — see the header note.
+  // `locale` is "en-IE", not "es-ES": it is only ever used for og:locale:alternate
+  // (see app/decks/page.tsx), and every page on this site is written in ENGLISH.
+  // Claiming a Spanish locale for an English page is the same lie seo.ts's
+  // hreflang note refuses to tell. en-IE is English in a eurozone country, which
+  // is exactly what these pages are. hreflang, which DOES need a country, anchors
+  // to ES instead (see seo.ts) — a different question with a different answer.
+  EU: { code: "EU", label: "Europe (EU)", adjective: "European", place: "the EU", flag: "🇪🇺", currency: "EUR", locale: "en-IE" },
 };
 
 // Order shown in the switcher. UK is live, priced in GBP (TCGplayer now; eBay UK
 // joins on the next daily import, CardTrader once its API token is set).
-export const COUNTRY_LIST: CountryInfo[] = [COUNTRIES.AU, COUNTRIES.US, COUNTRIES.UK, COUNTRIES.SG, COUNTRIES.CA];
+export const COUNTRY_LIST: CountryInfo[] = [COUNTRIES.AU, COUNTRIES.US, COUNTRIES.UK, COUNTRIES.SG, COUNTRIES.CA, COUNTRIES.EU];
 // US is the default market (the ISR baseline + the fallback when geo can't place a
 // visitor in AU/UK). Geo auto-switches AU/UK visitors client-side.
 export const DEFAULT_COUNTRY: Country = "US";
@@ -50,17 +82,22 @@ export const COUNTRY_COOKIE = "country";
 // quickly if a market's data needs work, without code surgery.)
 export const INTL_ENABLED = process.env.NEXT_PUBLIC_INTL_DISABLED !== "true";
 
-const VALID = new Set<Country>(["AU", "US", "UK", "SG", "CA"]);
+const VALID = new Set<Country>(["AU", "US", "UK", "SG", "CA", "EU"]);
 
-// EU member states (+ EEA/Schengen-adjacent UK-shipping-friendly neighbours),
-// INCLUDING Germany again now that DE has no store/eBay market of its own (see
-// the header note on its 2026-08-20 add-then-remove). Every EU visitor has no
-// separate EU store/eBay market, so UK (GBP, real UK stores) is the closest
-// match: nearer currency, nearer postage than the US default. That visitor
-// browses the same real UK store inventory as a genuine UK visitor, but SEES
-// prices displayed in EUR by default (see get-country.ts's getDisplayCurrency
-// and CountryProvider's `currency`/`fmt`) — GBP is the real, buyable currency;
-// EUR is a display conversion of it, never a second market.
+// EU member states (+ EEA/Schengen-adjacent neighbours). Since 2026-08-23 these
+// resolve to the EU market itself (see the header note), which has its own real
+// EUR store inventory and its own eBay rotation slot — so this is no longer the
+// "closest available match" fallback it was, it is the market's own membership
+// list. Germany is in it, as it has been since DE was retired.
+//
+// THE SET STILL HAS A SECOND, SEPARATE JOB, and deleting it would break that:
+// isEuIso() below reads it to answer "is this raw geo value European?", which is
+// what get-country.ts uses to decide whether a visitor who DELIBERATELY switched
+// to the UK market should see its real GBP prices converted to EUR (see
+// getDisplayCurrency + CountryProvider's `currency`/`fmt`). That path is now
+// only reachable by an explicit switcher pick rather than by geo — an EU visitor
+// no longer lands on UK by default — but it is still the right behaviour for the
+// visitor who makes that pick, so it stays.
 const EU_ISO = new Set([
   "AT", "BE", "BG", "HR", "CY", "CZ", "DE", "DK", "EE", "FI", "FR", "GR", "HU",
   "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE",
@@ -74,15 +111,20 @@ export function isEuIso(v: string | undefined | null): boolean {
 }
 
 // Coerce any cookie/geo/query value to a supported Country. Accepts ISO country
-// codes from the geo header too (e.g. "AU", "GB"). AU/UK/SG/CA geo hits
-// pass straight through; any EU country (including Germany) defaults to UK (see
-// EU_ISO above); everything else (incl. the US and undetectable) falls through to US.
+// codes from the geo header too (e.g. "AU", "GB", "ES"). AU/UK/SG/CA geo hits
+// pass straight through; any EU/EEA country (including Germany) resolves to the
+// EU market (see EU_ISO above); everything else (incl. the US and undetectable)
+// falls through to US.
+//
+// ORDER MATTERS on the GB line. "GB" is rewritten to "UK" BEFORE the EU_ISO
+// check, and GB is not in EU_ISO anyway — so a British visitor can never be
+// swept into the EU market by either route.
 export function normalizeCountry(v: string | undefined | null): Country {
   let up = (v ?? "").toUpperCase();
   // The geo header / Shopify use the ISO code "GB" for the United Kingdom; we use "UK".
   if (up === "GB") up = "UK";
   if (VALID.has(up as Country)) return up as Country;
-  if (EU_ISO.has(up)) return "UK";
+  if (EU_ISO.has(up)) return "EU";
   return "US";
 }
 
@@ -95,8 +137,20 @@ export const EUR_DISPLAY_COOKIE = "eur_display";
 
 // The Shopify storefront ?country= param + eBay use ISO 3166 alpha-2, where the UK
 // is "GB" (not "UK"). Everywhere else we use our own "UK" code.
+//
+// "EU" IS NOT AN ISO 3166 COUNTRY, and this is the line that makes that safe.
+// Shopify Markets prices a request by the ?country= it is given and silently
+// serves its DEFAULT currency for a value it doesn't recognise — so passing "EU"
+// through would not error, it would quietly file some other currency's numbers
+// as EUR, which is the exact failure the ?country= param exists to prevent (see
+// fetchCollection in price-import.ts). Spain is the anchor: the EU market's lead
+// country, in the eurozone, and the same country its eBay marketplace and
+// hreflang resolve to. Change it in one place if the anchor ever moves.
+export const EU_ANCHOR_ISO = "ES";
 export function isoCountry(country: Country): string {
-  return country === "UK" ? "GB" : country;
+  if (country === "UK") return "GB";
+  if (country === "EU") return EU_ANCHOR_ISO;
+  return country;
 }
 
 // The Card column holding the lowest price for this market.
@@ -105,7 +159,8 @@ export type PriceField =
   | "lowestPriceCentsUs"
   | "lowestPriceCentsUk"
   | "lowestPriceCentsSg"
-  | "lowestPriceCentsCa";
+  | "lowestPriceCentsCa"
+  | "lowestPriceCentsEu";
 export function priceField(country: Country): PriceField {
   return country === "US"
     ? "lowestPriceCentsUs"
@@ -115,6 +170,8 @@ export function priceField(country: Country): PriceField {
     ? "lowestPriceCentsSg"
     : country === "CA"
     ? "lowestPriceCentsCa"
+    : country === "EU"
+    ? "lowestPriceCentsEu"
     : "lowestPriceCents";
 }
 
@@ -126,6 +183,7 @@ export function pickPrice(
     lowestPriceCentsUk?: number | null;
     lowestPriceCentsSg?: number | null;
     lowestPriceCentsCa?: number | null;
+    lowestPriceCentsEu?: number | null;
   },
   country: Country
 ): number | null {
@@ -133,6 +191,7 @@ export function pickPrice(
   if (country === "UK") return card.lowestPriceCentsUk ?? null;
   if (country === "SG") return card.lowestPriceCentsSg ?? null;
   if (country === "CA") return card.lowestPriceCentsCa ?? null;
+  if (country === "EU") return card.lowestPriceCentsEu ?? null;
   return card.lowestPriceCents;
 }
 

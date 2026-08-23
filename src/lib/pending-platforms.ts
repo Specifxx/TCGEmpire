@@ -228,3 +228,108 @@ export const PENDING_PERMISSION_UNRESOLVED: PermissionBlockedCandidate[] = [
 //   - Home Town Cards (hometown.cards, Austin TX) — confirmed real store with
 //     confirmed Riftbound Unleashed singles + sealed stock, but no /catalog/
 //     or /collections/ URL surfaced — platform unconfirmed, not added.
+
+// ── EU: the eurozone market's platform gap (2026-08-23) ──────────────────────
+// Added with the EU market. Same shape as PENDING_US_STORES above and subject to
+// the same rule as everything else in this file: a store lands here because its
+// PLATFORM has no public product feed the importer can read, not because
+// permission is unresolved (that is PENDING_PERMISSION_UNRESOLVED's category, and
+// the two must not be merged — one is fixed by writing an adapter, the other can
+// never be fixed by writing anything).
+//
+// THE HEADLINE FINDING, and the reason this section is worth reading before the
+// next EU pass: Spain's Riftbound retail is overwhelmingly NOT on Shopify. A
+// 354-domain eurozone sweep surfaced ~150 Spanish shops; the live probe
+// (scripts/probe-eu-stores.ts) could use 8 of them. That is why RETAILERS' EU
+// block is 8 Spanish stores out of 30 despite Spain being the market this whole
+// thing was requested for. Everywhere else in the eurozone the trade is far more
+// Shopify-native — DE, AT, IT, PT, NL and BE are all represented there.
+//
+// A WOOCOMMERCE ADAPTER IS THE HIGHEST-VALUE UNBLOCK AVAILABLE IN THIS MARKET.
+// It is the largest platform bucket here by a wide margin (~72 of the eurozone
+// non-Shopify hits), and unlike PrestaShop it has a well-known public read
+// surface: the WordPress Store API at /wp-json/wc/store/v1/products, which is
+// designed to be readable unauthenticated. CONFIRM THAT ON ONE REAL STORE FIRST —
+// individual shops disable the Store API, and a 404 there produces exactly the
+// silent-nothing failure this file's header warns about, not an error anyone
+// would notice.
+export interface PendingEuStoreCandidate {
+  name: string;
+  base: string; // origin, no trailing slash
+  country: string; // ISO alpha-2 of the business
+  platform: "woocommerce" | "prestashop" | "shopware" | "unknown";
+  // "direct" = this domain was fetched and its platform read off the response.
+  // "search" = reported from web-search synthesis and NOTHING was independently
+  // confirmed, INCLUDING whether it stocks Riftbound at all. Never present a
+  // "search" entry as verified — same distinction PENDING_US_STORES (all search)
+  // and PENDING_DE_STORES (all direct) drew before it.
+  evidence: "direct" | "search";
+  note?: string;
+}
+
+// The store that ASKED. Not a lead — an inbound request (2026-08-23) from a
+// Spanish shop saying the Spanish market was worth covering. They were right, and
+// the EU market in retailers.ts is the direct result. It is a genuine shame that
+// the shop which prompted the market is the one that cannot be onboarded into it;
+// if a PrestaShop or WooCommerce adapter is ever written, this is the first domain
+// to point it at.
+export const PENDING_EU_INBOUND: PendingEuStoreCandidate[] = [
+  {
+    name: "La Tienda Scum",
+    base: "https://latiendascum.com",
+    country: "ES",
+    platform: "prestashop",
+    evidence: "direct",
+    note:
+      "Fetched directly 2026-08-23. PrestaShop, not Shopify: /products.json and " +
+      "/collections.json both return its own Spanish 404 template, and /sitemap.xml " +
+      "404s (Shopify always serves one) — its real sitemap is /1_index_sitemap.xml, " +
+      "named in its robots.txt. PERMISSION IS NOT THE BLOCKER: that robots.txt " +
+      "grants `User-agent: * / Allow: /`, and the Disallow rules it does carry name " +
+      "AI crawlers (ClaudeBot, GPTBot, CCBot, Bytespider, Google-Extended and " +
+      "others), not product/price readers. Platform support is the only thing missing.",
+  },
+];
+
+// EVERY ENTRY BELOW IS `evidence: "search"` — found by research agents
+// synthesising web results. None was fetched, none had its Riftbound stock
+// confirmed, and the platform guesses are exactly that. This is a starting list
+// for a probe run, not a list of stores to add.
+export const PENDING_ES_STORES: PendingEuStoreCandidate[] = [
+  { name: "Goblin Trader", base: "https://www.goblintrader.es", country: "ES", platform: "prestashop", evidence: "search", note: "Multi-store Spanish chain — the largest single name on this list." },
+  { name: "Dungeon Marvels", base: "https://dungeonmarvels.com", country: "ES", platform: "prestashop", evidence: "search" },
+  { name: "Last Level", base: "https://www.lastlevel.es", country: "ES", platform: "prestashop", evidence: "search", note: "Distributor as well as retailer; reported sealed-only." },
+  { name: "La Cueva Roja", base: "https://lacuevaroja.com", country: "ES", platform: "prestashop", evidence: "search" },
+  { name: "Nakama Games", base: "https://www.nakamagames.com", country: "ES", platform: "prestashop", evidence: "search" },
+  { name: "La Torre Mágica", base: "https://www.latorremagica.com", country: "ES", platform: "prestashop", evidence: "search" },
+  { name: "Ocio Central", base: "https://ociocentral.com", country: "ES", platform: "prestashop", evidence: "search" },
+  { name: "War Lotus", base: "https://warlotus.com", country: "ES", platform: "prestashop", evidence: "search" },
+  { name: "Empire Games", base: "https://www.empiregames.es", country: "ES", platform: "woocommerce", evidence: "search" },
+  { name: "Kaburi Rol & Games", base: "https://www.kaburi.es", country: "ES", platform: "woocommerce", evidence: "search" },
+  { name: "Gigamesh", base: "https://gigamesh.com", country: "ES", platform: "woocommerce", evidence: "search" },
+  { name: "TopDeck", base: "https://topdeck.es", country: "ES", platform: "woocommerce", evidence: "search" },
+  { name: "CardCrack", base: "https://cardcrack.com", country: "ES", platform: "woocommerce", evidence: "search" },
+  { name: "City Of Cards", base: "https://cityof.cards", country: "ES", platform: "woocommerce", evidence: "search" },
+  { name: "HoloPlaza", base: "https://holoplazatcg.com", country: "ES", platform: "woocommerce", evidence: "search" },
+  { name: "Homelands", base: "https://www.homelands.es", country: "ES", platform: "woocommerce", evidence: "search" },
+  { name: "Mana Vortex Shop", base: "https://manavortex.es", country: "ES", platform: "woocommerce", evidence: "search" },
+  { name: "Monster Factory", base: "https://monsterfactory.es", country: "ES", platform: "woocommerce", evidence: "search" },
+  { name: "Only-Cards", base: "https://www.only-cards.com", country: "ES", platform: "woocommerce", evidence: "search" },
+  { name: "Sharkcards", base: "https://sharkcards.es", country: "ES", platform: "woocommerce", evidence: "search" },
+  { name: "Zacatrus", base: "https://zacatrus.es", country: "ES", platform: "unknown", evidence: "search" },
+  { name: "Generación X", base: "https://generacionx.es", country: "ES", platform: "unknown", evidence: "search", note: "Well-known Madrid chain." },
+  { name: "Kurogami Trading Card Store", base: "https://kurogami.com", country: "ES", platform: "unknown", evidence: "search" },
+  { name: "Ítaca", base: "https://itaca.gg", country: "ES", platform: "unknown", evidence: "direct", note: "The one DIRECT entry in this list: probed 2026-08-23 and rejected — reachable, but serves no Shopify sitemap, so its platform is something else." },
+];
+
+// Non-Shopify elsewhere in the eurozone. The German entries were already found —
+// and rejected for this same reason — during the one-day Germany market on
+// 2026-08-20, when they lived in a PENDING_DE_STORES list that the revert deleted.
+// Recorded again so a third pass doesn't re-research them.
+export const PENDING_EU_STORES: PendingEuStoreCandidate[] = [
+  { name: "Amzicards (Amziverse)", base: "https://amzicards.de", country: "DE", platform: "woocommerce", evidence: "search", note: "Sealed-heavy and mostly out of stock when checked on 2026-08-20." },
+  { name: "Gate to the Games", base: "https://www.gate-to-the-games.de", country: "DE", platform: "unknown", evidence: "search", note: "/products.json 404s; underlying platform never identified." },
+  { name: "BB-Spiele", base: "https://www.bb-spiele.de", country: "DE", platform: "shopware", evidence: "search", note: "Shopware is the other large German bucket; no public product feed." },
+  { name: "Collect-it.de", base: "https://www.collect-it.de", country: "DE", platform: "unknown", evidence: "search", note: "Has an 'Einzelkarten' (singles) subcategory under Riftbound — never confirmed populated." },
+  { name: "Mayener Fantasyland", base: "https://mayener-fantasyland.de", country: "DE", platform: "unknown", evidence: "search" },
+];

@@ -16,7 +16,7 @@ import { CONTENT_TAG } from "./revalidate-content";
 import { timeAgo } from "./format";
 import type { MarketStat } from "@/components/home/HeroStats";
 
-const COUNTRY_CODES: Country[] = ["AU", "US", "UK", "SG", "CA"];
+const COUNTRY_CODES: Country[] = ["AU", "US", "UK", "SG", "CA", "EU"];
 
 export interface HomeStats {
   totalCards: number;

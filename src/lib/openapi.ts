@@ -18,7 +18,7 @@ import { SITE_URL } from "@/lib/site";
 // throttle or block abusive traffic without notice. Be a good citizen: the
 // Cache-Control header on every response states exactly how long a result is
 // good for — cache accordingly rather than polling.
-const MARKET_ENUM = ["AU", "US", "UK", "SG", "CA"] as const;
+const MARKET_ENUM = ["AU", "US", "UK", "SG", "CA", "EU"] as const;
 
 const MARKET_PARAM = {
   name: "market",

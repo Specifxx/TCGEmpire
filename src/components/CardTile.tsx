@@ -41,6 +41,7 @@ export interface CardTileData {
   lowestPriceCentsUk?: number | null;
   lowestPriceCentsSg?: number | null;
   lowestPriceCentsCa?: number | null;
+  lowestPriceCentsEu?: number | null;
   _count: { retailerPrices: number };
   // In-stock store count for EVERY market, so the number can follow the same
   // market as the localised price (see storeCountsByCountry in lib/cards.ts).

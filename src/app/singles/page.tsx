@@ -43,7 +43,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "Where can I buy Riftbound singles?",
-    a: "RiftCompare compares live singles prices across a wide range of local stores in Australia, the US, the UK, Singapore and Canada, plus eBay. Search any card to see every store's price for that single, ranked by total delivered cost, and click straight through to buy from whichever store is cheapest.",
+    a: "RiftCompare compares live singles prices across a wide range of local stores in Australia, the US, the UK, Singapore, Canada and the EU, plus eBay. Search any card to see every store's price for that single, ranked by total delivered cost, and click straight through to buy from whichever store is cheapest.",
   },
   {
     q: "How do I find the cheapest Riftbound singles?",
@@ -108,7 +108,7 @@ export default async function SinglesPage() {
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400 sm:text-base">
             RiftCompare is the price comparison for <strong className="text-slate-200">Riftbound: League of Legends TCG
             singles</strong>. Search any card and see every store&apos;s live price side by side — ranked by total
-            delivered cost across Australia, the US, the UK, Singapore and Canada, updated daily. Find the cheapest
+            delivered cost across Australia, the US, the UK, Singapore, Canada and the EU, updated daily. Find the cheapest
             place to buy the exact cards your deck needs.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">

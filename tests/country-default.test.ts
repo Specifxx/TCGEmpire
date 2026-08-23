@@ -49,8 +49,17 @@ test("a detected region still wins over the default", () => {
   assert.equal(normalizeCountry("SG"), "SG");
   assert.equal(normalizeCountry("CA"), "CA");
   assert.equal(normalizeCountry("GB"), "UK", "the geo header uses ISO GB; we use UK");
-  assert.equal(normalizeCountry("DE"), "UK", "other EU visitors still browse the UK market's real GBP inventory");
-  assert.equal(normalizeCountry("FR"), "UK", "other EU visitors still browse the UK market's real GBP inventory");
+  // Changed 2026-08-23, when the eurozone became a market of its own. This
+  // asserted "DE"/"FR" -> "UK" for as long as EU shoppers had no EUR inventory
+  // to browse and the UK's real GBP stores were the closest honest match. They
+  // now have their own, so routing them to another country's stores would be
+  // the bug this line used to prevent, inverted.
+  assert.equal(normalizeCountry("DE"), "EU", "EU/EEA visitors browse the eurozone market's real EUR inventory");
+  assert.equal(normalizeCountry("FR"), "EU", "EU/EEA visitors browse the eurozone market's real EUR inventory");
+  assert.equal(normalizeCountry("ES"), "EU", "Spain is the EU market's anchor country, not a market of its own");
+  // The one European country that must NOT be swept into EU: it has its own
+  // market, its own currency and is outside the customs union.
+  assert.equal(normalizeCountry("GB"), "UK", "the UK is never absorbed into the EU market");
 });
 
 test("getCountry's kill-switch collapses to DEFAULT_COUNTRY, not a literal", () => {

@@ -24,7 +24,7 @@ import { setByCode } from "@/lib/constants";
 // already uses for the same "never show a stale price" reason.
 export const dynamic = "force-dynamic";
 
-const FEED_COUNTRIES = new Set(["AU", "US", "UK", "SG", "CA"]);
+const FEED_COUNTRIES = new Set(["AU", "US", "UK", "SG", "CA", "EU"]);
 
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");

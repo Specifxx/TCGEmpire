@@ -22,13 +22,14 @@ import { CardSearch, type SearchCard } from "./CardSearch";
 // the marketplace's seller-market picker, which tracks MARKETPLACE_COUNTRIES, not
 // the price-comparison market list). Being local means a new market added globally
 // does NOT surface a type error here — keep it in sync by hand.
-type Country = "AU" | "US" | "UK" | "SG" | "CA";
+type Country = "AU" | "US" | "UK" | "SG" | "CA" | "EU";
 const COUNTRY_LABEL: Record<Country, string> = {
   AU: "Australia",
   US: "United States",
   UK: "United Kingdom",
   SG: "Singapore",
   CA: "Canada",
+  EU: "Europe (EU)",
 };
 
 interface Profile {

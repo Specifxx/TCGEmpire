@@ -334,8 +334,9 @@ export async function importSealed(): Promise<number> {
   //
   // Cost is not the reason it was AU-only: sealed is a few dozen product groups,
   // not the ~1,400-card singles catalogue, so a full market sweep across all
-  // five markets (AU/US/UK/SG/CA) is ~130 Browse calls against a ~4,400 budget.
-  // It is rounding error.
+  // six markets (AU/US/UK/SG/CA/EU) is ~160 Browse calls against a ~4,400
+  // budget. It is rounding error — which is why this list does not rotate the
+  // way the singles pass now does (see EBAY_SEALED_MARKETS below).
   //
   // Deploys (push) set EBAY_REFRESH=false so they never spend eBay quota; only
   // scheduled / manual runs search eBay (and even then, within the live budget).
@@ -419,6 +420,13 @@ const EBAY_SEALED_MARKETS = [
   // even though the derivation differs; both tables are independent, so
   // there's no collision risk in reusing the name.
   { country: "CA", marketplace: "EBAY_CA", retailer: EBAY_CA_RETAILER },
+  // Added 2026-08-23 with the EU market, for the same reason CA was added above
+  // and on the same cost argument: sealed is ~30 product groups, not a ~350-card
+  // catalogue sweep, so a native EUR search is cheap. Note this list does NOT
+  // rotate — unlike the singles pass, where EU takes turns with UK and SG (see
+  // EBAY_ROTATING_MARKETS in price-import.ts). At ~30 groups a market it does
+  // not need to; if that ever changes, this is the list to rotate, not that one.
+  { country: "EU", marketplace: "EBAY_ES", retailer: "ebay_eu" },
 ] as const;
 
 /**

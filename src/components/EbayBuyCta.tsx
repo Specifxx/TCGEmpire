@@ -28,6 +28,9 @@ const EBAY_LABEL: Record<string, { label: string; note?: string }> = {
   UK: { label: "eBay UK" },
   SG: { label: "eBay Singapore" },
   CA: { label: "eBay Canada" },
+  // Matches affiliate.ts's EBAY_LABEL exactly — the click really does land on
+  // ebay.es, so this must not promise "eBay Europe".
+  EU: { label: "eBay Spain" },
 };
 
 function truncate(s: string, n: number) {

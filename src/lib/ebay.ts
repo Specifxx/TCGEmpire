@@ -18,7 +18,13 @@ import { isCrystalRose } from "./constants";
 const TOKEN_URL = "https://api.ebay.com/identity/v1/oauth2/token";
 const SEARCH_URL = "https://api.ebay.com/buy/browse/v1/item_summary/search";
 // eBay marketplace per country (results priced in that marketplace's currency).
-export const EBAY_MARKETPLACE: Record<string, string> = { AU: "EBAY_AU", US: "EBAY_US", UK: "EBAY_GB", SG: "EBAY_SG", CA: "EBAY_CA" };
+// EU maps to EBAY_ES (Spain) — eBay has no pan-European marketplace, so a single
+// EUR site front has to stand for the market. Spain is the anchor country the
+// whole EU market resolves to (see country.ts's EU_ANCHOR_ISO). eBay serves the
+// same inventory across its site fronts under different domains/currencies (see
+// the SG note in affiliate.ts), so this chooses the CURRENCY and the domain a
+// buyer lands on, not which listings exist.
+export const EBAY_MARKETPLACE: Record<string, string> = { AU: "EBAY_AU", US: "EBAY_US", UK: "EBAY_GB", SG: "EBAY_SG", CA: "EBAY_CA", EU: "EBAY_ES" };
 const DEFAULT_MARKETPLACE = "EBAY_AU";
 
 export function isEbayEnabled(): boolean {

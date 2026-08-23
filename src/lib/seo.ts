@@ -89,15 +89,28 @@ export const COUNTRY_GUIDE_SLUGS: Record<Country, string> = {
   AU: "buy-riftbound-cards-australia",
   CA: "buy-riftbound-cards-canada",
   SG: "riftbound-price-comparison-singapore",
+  EU: "buy-riftbound-cards-europe",
 };
 
-/** BCP-47 tag per market. UK's region subtag is GB, not UK. */
+/** BCP-47 tag per market. UK's region subtag is GB, not UK.
+ *
+ *  EU IS THE AWKWARD ONE. hreflang's region subtag must be an ISO 3166-1
+ *  alpha-2 COUNTRY code; "EU" is a UN M.49 region and search engines reject or
+ *  ignore it, so "en-EU" would be a broken annotation rather than a useful one.
+ *  The EU guide is therefore annotated en-ES — English content targeted at
+ *  Spain, the market's anchor country (see country.ts's EU_ANCHOR_ISO), which
+ *  is what the page genuinely is. It under-claims: a French or Dutch reader is
+ *  served by the same page and this tag doesn't say so. Under-claiming is the
+ *  right side to err on here — hreflangForCountryGuide's header exists because
+ *  the opposite (inventing locale annotations for pages that don't differ) is
+ *  the failure this file refuses to commit. */
 const HREFLANG: Record<Country, string> = {
   US: "en-US",
   UK: "en-GB",
   AU: "en-AU",
   CA: "en-CA",
   SG: "en-SG",
+  EU: "en-ES",
 };
 
 /**
@@ -118,7 +131,7 @@ export function hreflangForCountryGuide(slug: string): Record<string, string> | 
 
 /**
  * The second honest hreflang group on the site: the homepage ("/") plus its
- * region variants (/au, /uk, /sg, /ca — see app/au/page.tsx etc). Each is
+ * region variants (/au, /uk, /sg, /ca, /eu — see app/au/page.tsx etc). Each is
  * a genuinely distinct, separately-indexable page — its own H1, its own
  * region-locked stat block, its own store list — not a re-skin, so this is not
  * the "inventing hreflang" case hreflangForCountryGuide's header warns against.
@@ -131,6 +144,7 @@ export const REGION_HOME_PATH: Record<Country, string> = {
   AU: "/au",
   CA: "/ca",
   SG: "/sg",
+  EU: "/eu",
 };
 
 /** hreflang map for the homepage + all region pages. x-default points at "/",

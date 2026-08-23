@@ -42,7 +42,7 @@ export async function generateMetadata({ searchParams }: { searchParams: { list?
 
     const cards = await prisma.card.findMany({
       where: { nameNormalized: { in: nqs } },
-      select: { nameNormalized: true, lowestPriceCents: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true },
+      select: { nameNormalized: true, lowestPriceCents: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true, lowestPriceCentsEu: true },
       orderBy: [{ [priceField(country)]: { sort: "asc", nulls: "last" } } as Prisma.CardOrderByWithRelationInput],
     });
     const byName = new Map<string, (typeof cards)[number]>();

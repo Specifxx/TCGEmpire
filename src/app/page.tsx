@@ -113,7 +113,7 @@ export const metadata: Metadata = {
 const FAQS: { q: string; a: string }[] = [
   {
     q: "Where can I buy Riftbound cards?",
-    a: "RiftCompare compares live Riftbound prices across a wide range of local stores in Australia, the US, the UK, Singapore and Canada, plus eBay (AU, US, UK, SG and CA), so you can buy Riftbound cards from whichever shop is cheapest. Search any card to see every store's price and click straight through to buy.",
+    a: "RiftCompare compares live Riftbound prices across a wide range of local stores in Australia, the US, the UK, Singapore, Canada and the EU, plus eBay (AU, US, UK, SG, CA and EU), so you can buy Riftbound cards from whichever shop is cheapest. Search any card to see every store's price and click straight through to buy.",
   },
   {
     q: "How do I find the cheapest Riftbound prices?",
@@ -134,7 +134,7 @@ export default async function HomePage() {
   // "Australia"); CardTile re-prices to the visitor's market after hydration.
   // The copy Google indexes (hero, FAQs, about) is market-neutral.
   const country = DEFAULT_COUNTRY;
-  const COUNTRY_CODES: Country[] = ["AU", "US", "UK", "SG", "CA"];
+  const COUNTRY_CODES: Country[] = ["AU", "US", "UK", "SG", "CA", "EU"];
   const [
     { totalCards, statsByCountry, freshness },
     popularCards,
@@ -228,7 +228,7 @@ export default async function HomePage() {
 
       {/* About + FAQ — keyword-relevant content for search */}
       <section className="card-surface p-6">
-        <h2 className="text-xl font-extrabold text-white">Riftbound prices in Australia, the US, the UK, Singapore and Canada — all in one place</h2>
+        <h2 className="text-xl font-extrabold text-white">Riftbound prices in Australia, the US, the UK, Singapore, Canada and the EU — all in one place</h2>
         {/* Full width, matching the heading above — a capped/centred measure
             here just shifted the paragraph out of alignment with the heading
             (text starting a third of the way across the card reads as broken,
@@ -236,7 +236,7 @@ export default async function HomePage() {
         <p className="mt-2 text-sm leading-relaxed text-slate-400">
           RiftCompare is a free, independent price-comparison tool for Riftbound: League of Legends
           TCG. We track live prices for every Riftbound card across local stores in Australia,
-          the US, the UK, Singapore and Canada, plus eBay (AU, US, UK, SG and CA), so you
+          the US, the UK, Singapore, Canada and the EU, plus eBay (AU, US, UK, SG, CA and EU), so you
           can buy Riftbound cards for less — whether you&apos;re chasing singles for a deck or
           sealed booster boxes.
         </p>

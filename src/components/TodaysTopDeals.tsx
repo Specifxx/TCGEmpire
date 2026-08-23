@@ -64,6 +64,9 @@ const TIER_THRESHOLDS: Record<Country, { small: number; mid: number }> = {
   UK: { small: 400, mid: 2000 },
   SG: { small: 700, mid: 3500 },
   CA: { small: 700, mid: 3500 },
+  // US$5/US$25 at ~0.92 EUR/USD is €4.60/€23 — rounded to the same natural
+  // filter buckets a European store's own price facet would use.
+  EU: { small: 500, mid: 2500 },
 };
 const TIERS: { key: Tier; label: (t: { small: number; mid: number }, fmt: (c: number) => string) => string }[] = [
   { key: "all", label: () => "All" },

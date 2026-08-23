@@ -41,11 +41,28 @@ export const TCGPLAYER_IMPACT_LINK =
 // an "ebay.de" entry here too; it's gone along with the rest of the DE market —
 // any stray ebay.de URL now falls through to the generic eBay-TLD fallback below
 // (US rotation) like every other untracked eBay TLD.
+//
+// ES (2026-08-23, with the EU market) is UNVERIFIED against the live EPN
+// dashboard — the same starting state CA was in, and CA turned out correct.
+// siteid 186 is eBay's own public, stable platform Site ID for Spain (a Trading
+// API constant, not affiliate-specific) and the mkrid is the published EPN
+// rotation id for that site — the same public source the four above came from,
+// which is why they match it exactly. CONFIRM IT ON THE DASHBOARD and delete
+// this paragraph once done.
+//
+// Adding it is worth doing before that confirmation lands, because the
+// alternative is actively worse, not neutral: without an entry here an ebay.es
+// URL hits the generic fallback below, which REWRITES THE HOST to www.ebay.com
+// (see ebayAffiliateUrl) — so a European buyer clicking a €-priced listing would
+// land on the US site seeing dollars, defeating the market's entire premise. A
+// possibly-imperfect rotation id on the right site beats a perfect one on the
+// wrong site.
 const EBAY_MARKETS: Record<string, { mkrid: string; siteid: string; customid: string }> = {
   "ebay.com.au": { mkrid: "705-53470-19255-0", siteid: "15", customid: "rc-au" },
   "ebay.com": { mkrid: "711-53200-19255-0", siteid: "0", customid: "rc-us" },
   "ebay.co.uk": { mkrid: "710-53481-19255-0", siteid: "3", customid: "rc-uk" },
   "ebay.ca": { mkrid: "706-53473-19255-0", siteid: "2", customid: "rc-ca" },
+  "ebay.es": { mkrid: "1185-53479-19255-0", siteid: "186", customid: "rc-eu" },
 };
 
 // eBay Partner Network has NO commissionable program for Singapore at all —
@@ -173,6 +190,12 @@ const EBAY_DOMAIN: Record<string, string> = {
   UK: "ebay.co.uk",
   SG: "ebay.com.sg",
   CA: "ebay.ca",
+  // eBay has no pan-European site front, so the EU market shops on Spain's —
+  // the same anchor country the rest of the market resolves to (see country.ts's
+  // EU_ANCHOR_ISO) and the marketplace lib/ebay.ts searches (EBAY_ES). All three
+  // must name the same country or a listing found in one currency would be
+  // linked in another.
+  EU: "ebay.es",
 };
 
 export function ebayDomain(country: string): string {
@@ -191,6 +214,10 @@ const EBAY_LABEL: Record<string, string> = {
   UK: "eBay UK",
   SG: "eBay",
   CA: "eBay Canada",
+  // "eBay Spain", not "eBay Europe": the click really does land on ebay.es, and
+  // this label's whole job (per the note above) is to not claim a site the
+  // visitor never visits.
+  EU: "eBay Spain",
 };
 
 export function ebayLabel(country: string): string {

@@ -156,6 +156,7 @@ export function cardTileSelect(country: Country = DEFAULT_COUNTRY) {
     lowestPriceCentsUk: true,
     lowestPriceCentsSg: true,
     lowestPriceCentsCa: true,
+    lowestPriceCentsEu: true,
     // Count only in-stock listings for this market for the "N stores" tile label
     // (out-of-stock listings are shown on the card page but shouldn't inflate it).
     // Converted reference rows are excluded for the same reason they are excluded

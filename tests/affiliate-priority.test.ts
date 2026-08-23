@@ -300,10 +300,23 @@ test("UK and CA keep their own distinct, non-US rotations (only SG reroutes)", (
 // refreshTcgplayerPrices() looped US/UK/SG/AU and omitted CA, so Canada — a full
 // market everywhere else (its own eBay rotation, its own lowestPriceCentsCa
 // column, its own FX rate) — had no TCGplayer reference price at all.
+//
+// EU IS AN ALLOWED EXCEPTION, and it is listed here rather than the test being
+// relaxed to "most markets" so that the reason has to be restated deliberately
+// for any future market someone wants to exempt. TCGplayer publishes no EUR
+// market price to convert from, and the obvious European equivalent —
+// Cardmarket — is feature-flagged OFF pending written permission to redisplay
+// its price data (see lib/cardmarket.ts's header). If that permission ever
+// lands, EU gets a reference source and comes OUT of this list.
+const NO_TCGPLAYER_REFERENCE = new Set(["EU"]);
 
 test("every tracked market has a TCGplayer reference price", () => {
   const covered = new Set(TCG_MARKETS.map((m) => m.country));
   for (const c of COUNTRY_LIST) {
+    if (NO_TCGPLAYER_REFERENCE.has(c.code)) {
+      assert.ok(!covered.has(c.code), `${c.code} is listed as having no TCGplayer reference but one is configured — delete the exemption`);
+      continue;
+    }
     assert.ok(covered.has(c.code), `${c.code} has no TCGplayer market configured`);
   }
 });
@@ -445,7 +458,13 @@ const CHASE_PRINTINGS = 179; // promo+signature+overnumbered at or above the flo
 // 2026-08-20 CA addition and the once-a-day gate; both are directional changes
 // (CA adds a fifth market's worth of groups, the gate halves the daily total)
 // that have not yet been re-measured against a live run.
-const SEALED_PER_RUN = 104;
+//
+// RAISED 104 → 160 on 2026-08-23 with the EU market. Still not a measurement:
+// 104 was four markets (~26 groups each), CA made it five and EU makes it six,
+// so ~156 is the straight-line estimate and 160 is that rounded UP. Erring high
+// is deliberate — this constant only feeds an assertion that the day FITS, so an
+// overstatement can only make that assertion stricter, never hide an overspend.
+const SEALED_PER_RUN = 160;
 const SPENDABLE = 4400;      // 5000 daily limit − 600 reserve
 const SECONDS_PER_CARD = 0.75;
 // A card whose strict query returns nothing costs a SECOND Browse call for the
@@ -482,8 +501,15 @@ const CYCLE_DAYS = Math.max(EBAY_ALWAYS_MARKETS.length, EBAY_ROTATING_MARKETS.le
  */
 function dailyCalls(day: number): number {
   const markets = ebayMarketsForDay(day).length;
-  const always = EBAY_ALWAYS_MARKETS.length;
-  const singles = markets * CATALOGUE + always * CHASE_PRINTINGS;
+  // BOTH terms use the DAY's market list, not EBAY_ALWAYS_MARKETS. The chase
+  // pass was handed the always-list until 2026-08-23, when UK and SG moved into
+  // the rotation and that stopped being the same thing — see the call site in
+  // importPrices, which now passes ebayMarketsForDay(ebayDayIndex()) so the
+  // evening chase pass refreshes the same market the morning catalogue pass
+  // priced. Modelling it as `always` here would under-count the day by a whole
+  // market's chase set, which is exactly the class of error the doc comment
+  // above says made the old numbers wrong.
+  const singles = markets * CATALOGUE + markets * CHASE_PRINTINGS;
   const sealed = SEALED_PER_RUN;
   return Math.round(singles * (1 + RETRY_RATE)) + sealed;
 }
@@ -527,24 +553,60 @@ test("a day's markets fit inside the job timeout", () => {
   }
 });
 
-test("four daily markets fit ONLY because of the value floor", () => {
-  // UK and SG were demoted to a rotation on 2026-08-03 because 4 × the full
-  // catalogue did not fit, and promoted back on 2026-08-08 because the value
-  // floor ($20, then $10, now $5, all on 2026-08-20 — see CATALOGUE above) shrank the
-  // searched set. Both halves are asserted: if the floor is ever removed or
-  // bypassed, four daily markets stop fitting and this fails rather than
-  // silently truncating a market's entire pass again.
+test("the rotation exists because every market daily does NOT fit", () => {
+  // The history, because the design keeps being re-litigated: UK and SG were
+  // demoted to a rotation on 2026-08-03 (4 × the full catalogue did not fit),
+  // promoted back on 2026-08-08 (the value floor — $20, then $10, now $5, all on
+  // 2026-08-20, see CATALOGUE above — shrank the searched set), and rotated again
+  // on 2026-08-23 when the EU market made five.
+  //
+  // The floor constraint has not gone away, and is asserted first: without it
+  // even four markets stop fitting.
   assert.ok(
     4 * FULL_CATALOGUE > SPENDABLE,
     "4 markets × the FULL catalogue should still not fit — that constraint has not gone away",
   );
+  // ── WHAT THE ROTATION ACTUALLY BUYS, STATED HONESTLY ──────────────────────
+  // Not "every market daily would not fit". At the constants above it WOULD —
+  // ~78% of budget — and asserting otherwise would be a comfortable lie that
+  // this file would then enforce. What the rotation buys is HEADROOM, and the
+  // reason headroom is worth staleness is that CATALOGUE is understated: it is a
+  // $10-floor measurement, the floor has since dropped to $5, and a set launch
+  // inflates the searched set further because a new set's cards have no
+  // TCGplayer price and "unknown ≠ cheap" keeps all of them.
+  //
+  // So assert the two things that are actually true and worth pinning: the
+  // rotation is load-bearing (it materially reduces the day), and the day it
+  // produces sits far enough inside budget that the understatement above cannot
+  // quietly eat it.
+  const everyMarket = EBAY_ALWAYS_MARKETS.length + EBAY_ROTATING_MARKETS.length;
+  const scheduled = EBAY_ALWAYS_MARKETS.length + Math.min(1, EBAY_ROTATING_MARKETS.length);
   assert.ok(
-    4 * CATALOGUE <= SPENDABLE,
-    "4 markets × the SEARCHED catalogue must fit, or UK/SG cannot be daily markets",
+    everyMarket > scheduled,
+    "no market is on a rotation — delete this test and the rotation, or restore one",
+  );
+  const cost = (markets: number) =>
+    Math.round(markets * (CATALOGUE + CHASE_PRINTINGS) * (1 + RETRY_RATE)) + SEALED_PER_RUN;
+  assert.ok(
+    cost(scheduled) < cost(everyMarket) * 0.8,
+    `the rotation saves too little to be worth its staleness: ${cost(scheduled)} vs ${cost(everyMarket)}`,
+  );
+  // Half the budget is the headroom the staleness is being traded for. If a
+  // growing catalogue pushes the ROTATED day past this, the rotation has stopped
+  // providing what it was chosen for and the floor/reserve need revisiting —
+  // fail here rather than discover it as a truncated market in production.
+  assert.ok(
+    cost(scheduled) <= SPENDABLE / 2,
+    `a rotated day costs ~${cost(scheduled)} of ${SPENDABLE} — past half the budget the rotation is no longer buying headroom`,
   );
 });
 
-test("every market refreshes every day — none is on a rotation", () => {
+test("the always-markets refresh every single day", () => {
+  // Renamed from "every market refreshes every day — none is on a rotation",
+  // which stopped being true on 2026-08-23. The assertion did not change and is
+  // the one that matters: whatever else moves in or out of the rotation, a market
+  // in EBAY_ALWAYS_MARKETS must appear on every day of the cycle, or "daily
+  // prices" is a claim the importer does not keep.
   for (let day = 0; day < CYCLE_DAYS; day++) {
     const codes = ebayMarketsForDay(day).map((m) => m.country);
     for (const m of EBAY_ALWAYS_MARKETS) {
@@ -553,69 +615,65 @@ test("every market refreshes every day — none is on a rotation", () => {
   }
 });
 
-test("no always-market has permanent first claim on the budget", () => {
-  // Search ORDER decides who starves. refreshEbayMarkets walks the array and
-  // breaks the moment the budget latches, and a truncated market's whole pass is
-  // discarded — so the market that is consistently LAST is the one that
-  // consistently gets nothing. With ~4,200 calls against ~4,280 spendable, plus a
-  // second Browse call for every card whose strict query returns zero,
-  // overspending is routine rather than exceptional.
-  //
-  // A fixed [AU, US] order meant AU was never once dropped and US always was.
-  // Every always-market must therefore lead on some day.
-  //
-  // This is why the ordering ROTATES rather than alternating with reverse():
-  // reverse() yields only two orderings, so with four markets the middle two
-  // could never lead and starvation would simply move to a new pair.
-  const leaders = new Set<string>();
-  for (let day = 0; day < CYCLE_DAYS; day++) leaders.add(ebayMarketsForDay(day)[0].country);
-  for (const m of EBAY_ALWAYS_MARKETS) {
-    assert.ok(leaders.has(m.country), `${m.country} never searches first — it can be starved indefinitely`);
+test("every rotating market comes round, and only one runs per day", () => {
+  const seen = new Set<string>();
+  for (let day = 0; day < CYCLE_DAYS; day++) {
+    const codes = ebayMarketsForDay(day).map((m) => m.country);
+    const rotating = codes.filter((c) => EBAY_ROTATING_MARKETS.some((m) => m.country === c));
+    assert.ok(rotating.length <= 1, `day ${day}: ${rotating.length} rotating markets scheduled at once`);
+    rotating.forEach((c) => seen.add(c));
+  }
+  for (const m of EBAY_ROTATING_MARKETS) {
+    assert.ok(seen.has(m.country), `${m.country} never comes round in ${CYCLE_DAYS} days`);
   }
 });
 
-test("every always-market takes the position most exposed to starvation within the always block", () => {
-  // The mirror of the test above and the one that actually matters: leading is
-  // only worth something if the riskiest trailing slot is shared too.
+test("the rotating market is never the one dropped", () => {
+  // Search ORDER decides who starves. refreshEbayMarkets walks the array and
+  // breaks the moment the budget latches, and a truncated market's whole pass is
+  // discarded — so the market that sits LAST is the one that gets nothing.
   //
-  // EBAY_ROTATING_MARKETS is empty, so every scheduled market IS an always-market
-  // and this reduces to "who sits last in the whole day's list" — but it is
-  // written generically (excluding a trailing rotating slot, when one exists) so
-  // it keeps meaning something if a market is ever demoted to a rotation again:
-  // the one dropped if the always pass alone runs out of budget before even
-  // reaching the rotating market's slot.
+  // ── THIS ASSERTION WAS INVERTED UNTIL 2026-08-23 ─────────────────────────
+  // It used to require the rotating market to be last, on the reasoning that a
+  // rotating market is "the intended sacrifice … at most ~48h stale by design,
+  // whereas an always-market missing its slot is a coverage gap in a market we
+  // promise daily prices for". That reasoning was sound with ONE rotating market
+  // and four daily ones. It stopped being sound the moment the rotation held
+  // three: a rotating market is now ~72h stale by design, so dropping it on its
+  // one turn costs it ~144h, while a daily market skipped for a day costs ~48h.
+  //
+  // Worse, the old rule was not merely unfair but UNBOUNDED for the rotating
+  // market: it was last on every one of its turns, so a market sitting near the
+  // budget edge could go unpriced indefinitely while its store rows stayed fresh
+  // — indistinguishable, from the outside, from "eBay has no listings here".
+  //
+  // So the least-frequently-refreshed market now gets FIRST claim. The sacrifice
+  // is a daily market, which loses the least by being skipped.
+  if (EBAY_ROTATING_MARKETS.length === 0) return; // nothing to order
+  for (let day = 0; day < CYCLE_DAYS; day++) {
+    const codes = ebayMarketsForDay(day).map((m) => m.country);
+    const rotatingAt = codes.findIndex((c) => EBAY_ROTATING_MARKETS.some((m) => m.country === c));
+    assert.equal(rotatingAt, 0, `day ${day}: the rotating market must search FIRST, got ${codes.join("→")}`);
+  }
+});
+
+test("every always-market takes the position most exposed to starvation", () => {
+  // The mirror of the test above, and the one that actually matters: giving the
+  // rotating market first claim is only fair if the trailing slot it no longer
+  // occupies is SHARED among the daily markets rather than handed to one of them
+  // permanently. A fixed [AU, US] order meant AU was never once dropped and US
+  // always was — the 2026-08-05 bug this alternation was introduced to fix, and
+  // which is easy to reintroduce by "simplifying" ebayMarketsForDay.
   const trailers = new Set<string>();
   for (let day = 0; day < CYCLE_DAYS; day++) {
     const codes = ebayMarketsForDay(day).map((m) => m.country);
-    const alwaysCodes = EBAY_ROTATING_MARKETS.length > 0 ? codes.slice(0, -1) : codes;
-    trailers.add(alwaysCodes[alwaysCodes.length - 1]);
+    trailers.add(codes[codes.length - 1]);
   }
   for (const m of EBAY_ALWAYS_MARKETS) {
-    assert.ok(trailers.has(m.country), `${m.country} never sits last within the always block`);
+    assert.ok(trailers.has(m.country), `${m.country} never sits last — every other always-market carries its risk`);
   }
-});
-
-test("the always-markets always precede any rotating one", () => {
-  // A rotating market is the intended sacrifice when quota runs short: it is at
-  // most ~48h stale by design, whereas an always-market missing its slot is a
-  // coverage gap in a market we promise daily prices for.
-  //
-  // EBAY_ROTATING_MARKETS is empty, so the branch below is the only one that
-  // fires today — kept (rather than deleted) so this test stays correct the
-  // moment a market is ever demoted to the rotation again.
-  for (let day = 0; day < CYCLE_DAYS; day++) {
-    const codes = ebayMarketsForDay(day).map((m) => m.country);
-    if (EBAY_ROTATING_MARKETS.length === 0) {
-      for (const c of codes) {
-        assert.ok(
-          EBAY_ALWAYS_MARKETS.some((m) => m.country === c),
-          `day ${day}: ${c} is scheduled but is not an always-market`,
-        );
-      }
-      continue;
-    }
-    const rotatingAt = codes.findIndex((c) => EBAY_ROTATING_MARKETS.some((m) => m.country === c));
-    assert.equal(rotatingAt, codes.length - 1, `day ${day}: rotating market must be last, got ${codes.join("→")}`);
+  for (const m of EBAY_ROTATING_MARKETS) {
+    assert.ok(!trailers.has(m.country), `${m.country} rotates but still sits last — see the test above`);
   }
 });
 

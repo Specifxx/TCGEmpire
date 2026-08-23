@@ -22,6 +22,16 @@ const POSTCODE_PATTERN: Record<string, RegExp> = {
   // `pattern ? … : p.length > 0` fallback accepts ANY non-empty string.
   CA: /^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/,
   SG: /^\d{6}$/,
+  // NO "EU" ENTRY, DELIBERATELY. The EU market spans ~20 countries whose
+  // postcode formats have nothing in common (4 digits in Belgium, 5 in
+  // Spain/France/Germany/Italy, "1234 AB" in the Netherlands, 7 with a dash in
+  // Portugal, "L-1234" in Luxembourg). Any single regex here would reject real
+  // addresses in most member states, and validatePostcode's fallback for an
+  // unlisted country — accept any non-empty string — is the correct behaviour
+  // rather than a gap: it is the same "can't confidently validate, so don't
+  // block the sale" position this table already takes for every untracked
+  // country. Per-member-state validation belongs behind the seller's actual
+  // country, not the market code, if it is ever worth adding.
 };
 
 export function validatePostcode(country: string, postcode: string): boolean {

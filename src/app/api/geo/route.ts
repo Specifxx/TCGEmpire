@@ -14,8 +14,13 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const raw = headers().get("x-vercel-ip-country");
   const country = normalizeCountry(raw);
-  // An EU visitor geo-defaults into the UK market (real GBP stores) but should see
-  // EUR by default — see get-country.ts's getDisplayCurrency for the full story.
+  // A European visitor now geo-resolves to the EU market itself (real EUR
+  // stores), so this branch no longer fires from geo alone — normalizeCountry
+  // returns "EU", not "UK", for every EU_ISO value. It is kept because the
+  // condition is about the raw HEADER, not the resolved market: a visitor who
+  // has explicitly switched to the UK market still has a European IP, and this
+  // is what tells CountryProvider to show those real GBP prices in EUR for
+  // them. See get-country.ts's getDisplayCurrency for the full story.
   const currency = country === "UK" && isEuIso(raw) ? "EUR" : COUNTRIES[country].currency;
   return NextResponse.json(
     { country, currency },

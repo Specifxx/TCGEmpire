@@ -24,6 +24,7 @@ interface TradeCard {
   lowestPriceCentsUk?: number | null;
   lowestPriceCentsSg?: number | null;
   lowestPriceCentsCa?: number | null;
+  lowestPriceCentsEu?: number | null;
   qty: number;
 }
 

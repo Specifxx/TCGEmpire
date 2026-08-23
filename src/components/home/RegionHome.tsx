@@ -3,13 +3,18 @@ import { getPopularCards } from "@/lib/cheapest-cards";
 import { getHomeStats } from "@/lib/home-stats";
 import { getCachedTopDeals, type TopDeals } from "@/lib/top-deals";
 import { getRecentlyUpdated, getPriceMovers, type PriceMovers } from "@/lib/price-history";
-import { COUNTRIES, type Country } from "@/lib/country";
+import { COUNTRIES, COUNTRY_LIST, type Country } from "@/lib/country";
 import { COUNTRY_GUIDE_SLUGS } from "@/lib/seo";
+import { ebayLabel } from "@/lib/affiliate";
 import { CinematicHero } from "./CinematicHero";
 import { HomeSections } from "./HomeSections";
 import { webPage, faqPage, breadcrumb, ldJson } from "@/lib/jsonld";
 
-const COUNTRY_CODES: Country[] = ["AU", "US", "UK", "SG", "CA"];
+// Every market, so the cross-market strips on a region page show them all.
+// Derived rather than hand-listed would be better still, but this file needs a
+// stable ARRAY order for the Promise.all/zip below, and COUNTRY_LIST is that
+// order — see the import.
+const COUNTRY_CODES: Country[] = COUNTRY_LIST.map((c) => c.code);
 
 // Region home pages (/au, /uk, /sg, /ca — see app/au/page.tsx etc): the
 // homepage's own hero/search/stat building blocks, reused rather than
@@ -62,7 +67,7 @@ export async function RegionHome({ region }: { region: Country }) {
   const faqs = [
     {
       q: `Where can I buy Riftbound cards in ${info.place}?`,
-      a: `RiftCompare tracks ${stat.stores} ${info.adjective} ${storeWord} stocking Riftbound: League of Legends TCG singles and sealed product, plus eBay ${region}, and ranks every result by total delivered cost — item price plus ${info.adjective} shipping — so you see what you'd actually pay, not just the sticker price.`,
+      a: `RiftCompare tracks ${stat.stores} ${info.adjective} ${storeWord} stocking Riftbound: League of Legends TCG singles and sealed product, plus ${ebayLabel(region)}, and ranks every result by total delivered cost — item price plus ${info.adjective} shipping — so you see what you'd actually pay, not just the sticker price.`,
     },
     {
       q: `Are prices shown in ${info.currency}?`,

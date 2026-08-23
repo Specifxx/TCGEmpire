@@ -19,6 +19,7 @@ const lowestFor = (c: SearchCard, country: Country): number | null =>
   : country === "UK" ? c.lowestPriceCentsUk ?? null
   : country === "SG" ? c.lowestPriceCentsSg ?? null
   : country === "CA" ? c.lowestPriceCentsCa ?? null
+  : country === "EU" ? c.lowestPriceCentsEu ?? null
   : c.lowestPriceCents;
 
 export function ConditionCalculator({ country, currency }: { country: Country; currency: string }) {

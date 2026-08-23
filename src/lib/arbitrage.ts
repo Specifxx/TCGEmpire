@@ -82,7 +82,7 @@ export interface ArbSource {
 }
 
 // eBay retailer key per market.
-const EBAY_KEY: Record<Country, string | null> = { AU: "ebay", US: "ebay_us", UK: "ebay_uk", SG: "ebay_sg", CA: "ebay_ca" };
+const EBAY_KEY: Record<Country, string | null> = { AU: "ebay", US: "ebay_us", UK: "ebay_uk", SG: "ebay_sg", CA: "ebay_ca", EU: "ebay_eu" };
 // TCGplayer retailer key per market — the same converted-reference rows used as a
 // fallback in the main price comparison (see UK_FALLBACK_RETAILERS / SG_FALLBACK_RETAILERS)
 // double as a real, always-available BUY source here. Excluded for AU on purpose:
@@ -102,6 +102,14 @@ export const TCGPLAYER_KEY: Record<Country, string | null> = {
   // users, which is a product call rather than a correctness one. Flip this to
   // TCGPLAYER_CA_RETAILER when that call is made; nothing else stands in the way.
   CA: null,
+  // The EU market has NO reference source at all, unlike every other market
+  // here — and that is a licensing fact, not an oversight. TCGplayer publishes
+  // no EUR market price (tcgplayer.ts has no EU arm to convert from), and the
+  // obvious European equivalent, Cardmarket, is deliberately feature-flagged
+  // OFF pending written permission to redisplay its price data — read the
+  // header of lib/cardmarket.ts before assuming this is a gap to fill. Until
+  // that permission exists, EU arbitrage runs on real EU store rows + eBay ES.
+  EU: null,
 };
 const MARKETPLACE_FEE_PCT = MARKETPLACE_FEE_BPS / 10000;
 

@@ -207,6 +207,7 @@ async function cards(): Promise<SitemapEntry[]> {
         lowestPriceCentsUk: true,
         lowestPriceCentsSg: true,
         lowestPriceCentsCa: true,
+        lowestPriceCentsEu: true,
         imageUrl: true,
         createdAt: true,
       },

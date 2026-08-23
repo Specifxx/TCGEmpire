@@ -90,6 +90,7 @@ async function main() {
           lowestPriceCentsUk: null,
           lowestPriceCentsSg: null,
           lowestPriceCentsCa: null,
+          lowestPriceCentsEu: null,
           viewCount: 0,
           searchCount: 0,
           lastViewedAt: null,

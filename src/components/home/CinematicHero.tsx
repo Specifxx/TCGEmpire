@@ -28,9 +28,13 @@ const SHORT_PLACE: Record<Country, string> = {
   UK: "the UK",
   SG: "Singapore",
   CA: "Canada",
+  // "Europe", not "the EU": in a run-on list of places this reads as a place,
+  // which is what the sentence needs. The market's formal label ("Europe (EU)")
+  // is COUNTRIES.EU.label and is used where precision matters — the switcher.
+  EU: "Europe",
 };
 
-/** "Australia, the UK, Singapore and Canada" — every market EXCEPT
+/** "Australia, the UK, Singapore, Canada and Europe" — every market EXCEPT
  *  the one leading the H1, so a region page never re-lists its own market as
  *  one of the "others". */
 function otherMarketsList(exclude: Country): string {

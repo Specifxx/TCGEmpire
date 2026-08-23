@@ -12,11 +12,11 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: "Stores we track — every Riftbound retailer in the comparison",
   description:
-    "The full list of Riftbound stores RiftCompare compares prices across, by market (Australia, the US, the UK, Singapore and Canada). Don't see your store? Request it.",
+    "The full list of Riftbound stores RiftCompare compares prices across, by market (Australia, the US, the UK, Singapore, Canada and the EU). Don't see your store? Request it.",
   alternates: pageAlternates("/stores/tracked"),
 };
 
-const MARKETS: Country[] = ["AU", "US", "UK", "SG", "CA"];
+const MARKETS: Country[] = ["AU", "US", "UK", "SG", "CA", "EU"];
 
 const FAQS = [
   {
@@ -29,7 +29,7 @@ const FAQS = [
   },
   {
     q: "Which countries does RiftCompare cover?",
-    a: "RiftCompare covers Australia, the United States, the United Kingdom, Singapore and Canada. Each market shows prices in its local currency (AUD, USD, GBP, SGD, CAD) from retailers that actually ship to buyers in that region. Switch markets using the country selector in the navigation.",
+    a: "RiftCompare covers Australia, the United States, the United Kingdom, Singapore, Canada and the eurozone. Each market shows prices in its local currency (AUD, USD, GBP, SGD, CAD, EUR) from retailers that actually ship to buyers in that region — the EU market pools stores across the single market, since they all price in EUR and ship to each other duty-free. Switch markets using the country selector in the navigation.",
   },
   {
     q: "Can I trust the prices shown on RiftCompare?",
@@ -90,7 +90,7 @@ export default function TrackedStoresPage() {
             </div>
             <p className="mt-2 text-sm text-slate-300">
               Our own P2P marketplace — tracked as a live source in every market below (Australia, the US,
-              the UK, Singapore and Canada) whenever a card has an active listing, alongside the independent stores.
+              the UK, Singapore, Canada and the EU) whenever a card has an active listing, alongside the independent stores.
             </p>
           </div>
           <span className="btn-primary shrink-0 whitespace-nowrap">Browse the Marketplace →</span>

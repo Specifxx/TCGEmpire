@@ -103,7 +103,7 @@ const FAQS = [
   },
   {
     q: "Where will Radiance cards be cheapest?",
-    a: "RiftCompare compares live prices across stores in Australia, the US, the UK, Singapore and Canada, ranked by total delivered cost including postage. Radiance cards appear on the set page with real prices as soon as stores list them.",
+    a: "RiftCompare compares live prices across stores in Australia, the US, the UK, Singapore, Canada and the EU, ranked by total delivered cost including postage. Radiance cards appear on the set page with real prices as soon as stores list them.",
   },
 ];
 

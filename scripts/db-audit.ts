@@ -62,7 +62,7 @@ async function main() {
       setCode: true, setName: true, collectorNumber: true, variant: true,
       isPromo: true, domain: true, type: true, rarity: true, imageUrl: true, imageThumbUrl: true,
       lowestPriceCents: true, lowestPriceCentsUs: true,
-      lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true,
+      lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true, lowestPriceCentsEu: true,
       ebayCheckedAt: true,
     },
   });
@@ -139,6 +139,7 @@ async function main() {
     { code: "UK", field: "lowestPriceCentsUk" },
     { code: "SG", field: "lowestPriceCentsSg" },
     { code: "CA", field: "lowestPriceCentsCa" },
+    { code: "EU", field: "lowestPriceCentsEu" },
   ];
   for (const m of MARKETS) {
     const phantom = cards.filter((c) => c[m.field] != null && !stock.get(`${c.id}|${m.code}`));

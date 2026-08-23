@@ -59,7 +59,7 @@ export default async function AboutPage() {
             {SITE_NAME} is a free price-comparison tool and card database for{" "}
             <strong className="text-white">Riftbound: League of Legends TCG</strong>. We track live prices
             for every Riftbound card across dozens of stores in Australia, the United States,
-            the United Kingdom, Singapore and Canada, and show you the cheapest place to buy — alongside
+            the United Kingdom, Singapore, Canada and the EU, and show you the cheapest place to buy — alongside
             price history, set checklists, sealed-product prices, deck pricing and more. Everything is free
             to use, with no account required.
           </p>

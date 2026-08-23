@@ -546,41 +546,79 @@ export interface EbayMarketCfg { country: string; marketplace: string; currency:
 /**
  * Searched on EVERY run.
  *
- * ── WHY UK AND SG CAME BACK (2026-08-08) ────────────────────────────────────
- * They were demoted to a rotation on 2026-08-03 for one reason: 4 markets ×
- * ~1,400 cards = 5,600 Browse calls did not fit a ~4,280 budget, and a run that
- * overspent had its last market discarded whole. The fix then was to search
- * fewer markets.
+ * ── WHY UK AND SG LEFT AGAIN, AND WHY THAT IS NOT A REVERSAL (2026-08-23) ───
+ * They were demoted to a rotation on 2026-08-03 (4 markets × ~1,400 cards did
+ * not fit a ~4,280 budget), promoted back on 2026-08-08 when the value floor
+ * cut the searched catalogue to ~240 cards, and are rotating again now. The
+ * 2026-08-08 promotion was NOT wrong and is not being undone on its own terms:
+ * four always-markets still fit. What changed is that a FIFTH market exists.
  *
- * The $20 value floor (see eBayWorthSearching) removed the cause instead: the
- * searched catalogue is now ~240 cards, not ~1,400, so 4 × ~240 ≈ 960 calls —
- * roughly a fifth of what forced the demotion. UK and SG no longer have to take
- * turns, and neither is ever ~48h stale again.
+ * The choice was never "does UK fit daily" — it was how to spend the headroom
+ * the value floor bought. Two ways to add EU:
+ *   (a) five always-markets — ~78% of the spendable budget;
+ *   (b) two always + a three-way rotation — 3 markets a day, ~48%.
  *
- * THIS LIST IS LOAD-BEARING IN TWO PLACES, not one. The catalogue pass builds
- * from ebayMarketsForDay, but refreshEbayChasePrintings is handed
- * EBAY_ALWAYS_MARKETS directly — and the chase pass runs TWICE a day. Adding a
- * market here multiplies both, so a fifth market costs far more than one
- * catalogue sweep. tests/affiliate-priority.test.ts models the whole day rather
- * than the catalogue alone, for exactly that reason.
+ * BE HONEST ABOUT THIS: (a) FITS. At the numbers tests/affiliate-priority.test.ts
+ * models, five daily markets come in under budget with room to spare, so the
+ * rotation is not arithmetic, it is headroom — and it is worth having only
+ * because the input to that arithmetic is known to be understated. CATALOGUE
+ * there is a $10-floor measurement that the $5 floor has never been re-measured
+ * against (the constant says so itself), and a set launch inflates the searched
+ * set further, because a just-released set's cards have no TCGplayer price yet
+ * and "unknown ≠ cheap" keeps every one of them. 78% of budget against a number
+ * biased low in both directions is thin; 48% is not.
+ *
+ * The price of (b) is staleness: UK and SG go from ~24h to ~72h between
+ * refreshes, and EU starts there. AU and US stay daily because they are the
+ * largest markets and US is the default one. If the $5-floor catalogue is ever
+ * measured and turns out comfortable, promoting UK and SG back is a two-line
+ * change — and the budget test is written to fail if the rotation stops earning
+ * its staleness, rather than leaving it in place out of habit.
+ *
+ * THIS LIST IS LOAD-BEARING IN TWO PLACES, not one — and the second one is the
+ * trap this change had to avoid. The catalogue pass builds from
+ * ebayMarketsForDay, but refreshEbayChasePrintings used to be handed
+ * EBAY_ALWAYS_MARKETS directly, and it is a whole second pass over the day (it
+ * alternates with the catalogue pass across the 07:00/19:00 runs — chaseDue is
+ * gated on `!ebayDue`, so one or the other fires per invocation, never both;
+ * the PRINTINGS get refreshed twice a day, the chase pass itself runs once).
+ * Shrinking this list would therefore have silently stopped refreshing UK and
+ * SG promos/signatures
+ * — the thinnest, most volatile, most expensive prices on the site — while
+ * every other part of those markets kept updating. It is now handed
+ * ebayMarketsForDay() instead (see the call site), so the chase set follows the
+ * same rotation the catalogue does. tests/affiliate-priority.test.ts models the
+ * whole day rather than the catalogue alone, for exactly that reason.
  */
 export const EBAY_ALWAYS_MARKETS: EbayMarketCfg[] = [
   { country: "AU", marketplace: "EBAY_AU", currency: "AUD", retailer: "ebay" },
   { country: "US", marketplace: "EBAY_US", currency: "USD", retailer: "ebay_us" },
-  { country: "UK", marketplace: "EBAY_GB", currency: "GBP", retailer: "ebay_uk" },
-  { country: "SG", marketplace: "EBAY_SG", currency: "SGD", retailer: "ebay_sg" },
 ];
 
 /**
- * Rotated one per day, in this order. Empty since 2026-08-08 — the $20 value
- * floor shrank the searched catalogue enough that all four always-markets fit
- * inside budget daily (see EBAY_ALWAYS_MARKETS above), so there is currently no
- * market that NEEDS to take turns. Germany used this slot for its brief
- * 2026-08-20 add-then-remove (see country.ts's header note) — kept empty
- * rather than deleted: the next market this site adds is the next real
- * candidate for launching here first, same reasoning DE used.
+ * Rotated one per day, in this order — so each of these refreshes every third
+ * day, not daily, and is at most ~72h stale.
+ *
+ * UK and SG moved here from EBAY_ALWAYS_MARKETS on 2026-08-23 to make room for
+ * EU without a fifth always-market; see the note above for the arithmetic.
+ * Germany briefly held this list alone on 2026-08-20 (see country.ts's header
+ * note) before the eurozone-wide market replaced the single-country one.
+ *
+ * ORDER IS NOT ALPHABETICAL AND NOT ARBITRARY. ebayMarketsForDay indexes this
+ * with `dayIndex % length`, so the order only decides WHICH day each market
+ * lands on, not how often — every entry gets exactly one day in three. It is
+ * written UK → SG → EU so a reader can check the log line against the list.
+ *
+ * EU is the market with the least proven per-day cost (it is new, and its store
+ * coverage is still growing), which is the same reason DE launched in a rotation
+ * slot rather than as an always-market: a rotation slot costs nothing on the two
+ * days in three it is not picked.
  */
-export const EBAY_ROTATING_MARKETS: EbayMarketCfg[] = [];
+export const EBAY_ROTATING_MARKETS: EbayMarketCfg[] = [
+  { country: "UK", marketplace: "EBAY_GB", currency: "GBP", retailer: "ebay_uk" },
+  { country: "SG", marketplace: "EBAY_SG", currency: "SGD", retailer: "ebay_sg" },
+  { country: "EU", marketplace: "EBAY_ES", currency: "EUR", retailer: "ebay_eu" },
+];
 
 /**
  * The markets a run on `dayIndex` will search, IN THE ORDER IT WILL SEARCH THEM.
@@ -610,6 +648,23 @@ export const EBAY_ROTATING_MARKETS: EbayMarketCfg[] = [];
  * Rotating by dayIndex gives every market the lead, and the last (first to be
  * dropped) slot, once every n days.
  */
+/**
+ * The rotation's day number. Keyed off the Australia/Sydney calendar day (the
+ * same boundary the price history uses) so "today's market" is STABLE for the
+ * whole day: the 07:00 and 19:00 UTC runs, a deploy-triggered run and a manual
+ * re-run all pick the same one instead of ping-ponging and double-spending
+ * quota on two different markets.
+ *
+ * Extracted from refreshEbayMarkets on 2026-08-23 because the chase pass now
+ * needs the same number (see the call site in importPrices). Two copies of this
+ * expression is exactly how the evening chase pass would end up refreshing a
+ * DIFFERENT market than the morning catalogue pass on a day the two computed
+ * the boundary a millisecond apart.
+ */
+export function ebayDayIndex(): number {
+  return Math.floor(sydneyDay().getTime() / 86_400_000);
+}
+
 export function ebayMarketsForDay(dayIndex: number): EbayMarketCfg[] {
   const n = EBAY_ALWAYS_MARKETS.length;
   // `% n` twice with an added n: dayIndex is derived from a clock and is always
@@ -621,8 +676,31 @@ export function ebayMarketsForDay(dayIndex: number): EbayMarketCfg[] {
   // No rotating markets today. Indexing an empty array here would yield
   // `undefined` and append it, and the pass would crash on `mkt.marketplace`
   // rather than simply searching the always-markets.
-  if (EBAY_ROTATING_MARKETS.length === 0) return always;
-  return [...always, EBAY_ROTATING_MARKETS[dayIndex % EBAY_ROTATING_MARKETS.length]];
+  const r = EBAY_ROTATING_MARKETS.length;
+  if (r === 0) return always;
+  const today = EBAY_ROTATING_MARKETS[((dayIndex % r) + r) % r];
+
+  // ── THE ROTATING MARKET GOES FIRST, NOT LAST (2026-08-23) ──────────────────
+  // Appending it — the obvious reading of "always-markets, then today's extra" —
+  // reintroduces exactly the systematic starvation the day-rotation above exists
+  // to prevent, and does so at the worst possible target. The last market in this
+  // array is the one discarded whole when the budget latches (see the header
+  // note), so appending would make the rotating market the FIRST casualty on
+  // every single overspend.
+  //
+  // That is worse than it sounds, because the loss is not symmetric. AU and US
+  // run daily: dropping one costs it ~24 extra hours. A rotating market only
+  // comes round every `r` days, so dropping it on its one day costs it ~2×72h —
+  // and since the same market would be last on every one of its turns, a market
+  // near the budget edge could go unpriced indefinitely while its store rows
+  // stayed fresh, which reads as "eBay has no listings here" rather than as a
+  // quota problem.
+  //
+  // First claim to the least-frequently-refreshed market inverts that: the
+  // casualty is always one of the daily markets, which lose the least by being
+  // skipped, and which one it is still alternates by day via `offset` above —
+  // the 2026-08-05 fix, intact.
+  return [today, ...always];
 }
 
 // EBAY_CA_RETAILER moved to constants.ts (2026-08-20) so sealed-import.ts can
@@ -650,20 +728,32 @@ export async function refreshEbayMarkets(
   // Each market has its own retailer key so eBay AU + US rows for the same card never
   // collide on the unique [cardId, retailer, condition, isFoil] key.
   //
-  // ── QUOTA BUDGET: WHY SG AND CA ALTERNATE BY DAY ────────────────────────────
-  // Every market costs ~1 Browse call per card (~1.1k cards), and the real spendable
-  // budget is `liveRemaining − QUOTA_RESERVE` ≈ 4,400 on a clean day. Six markets
-  // would need ~6.6k and five ~5.5k, so a single pass covering every market EVERY
-  // day is arithmetically impossible — it would always run out partway and leave the
-  // trailing market(s) unrefreshed. Rather than let that happen implicitly (which
-  // silently starves whichever market sorts last), the two newest/smallest markets
-  // take turns: AU/US/UK refresh daily, and SG and CA get every other day. That
-  // fits ~4×1.1k ≈ 4.4k inside the budget, and each rotating market is at most ~24h
-  // staler than the others — far better than one of them being permanently skipped.
+  // ── QUOTA BUDGET: WHY THREE MARKETS A DAY, NOT FIVE ─────────────────────────
+  // Every market costs ~1 Browse call per SEARCHED card, and the searched
+  // catalogue is ~350 cards, not the ~1.1k this note used to assume (the value
+  // floor in eBayWorthSearching is what cut it — see the figures there, read off
+  // a real production run). The real spendable budget is
+  // `liveRemaining − QUOTA_RESERVE` ≈ 4,400 on a clean day.
+  //
+  // A DAY is a full catalogue pass plus a chase pass (they alternate across the
+  // 07:00/19:00 runs — chaseDue is gated on `!ebayDue`, so exactly one of them
+  // fires per invocation), plus the sealed sweep. Both eBay passes now walk the
+  // SAME day's market list, so a market costs ~(catalogue + chase) per day, not
+  // ~catalogue.
+  //
+  // At three markets that is ~48% of the spendable budget. Five daily markets
+  // would be ~78% — which fits, and the rotation is a deliberate headroom choice
+  // rather than an arithmetic necessity; see the note on EBAY_ALWAYS_MARKETS for
+  // why that headroom is worth buying with staleness (the catalogue constant is
+  // measured at a floor that has since dropped, and a set launch inflates it).
+  //
+  // AU and US refresh daily (largest market, and the default one). UK, SG and EU
+  // take turns one per day, so a run searches 3 markets rather than 4 — LESS
+  // than before EU existed. Each rotating market is at most ~72h stale, which is
+  // the real cost of this design and the number to watch if a market's prices
+  // start looking wrong. CA still costs nothing: its rows are derived from the
+  // US pass and converted (see the write site below).
   const ALWAYS = EBAY_ALWAYS_MARKETS;
-  // Empty today — every market we search is a daily one. See the note on
-  // EBAY_ROTATING_MARKETS for why UK and SG left the rotation on 2026-08-08 and
-  // why the mechanism is kept rather than deleted.
   const ROTATING = EBAY_ROTATING_MARKETS;
   const ALL = [...ALWAYS, ...ROTATING];
 
@@ -676,11 +766,7 @@ export async function refreshEbayMarkets(
     markets = ALL.filter((m) => m.country === onlyMarket);
     console.log(`EBAY_ONLY_MARKET=${onlyMarket} — restricting the eBay pass to ${markets.length} market(s).`);
   } else {
-    // Keyed off the Australia/Sydney calendar day (the same day boundary the price
-    // history uses), so which market is "today's" is STABLE for the whole day: the
-    // 07:00 and 19:00 UTC runs, a deploy-triggered run and a manual re-run all pick
-    // the same one instead of ping-ponging and double-spending quota.
-    const dayIndex = Math.floor(sydneyDay().getTime() / 86_400_000);
+    const dayIndex = ebayDayIndex();
     // Built by ebayMarketsForDay rather than assembled here. This line used to
     // be its own copy of the same expression, which meant the pure function the
     // budget tests assert against was NOT the one production ran — the two could
@@ -691,9 +777,12 @@ export async function refreshEbayMarkets(
       `eBay market rotation: ${markets.map((m) => m.country).join(" → ")} ` +
         `(search order; the LAST market is the one dropped if the budget runs out. ` +
         `${ALWAYS.map((m) => m.country).join("/")} daily, priority rotating by Sydney day` +
-        // Empty today: every market is daily. Without this the line printed a
-        // dangling ", alternate by Sydney day" with nothing named in front of it.
-        (ROTATING.length ? `; ${ROTATING.map((m) => m.country).join("/")} alternate by Sydney day` : "") +
+        // Guarded because the rotation can legitimately be empty (it was, between
+        // 2026-08-08 and 2026-08-23). Without this the line printed a dangling
+        // ", alternate by Sydney day" with nothing named in front of it.
+        (ROTATING.length
+          ? `; ${ROTATING.map((m) => m.country).join("/")} one per day (each every ${ROTATING.length}d)`
+          : "") +
         `; use EBAY_ONLY_MARKET=<code> to refresh one off-cycle).`
     );
   }
@@ -1409,11 +1498,13 @@ export async function importPrices(): Promise<ImportSummary> {
   if (corrected) console.log(`Verified cheapest listings — corrected ${corrected} stale prices.`);
 
   // ---- eBay AU + US (optional; only when EBAY_CLIENT_ID/SECRET are set) ---------
-  // eBay covers EVERY card per market, but only ONCE a day, and NEVER on a deploy
-  // (push). AU/US/UK/SG/CA ≈ 5×~1k calls; primeEbayBudget() reads the LIVE remaining
-  // quota and reserves QUOTA_RESERVE, so this can never exhaust eBay's ~5,000/day
-  // Browse limit — it just stops early, dropping the last market(s) in the array
-  // (CA first, by design — see refreshEbayMarkets).
+  // eBay covers EVERY searched card per market, but only ONCE a day, and NEVER on
+  // a deploy (push). A run searches 3 markets — AU and US daily plus one of
+  // UK/SG/EU — at ~350 cards each, so ≈ 1k calls; primeEbayBudget() reads the LIVE
+  // remaining quota and reserves QUOTA_RESERVE, so this can never exhaust eBay's
+  // ~5,000/day Browse limit — it just stops early, dropping the last market(s) in
+  // the array (see refreshEbayMarkets for why that loser rotates rather than
+  // always being the same market).
   // Cards are ordered by search demand so the most-wanted are covered first if the
   // quota is ever hit.
   //  - ebayDue:     last eBay refresh was > 20h ago (so it runs ~once a day).
@@ -1524,7 +1615,19 @@ export async function importPrices(): Promise<ImportSummary> {
         `~${skipped * 3} calls/day saved.`,
     );
     const n = await refreshEbayMarkets(ebayTargets);
-    summary.stores.push({ name: "eBay (AU/US/UK/SG/CA)", products: ebayTargets.length, priced: n, matched: n, unmatched: 0 });
+    // Named off the real lists rather than a hand-typed string: the previous
+    // literal still said "AU/US/UK/SG/CA" and would have gone on saying it
+    // after the rotation change, misreporting which markets a run covered.
+    // CA is appended separately — it is derived from the US pass, not searched.
+    summary.stores.push({
+      name: `eBay (${EBAY_ALWAYS_MARKETS.map((m) => m.country).join("/")} daily` +
+        `${EBAY_ROTATING_MARKETS.length ? ` + ${EBAY_ROTATING_MARKETS.map((m) => m.country).join("/")} rotating` : ""}` +
+        `, CA derived)`,
+      products: ebayTargets.length,
+      priced: n,
+      matched: n,
+      unmatched: 0,
+    });
   } else if (chaseDue && isEbayEnabled() && ebayAllowed) {
     // The evening pass: promo / Signature / overnumbered printings only. These
     // are thin markets — often one or two live listings — so a single sale moves
@@ -1532,7 +1635,15 @@ export async function importPrices(): Promise<ImportSummary> {
     // track, which makes a stale figure on one the most costly kind of wrong.
     await primeEbayBudget();
     try {
-      const n = await refreshEbayChasePrintings(EBAY_ALWAYS_MARKETS);
+      // The SAME market set the catalogue pass used today, not
+      // EBAY_ALWAYS_MARKETS. Those were the same list until 2026-08-23; once UK
+      // and SG moved into the rotation they stopped being, and passing the
+      // always-list here would have quietly frozen UK/SG/EU chase prices — the
+      // thinnest and most volatile on the site — at whatever the catalogue pass
+      // last wrote, while the rest of those markets kept moving. Same dayIndex
+      // as that pass, so the evening run refreshes the market the morning run
+      // priced rather than a different one.
+      const n = await refreshEbayChasePrintings(ebayMarketsForDay(ebayDayIndex()));
       summary.stores.push({ name: "eBay chase (2nd daily)", products: n, priced: n, matched: n, unmatched: 0 });
     } catch (e) {
       console.warn("eBay chase pass failed:", e);
@@ -1600,18 +1711,25 @@ export async function importPrices(): Promise<ImportSummary> {
   // filtered country-agnostically; the write side asking the same question the
   // same way is what stops the next added market repeating it. "tcgplayer" (US)
   // is deliberately NOT in that list — it is a real buyable store there.
-  const [pricedAuReal, pricedUs, pricedSgReal, pricedUkReal, pricedCa] = await Promise.all([
+  const [pricedAuReal, pricedUs, pricedSgReal, pricedUkReal, pricedCa, pricedEu] = await Promise.all([
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "AU", retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "US", retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "SG", retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "UK", retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
     prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "CA", retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
+    // EU_FALLBACK_RETAILERS is empty today (no permitted EUR reference source —
+    // see constants.ts), so this exclusion is a no-op for EU right now. It is
+    // written anyway, identically to every other market, because the failure it
+    // prevents is silent: the day a reference row appears it would otherwise set
+    // lowestPriceCentsEu and present a converted aggregate as a buyable price.
+    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "EU", retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
   ]);
   const lowAuReal = new Map(pricedAuReal.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowUs = new Map(pricedUs.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowSgReal = new Map(pricedSgReal.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowUkReal = new Map(pricedUkReal.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowCa = new Map(pricedCa.map((r) => [r.cardId, r._min.priceCents ?? null]));
+  const lowEu = new Map(pricedEu.map((r) => [r.cardId, r._min.priceCents ?? null]));
   // Diff-based update: write each card STRAIGHT to its new lowest only when it
   // changed. We must NOT reset every card to null first (the old approach) — that
   // briefly showed "No price yet" for the whole catalogue on every import/deploy
@@ -1625,6 +1743,7 @@ export async function importPrices(): Promise<ImportSummary> {
       lowestPriceCentsUk: true,
       lowestPriceCentsSg: true,
       lowestPriceCentsCa: true,
+      lowestPriceCentsEu: true,
     },
   });
   let changed = 0;
@@ -1640,12 +1759,14 @@ export async function importPrices(): Promise<ImportSummary> {
     const nUk = lowUkReal.get(c.id) ?? null;
     const nSg = lowSgReal.get(c.id) ?? null;
     const nCa = lowCa.get(c.id) ?? null;
+    const nEu = lowEu.get(c.id) ?? null;
     if (
       nAu !== c.lowestPriceCents ||
       nUs !== c.lowestPriceCentsUs ||
       nUk !== c.lowestPriceCentsUk ||
       nSg !== c.lowestPriceCentsSg ||
-      nCa !== c.lowestPriceCentsCa
+      nCa !== c.lowestPriceCentsCa ||
+      nEu !== c.lowestPriceCentsEu
     ) {
       await prisma.card.update({
         where: { id: c.id },
@@ -1655,6 +1776,7 @@ export async function importPrices(): Promise<ImportSummary> {
           lowestPriceCentsUk: nUk,
           lowestPriceCentsSg: nSg,
           lowestPriceCentsCa: nCa,
+          lowestPriceCentsEu: nEu,
         },
       });
       changed++;
@@ -1686,17 +1808,19 @@ export async function importPrices(): Promise<ImportSummary> {
       const uk = lowUkReal.get(c.id) ?? null;
       const sg = lowSgReal.get(c.id) ?? null;
       const ca = lowCa.get(c.id) ?? null;
+      const eu = lowEu.get(c.id) ?? null;
       if (au != null) rows.push({ cardId: c.id, country: "AU", day, lowestPriceCents: au });
       if (us != null) rows.push({ cardId: c.id, country: "US", day, lowestPriceCents: us });
       if (uk != null) rows.push({ cardId: c.id, country: "UK", day, lowestPriceCents: uk });
       if (sg != null) rows.push({ cardId: c.id, country: "SG", day, lowestPriceCents: sg });
       if (ca != null) rows.push({ cardId: c.id, country: "CA", day, lowestPriceCents: ca });
+      if (eu != null) rows.push({ cardId: c.id, country: "EU", day, lowestPriceCents: eu });
     }
     await dbHistory.priceHistory.deleteMany({ where: { day } });
     if (rows.length > 0) await dbHistory.priceHistory.createMany({ data: rows });
     const skipped = writable ? existing.filter((c) => !writable.has(c.id)).length : 0;
     console.log(
-      `Price history: recorded ${rows.length} points (AU/US/UK/SG/CA) for ${day.toISOString().slice(0, 10)}` +
+      `Price history: recorded ${rows.length} points (AU/US/UK/SG/CA/EU) for ${day.toISOString().slice(0, 10)}` +
         (skipped ? ` — ${skipped} card(s) skipped: no Card row in the history DB` : "") + "."
     );
   } catch (e) {

@@ -28,6 +28,10 @@ function tagline(country: string, contextual: boolean): string {
   if (country === "UK") return "Buy from UK & global sellers";
   if (country === "SG") return "Buy from SG & global sellers";
   if (country === "CA") return "Buy from CA & global sellers";
+  // "EU sellers", not "ES sellers": the link goes to ebay.es (see
+  // affiliate.ts's EBAY_DOMAIN) but eBay serves the same cross-border inventory
+  // there, and the visitor's market is the eurozone, not Spain.
+  if (country === "EU") return "Buy from EU & global sellers";
   return "Buy from AU & global sellers";
 }
 

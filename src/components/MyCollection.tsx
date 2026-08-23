@@ -23,6 +23,7 @@ type CollCard = {
   lowestPriceCentsUk: number | null;
   lowestPriceCentsSg: number | null;
   lowestPriceCentsCa: number | null;
+  lowestPriceCentsEu: number | null;
 };
 type Item = {
   id: string;

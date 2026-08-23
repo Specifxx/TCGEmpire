@@ -5,7 +5,7 @@ import { COUNTRY_LIST, INTL_ENABLED } from "@/lib/country";
 import { REGION_HOME_PATH } from "@/lib/seo";
 import { useCountry } from "./CountryProvider";
 
-// Market chooser for the homepage hero — pill toggle of AU/US/UK/SG/CA
+// Market chooser for the homepage hero — pill toggle of AU/US/UK/SG/CA/EU
 // that switches all prices + store lists. Mirrors the compact navbar switcher.
 // Deliberately quiet (small type, low-contrast border, no filled active
 // state) — it's a utility, not a CTA, and shouldn't compete with the search

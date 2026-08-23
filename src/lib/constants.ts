@@ -85,11 +85,18 @@ export const EBAY_CA_RETAILER = "ebay_ca";
 // sites did the latter and every one of them was missing a market by the time CA
 // was added — a hand-listed subset silently readmits a reference price as a
 // buyable store the moment a new market appears.
+// The EU market has no converted reference source, so this is empty — but it is
+// DECLARED rather than omitted, and spread below like every other market's, so
+// the day one appears (a permitted Cardmarket feed being the obvious candidate —
+// see lib/cardmarket.ts's legal gate) it is excluded from "buyable store"
+// everywhere at once instead of in whichever call sites someone remembers.
+export const EU_FALLBACK_RETAILERS: readonly string[] = [];
 export const ALL_FALLBACK_RETAILERS: readonly string[] = [
   ...AU_FALLBACK_RETAILERS,
   ...UK_FALLBACK_RETAILERS,
   ...SG_FALLBACK_RETAILERS,
   ...CA_FALLBACK_RETAILERS,
+  ...EU_FALLBACK_RETAILERS,
 ];
 
 /** True when `retailer` is a converted reference price, not a buyable store. */

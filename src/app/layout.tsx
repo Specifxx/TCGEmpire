@@ -94,7 +94,7 @@ export const metadata: Metadata = {
     template: "%s — RiftCompare",
   },
   description:
-    "The Riftbound TCG card database and price comparison. Browse every card and compare live prices across stores in Australia, the US, the UK, Singapore and Canada to find the cheapest place to buy.",
+    "The Riftbound TCG card database and price comparison. Browse every card and compare live prices across stores in Australia, the US, the UK, Singapore, Canada and the EU to find the cheapest place to buy.",
   applicationName: SITE_NAME,
   // NO `keywords` meta. Google has ignored it since 2009 and Bing treats stuffing
   // it as a negative signal; it only ever advertised our target terms to
@@ -118,7 +118,7 @@ export const metadata: Metadata = {
     url: SITE_URL,
     title: "RiftCompare — Riftbound Card Database & Price Comparison",
     description:
-      "Compare live Riftbound TCG card prices across stores in Australia, the US, the UK, Singapore and Canada to find the cheapest place to buy.",
+      "Compare live Riftbound TCG card prices across stores in Australia, the US, the UK, Singapore, Canada and the EU to find the cheapest place to buy.",
   },
   twitter: { card: "summary_large_image" },
   // Opt into large image thumbnails + full text snippets in Google/Bing results
@@ -193,7 +193,7 @@ const orgJsonLd = {
         availableLanguage: "English",
       },
       description:
-        "Riftbound: League of Legends TCG card database and live price-comparison across Australia, the United States, the United Kingdom, Singapore and Canada, home of the RiftCompare Index.",
+        "Riftbound: League of Legends TCG card database and live price-comparison across Australia, the United States, the United Kingdom, Singapore, Canada and the EU, home of the RiftCompare Index.",
     },
     {
       "@type": "WebSite",
@@ -453,7 +453,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </p>
           <p>
             RiftCompare · Riftbound card database &amp; price comparison for
-            Australia, the US, the UK, Singapore and Canada. Prices are sourced from public store listings and may be out
+            Australia, the US, the UK, Singapore, Canada and the EU. Prices are sourced from public store listings and may be out
             of date — always confirm on the retailer&apos;s site.
           </p>
           {/* Riot's Legal Jibber Jabber policy requires this EXACT notice, displayed

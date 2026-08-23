@@ -51,13 +51,13 @@ test("every market's lowest-price query excludes converted reference rows", () =
   const queries = [...block.matchAll(/country:\s*"(\w+)"/g)].map((m) => m[1]);
   assert.deepEqual(
     [...queries].sort(),
-    ["AU", "CA", "SG", "UK", "US"],
+    COUNTRY_LIST.map((c) => c.code).sort(),
     "expected exactly one lowest-price query per tracked market"
   );
   // Split on the per-market `country:` markers so each query is checked alone —
   // one market keeping the exclusion must not cover for another dropping it.
   const parts = block.split(/(?=prisma\.retailerPrice\.groupBy)/).filter((p) => /country:/.test(p));
-  assert.equal(parts.length, 5, "expected five separable groupBy calls");
+  assert.equal(parts.length, COUNTRY_LIST.length, "expected one separable groupBy call per tracked market");
   for (const part of parts) {
     const country = /country:\s*"(\w+)"/.exec(part)![1];
     assert.match(
@@ -116,12 +116,24 @@ test("every non-US TCGplayer market is a reference; the US one is a real store",
   );
 });
 
+// Markets that have NO converted reference source at all, and so register no key
+// in the union. Enumerated rather than the assertion being softened, so adding a
+// market can never quietly join this set — someone has to write the reason down.
+//   US — TCGplayer IS a buyable store there; excluding it would blank the
+//        baseline market.
+//   EU — no EUR reference source exists to convert from. TCGplayer publishes no
+//        EUR market price, and Cardmarket (the European equivalent) is
+//        feature-flagged off pending written permission to redisplay its data.
+//        EU_FALLBACK_RETAILERS is declared-and-empty in constants.ts precisely so
+//        the day that changes, the union picks it up with no further edits.
+const NO_REFERENCE_SOURCE = new Set(["US", "EU"]);
+
 test("every tracked market is covered by the union", () => {
   // If a market is added with no reference key registered, the write side above
   // still runs but silently protects nothing for it.
   const covered = new Set(ALL_FALLBACK_RETAILERS.map((r) => r.replace(/^tcgplayer_?/, "").toUpperCase()));
   for (const c of COUNTRY_LIST) {
-    if (c.code === "US") continue; // US TCGplayer is a real store, by design
+    if (NO_REFERENCE_SOURCE.has(c.code)) continue;
     assert.ok(
       covered.has(c.code) || c.code === "UK",
       `${c.code} has no reference retailer registered in ALL_FALLBACK_RETAILERS`
