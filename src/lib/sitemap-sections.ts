@@ -101,6 +101,7 @@ async function core(): Promise<SitemapEntry[]> {
     { url: `${SITE_URL}/singles`, changeFrequency: "daily", priority: 0.9, lastModified: day },
     { url: `${SITE_URL}/movers`, changeFrequency: "daily", priority: 0.8, lastModified: day },
     { url: `${SITE_URL}/market`, changeFrequency: "daily", priority: 0.8, lastModified: day },
+    { url: `${SITE_URL}/market/records`, changeFrequency: "daily", priority: 0.7, lastModified: day },
     { url: `${SITE_URL}/sealed`, changeFrequency: "daily", priority: 0.8, lastModified: day },
     { url: `${SITE_URL}/sets`, changeFrequency: "weekly", priority: 0.8, lastModified: day },
     { url: `${SITE_URL}/decks`, changeFrequency: "weekly", priority: 0.8, lastModified: decksModified(day) },

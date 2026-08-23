@@ -212,6 +212,17 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
               <>You&apos;re viewing the <strong className="text-slate-200">{COUNTRIES[market as Country].place}</strong> market, priced from {COUNTRIES[market as Country].adjective} stores. Switch back to Global at the top right.</>
             )}
           </p>
+          {/* The Index is today's number; records are the same data asked the
+              other way round ("what is the most this has ever been?"). Linked
+              from the top rather than buried at the bottom because it is the
+              page a visitor searching "riftbound all-time high" wants, and they
+              land here. */}
+          <p className="mt-3 text-sm">
+            <Link href="/market/records" className="font-semibold text-brand-400 hover:underline">
+              All-time price records &amp; cross-market gaps →
+            </Link>{" "}
+            <span className="text-slate-500">every card&apos;s highest and lowest recorded price, and the day it was set.</span>
+          </p>
         </div>
       </section>
 
