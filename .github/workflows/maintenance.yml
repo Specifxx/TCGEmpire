@@ -857,6 +857,35 @@ jobs:
             ORDER BY pg_total_relation_size(relid) DESC
             LIMIT 20;" 2>&1 || echo "(size report unavailable — continuing)"
 
+          # ── IS THIS ACTUALLY A HISTORY PROJECT? ──────────────────────────
+          # CHECKED FIRST, BEFORE THE SCHEMA PUSH, AND THAT ORDER IS THE POINT.
+          #
+          # A history project holds no accounts, so rows in "User" mean this
+          # variable points at an operational database and nothing below may run.
+          #
+          # This guard used to sit AFTER `prisma db push --accept-data-loss`,
+          # inherited from the hdu4 step, on the reasoning that you need the
+          # schema to exist before you can query "User". That reasoning is wrong
+          # in the one case that matters: a MISSING table is itself proof the
+          # target is not an operational database, and `|| echo 0` already
+          # handles it. Putting the push first meant a destructive, schema-
+          # altering command ran against a database we had not yet established
+          # was safe to touch.
+          #
+          # It cost something real on 2026-08-23: RH5 turned out to hold 85 User
+          # rows (a full operational snapshot from an early term — 374
+          # CollectionCard, 39,635 RetailerPrice, 4 Order), the guard correctly
+          # refused to TRUNCATE, but the push had ALREADY run and dropped
+          # Card.lowestPriceCentsNz with 868 non-null values. The abort was
+          # clean; the step before it was not.
+          USERS=$(psql "$TARGET_HISTORY_URL" -tAc 'SELECT COUNT(*) FROM public."User"' 2>/dev/null || echo "0")
+          case "$USERS" in ''|*[!0-9]*) USERS=0;; esac
+          if [ "$USERS" -gt 0 ]; then
+            echo "::error::Target has $USERS rows in public.\"User\" — that is an OPERATIONAL database, not a history project. Refusing to touch it. Every real history project in the rotation reports User=0; run the probe-databases task and pick one that does."
+            exit 1
+          fi
+          echo "Target public.\"User\" rows: 0 ✓ (confirmed history-only project)"
+
           # SCHEMA PUSH OVER THE DIRECT ENDPOINT, NOT THE POOLER.
           # `prisma db push` introspects the target first, and over Neon's
           # PgBouncer that introspection comes back EMPTY on a stale/empty
@@ -865,19 +894,8 @@ jobs:
           # Learned on the RM8 cutover the day before this one. The direct host is
           # the pooled host minus "-pooler".
           DIRECT_TARGET_URL="${TARGET_HISTORY_URL/-pooler/}"
-          echo "== Bringing RH5's schema up to date (recycled project — its schema predates recent migrations) =="
+          echo "== Bringing the target's schema up to date (recycled project — its schema predates recent migrations) =="
           DATABASE_URL="$DIRECT_TARGET_URL" npx prisma db push --skip-generate --accept-data-loss
-
-          # LAST-LINE SAFETY GUARD, after the schema exists and before anything
-          # destructive: a history project holds no accounts. Rows in "User" mean
-          # RH5 is pointed at a real operational database.
-          USERS=$(psql "$TARGET_HISTORY_URL" -tAc 'SELECT COUNT(*) FROM public."User"' 2>/dev/null || echo "0")
-          case "$USERS" in ''|*[!0-9]*) USERS=0;; esac
-          if [ "$USERS" -gt 0 ]; then
-            echo "::error::Target has $USERS rows in public.\"User\" — that is an OPERATIONAL database, not a history project. Refusing to truncate. Check what the RH5 secret is set to."
-            exit 1
-          fi
-          echo "Target public.\"User\" rows: 0 ✓ (confirmed history-only project)"
 
           echo "== What RH5 holds BEFORE this run (its own retired term — all of it is about to be replaced) =="
           for T in 'public."Card"' 'public."ClickEvent"' 'public."PriceHistory"'; do
@@ -1044,20 +1062,25 @@ jobs:
             ORDER BY pg_total_relation_size(relid) DESC
             LIMIT 20;" 2>&1 || echo "(size report unavailable — continuing)"
 
-          echo "== Bringing the target's schema up to date (it is an OLD project — its schema predates recent migrations) =="
-          DATABASE_URL="$TARGET_HISTORY_URL" npx prisma db push --skip-generate --accept-data-loss
-
-          # LAST-LINE SAFETY GUARD, checked AFTER the schema exists and BEFORE any
-          # destructive statement: a history project holds no accounts. If "User"
-          # has rows, HISTORY_DATABASE_URL_4 is pointed at a real operational
-          # database and the TRUNCATE below would destroy production data.
+          # SAFETY GUARD FIRST, BEFORE THE SCHEMA PUSH. A history project holds no
+          # accounts, so rows in "User" mean this variable points at an
+          # operational database. A MISSING table is itself proof it is not one,
+          # which is what `|| echo 0` covers — so there is no reason to push
+          # schema before checking, and a real reason not to: the push is
+          # destructive (--accept-data-loss) and ran against RH5 on 2026-08-23
+          # before this same guard stopped the TRUNCATE, dropping a column with
+          # 868 non-null values from a database we had not established was safe
+          # to touch. Reordered here so that cannot happen on this task either.
           USERS=$(psql "$TARGET_HISTORY_URL" -tAc 'SELECT COUNT(*) FROM public."User"' 2>/dev/null || echo "0")
           case "$USERS" in ''|*[!0-9]*) USERS=0;; esac
           if [ "$USERS" -gt 0 ]; then
-            echo "::error::Target has $USERS rows in public.\"User\" — that is an OPERATIONAL database, not a history project. Refusing to truncate. Check what the HISTORY_DATABASE_URL_4 secret is set to."
+            echo "::error::Target has $USERS rows in public.\"User\" — that is an OPERATIONAL database, not a history project. Refusing to touch it. Check what the HISTORY_DATABASE_URL_4 secret is set to."
             exit 1
           fi
           echo "Target public.\"User\" rows: 0 ✓ (confirmed history-only project)"
+
+          echo "== Bringing the target's schema up to date (it is an OLD project — its schema predates recent migrations) =="
+          DATABASE_URL="$TARGET_HISTORY_URL" npx prisma db push --skip-generate --accept-data-loss
 
           # DUMP BEFORE TRUNCATE, always — if the source refuses reads (fully
           # exhausted), we must not have already destroyed the target's contents.
