@@ -40,7 +40,7 @@ const FAQS = [
   },
   {
     q: "What does the Deal Finder do?",
-    a: "It compares the same Riftbound card's live price across every tracked store and region and surfaces where the gap is large enough to matter — including cards worth more on eBay than in stores, the cheapest place to buy a given card all-in, and cards priced meaningfully cheaper in another tracked market. Premium members also get its top picks as a daily Arbitrage Alerts email.",
+    a: "It compares the same Riftbound card's live price across every tracked store and region and surfaces where the gap is large enough to matter — including cards worth more on eBay than in stores, the cheapest place to buy a given card all-in, and cards priced meaningfully cheaper in another tracked market. Premium members get the complete list; everyone else sees the single best result.",
   },
   {
     q: "Do I need an account to use RiftCompare tools?",

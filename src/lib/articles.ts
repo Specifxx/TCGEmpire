@@ -7581,7 +7581,7 @@ The honest version of "which cards are going up" is: nobody knows for certain, b
     category: "blog",
     title: "RiftCompare Premium: Every Feature Explained",
     excerpt:
-      "Everything RiftCompare Premium actually includes — Value Finder, Rising Cards, the full Deal Finder, Arbitrage Alerts, Bulk Pricer, the Condition Calculator and the 1% Marketplace fee — with pricing, screenshots and honest FAQs.",
+      "Everything RiftCompare Premium actually includes — Value Finder, Rising Cards, the full Deal Finder, Bulk Pricer, the Condition Calculator and the 1% Marketplace fee — with pricing, screenshots and honest FAQs.",
     author: "RiftCompare",
     date: "2026-08-20",
     readMins: 11,
@@ -7592,7 +7592,7 @@ The honest version of "which cards are going up" is: nobody knows for certain, b
     },
     summary: [
       "**RiftCompare Premium is $4.99/mo or $39/yr** (works out to about $3.25/mo, a 35% saving) — with a 3-day free trial and cancel-anytime billing through Stripe.",
-      "**It unlocks 6 tools outright**: the Bulk Pricer, Value Finder screener, Rising Cards (full list), the full Deal Finder (full list, 4 views), daily Arbitrage Alerts by email, and the Condition Impact Calculator. Best Basket — the multi-store cart optimiser — is free with any account, no Premium needed.",
+      "**It unlocks 5 tools outright**: the Bulk Pricer, Value Finder screener, Rising Cards (full list), the full Deal Finder (full list, 4 views), and the Condition Impact Calculator. Best Basket — the multi-store cart optimiser — is free with any account, no Premium needed.",
       "**It also cuts your Marketplace seller fee from 2% to 1%** on every sale, automatically, plus removes ads sitewide.",
       "**Price comparison itself stays free for everyone** — Premium is entirely about the pro tools and the seller discount, never about seeing prices.",
       "**You can also get a month of Premium for free** just by sending us feedback at [/feedback](/feedback), no card required.",
@@ -7609,7 +7609,7 @@ The honest version of "which cards are going up" is: nobody knows for certain, b
       },
       {
         q: "What do you actually get with RiftCompare Premium?",
-        a: "Six tools you can't otherwise use at all — the Bulk Pricer, Value Finder screener, the full Rising Cards list, the full Deal Finder (all four views), a daily Arbitrage Alerts email, and the Condition Impact Calculator — plus a Marketplace seller fee cut from 2% to 1% and a completely ad-free site. Best Basket isn't in that list — it's free with any account.",
+        a: "Five tools you can't otherwise use at all — the Bulk Pricer, Value Finder screener, the full Rising Cards list, the full Deal Finder (all four views), and the Condition Impact Calculator — plus a Marketplace seller fee cut from 2% to 1% and a completely ad-free site. Best Basket isn't in that list — it's free with any account.",
       },
       {
         q: "Is price comparison free without Premium?",
@@ -7617,7 +7617,7 @@ The honest version of "which cards are going up" is: nobody knows for certain, b
       },
       {
         q: "What's the difference between a free account and Premium?",
-        a: "A free account (no card, just an email) adds price alerts, your portfolio tracker (value history, cost-basis P&L, CSV export) and Best Basket on top of the fully-free tier. Premium is the paid step above that — it's the only tier with the Bulk Pricer, Value Finder, the full Rising Cards and Deal Finder lists, Arbitrage Alerts, the Condition Calculator, the 1% Marketplace fee and an ad-free site.",
+        a: "A free account (no card, just an email) adds price alerts, your portfolio tracker (value history, cost-basis P&L, CSV export) and Best Basket on top of the fully-free tier. Premium is the paid step above that — it's the only tier with the Bulk Pricer, Value Finder, the full Rising Cards and Deal Finder lists, the Condition Calculator, the 1% Marketplace fee and an ad-free site.",
       },
       {
         q: "Is there a free trial?",
@@ -7647,7 +7647,6 @@ The honest version of "which cards are going up" is: nobody knows for certain, b
         { name: "Value Finder screener", description: "Every card trading below its own 30-day average right now, ranked by discount.", url: "/tools/value-finder" },
         { name: "Rising Cards (full list)", description: "Cards ranked by demand and price-timing signals — free accounts see only the top pick.", url: "/tools/rising" },
         { name: "Deal Finder (full list)", description: "Every cross-store, cross-region and eBay pricing gap we track, sortable — free accounts see only the top pick.", url: "/tools/deal-finder" },
-        { name: "Arbitrage Alerts", description: "A daily email digest of the best Deal Finder gaps, delivered automatically.", url: "/tools/deal-finder" },
         { name: "Condition Impact Calculator", description: "See how a card's value shifts between NM, LP, MP, HP and DMG.", url: "/tools/condition-calculator" },
         { name: "1% Marketplace seller fee", description: "Half the standard 2% fee on every Marketplace sale, applied automatically.", url: "/marketplace/sell" },
         { name: "Ad-free site", description: "No ads on any page, sitewide, automatically.", url: "/premium" },
@@ -7655,7 +7654,7 @@ The honest version of "which cards are going up" is: nobody knows for certain, b
     },
     body: `RiftCompare's price comparison — search, browse, live prices across every store and eBay, the deck builder, the trade calculator, box EV, the Index and daily movers — has always been free, and stays free. This post is about the other thing: **what you actually get if you pay for RiftCompare Premium**, screenshot by screenshot, with nothing rounded up or left vague.
 
-Short version: Premium is $4.99/mo (or $39/yr), and it unlocks six tools you can't use at all otherwise, cuts your Marketplace seller fee in half, and removes every ad on the site. (Best Basket, the multi-store cart optimiser, used to be on that list — it's free with any account now.) Here's the full breakdown.
+Short version: Premium is $4.99/mo (or $39/yr), and it unlocks five tools you can't use at all otherwise, cuts your Marketplace seller fee in half, and removes every ad on the site. (Best Basket, the multi-store cart optimiser, used to be on that list — it's free with any account now.) Here's the full breakdown.
 
 ## How much does RiftCompare Premium cost?
 
@@ -7666,7 +7665,7 @@ Short version: Premium is $4.99/mo (or $39/yr), and it unlocks six tools you can
 | Monthly | $4.99/month | $4.99/month | 3 days free |
 | Annual | $39/year | ≈ $3.25/month (**35% off**, vs $59.88/yr paying monthly) | 3 days free |
 
-Both plans run through Stripe, need a card up front for the trial, and auto-convert to the paid price after 3 days unless you cancel first. Subscribe once and **your price is locked in for good** — it doesn't rise later even as new tools ship, which is worth knowing given how much has been added to Premium since launch (Arbitrage Alerts and the Condition Calculator are both recent additions).
+Both plans run through Stripe, need a card up front for the trial, and auto-convert to the paid price after 3 days unless you cancel first. Subscribe once and **your price is locked in for good** — it doesn't rise later even as new tools ship, which is worth knowing given how much has been added to Premium since launch (the Condition Calculator is a recent addition).
 
 Cancellation is genuinely no-friction: cancel anytime, and your benefits simply run to the end of the period you already paid for.
 
@@ -7687,14 +7686,13 @@ Everything below is real, current, and reflects exactly what each tier gets — 
 | Rising Cards | Top pick | Top pick | Full list |
 | Value Finder screener | — | — | ✓ |
 | Bulk Pricer | — | — | ✓ |
-| Arbitrage Alerts (daily digest) | — | — | ✓ |
 | Condition Impact Calculator | — | — | ✓ |
 | Marketplace seller fee | — | 2% | **1%** |
 | Ad-free experience | — | — | ✓ |
 
 The pattern is deliberate: **nothing about seeing a price is ever gated.** A free account adds the things every serious collector eventually wants (alerts, a portfolio, and the Best Basket cart optimiser); Premium is entirely the pro tools and the seller discount on top of that.
 
-## The 6 tools you only get with Premium
+## The 5 tools you only get with Premium
 
 ### 1. Value Finder screener
 
@@ -7723,17 +7721,13 @@ Deal Finder is the one built specifically around arbitrage — the same card, pr
 
 Every gap is computed from **live listings, not a reference price**, and ranked by delivered cost (price plus estimated shipping) rather than sticker price alone — a $2 saving that costs $5 more to ship isn't a real saving, and Deal Finder already knows that. Free accounts get the top result only; Premium gets the full, sortable list across all four views.
 
-### 4. Arbitrage Alerts
-
-The newest addition to Premium: a **daily email digest of Deal Finder's best gaps**, delivered automatically — no separate opt-in, and one click to unsubscribe if you'd rather just check the page yourself. It's the same engine as Deal Finder above, just landing in your inbox instead of requiring a visit.
-
-### 5. Bulk Pricer
+### 4. Bulk Pricer
 
 Paste an entire want-list, trade pile or full collection, and Bulk Pricer matches **every card to its cheapest live store price at once**, with a running total. If you've ever priced out a stack of 40 cards one search at a time, this is the tool that turns it into one paste.
 
-(If you're after the cheapest way to actually **buy** a whole list rather than just price it, that's [Best Basket](/tools/best-basket) — it answers a genuinely different question, solving for the lowest total landed cost across stores once postage and free-shipping thresholds are factored in. It used to be Premium-only; it's free with any account now, so it's not counted among the six tools here.)
+(If you're after the cheapest way to actually **buy** a whole list rather than just price it, that's [Best Basket](/tools/best-basket) — it answers a genuinely different question, solving for the lowest total landed cost across stores once postage and free-shipping thresholds are factored in. It used to be Premium-only; it's free with any account now, so it's not counted among the five tools here.)
 
-### 6. Condition Impact Calculator
+### 5. Condition Impact Calculator
 
 ![The Condition Impact Calculator — estimating a card's value across NM, LP, MP, HP and DMG conditions](/blog/premium/06-condition-calculator.png)
 

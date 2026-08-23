@@ -78,12 +78,13 @@ jobs:
       # schedule. Do those by hand via maintenance.yml's db-push task.
       - name: Sync database schema (additive)
         env:
-          DATABASE_URL: ${{ secrets.RM8 || vars.RM8 || secrets.RM7 || vars.RM7 || secrets.DATABASE_URL || vars.DATABASE_URL }}
-          # Which of the chain above actually won, by NAME (never its value). lib/db.ts
-          # cannot work this out inside Actions: the chain is collapsed into one
-          # DATABASE_URL before the job starts, so process.env.RM5 is always unset there
-          # and its warning always said "DATABASE_URL". See src/lib/db.ts.
-          DB_SOURCE_NAME: ${{ (secrets.RM8 || vars.RM8) && 'RM8' || (secrets.RM7 || vars.RM7) && 'RM7' || 'DATABASE_URL' }}
+          DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
+          # RM9 is the only operational variable now (2026-08-23 cutover — see
+          # src/lib/db-chains.ts). This is set explicitly rather than left to
+          # lib/db.ts's own resolution because Actions collapses everything into
+          # one DATABASE_URL before the job starts, so process.env-based
+          # resolution can't see which secret actually won. See src/lib/db.ts.
+          DB_SOURCE_NAME: ${{ (secrets.RM9 || vars.RM9) && 'RM9' || 'UNSET' }}
         run: |
           if [ -z "${DATABASE_URL:-}" ]; then
             echo "::error::No database URL configured — cannot sync schema."
@@ -97,12 +98,13 @@ jobs:
           fi
       - name: Import prices
         env:
-          DATABASE_URL: ${{ secrets.RM8 || vars.RM8 || secrets.RM7 || vars.RM7 || secrets.DATABASE_URL || vars.DATABASE_URL }}
-          # Which of the chain above actually won, by NAME (never its value). lib/db.ts
-          # cannot work this out inside Actions: the chain is collapsed into one
-          # DATABASE_URL before the job starts, so process.env.RM5 is always unset there
-          # and its warning always said "DATABASE_URL". See src/lib/db.ts.
-          DB_SOURCE_NAME: ${{ (secrets.RM8 || vars.RM8) && 'RM8' || (secrets.RM7 || vars.RM7) && 'RM7' || 'DATABASE_URL' }}
+          DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
+          # RM9 is the only operational variable now (2026-08-23 cutover — see
+          # src/lib/db-chains.ts). This is set explicitly rather than left to
+          # lib/db.ts's own resolution because Actions collapses everything into
+          # one DATABASE_URL before the job starts, so process.env-based
+          # resolution can't see which secret actually won. See src/lib/db.ts.
+          DB_SOURCE_NAME: ${{ (secrets.RM9 || vars.RM9) && 'RM9' || 'UNSET' }}
           # eBay is optional — the import skips it if these aren't set.
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
@@ -139,12 +141,13 @@ jobs:
         # Populate the /sealed page (booster boxes/packs across AU/US). Nothing
         # else scheduled this before, so the table went empty.
         env:
-          DATABASE_URL: ${{ secrets.RM8 || vars.RM8 || secrets.RM7 || vars.RM7 || secrets.DATABASE_URL || vars.DATABASE_URL }}
-          # Which of the chain above actually won, by NAME (never its value). lib/db.ts
-          # cannot work this out inside Actions: the chain is collapsed into one
-          # DATABASE_URL before the job starts, so process.env.RM5 is always unset there
-          # and its warning always said "DATABASE_URL". See src/lib/db.ts.
-          DB_SOURCE_NAME: ${{ (secrets.RM8 || vars.RM8) && 'RM8' || (secrets.RM7 || vars.RM7) && 'RM7' || 'DATABASE_URL' }}
+          DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
+          # RM9 is the only operational variable now (2026-08-23 cutover — see
+          # src/lib/db-chains.ts). This is set explicitly rather than left to
+          # lib/db.ts's own resolution because Actions collapses everything into
+          # one DATABASE_URL before the job starts, so process.env-based
+          # resolution can't see which secret actually won. See src/lib/db.ts.
+          DB_SOURCE_NAME: ${{ (secrets.RM9 || vars.RM9) && 'RM9' || 'UNSET' }}
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
           EBAY_AFFILIATE_CAMPAIGN: ${{ secrets.EBAY_AFFILIATE_CAMPAIGN }}

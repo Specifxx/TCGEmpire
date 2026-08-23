@@ -64,69 +64,54 @@ import { OPERATIONAL_VARS, resolveUrl, resolveVar } from "./db-chains";
 const BIG_RESULT_ROWS = 500; // only size-check results at least this long (CPU)
 const BIG_RESULT_BYTES = 1_000_000;
 
-// RM7 is the CURRENT operational Neon project, cut over 2026-08-20. Ninth
-// rotation (DATABASE_URL → DATABASE_URL_2 → RM3 → RM4 → RM5 → DATABASE_URL →
-// DATABASE_URL_2 → RM6 → RM7). RM6 exhausted its 5 GB monthly network-transfer
-// allowance just THREE DAYS after the 2026-08-17 cutover onto it — the same
-// ~2 GB/day burn every prior project has shown.
+// RM9 is the ONLY operational Neon project, cut over 2026-08-23 — a deliberate
+// departure from every prior rotation (DATABASE_URL → DATABASE_URL_2 → RM3 →
+// RM4 → RM5 → DATABASE_URL → DATABASE_URL_2 → RM6 → RM7 → RM8), each of which
+// was a multi-entry FALLBACK CHAIN, current-first. Every real outage this
+// database has caused traced back to that shape, not to the database itself:
+// resolveVar() selects the first variable that is merely SET — precedence,
+// never health — so an exhausted CURRENT project stayed selected instead of
+// failing over, and ~84 `.catch(() => [])` sites across src/ turned the
+// resulting query failures into empty arrays. AN EXHAUSTED DATABASE PRESENTS
+// AS MISSING DATA, NOT AS AN ERROR PAGE. The 2026-08-22 outage is the sharpest
+// example: RM7 went over its transfer allowance, and the "rollback" RM8 turned
+// out to be reachable and completely empty because the migration that fills a
+// fallback had never been run — the site showed no in-stock listings for hours
+// before anyone thought to suspect the database. A single name trades away the
+// emergency-fallback lever, but it fails LOUDLY (P1001) instead of silently
+// serving garbage, which is the trade this project now makes on purpose.
 //
-// ⚠ THIS ROTATION IS NOT A FIX, AND THE NEXT ONE WON'T BE EITHER. Seven
-// consecutive projects have now been exhausted the same way, which makes this
-// a systemic read-volume problem, not bad luck with allowances. Rotating buys
-// days; it has never bought a fix. The burn rate itself is the open problem —
-// see the note on RetailerPrice below.
+// ⚠ THE BURN RATE ITSELF IS STILL UNSOLVED. Eight consecutive projects have
+// now been exhausted the same way (~2 GB/day), which makes this a systemic
+// read-volume problem, not bad luck with allowances. A new project buys time,
+// not a fix.
 //
-// SIZE CONTEXT FOR WHOEVER PICKS THIS UP: RetailerPrice is 77,861 rows (counted
-// during the 2026-08-14 cutover) against Card's 1,429. Any hot path that reads
+// SIZE CONTEXT FOR WHOEVER PICKS THIS UP: RetailerPrice is 81,452 rows (counted
+// during the 2026-08-23 cutover) against Card's 1,429. Any hot path that reads
 // RetailerPrice without a `take`/narrow `select`, or any cache that silently
 // stops caching it, moves tens of MB per request — which is the only shape of
 // bug that reaches 2 GB/day at this traffic level. Start there.
 //
-// THE CHAIN IS CURRENT-FIRST, NOT NEWEST-FIRST. Read the head of this list as
-// "whichever project is in service TODAY" — a precedence order, never a
-// timeline. Same convention as db-history.ts.
-//
 // THE NAME HAZARD, and it is worth reading before touching anything here.
 // prisma/schema.prisma reads env("DATABASE_URL") directly, and nearly every
 // script assigns `DATABASE_URL=<something> npx tsx …` to aim Prisma at a
-// database. The head of this chain is RM7, so anything that runs Prisma MUST
-// copy the winner into DATABASE_URL first or it will talk to a previous
-// project while the app talks to the current one. scripts/build-db-push.sh
-// does exactly that copy. Locally this all still resolves to the dev Postgres
-// in .env.local, which is why local dev is unaffected.
+// database. The operational variable is RM9, so anything that runs Prisma MUST
+// copy RM9 into DATABASE_URL first or it will talk to whatever DATABASE_URL
+// happens to hold while the app talks to RM9. scripts/build-db-push.sh does
+// exactly that copy. Locally this all still resolves to the dev Postgres in
+// .env.local, which is why local dev is unaffected.
 //
-// RM4's exhaustion is the sharpest example of what an unplanned rotation costs.
-// It went from a clean 43-minute price import at 2026-08-09 19:30 UTC to
+// RM4's exhaustion (2026-08-10) is the sharpest example of what an unplanned
+// rotation costs on its own: a clean 43-minute price import at 19:30 UTC to
 // refusing every connection by 04:35 the next morning, and because `next build`
 // prerenders 22 database-backed pages, every Vercel deploy failed outright from
 // that moment — with a bare `Error: Command "npm run build" exited with 1` and
 // nothing in it naming a database.
 //
-// THE CHAIN NOW HOLDS ONLY LIVE PROJECTS: RM7 (current), RM8 (rollback), and
-// DATABASE_URL. RM3/RM4/RM5/RM6/DATABASE_URL_2 were removed on 2026-08-20.
-//
-// WHY REMOVING THEM IS A CORRECTNESS FIX, NOT TIDYING. A retired project is
-// eventually DECOMMISSIONED, but its variable lingers in Vercel and GitHub long
-// after. This chain falls through on an UNSET variable — never on an
-// unreachable one — so a lingering dead name is not a safety net: the app
-// selects it, connects to nothing, and the failure reads as an outage rather
-// than a misconfiguration. A shorter chain fails faster and more honestly.
-//
-// Those projects are still reachable BY NAME from the migrate-* tasks in
-// .github/workflows/maintenance.yml, which is where draining a project before
-// switching it off belongs. Draining must not depend on the runtime chain.
-//
-// DATABASE_URL is last and is NOT a good production fallback. It is kept
-// because prisma/schema.prisma reads env("DATABASE_URL") literally and local
-// development sets only that name in .env.local.
-//
-// ⚠ RM8 IS NOT AUTOMATIC FAILOVER. Promoting it is deliberate: UNSET RM7 in
-// Vercel and GitHub, then redeploy. Health-based failover would mean a live
-// connection check on every cold start, against the very database whose
-// transfer allowance is the problem.
-//
-// ⚠ AN EMPTY RM8 IS WORSE THAN NO ROLLBACK. Run maintenance.yml's
-// `migrate-main-db-to-rm8` before it is ever needed, and re-run it periodically.
+// RM3 through RM8 and DATABASE_URL_2 are retired and reachable BY NAME from
+// the migrate-* tasks in .github/workflows/maintenance.yml, which is where
+// draining a project before switching it off belongs. Draining must not
+// depend on the runtime chain — and there is no runtime chain to depend on now.
 //
 // THE LIST ITSELF LIVES IN src/lib/db-chains.ts and is imported here. Everything
 // that runs in Node imports it too, so the copies that used to drift (seven
@@ -159,11 +144,10 @@ function withConnectTimeout(url: string | undefined, seconds: number): string | 
 
 // Which var actually won, by NAME (never the value — it contains credentials).
 // A Neon P1001 ("Can't reach database server at ep-…") names only the host, and
-// with three fallback vars plus a separate history database in play there is no
-// way to tell from the error alone WHICH client was pointed where. Logging the
-// winning var name once at module init makes the next P1001 self-diagnosing —
-// in particular it distinguishes "RM3 is down" from "RM3 is unset in this
-// environment, so we silently fell back to the exhausted old database".
+// with a separate history database also in play there is no way to tell from
+// the error alone WHICH client was pointed where. Logging the winning var name
+// once at module init makes the next P1001 self-diagnosing — in particular it
+// distinguishes "RM9 is down" from "RM9 is unset in this environment".
 const RESOLVED_SOURCE = resolveVar(OPERATIONAL_VARS) ?? "NONE";
 
 // DB_SOURCE_NAME: the same answer, supplied by whoever set the URL.
@@ -183,13 +167,13 @@ const RESOLVED_SOURCE = resolveVar(OPERATIONAL_VARS) ?? "NONE";
 // exactly as before.
 export const OPERATIONAL_URL_SOURCE = process.env.DB_SOURCE_NAME || RESOLVED_SOURCE;
 
-if (OPERATIONAL_URL_SOURCE !== "RM8") {
+if (OPERATIONAL_URL_SOURCE !== "RM9") {
   console.warn(
-    `[db] operational database resolved from ${OPERATIONAL_URL_SOURCE}, not RM8. ` +
-      `RM8 is the current project (cut over 2026-08-22, restored from RM6 after RM7 went over its ` +
-      `transfer allowance); RM7 sits behind it, holding the 2026-08-20..22 writes but unable to ` +
-      `serve until its allowance resets. If this appears in a Vercel build log, RM8 is missing ` +
-      `from that environment.`
+    `[db] operational database resolved from ${OPERATIONAL_URL_SOURCE}, not RM9. ` +
+      `RM9 is the only operational project as of the 2026-08-23 cutover — there is no fallback ` +
+      `chain anymore, so this means RM9 is simply missing from this environment. If this appears ` +
+      `in a Vercel build log, check Settings -> Environment Variables -> is "Production" (or ` +
+      `"Preview") ticked for RM9.`
   );
 }
 

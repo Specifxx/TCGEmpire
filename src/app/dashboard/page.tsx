@@ -96,8 +96,7 @@ export default async function DashboardPage() {
       </div>
 
       <p className="mt-6 text-center text-xs text-slate-600">
-        Ad-free is active across the site while you&apos;re Premium, and Arbitrage Alerts — a daily digest of today&apos;s
-        best flips and cross-region gaps — lands in your inbox automatically. Thanks for supporting RiftCompare.
+        Ad-free is active across the site while you&apos;re Premium. Thanks for supporting RiftCompare.
       </p>
     </div>
   );

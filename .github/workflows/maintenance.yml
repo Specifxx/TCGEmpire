@@ -150,12 +150,12 @@ jobs:
       # operate against a still-empty target. This is not hypothetical: on
       # 2026-08-22 RM8 was set but completely empty at cutover, and every
       # in-stock listing on the site vanished as a result.
-      DATABASE_URL: ${{ secrets.RM8 || vars.RM8 || secrets.RM7 || vars.RM7 || secrets.DATABASE_URL || vars.DATABASE_URL }}
-      # Which of the chain above actually won, by NAME (never its value). lib/db.ts
-      # cannot work this out inside Actions: the chain is collapsed into one
-      # DATABASE_URL before the job starts, so process.env.RM5 is always unset there
-      # and its warning always said "DATABASE_URL". See src/lib/db.ts.
-      DB_SOURCE_NAME: ${{ (secrets.RM8 || vars.RM8) && 'RM8' || (secrets.RM7 || vars.RM7) && 'RM7' || 'DATABASE_URL' }}
+      DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
+      # There is only one value now, but this stays for the same reason it did
+      # under the old chain: lib/db.ts cannot work this out inside Actions
+      # itself (everything collapses into one DATABASE_URL before the job
+      # starts), so the winning name is exported explicitly. See src/lib/db.ts.
+      DB_SOURCE_NAME: ${{ (secrets.RM9 || vars.RM9) && 'RM9' || 'UNSET' }}
       DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
     steps:
       - uses: actions/checkout@v4
@@ -283,7 +283,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.RH7 || vars.RH7 }}
           # Only ever used for a "did RH7 accidentally get set to the operational
           # database?" guard before this step truncates anything.
-          OPERATIONAL_URL: ${{ secrets.RM8 || vars.RM8 || secrets.RM7 || vars.RM7 || secrets.DATABASE_URL || vars.DATABASE_URL }}
+          OPERATIONAL_URL: ${{ secrets.RM9 || vars.RM9 }}
         run: |
           set -uo pipefail
 
@@ -474,7 +474,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
           # Only ever used for a "did HISTORY_DATABASE_URL_2 accidentally get set
           # to the operational database?" guard before this step truncates anything.
-          OPERATIONAL_URL: ${{ secrets.RM8 || vars.RM8 || secrets.RM7 || vars.RM7 || secrets.DATABASE_URL || vars.DATABASE_URL }}
+          OPERATIONAL_URL: ${{ secrets.RM9 || vars.RM9 }}
         run: |
           set -uo pipefail
 
@@ -663,7 +663,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
           # Only ever used for a "did HISTORY_DATABASE_URL_3 accidentally get set
           # to the operational database?" guard before this step truncates anything.
-          OPERATIONAL_URL: ${{ secrets.RM8 || vars.RM8 || secrets.RM7 || vars.RM7 || secrets.DATABASE_URL || vars.DATABASE_URL }}
+          OPERATIONAL_URL: ${{ secrets.RM9 || vars.RM9 }}
         run: |
           set -uo pipefail
 
@@ -835,7 +835,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.RH8 || vars.RH8 }}
           # Only for the "did RH8 accidentally get set to the operational database?"
           # guard below, before anything destructive runs.
-          OPERATIONAL_URL: ${{ secrets.RM8 || vars.RM8 || secrets.RM7 || vars.RM7 || secrets.DATABASE_URL || vars.DATABASE_URL }}
+          OPERATIONAL_URL: ${{ secrets.RM9 || vars.RM9 }}
         run: |
           set -uo pipefail
 
@@ -1035,7 +1035,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
           # Only ever used for a "did HISTORY_DATABASE_URL_4 accidentally get set
           # to the operational database?" guard before this step truncates anything.
-          OPERATIONAL_URL: ${{ secrets.RM8 || vars.RM8 || secrets.RM7 || vars.RM7 || secrets.DATABASE_URL || vars.DATABASE_URL }}
+          OPERATIONAL_URL: ${{ secrets.RM9 || vars.RM9 }}
         run: |
           set -uo pipefail
 
@@ -3070,7 +3070,7 @@ jobs:
         # so the generated client may not even load.
         if: inputs.task == 'fix-orphan-users'
         env:
-          TARGET_DATABASE_URL: ${{ secrets.RM8 || vars.RM8 || secrets.RM7 || vars.RM7 || secrets.DATABASE_URL || vars.DATABASE_URL }}
+          TARGET_DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
         run: |
           set -uo pipefail
           if [ -z "$TARGET_DATABASE_URL" ]; then
@@ -3353,12 +3353,12 @@ jobs:
       - name: Audit rarity across sets (read-only census)
         if: inputs.task == 'audit-rarity'
         env:
-          DATABASE_URL: ${{ secrets.RM8 || vars.RM8 || secrets.RM7 || vars.RM7 || secrets.DATABASE_URL || vars.DATABASE_URL }}
-          # Which of the chain above actually won, by NAME (never its value). lib/db.ts
-          # cannot work this out inside Actions: the chain is collapsed into one
-          # DATABASE_URL before the job starts, so process.env.RM5 is always unset there
-          # and its warning always said "DATABASE_URL". See src/lib/db.ts.
-          DB_SOURCE_NAME: ${{ (secrets.RM8 || vars.RM8) && 'RM8' || (secrets.RM7 || vars.RM7) && 'RM7' || 'DATABASE_URL' }}
+          DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
+          # There is only one value now, but this stays for the same reason it did
+          # under the old chain: lib/db.ts cannot work this out inside Actions
+          # itself (everything collapses into one DATABASE_URL before the job
+          # starts), so the winning name is exported explicitly. See src/lib/db.ts.
+          DB_SOURCE_NAME: ${{ (secrets.RM9 || vars.RM9) && 'RM9' || 'UNSET' }}
         run: npx tsx scripts/audit-rarity.ts
 
       - name: Audit VEN cards (read-only census)
@@ -3430,15 +3430,9 @@ jobs:
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
           # The orphan check needs the LIVE operational database to compare card
-          # ids against; without these it fell through to the retired RM5 and
-          # answered the one question this probe exists for against the wrong DB.
-          RM7: ${{ secrets.RM7 || vars.RM7 }}
-          RM8: ${{ secrets.RM8 || vars.RM8 }}
-          DATABASE_URL_2: ${{ secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL || vars.DATABASE_URL }}
-          RM5: ${{ secrets.RM5 || vars.RM5 }}
-          RM4: ${{ secrets.RM4 || vars.RM4 }}
-          RM3: ${{ secrets.RM3 || vars.RM3 }}
+          # ids against — this script iterates OPERATIONAL_VARS from
+          # src/lib/db-chains.ts directly, which is now just ["RM9"].
+          RM9: ${{ secrets.RM9 || vars.RM9 }}
         run: npx tsx scripts/probe-history-dbs.ts
 
       # Dry run unless dry_run is explicitly false — the inverse of every other
@@ -3455,15 +3449,9 @@ jobs:
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
           # The orphan check needs the LIVE operational database to compare card
-          # ids against; without these it fell through to the retired RM5 and
-          # answered the one question this probe exists for against the wrong DB.
-          RM7: ${{ secrets.RM7 || vars.RM7 }}
-          RM8: ${{ secrets.RM8 || vars.RM8 }}
-          DATABASE_URL_2: ${{ secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL || vars.DATABASE_URL }}
-          RM5: ${{ secrets.RM5 || vars.RM5 }}
-          RM4: ${{ secrets.RM4 || vars.RM4 }}
-          RM3: ${{ secrets.RM3 || vars.RM3 }}
+          # ids against — this script iterates OPERATIONAL_VARS from
+          # src/lib/db-chains.ts directly, which is now just ["RM9"].
+          RM9: ${{ secrets.RM9 || vars.RM9 }}
         run: |
           ARGS=""
           if [ -n "${{ inputs.source }}" ] && [ "${{ inputs.source }}" != "RM4" ]; then
@@ -3498,13 +3486,14 @@ jobs:
         run: npx tsx scripts/audit-indexability.ts
 
       - name: Audit database egress (read-only forensics)
-        # THE OPEN INCIDENT. Nine Neon projects have been burned through at
+        # THE OPEN INCIDENT. Ten Neon projects have been burned through at
         # ~2 GB/day, each dying 2-3 days after it was cut over to. The
         # 2026-08-14 sweep found and fixed a segment-TTL inversion that
         # regenerated /card/[id] 288x a day — and the rate did not change: RM6
         # died in 3 days and RM7 in 2 days AFTER that fix, taking the site down.
         # So the remaining burn has never been measured, only hypothesised, and
-        # RM8 is on the same clock right now.
+        # RM9 — the sole operational project since the 2026-08-23 cutover, with
+        # no fallback chain behind it anymore — is on the same clock right now.
         #
         # This step measures it instead of guessing. It writes nothing: only
         # pg_stat_database, pg_stat_user_tables and pg_stat_statements, plus one
