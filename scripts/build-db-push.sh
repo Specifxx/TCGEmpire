@@ -18,25 +18,24 @@
 # appears in, so that question never has to be asked again.
 set -uo pipefail
 
-# The CURRENT project for each database, i.e. the first entry of the resolution
-# chain in src/lib/db.ts and src/lib/db-history.ts respectively. Declared once,
-# here, because the "you resolved to a dead fallback" warnings below used to
-# hard-code the name in the condition AND in the message text — three places per
-# database, and a cutover updated the chain but not the warnings. That is not
-# hypothetical: after the RM3->RM4 and RH6->RH7 cutovers on 2026-08-04, every
-# production deploy printed a ::warning:: naming the CURRENT database as the
-# "exhausted/dead fallback". A warning that cries wolf on every green build is
-# worse than no warning, because it teaches you to scroll past the one line that
-# was supposed to answer "which database did this build actually write to?".
+# The CURRENT project for each database. Declared once, here, because the "you
+# resolved to a dead fallback" warnings below used to hard-code the name in the
+# condition AND in the message text — three places per database, and a cutover
+# updated the chain but not the warnings. That is not hypothetical: after the
+# RM3->RM4 and RH6->RH7 cutovers on 2026-08-04, every production deploy printed
+# a ::warning:: naming the CURRENT database as the "exhausted/dead fallback". A
+# warning that cries wolf on every green build is worse than no warning,
+# because it teaches you to scroll past the one line that was supposed to
+# answer "which database did this build actually write to?".
 #
 # tests/db-chain.test.ts asserts these two values still match the head of each
 # chain, so the next cutover fails a test instead of quietly lying in a log.
-# Rotated onto RM8 on 2026-08-22: RM7 went over its 5 GB monthly transfer
-# allowance just TWO days after the 2026-08-20 cutover onto it — the same
-# ~2 GB/day burn every prior project has shown. RM8 was empty at that point
-# (the pre-stage task had never been run) and was restored from RM6 first.
-# See the long note on OPERATIONAL_VARS in src/lib/db-chains.ts.
-CURRENT_OP="RM8"
+#
+# CUT OVER TO RM9 ON 2026-08-23: this is no longer a rotation onto another
+# fallback-chain member — RM9 is the ONLY operational variable now (see the
+# long note on OPERATIONAL_VARS in src/lib/db-chains.ts for why the chain
+# shape itself, not just the project, was the thing being replaced).
+CURRENT_OP="RM9"
 # Rotated again on 2026-08-23: HISTORY_DATABASE_URL_4 approached its 5 GB monthly
 # allowance only two days after taking over, and RH8 — a NEW project, empty
 # before the restore — took its place. The chains are CURRENT-first, not
@@ -46,58 +45,30 @@ CURRENT_HIST="RH8"
 # Only push schema for a real Vercel production/preview build with a database
 # configured. A local `next build` (no database vars) must not try to reach anything.
 #
-# GATES ON THE WHOLE OPERATIONAL CHAIN, not bare DATABASE_URL. The original check
-# was `['production','preview'].includes(VERCEL_ENV) && DATABASE_URL`, written when
-# DATABASE_URL was the only operational variable. It has since become
-# RM7 || RM8 || RM5 || DATABASE_URL_2 || DATABASE_URL || RM4 || RM3 || RM6 (lib/db.ts), and lib/db.ts explicitly
-# tells the owner the older vars can eventually be deleted — at which point
-# this line would exit 0 on every deploy and silently stop pushing schema to
-# BOTH the operational AND the history database, while logging a
-# benign-looking "skipping". A green deploy against an un-migrated database is
-# exactly the failure this script exists to prevent.
+# GATES ON RM9, not bare DATABASE_URL. The original check was
+# `['production','preview'].includes(VERCEL_ENV) && DATABASE_URL`, written when
+# DATABASE_URL was the only operational variable, then widened as the chain grew
+# and narrowed back down here on 2026-08-23 when the chain was replaced by a
+# single name. See the long note on OPERATIONAL_VARS in src/lib/db-chains.ts for
+# why a fallback chain was replaced rather than just rotated this time.
 if ! { [ "${VERCEL_ENV:-}" = "production" ] || [ "${VERCEL_ENV:-}" = "preview" ]; } \
-   || [ -z "${RM8:-}${RM7:-}${DATABASE_URL:-}" ]; then
-  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM8 / RM7 / DATABASE_URL) — skipping schema push."
+   || [ -z "${RM9:-}" ]; then
+  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM9) — skipping schema push."
   exit 0
 fi
 
-# CURRENT-first, same order as lib/db.ts and every GitHub Actions workflow. Unlike
-# the app runtime (which can silently keep serving from a stale connection until
-# the next cold start), this ALWAYS reflects the current build's actual environment.
-#
-# EVERY BRANCH EXCEPT THE DATABASE_URL ONE MUST `export`, because DATABASE_URL
-# is the only name `prisma db push` reads. Now that the head is RM8, the FIRST
-# branch is the one that must copy — and getting this wrong is silent and
-# expensive, because `prisma db push` would migrate a PREVIOUS project while
-# the app (src/lib/db-chains.ts, RM8-first) reads the current one. A green deploy
+# EXPORT, because DATABASE_URL is the only name `prisma db push` reads — RM9
+# must be copied into it or `prisma db push` would migrate whatever DATABASE_URL
+# happens to hold while the app (src/lib/db-chains.ts) reads RM9. A green deploy
 # against an un-migrated database is exactly the failure this script exists to
 # prevent.
-if [ -n "${RM8:-}" ]; then
-  export DATABASE_URL="$RM8"
-  SOURCE="RM8"
-elif [ -n "${RM7:-}" ]; then
-  # The previous project, demoted 2026-08-22 when it went over its transfer
-  # allowance. Reached by UNSETTING RM8 — this chain falls through on an unset
-  # variable, never on an unreachable one.
-  export DATABASE_URL="$RM7"
-  SOURCE="RM7"
-else
-  # DATABASE_URL is last and is NOT a good production fallback — it is kept
-  # because prisma/schema.prisma reads that literal name and local dev sets only
-  # it. Retired projects (RM3/RM4/RM5/RM6/DATABASE_URL_2) were removed from this
-  # chain on 2026-08-20: a decommissioned project whose variable lingers is not a
-  # safety net, it is a trap. See src/lib/db-chains.ts.
-  SOURCE="DATABASE_URL"
-fi
-# Name the winner, never the value (it's a credential). This is the one line that
-# turns "P1001 against some unfamiliar host" into an immediate answer: if SOURCE is
-# anything other than $CURRENT_OP, that variable is missing from THIS Vercel
-# environment/scope — check Settings -> Environment Variables -> is "Production"
-# (or "Preview") ticked.
+export DATABASE_URL="$RM9"
+SOURCE="RM9"
+# Name the winner, never the value (it's a credential). There is only one
+# possible value now (the gate above already required RM9 to be set), but this
+# stays as the one line that answers "which database did this build actually
+# write to?" without anyone having to guess from a bare P1001 host.
 echo "[build-db-push] operational DB source for this build: $SOURCE"
-if [ "$SOURCE" != "$CURRENT_OP" ]; then
-  echo "::warning::[build-db-push] ${CURRENT_OP} is not visible in this build (VERCEL_ENV=${VERCEL_ENV:-unset}) — falling back to ${SOURCE}, which lib/db.ts documents as an exhausted/dead fallback. If db push below fails with P1001, this is almost certainly why."
-fi
 
 # A failed push doesn't fail the build — see the block comment at the bottom for why.
 if ! prisma db push --skip-generate --accept-data-loss; then

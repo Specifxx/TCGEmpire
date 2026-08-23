@@ -40,48 +40,38 @@
  */
 
 /**
- * Operational database (Card, RetailerPrice, users, marketplace), CURRENT-first.
+ * Operational database (Card, RetailerPrice, users, marketplace).
  *
- *   RM8            — in service since 2026-08-22, restored from RM6.
- *   RM7            — served 2026-08-20..22. Demoted, NOT removed: it still holds
- *                    the writes from that window, so it is worth draining forward
- *                    once its allowance resets. It cannot serve today.
- *   DATABASE_URL   — last, and kept for two reasons that are not "it is a good
- *                    fallback": prisma/schema.prisma reads env("DATABASE_URL")
- *                    literally, and local development sets only that name in
- *                    .env.local. In production it should be treated as dead.
+ *   RM9 — the ONLY operational variable, in service since 2026-08-23. This is a
+ *         deliberate departure from every prior rotation: RM3 through RM8 were
+ *         each a FALLBACK CHAIN (CURRENT-first, falling through to older, often
+ *         exhausted projects), and every real outage this project has had on
+ *         this database traces back to that shape, not to the database itself.
  *
- * ── THE 2026-08-22 OUTAGE, because the shape will recur ─────────────────────
- * The site showed NO IN-STOCK LISTINGS. Nothing was broken in the query layer:
- * RM7 had gone over its Neon transfer allowance two days after cutover, and
+ * ── WHY THIS IS ONE NAME NOW, NOT ANOTHER CHAIN ──────────────────────────────
  * resolveVar() below selects the first variable that is merely SET — precedence,
- * never health — so an exhausted RM7 stayed selected. The reads failed, and ~84
- * `.catch(() => [])` sites across src/ turned those failures into empty arrays.
+ * never health. With a multi-entry chain, an exhausted CURRENT project doesn't
+ * error, it silently demotes every read to a stale or empty fallback, and ~84
+ * `.catch(() => [])` sites across src/ turn that into missing data rather than
+ * an error page (see the 2026-08-22 outage this comment used to describe in
+ * detail — RM7 exhausted its transfer allowance, the "rollback" RM8 turned out
+ * to be reachable and completely empty because the migration that fills a
+ * fallback had never been run, and the site showed no in-stock listings for
+ * hours before anyone thought to suspect the database). A single name can still
+ * fail, but it fails LOUDLY — P1001, not silence — which is the trade this
+ * project now makes deliberately: no emergency fallback lever, but no more
+ * silently-serving-garbage incidents either.
  *
- * AN EXHAUSTED DATABASE PRESENTS AS MISSING DATA HERE, NOT AS AN ERROR PAGE.
- * If data disappears site-wide, suspect this chain before suspecting the code
- * that reads it, and run the probe-databases maintenance task first.
- *
- * The rollback was also a fiction: RM8 was in this chain as "the designated
- * rollback" the whole time, but the migrate-main-db-to-rm8 task that fills it had
- * never been run, so the 2026-08-22 probe found it REACHABLE AND COMPLETELY EMPTY
- * — no schema at all. A named fallback is not a fallback until something has
- * copied data into it. It was restored from RM6 before this reorder shipped.
- *
- * ── WHY THE ORDER CHANGED RATHER THAN RM7 BEING UNSET IN VERCEL ─────────────
- * Both promote RM8, but only one moves the WRITERS too. The GitHub Actions
- * chains — notably refresh-prices.yml, the price importer — resolve
- * `secrets.RM7 || vars.RM7 || secrets.RM8 || ...`, the same precedence as the
- * app. Unsetting RM7 in Vercel alone would have moved the app to RM8 while the
- * importer kept writing to a dead RM7: stock would never have refreshed and the
- * cutover would have looked like it failed. Flipping the ORDER here and in every
- * YAML chain in lockstep moves readers and writers together in one deploy, and
- * needs no environment change at all.
- *
- * RM3/RM4/RM5/RM6/DATABASE_URL_2 stay out of the runtime chain — retired, and
- * available to the migration tasks by explicit name.
+ * RM3 through RM8 and DATABASE_URL_2 are retired and stay out of this chain —
+ * available to the migration tasks by explicit name (see
+ * migrate-main-db-to-rm9 and its predecessors in .github/workflows/maintenance.yml).
+ * DATABASE_URL is ALSO not in this chain anymore: it is read directly by
+ * prisma/schema.prisma's env("DATABASE_URL") for local dev and by the Prisma
+ * CLI, never by the running app (src/lib/db.ts constructs PrismaClient with an
+ * explicit datasourceUrl override), so its presence or absence here has no
+ * effect on what the app resolves to.
  */
-export const OPERATIONAL_VARS = ["RM8", "RM7", "DATABASE_URL"] as const;
+export const OPERATIONAL_VARS = ["RM9"] as const;
 
 /**
  * History database (PriceHistory, ClickEvent), CURRENT-first.
