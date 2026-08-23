@@ -86,35 +86,37 @@ export const OPERATIONAL_VARS = ["RM8", "RM7", "DATABASE_URL"] as const;
 /**
  * History database (PriceHistory, ClickEvent), CURRENT-first.
  *
- *   HISTORY_DATABASE_URL_4 — in service since 2026-08-21. A RECYCLED project
- *                            name: the 2026-08-21 probe found it still holding
- *                            195,574 orphaned rows (0% card-id match) from its
- *                            earlier term, same as when it was first removed
- *                            from this chain — the migrate-history-db-to-hdu4
- *                            task TRUNCATED it before restoring a fresh,
- *                            row-count-verified copy of _3 (Card 1,434/1,434,
- *                            ClickEvent 698/698, PriceHistory 293,094/293,094).
- *   HISTORY_DATABASE_URL_3 — the rollback: served from 2026-08-19 until this
- *                            cutover, so it holds every row written in that
- *                            window and is reachable.
+ *   RH8                    — in service since 2026-08-23. A NEW project, created
+ *                            for this cutover, so it started genuinely empty
+ *                            (Card/ClickEvent/PriceHistory all 0 before the
+ *                            restore) and carries no orphaned term of its own.
+ *                            migrate-history-db-to-rh8 restored a row-count
+ *                            verified copy of _4: Card 1,434/1,434, ClickEvent
+ *                            698/698, PriceHistory 306,015/306,015.
+ *   HISTORY_DATABASE_URL_4 — the rollback: served 2026-08-21 to 2026-08-23 and
+ *                            holds every row written in that window. Near its
+ *                            transfer allowance, which is why this rotation
+ *                            happened, but still reachable.
  *   DATABASE_URL           — the terminal case, meaning "no separate history
  *                            project is configured; history shares the
  *                            operational database". db-history.ts's
  *                            historyIsSplit depends on this staying last.
  *
- * HISTORY_DATABASE_URL (bare) drops out of this cutover — it was the
- * PREVIOUS rollback (byte-identical to _2/_3's 2026-08-04..09 window and 100%
- * joinable per the 2026-08-21 probe), but that role now belongs to _3, and a
- * chain only needs one rollback. It is still reachable, just no longer read.
- * HISTORY_DATABASE_URL_2 was removed on 2026-08-20 (its allowance is spent).
- * RH5/RH7 were removed as orphaned — every survey to date, including
- * 2026-08-21, found 0% of their card ids resolve against the live catalogue,
- * so they cannot render a chart even when they answer. RH6 still holds the
- * deep 2026-06-06..08-04 history and IS joinable, but it is a migration
- * source to be drained forward, not something the app should ever read from
- * directly.
+ * RH5 IS DELIBERATELY ABSENT, and not because it is orphaned. The 2026-08-23
+ * probe found it holding User=85, CollectionCard=374, Order=4,
+ * MarketplaceListing=11, RetailerPrice=39,635 — a full OPERATIONAL snapshot from
+ * an early term, not a history project at all. It was briefly the intended target
+ * of this rotation; the migration's User-row guard refused it. It is also one of
+ * the account-recovery sources probe-databases exists to find, so it should be
+ * left intact rather than reused.
+ *
+ * HISTORY_DATABASE_URL_3 drops out of this cutover (it was _4's rollback, and a
+ * chain only needs one). HISTORY_DATABASE_URL (bare) and _2 were superseded
+ * earlier. RH7 is orphaned — 0% of its card ids resolve against the live
+ * catalogue. RH6 still holds the deep 2026-06-06..08-04 history and IS joinable,
+ * but it is a migration source to be drained forward, not a runtime target.
  */
-export const HISTORY_VARS = ["HISTORY_DATABASE_URL_4", "HISTORY_DATABASE_URL_3", "DATABASE_URL"] as const;
+export const HISTORY_VARS = ["RH8", "HISTORY_DATABASE_URL_4", "DATABASE_URL"] as const;
 
 /** First variable in `vars` that is actually set, by NAME — never its value. */
 export function resolveVar(vars: readonly string[]): string | null {

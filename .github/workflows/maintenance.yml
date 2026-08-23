@@ -171,14 +171,14 @@ jobs:
           # The click/price-history tables can live in a SECOND Neon project
           # (src/lib/db-history.ts). Ordinary pushes never reach it, so new columns
           # (e.g. ClickEvent.path) 500 the admin clicks page until pushed here too.
-          # HISTORY_DATABASE_URL_4 is the CURRENT project (2026-08-21, after
+          # RH8 is the CURRENT project (2026-08-23, after
           # HISTORY_DATABASE_URL_3 went over its 5 GB Neon network-transfer allowance —
           # see db-history.ts, which explains why this chain is CURRENT-first
           # rather than newest-first). HISTORY_DATABASE_URL_3 is the rollback;
           # everything below it is dead. This is a schema-push TARGET chain, so it
           # mirrors the app's precedence exactly — pushing a new column into any
           # project other than the one the app reads is how a green deploy 500s.
-          HISTORY_DB: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 || secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 || secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 || secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL || secrets.RH7 || vars.RH7 || secrets.RH6 || vars.RH6 || secrets.RH5 || vars.RH5 }}
+          HISTORY_DB: ${{ secrets.RH8 || vars.RH8 || secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 || secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 || secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 || secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL || secrets.RH7 || vars.RH7 || secrets.RH6 || vars.RH6 }}
         run: |
           # --accept-data-loss: some schema changes are intentionally destructive
           # (e.g. dropping a removed feature's tables/columns) — prisma db push
@@ -224,13 +224,13 @@ jobs:
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
         run: |
-          TARGET="${HISTORY_DATABASE_URL_4:-${HISTORY_DATABASE_URL_3:-${HISTORY_DATABASE_URL_2:-${HISTORY_DATABASE_URL:-${RH7:-${RH6:-$RH5}}}}}}"
+          TARGET="${RH8:-${HISTORY_DATABASE_URL_4:-${HISTORY_DATABASE_URL_3:-${HISTORY_DATABASE_URL_2:-${HISTORY_DATABASE_URL:-${RH7:-$RH6}}}}}}"
           if [ -z "$TARGET" ]; then
-            echo "::error::No target history DB visible to Actions (HISTORY_DATABASE_URL_4 / _3 / _2 / HISTORY_DATABASE_URL / RH7 / RH6 / RH5)."
+            echo "::error::No target history DB visible to Actions (RH8 / HISTORY_DATABASE_URL_4 / _3 / _2 / HISTORY_DATABASE_URL / RH7 / RH6)."
             exit 1
           fi
-          if [ -z "${HISTORY_DATABASE_URL_4:-}" ]; then
-            echo "::warning::HISTORY_DATABASE_URL_4 is not visible to Actions — this is copying into a project that is NOT the current one. Add it under Settings → Secrets and variables → Actions."
+          if [ -z "${RH8:-}" ]; then
+            echo "::warning::RH8 is not visible to Actions — this is copying into a project that is NOT the current one. Add it under Settings → Secrets and variables → Actions."
           fi
           echo "Pushing schema to the target history database…"
           # Non-fatal: a forked history DB can carry EXTRA columns this ref's schema
