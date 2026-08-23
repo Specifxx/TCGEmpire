@@ -245,14 +245,26 @@ export const PENDING_PERMISSION_UNRESOLVED: PermissionBlockedCandidate[] = [
 // thing was requested for. Everywhere else in the eurozone the trade is far more
 // Shopify-native — DE, AT, IT, PT, NL and BE are all represented there.
 //
-// A WOOCOMMERCE ADAPTER IS THE HIGHEST-VALUE UNBLOCK AVAILABLE IN THIS MARKET.
-// It is the largest platform bucket here by a wide margin (~72 of the eurozone
-// non-Shopify hits), and unlike PrestaShop it has a well-known public read
-// surface: the WordPress Store API at /wp-json/wc/store/v1/products, which is
-// designed to be readable unauthenticated. CONFIRM THAT ON ONE REAL STORE FIRST —
-// individual shops disable the Store API, and a 404 there produces exactly the
-// silent-nothing failure this file's header warns about, not an error anyone
-// would notice.
+// ── THE WOOCOMMERCE HALF OF THIS IS DONE (2026-08-23, same day) ──────────────
+// This section previously said a WooCommerce adapter was the highest-value
+// unblock in this market. It was, and it was built: lib/woocommerce.ts reads the
+// WordPress Store API (/wp-json/wc/store/v1), both importers understand a
+// `platform: "woocommerce"` store, and 36 eurozone Woo shops — 30 of them
+// Spanish — are now in RETAILERS. What follows is what the adapter did NOT
+// resolve, kept because the next pass should not re-derive it:
+//
+//   * PRESTASHOP IS STILL BLOCKED. It has no equivalent public read surface, and
+//     it is the platform of the shop that asked to be listed (below). ~27 of the
+//     Spanish shops found are on it.
+//   * OF THE 224 NON-SHOPIFY DOMAINS PROBED, 153 SERVED NO STORE API AT ALL —
+//     either not WooCommerce, or WooCommerce with the Store API disabled. A shop
+//     being "WooCommerce" per a page-source sniff does not mean it is readable.
+//   * THE WOO SHOPS CARRY NO SINGLES. Measured, not assumed: across all 41
+//     eurozone Woo stores with a Riftbound category, exactly ONE had a singles
+//     category and it held ONE card. So the adapter bought a real EUR sealed
+//     market and almost nothing for the singles comparison — which is the honest
+//     answer to "will an adapter get those shops in", and the reason the entries
+//     below are still worth keeping rather than deleting as solved.
 export interface PendingEuStoreCandidate {
   name: string;
   base: string; // origin, no trailing slash

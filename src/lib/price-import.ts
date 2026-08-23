@@ -17,9 +17,22 @@ import { ALL_FALLBACK_RETAILERS, pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DA
 import { currencyOf, isoCountry, priceField, type Country } from "./country";
 import { USD_TO } from "./fx";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows } from "./scrape-http";
+import { decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, productUrl, wooVariants } from "./woocommerce";
 
 export interface ShopifyVariant { title: string; price: string; available: boolean }
-export interface ShopifyProduct { title: string; handle: string; variants: ShopifyVariant[] }
+export interface ShopifyProduct {
+  title: string;
+  handle: string;
+  variants: ShopifyVariant[];
+  // The product's real page URL. Shopify products don't set it — their URL is
+  // always `${base}/products/${handle}`, which productUrl() below builds. A
+  // WooCommerce product MUST set it: its permalink is whatever the shop's
+  // WordPress permalink structure says (/producto/<slug>/, /tienda/<cat>/<slug>/,
+  // …), so the Shopify shape would produce a 404 on every outbound buy link —
+  // the click that earns the site money, pointed at a dead page.
+  url?: string;
+}
+
 
 // Calendar day (date-only) in Australia/Sydney, used as the price-history x-axis
 // bucket so there's exactly one snapshot per card per local day.
@@ -301,6 +314,18 @@ async function verifyCheapestListings(onlyCountry?: string): Promise<number> {
   // cache-bust query param — that returned a stale/blocked response from the runner;
   // the plain URL returns the live price) with a browser UA, and one retry.
   async function fetchProductPrice(url: string, country: string): Promise<{ priceCents: number } | null> {
+    // `${url}.json` is a SHOPIFY convention. A WooCommerce product URL is a
+    // WordPress permalink (/producto/<slug>/ …) with no .json sibling, so this
+    // would spend two requests per listing to get two 404s and return null —
+    // which the caller reads as "couldn't verify, keep the feed price", i.e. the
+    // right outcome reached the expensive way. Skipping outright is free and
+    // says what is actually true: there is nothing to verify against here.
+    //
+    // Costs nothing today — the Woo stores in RETAILERS contribute sealed, not
+    // RetailerPrice rows, so none of their URLs reach this function — and stops
+    // that from silently becoming a per-listing double request the day one of
+    // them starts listing singles.
+    if (!/\/products\//.test(url)) return null;
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const res = await fetch(`${url}.json?country=${isoCountry(country as Country)}`, {
@@ -706,6 +731,66 @@ export function ebayMarketsForDay(dayIndex: number): EbayMarketCfg[] {
 // EBAY_CA_RETAILER moved to constants.ts (2026-08-20) so sealed-import.ts can
 // share it without an import cycle — see the note there. Rows here are still
 // derived from the US pass, not a separate search; see the write site below.
+
+/**
+ * Every Riftbound product a SHOPIFY store lists, de-duplicated across its
+ * overlapping collections. Extracted from importPrices' loop when WooCommerce
+ * became a second platform — the loop now picks a fetcher and knows nothing else
+ * about how either platform is read.
+ */
+async function fetchShopifyStoreProducts(store: RetailerInfo): Promise<ShopifyProduct[]> {
+  // Auto-discover the store's Riftbound collections; fall back to any handles
+  // configured explicitly in retailers.ts.
+  let handles = await discoverRiftboundCollections(store.base);
+  if (!handles.length) handles = store.collections ?? [];
+  handles = Array.from(new Set([...handles, ...(store.collections ?? [])]));
+
+  const products: ShopifyProduct[] = [];
+  const seen = new Set<string>();
+  for (const handle of handles) {
+    for (const p of await fetchCollection(store, handle)) {
+      if (seen.has(p.handle)) continue; // de-dup across overlapping collections
+      seen.add(p.handle);
+      products.push(p);
+    }
+  }
+  return products;
+}
+
+/**
+ * The same, for a WOOCOMMERCE store, via the WordPress Store API.
+ *
+ * Returns the SHOPIFY product shape deliberately. Everything downstream —
+ * resolveCardId, MULTI_CARD, conditionRank, the write side — is shared, and the
+ * cheapest way to keep it shared is to make the adapter responsible for speaking
+ * the shape the rest of the file already speaks. A parallel Woo-flavoured
+ * pipeline would have to re-implement every one of those and would drift.
+ *
+ * NOTE ON ?country=: there is no equivalent here, and none is needed. Shopify
+ * Markets serves a different price per visitor country, which is why the Shopify
+ * fetcher must force one; a WooCommerce shop has ONE price list and states its
+ * currency on every product (see lib/woocommerce.ts). The probe checks that
+ * currency matches the market before a store is ever added.
+ */
+async function fetchWooStoreProducts(store: RetailerInfo): Promise<ShopifyProduct[]> {
+  const allowed = await robotsAllows(store.base);
+  if (!allowed("/wp-json/wc/store/v1/products")) {
+    console.warn(`${store.name}: robots.txt disallows the WooCommerce Store API — skipping.`);
+    return [];
+  }
+  const categories = await discoverWooRiftboundCategories(store.base, store.collections ?? []);
+  const products: ShopifyProduct[] = [];
+  const seen = new Set<number>();
+  for (const [i, id] of categories.entries()) {
+    if (i > 0) await sleep(REQUEST_DELAY_MS);
+    for (const p of await fetchWooCategory(store.base, id)) {
+      if (seen.has(p.id)) continue; // de-dup across overlapping categories
+      seen.add(p.id);
+      products.push({ title: decodeEntities(p.name), handle: p.slug, variants: wooVariants(p), url: p.permalink });
+    }
+  }
+  return products;
+}
 
 export async function refreshEbayMarkets(
   cards: { id: string; name: string; setCode: string; collectorNumber: string; isPromo: boolean }[]
@@ -1394,21 +1479,10 @@ export async function importPrices(): Promise<ImportSummary> {
   for (const store of RETAILER_LIST) {
     const cc = store.country ?? "AU";
     if (onlyCountry && cc !== onlyCountry) continue;
-    // Auto-discover the store's Riftbound collections; fall back to any handles
-    // configured explicitly in retailers.ts.
-    let handles = await discoverRiftboundCollections(store.base);
-    if (!handles.length) handles = store.collections ?? [];
-    handles = Array.from(new Set([...handles, ...(store.collections ?? [])]));
-
-    const products: ShopifyProduct[] = [];
-    const seen = new Set<string>();
-    for (const handle of handles) {
-      for (const p of await fetchCollection(store, handle)) {
-        if (seen.has(p.handle)) continue; // de-dup across overlapping collections
-        seen.add(p.handle);
-        products.push(p);
-      }
-    }
+    const products =
+      store.platform === "woocommerce"
+        ? await fetchWooStoreProducts(store)
+        : await fetchShopifyStoreProducts(store);
     if (!products.length) {
       summary.stores.push({ name: store.name, products: 0, priced: 0, matched: 0, unmatched: 0 });
       continue;
@@ -1464,7 +1538,7 @@ export async function importPrices(): Promise<ImportSummary> {
         retailer: store.key,
         retailerName: store.name,
         title: p.title,
-        url: `${store.base}/products/${p.handle}`,
+        url: productUrl(store.base, p),
         condition: best.title && best.title !== "Default Title" ? best.title : null,
         isFoil: /foil/i.test(p.title),
         priceCents,

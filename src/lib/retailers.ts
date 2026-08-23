@@ -28,6 +28,20 @@ export interface RetailerInfo {
   // eBay runs for AU + US daily; UK, SG and EU take turns one per day (see
   // EBAY_ALWAYS_MARKETS / EBAY_ROTATING_MARKETS in price-import.ts).
   country?: "AU" | "US" | "UK" | "SG" | "CA" | "EU";
+  // Storefront platform. Omitted = "shopify", which every store here was until
+  // 2026-08-23 — the importer's whole discovery path was built around Shopify's
+  // /collections/<handle>/products.json.
+  //
+  // "woocommerce" reads the WordPress Store API instead (/wp-json/wc/store/v1 —
+  // see lib/woocommerce.ts). This is NOT cosmetic metadata: pointing the Shopify
+  // path at a Woo store does not fail, it silently finds nothing, which is the
+  // trap lib/pending-platforms.ts's header describes. Get it wrong and the store
+  // gets a page on /stores/tracked that never shows a price.
+  //
+  // Verify a store's platform with the matching probe before setting this —
+  // scripts/probe-eu-stores.ts for Shopify, scripts/probe-woocommerce-stores.ts
+  // for Woo — rather than inferring it from the domain or the theme.
+  platform?: "shopify" | "woocommerce";
 }
 
 export const RETAILERS: Record<string, RetailerInfo> = {
@@ -1699,11 +1713,19 @@ export const RETAILERS: Record<string, RetailerInfo> = {
   //     access; absence of a search hit is not proof of absence of stock.
 
   // ---- Eurozone stores (country: "EU"; prices in EUR via ?country=ES) --------
-  // New market, added 2026-08-23. Thirty stores across NINE eurozone countries
-  // (ES 9, DE 7, AT 5, IT 3, PT 2, HR/FR/BE/NL 1 each) — the point of drawing
+  // New market, added 2026-08-23. NINETY-SIX stores across TEN eurozone countries
+  // — ES 45, DE 13, IT 10, FR 7, AT 6, PT 6, NL 3, HR 3, BE 2, CY 1 — making the
+  // EU the largest market on the site by store count. That is the point of drawing
   // the market as the whole eurozone rather than one country (see lib/country.ts's
   // header note): no single member state has enough Riftbound stores to price a
   // catalogue from, which is exactly why the Germany-only market lasted a day.
+  //
+  // They arrive in THREE blocks, and the difference between them matters:
+  //   1. this one — 30 Shopify stores, the top of the in-stock ranking;
+  //   2. "Eurozone, round 2" below — 30 more Shopify stores, thinner;
+  //   3. "Eurozone WOOCOMMERCE stores" below that — 36 stores on a different
+  //      platform entirely, which are SEALED-ONLY for Riftbound. Read that
+  //      block's own header before expecting singles prices from them.
   //
   // EVERY ONE OF THESE WAS DIRECTLY VERIFIED, not search-synthesised — unlike the
   // US and CA batches above, which say so in their own headers. Each cleared
@@ -2048,6 +2070,761 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     country: "EU",
   },
 
+  // ---- Eurozone, round 2 (2026-08-23, same pass) -----------------------------
+  // The other 30 stores the sweep verified. The first block above was cut to 30
+  // to match a "20-30" brief; the brief then changed to "as many as possible",
+  // and these were already probed and already passing, so there was nothing left
+  // to research — every one cleared the same bar: Shopify feed readable,
+  // robots.txt permits it, a Riftbound collection with in-stock product, and
+  // priceCurrency EUR proven on a product page under ?country=ES.
+  //
+  // They are THINNER than the first block by design — that block took the top of
+  // the in-stock ranking, so these run from ~10 listings down to 1. A store with
+  // one listing is not a mistake here: it costs one HTTP request per import, its
+  // store page auto-noindexes below STORE_THIN_THRESHOLD (see lib/store-pages.ts)
+  // so nothing thin gets published, and a shop that has just started stocking
+  // Riftbound is exactly the one worth already tracking when it grows.
+  //
+  // THREE VERIFIED STORES WERE STILL LEFT OUT, because passing the probe is not
+  // the same as being a shop that sells cards:
+  //   - hallicards.de — its only Riftbound collection is
+  //     "teilnahmetickets-riftbound", i.e. tournament entry tickets.
+  //   - collgamers.nl — "riftbound-events-locals", one item, same story.
+  //   - mazeek.it — its collections are "riftbound-copia" / "riftbound-copia-1"
+  //     (duplicated or draft collections) and the first in-stock product is from
+  //     a different game entirely. Re-check before adding.
+  mabasso: {
+    key: "mabasso",
+    name: "MaBasso",
+    base: "https://www.mabasso.com",
+    collections: ["riftbound-league-of-legends"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  azcardgames: {
+    key: "azcardgames",
+    name: "AZ Card & Games",
+    base: "https://www.azcardtrading.it",
+    collections: ["riftbound-league-of-legends-tcg"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  cardknights: {
+    key: "cardknights",
+    name: "Card-Knights",
+    base: "https://www.card-knights.de",
+    collections: ["riftbound-origins", "riftbound-league-of-legends-tcg", "riftbound-league-of-legends-tcg-spiritforged"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  loufoque: {
+    key: "loufoque",
+    name: "Loufoque",
+    base: "https://shop.loufoque.fr",
+    collections: ["carte-riftbound", "tournois-riftbound-paris"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  magicomens: {
+    key: "magicomens",
+    name: "Magic Omens",
+    base: "https://magicomens.com",
+    collections: ["riftbound-lol-tcg"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  versusgamecenter: {
+    key: "versusgamecenter",
+    name: "Versus Gamecenter",
+    base: "https://versusgamecenter.pt",
+    collections: ["riftbound-league-of-legends-tcg"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  baruzcard: {
+    key: "baruzcard",
+    name: "Baruzcard",
+    base: "https://baruzcard.it",
+    collections: ["riftbound-league-of-legends-tcg"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  factorycards: {
+    key: "factorycards",
+    name: "Factory Cards",
+    base: "https://www.factorycardstcg.com",
+    collections: ["riftbound"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  laliane: {
+    key: "laliane",
+    name: "L'Aliane",
+    base: "https://laliane.com",
+    collections: ["riftbound"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  houseofgames: {
+    key: "houseofgames",
+    name: "House of Games",
+    base: "https://thehouseofgames.eu",
+    collections: ["riftbound-league-of-legends-tcg", "riftbound-spiritforged"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  laroccawargaming: {
+    key: "laroccawargaming",
+    name: "La Rocca del Wargaming",
+    base: "https://laroccadelwargaming.it",
+    collections: ["riftbound"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  cardzone: {
+    key: "cardzone",
+    name: "CardZone",
+    base: "https://cardzone.es",
+    collections: ["riftbound-league-of-legends"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  isengard: {
+    key: "isengard",
+    name: "Isengard Fantasy Shop",
+    base: "https://isengard.com.cy",
+    collections: ["riftbound-league-of-legends"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  fuhrious: {
+    key: "fuhrious",
+    name: "Fuhrious Tradingcards",
+    base: "https://fuhrious-tc.shop",
+    collections: ["riftbound", "riftbound-copy"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  kardsgreifswald: {
+    key: "kardsgreifswald",
+    name: "KARDS Greifswald",
+    base: "https://kardsgreifswald.de",
+    collections: ["riftbound"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  exchangeplayinvest: {
+    key: "exchangeplayinvest",
+    name: "E.P.I. Exchange Play Invest",
+    base: "https://exchangeplayinvest.com",
+    collections: ["carte-singole-riftbound", "confezioni-speciali-riftbound"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  drawphase: {
+    key: "drawphase",
+    name: "DrawPhase",
+    base: "https://www.drawphase.pt",
+    collections: ["riftbound-tcg-portugal"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  gamersacademy: {
+    key: "gamersacademy",
+    name: "Gamers Academy",
+    base: "https://gamers-academy.org",
+    collections: ["riftbound-displays", "riftbound-displays-1", "riftbound-sonderprodukte", "riftbound"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  garajeux: {
+    key: "garajeux",
+    name: "Garajeux",
+    base: "https://www.garajeux.shop",
+    collections: ["riftbound"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  side7: {
+    key: "side7",
+    name: "Side7",
+    base: "https://www.side7.nl",
+    collections: ["riot-games-riftbound"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  grillecards: {
+    key: "grillecards",
+    name: "Grillecards",
+    base: "https://grillecards.com",
+    collections: ["riftbound-league-of-legends"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  metamorphcenter: {
+    key: "metamorphcenter",
+    name: "Metamorph Center",
+    base: "https://metamorphcenter.com",
+    collections: ["riftbound-league-of-legends-tcg"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  cardverse: {
+    key: "cardverse",
+    name: "Cardverse",
+    base: "https://www.cardverse.it",
+    collections: ["riftbound-league-of-legends"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  tcglevel: {
+    key: "tcglevel",
+    name: "TCG Level",
+    base: "https://tcglevel.com",
+    collections: ["riftbound"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  panterland: {
+    key: "panterland",
+    name: "Panterland",
+    base: "https://www.panterland.be",
+    collections: ["riftbound"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  coolupcards: {
+    key: "coolupcards",
+    name: "CoolUp Cards",
+    base: "https://coolupcards.com",
+    collections: ["riftbound", "riftbound-turniere"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  elturnoextra: {
+    key: "elturnoextra",
+    name: "El Turno Extra",
+    base: "https://elturnoextra.es",
+    collections: ["riftbound"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  venturagames: {
+    key: "venturagames",
+    name: "Ventura Games",
+    base: "https://www.venturacardgames.com",
+    collections: ["riftbound"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  uproma: {
+    key: "uproma",
+    name: "1UP Roma",
+    base: "https://1uprm.com",
+    collections: ["riftbound-league-of-legends-card-game"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  fumetteriageco: {
+    key: "fumetteriageco",
+    name: "Fumetteria Geco",
+    base: "https://fumetteriageco.it",
+    collections: ["riftbound"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+
+  // ---- Eurozone WOOCOMMERCE stores (country: "EU", platform: "woocommerce") ---
+  // The other half of the eurozone market, and the reason lib/woocommerce.ts
+  // exists. Thirty of these 36 are SPANISH, which is the point: Spain's Riftbound
+  // retail runs overwhelmingly on WooCommerce, not Shopify (~150 Spanish shops
+  // found, 9 usable by the Shopify path), so without this adapter the market
+  // requested for Spain would have had 9 Spanish stores in it.
+  //
+  // READ THIS BEFORE EXPECTING SINGLES PRICES FROM THEM. They are, as of
+  // 2026-08-23, SEALED-ONLY for Riftbound, and that was measured rather than
+  // assumed: across all 41 eurozone Woo stores with a Riftbound category, exactly
+  // ONE had a singles category and it held ONE card (shop-tcg.fr's
+  // "cartes-a-lunite-riftbound"). Sampling the largest catalogues — Only-Cards,
+  // Micelion, Montalfan, HoloPlaza — returned zero products carrying a collector
+  // number. So what these stores contribute today is the EUR sealed comparison
+  // (see importSealed, which reads them through the same adapter), not the
+  // singles one.
+  //
+  // They are still worth tracking, for three reasons that are worth stating so
+  // this does not read as padding: sealed is the highest-value category on the
+  // site (booster boxes are the biggest baskets), the eurozone had no EUR sealed
+  // coverage at all before this, and the moment any of them lists singles the
+  // importer picks them up with no code change. Nothing here inflates a headline
+  // number either — the store counts on the homepage and region pages are derived
+  // from real priced rows intersected with RETAILER_LIST (see lib/home-stats.ts),
+  // so a store with no rows counts as zero, and a store page below
+  // STORE_THIN_THRESHOLD is noindexed rather than published.
+  //
+  // NONE OF THEM IS IN STORES_WITH_POLICY, and none may be: that helper builds a
+  // /policies/shipping-policy URL, which is a SHOPIFY path. shippingPolicyUrl()
+  // now refuses non-Shopify stores outright rather than relying on this note.
+  //
+  // Collections here are WooCommerce category SLUGS, resolved to the Store API's
+  // numeric category ids at scrape time (see discoverWooRiftboundCategories) —
+  // and, as on the Shopify side, they are only a fallback for discovery.
+  montalfan: {
+    key: "montalfan",
+    name: "Montalfan",
+    base: "https://montalfan.com",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  ozjuegos: {
+    key: "ozjuegos",
+    name: "OZ Juegos",
+    base: "https://www.ozjuegos.com",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  maxireves: {
+    key: "maxireves",
+    name: "Maxi R\u00eaves",
+    base: "https://maxireves.fr",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  miceliongames: {
+    key: "miceliongames",
+    name: "Micelion Games",
+    base: "https://miceliongames.com",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  holoplazatcg: {
+    key: "holoplazatcg",
+    name: "HoloPlaza TCG",
+    base: "https://holoplazatcg.com",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  ludusbelli: {
+    key: "ludusbelli",
+    name: "Ludus Belli",
+    base: "https://www.ludusbelli.com",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  keepseven: {
+    key: "keepseven",
+    name: "KEEPSEVEN",
+    base: "https://keepseven.de",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  lotusvalley: {
+    key: "lotusvalley",
+    name: "Lotus Valley",
+    base: "https://lotusvalley.pt",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  lecoindesbarons: {
+    key: "lecoindesbarons",
+    name: "Le Coin Des Barons",
+    base: "https://lecoindesbarons.com",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  manavortexshop: {
+    key: "manavortexshop",
+    name: "Mana Vortex Shop",
+    base: "https://manavortex.es",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  mulligantiendamulligan: {
+    key: "mulligantiendamulligan",
+    name: "Mulligan / Tienda Mulligan",
+    base: "https://shop.tiendamulligan.com",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  shoptcg: {
+    key: "shoptcg",
+    name: "Shop TCG",
+    base: "https://shop-tcg.fr",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  cardcrack: {
+    key: "cardcrack",
+    name: "Card Crack",
+    base: "https://www.cardcrack.com",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  industria61: {
+    key: "industria61",
+    name: "Industria 61",
+    base: "https://www.industria61.com",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  elius: {
+    key: "elius",
+    name: "Elius",
+    base: "https://www.eliusweb.com",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  arenagames: {
+    key: "arenagames",
+    name: "Arena Games",
+    base: "https://arenagames.es",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  thebigbanggames: {
+    key: "thebigbanggames",
+    name: "The Big Bang Games",
+    base: "https://www.thebigbanggames.com",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  topdeck: {
+    key: "topdeck",
+    name: "TopDeck",
+    base: "https://www.topdeck.es",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  egdgamesmeepledin: {
+    key: "egdgamesmeepledin",
+    name: "EGD Games Meepledin",
+    base: "https://egdgames.com",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  frikigalaxy: {
+    key: "frikigalaxy",
+    name: "Friki Galaxy",
+    base: "https://www.frikigalaxy.com",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  esfantasia: {
+    key: "esfantasia",
+    name: "Esfantasia",
+    base: "https://esfantasia.es",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  monsterfactory: {
+    key: "monsterfactory",
+    name: "Monster Factory",
+    base: "https://www.monsterfactory.es",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  gigamesh: {
+    key: "gigamesh",
+    name: "Gigamesh",
+    base: "https://www.gigamesh.com",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  cityofcards: {
+    key: "cityofcards",
+    name: "City Of Cards",
+    base: "https://cityof.cards",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  metamorfo: {
+    key: "metamorfo",
+    name: "Metamorfo",
+    base: "https://metamorfo.es",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  jupiterjuegos: {
+    key: "jupiterjuegos",
+    name: "Jupiter Juegos",
+    base: "https://www.jupiterjuegos.com",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  planeswalkersvalencia: {
+    key: "planeswalkersvalencia",
+    name: "Planeswalkers Valencia",
+    base: "https://planeswalkers.shop",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  vadejocs: {
+    key: "vadejocs",
+    name: "Va de Jocs",
+    base: "https://vadejocs.es",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  vulcacomics: {
+    key: "vulcacomics",
+    name: "Vulca Comics",
+    base: "https://vulcacomics.com",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  g3skediog3tcg: {
+    key: "g3skediog3tcg",
+    name: "G3Skedio / G3TCG",
+    base: "https://g3tcg.es",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  latorrekarinstore: {
+    key: "latorrekarinstore",
+    name: "La Torre Karin Store",
+    base: "https://latorrekarinstore.es",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  ingeniobcngames: {
+    key: "ingeniobcngames",
+    name: "Ingenio BCN Games",
+    base: "https://www.ingeniobcn.com",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  gamestcg: {
+    key: "gamestcg",
+    name: "Games TCG",
+    base: "https://gamestcg.com",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  tsukicenter: {
+    key: "tsukicenter",
+    name: "Tsuki Center",
+    base: "https://tsukicenter.com",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  hobbyshopwargames: {
+    key: "hobbyshopwargames",
+    name: "Hobby Shop Wargames",
+    base: "https://hobbyshopwargames.es",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+  collectorstore: {
+    key: "collectorstore",
+    name: "Collector Store",
+    base: "https://www.collectorstore.nl",
+    collections: [],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+    platform: "woocommerce",
+  },
+
   // ---- Eurozone leads found and NOT added ------------------------------------
   //   - latiendascum.com — the store that ASKED to be listed (an inbound request
   //     naming the Spanish market, 2026-08-23), and the reason this market exists
@@ -2141,13 +2918,28 @@ const STORES_WITH_POLICY = new Set([
   "templarsarena", "breakthecase", "sgames", "jjcollection", "freakshowstore",
   "brickznmore", "cardcorner", "treasurehub", "laescotilla", "sarumangames",
   "battlebear", "threestones", "ikigaicomics", "vaultofdelights", "lmshandel",
-  // "exchangeplayinvest" was here until El Duelista replaced it in RETAILERS above.
-  "lepotoryko", "boostertcg", "zillerstore", "outpostbrussels",
-  "tcgfamily",
+  "lepotoryko", "boostertcg", "zillerstore", "outpostbrussels", "tcgfamily",
+  // EU round 2 — 24 of those 30 publish a policy page. The other six (MaBasso,
+  // Card-Knights, L'Aliane, La Rocca del Wargaming, Grillecards, Cardverse) 404
+  // there and keep showing the estimate rather than linking a dead page.
+  "azcardgames", "loufoque", "magicomens", "versusgamecenter", "baruzcard",
+  "factorycards", "houseofgames", "cardzone", "isengard", "fuhrious",
+  "kardsgreifswald", "exchangeplayinvest", "drawphase", "gamersacademy", "garajeux",
+  "side7", "metamorphcenter", "tcglevel", "panterland", "coolupcards",
+  "elturnoextra", "venturagames", "uproma", "fumetteriageco",
 ]);
 
 // The store's shipping-policy page URL, or null if it doesn't have one / isn't a store.
+//
+// /policies/shipping-policy is a SHOPIFY path — it is Shopify that publishes
+// merchant policies at fixed URLs, and no other platform does. A WooCommerce shop
+// puts its shipping terms on whatever page its owner made, so there is no URL to
+// derive. The platform check is here rather than left to "just don't add Woo keys
+// to the Set" because that convention is invisible at the call site and one wrong
+// entry would send shoppers to a 404 in place of a shipping cost — worse than the
+// estimate it was meant to improve on.
 export function shippingPolicyUrl(retailerKey: string): string | null {
   const r = RETAILERS[retailerKey];
-  return r && STORES_WITH_POLICY.has(retailerKey) ? `${r.base}/policies/shipping-policy` : null;
+  if (!r || (r.platform ?? "shopify") !== "shopify") return null;
+  return STORES_WITH_POLICY.has(retailerKey) ? `${r.base}/policies/shipping-policy` : null;
 }

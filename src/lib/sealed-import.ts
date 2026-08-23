@@ -2,7 +2,8 @@
 // Grounds, bundles, …) from the same AU Shopify stores, into SealedListing. The
 // singles importer (price-import.ts) deliberately skips these; this complements it.
 import { prisma } from "./db";
-import { RETAILER_LIST } from "./retailers";
+import { RETAILER_LIST, type RetailerInfo } from "./retailers";
+import { decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, productUrl, wooVariants } from "./woocommerce";
 import { isEbayEnabled, isEbayRateLimited, searchEbaySealed, primeEbayBudget, sealedFloorCents } from "./ebay";
 import { fetchTcgplayerSealed, tcgProductUrl, tcgImageUrl, setCodeFromSetName } from "./tcgplayer";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows } from "./scrape-http";
@@ -11,7 +12,10 @@ import { isPreorderSetCode, EBAY_CA_RETAILER } from "./constants";
 
 interface ShopifyImg { src?: string }
 interface ShopifyVar { price: string; available: boolean }
-interface ShopifyProd { title: string; handle: string; variants: ShopifyVar[]; images?: ShopifyImg[] }
+// `url` is the product's real page URL — see ShopifyProduct.url in
+// price-import.ts for why a WooCommerce product must carry one and a Shopify
+// product need not.
+interface ShopifyProd { title: string; handle: string; variants: ShopifyVar[]; images?: ShopifyImg[]; url?: string }
 
 const SET_FROM_TITLE: [RegExp, string][] = [
   [/proving\s*grounds|\bOGS\b/i, "OGS"],
@@ -255,22 +259,64 @@ async function mapLimit<T>(items: T[], limit: number, fn: (item: T) => Promise<v
 // Canonical implementation lives in lib/tcgplayer.ts — imported, not re-declared,
 // so the two can't drift apart when a new set is added.
 
+/**
+ * Riftbound products from a WOOCOMMERCE store, in the Shopify shape this file
+ * already parses (see lib/woocommerce.ts for why the adapter speaks that shape
+ * rather than adding a second pipeline).
+ *
+ * Unlike the singles importer's equivalent this does NOT filter out sealed
+ * categories — sealed is what this importer wants, so it takes every Riftbound
+ * category the store has and lets looksSealed()/isRiftboundSealed() below do the
+ * selecting, exactly as they do for a Shopify store's collections.
+ */
+async function fetchWooSealedProducts(store: RetailerInfo): Promise<ShopifyProd[]> {
+  const allowed = await robotsAllows(store.base);
+  if (!allowed("/wp-json/wc/store/v1/products")) return [];
+  const categories = await discoverWooRiftboundCategories(store.base, store.collections ?? []);
+  const out: ShopifyProd[] = [];
+  const seen = new Set<number>();
+  for (const [i, id] of categories.entries()) {
+    if (i > 0) await sleep(REQUEST_DELAY_MS);
+    for (const p of await fetchWooCategory(store.base, id)) {
+      if (seen.has(p.id)) continue;
+      seen.add(p.id);
+      out.push({ title: decodeEntities(p.name), handle: p.slug, variants: wooVariants(p), url: p.permalink } as ShopifyProd);
+    }
+  }
+  return out;
+}
+
 export async function importSealed(): Promise<number> {
   let count = 0;
   for (const store of RETAILER_LIST) {
     const cc = store.country ?? "AU";
-    // Auto-discover from the sitemap, but fall back to the store's configured
-    // collections (some stores' sitemaps don't expose their collection handles —
-    // some sealed stores were being skipped). Mirrors price-import.ts.
-    let handles = await discoverCollections(store.base);
-    handles = Array.from(new Set([...handles, ...(store.collections ?? [])]));
-    if (!handles.length) continue;
-
     const seen = new Set<string>();
     const rows = new Map<string, any>(); // groupKey+store -> row (cheapest per store/product)
     let scraped = false; // did we actually read products (vs an empty/failed fetch)?
-    for (const handle of handles) {
-      const products = await fetchProducts(store.base, handle, cc);
+
+    // WooCommerce stores are read through the Store API instead of Shopify
+    // collections — and for THIS importer they are the whole reason the adapter
+    // exists. The 2026-08-23 eurozone sweep found the EU's WooCommerce shops
+    // carry Riftbound SEALED and essentially no singles (one shop, one card,
+    // across 41 stores with a Riftbound category), so the singles importer gets
+    // almost nothing from them while this one gets a real EUR sealed market.
+    //
+    // Batched into ONE list rather than per-handle because the Store API is
+    // queried by category id, and category discovery already de-duplicates.
+    const batches: ShopifyProd[][] = [];
+    if (store.platform === "woocommerce") {
+      batches.push(await fetchWooSealedProducts(store));
+    } else {
+      // Auto-discover from the sitemap, but fall back to the store's configured
+      // collections (some stores' sitemaps don't expose their collection handles —
+      // some sealed stores were being skipped). Mirrors price-import.ts.
+      let handles = await discoverCollections(store.base);
+      handles = Array.from(new Set([...handles, ...(store.collections ?? [])]));
+      if (!handles.length) continue;
+      for (const handle of handles) batches.push(await fetchProducts(store.base, handle, cc));
+    }
+
+    for (const products of batches) {
       if (products.length) scraped = true;
       for (const p of products) {
         if (seen.has(p.handle)) continue;
@@ -306,7 +352,7 @@ export async function importSealed(): Promise<number> {
           retailer: store.key,
           retailerName: store.name,
           priceCents,
-          url: `${store.base}/products/${p.handle}`,
+          url: productUrl(store.base, p),
           imageUrl: p.images?.[0]?.src ?? null,
           country: cc,
           inStock,

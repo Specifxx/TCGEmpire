@@ -147,6 +147,84 @@ test("eBay links carry the tracking params EPN requires", () => {
   assert.ok(u.searchParams.get("siteid"));
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// THE AFFILIATE MUST SURVIVE A WRONG ROTATION ID.
+// ─────────────────────────────────────────────────────────────────────────────
+// The EU market ships with an ES rotation id that has never been checked against
+// the live EPN dashboard. That is acceptable ONLY because a wrong mkrid cannot
+// cost the commission — `campid` is what names the campaign that gets credited,
+// and mkrid is a reporting dimension within it. These tests pin the three things
+// that make that true, so a refactor cannot quietly turn an unverified id into
+// an untracked click.
+
+test("every market's eBay link is affiliate-tagged, EU included", () => {
+  for (const c of COUNTRY_LIST) {
+    const u = new URL(ebaySearchUrl(c.code, "Riftbound singles", "card"));
+    assert.equal(u.searchParams.get("mkevt"), "1", `${c.code}: mkevt is what makes the click count`);
+    assert.equal(u.searchParams.get("mkcid"), "1", `${c.code}: mkcid names EPN as the channel`);
+    assert.equal(u.searchParams.get("campid"), EBAY_CAMPAIGN_ID, `${c.code}: campid IS the attribution`);
+    assert.ok(u.searchParams.get("mkrid"), `${c.code}: a rotation id must be present, right or not`);
+    assert.ok(u.searchParams.get("customid"), `${c.code}: no sub-id means unattributable revenue`);
+  }
+});
+
+test("each market reports under its OWN sub-id, so EU revenue is legible", () => {
+  const ids = COUNTRY_LIST.map((c) => new URL(ebaySearchUrl(c.code, "x", "card")).searchParams.get("customid")!);
+  assert.equal(new Set(ids).size, ids.length, `markets share a customid: ${ids.join(", ")}`);
+  const eu = new URL(ebaySearchUrl("EU", "x", "card"));
+  assert.match(eu.searchParams.get("customid")!, /^rc-eu-/, "EU clicks must report as rc-eu");
+  // And they must land on a EUR site. Sending a European buyer to ebay.com to
+  // read dollars would defeat the market, however well the click is tracked.
+  assert.equal(eu.hostname, "www.ebay.es");
+});
+
+test("a URL eBay already tagged keeps EBAY'S rotation, not ours", () => {
+  // The Browse API is called with our campaign in X-EBAY-C-ENDUSERCTX and returns
+  // itemAffiliateWebUrl — a URL eBay built, carrying the correct rotation for
+  // that marketplace. Overwriting it with our hand-maintained table (which this
+  // function used to do unconditionally) throws away authoritative data and puts
+  // an unverified id in front of every real listing click. This is the workaround
+  // that makes the ES id not matter for the links that carry the most money.
+  const fromEbay = "https://www.ebay.es/itm/123?mkevt=1&mkcid=1&mkrid=EBAY-OWN-ROTATION&siteid=186&campid=old";
+  const u = new URL(ebayAffiliateUrl(fromEbay, "card"));
+  assert.equal(u.searchParams.get("mkrid"), "EBAY-OWN-ROTATION", "eBay's own rotation must be preserved");
+  assert.equal(u.searchParams.get("siteid"), "186");
+  // campid is still forced to ours — it is the one parameter that decides who
+  // gets paid, and it must never be left to whatever came back on the URL.
+  assert.equal(u.searchParams.get("campid"), EBAY_CAMPAIGN_ID);
+  assert.match(u.searchParams.get("customid")!, /^rc-eu-/);
+});
+
+test("a link we built ourselves falls back to our rotation table", () => {
+  // The other half: a search link never passes through eBay, so there is no
+  // authoritative rotation to preserve and the table is what we have.
+  const u = new URL(ebayAffiliateUrl("https://www.ebay.es/sch/i.html?_nkw=riftbound", "card"));
+  assert.equal(u.searchParams.get("mkrid"), "1185-53479-19255-0");
+  assert.equal(u.searchParams.get("siteid"), "186");
+});
+
+test("Singapore's reroute still overrides eBay's own rotation", () => {
+  // The one case where eBay's answer is the WRONG one for us: SG has no EPN
+  // program at all, so an ebay.com.sg listing's own rotation is for a site the
+  // click will not land on — we deliberately move the destination to ebay.com.
+  // Preserving eBay's rotation here would tag the click for a rotation that does
+  // not exist on the site it reaches.
+  const u = new URL(ebayAffiliateUrl("https://www.ebay.com.sg/itm/9?mkevt=1&mkrid=SG-ROTATION&siteid=216", "card"));
+  assert.equal(u.hostname, "www.ebay.com");
+  assert.notEqual(u.searchParams.get("mkrid"), "SG-ROTATION", "the SG rotation must not follow the click to ebay.com");
+  assert.equal(u.searchParams.get("campid"), EBAY_CAMPAIGN_ID);
+  assert.match(u.searchParams.get("customid")!, /^rc-sg-/, "SG traffic still reports as SG even though eBay credits it under US");
+});
+
+test("the rotation ids are env-overridable, so a wrong one is a config fix", () => {
+  const src = readFileSync("src/lib/affiliate.ts", "utf8");
+  assert.match(src, /EBAY_MKRID_\$\{m\.code\}/, "mkrid must be overridable without a deploy");
+  assert.match(src, /EBAY_SITEID_\$\{m\.code\}/, "siteid must be overridable without a deploy");
+  // `||`, not `??`: an env var set to an empty string must fall back to the code
+  // default rather than emitting `mkrid=`, which would untrack the click outright.
+  assert.match(src, /process\.env\[`EBAY_MKRID_\$\{m\.code\}`\] \|\| m\.mkrid/);
+});
+
 test("the eBay sub-id names both the market and the placement", () => {
   const u = new URL(affiliateUrl("https://www.ebay.com/itm/1", "ebay_us", "https://riftcompare.com/card/vi-destructive"));
   const custom = u.searchParams.get("customid")!;

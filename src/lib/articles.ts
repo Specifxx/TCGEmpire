@@ -3488,9 +3488,9 @@ See the full **[Vendetta card list](/guides/riftbound-vendetta-card-list)**, bro
     slug: "buy-riftbound-cards-europe",
     marketData: "EU",
     category: "blog",
-    title: "Riftbound Card Prices Europe — 30 EU Stores in EUR",
+    title: "Riftbound Card Prices Europe — 96 EU Stores in EUR",
     excerpt:
-      "Compare Riftbound card prices across 30 stores in nine eurozone countries — live EUR prices ranked by total delivered cost. Free, updated daily.",
+      "Compare Riftbound card prices across 96 stores in ten eurozone countries — live EUR prices ranked by total delivered cost. Free, updated daily.",
     author: "RiftCompare",
     date: "2026-08-23",
     updated: "2026-08-23",
@@ -3508,18 +3508,17 @@ The eurozone shares a currency **and** a customs union. A card listed at €4.20
 
 That is exactly why RiftCompare treats the whole eurozone as one market. Switch to **Europe (EU)** in the country selector and every price on the site is in EUR, sourced from stores that will actually ship to you.
 
-## The 30 stores we compare
+## The 96 stores we compare
 
-Nine countries, all priced natively in euro:
+Ten countries, all priced natively in euro: **Spain (45)**, **Germany (13)**, **Italy (10)**, **France (7)**, **Austria (6)**, **Portugal (6)**, **the Netherlands (3)**, **Croatia (3)**, **Belgium (2)** and **Cyprus (1)** — making Europe the largest market on RiftCompare by store count.
 
-- **🇪🇸 Spain (9):** El Duelista, Universe TCG, FreakCorp, JJ Collection, Freakshow Store, La Escotilla, Saruman Games, Three Stones Games and Ikigai Comics.
-- **🇩🇪 Germany (7):** Battle Bear Saarbrücken, Battle Bear, BreakTheCase, Team Lunti Trading Cards, Crossroads (LMS Handel), Booster Trading Cards and Brickz'n'More.
-- **🇦🇹 Austria (5):** Mana Market EU, S-Games, Cardcorner, TreasureHub TCG and DC-Trading.
-- **🇮🇹 Italy (3):** GS-GameOn, Fire & Dice and Zillerstore.
-- **🇵🇹 Portugal (2):** End Turn and Templars Arena.
-- **🇭🇷 Croatia, 🇫🇷 France, 🇧🇪 Belgium, 🇳🇱 Netherlands (1 each):** Vault of Delights, Le Poto Ryko, Outpost Brussels and TCGFamily.
+The deepest single-card catalogues are El Duelista and Universe TCG in Spain, Mana Market EU in Austria, End Turn in Portugal, GS-GameOn and Fire & Dice in Italy, and Battle Bear Saarbrücken in Germany. The **[full tracked-store list](/stores/tracked)** has every one of them, and **eBay Spain** listings sit alongside them on each card page.
 
-The **[full tracked-store list](/stores/tracked)** has every one of them, and **eBay Spain** listings sit alongside them on each card page.
+### Singles and sealed are not the same list
+
+Sixty of these stores run on Shopify and are compared for **single cards**. The other thirty-six — thirty of them Spanish — run on WooCommerce, and today they stock Riftbound **sealed product only**: booster boxes, displays, vaults and champion decks. We track them for the [sealed comparison](/sealed), and the moment any of them lists singles those appear here too, automatically.
+
+That split is worth knowing because it is a fact about the Spanish market rather than about us: Spanish card shops overwhelmingly run WooCommerce, and singles selling online has been slower to arrive there than sealed.
 
 ## How to find the cheapest Riftbound single in Europe
 
