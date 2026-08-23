@@ -90,9 +90,24 @@ export function championCardWhere(c: Champion) {
   return { OR: c.prefixes.map((p) => ({ name: { startsWith: `${p},` } })) };
 }
 
-// Minimum tracked printings for a champion hub to be worth indexing. Mirrors
-// FACET_THIN_THRESHOLD in lib/facets.ts — the two are the same judgement about
-// the same kind of page, so they are kept at the same number deliberately.
-// Below this the page still renders, is still linked and is still crawlable;
-// it just carries robots: noindex and is left out of sitemaps/champions.xml.
-export const CHAMPION_THIN_THRESHOLD = 8;
+// Minimum tracked printings for a champion hub to be worth indexing. Below
+// this the page still renders, is still linked and is still crawlable; it
+// just carries robots: noindex and is left out of sitemaps/champions.xml.
+//
+// PREVIOUSLY mirrored FACET_THIN_THRESHOLD (8) in lib/facets.ts on the theory
+// that they're "the same judgement about the same kind of page" — they are
+// not. A facet page is a name, a one-line description and a card grid, thin
+// below ~8 cards. A champion hub runs buildCollectionNarrative(), which
+// generates unique price-concentration analysis, domain/set breakdown and
+// tournament-deck data from the champion's own live data — GROWTH-AUDIT.md's
+// content audit measured champion pages at a 397-word median of actual
+// narrative and rated the template "acceptable" independently of printing
+// count. Borrowing the facet number was noindexing pages that already clear a
+// real content bar, undercutting the whole reason this template exists (see
+// the doc comment in app/champions/[slug]/page.tsx on riftdecks.com).
+//
+// 4, not lower, because collection-narrative.ts's own richest branch — the
+// price-range/median/concentration paragraph and the "cards to know" line —
+// only activates at >= 4 priced members; below that the narrative is real but
+// noticeably shorter, which is the actual thin-content line for this template.
+export const CHAMPION_THIN_THRESHOLD = 4;
