@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { AuthForm } from "@/components/AuthForm";
 import { getCurrentUser } from "@/lib/auth";
 import { enabledProviders } from "@/lib/oauth";
-import { SIGNUP_PREMIUM_DAYS } from "@/lib/premium";
 import { pageAlternates } from "@/lib/seo";
 import { sanitizeNextPath } from "@/lib/next-param";
 
@@ -41,7 +40,6 @@ export default async function LoginPage({ searchParams }: { searchParams: { next
     <AuthForm
       providers={enabledProviders()}
       cancelHref={next ?? "/"}
-      signupPremiumDays={SIGNUP_PREMIUM_DAYS}
       next={next ?? undefined}
       contextLine={next ? CONTEXT_LINES[next] : undefined}
     />
