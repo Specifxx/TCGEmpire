@@ -27,6 +27,41 @@ export const dynamic = "force-dynamic";
 
 /** How many gap rows the free board shows. Deal Finder has the full screener. */
 const GAPS_SHOWN = 10;
+/**
+ * Candidates to consider before re-ranking — effectively "all of them".
+ *
+ * Costs nothing extra. computeCrossRegionRows memoizes the built row list per
+ * market for 15 minutes and getCrossRegionGaps just slices it, so page size only
+ * changes how much of an already-in-memory array comes back. The eligible set is
+ * already narrowed to cards at least XREGION_MIN_GAP_PCT (20%) cheaper
+ * elsewhere, so 500 covers it with room to spare.
+ *
+ * It has to be this generous BECAUSE the underlying list is sorted by
+ * percentage: a $300 card 22% cheaper abroad is a ~$66 saving and belongs at the
+ * top of this board, but it can sit deep in a percentage ranking behind dozens
+ * of commons. A small pool would never fetch it to re-rank.
+ */
+const GAPS_CANDIDATES = 500;
+/**
+ * Minimum absolute saving, in the home market's cents, for a row to appear.
+ *
+ * WHY THIS EXISTS — it was added after watching the live board. getCrossRegionGaps
+ * ranks by PERCENTAGE, which is right for the Premium screener (sortable, paged,
+ * used by someone who knows what they are looking at) and wrong for a public
+ * top-10. Percentage systematically promotes the cheapest cards: the first
+ * board we shipped led with a common at S$0.50 vs US$3.99 and called it "−90.7%",
+ * while a Showcase Signature with a genuine US$44 gap sat at #8. Every one of
+ * those headline rows was a saving of two or three dollars — less than the
+ * postage, on a card nobody ships internationally.
+ *
+ * $5 is deliberately a blunt instrument applied to whichever currency the
+ * visitor's market uses (the five are within ~1.6× of each other, so a
+ * per-currency table would be false precision). It is not "this is worth
+ * doing" — international postage on a single card is realistically $5-15, and
+ * the caveat below says so. It is the floor below which a row is certainly
+ * noise.
+ */
+const GAP_MIN_SAVING_CENTS = 500;
 
 const TITLE = "Riftbound All-Time Price Records & Cross-Market Gaps";
 const DESCRIPTION =
@@ -133,28 +168,39 @@ function RecordsBoard({
   );
 }
 
-function GapsBoard({ gaps, homeCountry }: { gaps: CrossRegionGap[]; homeCountry: Country }) {
+function GapsBoard({
+  gaps,
+  homeCountry,
+}: {
+  gaps: { gap: CrossRegionGap; savingCents: number }[];
+  homeCountry: Country;
+}) {
   if (gaps.length === 0) return null;
   const home = COUNTRIES[homeCountry];
   return (
     <section id="gaps" className="scroll-mt-24">
       <h2 className="text-xl font-extrabold text-white">Biggest cross-market price gaps</h2>
       <p className="mt-1 text-sm text-slate-400">
-        Cards that cost meaningfully less in another tracked market than they do in {home.place}. Converted at today&apos;s rates
-        so the two figures are comparable.
+        Cards that cost meaningfully less in another tracked market than they do in {home.place}, ranked by how much you would
+        actually save. Converted at today&apos;s rates so the two figures are comparable.
       </p>
       <ol className="mt-3 divide-y divide-ink-800 overflow-hidden rounded-xl border border-ink-800 bg-ink-950/60">
-        {gaps.map((g, i) => (
+        {gaps.map(({ gap: g, savingCents }, i) => (
           <li key={g.card.id} className="flex items-center gap-3 px-3 py-2.5">
             <span className="num w-5 shrink-0 text-center text-xs font-bold text-slate-600">{i + 1}</span>
             <div className="min-w-0 flex-1">
               <CardCell card={g.card} />
             </div>
+            {/* The saving leads and the percentage is secondary, matching how the
+                board is now ranked. A number that is not what the list is sorted
+                by must not be the biggest thing in the row. */}
             <div className="shrink-0 text-right">
-              <div className="num text-sm font-extrabold text-brand-400">−{g.gapPct}%</div>
+              <div className="num text-sm font-extrabold text-brand-400">
+                {formatMoney(savingCents, g.homeCurrency)} less
+              </div>
               <div className="text-[11px] text-slate-500">
                 {COUNTRIES[g.awayCountry].flag} {formatMoney(g.awayCentsNative, g.awayCurrency)} vs{" "}
-                {formatMoney(g.homeCents, g.homeCurrency)}
+                {formatMoney(g.homeCents, g.homeCurrency)} · −{g.gapPct}%
               </div>
             </div>
           </li>
@@ -183,15 +229,25 @@ export default async function MarketRecordsPage({ searchParams }: { searchParams
 
   const [records, gapPage] = await Promise.all([
     getAllTimeRecords(country, RECORDS_LIST_SIZE),
-    getCrossRegionGaps(country, 1, GAPS_SHOWN),
+    getCrossRegionGaps(country, 1, GAPS_CANDIDATES),
   ]);
+
+  // Re-rank by MONEY, not percentage — see GAP_MIN_SAVING_CENTS. Done here
+  // rather than in getCrossRegionGaps because that function is shared with the
+  // Premium screener, where percentage ranking is the right default and a
+  // dollar floor would silently hide rows a paying user asked to see.
+  const gaps = gapPage.items
+    .map((g) => ({ gap: g, savingCents: g.homeCents - g.awayCentsConverted }))
+    .filter((r) => r.savingCents >= GAP_MIN_SAVING_CENTS)
+    .sort((a, b) => b.savingCents - a.savingCents)
+    .slice(0, GAPS_SHOWN);
 
   const asOf = prettyDay(records.asOf);
   const hasRecords = records.peaks.length > 0 || records.offPeak.length > 0 || records.atLow.length > 0;
-  const hasAnything = hasRecords || gapPage.items.length > 0;
+  const hasAnything = hasRecords || gaps.length > 0;
 
   const sections = [
-    ...(gapPage.items.length ? [{ id: "gaps", label: "Price gaps" }] : []),
+    ...(gaps.length ? [{ id: "gaps", label: "Price gaps" }] : []),
     ...(records.peaks.length ? [{ id: "highs", label: "All-time highs" }] : []),
     ...(records.offPeak.length ? [{ id: "off-peak", label: "Off their peak" }] : []),
     ...(records.atLow.length ? [{ id: "lows", label: "At all-time lows" }] : []),
@@ -282,7 +338,7 @@ export default async function MarketRecordsPage({ searchParams }: { searchParams
           {sections.length > 1 && <MarketSectionNav sections={sections} />}
 
           <Reveal>
-            <GapsBoard gaps={gapPage.items} homeCountry={country} />
+            <GapsBoard gaps={gaps} homeCountry={country} />
           </Reveal>
 
           <AdSlot />

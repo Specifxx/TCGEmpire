@@ -110,6 +110,55 @@ test("the free board teases the Premium screener rather than replacing it", () =
   assert.match(src, /\/tools\/deal-finder/, "must link to the full screener");
 });
 
+test("the public gap board ranks by money, not percentage", () => {
+  // REGRESSION, caught on the live page. getCrossRegionGaps ranks by PERCENTAGE,
+  // which systematically promotes the cheapest cards: the first board shipped
+  // led with a common at S$0.50 vs US$3.99 ("−90.7%") while a Showcase Signature
+  // with a real US$44 gap sat at #8. Every headline row was a two-dollar saving
+  // on a card nobody ships internationally.
+  const src = codeOnly(read(PAGE));
+  assert.match(src, /const GAP_MIN_SAVING_CENTS = \d+/, "expected an absolute-saving floor");
+  assert.match(
+    src,
+    /\.filter\(\(r\) => r\.savingCents >= GAP_MIN_SAVING_CENTS\)/,
+    "the floor must actually filter the board",
+  );
+  assert.match(
+    src,
+    /\.sort\(\(a, b\) => b\.savingCents - a\.savingCents\)/,
+    "must rank by absolute saving, not gapPct",
+  );
+  // Re-ranking needs a candidate pool bigger than the board, or the rows that
+  // deserve the top spots are never fetched to begin with.
+  assert.match(src, /getCrossRegionGaps\(country, 1, GAPS_CANDIDATES\)/, "must over-fetch before re-ranking");
+  const cand = Number(/const GAPS_CANDIDATES = (\d+)/.exec(src)![1]);
+  const shown = Number(/const GAPS_SHOWN = (\d+)/.exec(src)![1]);
+  assert.ok(cand > shown * 5, `candidate pool of ${cand} is too small to re-rank a top-${shown} meaningfully`);
+});
+
+test("re-ranking happens on the page, never in the shared screener", () => {
+  // getCrossRegionGaps is shared with the Premium Deal Finder, where percentage
+  // ranking is the right default and a dollar floor would silently hide rows a
+  // paying user explicitly asked to see.
+  const lib = codeOnly(read("src/lib/arbitrage.ts"));
+  assert.ok(!/GAP_MIN_SAVING_CENTS/.test(lib), "the public board's floor must not leak into the shared function");
+  // The ranking lives in computeCrossRegionRows, not getCrossRegionGaps — the
+  // row build was split out (and memoized) when the cross-region tab turned out
+  // to be re-pulling the whole catalogue per request.
+  const fn = lib.slice(lib.indexOf("async function computeCrossRegionRows"));
+  assert.match(fn.slice(0, fn.indexOf("\n}")), /rows\.sort\(\(a, b\) => b\.pct - a\.pct\)/, "the shared screener keeps percentage ranking");
+});
+
+test("the row leads with the figure the board is sorted by", () => {
+  const src = read(PAGE);
+  // A number that is not what the list is ranked by must not be the biggest
+  // thing in the row — that is what made the percentage-ranked board read as
+  // though a 50-cent common were the headline opportunity.
+  const board = src.slice(src.indexOf("function GapsBoard"), src.indexOf("export default async function"));
+  const lead = board.slice(board.indexOf("text-sm font-extrabold text-brand-400"));
+  assert.match(lead.slice(0, 200), /formatMoney\(savingCents/, "the saving belongs in the lead position");
+});
+
 test("the records page is discoverable", () => {
   // A page nothing links to is a page nobody visits — and this one exists to be
   // found by search, so both the sitemap and the Index page must point at it.
