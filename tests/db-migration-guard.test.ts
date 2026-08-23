@@ -31,21 +31,39 @@ function stepsOf(src: string): { name: string; body: string }[] {
   return parts.map((p) => ({ name: p.slice(0, p.indexOf("\n")).trim(), body: p }));
 }
 
-const CURRENT_MIGRATION = "Migrate main (operational) database to RM7";
+// DERIVED FROM db-chains.ts, never hard-coded. This constant said "RM7" through
+// the 2026-08-22 rotation onto RM8, so it silently kept asserting against the
+// step for a project that was no longer live — the same staleness this whole
+// file exists to catch, reproduced in the test itself.
+const CURRENT_OP = /export const OPERATIONAL_VARS = \[\s*"(\w+)"/.exec(
+  readFileSync(join(ROOT, "src/lib/db-chains.ts"), "utf8")
+)?.[1];
+assert.ok(CURRENT_OP, "could not read the head of OPERATIONAL_VARS from db-chains.ts");
+const CURRENT_MIGRATION = `Migrate main (operational) database to ${CURRENT_OP}`;
 
 test("the CURRENT migration step re-pushes the schema after restoring", () => {
   const step = stepsOf(YML).find((s) => s.name === CURRENT_MIGRATION);
   assert.ok(step, `expected a "${CURRENT_MIGRATION}" step`);
+  // Aimed at the target, and specifically at its DIRECT endpoint: over Neon's
+  // PgBouncer host `prisma db push` introspects an empty schema and aborts with
+  // P1014 "The underlying table for model `Card` does not exist" even when the
+  // restore just verified that table row-for-row (seen 2026-08-22, run
+  // 32555324191). DIRECT_TARGET_URL is TARGET_DATABASE_URL minus "-pooler".
   assert.match(
     step!.body,
-    /DATABASE_URL="\$TARGET_DATABASE_URL" npx prisma db push/,
+    /DIRECT_TARGET_URL="\$\{TARGET_DATABASE_URL\/-pooler\/\}"/,
+    "derive a direct (non-pooled) URL — a pooled push fails P1014 against a freshly restored database"
+  );
+  assert.match(
+    step!.body,
+    /DATABASE_URL="\$DIRECT_TARGET_URL" npx prisma db push/,
     "the restore leaves the SOURCE's older schema behind — push the repo's schema at the target before anyone deploys"
   );
   // Prisma reads DATABASE_URL and nothing else; aiming it at the target is the
   // whole point, so a bare `prisma db push` here would migrate the wrong project.
   assert.ok(
-    !/\n\s*npx prisma db push[^\n]*\n/.test(step!.body.replace(/DATABASE_URL="\$TARGET_DATABASE_URL" npx prisma db push[^\n]*/g, "")),
-    "every db push in this step must be aimed explicitly at TARGET_DATABASE_URL"
+    !/\n\s*npx prisma db push[^\n]*\n/.test(step!.body.replace(/DATABASE_URL="\$DIRECT_TARGET_URL" npx prisma db push[^\n]*/g, "")),
+    "every db push in this step must be aimed explicitly at the target"
   );
 });
 
@@ -53,7 +71,7 @@ test("a failed schema re-push fails the migration job loudly", () => {
   const step = stepsOf(YML).find((s) => s.name === CURRENT_MIGRATION)!;
   // Silently continuing would hand over a target whose schema is older than the
   // code about to be deployed against it — the exact 2026-08-20 failure.
-  assert.match(step.body, /::error::schema push against RM7 FAILED/, "expected a loud error on push failure");
+  assert.match(step.body, new RegExp(`::error::schema push against ${CURRENT_OP} FAILED`), "expected a loud error on push failure");
   assert.match(step.body, /Do NOT deploy until this succeeds/, "the error must say what not to do next");
 });
 

@@ -42,7 +42,10 @@ const BLOG_SECTIONS: ArticleSection[] = [
   },
 ];
 
-export const revalidate = 600;
+// ISR: 24 hours; the price importer purges this index via /api/revalidate
+// (lib/revalidate-content.ts), same as the posts it links to. It was 600 for the
+// same reason they were — the route was missing from that purge list.
+export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: "Riftbound Blog — News, Guides & Market Updates",

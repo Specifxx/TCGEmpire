@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { unstable_cache } from "next/cache";
-import { cookies } from "next/headers";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { normalizeSearch } from "@/lib/format";
@@ -8,46 +7,24 @@ import { cardTileSelect } from "@/lib/cards";
 import { getSealedGroups } from "@/lib/sealed-import";
 import { getCountry } from "@/lib/get-country";
 import { priceField } from "@/lib/country";
-import { getCurrentUser } from "@/lib/auth";
-import { isPremium } from "@/lib/premium";
-import { ANON_SEARCH_LIMIT, FREE_SEARCH_LIMIT, SEARCH_QUOTA_COOKIE } from "@/lib/search-limits";
-import { tickQuota } from "@/lib/search-quota";
 
 // Typeahead search for the navbar dropdown. Returns full tile data so a result can
 // open the same instant quick-view modal as the browse grid, plus any matching
 // sealed products (booster boxes/packs/etc.).
 //
-// Metered per UTC day: anonymous visitors get ANON_SEARCH_LIMIT searches, free
-// accounts FREE_SEARCH_LIMIT, Premium unlimited — the first concrete,
-// experiential difference between the tiers, and the thing the signup surfaces
-// advertise. Enforcement is an httpOnly counter cookie; the definition of one
-// "search" and the deliberate non-metering of /browse?q= are documented in
-// lib/search-limits.ts.
+// SEARCH IS UNMETERED FOR EVERYONE — anonymous, free account, Premium alike.
+// A tiered daily allowance (10/100/unlimited, an httpOnly counter cookie) shipped
+// here and was removed after one day in production: it cost ~1.1 pages/visitor
+// and ~40% of buy_click while the gate it powered converted nobody. Search is the
+// site's core value and the top of every funnel that ends in a buy_click — capping
+// it taxed the behaviour we actually want. Do not reintroduce a growth-motivated
+// meter here; if this route ever needs protection it should be genuine
+// abuse/cost limiting via lib/rate-limit.ts, applied by IP and sized so no real
+// user ever reaches it.
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const q = (searchParams.get("q") ?? "").trim();
   if (q.length < 2) return NextResponse.json({ results: [], sealed: [] });
-
-  const user = await getCurrentUser();
-  let quota: ReturnType<typeof tickQuota> | null = null;
-  if (!isPremium(user)) {
-    const limit = user ? FREE_SEARCH_LIMIT : ANON_SEARCH_LIMIT;
-    quota = tickQuota(cookies().get(SEARCH_QUOTA_COOKIE)?.value, limit, Date.now());
-    if (quota.blocked) {
-      // No DB work for a blocked request — the gate response carries what the
-      // dropdown needs to render the upsell instead of results.
-      const res = NextResponse.json({
-        results: [],
-        sealed: [],
-        limited: true,
-        signedIn: !!user,
-        limit,
-        remaining: 0,
-      });
-      res.cookies.set(SEARCH_QUOTA_COOKIE, quota.cookieValue, { path: "/", httpOnly: true, sameSite: "lax", maxAge: 86400 });
-      return res;
-    }
-  }
 
   const country = getCountry();
   const nq = normalizeSearch(q);
@@ -101,15 +78,5 @@ export async function GET(req: Request) {
       lowestPriceCents: g.lowestPriceCents,
     }));
 
-  // `remaining`/`signedIn` let the dropdown show a "3 searches left today"
-  // nudge as the meter runs down (null quota = Premium, nothing to show).
-  const res = NextResponse.json({
-    results: ranked,
-    sealed,
-    ...(quota ? { remaining: quota.remaining, signedIn: !!user } : {}),
-  });
-  if (quota) {
-    res.cookies.set(SEARCH_QUOTA_COOKIE, quota.cookieValue, { path: "/", httpOnly: true, sameSite: "lax", maxAge: 86400 });
-  }
-  return res;
+  return NextResponse.json({ results: ranked, sealed });
 }

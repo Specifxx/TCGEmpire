@@ -11,6 +11,7 @@ import { formatMoney } from "@/lib/format";
 import { IndexChart } from "@/components/IndexChart";
 import { PriceChart } from "@/components/PriceChart";
 import { MyCollection } from "@/components/MyCollection";
+import { CollectionShare } from "@/components/CollectionShare";
 import { HoldingsGrid } from "@/components/HoldingsGrid";
 import { PremiumButton } from "@/components/PremiumButton";
 
@@ -250,6 +251,10 @@ export default async function PortfolioPage() {
           (the "paid" price powers the profit/loss above). Handles its own empty
           state and "add a card" guidance, so it shows for new users too. */}
       <MyCollection />
+
+      {/* Below the collection editor on purpose: sharing is something you do
+          once the binder is worth showing, not the first thing you meet. */}
+      <CollectionShare />
     </div>
   );
 }

@@ -95,11 +95,19 @@ export default async function AccountsAdminPage({
       }),
       // Distinct emails watching prices with NO account — the standing pool
       // claimAlertsForUser() adopts on signup. Shrinking = conversion working.
-      prisma.priceAlert.findMany({ where: { userId: null }, distinct: ["email"], select: { email: true } }),
+      //
+      // COUNT(DISTINCT ...), not findMany({ distinct }): Prisma dedupes in the
+      // CLIENT, so that form selects every matching row and ships it here just to
+      // read .length. See the note on demandSnapshotDays() in lib/demand-snapshot.ts
+      // — same bug, and it was the largest row-returning statement on the database.
+      // Only the count is ever rendered, so only the count is fetched.
+      prisma.$queryRaw<{ n: bigint }[]>`
+        SELECT COUNT(DISTINCT email) AS n FROM "PriceAlert" WHERE "userId" IS NULL
+      `,
     ]);
     rows = list;
     totals = { all, verified, premium, new7, new30 };
-    unclaimedAlertEmails = anonEmails.length;
+    unclaimedAlertEmails = Number(anonEmails[0]?.n ?? 0);
     // Bucket by UTC day, zero-filling so a quiet day renders as a gap, not a
     // shorter x-axis (30 entries, oldest first).
     const byDay = new Map<string, number>();

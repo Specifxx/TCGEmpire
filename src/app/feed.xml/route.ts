@@ -9,7 +9,10 @@ import { SITE_NAME, SITE_URL } from "@/lib/site";
 // Articles are file-based (lib/articles.ts) — no DB — so the feed is statically
 // generated at build and updates on deploy, exactly when new articles ship.
 // Revalidate so freshly-generated daily market reports enter the feed.
-export const revalidate = 600;
+// ISR: 24 hours; purged on demand by the price importer (lib/revalidate-content.ts).
+// It was 600, which regenerated this 144x a day to publish a feed whose contents
+// only change when an article ships (a deploy) or the importer runs.
+export const revalidate = 86400;
 
 const esc = (s: string) =>
   s

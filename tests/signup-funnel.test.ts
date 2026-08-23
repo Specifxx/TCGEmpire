@@ -81,10 +81,54 @@ test("SignupWelcome is mounted in the root layout", () => {
 
 test("the signup popup reports shown and dismissed — its conversion rate is measurable", () => {
   const src = read("src/components/SignupPromoPopup.tsx");
-  assert.match(src, /trackEvent\("signup_promo_shown", \{ path: pathname \?\? "\/" \}\)/);
-  assert.match(src, /trackEvent\("signup_promo_dismissed"\)/);
+  // Both events carry `variant`, so the comparison layout stays separable from
+  // the perk-list version it replaced instead of being averaged together across
+  // the changeover. Read them in GA4 — see the GA4_ONLY_EVENTS test below.
+  // Asserted on the PROPERTIES the funnel needs, not on one literal argument
+  // list — this pinned the exact object and then had to change the moment
+  // `trigger` was added to separate the buy-path cases. What must hold is that
+  // the impression carries the path and the layout variant.
+  assert.match(src, /trackEvent\("signup_promo_shown", \{[^}]*path: pathname/);
+  assert.match(src, /trackEvent\("signup_promo_shown", \{[^}]*variant: PROMO_VARIANT/);
+  assert.match(src, /trackEvent\("signup_promo_dismissed", \{ variant: PROMO_VARIANT \}\)/);
+  assert.match(src, /const PROMO_VARIANT = "comparison"/, "the variant must be a named constant, not inlined at each call");
   // The embedded AuthForm attributes its provider clicks to the popup.
   assert.match(src, /source="popup"/);
+});
+
+test("the promo impression events are GA4-only — they must not bill Vercel's event quota", () => {
+  // signup_promo_shown fires for a large share of visitors (26% at its peak,
+  // the site's #1 event by volume) and _dismissed tracks it closely. Vercel
+  // bills custom events against a monthly quota, so the pair was crowding out
+  // buy_click, sign_up and price_alert_subscribed — the handful-a-day events
+  // that actually decide whether the site works.
+  const src = read("src/lib/analytics.ts");
+  const setMatch = src.match(/const GA4_ONLY_EVENTS = new Set\(\[([\s\S]*?)\]\)/);
+  assert.ok(setMatch, "expected a GA4_ONLY_EVENTS set");
+  assert.match(setMatch![1], /"signup_promo_shown"/);
+  assert.match(setMatch![1], /"signup_promo_dismissed"/);
+  // The Vercel leg must be the one that is gated, and GA4's must NOT be —
+  // suppressing both would delete the funnel rather than move it.
+  assert.match(src, /if \(!GA4_ONLY_EVENTS\.has\(name\)\) vercelTrack\(name, cleaned\);/);
+  // Pinned as a POSITIVE match on the whole statement: the GA4 leg is guarded
+  // by the window check and nothing else. A negative "GA4_ONLY_EVENTS near
+  // gtag" regex looks equivalent and is not — the two dispatch lines are
+  // adjacent, so any proximity window spans them and fails on correct code.
+  assert.match(
+    src,
+    /\n {2}if \(typeof window !== "undefined"\) window\.gtag\?\.\("event", name, cleaned\);/,
+    "the GA4 dispatch must be guarded only by the window check, never by GA4_ONLY_EVENTS"
+  );
+
+  // The call sites stay intact — the exclusion is a destination policy, not a
+  // deletion. Dropping the trackEvent() call instead is what makes the two
+  // destinations silently diverge, which is why this dispatcher exists.
+  const popup = read("src/components/SignupPromoPopup.tsx");
+  assert.match(popup, /trackEvent\("signup_promo_shown"/);
+  assert.match(popup, /trackEvent\("signup_promo_dismissed"/);
+
+  // Nothing may reach Vercel around these events except through trackEvent().
+  assert.ok(!/@vercel\/analytics/.test(popup), "the popup must not import Vercel's track() directly");
 });
 
 test("PriceAlertModal events reach BOTH analytics systems, and the silent path is finally visible", () => {
@@ -136,21 +180,61 @@ test("the accounts admin page charts signups over time, by source, and the uncla
   // shorter axis.
   assert.match(src, /Array\.from\(\{ length: 30 \}/);
   // The convertible pool: distinct alert emails with no account.
-  assert.match(src, /prisma\.priceAlert\.findMany\(\{ where: \{ userId: null \}, distinct: \["email"\]/);
+  //
+  // Asserted on the SHAPE of the question, not on one implementation of it.
+  // This used to pin the literal `prisma.priceAlert.findMany({ where: { userId:
+  // null }, distinct: ["email"] })`, which then had to be rewritten — Prisma
+  // dedupes `distinct` in the client, so that form selected every unclaimed
+  // alert row to read its .length (see tests/prisma-client-side-distinct.test.ts).
+  // What this test exists to protect is that the page still measures the pool
+  // claimAlertsForUser() converts, and still counts EMAILS rather than rows.
+  assert.match(src, /COUNT\(DISTINCT email\)[\s\S]{0,80}"PriceAlert"[\s\S]{0,60}"userId" IS NULL/);
+  assert.match(src, /unclaimedAlertEmails\s*=/, "the count must still reach the rendered stat");
   assert.match(src, /\(untracked\)/, "null sources must be labeled, not dropped from the breakdown");
 });
 
 // ── Phase 1: conversion fixes ────────────────────────────────────────────────
 
-test("the signed-out navbar has a VISIBLE Sign in button, not just an icon", () => {
+test("the signed-out navbar names BOTH logging in and signing up, not just an icon", () => {
   const src = read("src/components/UserMenu.tsx");
-  // Text pill on sm+, icon below sm — both attributed, both nofollow (the
-  // ?next= family must stay out of the crawl graph, see the SEO note there).
-  assert.match(src, />\s*Sign in\s*<\/Link>/);
+  // A lone "Sign in" reads as a door for people who already have an account, so
+  // a first-time visitor has no reason to think it's for them. Both halves must
+  // be named — that's what makes the header an entry point, not a return path.
+  assert.match(src, />\s*Log in \/ Sign up\s*<\/Link>/, "the sm+ pill must name both halves");
+  // Below sm the glyph can't carry text, so its accessible name must.
+  assert.match(src, /aria-label="Log in or sign up"/, "the mobile icon needs both halves in its label");
+  // ONE control, not two: both words open the same OAuth screen (there is no
+  // separate registration flow), so two links would imply a distinction the
+  // auth system doesn't have.
+  const links = src.match(/href=\{loginHref\}/g) ?? [];
+  assert.equal(links.length, 2, "expected exactly the sm+ pill and the below-sm icon, both to /login");
   assert.match(src, /hidden whitespace-nowrap px-3 py-1\.5 text-xs sm:inline-flex/);
   assert.match(src, /sm:hidden/);
   const nofollow = src.match(/rel="nofollow"/g) ?? [];
   assert.ok(nofollow.length >= 2, "both signed-out links must keep rel=nofollow");
+});
+
+test("the header row has the slack to actually RENDER the wider signed-out CTA", () => {
+  // Widening the CTA to "Log in / Sign up" made the nav row's intrinsic minimum
+  // exceed the container between 1024 and ~1056px, and the container CLIPPED it
+  // — "Log in / Sign up" rendered as "Log". No page scroll, so
+  // scripts/mobile-check.ts's overflow sweep could not see it; measured with a
+  // real browser instead (ctaRight === viewportWidth, i.e. hard against the
+  // edge, at 1024/1032/1040/1048/1056).
+  //
+  // Two independent reservations of slack, both pinned here because either one
+  // silently reverting re-clips the CTA:
+  const src = read("src/components/Navbar.tsx");
+  // 1. The nav LINKS turn on at the same breakpoint as the search bar — the only
+  //    element in the row that can flex and absorb the difference.
+  assert.ok(!/md:block md:px-2\.5/.test(src), "nav links must not turn on at md — the flexible search bar is lg-and-up");
+  const lgLinks = src.match(/lg:block lg:px-2\.5/g) ?? [];
+  assert.ok(lgLinks.length >= 4, `expected the nav links gated at lg, found ${lgLinks.length}`);
+  // 2. The two NON-navigational items defer to xl, which is what buys the
+  //    1024-1056 band its headroom. Premium stays reachable from UserMenu and
+  //    /premium; Discord from the footer.
+  assert.match(src, /<PremiumButton className="[^"]*\bxl:block\b/, "the Premium button must defer to xl");
+  assert.match(src, /aria-label="Join our Discord"[\s\S]{0,300}?\bxl:grid\b/, "the Discord icon must defer to xl");
 });
 
 test("PriceAlertModal keeps the email path intact — the account option is a reframe, NOT a gate", () => {
@@ -178,10 +262,17 @@ test("the card page CTA no longer undercuts the account pitch", () => {
   assert.match(src, /watchlist syncs everywhere/);
 });
 
-test("the popup never fires on the first page of a session", () => {
+test("the popup gates on engagement, now via the delay rather than a second pageview", () => {
   const src = read("src/components/SignupPromoPopup.tsx");
-  assert.match(src, /const MIN_PAGEVIEWS = 2/);
+  // MIN_PAGEVIEWS was 2 because a 5s timer fired on page ONE for everyone, and
+  // requiring a second pageview was the only way to express "has engaged".
+  // PROMO_DELAY_MS is 15s now and expresses that directly, so the pageview gate
+  // relaxed to 1 — stacking both gated the dialog twice for one reason, and with
+  // bounce up 5pts it excluded every single-page session from ever seeing the
+  // pitch. The counter itself stays (it's how the gate is enforced at all).
+  assert.match(src, /const MIN_PAGEVIEWS = 1/);
   assert.match(src, /if \(pageviews < MIN_PAGEVIEWS\) return/);
+  assert.match(src, /export const PROMO_DELAY_MS = 30_000;/, "the delay must carry the engagement gate now");
   // The pageview counter increments once per pathname, in its own effect —
   // counting inside the arming effect would double-count when auth state loads.
   assert.match(src, /lastCountedPath/);
@@ -207,4 +298,62 @@ test("/login leads with account creation, not returning-user framing", () => {
   assert.match(src, /Already have one\? The same buttons sign you in\./);
   // The perks row replaced the 12px grey prose as the page's value prop.
   assert.match(src, /const PERKS = \["Price alerts", "Portfolio tracking", "Watchlist"\]/);
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// THE PROMO MUST NOT LAND ON TOP OF A BUY CLICK.
+//
+// buy_click is the event every affiliate dollar depends on. The delay ladder
+// (5s → 15s → 30s) only ever changed how long the interruption waited before
+// covering the buy button; it never moved it off the buy path. The trigger is
+// now conditional on what is on the page and what the visitor has already done:
+//
+//   no buy link on the page  → ordinary timer (PROMO_DELAY_MS)
+//   buy link, not clicked    → hold off until BUY_SURFACE_BACKSTOP_MS
+//   already clicked a buy    → POST_BUY_DELAY_MS, the only moment that cannot
+//                              cost a buy_click because it already happened
+//
+// The page-has-a-buy-link fact comes from OutboundLink REGISTERING ITSELF, not
+// from a list of "pages with buy links" — such a list rots the first time a new
+// surface renders one, and the failure mode is silent (the popup goes back to
+// covering the buy button on exactly the new page nobody remembered to add).
+// ─────────────────────────────────────────────────────────────────────────────
+test("the signup promo stays off the buy path", () => {
+  const src = read("src/components/SignupPromoPopup.tsx");
+  const outbound = read("src/components/OutboundLink.tsx");
+  const intent = read("src/lib/buy-intent.ts");
+
+  // The popup asks the shared signal, rather than testing the pathname.
+  assert.match(src, /buyLinksOnPage\(\)/, "the popup must ask whether a buy link is present");
+  assert.match(src, /hasBoughtThisSession\(\)/, "the popup must know whether the buy already happened");
+  assert.doesNotMatch(
+    src,
+    /startsWith\("\/card/,
+    "a hardcoded card-page path would rot — the signal must come from OutboundLink registering itself"
+  );
+
+  // OutboundLink is what makes the rule self-maintaining, on BOTH halves.
+  assert.match(outbound, /registerBuyLink\(\)/, "OutboundLink must register its presence on mount");
+  assert.match(outbound, /markBuyClick\(\)/, "OutboundLink must record the click");
+  // Order matters: the flag must be set before the beacon, or a re-arm can race it.
+  const markAt = outbound.indexOf("markBuyClick()");
+  const trackAt = outbound.indexOf('trackEvent("buy_click"');
+  assert.ok(markAt > -1 && trackAt > -1 && markAt < trackAt, "markBuyClick() must run before the buy_click beacon");
+
+  // A buy click mid-timer must re-arm to the short delay, or the best moment on
+  // the site is missed while the two-minute backstop runs out.
+  assert.match(src, /addEventListener\(BUY_CLICK_EVENT/, "a buy during the wait must re-arm the promo");
+  assert.match(src, /removeEventListener\(BUY_CLICK_EVENT/, "and must be cleaned up");
+
+  // Which trigger fired has to be separable in GA4, or the three cases average
+  // together and none of them can be judged.
+  assert.match(src, /trigger: firedAs/, "the impression must report which trigger fired");
+  assert.match(src, /trigger: "post_buy"/, "the post-buy path must label itself");
+
+  // Private mode must fail toward protecting the buy, not toward showing.
+  assert.match(
+    intent,
+    /catch\s*\{[\s\S]{0,400}?return false;/,
+    "an unreadable session must read as 'has not bought', which keeps the promo off the buy path"
+  );
 });

@@ -123,7 +123,7 @@ const LIST_SIZE = 5;
 // freshest snapshot is older than this, so the section just doesn't render
 // (both callers already treat an empty result as "hide this") instead of
 // presenting stale numbers as today's market.
-const STALE_HISTORY_MS = 3 * 86400_000;
+export const STALE_HISTORY_MS = 3 * 86400_000;
 
 // Compute this-week's biggest gainers, biggest fallers, and best-value buys (the
 // largest discounts off a card's recent high). Reads the whole market's history

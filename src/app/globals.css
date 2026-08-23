@@ -4,6 +4,22 @@
 
 :root {
   color-scheme: dark;
+  /* Reserved width for the persistent desktop SideNav (components/SideNav.tsx),
+     0 by default so every element that pads/positions against it (main, the
+     footer ad zone, the footer itself, CinematicHero's full-bleed breakout) is
+     a no-op below the breakpoint where SideNav actually renders. Read via
+     `var(--sidenav-w)` rather than a Tailwind `xl:` prefix on each consumer so
+     ALL of them share exactly one breakpoint decision — SideNav.tsx's own
+     `hidden xl:flex` and this media query must always agree, or the panel
+     either overlaps un-padded content or leaves a dead gap.
+     tests/sidenav.test.ts pins both against the same "1280px" value. */
+  --sidenav-w: 0px;
+}
+
+@media (min-width: 1280px) {
+  :root {
+    --sidenav-w: 17rem;
+  }
 }
 
 html,

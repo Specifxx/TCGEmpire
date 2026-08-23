@@ -23,24 +23,32 @@ const POPUP = "src/components/SignupPromoPopup.tsx";
 const PREMIUM_LIB = "src/lib/premium.ts";
 const OAUTH_CALLBACK = "src/app/api/auth/oauth/[provider]/callback/route.ts";
 
-test("the two list tools gate on Premium, not merely on an account", () => {
-  // Deliberate reversal (see the tier note in lib/premium.ts): these two used to
-  // be "the reason to sign up" for a free account. hasAccount() here would put
-  // them back on the free tier — the exact state this change exists to undo.
-  for (const page of [BULK, BASKET]) {
-    const src = read(page);
-    assert.match(src, /isPremium\(/, `${page} must gate via isPremium()`);
-    assert.ok(!/hasAccount\s*\(/.test(src), `${page} must not gate on hasAccount()`);
-  }
+test("the bulk pricer gates on Premium, not merely on an account", () => {
+  // The Bulk Pricer stays on the paid tier (see the tier note in lib/premium.ts).
+  // hasAccount() here would put it back on the free tier.
+  const src = read(BULK);
+  assert.match(src, /isPremium\(/, `${BULK} must gate via isPremium()`);
+  assert.ok(!/hasAccount\s*\(/.test(src), `${BULK} must not gate on hasAccount()`);
 });
 
-test("the basket API requires Premium, not just a session", () => {
+test("Best Basket gates on having an account, not on Premium", () => {
+  // Best Basket moved BACK to the free account tier (see the tier note in
+  // lib/premium.ts) — a generosity play to make it the reason to sign up, since
+  // signups were near-zero. isPremium() here would put it back behind the paywall
+  // this change exists to remove it from.
+  const src = read(BASKET);
+  assert.match(src, /hasAccount\(/, `${BASKET} must gate via hasAccount()`);
+  assert.ok(!/isPremium\s*\(/.test(src), `${BASKET} must not gate on isPremium()`);
+});
+
+test("the basket API requires a session, and nothing more", () => {
   // The page only conditionally RENDERS <BestBasket> — that's no obstacle to a
-  // signed-in-but-not-Premium caller hitting this route directly, and its output
-  // (the optimized store split) is the exact thing Premium is sold on.
+  // signed-out caller hitting this route directly, so the sign-in check has to
+  // live here too. It must NOT also require Premium — Best Basket is a free
+  // account-tier tool now.
   const src = read(BASKET_API);
   assert.match(src, /if \(!user\) return NextResponse\.json\(/, "must still reject signed-out callers");
-  assert.match(src, /isPremium\(user\)/, "basket API must also reject a signed-in non-Premium caller");
+  assert.ok(!/isPremium\s*\(/.test(src), "basket API must not require Premium — it's account-tier now");
 });
 
 test("the bulk pricer gates the TOOL without gating the page's indexable content", () => {
@@ -54,9 +62,10 @@ test("the bulk pricer gates the TOOL without gating the page's indexable content
   assert.match(beforeGate, /HubIntro/, "the hub intro must render above the gate");
 });
 
-test("neither tool still advertises itself as needing no account", () => {
+test("neither list tool still advertises itself as needing no account", () => {
   // Both pages used to say exactly this, and a stale claim here is a promise the
-  // gate immediately breaks.
+  // gate immediately breaks — Best Basket still requires a free account even
+  // though it no longer requires Premium.
   for (const page of [BULK, BASKET]) {
     const src = read(page);
     assert.ok(!/No account needed/i.test(src), `${page} still claims "no account needed"`);
@@ -77,41 +86,87 @@ test("the signup popup still appears on its own, with no promo gate", () => {
   assert.match(src, /if \(!loaded \|\| user\) return/, "still only shown to signed-out visitors");
 });
 
-test("the popup's permanent perks never include Bulk Pricer or Best Basket", () => {
+test("the popup's comparison pitches Best Basket but never Bulk Pricer", () => {
   const src = read(POPUP);
-  // Scope to the PERKS array itself (not the whole file — a comment is allowed to
-  // explain, in prose, that Bulk Pricer/Best Basket moved to Premium) so this
-  // checks what's actually PITCHED as a permanent account perk, not whether the
-  // tool names appear anywhere.
-  const perksMatch = src.match(/const PERKS[^=]*=\s*\[([\s\S]*?)\n\];/);
-  assert.ok(perksMatch, "expected a PERKS array declaration");
-  const perks = perksMatch![1];
-  assert.ok(!/Bulk Pricer/.test(perks), "popup must not pitch Bulk Pricer — it's Premium now");
-  assert.ok(!/Best Basket/.test(perks), "popup must not pitch Best Basket — it's Premium now");
-  assert.match(perks, /Price alerts/, "popup should name what an account actually unlocks");
-  assert.match(perks, /Watchlist/, "popup should name what an account actually unlocks");
+  // Scope to the COMPARISON array itself (not the whole file — a comment is
+  // allowed to explain, in prose, that Bulk Pricer stays Premium) so this checks
+  // what's actually PITCHED as a free-account perk, not whether the tool names
+  // appear anywhere.
+  const rowsMatch = src.match(/const COMPARISON[^=]*=\s*\[([\s\S]*?)\n\];/);
+  assert.ok(rowsMatch, "expected a COMPARISON array declaration");
+  const rows = rowsMatch![1];
+  assert.ok(!/Bulk Pricer/.test(rows), "popup must not pitch Bulk Pricer — it's Premium only");
+  assert.match(rows, /Best Basket/, "popup must pitch Best Basket — it's a free account perk, and advertising it is the point");
+  assert.match(rows, /Price alerts/, "popup should name what an account actually unlocks");
+  assert.match(rows, /Watchlist/, "popup should name what an account actually unlocks");
+  // 4-6 rows: fewer reads as thin, more makes the card tall enough to reopen the
+  // short-phone dismiss bug tests/signup-popup-dismissible.test.ts guards.
+  const rowCount = (rows.match(/\{\s*label:/g) ?? []).length;
+  assert.ok(rowCount >= 4 && rowCount <= 6, `expected 4-6 comparison rows, found ${rowCount}`);
 });
 
-test("the popup's Premium preview is sourced from a prop, not a hardcoded duration", () => {
-  // SIGNUP_PREMIUM_DAYS (lib/premium.ts) is a DELIBERATE reintroduction of a
-  // short signup-time Premium comp — see that constant's comment for why this
-  // differs from the week-long one retired below. This popup can't import a
-  // server-only module, so the day count must arrive as a prop (threaded from
-  // app/layout.tsx), never baked into the component as a literal — that's what
-  // keeps SIGNUP_PREMIUM_DAYS=0 actually able to turn the pitch off again.
+test("the popup is a free-account moment only — Premium never appears in it", () => {
+  // The dialog used to lead with a Premium comp (first a free WEEK, later the
+  // shorter SIGNUP_PREMIUM_DAYS preview threaded down as a prop). That made the
+  // ask about the PAID tier at the moment the visitor hadn't yet agreed to the
+  // free one. SIGNUP_PREMIUM_DAYS still grants on signup and is still pitched on
+  // /login via AuthForm's full layout — it is just not this dialog's hook.
   const src = read(POPUP);
-  assert.match(src, /signupPremiumDays\s*=\s*0/, "must default the prop to 0 (comp off) if the caller omits it");
-  assert.ok(!/\b1 day of Premium\b/.test(src), "must not hardcode a specific day count in the pitched copy");
-  assert.match(src, /of Premium free/i, "must pitch the preview when signupPremiumDays > 0");
+  assert.ok(!/signupPremiumDays/.test(src), "the popup must not take or thread the Premium-preview prop");
+  // Scoped to JSX/copy, not comments: the header comment legitimately explains
+  // WHY Premium is absent, and must not itself trip this assertion.
+  const withoutComments = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  assert.ok(!/Premium/.test(withoutComments), "no Premium copy may render in the popup");
 });
 
-test("the popup frames the Premium preview as temporary and the account perks as kept", () => {
-  // The old, week-long comp's actual failure (per lib/premium.ts's tier note) was
-  // reading as the account's own payoff, so losing it read as a downgrade. The
-  // reintroduced version must not repeat that: the copy has to say the preview
-  // ends and the perks below survive it.
+test("the popup's honesty guarantees: no fake scarcity, and the tie row stays", () => {
   const src = read(POPUP);
-  assert.match(src, /you keep/i, "copy must say the account perks are kept after the preview lapses");
+  // Row one is a deliberate tie — signing up takes nothing away — and the
+  // price-alerts row concedes the anonymous email path rather than claiming
+  // alerts are account-only, which they are not (api/alerts/subscribe).
+  const rowsMatch = src.match(/const COMPARISON[^=]*=\s*\[([\s\S]*?)\n\];/);
+  assert.ok(rowsMatch, "expected a COMPARISON array declaration");
+  const rows = rowsMatch![1];
+  assert.match(rows, /browsing: "Yes"/, "at least one row must credit browsing with a full yes");
+  assert.match(rows, /browsing: "One card, by email"/, "the alerts row must concede the anonymous email path");
+  // Countdowns, seat counts and "expires in" pressure are exactly what this
+  // dialog must never grow.
+  assert.ok(!/only \d+ (left|spots|seats)/i.test(src), "no fake scarcity");
+  assert.ok(!/expires? in/i.test(src), "no countdown pressure");
+  assert.match(src, /You keep everything you already have/, "the copy must say signing up costs them nothing");
+});
+
+test("the promo delay is one named 15s constant, never a scattered literal", () => {
+  // Was 5s, which fired while a visitor was still reading the first thing they
+  // landed on — 26% of visitors saw the dialog, 78% dismissed it, and
+  // pages/visitor and buy_click both fell. The delay must stay a single named
+  // export so it can't drift between the component and anything that reasons
+  // about its timing.
+  const src = read(POPUP);
+  // Every timing the promo can use is a named export. The delay ladder ended at
+  // 30s for pages with nothing to interrupt; the other two exist because a delay
+  // alone only changes how long the interruption waits before landing on the buy
+  // button, it never moves it off the buy path. See the component's header.
+  assert.match(src, /export const PROMO_DELAY_MS = 30_000;/, "the no-buy-link delay must stay a named constant");
+  assert.match(src, /export const BUY_SURFACE_BACKSTOP_MS = /, "the buy-surface backstop must be named");
+  assert.match(src, /export const POST_BUY_DELAY_MS = /, "the post-buy delay must be named");
+  assert.match(src, /\}, delay\)/, "the timer must read a computed named delay, not a literal");
+  assert.ok(!/setTimeout\([\s\S]{0,400}?\}, \d{3,}\)/.test(src), "no hardcoded millisecond literal may drive the promo timer");
+});
+
+test("a dismissed promo stays dismissed for the rest of the session", () => {
+  // Re-showing a dialog someone just closed is its own contribution to a 78%
+  // dismiss rate. dismiss() must WRITE the flag and the arming effect must READ
+  // it before re-arming on the next route.
+  const src = read(POPUP);
+  assert.match(src, /sessionStorage\.setItem\(SEEN_KEY, "1"\)/, "dismiss must persist the flag");
+  assert.match(src, /seen = sessionStorage\.getItem\(SEEN_KEY\) === "1"/, "the arming effect must read the flag back");
+  assert.match(src, /if \(seen\) return;/, "a seen promo must not re-arm on the next pageview");
+});
+
+test("the promo never fires for a signed-in visitor", () => {
+  const src = read(POPUP);
+  assert.match(src, /if \(!loaded \|\| user\) return;/, "the arming effect must bail for a signed-in user");
 });
 
 test("the retired WEEK-long signup comp's specific machinery stays gone", () => {
@@ -151,11 +206,13 @@ test("hasAccount and isPremium remain distinct checks", () => {
 // SIGNUP_PREMIUM_DAYS — the reintroduced signup-time Premium preview.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("SIGNUP_PREMIUM_DAYS is exported and env-configurable, defaulting to 1", () => {
+test("SIGNUP_PREMIUM_DAYS is exported and env-configurable, defaulting to 3", () => {
+  // Raised 1 → 3: a single day routinely lapsed before a new account came back
+  // for a second session, so the preview was spent without ever being used.
   const src = read(PREMIUM_LIB);
   assert.match(
     src,
-    /export const SIGNUP_PREMIUM_DAYS = Math\.max\(0, Math\.floor\(Number\(process\.env\.SIGNUP_PREMIUM_DAYS \?\? 1\)\)\);/,
+    /export const SIGNUP_PREMIUM_DAYS = Math\.max\(0, Math\.floor\(Number\(process\.env\.SIGNUP_PREMIUM_DAYS \?\? 3\)\)\);/,
     "SIGNUP_PREMIUM_DAYS must be exported, env-overridable, and floor/clamp like its siblings (PREMIUM_TRIAL_DAYS etc.)"
   );
 });

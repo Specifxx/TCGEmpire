@@ -10,7 +10,20 @@ import { hreflangForCountryGuide, pageAlternates, pageOpenGraph } from "@/lib/se
 
 // Pre-render the file-based posts; DB-backed market reports render on demand
 // (dynamicParams defaults to true) and are cached by `revalidate`.
-export const revalidate = 600;
+// ISR: 24 hours, with the price importer's /api/revalidate POST purging this
+// path outright at the end of every run (see lib/revalidate-content.ts).
+//
+// It was 600. Nothing here changes on a ten-minute clock: the prose is compiled
+// into the bundle, so an edit ships with a deploy, and the only live data is the
+// embedded card galleries, which move when the importer runs. The short TTL was
+// compensating for these routes being absent from the on-demand purge list —
+// they are on it now, so freshness went UP (immediate on import, not up to ten
+// minutes late) while regenerations went from 144 a day to 1.
+//
+// Across 56 posts + 38 guides that is ~13,500 renders a day, each re-running its
+// article's embed queries against Neon, replaced by ~2. See the egress rules at
+// the top of lib/db.ts for why that matters here specifically.
+export const revalidate = 86400;
 
 export function generateStaticParams() {
   return getArticles("blog").map((a) => ({ slug: a.slug }));

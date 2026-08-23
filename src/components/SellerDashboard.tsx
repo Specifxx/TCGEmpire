@@ -7,6 +7,7 @@ import { CONDITION_KEYS } from "@/lib/constants";
 import { CURRENCY_BY_COUNTRY } from "@/lib/marketplace-countries";
 import { MARKETPLACE_FEE_BPS, MARKETPLACE_PREMIUM_FEE_BPS, platformFeeCents } from "@/lib/marketplace-policy";
 import { formatMoney } from "@/lib/format";
+import { ListingShare } from "./ListingShare";
 import { cardDisplayName } from "@/lib/card-name";
 import { StripeErrorNotice } from "./StripeErrorNotice";
 import { MarketplaceReportBug } from "./MarketplaceReportBug";
@@ -615,6 +616,7 @@ function ListingRow({ l, isPremiumSeller, onChange }: { l: Listing; isPremiumSel
           <span className="text-xs text-slate-500">×{l.quantity}</span>
           <div className="flex items-center gap-1.5">
             <button onClick={() => setEditing(true)} className="rounded bg-ink-800 px-2 py-1 text-[11px] text-slate-200 hover:bg-ink-700">Edit</button>
+            <ListingShare listingId={l.id} />
             {l.status === "ACTIVE" ? (
               <button onClick={() => patch({ status: "PAUSED" })} className="rounded bg-ink-800 px-2 py-1 text-[11px] text-slate-300 hover:bg-ink-700">Pause</button>
             ) : l.status === "PAUSED" ? (

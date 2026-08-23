@@ -426,3 +426,54 @@ test("store health only posts to Discord when there are alerts, never a daily al
   const src = read("src/app/api/cron/store-health/route.ts");
   assert.match(src, /if \(alerts\.length\)/, "a clean run should stay silent, not compete for attention with a daily message");
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// THE BLIND SPOT AT THE CENTRE OF THE STORE MONITOR.
+//
+// checkStoreHealth() exists to catch a silently broken scraper. It used to build
+// its report by iterating `counts` — a groupBy over RetailerPrice — so a store
+// that returned ZERO rows produced no group, never entered the loop, and got no
+// row and no alert.
+//
+// That is the most complete form of the failure it is built to detect. Every
+// other check needs data to fire: `stale` reads a lastSeen that is null with no
+// rows, `listings-dropped` needs a count to compare against, and both price
+// checks need a median. A scraper falling from 400 listings to 40 alerted
+// loudly; the same scraper falling to 0 — site redesign, new bot protection,
+// changed URL, expired token — vanished from the report, which reads exactly
+// like "this store was never configured".
+//
+// The loop must therefore walk the REGISTRY, not the query result.
+// ─────────────────────────────────────────────────────────────────────────────
+test("store health reports stores that returned NOTHING, not just stores with data", () => {
+  const src = read("src/lib/store-health.ts");
+
+  // Matches the BLOCK form only. The union line below is `for (const c of
+  // counts) expected.set(...)` on one line and is required, so a bare
+  // /for \(const c of counts\)/ would fail on correct code — the same
+  // over-broad-negative mistake this file has caught before.
+  assert.doesNotMatch(
+    src,
+    /for \(const c of counts\)\s*\{/,
+    "iterating the groupBy as the report loop makes a zero-listing store invisible — walk the registry instead"
+  );
+  assert.match(
+    src,
+    /for \(const r of RETAILER_LIST\)/,
+    "the expected set must be built from the registry of stores we claim to track"
+  );
+  // Observed markets must be UNIONED in, never replaced: eBay uses per-market
+  // retailer keys, so a registry-only list would drop real rows from the report.
+  assert.match(
+    src,
+    /for \(const c of counts\) expected\.set\(/,
+    "markets that returned rows but aren't named in the registry must still be reported"
+  );
+  // And the zero case has to actually raise something.
+  assert.match(src, /kind: "no-listings"/, "a store with no rows at all must raise an alert");
+  assert.match(
+    src,
+    /"no-listings":\s*"[^"]+"/,
+    "the new alert kind needs a KIND_LABEL or the Discord line renders undefined"
+  );
+});

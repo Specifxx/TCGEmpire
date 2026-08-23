@@ -183,13 +183,13 @@ const RESOLVED_SOURCE = resolveVar(OPERATIONAL_VARS) ?? "NONE";
 // exactly as before.
 export const OPERATIONAL_URL_SOURCE = process.env.DB_SOURCE_NAME || RESOLVED_SOURCE;
 
-if (OPERATIONAL_URL_SOURCE !== "RM7") {
+if (OPERATIONAL_URL_SOURCE !== "RM8") {
   console.warn(
-    `[db] operational database resolved from ${OPERATIONAL_URL_SOURCE}, not RM7. ` +
-      `RM7 is the current project (cut over 2026-08-20); RM8 is the designated rollback and RM5 the one behind it; ` +
-      `everything below them is exhausted/read-only (RM6 last of all — freshest data, but its ` +
-      `allowance is spent, so it cannot serve), kept only so a deploy can't hard-fail. ` +
-      `If this appears in a Vercel build log, RM7 is missing from that environment.`
+    `[db] operational database resolved from ${OPERATIONAL_URL_SOURCE}, not RM8. ` +
+      `RM8 is the current project (cut over 2026-08-22, restored from RM6 after RM7 went over its ` +
+      `transfer allowance); RM7 sits behind it, holding the 2026-08-20..22 writes but unable to ` +
+      `serve until its allowance resets. If this appears in a Vercel build log, RM8 is missing ` +
+      `from that environment.`
   );
 }
 

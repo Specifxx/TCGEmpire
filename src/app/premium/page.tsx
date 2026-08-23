@@ -9,13 +9,12 @@ import { AnnualPriceBlock } from "@/components/AnnualPriceBlock";
 import { SITE_URL, PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, PREMIUM_ANNUAL_AMOUNT } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
-import { ANON_SEARCH_LIMIT, FREE_SEARCH_LIMIT } from "@/lib/search-limits";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "RiftCompare Premium — power tools for buyers & sellers",
-  description: "RiftCompare Premium: the Bulk Pricer, Best Basket, Value Finder screener, Rising Cards, the full Deal Finder list, daily Arbitrage Alerts and an ad-free site. Price comparison is free for everyone.",
+  description: "RiftCompare Premium: the Bulk Pricer, Value Finder screener, Rising Cards, the full Deal Finder list, daily Arbitrage Alerts and an ad-free site. Price comparison is free for everyone, and a free account adds Best Basket.",
   alternates: pageAlternates("/premium"),
 };
 
@@ -26,12 +25,6 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
     body: "Paste an entire want-list, trade pile or collection and price every card at once, each matched to its cheapest live store price with a running total.",
     href: "/bulk-pricer",
     cta: "Open Bulk Pricer",
-  },
-  {
-    title: "Best Basket",
-    body: "The cheapest way to actually buy a whole deck or wishlist — the lowest landed total across stores once postage and free-shipping thresholds are factored in, not just the lowest price per card.",
-    href: "/tools/best-basket",
-    cta: "Open Best Basket",
   },
   {
     title: "Value Finder screener",
@@ -74,18 +67,17 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
 // The three tiers, in the order a visitor moves through them (see lib/premium.ts).
 // `true`/`false` render a tick/dash; a string renders verbatim.
 const COMPARE: { feature: string; anon: boolean | string; account: boolean | string; premium: boolean | string }[] = [
-  { feature: "Card searches per day", anon: `${ANON_SEARCH_LIMIT}/day`, account: `${FREE_SEARCH_LIMIT}/day`, premium: "Unlimited" },
   { feature: "Compare prices across every store + eBay", anon: true, account: true, premium: true },
   { feature: "Full card database, search & browse", anon: true, account: true, premium: true },
   { feature: "Deck builder, trade calculator & box EV", anon: true, account: true, premium: true },
   { feature: "RiftCompare Index, movers & daily wrap", anon: true, account: true, premium: true },
   { feature: "Price alerts", anon: false, account: true, premium: true },
   { feature: "Portfolio tracker — history, P&L, CSV export", anon: false, account: true, premium: true },
+  { feature: "Best Basket — cheapest store split, postage included", anon: false, account: true, premium: true },
   { feature: "Deal Finder", anon: "Top pick", account: "Top pick", premium: "Full list" },
   { feature: "Rising Cards", anon: "Top pick", account: "Top pick", premium: "Full list" },
   { feature: "Value Finder screener", anon: false, account: false, premium: true },
   { feature: "Bulk Pricer — price a whole list at once", anon: false, account: false, premium: true },
-  { feature: "Best Basket — cheapest store split, postage included", anon: false, account: false, premium: true },
   { feature: "Arbitrage Alerts — daily flip + cross-region digest", anon: false, account: false, premium: true },
   { feature: "Condition Impact Calculator", anon: false, account: false, premium: true },
   { feature: "Ad-free experience", anon: false, account: false, premium: true },
@@ -93,7 +85,6 @@ const COMPARE: { feature: string; anon: boolean | string; account: boolean | str
 
 const INCLUDED = [
   "Bulk Pricer",
-  "Best Basket",
   "Value Finder screener",
   "Rising Cards",
   "Full Deal Finder list",
@@ -130,7 +121,7 @@ export default async function PremiumPage() {
             "@context": "https://schema.org",
             "@type": "Product",
             name: "RiftCompare Premium",
-            description: "The Bulk Pricer, Best Basket, Value Finder screener, Rising Cards, the full Deal Finder list, daily Arbitrage Alerts and an ad-free RiftCompare.",
+            description: "The Bulk Pricer, Value Finder screener, Rising Cards, the full Deal Finder list, daily Arbitrage Alerts and an ad-free RiftCompare.",
             brand: { "@type": "Organization", name: "RiftCompare", url: SITE_URL },
             offers: {
               "@type": "Offer",
@@ -152,7 +143,7 @@ export default async function PremiumPage() {
         <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-400">
           {already
             ? "Everything you've unlocked is below — jump straight into any of it. Thanks for supporting RiftCompare."
-            : "Price comparison is free for everyone, and a free account adds alerts and your portfolio. Premium adds the Bulk Pricer, Best Basket, the pro screeners and an ad-free site — cancel anytime."}
+            : "Price comparison is free for everyone, and a free account adds alerts, your portfolio and Best Basket. Premium adds the Bulk Pricer, the pro screeners and an ad-free site — cancel anytime."}
         </p>
       </div>
 

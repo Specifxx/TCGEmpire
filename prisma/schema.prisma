@@ -64,6 +64,19 @@ model User {
   // market on any device, not just the one that had the right cookie/geo guess.
   preferredCountry    String?
 
+  // ── Public collection share link (opt-in, revocable) ────────────────────────
+  // A random URL token. Its PRESENCE is the switch: set = /c/<token> serves a
+  // read-only view of this account's collection, null = the page 404s. There is
+  // deliberately no separate boolean — two sources of truth for "is this shared"
+  // is how a revoked share stays live because only one of them was cleared.
+  //
+  // Rotating the token (Share → Regenerate) invalidates every link already
+  // posted, which is the only revocation that actually works once a URL is in a
+  // Discord channel. The public view NEVER reads costBasisCents or any P&L
+  // figure — see lib/collection-share.ts, which selects the fields explicitly
+  // rather than passing a whole row through.
+  collectionShareId   String?   @unique
+
   // ── Saved default shipping address (marketplace checkout) ─────────────────────
   // Prefills the checkout address step; a fresh snapshot is copied onto each Order
   // at purchase time (see Order.ship* below) so editing this later never rewrites
@@ -908,6 +921,13 @@ model MarketplaceListing {
   status     String   @default("ACTIVE") // ACTIVE, SOLD_OUT, PAUSED, REMOVED
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  // Stable public token for /l/<shareId>, the link a seller posts into a Discord
+  // or Facebook trading group. Deliberately NOT the row id: a listing id appears
+  // in seller-only API responses and admin views, and a token that is safe to
+  // paste anywhere should never be the same string that identifies the row
+  // internally. Backfilled lazily on first share (see lib/listing-share.ts), so
+  // existing rows need no migration and a seller who never shares never gets one.
+  shareId    String?  @unique
 
   seller User               @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   card   Card               @relation(fields: [cardId], references: [id], onDelete: Cascade)

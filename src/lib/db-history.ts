@@ -25,45 +25,47 @@ import { HISTORY_VARS, OPERATIONAL_VARS, resolveUrl, resolveVar } from "./db-cha
 // etc. tables it also creates cost negligible storage empty; only PriceHistory /
 // ClickEvent get real traffic).
 
-// HISTORY_DATABASE_URL_3 is the CURRENT history project — cut over 2026-08-19
-// when HISTORY_DATABASE_URL_2 approached its own 5 GB monthly network-transfer
-// allowance, three days after it took over from HISTORY_DATABASE_URL (which
-// replaced RH7 on 2026-08-16; RH7 replaced RH6 on 2026-08-04; RH6 replaced RH5
-// on 2026-07-31; _4 went unreachable with P1001 before that).
+// HISTORY_DATABASE_URL_4 is the CURRENT history project — cut over 2026-08-21
+// when HISTORY_DATABASE_URL_3 went over its 5 GB monthly network-transfer
+// allowance, two days after it took over from HISTORY_DATABASE_URL_2 (which
+// replaced HISTORY_DATABASE_URL on 2026-08-19; HISTORY_DATABASE_URL replaced
+// RH7 on 2026-08-16; RH7 replaced RH6 on 2026-08-04; RH6 replaced RH5 on
+// 2026-07-31).
 //
 // THE CHAIN IS CURRENT-FIRST, NOT NEWEST-FIRST. Early rotations moved forward
 // onto freshly provisioned projects, so "newest first" and "current first"
-// happened to coincide. They no longer do: this is the THIRD consecutive
-// rotation onto a RECYCLED project — _2 and now _3 are both among the oldest
-// names in the list. Neon's caps are per project and per month, so a project
-// retired long enough ago has a fully reset allowance — re-using rested
-// capacity we already own beats provisioning an RH8 and beats paying. The head
-// of this list is therefore whichever project is in service TODAY; read it as
-// a precedence order, never as a timeline.
+// happened to coincide. They no longer do: this is the FOURTH consecutive
+// rotation onto a RECYCLED project — _2, _3 and now _4 are all among the
+// oldest names in the list. Neon's caps are per project and per month, so a
+// project retired long enough ago has a fully reset allowance — re-using
+// rested capacity we already own beats provisioning an RH8 and beats paying.
+// The head of this list is therefore whichever project is in service TODAY;
+// read it as a precedence order, never as a timeline.
 //
 // A recycled name carries one trap the forward rotations never had: the older
 // vars are also migration SOURCES in .github/workflows/maintenance.yml, so a
 // name that is both the target and a listed source would make a migration
 // silently no-op while reporting every row count as matching.
-// HISTORY_DATABASE_URL_3 has been made the SOURCE-EXCLUDED target in the new
-// `migrate-history-db-to-hdu3` task for that reason (pinned SOURCE =
-// HISTORY_DATABASE_URL_2 only, never a fallback chain that could resolve back
-// to _3 itself). HISTORY_DATABASE_URL_2 — no longer the target — is safe to
+// HISTORY_DATABASE_URL_4 has been made the SOURCE-EXCLUDED target in the new
+// `migrate-history-db-to-hdu4` task for that reason (pinned SOURCE =
+// HISTORY_DATABASE_URL_3 only, never a fallback chain that could resolve back
+// to _4 itself). HISTORY_DATABASE_URL_3 — no longer the target — is safe to
 // leave in other tasks' fallback/source chains. Grep both before rotating again.
 //
-// SEVEN PROJECTS IN ~TWO WEEKS IS A READ-PATTERN PROBLEM, NOT A CAPACITY ONE. A
-// fresh project buys roughly three to four days at the current burn rate, so
-// treat the next exhaustion as a signal to find the query, not to provision
-// RH8. The egress guard below already logs any single history query returning
-// ≥1 MB — grep the Vercel logs for "[egress-guard:history]" and it will name
-// the model/operation. One known offender to check first: getEmptyCardIds() in
-// lib/card-price-state.ts groups the ENTIRE PriceHistory table with no `where`,
-// no `take` and no cache, so its payload grows every day forever.
+// EIGHT PROJECTS IN ~TWO WEEKS IS A READ-PATTERN PROBLEM, NOT A CAPACITY ONE.
+// A fresh project buys only a few days at the current burn rate, so treat the
+// next exhaustion as a signal to find the query, not to provision RH8.
+// getEmptyCardIds() in lib/card-price-state.ts — named as the prime suspect on
+// every prior rotation's own notes — was rewritten as part of THIS rotation to
+// stop grouping the entire PriceHistory table (see that function's own
+// comment). The egress guard below still logs any single history query
+// returning ≥1 MB — grep the Vercel logs for "[egress-guard:history]" if the
+// allowance still drains fast; that names the next offender.
 //
-// HISTORY_DATABASE_URL_2 is kept as the rollback fallback and every older var
+// HISTORY_DATABASE_URL_3 is kept as the rollback fallback and every older var
 // below it is a read-only fallback/migration source; treat them as dead, never
 // the primary target. Once everything's copied across (see the
-// `migrate-history-db-to-hdu3` task in .github/workflows/maintenance.yml) and
+// `migrate-history-db-to-hdu4` task in .github/workflows/maintenance.yml) and
 // nothing references the older vars anymore, they can be removed entirely.
 //
 // ORDER MATTERS AND IS LOAD-BEARING: this list is duplicated, by necessity, in
@@ -88,12 +90,12 @@ export const HISTORY_URL_SOURCE =
     ? "DATABASE_URL (no history project set — history shares the operational DB)"
     : resolveVar(HISTORY_VARS)!;
 
-if (HISTORY_URL_SOURCE !== "HISTORY_DATABASE_URL_3") {
+if (HISTORY_URL_SOURCE !== "HISTORY_DATABASE_URL_4") {
   console.warn(
-    `[db-history] history DB resolved to ${HISTORY_URL_SOURCE}, not HISTORY_DATABASE_URL_3 — the current ` +
-      `history project is missing from this environment. HISTORY_DATABASE_URL is the rollback (an identical copy) ` +
-      `and RH6 holds the deep pre-2026-08-04 history; HISTORY_DATABASE_URL_2 is LAST because its allowance is spent. ` +
-      `Expect P1001 or writes landing in the wrong place.`
+    `[db-history] history DB resolved to ${HISTORY_URL_SOURCE}, not HISTORY_DATABASE_URL_4 — the current ` +
+      `history project is missing from this environment. HISTORY_DATABASE_URL_3 is the rollback (served until ` +
+      `the 2026-08-21 cutover) and RH6 holds the deep pre-2026-08-04 history; HISTORY_DATABASE_URL_2 is dead ` +
+      `(allowance spent). Expect P1001 or writes landing in the wrong place.`
   );
 }
 
