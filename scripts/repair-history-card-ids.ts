@@ -52,15 +52,34 @@ const HISTORY_VARS = [
   "RH6",
   "RH5",
 ];
-// RM7/RM8 prepended 2026-08-21 — this list had gone stale at RM6 (missing the
-// 2026-08-20 RM7 cutover entirely), which is exactly the "operational chain
-// drifted from db-chains.ts" failure mode db-chains.ts's own header warns
-// about. Kept as a superset (not the bare db-chains.ts OPERATIONAL_VARS) since
-// this script's `pick()` is a best-effort "find ANY live operational database"
-// for the externalId join, not a strict current-vs-dead diagnostic.
-const OPERATIONAL_VARS = ["RM7", "RM8", "RM6", "DATABASE_URL_2", "DATABASE_URL", "RM5", "RM4", "RM3"];
+// THE CANONICAL CHAIN, IMPORTED. Not a hand-kept copy.
+//
+// This list used to live here as a superset — ["RM7", "RM8", "RM6", ...] — on the
+// reasoning that pick() is a best-effort "find ANY live operational database" for
+// the externalId join rather than a strict current-vs-dead diagnostic.
+//
+// That reasoning was wrong, and it broke this script on 2026-08-23. Two ways:
+//
+//  1. It went stale. RM7 was prepended on 2026-08-21, one day before the RM8
+//     cutover, so the list led with a project that is now dead and over its
+//     transfer allowance. pick() returns the first variable that is merely SET,
+//     not the first that ANSWERS, so it selected RM7 and the run died with
+//     "Can't reach database server" — after printing "Operational : RM7".
+//
+//  2. "Any operational database" is the wrong requirement. This script rewrites
+//     history cardIds to match the LIVE catalogue. Joining externalIds against a
+//     RETIRED catalogue would re-key history onto ids the live app does not use —
+//     silently, and with CASCADE behind it. A fallback here does not degrade the
+//     result, it corrupts it. The only correct source is the database the app
+//     actually reads.
+//
+// So this now imports OPERATIONAL_VARS from db-chains.ts, which is the single
+// source of truth the header of that file exists to enforce, and pinned by
+// tests/db-chain.test.ts. If none of the live chain resolves, the run fails —
+// which is the right outcome, because there is nothing safe to fall back to.
+import { OPERATIONAL_VARS } from "../src/lib/db-chains";
 
-function pick(vars: string[], forced?: string): { name: string; url: string } | null {
+function pick(vars: readonly string[], forced?: string): { name: string; url: string } | null {
   const list = forced ? [forced] : vars;
   for (const v of list) {
     const url = process.env[v];
