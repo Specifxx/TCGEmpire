@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 const ROOT = process.cwd();
@@ -112,4 +112,54 @@ test("db-history and db.ts resolve the operational database from ONE shared list
       `${f} must not re-declare the operational chain inline`
     );
   }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NO SCRIPT MAY KEEP ITS OWN OPERATIONAL CHAIN.
+//
+// db-chains.ts exists because these lists were copy-pasted into a dozen places
+// and every rotation had to update all of them, and never did. Its header lists
+// four production failures caused by exactly that. This is the fifth, and it
+// happened AFTER that file was created:
+//
+//   scripts/repair-history-card-ids.ts declared
+//     const OPERATIONAL_VARS = ["RM7", "RM8", "RM6", "DATABASE_URL_2", ...]
+//
+//   prepended on 2026-08-21, one day before the RM8 cutover. pick() returns the
+//   first variable that is merely SET — not the first that ANSWERS — so on
+//   2026-08-23 it selected RM7, a project that is dead and over its transfer
+//   allowance, printed "Operational : RM7", and died on connect.
+//
+// The comment above that list even named the drift risk, then justified the copy
+// as a "best-effort find ANY live operational database". That justification is
+// what made it dangerous: the script re-keys history cardIds onto the live
+// catalogue, so joining externalIds against a RETIRED catalogue does not degrade
+// the result, it corrupts it — silently, with ON UPDATE CASCADE behind it.
+//
+// A script that needs the operational database needs THE operational database.
+// ─────────────────────────────────────────────────────────────────────────────
+test("no script declares its own operational-database chain", () => {
+  const dir = join(process.cwd(), "scripts");
+  const offenders: string[] = [];
+
+  for (const f of readdirSync(dir)) {
+    if (!f.endsWith(".ts")) continue;
+    const src = readFileSync(join(dir, f), "utf8");
+    // A local array literal of operational variable NAMES. The canonical list is
+    // imported, so a file that imports it has no such literal.
+    for (const m of src.matchAll(/const\s+\w*(?:OPERATIONAL|MAIN)\w*(?:_VARS|_URLS)?\s*=\s*\[([^\]]*)\]/g)) {
+      const body = m[1];
+      if (!/["'](?:RM\d|DATABASE_URL)/.test(body)) continue;
+      const line = src.slice(0, m.index).split("\n").length;
+      offenders.push(`scripts/${f}:${line} — ${m[0].replace(/\s+/g, " ").slice(0, 100)}`);
+    }
+  }
+
+  assert.deepEqual(
+    offenders,
+    [],
+    "import OPERATIONAL_VARS from src/lib/db-chains.ts instead — a hand-kept copy goes " +
+      "stale at the next rotation and selects a dead project, because these chains fall " +
+      "through on an UNSET variable, never an unreachable one:\n" + offenders.join("\n")
+  );
 });

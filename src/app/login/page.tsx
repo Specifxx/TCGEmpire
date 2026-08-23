@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { enabledProviders } from "@/lib/oauth";
 import { SIGNUP_PREMIUM_DAYS } from "@/lib/premium";
 import { pageAlternates } from "@/lib/seo";
+import { sanitizeNextPath } from "@/lib/next-param";
 
 // auth/utility — never indexed. The self-referencing canonical is what collapses
 // the ?next= family: the navbar's sign-in link carries the current path as ?next=,
@@ -18,28 +19,31 @@ export const metadata: Metadata = {
   alternates: pageAlternates("/login"),
 };
 
-function safe(next?: string): string {
-  return next && next.startsWith("/") && !next.startsWith("//") ? next : "/profile";
-}
-
-// Where "cancel" goes, for a signed-out visitor who landed here (often
-// redirected, unasked, off a gated feature) and wants back out. NOT safe()'s
-// "/profile" fallback — that requires being signed in, so an unauthenticated
-// visitor with no `next` clicking Cancel would just bounce straight back to
-// this same page. Falls back to the homepage instead, which is always a real
-// escape route.
-function cancelTarget(next?: string): string {
-  return next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
-}
+// One line of destination-specific persuasion, so a visitor bounced here off a
+// gated feature (/watching, /portfolio redirect straight to /login?next=…)
+// lands on a reason instead of a cold form. Unknown destinations get none.
+const CONTEXT_LINES: Record<string, string> = {
+  "/watching": "Sign in to see and manage every card you're watching in one place.",
+  "/portfolio": "Sign in to track what your collection is worth, live.",
+  "/profile": "Sign in to get back to your account.",
+  "/dashboard": "Sign in to open your dashboard.",
+};
 
 export default async function LoginPage({ searchParams }: { searchParams: { next?: string } }) {
   const user = await getCurrentUser();
-  if (user) redirect(safe(searchParams.next));
+  // "Safe internal path" is defined once in lib/next-param.ts (the OAuth start
+  // route and callback apply the same rule); the fallbacks differ per use:
+  // an already-signed-in visitor goes to /profile, a Cancel link goes home
+  // (an unauthenticated visitor sent to /profile would just bounce back here).
+  const next = sanitizeNextPath(searchParams.next);
+  if (user) redirect(next ?? "/profile");
   return (
     <AuthForm
       providers={enabledProviders()}
-      cancelHref={cancelTarget(searchParams.next)}
+      cancelHref={next ?? "/"}
       signupPremiumDays={SIGNUP_PREMIUM_DAYS}
+      next={next ?? undefined}
+      contextLine={next ? CONTEXT_LINES[next] : undefined}
     />
   );
 }

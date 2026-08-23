@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { Inter, JetBrains_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
+import { SideNav } from "@/components/SideNav";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { QuickViewProvider } from "@/components/QuickView";
 import { SealedQuickViewProvider } from "@/components/SealedQuickView";
@@ -19,11 +20,11 @@ import { MARKETPLACE_NAV_VISIBLE } from "@/components/nav-groups";
 import { FooterNav } from "@/components/FooterNav";
 import { ShareRow } from "@/components/ShareRow";
 import { enabledProviders } from "@/lib/oauth";
-import { SIGNUP_PREMIUM_DAYS } from "@/lib/premium";
 import { AdSenseLoader } from "@/components/AdSenseLoader";
 import { ConsentDefaults } from "@/components/ConsentDefaults";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { GAPageViewTracker } from "@/components/GAPageViewTracker";
+import { SignupWelcome } from "@/components/SignupWelcome";
 import { GoogleAnalyticsUser } from "@/components/GoogleAnalyticsUser";
 import { ConsentGatedAnalytics } from "@/components/ConsentGatedAnalytics";
 import { PrivacySettingsLink } from "@/components/PrivacySettingsLink";
@@ -283,12 +284,27 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <CommandLauncherProvider>
               <MegaMenuProvider>
                 <Navbar />
+                <SideNav />
                 {/* No announcement ribbon here any more — the homepage's Vendetta
                     block (right under the hero) carries the "it's here" message
                     with real prices instead of a repeating marquee claim. */}
-                <main id="main-content" className="container-app min-w-0 py-6">{children}</main>
-                <PriceAlertModal />
-                <SignupPromoPopup providers={enabledProviders()} signupPremiumDays={SIGNUP_PREMIUM_DAYS} />
+                {/* pl-[var(--sidenav-w)] on this OUTER wrapper, not on <main> itself
+                    — combining a pl-* utility with container-app's own px-* on the
+                    SAME element is a well-known Tailwind footgun (both set
+                    padding-left; which one wins depends on generated CSS order,
+                    not className order). Keeping them on separate elements sidesteps
+                    that entirely. 0 below xl, so a no-op everywhere SideNav is
+                    hidden; SideNav itself is `position: fixed`, not a layout
+                    participant, so this is what actually reserves its space. */}
+                <div className="pl-[var(--sidenav-w)]">
+                  <main id="main-content" className="container-app min-w-0 py-6">{children}</main>
+                </div>
+                <PriceAlertModal providers={enabledProviders()} />
+                <SignupPromoPopup providers={enabledProviders()} />
+                {/* Converts the OAuth callback's one-time ?welcome= param into
+                    the sign_up analytics event, then strips it from the URL.
+                    Renders nothing. */}
+                <SignupWelcome />
                 {/* Feedback launcher. Deliberately never auto-opens — see the
                     component header for why a second uninvited dialog would be
                     self-defeating here. It hides itself over the ad zone below. */}
@@ -302,15 +318,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             is left unmonetised. Both are CPC/affiliate: they pay on click-through
             purchases, so placement-where-relevant beats raw banner count.
             FooterAds reads the market from the client country context (inside
-            CountryProvider) so the layout stays cookie-free and cacheable. */}
-        <FooterAds />
+            CountryProvider) so the layout stays cookie-free and cacheable.
+            SideNav is `position: fixed` and spans the FULL page height (it
+            doesn't scroll away), so the ad zone needs the same pl-[var(--sidenav-w)]
+            reservation as <main> above — without it, the fixed panel would sit
+            on top of (not beside) these banners once scrolled into view. */}
+        <div className="pl-[var(--sidenav-w)]">
+          <FooterAds />
+        </div>
         </CountryProvider>
-        <footer className="container-app border-t border-ink-800 py-8 text-center text-xs text-slate-500">
+        <footer className="border-t border-ink-800 py-8 text-center text-xs text-slate-500">
+        <div className="container-app pl-[var(--sidenav-w)]">
           <NewsletterSignup siteName="RiftCompare" />
           {/* Site-map — surfaced here so every page links to every feature even
-              when the xl SideNav is absent (mobile, homepage, smaller desktops).
-              4 columns on desktop, collapsible accordions on mobile — see
-              FooterNav / nav-groups.ts's FOOTER_GROUPS for the re-bucketing. */}
+              on mobile/tablet, where the xl-and-up SideNav is hidden. 4 columns
+              on desktop, collapsible accordions on mobile — see FooterNav /
+              nav-groups.ts's FOOTER_GROUPS for the re-bucketing. */}
           <FooterNav />
           {/* Share band. The site's only other share controls are per-article
               (ArticleShare) and per-card (ShareButton), so there was nowhere to
@@ -444,6 +467,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             sponsor this project.
           </p>
           <p className="mt-2">&copy; {new Date().getFullYear()} {SITE_NAME}. All rights reserved.</p>
+        </div>
         </footer>
         {/* Detects the Capacitor native runtime and shows native AdMob ads, styles
             the status bar and wires the Android back button. No-op on the web. */}

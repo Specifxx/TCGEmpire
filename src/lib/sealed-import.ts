@@ -7,7 +7,7 @@ import { isEbayEnabled, isEbayRateLimited, searchEbaySealed, primeEbayBudget, se
 import { fetchTcgplayerSealed, tcgProductUrl, tcgImageUrl, setCodeFromSetName } from "./tcgplayer";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows } from "./scrape-http";
 import { DEFAULT_COUNTRY, type Country } from "./country";
-import { isPreorderSetCode } from "./constants";
+import { isPreorderSetCode, EBAY_CA_RETAILER } from "./constants";
 
 interface ShopifyImg { src?: string }
 interface ShopifyVar { price: string; available: boolean }
@@ -333,16 +333,39 @@ export async function importSealed(): Promise<number> {
   // zero, not a ranking problem, and no amount of placement work could reach it.
   //
   // Cost is not the reason it was AU-only: sealed is a few dozen product groups,
-  // not the ~1,400-card singles catalogue, so a full market sweep is ~100 Browse
-  // calls against a ~4,280 budget. It is rounding error.
+  // not the ~1,400-card singles catalogue, so a full market sweep across all
+  // five markets (AU/US/UK/SG/CA) is ~130 Browse calls against a ~4,400 budget.
+  // It is rounding error.
   //
   // Deploys (push) set EBAY_REFRESH=false so they never spend eBay quota; only
   // scheduled / manual runs search eBay (and even then, within the live budget).
+  //
+  // ONCE A DAY, NOT EVERY RUN (2026-08-20). This import runs on every scheduled
+  // invocation (twice daily, 07:00/19:00 UTC), unlike the singles pass which
+  // gates itself on staleness. Sealed inventory does not move twice a day, so
+  // the second run was pure waste — real Browse calls spent re-searching the
+  // same ~30 product groups per market a few hours after the first pass already
+  // refreshed them. Gated the same way singles is: due if the newest eBay-sealed
+  // row is over 20h old, or EBAY_FORCE=1 bypasses it. The store-scrape and
+  // TCGplayer halves above are UNCHANGED — they cost no Browse quota, so there is
+  // no reason to make those any staler than the schedule already gives them.
   if (isEbayEnabled() && process.env.EBAY_REFRESH !== "false") {
-    await primeEbayBudget(); // respect the live daily quota for sealed searches too
-    for (const mkt of EBAY_SEALED_MARKETS) {
-      if (isEbayRateLimited()) break;
-      count += await refreshEbaySealedMarket(mkt);
+    const newestEbaySealed = await prisma.sealedListing.findFirst({
+      where: { retailer: { startsWith: "ebay" } },
+      orderBy: { lastSeen: "desc" },
+      select: { lastSeen: true },
+    });
+    const staleCutoff = new Date(Date.now() - 20 * 3600_000);
+    const forced = process.env.EBAY_FORCE === "1";
+    const due = forced || !newestEbaySealed || newestEbaySealed.lastSeen < staleCutoff;
+    if (due) {
+      await primeEbayBudget(); // respect the live daily quota for sealed searches too
+      for (const mkt of EBAY_SEALED_MARKETS) {
+        if (isEbayRateLimited()) break;
+        count += await refreshEbaySealedMarket(mkt);
+      }
+    } else {
+      console.log("eBay sealed: skipped (refreshed within the last 20h).");
     }
   }
 
@@ -387,14 +410,23 @@ const EBAY_SEALED_MARKETS = [
   { country: "AU", marketplace: "EBAY_AU", retailer: "ebay" },
   { country: "UK", marketplace: "EBAY_GB", retailer: "ebay_uk" },
   { country: "SG", marketplace: "EBAY_SG", retailer: "ebay_sg" },
+  // Added 2026-08-20 — CA was the only tracked market with no eBay sealed
+  // presence (singles derive CA from the US pass to skip a ~1,400-card
+  // catalogue sweep, but sealed is only ~30 product groups here, so a REAL
+  // native search is cheap enough — see the cost note above — and simpler
+  // than an FX-converted synthetic like TCG_CA). Reuses EBAY_CA_RETAILER so
+  // this shares an identity with the singles importer's "ebay_ca" retailer key
+  // even though the derivation differs; both tables are independent, so
+  // there's no collision risk in reusing the name.
+  { country: "CA", marketplace: "EBAY_CA", retailer: EBAY_CA_RETAILER },
 ] as const;
 
 /**
  * One market's eBay sealed pass. Returns the number of rows written.
  *
  * Retailer keys match the singles importer (`ebay`, `ebay_us`, `ebay_uk`,
- * `ebay_sg`) so every existing `retailer.startsWith("ebay")` test — brand
- * colouring, buy-button labels, affiliate tagging, the admin breakdown —
+ * `ebay_sg`, `ebay_ca`) so every existing `retailer.startsWith("ebay")` test —
+ * brand colouring, buy-button labels, affiliate tagging, the admin breakdown —
  * classifies these rows without a change.
  */
 async function refreshEbaySealedMarket(

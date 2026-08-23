@@ -6,6 +6,9 @@ import { getCurrentUser } from "@/lib/auth";
 import { LogoutButton, ResendVerifyButton } from "@/components/ProfileActions";
 import { MyCollection } from "@/components/MyCollection";
 import { ShippingAddressCard } from "@/components/ShippingAddressCard";
+import { ReferralLinkCard } from "@/components/ReferralLinkCard";
+import { REFERRAL_PREMIUM_MONTHS } from "@/lib/premium";
+import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = { robots: { index: false } }; // auth/utility — never indexed
 
@@ -50,6 +53,13 @@ export default async function ProfilePage() {
 
       {/* Saved shipping address — prefills Marketplace checkout */}
       <ShippingAddressCard />
+
+      {/* Referral link — hidden entirely when the program is off. The capture
+          + grant machinery (ReferralCapture, applyReferral) has existed all
+          along; this is its first UI. */}
+      {REFERRAL_PREMIUM_MONTHS > 0 && (
+        <ReferralLinkCard url={`${SITE_URL}/?ref=${user.id}`} months={REFERRAL_PREMIUM_MONTHS} />
+      )}
 
       {/* Account & security */}
       <div className="card-surface mt-5 p-5">

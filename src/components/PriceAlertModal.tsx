@@ -1,8 +1,14 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { track } from "@vercel/analytics";
+import { trackEvent } from "@/lib/analytics";
+import { markSignupSource } from "@/lib/signup-source";
+import { PENDING_WATCH_KEY } from "@/lib/signup-source-shared";
+import { useMe } from "@/lib/use-me";
 import { useCountry } from "./CountryProvider";
+import { AuthForm } from "./AuthForm";
 
 // Where we remember the visitor's email so clicking "watch price" again
 // doesn't re-prompt — it silently extends their existing watch instead.
@@ -18,21 +24,38 @@ type Phase = "form" | "success" | "error";
 // A global, single-instance modal that turns a "watch this price" click into
 // an opt-in for price-drop emails on that one card. Mounted once in the root
 // layout (inside CountryProvider).
-export function PriceAlertModal() {
+//
+// ACCOUNT-FIRST, EMAIL-ALWAYS-AVAILABLE (2026-08-21). This modal sits on the
+// site's highest-intent moment (every card tile, QuickView, twice on the card
+// page) and used to lead with "No account needed — just an email", which
+// undercut the #1 perk every signup surface pitches. The email path is a
+// deliberate prior decision and STAYS — unchanged behavior, one input, no
+// gate — but the one-tap account option is now presented first, and the
+// email-success + silent-extend paths gained a low-key "manage these in a
+// free account" link (true via claimAlertsForUser: existing watches are
+// adopted on signup by email match). Guardrail: if price_alert_subscribed
+// craters without a compensating sign_up rise, revert the form-phase layout
+// only — the success/silent upsells are pure upside.
+export function PriceAlertModal({ providers = [] }: { providers?: ("google" | "discord")[] }) {
   const { country } = useCountry();
+  const { user, loaded: meLoaded } = useMe();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [phase, setPhase] = useState<Phase>("form");
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [pendingCardId, setPendingCardId] = useState<string | null>(null);
-  // Lightweight toast for the silent (already-subscribed) path.
-  const [toast, setToast] = useState<string | null>(null);
+  // Lightweight toast for the silent (already-subscribed) path. `accountLink`
+  // adds a low-key "manage in a free account" line — the ONLY account pitch a
+  // habitual anonymous watcher ever sees, since this path never opens a modal.
+  const [toast, setToast] = useState<{ msg: string; accountLink?: boolean } | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const flashToast = useCallback((msg: string) => {
-    setToast(msg);
+  const flashToast = useCallback((msg: string, accountLink = false) => {
+    setToast({ msg, accountLink });
     if (toastTimer.current) clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToast(null), 3500);
+    // A toast with a link needs longer than a pure confirmation blip.
+    toastTimer.current = setTimeout(() => setToast(null), accountLink ? 6000 : 3500);
   }, []);
 
   // Subscribe one card for the active market.
@@ -61,9 +84,15 @@ export function PriceAlertModal() {
       if (!cardId) return;
       const saved = ls()?.getItem(EMAIL_KEY) ?? null;
       if (saved) {
-        // Returning subscriber — extend their watch quietly, no modal.
+        // Returning subscriber — extend their watch quietly, no modal. Counted
+        // separately from price_alert_subscribed: this is the cohort that gets
+        // value repeatedly without ever seeing an account (or any other) pitch,
+        // and its size was invisible before this event existed.
         void subscribe(saved, cardId).then((r) => {
-          if (r.ok) flashToast("Watching this card's price ✓");
+          if (r.ok) {
+            flashToast("Watching this card's price ✓", true);
+            trackEvent("price_alert_silent_extend", { card: cardId });
+          }
         });
         return;
       }
@@ -71,6 +100,7 @@ export function PriceAlertModal() {
       setPhase("form");
       setEmail("");
       setOpen(true);
+      trackEvent("price_alert_modal_shown", { trigger: "auto" });
     };
 
     // Deliberate "email me when it drops" click (CardConversionCta) — always
@@ -80,9 +110,13 @@ export function PriceAlertModal() {
       const cardId = (e as CustomEvent<PriceAlertPromptDetail>).detail?.cardId;
       if (!cardId) return;
       setPendingCardId(cardId);
-      setEmail(ls()?.getItem(EMAIL_KEY) ?? "");
+      // A signed-in member who reaches this modal (the card page's explicit
+      // "email me" CTA fires regardless of auth) just subscribes on their
+      // account address — no reason to make them type it.
+      setEmail(user?.email ?? ls()?.getItem(EMAIL_KEY) ?? "");
       setPhase("form");
       setOpen(true);
+      trackEvent("price_alert_modal_shown", { trigger: "explicit" });
     };
 
     window.addEventListener("price-alert-prompt", handler as EventListener);
@@ -91,7 +125,7 @@ export function PriceAlertModal() {
       window.removeEventListener("price-alert-prompt", handler as EventListener);
       window.removeEventListener("price-alert-open", openHandler as EventListener);
     };
-  }, [subscribe, flashToast]);
+  }, [subscribe, flashToast, user?.email]);
 
   // Close on Escape.
   useEffect(() => {
@@ -116,7 +150,10 @@ export function PriceAlertModal() {
       } catch {
         /* private mode — fine, we just re-prompt next time */
       }
-      track("price_alert_subscribed", { card: pendingCardId });
+      // trackEvent (GA4 + Vercel), not the old Vercel-only track() — this is
+      // the site's highest-volume conversion event and GA4 couldn't see it,
+      // which made any GA4 funnel around alerts/signup silently incomplete.
+      trackEvent("price_alert_subscribed", { card: pendingCardId });
       setPhase("success");
     } else {
       setPhase("error");
@@ -128,8 +165,18 @@ export function PriceAlertModal() {
       {/* Toast (silent path) */}
       {toast && (
         <div className="fixed inset-x-0 bottom-4 z-[80] flex justify-center px-4">
-          <div className="rounded-xl border border-brand-500/40 bg-ink-900/95 px-4 py-2.5 text-sm font-medium text-slate-100 shadow-2xl">
-            {toast}
+          <div className="rounded-xl border border-brand-500/40 bg-ink-900/95 px-4 py-2.5 text-center text-sm font-medium text-slate-100 shadow-2xl">
+            {toast.msg}
+            {toast.accountLink && !user && (
+              <Link
+                href="/login?next=/watching"
+                rel="nofollow"
+                onClick={() => markSignupSource("alert_success")}
+                className="mt-0.5 block text-xs font-semibold text-brand-400 hover:underline"
+              >
+                Manage your watches in a free account →
+              </Link>
+            )}
           </div>
         </div>
       )}
@@ -155,14 +202,58 @@ export function PriceAlertModal() {
                   <span className="text-xs font-semibold uppercase tracking-wide">Watching this card</span>
                 </div>
                 <h2 className="font-display text-xl font-bold text-white">Get a price-drop email</h2>
-                <p className="mt-2 text-sm leading-relaxed text-slate-300">
-                  We&apos;ll email you the moment this card gets cheaper. No account needed — just an email.
-                  Unsubscribe anytime.
-                </p>
+                {/* ACCOUNT FIRST for signed-out visitors — this is the site's
+                    highest-intent moment, and it used to hand it straight to an
+                    email field. The email path below is UNCHANGED and always
+                    visible; nothing is gated. Signed-in members (who reach this
+                    via the card page's explicit CTA) skip straight to the
+                    prefilled email form. meLoaded gate: render neither pitch
+                    until auth state is known, so the account block never
+                    flashes at a member. */}
+                {meLoaded && !user && providers.length > 0 && (
+                  <>
+                    <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                      Fastest — one tap, and your watchlist follows you everywhere:
+                    </p>
+                    <div className="mt-3">
+                      <AuthForm
+                        providers={providers}
+                        bare
+                        compact
+                        source="alert_modal"
+                        next={pathname ?? undefined}
+                        onProviderClick={() => {
+                          // Stash the watch so SignupWelcome completes it after
+                          // the OAuth round trip — picking the account path
+                          // must never lose the card they came to watch.
+                          try {
+                            if (pendingCardId) {
+                              localStorage.setItem(
+                                PENDING_WATCH_KEY,
+                                JSON.stringify({ cardId: pendingCardId, market: country }),
+                              );
+                            }
+                          } catch {
+                            /* private mode — they land signed in, just without the auto-watch */
+                          }
+                        }}
+                      />
+                    </div>
+                    <div className="mt-4 flex items-center gap-3 text-[11px] uppercase tracking-wide text-slate-600">
+                      <span className="h-px flex-1 bg-ink-700" aria-hidden />
+                      or just get emails — no account needed
+                      <span className="h-px flex-1 bg-ink-700" aria-hidden />
+                    </div>
+                  </>
+                )}
+                {(!meLoaded || user || providers.length === 0) && (
+                  <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                    We&apos;ll email you the moment this card gets cheaper. Unsubscribe anytime.
+                  </p>
+                )}
                 <input
                   type="email"
                   required
-                  autoFocus
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
@@ -196,6 +287,20 @@ export function PriceAlertModal() {
                 <button onClick={() => setOpen(false)} className="btn-primary mt-4 w-full">
                   Done
                 </button>
+                {!user && (
+                  <p className="mt-3 text-xs text-slate-400">
+                    Want to manage these in one place?{" "}
+                    <Link
+                      href="/login?next=/watching"
+                      rel="nofollow"
+                      onClick={() => markSignupSource("alert_success")}
+                      className="font-semibold text-brand-400 hover:underline"
+                    >
+                      Create a free account
+                    </Link>{" "}
+                    — your watches come with you.
+                  </p>
+                )}
               </div>
             )}
 

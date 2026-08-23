@@ -49,6 +49,11 @@ export default async function AccountsAdminPage({
     createdAt: Date;
   }[] = [];
   let totals = { all: 0, verified: 0, premium: 0, new7: 0, new30: 0 };
+  // Signups-over-time + attribution, so "did last week's change move signups"
+  // is answerable from this page instead of being two bare integers (7d/30d).
+  let daily: { day: string; count: number }[] = [];
+  let bySource: [string, number][] = [];
+  let unclaimedAlertEmails = 0;
   let error = false;
   try {
     // Never count synthetic seed accounts (dev-reset personas + the marketplace test
@@ -66,7 +71,7 @@ export default async function AccountsAdminPage({
     const quick =
       filter === "premium" ? { premiumUntil: { gt: now } } : filter === "verified" ? { emailVerified: { not: null } } : {};
     const where = { AND: [notSeed, search, quick] };
-    const [list, all, verified, premium, new7, new30] = await Promise.all([
+    const [list, all, verified, premium, new7, new30, recent30, anonEmails] = await Promise.all([
       prisma.user.findMany({
         where,
         orderBy: { createdAt: "desc" },
@@ -82,9 +87,44 @@ export default async function AccountsAdminPage({
       prisma.user.count({ where: { AND: [notSeed, { premiumUntil: { gt: now } }] } }),
       prisma.user.count({ where: { AND: [notSeed, { createdAt: { gte: d7 } }] } }),
       prisma.user.count({ where: { AND: [notSeed, { createdAt: { gte: d30 } }] } }),
+      // Raw createdAt+signupSource for the last 30 days — bucketed by UTC day in
+      // JS below rather than a raw SQL date_trunc, so this stays plain Prisma.
+      prisma.user.findMany({
+        where: { AND: [notSeed, { createdAt: { gte: d30 } }] },
+        select: { createdAt: true, signupSource: true },
+      }),
+      // Distinct emails watching prices with NO account — the standing pool
+      // claimAlertsForUser() adopts on signup. Shrinking = conversion working.
+      //
+      // COUNT(DISTINCT ...), not findMany({ distinct }): Prisma dedupes in the
+      // CLIENT, so that form selects every matching row and ships it here just to
+      // read .length. See the note on demandSnapshotDays() in lib/demand-snapshot.ts
+      // — same bug, and it was the largest row-returning statement on the database.
+      // Only the count is ever rendered, so only the count is fetched.
+      prisma.$queryRaw<{ n: bigint }[]>`
+        SELECT COUNT(DISTINCT email) AS n FROM "PriceAlert" WHERE "userId" IS NULL
+      `,
     ]);
     rows = list;
     totals = { all, verified, premium, new7, new30 };
+    unclaimedAlertEmails = Number(anonEmails[0]?.n ?? 0);
+    // Bucket by UTC day, zero-filling so a quiet day renders as a gap, not a
+    // shorter x-axis (30 entries, oldest first).
+    const byDay = new Map<string, number>();
+    for (const u of recent30) {
+      const key = u.createdAt.toISOString().slice(0, 10);
+      byDay.set(key, (byDay.get(key) ?? 0) + 1);
+    }
+    daily = Array.from({ length: 30 }, (_, i) => {
+      const day = new Date(now.getTime() - (29 - i) * 86400_000).toISOString().slice(0, 10);
+      return { day, count: byDay.get(day) ?? 0 };
+    });
+    const srcCounts = new Map<string, number>();
+    for (const u of recent30) {
+      const s = u.signupSource ?? "(untracked)";
+      srcCounts.set(s, (srcCounts.get(s) ?? 0) + 1);
+    }
+    bySource = [...srcCounts.entries()].sort((a, b) => b[1] - a[1]);
   } catch {
     error = true;
   }
@@ -116,8 +156,55 @@ export default async function AccountsAdminPage({
         <Stat label="Total users" value={num(totals.all)} />
         <Stat label="Email-verified" value={num(totals.verified)} />
         <Stat label="Premium (active)" value={num(totals.premium)} />
-        <Stat label="New · 30 days" value={num(totals.new30)} sub={`${num(totals.new7)} in 7d`} />
+        <Stat
+          label="Watching, no account"
+          value={num(unclaimedAlertEmails)}
+          sub="distinct alert emails — adopted on signup"
+        />
       </div>
+
+      {/* Signups over time + where they came from. The bar strip answers "did
+          last week's change move signups"; the source table answers "which
+          sign-in surface converts" (User.signupSource, stamped by the OAuth
+          callback from the CTA-set cookie — null for pre-instrumentation and
+          direct-/login accounts). */}
+      {!error && (
+        <div className="mt-3 rounded-xl border border-ink-700 bg-ink-850 p-4">
+          <div className="flex items-baseline justify-between gap-2">
+            <div className="text-[11px] uppercase tracking-wide text-slate-500">Signups · last 30 days</div>
+            <div className="text-xs text-slate-400">
+              <span className="num font-bold text-white">{num(totals.new30)}</span> total ·{" "}
+              <span className="num font-bold text-white">{num(totals.new7)}</span> in 7d
+            </div>
+          </div>
+          <div className="mt-3 flex h-16 items-end gap-[2px]" aria-hidden>
+            {daily.map(({ day, count }) => {
+              const max = Math.max(1, ...daily.map((d) => d.count));
+              return (
+                <div
+                  key={day}
+                  title={`${day}: ${count}`}
+                  className={`flex-1 rounded-t ${count > 0 ? "bg-brand-500/80" : "bg-ink-700"}`}
+                  style={{ height: count > 0 ? `${Math.max(12, (count / max) * 100)}%` : "3px" }}
+                />
+              );
+            })}
+          </div>
+          <div className="mt-1 flex justify-between text-[10px] text-slate-600">
+            <span>{daily[0]?.day}</span>
+            <span>{daily[daily.length - 1]?.day}</span>
+          </div>
+          {bySource.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {bySource.map(([src, count]) => (
+                <span key={src} className="chip bg-ink-800 text-slate-400">
+                  {src} · <span className="num font-bold text-slate-200">{num(count)}</span>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Export */}
       {!error && rows.length > 0 && (

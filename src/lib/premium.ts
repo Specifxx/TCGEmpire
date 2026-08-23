@@ -129,19 +129,27 @@ export const PORTFOLIO_FREE = true;
 //      the deck builder, trade calculator, box EV, sealed prices, the index and
 //      movers. No wall anywhere.
 //   2. ACCOUNT (free, `hasAccount`) — the above PLUS watchlists, price alerts,
-//      and the portfolio.
+//      the portfolio, and the Best Basket optimiser.
 //   3. PREMIUM (paid, `isPremium`) — the above plus Value Finder, Rising Cards,
-//      the full Deal Finder list, the Bulk Pricer, the Best Basket optimiser,
-//      and no ads.
+//      the full Deal Finder list, the Bulk Pricer, and no ads.
 //
-// The Bulk Pricer and Best Basket optimiser moved here FROM tier 2 (a deliberate
-// reversal — they used to be "the reason to sign up" for a free account, per an
-// earlier version of this comment). Tier 2 replaced a "free week of Premium on
-// signup" comp that handed new accounts the PAID tier and silently withdrew it a
-// week later — that reasoning (a durable free payoff beats a comp that expires)
-// still holds for watchlists/alerts/portfolio, which stay free regardless of
-// Premium. The grant machinery for that WEEK-long comp (and its signup email) is
-// gone rather than switched off by env, so a stale EARLY_PREMIUM_DAYS in a deploy
+// Best Basket moved BACK to tier 2 (signups were near-zero — see the signup-funnel
+// work — and giving away the strongest "reason to sign up" tool for free is the
+// generous move that's supposed to fix that; see SignupPromoPopup.tsx's PERKS,
+// which now pitches it directly). It had briefly moved to tier 3 alongside the
+// Bulk Pricer (a deliberate reversal at the time, per an earlier version of this
+// comment) — that reasoning no longer holds for Best Basket specifically now that
+// growing the account tier is the priority, but the Bulk Pricer stays Premium: it
+// was never named in the request that moved Best Basket back, and the two tools
+// have always been allowed to sit on different tiers independently (see
+// tests/access-tiers.test.ts).
+//
+// Tier 2 replaced a "free week of Premium on signup" comp that handed new
+// accounts the PAID tier and silently withdrew it a week later — that reasoning
+// (a durable free payoff beats a comp that expires) still holds for
+// watchlists/alerts/portfolio/Best Basket, which stay free regardless of Premium.
+// The grant machinery for that WEEK-long comp (and its signup email) is gone
+// rather than switched off by env, so a stale EARLY_PREMIUM_DAYS in a deploy
 // environment can't quietly resurrect it.
 //
 // A much shorter Premium PREVIEW is back, though — see SIGNUP_PREMIUM_DAYS below.
@@ -193,11 +201,19 @@ export function referralPremiumActive(): boolean {
 // This reintroduces a scaled-down version of the "free week of Premium on
 // signup" comp the tier note above describes retiring. That comp's problem was
 // duration — a WEEK reads as a tier of its own, so losing it read as a downgrade —
-// not the idea of a taste. A single day is short enough to read as a preview, and
-// the free ACCOUNT tier (watchlists/alerts/portfolio) is still explicitly pitched
-// everywhere as the durable, permanent reason to sign up — see
-// SignupPromoPopup.tsx and AuthForm.tsx, which both say so alongside this.
-export const SIGNUP_PREMIUM_DAYS = Math.max(0, Math.floor(Number(process.env.SIGNUP_PREMIUM_DAYS ?? 1)));
+// not the idea of a taste. Three days is long enough to actually open the paid
+// tools more than once (a single day, the previous default, often lapsed before
+// a new account came back for a second session) while still reading as a preview
+// rather than an entitlement. The free ACCOUNT tier
+// (watchlists/alerts/portfolio/Best Basket) remains the durable, permanent reason
+// to sign up.
+//
+// WHERE THIS IS PITCHED: /login and AuthForm's full (non-compact) layout. It is
+// deliberately NOT pitched in SignupPromoPopup — see that file's header for why
+// the popup is a free-account-only conversion moment. The grant itself is
+// unconditional on the pitch: it happens in the OAuth callback's isNew branch
+// regardless of which surface the signup came from.
+export const SIGNUP_PREMIUM_DAYS = Math.max(0, Math.floor(Number(process.env.SIGNUP_PREMIUM_DAYS ?? 3)));
 
 function addMonths(base: Date, months: number): Date {
   const d = new Date(base);

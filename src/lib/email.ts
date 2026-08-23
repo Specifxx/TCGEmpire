@@ -133,6 +133,29 @@ function alertFooter(unsubUrl: string): string {
   </td></tr>`;
 }
 
+// One-row "create a free account" block for MARKETING-ADJACENT emails going to
+// people we know DON'T have an account (anonymous price-alert watchers, the
+// newsletter list). These lists get value from us indefinitely and, until this
+// existed, were never once asked to register — the softest possible audience,
+// asked nowhere. Deliberately NOT added to user-digest or transactional sends:
+// those recipients are registered already, and an account CTA there is noise.
+//
+// The link lands on /login?src=email…, which AuthForm converts into
+// markSignupSource("email") — so email-attributed signups show up in
+// User.signupSource and the admin breakdown, closing the loop.
+export function accountCtaBlock(campaign: string, line?: string): string {
+  const copy =
+    line ??
+    "Price alerts, a live portfolio and a watchlist you can manage in one place — free.";
+  const url = `${SITE_URL}/login?src=email&utm_source=email&utm_medium=email&utm_campaign=${encodeURIComponent(campaign)}`;
+  return `<tr><td style="padding:4px 32px 20px">
+    <div style="border:1px solid #233047;border-radius:12px;padding:14px 16px">
+      <div style="font-size:13px;line-height:1.5;color:#b8c0cc">${copy}</div>
+      <a href="${url}" style="display:inline-block;margin-top:10px;border:1px solid #34d17e;color:#34d17e;font-size:13px;font-weight:700;text-decoration:none;padding:8px 16px;border-radius:8px">Create your free account</a>
+    </div>
+  </td></tr>`;
+}
+
 export function emailShell(heading: string, inner: string, footer: string): string {
   return `<!doctype html><html><body style="margin:0;background:#0b0e14;font-family:Arial,Helvetica,sans-serif">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0b0e14;padding:32px 0"><tr><td align="center">
@@ -161,27 +184,33 @@ function dropRow(item: PriceDropItem): string {
 
 // The daily "a card on your wishlist got cheaper" email. Lists every card that
 // dropped since the last check in one message.
-export async function sendPriceDropEmail(to: string, items: PriceDropItem[], unsubUrl: string): Promise<boolean> {
+// `anonymous` = this address has no linked account (PriceAlert.userId is null).
+// Only THOSE recipients get the account CTA — its "your existing alerts come
+// with you" promise is claimAlertsForUser's adopt-by-email behavior, which is
+// meaningless (and the CTA is pure noise) for someone already signed up.
+export async function sendPriceDropEmail(to: string, items: PriceDropItem[], unsubUrl: string, anonymous = false): Promise<boolean> {
   const count = items.length;
   const heading = count === 1 ? "A wishlist card just got cheaper" : `${count} wishlist cards just got cheaper`;
   const intro = `Good news — ${count === 1 ? "a card you're watching" : "some cards you're watching"} dropped in price:`;
   const inner = `
     <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">${intro}</td></tr>
     <tr><td style="padding:4px 32px 12px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${items.map(dropRow).join("")}</table></td></tr>
-    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/browse" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Browse cards</a></td></tr>`;
+    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/browse" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Browse cards</a></td></tr>
+    ${anonymous ? accountCtaBlock("price-drop", "Manage your price watches with a free account — your existing alerts come with you automatically.") : ""}`;
   const subject = count === 1 ? `Price drop: ${items[0]!.name} is now ${formatMoney(items[0]!.newCents, currencyOf(items[0]!.market))}` : `Price drops on ${count} of your wishlist cards`;
   return sendEmail(to, subject, emailShell(heading, inner, alertFooter(unsubUrl)));
 }
 
 // Sent once when someone subscribes via the wishlist pop-up, confirming the watch
 // and surfacing the unsubscribe link up front.
-export async function sendAlertConfirmationEmail(to: string, cardCount: number, unsubUrl: string): Promise<boolean> {
+export async function sendAlertConfirmationEmail(to: string, cardCount: number, unsubUrl: string, anonymous = false): Promise<boolean> {
   const inner = `
     <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
       You're all set — we'll email you whenever the price drops on
       ${cardCount === 1 ? "the card" : `any of the ${cardCount} cards`} on your wishlist. We check prices once a day.
     </td></tr>
-    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/browse" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Browse cards</a></td></tr>`;
+    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/browse" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Browse cards</a></td></tr>
+    ${anonymous ? accountCtaBlock("alert-confirm", "Manage your price watches with a free account — your existing alerts come with you automatically.") : ""}`;
   return sendEmail(to, "You're watching your RiftCompare wishlist for price drops", emailShell("Price-drop alerts are on", inner, alertFooter(unsubUrl)));
 }
 
@@ -303,7 +332,11 @@ function announcementFooter(unsubUrl: string): string {
 // The weekly digest itself; `inner` is built by lib/newsletter.ts so the content
 // (movers tables, Index summary) lives next to the data that produces it.
 export async function sendNewsletterDigestEmail(to: string, subject: string, heading: string, inner: string, unsubUrl: string): Promise<boolean> {
-  return sendEmail(to, subject, emailShell(heading, inner, newsletterFooter(unsubUrl)));
+  // The newsletter list (NewsletterSubscriber) is captured without an account,
+  // so the weekly digest carries the generic account CTA. Some subscribers may
+  // also hold accounts — acceptable noise for one soft block, unlike the alert
+  // emails where the caller knows userId and gates it precisely.
+  return sendEmail(to, subject, emailShell(heading, inner + accountCtaBlock("newsletter"), newsletterFooter(unsubUrl)));
 }
 
 // One-off release-day blast for a new set (e.g. Vendetta, 31 Jul 2026). Sent to the

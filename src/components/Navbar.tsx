@@ -4,7 +4,6 @@ import { NavbarShell } from "./NavbarShell";
 import { CommandLauncherButton } from "./CommandLauncher";
 import { SearchBar } from "./SearchBar";
 import { HeaderSearchSlot } from "./HeaderSearchSlot";
-import { HomeHeaderReveal } from "./HomeHeaderReveal";
 import { MobileNav } from "./MobileNav";
 import { CountrySwitcher } from "./CountrySwitcher";
 import { NavUser } from "./NavUser";
@@ -60,21 +59,37 @@ export function Navbar() {
 
             The fix is what the hamburger exists for, applied in order of how
             navigational each item is:
-              • below md — logo, Database, Explore, Marketplace, country, burger.
-              • from md  — the navigation links: Sealed, Decks, Blog (+66/62/50px).
-              • from lg  — Database moves into this row, and the two items that
-                are not navigation join it: the Premium upsell (96px, opens a
-                dialog) and the Discord icon (36px, external).
+              • below lg — logo, Database, Explore, Marketplace, country, burger.
+              • from lg  — everything else at once: the navigation links (Sealed,
+                Decks, Best Basket, Blog), Database moving into this row, the
+                Premium upsell (96px, opens a dialog) and the Discord icon (36px,
+                external).
             Everything hidden at a given width is in the hamburger via
             nav-groups.ts, and Discord is in the footer, so no link is lost.
-            Measured after: 590px at 640, 652px at 768, no overflow anywhere, and
-            ~130px of headroom left for the wider avatar a signed-in user gets. */}
+
+            THE NAV LINKS MOVED md → lg, and the reason is worth keeping: `md`
+            put them on screen from 768px, but the SEARCH BAR — the only element
+            here that can flex and absorb slack — does not appear until `lg`
+            (1024px). That left 768-1023px as a band carrying every link with
+            nothing able to give, and it overflowed: measured at 790px, the
+            document was 818px wide before the signed-out CTA was widened to
+            "Log in / Sign up" and 869px after. Tying the links to the same
+            breakpoint as the flexible search bar means the row never carries
+            them without something able to absorb the difference.
+            Measured after: 691px at 790, no overflow at 640/720/790/1280.
+            scripts/mobile-check.ts --url <dev> is the check to re-run after
+            touching anything in this row. */}
         <nav className="flex shrink-0 items-center gap-0.5 sm:gap-1">
-          {/* HomeHeaderReveal: on "/" only, this whole group (⌘K through Blog)
-              stays hidden until the visitor scrolls — see that component's own
-              doc comment for why. Every other route renders exactly as before;
-              `isHome` inside it makes this a no-op everywhere else. */}
-          <HomeHeaderReveal>
+          {/* This whole group (⌘K through Blog), the sign-in control, and the
+              other secondary chrome below used to be gated behind
+              HomeHeaderReveal — hidden pre-scroll on "/" alone, in service of
+              a "≤12 interactive elements above the fold" homepage-redesign
+              target. Reverted: hiding the sign-in control specifically was
+              undercutting the signup funnel this same codebase spent real
+              effort instrumenting and fixing elsewhere (see the Phase 0-2
+              signup-growth work) — a visitor who never scrolls never sees a
+              way to sign in at all. The whole nav is unconditionally visible
+              on every route now, homepage included. */}
           {/* Command launcher — every page can reach every page from here (⌘K). */}
           {/* Inline text/⌘K nav is desktop-only — on phones it overflowed the bar
               (worse once the logged-in avatar showed). Everything here is reachable
@@ -87,7 +102,7 @@ export function Navbar() {
             Database
           </Link>
           {/* Sealed products — high-AOV, right after the database. */}
-          <Link href="/sealed" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white md:block md:px-2.5">
+          <Link href="/sealed" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5">
             Sealed
           </Link>
           {/* Decks — the hub for the metagame surface: 10 real tournament lists,
@@ -110,7 +125,7 @@ export function Navbar() {
               was overflowing at the time and this link must not make a live bug
               worse; now that the row fits, it belongs with the other navigation
               links. */}
-          <Link href="/decks" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white md:block md:px-2.5">
+          <Link href="/decks" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5">
             Decks
           </Link>
           {/* Best Basket — the multi-store cart optimiser (cheapest way to buy
@@ -122,7 +137,7 @@ export function Navbar() {
               moment it answers ("I have a list, what's the cheapest way to buy
               it") having no header presence at all. Same md:block treatment as
               Sealed/Decks/Blog. */}
-          <Link href="/tools/best-basket" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white md:block md:px-2.5">
+          <Link href="/tools/best-basket" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5">
             Best Basket
           </Link>
           {/* Blog — the header's one link into our own writing. It exists because
@@ -135,10 +150,9 @@ export function Navbar() {
               meta snapshots — the pages that change weekly) and it carries a
               "Browse the guides" link of its own, so /guides is still one hop
               from the header rather than buried. */}
-          <Link href="/blog" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white md:block md:px-2.5">
+          <Link href="/blog" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5">
             Blog
           </Link>
-          </HomeHeaderReveal>
           {/* NO Marketplace chip here, deliberately (removed 2026-08-17, before
               this phase's own homepage-decluttering pass — the two changes
               are independent and both still hold). The P2P marketplace needs
@@ -157,30 +171,36 @@ export function Navbar() {
               the header's only always-visible, non-deferred nav item besides
               the logo and Database, which only helps the above-the-fold
               interactive-target budget scripts/homepage-audit.mjs checks.) */}
-          {/* Premium — one-click into the upsell dialog from anywhere. */}
-          <PremiumButton className="hidden rounded-lg px-2 py-2 text-sm font-semibold text-gold hover:bg-ink-800 lg:block lg:px-2.5">
+          {/* Premium — one-click into the upsell dialog from anywhere.
+              At xl, not lg: see the Discord icon below for the shared reason. */}
+          <PremiumButton className="hidden rounded-lg px-2 py-2 text-sm font-semibold text-gold hover:bg-ink-800 xl:block xl:px-2.5">
             ✦ Premium
           </PremiumButton>
           {/* Single nav entry point: the ⌘K "Explore" command launcher (above) is the
               full-nav surface on desktop — it lists the same NAV_GROUPS searchably — so
               the separate "Menu" mega-dropdown is gone (matches DexCompare's one-tab model). */}
-          {/* HomeHeaderReveal again: Discord, the region switcher and the
-              sign-in control are the second contiguous group this phase's
-              audit found worth deferring on "/" — see the component's own
-              doc comment, in particular the CountrySwitcher/CountryHeroToggle
-              duplicate-region-selector finding. MobileNav (the hamburger)
-              stays OUTSIDE this wrapper on purpose: below `lg` it is the only
-              way to reach Sealed/Decks/Blog/Discord/Premium at all, so hiding
-              it pre-scroll would strand a mobile visitor with no navigation. */}
-          <HomeHeaderReveal>
-          {/* Join our Discord — opens the permanent invite in a new tab */}
+          {/* Discord, the region switcher and the sign-in control (NavUser) —
+              always visible now, see the doc comment above this nav's opening
+              tag for why the prior pre-scroll hiding on "/" was reverted. A
+              signed-out visitor on the homepage sees the same "Sign in" the
+              rest of the site shows, from the very first paint. */}
+          {/* Join our Discord — opens the permanent invite in a new tab.
+              AT xl, NOT lg — same for the Premium button above. Once every nav
+              link turns on at lg, the row's intrinsic minimum was ~1056px, so
+              between 1024 and ~1056 the signed-out CTA was silently CLIPPED by
+              the container (no page scroll, so the overflow sweep never caught
+              it — it just cut "Log in / Sign up" down to "Log"). These two are
+              the row's only non-navigational items — Premium opens a dialog,
+              Discord leaves the site — so deferring them to xl is the cheapest
+              ~132px, and both remain reachable meanwhile: Premium from the
+              UserMenu and /premium, Discord from the footer. */}
           <a
             href={DISCORD_URL}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Join our Discord"
             title="Join our Discord"
-            className="tap-icon hidden rounded-lg text-slate-300 transition-colors hover:bg-ink-800 hover:text-[#5865F2] lg:grid"
+            className="tap-icon hidden rounded-lg text-slate-300 transition-colors hover:bg-ink-800 hover:text-[#5865F2] xl:grid"
           >
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden>
               <path d="M20.317 4.369a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.249a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.249.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.369a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.3 12.3 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.331c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
@@ -188,7 +208,6 @@ export function Navbar() {
           </a>
           <CountrySwitcher className="ml-0.5 sm:ml-1" />
           <NavUser />
-          </HomeHeaderReveal>
           <MobileNav />
         </nav>
        </div>

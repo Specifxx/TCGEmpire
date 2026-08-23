@@ -97,6 +97,25 @@ export function CinematicHero({
           the fold, where it doesn't compete with the search box. */}
 
       {/* ── Foreground content (re-aligned to the normal grid) ───────────────── */}
+      {/* pl-[var(--sidenav-w)] on the OUTER div, container-app's own px-* stays
+          on the inner one — same Tailwind cascade-order footgun noted in
+          layout.tsx (a pl-* utility and container-app's px-* on the SAME
+          element race in generated-CSS order, not className order). Without
+          this the hero's H1/search/trending-chips column — which re-centers
+          on the FULL viewport via container-app's mx-auto, same as the
+          breakout background it sits inside — would render partly behind
+          the fixed SideNav on every page ≥1280px, not just visually below it.
+          `w-full` HERE IS LOAD-BEARING: ParallaxRoot (this div's parent) is
+          `flex items-center`, and the background layer is `position:absolute`
+          (out of flow), so this wrapper is the row's ONLY normal-flow flex
+          item — without an explicit width a flex item sizes to its CONTENT
+          (shrink-to-fit), not the row's full width, which is what actually
+          broke the hero's centering the first time this shipped: the wrapper
+          shrank to content width and sat at the row's flex-start (the
+          left edge) instead of spanning the row for container-app's mx-auto
+          to center within. The inner container-app div's own `w-full` was
+          providing this before there were two nested divs; now both need it. */}
+      <div className="w-full pl-[var(--sidenav-w)]">
       <div className="container-app relative z-10 w-full py-8 text-center sm:py-10">
         {/* Brand mark, centered above the headline — the nav's own logo sits
             in the fixed header, but this is the FIRST thing painted (the
@@ -138,12 +157,23 @@ export function CinematicHero({
             underlying goal — one short, job-focused sentence instead of a
             60-character country list — is still fully honored here, just
             phrased in the market-aware way. See DECISIONS.md for the full
-            reasoning. */}
+            reasoning.
+
+            "Riftbound" + "prices" ADJACENT, not split by "card": an SEO audit
+            (2026-08-20, "riftbound prices" ranking ~13th) found this exact
+            phrase absent from every on-page signal — title, meta description,
+            H1, JSON-LD — always broken up by "Card"/"TCG". This H1 is the
+            single highest-leverage place to fix that (see page.tsx's metadata
+            for the matching title/description/JSON-LD fix). The subhead below
+            now carries the "Riftbound cards" and "Riftbound card prices"
+            variants verbatim instead, so all three of the site's target
+            phrases land in the first ~45 words without stuffing any one of
+            them into the H1 alongside the others. */}
         <h1 className="animate-fade-in [animation-delay:160ms] mx-auto mt-4 max-w-4xl text-3xl font-extrabold leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-5xl">
-          Compare <span className="text-brand-400">Riftbound</span> card prices across every {heroAdjective} store
+          Compare <span className="text-brand-400">Riftbound</span> prices across every {heroAdjective} store
         </h1>
         <p className="animate-fade-in [animation-delay:240ms] mx-auto mt-4 max-w-2xl text-base text-slate-300">
-          Find the cheapest place to buy Riftbound TCG cards — live prices from every {heroAdjective} retailer we track,
+          Find the cheapest place to buy Riftbound cards — live Riftbound card prices from every {heroAdjective} retailer we track,
           plus four more markets in their own currency: {otherMarkets}, updated daily.
         </p>
 
@@ -263,14 +293,28 @@ export function CinematicHero({
           <CountryHeroToggle />
         </div>
       </div>
+      </div>
     </ParallaxShell>
   );
 }
 
 // Full-bleed breakout shell. `-mt-6` tightens the gap to the wrap banner above;
-// `left-1/2 w-screen -translate-x-1/2` breaks the hero out to the full viewport
-// (safe because globals.css sets html{overflow-x:clip}). `main` is centred in the
-// viewport on every breakpoint, so the breakout is symmetric. min-height is kept
+// `left-1/2 w-screen translate-x-[calc(-50%-var(--sidenav-w)/2)]` breaks the hero
+// out to the full viewport (safe because globals.css sets html{overflow-x:clip}).
+//
+// THE --sidenav-w TERM: `left:50%` on a `position:relative` element offsets by
+// 50% of its CONTAINING BLOCK's width, not the viewport's — so once SideNav.tsx
+// (via `<main>`'s `pl-[var(--sidenav-w)]` wrapper in layout.tsx) shifts that
+// containing block's horizontal center right by `--sidenav-w / 2`, a bare
+// `-translate-x-1/2` would land the breakout's left edge that same
+// `--sidenav-w / 2` short of x=0 — a visible gap on the left and an equal
+// overflow clipped on the right. The extra `-var(--sidenav-w)/2` in the
+// translate cancels that out, same math as the plain-`-translate-x-1/2` case
+// when `--sidenav-w` is 0 (its default below the breakpoint SideNav renders
+// at), so this is provably a no-op change everywhere the old comment's
+// "`main` is centred in the viewport" assumption still holds, and correct
+// where it no longer does. tests/sidenav.test.ts pins the exact expression.
+// min-height is kept
 // modest so the vertically-centred content doesn't leave a large void up top —
 // content-driven height (via the section's own py-8/10) does most of the work;
 // this floor just stops a short-content flash on the very first paint. Trimmed
@@ -316,7 +360,7 @@ export function CinematicHero({
 // workaround for Market Pulse's own animation (which is correct as-is).
 function ParallaxShell({ children }: { children: React.ReactNode }) {
   return (
-    <ParallaxRoot id="rc-hero" className="relative z-10 left-1/2 -mt-6 flex min-h-[30vh] w-screen -translate-x-1/2 items-center">
+    <ParallaxRoot id="rc-hero" className="relative z-10 left-1/2 -mt-6 flex min-h-[30vh] w-screen translate-x-[calc(-50%-var(--sidenav-w)/2)] items-center">
       {children}
     </ParallaxRoot>
   );

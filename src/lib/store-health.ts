@@ -14,7 +14,7 @@
 // `prisma db push` deploy) and never turns a monitoring failure into a 500 on
 // the cron route that calls it.
 import { prisma } from "./db";
-import { RETAILER_LIST } from "./retailers";
+import { RETAILER_LIST, retailerCountry } from "./retailers";
 import { median } from "./stats";
 
 // Calendar day (date-only) in Australia/Sydney — same bucketing as
@@ -25,7 +25,7 @@ function sydneyDay(d = new Date()): Date {
   return new Date(`${ymd}T00:00:00.000Z`);
 }
 
-export type StoreHealthAlertKind = "stale" | "listings-dropped" | "frozen-prices" | "price-jump";
+export type StoreHealthAlertKind = "stale" | "listings-dropped" | "frozen-prices" | "price-jump" | "no-listings";
 
 export interface StoreHealthAlert {
   retailer: string;
@@ -62,10 +62,28 @@ const LISTING_DROP_RATIO = 0.7;
 const MIN_HISTORY_DAYS = 3;
 // A store's median in-stock price identical for this many consecutive recorded
 // days, on a store with enough listings that SOME price should plausibly move,
-// looks like a frozen scraper — a live catalogue this size drifting by exactly
-// $0.00 for three straight snapshots is far more likely a stuck cache/selector
-// than a genuinely unchanged market.
-const FROZEN_STREAK_DAYS = 3;
+// looks like a frozen scraper — a live catalogue drifting by exactly $0.00 for a
+// long run of snapshots is more likely a stuck cache/selector than a genuinely
+// unchanged market.
+//
+// RAISED FROM 3 TO 7 ON 2026-08-23, because 3 was firing on almost everything:
+// 67 of 132 stores raised `frozen-prices` in one run, which is not a finding, it
+// is noise — and a monitor that flags 81% of its subjects gets ignored, which is
+// exactly what happened to this one.
+//
+// Three was never enough evidence. It is the MINIMUM the streak test can use
+// (two prior snapshots plus today), StoreHealthSnapshot held only about three
+// days of rows at the time, and a small store's median price genuinely can sit
+// still for three days — twenty cards in stock and no restock is an ordinary
+// week, not a broken scraper. Worse, the operational database was restored from
+// an older snapshot on 2026-08-22, so part of that three-day "history" was
+// rewritten underneath the comparison.
+//
+// Seven days of an IDENTICAL median across at least FROZEN_MIN_LISTINGS listings
+// is a claim worth paying attention to. The cost is that this alert goes quiet
+// until a real week of snapshots accrues — which is correct, because until then
+// there is no evidence to make the claim on.
+const FROZEN_STREAK_DAYS = 7;
 const FROZEN_MIN_LISTINGS = 5;
 // A store's median price 10x above or below its own recent median is the
 // classic sign of a unit-parsing bug (cents read as dollars, or vice versa)
@@ -144,9 +162,37 @@ export async function checkStoreHealth(): Promise<{ rows: StoreHealthRow[]; aler
     const alerts: StoreHealthAlert[] = [];
     const now = Date.now();
 
-    for (const c of counts) {
+    // THE MONITOR USED TO ITERATE `counts`, AND `counts` IS A groupBy OVER
+    // RetailerPrice — so a store with ZERO rows produced no group, never entered
+    // this loop, and got no row and no alert.
+    //
+    // That is the blind spot at the exact centre of what this file is for. Every
+    // check below needs data to fire: `stale` needs a lastSeen (null when there
+    // are no rows), `listings-dropped` needs a listing count to compare, and the
+    // price checks need a median. A scraper degrading from 400 listings to 40
+    // alerted loudly; the same scraper degrading to 0 — a site redesign, new bot
+    // protection, a changed URL, an expired token — went completely silent and
+    // simply vanished from the report, which reads identically to "this store was
+    // never configured".
+    //
+    // So the loop now walks the REGISTRY (every store we claim to track, in the
+    // market it serves) unioned with whatever markets actually returned rows, and
+    // a store with nothing at all reports listings: 0 and raises `no-listings`.
+    // Losing a store outright is the most severe failure this monitor has, and it
+    // was the only one it could not see.
+    const expected = new Map<string, { retailer: string; country: string }>();
+    for (const r of RETAILER_LIST) {
+      expected.set(key(r.key, retailerCountry(r.key)), { retailer: r.key, country: retailerCountry(r.key) });
+    }
+    // A store can also legitimately return rows in a market the registry doesn't
+    // name (eBay's per-market keys, a store that started shipping elsewhere).
+    // Union rather than replace, so observed data is never dropped from the report.
+    for (const c of counts) expected.set(key(c.retailer, c.country), { retailer: c.retailer, country: c.country });
+    const countByKey = new Map(counts.map((c) => [key(c.retailer, c.country), c._count._all]));
+
+    for (const c of expected.values()) {
       const k = key(c.retailer, c.country);
-      const listings = c._count._all;
+      const listings = countByKey.get(k) ?? 0;
       const inStock = inStockByKey.get(k) ?? 0;
       const lastSeen = lastSeenByKey.get(k) ?? null;
       const medianPriceCents = medianByKey.get(k) ?? null;
@@ -155,6 +201,18 @@ export async function checkStoreHealth(): Promise<{ rows: StoreHealthRow[]; aler
       const medianListings7d = historyDays >= MIN_HISTORY_DAYS ? median(hist.map((h) => h.listings)) : null;
 
       const rowAlerts: StoreHealthAlert[] = [];
+
+      // Nothing at all. Checked first and on its own: with no rows there is no
+      // lastSeen, no median and no count to compare, so every other check below
+      // is structurally incapable of firing for this store.
+      if (listings === 0) {
+        rowAlerts.push({
+          retailer: c.retailer,
+          country: c.country,
+          kind: "no-listings",
+          detail: "tracked in the registry but has NO rows at all — scraper returning nothing, or never ran",
+        });
+      }
 
       if (lastSeen && now - lastSeen.getTime() > STALE_HOURS * 3_600_000) {
         const hoursAgo = Math.round((now - lastSeen.getTime()) / 3_600_000);
@@ -247,6 +305,7 @@ const KIND_LABEL: Record<StoreHealthAlertKind, string> = {
   "listings-dropped": "LISTINGS DROPPED",
   "frozen-prices": "FROZEN PRICES",
   "price-jump": "PRICE JUMP",
+  "no-listings": "NO LISTINGS AT ALL",
 };
 
 // Human-readable lines for the Discord alert — one per alert, store name first

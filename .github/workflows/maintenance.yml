@@ -32,7 +32,8 @@ on:
           - migrate-history  # Prisma-based top-up: copy PriceHistory/ClickEvent from EVERY older source into the newest history DB (tolerates unreadable sources, dedupes). Slower/more transfer than migrate-history-db — prefer that for the bulk copy.
           - migrate-history-db # LEGACY (RH6 → RH7 cutover, kept for reference): full pg_dump/restore of the HISTORY database (RH6) into RH7 + row-count verification.
           - migrate-history-db-to-hdu2 # LEGACY (HISTORY_DATABASE_URL → HISTORY_DATABASE_URL_2 cutover, kept for reference): full pg_dump/restore + row-count verification. Superseded by migrate-history-db-to-hdu3 on 2026-08-19.
-          - migrate-history-db-to-hdu3 # CURRENT history cutover: full pg_dump/restore of HISTORY_DATABASE_URL_2 into HISTORY_DATABASE_URL_3 + row-count verification. Rotates onto another rested project because HISTORY_DATABASE_URL_2 is nearing its own 5 GB monthly transfer allowance. Compressed on the wire, so it is the cheapest way to drain a project that is near its limit. RUN THIS BEFORE deploying the HISTORY_DATABASE_URL_3-first chain.
+          - migrate-history-db-to-hdu3 # LEGACY (HISTORY_DATABASE_URL_2 → HISTORY_DATABASE_URL_3 cutover, kept for reference): full pg_dump/restore + row-count verification. Superseded by migrate-history-db-to-hdu4 on 2026-08-21.
+          - migrate-history-db-to-hdu4 # CURRENT history cutover: full pg_dump/restore of HISTORY_DATABASE_URL_3 into HISTORY_DATABASE_URL_4 + row-count verification. Rotates because HISTORY_DATABASE_URL_3 is over its 5 GB monthly transfer allowance. One lean COPY-format pass per table (not compression — Neon bills the pre-compression bytes), so it is the cheapest way to drain a project that is at/over its limit. RUN THIS BEFORE deploying the HISTORY_DATABASE_URL_4-first chain.
           - audit-ven        # read-only census of VEN cards (chase-tier fields)
           - audit-runes      # read-only census of every set's Rune printings + which lack real art
           - set-rune-art     # attach real English art to placeholder rune printings (OGN 'b' promos, UNL alt arts, SFD Nexus Night) + clear the Chinese-only VEN alt-art prints
@@ -40,9 +41,13 @@ on:
           - fix-op-promo-flag # flip isPromo=true for organized-play promos add-tcg-printings.ts mis-tagged (Nexus Night rune cycle)
           - fix-kennen-name  # one-off: rename VEN 155/166 + 197/166 from RiftScribe's "Yordle, Heart of the Tempest" placeholder to "Kennen, Heart of the Tempest" (matches the manually-corrected 197*/166 Signature)
           - audit-history    # read-only per-day price-history diagnostic
+          - audit-premium-vs-stripe # READ-ONLY (unless dry_run=false): walk every live Stripe subscription and assert the DB agrees — account exists, premiumUntil covers what they paid for, and the renewal link still resolves. Run after any restore that rolled the database back.
+          - grant-premium # restore/extend Premium on ONE account by email to an explicit end date, AND re-link its Stripe subscription (metadata.userId + User.stripeCustomerId) so renewals resume. Use after a restore has rolled back a paid period.
           - revoke-premium   # remove Premium from ONE account (email input): clears premiumUntil + the retired early-adopter comp flag, and REPORTS the account's full premium state before/after. Honours dry_run. Does NOT touch isAdmin (admins read as Premium regardless — it says so loudly) and does not cancel a live Stripe subscription. Set reset_trial to also clear trialStartedAt so the account can trial again.
           - audit-users      # read-only user/Premium census (no PII printed)
           - audit-clicks     # read-only outbound-click leaderboard per retailer (affiliate-outreach priority)
+          - audit-egress     # READ-ONLY forensics on the ~2 GB/day Neon transfer burn that has now killed nine projects in a row (each dies 2-3 days after cutover). Reads ONLY statistics views — pg_stat_database, pg_stat_user_tables and, if present, pg_stat_statements — and attributes the churn to a TABLE and then to a QUERY SHAPE, with rows costed into estimated bytes. Run it a few hours after a cutover, not minutes: Neon resets these counters whenever the compute endpoint restarts, so the window is short and one import run inside it dominates the extrapolation.
+          - audit-indexability # READ-ONLY census of how many card pages currently noindex themselves AND drop out of the sitemap, and why. Reports the CROSS-DATABASE JOIN HEALTH first (what share of PriceHistory cardIds still resolve against the live Card table), because when that join breaks every card reads as 0 days of history and every out-of-stock card noindexes at once — silently, with no error and no deploy to blame, which looks exactly like an unexplained traffic decline. RUN THIS FIRST when traffic drops after any database rotation, restore or catalogue rebuild.
           - backfill-alert-user-ids # link existing email-keyed price alerts to the accounts that own them (idempotent; honours dry_run)
           - fix-orphan-users # repair FK orphans: delete rows in GameScore/AuthToken/Notification/SellerProfile/CollectionCard whose userId no longer exists in User (they block `prisma db push` from adding the FK, which fails the Vercel build)
           - diagnose-card    # read-only: why does ONE card have no price? dumps its RetailerPrice + eBay carousel rows and re-runs the LIVE eBay search (card input)
@@ -79,14 +84,26 @@ on:
         required: false
         default: RM4
         options: [RM4, RM3, DATABASE_URL_2, DATABASE_URL, HISTORY_DATABASE_URL_2, HISTORY_DATABASE_URL, RH7, RH6, RH5, HISTORY_DATABASE_URL_4, HISTORY_DATABASE_URL_3]
+      apply:
+        description: "audit-premium-vs-stripe only: actually WRITE the repairs (default: report only)"
+        type: boolean
+        default: false
+      premium_until:
+        description: "grant-premium only: end date, e.g. 2026-08-30 (a date-only value means through the END of that day)"
+        type: string
+        required: false
       email:
-        description: "revoke-premium only: the account's email address"
+        description: "revoke-premium / grant-premium: the account's email address"
         type: string
         required: false
       reset_trial:
         description: "revoke-premium only: ALSO clear trialStartedAt so the account can start a free trial again"
         type: boolean
         default: false
+      sample_minutes:
+        description: "audit-egress only: sample live traffic for this many minutes and report only what MOVED (a real burn rate). 0/empty = cumulative counters, which include one-off work like a restore or a full import."
+        type: string
+        required: false
       url:
         description: "probe-url only: page to fetch for font/style diagnostics"
         type: string
@@ -115,29 +132,28 @@ jobs:
       group: ${{ inputs.task == 'import-prices' && 'refresh-prices' || format('maintenance-{0}', github.run_id) }}
       cancel-in-progress: false
     env:
-      # RM7 is the CURRENT operational project (cut over 2026-08-20 after RM6
-      # spent its 5 GB monthly network-transfer allowance just three days after
-      # its own cutover). Current-first, matching src/lib/db.ts.
+      # RM8 is the CURRENT operational project (cut over 2026-08-22, mid-outage,
+      # after RM7 spent its 5 GB monthly network-transfer allowance just TWO days
+      # after its own cutover and every in-stock listing on the site vanished).
+      # Current-first, matching src/lib/db-chains.ts — that file is the source of
+      # truth for this order and tests/db-chain.test.ts pins this chain to it.
       #
-      # RM6 now sits LAST in this chain, below even the long-dead projects,
-      # because a fallback that cannot connect is worth less than a stale one
-      # that can — see the long note on OPERATIONAL_URL in src/lib/db.ts. RM5 is
-      # the real rollback.
+      # The migrate-* steps below deliberately do NOT use this default: each pins
+      # its own SOURCE (the OLD project it reads FROM) and TARGET, and aborts if
+      # the two resolve to the same database.
       #
-      # migrate-main-db-to-rm7's own step below deliberately does NOT use this
-      # default: it pins SOURCE to RM6 (the OLD project it reads FROM) and
-      # TARGET to RM7, and aborts outright if the two resolve to the same
-      # database.
-      #
-      # ORDERING: this default points at RM7 from the moment it's set, so run
-      # migrate-main-db-to-rm7 BEFORE any other task here — otherwise a task
-      # like import-prices would happily operate against a still-empty RM7.
-      DATABASE_URL: ${{ secrets.RM7 || vars.RM7 || secrets.RM8 || vars.RM8 || secrets.DATABASE_URL || vars.DATABASE_URL }}
+      # ORDERING: this default points at the newest project from the moment its
+      # variable is set, so run the matching migrate-main-db-to-* task BEFORE any
+      # other task here — otherwise something like import-prices would happily
+      # operate against a still-empty target. This is not hypothetical: on
+      # 2026-08-22 RM8 was set but completely empty, and cutting over without
+      # staging it first would have replaced "no listings" with "no site".
+      DATABASE_URL: ${{ secrets.RM8 || vars.RM8 || secrets.RM7 || vars.RM7 || secrets.DATABASE_URL || vars.DATABASE_URL }}
       # Which of the chain above actually won, by NAME (never its value). lib/db.ts
       # cannot work this out inside Actions: the chain is collapsed into one
       # DATABASE_URL before the job starts, so process.env.RM5 is always unset there
       # and its warning always said "DATABASE_URL". See src/lib/db.ts.
-      DB_SOURCE_NAME: ${{ (secrets.RM7 || vars.RM7) && 'RM7' || (secrets.RM8 || vars.RM8) && 'RM8' || 'DATABASE_URL' }}
+      DB_SOURCE_NAME: ${{ (secrets.RM8 || vars.RM8) && 'RM8' || (secrets.RM7 || vars.RM7) && 'RM7' || 'DATABASE_URL' }}
       DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
     steps:
       - uses: actions/checkout@v4
@@ -154,14 +170,14 @@ jobs:
           # The click/price-history tables can live in a SECOND Neon project
           # (src/lib/db-history.ts). Ordinary pushes never reach it, so new columns
           # (e.g. ClickEvent.path) 500 the admin clicks page until pushed here too.
-          # HISTORY_DATABASE_URL_3 is the CURRENT project (2026-08-19, after
-          # HISTORY_DATABASE_URL_2 neared its 5 GB Neon network-transfer allowance —
+          # HISTORY_DATABASE_URL_4 is the CURRENT project (2026-08-21, after
+          # HISTORY_DATABASE_URL_3 went over its 5 GB Neon network-transfer allowance —
           # see db-history.ts, which explains why this chain is CURRENT-first
-          # rather than newest-first). HISTORY_DATABASE_URL_2 is the rollback;
+          # rather than newest-first). HISTORY_DATABASE_URL_3 is the rollback;
           # everything below it is dead. This is a schema-push TARGET chain, so it
           # mirrors the app's precedence exactly — pushing a new column into any
           # project other than the one the app reads is how a green deploy 500s.
-          HISTORY_DB: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 || secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 || secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL || secrets.RH7 || vars.RH7 || secrets.RH6 || vars.RH6 || secrets.RH5 || vars.RH5 || secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
+          HISTORY_DB: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 || secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 || secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 || secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL || secrets.RH7 || vars.RH7 || secrets.RH6 || vars.RH6 || secrets.RH5 || vars.RH5 }}
         run: |
           # --accept-data-loss: some schema changes are intentionally destructive
           # (e.g. dropping a removed feature's tables/columns) — prisma db push
@@ -207,13 +223,13 @@ jobs:
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
         run: |
-          TARGET="${HISTORY_DATABASE_URL_3:-${HISTORY_DATABASE_URL_2:-${HISTORY_DATABASE_URL:-${RH7:-${RH6:-${RH5:-$HISTORY_DATABASE_URL_4}}}}}}"
+          TARGET="${HISTORY_DATABASE_URL_4:-${HISTORY_DATABASE_URL_3:-${HISTORY_DATABASE_URL_2:-${HISTORY_DATABASE_URL:-${RH7:-${RH6:-$RH5}}}}}}"
           if [ -z "$TARGET" ]; then
-            echo "::error::No target history DB visible to Actions (HISTORY_DATABASE_URL_3 / _2 / HISTORY_DATABASE_URL / RH7 / RH6 / RH5 / HISTORY_DATABASE_URL_4)."
+            echo "::error::No target history DB visible to Actions (HISTORY_DATABASE_URL_4 / _3 / _2 / HISTORY_DATABASE_URL / RH7 / RH6 / RH5)."
             exit 1
           fi
-          if [ -z "${HISTORY_DATABASE_URL_3:-}" ]; then
-            echo "::warning::HISTORY_DATABASE_URL_3 is not visible to Actions — this is copying into a project that is NOT the current one. Add it under Settings → Secrets and variables → Actions."
+          if [ -z "${HISTORY_DATABASE_URL_4:-}" ]; then
+            echo "::warning::HISTORY_DATABASE_URL_4 is not visible to Actions — this is copying into a project that is NOT the current one. Add it under Settings → Secrets and variables → Actions."
           fi
           echo "Pushing schema to the target history database…"
           # Non-fatal: a forked history DB can carry EXTRA columns this ref's schema
@@ -230,10 +246,13 @@ jobs:
         # parent for PriceHistory; see ensureHistoryCards() in lib/db-history.ts).
         #
         # WHY NOT the `migrate-history` task above? scripts/migrate-history.ts
-        # streams every row over the UNCOMPRESSED Postgres wire protocol and
-        # re-reads the whole Card table on top — the most expensive possible way
-        # to read a database that is already out of allowance. pg_dump
-        # --format=custom compresses on the wire. Keep the Prisma script for what
+        # re-reads the whole Card table on top of every history table it copies —
+        # a genuinely redundant read this pg_dump-based task avoids by reading
+        # each table exactly once via COPY format. (NOT because pg_dump
+        # "compresses on the wire" — Neon's own docs say compression flags run
+        # CLIENT-SIDE, after the data already crossed the network, so they do not
+        # reduce billed transfer at all: https://neon.com/docs/introduction/network-transfer.
+        # The real saving is reading once instead of twice.) Keep the Prisma script for what
         # it's better at (multi-source top-ups, tolerating a dead source, dedupe);
         # use THIS for the bulk copy.
         #
@@ -262,7 +281,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.RH7 || vars.RH7 }}
           # Only ever used for a "did RH7 accidentally get set to the operational
           # database?" guard before this step truncates anything.
-          OPERATIONAL_URL: ${{ secrets.RM7 || vars.RM7 || secrets.RM8 || vars.RM8 || secrets.DATABASE_URL || vars.DATABASE_URL }}
+          OPERATIONAL_URL: ${{ secrets.RM8 || vars.RM8 || secrets.RM7 || vars.RM7 || secrets.DATABASE_URL || vars.DATABASE_URL }}
         run: |
           set -uo pipefail
 
@@ -413,10 +432,13 @@ jobs:
         # parent for PriceHistory; see ensureHistoryCards() in lib/db-history.ts).
         #
         # WHY NOT the `migrate-history` task above? scripts/migrate-history.ts
-        # streams every row over the UNCOMPRESSED Postgres wire protocol and
-        # re-reads the whole Card table on top — the most expensive possible way
-        # to read a database that is already out of allowance. pg_dump
-        # --format=custom compresses on the wire. Keep the Prisma script for what
+        # re-reads the whole Card table on top of every history table it copies —
+        # a genuinely redundant read this pg_dump-based task avoids by reading
+        # each table exactly once via COPY format. (NOT because pg_dump
+        # "compresses on the wire" — Neon's own docs say compression flags run
+        # CLIENT-SIDE, after the data already crossed the network, so they do not
+        # reduce billed transfer at all: https://neon.com/docs/introduction/network-transfer.
+        # The real saving is reading once instead of twice.) Keep the Prisma script for what
         # it's better at (multi-source top-ups, tolerating a dead source, dedupe);
         # use THIS for the bulk copy.
         #
@@ -450,7 +472,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
           # Only ever used for a "did HISTORY_DATABASE_URL_2 accidentally get set
           # to the operational database?" guard before this step truncates anything.
-          OPERATIONAL_URL: ${{ secrets.RM7 || vars.RM7 || secrets.RM8 || vars.RM8 || secrets.DATABASE_URL || vars.DATABASE_URL }}
+          OPERATIONAL_URL: ${{ secrets.RM8 || vars.RM8 || secrets.RM7 || vars.RM7 || secrets.DATABASE_URL || vars.DATABASE_URL }}
         run: |
           set -uo pipefail
 
@@ -599,10 +621,13 @@ jobs:
         # parent for PriceHistory; see ensureHistoryCards() in lib/db-history.ts).
         #
         # WHY NOT the `migrate-history` task above? scripts/migrate-history.ts
-        # streams every row over the UNCOMPRESSED Postgres wire protocol and
-        # re-reads the whole Card table on top — the most expensive possible way
-        # to read a database that is already out of allowance. pg_dump
-        # --format=custom compresses on the wire. Keep the Prisma script for what
+        # re-reads the whole Card table on top of every history table it copies —
+        # a genuinely redundant read this pg_dump-based task avoids by reading
+        # each table exactly once via COPY format. (NOT because pg_dump
+        # "compresses on the wire" — Neon's own docs say compression flags run
+        # CLIENT-SIDE, after the data already crossed the network, so they do not
+        # reduce billed transfer at all: https://neon.com/docs/introduction/network-transfer.
+        # The real saving is reading once instead of twice.) Keep the Prisma script for what
         # it's better at (multi-source top-ups, tolerating a dead source, dedupe);
         # use THIS for the bulk copy.
         #
@@ -636,7 +661,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
           # Only ever used for a "did HISTORY_DATABASE_URL_3 accidentally get set
           # to the operational database?" guard before this step truncates anything.
-          OPERATIONAL_URL: ${{ secrets.RM7 || vars.RM7 || secrets.RM8 || vars.RM8 || secrets.DATABASE_URL || vars.DATABASE_URL }}
+          OPERATIONAL_URL: ${{ secrets.RM8 || vars.RM8 || secrets.RM7 || vars.RM7 || secrets.DATABASE_URL || vars.DATABASE_URL }}
         run: |
           set -uo pipefail
 
@@ -761,6 +786,189 @@ jobs:
           echo "     the real problem — grep the Vercel logs for [egress-guard:history];"
           echo "     db-history.ts names getEmptyCardIds() as the first suspect."
 
+      - name: Migrate the HISTORY database (HISTORY_DATABASE_URL_3 → HISTORY_DATABASE_URL_4) via pg_dump/pg_restore
+        # ROTATING because HISTORY_DATABASE_URL_3 is over its 5 GB monthly
+        # network-transfer allowance — the FOURTH rotation of this history
+        # project inside two weeks. See getEmptyCardIds() in
+        # lib/card-price-state.ts: it groups the ENTIRE PriceHistory table with
+        # no where/take/cache, and was the prime suspect named in every prior
+        # rotation's own notes. It is bounded/cached as part of the same change
+        # that adds this step — see its own comment — so this rotation should
+        # actually hold, unlike the last three.
+        #
+        # The cheapest CORRECT way to drain a Neon project that is near its
+        # allowance. Mirrors migrate-main-db-to-rm7, scoped to the three tables
+        # a history project actually holds (Card is only there as the FK parent
+        # for PriceHistory; see ensureHistoryCards() in lib/db-history.ts).
+        #
+        # WHY NOT the `migrate-history` task above? scripts/migrate-history.ts
+        # re-reads the whole Card table on top of every history table it copies —
+        # a genuinely redundant read this pg_dump-based task avoids by reading
+        # each table exactly once via COPY format. (NOT because pg_dump
+        # "compresses on the wire" — Neon's own docs say compression flags run
+        # CLIENT-SIDE, after the data already crossed the network, so they do not
+        # reduce billed transfer at all: https://neon.com/docs/introduction/network-transfer.
+        # The real saving is reading once instead of twice.) Keep the Prisma script for
+        # what it's better at (multi-source top-ups, tolerating a dead source,
+        # dedupe); use THIS for the bulk copy.
+        #
+        # RE-RUNNABLE: truncates the target's three tables and re-copies, so
+        # every run is a full re-sync of the source's CURRENT state. Run it
+        # once for the bulk copy, then once more immediately before deploying
+        # the new chain, so anything written in between is included.
+        #
+        # THE TARGET IS AN OLD, RECYCLED PROJECT (per the 2026-08-21 probe:
+        # HISTORY_DATABASE_URL_4 still holds 195,574 rows from 2026-06-06 to
+        # 2026-07-24, 0% of which resolve against the live catalogue — the same
+        # orphaned state db-chains.ts already documented). That is fine: this
+        # step TRUNCATEs it before restoring, same as every prior rotation onto
+        # a recycled name. `prisma db push` below brings its schema up to date
+        # first (it predates every migration since it was retired), and the
+        # TRUNCATE afterwards clears every stale row from its previous term.
+        if: inputs.task == 'migrate-history-db-to-hdu4'
+        env:
+          # SOURCE deliberately EXCLUDES HISTORY_DATABASE_URL_4 — that's the
+          # project we migrate TO. Resolving it with the _4-first chain used
+          # everywhere else would point source and target at the same database,
+          # and the migration would silently no-op while reporting every row
+          # count as matching. This is not hypothetical: the same trap is
+          # documented on migrate-main-db, and it is the specific reason
+          # db-history.ts tells you to grep the target name before rotating.
+          #
+          # HISTORY_DATABASE_URL_3 is the source because that is where the live
+          # data is: it served since 2026-08-19, so it holds every row written
+          # in that window. Pinned to that ONE variable rather than a fallback
+          # chain, so a missing secret fails loudly below instead of quietly
+          # dumping some older, half-drained project into the new one.
+          SOURCE_HISTORY_URL: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
+          TARGET_HISTORY_URL: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
+          # Only ever used for a "did HISTORY_DATABASE_URL_4 accidentally get set
+          # to the operational database?" guard before this step truncates anything.
+          OPERATIONAL_URL: ${{ secrets.RM8 || vars.RM8 || secrets.RM7 || vars.RM7 || secrets.DATABASE_URL || vars.DATABASE_URL }}
+        run: |
+          set -uo pipefail
+
+          if [ -z "$TARGET_HISTORY_URL" ]; then
+            echo "::error::HISTORY_DATABASE_URL_4 is not visible to Actions — add it under Settings → Secrets and variables → Actions (exact name HISTORY_DATABASE_URL_4)."
+            exit 1
+          fi
+          if [ -z "$SOURCE_HISTORY_URL" ]; then
+            echo "::error::HISTORY_DATABASE_URL_3 is not visible to Actions — nothing to migrate FROM."
+            exit 1
+          fi
+          if [ "$SOURCE_HISTORY_URL" = "$TARGET_HISTORY_URL" ]; then
+            echo "::error::SOURCE and TARGET resolve to the SAME database — HISTORY_DATABASE_URL_4 must be a different Neon project than HISTORY_DATABASE_URL_3. Aborting before doing anything."
+            exit 1
+          fi
+          if [ -n "${OPERATIONAL_URL:-}" ] && [ "$TARGET_HISTORY_URL" = "$OPERATIONAL_URL" ]; then
+            echo "::error::HISTORY_DATABASE_URL_4 resolves to the OPERATIONAL database. This step TRUNCATES its target — aborting rather than wiping production data."
+            exit 1
+          fi
+
+          # Neon runs a newer Postgres major than ubuntu-latest's stock pg_dump
+          # (16.x), and pg_dump refuses to dump from a server newer than itself.
+          # Install from PGDG's own apt repo rather than guessing a version.
+          echo "== Installing PostgreSQL client tools from PGDG =="
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-18
+          export PATH="/usr/lib/postgresql/18/bin:$PATH"
+          pg_dump --version; psql --version
+
+          # Catalog statistics only — a few rows of metadata, NOT the tables. Tells
+          # us what this migration is about to cost before spending any allowance.
+          echo "== Source table sizes (from catalog — negligible transfer) =="
+          psql "$SOURCE_HISTORY_URL" -P pager=off -c "
+            SELECT relname AS table,
+                   to_char(n_live_tup, 'FM999,999,999') AS est_rows,
+                   pg_size_pretty(pg_total_relation_size(relid)) AS total_size
+            FROM pg_stat_user_tables
+            ORDER BY pg_total_relation_size(relid) DESC
+            LIMIT 20;" 2>&1 || echo "(size report unavailable — continuing)"
+
+          echo "== Bringing the target's schema up to date (it is an OLD project — its schema predates recent migrations) =="
+          DATABASE_URL="$TARGET_HISTORY_URL" npx prisma db push --skip-generate --accept-data-loss
+
+          # LAST-LINE SAFETY GUARD, checked AFTER the schema exists and BEFORE any
+          # destructive statement: a history project holds no accounts. If "User"
+          # has rows, HISTORY_DATABASE_URL_4 is pointed at a real operational
+          # database and the TRUNCATE below would destroy production data.
+          USERS=$(psql "$TARGET_HISTORY_URL" -tAc 'SELECT COUNT(*) FROM public."User"' 2>/dev/null || echo "0")
+          case "$USERS" in ''|*[!0-9]*) USERS=0;; esac
+          if [ "$USERS" -gt 0 ]; then
+            echo "::error::Target has $USERS rows in public.\"User\" — that is an OPERATIONAL database, not a history project. Refusing to truncate. Check what the HISTORY_DATABASE_URL_4 secret is set to."
+            exit 1
+          fi
+          echo "Target public.\"User\" rows: 0 ✓ (confirmed history-only project)"
+
+          # DUMP BEFORE TRUNCATE, always — if the source refuses reads (fully
+          # exhausted), we must not have already destroyed the target's contents.
+          echo "== Dumping Card + ClickEvent + PriceHistory from the source (compressed) =="
+          if ! pg_dump "$SOURCE_HISTORY_URL" --no-owner --no-acl --format=custom --data-only \
+                 -t 'public."Card"' -t 'public."ClickEvent"' -t 'public."PriceHistory"' \
+                 -f history.dump; then
+            echo "::error::Could not read HISTORY_DATABASE_URL_3. If it is hard-capped, its history cannot be drained — the site still works on an empty target (charts and the Index rebuild from the next price import onward). Nothing was written to the target."
+            exit 1
+          fi
+          echo "Dump size: $(du -h history.dump | cut -f1)"
+
+          echo "== Clearing the target's history tables for a clean re-sync =="
+          psql "$TARGET_HISTORY_URL" -c 'TRUNCATE public."PriceHistory", public."ClickEvent", public."Card" CASCADE;'
+
+          # ORDER IS LOAD-BEARING: PriceHistory.cardId REFERENCES Card(id), so Card
+          # rows must land first or every COPY fails the FK. pg_restore replays
+          # archive entries in the order pg_dump wrote them (alphabetical: Card,
+          # ClickEvent, PriceHistory) which is coincidentally correct — but relying
+          # on alphabetical luck is not a design. Restore Card explicitly first.
+          # The dump file is LOCAL, so this second pass costs zero source transfer.
+          echo "== Restoring Card (the FK parent) =="
+          pg_restore --no-owner --no-acl --data-only -t 'Card' -d "$TARGET_HISTORY_URL" history.dump
+          echo "== Restoring ClickEvent + PriceHistory =="
+          pg_restore --no-owner --no-acl --data-only -t 'ClickEvent' -t 'PriceHistory' -d "$TARGET_HISTORY_URL" history.dump
+
+          echo "== Verifying row counts (source vs target) =="
+          # COUNT(*) transfers a single integer per table rather than re-reading
+          # data — do NOT "verify" by re-reading rows; an earlier version of the
+          # migrate-main-db job did that and burned the allowance it was saving.
+          # set +e so every count is attempted and every error is PRINTED rather
+          # than swallowed into a command substitution.
+          set +e
+          MISMATCH=0
+          for T in 'public."Card"' 'public."ClickEvent"' 'public."PriceHistory"'; do
+            SRC=$(psql "$SOURCE_HISTORY_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
+            DST=$(psql "$TARGET_HISTORY_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
+            case "$SRC" in ''|*[!0-9]*) echo "$T source query FAILED: $SRC"; MISMATCH=1; continue;; esac
+            case "$DST" in ''|*[!0-9]*) echo "$T target query FAILED: $DST"; MISMATCH=1; continue;; esac
+            if [ "$SRC" = "$DST" ]; then
+              echo "$T: source=$SRC target=$DST ✓"
+            else
+              echo "$T: source=$SRC target=$DST ✗ MISMATCH"
+              MISMATCH=1
+            fi
+          done
+          set -e
+          if [ "$MISMATCH" = "1" ]; then
+            echo "::error::Row-count mismatch — do NOT deploy the HISTORY_DATABASE_URL_4-first chain yet. Re-run this task, or inspect the pg_restore output above."
+            exit 1
+          fi
+          echo "All tables match — HISTORY_DATABASE_URL_4 now holds a full copy of the history data."
+          echo ""
+          echo "NEXT STEPS:"
+          echo "  1. Re-run this task immediately before deploying, so anything the"
+          echo "     price importer wrote to HISTORY_DATABASE_URL_3 in the meantime"
+          echo "     is included."
+          echo "  2. src/lib/db-history.ts, scripts/build-db-push.sh and the workflow"
+          echo "     chains now put HISTORY_DATABASE_URL_4 FIRST, so a deploy moves"
+          echo "     history reads/writes onto it. Confirm HISTORY_DATABASE_URL_4 is"
+          echo "     set in Vercel for Production, Preview AND Development."
+          echo "  3. Leave HISTORY_DATABASE_URL_3 set as the rollback fallback; remove"
+          echo "     it only once the new target has been serving cleanly for a while."
+          echo "  4. getEmptyCardIds() (lib/card-price-state.ts) is bounded/cached as"
+          echo "     of this same rotation — if the allowance still drains fast, grep"
+          echo "     Vercel logs for [egress-guard:history] to find the next offender."
+
       - name: Migrate main (operational) database to RM3
         # Full pg_dump/pg_restore of the ENTIRE operational schema (users, cards,
         # orders, marketplace listings, everything) — unlike the history-DB split,
@@ -771,9 +979,13 @@ jobs:
         # one pass — the proven, boring, correct tool for "copy an entire database."
         #
         # NETWORK TRANSFER (the reason we're here — the source hit its monthly
-        # allowance): pg_dump --format=custom is COMPRESSED on the wire, so this
-        # is already the cheapest way to read the whole DB once. Two further
-        # savings applied below:
+        # allowance): pg_dump/pg_restore reads the whole DB exactly once, via
+        # COPY format rather than row-by-row ORM queries — the leanest single
+        # pass available, though NOT because of compression. Neon's own docs
+        # are explicit that pg_dump's compression flags (-Fc, -Z) run CLIENT-SIDE
+        # after the data has already crossed the network, so they do not reduce
+        # billed transfer at all: https://neon.com/docs/introduction/network-transfer.
+        # Two further, REAL savings applied below:
         #   • PriceHistory + ClickEvent are excluded with --exclude-table-data.
         #     Those are the two biggest tables by far, and the app does NOT read
         #     them from this database — they live in the history project (RH7,
@@ -1017,7 +1229,15 @@ jobs:
 
           # The tables that actually matter for this incident. Cards and prices
           # rebuild themselves from public sources; nothing below can.
-          TABLES='User MarketplaceListing Order SellerProfile SupportTicket CollectionCard PriceAlert Card'
+          # RetailerPrice IS IN THIS LIST DELIBERATELY, and it was the one number
+          # missing when it mattered most. During the 2026-08-22 outage this
+          # probe was the first thing run, and it answered "RM8 REACHABLE" with
+          # every table "-" — but it could not say whether RM8 held any STOCK,
+          # which is the only number that decides whether in-stock listings come
+          # back after a cutover. That had to be inferred from a later migration
+          # log instead of read here. It is ~78k rows and counts in milliseconds;
+          # there was never a reason to leave it out.
+          TABLES='User MarketplaceListing Order SellerProfile SupportTicket CollectionCard PriceAlert Card RetailerPrice SealedListing'
 
           # TWO WAYS THIS PROBE HAS ALREADY LIED, both worth keeping written down.
           #
@@ -1070,13 +1290,13 @@ jobs:
           probe "RM3"                  "${P_RM3:-}" || true
           echo ""
           echo "===== HISTORY ROTATION (may carry a full early copy) ====="
-          probe "HISTORY_DATABASE_URL_3 (current)" "${P_HISTORY_DATABASE_URL_3:-}" || true
-          probe "HISTORY_DATABASE_URL_2 (rollback)" "${P_HISTORY_DATABASE_URL_2:-}" || true
+          probe "HISTORY_DATABASE_URL_4 (current)" "${P_HISTORY_DATABASE_URL_4:-}" || true
+          probe "HISTORY_DATABASE_URL_3 (rollback)" "${P_HISTORY_DATABASE_URL_3:-}" || true
+          probe "HISTORY_DATABASE_URL_2" "${P_HISTORY_DATABASE_URL_2:-}" || true
           probe "HISTORY_DATABASE_URL"  "${P_HISTORY_DATABASE_URL:-}" || true
           probe "RH7"                  "${P_RH7:-}" || true
           probe "RH6"                  "${P_RH6:-}" || true
           probe "RH5"                  "${P_RH5:-}" || true
-          probe "HISTORY_DATABASE_URL_4" "${P_HISTORY_DATABASE_URL_4:-}" || true
           echo ""
           echo "Read-only survey complete — nothing was written to any database."
           echo "Pick the reachable source with the highest User/MarketplaceListing"
@@ -1095,9 +1315,9 @@ jobs:
         # connections ("Can't reach database server at ep-…"), and pg_dump needs
         # it to answer. If the dump below fails with P1001 the data cannot be
         # drained until RM4's allowance resets (Neon bills monthly) or its plan is
-        # raised for long enough to copy — a dump is the cheapest possible read,
-        # compressed on the wire, so it is the likeliest thing to succeed if
-        # ANYTHING can. Do not treat an empty RM5 as a successful migration: the
+        # raised for long enough to copy — a dump via COPY format, one lean pass
+        # over each table, is the cheapest possible read, so it is the likeliest
+        # thing to succeed if ANYTHING can. Do not treat an empty RM5 as a successful migration: the
         # row-count check at the end exists to stop exactly that, and cutting
         # traffic to an empty database would show a reviewer an empty site.
         #
@@ -1438,11 +1658,30 @@ jobs:
         # about as long as the source did. This buys time; it is not the cure —
         # see the note on RetailerPrice in src/lib/db.ts.
         #
-        # SOURCE is pinned to RM7 and TARGET to RM8, deliberately NOT using the
-        # job-level DATABASE_URL default — once the chain is flipped RM8-first,
-        # reusing that default would point source and target at the same
-        # database and the migration would silently no-op while reporting every
-        # row count as matching.
+        # SOURCE IS RM6, NOT RM7, AND THAT IS THE 2026-08-22 INCIDENT TALKING.
+        # This task was written to copy RM7 (then live) into RM8 as a pre-staged
+        # rollback, and it was never run. RM7 then went over its Neon transfer
+        # allowance two days after cutover, and the probe-databases survey on
+        # 2026-08-22 found: RM7 UNREACHABLE (quota), RM8 REACHABLE but EMPTY —
+        # every table count came back "-", i.e. no schema at all. So the rollback
+        # this task exists to create did not exist when it was needed, and the
+        # source it was pinned to could no longer be dumped.
+        #
+        # That same survey found RM6 REACHABLE and holding the most complete
+        # catalogue of any live project (User=186, Card=1,429, CollectionCard=635
+        # — ahead of DATABASE_URL's 151 users and RM5's 144). RM6 served as the
+        # operational database until the 2026-08-20 cutover, so it is both the
+        # freshest reachable source and a superset of the older ones. It is
+        # therefore the source now.
+        #
+        # Pinned by NAME on both ends, deliberately NOT using the job-level
+        # DATABASE_URL default — once the chain is flipped RM8-first, reusing
+        # that default would point source and target at the same database and the
+        # migration would silently no-op while reporting every row count as
+        # matching.
+        #
+        # WHEN RM7's ALLOWANCE RESETS it becomes the better source again (it holds
+        # the 08-20..08-22 writes RM6 does not). Point SOURCE back at RM7 then.
         #
         # PriceHistory/ClickEvent DATA is excluded (schema kept): those are served
         # from the history project, and copying them would spend the source's
@@ -1453,7 +1692,7 @@ jobs:
         # copy and again immediately before cutting traffic over.
         if: inputs.task == 'migrate-main-db-to-rm8'
         env:
-          SOURCE_DATABASE_URL: ${{ secrets.RM7 || vars.RM7 }}
+          SOURCE_DATABASE_URL: ${{ secrets.RM6 || vars.RM6 }}
           TARGET_DATABASE_URL: ${{ secrets.RM8 || vars.RM8 }}
         run: |
           set -uo pipefail
@@ -1486,9 +1725,21 @@ jobs:
           # src/lib/db.ts is the authority on which variable production resolves
           # FIRST, and tests/db-chain.test.ts keeps that list honest, so read it
           # here instead of duplicating the chain into yet another place.
-          FIRST_IN_CHAIN=$(sed -n '/^const OPERATIONAL_URL =/,/;/p' src/lib/db.ts \
-            | grep -oE 'process\.env\.[A-Z_0-9]+' | head -1 | sed 's/process\.env\.//')
-          echo "Chain in src/lib/db.ts resolves first: ${FIRST_IN_CHAIN:-<could not parse>}"
+          # READS db-chains.ts, NOT db.ts. This used to sed db.ts for
+          # `const OPERATIONAL_URL = ... process.env.X`, but db.ts now delegates
+          # to resolveUrl(OPERATIONAL_VARS) and holds no process.env reference at
+          # all — so the regex matched nothing, FIRST_IN_CHAIN came back EMPTY,
+          # and the "refusing to overwrite the live database" guard below could
+          # never fire. It was inert in all three migrate tasks. db-chains.ts is
+          # the single source of truth (tests/db-chain.test.ts keeps it honest),
+          # so parse the head of OPERATIONAL_VARS straight out of it.
+          FIRST_IN_CHAIN=$(sed -n '/^export const OPERATIONAL_VARS =/,/;/p' src/lib/db-chains.ts \
+            | grep -oE '"[A-Z_0-9]+"' | head -1 | tr -d '"')
+          if [ -z "${FIRST_IN_CHAIN:-}" ]; then
+            echo "::error::could not determine which database is live from src/lib/db-chains.ts. Refusing to run a destructive migration blind."
+            exit 1
+          fi
+          echo "Chain in src/lib/db-chains.ts resolves first: ${FIRST_IN_CHAIN:-<could not parse>}"
           if [ "$FIRST_IN_CHAIN" = "RM8" ]; then
             if [ "${{ inputs.overwrite_live_db }}" != "true" ]; then
               echo "::error::REFUSING TO RUN — RM8 is LIVE. src/lib/db.ts resolves it first, so it is the database production is serving right now. This task would restore the frozen RM7 over it and discard every row written since the cutover (signups, feedback, orders, listings). Nothing has been touched. If you truly intend this — a deliberate rollback to the old project — re-run with overwrite_live_db = true."
@@ -1508,7 +1759,7 @@ jobs:
 
           echo "== Can the source still be reached at all? =="
           if ! psql "$SOURCE_DATABASE_URL" -tAc "SELECT 1" >/dev/null 2>&1; then
-            echo "::error::RM7 is unreachable — its transfer allowance is spent, so there is nothing to dump FROM. RM8 has NOT been touched."
+            echo "::error::the SOURCE project is unreachable — most likely its transfer allowance is spent, so there is nothing to dump FROM. RM8 has NOT been touched. Run probe-databases to see which projects still answer, then point SOURCE_DATABASE_URL at the freshest reachable one."
             exit 1
           fi
           echo "Source answered — proceeding."
@@ -1525,8 +1776,22 @@ jobs:
             LIMIT 40;" 2>&1 || echo "(size report unavailable — continuing)"
 
           echo "== What the target holds BEFORE we replace it =="
+          # `|| true` PER ITERATION, and it is load-bearing. GitHub runs these
+          # steps as `bash -e {0}`; the `set -uo pipefail` above ADDS to that, it
+          # does not clear the -e. So when the target is an EMPTY project — no
+          # schema at all, which is precisely the state a pre-stage task exists to
+          # fix — the first COUNT(*) hits "relation does not exist", psql exits
+          # non-zero, and -e killed the whole step before a single byte was
+          # restored. These tasks could therefore never INITIALISE an empty
+          # target, only refresh an already-populated one.
+          #
+          # That is very likely why RM8 sat empty until the 2026-08-22 outage
+          # needed it as a rollback: the job "failed", and the failure looked like
+          # a database problem rather than a shell one. Found the hard way, during
+          # that outage, in all four migrate tasks at once.
           for T in 'public."User"' 'public."Card"' 'public."MarketplaceListing"' 'public."Order"'; do
-            N=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1 | tr -d ' \n')
+            N=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>/dev/null | tr -d ' \n') || true
+            case "$N" in ''|*[!0-9]*) N="(absent — target has no such table yet)";; esac
             echo "  target $T: $N"
           done
 
@@ -1542,7 +1807,7 @@ jobs:
             --exclude-table-data='public."PriceHistory"' \
             --exclude-table-data='public."ClickEvent"' \
             -f main.dump; then
-            echo "::error::pg_dump FAILED against RM7 — almost certainly its transfer allowance dying mid-stream. RM8 has NOT been touched; a partial dump is never restored."
+            echo "::error::pg_dump FAILED against the SOURCE project — almost certainly its transfer allowance dying mid-stream. RM8 has NOT been touched; a partial dump is never restored."
             exit 1
           fi
           echo "Dump size: $(du -h main.dump | cut -f1)"
@@ -1569,7 +1834,7 @@ jobs:
           echo "== Target inventory after restore =="
           psql "$TARGET_DATABASE_URL" -c "SELECT current_database(), current_user" -c "\dn" -c "\dt public.*" 2>&1 | head -60
 
-          echo "== Verifying row counts (RM7 vs RM8) =="
+          echo "== Verifying row counts (source vs RM8) =="
           # ENUMERATED FROM THE SOURCE, not hand-listed. This used to check nine
           # named tables, which silently said nothing about the rest — after the
           # 2026-08-20 migration, ArbitrageAlertOptOut, UserDigestOptOut and
@@ -1634,7 +1899,20 @@ jobs:
           # the schema pushed here is the one checked out for this job.
           echo ""
           echo "== Re-aligning TARGET schema to this ref's prisma/schema.prisma =="
-          if ! DATABASE_URL="$TARGET_DATABASE_URL" npx prisma db push --skip-generate --accept-data-loss; then
+          # PUSH OVER THE DIRECT ENDPOINT, NOT THE POOLER. `prisma db push`
+          # introspects the live schema first, and against Neon's PgBouncer
+          # endpoint that introspection comes back EMPTY — so Prisma concludes
+          # the tables are missing and aborts with
+          #   P1014  The underlying table for model `Card` does not exist
+          # even though the restore immediately above verified Card row-for-row.
+          # Seen for real on 2026-08-22 (run 32555324191): every table matched
+          # source=target, then the push failed claiming Card was absent.
+          # Neon's direct host is the pooled one minus the "-pooler" suffix;
+          # everything else about the URL is identical. Falls back to the
+          # original URL when there is no -pooler to strip (a direct URL, or a
+          # non-Neon database).
+          DIRECT_TARGET_URL="${TARGET_DATABASE_URL/-pooler/}"
+          if ! DATABASE_URL="$DIRECT_TARGET_URL" npx prisma db push --skip-generate --accept-data-loss; then
             echo "::error::schema push against RM8 FAILED. The data is copied, but its schema may be older than the deployed code (that is how a restore silently drops a just-added column). Do NOT deploy until this succeeds."
             exit 1
           fi
@@ -1708,9 +1986,21 @@ jobs:
           # src/lib/db.ts is the authority on which variable production resolves
           # FIRST, and tests/db-chain.test.ts keeps that list honest, so read it
           # here instead of duplicating the chain into yet another place.
-          FIRST_IN_CHAIN=$(sed -n '/^const OPERATIONAL_URL =/,/;/p' src/lib/db.ts \
-            | grep -oE 'process\.env\.[A-Z_0-9]+' | head -1 | sed 's/process\.env\.//')
-          echo "Chain in src/lib/db.ts resolves first: ${FIRST_IN_CHAIN:-<could not parse>}"
+          # READS db-chains.ts, NOT db.ts. This used to sed db.ts for
+          # `const OPERATIONAL_URL = ... process.env.X`, but db.ts now delegates
+          # to resolveUrl(OPERATIONAL_VARS) and holds no process.env reference at
+          # all — so the regex matched nothing, FIRST_IN_CHAIN came back EMPTY,
+          # and the "refusing to overwrite the live database" guard below could
+          # never fire. It was inert in all three migrate tasks. db-chains.ts is
+          # the single source of truth (tests/db-chain.test.ts keeps it honest),
+          # so parse the head of OPERATIONAL_VARS straight out of it.
+          FIRST_IN_CHAIN=$(sed -n '/^export const OPERATIONAL_VARS =/,/;/p' src/lib/db-chains.ts \
+            | grep -oE '"[A-Z_0-9]+"' | head -1 | tr -d '"')
+          if [ -z "${FIRST_IN_CHAIN:-}" ]; then
+            echo "::error::could not determine which database is live from src/lib/db-chains.ts. Refusing to run a destructive migration blind."
+            exit 1
+          fi
+          echo "Chain in src/lib/db-chains.ts resolves first: ${FIRST_IN_CHAIN:-<could not parse>}"
           if [ "$FIRST_IN_CHAIN" = "RM7" ]; then
             if [ "${{ inputs.overwrite_live_db }}" != "true" ]; then
               echo "::error::REFUSING TO RUN — RM7 is LIVE. src/lib/db.ts resolves it first, so it is the database production is serving right now. This task would restore the frozen RM6 over it and discard every row written since the cutover (signups, feedback, orders, listings). Nothing has been touched. If you truly intend this — a deliberate rollback to the old project — re-run with overwrite_live_db = true."
@@ -1747,8 +2037,22 @@ jobs:
             LIMIT 40;" 2>&1 || echo "(size report unavailable — continuing)"
 
           echo "== What the target holds BEFORE we replace it =="
+          # `|| true` PER ITERATION, and it is load-bearing. GitHub runs these
+          # steps as `bash -e {0}`; the `set -uo pipefail` above ADDS to that, it
+          # does not clear the -e. So when the target is an EMPTY project — no
+          # schema at all, which is precisely the state a pre-stage task exists to
+          # fix — the first COUNT(*) hits "relation does not exist", psql exits
+          # non-zero, and -e killed the whole step before a single byte was
+          # restored. These tasks could therefore never INITIALISE an empty
+          # target, only refresh an already-populated one.
+          #
+          # That is very likely why RM8 sat empty until the 2026-08-22 outage
+          # needed it as a rollback: the job "failed", and the failure looked like
+          # a database problem rather than a shell one. Found the hard way, during
+          # that outage, in all four migrate tasks at once.
           for T in 'public."User"' 'public."Card"' 'public."MarketplaceListing"' 'public."Order"'; do
-            N=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1 | tr -d ' \n')
+            N=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>/dev/null | tr -d ' \n') || true
+            case "$N" in ''|*[!0-9]*) N="(absent — target has no such table yet)";; esac
             echo "  target $T: $N"
           done
 
@@ -1856,7 +2160,20 @@ jobs:
           # the schema pushed here is the one checked out for this job.
           echo ""
           echo "== Re-aligning TARGET schema to this ref's prisma/schema.prisma =="
-          if ! DATABASE_URL="$TARGET_DATABASE_URL" npx prisma db push --skip-generate --accept-data-loss; then
+          # PUSH OVER THE DIRECT ENDPOINT, NOT THE POOLER. `prisma db push`
+          # introspects the live schema first, and against Neon's PgBouncer
+          # endpoint that introspection comes back EMPTY — so Prisma concludes
+          # the tables are missing and aborts with
+          #   P1014  The underlying table for model `Card` does not exist
+          # even though the restore immediately above verified Card row-for-row.
+          # Seen for real on 2026-08-22 (run 32555324191): every table matched
+          # source=target, then the push failed claiming Card was absent.
+          # Neon's direct host is the pooled one minus the "-pooler" suffix;
+          # everything else about the URL is identical. Falls back to the
+          # original URL when there is no -pooler to strip (a direct URL, or a
+          # non-Neon database).
+          DIRECT_TARGET_URL="${TARGET_DATABASE_URL/-pooler/}"
+          if ! DATABASE_URL="$DIRECT_TARGET_URL" npx prisma db push --skip-generate --accept-data-loss; then
             echo "::error::schema push against RM7 FAILED. The data is copied, but its schema may be older than the deployed code (that is how a restore silently drops a just-added column). Do NOT deploy until this succeeds."
             exit 1
           fi
@@ -1927,9 +2244,21 @@ jobs:
           # src/lib/db.ts is the authority on which variable production resolves
           # FIRST, and tests/db-chain.test.ts keeps that list honest, so read it
           # here instead of duplicating the chain into yet another place.
-          FIRST_IN_CHAIN=$(sed -n '/^const OPERATIONAL_URL =/,/;/p' src/lib/db.ts \
-            | grep -oE 'process\.env\.[A-Z_0-9]+' | head -1 | sed 's/process\.env\.//')
-          echo "Chain in src/lib/db.ts resolves first: ${FIRST_IN_CHAIN:-<could not parse>}"
+          # READS db-chains.ts, NOT db.ts. This used to sed db.ts for
+          # `const OPERATIONAL_URL = ... process.env.X`, but db.ts now delegates
+          # to resolveUrl(OPERATIONAL_VARS) and holds no process.env reference at
+          # all — so the regex matched nothing, FIRST_IN_CHAIN came back EMPTY,
+          # and the "refusing to overwrite the live database" guard below could
+          # never fire. It was inert in all three migrate tasks. db-chains.ts is
+          # the single source of truth (tests/db-chain.test.ts keeps it honest),
+          # so parse the head of OPERATIONAL_VARS straight out of it.
+          FIRST_IN_CHAIN=$(sed -n '/^export const OPERATIONAL_VARS =/,/;/p' src/lib/db-chains.ts \
+            | grep -oE '"[A-Z_0-9]+"' | head -1 | tr -d '"')
+          if [ -z "${FIRST_IN_CHAIN:-}" ]; then
+            echo "::error::could not determine which database is live from src/lib/db-chains.ts. Refusing to run a destructive migration blind."
+            exit 1
+          fi
+          echo "Chain in src/lib/db-chains.ts resolves first: ${FIRST_IN_CHAIN:-<could not parse>}"
           if [ "$FIRST_IN_CHAIN" = "RM6" ]; then
             if [ "${{ inputs.overwrite_live_db }}" != "true" ]; then
               echo "::error::REFUSING TO RUN — RM6 is LIVE. src/lib/db.ts resolves it first, so it is the database production is serving right now. This task would restore the frozen DATABASE_URL_2 over it and discard every row written since the cutover (signups, feedback, orders, listings). Nothing has been touched. If you truly intend this — a deliberate rollback to the old project — re-run with overwrite_live_db = true."
@@ -2069,9 +2398,21 @@ jobs:
           # src/lib/db.ts is the authority on which variable production resolves
           # FIRST, and tests/db-chain.test.ts keeps that list honest, so read it
           # here instead of duplicating the chain into yet another place.
-          FIRST_IN_CHAIN=$(sed -n '/^const OPERATIONAL_URL =/,/;/p' src/lib/db.ts \
-            | grep -oE 'process\.env\.[A-Z_0-9]+' | head -1 | sed 's/process\.env\.//')
-          echo "Chain in src/lib/db.ts resolves first: ${FIRST_IN_CHAIN:-<could not parse>}"
+          # READS db-chains.ts, NOT db.ts. This used to sed db.ts for
+          # `const OPERATIONAL_URL = ... process.env.X`, but db.ts now delegates
+          # to resolveUrl(OPERATIONAL_VARS) and holds no process.env reference at
+          # all — so the regex matched nothing, FIRST_IN_CHAIN came back EMPTY,
+          # and the "refusing to overwrite the live database" guard below could
+          # never fire. It was inert in all three migrate tasks. db-chains.ts is
+          # the single source of truth (tests/db-chain.test.ts keeps it honest),
+          # so parse the head of OPERATIONAL_VARS straight out of it.
+          FIRST_IN_CHAIN=$(sed -n '/^export const OPERATIONAL_VARS =/,/;/p' src/lib/db-chains.ts \
+            | grep -oE '"[A-Z_0-9]+"' | head -1 | tr -d '"')
+          if [ -z "${FIRST_IN_CHAIN:-}" ]; then
+            echo "::error::could not determine which database is live from src/lib/db-chains.ts. Refusing to run a destructive migration blind."
+            exit 1
+          fi
+          echo "Chain in src/lib/db-chains.ts resolves first: ${FIRST_IN_CHAIN:-<could not parse>}"
           if [ "$FIRST_IN_CHAIN" = "DATABASE_URL_2" ]; then
             if [ "${{ inputs.overwrite_live_db }}" != "true" ]; then
               echo "::error::REFUSING TO RUN — DATABASE_URL_2 is LIVE. src/lib/db.ts resolves it first, so it is the database production is serving right now. This task would restore the frozen DATABASE_URL over it and discard every row written since the cutover (signups, feedback, orders, listings). Nothing has been touched. If you truly intend this — a deliberate rollback to the old project — re-run with overwrite_live_db = true."
@@ -2108,8 +2449,22 @@ jobs:
             LIMIT 40;" 2>&1 || echo "(size report unavailable — continuing)"
 
           echo "== What the target holds BEFORE we replace it =="
+          # `|| true` PER ITERATION, and it is load-bearing. GitHub runs these
+          # steps as `bash -e {0}`; the `set -uo pipefail` above ADDS to that, it
+          # does not clear the -e. So when the target is an EMPTY project — no
+          # schema at all, which is precisely the state a pre-stage task exists to
+          # fix — the first COUNT(*) hits "relation does not exist", psql exits
+          # non-zero, and -e killed the whole step before a single byte was
+          # restored. These tasks could therefore never INITIALISE an empty
+          # target, only refresh an already-populated one.
+          #
+          # That is very likely why RM8 sat empty until the 2026-08-22 outage
+          # needed it as a rollback: the job "failed", and the failure looked like
+          # a database problem rather than a shell one. Found the hard way, during
+          # that outage, in all four migrate tasks at once.
           for T in 'public."User"' 'public."Card"' 'public."MarketplaceListing"' 'public."Order"'; do
-            N=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1 | tr -d ' \n')
+            N=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>/dev/null | tr -d ' \n') || true
+            case "$N" in ''|*[!0-9]*) N="(absent — target has no such table yet)";; esac
             echo "  target $T: $N"
           done
 
@@ -2319,7 +2674,7 @@ jobs:
         # so the generated client may not even load.
         if: inputs.task == 'fix-orphan-users'
         env:
-          TARGET_DATABASE_URL: ${{ secrets.RM7 || vars.RM7 || secrets.RM8 || vars.RM8 || secrets.DATABASE_URL || vars.DATABASE_URL }}
+          TARGET_DATABASE_URL: ${{ secrets.RM8 || vars.RM8 || secrets.RM7 || vars.RM7 || secrets.DATABASE_URL || vars.DATABASE_URL }}
         run: |
           set -uo pipefail
           if [ -z "$TARGET_DATABASE_URL" ]; then
@@ -2602,12 +2957,12 @@ jobs:
       - name: Audit rarity across sets (read-only census)
         if: inputs.task == 'audit-rarity'
         env:
-          DATABASE_URL: ${{ secrets.RM7 || vars.RM7 || secrets.RM8 || vars.RM8 || secrets.DATABASE_URL || vars.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.RM8 || vars.RM8 || secrets.RM7 || vars.RM7 || secrets.DATABASE_URL || vars.DATABASE_URL }}
           # Which of the chain above actually won, by NAME (never its value). lib/db.ts
           # cannot work this out inside Actions: the chain is collapsed into one
           # DATABASE_URL before the job starts, so process.env.RM5 is always unset there
           # and its warning always said "DATABASE_URL". See src/lib/db.ts.
-          DB_SOURCE_NAME: ${{ (secrets.RM7 || vars.RM7) && 'RM7' || (secrets.RM8 || vars.RM8) && 'RM8' || 'DATABASE_URL' }}
+          DB_SOURCE_NAME: ${{ (secrets.RM8 || vars.RM8) && 'RM8' || (secrets.RM7 || vars.RM7) && 'RM7' || 'DATABASE_URL' }}
         run: npx tsx scripts/audit-rarity.ts
 
       - name: Audit VEN cards (read-only census)
@@ -2725,6 +3080,106 @@ jobs:
       - name: Audit users/Premium (read-only census)
         if: inputs.task == 'audit-users'
         run: npx tsx scripts/audit-users.ts
+
+      - name: Audit card indexability (read-only census)
+        # THE SILENT TRAFFIC KILLER. A card page noindexes itself and leaves the
+        # sitemap when lib/card-price-state.ts finds it empty:
+        #
+        #   indexable = in-stock listing OR >=7 days history OR no-retail-channel
+        #
+        # The two halves of that OR read DIFFERENT databases, joined on Card.id,
+        # and that join has been broken repeatedly — see repair-history-card-ids,
+        # whose own description records "every history project currently has 0% of
+        # its cardIds resolving against the live Card table". When it breaks,
+        # historyDays is 0 for every card, the OR collapses onto "in stock right
+        # now", and a large slice of the catalogue noindexes at once. Nothing
+        # errors. Pages still render. Google drops them over the following days,
+        # so the traffic decline trails the cause and looks unrelated to it.
+        #
+        # This reports the join health first and the census second, because a bad
+        # join makes every number under it meaningless.
+        if: inputs.task == 'audit-indexability'
+        run: npx tsx scripts/audit-indexability.ts
+
+      - name: Audit database egress (read-only forensics)
+        # THE OPEN INCIDENT. Nine Neon projects have been burned through at
+        # ~2 GB/day, each dying 2-3 days after it was cut over to. The
+        # 2026-08-14 sweep found and fixed a segment-TTL inversion that
+        # regenerated /card/[id] 288x a day — and the rate did not change: RM6
+        # died in 3 days and RM7 in 2 days AFTER that fix, taking the site down.
+        # So the remaining burn has never been measured, only hypothesised, and
+        # RM8 is on the same clock right now.
+        #
+        # This step measures it instead of guessing. It writes nothing: only
+        # pg_stat_database, pg_stat_user_tables and pg_stat_statements, plus one
+        # CREATE EXTENSION IF NOT EXISTS for the last of those (Neon preloads the
+        # library; the extension itself still has to be created once per project,
+        # and creating it is what makes the NEXT run useful).
+        #
+        # TIMING MATTERS. Neon resets these counters when the compute endpoint
+        # restarts, which for a suspend-happy serverless project is often. Run
+        # this a few HOURS into a window, not minutes — the script prints the
+        # window length and refuses to stand behind anything under an hour.
+        if: inputs.task == 'audit-egress'
+        # The job's 45-minute timeout bounds sample_minutes; anything approaching
+        # it will be killed mid-sample and report nothing.
+        run: |
+          ARGS=""
+          if [ -n "${{ inputs.sample_minutes }}" ] && [ "${{ inputs.sample_minutes }}" != "0" ]; then
+            ARGS="--sample=${{ inputs.sample_minutes }}"
+          fi
+          echo "npx tsx scripts/audit-egress.ts $ARGS"
+          npx tsx scripts/audit-egress.ts $ARGS
+
+      - name: Audit Stripe subscriptions against the database (read-only unless fix)
+        # The companion to grant-premium: instead of repairing ONE account you
+        # were told about, it walks every live Stripe subscription and asserts the
+        # database agrees. Stripe is the authority — it took the money and was
+        # never rolled back — so it is the only complete list of who should have
+        # Premium after a restore rolled the database back.
+        #
+        # Catches the silent case specifically: a subscriber whose renewal link
+        # (subscription.metadata.userId / User.stripeCustomerId) points at a row
+        # id that no longer exists. premiumRenewed() then finds nobody and
+        # no-ops behind a .catch(() => {}), so they keep paying and quietly stop
+        # being extended.
+        #
+        # Reports only unless `apply` is ticked.
+        #
+        # NOTE THE POLARITY, it bit this very step once. GitHub's `&&`/`||`
+        # return an OPERAND, not a boolean, and '' is FALSY — so
+        # `${{ inputs.dry_run && '' || '1' }}` evaluates `true && ''` to '',
+        # which is falsy, and falls through to '1'. The "read-only" flag
+        # therefore selected WRITE mode, every time. It was only harmless
+        # because the first run found nothing to change.
+        #
+        # The safe shape is always: TRUE branch is the NON-EMPTY string, i.e.
+        # `${{ inputs.apply && '1' || '' }}`. Never put '' on the true side.
+        if: inputs.task == 'audit-premium-vs-stripe'
+        env:
+          FIX: ${{ inputs.apply && '1' || '' }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+        run: npx tsx scripts/audit-premium-vs-stripe.ts
+
+      - name: Grant/restore Premium on one account (and re-link Stripe)
+        # Written for the 2026-08-22 data loss: RM8 was restored from RM6, whose
+        # snapshot predates 2026-08-20, so every write in that window vanished —
+        # including premiumUntil for at least one paying subscriber.
+        #
+        # Setting the date is the easy half. The half that matters is re-pointing
+        # the Stripe subscription's metadata.userId (and User.stripeCustomerId)
+        # at the CURRENT row id: premiumRenewed() in the Stripe webhook resolves
+        # the account through those links, and if the row was recreated they name
+        # an id that no longer exists. Its update then no-ops behind a
+        # .catch(() => {}), so the subscriber just quietly stops being extended
+        # at the next invoice with no error anywhere. See the script's header.
+        if: inputs.task == 'grant-premium'
+        env:
+          TARGET_EMAIL: ${{ inputs.email }}
+          PREMIUM_UNTIL: ${{ inputs.premium_until }}
+          DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+        run: npx tsx scripts/grant-premium.ts
 
       - name: Remove Premium from one account
         if: inputs.task == 'revoke-premium'

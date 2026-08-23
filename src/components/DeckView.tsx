@@ -35,7 +35,7 @@ export function DeckView({
 }: {
   deck: ResolvedDeck;
   builderHref: string;
-  /** Same decklist, pre-filled into the Premium-gated Best Basket optimiser — a
+  /** Same decklist, pre-filled into the account-gated Best Basket optimiser — a
    *  handoff, not a duplicate of the free inline <DeckCart> below. Optional so
    *  other DeckView callers (deck GROUP pages, which already show their own
    *  Best-Basket-style cart) aren't forced to wire it. */

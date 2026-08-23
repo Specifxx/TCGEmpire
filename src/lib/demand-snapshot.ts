@@ -169,10 +169,43 @@ export async function getDemandWindow(days: number): Promise<DemandWindowResult>
 
 // How many distinct snapshot days exist at all (drives the "velocity active" status
 // in the admin tool). 0 until the table ships / accrues. Guarded.
+//
+// COUNT(DISTINCT day) IS DELIBERATE — THIS FUNCTION RETURNS ONE INTEGER AND MUST
+// COST ONE INTEGER.
+//
+// It was `findMany({ distinct: ["day"], select: { day: true }, take: 400 })`,
+// which reads as "at most 400 days". It is not: Prisma applies `distinct` IN
+// THE CLIENT for findMany, so it selects id+day for EVERY ROW, ships the lot to
+// Node, dedupes there, and only then slices. `take` bounds the deduped result,
+// not the query.
+//
+// Measured on RM8, 2026-08-22 (scripts/audit-egress.ts, pg_stat_statements):
+//
+//   SELECT "DemandSnapshot"."id", "DemandSnapshot"."day" FROM "DemandSnapshot"
+//   222 calls · 3,621,086 rows · 16,311 rows/call
+//
+// DemandSnapshot held 17,148 rows, so each call dragged back the whole table —
+// ~1.8 MB over the wire, 222 times, to produce a number under 400. It was the
+// single largest row-returning statement on the database. And it GROWS: the
+// importer writes one row per card per day forever, so the same call costs
+// ~4.7 MB after a month and keeps climbing.
+//
+// getRisingCards() awaits this on every miss, and that runs behind /tools/rising
+// (force-dynamic), /admin/rising and getTopDeals() — i.e. the homepage and every
+// region home.
+//
+// This is the SAME BUG that getEmptyCardIds() carried in lib/card-price-state.ts,
+// found and fixed on 2026-08-21 after three straight Neon transfer-allowance
+// rotations. That fix pushed the counting into Postgres with a HAVING clause;
+// this one does the same with COUNT(DISTINCT). If you need "the days themselves"
+// rather than how many, write GROUP BY day — never client-side distinct over a
+// table that grows daily.
 export async function demandSnapshotDays(): Promise<number> {
   try {
-    const rows = await prisma.demandSnapshot.findMany({ distinct: ["day"], select: { day: true }, take: 400 });
-    return rows.length;
+    const [row] = await prisma.$queryRaw<{ days: bigint }[]>`
+      SELECT COUNT(DISTINCT day) AS days FROM "DemandSnapshot"
+    `;
+    return Number(row?.days ?? 0);
   } catch {
     return 0;
   }

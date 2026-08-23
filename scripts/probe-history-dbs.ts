@@ -32,24 +32,38 @@ import { PrismaClient } from "@prisma/client";
 // operator may want to migrate INTO. Kept as a list of names so the report can
 // say which variable it is talking about without ever printing a credential.
 const HISTORY_VARS = [
+  "HISTORY_DATABASE_URL_4",
   "HISTORY_DATABASE_URL_3",
   "HISTORY_DATABASE_URL_2",
   "HISTORY_DATABASE_URL",
   "RH7",
   "RH6",
   "RH5",
-  "HISTORY_DATABASE_URL_4",
 ] as const;
 
 // The operational chain, in db.ts order — we need the LIVE Card ids to test
 // history rows against.
-// MIRRORS src/lib/db.ts's OPERATIONAL_URL, and must keep doing so. This list had
-// gone stale at RM6 — which is over its allowance and refuses connections — so the
-// probe fell through to RM5, a RETIRED project, and reported "N cards resolve"
-// against a catalogue the site no longer serves. That is the one number this
-// script exists to produce, so a stale list here quietly answers the wrong
-// question. (RM6 last: freshest data, spent allowance — see db.ts.)
-const OPERATIONAL_VARS = ["RM7", "RM8", "RM5", "DATABASE_URL_2", "DATABASE_URL", "RM4", "RM3", "RM6"] as const;
+// THE CANONICAL CHAIN, IMPORTED — not a mirror of it.
+//
+// This list was hand-kept "mirroring src/lib/db.ts", and it went stale twice.
+// First at RM6: RM6 refuses connections when over its allowance, so the probe
+// fell through to RM5 — a RETIRED project — and reported "N cards resolve"
+// against a catalogue the site no longer serves. That is the ONE number this
+// script exists to produce, so a stale list quietly answers the wrong question.
+// Then again at RM7, which led this list on 2026-08-23, a day after the site
+// moved to RM8.
+//
+// The second time was survivable only because the loop below TESTS THE
+// CONNECTION and keeps going on failure, so a dead leading entry is skipped
+// rather than selected. That is luck, not design: the tail of the old list ran
+// on through RM5/RM4/RM3, so one transient timeout on the live project would
+// have silently produced an answer about a catalogue from months ago.
+//
+// db-chains.ts holds live projects only, on purpose — see its "ONLY LIVE
+// PROJECTS BELONG IN A RUNTIME CHAIN" note. Importing it means there is nothing
+// retired left to fall through TO, so the worst case becomes "could not reach
+// any operational database", which the loop already reports honestly.
+import { OPERATIONAL_VARS } from "../src/lib/db-chains";
 
 function clientFor(url: string) {
   return new PrismaClient({ datasources: { db: { url } }, log: ["error"] });

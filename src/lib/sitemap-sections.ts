@@ -127,6 +127,10 @@ async function core(): Promise<SitemapEntry[]> {
     { url: `${SITE_URL}/domains`, changeFrequency: "weekly", priority: 0.7, lastModified: day },
     { url: `${SITE_URL}/keywords`, changeFrequency: "weekly", priority: 0.7, lastModified: staticPageDate("/keywords") },
     { url: `${SITE_URL}/cards`, changeFrequency: "weekly", priority: 0.7, lastModified: day },
+    // Added 2026-08-20 targeting "riftbound cards rarity" / "riftbound card
+    // gallery" directly — see each route's own doc comment.
+    { url: `${SITE_URL}/cards/rarity`, changeFrequency: "weekly", priority: 0.7, lastModified: day },
+    { url: `${SITE_URL}/gallery`, changeFrequency: "daily", priority: 0.8, lastModified: day },
     { url: `${SITE_URL}/champions`, changeFrequency: "daily", priority: 0.8, lastModified: day },
     { url: `${SITE_URL}/stores`, changeFrequency: "monthly", priority: 0.5, lastModified: day },
     { url: `${SITE_URL}/games/higher-lower`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/higher-lower") },
@@ -474,12 +478,17 @@ export async function marketplace(): Promise<SitemapEntry[]> {
     { url: `${SITE_URL}/marketplace/terms`, changeFrequency: "yearly", priority: 0.3, lastModified: staticPageDate("/marketplace/terms") },
   ];
   try {
-    const sellers = await prisma.marketplaceListing.findMany({
-      where: { status: "ACTIVE", quantity: { gt: 0 } },
-      distinct: ["sellerId"],
-      select: { sellerId: true },
-      take: 1000,
-    });
+    // GROUP BY, not findMany({ distinct }) — Prisma applies BOTH `distinct` and
+    // `take` in the client, so that form selects every active listing row and
+    // dedupes here, with the `take: 1000` bounding the deduped array rather than
+    // the query. Postgres does the dedupe and the LIMIT. Same bug class as
+    // demandSnapshotDays() in lib/demand-snapshot.ts.
+    const sellers = await prisma.$queryRaw<{ sellerId: string }[]>`
+      SELECT "sellerId" FROM "MarketplaceListing"
+      WHERE status = 'ACTIVE' AND quantity > 0
+      GROUP BY "sellerId"
+      LIMIT 1000
+    `;
     base.push(
       ...sellers.map((s) => ({
         url: `${SITE_URL}/marketplace/seller/${s.sellerId}`,

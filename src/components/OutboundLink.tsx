@@ -1,8 +1,9 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { trackEvent } from "@/lib/analytics";
 import { outboundRel } from "@/lib/affiliate";
+import { markBuyClick, registerBuyLink } from "@/lib/buy-intent";
 
 // An outbound "buy" link. Used to also fire a click beacon (to /api/click) for
 // eBay retailer keys so click counts could be verified in our own DB — that
@@ -120,7 +121,15 @@ export function OutboundLink({
    *  re-deriving it from page_type + DOM position. */
   surface?: "table" | "modal" | "ebay_strip" | "out_of_stock";
 }) {
+  // Tell the signup popup a buy link exists on this page, so it stays off the
+  // buy path until the click has happened. See lib/buy-intent.ts — registering
+  // here rather than listing "pages with buy links" somewhere means a new buy
+  // surface is covered automatically.
+  useEffect(() => registerBuyLink(), []);
+
   function onClick(e: React.MouseEvent<HTMLAnchorElement>) {
+    // Before the event, so the popup's re-arm cannot race the beacon.
+    markBuyClick();
     trackEvent("buy_click", {
       retailer,
       country,

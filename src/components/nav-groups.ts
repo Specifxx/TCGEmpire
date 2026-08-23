@@ -1,8 +1,9 @@
 import { DISCORD_URL } from "@/lib/site";
 
 // The grouped site navigation, shared by the ⌘K command launcher
-// (CommandLauncher.tsx), the footer site-map (FOOTER_GROUPS below) and
-// /llms.txt — edit a link here once and all three follow.
+// (CommandLauncher.tsx), the persistent desktop rail (SideNav.tsx), the footer
+// site-map (FOOTER_GROUPS below) and /llms.txt — edit a link here once and all
+// four follow.
 export interface NavGroupLink {
   href: string;
   label: string;
@@ -12,7 +13,7 @@ export interface NavGroupLink {
    * through next/link's client-side navigation or router.push — both would
    * either mis-handle an absolute non-app URL or navigate the current tab
    * away from RiftCompare). Every renderer of NavGroupLink (FooterNav,
-   * CinematicNavMenu, CommandLauncher) must branch on this.
+   * CinematicNavMenu, CommandLauncher, SideNav) must branch on this.
    */
   external?: boolean;
   /**
@@ -113,6 +114,10 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/radiance-countdown", label: "Radiance release date", emoji: "✨", keywords: ["release date", "countdown", "when", "next set", "set 5", "radiance"] },
       { href: "/champions", label: "Champions", emoji: "🦸", keywords: ["champions", "by champion", "legends"] },
       { href: "/cards", label: "By type & rarity", emoji: "🔤", keywords: ["type", "rarity", "showcase", "epic", "signature", "promo", "printings", "facets", "alt art"] },
+      // The set-agnostic hub for /sets/<set>/gallery (added 2026-08-20 to target
+      // "riftbound card gallery" directly — see that route's own doc comment for
+      // the Search Console data behind the per-set galleries it links to).
+      { href: "/gallery", label: "Card gallery", emoji: "🖼️", keywords: ["gallery", "card gallery", "full art", "browse art", "card images"] },
       { href: "/domains", label: "Domains", emoji: "🌀", keywords: ["domains", "colours", "colors", "fury", "calm", "mind", "body", "chaos", "order"] },
       { href: "/keywords", label: "Keywords glossary", emoji: "📚", keywords: ["keywords", "glossary", "mechanics", "rules", "empower", "flow", "burn", "tank", "deflect", "what does"] },
       { href: "/singles", label: "Buy singles", emoji: "🃏", keywords: ["singles", "buy singles", "cheapest single"] },

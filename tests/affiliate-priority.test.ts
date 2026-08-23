@@ -2,10 +2,10 @@ import { test } from "node:test";
 import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
 import {
-  orderCardsForEbay, ebayMarketsForDay, EBAY_ROTATING_MARKETS, EBAY_ALWAYS_MARKETS, EBAY_CA_RETAILER,
+  orderCardsForEbay, ebayMarketsForDay, EBAY_ROTATING_MARKETS, EBAY_ALWAYS_MARKETS,
 } from "../src/lib/price-import";
 import {
-  pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, SETS, isFallbackRetailer,
+  pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, SETS, isFallbackRetailer, EBAY_CA_RETAILER,
   ALL_FALLBACK_RETAILERS, AU_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS,
   SG_FALLBACK_RETAILERS, CA_FALLBACK_RETAILERS,
 } from "../src/lib/constants";
@@ -426,6 +426,13 @@ const FULL_CATALOGUE = 1429; // every card — measured 2026-08-20, up from 1400
 // from 280 at the old $20 floor — real growth, but far short of the ~187-card
 // ceiling the pre-measurement estimate floated; TCG price distributions are
 // more front-loaded near the floor than that estimate assumed.
+//
+// STALE AGAIN: the floor dropped a second time the same day, $10→$5, funded
+// by removing the auction pass (see the "auctions" note on dailyCalls below).
+// The real $5-floor count is not yet measured — read it off the next run's
+// "eBay catalogue: X of Y cards searched" log line and update this constant
+// then. Left at the $10 measurement as a safe (understated) floor in the
+// meantime, same reasoning as the $20→$10 gap before it.
 const CATALOGUE = 347;
 // NOT re-measured alongside CATALOGUE above — the 2026-08-20 forced run was
 // the FULL/catalogue pass (ebay_force bypasses the staleness gate and always
@@ -434,7 +441,11 @@ const CATALOGUE = 347;
 // the $20 floor); update it from that pass's own log line next time it fires
 // due, or force it specifically to check sooner.
 const CHASE_PRINTINGS = 179; // promo+signature+overnumbered at or above the floor
-const SEALED_PER_RUN = 104;  // US 53 + AU 33 + UK 11 + SG 7, before the loose-pack cut
+// US 53 + AU 33 + UK 11 + SG 7, before the loose-pack cut — measured before the
+// 2026-08-20 CA addition and the once-a-day gate; both are directional changes
+// (CA adds a fifth market's worth of groups, the gate halves the daily total)
+// that have not yet been re-measured against a live run.
+const SEALED_PER_RUN = 104;
 const SPENDABLE = 4400;      // 5000 daily limit − 600 reserve
 const SECONDS_PER_CARD = 0.75;
 // A card whose strict query returns nothing costs a SECOND Browse call for the
@@ -458,18 +469,22 @@ const CYCLE_DAYS = Math.max(EBAY_ALWAYS_MARKETS.length, EBAY_ROTATING_MARKETS.le
  * Browse calls for one whole DAY, not one pass.
  *
  * Modelling the catalogue alone is what made the old numbers wrong: the chase
- * pass is handed EBAY_ALWAYS_MARKETS directly, and the sealed pass runs TWICE a
- * day (07:00 and 19:00 UTC). A market added to ALWAYS therefore multiplies more
- * than one pass.
+ * pass is handed EBAY_ALWAYS_MARKETS directly, separate from the catalogue
+ * pass's own market list. A market added to ALWAYS therefore multiplies both
+ * passes, not one.
  *
- * The chase-AUCTION pass was a third term here (always × 120 × 2 ≈ 960 calls/day)
- * until 2026-08-20, when the auctions feature was removed outright.
+ * The chase-AUCTION pass was a third term here (always × 120 × 2 ≈ 960
+ * calls/day) until 2026-08-20, when the auctions feature — refreshEbayAuctions
+ * and the EbayAuction model — was removed outright. `sealed` is SEALED_PER_RUN
+ * × 1, not × 2, for the same reason it used to need the ×2: sealed's eBay pass
+ * gained its own 20h staleness gate the same day (see "sealed" below) and no
+ * longer runs unconditionally on both the 07:00 and 19:00 imports.
  */
 function dailyCalls(day: number): number {
   const markets = ebayMarketsForDay(day).length;
   const always = EBAY_ALWAYS_MARKETS.length;
   const singles = markets * CATALOGUE + always * CHASE_PRINTINGS;
-  const sealed = SEALED_PER_RUN * 2;
+  const sealed = SEALED_PER_RUN;
   return Math.round(singles * (1 + RETRY_RATE)) + sealed;
 }
 
@@ -480,23 +495,24 @@ test("a whole day of eBay passes fits inside the Browse budget", () => {
   }
 });
 
-test("the budget model counts the passes that actually run twice a day", () => {
-  // The failure this pins is an accounting one, not a runtime one: the sealed
-  // search was counted once a day when it in fact runs after BOTH the 07:00 and
-  // 19:00 imports. Undercounting it is how a budget that looks comfortable turns
-  // out to be overspent in production.
-  const src = readFileSync("src/lib/price-import.ts", "utf8");
-  // The auctions feature is gone: nothing may reintroduce a per-card pass under
-  // its name without also re-adding its term to dailyCalls above.
-  assert.equal(
-    (src.match(/refreshEbayAuctions/g) ?? []).length,
-    0,
-    "the auction pass was removed — dailyCalls no longer budgets for it",
+test("auctions are gone and sealed's eBay pass is gated to once a day", () => {
+  // Pins the two 2026-08-20 removals dailyCalls above depends on: no auction
+  // pass left to undercount, and sealed's eBay search now self-gates instead of
+  // running unconditionally on both daily imports (the old failure mode this
+  // test used to guard: a budget that looks comfortable turns out overspent in
+  // production because a twice-daily pass was modelled as once).
+  const priceImport = readFileSync("src/lib/price-import.ts", "utf8");
+  // Code patterns only, not prose — this file's own history comments legitimately
+  // name the removed function/model when explaining why the quota model changed.
+  assert.ok(
+    !/(?:async )?function refreshEbayAuctions|prisma\.ebayAuction\b/.test(priceImport),
+    "the refreshEbayAuctions function and its prisma.ebayAuction calls must be fully removed from price-import.ts",
   );
   const sealed = readFileSync("src/lib/sealed-import.ts", "utf8");
-  assert.ok(
-    !/ebayDue|chaseDue|lastSeen/.test(sealed),
-    "sealed has no staleness gate — if one is added, the ×2 in dailyCalls must change",
+  assert.match(
+    sealed,
+    /lastSeen/,
+    "sealed's eBay pass must read a staleness signal — dailyCalls models it as running once a day, not twice",
   );
 });
 
@@ -514,7 +530,7 @@ test("a day's markets fit inside the job timeout", () => {
 test("four daily markets fit ONLY because of the value floor", () => {
   // UK and SG were demoted to a rotation on 2026-08-03 because 4 × the full
   // catalogue did not fit, and promoted back on 2026-08-08 because the value
-  // floor (then $20, now $10 as of 2026-08-20 — see CATALOGUE above) shrank the
+  // floor ($20, then $10, now $5, all on 2026-08-20 — see CATALOGUE above) shrank the
   // searched set. Both halves are asserted: if the floor is ever removed or
   // bypassed, four daily markets stop fitting and this fails rather than
   // silently truncating a market's entire pass again.
