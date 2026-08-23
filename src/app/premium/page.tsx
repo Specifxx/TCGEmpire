@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "RiftCompare Premium — power tools for buyers & sellers",
-  description: "RiftCompare Premium: the Bulk Pricer, Value Finder screener, Rising Cards, the full Deal Finder list, daily Arbitrage Alerts and an ad-free site. Price comparison is free for everyone, and a free account adds Best Basket.",
+  description: "RiftCompare Premium: the Bulk Pricer, Value Finder screener, Rising Cards, the full Deal Finder list and an ad-free site. Price comparison is free for everyone, and a free account adds Best Basket.",
   alternates: pageAlternates("/premium"),
 };
 
@@ -45,12 +45,6 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
     cta: "Open Deal Finder",
   },
   {
-    title: "Arbitrage Alerts",
-    body: "A daily digest of today's best flips and cross-region price gaps, straight to your inbox — the same Deal Finder engine, delivered automatically. No separate opt-in; one-click unsubscribe if you'd rather check the page yourself.",
-    href: "/tools/deal-finder",
-    cta: "See what it finds",
-  },
-  {
     title: "Condition Impact Calculator",
     body: "Estimate how a card's value shifts between NM, LP, MP, HP and DMG — the same multiplier scale your portfolio is valued with, run forward on any card.",
     href: "/tools/condition-calculator",
@@ -78,7 +72,6 @@ const COMPARE: { feature: string; anon: boolean | string; account: boolean | str
   { feature: "Rising Cards", anon: "Top pick", account: "Top pick", premium: "Full list" },
   { feature: "Value Finder screener", anon: false, account: false, premium: true },
   { feature: "Bulk Pricer — price a whole list at once", anon: false, account: false, premium: true },
-  { feature: "Arbitrage Alerts — daily flip + cross-region digest", anon: false, account: false, premium: true },
   { feature: "Condition Impact Calculator", anon: false, account: false, premium: true },
   { feature: "Ad-free experience", anon: false, account: false, premium: true },
 ];
@@ -88,7 +81,6 @@ const INCLUDED = [
   "Value Finder screener",
   "Rising Cards",
   "Full Deal Finder list",
-  "Arbitrage Alerts daily digest",
   "Condition Impact Calculator",
   "Ad-free on every page",
   "Everything in the free account tier",
@@ -121,7 +113,7 @@ export default async function PremiumPage() {
             "@context": "https://schema.org",
             "@type": "Product",
             name: "RiftCompare Premium",
-            description: "The Bulk Pricer, Value Finder screener, Rising Cards, the full Deal Finder list, daily Arbitrage Alerts and an ad-free RiftCompare.",
+            description: "The Bulk Pricer, Value Finder screener, Rising Cards, the full Deal Finder list and an ad-free RiftCompare.",
             brand: { "@type": "Organization", name: "RiftCompare", url: SITE_URL },
             offers: {
               "@type": "Offer",

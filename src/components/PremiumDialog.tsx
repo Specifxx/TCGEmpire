@@ -21,7 +21,6 @@ const FEATURES: { k: string; v: string }[] = [
   { k: "Bulk Pricer", v: "price a whole list at once" },
   { k: "Value Finder", v: "undervalued-card screener" },
   { k: "Rising Cards", v: "demand + price-timing screener" },
-  { k: "Arbitrage Alerts", v: "daily flip + cross-region digest" },
   { k: "Condition Calculator", v: "NM → LP → MP → HP → DMG value" },
   { k: "Ad-free", v: "no ads on any page" },
 ];
