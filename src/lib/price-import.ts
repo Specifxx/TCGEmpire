@@ -13,7 +13,7 @@ import { snapshotDemand } from "./demand-snapshot";
 import { refreshTcgplayerPrices } from "./tcgplayer";
 import { importMarketplaceListings } from "./marketplace";
 import { refreshCardmarketPrices } from "./cardmarket";
-import { ALL_FALLBACK_RETAILERS, pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, chasePrintRarity, isSignature, isOvernumbered, EBAY_CA_RETAILER } from "./constants";
+import { ALL_FALLBACK_RETAILERS, pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, chasePrintRarity, isSignature, isOvernumbered, EBAY_CA_RETAILER, SETS } from "./constants";
 import { currencyOf, isoCountry, priceField, type Country } from "./country";
 import { USD_TO } from "./fx";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows } from "./scrape-http";
@@ -101,11 +101,39 @@ const RUNE_BARE = new RegExp(String.raw`\bR\d{1,3}[a-z]?\b`, "i");
 // only listings a store carried were the alt-arts, that is exactly what happened:
 // base runes worth about ten cents were showing $13.70 in one region and $15.00 in AU,
 // carrying the alt-art's price, in the database and therefore in the pack sim too.
+// Every set code the catalogue actually knows about. parseNumber's no-total
+// pattern is anchored to this so a "XX-123" fragment can never invent a set.
+const SET_CODES = new Set(SETS.map((s) => s.code.toUpperCase()));
+
 function parseNumber(title: string): { setCode: string | null; key: string; total: string } | null {
   const pref = title.match(/\b([A-Za-z]{2,4})\s*-\s*(\d+)([a-z*]*)\s*\/\s*(\d+)/);
   if (pref) return { setCode: pref[1].toUpperCase(), key: numKey(pref[2] + pref[3]), total: pref[4] };
   const bare = title.match(/(\d+)([a-z*]*)\s*\/\s*(\d+)/);
   if (bare) return { setCode: null, key: numKey(bare[1] + bare[2]), total: bare[3] };
+  // SETCODE-NUMBER with NO "/total" — e.g. "OGN-181 Pack of Wonders U".
+  //
+  // Every pattern above requires a "/total", so a store that numbers its titles
+  // this way matched NOTHING, and the failure was invisible: the importer fetched
+  // the catalogue fine and simply recorded zero prices, which reads identically to
+  // a store that carries no Riftbound singles.
+  //
+  // Found on 2026-08-23 at apgtcg.com (apextcg), whose Riftbound singles
+  // collection returns 250 products in exactly this format and contributed zero
+  // rows. store-health reported it as `no-listings` alongside 39 others.
+  //
+  // ANCHORED TO REAL SET CODES ON PURPOSE. A bare /([A-Za-z]{2,4})-(\d+)/ would
+  // match "Deck-2", "Vol-3", a date, or a SKU fragment and hand back a confident
+  // setCode that isn't one — and confidentSetCode is what the name path uses to
+  // choose between same-named cards in different sets, so a wrong hit there
+  // attaches a real price to the wrong printing. Requiring a known code makes a
+  // false positive impossible; the cost is that a genuinely new set needs adding
+  // to SETS first, which it does anyway to have cards at all.
+  const noTotal = title.match(/\b([A-Za-z]{2,4})\s*-\s*(\d+)([a-z*]*)\b(?!\s*\/)/);
+  if (noTotal && SET_CODES.has(noTotal[1].toUpperCase())) {
+    // total stays "" so setFromTotal() declines — the set comes from the explicit
+    // prefix, which is the only evidence this shape carries.
+    return { setCode: noTotal[1].toUpperCase(), key: numKey(noTotal[2] + noTotal[3]), total: "" };
+  }
   // No "/total" anywhere — the shape a rune number has. `total` stays "" so
   // setFromTotal() simply declines and the set still has to come from the title.
   const rune = title.match(RUNE_BARE);

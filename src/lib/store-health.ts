@@ -62,10 +62,28 @@ const LISTING_DROP_RATIO = 0.7;
 const MIN_HISTORY_DAYS = 3;
 // A store's median in-stock price identical for this many consecutive recorded
 // days, on a store with enough listings that SOME price should plausibly move,
-// looks like a frozen scraper — a live catalogue this size drifting by exactly
-// $0.00 for three straight snapshots is far more likely a stuck cache/selector
-// than a genuinely unchanged market.
-const FROZEN_STREAK_DAYS = 3;
+// looks like a frozen scraper — a live catalogue drifting by exactly $0.00 for a
+// long run of snapshots is more likely a stuck cache/selector than a genuinely
+// unchanged market.
+//
+// RAISED FROM 3 TO 7 ON 2026-08-23, because 3 was firing on almost everything:
+// 67 of 132 stores raised `frozen-prices` in one run, which is not a finding, it
+// is noise — and a monitor that flags 81% of its subjects gets ignored, which is
+// exactly what happened to this one.
+//
+// Three was never enough evidence. It is the MINIMUM the streak test can use
+// (two prior snapshots plus today), StoreHealthSnapshot held only about three
+// days of rows at the time, and a small store's median price genuinely can sit
+// still for three days — twenty cards in stock and no restock is an ordinary
+// week, not a broken scraper. Worse, the operational database was restored from
+// an older snapshot on 2026-08-22, so part of that three-day "history" was
+// rewritten underneath the comparison.
+//
+// Seven days of an IDENTICAL median across at least FROZEN_MIN_LISTINGS listings
+// is a claim worth paying attention to. The cost is that this alert goes quiet
+// until a real week of snapshots accrues — which is correct, because until then
+// there is no evidence to make the claim on.
+const FROZEN_STREAK_DAYS = 7;
 const FROZEN_MIN_LISTINGS = 5;
 // A store's median price 10x above or below its own recent median is the
 // classic sign of a unit-parsing bug (cents read as dollars, or vice versa)
