@@ -40,7 +40,6 @@ export function AuthForm({
   bare = false,
   compact = false,
   cancelHref,
-  signupPremiumDays = 0,
   source,
   next,
   contextLine,
@@ -66,10 +65,6 @@ export function AuthForm({
   // WS4 collapsed elsewhere on the site. /login/page.tsx computes this from
   // ?next=, falling back to the homepage.
   cancelHref?: string;
-  // lib/premium.ts's SIGNUP_PREMIUM_DAYS, threaded down from a server component
-  // (this file has no server-only imports, so it can't read it directly). Default
-  // 0 renders the plain account-only pitch, matching the comp being turned off.
-  signupPremiumDays?: number;
   // Which surface this form is embedded in ("popup", "alert_modal", …) — fed to
   // markSignupSource on provider click so the sign_in_click event and, if the
   // OAuth round trip completes, User.signupSource both carry the surface that
@@ -146,13 +141,6 @@ export function AuthForm({
                 </li>
               ))}
             </ul>
-            {signupPremiumDays > 0 && (
-              <p className="mt-2">
-                <span className="chip bg-gold/15 text-[10px] font-bold uppercase tracking-wide text-gold">
-                  + your first {signupPremiumDays === 1 ? "day" : `${signupPremiumDays} days`} of Premium free
-                </span>
-              </p>
-            )}
           </>
         )}
 

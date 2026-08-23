@@ -5,7 +5,6 @@ import { createSession } from "@/lib/auth";
 import { applyReferral } from "@/lib/referral";
 import { providerConfig, isProviderEnabled, isOAuthProvider, redirectUri, type OAuthProvider } from "@/lib/oauth";
 import { claimAlertsForUser } from "@/lib/alerts";
-import { grantPremiumDays, SIGNUP_PREMIUM_DAYS } from "@/lib/premium";
 import { SIGNUP_SOURCE_COOKIE, parseSignupSource } from "@/lib/signup-source-shared";
 import { sanitizeNextPath } from "@/lib/next-param";
 
@@ -108,13 +107,12 @@ export async function GET(req: Request, { params }: { params: { provider: string
   // fire-and-forget: a failure here must never block signing in.
   void claimAlertsForUser(user.id, user.email).catch(() => {});
   if (isNew) {
-    // First-ever sign-in: credit any referrer, and hand the new account a short
-    // taste of Premium (see SIGNUP_PREMIUM_DAYS in lib/premium.ts) — the ACCOUNT
-    // tier itself (alerts + portfolio + watchlist) is still granted immediately
-    // by virtue of existing and is the durable payoff; this is just a preview of
-    // what Premium adds on top, and lapses on its own via premiumUntil.
+    // First-ever sign-in: credit any referrer. NO PREMIUM IS GRANTED HERE — the
+    // automatic signup-time Premium preview was removed on 2026-08-23 (see the
+    // note where SIGNUP_PREMIUM_DAYS used to be defined in lib/premium.ts). The
+    // ACCOUNT tier — alerts, portfolio, watchlist, Best Basket — is granted by
+    // virtue of the account existing and is the durable payoff on its own.
     await applyReferral(user.id).catch(() => {});
-    if (SIGNUP_PREMIUM_DAYS > 0) await grantPremiumDays(user.id, SIGNUP_PREMIUM_DAYS).catch(() => {});
     // Which CTA produced this account. The clicked sign-in surface set a
     // short-lived rc_signup_src cookie (see lib/signup-source.ts); the value is
     // whitelisted here before it touches the DB, and the write is best-effort —

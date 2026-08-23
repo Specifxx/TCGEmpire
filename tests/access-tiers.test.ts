@@ -107,10 +107,11 @@ test("the popup's comparison pitches Best Basket but never Bulk Pricer", () => {
 
 test("the popup is a free-account moment only — Premium never appears in it", () => {
   // The dialog used to lead with a Premium comp (first a free WEEK, later the
-  // shorter SIGNUP_PREMIUM_DAYS preview threaded down as a prop). That made the
+  // shorter automatic signup preview threaded down as a prop). That made the
   // ask about the PAID tier at the moment the visitor hadn't yet agreed to the
-  // free one. SIGNUP_PREMIUM_DAYS still grants on signup and is still pitched on
-  // /login via AuthForm's full layout — it is just not this dialog's hook.
+  // free one. That signup grant has since been removed entirely (2026-08-23),
+  // so no surface offers Premium for registering any more. What this test pins
+  // is narrower and still worth pinning: the POPUP never mentions Premium.
   const src = read(POPUP);
   assert.ok(!/signupPremiumDays/.test(src), "the popup must not take or thread the Premium-preview prop");
   // Scoped to JSX/copy, not comments: the header comment legitimately explains
@@ -203,31 +204,49 @@ test("hasAccount and isPremium remain distinct checks", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SIGNUP_PREMIUM_DAYS — the reintroduced signup-time Premium preview.
+// NO PREMIUM ON SIGNUP — removed 2026-08-23, and it must not come back by
+// accident.
+//
+// New accounts used to get an automatic 3-day Premium grant in the OAuth
+// callback's isNew branch, read from SIGNUP_PREMIUM_DAYS. The whole mechanism
+// was deleted: the constant, the grant call, and the pitches on /login,
+// AuthForm and /premium.
+//
+// THE CONSTANT WAS DELETED RATHER THAN DEFAULTED TO ZERO, and that is what
+// these tests protect. SIGNUP_PREMIUM_DAYS read from process.env, so setting
+// the default to 0 would have left a lingering SIGNUP_PREMIUM_DAYS=3 in Vercel
+// silently granting Premium while the code claimed the feature was off — a
+// discrepancy invisible until someone audited premiumUntil against Stripe. With
+// no constant to read, no environment variable can switch it back on.
+//
+// Premium is now reached only by: the card-gated Stripe trial
+// (PREMIUM_TRIAL_DAYS), checkout, feedback, or a referral.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("SIGNUP_PREMIUM_DAYS is exported and env-configurable, defaulting to 3", () => {
-  // Raised 1 → 3: a single day routinely lapsed before a new account came back
-  // for a second session, so the preview was spent without ever being used.
-  const src = read(PREMIUM_LIB);
-  assert.match(
-    src,
-    /export const SIGNUP_PREMIUM_DAYS = Math\.max\(0, Math\.floor\(Number\(process\.env\.SIGNUP_PREMIUM_DAYS \?\? 3\)\)\);/,
-    "SIGNUP_PREMIUM_DAYS must be exported, env-overridable, and floor/clamp like its siblings (PREMIUM_TRIAL_DAYS etc.)"
-  );
+test("no signup-time Premium constant exists anywhere", () => {
+  for (const f of [PREMIUM_LIB, OAUTH_CALLBACK, "src/app/login/page.tsx", "src/components/AuthForm.tsx", "src/app/premium/page.tsx"]) {
+    const src = read(f);
+    // Comments explaining the removal are fine; a live reference is not.
+    const code = src.split("\n").filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join("\n");
+    assert.doesNotMatch(
+      code,
+      /SIGNUP_PREMIUM_DAYS|signupPremiumDays/,
+      `${f} still references the removed signup Premium grant — deleting the constant is what makes a stale env var harmless`
+    );
+  }
 });
 
-test("the OAuth callback grants the signup preview once, only for a brand-new account", () => {
+test("the OAuth callback creates an account WITHOUT granting Premium", () => {
   const src = read(OAUTH_CALLBACK);
-  assert.match(src, /grantPremiumDays/, "callback must call grantPremiumDays");
-  assert.match(src, /SIGNUP_PREMIUM_DAYS/, "callback must gate the grant on SIGNUP_PREMIUM_DAYS, not a literal");
-  // Scope to the `if (isNew)` block specifically — granting on every sign-in
-  // (not just account creation) would silently keep re-extending premiumUntil
-  // for a returning user, which is not what "a taste of Premium" is supposed to
-  // mean.
   const ifNewMatch = src.match(/if \(isNew\) \{([\s\S]*?)\n {2}\}/);
   assert.ok(ifNewMatch, "expected an `if (isNew) { ... }` block");
-  assert.match(ifNewMatch![1], /grantPremiumDays\(user\.id, SIGNUP_PREMIUM_DAYS\)/, "the grant call must live inside the isNew branch");
+  assert.doesNotMatch(
+    ifNewMatch![1],
+    /grantPremiumDays/,
+    "a new account must not be granted Premium — the free ACCOUNT tier is the payoff for signing up"
+  );
+  // The referral credit is a separate, earned thing and must survive.
+  assert.match(ifNewMatch![1], /applyReferral\(user\.id\)/, "referral crediting must still happen on account creation");
 });
 
 test("grantPremiumDays is a real, generic helper the signup grant can reuse", () => {

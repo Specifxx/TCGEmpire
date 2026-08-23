@@ -152,7 +152,8 @@ export const PORTFOLIO_FREE = true;
 // rather than switched off by env, so a stale EARLY_PREMIUM_DAYS in a deploy
 // environment can't quietly resurrect it.
 //
-// A much shorter Premium PREVIEW is back, though — see SIGNUP_PREMIUM_DAYS below.
+// A shorter Premium preview was reintroduced after that, then removed outright
+// on 2026-08-23 — see the "NO PREMIUM ON SIGNUP" note further down.
 // The old comp's problem was duration, not the idea of a taste: a week is long
 // enough to feel like the account's own tier, so losing it read as a downgrade.
 // A day reads as exactly what it is — a preview — with tier 2's own perks above
@@ -176,7 +177,8 @@ export async function getPremiumUntil(userId: string): Promise<Date | null> {
 
 // ── Promotional Premium grants (feedback + referral + signup preview) ───────────
 // These grant Premium WITHOUT Stripe (a comp), by extending premiumUntil directly.
-// Feedback and referral are earned by an action after signup. SIGNUP_PREMIUM_DAYS
+// Feedback and referral are earned by an action after signup. The automatic
+// signup-time grant that used to sit alongside them
 // below is the one exception — a short preview handed out for merely registering,
 // deliberately reintroduced; see its own comment and the access-tier note above
 // for why this is safe against the failure mode the original, week-long version
@@ -191,29 +193,24 @@ export function referralPremiumActive(): boolean {
   return REFERRAL_PREMIUM_MONTHS > 0;
 }
 
-// A short, automatic taste of Premium for every NEW account — not a Stripe trial
-// (see PREMIUM_TRIAL_DAYS above, the separate CARD-GATED trial at checkout).
-// Applied exactly once, at account creation (the `isNew` branch of the OAuth
-// callback), and never re-granted on a later sign-in. Default 1 day; set
-// SIGNUP_PREMIUM_DAYS=0 to turn it off — grantPremiumDays() already no-ops on
-// days<=0, so the call site needs no extra guard.
+// NO PREMIUM ON SIGNUP. REMOVED 2026-08-23, DELIBERATELY AND ENTIRELY.
 //
-// This reintroduces a scaled-down version of the "free week of Premium on
-// signup" comp the tier note above describes retiring. That comp's problem was
-// duration — a WEEK reads as a tier of its own, so losing it read as a downgrade —
-// not the idea of a taste. Three days is long enough to actually open the paid
-// tools more than once (a single day, the previous default, often lapsed before
-// a new account came back for a second session) while still reading as a preview
-// rather than an entitlement. The free ACCOUNT tier
-// (watchlists/alerts/portfolio/Best Basket) remains the durable, permanent reason
-// to sign up.
+// New accounts used to receive an automatic 3-day Premium grant in the OAuth
+// callback's isNew branch (SIGNUP_PREMIUM_DAYS, env-overridable). The whole
+// mechanism is gone: the constant, the grant call, and the pitches on /login,
+// AuthForm and /premium.
 //
-// WHERE THIS IS PITCHED: /login and AuthForm's full (non-compact) layout. It is
-// deliberately NOT pitched in SignupPromoPopup — see that file's header for why
-// the popup is a free-account-only conversion moment. The grant itself is
-// unconditional on the pitch: it happens in the OAuth callback's isNew branch
-// regardless of which surface the signup came from.
-export const SIGNUP_PREMIUM_DAYS = Math.max(0, Math.floor(Number(process.env.SIGNUP_PREMIUM_DAYS ?? 3)));
+// DELETED RATHER THAN DEFAULTED TO ZERO, on purpose. SIGNUP_PREMIUM_DAYS read
+// from the environment, so a lingering SIGNUP_PREMIUM_DAYS=3 in Vercel would
+// have kept granting silently while the code said the feature was off — the
+// failure would be invisible until someone audited premiumUntil against
+// Stripe. With no constant to read, no environment can turn it back on.
+//
+// What a new account still gets is the free ACCOUNT tier — watchlist, price
+// alerts, portfolio, Best Basket — which is permanent and is the durable
+// reason to sign up. Premium is now reached only by: the card-gated Stripe
+// trial (PREMIUM_TRIAL_DAYS), checkout, feedback, or a referral.
+
 
 function addMonths(base: Date, months: number): Date {
   const d = new Date(base);

@@ -22,11 +22,12 @@ import { AuthForm } from "./AuthForm";
 // THIS POPUP IS A NO-ACCOUNT → FREE-ACCOUNT MOMENT, AND NOTHING ELSE.
 //
 // Premium is deliberately absent. Earlier versions led with a comp — first a free
-// WEEK of Premium, later a shorter SIGNUP_PREMIUM_DAYS preview threaded in as a
+// WEEK of Premium, later a shorter automatic signup preview threaded in as a
 // prop — which made the ask about the paid tier at the exact moment the visitor
 // had not yet agreed to the free one. The signup grant itself still happens
-// server-side in the OAuth callback (see SIGNUP_PREMIUM_DAYS in lib/premium.ts,
-// and /login, which does still pitch it); it just isn't this dialog's hook.
+// server-side in the OAuth callback. THAT GRANT IS NOW GONE TOO — removed
+// 2026-08-23, see lib/premium.ts — so no signup surface offers Premium at all,
+// and this dialog was already the one that never did.
 //
 // It also no longer sells a search allowance. A tiered search cap shipped as this
 // popup's headline and was removed a day later — see api/search/route.ts for what
