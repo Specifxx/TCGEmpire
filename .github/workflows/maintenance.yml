@@ -47,6 +47,7 @@ on:
           - audit-users      # read-only user/Premium census (no PII printed)
           - audit-clicks     # read-only outbound-click leaderboard per retailer (affiliate-outreach priority)
           - audit-egress     # READ-ONLY forensics on the ~2 GB/day Neon transfer burn that has now killed nine projects in a row (each dies 2-3 days after cutover). Reads ONLY statistics views — pg_stat_database, pg_stat_user_tables and, if present, pg_stat_statements — and attributes the churn to a TABLE and then to a QUERY SHAPE, with rows costed into estimated bytes. Run it a few hours after a cutover, not minutes: Neon resets these counters whenever the compute endpoint restarts, so the window is short and one import run inside it dominates the extrapolation.
+          - audit-indexability # READ-ONLY census of how many card pages currently noindex themselves AND drop out of the sitemap, and why. Reports the CROSS-DATABASE JOIN HEALTH first (what share of PriceHistory cardIds still resolve against the live Card table), because when that join breaks every card reads as 0 days of history and every out-of-stock card noindexes at once — silently, with no error and no deploy to blame, which looks exactly like an unexplained traffic decline. RUN THIS FIRST when traffic drops after any database rotation, restore or catalogue rebuild.
           - backfill-alert-user-ids # link existing email-keyed price alerts to the accounts that own them (idempotent; honours dry_run)
           - fix-orphan-users # repair FK orphans: delete rows in GameScore/AuthToken/Notification/SellerProfile/CollectionCard whose userId no longer exists in User (they block `prisma db push` from adding the FK, which fails the Vercel build)
           - diagnose-card    # read-only: why does ONE card have no price? dumps its RetailerPrice + eBay carousel rows and re-runs the LIVE eBay search (card input)
@@ -3079,6 +3080,26 @@ jobs:
       - name: Audit users/Premium (read-only census)
         if: inputs.task == 'audit-users'
         run: npx tsx scripts/audit-users.ts
+
+      - name: Audit card indexability (read-only census)
+        # THE SILENT TRAFFIC KILLER. A card page noindexes itself and leaves the
+        # sitemap when lib/card-price-state.ts finds it empty:
+        #
+        #   indexable = in-stock listing OR >=7 days history OR no-retail-channel
+        #
+        # The two halves of that OR read DIFFERENT databases, joined on Card.id,
+        # and that join has been broken repeatedly — see repair-history-card-ids,
+        # whose own description records "every history project currently has 0% of
+        # its cardIds resolving against the live Card table". When it breaks,
+        # historyDays is 0 for every card, the OR collapses onto "in stock right
+        # now", and a large slice of the catalogue noindexes at once. Nothing
+        # errors. Pages still render. Google drops them over the following days,
+        # so the traffic decline trails the cause and looks unrelated to it.
+        #
+        # This reports the join health first and the census second, because a bad
+        # join makes every number under it meaningless.
+        if: inputs.task == 'audit-indexability'
+        run: npx tsx scripts/audit-indexability.ts
 
       - name: Audit database egress (read-only forensics)
         # THE OPEN INCIDENT. Nine Neon projects have been burned through at
