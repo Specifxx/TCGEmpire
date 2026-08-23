@@ -143,8 +143,14 @@ test("the promo delay is one named 15s constant, never a scattered literal", () 
   // export so it can't drift between the component and anything that reasons
   // about its timing.
   const src = read(POPUP);
-  assert.match(src, /export const PROMO_DELAY_MS = 15_000;/, "expected a single named 15s delay constant");
-  assert.match(src, /\}, PROMO_DELAY_MS\)/, "the timer must read the constant, not a literal");
+  // Every timing the promo can use is a named export. The delay ladder ended at
+  // 30s for pages with nothing to interrupt; the other two exist because a delay
+  // alone only changes how long the interruption waits before landing on the buy
+  // button, it never moves it off the buy path. See the component's header.
+  assert.match(src, /export const PROMO_DELAY_MS = 30_000;/, "the no-buy-link delay must stay a named constant");
+  assert.match(src, /export const BUY_SURFACE_BACKSTOP_MS = /, "the buy-surface backstop must be named");
+  assert.match(src, /export const POST_BUY_DELAY_MS = /, "the post-buy delay must be named");
+  assert.match(src, /\}, delay\)/, "the timer must read a computed named delay, not a literal");
   assert.ok(!/setTimeout\([\s\S]{0,400}?\}, \d{3,}\)/.test(src), "no hardcoded millisecond literal may drive the promo timer");
 });
 

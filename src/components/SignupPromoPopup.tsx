@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMe } from "@/lib/use-me";
+import { BUY_CLICK_EVENT, buyLinksOnPage, hasBoughtThisSession } from "@/lib/buy-intent";
 import { trackEvent } from "@/lib/analytics";
 import { AuthForm } from "./AuthForm";
 
@@ -39,14 +40,45 @@ import { AuthForm } from "./AuthForm";
 // rather than pretending alerts are account-only, because they aren't.
 const SEEN_KEY = "rc_signup_promo_seen";
 
-// THE SINGLE SOURCE OF TRUTH FOR THE PROMO'S DELAY. Nothing else may hardcode it.
+// THE PROMO IS NOW TIMED AROUND buy_click, NOT JUST AROUND THE CLOCK.
 //
-// Was 5s, which fired while a visitor was still reading the first thing they
-// landed on: 26% of visitors saw this dialog and 78% dismissed it, alongside a
-// measured drop in pages/visitor and buy_click. 15s is long enough that anyone
-// who sees it has actually engaged with a page, which is the only state in which
-// the comparison below means anything.
-export const PROMO_DELAY_MS = 15_000;
+// buy_click is the event every affiliate dollar depends on, and this dialog is
+// the only thing on the site that can cover it up. A pure delay — 5s, then 15s,
+// then 30s — only changes HOW LONG the interruption waits before landing on top
+// of the buy button. It never stops it landing there.
+//
+// So the trigger is now conditional on where the visitor is and what they have
+// already done, in three cases:
+//
+//   1. NO BUY LINK ON THE PAGE (homepage, guides, blog, hubs) — nothing to
+//      interrupt, so the ordinary timer runs. This is the 30s the delay ladder
+//      was heading towards anyway.
+//
+//   2. A BUY LINK IS ON THE PAGE AND THEY HAVE NOT CLICKED ONE YET — hold off.
+//      This is a card page, and the visitor is doing the exact thing the site
+//      exists for. BUY_SURFACE_BACKSTOP_MS is the concession: someone who has
+//      sat on a card page for two minutes without clicking out is not about to,
+//      so the dialog eventually shows rather than never showing at all.
+//
+//   3. THEY HAVE ALREADY CLICKED A BUY LINK — show shortly after. Buy links
+//      open in a NEW TAB (OutboundLink's target="_blank"), so the visitor is
+//      still on our page, has got exactly what they came for, and is at a
+//      natural pause. It is the best signup moment on the site and the only one
+//      that CANNOT cost a buy_click, because the click already happened.
+//
+// Which of the three fired is reported as `trigger` on signup_promo_shown, so
+// they are separable in GA4 rather than averaged. If post_buy converts better
+// than timer (it should — value already delivered), that is the argument for
+// leaning further into it.
+export const PROMO_DELAY_MS = 30_000;
+
+// Case 2: a page with a buy link, no buy click yet. Long enough to be clear of
+// the decision, short enough to still reach a browser who never clicks out.
+export const BUY_SURFACE_BACKSTOP_MS = 120_000;
+
+// Case 3: after a buy_click. Short — the tab has already opened over us, and the
+// visitor's attention comes back to this page within a few seconds.
+export const POST_BUY_DELAY_MS = 8_000;
 
 const SKIP_PATHS = ["/login", "/verify", "/marketplace"];
 // Session pageview counter (see the gate below). Incremented once per route.
@@ -148,6 +180,14 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
     // MIN_PAGEVIEWS above). Deliberately does NOT mark SEEN_KEY when it skips —
     // the visitor still gets the promo once they've browsed further.
     if (pageviews < MIN_PAGEVIEWS) return;
+
+    // Which of the three cases above applies right now. Re-evaluated inside the
+    // timer too, because a visitor can click Buy while it is still counting.
+    const bought = hasBoughtThisSession();
+    const onBuySurface = buyLinksOnPage();
+    const trigger = bought ? "post_buy" : onBuySurface ? "buy_surface_backstop" : "timer";
+    const delay = bought ? POST_BUY_DELAY_MS : onBuySurface ? BUY_SURFACE_BACKSTOP_MS : PROMO_DELAY_MS;
+
     const t = setTimeout(() => {
       // Never stack on top of another dialog. FeedbackWidget sets this flag
       // while its panel is open; opening a full-screen signup wall over a
@@ -157,13 +197,38 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
       // visitor still gets the promo on a later visit rather than silently
       // losing it forever.
       if (document.body.dataset.rcDialog === "1") return;
+      // Last check before it lands: if a buy link is on the page and STILL has
+      // not been clicked, the backstop is what fired, and that is fine — but a
+      // visitor who bought in the meantime should be recorded as post_buy, not
+      // as the backstop, or the comparison between the two is polluted.
+      const firedAs = hasBoughtThisSession() && trigger !== "timer" ? "post_buy" : trigger;
       setPhase("shown");
       // Impression event — with dismiss (below) this makes the popup's
       // conversion rate knowable for the first time: shown vs dismissed vs
       // sign_in_click(source=popup) vs sign_up.
-      trackEvent("signup_promo_shown", { path: pathname ?? "/", variant: PROMO_VARIANT });
-    }, PROMO_DELAY_MS);
-    return () => clearTimeout(t);
+      trackEvent("signup_promo_shown", { path: pathname ?? "/", variant: PROMO_VARIANT, trigger: firedAs });
+    }, delay);
+
+    // A buy click while the timer is running re-arms it to the short post-buy
+    // delay. Without this, someone who buys 5 seconds into a card page would
+    // still wait out the full two-minute backstop — the moment we most want is
+    // the one we would miss.
+    let buyTimer: ReturnType<typeof setTimeout> | undefined;
+    const onBuy = () => {
+      clearTimeout(t);
+      buyTimer = setTimeout(() => {
+        if (document.body.dataset.rcDialog === "1") return;
+        setPhase("shown");
+        trackEvent("signup_promo_shown", { path: pathname ?? "/", variant: PROMO_VARIANT, trigger: "post_buy" });
+      }, POST_BUY_DELAY_MS);
+    };
+    if (!bought) window.addEventListener(BUY_CLICK_EVENT, onBuy);
+
+    return () => {
+      clearTimeout(t);
+      if (buyTimer) clearTimeout(buyTimer);
+      window.removeEventListener(BUY_CLICK_EVENT, onBuy);
+    };
   }, [loaded, user, pathname]);
 
   const dismiss = useCallback(() => {
