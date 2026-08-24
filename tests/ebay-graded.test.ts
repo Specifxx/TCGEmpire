@@ -204,18 +204,22 @@ test("the chase gate uses a stamp the chase pass can actually advance", () => {
   );
 });
 
-test("the third cron is accounted for", () => {
-  // The comment that justified the 10h cutoff enumerated only the two GitHub
-  // Actions crons. vercel.json runs the same import a third time at 18:00.
+test("the import runs exactly twice a day, and the gate comment says so", () => {
+  // The redundant vercel.json cron (18:00) was removed 2026-08-24: it double-
+  // fired an hour before the 19:00 GitHub run, wasting ~420 eBay Browse calls
+  // and a whole operational import. The 20h/10h eBay gate was always tuned for
+  // the 07:00 (full) + 19:00 (chase) pair, so the chase pass just moves to 19:00.
+  // This test keeps reality and the gate comment in lockstep in BOTH directions:
+  // vercel.json must NOT re-add the import cron, and GitHub must keep exactly two.
   const vercel = JSON.parse(read("vercel.json"));
   const refresh = (vercel.crons ?? []).filter((c: any) => c.path === "/api/cron/refresh-prices");
-  assert.equal(refresh.length, 1, "vercel.json should still schedule the price refresh");
+  assert.equal(refresh.length, 0, "vercel.json must not schedule the price import (GitHub Actions owns it)");
   const gha = read(".github/workflows/refresh-prices.yml");
   const crons = [...gha.matchAll(/cron:\s*"([^"]+)"/g)].map((m) => m[1]);
-  assert.equal(crons.length + refresh.length, 3, "expected 3 daily import invocations in total");
+  assert.equal(crons.length + refresh.length, 2, "expected exactly 2 daily import invocations in total");
   // If a schedule moves, the reasoning in the gate comment has to move with it.
   const src = read("src/lib/price-import.ts");
-  assert.match(src, /THREE daily invocations/, "the gate must document all three invocations");
+  assert.match(src, /TWO daily invocations/, "the gate must document the two invocations");
 });
 
 test("a failed search never deletes a price row", () => {
