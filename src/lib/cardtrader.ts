@@ -278,3 +278,32 @@ export async function buildCardTraderRows(opts?: { setCodes?: string[] }): Promi
   }
   return rows;
 }
+
+/**
+ * Import pass: rebuild every CardTrader EU row. Called by the daily price import.
+ *
+ * Delete-then-insert, mirroring refreshCardmarketPrices(): a listing that sold out
+ * simply stops appearing in the API, and an UPDATE-only pass would leave that stale
+ * row behind forever, quoting a price nobody can buy. Guarded so a bad fetch keeps
+ * the previous rows rather than emptying the EU market — 0 rows is far more likely
+ * to mean "the API blipped" than "every EU seller sold out at once".
+ */
+export async function refreshCardTraderPrices(): Promise<{ skipped: boolean; written: number; reason?: string }> {
+  if (!isCardTraderEnabled()) return { skipped: true, written: 0, reason: "CARDTRADER_API_TOKEN not set" };
+
+  let rows: CardTraderRow[];
+  try {
+    rows = await buildCardTraderRows();
+  } catch (e) {
+    return { skipped: true, written: 0, reason: `fetch failed: ${(e as Error).message}` };
+  }
+  if (rows.length === 0) {
+    console.warn("CardTrader: 0 rows built — keeping existing rows.");
+    return { skipped: false, written: 0, reason: "0 rows built" };
+  }
+
+  await prisma.retailerPrice.deleteMany({ where: { retailer: CARDTRADER_RETAILER } });
+  await prisma.retailerPrice.createMany({ data: rows });
+  console.log(`CardTrader: wrote ${rows.length} EU rows.`);
+  return { skipped: false, written: rows.length };
+}

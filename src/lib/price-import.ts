@@ -13,6 +13,7 @@ import { snapshotDemand } from "./demand-snapshot";
 import { refreshTcgplayerPrices } from "./tcgplayer";
 import { importMarketplaceListings } from "./marketplace";
 import { refreshCardmarketPrices } from "./cardmarket";
+import { refreshCardTraderPrices } from "./cardtrader";
 import { ALL_FALLBACK_RETAILERS, pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, chasePrintRarity, isSignature, isOvernumbered, EBAY_CA_RETAILER, SETS } from "./constants";
 import { currencyOf, isoCountry, priceField, type Country } from "./country";
 import { USD_TO } from "./fx";
@@ -1772,6 +1773,32 @@ export async function importPrices(): Promise<ImportSummary> {
     }
   } catch (e) {
     console.warn("Cardmarket import failed:", e);
+  }
+
+  // ---- CardTrader (EU singles, from EU sellers, in euro) -----------------------
+  // The EU source that is actually available. Cardmarket above stays gated behind
+  // CARDMARKET_ENABLED because presenting their prices needs their prior written
+  // agreement; CardTrader's API is open to any account holder, so this one runs.
+  //
+  // NOT a fallback retailer, unlike Cardmarket/TCGplayer-*: each row is one real
+  // in-stock listing from one identified EU seller quoted in euro, so it can carry
+  // the EU "from" price the way a Shopify store's listing carries the UK's. That
+  // matters most here — the comment above notes the EU has eleven stores for a
+  // whole continent, and measured against the live API, CardTrader prices 99.6% of
+  // Unleashed and 95.1% of Origins from EU sellers alone.
+  //
+  // Isolated like every other source so it can never fail the whole import.
+  try {
+    if (!onlyCountry || onlyCountry === "EU") {
+      const r = await refreshCardTraderPrices();
+      if (!r.skipped && r.written > 0) {
+        summary.stores.push({ name: "CardTrader (EU)", products: r.written, priced: r.written, matched: r.written, unmatched: 0 });
+      } else if (r.skipped) {
+        console.log(`CardTrader: skipped (${r.reason}).`);
+      }
+    }
+  } catch (e) {
+    console.warn("CardTrader import failed:", e);
   }
 
   // ---- RiftCompare Marketplace (our own verified-seller listings) --------------
