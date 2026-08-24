@@ -46,7 +46,7 @@ export function premiumCheckoutEnabled(): boolean {
   return Boolean(process.env.STRIPE_SECRET_KEY && PREMIUM_PRICE_ID);
 }
 
-// Free-trial length (days) for a first-time subscriber. Defaults to 3 — set
+// Free-trial length (days) for a first-time subscriber. Defaults to 14 — set
 // PREMIUM_TRIAL_DAYS=0 in the environment to switch it back off (immediate charge,
 // no trial). Card-gated: a card is still required up front (payment_method_collection
 // in the checkout route), so the trial auto-converts to paid unless cancelled.
@@ -54,15 +54,16 @@ export function premiumCheckoutEnabled(): boolean {
 // done) AND the trial-ending reminder email (runPremiumTrialReminders below — done)
 // so trialists can see the charge coming and cancel before it happens. Abuse is
 // blocked by card fingerprint regardless of trial length (see the webhook).
-export const PREMIUM_TRIAL_DAYS = Math.max(0, Math.floor(Number(process.env.PREMIUM_TRIAL_DAYS ?? 3)));
+export const PREMIUM_TRIAL_DAYS = Math.max(0, Math.floor(Number(process.env.PREMIUM_TRIAL_DAYS ?? 14)));
 export function premiumTrialEnabled(): boolean {
   return PREMIUM_TRIAL_DAYS > 0;
 }
 
-// The reminder half of the trial precondition above. A 3-day trial is too short
-// for Stripe's own customer.subscription.trial_will_end webhook to help — Stripe
-// doesn't fire it when the whole trial is 3 days or less — so this runs as a daily
-// cron (see api/cron/premium-trial-reminders) instead of reacting to a webhook.
+// The reminder half of the trial precondition above. Stripe's own
+// customer.subscription.trial_will_end webhook only fires 3 days before a trial
+// converts, which is too coarse to rely on alone (and fires too late to matter at
+// all for a trial 3 days or shorter) — so this runs as a daily cron (see
+// api/cron/premium-trial-reminders) instead of reacting to that webhook.
 //
 // Finds trials converting to paid within the next 24h that haven't been warned yet,
 // looks up each trialist's OWN live Stripe subscription for the real charge amount

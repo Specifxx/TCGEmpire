@@ -7916,7 +7916,7 @@ The honest version of "which cards are going up" is: nobody knows for certain, b
       alt: "The RiftCompare logo beside a gold Premium badge, on a dark green-and-blue gradient background",
     },
     summary: [
-      "**RiftCompare Premium is $4.99/mo or $39/yr** (works out to about $3.25/mo, a 35% saving) — with a 3-day free trial and cancel-anytime billing through Stripe.",
+      "**RiftCompare Premium is $4.99/mo or $39/yr** (works out to about $3.25/mo, a 35% saving) — with a 14-day free trial and cancel-anytime billing through Stripe.",
       "**It unlocks 5 tools outright**: the Bulk Pricer, Value Finder screener, Rising Cards (full list), the full Deal Finder (full list, 4 views), and the Condition Impact Calculator. Best Basket — the multi-store cart optimiser — is free with any account, no Premium needed.",
       "**It also cuts your Marketplace seller fee from 2% to 1%** on every sale, automatically, plus removes ads sitewide.",
       "**Price comparison itself stays free for everyone** — Premium is entirely about the pro tools and the seller discount, never about seeing prices.",
@@ -7930,7 +7930,7 @@ The honest version of "which cards are going up" is: nobody knows for certain, b
     faq: [
       {
         q: "How much does RiftCompare Premium cost?",
-        a: "$4.99/month, or $39/year if you pay annually (about $3.25/month, a 35% saving versus paying monthly — $59.88 over a year). Both plans start with a 3-day free trial; a card is required up front and it auto-converts to the paid price unless you cancel first.",
+        a: "$4.99/month, or $39/year if you pay annually (about $3.25/month, a 35% saving versus paying monthly — $59.88 over a year). Both plans start with a 14-day free trial; a card is required up front and it auto-converts to the paid price unless you cancel first.",
       },
       {
         q: "What do you actually get with RiftCompare Premium?",
@@ -7946,7 +7946,7 @@ The honest version of "which cards are going up" is: nobody knows for certain, b
       },
       {
         q: "Is there a free trial?",
-        a: "Yes — 3 days, on both the monthly and annual plan. It needs a card up front and converts automatically to the plan's normal price after 3 days unless you cancel before then. New accounts also get one full day of Premium automatically just for signing up, no trial or card needed.",
+        a: "Yes — 14 days, on both the monthly and annual plan. It needs a card up front and converts automatically to the plan's normal price after 14 days unless you cancel before then. New accounts also get one full day of Premium automatically just for signing up, no trial or card needed.",
       },
       {
         q: "Can I get RiftCompare Premium for free?",
@@ -7987,10 +7987,10 @@ Short version: Premium is $4.99/mo (or $39/yr), and it unlocks five tools you ca
 
 | Plan | Price | Works out to | Trial |
 | --- | --- | --- | --- |
-| Monthly | $4.99/month | $4.99/month | 3 days free |
-| Annual | $39/year | ≈ $3.25/month (**35% off**, vs $59.88/yr paying monthly) | 3 days free |
+| Monthly | $4.99/month | $4.99/month | 14 days free |
+| Annual | $39/year | ≈ $3.25/month (**35% off**, vs $59.88/yr paying monthly) | 14 days free |
 
-Both plans run through Stripe, need a card up front for the trial, and auto-convert to the paid price after 3 days unless you cancel first. Subscribe once and **your price is locked in for good** — it doesn't rise later even as new tools ship, which is worth knowing given how much has been added to Premium since launch (the Condition Calculator is a recent addition).
+Both plans run through Stripe, need a card up front for the trial, and auto-convert to the paid price after 14 days unless you cancel first. Subscribe once and **your price is locked in for good** — it doesn't rise later even as new tools ship, which is worth knowing given how much has been added to Premium since launch (the Condition Calculator is a recent addition).
 
 Cancellation is genuinely no-friction: cancel anytime, and your benefits simply run to the end of the period you already paid for.
 
