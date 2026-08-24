@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { formatMoney } from "@/lib/format";
 import { currencyOf, COUNTRY_LIST } from "@/lib/country";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
+import { sydneyDayKey } from "@/lib/price-history";
 import { getRisingCards, type RisePick, type RiseComponents, type RiseScope } from "@/lib/rise-predictor";
 import { cardImageAlt } from "@/lib/image-alt";
 
@@ -93,8 +94,8 @@ export default async function AdminRisingPage({
 
   // Cache the heavy scan (400 cards × price history) per scope; refreshed on the
   // daily import via CONTENT_TAG so repeated admin loads don't re-hit Neon.
-  const analysis = await unstable_cache(() => getRisingCards(scope), ["rising-cards", scope], {
-    revalidate: 3600,
+  const analysis = await unstable_cache(() => getRisingCards(scope), ["rising-cards", scope, sydneyDayKey()], {
+    revalidate: 172800,
     tags: [CONTENT_TAG],
   })();
 

@@ -85,8 +85,19 @@ export async function EbayPicks({
   // CONTENT_TAG is cleared by the daily import, so fresh listings appear then.
   let listings: PickListing[] = [];
   try {
+    // 86400, NOT 3600 — this component renders inside ArticleView, which is the
+    // body of the blog/[slug] and guides/[slug] routes (both `revalidate = 86400`).
+    // An inner unstable_cache revalidate is applied to the whole route segment at
+    // the LOWER of the two values (see EbayCardPanel.tsx's post-mortem — the exact
+    // mechanism behind the prior ~2GB/day leak), so a 3600 here regenerated each
+    // of those ~6 monetized article pages 24×/day, re-running their uncached embed
+    // and market-data queries every time. CONTENT_TAG still busts this on import,
+    // so the shorter window bought no freshness. On /browse and /sets (force-
+    // dynamic) and the homepage (3600) this value is harmless; only the 86400
+    // article routes were undercut, so matching 86400 fixes them without changing
+    // anything else.
     listings = await unstable_cache(() => loadPicks(setCode, limit), ["ebay-picks", setCode, String(limit)], {
-      revalidate: 3600,
+      revalidate: 86400,
       tags: [CONTENT_TAG],
     })();
   } catch {
