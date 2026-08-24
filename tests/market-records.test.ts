@@ -143,9 +143,9 @@ test("re-ranking happens on the page, never in the shared screener", () => {
   const lib = codeOnly(read("src/lib/arbitrage.ts"));
   assert.ok(!/GAP_MIN_SAVING_CENTS/.test(lib), "the public board's floor must not leak into the shared function");
   // The ranking lives in computeCrossRegionRows, not getCrossRegionGaps — the
-  // row build was split out (and memoized) when the cross-region tab turned out
-  // to be re-pulling the whole catalogue per request.
-  const fn = lib.slice(lib.indexOf("async function computeCrossRegionRows"));
+  // row build was split out (and moved into the shared day-cache) when the
+  // cross-region tab turned out to be re-pulling the whole catalogue per request.
+  const fn = lib.slice(lib.indexOf("function computeCrossRegionRows"));
   assert.match(fn.slice(0, fn.indexOf("\n}")), /rows\.sort\(\(a, b\) => b\.pct - a\.pct\)/, "the shared screener keeps percentage ranking");
 });
 
