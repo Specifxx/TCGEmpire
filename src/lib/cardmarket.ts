@@ -85,6 +85,7 @@ function setFromTotal(total?: string): string | null {
     case 298: return "OGN";
     case 221: return "SFD";
     case 219: return "UNL";
+    case 166: return "VEN"; // Vendetta released 31 Jul 2026, after this map was first written
     case 24: return "OGS";
     default: return null;
   }
