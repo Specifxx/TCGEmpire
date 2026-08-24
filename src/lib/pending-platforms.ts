@@ -338,6 +338,27 @@ export const PENDING_ES_STORES: PendingEuStoreCandidate[] = [
 // and rejected for this same reason — during the one-day Germany market on
 // 2026-08-20, when they lived in a PENDING_DE_STORES list that the revert deleted.
 // Recorded again so a third pass doesn't re-research them.
+// ── The eurozone stores that were ADDED and then REMOVED (2026-08-23) ────────
+// 85 of them, in one afternoon, and the reason is worth stating plainly because
+// the mistake is easy to repeat: they were ranked on RAW in-stock product count
+// inside their Riftbound collections, which counts booster boxes, playmats,
+// sleeves and tournament tickets. Re-measured on in-stock listings carrying a
+// COLLECTOR NUMBER — the only ones the singles importer can turn into a price —
+// 60 Shopify stores yielded five clearing ten singles, and all 36 WooCommerce
+// stores yielded zero.
+//
+// They are NOT listed individually here, deliberately. They are not leads: they
+// were probed, they are on readable platforms, and they were found to stock no
+// singles. Re-adding any of them is a matter of re-running
+// `npx tsx scripts/probe-eu-stores.ts` against a candidate file — the tool that
+// removed them is the tool that puts them back the day their stock changes.
+// Copying 85 names into this file would only make that look like research.
+//
+// The WooCommerce adapter (lib/woocommerce.ts) STAYS. It is how the Woo half of
+// that measurement was possible at all, it is correct, and it is what makes any
+// of those shops a one-line addition the day one lists singles. It is currently
+// used by no store in RETAILERS, and that is an honest state, not dead code.
+
 export const PENDING_EU_STORES: PendingEuStoreCandidate[] = [
   { name: "Amzicards (Amziverse)", base: "https://amzicards.de", country: "DE", platform: "woocommerce", evidence: "search", note: "Sealed-heavy and mostly out of stock when checked on 2026-08-20." },
   { name: "Gate to the Games", base: "https://www.gate-to-the-games.de", country: "DE", platform: "unknown", evidence: "search", note: "/products.json 404s; underlying platform never identified." },

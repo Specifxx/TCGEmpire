@@ -99,16 +99,71 @@ export function wooPriceString(p: WooProduct): string {
 /**
  * Does this product title look like a SINGLE card rather than sealed product?
  *
- * The importer's own matcher is the real authority — a listing only ever gets a
- * price row if resolveCardId() finds a card for it — so this is a cheaper,
- * looser pre-filter used for reporting ("how many singles does this store have?")
- * and for deciding whether a store is worth tracking at all. It mirrors the
- * collector-number shapes parseNumber() understands in price-import.ts:
- * "123/298", "OGN-181", and the bare rune numbers "R01"/"R02a".
+ * ── THIS IS THE STORE-QUALITY BAR, NOT A REPORTING NICETY ────────────────────
+ * A store earns its place in RETAILERS by contributing PRICES, and the singles
+ * importer only ever writes a price row when resolveCardId() matches a listing
+ * to a card — which requires a collector number (or a name it can disambiguate).
+ * A store with 200 in-stock "listings" that are all booster boxes, playmats and
+ * tournament tickets contributes exactly zero to the comparison while counting
+ * as a tracked store everywhere a human reads a number.
+ *
+ * That is not hypothetical: the first eurozone pass ranked candidates by RAW
+ * in-stock product count and shipped 96 stores on it. Most of those counts were
+ * sealed. Ranking on THIS function instead is what separates a store that prices
+ * cards from a store that stocks boxes.
+ *
+ * Mirrors the collector-number shapes parseNumber() understands in
+ * price-import.ts — "123/298", "OGN-181", the bare rune numbers "R01"/"R02a" —
+ * and applies the same MULTI_CARD guard, because a playset or a lot carries a
+ * SET price and the importer refuses it too. Deliberately a touch LOOSER than
+ * resolveCardId (it cannot check the number against the real catalogue), so it
+ * over-counts slightly; a bar set on an over-count is the safe direction.
  */
+const SINGLE_NUMBER = /\d+[a-z*]*\s*\/\s*\d+|\b(OGN|OGS|SFD|UNL|VEN)\s*-\s*\d+|\bR\d{1,3}[a-z]?\b/i;
+// Kept in step with MULTI_CARD in price-import.ts — a bundle is not a single.
+const MULTI = /\b(playset|lot|lots|bundle|joblot|job lot|x\s*\d+|\d+\s*x|set of|complete set|full set|bulk)\b/i;
+
 export function isSinglesTitle(title: string): boolean {
-  return /\d+[a-z*]*\s*\/\s*\d+/i.test(title) || /\b(OGN|OGS|SFD|UNL|VEN)\s*-\s*\d+/i.test(title) || /\bR\d{1,3}[a-z]?\b/.test(title);
+  return SINGLE_NUMBER.test(title) && !MULTI.test(title);
 }
+
+/**
+ * The minimum number of in-stock SINGLES a store must carry to be worth adding.
+ *
+ * Below this a store is not a price source, it is a directory entry: it adds a
+ * row to /stores/tracked, a store page thin enough to be noindexed, and one HTTP
+ * request per import, in exchange for a handful of prices that any of the deep
+ * catalogues already beat. Ten is the line because it is roughly where a store
+ * starts to have more than a couple of sets' worth of chase cards — enough that
+ * it can actually win a comparison on some card.
+ *
+ * Enforced by scripts/probe-eu-stores.ts, which is how a store gets added, and
+ * pinned by tests/eu-store-quality.test.ts so the bar cannot be quietly lowered
+ * by adding a store that never cleared it.
+ */
+export const MIN_SINGLES_FOR_STORE = 10;
+
+/**
+ * Collection handles a Riftbound singles catalogue is generated under, tried
+ * DIRECTLY rather than waiting for sitemap discovery to name them.
+ *
+ * BinderPOS — the Shopify point-of-sale most TCG shops with a real singles
+ * inventory run — generates one collection per game with a fixed handle and a
+ * `product_type` of "<Game> Single". Every deep eurozone singles catalogue found
+ * so far is one of these: Mana Market, Universe TCG, End Turn, El Duelista,
+ * GS-GameOn, Trinket Mage, T-REX TCG, Timetwister, Nordic Legends.
+ *
+ * WHY THIS LIST HAS TO EXIST. discoverRiftboundCollections() reads
+ * sitemap_collections, and a BinderPOS collection is frequently absent from it —
+ * four of the nine stores above were REJECTED by a sitemap-only probe as having
+ * no Riftbound collection, while serving 250 singles at a handle anyone could
+ * have guessed. Sitemap discovery finding nothing is not evidence a store has
+ * nothing; it is evidence the sitemap does not list it.
+ *
+ * Cheap to try: a handle that does not exist is one 404, and these are unioned
+ * with discovery rather than replacing it.
+ */
+export const CONVENTIONAL_SINGLES_HANDLES = ["riftbound-single", "riftbound-singles"] as const;
 
 /**
  * The condition/finish variants for one product, in the shape the Shopify path

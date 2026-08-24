@@ -17,7 +17,7 @@ import { ALL_FALLBACK_RETAILERS, pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DA
 import { currencyOf, isoCountry, priceField, type Country } from "./country";
 import { USD_TO } from "./fx";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows } from "./scrape-http";
-import { decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, productUrl, wooVariants } from "./woocommerce";
+import { CONVENTIONAL_SINGLES_HANDLES, decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, productUrl, wooVariants } from "./woocommerce";
 
 export interface ShopifyVariant { title: string; price: string; available: boolean }
 export interface ShopifyProduct {
@@ -739,11 +739,20 @@ export function ebayMarketsForDay(dayIndex: number): EbayMarketCfg[] {
  * about how either platform is read.
  */
 async function fetchShopifyStoreProducts(store: RetailerInfo): Promise<ShopifyProduct[]> {
-  // Auto-discover the store's Riftbound collections; fall back to any handles
-  // configured explicitly in retailers.ts.
-  let handles = await discoverRiftboundCollections(store.base);
-  if (!handles.length) handles = store.collections ?? [];
-  handles = Array.from(new Set([...handles, ...(store.collections ?? [])]));
+  // Auto-discover the store's Riftbound collections, then union in the handles
+  // configured in retailers.ts AND the conventional BinderPOS ones.
+  //
+  // THE CONVENTIONAL HANDLES ARE NOT BELT-AND-BRACES. Sitemap discovery misses
+  // BinderPOS singles collections routinely — four of the nine deepest eurozone
+  // singles catalogues were invisible to it while serving 250 cards at
+  // /collections/riftbound-single (see CONVENTIONAL_SINGLES_HANDLES). Since a
+  // missing handle here reads exactly like "this store has no Riftbound stock",
+  // the failure was silent and cost real coverage. Two extra 404s per store is
+  // the entire price of never repeating it.
+  const discovered = await discoverRiftboundCollections(store.base);
+  const handles = Array.from(
+    new Set([...discovered, ...(store.collections ?? []), ...CONVENTIONAL_SINGLES_HANDLES]),
+  );
 
   const products: ShopifyProduct[] = [];
   const seen = new Set<string>();

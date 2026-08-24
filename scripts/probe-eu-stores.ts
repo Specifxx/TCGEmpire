@@ -21,6 +21,7 @@ import { readFileSync } from "node:fs";
 import { SCRAPE_HEADERS as UA, robotsAllows } from "../src/lib/scrape-http";
 import { EU_ANCHOR_ISO } from "../src/lib/country";
 import { RETAILER_LIST } from "../src/lib/retailers";
+import { CONVENTIONAL_SINGLES_HANDLES, isSinglesTitle, MIN_SINGLES_FOR_STORE } from "../src/lib/woocommerce";
 
 const NON_SINGLE = /sealed|booster|box|bundle|preorder|pre-order|accessor|playmat|sleeve|merch|deck-?box|gift|case|tin|blister|collection-box/i;
 const CC = EU_ANCHOR_ISO;
@@ -65,6 +66,12 @@ async function discover(base: string) {
   // serves one. A store that 404s here is on another platform (WooCommerce,
   // PrestaShop, Shopware are all common in this market) and has no products.json
   // for the importer to read, whatever else is true about it.
+  // Union in the conventional BinderPOS handles, exactly as the importer does —
+  // a probe that discovers less than the importer will reject stores the
+  // importer could have priced. Four of the deepest eurozone singles catalogues
+  // were rejected by an earlier sitemap-only version of this function while
+  // serving 250 cards at /collections/riftbound-single.
+  for (const h of CONVENTIONAL_SINGLES_HANDLES) handles.add(h);
   return { isShopify: index != null, handles: [...handles], anyRiftbound, robotsOk };
 }
 
@@ -83,35 +90,72 @@ async function provenCurrency(base: string, handle: string, feedPrice: string) {
 
 export interface ProbeResult {
   name: string; base: string; ok: boolean; reason: string;
-  currency: string; currencyAgrees: boolean; inStock: number; total: number;
+  currency: string; currencyAgrees: boolean;
+  // singles = in-stock listings that carry a collector number, i.e. the only
+  // ones the importer can turn into a price. inStock counts everything in the
+  // Riftbound collections, sealed included, and is kept only for context —
+  // ranking on it is the mistake that shipped 96 stores of which most priced
+  // nothing (see isSinglesTitle in lib/woocommerce.ts).
+  singles: number; inStock: number; total: number;
   handles: string[]; sample: string; shippingPolicy: boolean;
 }
 
 async function probe(name: string, base: string): Promise<ProbeResult> {
-  const blank = { name, base, currency: "n/a", currencyAgrees: false, inStock: 0, total: 0, handles: [] as string[], sample: "", shippingPolicy: false };
+  const blank = { name, base, currency: "n/a", currencyAgrees: false, singles: 0, inStock: 0, total: 0, handles: [] as string[], sample: "", shippingPolicy: false };
   const d = await discover(base);
   if (!d.isShopify) return { ...blank, ok: false, reason: "not Shopify (no /sitemap.xml)" };
   if (!d.robotsOk) return { ...blank, ok: false, reason: "robots.txt disallows the products.json feed" };
-  if (!d.handles.length) return { ...blank, ok: false, reason: d.anyRiftbound ? "Shopify, riftbound sealed-only" : "Shopify, no riftbound collection" };
+  // `handles` now always contains the conventional ones, so it is never empty on
+  // a Shopify store — emptiness is no longer the "nothing here" signal it was.
+  // The singles count below is, which is the right signal anyway.
 
-  let inStock = 0, total = 0, sample = "", firstHandle = "", firstPrice = "";
-  for (const h of d.handles.slice(0, 6)) {
-    for (let page = 1; page <= 6; page++) {
+  let inStock = 0, singles = 0, total = 0, sample = "", firstHandle = "", firstPrice = "";
+  const seenHandles = new Set<string>();
+  for (const h of d.handles.slice(0, 8)) {
+    for (let page = 1; page <= 8; page++) {
       const j = await fetchText(`${base}/collections/${h}/products.json?country=${CC}&limit=250&page=${page}`);
       if (!j) break;
       let arr: any[]; try { arr = JSON.parse(j).products; } catch { break; }
       if (!arr || !arr.length) break;
-      total += arr.length;
       for (const p of arr) {
+        // De-dup ACROSS collections. Stores routinely list the same card in
+        // "riftbound" and "riftbound-singles"; counting it twice inflates a
+        // store straight past the quality bar it should not clear.
+        if (seenHandles.has(p.handle)) continue;
+        seenHandles.add(p.handle);
+        total++;
         const v = (p.variants || []).find((v: any) => v.available);
         if (!v) continue;
         inStock++;
-        if (!sample) { sample = `${String(p.title).slice(0, 30)} €${v.price}`; firstHandle = p.handle; firstPrice = v.price; }
+        const isSingle = isSinglesTitle(String(p.title));
+        if (isSingle) singles++;
+        // Sample a SINGLE if we have one — a sealed sample on a store being
+        // judged for singles is exactly the misreading this probe now exists
+        // to prevent.
+        if (isSingle && !firstHandle) { sample = `${String(p.title).slice(0, 34)} €${v.price}`; firstHandle = p.handle; firstPrice = v.price; }
       }
       if (arr.length < 250) break;
     }
   }
-  if (!inStock) return { ...blank, ok: false, reason: `no in-stock singles (${total} products listed)`, total, handles: d.handles };
+  if (!firstHandle) {
+    // No single at all to prove the currency against — fall back to any in-stock
+    // product purely so the currency check can still run and be reported.
+    for (const h of d.handles.slice(0, 2)) {
+      const j = await fetchText(`${base}/collections/${h}/products.json?country=${CC}&limit=250`);
+      if (!j) continue;
+      let arr: any[]; try { arr = JSON.parse(j).products; } catch { continue; }
+      const p = (arr || []).find((x: any) => (x.variants || []).some((v: any) => v.available));
+      if (p) {
+        const v = p.variants.find((v: any) => v.available);
+        sample = `${String(p.title).slice(0, 34)} €${v.price}`; firstHandle = p.handle; firstPrice = v.price;
+        break;
+      }
+    }
+  }
+  if (singles < MIN_SINGLES_FOR_STORE) {
+    return { ...blank, ok: false, reason: `${singles} in-stock singles (need ${MIN_SINGLES_FOR_STORE}+); ${inStock} in stock of ${total} listed`, singles, inStock, total, handles: d.handles, sample };
+  }
+  if (!firstHandle) return { ...blank, ok: false, reason: "nothing in stock to prove the currency against", singles, inStock, total, handles: d.handles };
 
   const cur = await provenCurrency(base, firstHandle, firstPrice);
   const shippingPolicy = (await fetchText(`${base}/policies/shipping-policy`)) != null;
@@ -122,7 +166,7 @@ async function probe(name: string, base: string): Promise<ProbeResult> {
   return {
     name, base, ok,
     reason: ok ? "ok" : `serves ${cur.cur} to a ?country=${CC} shopper, not EUR`,
-    currency: cur.cur, currencyAgrees: cur.agrees, inStock, total,
+    currency: cur.cur, currencyAgrees: cur.agrees, singles, inStock, total,
     handles: d.handles, sample, shippingPolicy,
   };
 }
@@ -153,18 +197,19 @@ async function main() {
 
   console.log(`Probing ${stores.length} store(s) with ?country=${CC} …\n`);
   const results = await pool(stores, 8, (s) => probe(s.name, s.base));
-  const good = results.filter((r) => r.ok).sort((a, b) => b.inStock - a.inStock);
+  const good = results.filter((r) => r.ok).sort((a, b) => b.singles - a.singles);
 
   for (const r of good) {
     console.log(
       `${r.name.padEnd(28)} ✓ cur=${r.currency}${r.currencyAgrees ? "" : "(page≠feed)"} ` +
-      `policy=${r.shippingPolicy ? "y" : "n"} inStock=${String(r.inStock).padStart(4)} (of ${String(r.total).padStart(4)})` +
+      `policy=${r.shippingPolicy ? "y" : "n"} singles=${String(r.singles).padStart(4)} ` +
+      `inStock=${String(r.inStock).padStart(4)} (of ${String(r.total).padStart(4)})` +
       `  [${r.handles.slice(0, 3).join(",")}]  e.g. ${r.sample}`,
     );
   }
   console.log(`\n── rejected ──`);
   for (const r of results.filter((x) => !x.ok)) console.log(`${r.name.padEnd(28)} ✗ ${r.reason}`);
-  console.log(`\n${good.length} of ${stores.length} usable.`);
+  console.log(`\n${good.length} of ${stores.length} clear the ${MIN_SINGLES_FOR_STORE}+ in-stock-singles bar.`);
   // Machine-readable, so a retailers.ts block can be generated from a real run
   // rather than hand-transcribed off the log.
   console.log(`\n──JSON──\n${JSON.stringify(good, null, 1)}`);
