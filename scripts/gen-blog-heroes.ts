@@ -27,6 +27,12 @@ const HEIGHT = 630;
 const BRAND = "#34d17e";
 const ACCENT = "#38bdf8";
 
+// The actual RiftCompare "R" mark (components/BrandLogo.tsx's mask source),
+// embedded as a data URI so every generated hero carries the real logo next
+// to the wordmark — not just the wordmark on its own.
+const LOGO_PATH = path.join(process.cwd(), "public", "logo-r-green.png");
+const LOGO_DATA_URI = `data:image/png;base64,${fs.readFileSync(LOGO_PATH).toString("base64")}`;
+
 interface Hero {
   slug: string;
   kicker: string;
@@ -209,8 +215,9 @@ function svgFor(h: Hero): string {
   <circle cx="1080" cy="140" r="220" fill="${BRAND}" opacity="0.07"/>
   <circle cx="1150" cy="520" r="160" fill="${ACCENT}" opacity="0.05"/>
 
+  <image href="${LOGO_DATA_URI}" x="80" y="66" width="42" height="42"/>
   <g font-family="DejaVu Sans, sans-serif">
-    <text x="80" y="112" fill="${BRAND}" font-size="30" font-weight="bold" letter-spacing="6">RIFTCOMPARE</text>
+    <text x="134" y="112" fill="${BRAND}" font-size="30" font-weight="bold" letter-spacing="6">RIFTCOMPARE</text>
     <text x="80" y="160" fill="#94a3b8" font-size="26" letter-spacing="2">${esc(h.kicker.toUpperCase())}</text>
     ${lines
       .map(

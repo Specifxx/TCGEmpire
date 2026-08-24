@@ -3,11 +3,11 @@
     "src": "/blog/best-riftbound-marketplaces.png",
     "width": 1200,
     "height": 630,
-    "bytes": 42401,
+    "bytes": 40967,
     "webp": "/blog/best-riftbound-marketplaces.webp",
-    "webpBytes": 21424,
+    "webpBytes": 22300,
     "avif": "/blog/best-riftbound-marketplaces.avif",
-    "avifBytes": 15522,
+    "avifBytes": 12470,
     "variants": [
       {
         "w": 480,
@@ -18,17 +18,17 @@
         "src": "/blog/best-riftbound-marketplaces-768w.webp"
       }
     ],
-    "fingerprint": "c4a61ca6b8009622"
+    "fingerprint": "48ea18b6b4af45e7"
   },
   "/blog/best-riftbound-price-comparison-sites.png": {
     "src": "/blog/best-riftbound-price-comparison-sites.png",
     "width": 1200,
     "height": 630,
-    "bytes": 49594,
+    "bytes": 49738,
     "webp": "/blog/best-riftbound-price-comparison-sites.webp",
-    "webpBytes": 21576,
+    "webpBytes": 24420,
     "avif": "/blog/best-riftbound-price-comparison-sites.avif",
-    "avifBytes": 14186,
+    "avifBytes": 14177,
     "variants": [
       {
         "w": 480,
@@ -39,17 +39,17 @@
         "src": "/blog/best-riftbound-price-comparison-sites-768w.webp"
       }
     ],
-    "fingerprint": "c699033db56f5775"
+    "fingerprint": "9034ded795bc64ec"
   },
   "/blog/buy-riftbound-cards-europe.png": {
     "src": "/blog/buy-riftbound-cards-europe.png",
     "width": 1200,
     "height": 630,
-    "bytes": 50601,
+    "bytes": 44420,
     "webp": "/blog/buy-riftbound-cards-europe.webp",
-    "webpBytes": 22732,
+    "webpBytes": 22298,
     "avif": "/blog/buy-riftbound-cards-europe.avif",
-    "avifBytes": 12717,
+    "avifBytes": 14872,
     "variants": [
       {
         "w": 480,
@@ -60,17 +60,17 @@
         "src": "/blog/buy-riftbound-cards-europe-768w.webp"
       }
     ],
-    "fingerprint": "2f5421be4d27b8ae"
+    "fingerprint": "abc9b5fb802a349e"
   },
   "/blog/currency-conversion-fees.png": {
     "src": "/blog/currency-conversion-fees.png",
     "width": 1200,
     "height": 630,
-    "bytes": 50805,
+    "bytes": 41481,
     "webp": "/blog/currency-conversion-fees.webp",
-    "webpBytes": 20526,
+    "webpBytes": 20452,
     "avif": "/blog/currency-conversion-fees.avif",
-    "avifBytes": 11689,
+    "avifBytes": 11646,
     "variants": [
       {
         "w": 480,
@@ -81,17 +81,17 @@
         "src": "/blog/currency-conversion-fees-768w.webp"
       }
     ],
-    "fingerprint": "d5ec4b8772e97d35"
+    "fingerprint": "0f9c54bf7405466c"
   },
   "/blog/ebay-bidding-strategies.png": {
     "src": "/blog/ebay-bidding-strategies.png",
     "width": 1200,
     "height": 630,
-    "bytes": 49890,
+    "bytes": 44086,
     "webp": "/blog/ebay-bidding-strategies.webp",
-    "webpBytes": 18938,
+    "webpBytes": 19972,
     "avif": "/blog/ebay-bidding-strategies.avif",
-    "avifBytes": 10990,
+    "avifBytes": 12740,
     "variants": [
       {
         "w": 480,
@@ -102,17 +102,17 @@
         "src": "/blog/ebay-bidding-strategies-768w.webp"
       }
     ],
-    "fingerprint": "904b958f5042f96f"
+    "fingerprint": "1deb105805dc2947"
   },
   "/blog/how-to-choose-a-riftbound-marketplace.png": {
     "src": "/blog/how-to-choose-a-riftbound-marketplace.png",
     "width": 1200,
     "height": 630,
-    "bytes": 48832,
+    "bytes": 59915,
     "webp": "/blog/how-to-choose-a-riftbound-marketplace.webp",
-    "webpBytes": 21050,
+    "webpBytes": 20776,
     "avif": "/blog/how-to-choose-a-riftbound-marketplace.avif",
-    "avifBytes": 12008,
+    "avifBytes": 12227,
     "variants": [
       {
         "w": 480,
@@ -123,17 +123,17 @@
         "src": "/blog/how-to-choose-a-riftbound-marketplace-768w.webp"
       }
     ],
-    "fingerprint": "aa8de7f8db58d461"
+    "fingerprint": "577074768cb5162b"
   },
   "/blog/most-expensive-riftbound-cards.png": {
     "src": "/blog/most-expensive-riftbound-cards.png",
     "width": 1200,
     "height": 630,
-    "bytes": 48827,
+    "bytes": 43806,
     "webp": "/blog/most-expensive-riftbound-cards.webp",
-    "webpBytes": 21348,
+    "webpBytes": 22264,
     "avif": "/blog/most-expensive-riftbound-cards.avif",
-    "avifBytes": 17056,
+    "avifBytes": 14313,
     "variants": [
       {
         "w": 480,
@@ -144,7 +144,7 @@
         "src": "/blog/most-expensive-riftbound-cards-768w.webp"
       }
     ],
-    "fingerprint": "d016e1ece2e9aa86"
+    "fingerprint": "a806fcdbe289c7cb"
   },
   "/blog/premium/00-pricing-cards.png": {
     "src": "/blog/premium/00-pricing-cards.png",
@@ -246,11 +246,11 @@
     "src": "/blog/riftbound-2027-set-roadmap.png",
     "width": 1200,
     "height": 630,
-    "bytes": 43845,
+    "bytes": 52641,
     "webp": "/blog/riftbound-2027-set-roadmap.webp",
-    "webpBytes": 22278,
+    "webpBytes": 23286,
     "avif": "/blog/riftbound-2027-set-roadmap.avif",
-    "avifBytes": 13391,
+    "avifBytes": 14907,
     "variants": [
       {
         "w": 480,
@@ -261,17 +261,17 @@
         "src": "/blog/riftbound-2027-set-roadmap-768w.webp"
       }
     ],
-    "fingerprint": "dc56591bde285357"
+    "fingerprint": "766ae31fa4824ab1"
   },
   "/blog/riftbound-august-2026-state-of-the-game-takeaways.png": {
     "src": "/blog/riftbound-august-2026-state-of-the-game-takeaways.png",
     "width": 1200,
     "height": 630,
-    "bytes": 53564,
+    "bytes": 48420,
     "webp": "/blog/riftbound-august-2026-state-of-the-game-takeaways.webp",
-    "webpBytes": 21106,
+    "webpBytes": 22778,
     "avif": "/blog/riftbound-august-2026-state-of-the-game-takeaways.avif",
-    "avifBytes": 12484,
+    "avifBytes": 16084,
     "variants": [
       {
         "w": 480,
@@ -282,17 +282,17 @@
         "src": "/blog/riftbound-august-2026-state-of-the-game-takeaways-768w.webp"
       }
     ],
-    "fingerprint": "93f8fcf66cb2191e"
+    "fingerprint": "17f4e67ad6bff499"
   },
   "/blog/riftbound-card-price-comparison.png": {
     "src": "/blog/riftbound-card-price-comparison.png",
     "width": 1200,
     "height": 630,
-    "bytes": 46702,
+    "bytes": 48523,
     "webp": "/blog/riftbound-card-price-comparison.webp",
-    "webpBytes": 21552,
+    "webpBytes": 23152,
     "avif": "/blog/riftbound-card-price-comparison.avif",
-    "avifBytes": 15461,
+    "avifBytes": 13037,
     "variants": [
       {
         "w": 480,
@@ -303,17 +303,17 @@
         "src": "/blog/riftbound-card-price-comparison-768w.webp"
       }
     ],
-    "fingerprint": "e270c3bb8f676c30"
+    "fingerprint": "1fd35b894ea71e1b"
   },
   "/blog/riftbound-card-values.png": {
     "src": "/blog/riftbound-card-values.png",
     "width": 1200,
     "height": 630,
-    "bytes": 43248,
+    "bytes": 55604,
     "webp": "/blog/riftbound-card-values.webp",
-    "webpBytes": 19628,
+    "webpBytes": 18712,
     "avif": "/blog/riftbound-card-values.avif",
-    "avifBytes": 10135,
+    "avifBytes": 16760,
     "variants": [
       {
         "w": 480,
@@ -324,17 +324,17 @@
         "src": "/blog/riftbound-card-values-768w.webp"
       }
     ],
-    "fingerprint": "69da8aa819e875f1"
+    "fingerprint": "052a52da511b82a4"
   },
   "/blog/riftbound-legacy-pack-changes-and-card-templating.png": {
     "src": "/blog/riftbound-legacy-pack-changes-and-card-templating.png",
     "width": 1200,
     "height": 630,
-    "bytes": 45410,
+    "bytes": 44728,
     "webp": "/blog/riftbound-legacy-pack-changes-and-card-templating.webp",
-    "webpBytes": 27386,
+    "webpBytes": 25642,
     "avif": "/blog/riftbound-legacy-pack-changes-and-card-templating.avif",
-    "avifBytes": 18315,
+    "avifBytes": 20582,
     "variants": [
       {
         "w": 480,
@@ -345,17 +345,17 @@
         "src": "/blog/riftbound-legacy-pack-changes-and-card-templating-768w.webp"
       }
     ],
-    "fingerprint": "f573c4f051b218f8"
+    "fingerprint": "9ff9bbe81cbe5b70"
   },
   "/blog/riftbound-t1-signature-edition-drawing.png": {
     "src": "/blog/riftbound-t1-signature-edition-drawing.png",
     "width": 1200,
     "height": 630,
-    "bytes": 42797,
+    "bytes": 44055,
     "webp": "/blog/riftbound-t1-signature-edition-drawing.webp",
-    "webpBytes": 25830,
+    "webpBytes": 23466,
     "avif": "/blog/riftbound-t1-signature-edition-drawing.avif",
-    "avifBytes": 15233,
+    "avifBytes": 13921,
     "variants": [
       {
         "w": 480,
@@ -366,17 +366,17 @@
         "src": "/blog/riftbound-t1-signature-edition-drawing-768w.webp"
       }
     ],
-    "fingerprint": "e0ce4b109292ea46"
+    "fingerprint": "d1c516522e9a5d71"
   },
   "/blog/riftbound-variant-glossary.png": {
     "src": "/blog/riftbound-variant-glossary.png",
     "width": 1200,
     "height": 630,
-    "bytes": 42632,
+    "bytes": 49735,
     "webp": "/blog/riftbound-variant-glossary.webp",
-    "webpBytes": 20918,
+    "webpBytes": 21498,
     "avif": "/blog/riftbound-variant-glossary.avif",
-    "avifBytes": 13446,
+    "avifBytes": 12485,
     "variants": [
       {
         "w": 480,
@@ -387,17 +387,17 @@
         "src": "/blog/riftbound-variant-glossary-768w.webp"
       }
     ],
-    "fingerprint": "1367a8b7adca33e4"
+    "fingerprint": "5174632f8c43553d"
   },
   "/blog/riftcompare-launches-in-the-eu.png": {
     "src": "/blog/riftcompare-launches-in-the-eu.png",
     "width": 1200,
     "height": 630,
-    "bytes": 57006,
+    "bytes": 48641,
     "webp": "/blog/riftcompare-launches-in-the-eu.webp",
-    "webpBytes": 22012,
+    "webpBytes": 20704,
     "avif": "/blog/riftcompare-launches-in-the-eu.avif",
-    "avifBytes": 17237,
+    "avifBytes": 12062,
     "variants": [
       {
         "w": 480,
@@ -408,7 +408,7 @@
         "src": "/blog/riftcompare-launches-in-the-eu-768w.webp"
       }
     ],
-    "fingerprint": "1b1710b552e839a3"
+    "fingerprint": "26b4930ed3966c7a"
   },
   "/blog/riftcompare-premium-explained.png": {
     "src": "/blog/riftcompare-premium-explained.png",
@@ -435,11 +435,11 @@
     "src": "/blog/riftcompare-review.png",
     "width": 1200,
     "height": 630,
-    "bytes": 50582,
+    "bytes": 34753,
     "webp": "/blog/riftcompare-review.webp",
-    "webpBytes": 19166,
+    "webpBytes": 19442,
     "avif": "/blog/riftcompare-review.avif",
-    "avifBytes": 11260,
+    "avifBytes": 11463,
     "variants": [
       {
         "w": 480,
@@ -450,17 +450,17 @@
         "src": "/blog/riftcompare-review-768w.webp"
       }
     ],
-    "fingerprint": "d155c00ef6b1a784"
+    "fingerprint": "e820064a51168ed3"
   },
   "/blog/tcgplayer-fees.png": {
     "src": "/blog/tcgplayer-fees.png",
     "width": 1200,
     "height": 630,
-    "bytes": 60210,
+    "bytes": 51210,
     "webp": "/blog/tcgplayer-fees.webp",
-    "webpBytes": 20134,
+    "webpBytes": 19426,
     "avif": "/blog/tcgplayer-fees.avif",
-    "avifBytes": 12299,
+    "avifBytes": 11294,
     "variants": [
       {
         "w": 480,
@@ -471,17 +471,17 @@
         "src": "/blog/tcgplayer-fees-768w.webp"
       }
     ],
-    "fingerprint": "c076dea240cd7a64"
+    "fingerprint": "8782fe89369f45f7"
   },
   "/blog/where-to-buy-riftbound-cards.png": {
     "src": "/blog/where-to-buy-riftbound-cards.png",
     "width": 1200,
     "height": 630,
-    "bytes": 49564,
+    "bytes": 53575,
     "webp": "/blog/where-to-buy-riftbound-cards.webp",
-    "webpBytes": 22248,
+    "webpBytes": 23592,
     "avif": "/blog/where-to-buy-riftbound-cards.avif",
-    "avifBytes": 13874,
+    "avifBytes": 13846,
     "variants": [
       {
         "w": 480,
@@ -492,7 +492,7 @@
         "src": "/blog/where-to-buy-riftbound-cards-768w.webp"
       }
     ],
-    "fingerprint": "623942eddf755a5b"
+    "fingerprint": "036be5419dbdeb2d"
   },
   "/icon-512.png": {
     "src": "/icon-512.png",

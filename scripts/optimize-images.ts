@@ -314,7 +314,19 @@ async function main() {
       /* a format sharp can't re-encode — the optimised original still ships */
     }
 
+    // BUST STALE DERIVED FILES. makeAvif/makeVariants each skip regenerating
+    // whenever their OWN output file already exists on disk — a fast path that
+    // is only correct when the base image is untouched, which is exactly what
+    // this branch means it is NOT (the fingerprint just changed, or this is the
+    // first run). Without this, redrawing a hero in place (e.g. gen-blog-heroes
+    // --force) silently ships the OLD avif/responsive renditions forever, since
+    // this loop only ever overwrites `file` and its .webp sibling directly. Found
+    // via the blog-hero logo-mark redraw: base .png/.webp updated, .avif and the
+    // -480w/-768w.webp renditions kept showing the pre-logo image.
     const avifRel = rel.replace(/\.(png|jpe?g)$/i, ".avif");
+    dropWebp(`/${avifRel}`);
+    for (const w of RESPONSIVE_WIDTHS) dropWebp(`/${rel.replace(/\.(png|jpe?g)$/i, `-${w}w.webp`)}`);
+
     const avifBytes = await makeAvif(sharp, file, rel, webpBytes);
 
     const variants = await makeVariants(sharp, file, rel, finalMeta.width ?? 0, webpBytes != null);
