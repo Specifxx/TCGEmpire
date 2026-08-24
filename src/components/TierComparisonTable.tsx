@@ -47,30 +47,54 @@ export const TIER_COMPARISON: TierRow[] = [
   { feature: "Ad-free experience", anon: false, account: false, premium: true },
 ];
 
-export function TierCell({ v }: { v: boolean | string }) {
+export function TierCell({ v, dialog = false }: { v: boolean | string; dialog?: boolean }) {
   if (v === true) return <span className="font-bold text-brand-400" aria-label="Included">✓</span>;
-  if (v === false) return <span className="text-slate-600" aria-label="Not included">—</span>;
+  if (v === false)
+    return dialog ? (
+      <span className="font-bold text-red-500" aria-label="Not included">✗</span>
+    ) : (
+      <span className="text-slate-600" aria-label="Not included">—</span>
+    );
   return <span className="text-xs font-semibold text-slate-300">{v}</span>;
 }
 
+// The compact dialog is a fast glance, not the full accounting — /premium (the
+// link right below the table) is where the complete, unabridged list lives.
+// Omitted here purely for length: the popup caps its own height and scrolls.
+const DIALOG_OMIT_FEATURES = new Set(["Ad-free experience", "Condition Impact Calculator"]);
+
+// TIER_COMPARISON keeps "Top pick" as the honest answer for these two rows (a
+// free account isn't shut out, just capped) — that string stays intact above
+// for /premium. The dialog is a conversion surface rather than a spec sheet, so
+// there it collapses to the same tick/✗ vocabulary as every other row.
+const DIALOG_BINARY_FEATURES = new Set(["Deal Finder", "Rising Cards"]);
+
 /**
- * `compact` trims the padding and type scale for the dialog, where the table sits
- * inside a modal rather than a full page. The COLUMNS and ROWS are identical in
- * both — a modal that quietly dropped rows would be the same drift in a new form.
+ * `compact` is also "is this the dialog?" — it trims padding/type scale AND
+ * switches the popup-specific presentation above (fewer rows, no anon column,
+ * red ✗ instead of an em dash). The underlying TIER_COMPARISON rows — and what
+ * /premium renders from them — are untouched either way.
  */
 export function TierComparisonTable({ compact = false }: { compact?: boolean }) {
   const cell = compact ? "px-2 py-1.5" : "px-3 py-2.5";
+  const rows = compact
+    ? TIER_COMPARISON.filter((r) => !DIALOG_OMIT_FEATURES.has(r.feature)).map((r) =>
+        DIALOG_BINARY_FEATURES.has(r.feature) ? { ...r, account: false, premium: true } : r
+      )
+    : TIER_COMPARISON;
   return (
-    // min-w forces the three tier columns to stay readable; the wrapper scrolls
+    // min-w forces the tier columns to stay readable; the wrapper scrolls
     // horizontally rather than letting them crush together on a phone.
     <div className="overflow-x-auto">
-      <table className={`w-full border-collapse ${compact ? "min-w-[460px] text-xs" : "min-w-[560px] text-sm"}`}>
+      <table className={`w-full border-collapse ${compact ? "min-w-[380px] text-xs" : "min-w-[560px] text-sm"}`}>
         <thead>
           <tr className="border-b border-ink-700 text-left">
             <th scope="col" className={`${cell} font-semibold text-slate-400`}>Feature</th>
-            <th scope="col" className={`${compact ? "w-16" : "w-24"} ${cell} text-center font-semibold text-slate-400`}>
-              No account
-            </th>
+            {!compact && (
+              <th scope="col" className={`w-24 ${cell} text-center font-semibold text-slate-400`}>
+                No account
+              </th>
+            )}
             <th scope="col" className={`${compact ? "w-16" : "w-24"} ${cell} text-center font-bold text-brand-300`}>
               Free account
             </th>
@@ -80,12 +104,12 @@ export function TierComparisonTable({ compact = false }: { compact?: boolean }) 
           </tr>
         </thead>
         <tbody>
-          {TIER_COMPARISON.map((r) => (
+          {rows.map((r) => (
             <tr key={r.feature} className="border-b border-ink-800 last:border-0">
               <th scope="row" className={`${cell} text-left font-normal text-slate-200`}>{r.feature}</th>
-              <td className={`${cell} text-center`}><TierCell v={r.anon} /></td>
-              <td className={`${cell} text-center`}><TierCell v={r.account} /></td>
-              <td className={`${cell} text-center`}><TierCell v={r.premium} /></td>
+              {!compact && <td className={`${cell} text-center`}><TierCell v={r.anon} /></td>}
+              <td className={`${cell} text-center`}><TierCell v={r.account} dialog={compact} /></td>
+              <td className={`${cell} text-center`}><TierCell v={r.premium} dialog={compact} /></td>
             </tr>
           ))}
         </tbody>
