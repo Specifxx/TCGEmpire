@@ -255,3 +255,60 @@ test("grantPremiumDays is a real, generic helper the signup grant can reuse", ()
   const src = read(PREMIUM_LIB);
   assert.match(src, /export async function grantPremiumDays\(userId: string, days: number\)/);
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// THE TIER TABLE IS ONE TABLE, AND THE DIALOG THAT SHOWS IT MUST STAY CLOSABLE.
+//
+// The Premium dialog used to show a hand-written six-item list of Premium-only
+// perks while /premium showed a fourteen-row three-tier table — two different
+// answers to "what do I get?", updated independently. Both now render
+// TierComparisonTable. The Best Basket tier change had to be chased through six
+// files for exactly this reason.
+//
+// Putting the full table in a modal has a cost, and it is one this codebase has
+// already paid once: the dialog was `fixed inset-0 flex items-center
+// justify-center` with an overflow-hidden card and NO scroll container. A centred
+// card taller than the viewport overflows EQUALLY in both directions, so the ✕
+// pinned to its header goes above the top of the screen with nothing to scroll to
+// reach it — the SignupPromoPopup bug fixed in 263eaeb.
+//
+// Measured in a real browser with the table added and the OLD overlay restored:
+// the close button rendered at y = -3 (375x553) and y = -23 (360x480). With the
+// fix: y = 29, hit-testable, dismisses, and the below-fold CTA is reachable by
+// scrolling. Verified down to 320x480.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("the Premium dialog and /premium show the SAME tier table, from one source", () => {
+  const shared = read("src/components/TierComparisonTable.tsx");
+  const dialog = read("src/components/PremiumDialog.tsx");
+  const page = read("src/app/premium/page.tsx");
+
+  assert.match(shared, /export const TIER_COMPARISON/, "the rows must be exported from the shared module");
+  for (const [file, name] of [[dialog, "the dialog"], [page, "/premium"]] as const) {
+    assert.match(file, /TierComparisonTable/, `${name} must render the shared table`);
+    assert.doesNotMatch(
+      file,
+      /const COMPARE(_\w+)?\s*(:|=)/,
+      `${name} must not keep its own copy of the comparison rows`
+    );
+  }
+  assert.doesNotMatch(dialog, /const FEATURES\s*:/, "the dialog's hand-written perk list is superseded by the table");
+
+  // Rows that are neither a flat yes nor a flat no stay strings — rounding
+  // "Top pick" up to a tick would overstate the free tier.
+  assert.match(shared, /anon: "Top pick", account: "Top pick", premium: "Full list"/);
+});
+
+test("the Premium dialog stays closable once the table makes it tall", () => {
+  const src = read("src/components/PremiumDialog.tsx");
+  assert.match(src, /fixed inset-0[^"]*overflow-y-auto/, "the overlay must scroll, or a tall card hides its own close button");
+  assert.match(src, /min-h-full items-center justify-center/, "min-h-full (not h-full) is what stops the card overflowing above the viewport");
+  assert.doesNotMatch(
+    src,
+    /fixed inset-0 z-\[120\] flex items-center justify-center/,
+    "the old centred, non-scrolling overlay put the close button at y = -23 on a 360x480 screen"
+  );
+  assert.match(src, /h-\[100dvh\]/, "dvh, or iOS Safari puts the dialog behind its own toolbars");
+  assert.match(src, /safe-area-inset-top/, "the top inset is what keeps the close button clear of the notch");
+  assert.match(src, /max-h-\[\d+vh\] overflow-y-auto/, "the table needs its own height cap and scroll");
+});
