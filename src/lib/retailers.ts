@@ -1730,11 +1730,20 @@ export const RETAILERS: Record<string, RetailerInfo> = {
   // singles counts, at the time of adding, are on each entry — not decoration,
   // but the number to re-check when one of these looks wrong.
   //
-  // ── THE HONEST CEILING ───────────────────────────────────────────────────────
-  // 421 eurozone domains were swept for this, plus a targeted sweep for the
-  // conventional BinderPOS singles handles across every one of them, plus
-  // language-specific searches in Spanish, German, Italian, Dutch and French.
-  // ELEVEN is what exists. It is not a search that stopped early.
+  // ── THE HONEST CEILING, NOW MEASURED AGAINST THE FULL REGISTRY ──────────────
+  // ELEVEN is what exists, and this is no longer an inference from however many
+  // domains a search happened to surface. UVS Games publishes the authoritative
+  // Riftbound retailer list — the data behind locator.riftbound.uvsgames.com — and
+  // it was pulled in full: 8,445 stores worldwide, 2,047 in the eurozone, 951
+  // unique shop domains once social-media "websites" are dropped.
+  //
+  //   * 421 domains from a multi-lane research sweep      -> 10 clear the bar
+  //   * 581 registry domains NOT in that sweep, full probe ->  0 clear the bar
+  //   * language-specific searches in ES/DE/IT/NL/FR/PT    ->  1 (Lichcards)
+  //
+  // Re-run it yourself with `npx tsx scripts/probe-eu-stores.ts --registry`
+  // before spending another pass on discovery. Two independent exhaustive sweeps
+  // returning the same eleven stores is the answer, not a stopping point.
   //
   // The structural reason, which matters more than the number: European singles
   // trading is concentrated on CARDMARKET and CARDTRADER, not on individual
@@ -1742,9 +1751,13 @@ export const RETAILERS: Record<string, RetailerInfo> = {
   // marketplaces out of RETAILERS (see the Fetch TCG note in
   // lib/pending-platforms.ts for why — they double-count stock that is also
   // listed directly, and they need their own adapter, not a retailers.ts row).
-  // Getting the EU past ~a dozen real singles sources means integrating one of
-  // those two, and Cardmarket is feature-flagged off pending written permission
-  // (lib/cardmarket.ts). That is the actual unblock, not more searching.
+  //
+  // Getting EU price coverage past eleven shops therefore means a REFERENCE
+  // source, not more stores. Cardmarket is wired for exactly that as of
+  // 2026-08-23 — including a native-EUR row that needs no FX conversion, which
+  // makes it a better fit for this market than for any other — and is
+  // feature-gated off pending a redisplay licence. See lib/cardmarket.ts. That
+  // is the actual unblock.
   //
   // SHIPPING: unverified placeholder estimates (€4.95 · free over €60), uniform
   // so nobody mistakes them for researched per-store rates. Nine of the eleven

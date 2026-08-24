@@ -13,6 +13,12 @@ export const TCGPLAYER_UK_RETAILER = "tcgplayer_uk";
 // TCGplayer-UK — it's a converted reference: a marketplace "from" aggregate, not a
 // single verified in-stock UK listing. It's therefore treated as a fallback too.
 export const CARDMARKET_RETAILER = "cardmarket";
+// The EU market's Cardmarket row. A SEPARATE retailer key from the UK one above
+// because RetailerPrice is uniquely keyed on [cardId, retailer, condition,
+// isFoil] with no country in the key — one key serving two markets would collide
+// and silently keep whichever row was written last. Same reason eBay has
+// ebay/ebay_us/ebay_uk and the marketplace has marketplace_*.
+export const CARDMARKET_EU_RETAILER = "cardmarket_eu";
 
 // Converted, non-buyable-as-shown UK price sources. These are EXCLUDED from the UK
 // "from" price and HIDDEN from the UK listing breakdown whenever a genuine GBP
@@ -85,12 +91,13 @@ export const EBAY_CA_RETAILER = "ebay_ca";
 // sites did the latter and every one of them was missing a market by the time CA
 // was added — a hand-listed subset silently readmits a reference price as a
 // buyable store the moment a new market appears.
-// The EU market has no converted reference source, so this is empty — but it is
-// DECLARED rather than omitted, and spread below like every other market's, so
-// the day one appears (a permitted Cardmarket feed being the obvious candidate —
-// see lib/cardmarket.ts's legal gate) it is excluded from "buyable store"
-// everywhere at once instead of in whichever call sites someone remembers.
-export const EU_FALLBACK_RETAILERS: readonly string[] = [];
+// The day predicted in this comment arrived on 2026-08-23: Cardmarket now writes
+// a native-EUR row for the EU market (lib/cardmarket.ts), so the list is no
+// longer empty. It is still gated OFF at the source by CARDMARKET_ENABLED, and
+// registering the key here regardless is the point — the exclusion has to be in
+// place BEFORE the flag flips, not after, or the first enabled run lets a
+// marketplace aggregate set lowestPriceCentsEu and outrank real EU stores.
+export const EU_FALLBACK_RETAILERS: readonly string[] = [CARDMARKET_EU_RETAILER];
 export const ALL_FALLBACK_RETAILERS: readonly string[] = [
   ...AU_FALLBACK_RETAILERS,
   ...UK_FALLBACK_RETAILERS,

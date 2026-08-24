@@ -16,6 +16,19 @@
 // Read-only (no DB) — run it and read the log to decide the list.
 //   npx tsx scripts/probe-eu-stores.ts                 # the tracked EU stores
 //   npx tsx scripts/probe-eu-stores.ts candidates.json # a research candidate file
+//   npx tsx scripts/probe-eu-stores.ts --registry      # EVERY eurozone retailer
+//                                                        in the official registry
+//
+// ── --registry IS THE ONE THAT MATTERS FOR "ARE WE MISSING STORES?" ──────────
+// UVS Games publishes the authoritative Riftbound retailer list — the data behind
+// locator.riftbound.uvsgames.com — at api.riftbound.uvsgames.com/api/v2/game-stores/
+// (game_id=3, unauthenticated, paginated). It is the complete registry, not a
+// sample: 8,445 stores worldwide, 2,047 of them in the eurozone.
+//
+// Use it before concluding anything about coverage. Web search and hand-built
+// candidate lists find whatever happens to rank; this finds every shop Riot's own
+// partner programme knows about. When that sweep and a 421-domain search sweep
+// return the SAME eleven stores, "there are only eleven" stops being a guess.
 export {}; // module scope — avoids global-name collisions with other probe scripts
 import { readFileSync } from "node:fs";
 import { SCRAPE_HEADERS as UA, robotsAllows } from "../src/lib/scrape-http";
@@ -189,11 +202,55 @@ async function pool<T, R>(items: T[], limit: number, fn: (t: T) => Promise<R>): 
   return out;
 }
 
+// Eurozone member states — the market's membership, used to filter the registry.
+const EUROZONE = new Set(["AT","BE","HR","CY","EE","FI","FR","DE","GR","IE","IT","LV","LT","LU","MT","NL","PT","SK","SI","ES"]);
+const REGISTRY = "https://api.riftbound.uvsgames.com/api/v2/game-stores/?game_id=3&page_size=200&page=";
+// Store "websites" that are not webshops. A social profile is a real contact
+// channel and a useless scrape target, and roughly half the registry's website
+// field is one of these.
+const NOT_A_SHOP = /facebook|instagram|linktr|whatsapp|tiktok|twitter|youtube|discord|google\.com|maps\.app/i;
+
+async function registryStores(): Promise<{ name: string; base: string }[]> {
+  const first = await fetchJson<any>(REGISTRY + "1");
+  if (!first) throw new Error("registry unreachable");
+  const pages = Math.ceil(first.total / 200);
+  console.log(`Official registry: ${first.total} stores worldwide, ${pages} pages …`);
+  const all: any[] = [...first.results];
+  for (let p = 2; p <= pages; p++) {
+    const r = await fetchJson<any>(REGISTRY + p);
+    if (r?.results) all.push(...r.results);
+  }
+  const byHost = new Map<string, { name: string; base: string }>();
+  for (const row of all) {
+    const s = row?.store ?? {};
+    if (!EUROZONE.has(String(s.country ?? "").toUpperCase())) continue;
+    const w = String(s.website ?? "").trim();
+    if (!w || NOT_A_SHOP.test(w)) continue;
+    const host = w.replace(/^https?:\/\//i, "").replace(/\/.*$/, "").toLowerCase();
+    if (!host.includes(".")) continue;
+    if (!byHost.has(host)) byHost.set(host, { name: String(s.name ?? host), base: `https://${host}` });
+  }
+  console.log(`${byHost.size} unique eurozone shop domains in the registry.`);
+  return [...byHost.values()];
+}
+
+async function fetchJson<T>(url: string): Promise<T | null> {
+  try {
+    const r = await fetch(url, { headers: { ...UA, Accept: "application/json" }, signal: AbortSignal.timeout(45000) });
+    return r.ok ? ((await r.json()) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
 async function main() {
   const file = process.argv[2];
-  const stores: { name: string; base: string }[] = file
-    ? JSON.parse(readFileSync(file, "utf8")).map((c: any) => ({ name: c.name, base: String(c.base).replace(/\/$/, "") }))
-    : RETAILER_LIST.filter((r) => r.country === "EU").map((r) => ({ name: r.name, base: r.base }));
+  const stores: { name: string; base: string }[] =
+    file === "--registry"
+      ? await registryStores()
+      : file
+      ? JSON.parse(readFileSync(file, "utf8")).map((c: any) => ({ name: c.name, base: String(c.base).replace(/\/$/, "") }))
+      : RETAILER_LIST.filter((r) => r.country === "EU").map((r) => ({ name: r.name, base: r.base }));
 
   console.log(`Probing ${stores.length} store(s) with ?country=${CC} …\n`);
   const results = await pool(stores, 8, (s) => probe(s.name, s.base));

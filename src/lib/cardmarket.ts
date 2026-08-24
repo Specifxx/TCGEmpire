@@ -28,7 +28,8 @@
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
 import { gunzipSync } from "node:zlib";
-import { CARDMARKET_RETAILER } from "@/lib/constants";
+import { readFile } from "node:fs/promises";
+import { CARDMARKET_EU_RETAILER, CARDMARKET_RETAILER } from "@/lib/constants";
 
 // ---- feature flag -------------------------------------------------------------
 // Off unless CARDMARKET_ENABLED === "true". Nothing is fetched, written, or shown
@@ -38,9 +39,31 @@ export function isCardmarketEnabled(): boolean {
 }
 
 // ---- configuration (verify before enabling) -----------------------------------
-// Download URLs for the Riftbound Product List + Price Guide files. These are the
-// values that MUST be confirmed against the live site — set them via env once known.
-// (Left blank by default so an accidental enable can't hit a wrong endpoint.)
+// The Riftbound Product List + Price Guide. Blank by default so an accidental
+// enable can't hit a wrong endpoint.
+//
+// ── THESE ARE NOT SCRAPE TARGETS, AND CANNOT BE (checked 2026-08-23) ─────────
+// www.cardmarket.com sits behind a Cloudflare WAF that returns a hard 403
+// "Sorry, you have been blocked" to any non-browser client — not a JS challenge,
+// an outright block. Their robots.txt separately Disallows ClaudeBot, GPTBot,
+// CCBot, Bytespider and Google-Extended, and carries an Article 4 EU DSM
+// reservation of rights over text-and-data-mining. Getting around any of that
+// would be circumventing an access control the operator deliberately put up.
+// DO NOT point this at a scraper, a headless browser, or a proxy service.
+//
+// ── THE SUPPORTED ROUTE ─────────────────────────────────────────────────────
+// Cardmarket PUBLISHES these two files to logged-in account holders at
+// https://www.cardmarket.com/Data/Download — widened in 2024 from API users to
+// all users, price guide refreshed once daily, catalogue on each new release.
+// A human downloads them and points this at the result. That is why both values
+// now accept a LOCAL FILE PATH as well as a URL (see readCsv below): the normal
+// operating mode is "a person downloaded two files", not "a server fetched two
+// URLs". New API applications are closed, so there is no key to get instead.
+//
+// What is still unresolved is the LICENCE to redisplay those prices on this site
+// — see the legal gate in this file's header. Having the files is not permission
+// to publish them, and CARDMARKET_ENABLED stays false until someone has that in
+// writing.
 const PRODUCTLIST_URL = process.env.CARDMARKET_PRODUCTLIST_URL ?? "";
 const PRICEGUIDE_URL = process.env.CARDMARKET_PRICEGUIDE_URL ?? "";
 
@@ -135,18 +158,46 @@ function parseEur(s?: string): number | null {
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
-async function fetchCsv(url: string): Promise<string> {
-  const res = await fetch(url, {
-    headers: {
-      Accept: "text/csv,application/gzip,*/*",
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36",
-    },
-  });
-  if (!res.ok) throw new Error(`Cardmarket fetch ${res.status} for ${url}: ${(await res.text()).slice(0, 160)}`);
-  const buf = Buffer.from(await res.arrayBuffer());
-  // Transparently gunzip gzip-magic (0x1f 0x8b) payloads, regardless of URL/extension.
+/**
+ * Read one of the two files, from a LOCAL PATH or a URL.
+ *
+ * The local path is the primary mode, not a convenience: cardmarket.com blocks
+ * automated clients outright (see the configuration note above), so the realistic
+ * operating procedure is a person logging in, downloading the price guide and
+ * product catalogue, and putting them somewhere this can read — a mounted volume,
+ * a build artefact, a signed URL on our own storage.
+ *
+ * Anything that is not obviously a URL is treated as a path, so
+ * CARDMARKET_PRICEGUIDE_URL=/data/price_guide_3.csv just works.
+ */
+async function readCsv(source: string): Promise<string> {
+  const buf = /^https?:\/\//i.test(source)
+    ? await fetchRemoteCsv(source)
+    : await readFile(source);
+  // Transparently gunzip gzip-magic (0x1f 0x8b) payloads, regardless of
+  // URL/extension — Cardmarket serves these gzipped.
   const isGzip = buf.length > 2 && buf[0] === 0x1f && buf[1] === 0x8b;
   return (isGzip ? gunzipSync(buf) : buf).toString("utf8");
+}
+
+async function fetchRemoteCsv(url: string): Promise<Buffer> {
+  // Deliberately a plain fetch with a plain Accept header and NO browser
+  // impersonation. If this is ever pointed at cardmarket.com directly it should
+  // fail loudly on their 403 rather than quietly succeed by pretending to be
+  // Chrome — the failure is the correct outcome, and disguising the client to
+  // avoid it is the thing this module must not do.
+  const res = await fetch(url, { headers: { Accept: "text/csv,application/gzip,*/*" } });
+  if (!res.ok) {
+    throw new Error(
+      `Cardmarket read ${res.status} for ${url}: ${(await res.text()).slice(0, 160)}` +
+        (res.status === 403
+          ? " — cardmarket.com blocks automated clients. Download the files from " +
+            "https://www.cardmarket.com/Data/Download while signed in and point " +
+            "CARDMARKET_PRICEGUIDE_URL / CARDMARKET_PRODUCTLIST_URL at the local files."
+          : ""),
+    );
+  }
+  return Buffer.from(await res.arrayBuffer());
 }
 
 export type CardmarketMatch = {
@@ -189,20 +240,37 @@ export function buildCardmarketRows(
 
   for (const prod of products) {
     const id = pick(prod, "idProduct", "Product ID", "id");
-    const name = pick(prod, "Name", "name", "Local Name", "English Name") ?? "";
+    const name = pick(prod, "Name", "name", "Local Name", "English Name", "enName") ?? "";
     if (!id) continue;
     const pg = priceById.get(id);
     if (!pg) continue;
 
     // LOW = lowest current (non-foil) listing — our closest analog to "from" price.
-    const lowEur = parseEur(pick(pg, "Low Price", "Avg. Sell Price", "Trend Price"));
-    if (lowEur == null) continue;
+    //
+    // BOTH COLUMN VOCABULARIES, because Cardmarket publishes two shapes of the
+    // same file and this code cannot be tested against either from here (the site
+    // 403s every automated client — see the configuration note above). The CSV
+    // download uses long headers ("Low Price", "Avg. Sell Price"); the JSON price
+    // guide uses short keys ("low", "avg", "trend"). Accepting both costs nothing
+    // and removes the most likely reason a first real run silently writes zero
+    // rows — which is exactly how this failed on its first dry-run, and the
+    // failure was invisible because a missing price `continue`s BEFORE the
+    // unmatched-sample counter (fixed below).
+    //
+    // ORDER IS THE CONTRACT, not just a fallback chain: LOW first because it is
+    // the "from" price this site promises. Trend/Avg are averages over time and
+    // would quietly turn a lowest-price comparison into an average-price one.
+    const lowEur = parseEur(pick(pg, "Low Price", "low", "Low", "Avg. Sell Price", "avg", "Trend Price", "trend"));
+    if (lowEur == null) {
+      if (unmatchedSamples.length < 25) unmatchedSamples.push(`${name} #${pick(prod, "Number", "Collector Number") ?? "?"} — NO PRICE COLUMN (${Object.keys(pg).join("/")})`);
+      continue;
+    }
 
     // Match: prefer collector number if the product file exposes one; else fall back
     // to an UNAMBIGUOUS name match (skip when a name maps to >1 card to avoid pricing
     // an alt-art/signature onto the wrong print).
     let cardId: string | undefined;
-    const numStr = pick(prod, "Number", "Collector Number", "CardNumber", "Card Number");
+    const numStr = pick(prod, "Number", "Collector Number", "CardNumber", "Card Number", "number", "Collector Nr.");
     if (numStr && numStr.includes("/")) {
       const [num, total] = numStr.split("/");
       const sc = setFromTotal(total);
@@ -221,19 +289,30 @@ export function buildCardmarketRows(
     const dedupe = `${cardId}|false`;
     if (seen.has(dedupe)) continue; // one standard row per card (unique key)
     seen.add(dedupe);
-    rows.push({
+    const url = cardmarketProductUrl(prod);
+    const base = {
       cardId,
       retailer: CARDMARKET_RETAILER,
       retailerName: "Cardmarket",
       title: name,
-      url: cardmarketProductUrl(prod),
+      url,
       condition: "NM",
       isFoil: false,
-      priceCents: Math.round(lowEur * EUR_TO_GBP * 100),
-      currency: "GBP",
-      country: "UK",
       inStock: true,
-    });
+    };
+    // UK: an EUR→GBP CONVERSION of a European marketplace aggregate. A reference,
+    // never a buyable UK listing — which is why it lives in UK_FALLBACK_RETAILERS.
+    rows.push({ ...base, priceCents: Math.round(lowEur * EUR_TO_GBP * 100), currency: "GBP", country: "UK" });
+    // EU: the SAME number, unconverted, because Cardmarket quotes in euro and the
+    // EU market prices in euro. This is the one market where this source is not
+    // an approximation at all — no FX rate sits between the figure Cardmarket
+    // publishes and the figure a European shopper reads.
+    //
+    // It is STILL a fallback (see EU_FALLBACK_RETAILERS in constants.ts), for the
+    // reason UK's is: it is a marketplace aggregate across many sellers, not one
+    // verified in-stock SKU at a store that will post it to you. It must never
+    // undercut a real EU store listing for the headline "from" price.
+    rows.push({ ...base, retailer: CARDMARKET_EU_RETAILER, priceCents: Math.round(lowEur * 100), currency: "EUR", country: "EU" });
   }
   return { total: products.length, matched, rows, unmatchedSamples };
 }
@@ -255,7 +334,7 @@ export async function refreshCardmarketPrices(): Promise<{ skipped: boolean; wri
     return { skipped: true, written: 0, reason: "CARDMARKET_PRODUCTLIST_URL / CARDMARKET_PRICEGUIDE_URL not set" };
   }
 
-  const [productCsv, priceCsv] = await Promise.all([fetchCsv(PRODUCTLIST_URL), fetchCsv(PRICEGUIDE_URL)]);
+  const [productCsv, priceCsv] = await Promise.all([readCsv(PRODUCTLIST_URL), readCsv(PRICEGUIDE_URL)]);
   const products = parseCsv(productCsv);
   const prices = parseCsv(priceCsv);
   const cards = await prisma.card.findMany({ select: { id: true, collectorNumber: true, nameNormalized: true, name: true } });
@@ -268,7 +347,7 @@ export async function refreshCardmarketPrices(): Promise<{ skipped: boolean; wri
     return { skipped: false, written: 0, reason: "0 rows built" };
   }
 
-  await prisma.retailerPrice.deleteMany({ where: { retailer: CARDMARKET_RETAILER } });
+  await prisma.retailerPrice.deleteMany({ where: { retailer: { in: [CARDMARKET_RETAILER, CARDMARKET_EU_RETAILER] } } });
   await prisma.retailerPrice.createMany({ data: rows });
   return { skipped: false, written: rows.length };
 }

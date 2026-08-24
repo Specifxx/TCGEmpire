@@ -1746,15 +1746,26 @@ export async function importPrices(): Promise<ImportSummary> {
     console.warn("TCGplayer import failed:", e);
   }
 
-  // ---- Cardmarket (UK fallback price) ------------------------------------------
-  // Flag-gated OFF (CARDMARKET_ENABLED) and pending a ToS sign-off — see cardmarket.ts.
-  // When enabled it adds an EUR→GBP-converted marketplace "from" price as a UK
-  // FALLBACK source (UK_FALLBACK_RETAILERS). Isolated so it never fails the import.
+  // ---- Cardmarket (UK + EU fallback price) -------------------------------------
+  // Flag-gated OFF (CARDMARKET_ENABLED) and pending a licence sign-off — see
+  // cardmarket.ts's header for the gate and its configuration note for why the
+  // files are read from disk rather than fetched.
+  //
+  // Writes TWO rows per card: an EUR→GBP conversion for UK, and the SAME figure
+  // unconverted for EU — Cardmarket quotes in euro, so for the eurozone this is
+  // the one reference source with no FX rate in the middle. Both are FALLBACKS
+  // (UK_FALLBACK_RETAILERS / EU_FALLBACK_RETAILERS): a marketplace aggregate
+  // across many sellers must never undercut a real store's in-stock listing.
+  //
+  // Worth more to EU than to UK, which is why the gate is worth resolving: the UK
+  // has 28 tracked stores and TCGplayer, while the EU has eleven stores for a
+  // whole continent because European singles trading happens on Cardmarket and
+  // CardTrader rather than on shop websites. Isolated so it never fails the import.
   try {
-    if (!onlyCountry || onlyCountry === "UK") {
+    if (!onlyCountry || onlyCountry === "UK" || onlyCountry === "EU") {
       const r = await refreshCardmarketPrices();
       if (!r.skipped && r.written > 0) {
-        summary.stores.push({ name: "Cardmarket (UK)", products: r.written, priced: r.written, matched: r.written, unmatched: 0 });
+        summary.stores.push({ name: "Cardmarket (UK+EU)", products: r.written, priced: r.written, matched: r.written, unmatched: 0 });
       } else if (r.skipped) {
         console.log(`Cardmarket: skipped (${r.reason}).`);
       }
