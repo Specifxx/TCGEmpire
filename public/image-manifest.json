@@ -1,4 +1,25 @@
 {
+  "/blog/best-basket-cheapest-riftbound-deck.png": {
+    "src": "/blog/best-basket-cheapest-riftbound-deck.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 40831,
+    "webp": "/blog/best-basket-cheapest-riftbound-deck.webp",
+    "webpBytes": 24836,
+    "avif": "/blog/best-basket-cheapest-riftbound-deck.avif",
+    "avifBytes": 13650,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/best-basket-cheapest-riftbound-deck-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/best-basket-cheapest-riftbound-deck-768w.webp"
+      }
+    ],
+    "fingerprint": "9ac0750e15cef860"
+  },
   "/blog/best-riftbound-marketplaces.png": {
     "src": "/blog/best-riftbound-marketplaces.png",
     "width": 1200,

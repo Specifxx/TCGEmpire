@@ -1264,6 +1264,76 @@ The two extra slots are worth more than they look. Eight slots usually forced yo
 Want to try these ideas out before committing? **[Price the final deck](/deck)** across every store first, so you know exactly what the build costs before you buy.`,
   },
   {
+    slug: "best-basket-cheapest-riftbound-deck",
+    category: "guide",
+    title: "Best Basket: The Cheapest Way to Buy a Riftbound Deck",
+    excerpt:
+      "Pricing every card at its own cheapest store usually means paying postage a dozen times over. Best Basket finds the store split that's actually cheapest delivered — here's exactly how it works.",
+    author: "RiftCompare",
+    date: "2026-08-24",
+    readMins: 6,
+    tags: ["best basket", "deckbuilding", "buying", "guide", "shipping"],
+    hero: {
+      src: "/blog/best-basket-cheapest-riftbound-deck.png",
+      alt: "Best Basket — the cheapest way to buy a Riftbound deck, comparing an optimised store split against the naive per-card total",
+    },
+    summary: [
+      "**The naive way to buy a deck — each card from whichever store has it cheapest — is usually NOT the cheapest way once shipping is counted.** A 40-card list priced that way can easily spread across a dozen stores, each charging its own postage.",
+      "**Best Basket solves a different problem**: not \"what's the cheapest price per card\" but \"what's the cheapest way to buy the WHOLE list\", factoring in every store's shipping cost and free-shipping threshold.",
+      "**It's free with any RiftCompare account** — no Premium required — and shows you the naive-split cost right alongside its optimised one, so the saving is a number you can check, not a claim.",
+      "Just pricing a list, not buying it yet? **[The free deck pricer](/deck)** needs no account at all.",
+    ],
+    browseCta: {
+      href: "/tools/best-basket",
+      label: "Try Best Basket →",
+      blurb: "Paste a decklist or use your wishlist and see the cheapest way to buy the whole thing.",
+    },
+    body: `Price a 40-card Riftbound deck the obvious way — open each card, buy it from whichever store is cheapest — and you'll usually end up with an order spread across eight, ten, sometimes fifteen different stores. Each one charges its own shipping. The "cheapest" card-by-card total quietly stops being the cheapest total once postage lands on top of it a dozen times.
+
+**[Best Basket](/tools/best-basket)** exists to fix exactly that. It's a free tool (any RiftCompare account, no Premium needed) that takes a full decklist and works out the cheapest way to buy *all of it*, not the cheapest way to buy each card in isolation.
+
+## The problem, concretely
+
+Say a 40-card list has its cheapest matches spread across 12 different stores. Buy it that way and you're paying 12 separate shipping charges — plus 12 separate deliveries to track, 12 separate free-shipping thresholds you're not close enough to hit, and a much higher chance one store is out of stock by the time you check out.
+
+Consolidate the same list into, say, 3 or 4 stores instead, and you often come out **cheaper overall** even though a few individual cards cost a little more than their absolute lowest listing — because you're paying shipping 3 or 4 times instead of 12, and you're more likely to clear each store's free-shipping threshold along the way. That trade-off — a few cents more per card against dramatically less postage — is exactly the calculation nobody wants to do by hand across a 40-card list and a dozen stores' worth of shipping policies.
+
+## How Best Basket actually works
+
+1. **Give it a list.** Paste any decklist in standard list format, or point it at your own wishlist/watchlist from your account. If you got here from a deck page, your list is often already pre-filled.
+2. **It prices every viable store split** — not just the single cheapest store for each card, but combinations of stores that carry enough of the list to be worth consolidating into, each with its real shipping cost and free-shipping threshold applied.
+3. **It shows you the comparison, not just the answer.** The result names the store split, the total delivered cost, and — right alongside it — what the "naive" per-card-cheapest approach would have cost and how many stores it would have needed. You can see the saving, not just be told one exists.
+4. **You check out at each store yourself.** Best Basket tells you where to buy; it doesn't process the order. Every store in the plan gets a direct link.
+
+## Best Basket vs. the free deck pricer
+
+RiftCompare has two related tools, and it's worth knowing which one you actually want:
+
+- **[The deck pricer](/deck)** — free, no account needed. Prices every card in a list at its own cheapest store and adds it up. Good for a quick "what's this deck worth" check.
+- **[Best Basket](/tools/best-basket)** — free with an account. Solves the harder, more useful question: what's the cheapest way to actually *buy* the list, once you stop pretending shipping is free.
+
+If you're pricing a list out of curiosity, the deck pricer is enough. If you're actually about to place an order, Best Basket is the one that saves you real money.
+
+## When it matters most
+
+- **Full 40-card decks**, where the naive approach realistically does spread across a dozen-plus stores.
+- **Cheap-to-mid-value staples** — commons and uncommons where postage is a large fraction of the card's own price, so consolidating a handful of $1-2 cards into one store's order genuinely moves the total.
+- **Rebuilding after a rotation or ban**, when you're replacing several cards at once rather than one at a time.
+
+It matters least for a single chase card or a short shopping list of two or three cards — there's no split to optimise when everything's coming from one order anyway.
+
+## Try it
+
+**[Open Best Basket](/tools/best-basket)**, paste in a decklist — your own, or one from the current **[meta decks](/decks)** — and see the store split for yourself. If you'd rather just price a list with no account, **[the deck pricer](/deck)** does that part for free.`,
+    faq: [
+      { q: "Is Best Basket free?", a: "Yes — Best Basket is free with a RiftCompare account. Just sign in (no card required); nothing about it is behind Premium." },
+      { q: "Does Best Basket account for shipping?", a: "Yes — that's the whole point. Buying each card from its individual cheapest store usually spreads an order over a dozen stores and buries the saving in postage. Best Basket prices every viable split across the stores that stock your list, including each store's shipping cost and free-shipping thresholds, and ranks results by what you'd actually pay delivered." },
+      { q: "What can I paste into Best Basket?", a: "Any decklist in standard list format, or your own wishlist/watchlist from your RiftCompare account. It matches by card name and set/collector number where given." },
+      { q: "Do I need an account just to price a list, not buy it?", a: "No — the free deck pricer at /deck needs no account at all if you only want per-card prices. An account is only needed for Best Basket's store-split optimisation, and that account is free." },
+      { q: "How much can Best Basket actually save on a full deck?", a: "It depends on the list and current stock, which is why the tool shows the real comparison rather than a fixed percentage: the naive per-card-cheapest total and store count, right next to its optimised split. Savings are largest on full 40-card lists heavy on cheap commons, where postage is a large share of each card's price." },
+    ],
+  },
+  {
     slug: "riftbound-booster-box-ev-worth-ripping-or-buying-singles",
     // Placed at the rip-or-buy verdict rather than the article's end: the closing
     // section walks back from the decision into caveats, so a reader who has

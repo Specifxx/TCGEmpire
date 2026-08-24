@@ -155,6 +155,12 @@ const HEROES: Hero[] = [
     title: "Where to Buy Riftbound Cards",
     chips: ["6 markets", "100+ stores", "Singles & sealed"],
   },
+  {
+    slug: "best-basket-cheapest-riftbound-deck",
+    kicker: "Guide · Deckbuilding",
+    title: "Best Basket: Cheapest Way to Buy a Deck",
+    chips: ["Free with account", "Shipping included", "vs. naive total"],
+  },
 ];
 
 const esc = (s: string) =>
