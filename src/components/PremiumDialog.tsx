@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useState } from "rea
 import Link from "next/link";
 import { useMe } from "@/lib/use-me";
 import { AnnualPriceBlock } from "./AnnualPriceBlock";
+import { TierComparisonTable } from "./TierComparisonTable";
 import { PREMIUM_PRICE_LABEL, PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, PREMIUM_ANNUAL_AMOUNT, annualSavingPct } from "@/lib/site";
 
 // A site-wide Premium upsell dialog so users can subscribe / start the trial from
@@ -15,15 +16,6 @@ const PremiumDialogContext = createContext<{ open: () => void }>({ open: () => {
 export function usePremiumDialog() {
   return useContext(PremiumDialogContext);
 }
-
-// Premium-ONLY perks (see the tier comment in lib/premium.ts).
-const FEATURES: { k: string; v: string }[] = [
-  { k: "Bulk Pricer", v: "price a whole list at once" },
-  { k: "Value Finder", v: "undervalued-card screener" },
-  { k: "Rising Cards", v: "demand + price-timing screener" },
-  { k: "Condition Calculator", v: "NM → LP → MP → HP → DMG value" },
-  { k: "Ad-free", v: "no ads on any page" },
-];
 
 const GOLD_BTN =
   "inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-sm font-bold text-ink-950 transition hover:brightness-110 disabled:opacity-50";
@@ -98,9 +90,35 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="RiftCompare Premium">
+    // THE OVERLAY SCROLLS; THE CARD DOES NOT CENTRE ITSELF OFF-SCREEN.
+    //
+    // This was `fixed inset-0 flex items-center justify-center` with an
+    // overflow-hidden card and no scroll container anywhere — the exact shape
+    // that made SignupPromoPopup impossible to close on short phones (fixed in
+    // 263eaeb, and measured there: the close button rendered at y = -131 on a
+    // 375x667 iPhone SE). Once a centred card grows taller than the viewport it
+    // overflows EQUALLY in both directions, so the header — and the ✕ pinned to
+    // it — sits above the top of the screen with nothing to scroll to reach it.
+    //
+    // That was latent here while the body was six short list rows. Adding the
+    // full tier table makes it certain, so the layout is fixed in the same
+    // commit rather than shipped broken and patched later:
+    //   overflow-y-auto on the overlay  — it becomes the scroll container
+    //   min-h-full (not h-full) wrapper — grows to a taller-than-viewport card
+    //                                     instead of overflowing above it
+    //   h-[100dvh] + safe-area insets   — inset-0 resolves against the LARGE
+    //                                     viewport on iOS Safari, which puts a
+    //                                     fixed element behind the browser chrome
+    //   max-h + internal scroll on the table so the CTA stays reachable
+    <div
+      className="fixed inset-0 z-[120] h-[100dvh] overflow-y-auto p-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))]"
+      role="dialog"
+      aria-modal="true"
+      aria-label="RiftCompare Premium"
+    >
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-lg overflow-hidden rounded-xl border border-ink-700 bg-ink-900 shadow-2xl">
+      <div className="relative flex min-h-full items-center justify-center">
+      <div className="relative w-full max-w-xl overflow-hidden rounded-xl border border-ink-700 bg-ink-900 shadow-2xl">
         {/* Terminal-style header bar */}
         <div className="flex items-center justify-between border-b border-ink-700 bg-ink-950/60 px-5 py-3">
           <div className="flex items-center gap-2">
@@ -118,15 +136,16 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
             Unlock the pro screeners and go ad-free. The portfolio tracker and price comparison stay free.
           </p>
 
-          <ul className="mt-4 divide-y divide-ink-800 border-y border-ink-800">
-            {FEATURES.map((f) => (
-              <li key={f.k} className="flex items-center gap-3 py-2.5">
-                <span className="text-gold" aria-hidden>▸</span>
-                <span className="text-sm font-semibold text-white">{f.k}</span>
-                <span className="ml-auto text-right text-xs text-slate-500">{f.v}</span>
-              </li>
-            ))}
-          </ul>
+          {/* The SAME rows /premium shows — see TierComparisonTable's header for
+              why this is imported rather than restated. Capped in height with its
+              own scroll so a 14-row table can never push the CTA below the fold
+              on a short screen. */}
+          <div className="mt-4 max-h-[45vh] overflow-y-auto rounded-lg border border-ink-800">
+            <TierComparisonTable compact />
+          </div>
+          <p className="mt-2 text-center text-[11px] text-slate-500">
+            Scroll the table for the full list · every row is a real entitlement
+          </p>
 
           <div className="mt-5">
             {!loaded ? (
@@ -214,6 +233,7 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
             </Link>
           </p>
         </div>
+      </div>
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import { isPremium, premiumCheckoutEnabled, premiumTrialEnabled, premiumAnnualEn
 import { PremiumCta } from "@/components/PremiumCta";
 import { ManageSubscriptionButton } from "@/components/ManageSubscriptionButton";
 import { AnnualPriceBlock } from "@/components/AnnualPriceBlock";
+import { TierComparisonTable } from "@/components/TierComparisonTable";
 import { SITE_URL, PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, PREMIUM_ANNUAL_AMOUNT } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -60,22 +61,6 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
 
 // The three tiers, in the order a visitor moves through them (see lib/premium.ts).
 // `true`/`false` render a tick/dash; a string renders verbatim.
-const COMPARE: { feature: string; anon: boolean | string; account: boolean | string; premium: boolean | string }[] = [
-  { feature: "Compare prices across every store + eBay", anon: true, account: true, premium: true },
-  { feature: "Full card database, search & browse", anon: true, account: true, premium: true },
-  { feature: "Deck builder, trade calculator & box EV", anon: true, account: true, premium: true },
-  { feature: "RiftCompare Index, movers & daily wrap", anon: true, account: true, premium: true },
-  { feature: "Price alerts", anon: false, account: true, premium: true },
-  { feature: "Portfolio tracker — history, P&L, CSV export", anon: false, account: true, premium: true },
-  { feature: "Best Basket — cheapest store split, postage included", anon: false, account: true, premium: true },
-  { feature: "Deal Finder", anon: "Top pick", account: "Top pick", premium: "Full list" },
-  { feature: "Rising Cards", anon: "Top pick", account: "Top pick", premium: "Full list" },
-  { feature: "Value Finder screener", anon: false, account: false, premium: true },
-  { feature: "Bulk Pricer — price a whole list at once", anon: false, account: false, premium: true },
-  { feature: "Condition Impact Calculator", anon: false, account: false, premium: true },
-  { feature: "Ad-free experience", anon: false, account: false, premium: true },
-];
-
 const INCLUDED = [
   "Bulk Pricer",
   "Value Finder screener",
@@ -86,11 +71,6 @@ const INCLUDED = [
   "Everything in the free account tier",
 ];
 
-function Cell({ v }: { v: boolean | string }) {
-  if (v === true) return <span className="font-bold text-brand-400" aria-label="Included">✓</span>;
-  if (v === false) return <span className="text-slate-600" aria-label="Not included">—</span>;
-  return <span className="text-xs font-semibold text-slate-300">{v}</span>;
-}
 
 export default async function PremiumPage() {
   const user = await getCurrentUser();
@@ -220,31 +200,8 @@ export default async function PremiumPage() {
         <p className="mb-3 text-center text-xs text-slate-500">
           A free account unlocks alerts, your portfolio and price history — Premium adds the list-pricing tools and the pro screeners.
         </p>
-        <div className="card-surface overflow-x-auto p-1">
-          <table className="w-full min-w-[560px] border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-ink-700 text-left">
-                <th className="px-3 py-2.5 font-semibold text-slate-400">Feature</th>
-                <th className="w-24 px-3 py-2.5 text-center font-semibold text-slate-400">
-                  No account
-                </th>
-                <th className="w-24 px-3 py-2.5 text-center font-bold text-brand-300">
-                  Free account
-                </th>
-                <th className="w-24 px-3 py-2.5 text-center font-bold text-gold">Premium</th>
-              </tr>
-            </thead>
-            <tbody>
-              {COMPARE.map((r) => (
-                <tr key={r.feature} className="border-b border-ink-800 last:border-0">
-                  <td className="px-3 py-2.5 text-slate-200">{r.feature}</td>
-                  <td className="px-3 py-2.5 text-center"><Cell v={r.anon} /></td>
-                  <td className="px-3 py-2.5 text-center"><Cell v={r.account} /></td>
-                  <td className="px-3 py-2.5 text-center"><Cell v={r.premium} /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="card-surface p-1">
+          <TierComparisonTable />
         </div>
         {!user && (
           <p className="mt-3 text-center text-xs text-slate-400">
