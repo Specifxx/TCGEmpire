@@ -244,11 +244,25 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 export default async function CardPage({ params }: { params: { id: string } }) {
   const card = await prisma.card.findFirst({
     where: whereParam(params.id),
-    include: {
+    // Explicit column list, not `include`: `include` returns EVERY scalar on Card,
+    // and this page never reads most of them — externalId, nameNormalized,
+    // imageHash, marketPriceCents, the six lowestPrice* columns, the view/search
+    // counters or the timestamps. Select only what the page and its helpers
+    // (CardImage, buildFaqs, printingKind/Label, cardDisplayName/SearchName,
+    // getCardPriceState) actually render. description/flavorText/tags and the image
+    // columns ARE used, so they stay.
+    select: {
+      id: true, slug: true, name: true,
+      setCode: true, setName: true, collectorNumber: true,
+      domain: true, type: true, rarity: true,
+      variant: true, isOvernumbered: true, isPromo: true,
+      orientation: true, energyCost: true, might: true, power: true,
+      tags: true, description: true, flavorText: true,
+      imageUrl: true, imageThumbUrl: true, blurDataUrl: true, artSeed: true,
       // ALL markets' listings — the client market section filters to the visitor's
       // country, so a market switch is instant and never re-renders the server page.
       // Select ONLY the columns MarketRow needs: this query returns the most rows
-      // (every listing × 4 markets), so trimming columns is the biggest per-render
+      // (every listing × all markets), so trimming columns is the biggest per-render
       // egress cut on the site's highest-volume page.
       retailerPrices: {
         orderBy: { priceCents: "asc" },
