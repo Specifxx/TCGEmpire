@@ -20,6 +20,13 @@ export const CARDMARKET_RETAILER = "cardmarket";
 // ebay/ebay_us/ebay_uk and the marketplace has marketplace_*.
 export const CARDMARKET_EU_RETAILER = "cardmarket_eu";
 
+// Retailer key for CardTrader, the EU market's price source (lib/cardtrader.ts).
+// UNLIKE the two above, this is NOT a converted fallback: each row is one real,
+// in-stock listing from one identified EU seller, quoted in EUR, so it can carry
+// the EU "from" price on its own the way a genuine Shopify store listing carries
+// the UK's. Kept out of UK_FALLBACK_RETAILERS deliberately for that reason.
+export const CARDTRADER_RETAILER = "cardtrader";
+
 // Converted, non-buyable-as-shown UK price sources. These are EXCLUDED from the UK
 // "from" price and HIDDEN from the UK listing breakdown whenever a genuine GBP
 // listing exists, and only used as a fallback when none does. Real UK stores and
