@@ -125,6 +125,30 @@ const HEROES: Hero[] = [
     title: "T1 Signature Edition Drawing",
     chips: ["Opens 14 Aug, 9am PT", "Closes 17 Aug, 6pm PT", "10,125 copies · US$360"],
   },
+  {
+    slug: "best-riftbound-price-comparison-sites",
+    kicker: "Comparison · Price tools",
+    title: "Best Riftbound Price Comparison Sites",
+    chips: ["10 sites ranked", "5 criteria scored", "RiftCompare #1"],
+  },
+  {
+    slug: "riftcompare-launches-in-the-eu",
+    kicker: "News · EU launch",
+    title: "RiftCompare Is Now Live in the EU",
+    chips: ["11 real EU stores", "Priced in EUR", "6th market"],
+  },
+  {
+    slug: "buy-riftbound-cards-europe",
+    kicker: "Buying guide · Europe",
+    title: "Riftbound Card Prices: Europe",
+    chips: ["11 EU stores", "Priced in EUR", "6 countries"],
+  },
+  {
+    slug: "where-to-buy-riftbound-cards",
+    kicker: "Guide · Where to buy",
+    title: "Where to Buy Riftbound Cards",
+    chips: ["6 markets", "100+ stores", "Singles & sealed"],
+  },
 ];
 
 const esc = (s: string) =>

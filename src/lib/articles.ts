@@ -636,14 +636,19 @@ New to the game entirely? Start with **[Riftbound for beginners](/guides/riftbou
       { label: "Vendetta singles & sealed", query: "Riftbound Vendetta" },
     ],
     category: "guide",
-    title: "Where to Buy Riftbound Cards (Australia, US & UK)",
+    title: "Where to Buy Riftbound Cards (6 Markets, 100+ Stores)",
     excerpt:
       "The complete guide to buying Riftbound: League of Legends TCG cards — singles and sealed — in Australia, the United States, the United Kingdom, Singapore, Canada and the EU, and how to always find the cheapest price.",
     author: "RiftCompare",
     date: "2026-06-08",
-    readMins: 6,
+    updated: "2026-08-24",
+    hero: {
+      src: "/blog/where-to-buy-riftbound-cards.png",
+      alt: "Where to buy Riftbound cards — 6 markets and over 100 tracked stores, singles and sealed",
+    },
+    readMins: 9,
     tags: ["buying", "guide", "stores", "singles", "sealed"],
-    body: `Want to buy **Riftbound: League of Legends TCG** cards but not sure where to start? Whether you're chasing a single chase card, completing a deck, or grabbing a sealed booster box, this guide covers exactly **where to buy Riftbound cards** in **Australia, the United States and the United Kingdom** — and how to make sure you never overpay.
+    body: `Want to buy **Riftbound: League of Legends TCG** cards but not sure where to start? Whether you're chasing a single chase card, completing a deck, or grabbing a sealed booster box, this guide covers exactly **where to buy Riftbound cards** in **Australia, the United States, the United Kingdom, Singapore, Canada and the EU** — over 100 tracked stores between them — and how to make sure you never overpay.
 
 The short version: prices for the same card vary a lot between shops and change daily, so the smartest move is to **[compare every store at once on RiftCompare](/browse)** and buy from whichever is cheapest in your country. Here's how to do it region by region.
 
@@ -679,6 +684,29 @@ UK players can buy Riftbound singles in GBP from a growing list of British TCG r
 - **[Sealed products](/sealed)** are listed too.
 - **Tip:** the UK singles market is still maturing, so for some cards a converted reference price is shown until a genuine in-stock GBP listing appears — always confirm on the retailer's page before buying.
 
+## 🇸🇬 Buying Riftbound cards in Singapore
+
+Riftbound arrived in Southeast Asia with Singapore's card shops stocking up fast, plus eBay Singapore filling in the gaps.
+
+- Switch the country to **Singapore** and **[browse the database](/browse)** for live SGD prices across Singapore stores and eBay SG.
+- Where no local store has a card in stock yet, TCGplayer's market price converts to SGD as a clearly-marked reference — never mistaken for a local listing.
+- **Tip:** stores without their own webstore yet are still listed on the **[stores we track](/stores/tracked)** page and start showing prices the moment they sell online — worth a bookmark if you're chasing a card from a specific shop.
+
+## 🇨🇦 Buying Riftbound cards in Canada
+
+Canada has a large and growing Riftbound retailer base, with prices that swing 30–50% between stores once shipping is counted.
+
+- Set the country to **Canada** and **[search the database](/browse)** for live CAD prices across Canadian stores.
+- **[Sealed product](/sealed)** — boxes and packs — is compared the same way.
+- **Tip:** with dozens of stores tracked, free-shipping thresholds do a lot of the work — RiftCompare factors each store's threshold into the ranking automatically, so you're comparing what you'd actually pay, not just the sticker price.
+
+## 🇪🇺 Buying Riftbound cards in the EU
+
+The eurozone is priced as **one market**, not one per country — a card listed in Rotterdam is the same EUR price to a buyer in Madrid, with no conversion and no customs, because the eurozone shares both a currency and a customs union.
+
+- Switch the country to **Europe (EU)** and **[browse the database](/browse)** for live EUR prices sourced from real eurozone stores across Austria, Spain, Portugal, the Netherlands, Germany and Italy.
+- **Tip:** postage estimates shown are domestic rates. Buying across a border inside the EU needs no currency conversion or customs form, but postage itself still runs higher — check the store's shipping-policy link for the real rate before you buy. See the full **[EU buying breakdown](/blog/buy-riftbound-cards-europe)** for the exact stores and why eleven is the honest number right now, not a hundred.
+
 ## Singles vs sealed: which should you buy?
 
 - **Buying specific cards** (to finish a deck or grab a chase card)? Buy **singles** — it's almost always cheaper than ripping packs and chasing the card you need. Start on the **[card database](/browse)**.
@@ -699,7 +727,7 @@ Set your country, **[open the card database](/browse)**, find your card, and cli
 
 ## Buying in a specific market?
 
-Deeper dives per region — real store counts, presale links and payment tips: **[Australia](/blog/buy-riftbound-cards-australia)** · **[United States](/blog/buy-riftbound-cards-us)** · **[United Kingdom](/blog/buy-riftbound-cards-uk)**. Just want the cheapest single right now? **[See where to buy singles](/blog/where-to-buy-riftbound-singles)**.
+Deeper dives per region — real store counts, presale links and payment tips: **[Australia](/blog/buy-riftbound-cards-australia)** · **[United States](/blog/buy-riftbound-cards-us)** · **[United Kingdom](/blog/buy-riftbound-cards-uk)** · **[Singapore](/blog/riftbound-price-comparison-singapore)** · **[Canada](/blog/buy-riftbound-cards-canada)** · **[the EU](/blog/buy-riftbound-cards-europe)**. Just want the cheapest single right now? **[See where to buy singles](/blog/where-to-buy-riftbound-singles)**.
 
 ## Where to buy Riftbound FAQ
 
@@ -728,6 +756,7 @@ market, on delivered cost.
       { q: "Is it cheaper to buy Riftbound singles or sealed product?", a: "For a specific card you've already chosen, singles are almost always cheaper — sealed means paying for many cards you didn't need. Sealed makes sense when you want the experience of opening packs." },
       { q: "Do Riftbound prices differ between countries?", a: "Yes, and not just by exchange rate. Regional allocation, local stock levels and import costs all affect price. RiftCompare prices each market in its own currency from stores that actually ship there." },
       { q: "Does RiftCompare sell cards directly?", a: "No — RiftCompare is a price-comparison tool that links you through to the retailer with the best price; you always buy from the store itself." },
+      { q: "Which countries does RiftCompare cover?", a: "Six markets: Australia, the United States, the United Kingdom, Singapore, Canada and the EU (priced as one eurozone market in EUR). Each is priced in its own currency from stores that actually ship there — over 100 tracked stores across all six." },
     ],
   },
   {
@@ -3493,9 +3522,13 @@ See the full **[Vendetta card list](/guides/riftbound-vendetta-card-list)**, bro
       "Compare Riftbound singles across the eurozone stores that actually stock them — live EUR prices ranked by total delivered cost. Free, updated daily.",
     author: "RiftCompare",
     date: "2026-08-23",
-    updated: "2026-08-23",
+    updated: "2026-08-24",
     readMins: 4,
     tags: ["europe", "spain", "buying guide", "price comparison", "riftbound singles", "eur"],
+    hero: {
+      src: "/blog/buy-riftbound-cards-europe.png",
+      alt: "Riftbound card prices in Europe — eleven real eurozone stores compared, priced natively in EUR",
+    },
     shop: [
       { label: "Riftbound singles on eBay", query: "Riftbound singles" },
       { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
@@ -3539,13 +3572,13 @@ Buying a whole deck? The **[deck pricer](/deck)** takes a full list and works ou
 
 ## One honest caveat about shipping
 
-Our delivered-cost ranking uses each store's **domestic** postage estimate. Inside your own country that is close to right. Buying across a border — Spain from the Netherlands — postage runs several times higher, even though the item price needs no conversion and clears no customs. So treat a cross-border result as "cheapest item price, check their postage", and use the shipping-policy link on the store's row for the real current rate. Twenty-six of the thirty publish one.
+Our delivered-cost ranking uses each store's **domestic** postage estimate. Inside your own country that is close to right. Buying across a border — Spain from the Netherlands — postage runs several times higher, even though the item price needs no conversion and clears no customs. So treat a cross-border result as "cheapest item price, check their postage", and use the shipping-policy link on the store's row for the real current rate. Nine of the eleven publish one.
 
 We would rather tell you that than quietly show you a number that flatters us.
 
 ## A note on where this market came from
 
-A Spanish shop wrote to us asking to be listed, and said the Spanish market was growing fast and worth covering. They were right, and this market is the result. Spain's Riftbound trade turned out to run largely on shop platforms we cannot yet read prices from, which is why the Spanish list here is eight stores rather than thirty — that is a gap on our side, not a shortage of Spanish shops, and it is the next thing we are fixing.
+A Spanish shop wrote to us asking to be listed, and said the Spanish market was growing fast and worth covering. They were right, and this market is the result. We swept 421 eurozone shop domains looking for real singles inventory, in Spanish, German, Italian, Dutch and French — the eleven above are what actually clears the bar. Most European card shops sell sealed product only through their own site, and a good chunk of the rest run on shop platforms we cannot yet read prices from (PrestaShop, WooCommerce). That is a gap on our side, not a shortage of European shops, and it is the next thing we are fixing.
 
 Run a European store selling Riftbound? **[Get listed free](/stores/suggest)** — free listing, more customers.
 
@@ -3754,6 +3787,219 @@ Shopping from **[Australia](/blog/buy-riftbound-cards-australia)** or **[the US]
 Run a Canadian store selling Riftbound? [Get listed free](/stores/suggest) — more visibility, more customers. Everyone else: start at the [card database](/browse) and pay less for your next pickup.
 
 Shopping from [Australia](/blog/buy-riftbound-cards-australia), [the US](/blog/buy-riftbound-cards-us), [the UK](/blog/buy-riftbound-cards-uk) or [Singapore](/blog/riftbound-price-comparison-singapore)? We've got a dedicated breakdown for those markets too — or see the [full multi-market guide](/guides/where-to-buy-riftbound-cards).`,
+  },
+  {
+    slug: "riftcompare-launches-in-the-eu",
+    marketData: "EU",
+    category: "blog",
+    title: "RiftCompare Is Now Live in the EU",
+    excerpt:
+      "RiftCompare's sixth market is here: the eurozone, priced natively in EUR from eleven real EU stores — not a currency conversion over UK prices. Here's exactly what changed and why.",
+    author: "RiftCompare",
+    date: "2026-08-24",
+    updated: "2026-08-24",
+    readMins: 6,
+    tags: ["europe", "announcement", "news", "eur", "price comparison"],
+    hero: {
+      src: "/blog/riftcompare-launches-in-the-eu.png",
+      alt: "RiftCompare is now live in the EU — the sixth priced market, eleven real eurozone stores, priced natively in EUR",
+    },
+    summary: [
+      "**RiftCompare now prices the eurozone as its own market** — EUR, sourced from eleven real EU stores, not a converted UK price.",
+      "**Before this, an EU visitor saw a UK price with a currency label swapped** — same GBP stores, same GBP-shaped postage, just relabelled in EUR. That's gone.",
+      "**The eurozone is priced as ONE market, not per country**, because it shares both a currency and a customs union — a genuinely buyable price across borders in a way a single-country market couldn't be.",
+      "It exists because **a Spanish store asked us to cover their market** — see [where to buy in the EU](/blog/buy-riftbound-cards-europe) for the full store list and how to use it.",
+    ],
+    shop: [
+      { label: "Riftbound singles on eBay", query: "Riftbound singles" },
+      { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
+    ],
+    body: `**RiftCompare now has a real EU market.** Switch the country selector to **Europe (EU)** and every price is EUR, sourced from real eurozone stores — not a UK price with a currency symbol swapped, which is what an EU visitor saw here until now.
+
+## What actually changed
+
+Before today, an EU shopper landed on RiftCompare and got routed to the **UK market**: real UK stores, real GBP stock — just displayed to you in EUR at a rough conversion rate, because it was the closest currency and postage match RiftCompare had. That number was honest about being a conversion, but it was still, structurally, someone else's market wearing your currency.
+
+As of this market, that's gone for eurozone visitors. **Europe (EU) is now its own priced market**, the sixth alongside Australia, the US, the UK, Singapore and Canada — with its own real store inventory, its own EUR prices, and no conversion step in between.
+
+| | Before | Now |
+| --- | --- | --- |
+| Currency shown | EUR (display only) | EUR (native) |
+| Stores priced | UK stores (GBP inventory) | 11 real eurozone stores |
+| What "cheapest" meant | Cheapest in the UK, relabelled | Cheapest actually in the eurozone |
+| Cross-border buying | N/A — it was one country's stock | Real — same currency, same customs union |
+
+## Why the whole eurozone is one market, not one per country
+
+This is the part worth understanding, because it's not how any of RiftCompare's other markets work. Every other market on the site is one country. The EU is roughly twenty.
+
+We tried the single-country version first: **Germany, added and removed on the same day** in August. Not because German stores don't exist — because one country's worth of them wasn't enough to build a real price comparison out of. A market with three or four stores in it isn't a comparison, it's a coincidence.
+
+The eurozone fixes that structurally, not by trying harder to find German stores, but by asking a different question. Eurozone countries share a **currency** and a **customs union**. A store in Rotterdam selling at €4.20 is €4.20 to a buyer in Madrid — no conversion, no import duty, no customs form. That means "the cheapest EUR listing anywhere in the eurozone" is a genuinely buyable number, in a way "the cheapest listing in one specific country" mostly wasn't. Pool the stores across the whole currency union and you get a market deep enough to actually compare — eleven real stores, across six countries, rather than three in one.
+
+## The honest version of "eleven stores"
+
+We didn't stop at eleven because eleven was easy. We swept **421 eurozone shop domains** — Spanish, German, Italian, Dutch, French and English searches — for anything selling Riftbound. Most of what we found sells **sealed product only**: booster boxes, displays, champion decks, no singles through their own site at all. Eleven is what's left once you filter for stores that actually run a real singles inventory on their own storefront, confirmed on a live probe.
+
+That number will grow — we're actively working through stores running on platforms (WooCommerce, PrestaShop) our importer doesn't read yet, which is most of what's left. It won't come from lowering the bar.
+
+## Why this shipped now
+
+A Spanish card store wrote to us directly, asking to be listed and pointing out that the Spanish Riftbound scene was growing fast. They were right, and pulling that thread — "how many EU stores actually sell singles" — is what turned into this market. If you run a European store and want to be part of the comparison, **[the listing form is free](/stores/suggest)**.
+
+## What this doesn't cover yet — and won't pretend to
+
+The biggest source of real Riftbound singles trading in Europe isn't any of the eleven stores above — it's **Cardmarket** and **CardTrader**, the two pan-European marketplaces most European collectors already use. RiftCompare doesn't price those yet. Cardmarket's terms require their written permission before their price data can be shown elsewhere, and we're not going to quietly work around that — so it's off until that permission is in place, not hidden behind a flag hoping nobody notices. When it lands, we'll say so here.
+
+## Try it
+
+Set the country selector to **🇪🇺 Europe (EU)**, or if you're browsing from inside the eurozone it should already have picked it up automatically. **[See the full store-by-store EU buying guide](/blog/buy-riftbound-cards-europe)** for exactly which eleven stores, what they carry, and the one honest caveat about cross-border shipping. Or just **[search any card](/browse)** and see the EUR price for yourself.
+
+Buying from outside the eurozone? RiftCompare also covers **[Australia](/blog/buy-riftbound-cards-australia)**, **[the US](/blog/buy-riftbound-cards-us)**, **[the UK](/blog/buy-riftbound-cards-uk)**, **[Singapore](/blog/riftbound-price-comparison-singapore)** and **[Canada](/blog/buy-riftbound-cards-canada)** — or see the **[full multi-market guide](/guides/where-to-buy-riftbound-cards)**.`,
+    faq: [
+      { q: "Does RiftCompare support the EU?", a: "Yes — the eurozone is RiftCompare's sixth priced market, added alongside Australia, the US, the UK, Singapore and Canada. Prices are in EUR, sourced from eleven real eurozone stores across Austria, Spain, Portugal, the Netherlands, Germany and Italy." },
+      { q: "Is the EU price just a currency conversion?", a: "No, not anymore. Before this market existed, EU visitors saw UK store prices (GBP) converted and displayed in EUR. The EU is now its own market with its own real store inventory priced natively in EUR — no conversion step." },
+      { q: "Why is the EU one market instead of one per country?", a: "The eurozone shares a currency and a customs union, so a price in one member state is a real, buyable number to a shopper in another — no conversion, no import duty. That let us pool stores across the whole eurozone into one comparison deep enough to be useful, rather than splitting them into single-country markets too thin to compare." },
+      { q: "Does RiftCompare show Cardmarket prices?", a: "Not yet. Cardmarket's terms require their written permission before their price data can be redisplayed elsewhere, and RiftCompare doesn't have that yet, so it isn't shown. The eleven stores currently tracked run their own independent storefronts." },
+      { q: "How many EU stores does RiftCompare track?", a: "Eleven, across six countries — three in Germany, three in Italy, two in Spain, and one each in Austria, Portugal and the Netherlands — after sweeping 421 eurozone shop domains for stores that carry a real singles inventory, not just sealed product." },
+    ],
+  },
+  {
+    slug: "best-riftbound-price-comparison-sites",
+    category: "blog",
+    title: "Best Riftbound Price Comparison Sites, Ranked",
+    excerpt:
+      "TCGplayer, Cardmarket, Bilgewater Market, TCG Snoop, TCGCompare and more — every real Riftbound price site compared on independent-store coverage, delivered cost, and whether the price you see is a live listing or someone else's reference number.",
+    author: "RiftCompare",
+    date: "2026-08-24",
+    updated: "2026-08-24",
+    readMins: 13,
+    tags: ["price comparison", "comparison", "tcgplayer", "cardmarket", "best sites", "tools", "buying guide"],
+    hero: {
+      src: "/blog/best-riftbound-price-comparison-sites.png",
+      alt: "Best Riftbound price comparison sites ranked — 10 sites scored on 5 criteria, RiftCompare #1",
+    },
+    summary: [
+      "**RiftCompare ranks #1** on the criteria that actually decide where you should buy: independent-store coverage across six real markets, delivered cost (not sticker price), and exact-printing matching. We explain exactly why below, scored against nine other real, named sites — not a strawman.",
+      "**The insight most of these sites won't tell you:** several of the biggest names in Riftbound price tracking — Magical Meta, Riftbound Stats, and TCGplayer's own market price — are reading the SAME underlying number. Check three different \"price trackers\" and you can see one figure three times, not three independent opinions.",
+      "**Marketplaces (TCGplayer, Cardmarket, eBay) show you THEIR sellers' prices**, not the market's. That's a completely different question from \"who's cheapest right now, everywhere, delivered to me\" — which is the one this list is actually built to answer.",
+      "This is our own tool, so read the ranking with that in mind — every claim below is checkable in a couple of minutes. **[Run a card you already know the price of](/browse)** and see for yourself.",
+    ],
+    itemList: {
+      name: "Best Riftbound price comparison sites, ranked",
+      items: [
+        { name: "RiftCompare", description: "Live prices from independent stores across 6 real markets, ranked by delivered cost, matched by exact printing.", url: "/browse" },
+        { name: "TCGplayer", description: "The largest US Riftbound marketplace and the reference price most other trackers actually re-display.", url: "https://www.tcgplayer.com/categories/trading-and-collectible-card-games/riftbound-league-of-legends-trading-card-game" },
+        { name: "Cardmarket", description: "Europe's dominant TCG marketplace, VAT-inclusive pricing across the eurozone.", url: "https://www.cardmarket.com" },
+        { name: "TCGCompare", description: "A multi-TCG comparison app covering 1,000+ stores, with a dedicated Riftbound section geared toward sealed product.", url: "https://www.tcgcompare.com/riftbound" },
+        { name: "Bilgewater Market", description: "A Riftbound-dedicated price database with CN/EN dual-market tracking and a peer-to-peer trade board.", url: "https://bilgewatermarket.com" },
+        { name: "eBay", description: "The largest global marketplace for Riftbound singles and sealed, with no dedicated price-comparison tooling of its own.", url: "https://www.ebay.com" },
+        { name: "TCG Snoop", description: "A multi-TCG comparison engine covering 30+ Australian stores — real, but single-market and not Riftbound-specific.", url: "https://www.tcgsnoop.com.au" },
+        { name: "Magical Meta", description: "A deck builder and tier-list site with a Riftbound price tracker built on TCGplayer's market price.", url: "https://magicalmeta.ink/riftbound" },
+        { name: "Riftbound Stats", description: "A competitive decklist and meta database with a daily TCGplayer-based price tracker attached.", url: "https://www.riftboundstats.com" },
+        { name: "PriceCharting", description: "A historical and graded-card price guide built from past eBay sales — useful for collectors, not for finding today's cheapest listing.", url: "https://www.pricecharting.com/console/riftbound-origins" },
+      ],
+    },
+    shop: [
+      { label: "Riftbound singles on eBay", query: "Riftbound singles" },
+      { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
+    ],
+    body: `Search "Riftbound price comparison" or the name of pretty much any of these sites and you'll find a handful of genuinely different tools that all sound like they answer the same question. They don't. Some show you a marketplace's own listings. Some show you a reference price copied from somewhere else. Only a few actually compare independent stores against each other and tell you what you'd really pay, delivered.
+
+We ranked ten real sites — by name, on stated criteria — against the one question that actually matters when you're about to spend money: **if I search for this exact card right now, which of these tells me the truth about who's cheapest?**
+
+## How we scored these
+
+Five criteria, all checkable in a couple of minutes on any of these sites:
+
+1. **Independent-store coverage** — does it compare prices across multiple separate stores, or show one marketplace's own sellers?
+2. **Delivered cost** — does the ranking include shipping, or just the sticker price?
+3. **Live vs. reference pricing** — is the number a real in-stock listing, or a market-price estimate pulled from somewhere else?
+4. **Exact-printing precision** — does it distinguish Signature, Overnumbered, Showcase and alt-art printings, or lump "a copy of this card" together?
+5. **Market breadth** — how many countries/currencies does it actually price natively, versus converting or defaulting to one?
+
+## The ranking
+
+### 1. RiftCompare
+
+**[RiftCompare](/browse)** compares live prices from **independent stores across six real markets** — Australia, the US, the UK, Singapore, Canada and the EU — each priced natively in its own currency, plus eBay and TCGplayer reference pricing where a market has thin local coverage. Every comparison ranks by **total delivered cost** (price plus shipping, with free-shipping thresholds factored in automatically), and every match is by **exact printing** — a Signature or Overnumbered chase card is never confused with the base print.
+
+That combination — independent stores, delivered cost, exact printing, six real markets — is the actual gap every other name on this list has in at least one place. None of them clear all five criteria at once. It's also completely free, with no signup required to compare, and it's the only one on this list that adds a deal finder, a value screener, a whole-deck pricer (Best Basket), price-drop alerts and a weekly price-movers digest on top of the comparison itself.
+
+### 2. TCGplayer
+
+TCGplayer is the largest dedicated Riftbound marketplace and the industry-standard US reference price — genuinely the biggest, deepest Riftbound inventory that exists in one place, and several of the other tools on this list (see #8 and #9) build their entire price tracker on top of TCGplayer's number rather than sourcing their own. That's the catch: TCGplayer's price is **its own marketplace's listings**, not a comparison across other stores, and its "market price" is often a rolling average rather than a specific in-stock item you can click and buy right now. It's US-centric — genuinely useful internationally, but not natively priced in every other currency RiftCompare's six markets are, the way a real local market is.
+
+### 3. Cardmarket
+
+Cardmarket is Europe's dominant TCG marketplace, VAT-inclusive and deep in exactly the region RiftCompare's own EU coverage is newest and thinnest (see our [honest EU store list](/blog/buy-riftbound-cards-europe) — eleven independent stores, not a hundred). Like TCGplayer, it's a marketplace showing **its own sellers**, not a cross-store comparison — you're seeing Cardmarket listings, not Cardmarket-versus-everyone-else. If most of your buying is in the eurozone and you're comfortable with a marketplace model, it's a genuinely strong option; it just answers a different question than "who's cheapest across every store that ships to me."
+
+### 4. TCGCompare
+
+TCGCompare is a real multi-TCG comparison app with a dedicated Riftbound section, publicly claiming coverage of 1,000+ stores and price alerts across the US, UK, Canada and Europe — genuinely the broadest raw store count on this list. Its public-facing content leans heavily toward **sealed product** (booster boxes, starter decks) rather than singles-level comparison, and we couldn't confirm it applies the same exact-printing precision or delivered-cost ranking to individual card listings that it does to sealed product. If you're comparing box prices across a huge net of stores, it's worth checking; for a specific single's exact printing, verify what you're actually being shown.
+
+### 5. Bilgewater Market
+
+Bilgewater Market is the most genuinely Riftbound-native name on this list — a dedicated Riftbound price database with a real, differentiated feature nobody else here has: **dual CN/EN market tracking** and a **peer-to-peer trade board** spanning 17 currencies across a long list of regions. If you're trading directly with other collectors, especially across the English/Chinese print divide, it's a real, useful tool with no equivalent on this list. What it isn't is a live multi-store comparison engine — its core price is a market reference plus classifieds-style buy/sell listings, not a ranked, delivered-cost comparison across many independent storefronts.
+
+### 6. eBay
+
+eBay is the largest global marketplace touching Riftbound, and its sheer reach means a genuinely cheap listing does turn up there — but it has no Riftbound-specific tooling at all. No printing-precision matching, no delivered-cost ranking, no market-specific pricing beyond whichever eBay domain you happen to be on. It's a source RiftCompare itself pulls into its own comparison rather than a comparison tool in its own right.
+
+### 7. TCG Snoop
+
+TCG Snoop is a real, solid multi-TCG price comparison engine — Magic, Pokémon, Yu-Gi-Oh, Lorcana, One Piece and Riftbound — across 30+ Australian stores. It does the actual job (independent-store comparison) well for the one market it covers. The gap is scope: it's Australia-only, and Riftbound is one of several games it tracks rather than the thing it's built around, so depth on Riftbound specifically — chase-printing precision, set-by-set tooling — isn't its focus the way it is for a Riftbound-dedicated tool.
+
+### 8. Magical Meta
+
+Magical Meta is primarily a deck builder and meta/tier-list site, with a Riftbound price tracker attached that runs on **TCGplayer's market price** — hourly refreshed, but the same underlying US number as TCGplayer itself, not an independent read. Its deck builder, set explorer and sealed-product tracker are genuinely useful tools for building and pricing a list; for finding the cheapest place to actually buy a card, you're seeing TCGplayer's number with a different layout around it.
+
+### 9. Riftbound Stats
+
+Riftbound Stats markets itself around competitive data — 12,000+ decklists across 90+ events — with a price tracker layered on top, again sourced from **daily TCGplayer updates** rather than an independent multi-store read. For meta analysis and tournament data it's a strong, dedicated resource; for pricing, it's the same TCGplayer reference number showing up a third time on this list.
+
+### 10. PriceCharting
+
+PriceCharting is a historical and graded-card price guide, built from **past eBay sales** rather than live current listings. It's genuinely useful for a different job entirely — "what has this graded card actually sold for over time" — which none of the other nine tools on this list answer well. It is not the right tool for "who has this in stock and what would I pay right now," which is the question everything else on this list is trying to answer.
+
+## The ranking at a glance
+
+| Site | Independent stores | Delivered cost | Live pricing | Exact printing | Markets |
+| --- | --- | --- | --- | --- | --- |
+| **RiftCompare** | ✓ | ✓ | ✓ | ✓ | AU, US, UK, SG, CA, EU |
+| TCGplayer | — (own listings) | — | Mostly | Partial | US-centric |
+| Cardmarket | — (own listings) | — | ✓ | Partial | EU-centric |
+| TCGCompare | ✓ (sealed-focused) | Unconfirmed | ✓ | Unconfirmed | US, UK, CA, EU |
+| Bilgewater Market | — (reference + trade board) | — | Reference | — | CN, EN |
+| eBay | — (own listings) | — | ✓ | — | Global, unranked |
+| TCG Snoop | ✓ | Unconfirmed | ✓ | Unconfirmed | AU only |
+| Magical Meta | — (TCGplayer-sourced) | — | Mostly | — | US-centric |
+| Riftbound Stats | — (TCGplayer-sourced) | — | Mostly | — | US-centric |
+| PriceCharting | — (historical) | — | Historical | Partial | Global, unranked |
+
+## Why RiftCompare actually wins this
+
+Strip away the branding and every name on this list falls into one of three buckets: a **marketplace** showing you its own sellers (TCGplayer, Cardmarket, eBay), a **reference-price re-display** built on top of one of those marketplaces (Magical Meta, Riftbound Stats, and PriceCharting for historical sales), or a genuine **comparison tool** that's either narrower in scope (TCG Snoop, one market) or a different kind of tool entirely (Bilgewater Market's trade board, TCGCompare's sealed-product focus).
+
+RiftCompare is built to answer one specific, narrow question as well as it possibly can: **for this exact card, in my market, right now, who's actually cheapest once shipping is counted — and is that a real listing I can click and buy?** Every other tool on this list answers something adjacent to that. None of them answer that exact question across six real markets with delivered-cost ranking and exact-printing precision. That's not a marketing claim — it's the gap in the table above.
+
+## See it for yourself
+
+The fastest way to judge any of this is to pick a card you already know the price of and check it. **[Search the card database](/browse)** — free, no signup — or if you buy or sell regularly, **[Deal Finder](/tools/deal-finder)** surfaces the gaps between all of the above automatically instead of making you check each one by hand.
+
+## FAQ
+
+**Is RiftCompare better than TCGplayer for Riftbound prices?** For finding the cheapest place to buy right now, yes — RiftCompare compares TCGplayer's own listings against independent stores and eBay in your market, ranked by delivered cost, rather than showing only TCGplayer's own inventory. TCGplayer itself remains the deepest single marketplace and the reference price much of the rest of the industry is built on.
+
+**Does Cardmarket list Riftbound cards?** Cardmarket is a general TCG marketplace and Europe's largest, so Riftbound listings do appear there as the game grows. RiftCompare doesn't currently show Cardmarket's prices — their terms require written permission before their price data can be redisplayed elsewhere, and that permission isn't in place yet.
+
+**What is Bilgewater Market?** A Riftbound-dedicated price database and trade board, tracking both English and Chinese-market prices with a peer-to-peer buy/sell board across many currencies. It's a genuinely different tool from RiftCompare — closer to a reference price plus classifieds than a live multi-store comparison.
+
+**Is TCG Snoop good for Riftbound?** It's a real, solid multi-TCG comparison engine for the Australian market specifically, covering 30+ AU stores across several card games including Riftbound. It doesn't cover other countries, and Riftbound is one of several games it tracks rather than its focus.
+
+**Why do so many Riftbound price trackers show the same number?** Because several of them — including Magical Meta and Riftbound Stats — build their price tracker directly on top of TCGplayer's market price rather than an independent read of the market. Checking three of those tools back to back can show the same figure three times, not three independent opinions.
+
+**Is RiftCompare free to use?** Yes, entirely. The card database, price comparison, price-drop alerts and the weekly price-movers digest are free with no account needed. Premium adds the full deal-finder and value-finder lists on top of the free single-best-pick view.`,
   },
   {
     slug: "every-riftbound-vendetta-card-revealed",

@@ -20,6 +20,48 @@
     ],
     "fingerprint": "c4a61ca6b8009622"
   },
+  "/blog/best-riftbound-price-comparison-sites.png": {
+    "src": "/blog/best-riftbound-price-comparison-sites.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 49594,
+    "webp": "/blog/best-riftbound-price-comparison-sites.webp",
+    "webpBytes": 21576,
+    "avif": "/blog/best-riftbound-price-comparison-sites.avif",
+    "avifBytes": 14186,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/best-riftbound-price-comparison-sites-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/best-riftbound-price-comparison-sites-768w.webp"
+      }
+    ],
+    "fingerprint": "c699033db56f5775"
+  },
+  "/blog/buy-riftbound-cards-europe.png": {
+    "src": "/blog/buy-riftbound-cards-europe.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 50601,
+    "webp": "/blog/buy-riftbound-cards-europe.webp",
+    "webpBytes": 22732,
+    "avif": "/blog/buy-riftbound-cards-europe.avif",
+    "avifBytes": 12717,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/buy-riftbound-cards-europe-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/buy-riftbound-cards-europe-768w.webp"
+      }
+    ],
+    "fingerprint": "2f5421be4d27b8ae"
+  },
   "/blog/currency-conversion-fees.png": {
     "src": "/blog/currency-conversion-fees.png",
     "width": 1200,
@@ -347,6 +389,27 @@
     ],
     "fingerprint": "1367a8b7adca33e4"
   },
+  "/blog/riftcompare-launches-in-the-eu.png": {
+    "src": "/blog/riftcompare-launches-in-the-eu.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 57006,
+    "webp": "/blog/riftcompare-launches-in-the-eu.webp",
+    "webpBytes": 22012,
+    "avif": "/blog/riftcompare-launches-in-the-eu.avif",
+    "avifBytes": 17237,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftcompare-launches-in-the-eu-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftcompare-launches-in-the-eu-768w.webp"
+      }
+    ],
+    "fingerprint": "1b1710b552e839a3"
+  },
   "/blog/riftcompare-premium-explained.png": {
     "src": "/blog/riftcompare-premium-explained.png",
     "width": 1200,
@@ -409,6 +472,27 @@
       }
     ],
     "fingerprint": "c076dea240cd7a64"
+  },
+  "/blog/where-to-buy-riftbound-cards.png": {
+    "src": "/blog/where-to-buy-riftbound-cards.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 49564,
+    "webp": "/blog/where-to-buy-riftbound-cards.webp",
+    "webpBytes": 22248,
+    "avif": "/blog/where-to-buy-riftbound-cards.avif",
+    "avifBytes": 13874,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/where-to-buy-riftbound-cards-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/where-to-buy-riftbound-cards-768w.webp"
+      }
+    ],
+    "fingerprint": "623942eddf755a5b"
   },
   "/icon-512.png": {
     "src": "/icon-512.png",
