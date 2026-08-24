@@ -1,4 +1,4 @@
-name: SEO gate (PR preview)
+name: SEO gate (Vercel deploy)
 
 # Runs the two live-crawl SEO instruments — scripts/content-quality.ts and
 # scripts/template-seo-check.ts — against the Vercel PREVIEW deploy for a pull
@@ -40,11 +40,30 @@ concurrency:
   group: seo-preview-gate-${{ github.event.deployment.sha }}
   cancel-in-progress: true
 
+# ── WHY THIS ALSO RUNS ON PRODUCTION (2026-08-23) ────────────────────────────
+# It used to require `environment == 'Preview'`. That became a silent hole the
+# moment vercel.json stopped deploying `claude/*` branches (see docs/build-cost.md
+# — the same commit was being built twice, once as a Preview for the working
+# branch and again as Production for main, and the Preview was the more expensive
+# of the two because of the SG price import in the build command).
+#
+# No preview, no deployment_status with environment 'Preview', no gate — and
+# nothing would have said so. Losing a check quietly is worse than not having it.
+#
+# The run COUNT is unchanged: one deploy per commit either way, so this costs no
+# extra Actions minutes. What changes is the meaning of a failure — "production
+# regressed" rather than "this preview would have regressed". That is an honest
+# description of what it was already worth: nothing enforced the preview gate
+# before a push to main, so it never actually blocked anything.
+#
+# Preview is still gated when a preview exists (a PR from a non-claude/* branch),
+# which is the case where the pre-merge meaning is real.
 jobs:
   seo-gate:
     if: >
       github.event.deployment_status.state == 'success' &&
-      github.event.deployment.environment == 'Preview'
+      (github.event.deployment.environment == 'Preview' ||
+       github.event.deployment.environment == 'Production')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -60,7 +79,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Resolve the preview URL
+      - name: Resolve the deployment URL
         id: preview
         run: |
           URL="${{ github.event.deployment_status.environment_url }}"
@@ -70,7 +89,7 @@ jobs:
             exit 1
           fi
           echo "url=$URL" >> "$GITHUB_OUTPUT"
-          echo "Preview URL: $URL"
+          echo "${{ github.event.deployment.environment }} URL: $URL"
 
       # GATE. Exits non-zero on a real template-level defect.
       - name: Template SEO check
