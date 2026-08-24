@@ -642,6 +642,10 @@ New to the game entirely? Start with **[Riftbound for beginners](/guides/riftbou
     author: "RiftCompare",
     date: "2026-06-08",
     updated: "2026-08-24",
+    hero: {
+      src: "/blog/where-to-buy-riftbound-cards.png",
+      alt: "Where to buy Riftbound cards — 6 markets and over 100 tracked stores, singles and sealed",
+    },
     readMins: 9,
     tags: ["buying", "guide", "stores", "singles", "sealed"],
     body: `Want to buy **Riftbound: League of Legends TCG** cards but not sure where to start? Whether you're chasing a single chase card, completing a deck, or grabbing a sealed booster box, this guide covers exactly **where to buy Riftbound cards** in **Australia, the United States, the United Kingdom, Singapore, Canada and the EU** — over 100 tracked stores between them — and how to make sure you never overpay.
@@ -3518,9 +3522,13 @@ See the full **[Vendetta card list](/guides/riftbound-vendetta-card-list)**, bro
       "Compare Riftbound singles across the eurozone stores that actually stock them — live EUR prices ranked by total delivered cost. Free, updated daily.",
     author: "RiftCompare",
     date: "2026-08-23",
-    updated: "2026-08-23",
+    updated: "2026-08-24",
     readMins: 4,
     tags: ["europe", "spain", "buying guide", "price comparison", "riftbound singles", "eur"],
+    hero: {
+      src: "/blog/buy-riftbound-cards-europe.png",
+      alt: "Riftbound card prices in Europe — eleven real eurozone stores compared, priced natively in EUR",
+    },
     shop: [
       { label: "Riftbound singles on eBay", query: "Riftbound singles" },
       { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
@@ -3792,6 +3800,10 @@ Shopping from [Australia](/blog/buy-riftbound-cards-australia), [the US](/blog/b
     updated: "2026-08-24",
     readMins: 6,
     tags: ["europe", "announcement", "news", "eur", "price comparison"],
+    hero: {
+      src: "/blog/riftcompare-launches-in-the-eu.png",
+      alt: "RiftCompare is now live in the EU — the sixth priced market, eleven real eurozone stores, priced natively in EUR",
+    },
     summary: [
       "**RiftCompare now prices the eurozone as its own market** — EUR, sourced from eleven real EU stores, not a converted UK price.",
       "**Before this, an EU visitor saw a UK price with a currency label swapped** — same GBP stores, same GBP-shaped postage, just relabelled in EUR. That's gone.",
@@ -3863,6 +3875,10 @@ Buying from outside the eurozone? RiftCompare also covers **[Australia](/blog/bu
     updated: "2026-08-24",
     readMins: 13,
     tags: ["price comparison", "comparison", "tcgplayer", "cardmarket", "best sites", "tools", "buying guide"],
+    hero: {
+      src: "/blog/best-riftbound-price-comparison-sites.png",
+      alt: "Best Riftbound price comparison sites ranked — 10 sites scored on 5 criteria, RiftCompare #1",
+    },
     summary: [
       "**RiftCompare ranks #1** on the criteria that actually decide where you should buy: independent-store coverage across six real markets, delivered cost (not sticker price), and exact-printing matching. We explain exactly why below, scored against nine other real, named sites — not a strawman.",
       "**The insight most of these sites won't tell you:** several of the biggest names in Riftbound price tracking — Magical Meta, Riftbound Stats, and TCGplayer's own market price — are reading the SAME underlying number. Check three different \"price trackers\" and you can see one figure three times, not three independent opinions.",
